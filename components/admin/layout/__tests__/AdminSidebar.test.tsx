@@ -223,7 +223,8 @@ describe("AdminSidebar", () => {
 
     expect(screen.queryByText("BETRIEB")).not.toBeInTheDocument();
     expect(screen.queryByText("FÜHRUNG")).not.toBeInTheDocument();
-    expect(screen.getByText("Betrieb", { selector: ".sr-only" })).toBeInTheDocument();
+    expect(screen.queryByText("SYSTEM")).not.toBeInTheDocument();
+    expect(screen.getByText("Tagesbetrieb", { selector: ".sr-only" })).toBeInTheDocument();
   });
 
   it("hides child labels in collapsed rail while keeping module icons", () => {

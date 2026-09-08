@@ -303,7 +303,7 @@ export default function AdminSidebar({
             {section.sectionLabel && (
               <p className="sr-only">{section.sectionLabel}</p>
             )}
-            {isCollapsed && sectionIdx > 0 && (
+            {sectionIdx > 0 && (
               <div
                 className="my-2 mx-1.5 border-t border-[color-mix(in_srgb,var(--border)_45%,transparent)]"
                 aria-hidden="true"

@@ -42,10 +42,10 @@ function findItemByKey(
 
 describe("NAV_SECTIONS static structure", () => {
   it("Planung section contains exactly TrainingCenter, MatchCenter, TournamentCenter, Veranstaltungen and Wochenplanner in that order", () => {
-    const betrieb = findSection("Betrieb");
-    expect(betrieb).toBeDefined();
+    const tagesbetrieb = findSection("Tagesbetrieb");
+    expect(tagesbetrieb).toBeDefined();
 
-    const planung = betrieb!.items.find((i) => i.key === "planung");
+    const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     expect(planung).toBeDefined();
 
     const childKeys = planung!.children?.map((c) => c.key) ?? [];
@@ -59,31 +59,32 @@ describe("NAV_SECTIONS static structure", () => {
   });
 
   it("MatchCenter is nested under Planung, labelled exactly 'MatchCenter', pointing to /dashboard/matchcenter", () => {
-    const betrieb = findSection("Betrieb");
-    const planung = betrieb!.items.find((i) => i.key === "planung");
+    const tagesbetrieb = findSection("Tagesbetrieb");
+    const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     const matchcenter = planung!.children?.find((c) => c.key === "matchcenter");
     expect(matchcenter).toBeDefined();
     expect(matchcenter?.label).toBe("MatchCenter");
     expect(matchcenter?.href).toBe("/dashboard/matchcenter");
   });
 
-  it("MatchCenter is no longer a standalone top-level Betrieb entry", () => {
-    const betrieb = findSection("Betrieb");
-    const topLevelMatchcenter = betrieb!.items.find((i) => i.key === "matchcenter");
+  it("MatchCenter is no longer a standalone top-level entry", () => {
+    const topLevelMatchcenter = NAV_SECTIONS.flatMap((s) => s.items).find(
+      (i) => i.key === "matchcenter",
+    );
     expect(topLevelMatchcenter).toBeUndefined();
   });
 
   it("Wochenplanner (WEEKPLANNER-01A/01B) points to /dashboard/planner/week", () => {
-    const betrieb = findSection("Betrieb");
-    const planung = betrieb!.items.find((i) => i.key === "planung");
+    const tagesbetrieb = findSection("Tagesbetrieb");
+    const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     const wochenplanner = planung!.children?.find((c) => c.key === "wochenplanner");
     expect(wochenplanner?.href).toBe("/dashboard/planner/week");
     expect(wochenplanner?.label).toBe("Wochenplanner");
   });
 
   it("exposes Übersicht and Vorschau inside the Infoboard module", () => {
-    const betrieb = findSection("Betrieb");
-    const infoboard = betrieb!.items.find((item) => item.key === "infoboard");
+    const oeffentlich = findSection("Öffentliche Kanäle");
+    const infoboard = oeffentlich!.items.find((item) => item.key === "infoboard");
     expect(infoboard?.children).toEqual([
       expect.objectContaining({
         key: "infoboard-overview",
@@ -99,44 +100,44 @@ describe("NAV_SECTIONS static structure", () => {
   });
 
   it("TournamentCenter points to /dashboard/tournamentcenter", () => {
-    const betrieb = findSection("Betrieb");
-    const planung = betrieb!.items.find((i) => i.key === "planung");
+    const tagesbetrieb = findSection("Tagesbetrieb");
+    const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     const tournamentcenter = planung!.children?.find((c) => c.key === "tournamentcenter");
     expect(tournamentcenter?.href).toBe("/dashboard/tournamentcenter");
     expect(tournamentcenter?.label).toBe("TournamentCenter");
   });
 
   it("Anlagen does not appear under Planung", () => {
-    const betrieb = findSection("Betrieb");
-    const planung = betrieb!.items.find((i) => i.key === "planung");
+    const tagesbetrieb = findSection("Tagesbetrieb");
+    const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     const childKeys = planung!.children?.map((c) => c.key) ?? [];
     expect(childKeys).not.toContain("anlagen");
   });
 
   it("Planung has no Saisons child", () => {
-    const betrieb = findSection("Betrieb");
-    const planung = betrieb!.items.find((i) => i.key === "planung");
+    const tagesbetrieb = findSection("Tagesbetrieb");
+    const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     const childKeys = planung!.children?.map((c) => c.key) ?? [];
     expect(childKeys).not.toContain("saisons");
   });
 
   it("Planung has no Saisonplanung child", () => {
-    const betrieb = findSection("Betrieb");
-    const planung = betrieb!.items.find((i) => i.key === "planung");
+    const tagesbetrieb = findSection("Tagesbetrieb");
+    const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     const childKeys = planung!.children?.map((c) => c.key) ?? [];
     expect(childKeys).not.toContain("saisonplanung");
   });
 
   it("Planung has no Feld & Ressourcen child", () => {
-    const betrieb = findSection("Betrieb");
-    const planung = betrieb!.items.find((i) => i.key === "planung");
+    const tagesbetrieb = findSection("Tagesbetrieb");
+    const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     const childLabels = planung!.children?.map((c) => c.label) ?? [];
     expect(childLabels).not.toContain("Feld & Ressourcen");
   });
 
   it("TrainingCenter points to /dashboard/training", () => {
-    const betrieb = findSection("Betrieb");
-    const planung = betrieb!.items.find((i) => i.key === "planung");
+    const tagesbetrieb = findSection("Tagesbetrieb");
+    const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     const trainingcenter = planung!.children?.find(
       (c) => c.key === "trainingcenter",
     );
@@ -144,8 +145,8 @@ describe("NAV_SECTIONS static structure", () => {
   });
 
   it("Veranstaltungen points to /dashboard/veranstaltungen", () => {
-    const betrieb = findSection("Betrieb");
-    const planung = betrieb!.items.find((i) => i.key === "planung");
+    const tagesbetrieb = findSection("Tagesbetrieb");
+    const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     const veranstaltungen = planung!.children?.find(
       (c) => c.key === "veranstaltungen",
     );
@@ -174,10 +175,8 @@ describe("NAV_SECTIONS static structure", () => {
   });
 
   it("Organisation lists children in the canonical order ending with Personen, then Wettkämpfe", () => {
-    const coreSection = NAV_SECTIONS.find((s) =>
-      s.items.some((i) => i.key === "organisation"),
-    );
-    const organisation = coreSection!.items.find((i) => i.key === "organisation");
+    const tagesbetrieb = findSection("Tagesbetrieb");
+    const organisation = tagesbetrieb!.items.find((i) => i.key === "organisation");
     const childKeys = organisation!.children?.map((c) => c.key) ?? [];
     expect(childKeys).toEqual([
       "org-units",
@@ -201,16 +200,20 @@ describe("NAV_SECTIONS static structure", () => {
     ]);
   });
 
-  it("exposes Kommunikation as a first-class Betrieb module with the canonical sender child", () => {
-    const betrieb = findSection("Betrieb");
-    const communication = betrieb!.items.find((i) => i.key === "communication");
+  it("exposes Kommunikation as a first-class module with the canonical sender child", () => {
+    const tagesbetrieb = findSection("Tagesbetrieb");
+    const communication = tagesbetrieb!.items.find((i) => i.key === "communication");
 
-    expect(betrieb!.items.map((item) => item.key)).toEqual([
+    expect(tagesbetrieb!.items.map((item) => item.key)).toEqual([
+      "dashboard",
       "planung",
-      "workspace",
+      "organisation",
+      "mitglieder",
       "anmeldungen",
+      "aufgaben",
+      "helfereinsaetze",
       "communication",
-      "infoboard",
+      "workspace",
     ]);
     expect(communication?.label).toBe("Kommunikation");
     expect(communication?.href).toBe("/dashboard/communication");
@@ -240,6 +243,7 @@ describe("NAV_SECTIONS static structure", () => {
     const sponsoring = fuehrung!.items.find((i) => i.key === "sponsoring");
 
     expect(fuehrung!.items.map((item) => item.key)).toEqual([
+      "trainer-staff",
       "meetings",
       "club-entwicklung",
       "material",
@@ -406,8 +410,8 @@ describe("getVisibleNavSections permission filtering", () => {
 
 describe("route deduplication", () => {
   it("facilities route /dashboard/admin/facilities appears only under Administration, not under Planung", () => {
-    const betrieb = findSection("Betrieb");
-    const planung = betrieb!.items.find((i) => i.key === "planung");
+    const tagesbetrieb = findSection("Tagesbetrieb");
+    const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     const planungFacilities = planung!.children?.filter(
       (c) => c.href === "/dashboard/admin/facilities",
     ) ?? [];

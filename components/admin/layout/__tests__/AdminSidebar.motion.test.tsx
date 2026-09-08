@@ -46,7 +46,7 @@ describe("AdminSidebar animated icons (SCE-DESIGN-04C)", () => {
     expect(animatedIcons.length).toBeGreaterThan(0);
 
     const navLinks = container.querySelectorAll(
-      ".sce-nav-item, .sce-nav-module-link, .sce-nav-child",
+      ".sce-nav-item, .sce-nav-module-link",
     );
     expect(animatedIcons.length).toBe(navLinks.length);
   });
@@ -74,12 +74,7 @@ describe("AdminSidebar animated icons (SCE-DESIGN-04C)", () => {
     );
 
     const visibleLabels = getVisibleNavSections(CLUB_ADMIN_PERMISSIONS).flatMap((section) =>
-      section.items.flatMap((item) => [
-        item.label,
-        ...(expandedModuleIncludes(item.key)
-          ? (item.children ?? []).map((child) => child.label)
-          : []),
-      ]),
+      section.items.map((item) => item.label),
     );
 
     for (const label of visibleLabels) {
@@ -128,13 +123,10 @@ describe("AdminSidebar animated icons (SCE-DESIGN-04C)", () => {
     );
 
     const activeIcon = container.querySelector(
-      '.sce-nav-child.active .sce-animated-nav-icon--active[data-nav-icon="matchcenter"]',
+      '.sce-nav-module-link.active .sce-animated-nav-icon--active[data-nav-icon="planung"]',
     );
     expect(activeIcon).toBeInTheDocument();
     expect(activeIcon?.parentElement?.matches(":hover")).toBe(false);
   });
 });
 
-function expandedModuleIncludes(moduleKey: string): boolean {
-  return moduleKey === "planung";
-}

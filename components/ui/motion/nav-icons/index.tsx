@@ -64,6 +64,14 @@ import {
   WebsiteIcon,
   WiederverwendbareInhalteIcon,
 } from "./icons-website";
+import {
+  AufgabenIcon,
+  FormulareFreigabenIcon,
+  HelfereinsaetzeIcon,
+  MitgliederIcon,
+  TrainerStaffIcon,
+  VorfaelleDisziplinIcon,
+} from "./icons-future-modules";
 
 type NavIconComponent = ComponentType<Omit<NavIconSvgProps, "iconKey" | "children">>;
 
@@ -113,6 +121,12 @@ export const NAV_ICON_COMPONENTS: Record<NavIconKey, NavIconComponent> = {
   "material-inventar": MaterialInventarIcon,
   finanzen: FinanzenIcon,
   sponsoring: SponsoringIcon,
+  mitglieder: MitgliederIcon,
+  aufgaben: AufgabenIcon,
+  helfereinsaetze: HelfereinsaetzeIcon,
+  "trainer-staff": TrainerStaffIcon,
+  "formulare-freigaben": FormulareFreigabenIcon,
+  "vorfaelle-disziplin": VorfaelleDisziplinIcon,
   administration: AdministrationIcon,
   "rollen-berechtigungen": RollenBerechtigungenIcon,
   saisons: SaisonsIcon,
