@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Newspaper } from "lucide-react";
+import { Newspaper } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { CommandCenterNewsItem } from "@/lib/dashboard/command-center-presentation";
 
@@ -160,30 +160,21 @@ export function DashboardNewsSection({
 }: DashboardNewsSectionProps) {
   if (items.length === 0) return null;
 
-  const header = (
-    <div className={cn("flex items-center justify-between gap-3", embedded ? "mb-2.5" : "mb-3.5")}>
-      {!embedded && (
-        <h2 className="text-[1.0625rem] font-semibold leading-snug text-[var(--foreground)] sm:text-lg">
-          Aktuelle News
-        </h2>
-      )}
-      <Link
-        href={listHref}
-        className={cn(
-          "inline-flex items-center gap-1 text-[0.8125rem] font-medium text-[var(--sce-primary)] no-underline motion-safe:transition-colors motion-safe:hover:text-[color-mix(in_srgb,var(--sce-primary)_85%,var(--foreground))]",
-          embedded && "ml-auto",
-        )}
-      >
-        Alle News
-        <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-      </Link>
-    </div>
+  const footerLink = (
+    <Link href={listHref} className="sce-link-primary text-[0.8125rem]">
+      Alle News anzeigen →
+    </Link>
   );
 
   return (
     <section className={className}>
-      {header}
+      {!embedded && (
+        <h2 className="mb-3.5 text-[1.0625rem] font-semibold leading-snug text-[var(--foreground)] sm:text-lg">
+          Aktuelle News
+        </h2>
+      )}
       <DashboardNewsGrid items={items} variant={variant} maxItems={maxItems} />
+      {!embedded && footerLink}
     </section>
   );
 }
