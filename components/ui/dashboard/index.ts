@@ -60,5 +60,8 @@ export type { DashboardSectionProps, DashboardSectionVariant } from "./Dashboard
 export { DashboardGrid } from "./DashboardGrid";
 export type { DashboardGridProps } from "./DashboardGrid";
 
+export { DashboardNewsGrid, DashboardNewsSection } from "./DashboardNewsGrid";
+export type { DashboardNewsGridProps, DashboardNewsSectionProps } from "./DashboardNewsGrid";
+
 export { DashboardEmptyState } from "./DashboardEmptyState";
 export type { DashboardEmptyStateProps } from "./DashboardEmptyState";

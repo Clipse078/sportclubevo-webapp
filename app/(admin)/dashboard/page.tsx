@@ -20,7 +20,7 @@ import { getCommandCenterData } from "@/lib/dashboard/command-center";
 import { withTodayItemHrefs } from "@/lib/dashboard/today-schedule-href";
 import { getDashboardQuickActionDefs } from "@/lib/dashboard/quick-actions";
 import {
-  DashboardCommandHeader,
+  DashboardHero,
   DashboardKpiGrid,
   DashboardQuickActions,
   DashboardActivityFeed,
@@ -31,6 +31,7 @@ import {
   DashboardTodaySchedule,
   DashboardAttentionList,
   DashboardUpcomingList,
+  DashboardNewsSection,
 } from "@/components/ui/dashboard";
 import type { DashboardKpiAccent } from "@/components/ui/dashboard";
 import { getCurrentSwissFootballSeason } from "@/lib/seasons/season-logic";
@@ -103,6 +104,8 @@ export default async function DashboardPage() {
         attentionItems: [],
         upcomingItems: [],
         activitySources: [],
+        newsItems: [],
+        heroBackgroundImageUrl: null,
       };
 
   const permissionKeys = (actor?.permissionKeys ??
@@ -180,14 +183,18 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6 lg:gap-7">
-      <DashboardCommandHeader
+      <DashboardHero
         greeting={greeting}
         clubName={ctx?.name ?? undefined}
         activeSeason={activeSeason}
         date={todayFormatted}
+        backgroundImageUrl={commandCenter.heroBackgroundImageUrl}
+        kpiGrid={
+          kpiItems.length > 0 ? (
+            <DashboardKpiGrid items={kpiItems} variant="hero" />
+          ) : undefined
+        }
       />
-
-      {kpiItems.length > 0 && <DashboardKpiGrid items={kpiItems} />}
 
       <DashboardGrid
         sidebar={
@@ -245,46 +252,47 @@ export default async function DashboardPage() {
           />
         </DashboardSection>
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:gap-6">
+        {quickActions.length > 0 && (
           <DashboardSection
-            title="Letzte Aktivitäten"
-            noPadding
+            title="Schnellaktionen"
             variant="card"
-            className="lg:col-span-3"
-            footer={
-              activityItems.length > 0 ? (
-                <Link href="/dashboard/logs" className="sce-link-primary text-[0.8125rem]">
-                  Alle Aktivitäten anzeigen →
-                </Link>
-              ) : undefined
-            }
+            bodyClassName="px-4 py-4 sm:px-5 sm:py-5"
           >
-            <div className="px-5 py-1 sm:px-6">
-              <DashboardActivityFeed
-                items={activityItems}
-                emptyState={
-                  <DashboardEmptyState
-                    icon={<Globe className="h-5 w-5" />}
-                    title="Noch keine Aktivitäten"
-                    description="Aktuelle News, Anmeldungen, Planungsänderungen und Meetings erscheinen hier."
-                  />
-                }
-              />
-            </div>
+            <DashboardQuickActions actions={quickActions} />
           </DashboardSection>
+        )}
 
-          {quickActions.length > 0 && (
-            <DashboardSection
-              title="Schnellaktionen"
-              noPadding
-              variant="card"
-              className="lg:col-span-2"
-              bodyClassName="px-4 py-3 sm:px-5 sm:py-4"
-            >
-              <DashboardQuickActions actions={quickActions} />
-            </DashboardSection>
-          )}
-        </div>
+        {commandCenter.newsItems.length > 0 && (
+          <DashboardSection variant="flat" noPadding bodyClassName="px-0">
+            <DashboardNewsSection items={commandCenter.newsItems} />
+          </DashboardSection>
+        )}
+
+        <DashboardSection
+          title="Letzte Aktivitäten"
+          noPadding
+          variant="card"
+          footer={
+            activityItems.length > 0 ? (
+              <Link href="/dashboard/logs" className="sce-link-primary text-[0.8125rem]">
+                Alle Aktivitäten anzeigen →
+              </Link>
+            ) : undefined
+          }
+        >
+          <div className="px-5 py-1 sm:px-6">
+            <DashboardActivityFeed
+              items={activityItems}
+              emptyState={
+                <DashboardEmptyState
+                  icon={<Globe className="h-5 w-5" />}
+                  title="Noch keine Aktivitäten"
+                  description="Aktuelle News, Anmeldungen, Planungsänderungen und Meetings erscheinen hier."
+                />
+              }
+            />
+          </div>
+        </DashboardSection>
       </DashboardGrid>
     </div>
   );

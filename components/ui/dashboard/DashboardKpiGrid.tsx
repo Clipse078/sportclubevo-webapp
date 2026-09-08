@@ -13,13 +13,19 @@ export type DashboardKpiGridItem = {
 
 export type DashboardKpiGridProps = {
   items: DashboardKpiGridItem[];
+  /** Hero-embedded KPI cards inside DashboardHero. */
+  variant?: "default" | "hero";
   className?: string;
 };
 
 /**
  * Premium KPI card grid — replaces the flat metric strip for command-center dashboards.
  */
-export function DashboardKpiGrid({ items, className }: DashboardKpiGridProps) {
+export function DashboardKpiGrid({
+  items,
+  variant = "default",
+  className,
+}: DashboardKpiGridProps) {
   return (
     <div
       className={cn(
@@ -35,10 +41,10 @@ export function DashboardKpiGrid({ items, className }: DashboardKpiGridProps) {
           description={item.description}
           accent={item.accent}
           icon={item.icon}
+          variant={variant}
           className={cn(
-            "motion-safe:transition-[box-shadow,border-color,transform] motion-safe:duration-150",
-            "motion-safe:hover:-translate-y-px motion-safe:hover:shadow-[var(--shadow-sm)]",
-            "motion-safe:hover:border-[var(--border-strong)]",
+            variant === "default" &&
+              "motion-safe:transition-[box-shadow,border-color,transform] motion-safe:duration-150 motion-safe:hover:-translate-y-px motion-safe:hover:shadow-[var(--shadow-sm)] motion-safe:hover:border-[var(--border-strong)]",
           )}
         />
       ))}

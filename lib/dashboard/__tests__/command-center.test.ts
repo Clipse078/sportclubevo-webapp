@@ -3,8 +3,14 @@ import {
   buildAttentionItems,
   buildCommandCenterKpis,
 } from "@/lib/dashboard/command-center";
+import {
+  buildCommandCenterMatchPresentation,
+  buildCommandCenterTournamentParticipants,
+  resolveNewsHeroImageUrl,
+} from "@/lib/dashboard/command-center-presentation";
 import { getDashboardQuickActionDefs } from "@/lib/dashboard/quick-actions";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { EMPTY_TOURNAMENT_LOGO_RESOLUTION_CONTEXT } from "@/lib/tournaments/logo-resolution-context";
 
 describe("SCE-DASHBOARD-V3-01 — command center builders", () => {
   describe("buildCommandCenterKpis", () => {
@@ -88,5 +94,94 @@ describe("SCE-DASHBOARD-V3-01 — quick actions", () => {
     expect(actions.some((action) => action.key === "news")).toBe(true);
     expect(actions.some((action) => action.key === "planner-week")).toBe(true);
     expect(actions.some((action) => action.key === "people-access")).toBe(false);
+  });
+});
+
+describe("SCE-DASHBOARD-V3-02B — command center presentation", () => {
+  describe("resolveNewsHeroImageUrl", () => {
+    it("prefers heroMedia URL over legacy imageUrl", () => {
+      expect(
+        resolveNewsHeroImageUrl({
+          heroMediaUrl: "https://cdn.example/hero.jpg",
+          imageUrl: "https://cdn.example/legacy.jpg",
+        }),
+      ).toBe("https://cdn.example/hero.jpg");
+    });
+
+    it("falls back to imageUrl when hero media is absent", () => {
+      expect(
+        resolveNewsHeroImageUrl({
+          heroMediaUrl: null,
+          imageUrl: "https://cdn.example/legacy.jpg",
+        }),
+      ).toBe("https://cdn.example/legacy.jpg");
+    });
+
+    it("returns null when no configured news image exists", () => {
+      expect(resolveNewsHeroImageUrl({ heroMediaUrl: null, imageUrl: null })).toBeNull();
+    });
+  });
+
+  describe("buildCommandCenterMatchPresentation", () => {
+    it("maps canonical match identity without inventing logos", () => {
+      const presentation = buildCommandCenterMatchPresentation({
+        policy: {
+          id: "evt-1",
+          status: "SCHEDULED",
+          infoboardVisible: true,
+          websiteVisible: true,
+          trainingsplanVisible: true,
+          homeAway: "HOME",
+          organizerName: null,
+          competitionLabel: "Meisterschaft",
+          meetingTime: null,
+          resultLabel: null,
+          intermediateResultLabel: null,
+          season: { key: "2025/26" },
+          team: { name: "Team A", shortName: null, alternativeName: null },
+          opponentExternalClub: {
+            name: "FC Gegner",
+            shortName: null,
+            alternativeName: null,
+            logoUrl: "https://cdn.example/opp.png",
+          },
+        },
+        opponentName: "FC Gegner",
+        ownTeamDisplayName: "Team A",
+        tenantClubName: "Heimverein",
+        tenantLogoUrl: "https://cdn.example/home.png",
+        canonicalLogoByProviderClubId: new Map(),
+      });
+
+      expect(presentation?.competitionLabel).toBe("Meisterschaft");
+      expect(presentation?.home.logoUrl).toBe("https://cdn.example/home.png");
+      expect(presentation?.away.logoUrl).toBe("https://cdn.example/opp.png");
+    });
+  });
+
+  describe("buildCommandCenterTournamentParticipants", () => {
+    it("returns serializable participant rows with resolved logos", () => {
+      const participants = buildCommandCenterTournamentParticipants(
+        [
+          {
+            displayName: "Team Rot",
+            manualLabel: null,
+            displayOrder: 0,
+            team: { name: "Team Rot", shortName: null, alternativeName: null },
+            externalClub: null,
+            externalTeam: null,
+          },
+        ],
+        "https://cdn.example/tenant.png",
+        EMPTY_TOURNAMENT_LOGO_RESOLUTION_CONTEXT,
+      );
+
+      expect(participants).toEqual([
+        {
+          displayName: "Team Rot",
+          logoUrl: "https://cdn.example/tenant.png",
+        },
+      ]);
+    });
   });
 });

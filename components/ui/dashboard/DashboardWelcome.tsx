@@ -5,6 +5,8 @@ export type DashboardWelcomeProps = {
   greeting: string;
   /** Optional supporting subtitle below the greeting. */
   subtitle?: string;
+  /** Renders the "WILLKOMMEN ZURÜCK" eyebrow above the greeting. */
+  showEyebrow?: boolean;
   className?: string;
 };
 
@@ -24,10 +26,16 @@ export type DashboardWelcomeProps = {
 export function DashboardWelcome({
   greeting,
   subtitle,
+  showEyebrow = false,
   className,
 }: DashboardWelcomeProps) {
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
+      {showEyebrow && (
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-[var(--sce-primary)]">
+          Willkommen zurück
+        </p>
+      )}
       <h1 className="text-[1.875rem] font-bold leading-[1.15] tracking-tight text-[var(--foreground)] sm:text-[2rem] lg:text-[2.125rem]">
         {greeting}
       </h1>

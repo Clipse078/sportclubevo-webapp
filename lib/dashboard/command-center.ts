@@ -15,7 +15,27 @@ import {
 import type { ActorContext } from "@/lib/visibility/actor-context";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { formatTime, type TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
+import {
+  formatDate,
+  formatTime,
+  type TenantFormatConfig,
+} from "@/lib/tenant-runtime/formatters";
+import {
+  collectProviderClubIdsFromEventPolicies,
+  loadCanonicalClubLogoIndex,
+} from "@/lib/club-directory/canonical-logo-resolution";
+import { loadMatchEventPoliciesByEventId } from "@/lib/website/public-matches-identity";
+import { SCREEN1_TOURNAMENT_PARTICIPANT_SELECT } from "@/lib/publishing/infoboard/screen1-tournament-presentation";
+import { loadTournamentLogoResolutionContext } from "@/lib/tournaments/logo-resolution-context";
+import {
+  buildCommandCenterMatchPresentation,
+  buildCommandCenterTournamentParticipants,
+  resolveNewsHeroImageUrl,
+  type CommandCenterMatchPresentation,
+  type CommandCenterNewsItem,
+  type CommandCenterTournamentParticipant,
+  type CommandCenterUpcomingLogo,
+} from "@/lib/dashboard/command-center-presentation";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -36,6 +56,9 @@ export type TodayScheduleItem = {
   title: string;
   subtitle?: string;
   meta?: string;
+  competitionLabel?: string;
+  matchPresentation?: CommandCenterMatchPresentation;
+  tournamentParticipants?: CommandCenterTournamentParticipant[];
 };
 
 export type AttentionItem = {
@@ -54,6 +77,9 @@ export type UpcomingScheduleItem = {
   title: string;
   location?: string;
   timeLabel: string;
+  eventType?: EventType | "MEETING";
+  href?: string;
+  logo?: CommandCenterUpcomingLogo;
 };
 
 export type ActivitySourceItem = {
@@ -70,6 +96,9 @@ export type CommandCenterData = {
   attentionItems: AttentionItem[];
   upcomingItems: UpcomingScheduleItem[];
   activitySources: ActivitySourceItem[];
+  newsItems: CommandCenterNewsItem[];
+  /** Ready for V3-03 personal dashboard background upload — null until persisted. */
+  heroBackgroundImageUrl: string | null;
 };
 
 type StrategicActor = Pick<ActorContext, "tenantId" | "userId" | "permissionKeys">;
@@ -255,7 +284,14 @@ export async function getCommandCenterData(args: {
 
   const newsWhere = canSeeNews ? tWhere : { tenantId: "__none__" };
 
+  const publishedNewsWhere = {
+    tenantId: args.tenantId,
+    status: "PUBLISHED" as const,
+    publishedAt: { not: null, lte: now },
+  };
+
   const [
+    tenant,
     teamCount,
     activePersonCount,
     todayEventCount,
@@ -271,7 +307,12 @@ export async function getCommandCenterData(args: {
     operativeCounts,
     todayMeetings,
     upcomingMeetings,
+    dashboardNewsArticles,
   ] = await Promise.all([
+    prisma.tenant.findFirst({
+      where: { id: args.tenantId },
+      select: { name: true, logoUrl: true },
+    }),
     prisma.team.count({ where: tWhere }),
     prisma.person.count({ where: { ...tWhere, isActive: true } }),
     prisma.event.count({
@@ -309,7 +350,7 @@ export async function getCommandCenterData(args: {
         homeDressingRoomCode: true,
         awayDressingRoomCode: true,
         opponentName: true,
-        team: { select: { name: true } },
+        team: { select: { id: true, name: true } },
       },
     }),
 
@@ -326,6 +367,8 @@ export async function getCommandCenterData(args: {
         startAt: true,
         location: true,
         type: true,
+        opponentName: true,
+        team: { select: { name: true } },
       },
     }),
 
@@ -405,11 +448,99 @@ export async function getCommandCenterData(args: {
           },
         })
       : Promise.resolve([]),
+    prisma.newsArticle.findMany({
+      where: publishedNewsWhere,
+      orderBy: [{ publishedAt: "desc" }, { title: "asc" }],
+      take: 3,
+      select: {
+        id: true,
+        title: true,
+        excerpt: true,
+        imageUrl: true,
+        publishedAt: true,
+        heroMedia: {
+          select: { url: true, altText: true },
+        },
+      },
+    }),
   ]);
+
+  const tenantClubName = tenant?.name ?? "Verein";
+  const tenantLogoUrl = tenant?.logoUrl ?? null;
+
+  const matchAndTournamentEventIds = [
+    ...todayEvents
+      .filter((event) => event.type === "MATCH" || event.type === "TOURNAMENT")
+      .map((event) => event.id),
+    ...upcomingEvents
+      .filter((event) => event.type === "MATCH")
+      .map((event) => event.id),
+  ];
+
+  const tournamentEventIds = todayEvents
+    .filter((event) => event.type === "TOURNAMENT")
+    .map((event) => event.id);
+
+  const [eventPolicyByEventId, tournamentParticipantsByEventId, tournamentLogoContext] =
+    await Promise.all([
+      loadMatchEventPoliciesByEventId(args.tenantId, matchAndTournamentEventIds),
+      tournamentEventIds.length > 0
+        ? prisma.tournamentParticipant
+            .findMany({
+              where: {
+                tenantId: args.tenantId,
+                eventId: { in: tournamentEventIds },
+              },
+              select: { ...SCREEN1_TOURNAMENT_PARTICIPANT_SELECT },
+              orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
+            })
+            .then((rows) => {
+              const byEventId = new Map<string, typeof rows>();
+              for (const row of rows) {
+                const bucket = byEventId.get(row.eventId);
+                if (bucket) bucket.push(row);
+                else byEventId.set(row.eventId, [row]);
+              }
+              return byEventId;
+            })
+        : Promise.resolve(new Map<string, never[]>()),
+      loadTournamentLogoResolutionContext(args.tenantId),
+    ]);
+
+  const canonicalLogoByProviderClubId = await loadCanonicalClubLogoIndex(
+    args.tenantId,
+    collectProviderClubIdsFromEventPolicies([...eventPolicyByEventId.values()]),
+  );
 
   const todayItems: TodayScheduleItem[] = [
     ...todayEvents.map((event) => {
-      const subtitle = event.team?.name ?? event.opponentName ?? undefined;
+      const policy = eventPolicyByEventId.get(event.id);
+      const ownTeamDisplayName = event.team?.name ?? null;
+      const subtitle = ownTeamDisplayName ?? event.opponentName ?? undefined;
+
+      const matchPresentation =
+        event.type === "MATCH"
+          ? buildCommandCenterMatchPresentation({
+              policy,
+              opponentName: event.opponentName,
+              ownTeamDisplayName,
+              tenantClubName,
+              tenantLogoUrl,
+              canonicalLogoByProviderClubId,
+            }) ?? undefined
+          : undefined;
+
+      const tournamentParticipants =
+        event.type === "TOURNAMENT"
+          ? buildCommandCenterTournamentParticipants(
+              (tournamentParticipantsByEventId.get(event.id) ?? []) as Parameters<
+                typeof buildCommandCenterTournamentParticipants
+              >[0],
+              tenantLogoUrl,
+              tournamentLogoContext,
+            )
+          : undefined;
+
       return {
         key: `event-${event.id}`,
         sortAt: event.startAt,
@@ -418,8 +549,14 @@ export async function getCommandCenterData(args: {
         typeLabel: getEventTypeLabel(event.type),
         eventType: event.type,
         title: event.title,
-        subtitle,
+        subtitle: matchPresentation ? undefined : subtitle,
         meta: buildLocationMeta(event),
+        competitionLabel: policy?.competitionLabel?.trim() || undefined,
+        matchPresentation,
+        tournamentParticipants:
+          tournamentParticipants && tournamentParticipants.length > 0
+            ? tournamentParticipants
+            : undefined,
       };
     }),
     ...todayMeetings.map((meeting) => ({
@@ -436,15 +573,41 @@ export async function getCommandCenterData(args: {
   const monthLabels = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
 
   const upcomingItems: UpcomingScheduleItem[] = [
-    ...upcomingEvents.map((event) => ({
-      key: `event-${event.id}`,
-      sortAt: event.startAt,
-      dayLabel: String(event.startAt.getUTCDate()),
-      monthLabel: monthLabels[event.startAt.getUTCMonth()] ?? "",
-      title: event.title,
-      location: event.location ?? undefined,
-      timeLabel: formatTime(event.startAt, args.fmtCfg),
-    })),
+    ...upcomingEvents.map((event) => {
+      const policy = eventPolicyByEventId.get(event.id);
+      const matchPresentation =
+        event.type === "MATCH"
+          ? buildCommandCenterMatchPresentation({
+              policy,
+              opponentName: event.opponentName,
+              ownTeamDisplayName: event.team?.name ?? null,
+              tenantClubName,
+              tenantLogoUrl,
+              canonicalLogoByProviderClubId,
+            })
+          : null;
+
+      const opponentLogo =
+        matchPresentation &&
+        (matchPresentation.home.logoUrl
+          ? { logoUrl: matchPresentation.home.logoUrl, displayName: matchPresentation.home.displayName }
+          : matchPresentation.away.logoUrl
+            ? { logoUrl: matchPresentation.away.logoUrl, displayName: matchPresentation.away.displayName }
+            : null);
+
+      return {
+        key: `event-${event.id}`,
+        sortAt: event.startAt,
+        dayLabel: String(event.startAt.getUTCDate()),
+        monthLabel: monthLabels[event.startAt.getUTCMonth()] ?? "",
+        title: event.title,
+        location: event.location ?? undefined,
+        timeLabel: formatTime(event.startAt, args.fmtCfg),
+        eventType: event.type,
+        href: `/dashboard/planner/edit/${event.id}`,
+        logo: opponentLogo ?? undefined,
+      };
+    }),
     ...upcomingMeetings.map((meeting) => ({
       key: `meeting-${meeting.id}`,
       sortAt: meeting.meetingDate,
@@ -453,10 +616,27 @@ export async function getCommandCenterData(args: {
       title: meeting.title,
       location: meeting.location ?? undefined,
       timeLabel: formatTime(meeting.meetingDate, args.fmtCfg),
+      eventType: "MEETING" as const,
     })),
   ]
     .sort((a, b) => a.sortAt.getTime() - b.sortAt.getTime())
     .slice(0, 5);
+
+  const newsItems: CommandCenterNewsItem[] = dashboardNewsArticles.map((article) => ({
+    key: `news-${article.id}`,
+    id: article.id,
+    title: article.title,
+    excerpt: article.excerpt,
+    heroImageUrl: resolveNewsHeroImageUrl({
+      heroMediaUrl: article.heroMedia?.url,
+      imageUrl: article.imageUrl,
+    }),
+    heroImageAlt: article.heroMedia?.altText ?? article.title,
+    publishedAtLabel: article.publishedAt
+      ? formatDate(article.publishedAt, args.fmtCfg)
+      : "",
+    href: `/dashboard/website/news/${article.id}/edit`,
+  }));
 
   const activitySources: ActivitySourceItem[] = [
     ...recentNews.map((item) => ({
@@ -511,5 +691,7 @@ export async function getCommandCenterData(args: {
     }),
     upcomingItems,
     activitySources,
+    newsItems,
+    heroBackgroundImageUrl: null,
   };
 }

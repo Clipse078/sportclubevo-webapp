@@ -56,6 +56,8 @@ export type DashboardKpiCardProps = {
   description?: string;
   /** Semantic accent variant. No arbitrary colors — design tokens only. */
   accent?: DashboardKpiAccent;
+  /** Hero-embedded translucent card for command-center composition. */
+  variant?: "default" | "hero";
   /** Optional action rendered below the description. */
   action?: ReactNode;
   className?: string;
@@ -84,17 +86,25 @@ export function DashboardKpiCard({
   icon,
   description,
   accent = "default",
+  variant = "default",
   action,
   className,
 }: DashboardKpiCardProps) {
   const vars = ACCENT_VARS[accent];
+  const isHero = variant === "hero";
 
   return (
     <div
       className={cn(
-        "rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] px-4 py-4 sm:px-5",
-        "bg-[linear-gradient(145deg,var(--surface)_0%,color-mix(in_srgb,var(--surface)_92%,var(--surface-2))_100%)]",
-        "shadow-[var(--shadow-xs)]",
+        "rounded-[var(--radius-lg)] border px-4 py-3.5 sm:px-4 sm:py-4",
+        isHero
+          ? "min-h-[6.25rem] border-[color-mix(in_srgb,var(--border)_70%,transparent)] bg-[color-mix(in_srgb,var(--surface)_55%,transparent)] backdrop-blur-[2px] shadow-[inset_0_1px_0_color-mix(in_srgb,var(--foreground)_6%,transparent)]"
+          : cn(
+              "rounded-[var(--radius-xl)] bg-[var(--surface)] sm:px-5",
+              "bg-[linear-gradient(145deg,var(--surface)_0%,color-mix(in_srgb,var(--surface)_92%,var(--surface-2))_100%)]",
+              "shadow-[var(--shadow-xs)]",
+            ),
+        "border-[var(--border)]",
         "motion-safe:transition-[box-shadow,border-color] motion-safe:duration-150",
         className,
       )}
@@ -104,7 +114,14 @@ export function DashboardKpiCard({
           <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
             {title}
           </p>
-          <p className="mt-2 text-[1.75rem] font-bold leading-none tracking-tight text-[var(--foreground)] sm:text-[1.875rem] lg:text-[2rem]">
+          <p
+            className={cn(
+              "mt-1.5 font-bold leading-none tracking-tight text-[var(--foreground)]",
+              isHero
+                ? "text-[1.625rem] sm:text-[1.75rem]"
+                : "mt-2 text-[1.75rem] sm:text-[1.875rem] lg:text-[2rem]",
+            )}
+          >
             {value}
           </p>
           {description && (
@@ -120,7 +137,10 @@ export function DashboardKpiCard({
 
         {icon && (
           <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] sm:h-11 sm:w-11"
+            className={cn(
+              "flex shrink-0 items-center justify-center rounded-[var(--radius-md)]",
+              isHero ? "h-9 w-9 sm:h-10 sm:w-10" : "h-10 w-10 sm:h-11 sm:w-11",
+            )}
             style={{ background: vars.iconBg, color: vars.iconColor }}
             aria-hidden="true"
           >

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { DashboardEmptyState } from "./DashboardEmptyState";
 import type { AttentionItem } from "@/lib/dashboard/command-center";
@@ -21,7 +22,9 @@ function AttentionRow({ item }: { item: AttentionItem }) {
       <span
         className={cn(
           "mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full",
-          item.urgent ? "bg-[var(--sce-primary)] shadow-[0_0_0_3px_var(--sce-primary-light)]" : "bg-[var(--border-strong)]",
+          item.urgent
+            ? "bg-[var(--sce-primary)] shadow-[0_0_0_3px_var(--sce-primary-light)]"
+            : "bg-[var(--border-strong)]",
         )}
         aria-hidden="true"
       />
@@ -33,6 +36,10 @@ function AttentionRow({ item }: { item: AttentionItem }) {
           {item.subtitle}
         </p>
       </div>
+      <ChevronRight
+        className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)] motion-safe:transition-colors motion-safe:duration-150 group-hover:text-[var(--sce-primary)]"
+        aria-hidden="true"
+      />
     </Link>
   );
 }
