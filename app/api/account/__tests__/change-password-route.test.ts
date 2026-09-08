@@ -32,16 +32,18 @@ const mocks = vi.hoisted(() => ({
   userUpdate: vi.fn(),
   verifyPassword: vi.fn(),
   hashPassword: vi.fn(),
-  logAction: vi.fn(),
+  writeAuditRecord: vi.fn(),
 }));
 
 vi.mock("@/auth", () => ({ auth: mocks.auth }));
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
+    $transaction: vi.fn((callback: (tx: unknown) => unknown) =>
+      callback({ user: { update: mocks.userUpdate } }),
+    ),
     user: {
       findUnique: mocks.userFindUnique,
-      update: mocks.userUpdate,
     },
   },
 }));
@@ -51,8 +53,8 @@ vi.mock("@/lib/auth/password", () => ({
   hashPassword: mocks.hashPassword,
 }));
 
-vi.mock("@/lib/audit/log-action", () => ({
-  logAction: mocks.logAction,
+vi.mock("@/lib/audit/audit-record", () => ({
+  writeAuditRecord: mocks.writeAuditRecord,
 }));
 
 import { POST } from "@/app/api/account/change-password/route";
@@ -79,7 +81,7 @@ const DB_USER = {
 describe("POST /api/account/change-password", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.logAction.mockResolvedValue(undefined);
+    mocks.writeAuditRecord.mockResolvedValue(undefined);
   });
 
   it("returns 401 when unauthenticated", async () => {
@@ -242,7 +244,8 @@ describe("POST /api/account/change-password", () => {
       confirmPassword: "newpassword123",
     }));
 
-    expect(mocks.logAction).toHaveBeenCalledWith(
+    expect(mocks.writeAuditRecord).toHaveBeenCalledWith(
+      expect.objectContaining({ user: expect.any(Object) }),
       expect.objectContaining({
         action: "account.password_changed",
         entityType: "User",

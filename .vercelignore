@@ -1,0 +1,11 @@
+# Preventive hardening: local environment files are workstation state and must
+# not be included in a Vercel upload. This reduces local configuration leakage
+# and contamination risk; it is not evidence about the September 8 incident.
+#
+# Reference: docs/development/deployment-runtime-contract.md
+
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.development

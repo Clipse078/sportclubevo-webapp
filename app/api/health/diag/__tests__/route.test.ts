@@ -1,14 +1,11 @@
-/**
- * Pure route tests: authorization, runtime, deployment, and database checks
- * are mocked. No Prisma client, network service, or persistent state is used.
- */
+/** Pure route tests; no database or network service is used. */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   requireApiPermission: vi.fn(),
   evaluateRuntimeConfiguration: vi.fn(),
   checkDatabaseHealth: vi.fn(),
-  getDeploymentMetadata: vi.fn(),
+  resolveDeploymentIdentity: vi.fn(),
 }));
 
 vi.mock("@/lib/permissions/require-api-permission", () => ({
@@ -20,13 +17,35 @@ vi.mock("@/lib/server/runtime", () => ({
   checkDatabaseHealth: mocks.checkDatabaseHealth,
 }));
 
-vi.mock("@/lib/server/deployment", () => ({
-  getDeploymentMetadata: mocks.getDeploymentMetadata,
+vi.mock("@/lib/server/deployment-identity", () => ({
+  resolveDeploymentIdentity: mocks.resolveDeploymentIdentity,
 }));
 
 const { GET } = await import("../route");
 
-describe("GET /api/health/diag authorization", () => {
+const identity = {
+  commitSha: "abc123",
+  commitRef: "feature/dashboard-command-center-v3",
+  deploymentId: "dpl_abc123",
+  deploymentUrl: "preview.example.vercel.app",
+  vercelEnv: "preview",
+  vercelTargetEnv: null,
+  appEnvironment: "PREVIEW",
+  appEnvRaw: "preview",
+  isDeployed: true,
+  databaseHost: "stage-db.neon.tech",
+  databaseFingerprint: "fingerprint123",
+  authConfigured: {
+    hasNextAuthSecret: true,
+    hasDatabaseUrl: true,
+    hasNextAuthUrl: true,
+    hasAppBaseUrl: true,
+  },
+  identityValid: "PASS",
+  identityViolations: [],
+};
+
+describe("GET /api/health/diag", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireApiPermission.mockResolvedValue({
@@ -43,11 +62,14 @@ describe("GET /api/health/diag authorization", () => {
         hasNextAuthSecret: true,
         appBaseUrl: "https://sce.example",
         nextAuthUrl: "https://sce.example",
-        appEnv: "stage",
+        appEnv: "preview",
         nodeEnv: "production",
         vercelEnv: "preview",
         isLocal: false,
-        isStage: true,
+        isPreview: true,
+        isAcceptance: false,
+        isDeployed: true,
+        isStage: false,
         isProd: false,
       },
       warnings: [],
@@ -57,13 +79,10 @@ describe("GET /api/health/diag authorization", () => {
       ok: true,
       message: "Database connection successful.",
     });
-    mocks.getDeploymentMetadata.mockReturnValue({
-      environment: "stage",
-      commitSha: "internal-sha",
-    });
+    mocks.resolveDeploymentIdentity.mockReturnValue(identity);
   });
 
-  it("returns no diagnostic payload to an unauthenticated caller", async () => {
+  it("returns the safe identity subset to an unauthenticated caller", async () => {
     mocks.requireApiPermission.mockResolvedValue({
       ok: false,
       status: 401,
@@ -73,26 +92,57 @@ describe("GET /api/health/diag authorization", () => {
 
     const response = await GET();
 
-    expect(response.status).toBe(401);
-    expect(await response.json()).toEqual({ error: "Unauthorized" });
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.access).toBe("public");
+    expect(body.deployment).toEqual({
+      commitSha: "abc123",
+      commitRef: "feature/dashboard-command-center-v3",
+      vercelEnvironment: "preview",
+      vercelTargetEnv: null,
+      appEnvironment: "PREVIEW",
+    });
+    expect(body.database).toEqual({
+      host: "stage-db.neon.tech",
+      fingerprint: "fingerprint123",
+    });
+    expect(body.checks.hasNextAuthSecret).toBe(true);
     expect(mocks.evaluateRuntimeConfiguration).not.toHaveBeenCalled();
     expect(mocks.checkDatabaseHealth).not.toHaveBeenCalled();
-    expect(mocks.getDeploymentMetadata).not.toHaveBeenCalled();
+    expect(JSON.stringify(body)).not.toContain("dpl_abc123");
+    expect(JSON.stringify(body)).not.toContain("preview.example.vercel.app");
   });
 
-  it("uses the established platform users.manage permission", async () => {
-    await GET();
-
-    expect(mocks.requireApiPermission).toHaveBeenCalledWith("users.manage");
-  });
-
-  it("retains diagnostics for an authorized SCE administrator", async () => {
+  it("adds deeper diagnostics for an authorized SCE administrator", async () => {
     const response = await GET();
     const body = await response.json();
 
     expect(response.status).toBe(200);
+    expect(mocks.requireApiPermission).toHaveBeenCalledWith("users.manage");
+    expect(body.access).toBe("authorized");
     expect(body.healthOk).toBe(true);
-    expect(body.deployment.commitSha).toBe("internal-sha");
-    expect(body.database.ok).toBe(true);
+    expect(body.deployment.deploymentId).toBe("dpl_abc123");
+    expect(body.database.connectivity.ok).toBe(true);
+    expect(body.phases.IDENTITY_VALIDATED).toBe(true);
+  });
+
+  it("falls back to the public subset when auth evaluation throws", async () => {
+    mocks.requireApiPermission.mockRejectedValue(new Error("auth unavailable"));
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.access).toBe("public");
+    expect(body.identity.identityValid).toBe("PASS");
+  });
+
+  it("never exposes credential or connection-string values", async () => {
+    const response = await GET();
+    const serialized = JSON.stringify(await response.json());
+
+    expect(serialized).not.toContain("postgresql://");
+    expect(serialized).not.toContain("passwordHash");
+    expect(serialized).not.toContain("NEXTAUTH_SECRET");
   });
 });

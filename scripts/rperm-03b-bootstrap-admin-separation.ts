@@ -35,7 +35,8 @@
  *
  * Password reset flags (optional, requires --execute):
  *   --reset-platform-password    Reset hello@tulip-digital.ch password from env var
- *   --reset-club-admin-password  Reset it@fcallschwil.ch password from env var
+ *   --reset-club-admin-password  Blocked for protected persistent identities;
+ *                                use an authorized audited recovery path
  */
 
 import "dotenv/config";
@@ -44,6 +45,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, RoleScope, PermissionScope } from "@prisma/client";
 import { Pool } from "pg";
 import { assertOperationalMutationAllowed } from "@/lib/server/operational-database-guard";
+import { assertProtectedAuthAllowed } from "@/lib/server/protected-auth-guard";
 import { hashPassword } from "@/lib/auth/password";
 import { getTenantClubAdminRoleKey } from "@/lib/roles/tenant-role-keys";
 
@@ -1054,6 +1056,7 @@ export async function runExecute(
     });
 
     if (!platformUser) {
+      assertProtectedAuthAllowed(platformEmail, { isCreate: true });
       platformUser = await tx.user.create({
         data: {
           email: platformEmail,
@@ -1069,6 +1072,7 @@ export async function runExecute(
     } else {
       result.usersReused.push(platformEmail);
       if (options.resetPlatformPassword) {
+        assertProtectedAuthAllowed(platformEmail, { isCreate: false });
         await tx.user.update({
           where: { id: platformUser.id },
           data: {
@@ -1123,6 +1127,7 @@ export async function runExecute(
     });
 
     if (!clubAdminUser) {
+      assertProtectedAuthAllowed(clubAdminEmail, { isCreate: true });
       clubAdminUser = await tx.user.create({
         data: {
           email: clubAdminEmail,
@@ -1138,6 +1143,7 @@ export async function runExecute(
     } else {
       result.usersReused.push(clubAdminEmail);
       if (options.resetClubAdminPassword) {
+        assertProtectedAuthAllowed(clubAdminEmail, { isCreate: false });
         await tx.user.update({
           where: { id: clubAdminUser.id },
           data: {

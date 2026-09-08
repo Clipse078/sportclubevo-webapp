@@ -21,7 +21,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
 import { verifyPassword, hashPassword } from "@/lib/auth/password";
-import { logAction } from "@/lib/audit/log-action";
+import { writeAuditRecord } from "@/lib/audit/audit-record";
 
 const MIN_PASSWORD_LENGTH = 12;
 
@@ -92,19 +92,22 @@ export async function POST(req: NextRequest) {
   const newHash = await hashPassword(newPassword);
   const now = new Date();
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { passwordHash: newHash, passwordChangedAt: now },
-  });
-
-  await logAction({
-    action: "account.password_changed",
-    entityType: "User",
-    entityId: user.id,
-    actorUserId: session.user.id,
-    moduleKey: "account",
-  }).catch(() => {
-    // Non-blocking — audit failure must not prevent success response
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: user.id },
+      data: { passwordHash: newHash, passwordChangedAt: now },
+    });
+    await writeAuditRecord(tx, {
+      action: "account.password_changed",
+      entityType: "User",
+      entityId: user.id,
+      actorUserId: session.user.id,
+      moduleKey: "account",
+      metadataJson: {
+        authenticationMethod: "current_password",
+        priorSessionsInvalidated: true,
+      },
+    });
   });
 
   return NextResponse.json({ success: true });
