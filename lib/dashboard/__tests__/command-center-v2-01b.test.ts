@@ -1,8 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
   buildDashboardTasks,
+  buildUpcomingDashboardItems,
   formatEventTypeLabel,
+  formatUpcomingMonth,
   FORBIDDEN_FALLBACK_TASK_TITLES,
+  resolveDashboardLocale,
   tenantEventWhere,
 } from "@/lib/dashboard/command-center";
 import { getPersonalizedGreeting, resolveDashboardFirstName } from "@/lib/dashboard/greeting";
@@ -97,6 +100,57 @@ describe("SCE-DASHBOARD-V2-01B — command center data integrity", () => {
         startAt: { gte: expect.any(Date) },
       });
       expect(tenantEventWhere(null)).toEqual({});
+    });
+  });
+
+  describe("resolveDashboardLocale", () => {
+    it("falls back when tenant locale is blank", () => {
+      expect(resolveDashboardLocale("")).toBe("de-CH");
+      expect(resolveDashboardLocale("   ")).toBe("de-CH");
+      expect(resolveDashboardLocale(null)).toBe("de-CH");
+    });
+
+    it("preserves a configured locale", () => {
+      expect(resolveDashboardLocale("de-CH")).toBe("de-CH");
+    });
+  });
+
+  describe("formatUpcomingMonth", () => {
+    it("does not throw for blank tenant locale values", () => {
+      expect(() =>
+        formatUpcomingMonth(new Date(2026, 8, 8), ""),
+      ).not.toThrow();
+      expect(formatUpcomingMonth(new Date(2026, 8, 8), "")).toMatch(/Sep/i);
+    });
+  });
+
+  describe("buildUpcomingDashboardItems", () => {
+    it("sorts mixed event and meeting rows without Date props", () => {
+      const items = buildUpcomingDashboardItems(
+        [
+          {
+            id: "ev-2",
+            title: "Spiel",
+            startAt: new Date(2026, 8, 12, 18, 0),
+            location: null,
+          },
+        ],
+        [
+          {
+            id: "mt-1",
+            title: "Sitzung",
+            meetingDate: new Date(2026, 8, 10, 19, 0),
+            location: "Clubhaus",
+          },
+        ],
+        () => "19:00",
+        "de-CH",
+      );
+
+      expect(items).toHaveLength(2);
+      expect(items[0]?.key).toBe("mt-mt-1");
+      expect(items[1]?.key).toBe("ev-ev-2");
+      expect(items.every((item) => !("date" in item))).toBe(true);
     });
   });
 

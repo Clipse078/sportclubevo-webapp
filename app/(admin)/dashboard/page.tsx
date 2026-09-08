@@ -16,7 +16,9 @@ import { formatTime } from "@/lib/tenant-runtime/formatters";
 import { getPersonalizedGreeting, resolveDashboardFirstName } from "@/lib/dashboard/greeting";
 import {
   buildDashboardTasks,
+  buildUpcomingDashboardItems,
   formatEventTypeLabel,
+  resolveDashboardLocale,
   tenantEventWhere,
 } from "@/lib/dashboard/command-center";
 import { getPersonFirstNameByUserId } from "@/lib/people/queries";
@@ -51,8 +53,20 @@ function timeAgo(date: Date): string {
   return `Vor ${diffD} Tag${diffD === 1 ? "" : "en"}`;
 }
 
-function formatUpcomingMonth(date: Date, locale: string): string {
-  return new Intl.DateTimeFormat(locale, { month: "short" }).format(date);
+async function safeDashboardQuery<T>(
+  label: string,
+  query: () => Promise<T>,
+  fallback: T,
+): Promise<T> {
+  try {
+    return await query();
+  } catch (error) {
+    console.error(
+      `[dashboard] ${label} failed`,
+      error instanceof Error ? error.message : String(error),
+    );
+    return fallback;
+  }
 }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -99,43 +113,95 @@ async function getDashboardData(
     meetingSummary,
     upcomingEvents,
   ] = await Promise.all([
-    prisma.registration.count({ where: { ...tWhere, status: { in: ["NEW", "REVIEWING"] } } }),
-    prisma.newsArticle.count({ where: { ...tWhere, status: "IN_REVIEW" } }),
-    prisma.newsArticle.count({ where: { ...tWhere, status: "SCHEDULED" } }),
-    prisma.event.count({ where: weekEventWhere }),
-    prisma.event.count({ where: todayEventWhere }),
-    prisma.event.findMany({
-      where: todayEventWhere,
-      orderBy: { startAt: "asc" },
-      select: { id: true, title: true, startAt: true, location: true, type: true },
-    }),
+    safeDashboardQuery(
+      "openRegistrationCount",
+      () =>
+        prisma.registration.count({
+          where: { ...tWhere, status: { in: ["NEW", "REVIEWING"] } },
+        }),
+      0,
+    ),
+    safeDashboardQuery(
+      "newsInReviewCount",
+      () => prisma.newsArticle.count({ where: { ...tWhere, status: "IN_REVIEW" } }),
+      0,
+    ),
+    safeDashboardQuery(
+      "scheduledNewsCount",
+      () => prisma.newsArticle.count({ where: { ...tWhere, status: "SCHEDULED" } }),
+      0,
+    ),
+    safeDashboardQuery(
+      "weekEventsCount",
+      () => prisma.event.count({ where: weekEventWhere }),
+      0,
+    ),
+    safeDashboardQuery(
+      "todayEventsCount",
+      () => prisma.event.count({ where: todayEventWhere }),
+      0,
+    ),
+    safeDashboardQuery(
+      "todayEvents",
+      () =>
+        prisma.event.findMany({
+          where: todayEventWhere,
+          orderBy: { startAt: "asc" },
+          select: { id: true, title: true, startAt: true, location: true, type: true },
+        }),
+      [],
+    ),
 
-    prisma.newsArticle.findMany({
-      where: tWhere,
-      orderBy: { updatedAt: "desc" },
-      take: 2,
-      select: { id: true, title: true, updatedAt: true, status: true, authorName: true },
-    }),
-    prisma.registration.findMany({
-      where: tWhere,
-      orderBy: { createdAt: "desc" },
-      take: 2,
-      select: { id: true, firstName: true, lastName: true, createdAt: true, type: true },
-    }),
-    prisma.event.findMany({
-      where: recentEventWhere,
-      orderBy: { updatedAt: "desc" },
-      take: 1,
-      select: { id: true, title: true, updatedAt: true, type: true },
-    }),
-    getDashboardMeetingSummary(actor, today),
+    safeDashboardQuery(
+      "recentNews",
+      () =>
+        prisma.newsArticle.findMany({
+          where: tWhere,
+          orderBy: { updatedAt: "desc" },
+          take: 2,
+          select: { id: true, title: true, updatedAt: true, status: true, authorName: true },
+        }),
+      [],
+    ),
+    safeDashboardQuery(
+      "recentRegistrations",
+      () =>
+        prisma.registration.findMany({
+          where: tWhere,
+          orderBy: { createdAt: "desc" },
+          take: 2,
+          select: { id: true, firstName: true, lastName: true, createdAt: true, type: true },
+        }),
+      [],
+    ),
+    safeDashboardQuery(
+      "recentEvents",
+      () =>
+        prisma.event.findMany({
+          where: recentEventWhere,
+          orderBy: { updatedAt: "desc" },
+          take: 1,
+          select: { id: true, title: true, updatedAt: true, type: true },
+        }),
+      [],
+    ),
+    safeDashboardQuery(
+      "meetingSummary",
+      () => getDashboardMeetingSummary(actor, today),
+      { recentMeetings: [], upcomingMeetings: [] },
+    ),
 
-    prisma.event.findMany({
-      where: upcomingEventWhere,
-      orderBy: { startAt: "asc" },
-      take: 4,
-      select: { id: true, title: true, startAt: true, location: true, type: true },
-    }),
+    safeDashboardQuery(
+      "upcomingEvents",
+      () =>
+        prisma.event.findMany({
+          where: upcomingEventWhere,
+          orderBy: { startAt: "asc" },
+          take: 4,
+          select: { id: true, title: true, startAt: true, location: true, type: true },
+        }),
+      [],
+    ),
   ]);
 
   return {
@@ -175,7 +241,10 @@ export default async function DashboardPage() {
 
   const dash = await getDashboardData(ctx?.id ?? null, actor);
 
-  const fmtCfg = { locale: ctx?.locale ?? "de-CH", timezone: ctx?.timezone ?? undefined };
+  const fmtCfg = {
+    locale: resolveDashboardLocale(ctx?.locale),
+    timezone: ctx?.timezone ?? undefined,
+  };
 
   const activeSeason = ctx ? getCurrentSwissFootballSeason()?.label : undefined;
 
@@ -271,40 +340,12 @@ export default async function DashboardPage() {
       ? `${dash.todayEventsCount} Termin${dash.todayEventsCount === 1 ? "" : "e"}`
       : undefined;
 
-  // ── Upcoming events (merge sport events + meetings) ───────────────────────
-
-  type UpcomingEntry = {
-    key: string;
-    date: Date;
-    day: string;
-    month: string;
-    title: string;
-    location: string | null;
-    time: string;
-  };
-
-  const upcomingEntries: UpcomingEntry[] = [
-    ...dash.upcomingEvents.map((ev) => ({
-      key: `ev-${ev.id}`,
-      date: ev.startAt,
-      day: String(ev.startAt.getDate()),
-      month: formatUpcomingMonth(ev.startAt, fmtCfg.locale),
-      title: ev.title,
-      location: ev.location,
-      time: formatTime(ev.startAt, fmtCfg),
-    })),
-    ...dash.upcomingMeetings.map((m) => ({
-      key: `mt-${m.id}`,
-      date: m.meetingDate,
-      day: String(m.meetingDate.getDate()),
-      month: formatUpcomingMonth(m.meetingDate, fmtCfg.locale),
-      title: m.title,
-      location: m.location,
-      time: formatTime(m.meetingDate, fmtCfg),
-    })),
-  ]
-    .sort((a, b) => a.date.getTime() - b.date.getTime())
-    .slice(0, 4);
+  const upcomingEntries = buildUpcomingDashboardItems(
+    dash.upcomingEvents,
+    dash.upcomingMeetings,
+    (date) => formatTime(date, fmtCfg),
+    fmtCfg.locale,
+  );
 
   const greeting = getPersonalizedGreeting(firstName);
 
