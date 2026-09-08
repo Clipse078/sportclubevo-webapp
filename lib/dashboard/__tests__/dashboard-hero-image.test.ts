@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   DASHBOARD_HERO_SCHEMA_FIELD,
+  DASHBOARD_HERO_ZOOM_FIELD,
+  DASHBOARD_HERO_POSITION_X_FIELD,
+  DASHBOARD_HERO_POSITION_Y_FIELD,
   getDashboardHeroStorageKey,
   getUserDashboardHeroImageUrl,
   persistUserDashboardHeroImageUrl,
@@ -9,6 +12,9 @@ import {
 describe("SCE-DASHBOARD-V3-03 — dashboard hero image adapter", () => {
   it("documents the proposed User schema field", () => {
     expect(DASHBOARD_HERO_SCHEMA_FIELD).toBe("dashboardHeroImageUrl");
+    expect(DASHBOARD_HERO_ZOOM_FIELD).toBe("dashboardHeroImageZoom");
+    expect(DASHBOARD_HERO_POSITION_X_FIELD).toBe("dashboardHeroImagePositionX");
+    expect(DASHBOARD_HERO_POSITION_Y_FIELD).toBe("dashboardHeroImagePositionY");
   });
 
   it("returns null until migration is applied", async () => {

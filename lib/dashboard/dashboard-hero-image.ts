@@ -5,13 +5,22 @@
  *   model User {
  *     ...
  *     /// Personal dashboard cover image URL (Vercel Blob). Distinct from Person.imageUrl avatar.
- *     dashboardHeroImageUrl String?
+ *     dashboardHeroImageUrl      String?
+ *     /// Cover zoom multiplier on top of object-cover minimum (>= 1).
+ *     dashboardHeroImageZoom     Float?
+ *     /// Normalized horizontal focal point (0..1).
+ *     dashboardHeroImagePositionX Float?
+ *     /// Normalized vertical focal point (0..1).
+ *     dashboardHeroImagePositionY Float?
  *   }
  *
  * Until the migration lands, reads return null and writes are skipped after blob upload.
  */
 
 export const DASHBOARD_HERO_SCHEMA_FIELD = "dashboardHeroImageUrl" as const;
+export const DASHBOARD_HERO_ZOOM_FIELD = "dashboardHeroImageZoom" as const;
+export const DASHBOARD_HERO_POSITION_X_FIELD = "dashboardHeroImagePositionX" as const;
+export const DASHBOARD_HERO_POSITION_Y_FIELD = "dashboardHeroImagePositionY" as const;
 
 export function getDashboardHeroStorageKey(userId: string, ext: string): string {
   return `dashboard-hero/${userId}.${ext}`;

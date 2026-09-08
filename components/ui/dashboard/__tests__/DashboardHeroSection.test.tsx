@@ -13,6 +13,13 @@ beforeEach(() => {
   global.fetch = fetchMock;
   URL.createObjectURL = vi.fn(() => "blob:preview-url");
   URL.revokeObjectURL = vi.fn();
+
+  class ResizeObserverMock {
+    observe() {}
+    disconnect() {}
+    unobserve() {}
+  }
+  vi.stubGlobal("ResizeObserver", ResizeObserverMock);
 });
 
 afterEach(() => {
@@ -35,7 +42,7 @@ describe("DashboardHeroSection", () => {
     );
   });
 
-  it("shows upload and remove actions in the hero menu", async () => {
+  it("shows upload, adjust, and remove actions in the hero menu", async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ storageAvailable: true, imageUrl: null }),
@@ -52,6 +59,7 @@ describe("DashboardHeroSection", () => {
     fireEvent.click(screen.getByRole("button", { name: "Titelbild ändern" }));
 
     expect(screen.getByRole("menuitem", { name: "Bild ersetzen" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Titelbild anpassen" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Titelbild entfernen" })).toBeInTheDocument();
   });
 
@@ -72,7 +80,7 @@ describe("DashboardHeroSection", () => {
     expect(clickSpy).toHaveBeenCalled();
   });
 
-  it("uses a local preview when blob storage is unavailable", async () => {
+  it("uses a local preview when blob storage is unavailable and opens edit mode", async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ storageAvailable: false, imageUrl: null }),
@@ -90,13 +98,13 @@ describe("DashboardHeroSection", () => {
     fireEvent.change(input, { target: { files: [file] } });
 
     await waitFor(() =>
-      expect(screen.getByText(/Titelbild-Vorschau gesetzt/i)).toBeInTheDocument(),
+      expect(screen.getByRole("toolbar", { name: "Titelbild anpassen" })).toBeInTheDocument(),
     );
     expect(URL.createObjectURL).toHaveBeenCalledWith(file);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("uploads through the API when storage is available", async () => {
+  it("uploads through the API when storage is available and opens edit mode", async () => {
     fetchMock
       .mockResolvedValueOnce({
         ok: true,
@@ -127,10 +135,143 @@ describe("DashboardHeroSection", () => {
     );
 
     await waitFor(() =>
-      expect(
-        screen.getByText(/Dauerhafte Speicherung folgt nach Schema-Freigabe/i),
-      ).toBeInTheDocument(),
+      expect(screen.getByRole("toolbar", { name: "Titelbild anpassen" })).toBeInTheDocument(),
     );
+  });
+
+  it("enters edit mode from Titelbild anpassen", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ storageAvailable: true, imageUrl: null }),
+    });
+
+    render(
+      <DashboardHeroSection
+        greeting="Guten Abend"
+        highlightName="Michael"
+        initialBackgroundImageUrl="https://cdn.example/hero.jpg"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Titelbild ändern" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Titelbild anpassen" }));
+
+    expect(screen.getByRole("toolbar", { name: "Titelbild anpassen" })).toBeInTheDocument();
+    expect(screen.getByText(/Bild ziehen, um den Ausschnitt zu verschieben/i)).toBeInTheDocument();
+  });
+
+  it("cancels edit mode without changing saved image", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ storageAvailable: true, imageUrl: null }),
+    });
+
+    render(
+      <DashboardHeroSection
+        greeting="Guten Abend"
+        highlightName="Michael"
+        initialBackgroundImageUrl="https://cdn.example/hero.jpg"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Titelbild ändern" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Titelbild anpassen" }));
+    fireEvent.click(screen.getByRole("button", { name: "Abbrechen" }));
+
+    expect(screen.queryByRole("toolbar", { name: "Titelbild anpassen" })).not.toBeInTheDocument();
+    expect(document.querySelector('img[src="https://cdn.example/hero.jpg"]')).toBeTruthy();
+  });
+
+  it("saves edit mode to session state", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ storageAvailable: true, imageUrl: null }),
+    });
+
+    render(
+      <DashboardHeroSection
+        greeting="Guten Abend"
+        highlightName="Michael"
+        initialBackgroundImageUrl="https://cdn.example/hero.jpg"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Titelbild ändern" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Titelbild anpassen" }));
+    fireEvent.click(screen.getByRole("button", { name: "Speichern" }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/Titelbild-Position gespeichert/i)).toBeInTheDocument(),
+    );
+    expect(screen.queryByRole("toolbar", { name: "Titelbild anpassen" })).not.toBeInTheDocument();
+  });
+
+  it("resets draft transform from the toolbar", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ storageAvailable: true, imageUrl: null }),
+    });
+
+    render(
+      <DashboardHeroSection
+        greeting="Guten Abend"
+        highlightName="Michael"
+        initialBackgroundImageUrl="https://cdn.example/hero.jpg"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Titelbild ändern" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Titelbild anpassen" }));
+
+    const slider = screen.getByRole("slider", { name: "Zoom" }) as HTMLInputElement;
+    fireEvent.change(slider, { target: { value: "1.5" } });
+    expect(slider.value).toBe("1.5");
+
+    fireEvent.click(screen.getByRole("button", { name: "Zurücksetzen" }));
+    expect(slider.value).toBe("1");
+  });
+
+  it("supports keyboard zoom via plus button", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ storageAvailable: true, imageUrl: null }),
+    });
+
+    render(
+      <DashboardHeroSection
+        greeting="Guten Abend"
+        highlightName="Michael"
+        initialBackgroundImageUrl="https://cdn.example/hero.jpg"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Titelbild ändern" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Titelbild anpassen" }));
+
+    const slider = screen.getByRole("slider", { name: "Zoom" }) as HTMLInputElement;
+    fireEvent.click(screen.getByRole("button", { name: "Vergrößern" }));
+    expect(Number(slider.value)).toBeGreaterThan(1);
+  });
+
+  it("cancels edit mode on Escape", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ storageAvailable: true, imageUrl: null }),
+    });
+
+    render(
+      <DashboardHeroSection
+        greeting="Guten Abend"
+        highlightName="Michael"
+        initialBackgroundImageUrl="https://cdn.example/hero.jpg"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Titelbild ändern" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Titelbild anpassen" }));
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(screen.queryByRole("toolbar", { name: "Titelbild anpassen" })).not.toBeInTheDocument();
   });
 
   it("removes a local preview without calling DELETE", async () => {
@@ -151,7 +292,13 @@ describe("DashboardHeroSection", () => {
     });
 
     await waitFor(() =>
-      expect(screen.getByLabelText("Bild ersetzen")).toBeInTheDocument(),
+      expect(screen.getByRole("toolbar", { name: "Titelbild anpassen" })).toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Speichern" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("toolbar", { name: "Titelbild anpassen" })).not.toBeInTheDocument(),
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Titelbild ändern" }));
