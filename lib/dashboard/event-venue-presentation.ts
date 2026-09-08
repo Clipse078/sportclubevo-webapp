@@ -1,6 +1,10 @@
 /**
  * SCE-DASHBOARD-V3-03B — Human-friendly venue / facility presentation for
  * dashboard event cards. Presentation-only; stored allocation codes unchanged.
+ *
+ * SCE-DASHBOARD-V3-03G — Home/away dressing-room labels (Heim/Gast) when
+ * allocation semantics explicitly identify sides; neutral/participant labels
+ * otherwise. Never inferred from array order.
  */
 
 import {
@@ -10,14 +14,46 @@ import {
 
 export type TodayEventVenueGroupKind = "location" | "pitch" | "dressing-rooms";
 
+export type DressingRoomSidePresentation = {
+  /** Semantic role label such as Heim, Gast, or a tournament participant name. */
+  roleLabel?: string;
+  rooms: string[];
+};
+
+export type DressingRoomVenueSemantics = "home-away" | "neutral" | "participant";
+
+export type DressingRoomVenueDetails = {
+  semantics: DressingRoomVenueSemantics;
+  sides: DressingRoomSidePresentation[];
+  ariaLabel: string;
+};
+
 export type TodayEventVenueGroup = {
   kind: TodayEventVenueGroupKind;
   label: string;
+  ariaLabel?: string;
+  dressingRooms?: DressingRoomVenueDetails;
 };
 
 export type TodayEventVenuePresentation = {
   groups: TodayEventVenueGroup[];
 };
+
+export type DressingRoomAllocationInput = {
+  code?: string | null;
+  label?: string | null;
+};
+
+export type ParticipantDressingRoomInput = {
+  participantLabel: string;
+  rooms: DressingRoomAllocationInput[];
+};
+
+const DRESSING_ROOM_HOME_LABEL = "Heim";
+const DRESSING_ROOM_AWAY_LABEL = "Gast";
+const DRESSING_ROOM_ARIA_NOUN = "Garderobe";
+const MULTI_ROOM_SEPARATOR = " / ";
+const SIDE_SEPARATOR = " · ";
 
 /**
  * Normalizes internal facility/resource codes for display when no registry
@@ -59,22 +95,138 @@ export function resolveDressingRoomPresentationLabel(
   return code.trim();
 }
 
+function resolveDressingRoomAllocationLabels(
+  allocations: readonly DressingRoomAllocationInput[],
+): string[] {
+  const labels: string[] = [];
+  const seen = new Set<string>();
+
+  for (const allocation of allocations) {
+    const label = resolveDressingRoomPresentationLabel(
+      allocation.code,
+      allocation.label,
+    );
+    if (!label || seen.has(label)) continue;
+    seen.add(label);
+    labels.push(label);
+  }
+
+  return labels;
+}
+
+function resolveDressingRoomAllocationsFromFields(input: {
+  code?: string | null;
+  label?: string | null;
+  allocations?: readonly DressingRoomAllocationInput[];
+}): string[] {
+  if (input.allocations && input.allocations.length > 0) {
+    return resolveDressingRoomAllocationLabels(input.allocations);
+  }
+
+  const single = resolveDressingRoomPresentationLabel(input.code, input.label);
+  return single ? [single] : [];
+}
+
+function joinRoomLabels(rooms: readonly string[]): string {
+  return rooms.join(MULTI_ROOM_SEPARATOR);
+}
+
+function formatDressingRoomSide(roleLabel: string | undefined, rooms: readonly string[]): string {
+  const roomText = joinRoomLabels(rooms);
+  return roleLabel ? `${roleLabel} ${roomText}` : roomText;
+}
+
+function formatDressingRoomAriaSide(
+  roleLabel: string | undefined,
+  rooms: readonly string[],
+): string {
+  const roomText = rooms.join(", ");
+  if (!roleLabel) return `${DRESSING_ROOM_ARIA_NOUN} ${roomText}`;
+  return `${roleLabel} ${DRESSING_ROOM_ARIA_NOUN} ${roomText}`;
+}
+
+function buildDressingRoomVenueDetails(input: {
+  semantics: DressingRoomVenueSemantics;
+  sides: DressingRoomSidePresentation[];
+}): DressingRoomVenueDetails | null {
+  const sides = input.sides
+    .map((side) => ({
+      roleLabel: side.roleLabel?.trim() || undefined,
+      rooms: side.rooms.filter(Boolean),
+    }))
+    .filter((side) => side.rooms.length > 0);
+
+  if (sides.length === 0) return null;
+
+  const ariaLabel = sides
+    .map((side) => formatDressingRoomAriaSide(side.roleLabel, side.rooms))
+    .join(", ");
+
+  return {
+    semantics: input.semantics,
+    sides,
+    ariaLabel,
+  };
+}
+
 export function formatDressingRoomsPresentation(input: {
+  eventType?: "MATCH" | "TRAINING" | "TOURNAMENT" | "OTHER" | "VACATION_PERIOD" | "MEETING";
   homeCode?: string | null;
   awayCode?: string | null;
   homeLabel?: string | null;
   awayLabel?: string | null;
-}): string | null {
-  const parts = [
-    resolveDressingRoomPresentationLabel(input.homeCode, input.homeLabel),
-    resolveDressingRoomPresentationLabel(input.awayCode, input.awayLabel),
-  ].filter((value): value is string => Boolean(value));
+  homeAllocations?: readonly DressingRoomAllocationInput[];
+  awayAllocations?: readonly DressingRoomAllocationInput[];
+  participantAllocations?: readonly ParticipantDressingRoomInput[];
+}): DressingRoomVenueDetails | null {
+  const participantSides =
+    input.participantAllocations
+      ?.map((participant) => ({
+        roleLabel: participant.participantLabel.trim(),
+        rooms: resolveDressingRoomAllocationLabels(participant.rooms),
+      }))
+      .filter((side) => side.roleLabel.length > 0 && side.rooms.length > 0) ?? [];
 
-  if (parts.length === 0) return null;
-  return parts.join(" · ");
+  if (participantSides.length > 0) {
+    return buildDressingRoomVenueDetails({
+      semantics: "participant",
+      sides: participantSides,
+    });
+  }
+
+  const homeRooms = resolveDressingRoomAllocationsFromFields({
+    code: input.homeCode,
+    label: input.homeLabel,
+    allocations: input.homeAllocations,
+  });
+  const awayRooms = resolveDressingRoomAllocationsFromFields({
+    code: input.awayCode,
+    label: input.awayLabel,
+    allocations: input.awayAllocations,
+  });
+
+  if (input.eventType === "MATCH") {
+    const sides: DressingRoomSidePresentation[] = [];
+    if (homeRooms.length > 0) {
+      sides.push({ roleLabel: DRESSING_ROOM_HOME_LABEL, rooms: homeRooms });
+    }
+    if (awayRooms.length > 0) {
+      sides.push({ roleLabel: DRESSING_ROOM_AWAY_LABEL, rooms: awayRooms });
+    }
+    return buildDressingRoomVenueDetails({ semantics: "home-away", sides });
+  }
+
+  const neutralRooms = [...homeRooms, ...awayRooms];
+  if (neutralRooms.length === 0) return null;
+
+  return buildDressingRoomVenueDetails({
+    semantics: "neutral",
+    sides: [{ rooms: neutralRooms }],
+  });
 }
 
 export function buildTodayEventVenuePresentation(input: {
+  eventType?: "MATCH" | "TRAINING" | "TOURNAMENT" | "OTHER" | "VACATION_PERIOD" | "MEETING";
   location?: string | null;
   pitchCode?: string | null;
   pitchLabel?: string | null;
@@ -82,6 +234,9 @@ export function buildTodayEventVenuePresentation(input: {
   awayDressingRoomCode?: string | null;
   homeDressingRoomLabel?: string | null;
   awayDressingRoomLabel?: string | null;
+  homeDressingRoomAllocations?: readonly DressingRoomAllocationInput[];
+  awayDressingRoomAllocations?: readonly DressingRoomAllocationInput[];
+  participantDressingRoomAllocations?: readonly ParticipantDressingRoomInput[];
 }): TodayEventVenuePresentation {
   const groups: TodayEventVenueGroup[] = [];
 
@@ -96,13 +251,25 @@ export function buildTodayEventVenuePresentation(input: {
   }
 
   const dressingRooms = formatDressingRoomsPresentation({
+    eventType: input.eventType,
     homeCode: input.homeDressingRoomCode,
     awayCode: input.awayDressingRoomCode,
     homeLabel: input.homeDressingRoomLabel,
     awayLabel: input.awayDressingRoomLabel,
+    homeAllocations: input.homeDressingRoomAllocations,
+    awayAllocations: input.awayDressingRoomAllocations,
+    participantAllocations: input.participantDressingRoomAllocations,
   });
+
   if (dressingRooms) {
-    groups.push({ kind: "dressing-rooms", label: dressingRooms });
+    groups.push({
+      kind: "dressing-rooms",
+      label: dressingRooms.sides
+        .map((side) => formatDressingRoomSide(side.roleLabel, side.rooms))
+        .join(SIDE_SEPARATOR),
+      ariaLabel: dressingRooms.ariaLabel,
+      dressingRooms,
+    });
   }
 
   return { groups };

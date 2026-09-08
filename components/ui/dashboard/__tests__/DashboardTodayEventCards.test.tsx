@@ -24,7 +24,19 @@ const matchItem: DashboardTodayTimelineItem = {
     groups: [
       { kind: "location", label: "Im Brüel, Allschwil" },
       { kind: "pitch", label: "Kunstrasen 2" },
-      { kind: "dressing-rooms", label: "O1 · E4" },
+      {
+        kind: "dressing-rooms",
+        label: "Heim O1 · Gast E4",
+        ariaLabel: "Heim Garderobe O1, Gast Garderobe E4",
+        dressingRooms: {
+          semantics: "home-away",
+          ariaLabel: "Heim Garderobe O1, Gast Garderobe E4",
+          sides: [
+            { roleLabel: "Heim", rooms: ["O1"] },
+            { roleLabel: "Gast", rooms: ["E4"] },
+          ],
+        },
+      },
     ],
   },
   matchPresentation: {
@@ -67,7 +79,13 @@ describe("DashboardTodayMatchCard", () => {
     expect(screen.getByText("SPIEL")).toBeInTheDocument();
     expect(screen.getByText("Im Brüel, Allschwil")).toBeInTheDocument();
     expect(screen.getByText("Kunstrasen 2")).toBeInTheDocument();
-    expect(screen.getByText("O1 · E4")).toBeInTheDocument();
+    expect(screen.getByText("Heim")).toBeInTheDocument();
+    expect(screen.getByText("O1")).toBeInTheDocument();
+    expect(screen.getByText("Gast")).toBeInTheDocument();
+    expect(screen.getByText("E4")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Heim Garderobe O1, Gast Garderobe E4"),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link")).toHaveAttribute("href", matchItem.href);
   });
 
