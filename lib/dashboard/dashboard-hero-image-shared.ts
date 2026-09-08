@@ -20,6 +20,7 @@ import {
 import { getDashboardHeroStorageKey } from "@/lib/dashboard/dashboard-hero-image";
 
 type DashboardHeroBlobEnvironment = {
+  [key: string]: string | undefined;
   BLOB_READ_WRITE_TOKEN?: string;
   BLOB_STORE_ID?: string;
   VERCEL?: string;
