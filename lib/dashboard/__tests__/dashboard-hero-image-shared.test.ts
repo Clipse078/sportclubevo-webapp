@@ -4,7 +4,7 @@
  * SCE-DASHBOARD-V3-03 — dashboard hero blob upload shared helpers
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   put: vi.fn(),
@@ -42,9 +42,19 @@ import {
 
 const USER_ID = "user-abc";
 const TOKEN = "test-token";
+const originalBlobEnvironment = {
+  BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
+  BLOB_STORE_ID: process.env.BLOB_STORE_ID,
+  VERCEL: process.env.VERCEL,
+  VERCEL_OIDC_TOKEN: process.env.VERCEL_OIDC_TOKEN,
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
+  delete process.env.BLOB_READ_WRITE_TOKEN;
+  delete process.env.BLOB_STORE_ID;
+  delete process.env.VERCEL;
+  delete process.env.VERCEL_OIDC_TOKEN;
   mocks.put.mockResolvedValue({
     url: "https://abc.public.blob.vercel-storage.com/dashboard-hero/user-abc.jpg",
   });
@@ -52,6 +62,14 @@ beforeEach(() => {
   mocks.fileTypeFromBuffer.mockResolvedValue({ mime: "image/jpeg" });
   mocks.logAction.mockResolvedValue(undefined);
   vi.spyOn(console, "error").mockImplementation(mocks.consoleError);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  for (const [key, value] of Object.entries(originalBlobEnvironment)) {
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+  }
 });
 
 describe("uploadUserDashboardHeroImage", () => {
@@ -80,6 +98,33 @@ describe("uploadUserDashboardHeroImage", () => {
         addRandomSuffix: false,
         allowOverwrite: true,
       },
+    );
+  });
+
+  it("uses connected-store OIDC without explicitly passing a stale static token", async () => {
+    process.env.VERCEL = "1";
+    process.env.BLOB_STORE_ID = "store_dashboard";
+    process.env.VERCEL_OIDC_TOKEN = "oidc-runtime-credential";
+    process.env.BLOB_READ_WRITE_TOKEN = "stale-static-token";
+
+    const file = new File([Buffer.from("jpeg")], "hero.jpg", { type: "image/jpeg" });
+
+    await uploadUserDashboardHeroImage({
+      userId: USER_ID,
+      currentImageUrl:
+        "https://abc.public.blob.vercel-storage.com/dashboard-hero/user-abc.png",
+      file,
+      token: "stale-static-token",
+    });
+
+    expect(mocks.del).toHaveBeenCalledWith(
+      "https://abc.public.blob.vercel-storage.com/dashboard-hero/user-abc.png",
+      {},
+    );
+    expect(mocks.put).toHaveBeenCalledWith(
+      "dashboard-hero/user-abc.jpg",
+      expect.any(Buffer),
+      expect.not.objectContaining({ token: expect.anything() }),
     );
   });
 
@@ -136,6 +181,33 @@ describe("uploadUserDashboardHeroImage", () => {
       }),
     );
   });
+
+  it("redacts Blob credential values from error logs", async () => {
+    process.env.VERCEL = "1";
+    process.env.BLOB_STORE_ID = "store_dashboard_secret";
+    process.env.VERCEL_OIDC_TOKEN = "oidc-secret";
+    process.env.BLOB_READ_WRITE_TOKEN = "static-secret";
+    mocks.put.mockRejectedValueOnce(
+      new Error(
+        "Failure oidc-secret static-secret store_dashboard_secret",
+      ),
+    );
+
+    const file = new File([Buffer.from("jpeg")], "hero.jpg", { type: "image/jpeg" });
+
+    await uploadUserDashboardHeroImage({
+      userId: USER_ID,
+      currentImageUrl: null,
+      file,
+      token: "static-secret",
+    });
+
+    const logged = JSON.stringify(mocks.consoleError.mock.calls);
+    expect(logged).not.toContain("oidc-secret");
+    expect(logged).not.toContain("static-secret");
+    expect(logged).not.toContain("store_dashboard_secret");
+    expect(logged).toContain("[REDACTED]");
+  });
 });
 
 describe("removeUserDashboardHeroImage", () => {
@@ -150,6 +222,24 @@ describe("removeUserDashboardHeroImage", () => {
     expect(mocks.del).toHaveBeenCalledWith(
       "https://abc.public.blob.vercel-storage.com/dashboard-hero/user-abc.jpg",
       { token: TOKEN },
+    );
+  });
+
+  it("uses connected-store OIDC for delete without explicitly passing a stale token", async () => {
+    process.env.VERCEL = "1";
+    process.env.BLOB_STORE_ID = "store_dashboard";
+    process.env.BLOB_READ_WRITE_TOKEN = "stale-static-token";
+
+    await removeUserDashboardHeroImage({
+      userId: USER_ID,
+      currentImageUrl:
+        "https://abc.public.blob.vercel-storage.com/dashboard-hero/user-abc.jpg",
+      token: "stale-static-token",
+    });
+
+    expect(mocks.del).toHaveBeenCalledWith(
+      "https://abc.public.blob.vercel-storage.com/dashboard-hero/user-abc.jpg",
+      {},
     );
   });
 });

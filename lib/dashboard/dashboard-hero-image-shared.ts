@@ -19,7 +19,61 @@ import {
 } from "@/lib/people/profile-image-shared";
 import { getDashboardHeroStorageKey } from "@/lib/dashboard/dashboard-hero-image";
 
-function getSafeBlobErrorDetails(error: unknown): {
+type DashboardHeroBlobEnvironment = Pick<
+  NodeJS.ProcessEnv,
+  "BLOB_READ_WRITE_TOKEN" | "BLOB_STORE_ID" | "VERCEL" | "VERCEL_OIDC_TOKEN"
+>;
+
+function readNonEmpty(value: string | undefined): string | undefined {
+  const normalized = value?.trim();
+  return normalized ? normalized : undefined;
+}
+
+function hasDashboardHeroOidcConfiguration(
+  env: DashboardHeroBlobEnvironment = process.env,
+): boolean {
+  const hasStore = Boolean(readNonEmpty(env.BLOB_STORE_ID));
+  const hasRuntimeOidc =
+    Boolean(readNonEmpty(env.VERCEL)) || Boolean(readNonEmpty(env.VERCEL_OIDC_TOKEN));
+
+  return hasStore && hasRuntimeOidc;
+}
+
+export function isDashboardHeroStorageAvailable(
+  env: DashboardHeroBlobEnvironment = process.env,
+): boolean {
+  return (
+    hasDashboardHeroOidcConfiguration(env) ||
+    Boolean(readNonEmpty(env.BLOB_READ_WRITE_TOKEN))
+  );
+}
+
+function getDashboardHeroBlobAuthOptions(token: string | undefined): { token?: string } {
+  if (hasDashboardHeroOidcConfiguration()) {
+    return {};
+  }
+
+  const staticToken = readNonEmpty(token);
+  return staticToken ? { token: staticToken } : {};
+}
+
+function redactBlobCredentials(message: string, token: string | undefined): string {
+  const sensitiveValues = [
+    token,
+    process.env.BLOB_READ_WRITE_TOKEN,
+    process.env.VERCEL_OIDC_TOKEN,
+    process.env.BLOB_STORE_ID,
+  ]
+    .map(readNonEmpty)
+    .filter((value): value is string => Boolean(value));
+
+  return sensitiveValues.reduce(
+    (redacted, value) => redacted.replaceAll(value, "[REDACTED]"),
+    message,
+  );
+}
+
+function getSafeBlobErrorDetails(error: unknown, token?: string): {
   errorClass: string;
   errorMessage: string;
   errorStatus?: number;
@@ -27,7 +81,7 @@ function getSafeBlobErrorDetails(error: unknown): {
   if (error instanceof BlobServiceRateLimited) {
     return {
       errorClass: error.constructor.name,
-      errorMessage: error.message,
+      errorMessage: redactBlobCredentials(error.message, token),
       errorStatus: error.retryAfter,
     };
   }
@@ -35,18 +89,14 @@ function getSafeBlobErrorDetails(error: unknown): {
   if (error instanceof Error) {
     return {
       errorClass: error.constructor.name,
-      errorMessage: error.message,
+      errorMessage: redactBlobCredentials(error.message, token),
     };
   }
 
   return {
     errorClass: typeof error,
-    errorMessage: String(error),
+    errorMessage: redactBlobCredentials(String(error), token),
   };
-}
-
-function normalizeBlobToken(token: string): string {
-  return token.trim();
 }
 
 export type UploadDashboardHeroResult =
@@ -66,7 +116,7 @@ export async function uploadUserDashboardHeroImage({
   userId: string;
   currentImageUrl: string | null | undefined;
   file: Blob;
-  token: string;
+  token?: string;
 }): Promise<UploadDashboardHeroResult> {
   const validated = await validateImageFile(file);
   if (!validated.ok) {
@@ -74,12 +124,12 @@ export async function uploadUserDashboardHeroImage({
   }
 
   const storageKey = getDashboardHeroStorageKey(userId, validated.ext);
-  const blobToken = normalizeBlobToken(token);
+  const authOptions = getDashboardHeroBlobAuthOptions(token);
 
   try {
     if (currentImageUrl && isVercelBlobUrl(currentImageUrl)) {
       try {
-        await del(currentImageUrl, { token: blobToken });
+        await del(currentImageUrl, authOptions);
       } catch {
         // Non-fatal cleanup
       }
@@ -88,9 +138,9 @@ export async function uploadUserDashboardHeroImage({
     const blob = await put(storageKey, validated.buffer, {
       access: "public",
       contentType: validated.mime,
-      token: blobToken,
       addRandomSuffix: false,
       allowOverwrite: true,
+      ...authOptions,
     });
 
     await logAction({
@@ -104,7 +154,7 @@ export async function uploadUserDashboardHeroImage({
 
     return { ok: true, imageUrl: blob.url, persisted: false };
   } catch (error) {
-    const details = getSafeBlobErrorDetails(error);
+    const details = getSafeBlobErrorDetails(error, token);
     console.error("[dashboard-hero-image-shared] upload failed", {
       storageKey,
       errorClass: details.errorClass,
@@ -128,12 +178,15 @@ export async function removeUserDashboardHeroImage({
     return { ok: false, status: 404, error: "Kein Titelbild vorhanden." };
   }
 
-  const blobToken = token ? normalizeBlobToken(token) : undefined;
+  const authOptions = getDashboardHeroBlobAuthOptions(token);
 
   try {
-    if (blobToken && isVercelBlobUrl(currentImageUrl)) {
+    if (
+      (authOptions.token || isDashboardHeroStorageAvailable()) &&
+      isVercelBlobUrl(currentImageUrl)
+    ) {
       try {
-        await del(currentImageUrl, { token: blobToken });
+        await del(currentImageUrl, authOptions);
       } catch {
         // Non-fatal
       }
@@ -150,7 +203,7 @@ export async function removeUserDashboardHeroImage({
 
     return { ok: true, persisted: false };
   } catch (error) {
-    const details = getSafeBlobErrorDetails(error);
+    const details = getSafeBlobErrorDetails(error, token);
     console.error("[dashboard-hero-image-shared] remove failed", {
       errorClass: details.errorClass,
       errorMessage: details.errorMessage,

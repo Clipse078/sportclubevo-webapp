@@ -51,10 +51,19 @@ vi.mock("@/lib/dashboard/dashboard-hero-image-shared", () => ({
 import { NextRequest } from "next/server";
 import { DELETE, GET, PATCH, POST } from "@/app/api/account/dashboard-hero-image/route";
 
-const originalToken = process.env.BLOB_READ_WRITE_TOKEN;
+const originalBlobEnvironment = {
+  BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
+  BLOB_STORE_ID: process.env.BLOB_STORE_ID,
+  VERCEL: process.env.VERCEL,
+  VERCEL_OIDC_TOKEN: process.env.VERCEL_OIDC_TOKEN,
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
+  delete process.env.BLOB_READ_WRITE_TOKEN;
+  delete process.env.BLOB_STORE_ID;
+  delete process.env.VERCEL;
+  delete process.env.VERCEL_OIDC_TOKEN;
   mocks.auth.mockResolvedValue({ user: SESSION_USER });
   mocks.getUserDashboardHeroState.mockResolvedValue(DEFAULT_STATE);
   mocks.updateUserDashboardHeroImage.mockResolvedValue({
@@ -85,8 +94,10 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  if (originalToken === undefined) delete process.env.BLOB_READ_WRITE_TOKEN;
-  else process.env.BLOB_READ_WRITE_TOKEN = originalToken;
+  for (const [key, value] of Object.entries(originalBlobEnvironment)) {
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+  }
 });
 
 describe("GET /api/account/dashboard-hero-image", () => {
@@ -113,6 +124,17 @@ describe("GET /api/account/dashboard-hero-image", () => {
       },
     });
     expect(mocks.getUserDashboardHeroState).toHaveBeenCalledWith("user-001");
+  });
+
+  it("reports storage available for a Vercel connected store without a static token", async () => {
+    process.env.VERCEL = "1";
+    process.env.BLOB_STORE_ID = "store_dashboard";
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.storageAvailable).toBe(true);
   });
 
   it("returns 401 when unauthenticated", async () => {
@@ -184,6 +206,31 @@ describe("POST /api/account/dashboard-hero-image", () => {
     expect(mocks.updateUserDashboardHeroImage).toHaveBeenCalledWith(
       "user-001",
       "https://cdn.example/hero.jpg",
+    );
+  });
+
+  it("uploads through a Vercel connected store without requiring a static token", async () => {
+    process.env.VERCEL = "1";
+    process.env.BLOB_STORE_ID = "store_dashboard";
+    mocks.uploadUserDashboardHeroImage.mockResolvedValueOnce({
+      ok: true,
+      imageUrl: "https://cdn.example/hero.jpg",
+      persisted: false,
+    });
+
+    const formData = new FormData();
+    formData.append("file", new File(["hero"], "hero.png", { type: "image/png" }));
+
+    const request = new NextRequest("http://localhost/api/account/dashboard-hero-image", {
+      method: "POST",
+      body: formData,
+    });
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(200);
+    expect(mocks.uploadUserDashboardHeroImage).toHaveBeenCalledWith(
+      expect.objectContaining({ token: undefined }),
     );
   });
 

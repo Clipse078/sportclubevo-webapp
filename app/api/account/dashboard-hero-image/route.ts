@@ -21,6 +21,7 @@ import {
   updateUserDashboardHeroTransform,
 } from "@/lib/dashboard/dashboard-hero-image";
 import {
+  isDashboardHeroStorageAvailable,
   removeUserDashboardHeroImage,
   uploadUserDashboardHeroImage,
 } from "@/lib/dashboard/dashboard-hero-image-shared";
@@ -64,14 +65,14 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    storageAvailable: Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim()),
+    storageAvailable: isDashboardHeroStorageAvailable(),
     ...serializeHeroResponse(check.heroState),
   });
 }
 
 export async function POST(request: NextRequest) {
   const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
-  if (!token) {
+  if (!isDashboardHeroStorageAvailable()) {
     return NextResponse.json(
       {
         error:
