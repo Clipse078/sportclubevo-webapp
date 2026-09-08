@@ -43,7 +43,10 @@ vi.mock("@/lib/dashboard/dashboard-hero-image", () => ({
   clearUserDashboardHero: mocks.clearUserDashboardHero,
 }));
 
-vi.mock("@/lib/dashboard/dashboard-hero-image-shared", () => ({
+vi.mock("@/lib/dashboard/dashboard-hero-image-shared", async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import("@/lib/dashboard/dashboard-hero-image-shared")
+  >()),
   uploadUserDashboardHeroImage: mocks.uploadUserDashboardHeroImage,
   removeUserDashboardHeroImage: mocks.removeUserDashboardHeroImage,
 }));
