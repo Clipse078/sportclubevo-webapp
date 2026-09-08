@@ -193,24 +193,29 @@ export default function AdminSidebar({
 
     return (
       <li key={item.key} className={cn("sce-nav-module", isActive && "sce-nav-module--active")}>
-        <div className={cn("sce-nav-module-header", isActive && "active")}>
+        <div
+          className={cn(
+            "sce-nav-module-row",
+            isActive && "sce-nav-module-row--active",
+          )}
+        >
           <Link
             href={resolvedHref}
             aria-current={isActive && isItemActive(item.href) ? "page" : undefined}
             className={cn(
-              "sce-nav-item sce-nav-module-link min-w-0 flex-1 no-underline text-inherit",
+              "sce-nav-item sce-nav-module-link no-underline text-inherit",
               isActive && "active",
             )}
           >
             <span className="sce-nav-icon-wrap" aria-hidden={false}>
               <AnimatedNavIcon label={item.label} active={isActive} variant="parent" />
             </span>
-            <span className="truncate">{item.label}</span>
+            <span className="min-w-0 flex-1 truncate">{item.label}</span>
           </Link>
 
           <button
             type="button"
-            className="sce-nav-module-toggle"
+            className="sce-nav-module-chevron"
             aria-expanded={isExpanded}
             aria-controls={`nav-module-${item.key}`}
             aria-label={`${item.label} ${isExpanded ? "einklappen" : "ausklappen"}`}
@@ -229,7 +234,7 @@ export default function AdminSidebar({
         {isExpanded && (
           <ul
             id={`nav-module-${item.key}`}
-            className="sce-nav-module-children mt-0.5 space-y-0.5"
+            className="sce-nav-module-children"
           >
             {item.children!.map((child) => {
               const childHref = buildHref(child.href);
@@ -241,13 +246,6 @@ export default function AdminSidebar({
                     aria-current={isChildActive ? "page" : undefined}
                     className={cn("sce-nav-child", isChildActive && "active")}
                   >
-                    <span className="sce-nav-icon-wrap sce-nav-icon-wrap--child" aria-hidden={false}>
-                      <AnimatedNavIcon
-                        label={child.label}
-                        active={isChildActive}
-                        variant="child"
-                      />
-                    </span>
                     <span>{child.label}</span>
                   </Link>
                 </li>
@@ -298,28 +296,21 @@ export default function AdminSidebar({
         {sections.map((section, sectionIdx) => (
           <div
             key={section.sectionLabel ?? `nav-section:${sectionIdx}`}
-            className={cn(sectionIdx > 0 && "mt-4")}
+            className={cn(sectionIdx > 0 && "mt-1.5")}
             role="group"
             aria-label={section.sectionLabel ?? undefined}
           >
-            {section.sectionLabel && !isCollapsed && (
-              <p
-                className={cn(
-                  "sce-nav-section-label",
-                  sectionIdx > 0 && "mt-0",
-                )}
-              >
-                {section.sectionLabel}
-              </p>
+            {section.sectionLabel && (
+              <p className="sr-only">{section.sectionLabel}</p>
             )}
-            {section.sectionLabel && isCollapsed && sectionIdx > 0 && (
+            {isCollapsed && sectionIdx > 0 && (
               <div
-                className="my-2.5 mx-1.5 border-t border-[color-mix(in_srgb,var(--border)_70%,transparent)]"
+                className="my-2 mx-1.5 border-t border-[color-mix(in_srgb,var(--border)_45%,transparent)]"
                 aria-hidden="true"
               />
             )}
 
-            <ul className="space-y-1">
+            <ul className="sce-nav-module-list">
               {section.items.map((item) => renderModuleItem(item))}
             </ul>
           </div>

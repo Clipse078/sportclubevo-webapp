@@ -191,7 +191,59 @@ describe("AdminSidebar", () => {
     expect(within(dashboardLink).getByText("Dashboard", { selector: ".sr-only" })).toBeInTheDocument();
   });
 
-  it("renders Kommunikation and Sponsoring once in the Club Admin runtime sidebar groups", () => {
+  it("keeps expand chevrons inside the module row without wrapping", () => {
+    pathnameState.value = "/dashboard";
+
+    render(
+      <AdminSidebar
+        permissionKeys={CLUB_ADMIN_PERMISSIONS}
+        clubName="FC Allschwil"
+        logoUrl={null}
+      />,
+    );
+
+    const planungLink = screen.getByRole("link", { name: "Planung" });
+    const planungRow = planungLink.closest(".sce-nav-module-row");
+    const planungChevron = screen.getByRole("button", { name: /Planung ausklappen/i });
+
+    expect(planungRow).toBeTruthy();
+    expect(planungRow?.contains(planungLink)).toBe(true);
+    expect(planungRow?.contains(planungChevron)).toBe(true);
+    expect(planungChevron.className).toContain("sce-nav-module-chevron");
+  });
+
+  it("does not render visible uppercase section headings in the module list", () => {
+    render(
+      <AdminSidebar
+        permissionKeys={CLUB_ADMIN_PERMISSIONS}
+        clubName="FC Allschwil"
+        logoUrl={null}
+      />,
+    );
+
+    expect(screen.queryByText("BETRIEB")).not.toBeInTheDocument();
+    expect(screen.queryByText("FÜHRUNG")).not.toBeInTheDocument();
+    expect(screen.getByText("Betrieb", { selector: ".sr-only" })).toBeInTheDocument();
+  });
+
+  it("hides child labels in collapsed rail while keeping module icons", () => {
+    pathnameState.value = "/dashboard/matchcenter";
+
+    render(
+      <AdminSidebar
+        permissionKeys={CLUB_ADMIN_PERMISSIONS}
+        clubName="FC Allschwil"
+        logoUrl={null}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Navigation einklappen" }));
+
+    expect(screen.queryByRole("link", { name: "MatchCenter" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Planung" })).toBeInTheDocument();
+  });
+
+  it("renders Kommunikation and Sponsoring once for scoped Club Admin permissions", () => {
     pathnameState.value = "/dashboard/communication";
 
     render(
@@ -205,23 +257,14 @@ describe("AdminSidebar", () => {
       />,
     );
 
-    const betrieb = screen.getByText("Betrieb").parentElement;
-    const fuehrung = screen.getByText("Führung").parentElement;
-    expect(betrieb).not.toBeNull();
-    expect(fuehrung).not.toBeNull();
-
-    const communication = within(betrieb!).getByRole("link", {
-      name: "Kommunikation",
-    });
+    const communication = screen.getByRole("link", { name: "Kommunikation" });
     expect(communication).toHaveAttribute("href", "/dashboard/communication");
-    expect(within(betrieb!).getByRole("link", { name: "E-Mail-Absender" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "E-Mail-Absender" })).toHaveAttribute(
       "href",
       "/dashboard/communication/email-sender",
     );
 
-    const sponsoring = within(fuehrung!).getByRole("link", {
-      name: "Sponsoring",
-    });
+    const sponsoring = screen.getByRole("link", { name: "Sponsoring" });
     expect(sponsoring).toHaveAttribute("href", "/dashboard/sponsoring");
 
     expect(screen.getAllByRole("link", { name: "Kommunikation" })).toHaveLength(1);

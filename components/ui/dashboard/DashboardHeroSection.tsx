@@ -22,8 +22,7 @@ import type { DashboardHeroProps } from "./DashboardHero";
 import { DashboardHeroEditorToolbar } from "./DashboardHeroEditorToolbar";
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
-const STORAGE_UNAVAILABLE_MESSAGE =
-  "Titelbild-Upload ist derzeit nicht verfügbar (Speicher nicht konfiguriert). Vorschau nur für diese Sitzung.";
+const STORAGE_UNAVAILABLE_MESSAGE = "Vorschau – noch nicht dauerhaft gespeichert";
 
 type HeroImageState = {
   imageUrl: string | null;
@@ -184,20 +183,6 @@ export function DashboardHeroSection({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [menuOpen]);
-
-  useEffect(() => {
-    if (!isEditing) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      if (menuOpen) return;
-      event.preventDefault();
-      exitEditMode();
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [exitEditMode, isEditing, menuOpen]);
 
   const handleUploadClick = useCallback(() => {
     setMenuOpen(false);
@@ -373,37 +358,42 @@ export function DashboardHeroSection({
     setFeedback(null);
   }, [draftState?.imageUrl, exitEditMode, revokeLocalPreview, savedState.imageUrl]);
 
+  useEffect(() => {
+    if (!isEditing) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (menuOpen) return;
+      event.preventDefault();
+      handleCancelEdit();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleCancelEdit, isEditing, menuOpen]);
+
   const handleSaveEdit = useCallback(() => {
     if (!draftState) return;
 
-    startTransition(() => {
-      if (isLocalPreviewUrl(draftState.imageUrl)) {
-        setSavedState({
-          imageUrl: draftState.imageUrl,
-          transform: { ...draftState.transform },
-        });
-        exitEditMode();
-        setFeedback(
-          "Titelbild-Position gespeichert (Sitzung). Dauerhafte Speicherung folgt nach Schema-Freigabe.",
-        );
-        return;
-      }
-
-      setSavedState({
-        imageUrl: draftState.imageUrl,
-        transform: { ...draftState.transform },
-      });
-      exitEditMode();
-      setFeedback(
-        "Titelbild-Position gespeichert. Dauerhafte Speicherung der Position folgt nach Schema-Freigabe.",
-      );
+    setSavedState({
+      imageUrl: draftState.imageUrl,
+      transform: { ...draftState.transform },
     });
-  }, [draftState, exitEditMode, startTransition]);
+    exitEditMode();
+    setFeedback(
+      storageAvailable === false
+        ? "Titelbild für diese Sitzung gespeichert."
+        : "Titelbild-Position gespeichert. Dauerhafte Speicherung der Position folgt nach Schema-Freigabe.",
+    );
+  }, [draftState, exitEditMode, storageAvailable]);
 
   const uploadLabel = displayState.imageUrl ? "Bild ersetzen" : "Bild hochladen";
 
   const heroActions = (
-    <div className="relative flex flex-col items-start gap-1 sm:items-end">
+    <div
+      className="relative flex flex-col items-start gap-1 sm:items-end"
+      data-hero-interactive
+    >
       <input
         ref={fileInputRef}
         id={fileInputId}

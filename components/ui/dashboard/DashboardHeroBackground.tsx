@@ -115,7 +115,9 @@ export function DashboardHeroBackground({
     if ((event.target as HTMLElement).closest("[data-hero-editor-control]")) return;
 
     event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
+    if (typeof event.currentTarget.setPointerCapture === "function") {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
     dragRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
@@ -141,7 +143,10 @@ export function DashboardHeroBackground({
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
 
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+    if (
+      typeof event.currentTarget.hasPointerCapture === "function" &&
+      event.currentTarget.hasPointerCapture(event.pointerId)
+    ) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
 

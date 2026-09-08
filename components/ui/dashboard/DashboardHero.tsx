@@ -78,7 +78,7 @@ export function DashboardHero({
 
       <div
         className={cn(
-          "absolute inset-0",
+          "pointer-events-none absolute inset-0",
           !backgroundImageUrl &&
             "bg-[linear-gradient(118deg,color-mix(in_srgb,var(--background)_94%,var(--sce-primary)_6%)_0%,var(--background)_32%,color-mix(in_srgb,var(--surface)_78%,var(--background)_22%)_68%,color-mix(in_srgb,var(--background)_88%,var(--surface)_12%)_100%)]",
           isEditingBackground && "motion-safe:transition-[background] motion-safe:duration-200",
@@ -106,13 +106,13 @@ export function DashboardHero({
         <>
           <div
             className={cn(
-              "absolute inset-0 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--background)_92%,transparent)_0%,transparent_48%,color-mix(in_srgb,var(--background)_84%,transparent)_100%)]",
+              "pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--background)_92%,transparent)_0%,transparent_48%,color-mix(in_srgb,var(--background)_84%,transparent)_100%)]",
               isEditingBackground && "opacity-80",
             )}
             aria-hidden="true"
           />
           <div
-            className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,transparent_0%,var(--background)_96%)]"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,transparent_0%,var(--background)_96%)]"
             aria-hidden="true"
           />
         </>
@@ -133,7 +133,13 @@ export function DashboardHero({
 
       {editorOverlay}
 
-      <div className="relative flex min-h-[15.625rem] flex-col px-5 py-5 sm:px-6 lg:px-7 lg:py-5">
+      <div
+        className={cn(
+          "relative flex min-h-[15.625rem] flex-col px-5 py-5 sm:px-6 lg:px-7 lg:py-5",
+          isEditingBackground &&
+            "pointer-events-none [&_[data-hero-interactive]]:pointer-events-auto",
+        )}
+      >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <DashboardWelcome
             greeting={greeting}

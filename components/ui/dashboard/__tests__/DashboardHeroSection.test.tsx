@@ -89,7 +89,7 @@ describe("DashboardHeroSection", () => {
     render(<DashboardHeroSection greeting="Guten Abend" highlightName="Michael" />);
 
     await waitFor(() =>
-      expect(screen.getByText(/Speicher nicht konfiguriert/i)).toBeInTheDocument(),
+      expect(screen.getByText(/noch nicht dauerhaft gespeichert/i)).toBeInTheDocument(),
     );
 
     const file = new File(["hero"], "hero.png", { type: "image/png" });
@@ -180,6 +180,75 @@ describe("DashboardHeroSection", () => {
 
     expect(screen.queryByRole("toolbar", { name: "Titelbild anpassen" })).not.toBeInTheDocument();
     expect(document.querySelector('img[src="https://cdn.example/hero.jpg"]')).toBeTruthy();
+  });
+
+  it("saves session state when storage is unavailable", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ storageAvailable: false, imageUrl: null }),
+    });
+
+    render(<DashboardHeroSection greeting="Guten Abend" highlightName="Michael" />);
+
+    await waitFor(() =>
+      expect(screen.getByText(/noch nicht dauerhaft gespeichert/i)).toBeInTheDocument(),
+    );
+
+    const file = new File(["hero"], "hero.png", { type: "image/png" });
+    fireEvent.change(screen.getByLabelText("Bild hochladen"), {
+      target: { files: [file] },
+    });
+
+    await waitFor(() =>
+      expect(screen.getByRole("toolbar", { name: "Titelbild anpassen" })).toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Speichern" }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/für diese Sitzung gespeichert/i)).toBeInTheDocument(),
+    );
+    expect(screen.queryByRole("toolbar", { name: "Titelbild anpassen" })).not.toBeInTheDocument();
+  });
+
+  it("reopens editor from accepted session state and cancel restores it", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ storageAvailable: true, imageUrl: null }),
+    });
+
+    render(
+      <DashboardHeroSection
+        greeting="Guten Abend"
+        highlightName="Michael"
+        initialBackgroundImageUrl="https://cdn.example/hero.jpg"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Titelbild ändern" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Titelbild anpassen" }));
+
+    const slider = screen.getByRole("slider", { name: "Zoom" }) as HTMLInputElement;
+    fireEvent.change(slider, { target: { value: "1.4" } });
+    fireEvent.click(screen.getByRole("button", { name: "Speichern" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("toolbar", { name: "Titelbild anpassen" })).not.toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Titelbild ändern" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Titelbild anpassen" }));
+
+    const reopenedSlider = screen.getByRole("slider", { name: "Zoom" }) as HTMLInputElement;
+    expect(reopenedSlider.value).toBe("1.4");
+
+    fireEvent.change(reopenedSlider, { target: { value: "1.8" } });
+    fireEvent.click(screen.getByRole("button", { name: "Abbrechen" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Titelbild ändern" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Titelbild anpassen" }));
+
+    expect((screen.getByRole("slider", { name: "Zoom" }) as HTMLInputElement).value).toBe("1.4");
   });
 
   it("saves edit mode to session state", async () => {
@@ -283,7 +352,7 @@ describe("DashboardHeroSection", () => {
     render(<DashboardHeroSection greeting="Guten Abend" highlightName="Michael" />);
 
     await waitFor(() =>
-      expect(screen.getByText(/Speicher nicht konfiguriert/i)).toBeInTheDocument(),
+      expect(screen.getByText(/noch nicht dauerhaft gespeichert/i)).toBeInTheDocument(),
     );
 
     const file = new File(["hero"], "hero.png", { type: "image/png" });
