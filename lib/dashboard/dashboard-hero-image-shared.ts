@@ -19,10 +19,12 @@ import {
 } from "@/lib/people/profile-image-shared";
 import { getDashboardHeroStorageKey } from "@/lib/dashboard/dashboard-hero-image";
 
-type DashboardHeroBlobEnvironment = Pick<
-  NodeJS.ProcessEnv,
-  "BLOB_READ_WRITE_TOKEN" | "BLOB_STORE_ID" | "VERCEL" | "VERCEL_OIDC_TOKEN"
->;
+type DashboardHeroBlobEnvironment = {
+  BLOB_READ_WRITE_TOKEN?: string;
+  BLOB_STORE_ID?: string;
+  VERCEL?: string;
+  VERCEL_OIDC_TOKEN?: string;
+};
 
 function readNonEmpty(value: string | undefined): string | undefined {
   const normalized = value?.trim();
