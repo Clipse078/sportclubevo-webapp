@@ -143,6 +143,22 @@ describe("POST /api/account/dashboard-hero-image", () => {
     expect(mocks.updateUserDashboardHeroImage).not.toHaveBeenCalled();
   });
 
+  it("returns 503 when BLOB_READ_WRITE_TOKEN is whitespace-only", async () => {
+    process.env.BLOB_READ_WRITE_TOKEN = "   ";
+
+    const request = new NextRequest("http://localhost/api/account/dashboard-hero-image", {
+      method: "POST",
+      body: new FormData(),
+    });
+
+    const response = await POST(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body.error).toContain("Speicher nicht konfiguriert");
+    expect(mocks.updateUserDashboardHeroImage).not.toHaveBeenCalled();
+  });
+
   it("persists uploaded image URL for the authenticated user", async () => {
     process.env.BLOB_READ_WRITE_TOKEN = "test-token";
     mocks.uploadUserDashboardHeroImage.mockResolvedValueOnce({

@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 /**
  * Personal dashboard hero image API — SCE-DASHBOARD-V3-03
  *
@@ -62,13 +64,13 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    storageAvailable: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
+    storageAvailable: Boolean(process.env.BLOB_READ_WRITE_TOKEN?.trim()),
     ...serializeHeroResponse(check.heroState),
   });
 }
 
 export async function POST(request: NextRequest) {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
   if (!token) {
     return NextResponse.json(
       {
@@ -166,7 +168,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE() {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
 
   const check = await requireAuthenticatedUser();
   if (!check.ok) {
