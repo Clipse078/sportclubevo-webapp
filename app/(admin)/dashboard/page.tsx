@@ -19,6 +19,7 @@ import { getPersonalizedGreeting, resolveDashboardFirstName } from "@/lib/dashbo
 import { getPersonFirstNameByUserId } from "@/lib/people/queries";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { getCommandCenterData } from "@/lib/dashboard/command-center";
+import { DEFAULT_HERO_TRANSFORM } from "@/lib/dashboard/dashboard-hero-position";
 import { withTodayItemHrefs } from "@/lib/dashboard/today-schedule-href";
 import { getDashboardQuickActionDefs } from "@/lib/dashboard/quick-actions";
 import {
@@ -121,6 +122,7 @@ export default async function DashboardPage() {
         activitySources: [],
         newsItems: [],
         heroBackgroundImageUrl: null,
+        heroBackgroundTransform: DEFAULT_HERO_TRANSFORM,
       };
 
   const permissionKeys = (actor?.permissionKeys ??
@@ -203,6 +205,7 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-5 lg:gap-6">
       <DashboardHeroSection
         initialBackgroundImageUrl={commandCenter.heroBackgroundImageUrl}
+        initialBackgroundTransform={commandCenter.heroBackgroundTransform}
         greeting={greeting}
         highlightName={displayName}
         subtitle={heroSubtitle}

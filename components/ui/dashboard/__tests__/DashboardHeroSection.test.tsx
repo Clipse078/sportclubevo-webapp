@@ -27,6 +27,31 @@ afterEach(() => {
 });
 
 describe("DashboardHeroSection", () => {
+  it("loads persisted image and transform from server props", () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        storageAvailable: true,
+        imageUrl: "https://cdn.example/server.jpg",
+        transform: { zoom: 1.3, positionX: 0.2, positionY: 0.8 },
+      }),
+    });
+
+    render(
+      <DashboardHeroSection
+        greeting="Guten Abend"
+        highlightName="Michael"
+        initialBackgroundImageUrl="https://cdn.example/hero.jpg"
+        initialBackgroundTransform={{ zoom: 1.3, positionX: 0.2, positionY: 0.8 }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Titelbild ändern" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Titelbild anpassen" }));
+
+    expect((screen.getByRole("slider", { name: "Zoom" }) as HTMLInputElement).value).toBe("1.3");
+  });
+
   it("loads storage availability on mount", async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
@@ -114,7 +139,8 @@ describe("DashboardHeroSection", () => {
         ok: true,
         json: async () => ({
           imageUrl: "https://cdn.example/new-hero.jpg",
-          persistencePending: true,
+          persisted: true,
+          transform: { zoom: 1, positionX: 0.5, positionY: 0.5 },
         }),
       });
 
@@ -212,10 +238,18 @@ describe("DashboardHeroSection", () => {
   });
 
   it("reopens editor from accepted session state and cancel restores it", async () => {
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ storageAvailable: true, imageUrl: null }),
-    });
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ storageAvailable: true, imageUrl: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          persisted: true,
+          transform: { zoom: 1.4, positionX: 0.5, positionY: 0.5 },
+        }),
+      });
 
     render(
       <DashboardHeroSection
@@ -251,11 +285,87 @@ describe("DashboardHeroSection", () => {
     expect((screen.getByRole("slider", { name: "Zoom" }) as HTMLInputElement).value).toBe("1.4");
   });
 
-  it("saves edit mode to session state", async () => {
+  it("persists transform via PATCH when storage is available", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ storageAvailable: true, imageUrl: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          persisted: true,
+          transform: { zoom: 1.4, positionX: 0.5, positionY: 0.5 },
+        }),
+      });
+
+    render(
+      <DashboardHeroSection
+        greeting="Guten Abend"
+        highlightName="Michael"
+        initialBackgroundImageUrl="https://cdn.example/hero.jpg"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Titelbild ändern" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Titelbild anpassen" }));
+    fireEvent.click(screen.getByRole("button", { name: "Speichern" }));
+
+    await waitFor(() => {
+      const patchCall = fetchMock.mock.calls.find((call) => call[1]?.method === "PATCH");
+      expect(patchCall).toBeTruthy();
+      expect(JSON.parse(String(patchCall?.[1]?.body))).toEqual({
+        zoom: 1,
+        positionX: 0.5,
+        positionY: 0.5,
+      });
+    });
+
+    await waitFor(() =>
+      expect(screen.getByText("Titelbild gespeichert")).toBeInTheDocument(),
+    );
+    expect(screen.queryByRole("toolbar", { name: "Titelbild anpassen" })).not.toBeInTheDocument();
+  });
+
+  it("saves edit mode to session state for local preview images", async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ storageAvailable: true, imageUrl: null }),
+      json: async () => ({ storageAvailable: false, imageUrl: null }),
     });
+
+    render(<DashboardHeroSection greeting="Guten Abend" highlightName="Michael" />);
+
+    await waitFor(() =>
+      expect(screen.getByText(/noch nicht dauerhaft gespeichert/i)).toBeInTheDocument(),
+    );
+
+    const file = new File(["hero"], "hero.png", { type: "image/png" });
+    fireEvent.change(screen.getByLabelText("Bild hochladen"), {
+      target: { files: [file] },
+    });
+
+    await waitFor(() =>
+      expect(screen.getByRole("toolbar", { name: "Titelbild anpassen" })).toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Speichern" }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/für diese Sitzung gespeichert/i)).toBeInTheDocument(),
+    );
+    expect(screen.queryByRole("toolbar", { name: "Titelbild anpassen" })).not.toBeInTheDocument();
+  });
+
+  it("shows save failure without claiming success", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ storageAvailable: true, imageUrl: null }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: "Speichern nicht möglich. Bitte erneut versuchen." }),
+      });
 
     render(
       <DashboardHeroSection
@@ -270,9 +380,11 @@ describe("DashboardHeroSection", () => {
     fireEvent.click(screen.getByRole("button", { name: "Speichern" }));
 
     await waitFor(() =>
-      expect(screen.getByText(/Titelbild-Position gespeichert/i)).toBeInTheDocument(),
+      expect(
+        screen.getByText("Speichern nicht möglich. Bitte erneut versuchen."),
+      ).toBeInTheDocument(),
     );
-    expect(screen.queryByRole("toolbar", { name: "Titelbild anpassen" })).not.toBeInTheDocument();
+    expect(screen.getByRole("toolbar", { name: "Titelbild anpassen" })).toBeInTheDocument();
   });
 
   it("resets draft transform from the toolbar", async () => {

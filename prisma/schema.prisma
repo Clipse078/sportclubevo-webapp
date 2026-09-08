@@ -776,10 +776,15 @@ model User {
   tenantId String?
   tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
-  /// SCE-DASHBOARD-V3-03 (PROPOSED — migration pending approval):
-  /// Personal dashboard cover image URL (Vercel Blob). User-scoped preference,
-  /// distinct from Person.imageUrl (organisational avatar/profile photo).
-  /// dashboardHeroImageUrl String?
+  /// SCE-DASHBOARD-V3-03: Personal dashboard cover image URL (Vercel Blob).
+  /// User-scoped preference, distinct from Person.imageUrl (organisational avatar/profile photo).
+  dashboardHeroImageUrl       String?
+  /// Cover zoom multiplier on top of object-cover minimum (>= 1).
+  dashboardHeroImageZoom      Float?
+  /// Normalized horizontal focal point (0..1).
+  dashboardHeroImagePositionX Float?
+  /// Normalized vertical focal point (0..1).
+  dashboardHeroImagePositionY Float?
 
   userRoles                     UserRole[]
   passwordResetTokens           PasswordResetToken[]

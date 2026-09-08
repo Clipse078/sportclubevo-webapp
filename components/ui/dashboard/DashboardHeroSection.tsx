@@ -39,31 +39,40 @@ type DashboardHeroSectionProps = Omit<
   | "actions"
 > & {
   initialBackgroundImageUrl?: string | null;
+  initialBackgroundTransform?: HeroImageTransform;
 };
 
 function isLocalPreviewUrl(url: string | null | undefined): url is string {
   return typeof url === "string" && url.startsWith("blob:");
 }
 
-function createHeroState(imageUrl: string | null): HeroImageState {
+function createHeroState(
+  imageUrl: string | null,
+  transform: HeroImageTransform = DEFAULT_HERO_TRANSFORM,
+): HeroImageState {
   return {
     imageUrl,
-    transform: { ...DEFAULT_HERO_TRANSFORM },
+    transform: { ...transform },
   };
 }
 
 export function DashboardHeroSection({
   initialBackgroundImageUrl = null,
+  initialBackgroundTransform = DEFAULT_HERO_TRANSFORM,
   ...heroProps
 }: DashboardHeroSectionProps) {
   const [savedState, setSavedState] = useState<HeroImageState>(() =>
-    createHeroState(initialBackgroundImageUrl),
+    createHeroState(initialBackgroundImageUrl, initialBackgroundTransform),
   );
   const [draftState, setDraftState] = useState<HeroImageState | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [storageAvailable, setStorageAvailable] = useState<boolean | null>(null);
+  const [isPersisted, setIsPersisted] = useState(
+    () => Boolean(initialBackgroundImageUrl) && !isLocalPreviewUrl(initialBackgroundImageUrl),
+  );
+  const [isSaving, setIsSaving] = useState(false);
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -104,14 +113,10 @@ export function DashboardHeroSection({
       if (openEditor) {
         setDraftState(nextState);
         setIsEditing(true);
-        setFeedback(
-          "Titelbild-Vorschau gesetzt. Position anpassen und speichern. Dauerhafte Speicherung folgt nach Schema-Freigabe.",
-        );
+        setFeedback("Titelbild-Vorschau gesetzt. Position anpassen und speichern.");
       } else {
         setSavedState(nextState);
-        setFeedback(
-          "Titelbild-Vorschau gesetzt. Dauerhafte Speicherung folgt nach Schema-Freigabe.",
-        );
+        setFeedback("Titelbild-Vorschau gesetzt.");
       }
     },
     [revokeLocalPreview],
@@ -128,14 +133,28 @@ export function DashboardHeroSection({
         const payload = (await response.json()) as {
           storageAvailable?: boolean;
           imageUrl?: string | null;
+          transform?: HeroImageTransform;
         };
 
         if (cancelled) return;
 
         setStorageAvailable(payload.storageAvailable ?? false);
 
-        if (payload.imageUrl && !savedState.imageUrl) {
-          setSavedState(createHeroState(payload.imageUrl));
+        const hasServerImage = Boolean(payload.imageUrl);
+        const hasServerTransform = Boolean(payload.transform);
+
+        if (hasServerImage || hasServerTransform) {
+          setSavedState(
+            createHeroState(
+              payload.imageUrl ?? savedState.imageUrl,
+              payload.transform ?? savedState.transform,
+            ),
+          );
+          if (hasServerImage && payload.storageAvailable) {
+            setIsPersisted(true);
+          }
+        } else if (payload.imageUrl && !savedState.imageUrl) {
+          setSavedState(createHeroState(payload.imageUrl, savedState.transform));
         }
       } catch {
         if (!cancelled) {
@@ -244,7 +263,8 @@ export function DashboardHeroSection({
           const payload = (await response.json()) as {
             imageUrl?: string;
             error?: string;
-            persistencePending?: boolean;
+            persisted?: boolean;
+            transform?: HeroImageTransform;
           };
 
           if (response.status === 503) {
@@ -259,14 +279,14 @@ export function DashboardHeroSection({
           }
 
           revokeLocalPreview();
-          const nextState = createHeroState(payload.imageUrl);
+          const nextState = createHeroState(
+            payload.imageUrl,
+            payload.transform ?? DEFAULT_HERO_TRANSFORM,
+          );
           setDraftState(nextState);
           setIsEditing(true);
-          setFeedback(
-            payload.persistencePending
-              ? "Titelbild hochgeladen. Position anpassen und speichern. Dauerhafte Speicherung folgt nach Schema-Freigabe."
-              : "Titelbild hochgeladen. Position anpassen und speichern.",
-          );
+          setIsPersisted(Boolean(payload.persisted));
+          setFeedback("Titelbild hochgeladen. Position anpassen und speichern.");
         } catch {
           setFeedback("Titelbild konnte nicht hochgeladen werden.");
         }
@@ -302,6 +322,7 @@ export function DashboardHeroSection({
 
         revokeLocalPreview();
         setSavedState(createHeroState(null));
+        setIsPersisted(false);
         setFeedback(payload.message ?? "Titelbild entfernt.");
       } catch {
         setFeedback("Titelbild konnte nicht entfernt werden.");
@@ -375,17 +396,51 @@ export function DashboardHeroSection({
   const handleSaveEdit = useCallback(() => {
     if (!draftState) return;
 
-    setSavedState({
-      imageUrl: draftState.imageUrl,
-      transform: { ...draftState.transform },
-    });
-    exitEditMode();
-    setFeedback(
-      storageAvailable === false
-        ? "Titelbild für diese Sitzung gespeichert."
-        : "Titelbild-Position gespeichert. Dauerhafte Speicherung der Position folgt nach Schema-Freigabe.",
-    );
-  }, [draftState, exitEditMode, storageAvailable]);
+    if (isLocalPreviewUrl(draftState.imageUrl)) {
+      setSavedState({
+        imageUrl: draftState.imageUrl,
+        transform: { ...draftState.transform },
+      });
+      exitEditMode();
+      setFeedback("Titelbild für diese Sitzung gespeichert.");
+      return;
+    }
+
+    setIsSaving(true);
+    setFeedback("Speichern …");
+
+    void (async () => {
+      try {
+        const response = await fetch("/api/account/dashboard-hero-image", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(draftState.transform),
+        });
+        const payload = (await response.json()) as {
+          error?: string;
+          transform?: HeroImageTransform;
+          persisted?: boolean;
+        };
+
+        if (!response.ok || !payload.transform) {
+          setFeedback(payload.error ?? "Speichern nicht möglich. Bitte erneut versuchen.");
+          return;
+        }
+
+        setSavedState({
+          imageUrl: draftState.imageUrl,
+          transform: { ...payload.transform },
+        });
+        setIsPersisted(Boolean(payload.persisted));
+        exitEditMode();
+        setFeedback("Titelbild gespeichert");
+      } catch {
+        setFeedback("Speichern nicht möglich. Bitte erneut versuchen.");
+      } finally {
+        setIsSaving(false);
+      }
+    })();
+  }, [draftState, exitEditMode]);
 
   const uploadLabel = displayState.imageUrl ? "Bild ersetzen" : "Bild hochladen";
 
@@ -493,7 +548,16 @@ export function DashboardHeroSection({
         </p>
       )}
 
-      {feedback && !isEditing && (
+      {isPersisted && storageAvailable !== false && !feedback && !isEditing && savedState.imageUrl && (
+        <p
+          className="max-w-[16rem] text-[0.6875rem] leading-snug text-[var(--text-2)] sm:text-right"
+          role="status"
+        >
+          Titelbild gespeichert
+        </p>
+      )}
+
+      {feedback && (!isEditing || feedback.startsWith("Speichern")) && (
         <p
           className="max-w-[16rem] text-[0.6875rem] leading-snug text-[var(--text-2)] sm:text-right"
           role="status"
@@ -521,7 +585,7 @@ export function DashboardHeroSection({
             onReset={handleReset}
             onCancel={handleCancelEdit}
             onSave={handleSaveEdit}
-            isSaving={isPending}
+            isSaving={isPending || isSaving}
           />
         </div>
       </>

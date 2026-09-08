@@ -37,7 +37,9 @@ import {
   type CommandCenterTournamentParticipant,
   type CommandCenterUpcomingLogo,
 } from "@/lib/dashboard/command-center-presentation";
-import { getUserDashboardHeroImageUrl } from "@/lib/dashboard/dashboard-hero-image";
+import { getUserDashboardHeroState } from "@/lib/dashboard/dashboard-hero-image";
+import type { HeroImageTransform } from "@/lib/dashboard/dashboard-hero-position";
+import { DEFAULT_HERO_TRANSFORM } from "@/lib/dashboard/dashboard-hero-position";
 import {
   batchGetEventAllocationDisplayForTenant,
 } from "@/lib/facilities/display-helpers";
@@ -108,8 +110,9 @@ export type CommandCenterData = {
   upcomingItems: UpcomingScheduleItem[];
   activitySources: ActivitySourceItem[];
   newsItems: CommandCenterNewsItem[];
-  /** Ready for V3-03 personal dashboard background upload — null until persisted. */
+  /** Personal dashboard hero background — user-scoped, persisted on User. */
   heroBackgroundImageUrl: string | null;
+  heroBackgroundTransform: HeroImageTransform;
 };
 
 type StrategicActor = Pick<ActorContext, "tenantId" | "userId" | "permissionKeys">;
@@ -762,6 +765,8 @@ export async function getCommandCenterData(args: {
     .sort((a, b) => b.date.getTime() - a.date.getTime())
     .slice(0, 5);
 
+  const heroState = args.userId ? await getUserDashboardHeroState(args.userId) : null;
+
   return {
     kpis: buildCommandCenterKpis({
       teamCount,
@@ -783,8 +788,13 @@ export async function getCommandCenterData(args: {
     upcomingItems,
     activitySources,
     newsItems,
-    heroBackgroundImageUrl: args.userId
-      ? await getUserDashboardHeroImageUrl(args.userId)
-      : null,
+    heroBackgroundImageUrl: heroState?.imageUrl ?? null,
+    heroBackgroundTransform: heroState
+      ? {
+          zoom: heroState.zoom,
+          positionX: heroState.positionX,
+          positionY: heroState.positionY,
+        }
+      : { ...DEFAULT_HERO_TRANSFORM },
   };
 }
