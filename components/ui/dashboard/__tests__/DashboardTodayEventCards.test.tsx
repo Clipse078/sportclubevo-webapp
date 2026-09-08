@@ -24,6 +24,7 @@ const matchItem: DashboardTodayTimelineItem = {
     groups: [
       { kind: "location", label: "Im Brüel, Allschwil" },
       { kind: "pitch", label: "Kunstrasen 2" },
+      { kind: "dressing-rooms", label: "O1 · E4" },
     ],
   },
   matchPresentation: {
@@ -66,6 +67,7 @@ describe("DashboardTodayMatchCard", () => {
     expect(screen.getByText("SPIEL")).toBeInTheDocument();
     expect(screen.getByText("Im Brüel, Allschwil")).toBeInTheDocument();
     expect(screen.getByText("Kunstrasen 2")).toBeInTheDocument();
+    expect(screen.getByText("O1 · E4")).toBeInTheDocument();
     expect(screen.getByRole("link")).toHaveAttribute("href", matchItem.href);
   });
 });

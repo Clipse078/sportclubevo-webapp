@@ -3,6 +3,7 @@
  *
  * POST   /api/account/dashboard-hero-image  — upload / replace cover image
  * DELETE /api/account/dashboard-hero-image  — remove cover image
+ * GET    /api/account/dashboard-hero-image  — storage availability + current URL
  *
  * Auth: any authenticated session with an active tenant context.
  * Storage: Vercel Blob, namespace dashboard-hero/{userId}.{ext}
@@ -40,6 +41,19 @@ async function requireAuthenticatedUser() {
     userId: session.user.id,
     currentImageUrl,
   };
+}
+
+export async function GET() {
+  const check = await requireAuthenticatedUser();
+  if (!check.ok) {
+    return NextResponse.json({ error: check.error }, { status: check.status });
+  }
+
+  return NextResponse.json({
+    storageAvailable: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
+    imageUrl: check.currentImageUrl,
+    persistencePending: true,
+  });
 }
 
 export async function POST(request: NextRequest) {

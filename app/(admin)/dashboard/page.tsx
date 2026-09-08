@@ -11,6 +11,7 @@ import {
   UserPlus,
   Users,
   BellRing,
+  Zap,
 } from "lucide-react";
 import { auth } from "@/auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -234,6 +235,8 @@ export default async function DashboardPage() {
 
             <DashboardSection
               title="Nächste Termine"
+              icon={<CalendarDays className="h-4 w-4" />}
+              iconAccent="info"
               noPadding
               variant="card"
               footer={
@@ -284,6 +287,8 @@ export default async function DashboardPage() {
         {quickActions.length > 0 && (
           <DashboardSection
             title="Schnellaktionen"
+            icon={<Zap className="h-4 w-4" />}
+            iconAccent="primary"
             variant="card"
             bodyClassName="px-3.5 py-3 sm:px-4 sm:py-3.5"
           >

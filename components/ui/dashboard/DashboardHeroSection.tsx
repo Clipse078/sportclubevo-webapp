@@ -1,14 +1,29 @@
 "use client";
 
-import { useCallback, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { ChevronDown, ImageIcon, Trash2, Upload } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { DashboardHero } from "./DashboardHero";
 import type { DashboardHeroProps } from "./DashboardHero";
 
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+const STORAGE_UNAVAILABLE_MESSAGE =
+  "Titelbild-Upload ist derzeit nicht verfügbar (Speicher nicht konfiguriert). Vorschau nur für diese Sitzung.";
+
 type DashboardHeroSectionProps = Omit<DashboardHeroProps, "backgroundImageUrl" | "actions"> & {
   initialBackgroundImageUrl?: string | null;
 };
+
+function isLocalPreviewUrl(url: string | null | undefined): url is string {
+  return typeof url === "string" && url.startsWith("blob:");
+}
 
 export function DashboardHeroSection({
   initialBackgroundImageUrl = null,
@@ -19,8 +34,99 @@ export function DashboardHeroSection({
   );
   const [menuOpen, setMenuOpen] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [storageAvailable, setStorageAvailable] = useState<boolean | null>(null);
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const localPreviewUrlRef = useRef<string | null>(null);
+  const fileInputId = useId();
+
+  const revokeLocalPreview = useCallback(() => {
+    if (localPreviewUrlRef.current) {
+      URL.revokeObjectURL(localPreviewUrlRef.current);
+      localPreviewUrlRef.current = null;
+    }
+  }, []);
+
+  const applyLocalPreview = useCallback(
+    (file: File) => {
+      revokeLocalPreview();
+      const previewUrl = URL.createObjectURL(file);
+      localPreviewUrlRef.current = previewUrl;
+      setBackgroundImageUrl(previewUrl);
+      setFeedback(
+        "Titelbild-Vorschau gesetzt. Dauerhafte Speicherung folgt nach Schema-Freigabe.",
+      );
+    },
+    [revokeLocalPreview],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const response = await fetch("/api/account/dashboard-hero-image");
+        if (!response.ok) return;
+
+        const payload = (await response.json()) as {
+          storageAvailable?: boolean;
+          imageUrl?: string | null;
+        };
+
+        if (cancelled) return;
+
+        setStorageAvailable(payload.storageAvailable ?? false);
+
+        if (payload.imageUrl && !backgroundImageUrl) {
+          setBackgroundImageUrl(payload.imageUrl);
+        }
+      } catch {
+        if (!cancelled) {
+          setStorageAvailable(null);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // Intentionally only on mount — initial server value may already be set.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (localPreviewUrlRef.current) {
+        URL.revokeObjectURL(localPreviewUrlRef.current);
+        localPreviewUrlRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
 
   const handleUploadClick = useCallback(() => {
     setMenuOpen(false);
@@ -33,8 +139,39 @@ export function DashboardHeroSection({
       event.target.value = "";
       if (!file) return;
 
+      if (!ACCEPTED_IMAGE_TYPES.includes(file.type as (typeof ACCEPTED_IMAGE_TYPES)[number])) {
+        setFeedback("Bitte JPEG, PNG oder WebP wählen.");
+        return;
+      }
+
       startTransition(async () => {
         setFeedback(null);
+
+        let storageReady = storageAvailable;
+        if (storageReady === null) {
+          try {
+            const statusResponse = await fetch("/api/account/dashboard-hero-image");
+            if (statusResponse.ok) {
+              const statusPayload = (await statusResponse.json()) as {
+                storageAvailable?: boolean;
+              };
+              storageReady = statusPayload.storageAvailable ?? false;
+              setStorageAvailable(storageReady);
+            } else {
+              storageReady = false;
+              setStorageAvailable(false);
+            }
+          } catch {
+            storageReady = false;
+            setStorageAvailable(false);
+          }
+        }
+
+        if (storageReady === false) {
+          applyLocalPreview(file);
+          return;
+        }
+
         const formData = new FormData();
         formData.append("file", file);
 
@@ -49,11 +186,18 @@ export function DashboardHeroSection({
             persistencePending?: boolean;
           };
 
+          if (response.status === 503) {
+            setStorageAvailable(false);
+            applyLocalPreview(file);
+            return;
+          }
+
           if (!response.ok || !payload.imageUrl) {
             setFeedback(payload.error ?? "Titelbild konnte nicht hochgeladen werden.");
             return;
           }
 
+          revokeLocalPreview();
           setBackgroundImageUrl(payload.imageUrl);
           setFeedback(
             payload.persistencePending
@@ -65,11 +209,19 @@ export function DashboardHeroSection({
         }
       });
     },
-    [startTransition],
+    [applyLocalPreview, revokeLocalPreview, startTransition, storageAvailable],
   );
 
   const handleRemove = useCallback(() => {
     setMenuOpen(false);
+
+    if (isLocalPreviewUrl(backgroundImageUrl)) {
+      revokeLocalPreview();
+      setBackgroundImageUrl(null);
+      setFeedback("Titelbild entfernt.");
+      return;
+    }
+
     startTransition(async () => {
       setFeedback(null);
 
@@ -84,31 +236,35 @@ export function DashboardHeroSection({
           return;
         }
 
+        revokeLocalPreview();
         setBackgroundImageUrl(null);
         setFeedback(payload.message ?? "Titelbild entfernt.");
       } catch {
         setFeedback("Titelbild konnte nicht entfernt werden.");
       }
     });
-  }, [startTransition]);
+  }, [backgroundImageUrl, revokeLocalPreview, startTransition]);
+
+  const uploadLabel = backgroundImageUrl ? "Bild ersetzen" : "Bild hochladen";
 
   const heroActions = (
     <div className="relative flex flex-col items-start gap-1 sm:items-end">
       <input
         ref={fileInputRef}
+        id={fileInputId}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept={ACCEPTED_IMAGE_TYPES.join(",")}
         className="sr-only"
-        aria-hidden
-        tabIndex={-1}
+        aria-label={uploadLabel}
         onChange={handleFileChange}
       />
 
-      <div className="relative">
+      <div ref={menuRef} className="relative">
         <button
           type="button"
           aria-haspopup="menu"
           aria-expanded={menuOpen}
+          aria-controls={`${fileInputId}-menu`}
           aria-label="Titelbild ändern"
           disabled={isPending}
           onClick={() => setMenuOpen((open) => !open)}
@@ -136,7 +292,9 @@ export function DashboardHeroSection({
 
         {menuOpen && (
           <div
+            id={`${fileInputId}-menu`}
             role="menu"
+            aria-label="Titelbild-Aktionen"
             className={cn(
               "absolute right-0 z-20 mt-1.5 min-w-[11.5rem] overflow-hidden rounded-[var(--radius-md)]",
               "border border-[color-mix(in_srgb,var(--border)_70%,transparent)]",
@@ -148,10 +306,10 @@ export function DashboardHeroSection({
               role="menuitem"
               disabled={isPending}
               onClick={handleUploadClick}
-              className="flex min-h-[2.75rem] w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[var(--foreground)] hover:bg-[var(--surface-2)] focus-visible:bg-[var(--surface-2)] focus-visible:outline-none"
+              className="flex min-h-[2.75rem] w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[var(--foreground)] hover:bg-[var(--surface-2)] focus-visible:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--sce-primary)]"
             >
               <Upload className="h-4 w-4 shrink-0 text-[var(--text-2)]" aria-hidden="true" />
-              Bild hochladen
+              {uploadLabel}
             </button>
             {backgroundImageUrl && (
               <button
@@ -159,7 +317,7 @@ export function DashboardHeroSection({
                 role="menuitem"
                 disabled={isPending}
                 onClick={handleRemove}
-                className="flex min-h-[2.75rem] w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[var(--foreground)] hover:bg-[var(--surface-2)] focus-visible:bg-[var(--surface-2)] focus-visible:outline-none"
+                className="flex min-h-[2.75rem] w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[var(--foreground)] hover:bg-[var(--surface-2)] focus-visible:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--sce-primary)]"
               >
                 <Trash2 className="h-4 w-4 shrink-0 text-[var(--sce-danger)]" aria-hidden="true" />
                 Titelbild entfernen
@@ -168,6 +326,15 @@ export function DashboardHeroSection({
           </div>
         )}
       </div>
+
+      {storageAvailable === false && !feedback && (
+        <p
+          className="max-w-[16rem] text-[0.6875rem] leading-snug text-[var(--text-2)] sm:text-right"
+          role="status"
+        >
+          {STORAGE_UNAVAILABLE_MESSAGE}
+        </p>
+      )}
 
       {feedback && (
         <p

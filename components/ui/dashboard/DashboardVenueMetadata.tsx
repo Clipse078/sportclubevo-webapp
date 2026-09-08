@@ -8,6 +8,24 @@ const GROUP_ICONS = {
   "dressing-rooms": DoorOpen,
 } as const;
 
+const GROUP_ICON_TREATMENTS: Record<
+  TodayEventVenueGroup["kind"],
+  { iconClassName: string; containerClassName?: string }
+> = {
+  location: {
+    iconClassName: "text-[var(--muted)]",
+  },
+  pitch: {
+    iconClassName: "text-[var(--sce-success)]",
+    containerClassName:
+      "bg-[var(--sce-success-light)] text-[var(--sce-success)]",
+  },
+  "dressing-rooms": {
+    iconClassName: "text-[var(--sce-info)]",
+    containerClassName: "bg-[var(--sce-info-light)] text-[var(--sce-info)]",
+  },
+};
+
 export type DashboardVenueMetadataProps = {
   groups: TodayEventVenueGroup[];
   className?: string;
@@ -31,15 +49,34 @@ export function DashboardVenueMetadata({
     >
       {groups.map((group) => {
         const Icon = GROUP_ICONS[group.kind];
+        const treatment = GROUP_ICON_TREATMENTS[group.kind];
+
         return (
           <span
             key={`${group.kind}-${group.label}`}
             className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-[var(--text-2)]"
           >
-            <Icon
-              className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]"
+            <span
+              className={cn(
+                "inline-flex shrink-0 items-center justify-center",
+                treatment.containerClassName
+                  ? cn(
+                      "h-5 w-5 rounded-[var(--radius-sm)]",
+                      treatment.containerClassName,
+                    )
+                  : null,
+              )}
               aria-hidden="true"
-            />
+            >
+              <Icon
+                className={cn(
+                  "shrink-0",
+                  treatment.containerClassName ? "h-3 w-3" : "h-3.5 w-3.5",
+                  treatment.iconClassName,
+                )}
+                aria-hidden="true"
+              />
+            </span>
             <span className="truncate leading-snug">{group.label}</span>
           </span>
         );
