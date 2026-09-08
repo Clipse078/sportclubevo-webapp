@@ -142,9 +142,7 @@ export default async function DashboardPage() {
   const todayFormatted = formatTodayDate(fmtCfg);
   const greeting = getPersonalizedGreeting(firstName);
   const displayName = firstName?.trim() || "zusammen";
-  const heroSubtitle = ctx?.name
-    ? `Schön, dass du wieder da bist. Gemeinsam für den ${ctx.name}.`
-    : "Schön, dass du wieder da bist.";
+  const heroSubtitle = "Schön, dass du wieder da bist.";
 
   const activityTagMap: Record<
     (typeof commandCenter.activitySources)[number]["kind"],

@@ -70,6 +70,15 @@ describe("DashboardTodayMatchCard", () => {
     expect(screen.getByText("O1 · E4")).toBeInTheDocument();
     expect(screen.getByRole("link")).toHaveAttribute("href", matchItem.href);
   });
+
+  it("uses compact match logos", () => {
+    const { container } = render(<DashboardTodayMatchCard item={matchItem} />);
+    const logos = container.querySelectorAll("img");
+    expect(logos.length).toBeGreaterThan(0);
+    for (const logo of logos) {
+      expect(logo.className).toMatch(/h-10|w-10/);
+    }
+  });
 });
 
 describe("DashboardTodayTournamentCard", () => {

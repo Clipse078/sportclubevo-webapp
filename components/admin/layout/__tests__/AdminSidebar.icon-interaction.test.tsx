@@ -10,7 +10,7 @@ import AdminSidebar from "@/components/admin/layout/AdminSidebar";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/dashboard",
+  usePathname: () => "/dashboard/website/news",
   useSearchParams: () => new URLSearchParams(),
 }));
 
@@ -36,7 +36,7 @@ describe("AdminSidebar icon interaction (SCE-DESIGN-04C)", () => {
     );
 
     const websiteLink = container.querySelector(
-      'a.sce-nav-item[href="/dashboard/website"]',
+      'a.sce-nav-module-link[href="/dashboard/website"]',
     ) as HTMLElement;
     expect(websiteLink).toBeTruthy();
 
@@ -84,7 +84,9 @@ describe("AdminSidebar icon interaction (SCE-DESIGN-04C)", () => {
       />,
     );
 
-    const links = container.querySelectorAll("a.sce-nav-item, a.sce-nav-child");
+    const links = container.querySelectorAll(
+      "a.sce-nav-item, a.sce-nav-module-link, a.sce-nav-child",
+    );
     expect(links.length).toBeGreaterThan(0);
     for (const link of links) {
       expect(link).toHaveAttribute("href");

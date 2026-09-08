@@ -2,15 +2,19 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import SidebarBrandHeader from "@/components/admin/branding/SidebarBrandHeader";
 import SidebarPlatformBrand from "@/components/admin/branding/SidebarPlatformBrand";
 import { AnimatedNavIcon } from "@/components/ui/motion/AnimatedNavIcon";
 import { useSidebarResize } from "@/hooks/useSidebarResize";
 import { getVisibleNavSections } from "@/lib/nav/nav-config";
-import type { NavSection } from "@/lib/nav/nav-config";
+import type { NavItem, NavSection } from "@/lib/nav/nav-config";
 import type { PermissionKey } from "@/lib/permissions/permissions";
+import {
+  persistSidebarCollapsed,
+  readStoredSidebarCollapsed,
+} from "@/lib/shell/sidebar-collapsed";
 import { cn } from "@/lib/cn";
 
 type AdminSidebarProps = {
@@ -40,6 +44,30 @@ function shouldCarrySeason(href: string) {
   );
 }
 
+function resolveActiveModuleKey(
+  sections: NavSection[],
+  isItemActive: (href: string) => boolean,
+): string | null {
+  for (const section of sections) {
+    for (const item of section.items) {
+      if (isItemActive(item.href)) return item.key;
+      if (item.children?.some((child) => isItemActive(child.href))) {
+        return item.key;
+      }
+    }
+  }
+  return null;
+}
+
+function moduleHasChildren(item: NavItem): boolean {
+  return !!item.children && item.children.length > 0;
+}
+
+function moduleIsActive(item: NavItem, isItemActive: (href: string) => boolean): boolean {
+  if (isItemActive(item.href)) return true;
+  return item.children?.some((child) => isItemActive(child.href)) ?? false;
+}
+
 export default function AdminSidebar({
   permissionKeys,
   clubName,
@@ -52,14 +80,26 @@ export default function AdminSidebar({
   const selectedSeason = searchParams.get("season");
 
   const [internalCollapsed, setInternalCollapsed] = useState(false);
+  const [collapsedHydrated, setCollapsedHydrated] = useState(false);
+
+  useEffect(() => {
+    setInternalCollapsed(readStoredSidebarCollapsed());
+    setCollapsedHydrated(true);
+  }, []);
 
   const isCollapsed =
     typeof collapsed === "boolean" ? collapsed : internalCollapsed;
 
-  const handleToggle =
-    typeof onToggle === "function"
-      ? onToggle
-      : () => setInternalCollapsed((c) => !c);
+  const handleToggle = useCallback(() => {
+    const next = !isCollapsed;
+    if (typeof collapsed !== "boolean") {
+      setInternalCollapsed(next);
+      persistSidebarCollapsed(next);
+    }
+    if (typeof onToggle === "function") {
+      onToggle();
+    }
+  }, [collapsed, isCollapsed, onToggle]);
 
   const { isResizing, onResizePointerDown, onResizeKeyDown } = useSidebarResize({
     collapsed: isCollapsed,
@@ -80,11 +120,150 @@ export default function AdminSidebar({
     return pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"));
   }
 
+  const activeModuleKey = useMemo(
+    () => resolveActiveModuleKey(sections, isItemActive),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- pathname drives active matching
+    [sections, pathname],
+  );
+
+  const [expandedModuleKey, setExpandedModuleKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (activeModuleKey) {
+      setExpandedModuleKey(activeModuleKey);
+    }
+  }, [activeModuleKey]);
+
+  const handleModuleToggle = useCallback(
+    (moduleKey: string) => {
+      setExpandedModuleKey((current) => {
+        if (current === moduleKey) {
+          if (moduleKey === activeModuleKey) return moduleKey;
+          return null;
+        }
+        return moduleKey;
+      });
+    },
+    [activeModuleKey],
+  );
+
+  function renderModuleItem(item: NavItem) {
+    const resolvedHref = buildHref(item.href);
+    const hasChildren = moduleHasChildren(item);
+    const isActive = moduleIsActive(item, isItemActive);
+    const isExpanded = !isCollapsed && hasChildren && expandedModuleKey === item.key;
+
+    if (isCollapsed) {
+      return (
+        <li key={item.key}>
+          <Link
+            href={resolvedHref}
+            title={item.label}
+            aria-current={isActive ? "page" : undefined}
+            className={cn(
+              "sce-nav-item justify-center px-2",
+              isActive && "active",
+            )}
+          >
+            <span className="sce-nav-icon-wrap" aria-hidden={false}>
+              <AnimatedNavIcon label={item.label} active={isActive} variant="parent" />
+            </span>
+            <span className="sr-only">{item.label}</span>
+          </Link>
+        </li>
+      );
+    }
+
+    if (!hasChildren) {
+      return (
+        <li key={item.key}>
+          <Link
+            href={resolvedHref}
+            aria-current={isActive ? "page" : undefined}
+            className={cn("sce-nav-item", isActive && "active")}
+          >
+            <span className="sce-nav-icon-wrap" aria-hidden={false}>
+              <AnimatedNavIcon label={item.label} active={isActive} variant="parent" />
+            </span>
+            <span>{item.label}</span>
+          </Link>
+        </li>
+      );
+    }
+
+    return (
+      <li key={item.key} className={cn("sce-nav-module", isActive && "sce-nav-module--active")}>
+        <div className={cn("sce-nav-module-header", isActive && "active")}>
+          <Link
+            href={resolvedHref}
+            aria-current={isActive && isItemActive(item.href) ? "page" : undefined}
+            className={cn(
+              "sce-nav-item sce-nav-module-link min-w-0 flex-1 no-underline text-inherit",
+              isActive && "active",
+            )}
+          >
+            <span className="sce-nav-icon-wrap" aria-hidden={false}>
+              <AnimatedNavIcon label={item.label} active={isActive} variant="parent" />
+            </span>
+            <span className="truncate">{item.label}</span>
+          </Link>
+
+          <button
+            type="button"
+            className="sce-nav-module-toggle"
+            aria-expanded={isExpanded}
+            aria-controls={`nav-module-${item.key}`}
+            aria-label={`${item.label} ${isExpanded ? "einklappen" : "ausklappen"}`}
+            onClick={() => handleModuleToggle(item.key)}
+          >
+            <ChevronRight
+              className={cn(
+                "h-4 w-4 motion-safe:transition-transform motion-safe:duration-150",
+                isExpanded && "rotate-90",
+              )}
+              aria-hidden="true"
+            />
+          </button>
+        </div>
+
+        {isExpanded && (
+          <ul
+            id={`nav-module-${item.key}`}
+            className="sce-nav-module-children mt-0.5 space-y-0.5"
+          >
+            {item.children!.map((child) => {
+              const childHref = buildHref(child.href);
+              const isChildActive = isItemActive(child.href);
+              return (
+                <li key={child.key}>
+                  <Link
+                    href={childHref}
+                    aria-current={isChildActive ? "page" : undefined}
+                    className={cn("sce-nav-child", isChildActive && "active")}
+                  >
+                    <span className="sce-nav-icon-wrap sce-nav-icon-wrap--child" aria-hidden={false}>
+                      <AnimatedNavIcon
+                        label={child.label}
+                        active={isChildActive}
+                        variant="child"
+                      />
+                    </span>
+                    <span>{child.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </li>
+    );
+  }
+
   return (
     <aside
       className={cn(
         "sce-sidebar flex-shrink-0 relative",
-        isCollapsed && "collapsed",
+        isCollapsed && collapsedHydrated && "collapsed",
         isResizing && "sce-sidebar-resizing",
       )}
       aria-label="Hauptnavigation"
@@ -99,7 +278,7 @@ export default function AdminSidebar({
         <button
           type="button"
           onClick={handleToggle}
-          aria-label={isCollapsed ? "Menü erweitern" : "Menü einklappen"}
+          aria-label={isCollapsed ? "Navigation ausklappen" : "Navigation einklappen"}
           aria-expanded={!isCollapsed}
           aria-controls="admin-sidebar-nav"
           className="sce-icon-button shrink-0 ml-auto min-h-[2.75rem] min-w-[2.75rem]"
@@ -119,7 +298,7 @@ export default function AdminSidebar({
         {sections.map((section, sectionIdx) => (
           <div
             key={section.sectionLabel ?? `nav-section:${sectionIdx}`}
-            className={cn(sectionIdx > 0 && "mt-5")}
+            className={cn(sectionIdx > 0 && "mt-4")}
             role="group"
             aria-label={section.sectionLabel ?? undefined}
           >
@@ -141,62 +320,7 @@ export default function AdminSidebar({
             )}
 
             <ul className="space-y-1">
-              {section.items.map((item) => {
-                const resolvedHref = buildHref(item.href);
-                const childActive = item.children?.some((c) => isItemActive(c.href)) ?? false;
-                const isActive = isItemActive(item.href) || childActive;
-
-                return (
-                  <li key={item.key}>
-                    <Link
-                      href={resolvedHref}
-                      title={isCollapsed ? item.label : undefined}
-                      aria-current={isActive ? "page" : undefined}
-                      className={cn(
-                        "sce-nav-item",
-                        isActive && "active",
-                        isCollapsed && "justify-center px-2",
-                      )}
-                    >
-                      <span className="sce-nav-icon-wrap" aria-hidden={false}>
-                        <AnimatedNavIcon
-                          label={item.label}
-                          active={isActive}
-                          variant="parent"
-                        />
-                      </span>
-                      <span className={cn(isCollapsed && "sr-only")}>{item.label}</span>
-                    </Link>
-
-                    {!isCollapsed && item.children && item.children.length > 0 && (
-                      <ul className="mt-1 space-y-0.5 border-l border-[color-mix(in_srgb,var(--border)_55%,transparent)] ml-[1.125rem] pl-2">
-                        {item.children.map((child) => {
-                          const childHref = buildHref(child.href);
-                          const isChildActive = isItemActive(child.href);
-                          return (
-                            <li key={child.key}>
-                              <Link
-                                href={childHref}
-                                aria-current={isChildActive ? "page" : undefined}
-                                className={cn("sce-nav-child", isChildActive && "active")}
-                              >
-                                <span className="sce-nav-icon-wrap sce-nav-icon-wrap--child" aria-hidden={false}>
-                                  <AnimatedNavIcon
-                                    label={child.label}
-                                    active={isChildActive}
-                                    variant="child"
-                                  />
-                                </span>
-                                <span>{child.label}</span>
-                              </Link>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </li>
-                );
-              })}
+              {section.items.map((item) => renderModuleItem(item))}
             </ul>
           </div>
         ))}

@@ -1248,6 +1248,62 @@ button {
   margin-bottom: 6px;
 }
 
+.sce-nav-module {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sce-nav-module--active > .sce-nav-module-header {
+  background: color-mix(in srgb, var(--sce-accent) 8%, transparent);
+  border-radius: var(--radius-md);
+}
+
+.sce-nav-module-header {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  min-height: 2.75rem;
+}
+
+.sce-nav-module-link.active::before {
+  display: none;
+}
+
+.sce-nav-module-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.75rem;
+  min-height: 2.75rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.sce-nav-module-toggle:hover {
+  background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+  color: var(--foreground);
+}
+
+.sce-nav-module-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sce-primary) 55%, transparent);
+}
+
+.sce-nav-module-children {
+  margin-left: 0.875rem;
+  padding-left: 0.625rem;
+  border-left: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
    SCE TOP NAVIGATION
 ───────────────────────────────────────────────────────────────────────── */

@@ -6,15 +6,22 @@
  *   - SportClubEvo platform branding at footer (not "Powered by")
  *   - MatchCenter renders nested under Planung (not as a standalone item)
  *   - permission-driven visibility is preserved
+ *
+ * DASHBOARD-V3-03E — two-level module navigation:
+ *   - accordion child expansion
+ *   - active module auto-expands
+ *   - collapsed icon rail
  */
 
-import { render, screen, within } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import AdminSidebar from "@/components/admin/layout/AdminSidebar";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
+const pathnameState = vi.hoisted(() => ({ value: "/dashboard" }));
+
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/dashboard",
+  usePathname: () => pathnameState.value,
   useSearchParams: () => new URLSearchParams(),
 }));
 
@@ -30,6 +37,11 @@ vi.mock("@/hooks/useSidebarResize", () => ({
 const CLUB_ADMIN_PERMISSIONS = Object.values(PERMISSIONS);
 
 describe("AdminSidebar", () => {
+  beforeEach(() => {
+    pathnameState.value = "/dashboard";
+    localStorage.clear();
+  });
+
   it("renders the tenant name prominently in the brand header", () => {
     render(
       <AdminSidebar
@@ -67,7 +79,9 @@ describe("AdminSidebar", () => {
     expect(screen.queryByText("it@fcallschwil.ch")).not.toBeInTheDocument();
   });
 
-  it("renders MatchCenter nested under Planung, not as a standalone top-level item", () => {
+  it("renders MatchCenter nested under Planung when Planung is expanded", () => {
+    pathnameState.value = "/dashboard/matchcenter";
+
     render(
       <AdminSidebar
         permissionKeys={CLUB_ADMIN_PERMISSIONS}
@@ -107,7 +121,79 @@ describe("AdminSidebar", () => {
     );
   });
 
+  it("auto-expands the active module and keeps inactive module children collapsed", () => {
+    pathnameState.value = "/dashboard";
+
+    render(
+      <AdminSidebar
+        permissionKeys={CLUB_ADMIN_PERMISSIONS}
+        clubName="FC Allschwil"
+        logoUrl={null}
+      />,
+    );
+
+    expect(screen.queryByRole("link", { name: "MatchCenter" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "CMS Übersicht" })).not.toBeInTheDocument();
+  });
+
+  it("expands a module via accordion toggle and collapses the previously expanded module", () => {
+    pathnameState.value = "/dashboard";
+
+    render(
+      <AdminSidebar
+        permissionKeys={CLUB_ADMIN_PERMISSIONS}
+        clubName="FC Allschwil"
+        logoUrl={null}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Planung ausklappen/i }));
+    expect(screen.getByRole("link", { name: "MatchCenter" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Website ausklappen/i }));
+    expect(screen.getByRole("link", { name: "CMS Übersicht" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "MatchCenter" })).not.toBeInTheDocument();
+  });
+
+  it("uses accessible collapse control labels", () => {
+    render(
+      <AdminSidebar
+        permissionKeys={CLUB_ADMIN_PERMISSIONS}
+        clubName="FC Allschwil"
+        logoUrl={null}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Navigation einklappen" }),
+    ).toHaveAttribute("aria-expanded", "true");
+
+    fireEvent.click(screen.getByRole("button", { name: "Navigation einklappen" }));
+
+    expect(
+      screen.getByRole("button", { name: "Navigation ausklappen" }),
+    ).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("renders collapsed icon rail labels for assistive technology", () => {
+    render(
+      <AdminSidebar
+        permissionKeys={CLUB_ADMIN_PERMISSIONS}
+        clubName="FC Allschwil"
+        logoUrl={null}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Navigation einklappen" }));
+
+    const dashboardLink = screen.getByRole("link", { name: "Dashboard" });
+    expect(dashboardLink).toHaveAttribute("title", "Dashboard");
+    expect(within(dashboardLink).getByText("Dashboard", { selector: ".sr-only" })).toBeInTheDocument();
+  });
+
   it("renders Kommunikation and Sponsoring once in the Club Admin runtime sidebar groups", () => {
+    pathnameState.value = "/dashboard/communication";
+
     render(
       <AdminSidebar
         permissionKeys={[
@@ -158,5 +244,20 @@ describe("AdminSidebar", () => {
     expect(screen.getByRole("link", { name: "Administration" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "MatchCenter" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Organisation" })).not.toBeInTheDocument();
+  });
+
+  it("derives visible modules from getVisibleNavSections without duplicating permission logic", () => {
+    render(
+      <AdminSidebar
+        permissionKeys={[PERMISSIONS.ROLES_VIEW, PERMISSIONS.SEASONS_VIEW]}
+        clubName="FC Allschwil"
+        logoUrl={null}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Administration" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Website" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Planung" })).not.toBeInTheDocument();
   });
 });
