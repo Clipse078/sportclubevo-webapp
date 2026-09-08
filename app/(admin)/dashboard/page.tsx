@@ -17,7 +17,7 @@ import { getPersonalizedGreeting, resolveDashboardFirstName } from "@/lib/dashbo
 import { getPersonFirstNameByUserId } from "@/lib/people/queries";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { getCommandCenterData } from "@/lib/dashboard/command-center";
-import type { TodayScheduleItem } from "@/lib/dashboard/command-center";
+import { withTodayItemHrefs } from "@/lib/dashboard/today-schedule-href";
 import { getDashboardQuickActionDefs } from "@/lib/dashboard/quick-actions";
 import {
   DashboardCommandHeader,
@@ -46,13 +46,6 @@ function timeAgo(date: Date): string {
   if (diffH < 24) return `Vor ${diffH} Std.`;
   const diffD = Math.floor(diffH / 24);
   return `Vor ${diffD} Tag${diffD === 1 ? "" : "en"}`;
-}
-
-function resolveTodayItemHref(item: TodayScheduleItem): string | undefined {
-  if (item.key.startsWith("event-")) {
-    return `/dashboard/planner/edit/${item.key.slice("event-".length)}`;
-  }
-  return undefined;
 }
 
 const KPI_ACCENT: Record<string, DashboardKpiAccent> = {
@@ -234,8 +227,7 @@ export default async function DashboardPage() {
           }
         >
           <DashboardTodaySchedule
-            items={commandCenter.todayItems}
-            resolveHref={resolveTodayItemHref}
+            items={withTodayItemHrefs(commandCenter.todayItems)}
             emptyState={
               <DashboardEmptyState
                 icon={<CalendarDays className="h-5 w-5" />}

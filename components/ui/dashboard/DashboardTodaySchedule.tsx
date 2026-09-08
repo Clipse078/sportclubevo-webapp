@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/cn";
 import { DashboardTodayTimeline } from "./DashboardTodayTimeline";
+import type { DashboardTodayTimelineItem } from "./DashboardTodayTimeline";
 import type { TodayScheduleItem } from "@/lib/dashboard/command-center";
 
 type TodayFilter = "all" | "training" | "match" | "events";
@@ -40,15 +41,13 @@ function getAvailableFilters(items: TodayScheduleItem[]): TodayFilter[] {
 }
 
 export type DashboardTodayScheduleProps = {
-  items: TodayScheduleItem[];
-  resolveHref?: (item: TodayScheduleItem) => string | undefined;
+  items: DashboardTodayTimelineItem[];
   emptyState?: React.ReactNode;
   className?: string;
 };
 
 export function DashboardTodaySchedule({
   items,
-  resolveHref,
   emptyState,
   className,
 }: DashboardTodayScheduleProps) {
@@ -61,15 +60,6 @@ export function DashboardTodaySchedule({
   const filteredItems = useMemo(
     () => items.filter((item) => matchesFilter(item, safeFilter)),
     [items, safeFilter],
-  );
-
-  const itemsWithHref = useMemo(
-    () =>
-      filteredItems.map((item) => ({
-        ...item,
-        href: resolveHref?.(item),
-      })),
-    [filteredItems, resolveHref],
   );
 
   return (
@@ -109,8 +99,8 @@ export function DashboardTodaySchedule({
       )}
 
       <DashboardTodayTimeline
-        items={itemsWithHref}
-        compact={itemsWithHref.length === 1}
+        items={filteredItems}
+        compact={filteredItems.length === 1}
         emptyState={emptyState}
       />
     </div>
