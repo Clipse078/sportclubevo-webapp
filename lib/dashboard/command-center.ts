@@ -25,7 +25,7 @@ import {
   loadCanonicalClubLogoIndex,
 } from "@/lib/club-directory/canonical-logo-resolution";
 import { loadMatchEventPoliciesByEventId } from "@/lib/website/public-matches-identity";
-import { SCREEN1_TOURNAMENT_PARTICIPANT_SELECT } from "@/lib/publishing/infoboard/screen1-tournament-presentation";
+import { SFV_PROVIDER } from "@/lib/integrations/sfv/season-bridge";
 import { loadTournamentLogoResolutionContext } from "@/lib/tournaments/logo-resolution-context";
 import {
   buildCommandCenterMatchPresentation,
@@ -102,6 +102,56 @@ export type CommandCenterData = {
 };
 
 type StrategicActor = Pick<ActorContext, "tenantId" | "userId" | "permissionKeys">;
+
+/** Prisma select for tournament logos/names — excludes infoboard-only dressing-room data. */
+const COMMAND_CENTER_TOURNAMENT_PARTICIPANT_SELECT = {
+  id: true,
+  eventId: true,
+  displayName: true,
+  manualLabel: true,
+  displayOrder: true,
+  team: {
+    select: {
+      name: true,
+      shortName: true,
+      alternativeName: true,
+      infoboardDisplayName: true,
+      infoboardTournamentDisplayName: true,
+    },
+  },
+  externalClub: {
+    select: {
+      name: true,
+      shortName: true,
+      alternativeName: true,
+      logoUrl: true,
+      providerMappings: {
+        where: { provider: SFV_PROVIDER },
+        select: { providerClubId: true },
+      },
+    },
+  },
+  externalTeam: {
+    select: {
+      name: true,
+      shortName: true,
+      alternativeName: true,
+      logoUrl: true,
+      providerMappings: {
+        where: { provider: SFV_PROVIDER },
+        select: { providerClubId: true },
+      },
+      externalClub: {
+        select: {
+          name: true,
+          shortName: true,
+          alternativeName: true,
+          logoUrl: true,
+        },
+      },
+    },
+  },
+};
 
 // ── Labels ────────────────────────────────────────────────────────────────────
 
@@ -491,7 +541,7 @@ export async function getCommandCenterData(args: {
                 tenantId: args.tenantId,
                 eventId: { in: tournamentEventIds },
               },
-              select: { ...SCREEN1_TOURNAMENT_PARTICIPANT_SELECT },
+              select: COMMAND_CENTER_TOURNAMENT_PARTICIPANT_SELECT,
               orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
             })
             .then((rows) => {
@@ -533,9 +583,7 @@ export async function getCommandCenterData(args: {
       const tournamentParticipants =
         event.type === "TOURNAMENT"
           ? buildCommandCenterTournamentParticipants(
-              (tournamentParticipantsByEventId.get(event.id) ?? []) as Parameters<
-                typeof buildCommandCenterTournamentParticipants
-              >[0],
+              tournamentParticipantsByEventId.get(event.id) ?? [],
               tenantLogoUrl,
               tournamentLogoContext,
             )
