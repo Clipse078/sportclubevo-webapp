@@ -300,14 +300,6 @@ export default async function DashboardPage() {
                 iconAccent="primary"
                 variant="card"
                 bodyClassName="px-4 py-3 sm:px-5 sm:py-3.5"
-                actions={
-                  <Link
-                    href="/dashboard/website/news"
-                    className="sce-link-primary text-[0.8125rem] font-medium"
-                  >
-                    Alle News →
-                  </Link>
-                }
               >
                 <DashboardNewsSection
                   items={commandCenter.newsItems}
