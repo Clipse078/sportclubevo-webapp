@@ -1136,9 +1136,9 @@ button {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 9px;
-  height: 34px;
-  padding: 0 10px;
+  gap: 10px;
+  min-height: 2.75rem;
+  padding: 0 12px;
   border-radius: var(--radius-md);
   color: var(--text-2);
   font-size: 0.8125rem;
@@ -1147,7 +1147,8 @@ button {
   white-space: nowrap;
   transition:
     background-color var(--transition-fast),
-    color var(--transition-fast);
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
   cursor: pointer;
   border: none;
   background: transparent;
@@ -1155,34 +1156,60 @@ button {
   text-align: left;
 }
 
+.sce-nav-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sce-primary) 55%, transparent);
+}
+
 .sce-nav-item:hover {
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--surface-2) 88%, transparent);
   color: var(--foreground);
 }
 
 .sce-nav-item.active {
-  background: color-mix(in srgb, var(--sce-accent) 8%, transparent);
+  background: color-mix(in srgb, var(--sce-accent) 12%, var(--surface-2));
   color: var(--foreground);
   font-weight: 600;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sce-accent) 18%, transparent);
 }
 
 .sce-nav-item.active::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 6px;
-  bottom: 6px;
-  width: 2px;
-  border-radius: 0 2px 2px 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
   background: var(--sce-accent);
+}
+
+.sce-nav-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface-2) 72%, transparent);
+  flex-shrink: 0;
+}
+
+.sce-nav-item.active .sce-nav-icon-wrap {
+  background: color-mix(in srgb, var(--sce-accent) 14%, var(--surface-2));
+}
+
+.sce-nav-icon-wrap--child {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .sce-nav-child {
   display: flex;
   align-items: center;
   gap: 9px;
-  height: 30px;
-  padding: 0 10px 0 30px;
+  min-height: 2.75rem;
+  padding: 0 10px 0 8px;
   border-radius: var(--radius-md);
   color: var(--muted);
   font-size: 0.8rem;
@@ -1190,28 +1217,35 @@ button {
   text-decoration: none;
   transition:
     background-color var(--transition-fast),
-    color var(--transition-fast);
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.sce-nav-child:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sce-primary) 55%, transparent);
 }
 
 .sce-nav-child:hover {
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--surface-2) 88%, transparent);
   color: var(--text-2);
 }
 
 .sce-nav-child.active {
   color: var(--foreground);
   font-weight: 500;
-  background: color-mix(in srgb, var(--sce-accent) 6%, transparent);
+  background: color-mix(in srgb, var(--sce-accent) 8%, var(--surface-2));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sce-accent) 12%, transparent);
 }
 
 .sce-nav-section-label {
-  color: var(--muted);
-  font-size: 0.68rem;
+  color: color-mix(in srgb, var(--muted) 92%, var(--foreground));
+  font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
-  padding: 0 10px;
-  margin-bottom: 2px;
+  padding: 0 12px;
+  margin-bottom: 6px;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

@@ -20,7 +20,7 @@ import { getCommandCenterData } from "@/lib/dashboard/command-center";
 import { withTodayItemHrefs } from "@/lib/dashboard/today-schedule-href";
 import { getDashboardQuickActionDefs } from "@/lib/dashboard/quick-actions";
 import {
-  DashboardHero,
+  DashboardHeroSection,
   DashboardKpiGrid,
   DashboardQuickActions,
   DashboardActivityFeed,
@@ -109,6 +109,7 @@ export default async function DashboardPage() {
         tenantId,
         actor,
         fmtCfg,
+        userId: session?.user?.id ?? null,
       })
     : {
         kpis: [],
@@ -200,14 +201,14 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-5 lg:gap-6">
-      <DashboardHero
+      <DashboardHeroSection
+        initialBackgroundImageUrl={commandCenter.heroBackgroundImageUrl}
         greeting={greeting}
         highlightName={displayName}
         subtitle={heroSubtitle}
         clubName={ctx?.name ?? undefined}
         activeSeason={activeSeason}
         date={todayFormatted}
-        backgroundImageUrl={commandCenter.heroBackgroundImageUrl}
         kpiGrid={
           kpiItems.length > 0 ? (
             <DashboardKpiGrid items={kpiItems} variant="hero" />

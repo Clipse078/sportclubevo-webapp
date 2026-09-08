@@ -87,6 +87,7 @@ export default function AdminSidebar({
         isCollapsed && "collapsed",
         isResizing && "sce-sidebar-resizing",
       )}
+      aria-label="Hauptnavigation"
     >
       <div className="sce-sidebar-brand">
         <SidebarBrandHeader
@@ -99,33 +100,47 @@ export default function AdminSidebar({
           type="button"
           onClick={handleToggle}
           aria-label={isCollapsed ? "Menü erweitern" : "Menü einklappen"}
-          className="sce-icon-button shrink-0 ml-auto"
+          aria-expanded={!isCollapsed}
+          aria-controls="admin-sidebar-nav"
+          className="sce-icon-button shrink-0 ml-auto min-h-[2.75rem] min-w-[2.75rem]"
         >
           {isCollapsed
-            ? <ChevronRight className="h-3.5 w-3.5" />
-            : <ChevronLeft className="h-3.5 w-3.5" />
+            ? <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+            : <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
           }
         </button>
       </div>
 
-      <nav className="sce-sidebar-nav flex-1 overflow-y-auto overflow-x-hidden px-2 py-3">
+      <nav
+        id="admin-sidebar-nav"
+        className="sce-sidebar-nav flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-3"
+        aria-label="Modulnavigation"
+      >
         {sections.map((section, sectionIdx) => (
-          <div key={section.sectionLabel ?? `nav-section:${sectionIdx}`}>
+          <div
+            key={section.sectionLabel ?? `nav-section:${sectionIdx}`}
+            className={cn(sectionIdx > 0 && "mt-5")}
+            role="group"
+            aria-label={section.sectionLabel ?? undefined}
+          >
             {section.sectionLabel && !isCollapsed && (
               <p
                 className={cn(
                   "sce-nav-section-label",
-                  sectionIdx > 0 && "mt-4",
+                  sectionIdx > 0 && "mt-0",
                 )}
               >
                 {section.sectionLabel}
               </p>
             )}
             {section.sectionLabel && isCollapsed && sectionIdx > 0 && (
-              <div className="my-2 mx-2 border-t border-[var(--border)]" />
+              <div
+                className="my-2.5 mx-1.5 border-t border-[color-mix(in_srgb,var(--border)_70%,transparent)]"
+                aria-hidden="true"
+              />
             )}
 
-            <ul className="space-y-0.5">
+            <ul className="space-y-1">
               {section.items.map((item) => {
                 const resolvedHref = buildHref(item.href);
                 const childActive = item.children?.some((c) => isItemActive(c.href)) ?? false;
@@ -136,22 +151,25 @@ export default function AdminSidebar({
                     <Link
                       href={resolvedHref}
                       title={isCollapsed ? item.label : undefined}
+                      aria-current={isActive ? "page" : undefined}
                       className={cn(
                         "sce-nav-item",
                         isActive && "active",
                         isCollapsed && "justify-center px-2",
                       )}
                     >
-                      <AnimatedNavIcon
-                        label={item.label}
-                        active={isActive}
-                        variant="parent"
-                      />
-                      {!isCollapsed && <span>{item.label}</span>}
+                      <span className="sce-nav-icon-wrap" aria-hidden={false}>
+                        <AnimatedNavIcon
+                          label={item.label}
+                          active={isActive}
+                          variant="parent"
+                        />
+                      </span>
+                      <span className={cn(isCollapsed && "sr-only")}>{item.label}</span>
                     </Link>
 
                     {!isCollapsed && item.children && item.children.length > 0 && (
-                      <ul className="mt-0.5 space-y-0.5">
+                      <ul className="mt-1 space-y-0.5 border-l border-[color-mix(in_srgb,var(--border)_55%,transparent)] ml-[1.125rem] pl-2">
                         {item.children.map((child) => {
                           const childHref = buildHref(child.href);
                           const isChildActive = isItemActive(child.href);
@@ -159,13 +177,16 @@ export default function AdminSidebar({
                             <li key={child.key}>
                               <Link
                                 href={childHref}
+                                aria-current={isChildActive ? "page" : undefined}
                                 className={cn("sce-nav-child", isChildActive && "active")}
                               >
-                                <AnimatedNavIcon
-                                  label={child.label}
-                                  active={isChildActive}
-                                  variant="child"
-                                />
+                                <span className="sce-nav-icon-wrap sce-nav-icon-wrap--child" aria-hidden={false}>
+                                  <AnimatedNavIcon
+                                    label={child.label}
+                                    active={isChildActive}
+                                    variant="child"
+                                  />
+                                </span>
                                 <span>{child.label}</span>
                               </Link>
                             </li>
@@ -181,7 +202,7 @@ export default function AdminSidebar({
         ))}
       </nav>
 
-      <div className="shrink-0 border-t border-[var(--border)] px-2 py-3">
+      <div className="shrink-0 border-t border-[color-mix(in_srgb,var(--border)_70%,transparent)] px-2.5 py-3">
         <SidebarPlatformBrand collapsed={isCollapsed} />
       </div>
 

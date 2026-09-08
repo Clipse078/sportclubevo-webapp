@@ -36,6 +36,7 @@ import {
   type CommandCenterTournamentParticipant,
   type CommandCenterUpcomingLogo,
 } from "@/lib/dashboard/command-center-presentation";
+import { getUserDashboardHeroImageUrl } from "@/lib/dashboard/dashboard-hero-image";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -310,6 +311,7 @@ export async function getCommandCenterData(args: {
   tenantId: string;
   actor: StrategicActor | null;
   fmtCfg: TenantFormatConfig;
+  userId?: string | null;
   now?: Date;
 }): Promise<CommandCenterData> {
   const now = args.now ?? new Date();
@@ -740,6 +742,8 @@ export async function getCommandCenterData(args: {
     upcomingItems,
     activitySources,
     newsItems,
-    heroBackgroundImageUrl: null,
+    heroBackgroundImageUrl: args.userId
+      ? await getUserDashboardHeroImageUrl(args.userId)
+      : null,
   };
 }

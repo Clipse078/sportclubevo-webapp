@@ -11,6 +11,8 @@
 export { DashboardHero } from "./DashboardHero";
 export type { DashboardHeroProps } from "./DashboardHero";
 
+export { DashboardHeroSection } from "./DashboardHeroSection";
+
 export { DashboardCommandHeader } from "./DashboardCommandHeader";
 export type { DashboardCommandHeaderProps } from "./DashboardCommandHeader";
 

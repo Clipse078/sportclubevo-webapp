@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
+import {
+  isTodayMatchCard,
+  isTodayTournamentCard,
+} from "@/lib/dashboard/today-event-card-presentation";
+import {
+  DashboardTodayMatchCard,
+  DashboardTodayTournamentCard,
+} from "./DashboardTodayEventCards";
 import { DashboardEmptyState } from "./DashboardEmptyState";
 import type { TodayScheduleItem } from "@/lib/dashboard/command-center";
 
@@ -37,83 +44,13 @@ function MetaLine({ meta }: { meta: string }) {
   );
 }
 
-function MatchSides({
-  match,
-  competitionLabel,
-}: {
-  match: NonNullable<TodayScheduleItem["matchPresentation"]>;
-  competitionLabel?: string;
-}) {
-  const fixtureLine = competitionLabel
-    ? `${competitionLabel} — vs ${match.away.displayName}`
-    : `${match.home.displayName} vs ${match.away.displayName}`;
-
-  return (
-    <div className="mt-1.5 space-y-1.5">
-      <p className="text-[0.875rem] font-semibold leading-snug text-[var(--foreground)]">
-        {fixtureLine}
-      </p>
-      <div className="flex items-center gap-2">
-        <ClubLogo logoUrl={match.home.logoUrl} name={match.home.displayName} size="sm" bare />
-        <p className="min-w-0 truncate text-[0.8125rem] font-medium text-[var(--text-2)]">
-          {match.home.displayName}
-        </p>
-      </div>
-      <div className="flex items-center gap-2">
-        <ClubLogo logoUrl={match.away.logoUrl} name={match.away.displayName} size="sm" bare />
-        <p className="min-w-0 truncate text-[0.8125rem] font-medium text-[var(--text-2)]">
-          {match.away.displayName}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function TournamentParticipants({
-  participants,
-}: {
-  participants: NonNullable<TodayScheduleItem["tournamentParticipants"]>;
-}) {
-  const visible = participants.slice(0, 8);
-
-  return (
-    <div className="mt-2 flex flex-wrap items-center gap-1.5">
-      {visible.map((participant, index) => (
-        <div
-          key={`${participant.displayName}-${index}`}
-          className="flex items-center"
-          title={participant.displayName}
-        >
-          <ClubLogo
-            logoUrl={participant.logoUrl}
-            name={participant.displayName}
-            size="sm"
-            bare
-          />
-        </div>
-      ))}
-      {participants.length > visible.length && (
-        <span className="px-1 text-[0.6875rem] font-medium text-[var(--muted)]">
-          +{participants.length - visible.length}
-        </span>
-      )}
-    </div>
-  );
-}
-
-function TimelineContent({
+function ScheduleRowContent({
   item,
   accent,
 }: {
   item: DashboardTodayTimelineItem;
   accent: string;
 }) {
-  const isMatch = item.eventType === "MATCH" && item.matchPresentation;
-  const isTournament =
-    item.eventType === "TOURNAMENT" &&
-    item.tournamentParticipants &&
-    item.tournamentParticipants.length > 0;
-
   return (
     <div className="min-w-0 flex-1">
       <div className="flex items-start justify-between gap-2.5">
@@ -122,32 +59,14 @@ function TimelineContent({
             className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em]"
             style={{ color: accent }}
           >
-            {isMatch ? item.typeLabel : item.competitionLabel || item.typeLabel}
+            {item.competitionLabel || item.typeLabel}
           </span>
 
-          {!isMatch && (
-            <p className="mt-0.5 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
-              {item.title}
-            </p>
-          )}
+          <p className="mt-0.5 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
+            {item.title}
+          </p>
 
-          {isMatch && item.matchPresentation && (
-            <MatchSides
-              match={item.matchPresentation}
-              competitionLabel={item.competitionLabel}
-            />
-          )}
-
-          {isTournament && item.tournamentParticipants && (
-            <>
-              <p className="mt-0.5 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
-                {item.title}
-              </p>
-              <TournamentParticipants participants={item.tournamentParticipants} />
-            </>
-          )}
-
-          {!isMatch && !isTournament && item.subtitle && (
+          {item.subtitle && (
             <p className="mt-0.5 text-[0.8125rem] text-[var(--text-2)]">{item.subtitle}</p>
           )}
 
@@ -165,7 +84,7 @@ function TimelineContent({
   );
 }
 
-function TimelineRow({
+function ScheduleRow({
   item,
   isLast,
 }: {
@@ -176,9 +95,10 @@ function TimelineRow({
 
   const rowClassName = cn(
     "group relative grid grid-cols-[3.25rem_minmax(0,1fr)] gap-x-3 sm:grid-cols-[3.75rem_minmax(0,1fr)] sm:gap-x-4",
-    "rounded-[var(--radius-md)] px-0.5 -mx-0.5",
+    "rounded-[var(--radius-md)] px-0.5 -mx-0.5 min-h-[2.75rem]",
     "motion-safe:transition-colors motion-safe:duration-150",
-    item.href && "cursor-pointer motion-safe:hover:bg-[color-mix(in_srgb,var(--surface-2)_65%,transparent)]",
+    item.href &&
+      "cursor-pointer motion-safe:hover:bg-[color-mix(in_srgb,var(--surface-2)_65%,transparent)]",
     !isLast && "border-b border-[color-mix(in_srgb,var(--border)_85%,transparent)] pb-3.5 mb-0",
     "pt-0",
   );
@@ -202,7 +122,7 @@ function TimelineRow({
           style={{ backgroundColor: accent }}
           aria-hidden="true"
         />
-        <TimelineContent item={item} accent={accent} />
+        <ScheduleRowContent item={item} accent={accent} />
       </div>
     </>
   );
@@ -220,8 +140,27 @@ function TimelineRow({
   return <li className={rowClassName}>{inner}</li>;
 }
 
+function TodayEventItem({
+  item,
+  isLast,
+}: {
+  item: DashboardTodayTimelineItem;
+  isLast: boolean;
+}) {
+  if (isTodayMatchCard(item)) {
+    return <DashboardTodayMatchCard item={item} />;
+  }
+
+  if (isTodayTournamentCard(item)) {
+    return <DashboardTodayTournamentCard item={item} />;
+  }
+
+  return <ScheduleRow item={item} isLast={isLast} />;
+}
+
 /**
- * Premium operational timeline for today's club schedule.
+ * Premium operational schedule for today's club events.
+ * Matches and tournaments render as compact fixture cards; other types stay as schedule rows.
  */
 export function DashboardTodayTimeline({
   items,
@@ -241,10 +180,21 @@ export function DashboardTodayTimeline({
     );
   }
 
+  const hasPremiumCards = items.some(
+    (item) => isTodayMatchCard(item) || isTodayTournamentCard(item),
+  );
+
   return (
-    <ol className={cn("relative", className)} aria-label="Heutiger Tagesplan">
+    <ol
+      className={cn(
+        "relative",
+        hasPremiumCards && "flex flex-col gap-2.5",
+        className,
+      )}
+      aria-label="Heutiger Tagesplan"
+    >
       {items.map((item, index) => (
-        <TimelineRow
+        <TodayEventItem
           key={item.key}
           item={item}
           isLast={index === items.length - 1}

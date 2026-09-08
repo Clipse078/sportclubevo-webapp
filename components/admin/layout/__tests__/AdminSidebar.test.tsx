@@ -92,6 +92,21 @@ describe("AdminSidebar", () => {
     expect(matchIdx).toBeLessThan(tournamentIdx);
   });
 
+  it("marks the active dashboard route with aria-current", () => {
+    render(
+      <AdminSidebar
+        permissionKeys={CLUB_ADMIN_PERMISSIONS}
+        clubName="FC Allschwil"
+        logoUrl={null}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
   it("renders Kommunikation and Sponsoring once in the Club Admin runtime sidebar groups", () => {
     render(
       <AdminSidebar
