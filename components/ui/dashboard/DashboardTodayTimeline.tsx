@@ -33,35 +33,37 @@ function getTypeAccent(type?: TodayScheduleItem["eventType"]): string {
 
 function MetaLine({ meta }: { meta: string }) {
   return (
-    <p className="mt-2 text-[0.75rem] leading-relaxed text-[var(--text-2)]">{meta}</p>
+    <p className="mt-1.5 text-[0.75rem] leading-relaxed text-[var(--text-2)]">{meta}</p>
   );
 }
 
 function MatchSides({
   match,
+  competitionLabel,
 }: {
   match: NonNullable<TodayScheduleItem["matchPresentation"]>;
+  competitionLabel?: string;
 }) {
+  const fixtureLine = competitionLabel
+    ? `${competitionLabel} — vs ${match.away.displayName}`
+    : `${match.home.displayName} vs ${match.away.displayName}`;
+
   return (
-    <div className="mt-3 space-y-2.5">
-      <div className="flex items-center gap-2.5">
-        <ClubLogo logoUrl={match.home.logoUrl} name={match.home.displayName} size="sm" bare />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[0.875rem] font-semibold text-[var(--foreground)]">
-            {match.home.displayName}
-          </p>
-        </div>
-      </div>
-      <p className="pl-1 text-[0.625rem] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-        vs
+    <div className="mt-1.5 space-y-1.5">
+      <p className="text-[0.875rem] font-semibold leading-snug text-[var(--foreground)]">
+        {fixtureLine}
       </p>
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2">
+        <ClubLogo logoUrl={match.home.logoUrl} name={match.home.displayName} size="sm" bare />
+        <p className="min-w-0 truncate text-[0.8125rem] font-medium text-[var(--text-2)]">
+          {match.home.displayName}
+        </p>
+      </div>
+      <div className="flex items-center gap-2">
         <ClubLogo logoUrl={match.away.logoUrl} name={match.away.displayName} size="sm" bare />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[0.875rem] font-semibold text-[var(--foreground)]">
-            {match.away.displayName}
-          </p>
-        </div>
+        <p className="min-w-0 truncate text-[0.8125rem] font-medium text-[var(--text-2)]">
+          {match.away.displayName}
+        </p>
       </div>
     </div>
   );
@@ -72,14 +74,15 @@ function TournamentParticipants({
 }: {
   participants: NonNullable<TodayScheduleItem["tournamentParticipants"]>;
 }) {
-  const visible = participants.slice(0, 6);
+  const visible = participants.slice(0, 8);
 
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-2">
+    <div className="mt-2 flex flex-wrap items-center gap-1.5">
       {visible.map((participant, index) => (
         <div
           key={`${participant.displayName}-${index}`}
-          className="flex min-w-0 max-w-[calc(50%-0.25rem)] items-center gap-1.5 sm:max-w-[calc(33.333%-0.35rem)]"
+          className="flex items-center"
+          title={participant.displayName}
         >
           <ClubLogo
             logoUrl={participant.logoUrl}
@@ -87,13 +90,10 @@ function TournamentParticipants({
             size="sm"
             bare
           />
-          <span className="truncate text-[0.75rem] font-medium text-[var(--text-2)]">
-            {participant.displayName}
-          </span>
         </div>
       ))}
       {participants.length > visible.length && (
-        <span className="text-[0.6875rem] text-[var(--muted)]">
+        <span className="px-1 text-[0.6875rem] font-medium text-[var(--muted)]">
           +{participants.length - visible.length}
         </span>
       )}
@@ -116,28 +116,31 @@ function TimelineContent({
 
   return (
     <div className="min-w-0 flex-1">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-2.5">
         <div className="min-w-0 flex-1">
           <span
             className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em]"
             style={{ color: accent }}
           >
-            {item.competitionLabel || item.typeLabel}
+            {isMatch ? item.typeLabel : item.competitionLabel || item.typeLabel}
           </span>
 
           {!isMatch && (
-            <p className="mt-1 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)] sm:text-base">
+            <p className="mt-0.5 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
               {item.title}
             </p>
           )}
 
           {isMatch && item.matchPresentation && (
-            <MatchSides match={item.matchPresentation} />
+            <MatchSides
+              match={item.matchPresentation}
+              competitionLabel={item.competitionLabel}
+            />
           )}
 
           {isTournament && item.tournamentParticipants && (
             <>
-              <p className="mt-1 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)] sm:text-base">
+              <p className="mt-0.5 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
                 {item.title}
               </p>
               <TournamentParticipants participants={item.tournamentParticipants} />
@@ -164,24 +167,20 @@ function TimelineContent({
 
 function TimelineRow({
   item,
-  compact,
   isLast,
 }: {
   item: DashboardTodayTimelineItem;
-  compact?: boolean;
   isLast: boolean;
 }) {
   const accent = getTypeAccent(item.eventType);
 
   const rowClassName = cn(
-    "group relative grid grid-cols-[3.75rem_minmax(0,1fr)] gap-x-4 sm:grid-cols-[4.25rem_minmax(0,1fr)]",
-    "rounded-[var(--radius-lg)] px-1 -mx-1",
+    "group relative grid grid-cols-[3.25rem_minmax(0,1fr)] gap-x-3 sm:grid-cols-[3.75rem_minmax(0,1fr)] sm:gap-x-4",
+    "rounded-[var(--radius-md)] px-0.5 -mx-0.5",
     "motion-safe:transition-colors motion-safe:duration-150",
-    item.href && "motion-safe:hover:bg-[var(--surface-2)]/70",
-    !isLast && "border-b border-[var(--border)]/80 pb-4",
-    !isLast && (compact ? "mb-0" : "mb-0"),
-    isLast ? (compact ? "pb-0" : "pb-0") : undefined,
-    compact ? "pt-0" : "pt-0",
+    item.href && "cursor-pointer motion-safe:hover:bg-[color-mix(in_srgb,var(--surface-2)_65%,transparent)]",
+    !isLast && "border-b border-[color-mix(in_srgb,var(--border)_85%,transparent)] pb-3.5 mb-0",
+    "pt-0",
   );
 
   const inner = (
@@ -197,9 +196,9 @@ function TimelineRow({
         )}
       </div>
 
-      <div className="relative min-w-0 border-l-2 border-[var(--border)] pl-4 sm:pl-5">
+      <div className="relative min-w-0 border-l-2 border-[color-mix(in_srgb,var(--border)_90%,transparent)] pl-3.5 sm:pl-4">
         <span
-          className="absolute -left-[6px] top-2 h-3 w-3 rounded-full border-2 border-[var(--surface)] ring-1 ring-[var(--border)]"
+          className="absolute -left-[5px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--surface)] ring-1 ring-[color-mix(in_srgb,var(--border)_80%,transparent)]"
           style={{ backgroundColor: accent }}
           aria-hidden="true"
         />
@@ -227,7 +226,6 @@ function TimelineRow({
 export function DashboardTodayTimeline({
   items,
   emptyState,
-  compact = false,
   className,
 }: DashboardTodayTimelineProps) {
   if (items.length === 0) {
@@ -249,7 +247,6 @@ export function DashboardTodayTimeline({
         <TimelineRow
           key={item.key}
           item={item}
-          compact={compact}
           isLast={index === items.length - 1}
         />
       ))}

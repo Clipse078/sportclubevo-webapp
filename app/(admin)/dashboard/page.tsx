@@ -34,6 +34,7 @@ import {
   DashboardNewsSection,
 } from "@/components/ui/dashboard";
 import type { DashboardKpiAccent } from "@/components/ui/dashboard";
+import type { QuickActionAccent } from "@/components/ui/dashboard/DashboardQuickActions";
 import { getCurrentSwissFootballSeason } from "@/lib/seasons/season-logic";
 import { formatTodayDate } from "@/lib/tenant-runtime/formatters";
 import type { PermissionKey } from "@/lib/permissions/permissions";
@@ -53,18 +54,29 @@ const KPI_ACCENT: Record<string, DashboardKpiAccent> = {
   teams: "primary",
   people: "info",
   "today-events": "success",
-  registrations: "warning",
+  registrations: "violet",
+};
+
+const QUICK_ACTION_ACCENT: Record<string, QuickActionAccent> = {
+  news: "primary",
+  training: "info",
+  "planner-week": "violet",
+  person: "success",
+  infoboard: "primary",
+  registrations: "violet",
+  events: "info",
+  "people-access": "default",
 };
 
 const QUICK_ACTION_ICONS = {
-  news: <Newspaper className="h-4 w-4" />,
-  training: <CalendarDays className="h-4 w-4" />,
-  "planner-week": <CalendarRange className="h-4 w-4" />,
-  person: <UserPlus className="h-4 w-4" />,
-  infoboard: <Monitor className="h-4 w-4" />,
-  registrations: <Users className="h-4 w-4" />,
-  events: <CalendarDays className="h-4 w-4" />,
-  "people-access": <Users className="h-4 w-4" />,
+  news: <Newspaper className="h-5 w-5" />,
+  training: <CalendarDays className="h-5 w-5" />,
+  "planner-week": <CalendarRange className="h-5 w-5" />,
+  person: <UserPlus className="h-5 w-5" />,
+  infoboard: <Monitor className="h-5 w-5" />,
+  registrations: <Users className="h-5 w-5" />,
+  events: <CalendarDays className="h-5 w-5" />,
+  "people-access": <Users className="h-5 w-5" />,
 } as const;
 
 export default async function DashboardPage() {
@@ -116,15 +128,20 @@ export default async function DashboardPage() {
   const quickActions = quickActionDefs.map((action) => ({
     href: action.href,
     icon: QUICK_ACTION_ICONS[action.key as keyof typeof QUICK_ACTION_ICONS] ?? (
-      <FileText className="h-4 w-4" />
+      <FileText className="h-5 w-5" />
     ),
     title: action.title,
     subtitle: action.subtitle,
+    accent: QUICK_ACTION_ACCENT[action.key] ?? "primary",
   }));
 
   const activeSeason = ctx ? getCurrentSwissFootballSeason()?.label : undefined;
   const todayFormatted = formatTodayDate(fmtCfg);
   const greeting = getPersonalizedGreeting(firstName);
+  const displayName = firstName?.trim() || "zusammen";
+  const heroSubtitle = ctx?.name
+    ? `Schön, dass du wieder da bist. Gemeinsam für den ${ctx.name}.`
+    : "Schön, dass du wieder da bist.";
 
   const activityTagMap: Record<
     (typeof commandCenter.activitySources)[number]["kind"],
@@ -171,20 +188,22 @@ export default async function DashboardPage() {
     accent: KPI_ACCENT[kpi.key] ?? "default",
     icon:
       kpi.key === "teams" ? (
-        <Users className="h-5 w-5" />
+        <Users className="h-6 w-6" />
       ) : kpi.key === "people" ? (
-        <UserPlus className="h-5 w-5" />
+        <UserPlus className="h-6 w-6" />
       ) : kpi.key === "today-events" ? (
-        <CalendarDays className="h-5 w-5" />
+        <CalendarDays className="h-6 w-6" />
       ) : (
-        <Newspaper className="h-5 w-5" />
+        <Newspaper className="h-6 w-6" />
       ),
   }));
 
   return (
-    <div className="flex flex-col gap-6 lg:gap-7">
+    <div className="flex flex-col gap-5 lg:gap-6">
       <DashboardHero
         greeting={greeting}
+        highlightName={displayName}
+        subtitle={heroSubtitle}
         clubName={ctx?.name ?? undefined}
         activeSeason={activeSeason}
         date={todayFormatted}
@@ -200,7 +219,7 @@ export default async function DashboardPage() {
         sidebar={
           <>
             <DashboardSection title="Benötigt Aufmerksamkeit" noPadding variant="card">
-              <div className="px-5 py-1 sm:px-6">
+              <div className="px-4 py-0.5 sm:px-5">
                 <DashboardAttentionList items={commandCenter.attentionItems} />
               </div>
             </DashboardSection>
@@ -215,7 +234,7 @@ export default async function DashboardPage() {
                 </Link>
               }
             >
-              <div className="px-5 py-1 sm:px-6">
+              <div className="px-4 py-0.5 sm:px-5">
                 <DashboardUpcomingList items={commandCenter.upcomingItems} />
               </div>
             </DashboardSection>
@@ -226,7 +245,7 @@ export default async function DashboardPage() {
           title="Heute im Verein"
           description={todayFormatted}
           variant="card"
-          bodyClassName="px-5 py-4 sm:px-6 sm:py-5"
+          bodyClassName="px-4 py-3 sm:px-5 sm:py-4"
           actions={
             <Link href="/dashboard/planner" className="sce-link-primary text-[0.8125rem] font-medium">
               Alle Termine →
@@ -256,7 +275,7 @@ export default async function DashboardPage() {
           <DashboardSection
             title="Schnellaktionen"
             variant="card"
-            bodyClassName="px-4 py-4 sm:px-5 sm:py-5"
+            bodyClassName="px-3.5 py-3 sm:px-4 sm:py-3.5"
           >
             <DashboardQuickActions actions={quickActions} />
           </DashboardSection>
@@ -280,7 +299,7 @@ export default async function DashboardPage() {
             ) : undefined
           }
         >
-          <div className="px-5 py-1 sm:px-6">
+          <div className="px-4 py-0.5 sm:px-5">
             <DashboardActivityFeed
               items={activityItems}
               emptyState={

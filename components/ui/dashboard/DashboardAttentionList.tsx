@@ -14,25 +14,25 @@ function AttentionRow({ item }: { item: AttentionItem }) {
     <Link
       href={item.href}
       className={cn(
-        "group flex items-start gap-3 border-b border-[var(--border)] py-3.5 no-underline last:border-b-0",
-        "motion-safe:transition-colors motion-safe:duration-150 motion-safe:hover:bg-[var(--surface-2)] -mx-2 rounded-lg px-2",
+        "group flex items-start gap-2.5 border-b border-[color-mix(in_srgb,var(--border)_85%,transparent)] py-3 no-underline last:border-b-0",
+        "motion-safe:transition-colors motion-safe:duration-150 motion-safe:hover:bg-[var(--surface-2)] -mx-1.5 rounded-md px-1.5",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
       )}
     >
       <span
         className={cn(
-          "mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full",
+          "mt-1.5 h-2 w-2 shrink-0 rounded-full",
           item.urgent
-            ? "bg-[var(--sce-primary)] shadow-[0_0_0_3px_var(--sce-primary-light)]"
+            ? "bg-[var(--sce-primary)] ring-2 ring-[color-mix(in_srgb,var(--sce-primary)_25%,transparent)]"
             : "bg-[var(--border-strong)]",
         )}
         aria-hidden="true"
       />
       <div className="min-w-0 flex-1">
-        <p className="text-[0.875rem] font-semibold leading-snug text-[var(--foreground)]">
+        <p className="text-[0.8125rem] font-semibold leading-snug text-[var(--foreground)]">
           {item.title}
         </p>
-        <p className="mt-1 text-[0.8125rem] leading-relaxed text-[var(--muted)]">
+        <p className="mt-0.5 text-[0.75rem] leading-relaxed text-[var(--muted)]">
           {item.subtitle}
         </p>
       </div>
@@ -48,7 +48,7 @@ export function DashboardAttentionList({ items, className }: DashboardAttentionL
   if (items.length === 0) {
     return (
       <DashboardEmptyState
-        className={cn("py-5", className)}
+        className={cn("py-4", className)}
         title="Alles im grünen Bereich"
         description="Es gibt derzeit keine offenen operativen Punkte, die deine Aufmerksamkeit brauchen."
       />

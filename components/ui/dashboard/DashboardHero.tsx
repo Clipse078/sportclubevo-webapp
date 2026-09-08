@@ -4,6 +4,7 @@ import { DashboardWelcome } from "./DashboardWelcome";
 
 export type DashboardHeroProps = {
   greeting: string;
+  highlightName?: string;
   subtitle?: string;
   clubName?: string;
   activeSeason?: string;
@@ -20,6 +21,7 @@ export type DashboardHeroProps = {
  */
 export function DashboardHero({
   greeting,
+  highlightName,
   subtitle = "Schön, dass du wieder da bist.",
   clubName,
   activeSeason,
@@ -29,84 +31,98 @@ export function DashboardHero({
   actions,
   className,
 }: DashboardHeroProps) {
-  const contextLines = [
-    clubName,
-    activeSeason ? `Saison ${activeSeason}` : null,
-    date,
-  ].filter(Boolean);
+  const clubSeasonLine = [clubName, activeSeason ? `Saison ${activeSeason}` : null]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <section
       className={cn(
-        "relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)]",
-        "shadow-[var(--shadow-sm)]",
+        "relative overflow-hidden rounded-[var(--radius-xl)]",
+        "border border-[color-mix(in_srgb,var(--border)_30%,transparent)]",
+        "shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_4%,transparent)]",
+        "lg:min-h-[15.625rem]",
         className,
       )}
     >
-      {/* Optional real background image */}
       {backgroundImageUrl && (
         // eslint-disable-next-line @next/next/no-img-element -- tenant/user dashboard background URL resolved on server.
         <img
           src={backgroundImageUrl}
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover object-center"
         />
       )}
 
-      {/* Layer stack: navy overlay → readability gradients → bottom fade */}
       <div
         className={cn(
           "absolute inset-0",
           backgroundImageUrl
-            ? "bg-[color-mix(in_srgb,var(--background)_72%,transparent)]"
-            : "bg-[linear-gradient(135deg,color-mix(in_srgb,var(--background)_98%,var(--sce-primary)_2%)_0%,var(--background)_45%,color-mix(in_srgb,var(--surface)_88%,var(--background)_12%)_100%)]",
+            ? "bg-[color-mix(in_srgb,var(--background)_76%,transparent)]"
+            : "bg-[linear-gradient(118deg,color-mix(in_srgb,var(--background)_94%,var(--sce-primary)_6%)_0%,var(--background)_32%,color-mix(in_srgb,var(--surface)_78%,var(--background)_22%)_68%,color-mix(in_srgb,var(--background)_88%,var(--surface)_12%)_100%)]",
         )}
         aria-hidden="true"
       />
+
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_8%_12%,color-mix(in_srgb,var(--sce-primary)_12%,transparent)_0%,transparent_58%)]"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--foreground)_4%,transparent)_0%,transparent_38%,color-mix(in_srgb,var(--background)_62%,transparent)_100%)]"
+        aria-hidden="true"
+      />
+
       {backgroundImageUrl && (
         <>
           <div
-            className="absolute inset-0 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--background)_88%,transparent)_0%,transparent_55%,color-mix(in_srgb,var(--background)_75%,transparent)_100%)]"
+            className="absolute inset-0 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--background)_92%,transparent)_0%,transparent_48%,color-mix(in_srgb,var(--background)_84%,transparent)_100%)]"
             aria-hidden="true"
           />
           <div
-            className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,transparent_0%,var(--background)_92%)]"
+            className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,transparent_0%,var(--background)_96%)]"
             aria-hidden="true"
           />
         </>
       )}
+
       {!backgroundImageUrl && (
-        <div
-          className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[color-mix(in_srgb,var(--sce-primary)_8%,transparent)] blur-3xl"
-          aria-hidden="true"
-        />
+        <>
+          <div
+            className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[color-mix(in_srgb,var(--sce-primary)_9%,transparent)] blur-3xl"
+            aria-hidden="true"
+          />
+          <div
+            className="pointer-events-none absolute bottom-0 left-0 right-0 h-32 bg-[linear-gradient(180deg,transparent_0%,color-mix(in_srgb,var(--background)_40%,transparent)_100%)]"
+            aria-hidden="true"
+          />
+        </>
       )}
 
-      <div className="relative px-5 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <DashboardWelcome greeting={greeting} subtitle={subtitle} showEyebrow />
+      <div className="relative flex min-h-[15.625rem] flex-col px-5 py-5 sm:px-6 lg:px-7 lg:py-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <DashboardWelcome
+            greeting={greeting}
+            highlightName={highlightName}
+            subtitle={subtitle}
+            showEyebrow
+          />
 
-          <div className="flex flex-col items-start gap-2 lg:items-end lg:pt-1">
-            {contextLines.length > 0 && (
-              <div className="text-right text-[0.8125rem] leading-relaxed text-[var(--text-2)]">
-                {contextLines.map((line, index) => (
-                  <p
-                    key={line}
-                    className={cn(
-                      index === 0 && "font-semibold text-[var(--foreground)]",
-                    )}
-                  >
-                    {line}
-                  </p>
-                ))}
-              </div>
+          <div className="flex shrink-0 flex-col items-start gap-1 sm:items-end sm:text-right lg:pt-0.5">
+            {clubSeasonLine && (
+              <p className="text-[0.8125rem] font-semibold leading-snug text-[var(--foreground)]">
+                {clubSeasonLine}
+              </p>
+            )}
+            {date && (
+              <p className="text-[0.8125rem] leading-snug text-[var(--text-2)]">{date}</p>
             )}
             {actions}
           </div>
         </div>
 
-        {kpiGrid && <div className="mt-6 lg:mt-7">{kpiGrid}</div>}
+        {kpiGrid && <div className="mt-auto pt-4 lg:pt-5">{kpiGrid}</div>}
       </div>
     </section>
   );

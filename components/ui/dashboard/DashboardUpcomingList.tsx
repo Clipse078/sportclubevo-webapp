@@ -13,38 +13,44 @@ export type DashboardUpcomingListProps = {
 function UpcomingRow({ item }: { item: UpcomingScheduleItem }) {
   const content = (
     <>
-      <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-2)]">
+      <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-2)]">
         <span className="text-[0.9375rem] font-bold leading-none text-[var(--foreground)]">
           {item.dayLabel}
         </span>
-        <span className="mt-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+        <span className="mt-0.5 text-[0.5625rem] font-semibold uppercase tracking-[0.06em] text-[var(--muted)]">
           {item.monthLabel}
         </span>
       </div>
 
-      {item.logo && (
+      {item.logo ? (
         <ClubLogo
           logoUrl={item.logo.logoUrl}
           name={item.logo.displayName}
           size="sm"
           bare
-          className="hidden sm:block"
+          className="shrink-0"
         />
-      )}
+      ) : item.eventType === "MATCH" ? (
+        <div
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--sce-secondary)_12%,transparent)] text-[var(--sce-secondary)]"
+          aria-hidden="true"
+        >
+          <CalendarDays className="h-3.5 w-3.5" />
+        </div>
+      ) : null}
 
       <div className="min-w-0 flex-1">
-        <p className="text-[0.875rem] font-semibold leading-snug text-[var(--foreground)]">
+        <p className="line-clamp-2 text-[0.8125rem] font-semibold leading-snug text-[var(--foreground)]">
           {item.title}
         </p>
         {item.location && (
-          <p className="mt-1 text-[0.8125rem] leading-snug text-[var(--muted)]">{item.location}</p>
+          <p className="mt-0.5 line-clamp-1 text-[0.75rem] leading-snug text-[var(--muted)]">
+            {item.location}
+          </p>
         )}
       </div>
 
-      <div className="flex shrink-0 items-center gap-2 pt-0.5">
-        {item.eventType === "MATCH" && !item.logo && (
-          <CalendarDays className="h-3.5 w-3.5 text-[var(--sce-secondary)]" aria-hidden="true" />
-        )}
+      <div className="flex shrink-0 items-center gap-1.5 self-start pt-0.5">
         <span className="font-mono text-[0.8125rem] font-medium tabular-nums text-[var(--text-2)]">
           {item.timeLabel}
         </span>
@@ -59,7 +65,7 @@ function UpcomingRow({ item }: { item: UpcomingScheduleItem }) {
   );
 
   const rowClassName =
-    "group flex items-start gap-3 border-b border-[var(--border)] py-3.5 last:border-b-0 motion-safe:transition-colors motion-safe:duration-150 motion-safe:hover:bg-[var(--surface-2)] -mx-2 rounded-lg px-2";
+    "group flex items-start gap-2.5 border-b border-[color-mix(in_srgb,var(--border)_85%,transparent)] py-3 last:border-b-0 motion-safe:transition-colors motion-safe:duration-150 motion-safe:hover:bg-[var(--surface-2)] -mx-1.5 rounded-md px-1.5";
 
   if (item.href) {
     return (
@@ -76,7 +82,7 @@ export function DashboardUpcomingList({ items, className }: DashboardUpcomingLis
   if (items.length === 0) {
     return (
       <DashboardEmptyState
-        className={cn("py-5", className)}
+        className={cn("py-4", className)}
         title="Keine kommenden Termine"
         description="Nach heute sind derzeit keine weiteren Termine geplant."
       />

@@ -65,44 +65,42 @@ export function DashboardTodaySchedule({
   return (
     <div className={className}>
       {showFilters && (
-        <div
-          className="mb-4 flex flex-wrap gap-1.5"
-          role="tablist"
-          aria-label="Heutige Termine filtern"
-        >
-          {availableFilters.map((filterKey) => {
-            const option = FILTER_OPTIONS.find((entry) => entry.key === filterKey);
-            if (!option) return null;
+        <div className="mb-3 flex justify-end">
+          <div
+            className="inline-flex flex-wrap items-center gap-0.5 rounded-lg bg-[var(--surface-2)] p-0.5"
+            role="tablist"
+            aria-label="Heutige Termine filtern"
+          >
+            {availableFilters.map((filterKey) => {
+              const option = FILTER_OPTIONS.find((entry) => entry.key === filterKey);
+              if (!option) return null;
 
-            const isActive = safeFilter === filterKey;
+              const isActive = safeFilter === filterKey;
 
-            return (
-              <button
-                key={filterKey}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => setActiveFilter(filterKey)}
-                className={cn(
-                  "rounded-md px-3 py-1.5 text-xs font-medium transition-colors duration-150",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
-                  isActive
-                    ? "bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
-                    : "text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]",
-                )}
-              >
-                {option.label}
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={filterKey}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setActiveFilter(filterKey)}
+                  className={cn(
+                    "rounded-md px-3 py-1.5 text-[0.6875rem] font-medium transition-colors duration-150 sm:text-xs",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
+                    isActive
+                      ? "bg-[var(--surface-3)] text-[var(--foreground)] shadow-[var(--shadow-xs)]"
+                      : "text-[var(--text-2)] hover:text-[var(--foreground)]",
+                  )}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      <DashboardTodayTimeline
-        items={filteredItems}
-        compact={filteredItems.length === 1}
-        emptyState={emptyState}
-      />
+      <DashboardTodayTimeline items={filteredItems} emptyState={emptyState} />
     </div>
   );
 }

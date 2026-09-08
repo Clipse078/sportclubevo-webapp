@@ -19,13 +19,13 @@ function NewsCard({ item }: { item: CommandCenterNewsItem }) {
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
       )}
     >
-      <div className="relative aspect-[16/9] w-full overflow-hidden bg-[var(--surface-2)]">
+      <div className="relative h-[9.375rem] w-full overflow-hidden bg-[var(--surface-2)] sm:h-[10.5rem] xl:h-[11.25rem]">
         {item.heroImageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- canonical tenant news hero media URL from server.
           <img
             src={item.heroImageUrl}
             alt={item.heroImageAlt ?? item.title}
-            className="h-full w-full object-cover motion-safe:transition-transform motion-safe:duration-300 group-hover:scale-[1.02]"
+            className="h-full w-full object-cover motion-safe:transition-transform motion-safe:duration-200 group-hover:scale-[1.02]"
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[linear-gradient(145deg,var(--surface-2)_0%,color-mix(in_srgb,var(--background)_88%,var(--surface-2))_100%)] px-4 text-center">
@@ -39,17 +39,17 @@ function NewsCard({ item }: { item: CommandCenterNewsItem }) {
         )}
       </div>
 
-      <div className="flex flex-1 flex-col px-3.5 py-3 sm:px-4 sm:py-3.5">
+      <div className="flex flex-1 flex-col px-3.5 py-3 sm:px-4">
         <p className="line-clamp-2 text-[0.875rem] font-semibold leading-snug text-[var(--foreground)]">
           {item.title}
         </p>
         {item.excerpt && (
-          <p className="mt-1.5 line-clamp-2 text-[0.75rem] leading-relaxed text-[var(--text-2)]">
+          <p className="mt-1 line-clamp-2 text-[0.75rem] leading-relaxed text-[var(--text-2)]">
             {item.excerpt}
           </p>
         )}
         {item.publishedAtLabel && (
-          <p className="mt-auto pt-3 text-[0.6875rem] font-medium text-[var(--muted)]">
+          <p className="mt-auto pt-2.5 text-[0.6875rem] font-medium text-[var(--muted)]">
             {item.publishedAtLabel}
           </p>
         )}
@@ -64,7 +64,7 @@ export function DashboardNewsGrid({ items, className }: DashboardNewsGridProps) 
   return (
     <div
       className={cn(
-        "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3",
+        "grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3",
         className,
       )}
     >
@@ -90,7 +90,7 @@ export function DashboardNewsSection({
 
   return (
     <section className={className}>
-      <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="mb-3.5 flex items-center justify-between gap-3">
         <h2 className="text-[1.0625rem] font-semibold leading-snug text-[var(--foreground)] sm:text-lg">
           Aktuelle News
         </h2>

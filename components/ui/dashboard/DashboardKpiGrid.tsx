@@ -19,7 +19,7 @@ export type DashboardKpiGridProps = {
 };
 
 /**
- * Premium KPI card grid — replaces the flat metric strip for command-center dashboards.
+ * Premium KPI card grid — command-center hero composition.
  */
 export function DashboardKpiGrid({
   items,
@@ -29,7 +29,7 @@ export function DashboardKpiGrid({
   return (
     <div
       className={cn(
-        "grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4",
+        "grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4 lg:gap-3",
         className,
       )}
     >

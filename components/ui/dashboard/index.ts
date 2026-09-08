@@ -43,7 +43,7 @@ export type {
 } from "./DashboardMetricStrip";
 
 export { DashboardQuickActions } from "./DashboardQuickActions";
-export type { DashboardQuickActionsProps, QuickAction } from "./DashboardQuickActions";
+export type { DashboardQuickActionsProps, QuickAction, QuickActionAccent } from "./DashboardQuickActions";
 
 export { DashboardActivityFeed } from "./DashboardActivityFeed";
 export type {

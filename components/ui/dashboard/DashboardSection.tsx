@@ -35,7 +35,7 @@ export function DashboardSection({
         isCard &&
           "overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xs)]",
         isCard &&
-          "bg-[linear-gradient(180deg,var(--surface)_0%,color-mix(in_srgb,var(--surface)_96%,var(--surface-2))_100%)]",
+          "bg-[linear-gradient(180deg,var(--surface)_0%,color-mix(in_srgb,var(--surface)_97%,var(--surface-2))_100%)]",
         className,
       )}
     >
@@ -43,7 +43,7 @@ export function DashboardSection({
         <div
           className={cn(
             "flex items-start justify-between gap-3",
-            isCard ? "border-b border-[var(--border)] px-5 py-4 sm:px-6" : "pb-3",
+            isCard ? "border-b border-[color-mix(in_srgb,var(--border)_90%,transparent)] px-4 py-3.5 sm:px-5" : "pb-2.5",
           )}
         >
           <div className="min-w-0 flex-1">
@@ -53,7 +53,7 @@ export function DashboardSection({
               </h2>
             )}
             {description && (
-              <p className="mt-1 text-[0.8125rem] text-[var(--text-2)]">{description}</p>
+              <p className="mt-0.5 text-[0.8125rem] text-[var(--text-2)]">{description}</p>
             )}
           </div>
           {actions && (
@@ -63,7 +63,7 @@ export function DashboardSection({
       )}
 
       {children !== undefined && (
-        <div className={cn(!noPadding && (isCard ? "px-5 py-4" : "py-1"), bodyClassName)}>
+        <div className={cn(!noPadding && (isCard ? "px-4 py-3.5" : "py-1"), bodyClassName)}>
           {children}
         </div>
       )}
@@ -71,8 +71,8 @@ export function DashboardSection({
       {footer && (
         <div
           className={cn(
-            "pt-3",
-            isCard && "border-t border-[var(--border)] px-5 py-3.5 sm:px-6",
+            "pt-2",
+            isCard && "border-t border-[color-mix(in_srgb,var(--border)_90%,transparent)] px-4 py-3 sm:px-5",
           )}
         >
           {footer}

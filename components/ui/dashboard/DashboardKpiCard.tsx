@@ -6,6 +6,7 @@ export type DashboardKpiAccent =
   | "info"
   | "success"
   | "warning"
+  | "violet"
   | "danger"
   | "default";
 
@@ -33,6 +34,11 @@ const ACCENT_VARS: Record<
     iconColor: "var(--sce-warning)",
     subtextColor: "var(--sce-warning)",
   },
+  violet: {
+    iconBg: "rgba(129, 140, 248, 0.16)",
+    iconColor: "#a5b4fc",
+    subtextColor: "#a5b4fc",
+  },
   danger: {
     iconBg: "var(--sce-danger-light)",
     iconColor: "var(--sce-danger)",
@@ -46,39 +52,18 @@ const ACCENT_VARS: Record<
 };
 
 export type DashboardKpiCardProps = {
-  /** Uppercase metric label. */
   title: string;
-  /** Primary numeric or text value. */
   value: string;
-  /** Optional icon rendered in the top-right accent chip. */
   icon?: ReactNode;
-  /** Supporting text below the value (e.g. trend label or contextual info). */
   description?: string;
-  /** Semantic accent variant. No arbitrary colors — design tokens only. */
   accent?: DashboardKpiAccent;
-  /** Hero-embedded translucent card for command-center composition. */
   variant?: "default" | "hero";
-  /** Optional action rendered below the description. */
   action?: ReactNode;
   className?: string;
 };
 
 /**
- * DashboardKpiCard
- *
- * Reusable KPI metric card for dashboard overview strips.
- * Uses only SportClubEvo semantic design tokens — no hardcoded colors.
- *
- * Replaces the legacy KpiCard from components/admin/dashboard/.
- *
- * Usage:
- *   <DashboardKpiCard
- *     title="Offene Anmeldungen"
- *     value="3"
- *     accent="warning"
- *     icon={<Users className="h-5 w-5" />}
- *     description="+2 seit gestern"
- *   />
+ * DashboardKpiCard — KPI metric card with left icon block for command-center hero.
  */
 export function DashboardKpiCard({
   title,
@@ -96,11 +81,17 @@ export function DashboardKpiCard({
   return (
     <div
       className={cn(
-        "rounded-[var(--radius-lg)] border px-4 py-3.5 sm:px-4 sm:py-4",
+        "rounded-[var(--radius-lg)] border",
         isHero
-          ? "min-h-[6.25rem] border-[color-mix(in_srgb,var(--border)_70%,transparent)] bg-[color-mix(in_srgb,var(--surface)_55%,transparent)] backdrop-blur-[2px] shadow-[inset_0_1px_0_color-mix(in_srgb,var(--foreground)_6%,transparent)]"
+          ? cn(
+              "flex min-h-[5.5rem] items-center gap-3 px-3 py-2.5 sm:min-h-[6rem] sm:gap-3.5 sm:px-3.5",
+              "border-[color-mix(in_srgb,var(--border)_50%,transparent)]",
+              "bg-[color-mix(in_srgb,var(--surface)_42%,transparent)]",
+              "shadow-[inset_0_1px_0_color-mix(in_srgb,var(--foreground)_8%,transparent)]",
+              "backdrop-blur-[4px]",
+            )
           : cn(
-              "rounded-[var(--radius-xl)] bg-[var(--surface)] sm:px-5",
+              "rounded-[var(--radius-xl)] bg-[var(--surface)] px-4 py-3.5 sm:px-5 sm:py-4",
               "bg-[linear-gradient(145deg,var(--surface)_0%,color-mix(in_srgb,var(--surface)_92%,var(--surface-2))_100%)]",
               "shadow-[var(--shadow-xs)]",
             ),
@@ -109,44 +100,43 @@ export function DashboardKpiCard({
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
-            {title}
-          </p>
-          <p
-            className={cn(
-              "mt-1.5 font-bold leading-none tracking-tight text-[var(--foreground)]",
-              isHero
-                ? "text-[1.625rem] sm:text-[1.75rem]"
-                : "mt-2 text-[1.75rem] sm:text-[1.875rem] lg:text-[2rem]",
-            )}
-          >
-            {value}
-          </p>
-          {description && (
-            <p
-              className="mt-2 text-[0.75rem] font-medium"
-              style={{ color: vars.subtextColor }}
-            >
-              {description}
-            </p>
-          )}
-          {action && <div className="mt-3">{action}</div>}
-        </div>
-
-        {icon && (
-          <div
-            className={cn(
-              "flex shrink-0 items-center justify-center rounded-[var(--radius-md)]",
-              isHero ? "h-9 w-9 sm:h-10 sm:w-10" : "h-10 w-10 sm:h-11 sm:w-11",
-            )}
-            style={{ background: vars.iconBg, color: vars.iconColor }}
-            aria-hidden="true"
-          >
-            {icon}
-          </div>
+      <div
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-[var(--radius-md)]",
+          isHero ? "h-[3.5rem] w-[3.5rem] sm:h-14 sm:w-14" : "h-10 w-10 sm:h-11 sm:w-11",
         )}
+        style={{ background: vars.iconBg, color: vars.iconColor }}
+        aria-hidden="true"
+      >
+        {icon}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p
+          className={cn(
+            "font-medium leading-tight text-[var(--text-2)]",
+            isHero ? "text-[0.8125rem]" : "text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]",
+          )}
+        >
+          {title}
+        </p>
+        <p
+          className={cn(
+            "font-bold leading-none tracking-tight text-[var(--foreground)]",
+            isHero ? "mt-1 text-[1.5rem] sm:text-[1.625rem]" : "mt-2 text-[1.75rem] sm:text-[1.875rem] lg:text-[2rem]",
+          )}
+        >
+          {value}
+        </p>
+        {description && (
+          <p
+            className="mt-1.5 text-[0.75rem] font-medium"
+            style={{ color: vars.subtextColor }}
+          >
+            {description}
+          </p>
+        )}
+        {action && <div className="mt-3">{action}</div>}
       </div>
     </div>
   );

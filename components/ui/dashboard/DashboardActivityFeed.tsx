@@ -37,13 +37,13 @@ export function DashboardActivityFeed({
           <div
             key={item.key}
             className={cn(
-              "group flex items-start gap-2.5 py-2.5 motion-safe:transition-colors motion-safe:duration-150",
-              "motion-safe:hover:bg-[var(--surface-2)] -mx-1.5 rounded-lg px-1.5",
-              !isLast && "border-b border-[var(--border)]",
+              "group flex items-start gap-2 py-2 motion-safe:transition-colors motion-safe:duration-150",
+              "motion-safe:hover:bg-[var(--surface-2)] -mx-1 rounded-md px-1",
+              !isLast && "border-b border-[color-mix(in_srgb,var(--border)_85%,transparent)]",
             )}
           >
             <div
-              className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[var(--surface-2)] text-[var(--muted)]"
+              className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[var(--surface-2)] text-[var(--muted)]"
               aria-hidden="true"
             >
               {item.icon}
@@ -54,7 +54,7 @@ export function DashboardActivityFeed({
                 {item.title}
               </p>
               {item.subtitle && (
-                <p className="mt-0.5 text-[0.75rem] leading-snug text-[var(--text-2)]">
+                <p className="mt-0.5 text-[0.6875rem] leading-snug text-[var(--text-2)]">
                   {item.subtitle}
                 </p>
               )}
