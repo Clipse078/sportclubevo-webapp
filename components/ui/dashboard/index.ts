@@ -11,6 +11,18 @@
 export { DashboardHero } from "./DashboardHero";
 export type { DashboardHeroProps } from "./DashboardHero";
 
+export { DashboardCommandHeader } from "./DashboardCommandHeader";
+export type { DashboardCommandHeaderProps } from "./DashboardCommandHeader";
+
+export { DashboardTodayTimeline } from "./DashboardTodayTimeline";
+export type { DashboardTodayTimelineProps } from "./DashboardTodayTimeline";
+
+export { DashboardAttentionList } from "./DashboardAttentionList";
+export type { DashboardAttentionListProps } from "./DashboardAttentionList";
+
+export { DashboardUpcomingList } from "./DashboardUpcomingList";
+export type { DashboardUpcomingListProps } from "./DashboardUpcomingList";
+
 export { DashboardWelcome } from "./DashboardWelcome";
 export type { DashboardWelcomeProps } from "./DashboardWelcome";
 
