@@ -1,0 +1,16 @@
+# Local environment files must never become the source of truth for a Vercel
+# deployment. Listing them here prevents the Vercel CLI from uploading them
+# even when `vercel pull` has written a local copy.
+#
+# Vercel CLI will warn "Overwriting existing .env.local" and then download
+# Development-scope variables. If those are then uploaded as part of the build
+# payload they can override the Preview/Production env vars configured in the
+# Vercel dashboard. This file eliminates that vector.
+#
+# Reference: docs/development/deployment-runtime-contract.md
+
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.development

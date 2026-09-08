@@ -1,31 +1,30 @@
 /**
- * Temporary diagnostic endpoint — always returns 200 with the same payload
- * as /api/health so the JSON body is readable from tooling that discards
- * non-200 responses.
+ * Safe runtime diagnostic endpoint.
  *
- * TODO: remove once the STAGE login issue is resolved.
+ * Returns a structured identity report for authorized SCE administrators.
+ * Used for deployment triage: compare two builds' commit, environment, and
+ * database identity without resetting credentials or performing database
+ * archaeology.
+ *
+ * Access requires the users.manage permission. The endpoint is permanently
+ * available and always returns 200 so tooling that discards non-200 responses
+ * can still read the JSON body.
+ *
+ * Sections:
+ *   - CONFIGURED: required configuration is present
+ *   - CONNECTED: database is reachable
+ *   - IDENTITY_VALIDATED: full identity check passes
  */
 import { NextResponse } from "next/server";
 import {
   checkDatabaseHealth,
   evaluateRuntimeConfiguration,
 } from "@/lib/server/runtime";
-import { getDeploymentMetadata } from "@/lib/server/deployment";
+import { resolveDeploymentIdentity } from "@/lib/server/deployment-identity";
 import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 export const dynamic = "force-dynamic";
-
-function getDatabaseHost(): string {
-  try {
-    const raw = process.env.DATABASE_URL;
-    if (!raw) return "not-set";
-    const url = new URL(raw);
-    return url.hostname;
-  } catch {
-    return "unparseable";
-  }
-}
 
 export async function GET(): Promise<NextResponse> {
   const access = await requireApiPermission(PERMISSIONS.USERS_MANAGE);
@@ -37,36 +36,80 @@ export async function GET(): Promise<NextResponse> {
   }
 
   const runtime = evaluateRuntimeConfiguration();
-  const deployment = getDeploymentMetadata();
+  const identity = resolveDeploymentIdentity();
 
   const database = runtime.env.hasDatabaseUrl
     ? await checkDatabaseHealth()
     : { ok: false, message: "DATABASE_URL is not configured." };
 
-  const healthOk = runtime.ok && database.ok;
+  const configured =
+    identity.authConfigured.hasNextAuthSecret &&
+    identity.authConfigured.hasDatabaseUrl;
+
+  const connected = configured && database.ok;
+  const identityValidated =
+    connected && identity.identityValid === "PASS" && runtime.ok;
 
   return NextResponse.json({
-    healthOk,
-    deployment,
+    healthOk: identityValidated,
+
+    // ── Deployment provenance ──────────────────────────────────────────────
+    deployment: {
+      commitSha: identity.commitSha,
+      commitRef: identity.commitRef,
+      deploymentId: identity.deploymentId,
+      deploymentUrl: identity.deploymentUrl,
+      vercelEnvironment: identity.vercelEnv,
+      vercelTargetEnv: identity.vercelTargetEnv,
+      appEnvironment: identity.appEnvironment,
+      isDeployed: identity.isDeployed,
+    },
+
+    // ── Identity validation ───────────────────────────────────────────────
+    identity: {
+      identityValid: identity.identityValid,
+      identityViolations: identity.identityViolations,
+    },
+
+    // ── Three-phase status ────────────────────────────────────────────────
+    phases: {
+      CONFIGURED: configured,
+      CONNECTED: connected,
+      IDENTITY_VALIDATED: identityValidated,
+    },
+
+    // ── Configuration presence (no values) ───────────────────────────────
+    checks: {
+      hasDatabaseUrl: identity.authConfigured.hasDatabaseUrl,
+      hasNextAuthSecret: identity.authConfigured.hasNextAuthSecret,
+      hasAppBaseUrl: identity.authConfigured.hasAppBaseUrl,
+      hasNextAuthUrl: identity.authConfigured.hasNextAuthUrl,
+    },
+
+    // ── Database identity ─────────────────────────────────────────────────
+    database: {
+      host: identity.databaseHost,
+      fingerprint: identity.databaseFingerprint,
+      connectivity: database,
+    },
+
+    // ── Runtime classification ────────────────────────────────────────────
     environment: {
       appEnv: runtime.env.appEnv,
       nodeEnv: runtime.env.nodeEnv,
       vercelEnv: runtime.env.vercelEnv,
+      isDeployed: runtime.env.isDeployed,
       isLocal: runtime.env.isLocal,
+      isPreview: runtime.env.isPreview,
+      isAcceptance: runtime.env.isAcceptance,
       isStage: runtime.env.isStage,
       isProd: runtime.env.isProd,
     },
-    checks: {
-      hasDatabaseUrl: runtime.env.hasDatabaseUrl,
-      hasDirectUrl: runtime.env.hasDirectUrl,
-      hasNextAuthSecret: runtime.env.hasNextAuthSecret,
-      hasAppBaseUrl: Boolean(runtime.env.appBaseUrl),
-      hasNextAuthUrl: Boolean(runtime.env.nextAuthUrl),
-    },
-    databaseHost: getDatabaseHost(),
-    database,
+
+    // ── Configuration warnings/errors ─────────────────────────────────────
     warnings: runtime.warnings,
     errors: runtime.errors,
+
     timestamp: new Date().toISOString(),
   });
 }
