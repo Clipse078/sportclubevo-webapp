@@ -26,11 +26,41 @@ const GROUP_ICON_TREATMENTS: Record<
   },
 };
 
+const MULTI_ROOM_SEPARATOR = " / ";
+
 export type DashboardVenueMetadataProps = {
   groups: TodayEventVenueGroup[];
   className?: string;
   compact?: boolean;
 };
+
+function DressingRoomLabel({ group }: { group: TodayEventVenueGroup }) {
+  const details = group.dressingRooms;
+
+  if (!details || details.sides.length === 0) {
+    return <span className="truncate leading-snug">{group.label}</span>;
+  }
+
+  return (
+    <span className="min-w-0 leading-snug">
+      {details.sides.map((side, index) => (
+        <span key={`${side.roleLabel ?? "neutral"}-${side.rooms.join("-")}`}>
+          {index > 0 && (
+            <span aria-hidden="true" className="text-[var(--muted)]">
+              {" · "}
+            </span>
+          )}
+          {side.roleLabel && (
+            <span className="font-medium text-[var(--muted)]">{side.roleLabel} </span>
+          )}
+          <span className="font-semibold text-[var(--foreground)]">
+            {side.rooms.join(MULTI_ROOM_SEPARATOR)}
+          </span>
+        </span>
+      ))}
+    </span>
+  );
+}
 
 export function DashboardVenueMetadata({
   groups,
@@ -50,11 +80,13 @@ export function DashboardVenueMetadata({
       {groups.map((group) => {
         const Icon = GROUP_ICONS[group.kind];
         const treatment = GROUP_ICON_TREATMENTS[group.kind];
+        const accessibleLabel = group.ariaLabel ?? group.label;
 
         return (
           <span
             key={`${group.kind}-${group.label}`}
             className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-[var(--text-2)]"
+            aria-label={group.kind === "dressing-rooms" ? accessibleLabel : undefined}
           >
             <span
               className={cn(
@@ -77,7 +109,11 @@ export function DashboardVenueMetadata({
                 aria-hidden="true"
               />
             </span>
-            <span className="truncate leading-snug">{group.label}</span>
+            {group.kind === "dressing-rooms" ? (
+              <DressingRoomLabel group={group} />
+            ) : (
+              <span className="truncate leading-snug">{group.label}</span>
+            )}
           </span>
         );
       })}

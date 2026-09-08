@@ -29,6 +29,7 @@ import { SFV_PROVIDER } from "@/lib/integrations/sfv/season-bridge";
 import { loadTournamentLogoResolutionContext } from "@/lib/tournaments/logo-resolution-context";
 import {
   buildCommandCenterMatchPresentation,
+  buildCommandCenterParticipantDressingRoomAllocations,
   buildCommandCenterTournamentParticipants,
   resolveNewsHeroImageUrl,
   type CommandCenterMatchPresentation,
@@ -113,13 +114,24 @@ export type CommandCenterData = {
 
 type StrategicActor = Pick<ActorContext, "tenantId" | "userId" | "permissionKeys">;
 
-/** Prisma select for tournament logos/names — excludes infoboard-only dressing-room data. */
+/** Prisma select for tournament logos/names and participant dressing-room allocations. */
 const COMMAND_CENTER_TOURNAMENT_PARTICIPANT_SELECT = {
   id: true,
   eventId: true,
   displayName: true,
   manualLabel: true,
   displayOrder: true,
+  dressingRoomAllocations: {
+    orderBy: { displayOrder: "asc" as const },
+    select: {
+      facilityResource: {
+        select: {
+          code: true,
+          name: true,
+        },
+      },
+    },
+  },
   team: {
     select: {
       name: true,
@@ -590,7 +602,12 @@ export async function getCommandCenterData(args: {
           : undefined;
 
       const allocation = todayAllocationDisplays[index];
+      const tournamentParticipantRows =
+        event.type === "TOURNAMENT"
+          ? (tournamentParticipantsByEventId.get(event.id) ?? [])
+          : [];
       const venuePresentation = buildTodayEventVenuePresentation({
+        eventType: event.type,
         location: event.location,
         pitchCode: event.pitchCode,
         pitchLabel: allocation.pitchLabel,
@@ -598,6 +615,12 @@ export async function getCommandCenterData(args: {
         awayDressingRoomCode: event.awayDressingRoomCode,
         homeDressingRoomLabel: allocation.homeDressingRoomLabel,
         awayDressingRoomLabel: allocation.awayDressingRoomLabel,
+        participantDressingRoomAllocations:
+          event.type === "TOURNAMENT"
+            ? buildCommandCenterParticipantDressingRoomAllocations(
+                tournamentParticipantRows,
+              )
+            : undefined,
       });
       const venueMeta = formatTodayEventVenueMeta(venuePresentation);
 

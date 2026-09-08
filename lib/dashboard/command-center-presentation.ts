@@ -10,6 +10,7 @@ import type { CanonicalEventPolicyRow } from "@/lib/publishing/infoboard/canonic
 import {
   resolveInfoboardTeamSubDisplayName,
 } from "@/lib/publishing/presentation/infoboard-match-presentation";
+import type { ParticipantDressingRoomInput } from "@/lib/dashboard/event-venue-presentation";
 import { resolveTournamentParticipantLogoUrl } from "@/lib/tournaments/club-identity";
 import type { TournamentLogoResolutionContext } from "@/lib/tournaments/logo-resolution-context";
 
@@ -233,6 +234,12 @@ type TournamentParticipantRow = Parameters<typeof resolveTournamentParticipantLo
   displayName: string | null;
   manualLabel: string | null;
   displayOrder: number;
+  dressingRoomAllocations?: Array<{
+    facilityResource: {
+      code: string;
+      name: string;
+    };
+  }>;
   team: {
     name: string;
     shortName: string | null;
@@ -272,4 +279,22 @@ export function buildCommandCenterTournamentParticipants(
       logoUrl: resolveTournamentParticipantLogoUrl(row, tenantLogoUrl, logoContext),
     }))
     .filter((participant) => participant.displayName.length > 0);
+}
+
+export function buildCommandCenterParticipantDressingRoomAllocations(
+  rows: readonly TournamentParticipantRow[],
+): ParticipantDressingRoomInput[] {
+  return [...rows]
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+    .map((row) => ({
+      participantLabel: resolveParticipantDisplayName(row),
+      rooms:
+        row.dressingRoomAllocations?.map((allocation) => ({
+          code: allocation.facilityResource.code,
+          label: allocation.facilityResource.name,
+        })) ?? [],
+    }))
+    .filter(
+      (entry) => entry.participantLabel.length > 0 && entry.rooms.length > 0,
+    );
 }
