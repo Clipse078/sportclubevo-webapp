@@ -27,12 +27,14 @@ export function DashboardWelcome({
   className,
 }: DashboardWelcomeProps) {
   return (
-    <div className={cn("flex flex-col gap-1", className)}>
-      <h1 className="text-[1.625rem] font-bold leading-tight tracking-tight text-[var(--foreground)]">
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      <h1 className="text-[1.875rem] font-bold leading-[1.15] tracking-tight text-[var(--foreground)] sm:text-[2rem] lg:text-[2.125rem]">
         {greeting}
       </h1>
       {subtitle && (
-        <p className="text-sm leading-relaxed text-[var(--text-2)]">{subtitle}</p>
+        <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-2)] sm:text-[0.9375rem]">
+          {subtitle}
+        </p>
       )}
     </div>
   );

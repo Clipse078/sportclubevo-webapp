@@ -1,15 +1,21 @@
-import type { EventType } from "@prisma/client";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { DashboardEmptyState } from "./DashboardEmptyState";
 import type { TodayScheduleItem } from "@/lib/dashboard/command-center";
 
+export type DashboardTodayTimelineItem = TodayScheduleItem & {
+  href?: string;
+};
+
 export type DashboardTodayTimelineProps = {
-  items: TodayScheduleItem[];
+  items: DashboardTodayTimelineItem[];
   emptyState?: React.ReactNode;
+  compact?: boolean;
   className?: string;
 };
 
-function getTypeAccent(type?: EventType | "MEETING"): string {
+function getTypeAccent(type?: TodayScheduleItem["eventType"]): string {
   switch (type) {
     case "MATCH":
       return "var(--sce-secondary)";
@@ -24,56 +30,109 @@ function getTypeAccent(type?: EventType | "MEETING"): string {
   }
 }
 
-function TimelineRow({ item }: { item: TodayScheduleItem }) {
-  const accent = getTypeAccent(item.eventType);
+function MetaSegments({ meta }: { meta: string }) {
+  const segments = meta.split(" · ").filter(Boolean);
 
   return (
-    <li className="relative grid grid-cols-[3.5rem_minmax(0,1fr)] gap-x-4 pb-5 last:pb-0">
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {segments.map((segment) => (
+        <span
+          key={segment}
+          className="inline-flex items-center rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 text-[0.6875rem] leading-snug text-[var(--text-2)]"
+        >
+          {segment}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function TimelineRow({
+  item,
+  compact,
+  isLast,
+}: {
+  item: DashboardTodayTimelineItem;
+  compact?: boolean;
+  isLast: boolean;
+}) {
+  const accent = getTypeAccent(item.eventType);
+  const content = (
+    <>
       <div className="pt-0.5 text-right">
-        <p className="font-mono text-xs font-medium tabular-nums text-[var(--foreground)]">
+        <p className="font-mono text-[0.8125rem] font-semibold tabular-nums text-[var(--foreground)]">
           {item.timeLabel}
         </p>
         {item.endTimeLabel && (
-          <p className="mt-0.5 font-mono text-[0.65rem] tabular-nums text-[var(--muted)]">
+          <p className="mt-0.5 font-mono text-[0.6875rem] tabular-nums text-[var(--muted)]">
             {item.endTimeLabel}
           </p>
         )}
       </div>
 
-      <div className="relative min-w-0 border-l border-[var(--border)] pl-4">
+      <div className="relative min-w-0 border-l-2 border-[var(--border)] pl-4 sm:pl-5">
         <span
-          className="absolute -left-[5px] top-1.5 h-2.5 w-2.5 rounded-full border border-[var(--background)]"
+          className="absolute -left-[6px] top-2 h-3 w-3 rounded-full border-2 border-[var(--surface)] ring-1 ring-[var(--border)]"
           style={{ backgroundColor: accent }}
           aria-hidden="true"
         />
 
-        <div className="rounded-lg bg-[var(--surface)] px-3.5 py-3 transition-colors duration-[120ms] hover:bg-[var(--surface-2)]">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className="text-[0.65rem] font-semibold uppercase tracking-[0.08em]"
-              style={{ color: accent }}
-            >
-              {item.typeLabel}
-            </span>
+        <div
+          className={cn(
+            "rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-2)]/60",
+            compact ? "px-3.5 py-3" : "px-4 py-3.5",
+            "motion-safe:transition-[background-color,border-color,box-shadow] motion-safe:duration-150",
+            item.href && "motion-safe:hover:border-[var(--border-strong)] motion-safe:hover:bg-[var(--surface-2)] motion-safe:hover:shadow-[var(--shadow-xs)]",
+          )}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <span
+                className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em]"
+                style={{ color: accent }}
+              >
+                {item.typeLabel}
+              </span>
+
+              <p className="mt-1 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)] sm:text-base">
+                {item.title}
+              </p>
+
+              {item.subtitle && (
+                <p className="mt-0.5 text-[0.8125rem] text-[var(--text-2)]">{item.subtitle}</p>
+              )}
+
+              {item.meta && <MetaSegments meta={item.meta} />}
+            </div>
+
+            {item.href && (
+              <ChevronRight
+                className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)] motion-safe:transition-colors motion-safe:duration-150 group-hover:text-[var(--sce-primary)]"
+                aria-hidden="true"
+              />
+            )}
           </div>
-
-          <p className="mt-1 text-sm font-medium leading-snug text-[var(--foreground)]">
-            {item.title}
-          </p>
-
-          {item.subtitle && (
-            <p className="mt-0.5 text-xs text-[var(--text-2)]">{item.subtitle}</p>
-          )}
-
-          {item.meta && (
-            <p className="mt-1.5 text-xs leading-relaxed text-[var(--muted)]">
-              {item.meta}
-            </p>
-          )}
         </div>
       </div>
-    </li>
+    </>
   );
+
+  const rowClassName = cn(
+    "group relative grid grid-cols-[3.75rem_minmax(0,1fr)] gap-x-4 sm:grid-cols-[4.25rem_minmax(0,1fr)]",
+    !isLast && (compact ? "pb-4" : "pb-5"),
+  );
+
+  if (item.href) {
+    return (
+      <li className={rowClassName}>
+        <Link href={item.href} className="contents no-underline">
+          {content}
+        </Link>
+      </li>
+    );
+  }
+
+  return <li className={rowClassName}>{content}</li>;
 }
 
 /**
@@ -82,6 +141,7 @@ function TimelineRow({ item }: { item: TodayScheduleItem }) {
 export function DashboardTodayTimeline({
   items,
   emptyState,
+  compact = false,
   className,
 }: DashboardTodayTimelineProps) {
   if (items.length === 0) {
@@ -99,8 +159,13 @@ export function DashboardTodayTimeline({
 
   return (
     <ol className={cn("relative", className)} aria-label="Heutiger Tagesplan">
-      {items.map((item) => (
-        <TimelineRow key={item.key} item={item} />
+      {items.map((item, index) => (
+        <TimelineRow
+          key={item.key}
+          item={item}
+          compact={compact}
+          isLast={index === items.length - 1}
+        />
       ))}
     </ol>
   );

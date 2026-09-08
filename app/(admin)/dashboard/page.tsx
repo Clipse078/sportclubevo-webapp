@@ -17,20 +17,22 @@ import { getPersonalizedGreeting, resolveDashboardFirstName } from "@/lib/dashbo
 import { getPersonFirstNameByUserId } from "@/lib/people/queries";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { getCommandCenterData } from "@/lib/dashboard/command-center";
+import type { TodayScheduleItem } from "@/lib/dashboard/command-center";
 import { getDashboardQuickActionDefs } from "@/lib/dashboard/quick-actions";
 import {
   DashboardCommandHeader,
-  DashboardMetricStrip,
+  DashboardKpiGrid,
   DashboardQuickActions,
   DashboardActivityFeed,
   DashboardActivityItem,
   DashboardSection,
   DashboardGrid,
   DashboardEmptyState,
-  DashboardTodayTimeline,
+  DashboardTodaySchedule,
   DashboardAttentionList,
   DashboardUpcomingList,
 } from "@/components/ui/dashboard";
+import type { DashboardKpiAccent } from "@/components/ui/dashboard";
 import { getCurrentSwissFootballSeason } from "@/lib/seasons/season-logic";
 import { formatTodayDate } from "@/lib/tenant-runtime/formatters";
 import type { PermissionKey } from "@/lib/permissions/permissions";
@@ -45,6 +47,20 @@ function timeAgo(date: Date): string {
   const diffD = Math.floor(diffH / 24);
   return `Vor ${diffD} Tag${diffD === 1 ? "" : "en"}`;
 }
+
+function resolveTodayItemHref(item: TodayScheduleItem): string | undefined {
+  if (item.key.startsWith("event-")) {
+    return `/dashboard/planner/edit/${item.key.slice("event-".length)}`;
+  }
+  return undefined;
+}
+
+const KPI_ACCENT: Record<string, DashboardKpiAccent> = {
+  teams: "primary",
+  people: "info",
+  "today-events": "success",
+  registrations: "warning",
+};
 
 const QUICK_ACTION_ICONS = {
   news: <Newspaper className="h-4 w-4" />,
@@ -118,21 +134,21 @@ export default async function DashboardPage() {
     (typeof commandCenter.activitySources)[number]["kind"],
     { tag: string; tagVariant: DashboardActivityItem["tagVariant"]; icon: ReactNode }
   > = {
-    news: { tag: "News", tagVariant: "info", icon: <Newspaper className="h-4 w-4" /> },
+    news: { tag: "News", tagVariant: "info", icon: <Newspaper className="h-3.5 w-3.5" /> },
     registration: {
       tag: "Anmeldung",
       tagVariant: "warning",
-      icon: <Users className="h-4 w-4" />,
+      icon: <Users className="h-3.5 w-3.5" />,
     },
     event: {
       tag: "Planung",
       tagVariant: "success",
-      icon: <CalendarDays className="h-4 w-4" />,
+      icon: <CalendarDays className="h-3.5 w-3.5" />,
     },
     meeting: {
       tag: "Meeting",
       tagVariant: "primary",
-      icon: <ScrollText className="h-4 w-4" />,
+      icon: <ScrollText className="h-3.5 w-3.5" />,
     },
   };
 
@@ -151,25 +167,26 @@ export default async function DashboardPage() {
     },
   );
 
-  const kpiMetrics = commandCenter.kpis.map((kpi) => ({
+  const kpiItems = commandCenter.kpis.map((kpi) => ({
     key: kpi.key,
     label: kpi.label,
     value: kpi.value,
     description: kpi.context,
+    accent: KPI_ACCENT[kpi.key] ?? "default",
     icon:
       kpi.key === "teams" ? (
-        <Users className="h-4 w-4" />
+        <Users className="h-5 w-5" />
       ) : kpi.key === "people" ? (
-        <UserPlus className="h-4 w-4" />
+        <UserPlus className="h-5 w-5" />
       ) : kpi.key === "today-events" ? (
-        <CalendarDays className="h-4 w-4" />
+        <CalendarDays className="h-5 w-5" />
       ) : (
-        <Newspaper className="h-4 w-4" />
+        <Newspaper className="h-5 w-5" />
       ),
   }));
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6 lg:gap-7">
       <DashboardCommandHeader
         greeting={greeting}
         clubName={ctx?.name ?? undefined}
@@ -177,13 +194,13 @@ export default async function DashboardPage() {
         date={todayFormatted}
       />
 
-      {kpiMetrics.length > 0 && <DashboardMetricStrip metrics={kpiMetrics} />}
+      {kpiItems.length > 0 && <DashboardKpiGrid items={kpiItems} />}
 
       <DashboardGrid
         sidebar={
           <>
             <DashboardSection title="Benötigt Aufmerksamkeit" noPadding variant="card">
-              <div className="px-5 py-1">
+              <div className="px-5 py-1 sm:px-6">
                 <DashboardAttentionList items={commandCenter.attentionItems} />
               </div>
             </DashboardSection>
@@ -198,7 +215,7 @@ export default async function DashboardPage() {
                 </Link>
               }
             >
-              <div className="px-5 py-1">
+              <div className="px-5 py-1 sm:px-6">
                 <DashboardUpcomingList items={commandCenter.upcomingItems} />
               </div>
             </DashboardSection>
@@ -209,13 +226,19 @@ export default async function DashboardPage() {
           title="Heute im Verein"
           description={todayFormatted}
           variant="card"
-          bodyClassName="px-5 py-4"
+          bodyClassName="px-5 py-4 sm:px-6 sm:py-5"
+          actions={
+            <Link href="/dashboard/planner" className="sce-link-primary text-[0.8125rem] font-medium">
+              Alle Termine →
+            </Link>
+          }
         >
-          <DashboardTodayTimeline
+          <DashboardTodaySchedule
             items={commandCenter.todayItems}
+            resolveHref={resolveTodayItemHref}
             emptyState={
               <DashboardEmptyState
-                icon={<CalendarDays className="h-6 w-6" />}
+                icon={<CalendarDays className="h-5 w-5" />}
                 title="Heute ist nichts geplant"
                 description="Trainings, Spiele, Turniere und Meetings erscheinen hier chronologisch."
                 action={
@@ -230,39 +253,46 @@ export default async function DashboardPage() {
           />
         </DashboardSection>
 
-        {quickActions.length > 0 && (
-          <DashboardSection title="Schnellaktionen" noPadding variant="card">
-            <div className="px-3 py-2">
-              <DashboardQuickActions actions={quickActions} />
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-5 lg:gap-6">
+          <DashboardSection
+            title="Letzte Aktivitäten"
+            noPadding
+            variant="card"
+            className="lg:col-span-3"
+            footer={
+              activityItems.length > 0 ? (
+                <Link href="/dashboard/logs" className="sce-link-primary text-[0.8125rem]">
+                  Alle Aktivitäten anzeigen →
+                </Link>
+              ) : undefined
+            }
+          >
+            <div className="px-5 py-1 sm:px-6">
+              <DashboardActivityFeed
+                items={activityItems}
+                emptyState={
+                  <DashboardEmptyState
+                    icon={<Globe className="h-5 w-5" />}
+                    title="Noch keine Aktivitäten"
+                    description="Aktuelle News, Anmeldungen, Planungsänderungen und Meetings erscheinen hier."
+                  />
+                }
+              />
             </div>
           </DashboardSection>
-        )}
 
-        <DashboardSection
-          title="Letzte Aktivitäten"
-          noPadding
-          variant="card"
-          footer={
-            activityItems.length > 0 ? (
-              <Link href="/dashboard/logs" className="sce-link-primary text-[0.8125rem]">
-                Alle Aktivitäten anzeigen →
-              </Link>
-            ) : undefined
-          }
-        >
-          <div className="px-5 py-1">
-            <DashboardActivityFeed
-              items={activityItems}
-              emptyState={
-                <DashboardEmptyState
-                  icon={<Globe className="h-7 w-7" />}
-                  title="Noch keine Aktivitäten"
-                  description="Aktuelle News, Anmeldungen, Planungsänderungen und Meetings erscheinen hier."
-                />
-              }
-            />
-          </div>
-        </DashboardSection>
+          {quickActions.length > 0 && (
+            <DashboardSection
+              title="Schnellaktionen"
+              noPadding
+              variant="card"
+              className="lg:col-span-2"
+              bodyClassName="px-4 py-3 sm:px-5 sm:py-4"
+            >
+              <DashboardQuickActions actions={quickActions} />
+            </DashboardSection>
+          )}
+        </div>
       </DashboardGrid>
     </div>
   );

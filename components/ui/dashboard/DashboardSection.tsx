@@ -32,29 +32,32 @@ export function DashboardSection({
   return (
     <section
       className={cn(
-        isCard && "overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xs)]",
+        isCard &&
+          "overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xs)]",
+        isCard &&
+          "bg-[linear-gradient(180deg,var(--surface)_0%,color-mix(in_srgb,var(--surface)_96%,var(--surface-2))_100%)]",
         className,
       )}
     >
       {hasHeader && (
         <div
           className={cn(
-            "flex items-center justify-between gap-3",
-            isCard ? "border-b border-[var(--border)] px-5 py-4" : "pb-3",
+            "flex items-start justify-between gap-3",
+            isCard ? "border-b border-[var(--border)] px-5 py-4 sm:px-6" : "pb-3",
           )}
         >
           <div className="min-w-0 flex-1">
             {title && (
-              <h2 className="text-sm font-semibold text-[var(--foreground)]">
+              <h2 className="text-[1.0625rem] font-semibold leading-snug text-[var(--foreground)] sm:text-lg">
                 {title}
               </h2>
             )}
             {description && (
-              <p className="mt-0.5 text-xs text-[var(--text-2)]">{description}</p>
+              <p className="mt-1 text-[0.8125rem] text-[var(--text-2)]">{description}</p>
             )}
           </div>
           {actions && (
-            <div className="flex shrink-0 items-center gap-2">{actions}</div>
+            <div className="flex shrink-0 items-center gap-2 pt-0.5">{actions}</div>
           )}
         </div>
       )}
@@ -69,7 +72,7 @@ export function DashboardSection({
         <div
           className={cn(
             "pt-3",
-            isCard && "border-t border-[var(--border)] px-5 py-3",
+            isCard && "border-t border-[var(--border)] px-5 py-3.5 sm:px-6",
           )}
         >
           {footer}

@@ -4,6 +4,8 @@ import { DashboardWelcome } from "./DashboardWelcome";
 
 export type DashboardCommandHeaderProps = {
   greeting: string;
+  /** Supporting welcome line below the greeting. */
+  subtitle?: string;
   clubName?: string;
   activeSeason?: string;
   date?: string;
@@ -16,33 +18,43 @@ export type DashboardCommandHeaderProps = {
  */
 export function DashboardCommandHeader({
   greeting,
+  subtitle,
   clubName,
   activeSeason,
   date,
   actions,
   className,
 }: DashboardCommandHeaderProps) {
-  const contextParts = [
+  const contextChips = [
     clubName,
     activeSeason ? `Saison ${activeSeason}` : null,
     date,
   ].filter(Boolean);
 
+  const welcomeSubtitle =
+    subtitle ??
+    (clubName
+      ? "Dein Überblick für den heutigen Vereinsbetrieb."
+      : undefined);
+
   return (
     <header
       className={cn(
-        "flex flex-wrap items-end justify-between gap-4 border-b border-[var(--border)] pb-5",
+        "flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between",
         className,
       )}
     >
-      <DashboardWelcome greeting={greeting} />
+      <DashboardWelcome greeting={greeting} subtitle={welcomeSubtitle} />
 
-      <div className="flex flex-wrap items-center gap-3">
-        {contextParts.length > 0 && (
-          <p className="text-[0.8125rem] leading-relaxed text-[var(--muted)]">
-            {contextParts.join(" · ")}
-          </p>
-        )}
+      <div className="flex flex-wrap items-center gap-2 lg:justify-end lg:pt-1">
+        {contextChips.map((chip) => (
+          <span
+            key={chip}
+            className="inline-flex items-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-[0.6875rem] font-medium text-[var(--text-2)]"
+          >
+            {chip}
+          </span>
+        ))}
         {actions}
       </div>
     </header>

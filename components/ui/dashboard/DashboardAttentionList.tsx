@@ -13,23 +13,23 @@ function AttentionRow({ item }: { item: AttentionItem }) {
     <Link
       href={item.href}
       className={cn(
-        "group flex items-start gap-3 border-b border-[var(--border)] py-3 no-underline last:border-b-0",
-        "transition-colors duration-[120ms] hover:bg-[var(--surface-2)] -mx-2 px-2 rounded-lg",
+        "group flex items-start gap-3 border-b border-[var(--border)] py-3.5 no-underline last:border-b-0",
+        "motion-safe:transition-colors motion-safe:duration-150 motion-safe:hover:bg-[var(--surface-2)] -mx-2 rounded-lg px-2",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
       )}
     >
       <span
         className={cn(
-          "mt-1.5 h-2 w-2 shrink-0 rounded-full",
-          item.urgent ? "bg-[var(--sce-primary)]" : "bg-[var(--border-strong)]",
+          "mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full",
+          item.urgent ? "bg-[var(--sce-primary)] shadow-[0_0_0_3px_var(--sce-primary-light)]" : "bg-[var(--border-strong)]",
         )}
         aria-hidden="true"
       />
       <div className="min-w-0 flex-1">
-        <p className="text-[0.8125rem] font-medium leading-snug text-[var(--foreground)] group-hover:text-[var(--foreground)]">
+        <p className="text-[0.875rem] font-semibold leading-snug text-[var(--foreground)]">
           {item.title}
         </p>
-        <p className="mt-0.5 text-xs leading-relaxed text-[var(--muted)]">
+        <p className="mt-1 text-[0.8125rem] leading-relaxed text-[var(--muted)]">
           {item.subtitle}
         </p>
       </div>
@@ -41,7 +41,7 @@ export function DashboardAttentionList({ items, className }: DashboardAttentionL
   if (items.length === 0) {
     return (
       <DashboardEmptyState
-        className={cn("py-6", className)}
+        className={cn("py-5", className)}
         title="Alles im grünen Bereich"
         description="Es gibt derzeit keine offenen operativen Punkte, die deine Aufmerksamkeit brauchen."
       />

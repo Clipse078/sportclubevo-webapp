@@ -15,7 +15,10 @@ export { DashboardCommandHeader } from "./DashboardCommandHeader";
 export type { DashboardCommandHeaderProps } from "./DashboardCommandHeader";
 
 export { DashboardTodayTimeline } from "./DashboardTodayTimeline";
-export type { DashboardTodayTimelineProps } from "./DashboardTodayTimeline";
+export type { DashboardTodayTimelineProps, DashboardTodayTimelineItem } from "./DashboardTodayTimeline";
+
+export { DashboardTodaySchedule } from "./DashboardTodaySchedule";
+export type { DashboardTodayScheduleProps } from "./DashboardTodaySchedule";
 
 export { DashboardAttentionList } from "./DashboardAttentionList";
 export type { DashboardAttentionListProps } from "./DashboardAttentionList";
@@ -28,6 +31,9 @@ export type { DashboardWelcomeProps } from "./DashboardWelcome";
 
 export { DashboardKpiCard } from "./DashboardKpiCard";
 export type { DashboardKpiCardProps, DashboardKpiAccent } from "./DashboardKpiCard";
+
+export { DashboardKpiGrid } from "./DashboardKpiGrid";
+export type { DashboardKpiGridProps, DashboardKpiGridItem } from "./DashboardKpiGrid";
 
 export { DashboardMetricStrip } from "./DashboardMetricStrip";
 export type {
