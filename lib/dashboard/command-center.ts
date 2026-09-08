@@ -37,6 +37,14 @@ import {
   type CommandCenterUpcomingLogo,
 } from "@/lib/dashboard/command-center-presentation";
 import { getUserDashboardHeroImageUrl } from "@/lib/dashboard/dashboard-hero-image";
+import {
+  batchGetEventAllocationDisplayForTenant,
+} from "@/lib/facilities/display-helpers";
+import {
+  buildTodayEventVenuePresentation,
+  formatTodayEventVenueMeta,
+  type TodayEventVenuePresentation,
+} from "@/lib/dashboard/event-venue-presentation";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -57,6 +65,7 @@ export type TodayScheduleItem = {
   title: string;
   subtitle?: string;
   meta?: string;
+  venuePresentation?: TodayEventVenuePresentation;
   competitionLabel?: string;
   matchPresentation?: CommandCenterMatchPresentation;
   tournamentParticipants?: CommandCenterTournamentParticipant[];
@@ -188,27 +197,6 @@ function tenantEventWhere(tenantId: string) {
     tenantId,
     OR: [{ teamId: null }, { team: { tenantId } }],
   };
-}
-
-function formatDressingRooms(home?: string | null, away?: string | null): string | undefined {
-  const parts = [home, away].filter(Boolean);
-  if (parts.length === 0) return undefined;
-  return parts.join(" · ");
-}
-
-function buildLocationMeta(args: {
-  location?: string | null;
-  pitchCode?: string | null;
-  homeDressingRoomCode?: string | null;
-  awayDressingRoomCode?: string | null;
-}): string | undefined {
-  const segments = [
-    args.location?.trim(),
-    args.pitchCode ? `Feld ${args.pitchCode}` : undefined,
-    formatDressingRooms(args.homeDressingRoomCode, args.awayDressingRoomCode),
-  ].filter(Boolean);
-
-  return segments.length > 0 ? segments.join(" · ") : undefined;
 }
 
 // ── Pure builders (testable) ──────────────────────────────────────────────────
@@ -564,8 +552,18 @@ export async function getCommandCenterData(args: {
     collectProviderClubIdsFromEventPolicies([...eventPolicyByEventId.values()]),
   );
 
+  const todayAllocationDisplays = await batchGetEventAllocationDisplayForTenant(
+    todayEvents.map((event) => ({
+      type: event.type,
+      pitchCode: event.pitchCode,
+      homeDressingRoomCode: event.homeDressingRoomCode,
+      awayDressingRoomCode: event.awayDressingRoomCode,
+    })),
+    args.tenantId,
+  );
+
   const todayItems: TodayScheduleItem[] = [
-    ...todayEvents.map((event) => {
+    ...todayEvents.map((event, index) => {
       const policy = eventPolicyByEventId.get(event.id);
       const ownTeamDisplayName = event.team?.name ?? null;
       const subtitle = ownTeamDisplayName ?? event.opponentName ?? undefined;
@@ -591,6 +589,18 @@ export async function getCommandCenterData(args: {
             )
           : undefined;
 
+      const allocation = todayAllocationDisplays[index];
+      const venuePresentation = buildTodayEventVenuePresentation({
+        location: event.location,
+        pitchCode: event.pitchCode,
+        pitchLabel: allocation.pitchLabel,
+        homeDressingRoomCode: event.homeDressingRoomCode,
+        awayDressingRoomCode: event.awayDressingRoomCode,
+        homeDressingRoomLabel: allocation.homeDressingRoomLabel,
+        awayDressingRoomLabel: allocation.awayDressingRoomLabel,
+      });
+      const venueMeta = formatTodayEventVenueMeta(venuePresentation);
+
       return {
         key: `event-${event.id}`,
         sortAt: event.startAt,
@@ -600,7 +610,8 @@ export async function getCommandCenterData(args: {
         eventType: event.type,
         title: event.title,
         subtitle: matchPresentation ? undefined : subtitle,
-        meta: buildLocationMeta(event),
+        meta: venueMeta,
+        venuePresentation,
         competitionLabel: policy?.competitionLabel?.trim() || undefined,
         matchPresentation,
         tournamentParticipants:
@@ -609,15 +620,22 @@ export async function getCommandCenterData(args: {
             : undefined,
       };
     }),
-    ...todayMeetings.map((meeting) => ({
-      key: `meeting-${meeting.id}`,
-      sortAt: meeting.meetingDate,
-      timeLabel: formatTime(meeting.meetingDate, args.fmtCfg),
-      typeLabel: "Meeting",
-      eventType: "MEETING" as const,
-      title: meeting.title,
-      meta: meeting.location ?? undefined,
-    })),
+    ...todayMeetings.map((meeting) => {
+      const meetingVenue = buildTodayEventVenuePresentation({
+        location: meeting.location,
+      });
+
+      return {
+        key: `meeting-${meeting.id}`,
+        sortAt: meeting.meetingDate,
+        timeLabel: formatTime(meeting.meetingDate, args.fmtCfg),
+        typeLabel: "Meeting",
+        eventType: "MEETING" as const,
+        title: meeting.title,
+        meta: formatTodayEventVenueMeta(meetingVenue),
+        venuePresentation: meetingVenue,
+      };
+    }),
   ].sort((a, b) => a.sortAt.getTime() - b.sortAt.getTime());
 
   const monthLabels = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];

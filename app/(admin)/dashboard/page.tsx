@@ -10,6 +10,7 @@ import {
   ScrollText,
   UserPlus,
   Users,
+  BellRing,
 } from "lucide-react";
 import { auth } from "@/auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -219,7 +220,13 @@ export default async function DashboardPage() {
       <DashboardGrid
         sidebar={
           <>
-            <DashboardSection title="Benötigt Aufmerksamkeit" noPadding variant="card">
+            <DashboardSection
+              title="Benötigt Aufmerksamkeit"
+              icon={<BellRing className="h-4 w-4" />}
+              iconAccent="info"
+              noPadding
+              variant="card"
+            >
               <div className="px-4 py-0.5 sm:px-5">
                 <DashboardAttentionList items={commandCenter.attentionItems} />
               </div>
@@ -245,6 +252,8 @@ export default async function DashboardPage() {
         <DashboardSection
           title="Heute im Verein"
           description={todayFormatted}
+          icon={<CalendarDays className="h-4 w-4" />}
+          iconAccent="info"
           variant="card"
           bodyClassName="px-4 py-3 sm:px-5 sm:py-4"
           actions={
@@ -282,37 +291,62 @@ export default async function DashboardPage() {
           </DashboardSection>
         )}
 
-        {commandCenter.newsItems.length > 0 && (
-          <DashboardSection variant="flat" noPadding bodyClassName="px-0">
-            <DashboardNewsSection items={commandCenter.newsItems} />
-          </DashboardSection>
-        )}
-
-        <DashboardSection
-          title="Letzte Aktivitäten"
-          noPadding
-          variant="card"
-          footer={
-            activityItems.length > 0 ? (
-              <Link href="/dashboard/logs" className="sce-link-primary text-[0.8125rem]">
-                Alle Aktivitäten anzeigen →
-              </Link>
-            ) : undefined
-          }
-        >
-          <div className="px-4 py-0.5 sm:px-5">
-            <DashboardActivityFeed
-              items={activityItems}
-              emptyState={
-                <DashboardEmptyState
-                  icon={<Globe className="h-5 w-5" />}
-                  title="Noch keine Aktivitäten"
-                  description="Aktuelle News, Anmeldungen, Planungsänderungen und Meetings erscheinen hier."
+        {(commandCenter.newsItems.length > 0 || activityItems.length > 0) && (
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-start lg:gap-5">
+            {commandCenter.newsItems.length > 0 && (
+              <DashboardSection
+                title="Aktuelle News"
+                icon={<Newspaper className="h-4 w-4" />}
+                iconAccent="primary"
+                variant="card"
+                bodyClassName="px-4 py-3 sm:px-5 sm:py-3.5"
+                actions={
+                  <Link
+                    href="/dashboard/website/news"
+                    className="sce-link-primary text-[0.8125rem] font-medium"
+                  >
+                    Alle News →
+                  </Link>
+                }
+              >
+                <DashboardNewsSection
+                  items={commandCenter.newsItems}
+                  variant="compact"
+                  maxItems={2}
+                  embedded
                 />
+              </DashboardSection>
+            )}
+
+            <DashboardSection
+              title="Letzte Aktivitäten"
+              icon={<ScrollText className="h-4 w-4" />}
+              iconAccent="violet"
+              noPadding
+              variant="card"
+              footer={
+                activityItems.length > 0 ? (
+                  <Link href="/dashboard/logs" className="sce-link-primary text-[0.8125rem]">
+                    Alle Aktivitäten anzeigen →
+                  </Link>
+                ) : undefined
               }
-            />
+            >
+              <div className="px-4 py-0.5 sm:px-5">
+                <DashboardActivityFeed
+                  items={activityItems}
+                  emptyState={
+                    <DashboardEmptyState
+                      icon={<Globe className="h-5 w-5" />}
+                      title="Noch keine Aktivitäten"
+                      description="Aktuelle News, Anmeldungen, Planungsänderungen und Meetings erscheinen hier."
+                    />
+                  }
+                />
+              </div>
+            </DashboardSection>
           </div>
-        </DashboardSection>
+        )}
       </DashboardGrid>
     </div>
   );

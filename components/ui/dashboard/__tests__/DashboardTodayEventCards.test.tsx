@@ -4,7 +4,10 @@
 
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { DashboardTodayMatchCard } from "@/components/ui/dashboard/DashboardTodayEventCards";
+import {
+  DashboardTodayMatchCard,
+  DashboardTodayTournamentCard,
+} from "@/components/ui/dashboard/DashboardTodayEventCards";
 import type { DashboardTodayTimelineItem } from "@/components/ui/dashboard/DashboardTodayTimeline";
 
 const matchItem: DashboardTodayTimelineItem = {
@@ -14,25 +17,66 @@ const matchItem: DashboardTodayTimelineItem = {
   typeLabel: "Spiel",
   eventType: "MATCH",
   title: "Spiel",
-  meta: "Im Brüel · Feld 2",
-  competitionLabel: "2. Liga",
+  meta: "Im Brüel, Allschwil · Kunstrasen 2",
+  competitionLabel: "2. Liga (FAEW)",
   href: "/dashboard/planner/edit/evt-1",
+  venuePresentation: {
+    groups: [
+      { kind: "location", label: "Im Brüel, Allschwil" },
+      { kind: "pitch", label: "Kunstrasen 2" },
+    ],
+  },
   matchPresentation: {
-    competitionLabel: "2. Liga",
-    home: { displayName: "FC Heim", logoUrl: "https://cdn.example/home.png" },
+    competitionLabel: "2. Liga (FAEW)",
+    home: {
+      displayName: "FC Heim",
+      logoUrl: "https://cdn.example/home.png",
+      clubLine: "FC Heim",
+      teamLine: "1. Mannschaft",
+    },
     away: { displayName: "FC Gast", logoUrl: "https://cdn.example/away.png" },
   },
 };
 
+const tournamentItem: DashboardTodayTimelineItem = {
+  key: "event-2",
+  sortAt: new Date("2026-09-08T09:00:00Z"),
+  timeLabel: "09:00",
+  typeLabel: "Turnier",
+  eventType: "TOURNAMENT",
+  title: "F-Junioren Herbstturnier",
+  venuePresentation: {
+    groups: [{ kind: "location", label: "Im Brüel, Allschwil" }],
+  },
+  tournamentParticipants: [
+    { displayName: "Team A", logoUrl: null },
+    { displayName: "Team B", logoUrl: null },
+  ],
+};
+
 describe("DashboardTodayMatchCard", () => {
-  it("renders home vs away fixture composition with canonical data only", () => {
+  it("renders premium fixture hierarchy with venue metadata", () => {
     render(<DashboardTodayMatchCard item={matchItem} />);
 
     expect(screen.getByText("FC Heim")).toBeInTheDocument();
+    expect(screen.getByText("1. Mannschaft")).toBeInTheDocument();
     expect(screen.getByText("FC Gast")).toBeInTheDocument();
     expect(screen.getByText("VS")).toBeInTheDocument();
-    expect(screen.getByText("2. Liga")).toBeInTheDocument();
-    expect(screen.getByText("Im Brüel · Feld 2")).toBeInTheDocument();
+    expect(screen.getByText("2. Liga (FAEW)")).toBeInTheDocument();
+    expect(screen.getByText("SPIEL")).toBeInTheDocument();
+    expect(screen.getByText("Im Brüel, Allschwil")).toBeInTheDocument();
+    expect(screen.getByText("Kunstrasen 2")).toBeInTheDocument();
     expect(screen.getByRole("link")).toHaveAttribute("href", matchItem.href);
+  });
+});
+
+describe("DashboardTodayTournamentCard", () => {
+  it("renders tournament hierarchy with participant summary", () => {
+    render(<DashboardTodayTournamentCard item={tournamentItem} />);
+
+    expect(screen.getByText("TURNIER")).toBeInTheDocument();
+    expect(screen.getByText("F-Junioren Herbstturnier")).toBeInTheDocument();
+    expect(screen.getByText("2 Teilnehmer")).toBeInTheDocument();
+    expect(screen.getByText("Im Brüel, Allschwil")).toBeInTheDocument();
   });
 });

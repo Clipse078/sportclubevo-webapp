@@ -1,19 +1,25 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { ChevronRight, Trophy } from "lucide-react";
 import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
 import { cn } from "@/lib/cn";
 import {
-  buildTodayMatchMetaLine,
   buildTodayTournamentParticipantSummary,
   formatTodayEventTypeBadge,
 } from "@/lib/dashboard/today-event-card-presentation";
+import { DashboardVenueMetadata } from "./DashboardVenueMetadata";
 import type { DashboardTodayTimelineItem } from "./DashboardTodayTimeline";
+import type { CommandCenterClubSide } from "@/lib/dashboard/command-center-presentation";
+
+const MATCH_ACCENT = "var(--sce-secondary)";
+const TOURNAMENT_ACCENT = "#a5b4fc";
+const TOURNAMENT_ACCENT_BG = "rgba(129, 140, 248, 0.16)";
 
 const CARD_BASE = cn(
   "group relative block rounded-[var(--radius-lg)] border",
   "border-[color-mix(in_srgb,var(--border)_78%,transparent)]",
   "bg-[color-mix(in_srgb,var(--surface)_88%,var(--surface-2)_12%)]",
-  "p-3 sm:p-3.5",
+  "p-4 sm:p-4.5",
   "motion-safe:transition-[background-color,border-color,box-shadow] motion-safe:duration-150",
   "focus-within:ring-2 focus-within:ring-[var(--sce-primary)] focus-within:ring-offset-2 focus-within:ring-offset-[var(--background)]",
 );
@@ -25,140 +31,132 @@ const CARD_INTERACTIVE = cn(
   "motion-safe:hover:shadow-[var(--shadow-xs)]",
 );
 
-function EventTimeBadge({
+function EventTypeBadge({
+  typeLabel,
+  accent,
+  icon,
+}: {
+  typeLabel: string;
+  accent: string;
+  icon?: ReactNode;
+}) {
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.625rem] font-bold uppercase tracking-[0.08em]"
+      style={{
+        color: accent,
+        backgroundColor: `color-mix(in srgb, ${accent} 14%, transparent)`,
+      }}
+    >
+      {icon}
+      {formatTodayEventTypeBadge(typeLabel)}
+    </span>
+  );
+}
+
+function EventTimeHeader({
   timeLabel,
   endTimeLabel,
   typeLabel,
   accent,
+  typeIcon,
+  trailing,
 }: {
   timeLabel: string;
   endTimeLabel?: string;
   typeLabel: string;
   accent: string;
+  typeIcon?: ReactNode;
+  trailing?: React.ReactNode;
 }) {
   return (
-    <div className="flex shrink-0 flex-col items-start">
-      <p className="font-mono text-[0.875rem] font-semibold tabular-nums leading-none text-[var(--foreground)]">
-        {timeLabel}
-      </p>
-      {endTimeLabel && (
-        <p className="mt-1 font-mono text-[0.6875rem] tabular-nums text-[var(--muted)]">
-          {endTimeLabel}
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+        <p className="font-mono text-[1.125rem] font-bold tabular-nums leading-none text-[var(--foreground)] sm:text-[1.25rem]">
+          {timeLabel}
         </p>
-      )}
-      <span
-        className="mt-1.5 inline-flex items-center gap-1 text-[0.625rem] font-semibold uppercase tracking-[0.08em]"
-        style={{ color: accent }}
-      >
-        <span
-          className="inline-block h-1.5 w-1.5 rounded-full"
-          style={{ backgroundColor: accent }}
-          aria-hidden="true"
-        />
-        {formatTodayEventTypeBadge(typeLabel)}
-      </span>
+        <EventTypeBadge typeLabel={typeLabel} accent={accent} icon={typeIcon} />
+        {endTimeLabel && (
+          <p className="font-mono text-[0.6875rem] tabular-nums text-[var(--muted)]">
+            bis {endTimeLabel}
+          </p>
+        )}
+      </div>
+      {trailing}
     </div>
   );
 }
 
-function TournamentTimeBadge({
-  timeLabel,
-  endTimeLabel,
-  typeLabel,
-  accent,
-}: {
-  timeLabel: string;
-  endTimeLabel?: string;
-  typeLabel: string;
-  accent: string;
-}) {
+function FixtureSide({ side }: { side: CommandCenterClubSide }) {
+  const primary = side.clubLine ?? side.displayName;
+  const secondary = side.teamLine;
+
   return (
-    <div className="flex shrink-0 flex-col items-start">
-      <p className="font-mono text-[0.875rem] font-semibold tabular-nums leading-none text-[var(--foreground)]">
-        {timeLabel}
-      </p>
-      {endTimeLabel && (
-        <p className="mt-1 font-mono text-[0.6875rem] tabular-nums text-[var(--muted)]">
-          {endTimeLabel}
+    <div className="flex min-w-0 flex-col items-center gap-2 text-center">
+      <ClubLogo
+        logoUrl={side.logoUrl}
+        name={side.displayName}
+        size="lg"
+        bare
+      />
+      <div className="w-full min-w-0">
+        <p className="text-[0.875rem] font-bold leading-snug text-[var(--foreground)] sm:text-[0.9375rem]">
+          {primary}
         </p>
-      )}
-      <span
-        className="mt-1.5 inline-flex items-center gap-1 text-[0.625rem] font-semibold uppercase tracking-[0.08em]"
-        style={{ color: accent }}
-      >
-        <Trophy className="h-3 w-3 shrink-0" aria-hidden="true" />
-        {formatTodayEventTypeBadge(typeLabel)}
-      </span>
+        {secondary && (
+          <p className="mt-0.5 text-[0.75rem] font-medium leading-snug text-[var(--text-2)]">
+            {secondary}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
 
 export function DashboardTodayMatchCard({ item }: { item: DashboardTodayTimelineItem }) {
   const match = item.matchPresentation!;
-  const { competition, location } = buildTodayMatchMetaLine({
-    competitionLabel: item.competitionLabel,
-    meta: item.meta,
-  });
+  const competition = item.competitionLabel?.trim() || match.competitionLabel?.trim();
+  const venueGroups = item.venuePresentation?.groups ?? [];
 
   const content = (
     <>
-      <div className="flex items-start justify-between gap-3">
-        <EventTimeBadge
-          timeLabel={item.timeLabel}
-          endTimeLabel={item.endTimeLabel}
-          typeLabel={item.typeLabel}
-          accent="var(--sce-secondary)"
-        />
+      <EventTimeHeader
+        timeLabel={item.timeLabel}
+        endTimeLabel={item.endTimeLabel}
+        typeLabel={item.typeLabel}
+        accent={MATCH_ACCENT}
+        trailing={
+          item.href ? (
+            <ChevronRight
+              className="mt-1 h-4 w-4 shrink-0 text-[var(--muted)] motion-safe:transition-colors motion-safe:group-hover:text-[var(--sce-primary)]"
+              aria-hidden="true"
+            />
+          ) : undefined
+        }
+      />
 
-        {item.href && (
-          <ChevronRight
-            className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)] motion-safe:transition-colors motion-safe:group-hover:text-[var(--sce-primary)]"
-            aria-hidden="true"
-          />
-        )}
-      </div>
+      {competition && (
+        <p className="mt-2.5 text-[0.8125rem] font-semibold text-[var(--text-2)]">
+          {competition}
+        </p>
+      )}
 
-      <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3">
-        <div className="flex min-w-0 flex-col items-center gap-1.5 text-center">
-          <ClubLogo
-            logoUrl={match.home.logoUrl}
-            name={match.home.displayName}
-            size="md"
-            bare
-          />
-          <p className="w-full truncate text-[0.8125rem] font-semibold leading-snug text-[var(--foreground)]">
-            {match.home.displayName}
-          </p>
-        </div>
+      <div className="mt-3.5 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-3 sm:gap-4">
+        <FixtureSide side={match.home} />
 
         <p
-          className="px-0.5 text-[0.75rem] font-bold uppercase tracking-[0.12em] text-[var(--text-2)]"
+          className="self-center px-1 text-[0.8125rem] font-bold uppercase tracking-[0.14em] text-[var(--muted)]"
           aria-hidden="true"
         >
           VS
         </p>
 
-        <div className="flex min-w-0 flex-col items-center gap-1.5 text-center">
-          <ClubLogo
-            logoUrl={match.away.logoUrl}
-            name={match.away.displayName}
-            size="md"
-            bare
-          />
-          <p className="w-full truncate text-[0.8125rem] font-semibold leading-snug text-[var(--foreground)]">
-            {match.away.displayName}
-          </p>
-        </div>
+        <FixtureSide side={match.away} />
       </div>
 
-      {(competition || location) && (
-        <div className="mt-2.5 space-y-0.5 text-center">
-          {competition && (
-            <p className="text-[0.75rem] font-medium text-[var(--text-2)]">{competition}</p>
-          )}
-          {location && (
-            <p className="text-[0.6875rem] leading-relaxed text-[var(--muted)]">{location}</p>
-          )}
+      {venueGroups.length > 0 && (
+        <div className="mt-3.5 border-t border-[color-mix(in_srgb,var(--border)_85%,transparent)] pt-3">
+          <DashboardVenueMetadata groups={venueGroups} />
         </div>
       )}
     </>
@@ -189,49 +187,49 @@ export function DashboardTodayTournamentCard({ item }: { item: DashboardTodayTim
   const participants = item.tournamentParticipants ?? [];
   const visibleParticipants = participants.slice(0, 6);
   const participantSummary = buildTodayTournamentParticipantSummary(participants.length);
-  const accent = "var(--sce-warning)";
+  const venueGroups = item.venuePresentation?.groups ?? [];
 
   const content = (
     <>
       <div className="flex items-start gap-3">
         <div
-          className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)]"
+          className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)]"
           style={{
-            backgroundColor: "color-mix(in srgb, var(--sce-warning) 14%, transparent)",
-            color: accent,
+            backgroundColor: TOURNAMENT_ACCENT_BG,
+            color: TOURNAMENT_ACCENT,
           }}
           aria-hidden="true"
         >
-          <Trophy className="h-4 w-4" />
+          <Trophy className="h-5 w-5" />
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-        <TournamentTimeBadge
-          timeLabel={item.timeLabel}
-          endTimeLabel={item.endTimeLabel}
-          typeLabel={item.typeLabel}
-          accent={accent}
-        />
+          <EventTimeHeader
+            timeLabel={item.timeLabel}
+            endTimeLabel={item.endTimeLabel}
+            typeLabel={item.typeLabel}
+            accent={TOURNAMENT_ACCENT}
+            typeIcon={<Trophy className="h-3 w-3 shrink-0" aria-hidden="true" />}
+            trailing={
+              item.href ? (
+                <ChevronRight
+                  className="mt-1 h-4 w-4 shrink-0 text-[var(--muted)] motion-safe:transition-colors motion-safe:group-hover:text-[var(--sce-primary)]"
+                  aria-hidden="true"
+                />
+              ) : undefined
+            }
+          />
 
-            {item.href && (
-              <ChevronRight
-                className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)] motion-safe:transition-colors motion-safe:group-hover:text-[var(--sce-primary)]"
-                aria-hidden="true"
-              />
-            )}
-          </div>
-
-          <p className="mt-2 text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
+          <p className="mt-2.5 text-[1rem] font-bold leading-snug text-[var(--foreground)] sm:text-[1.0625rem]">
             {item.title}
           </p>
 
           {item.subtitle && (
-            <p className="mt-0.5 text-[0.8125rem] text-[var(--text-2)]">{item.subtitle}</p>
+            <p className="mt-1 text-[0.8125rem] font-medium text-[var(--text-2)]">{item.subtitle}</p>
           )}
 
           {visibleParticipants.length > 0 && (
-            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               {visibleParticipants.map((participant, index) => (
                 <div
                   key={`${participant.displayName}-${index}`}
@@ -253,10 +251,15 @@ export function DashboardTodayTournamentCard({ item }: { item: DashboardTodayTim
             </div>
           )}
 
-          {(item.meta || participantSummary) && (
-            <p className="mt-2 text-[0.6875rem] leading-relaxed text-[var(--muted)]">
-              {[item.meta, participantSummary].filter(Boolean).join(" · ")}
-            </p>
+          {(participantSummary || venueGroups.length > 0) && (
+            <div className="mt-3 space-y-2 border-t border-[color-mix(in_srgb,var(--border)_85%,transparent)] pt-3">
+              {participantSummary && (
+                <p className="text-[0.75rem] font-medium text-[var(--text-2)]">
+                  {participantSummary}
+                </p>
+              )}
+              {venueGroups.length > 0 && <DashboardVenueMetadata groups={venueGroups} />}
+            </div>
           )}
         </div>
       </div>

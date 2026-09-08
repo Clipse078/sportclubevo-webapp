@@ -37,13 +37,13 @@ export function DashboardActivityFeed({
           <div
             key={item.key}
             className={cn(
-              "group flex items-start gap-2 py-2 motion-safe:transition-colors motion-safe:duration-150",
+              "group flex items-start gap-2 py-1.5 motion-safe:transition-colors motion-safe:duration-150",
               "motion-safe:hover:bg-[var(--surface-2)] -mx-1 rounded-md px-1",
               !isLast && "border-b border-[color-mix(in_srgb,var(--border)_85%,transparent)]",
             )}
           >
             <div
-              className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[var(--surface-2)] text-[var(--muted)]"
+              className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[var(--surface-2)] text-[var(--muted)]"
               aria-hidden="true"
             >
               {item.icon}
@@ -60,8 +60,8 @@ export function DashboardActivityFeed({
               )}
             </div>
 
-            <div className="flex shrink-0 flex-col items-end gap-1">
-              <span className="text-[0.6875rem] text-[var(--muted)]">{item.timestamp}</span>
+            <div className="flex shrink-0 flex-col items-end gap-0.5">
+              <span className="text-[0.625rem] text-[var(--muted)]">{item.timestamp}</span>
               {item.tag && (
                 <Badge variant={item.tagVariant ?? "default"} size="sm">
                   {item.tag}

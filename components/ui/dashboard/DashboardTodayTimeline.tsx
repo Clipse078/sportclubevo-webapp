@@ -9,6 +9,7 @@ import {
   DashboardTodayMatchCard,
   DashboardTodayTournamentCard,
 } from "./DashboardTodayEventCards";
+import { DashboardVenueMetadata } from "./DashboardVenueMetadata";
 import { DashboardEmptyState } from "./DashboardEmptyState";
 import type { TodayScheduleItem } from "@/lib/dashboard/command-center";
 
@@ -38,9 +39,19 @@ function getTypeAccent(type?: TodayScheduleItem["eventType"]): string {
   }
 }
 
-function MetaLine({ meta }: { meta: string }) {
+function MetaLine({ item }: { item: DashboardTodayTimelineItem }) {
+  if (item.venuePresentation?.groups.length) {
+    return (
+      <div className="mt-1.5">
+        <DashboardVenueMetadata groups={item.venuePresentation.groups} compact />
+      </div>
+    );
+  }
+
+  if (!item.meta) return null;
+
   return (
-    <p className="mt-1.5 text-[0.75rem] leading-relaxed text-[var(--text-2)]">{meta}</p>
+    <p className="mt-1.5 text-[0.75rem] leading-relaxed text-[var(--text-2)]">{item.meta}</p>
   );
 }
 
@@ -70,7 +81,9 @@ function ScheduleRowContent({
             <p className="mt-0.5 text-[0.8125rem] text-[var(--text-2)]">{item.subtitle}</p>
           )}
 
-          {item.meta && <MetaLine meta={item.meta} />}
+          {item.meta || item.venuePresentation?.groups.length ? (
+            <MetaLine item={item} />
+          ) : null}
         </div>
 
         {item.href && (

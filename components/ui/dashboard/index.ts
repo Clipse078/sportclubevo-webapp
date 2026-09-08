@@ -57,7 +57,7 @@ export { DashboardSmartNudges } from "./DashboardSmartNudges";
 export type { DashboardSmartNudgesProps } from "./DashboardSmartNudges";
 
 export { DashboardSection } from "./DashboardSection";
-export type { DashboardSectionProps, DashboardSectionVariant } from "./DashboardSection";
+export type { DashboardSectionProps, DashboardSectionVariant, DashboardSectionIconAccent } from "./DashboardSection";
 
 export { DashboardGrid } from "./DashboardGrid";
 export type { DashboardGridProps } from "./DashboardGrid";
