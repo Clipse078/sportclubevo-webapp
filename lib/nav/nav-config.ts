@@ -48,21 +48,19 @@ export type ModuleDefinition = {
 
 // ── Navigation sections ───────────────────────────────────────────────────────
 //
-// Primary structure: Dashboard · Organisation · Website · Betrieb · Führung · System
+// PLATFORM-UX-01: Final sidebar order with conceptual grouping communicated
+// only through restrained section separators (no visible section headings).
+// Section labels are sr-only for assistive technology.
 //
-// Vereinsleitung, Wochenplaner, and Tagesplaner are NOT top-level modules.
-// Their routes remain intact — only the sidebar presentation changes.
-//
-// DASHBOARD-SHELL-UX-01: "Planung" (inside Betrieb) groups the three
-// canonical operational modules in this exact order — TrainingCenter,
-// MatchCenter, TournamentCenter — followed by Veranstaltungen and
-// Wochenplanner. MatchCenter previously lived as a standalone Betrieb
-// entry; only its nav placement/label changed, its route and permissions
-// did not.
+// Order: Dashboard · Planung · Organisation · Mitglieder · Anmeldungen ·
+// Aufgaben · Helfereinsätze · Kommunikation · Dokumente | Website · Infoboard |
+// Trainer & Staff · Meetings · Club Entwicklung · Material · Finanzen · Sponsoring |
+// Formulare & Freigaben · Vorfälle & Disziplin | Administration
 
 export const NAV_SECTIONS: NavSection[] = [
-  // ── Dashboard ──────────────────────────────────────────────────────────────
+  // ── Daily club operations (sr-only: Tagesbetrieb) ─────────────────────────
   {
+    sectionLabel: "Tagesbetrieb",
     items: [
       {
         key: "dashboard",
@@ -70,153 +68,6 @@ export const NAV_SECTIONS: NavSection[] = [
         href: "/dashboard",
         carrySeason: true,
       },
-    ],
-  },
-
-  // ── Core modules (Organisation + Website) ─────────────────────────────────
-  {
-    items: [
-      {
-        key: "organisation",
-        label: "Organisation",
-        href: "/dashboard/org-units",
-        permissionKeys: [
-          PERMISSIONS.ORG_VIEW,
-          PERMISSIONS.ORG_MANAGE,
-          PERMISSIONS.TEAMS_VIEW,
-          PERMISSIONS.TEAMS_MANAGE,
-          PERMISSIONS.COMPETITIONS_VIEW,
-          PERMISSIONS.COMPETITIONS_MANAGE,
-          PERMISSIONS.PEOPLE_VIEW,
-          PERMISSIONS.PEOPLE_MANAGE,
-        ],
-        children: [
-          {
-            key: "org-units",
-            label: "Organisationseinheiten",
-            href: "/dashboard/org-units",
-            permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
-          },
-          {
-            key: "target-groups",
-            label: "Zielgruppen",
-            href: "/dashboard/target-groups",
-            permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
-          },
-          {
-            key: "teams",
-            label: "Teams",
-            href: "/dashboard/teams",
-            permissionKeys: [PERMISSIONS.TEAMS_VIEW, PERMISSIONS.TEAMS_MANAGE],
-          },
-          {
-            key: "provider-mapping",
-            label: "Anbieter-Mapping",
-            href: "/dashboard/teams/provider-mapping",
-            permissionKeys: [PERMISSIONS.TEAMS_MANAGE],
-          },
-          {
-            // CLUB-DIRECTORY-01: canonical external club/team directory.
-            key: "vereine",
-            label: "Vereine",
-            href: "/dashboard/vereine",
-            permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
-          },
-          {
-            key: "personen",
-            label: "Personen",
-            href: "/dashboard/persons",
-            permissionKeys: [PERMISSIONS.PEOPLE_VIEW, PERMISSIONS.PEOPLE_MANAGE],
-          },
-          {
-            key: "competitions",
-            label: "Wettkämpfe",
-            href: "/dashboard/competitions",
-            permissionKeys: [PERMISSIONS.COMPETITIONS_VIEW, PERMISSIONS.COMPETITIONS_MANAGE],
-          },
-        ],
-      },
-      {
-        key: "website",
-        label: "Website",
-        href: "/dashboard/website",
-        permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
-        children: [
-          {
-            key: "website-overview",
-            label: "CMS Übersicht",
-            href: "/dashboard/website",
-            permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
-          },
-          {
-            key: "website-news",
-            label: "News",
-            href: "/dashboard/website/news",
-            permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
-          },
-          {
-            key: "website-pages",
-            label: "Seiten",
-            href: "/dashboard/website/pages",
-            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
-          },
-          {
-            key: "website-homepage",
-            label: "Homepage Builder",
-            href: "/dashboard/website/homepage",
-            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
-          },
-          {
-            key: "website-navigation",
-            label: "Navigation",
-            href: "/dashboard/website/navigation",
-            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
-          },
-          {
-            key: "website-blocks",
-            label: "Block-Bibliothek",
-            href: "/dashboard/website/blocks",
-            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
-          },
-          {
-            key: "website-media",
-            label: "Medien",
-            href: "/dashboard/website/media",
-            permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
-          },
-          {
-            key: "website-editorial",
-            label: "Redaktion",
-            href: "/dashboard/website/editorial",
-            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
-          },
-          {
-            key: "website-publishing",
-            label: "Veröffentlichungen",
-            href: "/dashboard/website/publishing",
-            permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
-          },
-          {
-            key: "website-components",
-            label: "Wiederverwendbare Inhalte",
-            href: "/dashboard/website/components",
-            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
-          },
-          {
-            key: "website-settings",
-            label: "Einstellungen",
-            href: "/dashboard/website/settings",
-            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
-          },
-        ],
-      },
-    ],
-  },
-
-  // ── Betrieb ────────────────────────────────────────────────────────────────
-  {
-    sectionLabel: "Betrieb",
-    items: [
       {
         key: "planung",
         label: "Planung",
@@ -296,13 +147,71 @@ export const NAV_SECTIONS: NavSection[] = [
         ],
       },
       {
-        key: "workspace",
-        label: "Dokumente",
-        href: "/dashboard/workspace",
+        key: "organisation",
+        label: "Organisation",
+        href: "/dashboard/org-units",
         permissionKeys: [
-          PERMISSIONS.WORKSPACE_VIEW,
-          PERMISSIONS.WORKSPACE_MANAGE,
+          PERMISSIONS.ORG_VIEW,
+          PERMISSIONS.ORG_MANAGE,
+          PERMISSIONS.TEAMS_VIEW,
+          PERMISSIONS.TEAMS_MANAGE,
+          PERMISSIONS.COMPETITIONS_VIEW,
+          PERMISSIONS.COMPETITIONS_MANAGE,
+          PERMISSIONS.PEOPLE_VIEW,
+          PERMISSIONS.PEOPLE_MANAGE,
         ],
+        children: [
+          {
+            key: "org-units",
+            label: "Organisationseinheiten",
+            href: "/dashboard/org-units",
+            permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
+          },
+          {
+            key: "target-groups",
+            label: "Zielgruppen",
+            href: "/dashboard/target-groups",
+            permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
+          },
+          {
+            key: "teams",
+            label: "Teams",
+            href: "/dashboard/teams",
+            permissionKeys: [PERMISSIONS.TEAMS_VIEW, PERMISSIONS.TEAMS_MANAGE],
+          },
+          {
+            key: "provider-mapping",
+            label: "Anbieter-Mapping",
+            href: "/dashboard/teams/provider-mapping",
+            permissionKeys: [PERMISSIONS.TEAMS_MANAGE],
+          },
+          {
+            key: "vereine",
+            label: "Vereine",
+            href: "/dashboard/vereine",
+            permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
+          },
+          {
+            key: "personen",
+            label: "Personen",
+            href: "/dashboard/persons",
+            permissionKeys: [PERMISSIONS.PEOPLE_VIEW, PERMISSIONS.PEOPLE_MANAGE],
+          },
+          {
+            key: "competitions",
+            label: "Wettkämpfe",
+            href: "/dashboard/competitions",
+            permissionKeys: [PERMISSIONS.COMPETITIONS_VIEW, PERMISSIONS.COMPETITIONS_MANAGE],
+          },
+        ],
+      },
+      {
+        // PLATFORM-UX-01: membership lifecycle module — distinct from Personen
+        // (canonical person/master data). Shell only until workflows exist.
+        key: "mitglieder",
+        label: "Mitglieder",
+        href: "/dashboard/mitglieder",
+        permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
       },
       {
         key: "anmeldungen",
@@ -331,10 +240,18 @@ export const NAV_SECTIONS: NavSection[] = [
         ],
       },
       {
-        // COMM-03B-UX-01: first-class communication module shell. The real
-        // tenant sender identity and the module shell share the established
-        // tenant-administration authority. Platform user administrators retain
-        // access through the same policy.
+        key: "aufgaben",
+        label: "Aufgaben",
+        href: "/dashboard/aufgaben",
+        permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
+      },
+      {
+        key: "helfereinsaetze",
+        label: "Helfereinsätze",
+        href: "/dashboard/helfereinsaetze",
+        permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
+      },
+      {
         key: "communication",
         label: "Kommunikation",
         href: "/dashboard/communication",
@@ -345,6 +262,96 @@ export const NAV_SECTIONS: NavSection[] = [
             label: "E-Mail-Absender",
             href: "/dashboard/communication/email-sender",
             permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
+          },
+        ],
+      },
+      {
+        key: "workspace",
+        label: "Dokumente",
+        href: "/dashboard/workspace",
+        permissionKeys: [
+          PERMISSIONS.WORKSPACE_VIEW,
+          PERMISSIONS.WORKSPACE_MANAGE,
+        ],
+      },
+    ],
+  },
+
+  // ── Public channels (sr-only: Öffentliche Kanäle) ─────────────────────────
+  {
+    sectionLabel: "Öffentliche Kanäle",
+    items: [
+      {
+        key: "website",
+        label: "Website",
+        href: "/dashboard/website",
+        permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
+        children: [
+          {
+            key: "website-overview",
+            label: "CMS Übersicht",
+            href: "/dashboard/website",
+            permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
+          },
+          {
+            key: "website-news",
+            label: "News",
+            href: "/dashboard/website/news",
+            permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
+          },
+          {
+            key: "website-pages",
+            label: "Seiten",
+            href: "/dashboard/website/pages",
+            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
+          },
+          {
+            key: "website-homepage",
+            label: "Homepage Builder",
+            href: "/dashboard/website/homepage",
+            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
+          },
+          {
+            key: "website-navigation",
+            label: "Navigation",
+            href: "/dashboard/website/navigation",
+            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
+          },
+          {
+            key: "website-blocks",
+            label: "Block-Bibliothek",
+            href: "/dashboard/website/blocks",
+            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
+          },
+          {
+            key: "website-media",
+            label: "Medien",
+            href: "/dashboard/website/media",
+            permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
+          },
+          {
+            key: "website-editorial",
+            label: "Redaktion",
+            href: "/dashboard/website/editorial",
+            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
+          },
+          {
+            key: "website-publishing",
+            label: "Veröffentlichungen",
+            href: "/dashboard/website/publishing",
+            permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
+          },
+          {
+            key: "website-components",
+            label: "Wiederverwendbare Inhalte",
+            href: "/dashboard/website/components",
+            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
+          },
+          {
+            key: "website-settings",
+            label: "Einstellungen",
+            href: "/dashboard/website/settings",
+            permissionKeys: [PERMISSIONS.WEBSITE_MANAGE],
           },
         ],
       },
@@ -377,19 +384,22 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
 
-  // ── Führung ────────────────────────────────────────────────────────────────
+  // ── Leadership / management (sr-only: Führung) ────────────────────────────
   {
     sectionLabel: "Führung",
     items: [
+      {
+        key: "trainer-staff",
+        label: "Trainer & Staff",
+        href: "/dashboard/trainer-staff",
+        permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
+      },
       {
         key: "meetings",
         label: "Meetings",
         href: "/vereinsleitung/meetings",
       },
       {
-        // DEMO-LAYER-03: Club Entwicklung umbrella — Pläne & Ziele, Prozesse,
-        // Initiativen. The three sub-capabilities each have their own route;
-        // this entry is the discoverable entry point for the whole area.
         key: "club-entwicklung",
         label: "Club Entwicklung",
         href: "/vereinsleitung/club-entwicklung",
@@ -412,22 +422,16 @@ export const NAV_SECTIONS: NavSection[] = [
         ],
       },
       {
-        // DEMO-LAYER-03: Material & Inventar — demo-only module.
         key: "material",
         label: "Material & Inventar",
         href: "/vereinsleitung/material",
       },
       {
-        // DEMO-LAYER-03: Club-level Finanzen — demo-only module.
-        // Does NOT touch Person-level finance permissions.
         key: "finanzen",
         label: "Finanzen",
         href: "/vereinsleitung/finanzen",
       },
       {
-        // COMM-03B-UX-01: demo-only commercial sponsoring module. Reuses an
-        // existing admin permission and contains no persistence. Both platform
-        // and tenant Club Admins can discover it without changing route access.
         key: "sponsoring",
         label: "Sponsoring",
         href: "/dashboard/sponsoring",
@@ -436,7 +440,26 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
 
-  // ── System ─────────────────────────────────────────────────────────────────
+  // ── Governance / control (sr-only: Governance) ────────────────────────────
+  {
+    sectionLabel: "Governance",
+    items: [
+      {
+        key: "formulare-freigaben",
+        label: "Formulare & Freigaben",
+        href: "/dashboard/formulare-freigaben",
+        permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
+      },
+      {
+        key: "vorfaelle-disziplin",
+        label: "Vorfälle & Disziplin",
+        href: "/dashboard/vorfaelle-disziplin",
+        permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
+      },
+    ],
+  },
+
+  // ── System (sr-only: System) ────────────────────────────────────────────────
   {
     sectionLabel: "System",
     items: [
@@ -617,6 +640,13 @@ export function getVisibleNavSections(permissionKeys: PermissionKey[]): NavSecti
         ),
       })),
   })).filter((section) => section.items.length > 0);
+}
+
+/** Top-level module keys in canonical sidebar order for the given permissions. */
+export function getTopLevelNavModuleKeys(permissionKeys: PermissionKey[]): string[] {
+  return getVisibleNavSections(permissionKeys).flatMap((section) =>
+    section.items.map((item) => item.key),
+  );
 }
 
 /** Returns module definitions visible to the given permission keys. */

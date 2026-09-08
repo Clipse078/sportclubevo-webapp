@@ -186,7 +186,10 @@ export function getRuntimeEnvironment(
     nextAuthUrl,
     hasDatabaseUrl: Boolean(readOptionalString(processEnv.DATABASE_URL)),
     hasDirectUrl: Boolean(readOptionalString(processEnv.DIRECT_URL)),
-    hasNextAuthSecret: Boolean(readOptionalString(processEnv.NEXTAUTH_SECRET)),
+    hasNextAuthSecret: Boolean(
+      readOptionalString(processEnv.NEXTAUTH_SECRET) ??
+        readOptionalString(processEnv.AUTH_SECRET),
+    ),
     isDeployed,
     isTest: appEnv === "test",
     isPreview: appEnv === "preview",

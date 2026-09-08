@@ -10,10 +10,7 @@ export type DashboardEmptyStateProps = {
 };
 
 /**
- * DashboardEmptyState
- *
  * Centered empty state for dashboard sections with no data.
- * Uses design tokens only — no hardcoded colors.
  */
 export function DashboardEmptyState({
   icon,
@@ -25,22 +22,25 @@ export function DashboardEmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-2 py-8 text-center",
+        "flex flex-col items-center gap-2.5 py-7 text-center sm:py-8",
         className,
       )}
     >
       {icon && (
-        <span className="text-[var(--muted)]" aria-hidden="true">
+        <span
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)]"
+          aria-hidden="true"
+        >
           {icon}
         </span>
       )}
-      <p className="text-sm font-medium text-[var(--text-2)]">{title}</p>
+      <p className="text-[0.875rem] font-semibold text-[var(--foreground)]">{title}</p>
       {description && (
-        <p className="max-w-xs text-xs leading-relaxed text-[var(--muted)]">
+        <p className="max-w-sm text-[0.8125rem] leading-relaxed text-[var(--muted)]">
           {description}
         </p>
       )}
-      {action && <div className="mt-2">{action}</div>}
+      {action && <div className="mt-1">{action}</div>}
     </div>
   );
 }

@@ -14,9 +14,10 @@ import {
   getAllSidebarNavLabels,
   getNavIconKey,
 } from "@/lib/motion/nav-icon-registry";
+import { getVisibleNavSections } from "@/lib/nav/nav-config";
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/dashboard",
+  usePathname: () => "/dashboard/matchcenter",
   useSearchParams: () => new URLSearchParams(),
 }));
 
@@ -44,7 +45,9 @@ describe("AdminSidebar animated icons (SCE-DESIGN-04C)", () => {
     const animatedIcons = container.querySelectorAll(".sce-animated-nav-icon");
     expect(animatedIcons.length).toBeGreaterThan(0);
 
-    const navLinks = container.querySelectorAll(".sce-nav-item, .sce-nav-child");
+    const navLinks = container.querySelectorAll(
+      ".sce-nav-item, .sce-nav-module-link",
+    );
     expect(animatedIcons.length).toBe(navLinks.length);
   });
 
@@ -61,7 +64,7 @@ describe("AdminSidebar animated icons (SCE-DESIGN-04C)", () => {
     expect(legacyIcons.length).toBe(0);
   });
 
-  it("assigns data-nav-icon for every sidebar label", () => {
+  it("assigns data-nav-icon for every visible sidebar label", () => {
     const { container } = render(
       <AdminSidebar
         permissionKeys={CLUB_ADMIN_PERMISSIONS}
@@ -70,10 +73,18 @@ describe("AdminSidebar animated icons (SCE-DESIGN-04C)", () => {
       />,
     );
 
-    for (const label of getAllSidebarNavLabels()) {
+    const visibleLabels = getVisibleNavSections(CLUB_ADMIN_PERMISSIONS).flatMap((section) =>
+      section.items.map((item) => item.label),
+    );
+
+    for (const label of visibleLabels) {
       const expectedKey = getNavIconKey(label);
       const icon = container.querySelector(`[data-nav-icon="${expectedKey}"]`);
       expect(icon, `missing icon for ${label}`).toBeTruthy();
+    }
+
+    for (const label of getAllSidebarNavLabels()) {
+      expect(getNavIconKey(label)).toBeTruthy();
     }
   });
 
@@ -112,9 +123,10 @@ describe("AdminSidebar animated icons (SCE-DESIGN-04C)", () => {
     );
 
     const activeIcon = container.querySelector(
-      '.sce-nav-item.active .sce-animated-nav-icon--active[data-nav-icon="dashboard"]',
+      '.sce-nav-module-link.active .sce-animated-nav-icon--active[data-nav-icon="planung"]',
     );
     expect(activeIcon).toBeInTheDocument();
     expect(activeIcon?.parentElement?.matches(":hover")).toBe(false);
   });
 });
+
