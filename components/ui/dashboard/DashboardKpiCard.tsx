@@ -61,23 +61,6 @@ export type DashboardKpiCardProps = {
   className?: string;
 };
 
-/**
- * DashboardKpiCard
- *
- * Reusable KPI metric card for dashboard overview strips.
- * Uses only SportClubEvo semantic design tokens — no hardcoded colors.
- *
- * Replaces the legacy KpiCard from components/admin/dashboard/.
- *
- * Usage:
- *   <DashboardKpiCard
- *     title="Offene Anmeldungen"
- *     value="3"
- *     accent="warning"
- *     icon={<Users className="h-5 w-5" />}
- *     description="+2 seit gestern"
- *   />
- */
 export function DashboardKpiCard({
   title,
   value,
@@ -94,13 +77,15 @@ export function DashboardKpiCard({
       className={cn(
         "rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4",
         "shadow-[var(--shadow-xs)]",
-        "transition-[box-shadow,border-color] duration-[120ms]",
+        "transition-[border-color,background-color,box-shadow] duration-[140ms]",
+        "hover:border-[color-mix(in_srgb,var(--border-strong)_60%,var(--sce-primary)_40%)]",
+        "hover:bg-[var(--surface-2)]",
         className,
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[0.70rem] font-semibold uppercase tracking-[0.09em] text-[var(--muted)]">
+          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
             {title}
           </p>
           <p className="mt-2 text-[1.875rem] font-bold leading-none tracking-tight text-[var(--foreground)]">
@@ -119,7 +104,7 @@ export function DashboardKpiCard({
 
         {icon && (
           <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-lg)]"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
             style={{ background: vars.iconBg, color: vars.iconColor }}
             aria-hidden="true"
           >

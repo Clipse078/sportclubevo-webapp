@@ -15,7 +15,7 @@ export type DashboardHeroProps = {
 
 export function DashboardHero({
   greeting,
-  subtitle,
+  subtitle = "Hier ist der aktuelle Überblick für euren Vereinsbetrieb.",
   clubName,
   activeSeason,
   role,
@@ -23,29 +23,52 @@ export function DashboardHero({
   actions,
   className,
 }: DashboardHeroProps) {
-  const metaParts = [
-    clubName,
-    activeSeason ? `Saison ${activeSeason}` : null,
-    date,
-    role,
-  ].filter(Boolean);
-
   return (
     <div
       className={cn(
-        "flex flex-wrap items-start justify-between gap-4",
+        "relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-5",
         className,
       )}
     >
-      <DashboardWelcome greeting={greeting} subtitle={subtitle} />
+      {/* Subtle atmospheric glow — tenant-orange influence */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        aria-hidden="true"
+        style={{
+          background: [
+            "radial-gradient(ellipse 80% 60% at 0% 0%, color-mix(in srgb, var(--sce-primary) 6%, transparent), transparent 70%)",
+            "linear-gradient(135deg, color-mix(in srgb, var(--sce-primary) 3%, transparent) 0%, transparent 50%)",
+          ].join(", "),
+        }}
+      />
 
-      <div className="flex flex-wrap items-center gap-2.5">
-        {metaParts.length > 0 && (
-          <p className="text-[0.8125rem] text-[var(--muted)]">
-            {metaParts.join(" · ")}
+      <div className="relative flex flex-wrap items-start justify-between gap-5">
+        <div className="min-w-0 flex-1">
+          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+            Übersicht
           </p>
-        )}
-        {actions}
+          <DashboardWelcome
+            greeting={greeting}
+            subtitle={subtitle}
+            className="mt-2 gap-1.5"
+          />
+        </div>
+
+        <div className="flex shrink-0 flex-col items-end gap-1.5 text-right">
+          {clubName && (
+            <p className="text-sm font-medium text-[var(--foreground)]">{clubName}</p>
+          )}
+          {activeSeason && (
+            <p className="text-[0.8125rem] text-[var(--text-2)]">Saison {activeSeason}</p>
+          )}
+          {date && (
+            <p className="text-[0.8125rem] text-[var(--muted)]">{date}</p>
+          )}
+          {role && (
+            <p className="text-[0.75rem] text-[var(--muted)]">{role}</p>
+          )}
+          {actions}
+        </div>
       </div>
     </div>
   );

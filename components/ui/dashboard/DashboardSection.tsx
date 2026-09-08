@@ -5,6 +5,8 @@ export type DashboardSectionVariant = "flat" | "card";
 
 export type DashboardSectionProps = {
   title?: string;
+  /** Compact meta label shown beside the title (e.g. "5 Termine"). */
+  meta?: string;
   description?: string;
   actions?: ReactNode;
   footer?: ReactNode;
@@ -17,6 +19,7 @@ export type DashboardSectionProps = {
 
 export function DashboardSection({
   title,
+  meta,
   description,
   actions,
   footer,
@@ -26,7 +29,7 @@ export function DashboardSection({
   bodyClassName,
   children,
 }: DashboardSectionProps) {
-  const hasHeader = !!(title || description || actions);
+  const hasHeader = !!(title || meta || description || actions);
   const isCard = variant === "card";
 
   return (
@@ -44,10 +47,17 @@ export function DashboardSection({
           )}
         >
           <div className="min-w-0 flex-1">
-            {title && (
-              <h2 className="text-sm font-semibold text-[var(--foreground)]">
-                {title}
-              </h2>
+            {(title || meta) && (
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                {title && (
+                  <h2 className="text-sm font-semibold text-[var(--foreground)]">
+                    {title}
+                  </h2>
+                )}
+                {meta && (
+                  <span className="text-xs text-[var(--muted)]">{meta}</span>
+                )}
+              </div>
             )}
             {description && (
               <p className="mt-0.5 text-xs text-[var(--text-2)]">{description}</p>

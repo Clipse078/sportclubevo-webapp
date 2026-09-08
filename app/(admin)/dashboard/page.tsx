@@ -14,18 +14,27 @@ import { prisma } from "@/lib/db/prisma";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { formatTime } from "@/lib/tenant-runtime/formatters";
 import { getPersonalizedGreeting, resolveDashboardFirstName } from "@/lib/dashboard/greeting";
+import {
+  buildDashboardTasks,
+  formatEventTypeLabel,
+  tenantEventWhere,
+} from "@/lib/dashboard/command-center";
 import { getPersonFirstNameByUserId } from "@/lib/people/queries";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { getDashboardMeetingSummary } from "@/lib/dashboard/strategic-summary";
 import {
   DashboardHero,
-  DashboardMetricStrip,
+  DashboardKpiCard,
   DashboardQuickActions,
   DashboardActivityFeed,
   DashboardActivityItem,
   DashboardSection,
-  DashboardGrid,
   DashboardEmptyState,
+  DashboardCommandCenter,
+  DashboardTodayEvents,
+  DashboardTodayEventsLinkAction,
+  DashboardTaskList,
+  DashboardUpcomingList,
 } from "@/components/ui/dashboard";
 import { getCurrentSwissFootballSeason } from "@/lib/seasons/season-logic";
 
@@ -42,6 +51,10 @@ function timeAgo(date: Date): string {
   return `Vor ${diffD} Tag${diffD === 1 ? "" : "en"}`;
 }
 
+function formatUpcomingMonth(date: Date, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { month: "short" }).format(date);
+}
+
 // ── Data ──────────────────────────────────────────────────────────────────────
 
 async function getDashboardData(
@@ -52,7 +65,6 @@ async function getDashboardData(
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
-  // Week boundaries (Mon–Sun)
   const dayOfWeek = today.getDay();
   const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   const weekStart = new Date(todayStart);
@@ -61,6 +73,18 @@ async function getDashboardData(
   weekEnd.setDate(weekStart.getDate() + 7);
 
   const tWhere = tenantId ? { tenantId } : {};
+  const weekEventWhere = tenantEventWhere(tenantId, {
+    startAt: { gte: weekStart, lt: weekEnd },
+  });
+  const todayEventWhere = tenantEventWhere(tenantId, {
+    startAt: { gte: todayStart, lt: todayEnd },
+  });
+  const upcomingEventWhere = tenantEventWhere(tenantId, {
+    startAt: { gte: todayStart },
+  });
+  const recentEventWhere = tenantEventWhere(tenantId, {
+    updatedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+  });
 
   const [
     openRegistrationCount,
@@ -68,6 +92,7 @@ async function getDashboardData(
     scheduledNewsCount,
     weekEventsCount,
     todayEventsCount,
+    todayEvents,
     recentNews,
     recentRegistrations,
     recentEvents,
@@ -77,10 +102,14 @@ async function getDashboardData(
     prisma.registration.count({ where: { ...tWhere, status: { in: ["NEW", "REVIEWING"] } } }),
     prisma.newsArticle.count({ where: { ...tWhere, status: "IN_REVIEW" } }),
     prisma.newsArticle.count({ where: { ...tWhere, status: "SCHEDULED" } }),
-    prisma.event.count({ where: { startAt: { gte: weekStart, lt: weekEnd } } }),
-    prisma.event.count({ where: { startAt: { gte: todayStart, lt: todayEnd } } }),
+    prisma.event.count({ where: weekEventWhere }),
+    prisma.event.count({ where: todayEventWhere }),
+    prisma.event.findMany({
+      where: todayEventWhere,
+      orderBy: { startAt: "asc" },
+      select: { id: true, title: true, startAt: true, location: true, type: true },
+    }),
 
-    // Activity feed sources
     prisma.newsArticle.findMany({
       where: tWhere,
       orderBy: { updatedAt: "desc" },
@@ -94,16 +123,15 @@ async function getDashboardData(
       select: { id: true, firstName: true, lastName: true, createdAt: true, type: true },
     }),
     prisma.event.findMany({
-      where: { updatedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+      where: recentEventWhere,
       orderBy: { updatedAt: "desc" },
       take: 1,
       select: { id: true, title: true, updatedAt: true, type: true },
     }),
     getDashboardMeetingSummary(actor, today),
 
-    // Right sidebar — upcoming sport events
     prisma.event.findMany({
-      where: { startAt: { gte: todayStart } },
+      where: upcomingEventWhere,
       orderBy: { startAt: "asc" },
       take: 4,
       select: { id: true, title: true, startAt: true, location: true, type: true },
@@ -116,6 +144,7 @@ async function getDashboardData(
     scheduledNewsCount,
     weekEventsCount,
     todayEventsCount,
+    todayEvents,
     recentNews,
     recentRegistrations,
     recentEvents,
@@ -123,63 +152,6 @@ async function getDashboardData(
     upcomingMeetings: meetingSummary.upcomingMeetings,
     upcomingEvents,
   };
-}
-
-// ── Inline sub-components (page-specific) ─────────────────────────────────────
-
-type TaskItemProps = {
-  title: string;
-  subtitle: string;
-  dueLabel: string;
-  urgent?: boolean;
-};
-
-function TaskItem({ title, subtitle, dueLabel, urgent = false }: TaskItemProps) {
-  return (
-    <div className="flex items-start gap-3 py-3 border-b border-[var(--border)] last:border-b-0">
-      <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border border-[var(--border-strong)]" />
-      <div className="min-w-0 flex-1">
-        <p className="text-[0.8125rem] font-medium leading-tight text-[var(--foreground)]">
-          {title}
-        </p>
-        <p className="mt-0.5 truncate text-xs text-[var(--muted)]">{subtitle}</p>
-      </div>
-      <span
-        className="shrink-0 text-xs font-medium"
-        style={{ color: urgent ? "var(--sce-warning)" : "var(--muted)" }}
-      >
-        {dueLabel}
-      </span>
-    </div>
-  );
-}
-
-type EventItemProps = {
-  day: string;
-  month: string;
-  title: string;
-  location: string;
-  time: string;
-};
-
-function EventItem({ day, month, title, location, time }: EventItemProps) {
-  return (
-    <div className="flex items-center gap-3 py-3 border-b border-[var(--border)] last:border-b-0">
-      <div className="flex h-10 w-10 shrink-0 flex-col items-center justify-center">
-        <span className="text-sm font-bold leading-none text-[var(--foreground)]">{day}</span>
-        <span className="mt-0.5 text-[0.6rem] font-medium uppercase tracking-wide text-[var(--muted)]">
-          {month}
-        </span>
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[0.8125rem] font-medium leading-tight text-[var(--foreground)]">
-          {title}
-        </p>
-        <p className="mt-0.5 truncate text-xs text-[var(--muted)]">{location}</p>
-      </div>
-      <span className="shrink-0 text-xs text-[var(--muted)]">{time}</span>
-    </div>
-  );
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -192,10 +164,6 @@ export default async function DashboardPage() {
       ? await getActorContext(session.user, ctx.id)
       : null;
 
-  // DASHBOARD-SHELL-UX-01-C1: prefer the canonically linked Person's first
-  // name over session.user.firstName (the raw User.firstName column), which
-  // for some bootstrapped tenant accounts holds the club name instead of a
-  // person's name. See lib/dashboard/greeting.ts for the resolution rule.
   const linkedPersonFirstName = session?.user?.id
     ? await getPersonFirstNameByUserId(session.user.id)
     : null;
@@ -205,18 +173,11 @@ export default async function DashboardPage() {
     tenantName: ctx?.name,
   });
 
-  const dash = await getDashboardData(
-    ctx?.id ?? null,
-    actor,
-  );
+  const dash = await getDashboardData(ctx?.id ?? null, actor);
 
   const fmtCfg = { locale: ctx?.locale ?? "de-CH", timezone: ctx?.timezone ?? undefined };
 
-  // ── Presentation helpers ──────────────────────────────────────────────────
-
-  const activeSeason = ctx
-    ? getCurrentSwissFootballSeason()?.label
-    : undefined;
+  const activeSeason = ctx ? getCurrentSwissFootballSeason()?.label : undefined;
 
   const todayFormatted = new Intl.DateTimeFormat(fmtCfg.locale, {
     weekday: "short",
@@ -259,7 +220,7 @@ export default async function DashboardPage() {
       key: `event-${e.id}`,
       icon: <CalendarDays className="h-4 w-4" />,
       title: `${e.title} wurde aktualisiert`,
-      subtitle: e.type === "TRAINING" ? "Training" : e.type === "MATCH" ? "Spiel" : "Event",
+      subtitle: formatEventTypeLabel(e.type),
       date: e.updatedAt,
       tag: "Planung",
       tagVariant: "success" as const,
@@ -289,96 +250,66 @@ export default async function DashboardPage() {
 
   // ── Tasks panel ──────────────────────────────────────────────────────────
 
-  const tasks: { title: string; subtitle: string; dueLabel: string; urgent: boolean }[] = [];
-  if (dash.newsInReviewCount > 0) {
-    tasks.push({
-      title: `Newsartikel prüfen (${dash.newsInReviewCount})`,
-      subtitle: `${dash.newsInReviewCount > 1 ? "Mehrere Artikel" : "1 Artikel"} warten auf Freigabe`,
-      dueLabel: "Heute",
-      urgent: true,
-    });
-  }
-  if (dash.openRegistrationCount > 0) {
-    tasks.push({
-      title: `Anmeldungen bestätigen (${dash.openRegistrationCount})`,
-      subtitle: "Neue Anmeldungen prüfen",
-      dueLabel: "Heute",
-      urgent: true,
-    });
-  }
-  if (dash.scheduledNewsCount > 0) {
-    tasks.push({
-      title: "Veröffentlichungen freigeben",
-      subtitle: `${dash.scheduledNewsCount} geplante Artikel`,
-      dueLabel: "Diese Woche",
-      urgent: false,
-    });
-  }
-  // Filler tasks to show at least some items
-  if (tasks.length === 0) {
-    tasks.push(
-      {
-        title: "Homepage überprüfen",
-        subtitle: "Aktuelle Inhalte validieren",
-        dueLabel: "Morgen",
-        urgent: false,
-      },
-      {
-        title: "Saisonplanung aktualisieren",
-        subtitle: "Events für nächste Woche eintragen",
-        dueLabel: "12.06.",
-        urgent: false,
-      },
-    );
-  }
+  const tasks = buildDashboardTasks({
+    newsInReviewCount: dash.newsInReviewCount,
+    openRegistrationCount: dash.openRegistrationCount,
+    scheduledNewsCount: dash.scheduledNewsCount,
+  });
+
+  // ── Today's events ───────────────────────────────────────────────────────
+
+  const todayEventItems = dash.todayEvents.map((ev) => ({
+    key: `today-${ev.id}`,
+    time: formatTime(ev.startAt, fmtCfg),
+    typeLabel: formatEventTypeLabel(ev.type),
+    title: ev.title,
+    location: ev.location,
+  }));
+
+  const todayCountLabel =
+    dash.todayEventsCount > 0
+      ? `${dash.todayEventsCount} Termin${dash.todayEventsCount === 1 ? "" : "e"}`
+      : undefined;
 
   // ── Upcoming events (merge sport events + meetings) ───────────────────────
 
   type UpcomingEntry = {
     key: string;
+    date: Date;
     day: string;
     month: string;
     title: string;
-    location: string;
+    location: string | null;
     time: string;
   };
-
-  const MONTHS_DE = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
 
   const upcomingEntries: UpcomingEntry[] = [
     ...dash.upcomingEvents.map((ev) => ({
       key: `ev-${ev.id}`,
+      date: ev.startAt,
       day: String(ev.startAt.getDate()),
-      month: MONTHS_DE[ev.startAt.getMonth()] ?? "",
+      month: formatUpcomingMonth(ev.startAt, fmtCfg.locale),
       title: ev.title,
-      location: ev.location ?? (ev.type === "TRAINING" ? "Sportanlage" : ""),
+      location: ev.location,
       time: formatTime(ev.startAt, fmtCfg),
     })),
     ...dash.upcomingMeetings.map((m) => ({
       key: `mt-${m.id}`,
+      date: m.meetingDate,
       day: String(m.meetingDate.getDate()),
-      month: MONTHS_DE[m.meetingDate.getMonth()] ?? "",
+      month: formatUpcomingMonth(m.meetingDate, fmtCfg.locale),
       title: m.title,
-      location: m.location ?? "Sitzungszimmer",
+      location: m.location,
       time: formatTime(m.meetingDate, fmtCfg),
     })),
   ]
-    .sort((a, b) => {
-      const dateA = dash.upcomingEvents.find((e) => `ev-${e.id}` === a.key)?.startAt
-        ?? dash.upcomingMeetings.find((m) => `mt-${m.id}` === a.key)?.meetingDate
-        ?? new Date();
-      const dateB = dash.upcomingEvents.find((e) => `ev-${e.id}` === b.key)?.startAt
-        ?? dash.upcomingMeetings.find((m) => `mt-${m.id}` === b.key)?.meetingDate
-        ?? new Date();
-      return dateA.getTime() - dateB.getTime();
-    })
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
     .slice(0, 4);
 
   const greeting = getPersonalizedGreeting(firstName);
 
   return (
-    <div className="flex flex-col gap-8">
-
+    <div className="flex flex-col gap-5">
       <DashboardHero
         greeting={greeting}
         clubName={ctx?.name ?? undefined}
@@ -386,149 +317,156 @@ export default async function DashboardPage() {
         date={todayFormatted}
       />
 
-      <DashboardMetricStrip
-        metrics={[
-          {
-            key: "registrations",
-            label: "Offene Anmeldungen",
-            value: String(dash.openRegistrationCount),
-            description: "+3 seit gestern",
-            accent: "warning",
-            icon: <Users className="h-4 w-4" />,
-          },
-          {
-            key: "news-review",
-            label: "News in Prüfung",
-            value: String(dash.newsInReviewCount),
-            description: "2 fällig heute",
-            accent: "info",
-            icon: <Newspaper className="h-4 w-4" />,
-          },
-          {
-            key: "scheduled",
-            label: "Veröffentlichungen geplant",
-            value: String(dash.scheduledNewsCount),
-            description: "Diese Woche",
-            accent: "success",
-            icon: <Monitor className="h-4 w-4" />,
-          },
-          {
-            key: "events",
-            label: "Events diese Woche",
-            value: String(dash.weekEventsCount),
-            description: `${dash.todayEventsCount} heute`,
-            accent: "primary",
-            icon: <CalendarDays className="h-4 w-4" />,
-          },
-        ]}
-      />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <DashboardKpiCard
+          title="Offene Anmeldungen"
+          value={String(dash.openRegistrationCount)}
+          description={dash.openRegistrationCount > 0 ? "Zu bearbeiten" : undefined}
+          accent="warning"
+          icon={<Users className="h-4 w-4" />}
+        />
+        <DashboardKpiCard
+          title="News in Prüfung"
+          value={String(dash.newsInReviewCount)}
+          description={dash.newsInReviewCount > 0 ? "Zu bearbeiten" : undefined}
+          accent="info"
+          icon={<Newspaper className="h-4 w-4" />}
+        />
+        <DashboardKpiCard
+          title="Geplante Veröffentlichungen"
+          value={String(dash.scheduledNewsCount)}
+          description={dash.scheduledNewsCount > 0 ? "Zu bearbeiten" : undefined}
+          accent="success"
+          icon={<Monitor className="h-4 w-4" />}
+        />
+        <DashboardKpiCard
+          title="Events diese Woche"
+          value={String(dash.weekEventsCount)}
+          description={
+            dash.todayEventsCount > 0 ? `${dash.todayEventsCount} heute` : undefined
+          }
+          accent="primary"
+          icon={<CalendarDays className="h-4 w-4" />}
+        />
+      </div>
 
-      <DashboardGrid
-        sidebar={
-          <>
-            <DashboardSection
-              title="Meine Aufgaben"
-              noPadding
-              footer={
+      <DashboardCommandCenter
+        today={
+          <DashboardSection
+            title="Heute im Verein"
+            meta={todayCountLabel}
+            variant="card"
+            noPadding
+            bodyClassName="px-5"
+            footer={
+              <Link href="/dashboard/planner" className="sce-link-primary text-[0.8125rem]">
+                Zur Planung →
+              </Link>
+            }
+          >
+            <DashboardTodayEvents
+              events={todayEventItems}
+              emptyStateAction={
+                <DashboardTodayEventsLinkAction
+                  href="/dashboard/planner"
+                  label="Zur Planung"
+                />
+              }
+            />
+          </DashboardSection>
+        }
+        tasks={
+          <DashboardSection
+            title="Meine Aufgaben"
+            variant="card"
+            noPadding
+            bodyClassName="px-5"
+            footer={
+              tasks.length > 0 ? (
                 <Link href="/dashboard/registrations" className="sce-link-primary text-[0.8125rem]">
                   Alle Aufgaben anzeigen →
                 </Link>
-              }
-            >
-              {tasks.map((t, i) => (
-                <TaskItem
-                  key={i}
-                  title={t.title}
-                  subtitle={t.subtitle}
-                  dueLabel={t.dueLabel}
-                  urgent={t.urgent}
-                />
-              ))}
-            </DashboardSection>
-
-            <DashboardSection
-              title="Nächste Termine"
-              noPadding
-              footer={
-                <Link href="/dashboard/events" className="sce-link-primary text-[0.8125rem]">
-                  Alle Termine anzeigen →
-                </Link>
-              }
-            >
-              {upcomingEntries.length > 0 ? (
-                upcomingEntries.map((e) => (
-                  <EventItem
-                    key={e.key}
-                    day={e.day}
-                    month={e.month}
-                    title={e.title}
-                    location={e.location}
-                    time={e.time}
-                  />
-                ))
-              ) : (
-                <DashboardEmptyState
-                  icon={<CalendarDays className="h-6 w-6" />}
-                  title="Keine bevorstehenden Termine"
-                  className="py-6"
-                />
-              )}
-            </DashboardSection>
-          </>
-        }
-      >
-        <DashboardSection title="Schnellaktionen" noPadding>
-          <DashboardQuickActions
-            actions={[
-              {
-                href: "/dashboard/website/news/new",
-                icon: <Newspaper className="h-4 w-4" />,
-                title: "Neue News",
-                subtitle: "Artikel erstellen",
-              },
-              {
-                href: "/dashboard/website/pages/new",
-                icon: <FileText className="h-4 w-4" />,
-                title: "Neue Seite",
-                subtitle: "Webseite erstellen",
-              },
-              {
-                href: "/dashboard/website/publishing",
-                icon: <Monitor className="h-4 w-4" />,
-                title: "Homepage",
-                subtitle: "Vorschau öffnen",
-              },
-              {
-                href: "/dashboard/planner",
-                icon: <CalendarRange className="h-4 w-4" />,
-                title: "Wochenplanung",
-                subtitle: "Zur Planung",
-              },
-            ]}
-          />
-        </DashboardSection>
-
-        <DashboardSection
-          title="Aktuelle Aktivitäten"
-          noPadding
-          footer={
-            <Link href="/dashboard/logs" className="sce-link-primary text-[0.8125rem]">
-              Alle Aktivitäten anzeigen →
-            </Link>
-          }
-        >
-          <DashboardActivityFeed
-            items={activityItems}
-            emptyState={
-              <DashboardEmptyState
-                icon={<Globe className="h-7 w-7" />}
-                title="Noch keine Aktivitäten"
-                description="Aktivitäten erscheinen hier sobald Inhalte erstellt werden."
-              />
+              ) : undefined
             }
-          />
-        </DashboardSection>
-      </DashboardGrid>
+          >
+            <DashboardTaskList tasks={tasks} />
+          </DashboardSection>
+        }
+        quickActions={
+          <DashboardSection title="Schnellaktionen" variant="card" bodyClassName="px-4 py-4">
+            <DashboardQuickActions
+              actions={[
+                {
+                  href: "/dashboard/website/news/new",
+                  icon: <Newspaper className="h-4 w-4" />,
+                  title: "Neue News",
+                  subtitle: "Artikel erstellen",
+                },
+                {
+                  href: "/dashboard/website/pages/new",
+                  icon: <FileText className="h-4 w-4" />,
+                  title: "Neue Seite",
+                  subtitle: "Webseite erstellen",
+                },
+                {
+                  href: "/dashboard/website/publishing",
+                  icon: <Monitor className="h-4 w-4" />,
+                  title: "Homepage",
+                  subtitle: "Vorschau öffnen",
+                },
+                {
+                  href: "/dashboard/planner",
+                  icon: <CalendarRange className="h-4 w-4" />,
+                  title: "Wochenplanung",
+                  subtitle: "Zur Planung",
+                },
+              ]}
+            />
+          </DashboardSection>
+        }
+        upcoming={
+          <DashboardSection
+            title="Nächste Termine"
+            variant="card"
+            noPadding
+            bodyClassName="px-5"
+            footer={
+              <Link href="/dashboard/planner" className="sce-link-primary text-[0.8125rem]">
+                Alle Termine anzeigen →
+              </Link>
+            }
+          >
+            <DashboardUpcomingList
+              items={upcomingEntries}
+              emptyIcon={<CalendarDays className="h-6 w-6" />}
+            />
+          </DashboardSection>
+        }
+        activity={
+          <DashboardSection
+            title="Aktuelle Aktivitäten"
+            variant="card"
+            noPadding
+            bodyClassName="px-5"
+            footer={
+              <Link href="/dashboard/logs" className="sce-link-primary text-[0.8125rem]">
+                Alle Aktivitäten anzeigen →
+              </Link>
+            }
+          >
+            <DashboardActivityFeed
+              items={activityItems}
+              emptyState={
+                <DashboardEmptyState
+                  icon={<Globe className="h-7 w-7" />}
+                  title="Noch keine Aktivitäten"
+                  description="Aktivitäten erscheinen hier sobald Inhalte erstellt werden."
+                />
+              }
+            />
+          </DashboardSection>
+        }
+      />
     </div>
   );
 }

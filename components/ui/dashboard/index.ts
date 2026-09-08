@@ -44,3 +44,19 @@ export type { DashboardGridProps } from "./DashboardGrid";
 
 export { DashboardEmptyState } from "./DashboardEmptyState";
 export type { DashboardEmptyStateProps } from "./DashboardEmptyState";
+
+export { DashboardCommandCenter } from "./DashboardCommandCenter";
+export type { DashboardCommandCenterProps } from "./DashboardCommandCenter";
+
+export { DashboardTodayEvents, DashboardTodayEventsLinkAction } from "./DashboardTodayEvents";
+export type {
+  DashboardTodayEventsProps,
+  TodayEventItem,
+  DashboardTodayEventsLinkActionProps,
+} from "./DashboardTodayEvents";
+
+export { DashboardTaskList } from "./DashboardTaskList";
+export type { DashboardTaskListProps, DashboardTaskListItem } from "./DashboardTaskList";
+
+export { DashboardUpcomingList } from "./DashboardUpcomingList";
+export type { DashboardUpcomingListProps, UpcomingEventItem } from "./DashboardUpcomingList";
