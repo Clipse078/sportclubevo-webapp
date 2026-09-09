@@ -97,7 +97,10 @@
   --ib-match-font-size:     clamp(1.65rem, 2.15vw, 2.75rem);
   --ib-match-opponent-font-size: clamp(0.935rem, 1.25vw, 1.65rem);
   --ib-tournament-font-size: clamp(1.85rem, 2.5vw, 2.9rem);
-  --ib-tournament-kabine-badge-width: clamp(52px, 4.8vw, 76px);
+  /* Canonical Kabine pill geometry — tournament reference (01M). */
+  --ib-kabine-badge-width: clamp(52px, 4.8vw, 76px);
+  --ib-kabine-font-size-fallback: clamp(1.2rem, 1.6vw, 1.9rem);
+  --ib-tournament-kabine-badge-width: var(--ib-kabine-badge-width);
   --ib-fs-dest-label:       clamp(0.6rem, 0.78vw, 0.92rem);
   --ib-fs-dest-pitch:       clamp(1.5rem, 2.1vw, 2.8rem);
   --ib-fs-dest-room:        clamp(1rem, 1.4vw, 1.9rem);
@@ -219,7 +222,8 @@
     --ib-match-font-size: clamp(1.65rem, 2.15cqw, 2.75rem);
     --ib-match-opponent-font-size: clamp(0.935rem, 1.25cqw, 1.65rem);
     --ib-tournament-font-size: clamp(1.85rem, 2.5cqw, 2.9rem);
-    --ib-tournament-kabine-badge-width: clamp(52px, 4.8cqw, 76px);
+    --ib-kabine-badge-width: clamp(52px, 4.8cqw, 76px);
+    --ib-tournament-kabine-badge-width: var(--ib-kabine-badge-width);
     --ib-fs-dest-label: clamp(0.6rem, 0.78cqw, 0.92rem);
     --ib-fs-dest-pitch: clamp(1.5rem, 2.1cqw, 2.8rem);
     --ib-fs-dest-room: clamp(1rem, 1.4cqw, 1.9rem);
@@ -871,7 +875,6 @@
   align-items: center;
   justify-content: center;
   align-self: flex-start;
-  max-width: 100%;
   box-sizing: border-box;
   min-height: clamp(34px, 3.8vh, 52px);
   padding: clamp(6px, 0.65vh, 12px) clamp(14px, 1.35vw, 22px);
@@ -879,6 +882,14 @@
   background: rgba(30, 91, 198, 0.22);
   border: 1px solid rgba(30, 91, 198, 0.45);
   color: #F0F6FC;
+  /* Canonical Kabine pill geometry — shared across TRAINING / MATCH / TOURNAMENT. */
+  width: var(--ib-kabine-badge-width);
+  min-width: var(--ib-kabine-badge-width);
+  max-width: var(--ib-kabine-badge-width);
+  line-height: 1;
+  text-align: center;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .destPitchValue,
@@ -943,15 +954,11 @@
 
 .matchAllocRoom {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: var(--ib-match-kabine-font-size, var(--ib-fs-dest-room));
+  font-size: var(--ib-match-kabine-font-size, var(--ib-kabine-font-size-fallback));
   font-weight: 700;
   text-transform: uppercase;
   color: inherit;
-  white-space: nowrap;
-  flex-shrink: 0;
-  min-width: clamp(44px, 4.2vw, 68px);
   letter-spacing: 0.02em;
-  line-height: 1.1;
 }
 
 .matchAllocRole {
@@ -994,7 +1001,7 @@
 
 .participantAllocationBlock {
   display: grid;
-  grid-template-columns: var(--ib-tournament-kabine-badge-width) minmax(0, 1fr);
+  grid-template-columns: var(--ib-kabine-badge-width) minmax(0, 1fr);
   column-gap: clamp(10px, 1vw, 16px);
   row-gap: 2px;
   align-items: center;
@@ -1010,19 +1017,12 @@
 
 .participantRoomValue {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: var(--ib-tournament-kabine-font-size, clamp(1.2rem, 1.6vw, 1.9rem));
+  font-size: var(--ib-tournament-kabine-font-size, var(--ib-kabine-font-size-fallback));
   font-weight: 700;
   text-transform: uppercase;
   color: inherit;
-  white-space: nowrap;
   letter-spacing: 0.02em;
-  line-height: 1;
-  width: var(--ib-tournament-kabine-badge-width);
-  min-width: var(--ib-tournament-kabine-badge-width);
-  max-width: var(--ib-tournament-kabine-badge-width);
-  flex-shrink: 0;
   justify-self: start;
-  text-align: center;
 }
 
 .participantRoomValue[data-multi-room="true"] {
@@ -1712,15 +1712,11 @@
 
 .trainingGroupRoomValue {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: var(--ib-training-kabine-font-size, var(--ib-fs-dest-room));
+  font-size: var(--ib-training-kabine-font-size, var(--ib-kabine-font-size-fallback));
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   color: inherit;
-  line-height: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* Training owns its semantic destination accents. */
@@ -1762,11 +1758,6 @@
   line-height: 1.05;
 }
 
-.eventCard[data-type="TRAINING"][data-group-density="compact"] .trainingGroupRoomValue {
-  font-size: clamp(0.9rem, 1.15vw, 1.55rem);
-  line-height: 1.05;
-}
-
 .eventCard[data-type="TRAINING"][data-group-density="dense"] .trainingMatrixHeaders {
   --ib-training-header-gap: clamp(2px, 0.35vh, 5px);
 }
@@ -1779,11 +1770,6 @@
 
 .eventCard[data-type="TRAINING"][data-group-density="dense"] .trainingGroupPitchValue {
   font-size: clamp(0.95rem, 1.25vw, 1.6rem);
-  line-height: 1.02;
-}
-
-.eventCard[data-type="TRAINING"][data-group-density="dense"] .trainingGroupRoomValue {
-  font-size: clamp(0.85rem, 1.05vw, 1.45rem);
   line-height: 1.02;
 }
 

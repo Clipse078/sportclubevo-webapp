@@ -130,9 +130,9 @@ describe("INFOBOARD-SCREEN1-VISUAL-01J — tournament title prominence", () => {
 describe("INFOBOARD-SCREEN1-VISUAL-01J — tournament Kabine alignment", () => {
   it("defines a fixed Kabine column on the participant allocation grid", () => {
     expect(CSS).toMatch(
-      /\.participantAllocationBlock[\s\S]*grid-template-columns:\s*var\(--ib-tournament-kabine-badge-width\)\s*minmax\(0,\s*1fr\)/,
+      /\.participantAllocationBlock[\s\S]*grid-template-columns:\s*var\(--ib-kabine-badge-width\)\s*minmax\(0,\s*1fr\)/,
     );
-    expect(CSS).toMatch(/--ib-tournament-kabine-badge-width:\s*clamp\(52px,\s*4\.8vw,\s*76px\)/);
+    expect(CSS).toMatch(/--ib-kabine-badge-width:\s*clamp\(52px,\s*4\.8vw,\s*76px\)/);
   });
 
   it("uses display:contents rows so badges share one Kabine column", () => {
@@ -141,15 +141,17 @@ describe("INFOBOARD-SCREEN1-VISUAL-01J — tournament Kabine alignment", () => {
 
   it("standardizes single-room badge width and centers room values", () => {
     expect(CSS).toMatch(
-      /\.participantRoomValue[\s\S]*width:\s*var\(--ib-tournament-kabine-badge-width\)/,
+      /\.matchAllocRoom,\s*\n\.trainingGroupRoomValue,\s*\n\.participantRoomValue[\s\S]*width:\s*var\(--ib-kabine-badge-width\)/,
     );
     expect(CSS).toMatch(
-      /\.participantRoomValue[\s\S]*min-width:\s*var\(--ib-tournament-kabine-badge-width\)/,
+      /\.matchAllocRoom,\s*\n\.trainingGroupRoomValue,\s*\n\.participantRoomValue[\s\S]*min-width:\s*var\(--ib-kabine-badge-width\)/,
     );
     expect(CSS).toMatch(
-      /\.participantRoomValue[\s\S]*max-width:\s*var\(--ib-tournament-kabine-badge-width\)/,
+      /\.matchAllocRoom,\s*\n\.trainingGroupRoomValue,\s*\n\.participantRoomValue[\s\S]*max-width:\s*var\(--ib-kabine-badge-width\)/,
     );
-    expect(CSS).toMatch(/\.participantRoomValue[\s\S]*text-align:\s*center/);
+    expect(CSS).toMatch(
+      /\.matchAllocRoom,\s*\n\.trainingGroupRoomValue,\s*\n\.participantRoomValue[\s\S]*text-align:\s*center/,
+    );
   });
 
   it("allows deliberate wider multi-room badges without truncating values", () => {
@@ -255,6 +257,8 @@ describe("INFOBOARD-SCREEN1-VISUAL-01J — tournament Kabine alignment", () => {
 
   it("does not alter match Kabine row geometry contract", () => {
     expect(CSS).toMatch(/\.matchAllocRow[\s\S]*display:\s*flex/);
-    expect(CSS).toMatch(/\.matchAllocRoom[\s\S]*min-width:\s*clamp\(44px,\s*4\.2vw,\s*68px\)/);
+    expect(CSS).toMatch(
+      /\.matchAllocRoom,\s*\n\.trainingGroupRoomValue,\s*\n\.participantRoomValue[\s\S]*min-width:\s*var\(--ib-kabine-badge-width\)/,
+    );
   });
 });

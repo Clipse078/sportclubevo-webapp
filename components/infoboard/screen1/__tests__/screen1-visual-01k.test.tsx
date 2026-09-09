@@ -379,10 +379,10 @@ describe("INFOBOARD-SCREEN1-VISUAL-01K — Kabine column content", () => {
 
   it("preserves tournament participant-name alignment and equal badge width", () => {
     expect(CSS).toMatch(
-      /\.participantAllocationBlock[\s\S]*grid-template-columns:\s*var\(--ib-tournament-kabine-badge-width\)/,
+      /\.participantAllocationBlock[\s\S]*grid-template-columns:\s*var\(--ib-kabine-badge-width\)/,
     );
     expect(CSS).toMatch(
-      /\.participantRoomValue[\s\S]*width:\s*var\(--ib-tournament-kabine-badge-width\)/,
+      /\.matchAllocRoom,\s*\n\.trainingGroupRoomValue,\s*\n\.participantRoomValue[\s\S]*width:\s*var\(--ib-kabine-badge-width\)/,
     );
   });
 });
