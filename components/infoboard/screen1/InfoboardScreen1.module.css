@@ -96,7 +96,8 @@
   --ib-training-font-size-dense: clamp(1.05rem, 1.4vw, 2rem);
   --ib-match-font-size:     clamp(1.65rem, 2.15vw, 2.75rem);
   --ib-match-opponent-font-size: clamp(0.935rem, 1.25vw, 1.65rem);
-  --ib-tournament-font-size: clamp(1.15rem, 1.55vw, 2.6rem);
+  --ib-tournament-font-size: clamp(1.85rem, 2.5vw, 2.9rem);
+  --ib-tournament-kabine-badge-width: clamp(52px, 4.8vw, 76px);
   --ib-fs-dest-label:       clamp(0.6rem, 0.78vw, 0.92rem);
   --ib-fs-dest-pitch:       clamp(1.5rem, 2.1vw, 2.8rem);
   --ib-fs-dest-room:        clamp(1rem, 1.4vw, 1.9rem);
@@ -217,7 +218,8 @@
     --ib-training-font-size-dense: clamp(1.05rem, 1.4cqw, 2rem);
     --ib-match-font-size: clamp(1.65rem, 2.15cqw, 2.75rem);
     --ib-match-opponent-font-size: clamp(0.935rem, 1.25cqw, 1.65rem);
-    --ib-tournament-font-size: clamp(1.15rem, 1.55cqw, 2.6rem);
+    --ib-tournament-font-size: clamp(1.85rem, 2.5cqw, 2.9rem);
+    --ib-tournament-kabine-badge-width: clamp(52px, 4.8cqw, 76px);
     --ib-fs-dest-label: clamp(0.6rem, 0.78cqw, 0.92rem);
     --ib-fs-dest-pitch: clamp(1.5rem, 2.1cqw, 2.8rem);
     --ib-fs-dest-room: clamp(1rem, 1.4cqw, 1.9rem);
@@ -985,16 +987,15 @@
 /* ─── Tournament participant block ───────────────────────────────────────── */
 
 .participantAllocationBlock {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  grid-template-columns: var(--ib-tournament-kabine-badge-width) minmax(0, 1fr);
+  column-gap: clamp(10px, 1vw, 16px);
+  row-gap: 2px;
+  align-items: center;
 }
 
 .participantAllocationRow {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  column-gap: clamp(10px, 1vw, 16px);
+  display: contents;
 }
 
 .participantAllocationRow.homeTeamEmphasis .participantTeamName {
@@ -1010,6 +1011,17 @@
   white-space: nowrap;
   letter-spacing: 0.02em;
   line-height: 1;
+  width: var(--ib-tournament-kabine-badge-width);
+  min-width: var(--ib-tournament-kabine-badge-width);
+  max-width: var(--ib-tournament-kabine-badge-width);
+  flex-shrink: 0;
+  justify-self: start;
+  text-align: center;
+}
+
+.participantRoomValue[data-multi-room="true"] {
+  width: auto;
+  max-width: 100%;
 }
 
 .participantTeamName {
@@ -1274,7 +1286,7 @@
 
 /* Single-event tournament hero — title and participant allocations scale up */
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="TOURNAMENT"] .tournamentTitle {
-  font-size: clamp(1.6rem, 2.2vw, 3.2rem);
+  font-size: clamp(2.4rem, 3.2vw, 3.8rem);
 }
 
 .eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="TOURNAMENT"] .participantTeamName {

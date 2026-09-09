@@ -84,10 +84,10 @@ export const MATCH_FONT_SIZE_CSS: Record<
 
 /** Tournament title clamps; the existing page-density cap remains authoritative. */
 export const TOURNAMENT_FONT_SIZE_CSS: Record<InfoboardFontSize, string> = {
-  SMALL: "clamp(0.874rem, 1.178vw, 1.976rem)",
-  MEDIUM: "clamp(1.012rem, 1.364vw, 2.288rem)",
-  LARGE: "clamp(1.15rem, 1.55vw, 2.6rem)",
-  XLARGE: "clamp(1.288rem, 1.736vw, 2.912rem)",
+  SMALL: "clamp(1.4rem, 1.9vw, 2.2rem)",
+  MEDIUM: "clamp(1.65rem, 2.2vw, 2.6rem)",
+  LARGE: "clamp(1.85rem, 2.5vw, 2.9rem)",
+  XLARGE: "clamp(2rem, 2.8vw, 3.2rem)",
 };
 
 /** Training KABINE column clamps — independent from team-name typography. */

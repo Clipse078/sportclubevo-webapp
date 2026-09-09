@@ -809,25 +809,34 @@ function ParticipantAllocationBlock({
       className={styles.participantAllocationBlock}
       data-testid="participant-allocation-block"
     >
-      {allocations.map((alloc) => (
-        <div
-          key={alloc.id}
-          className={
-            alloc.isHomeTeam === true
-              ? `${styles.participantAllocationRow} ${styles.homeTeamEmphasis}`
-              : styles.participantAllocationRow
-          }
-        >
-          <span className={styles.participantRoomValue}>
-            {alloc.dressingRoomLabel !== null
-              ? formatDressingRoomLabel(alloc.dressingRoomLabel)
-              : "—"}
-          </span>
-          <span className={styles.participantTeamName}>
-            {alloc.teamDisplayName}
-          </span>
-        </div>
-      ))}
+      {allocations.map((alloc) => {
+        const roomLabel =
+          alloc.dressingRoomLabel !== null
+            ? formatDressingRoomLabel(alloc.dressingRoomLabel)
+            : "—";
+        const isMultiRoom = roomLabel.includes("·");
+
+        return (
+          <div
+            key={alloc.id}
+            className={
+              alloc.isHomeTeam === true
+                ? `${styles.participantAllocationRow} ${styles.homeTeamEmphasis}`
+                : styles.participantAllocationRow
+            }
+          >
+            <span
+              className={styles.participantRoomValue}
+              data-multi-room={isMultiRoom ? "true" : undefined}
+            >
+              {roomLabel}
+            </span>
+            <span className={styles.participantTeamName}>
+              {alloc.teamDisplayName}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
