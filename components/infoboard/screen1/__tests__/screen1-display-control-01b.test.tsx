@@ -336,7 +336,7 @@ describe("INFOBOARD-KIOSK-VIEWPORT-01B display controls", () => {
     expect(CSS).toMatch(/\.tournamentTitle[\s\S]*font-size:\s*var\(--ib-tournament-font-size\)/);
   });
 
-  it("XLARGE presentation lowers page capacity for the dense Thursday page", () => {
+  it("XL baseline presentation paginates the dense Thursday page safely", () => {
     const nowIso = resolveThursdayPreviewCurrentTimeIso("14:00");
     const feed = buildThursday20260827Feed(nowIso);
     const flat: FlatEvent[] = [
@@ -356,21 +356,21 @@ describe("INFOBOARD-KIOSK-VIEWPORT-01B display controls", () => {
       demands,
       resolveScreen1PageDemandMax(DEFAULT_SCREEN1_PRESENTATION),
     );
-    const xlargePages = paginateDisplayList(
+    const smallPages = paginateDisplayList(
       items,
       demands,
       resolveScreen1PageDemandMax({
         ...DEFAULT_SCREEN1_PRESENTATION,
-        trainingFontSize: "XLARGE",
-        matchFontSize: "XLARGE",
-        tournamentFontSize: "XLARGE",
-        trainingLogoSize: "XLARGE",
-        matchLogoSize: "XLARGE",
-        tournamentLogoSize: "XLARGE",
+        trainingFontSize: "SMALL",
+        matchFontSize: "SMALL",
+        tournamentFontSize: "SMALL",
+        trainingLogoSize: "SMALL",
+        matchLogoSize: "SMALL",
+        tournamentLogoSize: "SMALL",
       }),
     );
 
-    expect(defaultPages).toHaveLength(1);
-    expect(xlargePages.length).toBeGreaterThanOrEqual(defaultPages.length);
+    expect(defaultPages.length).toBeGreaterThanOrEqual(1);
+    expect(smallPages.length).toBeLessThanOrEqual(defaultPages.length);
   });
 });

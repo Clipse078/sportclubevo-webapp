@@ -853,6 +853,50 @@
   max-width: 100%;
 }
 
+/* ─── Destination value badges — semantic color, value only (no icons) ─────── */
+
+.matchAllocRoom,
+.trainingGroupRoomValue,
+.participantRoomValue,
+.cardDressingRoomZone > .destRoomValue {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: clamp(4px, 0.45vh, 8px) clamp(8px, 0.9vw, 14px);
+  border-radius: var(--ib-radius-sm);
+  background: rgba(30, 91, 198, 0.14);
+  border: 1px solid rgba(30, 91, 198, 0.38);
+}
+
+.destPitchValue,
+.trainingGroupPitchValue {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: clamp(5px, 0.55vh, 10px) clamp(10px, 1vw, 16px);
+  border-radius: var(--ib-radius-sm);
+  background: rgba(26, 122, 74, 0.16);
+  border: 1px solid rgba(26, 122, 74, 0.42);
+}
+
+.root[data-theme="light"] .matchAllocRoom,
+.root[data-theme="light"] .trainingGroupRoomValue,
+.root[data-theme="light"] .participantRoomValue,
+.root[data-theme="light"] .cardDressingRoomZone > .destRoomValue {
+  background: rgba(24, 73, 166, 0.1);
+  border-color: rgba(24, 73, 166, 0.28);
+}
+
+.root[data-theme="light"] .destPitchValue,
+.root[data-theme="light"] .trainingGroupPitchValue {
+  background: rgba(22, 122, 70, 0.12);
+  border-color: rgba(22, 122, 70, 0.32);
+}
+
 .destRoomRow {
   display: flex;
   flex-direction: column;
@@ -1148,6 +1192,63 @@
   --ib-fs-dest-pitch:  clamp(2.2rem, 3.2vw, 4.2rem);
   --ib-fs-dest-room:   clamp(1.5rem, 2.2vw, 3rem);
   --ib-tournament-logo-size: var(--ib-tournament-logo-size-large);
+}
+
+/* Single-event hero — ~35–45% usable body height, content vertically composed */
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard {
+  flex: 0 0 clamp(300px, 40vh, 460px);
+  max-height: 45vh;
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .statusLabel {
+  font-size: clamp(0.95rem, 1.25vw, 1.55rem);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventTime {
+  font-size: clamp(3.4rem, 5vw, 6rem);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventEndTime {
+  font-size: clamp(1rem, 1.35vw, 1.65rem);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .cardTimeZone,
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .cardEventZone,
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .cardDressingRoomZone,
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .cardPitchZone {
+  gap: clamp(8px, 0.9vh, 14px);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .matchIdentity {
+  gap: clamp(6px, 0.75vh, 12px);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .vsLabel {
+  margin: clamp(8px, 1vh, 14px) 0;
+  font-size: clamp(0.75rem, 0.95vw, 1.15rem);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .matchAllocation {
+  gap: clamp(6px, 0.7vh, 10px);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .matchAllocRole {
+  font-size: clamp(0.72rem, 0.9vw, 1.05rem);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .destPitchValue,
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .trainingGroupPitchValue {
+  padding: clamp(8px, 0.85vh, 14px) clamp(12px, 1.2vw, 20px);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .matchAllocRoom,
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .trainingGroupRoomValue,
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .participantRoomValue {
+  padding: clamp(6px, 0.65vh, 11px) clamp(10px, 1vw, 16px);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .trainingGroupTeamName {
+  font-size: var(--ib-training-font-size);
 }
 
 /* 2 events — large balanced */
