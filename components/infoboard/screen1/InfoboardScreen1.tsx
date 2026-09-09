@@ -1398,6 +1398,12 @@ function EventCard({
           <div className={styles.tournamentIdentity}>
             <span className={styles.tournamentTitle}>{event.displayTitle}</span>
 
+            {event.organizerDisplayName !== null && (
+              <span className={styles.eventTeamSubtitle}>
+                {event.organizerDisplayName}
+              </span>
+            )}
+
             {participantAllocations !== undefined && participantAllocations.length > 0 && (
               <div
                 className={styles.tournamentParticipantLogos}

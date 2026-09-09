@@ -236,10 +236,10 @@ describe("Tournament font presets and card-type isolation", () => {
       TRAINING_FONT_SIZE_CSS.SMALL.normal,
     );
     expect(root.style.getPropertyValue("--ib-match-font-size")).toBe(
-      MATCH_FONT_SIZE_CSS.MEDIUM.primary,
+      MATCH_FONT_SIZE_CSS.XLARGE.primary,
     );
     expect(root.style.getPropertyValue("--ib-tournament-font-size")).toBe(
-      TOURNAMENT_FONT_SIZE_CSS.LARGE,
+      TOURNAMENT_FONT_SIZE_CSS.XLARGE,
     );
   });
 });

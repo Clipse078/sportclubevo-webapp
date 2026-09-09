@@ -92,18 +92,18 @@ export const TOURNAMENT_FONT_SIZE_CSS: Record<InfoboardFontSize, string> = {
 
 /** Training KABINE column clamps — independent from team-name typography. */
 export const TRAINING_KABINE_FONT_SIZE_CSS: Record<InfoboardFontSize, string> = {
-  SMALL: "clamp(0.85rem, 1.1vw, 1.45rem)",
-  MEDIUM: "clamp(1rem, 1.35vw, 1.8rem)",
-  LARGE: "clamp(1.2rem, 1.6vw, 2.1rem)",
-  XLARGE: "clamp(1.35rem, 1.8vw, 2.4rem)",
+  SMALL: "clamp(0.9rem, 1.15vw, 1.55rem)",
+  MEDIUM: "clamp(1.1rem, 1.45vw, 1.95rem)",
+  LARGE: "clamp(1.35rem, 1.8vw, 2.35rem)",
+  XLARGE: "clamp(1.55rem, 2.05vw, 2.75rem)",
 };
 
 /** Training PLATZ column clamps — independent from team-name typography. */
 export const TRAINING_PLATZ_FONT_SIZE_CSS: Record<InfoboardFontSize, string> = {
-  SMALL: "clamp(1.1rem, 1.45vw, 1.9rem)",
-  MEDIUM: "clamp(1.3rem, 1.75vw, 2.4rem)",
-  LARGE: "clamp(1.5rem, 2.1vw, 2.8rem)",
-  XLARGE: "clamp(1.7rem, 2.35vw, 3.2rem)",
+  SMALL: "clamp(1.15rem, 1.5vw, 2rem)",
+  MEDIUM: "clamp(1.35rem, 1.8vw, 2.45rem)",
+  LARGE: "clamp(1.55rem, 2.15vw, 2.95rem)",
+  XLARGE: "clamp(1.75rem, 2.4vw, 3.35rem)",
 };
 
 /** Match KABINE column clamps — independent from team-name typography. */
@@ -170,8 +170,9 @@ export type Screen1PresentationConfig = {
 /** @deprecated Use the generalized Screen1PresentationConfig name. */
 export type Screen1LogoPresentationConfig = Screen1PresentationConfig;
 
+/** Training rows omit repetitive tenant crests — header establishes club identity. */
 export const DEFAULT_SCREEN1_PRESENTATION: Screen1PresentationConfig = {
-  trainingShowLogos: true,
+  trainingShowLogos: false,
   trainingLogoSize: DEFAULT_INFOBOARD_LOGO_SIZE,
   matchShowLogos: true,
   matchLogoSize: DEFAULT_INFOBOARD_LOGO_SIZE,

@@ -42,6 +42,7 @@ import {
   CARD_DEMAND_TOURNAMENT_PARTICIPANT,
   CARD_DEMAND_PAGE_MAX,
 } from "@/components/infoboard/screen1/InfoboardScreen1";
+import { FONT_SIZE_CAPACITY_SCALE } from "@/lib/infoboard/screen1-logo-settings";
 import type { DisplayItem, FlatEvent } from "@/components/infoboard/screen1/InfoboardScreen1";
 import {
   PREVIEW_FIXTURE,
@@ -66,6 +67,7 @@ import type {
   InfoboardEventPresentationExtension,
   InfoboardTeamAllocationPresentation,
 } from "@/components/infoboard/screen1/screen1-presentation-types";
+import { DEFAULT_SCREEN1_PRESENTATION } from "@/lib/infoboard/screen1-logo-settings";
 
 // â”€â”€ Fixture helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -2553,7 +2555,7 @@ describe("Match logo placement â€” INFOBOARD-LOGO-02", () => {
     expect(matchAlloc.querySelector("img")).toBeNull();
   });
 
-  it("renders the tenant logo in a training group card by default", () => {
+  it("does not render repetitive tenant logos in training group cards by default", () => {
     const feed = makeFeed({
       current: [makeEvent({ type: "TRAINING", allocation: { pitchLabel: "KR2", homeDressingRoomLabel: "Kabine A", awayDressingRoomLabel: null, refereeDressingRoomLabel: null } })],
       isEmpty: false,
@@ -2562,6 +2564,25 @@ describe("Match logo placement â€” INFOBOARD-LOGO-02", () => {
       <InfoboardScreen1
         feed={feed}
         branding={{ clubLogoSrc: "/logo.png" }}
+      />,
+    );
+    const trainingGroup = screen.getByTestId("training-group");
+    expect(trainingGroup.querySelector("[data-testid='training-team-logo']")).toBeNull();
+  });
+
+  it("renders training logos when explicitly enabled via presentation", () => {
+    const feed = makeFeed({
+      current: [makeEvent({ type: "TRAINING", allocation: { pitchLabel: "KR2", homeDressingRoomLabel: "Kabine A", awayDressingRoomLabel: null, refereeDressingRoomLabel: null } })],
+      isEmpty: false,
+    });
+    render(
+      <InfoboardScreen1
+        feed={feed}
+        branding={{ clubLogoSrc: "/logo.png" }}
+        presentation={{
+          ...DEFAULT_SCREEN1_PRESENTATION,
+          trainingShowLogos: true,
+        }}
       />,
     );
     const trainingGroup = screen.getByTestId("training-group");
@@ -3727,7 +3748,7 @@ describe("Content-demand â€” rendered data-card-demand attributes", () => {
     expect(demand6).toBeGreaterThan(demand4);
   });
 
-  it("match card has data-card-demand equal to CARD_DEMAND_MATCH", () => {
+  it("match card has data-card-demand scaled for XLARGE presentation defaults", () => {
     const feed = makeFeed({
       current: [
         makeEvent({ id: "m1", type: "MATCH", teamDisplayName: "Team A", opponentDisplayName: "Team B" }),
@@ -3737,7 +3758,9 @@ describe("Content-demand â€” rendered data-card-demand attributes", () => {
     render(<InfoboardScreen1 feed={feed} />);
     const row = screen.getByTestId("event-row");
     const demand = parseFloat(row.getAttribute("data-card-demand") ?? "0");
-    expect(demand).toBeCloseTo(CARD_DEMAND_MATCH);
+    expect(demand).toBeCloseTo(
+      CARD_DEMAND_MATCH * FONT_SIZE_CAPACITY_SCALE.XLARGE,
+    );
   });
 
   it("cards in mixed list are not all assigned identical demand", () => {
@@ -3977,12 +4000,16 @@ describe("Sparse layout mode â€” demand proportionality preserved", () => {
     const card = screen.getByTestId("event-row");
     const demand = parseFloat(card.getAttribute("data-card-demand") ?? "0");
     expect(demand).toBeGreaterThan(0);
-    expect(demand).toBeCloseTo(CARD_DEMAND_MATCH);
+    expect(demand).toBeCloseTo(
+      CARD_DEMAND_MATCH * FONT_SIZE_CAPACITY_SCALE.XLARGE,
+    );
   });
 
-  it("sparse 1-MATCH card has demand < fill threshold", () => {
-    expect(CARD_DEMAND_MATCH).toBeLessThan(LAYOUT_MODE_SPARSE_THRESHOLD);
-    expect(layoutModeTier(CARD_DEMAND_MATCH)).toBe("sparse");
+  it("sparse 1-MATCH card has scaled demand below fill threshold", () => {
+    const scaledMatchDemand =
+      CARD_DEMAND_MATCH * FONT_SIZE_CAPACITY_SCALE.XLARGE;
+    expect(scaledMatchDemand).toBeLessThan(LAYOUT_MODE_SPARSE_THRESHOLD);
+    expect(layoutModeTier(scaledMatchDemand)).toBe("sparse");
   });
 
   it("pagination still works when high demand triggers multi-page", () => {
