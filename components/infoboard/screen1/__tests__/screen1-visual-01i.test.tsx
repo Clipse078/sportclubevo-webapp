@@ -70,8 +70,11 @@ describe("INFOBOARD-SCREEN1-VISUAL-01I — grid proportions", () => {
     expect(CSS).toMatch(/--ib-zone-pitch:\s*26%/);
   });
 
-  it("aligns training matrix to 36/26/26 fr units", () => {
-    expect(CSS).toMatch(/\.trainingMatrixRow[\s\S]*grid-template-columns:\s*36fr 26fr 26fr/);
+  it("aligns training matrix to parent eventCard columns via subgrid", () => {
+    expect(CSS).toMatch(
+      /\.eventCard\[data-type="TRAINING"\] \.trainingMatrix[\s\S]*grid-template-columns:\s*subgrid/,
+    );
+    expect(CSS).toMatch(/\.trainingMatrixRow[\s\S]*grid-template-columns:\s*subgrid/);
   });
 });
 

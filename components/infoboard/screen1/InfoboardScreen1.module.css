@@ -743,29 +743,35 @@
 
 /* ─── RIGHT ZONE: Destination ───────────────────────────────────────────── */
 
+/* Canonical Screen-1 column anchors — shared by match, tournament, and training. */
+.cardKabineColumn,
+.cardDressingRoomZone {
+  padding: var(--ib-card-pad-v) var(--ib-card-pad-h);
+  border-left: 1px solid var(--ib-border);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.cardPlatzColumn,
+.cardPitchZone {
+  padding: var(--ib-card-pad-v) var(--ib-card-pad-h);
+  border-left: 1px solid var(--ib-border);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 .cardDressingRoomZone,
 .cardPitchZone {
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: var(--ib-sp-3);
-  padding: var(--ib-card-pad-v) var(--ib-card-pad-h);
-  min-width: 0;
   /* Ensure the zone has a definite height so justify-content:center works.
    * Grid items with align-self:stretch receive the grid area height, but
    * height:100% explicitly establishes a definite height for the flex
    * algorithm's justify-content calculation. */
   min-height: 0;
   height: 100%;
-  box-sizing: border-box;
-}
-
-.cardDressingRoomZone {
-  border-left: 1px solid var(--ib-border);
-}
-
-.cardPitchZone {
-  border-left: 1px solid var(--ib-border);
 }
 
 .cardPitchZone .destPitchValue {
@@ -1406,14 +1412,15 @@
  * EVENT + KABINE + PLATZ card columns. Each training record is a single grid
  * row — no independent column lists that can drift vertically.
  *
- * Column proportions match the approved physical-TV contract:
- *   36fr | 26fr | 26fr  (within the 88% content span)
+ * Subgrid inherits the parent eventCard column tracks (36% | 26% | 26%) so
+ * KABINE and PLATZ anchors match match/tournament cards exactly.
  */
 
 .eventCard[data-type="TRAINING"] .trainingMatrix {
   grid-column: 2 / -1;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: subgrid;
+  grid-auto-rows: auto;
   align-content: start;
   min-width: 0;
   min-height: 0;
@@ -1421,10 +1428,11 @@
 }
 
 .trainingMatrixHeaders {
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 36fr 26fr 26fr;
+  grid-template-columns: subgrid;
   align-items: end;
-  padding: var(--ib-card-pad-v) var(--ib-card-pad-h) 0;
+  padding: var(--ib-card-pad-v) 0 0;
   column-gap: 0;
   min-width: 0;
 }
@@ -1435,7 +1443,6 @@
   align-self: start;
   justify-self: start;
   margin: 0;
-  padding: 0 0 var(--ib-training-header-gap, clamp(5px, 0.55vh, 8px));
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
   font-size: var(--ib-fs-dest-label);
   font-weight: 700;
@@ -1450,22 +1457,38 @@
 
 .trainingMatrixHeaders > .destLabel {
   color: var(--ib-training-soft);
-  padding-left: var(--ib-card-pad-h);
+}
+
+.trainingMatrixHeaders > :nth-child(1) {
+  padding: 0 var(--ib-card-pad-h) var(--ib-training-header-gap, clamp(5px, 0.55vh, 8px));
+  border-right: 1px solid var(--ib-border);
+}
+
+.trainingMatrixHeaders > :nth-child(2) {
+  padding: 0 var(--ib-card-pad-h) var(--ib-training-header-gap, clamp(5px, 0.55vh, 8px));
+  border-left: 1px solid var(--ib-border);
+}
+
+.trainingMatrixHeaders > :nth-child(3) {
+  padding: 0 var(--ib-card-pad-h) var(--ib-training-header-gap, clamp(5px, 0.55vh, 8px));
   border-left: 1px solid var(--ib-border);
 }
 
 .trainingRowMatrix {
+  grid-column: 1 / -1;
   display: grid;
+  grid-template-columns: subgrid;
   grid-auto-rows: var(--ib-training-row-height, minmax(clamp(24px, 3.2vh, 44px), auto));
   row-gap: var(--ib-training-row-gap, 0);
   align-content: start;
   min-width: 0;
-  padding: 0 var(--ib-card-pad-h) var(--ib-card-pad-v);
+  padding-bottom: var(--ib-card-pad-v);
 }
 
 .trainingMatrixRow {
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 36fr 26fr 26fr;
+  grid-template-columns: subgrid;
   align-items: center;
   min-height: var(--ib-training-row-height, clamp(24px, 3.2vh, 44px));
   min-width: 0;
@@ -1481,12 +1504,21 @@
   justify-content: flex-start;
   min-width: 0;
   min-height: inherit;
-  padding: var(--ib-training-cell-padding-y, clamp(2px, 0.35vh, 6px)) 0;
   box-sizing: border-box;
 }
 
-.trainingMatrixCell:not(:first-child) {
-  padding-left: var(--ib-card-pad-h);
+.trainingMatrixCell:nth-child(1) {
+  padding: var(--ib-training-cell-padding-y, clamp(2px, 0.35vh, 6px)) var(--ib-card-pad-h);
+  border-right: 1px solid var(--ib-border);
+}
+
+.trainingMatrixCell:nth-child(2) {
+  padding: var(--ib-training-cell-padding-y, clamp(2px, 0.35vh, 6px)) var(--ib-card-pad-h);
+  border-left: 1px solid var(--ib-border);
+}
+
+.trainingMatrixCell:nth-child(3) {
+  padding: var(--ib-training-cell-padding-y, clamp(2px, 0.35vh, 6px)) var(--ib-card-pad-h);
   border-left: 1px solid var(--ib-border);
 }
 
