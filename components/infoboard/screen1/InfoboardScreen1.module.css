@@ -1421,9 +1421,13 @@
   display: grid;
   grid-template-columns: subgrid;
   grid-auto-rows: auto;
-  align-content: start;
+  /* Center the complete TRAINING/KABINE/PLATZ block when the card has
+     headroom; safe center falls back to start before clipping dense groups. */
+  align-content: safe center;
   min-width: 0;
   min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
   border-right: none;
 }
 
@@ -1584,18 +1588,13 @@
 
 .eventList[data-layout-mode="fill"] .eventCard[data-type="TRAINING"] .trainingMatrix {
   min-height: 0;
-  height: 100%;
 }
 
+/* Fill-mode training cards keep compact row tracks; the shared matrix centers
+ * as one block instead of stretching individual rows to absorb card height. */
 .eventList[data-layout-mode="fill"] .trainingRowMatrix {
   min-height: 0;
-  height: 100%;
-  grid-auto-rows: minmax(0, 1fr);
-  align-content: stretch;
-}
-
-.eventList[data-layout-mode="fill"] .trainingMatrixRow {
-  min-height: 0;
+  align-content: start;
 }
 
 /* ─── Adaptive density tiers ────────────────────────────────────────────────
