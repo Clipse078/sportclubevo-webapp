@@ -9,16 +9,17 @@ export const INFOBOARD_LOGO_SIZES = ["SMALL", "MEDIUM", "LARGE", "XLARGE"] as co
 
 export type InfoboardLogoSize = (typeof INFOBOARD_LOGO_SIZES)[number];
 
-export const DEFAULT_INFOBOARD_LOGO_SIZE: InfoboardLogoSize = "MEDIUM";
+/** Screen-1 canonical logo default (INFOBOARD-SCREEN1-VISUAL-01H). */
+export const DEFAULT_INFOBOARD_LOGO_SIZE: InfoboardLogoSize = "XLARGE";
 
 export const INFOBOARD_FONT_SIZES = INFOBOARD_LOGO_SIZES;
 
 export type InfoboardFontSize = (typeof INFOBOARD_FONT_SIZES)[number];
 
-/** Existing typography is LARGE; Match defaults lower after physical-TV acceptance. */
-export const DEFAULT_TRAINING_FONT_SIZE: InfoboardFontSize = "LARGE";
-export const DEFAULT_MATCH_FONT_SIZE: InfoboardFontSize = "MEDIUM";
-export const DEFAULT_TOURNAMENT_FONT_SIZE: InfoboardFontSize = "LARGE";
+/** Screen-1 canonical typography default — XL for all event types (01H). */
+export const DEFAULT_TRAINING_FONT_SIZE: InfoboardFontSize = "XLARGE";
+export const DEFAULT_MATCH_FONT_SIZE: InfoboardFontSize = "XLARGE";
+export const DEFAULT_TOURNAMENT_FONT_SIZE: InfoboardFontSize = "XLARGE";
 
 /** German labels for admin UI select options. */
 export const LOGO_SIZE_LABELS: Record<InfoboardLogoSize, string> = {
@@ -203,7 +204,7 @@ export function resolveInfoboardFontSize(
 /** Footer-safe single-page demand ceiling at default presentation settings. */
 export const SCREEN1_PAGE_DEMAND_MAX = 8.5;
 
-/** LARGE matches accepted Screen 1 baseline typography (DEFAULT_* constants). */
+/** XLARGE matches Screen-1 canonical typography defaults (DEFAULT_* constants). */
 export const FONT_SIZE_CAPACITY_SCALE: Record<InfoboardFontSize, number> = {
   SMALL: 0.92,
   MEDIUM: 0.96,

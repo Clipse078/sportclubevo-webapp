@@ -11,9 +11,9 @@ import {
 } from "@/lib/infoboard/screen1-logo-settings";
 
 describe("resolveScreen1PageDemandMax", () => {
-  it("returns the default ceiling for baseline presentation", () => {
-    expect(resolveScreen1PageDemandMax(DEFAULT_SCREEN1_PRESENTATION)).toBe(
-      SCREEN1_PAGE_DEMAND_MAX,
+  it("returns the scaled default ceiling for XL baseline presentation", () => {
+    expect(resolveScreen1PageDemandMax(DEFAULT_SCREEN1_PRESENTATION)).toBeCloseTo(
+      SCREEN1_PAGE_DEMAND_MAX / 1.12,
     );
   });
 
@@ -46,6 +46,9 @@ describe("resolveScreen1PageDemandMax", () => {
   it("ignores logo scale when logos are hidden", () => {
     const hidden = resolvePresentationCapacityScale({
       ...DEFAULT_SCREEN1_PRESENTATION,
+      trainingFontSize: "SMALL",
+      matchFontSize: "SMALL",
+      tournamentFontSize: "SMALL",
       trainingShowLogos: false,
       matchShowLogos: false,
       tournamentShowLogos: false,
@@ -55,6 +58,9 @@ describe("resolveScreen1PageDemandMax", () => {
     });
     const visible = resolvePresentationCapacityScale({
       ...DEFAULT_SCREEN1_PRESENTATION,
+      trainingFontSize: "SMALL",
+      matchFontSize: "SMALL",
+      tournamentFontSize: "SMALL",
       trainingLogoSize: "XLARGE",
       matchLogoSize: "XLARGE",
       tournamentLogoSize: "XLARGE",
