@@ -96,12 +96,12 @@ describe("font-size persistence", () => {
     });
   });
 
-  it("uses safe defaults for boards created before the columns existed", () => {
+  it("uses XLARGE defaults for boards created before the columns existed", () => {
     const config = buildBoardConfig(board("legacy", "tenant-1")).presentation;
     expect(config).toMatchObject({
-      trainingFontSize: "LARGE",
-      matchFontSize: "MEDIUM",
-      tournamentFontSize: "LARGE",
+      trainingFontSize: "XLARGE",
+      matchFontSize: "XLARGE",
+      tournamentFontSize: "XLARGE",
     });
   });
 });

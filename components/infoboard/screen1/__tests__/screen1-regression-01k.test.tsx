@@ -24,6 +24,12 @@ import {
   resolveWednesdayPreviewCurrentTimeIso,
 } from "@/components/infoboard/screen1/wednesday-2026-08-26-fixture";
 import type { InfoboardScreen1Event } from "@/lib/publishing/event-types";
+import {
+  DEFAULT_SCREEN1_PRESENTATION,
+  resolveScreen1PageDemandMax,
+} from "@/lib/infoboard/screen1-logo-settings";
+import { resolveCardDemandScale } from "@/lib/infoboard/screen1-card-presentation";
+import { EMPTY_SCREEN1_STUDIO_CONFIG } from "@/lib/infoboard/screen1-studio-types";
 
 const CSS = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), "../InfoboardScreen1.module.css"),
@@ -73,11 +79,17 @@ function wednesdayItems(): { items: DisplayItem[]; demands: number[] } {
     matchItem("19:45", "2026-08-26T17:45:00.000Z"),
     trainingCohort("20:15", "2026-08-26T18:15:00.000Z", 2),
   ];
-  const demands = items.map((item) =>
-    item.kind === "training-group"
-      ? computeTrainingGroupDemand(item.items.length)
-      : computeMatchDemand(item.item.event),
-  );
+  const demands = items.map((item) => {
+    const base =
+      item.kind === "training-group"
+        ? computeTrainingGroupDemand(item.items.length)
+        : computeMatchDemand(item.item.event);
+    return base * resolveCardDemandScale(
+      item,
+      DEFAULT_SCREEN1_PRESENTATION,
+      EMPTY_SCREEN1_STUDIO_CONFIG,
+    );
+  });
   return { items, demands };
 }
 
@@ -130,7 +142,9 @@ describe("INFOBOARD-ROLLING-01K — footer-safe pagination", () => {
     const footer = screen.getByTestId("announcement-bar");
     expect(main.nextElementSibling).toBe(footer);
     expect(root.lastElementChild).toBe(footer);
-    expect(main.getAttribute("data-safe-page-capacity")).toBe("8.50");
+    expect(main.getAttribute("data-safe-page-capacity")).toBe(
+      resolveScreen1PageDemandMax(DEFAULT_SCREEN1_PRESENTATION).toFixed(2),
+    );
 
     const rootCss = cssBlock(".root {\n  display: grid");
     const mainCss = cssBlock(".main {");
@@ -143,10 +157,11 @@ describe("INFOBOARD-ROLLING-01K — footer-safe pagination", () => {
 
   it("TEST B — rejects dense Wednesday Page 2 when demand exceeds safe capacity", () => {
     const { items, demands } = wednesdayItems();
-    const pages = paginateDisplayList(items, demands);
+    const pageMax = resolveScreen1PageDemandMax(DEFAULT_SCREEN1_PRESENTATION);
+    const pages = paginateDisplayList(items, demands, pageMax);
     const denseTailDemand = demands[2]! + demands[3]! + demands[4]!;
 
-    expect(denseTailDemand).toBeGreaterThan(CARD_DEMAND_PAGE_MAX);
+    expect(denseTailDemand).toBeGreaterThan(pageMax);
     expect(pages.map((page) => page.map(itemLabel))).toEqual([
       ["15:45", "17:15"],
       ["18:45", "19:45"],
@@ -156,7 +171,11 @@ describe("INFOBOARD-ROLLING-01K — footer-safe pagination", () => {
 
   it("TEST C — keeps consecutive chronological pagination without leapfrogging", () => {
     const { items, demands } = wednesdayItems();
-    const pages = paginateDisplayList(items, demands);
+    const pages = paginateDisplayList(
+      items,
+      demands,
+      resolveScreen1PageDemandMax(DEFAULT_SCREEN1_PRESENTATION),
+    );
     expect(pages.flat().map(itemLabel)).toEqual([
       "15:45",
       "17:15",
@@ -168,7 +187,11 @@ describe("INFOBOARD-ROLLING-01K — footer-safe pagination", () => {
 
   it("TEST D — keeps the six-row 18:45 cohort atomic", () => {
     const { items, demands } = wednesdayItems();
-    const pages = paginateDisplayList(items, demands);
+    const pages = paginateDisplayList(
+      items,
+      demands,
+      resolveScreen1PageDemandMax(DEFAULT_SCREEN1_PRESENTATION),
+    );
     const cohort = pages.flat().find((item) => itemLabel(item) === "18:45");
     expect(cohort?.kind).toBe("training-group");
     if (cohort?.kind === "training-group") {
@@ -224,7 +247,10 @@ describe("INFOBOARD-ROLLING-01K — footer-safe pagination", () => {
     );
     await act(async () => {});
 
-    expect(activePageTimes()).toEqual(["17:15", "18:45"]);
+    expect(
+      screen.getByTestId("infoboard-page-rotator")?.getAttribute("data-active-page"),
+    ).toBe("0");
+    expect(activePageTimes()).toEqual(["17:15"]);
   });
 
   it("TEST G — converges to one page and removes the rotator when late content fits", () => {

@@ -383,15 +383,15 @@ describe("Board config persistence defaults (07C)", () => {
 
     const config = buildBoardConfig(board);
     expect(config.presentation).toEqual({
-      trainingShowLogos: true,
-      trainingLogoSize: "MEDIUM",
+      trainingShowLogos: false,
+      trainingLogoSize: "XLARGE",
       matchShowLogos: true,
-      matchLogoSize: "MEDIUM",
+      matchLogoSize: "XLARGE",
       tournamentShowLogos: true,
-      tournamentLogoSize: "MEDIUM",
-      trainingFontSize: "LARGE",
-      matchFontSize: "MEDIUM",
-      tournamentFontSize: "LARGE",
+      tournamentLogoSize: "XLARGE",
+      trainingFontSize: "XLARGE",
+      matchFontSize: "XLARGE",
+      tournamentFontSize: "XLARGE",
     });
   });
 });

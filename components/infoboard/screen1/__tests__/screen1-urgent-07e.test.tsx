@@ -153,9 +153,9 @@ describe("Per-board logo setting independence (07E)", () => {
       matchLogoSize: "LARGE",
       tournamentShowLogos: true,
       tournamentLogoSize: "XLARGE",
-      trainingFontSize: "LARGE",
-      matchFontSize: "MEDIUM",
-      tournamentFontSize: "LARGE",
+      trainingFontSize: "XLARGE",
+      matchFontSize: "XLARGE",
+      tournamentFontSize: "XLARGE",
     });
   });
 });

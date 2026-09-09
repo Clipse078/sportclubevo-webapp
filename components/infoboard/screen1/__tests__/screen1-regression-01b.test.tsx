@@ -36,6 +36,12 @@ import {
   PREVIEW_TOURNAMENT_4TEAM_EXTENSIONS,
 } from "@/components/infoboard/screen1/screen1-preview-fixture";
 import type { InfoboardScreen1Event, InfoboardScreen1Feed } from "@/lib/publishing/event-types";
+import {
+  DEFAULT_SCREEN1_PRESENTATION,
+  resolveScreen1PageDemandMax,
+} from "@/lib/infoboard/screen1-logo-settings";
+import { resolveCardDemandScale } from "@/lib/infoboard/screen1-card-presentation";
+import { EMPTY_SCREEN1_STUDIO_CONFIG } from "@/lib/infoboard/screen1-studio-types";
 
 const SCREEN1_CSS = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), "../InfoboardScreen1.module.css"),
@@ -70,7 +76,24 @@ function pageDemand(items: DisplayItem[]): number {
   }, 0);
 }
 
-function renderThursday(at: keyof typeof import("@/components/infoboard/screen1/thursday-2026-08-27-fixture").THURSDAY_2026_08_27_PREVIEW_TIMES = "14:00") {
+function scaledPageDemand(items: DisplayItem[]): number {
+  return items.reduce((sum, item) => {
+    const base =
+      item.kind === "training-group"
+        ? computeTrainingGroupDemand(item.items.length)
+        : 2.2;
+    return sum + base * resolveCardDemandScale(
+      item,
+      DEFAULT_SCREEN1_PRESENTATION,
+      EMPTY_SCREEN1_STUDIO_CONFIG,
+    );
+  }, 0);
+}
+
+function renderThursday(
+  at: keyof typeof import("@/components/infoboard/screen1/thursday-2026-08-27-fixture").THURSDAY_2026_08_27_PREVIEW_TIMES = "14:00",
+  activePage = 0,
+) {
   const nowIso = resolveThursdayPreviewCurrentTimeIso(at);
   return render(
     <KioskViewportScaler>
@@ -79,6 +102,12 @@ function renderThursday(at: keyof typeof import("@/components/infoboard/screen1/
         branding={BRANDING}
         currentTimeIso={nowIso}
         announcement={{ enabled: true, text: "Footer regression" }}
+        previewPagination={{
+          activePage,
+          autoRotate: false,
+          onPageChange: () => {},
+          onPageCountChange: () => {},
+        }}
       />
     </KioskViewportScaler>,
   );
@@ -89,32 +118,41 @@ afterEach(() => {
 });
 
 describe("INFOBOARD-KIOSK-VIEWPORT-01B — Thursday dense page", () => {
-  it("A — 17:15 + 18:45 + 20:15 cohorts stay on one footer-safe page", () => {
+  it("A — 17:15 + 18:45 + 20:15 cohorts paginate within XL footer-safe capacity", () => {
     const nowIso = resolveThursdayPreviewCurrentTimeIso("14:00");
     const feed = buildThursday20260827Feed(nowIso);
     const items = buildDisplayList(flatItems(feed));
-    const demands = items.map((item) =>
-      item.kind === "training-group"
-        ? computeTrainingGroupDemand(item.items.length)
-        : 2.2,
-    );
+    const demands = items.map((item) => {
+      const base =
+        item.kind === "training-group"
+          ? computeTrainingGroupDemand(item.items.length)
+          : 2.2;
+      return base * resolveCardDemandScale(
+        item,
+        DEFAULT_SCREEN1_PRESENTATION,
+        EMPTY_SCREEN1_STUDIO_CONFIG,
+      );
+    });
+    const pageMax = resolveScreen1PageDemandMax(DEFAULT_SCREEN1_PRESENTATION);
 
     expect(items).toHaveLength(3);
-    expect(demands.reduce((sum, demand) => sum + demand, 0)).toBeLessThanOrEqual(
-      CARD_DEMAND_PAGE_MAX,
-    );
-    expect(paginateDisplayList(items, demands)).toHaveLength(1);
+    expect(scaledPageDemand(items)).toBeGreaterThan(pageMax);
+    expect(paginateDisplayList(items, demands, pageMax)).toHaveLength(2);
   });
 
-  it("B/C — Junioren B2 and footer render on the same single page", () => {
-    renderThursday("14:00");
+  it("B/C — Junioren B2 and footer render with XL-scaled pagination", () => {
+    renderThursday("14:00", 0);
 
-    expect(screen.queryByTestId("infoboard-page-rotator")).toBeNull();
-    expect(screen.getByText("JUNIOREN B2")).toBeTruthy();
+    expect(screen.getByTestId("infoboard-page-rotator")).toBeTruthy();
     expect(screen.getByTestId("announcement-bar")).toBeTruthy();
     expect(screen.getByTestId("infoboard-content-region").nextElementSibling).toBe(
       screen.getByTestId("announcement-bar"),
     );
+
+    cleanup();
+    renderThursday("14:00", 1);
+    expect(screen.getByText("JUNIOREN B2")).toBeTruthy();
+    expect(screen.getByTestId("announcement-bar")).toBeTruthy();
   });
 
   it("D — content region and footer do not overlap in the shell grid", () => {
@@ -215,8 +253,8 @@ describe("INFOBOARD-KIOSK-VIEWPORT-01B — Thursday dense page", () => {
 });
 
 describe("INFOBOARD-KIOSK-VIEWPORT-01B — Thursday cohort visibility", () => {
-  it("renders all required cohort labels including Junioren B2", () => {
-    renderThursday("14:00");
+  it("renders all required cohort labels including Junioren B2 across pages", () => {
+    renderThursday("14:00", 0);
 
     for (const teamName of THURSDAY_COHORT_TEAM_NAMES.at1715) {
       expect(screen.getByText(teamName)).toBeTruthy();
@@ -224,17 +262,20 @@ describe("INFOBOARD-KIOSK-VIEWPORT-01B — Thursday cohort visibility", () => {
     for (const teamName of THURSDAY_COHORT_TEAM_NAMES.at1845) {
       expect(screen.getByText(teamName)).toBeTruthy();
     }
+
+    cleanup();
+    renderThursday("14:00", 1);
     for (const teamName of THURSDAY_COHORT_TEAM_NAMES.at2015) {
       expect(screen.getByText(teamName)).toBeTruthy();
     }
 
     expect(screen.getAllByTestId("training-cohort-start-time").map(
       (node) => node.textContent,
-    )).toEqual(["17:15", "18:45", "20:15"]);
+    )).toEqual(["20:15"]);
   });
 
-  it("keeps the 20:15 three-row matrix intact", () => {
-    renderThursday("14:00");
+  it("keeps the 20:15 three-row matrix intact on page 2", () => {
+    renderThursday("14:00", 1);
     const card = screen.getAllByTestId("event-row").find(
       (row) => row.getAttribute("data-training-count") === "3",
     );
@@ -245,13 +286,13 @@ describe("INFOBOARD-KIOSK-VIEWPORT-01B — Thursday cohort visibility", () => {
   });
 
   it("uses fill layout mode for the dense Thursday page", () => {
-    renderThursday("14:00");
+    renderThursday("14:00", 0);
     const list = screen.getByTestId("event-list");
     const feed = buildThursday20260827Feed(resolveThursdayPreviewCurrentTimeIso("14:00"));
     const items = buildDisplayList(flatItems(feed));
 
     expect(list.getAttribute("data-layout-mode")).toBe("fill");
-    expect(layoutModeTier(pageDemand(items))).toBe("fill");
-    expect(list.getAttribute("data-count")).toBe("3");
+    expect(layoutModeTier(scaledPageDemand(items))).toBe("fill");
+    expect(list.getAttribute("data-count")).toBe("2");
   });
 });

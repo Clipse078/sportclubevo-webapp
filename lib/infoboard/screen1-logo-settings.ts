@@ -9,16 +9,17 @@ export const INFOBOARD_LOGO_SIZES = ["SMALL", "MEDIUM", "LARGE", "XLARGE"] as co
 
 export type InfoboardLogoSize = (typeof INFOBOARD_LOGO_SIZES)[number];
 
-export const DEFAULT_INFOBOARD_LOGO_SIZE: InfoboardLogoSize = "MEDIUM";
+/** Screen-1 canonical logo default (INFOBOARD-SCREEN1-VISUAL-01H). */
+export const DEFAULT_INFOBOARD_LOGO_SIZE: InfoboardLogoSize = "XLARGE";
 
 export const INFOBOARD_FONT_SIZES = INFOBOARD_LOGO_SIZES;
 
 export type InfoboardFontSize = (typeof INFOBOARD_FONT_SIZES)[number];
 
-/** Existing typography is LARGE; Match defaults lower after physical-TV acceptance. */
-export const DEFAULT_TRAINING_FONT_SIZE: InfoboardFontSize = "LARGE";
-export const DEFAULT_MATCH_FONT_SIZE: InfoboardFontSize = "MEDIUM";
-export const DEFAULT_TOURNAMENT_FONT_SIZE: InfoboardFontSize = "LARGE";
+/** Screen-1 canonical typography default — XL for all event types (01H). */
+export const DEFAULT_TRAINING_FONT_SIZE: InfoboardFontSize = "XLARGE";
+export const DEFAULT_MATCH_FONT_SIZE: InfoboardFontSize = "XLARGE";
+export const DEFAULT_TOURNAMENT_FONT_SIZE: InfoboardFontSize = "XLARGE";
 
 /** German labels for admin UI select options. */
 export const LOGO_SIZE_LABELS: Record<InfoboardLogoSize, string> = {
@@ -83,26 +84,26 @@ export const MATCH_FONT_SIZE_CSS: Record<
 
 /** Tournament title clamps; the existing page-density cap remains authoritative. */
 export const TOURNAMENT_FONT_SIZE_CSS: Record<InfoboardFontSize, string> = {
-  SMALL: "clamp(0.874rem, 1.178vw, 1.976rem)",
-  MEDIUM: "clamp(1.012rem, 1.364vw, 2.288rem)",
-  LARGE: "clamp(1.15rem, 1.55vw, 2.6rem)",
-  XLARGE: "clamp(1.288rem, 1.736vw, 2.912rem)",
+  SMALL: "clamp(1.4rem, 1.9vw, 2.2rem)",
+  MEDIUM: "clamp(1.65rem, 2.2vw, 2.6rem)",
+  LARGE: "clamp(1.85rem, 2.5vw, 2.9rem)",
+  XLARGE: "clamp(2rem, 2.8vw, 3.2rem)",
 };
 
 /** Training KABINE column clamps — independent from team-name typography. */
 export const TRAINING_KABINE_FONT_SIZE_CSS: Record<InfoboardFontSize, string> = {
-  SMALL: "clamp(0.85rem, 1.1vw, 1.45rem)",
-  MEDIUM: "clamp(1rem, 1.35vw, 1.8rem)",
-  LARGE: "clamp(1.2rem, 1.6vw, 2.1rem)",
-  XLARGE: "clamp(1.35rem, 1.8vw, 2.4rem)",
+  SMALL: "clamp(0.9rem, 1.15vw, 1.55rem)",
+  MEDIUM: "clamp(1.1rem, 1.45vw, 1.95rem)",
+  LARGE: "clamp(1.35rem, 1.8vw, 2.35rem)",
+  XLARGE: "clamp(1.55rem, 2.05vw, 2.75rem)",
 };
 
 /** Training PLATZ column clamps — independent from team-name typography. */
 export const TRAINING_PLATZ_FONT_SIZE_CSS: Record<InfoboardFontSize, string> = {
-  SMALL: "clamp(1.1rem, 1.45vw, 1.9rem)",
-  MEDIUM: "clamp(1.3rem, 1.75vw, 2.4rem)",
-  LARGE: "clamp(1.5rem, 2.1vw, 2.8rem)",
-  XLARGE: "clamp(1.7rem, 2.35vw, 3.2rem)",
+  SMALL: "clamp(1.15rem, 1.5vw, 2rem)",
+  MEDIUM: "clamp(1.35rem, 1.8vw, 2.45rem)",
+  LARGE: "clamp(1.55rem, 2.15vw, 2.95rem)",
+  XLARGE: "clamp(1.75rem, 2.4vw, 3.35rem)",
 };
 
 /** Match KABINE column clamps — independent from team-name typography. */
@@ -169,8 +170,9 @@ export type Screen1PresentationConfig = {
 /** @deprecated Use the generalized Screen1PresentationConfig name. */
 export type Screen1LogoPresentationConfig = Screen1PresentationConfig;
 
+/** Training rows omit repetitive tenant crests — header establishes club identity. */
 export const DEFAULT_SCREEN1_PRESENTATION: Screen1PresentationConfig = {
-  trainingShowLogos: true,
+  trainingShowLogos: false,
   trainingLogoSize: DEFAULT_INFOBOARD_LOGO_SIZE,
   matchShowLogos: true,
   matchLogoSize: DEFAULT_INFOBOARD_LOGO_SIZE,
@@ -203,7 +205,7 @@ export function resolveInfoboardFontSize(
 /** Footer-safe single-page demand ceiling at default presentation settings. */
 export const SCREEN1_PAGE_DEMAND_MAX = 8.5;
 
-/** LARGE matches accepted Screen 1 baseline typography (DEFAULT_* constants). */
+/** XLARGE matches Screen-1 canonical typography defaults (DEFAULT_* constants). */
 export const FONT_SIZE_CAPACITY_SCALE: Record<InfoboardFontSize, number> = {
   SMALL: 0.92,
   MEDIUM: 0.96,

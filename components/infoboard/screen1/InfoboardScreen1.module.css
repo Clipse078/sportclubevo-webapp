@@ -96,7 +96,11 @@
   --ib-training-font-size-dense: clamp(1.05rem, 1.4vw, 2rem);
   --ib-match-font-size:     clamp(1.65rem, 2.15vw, 2.75rem);
   --ib-match-opponent-font-size: clamp(0.935rem, 1.25vw, 1.65rem);
-  --ib-tournament-font-size: clamp(1.15rem, 1.55vw, 2.6rem);
+  --ib-tournament-font-size: clamp(1.85rem, 2.5vw, 2.9rem);
+  /* Canonical Kabine pill geometry — tournament reference (01M). */
+  --ib-kabine-badge-width: clamp(52px, 4.8vw, 76px);
+  --ib-kabine-font-size-fallback: clamp(1.2rem, 1.6vw, 1.9rem);
+  --ib-tournament-kabine-badge-width: var(--ib-kabine-badge-width);
   --ib-fs-dest-label:       clamp(0.6rem, 0.78vw, 0.92rem);
   --ib-fs-dest-pitch:       clamp(1.5rem, 2.1vw, 2.8rem);
   --ib-fs-dest-room:        clamp(1rem, 1.4vw, 1.9rem);
@@ -106,11 +110,11 @@
   --ib-fs-footer:           clamp(0.8rem, 1vw, 1.15rem);
   --ib-fs-powered-by:       clamp(0.5rem, 0.62vw, 0.72rem);
 
-  /* Card zone proportions */
-  --ib-zone-time:       15%;
-  --ib-zone-event:      43%;
-  --ib-zone-room:       24%;
-  --ib-zone-pitch:      18%;
+  /* Card zone proportions — stadium wayfinding: TIME | EVENT | KABINE | PLATZ */
+  --ib-zone-time:       12%;
+  --ib-zone-event:      36%;
+  --ib-zone-room:       26%;
+  --ib-zone-pitch:      26%;
 
   /* Border radius */
   --ib-radius:          8px;
@@ -217,7 +221,9 @@
     --ib-training-font-size-dense: clamp(1.05rem, 1.4cqw, 2rem);
     --ib-match-font-size: clamp(1.65rem, 2.15cqw, 2.75rem);
     --ib-match-opponent-font-size: clamp(0.935rem, 1.25cqw, 1.65rem);
-    --ib-tournament-font-size: clamp(1.15rem, 1.55cqw, 2.6rem);
+    --ib-tournament-font-size: clamp(1.85rem, 2.5cqw, 2.9rem);
+    --ib-kabine-badge-width: clamp(52px, 4.8cqw, 76px);
+    --ib-tournament-kabine-badge-width: var(--ib-kabine-badge-width);
     --ib-fs-dest-label: clamp(0.6rem, 0.78cqw, 0.92rem);
     --ib-fs-dest-pitch: clamp(1.5rem, 2.1cqw, 2.8rem);
     --ib-fs-dest-room: clamp(1rem, 1.4cqw, 1.9rem);
@@ -741,29 +747,35 @@
 
 /* ─── RIGHT ZONE: Destination ───────────────────────────────────────────── */
 
+/* Canonical Screen-1 column anchors — shared by match, tournament, and training. */
+.cardKabineColumn,
+.cardDressingRoomZone {
+  padding: var(--ib-card-pad-v) var(--ib-card-pad-h);
+  border-left: 1px solid var(--ib-border);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.cardPlatzColumn,
+.cardPitchZone {
+  padding: var(--ib-card-pad-v) var(--ib-card-pad-h);
+  border-left: 1px solid var(--ib-border);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 .cardDressingRoomZone,
 .cardPitchZone {
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: var(--ib-sp-3);
-  padding: var(--ib-card-pad-v) var(--ib-card-pad-h);
-  min-width: 0;
   /* Ensure the zone has a definite height so justify-content:center works.
    * Grid items with align-self:stretch receive the grid area height, but
    * height:100% explicitly establishes a definite height for the flex
    * algorithm's justify-content calculation. */
   min-height: 0;
   height: 100%;
-  box-sizing: border-box;
-}
-
-.cardDressingRoomZone {
-  border-left: 1px solid var(--ib-border);
-}
-
-.cardPitchZone {
-  border-left: 1px solid var(--ib-border);
 }
 
 .cardPitchZone .destPitchValue {
@@ -844,13 +856,70 @@
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: var(--ib-text);
+  color: inherit;
   line-height: 1;
   /* Wrap at word boundaries; never split mid-word (e.g., KUNSTRASEN stays intact). */
   white-space: normal;
   overflow-wrap: normal;
   word-break: normal;
   max-width: 100%;
+}
+
+/* ─── Destination value badges — semantic color, value only (no icons) ─────── */
+
+.matchAllocRoom,
+.trainingGroupRoomValue,
+.participantRoomValue,
+.cardDressingRoomZone > .destRoomValue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  box-sizing: border-box;
+  min-height: clamp(34px, 3.8vh, 52px);
+  padding: clamp(6px, 0.65vh, 12px) clamp(14px, 1.35vw, 22px);
+  border-radius: var(--ib-radius-sm);
+  background: rgba(30, 91, 198, 0.22);
+  border: 1px solid rgba(30, 91, 198, 0.45);
+  color: #F0F6FC;
+  /* Canonical Kabine pill geometry — shared across TRAINING / MATCH / TOURNAMENT. */
+  width: var(--ib-kabine-badge-width);
+  min-width: var(--ib-kabine-badge-width);
+  max-width: var(--ib-kabine-badge-width);
+  line-height: 1;
+  text-align: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.destPitchValue,
+.trainingGroupPitchValue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: clamp(34px, 3.8vh, 52px);
+  padding: clamp(6px, 0.65vh, 12px) clamp(14px, 1.35vw, 22px);
+  border-radius: var(--ib-radius-sm);
+  background: rgba(26, 122, 74, 0.22);
+  border: 1px solid rgba(26, 122, 74, 0.48);
+  color: #F0F6FC;
+}
+
+.root[data-theme="light"] .matchAllocRoom,
+.root[data-theme="light"] .trainingGroupRoomValue,
+.root[data-theme="light"] .participantRoomValue,
+.root[data-theme="light"] .cardDressingRoomZone > .destRoomValue {
+  background: rgba(24, 73, 166, 0.1);
+  border-color: rgba(24, 73, 166, 0.28);
+}
+
+.root[data-theme="light"] .destPitchValue,
+.root[data-theme="light"] .trainingGroupPitchValue {
+  background: rgba(22, 122, 70, 0.12);
+  border-color: rgba(22, 122, 70, 0.32);
 }
 
 .destRoomRow {
@@ -885,15 +954,11 @@
 
 .matchAllocRoom {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: var(--ib-match-kabine-font-size, var(--ib-fs-dest-room));
+  font-size: var(--ib-match-kabine-font-size, var(--ib-kabine-font-size-fallback));
   font-weight: 700;
   text-transform: uppercase;
-  color: var(--ib-text);
-  white-space: nowrap;
-  flex-shrink: 0;
-  min-width: clamp(40px, 4vw, 60px);
+  color: inherit;
   letter-spacing: 0.02em;
-  line-height: 1.1;
 }
 
 .matchAllocRole {
@@ -935,16 +1000,15 @@
 /* ─── Tournament participant block ───────────────────────────────────────── */
 
 .participantAllocationBlock {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  grid-template-columns: var(--ib-kabine-badge-width) minmax(0, 1fr);
+  column-gap: clamp(10px, 1vw, 16px);
+  row-gap: 2px;
+  align-items: center;
 }
 
 .participantAllocationRow {
-  display: grid;
-  grid-template-columns: clamp(34px, 3vw, 52px) minmax(0, 1fr);
-  align-items: baseline;
-  column-gap: clamp(8px, 0.8vw, 14px);
+  display: contents;
 }
 
 .participantAllocationRow.homeTeamEmphasis .participantTeamName {
@@ -953,13 +1017,17 @@
 
 .participantRoomValue {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: var(--ib-tournament-kabine-font-size, clamp(1.2rem, 1.6vw, 1.9rem));
+  font-size: var(--ib-tournament-kabine-font-size, var(--ib-kabine-font-size-fallback));
   font-weight: 700;
   text-transform: uppercase;
-  color: var(--ib-text);
-  white-space: nowrap;
+  color: inherit;
   letter-spacing: 0.02em;
-  line-height: 1;
+  justify-self: start;
+}
+
+.participantRoomValue[data-multi-room="true"] {
+  width: auto;
+  max-width: 100%;
 }
 
 .participantTeamName {
@@ -1150,6 +1218,98 @@
   --ib-tournament-logo-size: var(--ib-tournament-logo-size-large);
 }
 
+/* Single-event hero — ~35–45% usable body height, content vertically composed */
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard {
+  flex: 0 0 clamp(300px, 40vh, 460px);
+  max-height: 45vh;
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .statusLabel {
+  font-size: clamp(0.95rem, 1.25vw, 1.55rem);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventTime {
+  font-size: clamp(3.4rem, 5vw, 6rem);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventEndTime {
+  font-size: clamp(1rem, 1.35vw, 1.65rem);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .cardTimeZone,
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .cardEventZone,
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .cardDressingRoomZone,
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .cardPitchZone {
+  gap: clamp(8px, 0.9vh, 14px);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .matchIdentity {
+  gap: clamp(6px, 0.75vh, 12px);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .vsLabel {
+  margin: clamp(8px, 1vh, 14px) 0;
+  font-size: clamp(0.75rem, 0.95vw, 1.15rem);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .matchAllocation {
+  gap: clamp(6px, 0.7vh, 10px);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .matchAllocRole {
+  font-size: clamp(0.72rem, 0.9vw, 1.05rem);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .destPitchValue,
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .trainingGroupPitchValue {
+  padding: clamp(8px, 0.85vh, 14px) clamp(12px, 1.2vw, 20px);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .matchAllocRoom,
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .trainingGroupRoomValue,
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .participantRoomValue {
+  padding: clamp(6px, 0.65vh, 11px) clamp(10px, 1vw, 16px);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .trainingGroupTeamName {
+  font-size: var(--ib-training-font-size);
+}
+
+/* Single-event match hero — equal home/away prominence */
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="MATCH"] .eventTeamOpponent {
+  --ib-match-team-name-base: var(--ib-match-font-size);
+  font-size: var(--ib-match-font-size);
+  font-weight: 700;
+  color: var(--ib-text);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="MATCH"] .matchClubLogo,
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="MATCH"] .matchClubLogoPlaceholder {
+  width: var(--ib-match-logo-size);
+  height: var(--ib-match-logo-size);
+  flex: 0 0 var(--ib-match-logo-size);
+}
+
+/* Single-event tournament hero — title and participant allocations scale up */
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="TOURNAMENT"] .tournamentTitle {
+  font-size: clamp(2.4rem, 3.2vw, 3.8rem);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="TOURNAMENT"] .participantTeamName {
+  font-size: clamp(1rem, 1.35vw, 1.55rem);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="TOURNAMENT"] .participantAllocationBlock {
+  gap: clamp(6px, 0.7vh, 10px);
+}
+
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="TOURNAMENT"] .tournamentClubLogo,
+.eventList[data-count="1"]:not([data-density="dense"]):not([data-density="ultra"]) .eventCard[data-type="TOURNAMENT"] .tournamentClubLogoPlaceholder {
+  width: var(--ib-tournament-logo-size-large);
+  height: var(--ib-tournament-logo-size-large);
+  flex: 0 0 var(--ib-tournament-logo-size-large);
+}
+
 /* 2 events — large balanced */
 .eventList[data-count="2"] {
   --ib-card-pad-v:  clamp(20px, 3.5vh, 40px);
@@ -1205,10 +1365,10 @@
 
 @media (max-width: 1366px) {
   .root {
-    --ib-zone-time:   16%;
-    --ib-zone-event:  42%;
-    --ib-zone-room:   24%;
-    --ib-zone-pitch:  18%;
+    --ib-zone-time:   13%;
+    --ib-zone-event:  35%;
+    --ib-zone-room:   26%;
+    --ib-zone-pitch:  26%;
     --ib-card-gap:    3px;
   }
 
@@ -1252,25 +1412,31 @@
  * EVENT + KABINE + PLATZ card columns. Each training record is a single grid
  * row — no independent column lists that can drift vertically.
  *
- * Column proportions match the approved physical-TV contract:
- *   43fr | 24fr | 18fr  (within the 85% content span)
+ * Subgrid inherits the parent eventCard column tracks (36% | 26% | 26%) so
+ * KABINE and PLATZ anchors match match/tournament cards exactly.
  */
 
 .eventCard[data-type="TRAINING"] .trainingMatrix {
   grid-column: 2 / -1;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  align-content: start;
+  grid-template-columns: subgrid;
+  grid-auto-rows: auto;
+  /* Center the complete TRAINING/KABINE/PLATZ block when the card has
+     headroom; safe center falls back to start before clipping dense groups. */
+  align-content: safe center;
   min-width: 0;
   min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
   border-right: none;
 }
 
 .trainingMatrixHeaders {
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 43fr 24fr 18fr;
+  grid-template-columns: subgrid;
   align-items: end;
-  padding: var(--ib-card-pad-v) var(--ib-card-pad-h) 0;
+  padding: var(--ib-card-pad-v) 0 0;
   column-gap: 0;
   min-width: 0;
 }
@@ -1281,7 +1447,6 @@
   align-self: start;
   justify-self: start;
   margin: 0;
-  padding: 0 0 var(--ib-training-header-gap, clamp(5px, 0.55vh, 8px));
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
   font-size: var(--ib-fs-dest-label);
   font-weight: 700;
@@ -1296,22 +1461,38 @@
 
 .trainingMatrixHeaders > .destLabel {
   color: var(--ib-training-soft);
-  padding-left: var(--ib-card-pad-h);
+}
+
+.trainingMatrixHeaders > :nth-child(1) {
+  padding: 0 var(--ib-card-pad-h) var(--ib-training-header-gap, clamp(5px, 0.55vh, 8px));
+  border-right: 1px solid var(--ib-border);
+}
+
+.trainingMatrixHeaders > :nth-child(2) {
+  padding: 0 var(--ib-card-pad-h) var(--ib-training-header-gap, clamp(5px, 0.55vh, 8px));
+  border-left: 1px solid var(--ib-border);
+}
+
+.trainingMatrixHeaders > :nth-child(3) {
+  padding: 0 var(--ib-card-pad-h) var(--ib-training-header-gap, clamp(5px, 0.55vh, 8px));
   border-left: 1px solid var(--ib-border);
 }
 
 .trainingRowMatrix {
+  grid-column: 1 / -1;
   display: grid;
+  grid-template-columns: subgrid;
   grid-auto-rows: var(--ib-training-row-height, minmax(clamp(24px, 3.2vh, 44px), auto));
   row-gap: var(--ib-training-row-gap, 0);
   align-content: start;
   min-width: 0;
-  padding: 0 var(--ib-card-pad-h) var(--ib-card-pad-v);
+  padding-bottom: var(--ib-card-pad-v);
 }
 
 .trainingMatrixRow {
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 43fr 24fr 18fr;
+  grid-template-columns: subgrid;
   align-items: center;
   min-height: var(--ib-training-row-height, clamp(24px, 3.2vh, 44px));
   min-width: 0;
@@ -1327,12 +1508,21 @@
   justify-content: flex-start;
   min-width: 0;
   min-height: inherit;
-  padding: var(--ib-training-cell-padding-y, clamp(2px, 0.35vh, 6px)) 0;
   box-sizing: border-box;
 }
 
-.trainingMatrixCell:not(:first-child) {
-  padding-left: var(--ib-card-pad-h);
+.trainingMatrixCell:nth-child(1) {
+  padding: var(--ib-training-cell-padding-y, clamp(2px, 0.35vh, 6px)) var(--ib-card-pad-h);
+  border-right: 1px solid var(--ib-border);
+}
+
+.trainingMatrixCell:nth-child(2) {
+  padding: var(--ib-training-cell-padding-y, clamp(2px, 0.35vh, 6px)) var(--ib-card-pad-h);
+  border-left: 1px solid var(--ib-border);
+}
+
+.trainingMatrixCell:nth-child(3) {
+  padding: var(--ib-training-cell-padding-y, clamp(2px, 0.35vh, 6px)) var(--ib-card-pad-h);
   border-left: 1px solid var(--ib-border);
 }
 
@@ -1398,18 +1588,13 @@
 
 .eventList[data-layout-mode="fill"] .eventCard[data-type="TRAINING"] .trainingMatrix {
   min-height: 0;
-  height: 100%;
 }
 
+/* Fill-mode training cards keep compact row tracks; the shared matrix centers
+ * as one block instead of stretching individual rows to absorb card height. */
 .eventList[data-layout-mode="fill"] .trainingRowMatrix {
   min-height: 0;
-  height: 100%;
-  grid-auto-rows: minmax(0, 1fr);
-  align-content: stretch;
-}
-
-.eventList[data-layout-mode="fill"] .trainingMatrixRow {
-  min-height: 0;
+  align-content: start;
 }
 
 /* ─── Adaptive density tiers ────────────────────────────────────────────────
@@ -1517,7 +1702,7 @@
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: var(--ib-text);
+  color: inherit;
   line-height: 1.05;
   white-space: normal;
   overflow-wrap: normal;
@@ -1527,15 +1712,11 @@
 
 .trainingGroupRoomValue {
   font-family: var(--font-display, "Barlow Condensed", sans-serif);
-  font-size: var(--ib-training-kabine-font-size, var(--ib-fs-dest-room));
+  font-size: var(--ib-training-kabine-font-size, var(--ib-kabine-font-size-fallback));
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: var(--ib-text);
-  line-height: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: inherit;
 }
 
 /* Training owns its semantic destination accents. */
@@ -1577,11 +1758,6 @@
   line-height: 1.05;
 }
 
-.eventCard[data-type="TRAINING"][data-group-density="compact"] .trainingGroupRoomValue {
-  font-size: clamp(0.9rem, 1.15vw, 1.55rem);
-  line-height: 1.05;
-}
-
 .eventCard[data-type="TRAINING"][data-group-density="dense"] .trainingMatrixHeaders {
   --ib-training-header-gap: clamp(2px, 0.35vh, 5px);
 }
@@ -1594,11 +1770,6 @@
 
 .eventCard[data-type="TRAINING"][data-group-density="dense"] .trainingGroupPitchValue {
   font-size: clamp(0.95rem, 1.25vw, 1.6rem);
-  line-height: 1.02;
-}
-
-.eventCard[data-type="TRAINING"][data-group-density="dense"] .trainingGroupRoomValue {
-  font-size: clamp(0.85rem, 1.05vw, 1.45rem);
   line-height: 1.02;
 }
 

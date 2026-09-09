@@ -376,7 +376,7 @@ describe("INFOBOARD-SCREEN1-STUDIO-01C card presentation", () => {
     expect(resolved.logoSize).toBe("LARGE");
   });
 
-  it("K: global default inheritance remains functional", () => {
+  it("K: global team font inheritance keeps kabine/platz on XLARGE Standard defaults", () => {
     const global = {
       ...DEFAULT_SCREEN1_PRESENTATION,
       matchFontSize: "SMALL" as const,
@@ -386,8 +386,8 @@ describe("INFOBOARD-SCREEN1-STUDIO-01C card presentation", () => {
     expect(resolved.kind).toBe("match");
     if (resolved.kind === "match") {
       expect(resolved.presentation.teamFontSize).toBe("SMALL");
-      expect(resolved.presentation.kabineFontSize).toBe("SMALL");
-      expect(resolved.presentation.platzFontSize).toBe("SMALL");
+      expect(resolved.presentation.kabineFontSize).toBe("XLARGE");
+      expect(resolved.presentation.platzFontSize).toBe("XLARGE");
     }
   });
 
@@ -413,7 +413,7 @@ describe("INFOBOARD-SCREEN1-STUDIO-01C card presentation", () => {
     if (resolved.kind === "match") {
       expect(resolved.presentation.teamFontSize).toBe("XLARGE");
       expect(resolved.presentation.kabineFontSize).toBe("LARGE");
-      expect(resolved.presentation.platzFontSize).toBe("SMALL");
+      expect(resolved.presentation.platzFontSize).toBe("XLARGE");
     }
   });
 });

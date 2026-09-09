@@ -70,8 +70,8 @@ export function resolveTrainingCardPresentation(
 ): ResolvedTrainingCardPresentation {
   return {
     teamFontSize: resolveSize(override?.teamFontSize, global.trainingFontSize),
-    kabineFontSize: resolveSize(override?.kabineFontSize, global.trainingFontSize),
-    platzFontSize: resolveSize(override?.platzFontSize, global.trainingFontSize),
+    kabineFontSize: resolveSize(override?.kabineFontSize, DEFAULT_TRAINING_FONT_SIZE),
+    platzFontSize: resolveSize(override?.platzFontSize, DEFAULT_TRAINING_FONT_SIZE),
     logoSize: resolveSize(override?.logoSize, global.trainingLogoSize),
     showLogos: global.trainingShowLogos,
   };
@@ -83,8 +83,8 @@ export function resolveMatchCardPresentation(
 ): ResolvedMatchCardPresentation {
   return {
     teamFontSize: resolveSize(override?.teamFontSize, global.matchFontSize),
-    kabineFontSize: resolveSize(override?.kabineFontSize, global.matchFontSize),
-    platzFontSize: resolveSize(override?.platzFontSize, global.matchFontSize),
+    kabineFontSize: resolveSize(override?.kabineFontSize, DEFAULT_MATCH_FONT_SIZE),
+    platzFontSize: resolveSize(override?.platzFontSize, DEFAULT_MATCH_FONT_SIZE),
     logoSize: resolveSize(override?.logoSize, global.matchLogoSize),
     showLogos: global.matchShowLogos,
   };
@@ -96,11 +96,8 @@ export function resolveTournamentCardPresentation(
 ): ResolvedTournamentCardPresentation {
   return {
     teamFontSize: resolveSize(override?.teamFontSize, global.tournamentFontSize),
-    kabineFontSize: resolveSize(
-      override?.kabineFontSize,
-      global.tournamentFontSize,
-    ),
-    platzFontSize: resolveSize(override?.platzFontSize, global.tournamentFontSize),
+    kabineFontSize: resolveSize(override?.kabineFontSize, DEFAULT_TOURNAMENT_FONT_SIZE),
+    platzFontSize: resolveSize(override?.platzFontSize, DEFAULT_TOURNAMENT_FONT_SIZE),
     logoSize: resolveSize(override?.logoSize, global.tournamentLogoSize),
     showLogos: global.tournamentShowLogos,
   };
