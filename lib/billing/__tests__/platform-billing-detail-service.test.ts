@@ -30,6 +30,22 @@ vi.mock("@/lib/integrations/stripe/config", () => ({
   getStripeConfigStatus: mocks.getStripeConfigStatus,
 }));
 
+vi.mock("@/lib/tenants/platform-tenant-lifecycle-service", () => ({
+  getTenantLifecycleSnapshot: vi.fn().mockResolvedValue({
+    tenantId: "t1",
+    tenantKey: "club-a",
+    tenantName: "Club A",
+    status: "ACTIVE",
+    suspendedAt: null,
+    suspensionReason: null,
+    suspensionReasonNote: null,
+    reactivatedAt: null,
+    terminatedAt: null,
+    terminationReason: null,
+    terminationReasonNote: null,
+  }),
+}));
+
 import { getPlatformTenantBillingDetail } from "../platform-billing-detail-service";
 import { StripeIntegrationError } from "@/lib/integrations/stripe/errors";
 

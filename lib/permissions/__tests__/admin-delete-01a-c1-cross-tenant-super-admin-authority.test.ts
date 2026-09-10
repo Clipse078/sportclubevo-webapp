@@ -123,7 +123,7 @@ function makePlatformSuperAdminRow(permissionKeys: string[]) {
   });
 }
 
-function activeMembership(tenantStatus: "ACTIVE" | "INACTIVE" | "ARCHIVED" = "ACTIVE") {
+function activeMembership(tenantStatus: "ACTIVE" | "SUSPENDED" | "TERMINATED" | "ARCHIVED" = "ACTIVE") {
   return { isActive: true, tenant: { status: tenantStatus } };
 }
 
@@ -272,9 +272,9 @@ describe("ADMIN-DELETE-01A-C1/C2 — SCE Super Admin cross-tenant deletion autho
       expect(result).toBe(false);
     });
 
-    it("denies when the resolved tenant's status is INACTIVE", async () => {
+    it("denies when the resolved tenant's status is SUSPENDED", async () => {
       userRoleFindMany.mockResolvedValue([makePlatformSuperAdminRow([TEAMS_DELETE])]);
-      tenantFindUnique.mockResolvedValue({ status: "INACTIVE" });
+      tenantFindUnique.mockResolvedValue({ status: "SUSPENDED" });
 
       const result = await resolver.hasTenantDeletionAuthority({
         userId: SUPER_ADMIN_USER,

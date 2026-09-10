@@ -142,7 +142,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Name darf nicht leer sein." }, { status: 400 });
   }
 
-  const validStatuses = ["ACTIVE", "INACTIVE"] as const;
+  const validStatuses = ["ACTIVE", "SUSPENDED"] as const;
   type UpdatableStatus = (typeof validStatuses)[number];
   const status: UpdatableStatus | undefined = validStatuses.includes(body?.status)
     ? (body.status as UpdatableStatus)

@@ -314,7 +314,7 @@ async function resolvePlatformRolePermissionKeys(
  *
  * Tenant operational status (RPERM-04-C1): an active TenantMembership is
  * necessary but not sufficient — the related Tenant must also be
- * operationally ACTIVE (not ARCHIVED, not INACTIVE). This is evaluated live
+ * operationally ACTIVE (not SUSPENDED, TERMINATED, or ARCHIVED). This is evaluated live
  * on every call (never cached), so archiving a tenant immediately revokes
  * every tenant permission for every member, regardless of any JWT session
  * that was issued before the archival.
@@ -339,7 +339,7 @@ async function resolveTenantPermissions(
   if (
     !membership?.isActive ||
     !membership.user.isActive ||
-    membership.tenant.status !== "ACTIVE"
+    membership.tenant.status !== "ACTIVE" // SUSPENDED / TERMINATED / ARCHIVED block tenant access
   ) {
     return new Set<string>();
   }

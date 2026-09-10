@@ -6,8 +6,10 @@ import PlatformBillingAccountCard from "@/components/admin/billing/PlatformBilli
 import PlatformBillingDetailAlerts from "@/components/admin/billing/PlatformBillingDetailAlerts";
 import PlatformBillingDetailSummary from "@/components/admin/billing/PlatformBillingDetailSummary";
 import PlatformBillingInvoiceTable from "@/components/admin/billing/PlatformBillingInvoiceTable";
+import PlatformBillingLifecyclePanel from "@/components/admin/billing/PlatformBillingLifecyclePanel";
 import PlatformBillingSubscriptionCard from "@/components/admin/billing/PlatformBillingSubscriptionCard";
 import { EmptyState } from "@/components/ui/page";
+import { canManagePlatformBilling } from "@/lib/billing/platform-billing-page-auth";
 import { getPlatformTenantBillingDetail } from "@/lib/billing/platform-billing-detail-service";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -18,7 +20,10 @@ export default async function PlatformCommercialBillingDetailPage({ params }: Pa
   await requirePermission(PERMISSIONS.BILLING_VIEW);
 
   const { tenantId } = await params;
-  const detail = await getPlatformTenantBillingDetail(tenantId);
+  const [detail, canManage] = await Promise.all([
+    getPlatformTenantBillingDetail(tenantId),
+    canManagePlatformBilling(),
+  ]);
 
   if (detail.kind === "tenant_not_found") {
     notFound();
@@ -34,6 +39,16 @@ export default async function PlatformCommercialBillingDetailPage({ params }: Pa
     </Link>
   );
 
+  const lifecyclePanel = (
+    <PlatformBillingLifecyclePanel
+      tenantKey={detail.tenant.tenantKey}
+      tenantName={detail.tenant.tenantName}
+      lifecycle={detail.lifecycle}
+      subscription={detail.kind === "detail" ? detail.subscription : null}
+      canManage={canManage}
+    />
+  );
+
   if (detail.kind === "no_billing_linkage") {
     return (
       <div className="space-y-8">
@@ -43,6 +58,7 @@ export default async function PlatformCommercialBillingDetailPage({ params }: Pa
           title={detail.tenant.tenantName}
           description="Abonnement, Rechnungen und Zahlungsstatus dieses Clubs."
         />
+        {lifecyclePanel}
         <EmptyState
           heading="Für diesen Club ist noch kein Billing-Konto verknüpft."
           description="Sobald ein Stripe-Kunde mit diesem Tenant verknüpft ist, erscheinen hier Abonnement- und Rechnungsdaten."
@@ -60,6 +76,7 @@ export default async function PlatformCommercialBillingDetailPage({ params }: Pa
           title={detail.tenant.tenantName}
           description="Abonnement, Rechnungen und Zahlungsstatus dieses Clubs."
         />
+        {lifecyclePanel}
         <div className="rounded-[var(--radius-lg)] border border-[var(--sce-warning-border)] bg-[var(--sce-warning-light)] px-4 py-3 text-sm text-[var(--sce-warning)]">
           {detail.message}
         </div>
@@ -75,6 +92,8 @@ export default async function PlatformCommercialBillingDetailPage({ params }: Pa
         title={detail.tenant.tenantName}
         description="Abonnement, Rechnungen und Zahlungsstatus dieses Clubs."
       />
+
+      {lifecyclePanel}
 
       <PlatformBillingDetailAlerts
         stripeState={detail.stripeState}
