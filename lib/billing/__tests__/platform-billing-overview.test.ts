@@ -42,6 +42,7 @@ function summary(overrides: Partial<TenantBillingSummary> = {}): TenantBillingSu
         currentPeriodStart: null,
         currentPeriodEnd: null,
         cancelAtPeriodEnd: false,
+        trialEnd: null,
       },
     ],
     latestInvoice: {

@@ -11,6 +11,7 @@ export type BillingSubscriptionSummary = {
   currentPeriodStart: string | null;
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
+  trialEnd: string | null;
 };
 
 export type BillingInvoiceSummary = {

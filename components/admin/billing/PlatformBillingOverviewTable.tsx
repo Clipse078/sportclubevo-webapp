@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
@@ -10,19 +11,15 @@ import {
   presentSubscriptionStatus,
 } from "@/lib/billing/billing-status-presentation";
 import { computeTenantMrrMinorUnits } from "@/lib/billing/billing-kpi";
+import { formatBillingDate } from "@/lib/billing/format-billing-date";
 import type { PlatformBillingTenantRow } from "@/lib/billing/platform-billing-overview-service";
 
 type PlatformBillingOverviewTableProps = {
   rows: PlatformBillingTenantRow[];
 };
 
-function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  return new Intl.DateTimeFormat("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(new Date(iso));
+function billingDetailHref(tenantId: string): string {
+  return `/dashboard/admin/commercial/billing/${tenantId}`;
 }
 
 export default function PlatformBillingOverviewTable({
@@ -98,8 +95,15 @@ export default function PlatformBillingOverviewTable({
               return (
                 <tr key={row.tenantId}>
                   <td>
-                    <div className="font-medium text-[var(--foreground)]">{row.tenantName}</div>
-                    <div className="text-xs text-[var(--muted)]">{row.tenantKey}</div>
+                    <Link
+                      href={billingDetailHref(row.tenantId)}
+                      className="group block rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                    >
+                      <div className="font-medium text-[var(--foreground)] group-hover:text-[var(--primary)]">
+                        {row.tenantName}
+                      </div>
+                      <div className="text-xs text-[var(--muted)]">{row.tenantKey}</div>
+                    </Link>
                   </td>
                   <td className="text-sm text-[var(--text-2)]">
                     {primarySub?.planName ?? "—"}
@@ -136,7 +140,7 @@ export default function PlatformBillingOverviewTable({
                       : "—"}
                   </td>
                   <td className="text-sm text-[var(--text-2)]">
-                    {formatDate(invoice?.dueDate)}
+                    {formatBillingDate(invoice?.dueDate)}
                   </td>
                 </tr>
               );
