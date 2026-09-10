@@ -209,6 +209,29 @@ describe("tenant billing read service", () => {
     expect(summary.latestInvoice?.stripeInvoiceId).toBe("in_paid");
   });
 
+  it("counts overdue open invoices from the open-invoice scan", async () => {
+    const overdue = invoice({
+      id: "in_overdue",
+      status: "open",
+      amount_remaining: 2500,
+      due_date: Math.floor(Date.now() / 1000) - 86400,
+    });
+    const future = invoice({
+      id: "in_future",
+      status: "open",
+      amount_remaining: 1000,
+      due_date: Math.floor(Date.now() / 1000) + 86400 * 30,
+    });
+
+    const stripe = makeStripeMock({
+      subscriptions: [],
+      invoicePages: [[future], [overdue]],
+    });
+
+    const summary = await getTenantBillingSummary(TENANT_ID, { stripe });
+    expect(summary.overdueOpenInvoiceCount).toBe(1);
+  });
+
   it("maps tax on invoices", async () => {
     const stripe = makeStripeMock({
       subscriptions: [],

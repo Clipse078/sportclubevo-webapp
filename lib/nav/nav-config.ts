@@ -459,6 +459,27 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
 
+  // ── Commercial (sr-only: Commercial) — platform billing & revenue ops ─────
+  {
+    sectionLabel: "Commercial",
+    items: [
+      {
+        key: "commercial",
+        label: "Commercial",
+        href: "/dashboard/admin/commercial/billing",
+        permissionKeys: [PERMISSIONS.BILLING_VIEW],
+        children: [
+          {
+            key: "commercial-billing",
+            label: "Billing",
+            href: "/dashboard/admin/commercial/billing",
+            permissionKeys: [PERMISSIONS.BILLING_VIEW],
+          },
+        ],
+      },
+    ],
+  },
+
   // ── System (sr-only: System) ────────────────────────────────────────────────
   {
     sectionLabel: "System",

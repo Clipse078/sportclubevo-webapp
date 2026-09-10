@@ -39,6 +39,8 @@ export type TenantBillingSummary = {
   subscriptions: BillingSubscriptionSummary[];
   latestInvoice: BillingInvoiceSummary | null;
   outstandingAmount: number;
+  /** Open invoices with dueDate before now (from the open-invoice scan). */
+  overdueOpenInvoiceCount: number;
   currency: string | null;
 };
 

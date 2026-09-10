@@ -31,6 +31,7 @@ const CANONICAL_FULL_ORDER = [
   "sponsoring",
   "formulare-freigaben",
   "vorfaelle-disziplin",
+  "commercial",
   "administration",
 ];
 
@@ -129,6 +130,7 @@ describe("PLATFORM-UX-01 — final sidebar order", () => {
       "Öffentliche Kanäle",
       "Führung",
       "Governance",
+      "Commercial",
       "System",
     ]);
     expect(labels).not.toContain("Betrieb");
@@ -146,13 +148,15 @@ describe("PLATFORM-UX-01 — final sidebar order", () => {
     expect(websiteIdx).toBe(0);
   });
 
-  it("places governance modules before Administration", () => {
+  it("places governance modules before Commercial and Administration", () => {
     const governance = findSection("Governance");
+    const commercial = findSection("Commercial");
     const system = findSection("System");
     expect(governance!.items.map((i) => i.key)).toEqual([
       "formulare-freigaben",
       "vorfaelle-disziplin",
     ]);
+    expect(commercial!.items.map((i) => i.key)).toEqual(["commercial"]);
     expect(system!.items.map((i) => i.key)).toEqual(["administration"]);
   });
 

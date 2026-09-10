@@ -130,6 +130,7 @@ export async function getTenantBillingSummary(
     );
 
     const outstandingInvoices = openInvoicesPage.invoices;
+    const nowMs = Date.now();
 
     return {
       tenantId: context.tenantId,
@@ -139,6 +140,12 @@ export async function getTenantBillingSummary(
       subscriptions,
       latestInvoice: latestPage.invoices[0] ?? null,
       outstandingAmount: sumOutstandingFromInvoices(outstandingInvoices),
+      overdueOpenInvoiceCount: outstandingInvoices.filter((invoice) => {
+        if (invoice.status !== "open" || !invoice.dueDate) {
+          return false;
+        }
+        return new Date(invoice.dueDate).getTime() < nowMs;
+      }).length,
       currency: pickPrimaryCurrency(
         [...latestPage.invoices, ...outstandingInvoices],
         subscriptions,
