@@ -271,3 +271,29 @@ export async function resolveTenantIdFromTenantKey(
 ): Promise<string | null> {
   return resolveTenantIdFromKey(tenantKey.trim());
 }
+
+/** Open invoices used for SCE dunning delinquency resolution (01G). */
+export async function getTenantOpenInvoicesForDelinquency(
+  tenantId: string,
+  deps?: { stripe?: Stripe },
+): Promise<BillingInvoiceSummary[]> {
+  const context = await loadTenantBillingContext(tenantId);
+  if (!context) {
+    throw new StripeIntegrationError(
+      "NO_BILLING_ACCOUNT",
+      "No billing account is linked for this tenant.",
+    );
+  }
+
+  const stripe = resolveStripe(deps);
+  try {
+    const page = await listInvoiceSummariesForCustomer(
+      stripe,
+      context.stripeCustomerId,
+      { limit: OPEN_INVOICE_SCAN_LIMIT, status: "open" },
+    );
+    return page.invoices;
+  } catch (error) {
+    throw mapStripeSdkError(error);
+  }
+}

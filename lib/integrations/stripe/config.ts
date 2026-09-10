@@ -25,6 +25,45 @@ export type StripeConfig = {
   keyMode: StripeKeyMode;
 };
 
+export type StripeWebhookConfigStatus = {
+  hasWebhookSecret: boolean;
+  providerEnabled: boolean;
+  allValid: boolean;
+};
+
+export function getStripeWebhookConfigStatus(
+  env: NodeJS.ProcessEnv = process.env,
+): StripeWebhookConfigStatus {
+  assertServerOnly();
+  const secret = env.STRIPE_WEBHOOK_SECRET?.trim();
+  const hasWebhookSecret = Boolean(secret);
+  const providerEnabled = isExternalSideEffectConfigured(
+    "stripe",
+    ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"],
+    env,
+  );
+  return {
+    hasWebhookSecret,
+    providerEnabled,
+    allValid: hasWebhookSecret && providerEnabled,
+  };
+}
+
+export function getStripeWebhookSecret(
+  env: NodeJS.ProcessEnv = process.env,
+): string {
+  assertServerOnly();
+  const status = getStripeWebhookConfigStatus(env);
+  const secret = env.STRIPE_WEBHOOK_SECRET?.trim();
+  if (!secret || !status.allValid) {
+    throw new StripeConfigurationError(
+      "STRIPE_NOT_CONFIGURED",
+      "STRIPE_WEBHOOK_SECRET is not configured.",
+    );
+  }
+  return secret;
+}
+
 function assertServerOnly(): void {
   if (typeof window !== "undefined") {
     throw new StripeConfigurationError(

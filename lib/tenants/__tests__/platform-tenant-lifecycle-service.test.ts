@@ -42,6 +42,7 @@ const baseTenant = {
   suspendedAt: null,
   suspensionReason: null,
   suspensionReasonNote: null,
+  suspensionActionSource: null,
   reactivatedAt: null,
   terminatedAt: null,
   terminationReason: null,

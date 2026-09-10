@@ -46,6 +46,17 @@ function account(overrides: Partial<TenantBillingAccountRecord> = {}): TenantBil
     linkedByUserId: ACTOR,
     createdAt: new Date("2026-09-01T00:00:00.000Z"),
     updatedAt: new Date("2026-09-01T00:00:00.000Z"),
+    dunningStatus: "CURRENT",
+    firstPaymentFailureAt: null,
+    latestPaymentFailureAt: null,
+    gracePeriodEndsAt: null,
+    automaticallySuspendedAt: null,
+    resolvedAt: null,
+    lastDunningEventAt: null,
+    dunningExemptUntil: null,
+    dunningExemptNote: null,
+    automaticDunningEnabled: true,
+    lastStripeEventId: null,
     ...overrides,
   };
 }

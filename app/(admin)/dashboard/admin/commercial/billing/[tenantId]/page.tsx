@@ -6,6 +6,7 @@ import PlatformBillingAccountCard from "@/components/admin/billing/PlatformBilli
 import PlatformBillingDetailAlerts from "@/components/admin/billing/PlatformBillingDetailAlerts";
 import PlatformBillingDetailSummary from "@/components/admin/billing/PlatformBillingDetailSummary";
 import PlatformBillingInvoiceTable from "@/components/admin/billing/PlatformBillingInvoiceTable";
+import PlatformBillingDunningPanel from "@/components/admin/billing/PlatformBillingDunningPanel";
 import PlatformBillingLifecyclePanel from "@/components/admin/billing/PlatformBillingLifecyclePanel";
 import PlatformBillingSubscriptionCard from "@/components/admin/billing/PlatformBillingSubscriptionCard";
 import { EmptyState } from "@/components/ui/page";
@@ -77,6 +78,13 @@ export default async function PlatformCommercialBillingDetailPage({ params }: Pa
           description="Abonnement, Rechnungen und Zahlungsstatus dieses Clubs."
         />
         {lifecyclePanel}
+        {detail.dunning ? (
+          <PlatformBillingDunningPanel
+            tenantKey={detail.tenant.tenantKey}
+            dunning={detail.dunning}
+            canManage={canManage}
+          />
+        ) : null}
         <div className="rounded-[var(--radius-lg)] border border-[var(--sce-warning-border)] bg-[var(--sce-warning-light)] px-4 py-3 text-sm text-[var(--sce-warning)]">
           {detail.message}
         </div>
@@ -94,6 +102,14 @@ export default async function PlatformCommercialBillingDetailPage({ params }: Pa
       />
 
       {lifecyclePanel}
+
+      {detail.dunning ? (
+        <PlatformBillingDunningPanel
+          tenantKey={detail.tenant.tenantKey}
+          dunning={detail.dunning}
+          canManage={canManage}
+        />
+      ) : null}
 
       <PlatformBillingDetailAlerts
         stripeState={detail.stripeState}

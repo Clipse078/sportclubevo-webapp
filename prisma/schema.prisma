@@ -26,6 +26,23 @@ enum TenantTerminationReason {
   OTHER
 }
 
+// SCE-SUPERADMIN-BILLING-01G — who initiated the last SCE tenant lifecycle suspension.
+enum TenantLifecycleActionSource {
+  MANUAL
+  DUNNING_AUTOMATION
+  SYSTEM
+}
+
+// SCE-SUPERADMIN-BILLING-01G — billing delinquency lifecycle (distinct from Tenant.status).
+enum BillingDunningStatus {
+  CURRENT
+  GRACE_PERIOD
+  SUSPENDED
+  RESOLVED
+  EXEMPT
+  REQUIRES_REVIEW
+}
+
 // INFOBOARD-V2: status for tenant-managed Infoboard displays
 enum InfoboardStatus {
   ACTIVE
@@ -601,6 +618,7 @@ model Tenant {
   suspendedByUserId     String?
   suspensionReason      TenantSuspensionReason?
   suspensionReasonNote  String?                 @db.VarChar(500)
+  suspensionActionSource TenantLifecycleActionSource?
   reactivatedAt         DateTime?
   reactivatedByUserId   String?
   terminatedAt          DateTime?
@@ -4081,6 +4099,7 @@ model TenantSfvConfig {
 // have no row. stripeCustomerId is globally unique across tenants.
 // CASCADE on tenantId: permanent tenant deletion removes the linkage row.
 // No invoice, subscription, payment, or amount fields — Stripe is financial SoT.
+// SCE-SUPERADMIN-BILLING-01G adds dunning metadata only (not Stripe projections).
 model TenantBillingAccount {
   id               String   @id @default(cuid())
   tenantId         String   @unique
@@ -4090,10 +4109,33 @@ model TenantBillingAccount {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  dunningStatus            BillingDunningStatus @default(CURRENT)
+  firstPaymentFailureAt    DateTime?
+  latestPaymentFailureAt   DateTime?
+  gracePeriodEndsAt        DateTime?
+  automaticallySuspendedAt DateTime?
+  resolvedAt               DateTime?
+  lastDunningEventAt       DateTime?
+  dunningExemptUntil       DateTime?
+  dunningExemptNote        String?              @db.VarChar(500)
+  automaticDunningEnabled  Boolean              @default(true)
+  lastStripeEventId        String?
+
   tenant       Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   linkedByUser User?  @relation("TenantBillingAccountLinkedBy", fields: [linkedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@index([stripeCustomerId])
+  @@index([dunningStatus, gracePeriodEndsAt])
+}
+
+// Stripe webhook idempotency — same stripeEventId must not be processed twice.
+model StripeWebhookProcessedEvent {
+  id            String   @id @default(cuid())
+  stripeEventId String   @unique
+  eventType     String
+  processedAt   DateTime @default(now())
+
+  @@index([processedAt])
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

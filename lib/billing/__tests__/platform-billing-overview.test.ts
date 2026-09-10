@@ -22,6 +22,31 @@ vi.mock("@/lib/integrations/stripe/config", () => ({
 import { getPlatformBillingOverview } from "../platform-billing-overview-service";
 import { StripeIntegrationError } from "@/lib/integrations/stripe/errors";
 
+function linkRow(
+  overrides: Partial<{
+    tenantId: string;
+    tenantKey: string;
+    tenantName: string;
+    stripeCustomerId: string;
+    dunningStatus: "CURRENT";
+    gracePeriodEndsAt: Date | null;
+    automaticDunningEnabled: boolean;
+    dunningExemptUntil: Date | null;
+  }> = {},
+) {
+  return {
+    tenantId: "t1",
+    tenantKey: "club-a",
+    tenantName: "Club A",
+    stripeCustomerId: "cus_a",
+    dunningStatus: "CURRENT" as const,
+    gracePeriodEndsAt: null,
+    automaticDunningEnabled: true,
+    dunningExemptUntil: null,
+    ...overrides,
+  };
+}
+
 function summary(overrides: Partial<TenantBillingSummary> = {}): TenantBillingSummary {
   return {
     tenantId: "t1",
@@ -92,14 +117,7 @@ describe("getPlatformBillingOverview", () => {
   });
 
   it("loads active subscription summary for linked tenant", async () => {
-    mocks.findAllLinkedTenantBillingAccounts.mockResolvedValue([
-      {
-        tenantId: "t1",
-        tenantKey: "club-a",
-        tenantName: "Club A",
-        stripeCustomerId: "cus_a",
-      },
-    ]);
+    mocks.findAllLinkedTenantBillingAccounts.mockResolvedValue([linkRow()]);
     mocks.getTenantBillingSummary.mockResolvedValue(summary());
 
     const overview = await getPlatformBillingOverview();
@@ -108,14 +126,7 @@ describe("getPlatformBillingOverview", () => {
   });
 
   it("handles tenant without subscription", async () => {
-    mocks.findAllLinkedTenantBillingAccounts.mockResolvedValue([
-      {
-        tenantId: "t1",
-        tenantKey: "club-a",
-        tenantName: "Club A",
-        stripeCustomerId: "cus_a",
-      },
-    ]);
+    mocks.findAllLinkedTenantBillingAccounts.mockResolvedValue([linkRow()]);
     mocks.getTenantBillingSummary.mockResolvedValue(
       summary({ subscriptions: [], outstandingAmount: 0, overdueOpenInvoiceCount: 0 }),
     );
@@ -126,18 +137,8 @@ describe("getPlatformBillingOverview", () => {
 
   it("aggregates paid and open invoice scenarios via summaries", async () => {
     mocks.findAllLinkedTenantBillingAccounts.mockResolvedValue([
-      {
-        tenantId: "t1",
-        tenantKey: "a",
-        tenantName: "A",
-        stripeCustomerId: "cus_a",
-      },
-      {
-        tenantId: "t2",
-        tenantKey: "b",
-        tenantName: "B",
-        stripeCustomerId: "cus_b",
-      },
+      linkRow({ tenantId: "t1", tenantKey: "a", tenantName: "A", stripeCustomerId: "cus_a" }),
+      linkRow({ tenantId: "t2", tenantKey: "b", tenantName: "B", stripeCustomerId: "cus_b" }),
     ]);
     mocks.getTenantBillingSummary
       .mockResolvedValueOnce(summary())
@@ -163,18 +164,8 @@ describe("getPlatformBillingOverview", () => {
 
   it("continues when one tenant Stripe load fails", async () => {
     mocks.findAllLinkedTenantBillingAccounts.mockResolvedValue([
-      {
-        tenantId: "t1",
-        tenantKey: "a",
-        tenantName: "A",
-        stripeCustomerId: "cus_a",
-      },
-      {
-        tenantId: "t2",
-        tenantKey: "b",
-        tenantName: "B",
-        stripeCustomerId: "cus_b",
-      },
+      linkRow({ tenantId: "t1", tenantKey: "a", tenantName: "A", stripeCustomerId: "cus_a" }),
+      linkRow({ tenantId: "t2", tenantKey: "b", tenantName: "B", stripeCustomerId: "cus_b" }),
     ]);
     mocks.getTenantBillingSummary
       .mockRejectedValueOnce(new StripeIntegrationError("STRIPE_UNAVAILABLE", "down"))
@@ -196,12 +187,7 @@ describe("getPlatformBillingOverview", () => {
       allValid: false,
     });
     mocks.findAllLinkedTenantBillingAccounts.mockResolvedValue([
-      {
-        tenantId: "t1",
-        tenantKey: "a",
-        tenantName: "A",
-        stripeCustomerId: "cus_a",
-      },
+      linkRow({ tenantId: "t1", tenantKey: "a", tenantName: "A", stripeCustomerId: "cus_a" }),
     ]);
 
     const overview = await getPlatformBillingOverview();
@@ -212,18 +198,8 @@ describe("getPlatformBillingOverview", () => {
 
   it("loads multiple linked tenants", async () => {
     mocks.findAllLinkedTenantBillingAccounts.mockResolvedValue([
-      {
-        tenantId: "t1",
-        tenantKey: "a",
-        tenantName: "A",
-        stripeCustomerId: "cus_a",
-      },
-      {
-        tenantId: "t2",
-        tenantKey: "b",
-        tenantName: "B",
-        stripeCustomerId: "cus_b",
-      },
+      linkRow({ tenantId: "t1", tenantKey: "a", tenantName: "A", stripeCustomerId: "cus_a" }),
+      linkRow({ tenantId: "t2", tenantKey: "b", tenantName: "B", stripeCustomerId: "cus_b" }),
     ]);
     mocks.getTenantBillingSummary.mockResolvedValue(summary());
 

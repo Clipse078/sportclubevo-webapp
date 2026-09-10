@@ -27,6 +27,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     tenantId,
     actorUserId: auth.actorUserId,
     undoScheduledStripeCancellation,
+    actionSource: "MANUAL",
   });
 
   if (!result.ok) {

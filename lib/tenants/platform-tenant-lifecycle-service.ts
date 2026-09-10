@@ -1,4 +1,4 @@
-import type { TenantStatus } from "@prisma/client";
+import type { TenantLifecycleActionSource, TenantStatus } from "@prisma/client";
 import { logAction } from "@/lib/audit/log-action";
 import { prisma } from "@/lib/db/prisma";
 import {
@@ -30,6 +30,7 @@ function toSnapshot(row: {
   suspendedAt: Date | null;
   suspensionReason: TenantLifecycleSnapshot["suspensionReason"];
   suspensionReasonNote: string | null;
+  suspensionActionSource: TenantLifecycleSnapshot["suspensionActionSource"];
   reactivatedAt: Date | null;
   terminatedAt: Date | null;
   terminationReason: TenantLifecycleSnapshot["terminationReason"];
@@ -43,6 +44,7 @@ function toSnapshot(row: {
     suspendedAt: row.suspendedAt?.toISOString() ?? null,
     suspensionReason: row.suspensionReason,
     suspensionReasonNote: row.suspensionReasonNote,
+    suspensionActionSource: row.suspensionActionSource,
     reactivatedAt: row.reactivatedAt?.toISOString() ?? null,
     terminatedAt: row.terminatedAt?.toISOString() ?? null,
     terminationReason: row.terminationReason,
@@ -58,6 +60,7 @@ const lifecycleSelect = {
   suspendedAt: true,
   suspensionReason: true,
   suspensionReasonNote: true,
+  suspensionActionSource: true,
   reactivatedAt: true,
   terminatedAt: true,
   terminationReason: true,
@@ -76,7 +79,7 @@ export async function getTenantLifecycleSnapshot(
 
 async function auditLifecycle(
   input: {
-    actorUserId: string;
+    actorUserId: string | null;
     tenantId: string;
     action: string;
     beforeStatus: TenantStatus;
@@ -85,7 +88,7 @@ async function auditLifecycle(
   },
 ): Promise<void> {
   void logAction({
-    actorUserId: input.actorUserId,
+    actorUserId: input.actorUserId ?? null,
     moduleKey: TENANT_LIFECYCLE_AUDIT_MODULE,
     entityType: "Tenant",
     entityId: input.tenantId,
@@ -99,10 +102,11 @@ async function auditLifecycle(
 
 export async function suspendPlatformTenant(input: {
   tenantId: string;
-  actorUserId: string;
+  actorUserId?: string | null;
   reason: "NON_PAYMENT" | "ADMINISTRATIVE" | "OTHER";
   reasonNote?: string | null;
   billingBehavior: SuspensionBillingBehavior;
+  actionSource?: TenantLifecycleActionSource;
 }): Promise<LifecycleCommandResult> {
   const tenant = await prisma.tenant.findUnique({
     where: { id: input.tenantId },
@@ -150,9 +154,10 @@ export async function suspendPlatformTenant(input: {
       data: {
         status: "SUSPENDED",
         suspendedAt: now,
-        suspendedByUserId: input.actorUserId,
+        suspendedByUserId: input.actorUserId ?? null,
         suspensionReason: input.reason,
         suspensionReasonNote: input.reasonNote?.trim() || null,
+        suspensionActionSource: input.actionSource ?? "MANUAL",
         reactivatedAt: null,
         reactivatedByUserId: null,
       },
@@ -168,6 +173,7 @@ export async function suspendPlatformTenant(input: {
       metadata: {
         suspensionReason: input.reason,
         billingBehavior: input.billingBehavior,
+        actionSource: input.actionSource ?? "MANUAL",
       },
     });
 
@@ -195,8 +201,9 @@ export async function suspendPlatformTenant(input: {
 
 export async function reactivatePlatformTenant(input: {
   tenantId: string;
-  actorUserId: string;
+  actorUserId?: string | null;
   undoScheduledStripeCancellation: boolean;
+  actionSource?: TenantLifecycleActionSource;
 }): Promise<LifecycleCommandResult> {
   const tenant = await prisma.tenant.findUnique({
     where: { id: input.tenantId },
@@ -262,19 +269,20 @@ export async function reactivatePlatformTenant(input: {
       data: {
         status: "ACTIVE",
         reactivatedAt: now,
-        reactivatedByUserId: input.actorUserId,
+        reactivatedByUserId: input.actorUserId ?? null,
       },
       select: lifecycleSelect,
     });
 
     await auditLifecycle({
-      actorUserId: input.actorUserId,
+      actorUserId: input.actorUserId ?? null,
       tenantId: input.tenantId,
       action: TENANT_LIFECYCLE_AUDIT_ACTIONS.REACTIVATED,
       beforeStatus: tenant.status,
       afterStatus: "ACTIVE",
       metadata: {
         undoScheduledStripeCancellation: input.undoScheduledStripeCancellation,
+        actionSource: input.actionSource ?? "MANUAL",
       },
     });
 
