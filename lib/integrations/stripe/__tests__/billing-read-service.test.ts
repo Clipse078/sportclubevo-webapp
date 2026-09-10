@@ -29,6 +29,7 @@ vi.mock("@/lib/db/prisma", () => ({
 import {
   getStripeInvoiceForTenant,
   getTenantBillingSummary,
+  getTenantInvoiceHistory,
   getTenantInvoices,
   getTenantSubscriptions,
 } from "../billing-read-service";
@@ -309,6 +310,27 @@ describe("tenant billing read service", () => {
     await expect(getTenantSubscriptions(TENANT_ID, { stripe })).rejects.toMatchObject({
       code: "STRIPE_UNAVAILABLE",
     });
+  });
+
+  it("returns invoice history newest-first with default limit", async () => {
+    const stripe = makeStripeMock({
+      invoices: [
+        invoice({
+          id: "in_old",
+          created: 1_600_000_000,
+          number: "OLD",
+        }),
+        invoice({
+          id: "in_new",
+          created: 1_700_000_000,
+          number: "NEW",
+        }),
+      ],
+    });
+
+    const page = await getTenantInvoiceHistory({ tenantId: TENANT_ID, stripe });
+    expect(page.invoices[0]?.number).toBe("NEW");
+    expect(page.invoices[1]?.number).toBe("OLD");
   });
 
   it("never accepts caller-supplied customer id (queries linked cus_* only)", async () => {

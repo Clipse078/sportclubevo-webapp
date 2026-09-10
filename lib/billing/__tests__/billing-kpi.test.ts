@@ -26,6 +26,7 @@ function sub(
     currentPeriodStart: null,
     currentPeriodEnd: null,
     cancelAtPeriodEnd: false,
+    trialEnd: null,
     ...overrides,
   };
 }

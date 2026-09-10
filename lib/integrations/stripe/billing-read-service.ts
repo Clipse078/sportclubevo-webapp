@@ -178,6 +178,22 @@ export async function getTenantSubscriptions(
   }
 }
 
+export async function getTenantInvoiceHistory(input: {
+  tenantId: string;
+  limit?: number;
+  startingAfter?: string;
+  stripe?: Stripe;
+}): Promise<BillingInvoiceListPage> {
+  const page = await getTenantInvoices(input);
+  const invoices = [...page.invoices].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+  return {
+    ...page,
+    invoices,
+  };
+}
+
 export async function getTenantInvoices(input: {
   tenantId: string;
   limit?: number;

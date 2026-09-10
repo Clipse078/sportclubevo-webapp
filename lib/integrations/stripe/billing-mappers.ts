@@ -51,6 +51,7 @@ export function mapStripeSubscription(
     currentPeriodStart: unixToIso(item?.current_period_start),
     currentPeriodEnd: unixToIso(item?.current_period_end),
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    trialEnd: unixToIso(subscription.trial_end),
   };
 }
 

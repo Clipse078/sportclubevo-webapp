@@ -23,6 +23,25 @@ const loadedRow: PlatformBillingTenantRow = {
 };
 
 describe("PlatformBillingOverviewTable", () => {
+  it("links loaded rows to billing detail by tenant id", () => {
+    render(<PlatformBillingOverviewTable rows={[loadedRow]} />);
+    const link = screen.getByRole("link", { name: /Demo Club/i });
+    expect(link).toHaveAttribute("href", "/dashboard/admin/commercial/billing/t1");
+  });
+
+  it("does not link error rows", () => {
+    const errorRow: PlatformBillingTenantRow = {
+      kind: "error",
+      tenantId: "t2",
+      tenantKey: "bad",
+      tenantName: "Broken Club",
+      errorCode: "STRIPE_UNAVAILABLE",
+      message: "Billing-Daten konnten nicht geladen werden.",
+    };
+    render(<PlatformBillingOverviewTable rows={[errorRow]} />);
+    expect(screen.queryByRole("link", { name: /Broken Club/i })).not.toBeInTheDocument();
+  });
+
   it("renders empty subscription and invoice states", () => {
     render(<PlatformBillingOverviewTable rows={[loadedRow]} />);
     expect(screen.getByText("Demo Club")).toBeInTheDocument();
