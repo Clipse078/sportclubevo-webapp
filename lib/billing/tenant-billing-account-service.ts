@@ -21,7 +21,6 @@ import {
 
 export { BillingValidationError } from "./stripe-customer-id";
 export {
-  BillingAccountNotFoundError,
   BillingCustomerAlreadyLinkedError,
   BillingTenantNotFoundError,
 } from "./tenant-billing-account-types";
