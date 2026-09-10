@@ -89,6 +89,8 @@ async function main() {
     // ADMIN-DELETE-TENANT-01: SCE Super Admin only. Highest-impact platform operation.
     // Deliberately NOT grantable by club admins — only platform super_admin holds it.
     { key: "tenants.delete", name: "Permanently delete tenants", module: PermissionModule.TENANTS, scope: PermissionScope.PLATFORM, grantableByAdmin: false },
+    { key: "billing.view", name: "View platform billing linkage", module: PermissionModule.BILLING, scope: PermissionScope.PLATFORM, grantableByAdmin: false },
+    { key: "billing.manage", name: "Manage platform billing linkage", module: PermissionModule.BILLING, scope: PermissionScope.PLATFORM, grantableByAdmin: false },
 
     // ── RPERM-02: new user-management keys ────────────────────────────────
     { key: "users.view", name: "View users", module: PermissionModule.USERS, scope: PermissionScope.TENANT, grantableByAdmin: true },

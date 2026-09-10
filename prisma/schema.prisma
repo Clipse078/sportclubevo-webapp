@@ -65,6 +65,7 @@ enum PermissionModule {
   TEMPLATES
   REGISTRATIONS
   TENANTS
+  BILLING
   ORG
   FACILITIES
   WORKSPACE
@@ -667,6 +668,9 @@ model Tenant {
   // SFV Integration — Slice: Tenant-Scoped SFV Configuration
   // One config per tenant (@@unique on tenantId). Null when not configured.
   sfvConfig                        TenantSfvConfig?
+  /// SCE-SUPERADMIN-BILLING-01B: optional Stripe customer linkage (1:1).
+  /// Financial truth remains in Stripe; this row stores the platform operator link only.
+  billingAccount                   TenantBillingAccount?
   teamExternalMappings             TeamExternalMapping[]
   matchExternalMappings            MatchExternalMapping[]
   // ADMIN-DELETE-02A-C1: intentionally-deleted SFV match suppression — see
@@ -840,6 +844,8 @@ model User {
   createdCommunicationMessages CommunicationMessage[] @relation("CommunicationMessageCreatedBy")
   authoredInternalComments     InternalComment[]      @relation("InternalCommentAuthor")
   commentMentionsReceived      CommentMention[]       @relation("CommentMentionUser")
+
+  linkedTenantBillingAccounts TenantBillingAccount[] @relation("TenantBillingAccountLinkedBy")
 
   @@index([isActive])
   @@index([tenantId])
@@ -4034,6 +4040,27 @@ model TenantSfvConfig {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@index([enabled])
+}
+
+// SCE-SUPERADMIN-BILLING-01B — Platform billing linkage (Stripe customer id only).
+//
+// One active billing account per tenant (@@unique on tenantId). Unlinked tenants
+// have no row. stripeCustomerId is globally unique across tenants.
+// CASCADE on tenantId: permanent tenant deletion removes the linkage row.
+// No invoice, subscription, payment, or amount fields — Stripe is financial SoT.
+model TenantBillingAccount {
+  id               String   @id @default(cuid())
+  tenantId         String   @unique
+  stripeCustomerId String   @unique
+  linkedAt         DateTime @default(now())
+  linkedByUserId   String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  tenant       Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  linkedByUser User?  @relation("TenantBillingAccountLinkedBy", fields: [linkedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([stripeCustomerId])
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

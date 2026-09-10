@@ -143,6 +143,9 @@ export const PERMISSIONS = {
   TENANTS_VIEW: "tenants.view",
   TENANTS_MANAGE: "tenants.manage",
 
+  BILLING_VIEW: "billing.view",
+  BILLING_MANAGE: "billing.manage",
+
   ORG_VIEW: "org.view",
   ORG_MANAGE: "org.manage",
   // ADMIN-DELETE-ORG-01: canonical permanent-deletion permission for OrgUnit
