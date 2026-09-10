@@ -9,6 +9,17 @@ const billingAccountSelect = {
   linkedByUserId: true,
   createdAt: true,
   updatedAt: true,
+  dunningStatus: true,
+  firstPaymentFailureAt: true,
+  latestPaymentFailureAt: true,
+  gracePeriodEndsAt: true,
+  automaticallySuspendedAt: true,
+  resolvedAt: true,
+  lastDunningEventAt: true,
+  dunningExemptUntil: true,
+  dunningExemptNote: true,
+  automaticDunningEnabled: true,
+  lastStripeEventId: true,
 } as const;
 
 export async function findBillingAccountByTenantId(
@@ -91,7 +102,53 @@ export type LinkedTenantBillingAccountRow = {
   tenantKey: string;
   tenantName: string;
   stripeCustomerId: string;
+  dunningStatus: import("@prisma/client").BillingDunningStatus;
+  gracePeriodEndsAt: Date | null;
+  automaticDunningEnabled: boolean;
+  dunningExemptUntil: Date | null;
 };
+
+export async function updateTenantBillingAccountDunning(
+  tenantId: string,
+  data: import("@prisma/client").Prisma.TenantBillingAccountUpdateInput,
+): Promise<TenantBillingAccountRecord> {
+  return prisma.tenantBillingAccount.update({
+    where: { tenantId },
+    data,
+    select: billingAccountSelect,
+  });
+}
+
+export async function findGracePeriodBillingAccountsDue(
+  now: Date,
+  take: number,
+): Promise<TenantBillingAccountRecord[]> {
+  return prisma.tenantBillingAccount.findMany({
+    where: {
+      dunningStatus: "GRACE_PERIOD",
+      gracePeriodEndsAt: { lte: now },
+      automaticDunningEnabled: true,
+    },
+    select: billingAccountSelect,
+    orderBy: { gracePeriodEndsAt: "asc" },
+    take,
+  });
+}
+
+export async function findBillingAccountsForDunningReconciliation(
+  take: number,
+  skip: number,
+): Promise<TenantBillingAccountRecord[]> {
+  return prisma.tenantBillingAccount.findMany({
+    where: {
+      dunningStatus: { in: ["GRACE_PERIOD", "SUSPENDED", "REQUIRES_REVIEW", "RESOLVED"] },
+    },
+    select: billingAccountSelect,
+    orderBy: { updatedAt: "asc" },
+    take,
+    skip,
+  });
+}
 
 /** All tenants with a TenantBillingAccount row (bounded platform billing universe). */
 export async function findAllLinkedTenantBillingAccounts(): Promise<
@@ -100,6 +157,10 @@ export async function findAllLinkedTenantBillingAccounts(): Promise<
   const rows = await prisma.tenantBillingAccount.findMany({
     select: {
       stripeCustomerId: true,
+      dunningStatus: true,
+      gracePeriodEndsAt: true,
+      automaticDunningEnabled: true,
+      dunningExemptUntil: true,
       tenant: {
         select: { id: true, key: true, name: true },
       },
@@ -112,5 +173,9 @@ export async function findAllLinkedTenantBillingAccounts(): Promise<
     tenantKey: row.tenant.key,
     tenantName: row.tenant.name,
     stripeCustomerId: row.stripeCustomerId,
+    dunningStatus: row.dunningStatus,
+    gracePeriodEndsAt: row.gracePeriodEndsAt,
+    automaticDunningEnabled: row.automaticDunningEnabled,
+    dunningExemptUntil: row.dunningExemptUntil,
   }));
 }

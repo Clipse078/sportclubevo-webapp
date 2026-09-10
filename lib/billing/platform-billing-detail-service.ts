@@ -19,6 +19,8 @@ import {
   toSafePublicStripeError,
 } from "@/lib/integrations/stripe/errors";
 import { prisma } from "@/lib/db/prisma";
+import { toDunningSnapshot } from "@/lib/billing/dunning-snapshot";
+import type { TenantDunningSnapshot } from "@/lib/billing/dunning-types";
 import type { TenantLifecycleSnapshot } from "@/lib/tenants/tenant-lifecycle-types";
 import { getTenantLifecycleSnapshot } from "@/lib/tenants/platform-tenant-lifecycle-service";
 
@@ -71,23 +73,28 @@ export type PlatformBillingAccountInfo = {
 
 export type PlatformBillingLifecycleInfo = TenantLifecycleSnapshot;
 
+export type PlatformBillingDunningInfo = TenantDunningSnapshot;
+
 export type PlatformTenantBillingDetail =
   | { kind: "tenant_not_found" }
   | {
       kind: "no_billing_linkage";
       tenant: PlatformBillingTenantInfo;
       lifecycle: PlatformBillingLifecycleInfo;
+      dunning: null;
     }
   | {
       kind: "invalid_linkage";
       tenant: PlatformBillingTenantInfo;
       lifecycle: PlatformBillingLifecycleInfo;
+      dunning: PlatformBillingDunningInfo;
       message: string;
     }
   | {
       kind: "detail";
       tenant: PlatformBillingTenantInfo;
       lifecycle: PlatformBillingLifecycleInfo;
+      dunning: PlatformBillingDunningInfo;
       stripeState: PlatformBillingStripeState;
       billingAccount: PlatformBillingAccountInfo;
       summary: PlatformBillingDetailSummary | null;
@@ -219,14 +226,20 @@ export async function getPlatformTenantBillingDetail(
 
   const account = await findBillingAccountByTenantId(tenantId);
   if (!account) {
-    return { kind: "no_billing_linkage", tenant: tenantInfo, lifecycle };
+    return { kind: "no_billing_linkage", tenant: tenantInfo, lifecycle, dunning: null };
   }
+
+  const dunning = toDunningSnapshot(
+    account,
+    account.dunningStatus === "REQUIRES_REVIEW",
+  );
 
   if (!isValidStripeCustomerId(account.stripeCustomerId)) {
     return {
       kind: "invalid_linkage",
       tenant: tenantInfo,
       lifecycle,
+      dunning,
       message: "Die gespeicherte Stripe-Verknüpfung ist ungültig.",
     };
   }
@@ -243,6 +256,7 @@ export async function getPlatformTenantBillingDetail(
       kind: "detail",
       tenant: tenantInfo,
       lifecycle,
+      dunning,
       stripeState,
       billingAccount,
       summary: null,
@@ -284,6 +298,7 @@ export async function getPlatformTenantBillingDetail(
         kind: "detail",
         tenant: tenantInfo,
         lifecycle,
+        dunning,
         stripeState: {
           kind:
             error.code === "STRIPE_NOT_CONFIGURED" ? "not_configured" : "misconfigured",
@@ -306,7 +321,7 @@ export async function getPlatformTenantBillingDetail(
       error instanceof StripeIntegrationError &&
       error.code === "NO_BILLING_ACCOUNT"
     ) {
-      return { kind: "no_billing_linkage", tenant: tenantInfo, lifecycle };
+      return { kind: "no_billing_linkage", tenant: tenantInfo, lifecycle, dunning: null };
     }
     degradedMessage =
       "Billing-Daten konnten momentan nicht vollständig geladen werden.";
@@ -337,6 +352,7 @@ export async function getPlatformTenantBillingDetail(
     kind: "detail",
     tenant: tenantInfo,
     lifecycle,
+    dunning,
     stripeState,
     billingAccount,
     summary,

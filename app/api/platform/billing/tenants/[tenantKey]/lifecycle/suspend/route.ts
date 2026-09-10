@@ -47,6 +47,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     reason: reason as "NON_PAYMENT" | "ADMINISTRATIVE" | "OTHER",
     reasonNote,
     billingBehavior: billingBehavior as SuspensionBillingBehavior,
+    actionSource: "MANUAL",
   });
 
   if (!result.ok) {

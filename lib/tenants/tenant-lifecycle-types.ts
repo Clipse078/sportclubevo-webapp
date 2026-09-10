@@ -1,4 +1,5 @@
 import type {
+  TenantLifecycleActionSource,
   TenantStatus,
   TenantSuspensionReason,
   TenantTerminationReason,
@@ -22,6 +23,7 @@ export type TenantLifecycleSnapshot = {
   suspendedAt: string | null;
   suspensionReason: TenantSuspensionReason | null;
   suspensionReasonNote: string | null;
+  suspensionActionSource: TenantLifecycleActionSource | null;
   reactivatedAt: string | null;
   terminatedAt: string | null;
   terminationReason: TenantTerminationReason | null;

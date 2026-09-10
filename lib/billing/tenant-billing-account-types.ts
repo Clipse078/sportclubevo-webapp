@@ -1,3 +1,5 @@
+import type { BillingDunningStatus } from "@prisma/client";
+
 export type TenantBillingAccountRecord = {
   id: string;
   tenantId: string;
@@ -6,6 +8,17 @@ export type TenantBillingAccountRecord = {
   linkedByUserId: string | null;
   createdAt: Date;
   updatedAt: Date;
+  dunningStatus: BillingDunningStatus;
+  firstPaymentFailureAt: Date | null;
+  latestPaymentFailureAt: Date | null;
+  gracePeriodEndsAt: Date | null;
+  automaticallySuspendedAt: Date | null;
+  resolvedAt: Date | null;
+  lastDunningEventAt: Date | null;
+  dunningExemptUntil: Date | null;
+  dunningExemptNote: string | null;
+  automaticDunningEnabled: boolean;
+  lastStripeEventId: string | null;
 };
 
 export type LinkTenantStripeCustomerInput = {

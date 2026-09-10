@@ -39,6 +39,7 @@ vi.mock("@/lib/tenants/platform-tenant-lifecycle-service", () => ({
     suspendedAt: null,
     suspensionReason: null,
     suspensionReasonNote: null,
+    suspensionActionSource: null,
     reactivatedAt: null,
     terminatedAt: null,
     terminationReason: null,
@@ -103,6 +104,17 @@ beforeEach(() => {
     linkedByUserId: "u1",
     createdAt: new Date("2025-01-01T00:00:00.000Z"),
     updatedAt: new Date("2025-01-01T00:00:00.000Z"),
+    dunningStatus: "CURRENT",
+    firstPaymentFailureAt: null,
+    latestPaymentFailureAt: null,
+    gracePeriodEndsAt: null,
+    automaticallySuspendedAt: null,
+    resolvedAt: null,
+    lastDunningEventAt: null,
+    dunningExemptUntil: null,
+    dunningExemptNote: null,
+    automaticDunningEnabled: true,
+    lastStripeEventId: null,
   });
 });
 

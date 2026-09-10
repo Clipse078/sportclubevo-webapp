@@ -1,4 +1,6 @@
 import { findAllLinkedTenantBillingAccounts } from "@/lib/billing/tenant-billing-account-repository";
+import { resolveEffectiveDunningStatus } from "@/lib/billing/dunning-snapshot";
+import type { BillingDunningStatus } from "@prisma/client";
 import {
   aggregatePlatformBillingKpis,
   type PlatformBillingKpis,
@@ -26,6 +28,8 @@ export type PlatformBillingTenantRow =
       tenantKey: string;
       tenantName: string;
       summary: TenantBillingSummary;
+      dunningStatus: BillingDunningStatus;
+      gracePeriodEndsAt: string | null;
     }
   | {
       kind: "error";
@@ -130,12 +134,18 @@ export async function getPlatformBillingOverview(): Promise<PlatformBillingOverv
   const rows = await runWithConcurrency(links, DEFAULT_CONCURRENCY, async (link) => {
     try {
       const summary = await getTenantBillingSummary(link.tenantId);
+      const dunningStatus = resolveEffectiveDunningStatus({
+        dunningStatus: link.dunningStatus,
+        dunningExemptUntil: link.dunningExemptUntil,
+      });
       return {
         kind: "loaded" as const,
         tenantId: link.tenantId,
         tenantKey: link.tenantKey,
         tenantName: link.tenantName,
         summary,
+        dunningStatus,
+        gracePeriodEndsAt: link.gracePeriodEndsAt?.toISOString() ?? null,
       };
     } catch (error) {
       if (error instanceof StripeConfigurationError) {

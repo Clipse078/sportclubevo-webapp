@@ -12,6 +12,11 @@ import {
 } from "@/lib/billing/billing-status-presentation";
 import { computeTenantMrrMinorUnits } from "@/lib/billing/billing-kpi";
 import { formatBillingDate } from "@/lib/billing/format-billing-date";
+import {
+  presentDunningBadgeTone,
+  presentDunningStatusLabel,
+  presentOverviewDunningPriority,
+} from "@/lib/billing/dunning-presentation";
 import type { PlatformBillingTenantRow } from "@/lib/billing/platform-billing-overview-service";
 
 type PlatformBillingOverviewTableProps = {
@@ -103,6 +108,25 @@ export default function PlatformBillingOverviewTable({
                         {row.tenantName}
                       </div>
                       <div className="text-xs text-[var(--muted)]">{row.tenantKey}</div>
+                      {(() => {
+                        const priority = presentOverviewDunningPriority(row.dunningStatus);
+                        if (priority === "healthy") {
+                          return null;
+                        }
+                        return (
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <BillingStatusBadge
+                              label={presentDunningStatusLabel(row.dunningStatus)}
+                              tone={presentDunningBadgeTone(row.dunningStatus)}
+                            />
+                            {row.gracePeriodEndsAt && row.dunningStatus === "GRACE_PERIOD" ? (
+                              <span className="text-xs text-[var(--text-2)]">
+                                Frist {formatBillingDate(row.gracePeriodEndsAt)}
+                              </span>
+                            ) : null}
+                          </div>
+                        );
+                      })()}
                     </Link>
                   </td>
                   <td className="text-sm text-[var(--text-2)]">
