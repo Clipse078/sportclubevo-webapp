@@ -8,8 +8,22 @@ datasource db {
 
 enum TenantStatus {
   ACTIVE
-  INACTIVE
+  SUSPENDED
+  TERMINATED
   ARCHIVED
+}
+
+enum TenantSuspensionReason {
+  NON_PAYMENT
+  ADMINISTRATIVE
+  OTHER
+}
+
+enum TenantTerminationReason {
+  CONTRACT_ENDED
+  CUSTOMER_REQUEST
+  ADMINISTRATIVE
+  OTHER
 }
 
 // INFOBOARD-V2: status for tenant-managed Infoboard displays
@@ -582,6 +596,22 @@ model Tenant {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
+  // SCE-SUPERADMIN-BILLING-01F — commercial access lifecycle (distinct from Stripe subscription state).
+  suspendedAt           DateTime?
+  suspendedByUserId     String?
+  suspensionReason      TenantSuspensionReason?
+  suspensionReasonNote  String?                 @db.VarChar(500)
+  reactivatedAt         DateTime?
+  reactivatedByUserId   String?
+  terminatedAt          DateTime?
+  terminatedByUserId    String?
+  terminationReason     TenantTerminationReason?
+  terminationReasonNote String?                 @db.VarChar(500)
+
+  suspendedByUser   User? @relation("TenantSuspendedBy", fields: [suspendedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  reactivatedByUser User? @relation("TenantReactivatedBy", fields: [reactivatedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  terminatedByUser  User? @relation("TenantTerminatedBy", fields: [terminatedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
   // Config v1 — Slice 10.2
   // String fields are nullable: no opinionated DB default for white-label safety.
   // Seed sets explicit values for fc-allschwil. New tenants start with nulls.
@@ -846,6 +876,9 @@ model User {
   commentMentionsReceived      CommentMention[]       @relation("CommentMentionUser")
 
   linkedTenantBillingAccounts TenantBillingAccount[] @relation("TenantBillingAccountLinkedBy")
+  tenantsSuspended          Tenant[]                 @relation("TenantSuspendedBy")
+  tenantsReactivated        Tenant[]                 @relation("TenantReactivatedBy")
+  tenantsTerminated         Tenant[]                 @relation("TenantTerminatedBy")
 
   @@index([isActive])
   @@index([tenantId])

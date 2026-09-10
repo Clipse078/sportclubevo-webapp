@@ -94,7 +94,7 @@ function makeUserRoleRow(opts: {
   };
 }
 
-function activeMembership(tenantStatus: "ACTIVE" | "INACTIVE" | "ARCHIVED" = "ACTIVE") {
+function activeMembership(tenantStatus: "ACTIVE" | "SUSPENDED" | "TERMINATED" | "ARCHIVED" = "ACTIVE") {
   return { isActive: true, tenant: { status: tenantStatus } };
 }
 

@@ -35,7 +35,7 @@
  * TENANT OPERATIONAL STATUS (RPERM-04-C1)
  *   TS-01 Active membership + ACTIVE tenant → granted
  *   TS-02 Active membership + ARCHIVED tenant → denied
- *   TS-03 Active membership + INACTIVE tenant → denied
+ *   TS-03 Active membership + SUSPENDED tenant → denied
  *   TS-04 Inactive membership + ACTIVE tenant → denied (membership gate still applies)
  *   TS-05 Archived-tenant denial short-circuits before the UserRole query
  *
@@ -116,7 +116,7 @@ function makeUserRoleRow(opts: {
  * tenant by default (RPERM-04-C1: the resolver now selects the related
  * Tenant.status alongside TenantMembership.isActive).
  */
-function activeMembership(tenantStatus: "ACTIVE" | "INACTIVE" | "ARCHIVED" = "ACTIVE") {
+function activeMembership(tenantStatus: "ACTIVE" | "SUSPENDED" | "TERMINATED" | "ARCHIVED" = "ACTIVE") {
   return {
     isActive: true,
     tenant: { status: tenantStatus },
@@ -125,7 +125,7 @@ function activeMembership(tenantStatus: "ACTIVE" | "INACTIVE" | "ARCHIVED" = "AC
 }
 
 /** Inactive tenant membership fixture. */
-function inactiveMembership(tenantStatus: "ACTIVE" | "INACTIVE" | "ARCHIVED" = "ACTIVE") {
+function inactiveMembership(tenantStatus: "ACTIVE" | "SUSPENDED" | "TERMINATED" | "ARCHIVED" = "ACTIVE") {
   return {
     isActive: false,
     tenant: { status: tenantStatus },
@@ -643,9 +643,9 @@ describe("EffectivePermissionResolver", () => {
     });
   });
 
-  describe("TS-03: active membership + INACTIVE tenant → denied", () => {
-    it("returns false when the related tenant status is INACTIVE (not just ARCHIVED)", async () => {
-      tenantMembershipFindUnique.mockResolvedValue(activeMembership("INACTIVE"));
+  describe("TS-03: active membership + SUSPENDED tenant → denied", () => {
+    it("returns false when the related tenant status is SUSPENDED (not just ARCHIVED)", async () => {
+      tenantMembershipFindUnique.mockResolvedValue(activeMembership("SUSPENDED"));
       userRoleFindMany.mockResolvedValue([
         makeUserRoleRow({
           roleScope: "TENANT",

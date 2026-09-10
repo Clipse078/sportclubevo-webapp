@@ -15,7 +15,7 @@ type TenantFormProps = {
 
 const STATUS_OPTIONS = [
   { value: "ACTIVE", label: "Aktiv" },
-  { value: "INACTIVE", label: "Inaktiv" },
+  { value: "SUSPENDED", label: "Gesperrt" },
 ] as const;
 
 export default function TenantForm({ mode, tenantKey, defaultValues }: TenantFormProps) {

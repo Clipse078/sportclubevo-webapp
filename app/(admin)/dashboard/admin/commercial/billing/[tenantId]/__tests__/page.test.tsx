@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   requirePermission: vi.fn(),
   getPlatformTenantBillingDetail: vi.fn(),
+  canManagePlatformBilling: vi.fn(),
   notFound: vi.fn(),
 }));
 
@@ -12,6 +13,10 @@ vi.mock("@/lib/permissions/require-permission", () => ({
 
 vi.mock("@/lib/billing/platform-billing-detail-service", () => ({
   getPlatformTenantBillingDetail: mocks.getPlatformTenantBillingDetail,
+}));
+
+vi.mock("@/lib/billing/platform-billing-page-auth", () => ({
+  canManagePlatformBilling: mocks.canManagePlatformBilling,
 }));
 
 vi.mock("next/navigation", () => ({
@@ -24,9 +29,23 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.requirePermission.mockResolvedValue({ user: { id: "platform-admin" } });
+  mocks.canManagePlatformBilling.mockResolvedValue(false);
   mocks.getPlatformTenantBillingDetail.mockResolvedValue({
     kind: "detail",
     tenant: { tenantId: "t1", tenantKey: "club", tenantName: "Club" },
+    lifecycle: {
+      tenantId: "t1",
+      tenantKey: "club",
+      tenantName: "Club",
+      status: "ACTIVE",
+      suspendedAt: null,
+      suspensionReason: null,
+      suspensionReasonNote: null,
+      reactivatedAt: null,
+      terminatedAt: null,
+      terminationReason: null,
+      terminationReasonNote: null,
+    },
     stripeState: { kind: "ready" },
     billingAccount: { linkageStatus: "linked", linkedAt: null, currency: "chf" },
     summary: null,

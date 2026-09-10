@@ -20,7 +20,7 @@
  * MEMBERSHIP/ROLE VALIDITY
  *   OA-V-01  Inactive TenantMembership → denied
  *   OA-V-02  Archived tenant → denied
- *   OA-V-03  Inactive tenant (INACTIVE status) → denied
+ *   OA-V-03  Inactive tenant (SUSPENDED status) → denied
  *   OA-V-04  Archived role → excluded from grant
  *
  * TENANT ISOLATION
@@ -85,7 +85,7 @@ function makeMockPrisma(overrides: {
 // Fixture helpers
 // ---------------------------------------------------------------------------
 
-function activeMembership(tenantStatus: "ACTIVE" | "INACTIVE" | "ARCHIVED" = "ACTIVE") {
+function activeMembership(tenantStatus: "ACTIVE" | "SUSPENDED" | "TERMINATED" | "ARCHIVED" = "ACTIVE") {
   return { isActive: true, tenant: { status: tenantStatus } };
 }
 
@@ -361,9 +361,9 @@ describe("OrgUnitPermissionResolver.hasPermissionInOrgUnit", () => {
       ).resolves.toBe(false);
     });
 
-    it("OA-V-03: INACTIVE tenant → denied", async () => {
+    it("OA-V-03: SUSPENDED tenant → denied", async () => {
       const prisma = makeMockPrisma({
-        tenantMembershipFindUnique: vi.fn().mockResolvedValue(activeMembership("INACTIVE")),
+        tenantMembershipFindUnique: vi.fn().mockResolvedValue(activeMembership("SUSPENDED")),
         userRoleFindMany: vi.fn().mockResolvedValue([
           makeUserRoleWithPerm({ orgUnitId: null, scopeMode: null, permissionKey: PERM }),
         ]),

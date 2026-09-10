@@ -22,7 +22,8 @@ type TenantListProps = {
 function TenantStatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; bg: string; color: string }> = {
     ACTIVE: { label: "Aktiv", bg: "rgba(16,185,129,0.12)", color: "#10b981" },
-    INACTIVE: { label: "Inaktiv", bg: "rgba(156,163,175,0.12)", color: "var(--muted)" },
+    SUSPENDED: { label: "Gesperrt", bg: "rgba(156,163,175,0.12)", color: "var(--muted)" },
+    TERMINATED: { label: "Beendet", bg: "rgba(239,68,68,0.08)", color: "#ef4444" },
     ARCHIVED: { label: "Archiviert", bg: "rgba(239,68,68,0.08)", color: "#ef4444" },
   };
   const cfg = map[status] ?? { label: status, bg: "var(--surface-3)", color: "var(--muted)" };

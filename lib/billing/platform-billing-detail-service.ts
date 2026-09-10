@@ -19,6 +19,8 @@ import {
   toSafePublicStripeError,
 } from "@/lib/integrations/stripe/errors";
 import { prisma } from "@/lib/db/prisma";
+import type { TenantLifecycleSnapshot } from "@/lib/tenants/tenant-lifecycle-types";
+import { getTenantLifecycleSnapshot } from "@/lib/tenants/platform-tenant-lifecycle-service";
 
 export type PlatformBillingTenantInfo = {
   tenantId: string;
@@ -67,13 +69,25 @@ export type PlatformBillingAccountInfo = {
   currency: string | null;
 };
 
+export type PlatformBillingLifecycleInfo = TenantLifecycleSnapshot;
+
 export type PlatformTenantBillingDetail =
   | { kind: "tenant_not_found" }
-  | { kind: "no_billing_linkage"; tenant: PlatformBillingTenantInfo }
-  | { kind: "invalid_linkage"; tenant: PlatformBillingTenantInfo; message: string }
+  | {
+      kind: "no_billing_linkage";
+      tenant: PlatformBillingTenantInfo;
+      lifecycle: PlatformBillingLifecycleInfo;
+    }
+  | {
+      kind: "invalid_linkage";
+      tenant: PlatformBillingTenantInfo;
+      lifecycle: PlatformBillingLifecycleInfo;
+      message: string;
+    }
   | {
       kind: "detail";
       tenant: PlatformBillingTenantInfo;
+      lifecycle: PlatformBillingLifecycleInfo;
       stripeState: PlatformBillingStripeState;
       billingAccount: PlatformBillingAccountInfo;
       summary: PlatformBillingDetailSummary | null;
@@ -192,6 +206,11 @@ export async function getPlatformTenantBillingDetail(
     return { kind: "tenant_not_found" };
   }
 
+  const lifecycle = await getTenantLifecycleSnapshot(tenantId);
+  if (!lifecycle) {
+    return { kind: "tenant_not_found" };
+  }
+
   const tenantInfo: PlatformBillingTenantInfo = {
     tenantId: tenant.id,
     tenantKey: tenant.key,
@@ -200,13 +219,14 @@ export async function getPlatformTenantBillingDetail(
 
   const account = await findBillingAccountByTenantId(tenantId);
   if (!account) {
-    return { kind: "no_billing_linkage", tenant: tenantInfo };
+    return { kind: "no_billing_linkage", tenant: tenantInfo, lifecycle };
   }
 
   if (!isValidStripeCustomerId(account.stripeCustomerId)) {
     return {
       kind: "invalid_linkage",
       tenant: tenantInfo,
+      lifecycle,
       message: "Die gespeicherte Stripe-Verknüpfung ist ungültig.",
     };
   }
@@ -222,6 +242,7 @@ export async function getPlatformTenantBillingDetail(
     return {
       kind: "detail",
       tenant: tenantInfo,
+      lifecycle,
       stripeState,
       billingAccount,
       summary: null,
@@ -262,6 +283,7 @@ export async function getPlatformTenantBillingDetail(
       return {
         kind: "detail",
         tenant: tenantInfo,
+        lifecycle,
         stripeState: {
           kind:
             error.code === "STRIPE_NOT_CONFIGURED" ? "not_configured" : "misconfigured",
@@ -284,7 +306,7 @@ export async function getPlatformTenantBillingDetail(
       error instanceof StripeIntegrationError &&
       error.code === "NO_BILLING_ACCOUNT"
     ) {
-      return { kind: "no_billing_linkage", tenant: tenantInfo };
+      return { kind: "no_billing_linkage", tenant: tenantInfo, lifecycle };
     }
     degradedMessage =
       "Billing-Daten konnten momentan nicht vollständig geladen werden.";
@@ -314,6 +336,7 @@ export async function getPlatformTenantBillingDetail(
   return {
     kind: "detail",
     tenant: tenantInfo,
+    lifecycle,
     stripeState,
     billingAccount,
     summary,
