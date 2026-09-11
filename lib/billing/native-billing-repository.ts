@@ -69,6 +69,7 @@ const bankAccountDbSelect = {
   qrIbanEncrypted: true,
   encryptionKeyVersion: true,
   referenceStrategy: true,
+  qrrReferencePrefix: true,
   creditorName: true,
   creditorAddressLine1: true,
   creditorHouseNumber: true,
@@ -92,6 +93,7 @@ type BillingBankAccountDbRow = {
   qrIbanEncrypted: string | null;
   encryptionKeyVersion: number;
   referenceStrategy: BillingBankAccountRecord["referenceStrategy"];
+  qrrReferencePrefix: string | null;
   creditorName: string;
   creditorAddressLine1: string;
   creditorHouseNumber: string | null;
@@ -120,6 +122,7 @@ function mapBillingBankAccountRow(row: BillingBankAccountDbRow): BillingBankAcco
     iban,
     qrIban,
     referenceStrategy: row.referenceStrategy,
+    qrrReferencePrefix: row.qrrReferencePrefix,
     creditorName: row.creditorName,
     creditorAddressLine1: row.creditorAddressLine1,
     creditorHouseNumber: row.creditorHouseNumber,
@@ -491,6 +494,7 @@ export async function createBillingBankAccountRecord(
       currency: data.currency,
       ...encrypted,
       referenceStrategy: data.referenceStrategy,
+      qrrReferencePrefix: data.qrrReferencePrefix,
       creditorName: data.creditorName,
       creditorAddressLine1: data.creditorAddressLine1,
       creditorHouseNumber: data.creditorHouseNumber,
@@ -534,6 +538,7 @@ export async function updateBillingBankAccountRecord(
           }
         : {}),
       referenceStrategy: data.referenceStrategy,
+      qrrReferencePrefix: data.qrrReferencePrefix,
       creditorName: data.creditorName,
       creditorAddressLine1: data.creditorAddressLine1,
       creditorHouseNumber: data.creditorHouseNumber,

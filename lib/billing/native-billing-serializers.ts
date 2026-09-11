@@ -56,6 +56,7 @@ export function serializeBillingBankAccountMasked(account: BillingBankAccountRec
     ibanMasked: maskIban(account.iban),
     qrIbanMasked: maskIban(account.qrIban),
     referenceStrategy: account.referenceStrategy,
+    qrrReferencePrefix: account.qrrReferencePrefix,
     creditorName: account.creditorName,
     creditorAddressLine1: account.creditorAddressLine1,
     creditorHouseNumber: account.creditorHouseNumber,
@@ -78,6 +79,7 @@ export function auditBankAccountSnapshot(account: BillingBankAccountRecord) {
     ibanMasked: maskIban(account.iban),
     qrIbanMasked: maskIban(account.qrIban),
     referenceStrategy: account.referenceStrategy,
+    qrrReferencePrefix: account.qrrReferencePrefix,
     isDefault: account.isDefault,
     activeUntil: account.activeUntil?.toISOString() ?? null,
   };

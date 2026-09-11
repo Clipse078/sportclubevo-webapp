@@ -74,6 +74,7 @@ export type BillingBankAccountRecord = {
   iban: string;
   qrIban: string | null;
   referenceStrategy: BillingReferenceStrategy;
+  qrrReferencePrefix: string | null;
   creditorName: string;
   creditorAddressLine1: string;
   creditorHouseNumber: string | null;

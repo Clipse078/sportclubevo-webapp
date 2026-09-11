@@ -25,6 +25,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       iban: body.iban ? String(body.iban) : undefined,
       qrIban: body.qrIban === undefined ? undefined : body.qrIban ? String(body.qrIban) : null,
       referenceStrategy: body.referenceStrategy as BillingReferenceStrategy | undefined,
+      qrrReferencePrefix:
+        body.qrrReferencePrefix === undefined
+          ? undefined
+          : body.qrrReferencePrefix === null
+            ? null
+            : String(body.qrrReferencePrefix),
       creditorName: body.creditorName ? String(body.creditorName) : undefined,
       creditorAddressLine1: body.creditorAddressLine1 ? String(body.creditorAddressLine1) : undefined,
       creditorHouseNumber:

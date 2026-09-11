@@ -2,6 +2,13 @@ import Link from "next/link";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import NativeBillingInvoiceActions from "@/components/admin/billing/NativeBillingInvoiceActions";
+import NativeBillingInvoicePaymentSection from "@/components/admin/billing/NativeBillingInvoicePaymentSection";
+import { getInvoicePaymentInstruction } from "@/lib/billing/invoice-payment-instruction-service";
+import {
+  formatPaymentReferenceDisplay,
+  presentReferenceTypeLabel,
+  serializeInvoicePaymentInstructionMasked,
+} from "@/lib/billing/invoice-payment-instruction-serializers";
 import { getInvoiceDetail } from "@/lib/billing/native-billing-commercial-service";
 import { findBillingCustomerById } from "@/lib/billing/native-billing-repository";
 import { formatBillingMoney } from "@/lib/billing/format-billing-money";
@@ -48,6 +55,20 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
   const statusPresentation = presentNativeInvoiceStatus(invoice.status);
   const displayTitle = presentInvoiceDisplayNumber(invoice.invoiceNumber, invoice.status);
   const periodLabel = formatBillingPeriodDisplay(invoice.periodStart, invoice.periodEnd);
+
+  let paymentInstructionView: ReturnType<
+    typeof serializeInvoicePaymentInstructionMasked
+  > | null = null;
+  if (invoice.status === "FINALIZED") {
+    try {
+      const instruction = await getInvoicePaymentInstruction(invoice.key);
+      paymentInstructionView = instruction
+        ? serializeInvoicePaymentInstructionMasked(instruction)
+        : null;
+    } catch {
+      paymentInstructionView = null;
+    }
+  }
 
   return (
     <div className="space-y-10">
@@ -163,6 +184,30 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
           )}
         </section>
       </div>
+
+      {invoice.status === "FINALIZED" ? (
+        <NativeBillingInvoicePaymentSection
+          invoiceKey={invoice.key}
+          canManage={canManage}
+          amountFormatted={grossFormatted}
+          initialInstruction={
+            paymentInstructionView
+              ? {
+                  referenceType: presentReferenceTypeLabel(
+                    paymentInstructionView.referenceType,
+                  ),
+                  referenceFormatted: formatPaymentReferenceDisplay(
+                    paymentInstructionView.referenceType,
+                    paymentInstructionView.reference,
+                  ),
+                  creditorAccountMasked: paymentInstructionView.creditorAccountMasked,
+                  amountMinor: paymentInstructionView.amountMinor,
+                  currency: paymentInstructionView.currency,
+                }
+              : null
+          }
+        />
+      ) : null}
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold">Positionen</h2>
