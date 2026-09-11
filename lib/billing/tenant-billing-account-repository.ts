@@ -85,3 +85,34 @@ export async function deleteBillingAccountByTenantId(tenantId: string): Promise<
   await prisma.tenantBillingAccount.delete({ where: { tenantId } });
   return existing;
 }
+
+export type LinkedTenantBillingAccountRow = {
+  tenantId: string;
+  tenantKey: string;
+  tenantName: string;
+  stripeCustomerId: string;
+};
+
+/** All tenants with a TenantBillingAccount row (bounded platform billing universe). */
+export async function findAllLinkedTenantBillingAccounts(): Promise<
+  LinkedTenantBillingAccountRow[]
+> {
+  const rows = await prisma.tenantBillingAccount.findMany({
+    select: {
+      stripeCustomerId: true,
+      tenant: {
+        select: { id: true, key: true, name: true },
+      },
+    },
+    orderBy: { tenant: { name: "asc" } },
+  });
+
+  return rows
+    .filter((row) => row.tenant != null)
+    .map((row) => ({
+      tenantId: row.tenant.id,
+      tenantKey: row.tenant.key,
+      tenantName: row.tenant.name,
+      stripeCustomerId: row.stripeCustomerId,
+    }));
+}

@@ -38,7 +38,11 @@ export type TenantBillingSummary = {
   stripeCustomerId: string;
   subscriptions: BillingSubscriptionSummary[];
   latestInvoice: BillingInvoiceSummary | null;
+  /** Open invoices (same scan as outstandingAmount) for overdue KPIs in platform overview. */
+  openInvoices: BillingInvoiceSummary[];
   outstandingAmount: number;
+  /** Open invoices with dueDate before now (from the open-invoice scan). */
+  overdueOpenInvoiceCount: number;
   currency: string | null;
 };
 

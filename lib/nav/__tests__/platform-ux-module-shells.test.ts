@@ -31,6 +31,7 @@ const CANONICAL_FULL_ORDER = [
   "sponsoring",
   "formulare-freigaben",
   "vorfaelle-disziplin",
+  "commercial",
   "administration",
 ];
 
@@ -129,6 +130,7 @@ describe("PLATFORM-UX-01 — final sidebar order", () => {
       "Öffentliche Kanäle",
       "Führung",
       "Governance",
+      "Commercial",
       "System",
     ]);
     expect(labels).not.toContain("Betrieb");
@@ -146,14 +148,31 @@ describe("PLATFORM-UX-01 — final sidebar order", () => {
     expect(websiteIdx).toBe(0);
   });
 
-  it("places governance modules before Administration", () => {
+  it("places governance modules before Commercial and Administration", () => {
     const governance = findSection("Governance");
+    const commercial = findSection("Commercial");
     const system = findSection("System");
     expect(governance!.items.map((i) => i.key)).toEqual([
       "formulare-freigaben",
       "vorfaelle-disziplin",
     ]);
+    expect(commercial!.items.map((i) => i.key)).toEqual(["commercial"]);
     expect(system!.items.map((i) => i.key)).toEqual(["administration"]);
+  });
+
+  it("shows Commercial billing only for platform billing.view", () => {
+    const withBilling = getVisibleNavSections([PERMISSIONS.BILLING_VIEW]);
+    const commercial = withBilling.find((s) => s.sectionLabel === "Commercial");
+    expect(commercial?.items.map((i) => i.key)).toEqual(["commercial"]);
+    expect(commercial?.items[0]?.children?.map((c) => c.key)).toEqual([
+      "commercial-billing",
+    ]);
+    expect(commercial?.items[0]?.children?.[0]?.href).toBe(
+      "/dashboard/admin/commercial/billing",
+    );
+
+    const tenantAdmin = getVisibleNavSections([PERMISSIONS.USERS_MANAGE_MEMBERSHIPS]);
+    expect(tenantAdmin.some((s) => s.sectionLabel === "Commercial")).toBe(false);
   });
 
   it("filters empty sections so separators have modules on both sides", () => {
