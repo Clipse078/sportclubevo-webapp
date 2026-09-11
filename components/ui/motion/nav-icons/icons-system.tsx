@@ -110,6 +110,29 @@ export function FinanzenIcon(props: IconProps) {
   );
 }
 
+/** Platform commercial billing — wallet motif aligned with Finanzen. */
+export function CommercialIcon(props: IconProps) {
+  return (
+    <NavIconSvg iconKey="commercial" {...props}>
+      <StrokePath d="M4 8h16v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z" className="ani-wallet-body" />
+      <StrokePath d="M4 8V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2" className="ani-wallet-fold" />
+      <StrokeCircle cx="16" cy="13" r="1.5" className="ani-wallet-clasp" />
+    </NavIconSvg>
+  );
+}
+
+/** Nested billing nav — receipt motif for platform revenue ops. */
+export function BillingIcon(props: IconProps) {
+  return (
+    <NavIconSvg iconKey="billing" {...props}>
+      <StrokePath d="M6 4h12v16H6V4z" className="ani-clipboard" />
+      <StrokeLine x1="9" y1="9" x2="15" y2="9" className="ani-clipboard-line ani-clipboard-line-1" />
+      <StrokeLine x1="9" y1="13" x2="15" y2="13" className="ani-clipboard-line ani-clipboard-line-2" />
+      <StrokePath d="M9 17h4" className="ani-clipboard-line ani-clipboard-line-3" />
+    </NavIconSvg>
+  );
+}
+
 export function SponsoringIcon(props: IconProps) {
   return (
     <NavIconSvg iconKey="sponsoring" {...props}>

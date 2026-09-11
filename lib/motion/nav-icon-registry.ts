@@ -52,6 +52,8 @@ const NAV_LABEL_TO_ICON_KEY: Record<string, NavIconKey> = {
   "Prozesse & Aufgaben": "prozesse-aufgaben",
   "Material & Inventar": "material-inventar",
   Finanzen: "finanzen",
+  Commercial: "commercial",
+  Billing: "billing",
   Sponsoring: "sponsoring",
   Mitglieder: "mitglieder",
   Aufgaben: "aufgaben",
