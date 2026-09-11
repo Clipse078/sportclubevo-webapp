@@ -79,6 +79,14 @@ type NavIconComponent = ComponentType<Omit<NavIconSvgProps, "iconKey" | "childre
 
 export const NAV_ICON_COMPONENTS: Record<NavIconKey, NavIconComponent> = {
   dashboard: DashboardIcon,
+  "platform-dashboard": DashboardIcon,
+  clubs: TenantsIcon,
+  integrations: IntegrationenIcon,
+  "access-security": AdministrationIcon,
+  operations: IntegrationenIcon,
+  berechtigungen: RollenBerechtigungenIcon,
+  benutzerverwaltung: BenutzerIcon,
+  rollenverwaltung: RollenIcon,
   organisation: OrganisationIcon,
   organisationseinheiten: OrganisationseinheitenIcon,
   zielgruppen: ZielgruppenIcon,

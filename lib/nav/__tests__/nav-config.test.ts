@@ -218,7 +218,6 @@ describe("NAV_SECTIONS static structure", () => {
     expect(communication?.label).toBe("Kommunikation");
     expect(communication?.href).toBe("/dashboard/communication");
     expect(communication?.permissionKeys).toEqual([
-      PERMISSIONS.USERS_MANAGE,
       PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
     ]);
     expect(communication?.children).toEqual([
@@ -226,10 +225,7 @@ describe("NAV_SECTIONS static structure", () => {
         key: "communication-email-sender",
         label: "E-Mail-Absender",
         href: "/dashboard/communication/email-sender",
-        permissionKeys: [
-          PERMISSIONS.USERS_MANAGE,
-          PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
-        ],
+        permissionKeys: [PERMISSIONS.USERS_MANAGE_MEMBERSHIPS],
       }),
     ]);
 
@@ -253,10 +249,7 @@ describe("NAV_SECTIONS static structure", () => {
     expect(sponsoring).toEqual(expect.objectContaining({
       label: "Sponsoring",
       href: "/dashboard/sponsoring",
-      permissionKeys: [
-        PERMISSIONS.USERS_MANAGE,
-        PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
-      ],
+      permissionKeys: [PERMISSIONS.USERS_MANAGE_MEMBERSHIPS],
     }));
   });
 });
@@ -368,11 +361,10 @@ describe("getVisibleNavSections permission filtering", () => {
     expect(findItemByKey(unauthorized, "sponsoring")).toBeNull();
   });
 
-  it("keeps the protected sender child visible to platform user administrators", () => {
-    const platformAdmin = getVisibleNavSections([PERMISSIONS.USERS_MANAGE]);
-    expect(findItemByKey(platformAdmin, "communication")).not.toBeNull();
-    expect(findItemByKey(platformAdmin, "communication-email-sender")).not.toBeNull();
-    expect(findItemByKey(platformAdmin, "sponsoring")).not.toBeNull();
+  it("does not expose tenant Kommunikation modules to platform users.manage in platform workspace", () => {
+    const platformAdmin = getVisibleNavSections([PERMISSIONS.USERS_MANAGE], "platform");
+    expect(findItemByKey(platformAdmin, "communication")).toBeNull();
+    expect(findItemByKey(platformAdmin, "sponsoring")).toBeNull();
   });
 
   it("Veranstaltungen nav entry points to /dashboard/veranstaltungen with label Veranstaltungen", () => {
