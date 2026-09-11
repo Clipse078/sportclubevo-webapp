@@ -4189,6 +4189,8 @@ model BillingBankAccount {
   qrIbanEncrypted       String?
   encryptionKeyVersion  Int                      @default(1)
   referenceStrategy     BillingReferenceStrategy @default(NON)
+  /// Optional numeric QRR prefix (bank-specific); part of the 26-digit QRR body before check digit.
+  qrrReferencePrefix  String?
   creditorName          String
   creditorAddressLine1  String
   creditorHouseNumber   String?
@@ -4201,7 +4203,8 @@ model BillingBankAccount {
   createdAt             DateTime                 @default(now())
   updatedAt             DateTime                 @updatedAt
 
-  legalEntity LegalEntity @relation(fields: [legalEntityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  legalEntity          LegalEntity                 @relation(fields: [legalEntityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  paymentInstructions  InvoicePaymentInstruction[]
 
   @@index([legalEntityId])
 }
@@ -4290,6 +4293,10 @@ enum InvoiceStatus {
   CREDITED
 }
 
+enum InvoicePaymentMethod {
+  BANK_TRANSFER_SWISS_QR
+}
+
 model Invoice {
   id                 String        @id @default(cuid())
   key                String        @unique
@@ -4320,6 +4327,7 @@ model Invoice {
   taxSnapshots      InvoiceTaxSnapshot[]
   issuerSnapshot    InvoiceIssuerSnapshot?
   recipientSnapshot InvoiceRecipientSnapshot?
+  paymentInstruction InvoicePaymentInstruction?
 
   @@unique([legalEntityId, invoiceNumber])
   @@index([billingCustomerId])
@@ -4393,6 +4401,26 @@ model InvoiceRecipientSnapshot {
   createdAt     DateTime @default(now())
 
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+/// Immutable Swiss QR payment instruction for a finalized native invoice.
+model InvoicePaymentInstruction {
+  id                    String               @id @default(cuid())
+  invoiceId             String               @unique
+  billingBankAccountId  String
+  paymentMethod         InvoicePaymentMethod @default(BANK_TRANSFER_SWISS_QR)
+  referenceType         BillingReferenceStrategy
+  reference             String?
+  amountMinor           Int
+  currency              String
+  creditorAccountMasked String
+  additionalInformation String?
+  createdAt             DateTime             @default(now())
+
+  invoice            Invoice            @relation(fields: [invoiceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  billingBankAccount BillingBankAccount @relation(fields: [billingBankAccountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([billingBankAccountId])
 }
 
 /// Per legal entity, per calendar year — atomic invoice numbering on finalize.

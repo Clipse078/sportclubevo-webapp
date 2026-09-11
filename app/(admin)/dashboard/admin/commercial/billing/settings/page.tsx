@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import NativeBillingCreateBankAccountForm from "@/components/admin/billing/NativeBillingCreateBankAccountForm";
 import NativeBillingLegalEntitiesTable from "@/components/admin/billing/NativeBillingLegalEntitiesTable";
 import {
   listBillingBankAccountsForPlatform,
@@ -19,9 +20,13 @@ export default async function NativeBillingSettingsPage() {
 
   try {
     legalEntities = await listLegalEntitiesForPlatform();
-    bankAccounts = await listBillingBankAccountsForPlatform();
   } catch {
     legalEntities = [];
+  }
+
+  try {
+    bankAccounts = await listBillingBankAccountsForPlatform();
+  } catch {
     bankAccounts = [];
   }
 
@@ -72,8 +77,17 @@ export default async function NativeBillingSettingsPage() {
       <section className="space-y-3">
         <h2 className="text-sm font-semibold">Bankkonten</h2>
         <p className="text-sm text-muted-foreground">
-          Bankverbindungen werden separat konfiguriert (nicht Teil dieser Maske).
+          CHF-Konten mit Referenzstrategie (QRR/SCOR/NON). IBAN-Werte werden verschlüsselt
+          gespeichert und maskiert angezeigt.
         </p>
+        {canManage ? (
+          <NativeBillingCreateBankAccountForm
+            legalEntities={legalEntities.map((entity) => ({
+              key: entity.key,
+              label: entity.displayName,
+            }))}
+          />
+        ) : null}
         {bankAccounts.length === 0 ? (
           <p className="text-sm text-muted-foreground">Noch keine Bankkonten konfiguriert.</p>
         ) : (

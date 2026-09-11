@@ -46,6 +46,8 @@ import {
   NativeBillingNotFoundError,
   NativeBillingValidationError,
 } from "./native-billing-types";
+import { assertSwissReferenceAccountCompatibility } from "./swiss-qr/swiss-reference-compat";
+import { buildQrrPayload26 } from "./swiss-qr/swiss-qrr";
 
 function normalizeIban(value: string): string {
   return value.replace(/\s+/g, "").toUpperCase();
@@ -57,6 +59,43 @@ function assertNonEmpty(value: string, field: string): string {
     throw new NativeBillingValidationError(`${field} ist erforderlich.`);
   }
   return trimmed;
+}
+
+function parseQrrReferencePrefix(
+  value: string | null | undefined,
+): string | null {
+  if (value == null || value === "") {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) {
+    throw new NativeBillingValidationError("QRR-Präfix muss numerisch sein.");
+  }
+  if (trimmed.length >= 26) {
+    throw new NativeBillingValidationError("QRR-Präfix ist zu lang.");
+  }
+  return trimmed;
+}
+
+function validateQrrPrefixFitsPayload(prefix: string | null): void {
+  if (!prefix) {
+    return;
+  }
+  try {
+    buildQrrPayload26(
+      {
+        invoiceId: "sample-invoice-id",
+        legalEntityId: "sample-legal-entity",
+        invoiceNumber: "2026-000001",
+      },
+      prefix,
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new NativeBillingValidationError(error.message);
+    }
+    throw error;
+  }
 }
 
 export async function getBillingCustomersOverview(): Promise<
@@ -570,6 +609,7 @@ export type CreateBillingBankAccountInput = {
   iban: string;
   qrIban?: string | null;
   referenceStrategy?: BillingBankAccountRecord["referenceStrategy"];
+  qrrReferencePrefix?: string | null;
   creditorName: string;
   creditorAddressLine1: string;
   creditorHouseNumber?: string | null;
@@ -590,6 +630,14 @@ export async function createBillingBankAccount(
 
   const iban = normalizeIban(assertNonEmpty(input.iban, "IBAN"));
   const qrIban = input.qrIban ? normalizeIban(input.qrIban) : null;
+  const referenceStrategy = input.referenceStrategy ?? "NON";
+  const qrrReferencePrefix = parseQrrReferencePrefix(input.qrrReferencePrefix);
+  validateQrrPrefixFitsPayload(qrrReferencePrefix);
+  assertSwissReferenceAccountCompatibility({
+    iban,
+    qrIban,
+    referenceStrategy,
+  });
 
   const created = await createBillingBankAccountRecord({
     legalEntityId: legalEntity.id,
@@ -598,7 +646,8 @@ export async function createBillingBankAccount(
     currency: input.currency?.trim() || "CHF",
     iban,
     qrIban,
-    referenceStrategy: input.referenceStrategy ?? "NON",
+    referenceStrategy,
+    qrrReferencePrefix,
     creditorName: assertNonEmpty(input.creditorName, "Gläubiger"),
     creditorAddressLine1: assertNonEmpty(input.creditorAddressLine1, "Gläubiger-Adresse"),
     creditorHouseNumber: input.creditorHouseNumber?.trim() || null,
@@ -630,6 +679,7 @@ export type UpdateBillingBankAccountInput = {
   iban?: string;
   qrIban?: string | null;
   referenceStrategy?: BillingBankAccountRecord["referenceStrategy"];
+  qrrReferencePrefix?: string | null;
   creditorName?: string;
   creditorAddressLine1?: string;
   creditorHouseNumber?: string | null;
@@ -649,18 +699,33 @@ export async function updateBillingBankAccount(
     throw new NativeBillingNotFoundError("Bankkonto nicht gefunden.");
   }
 
+  const nextIban = input.iban ? normalizeIban(input.iban) : existing.iban;
+  const nextQrIban =
+    input.qrIban === undefined
+      ? existing.qrIban
+      : input.qrIban
+        ? normalizeIban(input.qrIban)
+        : null;
+  const nextReferenceStrategy = input.referenceStrategy ?? existing.referenceStrategy;
+  const nextQrrPrefix =
+    input.qrrReferencePrefix === undefined
+      ? existing.qrrReferencePrefix
+      : parseQrrReferencePrefix(input.qrrReferencePrefix);
+  validateQrrPrefixFitsPayload(nextQrrPrefix);
+  assertSwissReferenceAccountCompatibility({
+    iban: nextIban,
+    qrIban: nextQrIban,
+    referenceStrategy: nextReferenceStrategy,
+  });
+
   const updated = await updateBillingBankAccountRecord(existing.id, {
     label: input.label?.trim() || existing.label,
     bankName: input.bankName === undefined ? existing.bankName : input.bankName?.trim() || null,
     currency: input.currency?.trim() || existing.currency,
-    iban: input.iban ? normalizeIban(input.iban) : existing.iban,
-    qrIban:
-      input.qrIban === undefined
-        ? existing.qrIban
-        : input.qrIban
-          ? normalizeIban(input.qrIban)
-          : null,
-    referenceStrategy: input.referenceStrategy ?? existing.referenceStrategy,
+    iban: nextIban,
+    qrIban: nextQrIban,
+    referenceStrategy: nextReferenceStrategy,
+    qrrReferencePrefix: nextQrrPrefix,
     creditorName: input.creditorName?.trim() || existing.creditorName,
     creditorAddressLine1: input.creditorAddressLine1?.trim() || existing.creditorAddressLine1,
     creditorHouseNumber:
