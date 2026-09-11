@@ -21,14 +21,12 @@ const TEST_ENV = {
   NODE_ENV: "test",
   APP_ENV: "test",
   SCE_BILLING_ENCRYPTION_KEY: BILLING_FIELD_CRYPTO_TEST_KEY_BASE64,
-};
+} as NodeJS.ProcessEnv;
 
 describe("billing bank account encryption at persistence", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.SCE_BILLING_ENCRYPTION_KEY = BILLING_FIELD_CRYPTO_TEST_KEY_BASE64;
-    process.env.NODE_ENV = "test";
-    process.env.APP_ENV = "test";
   });
 
   it("encrypts IBAN and QR-IBAN before persistence", async () => {

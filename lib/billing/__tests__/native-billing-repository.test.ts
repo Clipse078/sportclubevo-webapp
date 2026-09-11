@@ -32,8 +32,6 @@ describe("native billing repository", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.SCE_BILLING_ENCRYPTION_KEY = BILLING_FIELD_CRYPTO_TEST_KEY_BASE64;
-    process.env.NODE_ENV = "test";
-    process.env.APP_ENV = "test";
   });
 
   it("enforces unique billing customer key at persistence layer", async () => {
