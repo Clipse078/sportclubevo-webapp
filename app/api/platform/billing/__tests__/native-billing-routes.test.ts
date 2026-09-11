@@ -35,6 +35,7 @@ vi.mock("@/lib/billing/native-billing-service", () => ({
 import { GET as listCustomers, POST as createCustomer } from "../customers/route";
 import { GET as listBankAccounts, POST as createBankAccount } from "../bank-accounts/route";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { NativeBillingValidationError } from "@/lib/billing/native-billing-types";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -205,5 +206,77 @@ describe("native billing bank account API masking", () => {
     const json = await response.json();
     expect(json.bankAccount.ibanMasked).toBe("****2957");
     expect(JSON.stringify(json)).not.toContain("CH9300762011623852957");
+  });
+
+  it("requires platform billing.manage for bank account create", async () => {
+    mocks.createBillingBankAccount.mockResolvedValue({
+      id: "ba-1",
+      legalEntityId: "le-1",
+      label: "Main",
+      bankName: null,
+      currency: "CHF",
+      iban: "CH9300762011623852957",
+      qrIban: null,
+      referenceStrategy: "NON",
+      qrrReferencePrefix: null,
+      creditorName: "Issuer",
+      creditorAddressLine1: "Street",
+      creditorHouseNumber: null,
+      creditorPostalCode: "4000",
+      creditorCity: "Basel",
+      creditorCountryCode: "CH",
+      activeFrom: new Date(),
+      activeUntil: null,
+      isDefault: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await createBankAccount(
+      new NextRequest("http://localhost", {
+        method: "POST",
+        body: JSON.stringify({
+          legalEntityKey: "issuer",
+          label: "Main",
+          iban: "CH9300762011623852957",
+          creditorName: "Issuer",
+          creditorAddressLine1: "Street",
+          creditorPostalCode: "4000",
+          creditorCity: "Basel",
+          creditorCountryCode: "CH",
+        }),
+      }),
+    );
+
+    expect(mocks.requirePlatformApiPermission).toHaveBeenCalledWith(PERMISSIONS.BILLING_MANAGE);
+  });
+
+  it("returns German validation errors instead of internal error for bank create", async () => {
+    mocks.createBillingBankAccount.mockRejectedValue(
+      new NativeBillingValidationError("IBAN-Prüfziffer ungültig."),
+    );
+
+    const response = await createBankAccount(
+      new NextRequest("http://localhost", {
+        method: "POST",
+        body: JSON.stringify({
+          legalEntityKey: "issuer",
+          label: "Main",
+          iban: "CH9300762011623852957",
+          qrIban: "CH0030049000000000049",
+          referenceStrategy: "QRR",
+          qrrReferencePrefix: "",
+          creditorName: "Issuer",
+          creditorAddressLine1: "Street",
+          creditorPostalCode: "4000",
+          creditorCity: "Basel",
+          creditorCountryCode: "CH",
+          isDefault: true,
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "IBAN-Prüfziffer ungültig." });
   });
 });

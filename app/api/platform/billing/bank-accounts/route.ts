@@ -38,7 +38,9 @@ export async function POST(request: NextRequest) {
       qrIban: body.qrIban ? String(body.qrIban) : null,
       referenceStrategy: body.referenceStrategy as BillingReferenceStrategy | undefined,
       qrrReferencePrefix:
-        body.qrrReferencePrefix === undefined || body.qrrReferencePrefix === null
+        body.qrrReferencePrefix === undefined ||
+        body.qrrReferencePrefix === null ||
+        body.qrrReferencePrefix === ""
           ? undefined
           : String(body.qrrReferencePrefix),
       creditorName: String(body.creditorName ?? ""),

@@ -45,7 +45,7 @@ describe("billing bank account encryption at persistence", () => {
       bankName: null,
       currency: "CHF",
       iban: "CH9300762011623852957",
-      qrIban: "CH4431990123000889012",
+      qrIban: "CH0030049000000000049",
       referenceStrategy: "NON",
       qrrReferencePrefix: null,
       creditorName: "Issuer",
