@@ -671,6 +671,7 @@ model Tenant {
   /// SCE-SUPERADMIN-BILLING-01B: optional Stripe customer linkage (1:1).
   /// Financial truth remains in Stripe; this row stores the platform operator link only.
   billingAccount                   TenantBillingAccount?
+  billingCustomerLinks             BillingCustomerTenant[]
   teamExternalMappings             TeamExternalMapping[]
   matchExternalMappings            MatchExternalMapping[]
   // ADMIN-DELETE-02A-C1: intentionally-deleted SFV match suppression — see
@@ -4061,6 +4062,140 @@ model TenantBillingAccount {
   linkedByUser User?  @relation("TenantBillingAccountLinkedBy", fields: [linkedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@index([stripeCustomerId])
+}
+
+// SCE-BILLING-SWISS-01B — Native commercial billing foundation (no invoices/payments).
+enum LegalEntityStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum LegalEntityType {
+  COMPANY
+  ASSOCIATION
+  OTHER
+}
+
+enum BillingCustomerStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum BillingProfileType {
+  BILLING
+  DELIVERY
+}
+
+enum BillingReferenceStrategy {
+  QRR
+  SCOR
+  NON
+}
+
+/// Platform issuer of future SCE-native invoices.
+model LegalEntity {
+  id              String            @id @default(cuid())
+  key             String            @unique
+  displayName     String
+  legalName       String
+  entityType      LegalEntityType?
+  uid             String?
+  vatId           String?
+  defaultCurrency String            @default("CHF")
+  status          LegalEntityStatus @default(ACTIVE)
+  addressLine1    String
+  houseNumber     String?
+  postalCode      String
+  city            String
+  countryCode     String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  bankAccounts BillingBankAccount[]
+}
+
+/// Commercial counterparty (independent from Tenant).
+model BillingCustomer {
+  id              String                @id @default(cuid())
+  key             String                @unique
+  displayName     String
+  legalName       String?
+  status          BillingCustomerStatus @default(ACTIVE)
+  defaultLanguage String?
+  defaultCurrency String?
+  primaryEmail    String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  tenantLinks BillingCustomerTenant[]
+  profiles    BillingProfile[]
+}
+
+/// Links a billing customer to one or more tenant workspaces.
+model BillingCustomerTenant {
+  id                String    @id @default(cuid())
+  billingCustomerId String
+  tenantId          String
+  linkRole          String?
+  activeFrom        DateTime  @default(now())
+  activeUntil       DateTime?
+  createdAt         DateTime  @default(now())
+
+  billingCustomer BillingCustomer @relation(fields: [billingCustomerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  /// Restrict: tenant deletion must not cascade-remove commercial linkage history.
+  tenant          Tenant          @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([billingCustomerId, tenantId])
+  @@index([tenantId])
+  @@index([billingCustomerId])
+}
+
+/// Recipient / delivery address for a billing customer.
+model BillingProfile {
+  id                String             @id @default(cuid())
+  billingCustomerId String
+  profileType       BillingProfileType
+  companyOrName     String
+  street            String
+  houseNumber       String?
+  postalCode        String
+  city              String
+  countryCode       String
+  invoiceEmail      String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  billingCustomer BillingCustomer @relation(fields: [billingCustomerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([billingCustomerId])
+}
+
+/// Payment recipient configuration for a legal entity (bank-neutral).
+model BillingBankAccount {
+  id                    String                   @id @default(cuid())
+  legalEntityId         String
+  label                 String
+  bankName              String?
+  currency              String                   @default("CHF")
+  iban                  String
+  qrIban                String?
+  referenceStrategy     BillingReferenceStrategy @default(NON)
+  creditorName          String
+  creditorAddressLine1  String
+  creditorHouseNumber   String?
+  creditorPostalCode    String
+  creditorCity          String
+  creditorCountryCode   String
+  activeFrom            DateTime                 @default(now())
+  activeUntil           DateTime?
+  isDefault             Boolean                  @default(false)
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+
+  legalEntity LegalEntity @relation(fields: [legalEntityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([legalEntityId])
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
