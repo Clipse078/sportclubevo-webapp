@@ -81,6 +81,12 @@ Scope terms:
 | `SFV_APPLICATION_PASS` | SFV application credential | Yes | Conditional | Forbidden | Optional | Required for SFV integration | SFV authentication fails closed | Never log |
 | `SFV_CLUB_ID` | Global club selector for current SFV integration | No | Conditional | Forbidden | Optional | Required by current single-club integration | SFV club-scoped features are unavailable | **Legacy: global scope is a Tenant #2 blocker; do not extend this architecture** |
 
+## Stripe billing
+
+| Name | Purpose | Sensitive | Production | Preview | Local | Required / optional | Failure behavior | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `STRIPE_SECRET_KEY` | Server-only Stripe API secret for read-only billing | Yes | Conditional (live `sk_live_…` only) | Forbidden | Optional (test `sk_test_…` only) | Required when Stripe billing reads are enabled | Billing reads fail closed; mis-mode keys rejected at startup/read time | Never log. Never use `NEXT_PUBLIC_` prefix. **Never reuse production live keys in STAGE, acceptance, or local.** STAGE and acceptance require test keys only. Production requires live keys only. On acceptance, provider side effects also require `ACCEPTANCE_ENABLED_EXTERNAL_PROVIDERS` to include `stripe`. |
+
 ## Public website
 
 | Name | Purpose | Sensitive | Production | Preview | Local | Required / optional | Failure behavior | Notes |
@@ -117,6 +123,7 @@ Preview must not receive shared STAGE values for:
 - `NEXTAUTH_SECRET` or `AUTH_SECRET`
 - `CRON_SECRET`
 - `SFV_APPLICATION_KEY`, `SFV_APPLICATION_PASS`, or `SFV_CLUB_ID`
+- `STRIPE_SECRET_KEY`
 - Resend API keys or webhook secrets
 - Blob read/write tokens or store bindings
 - OPS backup credentials or store bindings
