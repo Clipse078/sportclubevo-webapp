@@ -20,9 +20,13 @@ export default async function NativeBillingSettingsPage() {
 
   try {
     legalEntities = await listLegalEntitiesForPlatform();
-    bankAccounts = await listBillingBankAccountsForPlatform();
   } catch {
     legalEntities = [];
+  }
+
+  try {
+    bankAccounts = await listBillingBankAccountsForPlatform();
+  } catch {
     bankAccounts = [];
   }
 
