@@ -1,11 +1,14 @@
+import Link from "next/link";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import NativeBillingCustomersTable from "@/components/admin/billing/NativeBillingCustomersTable";
 import { getBillingCustomersOverview } from "@/lib/billing/native-billing-service";
+import { hasPermission } from "@/lib/permissions/has-permission";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 export default async function NativeBillingCustomersPage() {
-  await requirePermission(PERMISSIONS.BILLING_VIEW);
+  const session = await requirePermission(PERMISSIONS.BILLING_VIEW);
+  const canManage = hasPermission(session, PERMISSIONS.BILLING_MANAGE);
 
   let rows: Awaited<ReturnType<typeof getBillingCustomersOverview>> = [];
   try {
@@ -18,11 +21,19 @@ export default async function NativeBillingCustomersPage() {
     <div className="space-y-8">
       <AdminSectionHeader
         eyebrow="Commercial"
-        title="Billing Customers"
+        title="Kunden"
         description="Native SCE Billing-Kunden (unabhängig von Tenant-Identität)."
+        actions={
+          canManage ? (
+            <Link href="/dashboard/admin/commercial/billing/customers/new" className="fca-button-primary">
+              Neuer Kunde
+            </Link>
+          ) : undefined
+        }
       />
 
       <NativeBillingCustomersTable
+        canManage={canManage}
         rows={rows.map((customer) => ({
           key: customer.key,
           displayName: customer.displayName,
@@ -31,7 +42,7 @@ export default async function NativeBillingCustomersPage() {
           status: customer.status,
           tenantLabels: customer.tenantLinks
             .filter((link) => link.activeUntil === null)
-            .map((link) => link.tenantKey ?? link.tenantId),
+            .map((link) => link.tenantName ?? link.tenantKey ?? link.tenantId),
         }))}
       />
     </div>

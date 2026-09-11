@@ -5,9 +5,12 @@ const mocks = vi.hoisted(() => ({
   findBillingCustomerByKey: vi.fn(),
   createBillingCustomerRecord: vi.fn(),
   findActiveBillingCustomerTenantLink: vi.fn(),
+  findActiveBillingCustomerTenantLinkByTenantId: vi.fn(),
   createBillingCustomerTenantLink: vi.fn(),
   findTenantIdByKey: vi.fn(),
+  createBillingProfileRecord: vi.fn(),
   findLegalEntityByKey: vi.fn(),
+  createLegalEntityRecord: vi.fn(),
   createBillingBankAccountRecord: vi.fn(),
   logAction: vi.fn(),
   allocateUniqueBillingKey: vi.fn(),
@@ -21,18 +24,20 @@ vi.mock("../native-billing-repository", () => ({
   updateBillingCustomerRecord: vi.fn(),
   listBillingCustomerTenantLinks: vi.fn(),
   findActiveBillingCustomerTenantLink: mocks.findActiveBillingCustomerTenantLink,
+  findActiveBillingCustomerTenantLinkByTenantId: mocks.findActiveBillingCustomerTenantLinkByTenantId,
   createBillingCustomerTenantLink: mocks.createBillingCustomerTenantLink,
   reactivateBillingCustomerTenantLink: vi.fn(),
   deactivateBillingCustomerTenantLink: vi.fn(),
   listBillingProfilesForCustomer: vi.fn(),
-  createBillingProfileRecord: vi.fn(),
+  createBillingProfileRecord: mocks.createBillingProfileRecord,
   updateBillingProfileRecord: vi.fn(),
   findBillingProfileById: vi.fn(),
   listLegalEntities: vi.fn(),
   findLegalEntityByKey: mocks.findLegalEntityByKey,
   findLegalEntityById: vi.fn(),
-  createLegalEntityRecord: vi.fn(),
+  createLegalEntityRecord: mocks.createLegalEntityRecord,
   updateLegalEntityRecord: vi.fn(),
+  listActiveLegalEntities: vi.fn(),
   listAllBillingBankAccounts: vi.fn(),
   findBillingBankAccountById: vi.fn(),
   createBillingBankAccountRecord: mocks.createBillingBankAccountRecord,
@@ -52,8 +57,10 @@ vi.mock("@/lib/audit/log-action", () => ({
 
 const {
   createBillingCustomer,
+  createBillingCustomerWithDetails,
   linkBillingCustomerToTenant,
   createBillingBankAccount,
+  createLegalEntity,
 } = await import("../native-billing-service");
 
 describe("native billing service", () => {
@@ -88,9 +95,73 @@ describe("native billing service", () => {
     );
   });
 
+  it("creates customer with billing profile and tenant link", async () => {
+    mocks.createBillingCustomerRecord.mockResolvedValue({
+      id: "cust-1",
+      key: "acme-ag",
+      displayName: "Acme AG",
+      legalName: null,
+      status: "ACTIVE",
+      defaultLanguage: null,
+      defaultCurrency: null,
+      primaryEmail: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    mocks.findBillingCustomerByKey.mockResolvedValue({
+      id: "cust-1",
+      key: "acme-ag",
+      displayName: "Acme AG",
+    });
+    mocks.findTenantIdByKey.mockResolvedValue("tenant-1");
+    mocks.findActiveBillingCustomerTenantLinkByTenantId.mockResolvedValue(null);
+    mocks.findActiveBillingCustomerTenantLink.mockResolvedValue(null);
+    mocks.createBillingCustomerTenantLink.mockResolvedValue({
+      id: "link-1",
+      billingCustomerId: "cust-1",
+      tenantId: "tenant-1",
+      linkRole: null,
+      activeFrom: new Date(),
+      activeUntil: null,
+      createdAt: new Date(),
+    });
+    mocks.createBillingProfileRecord.mockResolvedValue({
+      id: "prof-1",
+      billingCustomerId: "cust-1",
+      profileType: "BILLING",
+      companyOrName: "Acme AG",
+      street: "Hauptstrasse",
+      houseNumber: "1",
+      postalCode: "4000",
+      city: "Basel",
+      countryCode: "CH",
+      invoiceEmail: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const result = await createBillingCustomerWithDetails({
+      displayName: "Acme AG",
+      actorUserId: "actor-1",
+      tenantKey: "fc-demo",
+      billingProfile: {
+        companyOrName: "Acme AG",
+        street: "Hauptstrasse",
+        houseNumber: "1",
+        postalCode: "4000",
+        city: "Basel",
+        countryCode: "CH",
+      },
+    });
+
+    expect(result.profile?.street).toBe("Hauptstrasse");
+    expect(mocks.createBillingCustomerTenantLink).toHaveBeenCalled();
+  });
+
   it("prevents duplicate active tenant link", async () => {
     mocks.findBillingCustomerByKey.mockResolvedValue({ id: "cust-1", key: "acme-ag" });
     mocks.findTenantIdByKey.mockResolvedValue("tenant-1");
+    mocks.findActiveBillingCustomerTenantLinkByTenantId.mockResolvedValue(null);
     mocks.findActiveBillingCustomerTenantLink.mockResolvedValue({
       id: "link-1",
       billingCustomerId: "cust-1",
@@ -105,6 +176,30 @@ describe("native billing service", () => {
       linkBillingCustomerToTenant({
         customerKey: "acme-ag",
         tenantKey: "fc-demo",
+        actorUserId: "actor-1",
+      }),
+    ).rejects.toMatchObject({ name: "NativeBillingConflictError" });
+  });
+
+  it("prevents linking tenant already tied to another billing customer", async () => {
+    mocks.findBillingCustomerByKey.mockResolvedValue({ id: "cust-2", key: "other" });
+    mocks.findTenantIdByKey.mockResolvedValue("tenant-1");
+    mocks.findActiveBillingCustomerTenantLinkByTenantId.mockResolvedValue({
+      id: "link-other",
+      billingCustomerId: "cust-1",
+      tenantId: "tenant-1",
+      linkRole: null,
+      activeFrom: new Date(),
+      activeUntil: null,
+      createdAt: new Date(),
+      customerKey: "fc-allschwil",
+      customerDisplayName: "FC Allschwil",
+    });
+
+    await expect(
+      linkBillingCustomerToTenant({
+        customerKey: "other",
+        tenantKey: "fc-allschwil",
         actorUserId: "actor-1",
       }),
     ).rejects.toMatchObject({ name: "NativeBillingConflictError" });
@@ -153,5 +248,56 @@ describe("native billing service", () => {
     const auditCall = mocks.logAction.mock.calls[0]?.[0];
     expect(JSON.stringify(auditCall?.afterJson)).not.toContain("CH9300762011623852957");
     expect(auditCall?.afterJson?.ibanMasked).toBe("****2957");
+  });
+
+  it("creates legal entity with audit metadata", async () => {
+    mocks.createLegalEntityRecord.mockResolvedValue({
+      id: "le-1",
+      key: "operator",
+      displayName: "Operator",
+      legalName: "Operator GmbH",
+      entityType: "COMPANY",
+      uid: null,
+      vatId: null,
+      defaultCurrency: "CHF",
+      status: "ACTIVE",
+      addressLine1: "Main",
+      houseNumber: null,
+      postalCode: "4000",
+      city: "Basel",
+      countryCode: "CH",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    mocks.allocateUniqueBillingKey.mockResolvedValue("operator");
+
+    const created = await createLegalEntity({
+      displayName: "Operator",
+      legalName: "Operator GmbH",
+      addressLine1: "Main",
+      postalCode: "4000",
+      city: "Basel",
+      countryCode: "CH",
+      actorUserId: "actor-1",
+    });
+
+    expect(created.key).toBe("operator");
+    expect(mocks.logAction).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "LEGAL_ENTITY_CREATED" }),
+    );
+  });
+
+  it("validates required legal entity fields", async () => {
+    await expect(
+      createLegalEntity({
+        displayName: "",
+        legalName: "X",
+        addressLine1: "S",
+        postalCode: "1",
+        city: "B",
+        countryCode: "CH",
+        actorUserId: "actor-1",
+      }),
+    ).rejects.toMatchObject({ name: "NativeBillingValidationError" });
   });
 });

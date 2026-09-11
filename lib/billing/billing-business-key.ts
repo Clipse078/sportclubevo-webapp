@@ -16,11 +16,29 @@ export function slugifyBillingKey(source: string): string {
   );
 }
 
-type UniqueKeyModel = "billingCustomer" | "legalEntity";
+type UniqueKeyModel =
+  | "billingCustomer"
+  | "legalEntity"
+  | "billingContract"
+  | "invoice";
 
 async function keyExists(model: UniqueKeyModel, key: string): Promise<boolean> {
   if (model === "billingCustomer") {
     const row = await prisma.billingCustomer.findUnique({
+      where: { key },
+      select: { id: true },
+    });
+    return row !== null;
+  }
+  if (model === "billingContract") {
+    const row = await prisma.billingContract.findUnique({
+      where: { key },
+      select: { id: true },
+    });
+    return row !== null;
+  }
+  if (model === "invoice") {
+    const row = await prisma.invoice.findUnique({
       where: { key },
       select: { id: true },
     });

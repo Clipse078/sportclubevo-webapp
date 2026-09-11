@@ -4,6 +4,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { nativeBillingErrorResponse } from "@/lib/billing/native-billing-api-errors";
 import {
   createBillingCustomer,
+  createBillingCustomerWithDetails,
   getBillingCustomersOverview,
 } from "@/lib/billing/native-billing-service";
 import {
@@ -33,7 +34,46 @@ export async function POST(request: NextRequest) {
   }
 
   const body = (await request.json()) as Record<string, unknown>;
+  const profileRaw = body.billingProfile as Record<string, unknown> | undefined;
+  const hasProfile =
+    profileRaw &&
+    typeof profileRaw === "object" &&
+    String(profileRaw.street ?? "").trim() !== "";
+  const tenantKey = body.tenantKey ? String(body.tenantKey).trim() : "";
+
   try {
+    if (hasProfile || tenantKey) {
+      const result = await createBillingCustomerWithDetails({
+        displayName: String(body.displayName ?? ""),
+        key: body.key ? String(body.key) : undefined,
+        legalName: body.legalName ? String(body.legalName) : null,
+        primaryEmail: body.primaryEmail ? String(body.primaryEmail) : null,
+        defaultLanguage: body.defaultLanguage ? String(body.defaultLanguage) : null,
+        defaultCurrency: body.defaultCurrency ? String(body.defaultCurrency) : null,
+        actorUserId: access.actorUserId!,
+        tenantKey: tenantKey || null,
+        billingProfile: hasProfile
+          ? {
+              companyOrName: String(profileRaw.companyOrName ?? body.displayName ?? ""),
+              street: String(profileRaw.street ?? ""),
+              houseNumber: profileRaw.houseNumber ? String(profileRaw.houseNumber) : null,
+              postalCode: String(profileRaw.postalCode ?? ""),
+              city: String(profileRaw.city ?? ""),
+              countryCode: String(profileRaw.countryCode ?? "CH"),
+              invoiceEmail: profileRaw.invoiceEmail
+                ? String(profileRaw.invoiceEmail)
+                : body.primaryEmail
+                  ? String(body.primaryEmail)
+                  : null,
+            }
+          : null,
+      });
+      return NextResponse.json(
+        { customer: serializeBillingCustomer(result.customer) },
+        { status: 201 },
+      );
+    }
+
     const created = await createBillingCustomer({
       displayName: String(body.displayName ?? ""),
       key: body.key ? String(body.key) : undefined,

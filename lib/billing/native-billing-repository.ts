@@ -8,6 +8,7 @@ import type {
   BillingCustomerRecord,
   BillingCustomerTenantLinkRecord,
   BillingProfileRecord,
+  LegalEntityDependencyCounts,
   LegalEntityRecord,
 } from "./native-billing-types";
 
@@ -140,6 +141,14 @@ export async function listBillingCustomers(): Promise<BillingCustomerRecord[]> {
   });
 }
 
+export async function listActiveBillingCustomers(): Promise<BillingCustomerRecord[]> {
+  return prisma.billingCustomer.findMany({
+    where: { status: "ACTIVE" },
+    select: customerSelect,
+    orderBy: { displayName: "asc" },
+  });
+}
+
 export async function findBillingCustomerByKey(
   key: string,
 ): Promise<BillingCustomerRecord | null> {
@@ -232,6 +241,44 @@ export async function findActiveBillingCustomerTenantLink(
     },
   });
   return row;
+}
+
+export type ActiveTenantBillingCustomerLink = BillingCustomerTenantLinkRecord & {
+  customerKey: string;
+  customerDisplayName: string;
+};
+
+/** Active link (activeUntil null) for a tenant, if any — across all billing customers. */
+export async function findActiveBillingCustomerTenantLinkByTenantId(
+  tenantId: string,
+): Promise<ActiveTenantBillingCustomerLink | null> {
+  const row = await prisma.billingCustomerTenant.findFirst({
+    where: { tenantId, activeUntil: null },
+    select: {
+      id: true,
+      billingCustomerId: true,
+      tenantId: true,
+      linkRole: true,
+      activeFrom: true,
+      activeUntil: true,
+      createdAt: true,
+      billingCustomer: { select: { key: true, displayName: true } },
+    },
+  });
+  if (!row) {
+    return null;
+  }
+  return {
+    id: row.id,
+    billingCustomerId: row.billingCustomerId,
+    tenantId: row.tenantId,
+    linkRole: row.linkRole,
+    activeFrom: row.activeFrom,
+    activeUntil: row.activeUntil,
+    createdAt: row.createdAt,
+    customerKey: row.billingCustomer.key,
+    customerDisplayName: row.billingCustomer.displayName,
+  };
 }
 
 export async function createBillingCustomerTenantLink(input: {
@@ -344,6 +391,14 @@ export async function listLegalEntities(): Promise<LegalEntityRecord[]> {
   });
 }
 
+export async function listActiveLegalEntities(): Promise<LegalEntityRecord[]> {
+  return prisma.legalEntity.findMany({
+    where: { status: "ACTIVE" },
+    select: legalEntitySelect,
+    orderBy: { displayName: "asc" },
+  });
+}
+
 export async function findLegalEntityByKey(key: string): Promise<LegalEntityRecord | null> {
   return prisma.legalEntity.findUnique({
     where: { key },
@@ -375,6 +430,23 @@ export async function updateLegalEntityRecord(
     data,
     select: legalEntitySelect,
   });
+}
+
+export async function countLegalEntityDependencies(
+  legalEntityId: string,
+): Promise<LegalEntityDependencyCounts> {
+  const [billingBankAccounts, billingContracts, invoices, invoiceSequences] = await Promise.all([
+    prisma.billingBankAccount.count({ where: { legalEntityId } }),
+    prisma.billingContract.count({ where: { legalEntityId } }),
+    prisma.invoice.count({ where: { legalEntityId } }),
+    prisma.invoiceSequence.count({ where: { legalEntityId } }),
+  ]);
+
+  return { billingBankAccounts, billingContracts, invoices, invoiceSequences };
+}
+
+export async function deleteLegalEntityRecord(id: string): Promise<void> {
+  await prisma.legalEntity.delete({ where: { id } });
 }
 
 export async function listBillingBankAccountsForLegalEntity(
