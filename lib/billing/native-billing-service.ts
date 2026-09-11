@@ -13,6 +13,8 @@ import {
   createBillingProfileRecord,
   createLegalEntityRecord,
   deactivateBillingCustomerTenantLink,
+  countLegalEntityDependencies,
+  deleteLegalEntityRecord,
   findActiveBillingCustomerTenantLink,
   findActiveBillingCustomerTenantLinkByTenantId,
   findBillingBankAccountById,
@@ -36,6 +38,7 @@ import type {
   BillingBankAccountRecord,
   BillingCustomerRecord,
   BillingProfileRecord,
+  LegalEntityDependencyCounts,
   LegalEntityRecord,
 } from "./native-billing-types";
 import {
@@ -509,6 +512,50 @@ export async function updateLegalEntity(input: UpdateLegalEntityInput): Promise<
   });
 
   return updated;
+}
+
+const LEGAL_ENTITY_DELETE_BLOCKED_MESSAGE =
+  "Dieser Rechtsträger kann nicht gelöscht werden, da bereits Abrechnungsdaten damit verknüpft sind.";
+
+function totalLegalEntityDependencies(counts: LegalEntityDependencyCounts): number {
+  return (
+    counts.billingBankAccounts +
+    counts.billingContracts +
+    counts.invoices +
+    counts.invoiceSequences
+  );
+}
+
+export async function deleteLegalEntity(input: {
+  entityKey: string;
+  actorUserId: string;
+}): Promise<void> {
+  const existing = await findLegalEntityByKey(input.entityKey);
+  if (!existing) {
+    throw new NativeBillingNotFoundError("Legal Entity nicht gefunden.");
+  }
+
+  const dependencies = await countLegalEntityDependencies(existing.id);
+  if (totalLegalEntityDependencies(dependencies) > 0) {
+    throw new NativeBillingConflictError(LEGAL_ENTITY_DELETE_BLOCKED_MESSAGE, {
+      dependencyCounts: dependencies,
+    });
+  }
+
+  await deleteLegalEntityRecord(existing.id);
+
+  void logAction({
+    actorUserId: input.actorUserId,
+    moduleKey: NATIVE_BILLING_AUDIT_MODULE,
+    entityType: "LegalEntity",
+    entityId: existing.id,
+    action: NATIVE_BILLING_AUDIT_ACTIONS.LEGAL_ENTITY_DELETED,
+    beforeJson: {
+      key: existing.key,
+      displayName: existing.displayName,
+      legalName: existing.legalName,
+    },
+  });
 }
 
 export async function listLegalEntitiesForPlatform() {

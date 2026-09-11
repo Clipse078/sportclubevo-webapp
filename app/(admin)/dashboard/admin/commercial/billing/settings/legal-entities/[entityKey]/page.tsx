@@ -2,11 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
+import NativeBillingDeleteLegalEntityButton from "@/components/admin/billing/NativeBillingDeleteLegalEntityButton";
 import { findLegalEntityByKey } from "@/lib/billing/native-billing-repository";
 import {
   presentLegalEntityStatus,
   presentLegalEntityType,
 } from "@/lib/billing/native-billing-presentation";
+import { hasPermission } from "@/lib/permissions/has-permission";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
@@ -15,7 +17,8 @@ type PageProps = {
 };
 
 export default async function NativeBillingLegalEntityDetailPage({ params }: PageProps) {
-  await requirePermission(PERMISSIONS.BILLING_VIEW);
+  const session = await requirePermission(PERMISSIONS.BILLING_VIEW);
+  const canManage = hasPermission(session, PERMISSIONS.BILLING_MANAGE);
   const { entityKey } = await params;
 
   const entity = await findLegalEntityByKey(entityKey);
@@ -95,6 +98,21 @@ export default async function NativeBillingLegalEntityDetailPage({ params }: Pag
           </div>
         </dl>
       </section>
+
+      {canManage ? (
+        <section className="space-y-3 rounded-lg border border-red-200 bg-red-50/40 p-4">
+          <h2 className="text-sm font-semibold text-red-900">Gefahrenzone</h2>
+          <p className="text-sm text-muted-foreground">
+            Entfernt den Rechtsträger aus Einstellungen und Vertragsauswahl, sofern keine
+            Abrechnungsdaten verknüpft sind.
+          </p>
+          <NativeBillingDeleteLegalEntityButton
+            entityKey={entity.key}
+            displayName={entity.displayName}
+            legalName={entity.legalName}
+          />
+        </section>
+      ) : null}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requirePlatformApiPermission } from "@/lib/permissions/require-platform-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { nativeBillingErrorResponse } from "@/lib/billing/native-billing-api-errors";
-import { updateLegalEntity } from "@/lib/billing/native-billing-service";
+import { deleteLegalEntity, updateLegalEntity } from "@/lib/billing/native-billing-service";
 import { serializeLegalEntity } from "@/lib/billing/native-billing-serializers";
 import { findLegalEntityByKey } from "@/lib/billing/native-billing-repository";
 import type { LegalEntityStatus, LegalEntityType } from "@prisma/client";
@@ -50,6 +50,24 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       actorUserId: access.actorUserId!,
     });
     return NextResponse.json({ legalEntity: serializeLegalEntity(updated) });
+  } catch (error) {
+    return nativeBillingErrorResponse(error);
+  }
+}
+
+export async function DELETE(_request: NextRequest, context: RouteContext) {
+  const access = await requirePlatformApiPermission(PERMISSIONS.BILLING_MANAGE);
+  if (!access.ok) {
+    return NextResponse.json({ error: access.error }, { status: access.status });
+  }
+
+  const { key } = await context.params;
+  try {
+    await deleteLegalEntity({
+      entityKey: key,
+      actorUserId: access.actorUserId!,
+    });
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
     return nativeBillingErrorResponse(error);
   }

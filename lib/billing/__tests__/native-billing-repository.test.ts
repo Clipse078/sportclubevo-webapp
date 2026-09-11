@@ -12,9 +12,20 @@ const prismaMock = vi.hoisted(() => ({
   legalEntity: {
     findUnique: vi.fn(),
     findMany: vi.fn(),
+    delete: vi.fn(),
   },
   billingBankAccount: {
     create: vi.fn(),
+    count: vi.fn(),
+  },
+  billingContract: {
+    count: vi.fn(),
+  },
+  invoice: {
+    count: vi.fn(),
+  },
+  invoiceSequence: {
+    count: vi.fn(),
   },
 }));
 
@@ -28,6 +39,8 @@ const {
   findLegalEntityByKey,
   listActiveLegalEntities,
   createBillingBankAccountRecord,
+  countLegalEntityDependencies,
+  deleteLegalEntityRecord,
 } = await import("../native-billing-repository");
 
 describe("native billing repository", () => {
@@ -136,5 +149,27 @@ describe("native billing repository", () => {
         data: expect.objectContaining({ ibanEncrypted: expect.not.stringContaining(iban) }),
       }),
     );
+  });
+
+  it("counts legal entity billing dependencies", async () => {
+    prismaMock.billingBankAccount.count.mockResolvedValue(1);
+    prismaMock.billingContract.count.mockResolvedValue(2);
+    prismaMock.invoice.count.mockResolvedValue(3);
+    prismaMock.invoiceSequence.count.mockResolvedValue(4);
+
+    const counts = await countLegalEntityDependencies("le-1");
+
+    expect(counts).toEqual({
+      billingBankAccounts: 1,
+      billingContracts: 2,
+      invoices: 3,
+      invoiceSequences: 4,
+    });
+  });
+
+  it("deletes legal entity by id", async () => {
+    prismaMock.legalEntity.delete.mockResolvedValue(undefined);
+    await deleteLegalEntityRecord("le-1");
+    expect(prismaMock.legalEntity.delete).toHaveBeenCalledWith({ where: { id: "le-1" } });
   });
 });

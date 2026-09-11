@@ -8,6 +8,7 @@ import type {
   BillingCustomerRecord,
   BillingCustomerTenantLinkRecord,
   BillingProfileRecord,
+  LegalEntityDependencyCounts,
   LegalEntityRecord,
 } from "./native-billing-types";
 
@@ -429,6 +430,23 @@ export async function updateLegalEntityRecord(
     data,
     select: legalEntitySelect,
   });
+}
+
+export async function countLegalEntityDependencies(
+  legalEntityId: string,
+): Promise<LegalEntityDependencyCounts> {
+  const [billingBankAccounts, billingContracts, invoices, invoiceSequences] = await Promise.all([
+    prisma.billingBankAccount.count({ where: { legalEntityId } }),
+    prisma.billingContract.count({ where: { legalEntityId } }),
+    prisma.invoice.count({ where: { legalEntityId } }),
+    prisma.invoiceSequence.count({ where: { legalEntityId } }),
+  ]);
+
+  return { billingBankAccounts, billingContracts, invoices, invoiceSequences };
+}
+
+export async function deleteLegalEntityRecord(id: string): Promise<void> {
+  await prisma.legalEntity.delete({ where: { id } });
 }
 
 export async function listBillingBankAccountsForLegalEntity(

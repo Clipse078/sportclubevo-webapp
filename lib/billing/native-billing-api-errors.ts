@@ -15,7 +15,13 @@ export function nativeBillingErrorResponse(error: unknown): NextResponse {
     return NextResponse.json({ error: error.message }, { status: 404 });
   }
   if (error instanceof NativeBillingConflictError) {
-    return NextResponse.json({ error: error.message }, { status: 409 });
+    return NextResponse.json(
+      {
+        error: error.message,
+        ...(error.dependencyCounts ? { dependencies: error.dependencyCounts } : {}),
+      },
+      { status: 409 },
+    );
   }
   if (
     error instanceof BillingBankAccountDecryptionError ||
