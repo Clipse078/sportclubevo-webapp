@@ -10,6 +10,7 @@ import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { generateTenantCssVars } from "@/lib/tenant-runtime/theme";
 import { getPersonProfileByUserId } from "@/lib/people/queries";
 import { resolveAccountIdentityName } from "@/lib/people/identity";
+import { resolveWorkspaceContextFromSessionUser } from "@/lib/workspace/workspace-context";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -46,6 +47,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
     tenantName: ctx?.name,
   });
   const shellImageUrl = linkedPersonProfile?.imageUrl ?? null;
+  const workspaceContext = resolveWorkspaceContextFromSessionUser(session.user);
 
   return (
     <div
@@ -56,6 +58,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
       <Suspense fallback={null}>
         <AdminSidebar
           permissionKeys={session.user.permissionKeys}
+          workspaceContext={workspaceContext}
           clubName={ctx?.name}
           logoUrl={ctx?.logoUrl}
         />

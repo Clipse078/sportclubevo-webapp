@@ -5,6 +5,14 @@
 
 export const NAV_ICON_KEYS = [
   "dashboard",
+  "platform-dashboard",
+  "clubs",
+  "integrations",
+  "access-security",
+  "operations",
+  "berechtigungen",
+  "benutzerverwaltung",
+  "rollenverwaltung",
   "organisation",
   "organisationseinheiten",
   "zielgruppen",

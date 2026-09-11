@@ -8,6 +8,14 @@ import type { NavIconKey } from "./nav-icon-keys";
 /** Maps every sidebar nav label to its animated icon key. */
 const NAV_LABEL_TO_ICON_KEY: Record<string, NavIconKey> = {
   Dashboard: "dashboard",
+  "Platform Dashboard": "platform-dashboard",
+  Clubs: "clubs",
+  Integrations: "integrations",
+  "Access & Security": "access-security",
+  Operations: "operations",
+  Berechtigungen: "berechtigungen",
+  Benutzerverwaltung: "benutzerverwaltung",
+  Rollenverwaltung: "rollenverwaltung",
   Organisation: "organisation",
   Organisationseinheiten: "organisationseinheiten",
   Zielgruppen: "zielgruppen",

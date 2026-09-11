@@ -10,11 +10,20 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { getVisibleNavSections, flattenNavSections } from "@/lib/nav/nav-config";
+import {
+  getVisibleNavSections,
+  flattenNavSections,
+  type NavContext,
+} from "@/lib/nav/nav-config";
 import { PERMISSIONS, type PermissionKey } from "@/lib/permissions/permissions";
 
-function visibleLabels(permissionKeys: PermissionKey[]): string[] {
-  return flattenNavSections(getVisibleNavSections(permissionKeys)).map((i) => i.label);
+function visibleLabels(
+  permissionKeys: PermissionKey[],
+  workspaceContext: NavContext = "club",
+): string[] {
+  return flattenNavSections(
+    getVisibleNavSections(permissionKeys, workspaceContext),
+  ).map((i) => i.label);
 }
 
 describe("RPERM-05 — Documents module navigation", () => {
@@ -49,8 +58,8 @@ describe("RPERM-05 — tenant Roles & Permissions navigation", () => {
     expect(tenantOnly).toContain("Rollen & Berechtigungen");
     expect(tenantOnly).not.toContain("Rollen");
 
-    const platformOnly = visibleLabels([PERMISSIONS.USERS_MANAGE]);
-    expect(platformOnly).toContain("Rollen");
+    const platformOnly = visibleLabels([PERMISSIONS.USERS_MANAGE], "platform");
+    expect(platformOnly).toContain("Rollenverwaltung");
     expect(platformOnly).not.toContain("Rollen & Berechtigungen");
   });
 });

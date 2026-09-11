@@ -11,6 +11,7 @@ import { useSidebarResize } from "@/hooks/useSidebarResize";
 import { getVisibleNavSections } from "@/lib/nav/nav-config";
 import type { NavItem, NavSection } from "@/lib/nav/nav-config";
 import type { PermissionKey } from "@/lib/permissions/permissions";
+import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
 import {
   persistSidebarCollapsed,
   readStoredSidebarCollapsed,
@@ -19,6 +20,7 @@ import { cn } from "@/lib/cn";
 
 type AdminSidebarProps = {
   permissionKeys: string[];
+  workspaceContext?: WorkspaceContext;
   /** Tenant display name. Falls back to "SportClubEvo" when not provided. */
   clubName?: string;
   /** Raw logoUrl from tenant config. Null/invalid → fallback icon. */
@@ -70,6 +72,7 @@ function moduleIsActive(item: NavItem, isItemActive: (href: string) => boolean):
 
 export default function AdminSidebar({
   permissionKeys,
+  workspaceContext = "club",
   clubName,
   logoUrl,
   collapsed,
@@ -107,9 +110,13 @@ export default function AdminSidebar({
 
   const sections: NavSection[] = getVisibleNavSections(
     permissionKeys as PermissionKey[],
+    workspaceContext,
   );
 
-  const displayClubName = clubName ?? "SportClubEvo";
+  const isPlatformWorkspace = workspaceContext === "platform";
+  const displayClubName = isPlatformWorkspace
+    ? "SportClubEvo Platform"
+    : (clubName ?? "SportClubEvo");
 
   function buildHref(baseHref: string) {
     if (!selectedSeason || !shouldCarrySeason(baseHref)) return baseHref;
@@ -269,8 +276,9 @@ export default function AdminSidebar({
       <div className="sce-sidebar-brand">
         <SidebarBrandHeader
           tenantName={displayClubName}
-          logoUrl={logoUrl}
+          logoUrl={isPlatformWorkspace ? null : logoUrl}
           collapsed={isCollapsed}
+          platformWorkspace={isPlatformWorkspace}
         />
 
         <button

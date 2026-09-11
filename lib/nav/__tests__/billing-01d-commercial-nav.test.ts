@@ -6,12 +6,14 @@ import { TENANT_ADMINISTRATION_PERMISSIONS } from "@/lib/permissions/tenant-admi
 
 describe("SCE-SUPERADMIN-BILLING-01D — Commercial billing navigation", () => {
   it("shows Billing under Commercial for platform billing.view", () => {
-    const sections = getVisibleNavSections([PERMISSIONS.BILLING_VIEW]);
-    const commercial = sections.find((s) => s.sectionLabel === "Commercial");
+    const sections = getVisibleNavSections([PERMISSIONS.BILLING_VIEW], "platform");
+    const commercial = sections.find((s) => s.sectionLabel === "Platform");
     expect(commercial).toBeDefined();
-    const item = commercial!.items.find((i) => i.key === "commercial");
+    const item = commercial!.items.find((i) => i.key === "platform-commercial");
     expect(item?.href).toBe("/dashboard/admin/commercial/billing");
-    expect(item?.children?.some((c) => c.key === "commercial-billing")).toBe(true);
+    expect(item?.children?.some((c) => c.key === "platform-commercial-billing")).toBe(
+      true,
+    );
   });
 
   it("hides Commercial billing for tenant administration permissions only", () => {
@@ -20,10 +22,14 @@ describe("SCE-SUPERADMIN-BILLING-01D — Commercial billing navigation", () => {
     expect(flat.some((i) => i.key === "commercial")).toBe(false);
   });
 
-  it("defines Commercial as its own section, not under Administration", () => {
+  it("defines Commercial under Platform, not under Administration", () => {
     const system = NAV_SECTIONS.find((s) => s.sectionLabel === "System");
     const adminChildren = system?.items.find((i) => i.key === "administration")?.children ?? [];
     expect(adminChildren.some((c) => c.href.includes("/commercial/billing"))).toBe(false);
+    const platform = NAV_SECTIONS.find((s) => s.sectionLabel === "Platform");
+    expect(
+      platform?.items.some((i) => i.href.includes("/commercial/billing")),
+    ).toBe(true);
   });
 
   it("resolves Commercial and Billing sidebar labels to animated nav icons", () => {
@@ -31,5 +37,7 @@ describe("SCE-SUPERADMIN-BILLING-01D — Commercial billing navigation", () => {
     expect(() => getNavIconKey("Billing")).not.toThrow();
     expect(getNavIconKey("Commercial")).toBe("commercial");
     expect(getNavIconKey("Billing")).toBe("billing");
+    expect(() => getNavIconKey("Platform Dashboard")).not.toThrow();
+    expect(() => getNavIconKey("Clubs")).not.toThrow();
   });
 });

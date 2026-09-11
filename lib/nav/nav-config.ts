@@ -7,14 +7,19 @@
 
 import { PERMISSIONS, type PermissionKey } from "@/lib/permissions/permissions";
 import { TENANT_ADMINISTRATION_PERMISSIONS } from "@/lib/permissions/tenant-administration";
+import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
 
 // ── Types ────────────────────────────────────────────────────────────────────
+
+export type NavContext = WorkspaceContext;
 
 export type NavItemChild = {
   key: string;
   label: string;
   href: string;
   permissionKeys?: PermissionKey[];
+  /** Shell workspace visibility; defaults to club-only. */
+  navContexts?: NavContext[];
 };
 
 export type NavItem = {
@@ -22,6 +27,8 @@ export type NavItem = {
   label: string;
   href: string;
   permissionKeys?: PermissionKey[];
+  /** Shell workspace visibility; defaults to club-only. */
+  navContexts?: NavContext[];
   /** Whether the active season query param should propagate to this href. */
   carrySeason?: boolean;
   /** Sub-items rendered as indented children in the sidebar. */
@@ -58,6 +65,86 @@ export type ModuleDefinition = {
 // Formulare & Freigaben · Vorfälle & Disziplin | Administration
 
 export const NAV_SECTIONS: NavSection[] = [
+  // ── Platform workspace (sr-only: Platform) ─────────────────────────────────
+  {
+    sectionLabel: "Platform",
+    items: [
+      {
+        key: "platform-dashboard",
+        label: "Platform Dashboard",
+        href: "/dashboard/platform",
+        navContexts: ["platform"],
+      },
+      {
+        key: "platform-clubs",
+        label: "Clubs",
+        href: "/dashboard/admin/tenants",
+        permissionKeys: [PERMISSIONS.TENANTS_VIEW, PERMISSIONS.TENANTS_MANAGE],
+        navContexts: ["platform"],
+      },
+      {
+        key: "platform-commercial",
+        label: "Commercial",
+        href: "/dashboard/admin/commercial/billing",
+        permissionKeys: [PERMISSIONS.BILLING_VIEW],
+        navContexts: ["platform"],
+        children: [
+          {
+            key: "platform-commercial-billing",
+            label: "Billing",
+            href: "/dashboard/admin/commercial/billing",
+            permissionKeys: [PERMISSIONS.BILLING_VIEW],
+            navContexts: ["platform"],
+          },
+        ],
+      },
+      {
+        key: "platform-integrations",
+        label: "Integrations",
+        href: "/dashboard/admin/integrations",
+        permissionKeys: [PERMISSIONS.TENANTS_MANAGE],
+        navContexts: ["platform"],
+      },
+      {
+        key: "platform-access",
+        label: "Access & Security",
+        href: "/dashboard/users",
+        permissionKeys: [PERMISSIONS.USERS_MANAGE],
+        navContexts: ["platform"],
+        children: [
+          {
+            key: "platform-users",
+            label: "Benutzerverwaltung",
+            href: "/dashboard/users",
+            permissionKeys: [PERMISSIONS.USERS_MANAGE],
+            navContexts: ["platform"],
+          },
+          {
+            key: "platform-permissions",
+            label: "Berechtigungen",
+            href: "/dashboard/permissions",
+            permissionKeys: [PERMISSIONS.USERS_MANAGE],
+            navContexts: ["platform"],
+          },
+          {
+            key: "platform-roles",
+            label: "Rollenverwaltung",
+            href: "/dashboard/roles",
+            permissionKeys: [PERMISSIONS.USERS_MANAGE],
+            navContexts: ["platform"],
+          },
+        ],
+      },
+      {
+        key: "platform-operations",
+        label: "Operations",
+        href: "/dashboard/runtime",
+        permissionKeys: [PERMISSIONS.USERS_MANAGE],
+        navContexts: ["platform"],
+      },
+    ],
+  },
+
   // ── Daily club operations (sr-only: Tagesbetrieb) ─────────────────────────
   {
     sectionLabel: "Tagesbetrieb",
@@ -67,6 +154,7 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Dashboard",
         href: "/dashboard",
         carrySeason: true,
+        navContexts: ["club"],
       },
       {
         key: "planung",
@@ -398,26 +486,31 @@ export const NAV_SECTIONS: NavSection[] = [
         key: "meetings",
         label: "Meetings",
         href: "/vereinsleitung/meetings",
+        navContexts: ["club"],
       },
       {
         key: "club-entwicklung",
         label: "Club Entwicklung",
         href: "/vereinsleitung/club-entwicklung",
+        navContexts: ["club"],
         children: [
           {
             key: "club-entwicklung-ziele",
             label: "Ziele",
             href: "/vereinsleitung/targets",
+            navContexts: ["club"],
           },
           {
             key: "club-entwicklung-initiativen",
             label: "Initiativen",
             href: "/vereinsleitung/initiativen",
+            navContexts: ["club"],
           },
           {
             key: "club-entwicklung-prozesse",
             label: "Prozesse & Aufgaben",
             href: "/vereinsleitung/prozesse",
+            navContexts: ["club"],
           },
         ],
       },
@@ -425,11 +518,13 @@ export const NAV_SECTIONS: NavSection[] = [
         key: "material",
         label: "Material & Inventar",
         href: "/vereinsleitung/material",
+        navContexts: ["club"],
       },
       {
         key: "finanzen",
         label: "Finanzen",
         href: "/vereinsleitung/finanzen",
+        navContexts: ["club"],
       },
       {
         key: "sponsoring",
@@ -455,27 +550,6 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Vorfälle & Disziplin",
         href: "/dashboard/vorfaelle-disziplin",
         permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
-      },
-    ],
-  },
-
-  // ── Commercial (sr-only: Commercial) — platform billing & revenue ops ─────
-  {
-    sectionLabel: "Commercial",
-    items: [
-      {
-        key: "commercial",
-        label: "Commercial",
-        href: "/dashboard/admin/commercial/billing",
-        permissionKeys: [PERMISSIONS.BILLING_VIEW],
-        children: [
-          {
-            key: "commercial-billing",
-            label: "Billing",
-            href: "/dashboard/admin/commercial/billing",
-            permissionKeys: [PERMISSIONS.BILLING_VIEW],
-          },
-        ],
       },
     ],
   },
@@ -648,24 +722,41 @@ function hasAccess(userKeys: PermissionKey[], required?: PermissionKey[]): boole
   return required.some((p) => userKeys.includes(p));
 }
 
-/** Returns nav sections filtered to the given permission keys. */
-export function getVisibleNavSections(permissionKeys: PermissionKey[]): NavSection[] {
+const DEFAULT_NAV_CONTEXTS: NavContext[] = ["club"];
+
+function isVisibleInNavContext(
+  navContexts: NavContext[] | undefined,
+  workspaceContext: NavContext,
+): boolean {
+  const contexts = navContexts ?? DEFAULT_NAV_CONTEXTS;
+  return contexts.includes(workspaceContext);
+}
+
+/** Returns nav sections filtered to workspace context and permission keys. */
+export function getVisibleNavSections(
+  permissionKeys: PermissionKey[],
+  workspaceContext: NavContext = "club",
+): NavSection[] {
   return NAV_SECTIONS.map((section) => ({
     ...section,
     items: section.items
+      .filter((item) => isVisibleInNavContext(item.navContexts, workspaceContext))
       .filter((item) => hasAccess(permissionKeys, item.permissionKeys))
       .map((item) => ({
         ...item,
-        children: item.children?.filter((child) =>
-          hasAccess(permissionKeys, child.permissionKeys),
-        ),
+        children: item.children
+          ?.filter((child) => isVisibleInNavContext(child.navContexts, workspaceContext))
+          ?.filter((child) => hasAccess(permissionKeys, child.permissionKeys)),
       })),
   })).filter((section) => section.items.length > 0);
 }
 
 /** Top-level module keys in canonical sidebar order for the given permissions. */
-export function getTopLevelNavModuleKeys(permissionKeys: PermissionKey[]): string[] {
-  return getVisibleNavSections(permissionKeys).flatMap((section) =>
+export function getTopLevelNavModuleKeys(
+  permissionKeys: PermissionKey[],
+  workspaceContext: NavContext = "club",
+): string[] {
+  return getVisibleNavSections(permissionKeys, workspaceContext).flatMap((section) =>
     section.items.map((item) => item.key),
   );
 }

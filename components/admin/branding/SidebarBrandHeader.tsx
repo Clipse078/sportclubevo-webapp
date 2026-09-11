@@ -18,13 +18,18 @@ type SidebarBrandHeaderProps = {
   tenantName: string;
   logoUrl?: string | null;
   collapsed?: boolean;
+  /** Platform workspace identity — no active club branding. */
+  platformWorkspace?: boolean;
 };
 
 export default function SidebarBrandHeader({
   tenantName,
   logoUrl,
   collapsed = false,
+  platformWorkspace = false,
 }: SidebarBrandHeaderProps) {
+  const displayName = platformWorkspace ? "SportClubEvo Platform" : tenantName;
+
   return (
     <div
       className={cn(
@@ -32,19 +37,25 @@ export default function SidebarBrandHeader({
         collapsed ? "justify-center" : "justify-start",
       )}
     >
-      <TenantLogo
-        logoUrl={logoUrl}
-        size={collapsed ? 34 : 42}
-        alt={`${tenantName} Logo`}
-      />
+      {!platformWorkspace && (
+        <TenantLogo
+          logoUrl={logoUrl}
+          size={collapsed ? 34 : 42}
+          alt={`${tenantName} Logo`}
+        />
+      )}
 
       {!collapsed && (
         <p
           className="min-w-0 truncate text-[1.0625rem] font-bold leading-snug tracking-[-0.01em]"
           style={{ color: "var(--foreground)" }}
         >
-          {tenantName}
+          {displayName}
         </p>
+      )}
+
+      {collapsed && platformWorkspace && (
+        <p className="sr-only">{displayName}</p>
       )}
     </div>
   );
