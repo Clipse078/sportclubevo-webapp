@@ -44,6 +44,11 @@ describe("nav-icon-registry (SCE-DESIGN-04C)", () => {
     expect(getNavIconKey("Personen & Zugänge")).toBe("benutzer");
   });
 
+  it("maps Commercial billing nav labels to dedicated animated icons", () => {
+    expect(getNavIconKey("Commercial")).toBe("commercial");
+    expect(getNavIconKey("Billing")).toBe("billing");
+  });
+
   it("throws for genuinely unknown sidebar labels", () => {
     expect(() => getNavIconKey("Not A Real Nav Item")).toThrow(
       '[nav-icon-registry] Missing animated icon for sidebar label: "Not A Real Nav Item"',

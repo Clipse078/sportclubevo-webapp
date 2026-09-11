@@ -40,10 +40,10 @@ describe("nav-icon hover loops (SCE-DESIGN-04E)", () => {
   const css = readFileSync(CSS_PATH, "utf8");
   const globalsCss = readFileSync(GLOBALS_CSS_PATH, "utf8");
 
-  it("covers all 54 sidebar nav labels with icon keys", () => {
+  it("covers every sidebar nav label with a distinct icon key", () => {
     const labels = getAllSidebarNavLabels();
-    expect(labels).toHaveLength(54);
-    expect(new Set(getAllSidebarNavIconKeys()).size).toBe(54);
+    expect(labels.length).toBeGreaterThan(0);
+    expect(new Set(getAllSidebarNavIconKeys()).size).toBe(labels.length);
   });
 
   it("has a bespoke icon component with animated elements for every icon key", () => {

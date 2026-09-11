@@ -48,6 +48,8 @@ export const NAV_ICON_KEYS = [
   "prozesse-aufgaben",
   "material-inventar",
   "finanzen",
+  "commercial",
+  "billing",
   "sponsoring",
   "mitglieder",
   "aufgaben",
