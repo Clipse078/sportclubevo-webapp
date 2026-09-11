@@ -107,10 +107,12 @@ export async function findAllLinkedTenantBillingAccounts(): Promise<
     orderBy: { tenant: { name: "asc" } },
   });
 
-  return rows.map((row) => ({
-    tenantId: row.tenant.id,
-    tenantKey: row.tenant.key,
-    tenantName: row.tenant.name,
-    stripeCustomerId: row.stripeCustomerId,
-  }));
+  return rows
+    .filter((row) => row.tenant != null)
+    .map((row) => ({
+      tenantId: row.tenant.id,
+      tenantKey: row.tenant.key,
+      tenantName: row.tenant.name,
+      stripeCustomerId: row.stripeCustomerId,
+    }));
 }

@@ -139,6 +139,7 @@ export async function getTenantBillingSummary(
       stripeCustomerId: context.stripeCustomerId,
       subscriptions,
       latestInvoice: latestPage.invoices[0] ?? null,
+      openInvoices: outstandingInvoices,
       outstandingAmount: sumOutstandingFromInvoices(outstandingInvoices),
       overdueOpenInvoiceCount: outstandingInvoices.filter((invoice) => {
         if (invoice.status !== "open" || !invoice.dueDate) {

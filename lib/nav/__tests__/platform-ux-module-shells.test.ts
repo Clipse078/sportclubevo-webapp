@@ -160,6 +160,21 @@ describe("PLATFORM-UX-01 — final sidebar order", () => {
     expect(system!.items.map((i) => i.key)).toEqual(["administration"]);
   });
 
+  it("shows Commercial billing only for platform billing.view", () => {
+    const withBilling = getVisibleNavSections([PERMISSIONS.BILLING_VIEW]);
+    const commercial = withBilling.find((s) => s.sectionLabel === "Commercial");
+    expect(commercial?.items.map((i) => i.key)).toEqual(["commercial"]);
+    expect(commercial?.items[0]?.children?.map((c) => c.key)).toEqual([
+      "commercial-billing",
+    ]);
+    expect(commercial?.items[0]?.children?.[0]?.href).toBe(
+      "/dashboard/admin/commercial/billing",
+    );
+
+    const tenantAdmin = getVisibleNavSections([PERMISSIONS.USERS_MANAGE_MEMBERSHIPS]);
+    expect(tenantAdmin.some((s) => s.sectionLabel === "Commercial")).toBe(false);
+  });
+
   it("filters empty sections so separators have modules on both sides", () => {
     const sections = getVisibleNavSections([PERMISSIONS.USERS_VIEW]);
     expect(sections.every((section) => section.items.length > 0)).toBe(true);
