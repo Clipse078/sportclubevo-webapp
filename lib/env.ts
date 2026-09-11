@@ -17,6 +17,7 @@ export type RuntimeEnvironment = {
   hasDatabaseUrl: boolean;
   hasDirectUrl: boolean;
   hasNextAuthSecret: boolean;
+  hasBillingEncryptionKey: boolean;
   isDeployed: boolean;
   isTest: boolean;
   isPreview: boolean;
@@ -190,6 +191,9 @@ export function getRuntimeEnvironment(
       readOptionalString(processEnv.NEXTAUTH_SECRET) ??
         readOptionalString(processEnv.AUTH_SECRET),
     ),
+    hasBillingEncryptionKey: Boolean(
+      readOptionalString(processEnv.SCE_BILLING_ENCRYPTION_KEY),
+    ),
     isDeployed,
     isTest: appEnv === "test",
     isPreview: appEnv === "preview",
@@ -252,6 +256,10 @@ export function getEnvironmentWarnings(env: RuntimeEnvironment): string[] {
 
   if (!env.hasNextAuthSecret) {
     warnings.push("NEXTAUTH_SECRET is not configured.");
+  }
+
+  if ((env.isStage || env.isProd) && !env.hasBillingEncryptionKey) {
+    warnings.push("SCE_BILLING_ENCRYPTION_KEY is not configured.");
   }
 
   if (env.isUnknown) {

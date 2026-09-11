@@ -87,6 +87,12 @@ Scope terms:
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `STRIPE_SECRET_KEY` | Server-only Stripe API secret for read-only billing | Yes | Conditional (live `sk_live_…` only) | Forbidden | Optional (test `sk_test_…` only) | Required when Stripe billing reads are enabled | Billing reads fail closed; mis-mode keys rejected at startup/read time | Never log. Never use `NEXT_PUBLIC_` prefix. **Never reuse production live keys in STAGE, acceptance, or local.** STAGE and acceptance require test keys only. Production requires live keys only. On acceptance, provider side effects also require `ACCEPTANCE_ENABLED_EXTERNAL_PROVIDERS` to include `stripe`. |
 
+## Native commercial billing (SCE)
+
+| Name | Purpose | Sensitive | Production | Preview | Local | Required / optional | Failure behavior | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `SCE_BILLING_ENCRYPTION_KEY` | AES-256-GCM key for IBAN / QR-IBAN field encryption at rest | Yes | Required before native bank accounts are configured | Forbidden | Optional (Vitest uses an isolated test fallback) | Required in STAGE/PROD when persisting bank accounts | Bank account reads/writes that touch encrypted fields fail with a typed billing error; other routes remain unaffected | 32-byte value as base64 or 64-char hex. Never log. Independent per environment. Supports versioned payloads for future rotation. |
+
 ## Public website
 
 | Name | Purpose | Sensitive | Production | Preview | Local | Required / optional | Failure behavior | Notes |
