@@ -1,0 +1,119 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const prismaMock = vi.hoisted(() => ({
+  billingCustomer: {
+    create: vi.fn(),
+    findUnique: vi.fn(),
+  },
+  billingCustomerTenant: {
+    create: vi.fn(),
+  },
+  legalEntity: {
+    findUnique: vi.fn(),
+  },
+  billingBankAccount: {
+    create: vi.fn(),
+  },
+}));
+
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: prismaMock,
+}));
+
+const {
+  createBillingCustomerRecord,
+  createBillingCustomerTenantLink,
+  findLegalEntityByKey,
+  createBillingBankAccountRecord,
+} = await import("../native-billing-repository");
+
+describe("native billing repository", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("enforces unique billing customer key at persistence layer", async () => {
+    prismaMock.billingCustomer.create.mockRejectedValue({ code: "P2002" });
+    await expect(
+      createBillingCustomerRecord({
+        key: "duplicate",
+        displayName: "Dup",
+        legalName: null,
+        status: "ACTIVE",
+        defaultLanguage: null,
+        defaultCurrency: null,
+        primaryEmail: null,
+      }),
+    ).rejects.toMatchObject({ code: "P2002" });
+  });
+
+  it("creates customer tenant link", async () => {
+    prismaMock.billingCustomerTenant.create.mockResolvedValue({
+      id: "link-1",
+      billingCustomerId: "cust-1",
+      tenantId: "tenant-1",
+      linkRole: null,
+      activeFrom: new Date(),
+      activeUntil: null,
+      createdAt: new Date(),
+    });
+
+    const link = await createBillingCustomerTenantLink({
+      billingCustomerId: "cust-1",
+      tenantId: "tenant-1",
+    });
+
+    expect(link.tenantId).toBe("tenant-1");
+  });
+
+  it("resolves legal entity by unique key", async () => {
+    prismaMock.legalEntity.findUnique.mockResolvedValue({ id: "le-1", key: "issuer" });
+    const entity = await findLegalEntityByKey("issuer");
+    expect(entity?.key).toBe("issuer");
+  });
+
+  it("associates bank account with legal entity", async () => {
+    prismaMock.billingBankAccount.create.mockResolvedValue({
+      id: "ba-1",
+      legalEntityId: "le-1",
+      label: "Main",
+      bankName: null,
+      currency: "CHF",
+      iban: "CH9300762011623852957",
+      qrIban: null,
+      referenceStrategy: "NON",
+      creditorName: "Issuer",
+      creditorAddressLine1: "Street",
+      creditorHouseNumber: null,
+      creditorPostalCode: "4000",
+      creditorCity: "Basel",
+      creditorCountryCode: "CH",
+      activeFrom: new Date(),
+      activeUntil: null,
+      isDefault: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const account = await createBillingBankAccountRecord({
+      legalEntityId: "le-1",
+      label: "Main",
+      bankName: null,
+      currency: "CHF",
+      iban: "CH9300762011623852957",
+      qrIban: null,
+      referenceStrategy: "NON",
+      creditorName: "Issuer",
+      creditorAddressLine1: "Street",
+      creditorHouseNumber: null,
+      creditorPostalCode: "4000",
+      creditorCity: "Basel",
+      creditorCountryCode: "CH",
+      activeFrom: new Date(),
+      activeUntil: null,
+      isDefault: false,
+    });
+
+    expect(account.legalEntityId).toBe("le-1");
+  });
+});
