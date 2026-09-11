@@ -140,7 +140,7 @@ export async function createBillingContract(
 
   let productName = input.productName?.trim() ?? "";
   let productDescription: string | null = null;
-  let billingProductId: string | null = input.billingProductId ?? null;
+  const billingProductId: string | null = input.billingProductId ?? null;
 
   if (billingProductId) {
     const product = await findBillingProductById(billingProductId);
