@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   requirePlatformApiPermission: vi.fn(),
   getBillingCustomersOverview: vi.fn(),
   createBillingCustomer: vi.fn(),
+  createBillingCustomerWithDetails: vi.fn(),
   listLegalEntitiesForPlatform: vi.fn(),
   createBillingBankAccount: vi.fn(),
   listBillingBankAccountsForPlatform: vi.fn(),
@@ -17,6 +18,7 @@ vi.mock("@/lib/permissions/require-platform-api-permission", () => ({
 vi.mock("@/lib/billing/native-billing-service", () => ({
   getBillingCustomersOverview: mocks.getBillingCustomersOverview,
   createBillingCustomer: mocks.createBillingCustomer,
+  createBillingCustomerWithDetails: mocks.createBillingCustomerWithDetails,
   getBillingCustomerDetail: vi.fn(),
   updateBillingCustomer: vi.fn(),
   linkBillingCustomerToTenant: vi.fn(),
@@ -74,6 +76,44 @@ describe("native billing platform API authorization", () => {
     );
 
     expect(mocks.requirePlatformApiPermission).toHaveBeenCalledWith(PERMISSIONS.BILLING_MANAGE);
+  });
+
+  it("uses bootstrap create when billing profile or tenant link is provided", async () => {
+    mocks.createBillingCustomerWithDetails.mockResolvedValue({
+      customer: {
+        id: "c1",
+        key: "acme",
+        displayName: "Acme",
+        legalName: null,
+        status: "ACTIVE",
+        defaultLanguage: null,
+        defaultCurrency: null,
+        primaryEmail: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      profile: null,
+      tenantLink: null,
+    });
+
+    await createCustomer(
+      new NextRequest("http://localhost", {
+        method: "POST",
+        body: JSON.stringify({
+          displayName: "Acme",
+          billingProfile: {
+            street: "Main",
+            postalCode: "4000",
+            city: "Basel",
+            countryCode: "CH",
+          },
+          tenantKey: "fc-demo",
+        }),
+      }),
+    );
+
+    expect(mocks.createBillingCustomerWithDetails).toHaveBeenCalled();
+    expect(mocks.createBillingCustomer).not.toHaveBeenCalled();
   });
 
   it("denies callers without platform permission", async () => {

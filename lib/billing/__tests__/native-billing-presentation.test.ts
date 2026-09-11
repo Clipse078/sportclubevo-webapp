@@ -1,5 +1,6 @@
 import {
   BillingContractStatus,
+  BillingCustomerStatus,
   BillingInterval,
   InvoiceStatus,
   SwissVatTreatment,
@@ -7,9 +8,11 @@ import {
 import { describe, expect, it } from "vitest";
 import {
   BILLING_CONTRACT_STATUS_KEYS,
+  BILLING_CUSTOMER_STATUS_KEYS,
   NATIVE_INVOICE_STATUS_KEYS,
   SWISS_VAT_TREATMENT_KEYS,
   formatBillingPeriodDisplay,
+  presentBillingCustomerStatus,
   presentBillingContractStatus,
   presentBillingInterval,
   presentInvoiceDisplayNumber,
@@ -31,6 +34,19 @@ describe("native billing presentation", () => {
     expect(presentNativeInvoiceStatus("DRAFT").label).toBe("Entwurf");
     expect(presentNativeInvoiceStatus("PARTIALLY_PAID").label).toBe("Teilweise bezahlt");
     expect(presentNativeInvoiceStatus("CREDITED").label).toBe("Gutgeschrieben");
+  });
+
+  it("maps every BillingCustomerStatus enum value to a German label", () => {
+    const prismaValues = Object.values(BillingCustomerStatus);
+    expect(prismaValues.sort()).toEqual([...BILLING_CUSTOMER_STATUS_KEYS].sort());
+
+    for (const status of prismaValues) {
+      const { label } = presentBillingCustomerStatus(status);
+      expect(label).not.toBe(status);
+      expect(label).not.toMatch(/^[A-Z0-9_]+$/);
+    }
+
+    expect(presentBillingCustomerStatus("ACTIVE").label).toBe("Aktiv");
   });
 
   it("maps every BillingContractStatus enum value to a German label", () => {

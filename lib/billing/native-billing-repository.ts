@@ -140,6 +140,14 @@ export async function listBillingCustomers(): Promise<BillingCustomerRecord[]> {
   });
 }
 
+export async function listActiveBillingCustomers(): Promise<BillingCustomerRecord[]> {
+  return prisma.billingCustomer.findMany({
+    where: { status: "ACTIVE" },
+    select: customerSelect,
+    orderBy: { displayName: "asc" },
+  });
+}
+
 export async function findBillingCustomerByKey(
   key: string,
 ): Promise<BillingCustomerRecord | null> {
@@ -232,6 +240,44 @@ export async function findActiveBillingCustomerTenantLink(
     },
   });
   return row;
+}
+
+export type ActiveTenantBillingCustomerLink = BillingCustomerTenantLinkRecord & {
+  customerKey: string;
+  customerDisplayName: string;
+};
+
+/** Active link (activeUntil null) for a tenant, if any — across all billing customers. */
+export async function findActiveBillingCustomerTenantLinkByTenantId(
+  tenantId: string,
+): Promise<ActiveTenantBillingCustomerLink | null> {
+  const row = await prisma.billingCustomerTenant.findFirst({
+    where: { tenantId, activeUntil: null },
+    select: {
+      id: true,
+      billingCustomerId: true,
+      tenantId: true,
+      linkRole: true,
+      activeFrom: true,
+      activeUntil: true,
+      createdAt: true,
+      billingCustomer: { select: { key: true, displayName: true } },
+    },
+  });
+  if (!row) {
+    return null;
+  }
+  return {
+    id: row.id,
+    billingCustomerId: row.billingCustomerId,
+    tenantId: row.tenantId,
+    linkRole: row.linkRole,
+    activeFrom: row.activeFrom,
+    activeUntil: row.activeUntil,
+    createdAt: row.createdAt,
+    customerKey: row.billingCustomer.key,
+    customerDisplayName: row.billingCustomer.displayName,
+  };
 }
 
 export async function createBillingCustomerTenantLink(input: {

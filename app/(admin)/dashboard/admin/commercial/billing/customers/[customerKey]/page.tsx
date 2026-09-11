@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import { getBillingCustomerDetail } from "@/lib/billing/native-billing-service";
+import { presentBillingCustomerStatus } from "@/lib/billing/native-billing-presentation";
 import { NativeBillingNotFoundError } from "@/lib/billing/native-billing-types";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -25,13 +27,15 @@ export default async function NativeBillingCustomerDetailPage({ params }: PagePr
   }
 
   const { customer, tenantLinks, profiles } = detail;
+  const statusPresentation = presentBillingCustomerStatus(customer.status);
+  const billingProfile = profiles.find((p) => p.profileType === "BILLING") ?? profiles[0];
 
   return (
     <div className="space-y-8">
       <AdminSectionHeader
         eyebrow="Commercial"
         title={customer.displayName}
-        description={`Billing-Kunde · ${customer.key}`}
+        description={`Kundennummer ${customer.key}`}
         actions={
           <Link href="/dashboard/admin/commercial/billing/customers" className="fca-button-secondary">
             Zurück zur Liste
@@ -52,7 +56,16 @@ export default async function NativeBillingCustomerDetailPage({ params }: PagePr
           </div>
           <div>
             <dt className="text-muted-foreground">Status</dt>
-            <dd>{customer.status}</dd>
+            <dd>
+              <BillingStatusBadge
+                label={statusPresentation.label}
+                tone={statusPresentation.tone}
+              />
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Kundennummer</dt>
+            <dd className="font-mono text-xs">{customer.key}</dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Währung / Sprache</dt>
@@ -80,25 +93,37 @@ export default async function NativeBillingCustomerDetailPage({ params }: PagePr
       </section>
 
       <section className="space-y-2 rounded-lg border border-border p-4">
-        <h2 className="text-sm font-semibold">Billing-Profile / Adressen</h2>
-        {profiles.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Keine Profile erfasst.</p>
+        <h2 className="text-sm font-semibold">Rechnungsadresse</h2>
+        {!billingProfile ? (
+          <p className="text-sm text-muted-foreground">Keine Rechnungsadresse erfasst.</p>
         ) : (
-          <ul className="space-y-3 text-sm">
-            {profiles.map((profile) => (
-              <li key={profile.id} className="rounded-md bg-muted/30 p-3">
-                <div className="font-medium">{profile.profileType}</div>
-                <div>{profile.companyOrName}</div>
-                <div className="text-muted-foreground">
-                  {profile.street} {profile.houseNumber ?? ""}, {profile.postalCode} {profile.city},{" "}
-                  {profile.countryCode}
-                </div>
-                {profile.invoiceEmail ? (
-                  <div className="text-muted-foreground">Rechnung: {profile.invoiceEmail}</div>
-                ) : null}
-              </li>
-            ))}
-          </ul>
+          <dl className="grid gap-2 text-sm sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <dt className="text-muted-foreground">Name</dt>
+              <dd>{billingProfile.companyOrName}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Strasse</dt>
+              <dd>
+                {billingProfile.street}
+                {billingProfile.houseNumber ? ` ${billingProfile.houseNumber}` : ""}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">PLZ / Ort</dt>
+              <dd>
+                {billingProfile.postalCode} {billingProfile.city}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Land</dt>
+              <dd>{billingProfile.countryCode}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Rechnungs-E-Mail</dt>
+              <dd>{billingProfile.invoiceEmail ?? customer.primaryEmail ?? "—"}</dd>
+            </div>
+          </dl>
         )}
       </section>
     </div>

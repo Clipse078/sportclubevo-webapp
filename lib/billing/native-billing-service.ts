@@ -14,6 +14,7 @@ import {
   createLegalEntityRecord,
   deactivateBillingCustomerTenantLink,
   findActiveBillingCustomerTenantLink,
+  findActiveBillingCustomerTenantLinkByTenantId,
   findBillingBankAccountById,
   findBillingCustomerById,
   findBillingCustomerByKey,
@@ -125,6 +126,60 @@ export async function createBillingCustomer(
   return created;
 }
 
+export type CreateBillingCustomerProfileInput = {
+  companyOrName: string;
+  street: string;
+  houseNumber?: string | null;
+  postalCode: string;
+  city: string;
+  countryCode: string;
+  invoiceEmail?: string | null;
+  profileType?: BillingProfileRecord["profileType"];
+};
+
+export type CreateBillingCustomerWithDetailsInput = CreateBillingCustomerInput & {
+  billingProfile?: CreateBillingCustomerProfileInput | null;
+  tenantKey?: string | null;
+};
+
+export async function createBillingCustomerWithDetails(
+  input: CreateBillingCustomerWithDetailsInput,
+): Promise<{
+  customer: BillingCustomerRecord;
+  profile: BillingProfileRecord | null;
+  tenantLink: Awaited<ReturnType<typeof linkBillingCustomerToTenant>> | null;
+}> {
+  const customer = await createBillingCustomer(input);
+
+  let profile: BillingProfileRecord | null = null;
+  if (input.billingProfile) {
+    profile = await createBillingProfile({
+      customerKey: customer.key,
+      profileType: input.billingProfile.profileType ?? "BILLING",
+      companyOrName: input.billingProfile.companyOrName,
+      street: input.billingProfile.street,
+      houseNumber: input.billingProfile.houseNumber ?? null,
+      postalCode: input.billingProfile.postalCode,
+      city: input.billingProfile.city,
+      countryCode: input.billingProfile.countryCode,
+      invoiceEmail: input.billingProfile.invoiceEmail ?? null,
+      actorUserId: input.actorUserId,
+    });
+  }
+
+  let tenantLink: Awaited<ReturnType<typeof linkBillingCustomerToTenant>> | null = null;
+  const tenantKey = input.tenantKey?.trim();
+  if (tenantKey) {
+    tenantLink = await linkBillingCustomerToTenant({
+      customerKey: customer.key,
+      tenantKey,
+      actorUserId: input.actorUserId,
+    });
+  }
+
+  return { customer, profile, tenantLink };
+}
+
 export type UpdateBillingCustomerInput = {
   customerKey: string;
   displayName?: string;
@@ -190,6 +245,17 @@ export async function linkBillingCustomerToTenant(input: {
   const tenantId = await findTenantIdByKey(input.tenantKey.trim());
   if (!tenantId) {
     throw new NativeBillingNotFoundError("Tenant nicht gefunden.");
+  }
+
+  const activeForTenant = await findActiveBillingCustomerTenantLinkByTenantId(tenantId);
+  if (
+    activeForTenant &&
+    activeForTenant.billingCustomerId !== customer.id &&
+    activeForTenant.activeUntil === null
+  ) {
+    throw new NativeBillingConflictError(
+      `Tenant ist bereits mit Billing-Kunde «${activeForTenant.customerDisplayName}» (${activeForTenant.customerKey}) verknüpft.`,
+    );
   }
 
   const existing = await findActiveBillingCustomerTenantLink(customer.id, tenantId);

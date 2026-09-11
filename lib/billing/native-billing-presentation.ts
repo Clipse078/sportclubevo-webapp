@@ -1,5 +1,6 @@
 import type {
   BillingContractStatus,
+  BillingCustomerStatus,
   BillingInterval,
   InvoiceStatus,
   SwissVatTreatment,
@@ -29,6 +30,12 @@ const BILLING_CONTRACT_STATUS: Record<BillingContractStatus, NativeBillingStatus
   TERMINATED: { label: "Beendet", tone: "muted" },
 };
 
+const BILLING_CUSTOMER_STATUS: Record<BillingCustomerStatus, NativeBillingStatusPresentation> = {
+  ACTIVE: { label: "Aktiv", tone: "success" },
+  INACTIVE: { label: "Inaktiv", tone: "muted" },
+  ARCHIVED: { label: "Archiviert", tone: "muted" },
+};
+
 const SWISS_VAT_TREATMENT_LABELS: Record<SwissVatTreatment, string> = {
   STANDARD_81: "MWST 8.1 %",
 };
@@ -50,6 +57,21 @@ export function presentNativeInvoiceStatus(
   const key = normalizeDomainEnumKey(String(status)) as InvoiceStatus;
   return (
     NATIVE_INVOICE_STATUS[key] ?? {
+      label: "Unbekannt",
+      tone: "muted",
+    }
+  );
+}
+
+export function presentBillingCustomerStatus(
+  status: BillingCustomerStatus | string | null | undefined,
+): NativeBillingStatusPresentation {
+  if (!status) {
+    return { label: "Unbekannt", tone: "muted" };
+  }
+  const key = normalizeDomainEnumKey(String(status)) as BillingCustomerStatus;
+  return (
+    BILLING_CUSTOMER_STATUS[key] ?? {
       label: "Unbekannt",
       tone: "muted",
     }
@@ -145,3 +167,8 @@ export const BILLING_CONTRACT_STATUS_KEYS = Object.keys(
 export const SWISS_VAT_TREATMENT_KEYS = Object.keys(
   SWISS_VAT_TREATMENT_LABELS,
 ) as SwissVatTreatment[];
+
+/** @internal Exported for exhaustive mapping tests. */
+export const BILLING_CUSTOMER_STATUS_KEYS = Object.keys(
+  BILLING_CUSTOMER_STATUS,
+) as BillingCustomerStatus[];

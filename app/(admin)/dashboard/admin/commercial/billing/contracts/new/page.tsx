@@ -2,7 +2,7 @@ import Link from "next/link";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import NativeBillingCreateContractForm from "@/components/admin/billing/NativeBillingCreateContractForm";
 import { getBillingProductsCatalogue } from "@/lib/billing/native-billing-commercial-service";
-import { listBillingCustomers, listLegalEntities } from "@/lib/billing/native-billing-repository";
+import { listActiveBillingCustomers, listLegalEntities } from "@/lib/billing/native-billing-repository";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
@@ -11,7 +11,7 @@ export default async function NativeBillingNewContractPage() {
 
   const [products, customers, legalEntities] = await Promise.all([
     getBillingProductsCatalogue(),
-    listBillingCustomers(),
+    listActiveBillingCustomers(),
     listLegalEntities(),
   ]);
 
