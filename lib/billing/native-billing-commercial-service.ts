@@ -128,6 +128,11 @@ export async function createBillingContract(
   if (!entityRow) {
     throw new NativeBillingNotFoundError("Legal Entity nicht gefunden.");
   }
+  if (entityRow.status !== "ACTIVE") {
+    throw new NativeBillingValidationError(
+      "Rechtsträger ist nicht aktiv und kann nicht für neue Verträge verwendet werden.",
+    );
+  }
 
   const customer = await findBillingCustomerById(input.billingCustomerId);
   if (!customer) {

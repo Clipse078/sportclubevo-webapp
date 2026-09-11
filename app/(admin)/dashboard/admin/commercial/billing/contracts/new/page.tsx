@@ -2,7 +2,8 @@ import Link from "next/link";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import NativeBillingCreateContractForm from "@/components/admin/billing/NativeBillingCreateContractForm";
 import { getBillingProductsCatalogue } from "@/lib/billing/native-billing-commercial-service";
-import { listActiveBillingCustomers, listLegalEntities } from "@/lib/billing/native-billing-repository";
+import { listActiveBillingCustomers, listActiveLegalEntities } from "@/lib/billing/native-billing-repository";
+import { presentLegalEntityContractSelectorLabel } from "@/lib/billing/native-billing-presentation";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
@@ -12,7 +13,7 @@ export default async function NativeBillingNewContractPage() {
   const [products, customers, legalEntities] = await Promise.all([
     getBillingProductsCatalogue(),
     listActiveBillingCustomers(),
-    listLegalEntities(),
+    listActiveLegalEntities(),
   ]);
 
   return (
@@ -36,7 +37,10 @@ export default async function NativeBillingNewContractPage() {
         customers={customers.map((c) => ({ id: c.id, label: c.displayName }))}
         legalEntities={legalEntities.map((e) => ({
           id: e.id,
-          label: `${e.displayName} (${e.key})`,
+          label: presentLegalEntityContractSelectorLabel({
+            displayName: e.displayName,
+            legalName: e.legalName,
+          }),
         }))}
       />
     </div>

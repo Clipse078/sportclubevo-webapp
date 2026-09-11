@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   findTenantIdByKey: vi.fn(),
   createBillingProfileRecord: vi.fn(),
   findLegalEntityByKey: vi.fn(),
+  createLegalEntityRecord: vi.fn(),
   createBillingBankAccountRecord: vi.fn(),
   logAction: vi.fn(),
   allocateUniqueBillingKey: vi.fn(),
@@ -34,8 +35,9 @@ vi.mock("../native-billing-repository", () => ({
   listLegalEntities: vi.fn(),
   findLegalEntityByKey: mocks.findLegalEntityByKey,
   findLegalEntityById: vi.fn(),
-  createLegalEntityRecord: vi.fn(),
+  createLegalEntityRecord: mocks.createLegalEntityRecord,
   updateLegalEntityRecord: vi.fn(),
+  listActiveLegalEntities: vi.fn(),
   listAllBillingBankAccounts: vi.fn(),
   findBillingBankAccountById: vi.fn(),
   createBillingBankAccountRecord: mocks.createBillingBankAccountRecord,
@@ -58,6 +60,7 @@ const {
   createBillingCustomerWithDetails,
   linkBillingCustomerToTenant,
   createBillingBankAccount,
+  createLegalEntity,
 } = await import("../native-billing-service");
 
 describe("native billing service", () => {
@@ -245,5 +248,56 @@ describe("native billing service", () => {
     const auditCall = mocks.logAction.mock.calls[0]?.[0];
     expect(JSON.stringify(auditCall?.afterJson)).not.toContain("CH9300762011623852957");
     expect(auditCall?.afterJson?.ibanMasked).toBe("****2957");
+  });
+
+  it("creates legal entity with audit metadata", async () => {
+    mocks.createLegalEntityRecord.mockResolvedValue({
+      id: "le-1",
+      key: "operator",
+      displayName: "Operator",
+      legalName: "Operator GmbH",
+      entityType: "COMPANY",
+      uid: null,
+      vatId: null,
+      defaultCurrency: "CHF",
+      status: "ACTIVE",
+      addressLine1: "Main",
+      houseNumber: null,
+      postalCode: "4000",
+      city: "Basel",
+      countryCode: "CH",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    mocks.allocateUniqueBillingKey.mockResolvedValue("operator");
+
+    const created = await createLegalEntity({
+      displayName: "Operator",
+      legalName: "Operator GmbH",
+      addressLine1: "Main",
+      postalCode: "4000",
+      city: "Basel",
+      countryCode: "CH",
+      actorUserId: "actor-1",
+    });
+
+    expect(created.key).toBe("operator");
+    expect(mocks.logAction).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "LEGAL_ENTITY_CREATED" }),
+    );
+  });
+
+  it("validates required legal entity fields", async () => {
+    await expect(
+      createLegalEntity({
+        displayName: "",
+        legalName: "X",
+        addressLine1: "S",
+        postalCode: "1",
+        city: "B",
+        countryCode: "CH",
+        actorUserId: "actor-1",
+      }),
+    ).rejects.toMatchObject({ name: "NativeBillingValidationError" });
   });
 });

@@ -3,6 +3,8 @@ import type {
   BillingCustomerStatus,
   BillingInterval,
   InvoiceStatus,
+  LegalEntityStatus,
+  LegalEntityType,
   SwissVatTreatment,
 } from "@prisma/client";
 import type { BillingStatusTone } from "./billing-status-presentation";
@@ -36,6 +38,17 @@ const BILLING_CUSTOMER_STATUS: Record<BillingCustomerStatus, NativeBillingStatus
   ARCHIVED: { label: "Archiviert", tone: "muted" },
 };
 
+const LEGAL_ENTITY_STATUS: Record<LegalEntityStatus, NativeBillingStatusPresentation> = {
+  ACTIVE: { label: "Aktiv", tone: "success" },
+  INACTIVE: { label: "Inaktiv", tone: "muted" },
+};
+
+const LEGAL_ENTITY_TYPE_LABELS: Record<LegalEntityType, string> = {
+  COMPANY: "Gesellschaft",
+  ASSOCIATION: "Verein",
+  OTHER: "Andere Rechtsform",
+};
+
 const SWISS_VAT_TREATMENT_LABELS: Record<SwissVatTreatment, string> = {
   STANDARD_81: "MWST 8.1 %",
 };
@@ -61,6 +74,44 @@ export function presentNativeInvoiceStatus(
       tone: "muted",
     }
   );
+}
+
+export function presentLegalEntityStatus(
+  status: LegalEntityStatus | string | null | undefined,
+): NativeBillingStatusPresentation {
+  if (!status) {
+    return { label: "Unbekannt", tone: "muted" };
+  }
+  const key = normalizeDomainEnumKey(String(status)) as LegalEntityStatus;
+  return (
+    LEGAL_ENTITY_STATUS[key] ?? {
+      label: "Unbekannt",
+      tone: "muted",
+    }
+  );
+}
+
+export function presentLegalEntityType(
+  entityType: LegalEntityType | string | null | undefined,
+): string {
+  if (!entityType) {
+    return "—";
+  }
+  const key = normalizeDomainEnumKey(String(entityType)) as LegalEntityType;
+  return LEGAL_ENTITY_TYPE_LABELS[key] ?? "Unbekannt";
+}
+
+/** Human-friendly label for contract Rechtsträger selectors (no internal key). */
+export function presentLegalEntityContractSelectorLabel(input: {
+  displayName: string;
+  legalName: string;
+}): string {
+  const display = input.displayName.trim();
+  const legal = input.legalName.trim();
+  if (legal && legal !== display) {
+    return `${display} — ${legal}`;
+  }
+  return display;
 }
 
 export function presentBillingCustomerStatus(
@@ -172,3 +223,13 @@ export const SWISS_VAT_TREATMENT_KEYS = Object.keys(
 export const BILLING_CUSTOMER_STATUS_KEYS = Object.keys(
   BILLING_CUSTOMER_STATUS,
 ) as BillingCustomerStatus[];
+
+/** @internal Exported for exhaustive mapping tests. */
+export const LEGAL_ENTITY_STATUS_KEYS = Object.keys(
+  LEGAL_ENTITY_STATUS,
+) as LegalEntityStatus[];
+
+/** @internal Exported for exhaustive mapping tests. */
+export const LEGAL_ENTITY_TYPE_KEYS = Object.keys(
+  LEGAL_ENTITY_TYPE_LABELS,
+) as LegalEntityType[];

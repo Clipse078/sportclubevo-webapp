@@ -3,12 +3,16 @@ import {
   BillingCustomerStatus,
   BillingInterval,
   InvoiceStatus,
+  LegalEntityStatus,
+  LegalEntityType,
   SwissVatTreatment,
 } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 import {
   BILLING_CONTRACT_STATUS_KEYS,
   BILLING_CUSTOMER_STATUS_KEYS,
+  LEGAL_ENTITY_STATUS_KEYS,
+  LEGAL_ENTITY_TYPE_KEYS,
   NATIVE_INVOICE_STATUS_KEYS,
   SWISS_VAT_TREATMENT_KEYS,
   formatBillingPeriodDisplay,
@@ -16,6 +20,9 @@ import {
   presentBillingContractStatus,
   presentBillingInterval,
   presentInvoiceDisplayNumber,
+  presentLegalEntityContractSelectorLabel,
+  presentLegalEntityStatus,
+  presentLegalEntityType,
   presentNativeInvoiceStatus,
   presentSwissVatTreatment,
 } from "../native-billing-presentation";
@@ -88,5 +95,34 @@ describe("native billing presentation", () => {
     expect(label).toContain("01");
     expect(label).toContain("31");
     expect(label).toContain("–");
+  });
+
+  it("maps every LegalEntityStatus enum value to a German label", () => {
+    const prismaValues = Object.values(LegalEntityStatus);
+    expect(prismaValues.sort()).toEqual([...LEGAL_ENTITY_STATUS_KEYS].sort());
+
+    for (const status of prismaValues) {
+      const { label } = presentLegalEntityStatus(status);
+      expect(label).not.toBe(status);
+      expect(label).not.toMatch(/^[A-Z0-9_]+$/);
+    }
+  });
+
+  it("maps every LegalEntityType enum value", () => {
+    const prismaValues = Object.values(LegalEntityType);
+    expect(prismaValues.sort()).toEqual([...LEGAL_ENTITY_TYPE_KEYS].sort());
+
+    for (const entityType of prismaValues) {
+      expect(presentLegalEntityType(entityType)).not.toBe(entityType);
+    }
+  });
+
+  it("builds contract selector labels without internal keys", () => {
+    expect(
+      presentLegalEntityContractSelectorLabel({
+        displayName: "Display",
+        legalName: "Legal",
+      }),
+    ).toBe("Display — Legal");
   });
 });

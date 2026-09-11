@@ -390,6 +390,14 @@ export async function listLegalEntities(): Promise<LegalEntityRecord[]> {
   });
 }
 
+export async function listActiveLegalEntities(): Promise<LegalEntityRecord[]> {
+  return prisma.legalEntity.findMany({
+    where: { status: "ACTIVE" },
+    select: legalEntitySelect,
+    orderBy: { displayName: "asc" },
+  });
+}
+
 export async function findLegalEntityByKey(key: string): Promise<LegalEntityRecord | null> {
   return prisma.legalEntity.findUnique({
     where: { key },

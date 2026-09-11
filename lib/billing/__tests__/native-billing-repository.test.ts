@@ -11,6 +11,7 @@ const prismaMock = vi.hoisted(() => ({
   },
   legalEntity: {
     findUnique: vi.fn(),
+    findMany: vi.fn(),
   },
   billingBankAccount: {
     create: vi.fn(),
@@ -25,6 +26,7 @@ const {
   createBillingCustomerRecord,
   createBillingCustomerTenantLink,
   findLegalEntityByKey,
+  listActiveLegalEntities,
   createBillingBankAccountRecord,
 } = await import("../native-billing-repository");
 
@@ -72,6 +74,14 @@ describe("native billing repository", () => {
     prismaMock.legalEntity.findUnique.mockResolvedValue({ id: "le-1", key: "issuer" });
     const entity = await findLegalEntityByKey("issuer");
     expect(entity?.key).toBe("issuer");
+  });
+
+  it("lists only active legal entities for contract selectors", async () => {
+    prismaMock.legalEntity.findMany.mockResolvedValue([{ id: "le-1", key: "active-one" }]);
+    await listActiveLegalEntities();
+    expect(prismaMock.legalEntity.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { status: "ACTIVE" } }),
+    );
   });
 
   it("associates bank account with legal entity", async () => {
