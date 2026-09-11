@@ -2,6 +2,10 @@ import Link from "next/link";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import NativeBillingInvoicesTable from "@/components/admin/billing/NativeBillingInvoicesTable";
 import { getInvoicesOverview } from "@/lib/billing/native-billing-commercial-service";
+import {
+  formatBillingPeriodDisplay,
+  presentInvoiceDisplayNumber,
+} from "@/lib/billing/native-billing-presentation";
 import { listBillingCustomers } from "@/lib/billing/native-billing-repository";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { requirePermission } from "@/lib/permissions/require-permission";
@@ -29,8 +33,8 @@ export default async function NativeBillingInvoicesPage() {
     <div className="space-y-8">
       <AdminSectionHeader
         eyebrow="Commercial"
-        title="Invoices"
-        description="Native SCE-Rechnungen (Entwurf → Finalisierung, ohne Versand/PDF in diesem Schritt)."
+        title="Rechnungen"
+        description="SCE-Rechnungen: Entwurf, Finalisierung und Status — ohne Versand oder PDF in diesem Schritt."
         actions={
           canManage ? (
             <Link href="/dashboard/admin/commercial/billing/invoices/new" className="fca-button-primary">
@@ -43,9 +47,9 @@ export default async function NativeBillingInvoicesPage() {
       <NativeBillingInvoicesTable
         rows={invoices.map((invoice) => ({
           key: invoice.key,
-          displayNumber: invoice.invoiceNumber ?? "DRAFT",
+          displayNumber: presentInvoiceDisplayNumber(invoice.invoiceNumber, invoice.status),
           customerLabel: customerById.get(invoice.billingCustomerId) ?? invoice.billingCustomerId,
-          periodLabel: `${invoice.periodStart.toISOString().slice(0, 10)} – ${invoice.periodEnd.toISOString().slice(0, 10)}`,
+          periodLabel: formatBillingPeriodDisplay(invoice.periodStart, invoice.periodEnd),
           invoiceDate: invoice.invoiceDate
             ? invoice.invoiceDate.toISOString().slice(0, 10)
             : null,

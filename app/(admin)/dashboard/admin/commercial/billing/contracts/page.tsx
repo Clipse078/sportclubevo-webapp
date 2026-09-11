@@ -2,6 +2,7 @@ import Link from "next/link";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import NativeBillingContractsTable from "@/components/admin/billing/NativeBillingContractsTable";
 import { getBillingContractsOverview } from "@/lib/billing/native-billing-commercial-service";
+import { presentBillingInterval } from "@/lib/billing/native-billing-presentation";
 import { listBillingCustomers } from "@/lib/billing/native-billing-repository";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { requirePermission } from "@/lib/permissions/require-permission";
@@ -29,8 +30,8 @@ export default async function NativeBillingContractsPage() {
     <div className="space-y-8">
       <AdminSectionHeader
         eyebrow="Commercial"
-        title="Contracts"
-        description="Native SCE-Verträge mit vereinbartem Monatspreis (CHF, Schweiz)."
+        title="Verträge"
+        description="SCE-Verträge mit vereinbartem Monatspreis in CHF."
         actions={
           canManage ? (
             <Link href="/dashboard/admin/commercial/billing/contracts/new" className="fca-button-primary">
@@ -51,6 +52,7 @@ export default async function NativeBillingContractsPage() {
           vatTreatment: contract.vatTreatment,
           status: contract.status,
           startDate: contract.startDate.toISOString().slice(0, 10),
+          billingIntervalLabel: presentBillingInterval(contract.billingInterval),
         }))}
       />
     </div>

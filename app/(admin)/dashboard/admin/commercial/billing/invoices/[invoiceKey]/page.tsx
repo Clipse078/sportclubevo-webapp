@@ -1,10 +1,17 @@
 import Link from "next/link";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import NativeBillingInvoiceActions from "@/components/admin/billing/NativeBillingInvoiceActions";
 import { getInvoiceDetail } from "@/lib/billing/native-billing-commercial-service";
 import { findBillingCustomerById } from "@/lib/billing/native-billing-repository";
 import { formatBillingMoney } from "@/lib/billing/format-billing-money";
 import { serializeInvoiceLine } from "@/lib/billing/native-billing-commercial-serializers";
+import {
+  formatBillingDateDisplay,
+  formatBillingPeriodDisplay,
+  presentInvoiceDisplayNumber,
+  presentNativeInvoiceStatus,
+} from "@/lib/billing/native-billing-presentation";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -38,15 +45,18 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
   const customer = await findBillingCustomerById(invoice.billingCustomerId);
   const serializedLines = lines.map(serializeInvoiceLine);
   const grossFormatted = formatBillingMoney(invoice.grossTotalMinor, invoice.currency);
+  const statusPresentation = presentNativeInvoiceStatus(invoice.status);
+  const displayTitle = presentInvoiceDisplayNumber(invoice.invoiceNumber, invoice.status);
+  const periodLabel = formatBillingPeriodDisplay(invoice.periodStart, invoice.periodEnd);
 
   return (
     <div className="space-y-10">
       <AdminSectionHeader
         eyebrow="Commercial"
-        title={invoice.invoiceNumber ?? "Rechnungsentwurf"}
+        title={displayTitle}
         description={
           invoice.contractLabel ??
-          `${customer?.displayName ?? "Kunde"} · ${invoice.periodStart.toISOString().slice(0, 10)} – ${invoice.periodEnd.toISOString().slice(0, 10)}`
+          `${customer?.displayName ?? "Kunde"} · ${periodLabel}`
         }
         actions={
           <Link href="/dashboard/admin/commercial/billing/invoices" className="fca-button-secondary">
@@ -56,9 +66,12 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
       />
 
       <div className="flex flex-wrap items-start justify-between gap-6">
-        <div className="space-y-1">
+        <div className="space-y-2">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Status</p>
-          <p className="text-lg font-semibold">{invoice.status}</p>
+          <BillingStatusBadge
+            label={statusPresentation.label}
+            tone={statusPresentation.tone}
+          />
         </div>
         <NativeBillingInvoiceActions
           invoiceKey={invoice.key}
@@ -67,6 +80,41 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
           grossTotalFormatted={grossFormatted}
         />
       </div>
+
+      <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 max-w-4xl text-sm">
+        <div>
+          <dt className="text-muted-foreground">Rechnungsnummer</dt>
+          <dd className="font-medium text-foreground">
+            {invoice.invoiceNumber ?? "Noch keine Rechnungsnummer"}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">Kunde</dt>
+          <dd className="font-medium text-foreground">{customer?.displayName ?? "—"}</dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">Abrechnungszeitraum</dt>
+          <dd className="font-medium text-foreground">{periodLabel}</dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">Rechnungsdatum</dt>
+          <dd className="font-medium text-foreground">
+            {formatBillingDateDisplay(invoice.invoiceDate)}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">Fällig am</dt>
+          <dd className="font-medium text-foreground">
+            {formatBillingDateDisplay(invoice.dueDate)}
+          </dd>
+        </div>
+        {invoice.paymentTermsDays != null ? (
+          <div>
+            <dt className="text-muted-foreground">Zahlungsziel</dt>
+            <dd className="font-medium text-foreground">{invoice.paymentTermsDays} Tage</dd>
+          </div>
+        ) : null}
+      </dl>
 
       <div className="grid gap-8 lg:grid-cols-2">
         <section className="space-y-2">
@@ -78,14 +126,16 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
               <p>
                 {issuer.addressLine1} {issuer.houseNumber ?? ""}
               </p>
-              <p>{issuer.postalCode} {issuer.city}</p>
+              <p>
+                {issuer.postalCode} {issuer.city}
+              </p>
               {issuer.uid ? <p>UID: {issuer.uid}</p> : null}
-              {issuer.vatId ? <p>MWST: {issuer.vatId}</p> : null}
+              {issuer.vatId ? <p>MWST-Nr.: {issuer.vatId}</p> : null}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
               {invoice.status === "DRAFT"
-                ? "Wird bei Finalisierung eingefroren."
+                ? "Ausstellerdaten werden bei der Finalisierung übernommen."
                 : "—"}
             </p>
           )}
@@ -98,13 +148,17 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
               <p>
                 {recipient.street} {recipient.houseNumber ?? ""}
               </p>
-              <p>{recipient.postalCode} {recipient.city}</p>
+              <p>
+                {recipient.postalCode} {recipient.city}
+              </p>
               {recipient.invoiceEmail ? <p>{recipient.invoiceEmail}</p> : null}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
               {customer?.displayName ?? "—"}
-              {invoice.status === "DRAFT" ? " (Profil bei Finalisierung)" : ""}
+              {invoice.status === "DRAFT"
+                ? " — Rechnungsadresse wird bei der Finalisierung übernommen."
+                : ""}
             </p>
           )}
         </section>
@@ -156,38 +210,16 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
           </div>
         ))}
         <div className="flex justify-between border-t border-border pt-2 text-base">
-          <span className="font-semibold">Total</span>
+          <span className="font-semibold">Total brutto</span>
           <span className="tabular-nums font-semibold">{grossFormatted}</span>
         </div>
       </section>
 
-      <dl className="grid gap-3 sm:grid-cols-2 max-w-2xl text-sm text-muted-foreground">
-        <div>
-          <dt>Leistungszeitraum</dt>
-          <dd className="text-foreground">
-            {invoice.periodStart.toISOString().slice(0, 10)} –{" "}
-            {invoice.periodEnd.toISOString().slice(0, 10)}
-          </dd>
-        </div>
-        <div>
-          <dt>Rechnungsdatum</dt>
-          <dd className="text-foreground">
-            {invoice.invoiceDate ? invoice.invoiceDate.toISOString().slice(0, 10) : "—"}
-          </dd>
-        </div>
-        <div>
-          <dt>Fällig</dt>
-          <dd className="text-foreground">
-            {invoice.dueDate ? invoice.dueDate.toISOString().slice(0, 10) : "—"}
-          </dd>
-        </div>
-        {invoice.finalizedAt ? (
-          <div>
-            <dt>Finalisiert</dt>
-            <dd className="text-foreground">{invoice.finalizedAt.toISOString()}</dd>
-          </div>
-        ) : null}
-      </dl>
+      {invoice.finalizedAt ? (
+        <p className="text-sm text-muted-foreground">
+          Finalisiert am {formatBillingDateDisplay(invoice.finalizedAt)}
+        </p>
+      ) : null}
 
       <p className="text-xs text-muted-foreground">
         PDF und Versand folgen in späteren Schritten (SWISS-01E / SWISS-01F).

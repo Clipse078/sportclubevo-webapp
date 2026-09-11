@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { formatBillingMoney } from "@/lib/billing/format-billing-money";
 
 type ProductOption = { id: string; name: string; catalogueMonthlyNetMinor: number | null };
 type CustomerOption = { id: string; label: string };
@@ -66,7 +67,7 @@ export default function NativeBillingCreateContractForm({
   return (
     <form onSubmit={onSubmit} className="max-w-xl space-y-4">
       <label className="block space-y-1 text-sm">
-        <span className="font-medium">Legal Entity</span>
+        <span className="font-medium">Rechtsträger</span>
         <select name="legalEntityId" required className="fca-input w-full">
           <option value="">Auswählen…</option>
           {legalEntities.map((e) => (
@@ -75,7 +76,7 @@ export default function NativeBillingCreateContractForm({
         </select>
       </label>
       <label className="block space-y-1 text-sm">
-        <span className="font-medium">Billing-Kunde</span>
+        <span className="font-medium">Kunde</span>
         <select name="billingCustomerId" required className="fca-input w-full">
           <option value="">Auswählen…</option>
           {customers.map((c) => (
@@ -91,9 +92,18 @@ export default function NativeBillingCreateContractForm({
         <span className="font-medium">Produkt</span>
         <select name="billingProductId" className="fca-input w-full">
           <option value="">Manuell / ohne Katalog</option>
-          {products.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
+          {products.map((p) => {
+            const catalogueHint =
+              p.catalogueMonthlyNetMinor != null
+                ? ` — Katalog ab ${formatBillingMoney(p.catalogueMonthlyNetMinor, "CHF")}`
+                : "";
+            return (
+              <option key={p.id} value={p.id}>
+                {p.name}
+                {catalogueHint}
+              </option>
+            );
+          })}
         </select>
       </label>
       <label className="block space-y-1 text-sm">
@@ -101,16 +111,20 @@ export default function NativeBillingCreateContractForm({
         <input name="productName" className="fca-input w-full" placeholder="Leer = Katalogname" />
       </label>
       <label className="block space-y-1 text-sm">
-        <span className="font-medium">Netto CHF / Monat</span>
+        <span className="font-medium">Monatspreis netto (CHF)</span>
         <input
           name="monthlyNetAmountMinor"
           type="number"
           step="0.01"
           min="0"
           className="fca-input w-full"
-          placeholder="z. B. 199.00"
+          placeholder="Vereinbarter Vertragspreis, z. B. 199.00"
         />
       </label>
+      <p className="text-xs text-muted-foreground -mt-2">
+        Leer lassen übernimmt den Katalog-Standardpreis als Startwert — der vereinbarte Vertragspreis
+        kann abweichen.
+      </p>
       <label className="block space-y-1 text-sm">
         <span className="font-medium">Startdatum</span>
         <input name="startDate" type="date" required className="fca-input w-full" />
@@ -126,7 +140,7 @@ export default function NativeBillingCreateContractForm({
         />
       </label>
       <p className="text-xs text-muted-foreground">
-        MWST 8.1% (Schweiz) · Währung CHF · monatliche Abrechnung
+        MWST 8.1 % · Währung CHF · monatliche Abrechnung
       </p>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <button type="submit" className="fca-button-primary" disabled={loading}>

@@ -57,9 +57,14 @@ export default function NativeBillingInvoiceActions({
         </button>
       ) : (
         <div className="rounded-lg border border-border bg-muted/20 p-4 space-y-3 max-w-md">
+          <p className="text-sm font-medium">Rechnung finalisieren?</p>
+          <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
+            <li>Die Rechnung wird finalisiert.</li>
+            <li>Es wird eine Rechnungsnummer vergeben.</li>
+            <li>Der Rechnungsinhalt kann danach nicht mehr direkt geändert werden.</li>
+          </ul>
           <p className="text-sm">
-            Rechnung unwiderruflich finalisieren? Rechnungsnummer wird vergeben und alle
-            Inhalte eingefroren. Total: <strong>{grossTotalFormatted}</strong>
+            Total: <strong>{grossTotalFormatted}</strong>
           </p>
           <div className="flex gap-2">
             <button
@@ -68,7 +73,7 @@ export default function NativeBillingInvoiceActions({
               disabled={loading}
               onClick={() => finalize()}
             >
-              Ja, finalisieren
+              Finalisieren
             </button>
             <button
               type="button"
