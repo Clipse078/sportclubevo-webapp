@@ -4112,7 +4112,10 @@ model LegalEntity {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
-  bankAccounts BillingBankAccount[]
+  bankAccounts     BillingBankAccount[]
+  billingContracts BillingContract[]
+  invoices         Invoice[]
+  invoiceSequences InvoiceSequence[]
 }
 
 /// Commercial counterparty (independent from Tenant).
@@ -4128,8 +4131,10 @@ model BillingCustomer {
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
 
-  tenantLinks BillingCustomerTenant[]
-  profiles    BillingProfile[]
+  tenantLinks      BillingCustomerTenant[]
+  profiles         BillingProfile[]
+  billingContracts BillingContract[]
+  invoices         Invoice[]
 }
 
 /// Links a billing customer to one or more tenant workspaces.
@@ -4168,6 +4173,8 @@ model BillingProfile {
 
   billingCustomer BillingCustomer @relation(fields: [billingCustomerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
+  contractsAsInvoiceRecipient BillingContract[] @relation("ContractInvoiceRecipientProfile")
+
   @@index([billingCustomerId])
 }
 
@@ -4196,6 +4203,210 @@ model BillingBankAccount {
 
   legalEntity LegalEntity @relation(fields: [legalEntityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
+  @@index([legalEntityId])
+}
+
+// SCE-BILLING-SWISS-01C — Native contracts & invoices (Switzerland-first).
+
+enum BillingProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
+/// Small SCE commercial catalogue (decoupled from invoice engine pricing).
+model BillingProduct {
+  id                        String               @id @default(cuid())
+  key                       String               @unique
+  name                      String
+  description               String?
+  catalogueMonthlyNetMinor    Int?
+  status                    BillingProductStatus @default(ACTIVE)
+  sortOrder                 Int                  @default(0)
+  createdAt                 DateTime             @default(now())
+  updatedAt                 DateTime             @updatedAt
+
+  contracts BillingContract[]
+}
+
+enum BillingContractStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  TERMINATED
+}
+
+enum BillingInterval {
+  MONTHLY
+}
+
+enum SwissVatTreatment {
+  STANDARD_81
+}
+
+model BillingContract {
+  id                        String                @id @default(cuid())
+  key                       String                @unique
+  contractNumber            String
+  legalEntityId             String
+  billingCustomerId         String
+  billingProductId          String?
+  productName               String
+  productDescription        String?
+  status                    BillingContractStatus @default(DRAFT)
+  currency                  String                @default("CHF")
+  monthlyNetAmountMinor     Int
+  billingInterval           BillingInterval       @default(MONTHLY)
+  vatTreatment              SwissVatTreatment     @default(STANDARD_81)
+  startDate                 DateTime              @db.Date
+  endDate                   DateTime?             @db.Date
+  minimumTermMonths         Int?
+  paymentTermsDays          Int                   @default(30)
+  invoiceRecipientProfileId String?
+  description               String?
+  internalNote              String?
+  createdAt                 DateTime              @default(now())
+  updatedAt                 DateTime              @updatedAt
+
+  legalEntity             LegalEntity     @relation(fields: [legalEntityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  billingCustomer         BillingCustomer @relation(fields: [billingCustomerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  billingProduct          BillingProduct? @relation(fields: [billingProductId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  invoiceRecipientProfile BillingProfile? @relation("ContractInvoiceRecipientProfile", fields: [invoiceRecipientProfileId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  invoices                Invoice[]
+
+  @@unique([legalEntityId, contractNumber])
+  @@index([billingCustomerId])
+  @@index([legalEntityId])
+  @@index([status])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  FINALIZED
+  OPEN
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  VOID
+  CREDITED
+}
+
+model Invoice {
+  id                 String        @id @default(cuid())
+  key                String        @unique
+  invoiceNumber      String?
+  legalEntityId      String
+  billingCustomerId  String
+  billingContractId  String?
+  status             InvoiceStatus @default(DRAFT)
+  currency           String        @default("CHF")
+  periodStart        DateTime      @db.Date
+  periodEnd          DateTime      @db.Date
+  invoiceDate        DateTime?     @db.Date
+  dueDate            DateTime?     @db.Date
+  paymentTermsDays   Int?
+  netTotalMinor      Int           @default(0)
+  vatTotalMinor      Int           @default(0)
+  grossTotalMinor    Int           @default(0)
+  contractLabel      String?
+  finalizedAt        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  legalEntity     LegalEntity      @relation(fields: [legalEntityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  billingCustomer BillingCustomer  @relation(fields: [billingCustomerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  billingContract BillingContract? @relation(fields: [billingContractId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  lines             InvoiceLine[]
+  taxSnapshots      InvoiceTaxSnapshot[]
+  issuerSnapshot    InvoiceIssuerSnapshot?
+  recipientSnapshot InvoiceRecipientSnapshot?
+
+  @@unique([legalEntityId, invoiceNumber])
+  @@index([billingCustomerId])
+  @@index([billingContractId])
+  @@index([status])
+  @@index([invoiceDate])
+}
+
+model InvoiceLine {
+  id                String   @id @default(cuid())
+  invoiceId         String
+  description       String
+  quantity          Decimal  @db.Decimal(12, 4)
+  unitPriceNetMinor Int
+  lineNetMinor      Int
+  vatRateBps        Int
+  vatMinor          Int
+  lineGrossMinor    Int
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([invoiceId])
+}
+
+model InvoiceTaxSnapshot {
+  id               String   @id @default(cuid())
+  invoiceId        String
+  taxLabel         String
+  taxRateBps       Int
+  taxableBaseMinor Int
+  taxAmountMinor   Int
+  currency         String
+  createdAt        DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([invoiceId])
+}
+
+model InvoiceIssuerSnapshot {
+  id              String   @id @default(cuid())
+  invoiceId       String   @unique
+  legalName       String
+  displayName     String
+  uid             String?
+  vatId           String?
+  addressLine1    String
+  houseNumber     String?
+  postalCode      String
+  city            String
+  countryCode     String
+  currency        String
+  createdAt       DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model InvoiceRecipientSnapshot {
+  id            String   @id @default(cuid())
+  invoiceId     String   @unique
+  companyOrName String
+  street        String
+  houseNumber   String?
+  postalCode    String
+  city          String
+  countryCode   String
+  invoiceEmail  String?
+  createdAt     DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+/// Per legal entity, per calendar year — atomic invoice numbering on finalize.
+model InvoiceSequence {
+  id             String   @id @default(cuid())
+  legalEntityId  String
+  sequenceYear   Int
+  lastNumber     Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  legalEntity LegalEntity @relation(fields: [legalEntityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([legalEntityId, sequenceYear])
   @@index([legalEntityId])
 }
 
