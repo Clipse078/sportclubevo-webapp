@@ -146,6 +146,10 @@ describe("native billing service", () => {
       actorUserId: "actor-1",
     });
 
+    expect(mocks.createBillingBankAccountRecord).toHaveBeenCalledWith(
+      expect.objectContaining({ iban: "CH9300762011623852957" }),
+    );
+
     const auditCall = mocks.logAction.mock.calls[0]?.[0];
     expect(JSON.stringify(auditCall?.afterJson)).not.toContain("CH9300762011623852957");
     expect(auditCall?.afterJson?.ibanMasked).toBe("****2957");

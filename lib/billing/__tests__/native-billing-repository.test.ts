@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { BILLING_FIELD_CRYPTO_TEST_KEY_BASE64, encryptBillingField } from "../billing-field-crypto";
 
 const prismaMock = vi.hoisted(() => ({
   billingCustomer: {
@@ -30,6 +31,7 @@ const {
 describe("native billing repository", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.SCE_BILLING_ENCRYPTION_KEY = BILLING_FIELD_CRYPTO_TEST_KEY_BASE64;
   });
 
   it("enforces unique billing customer key at persistence layer", async () => {
@@ -73,14 +75,17 @@ describe("native billing repository", () => {
   });
 
   it("associates bank account with legal entity", async () => {
+    const iban = "CH9300762011623852957";
+    const ibanEncrypted = encryptBillingField(iban);
     prismaMock.billingBankAccount.create.mockResolvedValue({
       id: "ba-1",
       legalEntityId: "le-1",
       label: "Main",
       bankName: null,
       currency: "CHF",
-      iban: "CH9300762011623852957",
-      qrIban: null,
+      ibanEncrypted,
+      qrIbanEncrypted: null,
+      encryptionKeyVersion: 1,
       referenceStrategy: "NON",
       creditorName: "Issuer",
       creditorAddressLine1: "Street",
@@ -100,7 +105,7 @@ describe("native billing repository", () => {
       label: "Main",
       bankName: null,
       currency: "CHF",
-      iban: "CH9300762011623852957",
+      iban,
       qrIban: null,
       referenceStrategy: "NON",
       creditorName: "Issuer",
@@ -115,5 +120,11 @@ describe("native billing repository", () => {
     });
 
     expect(account.legalEntityId).toBe("le-1");
+    expect(account.iban).toBe(iban);
+    expect(prismaMock.billingBankAccount.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ ibanEncrypted: expect.not.stringContaining(iban) }),
+      }),
+    );
   });
 });

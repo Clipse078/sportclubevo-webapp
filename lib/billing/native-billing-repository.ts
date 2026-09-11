@@ -1,4 +1,8 @@
 import { prisma } from "@/lib/db/prisma";
+import {
+  decryptBillingBankAccountFields,
+  encryptBillingBankAccountFields,
+} from "./billing-bank-account-crypto";
 import type {
   BillingBankAccountRecord,
   BillingCustomerRecord,
@@ -54,14 +58,15 @@ const profileSelect = {
   updatedAt: true,
 } as const;
 
-const bankAccountSelect = {
+const bankAccountDbSelect = {
   id: true,
   legalEntityId: true,
   label: true,
   bankName: true,
   currency: true,
-  iban: true,
-  qrIban: true,
+  ibanEncrypted: true,
+  qrIbanEncrypted: true,
+  encryptionKeyVersion: true,
   referenceStrategy: true,
   creditorName: true,
   creditorAddressLine1: true,
@@ -75,6 +80,58 @@ const bankAccountSelect = {
   createdAt: true,
   updatedAt: true,
 } as const;
+
+type BillingBankAccountDbRow = {
+  id: string;
+  legalEntityId: string;
+  label: string;
+  bankName: string | null;
+  currency: string;
+  ibanEncrypted: string;
+  qrIbanEncrypted: string | null;
+  encryptionKeyVersion: number;
+  referenceStrategy: BillingBankAccountRecord["referenceStrategy"];
+  creditorName: string;
+  creditorAddressLine1: string;
+  creditorHouseNumber: string | null;
+  creditorPostalCode: string;
+  creditorCity: string;
+  creditorCountryCode: string;
+  activeFrom: Date;
+  activeUntil: Date | null;
+  isDefault: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+function mapBillingBankAccountRow(row: BillingBankAccountDbRow): BillingBankAccountRecord {
+  const { iban, qrIban } = decryptBillingBankAccountFields({
+    ibanEncrypted: row.ibanEncrypted,
+    qrIbanEncrypted: row.qrIbanEncrypted,
+  });
+
+  return {
+    id: row.id,
+    legalEntityId: row.legalEntityId,
+    label: row.label,
+    bankName: row.bankName,
+    currency: row.currency,
+    iban,
+    qrIban,
+    referenceStrategy: row.referenceStrategy,
+    creditorName: row.creditorName,
+    creditorAddressLine1: row.creditorAddressLine1,
+    creditorHouseNumber: row.creditorHouseNumber,
+    creditorPostalCode: row.creditorPostalCode,
+    creditorCity: row.creditorCity,
+    creditorCountryCode: row.creditorCountryCode,
+    activeFrom: row.activeFrom,
+    activeUntil: row.activeUntil,
+    isDefault: row.isDefault,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
 
 export async function listBillingCustomers(): Promise<BillingCustomerRecord[]> {
   return prisma.billingCustomer.findMany({
@@ -325,31 +382,56 @@ export async function listBillingBankAccountsForLegalEntity(
 ): Promise<BillingBankAccountRecord[]> {
   return prisma.billingBankAccount.findMany({
     where: { legalEntityId },
-    select: bankAccountSelect,
+    select: bankAccountDbSelect,
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
-  });
+  }).then((rows) => rows.map(mapBillingBankAccountRow));
 }
 
 export async function listAllBillingBankAccounts(): Promise<BillingBankAccountRecord[]> {
   return prisma.billingBankAccount.findMany({
-    select: bankAccountSelect,
+    select: bankAccountDbSelect,
     orderBy: [{ legalEntityId: "asc" }, { isDefault: "desc" }, { createdAt: "asc" }],
-  });
+  }).then((rows) => rows.map(mapBillingBankAccountRow));
 }
 
 export async function findBillingBankAccountById(
   id: string,
 ): Promise<BillingBankAccountRecord | null> {
-  return prisma.billingBankAccount.findUnique({
+  const row = await prisma.billingBankAccount.findUnique({
     where: { id },
-    select: bankAccountSelect,
+    select: bankAccountDbSelect,
   });
+  return row ? mapBillingBankAccountRow(row) : null;
 }
 
 export async function createBillingBankAccountRecord(
   data: Omit<BillingBankAccountRecord, "id" | "createdAt" | "updatedAt">,
 ): Promise<BillingBankAccountRecord> {
-  return prisma.billingBankAccount.create({ data, select: bankAccountSelect });
+  const encrypted = encryptBillingBankAccountFields({
+    iban: data.iban,
+    qrIban: data.qrIban,
+  });
+  const row = await prisma.billingBankAccount.create({
+    data: {
+      legalEntityId: data.legalEntityId,
+      label: data.label,
+      bankName: data.bankName,
+      currency: data.currency,
+      ...encrypted,
+      referenceStrategy: data.referenceStrategy,
+      creditorName: data.creditorName,
+      creditorAddressLine1: data.creditorAddressLine1,
+      creditorHouseNumber: data.creditorHouseNumber,
+      creditorPostalCode: data.creditorPostalCode,
+      creditorCity: data.creditorCity,
+      creditorCountryCode: data.creditorCountryCode,
+      activeFrom: data.activeFrom,
+      activeUntil: data.activeUntil,
+      isDefault: data.isDefault,
+    },
+    select: bankAccountDbSelect,
+  });
+  return mapBillingBankAccountRow(row);
 }
 
 export async function updateBillingBankAccountRecord(
@@ -358,11 +440,41 @@ export async function updateBillingBankAccountRecord(
     Omit<BillingBankAccountRecord, "id" | "legalEntityId" | "createdAt" | "updatedAt">
   >,
 ): Promise<BillingBankAccountRecord> {
-  return prisma.billingBankAccount.update({
+  const encrypted =
+    data.iban !== undefined
+      ? encryptBillingBankAccountFields({
+          iban: data.iban,
+          qrIban: data.qrIban ?? null,
+        })
+      : null;
+
+  const row = await prisma.billingBankAccount.update({
     where: { id },
-    data,
-    select: bankAccountSelect,
+    data: {
+      label: data.label,
+      bankName: data.bankName,
+      currency: data.currency,
+      ...(encrypted
+        ? {
+            ibanEncrypted: encrypted.ibanEncrypted,
+            qrIbanEncrypted: encrypted.qrIbanEncrypted,
+            encryptionKeyVersion: encrypted.encryptionKeyVersion,
+          }
+        : {}),
+      referenceStrategy: data.referenceStrategy,
+      creditorName: data.creditorName,
+      creditorAddressLine1: data.creditorAddressLine1,
+      creditorHouseNumber: data.creditorHouseNumber,
+      creditorPostalCode: data.creditorPostalCode,
+      creditorCity: data.creditorCity,
+      creditorCountryCode: data.creditorCountryCode,
+      activeFrom: data.activeFrom,
+      activeUntil: data.activeUntil,
+      isDefault: data.isDefault,
+    },
+    select: bankAccountDbSelect,
   });
+  return mapBillingBankAccountRow(row);
 }
 
 export async function tenantExistsById(tenantId: string): Promise<boolean> {

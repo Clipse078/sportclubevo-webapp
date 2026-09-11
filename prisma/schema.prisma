@@ -4178,8 +4178,9 @@ model BillingBankAccount {
   label                 String
   bankName              String?
   currency              String                   @default("CHF")
-  iban                  String
-  qrIban                String?
+  ibanEncrypted         String
+  qrIbanEncrypted       String?
+  encryptionKeyVersion  Int                      @default(1)
   referenceStrategy     BillingReferenceStrategy @default(NON)
   creditorName          String
   creditorAddressLine1  String
