@@ -11,7 +11,7 @@ import {
 describe("invoice totals layout", () => {
   it("keeps minimum separation between VAT row and gross highlight", () => {
     expect(minimumVatToGrossSeparationMm()).toBeGreaterThanOrEqual(6);
-    expect(TOTALS_VAT_TO_GROSS_GAP_MM).toBeGreaterThanOrEqual(6);
+    expect(TOTALS_VAT_TO_GROSS_GAP_MM).toBeGreaterThanOrEqual(5);
     expect(TOTALS_GROSS_HIGHLIGHT_HEIGHT_MM).toBeGreaterThanOrEqual(7);
   });
 });

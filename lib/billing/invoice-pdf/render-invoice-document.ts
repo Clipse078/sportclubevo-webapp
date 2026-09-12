@@ -208,6 +208,10 @@ export async function drawInvoiceBody(
   const colUnit = tableWidth * 0.14;
   const colNet = tableWidth * 0.14;
   const colVat = tableWidth * 0.1;
+  const colQtyRight = tableX + colDesc + colQty - mmToPt(1);
+  const colUnitRight = tableX + colDesc + colQty + colUnit - mmToPt(1);
+  const colNetRight = tableX + colDesc + colQty + colUnit + colNet - mmToPt(1);
+  const colVatRight = tableX + colDesc + colQty + colUnit + colNet + colVat - mmToPt(1);
   const colGrossRight = tableX + tableWidth - mmToPt(1);
 
   const headerRowHeight = mmToPt(7.5);
@@ -369,9 +373,14 @@ export async function drawInvoiceBody(
       8.5,
       color(INVOICE_PDF_BRAND.text),
     );
-    totalsY -= mmToPt(TOTALS_VAT_ROW_STEP_MM + TOTALS_VAT_TO_GROSS_GAP_MM);
 
-    const dividerY = totalsY + mmToPt(2.5);
+    const vatBaselineY = totalsY;
+    const highlightHeight = mmToPt(TOTALS_GROSS_HIGHLIGHT_HEIGHT_MM);
+    const clearGap = mmToPt(TOTALS_VAT_TO_GROSS_GAP_MM);
+    const highlightBottom = vatBaselineY - clearGap - highlightHeight - mmToPt(1.5);
+    const highlightTop = highlightBottom + highlightHeight;
+    const dividerY = highlightTop + mmToPt(1.5);
+
     page.drawLine({
       start: { x: totalsX - mmToPt(1), y: dividerY },
       end: { x: totalsValueRight, y: dividerY },
@@ -379,8 +388,6 @@ export async function drawInvoiceBody(
       color: rgb(0.86, 0.87, 0.89),
     });
 
-    const highlightHeight = mmToPt(TOTALS_GROSS_HIGHLIGHT_HEIGHT_MM);
-    const highlightBottom = totalsY - mmToPt(1);
     page.drawRectangle({
       x: totalsX - mmToPt(2),
       y: highlightBottom,
