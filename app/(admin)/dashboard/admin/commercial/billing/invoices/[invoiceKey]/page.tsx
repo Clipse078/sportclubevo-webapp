@@ -5,6 +5,9 @@ import NativeBillingInvoiceActions from "@/components/admin/billing/NativeBillin
 import NativeBillingInvoicePdfActions from "@/components/admin/billing/NativeBillingInvoicePdfActions";
 import NativeBillingInvoiceDeliverySection from "@/components/admin/billing/NativeBillingInvoiceDeliverySection";
 import NativeBillingInvoicePaymentSection from "@/components/admin/billing/NativeBillingInvoicePaymentSection";
+import NativeBillingInvoiceSettlementsSection from "@/components/admin/billing/NativeBillingInvoiceSettlementsSection";
+import { getInvoicePaymentSummary } from "@/lib/billing/invoice-payments/invoice-payment-service";
+import { serializeInvoicePaymentSummary } from "@/lib/billing/invoice-payments/invoice-payment-serializers";
 import { getInvoicePaymentInstruction } from "@/lib/billing/invoice-payment-instruction-service";
 import {
   formatPaymentReferenceDisplay,
@@ -70,10 +73,27 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
     }
   }
 
+  const payableForSettlements = new Set([
+    "FINALIZED",
+    "OPEN",
+    "PARTIALLY_PAID",
+    "PAID",
+    "OVERDUE",
+  ]);
+  let paymentSummarySerialized: ReturnType<
+    typeof serializeInvoicePaymentSummary
+  > | null = null;
+  if (payableForSettlements.has(invoice.status)) {
+    const paymentSummary = await getInvoicePaymentSummary(invoice.key);
+    if (paymentSummary) {
+      paymentSummarySerialized = serializeInvoicePaymentSummary(paymentSummary);
+    }
+  }
+
   let paymentInstructionView: ReturnType<
     typeof serializeInvoicePaymentInstructionMasked
   > | null = null;
-  if (invoice.status === "FINALIZED") {
+  if (payableForSettlements.has(invoice.status)) {
     try {
       const instruction = await getInvoicePaymentInstruction(invoice.key);
       paymentInstructionView = instruction
@@ -231,6 +251,24 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
                   amountMinor: paymentInstructionView.amountMinor,
                   currency: paymentInstructionView.currency,
                 }
+              : null
+          }
+        />
+      ) : null}
+
+      {payableForSettlements.has(invoice.status) && paymentSummarySerialized ? (
+        <NativeBillingInvoiceSettlementsSection
+          invoiceKey={invoice.key}
+          invoiceNumber={invoice.invoiceNumber}
+          customerName={customer?.displayName ?? "—"}
+          canManage={canManage}
+          initialSummary={paymentSummarySerialized}
+          defaultReference={
+            paymentInstructionView?.reference
+              ? formatPaymentReferenceDisplay(
+                  paymentInstructionView.referenceType,
+                  paymentInstructionView.reference,
+                )
               : null
           }
         />
