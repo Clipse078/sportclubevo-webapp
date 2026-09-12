@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  getEnvironmentWarnings,
   getPublicEnvironmentLabel,
   getRuntimeEnvironment,
 } from "../env";
@@ -144,5 +145,18 @@ describe("runtime environment classification", () => {
     );
     expect(JSON.stringify(warn.mock.calls)).not.toContain(rawValue);
     expect(JSON.stringify(warn.mock.calls)).not.toContain("credential");
+  });
+
+  it("warns when Preview has DATABASE_URL but no billing encryption key", () => {
+    const runtime = getRuntimeEnvironment({
+      NODE_ENV: "production",
+      VERCEL: "1",
+      VERCEL_ENV: "preview",
+      APP_ENV: "stage",
+      DATABASE_URL: "postgresql://u:p@stage-db.neon.tech:5432/sce_stage",
+    });
+
+    const warnings = getEnvironmentWarnings(runtime);
+    expect(warnings.some((w) => w.includes("SCE_BILLING_ENCRYPTION_KEY"))).toBe(true);
   });
 });

@@ -206,7 +206,23 @@ export function runDeploymentPreflight(
     }
   }
 
-  // ── (6) Unsupported runtime classification ───────────────────────────────
+  // ── (6) Native billing decryption on Preview/Acceptance ─────────────────
+  if (
+    (runtime.isPreview || runtime.isAcceptance) &&
+    runtime.hasDatabaseUrl &&
+    !runtime.hasBillingEncryptionKey
+  ) {
+    addViolation(
+      warning(
+        "BILLING_ENCRYPTION_KEY_MISSING_PREVIEW",
+        "SCE_BILLING_ENCRYPTION_KEY is missing for a Preview/Acceptance deployment with DATABASE_URL. " +
+          "Invoice PDF and delivery attachment generation will fail when decrypting BillingBankAccount fields. " +
+          "Add the same key as STAGE Production to this deployment's Preview scope and redeploy.",
+      ),
+    );
+  }
+
+  // ── (7) Unsupported runtime classification ───────────────────────────────
   if (runtime.isUnknown && !isDeployedContext) {
     violations.push(
       warning(

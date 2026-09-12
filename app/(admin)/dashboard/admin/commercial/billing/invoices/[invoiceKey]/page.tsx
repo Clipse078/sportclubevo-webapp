@@ -3,6 +3,7 @@ import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import NativeBillingInvoiceActions from "@/components/admin/billing/NativeBillingInvoiceActions";
 import NativeBillingInvoicePdfActions from "@/components/admin/billing/NativeBillingInvoicePdfActions";
+import NativeBillingInvoiceDeliverySection from "@/components/admin/billing/NativeBillingInvoiceDeliverySection";
 import NativeBillingInvoicePaymentSection from "@/components/admin/billing/NativeBillingInvoicePaymentSection";
 import { getInvoicePaymentInstruction } from "@/lib/billing/invoice-payment-instruction-service";
 import {
@@ -10,6 +11,8 @@ import {
   presentReferenceTypeLabel,
   serializeInvoicePaymentInstructionMasked,
 } from "@/lib/billing/invoice-payment-instruction-serializers";
+import { getInvoiceDeliverySummary } from "@/lib/billing/invoice-delivery/invoice-delivery-summary";
+import { serializeInvoiceDeliverySummary } from "@/lib/billing/invoice-delivery/invoice-delivery-serializers";
 import { getInvoiceDetail } from "@/lib/billing/native-billing-commercial-service";
 import { findBillingCustomerById } from "@/lib/billing/native-billing-repository";
 import { formatBillingMoney } from "@/lib/billing/format-billing-money";
@@ -56,6 +59,16 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
   const statusPresentation = presentNativeInvoiceStatus(invoice.status);
   const displayTitle = presentInvoiceDisplayNumber(invoice.invoiceNumber, invoice.status);
   const periodLabel = formatBillingPeriodDisplay(invoice.periodStart, invoice.periodEnd);
+
+  let deliverySummarySerialized: ReturnType<
+    typeof serializeInvoiceDeliverySummary
+  > | null = null;
+  if (invoice.status === "FINALIZED") {
+    const deliverySummary = await getInvoiceDeliverySummary(invoice.key);
+    if (deliverySummary) {
+      deliverySummarySerialized = serializeInvoiceDeliverySummary(deliverySummary);
+    }
+  }
 
   let paymentInstructionView: ReturnType<
     typeof serializeInvoicePaymentInstructionMasked
@@ -186,6 +199,18 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
           )}
         </section>
       </div>
+
+      {invoice.status === "FINALIZED" ? (
+        <NativeBillingInvoiceDeliverySection
+          invoiceKey={invoice.key}
+          invoiceNumber={invoice.invoiceNumber}
+          grossTotalFormatted={grossFormatted}
+          recipientEmail={recipient?.invoiceEmail ?? null}
+          canManage={canManage}
+          status={invoice.status}
+          initialDelivery={deliverySummarySerialized}
+        />
+      ) : null}
 
       {invoice.status === "FINALIZED" ? (
         <NativeBillingInvoicePaymentSection

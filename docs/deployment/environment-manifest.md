@@ -91,7 +91,7 @@ Scope terms:
 
 | Name | Purpose | Sensitive | Production | Preview | Local | Required / optional | Failure behavior | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `SCE_BILLING_ENCRYPTION_KEY` | AES-256-GCM key for IBAN / QR-IBAN field encryption at rest | Yes | Required before native bank accounts are configured | Forbidden | Optional (Vitest uses an isolated test fallback) | Required in STAGE/PROD when persisting bank accounts | Bank account reads/writes that touch encrypted fields fail with a typed billing error; other routes remain unaffected | 32-byte value as base64 or 64-char hex. Never log. Independent per environment. Supports versioned payloads for future rotation. |
+| `SCE_BILLING_ENCRYPTION_KEY` | AES-256-GCM key for IBAN / QR-IBAN field encryption at rest | Yes | Required before native bank accounts are configured | Conditional (required when Preview uses the persistent STAGE database for native billing acceptance) | Optional (Vitest uses an isolated test fallback) | Required in STAGE/PROD when persisting bank accounts | Bank account reads/writes that touch encrypted fields fail with a typed billing error; other routes remain unaffected | 32-byte value as base64 or 64-char hex. Never log. When Preview targets STAGE data, use the **same** value as STAGE Production scope in the Preview scope. Supports versioned payloads for future rotation. |
 
 ## Public website
 
@@ -140,6 +140,13 @@ Preview must not receive shared STAGE values for:
 Benign shared configuration may include `APP_ENV`, `APP_BASE_URL`,
 `NEXTAUTH_URL`, `EMAIL_FROM`, and `EMAIL_INBOUND_DOMAIN`. Platform encryption of
 these settings does not make them secrets.
+
+When a Preview deployment intentionally uses the persistent STAGE database for
+native billing acceptance (invoice PDF, Swiss QR section, email attachment
+generation), `SCE_BILLING_ENCRYPTION_KEY` must also be present in the **Preview**
+Vercel environment scope with the **same** value as the STAGE **Production**
+scope. Vercel does not inherit Production-scoped secrets into Preview
+deployments automatically.
 
 ## Production policy
 

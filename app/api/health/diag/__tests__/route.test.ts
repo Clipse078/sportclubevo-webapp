@@ -38,6 +38,7 @@ const identity = {
   authConfigured: {
     hasNextAuthSecret: true,
     hasDatabaseUrl: true,
+    hasBillingEncryptionKey: false,
     hasNextAuthUrl: true,
     hasAppBaseUrl: true,
   },

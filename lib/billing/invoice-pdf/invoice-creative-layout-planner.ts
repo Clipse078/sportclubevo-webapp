@@ -6,7 +6,6 @@ import type { InvoicePdfDocumentData } from "./invoice-pdf-types";
 import {
   ACKNOWLEDGEMENT_ACCENT_BAR_HEIGHT_MM,
   ADDRESS_GRID_COLUMN_GAP_MM,
-  ADDRESS_LINE_STEP_MM,
   ADDRESS_SECTION_LABEL_STEP_MM,
   CREATIVE_AREA_HEIGHT_MM,
   FOOTER_BRAND_DIVIDER_GAP_MM,
@@ -29,13 +28,17 @@ import {
   splitLineDescription,
 } from "./invoice-design-geometry";
 import {
+  planAddressBlockLayout,
+  type PlannedAddressBlockLayout,
+} from "./invoice-address-layout";
+import {
   fontAscentMm,
-  fontDescentMm,
   gapBetweenInkMm,
   inkExtentsFromBaselineMm,
 } from "./invoice-font-metrics";
 import {
   TOTALS_GROSS_HIGHLIGHT_HEIGHT_MM,
+  TOTALS_GROSS_TEXT_INSET_MM,
   TOTALS_NET_ROW_STEP_MM,
   TOTALS_VAT_TO_GROSS_GAP_MM,
 } from "./invoice-totals-layout";
@@ -58,9 +61,7 @@ export type LayoutRegionMm = {
 export type InvoiceCreativeLayoutPlan = {
   regions: LayoutRegionMm[];
   metadataGroups: MetadataGroupPlan[];
-  /** Address body line step used for this plan (matches renderer when planned). */
-  addressLineStepMm: number;
-  addressLabelStepMm: number;
+  addressLayout: PlannedAddressBlockLayout;
   gaps: {
     metadataToAddressesMm: number;
     addressesToTableMm: number;
@@ -94,6 +95,7 @@ export const METADATA_INTRA_GROUP_INK_GAP_MIN_MM = 3.0;
 export const METADATA_TO_ADDRESS_INK_GAP_MM = 7;
 export const METADATA_TO_ADDRESS_INK_GAP_MIN_MM = 6.0;
 export const ADDRESS_TO_TABLE_INK_GAP_MM = 7;
+export const ADDRESS_TO_TABLE_INK_GAP_MIN_MM = 4;
 export const TABLE_TO_TOTALS_INK_GAP_MM = 3;
 export const TOTALS_TO_THANKYOU_INK_GAP_MM = 6;
 export const THANKYOU_TO_BRAND_INK_GAP_MM = 5;
@@ -107,11 +109,12 @@ export const TOTALS_HIGHLIGHT_EXTRA_OFFSET_MM = 1.5;
 
 const ACKNOWLEDGEMENT_TEXT_FONT_PT = 10.5;
 
+/** Matches {@link render-invoice-document} thank-you text baseline offset from accent bar top. */
+export const THANKYOU_TEXT_BASELINE_OFFSET_FROM_BAR_TOP_MM = 2;
+
 function sceFooterLogoWidthMm(): number {
   return FOOTER_SCE_LOGO_HEIGHT_MM * (937 / 204);
 }
-
-const ADDRESS_LINE_STEP_MIN_MM = 2.5;
 
 export class InvoiceCreativeLayoutOverflowError extends Error {
   constructor(message: string) {
@@ -145,10 +148,36 @@ export function measureTotalsInkBottomYm(totalsBlockTopYm: number): number {
   );
 }
 
+/** Gross highlight band (page-top Y, mm downward) — matches PDF totals renderer. */
+export function measureTotalsGrossHighlightBandYm(totalsBlockTopYm: number): {
+  topYm: number;
+  bottomYm: number;
+  centerYm: number;
+} {
+  const firstBaselineYm = totalsBlockTopYm + TOTALS_BLOCK_TOP_CONTENT_OFFSET_MM;
+  const vatBaselineYm = firstBaselineYm + TOTALS_NET_ROW_STEP_MM;
+  const topYm = vatBaselineYm + TOTALS_VAT_TO_GROSS_GAP_MM;
+  const bottomYm = topYm + TOTALS_GROSS_HIGHLIGHT_HEIGHT_MM;
+  return { topYm, bottomYm, centerYm: (topYm + bottomYm) / 2 };
+}
+
+/** Primary "Total brutto" text baseline (page-top Y). */
+export function measureTotalsGrossTextBaselineYm(totalsBlockTopYm: number): number {
+  const { bottomYm } = measureTotalsGrossHighlightBandYm(totalsBlockTopYm);
+  return bottomYm - TOTALS_GROSS_TEXT_INSET_MM;
+}
+
+export function planThankYouTopYmForGrossBandAlignment(totalsBlockTopYm: number): number {
+  return (
+    measureTotalsGrossTextBaselineYm(totalsBlockTopYm) -
+    THANKYOU_TEXT_BASELINE_OFFSET_FROM_BAR_TOP_MM
+  );
+}
+
 /** Thank-you region top Y is the accent bar top (page-top). */
 export function measureThankYouInkBottomYm(thankYouTopYm: number): number {
   const barBottomYm = thankYouTopYm + ACKNOWLEDGEMENT_ACCENT_BAR_HEIGHT_MM;
-  const textBaselineYm = thankYouTopYm + 2;
+  const textBaselineYm = thankYouTopYm + THANKYOU_TEXT_BASELINE_OFFSET_FROM_BAR_TOP_MM;
   const textInk = inkExtentsFromBaselineMm(textBaselineYm, ACKNOWLEDGEMENT_TEXT_FONT_PT);
   return Math.max(barBottomYm, textInk.bottomYMm);
 }
@@ -236,37 +265,6 @@ function planMetadataGroupsWithGap(
   return groups;
 }
 
-function measureAddressSection(
-  addressTopYm: number,
-  recipientLineCount: number,
-  issuerLineCount: number,
-  addressLineStepMm: number,
-  addressLabelStepMm: number,
-): {
-  addressBodyTopYMm: number;
-  addressSectionBottomYMm: number;
-  recipientBottomYMm: number;
-  issuerBottomYMm: number;
-} {
-  const addressBodyTopYMm = addressTopYm + addressLabelStepMm;
-  const lastLineBottomYm = (lineCount: number) => {
-    if (lineCount <= 0) {
-      return addressBodyTopYMm;
-    }
-    const lastBaselineYm =
-      addressBodyTopYMm + Math.max(0, lineCount - 1) * addressLineStepMm;
-    return lastBaselineYm + fontDescentMm(10);
-  };
-  const recipientBottomYMm = lastLineBottomYm(recipientLineCount);
-  const issuerBottomYMm = lastLineBottomYm(issuerLineCount);
-  return {
-    addressBodyTopYMm,
-    addressSectionBottomYMm: Math.max(recipientBottomYMm, issuerBottomYMm),
-    recipientBottomYMm,
-    issuerBottomYMm,
-  };
-}
-
 export function estimateOverflowCreativeHeightMm(data: InvoicePdfDocumentData): number {
   return DESIGN_MIN_TABLE_TOP_Y_MM + measureTableHeightMm(data) + 75;
 }
@@ -297,8 +295,8 @@ export function planInvoiceCreativeLayout(data: InvoicePdfDocumentData): Invoice
   let metadataInterGroupGapMm = METADATA_INTER_GROUP_INK_GAP_MM;
   let metadataIntraGroupGapMm = METADATA_INTRA_GROUP_INK_GAP_MM;
   let metadataToAddressGapMm = METADATA_TO_ADDRESS_INK_GAP_MM;
-  let addressLineStepMm = ADDRESS_LINE_STEP_MM;
-  let addressLabelStepMm = ADDRESS_SECTION_LABEL_STEP_MM;
+  let addressLabelToBodyGapMm = ADDRESS_SECTION_LABEL_STEP_MM;
+  let addressToTableGapMm = ADDRESS_TO_TABLE_INK_GAP_MM;
 
   let metadataGroups = planMetadataGroupsWithGap(
     data,
@@ -307,13 +305,7 @@ export function planInvoiceCreativeLayout(data: InvoicePdfDocumentData): Invoice
   );
   let metadataBottomYMm = metadataGroups[metadataGroups.length - 1]!.bottomYMm;
   let addressTopYMm = Math.max(DESIGN_MIN_ADDRESS_TOP_Y_MM, metadataBottomYMm + metadataToAddressGapMm);
-  let addressMetrics = measureAddressSection(
-    addressTopYMm,
-    recipientLines.length,
-    issuerLines.length,
-    addressLineStepMm,
-    addressLabelStepMm,
-  );
+  let addressLayout!: PlannedAddressBlockLayout;
 
   let tableTopYMm = 0;
   let tableBottomYMm = 0;
@@ -332,17 +324,27 @@ export function planInvoiceCreativeLayout(data: InvoicePdfDocumentData): Invoice
     );
     metadataBottomYMm = metadataGroups[metadataGroups.length - 1]!.bottomYMm;
     addressTopYMm = Math.max(DESIGN_MIN_ADDRESS_TOP_Y_MM, metadataBottomYMm + metadataToAddressGapMm);
-    addressMetrics = measureAddressSection(
-      addressTopYMm,
-      recipientLines.length,
-      issuerLines.length,
-      addressLineStepMm,
-      addressLabelStepMm,
-    );
+    const maxTableTopFromFooterYm = maxTableBottomYm - tableHeightMm;
+    try {
+      addressLayout = planAddressBlockLayout({
+        labelBaselineYm: addressTopYMm,
+        labelToBodyGapMm: addressLabelToBodyGapMm,
+        recipientLineCount: recipientLines.length,
+        issuerLineCount: issuerLines.length,
+        maxIssuerInkBottomYm: maxTableTopFromFooterYm - addressToTableGapMm,
+      });
+    } catch {
+      if (addressToTableGapMm > ADDRESS_TO_TABLE_INK_GAP_MIN_MM + 0.01) {
+        addressToTableGapMm = Math.max(ADDRESS_TO_TABLE_INK_GAP_MIN_MM, addressToTableGapMm - 0.5);
+        continue;
+      }
+      throw new InvoiceCreativeLayoutOverflowError(
+        "Invoice creative layout does not fit in the 210×192 mm area for this document.",
+      );
+    }
 
     const minTableTopFromAddressYm =
-      addressMetrics.addressSectionBottomYMm + ADDRESS_TO_TABLE_INK_GAP_MM;
-    const maxTableTopFromFooterYm = maxTableBottomYm - tableHeightMm;
+      addressLayout.sectionInkBottomYMm + addressToTableGapMm;
 
     tableTopYMm = Math.max(DESIGN_MIN_TABLE_TOP_Y_MM, minTableTopFromAddressYm);
     if (tableTopYMm > maxTableTopFromFooterYm + 0.01) {
@@ -352,25 +354,30 @@ export function planInvoiceCreativeLayout(data: InvoicePdfDocumentData): Invoice
     tableBottomYMm = tableTopYMm + tableHeightMm;
     totalsTopYMm = tableBottomYMm + TABLE_TO_TOTALS_INK_GAP_MM;
     totalsBottomYMm = measureTotalsInkBottomYm(totalsTopYMm);
-    thankYouTopYMm = totalsTopYMm;
+    thankYouTopYMm = planThankYouTopYmForGrossBandAlignment(totalsTopYMm);
     thankYouBottomYMm = measureThankYouInkBottomYm(thankYouTopYMm);
 
     const addressOk = tableTopYMm + 0.01 >= minTableTopFromAddressYm;
     const footerOk =
       totalsBottomYMm + THANKYOU_TO_BRAND_INK_GAP_MM <= brandRowTopYMm + 0.01 &&
       tableBottomYMm <= maxTableBottomYm + 0.01 &&
-      thankYouBottomYMm <= totalsBottomYMm + 0.01;
+      thankYouTopYMm + 0.01 >= totalsTopYMm &&
+      thankYouBottomYMm <= totalsBottomYMm + 0.01 &&
+      thankYouBottomYMm + THANKYOU_TO_BRAND_INK_GAP_MM <= brandRowTopYMm + 0.01;
 
     if (addressOk && footerOk) {
       break;
     }
 
-    if (addressLabelStepMm > 3.5 + 0.01) {
-      addressLabelStepMm = Math.max(3.5, addressLabelStepMm - 0.25);
+    if (addressToTableGapMm > ADDRESS_TO_TABLE_INK_GAP_MIN_MM + 0.01) {
+      addressToTableGapMm = Math.max(ADDRESS_TO_TABLE_INK_GAP_MIN_MM, addressToTableGapMm - 0.5);
       continue;
     }
-    if (addressLineStepMm > ADDRESS_LINE_STEP_MIN_MM + 0.01) {
-      addressLineStepMm = Math.max(ADDRESS_LINE_STEP_MIN_MM, addressLineStepMm - 0.25);
+    if (addressLabelToBodyGapMm > ADDRESS_SECTION_LABEL_STEP_MM - 1 + 0.01) {
+      addressLabelToBodyGapMm = Math.max(
+        ADDRESS_SECTION_LABEL_STEP_MM - 1,
+        addressLabelToBodyGapMm - 0.25,
+      );
       continue;
     }
     if (metadataIntraGroupGapMm > METADATA_INTRA_GROUP_INK_GAP_MIN_MM + 0.01) {
@@ -436,24 +443,24 @@ export function planInvoiceCreativeLayout(data: InvoicePdfDocumentData): Invoice
     xMm: PAGE_MARGIN_X_MM,
     yMm: addressTopYMm,
     widthMm: INNER_CONTENT_WIDTH_MM,
-    heightMm: addressLabelStepMm,
-    bottomYMm: addressTopYMm + addressLabelStepMm,
+    heightMm: addressLayout.sharedBodyFirstBaselineYMm - addressTopYMm,
+    bottomYMm: addressLayout.sharedBodyFirstBaselineYMm,
   });
   regions.push({
     id: "recipient_block",
     xMm: PAGE_MARGIN_X_MM,
-    yMm: addressMetrics.addressBodyTopYMm,
+    yMm: addressLayout.sharedBodyFirstBaselineYMm,
     widthMm: colWidth,
-    heightMm: addressMetrics.recipientBottomYMm - addressMetrics.addressBodyTopYMm,
-    bottomYMm: addressMetrics.recipientBottomYMm,
+    heightMm: addressLayout.recipient.inkBottomYMm - addressLayout.sharedBodyFirstBaselineYMm,
+    bottomYMm: addressLayout.recipient.inkBottomYMm,
   });
   regions.push({
     id: "issuer_block",
     xMm: PAGE_MARGIN_X_MM + colWidth + ADDRESS_GRID_COLUMN_GAP_MM,
-    yMm: addressMetrics.addressBodyTopYMm,
+    yMm: addressLayout.sharedBodyFirstBaselineYMm,
     widthMm: colWidth,
-    heightMm: addressMetrics.issuerBottomYMm - addressMetrics.addressBodyTopYMm,
-    bottomYMm: addressMetrics.issuerBottomYMm,
+    heightMm: addressLayout.issuer.inkBottomYMm - addressLayout.sharedBodyFirstBaselineYMm,
+    bottomYMm: addressLayout.issuer.inkBottomYMm,
   });
 
   regions.push({
@@ -518,11 +525,10 @@ export function planInvoiceCreativeLayout(data: InvoicePdfDocumentData): Invoice
   return {
     regions,
     metadataGroups,
-    addressLineStepMm,
-    addressLabelStepMm,
+    addressLayout,
     gaps: {
       metadataToAddressesMm: gapBetweenInkMm(metadataBottomYMm, addressTopYMm),
-      addressesToTableMm: gapBetweenInkMm(addressMetrics.addressSectionBottomYMm, tableTopYMm),
+      addressesToTableMm: gapBetweenInkMm(addressLayout.sectionInkBottomYMm, tableTopYMm),
       tableToTotalsMm: gapBetweenInkMm(tableBottomYMm, totalsTopYMm),
       totalsToThankYouMm: thankYouTopYMm >= totalsBottomYMm
         ? gapBetweenInkMm(totalsBottomYMm, thankYouTopYMm)
@@ -575,8 +581,6 @@ export function assertCreativeLayoutNoCollisions(plan: InvoiceCreativeLayoutPlan
   const meta = byId("metadata_block");
   const invoiceHero = byId("invoice_number_hero");
   const addr = byId("address_labels");
-  const recipient = byId("recipient_block");
-  const issuer = byId("issuer_block");
   const table = byId("line_items_table");
   const totals = byId("totals_block");
   const thank = byId("acknowledgement");
@@ -589,7 +593,7 @@ export function assertCreativeLayoutNoCollisions(plan: InvoiceCreativeLayoutPlan
     throw new Error("metadata/address collision");
   }
   if (
-    Math.max(recipient.bottomYMm, issuer.bottomYMm) + ADDRESS_TO_TABLE_INK_GAP_MM - 0.01 >
+    plan.addressLayout.sectionInkBottomYMm + ADDRESS_TO_TABLE_INK_GAP_MIN_MM - 0.01 >
     table.yMm
   ) {
     throw new Error("address/table collision");
@@ -598,9 +602,9 @@ export function assertCreativeLayoutNoCollisions(plan: InvoiceCreativeLayoutPlan
     throw new Error("table/totals collision");
   }
   if (thank.yMm + 0.01 < totals.yMm) {
-    throw new Error("totals/thank-you collision");
+    throw new Error("thank-you above totals block");
   }
-  if (thank.yMm < totals.bottomYMm - 0.01 && thank.bottomYMm > totals.bottomYMm + 0.01) {
+  if (thank.bottomYMm > totals.bottomYMm + 0.01) {
     throw new Error("thank-you extends below totals block");
   }
   if (totals.bottomYMm + THANKYOU_TO_BRAND_INK_GAP_MM - 0.01 > brand.yMm) {

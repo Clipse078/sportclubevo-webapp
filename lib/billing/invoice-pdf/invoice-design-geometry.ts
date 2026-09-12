@@ -146,7 +146,8 @@ export const TOTALS_HIGHLIGHT_WIDTH_MM = 52;
 export const TOTALS_HIGHLIGHT_X_INSET_MM = 2;
 export const TOTALS_AFTER_BLOCK_GAP_MM = 4;
 
-export const ACKNOWLEDGEMENT_ACCENT_BAR_WIDTH_MM = 1.2;
+/** Vertical stroke thickness — matches {@link TITLE_ACCENT_HEIGHT_MM} (Rechnung underline). */
+export const ACKNOWLEDGEMENT_ACCENT_BAR_WIDTH_MM = TITLE_ACCENT_HEIGHT_MM;
 export const ACKNOWLEDGEMENT_ACCENT_BAR_HEIGHT_MM = 6;
 export const ACKNOWLEDGEMENT_MIN_GAP_ABOVE_BRAND_MM = 4;
 
