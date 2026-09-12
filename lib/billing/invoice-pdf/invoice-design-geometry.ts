@@ -12,6 +12,12 @@ import {
   A4_WIDTH_MM,
   SWISS_PAYMENT_SECTION_HEIGHT_MM,
 } from "./constants";
+import { metadataStackEndYMm } from "./invoice-metadata-layout";
+import {
+  computeTulipVisibleDrawSizeMm,
+  TULIP_VISIBLE_MAX_WIDTH_MM,
+  TULIP_VISIBLE_MIN_WIDTH_MM,
+} from "./tulip-logo-visible-bounds";
 import type { InvoicePdfDocumentData } from "./invoice-pdf-types";
 
 export function splitLineDescription(description: string): {
@@ -61,22 +67,32 @@ export const INVOICE_NUMBER_FONT_SIZE_PT = 15;
 export const METADATA_STACK_TOP_Y_MM = 44;
 export const METADATA_LEFT_X_MM = 130;
 export const METADATA_BLOCK_WIDTH_MM = 66;
-export const METADATA_COMPACT_ROW_STEP_MM = 5.5;
-export const METADATA_LABEL_BASELINE_OFFSET_MM = 3;
-export const METADATA_VALUE_BASELINE_OFFSET_MM = 6;
+/** @deprecated Use {@link METADATA_GROUP_PITCH_MM}. */
+export const METADATA_COMPACT_ROW_STEP_MM = 9;
+export const METADATA_GROUP_COUNT = 4;
+/** Label baseline → next label baseline (editorial metadata rhythm, SWISS-01E4C2). */
+export const METADATA_GROUP_PITCH_MM = 9;
+/** Group top → label baseline (~1.8–2.2 mm label→value with value offset below). */
+export const METADATA_LABEL_BASELINE_OFFSET_MM = 2.5;
+export const METADATA_VALUE_BASELINE_OFFSET_MM = 4.5;
+/** Approximate cap height for 10.5 pt values (collision planning). */
+export const METADATA_VALUE_CAP_HEIGHT_MM = 3.7;
+/** Minimum white space between value ink and next label (mm). */
+export const METADATA_MIN_INTER_GROUP_GAP_MM = 3;
 
-export const ADDRESS_SECTION_TOP_Y_MM = 72;
+export const ADDRESS_SECTION_TOP_Y_MM = 86;
 export const ADDRESS_COLUMN_DIVIDER_WIDTH_MM = 0.12;
 
-export const TABLE_SECTION_TOP_Y_MM = 110;
+export const TABLE_SECTION_TOP_Y_MM = 112;
 
 export const THANK_YOU_TOP_Y_MM = 160;
 export const OPERATOR_BRAND_ROW_TOP_Y_MM = 171;
 
 export const FOOTER_SCE_LOGO_HEIGHT_MM = 5.5;
+/** @deprecated Use visible-content sizing via {@link computeOperatorBrandRowLayoutMm}. */
 export const TULIP_LOGO_HEIGHT_MM = 6;
-export const FOOTER_BRAND_DIVIDER_GAP_MM = 2.5;
-export const FOOTER_BRAND_LOGO_GAP_MM = 2.5;
+export const FOOTER_BRAND_DIVIDER_GAP_MM = 3.5;
+export const FOOTER_BRAND_LOGO_GAP_MM = 3.5;
 
 export const MIN_PAYMENT_BREATHING_ROOM_MM = 8;
 
@@ -87,6 +103,10 @@ export const INVOICE_BODY_AREA_HEIGHT_MM = A4_HEIGHT_MM - SWISS_PAYMENT_SECTION_
 
 /** Y (from page top) where the regulated payment section begins. */
 export const PAYMENT_SECTION_BOUNDARY_Y_FROM_TOP_MM = INVOICE_BODY_AREA_HEIGHT_MM;
+
+/** Bottom edge of operator brand row (maintains ≥8 mm above y=192). */
+export const FOOTER_BRAND_ROW_BOTTOM_Y_MM =
+  PAYMENT_SECTION_BOUNDARY_Y_FROM_TOP_MM - MIN_PAYMENT_BREATHING_ROOM_MM;
 
 export const CREATIVE_AREA_WIDTH_MM = A4_WIDTH_MM;
 export const CREATIVE_AREA_HEIGHT_MM = INVOICE_BODY_AREA_HEIGHT_MM;
@@ -179,7 +199,30 @@ function tableColumnRightsMm(): number[] {
 
 /** Deterministic region plan for handoff (matches renderer spacing constants). */
 export function footerBrandRowYFromTopMm(): number {
-  return OPERATOR_BRAND_ROW_TOP_Y_MM;
+  return computeOperatorBrandRowLayoutMm().rowTopYMm;
+}
+
+export type OperatorBrandRowLayoutMm = {
+  rowTopYMm: number;
+  rowBottomYMm: number;
+  rowHeightMm: number;
+  tulipVisibleWidthMm: number;
+  tulipVisibleHeightMm: number;
+  sceLogoHeightMm: number;
+};
+
+export function computeOperatorBrandRowLayoutMm(): OperatorBrandRowLayoutMm {
+  const { visibleWidthMm, visibleHeightMm } = computeTulipVisibleDrawSizeMm();
+  const rowHeightMm = Math.max(FOOTER_SCE_LOGO_HEIGHT_MM, visibleHeightMm);
+  const rowBottomYMm = FOOTER_BRAND_ROW_BOTTOM_Y_MM;
+  return {
+    rowTopYMm: rowBottomYMm - rowHeightMm,
+    rowBottomYMm,
+    rowHeightMm,
+    tulipVisibleWidthMm: visibleWidthMm,
+    tulipVisibleHeightMm: visibleHeightMm,
+    sceLogoHeightMm: FOOTER_SCE_LOGO_HEIGHT_MM,
+  };
 }
 
 export function paymentBreathingRoomMm(data: InvoicePdfDocumentData): number {
@@ -198,7 +241,7 @@ export function paymentBreathingRoomMm(data: InvoicePdfDocumentData): number {
   }
   maxBottom = Math.max(
     maxBottom,
-    OPERATOR_BRAND_ROW_TOP_Y_MM + FOOTER_SCE_LOGO_HEIGHT_MM,
+    computeOperatorBrandRowLayoutMm().rowBottomYMm,
   );
   return CREATIVE_AREA_HEIGHT_MM - maxBottom;
 }
@@ -272,7 +315,7 @@ export function planInvoiceBodyLayoutRegions(data: InvoicePdfDocumentData): Invo
     xMm: METADATA_LEFT_X_MM,
     yMm: METADATA_STACK_TOP_Y_MM,
     widthMm: METADATA_BLOCK_WIDTH_MM,
-    heightMm: METADATA_COMPACT_ROW_STEP_MM * 4,
+    heightMm: metadataStackEndYMm() - METADATA_STACK_TOP_Y_MM + 1,
   });
 
   const colWidth = (innerTableWidthMm() - ADDRESS_GRID_COLUMN_GAP_MM) / 2;
@@ -351,26 +394,44 @@ export function planInvoiceBodyLayoutRegions(data: InvoicePdfDocumentData): Invo
     heightMm: ACKNOWLEDGEMENT_ACCENT_BAR_HEIGHT_MM + 3,
   });
 
+  const brandRow = computeOperatorBrandRowLayoutMm();
+  const sceWidthMm = FOOTER_SCE_LOGO_HEIGHT_MM * (937 / 204);
+  const tulipX =
+    PAGE_MARGIN_X_MM +
+    sceWidthMm +
+    FOOTER_BRAND_LOGO_GAP_MM +
+    FOOTER_BRAND_DIVIDER_GAP_MM +
+    FOOTER_BRAND_DIVIDER_GAP_MM;
+
+  regions.push({
+    id: "operator_brand_row",
+    xMm: PAGE_MARGIN_X_MM,
+    yMm: brandRow.rowTopYMm,
+    widthMm: INNER_CONTENT_WIDTH_MM * 0.75,
+    heightMm: brandRow.rowHeightMm,
+  });
+
   regions.push({
     id: "operator_branding_sce",
     xMm: PAGE_MARGIN_X_MM,
-    yMm: OPERATOR_BRAND_ROW_TOP_Y_MM,
-    widthMm: FOOTER_SCE_LOGO_HEIGHT_MM * 3.2,
+    yMm: brandRow.rowBottomYMm - FOOTER_SCE_LOGO_HEIGHT_MM,
+    widthMm: sceWidthMm,
     heightMm: FOOTER_SCE_LOGO_HEIGHT_MM,
   });
 
   regions.push({
     id: "operator_branding_tulip",
-    xMm: PAGE_MARGIN_X_MM + FOOTER_SCE_LOGO_HEIGHT_MM * 3.2 + FOOTER_BRAND_DIVIDER_GAP_MM * 2,
-    yMm: OPERATOR_BRAND_ROW_TOP_Y_MM + (FOOTER_SCE_LOGO_HEIGHT_MM - TULIP_LOGO_HEIGHT_MM) / 2,
-    widthMm: TULIP_LOGO_HEIGHT_MM * 4,
-    heightMm: TULIP_LOGO_HEIGHT_MM,
+    xMm: tulipX,
+    yMm: brandRow.rowBottomYMm - brandRow.tulipVisibleHeightMm,
+    widthMm: brandRow.tulipVisibleWidthMm,
+    heightMm: brandRow.tulipVisibleHeightMm,
+    note: `Visible content target width ${brandRow.tulipVisibleWidthMm} mm (${TULIP_VISIBLE_MIN_WIDTH_MM}–${TULIP_VISIBLE_MAX_WIDTH_MM})`,
   });
 
   regions.push({
     id: "website_url",
     xMm: A4_WIDTH_MM - PAGE_MARGIN_X_MM - WEBSITE_TEXT_BLOCK_WIDTH_MM,
-    yMm: OPERATOR_BRAND_ROW_TOP_Y_MM,
+    yMm: brandRow.rowBottomYMm - 4,
     widthMm: WEBSITE_TEXT_BLOCK_WIDTH_MM,
     heightMm: 4,
   });

@@ -21,10 +21,10 @@ import {
   FOOTER_BRAND_DIVIDER_GAP_MM,
   FOOTER_BRAND_LOGO_GAP_MM,
   FOOTER_SCE_LOGO_HEIGHT_MM,
-  footerBrandRowYFromTopMm,
+  computeOperatorBrandRowLayoutMm,
   IDENTITY_TOP_Y_MM,
   INVOICE_NUMBER_FONT_SIZE_PT,
-  METADATA_COMPACT_ROW_STEP_MM,
+  METADATA_GROUP_PITCH_MM,
   METADATA_LEFT_X_MM,
   METADATA_STACK_TOP_Y_MM,
   METADATA_BLOCK_WIDTH_MM,
@@ -56,7 +56,6 @@ import {
   TOTALS_HIGHLIGHT_WIDTH_MM,
   TOTALS_HIGHLIGHT_X_INSET_MM,
   TOTALS_VALUE_INSET_MM,
-  TULIP_LOGO_HEIGHT_MM,
   WEBSITE_TEXT_BLOCK_WIDTH_MM,
 } from "./invoice-design-geometry";
 import {
@@ -64,10 +63,8 @@ import {
   splitLineDescription,
 } from "./invoice-layout";
 import { mmToPt } from "./mm";
-import {
-  embedLogoIfPresent,
-  TULIP_DIGITAL_LOGO_PATH,
-} from "./render-swiss-payment-slip";
+import { embedLogoIfPresent } from "./render-swiss-payment-slip";
+import { loadTulipVisibleArtworkPngBytes } from "./tulip-logo-visible-bounds";
 import type { InvoicePdfDocumentData } from "./invoice-pdf-types";
 import type { InvoiceLineRecord } from "../native-billing-commercial-types";
 import {
@@ -232,7 +229,7 @@ export async function drawInvoiceBody(
       font,
       color: color(INVOICE_PDF_BRAND.text),
     });
-    metaRowTopMm += useVisualMasterAnchors ? METADATA_COMPACT_ROW_STEP_MM : METADATA_ROW_STEP_MM;
+    metaRowTopMm += useVisualMasterAnchors ? METADATA_GROUP_PITCH_MM : METADATA_ROW_STEP_MM;
   }
 
   const addressTopMm = useVisualMasterAnchors
@@ -531,8 +528,10 @@ export async function drawInvoiceBody(
   }
 
   if (showFooter) {
-    const brandRowTopMm = footerBrandRowYFromTopMm();
-    const brandRowY = pdfYFromPageTop(pageHeight, brandRowTopMm + FOOTER_SCE_LOGO_HEIGHT_MM);
+    const brandRow = computeOperatorBrandRowLayoutMm();
+    const brandRowTopMm = brandRow.rowTopYMm;
+    const brandRowBottomMm = brandRow.rowBottomYMm;
+    const brandRowY = pdfYFromPageTop(pageHeight, brandRowBottomMm);
     const thankTopMm = useVisualMasterAnchors
       ? THANK_YOU_TOP_Y_MM
       : Math.min(
@@ -571,26 +570,29 @@ export async function drawInvoiceBody(
       brandCursorX += sceWidth + mmToPt(FOOTER_BRAND_LOGO_GAP_MM);
     }
 
-    const tulipLogo = await embedLogoIfPresent(pdfDoc, TULIP_DIGITAL_LOGO_PATH);
-    if (sceLogo && tulipLogo) {
+    const tulipArtwork = loadTulipVisibleArtworkPngBytes();
+    const tulipEmbedded = await pdfDoc.embedPng(tulipArtwork.pngBytes);
+    if (sceLogo && tulipEmbedded) {
       page.drawLine({
         start: { x: brandCursorX, y: brandRowY + mmToPt(0.5) },
-        end: { x: brandCursorX, y: brandRowY + mmToPt(FOOTER_SCE_LOGO_HEIGHT_MM - 0.5) },
+        end: {
+          x: brandCursorX,
+          y: brandRowY + mmToPt(Math.max(FOOTER_SCE_LOGO_HEIGHT_MM, brandRow.rowHeightMm) - 0.5),
+        },
         thickness: 0.35,
         color: rgb(0.82, 0.84, 0.86),
       });
       brandCursorX += mmToPt(FOOTER_BRAND_DIVIDER_GAP_MM);
     }
 
-    if (tulipLogo) {
-      const h = mmToPt(TULIP_LOGO_HEIGHT_MM);
-      const scale = h / tulipLogo.height;
-      const logoWidth = tulipLogo.width * scale;
-      page.drawImage(tulipLogo, {
+    if (tulipEmbedded) {
+      const drawWidthPt = mmToPt(brandRow.tulipVisibleWidthMm);
+      const drawHeightPt = mmToPt(brandRow.tulipVisibleHeightMm);
+      page.drawImage(tulipEmbedded, {
         x: brandCursorX,
-        y: brandRowY + mmToPt((FOOTER_SCE_LOGO_HEIGHT_MM - TULIP_LOGO_HEIGHT_MM) / 2),
-        width: logoWidth,
-        height: h,
+        y: brandRowY,
+        width: drawWidthPt,
+        height: drawHeightPt,
       });
     }
 
