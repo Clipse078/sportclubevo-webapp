@@ -3,10 +3,7 @@
  * Shared by creative layout planning and PDF rendering.
  */
 
-import {
-  ADDRESS_LINE_STEP_MM,
-  ADDRESS_SECTION_LABEL_STEP_MM,
-} from "./invoice-design-geometry";
+import { ADDRESS_SECTION_LABEL_STEP_MM } from "./invoice-design-geometry";
 import {
   fontAscentMm,
   fontDescentMm,
@@ -43,11 +40,12 @@ export function addressLabelInkBottomYm(labelBaselineYm: number): number {
 export function addressSharedBodyTopBaselineYm(
   labelBaselineYm: number,
   labelToBodyGapMm: number = ADDRESS_SECTION_LABEL_STEP_MM,
+  bodyFontPt: number = ADDRESS_ISSUER_BODY_FONT_PT_MIN,
 ): number {
   const inkSafeBaseline =
     addressLabelInkBottomYm(labelBaselineYm) +
     ADDRESS_MIN_INTERLINE_INK_GAP_MM +
-    fontAscentMm(ADDRESS_RECIPIENT_BODY_FONT_PT);
+    fontAscentMm(bodyFontPt);
   const stepBaseline = labelBaselineYm + labelToBodyGapMm;
   return Math.max(stepBaseline, inkSafeBaseline);
 }
@@ -121,30 +119,12 @@ export function planAddressBlockLayout(input: {
   const sharedBodyFirstBaselineYMm = addressSharedBodyTopBaselineYm(
     input.labelBaselineYm,
     input.labelToBodyGapMm,
+    ADDRESS_ISSUER_BODY_FONT_PT_MIN,
   );
-
-  const recipientStepMm = Math.max(
-    ADDRESS_LINE_STEP_MM,
-    minimumAddressBaselineStepMm(ADDRESS_RECIPIENT_BODY_FONT_PT),
-  );
-  const recipientBaselines = buildAddressLineBaselinesYm(
-    sharedBodyFirstBaselineYMm,
-    input.recipientLineCount,
-    recipientStepMm,
-  );
-  const recipient: PlannedAddressColumnLayout = {
-    fontSizePt: ADDRESS_RECIPIENT_BODY_FONT_PT,
-    baselineStepMm: recipientStepMm,
-    baselinesYMm: recipientBaselines,
-    inkBottomYMm: addressInkBottomFromBaselinesYm(
-      recipientBaselines,
-      ADDRESS_RECIPIENT_BODY_FONT_PT,
-    ),
-  };
 
   const issuerLineCount = input.issuerLineCount;
-  let issuerFontPt: number = ADDRESS_ISSUER_BODY_FONT_PT_MIN;
-  let issuerStepMm = minimumAddressBaselineStepMm(ADDRESS_ISSUER_BODY_FONT_PT_MIN);
+  let bodyFontPt: number = ADDRESS_ISSUER_BODY_FONT_PT_MIN;
+  let bodyStepMm = minimumAddressBaselineStepMm(ADDRESS_ISSUER_BODY_FONT_PT_MIN);
   let issuerBaselines: number[] = [];
 
   if (issuerLineCount > 0) {
@@ -158,33 +138,45 @@ export function planAddressBlockLayout(input: {
               sharedBodyFirstBaselineYMm) /
             (issuerLineCount - 1);
       if (stepMm + 0.01 >= minStep) {
-        issuerFontPt = candidatePt;
-        issuerStepMm = stepMm;
+        bodyFontPt = candidatePt;
+        bodyStepMm = stepMm;
         issuerBaselines = buildAddressLineBaselinesYm(
           sharedBodyFirstBaselineYMm,
           issuerLineCount,
-          issuerStepMm,
+          bodyStepMm,
         );
         break;
       }
     }
 
     if (issuerBaselines.length === 0) {
-      issuerFontPt = ADDRESS_ISSUER_BODY_FONT_PT_MIN;
-      issuerStepMm = minimumAddressBaselineStepMm(ADDRESS_ISSUER_BODY_FONT_PT_MIN);
+      bodyFontPt = ADDRESS_ISSUER_BODY_FONT_PT_MIN;
+      bodyStepMm = minimumAddressBaselineStepMm(ADDRESS_ISSUER_BODY_FONT_PT_MIN);
       issuerBaselines = buildAddressLineBaselinesYm(
         sharedBodyFirstBaselineYMm,
         issuerLineCount,
-        issuerStepMm,
+        bodyStepMm,
       );
     }
   }
 
   const issuer: PlannedAddressColumnLayout = {
-    fontSizePt: issuerFontPt,
-    baselineStepMm: issuerStepMm,
+    fontSizePt: bodyFontPt,
+    baselineStepMm: bodyStepMm,
     baselinesYMm: issuerBaselines,
-    inkBottomYMm: addressInkBottomFromBaselinesYm(issuerBaselines, issuerFontPt),
+    inkBottomYMm: addressInkBottomFromBaselinesYm(issuerBaselines, bodyFontPt),
+  };
+
+  const recipientBaselines = buildAddressLineBaselinesYm(
+    sharedBodyFirstBaselineYMm,
+    input.recipientLineCount,
+    bodyStepMm,
+  );
+  const recipient: PlannedAddressColumnLayout = {
+    fontSizePt: bodyFontPt,
+    baselineStepMm: bodyStepMm,
+    baselinesYMm: recipientBaselines,
+    inkBottomYMm: addressInkBottomFromBaselinesYm(recipientBaselines, bodyFontPt),
   };
 
   assertAddressBaselinesReadable(recipient);

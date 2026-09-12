@@ -38,6 +38,7 @@ import {
 } from "./invoice-font-metrics";
 import {
   TOTALS_GROSS_HIGHLIGHT_HEIGHT_MM,
+  TOTALS_GROSS_TEXT_INSET_MM,
   TOTALS_NET_ROW_STEP_MM,
   TOTALS_VAT_TO_GROSS_GAP_MM,
 } from "./invoice-totals-layout";
@@ -108,6 +109,9 @@ export const TOTALS_HIGHLIGHT_EXTRA_OFFSET_MM = 1.5;
 
 const ACKNOWLEDGEMENT_TEXT_FONT_PT = 10.5;
 
+/** Matches {@link render-invoice-document} thank-you text baseline offset from accent bar top. */
+export const THANKYOU_TEXT_BASELINE_OFFSET_FROM_BAR_TOP_MM = 2;
+
 function sceFooterLogoWidthMm(): number {
   return FOOTER_SCE_LOGO_HEIGHT_MM * (937 / 204);
 }
@@ -144,10 +148,36 @@ export function measureTotalsInkBottomYm(totalsBlockTopYm: number): number {
   );
 }
 
+/** Gross highlight band (page-top Y, mm downward) — matches PDF totals renderer. */
+export function measureTotalsGrossHighlightBandYm(totalsBlockTopYm: number): {
+  topYm: number;
+  bottomYm: number;
+  centerYm: number;
+} {
+  const firstBaselineYm = totalsBlockTopYm + TOTALS_BLOCK_TOP_CONTENT_OFFSET_MM;
+  const vatBaselineYm = firstBaselineYm + TOTALS_NET_ROW_STEP_MM;
+  const topYm = vatBaselineYm + TOTALS_VAT_TO_GROSS_GAP_MM;
+  const bottomYm = topYm + TOTALS_GROSS_HIGHLIGHT_HEIGHT_MM;
+  return { topYm, bottomYm, centerYm: (topYm + bottomYm) / 2 };
+}
+
+/** Primary "Total brutto" text baseline (page-top Y). */
+export function measureTotalsGrossTextBaselineYm(totalsBlockTopYm: number): number {
+  const { bottomYm } = measureTotalsGrossHighlightBandYm(totalsBlockTopYm);
+  return bottomYm - TOTALS_GROSS_TEXT_INSET_MM;
+}
+
+export function planThankYouTopYmForGrossBandAlignment(totalsBlockTopYm: number): number {
+  return (
+    measureTotalsGrossTextBaselineYm(totalsBlockTopYm) -
+    THANKYOU_TEXT_BASELINE_OFFSET_FROM_BAR_TOP_MM
+  );
+}
+
 /** Thank-you region top Y is the accent bar top (page-top). */
 export function measureThankYouInkBottomYm(thankYouTopYm: number): number {
   const barBottomYm = thankYouTopYm + ACKNOWLEDGEMENT_ACCENT_BAR_HEIGHT_MM;
-  const textBaselineYm = thankYouTopYm + 2;
+  const textBaselineYm = thankYouTopYm + THANKYOU_TEXT_BASELINE_OFFSET_FROM_BAR_TOP_MM;
   const textInk = inkExtentsFromBaselineMm(textBaselineYm, ACKNOWLEDGEMENT_TEXT_FONT_PT);
   return Math.max(barBottomYm, textInk.bottomYMm);
 }
@@ -324,14 +354,16 @@ export function planInvoiceCreativeLayout(data: InvoicePdfDocumentData): Invoice
     tableBottomYMm = tableTopYMm + tableHeightMm;
     totalsTopYMm = tableBottomYMm + TABLE_TO_TOTALS_INK_GAP_MM;
     totalsBottomYMm = measureTotalsInkBottomYm(totalsTopYMm);
-    thankYouTopYMm = totalsTopYMm;
+    thankYouTopYMm = planThankYouTopYmForGrossBandAlignment(totalsTopYMm);
     thankYouBottomYMm = measureThankYouInkBottomYm(thankYouTopYMm);
 
     const addressOk = tableTopYMm + 0.01 >= minTableTopFromAddressYm;
     const footerOk =
       totalsBottomYMm + THANKYOU_TO_BRAND_INK_GAP_MM <= brandRowTopYMm + 0.01 &&
       tableBottomYMm <= maxTableBottomYm + 0.01 &&
-      thankYouBottomYMm <= totalsBottomYMm + 0.01;
+      thankYouTopYMm + 0.01 >= totalsTopYMm &&
+      thankYouBottomYMm <= totalsBottomYMm + 0.01 &&
+      thankYouBottomYMm + THANKYOU_TO_BRAND_INK_GAP_MM <= brandRowTopYMm + 0.01;
 
     if (addressOk && footerOk) {
       break;
@@ -570,9 +602,9 @@ export function assertCreativeLayoutNoCollisions(plan: InvoiceCreativeLayoutPlan
     throw new Error("table/totals collision");
   }
   if (thank.yMm + 0.01 < totals.yMm) {
-    throw new Error("totals/thank-you collision");
+    throw new Error("thank-you above totals block");
   }
-  if (thank.yMm < totals.bottomYMm - 0.01 && thank.bottomYMm > totals.bottomYMm + 0.01) {
+  if (thank.bottomYMm > totals.bottomYMm + 0.01) {
     throw new Error("thank-you extends below totals block");
   }
   if (totals.bottomYMm + THANKYOU_TO_BRAND_INK_GAP_MM - 0.01 > brand.yMm) {

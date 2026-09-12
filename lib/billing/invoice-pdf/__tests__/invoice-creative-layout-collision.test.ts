@@ -8,9 +8,10 @@ import {
   METADATA_TO_ADDRESS_INK_GAP_MM,
   ADDRESS_TO_TABLE_INK_GAP_MIN_MM,
   TABLE_TO_TOTALS_INK_GAP_MM,
-  TOTALS_TO_THANKYOU_INK_GAP_MM,
   THANKYOU_TO_BRAND_INK_GAP_MM,
+  measureTotalsGrossTextBaselineYm,
   planInvoiceCreativeLayout,
+  THANKYOU_TEXT_BASELINE_OFFSET_FROM_BAR_TOP_MM,
 } from "../invoice-creative-layout-planner";
 import {
   MIN_PAYMENT_BREATHING_ROOM_MM,
@@ -62,5 +63,21 @@ describe("invoice creative layout collisions (SWISS-01E4C3)", () => {
     expect(brand.bottomYMm).toBeLessThanOrEqual(
       PAYMENT_SECTION_BOUNDARY_Y_FROM_TOP_MM - MIN_PAYMENT_BREATHING_ROOM_MM + 0.01,
     );
+  });
+
+  it("aligns thank-you with Total brutto band on fixture 2026-000002 (SWISS-01F4)", () => {
+    const plan = planInvoiceCreativeLayout(buildFixturePdfDocumentData());
+    const totals = region(plan, "totals_block");
+    const thank = region(plan, "acknowledgement");
+    const brand = region(plan, "operator_brand_row");
+
+    const grossTextBaselineYm = measureTotalsGrossTextBaselineYm(totals.yMm);
+    const thankTextBaselineYm = thank.yMm + THANKYOU_TEXT_BASELINE_OFFSET_FROM_BAR_TOP_MM;
+    expect(thankTextBaselineYm).toBeCloseTo(grossTextBaselineYm, 2);
+
+    expect(thank.yMm).toBeGreaterThanOrEqual(totals.yMm - 0.01);
+    expect(thank.bottomYMm).toBeLessThanOrEqual(totals.bottomYMm + 0.01);
+    expect(plan.gaps.thankYouToBrandMm).toBeGreaterThanOrEqual(THANKYOU_TO_BRAND_INK_GAP_MM - 0.5);
+    expect(brand.yMm - thank.bottomYMm).toBeGreaterThanOrEqual(THANKYOU_TO_BRAND_INK_GAP_MM - 0.5);
   });
 });

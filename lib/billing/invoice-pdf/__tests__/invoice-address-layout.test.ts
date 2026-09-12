@@ -14,11 +14,14 @@ import { PDFDocument } from "pdf-lib";
 import { mmToPt } from "../mm";
 import { A4_HEIGHT_MM } from "../constants";
 
-describe("invoice address layout (SWISS-01F3)", () => {
+describe("invoice address layout (SWISS-01F3 / SWISS-01F4)", () => {
   it("plans readable recipient and issuer baselines for fixture 2026-000002", () => {
     const plan = planInvoiceCreativeLayout(buildFixturePdfDocumentData());
     assertAddressBaselinesReadable(plan.addressLayout.recipient);
     assertAddressBaselinesReadable(plan.addressLayout.issuer);
+
+    expect(plan.addressLayout.recipient.fontSizePt).toBe(plan.addressLayout.issuer.fontSizePt);
+    expect(plan.addressLayout.recipient.baselineStepMm).toBe(plan.addressLayout.issuer.baselineStepMm);
 
     const recipient = plan.addressLayout.recipient;
     for (let index = 1; index < recipient.baselinesYMm.length; index++) {
