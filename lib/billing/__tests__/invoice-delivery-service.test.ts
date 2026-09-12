@@ -302,6 +302,6 @@ describe("invoice delivery service", () => {
         deliveryRow({ status: "FAILED", attemptNumber: 2 }),
         deliveryRow({ status: "SENT", attemptNumber: 1 }),
       ]),
-    ).toBe("SENT");
+    ).toBe("FAILED");
   });
 });

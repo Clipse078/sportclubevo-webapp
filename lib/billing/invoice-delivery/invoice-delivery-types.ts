@@ -41,6 +41,8 @@ export type SendNativeInvoiceEmailInput = {
   invoiceKey: string;
   actorUserId: string;
   resend: boolean;
+  /** Preview/acceptance dry-run only — simulates provider failure without sending email. */
+  simulateFailure?: boolean;
 };
 
 export type SendNativeInvoiceEmailResult = {

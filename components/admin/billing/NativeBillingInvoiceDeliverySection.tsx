@@ -54,6 +54,7 @@ export default function NativeBillingInvoiceDeliverySection({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmMode, setConfirmMode] = useState<"send" | "resend" | null>(null);
+  const [optimisticSending, setOptimisticSending] = useState(false);
 
   const refreshDelivery = useCallback(async () => {
     const res = await fetch(
@@ -68,19 +69,24 @@ export default function NativeBillingInvoiceDeliverySection({
     setDelivery(initialDelivery);
   }, [initialDelivery]);
 
-  async function sendInvoice(resend: boolean) {
+  async function sendInvoice(resend: boolean, simulateFailure = false) {
     setLoading(true);
+    setOptimisticSending(true);
     setError(null);
+    setConfirmMode(null);
     try {
       const res = await fetch(
         `/api/platform/billing/invoices/${encodeURIComponent(invoiceKey)}/send`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ resend }),
+          body: JSON.stringify({ resend, simulateFailure }),
         },
       );
-      const data = (await res.json()) as { error?: string; summary?: SerializedInvoiceDeliverySummary };
+      const data = (await res.json()) as {
+        error?: string;
+        summary?: SerializedInvoiceDeliverySummary;
+      };
       if (!res.ok) {
         throw new Error(data.error ?? "Versand fehlgeschlagen.");
       }
@@ -89,35 +95,50 @@ export default function NativeBillingInvoiceDeliverySection({
       } else {
         await refreshDelivery();
       }
-      setConfirmMode(null);
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Versand fehlgeschlagen.");
       await refreshDelivery();
     } finally {
       setLoading(false);
+      setOptimisticSending(false);
     }
   }
+
+  const serverAggregateStatus = delivery?.aggregateStatus ?? "NOT_SENT";
+  const aggregateStatus =
+    optimisticSending || loading ? "SENDING" : serverAggregateStatus;
+  const aggregateStatusLabel = (() => {
+    switch (aggregateStatus) {
+      case "SENDING":
+        return "Wird gesendet";
+      case "SENT":
+        return "Gesendet";
+      case "FAILED":
+        return "Fehlgeschlagen";
+      default:
+        return delivery?.aggregateStatusLabel ?? "Noch nicht gesendet";
+    }
+  })();
 
   if (status !== "FINALIZED") {
     return null;
   }
 
-  const aggregateStatus = delivery?.aggregateStatus ?? "NOT_SENT";
   const displayRecipient =
     delivery?.latestRecipientEmail ?? recipientEmail ?? "—";
-  const canSend =
-    canManage &&
-    Boolean(recipientEmail) &&
-    aggregateStatus !== "SENDING";
-  const showResend =
-    canSend &&
-    (aggregateStatus === "SENT" ||
-      delivery?.attempts.some((attempt) => attempt.status === "SENT"));
-  const showFirstSend = canSend && !showResend;
+  const actionsLocked =
+    loading || optimisticSending || serverAggregateStatus === "SENDING";
+  const hasSuccessfulSend = delivery?.attempts.some((attempt) => attempt.status === "SENT");
+  const canInteract =
+    canManage && Boolean(recipientEmail) && !actionsLocked;
+  const showResend = canInteract && hasSuccessfulSend;
+  const showFirstSend = canInteract && !hasSuccessfulSend;
+  const showRetryAfterFailure =
+    canInteract && aggregateStatus === "FAILED" && !hasSuccessfulSend;
 
   return (
-    <section className="space-y-4 max-w-3xl">
+    <section className="space-y-3 max-w-3xl">
       <h2 className="text-sm font-semibold">Versand</h2>
 
       <div className="rounded-lg border border-border p-4 space-y-4">
@@ -130,16 +151,31 @@ export default function NativeBillingInvoiceDeliverySection({
             <dt className="text-muted-foreground">Status</dt>
             <dd>
               <BillingStatusBadge
-                label={delivery?.aggregateStatusLabel ?? "Noch nicht gesendet"}
+                label={aggregateStatusLabel}
                 tone={deliveryTone(aggregateStatus)}
               />
             </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Gesendet am</dt>
-            <dd className="font-medium">{formatDateTime(delivery?.latestSentAt ?? null)}</dd>
+            <dd className="font-medium">
+              {formatDateTime(delivery?.latestSentAt ?? null)}
+            </dd>
           </div>
         </dl>
+
+        {aggregateStatus === "SENDING" ? (
+          <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
+            Wird gesendet… Bitte warten Sie, bis der Versand abgeschlossen ist.
+          </p>
+        ) : null}
+
+        {aggregateStatus === "FAILED" && !error ? (
+          <p className="text-sm text-destructive">
+            Die Rechnung konnte nicht gesendet werden. Sie können den Versand erneut
+            versuchen.
+          </p>
+        ) : null}
 
         {!recipientEmail ? (
           <p className="text-sm text-destructive">
@@ -149,23 +185,38 @@ export default function NativeBillingInvoiceDeliverySection({
         ) : null}
 
         {confirmMode === "send" ? (
-          <div className="rounded-md border border-border bg-muted/20 p-4 space-y-3">
-            <p className="text-sm font-medium">Rechnung senden?</p>
-            <ul className="text-sm text-muted-foreground space-y-1">
-              <li>
-                Empfänger: <strong className="text-foreground">{recipientEmail}</strong>
-              </li>
-              <li>
-                Rechnung: <strong className="text-foreground">{invoiceNumber ?? "—"}</strong>
-              </li>
-              <li>
-                Betrag: <strong className="text-foreground">{grossTotalFormatted}</strong>
-              </li>
-            </ul>
+          <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-4 space-y-3">
+            <p className="text-sm font-semibold">Rechnung senden?</p>
+            <p className="text-sm text-muted-foreground">
+              Die Rechnung wird per E-Mail an den Empfänger versendet. Diese Aktion kann nicht
+              rückgängig gemacht werden.
+            </p>
+            <dl className="text-sm space-y-1">
+              <div className="flex gap-2">
+                <dt className="text-muted-foreground min-w-24">Empfänger:</dt>
+                <dd className="font-medium break-all">{recipientEmail}</dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="text-muted-foreground min-w-24">Rechnung:</dt>
+                <dd className="font-medium">{invoiceNumber ?? "—"}</dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="text-muted-foreground min-w-24">Betrag:</dt>
+                <dd className="font-medium">{grossTotalFormatted}</dd>
+              </div>
+            </dl>
             <p className="text-sm text-muted-foreground">
               Die finalisierte Rechnung wird als PDF angehängt.
             </p>
             <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="fca-button-secondary"
+                disabled={loading}
+                onClick={() => setConfirmMode(null)}
+              >
+                Abbrechen
+              </button>
               <button
                 type="button"
                 className="fca-button-primary"
@@ -174,6 +225,28 @@ export default function NativeBillingInvoiceDeliverySection({
               >
                 Rechnung senden
               </button>
+            </div>
+          </div>
+        ) : null}
+
+        {confirmMode === "resend" ? (
+          <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-4 space-y-3">
+            <p className="text-sm font-semibold">Rechnung erneut senden?</p>
+            <p className="text-sm text-muted-foreground">
+              Diese Rechnung wurde bereits gesendet. Eine weitere Kopie der finalisierten
+              Rechnung wird per E-Mail versendet.
+            </p>
+            <dl className="text-sm space-y-1">
+              <div className="flex gap-2">
+                <dt className="text-muted-foreground min-w-24">Empfänger:</dt>
+                <dd className="font-medium break-all">{recipientEmail}</dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="text-muted-foreground min-w-24">Rechnung:</dt>
+                <dd className="font-medium">{invoiceNumber ?? "—"}</dd>
+              </div>
+            </dl>
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 className="fca-button-secondary"
@@ -182,18 +255,6 @@ export default function NativeBillingInvoiceDeliverySection({
               >
                 Abbrechen
               </button>
-            </div>
-          </div>
-        ) : null}
-
-        {confirmMode === "resend" ? (
-          <div className="rounded-md border border-border bg-muted/20 p-4 space-y-3">
-            <p className="text-sm font-medium">Rechnung erneut senden?</p>
-            <p className="text-sm text-muted-foreground">
-              Diese Rechnung wurde bereits per E-Mail versendet. Es wird eine weitere Kopie an{" "}
-              <strong className="text-foreground">{recipientEmail}</strong> gesendet.
-            </p>
-            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 className="fca-button-primary"
@@ -202,42 +263,39 @@ export default function NativeBillingInvoiceDeliverySection({
               >
                 Erneut senden
               </button>
-              <button
-                type="button"
-                className="fca-button-secondary"
-                disabled={loading}
-                onClick={() => setConfirmMode(null)}
-              >
-                Abbrechen
-              </button>
             </div>
           </div>
         ) : null}
 
         {!confirmMode ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             {showFirstSend ? (
               <button
                 type="button"
                 className="fca-button-primary"
-                disabled={loading || !recipientEmail}
+                disabled={!recipientEmail}
                 onClick={() => setConfirmMode("send")}
               >
-                {loading ? "Wird gesendet…" : "Rechnung senden"}
+                Rechnung senden
               </button>
             ) : null}
             {showResend ? (
               <button
                 type="button"
                 className="fca-button-secondary"
-                disabled={loading}
                 onClick={() => setConfirmMode("resend")}
               >
                 Erneut senden
               </button>
             ) : null}
-            {aggregateStatus === "SENDING" ? (
-              <span className="text-sm text-muted-foreground self-center">Wird gesendet…</span>
+            {showRetryAfterFailure ? (
+              <button
+                type="button"
+                className="fca-button-primary"
+                onClick={() => setConfirmMode("send")}
+              >
+                Erneut versuchen
+              </button>
             ) : null}
           </div>
         ) : null}
@@ -265,7 +323,9 @@ export default function NativeBillingInvoiceDeliverySection({
                       {formatDateTime(attempt.sentAt ?? attempt.failedAt ?? attempt.createdAt)}
                     </p>
                     {attempt.errorMessage ? (
-                      <p className="text-xs text-destructive">{attempt.errorMessage}</p>
+                      <p className="text-xs text-destructive max-w-xs">
+                        {attempt.errorMessage}
+                      </p>
                     ) : null}
                   </div>
                 </li>

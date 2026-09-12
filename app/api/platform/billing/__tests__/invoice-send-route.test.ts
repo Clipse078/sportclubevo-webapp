@@ -90,6 +90,7 @@ describe("invoice send route", () => {
       invoiceKey: "k",
       actorUserId: "user-1",
       resend: false,
+      simulateFailure: false,
     });
   });
 });

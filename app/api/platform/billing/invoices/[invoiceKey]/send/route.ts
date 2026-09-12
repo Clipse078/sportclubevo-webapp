@@ -18,11 +18,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const { invoiceKey } = await context.params;
   let resend = false;
+  let simulateFailure = false;
   try {
-    const body = (await request.json()) as { resend?: boolean };
+    const body = (await request.json()) as { resend?: boolean; simulateFailure?: boolean };
     resend = body.resend === true;
+    simulateFailure = body.simulateFailure === true;
   } catch {
     resend = false;
+    simulateFailure = false;
   }
 
   try {
@@ -30,6 +33,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       invoiceKey,
       actorUserId: access.actorUserId!,
       resend,
+      simulateFailure,
     });
     const invoice = await findInvoiceByKey(invoiceKey);
     const attempts = invoice

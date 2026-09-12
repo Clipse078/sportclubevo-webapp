@@ -21,7 +21,11 @@ import {
   MailConfigurationError,
 } from "@/lib/email/mailer";
 import { Prisma } from "@prisma/client";
-import { sendBillingEmail } from "./billing-email-transport";
+import {
+  BillingEmailDryRunFailureError,
+  sendBillingEmail,
+} from "./billing-email-transport";
+import { isBillingDeliveryAcceptanceSimulateFailureAllowed } from "./billing-delivery-transport-mode";
 import {
   buildInvoiceDeliveryEmailContent,
   resolveInvoiceDeliveryLocale,
@@ -151,10 +155,17 @@ function mapDeliveryFailure(error: unknown): { code: string; message: string; us
       userMessage: "Die Rechnungs-PDF konnte nicht erstellt werden.",
     };
   }
+  if (error instanceof BillingEmailDryRunFailureError) {
+    return {
+      code: "PROVIDER_SIMULATED_FAILURE",
+      message: error.message,
+      userMessage: "Die Rechnung konnte nicht gesendet werden.",
+    };
+  }
   return {
     code: "PROVIDER_ERROR",
     message: error instanceof Error ? error.message : "Unknown delivery error",
-    userMessage: "Der E-Mail-Dienst konnte die Rechnung nicht versenden.",
+    userMessage: "Die Rechnung konnte nicht gesendet werden.",
   };
 }
 
@@ -177,6 +188,15 @@ export async function generateInvoiceAttachment(
 export async function sendNativeInvoiceEmail(
   input: SendNativeInvoiceEmailInput,
 ): Promise<SendNativeInvoiceEmailResult> {
+  if (
+    input.simulateFailure &&
+    !isBillingDeliveryAcceptanceSimulateFailureAllowed()
+  ) {
+    throw new NativeBillingValidationError(
+      "Simulierter Versandfehler ist in dieser Umgebung nicht verfügbar.",
+    );
+  }
+
   const context = await validateInvoiceForDelivery(input.invoiceKey);
   const attempts = await listInvoiceDeliveriesForInvoiceId(context.invoice.id);
   await assertSendAllowed(context.invoice.id, input.resend, attempts);
@@ -259,6 +279,7 @@ export async function sendNativeInvoiceEmail(
         },
       ],
       idempotencyKey: `invoice-delivery:${delivery.key}`,
+      simulateFailure: input.simulateFailure === true,
     });
 
     const sent = await markInvoiceDeliverySent({

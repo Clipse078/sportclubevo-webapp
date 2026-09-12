@@ -19,8 +19,7 @@ export function deriveInvoiceDeliveryAggregateStatus(
     return "SENT";
   }
   if (latest.status === "FAILED") {
-    const hasSent = attempts.some((attempt) => attempt.status === "SENT");
-    return hasSent ? "SENT" : "FAILED";
+    return "FAILED";
   }
   return "NOT_SENT";
 }
