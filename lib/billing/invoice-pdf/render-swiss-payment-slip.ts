@@ -367,6 +367,9 @@ export async function embedLogoIfPresent(
   if (!bytes) {
     return null;
   }
+  if (bytes[0] === 0xff && bytes[1] === 0xd8) {
+    return pdfDoc.embedJpg(bytes);
+  }
   return pdfDoc.embedPng(bytes);
 }
 

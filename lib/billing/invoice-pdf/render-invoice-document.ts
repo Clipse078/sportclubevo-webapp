@@ -22,6 +22,7 @@ import {
   formatBillingDateDisplay,
   formatBillingPeriodDisplay,
 } from "../native-billing-presentation";
+import { drawRightAlignedText, META_LABEL_COLOR } from "./pdf-text-layout";
 
 export { shouldUseSinglePageWithPayment } from "./invoice-layout";
 
@@ -78,7 +79,7 @@ export async function drawInvoiceBody(
     pageHeight,
   );
 
-  let cursorY = headerBottomY - mmToPt(6);
+  let cursorY = headerBottomY - mmToPt(5);
 
   if (data.isVoid) {
     page.drawText("STORNIERT", {
@@ -119,9 +120,9 @@ export async function drawInvoiceBody(
     page.drawText(label, {
       x: metaX,
       y: metaY - mmToPt(3),
-      size: 6.5,
+      size: 7,
       font,
-      color: color(INVOICE_PDF_BRAND.muted),
+      color: META_LABEL_COLOR,
     });
     page.drawText(value, {
       x: metaX,
@@ -130,10 +131,10 @@ export async function drawInvoiceBody(
       font: label === "Rechnungsnummer" ? fontBold : font,
       color: color(INVOICE_PDF_BRAND.text),
     });
-    metaY -= mmToPt(9);
+    metaY -= mmToPt(8.5);
   }
 
-  cursorY = Math.min(cursorY - mmToPt(10), metaY) - mmToPt(4);
+  cursorY = Math.min(cursorY - mmToPt(8), metaY) - mmToPt(3);
 
   const colGap = mmToPt(6);
   const colWidth = (pageWidth - margin * 2 - colGap) / 2;
@@ -191,7 +192,7 @@ export async function drawInvoiceBody(
     addrY -= mmToPt(4);
   }
 
-  cursorY = Math.min(cursorY - recipientLines.length * mmToPt(4), addrY) - mmToPt(7);
+  cursorY = Math.min(cursorY - recipientLines.length * mmToPt(4), addrY) - mmToPt(5);
 
   const tableX = margin;
   const tableWidth = pageWidth - margin * 2;
@@ -200,35 +201,46 @@ export async function drawInvoiceBody(
   const colUnit = tableWidth * 0.14;
   const colNet = tableWidth * 0.14;
   const colVat = tableWidth * 0.1;
+  const colGross = tableWidth * 0.16;
+  const colQtyRight = tableX + colDesc + colQty - mmToPt(1);
+  const colUnitRight = tableX + colDesc + colQty + colUnit - mmToPt(1);
+  const colNetRight = tableX + colDesc + colQty + colUnit + colNet - mmToPt(1);
+  const colVatRight = tableX + colDesc + colQty + colUnit + colNet + colVat - mmToPt(1);
+  const colGrossRight = tableX + tableWidth - mmToPt(1);
 
-  const headerRowHeight = mmToPt(7);
+  const headerRowHeight = mmToPt(7.5);
   page.drawRectangle({
     x: tableX,
     y: cursorY - headerRowHeight,
     width: tableWidth,
     height: headerRowHeight,
-    color: color(INVOICE_PDF_BRAND.tableHeaderBg),
+    color: rgb(0.94, 0.95, 0.96),
   });
 
   const headers = [
-    { label: "BESCHREIBUNG", x: tableX + mmToPt(2) },
-    { label: "MENGE", x: tableX + colDesc },
-    { label: "EINZELPREIS (CHF)", x: tableX + colDesc + colQty },
-    { label: "NETTO (CHF)", x: tableX + colDesc + colQty + colUnit },
-    { label: "MWST", x: tableX + colDesc + colQty + colUnit + colNet },
-    { label: "BRUTTO (CHF)", x: tableX + colDesc + colQty + colUnit + colNet + colVat },
+    { label: "BESCHREIBUNG", x: tableX + mmToPt(2), right: false },
+    { label: "MENGE", x: colQtyRight, right: true },
+    { label: "EINZELPREIS (CHF)", x: colUnitRight, right: true },
+    { label: "NETTO (CHF)", x: colNetRight, right: true },
+    { label: "MWST", x: colVatRight, right: true },
+    { label: "BRUTTO (CHF)", x: colGrossRight, right: true },
   ];
   for (const h of headers) {
-    page.drawText(h.label, {
-      x: h.x,
-      y: cursorY - mmToPt(5),
-      size: 6,
-      font: fontBold,
-      color: color(INVOICE_PDF_BRAND.muted),
-    });
+    const headerColor = rgb(0.42, 0.44, 0.48);
+    if (h.right) {
+      drawRightAlignedText(page, h.label, h.x, cursorY - mmToPt(5.2), fontBold, 6.2, headerColor);
+    } else {
+      page.drawText(h.label, {
+        x: h.x,
+        y: cursorY - mmToPt(5.2),
+        size: 6.2,
+        font: fontBold,
+        color: headerColor,
+      });
+    }
   }
 
-  cursorY -= headerRowHeight + mmToPt(1.5);
+  cursorY -= headerRowHeight + mmToPt(1);
 
   for (const line of data.lines) {
     const split = splitLineDescription(line.description);
@@ -252,42 +264,53 @@ export async function drawInvoiceBody(
       color: color(INVOICE_PDF_BRAND.muted),
     });
 
+    const rowBaseline = cursorY - mmToPt(4.5);
     const qty = String(line.quantity);
-    page.drawText(qty, {
-      x: tableX + colDesc,
-      y: cursorY - mmToPt(4.5),
-      size: 8.5,
+    drawRightAlignedText(
+      page,
+      qty,
+      colQtyRight,
+      rowBaseline,
       font,
-      color: color(INVOICE_PDF_BRAND.text),
-    });
-    page.drawText(formatAmountPlain(line.unitPriceNetMinor), {
-      x: tableX + colDesc + colQty,
-      y: cursorY - mmToPt(4.5),
-      size: 8.5,
+      8.5,
+      color(INVOICE_PDF_BRAND.text),
+    );
+    drawRightAlignedText(
+      page,
+      formatAmountPlain(line.unitPriceNetMinor),
+      colUnitRight,
+      rowBaseline,
       font,
-      color: color(INVOICE_PDF_BRAND.text),
-    });
-    page.drawText(formatAmountPlain(line.lineNetMinor), {
-      x: tableX + colDesc + colQty + colUnit,
-      y: cursorY - mmToPt(4.5),
-      size: 8.5,
+      8.5,
+      color(INVOICE_PDF_BRAND.text),
+    );
+    drawRightAlignedText(
+      page,
+      formatAmountPlain(line.lineNetMinor),
+      colNetRight,
+      rowBaseline,
       font,
-      color: color(INVOICE_PDF_BRAND.text),
-    });
-    page.drawText(formatVatRateDisplay(line.vatRateBps), {
-      x: tableX + colDesc + colQty + colUnit + colNet,
-      y: cursorY - mmToPt(4.5),
-      size: 8.5,
+      8.5,
+      color(INVOICE_PDF_BRAND.text),
+    );
+    drawRightAlignedText(
+      page,
+      formatVatRateDisplay(line.vatRateBps),
+      colVatRight,
+      rowBaseline,
       font,
-      color: color(INVOICE_PDF_BRAND.text),
-    });
-    page.drawText(formatAmountPlain(line.lineGrossMinor), {
-      x: tableX + colDesc + colQty + colUnit + colNet + colVat,
-      y: cursorY - mmToPt(4.5),
-      size: 8.5,
+      8.5,
+      color(INVOICE_PDF_BRAND.text),
+    );
+    drawRightAlignedText(
+      page,
+      formatAmountPlain(line.lineGrossMinor),
+      colGrossRight,
+      rowBaseline,
       font,
-      color: color(INVOICE_PDF_BRAND.text),
-    });
+      8.5,
+      color(INVOICE_PDF_BRAND.text),
+    );
 
     page.drawLine({
       start: { x: tableX, y: cursorY - rowHeight },
@@ -302,8 +325,9 @@ export async function drawInvoiceBody(
   const showFooter = options.showTotals ?? true;
 
   if (showTotals) {
-    cursorY -= mmToPt(4);
+    cursorY -= mmToPt(3);
     const totalsX = pageWidth - margin - mmToPt(50);
+    const totalsValueRight = pageWidth - margin - mmToPt(1);
     let totalsY = cursorY;
 
     page.drawText("Netto", {
@@ -311,16 +335,18 @@ export async function drawInvoiceBody(
       y: totalsY,
       size: 8.5,
       font,
-      color: color(INVOICE_PDF_BRAND.muted),
+      color: META_LABEL_COLOR,
     });
-    page.drawText(`${formatAmountPlain(data.invoice.netTotalMinor)} CHF`, {
-      x: totalsX + mmToPt(24),
-      y: totalsY,
-      size: 8.5,
+    drawRightAlignedText(
+      page,
+      `${formatAmountPlain(data.invoice.netTotalMinor)} CHF`,
+      totalsValueRight,
+      totalsY,
       font,
-      color: color(INVOICE_PDF_BRAND.text),
-    });
-    totalsY -= mmToPt(5);
+      8.5,
+      color(INVOICE_PDF_BRAND.text),
+    );
+    totalsY -= mmToPt(4.5);
 
     const vatLabel =
       data.taxSnapshots[0]?.taxLabel ??
@@ -330,76 +356,82 @@ export async function drawInvoiceBody(
       y: totalsY,
       size: 8.5,
       font,
-      color: color(INVOICE_PDF_BRAND.muted),
+      color: META_LABEL_COLOR,
     });
-    page.drawText(`${formatAmountPlain(data.invoice.vatTotalMinor)} CHF`, {
-      x: totalsX + mmToPt(24),
-      y: totalsY,
-      size: 8.5,
+    drawRightAlignedText(
+      page,
+      `${formatAmountPlain(data.invoice.vatTotalMinor)} CHF`,
+      totalsValueRight,
+      totalsY,
       font,
-      color: color(INVOICE_PDF_BRAND.text),
-    });
-    totalsY -= mmToPt(6);
+      8.5,
+      color(INVOICE_PDF_BRAND.text),
+    );
+    totalsY -= mmToPt(5.5);
 
     page.drawRectangle({
       x: totalsX - mmToPt(2),
       y: totalsY - mmToPt(1),
-      width: mmToPt(50),
-      height: mmToPt(7),
+      width: mmToPt(52),
+      height: mmToPt(7.5),
       color: color(INVOICE_PDF_BRAND.orangeMuted),
-      opacity: 0.9,
+      opacity: 0.92,
     });
     page.drawText("Total brutto", {
       x: totalsX,
-      y: totalsY + mmToPt(1),
-      size: 9.5,
+      y: totalsY + mmToPt(1.2),
+      size: 10,
       font: fontBold,
       color: color(INVOICE_PDF_BRAND.text),
     });
-    page.drawText(`${formatAmountPlain(data.invoice.grossTotalMinor)} CHF`, {
-      x: totalsX + mmToPt(24),
-      y: totalsY + mmToPt(1),
-      size: 9.5,
-      font: fontBold,
-      color: color(INVOICE_PDF_BRAND.text),
-    });
+    drawRightAlignedText(
+      page,
+      `${formatAmountPlain(data.invoice.grossTotalMinor)} CHF`,
+      totalsValueRight,
+      totalsY + mmToPt(1.2),
+      fontBold,
+      10,
+      color(INVOICE_PDF_BRAND.text),
+    );
 
-    cursorY = totalsY - mmToPt(6);
+    cursorY = totalsY - mmToPt(5);
   }
 
   if (showFooter) {
-    cursorY -= mmToPt(3);
+    const brandRowY = paymentZoneTop + mmToPt(3.5);
+    const thankY = Math.max(cursorY - mmToPt(2), brandRowY + mmToPt(7));
+
     page.drawRectangle({
       x: margin,
-      y: cursorY - mmToPt(1),
+      y: thankY - mmToPt(1),
       width: mmToPt(1.2),
       height: mmToPt(7),
       color: color(INVOICE_PDF_BRAND.orange),
     });
     page.drawText("Vielen Dank für Ihr Vertrauen.", {
       x: margin + mmToPt(3.5),
-      y: cursorY + mmToPt(1.5),
+      y: thankY + mmToPt(1.5),
       size: 8.5,
       font: fontBold,
       color: color(INVOICE_PDF_BRAND.text),
     });
 
-    const footerY = Math.max(cursorY - mmToPt(1), minY);
     const tulipLogo = await embedLogoIfPresent(pdfDoc, TULIP_DIGITAL_LOGO_PATH);
     if (tulipLogo) {
-      const h = mmToPt(5.5);
+      const h = mmToPt(5);
       const scale = h / tulipLogo.height;
+      const logoWidth = tulipLogo.width * scale;
       page.drawImage(tulipLogo, {
         x: margin,
-        y: footerY - mmToPt(5),
-        width: tulipLogo.width * scale,
+        y: brandRowY,
+        width: logoWidth,
         height: h,
       });
     }
 
     page.drawText(INVOICE_PDF_SITE_URL, {
       x: pageWidth - margin - mmToPt(38),
-      y: footerY - mmToPt(4),
+      y: brandRowY + mmToPt(1),
       size: 7.5,
       font,
       color: color(INVOICE_PDF_BRAND.muted),

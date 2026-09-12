@@ -30,18 +30,18 @@ function measureLineRowMm(line: InvoiceLineRecord): number {
 
 /** Deterministic content height estimate (must stay ≤ body area for one-page layout). */
 export function measureInvoiceContentHeightMm(data: InvoicePdfDocumentData): number {
-  let heightMm = INVOICE_HEADER_HEIGHT_MM + 5;
+  let heightMm = INVOICE_HEADER_HEIGHT_MM + 4;
   if (data.isVoid) {
     heightMm += 8;
   }
-  heightMm += 30;
-  heightMm += 4 + 27;
-  heightMm += 5 + 7;
+  heightMm += 28;
+  heightMm += 3 + 26;
+  heightMm += 4 + 7;
   for (const line of data.lines) {
     heightMm += measureLineRowMm(line);
   }
-  heightMm += 4 + 19;
-  heightMm += 9;
+  heightMm += 3 + 18;
+  heightMm += 8;
   return heightMm;
 }
 

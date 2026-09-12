@@ -22,5 +22,8 @@ export const INVOICE_PDF_BRAND = {
 export const SPORTCLUBEVO_LOGO_PATH = "public/images/branding/sportclubevo_logo_alt.png";
 export const TULIP_DIGITAL_LOGO_PATH =
   "public/images/branding/Logo-730036c6-150f-4549-8e03-5ea1efb24084.png";
+/** Decorative header ribbon (SWISS-01E2); no text/logos in artwork. */
+export const INVOICE_HEADER_RIBBON_ACCENT_PATH =
+  "public/images/branding/sce-invoice-header-ribbon-accent.png";
 
 export const INVOICE_PDF_SITE_URL = "www.sportclubevo.com";

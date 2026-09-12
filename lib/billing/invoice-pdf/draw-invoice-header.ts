@@ -1,12 +1,115 @@
 import type { PDFDocument, PDFPage } from "pdf-lib";
 import { rgb } from "pdf-lib";
-import { INVOICE_PDF_BRAND } from "./constants";
+import { INVOICE_HEADER_RIBBON_ACCENT_PATH, INVOICE_PDF_BRAND } from "./constants";
 import { INVOICE_HEADER_HEIGHT_MM, INVOICE_SIDE_MARGIN_MM } from "./invoice-layout";
 import { mmToPt } from "./mm";
-import { embedLogoIfPresent, SPORTCLUBEVO_LOGO_PATH } from "./render-swiss-payment-slip";
+import {
+  embedLogoIfPresent,
+  loadBrandingAsset,
+  SPORTCLUBEVO_LOGO_PATH,
+} from "./render-swiss-payment-slip";
 
 function brandColor(c: { r: number; g: number; b: number }) {
   return rgb(c.r, c.g, c.b);
+}
+
+/**
+ * Decorative header artwork (no logos/text). Generated for SWISS-01E2;
+ * layered under the SportClubEvo logo on the navy header bar.
+ */
+async function drawHeaderRibbonArtwork(
+  pdfDoc: PDFDocument,
+  page: PDFPage,
+  pageWidthPt: number,
+  headerBottomY: number,
+  headerHeightPt: number,
+): Promise<void> {
+  const bytes = await loadBrandingAsset(INVOICE_HEADER_RIBBON_ACCENT_PATH);
+  if (!bytes) {
+    drawHeaderRibbonAccentVector(page, pageWidthPt, headerBottomY, headerHeightPt);
+    return;
+  }
+
+  const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8;
+  const image = isJpeg ? await pdfDoc.embedJpg(bytes) : await pdfDoc.embedPng(bytes);
+  const accentWidth = mmToPt(118);
+  const scale = accentWidth / image.width;
+  const accentHeight = image.height * scale;
+  const drawHeight = Math.min(accentHeight, headerHeightPt);
+  const drawWidth = (drawHeight / accentHeight) * accentWidth;
+
+  page.drawImage(image, {
+    x: pageWidthPt - drawWidth,
+    y: headerBottomY + (headerHeightPt - drawHeight) / 2,
+    width: drawWidth,
+    height: drawHeight,
+    opacity: 0.92,
+  });
+}
+
+/** Fallback vector ribbons if artwork asset is missing. */
+function drawHeaderRibbonAccentVector(
+  page: PDFPage,
+  pageWidthPt: number,
+  headerBottomY: number,
+  headerHeightPt: number,
+): void {
+  const burnt = rgb(0.68, 0.32, 0.1);
+  const vivid = brandColor(INVOICE_PDF_BRAND.orange);
+  const highlight = rgb(0.99, 0.68, 0.38);
+  const originX = pageWidthPt - mmToPt(102);
+  const originY = headerBottomY + mmToPt(1);
+  const scale = mmToPt(0.105);
+
+  page.drawSvgPath(
+    `M 0 52
+     C 28 44, 52 22, 88 26
+     C 118 30, 142 12, 178 18
+     C 208 24, 232 40, 268 28
+     L 268 44
+     C 232 56, 208 40, 178 36
+     C 142 30, 118 48, 88 44
+     C 52 40, 28 62, 0 68 Z`,
+    {
+      x: originX,
+      y: originY,
+      scale,
+      color: burnt,
+      opacity: 0.2,
+      borderWidth: 0,
+    },
+  );
+
+  page.drawSvgPath(
+    `M 0 38
+     C 32 24, 58 40, 96 32
+     C 132 24, 162 42, 204 34
+     C 236 28, 258 46, 290 36
+     L 290 50
+     C 258 60, 236 42, 204 48
+     C 162 56, 132 38, 96 46
+     C 58 54, 32 38, 0 52 Z`,
+    {
+      x: originX + mmToPt(4),
+      y: originY + mmToPt(2),
+      scale,
+      color: vivid,
+      opacity: 0.34,
+      borderWidth: 0,
+    },
+  );
+
+  page.drawSvgPath(
+    `M 0 28 C 36 14, 72 32, 108 24 C 148 16, 188 34, 228 26 C 258 20, 282 32, 310 24`,
+    {
+      x: originX + mmToPt(8),
+      y: originY + mmToPt(5),
+      scale,
+      borderColor: highlight,
+      borderWidth: 0.9,
+      opacity: 0.45,
+    },
+  );
 }
 
 export async function drawSportClubEvoInvoiceHeader(
@@ -26,7 +129,7 @@ export async function drawSportClubEvoInvoiceHeader(
     color: brandColor(INVOICE_PDF_BRAND.headerNavy),
   });
 
-  drawHeaderRibbonAccent(page, pageWidthPt, headerBottomY, headerHeightPt);
+  await drawHeaderRibbonArtwork(pdfDoc, page, pageWidthPt, headerBottomY, headerHeightPt);
 
   const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
   const logo = await embedLogoIfPresent(pdfDoc, SPORTCLUBEVO_LOGO_PATH);
@@ -53,50 +156,4 @@ export async function drawSportClubEvoInvoiceHeader(
   }
 
   return headerBottomY;
-}
-
-function drawHeaderRibbonAccent(
-  page: PDFPage,
-  pageWidthPt: number,
-  headerBottomY: number,
-  headerHeightPt: number,
-): void {
-  const orange = brandColor(INVOICE_PDF_BRAND.orange);
-  const orangeSoft = rgb(0.96, 0.55, 0.28);
-
-  page.drawSvgPath(
-    "M 0 0 C 35 8, 55 2, 90 18 L 90 0 Z",
-    {
-      x: pageWidthPt - mmToPt(62),
-      y: headerBottomY + headerHeightPt * 0.55,
-      scale: mmToPt(0.42),
-      color: orange,
-      opacity: 0.5,
-      borderWidth: 0,
-    },
-  );
-
-  page.drawSvgPath(
-    "M 0 5 C 40 28, 70 8, 110 35 L 110 0 Z",
-    {
-      x: pageWidthPt - mmToPt(78),
-      y: headerBottomY + headerHeightPt * 0.35,
-      scale: mmToPt(0.38),
-      color: orangeSoft,
-      opacity: 0.35,
-      borderWidth: 0,
-    },
-  );
-
-  page.drawSvgPath(
-    "M 0 0 C 20 12, 45 6, 65 22 L 65 8 Z",
-    {
-      x: pageWidthPt - mmToPt(48),
-      y: headerBottomY + headerHeightPt * 0.15,
-      scale: mmToPt(0.3),
-      color: orange,
-      opacity: 0.28,
-      borderWidth: 0,
-    },
-  );
 }
