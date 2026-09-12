@@ -25,7 +25,6 @@ import {
 import {
   PAGE_MARGIN_X_MM,
   computeOperatorBrandRowLayoutMm,
-  planInvoiceBodyLayoutRegions,
 } from "../lib/billing/invoice-pdf/invoice-design-geometry";
 
 const execFileAsync = promisify(execFile);
