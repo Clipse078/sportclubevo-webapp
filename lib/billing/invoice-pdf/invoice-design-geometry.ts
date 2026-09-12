@@ -74,7 +74,7 @@ export const THANK_YOU_TOP_Y_MM = 160;
 export const OPERATOR_BRAND_ROW_TOP_Y_MM = 171;
 
 export const FOOTER_SCE_LOGO_HEIGHT_MM = 5.5;
-export const TULIP_LOGO_HEIGHT_MM = 4.5;
+export const TULIP_LOGO_HEIGHT_MM = 6;
 export const FOOTER_BRAND_DIVIDER_GAP_MM = 2.5;
 export const FOOTER_BRAND_LOGO_GAP_MM = 2.5;
 

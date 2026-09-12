@@ -15,6 +15,7 @@ import {
   planInvoiceBodyLayoutRegions,
   paymentBreathingRoomMm,
   TITLE_TOP_Y_MM,
+  TULIP_LOGO_HEIGHT_MM,
 } from "../invoice-design-geometry";
 import { INVOICE_HEADER_JPG_PATH } from "../constants";
 
@@ -52,6 +53,13 @@ describe("invoice visual master layout (SWISS-01E4C)", () => {
     const title = regionById(planInvoiceBodyLayoutRegions(buildFixturePdfDocumentData()), "title");
     expect(title.yMm).toBeGreaterThanOrEqual(HEADER_HEIGHT_MM + 8);
     expect(title.yMm).toBeCloseTo(TITLE_TOP_Y_MM, 0);
+  });
+
+  it("uses 6 mm Tulip Digital logo height in operator row", () => {
+    expect(TULIP_LOGO_HEIGHT_MM).toBe(6);
+    const plan = planInvoiceBodyLayoutRegions(buildFixturePdfDocumentData());
+    const tulip = regionById(plan, "operator_branding_tulip");
+    expect(tulip.heightMm).toBe(6);
   });
 
   it("requires genuine invoice.jpg at canonical repo path", () => {
