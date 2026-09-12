@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { NativeBillingValidationError } from "@/lib/billing/native-billing-types";
+import {
+  INVOICE_PAYMENT_ERROR_CODES,
+  PAYMENT_EXCEEDS_OUTSTANDING_MESSAGE,
+} from "@/lib/billing/invoice-payments/invoice-payment-errors";
 
 const mocks = vi.hoisted(() => ({
   requirePlatformApiPermission: vi.fn(),
@@ -84,6 +89,30 @@ describe("invoice payments routes", () => {
     expect(mocks.requirePlatformApiPermission).toHaveBeenCalledWith(
       PERMISSIONS.BILLING_MANAGE,
     );
+  });
+
+  it("returns stable overpayment validation code on POST", async () => {
+    mocks.recordInvoicePayment.mockRejectedValue(
+      new NativeBillingValidationError(PAYMENT_EXCEEDS_OUTSTANDING_MESSAGE, {
+        code: INVOICE_PAYMENT_ERROR_CODES.PAYMENT_EXCEEDS_OUTSTANDING,
+      }),
+    );
+    const res = await POST(
+      new NextRequest("http://localhost/api/platform/billing/invoices/k/payments", {
+        method: "POST",
+        body: JSON.stringify({
+          amountMinor: 25000,
+          currency: "CHF",
+          paymentDate: "2026-09-12",
+        }),
+      }),
+      { params: Promise.resolve({ invoiceKey: "k" }) },
+    );
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toEqual({
+      error: PAYMENT_EXCEEDS_OUTSTANDING_MESSAGE,
+      code: INVOICE_PAYMENT_ERROR_CODES.PAYMENT_EXCEEDS_OUTSTANDING,
+    });
   });
 
   it("authorized POST records payment", async () => {

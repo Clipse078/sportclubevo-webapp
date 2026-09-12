@@ -3,6 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
+import {
+  PAYMENT_EXCEEDS_OUTSTANDING_MESSAGE,
+  resolveInvoicePaymentUserMessage,
+  type InvoicePaymentApiErrorBody,
+} from "@/lib/billing/invoice-payments/invoice-payment-errors";
 import type { SerializedInvoicePaymentSummary } from "@/lib/billing/invoice-payments/invoice-payment-serializers";
 
 type Props = {
@@ -37,7 +42,8 @@ export default function NativeBillingInvoiceSettlementsSection({
   const [recordOpen, setRecordOpen] = useState(false);
   const [reverseKey, setReverseKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [paymentFormError, setPaymentFormError] = useState<string | null>(null);
+  const [reversalFormError, setReversalFormError] = useState<string | null>(null);
 
   const [amountChf, setAmountChf] = useState("");
   const [paymentDate, setPaymentDate] = useState(todayIsoDate());
@@ -55,6 +61,7 @@ export default function NativeBillingInvoiceSettlementsSection({
       setPaymentDate(todayIsoDate());
       setReference(defaultReference ?? "");
       setNote("");
+      setPaymentFormError(null);
     }
   }, [recordOpen, summary, defaultReference]);
 
@@ -77,11 +84,15 @@ export default function NativeBillingInvoiceSettlementsSection({
     if (!summary) return;
     const amountMinor = parseAmountMinorFromChf(amountChf);
     if (amountMinor == null || amountMinor <= 0) {
-      setError("Ungültiger Zahlungsbetrag.");
+      setPaymentFormError("Ungültiger Zahlungsbetrag.");
+      return;
+    }
+    if (amountMinor > summary.outstandingMinor) {
+      setPaymentFormError(PAYMENT_EXCEEDS_OUTSTANDING_MESSAGE);
       return;
     }
     setLoading(true);
-    setError(null);
+    setPaymentFormError(null);
     try {
       const res = await fetch(
         `/api/platform/billing/invoices/${encodeURIComponent(invoiceKey)}/payments`,
@@ -97,18 +108,19 @@ export default function NativeBillingInvoiceSettlementsSection({
           }),
         },
       );
-      const data = (await res.json()) as {
-        error?: string;
+      const data = (await res.json()) as InvoicePaymentApiErrorBody & {
         paymentSummary?: SerializedInvoicePaymentSummary;
       };
       if (!res.ok || !data.paymentSummary) {
-        throw new Error(data.error ?? "Zahlung konnte nicht verbucht werden.");
+        setPaymentFormError(resolveInvoicePaymentUserMessage(data));
+        return;
       }
       setSummary(data.paymentSummary);
+      setPaymentFormError(null);
       setRecordOpen(false);
       router.refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Fehler.");
+    } catch {
+      setPaymentFormError("Zahlung konnte nicht verbucht werden.");
     } finally {
       setLoading(false);
     }
@@ -116,7 +128,7 @@ export default function NativeBillingInvoiceSettlementsSection({
 
   async function submitReversal(paymentKey: string) {
     setLoading(true);
-    setError(null);
+    setReversalFormError(null);
     try {
       const res = await fetch(
         `/api/platform/billing/invoices/${encodeURIComponent(invoiceKey)}/payments/${encodeURIComponent(paymentKey)}/reverse`,
@@ -131,14 +143,16 @@ export default function NativeBillingInvoiceSettlementsSection({
         paymentSummary?: SerializedInvoicePaymentSummary;
       };
       if (!res.ok || !data.paymentSummary) {
-        throw new Error(data.error ?? "Stornierung fehlgeschlagen.");
+        setReversalFormError(data.error ?? "Stornierung fehlgeschlagen.");
+        return;
       }
       setSummary(data.paymentSummary);
       setReverseKey(null);
       setReversalReason("");
+      setReversalFormError(null);
       router.refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Fehler.");
+    } catch {
+      setReversalFormError("Stornierung fehlgeschlagen.");
     } finally {
       setLoading(false);
     }
@@ -187,7 +201,10 @@ export default function NativeBillingInvoiceSettlementsSection({
         <button
           type="button"
           className="fca-button-primary"
-          onClick={() => setRecordOpen(true)}
+          onClick={() => {
+            setPaymentFormError(null);
+            setRecordOpen(true);
+          }}
         >
           Zahlung erfassen
         </button>
@@ -213,19 +230,34 @@ export default function NativeBillingInvoiceSettlementsSection({
               <dd className="font-medium tabular-nums">{summary.outstandingFormatted}</dd>
             </div>
           </dl>
-          <label className="block text-sm space-y-1">
+          <label className="block text-sm space-y-1" htmlFor="payment-amount-chf">
             <span className="text-muted-foreground">Betrag</span>
             <input
+              id="payment-amount-chf"
               type="text"
               inputMode="decimal"
               className="fca-input w-full tabular-nums"
               value={amountChf}
-              onChange={(e) => setAmountChf(e.target.value)}
+              aria-invalid={paymentFormError ? true : undefined}
+              aria-describedby={paymentFormError ? "payment-form-error" : undefined}
+              onChange={(e) => {
+                setAmountChf(e.target.value);
+                setPaymentFormError(null);
+              }}
             />
             <span className="text-xs text-muted-foreground">
               Max. {summary.outstandingFormatted}
             </span>
           </label>
+          {paymentFormError ? (
+            <p
+              id="payment-form-error"
+              role="alert"
+              className="text-sm font-medium text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 rounded-md px-3 py-2"
+            >
+              {paymentFormError}
+            </p>
+          ) : null}
           <label className="block text-sm space-y-1">
             <span className="text-muted-foreground">Zahlungsdatum</span>
             <input
@@ -330,6 +362,14 @@ export default function NativeBillingInvoiceSettlementsSection({
                         onChange={(e) => setReversalReason(e.target.value)}
                       />
                     </label>
+                    {reversalFormError ? (
+                      <p
+                        role="alert"
+                        className="text-sm font-medium text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 rounded-md px-3 py-2"
+                      >
+                        {reversalFormError}
+                      </p>
+                    ) : null}
                     <div className="flex gap-2">
                       <button
                         type="button"
@@ -358,7 +398,6 @@ export default function NativeBillingInvoiceSettlementsSection({
         <p className="text-sm text-muted-foreground">Noch keine Zahlungen erfasst.</p>
       )}
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
     </section>
   );
 }

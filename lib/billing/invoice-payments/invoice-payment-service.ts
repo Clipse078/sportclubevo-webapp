@@ -14,6 +14,10 @@ import {
 import type { InvoiceStatus } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 import {
+  INVOICE_PAYMENT_ERROR_CODES,
+  PAYMENT_EXCEEDS_OUTSTANDING_MESSAGE,
+} from "./invoice-payment-errors";
+import {
   calculateOutstandingMinor,
   isInvoiceFullyPaid,
   sumConfirmedPaymentAmountMinor,
@@ -43,7 +47,6 @@ const PAYABLE_STATUSES: ReadonlySet<InvoiceStatus> = new Set([
   "OVERDUE",
 ]);
 
-const OVERPAYMENT_MESSAGE = "Der Betrag übersteigt den offenen Rechnungsbetrag.";
 
 function parsePaymentDate(value: string): Date {
   const trimmed = value.trim();
@@ -217,7 +220,9 @@ export async function recordInvoicePayment(
       throw new NativeBillingConflictError("Die Rechnung ist bereits vollständig bezahlt.");
     }
     if (input.amountMinor > outstanding) {
-      throw new NativeBillingValidationError(OVERPAYMENT_MESSAGE);
+      throw new NativeBillingValidationError(PAYMENT_EXCEEDS_OUTSTANDING_MESSAGE, {
+        code: INVOICE_PAYMENT_ERROR_CODES.PAYMENT_EXCEEDS_OUTSTANDING,
+      });
     }
 
     const payment = await createInvoicePaymentRecord(

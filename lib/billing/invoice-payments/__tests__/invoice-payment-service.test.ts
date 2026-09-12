@@ -5,6 +5,10 @@ import {
   NativeBillingValidationError,
 } from "../../native-billing-types";
 import { NATIVE_BILLING_AUDIT_ACTIONS } from "../../native-billing-audit";
+import {
+  INVOICE_PAYMENT_ERROR_CODES,
+  PAYMENT_EXCEEDS_OUTSTANDING_MESSAGE,
+} from "../invoice-payment-errors";
 
 const mocks = vi.hoisted(() => ({
   findInvoiceByKey: vi.fn(),
@@ -228,7 +232,12 @@ describe("invoice payment service", () => {
         method: "BANK_TRANSFER_MANUAL",
         actorUserId: "user-1",
       }),
-    ).rejects.toBeInstanceOf(NativeBillingValidationError);
+    ).rejects.toMatchObject({
+      name: "NativeBillingValidationError",
+      message: PAYMENT_EXCEEDS_OUTSTANDING_MESSAGE,
+      code: INVOICE_PAYMENT_ERROR_CODES.PAYMENT_EXCEEDS_OUTSTANDING,
+    });
+    expect(mocks.createInvoicePaymentRecord).not.toHaveBeenCalled();
   });
 
   it("cannot pay DRAFT", async () => {
