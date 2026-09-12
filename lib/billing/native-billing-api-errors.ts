@@ -24,6 +24,9 @@ export function nativeBillingErrorResponse(error: unknown): NextResponse {
       {
         error: error.message,
         ...(error.dependencyCounts ? { dependencies: error.dependencyCounts } : {}),
+        ...(error.bankAccountDependencyCounts
+          ? { dependencies: error.bankAccountDependencyCounts }
+          : {}),
       },
       { status: 409 },
     );

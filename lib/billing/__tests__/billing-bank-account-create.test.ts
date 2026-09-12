@@ -4,6 +4,8 @@ import { BILLING_FIELD_CRYPTO_TEST_KEY_BASE64 } from "../billing-field-crypto";
 const mocks = vi.hoisted(() => ({
   findLegalEntityByKey: vi.fn(),
   createBillingBankAccountRecord: vi.fn(),
+  findBillingBankAccountWithFingerprintCollision: vi.fn(),
+  listBillingBankAccountsForLegacyDuplicateScan: vi.fn(),
   logAction: vi.fn(),
 }));
 
@@ -33,6 +35,8 @@ vi.mock("../native-billing-repository", () => ({
   listAllBillingBankAccounts: vi.fn(),
   findBillingBankAccountById: vi.fn(),
   updateBillingBankAccountRecord: vi.fn(),
+  findBillingBankAccountWithFingerprintCollision: mocks.findBillingBankAccountWithFingerprintCollision,
+  listBillingBankAccountsForLegacyDuplicateScan: mocks.listBillingBankAccountsForLegacyDuplicateScan,
   tenantExistsById: vi.fn(),
   findTenantIdByKey: vi.fn(),
 }));
@@ -63,6 +67,8 @@ describe("billing bank account create (SWISS-01D2 regression)", () => {
       updatedAt: new Date(),
     }));
     mocks.logAction.mockResolvedValue(undefined);
+    mocks.findBillingBankAccountWithFingerprintCollision.mockResolvedValue(null);
+    mocks.listBillingBankAccountsForLegacyDuplicateScan.mockResolvedValue([]);
   });
 
   it("creates first default account with spaced IBANs, QRR, and blank QRR prefix", async () => {

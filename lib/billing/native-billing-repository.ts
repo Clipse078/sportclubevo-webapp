@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/db/prisma";
 import {
+  computeBillingBankAccountIbanFingerprint,
+  computeBillingBankAccountQrIbanFingerprint,
+  normalizeBillingBankAccountIban,
+} from "./billing-bank-account-fingerprint";
+import {
   decryptBillingBankAccountFields,
   encryptBillingBankAccountFields,
 } from "./billing-bank-account-crypto";
@@ -67,6 +72,8 @@ const bankAccountDbSelect = {
   currency: true,
   ibanEncrypted: true,
   qrIbanEncrypted: true,
+  ibanFingerprint: true,
+  qrIbanFingerprint: true,
   encryptionKeyVersion: true,
   referenceStrategy: true,
   qrrReferencePrefix: true,
@@ -91,6 +98,8 @@ type BillingBankAccountDbRow = {
   currency: string;
   ibanEncrypted: string;
   qrIbanEncrypted: string | null;
+  ibanFingerprint: string | null;
+  qrIbanFingerprint: string | null;
   encryptionKeyVersion: number;
   referenceStrategy: BillingBankAccountRecord["referenceStrategy"];
   qrrReferencePrefix: string | null;
@@ -479,6 +488,101 @@ export async function findBillingBankAccountById(
   return row ? mapBillingBankAccountRow(row) : null;
 }
 
+function fingerprintFieldsForIbanWrite(iban: string, qrIban: string | null) {
+  const normalizedIban = normalizeBillingBankAccountIban(iban);
+  const normalizedQrIban = qrIban ? normalizeBillingBankAccountIban(qrIban) : null;
+  return {
+    ibanFingerprint: computeBillingBankAccountIbanFingerprint(normalizedIban),
+    qrIbanFingerprint: computeBillingBankAccountQrIbanFingerprint(normalizedQrIban),
+  };
+}
+
+export async function countBillingBankAccountDependencies(
+  billingBankAccountId: string,
+): Promise<{ paymentInstructions: number }> {
+  const paymentInstructions = await prisma.invoicePaymentInstruction.count({
+    where: { billingBankAccountId },
+  });
+  return { paymentInstructions };
+}
+
+export async function findBillingBankAccountWithFingerprintCollision(input: {
+  legalEntityId: string;
+  ibanFingerprint: string;
+  qrIbanFingerprint: string | null;
+  excludeAccountId?: string;
+}): Promise<{ id: string } | null> {
+  const row = await prisma.billingBankAccount.findFirst({
+    where: {
+      legalEntityId: input.legalEntityId,
+      ...(input.excludeAccountId ? { id: { not: input.excludeAccountId } } : {}),
+      OR: [
+        { ibanFingerprint: input.ibanFingerprint },
+        ...(input.qrIbanFingerprint
+          ? [{ qrIbanFingerprint: input.qrIbanFingerprint }]
+          : []),
+      ],
+    },
+    select: { id: true },
+  });
+  return row;
+}
+
+export async function listBillingBankAccountsForLegacyDuplicateScan(
+  legalEntityId: string,
+  excludeAccountId?: string,
+): Promise<
+  Array<{ id: string; ibanEncrypted: string; qrIbanEncrypted: string | null }>
+> {
+  return prisma.billingBankAccount.findMany({
+    where: {
+      legalEntityId,
+      ibanFingerprint: null,
+      ...(excludeAccountId ? { id: { not: excludeAccountId } } : {}),
+    },
+    select: {
+      id: true,
+      ibanEncrypted: true,
+      qrIbanEncrypted: true,
+    },
+  });
+}
+
+export async function listActiveBillingBankAccountsForLegalEntity(
+  legalEntityId: string,
+  options?: { excludeAccountId?: string; currency?: string },
+): Promise<BillingBankAccountRecord[]> {
+  const currency = options?.currency?.trim().toUpperCase() ?? "CHF";
+  const now = new Date();
+  return prisma.billingBankAccount
+    .findMany({
+      where: {
+        legalEntityId,
+        currency,
+        ...(options?.excludeAccountId ? { id: { not: options.excludeAccountId } } : {}),
+        OR: [{ activeUntil: null }, { activeUntil: { gt: now } }],
+      },
+      select: bankAccountDbSelect,
+      orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+    })
+    .then((rows) => rows.map(mapBillingBankAccountRow));
+}
+
+export async function deleteBillingBankAccountRecordWithDefaultRepair(input: {
+  accountId: string;
+  promoteDefaultAccountId: string | null;
+}): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    await tx.billingBankAccount.delete({ where: { id: input.accountId } });
+    if (input.promoteDefaultAccountId) {
+      await tx.billingBankAccount.update({
+        where: { id: input.promoteDefaultAccountId },
+        data: { isDefault: true },
+      });
+    }
+  });
+}
+
 export async function createBillingBankAccountRecord(
   data: Omit<BillingBankAccountRecord, "id" | "createdAt" | "updatedAt">,
 ): Promise<BillingBankAccountRecord> {
@@ -486,6 +590,7 @@ export async function createBillingBankAccountRecord(
     iban: data.iban,
     qrIban: data.qrIban,
   });
+  const fingerprints = fingerprintFieldsForIbanWrite(data.iban, data.qrIban);
   const row = await prisma.billingBankAccount.create({
     data: {
       legalEntityId: data.legalEntityId,
@@ -493,6 +598,7 @@ export async function createBillingBankAccountRecord(
       bankName: data.bankName,
       currency: data.currency,
       ...encrypted,
+      ...fingerprints,
       referenceStrategy: data.referenceStrategy,
       qrrReferencePrefix: data.qrrReferencePrefix,
       creditorName: data.creditorName,
@@ -523,6 +629,10 @@ export async function updateBillingBankAccountRecord(
           qrIban: data.qrIban ?? null,
         })
       : null;
+  const fingerprints =
+    data.iban !== undefined
+      ? fingerprintFieldsForIbanWrite(data.iban, data.qrIban ?? null)
+      : null;
 
   const row = await prisma.billingBankAccount.update({
     where: { id },
@@ -535,6 +645,8 @@ export async function updateBillingBankAccountRecord(
             ibanEncrypted: encrypted.ibanEncrypted,
             qrIbanEncrypted: encrypted.qrIbanEncrypted,
             encryptionKeyVersion: encrypted.encryptionKeyVersion,
+            ibanFingerprint: fingerprints!.ibanFingerprint,
+            qrIbanFingerprint: fingerprints!.qrIbanFingerprint,
           }
         : {}),
       referenceStrategy: data.referenceStrategy,

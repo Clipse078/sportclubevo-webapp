@@ -108,6 +108,8 @@ describe("native billing repository", () => {
       currency: "CHF",
       ibanEncrypted,
       qrIbanEncrypted: null,
+      ibanFingerprint: "fp-iban",
+      qrIbanFingerprint: null,
       encryptionKeyVersion: 1,
       referenceStrategy: "NON",
       qrrReferencePrefix: null,
@@ -148,7 +150,10 @@ describe("native billing repository", () => {
     expect(account.iban).toBe(iban);
     expect(prismaMock.billingBankAccount.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ ibanEncrypted: expect.not.stringContaining(iban) }),
+        data: expect.objectContaining({
+          ibanEncrypted: expect.not.stringContaining(iban),
+          ibanFingerprint: expect.any(String),
+        }),
       }),
     );
   });

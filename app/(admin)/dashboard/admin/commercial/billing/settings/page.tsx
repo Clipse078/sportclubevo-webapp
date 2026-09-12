@@ -1,6 +1,7 @@
 import Link from "next/link";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import NativeBillingCreateBankAccountForm from "@/components/admin/billing/NativeBillingCreateBankAccountForm";
+import NativeBillingDeleteBankAccountButton from "@/components/admin/billing/NativeBillingDeleteBankAccountButton";
 import NativeBillingLegalEntitiesTable from "@/components/admin/billing/NativeBillingLegalEntitiesTable";
 import {
   listBillingBankAccountsForPlatform,
@@ -29,6 +30,10 @@ export default async function NativeBillingSettingsPage() {
   } catch {
     bankAccounts = [];
   }
+
+  const legalEntityLabelById = new Map(
+    legalEntities.map((entity) => [entity.id, entity.displayName]),
+  );
 
   return (
     <div className="space-y-8">
@@ -100,10 +105,24 @@ export default async function NativeBillingSettingsPage() {
                   {account.qrIban ? ` · QR-IBAN: ${maskIban(account.qrIban)}` : ""}
                 </div>
                 <div className="text-xs text-muted-foreground">
+                  {legalEntityLabelById.get(account.legalEntityId) ?? account.legalEntityId}
+                  {" · "}
                   {account.referenceStrategy}
                   {account.isDefault ? " · Standard" : ""}
                   {account.activeUntil ? " · inaktiv" : ""}
                 </div>
+                {canManage ? (
+                  <NativeBillingDeleteBankAccountButton
+                    accountId={account.id}
+                    label={account.label}
+                    legalEntityLabel={
+                      legalEntityLabelById.get(account.legalEntityId) ?? account.legalEntityId
+                    }
+                    referenceStrategy={account.referenceStrategy}
+                    ibanMasked={maskIban(account.iban) ?? "****"}
+                    qrIbanMasked={account.qrIban ? maskIban(account.qrIban) : null}
+                  />
+                ) : null}
               </li>
             ))}
           </ul>

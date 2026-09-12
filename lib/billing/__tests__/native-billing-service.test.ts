@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => ({
   findLegalEntityByKey: vi.fn(),
   createLegalEntityRecord: vi.fn(),
   createBillingBankAccountRecord: vi.fn(),
+  findBillingBankAccountWithFingerprintCollision: vi.fn(),
+  listBillingBankAccountsForLegacyDuplicateScan: vi.fn(),
   logAction: vi.fn(),
   allocateUniqueBillingKey: vi.fn(),
 }));
@@ -41,6 +43,8 @@ vi.mock("../native-billing-repository", () => ({
   listAllBillingBankAccounts: vi.fn(),
   findBillingBankAccountById: vi.fn(),
   createBillingBankAccountRecord: mocks.createBillingBankAccountRecord,
+  findBillingBankAccountWithFingerprintCollision: mocks.findBillingBankAccountWithFingerprintCollision,
+  listBillingBankAccountsForLegacyDuplicateScan: mocks.listBillingBankAccountsForLegacyDuplicateScan,
   updateBillingBankAccountRecord: vi.fn(),
   tenantExistsById: vi.fn(),
   findTenantIdByKey: mocks.findTenantIdByKey,
@@ -68,6 +72,8 @@ describe("native billing service", () => {
     vi.clearAllMocks();
     mocks.logAction.mockResolvedValue(undefined);
     mocks.allocateUniqueBillingKey.mockResolvedValue("acme-ag");
+    mocks.findBillingBankAccountWithFingerprintCollision.mockResolvedValue(null);
+    mocks.listBillingBankAccountsForLegacyDuplicateScan.mockResolvedValue([]);
   });
 
   it("creates billing customer without tenant", async () => {
