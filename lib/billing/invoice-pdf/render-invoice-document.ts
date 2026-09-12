@@ -7,7 +7,44 @@ import {
 } from "./constants";
 import { drawSportClubEvoInvoiceHeader } from "./draw-invoice-header";
 import {
-  INVOICE_SIDE_MARGIN_MM,
+  ACKNOWLEDGEMENT_ACCENT_BAR_HEIGHT_MM,
+  ACKNOWLEDGEMENT_ACCENT_BAR_WIDTH_MM,
+  ACKNOWLEDGEMENT_MIN_GAP_ABOVE_BRAND_MM,
+  ACKNOWLEDGEMENT_TEXT_X_OFFSET_MM,
+  ADDRESS_GRID_BOTTOM_GAP_MM,
+  ADDRESS_GRID_COLUMN_GAP_MM,
+  ADDRESS_GRID_TOP_GAP_MM,
+  ADDRESS_LINE_STEP_MM,
+  ADDRESS_SECTION_LABEL_STEP_MM,
+  FOOTER_BRAND_ROW_OFFSET_ABOVE_PAYMENT_MM,
+  METADATA_BLOCK_WIDTH_MM,
+  METADATA_LABEL_BASELINE_OFFSET_MM,
+  METADATA_ROW_STEP_MM,
+  METADATA_TOP_OFFSET_MM,
+  METADATA_VALUE_BASELINE_OFFSET_MM,
+  PAGE_MARGIN_X_MM,
+  PAYMENT_BOUNDARY_LINE_ABOVE_MM,
+  TABLE_AFTER_ROWS_GAP_MM,
+  TABLE_COL_DESC_FRACTION,
+  TABLE_COL_NET_FRACTION,
+  TABLE_COL_QTY_FRACTION,
+  TABLE_COL_UNIT_FRACTION,
+  TABLE_COL_VAT_FRACTION,
+  TABLE_HEADER_ROW_HEIGHT_MM,
+  TABLE_ROW_HEIGHT_MULTI_MM,
+  TABLE_ROW_HEIGHT_SINGLE_MM,
+  TITLE_BASELINE_OFFSET_MM,
+  TITLE_BLOCK_TOP_GAP_MM,
+  TITLE_FONT_SIZE_PT,
+  TOTALS_AFTER_BLOCK_GAP_MM,
+  TOTALS_BLOCK_WIDTH_MM,
+  TOTALS_HIGHLIGHT_WIDTH_MM,
+  TOTALS_HIGHLIGHT_X_INSET_MM,
+  TOTALS_VALUE_INSET_MM,
+  TULIP_LOGO_HEIGHT_MM,
+  WEBSITE_TEXT_BLOCK_WIDTH_MM,
+} from "./invoice-design-geometry";
+import {
   paymentSectionTopPt,
   splitLineDescription,
 } from "./invoice-layout";
@@ -27,7 +64,6 @@ import {
   TOTALS_GROSS_HIGHLIGHT_HEIGHT_MM,
   TOTALS_GROSS_TEXT_INSET_MM,
   TOTALS_NET_ROW_STEP_MM,
-  TOTALS_VAT_ROW_STEP_MM,
   TOTALS_VAT_TO_GROSS_GAP_MM,
 } from "./invoice-totals-layout";
 
@@ -72,12 +108,12 @@ export async function drawInvoiceBody(
 
   const pageWidth = mmToPt(A4_WIDTH_MM);
   const pageHeight = mmToPt(A4_HEIGHT_MM);
-  const margin = mmToPt(INVOICE_SIDE_MARGIN_MM);
+  const margin = mmToPt(PAGE_MARGIN_X_MM);
 
   const paymentZoneTop = options.reservePaymentSectionAtBottom
     ? paymentSectionTopPt()
-    : mmToPt(12);
-  const minY = paymentZoneTop + mmToPt(1);
+    : mmToPt(PAGE_MARGIN_X_MM);
+  const minY = paymentZoneTop + mmToPt(PAYMENT_BOUNDARY_LINE_ABOVE_MM);
 
   const headerBottomY = await drawSportClubEvoInvoiceHeader(
     pdfDoc,
@@ -86,7 +122,7 @@ export async function drawInvoiceBody(
     pageHeight,
   );
 
-  let cursorY = headerBottomY - mmToPt(5);
+  let cursorY = headerBottomY - mmToPt(TITLE_BLOCK_TOP_GAP_MM);
 
   if (data.isVoid) {
     page.drawText("STORNIERT", {
@@ -101,14 +137,14 @@ export async function drawInvoiceBody(
 
   page.drawText("Rechnung", {
     x: margin,
-    y: cursorY - mmToPt(7),
-    size: 24,
+    y: cursorY - mmToPt(TITLE_BASELINE_OFFSET_MM),
+    size: TITLE_FONT_SIZE_PT,
     font: fontBold,
     color: color(INVOICE_PDF_BRAND.text),
   });
 
-  const metaX = pageWidth - margin - mmToPt(52);
-  let metaY = cursorY - mmToPt(1);
+  const metaX = pageWidth - margin - mmToPt(METADATA_BLOCK_WIDTH_MM);
+  let metaY = cursorY - mmToPt(METADATA_TOP_OFFSET_MM);
   const metaRows: Array<[string, string]> = [
     ["Rechnungsnummer", data.invoice.invoiceNumber ?? "—"],
     ["Rechnungsdatum", formatBillingDateDisplay(data.invoice.invoiceDate)],
@@ -126,24 +162,24 @@ export async function drawInvoiceBody(
   for (const [label, value] of metaRows) {
     page.drawText(label, {
       x: metaX,
-      y: metaY - mmToPt(3),
+      y: metaY - mmToPt(METADATA_LABEL_BASELINE_OFFSET_MM),
       size: 7,
       font,
       color: META_LABEL_COLOR,
     });
     page.drawText(value, {
       x: metaX,
-      y: metaY - mmToPt(6.5),
+      y: metaY - mmToPt(METADATA_VALUE_BASELINE_OFFSET_MM),
       size: 8.5,
       font: label === "Rechnungsnummer" ? fontBold : font,
       color: color(INVOICE_PDF_BRAND.text),
     });
-    metaY -= mmToPt(8.5);
+    metaY -= mmToPt(METADATA_ROW_STEP_MM);
   }
 
-  cursorY = Math.min(cursorY - mmToPt(8), metaY) - mmToPt(3);
+  cursorY = Math.min(cursorY - mmToPt(8), metaY) - mmToPt(ADDRESS_GRID_TOP_GAP_MM);
 
-  const colGap = mmToPt(6);
+  const colGap = mmToPt(ADDRESS_GRID_COLUMN_GAP_MM);
   const colWidth = (pageWidth - margin * 2 - colGap) / 2;
   const leftX = margin;
   const rightX = margin + colWidth + colGap;
@@ -163,7 +199,7 @@ export async function drawInvoiceBody(
     color: color(INVOICE_PDF_BRAND.orange),
   });
 
-  cursorY -= mmToPt(4);
+  cursorY -= mmToPt(ADDRESS_SECTION_LABEL_STEP_MM);
   const recipientLines = [
     data.recipient.companyOrName,
     data.recipient.houseNumber
@@ -191,30 +227,32 @@ export async function drawInvoiceBody(
   let addrY = cursorY;
   for (const line of recipientLines) {
     page.drawText(line, { x: leftX, y: addrY, size: 8.5, font, color: color(INVOICE_PDF_BRAND.text) });
-    addrY -= mmToPt(4);
+    addrY -= mmToPt(ADDRESS_LINE_STEP_MM);
   }
   addrY = cursorY;
   for (const line of issuerLines) {
     page.drawText(line, { x: rightX, y: addrY, size: 8.5, font, color: color(INVOICE_PDF_BRAND.text) });
-    addrY -= mmToPt(4);
+    addrY -= mmToPt(ADDRESS_LINE_STEP_MM);
   }
 
-  cursorY = Math.min(cursorY - recipientLines.length * mmToPt(4), addrY) - mmToPt(5);
+  cursorY =
+    Math.min(cursorY - recipientLines.length * mmToPt(ADDRESS_LINE_STEP_MM), addrY) -
+    mmToPt(ADDRESS_GRID_BOTTOM_GAP_MM);
 
   const tableX = margin;
   const tableWidth = pageWidth - margin * 2;
-  const colDesc = tableWidth * 0.38;
-  const colQty = tableWidth * 0.08;
-  const colUnit = tableWidth * 0.14;
-  const colNet = tableWidth * 0.14;
-  const colVat = tableWidth * 0.1;
+  const colDesc = tableWidth * TABLE_COL_DESC_FRACTION;
+  const colQty = tableWidth * TABLE_COL_QTY_FRACTION;
+  const colUnit = tableWidth * TABLE_COL_UNIT_FRACTION;
+  const colNet = tableWidth * TABLE_COL_NET_FRACTION;
+  const colVat = tableWidth * TABLE_COL_VAT_FRACTION;
   const colQtyRight = tableX + colDesc + colQty - mmToPt(1);
   const colUnitRight = tableX + colDesc + colQty + colUnit - mmToPt(1);
   const colNetRight = tableX + colDesc + colQty + colUnit + colNet - mmToPt(1);
   const colVatRight = tableX + colDesc + colQty + colUnit + colNet + colVat - mmToPt(1);
   const colGrossRight = tableX + tableWidth - mmToPt(1);
 
-  const headerRowHeight = mmToPt(7.5);
+  const headerRowHeight = mmToPt(TABLE_HEADER_ROW_HEIGHT_MM);
   page.drawRectangle({
     x: tableX,
     y: cursorY - headerRowHeight,
@@ -250,7 +288,7 @@ export async function drawInvoiceBody(
 
   for (const line of data.lines) {
     const split = splitLineDescription(line.description);
-    const rowHeight = mmToPt(split.secondaryFromData ? 11 : 9);
+    const rowHeight = mmToPt(split.secondaryFromData ? TABLE_ROW_HEIGHT_MULTI_MM : TABLE_ROW_HEIGHT_SINGLE_MM);
     if (cursorY - rowHeight < minY + mmToPt(28)) {
       break;
     }
@@ -331,9 +369,9 @@ export async function drawInvoiceBody(
   const showFooter = options.showTotals ?? true;
 
   if (showTotals) {
-    cursorY -= mmToPt(3);
-    const totalsX = pageWidth - margin - mmToPt(50);
-    const totalsValueRight = pageWidth - margin - mmToPt(1);
+    cursorY -= mmToPt(TABLE_AFTER_ROWS_GAP_MM);
+    const totalsX = pageWidth - margin - mmToPt(TOTALS_BLOCK_WIDTH_MM);
+    const totalsValueRight = pageWidth - margin - mmToPt(TOTALS_VALUE_INSET_MM);
     let totalsY = cursorY;
 
     page.drawText("Netto", {
@@ -389,9 +427,9 @@ export async function drawInvoiceBody(
     });
 
     page.drawRectangle({
-      x: totalsX - mmToPt(2),
+      x: totalsX - mmToPt(TOTALS_HIGHLIGHT_X_INSET_MM),
       y: highlightBottom,
-      width: mmToPt(52),
+      width: mmToPt(TOTALS_HIGHLIGHT_WIDTH_MM),
       height: highlightHeight,
       color: color(INVOICE_PDF_BRAND.orangeMuted),
       opacity: 0.92,
@@ -414,22 +452,22 @@ export async function drawInvoiceBody(
       color(INVOICE_PDF_BRAND.text),
     );
 
-    cursorY = highlightBottom - mmToPt(4);
+    cursorY = highlightBottom - mmToPt(TOTALS_AFTER_BLOCK_GAP_MM);
   }
 
   if (showFooter) {
-    const brandRowY = paymentZoneTop + mmToPt(3.5);
-    const thankY = Math.max(cursorY - mmToPt(2), brandRowY + mmToPt(7));
+    const brandRowY = paymentZoneTop + mmToPt(FOOTER_BRAND_ROW_OFFSET_ABOVE_PAYMENT_MM);
+    const thankY = Math.max(cursorY - mmToPt(ACKNOWLEDGEMENT_MIN_GAP_ABOVE_BRAND_MM), brandRowY + mmToPt(7));
 
     page.drawRectangle({
       x: margin,
       y: thankY - mmToPt(1),
-      width: mmToPt(1.2),
-      height: mmToPt(7),
+      width: mmToPt(ACKNOWLEDGEMENT_ACCENT_BAR_WIDTH_MM),
+      height: mmToPt(ACKNOWLEDGEMENT_ACCENT_BAR_HEIGHT_MM),
       color: color(INVOICE_PDF_BRAND.orange),
     });
     page.drawText("Vielen Dank für Ihr Vertrauen.", {
-      x: margin + mmToPt(3.5),
+      x: margin + mmToPt(ACKNOWLEDGEMENT_TEXT_X_OFFSET_MM),
       y: thankY + mmToPt(1.5),
       size: 8.5,
       font: fontBold,
@@ -438,7 +476,7 @@ export async function drawInvoiceBody(
 
     const tulipLogo = await embedLogoIfPresent(pdfDoc, TULIP_DIGITAL_LOGO_PATH);
     if (tulipLogo) {
-      const h = mmToPt(5);
+      const h = mmToPt(TULIP_LOGO_HEIGHT_MM);
       const scale = h / tulipLogo.height;
       const logoWidth = tulipLogo.width * scale;
       page.drawImage(tulipLogo, {
@@ -450,7 +488,7 @@ export async function drawInvoiceBody(
     }
 
     page.drawText(INVOICE_PDF_SITE_URL, {
-      x: pageWidth - margin - mmToPt(38),
+      x: pageWidth - margin - mmToPt(WEBSITE_TEXT_BLOCK_WIDTH_MM),
       y: brandRowY + mmToPt(1),
       size: 7.5,
       font,

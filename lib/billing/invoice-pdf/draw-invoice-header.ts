@@ -1,7 +1,12 @@
 import type { PDFDocument, PDFPage } from "pdf-lib";
 import { rgb } from "pdf-lib";
 import { INVOICE_HEADER_RIBBON_ACCENT_PATH, INVOICE_PDF_BRAND } from "./constants";
-import { INVOICE_HEADER_HEIGHT_MM, INVOICE_SIDE_MARGIN_MM } from "./invoice-layout";
+import {
+  HEADER_HEIGHT_MM,
+  HEADER_LOGO_HEIGHT_MM,
+  HEADER_RIBBON_ACCENT_WIDTH_MM,
+  PAGE_MARGIN_X_MM,
+} from "./invoice-design-geometry";
 import { mmToPt } from "./mm";
 import {
   embedLogoIfPresent,
@@ -32,7 +37,7 @@ async function drawHeaderRibbonArtwork(
 
   const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8;
   const image = isJpeg ? await pdfDoc.embedJpg(bytes) : await pdfDoc.embedPng(bytes);
-  const accentWidth = mmToPt(118);
+  const accentWidth = mmToPt(HEADER_RIBBON_ACCENT_WIDTH_MM);
   const scale = accentWidth / image.width;
   const accentHeight = image.height * scale;
   const drawHeight = Math.min(accentHeight, headerHeightPt);
@@ -118,7 +123,7 @@ export async function drawSportClubEvoInvoiceHeader(
   pageWidthPt: number,
   pageHeightPt: number,
 ): Promise<number> {
-  const headerHeightPt = mmToPt(INVOICE_HEADER_HEIGHT_MM);
+  const headerHeightPt = mmToPt(HEADER_HEIGHT_MM);
   const headerBottomY = pageHeightPt - headerHeightPt;
 
   page.drawRectangle({
@@ -133,10 +138,10 @@ export async function drawSportClubEvoInvoiceHeader(
 
   const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
   const logo = await embedLogoIfPresent(pdfDoc, SPORTCLUBEVO_LOGO_PATH);
-  const margin = mmToPt(INVOICE_SIDE_MARGIN_MM);
+  const margin = mmToPt(PAGE_MARGIN_X_MM);
 
   if (logo) {
-    const logoHeight = mmToPt(16);
+    const logoHeight = mmToPt(HEADER_LOGO_HEIGHT_MM);
     const scale = logoHeight / logo.height;
     const logoWidth = logo.width * scale;
     page.drawImage(logo, {

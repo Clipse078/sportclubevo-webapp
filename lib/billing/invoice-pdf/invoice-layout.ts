@@ -1,20 +1,21 @@
+import { SWISS_PAYMENT_SECTION_HEIGHT_MM } from "./constants";
 import {
-  A4_HEIGHT_MM,
-  SWISS_PAYMENT_SECTION_HEIGHT_MM,
-} from "./constants";
+  HEADER_HEIGHT_MM,
+  INVOICE_BODY_AREA_HEIGHT_MM,
+} from "./invoice-design-geometry";
 import type { InvoicePdfDocumentData } from "./invoice-pdf-types";
 import type { InvoiceLineRecord } from "../native-billing-commercial-types";
 import { mmToPt } from "./mm";
 
+export {
+  INVOICE_BODY_AREA_HEIGHT_MM,
+  INVOICE_HEADER_HEIGHT_MM,
+  INVOICE_SIDE_MARGIN_MM,
+} from "./invoice-design-geometry";
+
 /** Regulated Swiss QR zone (from bottom of page). */
 export const PAYMENT_SECTION_BOTTOM_MM = 0;
 export const PAYMENT_SECTION_TOP_MM = SWISS_PAYMENT_SECTION_HEIGHT_MM;
-
-/** Invoice body sits above the payment section on combined layouts. */
-export const INVOICE_BODY_AREA_HEIGHT_MM = A4_HEIGHT_MM - SWISS_PAYMENT_SECTION_HEIGHT_MM;
-
-export const INVOICE_HEADER_HEIGHT_MM = 34;
-export const INVOICE_SIDE_MARGIN_MM = 12;
 
 export function paymentSectionTopPt(): number {
   return mmToPt(PAYMENT_SECTION_TOP_MM);
@@ -30,7 +31,7 @@ function measureLineRowMm(line: InvoiceLineRecord): number {
 
 /** Deterministic content height estimate (must stay ≤ body area for one-page layout). */
 export function measureInvoiceContentHeightMm(data: InvoicePdfDocumentData): number {
-  let heightMm = INVOICE_HEADER_HEIGHT_MM + 4;
+  let heightMm = HEADER_HEIGHT_MM + 4;
   if (data.isVoid) {
     heightMm += 8;
   }
@@ -52,22 +53,4 @@ export function shouldUseSinglePageWithPayment(data: InvoicePdfDocumentData): bo
   return measureInvoiceContentHeightMm(data) <= INVOICE_BODY_AREA_HEIGHT_MM;
 }
 
-export function splitLineDescription(description: string): {
-  primary: string;
-  secondaryFromData: string | null;
-} {
-  const parts = description
-    .split(/\n|(?:\s\|\s)/)
-    .map((part) => part.trim())
-    .filter(Boolean);
-  if (parts.length === 0) {
-    return { primary: description.trim(), secondaryFromData: null };
-  }
-  if (parts.length === 1) {
-    return { primary: parts[0]!, secondaryFromData: null };
-  }
-  return {
-    primary: parts[0]!,
-    secondaryFromData: parts.slice(1).join(" | "),
-  };
-}
+export { splitLineDescription } from "./invoice-design-geometry";

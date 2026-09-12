@@ -1,3 +1,13 @@
+/**
+ * PROTECTED SIX PAYMENT SECTION
+ * --------------------------------
+ * Regulated Swiss QR-bill layout (210×105 mm, 62/148 split, 46 mm QR).
+ * Payload from persisted InvoicePaymentInstruction + buildSwissSpcPayload.
+ *
+ * Do not redesign visually, move branding into this zone, or change QRR/SPC/QR
+ * generation here without explicit Swiss QR compliance review.
+ */
+
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { PDFDocument, type PDFPage, rgb, type RGB, type PDFFont } from "pdf-lib";
