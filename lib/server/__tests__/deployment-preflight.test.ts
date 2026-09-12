@@ -50,6 +50,15 @@ describe("runDeploymentPreflight", () => {
       expect(errors).toHaveLength(0);
     });
 
+    it("warns when Preview has DATABASE_URL but no billing encryption key", () => {
+      const result = runDeploymentPreflight(VALID_PREVIEW_ENV);
+      expect(
+        result.violations.some(
+          (v) => v.code === "BILLING_ENCRYPTION_KEY_MISSING_PREVIEW",
+        ),
+      ).toBe(true);
+    });
+
     it("passes for a valid STAGE environment", () => {
       const result = runDeploymentPreflight(VALID_STAGE_ENV);
       expect(result.pass).toBe(true);
@@ -86,7 +95,11 @@ describe("runDeploymentPreflight", () => {
       });
 
       expect(result.pass).toBe(true);
-      expect(result.violations).toEqual([]);
+      expect(
+        result.violations.some(
+          (v) => v.code === "BILLING_ENCRYPTION_KEY_MISSING_PREVIEW",
+        ),
+      ).toBe(true);
     });
 
     it("does not flag APP_ENV=stage on a Vercel Custom Environment (VERCEL_TARGET_ENV set)", () => {
@@ -142,7 +155,11 @@ describe("runDeploymentPreflight", () => {
       });
 
       expect(result.pass).toBe(true);
-      expect(result.violations).toEqual([]);
+      expect(
+        result.violations.some(
+          (v) => v.code === "BILLING_ENCRYPTION_KEY_MISSING_PREVIEW",
+        ),
+      ).toBe(true);
     });
   });
 

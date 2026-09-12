@@ -1,4 +1,5 @@
 import { getSenderDomainAuthorization } from "@/lib/email/mailer";
+import { getRuntimeEnvironment } from "@/lib/env";
 import { resolveBillingEmailIdentity } from "./resolve-billing-email-identity";
 
 function extractEmailAddress(value: string): string {
@@ -8,6 +9,7 @@ function extractEmailAddress(value: string): string {
 
 export type BillingEmailIdentityReport = {
   resendApiKeyConfigured: boolean;
+  billingEncryptionKeyConfigured: boolean;
   emailFromConfigured: boolean;
   emailFromValue: string | null;
   billingEmailFromConfigured: boolean;
@@ -28,6 +30,7 @@ export async function buildBillingEmailIdentityReport(): Promise<BillingEmailIde
     "billing@sportclubevo.com";
 
   const identity = await resolveBillingEmailIdentity();
+  const runtime = getRuntimeEnvironment();
 
   const billingFromCandidate =
     billingEmailFrom ?? "SportClubEvo Billing <billing@sportclubevo.com>";
@@ -36,6 +39,7 @@ export async function buildBillingEmailIdentityReport(): Promise<BillingEmailIde
 
   return {
     resendApiKeyConfigured: Boolean(process.env.RESEND_API_KEY?.trim()),
+    billingEncryptionKeyConfigured: runtime.hasBillingEncryptionKey,
     emailFromConfigured: Boolean(emailFrom),
     emailFromValue: emailFrom,
     billingEmailFromConfigured: Boolean(billingEmailFrom),

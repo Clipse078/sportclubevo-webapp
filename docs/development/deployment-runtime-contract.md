@@ -9,6 +9,11 @@ Engineering reference for the current SportClubEvo deployment architecture.
   inferred from `APP_ENV`.
 - Normal Preview deployments may intentionally use the configured persistent
   STAGE database. This is supported architecture, not a preflight violation.
+- When Preview uses that STAGE database, `SCE_BILLING_ENCRYPTION_KEY` must be
+  configured in the Preview Vercel environment scope with the same value as STAGE
+  Production. Without it, `BillingBankAccount` decryption fails and native invoice
+  PDF / delivery attachment generation returns HTTP 503
+  (`Bankverbindung konnte nicht gelesen werden.`).
 - STAGE is persistent and non-disposable. Preview, development, testing,
   bootstrap, seed, migration, validation, and environment setup processes must
   preserve its data.

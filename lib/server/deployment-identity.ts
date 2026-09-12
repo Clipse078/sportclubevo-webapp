@@ -52,6 +52,7 @@ export type DeploymentIdentity = {
   authConfigured: {
     hasNextAuthSecret: boolean;
     hasDatabaseUrl: boolean;
+    hasBillingEncryptionKey: boolean;
     hasNextAuthUrl: boolean;
     hasAppBaseUrl: boolean;
   };
@@ -191,6 +192,7 @@ export function resolveDeploymentIdentity(
     authConfigured: {
       hasNextAuthSecret: runtime.hasNextAuthSecret,
       hasDatabaseUrl: runtime.hasDatabaseUrl,
+      hasBillingEncryptionKey: runtime.hasBillingEncryptionKey,
       hasNextAuthUrl: Boolean(runtime.nextAuthUrl),
       hasAppBaseUrl: Boolean(runtime.appBaseUrl),
     },

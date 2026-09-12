@@ -176,6 +176,29 @@ describe("resolveDeploymentIdentity", () => {
       expect(identity.authConfigured.hasNextAuthSecret).toBe(true);
     });
 
+    it("reports hasBillingEncryptionKey=false when missing on Preview", () => {
+      const identity = resolveDeploymentIdentity(BASE_PREVIEW_ENV);
+      expect(identity.authConfigured.hasBillingEncryptionKey).toBe(false);
+    });
+
+    it("reports hasBillingEncryptionKey=true when configured", () => {
+      const identity = resolveDeploymentIdentity({
+        ...BASE_PREVIEW_ENV,
+        SCE_BILLING_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      });
+      expect(identity.authConfigured.hasBillingEncryptionKey).toBe(true);
+    });
+
+    it("never includes the billing encryption key value in any returned field", () => {
+      const identity = resolveDeploymentIdentity({
+        ...BASE_PREVIEW_ENV,
+        SCE_BILLING_ENCRYPTION_KEY: "SUPERSECRETBILLINGKEYVALUE1234567890ABCD=",
+      });
+
+      const serialized = JSON.stringify(identity);
+      expect(serialized).not.toContain("SUPERSECRETBILLINGKEYVALUE");
+    });
+
     it("never includes the NEXTAUTH_SECRET value in any returned field", () => {
       const identity = resolveDeploymentIdentity({
         ...BASE_LOCAL_ENV,

@@ -262,6 +262,18 @@ export function getEnvironmentWarnings(env: RuntimeEnvironment): string[] {
     warnings.push("SCE_BILLING_ENCRYPTION_KEY is not configured.");
   }
 
+  if (
+    (env.isPreview || env.isAcceptance) &&
+    env.hasDatabaseUrl &&
+    !env.hasBillingEncryptionKey
+  ) {
+    warnings.push(
+      "SCE_BILLING_ENCRYPTION_KEY is not configured for this Preview/Acceptance deployment. " +
+        "Native invoice PDF generation and delivery attachments cannot decrypt billing bank accounts " +
+        "until the same key as the STAGE Production scope is present in this deployment scope.",
+    );
+  }
+
   if (env.isUnknown) {
     warnings.push(
       "Deployed environment classification is unknown; privileged operations are disabled.",
