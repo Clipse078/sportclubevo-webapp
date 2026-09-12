@@ -174,6 +174,33 @@ describe("invoice payment service", () => {
     );
   });
 
+  it("multiple partial payments can reach PAID", async () => {
+    mocks.sumConfirmedPaymentsMinor.mockResolvedValue(10000);
+    mocks.queryRaw.mockResolvedValue([
+      {
+        id: baseInvoice.id,
+        status: "PARTIALLY_PAID",
+        grossTotalMinor: 21512,
+        currency: "CHF",
+        key: baseInvoice.key,
+        invoiceNumber: baseInvoice.invoiceNumber,
+      },
+    ]);
+    mocks.findInvoiceByKey.mockResolvedValue({ ...baseInvoice, status: "PARTIALLY_PAID" });
+    await recordInvoicePayment({
+      invoiceKey: "inv-key",
+      amountMinor: 11512,
+      currency: "CHF",
+      paymentDate: "2026-09-12",
+      method: "BANK_TRANSFER_MANUAL",
+      actorUserId: "user-1",
+    });
+    expect(mocks.invoiceUpdate).toHaveBeenCalledWith({
+      where: { id: "inv-1" },
+      data: { status: "PAID" },
+    });
+  });
+
   it("partial payment does not mark PAID", async () => {
     mocks.sumConfirmedPaymentsMinor.mockResolvedValue(0);
     await recordInvoicePayment({
