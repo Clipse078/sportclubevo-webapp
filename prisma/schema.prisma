@@ -4302,6 +4302,22 @@ enum InvoicePaymentMethod {
   BANK_TRANSFER_SWISS_QR
 }
 
+/// Recorded payment against an invoice (manual entry, future camt.054 / Stripe).
+enum InvoicePaymentRecordMethod {
+  BANK_TRANSFER_MANUAL
+}
+
+enum InvoicePaymentSource {
+  MANUAL
+  CAMT054
+  STRIPE
+}
+
+enum InvoicePaymentRecordStatus {
+  CONFIRMED
+  REVERSED
+}
+
 model Invoice {
   id                String        @id @default(cuid())
   key               String        @unique
@@ -4334,6 +4350,7 @@ model Invoice {
   recipientSnapshot  InvoiceRecipientSnapshot?
   paymentInstruction InvoicePaymentInstruction?
   deliveries         InvoiceDelivery[]
+  payments           InvoicePayment[]
 
   @@unique([legalEntityId, invoiceNumber])
   @@index([billingCustomerId])
@@ -4438,6 +4455,35 @@ enum InvoiceDeliveryStatus {
   SENDING
   SENT
   FAILED
+}
+
+/// Accounting payment event against a native invoice (immutable except reversal metadata).
+model InvoicePayment {
+  id                String                     @id @default(cuid())
+  key               String                     @unique
+  invoiceId         String
+  amountMinor       Int
+  currency          String
+  paymentDate       DateTime                   @db.Date
+  method            InvoicePaymentRecordMethod
+  reference         String?
+  note              String?
+  source            InvoicePaymentSource
+  status            InvoicePaymentRecordStatus @default(CONFIRMED)
+  externalReference String?
+  bankTransactionId String?
+  reversedAt        DateTime?
+  reversedByUserId  String?
+  reversalReason    String?
+  createdByUserId   String?
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([invoiceId, paymentDate])
+  @@index([invoiceId, status])
+  @@index([status])
 }
 
 /// One row per outbound delivery attempt (email transport only; invoice financial state unchanged).

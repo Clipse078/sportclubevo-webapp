@@ -98,9 +98,11 @@ export class NativeBillingNotFoundError extends Error {
 
 export class NativeBillingValidationError extends Error {
   readonly name = "NativeBillingValidationError";
+  readonly code?: string;
 
-  constructor(message: string) {
+  constructor(message: string, options?: { code?: string }) {
     super(message);
+    this.code = options?.code;
   }
 }
 
