@@ -118,6 +118,13 @@ export const NAV_SECTIONS: NavSection[] = [
             navContexts: ["platform"],
           },
           {
+            key: "platform-commercial-billing-reconciliation",
+            label: "Reconciliation",
+            href: "/dashboard/admin/commercial/billing/reconciliation",
+            permissionKeys: [PERMISSIONS.BILLING_VIEW],
+            navContexts: ["platform"],
+          },
+          {
             key: "platform-commercial-billing-settings",
             label: "Settings",
             href: "/dashboard/admin/commercial/billing/settings",

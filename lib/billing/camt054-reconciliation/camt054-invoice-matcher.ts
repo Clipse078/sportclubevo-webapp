@@ -16,6 +16,7 @@ export type Camt054MatchedInvoice = {
   currency: string;
   grossTotalMinor: number;
   status: InvoiceStatus;
+  paymentInstructionId: string | null;
 };
 
 export async function findInvoiceForCamt054QrrReference(
@@ -30,6 +31,7 @@ export async function findInvoiceForCamt054QrrReference(
       reference: normalized,
     },
     select: {
+      id: true,
       invoiceId: true,
       currency: true,
       invoice: {
@@ -58,6 +60,7 @@ export async function findInvoiceForCamt054QrrReference(
     currency: instruction.invoice.currency,
     grossTotalMinor: instruction.invoice.grossTotalMinor,
     status: instruction.invoice.status,
+    paymentInstructionId: instruction.id,
   };
 }
 

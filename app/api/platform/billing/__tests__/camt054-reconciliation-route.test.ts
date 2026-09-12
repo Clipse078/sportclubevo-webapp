@@ -65,11 +65,14 @@ describe("camt054 reconciliation route (SWISS-01H)", () => {
       { params: Promise.resolve({ key: "issuer" }) },
     );
     expect(res.status).toBe(200);
-    expect(mocks.reconcileCamt054Statement).toHaveBeenCalledWith({
-      legalEntityKey: "issuer",
-      xml: "<xml/>",
-      dryRun: true,
-      actorUserId: "user-1",
-    });
+    expect(mocks.reconcileCamt054Statement).toHaveBeenCalledWith(
+      expect.objectContaining({
+        legalEntityKey: "issuer",
+        xml: "<xml/>",
+        dryRun: true,
+        actorUserId: "user-1",
+        contentSha256: expect.any(String),
+      }),
+    );
   });
 });

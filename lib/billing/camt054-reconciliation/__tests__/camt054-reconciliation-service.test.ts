@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
   findConfirmedPaymentByBankTransactionId: vi.fn(),
   findInvoiceForCamt054QrrReference: vi.fn(),
   recordCamt054InvoicePayment: vi.fn(),
+  findBankReconciliationImportByContentHash: vi.fn(),
+  createBankReconciliationImportWithTransactions: vi.fn(),
   logAction: vi.fn(),
 }));
 
@@ -29,6 +31,13 @@ vi.mock("@/lib/billing/invoice-payments/invoice-payment-service", () => ({
 }));
 
 vi.mock("@/lib/audit/log-action", () => ({ logAction: mocks.logAction }));
+
+vi.mock("@/lib/billing/camt054-reconciliation/camt054-reconciliation-repository", () => ({
+  findBankReconciliationImportByContentHash: mocks.findBankReconciliationImportByContentHash,
+  createBankReconciliationImportWithTransactions:
+    mocks.createBankReconciliationImportWithTransactions,
+  deriveImportStatus: () => "COMPLETED",
+}));
 
 const { reconcileCamt054Statement } = await import("../camt054-reconciliation-service");
 
@@ -53,10 +62,16 @@ describe("reconcileCamt054Statement (SWISS-01H)", () => {
       currency: "CHF",
       grossTotalMinor: 21512,
       status: "OPEN",
+      paymentInstructionId: "pi-1",
     });
     mocks.recordCamt054InvoicePayment.mockResolvedValue({
-      payment: { key: "pay-1" },
+      payment: { key: "pay-1", id: "pay-id-1" },
       summary: {},
+    });
+    mocks.findBankReconciliationImportByContentHash.mockResolvedValue(null);
+    mocks.createBankReconciliationImportWithTransactions.mockResolvedValue({
+      key: "import-1",
+      id: "import-id-1",
     });
   });
 
@@ -70,6 +85,8 @@ describe("reconcileCamt054Statement (SWISS-01H)", () => {
 
     expect(report.appliedCount).toBe(0);
     expect(report.entries[0]?.outcome).toBe("planned");
+    expect(report.entries[0]?.matchStatus).toBe("MATCHED");
+    expect(report.matchedCount).toBe(1);
     expect(mocks.recordCamt054InvoicePayment).not.toHaveBeenCalled();
   });
 
@@ -79,9 +96,12 @@ describe("reconcileCamt054Statement (SWISS-01H)", () => {
       xml: fixtureXml,
       dryRun: false,
       actorUserId: "user-1",
+      filename: "acceptance.xml",
+      contentSha256: "abc",
     });
 
     expect(report.appliedCount).toBe(1);
+    expect(report.importKey).toBe("import-1");
     expect(report.entries[0]?.outcome).toBe("applied");
     expect(mocks.recordCamt054InvoicePayment).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -93,12 +113,17 @@ describe("reconcileCamt054Statement (SWISS-01H)", () => {
   });
 
   it("skips duplicate bank transactions", async () => {
-    mocks.findConfirmedPaymentByBankTransactionId.mockResolvedValue({ key: "existing" });
+    mocks.findConfirmedPaymentByBankTransactionId.mockResolvedValue({
+      key: "existing",
+      id: "pay-existing",
+    });
     const report = await reconcileCamt054Statement({
       legalEntityKey: "issuer",
       xml: fixtureXml,
       dryRun: false,
       actorUserId: "user-1",
+      filename: "duplicate.xml",
+      contentSha256: "def",
     });
 
     expect(report.entries[0]?.outcome).toBe("skipped_duplicate");

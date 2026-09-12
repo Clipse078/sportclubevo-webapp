@@ -137,6 +137,12 @@ function parseTransactionDetail(input: {
     input.tx.RmtInf,
   );
 
+  let debtorName: string | null = null;
+  const rltdPties = input.tx.RltdPties as Record<string, unknown> | undefined;
+  if (rltdPties?.Dbtr && typeof rltdPties.Dbtr === "object") {
+    debtorName = readText((rltdPties.Dbtr as Record<string, unknown>).Nm);
+  }
+
   return {
     bankTransactionId,
     amountMinor: amount.amountMinor,
@@ -146,6 +152,7 @@ function parseTransactionDetail(input: {
     referenceType,
     rejected,
     messageId: input.messageId,
+    debtorName,
   };
 }
 

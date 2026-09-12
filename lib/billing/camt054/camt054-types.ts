@@ -7,6 +7,7 @@ export type Camt054CreditTransaction = {
   referenceType: "QRR" | "SCOR" | "UNKNOWN";
   rejected: boolean;
   messageId: string | null;
+  debtorName: string | null;
 };
 
 export type Camt054ParseResult = {
