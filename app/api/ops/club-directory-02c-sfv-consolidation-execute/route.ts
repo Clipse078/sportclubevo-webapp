@@ -137,7 +137,7 @@ import {
   type TenantSfvContext,
   type TenantInventory,
   type TenantPlan,
-} from "@/scripts/club-directory-02c-sfv-consolidation";
+} from "@/lib/club-directory/sfv-consolidation-02c";
 import { computePlanFingerprint } from "@/lib/club-directory/plan-fingerprint";
 import { persistConsolidationBackupSnapshot } from "@/lib/club-directory/ops-backup-storage";
 import { consolidateExternalClubsByProviderIdentity } from "@/lib/club-directory/consolidation-service";

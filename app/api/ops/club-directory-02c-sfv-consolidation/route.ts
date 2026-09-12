@@ -100,7 +100,7 @@ import {
   loadTenantInventory,
   buildTenantPlan,
   type TenantInventory,
-} from "@/scripts/club-directory-02c-sfv-consolidation";
+} from "@/lib/club-directory/sfv-consolidation-02c";
 import { computePlanFingerprint } from "@/lib/club-directory/plan-fingerprint";
 import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
