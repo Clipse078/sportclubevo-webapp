@@ -12,12 +12,12 @@ import {
   A4_WIDTH_MM,
   SWISS_PAYMENT_SECTION_HEIGHT_MM,
 } from "./constants";
-import { metadataStackEndYMm } from "./invoice-metadata-layout";
+import type { InvoiceCreativeLayoutPlan } from "./invoice-creative-layout-planner";
 import {
-  computeTulipVisibleDrawSizeMm,
-  TULIP_VISIBLE_MAX_WIDTH_MM,
-  TULIP_VISIBLE_MIN_WIDTH_MM,
-} from "./tulip-logo-visible-bounds";
+  estimateOverflowCreativeHeightMm,
+  tryPlanInvoiceCreativeLayout,
+} from "./invoice-creative-layout-planner";
+import { computeTulipVisibleDrawSizeMm } from "./tulip-logo-visible-bounds";
 import type { InvoicePdfDocumentData } from "./invoice-pdf-types";
 
 export function splitLineDescription(description: string): {
@@ -64,7 +64,8 @@ export const TITLE_ACCENT_GAP_BELOW_TITLE_MM = 2;
 
 export const IDENTITY_TOP_Y_MM = 32;
 export const INVOICE_NUMBER_FONT_SIZE_PT = 15;
-export const METADATA_STACK_TOP_Y_MM = 44;
+/** Right-column metadata stack (independent of left-column title / invoice number). */
+export const METADATA_STACK_TOP_Y_MM = 34;
 export const METADATA_LEFT_X_MM = 130;
 export const METADATA_BLOCK_WIDTH_MM = 66;
 /** @deprecated Use {@link METADATA_GROUP_PITCH_MM}. */
@@ -226,28 +227,64 @@ export function computeOperatorBrandRowLayoutMm(): OperatorBrandRowLayoutMm {
 }
 
 export function paymentBreathingRoomMm(data: InvoicePdfDocumentData): number {
-  const plan = planInvoiceBodyLayoutRegions(data);
-  const lowerIds = new Set([
-    "operator_branding_sce",
-    "operator_branding_tulip",
-    "website_url",
-    "acknowledgement",
-  ]);
-  let maxBottom = 0;
-  for (const region of plan.regions) {
-    if (lowerIds.has(region.id)) {
-      maxBottom = Math.max(maxBottom, region.yMm + region.heightMm);
-    }
-  }
-  maxBottom = Math.max(
-    maxBottom,
-    computeOperatorBrandRowLayoutMm().rowBottomYMm,
-  );
-  return CREATIVE_AREA_HEIGHT_MM - maxBottom;
+  const creative = loadCreativeLayoutPlan(data);
+  const brandBottomYm =
+    creative?.regions.find((entry) => entry.id === "operator_brand_row")?.bottomYMm ??
+    computeOperatorBrandRowLayoutMm().rowBottomYMm;
+  return PAYMENT_SECTION_BOUNDARY_Y_FROM_TOP_MM - brandBottomYm;
+}
+
+function loadCreativeLayoutPlan(data: InvoicePdfDocumentData): InvoiceCreativeLayoutPlan | null {
+  return tryPlanInvoiceCreativeLayout(data);
+}
+
+function planOverflowEstimateRegions(data: InvoicePdfDocumentData): MmRect[] {
+  const estimatedBodyBottomMm = estimateOverflowCreativeHeightMm(data);
+  return [
+    {
+      id: "overflow_content_estimate",
+      xMm: PAGE_MARGIN_X_MM,
+      yMm: 0,
+      widthMm: innerTableWidthMm(),
+      heightMm: estimatedBodyBottomMm,
+      note: "Fallback height when creative layout cannot fit on one page",
+    },
+  ];
 }
 
 export function planInvoiceBodyLayoutRegions(data: InvoicePdfDocumentData): InvoiceLayoutPlan {
+  const creative = loadCreativeLayoutPlan(data);
   const regions: MmRect[] = [];
+
+  if (!creative) {
+    regions.push({
+      id: "header_bar",
+      xMm: 0,
+      yMm: 0,
+      widthMm: A4_WIDTH_MM,
+      heightMm: HEADER_HEIGHT_MM,
+    });
+    regions.push(...planOverflowEstimateRegions(data));
+    return {
+      pageWidthMm: A4_WIDTH_MM,
+      pageHeightMm: A4_HEIGHT_MM,
+      creativeArea: {
+        id: "creative_area",
+        xMm: 0,
+        yMm: 0,
+        widthMm: CREATIVE_AREA_WIDTH_MM,
+        heightMm: CREATIVE_AREA_HEIGHT_MM,
+      },
+      paymentSection: {
+        id: "protected_six_payment_section",
+        xMm: 0,
+        yMm: PAYMENT_SECTION_BOUNDARY_Y_FROM_TOP_MM,
+        widthMm: A4_WIDTH_MM,
+        heightMm: SWISS_PAYMENT_SECTION_HEIGHT_MM,
+      },
+      regions,
+    };
+  }
 
   regions.push({
     id: "header_bar",
@@ -267,15 +304,6 @@ export function planInvoiceBodyLayoutRegions(data: InvoicePdfDocumentData): Invo
     note: "Width-led placement; height from asset aspect",
   });
 
-  regions.push({
-    id: "header_jpg_artwork",
-    xMm: HEADER_ARTWORK_DRAW_X_MM,
-    yMm: 0,
-    widthMm: HEADER_ARTWORK_DRAW_WIDTH_MM,
-    heightMm: HEADER_HEIGHT_MM,
-    note: "Far-right crop from invoice.jpg",
-  });
-
   if (data.isVoid) {
     regions.push({
       id: "void_banner",
@@ -287,14 +315,6 @@ export function planInvoiceBodyLayoutRegions(data: InvoicePdfDocumentData): Invo
   }
 
   regions.push({
-    id: "title",
-    xMm: PAGE_MARGIN_X_MM,
-    yMm: TITLE_TOP_Y_MM,
-    widthMm: INNER_CONTENT_WIDTH_MM * 0.45,
-    heightMm: TITLE_BASELINE_OFFSET_MM + TITLE_ACCENT_GAP_BELOW_TITLE_MM + TITLE_ACCENT_HEIGHT_MM,
-  });
-
-  regions.push({
     id: "title_accent_line",
     xMm: PAGE_MARGIN_X_MM,
     yMm: TITLE_TOP_Y_MM + TITLE_BASELINE_OFFSET_MM + TITLE_ACCENT_GAP_BELOW_TITLE_MM,
@@ -302,136 +322,33 @@ export function planInvoiceBodyLayoutRegions(data: InvoicePdfDocumentData): Invo
     heightMm: TITLE_ACCENT_HEIGHT_MM,
   });
 
-  regions.push({
-    id: "invoice_number_hero",
-    xMm: METADATA_LEFT_X_MM,
-    yMm: IDENTITY_TOP_Y_MM,
-    widthMm: METADATA_BLOCK_WIDTH_MM,
-    heightMm: 10,
-  });
+  for (const region of creative.regions) {
+    regions.push({
+      id: region.id,
+      xMm: region.xMm,
+      yMm: region.yMm,
+      widthMm: region.widthMm,
+      heightMm: region.heightMm,
+      note: region.note,
+    });
+  }
 
-  regions.push({
-    id: "metadata_block",
-    xMm: METADATA_LEFT_X_MM,
-    yMm: METADATA_STACK_TOP_Y_MM,
-    widthMm: METADATA_BLOCK_WIDTH_MM,
-    heightMm: metadataStackEndYMm() - METADATA_STACK_TOP_Y_MM + 1,
-  });
-
+  const addressTopY = creative.regions.find((entry) => entry.id === "address_labels")!.yMm;
   const colWidth = (innerTableWidthMm() - ADDRESS_GRID_COLUMN_GAP_MM) / 2;
   const leftX = PAGE_MARGIN_X_MM;
-  const rightX = PAGE_MARGIN_X_MM + colWidth + ADDRESS_GRID_COLUMN_GAP_MM;
-  const recipientLines = 4;
-  const issuerLines =
-    4 + (data.issuer.uid ? 1 : 0) + (data.issuer.vatId ? 1 : 0);
-  const addrRows = Math.max(recipientLines, issuerLines);
-  const addressTopY = ADDRESS_SECTION_TOP_Y_MM;
-
-  regions.push({
-    id: "recipient_block",
-    xMm: leftX,
-    yMm: addressTopY + ADDRESS_SECTION_LABEL_STEP_MM,
-    widthMm: colWidth,
-    heightMm: addrRows * ADDRESS_LINE_STEP_MM,
-  });
-  regions.push({
-    id: "issuer_block",
-    xMm: rightX,
-    yMm: addressTopY + ADDRESS_SECTION_LABEL_STEP_MM,
-    widthMm: colWidth,
-    heightMm: addrRows * ADDRESS_LINE_STEP_MM,
-  });
-  regions.push({
-    id: "address_labels",
-    xMm: leftX,
-    yMm: addressTopY,
-    widthMm: innerTableWidthMm(),
-    heightMm: ADDRESS_SECTION_LABEL_STEP_MM,
-  });
+  const recipient = creative.regions.find((entry) => entry.id === "recipient_block")!;
   regions.push({
     id: "address_column_divider",
     xMm: leftX + colWidth + ADDRESS_GRID_COLUMN_GAP_MM / 2,
     yMm: addressTopY,
     widthMm: ADDRESS_COLUMN_DIVIDER_WIDTH_MM,
-    heightMm: ADDRESS_SECTION_LABEL_STEP_MM + addrRows * ADDRESS_LINE_STEP_MM,
-  });
-
-  let cursorY = TABLE_SECTION_TOP_Y_MM;
-  const tableHeight =
-    TABLE_HEADER_ROW_HEIGHT_MM +
-    TABLE_TOP_GAP_MM +
-    data.lines.reduce((sum, line) => {
-      const split = splitLineDescription(line.description);
-      return sum + (split.secondaryFromData ? TABLE_ROW_HEIGHT_MULTI_MM : TABLE_ROW_HEIGHT_SINGLE_MM);
-    }, 0);
-
-  regions.push({
-    id: "line_items_table",
-    xMm: PAGE_MARGIN_X_MM,
-    yMm: cursorY,
-    widthMm: innerTableWidthMm(),
-    heightMm: tableHeight,
-    note: `Column right edges (mm from left): ${tableColumnRightsMm().map((x) => x.toFixed(1)).join(", ")}`,
-  });
-
-  cursorY += tableHeight + TABLE_AFTER_ROWS_GAP_MM;
-
-  const totalsHeight = 5 + 5 + 7 + 9 + TOTALS_AFTER_BLOCK_GAP_MM;
-  const totalsX = A4_WIDTH_MM - PAGE_MARGIN_X_MM - TOTALS_BLOCK_WIDTH_MM;
-  regions.push({
-    id: "totals_block",
-    xMm: totalsX - TOTALS_HIGHLIGHT_X_INSET_MM,
-    yMm: cursorY,
-    widthMm: TOTALS_HIGHLIGHT_WIDTH_MM,
-    heightMm: totalsHeight,
-  });
-
-  regions.push({
-    id: "acknowledgement",
-    xMm: PAGE_MARGIN_X_MM,
-    yMm: THANK_YOU_TOP_Y_MM,
-    widthMm: INNER_CONTENT_WIDTH_MM * 0.55,
-    heightMm: ACKNOWLEDGEMENT_ACCENT_BAR_HEIGHT_MM + 3,
-  });
-
-  const brandRow = computeOperatorBrandRowLayoutMm();
-  const sceWidthMm = FOOTER_SCE_LOGO_HEIGHT_MM * (937 / 204);
-  const tulipX =
-    PAGE_MARGIN_X_MM +
-    sceWidthMm +
-    FOOTER_BRAND_LOGO_GAP_MM +
-    FOOTER_BRAND_DIVIDER_GAP_MM +
-    FOOTER_BRAND_DIVIDER_GAP_MM;
-
-  regions.push({
-    id: "operator_brand_row",
-    xMm: PAGE_MARGIN_X_MM,
-    yMm: brandRow.rowTopYMm,
-    widthMm: INNER_CONTENT_WIDTH_MM * 0.75,
-    heightMm: brandRow.rowHeightMm,
-  });
-
-  regions.push({
-    id: "operator_branding_sce",
-    xMm: PAGE_MARGIN_X_MM,
-    yMm: brandRow.rowBottomYMm - FOOTER_SCE_LOGO_HEIGHT_MM,
-    widthMm: sceWidthMm,
-    heightMm: FOOTER_SCE_LOGO_HEIGHT_MM,
-  });
-
-  regions.push({
-    id: "operator_branding_tulip",
-    xMm: tulipX,
-    yMm: brandRow.rowBottomYMm - brandRow.tulipVisibleHeightMm,
-    widthMm: brandRow.tulipVisibleWidthMm,
-    heightMm: brandRow.tulipVisibleHeightMm,
-    note: `Visible content target width ${brandRow.tulipVisibleWidthMm} mm (${TULIP_VISIBLE_MIN_WIDTH_MM}–${TULIP_VISIBLE_MAX_WIDTH_MM})`,
+    heightMm: ADDRESS_SECTION_LABEL_STEP_MM + (recipient.bottomYMm - recipient.yMm),
   });
 
   regions.push({
     id: "website_url",
     xMm: A4_WIDTH_MM - PAGE_MARGIN_X_MM - WEBSITE_TEXT_BLOCK_WIDTH_MM,
-    yMm: brandRow.rowBottomYMm - 4,
+    yMm: creative.regions.find((entry) => entry.id === "operator_brand_row")!.yMm,
     widthMm: WEBSITE_TEXT_BLOCK_WIDTH_MM,
     heightMm: 4,
   });

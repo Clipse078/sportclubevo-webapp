@@ -2,45 +2,15 @@ import type { PDFDocument, PDFPage } from "pdf-lib";
 import { rgb } from "pdf-lib";
 import { INVOICE_PDF_BRAND, SPORTCLUBEVO_HEADER_LOGO_PATH } from "./constants";
 import {
-  HEADER_ARTWORK_DRAW_WIDTH_MM,
   HEADER_HEIGHT_MM,
   HEADER_LOGO_WIDTH_MM,
   HEADER_LOGO_X_MM,
 } from "./invoice-design-geometry";
-import { loadInvoiceHeaderJpgAccentBytes } from "./invoice-header-jpg-accent";
 import { mmToPt } from "./mm";
 import { embedLogoIfPresent } from "./render-swiss-payment-slip";
 
 function brandColor(c: { r: number; g: number; b: number }) {
   return rgb(c.r, c.g, c.b);
-}
-
-async function drawHeaderJpgAccent(
-  pdfDoc: PDFDocument,
-  page: PDFPage,
-  pageWidthPt: number,
-  headerBottomY: number,
-  headerHeightPt: number,
-): Promise<void> {
-  const accent = await loadInvoiceHeaderJpgAccentBytes();
-  if (!accent) {
-    return;
-  }
-
-  const image = await pdfDoc.embedJpg(accent.jpegBytes);
-  const drawHeightPt = headerHeightPt;
-  const scale = drawHeightPt / image.height;
-  const naturalWidthPt = image.width * scale;
-  const maxWidthPt = mmToPt(HEADER_ARTWORK_DRAW_WIDTH_MM);
-  const drawWidthPt = Math.min(naturalWidthPt, maxWidthPt);
-  const drawX = pageWidthPt - drawWidthPt;
-
-  page.drawImage(image, {
-    x: drawX,
-    y: headerBottomY,
-    width: drawWidthPt,
-    height: drawHeightPt,
-  });
 }
 
 export async function drawSportClubEvoInvoiceHeader(
@@ -59,8 +29,6 @@ export async function drawSportClubEvoInvoiceHeader(
     height: headerHeightPt,
     color: brandColor(INVOICE_PDF_BRAND.headerNavy),
   });
-
-  await drawHeaderJpgAccent(pdfDoc, page, pageWidthPt, headerBottomY, headerHeightPt);
 
   const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
   const logo = await embedLogoIfPresent(pdfDoc, SPORTCLUBEVO_HEADER_LOGO_PATH);

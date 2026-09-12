@@ -17,21 +17,16 @@ import {
   ADDRESS_GRID_COLUMN_GAP_MM,
   ADDRESS_LINE_STEP_MM,
   ADDRESS_SECTION_LABEL_STEP_MM,
-  ADDRESS_SECTION_TOP_Y_MM,
   FOOTER_BRAND_DIVIDER_GAP_MM,
   FOOTER_BRAND_LOGO_GAP_MM,
   FOOTER_SCE_LOGO_HEIGHT_MM,
   computeOperatorBrandRowLayoutMm,
   IDENTITY_TOP_Y_MM,
   INVOICE_NUMBER_FONT_SIZE_PT,
-  METADATA_GROUP_PITCH_MM,
   METADATA_LEFT_X_MM,
-  METADATA_STACK_TOP_Y_MM,
   METADATA_BLOCK_WIDTH_MM,
   METADATA_LABEL_BASELINE_OFFSET_MM,
   METADATA_ROW_STEP_MM,
-  METADATA_VALUE_BASELINE_OFFSET_MM,
-  THANK_YOU_TOP_Y_MM,
   PAGE_MARGIN_X_MM,
   PAYMENT_BOUNDARY_LINE_ABOVE_MM,
   TABLE_AFTER_ROWS_GAP_MM,
@@ -62,6 +57,13 @@ import {
   paymentSectionTopPt,
   splitLineDescription,
 } from "./invoice-layout";
+import {
+  METADATA_LABEL_FONT_PT,
+  METADATA_VALUE_FONT_PT,
+  tryPlanInvoiceCreativeLayout,
+  InvoiceCreativeLayoutOverflowError,
+  TOTALS_BLOCK_TOP_CONTENT_OFFSET_MM,
+} from "./invoice-creative-layout-planner";
 import { mmToPt } from "./mm";
 import { embedLogoIfPresent } from "./render-swiss-payment-slip";
 import { loadTulipVisibleArtworkPngBytes } from "./tulip-logo-visible-bounds";
@@ -144,6 +146,12 @@ export async function drawInvoiceBody(
   );
 
   const useVisualMasterAnchors = options.reservePaymentSectionAtBottom;
+  const layoutPlan = useVisualMasterAnchors ? tryPlanInvoiceCreativeLayout(data) : null;
+  if (useVisualMasterAnchors && !layoutPlan) {
+    throw new InvoiceCreativeLayoutOverflowError(
+      "Single-page invoice layout could not be planned safely.",
+    );
+  }
 
   let titleTopMm = TITLE_TOP_Y_MM;
   if (data.isVoid) {
@@ -200,41 +208,60 @@ export async function drawInvoiceBody(
     });
   }
 
-  let metaRowTopMm = useVisualMasterAnchors ? METADATA_STACK_TOP_Y_MM : titleTopMm + 12;
-  const metaRows: Array<[string, string]> = [
-    ["Rechnungsdatum", formatBillingDateDisplay(data.invoice.invoiceDate)],
-    ["Fällig am", formatBillingDateDisplay(data.invoice.dueDate)],
-    [
-      "Leistungszeitraum",
-      formatBillingPeriodDisplay(data.invoice.periodStart, data.invoice.periodEnd),
-    ],
-    [
-      "Zahlungsziel",
-      data.invoice.paymentTermsDays != null ? `${data.invoice.paymentTermsDays} Tage` : "—",
-    ],
-  ];
+  if (useVisualMasterAnchors && layoutPlan) {
+    for (const group of layoutPlan.metadataGroups) {
+      page.drawText(group.label, {
+        x: metaX,
+        y: pdfYFromPageTop(pageHeight, group.labelBaselineYMm),
+        size: METADATA_LABEL_FONT_PT,
+        font,
+        color: META_LABEL_COLOR,
+      });
+      page.drawText(group.value, {
+        x: metaX,
+        y: pdfYFromPageTop(pageHeight, group.valueBaselineYMm),
+        size: METADATA_VALUE_FONT_PT,
+        font,
+        color: color(INVOICE_PDF_BRAND.text),
+      });
+    }
+  } else {
+    let metaRowTopMm = titleTopMm + 12;
+    const metaRows: Array<[string, string]> = [
+      ["Rechnungsdatum", formatBillingDateDisplay(data.invoice.invoiceDate)],
+      ["Fällig am", formatBillingDateDisplay(data.invoice.dueDate)],
+      [
+        "Leistungszeitraum",
+        formatBillingPeriodDisplay(data.invoice.periodStart, data.invoice.periodEnd),
+      ],
+      [
+        "Zahlungsziel",
+        data.invoice.paymentTermsDays != null ? `${data.invoice.paymentTermsDays} Tage` : "—",
+      ],
+    ];
 
-  for (const [label, value] of metaRows) {
-    page.drawText(label, {
-      x: metaX,
-      y: pdfYFromPageTop(pageHeight, metaRowTopMm + METADATA_LABEL_BASELINE_OFFSET_MM),
-      size: 8.5,
-      font,
-      color: META_LABEL_COLOR,
-    });
-    page.drawText(value, {
-      x: metaX,
-      y: pdfYFromPageTop(pageHeight, metaRowTopMm + METADATA_VALUE_BASELINE_OFFSET_MM),
-      size: 10.5,
-      font,
-      color: color(INVOICE_PDF_BRAND.text),
-    });
-    metaRowTopMm += useVisualMasterAnchors ? METADATA_GROUP_PITCH_MM : METADATA_ROW_STEP_MM;
+    for (const [label, value] of metaRows) {
+      page.drawText(label, {
+        x: metaX,
+        y: pdfYFromPageTop(pageHeight, metaRowTopMm + METADATA_LABEL_BASELINE_OFFSET_MM),
+        size: 8.5,
+        font,
+        color: META_LABEL_COLOR,
+      });
+      page.drawText(value, {
+        x: metaX,
+        y: pdfYFromPageTop(pageHeight, metaRowTopMm + 6),
+        size: 10.5,
+        font,
+        color: color(INVOICE_PDF_BRAND.text),
+      });
+      metaRowTopMm += METADATA_ROW_STEP_MM;
+    }
   }
 
-  const addressTopMm = useVisualMasterAnchors
-    ? ADDRESS_SECTION_TOP_Y_MM
-    : Math.min(titleTopMm + 8, metaRowTopMm) + 3;
+  const addressTopMm = layoutPlan
+    ? layoutPlan.regions.find((entry) => entry.id === "address_labels")!.yMm
+    : Math.min(titleTopMm + 8, titleTopMm + 12) + 3;
 
   const colGap = mmToPt(ADDRESS_GRID_COLUMN_GAP_MM);
   const colWidth = (pageWidth - margin * 2 - colGap) / 2;
@@ -257,7 +284,11 @@ export async function drawInvoiceBody(
     color: color(INVOICE_PDF_BRAND.orange),
   });
 
-  const addressBodyTopMm = addressTopMm + ADDRESS_SECTION_LABEL_STEP_MM;
+  const addressBodyTopMm = layoutPlan
+    ? layoutPlan.regions.find((entry) => entry.id === "recipient_block")!.yMm
+    : addressTopMm + ADDRESS_SECTION_LABEL_STEP_MM;
+  const addressLineStepMm = layoutPlan?.addressLineStepMm ?? ADDRESS_LINE_STEP_MM;
+  const addressLabelStepMm = layoutPlan?.addressLabelStepMm ?? ADDRESS_SECTION_LABEL_STEP_MM;
   let addrY = pdfYFromPageTop(pageHeight, addressBodyTopMm);
   const recipientLines = [
     data.recipient.companyOrName,
@@ -285,16 +316,20 @@ export async function drawInvoiceBody(
 
   for (const line of recipientLines) {
     page.drawText(line, { x: leftX, y: addrY, size: 10, font, color: color(INVOICE_PDF_BRAND.text) });
-    addrY -= mmToPt(ADDRESS_LINE_STEP_MM);
+    addrY -= mmToPt(addressLineStepMm);
   }
   addrY = pdfYFromPageTop(pageHeight, addressBodyTopMm);
   for (const line of issuerLines) {
     page.drawText(line, { x: rightX, y: addrY, size: 10, font, color: color(INVOICE_PDF_BRAND.text) });
-    addrY -= mmToPt(ADDRESS_LINE_STEP_MM);
+    addrY -= mmToPt(addressLineStepMm);
   }
 
-  const addressBlockBottomMm =
-    addressBodyTopMm + Math.max(recipientLines.length, issuerLines.length) * ADDRESS_LINE_STEP_MM;
+  const addressBlockBottomMm = layoutPlan
+    ? Math.max(
+        layoutPlan.regions.find((entry) => entry.id === "recipient_block")!.bottomYMm,
+        layoutPlan.regions.find((entry) => entry.id === "issuer_block")!.bottomYMm,
+      )
+    : addressBodyTopMm + Math.max(recipientLines.length, issuerLines.length) * ADDRESS_LINE_STEP_MM;
   const dividerX = leftX + colWidth + colGap / 2;
   page.drawLine({
     start: { x: dividerX, y: addressLabelY - mmToPt(1) },
@@ -306,8 +341,8 @@ export async function drawInvoiceBody(
     color: rgb(0.9, 0.91, 0.93),
   });
 
-  const tableTopMm = useVisualMasterAnchors
-    ? TABLE_SECTION_TOP_Y_MM
+  const tableTopMm = layoutPlan
+    ? layoutPlan.regions.find((entry) => entry.id === "line_items_table")!.yMm
     : addressBlockBottomMm + ADDRESS_GRID_BOTTOM_GAP_MM;
   let cursorY = pdfYFromPageTop(pageHeight, tableTopMm);
 
@@ -441,7 +476,12 @@ export async function drawInvoiceBody(
   const showFooter = options.showTotals ?? true;
 
   if (showTotals) {
-    cursorY -= mmToPt(TABLE_AFTER_ROWS_GAP_MM);
+    if (layoutPlan) {
+      const totalsRegion = layoutPlan.regions.find((entry) => entry.id === "totals_block")!;
+      cursorY = pdfYFromPageTop(pageHeight, totalsRegion.yMm + TOTALS_BLOCK_TOP_CONTENT_OFFSET_MM);
+    } else {
+      cursorY -= mmToPt(TABLE_AFTER_ROWS_GAP_MM);
+    }
     const totalsX = pageWidth - margin - mmToPt(TOTALS_BLOCK_WIDTH_MM);
     const totalsValueRight = pageWidth - margin - mmToPt(TOTALS_VALUE_INSET_MM);
     let totalsY = cursorY;
@@ -529,14 +569,13 @@ export async function drawInvoiceBody(
 
   if (showFooter) {
     const brandRow = computeOperatorBrandRowLayoutMm();
-    const brandRowTopMm = brandRow.rowTopYMm;
     const brandRowBottomMm = brandRow.rowBottomYMm;
     const brandRowY = pdfYFromPageTop(pageHeight, brandRowBottomMm);
-    const thankTopMm = useVisualMasterAnchors
-      ? THANK_YOU_TOP_Y_MM
+    const thankTopMm = layoutPlan
+      ? layoutPlan.regions.find((entry) => entry.id === "acknowledgement")!.yMm
       : Math.min(
           pageTopMmFromPdfY(pageHeight, cursorY) - ACKNOWLEDGEMENT_MIN_GAP_ABOVE_BRAND_MM,
-          brandRowTopMm - ACKNOWLEDGEMENT_ACCENT_BAR_HEIGHT_MM - 2,
+          brandRow.rowTopYMm - ACKNOWLEDGEMENT_ACCENT_BAR_HEIGHT_MM - 2,
         );
     const thankY = pdfYFromPageTop(pageHeight, thankTopMm);
 
@@ -577,7 +616,7 @@ export async function drawInvoiceBody(
         start: { x: brandCursorX, y: brandRowY + mmToPt(0.5) },
         end: {
           x: brandCursorX,
-          y: brandRowY + mmToPt(Math.max(FOOTER_SCE_LOGO_HEIGHT_MM, brandRow.rowHeightMm) - 0.5),
+          y: brandRowY + mmToPt(brandRow.rowHeightMm - 0.5),
         },
         thickness: 0.35,
         color: rgb(0.82, 0.84, 0.86),
@@ -588,9 +627,11 @@ export async function drawInvoiceBody(
     if (tulipEmbedded) {
       const drawWidthPt = mmToPt(brandRow.tulipVisibleWidthMm);
       const drawHeightPt = mmToPt(brandRow.tulipVisibleHeightMm);
+      const tulipY =
+        brandRowY + mmToPt((FOOTER_SCE_LOGO_HEIGHT_MM - brandRow.tulipVisibleHeightMm) / 2);
       page.drawImage(tulipEmbedded, {
         x: brandCursorX,
-        y: brandRowY,
+        y: tulipY,
         width: drawWidthPt,
         height: drawHeightPt,
       });

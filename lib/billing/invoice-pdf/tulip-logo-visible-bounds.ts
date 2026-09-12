@@ -12,10 +12,12 @@ export type TulipVisibleContentBoundsPx = {
   contentHeightPx: number;
 };
 
-/** PO target for legible Tulip identity on A4 (visible artwork, not square canvas). */
+/** PO target visible height on A4 (SWISS-01E4C3 optical balance with SCE). */
+export const TULIP_VISIBLE_TARGET_HEIGHT_MM = 5.25;
+export const TULIP_VISIBLE_MIN_HEIGHT_MM = 5;
+export const TULIP_VISIBLE_MAX_HEIGHT_MM = 5.5;
+/** @deprecated Width-led sizing rejected in 01E4C3 — use height target. */
 export const TULIP_VISIBLE_TARGET_WIDTH_MM = 25;
-export const TULIP_VISIBLE_MIN_WIDTH_MM = 22;
-export const TULIP_VISIBLE_MAX_WIDTH_MM = 28;
 
 let cachedBounds: TulipVisibleContentBoundsPx | null = null;
 
@@ -85,12 +87,12 @@ export function tulipVisiblePaddingDetected(bounds = readTulipVisibleContentBoun
 }
 
 export function computeTulipVisibleDrawSizeMm(
-  targetVisibleWidthMm = TULIP_VISIBLE_TARGET_WIDTH_MM,
   bounds = readTulipVisibleContentBoundsPx(),
+  targetVisibleHeightMm = TULIP_VISIBLE_TARGET_HEIGHT_MM,
 ): { visibleWidthMm: number; visibleHeightMm: number; contentAspectRatio: number } {
   const contentAspectRatio = bounds.contentWidthPx / bounds.contentHeightPx;
-  const visibleWidthMm = targetVisibleWidthMm;
-  const visibleHeightMm = visibleWidthMm / contentAspectRatio;
+  const visibleHeightMm = targetVisibleHeightMm;
+  const visibleWidthMm = visibleHeightMm * contentAspectRatio;
   return { visibleWidthMm, visibleHeightMm, contentAspectRatio };
 }
 

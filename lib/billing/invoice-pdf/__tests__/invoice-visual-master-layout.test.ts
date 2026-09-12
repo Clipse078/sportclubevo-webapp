@@ -4,8 +4,6 @@ import { describe, expect, it } from "vitest";
 import { buildFixturePdfDocumentData } from "./invoice-pdf-fixtures";
 import {
   CREATIVE_AREA_HEIGHT_MM,
-  HEADER_ARTWORK_DRAW_X_MM,
-  HEADER_ARTWORK_DRAW_WIDTH_MM,
   HEADER_HEIGHT_MM,
   HEADER_LOGO_WIDTH_MM,
   FOOTER_SCE_LOGO_HEIGHT_MM,
@@ -17,8 +15,7 @@ import {
   paymentBreathingRoomMm,
   TITLE_TOP_Y_MM,
 } from "../invoice-design-geometry";
-import { TULIP_VISIBLE_TARGET_WIDTH_MM } from "../tulip-logo-visible-bounds";
-import { INVOICE_HEADER_JPG_PATH } from "../constants";
+import { TULIP_VISIBLE_TARGET_HEIGHT_MM } from "../tulip-logo-visible-bounds";
 
 function regionById(plan: ReturnType<typeof planInvoiceBodyLayoutRegions>, id: string) {
   const region = plan.regions.find((entry) => entry.id === id);
@@ -26,7 +23,7 @@ function regionById(plan: ReturnType<typeof planInvoiceBodyLayoutRegions>, id: s
   return region!;
 }
 
-describe("invoice visual master layout (SWISS-01E4C)", () => {
+describe("invoice visual master layout (SWISS-01E4C3)", () => {
   it("uses compact 21 mm header and 14 mm body margins", () => {
     expect(HEADER_HEIGHT_MM).toBe(21);
     expect(PAGE_MARGIN_X_MM).toBe(14);
@@ -34,11 +31,9 @@ describe("invoice visual master layout (SWISS-01E4C)", () => {
     expect(regionById(plan, "header_bar").heightMm).toBe(21);
   });
 
-  it("places header artwork on the far-right only", () => {
-    const artwork = regionById(planInvoiceBodyLayoutRegions(buildFixturePdfDocumentData()), "header_jpg_artwork");
-    expect(artwork.xMm).toBeCloseTo(HEADER_ARTWORK_DRAW_X_MM, 0);
-    expect(artwork.widthMm).toBeCloseTo(HEADER_ARTWORK_DRAW_WIDTH_MM, 0);
-    expect(artwork.heightMm).toBeCloseTo(HEADER_HEIGHT_MM, 0);
+  it("does not plan header artwork region (clean navy header)", () => {
+    const plan = planInvoiceBodyLayoutRegions(buildFixturePdfDocumentData());
+    expect(plan.regions.some((entry) => entry.id === "header_jpg_artwork")).toBe(false);
   });
 
   it("keeps operator branding above payment boundary with breathing room", () => {
@@ -57,16 +52,11 @@ describe("invoice visual master layout (SWISS-01E4C)", () => {
     expect(title.yMm).toBeCloseTo(TITLE_TOP_Y_MM, 0);
   });
 
-  it("uses visible-content Tulip width target in operator row", () => {
+  it("uses balanced Tulip visible height in operator row", () => {
     const plan = planInvoiceBodyLayoutRegions(buildFixturePdfDocumentData());
     const tulip = regionById(plan, "operator_branding_tulip");
-    expect(tulip.widthMm).toBeCloseTo(TULIP_VISIBLE_TARGET_WIDTH_MM, 0);
-    expect(tulip.heightMm).toBeGreaterThan(FOOTER_SCE_LOGO_HEIGHT_MM);
-  });
-
-  it("requires genuine invoice.jpg at canonical repo path", () => {
-    const absolute = path.join(process.cwd(), INVOICE_HEADER_JPG_PATH);
-    expect(existsSync(absolute)).toBe(true);
+    expect(tulip.heightMm).toBeCloseTo(TULIP_VISIBLE_TARGET_HEIGHT_MM, 2);
+    expect(tulip.heightMm).toBeLessThanOrEqual(FOOTER_SCE_LOGO_HEIGHT_MM + 0.5);
   });
 
   it("uses width-led SCE header logo target", () => {

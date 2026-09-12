@@ -19,13 +19,12 @@ import {
   A4_WIDTH_MM,
   SWISS_PAYMENT_SECTION_HEIGHT_MM,
 } from "../lib/billing/invoice-pdf/constants";
+import { planInvoiceCreativeLayout } from "../lib/billing/invoice-pdf/invoice-creative-layout-planner";
 import {
   CREATIVE_AREA_HEIGHT_MM,
   HEADER_HEIGHT_MM,
   IDENTITY_TOP_Y_MM,
-  METADATA_STACK_TOP_Y_MM,
   PAGE_MARGIN_X_MM,
-  THANK_YOU_TOP_Y_MM,
   TITLE_TOP_Y_MM,
   computeOperatorBrandRowLayoutMm,
   planInvoiceBodyLayoutRegions,
@@ -126,6 +125,14 @@ async function main() {
   });
 
   const plan = planInvoiceBodyLayoutRegions(buildFixturePdfDocumentData());
+  const creative = planInvoiceCreativeLayout(buildFixturePdfDocumentData());
+  const region = (id: string) => {
+    const entry = creative.regions.find((r) => r.id === id);
+    if (!entry) {
+      throw new Error(`Missing creative region ${id}`);
+    }
+    return entry;
+  };
   const cropRegion = async (regionId: string, filename: string, padMm = 1) => {
     const region = plan.regions.find((entry) => entry.id === regionId);
     if (!region) {
@@ -139,55 +146,69 @@ async function main() {
     });
   };
 
-  await cropPng(fullPng, path.join(ARTIFACT_DIR, "swiss-01e4c-header-crop.png"), {
+  await cropPng(fullPng, path.join(ARTIFACT_DIR, "swiss-01e4c-header-clean-crop.png"), {
     x: 0,
     y: 0,
     width: pageWidthPx,
-    height: mmToPx(HEADER_HEIGHT_MM + 2, DPI),
+    height: mmToPx(HEADER_HEIGHT_MM + 1, DPI),
   });
 
-  await cropRegion("invoice_number_hero", "swiss-01e4c-invoice-identity-crop.png", 2);
-  await cropRegion("title", "swiss-01e4c-title-crop.png", 2);
   await cropPng(fullPng, path.join(ARTIFACT_DIR, "swiss-01e4c-title-metadata-crop.png"), {
     x: mmToPx(PAGE_MARGIN_X_MM - 2, DPI),
     y: mmToPx(Math.min(TITLE_TOP_Y_MM, IDENTITY_TOP_Y_MM) - 2, DPI),
     width: mmToPx(A4_WIDTH_MM - PAGE_MARGIN_X_MM + 4, DPI),
+    height: mmToPx(region("metadata_block").bottomYMm - Math.min(TITLE_TOP_Y_MM, IDENTITY_TOP_Y_MM) + 4, DPI),
+  });
+  await cropRegion("metadata_block", "swiss-01e4c-metadata-detail-crop.png", 2);
+
+  await cropPng(fullPng, path.join(ARTIFACT_DIR, "swiss-01e4c-recipient-issuer-crop.png"), {
+    x: mmToPx(PAGE_MARGIN_X_MM - 3, DPI),
+    y: mmToPx(region("address_labels").yMm - 2, DPI),
+    width: mmToPx(A4_WIDTH_MM - PAGE_MARGIN_X_MM * 2 + 6, DPI),
     height: mmToPx(
-      plan.regions.find((entry) => entry.id === "metadata_block")!.yMm +
-        plan.regions.find((entry) => entry.id === "metadata_block")!.heightMm -
-        Math.min(TITLE_TOP_Y_MM, IDENTITY_TOP_Y_MM) +
+      Math.max(region("recipient_block").bottomYMm, region("issuer_block").bottomYMm) -
+        region("address_labels").yMm +
         4,
       DPI,
     ),
   });
-  await cropRegion("metadata_block", "swiss-01e4c-metadata-crop.png", 1.5);
-  await cropRegion("recipient_block", "swiss-01e4c-addresses-crop.png", 3);
-  await cropRegion("line_items_table", "swiss-01e4c-table-crop.png", 2);
-  await cropRegion("totals_block", "swiss-01e4c-totals-crop.png", 2);
+
+  const issuerBottom = region("issuer_block").bottomYMm;
+  const tableTop = region("line_items_table").yMm;
+  await cropPng(fullPng, path.join(ARTIFACT_DIR, "swiss-01e4c-issuer-table-gap-crop.png"), {
+    x: mmToPx(PAGE_MARGIN_X_MM + (A4_WIDTH_MM - PAGE_MARGIN_X_MM * 2) / 2 - 10, DPI),
+    y: mmToPx(issuerBottom - 2, DPI),
+    width: mmToPx(A4_WIDTH_MM - PAGE_MARGIN_X_MM * 2, DPI),
+    height: mmToPx(tableTop - issuerBottom + 6, DPI),
+  });
+
   await cropPng(fullPng, path.join(ARTIFACT_DIR, "swiss-01e4c-table-totals-crop.png"), {
     x: mmToPx(PAGE_MARGIN_X_MM - 2, DPI),
-    y: mmToPx(
-      plan.regions.find((entry) => entry.id === "line_items_table")!.yMm - 2,
-      DPI,
-    ),
+    y: mmToPx(region("line_items_table").yMm - 2, DPI),
     width: mmToPx(A4_WIDTH_MM - PAGE_MARGIN_X_MM * 2 + 4, DPI),
     height: mmToPx(
-      plan.regions.find((entry) => entry.id === "totals_block")!.yMm +
-        plan.regions.find((entry) => entry.id === "totals_block")!.heightMm -
-        plan.regions.find((entry) => entry.id === "line_items_table")!.yMm +
-        4,
+      region("totals_block").bottomYMm - region("line_items_table").yMm + 4,
       DPI,
     ),
   });
-  await cropRegion("operator_brand_row", "swiss-01e4c-thankyou-brand-crop.png", 8);
-  const brandRow = computeOperatorBrandRowLayoutMm();
-  await cropPng(fullPng, path.join(ARTIFACT_DIR, "swiss-01e4c-thankyou-operator-row-crop.png"), {
-    x: mmToPx(PAGE_MARGIN_X_MM - 4, DPI),
-    y: mmToPx(THANK_YOU_TOP_Y_MM - 3, DPI),
-    width: mmToPx(A4_WIDTH_MM - PAGE_MARGIN_X_MM * 2 + 8, DPI),
-    height: mmToPx(brandRow.rowBottomYMm - THANK_YOU_TOP_Y_MM + 6, DPI),
+
+  await cropPng(fullPng, path.join(ARTIFACT_DIR, "swiss-01e4c-totals-thankyou-crop.png"), {
+    x: mmToPx(PAGE_MARGIN_X_MM - 2, DPI),
+    y: mmToPx(region("totals_block").yMm - 2, DPI),
+    width: mmToPx(A4_WIDTH_MM - PAGE_MARGIN_X_MM * 2 + 4, DPI),
+    height: mmToPx(region("acknowledgement").bottomYMm - region("totals_block").yMm + 4, DPI),
   });
-  await cropRegion("operator_branding_tulip", "swiss-01e4c-tulip-logo-crop.png", 6);
+
+  const brandRow = computeOperatorBrandRowLayoutMm();
+  await cropPng(fullPng, path.join(ARTIFACT_DIR, "swiss-01e4c-thankyou-brand-row-crop.png"), {
+    x: mmToPx(PAGE_MARGIN_X_MM - 4, DPI),
+    y: mmToPx(region("acknowledgement").yMm - 3, DPI),
+    width: mmToPx(A4_WIDTH_MM - PAGE_MARGIN_X_MM * 2 + 8, DPI),
+    height: mmToPx(brandRow.rowBottomYMm - region("acknowledgement").yMm + 6, DPI),
+  });
+
+  await cropRegion("operator_brand_row", "swiss-01e4c-brand-row-detail-crop.png", 5);
+  await cropRegion("operator_branding_tulip", "swiss-01e4c-tulip-logo-crop.png", 8);
 
   await writeFile(
     path.join(ARTIFACT_DIR, "swiss-01e4c-geometry-regions.json"),
