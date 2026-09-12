@@ -634,31 +634,31 @@ model Tenant {
   // Non-destructive: existing tenants receive defaults automatically without migration data.
   websiteDesignSystem Json?
 
-  registrations           Registration[]
-  users                   User[]
-  events                  Event[]
-  teams                   Team[]
-  facilities              Facility[]
-  facilityResources       FacilityResource[]
-  wochenplanPublications  WochenplanPublication[]
+  registrations             Registration[]
+  users                     User[]
+  events                    Event[]
+  teams                     Team[]
+  facilities                Facility[]
+  facilityResources         FacilityResource[]
+  wochenplanPublications    WochenplanPublication[]
   // WOCHENPLAN-2.0-01B: tenant-defined named Wochenplan variants + sparse
   // per-event allocation overrides for alternative plans.
-  wochenplanPlans         WochenplanPlan[]
+  wochenplanPlans           WochenplanPlan[]
   wochenplanPlanAllocations WochenplanPlanAllocation[]
-  newsArticles            NewsArticle[]
-  mediaAssets             MediaAsset[]
-  mediaFolders            MediaFolder[]
-  mediaTags               MediaTag[]
-  mediaAssetTags          MediaAssetTag[]
-  mediaAssetUsages        MediaAssetUsage[]
-  newsArticleMedia        NewsArticleMedia[]
-  websitePages            WebsitePage[]
-  websitePageSections     WebsitePageSection[]
-  homepageSections        HomepageSection[]
-  websiteNavItems         WebsiteNavItem[]
-  contentRevisions        ContentRevision[]
-  reusableComponents      ReusableComponent[]
-  reusableComponentUsages ReusableComponentUsage[]
+  newsArticles              NewsArticle[]
+  mediaAssets               MediaAsset[]
+  mediaFolders              MediaFolder[]
+  mediaTags                 MediaTag[]
+  mediaAssetTags            MediaAssetTag[]
+  mediaAssetUsages          MediaAssetUsage[]
+  newsArticleMedia          NewsArticleMedia[]
+  websitePages              WebsitePage[]
+  websitePageSections       WebsitePageSection[]
+  homepageSections          HomepageSection[]
+  websiteNavItems           WebsiteNavItem[]
+  contentRevisions          ContentRevision[]
+  reusableComponents        ReusableComponent[]
+  reusableComponentUsages   ReusableComponentUsage[]
 
   // Workspace
   workspaceFolders          WorkspaceFolder[]
@@ -830,12 +830,12 @@ model User {
   assessorAssessments DevelopmentAssessment[] @relation("AssessorDevelopmentAssessments")
 
   // REG-WAIT-01: waiting list back-relations (three distinct roles)
-  responsibleWaitingListEntries WaitingListEntry[] @relation("WaitingListEntryResponsibleUser")
-  addedWaitingListEntries       WaitingListEntry[] @relation("WaitingListEntryAddedByUser")
-  resolvedWaitingListEntries    WaitingListEntry[] @relation("WaitingListEntryResolvedByUser")
+  responsibleWaitingListEntries   WaitingListEntry[]      @relation("WaitingListEntryResponsibleUser")
+  addedWaitingListEntries         WaitingListEntry[]      @relation("WaitingListEntryAddedByUser")
+  resolvedWaitingListEntries      WaitingListEntry[]      @relation("WaitingListEntryResolvedByUser")
   // TEAM-COCKPIT-02B: attendance audit back-relations
-  recordedAttendanceRecords     AttendanceRecord[] @relation("AttendanceRecordedByUser")
-  updatedAttendanceRecords      AttendanceRecord[] @relation("AttendanceUpdatedByUser")
+  recordedAttendanceRecords       AttendanceRecord[]      @relation("AttendanceRecordedByUser")
+  updatedAttendanceRecords        AttendanceRecord[]      @relation("AttendanceUpdatedByUser")
   // TEAM-COCKPIT-03A: participation response audit back-relations
   respondedParticipationResponses ParticipationResponse[] @relation("ParticipationRespondedByUser")
   updatedParticipationResponses   ParticipationResponse[] @relation("ParticipationUpdatedByUser")
@@ -1788,7 +1788,7 @@ model TeamSeason {
   // TEAM-COCKPIT-03A: roster-context participation responses for this TeamSeason
   participationResponses ParticipationResponse[] @relation("TeamSeasonParticipationResponses")
   // TEAM-PUBLIC-NEXT-EVENT-01A: canonical owning TeamSeason for tournament Events.
-  tournamentEvents        Event[]                 @relation("TournamentTeamSeason")
+  tournamentEvents       Event[]                 @relation("TournamentTeamSeason")
 
   @@unique([teamId, seasonId])
   @@index([seasonId])
@@ -1897,18 +1897,18 @@ model TrainerTeamMember {
 }
 
 model Event {
-  id       String      @id @default(cuid())
+  id           String      @id @default(cuid())
   /// Nullable since ADMIN-DELETE-SEASON-01-C1: Season deletion sets this to
   /// null rather than cascade-deleting canonical Event/Match/Tournament records.
-  seasonId String?
-  teamId   String?
+  seasonId     String?
+  teamId       String?
   /// Canonical seasonal owner for TOURNAMENT Events. Nullable for legacy,
   /// non-tournament, and legitimately teamless events. Event.teamId remains
   /// compatibility-only until a later explicit consumer migration.
   teamSeasonId String?
-  type     EventType
-  source   EventSource
-  status   EventStatus @default(SCHEDULED)
+  type         EventType
+  source       EventSource
+  status       EventStatus @default(SCHEDULED)
 
   reviewStage       ReviewWorkflowStage @default(DRAFT)
   reviewRequestedAt DateTime?
@@ -2116,8 +2116,8 @@ model Initiative {
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
-  @@index([tenantId])
   @@unique([tenantId, slug])
+  @@index([tenantId])
   @@index([status])
   @@index([reviewStage])
   @@index([dueDate])
@@ -2174,8 +2174,8 @@ model Meeting {
   participants MeetingParticipant[]
   tenant       Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
-  @@index([tenantId])
   @@unique([tenantId, slug])
+  @@index([tenantId])
   @@index([meetingDate])
   @@index([status])
   @@index([reviewStage])
@@ -2876,7 +2876,7 @@ model WochenplanPlan {
   updatedAt    DateTime  @updatedAt
   archivedAt   DateTime?
 
-  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tenant           Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   allocations      WochenplanPlanAllocation[]
   /// WOCHENPLAN-2.0-01E — week-scoped concrete plans linked to this definition.
   weekplannerPlans WeekplannerPlan[]
@@ -4180,35 +4180,35 @@ model BillingProfile {
 
 /// Payment recipient configuration for a legal entity (bank-neutral).
 model BillingBankAccount {
-  id                    String                   @id @default(cuid())
-  legalEntityId         String
-  label                 String
-  bankName              String?
-  currency              String                   @default("CHF")
-  ibanEncrypted         String
-  qrIbanEncrypted       String?
+  id                   String                   @id @default(cuid())
+  legalEntityId        String
+  label                String
+  bankName             String?
+  currency             String                   @default("CHF")
+  ibanEncrypted        String
+  qrIbanEncrypted      String?
   /// HMAC fingerprint of normalized IBAN (scoped per legal entity at query time).
-  ibanFingerprint       String?
+  ibanFingerprint      String?
   /// HMAC fingerprint of normalized QR-IBAN when configured.
-  qrIbanFingerprint     String?
-  encryptionKeyVersion  Int                      @default(1)
-  referenceStrategy     BillingReferenceStrategy @default(NON)
+  qrIbanFingerprint    String?
+  encryptionKeyVersion Int                      @default(1)
+  referenceStrategy    BillingReferenceStrategy @default(NON)
   /// Optional numeric QRR prefix (bank-specific); part of the 26-digit QRR body before check digit.
-  qrrReferencePrefix  String?
-  creditorName          String
-  creditorAddressLine1  String
-  creditorHouseNumber   String?
-  creditorPostalCode    String
-  creditorCity          String
-  creditorCountryCode   String
-  activeFrom            DateTime                 @default(now())
-  activeUntil           DateTime?
-  isDefault             Boolean                  @default(false)
-  createdAt             DateTime                 @default(now())
-  updatedAt             DateTime                 @updatedAt
+  qrrReferencePrefix   String?
+  creditorName         String
+  creditorAddressLine1 String
+  creditorHouseNumber  String?
+  creditorPostalCode   String
+  creditorCity         String
+  creditorCountryCode  String
+  activeFrom           DateTime                 @default(now())
+  activeUntil          DateTime?
+  isDefault            Boolean                  @default(false)
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
 
-  legalEntity          LegalEntity                 @relation(fields: [legalEntityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  paymentInstructions  InvoicePaymentInstruction[]
+  legalEntity         LegalEntity                 @relation(fields: [legalEntityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  paymentInstructions InvoicePaymentInstruction[]
 
   @@index([legalEntityId])
   @@index([legalEntityId, ibanFingerprint])
@@ -4223,15 +4223,15 @@ enum BillingProductStatus {
 
 /// Small SCE commercial catalogue (decoupled from invoice engine pricing).
 model BillingProduct {
-  id                        String               @id @default(cuid())
-  key                       String               @unique
-  name                      String
-  description               String?
-  catalogueMonthlyNetMinor    Int?
-  status                    BillingProductStatus @default(ACTIVE)
-  sortOrder                 Int                  @default(0)
-  createdAt                 DateTime             @default(now())
-  updatedAt                 DateTime             @updatedAt
+  id                       String               @id @default(cuid())
+  key                      String               @unique
+  name                     String
+  description              String?
+  catalogueMonthlyNetMinor Int?
+  status                   BillingProductStatus @default(ACTIVE)
+  sortOrder                Int                  @default(0)
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
 
   contracts BillingContract[]
 }
@@ -4303,36 +4303,37 @@ enum InvoicePaymentMethod {
 }
 
 model Invoice {
-  id                 String        @id @default(cuid())
-  key                String        @unique
-  invoiceNumber      String?
-  legalEntityId      String
-  billingCustomerId  String
-  billingContractId  String?
-  status             InvoiceStatus @default(DRAFT)
-  currency           String        @default("CHF")
-  periodStart        DateTime      @db.Date
-  periodEnd          DateTime      @db.Date
-  invoiceDate        DateTime?     @db.Date
-  dueDate            DateTime?     @db.Date
-  paymentTermsDays   Int?
-  netTotalMinor      Int           @default(0)
-  vatTotalMinor      Int           @default(0)
-  grossTotalMinor    Int           @default(0)
-  contractLabel      String?
-  finalizedAt        DateTime?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  id                String        @id @default(cuid())
+  key               String        @unique
+  invoiceNumber     String?
+  legalEntityId     String
+  billingCustomerId String
+  billingContractId String?
+  status            InvoiceStatus @default(DRAFT)
+  currency          String        @default("CHF")
+  periodStart       DateTime      @db.Date
+  periodEnd         DateTime      @db.Date
+  invoiceDate       DateTime?     @db.Date
+  dueDate           DateTime?     @db.Date
+  paymentTermsDays  Int?
+  netTotalMinor     Int           @default(0)
+  vatTotalMinor     Int           @default(0)
+  grossTotalMinor   Int           @default(0)
+  contractLabel     String?
+  finalizedAt       DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   legalEntity     LegalEntity      @relation(fields: [legalEntityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   billingCustomer BillingCustomer  @relation(fields: [billingCustomerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   billingContract BillingContract? @relation(fields: [billingContractId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
-  lines             InvoiceLine[]
-  taxSnapshots      InvoiceTaxSnapshot[]
-  issuerSnapshot    InvoiceIssuerSnapshot?
-  recipientSnapshot InvoiceRecipientSnapshot?
+  lines              InvoiceLine[]
+  taxSnapshots       InvoiceTaxSnapshot[]
+  issuerSnapshot     InvoiceIssuerSnapshot?
+  recipientSnapshot  InvoiceRecipientSnapshot?
   paymentInstruction InvoicePaymentInstruction?
+  deliveries         InvoiceDelivery[]
 
   @@unique([legalEntityId, invoiceNumber])
   @@index([billingCustomerId])
@@ -4376,19 +4377,19 @@ model InvoiceTaxSnapshot {
 }
 
 model InvoiceIssuerSnapshot {
-  id              String   @id @default(cuid())
-  invoiceId       String   @unique
-  legalName       String
-  displayName     String
-  uid             String?
-  vatId           String?
-  addressLine1    String
-  houseNumber     String?
-  postalCode      String
-  city            String
-  countryCode     String
-  currency        String
-  createdAt       DateTime @default(now())
+  id           String   @id @default(cuid())
+  invoiceId    String   @unique
+  legalName    String
+  displayName  String
+  uid          String?
+  vatId        String?
+  addressLine1 String
+  houseNumber  String?
+  postalCode   String
+  city         String
+  countryCode  String
+  currency     String
+  createdAt    DateTime @default(now())
 
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
@@ -4410,17 +4411,17 @@ model InvoiceRecipientSnapshot {
 
 /// Immutable Swiss QR payment instruction for a finalized native invoice.
 model InvoicePaymentInstruction {
-  id                    String               @id @default(cuid())
-  invoiceId             String               @unique
+  id                    String                   @id @default(cuid())
+  invoiceId             String                   @unique
   billingBankAccountId  String
-  paymentMethod         InvoicePaymentMethod @default(BANK_TRANSFER_SWISS_QR)
+  paymentMethod         InvoicePaymentMethod     @default(BANK_TRANSFER_SWISS_QR)
   referenceType         BillingReferenceStrategy
   reference             String?
   amountMinor           Int
   currency              String
   creditorAccountMasked String
   additionalInformation String?
-  createdAt             DateTime             @default(now())
+  createdAt             DateTime                 @default(now())
 
   invoice            Invoice            @relation(fields: [invoiceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   billingBankAccount BillingBankAccount @relation(fields: [billingBankAccountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
@@ -4428,14 +4429,55 @@ model InvoicePaymentInstruction {
   @@index([billingBankAccountId])
 }
 
+enum InvoiceDeliveryChannel {
+  EMAIL
+}
+
+enum InvoiceDeliveryStatus {
+  PENDING
+  SENDING
+  SENT
+  FAILED
+}
+
+/// One row per outbound delivery attempt (email transport only; invoice financial state unchanged).
+model InvoiceDelivery {
+  id                  String                 @id @default(cuid())
+  key                 String                 @unique
+  invoiceId           String
+  channel             InvoiceDeliveryChannel @default(EMAIL)
+  recipientEmail      String
+  status              InvoiceDeliveryStatus  @default(PENDING)
+  attemptNumber       Int
+  sentAt              DateTime?
+  failedAt            DateTime?
+  provider            String?
+  providerMessageId   String?
+  errorCode           String?
+  errorMessage        String?
+  subjectSnapshot     String?
+  fromAddressSnapshot String?
+  replyToSnapshot     String?
+  attachmentFilename  String?
+  createdByUserId     String?
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([invoiceId, attemptNumber])
+  @@index([invoiceId, createdAt])
+  @@index([status])
+}
+
 /// Per legal entity, per calendar year — atomic invoice numbering on finalize.
 model InvoiceSequence {
-  id             String   @id @default(cuid())
-  legalEntityId  String
-  sequenceYear   Int
-  lastNumber     Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String   @id @default(cuid())
+  legalEntityId String
+  sequenceYear  Int
+  lastNumber    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   legalEntity LegalEntity @relation(fields: [legalEntityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
@@ -5240,20 +5282,20 @@ model TrainingSession {
   createdAt        DateTime              @default(now())
   updatedAt        DateTime              @updatedAt
 
-  tenant             Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  trainingSeries     TrainingSeries              @relation(fields: [trainingSeriesId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  teamSeason         TeamSeason                  @relation(fields: [teamSeasonId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tenant                 Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  trainingSeries         TrainingSeries              @relation(fields: [trainingSeriesId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  teamSeason             TeamSeason                  @relation(fields: [teamSeasonId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   /// TRAININGCENTER-02: occurrence-level resource allocation overrides.
   /// Presence of any row here for a given allocation group (Spielfeld/Halle
   /// or Garderobe — see lib/training/allocation-groups.ts) overrides that
   /// group's series-level TrainingAllocation rows for this occurrence only.
   /// Removing every override row for a group reverts that group back to
   /// the TrainingSeries default. See lib/training/session-allocation-service.ts.
-  sessionAllocations TrainingSessionAllocation[]
+  sessionAllocations     TrainingSessionAllocation[]
   // TEAM-COCKPIT-02B: per-player attendance for this training occurrence
-  attendanceRecords  AttendanceRecord[]          @relation("TrainingSessionAttendanceRecords")
+  attendanceRecords      AttendanceRecord[]          @relation("TrainingSessionAttendanceRecords")
   // TEAM-COCKPIT-03A: per-player participation for this training occurrence
-  participationResponses ParticipationResponse[] @relation("TrainingSessionParticipationResponses")
+  participationResponses ParticipationResponse[]     @relation("TrainingSessionParticipationResponses")
 
   /// Canonical rule: one generated session per series per date. Never duplicated.
   @@unique([trainingSeriesId, date])
@@ -5593,23 +5635,23 @@ enum WeekplannerAllocationGroup {
 //   - Tenant A cannot read or modify Tenant B's plans.
 // ---------------------------------------------------------------------------
 model WeekplannerPlan {
-  id              String    @id @default(cuid())
-  tenantId        String
+  id               String    @id @default(cuid())
+  tenantId         String
   /// Monday "YYYY-MM-DD" (Europe/Zurich) identifying the scoped week.
-  weekId          String
+  weekId           String
   /// Tenant-chosen, generic plan name (e.g. "Schlechtwetterplan").
-  name            String
+  name             String
   /// Best-effort audit trail of who created the plan. Not an authorization input.
-  createdByUserId String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdByUserId  String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
   /// Set when archived (soft delete). Null while active.
-  archivedAt      DateTime?
+  archivedAt       DateTime?
   /// WEEKPLANNER-01E — operationally active flag. At most one non-archived
   /// plan per (tenantId, weekId) may be true — see partial unique index in
   /// the migration SQL. False for every plan == Standardplan operationally
   /// active. Never true while archivedAt is set.
-  isActive        Boolean   @default(false)
+  isActive         Boolean   @default(false)
   /// WOCHENPLAN-2.0-01E — stable link to the tenant-level WochenplanPlan
   /// definition this concrete week plan materializes. Null for legacy or
   /// ad-hoc week plans not tied to a reusable definition. Human-readable
@@ -5659,28 +5701,28 @@ model WeekplannerPlan {
 //   - Tenant A cannot read or modify Tenant B's plan allocations.
 // ---------------------------------------------------------------------------
 model WeekplannerPlanAllocation {
-  id                 String                     @id @default(cuid())
-  tenantId           String
-  weekplannerPlanId  String
-  activityType       WeekplannerActivityType
+  id                     String                     @id @default(cuid())
+  tenantId               String
+  weekplannerPlanId      String
+  activityType           WeekplannerActivityType
   /// TrainingSession.id (TRAINING) or Event.id (MATCH/TOURNAMENT) — tenant-
   /// validated at the service layer, deliberately not a DB relation.
-  activityId         String
-  allocationGroup    WeekplannerAllocationGroup
+  activityId             String
+  allocationGroup        WeekplannerAllocationGroup
   /// TournamentParticipant.id for TOURNAMENT+DRESSING_ROOM overrides; `""`
   /// (empty-string sentinel) for every other combination — see doc comment.
-  participantId      String                     @default("")
-  facilityResourceId String
+  participantId          String                     @default("")
+  facilityResourceId     String
   /// Optional free-text note for this override.
-  notes              String?
+  notes                  String?
   /// Display position within this override group.
-  displayOrder       Int                        @default(0)
+  displayOrder           Int                        @default(0)
   /// WOCHENPLAN-2.0-01H-E2 — minutes reserved before effective event start.
-  occupancyBeforeMinutes Int                    @default(0)
+  occupancyBeforeMinutes Int                        @default(0)
   /// WOCHENPLAN-2.0-01H-E2 — minutes reserved after effective event end.
-  occupancyAfterMinutes  Int                    @default(0)
-  createdAt          DateTime                   @default(now())
-  updatedAt          DateTime                   @updatedAt
+  occupancyAfterMinutes  Int                        @default(0)
+  createdAt              DateTime                   @default(now())
+  updatedAt              DateTime                   @updatedAt
 
   tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   weekplannerPlan  WeekplannerPlan  @relation(fields: [weekplannerPlanId], references: [id], onDelete: Cascade, onUpdate: Cascade)
