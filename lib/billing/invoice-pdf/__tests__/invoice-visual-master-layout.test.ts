@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { PDFDocument } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 import { buildFixturePdfDocumentData } from "./invoice-pdf-fixtures";
 import {
@@ -18,6 +19,7 @@ import {
   SPORTCLUBEVO_HEADER_LOGO_PATH,
   TULIP_DIGITAL_LOGO_PATH,
 } from "../constants";
+import { embedLogoIfPresent } from "../render-swiss-payment-slip";
 
 function regionById(plan: ReturnType<typeof planInvoiceBodyLayoutRegions>, id: string) {
   const region = plan.regions.find((entry) => entry.id === id);
@@ -76,7 +78,22 @@ describe("invoice visual master layout (SWISS-01E4B)", () => {
   it("uses real SportClubEvo header/footer assets and canonical Tulip path", () => {
     expect(existsSync(path.join(process.cwd(), SPORTCLUBEVO_HEADER_LOGO_PATH))).toBe(true);
     expect(existsSync(path.join(process.cwd(), SPORTCLUBEVO_FOOTER_LOGO_PATH))).toBe(true);
-    expect(TULIP_DIGITAL_LOGO_PATH).toContain("Logo-730036c6-150f-4549-8e03-5ea1efb24084.png");
+    expect(existsSync(path.join(process.cwd(), TULIP_DIGITAL_LOGO_PATH))).toBe(true);
+  });
+
+  it("embeds genuine Tulip Digital logo with native aspect ratio", async () => {
+    const pdfDoc = await PDFDocument.create();
+    const tulip = await embedLogoIfPresent(pdfDoc, TULIP_DIGITAL_LOGO_PATH);
+    expect(tulip).toBeTruthy();
+    expect(tulip!.width / tulip!.height).toBeCloseTo(1, 1);
+  });
+
+  it("Tulip logo height is smaller than SCE footer logo height in geometry plan", () => {
+    const plan = planInvoiceBodyLayoutRegions(buildFixturePdfDocumentData());
+    const sce = regionById(plan, "operator_branding_sce");
+    const tulip = regionById(plan, "operator_branding_tulip");
+    expect(tulip.heightMm).toBeLessThan(sce.heightMm);
+    expect(tulip.xMm).toBeGreaterThan(sce.xMm + sce.widthMm);
   });
 
   it("places header logo at approved top offset", () => {

@@ -17,12 +17,8 @@ describe("invoice totals layout", () => {
 });
 
 describe("Tulip Digital branding asset", () => {
-  it("documents expected PO logo path for PDF footer branding", () => {
+  it("requires genuine PO Tulip logo at canonical path", () => {
     const absolute = path.join(process.cwd(), TULIP_DIGITAL_LOGO_PATH);
-    if (!existsSync(absolute)) {
-      expect(existsSync(absolute)).toBe(false);
-      return;
-    }
     expect(existsSync(absolute)).toBe(true);
   });
 });

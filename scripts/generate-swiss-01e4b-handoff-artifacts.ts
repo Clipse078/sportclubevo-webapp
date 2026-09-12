@@ -28,7 +28,8 @@ import { mmToPt } from "../lib/billing/invoice-pdf/mm";
 
 const execFileAsync = promisify(execFile);
 const ARTIFACT_DIR = "/opt/cursor/artifacts";
-const DPI = 220;
+/** High resolution for PO pixel review (SWISS-01E4B1). */
+const DPI = 300;
 
 async function generateFixturePdf(): Promise<string> {
   const spcPayload = buildSwissSpcPayload({
