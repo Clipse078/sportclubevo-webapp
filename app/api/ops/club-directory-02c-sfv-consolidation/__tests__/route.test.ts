@@ -35,7 +35,7 @@ vi.mock("@/lib/permissions/require-api-permission", () => ({
   requireApiPermission: mockRequireApiPermission,
 }));
 
-vi.mock("@/scripts/club-directory-02c-sfv-consolidation", () => ({
+vi.mock("@/lib/club-directory/sfv-consolidation-02c", () => ({
   resolveTenantContexts: mockResolveTenantContexts,
   loadTenantInventory: mockLoadTenantInventory,
   buildTenantPlan: mockBuildTenantPlan,
@@ -161,7 +161,7 @@ describe("route module shape", () => {
       resolve(process.cwd(), "app/api/ops/club-directory-02c-sfv-consolidation/route.ts"),
       "utf-8",
     );
-    expect(content).toContain("@/scripts/club-directory-02c-sfv-consolidation");
+    expect(content).toContain("@/lib/club-directory/sfv-consolidation-02c");
     expect(content).toContain("resolveTenantContexts");
     expect(content).toContain("loadTenantInventory");
     expect(content).toContain("buildTenantPlan");

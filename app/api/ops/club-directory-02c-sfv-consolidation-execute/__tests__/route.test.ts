@@ -29,7 +29,7 @@ vi.mock("@/lib/permissions/require-api-permission", () => ({
   requireApiPermission: mockRequireApiPermission,
 }));
 
-vi.mock("@/scripts/club-directory-02c-sfv-consolidation", () => ({
+vi.mock("@/lib/club-directory/sfv-consolidation-02c", () => ({
   resolveTenantContexts: mockResolveTenantContexts,
   resolveProviderClubIdIndex: mockResolveProviderClubIdIndex,
   loadTenantInventoryFromIndex: mockLoadTenantInventoryFromIndex,
@@ -237,7 +237,7 @@ describe("route module shape", () => {
       "utf-8",
     );
 
-    expect(content).toContain("@/scripts/club-directory-02c-sfv-consolidation");
+    expect(content).toContain("@/lib/club-directory/sfv-consolidation-02c");
     expect(content).toContain("resolveTenantContexts");
     expect(content).toContain("resolveProviderClubIdIndex");
     expect(content).toContain("loadTenantInventoryFromIndex");
