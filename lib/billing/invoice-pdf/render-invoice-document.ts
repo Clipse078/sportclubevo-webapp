@@ -15,7 +15,6 @@ import {
   ADDRESS_COLUMN_DIVIDER_WIDTH_MM,
   ADDRESS_GRID_BOTTOM_GAP_MM,
   ADDRESS_GRID_COLUMN_GAP_MM,
-  ADDRESS_LINE_STEP_MM,
   ADDRESS_SECTION_LABEL_STEP_MM,
   FOOTER_BRAND_DIVIDER_GAP_MM,
   FOOTER_BRAND_LOGO_GAP_MM,
@@ -74,6 +73,7 @@ import {
   formatBillingPeriodDisplay,
 } from "../native-billing-presentation";
 import { drawRightAlignedText, META_LABEL_COLOR } from "./pdf-text-layout";
+import { planAddressBlockLayout } from "./invoice-address-layout";
 import {
   TOTALS_GROSS_FONT_SIZE_PT,
   TOTALS_GROSS_HIGHLIGHT_HEIGHT_MM,
@@ -284,12 +284,6 @@ export async function drawInvoiceBody(
     color: color(INVOICE_PDF_BRAND.orange),
   });
 
-  const addressBodyTopMm = layoutPlan
-    ? layoutPlan.regions.find((entry) => entry.id === "recipient_block")!.yMm
-    : addressTopMm + ADDRESS_SECTION_LABEL_STEP_MM;
-  const addressLineStepMm = layoutPlan?.addressLineStepMm ?? ADDRESS_LINE_STEP_MM;
-  const addressLabelStepMm = layoutPlan?.addressLabelStepMm ?? ADDRESS_SECTION_LABEL_STEP_MM;
-  let addrY = pdfYFromPageTop(pageHeight, addressBodyTopMm);
   const recipientLines = [
     data.recipient.companyOrName,
     data.recipient.houseNumber
@@ -314,22 +308,41 @@ export async function drawInvoiceBody(
     issuerLines.push(`MWST-Nr.: ${data.issuer.vatId}`);
   }
 
-  for (const line of recipientLines) {
-    page.drawText(line, { x: leftX, y: addrY, size: 10, font, color: color(INVOICE_PDF_BRAND.text) });
-    addrY -= mmToPt(addressLineStepMm);
+  const tableTopMmForAddress =
+    layoutPlan?.regions.find((entry) => entry.id === "line_items_table")?.yMm ??
+    addressTopMm + ADDRESS_SECTION_LABEL_STEP_MM + 40;
+  const addressBlockLayout =
+    layoutPlan?.addressLayout ??
+    planAddressBlockLayout({
+      labelBaselineYm: addressTopMm,
+      labelToBodyGapMm: ADDRESS_SECTION_LABEL_STEP_MM,
+      recipientLineCount: recipientLines.length,
+      issuerLineCount: issuerLines.length,
+      maxIssuerInkBottomYm: tableTopMmForAddress - 7,
+    });
+
+  for (let index = 0; index < recipientLines.length; index++) {
+    const baselineMm = addressBlockLayout.recipient.baselinesYMm[index]!;
+    page.drawText(recipientLines[index]!, {
+      x: leftX,
+      y: pdfYFromPageTop(pageHeight, baselineMm),
+      size: addressBlockLayout.recipient.fontSizePt,
+      font,
+      color: color(INVOICE_PDF_BRAND.text),
+    });
   }
-  addrY = pdfYFromPageTop(pageHeight, addressBodyTopMm);
-  for (const line of issuerLines) {
-    page.drawText(line, { x: rightX, y: addrY, size: 10, font, color: color(INVOICE_PDF_BRAND.text) });
-    addrY -= mmToPt(addressLineStepMm);
+  for (let index = 0; index < issuerLines.length; index++) {
+    const baselineMm = addressBlockLayout.issuer.baselinesYMm[index]!;
+    page.drawText(issuerLines[index]!, {
+      x: rightX,
+      y: pdfYFromPageTop(pageHeight, baselineMm),
+      size: addressBlockLayout.issuer.fontSizePt,
+      font,
+      color: color(INVOICE_PDF_BRAND.text),
+    });
   }
 
-  const addressBlockBottomMm = layoutPlan
-    ? Math.max(
-        layoutPlan.regions.find((entry) => entry.id === "recipient_block")!.bottomYMm,
-        layoutPlan.regions.find((entry) => entry.id === "issuer_block")!.bottomYMm,
-      )
-    : addressBodyTopMm + Math.max(recipientLines.length, issuerLines.length) * ADDRESS_LINE_STEP_MM;
+  const addressBlockBottomMm = addressBlockLayout.sectionInkBottomYMm;
   const dividerX = leftX + colWidth + colGap / 2;
   page.drawLine({
     start: { x: dividerX, y: addressLabelY - mmToPt(1) },

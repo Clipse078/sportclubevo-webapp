@@ -6,7 +6,7 @@ import {
   METADATA_INTRA_GROUP_INK_GAP_MIN_MM,
   METADATA_INTRA_GROUP_INK_GAP_MM,
   METADATA_TO_ADDRESS_INK_GAP_MM,
-  ADDRESS_TO_TABLE_INK_GAP_MM,
+  ADDRESS_TO_TABLE_INK_GAP_MIN_MM,
   TABLE_TO_TOTALS_INK_GAP_MM,
   TOTALS_TO_THANKYOU_INK_GAP_MM,
   THANKYOU_TO_BRAND_INK_GAP_MM,
@@ -32,7 +32,7 @@ describe("invoice creative layout collisions (SWISS-01E4C3)", () => {
   it("enforces minimum gaps between major regions", () => {
     const plan = planInvoiceCreativeLayout(buildFixturePdfDocumentData());
     expect(plan.gaps.metadataToAddressesMm).toBeGreaterThanOrEqual(6);
-    expect(plan.gaps.addressesToTableMm).toBeGreaterThanOrEqual(ADDRESS_TO_TABLE_INK_GAP_MM - 0.5);
+    expect(plan.gaps.addressesToTableMm).toBeGreaterThanOrEqual(ADDRESS_TO_TABLE_INK_GAP_MIN_MM - 0.01);
     expect(plan.gaps.tableToTotalsMm).toBeGreaterThanOrEqual(TABLE_TO_TOTALS_INK_GAP_MM - 0.5);
     expect(plan.gaps.thankYouToBrandMm).toBeGreaterThanOrEqual(THANKYOU_TO_BRAND_INK_GAP_MM - 0.5);
     expect(plan.gaps.brandToSixMm).toBeGreaterThanOrEqual(MIN_PAYMENT_BREATHING_ROOM_MM);
@@ -41,10 +41,9 @@ describe("invoice creative layout collisions (SWISS-01E4C3)", () => {
   it("keeps issuer and recipient above the table", () => {
     const plan = planInvoiceCreativeLayout(buildFixturePdfDocumentData());
     const table = region(plan, "line_items_table");
-    const recipient = region(plan, "recipient_block");
-    const issuer = region(plan, "issuer_block");
-    expect(recipient.bottomYMm + ADDRESS_TO_TABLE_INK_GAP_MM - 0.01).toBeLessThanOrEqual(table.yMm);
-    expect(issuer.bottomYMm + ADDRESS_TO_TABLE_INK_GAP_MM - 0.01).toBeLessThanOrEqual(table.yMm);
+    expect(plan.addressLayout.sectionInkBottomYMm + ADDRESS_TO_TABLE_INK_GAP_MIN_MM - 0.01).toBeLessThanOrEqual(
+      table.yMm,
+    );
   });
 
   it("keeps metadata groups separated by ink gaps", () => {
