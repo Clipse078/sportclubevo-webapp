@@ -167,6 +167,13 @@ export async function drawSwissPaymentSlipOnPage(
     color: rgb(0.7, 0.7, 0.7),
     dashArray: [2, 2],
   });
+  page.drawSvgPath("M 0 0 L 4 6 L 0 12 M 8 0 L 4 6 L 8 12", {
+    x: sectionWidth - mmToPt(6),
+    y: sectionY + sectionHeight - mmToPt(2.5),
+    scale: mmToPt(0.35),
+    borderColor: rgb(0.55, 0.55, 0.55),
+    borderWidth: 0.6,
+  });
 
   page.drawLine({
     start: { x: metrics.receiptWidthPt, y: sectionY },
@@ -290,7 +297,7 @@ export async function drawSwissPaymentSlipOnPage(
   const qrPng = await renderSwissQrCodePng(input.spcPayload, SWISS_QR_RENDER_PIXEL_SIZE);
   const qrImage = await pdfDoc.embedPng(qrPng);
   const qrX = paymentPartX + mmToPt(5);
-  const qrY = sectionY + mmToPt(24);
+  const qrY = sectionY + (sectionHeight - metrics.qrSizePt) / 2 - mmToPt(4);
   page.drawImage(qrImage, {
     x: qrX,
     y: qrY,

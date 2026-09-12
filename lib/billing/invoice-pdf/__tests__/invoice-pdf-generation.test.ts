@@ -132,7 +132,19 @@ describe("invoice PDF generation (SWISS-01E)", () => {
     const data = await buildResolvedDocumentData();
     const result = await generateInvoicePdfFromDocumentData(data);
     expect(result.pdfBytes.byteLength).toBeGreaterThan(5000);
-    expect(result.pageCount).toBeGreaterThanOrEqual(1);
+    expect(result.pageCount).toBe(1);
+    expect(result.singlePageLayout).toBe(true);
+  });
+
+  it("one-line invoice uses single-page composition with payment slip attached", async () => {
+    const data = await buildResolvedDocumentData();
+    const result = await generateInvoicePdfFromDocumentData(data);
+    expect(result.pageCount).toBe(1);
+    expect(result.singlePageLayout).toBe(true);
+    const text = await extractPdfText(result.pdfBytes);
+    expect(text).toContain("Rechnung");
+    expect(text).toContain("Zahlteil");
+    expect(text).toContain("Empfangsschein");
   });
 
   it("rejects draft invoice PDF", async () => {

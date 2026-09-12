@@ -23,9 +23,9 @@ export async function generateInvoicePdfFromDocumentData(
   pdfDoc.setTitle(`Rechnung ${data.invoice.invoiceNumber ?? data.invoice.key}`);
   pdfDoc.setProducer("SportClubEvo Billing");
 
-  const singlePageLayout =
-    data.includeSwissPaymentSection &&
-    shouldUseSinglePageWithPayment(data.lines.length);
+  const singlePageLayout = data.includeSwissPaymentSection
+    ? shouldUseSinglePageWithPayment(data)
+    : true;
 
   const { lastPage } = await drawInvoiceBodyPaginated(
     pdfDoc,
