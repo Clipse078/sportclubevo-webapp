@@ -46,7 +46,11 @@ import {
   NativeBillingNotFoundError,
   NativeBillingValidationError,
 } from "./native-billing-types";
-import { assertSwissReferenceAccountCompatibility } from "./swiss-qr/swiss-reference-compat";
+import {
+  assertSwissReferenceAccountCompatibility,
+  SwissReferenceCompatError,
+} from "./swiss-qr/swiss-reference-compat";
+import { SwissIbanError } from "./swiss-qr/swiss-iban";
 import { buildQrrPayload26 } from "./swiss-qr/swiss-qrr";
 
 function normalizeIban(value: string): string {
@@ -92,6 +96,21 @@ function validateQrrPrefixFitsPayload(prefix: string | null): void {
     );
   } catch (error) {
     if (error instanceof Error) {
+      throw new NativeBillingValidationError(error.message);
+    }
+    throw error;
+  }
+}
+
+function assertBankAccountSwissRules(input: {
+  iban: string;
+  qrIban: string | null;
+  referenceStrategy: BillingBankAccountRecord["referenceStrategy"];
+}): void {
+  try {
+    assertSwissReferenceAccountCompatibility(input);
+  } catch (error) {
+    if (error instanceof SwissReferenceCompatError || error instanceof SwissIbanError) {
       throw new NativeBillingValidationError(error.message);
     }
     throw error;
@@ -633,7 +652,7 @@ export async function createBillingBankAccount(
   const referenceStrategy = input.referenceStrategy ?? "NON";
   const qrrReferencePrefix = parseQrrReferencePrefix(input.qrrReferencePrefix);
   validateQrrPrefixFitsPayload(qrrReferencePrefix);
-  assertSwissReferenceAccountCompatibility({
+  assertBankAccountSwissRules({
     iban,
     qrIban,
     referenceStrategy,
@@ -712,7 +731,7 @@ export async function updateBillingBankAccount(
       ? existing.qrrReferencePrefix
       : parseQrrReferencePrefix(input.qrrReferencePrefix);
   validateQrrPrefixFitsPayload(nextQrrPrefix);
-  assertSwissReferenceAccountCompatibility({
+  assertBankAccountSwissRules({
     iban: nextIban,
     qrIban: nextQrIban,
     referenceStrategy: nextReferenceStrategy,

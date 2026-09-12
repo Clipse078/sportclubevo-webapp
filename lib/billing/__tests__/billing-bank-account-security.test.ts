@@ -10,7 +10,7 @@ const sampleAccount: BillingBankAccountRecord = {
   bankName: null,
   currency: "CHF",
   iban: "CH9300762011623852957",
-  qrIban: "CH4431990123000889012",
+  qrIban: "CH0030049000000000049",
   referenceStrategy: "NON",
   qrrReferencePrefix: null,
   creditorName: "Issuer",
@@ -30,7 +30,7 @@ describe("billing bank account security surfaces", () => {
   it("masks API payloads", () => {
     const serialized = serializeBillingBankAccountMasked(sampleAccount);
     expect(serialized.ibanMasked).toBe("****2957");
-    expect(serialized.qrIbanMasked).toBe("****9012");
+    expect(serialized.qrIbanMasked).toBe("****0049");
     expect(JSON.stringify(serialized)).not.toContain("CH9300762011623852957");
     expect(serialized).not.toHaveProperty("iban");
   });

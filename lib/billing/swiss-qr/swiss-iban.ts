@@ -4,7 +4,8 @@ export class SwissIbanError extends Error {
   readonly name = "SwissIbanError";
 }
 
-const CH_LI_IBAN_PATTERN = /^(CH|LI)\d{19}$/;
+/** SIX CH/LI: 2 check digits + 5-digit IID + 12 alphanumeric account characters. */
+const CH_LI_IBAN_PATTERN = /^(CH|LI)\d{7}[A-Z0-9]{12}$/;
 
 /** Normalizes IBAN/QR-IBAN: uppercase, no spaces. */
 export function normalizeSwissIban(value: string): string {

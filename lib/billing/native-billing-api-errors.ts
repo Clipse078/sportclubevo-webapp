@@ -6,9 +6,14 @@ import {
   NativeBillingValidationError,
 } from "./native-billing-types";
 import { BillingFieldCryptoError } from "./billing-field-crypto";
+import { SwissIbanError } from "./swiss-qr/swiss-iban";
+import { SwissReferenceCompatError } from "./swiss-qr/swiss-reference-compat";
 
 export function nativeBillingErrorResponse(error: unknown): NextResponse {
   if (error instanceof NativeBillingValidationError) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+  if (error instanceof SwissIbanError || error instanceof SwissReferenceCompatError) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
   if (error instanceof NativeBillingNotFoundError) {
