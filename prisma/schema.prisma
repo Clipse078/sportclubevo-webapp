@@ -4481,6 +4481,7 @@ model InvoicePayment {
 
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
+  @@unique([bankTransactionId])
   @@index([invoiceId, paymentDate])
   @@index([invoiceId, status])
   @@index([status])

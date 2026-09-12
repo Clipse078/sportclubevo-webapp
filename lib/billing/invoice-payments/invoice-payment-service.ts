@@ -32,6 +32,7 @@ import {
 import type {
   InvoicePaymentRecord,
   InvoicePaymentSummary,
+  RecordCamt054InvoicePaymentInput,
   RecordInvoicePaymentInput,
   ReverseInvoicePaymentInput,
 } from "./invoice-payment-types";
@@ -376,6 +377,118 @@ export async function reverseInvoicePayment(
         currency: payment.currency,
         source: payment.source,
         reversalReason: reason,
+      },
+    });
+
+    return { payment, summary };
+  });
+}
+
+export async function recordCamt054InvoicePayment(
+  input: RecordCamt054InvoicePaymentInput,
+): Promise<{ payment: InvoicePaymentRecord; summary: InvoicePaymentSummary }> {
+  const invoice = await findInvoiceByKey(input.invoiceKey);
+  if (!invoice) {
+    throw new NativeBillingNotFoundError("Rechnung nicht gefunden.");
+  }
+  assertPayableInvoice(invoice);
+
+  if (!input.bankTransactionId.trim()) {
+    throw new NativeBillingValidationError("Banktransaktions-ID fehlt.");
+  }
+
+  const paymentDate = parsePaymentDate(input.paymentDate);
+  const currency = input.currency.trim().toUpperCase();
+  if (currency !== invoice.currency.toUpperCase()) {
+    throw new NativeBillingValidationError("Die Währung muss mit der Rechnungswährung übereinstimmen.");
+  }
+
+  const reference =
+    input.creditorReference != null && input.creditorReference.trim() !== ""
+      ? input.creditorReference.trim()
+      : null;
+  if (reference && reference.length > INVOICE_PAYMENT_REFERENCE_MAX_LENGTH) {
+    throw new NativeBillingValidationError("Referenz ist zu lang.");
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const locked = await lockInvoiceForPayment(tx, invoice.id);
+    assertPayableInvoice({ ...invoice, status: locked.status });
+
+    const paidBefore = await sumConfirmedPaymentsMinor(invoice.id, tx);
+    const outstanding = calculateOutstandingMinor(locked.grossTotalMinor, paidBefore);
+    if (outstanding <= 0) {
+      throw new NativeBillingConflictError("Die Rechnung ist bereits vollständig bezahlt.");
+    }
+    if (input.amountMinor > outstanding) {
+      throw new NativeBillingValidationError(PAYMENT_EXCEEDS_OUTSTANDING_MESSAGE, {
+        code: INVOICE_PAYMENT_ERROR_CODES.PAYMENT_EXCEEDS_OUTSTANDING,
+      });
+    }
+
+    const payment = await createInvoicePaymentRecord(
+      {
+        key: randomUUID(),
+        invoiceId: invoice.id,
+        amountMinor: input.amountMinor,
+        currency: invoice.currency,
+        paymentDate,
+        method: "BANK_TRANSFER_MANUAL",
+        reference,
+        note: "camt.054 Abgleich",
+        source: "CAMT054",
+        createdByUserId: input.actorUserId,
+        externalReference: input.externalReference,
+        bankTransactionId: input.bankTransactionId.trim(),
+      },
+      tx,
+    );
+
+    const paidAfter = paidBefore + input.amountMinor;
+    const nextStatus = recalculateInvoicePaymentStatus(
+      locked.grossTotalMinor,
+      paidAfter,
+      locked.status,
+    );
+    await tx.invoice.update({
+      where: { id: invoice.id },
+      data: { status: nextStatus },
+    });
+
+    const payments = await tx.invoicePayment.findMany({
+      where: { invoiceId: invoice.id },
+      orderBy: [{ paymentDate: "asc" }, { createdAt: "asc" }],
+    });
+    const summary = calculateInvoicePaymentSummaryFromParts({
+      invoice: { ...invoice, status: nextStatus },
+      payments: payments.map((p) => ({
+        ...p,
+        method: "BANK_TRANSFER_MANUAL" as const,
+        source: p.source as InvoicePaymentRecord["source"],
+        status: p.status as InvoicePaymentRecord["status"],
+      })),
+    });
+
+    void logAction({
+      actorUserId: input.actorUserId,
+      moduleKey: NATIVE_BILLING_AUDIT_MODULE,
+      entityType: "InvoicePayment",
+      entityId: payment.id,
+      action: NATIVE_BILLING_AUDIT_ACTIONS.INVOICE_PAYMENT_RECORDED,
+      afterJson: {
+        invoiceId: invoice.id,
+        invoiceKey: invoice.key,
+        invoiceNumber: invoice.invoiceNumber,
+        paymentId: payment.id,
+        paymentKey: payment.key,
+        amountMinor: payment.amountMinor,
+        currency: payment.currency,
+        paymentDate: paymentDate.toISOString().slice(0, 10),
+        method: payment.method,
+        source: payment.source,
+        reference: payment.reference,
+        bankTransactionId: payment.bankTransactionId,
+        externalReference: payment.externalReference,
       },
     });
 

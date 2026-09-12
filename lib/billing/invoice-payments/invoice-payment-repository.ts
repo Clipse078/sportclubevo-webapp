@@ -67,19 +67,23 @@ export async function sumConfirmedPaymentsMinor(
   return agg._sum.amountMinor ?? 0;
 }
 
+export type CreateInvoicePaymentRecordInput = {
+  key: string;
+  invoiceId: string;
+  amountMinor: number;
+  currency: string;
+  paymentDate: Date;
+  method: "BANK_TRANSFER_MANUAL";
+  reference: string | null;
+  note: string | null;
+  source: InvoicePaymentRecord["source"];
+  createdByUserId: string | null;
+  externalReference?: string | null;
+  bankTransactionId?: string | null;
+};
+
 export async function createInvoicePaymentRecord(
-  input: {
-    key: string;
-    invoiceId: string;
-    amountMinor: number;
-    currency: string;
-    paymentDate: Date;
-    method: "BANK_TRANSFER_MANUAL";
-    reference: string | null;
-    note: string | null;
-    source: "MANUAL";
-    createdByUserId: string;
-  },
+  input: CreateInvoicePaymentRecordInput,
   tx: Prisma.TransactionClient = prisma,
 ): Promise<InvoicePaymentRecord> {
   const row = await tx.invoicePayment.create({
@@ -95,10 +99,25 @@ export async function createInvoicePaymentRecord(
       source: input.source,
       status: "CONFIRMED",
       createdByUserId: input.createdByUserId,
+      externalReference: input.externalReference ?? null,
+      bankTransactionId: input.bankTransactionId ?? null,
     },
     select: paymentSelect,
   });
   return mapPayment(row);
+}
+
+export async function findConfirmedPaymentByBankTransactionId(
+  bankTransactionId: string,
+): Promise<InvoicePaymentRecord | null> {
+  const row = await prisma.invoicePayment.findFirst({
+    where: {
+      bankTransactionId,
+      status: "CONFIRMED",
+    },
+    select: paymentSelect,
+  });
+  return row ? mapPayment(row) : null;
 }
 
 export async function markInvoicePaymentReversed(
