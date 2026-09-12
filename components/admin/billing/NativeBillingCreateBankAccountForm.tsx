@@ -9,6 +9,16 @@ type Props = {
   legalEntities: LegalEntityOption[];
 };
 
+function clientSafeBankAccountFormError(error: unknown): string {
+  if (error instanceof Error) {
+    const message = error.message.trim();
+    if (message && !/Cannot read properties of|null \(reading|is not a function/i.test(message)) {
+      return message;
+    }
+  }
+  return "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.";
+}
+
 export default function NativeBillingCreateBankAccountForm({ legalEntities }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -16,9 +26,10 @@ export default function NativeBillingCreateBankAccountForm({ legalEntities }: Pr
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formElement = event.currentTarget;
     setLoading(true);
     setError(null);
-    const form = new FormData(event.currentTarget);
+    const form = new FormData(formElement);
 
     try {
       const res = await fetch("/api/platform/billing/bank-accounts", {
@@ -47,9 +58,9 @@ export default function NativeBillingCreateBankAccountForm({ legalEntities }: Pr
         throw new Error(data.error ?? "Bankkonto konnte nicht gespeichert werden.");
       }
       router.refresh();
-      event.currentTarget.reset();
+      formElement.reset();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Fehler beim Speichern.");
+      setError(clientSafeBankAccountFormError(e));
     } finally {
       setLoading(false);
     }
