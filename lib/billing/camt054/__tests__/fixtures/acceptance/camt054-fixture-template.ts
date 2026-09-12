@@ -1,6 +1,7 @@
 /**
  * Synthetic camt.054 acceptance fixtures (no production bank data).
- * Replace {{QRR}} with the operational QRR for invoice 2026-000003 on STAGE.
+ * Regenerate committed XML via:
+ *   npx tsx scripts/swiss-01h-generate-camt054-acceptance-fixtures.ts --invoice-number <nr>
  */
 
 export function buildSyntheticCamt054Xml(input: {
@@ -47,6 +48,3 @@ export function buildSyntheticCamt054Xml(input: {
   </BkToCstmrDbtCdtNtfctn>
 </Document>`;
 }
-
-/** PO primary fixture — substitute QRR from STAGE invoice 2026-000003 payment instruction. */
-export const ACCEPTANCE_QRR_PLACEHOLDER = "273282026000002025434650072";
