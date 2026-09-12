@@ -26,6 +26,9 @@ describe("SCE-SUPERADMIN-BILLING-01D — Commercial billing navigation", () => {
     expect(item?.children?.some((c) => c.key === "platform-commercial-billing-invoices")).toBe(
       true,
     );
+    expect(
+      item?.children?.some((c) => c.key === "platform-commercial-billing-reconciliation"),
+    ).toBe(true);
   });
 
   it("hides Commercial billing for tenant administration permissions only", () => {

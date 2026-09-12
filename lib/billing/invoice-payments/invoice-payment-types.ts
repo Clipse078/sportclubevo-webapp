@@ -48,3 +48,14 @@ export type ReverseInvoicePaymentInput = {
   reason: string;
   actorUserId: string;
 };
+
+export type RecordCamt054InvoicePaymentInput = {
+  invoiceKey: string;
+  amountMinor: number;
+  currency: string;
+  paymentDate: string;
+  creditorReference: string | null;
+  bankTransactionId: string;
+  externalReference: string | null;
+  actorUserId: string;
+};

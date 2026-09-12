@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.054.001.04">
+  <BkToCstmrDbtCdtNtfctn>
+    <GrpHdr>
+      <MsgId>SCE-01H-ACC-C</MsgId>
+    </GrpHdr>
+    <Ntfctn>
+      <Ntry>
+        <Amt Ccy="CHF">50.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <BookgDt><Dt>2026-09-12</Dt></BookgDt>
+        <NtryDtls>
+          <TxDtls>
+            <Refs><AcctSvcrRef>SCE-01H-TX-C-UNKNOWN</AcctSvcrRef></Refs>
+            <Amt Ccy="CHF">50.00</Amt>
+            <CdtDbtInd>CRDT</CdtDbtInd>
+            
+            <RmtInf>
+              <Strd>
+                <CdtrRefInf>
+                  <Tp><CdOrPrtry><Prtry>QRR</Prtry></CdOrPrtry></Tp>
+                  <Ref>21000000000313943014314517</Ref>
+                </CdtrRefInf>
+              </Strd>
+            </RmtInf>
+          </TxDtls>
+        </NtryDtls>
+      </Ntry>
+    </Ntfctn>
+  </BkToCstmrDbtCdtNtfctn>
+</Document>
