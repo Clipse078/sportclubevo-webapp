@@ -35,6 +35,7 @@ describe("billing bank account encryption at persistence", () => {
       expect(data.ibanEncrypted).not.toBe("CH9300762011623852957");
       expect(data.qrIbanEncrypted).toBeTruthy();
       expect(data.encryptionKeyVersion).toBe(1);
+      expect(data.ibanFingerprint).toBeTruthy();
       expect(data).not.toHaveProperty("iban");
       return { id: "ba-1", ...data, createdAt: new Date(), updatedAt: new Date() };
     });
@@ -74,6 +75,8 @@ describe("billing bank account encryption at persistence", () => {
         currency: "CHF",
         ibanEncrypted,
         qrIbanEncrypted: null,
+        ibanFingerprint: "fp-test",
+        qrIbanFingerprint: null,
         encryptionKeyVersion: 1,
         referenceStrategy: "NON",
         creditorName: "Issuer",

@@ -4,9 +4,12 @@ import {
   NATIVE_BILLING_AUDIT_ACTIONS,
   NATIVE_BILLING_AUDIT_MODULE,
 } from "./native-billing-audit";
+import { assertBillingBankAccountNotDuplicate } from "./billing-bank-account-duplicate";
 import { auditBankAccountSnapshot } from "./native-billing-serializers";
 import {
+  countBillingBankAccountDependencies,
   createBillingBankAccountRecord,
+  deleteBillingBankAccountRecordWithDefaultRepair,
   createBillingCustomerRecord,
   createBillingCustomerTenantLink,
   reactivateBillingCustomerTenantLink,
@@ -18,11 +21,13 @@ import {
   findActiveBillingCustomerTenantLink,
   findActiveBillingCustomerTenantLinkByTenantId,
   findBillingBankAccountById,
+  findLegalEntityById,
   findBillingCustomerById,
   findBillingCustomerByKey,
   findBillingProfileById,
   findLegalEntityByKey,
   findTenantIdByKey,
+  listActiveBillingBankAccountsForLegalEntity,
   listAllBillingBankAccounts,
   listBillingCustomerTenantLinks,
   listBillingCustomers,
@@ -658,6 +663,12 @@ export async function createBillingBankAccount(
     referenceStrategy,
   });
 
+  await assertBillingBankAccountNotDuplicate({
+    legalEntityId: legalEntity.id,
+    iban,
+    qrIban,
+  });
+
   const created = await createBillingBankAccountRecord({
     legalEntityId: legalEntity.id,
     label: assertNonEmpty(input.label, "Bezeichnung"),
@@ -737,6 +748,13 @@ export async function updateBillingBankAccount(
     referenceStrategy: nextReferenceStrategy,
   });
 
+  await assertBillingBankAccountNotDuplicate({
+    legalEntityId: existing.legalEntityId,
+    iban: nextIban,
+    qrIban: nextQrIban,
+    excludeAccountId: existing.id,
+  });
+
   const updated = await updateBillingBankAccountRecord(existing.id, {
     label: input.label?.trim() || existing.label,
     bankName: input.bankName === undefined ? existing.bankName : input.bankName?.trim() || null,
@@ -776,6 +794,60 @@ export async function updateBillingBankAccount(
 
 export async function listBillingBankAccountsForPlatform() {
   return listAllBillingBankAccounts();
+}
+
+const BANK_ACCOUNT_DELETE_BLOCKED_MESSAGE =
+  "Dieses Bankkonto kann nicht gelöscht werden, da es bereits in Zahlungsanweisungen oder anderen Abrechnungsdaten verwendet wird.";
+
+const BANK_ACCOUNT_DELETE_DEFAULT_AMBIGUOUS_MESSAGE =
+  "Bitte legen Sie zuerst ein anderes Standardkonto fest, bevor Sie dieses Standardkonto löschen.";
+
+export async function deleteBillingBankAccount(input: {
+  accountId: string;
+  actorUserId: string;
+}): Promise<void> {
+  const existing = await findBillingBankAccountById(input.accountId);
+  if (!existing) {
+    throw new NativeBillingNotFoundError("Bankkonto nicht gefunden.");
+  }
+
+  const dependencies = await countBillingBankAccountDependencies(existing.id);
+  if (dependencies.paymentInstructions > 0) {
+    throw new NativeBillingConflictError(BANK_ACCOUNT_DELETE_BLOCKED_MESSAGE, {
+      bankAccountDependencyCounts: dependencies,
+    });
+  }
+
+  const otherActiveAccounts = await listActiveBillingBankAccountsForLegalEntity(
+    existing.legalEntityId,
+    { excludeAccountId: existing.id, currency: existing.currency },
+  );
+
+  if (existing.isDefault && otherActiveAccounts.length > 1) {
+    throw new NativeBillingConflictError(BANK_ACCOUNT_DELETE_DEFAULT_AMBIGUOUS_MESSAGE);
+  }
+
+  const promoteDefaultAccountId =
+    existing.isDefault && otherActiveAccounts.length === 1 ? otherActiveAccounts[0]!.id : null;
+
+  await deleteBillingBankAccountRecordWithDefaultRepair({
+    accountId: existing.id,
+    promoteDefaultAccountId,
+  });
+
+  const legalEntity = await findLegalEntityById(existing.legalEntityId);
+
+  void logAction({
+    actorUserId: input.actorUserId,
+    moduleKey: NATIVE_BILLING_AUDIT_MODULE,
+    entityType: "BillingBankAccount",
+    entityId: existing.id,
+    action: NATIVE_BILLING_AUDIT_ACTIONS.BANK_ACCOUNT_DELETED,
+    beforeJson: {
+      ...auditBankAccountSnapshot(existing),
+      legalEntityKey: legalEntity?.key ?? null,
+    },
+  });
 }
 
 export async function assertTenantExists(tenantId: string): Promise<boolean> {

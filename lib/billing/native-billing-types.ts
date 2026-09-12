@@ -111,12 +111,24 @@ export type LegalEntityDependencyCounts = {
   invoiceSequences: number;
 };
 
+export type BillingBankAccountDependencyCounts = {
+  paymentInstructions: number;
+};
+
 export class NativeBillingConflictError extends Error {
   readonly name = "NativeBillingConflictError";
   readonly dependencyCounts?: LegalEntityDependencyCounts;
+  readonly bankAccountDependencyCounts?: BillingBankAccountDependencyCounts;
 
-  constructor(message: string, options?: { dependencyCounts?: LegalEntityDependencyCounts }) {
+  constructor(
+    message: string,
+    options?: {
+      dependencyCounts?: LegalEntityDependencyCounts;
+      bankAccountDependencyCounts?: BillingBankAccountDependencyCounts;
+    },
+  ) {
     super(message);
     this.dependencyCounts = options?.dependencyCounts;
+    this.bankAccountDependencyCounts = options?.bankAccountDependencyCounts;
   }
 }

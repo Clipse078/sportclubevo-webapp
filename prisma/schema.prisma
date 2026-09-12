@@ -4187,6 +4187,10 @@ model BillingBankAccount {
   currency              String                   @default("CHF")
   ibanEncrypted         String
   qrIbanEncrypted       String?
+  /// HMAC fingerprint of normalized IBAN (scoped per legal entity at query time).
+  ibanFingerprint       String?
+  /// HMAC fingerprint of normalized QR-IBAN when configured.
+  qrIbanFingerprint     String?
   encryptionKeyVersion  Int                      @default(1)
   referenceStrategy     BillingReferenceStrategy @default(NON)
   /// Optional numeric QRR prefix (bank-specific); part of the 26-digit QRR body before check digit.
@@ -4207,6 +4211,7 @@ model BillingBankAccount {
   paymentInstructions  InvoicePaymentInstruction[]
 
   @@index([legalEntityId])
+  @@index([legalEntityId, ibanFingerprint])
 }
 
 // SCE-BILLING-SWISS-01C — Native contracts & invoices (Switzerland-first).
