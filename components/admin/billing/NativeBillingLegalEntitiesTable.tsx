@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { LegalEntityStatus } from "@prisma/client";
+import { ChevronRight } from "lucide-react";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import {
   presentLegalEntityStatus,
@@ -20,6 +21,10 @@ type Props = {
   rows: NativeBillingLegalEntityRow[];
   canManage?: boolean;
 };
+
+export function nativeBillingLegalEntityDetailHref(entityKey: string): string {
+  return `/dashboard/admin/commercial/billing/settings/legal-entities/${encodeURIComponent(entityKey)}`;
+}
 
 export default function NativeBillingLegalEntitiesTable({ rows, canManage = false }: Props) {
   if (rows.length === 0) {
@@ -50,35 +55,59 @@ export default function NativeBillingLegalEntitiesTable({ rows, canManage = fals
             <th className="px-4 py-3 font-medium">Rechtsform</th>
             <th className="px-4 py-3 font-medium">Ort</th>
             <th className="px-4 py-3 font-medium">Status</th>
+            <th className="px-4 py-3 font-medium">
+              <span className="sr-only">Details</span>
+            </th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => {
             const statusPresentation = presentLegalEntityStatus(row.status);
+            const detailHref = nativeBillingLegalEntityDetailHref(row.key);
             return (
-              <tr key={row.key} className="border-t border-border">
+              <tr
+                key={row.key}
+                className="group border-t border-border transition-colors hover:bg-muted/20"
+              >
                 <td className="px-4 py-3">
                   <Link
-                    href={`/dashboard/admin/commercial/billing/settings/legal-entities/${row.key}`}
-                    className="font-medium text-primary hover:underline"
+                    href={detailHref}
+                    className="block rounded-md outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
                   >
-                    {row.displayName}
+                    <span className="font-medium text-primary group-hover:underline">
+                      {row.displayName}
+                    </span>
+                    {row.legalName !== row.displayName ? (
+                      <div className="text-xs text-muted-foreground">{row.legalName}</div>
+                    ) : null}
                   </Link>
-                  {row.legalName !== row.displayName ? (
-                    <div className="text-xs text-muted-foreground">{row.legalName}</div>
-                  ) : null}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
-                  {presentLegalEntityType(row.entityType)}
+                  <Link href={detailHref} className="block py-1 hover:text-foreground">
+                    {presentLegalEntityType(row.entityType)}
+                  </Link>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
-                  {row.city}, {row.countryCode}
+                  <Link href={detailHref} className="block py-1 hover:text-foreground">
+                    {row.city}, {row.countryCode}
+                  </Link>
                 </td>
                 <td className="px-4 py-3">
-                  <BillingStatusBadge
-                    label={statusPresentation.label}
-                    tone={statusPresentation.tone}
-                  />
+                  <Link href={detailHref} className="inline-flex rounded-md outline-offset-2">
+                    <BillingStatusBadge
+                      label={statusPresentation.label}
+                      tone={statusPresentation.tone}
+                    />
+                  </Link>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <Link
+                    href={detailHref}
+                    className="inline-flex rounded-md p-1 text-muted-foreground transition hover:text-primary group-hover:text-primary"
+                    aria-label={`${row.displayName} verwalten`}
+                  >
+                    <ChevronRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+                  </Link>
                 </td>
               </tr>
             );

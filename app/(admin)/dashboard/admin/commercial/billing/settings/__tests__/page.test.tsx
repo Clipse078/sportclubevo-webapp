@@ -90,4 +90,14 @@ describe("Native billing settings page", () => {
     expect(mocks.listLegalEntitiesForPlatform).toHaveBeenCalled();
     expect(mocks.listBillingBankAccountsForPlatform).toHaveBeenCalled();
   });
+
+  it("links legal entity rows to the detail page from settings", async () => {
+    const page = await NativeBillingSettingsPage();
+    const html = renderToStaticMarkup(page);
+
+    expect(html).toContain(
+      'href="/dashboard/admin/commercial/billing/settings/legal-entities/sportclubevo-by-tulip-digital"',
+    );
+    expect(html).toContain("SportClubEvo by Tulip Digital verwalten");
+  });
 });
