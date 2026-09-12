@@ -277,7 +277,13 @@ async function main(): Promise<void> {
       ? formatPaymentReferenceDisplay("QRR", instruction.reference)
       : null;
 
+  const runtime = getRuntimeEnvironment({
+    ...process.env,
+    NODE_ENV: process.env.NODE_ENV ?? "development",
+    APP_ENV: process.env.APP_ENV ?? "local",
+  });
   const appBase =
+    (runtime.isStage ? "https://sportclubevo-webapp-stage.vercel.app" : null) ||
     process.env.APP_BASE_URL?.trim() ||
     process.env.NEXTAUTH_URL?.trim() ||
     "https://sportclubevo-webapp-stage.vercel.app";

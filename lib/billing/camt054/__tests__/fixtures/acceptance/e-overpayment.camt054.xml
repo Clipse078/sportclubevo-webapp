@@ -1,22 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.054.001.04">
   <BkToCstmrDbtCdtNtfctn>
-    <GrpHdr><MsgId>SCE-01H-ACC-E</MsgId></GrpHdr>
+    <GrpHdr>
+      <MsgId>SCE-01H-ACC-E</MsgId>
+    </GrpHdr>
     <Ntfctn>
       <Ntry>
-        <Amt Ccy="CHF">9999.99</Amt>
+        <Amt Ccy="CHF">250.00</Amt>
         <CdtDbtInd>CRDT</CdtDbtInd>
         <BookgDt><Dt>2026-09-12</Dt></BookgDt>
         <NtryDtls>
           <TxDtls>
             <Refs><AcctSvcrRef>SCE-01H-TX-E-OVER</AcctSvcrRef></Refs>
-            <Amt Ccy="CHF">9999.99</Amt>
+            <Amt Ccy="CHF">250.00</Amt>
             <CdtDbtInd>CRDT</CdtDbtInd>
+            
             <RmtInf>
               <Strd>
                 <CdtrRefInf>
                   <Tp><CdOrPrtry><Prtry>QRR</Prtry></CdOrPrtry></Tp>
-                  <Ref>273282026000002025434650072</Ref>
+                  <Ref>273282026000004030551312759</Ref>
                 </CdtrRefInf>
               </Strd>
             </RmtInf>

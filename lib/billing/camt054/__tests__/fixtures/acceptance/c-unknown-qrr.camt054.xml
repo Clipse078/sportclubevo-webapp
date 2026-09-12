@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.054.001.04">
   <BkToCstmrDbtCdtNtfctn>
-    <GrpHdr><MsgId>SCE-01H-ACC-C</MsgId></GrpHdr>
+    <GrpHdr>
+      <MsgId>SCE-01H-ACC-C</MsgId>
+    </GrpHdr>
     <Ntfctn>
       <Ntry>
         <Amt Ccy="CHF">50.00</Amt>
@@ -12,6 +14,7 @@
             <Refs><AcctSvcrRef>SCE-01H-TX-C-UNKNOWN</AcctSvcrRef></Refs>
             <Amt Ccy="CHF">50.00</Amt>
             <CdtDbtInd>CRDT</CdtDbtInd>
+            
             <RmtInf>
               <Strd>
                 <CdtrRefInf>

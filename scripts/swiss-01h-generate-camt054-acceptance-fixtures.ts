@@ -69,8 +69,12 @@ async function resolveOperationalQrr(invoice: {
   );
 }
 
-function writeFixture(filename: string, xml: string): void {
-  writeFileSync(path.join(ACCEPTANCE_DIR, filename), `${xml.trim()}\n`, "utf8");
+function writeFixture(filename: string, xml: string, comment?: string): void {
+  const body = xml.trim().replace(/^<\?xml[^>]*>\s*/u, "");
+  const header = comment
+    ? `<?xml version="1.0" encoding="UTF-8"?>\n<!-- ${comment} -->\n`
+    : `<?xml version="1.0" encoding="UTF-8"?>\n`;
+  writeFileSync(path.join(ACCEPTANCE_DIR, filename), `${header}${body}\n`, "utf8");
 }
 
 async function main(): Promise<void> {
@@ -100,7 +104,7 @@ async function main(): Promise<void> {
 
   writeFixture(
     "a-exact-qrr-full.camt054.xml",
-    `<?xml version="1.0" encoding="UTF-8"?>\n<!-- Synthetic SWISS-01H acceptance: exact QRR full payment for ${invoiceNumber} -->\n${buildSyntheticCamt054Xml({
+    buildSyntheticCamt054Xml({
       messageId: "SCE-01H-ACC-A",
       bankTransactionId: "SCE-01H-TX-A-FULL",
       amountMajor: "215.12",
@@ -108,7 +112,8 @@ async function main(): Promise<void> {
       bookingDate,
       qrrReference: qrr,
       debtorName,
-    })}`,
+    }),
+    `Synthetic SWISS-01H acceptance: exact QRR full payment for ${invoiceNumber}`,
   );
 
   writeFixture(
@@ -137,14 +142,15 @@ async function main(): Promise<void> {
 
   writeFixture(
     "d-duplicate-bank-tx.camt054.xml",
-    `<?xml version="1.0" encoding="UTF-8"?>\n<!-- Duplicate AcctSvcrRef of fixture A after A has been booked -->\n${buildSyntheticCamt054Xml({
+    buildSyntheticCamt054Xml({
       messageId: "SCE-01H-ACC-D",
       bankTransactionId: "SCE-01H-TX-A-FULL",
       amountMajor: "215.12",
       currency: "CHF",
       bookingDate,
       qrrReference: qrr,
-    })}`,
+    }),
+    "Duplicate AcctSvcrRef of fixture A after A has been booked",
   );
 
   writeFixture(
@@ -161,14 +167,15 @@ async function main(): Promise<void> {
 
   writeFixture(
     "f-already-paid.camt054.xml",
-    `<?xml version="1.0" encoding="UTF-8"?>\n<!-- Use after invoice ${invoiceNumber} is fully PAID -->\n${buildSyntheticCamt054Xml({
+    buildSyntheticCamt054Xml({
       messageId: "SCE-01H-ACC-F",
       bankTransactionId: "SCE-01H-TX-F-PAID",
       amountMajor: "215.12",
       currency: "CHF",
       bookingDate,
       qrrReference: qrr,
-    })}`,
+    }),
+    `Use after invoice ${invoiceNumber} is fully PAID`,
   );
 
   console.log(

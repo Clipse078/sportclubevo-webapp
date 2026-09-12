@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Synthetic SWISS-01H acceptance: exact QRR full payment for 2026-000003 -->
+<!-- Synthetic SWISS-01H acceptance: exact QRR full payment for 2026-000004 -->
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.054.001.04">
   <BkToCstmrDbtCdtNtfctn>
-    <GrpHdr><MsgId>SCE-01H-ACC-A</MsgId></GrpHdr>
+    <GrpHdr>
+      <MsgId>SCE-01H-ACC-A</MsgId>
+    </GrpHdr>
     <Ntfctn>
       <Ntry>
         <Amt Ccy="CHF">215.12</Amt>
@@ -18,7 +20,7 @@
               <Strd>
                 <CdtrRefInf>
                   <Tp><CdOrPrtry><Prtry>QRR</Prtry></CdOrPrtry></Tp>
-                  <Ref>273282026000002025434650072</Ref>
+                  <Ref>273282026000004030551312759</Ref>
                 </CdtrRefInf>
               </Strd>
             </RmtInf>
