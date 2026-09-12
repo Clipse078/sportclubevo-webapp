@@ -1,9 +1,28 @@
-# SCE invoice PDF — visual master geometry handoff (SWISS-01E4A)
+# SCE invoice PDF — visual master geometry (SWISS-01E4B)
 
-**Purpose:** technical measurement template for an externally approved visual master.  
-**Not** a design proposal. Current coordinates are baseline measurements only.
+**Purpose:** PO-approved visual master implementation reference.  
+**Coordinate system:** origin top-left; X right, Y down (mm).
 
-**Coordinate system:** origin top-left of page; **X** right, **Y** down (mm).
+Regenerate crops + JSON: `npx tsx scripts/generate-swiss-01e4b-handoff-artifacts.ts`
+
+See `/opt/cursor/artifacts/swiss-01e4b-geometry-regions.json` for the latest fixture bounds (`2026-000002`).
+
+## Protected payment section
+
+Unchanged from 01E4A — see `render-swiss-payment-slip.ts` (210×105 mm, y=192 mm from top).
+
+## Key creative anchors (01E4B)
+
+| Token | mm |
+| --- | --- |
+| Header height | 34 |
+| Header logo top | 9 |
+| Title top | 43 |
+| Metadata top / left | 45 / 146 |
+| Address section top | 84 |
+| Table top | 124 |
+| Footer brand row top | 181.5 |
+| Creative boundary | 192 |
 
 ## Page
 

@@ -14,7 +14,7 @@ import {
   SWISS_PAYMENT_SECTION_HEIGHT_MM,
 } from "../constants";
 
-describe("invoice design geometry (SWISS-01E4A)", () => {
+describe("invoice design geometry (SWISS-01E4B)", () => {
   it("defines A4 page and 210×192 mm creative canvas above 105 mm payment zone", () => {
     expect(CREATIVE_AREA_WIDTH_MM).toBe(A4_WIDTH_MM);
     expect(CREATIVE_AREA_HEIGHT_MM).toBe(A4_HEIGHT_MM - SWISS_PAYMENT_SECTION_HEIGHT_MM);
@@ -31,6 +31,7 @@ describe("invoice design geometry (SWISS-01E4A)", () => {
     for (const region of plan.regions) {
       if (
         region.id === "operator_branding_tulip" ||
+        region.id === "operator_branding_sce" ||
         region.id === "website_url" ||
         region.id === "acknowledgement"
       ) {

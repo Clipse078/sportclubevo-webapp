@@ -1,18 +1,15 @@
 import type { PDFDocument, PDFPage } from "pdf-lib";
 import { rgb } from "pdf-lib";
-import { INVOICE_HEADER_RIBBON_ACCENT_PATH, INVOICE_PDF_BRAND } from "./constants";
+import { INVOICE_HEADER_RIBBON_ACCENT_PATH, INVOICE_PDF_BRAND, SPORTCLUBEVO_HEADER_LOGO_PATH } from "./constants";
 import {
   HEADER_HEIGHT_MM,
   HEADER_LOGO_HEIGHT_MM,
+  HEADER_LOGO_TOP_Y_MM,
   HEADER_RIBBON_ACCENT_WIDTH_MM,
   PAGE_MARGIN_X_MM,
 } from "./invoice-design-geometry";
 import { mmToPt } from "./mm";
-import {
-  embedLogoIfPresent,
-  loadBrandingAsset,
-  SPORTCLUBEVO_LOGO_PATH,
-} from "./render-swiss-payment-slip";
+import { embedLogoIfPresent, loadBrandingAsset } from "./render-swiss-payment-slip";
 
 function brandColor(c: { r: number; g: number; b: number }) {
   return rgb(c.r, c.g, c.b);
@@ -45,7 +42,7 @@ async function drawHeaderRibbonArtwork(
 
   page.drawImage(image, {
     x: pageWidthPt - drawWidth,
-    y: headerBottomY + (headerHeightPt - drawHeight) / 2,
+    y: headerBottomY + headerHeightPt - drawHeight,
     width: drawWidth,
     height: drawHeight,
     opacity: 0.92,
@@ -137,16 +134,17 @@ export async function drawSportClubEvoInvoiceHeader(
   await drawHeaderRibbonArtwork(pdfDoc, page, pageWidthPt, headerBottomY, headerHeightPt);
 
   const fontBold = await pdfDoc.embedFont("Helvetica-Bold");
-  const logo = await embedLogoIfPresent(pdfDoc, SPORTCLUBEVO_LOGO_PATH);
+  const logo = await embedLogoIfPresent(pdfDoc, SPORTCLUBEVO_HEADER_LOGO_PATH);
   const margin = mmToPt(PAGE_MARGIN_X_MM);
 
   if (logo) {
     const logoHeight = mmToPt(HEADER_LOGO_HEIGHT_MM);
     const scale = logoHeight / logo.height;
     const logoWidth = logo.width * scale;
+    const logoTopInset = mmToPt(HEADER_LOGO_TOP_Y_MM);
     page.drawImage(logo, {
       x: margin,
-      y: headerBottomY + (headerHeightPt - logoHeight) / 2,
+      y: headerBottomY + headerHeightPt - logoTopInset - logoHeight,
       width: logoWidth,
       height: logoHeight,
     });

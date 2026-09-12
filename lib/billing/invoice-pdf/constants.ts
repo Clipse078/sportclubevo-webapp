@@ -10,7 +10,8 @@ export const SWISS_QR_CODE_SIZE_MM = 46;
 export const SWISS_CROSS_SIZE_MM = 7;
 
 export const INVOICE_PDF_BRAND = {
-  headerNavy: { r: 0.08, g: 0.11, b: 0.16 },
+  /** SCE navy ~#111B29 */
+  headerNavy: { r: 17 / 255, g: 27 / 255, b: 41 / 255 },
   orange: { r: 0.91, g: 0.45, b: 0.18 },
   orangeMuted: { r: 1, g: 0.94, b: 0.9 },
   text: { r: 0.12, g: 0.14, b: 0.18 },
@@ -19,7 +20,13 @@ export const INVOICE_PDF_BRAND = {
   white: { r: 1, g: 1, b: 1 },
 } as const;
 
-export const SPORTCLUBEVO_LOGO_PATH = "public/images/branding/sportclubevo_logo_alt.png";
+/** White/orange mark for dark invoice header. */
+export const SPORTCLUBEVO_HEADER_LOGO_PATH =
+  "public/images/branding/sportclubevo_logo_alt.png";
+/** Full-color mark for white invoice body (footer operator row). */
+export const SPORTCLUBEVO_FOOTER_LOGO_PATH = "public/images/branding/sportclubevo_logo.png";
+/** @deprecated Use SPORTCLUBEVO_HEADER_LOGO_PATH or SPORTCLUBEVO_FOOTER_LOGO_PATH. */
+export const SPORTCLUBEVO_LOGO_PATH = SPORTCLUBEVO_HEADER_LOGO_PATH;
 export const TULIP_DIGITAL_LOGO_PATH =
   "public/images/branding/Logo-730036c6-150f-4549-8e03-5ea1efb24084.png";
 /** Decorative header ribbon (SWISS-01E2); no text/logos in artwork. */

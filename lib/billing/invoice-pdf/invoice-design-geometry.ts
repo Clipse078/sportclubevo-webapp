@@ -1,5 +1,5 @@
 /**
- * SWISS-01E4A — Invoice creative-area layout tokens (mm / pt where noted).
+ * SWISS-01E4B — PO-approved visual master layout tokens (mm / pt where noted).
  *
  * Coordinates in handoff helpers use origin top-left, Y increases downward.
  * pdf-lib uses bottom-left origin; conversion via {@link mmFromPageTopToPdfY}.
@@ -40,12 +40,31 @@ export const PAGE_MARGIN_X_MM = 12;
 /** Navy header bar height. */
 export const HEADER_HEIGHT_MM = 34;
 
-/** SportClubEvo logo in header. */
+/** SportClubEvo logo in header (from page top). */
 export const HEADER_LOGO_HEIGHT_MM = 16;
 export const HEADER_LOGO_X_MM = PAGE_MARGIN_X_MM;
+export const HEADER_LOGO_TOP_Y_MM = 9;
 
-/** Decorative ribbon artwork (right side of header). */
-export const HEADER_RIBBON_ACCENT_WIDTH_MM = 118;
+/** Decorative ribbon artwork (upper-right ~36% of header width). */
+export const HEADER_RIBBON_ACCENT_WIDTH_MM = 76;
+
+/** PO master anchors (distance from page top, mm). */
+export const TITLE_TOP_Y_MM = 43;
+export const TITLE_FONT_SIZE_PT = 27;
+export const TITLE_ACCENT_WIDTH_MM = 11;
+export const TITLE_ACCENT_HEIGHT_MM = 1;
+export const TITLE_ACCENT_GAP_BELOW_TITLE_MM = 2.5;
+
+export const METADATA_TOP_Y_MM = 45;
+
+export const ADDRESS_SECTION_TOP_Y_MM = 84;
+export const ADDRESS_COLUMN_DIVIDER_WIDTH_MM = 0.15;
+
+export const TABLE_SECTION_TOP_Y_MM = 124;
+
+export const FOOTER_SCE_LOGO_HEIGHT_MM = 7;
+export const FOOTER_BRAND_DIVIDER_GAP_MM = 2.5;
+export const FOOTER_BRAND_LOGO_GAP_MM = 2.5;
 
 export const INVOICE_BODY_AREA_HEIGHT_MM = A4_HEIGHT_MM - SWISS_PAYMENT_SECTION_HEIGHT_MM;
 
@@ -59,10 +78,11 @@ export const CREATIVE_AREA_HEIGHT_MM = INVOICE_BODY_AREA_HEIGHT_MM;
 export const TITLE_BLOCK_TOP_GAP_MM = 5;
 
 export const TITLE_TEXT = "Rechnung";
-export const TITLE_FONT_SIZE_PT = 24;
 export const TITLE_BASELINE_OFFSET_MM = 7;
 
 export const METADATA_BLOCK_WIDTH_MM = 52;
+export const METADATA_LEFT_X_MM =
+  A4_WIDTH_MM - PAGE_MARGIN_X_MM - METADATA_BLOCK_WIDTH_MM;
 export const METADATA_TOP_OFFSET_MM = 1;
 export const METADATA_ROW_STEP_MM = 8.5;
 export const METADATA_LABEL_BASELINE_OFFSET_MM = 3;
@@ -148,6 +168,12 @@ function tableColumnRightsMm(): number[] {
 }
 
 /** Deterministic region plan for handoff (matches renderer spacing constants). */
+export function footerBrandRowYFromTopMm(): number {
+  return (
+    CREATIVE_AREA_HEIGHT_MM - FOOTER_SCE_LOGO_HEIGHT_MM - FOOTER_BRAND_ROW_OFFSET_ABOVE_PAYMENT_MM
+  );
+}
+
 export function planInvoiceBodyLayoutRegions(data: InvoicePdfDocumentData): InvoiceLayoutPlan {
   const regions: MmRect[] = [];
 
@@ -162,7 +188,7 @@ export function planInvoiceBodyLayoutRegions(data: InvoicePdfDocumentData): Invo
   regions.push({
     id: "header_logo",
     xMm: HEADER_LOGO_X_MM,
-    yMm: (HEADER_HEIGHT_MM - HEADER_LOGO_HEIGHT_MM) / 2,
+    yMm: HEADER_LOGO_TOP_Y_MM,
     widthMm: HEADER_LOGO_HEIGHT_MM * 2.8,
     heightMm: HEADER_LOGO_HEIGHT_MM,
     note: "Width approximate from asset aspect; height fixed",
@@ -174,42 +200,44 @@ export function planInvoiceBodyLayoutRegions(data: InvoicePdfDocumentData): Invo
     yMm: 0,
     widthMm: HEADER_RIBBON_ACCENT_WIDTH_MM,
     heightMm: HEADER_HEIGHT_MM,
-    note: "Decorative only; asset may clip to header height",
+    note: "Decorative only; upper-right composition",
   });
-
-  let cursorY = HEADER_HEIGHT_MM + TITLE_BLOCK_TOP_GAP_MM;
 
   if (data.isVoid) {
     regions.push({
       id: "void_banner",
       xMm: PAGE_MARGIN_X_MM,
-      yMm: cursorY,
+      yMm: HEADER_HEIGHT_MM + 2,
       widthMm: innerTableWidthMm(),
       heightMm: 10,
     });
-    cursorY += 10;
   }
 
-  const titleTopY = cursorY;
   regions.push({
     id: "title",
     xMm: PAGE_MARGIN_X_MM,
-    yMm: titleTopY,
+    yMm: TITLE_TOP_Y_MM,
     widthMm: innerTableWidthMm() * 0.5,
-    heightMm: TITLE_BASELINE_OFFSET_MM + 4,
+    heightMm: TITLE_BASELINE_OFFSET_MM + TITLE_ACCENT_GAP_BELOW_TITLE_MM + TITLE_ACCENT_HEIGHT_MM,
   });
 
-  const metaX = A4_WIDTH_MM - PAGE_MARGIN_X_MM - METADATA_BLOCK_WIDTH_MM;
-  const metaY = titleTopY + METADATA_TOP_OFFSET_MM;
+  regions.push({
+    id: "title_accent_line",
+    xMm: PAGE_MARGIN_X_MM,
+    yMm: TITLE_TOP_Y_MM + TITLE_BASELINE_OFFSET_MM + TITLE_ACCENT_GAP_BELOW_TITLE_MM,
+    widthMm: TITLE_ACCENT_WIDTH_MM,
+    heightMm: TITLE_ACCENT_HEIGHT_MM,
+  });
+
   regions.push({
     id: "metadata_block",
-    xMm: metaX,
-    yMm: metaY,
+    xMm: METADATA_LEFT_X_MM,
+    yMm: METADATA_TOP_Y_MM,
     widthMm: METADATA_BLOCK_WIDTH_MM,
     heightMm: METADATA_ROW_STEP_MM * 5,
   });
 
-  cursorY = Math.min(titleTopY + 8, metaY + METADATA_ROW_STEP_MM * 5) + ADDRESS_GRID_TOP_GAP_MM;
+  let cursorY = TABLE_SECTION_TOP_Y_MM;
 
   const colWidth = (innerTableWidthMm() - ADDRESS_GRID_COLUMN_GAP_MM) / 2;
   const leftX = PAGE_MARGIN_X_MM;
@@ -219,33 +247,36 @@ export function planInvoiceBodyLayoutRegions(data: InvoicePdfDocumentData): Invo
     4 + (data.issuer.uid ? 1 : 0) + (data.issuer.vatId ? 1 : 0);
   const addrRows = Math.max(recipientLines, issuerLines);
 
+  const addressTopY = ADDRESS_SECTION_TOP_Y_MM;
+
   regions.push({
     id: "recipient_block",
     xMm: leftX,
-    yMm: cursorY + ADDRESS_SECTION_LABEL_STEP_MM,
+    yMm: addressTopY + ADDRESS_SECTION_LABEL_STEP_MM,
     widthMm: colWidth,
     heightMm: addrRows * ADDRESS_LINE_STEP_MM,
   });
   regions.push({
     id: "issuer_block",
     xMm: rightX,
-    yMm: cursorY + ADDRESS_SECTION_LABEL_STEP_MM,
+    yMm: addressTopY + ADDRESS_SECTION_LABEL_STEP_MM,
     widthMm: colWidth,
     heightMm: addrRows * ADDRESS_LINE_STEP_MM,
   });
   regions.push({
     id: "address_labels",
     xMm: leftX,
-    yMm: cursorY,
+    yMm: addressTopY,
     widthMm: innerTableWidthMm(),
     heightMm: ADDRESS_SECTION_LABEL_STEP_MM,
   });
-
-  cursorY =
-    cursorY +
-    ADDRESS_SECTION_LABEL_STEP_MM +
-    addrRows * ADDRESS_LINE_STEP_MM +
-    ADDRESS_GRID_BOTTOM_GAP_MM;
+  regions.push({
+    id: "address_column_divider",
+    xMm: leftX + colWidth + ADDRESS_GRID_COLUMN_GAP_MM / 2,
+    yMm: addressTopY,
+    widthMm: ADDRESS_COLUMN_DIVIDER_WIDTH_MM,
+    heightMm: ADDRESS_SECTION_LABEL_STEP_MM + addrRows * ADDRESS_LINE_STEP_MM,
+  });
 
   const tableHeight =
     TABLE_HEADER_ROW_HEIGHT_MM +
@@ -284,17 +315,23 @@ export function planInvoiceBodyLayoutRegions(data: InvoicePdfDocumentData): Invo
 
   cursorY += totalsHeight;
 
-  const brandRowYFromPageBottomMm =
-    SWISS_PAYMENT_SECTION_HEIGHT_MM + FOOTER_BRAND_ROW_OFFSET_ABOVE_PAYMENT_MM;
-  const brandRowYFromTop = A4_HEIGHT_MM - brandRowYFromPageBottomMm;
+  const brandRowYFromTop = footerBrandRowYFromTopMm();
+
+  regions.push({
+    id: "operator_branding_sce",
+    xMm: PAGE_MARGIN_X_MM,
+    yMm: brandRowYFromTop,
+    widthMm: FOOTER_SCE_LOGO_HEIGHT_MM * 3.2,
+    heightMm: FOOTER_SCE_LOGO_HEIGHT_MM,
+  });
 
   regions.push({
     id: "operator_branding_tulip",
-    xMm: PAGE_MARGIN_X_MM,
-    yMm: brandRowYFromTop,
+    xMm: PAGE_MARGIN_X_MM + FOOTER_SCE_LOGO_HEIGHT_MM * 3.2 + FOOTER_BRAND_DIVIDER_GAP_MM * 2,
+    yMm: brandRowYFromTop + (FOOTER_SCE_LOGO_HEIGHT_MM - TULIP_LOGO_HEIGHT_MM) / 2,
     widthMm: TULIP_LOGO_HEIGHT_MM * 4,
     heightMm: TULIP_LOGO_HEIGHT_MM,
-    note: "Asset path configured; file may be absent until PO delivery",
+    note: "Real Tulip Digital logo asset (secondary to SCE)",
   });
 
   regions.push({
@@ -306,11 +343,17 @@ export function planInvoiceBodyLayoutRegions(data: InvoicePdfDocumentData): Invo
   });
 
   const cursorYFromPageBottomMm = A4_HEIGHT_MM - cursorY;
+  const brandRowYFromPageBottomMm =
+    SWISS_PAYMENT_SECTION_HEIGHT_MM + FOOTER_BRAND_ROW_OFFSET_ABOVE_PAYMENT_MM;
   const thankYFromPageBottomMm = Math.max(
     cursorYFromPageBottomMm - ACKNOWLEDGEMENT_MIN_GAP_ABOVE_BRAND_MM,
     brandRowYFromPageBottomMm + 7,
   );
-  const thankYFromTop = A4_HEIGHT_MM - thankYFromPageBottomMm;
+  const brandRowTopMm = footerBrandRowYFromTopMm();
+  const thankYFromTop = Math.min(
+    A4_HEIGHT_MM - thankYFromPageBottomMm,
+    brandRowTopMm - ACKNOWLEDGEMENT_ACCENT_BAR_HEIGHT_MM - 2,
+  );
 
   regions.push({
     id: "acknowledgement",

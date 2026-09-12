@@ -14,7 +14,7 @@ import { PDFDocument, type PDFPage, rgb, type RGB, type PDFFont } from "pdf-lib"
 import {
   A4_WIDTH_MM,
   INVOICE_PDF_BRAND,
-  SPORTCLUBEVO_LOGO_PATH,
+  SPORTCLUBEVO_HEADER_LOGO_PATH,
   SWISS_CROSS_SIZE_MM,
   SWISS_PAYMENT_PART_WIDTH_MM,
   SWISS_PAYMENT_SECTION_HEIGHT_MM,
@@ -383,4 +383,9 @@ export async function embedLogoIfPresent(
   return pdfDoc.embedPng(bytes);
 }
 
-export { SPORTCLUBEVO_LOGO_PATH, TULIP_DIGITAL_LOGO_PATH };
+export {
+  SPORTCLUBEVO_FOOTER_LOGO_PATH,
+  SPORTCLUBEVO_HEADER_LOGO_PATH,
+  SPORTCLUBEVO_LOGO_PATH,
+  TULIP_DIGITAL_LOGO_PATH,
+} from "./constants";

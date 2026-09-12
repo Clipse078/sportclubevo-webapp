@@ -1,7 +1,7 @@
 import { SWISS_PAYMENT_SECTION_HEIGHT_MM } from "./constants";
 import {
-  HEADER_HEIGHT_MM,
   INVOICE_BODY_AREA_HEIGHT_MM,
+  planInvoiceBodyLayoutRegions,
 } from "./invoice-design-geometry";
 import type { InvoicePdfDocumentData } from "./invoice-pdf-types";
 import type { InvoiceLineRecord } from "../native-billing-commercial-types";
@@ -31,19 +31,8 @@ function measureLineRowMm(line: InvoiceLineRecord): number {
 
 /** Deterministic content height estimate (must stay ≤ body area for one-page layout). */
 export function measureInvoiceContentHeightMm(data: InvoicePdfDocumentData): number {
-  let heightMm = HEADER_HEIGHT_MM + 4;
-  if (data.isVoid) {
-    heightMm += 8;
-  }
-  heightMm += 28;
-  heightMm += 3 + 26;
-  heightMm += 4 + 7;
-  for (const line of data.lines) {
-    heightMm += measureLineRowMm(line);
-  }
-  heightMm += 3 + 21;
-  heightMm += 8;
-  return heightMm;
+  const plan = planInvoiceBodyLayoutRegions(data);
+  return Math.max(...plan.regions.map((region) => region.yMm + region.heightMm));
 }
 
 export function shouldUseSinglePageWithPayment(data: InvoicePdfDocumentData): boolean {
