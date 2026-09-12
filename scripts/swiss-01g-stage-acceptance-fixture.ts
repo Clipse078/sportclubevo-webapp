@@ -251,11 +251,25 @@ async function main() {
         status: "ACTIVE",
         actorUserId,
       });
+      contract = await prisma.billingContract.findFirst({
+        where: {
+          contractNumber: CONTRACT_NUMBER,
+          legalEntityId,
+          billingCustomerId: customer.id,
+        },
+      });
     }
+
+    if (!contract) {
+      throw new Error(
+        "SWISS-01G fixture invariant failed: synthetic contract could not be resolved or created.",
+      );
+    }
+    const resolvedContract = contract;
 
     let invoice = await prisma.invoice.findFirst({
       where: {
-        billingContractId: contract.id,
+        billingContractId: resolvedContract.id,
         billingCustomerId: customer.id,
         status: { in: ["DRAFT", "FINALIZED", "OPEN", "PARTIALLY_PAID", "PAID"] },
       },
@@ -264,7 +278,7 @@ async function main() {
 
     if (!invoice) {
       const draft = await createDraftInvoiceFromContract({
-        billingContractId: contract.id,
+        billingContractId: resolvedContract.id,
         periodStart: "2026-09-01",
         periodEnd: "2026-09-30",
         invoiceDate: "2026-09-01",
@@ -341,10 +355,10 @@ async function main() {
           stageDatabaseVerified: true,
           syntheticCustomer: { id: customer.id, key: customer.key, name: customer.displayName },
           syntheticContract: {
-            id: contract.id,
-            key: contract.key,
-            number: contract.contractNumber,
-            status: contract.status,
+            id: resolvedContract.id,
+            key: resolvedContract.key,
+            number: resolvedContract.contractNumber,
+            status: resolvedContract.status,
           },
           syntheticInvoice: {
             id: invoice.id,
