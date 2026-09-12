@@ -14,7 +14,8 @@ export const INVOICE_PDF_BRAND = {
   headerNavy: { r: 17 / 255, g: 27 / 255, b: 41 / 255 },
   orange: { r: 0.91, g: 0.45, b: 0.18 },
   orangeMuted: { r: 1, g: 0.94, b: 0.9 },
-  text: { r: 0.12, g: 0.14, b: 0.18 },
+  /** Primary body text ~#17202D */
+  text: { r: 23 / 255, g: 32 / 255, b: 45 / 255 },
   muted: { r: 0.45, g: 0.48, b: 0.52 },
   tableHeaderBg: { r: 0.95, g: 0.96, b: 0.97 },
   white: { r: 1, g: 1, b: 1 },
@@ -29,7 +30,11 @@ export const SPORTCLUBEVO_FOOTER_LOGO_PATH = "public/images/branding/sportclubev
 export const SPORTCLUBEVO_LOGO_PATH = SPORTCLUBEVO_HEADER_LOGO_PATH;
 export const TULIP_DIGITAL_LOGO_PATH =
   "public/images/branding/Logo-730036c6-150f-4549-8e03-5ea1efb24084.png";
-/** Decorative header ribbon (SWISS-01E2); no text/logos in artwork. */
+/** Approved compact header accent (SWISS-01E4C); far-right crop only. */
+export const INVOICE_HEADER_JPG_PATH = "public/images/branding/invoice.jpg";
+/** Left edge of source crop (fraction of source width). Right ~18% of artwork. */
+export const HEADER_JPG_SOURCE_CROP_X_FRACTION = 0.82;
+/** @deprecated Retired from invoice header in SWISS-01E4C. */
 export const INVOICE_HEADER_RIBBON_ACCENT_PATH =
   "public/images/branding/sce-invoice-header-ribbon-accent.png";
 

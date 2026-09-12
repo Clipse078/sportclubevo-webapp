@@ -20,15 +20,18 @@ import {
   ADDRESS_SECTION_TOP_Y_MM,
   FOOTER_BRAND_DIVIDER_GAP_MM,
   FOOTER_BRAND_LOGO_GAP_MM,
-  FOOTER_BRAND_ROW_OFFSET_ABOVE_PAYMENT_MM,
   FOOTER_SCE_LOGO_HEIGHT_MM,
   footerBrandRowYFromTopMm,
+  IDENTITY_TOP_Y_MM,
+  INVOICE_NUMBER_FONT_SIZE_PT,
+  METADATA_COMPACT_ROW_STEP_MM,
   METADATA_LEFT_X_MM,
+  METADATA_STACK_TOP_Y_MM,
   METADATA_BLOCK_WIDTH_MM,
   METADATA_LABEL_BASELINE_OFFSET_MM,
   METADATA_ROW_STEP_MM,
-  METADATA_TOP_Y_MM,
   METADATA_VALUE_BASELINE_OFFSET_MM,
+  THANK_YOU_TOP_Y_MM,
   PAGE_MARGIN_X_MM,
   PAYMENT_BOUNDARY_LINE_ABOVE_MM,
   TABLE_AFTER_ROWS_GAP_MM,
@@ -73,6 +76,7 @@ import {
 } from "../native-billing-presentation";
 import { drawRightAlignedText, META_LABEL_COLOR } from "./pdf-text-layout";
 import {
+  TOTALS_GROSS_FONT_SIZE_PT,
   TOTALS_GROSS_HIGHLIGHT_HEIGHT_MM,
   TOTALS_GROSS_TEXT_INSET_MM,
   TOTALS_NET_ROW_STEP_MM,
@@ -181,10 +185,28 @@ export async function drawInvoiceBody(
   const metaX = useVisualMasterAnchors
     ? mmToPt(METADATA_LEFT_X_MM)
     : pageWidth - margin - mmToPt(METADATA_BLOCK_WIDTH_MM);
-  let metaRowTopMm = useVisualMasterAnchors ? METADATA_TOP_Y_MM : titleTopMm + 1;
+
+  if (useVisualMasterAnchors) {
+    page.drawText("RECHNUNGSNUMMER", {
+      x: metaX,
+      y: pdfYFromPageTop(pageHeight, IDENTITY_TOP_Y_MM + METADATA_LABEL_BASELINE_OFFSET_MM),
+      size: 8,
+      font,
+      color: META_LABEL_COLOR,
+    });
+    page.drawText(data.invoice.invoiceNumber ?? "—", {
+      x: metaX,
+      y: pdfYFromPageTop(pageHeight, IDENTITY_TOP_Y_MM + 8),
+      size: INVOICE_NUMBER_FONT_SIZE_PT,
+      font: fontBold,
+      color: color(INVOICE_PDF_BRAND.text),
+    });
+  }
+
+  let metaRowTopMm = useVisualMasterAnchors ? METADATA_STACK_TOP_Y_MM : titleTopMm + 12;
   const metaRows: Array<[string, string]> = [
-    ["Rechnungsnummer", data.invoice.invoiceNumber ?? "—"],
     ["Rechnungsdatum", formatBillingDateDisplay(data.invoice.invoiceDate)],
+    ["Fällig am", formatBillingDateDisplay(data.invoice.dueDate)],
     [
       "Leistungszeitraum",
       formatBillingPeriodDisplay(data.invoice.periodStart, data.invoice.periodEnd),
@@ -193,25 +215,24 @@ export async function drawInvoiceBody(
       "Zahlungsziel",
       data.invoice.paymentTermsDays != null ? `${data.invoice.paymentTermsDays} Tage` : "—",
     ],
-    ["Fällig am", formatBillingDateDisplay(data.invoice.dueDate)],
   ];
 
   for (const [label, value] of metaRows) {
     page.drawText(label, {
       x: metaX,
       y: pdfYFromPageTop(pageHeight, metaRowTopMm + METADATA_LABEL_BASELINE_OFFSET_MM),
-      size: 8,
+      size: 8.5,
       font,
       color: META_LABEL_COLOR,
     });
     page.drawText(value, {
       x: metaX,
       y: pdfYFromPageTop(pageHeight, metaRowTopMm + METADATA_VALUE_BASELINE_OFFSET_MM),
-      size: 10,
-      font: label === "Rechnungsnummer" ? fontBold : font,
+      size: 10.5,
+      font,
       color: color(INVOICE_PDF_BRAND.text),
     });
-    metaRowTopMm += METADATA_ROW_STEP_MM;
+    metaRowTopMm += useVisualMasterAnchors ? METADATA_COMPACT_ROW_STEP_MM : METADATA_ROW_STEP_MM;
   }
 
   const addressTopMm = useVisualMasterAnchors
@@ -502,7 +523,7 @@ export async function drawInvoiceBody(
       totalsValueRight,
       grossTextY,
       fontBold,
-      10,
+      TOTALS_GROSS_FONT_SIZE_PT,
       color(INVOICE_PDF_BRAND.text),
     );
 
@@ -512,11 +533,12 @@ export async function drawInvoiceBody(
   if (showFooter) {
     const brandRowTopMm = footerBrandRowYFromTopMm();
     const brandRowY = pdfYFromPageTop(pageHeight, brandRowTopMm + FOOTER_SCE_LOGO_HEIGHT_MM);
-    const contentEndMmFromTop = pageTopMmFromPdfY(pageHeight, cursorY);
-    const thankTopMm = Math.min(
-      contentEndMmFromTop - ACKNOWLEDGEMENT_MIN_GAP_ABOVE_BRAND_MM,
-      brandRowTopMm - ACKNOWLEDGEMENT_ACCENT_BAR_HEIGHT_MM - 2,
-    );
+    const thankTopMm = useVisualMasterAnchors
+      ? THANK_YOU_TOP_Y_MM
+      : Math.min(
+          pageTopMmFromPdfY(pageHeight, cursorY) - ACKNOWLEDGEMENT_MIN_GAP_ABOVE_BRAND_MM,
+          brandRowTopMm - ACKNOWLEDGEMENT_ACCENT_BAR_HEIGHT_MM - 2,
+        );
     const thankY = pdfYFromPageTop(pageHeight, thankTopMm);
 
     page.drawRectangle({

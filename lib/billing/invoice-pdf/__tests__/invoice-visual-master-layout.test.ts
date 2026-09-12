@@ -1,25 +1,22 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
-import { PDFDocument } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 import { buildFixturePdfDocumentData } from "./invoice-pdf-fixtures";
 import {
   CREATIVE_AREA_HEIGHT_MM,
-  HEADER_LOGO_TOP_Y_MM,
-  METADATA_LEFT_X_MM,
-  METADATA_TOP_Y_MM,
+  HEADER_ARTWORK_DRAW_X_MM,
+  HEADER_ARTWORK_DRAW_WIDTH_MM,
+  HEADER_HEIGHT_MM,
+  HEADER_LOGO_WIDTH_MM,
+  MIN_PAYMENT_BREATHING_ROOM_MM,
+  OPERATOR_BRAND_ROW_TOP_Y_MM,
+  PAGE_MARGIN_X_MM,
   PAYMENT_SECTION_BOUNDARY_Y_FROM_TOP_MM,
   planInvoiceBodyLayoutRegions,
-  TABLE_SECTION_TOP_Y_MM,
+  paymentBreathingRoomMm,
   TITLE_TOP_Y_MM,
-  footerBrandRowYFromTopMm,
 } from "../invoice-design-geometry";
-import {
-  SPORTCLUBEVO_FOOTER_LOGO_PATH,
-  SPORTCLUBEVO_HEADER_LOGO_PATH,
-  TULIP_DIGITAL_LOGO_PATH,
-} from "../constants";
-import { embedLogoIfPresent } from "../render-swiss-payment-slip";
+import { INVOICE_HEADER_JPG_PATH } from "../constants";
 
 function regionById(plan: ReturnType<typeof planInvoiceBodyLayoutRegions>, id: string) {
   const region = plan.regions.find((entry) => entry.id === id);
@@ -27,78 +24,51 @@ function regionById(plan: ReturnType<typeof planInvoiceBodyLayoutRegions>, id: s
   return region!;
 }
 
-function regionsOverlap(a: { xMm: number; yMm: number; widthMm: number; heightMm: number }, b: {
-  xMm: number;
-  yMm: number;
-  widthMm: number;
-  heightMm: number;
-}): boolean {
-  return !(
-    a.xMm + a.widthMm <= b.xMm ||
-    b.xMm + b.widthMm <= a.xMm ||
-    a.yMm + a.heightMm <= b.yMm ||
-    b.yMm + b.heightMm <= a.yMm
-  );
-}
-
-describe("invoice visual master layout (SWISS-01E4B)", () => {
-  it("anchors title and metadata to PO master coordinates", () => {
+describe("invoice visual master layout (SWISS-01E4C)", () => {
+  it("uses compact 21 mm header and 14 mm body margins", () => {
+    expect(HEADER_HEIGHT_MM).toBe(21);
+    expect(PAGE_MARGIN_X_MM).toBe(14);
     const plan = planInvoiceBodyLayoutRegions(buildFixturePdfDocumentData());
-    const title = regionById(plan, "title");
-    const metadata = regionById(plan, "metadata_block");
+    expect(regionById(plan, "header_bar").heightMm).toBe(21);
+  });
+
+  it("places header artwork on the far-right only", () => {
+    const artwork = regionById(planInvoiceBodyLayoutRegions(buildFixturePdfDocumentData()), "header_jpg_artwork");
+    expect(artwork.xMm).toBeCloseTo(HEADER_ARTWORK_DRAW_X_MM, 0);
+    expect(artwork.widthMm).toBeCloseTo(HEADER_ARTWORK_DRAW_WIDTH_MM, 0);
+    expect(artwork.heightMm).toBeCloseTo(HEADER_HEIGHT_MM, 0);
+  });
+
+  it("keeps operator branding above payment boundary with breathing room", () => {
+    const data = buildFixturePdfDocumentData();
+    const plan = planInvoiceBodyLayoutRegions(data);
+    const sce = regionById(plan, "operator_branding_sce");
+    expect(sce.yMm).toBe(OPERATOR_BRAND_ROW_TOP_Y_MM);
+    expect(sce.yMm + sce.heightMm).toBeLessThan(PAYMENT_SECTION_BOUNDARY_Y_FROM_TOP_MM);
+    expect(paymentBreathingRoomMm(data)).toBeGreaterThanOrEqual(MIN_PAYMENT_BREATHING_ROOM_MM);
+  });
+
+  it("keeps title below compact header", () => {
+    const title = regionById(planInvoiceBodyLayoutRegions(buildFixturePdfDocumentData()), "title");
+    expect(title.yMm).toBeGreaterThanOrEqual(HEADER_HEIGHT_MM + 8);
     expect(title.yMm).toBeCloseTo(TITLE_TOP_Y_MM, 0);
-    expect(metadata.xMm).toBeCloseTo(METADATA_LEFT_X_MM, 0);
-    expect(metadata.yMm).toBeCloseTo(METADATA_TOP_Y_MM, 0);
-    expect(regionsOverlap(title, metadata)).toBe(false);
   });
 
-  it("keeps table below address blocks and above payment boundary", () => {
+  it("requires genuine invoice.jpg at canonical repo path", () => {
+    const absolute = path.join(process.cwd(), INVOICE_HEADER_JPG_PATH);
+    expect(existsSync(absolute)).toBe(true);
+  });
+
+  it("uses width-led SCE header logo target", () => {
+    const logo = regionById(planInvoiceBodyLayoutRegions(buildFixturePdfDocumentData()), "header_logo");
+    expect(logo.widthMm).toBeCloseTo(HEADER_LOGO_WIDTH_MM, 0);
+    expect(logo.yMm + logo.heightMm).toBeLessThanOrEqual(HEADER_HEIGHT_MM + 0.01);
+  });
+
+  it("keeps all planned regions inside the 192 mm creative canvas", () => {
     const plan = planInvoiceBodyLayoutRegions(buildFixturePdfDocumentData());
-    const table = regionById(plan, "line_items_table");
-    const recipient = regionById(plan, "recipient_block");
-    const issuer = regionById(plan, "issuer_block");
-    expect(table.yMm).toBeGreaterThanOrEqual(TABLE_SECTION_TOP_Y_MM - 0.01);
-    expect(recipient.yMm + recipient.heightMm).toBeLessThanOrEqual(table.yMm + 0.5);
-    expect(issuer.yMm + issuer.heightMm).toBeLessThanOrEqual(table.yMm + 0.5);
-    expect(table.yMm + table.heightMm).toBeLessThan(PAYMENT_SECTION_BOUNDARY_Y_FROM_TOP_MM);
-  });
-
-  it("keeps lower branding and acknowledgement inside the 192 mm creative area", () => {
-    const plan = planInvoiceBodyLayoutRegions(buildFixturePdfDocumentData());
-    const sce = regionById(plan, "operator_branding_sce");
-    const tulip = regionById(plan, "operator_branding_tulip");
-    const acknowledgement = regionById(plan, "acknowledgement");
-    expect(sce.yMm + sce.heightMm).toBeLessThanOrEqual(CREATIVE_AREA_HEIGHT_MM + 0.01);
-    expect(tulip.yMm + tulip.heightMm).toBeLessThanOrEqual(CREATIVE_AREA_HEIGHT_MM + 0.01);
-    expect(acknowledgement.yMm + acknowledgement.heightMm).toBeLessThanOrEqual(
-      footerBrandRowYFromTopMm(),
-    );
-  });
-
-  it("uses real SportClubEvo header/footer assets and canonical Tulip path", () => {
-    expect(existsSync(path.join(process.cwd(), SPORTCLUBEVO_HEADER_LOGO_PATH))).toBe(true);
-    expect(existsSync(path.join(process.cwd(), SPORTCLUBEVO_FOOTER_LOGO_PATH))).toBe(true);
-    expect(existsSync(path.join(process.cwd(), TULIP_DIGITAL_LOGO_PATH))).toBe(true);
-  });
-
-  it("embeds genuine Tulip Digital logo with native aspect ratio", async () => {
-    const pdfDoc = await PDFDocument.create();
-    const tulip = await embedLogoIfPresent(pdfDoc, TULIP_DIGITAL_LOGO_PATH);
-    expect(tulip).toBeTruthy();
-    expect(tulip!.width / tulip!.height).toBeCloseTo(1, 1);
-  });
-
-  it("Tulip logo height is smaller than SCE footer logo height in geometry plan", () => {
-    const plan = planInvoiceBodyLayoutRegions(buildFixturePdfDocumentData());
-    const sce = regionById(plan, "operator_branding_sce");
-    const tulip = regionById(plan, "operator_branding_tulip");
-    expect(tulip.heightMm).toBeLessThan(sce.heightMm);
-    expect(tulip.xMm).toBeGreaterThan(sce.xMm + sce.widthMm);
-  });
-
-  it("places header logo at approved top offset", () => {
-    const plan = planInvoiceBodyLayoutRegions(buildFixturePdfDocumentData());
-    const logo = regionById(plan, "header_logo");
-    expect(logo.yMm).toBe(HEADER_LOGO_TOP_Y_MM);
+    for (const region of plan.regions) {
+      expect(region.yMm + region.heightMm).toBeLessThanOrEqual(CREATIVE_AREA_HEIGHT_MM + 0.01);
+    }
   });
 });

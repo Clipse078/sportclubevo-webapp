@@ -14,7 +14,7 @@ import {
   SWISS_PAYMENT_SECTION_HEIGHT_MM,
 } from "../constants";
 
-describe("invoice design geometry (SWISS-01E4B)", () => {
+describe("invoice design geometry (SWISS-01E4C)", () => {
   it("defines A4 page and 210×192 mm creative canvas above 105 mm payment zone", () => {
     expect(CREATIVE_AREA_WIDTH_MM).toBe(A4_WIDTH_MM);
     expect(CREATIVE_AREA_HEIGHT_MM).toBe(A4_HEIGHT_MM - SWISS_PAYMENT_SECTION_HEIGHT_MM);
@@ -42,8 +42,8 @@ describe("invoice design geometry (SWISS-01E4B)", () => {
     }
   });
 
-  it("exposes baseline header and margin tokens", () => {
-    expect(HEADER_HEIGHT_MM).toBe(34);
-    expect(PAGE_MARGIN_X_MM).toBe(12);
+  it("exposes compact header and margin tokens", () => {
+    expect(HEADER_HEIGHT_MM).toBe(21);
+    expect(PAGE_MARGIN_X_MM).toBe(14);
   });
 });
