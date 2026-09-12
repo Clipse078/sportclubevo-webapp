@@ -2,6 +2,7 @@ import Link from "next/link";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import NativeBillingInvoiceActions from "@/components/admin/billing/NativeBillingInvoiceActions";
+import NativeBillingInvoicePdfActions from "@/components/admin/billing/NativeBillingInvoicePdfActions";
 import NativeBillingInvoicePaymentSection from "@/components/admin/billing/NativeBillingInvoicePaymentSection";
 import { getInvoicePaymentInstruction } from "@/lib/billing/invoice-payment-instruction-service";
 import {
@@ -100,6 +101,7 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
           canManage={canManage}
           grossTotalFormatted={grossFormatted}
         />
+        <NativeBillingInvoicePdfActions invoiceKey={invoice.key} status={invoice.status} />
       </div>
 
       <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 max-w-4xl text-sm">
@@ -265,10 +267,6 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
           Finalisiert am {formatBillingDateDisplay(invoice.finalizedAt)}
         </p>
       ) : null}
-
-      <p className="text-xs text-muted-foreground">
-        PDF und Versand folgen in späteren Schritten (SWISS-01E / SWISS-01F).
-      </p>
     </div>
   );
 }
