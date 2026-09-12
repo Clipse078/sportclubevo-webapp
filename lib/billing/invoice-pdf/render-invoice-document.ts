@@ -23,6 +23,13 @@ import {
   formatBillingPeriodDisplay,
 } from "../native-billing-presentation";
 import { drawRightAlignedText, META_LABEL_COLOR } from "./pdf-text-layout";
+import {
+  TOTALS_GROSS_HIGHLIGHT_HEIGHT_MM,
+  TOTALS_GROSS_TEXT_INSET_MM,
+  TOTALS_NET_ROW_STEP_MM,
+  TOTALS_VAT_ROW_STEP_MM,
+  TOTALS_VAT_TO_GROSS_GAP_MM,
+} from "./invoice-totals-layout";
 
 export { shouldUseSinglePageWithPayment } from "./invoice-layout";
 
@@ -201,11 +208,6 @@ export async function drawInvoiceBody(
   const colUnit = tableWidth * 0.14;
   const colNet = tableWidth * 0.14;
   const colVat = tableWidth * 0.1;
-  const colGross = tableWidth * 0.16;
-  const colQtyRight = tableX + colDesc + colQty - mmToPt(1);
-  const colUnitRight = tableX + colDesc + colQty + colUnit - mmToPt(1);
-  const colNetRight = tableX + colDesc + colQty + colUnit + colNet - mmToPt(1);
-  const colVatRight = tableX + colDesc + colQty + colUnit + colNet + colVat - mmToPt(1);
   const colGrossRight = tableX + tableWidth - mmToPt(1);
 
   const headerRowHeight = mmToPt(7.5);
@@ -346,7 +348,7 @@ export async function drawInvoiceBody(
       8.5,
       color(INVOICE_PDF_BRAND.text),
     );
-    totalsY -= mmToPt(4.5);
+    totalsY -= mmToPt(TOTALS_NET_ROW_STEP_MM);
 
     const vatLabel =
       data.taxSnapshots[0]?.taxLabel ??
@@ -367,19 +369,30 @@ export async function drawInvoiceBody(
       8.5,
       color(INVOICE_PDF_BRAND.text),
     );
-    totalsY -= mmToPt(5.5);
+    totalsY -= mmToPt(TOTALS_VAT_ROW_STEP_MM + TOTALS_VAT_TO_GROSS_GAP_MM);
 
+    const dividerY = totalsY + mmToPt(2.5);
+    page.drawLine({
+      start: { x: totalsX - mmToPt(1), y: dividerY },
+      end: { x: totalsValueRight, y: dividerY },
+      thickness: 0.35,
+      color: rgb(0.86, 0.87, 0.89),
+    });
+
+    const highlightHeight = mmToPt(TOTALS_GROSS_HIGHLIGHT_HEIGHT_MM);
+    const highlightBottom = totalsY - mmToPt(1);
     page.drawRectangle({
       x: totalsX - mmToPt(2),
-      y: totalsY - mmToPt(1),
+      y: highlightBottom,
       width: mmToPt(52),
-      height: mmToPt(7.5),
+      height: highlightHeight,
       color: color(INVOICE_PDF_BRAND.orangeMuted),
       opacity: 0.92,
     });
+    const grossTextY = highlightBottom + mmToPt(TOTALS_GROSS_TEXT_INSET_MM);
     page.drawText("Total brutto", {
       x: totalsX,
-      y: totalsY + mmToPt(1.2),
+      y: grossTextY,
       size: 10,
       font: fontBold,
       color: color(INVOICE_PDF_BRAND.text),
@@ -388,13 +401,13 @@ export async function drawInvoiceBody(
       page,
       `${formatAmountPlain(data.invoice.grossTotalMinor)} CHF`,
       totalsValueRight,
-      totalsY + mmToPt(1.2),
+      grossTextY,
       fontBold,
       10,
       color(INVOICE_PDF_BRAND.text),
     );
 
-    cursorY = totalsY - mmToPt(5);
+    cursorY = highlightBottom - mmToPt(4);
   }
 
   if (showFooter) {

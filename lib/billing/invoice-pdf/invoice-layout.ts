@@ -40,7 +40,7 @@ export function measureInvoiceContentHeightMm(data: InvoicePdfDocumentData): num
   for (const line of data.lines) {
     heightMm += measureLineRowMm(line);
   }
-  heightMm += 3 + 18;
+  heightMm += 3 + 21;
   heightMm += 8;
   return heightMm;
 }
