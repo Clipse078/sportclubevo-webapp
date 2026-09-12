@@ -31,7 +31,6 @@ type EligibleInvoice = {
 
 type Props = {
   legalEntityKey: string;
-  importKey: string;
   filename: string;
   transactions: TransactionRow[];
   canManage: boolean;
@@ -39,7 +38,6 @@ type Props = {
 
 export default function NativeBillingReconciliationImportDetail({
   legalEntityKey,
-  importKey,
   filename,
   transactions: initialTransactions,
   canManage,

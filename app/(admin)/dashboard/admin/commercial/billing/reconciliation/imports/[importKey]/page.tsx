@@ -33,7 +33,6 @@ export default async function NativeBillingReconciliationImportPage({ params }: 
       />
       <NativeBillingReconciliationImportDetail
         legalEntityKey={detail.import.legalEntityKey}
-        importKey={importKey}
         filename={detail.import.filename}
         transactions={detail.transactions}
         canManage={canManage}
