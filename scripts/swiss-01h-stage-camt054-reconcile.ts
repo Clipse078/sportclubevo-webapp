@@ -15,6 +15,7 @@ import path from "node:path";
 import { reconcileCamt054Statement } from "@/lib/billing/camt054-reconciliation/camt054-reconciliation-service";
 import { assertOperationalMutationAllowed } from "@/lib/server/operational-database-guard";
 import { getRuntimeEnvironment } from "@/lib/env";
+import { requireBillingDataEnvironment } from "@/lib/server/runtime-identity";
 
 const OPERATION_ID = "swiss-01h-camt054";
 const CONFIRM_TOKEN = "SCE-SWISS-01H-CAMT054";
@@ -60,6 +61,7 @@ function assertStageTarget(): void {
   if (!runtime.isStage) {
     throw new Error(`STAGE verification failed: APP_ENV must be "stage".`);
   }
+  requireBillingDataEnvironment("STAGE");
   assertOperationalMutationAllowed({
     operationId: OPERATION_ID,
     databaseUrl: process.env.DATABASE_URL,
@@ -103,6 +105,7 @@ async function main(): Promise<void> {
     xml,
     dryRun: args.dryRun,
     actorUserId,
+    filename: args.execute ? path.basename(args.xmlFile) : undefined,
   });
 
   console.log(JSON.stringify(report, null, 2));

@@ -4,11 +4,17 @@ Engineering reference for the current SportClubEvo deployment architecture.
 
 ## Environment contract
 
+- Deployment and data environments are separate canonical values. Deployment
+  is one of `PRODUCTION`, `STAGE`, `PREVIEW`, `ACCEPTANCE`, or `LOCAL`; billing
+  data uses the same set and is configured by `SCE_DATA_ENVIRONMENT`.
 - A normal Vercel Preview is classified as `preview`, even when `APP_ENV=stage`
   is configured. Preview classification prevents STAGE privileges from being
   inferred from `APP_ENV`.
 - Normal Preview deployments may intentionally use the configured persistent
-  STAGE database. This is supported architecture, not a preflight violation.
+  STAGE database. Configure `SCE_DATA_ENVIRONMENT=STAGE`; the deployment remains
+  `PREVIEW`.
+- `SCE_DATA_DATABASE_FINGERPRINT` must match the fingerprint derived from the
+  effective Prisma `DATABASE_URL`. Reference URLs are not runtime identity.
 - When Preview uses that STAGE database, `SCE_BILLING_ENCRYPTION_KEY` must be
   configured in the Preview Vercel environment scope with the same value as STAGE
   Production. Without it, `BillingBankAccount` decryption fails and native invoice
@@ -49,6 +55,8 @@ build:
   a deployed context;
 - deployed runtime classification is known; and
 - configured Acceptance/STAGE database isolation references are respected.
+- deployed billing data environment and effective database fingerprint are
+  explicit and mutually consistent.
 
 Plain Preview classification is authoritative over `APP_ENV`; therefore an
 `APP_ENV=stage` value on Preview does not grant STAGE runtime privileges and is
