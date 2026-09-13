@@ -134,7 +134,11 @@ async function validateContractConfiguration(
 
   const accounts = await listBillingBankAccountsForLegalEntity(contract.legalEntityId);
   try {
-    selectEligibleBillingBankAccount(accounts);
+    selectEligibleBillingBankAccount(
+      accounts,
+      contract.legalEntityId,
+      contract.currency,
+    );
   } catch {
     return {
       ok: false,
