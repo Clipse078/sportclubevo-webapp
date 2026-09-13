@@ -87,73 +87,92 @@ export async function listEligibleInvoicesForManualCamt054Match(
 export async function manuallyAssignCamt054Transaction(
   input: ManualCamt054MatchInput,
 ): Promise<{ paymentKey: string; invoiceKey: string }> {
-  const row = await findBankReconciliationTransactionByKey(input.transactionKey);
-  if (!row) {
-    throw new NativeBillingNotFoundError("Banktransaktion nicht gefunden.");
-  }
-  if (row.matchStatus !== "UNMATCHED") {
-    throw new NativeBillingConflictError("Transaktion ist nicht mehr offen.");
-  }
+  return prisma.$transaction(async (tx) => {
+    const row = await findBankReconciliationTransactionByKey(
+      input.transactionKey,
+      tx,
+    );
+    if (!row) {
+      throw new NativeBillingNotFoundError("Banktransaktion nicht gefunden.");
+    }
+    if (row.matchStatus !== "UNMATCHED") {
+      throw new NativeBillingConflictError("Transaktion ist nicht mehr offen.");
+    }
+    if (
+      row.isReversal ||
+      (!row.accountServiceReference &&
+        (!row.endToEndId || row.endToEndId.toUpperCase() === "NOTPROVIDED"))
+    ) {
+      throw new NativeBillingConflictError(
+        "Transaktion hat keine beweisbare Provider-Identität oder ist eine Rückbuchung.",
+      );
+    }
 
-  const invoice = await prisma.invoice.findUnique({
-    where: { key: input.invoiceKey },
-    include: {
-      billingCustomer: { select: { displayName: true } },
-      paymentInstruction: { select: { id: true } },
-    },
+    const invoice = await tx.invoice.findUnique({
+      where: { key: input.invoiceKey },
+      include: {
+        billingCustomer: { select: { displayName: true } },
+        paymentInstruction: { select: { id: true } },
+      },
+    });
+    if (!invoice) {
+      throw new NativeBillingNotFoundError("Rechnung nicht gefunden.");
+    }
+    if (invoice.legalEntityId !== row.import.legalEntityId) {
+      throw new NativeBillingValidationError("Rechnung gehört zu einem anderen Rechtsträger.");
+    }
+    if (!isCamt054InvoicePayable(invoice.status)) {
+      throw new NativeBillingValidationError("Rechnung ist nicht zahlbar.");
+    }
+    if (invoice.currency.toUpperCase() !== row.currency.toUpperCase()) {
+      throw new NativeBillingValidationError("Währung stimmt nicht überein.");
+    }
+
+    const paid = await tx.invoicePayment.aggregate({
+      where: { invoiceId: invoice.id, status: "CONFIRMED" },
+      _sum: { amountMinor: true },
+    });
+    const outstanding =
+      invoice.grossTotalMinor - (paid._sum.amountMinor ?? 0);
+    if (outstanding <= 0) {
+      throw new NativeBillingConflictError("Rechnung ist bereits vollständig bezahlt.");
+    }
+    if (row.amountMinor > outstanding) {
+      throw new NativeBillingValidationError("Der Betrag übersteigt den offenen Rechnungsbetrag.");
+    }
+
+    const result = await recordCamt054InvoicePayment({
+      invoiceKey: invoice.key,
+      amountMinor: row.amountMinor,
+      currency: row.currency,
+      paymentDate: row.paymentDate.toISOString().slice(0, 10),
+      creditorReference: row.creditorReference,
+      bankTransactionId: row.bankTransactionId,
+      externalReference: `manual:${row.key}`,
+      actorUserId: input.actorUserId,
+      importKey: row.import.key,
+    }, tx);
+
+    await tx.bankReconciliationTransaction.update({
+      where: { id: row.id },
+      data: {
+        matchStatus: "MATCHED",
+        matchMethod: "MANUAL_ASSIGNMENT",
+        matchReason: "Manuell zugeordnet",
+        invoiceId: invoice.id,
+        invoicePaymentInstructionId: invoice.paymentInstruction?.id ?? null,
+        invoicePaymentId: result.payment.id,
+      },
+    });
+
+    await tx.bankReconciliationImport.update({
+      where: { id: row.importId },
+      data: {
+        matchedCount: { increment: 1 },
+        unmatchedCount: { decrement: 1 },
+      },
+    });
+
+    return { paymentKey: result.payment.key, invoiceKey: invoice.key };
   });
-  if (!invoice) {
-    throw new NativeBillingNotFoundError("Rechnung nicht gefunden.");
-  }
-  if (invoice.legalEntityId !== row.import.legalEntityId) {
-    throw new NativeBillingValidationError("Rechnung gehört zu einem anderen Rechtsträger.");
-  }
-  if (!isCamt054InvoicePayable(invoice.status)) {
-    throw new NativeBillingValidationError("Rechnung ist nicht zahlbar.");
-  }
-  if (invoice.currency.toUpperCase() !== row.currency.toUpperCase()) {
-    throw new NativeBillingValidationError("Währung stimmt nicht überein.");
-  }
-
-  const summary = await getInvoicePaymentSummary(invoice.key);
-  const outstanding = summary?.outstandingMinor ?? invoice.grossTotalMinor;
-  if (outstanding <= 0) {
-    throw new NativeBillingConflictError("Rechnung ist bereits vollständig bezahlt.");
-  }
-  if (row.amountMinor > outstanding) {
-    throw new NativeBillingValidationError("Der Betrag übersteigt den offenen Rechnungsbetrag.");
-  }
-
-  const result = await recordCamt054InvoicePayment({
-    invoiceKey: invoice.key,
-    amountMinor: row.amountMinor,
-    currency: row.currency,
-    paymentDate: row.paymentDate.toISOString().slice(0, 10),
-    creditorReference: row.creditorReference,
-    bankTransactionId: row.bankTransactionId,
-    externalReference: `manual:${row.key}`,
-    actorUserId: input.actorUserId,
-  });
-
-  await prisma.bankReconciliationTransaction.update({
-    where: { id: row.id },
-    data: {
-      matchStatus: "MATCHED",
-      matchMethod: "MANUAL_ASSIGNMENT",
-      matchReason: "Manuell zugeordnet",
-      invoiceId: invoice.id,
-      invoicePaymentInstructionId: invoice.paymentInstruction?.id ?? null,
-      invoicePaymentId: result.payment.id,
-    },
-  });
-
-  await prisma.bankReconciliationImport.update({
-    where: { id: row.importId },
-    data: {
-      matchedCount: { increment: 1 },
-      unmatchedCount: { decrement: 1 },
-    },
-  });
-
-  return { paymentKey: result.payment.key, invoiceKey: invoice.key };
 }

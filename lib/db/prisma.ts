@@ -2,6 +2,7 @@
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 import { requireSafeTestDatabaseUrlForPrisma } from "@/lib/test/safe-test-database";
+import { getEffectivePrismaRuntimeConnectionSource } from "./runtime-connection";
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -17,10 +18,11 @@ function getPrismaClient(): PrismaClient {
 
   // Vitest must never inherit a runtime DATABASE_URL. Any test that actually
   // uses the application client must first prove an explicit local test target.
+  const runtimeConnection = getEffectivePrismaRuntimeConnectionSource();
   const connectionString =
-    process.env.NODE_ENV === "test"
+    runtimeConnection.variable === "TEST_DATABASE_URL"
       ? requireSafeTestDatabaseUrlForPrisma()
-      : process.env.DATABASE_URL?.trim();
+      : runtimeConnection.value;
 
   if (!connectionString) {
     throw new Error(

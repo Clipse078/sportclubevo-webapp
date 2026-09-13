@@ -33,6 +33,16 @@ export function classifyCamt054EntryOutcome(
       return { matchStatus: "REVIEW_REQUIRED", matchMethod: "AMOUNT_EXCEEDS_OUTSTANDING" };
     case "skipped_rejected":
       return { matchStatus: "ERROR", matchMethod: "REJECTED_ENTRY" };
+    case "skipped_reversal":
+      return {
+        matchStatus: "REVIEW_REQUIRED",
+        matchMethod: "REVERSAL_REQUIRES_REVIEW",
+      };
+    case "skipped_unprovable_transaction":
+      return {
+        matchStatus: "REVIEW_REQUIRED",
+        matchMethod: "PROVIDER_TRANSACTION_ID_MISSING",
+      };
     case "skipped_invoice_not_payable":
       if (invoiceStatus === "PAID") {
         return { matchStatus: "REVIEW_REQUIRED", matchMethod: "INVOICE_ALREADY_PAID" };
@@ -89,6 +99,10 @@ export function matchMethodLabel(method: BankReconciliationMatchMethod | null): 
       return "Rechnung nicht zahlbar";
     case "PARSE_ERROR":
       return "XML-Fehler";
+    case "PROVIDER_TRANSACTION_ID_MISSING":
+      return "Provider-Transaktions-ID fehlt";
+    case "REVERSAL_REQUIRES_REVIEW":
+      return "Rückbuchung manuell prüfen";
     default:
       return method;
   }

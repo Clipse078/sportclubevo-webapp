@@ -17,8 +17,9 @@ export async function findBankReconciliationImportByKey(
 export async function findBankReconciliationImportByContentHash(
   legalEntityId: string,
   contentSha256: string,
+  tx: Prisma.TransactionClient = prisma,
 ): Promise<BankReconciliationImport | null> {
-  return prisma.bankReconciliationImport.findUnique({
+  return tx.bankReconciliationImport.findUnique({
     where: { legalEntityId_contentSha256: { legalEntityId, contentSha256 } },
   });
 }
@@ -45,13 +46,14 @@ export async function listBankReconciliationTransactionsForImport(
 
 export async function findBankReconciliationTransactionByKey(
   transactionKey: string,
+  tx: Prisma.TransactionClient = prisma,
 ): Promise<
   | (BankReconciliationTransaction & {
       import: BankReconciliationImport;
     })
   | null
 > {
-  return prisma.bankReconciliationTransaction.findUnique({
+  return tx.bankReconciliationTransaction.findUnique({
     where: { key: transactionKey },
     include: { import: true },
   });
@@ -60,8 +62,9 @@ export async function findBankReconciliationTransactionByKey(
 export async function createBankReconciliationImportWithTransactions(
   data: Prisma.BankReconciliationImportCreateInput,
   transactions: Prisma.BankReconciliationTransactionCreateWithoutImportInput[],
+  tx: Prisma.TransactionClient = prisma,
 ): Promise<BankReconciliationImport> {
-  return prisma.bankReconciliationImport.create({
+  return tx.bankReconciliationImport.create({
     data: {
       ...data,
       transactions: { create: transactions },

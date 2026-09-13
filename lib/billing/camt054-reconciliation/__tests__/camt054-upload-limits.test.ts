@@ -17,4 +17,13 @@ describe("camt054 upload limits", () => {
   it("enforces size limit", () => {
     expect(() => assertCamt054UploadWithinLimit(CAMT054_MAX_UPLOAD_BYTES + 1)).toThrow();
   });
+
+  it("rejects path-like filenames", () => {
+    expect(() => assertCamt054Filename("../../statement.xml")).toThrow(
+      /Ungültiger Dateiname/,
+    );
+    expect(() => assertCamt054Filename("folder\\statement.xml")).toThrow(
+      /Ungültiger Dateiname/,
+    );
+  });
 });

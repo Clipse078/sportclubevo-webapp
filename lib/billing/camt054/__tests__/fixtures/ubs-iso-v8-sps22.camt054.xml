@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.054.001.08">
+  <BkToCstmrDbtCdtNtfctn>
+    <GrpHdr><MsgId>UBS-SYNTHETIC-SPS22-001</MsgId><CreDtTm>2026-09-13T02:00:00Z</CreDtTm></GrpHdr>
+    <Ntfctn>
+      <Id>UBS-EOD-SYNTHETIC-001</Id>
+      <Acct><Id><IBAN>CH4400023000012345678</IBAN></Id><Ccy>CHF</Ccy></Acct>
+      <Ntry>
+        <Amt Ccy="CHF">215.12</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <BookgDt><Dt>2026-09-12</Dt></BookgDt>
+        <ValDt><Dt>2026-09-13</Dt></ValDt>
+        <NtryRef>UBS-NTRY-001</NtryRef>
+        <NtryDtls>
+          <Btch>
+            <NbOfTxs>1</NbOfTxs>
+            <TxDtls>
+              <Refs>
+                <AcctSvcrRef>UBS-ASR-SYNTHETIC-0001</AcctSvcrRef>
+                <EndToEndId>NOTPROVIDED</EndToEndId>
+              </Refs>
+              <AmtDtls><TxAmt><Amt Ccy="CHF">215.12</Amt></TxAmt></AmtDtls>
+              <RltdPties><Dbtr><Pty><Nm>Example Sports Club</Nm></Pty></Dbtr></RltdPties>
+              <RmtInf>
+                <Strd>
+                  <CdtrRefInf>
+                    <Tp><CdOrPrtry><Prtry>QRR</Prtry></CdOrPrtry></Tp>
+                    <Ref>273282026000004025434650070</Ref>
+                  </CdtrRefInf>
+                </Strd>
+              </RmtInf>
+            </TxDtls>
+          </Btch>
+        </NtryDtls>
+      </Ntry>
+      <Ntry>
+        <Amt Ccy="CHF">10.00</Amt>
+        <CdtDbtInd>DBIT</CdtDbtInd>
+        <RvslInd>true</RvslInd>
+        <BookgDt><Dt>2026-09-13</Dt></BookgDt>
+        <NtryDtls>
+          <TxDtls>
+            <Refs><AcctSvcrRef>UBS-ASR-SYNTHETIC-REV-1</AcctSvcrRef></Refs>
+            <RmtInf>
+              <Strd>
+                <CdtrRefInf>
+                  <Tp><CdOrPrtry><Prtry>QRR</Prtry></CdOrPrtry></Tp>
+                  <Ref>273282026000004025434650070</Ref>
+                </CdtrRefInf>
+              </Strd>
+            </RmtInf>
+          </TxDtls>
+        </NtryDtls>
+      </Ntry>
+    </Ntfctn>
+  </BkToCstmrDbtCdtNtfctn>
+</Document>

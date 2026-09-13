@@ -1,17 +1,18 @@
-import { getRuntimeEnvironment } from "@/lib/env";
-import { getDatabaseFingerprintFromUrl } from "@/lib/server/deployment-identity";
 import { NativeBillingConflictError } from "@/lib/billing/native-billing-types";
-
-// Safe host+database identity attested by the SWISS-01H STAGE CLI diagnostic.
-// This prevents two equally misconfigured Preview variables from passing.
-export const CAMT054_STAGE_DATABASE_FINGERPRINT = "acd3b37682911890";
+import {
+  requireBillingDataEnvironment,
+  resolveRuntimeIdentity,
+  RuntimeDataEnvironmentError,
+} from "@/lib/server/runtime-identity";
 
 export type Camt054PreviewRuntimeDiagnostics = {
   vercelEnv: string | null;
   appEnv: string;
+  deploymentEnvironment: string;
+  dataEnvironment: string;
   deploymentCommit: string | null;
   databaseFingerprint: string | null;
-  stageDatabaseFingerprint: string | null;
+  stageDatabaseFingerprint: null;
   databaseAligned: boolean;
   legalEntityKey: string;
   legalEntityFound: boolean | null;
@@ -33,48 +34,43 @@ export class Camt054PreviewRuntimeConflictError extends NativeBillingConflictErr
 }
 
 /**
- * SWISS-01H Preview acceptance requires the same persistent STAGE database as
- * CLI/STAGE dry-runs. PR Preview deployments often ship without the Production
- * DATABASE_URL scope; matching then fails with QRR_NOT_FOUND even when the
- * camt.054 QRR is valid.
+ * Preview billing is intentionally allowed to operate on STAGE data, but only
+ * when the canonical data-environment and effective Prisma DB identity are
+ * both explicit and attested.
  */
 export function assertCamt054ReconciliationDatabaseAlignment(
   processEnv: NodeJS.ProcessEnv = process.env,
   legalEntityKey = "",
 ): Camt054PreviewRuntimeDiagnostics | null {
-  const runtime = getRuntimeEnvironment({
-    ...processEnv,
-    NODE_ENV: processEnv.NODE_ENV ?? "development",
-  });
+  const identity = resolveRuntimeIdentity(processEnv, legalEntityKey);
 
-  if (!runtime.isPreview) {
+  if (identity.deploymentEnvironment !== "PREVIEW") {
     return null;
   }
 
-  const stageReferenceUrl = processEnv.STAGE_DB_URL?.trim();
-  const databaseUrl = processEnv.DATABASE_URL?.trim();
-  const stageFingerprint = getDatabaseFingerprintFromUrl(stageReferenceUrl);
-  const previewFingerprint = getDatabaseFingerprintFromUrl(databaseUrl);
-  const databaseAligned =
-    stageFingerprint === CAMT054_STAGE_DATABASE_FINGERPRINT &&
-    previewFingerprint === CAMT054_STAGE_DATABASE_FINGERPRINT;
   const diagnostics: Camt054PreviewRuntimeDiagnostics = {
-    vercelEnv: runtime.vercelEnv,
-    appEnv: runtime.appEnv,
-    deploymentCommit: processEnv.VERCEL_GIT_COMMIT_SHA?.trim() || null,
-    databaseFingerprint: previewFingerprint,
-    stageDatabaseFingerprint: stageFingerprint,
-    databaseAligned,
+    vercelEnv: identity.vercelEnvironment,
+    appEnv: identity.deploymentEnvironment.toLowerCase(),
+    deploymentEnvironment: identity.deploymentEnvironment,
+    dataEnvironment: identity.dataEnvironment,
+    deploymentCommit: identity.commitSha,
+    databaseFingerprint: identity.databaseFingerprint,
+    stageDatabaseFingerprint: null,
+    databaseAligned: identity.databaseFingerprintMatchesConfiguredTarget,
     legalEntityKey,
     legalEntityFound: null,
     acceptanceInvoiceFound: null,
     acceptancePaymentInstructionFound: null,
   };
 
-  if (!databaseAligned) {
+  try {
+    requireBillingDataEnvironment("STAGE", processEnv);
+  } catch (error) {
+    const reason =
+      error instanceof RuntimeDataEnvironmentError ? ` (${error.code})` : "";
     throw new Camt054PreviewRuntimeConflictError(
-      "Die Preview-Umgebung ist nicht mit der STAGE-Datenbank verbunden. " +
-        "Der Bankabgleich wurde aus Sicherheitsgründen nicht ausgeführt.",
+      "Preview ist nicht explizit und nachweisbar mit der STAGE-Datenumgebung verbunden. " +
+        `Der Bankabgleich wurde aus Sicherheitsgründen nicht ausgeführt${reason}.`,
       "PREVIEW_NOT_TARGETING_STAGE_DB",
       diagnostics,
     );

@@ -131,6 +131,13 @@ export const NAV_SECTIONS: NavSection[] = [
             permissionKeys: [PERMISSIONS.BILLING_VIEW],
             navContexts: ["platform"],
           },
+          {
+            key: "platform-commercial-billing-operations",
+            label: "Operations",
+            href: "/dashboard/admin/commercial/billing/operations",
+            permissionKeys: [PERMISSIONS.BILLING_MANAGE],
+            navContexts: ["platform"],
+          },
         ],
       },
       {

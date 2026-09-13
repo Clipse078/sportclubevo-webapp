@@ -6,6 +6,7 @@ import {
   NATIVE_BILLING_AUDIT_ACTIONS,
   NATIVE_BILLING_AUDIT_MODULE,
 } from "@/lib/billing/native-billing-audit";
+import { logBillingOperationalEvent } from "@/lib/billing/operations/billing-operational-log";
 import {
   NativeBillingConflictError,
   NativeBillingNotFoundError,
@@ -34,6 +35,7 @@ import type {
   InvoicePaymentSummary,
   RecordCamt054InvoicePaymentInput,
   RecordInvoicePaymentInput,
+  RecordStripeInvoicePaymentInput,
   ReverseInvoicePaymentInput,
 } from "./invoice-payment-types";
 
@@ -173,7 +175,7 @@ function validateRecordPaymentFields(input: RecordInvoicePaymentInput): {
 async function lockInvoiceForPayment(
   tx: Prisma.TransactionClient,
   invoiceId: string,
-): Promise<{ id: string; status: InvoiceStatus; grossTotalMinor: number; currency: string; key: string; invoiceNumber: string | null }> {
+): Promise<{ id: string; status: InvoiceStatus; grossTotalMinor: number; currency: string; key: string; invoiceNumber: string | null; legalEntityKey: string }> {
   const rows = await tx.$queryRaw<
     Array<{
       id: string;
@@ -182,11 +184,14 @@ async function lockInvoiceForPayment(
       currency: string;
       key: string;
       invoiceNumber: string | null;
+      legalEntityKey: string;
     }>
   >`
-    SELECT "id", "status", "grossTotalMinor", "currency", "key", "invoiceNumber"
-    FROM "Invoice"
-    WHERE "id" = ${invoiceId}
+    SELECT i."id", i."status", i."grossTotalMinor", i."currency", i."key",
+           i."invoiceNumber", le."key" AS "legalEntityKey"
+    FROM "Invoice" i
+    JOIN "LegalEntity" le ON le."id" = i."legalEntityId"
+    WHERE i."id" = ${invoiceId}
     FOR UPDATE
   `;
   const row = rows[0];
@@ -261,10 +266,18 @@ export async function recordInvoicePayment(
       invoice: { ...invoice, status: nextStatus },
       payments: payments.map((p) => ({
         ...p,
-        method: "BANK_TRANSFER_MANUAL" as const,
+        method: p.method as InvoicePaymentRecord["method"],
         source: p.source as InvoicePaymentRecord["source"],
         status: p.status as InvoicePaymentRecord["status"],
       })),
+    });
+    logBillingOperationalEvent("billing.payment.created", {
+      legalEntityKey: locked.legalEntityKey,
+      transactionKey: payment.providerTransactionId,
+      invoiceNumber: locked.invoiceNumber,
+      amountMinor: payment.amountMinor,
+      currency: payment.currency,
+      matchMethod: payment.source,
     });
 
     void logAction({
@@ -386,15 +399,80 @@ export async function reverseInvoicePayment(
 
 export async function recordCamt054InvoicePayment(
   input: RecordCamt054InvoicePaymentInput,
+  transactionClient?: Prisma.TransactionClient,
 ): Promise<{ payment: InvoicePaymentRecord; summary: InvoicePaymentSummary }> {
-  const invoice = await findInvoiceByKey(input.invoiceKey);
+  if (!input.bankTransactionId.trim()) {
+    throw new NativeBillingValidationError("Banktransaktions-ID fehlt.");
+  }
+  return recordExternalProviderPayment({
+    invoiceKey: input.invoiceKey,
+    amountMinor: input.amountMinor,
+    currency: input.currency,
+    paymentDate: input.paymentDate,
+    method: "BANK_TRANSFER_CAMT054",
+    source: "CAMT054",
+    reference: input.creditorReference,
+    note: "camt.054 Abgleich",
+    externalReference: input.externalReference,
+    providerTransactionId: `CAMT054:${input.bankTransactionId.trim()}`,
+    bankTransactionId: input.bankTransactionId.trim(),
+    actorUserId: input.actorUserId,
+    importKey: input.importKey ?? null,
+  }, transactionClient);
+}
+
+export async function recordStripeInvoicePayment(
+  input: RecordStripeInvoicePaymentInput,
+): Promise<{ payment: InvoicePaymentRecord; summary: InvoicePaymentSummary }> {
+  const stripePaymentIntentId = input.stripePaymentIntentId.trim();
+  if (!/^pi_[A-Za-z0-9_]+$/.test(stripePaymentIntentId)) {
+    throw new NativeBillingValidationError("Ungültige Stripe Payment-Intent-ID.");
+  }
+  return recordExternalProviderPayment({
+    invoiceKey: input.invoiceKey,
+    amountMinor: input.amountMinor,
+    currency: input.currency,
+    paymentDate: input.paymentDate,
+    method: "STRIPE_PAYMENT",
+    source: "STRIPE",
+    reference: stripePaymentIntentId,
+    note: "Stripe Zahlung",
+    externalReference: stripePaymentIntentId,
+    providerTransactionId: `STRIPE:${stripePaymentIntentId}`,
+    bankTransactionId: null,
+    actorUserId: input.actorUserId,
+    importKey: null,
+  });
+}
+
+async function recordExternalProviderPayment(input: {
+  invoiceKey: string;
+  amountMinor: number;
+  currency: string;
+  paymentDate: string;
+  method: InvoicePaymentRecord["method"];
+  source: "CAMT054" | "STRIPE";
+  reference: string | null;
+  note: string;
+  externalReference: string | null;
+  providerTransactionId: string;
+  bankTransactionId: string | null;
+  actorUserId: string | null;
+  importKey: string | null;
+},
+transactionClient?: Prisma.TransactionClient,
+): Promise<{ payment: InvoicePaymentRecord; summary: InvoicePaymentSummary }> {
+  const invoice = await findInvoiceByKey(
+    input.invoiceKey,
+    transactionClient ?? prisma,
+  );
   if (!invoice) {
     throw new NativeBillingNotFoundError("Rechnung nicht gefunden.");
   }
   assertPayableInvoice(invoice);
 
-  if (!input.bankTransactionId.trim()) {
-    throw new NativeBillingValidationError("Banktransaktions-ID fehlt.");
+  if (!Number.isInteger(input.amountMinor) || input.amountMinor <= 0) {
+    throw new NativeBillingValidationError("Ungültiger Zahlungsbetrag.");
   }
 
   const paymentDate = parsePaymentDate(input.paymentDate);
@@ -404,14 +482,14 @@ export async function recordCamt054InvoicePayment(
   }
 
   const reference =
-    input.creditorReference != null && input.creditorReference.trim() !== ""
-      ? input.creditorReference.trim()
+    input.reference != null && input.reference.trim() !== ""
+      ? input.reference.trim()
       : null;
   if (reference && reference.length > INVOICE_PAYMENT_REFERENCE_MAX_LENGTH) {
     throw new NativeBillingValidationError("Referenz ist zu lang.");
   }
 
-  return prisma.$transaction(async (tx) => {
+  const execute = async (tx: Prisma.TransactionClient) => {
     const locked = await lockInvoiceForPayment(tx, invoice.id);
     assertPayableInvoice({ ...invoice, status: locked.status });
 
@@ -433,13 +511,14 @@ export async function recordCamt054InvoicePayment(
         amountMinor: input.amountMinor,
         currency: invoice.currency,
         paymentDate,
-        method: "BANK_TRANSFER_MANUAL",
+        method: input.method,
         reference,
-        note: "camt.054 Abgleich",
-        source: "CAMT054",
+        note: input.note,
+        source: input.source,
         createdByUserId: input.actorUserId,
         externalReference: input.externalReference,
-        bankTransactionId: input.bankTransactionId.trim(),
+        providerTransactionId: input.providerTransactionId,
+        bankTransactionId: input.bankTransactionId,
       },
       tx,
     );
@@ -463,10 +542,20 @@ export async function recordCamt054InvoicePayment(
       invoice: { ...invoice, status: nextStatus },
       payments: payments.map((p) => ({
         ...p,
-        method: "BANK_TRANSFER_MANUAL" as const,
+        method: p.method as InvoicePaymentRecord["method"],
         source: p.source as InvoicePaymentRecord["source"],
         status: p.status as InvoicePaymentRecord["status"],
       })),
+    });
+
+    logBillingOperationalEvent("billing.payment.created", {
+      legalEntityKey: locked.legalEntityKey,
+      importKey: input.importKey,
+      transactionKey: payment.providerTransactionId,
+      invoiceNumber: locked.invoiceNumber,
+      amountMinor: payment.amountMinor,
+      currency: payment.currency,
+      matchMethod: payment.source,
     });
 
     void logAction({
@@ -493,7 +582,8 @@ export async function recordCamt054InvoicePayment(
     });
 
     return { payment, summary };
-  });
+  };
+  return transactionClient ? execute(transactionClient) : prisma.$transaction(execute);
 }
 
 /** @deprecated use calculateInvoicePaymentSummaryFromParts via getInvoicePaymentSummary */

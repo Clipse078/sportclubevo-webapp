@@ -15,6 +15,12 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/billing/native-billing-repository", () => ({
   findLegalEntityByKey: mocks.findLegalEntityByKey,
 }));
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: {
+    $transaction: (callback: (tx: Record<string, never>) => unknown) =>
+      callback({}),
+  },
+}));
 
 vi.mock("@/lib/billing/invoice-payments/invoice-payment-repository", () => ({
   findConfirmedPaymentByBankTransactionId: mocks.findConfirmedPaymentByBankTransactionId,
@@ -103,12 +109,18 @@ describe("reconcileCamt054Statement (SWISS-01H)", () => {
     expect(report.appliedCount).toBe(1);
     expect(report.importKey).toBe("import-1");
     expect(report.entries[0]?.outcome).toBe("applied");
+    expect(mocks.createBankReconciliationImportWithTransactions).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
     expect(mocks.recordCamt054InvoicePayment).toHaveBeenCalledWith(
       expect.objectContaining({
         invoiceKey: "inv-key",
         amountMinor: 21512,
-        bankTransactionId: expect.stringContaining("BANK-TX-SCE-01H-001"),
+        bankTransactionId: expect.stringMatching(/^CAMT054:[a-f0-9]{24}:[a-f0-9]{24}$/),
       }),
+      expect.anything(),
     );
   });
 
@@ -128,5 +140,56 @@ describe("reconcileCamt054Statement (SWISS-01H)", () => {
 
     expect(report.entries[0]?.outcome).toBe("skipped_duplicate");
     expect(mocks.recordCamt054InvoicePayment).not.toHaveBeenCalled();
+  });
+
+  it("requires review when Stripe already consumed the invoice balance", async () => {
+    mocks.findInvoiceForCamt054QrrReference.mockResolvedValue({
+      invoiceId: "inv-1",
+      invoiceKey: "inv-key",
+      invoiceNumber: "2026-000003",
+      legalEntityId: "le-1",
+      currency: "CHF",
+      grossTotalMinor: 21512,
+      paidTotalMinor: 21512,
+      outstandingMinor: 0,
+      status: "OPEN",
+      paymentInstructionId: "pi-1",
+    });
+    const report = await reconcileCamt054Statement({
+      legalEntityKey: "issuer",
+      xml: fixtureXml,
+      dryRun: true,
+      actorUserId: "user-1",
+    });
+    expect(report.entries[0]).toMatchObject({
+      matchStatus: "REVIEW_REQUIRED",
+      matchMethod: "INVOICE_ALREADY_PAID",
+    });
+    expect(mocks.recordCamt054InvoicePayment).not.toHaveBeenCalled();
+  });
+
+  it("requires review for overpayments before execution", async () => {
+    mocks.findInvoiceForCamt054QrrReference.mockResolvedValue({
+      invoiceId: "inv-1",
+      invoiceKey: "inv-key",
+      invoiceNumber: "2026-000003",
+      legalEntityId: "le-1",
+      currency: "CHF",
+      grossTotalMinor: 21512,
+      paidTotalMinor: 10000,
+      outstandingMinor: 11512,
+      status: "PARTIALLY_PAID",
+      paymentInstructionId: "pi-1",
+    });
+    const report = await reconcileCamt054Statement({
+      legalEntityKey: "issuer",
+      xml: fixtureXml,
+      dryRun: true,
+      actorUserId: "user-1",
+    });
+    expect(report.entries[0]).toMatchObject({
+      matchStatus: "REVIEW_REQUIRED",
+      matchMethod: "AMOUNT_EXCEEDS_OUTSTANDING",
+    });
   });
 });

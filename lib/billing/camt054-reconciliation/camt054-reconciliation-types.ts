@@ -10,6 +10,8 @@ export type Camt054ReconciliationEntryOutcome =
   | "planned"
   | "skipped_duplicate"
   | "skipped_rejected"
+  | "skipped_reversal"
+  | "skipped_unprovable_transaction"
   | "skipped_no_reference"
   | "skipped_unsupported_reference"
   | "unmatched_invoice"
@@ -35,6 +37,12 @@ export type Camt054ReconciliationEntryResult = {
 export type Camt054ReconciliationReport = {
   legalEntityKey: string;
   messageId: string | null;
+  contentSha256: string;
+  accountIdentificationMasked: string | null;
+  bookingPeriodStart: string | null;
+  bookingPeriodEnd: string | null;
+  totalCreditsMinor: number;
+  creditCurrency: string | null;
   dryRun: boolean;
   appliedCount: number;
   skippedCount: number;

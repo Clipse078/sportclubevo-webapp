@@ -19,6 +19,9 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/permissions/require-platform-api-permission", () => ({
   requirePlatformApiPermission: mocks.requirePlatformApiPermission,
 }));
+vi.mock("@/lib/security/platform-superadmin", () => ({
+  isPlatformSuperAdmin: vi.fn().mockResolvedValue(true),
+}));
 
 vi.mock("@/lib/billing/native-billing-repository", () => ({
   findLegalEntityByKey: mocks.findLegalEntityByKey,
@@ -75,7 +78,8 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
     vi.stubEnv("VERCEL_ENV", "preview");
     vi.stubEnv("APP_ENV", "preview");
     vi.stubEnv("DATABASE_URL", STAGE_URL);
-    vi.stubEnv("STAGE_DB_URL", STAGE_URL);
+    vi.stubEnv("SCE_DATA_ENVIRONMENT", "STAGE");
+    vi.stubEnv("SCE_DATA_DATABASE_FINGERPRINT", "acd3b37682911890");
 
     mocks.requirePlatformApiPermission.mockResolvedValue({
       ok: true,
@@ -133,12 +137,9 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
       };
       diagnostics: {
         databaseFingerprint: string;
-        stageDatabaseFingerprint: string;
+        dataEnvironment: string;
         databaseAligned: boolean;
         legalEntityKey: string;
-        legalEntityFound: boolean;
-        acceptanceInvoiceFound: boolean;
-        acceptancePaymentInstructionFound: boolean;
       };
     };
 
@@ -150,12 +151,9 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
     });
     expect(body.diagnostics).toMatchObject({
       databaseFingerprint: "acd3b37682911890",
-      stageDatabaseFingerprint: "acd3b37682911890",
+      dataEnvironment: "STAGE",
       databaseAligned: true,
       legalEntityKey: LEGAL_ENTITY_KEY,
-      legalEntityFound: true,
-      acceptanceInvoiceFound: true,
-      acceptancePaymentInstructionFound: true,
     });
 
     expect(mocks.invoicePaymentInstructionFindFirst).toHaveBeenCalledWith(
@@ -172,11 +170,8 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
     );
   });
 
-  it("fails with STAGE_ACCEPTANCE_DATA_MISSING before matching when the synthetic PI is absent", async () => {
-    mocks.invoiceFindUnique.mockResolvedValue({
-      id: "inv-id-2026-000004",
-      paymentInstruction: null,
-    });
+  it("does not hard-code synthetic acceptance invoice probes in domain code", async () => {
+    mocks.invoicePaymentInstructionFindFirst.mockResolvedValue(null);
 
     const res = await POST(
       new NextRequest("http://localhost/api", {
@@ -186,28 +181,13 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
       { params: Promise.resolve({ key: LEGAL_ENTITY_KEY }) },
     );
 
-    expect(res.status).toBe(409);
-    const body = (await res.json()) as {
-      code: string;
-      diagnostics: {
-        databaseAligned: boolean;
-        legalEntityFound: boolean;
-        acceptanceInvoiceFound: boolean;
-        acceptancePaymentInstructionFound: boolean;
-      };
-    };
-    expect(body.code).toBe("STAGE_ACCEPTANCE_DATA_MISSING");
-    expect(body.diagnostics).toMatchObject({
-      databaseAligned: true,
-      legalEntityFound: true,
-      acceptanceInvoiceFound: true,
-      acceptancePaymentInstructionFound: false,
-    });
-    expect(mocks.findLegalEntityByKey).not.toHaveBeenCalled();
-    expect(mocks.invoicePaymentInstructionFindFirst).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(mocks.findLegalEntityByKey).toHaveBeenCalledWith(LEGAL_ENTITY_KEY);
+    expect(mocks.legalEntityFindUnique).not.toHaveBeenCalled();
+    expect(mocks.invoiceFindUnique).not.toHaveBeenCalled();
   });
 
-  it("fails closed on Preview when DATABASE_URL is not aligned with STAGE_DB_URL", async () => {
+  it("fails closed on Preview when the effective DB identity is not attested", async () => {
     vi.stubEnv(
       "DATABASE_URL",
       "postgresql://u:p@ep-other-branch-aso93dy6-pooler.c-4.eu-central-1.aws.neon.tech/neondb",
@@ -227,7 +207,7 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
       code: string;
       diagnostics: { databaseAligned: boolean };
     };
-    expect(body.error).toMatch(/STAGE-Datenbank/i);
+    expect(body.error).toMatch(/STAGE-Datenumgebung/i);
     expect(body.code).toBe("PREVIEW_NOT_TARGETING_STAGE_DB");
     expect(body.diagnostics.databaseAligned).toBe(false);
     expect(mocks.findLegalEntityByKey).not.toHaveBeenCalled();
@@ -235,8 +215,8 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
     expect(mocks.invoicePaymentInstructionFindFirst).not.toHaveBeenCalled();
   });
 
-  it("fails closed before matching when Preview has no STAGE_DB_URL", async () => {
-    vi.stubEnv("STAGE_DB_URL", "");
+  it("fails closed before matching when Preview has no data environment", async () => {
+    vi.stubEnv("SCE_DATA_ENVIRONMENT", "");
 
     const res = await POST(
       new NextRequest("http://localhost/api", {
@@ -250,7 +230,7 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
     await expect(res.json()).resolves.toMatchObject({
       code: "PREVIEW_NOT_TARGETING_STAGE_DB",
       diagnostics: {
-        stageDatabaseFingerprint: null,
+        dataEnvironment: "UNKNOWN",
         databaseAligned: false,
       },
     });
@@ -258,11 +238,10 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
     expect(mocks.invoicePaymentInstructionFindFirst).not.toHaveBeenCalled();
   });
 
-  it("fails closed when both Preview URLs point to the same wrong database", async () => {
+  it("fails closed when Preview points to an unattested database", async () => {
     const wrongUrl =
       "postgresql://u:p@ep-other-branch-aso93dy6-pooler.c-4.eu-central-1.aws.neon.tech/neondb";
     vi.stubEnv("DATABASE_URL", wrongUrl);
-    vi.stubEnv("STAGE_DB_URL", wrongUrl);
 
     const res = await POST(
       new NextRequest("http://localhost/api", {

@@ -24,4 +24,12 @@ export function assertCamt054Filename(filename: string): void {
   if (!trimmed.toLowerCase().endsWith(".xml")) {
     throw new Error("Nur .xml Dateien sind erlaubt.");
   }
+  if (
+    trimmed.length > 180 ||
+    trimmed.includes("/") ||
+    trimmed.includes("\\") ||
+    /[\u0000-\u001f\u007f]/.test(trimmed)
+  ) {
+    throw new Error("Ungültiger Dateiname.");
+  }
 }

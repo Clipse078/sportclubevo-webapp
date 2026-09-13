@@ -50,6 +50,8 @@ vi.mock("@/lib/db/prisma", () => ({
 
 const {
   recordInvoicePayment,
+  recordCamt054InvoicePayment,
+  recordStripeInvoicePayment,
   reverseInvoicePayment,
   recalculateInvoicePaymentStatus,
   getInvoicePaymentSummary,
@@ -105,6 +107,7 @@ describe("invoice payment service", () => {
         currency: "CHF",
         key: baseInvoice.key,
         invoiceNumber: baseInvoice.invoiceNumber,
+        legalEntityKey: "sportclubevo-by-tulip-digital",
       },
     ]);
     mocks.createInvoicePaymentRecord.mockImplementation(async (data) => ({
@@ -280,6 +283,57 @@ describe("invoice payment service", () => {
         actorUserId: "user-1",
       }),
     ).rejects.toBeInstanceOf(NativeBillingConflictError);
+  });
+
+  it("Stripe first then bank is blocked by the canonical invoice balance", async () => {
+    mocks.findInvoiceByKey.mockResolvedValue({ ...baseInvoice, status: "PAID" });
+    await expect(
+      recordCamt054InvoicePayment({
+        invoiceKey: "inv-key",
+        amountMinor: 21512,
+        currency: "CHF",
+        paymentDate: "2026-09-12",
+        creditorReference: "273282026000004025434650070",
+        bankTransactionId: "CAMT054:account:transaction",
+        externalReference: "message-1",
+        actorUserId: "user-1",
+      }),
+    ).rejects.toBeInstanceOf(NativeBillingConflictError);
+    expect(mocks.createInvoicePaymentRecord).not.toHaveBeenCalled();
+  });
+
+  it("bank first then Stripe is blocked by the canonical invoice balance", async () => {
+    mocks.findInvoiceByKey.mockResolvedValue({ ...baseInvoice, status: "PAID" });
+    await expect(
+      recordStripeInvoicePayment({
+        invoiceKey: "inv-key",
+        amountMinor: 21512,
+        currency: "CHF",
+        paymentDate: "2026-09-12",
+        stripePaymentIntentId: "pi_synthetic_123",
+        actorUserId: null,
+      }),
+    ).rejects.toBeInstanceOf(NativeBillingConflictError);
+    expect(mocks.createInvoicePaymentRecord).not.toHaveBeenCalled();
+  });
+
+  it("records Stripe through InvoicePayment with source-scoped idempotency", async () => {
+    await recordStripeInvoicePayment({
+      invoiceKey: "inv-key",
+      amountMinor: 10000,
+      currency: "CHF",
+      paymentDate: "2026-09-12",
+      stripePaymentIntentId: "pi_synthetic_456",
+      actorUserId: null,
+    });
+    expect(mocks.createInvoicePaymentRecord).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: "STRIPE_PAYMENT",
+        source: "STRIPE",
+        providerTransactionId: "STRIPE:pi_synthetic_456",
+      }),
+      expect.anything(),
+    );
   });
 
   it("rejects currency mismatch", async () => {

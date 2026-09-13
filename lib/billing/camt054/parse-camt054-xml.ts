@@ -1,4 +1,5 @@
-import { XMLParser } from "fast-xml-parser";
+import { createHash } from "node:crypto";
+import { XMLParser, XMLValidator } from "fast-xml-parser";
 import type { Camt054CreditTransaction, Camt054ParseResult } from "./camt054-types";
 
 export class Camt054ParseError extends Error {
@@ -48,8 +49,10 @@ function extractReferenceType(cdtrRefInf: unknown): "QRR" | "SCOR" | "UNKNOWN" {
   const cdOrPrtry = (tp as Record<string, unknown>).CdOrPrtry;
   if (!cdOrPrtry || typeof cdOrPrtry !== "object") return "UNKNOWN";
   const prtry = readText((cdOrPrtry as Record<string, unknown>).Prtry);
+  const code = readText((cdOrPrtry as Record<string, unknown>).Cd);
   if (prtry?.toUpperCase() === "QRR") return "QRR";
   if (prtry?.toUpperCase() === "SCOR") return "SCOR";
+  if (code?.toUpperCase() === "SCOR") return "SCOR";
   return "UNKNOWN";
 }
 
@@ -87,38 +90,75 @@ function extractCreditorReference(rmtInf: unknown): {
   return { reference, referenceType, rejected };
 }
 
-function extractBookingDate(ntry: Record<string, unknown>): string | null {
-  const bookg =
-    readText(ntry.BookgDt) ??
-    readText((ntry.BookgDt as Record<string, unknown> | undefined)?.Dt) ??
-    readText((ntry.ValDt as Record<string, unknown> | undefined)?.Dt);
-  if (!bookg) return null;
-  const match = /^(\d{4}-\d{2}-\d{2})/.exec(bookg);
+function extractDate(node: unknown): string | null {
+  const record =
+    node && typeof node === "object"
+      ? (node as Record<string, unknown>)
+      : undefined;
+  const value =
+    readText(node) ?? readText(record?.Dt) ?? readText(record?.DtTm);
+  if (!value) return null;
+  const match = /^(\d{4}-\d{2}-\d{2})/.exec(value);
   return match ? match[1] : null;
 }
 
-function buildFallbackTransactionId(parts: string[]): string {
-  return parts.filter(Boolean).join("|");
+function hashIdentity(value: string): string {
+  return createHash("sha256").update(value).digest("hex").slice(0, 24);
+}
+
+function maskAccount(value: string | null): string | null {
+  if (!value) return null;
+  const compact = value.replace(/\s+/g, "");
+  return compact.length <= 8
+    ? `****${compact.slice(-4)}`
+    : `${compact.slice(0, 4)}••••${compact.slice(-4)}`;
+}
+
+function extractAccountId(notification: Record<string, unknown>): string | null {
+  const account = notification.Acct as Record<string, unknown> | undefined;
+  const id = account?.Id as Record<string, unknown> | undefined;
+  return readText(id?.IBAN) ?? readText(id?.Othr && (id.Othr as Record<string, unknown>).Id);
+}
+
+function extractTransactionAmount(
+  tx: Record<string, unknown>,
+  entry: Record<string, unknown>,
+) {
+  const details = tx.AmtDtls as Record<string, unknown> | undefined;
+  const txAmount = details?.TxAmt as Record<string, unknown> | undefined;
+  const instructed = details?.InstdAmt as Record<string, unknown> | undefined;
+  return (
+    readAmountMinor(tx.Amt) ??
+    readAmountMinor(txAmount?.Amt) ??
+    readAmountMinor(instructed?.Amt) ??
+    readAmountMinor(entry.Amt)
+  );
 }
 
 function parseTransactionDetail(input: {
   tx: Record<string, unknown>;
   entry: Record<string, unknown>;
   messageId: string | null;
+  accountId: string | null;
   index: number;
 }): Camt054CreditTransaction | null {
   const cdtDbt = readText(input.tx.CdtDbtInd) ?? readText(input.entry.CdtDbtInd);
-  if (!cdtDbt || cdtDbt.toUpperCase() !== "CRDT") {
+  const reversal =
+    cdtDbt?.toUpperCase() === "DBIT" ||
+    readText(input.tx.RvslInd)?.toLowerCase() === "true" ||
+    readText(input.entry.RvslInd)?.toLowerCase() === "true";
+  if (!cdtDbt || (!reversal && cdtDbt.toUpperCase() !== "CRDT")) {
     return null;
   }
 
-  const amount =
-    readAmountMinor(input.tx.Amt) ?? readAmountMinor(input.entry.Amt);
+  const amount = extractTransactionAmount(input.tx, input.entry);
   if (!amount || amount.amountMinor <= 0) {
     return null;
   }
 
-  const paymentDate = extractBookingDate(input.entry);
+  const bookingDate = extractDate(input.entry.BookgDt);
+  const valueDate = extractDate(input.entry.ValDt);
+  const paymentDate = bookingDate ?? valueDate;
   if (!paymentDate) {
     return null;
   }
@@ -126,31 +166,44 @@ function parseTransactionDetail(input: {
   const refs = input.tx.Refs as Record<string, unknown> | undefined;
   const acctSvcrRef = refs ? readText(refs.AcctSvcrRef) : null;
   const endToEndId = refs ? readText(refs.EndToEndId) : null;
-  const bankTransactionId = buildFallbackTransactionId([
-    input.messageId ?? "camt054",
-    acctSvcrRef ?? endToEndId ?? readText(input.entry.NtryRef) ?? `idx-${input.index}`,
-    paymentDate,
-    String(amount.amountMinor),
-  ]);
-
   const { reference, referenceType, rejected } = extractCreditorReference(
     input.tx.RmtInf,
   );
+  const providerReference =
+    acctSvcrRef ?? endToEndId ?? readText(input.entry.NtryRef);
+  const fallback = [
+    input.accountId ?? "unknown-account",
+    paymentDate,
+    String(amount.amountMinor),
+    amount.currency,
+    reference ?? "",
+    reversal ? "reversal" : "credit",
+  ].join("|");
+  const bankTransactionId = `CAMT054:${hashIdentity(input.accountId ?? "unknown-account")}:${
+    providerReference ? hashIdentity(providerReference) : hashIdentity(fallback)
+  }`;
 
   let debtorName: string | null = null;
   const rltdPties = input.tx.RltdPties as Record<string, unknown> | undefined;
   if (rltdPties?.Dbtr && typeof rltdPties.Dbtr === "object") {
-    debtorName = readText((rltdPties.Dbtr as Record<string, unknown>).Nm);
+    const debtor = rltdPties.Dbtr as Record<string, unknown>;
+    const party = debtor.Pty as Record<string, unknown> | undefined;
+    debtorName = readText(debtor.Nm) ?? readText(party?.Nm);
   }
 
   return {
     bankTransactionId,
+    accountServiceReference: acctSvcrRef,
+    endToEndId,
     amountMinor: amount.amountMinor,
     currency: amount.currency,
     paymentDate,
+    bookingDate: paymentDate,
+    valueDate,
     creditorReference: reference,
     referenceType,
     rejected,
+    reversal,
     messageId: input.messageId,
     debtorName,
   };
@@ -174,6 +227,12 @@ export function parseCamt054Xml(xml: string): Camt054ParseResult {
   const trimmed = xml.trim();
   if (!trimmed) {
     throw new Camt054ParseError("Leere camt.054 Datei.");
+  }
+  if (/<!DOCTYPE|<!ENTITY/i.test(trimmed)) {
+    throw new Camt054ParseError("Unsichere XML-Deklaration ist nicht erlaubt.");
+  }
+  if (XMLValidator.validate(trimmed) !== true) {
+    throw new Camt054ParseError("camt.054 XML konnte nicht gelesen werden.");
   }
 
   const parser = new XMLParser({
@@ -211,11 +270,15 @@ export function parseCamt054Xml(xml: string): Camt054ParseResult {
   );
 
   const transactions: Camt054CreditTransaction[] = [];
+  let accountId: string | null = null;
   let index = 0;
 
   for (const ntfctn of asArray(notification.Ntfctn)) {
     if (!ntfctn || typeof ntfctn !== "object") continue;
-    for (const ntry of asArray((ntfctn as Record<string, unknown>).Ntry)) {
+    const notificationRecord = ntfctn as Record<string, unknown>;
+    const notificationAccountId = extractAccountId(notificationRecord);
+    accountId ??= notificationAccountId;
+    for (const ntry of asArray(notificationRecord.Ntry)) {
       if (!ntry || typeof ntry !== "object") continue;
       const entry = ntry as Record<string, unknown>;
       const details = asArray(entry.NtryDtls);
@@ -224,6 +287,7 @@ export function parseCamt054Xml(xml: string): Camt054ParseResult {
           tx: entry,
           entry,
           messageId,
+          accountId: notificationAccountId,
           index,
         });
         if (pseudoTx) transactions.push(pseudoTx);
@@ -232,12 +296,19 @@ export function parseCamt054Xml(xml: string): Camt054ParseResult {
       }
       for (const detail of details) {
         if (!detail || typeof detail !== "object") continue;
-        for (const tx of asArray((detail as Record<string, unknown>).TxDtls)) {
+        const detailRecord = detail as Record<string, unknown>;
+        const batch = detailRecord.Btch as Record<string, unknown> | undefined;
+        const transactionDetails = [
+          ...asArray(detailRecord.TxDtls),
+          ...asArray(batch?.TxDtls),
+        ];
+        for (const tx of transactionDetails) {
           if (!tx || typeof tx !== "object") continue;
           const parsedTx = parseTransactionDetail({
             tx: tx as Record<string, unknown>,
             entry,
             messageId,
+            accountId: notificationAccountId,
             index,
           });
           if (parsedTx) transactions.push(parsedTx);
@@ -247,5 +318,20 @@ export function parseCamt054Xml(xml: string): Camt054ParseResult {
     }
   }
 
-  return { messageId, transactions };
+  const credits = transactions.filter((transaction) => !transaction.reversal);
+  const currencies = new Set(credits.map((transaction) => transaction.currency));
+  const dates = transactions.map((transaction) => transaction.bookingDate).sort();
+  return {
+    messageId,
+    accountIdentification: accountId,
+    accountIdentificationMasked: maskAccount(accountId),
+    bookingPeriodStart: dates[0] ?? null,
+    bookingPeriodEnd: dates.at(-1) ?? null,
+    totalCreditsMinor: credits.reduce(
+      (total, transaction) => total + transaction.amountMinor,
+      0,
+    ),
+    creditCurrency: currencies.size === 1 ? [...currencies][0]! : null,
+    transactions,
+  };
 }

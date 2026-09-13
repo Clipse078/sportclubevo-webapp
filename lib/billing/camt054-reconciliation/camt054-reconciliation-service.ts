@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
+import { Prisma } from "@prisma/client";
 import { logAction } from "@/lib/audit/log-action";
+import { prisma } from "@/lib/db/prisma";
 import { parseCamt054Xml } from "@/lib/billing/camt054/parse-camt054-xml";
 import { findConfirmedPaymentByBankTransactionId } from "@/lib/billing/invoice-payments/invoice-payment-repository";
 import { recordCamt054InvoicePayment } from "@/lib/billing/invoice-payments/invoice-payment-service";
@@ -7,13 +9,17 @@ import {
   NATIVE_BILLING_AUDIT_ACTIONS,
   NATIVE_BILLING_AUDIT_MODULE,
 } from "@/lib/billing/native-billing-audit";
-import { findLegalEntityByKey } from "@/lib/billing/native-billing-repository";
+import { logBillingOperationalEvent } from "@/lib/billing/operations/billing-operational-log";
+import {
+  findLegalEntityByKey,
+  listBillingBankAccountsForLegalEntity,
+} from "@/lib/billing/native-billing-repository";
+import { normalizeBillingBankAccountIban } from "@/lib/billing/billing-bank-account-fingerprint";
 import {
   NativeBillingConflictError,
   NativeBillingNotFoundError,
 } from "@/lib/billing/native-billing-types";
 import { assertCamt054ReconciliationDatabaseAlignment } from "./camt054-reconciliation-database-alignment";
-import { attestCamt054PreviewAcceptanceData } from "./camt054-preview-runtime-diagnostics";
 import { classifyCamt054EntryOutcome } from "./camt054-match-mapping";
 import { sha256Camt054Content } from "./camt054-upload-limits";
 import {
@@ -90,19 +96,25 @@ function countEntryBuckets(entries: Camt054ReconciliationEntryResult[]) {
 
 export async function reconcileCamt054Statement(
   input: ReconcileCamt054Input,
+  transactionClient?: Prisma.TransactionClient,
 ): Promise<Camt054ReconciliationReport> {
+  if (!input.dryRun && !transactionClient) {
+    return prisma.$transaction(
+      (tx) => reconcileCamt054Statement(input, tx),
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
+  }
+
   // Preview alignment must be proven before the first reconciliation database
   // lookup; otherwise a wrong database can masquerade as QRR_NOT_FOUND.
-  let previewDiagnostics = assertCamt054ReconciliationDatabaseAlignment(
+  const previewDiagnostics = assertCamt054ReconciliationDatabaseAlignment(
     process.env,
     input.legalEntityKey,
   );
-  if (previewDiagnostics && input.dryRun) {
-    previewDiagnostics =
-      await attestCamt054PreviewAcceptanceData(previewDiagnostics);
-  }
 
-  const legalEntity = await findLegalEntityByKey(input.legalEntityKey);
+  const legalEntity = transactionClient
+    ? await findLegalEntityByKey(input.legalEntityKey, transactionClient)
+    : await findLegalEntityByKey(input.legalEntityKey);
   if (!legalEntity) {
     throw new NativeBillingNotFoundError("Rechtsträger nicht gefunden.");
   }
@@ -116,6 +128,7 @@ export async function reconcileCamt054Statement(
     const existingImport = await findBankReconciliationImportByContentHash(
       legalEntity.id,
       contentSha256,
+      transactionClient,
     );
     if (existingImport) {
       throw new NativeBillingConflictError(
@@ -125,6 +138,37 @@ export async function reconcileCamt054Statement(
   }
 
   const parsed = parseCamt054Xml(input.xml);
+  if (parsed.accountIdentification) {
+    const accounts = transactionClient
+      ? await listBillingBankAccountsForLegalEntity(
+          legalEntity.id,
+          transactionClient,
+        )
+      : await listBillingBankAccountsForLegalEntity(legalEntity.id);
+    const statementAccount = normalizeBillingBankAccountIban(
+      parsed.accountIdentification,
+    );
+    const accountMatches = accounts.some(
+      (account) =>
+        normalizeBillingBankAccountIban(account.iban) === statementAccount ||
+        (account.qrIban
+          ? normalizeBillingBankAccountIban(account.qrIban) === statementAccount
+          : false),
+    );
+    if (!accountMatches) {
+      throw new NativeBillingConflictError(
+        "Das camt.054 Konto gehört nicht zum gewählten Rechtsträger.",
+        { code: "CAMT054_ACCOUNT_MISMATCH" },
+      );
+    }
+  }
+  const plannedImportKey = input.dryRun ? null : randomUUID();
+  if (plannedImportKey) {
+    logBillingOperationalEvent("billing.reconciliation.import.started", {
+      legalEntityKey: input.legalEntityKey,
+      importKey: plannedImportKey,
+    });
+  }
   const entries: Camt054ReconciliationEntryResult[] = [];
   const entryDrafts: EntryDraft[] = [];
   let appliedCount = 0;
@@ -138,6 +182,7 @@ export async function reconcileCamt054Statement(
   for (const transaction of parsed.transactions) {
     const existing = await findConfirmedPaymentByBankTransactionId(
       transaction.bankTransactionId,
+      transactionClient,
     );
     if (existing) {
       skippedCount += 1;
@@ -172,6 +217,49 @@ export async function reconcileCamt054Statement(
           invoiceId: null,
           message: "Bankmeldung markiert als abgelehnt.",
         });
+      continue;
+    }
+
+    if (transaction.reversal) {
+      skippedCount += 1;
+      pushEntry({
+        bankTransactionId: transaction.bankTransactionId,
+        outcome: "skipped_reversal",
+        transaction,
+        invoiceKey: null,
+        invoiceNumber: null,
+        invoiceStatus: null,
+        paymentInstructionId: null,
+        paymentKey: null,
+        paymentId: null,
+        invoiceId: null,
+        message: "Rückbuchung erkannt; manuelle Prüfung erforderlich.",
+      });
+      continue;
+    }
+
+    const hasProvableProviderTransaction =
+      Boolean(transaction.accountServiceReference) ||
+      Boolean(
+        transaction.endToEndId &&
+          transaction.endToEndId.toUpperCase() !== "NOTPROVIDED",
+      );
+    if (!hasProvableProviderTransaction) {
+      skippedCount += 1;
+      pushEntry({
+        bankTransactionId: transaction.bankTransactionId,
+        outcome: "skipped_unprovable_transaction",
+        transaction,
+        invoiceKey: null,
+        invoiceNumber: null,
+        invoiceStatus: null,
+        paymentInstructionId: null,
+        paymentKey: null,
+        paymentId: null,
+        invoiceId: null,
+        message:
+          "Keine beweisbare UBS-Transaktionsreferenz (AcctSvcrRef/EndToEndId).",
+      });
       continue;
     }
 
@@ -214,6 +302,7 @@ export async function reconcileCamt054Statement(
     const matched = await findInvoiceForCamt054QrrReference(
       transaction.creditorReference,
       legalEntity.id,
+      transactionClient,
     );
     if (!matched) {
       skippedCount += 1;
@@ -269,6 +358,45 @@ export async function reconcileCamt054Statement(
       continue;
     }
 
+    const outstandingMinor =
+      matched.outstandingMinor ?? matched.grossTotalMinor;
+    if (outstandingMinor <= 0) {
+      skippedCount += 1;
+      pushEntry({
+        bankTransactionId: transaction.bankTransactionId,
+        outcome: "skipped_invoice_not_payable",
+        transaction,
+        invoiceKey: matched.invoiceKey,
+        invoiceNumber: matched.invoiceNumber,
+        invoiceStatus: "PAID",
+        paymentInstructionId: matched.paymentInstructionId,
+        paymentKey: null,
+        paymentId: null,
+        invoiceId: matched.invoiceId,
+        message:
+          "Rechnung ist durch eine bestehende Zahlung bereits vollständig bezahlt.",
+      });
+      continue;
+    }
+
+    if (transaction.amountMinor > outstandingMinor) {
+      skippedCount += 1;
+      pushEntry({
+        bankTransactionId: transaction.bankTransactionId,
+        outcome: "skipped_overpayment",
+        transaction,
+        invoiceKey: matched.invoiceKey,
+        invoiceNumber: matched.invoiceNumber,
+        invoiceStatus: matched.status,
+        paymentInstructionId: matched.paymentInstructionId,
+        paymentKey: null,
+        paymentId: null,
+        invoiceId: matched.invoiceId,
+        message: "Betrag übersteigt den offenen Rechnungsbetrag.",
+      });
+      continue;
+    }
+
     if (!isCamt054InvoicePayable(matched.status)) {
       skippedCount += 1;
       pushEntry({
@@ -314,7 +442,8 @@ export async function reconcileCamt054Statement(
         bankTransactionId: transaction.bankTransactionId,
         externalReference: parsed.messageId,
         actorUserId: input.actorUserId,
-      });
+        importKey: plannedImportKey,
+      }, transactionClient);
       appliedCount += 1;
       pushEntry({
           bankTransactionId: transaction.bankTransactionId,
@@ -358,7 +487,7 @@ export async function reconcileCamt054Statement(
   let importKey: string | null = null;
 
   if (!input.dryRun) {
-    const importRecordKey = randomUUID();
+    const importRecordKey = plannedImportKey!;
     const status = deriveImportStatus({
       ...bucketCounts,
       transactionCount: parsed.transactions.length,
@@ -371,6 +500,15 @@ export async function reconcileCamt054Statement(
         filename: input.filename!.trim(),
         contentSha256,
         camtMessageId: parsed.messageId,
+        accountMasked: parsed.accountIdentificationMasked,
+        bookingPeriodStart: parsed.bookingPeriodStart
+          ? new Date(`${parsed.bookingPeriodStart}T00:00:00.000Z`)
+          : null,
+        bookingPeriodEnd: parsed.bookingPeriodEnd
+          ? new Date(`${parsed.bookingPeriodEnd}T00:00:00.000Z`)
+          : null,
+        totalCreditsMinor: parsed.totalCreditsMinor,
+        creditCurrency: parsed.creditCurrency,
         status,
         transactionCount: parsed.transactions.length,
         matchedCount: bucketCounts.matchedCount,
@@ -389,6 +527,13 @@ export async function reconcileCamt054Statement(
           amountMinor: draft.transaction.amountMinor,
           currency: draft.transaction.currency,
           paymentDate: new Date(`${draft.transaction.paymentDate}T00:00:00.000Z`),
+          bookingDate: new Date(`${draft.transaction.bookingDate}T00:00:00.000Z`),
+          valueDate: draft.transaction.valueDate
+            ? new Date(`${draft.transaction.valueDate}T00:00:00.000Z`)
+            : null,
+          accountServiceReference: draft.transaction.accountServiceReference,
+          endToEndId: draft.transaction.endToEndId,
+          isReversal: draft.transaction.reversal,
           creditorReference: draft.transaction.creditorReference,
           referenceType: draft.transaction.referenceType,
           debtorName: draft.transaction.debtorName,
@@ -400,14 +545,54 @@ export async function reconcileCamt054Statement(
           invoicePaymentId: draft.paymentId,
         };
       }),
+      transactionClient,
     );
 
     importKey = created.key;
+    logBillingOperationalEvent("billing.reconciliation.import.completed", {
+      legalEntityKey: input.legalEntityKey,
+      importKey,
+    });
+    for (const entry of entries) {
+      if (entry.matchStatus === "MATCHED") {
+        logBillingOperationalEvent(
+          "billing.reconciliation.transaction.matched",
+          {
+            legalEntityKey: input.legalEntityKey,
+            importKey,
+            transactionKey: entry.bankTransactionId,
+            invoiceNumber: entry.invoiceNumber,
+            amountMinor: entry.transaction.amountMinor,
+            currency: entry.transaction.currency,
+            matchMethod: entry.matchMethod,
+          },
+        );
+      } else if (entry.matchStatus === "REVIEW_REQUIRED") {
+        logBillingOperationalEvent(
+          "billing.reconciliation.transaction.review_required",
+          {
+            legalEntityKey: input.legalEntityKey,
+            importKey,
+            transactionKey: entry.bankTransactionId,
+            invoiceNumber: entry.invoiceNumber,
+            amountMinor: entry.transaction.amountMinor,
+            currency: entry.transaction.currency,
+            matchMethod: entry.matchMethod,
+          },
+        );
+      }
+    }
   }
 
   const report: Camt054ReconciliationReport = {
     legalEntityKey: input.legalEntityKey,
     messageId: parsed.messageId,
+    contentSha256,
+    accountIdentificationMasked: parsed.accountIdentificationMasked,
+    bookingPeriodStart: parsed.bookingPeriodStart,
+    bookingPeriodEnd: parsed.bookingPeriodEnd,
+    totalCreditsMinor: parsed.totalCreditsMinor,
+    creditCurrency: parsed.creditCurrency,
     dryRun: input.dryRun,
     appliedCount,
     skippedCount,

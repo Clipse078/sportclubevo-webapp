@@ -8,6 +8,12 @@ export function serializeCamt054ReconciliationReport(
   return {
     legalEntityKey: report.legalEntityKey,
     messageId: report.messageId,
+    contentSha256: report.contentSha256,
+    accountIdentificationMasked: report.accountIdentificationMasked,
+    bookingPeriodStart: report.bookingPeriodStart,
+    bookingPeriodEnd: report.bookingPeriodEnd,
+    totalCreditsMinor: report.totalCreditsMinor,
+    creditCurrency: report.creditCurrency,
     dryRun: report.dryRun,
     appliedCount: report.appliedCount,
     skippedCount: report.skippedCount,
@@ -32,6 +38,8 @@ export function serializeCamt054ReconciliationReport(
         amountMinor: entry.transaction.amountMinor,
         currency: entry.transaction.currency,
         paymentDate: entry.transaction.paymentDate,
+        bookingDate: entry.transaction.bookingDate,
+        valueDate: entry.transaction.valueDate,
         creditorReference: entry.transaction.creditorReference,
         creditorReferenceFormatted:
           entry.transaction.creditorReference && entry.transaction.referenceType === "QRR"
@@ -39,6 +47,7 @@ export function serializeCamt054ReconciliationReport(
             : entry.transaction.creditorReference,
         referenceType: entry.transaction.referenceType,
         rejected: entry.transaction.rejected,
+        reversal: entry.transaction.reversal,
         debtorName: entry.transaction.debtorName,
       },
     })),

@@ -4306,6 +4306,8 @@ enum InvoicePaymentMethod {
 /// Recorded payment against an invoice (manual entry, future camt.054 / Stripe).
 enum InvoicePaymentRecordMethod {
   BANK_TRANSFER_MANUAL
+  BANK_TRANSFER_CAMT054
+  STRIPE_PAYMENT
 }
 
 enum InvoicePaymentSource {
@@ -4473,6 +4475,8 @@ model InvoicePayment {
   source            InvoicePaymentSource
   status            InvoicePaymentRecordStatus @default(CONFIRMED)
   externalReference String?
+  /// Stable source-scoped provider identity (for example CAMT054:<id> or STRIPE:<payment_intent>).
+  providerTransactionId String?                    @unique
   bankTransactionId String?
   reversedAt        DateTime?
   reversedByUserId  String?
@@ -4523,6 +4527,8 @@ enum BankReconciliationMatchMethod {
   WRONG_LEGAL_ENTITY
   NOT_PAYABLE
   PARSE_ERROR
+  PROVIDER_TRANSACTION_ID_MISSING
+  REVERSAL_REQUIRES_REVIEW
 }
 
 /// Persisted camt.054 bank reconciliation import (operational history).
@@ -4534,6 +4540,11 @@ model BankReconciliationImport {
   filename            String
   contentSha256       String
   camtMessageId       String?
+  accountMasked       String?
+  bookingPeriodStart  DateTime?                      @db.Date
+  bookingPeriodEnd    DateTime?                      @db.Date
+  totalCreditsMinor   Int                            @default(0)
+  creditCurrency      String?
   status              BankReconciliationImportStatus
   transactionCount    Int                            @default(0)
   matchedCount        Int                            @default(0)
@@ -4561,6 +4572,11 @@ model BankReconciliationTransaction {
   amountMinor                 Int
   currency                    String
   paymentDate                 DateTime                      @db.Date
+  bookingDate                 DateTime                      @db.Date
+  valueDate                   DateTime?                     @db.Date
+  accountServiceReference     String?
+  endToEndId                  String?
+  isReversal                  Boolean                       @default(false)
   creditorReference           String?
   referenceType               String?
   debtorName                  String?

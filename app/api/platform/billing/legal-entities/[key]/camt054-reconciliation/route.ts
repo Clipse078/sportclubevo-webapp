@@ -11,6 +11,8 @@ import { getCamt054ReconciliationOverview } from "@/lib/billing/camt054-reconcil
 import { nativeBillingErrorResponse } from "@/lib/billing/native-billing-api-errors";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requirePlatformApiPermission } from "@/lib/permissions/require-platform-api-permission";
+import { prisma } from "@/lib/db/prisma";
+import { isPlatformSuperAdmin } from "@/lib/security/platform-superadmin";
 
 type RouteContext = { params: Promise<{ key: string }> };
 
@@ -19,7 +21,6 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   if (!access.ok) {
     return NextResponse.json({ error: access.error }, { status: access.status });
   }
-
   const { key: legalEntityKey } = await context.params;
   try {
     const overview = await getCamt054ReconciliationOverview(legalEntityKey);
@@ -34,6 +35,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
   if (!access.ok) {
     return NextResponse.json({ error: access.error }, { status: access.status });
   }
+  if (!(await isPlatformSuperAdmin(prisma, access.actorUserId!))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const { key: legalEntityKey } = await context.params;
   const body = (await request.json()) as Record<string, unknown>;
@@ -47,6 +51,20 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
     const byteLength = Buffer.byteLength(xml, "utf8");
     assertCamt054UploadWithinLimit(byteLength);
+    const contentSha256 = sha256Camt054Content(xml);
+    if (
+      !dryRun &&
+      String(body.confirmedContentSha256 ?? "") !== contentSha256
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Der bestätigte Datei-Hash stimmt nicht mit der hochgeladenen Datei überein.",
+          code: "CAMT054_CONFIRMATION_HASH_MISMATCH",
+        },
+        { status: 409 },
+      );
+    }
 
     const report = await reconcileCamt054Statement({
       legalEntityKey,
@@ -54,7 +72,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       dryRun,
       actorUserId: access.actorUserId!,
       filename: dryRun ? undefined : filename,
-      contentSha256: sha256Camt054Content(xml),
+      contentSha256,
     });
     return NextResponse.json({
       reconciliation: serializeCamt054ReconciliationReport(report),

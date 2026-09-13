@@ -42,6 +42,12 @@ type DryRunEntry = {
 
 type DryRunReport = {
   dryRun: boolean;
+  contentSha256: string;
+  accountIdentificationMasked: string | null;
+  bookingPeriodStart: string | null;
+  bookingPeriodEnd: string | null;
+  totalCreditsMinor: number;
+  creditCurrency: string | null;
   matchedCount: number;
   unmatchedCount: number;
   reviewRequiredCount: number;
@@ -198,6 +204,7 @@ export default function NativeBillingReconciliationWorkspace({
             xml: fileXml,
             dryRun: false,
             filename: file.name,
+            confirmedContentSha256: dryRunReport.contentSha256,
           }),
         },
       );
@@ -284,6 +291,37 @@ export default function NativeBillingReconciliationWorkspace({
       {dryRunReport ? (
         <section className="space-y-4 rounded-lg border border-border p-6">
           <h2 className="text-base font-semibold">Vorschau Abgleich</h2>
+          <dl className="grid gap-3 rounded-md bg-muted/35 p-4 text-sm sm:grid-cols-2 lg:grid-cols-5">
+            <div>
+              <dt className="text-muted-foreground">Datei</dt>
+              <dd className="font-medium">{file?.name ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">SHA-256</dt>
+              <dd className="truncate font-mono text-xs" title={dryRunReport.contentSha256}>
+                {dryRunReport.contentSha256}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Konto</dt>
+              <dd className="font-medium">{dryRunReport.accountIdentificationMasked ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Buchungsperiode</dt>
+              <dd className="font-medium">
+                {dryRunReport.bookingPeriodStart ?? "—"} – {dryRunReport.bookingPeriodEnd ?? "—"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Gutschriften total</dt>
+              <dd className="font-medium">
+                {formatBillingMoney(
+                  dryRunReport.totalCreditsMinor,
+                  dryRunReport.creditCurrency ?? "CHF",
+                )}
+              </dd>
+            </div>
+          </dl>
           <dl className="grid gap-3 text-sm sm:grid-cols-5">
             <div>
               <dt className="text-muted-foreground">Transaktionen</dt>
@@ -317,6 +355,7 @@ export default function NativeBillingReconciliationWorkspace({
                   <th className="py-2 pr-4">Zahler</th>
                   <th className="py-2 pr-4">Rechnung</th>
                   <th className="py-2">Ergebnis</th>
+                  <th className="py-2">Geplante Aktion</th>
                 </tr>
               </thead>
               <tbody>
@@ -342,6 +381,13 @@ export default function NativeBillingReconciliationWorkspace({
                         <div className="text-xs text-muted-foreground">{entry.message}</div>
                       ) : null}
                     </td>
+                    <td className="py-2 font-medium">
+                      {entry.outcome === "planned"
+                        ? "Zahlung verbuchen"
+                        : entry.matchStatus === "REVIEW_REQUIRED"
+                          ? "Manuell prüfen"
+                          : "Keine Buchung"}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -356,6 +402,10 @@ export default function NativeBillingReconciliationWorkspace({
                 <strong>{executeSummary.invoiceNumbers.join(", ") || "—"}</strong>. Bereits
                 verbuchte Banktransaktionen werden nicht erneut erfasst (Idempotenz über
                 Banktransaktions-ID).
+              </p>
+              <p className="font-medium">
+                Mit der Bestätigung wird ausschliesslich die angezeigte Datei mit diesem Hash
+                verarbeitet.
               </p>
               <button
                 type="button"

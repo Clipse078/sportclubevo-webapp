@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
-import type { InvoiceStatus } from "@prisma/client";
+import type { InvoiceStatus, Prisma } from "@prisma/client";
 
 const PAYABLE_STATUSES: ReadonlySet<InvoiceStatus> = new Set([
   "FINALIZED",
@@ -15,6 +15,8 @@ export type Camt054MatchedInvoice = {
   legalEntityId: string;
   currency: string;
   grossTotalMinor: number;
+  paidTotalMinor: number;
+  outstandingMinor: number;
   status: InvoiceStatus;
   paymentInstructionId: string | null;
 };
@@ -22,11 +24,12 @@ export type Camt054MatchedInvoice = {
 export async function findInvoiceForCamt054QrrReference(
   creditorReference: string,
   legalEntityId: string,
+  tx: Prisma.TransactionClient = prisma,
 ): Promise<Camt054MatchedInvoice | null> {
   const normalized = creditorReference.replace(/\s+/g, "");
   if (!normalized) return null;
 
-  const instruction = await prisma.invoicePaymentInstruction.findFirst({
+  const instruction = await tx.invoicePaymentInstruction.findFirst({
     where: {
       referenceType: "QRR",
       reference: normalized,
@@ -45,6 +48,10 @@ export async function findInvoiceForCamt054QrrReference(
           currency: true,
           grossTotalMinor: true,
           status: true,
+          payments: {
+            where: { status: "CONFIRMED" },
+            select: { amountMinor: true },
+          },
         },
       },
     },
@@ -54,6 +61,10 @@ export async function findInvoiceForCamt054QrrReference(
     return null;
   }
 
+  const paidTotalMinor = (instruction.invoice.payments ?? []).reduce(
+    (total, payment) => total + payment.amountMinor,
+    0,
+  );
   return {
     invoiceId: instruction.invoice.id,
     invoiceKey: instruction.invoice.key,
@@ -61,6 +72,11 @@ export async function findInvoiceForCamt054QrrReference(
     legalEntityId: instruction.invoice.legalEntityId,
     currency: instruction.invoice.currency,
     grossTotalMinor: instruction.invoice.grossTotalMinor,
+    paidTotalMinor,
+    outstandingMinor: Math.max(
+      0,
+      instruction.invoice.grossTotalMinor - paidTotalMinor,
+    ),
     status: instruction.invoice.status,
     paymentInstructionId: instruction.id,
   };
