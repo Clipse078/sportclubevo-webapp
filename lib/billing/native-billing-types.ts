@@ -119,17 +119,20 @@ export type BillingBankAccountDependencyCounts = {
 
 export class NativeBillingConflictError extends Error {
   readonly name = "NativeBillingConflictError";
+  readonly code?: string;
   readonly dependencyCounts?: LegalEntityDependencyCounts;
   readonly bankAccountDependencyCounts?: BillingBankAccountDependencyCounts;
 
   constructor(
     message: string,
     options?: {
+      code?: string;
       dependencyCounts?: LegalEntityDependencyCounts;
       bankAccountDependencyCounts?: BillingBankAccountDependencyCounts;
     },
   ) {
     super(message);
+    this.code = options?.code;
     this.dependencyCounts = options?.dependencyCounts;
     this.bankAccountDependencyCounts = options?.bankAccountDependencyCounts;
   }

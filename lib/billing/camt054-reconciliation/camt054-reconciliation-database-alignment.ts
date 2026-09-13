@@ -22,23 +22,17 @@ export function assertCamt054ReconciliationDatabaseAlignment(
 
   const stageReferenceUrl = processEnv.STAGE_DB_URL?.trim();
   const databaseUrl = processEnv.DATABASE_URL?.trim();
-  if (!stageReferenceUrl || !databaseUrl) {
-    return;
-  }
-
   const stageFingerprint = getDatabaseFingerprintFromUrl(stageReferenceUrl);
   const previewFingerprint = getDatabaseFingerprintFromUrl(databaseUrl);
-  if (!stageFingerprint || !previewFingerprint) {
-    return;
-  }
-
-  if (stageFingerprint !== previewFingerprint) {
+  if (
+    !stageFingerprint ||
+    !previewFingerprint ||
+    stageFingerprint !== previewFingerprint
+  ) {
     throw new NativeBillingConflictError(
-      "camt.054-Abgleich auf Preview ist nicht mit der STAGE-Datenbank verbunden. " +
-        "Die DATABASE_URL dieser Preview-Instanz weicht von STAGE_DB_URL ab " +
-        "(Datenbank-Fingerprint stimmt nicht überein). " +
-        "Für SWISS-01H Akzeptanz DATABASE_URL und SCE_BILLING_ENCRYPTION_KEY " +
-        "im Vercel Preview-Scope auf dieselben Werte wie STAGE Production setzen und neu deployen.",
+      "Die Preview-Umgebung ist nicht mit der STAGE-Datenbank verbunden. " +
+        "Der Bankabgleich wurde aus Sicherheitsgründen nicht ausgeführt.",
+      { code: "PREVIEW_NOT_TARGETING_STAGE_DB" },
     );
   }
 }

@@ -21,7 +21,7 @@ describe("assertCamt054ReconciliationDatabaseAlignment", () => {
   });
 
   it("throws when Preview DATABASE_URL targets a different database than STAGE_DB_URL", () => {
-    expect(() =>
+    expect(() => {
       assertCamt054ReconciliationDatabaseAlignment({
         NODE_ENV: "production",
         VERCEL: "1",
@@ -29,8 +29,34 @@ describe("assertCamt054ReconciliationDatabaseAlignment", () => {
         APP_ENV: "preview",
         DATABASE_URL: OTHER_URL,
         STAGE_DB_URL: STAGE_URL,
+      });
+    }).toThrow(
+      expect.objectContaining({
+        code: "PREVIEW_NOT_TARGETING_STAGE_DB",
+        message: expect.stringMatching(/nicht mit der STAGE-Datenbank verbunden/i),
       }),
-    ).toThrow(/nicht mit der STAGE-Datenbank verbunden/i);
+    );
+  });
+
+  it.each([
+    ["missing DATABASE_URL", { STAGE_DB_URL: STAGE_URL }],
+    ["missing STAGE_DB_URL", { DATABASE_URL: STAGE_URL }],
+    [
+      "unparseable STAGE_DB_URL",
+      { DATABASE_URL: STAGE_URL, STAGE_DB_URL: "not-a-postgres-url" },
+    ],
+  ])("fails closed when alignment is unprovable: %s", (_label, urls) => {
+    expect(() =>
+      assertCamt054ReconciliationDatabaseAlignment({
+        NODE_ENV: "production",
+        VERCEL: "1",
+        VERCEL_ENV: "preview",
+        APP_ENV: "preview",
+        ...urls,
+      }),
+    ).toThrow(
+      expect.objectContaining({ code: "PREVIEW_NOT_TARGETING_STAGE_DB" }),
+    );
   });
 
   it("does not block STAGE production reconciliation", () => {

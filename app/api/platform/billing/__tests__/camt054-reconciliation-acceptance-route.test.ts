@@ -56,11 +56,18 @@ const fixtureA = readFileSync(
 const LEGAL_ENTITY_ID = "le-sce-billing-test";
 const LEGAL_ENTITY_KEY = "sportclubevo-by-tulip-digital";
 const FIXTURE_QRR = "273282026000004030551312759";
+const STAGE_URL =
+  "postgresql://u:p@ep-wispy-hall-aso93dy6-pooler.c-4.eu-central-1.aws.neon.tech/neondb";
 
 describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.unstubAllEnvs();
+    vi.stubEnv("VERCEL", "1");
+    vi.stubEnv("VERCEL_ENV", "preview");
+    vi.stubEnv("APP_ENV", "preview");
+    vi.stubEnv("DATABASE_URL", STAGE_URL);
+    vi.stubEnv("STAGE_DB_URL", STAGE_URL);
 
     mocks.requirePlatformApiPermission.mockResolvedValue({
       ok: true,
@@ -165,16 +172,9 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
   });
 
   it("fails closed on Preview when DATABASE_URL is not aligned with STAGE_DB_URL", async () => {
-    vi.stubEnv("VERCEL", "1");
-    vi.stubEnv("VERCEL_ENV", "preview");
-    vi.stubEnv("APP_ENV", "preview");
     vi.stubEnv(
       "DATABASE_URL",
       "postgresql://u:p@ep-other-branch-aso93dy6-pooler.c-4.eu-central-1.aws.neon.tech/neondb",
-    );
-    vi.stubEnv(
-      "STAGE_DB_URL",
-      "postgresql://u:p@ep-wispy-hall-aso93dy6-pooler.c-4.eu-central-1.aws.neon.tech/neondb",
     );
 
     const res = await POST(
@@ -186,8 +186,29 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
     );
 
     expect(res.status).toBe(409);
-    const body = (await res.json()) as { error: string };
+    const body = (await res.json()) as { error: string; code: string };
     expect(body.error).toMatch(/STAGE-Datenbank/i);
+    expect(body.code).toBe("PREVIEW_NOT_TARGETING_STAGE_DB");
+    expect(mocks.findLegalEntityByKey).not.toHaveBeenCalled();
+    expect(mocks.invoicePaymentInstructionFindFirst).not.toHaveBeenCalled();
+  });
+
+  it("fails closed before matching when Preview has no STAGE_DB_URL", async () => {
+    vi.stubEnv("STAGE_DB_URL", "");
+
+    const res = await POST(
+      new NextRequest("http://localhost/api", {
+        method: "POST",
+        body: JSON.stringify({ xml: fixtureA, dryRun: true }),
+      }),
+      { params: Promise.resolve({ key: LEGAL_ENTITY_KEY }) },
+    );
+
+    expect(res.status).toBe(409);
+    await expect(res.json()).resolves.toMatchObject({
+      code: "PREVIEW_NOT_TARGETING_STAGE_DB",
+    });
+    expect(mocks.findLegalEntityByKey).not.toHaveBeenCalled();
     expect(mocks.invoicePaymentInstructionFindFirst).not.toHaveBeenCalled();
   });
 });

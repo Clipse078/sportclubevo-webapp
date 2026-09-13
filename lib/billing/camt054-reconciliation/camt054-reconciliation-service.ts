@@ -90,12 +90,14 @@ function countEntryBuckets(entries: Camt054ReconciliationEntryResult[]) {
 export async function reconcileCamt054Statement(
   input: ReconcileCamt054Input,
 ): Promise<Camt054ReconciliationReport> {
+  // Preview alignment must be proven before the first reconciliation database
+  // lookup; otherwise a wrong database can masquerade as QRR_NOT_FOUND.
+  assertCamt054ReconciliationDatabaseAlignment();
+
   const legalEntity = await findLegalEntityByKey(input.legalEntityKey);
   if (!legalEntity) {
     throw new NativeBillingNotFoundError("Rechtsträger nicht gefunden.");
   }
-
-  assertCamt054ReconciliationDatabaseAlignment();
 
   const contentSha256 = input.contentSha256 ?? sha256Camt054Content(input.xml);
 
