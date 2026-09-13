@@ -2,6 +2,10 @@ import { getRuntimeEnvironment } from "@/lib/env";
 import { getDatabaseFingerprintFromUrl } from "@/lib/server/deployment-identity";
 import { NativeBillingConflictError } from "@/lib/billing/native-billing-types";
 
+// Safe host+database identity attested by the SWISS-01H STAGE CLI diagnostic.
+// This prevents two equally misconfigured Preview variables from passing.
+export const CAMT054_STAGE_DATABASE_FINGERPRINT = "acd3b37682911890";
+
 /**
  * SWISS-01H Preview acceptance requires the same persistent STAGE database as
  * CLI/STAGE dry-runs. PR Preview deployments often ship without the Production
@@ -27,7 +31,8 @@ export function assertCamt054ReconciliationDatabaseAlignment(
   if (
     !stageFingerprint ||
     !previewFingerprint ||
-    stageFingerprint !== previewFingerprint
+    stageFingerprint !== CAMT054_STAGE_DATABASE_FINGERPRINT ||
+    previewFingerprint !== CAMT054_STAGE_DATABASE_FINGERPRINT
   ) {
     throw new NativeBillingConflictError(
       "Die Preview-Umgebung ist nicht mit der STAGE-Datenbank verbunden. " +

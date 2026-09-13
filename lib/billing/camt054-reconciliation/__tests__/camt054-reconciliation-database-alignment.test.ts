@@ -38,6 +38,21 @@ describe("assertCamt054ReconciliationDatabaseAlignment", () => {
     );
   });
 
+  it("throws when both Preview variables agree on the same non-STAGE database", () => {
+    expect(() =>
+      assertCamt054ReconciliationDatabaseAlignment({
+        NODE_ENV: "production",
+        VERCEL: "1",
+        VERCEL_ENV: "preview",
+        APP_ENV: "preview",
+        DATABASE_URL: OTHER_URL,
+        STAGE_DB_URL: OTHER_URL,
+      }),
+    ).toThrow(
+      expect.objectContaining({ code: "PREVIEW_NOT_TARGETING_STAGE_DB" }),
+    );
+  });
+
   it.each([
     ["missing DATABASE_URL", { STAGE_DB_URL: STAGE_URL }],
     ["missing STAGE_DB_URL", { DATABASE_URL: STAGE_URL }],
