@@ -188,8 +188,11 @@ export async function listInvoices(): Promise<InvoiceRecord[]> {
   });
 }
 
-export async function findInvoiceByKey(key: string): Promise<InvoiceRecord | null> {
-  return prisma.invoice.findUnique({
+export async function findInvoiceByKey(
+  key: string,
+  client: Pick<Prisma.TransactionClient, "invoice"> = prisma,
+): Promise<InvoiceRecord | null> {
+  return client.invoice.findUnique({
     where: { key },
     select: invoiceSelect,
   });

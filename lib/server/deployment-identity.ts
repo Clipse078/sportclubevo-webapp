@@ -110,6 +110,30 @@ function buildDatabaseFingerprint(
   return createHash("sha256").update(input).digest("hex").slice(0, 16);
 }
 
+/** Safe fingerprint for a DATABASE_URL (host + database name only; no secrets). */
+export function getDatabaseFingerprintFromUrl(
+  databaseUrl: string | undefined,
+): string | null {
+  const raw = databaseUrl?.trim();
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw);
+    if (
+      parsed.protocol !== "postgresql:" &&
+      parsed.protocol !== "postgres:"
+    ) {
+      return null;
+    }
+    const databaseName = parsed.pathname.replace(/^\//, "").split("?")[0];
+    if (!parsed.hostname || !databaseName) {
+      return null;
+    }
+    return buildDatabaseFingerprint(parsed.hostname, databaseName);
+  } catch {
+    return null;
+  }
+}
+
 function computeIdentityViolations(
   runtime: ReturnType<typeof getRuntimeEnvironment>,
 ): string[] {

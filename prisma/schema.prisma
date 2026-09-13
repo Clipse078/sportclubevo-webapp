@@ -4112,10 +4112,11 @@ model LegalEntity {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
-  bankAccounts     BillingBankAccount[]
-  billingContracts BillingContract[]
-  invoices         Invoice[]
-  invoiceSequences InvoiceSequence[]
+  bankAccounts              BillingBankAccount[]
+  billingContracts          BillingContract[]
+  invoices                  Invoice[]
+  invoiceSequences          InvoiceSequence[]
+  bankReconciliationImports BankReconciliationImport[]
 }
 
 /// Commercial counterparty (independent from Tenant).
@@ -4305,6 +4306,8 @@ enum InvoicePaymentMethod {
 /// Recorded payment against an invoice (manual entry, future camt.054 / Stripe).
 enum InvoicePaymentRecordMethod {
   BANK_TRANSFER_MANUAL
+  BANK_TRANSFER_CAMT054
+  STRIPE_PAYMENT
 }
 
 enum InvoicePaymentSource {
@@ -4349,8 +4352,9 @@ model Invoice {
   issuerSnapshot     InvoiceIssuerSnapshot?
   recipientSnapshot  InvoiceRecipientSnapshot?
   paymentInstruction InvoicePaymentInstruction?
-  deliveries         InvoiceDelivery[]
-  payments           InvoicePayment[]
+  deliveries                     InvoiceDelivery[]
+  payments                       InvoicePayment[]
+  bankReconciliationTransactions BankReconciliationTransaction[]
 
   @@unique([legalEntityId, invoiceNumber])
   @@index([billingCustomerId])
@@ -4471,6 +4475,8 @@ model InvoicePayment {
   source            InvoicePaymentSource
   status            InvoicePaymentRecordStatus @default(CONFIRMED)
   externalReference String?
+  /// Stable source-scoped provider identity (for example CAMT054:<id> or STRIPE:<payment_intent>).
+  providerTransactionId String?                    @unique
   bankTransactionId String?
   reversedAt        DateTime?
   reversedByUserId  String?
@@ -4481,9 +4487,115 @@ model InvoicePayment {
 
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
+  @@unique([bankTransactionId])
   @@index([invoiceId, paymentDate])
   @@index([invoiceId, status])
   @@index([status])
+
+  bankReconciliationTransactions BankReconciliationTransaction[]
+}
+
+enum BankReconciliationImportSource {
+  CAMT054
+}
+
+enum BankReconciliationImportStatus {
+  COMPLETED
+  PARTIAL
+  FAILED
+}
+
+enum BankReconciliationMatchStatus {
+  MATCHED
+  UNMATCHED
+  REVIEW_REQUIRED
+  DUPLICATE
+  ERROR
+}
+
+enum BankReconciliationMatchMethod {
+  QRR_EXACT
+  QRR_NOT_FOUND
+  MANUAL_ASSIGNMENT
+  AMOUNT_EXCEEDS_OUTSTANDING
+  CURRENCY_MISMATCH
+  INVOICE_ALREADY_PAID
+  DUPLICATE_TRANSACTION
+  UNSUPPORTED_REFERENCE
+  NO_REFERENCE
+  REJECTED_ENTRY
+  WRONG_LEGAL_ENTITY
+  NOT_PAYABLE
+  PARSE_ERROR
+  PROVIDER_TRANSACTION_ID_MISSING
+  REVERSAL_REQUIRES_REVIEW
+}
+
+/// Persisted camt.054 bank reconciliation import (operational history).
+model BankReconciliationImport {
+  id                  String                         @id @default(cuid())
+  key                 String                         @unique
+  legalEntityId       String
+  source              BankReconciliationImportSource @default(CAMT054)
+  filename            String
+  contentSha256       String
+  camtMessageId       String?
+  accountMasked       String?
+  bookingPeriodStart  DateTime?                      @db.Date
+  bookingPeriodEnd    DateTime?                      @db.Date
+  totalCreditsMinor   Int                            @default(0)
+  creditCurrency      String?
+  status              BankReconciliationImportStatus
+  transactionCount    Int                            @default(0)
+  matchedCount        Int                            @default(0)
+  unmatchedCount      Int                            @default(0)
+  reviewRequiredCount Int                            @default(0)
+  duplicateCount      Int                            @default(0)
+  errorCount          Int                            @default(0)
+  uploadedAt          DateTime                       @default(now())
+  uploadedByUserId    String?
+  processedAt         DateTime?
+
+  legalEntity   LegalEntity                       @relation(fields: [legalEntityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  transactions  BankReconciliationTransaction[]
+
+  @@unique([legalEntityId, contentSha256])
+  @@index([legalEntityId, uploadedAt])
+}
+
+/// One parsed bank credit line from a reconciliation import.
+model BankReconciliationTransaction {
+  id                          String                        @id @default(cuid())
+  key                         String                        @unique
+  importId                    String
+  bankTransactionId           String
+  amountMinor                 Int
+  currency                    String
+  paymentDate                 DateTime                      @db.Date
+  bookingDate                 DateTime                      @db.Date
+  valueDate                   DateTime?                     @db.Date
+  accountServiceReference     String?
+  endToEndId                  String?
+  isReversal                  Boolean                       @default(false)
+  creditorReference           String?
+  referenceType               String?
+  debtorName                  String?
+  matchStatus                 BankReconciliationMatchStatus
+  matchMethod                 BankReconciliationMatchMethod?
+  matchReason                 String?
+  invoiceId                   String?
+  invoicePaymentInstructionId String?
+  invoicePaymentId            String?
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime                      @updatedAt
+
+  import          BankReconciliationImport @relation(fields: [importId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  invoice         Invoice?                 @relation(fields: [invoiceId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  invoicePayment  InvoicePayment?          @relation(fields: [invoicePaymentId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([importId, bankTransactionId])
+  @@index([importId, matchStatus])
+  @@index([bankTransactionId])
 }
 
 /// One row per outbound delivery attempt (email transport only; invoice financial state unchanged).

@@ -47,6 +47,9 @@
 - `NEXTAUTH_SECRET`
 - `DATABASE_URL`
 - `DIRECT_URL`
+- `SCE_DATA_ENVIRONMENT`
+- `SCE_DATA_DATABASE_FINGERPRINT`
+- `SCE_BILLING_ENCRYPTION_KEY`
 
 Required for password reset (USER-ADMIN-01):
 - `RESEND_API_KEY` — Resend API key (re_...) from resend.com
@@ -71,6 +74,8 @@ Optional later:
 - `NEXTAUTH_SECRET=<unique-stage-secret>`
 - `DATABASE_URL=<stage-db-url>`
 - `DIRECT_URL=<stage-direct-db-url>`
+- `SCE_DATA_ENVIRONMENT=STAGE`
+- `SCE_DATA_DATABASE_FINGERPRINT=<fingerprint of effective stage DATABASE_URL>`
 
 ### PROD
 - `NODE_ENV=production`
@@ -80,6 +85,8 @@ Optional later:
 - `NEXTAUTH_SECRET=<unique-prod-secret>`
 - `DATABASE_URL=<prod-db-url>`
 - `DIRECT_URL=<prod-direct-db-url>`
+- `SCE_DATA_ENVIRONMENT=PRODUCTION`
+- `SCE_DATA_DATABASE_FINGERPRINT=<fingerprint of effective production DATABASE_URL>`
 
 ---
 

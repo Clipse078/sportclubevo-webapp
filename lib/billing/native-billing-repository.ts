@@ -411,8 +411,11 @@ export async function listActiveLegalEntities(): Promise<LegalEntityRecord[]> {
   });
 }
 
-export async function findLegalEntityByKey(key: string): Promise<LegalEntityRecord | null> {
-  return prisma.legalEntity.findUnique({
+export async function findLegalEntityByKey(
+  key: string,
+  client: Pick<import("@prisma/client").Prisma.TransactionClient, "legalEntity"> = prisma,
+): Promise<LegalEntityRecord | null> {
+  return client.legalEntity.findUnique({
     where: { key },
     select: legalEntitySelect,
   });
@@ -463,8 +466,9 @@ export async function deleteLegalEntityRecord(id: string): Promise<void> {
 
 export async function listBillingBankAccountsForLegalEntity(
   legalEntityId: string,
+  client: Pick<import("@prisma/client").Prisma.TransactionClient, "billingBankAccount"> = prisma,
 ): Promise<BillingBankAccountRecord[]> {
-  return prisma.billingBankAccount.findMany({
+  return client.billingBankAccount.findMany({
     where: { legalEntityId },
     select: bankAccountDbSelect,
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],

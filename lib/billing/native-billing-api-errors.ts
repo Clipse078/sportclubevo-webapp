@@ -29,6 +29,7 @@ export function nativeBillingErrorResponse(error: unknown): NextResponse {
     return NextResponse.json(
       {
         error: error.message,
+        ...(error.code ? { code: error.code } : {}),
         ...(error.dependencyCounts ? { dependencies: error.dependencyCounts } : {}),
         ...(error.bankAccountDependencyCounts
           ? { dependencies: error.bankAccountDependencyCounts }

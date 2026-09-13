@@ -14,6 +14,8 @@
 
 import { getRuntimeEnvironment } from "@/lib/env";
 import { classifyDatabaseTarget } from "@/lib/server/operational-database-guard";
+import { getDatabaseFingerprintFromUrl } from "@/lib/server/deployment-identity";
+import { resolveRuntimeIdentity } from "@/lib/server/runtime-identity";
 
 export type PreflightSeverity = "error" | "warning";
 
@@ -136,7 +138,65 @@ export function runDeploymentPreflight(
     }
   }
 
-  // ── (4) Acceptance/STAGE cross-contamination detection ───────────────────
+  // ── (4) Canonical deployment/data identity ───────────────────────────────
+  if (isDeployedContext) {
+    const identity = resolveRuntimeIdentity(processEnv);
+    if (identity.dataEnvironment === "UNKNOWN") {
+      addViolation(
+        error(
+          "DATA_ENVIRONMENT_MISSING_OR_INVALID",
+          "SCE_DATA_ENVIRONMENT must explicitly identify PRODUCTION, STAGE, PREVIEW, ACCEPTANCE, or LOCAL.",
+        ),
+      );
+    }
+    if (!identity.databaseFingerprintConfigured) {
+      addViolation(
+        error(
+          "DATA_DATABASE_FINGERPRINT_MISSING",
+          "SCE_DATA_DATABASE_FINGERPRINT must attest the effective Prisma database target.",
+        ),
+      );
+    } else if (!identity.databaseFingerprintMatchesConfiguredTarget) {
+      addViolation(
+        error(
+          "DATA_DATABASE_FINGERPRINT_MISMATCH",
+          "The effective Prisma database does not match SCE_DATA_DATABASE_FINGERPRINT.",
+        ),
+      );
+    }
+    if (
+      identity.deploymentEnvironment === "PREVIEW" &&
+      identity.dataEnvironment !== "STAGE"
+    ) {
+      addViolation(
+        error(
+          "PREVIEW_DATA_ENVIRONMENT_NOT_STAGE",
+          "PR Preview billing must explicitly use SCE_DATA_ENVIRONMENT=STAGE.",
+        ),
+      );
+    }
+    if (
+      identity.deploymentEnvironment === "STAGE" &&
+      identity.dataEnvironment !== "STAGE"
+    ) {
+      addViolation(
+        error("STAGE_DATA_ENVIRONMENT_MISMATCH", "STAGE must use STAGE data."),
+      );
+    }
+    if (
+      identity.deploymentEnvironment === "PRODUCTION" &&
+      identity.dataEnvironment !== "PRODUCTION"
+    ) {
+      addViolation(
+        error(
+          "PRODUCTION_DATA_ENVIRONMENT_MISMATCH",
+          "PRODUCTION must use PRODUCTION data.",
+        ),
+      );
+    }
+  }
+
+  // ── (5) Acceptance/STAGE cross-contamination detection ───────────────────
   // When the operator has provided explicit reference host variables we can
   // detect cross-environment database wiring. This does not hardcode any
   // specific host — it uses only the env vars the operator supplies.
@@ -183,7 +243,7 @@ export function runDeploymentPreflight(
     }
   }
 
-  // ── (5) STAGE_DB_URL reference check ────────────────────────────────────
+  // ── (6) Legacy STAGE_DB_URL reference check ─────────────────────────────
   // Preview -> configured persistent STAGE is an intentional current
   // architecture. The reference only guards Acceptance isolation.
   const stageReferenceUrl = safeReadOptional(processEnv.STAGE_DB_URL);
@@ -203,10 +263,28 @@ export function runDeploymentPreflight(
         );
       }
 
+      if (runtime.isPreview) {
+        const stageFingerprint = getDatabaseFingerprintFromUrl(stageReferenceUrl);
+        const previewFingerprint = getDatabaseFingerprintFromUrl(rawDatabaseUrl);
+        if (
+          stageFingerprint &&
+          previewFingerprint &&
+          stageFingerprint !== previewFingerprint
+        ) {
+          addViolation(
+            error(
+              "PREVIEW_NOT_TARGETING_STAGE_DB",
+              "Preview DATABASE_URL does not match STAGE_DB_URL (database fingerprint mismatch). " +
+                "Native billing camt.054 acceptance on PR Preview requires the STAGE DATABASE_URL " +
+                "in the Vercel Preview scope.",
+            ),
+          );
+        }
+      }
     }
   }
 
-  // ── (6) Native billing decryption on Preview/Acceptance ─────────────────
+  // ── (7) Native billing decryption on Preview/Acceptance ─────────────────
   if (
     (runtime.isPreview || runtime.isAcceptance) &&
     runtime.hasDatabaseUrl &&
@@ -222,7 +300,7 @@ export function runDeploymentPreflight(
     );
   }
 
-  // ── (7) Unsupported runtime classification ───────────────────────────────
+  // ── (8) Unsupported runtime classification ───────────────────────────────
   if (runtime.isUnknown && !isDeployedContext) {
     violations.push(
       warning(

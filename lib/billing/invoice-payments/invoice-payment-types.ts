@@ -5,12 +5,13 @@ export type InvoicePaymentRecord = {
   amountMinor: number;
   currency: string;
   paymentDate: Date;
-  method: "BANK_TRANSFER_MANUAL";
+  method: "BANK_TRANSFER_MANUAL" | "BANK_TRANSFER_CAMT054" | "STRIPE_PAYMENT";
   reference: string | null;
   note: string | null;
   source: "MANUAL" | "CAMT054" | "STRIPE";
   status: "CONFIRMED" | "REVERSED";
   externalReference: string | null;
+  providerTransactionId: string | null;
   bankTransactionId: string | null;
   reversedAt: Date | null;
   reversedByUserId: string | null;
@@ -47,4 +48,25 @@ export type ReverseInvoicePaymentInput = {
   paymentKey: string;
   reason: string;
   actorUserId: string;
+};
+
+export type RecordCamt054InvoicePaymentInput = {
+  invoiceKey: string;
+  amountMinor: number;
+  currency: string;
+  paymentDate: string;
+  creditorReference: string | null;
+  bankTransactionId: string;
+  externalReference: string | null;
+  actorUserId: string;
+  importKey?: string | null;
+};
+
+export type RecordStripeInvoicePaymentInput = {
+  invoiceKey: string;
+  amountMinor: number;
+  currency: string;
+  paymentDate: string;
+  stripePaymentIntentId: string;
+  actorUserId: string | null;
 };
