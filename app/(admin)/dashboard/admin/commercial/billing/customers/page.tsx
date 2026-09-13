@@ -1,7 +1,12 @@
 import Link from "next/link";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import NativeBillingCustomersTable from "@/components/admin/billing/NativeBillingCustomersTable";
-import { getBillingContractsOverview } from "@/lib/billing/native-billing-commercial-service";
+import { pickLatestCustomerLastInvoice } from "@/lib/billing/billing-customer-last-invoice";
+import {
+  getBillingContractsOverview,
+  getInvoicesOverview,
+} from "@/lib/billing/native-billing-commercial-service";
 import { getBillingCustomersOverview } from "@/lib/billing/native-billing-service";
 import { getBillingCustomerBalanceSummaries } from "@/lib/billing/operations/billing-operations-service";
 import { hasPermission } from "@/lib/permissions/has-permission";
@@ -32,16 +37,19 @@ export default async function NativeBillingCustomersPage() {
   let rows: Awaited<ReturnType<typeof getBillingCustomersOverview>> = [];
   let balances: Awaited<ReturnType<typeof getBillingCustomerBalanceSummaries>> = [];
   let contracts: Awaited<ReturnType<typeof getBillingContractsOverview>> = [];
+  let invoices: Awaited<ReturnType<typeof getInvoicesOverview>> = [];
   try {
-    [rows, balances, contracts] = await Promise.all([
+    [rows, balances, contracts, invoices] = await Promise.all([
       getBillingCustomersOverview(),
       getBillingCustomerBalanceSummaries(),
       getBillingContractsOverview(),
+      getInvoicesOverview(),
     ]);
   } catch {
     rows = [];
     balances = [];
     contracts = [];
+    invoices = [];
   }
 
   const balanceByCustomerKey = new Map(balances.map((b) => [b.customerKey, b]));
@@ -54,12 +62,22 @@ export default async function NativeBillingCustomersPage() {
     );
   }
 
+  const lastInvoiceByCustomerId = pickLatestCustomerLastInvoice(
+    invoices.map((invoice) => ({
+      billingCustomerId: invoice.billingCustomerId,
+      invoiceNumber: invoice.invoiceNumber,
+      status: invoice.status,
+      invoiceDate: invoice.invoiceDate,
+      createdAt: invoice.createdAt,
+    })),
+  );
+
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
-        eyebrow="Commercial"
+    <BillingWorkspaceContent width="list">
+      <div className="space-y-6">
+      <BillingPageHeader
         title="Kunden"
-        description="Native SCE Billing-Kunden mit Salden und Abrechnungsstatus."
+        description="Finanzielle Kundenübersicht mit Salden, Verträgen und Abrechnungsstatus."
         actions={
           canManage ? (
             <Link href="/dashboard/admin/commercial/billing/customers/new" className="fca-button-primary">
@@ -78,24 +96,24 @@ export default async function NativeBillingCustomersPage() {
             overdueBalanceMinor: balance?.overdueBalanceMinor ?? 0,
             primaryEmail: customer.primaryEmail,
           });
+          const lastInvoice = lastInvoiceByCustomerId.get(customer.id);
           return {
             key: customer.key,
             displayName: customer.displayName,
             legalName: customer.legalName,
-            primaryEmail: customer.primaryEmail,
             status: customer.status,
-            tenantLabels: customer.tenantLinks
-              .filter((link) => link.activeUntil === null)
-              .map((link) => link.tenantName ?? link.tenantKey ?? link.tenantId),
             activeContractCount: activeContractsByCustomerId.get(customer.id) ?? 0,
             openBalanceMinor: balance?.openBalanceMinor ?? 0,
             overdueBalanceMinor: balance?.overdueBalanceMinor ?? 0,
             currency: balance?.currency ?? customer.defaultCurrency ?? "CHF",
             billingHealthLabel: health.label,
             billingHealthTone: health.tone,
+            lastInvoiceLabel: lastInvoice?.label ?? null,
+            lastInvoiceDate: lastInvoice?.date ?? null,
           };
         })}
       />
-    </div>
+      </div>
+    </BillingWorkspaceContent>
   );
 }

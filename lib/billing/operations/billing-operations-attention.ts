@@ -170,10 +170,10 @@ export function buildBillingAttentionQueue(input: {
         kind: "INVOICE_UNSENT",
         priority: PRIORITY.INVOICE_UNSENT,
         title: invoice.invoiceNumber
-          ? `Nicht versendet — ${invoice.invoiceNumber}`
+          ? `Rechnung ${invoice.invoiceNumber}`
           : "Rechnung nicht versendet",
-        reason: "Finalisierte Rechnung wurde noch nicht per E-Mail versendet",
-        actionLabel: "Rechnung senden",
+        reason: "Finalisiert — noch nicht per E-Mail versendet",
+        actionLabel: "Rechnung prüfen",
         href: invoiceHref(invoice.key),
         customerKey,
         customerName,
@@ -182,8 +182,8 @@ export function buildBillingAttentionQueue(input: {
         contractKey: null,
         amountMinor: invoice.grossTotalMinor,
         currency: invoice.currency,
-        statusLabel: "Nicht versendet",
-        ageDate: invoice.finalizedAt?.toISOString().slice(0, 10) ?? null,
+        statusLabel: "Noch nicht versendet",
+        ageDate: dueIso,
       });
     }
 

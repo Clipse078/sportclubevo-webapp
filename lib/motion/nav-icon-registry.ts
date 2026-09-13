@@ -62,7 +62,22 @@ const NAV_LABEL_TO_ICON_KEY: Record<string, NavIconKey> = {
   Finanzen: "finanzen",
   Commercial: "commercial",
   Billing: "billing",
+  "Commercial Billing Übersicht": "commercial-billing-uebersicht",
+  "Commercial Billing Kunden": "commercial-billing-kunden",
+  "Commercial Billing Verträge": "commercial-billing-vertraege",
+  "Commercial Billing Rechnungen": "commercial-billing-rechnungen",
+  "Commercial Billing Bankabgleich": "commercial-billing-bankabgleich",
+  "Commercial Billing Einstellungen": "commercial-billing-einstellungen",
+  "Commercial Billing Operations": "commercial-billing-operations",
+  Abrechnung: "billing",
+  Kunden: "personen",
+  Verträge: "dokumente",
+  Rechnungen: "billing",
+  Bankabgleich: "finanzen",
   Customers: "personen",
+  Contracts: "dokumente",
+  Invoices: "billing",
+  Reconciliation: "finanzen",
   Settings: "einstellungen",
   Sponsoring: "sponsoring",
   Mitglieder: "mitglieder",
@@ -111,7 +126,7 @@ export function getAllSidebarNavLabels(): string[] {
   return NAV_SECTIONS.flatMap((section) =>
     section.items.flatMap((item) => [
       item.label,
-      ...(item.children?.map((child) => child.label) ?? []),
+      ...(item.children?.map((child) => child.navIconLabel ?? child.label) ?? []),
     ]),
   );
 }

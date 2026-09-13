@@ -16,6 +16,7 @@ type Props = {
   canManage: boolean;
   initialInstruction: PaymentInstructionView | null;
   amountFormatted: string;
+  embedded?: boolean;
 };
 
 export default function NativeBillingInvoicePaymentSection({
@@ -23,6 +24,7 @@ export default function NativeBillingInvoicePaymentSection({
   canManage,
   initialInstruction,
   amountFormatted,
+  embedded = false,
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -53,38 +55,39 @@ export default function NativeBillingInvoicePaymentSection({
     }
   }
 
+  const wrapperClass = embedded ? "space-y-4" : "space-y-4";
+
   return (
-    <section className="space-y-3 rounded-lg border border-border p-4">
-      <h2 className="text-sm font-semibold">Zahlungsinformationen</h2>
+    <div className={wrapperClass}>
       {instruction ? (
-        <dl className="grid gap-2 text-sm sm:grid-cols-2">
+        <dl className="grid gap-x-4 gap-y-3 text-sm sm:grid-cols-2">
           <div>
-            <dt className="text-muted-foreground">Zahlungsart</dt>
+            <dt className="text-[0.8125rem] text-[var(--text-2)]">Zahlungsart</dt>
             <dd className="font-medium">Schweizer QR-Rechnung</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Referenztyp</dt>
-            <dd className="font-medium">{instruction.referenceType}</dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="text-muted-foreground">Referenz</dt>
-            <dd className="font-medium font-mono text-xs sm:text-sm">
-              {instruction.referenceFormatted ?? "—"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Konto</dt>
+            <dt className="text-[0.8125rem] text-[var(--text-2)]">Konto</dt>
             <dd className="font-medium">{instruction.creditorAccountMasked}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Betrag</dt>
-            <dd className="font-medium">{amountFormatted}</dd>
+            <dt className="text-[0.8125rem] text-[var(--text-2)]">Betrag</dt>
+            <dd className="font-medium tabular-nums">{amountFormatted}</dd>
           </div>
+          <div>
+            <dt className="text-[0.8125rem] text-[var(--text-2)]">Referenztyp</dt>
+            <dd className="text-[var(--text-2)]">{instruction.referenceType}</dd>
+          </div>
+          {instruction.referenceFormatted ? (
+            <div className="sm:col-span-2">
+              <dt className="text-[0.8125rem] text-[var(--text-2)]">Referenz</dt>
+              <dd className="font-mono text-xs text-[var(--text-2)] break-all">
+                {instruction.referenceFormatted}
+              </dd>
+            </div>
+          ) : null}
         </dl>
       ) : (
-        <p className="text-sm text-muted-foreground">
-          Noch keine Zahlungsanweisung erstellt.
-        </p>
+        <p className="text-sm text-[var(--text-2)]">Noch keine Zahlungsanweisung erstellt.</p>
       )}
       {canManage && !instruction ? (
         <button
@@ -97,6 +100,6 @@ export default function NativeBillingInvoicePaymentSection({
         </button>
       ) : null}
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
-    </section>
+    </div>
   );
 }

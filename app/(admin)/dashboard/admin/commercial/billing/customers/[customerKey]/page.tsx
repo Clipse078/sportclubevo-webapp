@@ -1,14 +1,31 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
+import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
+import BillingDetailGrid, {
+  BillingDefinitionItem,
+  BillingDefinitionList,
+} from "@/components/admin/billing/shell/BillingDetailGrid";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
+import BillingDataTableShell, {
+  BillingDataTableCell,
+  BillingDataTableHead,
+  BillingDataTableHeaderCell,
+  BillingDataTableRow,
+} from "@/components/admin/billing/shell/BillingDataTable";
 import {
   getBillingContractsOverview,
   getInvoicesOverview,
 } from "@/lib/billing/native-billing-commercial-service";
 import { getBillingCustomerDetail } from "@/lib/billing/native-billing-service";
 import { formatBillingMoney } from "@/lib/billing/format-billing-money";
-import { presentBillingCustomerStatus } from "@/lib/billing/native-billing-presentation";
+import {
+  formatBillingDateDisplay,
+  presentBillingCustomerStatus,
+  presentBillingContractStatus,
+  presentNativeInvoiceStatus,
+} from "@/lib/billing/native-billing-presentation";
 import { getBillingCustomerBalanceSummaries } from "@/lib/billing/operations/billing-operations-service";
 import { NativeBillingNotFoundError } from "@/lib/billing/native-billing-types";
 import { requirePermission } from "@/lib/permissions/require-permission";
@@ -26,6 +43,7 @@ export default async function NativeBillingCustomerDetailPage({ params }: PagePr
   let balance: Awaited<ReturnType<typeof getBillingCustomerBalanceSummaries>>[number] | undefined;
   let customerContracts: Awaited<ReturnType<typeof getBillingContractsOverview>> = [];
   let customerInvoices: Awaited<ReturnType<typeof getInvoicesOverview>> = [];
+  let recentInvoices: Awaited<ReturnType<typeof getInvoicesOverview>> = [];
   try {
     const [loadedDetail, balances, contracts, invoices] = await Promise.all([
       getBillingCustomerDetail(customerKey),
@@ -37,6 +55,13 @@ export default async function NativeBillingCustomerDetailPage({ params }: PagePr
     balance = balances.find((b) => b.customerKey === customerKey);
     customerContracts = contracts.filter((c) => c.billingCustomerId === loadedDetail.customer.id);
     customerInvoices = invoices.filter((i) => i.billingCustomerId === loadedDetail.customer.id);
+    recentInvoices = [...customerInvoices]
+      .sort((a, b) => {
+        const aKey = a.invoiceDate?.toISOString() ?? a.createdAt.toISOString();
+        const bKey = b.invoiceDate?.toISOString() ?? b.createdAt.toISOString();
+        return bKey.localeCompare(aKey);
+      })
+      .slice(0, 5);
   } catch (error) {
     if (error instanceof NativeBillingNotFoundError) {
       notFound();
@@ -47,138 +72,192 @@ export default async function NativeBillingCustomerDetailPage({ params }: PagePr
   const { customer, tenantLinks, profiles } = detail;
   const statusPresentation = presentBillingCustomerStatus(customer.status);
   const billingProfile = profiles.find((p) => p.profileType === "BILLING") ?? profiles[0];
+  const currency = balance?.currency ?? customer.defaultCurrency ?? "CHF";
+  const activeContracts = customerContracts.filter((c) => c.status === "ACTIVE");
+  const invoiceCount = customerInvoices.length;
 
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
-        eyebrow="Commercial"
-        title={customer.displayName}
-        description={`Kundennummer ${customer.key}`}
-        actions={
-          <Link href="/dashboard/admin/commercial/billing/customers" className="fca-button-secondary">
-            Zurück zur Liste
-          </Link>
-        }
-      />
-
-      <section className="space-y-2 rounded-lg border border-border p-4">
-        <h2 className="text-sm font-semibold">Profil</h2>
-        <dl className="grid gap-2 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-muted-foreground">Rechtlicher Name</dt>
-            <dd>{customer.legalName ?? "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">E-Mail</dt>
-            <dd>{customer.primaryEmail ?? "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Status</dt>
-            <dd>
+    <BillingWorkspaceContent width="detail">
+      <div className="space-y-8">
+        <BillingPageHeader
+          size="hero"
+          title={customer.displayName}
+          description={`Kunde ${customer.key}`}
+          actions={
+            <div className="flex flex-wrap items-center gap-2">
               <BillingStatusBadge
-                label={statusPresentation.label}
+                label={statusPresentation.label.toUpperCase()}
                 tone={statusPresentation.tone}
               />
-            </dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Kundennummer</dt>
-            <dd className="font-mono text-xs">{customer.key}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Währung / Sprache</dt>
-            <dd>
-              {[customer.defaultCurrency, customer.defaultLanguage].filter(Boolean).join(" · ") || "—"}
-            </dd>
-          </div>
-        </dl>
-      </section>
-
-      <section className="space-y-2 rounded-lg border border-border p-4">
-        <h2 className="text-sm font-semibold">Abrechnung</h2>
-        <dl className="grid gap-2 text-sm sm:grid-cols-3">
-          <div>
-            <dt className="text-muted-foreground">Offener Saldo</dt>
-            <dd className="font-medium tabular-nums">
-              {formatBillingMoney(balance?.openBalanceMinor ?? 0, balance?.currency ?? "CHF")}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Überfällig</dt>
-            <dd className="font-medium tabular-nums">
-              {formatBillingMoney(balance?.overdueBalanceMinor ?? 0, balance?.currency ?? "CHF")}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Verknüpfungen</dt>
-            <dd className="flex flex-wrap gap-3">
               <Link
-                href="/dashboard/admin/commercial/billing/contracts"
-                className="text-primary hover:underline"
+                href="/dashboard/admin/commercial/billing/customers"
+                className="fca-button-secondary"
               >
-                {customerContracts.length} Verträge
+                Zurück zur Liste
               </Link>
-              <Link
-                href="/dashboard/admin/commercial/billing/invoices"
-                className="text-primary hover:underline"
-              >
-                {customerInvoices.length} Rechnungen
-              </Link>
-            </dd>
+            </div>
+          }
+        />
+
+        <div className="grid gap-4 rounded-[var(--radius-lg)] bg-[color-mix(in_srgb,var(--card)_90%,transparent)] px-5 py-4 ring-1 ring-[color-mix(in_srgb,var(--border)_50%,transparent)] sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <p className="text-[0.8125rem] text-[var(--text-2)]">Offen</p>
+            <p className="mt-1 text-lg font-semibold tabular-nums">
+              {formatBillingMoney(balance?.openBalanceMinor ?? 0, currency)}
+            </p>
           </div>
-        </dl>
-      </section>
+          <div>
+            <p className="text-[0.8125rem] text-[var(--text-2)]">Überfällig</p>
+            <p className="mt-1 text-lg font-semibold tabular-nums">
+              {formatBillingMoney(balance?.overdueBalanceMinor ?? 0, currency)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[0.8125rem] text-[var(--text-2)]">Aktive Verträge</p>
+            <p className="mt-1 text-lg font-semibold tabular-nums">{activeContracts.length}</p>
+          </div>
+          <div>
+            <p className="text-[0.8125rem] text-[var(--text-2)]">Rechnungen</p>
+            <p className="mt-1 text-lg font-semibold tabular-nums">{invoiceCount}</p>
+          </div>
+        </div>
 
-      <section className="space-y-2 rounded-lg border border-border p-4">
-        <h2 className="text-sm font-semibold">Verknüpfte Tenants</h2>
-        {tenantLinks.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Keine Tenant-Verknüpfungen.</p>
-        ) : (
-          <ul className="space-y-1 text-sm">
-            {tenantLinks.map((link) => (
-              <li key={link.id}>
-                {link.tenantName ?? link.tenantKey ?? link.tenantId}
-                {link.activeUntil ? " (inaktiv)" : ""}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        <BillingDetailGrid>
+          <div className="space-y-6">
+            <BillingPanel title="Abrechnung">
+              <BillingDefinitionList>
+                <BillingDefinitionItem label="Rechtlicher Name">
+                  {customer.legalName ?? "—"}
+                </BillingDefinitionItem>
+                <BillingDefinitionItem label="Währung / Sprache">
+                  {[customer.defaultCurrency, customer.defaultLanguage].filter(Boolean).join(" · ") ||
+                    "—"}
+                </BillingDefinitionItem>
+                <BillingDefinitionItem label="Rechnungs-E-Mail">
+                  {customer.primaryEmail ?? billingProfile?.invoiceEmail ?? "—"}
+                </BillingDefinitionItem>
+              </BillingDefinitionList>
+            </BillingPanel>
 
-      <section className="space-y-2 rounded-lg border border-border p-4">
-        <h2 className="text-sm font-semibold">Rechnungsadresse</h2>
-        {!billingProfile ? (
-          <p className="text-sm text-muted-foreground">Keine Rechnungsadresse erfasst.</p>
-        ) : (
-          <dl className="grid gap-2 text-sm sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <dt className="text-muted-foreground">Name</dt>
-              <dd>{billingProfile.companyOrName}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Strasse</dt>
-              <dd>
-                {billingProfile.street}
-                {billingProfile.houseNumber ? ` ${billingProfile.houseNumber}` : ""}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">PLZ / Ort</dt>
-              <dd>
-                {billingProfile.postalCode} {billingProfile.city}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Land</dt>
-              <dd>{billingProfile.countryCode}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Rechnungs-E-Mail</dt>
-              <dd>{billingProfile.invoiceEmail ?? customer.primaryEmail ?? "—"}</dd>
-            </div>
-          </dl>
-        )}
-      </section>
-    </div>
+            <BillingPanel title="Rechnungsadresse">
+              {!billingProfile ? (
+                <p className="text-sm text-[var(--text-2)]">Keine Rechnungsadresse erfasst.</p>
+              ) : (
+                <div className="space-y-1 text-sm">
+                  <p className="font-medium">{billingProfile.companyOrName}</p>
+                  <p className="text-[var(--text-2)]">
+                    {billingProfile.street}
+                    {billingProfile.houseNumber ? ` ${billingProfile.houseNumber}` : ""}
+                  </p>
+                  <p className="text-[var(--text-2)]">
+                    {billingProfile.postalCode} {billingProfile.city}
+                  </p>
+                  <p className="text-[var(--text-2)]">{billingProfile.countryCode}</p>
+                </div>
+              )}
+            </BillingPanel>
+
+            <BillingPanel title="Rechnungskontakt">
+              <BillingDefinitionList>
+                <BillingDefinitionItem label="E-Mail">
+                  {billingProfile?.invoiceEmail ?? customer.primaryEmail ?? "—"}
+                </BillingDefinitionItem>
+              </BillingDefinitionList>
+            </BillingPanel>
+          </div>
+
+          <div className="space-y-6">
+            <BillingPanel title="Verträge">
+              {customerContracts.length === 0 ? (
+                <p className="text-sm text-[var(--text-2)]">Keine Verträge.</p>
+              ) : (
+                <ul className="space-y-3 text-sm">
+                  {customerContracts.map((contract) => {
+                    const contractStatus = presentBillingContractStatus(contract.status);
+                    return (
+                      <li key={contract.key}>
+                        <Link
+                          href={`/dashboard/admin/commercial/billing/contracts/${contract.key}`}
+                          className="font-medium text-[var(--foreground)] hover:underline"
+                        >
+                          {contract.contractNumber}
+                        </Link>
+                        <p className="text-[var(--text-2)]">{contract.productName}</p>
+                        <div className="mt-1">
+                          <BillingStatusBadge
+                            label={contractStatus.label}
+                            tone={contractStatus.tone}
+                          />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </BillingPanel>
+
+            <BillingPanel title="Tenant-Verknüpfung">
+              {tenantLinks.length === 0 ? (
+                <p className="text-sm text-[var(--text-2)]">Keine Tenant-Verknüpfungen.</p>
+              ) : (
+                <ul className="space-y-2 text-sm">
+                  {tenantLinks.map((link) => (
+                    <li key={link.id} className="text-[var(--foreground)]">
+                      {link.tenantName ?? link.tenantKey ?? link.tenantId}
+                      {link.activeUntil ? (
+                        <span className="text-[var(--text-2)]"> · inaktiv</span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </BillingPanel>
+
+            <BillingPanel title="Rechnungen & Aktivität">
+              {customerInvoices.length === 0 ? (
+                <p className="text-sm text-[var(--text-2)]">Noch keine Rechnungen.</p>
+              ) : (
+                <BillingDataTableShell className="ring-0">
+                  <BillingDataTableHead>
+                    <tr>
+                      <BillingDataTableHeaderCell>Rechnung</BillingDataTableHeaderCell>
+                      <BillingDataTableHeaderCell>Datum</BillingDataTableHeaderCell>
+                      <BillingDataTableHeaderCell align="right">Betrag</BillingDataTableHeaderCell>
+                      <BillingDataTableHeaderCell>Status</BillingDataTableHeaderCell>
+                    </tr>
+                  </BillingDataTableHead>
+                  <tbody>
+                    {recentInvoices.map((invoice) => {
+                      const status = presentNativeInvoiceStatus(invoice.status);
+                      return (
+                        <BillingDataTableRow key={invoice.key}>
+                          <BillingDataTableCell>
+                            <Link
+                              href={`/dashboard/admin/commercial/billing/invoices/${invoice.key}`}
+                              className="font-medium hover:underline"
+                            >
+                              {invoice.invoiceNumber ?? "Entwurf"}
+                            </Link>
+                          </BillingDataTableCell>
+                          <BillingDataTableCell className="text-[var(--text-2)]">
+                            {formatBillingDateDisplay(invoice.invoiceDate)}
+                          </BillingDataTableCell>
+                          <BillingDataTableCell align="right">
+                            {formatBillingMoney(invoice.grossTotalMinor, invoice.currency)}
+                          </BillingDataTableCell>
+                          <BillingDataTableCell>
+                            <BillingStatusBadge label={status.label} tone={status.tone} />
+                          </BillingDataTableCell>
+                        </BillingDataTableRow>
+                      );
+                    })}
+                  </tbody>
+                </BillingDataTableShell>
+              )}
+            </BillingPanel>
+          </div>
+        </BillingDetailGrid>
+      </div>
+    </BillingWorkspaceContent>
   );
 }

@@ -27,7 +27,8 @@ describe("SCE-SUPERADMIN-SHELL-01B — platform superadmin navigation", () => {
     expect(labels).toContain("Platform Dashboard");
     expect(labels).toContain("Clubs");
     expect(labels).toContain("Commercial");
-    expect(labels).toContain("Billing");
+    expect(labels).toContain("Übersicht");
+    expect(labels).toContain("Rechnungen");
     expect(labels).toContain("Integrations");
     expect(labels).toContain("Operations");
   });
@@ -63,7 +64,7 @@ describe("SCE-SUPERADMIN-SHELL-01B — platform superadmin navigation", () => {
       PERMISSIONS.USERS_MANAGE,
     ]);
     expect(withoutBilling).not.toContain("Commercial");
-    expect(withoutBilling).not.toContain("Billing");
+    expect(withoutBilling).not.toContain("Rechnungen");
   });
 
   it("gates Integrations on tenants.manage", () => {

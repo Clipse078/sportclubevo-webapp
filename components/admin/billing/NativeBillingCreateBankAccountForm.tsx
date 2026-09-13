@@ -7,6 +7,8 @@ export type LegalEntityOption = { key: string; label: string };
 
 type Props = {
   legalEntities: LegalEntityOption[];
+  onSuccess?: () => void;
+  embedded?: boolean;
 };
 
 function clientSafeBankAccountFormError(error: unknown): string {
@@ -19,7 +21,11 @@ function clientSafeBankAccountFormError(error: unknown): string {
   return "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.";
 }
 
-export default function NativeBillingCreateBankAccountForm({ legalEntities }: Props) {
+export default function NativeBillingCreateBankAccountForm({
+  legalEntities,
+  onSuccess,
+  embedded = false,
+}: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +65,7 @@ export default function NativeBillingCreateBankAccountForm({ legalEntities }: Pr
       }
       router.refresh();
       formElement.reset();
+      onSuccess?.();
     } catch (e) {
       setError(clientSafeBankAccountFormError(e));
     } finally {
@@ -67,8 +74,15 @@ export default function NativeBillingCreateBankAccountForm({ legalEntities }: Pr
   }
 
   return (
-    <form onSubmit={onSubmit} className="max-w-xl space-y-4 rounded-lg border border-border p-4">
-      <h3 className="text-sm font-semibold">Bankkonto hinzufügen</h3>
+    <form
+      onSubmit={onSubmit}
+      className={
+        embedded
+          ? "space-y-4"
+          : "max-w-xl space-y-4 rounded-lg border border-border p-4"
+      }
+    >
+      {!embedded ? <h3 className="text-sm font-semibold">Bankkonto hinzufügen</h3> : null}
       <label className="block space-y-1 text-sm">
         <span className="font-medium">Rechtsträger</span>
         <select name="legalEntityKey" required className="fca-input w-full">

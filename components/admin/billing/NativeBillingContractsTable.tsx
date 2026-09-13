@@ -1,6 +1,16 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { BillingContractStatus, SwissVatTreatment } from "@prisma/client";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
+import BillingEmptyState from "@/components/admin/billing/shell/BillingEmptyState";
+import BillingDataTableShell, {
+  BillingDataTableCell,
+  BillingDataTableHead,
+  BillingDataTableHeaderCell,
+  BillingDataTableRow,
+} from "@/components/admin/billing/shell/BillingDataTable";
 import { formatBillingMoney } from "@/lib/billing/format-billing-money";
 import {
   formatBillingDateDisplay,
@@ -27,69 +37,76 @@ type Props = {
 };
 
 export default function NativeBillingContractsTable({ rows }: Props) {
+  const router = useRouter();
+
   if (rows.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">Noch keine Verträge erfasst.</p>
+      <BillingEmptyState
+        title="Noch keine Verträge"
+        description="Aktive Verträge mit Preisen und Abrechnungsintervall erscheinen hier."
+      />
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border">
-      <table className="min-w-full text-sm">
-        <thead className="bg-muted/40 text-left">
-          <tr>
-            <th className="px-4 py-3 font-medium">Vertrag</th>
-            <th className="px-4 py-3 font-medium">Kunde</th>
-            <th className="px-4 py-3 font-medium">Produkt</th>
-            <th className="px-4 py-3 font-medium">Monatspreis netto</th>
-            <th className="px-4 py-3 font-medium">Abrechnung</th>
-            <th className="px-4 py-3 font-medium">MWST</th>
-            <th className="px-4 py-3 font-medium">Status</th>
-            <th className="px-4 py-3 font-medium">Start</th>
-            <th className="px-4 py-3 font-medium">Ende</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => {
-            const statusPresentation = presentBillingContractStatus(row.status);
-            return (
-              <tr key={row.key} className="border-t border-border">
-                <td className="px-4 py-3">
-                  <Link
-                    href={`/dashboard/admin/commercial/billing/contracts/${row.key}`}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    {row.contractNumber}
-                  </Link>
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">{row.customerLabel}</td>
-                <td className="px-4 py-3">{row.productName}</td>
-                <td className="px-4 py-3 tabular-nums">
-                  {formatBillingMoney(row.monthlyNetAmountMinor, row.currency)}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {row.billingIntervalLabel ?? "Monatlich"}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {presentSwissVatTreatment(row.vatTreatment)}
-                </td>
-                <td className="px-4 py-3">
-                  <BillingStatusBadge
-                    label={statusPresentation.label}
-                    tone={statusPresentation.tone}
-                  />
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {formatBillingDateDisplay(row.startDate)}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {formatBillingDateDisplay(row.endDate ?? null)}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <BillingDataTableShell>
+      <BillingDataTableHead>
+        <tr>
+          <BillingDataTableHeaderCell>Vertrag</BillingDataTableHeaderCell>
+          <BillingDataTableHeaderCell>Kunde</BillingDataTableHeaderCell>
+          <BillingDataTableHeaderCell>Produkt</BillingDataTableHeaderCell>
+          <BillingDataTableHeaderCell align="right">Monatspreis</BillingDataTableHeaderCell>
+          <BillingDataTableHeaderCell>Abrechnung</BillingDataTableHeaderCell>
+          <BillingDataTableHeaderCell>MWST</BillingDataTableHeaderCell>
+          <BillingDataTableHeaderCell>Start</BillingDataTableHeaderCell>
+          <BillingDataTableHeaderCell>Status</BillingDataTableHeaderCell>
+        </tr>
+      </BillingDataTableHead>
+      <tbody>
+        {rows.map((row) => {
+          const statusPresentation = presentBillingContractStatus(row.status);
+          const href = `/dashboard/admin/commercial/billing/contracts/${row.key}`;
+          return (
+            <BillingDataTableRow
+              key={row.key}
+              className="cursor-pointer"
+              onClick={() => router.push(href)}
+            >
+              <BillingDataTableCell>
+                <Link
+                  href={href}
+                  className="font-medium text-[var(--foreground)] hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {row.contractNumber}
+                </Link>
+              </BillingDataTableCell>
+              <BillingDataTableCell className="text-[var(--text-2)]">
+                {row.customerLabel}
+              </BillingDataTableCell>
+              <BillingDataTableCell>{row.productName}</BillingDataTableCell>
+              <BillingDataTableCell align="right">
+                {formatBillingMoney(row.monthlyNetAmountMinor, row.currency)}
+              </BillingDataTableCell>
+              <BillingDataTableCell className="text-[var(--text-2)]">
+                {row.billingIntervalLabel ?? "Monatlich"}
+              </BillingDataTableCell>
+              <BillingDataTableCell className="text-[var(--text-2)]">
+                {presentSwissVatTreatment(row.vatTreatment)}
+              </BillingDataTableCell>
+              <BillingDataTableCell className="text-[var(--text-2)]">
+                {formatBillingDateDisplay(row.startDate)}
+              </BillingDataTableCell>
+              <BillingDataTableCell>
+                <BillingStatusBadge
+                  label={statusPresentation.label}
+                  tone={statusPresentation.tone}
+                />
+              </BillingDataTableCell>
+            </BillingDataTableRow>
+          );
+        })}
+      </tbody>
+    </BillingDataTableShell>
   );
 }

@@ -1,5 +1,7 @@
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import NativeBillingReconciliationWorkspace from "@/components/admin/billing/NativeBillingReconciliationWorkspace";
+import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import { getCamt054ReconciliationOverview } from "@/lib/billing/camt054-reconciliation/camt054-reconciliation-overview-service";
 import { listLegalEntitiesForPlatform } from "@/lib/billing/native-billing-service";
 import { hasPermission } from "@/lib/permissions/has-permission";
@@ -30,17 +32,31 @@ export default async function NativeBillingReconciliationPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
-        eyebrow="Commercial"
+    <BillingWorkspaceContent width="list">
+    <div className="space-y-6">
+      <BillingPageHeader
         title="Bankabgleich"
-        description="camt.054 Zahlungsavis importieren, per QRR zuordnen und Zahlungen auf SCE-Rechnungen verbuchen."
+        description="camt.054-Zahlungsavis importieren, per Swiss QR zuordnen und Zahlungen verbuchen."
       />
 
-      {legalEntities.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Kein Rechtsträger konfiguriert. Bitte zuerst Billing-Einstellungen prüfen.
+      <BillingPanel
+        title="Betriebsstatus"
+        description="Swiss QR und camt.054 für die konfigurierte Rechtsperson."
+        className="text-sm"
+      >
+        <p className="text-[var(--text-2)]">
+          {legalEntities.length > 0
+            ? `${legalEntities[0]?.displayName ?? "Rechtsträger"} · Import im XML-Format (max. 5 MB)`
+            : "Kein Rechtsträger konfiguriert — bitte Einstellungen prüfen."}
         </p>
+      </BillingPanel>
+
+      {legalEntities.length === 0 ? (
+        <BillingPanel>
+          <p className="text-sm text-[var(--text-2)]">
+            Bankabgleich ist erst nach Konfiguration eines Rechtsträgers verfügbar.
+          </p>
+        </BillingPanel>
       ) : (
         <NativeBillingReconciliationWorkspace
           legalEntities={legalEntities.map((e) => ({
@@ -53,5 +69,6 @@ export default async function NativeBillingReconciliationPage() {
         />
       )}
     </div>
+    </BillingWorkspaceContent>
   );
 }
