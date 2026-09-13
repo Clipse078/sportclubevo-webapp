@@ -4359,6 +4359,7 @@ model Invoice {
   @@unique([legalEntityId, invoiceNumber])
   @@index([billingCustomerId])
   @@index([billingContractId])
+  @@index([billingContractId, periodStart, periodEnd])
   @@index([status])
   @@index([invoiceDate])
 }
@@ -4626,6 +4627,40 @@ model InvoiceDelivery {
   @@index([invoiceId, attemptNumber])
   @@index([invoiceId, createdAt])
   @@index([status])
+}
+
+enum BillingRecurringRunMode {
+  DRY_RUN
+  EXECUTE
+}
+
+enum BillingRecurringRunTrigger {
+  CRON
+  MANUAL
+}
+
+enum BillingRecurringRunStatus {
+  COMPLETED
+  FAILED
+}
+
+/// Persisted summary of an automated or manual recurring billing evaluation.
+model BillingRecurringRun {
+  id                   String                     @id @default(cuid())
+  key                  String                     @unique
+  mode                 BillingRecurringRunMode
+  trigger              BillingRecurringRunTrigger
+  status               BillingRecurringRunStatus
+  asOfDate             DateTime                   @db.Date
+  deliverAutomatically Boolean                    @default(false)
+  startedAt            DateTime                   @default(now())
+  completedAt          DateTime?
+  summaryJson          Json
+  createdByUserId      String?
+  createdAt            DateTime                   @default(now())
+
+  @@index([startedAt])
+  @@index([trigger, startedAt])
 }
 
 /// Per legal entity, per calendar year — atomic invoice numbering on finalize.

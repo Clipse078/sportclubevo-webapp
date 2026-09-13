@@ -3,6 +3,8 @@ import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeade
 import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
+import BillingRecurringAutomationPanel from "@/components/admin/billing/BillingRecurringAutomationPanel";
+import { getRecurringBillingAutomationStatus } from "@/lib/billing/recurring/recurring-billing-service";
 import { getBillingOperationsDiagnostics } from "@/lib/billing/operations/billing-operations-diagnostics";
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -28,6 +30,7 @@ export default async function BillingOperationsPage() {
   }
 
   const diagnostics = await getBillingOperationsDiagnostics();
+  const automation = await getRecurringBillingAutomationStatus();
 
   return (
     <BillingWorkspaceContent width="wide">
@@ -101,6 +104,8 @@ export default async function BillingOperationsPage() {
             </dl>
           </BillingPanel>
         </div>
+
+        <BillingRecurringAutomationPanel initialAutomation={automation} />
 
         <BillingPanel title="Provider-Status">
           <dl className="grid gap-0 sm:grid-cols-3">
