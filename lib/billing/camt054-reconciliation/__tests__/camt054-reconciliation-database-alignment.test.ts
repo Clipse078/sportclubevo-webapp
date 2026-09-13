@@ -60,6 +60,10 @@ describe("assertCamt054ReconciliationDatabaseAlignment", () => {
       "unparseable STAGE_DB_URL",
       { DATABASE_URL: STAGE_URL, STAGE_DB_URL: "not-a-postgres-url" },
     ],
+    [
+      "non-PostgreSQL DATABASE_URL",
+      { DATABASE_URL: "https://example.invalid/neondb", STAGE_DB_URL: STAGE_URL },
+    ],
   ])("fails closed when alignment is unprovable: %s", (_label, urls) => {
     expect(() =>
       assertCamt054ReconciliationDatabaseAlignment({
