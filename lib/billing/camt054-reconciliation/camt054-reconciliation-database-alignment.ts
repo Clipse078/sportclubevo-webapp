@@ -20,7 +20,6 @@ export type Camt054PreviewRuntimeDiagnostics = {
 };
 
 export class Camt054PreviewRuntimeConflictError extends NativeBillingConflictError {
-  readonly name = "Camt054PreviewRuntimeConflictError";
   readonly diagnostics: Camt054PreviewRuntimeDiagnostics;
 
   constructor(
