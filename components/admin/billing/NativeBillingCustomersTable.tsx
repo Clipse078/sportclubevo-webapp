@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { BillingCustomerStatus } from "@prisma/client";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
+import { formatBillingMoney } from "@/lib/billing/format-billing-money";
 import { presentBillingCustomerStatus } from "@/lib/billing/native-billing-presentation";
 
 export type NativeBillingCustomerRow = {
@@ -10,6 +11,12 @@ export type NativeBillingCustomerRow = {
   primaryEmail: string | null;
   status: BillingCustomerStatus;
   tenantLabels: string[];
+  activeContractCount?: number;
+  openBalanceMinor?: number;
+  overdueBalanceMinor?: number;
+  currency?: string;
+  billingHealthLabel?: string;
+  billingHealthTone?: "success" | "warning" | "muted" | "default";
 };
 
 type Props = {
@@ -42,6 +49,10 @@ export default function NativeBillingCustomersTable({ rows, canManage = false }:
             <th className="px-4 py-3 font-medium">Kundennummer</th>
             <th className="px-4 py-3 font-medium">Club / Tenant</th>
             <th className="px-4 py-3 font-medium">Rechnungs-E-Mail</th>
+            <th className="px-4 py-3 font-medium">Verträge</th>
+            <th className="px-4 py-3 font-medium text-right">Offen</th>
+            <th className="px-4 py-3 font-medium text-right">Überfällig</th>
+            <th className="px-4 py-3 font-medium">Abrechnung</th>
             <th className="px-4 py-3 font-medium">Status</th>
           </tr>
         </thead>
@@ -67,6 +78,29 @@ export default function NativeBillingCustomersTable({ rows, canManage = false }:
                   {row.tenantLabels.length > 0 ? row.tenantLabels.join(", ") : "—"}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{billingEmail ?? "—"}</td>
+                <td className="px-4 py-3 tabular-nums text-muted-foreground">
+                  {row.activeContractCount ?? "—"}
+                </td>
+                <td className="px-4 py-3 text-right tabular-nums">
+                  {row.openBalanceMinor != null && row.currency
+                    ? formatBillingMoney(row.openBalanceMinor, row.currency)
+                    : "—"}
+                </td>
+                <td className="px-4 py-3 text-right tabular-nums">
+                  {row.overdueBalanceMinor != null && row.currency
+                    ? formatBillingMoney(row.overdueBalanceMinor, row.currency)
+                    : "—"}
+                </td>
+                <td className="px-4 py-3">
+                  {row.billingHealthLabel ? (
+                    <BillingStatusBadge
+                      label={row.billingHealthLabel}
+                      tone={row.billingHealthTone ?? "default"}
+                    />
+                  ) : (
+                    "—"
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <BillingStatusBadge
                     label={statusPresentation.label}

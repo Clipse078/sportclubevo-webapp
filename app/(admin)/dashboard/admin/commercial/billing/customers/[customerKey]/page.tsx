@@ -2,8 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
+import {
+  getBillingContractsOverview,
+  getInvoicesOverview,
+} from "@/lib/billing/native-billing-commercial-service";
 import { getBillingCustomerDetail } from "@/lib/billing/native-billing-service";
+import { formatBillingMoney } from "@/lib/billing/format-billing-money";
 import { presentBillingCustomerStatus } from "@/lib/billing/native-billing-presentation";
+import { getBillingCustomerBalanceSummaries } from "@/lib/billing/operations/billing-operations-service";
 import { NativeBillingNotFoundError } from "@/lib/billing/native-billing-types";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -17,8 +23,20 @@ export default async function NativeBillingCustomerDetailPage({ params }: PagePr
   const { customerKey } = await params;
 
   let detail: Awaited<ReturnType<typeof getBillingCustomerDetail>>;
+  let balance: Awaited<ReturnType<typeof getBillingCustomerBalanceSummaries>>[number] | undefined;
+  let customerContracts: Awaited<ReturnType<typeof getBillingContractsOverview>> = [];
+  let customerInvoices: Awaited<ReturnType<typeof getInvoicesOverview>> = [];
   try {
-    detail = await getBillingCustomerDetail(customerKey);
+    const [loadedDetail, balances, contracts, invoices] = await Promise.all([
+      getBillingCustomerDetail(customerKey),
+      getBillingCustomerBalanceSummaries(),
+      getBillingContractsOverview(),
+      getInvoicesOverview(),
+    ]);
+    detail = loadedDetail;
+    balance = balances.find((b) => b.customerKey === customerKey);
+    customerContracts = contracts.filter((c) => c.billingCustomerId === loadedDetail.customer.id);
+    customerInvoices = invoices.filter((i) => i.billingCustomerId === loadedDetail.customer.id);
   } catch (error) {
     if (error instanceof NativeBillingNotFoundError) {
       notFound();
@@ -71,6 +89,41 @@ export default async function NativeBillingCustomerDetailPage({ params }: PagePr
             <dt className="text-muted-foreground">Währung / Sprache</dt>
             <dd>
               {[customer.defaultCurrency, customer.defaultLanguage].filter(Boolean).join(" · ") || "—"}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section className="space-y-2 rounded-lg border border-border p-4">
+        <h2 className="text-sm font-semibold">Abrechnung</h2>
+        <dl className="grid gap-2 text-sm sm:grid-cols-3">
+          <div>
+            <dt className="text-muted-foreground">Offener Saldo</dt>
+            <dd className="font-medium tabular-nums">
+              {formatBillingMoney(balance?.openBalanceMinor ?? 0, balance?.currency ?? "CHF")}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Überfällig</dt>
+            <dd className="font-medium tabular-nums">
+              {formatBillingMoney(balance?.overdueBalanceMinor ?? 0, balance?.currency ?? "CHF")}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Verknüpfungen</dt>
+            <dd className="flex flex-wrap gap-3">
+              <Link
+                href="/dashboard/admin/commercial/billing/contracts"
+                className="text-primary hover:underline"
+              >
+                {customerContracts.length} Verträge
+              </Link>
+              <Link
+                href="/dashboard/admin/commercial/billing/invoices"
+                className="text-primary hover:underline"
+              >
+                {customerInvoices.length} Rechnungen
+              </Link>
             </dd>
           </div>
         </dl>
