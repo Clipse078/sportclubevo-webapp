@@ -52,6 +52,7 @@ export default async function NativeBillingContractsPage() {
           vatTreatment: contract.vatTreatment,
           status: contract.status,
           startDate: contract.startDate.toISOString().slice(0, 10),
+          endDate: contract.endDate?.toISOString().slice(0, 10) ?? null,
           billingIntervalLabel: presentBillingInterval(contract.billingInterval),
         }))}
       />

@@ -18,6 +18,7 @@ export type NativeBillingContractRow = {
   vatTreatment: SwissVatTreatment;
   status: BillingContractStatus;
   startDate: string;
+  endDate?: string | null;
   billingIntervalLabel?: string;
 };
 
@@ -45,6 +46,7 @@ export default function NativeBillingContractsTable({ rows }: Props) {
             <th className="px-4 py-3 font-medium">MWST</th>
             <th className="px-4 py-3 font-medium">Status</th>
             <th className="px-4 py-3 font-medium">Start</th>
+            <th className="px-4 py-3 font-medium">Ende</th>
           </tr>
         </thead>
         <tbody>
@@ -79,6 +81,9 @@ export default function NativeBillingContractsTable({ rows }: Props) {
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {formatBillingDateDisplay(row.startDate)}
+                </td>
+                <td className="px-4 py-3 text-muted-foreground">
+                  {formatBillingDateDisplay(row.endDate ?? null)}
                 </td>
               </tr>
             );
