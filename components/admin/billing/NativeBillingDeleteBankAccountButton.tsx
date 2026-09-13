@@ -14,6 +14,8 @@ type NativeBillingDeleteBankAccountButtonProps = {
   referenceStrategy: string;
   ibanMasked: string;
   qrIbanMasked: string | null;
+  /** When set, renders a compact overflow trigger instead of a destructive inline button. */
+  menuTrigger?: boolean;
 };
 
 export default function NativeBillingDeleteBankAccountButton({
@@ -23,6 +25,7 @@ export default function NativeBillingDeleteBankAccountButton({
   referenceStrategy,
   ibanMasked,
   qrIbanMasked,
+  menuTrigger = false,
 }: NativeBillingDeleteBankAccountButtonProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -69,18 +72,33 @@ export default function NativeBillingDeleteBankAccountButton({
   return (
     <>
       {success ? <p className="text-sm text-green-700">{success}</p> : null}
-      <button
-        type="button"
-        onClick={() => {
-          setError(null);
-          setSuccess(null);
-          setOpen(true);
-        }}
-        className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-transparent px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-        Bankkonto löschen
-      </button>
+      {menuTrigger ? (
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            setSuccess(null);
+            setOpen(true);
+          }}
+          className="rounded-md p-1.5 text-[var(--muted)] hover:bg-[color-mix(in_srgb,var(--foreground)_6%,transparent)] hover:text-[var(--foreground)]"
+          aria-label="Bankkonto Aktionen"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            setSuccess(null);
+            setOpen(true);
+          }}
+          className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-transparent px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          Bankkonto löschen
+        </button>
+      )}
 
       <Dialog
         open={open}

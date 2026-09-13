@@ -11,7 +11,7 @@ describe("SCE-SUPERADMIN-BILLING-01D — Commercial billing navigation", () => {
     expect(commercial).toBeDefined();
     const item = commercial!.items.find((i) => i.key === "platform-commercial");
     expect(item?.href).toBe("/dashboard/admin/commercial/billing");
-    expect(item?.children?.some((c) => c.key === "platform-commercial-billing")).toBe(
+    expect(item?.children?.some((c) => c.key === "platform-commercial-billing-overview")).toBe(
       true,
     );
     expect(item?.children?.some((c) => c.key === "platform-commercial-billing-customers")).toBe(

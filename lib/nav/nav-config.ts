@@ -20,6 +20,12 @@ export type NavItemChild = {
   permissionKeys?: PermissionKey[];
   /** Shell workspace visibility; defaults to club-only. */
   navContexts?: NavContext[];
+  /** Visual grouping in sidebar (primary workflow vs admin). */
+  navSection?: "primary" | "admin";
+  /** When true, only highlight on exact pathname match (e.g. billing overview). */
+  matchExact?: boolean;
+  /** Distinct label for nav icon registry when `label` duplicates another nav item. */
+  navIconLabel?: string;
 };
 
 export type NavItem = {
@@ -90,53 +96,68 @@ export const NAV_SECTIONS: NavSection[] = [
         navContexts: ["platform"],
         children: [
           {
-            key: "platform-commercial-billing",
-            label: "Billing",
+            key: "platform-commercial-billing-overview",
+            label: "Übersicht",
+            navIconLabel: "Commercial Billing Übersicht",
             href: "/dashboard/admin/commercial/billing",
             permissionKeys: [PERMISSIONS.BILLING_VIEW],
             navContexts: ["platform"],
+            navSection: "primary",
+            matchExact: true,
           },
           {
             key: "platform-commercial-billing-customers",
-            label: "Customers",
+            label: "Kunden",
+            navIconLabel: "Commercial Billing Kunden",
             href: "/dashboard/admin/commercial/billing/customers",
             permissionKeys: [PERMISSIONS.BILLING_VIEW],
             navContexts: ["platform"],
+            navSection: "primary",
           },
           {
             key: "platform-commercial-billing-contracts",
-            label: "Contracts",
+            label: "Verträge",
+            navIconLabel: "Commercial Billing Verträge",
             href: "/dashboard/admin/commercial/billing/contracts",
             permissionKeys: [PERMISSIONS.BILLING_VIEW],
             navContexts: ["platform"],
+            navSection: "primary",
           },
           {
             key: "platform-commercial-billing-invoices",
-            label: "Invoices",
+            label: "Rechnungen",
+            navIconLabel: "Commercial Billing Rechnungen",
             href: "/dashboard/admin/commercial/billing/invoices",
             permissionKeys: [PERMISSIONS.BILLING_VIEW],
             navContexts: ["platform"],
+            navSection: "primary",
           },
           {
             key: "platform-commercial-billing-reconciliation",
-            label: "Reconciliation",
+            label: "Bankabgleich",
+            navIconLabel: "Commercial Billing Bankabgleich",
             href: "/dashboard/admin/commercial/billing/reconciliation",
             permissionKeys: [PERMISSIONS.BILLING_VIEW],
             navContexts: ["platform"],
+            navSection: "primary",
           },
           {
             key: "platform-commercial-billing-settings",
-            label: "Settings",
+            label: "Einstellungen",
+            navIconLabel: "Commercial Billing Einstellungen",
             href: "/dashboard/admin/commercial/billing/settings",
             permissionKeys: [PERMISSIONS.BILLING_VIEW],
             navContexts: ["platform"],
+            navSection: "admin",
           },
           {
             key: "platform-commercial-billing-operations",
             label: "Operations",
+            navIconLabel: "Commercial Billing Operations",
             href: "/dashboard/admin/commercial/billing/operations",
             permissionKeys: [PERMISSIONS.BILLING_MANAGE],
             navContexts: ["platform"],
+            navSection: "admin",
           },
         ],
       },

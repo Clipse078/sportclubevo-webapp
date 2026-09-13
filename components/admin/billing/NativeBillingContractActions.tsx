@@ -59,7 +59,7 @@ export default function NativeBillingContractActions({
         <>
           <button
             type="button"
-            className="fca-button-secondary"
+            className="fca-button-secondary text-sm"
             disabled={loading}
             onClick={() => patchStatus("PAUSED")}
           >
@@ -67,7 +67,7 @@ export default function NativeBillingContractActions({
           </button>
           <button
             type="button"
-            className="fca-button-secondary"
+            className="fca-button-secondary text-sm"
             disabled={loading}
             onClick={() => patchStatus("TERMINATED")}
           >

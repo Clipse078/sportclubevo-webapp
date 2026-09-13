@@ -83,7 +83,7 @@ function activityPresentation(
     case NATIVE_BILLING_AUDIT_ACTIONS.CAMT054_RECONCILIATION_APPLIED:
       return {
         title: "camt.054 Import verarbeitet",
-        detail: importKey,
+        detail: invoiceNumber ? `Rechnungsbezug ${invoiceNumber}` : "Bankimport abgeschlossen",
       };
     default:
       return { title: action, detail: null };

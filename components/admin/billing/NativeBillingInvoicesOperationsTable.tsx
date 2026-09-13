@@ -1,8 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
+import BillingEmptyState from "@/components/admin/billing/shell/BillingEmptyState";
+import BillingDataTableShell, {
+  BillingDataTableCell,
+  BillingDataTableHead,
+  BillingDataTableHeaderCell,
+  BillingDataTableRow,
+} from "@/components/admin/billing/shell/BillingDataTable";
 import { formatBillingMoney } from "@/lib/billing/format-billing-money";
 import {
   formatBillingDateDisplay,
@@ -16,11 +24,24 @@ type Props = {
 };
 
 const DELIVERY_LABELS: Record<BillingInvoiceOperationalRow["deliveryStatus"], string> = {
-  NOT_SENT: "Nicht versendet",
+  NOT_SENT: "Noch nicht versendet",
   SENDING: "Wird gesendet",
   SENT: "Versendet",
   FAILED: "Versand fehlgeschlagen",
 };
+
+function rowVisualClass(row: BillingInvoiceOperationalRow): string {
+  if (row.operationalStatus === "VOID") {
+    return "opacity-60";
+  }
+  if (
+    row.operationalStatus === "FINALIZED" &&
+    row.deliveryStatus === "NOT_SENT"
+  ) {
+    return "bg-[color-mix(in_srgb,var(--sce-primary)_4%,transparent)] hover:bg-[color-mix(in_srgb,var(--sce-primary)_7%,transparent)]";
+  }
+  return "";
+}
 
 function presentOperationalStatus(row: BillingInvoiceOperationalRow) {
   if (row.operationalStatus === "OVERDUE") {
@@ -33,6 +54,7 @@ export default function NativeBillingInvoicesOperationsTable({
   rows,
   customerOptions,
 }: Props) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [customerFilter, setCustomerFilter] = useState<string>("ALL");
@@ -62,7 +84,10 @@ export default function NativeBillingInvoicesOperationsTable({
 
   if (rows.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">Noch keine Rechnungen erfasst.</p>
+      <BillingEmptyState
+        title="Noch keine Rechnungen"
+        description="Finalisierte und offene Rechnungen erscheinen hier mit Versand- und Zahlungsstatus."
+      />
     );
   }
 
@@ -70,7 +95,7 @@ export default function NativeBillingInvoicesOperationsTable({
     <div className="space-y-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
         <label className="flex min-w-0 flex-1 flex-col gap-1 text-sm">
-          <span className="text-muted-foreground">Suche</span>
+          <span className="text-[var(--muted)]">Suche</span>
           <input
             type="search"
             value={query}
@@ -80,7 +105,7 @@ export default function NativeBillingInvoicesOperationsTable({
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted-foreground">Status</span>
+          <span className="text-[var(--muted)]">Status</span>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -90,14 +115,14 @@ export default function NativeBillingInvoicesOperationsTable({
             <option value="DRAFT">Entwurf</option>
             <option value="FINALIZED">Finalisiert</option>
             <option value="OPEN">Offen</option>
-            <option value="PARTIALLY_PAID">Teilbezahlt</option>
+            <option value="PARTIALLY_PAID">Teilweise bezahlt</option>
             <option value="PAID">Bezahlt</option>
             <option value="OVERDUE">Überfällig</option>
             <option value="VOID">Storniert</option>
           </select>
         </label>
         <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted-foreground">Kunde</span>
+          <span className="text-[var(--muted)]">Kunde</span>
           <select
             value={customerFilter}
             onChange={(e) => setCustomerFilter(e.target.value)}
@@ -113,71 +138,90 @@ export default function NativeBillingInvoicesOperationsTable({
         </label>
       </div>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-[var(--muted)]">
         {filtered.length} von {rows.length} Rechnungen
       </p>
 
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="min-w-full text-sm">
-          <thead className="bg-muted/40 text-left">
+      {filtered.length === 0 ? (
+        <BillingEmptyState
+          title="Keine Treffer"
+          description="Passen Sie Suche oder Filter an, um Rechnungen anzuzeigen."
+        />
+      ) : (
+        <BillingDataTableShell>
+          <BillingDataTableHead>
             <tr>
-              <th className="px-4 py-3 font-medium">Rechnung</th>
-              <th className="px-4 py-3 font-medium">Kunde</th>
-              <th className="px-4 py-3 font-medium">Datum</th>
-              <th className="px-4 py-3 font-medium">Fällig</th>
-              <th className="px-4 py-3 font-medium text-right">Total</th>
-              <th className="px-4 py-3 font-medium text-right">Bezahlt</th>
-              <th className="px-4 py-3 font-medium text-right">Offen</th>
-              <th className="px-4 py-3 font-medium">Versand</th>
-              <th className="px-4 py-3 font-medium">Status</th>
+              <BillingDataTableHeaderCell>Rechnung</BillingDataTableHeaderCell>
+              <BillingDataTableHeaderCell>Kunde</BillingDataTableHeaderCell>
+              <BillingDataTableHeaderCell>Rechnungsdatum</BillingDataTableHeaderCell>
+              <BillingDataTableHeaderCell>Fällig</BillingDataTableHeaderCell>
+              <BillingDataTableHeaderCell align="right">Betrag</BillingDataTableHeaderCell>
+              <BillingDataTableHeaderCell align="right">Bezahlt</BillingDataTableHeaderCell>
+              <BillingDataTableHeaderCell align="right">Offen</BillingDataTableHeaderCell>
+              <BillingDataTableHeaderCell>Versand</BillingDataTableHeaderCell>
+              <BillingDataTableHeaderCell>Status</BillingDataTableHeaderCell>
             </tr>
-          </thead>
+          </BillingDataTableHead>
           <tbody>
             {filtered.map((row) => {
               const statusPresentation = presentOperationalStatus(row);
               const deliveryLabel = DELIVERY_LABELS[row.deliveryStatus];
               const isDraft = row.operationalStatus === "DRAFT";
+              const href = `/dashboard/admin/commercial/billing/invoices/${row.key}`;
               return (
-                <tr key={row.key} className="border-t border-border">
-                  <td className="px-4 py-3">
+                <BillingDataTableRow
+                  key={row.key}
+                  className={`cursor-pointer group ${rowVisualClass(row)}`}
+                  onClick={() => router.push(href)}
+                >
+                  <BillingDataTableCell>
                     <Link
-                      href={`/dashboard/admin/commercial/billing/invoices/${row.key}`}
-                      className={`font-medium hover:underline ${
-                        isDraft ? "text-muted-foreground italic" : "text-primary"
+                      href={href}
+                      className={`font-medium group-hover:underline ${
+                        isDraft
+                          ? "text-[var(--muted)] italic"
+                          : row.operationalStatus === "VOID"
+                            ? "text-[var(--text-2)]"
+                            : "text-[var(--foreground)]"
                       }`}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       {row.displayNumber}
                     </Link>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{row.customerLabel}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
+                  </BillingDataTableCell>
+                  <BillingDataTableCell className="text-[var(--text-2)]">
+                    {row.customerLabel}
+                  </BillingDataTableCell>
+                  <BillingDataTableCell className="text-[var(--text-2)]">
                     {formatBillingDateDisplay(row.invoiceDate)}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
+                  </BillingDataTableCell>
+                  <BillingDataTableCell className="text-[var(--text-2)]">
                     {formatBillingDateDisplay(row.dueDate)}
-                  </td>
-                  <td className="px-4 py-3 text-right tabular-nums">
+                  </BillingDataTableCell>
+                  <BillingDataTableCell align="right">
                     {formatBillingMoney(row.grossTotalMinor, row.currency)}
-                  </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                  </BillingDataTableCell>
+                  <BillingDataTableCell align="right" className="text-[var(--muted)]">
                     {formatBillingMoney(row.paidTotalMinor, row.currency)}
-                  </td>
-                  <td className="px-4 py-3 text-right tabular-nums font-medium">
+                  </BillingDataTableCell>
+                  <BillingDataTableCell align="right">
                     {formatBillingMoney(row.outstandingMinor, row.currency)}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{deliveryLabel}</td>
-                  <td className="px-4 py-3">
+                  </BillingDataTableCell>
+                  <BillingDataTableCell className="text-[var(--text-2)]">
+                    {deliveryLabel}
+                  </BillingDataTableCell>
+                  <BillingDataTableCell>
                     <BillingStatusBadge
                       label={statusPresentation.label}
                       tone={statusPresentation.tone}
                     />
-                  </td>
-                </tr>
+                  </BillingDataTableCell>
+                </BillingDataTableRow>
               );
             })}
           </tbody>
-        </table>
-      </div>
+        </BillingDataTableShell>
+      )}
     </div>
   );
 }

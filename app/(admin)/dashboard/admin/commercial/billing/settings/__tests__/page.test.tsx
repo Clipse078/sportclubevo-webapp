@@ -21,9 +21,9 @@ vi.mock("@/lib/billing/native-billing-service", () => ({
   listBillingBankAccountsForPlatform: mocks.listBillingBankAccountsForPlatform,
 }));
 
-vi.mock("@/components/admin/billing/NativeBillingCreateBankAccountForm", () => ({
+vi.mock("@/components/admin/billing/NativeBillingCreateBankAccountDialog", () => ({
   default: ({ legalEntities }: { legalEntities: { key: string; label: string }[] }) => (
-    <div data-testid="bank-account-form">
+    <div data-testid="bank-account-dialog-trigger">
       {legalEntities.map((entity) => (
         <span key={entity.key}>{entity.label}</span>
       ))}
@@ -82,7 +82,7 @@ describe("Native billing settings page", () => {
     expect(html).not.toContain(
       "Noch keine Rechtsträger für native SCE-Rechnungen erfasst.",
     );
-    expect(html).toContain('data-testid="bank-account-form"');
+    expect(html).toContain('data-testid="bank-account-dialog-trigger"');
   });
 
   it("loads legal entities and bank accounts independently on success", async () => {

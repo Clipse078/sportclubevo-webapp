@@ -1,8 +1,11 @@
 import Link from "next/link";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
-import NativeBillingCreateBankAccountForm from "@/components/admin/billing/NativeBillingCreateBankAccountForm";
+import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
+import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
+import NativeBillingCreateBankAccountDialog from "@/components/admin/billing/NativeBillingCreateBankAccountDialog";
 import NativeBillingDeleteBankAccountButton from "@/components/admin/billing/NativeBillingDeleteBankAccountButton";
 import NativeBillingLegalEntitiesTable from "@/components/admin/billing/NativeBillingLegalEntitiesTable";
+import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import {
   listBillingBankAccountsForPlatform,
   listLegalEntitiesForPlatform,
@@ -11,6 +14,17 @@ import { maskIban } from "@/lib/billing/iban-mask";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+
+function referenceStrategyLabel(strategy: string): string {
+  switch (strategy) {
+    case "QRR":
+      return "QRR";
+    case "SCOR":
+      return "SCOR";
+    default:
+      return strategy;
+  }
+}
 
 export default async function NativeBillingSettingsPage() {
   const session = await requirePermission(PERMISSIONS.BILLING_VIEW);
@@ -36,35 +50,27 @@ export default async function NativeBillingSettingsPage() {
   );
 
   return (
+    <BillingWorkspaceContent width="list">
     <div className="space-y-8">
-      <AdminSectionHeader
-        eyebrow="Commercial"
-        title="Billing-Einstellungen"
-        description="Rechtsträger und Bankkonten für native SCE-Rechnungen (Plattform-only)."
+      <BillingPageHeader
+        title="Einstellungen"
+        description="Rechtsträger, Bankkonten und Abrechnungsgrundlagen für native SCE-Rechnungen."
         actions={
-          <Link href="/dashboard/admin/commercial/billing" className="fca-button-secondary">
-            Zurück zu Billing
-          </Link>
+          canManage ? (
+            <Link
+              href="/dashboard/admin/commercial/billing/settings/legal-entities/new"
+              className="fca-button-secondary"
+            >
+              Rechtsträger hinzufügen
+            </Link>
+          ) : undefined
         }
       />
 
       <section className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-sm font-semibold">Rechtsträger</h2>
-            <p className="text-sm text-muted-foreground">
-              Ausstellende Legal Entities für Verträge und Rechnungen.
-            </p>
-          </div>
-          {canManage ? (
-            <Link
-              href="/dashboard/admin/commercial/billing/settings/legal-entities/new"
-              className="fca-button-primary"
-            >
-              Neuer Rechtsträger
-            </Link>
-          ) : null}
-        </div>
+        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+          Rechtsträger
+        </h2>
         <NativeBillingLegalEntitiesTable
           canManage={canManage}
           rows={legalEntities.map((entity) => ({
@@ -79,55 +85,85 @@ export default async function NativeBillingSettingsPage() {
         />
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold">Bankkonten</h2>
-        <p className="text-sm text-muted-foreground">
-          CHF-Konten mit Referenzstrategie (QRR/SCOR/NON). IBAN-Werte werden verschlüsselt
-          gespeichert und maskiert angezeigt.
-        </p>
-        {canManage ? (
-          <NativeBillingCreateBankAccountForm
-            legalEntities={legalEntities.map((entity) => ({
-              key: entity.key,
-              label: entity.displayName,
-            }))}
-          />
-        ) : null}
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+            Bankkonten
+          </h2>
+          {canManage ? (
+            <NativeBillingCreateBankAccountDialog
+              legalEntities={legalEntities.map((entity) => ({
+                key: entity.key,
+                label: entity.displayName,
+              }))}
+            />
+          ) : null}
+        </div>
+
         {bankAccounts.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Noch keine Bankkonten konfiguriert.</p>
+          <BillingPanel>
+            <p className="text-sm text-[var(--text-2)]">
+              Noch keine Bankkonten konfiguriert. Fügen Sie ein CHF-Geschäftskonto mit
+              Referenzstrategie hinzu.
+            </p>
+          </BillingPanel>
         ) : (
-          <ul className="space-y-2 text-sm">
+          <ul className="grid gap-3 sm:grid-cols-2">
             {bankAccounts.map((account) => (
-              <li key={account.id} className="rounded-lg border border-border p-3">
-                <div className="font-medium">{account.label}</div>
-                <div className="text-muted-foreground">
-                  IBAN: {maskIban(account.iban)}
-                  {account.qrIban ? ` · QR-IBAN: ${maskIban(account.qrIban)}` : ""}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {legalEntityLabelById.get(account.legalEntityId) ?? account.legalEntityId}
-                  {" · "}
-                  {account.referenceStrategy}
-                  {account.isDefault ? " · Standard" : ""}
-                  {account.activeUntil ? " · inaktiv" : ""}
-                </div>
-                {canManage ? (
-                  <NativeBillingDeleteBankAccountButton
-                    accountId={account.id}
-                    label={account.label}
-                    legalEntityLabel={
-                      legalEntityLabelById.get(account.legalEntityId) ?? account.legalEntityId
-                    }
-                    referenceStrategy={account.referenceStrategy}
-                    ibanMasked={maskIban(account.iban) ?? "****"}
-                    qrIbanMasked={account.qrIban ? maskIban(account.qrIban) : null}
-                  />
-                ) : null}
+              <li key={account.id}>
+                <BillingPanel className="h-full" padding="default">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-base font-semibold leading-snug">{account.label}</p>
+                      <p className="mt-0.5 text-xs text-[var(--text-2)]">
+                        {legalEntityLabelById.get(account.legalEntityId) ?? "Rechtsträger"}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      {account.isDefault ? (
+                        <BillingStatusBadge label="Standard" tone="success" />
+                      ) : null}
+                      {canManage ? (
+                        <NativeBillingDeleteBankAccountButton
+                          menuTrigger
+                          accountId={account.id}
+                          label={account.label}
+                          legalEntityLabel={
+                            legalEntityLabelById.get(account.legalEntityId) ??
+                            account.legalEntityId
+                          }
+                          referenceStrategy={account.referenceStrategy}
+                          ibanMasked={maskIban(account.iban) ?? "****"}
+                          qrIbanMasked={account.qrIban ? maskIban(account.qrIban) : null}
+                        />
+                      ) : null}
+                    </div>
+                  </div>
+                  <dl className="mt-3 space-y-2 text-sm">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <dt className="text-[0.8125rem] text-[var(--text-2)]">IBAN</dt>
+                      <dd className="font-mono text-xs tabular-nums">{maskIban(account.iban)}</dd>
+                    </div>
+                    {account.qrIban ? (
+                      <div className="flex items-baseline justify-between gap-3">
+                        <dt className="text-[0.8125rem] text-[var(--text-2)]">QR-IBAN</dt>
+                        <dd className="font-mono text-xs tabular-nums">{maskIban(account.qrIban)}</dd>
+                      </div>
+                    ) : null}
+                    <div className="flex items-baseline justify-between gap-3 pt-1">
+                      <dt className="text-[0.8125rem] text-[var(--text-2)]">Referenz</dt>
+                      <dd className="text-xs text-[var(--muted)]">
+                        {referenceStrategyLabel(account.referenceStrategy)}
+                      </dd>
+                    </div>
+                  </dl>
+                </BillingPanel>
               </li>
             ))}
           </ul>
         )}
       </section>
     </div>
+    </BillingWorkspaceContent>
   );
 }

@@ -46,7 +46,8 @@ describe("nav-icon-registry (SCE-DESIGN-04C)", () => {
 
   it("maps Commercial billing nav labels to dedicated animated icons", () => {
     expect(getNavIconKey("Commercial")).toBe("commercial");
-    expect(getNavIconKey("Billing")).toBe("billing");
+    expect(getNavIconKey("Commercial Billing Übersicht")).toBe("commercial-billing-uebersicht");
+    expect(getNavIconKey("Commercial Billing Rechnungen")).toBe("commercial-billing-rechnungen");
   });
 
   it("throws for genuinely unknown sidebar labels", () => {

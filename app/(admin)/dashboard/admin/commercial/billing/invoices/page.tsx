@@ -1,5 +1,6 @@
 import Link from "next/link";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import NativeBillingInvoicesOperationsTable from "@/components/admin/billing/NativeBillingInvoicesOperationsTable";
 import { getBillingInvoiceOperationalRows } from "@/lib/billing/operations/billing-operations-service";
 import { listBillingCustomers } from "@/lib/billing/native-billing-repository";
@@ -24,11 +25,11 @@ export default async function NativeBillingInvoicesPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
-        eyebrow="Commercial"
+    <BillingWorkspaceContent width="list">
+    <div className="space-y-6">
+      <BillingPageHeader
         title="Rechnungen"
-        description="Operative Rechnungsliste mit Zahlungs- und Versandstatus."
+        description="Operative Rechnungsliste mit Zahlungs-, Versand- und Fälligkeitsstatus."
         actions={
           canManage ? (
             <Link href="/dashboard/admin/commercial/billing/invoices/new" className="fca-button-primary">
@@ -43,5 +44,6 @@ export default async function NativeBillingInvoicesPage() {
         customerOptions={customers.map((c) => ({ key: c.key, label: c.displayName }))}
       />
     </div>
+    </BillingWorkspaceContent>
   );
 }
