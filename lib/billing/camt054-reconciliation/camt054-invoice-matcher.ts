@@ -21,6 +21,7 @@ export type Camt054MatchedInvoice = {
 
 export async function findInvoiceForCamt054QrrReference(
   creditorReference: string,
+  legalEntityId: string,
 ): Promise<Camt054MatchedInvoice | null> {
   const normalized = creditorReference.replace(/\s+/g, "");
   if (!normalized) return null;
@@ -29,6 +30,7 @@ export async function findInvoiceForCamt054QrrReference(
     where: {
       referenceType: "QRR",
       reference: normalized,
+      invoice: { legalEntityId },
     },
     select: {
       id: true,

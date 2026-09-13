@@ -110,6 +110,18 @@ function buildDatabaseFingerprint(
   return createHash("sha256").update(input).digest("hex").slice(0, 16);
 }
 
+/** Safe fingerprint for a DATABASE_URL (host + database name only; no secrets). */
+export function getDatabaseFingerprintFromUrl(
+  databaseUrl: string | undefined,
+): string | null {
+  const raw = databaseUrl?.trim();
+  if (!raw) return null;
+  return buildDatabaseFingerprint(
+    extractDatabaseHost(raw),
+    extractDatabaseName(raw),
+  );
+}
+
 function computeIdentityViolations(
   runtime: ReturnType<typeof getRuntimeEnvironment>,
 ): string[] {

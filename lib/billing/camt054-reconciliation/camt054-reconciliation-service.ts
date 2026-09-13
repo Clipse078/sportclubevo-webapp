@@ -12,6 +12,7 @@ import {
   NativeBillingConflictError,
   NativeBillingNotFoundError,
 } from "@/lib/billing/native-billing-types";
+import { assertCamt054ReconciliationDatabaseAlignment } from "./camt054-reconciliation-database-alignment";
 import { classifyCamt054EntryOutcome } from "./camt054-match-mapping";
 import { sha256Camt054Content } from "./camt054-upload-limits";
 import {
@@ -93,6 +94,8 @@ export async function reconcileCamt054Statement(
   if (!legalEntity) {
     throw new NativeBillingNotFoundError("Rechtsträger nicht gefunden.");
   }
+
+  assertCamt054ReconciliationDatabaseAlignment();
 
   const contentSha256 = input.contentSha256 ?? sha256Camt054Content(input.xml);
 
@@ -200,6 +203,7 @@ export async function reconcileCamt054Statement(
 
     const matched = await findInvoiceForCamt054QrrReference(
       transaction.creditorReference,
+      legalEntity.id,
     );
     if (!matched) {
       skippedCount += 1;

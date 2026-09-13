@@ -14,6 +14,7 @@
 
 import { getRuntimeEnvironment } from "@/lib/env";
 import { classifyDatabaseTarget } from "@/lib/server/operational-database-guard";
+import { getDatabaseFingerprintFromUrl } from "@/lib/server/deployment-identity";
 
 export type PreflightSeverity = "error" | "warning";
 
@@ -203,6 +204,24 @@ export function runDeploymentPreflight(
         );
       }
 
+      if (runtime.isPreview) {
+        const stageFingerprint = getDatabaseFingerprintFromUrl(stageReferenceUrl);
+        const previewFingerprint = getDatabaseFingerprintFromUrl(rawDatabaseUrl);
+        if (
+          stageFingerprint &&
+          previewFingerprint &&
+          stageFingerprint !== previewFingerprint
+        ) {
+          addViolation(
+            error(
+              "PREVIEW_NOT_TARGETING_STAGE_DB",
+              "Preview DATABASE_URL does not match STAGE_DB_URL (database fingerprint mismatch). " +
+                "Native billing camt.054 acceptance on PR Preview requires the STAGE DATABASE_URL " +
+                "in the Vercel Preview scope.",
+            ),
+          );
+        }
+      }
     }
   }
 

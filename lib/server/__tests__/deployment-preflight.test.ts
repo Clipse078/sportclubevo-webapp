@@ -59,6 +59,18 @@ describe("runDeploymentPreflight", () => {
       ).toBe(true);
     });
 
+    it("fails when Preview DATABASE_URL fingerprint differs from STAGE_DB_URL", () => {
+      const result = runDeploymentPreflight({
+        ...VALID_PREVIEW_ENV,
+        STAGE_DB_URL: "postgresql://u:p@stage-db.neon.tech:5432/sce_stage",
+      });
+
+      expect(result.pass).toBe(false);
+      expect(
+        result.violations.some((v) => v.code === "PREVIEW_NOT_TARGETING_STAGE_DB"),
+      ).toBe(true);
+    });
+
     it("passes for a valid STAGE environment", () => {
       const result = runDeploymentPreflight(VALID_STAGE_ENV);
       expect(result.pass).toBe(true);
@@ -147,11 +159,12 @@ describe("runDeploymentPreflight", () => {
       ).toBe(true);
     });
 
-    it("allows Preview to use the configured persistent STAGE database host", () => {
+    it("allows Preview when DATABASE_URL matches STAGE_DB_URL fingerprint", () => {
+      const stageUrl = "postgresql://u:p@stage-db.neon.tech:5432/sce_stage";
       const result = runDeploymentPreflight({
         ...VALID_PREVIEW_ENV,
-        DATABASE_URL: "postgresql://u:p@stage-db.neon.tech:5432/stage_db",
-        STAGE_DB_URL: "postgresql://u:p@stage-db.neon.tech:5432/sce_stage",
+        DATABASE_URL: stageUrl,
+        STAGE_DB_URL: stageUrl,
       });
 
       expect(result.pass).toBe(true);
@@ -159,6 +172,22 @@ describe("runDeploymentPreflight", () => {
         result.violations.some(
           (v) => v.code === "BILLING_ENCRYPTION_KEY_MISSING_PREVIEW",
         ),
+      ).toBe(true);
+      expect(
+        result.violations.some((v) => v.code === "PREVIEW_NOT_TARGETING_STAGE_DB"),
+      ).toBe(false);
+    });
+
+    it("fails Preview when only the database host matches STAGE_DB_URL but the database name differs", () => {
+      const result = runDeploymentPreflight({
+        ...VALID_PREVIEW_ENV,
+        DATABASE_URL: "postgresql://u:p@stage-db.neon.tech:5432/stage_db",
+        STAGE_DB_URL: "postgresql://u:p@stage-db.neon.tech:5432/sce_stage",
+      });
+
+      expect(result.pass).toBe(false);
+      expect(
+        result.violations.some((v) => v.code === "PREVIEW_NOT_TARGETING_STAGE_DB"),
       ).toBe(true);
     });
   });
