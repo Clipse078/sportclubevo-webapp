@@ -363,6 +363,7 @@ describe("invoice payment service", () => {
       source: "MANUAL" as const,
       status: "CONFIRMED" as const,
       externalReference: null,
+      providerTransactionId: null,
       bankTransactionId: null,
       reversedAt: null,
       reversedByUserId: null,

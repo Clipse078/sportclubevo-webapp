@@ -56,7 +56,9 @@ export function assertCamt054ReconciliationDatabaseAlignment(
     deploymentCommit: identity.commitSha,
     databaseFingerprint: identity.databaseFingerprint,
     stageDatabaseFingerprint: null,
-    databaseAligned: identity.databaseFingerprintMatchesConfiguredTarget,
+    databaseAligned:
+      identity.dataEnvironment === "STAGE" &&
+      identity.databaseFingerprintMatchesConfiguredTarget,
     legalEntityKey,
     legalEntityFound: null,
     acceptanceInvoiceFound: null,

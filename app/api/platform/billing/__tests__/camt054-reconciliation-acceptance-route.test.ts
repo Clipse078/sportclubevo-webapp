@@ -74,6 +74,7 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
   beforeEach(() => {
     vi.clearAllMocks();
     vi.unstubAllEnvs();
+    vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("VERCEL", "1");
     vi.stubEnv("VERCEL_ENV", "preview");
     vi.stubEnv("APP_ENV", "preview");
