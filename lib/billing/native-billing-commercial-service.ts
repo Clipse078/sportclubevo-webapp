@@ -46,6 +46,7 @@ import {
   NativeBillingNotFoundError,
   NativeBillingValidationError,
 } from "./native-billing-types";
+import { resolveInvoiceRecipientProfileForContract } from "./invoice-recipient-profile-resolution";
 import {
   calculateLineAmounts,
   sumInvoiceTotals,
@@ -520,19 +521,13 @@ export async function finalizeInvoice(
     throw new NativeBillingNotFoundError("Billing-Kunde nicht gefunden.");
   }
 
-  let recipientProfile = null;
   const contract = invoice.billingContractId
     ? await findBillingContractById(invoice.billingContractId)
     : null;
-  if (contract?.invoiceRecipientProfileId) {
-    recipientProfile = await findBillingProfileById(contract.invoiceRecipientProfileId);
-  }
-  if (!recipientProfile) {
-    const { listBillingProfilesForCustomer } = await import("./native-billing-repository");
-    const profiles = await listBillingProfilesForCustomer(invoice.billingCustomerId);
-    recipientProfile =
-      profiles.find((p) => p.profileType === "BILLING") ?? profiles[0] ?? null;
-  }
+  const recipientProfile = await resolveInvoiceRecipientProfileForContract({
+    billingCustomerId: invoice.billingCustomerId,
+    billingContractId: invoice.billingContractId,
+  });
   if (!recipientProfile) {
     throw new NativeBillingValidationError("Rechnungsempfänger-Profil fehlt.");
   }
