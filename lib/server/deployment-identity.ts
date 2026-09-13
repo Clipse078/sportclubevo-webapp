@@ -116,10 +116,22 @@ export function getDatabaseFingerprintFromUrl(
 ): string | null {
   const raw = databaseUrl?.trim();
   if (!raw) return null;
-  return buildDatabaseFingerprint(
-    extractDatabaseHost(raw),
-    extractDatabaseName(raw),
-  );
+  try {
+    const parsed = new URL(raw);
+    if (
+      parsed.protocol !== "postgresql:" &&
+      parsed.protocol !== "postgres:"
+    ) {
+      return null;
+    }
+    const databaseName = parsed.pathname.replace(/^\//, "").split("?")[0];
+    if (!parsed.hostname || !databaseName) {
+      return null;
+    }
+    return buildDatabaseFingerprint(parsed.hostname, databaseName);
+  } catch {
+    return null;
+  }
 }
 
 function computeIdentityViolations(

@@ -3,6 +3,7 @@ import type {
   BankReconciliationMatchStatus,
 } from "@prisma/client";
 import type { Camt054CreditTransaction } from "../camt054/camt054-types";
+import type { Camt054PreviewRuntimeDiagnostics } from "./camt054-reconciliation-database-alignment";
 
 export type Camt054ReconciliationEntryOutcome =
   | "applied"
@@ -44,6 +45,7 @@ export type Camt054ReconciliationReport = {
   errorCount: number;
   importKey: string | null;
   entries: Camt054ReconciliationEntryResult[];
+  diagnostics?: Camt054PreviewRuntimeDiagnostics;
 };
 
 export type ReconcileCamt054Input = {

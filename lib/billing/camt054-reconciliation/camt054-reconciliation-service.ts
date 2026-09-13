@@ -13,6 +13,7 @@ import {
   NativeBillingNotFoundError,
 } from "@/lib/billing/native-billing-types";
 import { assertCamt054ReconciliationDatabaseAlignment } from "./camt054-reconciliation-database-alignment";
+import { attestCamt054PreviewAcceptanceData } from "./camt054-preview-runtime-diagnostics";
 import { classifyCamt054EntryOutcome } from "./camt054-match-mapping";
 import { sha256Camt054Content } from "./camt054-upload-limits";
 import {
@@ -92,7 +93,14 @@ export async function reconcileCamt054Statement(
 ): Promise<Camt054ReconciliationReport> {
   // Preview alignment must be proven before the first reconciliation database
   // lookup; otherwise a wrong database can masquerade as QRR_NOT_FOUND.
-  assertCamt054ReconciliationDatabaseAlignment();
+  let previewDiagnostics = assertCamt054ReconciliationDatabaseAlignment(
+    process.env,
+    input.legalEntityKey,
+  );
+  if (previewDiagnostics && input.dryRun) {
+    previewDiagnostics =
+      await attestCamt054PreviewAcceptanceData(previewDiagnostics);
+  }
 
   const legalEntity = await findLegalEntityByKey(input.legalEntityKey);
   if (!legalEntity) {
@@ -406,6 +414,7 @@ export async function reconcileCamt054Statement(
     ...bucketCounts,
     importKey,
     entries,
+    ...(previewDiagnostics ? { diagnostics: previewDiagnostics } : {}),
   };
 
   if (!input.dryRun && appliedCount > 0) {

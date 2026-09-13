@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   requirePlatformApiPermission: vi.fn(),
   findLegalEntityByKey: vi.fn(),
   findConfirmedPaymentByBankTransactionId: vi.fn(),
+  legalEntityFindUnique: vi.fn(),
+  invoiceFindUnique: vi.fn(),
   invoicePaymentInstructionFindFirst: vi.fn(),
   findBankReconciliationImportByContentHash: vi.fn(),
   createBankReconciliationImportWithTransactions: vi.fn(),
@@ -28,6 +30,12 @@ vi.mock("@/lib/billing/invoice-payments/invoice-payment-repository", () => ({
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
+    legalEntity: {
+      findUnique: mocks.legalEntityFindUnique,
+    },
+    invoice: {
+      findUnique: mocks.invoiceFindUnique,
+    },
     invoicePaymentInstruction: {
       findFirst: mocks.invoicePaymentInstructionFindFirst,
     },
@@ -79,6 +87,14 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
     });
     mocks.findConfirmedPaymentByBankTransactionId.mockResolvedValue(null);
     mocks.findBankReconciliationImportByContentHash.mockResolvedValue(null);
+    mocks.legalEntityFindUnique.mockResolvedValue({ id: LEGAL_ENTITY_ID });
+    mocks.invoiceFindUnique.mockResolvedValue({
+      id: "inv-id-2026-000004",
+      paymentInstruction: {
+        paymentMethod: "BANK_TRANSFER_SWISS_QR",
+        referenceType: "QRR",
+      },
+    });
   });
 
   it("returns QRR_EXACT / MATCHED for fixture A through the HTTP route path", async () => {
@@ -115,6 +131,15 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
           invoiceNumber: string | null;
         }>;
       };
+      diagnostics: {
+        databaseFingerprint: string;
+        stageDatabaseFingerprint: string;
+        databaseAligned: boolean;
+        legalEntityKey: string;
+        legalEntityFound: boolean;
+        acceptanceInvoiceFound: boolean;
+        acceptancePaymentInstructionFound: boolean;
+      };
     };
 
     expect(body.reconciliation.matchedCount).toBe(1);
@@ -122,6 +147,15 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
       matchStatus: "MATCHED",
       matchMethod: "QRR_EXACT",
       invoiceNumber: "2026-000004",
+    });
+    expect(body.diagnostics).toMatchObject({
+      databaseFingerprint: "acd3b37682911890",
+      stageDatabaseFingerprint: "acd3b37682911890",
+      databaseAligned: true,
+      legalEntityKey: LEGAL_ENTITY_KEY,
+      legalEntityFound: true,
+      acceptanceInvoiceFound: true,
+      acceptancePaymentInstructionFound: true,
     });
 
     expect(mocks.invoicePaymentInstructionFindFirst).toHaveBeenCalledWith(
@@ -138,8 +172,11 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
     );
   });
 
-  it("reproduces Preview failure mode when no payment instruction exists for the QRR", async () => {
-    mocks.invoicePaymentInstructionFindFirst.mockResolvedValue(null);
+  it("fails with STAGE_ACCEPTANCE_DATA_MISSING before matching when the synthetic PI is absent", async () => {
+    mocks.invoiceFindUnique.mockResolvedValue({
+      id: "inv-id-2026-000004",
+      paymentInstruction: null,
+    });
 
     const res = await POST(
       new NextRequest("http://localhost/api", {
@@ -149,26 +186,25 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
       { params: Promise.resolve({ key: LEGAL_ENTITY_KEY }) },
     );
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(409);
     const body = (await res.json()) as {
-      reconciliation: {
-        matchedCount: number;
-        unmatchedCount: number;
-        entries: Array<{
-          matchStatus: string;
-          matchMethod: string;
-          message: string | null;
-        }>;
+      code: string;
+      diagnostics: {
+        databaseAligned: boolean;
+        legalEntityFound: boolean;
+        acceptanceInvoiceFound: boolean;
+        acceptancePaymentInstructionFound: boolean;
       };
     };
-
-    expect(body.reconciliation.matchedCount).toBe(0);
-    expect(body.reconciliation.unmatchedCount).toBe(1);
-    expect(body.reconciliation.entries[0]).toMatchObject({
-      matchStatus: "UNMATCHED",
-      matchMethod: "QRR_NOT_FOUND",
-      message: "Keine Rechnung zur QRR-Referenz gefunden.",
+    expect(body.code).toBe("STAGE_ACCEPTANCE_DATA_MISSING");
+    expect(body.diagnostics).toMatchObject({
+      databaseAligned: true,
+      legalEntityFound: true,
+      acceptanceInvoiceFound: true,
+      acceptancePaymentInstructionFound: false,
     });
+    expect(mocks.findLegalEntityByKey).not.toHaveBeenCalled();
+    expect(mocks.invoicePaymentInstructionFindFirst).not.toHaveBeenCalled();
   });
 
   it("fails closed on Preview when DATABASE_URL is not aligned with STAGE_DB_URL", async () => {
@@ -186,10 +222,16 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
     );
 
     expect(res.status).toBe(409);
-    const body = (await res.json()) as { error: string; code: string };
+    const body = (await res.json()) as {
+      error: string;
+      code: string;
+      diagnostics: { databaseAligned: boolean };
+    };
     expect(body.error).toMatch(/STAGE-Datenbank/i);
     expect(body.code).toBe("PREVIEW_NOT_TARGETING_STAGE_DB");
+    expect(body.diagnostics.databaseAligned).toBe(false);
     expect(mocks.findLegalEntityByKey).not.toHaveBeenCalled();
+    expect(mocks.legalEntityFindUnique).not.toHaveBeenCalled();
     expect(mocks.invoicePaymentInstructionFindFirst).not.toHaveBeenCalled();
   });
 
@@ -207,8 +249,69 @@ describe("camt054 reconciliation route acceptance fixture A (SWISS-01H3)", () =>
     expect(res.status).toBe(409);
     await expect(res.json()).resolves.toMatchObject({
       code: "PREVIEW_NOT_TARGETING_STAGE_DB",
+      diagnostics: {
+        stageDatabaseFingerprint: null,
+        databaseAligned: false,
+      },
     });
     expect(mocks.findLegalEntityByKey).not.toHaveBeenCalled();
     expect(mocks.invoicePaymentInstructionFindFirst).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when both Preview URLs point to the same wrong database", async () => {
+    const wrongUrl =
+      "postgresql://u:p@ep-other-branch-aso93dy6-pooler.c-4.eu-central-1.aws.neon.tech/neondb";
+    vi.stubEnv("DATABASE_URL", wrongUrl);
+    vi.stubEnv("STAGE_DB_URL", wrongUrl);
+
+    const res = await POST(
+      new NextRequest("http://localhost/api", {
+        method: "POST",
+        body: JSON.stringify({ xml: fixtureA, dryRun: true }),
+      }),
+      { params: Promise.resolve({ key: LEGAL_ENTITY_KEY }) },
+    );
+
+    expect(res.status).toBe(409);
+    await expect(res.json()).resolves.toMatchObject({
+      code: "PREVIEW_NOT_TARGETING_STAGE_DB",
+      diagnostics: { databaseAligned: false },
+    });
+    expect(mocks.legalEntityFindUnique).not.toHaveBeenCalled();
+    expect(mocks.findLegalEntityByKey).not.toHaveBeenCalled();
+    expect(mocks.invoicePaymentInstructionFindFirst).not.toHaveBeenCalled();
+  });
+
+  it("does not expose Preview diagnostics in Production", async () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("APP_ENV", "stage");
+    mocks.invoicePaymentInstructionFindFirst.mockResolvedValue({
+      id: "pi-2026-000004",
+      invoiceId: "inv-id-2026-000004",
+      currency: "CHF",
+      invoice: {
+        id: "inv-id-2026-000004",
+        key: "inv-sce-test-01g-2",
+        invoiceNumber: "2026-000004",
+        legalEntityId: LEGAL_ENTITY_ID,
+        currency: "CHF",
+        grossTotalMinor: 21512,
+        status: "FINALIZED",
+      },
+    });
+
+    const res = await POST(
+      new NextRequest("http://localhost/api", {
+        method: "POST",
+        body: JSON.stringify({ xml: fixtureA, dryRun: true }),
+      }),
+      { params: Promise.resolve({ key: LEGAL_ENTITY_KEY }) },
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body).not.toHaveProperty("diagnostics");
+    expect(mocks.legalEntityFindUnique).not.toHaveBeenCalled();
+    expect(mocks.invoiceFindUnique).not.toHaveBeenCalled();
   });
 });

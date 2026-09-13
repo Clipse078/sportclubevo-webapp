@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Camt054PreviewRuntimeConflictError } from "@/lib/billing/camt054-reconciliation/camt054-reconciliation-database-alignment";
 import { serializeCamt054ReconciliationReport } from "@/lib/billing/camt054-reconciliation/camt054-reconciliation-serializers";
 import { reconcileCamt054Statement } from "@/lib/billing/camt054-reconciliation/camt054-reconciliation-service";
 import {
@@ -57,8 +58,19 @@ export async function POST(request: NextRequest, context: RouteContext) {
     });
     return NextResponse.json({
       reconciliation: serializeCamt054ReconciliationReport(report),
+      ...(report.diagnostics ? { diagnostics: report.diagnostics } : {}),
     });
   } catch (error) {
+    if (error instanceof Camt054PreviewRuntimeConflictError) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          code: error.code,
+          diagnostics: error.diagnostics,
+        },
+        { status: 409 },
+      );
+    }
     return nativeBillingErrorResponse(error);
   }
 }
