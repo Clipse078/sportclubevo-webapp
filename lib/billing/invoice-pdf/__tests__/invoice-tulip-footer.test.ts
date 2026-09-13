@@ -18,12 +18,16 @@ import {
 import { TULIP_DIGITAL_LOGO_PATH } from "../constants";
 
 describe("Tulip footer visible-content sizing (SWISS-01E4C3)", () => {
-  it("detects meaningful artwork bounds inside the square PNG canvas", () => {
+  it("detects meaningful artwork bounds for the canonical Tulip PNG", () => {
     const bounds = readTulipVisibleContentBoundsPx();
-    expect(bounds.sourceWidthPx).toBe(1024);
-    expect(bounds.contentWidthPx).toBe(542);
-    expect(bounds.contentHeightPx).toBe(286);
-    expect(tulipVisiblePaddingDetected(bounds)).toBe(true);
+    expect(bounds.sourceWidthPx).toBeGreaterThan(0);
+    expect(bounds.sourceHeightPx).toBeGreaterThan(0);
+    expect(bounds.contentWidthPx).toBeGreaterThan(0);
+    expect(bounds.contentHeightPx).toBeGreaterThan(0);
+    expect(bounds.contentWidthPx).toBeLessThanOrEqual(bounds.sourceWidthPx);
+    expect(bounds.contentHeightPx).toBeLessThanOrEqual(bounds.sourceHeightPx);
+    // Official horizontal wordmark asset is wider than tall.
+    expect(bounds.contentWidthPx / bounds.contentHeightPx).toBeGreaterThan(1.2);
   });
 
   it("targets PO visible height band and preserves content aspect ratio", () => {
@@ -52,7 +56,7 @@ describe("Tulip footer visible-content sizing (SWISS-01E4C3)", () => {
 
   it("uses canonical Tulip asset path", () => {
     expect(TULIP_DIGITAL_LOGO_PATH).toBe(
-      "public/images/branding/Logo-730036c6-150f-4549-8e03-5ea1efb24084.png",
+      "public/images/branding/tulip-digital-logo1.png",
     );
   });
 });

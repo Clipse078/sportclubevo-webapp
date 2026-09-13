@@ -29,7 +29,7 @@ export const SPORTCLUBEVO_FOOTER_LOGO_PATH = "public/images/branding/sportclubev
 /** @deprecated Use SPORTCLUBEVO_HEADER_LOGO_PATH or SPORTCLUBEVO_FOOTER_LOGO_PATH. */
 export const SPORTCLUBEVO_LOGO_PATH = SPORTCLUBEVO_HEADER_LOGO_PATH;
 export const TULIP_DIGITAL_LOGO_PATH =
-  "public/images/branding/Logo-730036c6-150f-4549-8e03-5ea1efb24084.png";
+  "public/images/branding/tulip-digital-logo1.png";
 /** Approved compact header accent (SWISS-01E4C); far-right crop only. */
 export const INVOICE_HEADER_JPG_PATH = "public/images/branding/invoice.jpg";
 /** Left edge of source crop (fraction of source width). Right ~18% of artwork. */

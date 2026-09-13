@@ -58,7 +58,7 @@ Deterministic placement should use mm tokens from `invoice-design-geometry.ts` (
 
 ## Tulip Digital logo asset
 
-Expected path: `public/images/branding/Logo-730036c6-150f-4549-8e03-5ea1efb24084.png`  
+Expected path: `public/images/branding/tulip-digital-logo1.png`  
 Status at 01E4A: **missing** — renderer skips embed; PO to supply original binary.
 
 ## Next slice (01E4B)
