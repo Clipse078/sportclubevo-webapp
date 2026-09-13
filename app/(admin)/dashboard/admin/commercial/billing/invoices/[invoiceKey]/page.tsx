@@ -1,11 +1,19 @@
 import Link from "next/link";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import NativeBillingInvoiceActions from "@/components/admin/billing/NativeBillingInvoiceActions";
-import NativeBillingInvoicePdfActions from "@/components/admin/billing/NativeBillingInvoicePdfActions";
 import NativeBillingInvoiceDeliverySection from "@/components/admin/billing/NativeBillingInvoiceDeliverySection";
+import NativeBillingInvoiceLifecycleTimeline from "@/components/admin/billing/NativeBillingInvoiceLifecycleTimeline";
 import NativeBillingInvoicePaymentSection from "@/components/admin/billing/NativeBillingInvoicePaymentSection";
+import NativeBillingInvoiceSendReviewDialog from "@/components/admin/billing/NativeBillingInvoiceSendReviewDialog";
 import NativeBillingInvoiceSettlementsSection from "@/components/admin/billing/NativeBillingInvoiceSettlementsSection";
+import BillingDataTableShell, {
+  BillingDataTableCell,
+  BillingDataTableHead,
+  BillingDataTableHeaderCell,
+  BillingDataTableRow,
+} from "@/components/admin/billing/shell/BillingDataTable";
 import { getInvoicePaymentSummary } from "@/lib/billing/invoice-payments/invoice-payment-service";
 import { serializeInvoicePaymentSummary } from "@/lib/billing/invoice-payments/invoice-payment-serializers";
 import { getInvoicePaymentInstruction } from "@/lib/billing/invoice-payment-instruction-service";
@@ -17,6 +25,7 @@ import {
 import { getInvoiceDeliverySummary } from "@/lib/billing/invoice-delivery/invoice-delivery-summary";
 import { serializeInvoiceDeliverySummary } from "@/lib/billing/invoice-delivery/invoice-delivery-serializers";
 import { getInvoiceDetail } from "@/lib/billing/native-billing-commercial-service";
+import { findBillingContractById } from "@/lib/billing/native-billing-commercial-repository";
 import { findBillingCustomerById } from "@/lib/billing/native-billing-repository";
 import { formatBillingMoney } from "@/lib/billing/format-billing-money";
 import { serializeInvoiceLine } from "@/lib/billing/native-billing-commercial-serializers";
@@ -31,6 +40,25 @@ import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 type PageProps = { params: Promise<{ invoiceKey: string }> };
+
+function deliveryStatusLabel(
+  aggregateStatus: string | undefined,
+  aggregateStatusLabel: string | undefined,
+): { label: string; tone: "success" | "warning" | "muted" | "default" } {
+  switch (aggregateStatus) {
+    case "SENT":
+      return { label: "Versendet", tone: "success" };
+    case "FAILED":
+      return { label: "Versand fehlgeschlagen", tone: "warning" };
+    case "SENDING":
+      return { label: "Wird gesendet", tone: "default" };
+    default:
+      return {
+        label: aggregateStatusLabel ?? "Noch nicht versendet",
+        tone: "muted",
+      };
+  }
+}
 
 export default async function NativeBillingInvoiceDetailPage({ params }: PageProps) {
   const session = await requirePermission(PERMISSIONS.BILLING_VIEW);
@@ -47,9 +75,9 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
   if (!detail) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Rechnung nicht gefunden.</p>
+        <BillingPageHeader title="Rechnung nicht gefunden" />
         <Link href="/dashboard/admin/commercial/billing/invoices" className="fca-button-secondary">
-          Zurück
+          Zurück zur Liste
         </Link>
       </div>
     );
@@ -57,11 +85,17 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
 
   const { invoice, lines, taxSnapshots, issuer, recipient } = detail;
   const customer = await findBillingCustomerById(invoice.billingCustomerId);
+  const contract = invoice.billingContractId
+    ? await findBillingContractById(invoice.billingContractId)
+    : null;
   const serializedLines = lines.map(serializeInvoiceLine);
   const grossFormatted = formatBillingMoney(invoice.grossTotalMinor, invoice.currency);
+  const netFormatted = formatBillingMoney(invoice.netTotalMinor, invoice.currency);
   const statusPresentation = presentNativeInvoiceStatus(invoice.status);
   const displayTitle = presentInvoiceDisplayNumber(invoice.invoiceNumber, invoice.status);
   const periodLabel = formatBillingPeriodDisplay(invoice.periodStart, invoice.periodEnd);
+  const dueDateFormatted = formatBillingDateDisplay(invoice.dueDate);
+  const invoiceDateFormatted = formatBillingDateDisplay(invoice.invoiceDate);
 
   let deliverySummarySerialized: ReturnType<
     typeof serializeInvoiceDeliverySummary
@@ -104,231 +138,270 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
     }
   }
 
-  return (
-    <div className="space-y-10">
-      <AdminSectionHeader
-        eyebrow="Commercial"
-        title={displayTitle}
-        description={
-          invoice.contractLabel ??
-          `${customer?.displayName ?? "Kunde"} · ${periodLabel}`
-        }
-        actions={
-          <Link href="/dashboard/admin/commercial/billing/invoices" className="fca-button-secondary">
-            Zurück
-          </Link>
-        }
-      />
+  const deliveryBadge = deliveryStatusLabel(
+    deliverySummarySerialized?.aggregateStatus,
+    deliverySummarySerialized?.aggregateStatusLabel,
+  );
 
-      <div className="flex flex-wrap items-start justify-between gap-6">
-        <div className="space-y-2">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Status</p>
-          <BillingStatusBadge
-            label={statusPresentation.label}
-            tone={statusPresentation.tone}
-          />
-        </div>
-        <NativeBillingInvoiceActions
-          invoiceKey={invoice.key}
-          status={invoice.status}
-          canManage={canManage}
-          grossTotalFormatted={grossFormatted}
+  const paidFormatted =
+    paymentSummarySerialized?.paidTotalFormatted ??
+    formatBillingMoney(0, invoice.currency);
+  const outstandingFormatted =
+    paymentSummarySerialized?.outstandingFormatted ?? grossFormatted;
+
+  return (
+    <div className="space-y-8">
+      <div className="space-y-6">
+        <BillingPageHeader
+          size="hero"
+          title={`Rechnung ${displayTitle}`}
+          description={customer?.displayName ?? "Kunde"}
+          actions={
+            <Link
+              href="/dashboard/admin/commercial/billing/invoices"
+              className="fca-button-secondary"
+            >
+              Zurück
+            </Link>
+          }
         />
-        <NativeBillingInvoicePdfActions invoiceKey={invoice.key} status={invoice.status} />
+
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <BillingStatusBadge
+                label={statusPresentation.label.toUpperCase()}
+                tone={statusPresentation.tone}
+              />
+              {invoice.status === "FINALIZED" ? (
+                <BillingStatusBadge
+                  label={deliveryBadge.label.toUpperCase()}
+                  tone={deliveryBadge.tone}
+                />
+              ) : null}
+            </div>
+            <p className="text-3xl font-semibold tabular-nums tracking-tight">{grossFormatted}</p>
+            <dl className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-[var(--text-2)]">
+              <div>
+                <dt className="inline text-[var(--muted)]">Rechnungsdatum </dt>
+                <dd className="inline font-medium text-[var(--foreground)]">
+                  {invoiceDateFormatted}
+                </dd>
+              </div>
+              <div>
+                <dt className="inline text-[var(--muted)]">Fällig </dt>
+                <dd className="inline font-medium text-[var(--foreground)]">{dueDateFormatted}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="flex flex-col gap-3 lg:items-end">
+            <NativeBillingInvoiceSendReviewDialog
+              invoiceKey={invoice.key}
+              invoiceNumber={invoice.invoiceNumber}
+              grossTotalFormatted={grossFormatted}
+              dueDateFormatted={dueDateFormatted}
+              recipientEmail={recipient?.invoiceEmail ?? null}
+              canManage={canManage}
+              status={invoice.status}
+              initialDelivery={deliverySummarySerialized}
+            />
+            <NativeBillingInvoiceActions
+              invoiceKey={invoice.key}
+              status={invoice.status}
+              canManage={canManage}
+              grossTotalFormatted={grossFormatted}
+            />
+          </div>
+        </div>
       </div>
 
-      <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 max-w-4xl text-sm">
-        <div>
-          <dt className="text-muted-foreground">Rechnungsnummer</dt>
-          <dd className="font-medium text-foreground">
-            {invoice.invoiceNumber ?? "Noch keine Rechnungsnummer"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Kunde</dt>
-          <dd className="font-medium text-foreground">{customer?.displayName ?? "—"}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Abrechnungszeitraum</dt>
-          <dd className="font-medium text-foreground">{periodLabel}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Rechnungsdatum</dt>
-          <dd className="font-medium text-foreground">
-            {formatBillingDateDisplay(invoice.invoiceDate)}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Fällig am</dt>
-          <dd className="font-medium text-foreground">
-            {formatBillingDateDisplay(invoice.dueDate)}
-          </dd>
-        </div>
-        {invoice.paymentTermsDays != null ? (
-          <div>
-            <dt className="text-muted-foreground">Zahlungsziel</dt>
-            <dd className="font-medium text-foreground">{invoice.paymentTermsDays} Tage</dd>
-          </div>
-        ) : null}
-      </dl>
-
-      <div className="grid gap-8 lg:grid-cols-2">
-        <section className="space-y-2">
-          <h2 className="text-sm font-semibold">Aussteller</h2>
-          {issuer ? (
-            <div className="text-sm text-muted-foreground space-y-0.5">
-              <p className="text-foreground font-medium">{issuer.legalName}</p>
-              <p>{issuer.displayName}</p>
-              <p>
-                {issuer.addressLine1} {issuer.houseNumber ?? ""}
-              </p>
-              <p>
-                {issuer.postalCode} {issuer.city}
-              </p>
-              {issuer.uid ? <p>UID: {issuer.uid}</p> : null}
-              {issuer.vatId ? <p>MWST-Nr.: {issuer.vatId}</p> : null}
+      <div className="grid gap-6 xl:grid-cols-2">
+        <BillingPanel title="Finanzübersicht">
+          <dl className="space-y-3 text-sm">
+            <div className="flex justify-between gap-4">
+              <dt className="text-[var(--muted)]">Netto</dt>
+              <dd className="tabular-nums font-medium">{netFormatted}</dd>
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              {invoice.status === "DRAFT"
-                ? "Ausstellerdaten werden bei der Finalisierung übernommen."
-                : "—"}
-            </p>
-          )}
-        </section>
-        <section className="space-y-2">
-          <h2 className="text-sm font-semibold">Empfänger</h2>
+            {taxSnapshots.map((tax) => (
+              <div key={tax.id} className="flex justify-between gap-4">
+                <dt className="text-[var(--muted)]">{tax.taxLabel}</dt>
+                <dd className="tabular-nums">
+                  {formatBillingMoney(tax.taxAmountMinor, tax.currency)}
+                </dd>
+              </div>
+            ))}
+            <div className="flex justify-between gap-4 border-t border-[color-mix(in_srgb,var(--border)_45%,transparent)] pt-3 text-base">
+              <dt className="font-semibold">Total</dt>
+              <dd className="tabular-nums font-semibold">{grossFormatted}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-[var(--muted)]">Bezahlt</dt>
+              <dd className="tabular-nums">{paidFormatted}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-[var(--muted)]">Offen</dt>
+              <dd className="tabular-nums font-semibold">{outstandingFormatted}</dd>
+            </div>
+          </dl>
+        </BillingPanel>
+
+        <BillingPanel title="Empfänger">
           {recipient ? (
-            <div className="text-sm text-muted-foreground space-y-0.5">
-              <p className="text-foreground font-medium">{recipient.companyOrName}</p>
-              <p>
+            <div className="space-y-1 text-sm">
+              <p className="font-medium text-[var(--foreground)]">{recipient.companyOrName}</p>
+              <p className="text-[var(--text-2)]">
                 {recipient.street} {recipient.houseNumber ?? ""}
               </p>
-              <p>
+              <p className="text-[var(--text-2)]">
                 {recipient.postalCode} {recipient.city}
               </p>
-              {recipient.invoiceEmail ? <p>{recipient.invoiceEmail}</p> : null}
+              {recipient.invoiceEmail ? (
+                <p className="pt-2 text-[var(--foreground)]">{recipient.invoiceEmail}</p>
+              ) : null}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-[var(--text-2)]">
               {customer?.displayName ?? "—"}
               {invoice.status === "DRAFT"
-                ? " — Rechnungsadresse wird bei der Finalisierung übernommen."
+                ? " — Adresse wird bei der Finalisierung übernommen."
                 : ""}
             </p>
           )}
-        </section>
+        </BillingPanel>
+
+        <BillingPanel title="Vertrag & Leistung">
+          <dl className="space-y-2 text-sm">
+            <div>
+              <dt className="text-[var(--muted)]">Produkt</dt>
+              <dd className="font-medium">{invoice.contractLabel ?? contract?.productName ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-[var(--muted)]">Leistungszeitraum</dt>
+              <dd>{periodLabel}</dd>
+            </div>
+            {contract ? (
+              <div>
+                <dt className="text-[var(--muted)]">Vertrag</dt>
+                <dd>
+                  <Link
+                    href={`/dashboard/admin/commercial/billing/contracts/${contract.key}`}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    {contract.contractNumber}
+                  </Link>
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+        </BillingPanel>
+
+        {invoice.status === "FINALIZED" ? (
+          <BillingPanel title="Zahlung (Swiss QR)">
+            <NativeBillingInvoicePaymentSection
+              invoiceKey={invoice.key}
+              canManage={canManage}
+              amountFormatted={grossFormatted}
+              initialInstruction={
+                paymentInstructionView
+                  ? {
+                      referenceType: presentReferenceTypeLabel(
+                        paymentInstructionView.referenceType,
+                      ),
+                      referenceFormatted: formatPaymentReferenceDisplay(
+                        paymentInstructionView.referenceType,
+                        paymentInstructionView.reference,
+                      ),
+                      creditorAccountMasked: paymentInstructionView.creditorAccountMasked,
+                      amountMinor: paymentInstructionView.amountMinor,
+                      currency: paymentInstructionView.currency,
+                    }
+                  : null
+              }
+              embedded
+            />
+          </BillingPanel>
+        ) : null}
       </div>
 
       {invoice.status === "FINALIZED" ? (
-        <NativeBillingInvoiceDeliverySection
-          invoiceKey={invoice.key}
-          invoiceNumber={invoice.invoiceNumber}
-          grossTotalFormatted={grossFormatted}
-          recipientEmail={recipient?.invoiceEmail ?? null}
-          canManage={canManage}
-          status={invoice.status}
-          initialDelivery={deliverySummarySerialized}
-        />
-      ) : null}
-
-      {invoice.status === "FINALIZED" ? (
-        <NativeBillingInvoicePaymentSection
-          invoiceKey={invoice.key}
-          canManage={canManage}
-          amountFormatted={grossFormatted}
-          initialInstruction={
-            paymentInstructionView
-              ? {
-                  referenceType: presentReferenceTypeLabel(
-                    paymentInstructionView.referenceType,
-                  ),
-                  referenceFormatted: formatPaymentReferenceDisplay(
-                    paymentInstructionView.referenceType,
-                    paymentInstructionView.reference,
-                  ),
-                  creditorAccountMasked: paymentInstructionView.creditorAccountMasked,
-                  amountMinor: paymentInstructionView.amountMinor,
-                  currency: paymentInstructionView.currency,
-                }
-              : null
-          }
-        />
+        <BillingPanel title="Versand">
+          <NativeBillingInvoiceDeliverySection
+            invoiceKey={invoice.key}
+            invoiceNumber={invoice.invoiceNumber}
+            grossTotalFormatted={grossFormatted}
+            recipientEmail={recipient?.invoiceEmail ?? null}
+            canManage={canManage}
+            status={invoice.status}
+            initialDelivery={deliverySummarySerialized}
+            hideSendActions
+          />
+        </BillingPanel>
       ) : null}
 
       {payableForSettlements.has(invoice.status) && paymentSummarySerialized ? (
-        <NativeBillingInvoiceSettlementsSection
-          invoiceKey={invoice.key}
-          invoiceNumber={invoice.invoiceNumber}
-          customerName={customer?.displayName ?? "—"}
-          canManage={canManage}
-          initialSummary={paymentSummarySerialized}
-          defaultReference={
-            paymentInstructionView?.reference
-              ? formatPaymentReferenceDisplay(
-                  paymentInstructionView.referenceType,
-                  paymentInstructionView.reference,
-                )
-              : null
-          }
-        />
+        <BillingPanel title="Zahlungen">
+          <NativeBillingInvoiceSettlementsSection
+            invoiceKey={invoice.key}
+            invoiceNumber={invoice.invoiceNumber}
+            customerName={customer?.displayName ?? "—"}
+            canManage={canManage}
+            initialSummary={paymentSummarySerialized}
+            defaultReference={
+              paymentInstructionView?.reference
+                ? formatPaymentReferenceDisplay(
+                    paymentInstructionView.referenceType,
+                    paymentInstructionView.reference,
+                  )
+                : null
+            }
+          />
+        </BillingPanel>
       ) : null}
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold">Positionen</h2>
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="min-w-full text-sm">
-            <thead className="bg-muted/40 text-left">
-              <tr>
-                <th className="px-4 py-3 font-medium">Beschreibung</th>
-                <th className="px-4 py-3 font-medium">Menge</th>
-                <th className="px-4 py-3 font-medium">Einzelpreis netto</th>
-                <th className="px-4 py-3 font-medium">Netto</th>
-                <th className="px-4 py-3 font-medium">MWST</th>
-                <th className="px-4 py-3 font-medium">Brutto</th>
-              </tr>
-            </thead>
-            <tbody>
-              {serializedLines.map((line) => (
-                <tr key={line.id} className="border-t border-border">
-                  <td className="px-4 py-3">{line.description}</td>
-                  <td className="px-4 py-3 tabular-nums">{line.quantity}</td>
-                  <td className="px-4 py-3 tabular-nums">{line.unitPriceNetFormatted}</td>
-                  <td className="px-4 py-3 tabular-nums">{line.lineNetFormatted}</td>
-                  <td className="px-4 py-3 tabular-nums">{line.vatFormatted}</td>
-                  <td className="px-4 py-3 tabular-nums">{line.lineGrossFormatted}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <BillingPanel title="Positionen">
+        <BillingDataTableShell>
+          <BillingDataTableHead>
+            <tr>
+              <BillingDataTableHeaderCell>Beschreibung</BillingDataTableHeaderCell>
+              <BillingDataTableHeaderCell align="right">Menge</BillingDataTableHeaderCell>
+              <BillingDataTableHeaderCell align="right">Einzelpreis netto</BillingDataTableHeaderCell>
+              <BillingDataTableHeaderCell align="right">Netto</BillingDataTableHeaderCell>
+              <BillingDataTableHeaderCell align="right">MWST</BillingDataTableHeaderCell>
+              <BillingDataTableHeaderCell align="right">Brutto</BillingDataTableHeaderCell>
+            </tr>
+          </BillingDataTableHead>
+          <tbody>
+            {serializedLines.map((line) => (
+              <BillingDataTableRow key={line.id}>
+                <BillingDataTableCell>{line.description}</BillingDataTableCell>
+                <BillingDataTableCell align="right">{line.quantity}</BillingDataTableCell>
+                <BillingDataTableCell align="right">{line.unitPriceNetFormatted}</BillingDataTableCell>
+                <BillingDataTableCell align="right">{line.lineNetFormatted}</BillingDataTableCell>
+                <BillingDataTableCell align="right">{line.vatFormatted}</BillingDataTableCell>
+                <BillingDataTableCell align="right">{line.lineGrossFormatted}</BillingDataTableCell>
+              </BillingDataTableRow>
+            ))}
+          </tbody>
+        </BillingDataTableShell>
+      </BillingPanel>
 
-      <section className="max-w-sm ml-auto space-y-2 text-sm">
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Netto</span>
-          <span className="tabular-nums font-medium">
-            {formatBillingMoney(invoice.netTotalMinor, invoice.currency)}
-          </span>
-        </div>
-        {taxSnapshots.map((tax) => (
-          <div key={tax.id} className="flex justify-between">
-            <span className="text-muted-foreground">{tax.taxLabel}</span>
-            <span className="tabular-nums">
-              {formatBillingMoney(tax.taxAmountMinor, tax.currency)}
-            </span>
-          </div>
-        ))}
-        <div className="flex justify-between border-t border-border pt-2 text-base">
-          <span className="font-semibold">Total brutto</span>
-          <span className="tabular-nums font-semibold">{grossFormatted}</span>
-        </div>
-      </section>
+      <BillingPanel title="Aktivität">
+        <NativeBillingInvoiceLifecycleTimeline
+          invoiceCreatedAt={invoice.createdAt.toISOString()}
+          finalizedAt={invoice.finalizedAt?.toISOString() ?? null}
+          delivery={deliverySummarySerialized}
+          paymentSummary={paymentSummarySerialized}
+        />
+      </BillingPanel>
 
-      {invoice.finalizedAt ? (
-        <p className="text-sm text-muted-foreground">
-          Finalisiert am {formatBillingDateDisplay(invoice.finalizedAt)}
-        </p>
+      {issuer ? (
+        <details className="text-xs text-[var(--muted)]">
+          <summary className="cursor-pointer">Aussteller (intern)</summary>
+          <p className="mt-2">
+            {issuer.legalName} · {issuer.city}
+          </p>
+        </details>
       ) : null}
     </div>
   );

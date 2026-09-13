@@ -16,6 +16,7 @@ type Props = {
   canManage: boolean;
   initialInstruction: PaymentInstructionView | null;
   amountFormatted: string;
+  embedded?: boolean;
 };
 
 export default function NativeBillingInvoicePaymentSection({
@@ -23,6 +24,7 @@ export default function NativeBillingInvoicePaymentSection({
   canManage,
   initialInstruction,
   amountFormatted,
+  embedded = false,
 }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -53,9 +55,14 @@ export default function NativeBillingInvoicePaymentSection({
     }
   }
 
+  const Wrapper = embedded ? "div" : "section";
+  const wrapperClass = embedded
+    ? "space-y-3"
+    : "space-y-3 rounded-lg border border-border p-4";
+
   return (
-    <section className="space-y-3 rounded-lg border border-border p-4">
-      <h2 className="text-sm font-semibold">Zahlungsinformationen</h2>
+    <Wrapper className={wrapperClass}>
+      {!embedded ? <h2 className="text-sm font-semibold">Zahlungsinformationen</h2> : null}
       {instruction ? (
         <dl className="grid gap-2 text-sm sm:grid-cols-2">
           <div>
@@ -97,6 +104,6 @@ export default function NativeBillingInvoicePaymentSection({
         </button>
       ) : null}
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
-    </section>
+    </Wrapper>
   );
 }

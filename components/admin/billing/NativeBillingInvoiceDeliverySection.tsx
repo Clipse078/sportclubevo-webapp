@@ -13,6 +13,8 @@ type Props = {
   canManage: boolean;
   status: string;
   initialDelivery: SerializedInvoiceDeliverySummary | null;
+  /** When true, send/resend controls live in the page header dialog. */
+  hideSendActions?: boolean;
 };
 
 function deliveryTone(
@@ -46,6 +48,7 @@ export default function NativeBillingInvoiceDeliverySection({
   canManage,
   status,
   initialDelivery,
+  hideSendActions = false,
 }: Props) {
   const router = useRouter();
   const [delivery, setDelivery] = useState<SerializedInvoiceDeliverySummary | null>(
@@ -267,7 +270,7 @@ export default function NativeBillingInvoiceDeliverySection({
           </div>
         ) : null}
 
-        {!confirmMode ? (
+        {!confirmMode && !hideSendActions ? (
           <div className="flex flex-wrap gap-2 items-center">
             {showFirstSend ? (
               <button

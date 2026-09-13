@@ -1,9 +1,13 @@
 import Link from "next/link";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
 import NativeBillingCustomersTable from "@/components/admin/billing/NativeBillingCustomersTable";
-import { getBillingContractsOverview } from "@/lib/billing/native-billing-commercial-service";
+import {
+  getBillingContractsOverview,
+  getInvoicesOverview,
+} from "@/lib/billing/native-billing-commercial-service";
 import { getBillingCustomersOverview } from "@/lib/billing/native-billing-service";
 import { getBillingCustomerBalanceSummaries } from "@/lib/billing/operations/billing-operations-service";
+import { presentInvoiceDisplayNumber } from "@/lib/billing/native-billing-presentation";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -32,16 +36,19 @@ export default async function NativeBillingCustomersPage() {
   let rows: Awaited<ReturnType<typeof getBillingCustomersOverview>> = [];
   let balances: Awaited<ReturnType<typeof getBillingCustomerBalanceSummaries>> = [];
   let contracts: Awaited<ReturnType<typeof getBillingContractsOverview>> = [];
+  let invoices: Awaited<ReturnType<typeof getInvoicesOverview>> = [];
   try {
-    [rows, balances, contracts] = await Promise.all([
+    [rows, balances, contracts, invoices] = await Promise.all([
       getBillingCustomersOverview(),
       getBillingCustomerBalanceSummaries(),
       getBillingContractsOverview(),
+      getInvoicesOverview(),
     ]);
   } catch {
     rows = [];
     balances = [];
     contracts = [];
+    invoices = [];
   }
 
   const balanceByCustomerKey = new Map(balances.map((b) => [b.customerKey, b]));
@@ -54,12 +61,29 @@ export default async function NativeBillingCustomersPage() {
     );
   }
 
+  const lastInvoiceByCustomerId = new Map<
+    string,
+    { label: string; date: string | null }
+  >();
+  for (const invoice of invoices) {
+    const existing = lastInvoiceByCustomerId.get(invoice.billingCustomerId);
+    const invoiceDate = invoice.invoiceDate
+      ? invoice.invoiceDate.toISOString().slice(0, 10)
+      : null;
+    const sortKey = invoiceDate ?? invoice.createdAt.toISOString();
+    const existingKey = existing?.date ?? "";
+    if (existing && existingKey >= sortKey) continue;
+    lastInvoiceByCustomerId.set(invoice.billingCustomerId, {
+      label: presentInvoiceDisplayNumber(invoice.invoiceNumber, invoice.status),
+      date: invoiceDate,
+    });
+  }
+
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
-        eyebrow="Commercial"
+    <div className="space-y-6">
+      <BillingPageHeader
         title="Kunden"
-        description="Native SCE Billing-Kunden mit Salden und Abrechnungsstatus."
+        description="Finanzielle Kundenübersicht mit Salden, Verträgen und Abrechnungsstatus."
         actions={
           canManage ? (
             <Link href="/dashboard/admin/commercial/billing/customers/new" className="fca-button-primary">
@@ -78,21 +102,20 @@ export default async function NativeBillingCustomersPage() {
             overdueBalanceMinor: balance?.overdueBalanceMinor ?? 0,
             primaryEmail: customer.primaryEmail,
           });
+          const lastInvoice = lastInvoiceByCustomerId.get(customer.id);
           return {
             key: customer.key,
             displayName: customer.displayName,
             legalName: customer.legalName,
-            primaryEmail: customer.primaryEmail,
             status: customer.status,
-            tenantLabels: customer.tenantLinks
-              .filter((link) => link.activeUntil === null)
-              .map((link) => link.tenantName ?? link.tenantKey ?? link.tenantId),
             activeContractCount: activeContractsByCustomerId.get(customer.id) ?? 0,
             openBalanceMinor: balance?.openBalanceMinor ?? 0,
             overdueBalanceMinor: balance?.overdueBalanceMinor ?? 0,
             currency: balance?.currency ?? customer.defaultCurrency ?? "CHF",
             billingHealthLabel: health.label,
             billingHealthTone: health.tone,
+            lastInvoiceLabel: lastInvoice?.label ?? null,
+            lastInvoiceDate: lastInvoice?.date ?? null,
           };
         })}
       />

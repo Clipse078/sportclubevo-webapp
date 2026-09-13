@@ -243,15 +243,31 @@ export default function AdminSidebar({
             id={`nav-module-${item.key}`}
             className="sce-nav-module-children"
           >
-            {item.children!.map((child) => {
+            {item.children!.map((child, childIndex) => {
               const childHref = buildHref(child.href);
-              const isChildActive = isItemActive(child.href);
+              const isChildActive = child.matchExact
+                ? pathname === child.href
+                : isItemActive(child.href);
+              const showAdminDivider =
+                child.navSection === "admin" &&
+                item.children!.slice(0, childIndex).every((c) => c.navSection !== "admin");
               return (
                 <li key={child.key}>
+                  {showAdminDivider ? (
+                    <div
+                      className="my-1.5 mx-2 border-t border-[color-mix(in_srgb,var(--border)_40%,transparent)]"
+                      role="separator"
+                      aria-hidden="true"
+                    />
+                  ) : null}
                   <Link
                     href={childHref}
                     aria-current={isChildActive ? "page" : undefined}
-                    className={cn("sce-nav-child", isChildActive && "active")}
+                    className={cn(
+                      "sce-nav-child",
+                      isChildActive && "active",
+                      child.navSection === "admin" && "opacity-90",
+                    )}
                   >
                     <span>{child.label}</span>
                   </Link>

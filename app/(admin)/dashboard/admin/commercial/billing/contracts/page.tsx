@@ -1,5 +1,5 @@
 import Link from "next/link";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
 import NativeBillingContractsTable from "@/components/admin/billing/NativeBillingContractsTable";
 import { getBillingContractsOverview } from "@/lib/billing/native-billing-commercial-service";
 import { presentBillingInterval } from "@/lib/billing/native-billing-presentation";
@@ -27,11 +27,10 @@ export default async function NativeBillingContractsPage() {
   const customerById = new Map(customers.map((c) => [c.id, c.displayName]));
 
   return (
-    <div className="space-y-8">
-      <AdminSectionHeader
-        eyebrow="Commercial"
+    <div className="space-y-6">
+      <BillingPageHeader
         title="Verträge"
-        description="SCE-Verträge mit vereinbartem Monatspreis in CHF."
+        description="Aktive und historische SCE-Verträge mit Preisen, MWST und Abrechnungsintervall."
         actions={
           canManage ? (
             <Link href="/dashboard/admin/commercial/billing/contracts/new" className="fca-button-primary">

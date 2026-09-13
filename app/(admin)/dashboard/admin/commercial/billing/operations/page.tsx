@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
+import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import { getBillingOperationsDiagnostics } from "@/lib/billing/operations/billing-operations-diagnostics";
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -8,23 +10,12 @@ import { isPlatformSuperAdmin } from "@/lib/security/platform-superadmin";
 
 export const dynamic = "force-dynamic";
 
-function State({
-  ok,
-  children,
-}: {
-  ok: boolean;
-  children: React.ReactNode;
-}) {
+function DiagnosticRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <span
-      className={
-        ok
-          ? "font-medium text-emerald-700"
-          : "font-medium text-amber-700"
-      }
-    >
-      {children}
-    </span>
+    <div className="flex items-start justify-between gap-6 border-b border-[color-mix(in_srgb,var(--border)_40%,transparent)] py-3 last:border-0 text-sm">
+      <dt className="text-[var(--muted)]">{label}</dt>
+      <dd className="max-w-[65%] break-words text-right">{children}</dd>
+    </div>
   );
 }
 
@@ -36,101 +27,100 @@ export default async function BillingOperationsPage() {
   }
 
   const diagnostics = await getBillingOperationsDiagnostics();
-  const row = (label: string, value: React.ReactNode) => (
-    <div className="flex items-start justify-between gap-6 border-b border-border/60 py-3 last:border-0">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="max-w-[65%] break-words text-right font-mono text-xs">
-        {value}
-      </dd>
-    </div>
-  );
 
   return (
-    <div className="max-w-4xl space-y-8">
-      <AdminSectionHeader
-        eyebrow="Commercial · Billing"
-        title="Operations & Diagnostics"
-        description="Sichere Laufzeit-, Daten- und Providerdiagnose. Es werden keine Geheimnisse oder vollständigen Kontodaten angezeigt."
+    <div className="max-w-3xl space-y-6">
+      <BillingPageHeader
+        title="Operations"
+        description="Erweiterte Diagnose für Deployment, Billing-Daten und Provider — ohne Geheimnisse oder vollständige Kontodaten."
       />
 
-      <div
-        className={
-          diagnostics.readiness.result === "READY"
-            ? "rounded-lg border border-emerald-200 bg-emerald-50 p-5"
-            : "rounded-lg border border-amber-200 bg-amber-50 p-5"
+      <BillingPanel
+        title={`Bereitschaft: ${diagnostics.readiness.result}`}
+        description={
+          diagnostics.readiness.missing.length
+            ? diagnostics.readiness.missing.join(" · ")
+            : "Alle geprüften Voraussetzungen erfüllt."
         }
       >
-        <p className="text-sm font-semibold">
-          Production readiness: {diagnostics.readiness.result}
-        </p>
-        {diagnostics.readiness.missing.length ? (
-          <p className="mt-1 text-sm">
-            {diagnostics.readiness.missing.join(" · ")}
-          </p>
-        ) : null}
-      </div>
+        <BillingStatusBadge
+          label={diagnostics.readiness.result === "READY" ? "Bereit" : "Prüfen"}
+          tone={diagnostics.readiness.result === "READY" ? "success" : "warning"}
+        />
+      </BillingPanel>
 
-      <section className="rounded-lg border border-border bg-card px-5">
-        <h2 className="pt-5 text-sm font-semibold">Deployment</h2>
+      <BillingPanel title="Deployment">
         <dl>
-          {row("Environment", diagnostics.runtime.deploymentEnvironment)}
-          {row("Vercel environment", diagnostics.runtime.vercelEnvironment ?? "—")}
-          {row("Commit", diagnostics.runtime.commitSha ?? "—")}
-          {row("Deployment ID", diagnostics.runtime.deploymentId ?? "—")}
+          <DiagnosticRow label="Datenumgebung">{diagnostics.runtime.dataEnvironment}</DiagnosticRow>
+          <DiagnosticRow label="Deployment">{diagnostics.runtime.deploymentEnvironment}</DiagnosticRow>
+          <DiagnosticRow label="Commit">
+            <span className="font-mono text-xs">{diagnostics.runtime.commitSha ?? "—"}</span>
+          </DiagnosticRow>
         </dl>
-      </section>
+      </BillingPanel>
 
-      <section className="rounded-lg border border-border bg-card px-5">
-        <h2 className="pt-5 text-sm font-semibold">Billing data</h2>
+      <BillingPanel title="Billing data">
         <dl>
-          {row("Data environment", diagnostics.runtime.dataEnvironment)}
-          {row("Database fingerprint", diagnostics.runtime.databaseFingerprint ?? "—")}
-          {row("Migration status", diagnostics.migrationStatus)}
-          {row(
-            "Billing encryption key",
-            diagnostics.billingEncryptionKeyConfigured ? "configured" : "missing",
-          )}
+          <DiagnosticRow label="Migrationen">
+            {diagnostics.migrationStatus === "CURRENT" ? "Aktuell" : diagnostics.migrationStatus}
+          </DiagnosticRow>
+          <DiagnosticRow label="Verschlüsselung">
+            {diagnostics.billingEncryptionKeyConfigured ? "Konfiguriert" : "Fehlt"}
+          </DiagnosticRow>
+          <DiagnosticRow label="Datenbank-Fingerprint">
+            <span className="font-mono text-xs">
+              {diagnostics.runtime.databaseFingerprint ?? "—"}
+            </span>
+          </DiagnosticRow>
         </dl>
-      </section>
+      </BillingPanel>
 
-      <section className="rounded-lg border border-border bg-card px-5">
-        <h2 className="pt-5 text-sm font-semibold">Legal entity</h2>
+      <BillingPanel title="Legal entity">
         <dl>
-          {row(
-            "Active legal entity",
-            diagnostics.legalEntity
-              ? `${diagnostics.legalEntity.displayName} (${diagnostics.legalEntity.key})`
-              : "—",
-          )}
-          {row("Bank account", diagnostics.legalEntity?.bankAccountConfigured ? "configured" : "missing")}
-          {row("QR-IBAN", diagnostics.legalEntity?.qrIbanConfigured ? "configured" : "missing")}
-          {row("Reference type", diagnostics.legalEntity?.referenceType ?? "—")}
+          <DiagnosticRow label="Aktiver Rechtsträger">
+            {diagnostics.legalEntity?.displayName ?? "—"}
+          </DiagnosticRow>
+          <DiagnosticRow label="Bankkonto">
+            {diagnostics.legalEntity?.bankAccountConfigured ? "Konfiguriert" : "Fehlt"}
+          </DiagnosticRow>
+          <DiagnosticRow label="QR-IBAN">
+            {diagnostics.legalEntity?.qrIbanConfigured ? "Konfiguriert" : "Fehlt"}
+          </DiagnosticRow>
         </dl>
-      </section>
+      </BillingPanel>
 
-      <section className="rounded-lg border border-border bg-card px-5">
-        <h2 className="pt-5 text-sm font-semibold">Providers</h2>
+      <BillingPanel title="Providers">
         <dl>
-          {row(
-            "Swiss QR",
-            <State ok={diagnostics.providers.swissQr === "OPERATIONAL"}>
-              {diagnostics.providers.swissQr}
-            </State>,
-          )}
-          {row(
-            "camt.054 reconciliation",
-            <State ok={diagnostics.providers.camt054 === "OPERATIONAL"}>
-              {diagnostics.providers.camt054}
-            </State>,
-          )}
-          {row(
-            "Stripe",
-            <State ok={diagnostics.providers.stripe === "CONNECTED"}>
-              {diagnostics.providers.stripe}
-            </State>,
-          )}
+          <DiagnosticRow label="Swiss QR">
+            <BillingStatusBadge
+              label={
+                diagnostics.providers.swissQr === "OPERATIONAL"
+                  ? "Betriebsbereit"
+                  : diagnostics.providers.swissQr
+              }
+              tone={diagnostics.providers.swissQr === "OPERATIONAL" ? "success" : "warning"}
+            />
+          </DiagnosticRow>
+          <DiagnosticRow label="camt.054">
+            <BillingStatusBadge
+              label={
+                diagnostics.providers.camt054 === "OPERATIONAL"
+                  ? "Betriebsbereit"
+                  : diagnostics.providers.camt054
+              }
+              tone={diagnostics.providers.camt054 === "OPERATIONAL" ? "success" : "warning"}
+            />
+          </DiagnosticRow>
+          <DiagnosticRow label="Stripe">
+            <BillingStatusBadge
+              label={
+                diagnostics.providers.stripe === "CONNECTED" ? "Verbunden" : "Nicht verbunden"
+              }
+              tone={diagnostics.providers.stripe === "CONNECTED" ? "success" : "muted"}
+            />
+          </DiagnosticRow>
         </dl>
-      </section>
+      </BillingPanel>
     </div>
   );
 }

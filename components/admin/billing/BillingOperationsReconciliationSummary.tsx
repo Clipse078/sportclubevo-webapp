@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import { formatBillingDateDisplay } from "@/lib/billing/native-billing-presentation";
 import type { BillingReconciliationHealthSummary } from "@/lib/billing/operations/billing-operations-types";
 
@@ -11,40 +12,41 @@ export default function BillingOperationsReconciliationSummary({ summary }: Prop
     summary.unmatchedTransactionCount > 0 || summary.reviewRequiredTransactionCount > 0;
 
   return (
-    <div className="space-y-4">
-      <dl className="grid gap-3 text-sm sm:grid-cols-2">
-        <div>
-          <dt className="text-muted-foreground">Nicht zugeordnet</dt>
-          <dd className="text-lg font-semibold tabular-nums">
-            {summary.unmatchedTransactionCount}
-          </dd>
+    <BillingPanel
+      title="Swiss QR / camt.054"
+      description={
+        hasIssues
+          ? "Es gibt offene Zuordnungen oder Transaktionen zur Prüfung."
+          : "Import und Zuordnung sind ohne kritische offene Punkte."
+      }
+    >
+      <dl className="grid gap-4 text-sm">
+        <div className="flex items-baseline justify-between gap-4">
+          <dt className="text-[var(--muted)]">Nicht zugeordnet</dt>
+          <dd className="text-lg font-semibold tabular-nums">{summary.unmatchedTransactionCount}</dd>
         </div>
-        <div>
-          <dt className="text-muted-foreground">Prüfung erforderlich</dt>
+        <div className="flex items-baseline justify-between gap-4">
+          <dt className="text-[var(--muted)]">Prüfung erforderlich</dt>
           <dd className="text-lg font-semibold tabular-nums">
             {summary.reviewRequiredTransactionCount}
           </dd>
         </div>
       </dl>
-      {summary.latestImportFilename ? (
-        <p className="text-sm text-muted-foreground">
-          Letzter Import: {summary.latestImportFilename}
-          {summary.latestImportUploadedAt
-            ? ` · ${formatBillingDateDisplay(summary.latestImportUploadedAt.slice(0, 10))}`
-            : null}
+      {summary.latestImportUploadedAt ? (
+        <p className="mt-4 text-xs text-[var(--text-2)]">
+          Letzter Import{" "}
+          {formatBillingDateDisplay(summary.latestImportUploadedAt.slice(0, 10))}
           {summary.latestImportStatus ? ` · ${summary.latestImportStatus}` : null}
         </p>
       ) : (
-        <p className="text-sm text-muted-foreground">Noch kein camt.054 Import.</p>
+        <p className="mt-4 text-xs text-[var(--text-2)]">Noch kein camt.054-Import vorhanden.</p>
       )}
       <Link
         href={summary.reconciliationHref}
-        className={`inline-flex text-sm font-medium hover:underline ${
-          hasIssues ? "text-[var(--sce-primary)]" : "text-primary"
-        }`}
+        className="fca-button-secondary mt-5 inline-flex w-full justify-center text-sm sm:w-auto"
       >
-        Bankabgleich öffnen →
+        Bankabgleich öffnen
       </Link>
-    </div>
+    </BillingPanel>
   );
 }
