@@ -76,33 +76,33 @@ export default function NativeBillingCustomersTable({ rows, canManage = false }:
           return (
             <BillingDataTableRow
               key={row.key}
-              className="cursor-pointer"
+              className="cursor-pointer group"
               onClick={() => router.push(href)}
             >
               <BillingDataTableCell>
                 <Link
                   href={href}
-                  className="font-medium text-[var(--foreground)] hover:underline"
+                  className="text-base font-semibold text-[var(--foreground)] group-hover:underline"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {row.displayName}
                 </Link>
                 {row.legalName && row.legalName !== row.displayName ? (
-                  <div className="text-xs text-[var(--muted)]">{row.legalName}</div>
+                  <div className="text-sm text-[var(--text-2)]">{row.legalName}</div>
                 ) : null}
               </BillingDataTableCell>
-              <BillingDataTableCell className="font-mono text-xs text-[var(--muted)]">
+              <BillingDataTableCell className="font-mono text-[0.7rem] text-[var(--muted)]">
                 {row.key}
               </BillingDataTableCell>
               <BillingDataTableCell align="right" className="tabular-nums text-[var(--text-2)]">
                 {row.activeContractCount ?? "—"}
               </BillingDataTableCell>
-              <BillingDataTableCell align="right">
+              <BillingDataTableCell align="right" className="tabular-nums font-medium">
                 {row.openBalanceMinor != null && row.currency
                   ? formatBillingMoney(row.openBalanceMinor, row.currency)
                   : "—"}
               </BillingDataTableCell>
-              <BillingDataTableCell align="right">
+              <BillingDataTableCell align="right" className="tabular-nums font-medium">
                 {row.overdueBalanceMinor != null && row.currency
                   ? formatBillingMoney(row.overdueBalanceMinor, row.currency)
                   : "—"}
@@ -110,7 +110,7 @@ export default function NativeBillingCustomersTable({ rows, canManage = false }:
               <BillingDataTableCell className="text-[var(--text-2)]">
                 {row.lastInvoiceLabel ? (
                   <span>
-                    {row.lastInvoiceLabel}
+                    <span className="font-medium text-[var(--foreground)]">{row.lastInvoiceLabel}</span>
                     {row.lastInvoiceDate ? (
                       <span className="block text-xs text-[var(--muted)]">
                         {formatBillingDateDisplay(row.lastInvoiceDate)}
@@ -122,7 +122,7 @@ export default function NativeBillingCustomersTable({ rows, canManage = false }:
                 )}
               </BillingDataTableCell>
               <BillingDataTableCell>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-col items-start gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-1">
                   {row.billingHealthLabel ? (
                     <BillingStatusBadge
                       label={row.billingHealthLabel}

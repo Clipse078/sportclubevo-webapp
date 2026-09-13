@@ -22,7 +22,7 @@ export default function BillingDataTableShell({ children, className }: Props) {
 
 export function BillingDataTableHead({ children }: { children: ReactNode }) {
   return (
-    <thead className="bg-[color-mix(in_srgb,var(--muted)_12%,transparent)] text-left text-xs uppercase tracking-wide text-[var(--muted)]">
+    <thead className="bg-[color-mix(in_srgb,var(--muted)_14%,transparent)] text-left text-xs uppercase tracking-wide text-[var(--text-2)]">
       {children}
     </thead>
   );
@@ -41,7 +41,8 @@ export function BillingDataTableRow({
     <tr
       className={cn(
         "border-t border-[color-mix(in_srgb,var(--border)_45%,transparent)]",
-        "transition-colors hover:bg-[color-mix(in_srgb,var(--foreground)_3%,transparent)]",
+        "transition-colors hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]",
+        "focus-within:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]",
         className,
       )}
       onClick={onClick}
@@ -75,7 +76,7 @@ export function BillingDataTableCell({
   return (
     <td
       className={cn(
-        "px-3 py-2.5 align-middle sm:px-4 sm:py-3",
+        "px-3 py-3.5 align-middle sm:px-4 sm:py-4",
         align === "right" && "text-right tabular-nums",
         className,
       )}

@@ -1,6 +1,4 @@
 import type { ReactNode } from "react";
-import BillingWorkspaceNav from "@/components/admin/billing/shell/BillingWorkspaceNav";
-import { hasPermission } from "@/lib/permissions/has-permission";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
@@ -9,13 +7,7 @@ type Props = {
 };
 
 export default async function BillingWorkspaceShell({ children }: Props) {
-  const session = await requirePermission(PERMISSIONS.BILLING_VIEW);
-  const showOperations = hasPermission(session, PERMISSIONS.BILLING_MANAGE);
+  await requirePermission(PERMISSIONS.BILLING_VIEW);
 
-  return (
-    <div className="mx-auto w-full max-w-[90rem] space-y-8">
-      <BillingWorkspaceNav showOperations={showOperations} />
-      {children}
-    </div>
-  );
+  return <div className="w-full space-y-8">{children}</div>;
 }

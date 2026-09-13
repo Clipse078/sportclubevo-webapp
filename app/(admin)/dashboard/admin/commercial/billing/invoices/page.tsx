@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import NativeBillingInvoicesOperationsTable from "@/components/admin/billing/NativeBillingInvoicesOperationsTable";
 import { getBillingInvoiceOperationalRows } from "@/lib/billing/operations/billing-operations-service";
 import { listBillingCustomers } from "@/lib/billing/native-billing-repository";
@@ -24,6 +25,7 @@ export default async function NativeBillingInvoicesPage() {
   }
 
   return (
+    <BillingWorkspaceContent width="list">
     <div className="space-y-6">
       <BillingPageHeader
         title="Rechnungen"
@@ -42,5 +44,6 @@ export default async function NativeBillingInvoicesPage() {
         customerOptions={customers.map((c) => ({ key: c.key, label: c.displayName }))}
       />
     </div>
+    </BillingWorkspaceContent>
   );
 }

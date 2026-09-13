@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import NativeBillingInvoiceActions from "@/components/admin/billing/NativeBillingInvoiceActions";
@@ -149,8 +150,12 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
   const outstandingFormatted =
     paymentSummarySerialized?.outstandingFormatted ?? grossFormatted;
 
+  const isVoid = invoice.status === "VOID";
+  const isHistoricalVoid = isVoid;
+
   return (
-    <div className="space-y-8">
+    <BillingWorkspaceContent width="detail">
+      <div className={`space-y-8 ${isHistoricalVoid ? "opacity-95" : ""}`}>
       <div className="space-y-6">
         <BillingPageHeader
           size="hero"
@@ -165,6 +170,12 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
             </Link>
           }
         />
+
+        {isHistoricalVoid ? (
+          <p className="rounded-md bg-[color-mix(in_srgb,var(--muted)_18%,transparent)] px-4 py-3 text-sm text-[var(--text-2)] ring-1 ring-[color-mix(in_srgb,var(--border)_45%,transparent)]">
+            Diese Rechnung wurde storniert und ist nicht zahlungswirksam.
+          </p>
+        ) : null}
 
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-3">
@@ -196,6 +207,8 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
           </div>
 
           <div className="flex flex-col gap-3 lg:items-end">
+            {!isHistoricalVoid ? (
+              <>
             <NativeBillingInvoiceSendReviewDialog
               invoiceKey={invoice.key}
               invoiceNumber={invoice.invoiceNumber}
@@ -212,6 +225,8 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
               canManage={canManage}
               grossTotalFormatted={grossFormatted}
             />
+              </>
+            ) : null}
           </div>
         </div>
       </div>
@@ -403,6 +418,7 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
           </p>
         </details>
       ) : null}
-    </div>
+      </div>
+    </BillingWorkspaceContent>
   );
 }

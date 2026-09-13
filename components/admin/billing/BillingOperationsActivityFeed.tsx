@@ -48,8 +48,11 @@ export default function BillingOperationsActivityFeed({ items }: Props) {
               ) : (
                 <span className="font-medium text-[var(--foreground)]">{item.title}</span>
               )}
-              {item.detail ? (
+              {item.detail && item.kind !== "CAMT054_IMPORTED" ? (
                 <p className="mt-0.5 truncate text-[var(--text-2)]">{item.detail}</p>
+              ) : null}
+              {item.kind === "CAMT054_IMPORTED" && item.href ? (
+                <p className="mt-0.5 text-xs text-[var(--muted)]">Details im Import-Protokoll</p>
               ) : null}
             </div>
             <time

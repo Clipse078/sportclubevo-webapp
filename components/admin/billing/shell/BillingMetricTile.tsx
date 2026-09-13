@@ -27,19 +27,19 @@ export default function BillingMetricTile({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[0.68rem] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+          <p className="text-[0.68rem] font-medium uppercase tracking-[0.12em] text-[var(--text-2)]">
             {label}
           </p>
-          <p className="mt-1.5 text-xl font-semibold tabular-nums tracking-tight text-[var(--foreground)] sm:text-[1.65rem]">
+          <p className="mt-2 text-[1.35rem] font-semibold tabular-nums tracking-tight text-[var(--foreground)] sm:text-[1.75rem]">
             {value}
           </p>
           {hint ? (
-            <p className="mt-1 text-xs text-[var(--text-2)] leading-snug">{hint}</p>
+            <p className="mt-1.5 text-xs text-[var(--text-2)] leading-snug">{hint}</p>
           ) : null}
         </div>
         {icon ? (
           <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[var(--muted)]"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[color-mix(in_srgb,var(--muted)_85%,var(--foreground))] opacity-70"
             aria-hidden
           >
             {icon}

@@ -1,13 +1,14 @@
 import Link from "next/link";
 import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import NativeBillingCustomersTable from "@/components/admin/billing/NativeBillingCustomersTable";
+import { pickLatestCustomerLastInvoice } from "@/lib/billing/billing-customer-last-invoice";
 import {
   getBillingContractsOverview,
   getInvoicesOverview,
 } from "@/lib/billing/native-billing-commercial-service";
 import { getBillingCustomersOverview } from "@/lib/billing/native-billing-service";
 import { getBillingCustomerBalanceSummaries } from "@/lib/billing/operations/billing-operations-service";
-import { presentInvoiceDisplayNumber } from "@/lib/billing/native-billing-presentation";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -61,26 +62,19 @@ export default async function NativeBillingCustomersPage() {
     );
   }
 
-  const lastInvoiceByCustomerId = new Map<
-    string,
-    { label: string; date: string | null }
-  >();
-  for (const invoice of invoices) {
-    const existing = lastInvoiceByCustomerId.get(invoice.billingCustomerId);
-    const invoiceDate = invoice.invoiceDate
-      ? invoice.invoiceDate.toISOString().slice(0, 10)
-      : null;
-    const sortKey = invoiceDate ?? invoice.createdAt.toISOString();
-    const existingKey = existing?.date ?? "";
-    if (existing && existingKey >= sortKey) continue;
-    lastInvoiceByCustomerId.set(invoice.billingCustomerId, {
-      label: presentInvoiceDisplayNumber(invoice.invoiceNumber, invoice.status),
-      date: invoiceDate,
-    });
-  }
+  const lastInvoiceByCustomerId = pickLatestCustomerLastInvoice(
+    invoices.map((invoice) => ({
+      billingCustomerId: invoice.billingCustomerId,
+      invoiceNumber: invoice.invoiceNumber,
+      status: invoice.status,
+      invoiceDate: invoice.invoiceDate,
+      createdAt: invoice.createdAt,
+    })),
+  );
 
   return (
-    <div className="space-y-6">
+    <BillingWorkspaceContent width="list">
+      <div className="space-y-6">
       <BillingPageHeader
         title="Kunden"
         description="Finanzielle Kundenübersicht mit Salden, Verträgen und Abrechnungsstatus."
@@ -119,6 +113,7 @@ export default async function NativeBillingCustomersPage() {
           };
         })}
       />
-    </div>
+      </div>
+    </BillingWorkspaceContent>
   );
 }

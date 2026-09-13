@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import NativeBillingContractsTable from "@/components/admin/billing/NativeBillingContractsTable";
 import { getBillingContractsOverview } from "@/lib/billing/native-billing-commercial-service";
 import { presentBillingInterval } from "@/lib/billing/native-billing-presentation";
@@ -27,6 +28,7 @@ export default async function NativeBillingContractsPage() {
   const customerById = new Map(customers.map((c) => [c.id, c.displayName]));
 
   return (
+    <BillingWorkspaceContent width="list">
     <div className="space-y-6">
       <BillingPageHeader
         title="Verträge"
@@ -56,5 +58,6 @@ export default async function NativeBillingContractsPage() {
         }))}
       />
     </div>
+    </BillingWorkspaceContent>
   );
 }

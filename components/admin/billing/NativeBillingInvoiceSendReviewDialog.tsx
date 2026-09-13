@@ -112,22 +112,37 @@ export default function NativeBillingInvoiceSendReviewDialog({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
         {showPrimarySend ? (
           <button
             type="button"
-            className="fca-button-primary"
+            className="fca-button-primary w-full sm:w-auto"
             onClick={() => setDialogOpen(true)}
           >
             Rechnung senden
           </button>
         ) : null}
-        <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="fca-button-secondary">
+        <a
+          href={pdfUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fca-button-secondary w-full sm:w-auto text-center"
+        >
           PDF anzeigen
         </a>
-        <a href={downloadUrl} className="fca-button-secondary">
-          PDF herunterladen
-        </a>
+        <details className="relative w-full sm:w-auto">
+          <summary className="fca-button-secondary cursor-pointer list-none text-center [&::-webkit-details-marker]:hidden">
+            Mehr
+          </summary>
+          <div className="absolute right-0 z-10 mt-1 min-w-[12rem] rounded-md bg-[var(--card)] py-1 shadow-lg ring-1 ring-[color-mix(in_srgb,var(--border)_55%,transparent)]">
+            <a
+              href={downloadUrl}
+              className="block px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)]"
+            >
+              PDF herunterladen
+            </a>
+          </div>
+        </details>
       </div>
 
       {dialogOpen ? (

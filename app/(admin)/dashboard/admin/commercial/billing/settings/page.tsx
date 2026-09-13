@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import NativeBillingCreateBankAccountDialog from "@/components/admin/billing/NativeBillingCreateBankAccountDialog";
 import NativeBillingDeleteBankAccountButton from "@/components/admin/billing/NativeBillingDeleteBankAccountButton";
@@ -49,6 +50,7 @@ export default async function NativeBillingSettingsPage() {
   );
 
   return (
+    <BillingWorkspaceContent width="list">
     <div className="space-y-8">
       <BillingPageHeader
         title="Einstellungen"
@@ -109,49 +111,52 @@ export default async function NativeBillingSettingsPage() {
           <ul className="grid gap-3 sm:grid-cols-2">
             {bankAccounts.map((account) => (
               <li key={account.id}>
-                <BillingPanel className="h-full">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-medium">{account.label}</p>
-                      <p className="mt-1 text-xs text-[var(--muted)]">
+                <BillingPanel className="h-full" padding="default">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-base font-semibold leading-snug">{account.label}</p>
+                      <p className="mt-0.5 text-xs text-[var(--text-2)]">
                         {legalEntityLabelById.get(account.legalEntityId) ?? "Rechtsträger"}
                       </p>
                     </div>
-                    {account.isDefault ? (
-                      <BillingStatusBadge label="Standardkonto" tone="success" />
-                    ) : null}
+                    <div className="flex shrink-0 items-center gap-1">
+                      {account.isDefault ? (
+                        <BillingStatusBadge label="Standard" tone="success" />
+                      ) : null}
+                      {canManage ? (
+                        <NativeBillingDeleteBankAccountButton
+                          menuTrigger
+                          accountId={account.id}
+                          label={account.label}
+                          legalEntityLabel={
+                            legalEntityLabelById.get(account.legalEntityId) ??
+                            account.legalEntityId
+                          }
+                          referenceStrategy={account.referenceStrategy}
+                          ibanMasked={maskIban(account.iban) ?? "****"}
+                          qrIbanMasked={account.qrIban ? maskIban(account.qrIban) : null}
+                        />
+                      ) : null}
+                    </div>
                   </div>
-                  <dl className="mt-4 space-y-2 text-sm">
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-[var(--muted)]">IBAN</dt>
-                      <dd className="font-mono text-xs">{maskIban(account.iban)}</dd>
+                  <dl className="mt-3 space-y-2 text-sm">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <dt className="text-[0.8125rem] text-[var(--text-2)]">IBAN</dt>
+                      <dd className="font-mono text-xs tabular-nums">{maskIban(account.iban)}</dd>
                     </div>
                     {account.qrIban ? (
-                      <div className="flex justify-between gap-2">
-                        <dt className="text-[var(--muted)]">QR-IBAN</dt>
-                        <dd className="font-mono text-xs">{maskIban(account.qrIban)}</dd>
+                      <div className="flex items-baseline justify-between gap-3">
+                        <dt className="text-[0.8125rem] text-[var(--text-2)]">QR-IBAN</dt>
+                        <dd className="font-mono text-xs tabular-nums">{maskIban(account.qrIban)}</dd>
                       </div>
                     ) : null}
-                    <div className="flex justify-between gap-2">
-                      <dt className="text-[var(--muted)]">Referenz</dt>
-                      <dd>{referenceStrategyLabel(account.referenceStrategy)}</dd>
+                    <div className="flex items-baseline justify-between gap-3 pt-1">
+                      <dt className="text-[0.8125rem] text-[var(--text-2)]">Referenz</dt>
+                      <dd className="text-xs text-[var(--muted)]">
+                        {referenceStrategyLabel(account.referenceStrategy)}
+                      </dd>
                     </div>
                   </dl>
-                  {canManage ? (
-                    <div className="mt-4 border-t border-[color-mix(in_srgb,var(--border)_40%,transparent)] pt-3">
-                      <NativeBillingDeleteBankAccountButton
-                        accountId={account.id}
-                        label={account.label}
-                        legalEntityLabel={
-                          legalEntityLabelById.get(account.legalEntityId) ??
-                          account.legalEntityId
-                        }
-                        referenceStrategy={account.referenceStrategy}
-                        ibanMasked={maskIban(account.iban) ?? "****"}
-                        qrIbanMasked={account.qrIban ? maskIban(account.qrIban) : null}
-                      />
-                    </div>
-                  ) : null}
                 </BillingPanel>
               </li>
             ))}
@@ -159,5 +164,6 @@ export default async function NativeBillingSettingsPage() {
         )}
       </section>
     </div>
+    </BillingWorkspaceContent>
   );
 }

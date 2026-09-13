@@ -166,27 +166,27 @@ export default function NativeBillingInvoiceSettlementsSection({
     canManage && summary.outstandingMinor > 0 && !recordOpen && reverseKey === null;
 
   return (
-    <section className="space-y-4 rounded-lg border border-border p-4">
+    <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold">Zahlungen</h2>
+        <h3 className="text-sm font-semibold text-[var(--foreground)]">Zahlungsstatus</h3>
         <BillingStatusBadge
-          label={`Status: ${paymentOpenLabel}`}
+          label={paymentOpenLabel.toUpperCase()}
           tone={summary.isFullyPaid ? "success" : "warning"}
         />
       </div>
 
-      <dl className="grid gap-3 text-sm sm:grid-cols-3 max-w-2xl">
+      <dl className="grid gap-3 text-sm sm:grid-cols-3">
         <div>
-          <dt className="text-muted-foreground">Bruttobetrag</dt>
-          <dd className="font-medium tabular-nums">{summary.grossTotalFormatted}</dd>
+          <dt className="text-[0.8125rem] text-[var(--text-2)]">Bruttobetrag</dt>
+          <dd className="font-semibold tabular-nums">{summary.grossTotalFormatted}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Bezahlt</dt>
-          <dd className="font-medium tabular-nums">{summary.paidTotalFormatted}</dd>
+          <dt className="text-[0.8125rem] text-[var(--text-2)]">Bezahlt</dt>
+          <dd className="font-semibold tabular-nums">{summary.paidTotalFormatted}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Offen</dt>
-          <dd className="font-medium tabular-nums">{summary.outstandingFormatted}</dd>
+          <dt className="text-[0.8125rem] text-[var(--text-2)]">Offen</dt>
+          <dd className="font-semibold tabular-nums">{summary.outstandingFormatted}</dd>
         </div>
       </dl>
 
@@ -200,7 +200,7 @@ export default function NativeBillingInvoiceSettlementsSection({
       {canRecord ? (
         <button
           type="button"
-          className="fca-button-primary"
+          className="fca-button-secondary"
           onClick={() => {
             setPaymentFormError(null);
             setRecordOpen(true);
@@ -395,9 +395,9 @@ export default function NativeBillingInvoiceSettlementsSection({
           </ul>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">Noch keine Zahlungen erfasst.</p>
+        <p className="text-sm text-[var(--text-2)]">Noch keine Zahlungen erfasst.</p>
       )}
 
-    </section>
+    </div>
   );
 }

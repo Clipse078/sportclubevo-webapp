@@ -1,4 +1,5 @@
 import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import NativeBillingReconciliationWorkspace from "@/components/admin/billing/NativeBillingReconciliationWorkspace";
 import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import { getCamt054ReconciliationOverview } from "@/lib/billing/camt054-reconciliation/camt054-reconciliation-overview-service";
@@ -31,6 +32,7 @@ export default async function NativeBillingReconciliationPage() {
   }
 
   return (
+    <BillingWorkspaceContent width="list">
     <div className="space-y-6">
       <BillingPageHeader
         title="Bankabgleich"
@@ -67,5 +69,6 @@ export default async function NativeBillingReconciliationPage() {
         />
       )}
     </div>
+    </BillingWorkspaceContent>
   );
 }

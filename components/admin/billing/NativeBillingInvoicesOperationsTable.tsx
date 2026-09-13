@@ -30,6 +30,19 @@ const DELIVERY_LABELS: Record<BillingInvoiceOperationalRow["deliveryStatus"], st
   FAILED: "Versand fehlgeschlagen",
 };
 
+function rowVisualClass(row: BillingInvoiceOperationalRow): string {
+  if (row.operationalStatus === "VOID") {
+    return "opacity-60";
+  }
+  if (
+    row.operationalStatus === "FINALIZED" &&
+    row.deliveryStatus === "NOT_SENT"
+  ) {
+    return "bg-[color-mix(in_srgb,var(--sce-primary)_4%,transparent)] hover:bg-[color-mix(in_srgb,var(--sce-primary)_7%,transparent)]";
+  }
+  return "";
+}
+
 function presentOperationalStatus(row: BillingInvoiceOperationalRow) {
   if (row.operationalStatus === "OVERDUE") {
     return { label: "Überfällig", tone: "warning" as const };
@@ -158,14 +171,18 @@ export default function NativeBillingInvoicesOperationsTable({
               return (
                 <BillingDataTableRow
                   key={row.key}
-                  className="cursor-pointer"
+                  className={`cursor-pointer group ${rowVisualClass(row)}`}
                   onClick={() => router.push(href)}
                 >
                   <BillingDataTableCell>
                     <Link
                       href={href}
-                      className={`font-medium hover:underline ${
-                        isDraft ? "text-[var(--muted)] italic" : "text-[var(--foreground)]"
+                      className={`font-medium group-hover:underline ${
+                        isDraft
+                          ? "text-[var(--muted)] italic"
+                          : row.operationalStatus === "VOID"
+                            ? "text-[var(--text-2)]"
+                            : "text-[var(--foreground)]"
                       }`}
                       onClick={(e) => e.stopPropagation()}
                     >

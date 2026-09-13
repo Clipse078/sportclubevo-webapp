@@ -252,11 +252,23 @@ export default function NativeBillingReconciliationWorkspace({
       ) : null}
 
       {canManage ? (
-        <section className="rounded-lg border border-border bg-card p-6 shadow-sm space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-base font-semibold">camt.054 importieren</h2>
-            <label className="fca-button-primary cursor-pointer">
-              Datei wählen
+        <section className="space-y-4">
+          <h2 className="text-base font-semibold">camt.054 importieren</h2>
+          <div
+            className={`rounded-[var(--radius-lg)] border-2 border-dashed px-6 py-10 text-center transition-colors ${
+              file
+                ? "border-[color-mix(in_srgb,var(--sce-primary)_45%,var(--border))] bg-[color-mix(in_srgb,var(--sce-primary)_4%,transparent)]"
+                : "border-[color-mix(in_srgb,var(--border)_70%,transparent)] bg-[color-mix(in_srgb,var(--muted)_8%,transparent)]"
+            }`}
+          >
+            <p className="text-sm font-medium text-[var(--foreground)]">
+              {file ? file.name : "XML-Datei hier ablegen"}
+            </p>
+            {!file ? (
+              <p className="mt-2 text-sm text-[var(--text-2)]">oder</p>
+            ) : null}
+            <label className="mt-3 inline-block cursor-pointer text-sm font-medium text-[var(--sce-primary)] hover:underline">
+              {file ? "Andere Datei wählen" : "Datei wählen"}
               <input
                 type="file"
                 accept=".xml,application/xml,text/xml"
@@ -264,26 +276,23 @@ export default function NativeBillingReconciliationWorkspace({
                 onChange={(e) => onFileSelected(e.target.files?.[0] ?? null)}
               />
             </label>
+            <p className="mt-4 text-xs text-[var(--muted)]">camt.054 · XML · max. 5 MB</p>
+            <p className="mt-2 text-xs text-[var(--text-2)] max-w-md mx-auto">
+              Zuerst wird eine Vorschau erstellt. Es werden noch keine Zahlungen verbucht.
+            </p>
           </div>
           {file ? (
-            <p className="text-sm text-muted-foreground">
-              Ausgewählt: <span className="font-medium text-foreground">{file.name}</span>
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Nur XML-Dateien bis 5 MB. Zuerst wird eine Vorschau ohne Buchung erstellt.
-            </p>
-          )}
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="fca-button-secondary"
-              disabled={!fileXml || loading}
-              onClick={runDryRun}
-            >
-              {loading ? "Prüfe…" : "Vorschau / Dry-Run"}
-            </button>
-          </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="fca-button-primary"
+                disabled={!fileXml || loading}
+                onClick={runDryRun}
+              >
+                {loading ? "Prüfe…" : "Vorschau erstellen"}
+              </button>
+            </div>
+          ) : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
         </section>
       ) : null}

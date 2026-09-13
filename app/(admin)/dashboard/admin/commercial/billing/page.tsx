@@ -1,5 +1,5 @@
-import Link from "next/link";
 import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeader";
+import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import BillingOperationsActivityFeed from "@/components/admin/billing/BillingOperationsActivityFeed";
 import BillingOperationsAttentionQueue from "@/components/admin/billing/BillingOperationsAttentionQueue";
 import BillingOperationsKpiStrip from "@/components/admin/billing/BillingOperationsKpiStrip";
@@ -34,6 +34,7 @@ export default async function PlatformCommercialBillingPage() {
   }
 
   return (
+    <BillingWorkspaceContent width="list">
     <div className="space-y-8">
       <BillingPageHeader
         title="Abrechnung"
@@ -70,5 +71,6 @@ export default async function PlatformCommercialBillingPage() {
         </section>
       </div>
     </div>
+    </BillingWorkspaceContent>
   );
 }
