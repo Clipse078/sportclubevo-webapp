@@ -8,6 +8,7 @@ import {
   findBillingCommunicationByInvoiceDeliveryId,
   findBillingCommunicationByProviderMessageId,
 } from "./billing-communication-repository";
+import { normalizeInternetMessageId } from "@/lib/billing/billing-inbound/billing-inbound-message-id";
 import {
   assertTenantMatchesBillingCustomer,
   resolveTenantIdForBillingCustomer,
@@ -95,6 +96,7 @@ export async function recordOutboundInvoiceEmailCommunication(
     sentAt: input.delivery.sentAt,
     provider: input.transport.provider,
     providerMessageId: input.transport.providerMessageId,
+    internetMessageId: normalizeInternetMessageId(input.transport.providerMessageId),
   });
 }
 
@@ -161,5 +163,6 @@ export async function createOutboundBillingCommunicationForTenant(
     sentAt: input.sentAt,
     provider: input.provider,
     providerMessageId: input.providerMessageId,
+    internetMessageId: normalizeInternetMessageId(input.providerMessageId),
   });
 }

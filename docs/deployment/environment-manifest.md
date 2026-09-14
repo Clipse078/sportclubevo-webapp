@@ -73,6 +73,12 @@ Scope terms:
 | `BILLING_SMTP_ENCRYPTION` | SMTP encryption mode for billing (`STARTTLS` or `TLS`) | No | Conditional | Forbidden | Optional | Required when Infomaniak SMTP is selected | Billing SMTP transport fails closed | Canonical: `STARTTLS` on port 587 |
 | `BILLING_EMAIL_FROM` | Billing invoice From identity override | No | Conditional | Forbidden | Optional | Optional | Falls back to canonical billing From | Default: `SportClubEvo Billing <billing@sportclubevo.com>` |
 | `BILLING_REPLY_TO_EMAIL` | Billing invoice Reply-To address | No | Conditional | Forbidden | Optional | Optional | Falls back to canonical billing reply mailbox | Default: `billing@sportclubevo.com` |
+| `BILLING_INBOUND_ENABLED` | Enables billing inbound IMAP polling (`1`/`true`) | No | Conditional | Forbidden | Optional | Required for inbound sync | Cron sync no-ops safely when disabled | Does not ingest without explicit enable |
+| `BILLING_IMAP_HOST` | Infomaniak IMAP hostname for billing inbound | No | Conditional | Forbidden | Optional | Required when inbound enabled | Inbound sync fails closed | Canonical: `mail.infomaniak.com` |
+| `BILLING_IMAP_PORT` | Infomaniak IMAP port | No | Conditional | Forbidden | Optional | Required when inbound enabled | Inbound sync fails closed | Canonical: `993` with TLS |
+| `BILLING_IMAP_USER` | Billing mailbox IMAP username | No | Conditional | Forbidden | Optional | Required when inbound enabled (falls back to `BILLING_SMTP_USER`) | Inbound sync fails closed | Canonical: `billing@sportclubevo.com` |
+| `BILLING_IMAP_PASSWORD` | Billing mailbox IMAP password | Yes | Conditional | Forbidden | Optional | Required when inbound enabled (falls back to `BILLING_SMTP_PASSWORD`) | Inbound sync fails closed | Never log |
+| `BILLING_IMAP_TLS` | IMAP TLS (`1`/`true` or `0`/`false`) | No | Conditional | Forbidden | Optional | Required when inbound enabled | Inbound sync fails closed | Use TLS on port 993 |
 | `BILLING_TEST_RECIPIENT` | STAGE-only test delivery recipient (fixed operator inbox) | Yes | Forbidden | Forbidden | Conditional | Required only for guarded test delivery | Test delivery remains disabled | Never exposed via API/UI; boolean-only in readiness |
 | `BILLING_ALLOW_TEST_DELIVERY` | Explicit STAGE test delivery enable flag (`1` only) | No | Forbidden | Forbidden | Conditional | Required with `BILLING_TEST_RECIPIENT` for test delivery | Test delivery fails closed | Requires `APP_ENV=stage` |
 
