@@ -77,6 +77,7 @@ export async function sendInfomaniakBillingEmail(
         filename: attachment.filename,
         content: attachment.content,
         contentType: attachment.contentType,
+        cid: attachment.cid,
       })),
     });
 

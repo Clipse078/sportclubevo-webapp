@@ -42,6 +42,7 @@ import type {
   SendNativeInvoiceEmailInput,
   SendNativeInvoiceEmailResult,
 } from "./invoice-delivery-types";
+import { buildInvoiceDeliveryEmailAttachments } from "./invoice-delivery-email-inline-logos";
 import { buildInvoicePdfAttachmentFilename } from "./invoice-pdf-filename";
 import { buildInvoiceDeliverySummary } from "./invoice-delivery-summary";
 import { BillingSmtpConfigurationError } from "./billing-smtp-config";
@@ -279,13 +280,7 @@ export async function sendNativeInvoiceEmail(
       subject: emailContent.subject,
       html: emailContent.html,
       text: emailContent.text,
-      attachments: [
-        {
-          filename: attachment.filename,
-          content: attachment.content,
-          contentType: "application/pdf",
-        },
-      ],
+      attachments: buildInvoiceDeliveryEmailAttachments(attachment),
       idempotencyKey: `invoice-delivery:${delivery.key}`,
       simulateFailure: input.simulateFailure === true,
     });
