@@ -200,7 +200,7 @@ export const NAV_SECTIONS: NavSection[] = [
       },
       {
         key: "platform-operations",
-        label: "Operations",
+        label: "Runtime & Deployment",
         href: "/dashboard/runtime",
         permissionKeys: [PERMISSIONS.USERS_MANAGE],
         navContexts: ["platform"],

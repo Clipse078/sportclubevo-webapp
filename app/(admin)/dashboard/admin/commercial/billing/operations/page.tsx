@@ -3,6 +3,9 @@ import BillingPageHeader from "@/components/admin/billing/shell/BillingPageHeade
 import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWorkspaceContent";
 import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
+import BillingRecurringAutomationPanel from "@/components/admin/billing/BillingRecurringAutomationPanel";
+import CommercialBillingWorkspaceHint from "@/components/admin/billing/shell/CommercialBillingWorkspaceHint";
+import { getRecurringBillingAutomationStatus } from "@/lib/billing/recurring/recurring-billing-status";
 import { getBillingOperationsDiagnostics } from "@/lib/billing/operations/billing-operations-diagnostics";
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -28,14 +31,19 @@ export default async function BillingOperationsPage() {
   }
 
   const diagnostics = await getBillingOperationsDiagnostics();
+  const automation = await getRecurringBillingAutomationStatus();
 
   return (
     <BillingWorkspaceContent width="wide">
       <div className="space-y-6">
         <BillingPageHeader
           title="Operations"
-          description="Erweiterte Diagnose für Deployment, Billing-Daten und Provider — ohne Geheimnisse oder vollständige Kontodaten."
+          description="Commercial Abrechnung — Diagnose, Automatisierung und Provider-Status (nicht Plattform Runtime)."
         />
+
+        <CommercialBillingWorkspaceHint />
+
+        <BillingRecurringAutomationPanel initialAutomation={automation} />
 
         <BillingPanel
           title={`Bereitschaft: ${diagnostics.readiness.result}`}

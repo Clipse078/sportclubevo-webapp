@@ -20,7 +20,8 @@ type UniqueKeyModel =
   | "billingCustomer"
   | "legalEntity"
   | "billingContract"
-  | "invoice";
+  | "invoice"
+  | "billingRecurringRun";
 
 async function keyExists(model: UniqueKeyModel, key: string): Promise<boolean> {
   if (model === "billingCustomer") {
@@ -39,6 +40,13 @@ async function keyExists(model: UniqueKeyModel, key: string): Promise<boolean> {
   }
   if (model === "invoice") {
     const row = await prisma.invoice.findUnique({
+      where: { key },
+      select: { id: true },
+    });
+    return row !== null;
+  }
+  if (model === "billingRecurringRun") {
+    const row = await prisma.billingRecurringRun.findUnique({
       where: { key },
       select: { id: true },
     });
