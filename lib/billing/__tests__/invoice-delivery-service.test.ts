@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   sendBillingEmail: vi.fn(),
   resolveBillingEmailIdentity: vi.fn(),
   logAction: vi.fn(),
+  recordOutboundInvoiceEmailCommunication: vi.fn(),
 }));
 
 vi.mock("../native-billing-commercial-repository", () => ({
@@ -57,6 +58,10 @@ vi.mock("../invoice-delivery/resolve-billing-email-identity", () => ({
 }));
 
 vi.mock("@/lib/audit/log-action", () => ({ logAction: mocks.logAction }));
+
+vi.mock("../billing-communication/billing-communication-service", () => ({
+  recordOutboundInvoiceEmailCommunication: mocks.recordOutboundInvoiceEmailCommunication,
+}));
 
 const { validateInvoiceForDelivery, sendNativeInvoiceEmail } = await import(
   "../invoice-delivery/invoice-delivery-service",
@@ -170,6 +175,10 @@ describe("invoice delivery service", () => {
         errorMessage: input.errorMessage,
       }),
     );
+    mocks.recordOutboundInvoiceEmailCommunication.mockResolvedValue({
+      id: "comm-1",
+      status: "SENT",
+    });
   });
 
   it("cannot send DRAFT invoice", async () => {
@@ -204,16 +213,26 @@ describe("invoice delivery service", () => {
     expect(mocks.sendBillingEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "billing@example-club.test",
-        attachments: [
-          expect.objectContaining({
-            filename: "SportClubEvo-Rechnung-2026-000002.pdf",
-            contentType: "application/pdf",
-          }),
-        ],
       }),
+    );
+    const sendPayload = mocks.sendBillingEmail.mock.calls[0]?.[0] as {
+      attachments?: Array<{ filename?: string; contentType?: string }>;
+    };
+    expect(sendPayload.attachments).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          filename: "SportClubEvo-Rechnung-2026-000002.pdf",
+          contentType: "application/pdf",
+        }),
+      ]),
     );
     expect(mocks.logAction).toHaveBeenCalledWith(
       expect.objectContaining({ action: "INVOICE_DELIVERY_SENT" }),
+    );
+    expect(mocks.recordOutboundInvoiceEmailCommunication).toHaveBeenCalledWith(
+      expect.objectContaining({
+        transport: expect.objectContaining({ providerMessageId: "msg-123" }),
+      }),
     );
   });
 
@@ -230,6 +249,7 @@ describe("invoice delivery service", () => {
     expect(mocks.logAction).toHaveBeenCalledWith(
       expect.objectContaining({ action: "INVOICE_DELIVERY_FAILED" }),
     );
+    expect(mocks.recordOutboundInvoiceEmailCommunication).not.toHaveBeenCalled();
   });
 
   it("PDF failure results in failure", async () => {

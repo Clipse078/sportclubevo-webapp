@@ -47,6 +47,7 @@ import { buildInvoicePdfAttachmentFilename } from "./invoice-pdf-filename";
 import { buildInvoiceDeliverySummary } from "./invoice-delivery-summary";
 import { BillingSmtpConfigurationError } from "./billing-smtp-config";
 import { resolveBillingEmailIdentity } from "./resolve-billing-email-identity";
+import { recordOutboundInvoiceEmailCommunication } from "@/lib/billing/billing-communication/billing-communication-service";
 
 const recipientEmailSchema = z.string().email();
 
@@ -294,6 +295,48 @@ export async function sendNativeInvoiceEmail(
       replyToSnapshot: identity.replyTo ?? null,
       attachmentFilename: attachment.filename,
     });
+
+    if (sent.sentAt) {
+      try {
+        await recordOutboundInvoiceEmailCommunication({
+          invoice: {
+            id: context.invoice.id,
+            billingCustomerId: context.invoice.billingCustomerId,
+            billingContractId: context.invoice.billingContractId,
+          },
+          delivery: {
+            id: sent.id,
+            recipientEmail: context.recipientEmail,
+            sentAt: sent.sentAt,
+          },
+          email: {
+            subject: emailContent.subject,
+            textBody: emailContent.text,
+            fromAddress: transportResult.from,
+          },
+          transport: {
+            provider: transportResult.provider,
+            providerMessageId: transportResult.messageId,
+          },
+        });
+      } catch (communicationError) {
+        void logAction({
+          actorUserId: input.actorUserId,
+          moduleKey: NATIVE_BILLING_AUDIT_MODULE,
+          entityType: "Invoice",
+          entityId: context.invoice.id,
+          action: NATIVE_BILLING_AUDIT_ACTIONS.BILLING_COMMUNICATION_RECORD_FAILED,
+          afterJson: {
+            invoiceId: context.invoice.id,
+            deliveryId: sent.id,
+            errorMessage:
+              communicationError instanceof Error
+                ? communicationError.message
+                : "Billing communication persistence failed",
+          },
+        });
+      }
+    }
 
     void logAction({
       actorUserId: input.actorUserId,
