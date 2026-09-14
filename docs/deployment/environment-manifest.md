@@ -61,6 +61,21 @@ Scope terms:
 | `EMAIL_FROM` | Approved sender identity | No | Conditional | Allowed | Optional | Required for outbound mail | Mailer fails closed | Benign configuration; provider validation still applies |
 | `EMAIL_INBOUND_DOMAIN` | Domain used for reply routing | No | Conditional | Allowed | Optional | Required for reply-capable mail | Reply routing is unavailable | Benign configuration |
 
+## Native billing invoice email (SCE)
+
+| Name | Purpose | Sensitive | Production | Preview | Local | Required / optional | Failure behavior | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `BILLING_EMAIL_TRANSPORT` | Selects billing invoice delivery transport (`resend` default, or `infomaniak_smtp`) | No | Conditional | Forbidden | Optional | Optional; required value when Infomaniak SMTP is intended | Billing invoice send fails closed when transport prerequisites are missing | Does not replace global Resend transactional mail |
+| `BILLING_SMTP_HOST` | Infomaniak SMTP server hostname for billing invoice mail | No | Conditional | Forbidden | Optional | Required when `BILLING_EMAIL_TRANSPORT=infomaniak_smtp` | Billing SMTP transport fails closed | Canonical target: `mail.infomaniak.com` |
+| `BILLING_SMTP_PORT` | Infomaniak SMTP port for billing invoice mail | No | Conditional | Forbidden | Optional | Required when Infomaniak SMTP is selected | Billing SMTP transport fails closed | Canonical target: `587` |
+| `BILLING_SMTP_USER` | Authenticated Infomaniak mailbox username for billing SMTP | No | Conditional | Forbidden | Optional | Required when Infomaniak SMTP is selected | Billing SMTP transport fails closed | Canonical mailbox: `billing@sportclubevo.com` |
+| `BILLING_SMTP_PASSWORD` | Infomaniak mailbox SMTP/IMAP device password for billing | Yes | Conditional | Forbidden | Optional | Required when Infomaniak SMTP is selected | Billing SMTP transport fails closed | Never log; server-side only |
+| `BILLING_SMTP_ENCRYPTION` | SMTP encryption mode for billing (`STARTTLS` or `TLS`) | No | Conditional | Forbidden | Optional | Required when Infomaniak SMTP is selected | Billing SMTP transport fails closed | Canonical: `STARTTLS` on port 587 |
+| `BILLING_EMAIL_FROM` | Billing invoice From identity override | No | Conditional | Forbidden | Optional | Optional | Falls back to canonical billing From | Default: `SportClubEvo Billing <billing@sportclubevo.com>` |
+| `BILLING_REPLY_TO_EMAIL` | Billing invoice Reply-To address | No | Conditional | Forbidden | Optional | Optional | Falls back to canonical billing reply mailbox | Default: `billing@sportclubevo.com` |
+| `BILLING_TEST_RECIPIENT` | STAGE-only test delivery recipient (fixed operator inbox) | Yes | Forbidden | Forbidden | Conditional | Required only for guarded test delivery | Test delivery remains disabled | Never exposed via API/UI; boolean-only in readiness |
+| `BILLING_ALLOW_TEST_DELIVERY` | Explicit STAGE test delivery enable flag (`1` only) | No | Forbidden | Forbidden | Conditional | Required with `BILLING_TEST_RECIPIENT` for test delivery | Test delivery fails closed | Requires `APP_ENV=stage` |
+
 ## Blob storage
 
 | Name | Purpose | Sensitive | Production | Preview | Local | Required / optional | Failure behavior | Notes |

@@ -1,4 +1,6 @@
 import { sendMail, type MailAttachment, type MailDeliveryResult } from "@/lib/email/mailer";
+import { sendInfomaniakBillingEmail } from "./billing-infomaniak-smtp-transport";
+import { isInfomaniakBillingSmtpTransportSelected } from "./billing-email-transport-selection";
 import {
   billingDeliveryDryRunDelayMs,
   shouldUseBillingDeliveryDryRunTransport,
@@ -17,7 +19,7 @@ export type BillingEmailTransportPayload = {
 };
 
 export type BillingEmailTransportResult = {
-  provider: "resend" | "dry-run";
+  provider: "resend" | "dry-run" | "infomaniak-smtp";
   messageId: string;
   from: string;
 };
@@ -45,6 +47,23 @@ export async function sendBillingEmail(
       provider: "dry-run",
       messageId: `dry-run-${payload.idempotencyKey ?? "billing-invoice"}`,
       from,
+    };
+  }
+
+  if (isInfomaniakBillingSmtpTransportSelected()) {
+    const smtpResult = await sendInfomaniakBillingEmail({
+      from: payload.from?.trim() || "SportClubEvo Billing <billing@sportclubevo.com>",
+      to: payload.to,
+      replyTo: payload.replyTo,
+      subject: payload.subject,
+      html: payload.html,
+      text: payload.text,
+      attachments: payload.attachments,
+    });
+    return {
+      provider: smtpResult.provider,
+      messageId: smtpResult.messageId,
+      from: smtpResult.from,
     };
   }
 
