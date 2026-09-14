@@ -2,8 +2,9 @@ import { sendMail, type MailAttachment, type MailDeliveryResult } from "@/lib/em
 import { sendInfomaniakBillingEmail } from "./billing-infomaniak-smtp-transport";
 import { isInfomaniakBillingSmtpTransportSelected } from "./billing-email-transport-selection";
 import {
+  type BillingEmailDeliveryIntent,
   billingDeliveryDryRunDelayMs,
-  shouldUseBillingDeliveryDryRunTransport,
+  shouldUseBillingDeliveryDryRunTransportForIntent,
 } from "./billing-delivery-transport-mode";
 
 export type BillingEmailTransportPayload = {
@@ -16,6 +17,8 @@ export type BillingEmailTransportPayload = {
   attachments?: MailAttachment[];
   idempotencyKey?: string;
   simulateFailure?: boolean;
+  /** Defaults to normal (Preview dry-run). Only protected test delivery may opt into live transport. */
+  deliveryIntent?: BillingEmailDeliveryIntent;
 };
 
 export type BillingEmailTransportResult = {
@@ -34,7 +37,8 @@ export class BillingEmailDryRunFailureError extends Error {
 export async function sendBillingEmail(
   payload: BillingEmailTransportPayload,
 ): Promise<BillingEmailTransportResult> {
-  if (shouldUseBillingDeliveryDryRunTransport()) {
+  const deliveryIntent = payload.deliveryIntent ?? "normal";
+  if (shouldUseBillingDeliveryDryRunTransportForIntent(deliveryIntent)) {
     const delayMs = billingDeliveryDryRunDelayMs();
     if (delayMs > 0) {
       await new Promise((resolve) => setTimeout(resolve, delayMs));

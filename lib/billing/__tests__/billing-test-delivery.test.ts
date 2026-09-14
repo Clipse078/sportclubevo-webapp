@@ -129,6 +129,7 @@ describe("billing invoice test delivery", () => {
     expect(mocks.sendBillingEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "billing-test@sportclubevo.test",
+        deliveryIntent: "protected-test",
       }),
     );
   });
@@ -165,6 +166,18 @@ describe("billing invoice test delivery", () => {
     expect(result.messageId).toBe("test-msg-1");
     expect(result.attachmentFilename).toContain("2026-000002");
     expect(result.kind).toBe("BILLING_INVOICE_TEST_DELIVERY");
+
+    const sendPayload = mocks.sendBillingEmail.mock.calls[0]?.[0];
+    expect(sendPayload?.attachments).toHaveLength(3);
+    expect(sendPayload?.subject).toMatch(/^\[TEST DELIVERY\]/);
+    expect(
+      sendPayload?.attachments?.filter((item: { contentType: string }) => item.contentType === "image/png"),
+    ).toHaveLength(2);
+    expect(
+      sendPayload?.attachments?.some(
+        (item: { contentType: string }) => item.contentType === "application/pdf",
+      ),
+    ).toBe(true);
   });
 
   it("rejects when test delivery is disabled", async () => {

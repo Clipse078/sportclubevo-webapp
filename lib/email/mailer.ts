@@ -42,6 +42,8 @@ export type MailAttachment = {
   filename: string;
   content: Buffer;
   contentType: string;
+  /** Inline image Content-ID for `cid:` references in HTML (without angle brackets). */
+  cid?: string;
 };
 
 export type MailMessage = {
@@ -201,7 +203,12 @@ export async function sendMail(message: MailMessage): Promise<MailDeliveryResult
       html: message.html,
       text: message.text,
       replyTo: message.replyTo,
-      attachments: message.attachments,
+      attachments: message.attachments?.map((attachment) => ({
+        filename: attachment.filename,
+        content: attachment.content,
+        contentType: attachment.contentType,
+        contentId: attachment.cid,
+      })),
     },
     message.idempotencyKey ? { idempotencyKey: message.idempotencyKey } : undefined,
   );

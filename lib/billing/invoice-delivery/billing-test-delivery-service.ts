@@ -8,6 +8,7 @@ import {
   buildInvoiceDeliveryEmailContent,
   resolveInvoiceDeliveryLocale,
 } from "./invoice-delivery-email-template";
+import { buildInvoiceDeliveryEmailAttachments } from "./invoice-delivery-email-inline-logos";
 import { buildInvoicePdfAttachmentFilename } from "./invoice-pdf-filename";
 import { resolveBillingEmailIdentity } from "./resolve-billing-email-identity";
 import { requireBillingTestDeliveryRecipient } from "./billing-test-delivery-guards";
@@ -94,14 +95,9 @@ export async function executeBillingInvoiceTestDelivery(
     subject: `[TEST DELIVERY] ${emailContent.subject}`,
     html: emailContent.html,
     text: emailContent.text,
-    attachments: [
-      {
-        filename: attachment.filename,
-        content: attachment.content,
-        contentType: "application/pdf",
-      },
-    ],
+    attachments: buildInvoiceDeliveryEmailAttachments(attachment),
     idempotencyKey: `billing-test-delivery:${invoice.key}:${input.actorUserId}`,
+    deliveryIntent: "protected-test",
   });
 
   return {

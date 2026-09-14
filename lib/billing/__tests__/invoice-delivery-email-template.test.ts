@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildInvoiceDeliveryEmailContent } from "@/lib/billing/invoice-delivery/invoice-delivery-email-template";
+import { buildInvoiceDeliveryEmailAttachments } from "@/lib/billing/invoice-delivery/invoice-delivery-email-inline-logos";
 import { buildInvoicePdfAttachmentFilename } from "@/lib/billing/invoice-delivery/invoice-pdf-filename";
 
 describe("invoice delivery email template", () => {
@@ -19,6 +20,28 @@ describe("invoice delivery email template", () => {
     expect(content.html).toMatch(/215[.,]12/);
     expect(content.text.length).toBeGreaterThan(50);
     expect(content.html).toContain("<!DOCTYPE html>");
+    expect(content.html).toContain('alt="SportClubEvo"');
+    expect(content.html).toContain('alt="Tulip Digital"');
+    expect(content.html).toContain("cid:sportclubevo-invoice-email-logo");
+    expect(content.html).toContain("cid:tulip-digital-invoice-email-logo");
+    expect(content.html).toContain("Rechnungsbetrag");
+    expect(content.html).toContain("Fällig am");
+  });
+
+  it("includes inline logo CID attachments before the PDF", () => {
+    const attachments = buildInvoiceDeliveryEmailAttachments({
+      filename: "SportClubEvo-Rechnung-2026-000002.pdf",
+      content: Buffer.from("%PDF"),
+    });
+
+    expect(attachments).toHaveLength(3);
+    expect(attachments[0].contentType).toBe("image/png");
+    expect(attachments[0].cid).toBe("sportclubevo-invoice-email-logo");
+    expect(attachments[1].contentType).toBe("image/png");
+    expect(attachments[1].cid).toBe("tulip-digital-invoice-email-logo");
+    expect(attachments[2].contentType).toBe("application/pdf");
+    expect(attachments[2].filename).toBe("SportClubEvo-Rechnung-2026-000002.pdf");
+    expect(attachments[0].content.byteLength).toBeGreaterThan(1000);
   });
 
   it("sanitizes attachment filename", () => {
