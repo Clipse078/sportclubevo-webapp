@@ -25,6 +25,9 @@ export type BillingEmailTransportResult = {
   provider: "resend" | "dry-run" | "infomaniak-smtp";
   messageId: string;
   from: string;
+  /** Present when the outbound provider reports SMTP/API acceptance details. */
+  acceptedRecipients?: string[];
+  rejectedRecipients?: string[];
 };
 
 export class BillingEmailDryRunFailureError extends Error {
@@ -68,6 +71,8 @@ export async function sendBillingEmail(
       provider: smtpResult.provider,
       messageId: smtpResult.messageId,
       from: smtpResult.from,
+      acceptedRecipients: smtpResult.acceptedRecipients,
+      rejectedRecipients: smtpResult.rejectedRecipients,
     };
   }
 
