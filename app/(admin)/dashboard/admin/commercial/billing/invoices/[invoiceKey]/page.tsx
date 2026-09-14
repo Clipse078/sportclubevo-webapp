@@ -345,6 +345,7 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
             invoiceKey={invoice.key}
             invoiceNumber={invoice.invoiceNumber}
             grossTotalFormatted={grossFormatted}
+            dueDateFormatted={dueDateFormatted}
             recipientEmail={recipient?.invoiceEmail ?? null}
             canManage={canManage}
             status={invoice.status}

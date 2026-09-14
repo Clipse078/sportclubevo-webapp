@@ -9,13 +9,18 @@ type Props = {
   invoiceKey: string;
   invoiceNumber: string | null;
   grossTotalFormatted: string;
+  dueDateFormatted?: string;
   recipientEmail: string | null;
   canManage: boolean;
   status: string;
   initialDelivery: SerializedInvoiceDeliverySummary | null;
-  /** When true, send/resend controls live in the page header dialog. */
+  /** When true, first-send controls live in the page header dialog; resend stays in Versand. */
   hideSendActions?: boolean;
 };
+
+function pdfAttachmentName(invoiceNumber: string | null): string {
+  return invoiceNumber ? `Rechnung-${invoiceNumber}.pdf` : "Rechnung.pdf";
+}
 
 function deliveryTone(
   aggregateStatus: string,
@@ -44,6 +49,7 @@ export default function NativeBillingInvoiceDeliverySection({
   invoiceKey,
   invoiceNumber,
   grossTotalFormatted,
+  dueDateFormatted,
   recipientEmail,
   canManage,
   status,
@@ -136,9 +142,12 @@ export default function NativeBillingInvoiceDeliverySection({
   const canInteract =
     canManage && Boolean(recipientEmail) && !actionsLocked;
   const showResend = canInteract && hasSuccessfulSend;
-  const showFirstSend = canInteract && !hasSuccessfulSend;
+  const showFirstSend = canInteract && !hasSuccessfulSend && !hideSendActions;
   const showRetryAfterFailure =
-    canInteract && aggregateStatus === "FAILED" && !hasSuccessfulSend;
+    canInteract &&
+    aggregateStatus === "FAILED" &&
+    !hasSuccessfulSend &&
+    !hideSendActions;
 
   return (
     <section className="space-y-3 max-w-3xl">
@@ -234,10 +243,10 @@ export default function NativeBillingInvoiceDeliverySection({
 
         {confirmMode === "resend" ? (
           <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-4 space-y-3">
-            <p className="text-sm font-semibold">Rechnung erneut senden?</p>
+            <p className="text-sm font-semibold">Rechnung erneut senden</p>
             <p className="text-sm text-muted-foreground">
-              Diese Rechnung wurde bereits gesendet. Eine weitere Kopie der finalisierten
-              Rechnung wird per E-Mail versendet.
+              Diese Rechnung wurde bereits versendet. Bitte Empfänger und Betrag kontrollieren.
+              Eine weitere Kopie der finalisierten Rechnung wird per E-Mail versendet.
             </p>
             <dl className="text-sm space-y-1">
               <div className="flex gap-2">
@@ -247,6 +256,20 @@ export default function NativeBillingInvoiceDeliverySection({
               <div className="flex gap-2">
                 <dt className="text-muted-foreground min-w-24">Rechnung:</dt>
                 <dd className="font-medium">{invoiceNumber ?? "—"}</dd>
+              </div>
+              <div className="flex gap-2">
+                <dt className="text-muted-foreground min-w-24">Betrag:</dt>
+                <dd className="font-medium">{grossTotalFormatted}</dd>
+              </div>
+              {dueDateFormatted ? (
+                <div className="flex gap-2">
+                  <dt className="text-muted-foreground min-w-24">Fällig:</dt>
+                  <dd className="font-medium">{dueDateFormatted}</dd>
+                </div>
+              ) : null}
+              <div className="flex gap-2">
+                <dt className="text-muted-foreground min-w-24">Anhang:</dt>
+                <dd className="font-medium">{pdfAttachmentName(invoiceNumber)}</dd>
               </div>
             </dl>
             <div className="flex flex-wrap gap-2">
@@ -264,13 +287,13 @@ export default function NativeBillingInvoiceDeliverySection({
                 disabled={loading}
                 onClick={() => sendInvoice(true)}
               >
-                Erneut senden
+                Rechnung erneut senden
               </button>
             </div>
           </div>
         ) : null}
 
-        {!confirmMode && !hideSendActions ? (
+        {!confirmMode && (showFirstSend || showRetryAfterFailure || showResend) ? (
           <div className="flex flex-wrap gap-2 items-center">
             {showFirstSend ? (
               <button
