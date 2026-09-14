@@ -27,6 +27,7 @@ const communicationSelect = {
   internetMessageId: true,
   inReplyTo: true,
   referencesHeader: true,
+  parentCommunicationId: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -84,6 +85,85 @@ export async function findBillingCommunicationByProviderMessageId(input: {
   return row ? mapRow(row) : null;
 }
 
+export async function findBillingCommunicationByInternetMessageId(
+  internetMessageId: string,
+): Promise<BillingCommunicationRecord | null> {
+  const normalized = internetMessageId.trim();
+  if (!normalized) return null;
+  const row = await prisma.billingCommunication.findFirst({
+    where: {
+      OR: [{ internetMessageId: normalized }, { providerMessageId: normalized }],
+    },
+    select: communicationSelect,
+  });
+  return row ? mapRow(row) : null;
+}
+
+export async function findInboundBillingCommunicationByProviderMessageId(input: {
+  provider: string;
+  providerMessageId: string;
+}): Promise<BillingCommunicationRecord | null> {
+  const row = await prisma.billingCommunication.findFirst({
+    where: {
+      direction: "INBOUND",
+      provider: input.provider,
+      providerMessageId: input.providerMessageId,
+    },
+    select: communicationSelect,
+  });
+  return row ? mapRow(row) : null;
+}
+
+export async function createInboundBillingCommunication(
+  input: {
+    tenantId: string;
+    invoiceId: string | null;
+    billingContractId: string | null;
+    parentCommunicationId: string | null;
+    senderAddress: string;
+    toAddresses: string[];
+    ccAddresses: string[];
+    subject: string | null;
+    textBody: string | null;
+    htmlBody: string | null;
+    receivedAt: Date;
+    provider: string;
+    providerMessageId: string;
+    internetMessageId: string | null;
+    inReplyTo: string | null;
+    referencesHeader: string | null;
+  },
+): Promise<BillingCommunicationRecord> {
+  const row = await prisma.billingCommunication.create({
+    data: {
+      key: randomUUID(),
+      tenantId: input.tenantId,
+      direction: "INBOUND",
+      channel: "EMAIL",
+      status: "RECEIVED",
+      invoiceId: input.invoiceId,
+      billingContractId: input.billingContractId,
+      invoiceDeliveryId: null,
+      parentCommunicationId: input.parentCommunicationId,
+      senderAddress: input.senderAddress,
+      toAddresses: input.toAddresses,
+      ccAddresses: input.ccAddresses,
+      bccAddresses: [],
+      subject: input.subject,
+      textBody: input.textBody,
+      htmlBody: input.htmlBody,
+      receivedAt: input.receivedAt,
+      provider: input.provider,
+      providerMessageId: input.providerMessageId,
+      internetMessageId: input.internetMessageId,
+      inReplyTo: input.inReplyTo,
+      referencesHeader: input.referencesHeader,
+    },
+    select: communicationSelect,
+  });
+  return mapRow(row);
+}
+
 export async function createOutboundBillingCommunication(
   input: {
     tenantId: string;
@@ -97,6 +177,7 @@ export async function createOutboundBillingCommunication(
     sentAt: Date;
     provider: string;
     providerMessageId: string;
+    internetMessageId?: string | null;
   },
 ): Promise<BillingCommunicationRecord> {
   const row = await prisma.billingCommunication.create({
@@ -119,6 +200,7 @@ export async function createOutboundBillingCommunication(
       sentAt: input.sentAt,
       provider: input.provider,
       providerMessageId: input.providerMessageId,
+      internetMessageId: input.internetMessageId ?? null,
     },
     select: communicationSelect,
   });

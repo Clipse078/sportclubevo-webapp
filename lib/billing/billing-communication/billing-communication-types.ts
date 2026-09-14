@@ -28,6 +28,7 @@ export type BillingCommunicationRecord = {
   internetMessageId: string | null;
   inReplyTo: string | null;
   referencesHeader: string | null;
+  parentCommunicationId: string | null;
   createdAt: Date;
   updatedAt: Date;
 };

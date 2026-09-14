@@ -10,6 +10,7 @@ export const EXTERNAL_SIDE_EFFECT_PROVIDERS = [
   "website-revalidation",
   "cron",
   "stripe",
+  "billing-inbound-imap",
 ] as const;
 
 export type ExternalSideEffectProvider =

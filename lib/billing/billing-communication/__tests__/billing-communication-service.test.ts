@@ -65,6 +65,7 @@ const baseCommunication = {
   internetMessageId: null,
   inReplyTo: null,
   referencesHeader: null,
+  parentCommunicationId: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -125,6 +126,7 @@ describe("billing communication service", () => {
           invoiceId: "inv-1",
           billingContractId: "contract-1",
           invoiceDeliveryId: "del-1",
+          internetMessageId: "msg-unique-1",
         }),
       }),
     );

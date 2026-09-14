@@ -4652,47 +4652,96 @@ enum BillingCommunicationStatus {
 
 /// Tenant-scoped billing communication (outbound invoice email today; inbound replies later).
 model BillingCommunication {
-  id                String                        @id @default(cuid())
-  key               String                        @unique
-  tenantId          String
-  direction         BillingCommunicationDirection
-  channel           BillingCommunicationChannel   @default(EMAIL)
-  status            BillingCommunicationStatus
-  invoiceId         String?
-  billingContractId String?
+  id                    String                        @id @default(cuid())
+  key                   String                        @unique
+  tenantId              String
+  direction             BillingCommunicationDirection
+  channel               BillingCommunicationChannel   @default(EMAIL)
+  status                BillingCommunicationStatus
+  invoiceId             String?
+  billingContractId     String?
   /// Links a successful outbound attempt to exactly one communication (idempotent).
-  invoiceDeliveryId String?                       @unique
-  senderAddress     String
-  toAddresses       String[]
-  ccAddresses       String[]                      @default([])
-  bccAddresses      String[]                      @default([])
-  subject           String?
-  textBody          String?
-  htmlBody          String?
-  sentAt            DateTime?
-  receivedAt        DateTime?
-  provider          String?
+  invoiceDeliveryId     String?                       @unique
+  senderAddress         String
+  toAddresses           String[]
+  ccAddresses           String[]                      @default([])
+  bccAddresses          String[]                      @default([])
+  subject               String?
+  textBody              String?
+  htmlBody              String?
+  sentAt                DateTime?
+  receivedAt            DateTime?
+  provider              String?
   /// Provider-assigned message id (SMTP/Resend). Used for deduplication when present.
-  providerMessageId String?
+  providerMessageId     String?
   /// RFC 5322 Message-ID when known (inbound or provider-supplied).
-  internetMessageId String?
+  internetMessageId     String?
   /// RFC 5322 In-Reply-To header value for threading.
-  inReplyTo         String?
+  inReplyTo             String?
   /// RFC 5322 References header (opaque string; space-separated Message-IDs).
-  referencesHeader  String?
-  createdAt         DateTime                      @default(now())
-  updatedAt         DateTime                      @updatedAt
+  referencesHeader      String?
+  /// Reply parent when deterministically matched to an outbound communication.
+  parentCommunicationId String?
+  createdAt             DateTime                      @default(now())
+  updatedAt             DateTime                      @updatedAt
 
-  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  invoice         Invoice?         @relation(fields: [invoiceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  billingContract BillingContract? @relation(fields: [billingContractId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  invoiceDelivery InvoiceDelivery? @relation(fields: [invoiceDeliveryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  tenant              Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  invoice             Invoice?               @relation(fields: [invoiceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  billingContract     BillingContract?       @relation(fields: [billingContractId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  invoiceDelivery     InvoiceDelivery?       @relation(fields: [invoiceDeliveryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  parentCommunication BillingCommunication?  @relation("BillingCommunicationThread", fields: [parentCommunicationId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  childCommunications BillingCommunication[] @relation("BillingCommunicationThread")
 
   @@unique([provider, providerMessageId])
   @@index([tenantId, createdAt])
   @@index([tenantId, status])
   @@index([invoiceId, createdAt])
   @@index([billingContractId])
+  @@index([internetMessageId])
+  @@index([parentCommunicationId])
+}
+
+enum BillingInboundUnresolvedReason {
+  UNKNOWN_TENANT
+  PARSE_FAILED
+  AMBIGUOUS_INVOICE_REFERENCE
+  IDEMPOTENCY_CONFLICT
+}
+
+/// Platform-level queue for billing mailbox messages that cannot be tenant-scoped safely.
+model BillingInboundUnresolvedMessage {
+  id                String                         @id @default(cuid())
+  key               String                         @unique
+  mailboxKey        String
+  provider          String
+  providerMessageId String
+  internetMessageId String?
+  senderAddress     String
+  toAddresses       String[]                       @default([])
+  subject           String?
+  receivedAt        DateTime?
+  reason            BillingInboundUnresolvedReason
+  detail            String?
+  inReplyTo         String?
+  referencesHeader  String?
+  createdAt         DateTime                       @default(now())
+  updatedAt         DateTime                       @updatedAt
+
+  @@unique([provider, providerMessageId])
+  @@index([mailboxKey, createdAt])
+}
+
+/// Incremental IMAP cursor for billing inbound polling (separate from tenant communications).
+model BillingInboundMailboxState {
+  id               String    @id @default(cuid())
+  mailboxKey       String    @unique
+  uidValidity      BigInt?
+  lastProcessedUid BigInt?
+  lastSyncAt       DateTime?
+  lastSyncStatus   String?
+  lastError        String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 
 enum BillingRecurringRunMode {
