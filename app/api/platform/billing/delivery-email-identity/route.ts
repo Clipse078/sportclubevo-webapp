@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { buildBillingEmailIdentityReport } from "@/lib/billing/invoice-delivery/billing-email-identity-report";
-import { shouldUseBillingDeliveryDryRunTransport } from "@/lib/billing/invoice-delivery/billing-delivery-transport-mode";
+import {
+  isBillingProtectedTestDeliveryRealTransportEnabled,
+  shouldUseBillingDeliveryDryRunTransport,
+} from "@/lib/billing/invoice-delivery/billing-delivery-transport-mode";
 import { nativeBillingErrorResponse } from "@/lib/billing/native-billing-api-errors";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requirePlatformApiPermission } from "@/lib/permissions/require-platform-api-permission";
@@ -16,6 +19,7 @@ export async function GET() {
     return NextResponse.json({
       identity,
       deliveryDryRunTransport: shouldUseBillingDeliveryDryRunTransport(),
+      testDeliveryRealTransportEnabled: isBillingProtectedTestDeliveryRealTransportEnabled(),
     });
   } catch (error) {
     return nativeBillingErrorResponse(error);

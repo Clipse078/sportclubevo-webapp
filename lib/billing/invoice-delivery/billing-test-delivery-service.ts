@@ -97,6 +97,7 @@ export async function executeBillingInvoiceTestDelivery(
     text: emailContent.text,
     attachments: buildInvoiceDeliveryEmailAttachments(attachment),
     idempotencyKey: `billing-test-delivery:${invoice.key}:${input.actorUserId}`,
+    deliveryIntent: "protected-test",
   });
 
   return {

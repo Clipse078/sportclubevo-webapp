@@ -129,6 +129,7 @@ describe("billing invoice test delivery", () => {
     expect(mocks.sendBillingEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "billing-test@sportclubevo.test",
+        deliveryIntent: "protected-test",
       }),
     );
   });
