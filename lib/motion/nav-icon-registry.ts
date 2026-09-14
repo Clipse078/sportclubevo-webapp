@@ -13,6 +13,8 @@ const NAV_LABEL_TO_ICON_KEY: Record<string, NavIconKey> = {
   Integrations: "integrations",
   "Access & Security": "access-security",
   Operations: "operations",
+  "Runtime & Deployment": "operations",
+  "Platform Runtime Deployment": "operations",
   Berechtigungen: "berechtigungen",
   Benutzerverwaltung: "benutzerverwaltung",
   Rollenverwaltung: "rollenverwaltung",

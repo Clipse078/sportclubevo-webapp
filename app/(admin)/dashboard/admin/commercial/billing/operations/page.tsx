@@ -4,7 +4,8 @@ import BillingWorkspaceContent from "@/components/admin/billing/shell/BillingWor
 import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import BillingRecurringAutomationPanel from "@/components/admin/billing/BillingRecurringAutomationPanel";
-import { getRecurringBillingAutomationStatus } from "@/lib/billing/recurring/recurring-billing-service";
+import CommercialBillingWorkspaceHint from "@/components/admin/billing/shell/CommercialBillingWorkspaceHint";
+import { getRecurringBillingAutomationStatus } from "@/lib/billing/recurring/recurring-billing-status";
 import { getBillingOperationsDiagnostics } from "@/lib/billing/operations/billing-operations-diagnostics";
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -37,8 +38,12 @@ export default async function BillingOperationsPage() {
       <div className="space-y-6">
         <BillingPageHeader
           title="Operations"
-          description="Erweiterte Diagnose für Deployment, Billing-Daten und Provider — ohne Geheimnisse oder vollständige Kontodaten."
+          description="Commercial Abrechnung — Diagnose, Automatisierung und Provider-Status (nicht Plattform Runtime)."
         />
+
+        <CommercialBillingWorkspaceHint />
+
+        <BillingRecurringAutomationPanel initialAutomation={automation} />
 
         <BillingPanel
           title={`Bereitschaft: ${diagnostics.readiness.result}`}
@@ -104,8 +109,6 @@ export default async function BillingOperationsPage() {
             </dl>
           </BillingPanel>
         </div>
-
-        <BillingRecurringAutomationPanel initialAutomation={automation} />
 
         <BillingPanel title="Provider-Status">
           <dl className="grid gap-0 sm:grid-cols-3">

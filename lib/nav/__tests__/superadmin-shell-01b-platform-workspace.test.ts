@@ -11,6 +11,7 @@ const PLATFORM_SUPERADMIN_KEYS = [
   PERMISSIONS.TENANTS_VIEW,
   PERMISSIONS.TENANTS_MANAGE,
   PERMISSIONS.BILLING_VIEW,
+  PERMISSIONS.BILLING_MANAGE,
   PERMISSIONS.USERS_MANAGE,
 ] as const;
 
@@ -31,6 +32,7 @@ describe("SCE-SUPERADMIN-SHELL-01B — platform superadmin navigation", () => {
     expect(labels).toContain("Rechnungen");
     expect(labels).toContain("Integrations");
     expect(labels).toContain("Operations");
+    expect(labels).toContain("Runtime & Deployment");
   });
 
   it("hides club operational modules for platform workspace", () => {
@@ -78,6 +80,7 @@ describe("SCE-SUPERADMIN-SHELL-01B — platform superadmin navigation", () => {
       "Clubs",
       "Access & Security",
       "Operations",
+      "Runtime & Deployment",
       "Berechtigungen",
     ]) {
       expect(() => getNavIconKey(label)).not.toThrow();

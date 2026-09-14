@@ -31,6 +31,32 @@ describe("SCE-SUPERADMIN-BILLING-01D — Commercial billing navigation", () => {
     ).toBe(true);
   });
 
+  it("shows Commercial billing Operations for billing.manage", () => {
+    const sections = getVisibleNavSections(
+      [PERMISSIONS.BILLING_VIEW, PERMISSIONS.BILLING_MANAGE],
+      "platform",
+    );
+    const commercial = sections
+      .find((s) => s.sectionLabel === "Platform")
+      ?.items.find((i) => i.key === "platform-commercial");
+    const operations = commercial?.children?.find(
+      (c) => c.key === "platform-commercial-billing-operations",
+    );
+    expect(operations?.href).toBe("/dashboard/admin/commercial/billing/operations");
+    expect(operations?.label).toBe("Operations");
+  });
+
+  it("labels platform runtime separately from Commercial billing Operations", () => {
+    const sections = getVisibleNavSections(
+      [PERMISSIONS.BILLING_VIEW, PERMISSIONS.BILLING_MANAGE, PERMISSIONS.USERS_MANAGE],
+      "platform",
+    );
+    const platform = sections.find((s) => s.sectionLabel === "Platform");
+    const runtime = platform?.items.find((i) => i.key === "platform-operations");
+    expect(runtime?.label).toBe("Runtime & Deployment");
+    expect(runtime?.href).toBe("/dashboard/runtime");
+  });
+
   it("hides Commercial billing for tenant administration permissions only", () => {
     const sections = getVisibleNavSections(TENANT_ADMINISTRATION_PERMISSIONS);
     const flat = sections.flatMap((s) => s.items);

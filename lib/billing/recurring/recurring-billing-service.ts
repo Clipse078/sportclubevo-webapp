@@ -4,7 +4,6 @@ import { logAction } from "@/lib/audit/log-action";
 import { allocateUniqueBillingKey } from "@/lib/billing/billing-business-key";
 import { sendNativeInvoiceEmail } from "@/lib/billing/invoice-delivery/invoice-delivery-service";
 import { createInvoicePaymentInstruction } from "@/lib/billing/invoice-payment-instruction-service";
-import { generateNativeInvoicePdfBytes } from "@/lib/billing/invoice-pdf-service";
 import { resolveInvoiceRecipientProfileForContract } from "@/lib/billing/invoice-recipient-profile-resolution";
 import {
   createDraftInvoiceFromContract,
@@ -29,19 +28,14 @@ import {
   resolveDueBillableMonthlyPeriod,
 } from "./billing-period";
 import {
-  describeRecurringBillingScheduleHint,
   isRecurringBillingCronAutoDeliverEnabled,
-  RECURRING_BILLING_CRON_PATH,
-  RECURRING_BILLING_CRON_SCHEDULE_UTC,
 } from "./recurring-billing-config";
 import {
   createBillingRecurringRunRecord,
-  findLatestBillingRecurringRun,
   findNonVoidInvoiceForContractPeriod,
   listActiveBillingContractsForRecurring,
 } from "./recurring-billing-repository";
 import type {
-  RecurringBillingAutomationStatus,
   RecurringBillingContractResult,
   RecurringBillingRunSummary,
   RunRecurringBillingInput,
@@ -359,6 +353,7 @@ async function processContract(
 
     const finalized = await finalizeInvoice(invoice.key, actorUserId);
     await createInvoicePaymentInstruction(finalized.key, actorUserId);
+    const { generateNativeInvoicePdfBytes } = await import("@/lib/billing/invoice-pdf-service");
     await generateNativeInvoicePdfBytes(finalized.key);
 
     let outcome: RecurringBillingContractResult["outcome"] = "CREATED_NOT_SENT";
@@ -484,45 +479,4 @@ export async function runAutomaticRecurringBillingCron(): Promise<RunRecurringBi
   });
 }
 
-function parseStoredSummary(value: unknown): RecurringBillingRunSummary | null {
-  if (!value || typeof value !== "object") return null;
-  return value as RecurringBillingRunSummary;
-}
-
-export async function getRecurringBillingAutomationStatus(): Promise<RecurringBillingAutomationStatus> {
-  const latest = await findLatestBillingRecurringRun();
-  const cronSecretConfigured = Boolean(process.env.CRON_SECRET?.trim());
-
-  return {
-    scheduler: {
-      enabled: cronSecretConfigured,
-      cronPath: RECURRING_BILLING_CRON_PATH,
-      scheduleUtc: RECURRING_BILLING_CRON_SCHEDULE_UTC,
-      nextEvaluationHint: describeRecurringBillingScheduleHint(),
-    },
-    lastRun: latest
-      ? {
-          key: latest.key,
-          mode: latest.mode,
-          trigger: latest.trigger,
-          status: latest.status,
-          startedAt: latest.startedAt.toISOString(),
-          completedAt: latest.completedAt?.toISOString() ?? null,
-          asOfDate: formatBillingDateOnly(latest.asOfDate),
-          summary: parseStoredSummary(latest.summaryJson) ?? {
-            mode: latest.mode,
-            trigger: latest.trigger,
-            asOfDate: formatBillingDateOnly(latest.asOfDate),
-            deliverAutomatically: latest.deliverAutomatically,
-            contractsEvaluated: 0,
-            invoicesCreated: 0,
-            invoicesSent: 0,
-            skipped: 0,
-            blocked: 0,
-            failed: 0,
-            results: [],
-          },
-        }
-      : null,
-  };
-}
+export { getRecurringBillingAutomationStatus } from "./recurring-billing-status";
