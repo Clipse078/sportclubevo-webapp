@@ -46,6 +46,11 @@ import { buildInvoiceDeliveryEmailAttachments } from "./invoice-delivery-email-i
 import { buildInvoicePdfAttachmentFilename } from "./invoice-pdf-filename";
 import { buildInvoiceDeliverySummary } from "./invoice-delivery-summary";
 import { BillingSmtpConfigurationError } from "./billing-smtp-config";
+import {
+  assertRealInvoiceDeliveryTransportPermitted,
+  assertRealInvoiceDeliveryTransportResult,
+  BillingRealInvoiceDeliveryRejectedError,
+} from "./billing-real-invoice-delivery-validation";
 import { resolveBillingEmailIdentity } from "./resolve-billing-email-identity";
 
 const recipientEmailSchema = z.string().email();
@@ -171,6 +176,18 @@ function mapDeliveryFailure(error: unknown): { code: string; message: string; us
       userMessage: "Die Rechnung konnte nicht gesendet werden.",
     };
   }
+  if (error instanceof BillingRealInvoiceDeliveryRejectedError) {
+    const userMessage =
+      error.code === "DELIVERY_TRANSPORT_NOT_LIVE" ||
+      error.code === "DELIVERY_DRY_RUN"
+        ? "Der Rechnungsversand ist in dieser Umgebung nicht für den echten Versand freigeschaltet. Bitte wenden Sie sich an den SportClubEvo-Support."
+        : "Die Rechnung konnte nicht gesendet werden: Der E-Mail-Anbieter hat den Empfänger nicht akzeptiert.";
+    return {
+      code: error.code,
+      message: error.message,
+      userMessage,
+    };
+  }
   return {
     code: "PROVIDER_ERROR",
     message: error instanceof Error ? error.message : "Unknown delivery error",
@@ -207,6 +224,20 @@ export async function sendNativeInvoiceEmail(
   }
 
   const context = await validateInvoiceForDelivery(input.invoiceKey);
+  const acceptanceSimulatedFailure =
+    input.simulateFailure === true &&
+    isBillingDeliveryAcceptanceSimulateFailureAllowed();
+  if (!acceptanceSimulatedFailure) {
+    try {
+      assertRealInvoiceDeliveryTransportPermitted();
+    } catch (error) {
+      if (error instanceof BillingRealInvoiceDeliveryRejectedError) {
+        const failure = mapDeliveryFailure(error);
+        throw new NativeBillingValidationError(failure.userMessage);
+      }
+      throw error;
+    }
+  }
   const attempts = await listInvoiceDeliveriesForInvoiceId(context.invoice.id);
   await assertSendAllowed(context.invoice.id, input.resend, attempts);
 
@@ -283,7 +314,10 @@ export async function sendNativeInvoiceEmail(
       attachments: buildInvoiceDeliveryEmailAttachments(attachment),
       idempotencyKey: `invoice-delivery:${delivery.key}`,
       simulateFailure: input.simulateFailure === true,
+      deliveryIntent: "normal",
     });
+
+    assertRealInvoiceDeliveryTransportResult(transportResult, context.recipientEmail);
 
     const sent = await markInvoiceDeliverySent({
       deliveryId: delivery.id,

@@ -57,7 +57,11 @@ describe("billing Infomaniak SMTP transport", () => {
 
   it("configures STARTTLS on port 587", async () => {
     stubCompleteSmtpEnv();
-    sendMailMock.mockResolvedValue({ messageId: "<msg@test>" });
+    sendMailMock.mockResolvedValue({
+      messageId: "<msg@test>",
+      accepted: ["operator@test.example"],
+      rejected: [],
+    });
 
     const { sendBillingEmail } = await import("../invoice-delivery/billing-email-transport");
 
@@ -86,7 +90,11 @@ describe("billing Infomaniak SMTP transport", () => {
 
   it("returns infomaniak-smtp provider metadata", async () => {
     stubCompleteSmtpEnv();
-    sendMailMock.mockResolvedValue({ messageId: "<smtp-123>" });
+    sendMailMock.mockResolvedValue({
+      messageId: "<smtp-123>",
+      accepted: ["operator@test.example"],
+      rejected: [],
+    });
 
     const { sendBillingEmail } = await import("../invoice-delivery/billing-email-transport");
     const result = await sendBillingEmail({
@@ -141,6 +149,26 @@ describe("billing Infomaniak SMTP transport", () => {
     const identity = await resolveBillingEmailIdentity();
     expect(identity.from).toBe("SportClubEvo Billing <billing@sportclubevo.com>");
     expect(identity.replyTo).toBe("billing@sportclubevo.com");
+  });
+
+  it("fails when SMTP rejects the intended recipient", async () => {
+    stubCompleteSmtpEnv();
+    sendMailMock.mockResolvedValue({
+      messageId: "<smtp-reject>",
+      accepted: [],
+      rejected: ["operator@test.example"],
+    });
+
+    const { sendBillingEmail } = await import("../invoice-delivery/billing-email-transport");
+
+    await expect(
+      sendBillingEmail({
+        to: "operator@test.example",
+        subject: "Invoice",
+        html: "<p>Hi</p>",
+        text: "Hi",
+      }),
+    ).rejects.toThrow(/rejected/i);
   });
 
   it("readiness never exposes SMTP password", async () => {

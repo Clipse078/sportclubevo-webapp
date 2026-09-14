@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   NativeBillingConflictError,
   NativeBillingValidationError,
@@ -126,6 +126,10 @@ function deliveryRow(overrides: Record<string, unknown> = {}) {
 
 describe("invoice delivery service", () => {
   beforeEach(() => {
+    vi.stubEnv("VERCEL", "1");
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("APP_ENV", "stage");
+    vi.stubEnv("NODE_ENV", "production");
     vi.clearAllMocks();
     mocks.findInvoiceByKey.mockResolvedValue(finalizedInvoice);
     mocks.findInvoiceRecipientSnapshot.mockResolvedValue(recipientWithEmail);
@@ -150,6 +154,7 @@ describe("invoice delivery service", () => {
       provider: "resend",
       messageId: "msg-123",
       from: "SportClubEvo Billing <noreply@mail.sportclubevo.com>",
+      acceptedRecipients: ["billing@example-club.test"],
     });
     mocks.markInvoiceDeliverySent.mockImplementation(async (input) =>
       deliveryRow({
@@ -170,6 +175,10 @@ describe("invoice delivery service", () => {
         errorMessage: input.errorMessage,
       }),
     );
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("cannot send DRAFT invoice", async () => {
@@ -204,12 +213,13 @@ describe("invoice delivery service", () => {
     expect(mocks.sendBillingEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "billing@example-club.test",
-        attachments: [
+        deliveryIntent: "normal",
+        attachments: expect.arrayContaining([
           expect.objectContaining({
             filename: "SportClubEvo-Rechnung-2026-000002.pdf",
             contentType: "application/pdf",
           }),
-        ],
+        ]),
       }),
     );
     expect(mocks.logAction).toHaveBeenCalledWith(

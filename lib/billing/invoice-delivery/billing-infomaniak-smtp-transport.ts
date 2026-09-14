@@ -20,6 +20,8 @@ export type InfomaniakSmtpSendResult = {
   provider: "infomaniak-smtp";
   messageId: string;
   from: string;
+  acceptedRecipients: string[];
+  rejectedRecipients: string[];
 };
 
 function createTransport(config: BillingSmtpConfig) {
@@ -86,10 +88,31 @@ export async function sendInfomaniakBillingEmail(
         ? info.messageId.trim()
         : `infomaniak-smtp-${Date.now()}`;
 
+    const acceptedRecipients = Array.isArray(info.accepted)
+      ? info.accepted.map((entry) => String(entry))
+      : [];
+    const rejectedRecipients = Array.isArray(info.rejected)
+      ? info.rejected.map((entry) => String(entry))
+      : [];
+
+    if (rejectedRecipients.length > 0) {
+      throw new Error("Infomaniak SMTP rejected one or more recipients.");
+    }
+    if (
+      acceptedRecipients.length > 0 &&
+      !acceptedRecipients.some(
+        (entry) => entry.toLowerCase() === payload.to.trim().toLowerCase(),
+      )
+    ) {
+      throw new Error("Infomaniak SMTP did not accept the intended recipient.");
+    }
+
     return {
       provider: "infomaniak-smtp",
       messageId,
       from: payload.from,
+      acceptedRecipients,
+      rejectedRecipients,
     };
   } catch (error) {
     throw new Error(sanitizeSmtpError(error));
