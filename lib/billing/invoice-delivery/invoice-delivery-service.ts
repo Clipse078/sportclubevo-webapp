@@ -44,6 +44,7 @@ import type {
 } from "./invoice-delivery-types";
 import { buildInvoicePdfAttachmentFilename } from "./invoice-pdf-filename";
 import { buildInvoiceDeliverySummary } from "./invoice-delivery-summary";
+import { BillingSmtpConfigurationError } from "./billing-smtp-config";
 import { resolveBillingEmailIdentity } from "./resolve-billing-email-identity";
 
 const recipientEmailSchema = z.string().email();
@@ -132,6 +133,13 @@ function mapDeliveryFailure(error: unknown): { code: string; message: string; us
       code: "MAIL_NOT_CONFIGURED",
       message: error.message,
       userMessage: "Der E-Mail-Versand ist derzeit nicht konfiguriert.",
+    };
+  }
+  if (error instanceof BillingSmtpConfigurationError) {
+    return {
+      code: "MAIL_NOT_CONFIGURED",
+      message: error.message,
+      userMessage: "Der Rechnungs-E-Mail-Versand (SMTP) ist derzeit nicht konfiguriert.",
     };
   }
   if (error instanceof MailAttachmentPreflightError) {
