@@ -2,6 +2,7 @@ import { ImapFlow } from "imapflow";
 import type { BillingImapConfig } from "./billing-imap-config";
 import type { BillingImapClient, BillingImapFetchBatch } from "./billing-imap-client";
 import type { BillingImapFetchedMessage } from "./billing-inbound-types";
+import { pickBillingImapCandidateUids } from "./billing-imap-candidate-uids";
 
 export class ImapFlowBillingImapClient implements BillingImapClient {
   async fetchNewInboxMessages(input: {
@@ -39,16 +40,33 @@ export class ImapFlowBillingImapClient implements BillingImapClient {
       }
 
       const rangeStart = lastUid + 1;
-      const range = `${rangeStart}:*`;
+      const searchResult = await client.search({ uid: `${rangeStart}:*` }, { uid: true });
+      if (searchResult === false) {
+        throw new Error("IMAP UID SEARCH failed");
+      }
+
+      const candidateUids = pickBillingImapCandidateUids(
+        searchResult ?? [],
+        lastUid,
+        input.batchSize,
+      );
+
+      if (candidateUids.length === 0) {
+        return { uidValidity, messages: [], highestUid: null };
+      }
+
       const messages: BillingImapFetchedMessage[] = [];
       let highestUid: number | null = null;
 
-      for await (const msg of client.fetch(range, {
-        uid: true,
-        source: true,
-      })) {
+      for await (const msg of client.fetch(
+        candidateUids,
+        {
+          uid: true,
+          source: true,
+        },
+        { uid: true },
+      )) {
         if (!msg.uid || !msg.source) continue;
-        if (messages.length >= input.batchSize) break;
         highestUid = msg.uid;
         messages.push({
           uid: msg.uid,
@@ -57,6 +75,8 @@ export class ImapFlowBillingImapClient implements BillingImapClient {
           rawSource: Buffer.isBuffer(msg.source) ? msg.source : Buffer.from(msg.source),
         });
       }
+
+      messages.sort((a, b) => a.uid - b.uid);
 
       return { uidValidity, messages, highestUid };
     } finally {

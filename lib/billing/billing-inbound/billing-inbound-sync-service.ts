@@ -16,6 +16,7 @@ import {
   requireBillingImapConfig,
 } from "./billing-imap-config";
 import { createBillingImapClient } from "./billing-imap-client";
+import { formatBillingImapSyncError } from "./billing-imap-sync-error";
 
 function isBillingInboundImapConfigured(): boolean {
   const readiness = getBillingImapConfigReadiness();
@@ -147,9 +148,7 @@ export async function runBillingInboundImapSync(): Promise<BillingInboundSyncSum
       lastError: null,
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message.replace(/pass[^\s]*/gi, "[redacted]").slice(0, 500)
-        : "sync failed";
+    const message = formatBillingImapSyncError(error);
     await upsertBillingInboundMailboxState({
       mailboxKey: BILLING_INBOUND_MAILBOX_KEY,
       uidValidity,
