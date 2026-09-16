@@ -10,7 +10,7 @@
  * flagged as a conflict with itself.
  */
 
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TrainingSessionAllocationEditor } from "@/components/admin/training/TrainingSessionAllocationEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
@@ -81,16 +81,19 @@ describe("TrainingSessionAllocationEditor — RESOURCE-AVAILABILITY-UX-01 availa
       />,
     );
 
-    const select = await screen.findByTestId("training-session-allocation-add-pitch-hall-select");
+    fireEvent.click(await screen.findByTestId("training-session-allocation-add-pitch-hall-select"));
 
     await waitFor(() => {
-      const optionTexts = within(select).getAllByRole("option").map((o) => o.textContent);
-      expect(optionTexts.some((t) => t?.includes("Feld A ganz") && t?.includes("Frei"))).toBe(true);
-      expect(
-        optionTexts.some(
-          (t) => t?.includes("Feld B halb West") && t?.includes("Belegt") && t?.includes("Match vs. FC Muttenz"),
-        ),
-      ).toBe(true);
+      expect(screen.getByTestId("training-session-allocation-add-pitch-hall-option-res-pitch-a").textContent).toMatch(
+        /Feld A ganz/,
+      );
+      expect(screen.getByTestId("training-session-allocation-add-pitch-hall-option-res-pitch-a").textContent).toMatch(
+        /Frei/i,
+      );
+      const occupied = screen.getByTestId("training-session-allocation-add-pitch-hall-option-res-pitch-b").textContent;
+      expect(occupied).toMatch(/Feld B halb West/);
+      expect(occupied).toMatch(/Belegt/i);
+      expect(occupied).toMatch(/Match vs\. FC Muttenz/);
     });
   });
 

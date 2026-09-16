@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -10,7 +9,8 @@ import { TrainingSessionNotFoundError } from "@/lib/training/errors";
 import { listAllocationsByTrainingSeries } from "@/lib/training/training-allocation-service";
 import { listAllocationsByTrainingSession } from "@/lib/training/session-allocation-service";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import TrainingCenterShell from "@/components/admin/training/TrainingCenterShell";
+import { SectionCard } from "@/components/ui/page";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import TrainingSessionEditForm from "@/components/admin/training/TrainingSessionEditForm";
 import { TrainingSessionAllocationEditor } from "@/components/admin/training/TrainingSessionAllocationEditor";
@@ -25,6 +25,16 @@ function formatWallTime(iso: string, timezone: string): string {
     hour12: false,
     timeZone: timezone,
   }).format(new Date(iso));
+}
+
+function formatHeaderDate(date: string, locale: string, timezone: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: timezone,
+  }).format(new Date(`${date}T12:00:00.000Z`));
 }
 
 export default async function TrainingSessionEditPage({ params }: Props) {
@@ -47,9 +57,6 @@ export default async function TrainingSessionEditPage({ params }: Props) {
     throw err;
   }
 
-  // Cancelled/inactive occurrences have nothing to edit — editing a
-  // recurrence slot that is no longer a genuine SCHEDULED occurrence would
-  // silently do nothing operationally useful (see session-reschedule-service.ts).
   if (trainingSession.status !== "SCHEDULED") notFound();
 
   const locale = tenantContext.locale ?? "de-CH";
@@ -81,25 +88,22 @@ export default async function TrainingSessionEditPage({ params }: Props) {
     .filter((fg) => fg.resources.length > 0);
 
   const dayHref = `/dashboard/training?tab=kalender&view=day&day=${trainingSession.date}`;
+  const headerDate = formatHeaderDate(trainingSession.date, locale, trainingSession.timezone);
 
   return (
     <ToastProvider>
-      <div className="max-w-[900px] space-y-6">
-        <Link
-          href={dayHref}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--text-2)] transition hover:text-[var(--foreground)]"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Zurück zum Tag
-        </Link>
-
-        <AdminSectionHeader
-          eyebrow="TrainingCenter · Einzeltraining bearbeiten"
-          title={`${trainingSession.teamName} · ${trainingSession.trainingSeriesTitle}`}
-          description="Änderungen gelten ausschliesslich für dieses eine Training. Die Trainingsserie und alle anderen Termine bleiben unverändert."
-        />
-
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <TrainingCenterShell
+        variant="editor"
+        activeTab="kalender"
+        title="Einzeltraining bearbeiten"
+        description={`${trainingSession.teamName} · ${headerDate}`}
+        headerActions={
+          <Link href={dayHref} className="fca-button-secondary text-sm">
+            Zurück zum Tag
+          </Link>
+        }
+      >
+        <SectionCard>
           <TrainingSessionEditForm
             sessionId={trainingSession.id}
             canManage={canManage}
@@ -113,9 +117,12 @@ export default async function TrainingSessionEditPage({ params }: Props) {
             timezone={trainingSession.timezone}
             locale={locale}
           />
-        </div>
+        </SectionCard>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <SectionCard title="Ressourcen">
+          <p className="mb-4 text-xs text-[var(--muted)]">
+            Änderungen gelten nur für dieses Training.
+          </p>
           <TrainingSessionAllocationEditor
             sessionId={trainingSession.id}
             initialAllocations={sessionAllocations}
@@ -125,8 +132,8 @@ export default async function TrainingSessionEditPage({ params }: Props) {
             sessionStartAt={trainingSession.startAt}
             sessionEndAt={trainingSession.endAt}
           />
-        </div>
-      </div>
+        </SectionCard>
+      </TrainingCenterShell>
     </ToastProvider>
   );
 }

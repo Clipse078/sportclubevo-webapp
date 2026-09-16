@@ -11,6 +11,7 @@ import PlanningWorkflowActionsClient from "@/components/admin/shared/PlanningWor
 import PlanningWorkflowBadge from "@/components/admin/shared/PlanningWorkflowBadge";
 import { PopoverContent } from "@/components/ui/Popover";
 import { cn } from "@/lib/cn";
+import { SeriesLifecycleBadge } from "@/components/admin/training/training-center-ui";
 import {
   buildTrainingSeriesEditHref,
   TRAINING_SERIES_COCKPIT_GRID_CLASS,
@@ -36,28 +37,6 @@ function formatDate(iso: string | null): string | null {
     month: "2-digit",
     year: "numeric",
   });
-}
-
-function statusBadgeClasses(status: CockpitRow["status"]): string {
-  switch (status) {
-    case "ACTIVE":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
-    case "INACTIVE":
-      return "border-amber-200 bg-amber-50 text-amber-700";
-    case "ARCHIVED":
-      return "border-slate-200 bg-slate-100 text-slate-500";
-  }
-}
-
-function statusLabel(status: CockpitRow["status"]): string {
-  switch (status) {
-    case "ACTIVE":
-      return "Aktiv";
-    case "INACTIVE":
-      return "Inaktiv";
-    case "ARCHIVED":
-      return "Archiviert";
-  }
 }
 
 function ResourceQuickEdit({
@@ -429,14 +408,7 @@ export default function TrainingSeriesCockpitRow({
         className="flex min-h-5 flex-col items-start justify-center gap-0.5"
         data-testid={`training-series-cockpit-col-status-${row.rowKey}`}
       >
-        <span
-          className={cn(
-            "inline-flex h-5 items-center rounded-full border px-2 text-[0.62rem] font-semibold",
-            statusBadgeClasses(row.status),
-          )}
-        >
-          {statusLabel(row.status)}
-        </span>
+        <SeriesLifecycleBadge status={row.status} />
         {(row.planningStage === "DRAFT" || row.planningStage === "SUBMITTED" ||
           (row.planningStage === "APPROVED" && !isCoordinator)) && (
           <PlanningWorkflowBadge stage={row.planningStage} size="sm" />
@@ -454,7 +426,7 @@ export default function TrainingSeriesCockpitRow({
         {editable ? (
           <Link
             href={buildTrainingSeriesEditHref(row.seriesId)}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)] bg-white text-[var(--foreground)] hover:bg-[var(--surface-2)]"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] hover:bg-[var(--surface-2)]"
             aria-label="Serie bearbeiten"
             data-testid={`training-series-cockpit-edit-${row.rowKey}`}
           >
@@ -472,7 +444,7 @@ export default function TrainingSeriesCockpitRow({
               ref={menuAnchorRef}
               type="button"
               onClick={() => setMenuOpen((value) => !value)}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)] bg-white text-[var(--foreground)] hover:bg-[var(--surface-2)]"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] hover:bg-[var(--surface-2)]"
               aria-label="Weitere Aktionen"
               data-testid={`training-series-cockpit-menu-${row.rowKey}`}
             >

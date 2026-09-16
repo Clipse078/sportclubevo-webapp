@@ -4,16 +4,20 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarClock, Loader2, RotateCcw, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { SceTimeField } from "@/components/admin/shared/SceTimeField";
+import {
+  trainingCenterFieldClass,
+  trainingCenterLabelClass,
+  trainingCenterSectionTitleClass,
+} from "@/components/admin/training/training-center-ui";
 
 type Props = {
   sessionId: string;
   canManage: boolean;
   isRescheduled: boolean;
-  /** Effective (currently displayed/used) values — reflect any existing override. */
   effectiveDate: string;
   effectiveStartTime: string;
   effectiveEndTime: string;
-  /** Canonical TrainingSeries-derived defaults, shown as reference. */
   originalDate: string;
   originalStartTime: string;
   originalEndTime: string;
@@ -32,13 +36,6 @@ function formatDateLabel(date: string, locale: string, timezone: string): string
   }).format(parsed);
 }
 
-/**
- * TRAININGCENTER-02 — occurrence-level date/time editor for ONE canonical
- * TrainingSession. Submits the full effective schedule to
- * PATCH /api/training-sessions/[sessionId]/reschedule, which sets (or, when
- * it matches the series default exactly, clears) this occurrence's
- * override. The parent TrainingSeries recurrence is never touched.
- */
 export default function TrainingSessionEditForm({
   sessionId,
   canManage,
@@ -100,70 +97,72 @@ export default function TrainingSessionEditForm({
     setEndTime(originalEndTime);
   }
 
+  const seriesBaseline = `${formatDateLabel(originalDate, locale, timezone).split(",")[0] ?? originalDate} · ${originalStartTime}–${originalEndTime}`;
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-testid="training-session-edit-form">
       <div>
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-          <CalendarClock size={18} className="text-gray-400" aria-hidden />
+        <h2 className={trainingCenterSectionTitleClass}>
+          <CalendarClock className="mr-2 inline h-4 w-4 text-[var(--muted)]" aria-hidden />
           Datum &amp; Zeit
         </h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Serienstandard: {formatDateLabel(originalDate, locale, timezone)}, {originalStartTime}–{originalEndTime} (
-          {timezone}).
+        <p className="mt-1 text-sm text-[var(--text-2)]">
+          Serienstandard: {seriesBaseline} ({timezone})
         </p>
-        {isRescheduled && (
-          <p className="mt-1 text-sm font-medium text-blue-700" data-testid="training-session-edit-rescheduled-note">
+        {isRescheduled ? (
+          <p className="mt-1 text-sm text-[var(--muted)]" data-testid="training-session-edit-rescheduled-note">
             Dieses Training wurde für diesen Termin bereits angepasst.
           </p>
-        )}
+        ) : null}
+        <p className="mt-2 text-xs text-[var(--muted)]">
+          Änderungen gelten nur für dieses Training.
+        </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-gray-700">Datum</span>
+        <label className="block">
+          <span className={trainingCenterLabelClass}>Datum</span>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
             disabled={!canManage || saving}
             data-testid="training-session-edit-date"
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+            className={trainingCenterFieldClass}
           />
         </label>
 
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-gray-700">Beginn</span>
-          <input
-            type="time"
+        <label className="block">
+          <span className={trainingCenterLabelClass}>Beginn</span>
+          <SceTimeField
             value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
+            onChange={setStartTime}
             disabled={!canManage || saving}
-            data-testid="training-session-edit-start-time"
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+            testId="training-session-edit-start-time"
+            aria-label="Beginn"
           />
         </label>
 
-        <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-gray-700">Ende</span>
-          <input
-            type="time"
+        <label className="block">
+          <span className={trainingCenterLabelClass}>Ende</span>
+          <SceTimeField
             value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
+            onChange={setEndTime}
             disabled={!canManage || saving}
-            data-testid="training-session-edit-end-time"
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+            testId="training-session-edit-end-time"
+            aria-label="Ende"
           />
         </label>
       </div>
 
-      {canManage && (
-        <div className="flex flex-wrap items-center gap-3">
+      {canManage ? (
+        <div className="flex flex-wrap items-center gap-3 border-t border-[var(--border)] pt-4">
           <button
             type="button"
             onClick={handleSave}
             disabled={saving}
             data-testid="training-session-edit-save"
-            className="fca-button-primary"
+            className="fca-button-primary inline-flex items-center gap-2"
           >
             {saving ? (
               <>
@@ -183,13 +182,13 @@ export default function TrainingSessionEditForm({
             onClick={handleUseSeriesDefault}
             disabled={saving}
             data-testid="training-session-edit-use-default"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-white px-3.5 py-2 text-sm font-semibold text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="fca-button-secondary inline-flex items-center gap-1.5 text-sm"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            Serien-Standard verwenden
+            Serienstandard verwenden
           </button>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

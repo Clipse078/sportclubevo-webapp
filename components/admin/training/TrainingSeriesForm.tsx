@@ -3,8 +3,18 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, CheckCircle2, Users } from "lucide-react";
+import { Loader2, CheckCircle2, Users, MoreHorizontal } from "lucide-react";
 import type { Weekday } from "@/lib/training/types";
+import { SectionCard } from "@/components/ui/page/SectionCard";
+import { SceTimeField } from "@/components/admin/shared/SceTimeField";
+import {
+  trainingCenterFieldClass,
+  trainingCenterHelperClass,
+  trainingCenterLabelClass,
+  trainingCenterSectionTitleClass,
+} from "@/components/admin/training/training-center-ui";
+import { TRAINING_CENTER_EDITOR_MAX_CLASS } from "@/lib/training/training-center-layout";
+import { cn } from "@/lib/cn";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -33,6 +43,10 @@ type Props = {
   seriesId?: string;
   teamSeasons: TeamSeasonOption[];
   defaultValues?: TrainingSeriesFormDefaultValues;
+  /** Integrated resource editor (series edit page). */
+  resourcesSection?: React.ReactNode;
+  /** Danger zone (permanent delete). */
+  dangerSection?: React.ReactNode;
 };
 
 type WeekdayRow = {
@@ -80,7 +94,14 @@ function buildInitialWeekdayRows(
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaultValues }: Props) {
+export default function TrainingSeriesForm({
+  mode,
+  seriesId,
+  teamSeasons,
+  defaultValues,
+  resourcesSection,
+  dangerSection,
+}: Props) {
   const router = useRouter();
 
   const [teamSeasonId, setTeamSeasonId] = useState(defaultValues?.teamSeasonId ?? "");
@@ -104,9 +125,18 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
     [teamSeasons, teamSeasonId],
   );
 
-  function toggleWeekday(weekday: Weekday) {
+  const inactiveWeekdays = weekdayRows.filter((r) => !r.enabled);
+  const activeWeekdays = weekdayRows.filter((r) => r.enabled);
+
+  function enableWeekday(weekday: Weekday) {
     setWeekdayRows((rows) =>
-      rows.map((r) => (r.weekday === weekday ? { ...r, enabled: !r.enabled } : r)),
+      rows.map((r) => (r.weekday === weekday ? { ...r, enabled: true } : r)),
+    );
+  }
+
+  function removeWeekday(weekday: Weekday) {
+    setWeekdayRows((rows) =>
+      rows.map((r) => (r.weekday === weekday ? { ...r, enabled: false } : r)),
     );
   }
 
@@ -184,15 +214,13 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
     }
   }
 
-  const fieldClass =
-    "w-full rounded-[14px] border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]/30";
-  const labelClass =
-    "block text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)] mb-1.5";
+  const fieldClass = trainingCenterFieldClass;
+  const labelClass = trainingCenterLabelClass;
 
   if (result) {
     return (
-      <div className="space-y-6 rounded-[24px] border border-emerald-200 bg-emerald-50/60 p-8 text-center">
-        <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-600" />
+      <div className="space-y-6 rounded-xl border border-[color-mix(in_srgb,var(--sce-success)_35%,var(--border))] bg-[color-mix(in_srgb,var(--sce-success)_10%,var(--surface))] p-8 text-center">
+        <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-500" />
         <div>
           <p className="text-lg font-semibold text-[var(--foreground)]">
             {mode === "edit" ? "Trainingsserie aktualisiert" : "Trainingsserie erstellt"}
@@ -218,15 +246,15 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className={cn("space-y-6", TRAINING_CENTER_EDITOR_MAX_CLASS)} data-testid="training-series-form">
       {error ? (
-        <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700">
+        <div className="rounded-xl border border-[color-mix(in_srgb,var(--sce-danger)_35%,var(--border))] bg-[color-mix(in_srgb,var(--sce-danger)_8%,var(--surface))] px-4 py-3 text-sm font-medium text-[var(--sce-danger)]">
           {error}
         </div>
       ) : null}
 
-      <section className="rounded-[28px] border border-[var(--border)] bg-white p-6 shadow-sm">
-        <h3 className="mb-5 text-[1.05rem] font-semibold text-[var(--foreground)]">Team &amp; Serie</h3>
+      <SectionCard>
+        <h3 className={cn(trainingCenterSectionTitleClass, "mb-4")}>Grunddaten</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="md:col-span-2">
             <label className={labelClass}>Team / Saison *</label>
@@ -309,62 +337,79 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
             />
           </div>
         </div>
-      </section>
+      </SectionCard>
 
-      <section className="rounded-[28px] border border-[var(--border)] bg-white p-6 shadow-sm">
-        <h3 className="mb-1 text-[1.05rem] font-semibold text-[var(--foreground)]">Wochentage &amp; Zeiten</h3>
-        <p className="mb-5 text-sm text-[var(--text-2)]">
-          Wähle einen oder mehrere Wochentage. Jeder Wochentag kann eine eigene Start- und Endzeit haben
-          (z.&nbsp;B. Montag 17:00–18:00, Mittwoch 16:00–17:00).
+      <SectionCard>
+        <h3 className={cn(trainingCenterSectionTitleClass, "mb-1")}>Trainingszeiten</h3>
+        <p className={cn(trainingCenterHelperClass, "mb-4")}>
+          Aktive Wochentage mit eigener Start- und Endzeit. Weitere Tage bei Bedarf hinzufügen.
         </p>
-        <div className="space-y-2">
-          {weekdayRows.map((row) => (
+        <div className="space-y-2" data-testid="training-series-weekday-schedule">
+          {activeWeekdays.map((row) => (
             <div
               key={row.weekday}
-              className={`flex flex-wrap items-center gap-3 rounded-[14px] border px-4 py-3 transition ${
-                row.enabled
-                  ? "border-[var(--blue)]/30 bg-[var(--blue-light)]"
-                  : "border-[var(--border)] bg-[var(--surface-2)]"
-              }`}
+              className="flex flex-wrap items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 px-3 py-2.5"
             >
-              <label className="flex w-36 shrink-0 items-center gap-2 text-sm font-medium text-[var(--foreground)]">
-                <input
-                  type="checkbox"
-                  checked={row.enabled}
-                  onChange={() => toggleWeekday(row.weekday)}
-                  className="h-4 w-4 rounded border-[var(--border)]"
+              <span className="w-28 shrink-0 text-sm font-medium text-[var(--foreground)]">{row.label}</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <SceTimeField
+                  value={row.startsAt}
+                  onChange={(value) => updateWeekdayTime(row.weekday, "startsAt", value)}
+                  aria-label={`${row.label} Beginn`}
+                  required
                 />
-                {row.label}
-              </label>
-              {row.enabled ? (
-                <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <input
-                    type="time"
-                    value={row.startsAt}
-                    onChange={(e) => updateWeekdayTime(row.weekday, "startsAt", e.target.value)}
-                    className="rounded-[10px] border border-[var(--border)] bg-white px-3 py-1.5"
-                    required
-                  />
-                  <span className="text-[var(--muted)]">–</span>
-                  <input
-                    type="time"
-                    value={row.endsAt}
-                    onChange={(e) => updateWeekdayTime(row.weekday, "endsAt", e.target.value)}
-                    className="rounded-[10px] border border-[var(--border)] bg-white px-3 py-1.5"
-                    required
-                  />
-                </div>
-              ) : (
-                <span className="text-sm text-[var(--muted)]">Nicht aktiv</span>
-              )}
+                <span className="text-[var(--muted)]">—</span>
+                <SceTimeField
+                  value={row.endsAt}
+                  onChange={(value) => updateWeekdayTime(row.weekday, "endsAt", value)}
+                  aria-label={`${row.label} Ende`}
+                  required
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => removeWeekday(row.weekday)}
+                className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--sce-danger)]"
+                aria-label={`${row.label} entfernen`}
+              >
+                <MoreHorizontal className="h-4 w-4" aria-hidden />
+              </button>
             </div>
           ))}
+          {inactiveWeekdays.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <label className="sr-only" htmlFor="training-add-weekday">Trainingstag hinzufügen</label>
+              <select
+                id="training-add-weekday"
+                className={cn(fieldClass, "max-w-xs")}
+                defaultValue=""
+                onChange={(e) => {
+                  const value = e.target.value as Weekday;
+                  if (value) enableWeekday(value);
+                  e.target.value = "";
+                }}
+                data-testid="training-series-add-weekday"
+              >
+                <option value="">+ Trainingstag hinzufügen</option>
+                {inactiveWeekdays.map((row) => (
+                  <option key={row.weekday} value={row.weekday}>{row.label}</option>
+                ))}
+              </select>
+            </div>
+          ) : null}
         </div>
-      </section>
+      </SectionCard>
 
-      <section className="rounded-[28px] border border-[var(--border)] bg-white p-6 shadow-sm">
-        <h3 className="mb-1 flex items-center gap-2 text-[1.05rem] font-semibold text-[var(--foreground)]">
-          <Users className="h-4 w-4 text-[var(--blue)]" />
+      {resourcesSection ? (
+        <SectionCard>
+          <h3 className={cn(trainingCenterSectionTitleClass, "mb-4")}>Ressourcen</h3>
+          {resourcesSection}
+        </SectionCard>
+      ) : null}
+
+      <SectionCard>
+        <h3 className={cn(trainingCenterSectionTitleClass, "mb-1 flex items-center gap-2")}>
+          <Users className="h-4 w-4 text-[var(--muted)]" aria-hidden />
           Trainer
         </h3>
         <p className="mb-4 text-sm text-[var(--text-2)]">
@@ -397,13 +442,27 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
             Trainer für dieses Team verwalten
           </Link>
         ) : null}
-      </section>
+      </SectionCard>
 
-      <div className="flex items-center justify-between gap-4">
+      <SectionCard>
+        <h3 className={cn(trainingCenterSectionTitleClass, "mb-1")}>Öffentliche Sichtbarkeit</h3>
+        <p className="text-sm text-[var(--text-2)] leading-relaxed">
+          Trainings werden abhängig von Team-, Wochenplan- und Publikationseinstellungen auf den öffentlichen
+          Kanälen verwendet. Diese Einstellungen werden hier nicht geändert.
+        </p>
+        <Link
+          href="/dashboard/website/publishing"
+          className="mt-2 inline-block text-xs font-semibold text-[var(--sce-primary)] hover:underline"
+        >
+          Mehr erfahren
+        </Link>
+      </SectionCard>
+
+      <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--border)] pt-4">
         <button
           type="button"
           onClick={() => router.back()}
-          className="rounded-full border border-[var(--border)] bg-white px-5 py-2.5 text-sm font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+          className="fca-button-secondary text-sm"
         >
           Abbrechen
         </button>
@@ -416,6 +475,12 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
           {mode === "create" ? "Trainingsserie erstellen" : "Änderungen speichern"}
         </button>
       </div>
+
+      {dangerSection ? (
+        <div data-testid="training-series-danger-zone">
+          <SectionCard title="Gefahrenbereich">{dangerSection}</SectionCard>
+        </div>
+      ) : null}
     </form>
   );
 }

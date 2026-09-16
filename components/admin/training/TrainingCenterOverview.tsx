@@ -3,15 +3,14 @@ import { ChevronLeft, ChevronRight, Dumbbell } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { EmptyState } from "@/components/ui/page/EmptyState";
 import { SectionCard } from "@/components/ui/page/SectionCard";
+import { SceSegmentedLinkGroup } from "@/components/admin/shared/SceSegmentedLinkGroup";
 import type { TrainingCenterView } from "@/lib/training/date-range";
 import type { TrainingActionFilter, TrainingCenterViewModel } from "@/lib/training/view-model";
 import TrainingMonthCalendar from "./TrainingMonthCalendar";
 import TrainingSessionRow from "./TrainingSessionRow";
 
 export type TrainingCenterWindowLike = {
-  /** URL param value for this window (used to preserve cross-tab context). */
   param: string;
-  /** Human-readable label rendered in the date-navigation bar. */
   label: string;
   previousParam: string;
   nextParam: string;
@@ -39,7 +38,7 @@ const VIEW_TABS: { key: TrainingCenterView; label: string }[] = [
 const ACTION_FILTERS: { key: TrainingActionFilter; label: string }[] = [
   { key: "ALLE", label: "Alle" },
   { key: "OFFEN", label: "Offen" },
-  { key: "ERLEDIGT", label: "Erledigt" },
+  { key: "ERLEDIGT", label: "Bereit" },
 ];
 
 function paramKeyForView(view: TrainingCenterView): "month" | "week" | "day" {
@@ -96,9 +95,13 @@ export default function TrainingCenterOverview({
       ? {
           gesamt: dayScopedRows.length,
           offen: dayScopedRows.filter((row) => row.assessment.status === "OPEN").length,
-          erledigt: dayScopedRows.filter((row) => row.assessment.status !== "OPEN").length,
+          bereit: dayScopedRows.filter((row) => row.assessment.status !== "OPEN").length,
         }
-      : viewModel.kpis;
+      : {
+          gesamt: viewModel.kpis.gesamt,
+          offen: viewModel.kpis.offen,
+          bereit: viewModel.kpis.erledigt,
+        };
 
   const rowsByDate = new Map<string, typeof viewModel.filteredRows>();
   for (const row of viewModel.filteredRows) {
@@ -107,114 +110,100 @@ export default function TrainingCenterOverview({
     rowsByDate.set(row.session.date, list);
   }
 
+  const viewOptions = VIEW_TABS.map((item) => {
+    const itemWindow = windowForView(item.key, monthWindow, weekWindow, dayWindow);
+    return {
+      value: item.key,
+      label: item.label,
+      href: buildHref(basePath, { view: item.key, dateParam: itemWindow.param, actionFilter }),
+    };
+  });
+
+  const filterOptions = ACTION_FILTERS.map((item) => ({
+    value: item.key,
+    label: item.label,
+    href: buildHref(basePath, { view, dateParam: activeWindow.param, actionFilter: item.key }),
+  }));
+
+  const emptyCount =
+    (view === "DAY" ? dayScopedFilteredRows.length : viewModel.filteredRows.length) === 0;
+
   return (
-    <div className="space-y-5">
-      {/* Monat / Woche / Tag ────────────────────────────────────────────── */}
-      <div role="tablist" aria-label="TrainingCenter-Ansichten" className="flex gap-1 border-b border-[var(--border)]">
-        {VIEW_TABS.map((item) => {
-          const isActive = item.key === view;
-          const itemWindow = windowForView(item.key, monthWindow, weekWindow, dayWindow);
-          return (
-            <Link
-              key={item.key}
-              href={buildHref(basePath, { view: item.key, dateParam: itemWindow.param, actionFilter })}
-              role="tab"
-              aria-selected={isActive}
-              data-testid={`trainingcenter-view-${item.key.toLowerCase()}`}
-              className={cn(
-                "-mb-px border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors",
-                isActive
-                  ? "border-[var(--sce-primary)] text-[var(--sce-primary)]"
-                  : "border-transparent text-[var(--text-2)] hover:text-[var(--foreground)]",
-              )}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Date navigation ──────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5">
-        <Link
-          href={buildHref(basePath, { view, dateParam: activeWindow.previousParam, actionFilter })}
-          aria-label="Vorheriger Zeitraum"
-          data-testid="trainingcenter-date-previous"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Link>
-
-        <span className="text-sm font-semibold text-[var(--foreground)]" data-testid="trainingcenter-date-label">
-          {activeWindow.label}
-        </span>
-
-        <Link
-          href={buildHref(basePath, { view, dateParam: activeWindow.nextParam, actionFilter })}
-          aria-label="Nächster Zeitraum"
-          data-testid="trainingcenter-date-next"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Link>
-      </div>
-
-      {/* Operational summary ───────────────────────────────────────────────── */}
+    <div className="space-y-4" data-testid="training-center-calendar">
       <div
-        className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm text-[var(--text-2)]"
-        data-testid="trainingcenter-summary-strip"
+        className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 sm:px-4"
+        data-testid="trainingcenter-operational-toolbar"
       >
-        <span>
-          <span className="font-semibold text-[var(--foreground)]">{displayKpis.gesamt}</span> Trainings
-        </span>
-        <span aria-hidden>·</span>
-        <span>
-          <span className={cn("font-semibold", displayKpis.offen > 0 ? "text-amber-600" : "text-[var(--foreground)]")}>
-            {displayKpis.offen}
-          </span>{" "}
-          offen
-        </span>
-        <span aria-hidden>·</span>
-        <span>
-          <span className="font-semibold text-emerald-600">{displayKpis.erledigt}</span> erledigt
-        </span>
-        {view === "MONTH" && (
-          <>
-            <span aria-hidden>·</span>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <SceSegmentedLinkGroup
+            aria-label="TrainingCenter-Ansichten"
+            testId="trainingcenter-view"
+            value={view}
+            options={viewOptions}
+          />
+
+          <div className="flex items-center justify-center gap-2">
             <Link
-              href={`${basePath}?tab=planungsraster&day=${dayWindow.param}`}
-              className="font-semibold text-[var(--sce-primary)] hover:underline"
+              href={buildHref(basePath, { view, dateParam: activeWindow.previousParam, actionFilter })}
+              aria-label="Vorheriger Zeitraum"
+              data-testid="trainingcenter-date-previous"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
             >
-              Im Planungsraster öffnen
+              <ChevronLeft className="h-4 w-4" />
             </Link>
-          </>
-        )}
+            <span
+              className="min-w-[10rem] text-center text-sm font-semibold text-[var(--foreground)]"
+              data-testid="trainingcenter-date-label"
+            >
+              {activeWindow.label}
+            </span>
+            <Link
+              href={buildHref(basePath, { view, dateParam: activeWindow.nextParam, actionFilter })}
+              aria-label="Nächster Zeitraum"
+              data-testid="trainingcenter-date-next"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-3 sm:flex-row sm:items-center sm:justify-between">
+          <p
+            className="text-sm text-[var(--text-2)]"
+            data-testid="trainingcenter-summary-strip"
+          >
+            <span className="font-semibold text-[var(--foreground)]">{displayKpis.gesamt}</span> Trainings
+            <span className="mx-2 text-[var(--muted)]" aria-hidden>·</span>
+            <span className={cn(displayKpis.offen > 0 && "font-semibold text-[var(--sce-warning)]")}>
+              {displayKpis.offen}
+            </span>{" "}
+            offen
+            <span className="mx-2 text-[var(--muted)]" aria-hidden>·</span>
+            <span className="font-semibold text-[var(--foreground)]">{displayKpis.bereit}</span> bereit
+            {view === "MONTH" ? (
+              <>
+                <span className="mx-2 text-[var(--muted)]" aria-hidden>·</span>
+                <Link
+                  href={`${basePath}?tab=planungsraster&day=${dayWindow.param}`}
+                  className="font-semibold text-[var(--sce-primary)] hover:underline"
+                >
+                  Planungsraster
+                </Link>
+              </>
+            ) : null}
+          </p>
+
+          <SceSegmentedLinkGroup
+            aria-label="Aktionsfilter"
+            testId="trainingcenter-filter"
+            value={actionFilter}
+            options={filterOptions}
+          />
+        </div>
       </div>
 
-      {/* Alle / Offen / Erledigt ─────────────────────────────────────────── */}
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Aktionsfilter">
-        {ACTION_FILTERS.map((item) => {
-          const isActive = item.key === actionFilter;
-          return (
-            <Link
-              key={item.key}
-              href={buildHref(basePath, { view, dateParam: activeWindow.param, actionFilter: item.key })}
-              data-testid={`trainingcenter-filter-${item.key.toLowerCase()}`}
-              className={cn(
-                "rounded-full border px-3.5 py-1.5 text-xs font-semibold transition",
-                isActive
-                  ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
-                  : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-2)]",
-              )}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* View body ──────────────────────────────────────────────────────────── */}
-      {(view === "DAY" ? dayScopedFilteredRows.length : viewModel.filteredRows.length) === 0 ? (
+      {emptyCount ? (
         <SectionCard noPadding>
           <EmptyState
             icon={<Dumbbell className="h-8 w-8" />}
@@ -237,7 +226,7 @@ export default function TrainingCenterOverview({
             if (dayRows.length === 0) return null;
             return (
               <SectionCard key={date} noPadding>
-                <div className="border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-xs font-semibold uppercase text-[var(--muted)]">
+                <div className="border-b border-[var(--border)] px-4 py-2.5 text-sm font-medium text-[var(--foreground)]">
                   {new Intl.DateTimeFormat(locale, {
                     weekday: "long",
                     day: "2-digit",

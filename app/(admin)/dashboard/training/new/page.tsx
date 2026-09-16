@@ -4,7 +4,7 @@ import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { findTeamSeasonsForTenant } from "@/lib/training/queries";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import TrainingCenterShell from "@/components/admin/training/TrainingCenterShell";
 import TrainingSeriesCreateForm from "@/components/admin/training/TrainingSeriesCreateForm";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { prisma } from "@/lib/db/prisma";
@@ -73,13 +73,12 @@ export default async function NewTrainingSeriesPage() {
   const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
 
   return (
-    <div className="max-w-[1000px] space-y-6">
-      <AdminSectionHeader
-        eyebrow="TrainingCenter"
-        title="Neue Trainingsserie"
-        description="Team, Termin und Ressourcen in einem geführten Ablauf erfassen."
-      />
-
+    <TrainingCenterShell
+      variant="editor"
+      activeTab="serien"
+      title="Neue Trainingsserie"
+      description="Team, Termin und Ressourcen in einem geführten Ablauf erfassen."
+    >
       <TrainingSeriesCreateForm
         teamSeasons={filteredTeamSeasons.map((ts) => ({
           id: ts.id,
@@ -93,6 +92,6 @@ export default async function NewTrainingSeriesPage() {
         dressingRoomFacilityGroups={dressingRoomFacilityGroups}
         canValidateDirectly={canValidateDirectly}
       />
-    </div>
+    </TrainingCenterShell>
   );
 }

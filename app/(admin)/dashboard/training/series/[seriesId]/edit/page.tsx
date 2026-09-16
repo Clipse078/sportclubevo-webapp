@@ -10,34 +10,27 @@ import { listAllocationsByTrainingSeries } from "@/lib/training/training-allocat
 import { findTeamSeasonPickerRow } from "@/lib/training/queries";
 import { TrainingSeriesNotFoundError } from "@/lib/training/errors";
 import { countSeriesOccurrenceAllocationExceptions } from "@/lib/training/series-cockpit-exception-data";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import TrainingCenterShell from "@/components/admin/training/TrainingCenterShell";
 import TrainingSeriesForm from "@/components/admin/training/TrainingSeriesForm";
 import TrainingSeriesDeleteControl from "@/components/admin/training/TrainingSeriesDeleteControl";
 import { TrainingAllocationEditor } from "@/components/admin/training/TrainingAllocationEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import { cn } from "@/lib/cn";
 
 type Props = { params: Promise<{ seriesId: string }> };
 
-/** Formats an ISO datetime as "YYYY-MM-DD" for a native date input. */
 function toDateInputValue(iso: string | null): string | null {
   if (!iso) return null;
   return iso.slice(0, 10);
 }
 
 export default async function EditTrainingSeriesPage({ params }: Props) {
-  // ADMIN-DELETE-02A: a delegated user may hold trainings.delete without
-  // trainings.manage — they must still be able to reach this page to
-  // exercise the permanent-delete action gated below (mirrors
-  // app/(admin)/dashboard/teams/[teamId]/page.tsx, ADMIN-DELETE-01B).
   const session = await requireAnyPermission([
     PERMISSIONS.TRAININGS_MANAGE,
     PERMISSIONS.TRAININGS_DELETE,
   ]);
 
-  // ADMIN-DELETE-02A: permanent "Löschen" gating — deliberately independent
-  // of trainings.manage (manage alone must never authorize deletion).
   const canDelete = hasPermission(session, PERMISSIONS.TRAININGS_DELETE);
-
   const canManage = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
 
   const tenantId = session.user?.activeTenantId;
@@ -54,10 +47,6 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
   }
 
   const [teamSeasonRow, occurrenceExceptionCount, allocations, facilities] = await Promise.all([
-    // TEAMCENTER-UX-01C: the team/season assignment is immutable on edit, and
-    // findTeamSeasonsForTenant now intentionally scopes to the current season
-    // only (see lib/training/queries.ts) — so a series created in a prior
-    // season must still resolve its own TeamSeason for display here.
     findTeamSeasonPickerRow(tenantId, series.teamSeasonId),
     countSeriesOccurrenceAllocationExceptions(tenantId, seriesId, series.timezone),
     listAllocationsByTrainingSeries(tenantId, seriesId).catch((err) => {
@@ -88,19 +77,18 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
     .filter((fg) => fg.resources.length > 0);
 
   return (
-    <div className="space-y-6">
-      <AdminSectionHeader
-        eyebrow="TrainingCenter"
-        title={`Bearbeiten: ${series.title}`}
-        description="Änderungen an Wochentagen, Zeiten oder Zeitraum werden beim Speichern sofort in generierte Termine übernommen. Bereits generierte Termine werden nicht dupliziert."
-      />
-
+    <TrainingCenterShell
+      variant="editor"
+      activeTab="serien"
+      title={`Bearbeiten: ${series.title}`}
+      description="Manage recurring training schedule and resources."
+    >
       {occurrenceExceptionCount > 0 ? (
         <div
-          className="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900"
+          className="flex items-start gap-3 rounded-xl border border-[color-mix(in_srgb,var(--blue)_35%,var(--border))] bg-[color-mix(in_srgb,var(--blue)_8%,var(--surface))] px-4 py-3 text-sm text-[var(--foreground)]"
           data-testid="training-series-edit-exception-notice"
         >
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" aria-hidden />
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--blue)]" aria-hidden />
           <div className="space-y-1">
             <p>
               Diese Serie hat{" "}
@@ -112,8 +100,8 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
               . Änderungen an der Serie wirken sich nicht automatisch auf bereits abweichend zugewiesene Einzeltermine aus.
             </p>
             <Link
-              href={`/dashboard/training?tab=serien`}
-              className="inline-flex text-xs font-semibold text-blue-800 underline-offset-2 hover:underline"
+              href="/dashboard/training?tab=serien"
+              className="inline-flex text-xs font-semibold text-[var(--sce-primary)] hover:underline"
             >
               Ausnahmen im Serien-Cockpit ansehen
             </Link>
@@ -134,16 +122,7 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
           validUntil: toDateInputValue(series.validUntil),
           weekdaySchedules: series.weekdaySchedules,
         }}
-      />
-
-      <div className="sce-detail-section" data-testid="training-series-edit-resources-section">
-        <div className="sce-detail-section-header">
-          <h2 className="text-sm font-semibold text-[var(--foreground)]">Ressourcen</h2>
-          <p className="text-xs text-[var(--muted)]">
-            Wiederkehrende Spielfeld- und Garderoben-Zuweisung für diese Serie. Einzeltermin-Ausnahmen bleiben unverändert.
-          </p>
-        </div>
-        <div className="sce-detail-section-body">
+        resourcesSection={
           <TrainingAllocationEditor
             trainingSeriesId={series.id}
             trainingSeriesTitle={series.title}
@@ -152,14 +131,24 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
             canManage={canManage}
             embedded
           />
-        </div>
-      </div>
-
-      <TrainingSeriesDeleteControl
-        seriesId={series.id}
-        seriesTitle={series.title}
-        canDelete={canDelete}
+        }
+        dangerSection={
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm font-medium text-[var(--foreground)]">Trainingsserie löschen</p>
+              <p className={cn("text-xs text-[var(--text-2)]")}>
+                Entfernt die Serie und ihre generierten Termine endgültig.
+              </p>
+            </div>
+            <TrainingSeriesDeleteControl
+              seriesId={series.id}
+              seriesTitle={series.title}
+              canDelete={canDelete}
+              variant="bare"
+            />
+          </div>
+        }
       />
-    </div>
+    </TrainingCenterShell>
   );
 }

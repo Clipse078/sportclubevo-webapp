@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition, useCallback } from "react";
-import { Loader2, X, GripVertical, MapPin, Building2, ChevronDown } from "lucide-react";
+import { Loader2, X, ChevronDown, MapPin } from "lucide-react";
+import { FacilityResourceIdentity } from "@/components/admin/shared/planning/FacilityResourceIdentity";
 import type { TrainingAllocationDto } from "@/lib/training/types";
 import type { FacilityGroup } from "./FacilityResourceSelector";
 import { FacilityResourceSelector } from "./FacilityResourceSelector";
@@ -63,34 +64,23 @@ function AllocationRow({
   }, [allocation.id, onRemove]);
 
   return (
-    <li className="group flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-      <GripVertical size={16} className="shrink-0 text-gray-300" aria-hidden />
-
+    <li className="group flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 px-3 py-2.5">
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-gray-900 truncate">
-            {allocation.facilityResourceName}
-          </span>
-          <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
-            {RESOURCE_TYPE_LABELS[allocation.facilityResourceType as FacilityResourceType] ??
-              allocation.facilityResourceType}
-          </span>
-        </div>
-        <div className="mt-0.5 flex items-center gap-1 text-xs text-gray-500">
-          <Building2 size={11} aria-hidden />
-          <span className="truncate">{allocation.facilityName}</span>
-          <span className="text-gray-300 mx-1">·</span>
-          <MapPin size={11} aria-hidden />
-          <span>{allocation.facilityResourceCode}</span>
-        </div>
-        {allocation.notes && (
-          <p className="mt-1 text-xs text-gray-400 italic truncate">{allocation.notes}</p>
-        )}
-        {error && (
-          <p className="mt-1 text-xs text-red-500" role="alert">
+        <FacilityResourceIdentity
+          name={allocation.facilityResourceName}
+          resourceType={allocation.facilityResourceType as FacilityResourceType}
+          subtitle={`${allocation.facilityName} · ${RESOURCE_TYPE_LABELS[allocation.facilityResourceType as FacilityResourceType] ?? allocation.facilityResourceType}`}
+          detail={allocation.facilityResourceCode}
+          compact
+        />
+        {allocation.notes ? (
+          <p className="mt-1 text-xs italic text-[var(--muted)] truncate">{allocation.notes}</p>
+        ) : null}
+        {error ? (
+          <p className="mt-1 text-xs text-[var(--sce-danger)]" role="alert">
             {error}
           </p>
-        )}
+        ) : null}
       </div>
 
       {canManage && (
@@ -99,7 +89,7 @@ function AllocationRow({
           onClick={handleRemove}
           disabled={isPending}
           aria-label={`Zuweisung von ${allocation.facilityResourceName} entfernen`}
-          className="shrink-0 rounded p-1 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 focus:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className="shrink-0 rounded p-1 text-[var(--muted)] opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[color-mix(in_srgb,var(--sce-danger)_10%,var(--surface))] hover:text-[var(--sce-danger)] focus:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? (
             <Loader2 size={14} className="animate-spin" />

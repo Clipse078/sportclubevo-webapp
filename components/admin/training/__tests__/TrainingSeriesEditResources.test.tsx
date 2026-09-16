@@ -5,6 +5,7 @@
  */
 
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { pickFacilityResource } from "@/components/admin/tournamentcenter/__tests__/tournament-form-test-helpers";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TrainingAllocationEditor } from "@/components/admin/training/TrainingAllocationEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
@@ -165,8 +166,7 @@ describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
       expect.objectContaining({ method: "DELETE" }),
     );
 
-    const pitchSelect = screen.getByTestId("training-allocation-add-pitch-hall-select");
-    fireEvent.change(pitchSelect, { target: { value: "res-pitch-b" } });
+    pickFacilityResource("training-allocation-add-pitch-hall", "res-pitch-b");
     fireEvent.click(screen.getByTestId("training-allocation-add-pitch-hall-add-button"));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
@@ -222,8 +222,7 @@ describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
       expect.objectContaining({ method: "DELETE" }),
     );
 
-    const dressingSelect = screen.getByTestId("training-allocation-add-dressing-room-select");
-    fireEvent.change(dressingSelect, { target: { value: "res-dressing-o4" } });
+    pickFacilityResource("training-allocation-add-dressing-room", "res-dressing-o4");
     fireEvent.click(screen.getByTestId("training-allocation-add-dressing-room-add-button"));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));

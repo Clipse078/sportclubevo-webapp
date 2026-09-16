@@ -29,7 +29,7 @@ type Props = {
    * matching the other row actions (Ressourcen/Bearbeiten/Archivieren) in
    * the actual Serien-Verwaltung list — the surface admins use day to day.
    */
-  variant?: "section" | "inline";
+  variant?: "section" | "inline" | "bare";
 };
 
 /**
@@ -126,7 +126,7 @@ export default function TrainingSeriesDeleteControl({
         type="button"
         onClick={openConfirmation}
         data-testid="training-series-delete-inline"
-        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 text-xs font-medium text-rose-700 transition hover:border-rose-300 hover:bg-rose-50"
+        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--sce-danger)_35%,var(--border))] bg-[var(--surface)] px-3 text-xs font-medium text-[var(--sce-danger)] transition hover:bg-[color-mix(in_srgb,var(--sce-danger)_8%,var(--surface))]"
       >
         <Trash2 className="h-3.5 w-3.5" />
         Löschen

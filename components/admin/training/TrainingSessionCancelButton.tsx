@@ -8,6 +8,7 @@ type Props = {
   sessionId: string;
   /** Whether this occurrence is currently CANCELLED (renders the restore action instead). */
   isCancelled: boolean;
+  variant?: "button" | "menu";
 };
 
 /**
@@ -16,7 +17,11 @@ type Props = {
  * which only ever mutates this one occurrence's status — the parent
  * TrainingSeries recurrence definition is never touched.
  */
-export default function TrainingSessionCancelButton({ sessionId, isCancelled }: Props) {
+export default function TrainingSessionCancelButton({
+  sessionId,
+  isCancelled,
+  variant = "button",
+}: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,16 +51,23 @@ export default function TrainingSessionCancelButton({ sessionId, isCancelled }: 
     }
   }
 
+  const menuClass =
+    "flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm disabled:cursor-not-allowed disabled:opacity-60";
+  const buttonClass = isCancelled
+    ? "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-xs font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-60"
+    : "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[color-mix(in_srgb,var(--sce-danger)_35%,var(--border))] bg-[var(--surface)] px-3 text-xs font-medium text-[var(--sce-danger)] transition hover:bg-[color-mix(in_srgb,var(--sce-danger)_8%,var(--surface))] disabled:cursor-not-allowed disabled:opacity-60";
+
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className={variant === "menu" ? "w-full" : "flex flex-col items-end gap-1"}>
       <button
         type="button"
         onClick={handleToggle}
         disabled={loading}
+        role={variant === "menu" ? "menuitem" : undefined}
         className={
-          isCancelled
-            ? "inline-flex h-8 items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 text-xs font-medium text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
-            : "inline-flex h-8 items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 text-xs font-medium text-rose-700 transition hover:border-rose-300 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+          variant === "menu"
+            ? `${menuClass} ${isCancelled ? "text-[var(--foreground)] hover:bg-[var(--surface-2)]" : "text-[var(--sce-danger)] hover:bg-[color-mix(in_srgb,var(--sce-danger)_8%,var(--surface))]"}`
+            : buttonClass
         }
       >
         {loading ? (
@@ -67,7 +79,9 @@ export default function TrainingSessionCancelButton({ sessionId, isCancelled }: 
         )}
         {isCancelled ? "Wiederherstellen" : "Absagen"}
       </button>
-      {error ? <p className="text-[11px] font-medium text-rose-600">{error}</p> : null}
+      {error ? (
+        <p className="text-[11px] font-medium text-[var(--sce-danger)]" role="alert">{error}</p>
+      ) : null}
     </div>
   );
 }
