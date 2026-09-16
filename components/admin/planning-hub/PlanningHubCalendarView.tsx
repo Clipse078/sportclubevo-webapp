@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { cn } from "@/lib/cn";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
@@ -14,6 +14,13 @@ import {
 import { dayKeyInTimeZone, zonedMinutesFromMidnight } from "@/lib/planning-hub/scheduler/time-zone";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningHubActivityBlock from "./PlanningHubActivityBlock";
+import {
+  effectiveItemTimes,
+  projectedItemForRender,
+  usePlanningHubManipulation,
+} from "./PlanningHubManipulationContext";
+import { evaluateManipulationConflicts } from "@/lib/planning-hub/manipulation-projection";
+import { isoToLocalTime } from "@/lib/planning-hub/planner-time";
 
 type PlanningHubCalendarViewProps = {
   week: WeekplannerWeek;
@@ -35,7 +42,9 @@ export default function PlanningHubCalendarView({
   todayDayKey,
   onItemActivate,
 }: PlanningHubCalendarViewProps) {
+  const manipulation = usePlanningHubManipulation();
   const filtered = applyPlanningHubFilters(week, urlState);
+  const allItems = week.days.flatMap((d) => d.items);
 
   const timeRange = useMemo(
     () =>
@@ -172,40 +181,130 @@ export default function PlanningHubCalendarView({
                 )}
 
                 {day.items.map((item) => {
-                  const startMin = zonedMinutesFromMidnight(item.startAt, timezone);
-                  const endMin = Math.max(
-                    startMin + 15,
-                    zonedMinutesFromMidnight(item.endAt, timezone),
-                  );
                   if (dayKeyInTimeZone(item.startAt, timezone) !== day.dayKey) {
                     return null;
                   }
                   const layout = lanes.get(item.id) ?? { lane: 0, totalLanes: 1 };
                   const { leftPercent, widthPercent } = laneHorizontalStyle(layout);
-                  const top = minutesToCalendarTopPx(startMin, timeRange, CALENDAR_PIXELS_PER_MINUTE);
-                  const height = durationToCalendarHeightPx(
-                    startMin,
-                    endMin,
-                    timeRange,
-                    CALENDAR_PIXELS_PER_MINUTE,
-                  );
-                  const compact = height < 48;
+                  const caps = manipulation?.getCapabilities(item);
+                  const activeDraft =
+                    manipulation?.previewDraft?.itemId === item.id ? manipulation.previewDraft : null;
 
-                  return (
-                    <PlanningHubActivityBlock
-                      key={item.id}
-                      item={item}
-                      locale={locale}
-                      timezone={timezone}
-                      compact={compact}
-                      onActivate={() => onItemActivate(item)}
-                      style={{
-                        top,
-                        height,
-                        left: `calc(${leftPercent}% + 2px)`,
-                        width: `calc(${widthPercent}% - 4px)`,
-                      }}
-                    />
+                  const renderBlock = (
+                    blockItem: typeof item,
+                    startAt: Date,
+                    endAt: Date,
+                    variant: "default" | "ghost" | "preview" | "preview-warning",
+                    keySuffix: string,
+                    pointerHandlers?: {
+                      canDrag: boolean;
+                      canResize: boolean;
+                      onMove?: (clientY: number) => void;
+                      onResize?: (clientY: number) => void;
+                    },
+                  ) => {
+                    const startMin = zonedMinutesFromMidnight(startAt, timezone);
+                    const endMin = Math.max(startMin + 15, zonedMinutesFromMidnight(endAt, timezone));
+                    const top = minutesToCalendarTopPx(startMin, timeRange, CALENDAR_PIXELS_PER_MINUTE);
+                    const height = durationToCalendarHeightPx(
+                      startMin,
+                      endMin,
+                      timeRange,
+                      CALENDAR_PIXELS_PER_MINUTE,
+                    );
+                    const compact = height < 48;
+                    const timeLabel = `${isoToLocalTime(startAt, timezone)}–${isoToLocalTime(endAt, timezone)}`;
+                    return (
+                      <PlanningHubActivityBlock
+                        key={`${item.id}${keySuffix}`}
+                        item={blockItem}
+                        locale={locale}
+                        timezone={timezone}
+                        compact={compact}
+                        visualVariant={variant}
+                        dragTimeLabel={timeLabel}
+                        canDrag={pointerHandlers?.canDrag ?? false}
+                        canResize={pointerHandlers?.canResize ?? false}
+                        onPointerDownMove={
+                          pointerHandlers?.onMove
+                            ? (event) => pointerHandlers.onMove!(event.clientY)
+                            : undefined
+                        }
+                        onPointerDownResize={
+                          pointerHandlers?.onResize
+                            ? (event) => pointerHandlers.onResize!(event.clientY)
+                            : undefined
+                        }
+                        onActivate={() => {
+                          if (manipulation?.isDragging) return;
+                          onItemActivate(item);
+                        }}
+                        style={{
+                          top,
+                          height,
+                          left: `calc(${leftPercent}% + 2px)`,
+                          width: `calc(${widthPercent}% - 4px)`,
+                        }}
+                      />
+                    );
+                  };
+
+                  if (activeDraft && manipulation?.isDragging) {
+                    const projected = projectedItemForRender(
+                      item,
+                      activeDraft,
+                      urlState.resourceCategory,
+                      manipulation.resolveResourceRef,
+                    );
+                    const targetRef = activeDraft.proposedResourceId
+                      ? manipulation.resolveResourceRef(activeDraft.proposedResourceId)
+                      : null;
+                    const conflict = evaluateManipulationConflicts(
+                      allItems,
+                      activeDraft,
+                      targetRef,
+                      urlState.resourceCategory,
+                    );
+                    const previewVariant =
+                      conflict.status === "warning" ? "preview-warning" : "preview";
+                    return (
+                      <Fragment key={item.id}>
+                        {renderBlock(item, activeDraft.originalStart, activeDraft.originalEnd, "ghost", "-ghost")}
+                        {renderBlock(
+                          projected,
+                          activeDraft.proposedStart,
+                          activeDraft.proposedEnd,
+                          previewVariant,
+                          "-preview",
+                        )}
+                      </Fragment>
+                    );
+                  }
+
+                  const { startAt, endAt } = effectiveItemTimes(item, activeDraft);
+                  const displayItem = activeDraft
+                    ? projectedItemForRender(
+                        item,
+                        activeDraft,
+                        urlState.resourceCategory,
+                        manipulation!.resolveResourceRef,
+                      )
+                    : item;
+
+                  return renderBlock(
+                    displayItem,
+                    startAt,
+                    endAt,
+                    "default",
+                    "",
+                    manipulation?.enabled && caps
+                      ? {
+                          canDrag: caps.canMoveTime,
+                          canResize: caps.canResize,
+                          onMove: (clientY) => manipulation.beginCalendarMove(item, clientY),
+                          onResize: (clientY) => manipulation.beginCalendarResize(item, clientY),
+                        }
+                      : undefined,
                   );
                 })}
               </div>

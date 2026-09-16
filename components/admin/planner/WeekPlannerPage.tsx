@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -20,12 +20,17 @@ import PlanningHubConflictAttention from "@/components/admin/planning-hub/Planni
 import PlanningHubConflictSheet from "@/components/admin/planning-hub/PlanningHubConflictSheet";
 import PlanningHubCalendarView from "@/components/admin/planning-hub/PlanningHubCalendarView";
 import PlanningHubResourceDayView from "@/components/admin/planning-hub/PlanningHubResourceDayView";
+import { PlanningHubManipulationProvider } from "@/components/admin/planning-hub/PlanningHubManipulationContext";
+import {
+  buildResourceSegmentsForDay,
+} from "@/lib/planning-hub/scheduler/resource-segments";
 import PlanningHubListeView from "@/components/admin/planning-hub/PlanningHubListeView";
 import PlanningHubWeekFilters from "@/components/admin/planning-hub/PlanningHubWeekFilters";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
 import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
 import {
   buildPlanningHubHref,
+  resolvePlanningHubResourceDay,
   type PlanningHubUrlState,
 } from "@/lib/planning-hub/planner-url";
 import { dayKeyInTimeZone } from "@/lib/planning-hub/scheduler/time-zone";
@@ -185,6 +190,45 @@ export default function WeekPlannerPage({
 
   const resolvedUrlState = { ...urlState, week: week.param };
 
+  const manipulationFacilityGroups =
+    canonicalEditing?.facilityGroupsByAllocationGroup ??
+    overrideEditing?.facilityGroupsByAllocationGroup;
+
+  const resourceRowsForManipulation = useMemo(() => {
+    if (urlState.perspective !== "ressourcen" || !manipulationFacilityGroups) return [];
+    const filtered = applyPlanningHubFilters(week, resolvedUrlState);
+    const weekDayKeys = filtered.days.map((d) => d.dayKey);
+    const selectedDay = resolvePlanningHubResourceDay(weekDayKeys, urlState.day, todayDayKey);
+    const day = filtered.days.find((d) => d.dayKey === selectedDay) ?? filtered.days[0];
+    if (!day) return [];
+    const segments = buildResourceSegmentsForDay(day.items, urlState.resourceCategory);
+    return segments.map((s) => ({
+      resourceId: s.resource.facilityResourceId,
+      ref: s.resource,
+    }));
+  }, [week, resolvedUrlState, urlState.perspective, urlState.day, urlState.resourceCategory, todayDayKey, manipulationFacilityGroups]);
+
+  const wrapManipulation = (node: ReactNode) => {
+    if (!manipulationFacilityGroups) return node;
+    return (
+      <PlanningHubManipulationProvider
+        week={week}
+        urlState={resolvedUrlState}
+        locale={locale}
+        timezone={timezone}
+        isStandardplan={isStandardplan}
+        alternativePlanId={activePlanId}
+        canManageTrainings={canonicalEditing?.canManageTrainings ?? false}
+        canManageEvents={canonicalEditing?.canManageEvents ?? false}
+        facilityGroupsByAllocationGroup={manipulationFacilityGroups}
+        overridesByKey={overrideEditing?.overridesByKey}
+        resourceRows={resourceRowsForManipulation}
+      >
+        {node}
+      </PlanningHubManipulationProvider>
+    );
+  };
+
   return (
     <div className="space-y-3" data-testid="planning-hub-workspace">
       <AdminSectionHeader
@@ -307,23 +351,27 @@ export default function WeekPlannerPage({
           description="Für diese Kalenderwoche gibt es keine passenden Aktivitäten."
         />
       ) : urlState.perspective === "kalender" ? (
-        <PlanningHubCalendarView
-          week={week}
-          urlState={resolvedUrlState}
-          locale={locale}
-          timezone={timezone}
-          todayDayKey={todayDayKey}
-          onItemActivate={handleItemActivate}
-        />
+        wrapManipulation(
+          <PlanningHubCalendarView
+            week={week}
+            urlState={resolvedUrlState}
+            locale={locale}
+            timezone={timezone}
+            todayDayKey={todayDayKey}
+            onItemActivate={handleItemActivate}
+          />,
+        )
       ) : urlState.perspective === "ressourcen" ? (
-        <PlanningHubResourceDayView
-          week={week}
-          urlState={resolvedUrlState}
-          locale={locale}
-          timezone={timezone}
-          todayDayKey={todayDayKey}
-          onItemActivate={handleItemActivate}
-        />
+        wrapManipulation(
+          <PlanningHubResourceDayView
+            week={week}
+            urlState={resolvedUrlState}
+            locale={locale}
+            timezone={timezone}
+            todayDayKey={todayDayKey}
+            onItemActivate={handleItemActivate}
+          />,
+        )
       ) : (
         <PlanningHubListeView
           week={week}

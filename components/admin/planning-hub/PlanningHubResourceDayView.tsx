@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
@@ -23,6 +23,12 @@ import {
 import { zonedMinutesFromMidnight } from "@/lib/planning-hub/scheduler/time-zone";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningHubActivityBlock from "./PlanningHubActivityBlock";
+import {
+  projectedItemForRender,
+  usePlanningHubManipulation,
+} from "./PlanningHubManipulationContext";
+import { evaluateManipulationConflicts } from "@/lib/planning-hub/manipulation-projection";
+import { isoToLocalTime } from "@/lib/planning-hub/planner-time";
 
 type PlanningHubResourceDayViewProps = {
   week: WeekplannerWeek;
@@ -44,7 +50,9 @@ export default function PlanningHubResourceDayView({
   todayDayKey,
   onItemActivate,
 }: PlanningHubResourceDayViewProps) {
+  const manipulation = usePlanningHubManipulation();
   const filtered = applyPlanningHubFilters(week, urlState);
+  const allItems = week.days.flatMap((d) => d.items);
   const weekDayKeys = filtered.days.map((d) => d.dayKey);
   const selectedDay = resolvePlanningHubResourceDay(weekDayKeys, urlState.day, todayDayKey);
   const day = filtered.days.find((d) => d.dayKey === selectedDay) ?? filtered.days[0];
@@ -147,8 +155,14 @@ export default function PlanningHubResourceDayView({
               return (
                 <div
                   key={row.resourceId}
-                  className="flex border-b border-[var(--border)]/60"
+                  className={cn(
+                    "flex border-b border-[var(--border)]/60",
+                    manipulation?.hoverResourceId === row.resourceId &&
+                      manipulation.isDragging &&
+                      "bg-[var(--sce-primary-light)]/25",
+                  )}
                   data-testid="planning-hub-resource-row"
+                  data-planning-resource-id={row.resourceId}
                 >
                   <div
                     className="sticky left-0 z-10 shrink-0 border-r border-[var(--border)] bg-[var(--surface)] px-3 py-2"
@@ -176,42 +190,153 @@ export default function PlanningHubResourceDayView({
                       />
                     ))}
                     {row.segments.map((segment) => {
-                      const startMin = zonedMinutesFromMidnight(segment.startAt, timezone);
-                      const endMin = Math.max(
-                        startMin + 15,
-                        zonedMinutesFromMidnight(segment.endAt, timezone),
-                      );
-                      const layout = lanes.get(segment.segmentId) ?? { lane: 0, totalLanes: 1 };
-                      const leftPx = minutesToResourceLeftPx(
-                        startMin,
-                        timeRange,
-                        RESOURCE_PIXELS_PER_MINUTE,
-                      );
-                      const widthPx = durationToResourceWidthPx(
-                        startMin,
-                        endMin,
-                        timeRange,
-                        RESOURCE_PIXELS_PER_MINUTE,
-                      );
-                      const laneHeight = rowHeight / maxLane;
+                      const activeDraft =
+                        manipulation?.previewDraft?.segmentId === segment.segmentId
+                          ? manipulation.previewDraft
+                          : null;
+                      const caps = manipulation?.getCapabilities(segment.item);
 
-                      return (
-                        <PlanningHubActivityBlock
-                          key={segment.segmentId}
-                          item={segment.item}
-                          locale={locale}
-                          timezone={timezone}
-                          resourceId={row.resourceId}
-                          compact
-                          onActivate={() => onItemActivate(segment.item)}
-                          style={{
-                            top: layout.lane * laneHeight + 2,
-                            height: laneHeight - 4,
-                            left: leftPx + 2,
-                            width: Math.max(24, widthPx - 4),
-                          }}
-                          className="!absolute"
-                        />
+                      const renderSegment = (
+                        segItem: typeof segment.item,
+                        startAt: Date,
+                        endAt: Date,
+                        variant: "default" | "ghost" | "preview" | "preview-warning",
+                        keySuffix: string,
+                        interactive: boolean,
+                      ) => {
+                        const startMin = zonedMinutesFromMidnight(startAt, timezone);
+                        const endMin = Math.max(
+                          startMin + 15,
+                          zonedMinutesFromMidnight(endAt, timezone),
+                        );
+                        const layout = lanes.get(segment.segmentId) ?? { lane: 0, totalLanes: 1 };
+                        const leftPx = minutesToResourceLeftPx(
+                          startMin,
+                          timeRange,
+                          RESOURCE_PIXELS_PER_MINUTE,
+                        );
+                        const widthPx = durationToResourceWidthPx(
+                          startMin,
+                          endMin,
+                          timeRange,
+                          RESOURCE_PIXELS_PER_MINUTE,
+                        );
+                        const laneHeight = rowHeight / maxLane;
+                        const timeLabel = `${isoToLocalTime(startAt, timezone)}–${isoToLocalTime(endAt, timezone)}`;
+
+                        return (
+                          <PlanningHubActivityBlock
+                            key={`${segment.segmentId}${keySuffix}`}
+                            item={segItem}
+                            locale={locale}
+                            timezone={timezone}
+                            resourceId={row.resourceId}
+                            compact
+                            visualVariant={variant}
+                            dragTimeLabel={timeLabel}
+                            canDrag={interactive && (caps?.canMoveTime || caps?.canChangePrimaryResource || caps?.canChangeDressingRoom)}
+                            onPointerDownMove={
+                              interactive && manipulation
+                                ? (event) =>
+                                    manipulation.beginResourceMove(
+                                      segment.item,
+                                      segment.segmentId,
+                                      row.resourceId,
+                                      event.clientX,
+                                      event.clientY,
+                                    )
+                                : undefined
+                            }
+                            onActivate={() => {
+                              if (manipulation?.isDragging) return;
+                              onItemActivate(segment.item);
+                            }}
+                            style={{
+                              top: layout.lane * laneHeight + 2,
+                              height: laneHeight - 4,
+                              left: leftPx + 2,
+                              width: Math.max(24, widthPx - 4),
+                            }}
+                            className="!absolute"
+                          />
+                        );
+                      };
+
+                      if (activeDraft && manipulation?.isDragging) {
+                        const proposedResourceId =
+                          activeDraft.proposedResourceId ?? activeDraft.originalResourceId;
+                        const onOriginalRow = row.resourceId === activeDraft.originalResourceId;
+                        const onProposedRow = row.resourceId === proposedResourceId;
+                        if (!onOriginalRow && !onProposedRow) return null;
+
+                        const projected = projectedItemForRender(
+                          segment.item,
+                          activeDraft,
+                          urlState.resourceCategory,
+                          manipulation.resolveResourceRef,
+                        );
+                        const targetRef = activeDraft.proposedResourceId
+                          ? manipulation.resolveResourceRef(activeDraft.proposedResourceId)
+                          : null;
+                        const conflict = evaluateManipulationConflicts(
+                          allItems,
+                          activeDraft,
+                          targetRef,
+                          urlState.resourceCategory,
+                        );
+                        const previewVariant =
+                          conflict.status === "warning" ? "preview-warning" : "preview";
+
+                        return (
+                          <Fragment key={segment.segmentId}>
+                            {onOriginalRow &&
+                              renderSegment(
+                                segment.item,
+                                activeDraft.originalStart,
+                                activeDraft.originalEnd,
+                                "ghost",
+                                "-ghost",
+                                false,
+                              )}
+                            {onProposedRow &&
+                              renderSegment(
+                                projected,
+                                activeDraft.proposedStart,
+                                activeDraft.proposedEnd,
+                                previewVariant,
+                                "-preview",
+                                false,
+                              )}
+                          </Fragment>
+                        );
+                      }
+
+                      if (
+                        activeDraft &&
+                        row.resourceId !== (activeDraft.proposedResourceId ?? activeDraft.originalResourceId) &&
+                        row.resourceId !== activeDraft.originalResourceId
+                      ) {
+                        return null;
+                      }
+
+                      const displayItem = activeDraft
+                        ? projectedItemForRender(
+                            segment.item,
+                            activeDraft,
+                            urlState.resourceCategory,
+                            manipulation!.resolveResourceRef,
+                          )
+                        : segment.item;
+                      const startAt = activeDraft?.proposedStart ?? segment.startAt;
+                      const endAt = activeDraft?.proposedEnd ?? segment.endAt;
+
+                      return renderSegment(
+                        displayItem,
+                        startAt,
+                        endAt,
+                        "default",
+                        "",
+                        !!manipulation?.enabled,
                       );
                     })}
                   </div>
