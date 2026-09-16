@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, ArchiveRestore, Loader2 } from "lucide-react";
+import { Archive, ArchiveRestore } from "lucide-react";
+import { Button } from "@/components/ui";
 
 type Resource = "club" | "team";
 
@@ -10,7 +11,6 @@ type ArchiveButtonProps = {
   resource: Resource;
   id: string;
   name: string;
-  /** Where to redirect after archiving. Defaults to /dashboard/vereine. */
   redirectTo?: string;
 };
 
@@ -56,51 +56,61 @@ export function ClubDirectoryArchiveButton({
 
   if (!confirming) {
     return (
-      <div className="space-y-2">
-        <button
+      <div className="space-y-2" data-testid="club-archive-control">
+        <p className="text-xs text-[var(--muted)]">
+          Archivierung entfernt diesen {label.toLowerCase()} aus aktiven operativen Listen, ohne
+          historische Referenzen zu löschen.
+        </p>
+        <Button
           type="button"
+          variant="secondary"
+          className="w-full border-[color-mix(in_srgb,var(--sce-danger)_35%,var(--border))] text-[var(--sce-danger)] hover:bg-[color-mix(in_srgb,var(--sce-danger)_8%,var(--surface-2))]"
+          iconLeft={<Archive className="h-4 w-4" />}
           onClick={() => setConfirming(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-xl)] border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 transition hover:border-rose-300 hover:bg-rose-100"
         >
-          <Archive className="h-4 w-4" />
           {label} archivieren
-        </button>
-        {error ? <p className="text-center text-[11px] font-medium text-rose-600">{error}</p> : null}
+        </Button>
+        {error ? <p className="text-center text-xs font-medium text-[var(--sce-danger)]">{error}</p> : null}
       </div>
     );
   }
 
   return (
-    <div className="space-y-3 rounded-[var(--radius-xl)] border border-rose-200 bg-rose-50 p-4">
-      <p className="text-[13px] font-semibold text-rose-800">{`${name} wirklich archivieren?`}</p>
-      <p className="text-[12px] text-rose-700">
+    <div
+      className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 p-4"
+      data-testid="club-archive-confirm"
+    >
+      <p className="text-sm font-semibold text-[var(--foreground)]">{`${name} wirklich archivieren?`}</p>
+      <p className="text-xs text-[var(--muted)]">
         {resource === "club"
-          ? "Archivierte Vereine sind nicht mehr aktiv. Verknüpfte Teams bleiben erhalten. Diese Aktion kann rückgängig gemacht werden."
-          : "Archivierte Teams sind nicht mehr aktiv. Diese Aktion kann rückgängig gemacht werden."}
+          ? "Verknüpfte Teams bleiben erhalten. Die Archivierung kann rückgängig gemacht werden."
+          : "Die Archivierung kann rückgängig gemacht werden."}
       </p>
-      <div className="flex gap-2">
-        <button
+      <div className="flex flex-wrap gap-2">
+        <Button
           type="button"
+          variant="danger"
+          loading={loading}
+          className="flex-1"
+          iconLeft={<Archive className="h-4 w-4" />}
           onClick={handleArchive}
-          disabled={loading}
-          className="flex flex-1 items-center justify-center gap-2 rounded-[var(--radius-xl)] bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700 disabled:opacity-60"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Archive className="h-4 w-4" />}
-          {loading ? "Archivieren…" : "Ja, archivieren"}
-        </button>
-        <button
+          Ja, archivieren
+        </Button>
+        <Button
           type="button"
+          variant="secondary"
+          className="flex-1"
+          disabled={loading}
           onClick={() => {
             setConfirming(false);
             setError(null);
           }}
-          disabled={loading}
-          className="flex-1 rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)]"
         >
           Abbrechen
-        </button>
+        </Button>
       </div>
-      {error ? <p className="text-[11px] font-medium text-rose-600">{error}</p> : null}
+      {error ? <p className="text-xs font-medium text-[var(--sce-danger)]">{error}</p> : null}
     </div>
   );
 }
@@ -145,20 +155,17 @@ export function ClubDirectoryRestoreButton({
 
   return (
     <div className="space-y-2">
-      <button
+      <Button
         type="button"
+        variant="secondary"
+        className="w-full"
+        loading={loading}
+        iconLeft={<ArchiveRestore className="h-4 w-4" />}
         onClick={handleRestore}
-        disabled={loading}
-        className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-xl)] border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:opacity-60"
       >
-        {loading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <ArchiveRestore className="h-4 w-4" />
-        )}
         {`${name} wiederherstellen`}
-      </button>
-      {error ? <p className="text-center text-[11px] font-medium text-rose-600">{error}</p> : null}
+      </Button>
+      {error ? <p className="text-center text-xs font-medium text-[var(--sce-danger)]">{error}</p> : null}
     </div>
   );
 }

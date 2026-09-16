@@ -2,13 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Merge, Search, Users, X } from "lucide-react";
-import { Badge } from "@/components/ui";
+import Link from "next/link";
+import { Check, ChevronRight, Merge, Search, X } from "lucide-react";
+import { Badge, Button } from "@/components/ui";
+import { SectionCard } from "@/components/ui/page";
 import { ClubLogo } from "./ClubLogo";
-import {
-  formatExternalTeamCompetitionContext,
-  type ExternalTeamCompetitionContext,
-} from "@/lib/club-directory/competition-context";
+import type { ExternalTeamCompetitionContext } from "@/lib/club-directory/competition-context";
 
 type ClubSearchResult = {
   id: string;
@@ -39,21 +38,11 @@ type MergeClubFormProps = {
     name: string;
     shortName: string | null;
     logoUrl: string | null;
+    teamCount?: number;
+    hasProviderMapping?: boolean;
   };
 };
 
-const fieldClass =
-  "w-full rounded-[14px] border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30";
-
-/**
- * CLUB-DIRECTORY-03 — manual club merge UI. The tenant admin picks one or
- * more duplicate ("losing") clubs to merge into this ("surviving") club,
- * sees exactly what will move (teams + provider mappings) before
- * confirming, then triggers the merge via POST .../clubs/[clubId]/merge.
- *
- * Deliberately NOT automatic: no name-similarity suggestions, no
- * pre-selection — every losing club is explicitly chosen by the admin.
- */
 export default function MergeClubForm({ survivingClub }: MergeClubFormProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -66,19 +55,26 @@ export default function MergeClubForm({ survivingClub }: MergeClubFormProps) {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const hasSearchQuery = query.trim().length > 0;
+
   useEffect(() => {
     let cancelled = false;
     const handle = setTimeout(async () => {
+      if (!hasSearchQuery) {
+        setSearchResults([]);
+        setSearching(false);
+        return;
+      }
       setSearching(true);
       try {
-        const params = new URLSearchParams({ limit: "20" });
-        if (query.trim()) params.set("search", query.trim());
+        const params = new URLSearchParams({ limit: "20", search: query.trim() });
         const res = await fetch(`/api/club-directory/clubs?${params.toString()}`);
         const data = await res.json().catch(() => ({}));
         if (!cancelled && res.ok && Array.isArray(data?.clubs)) {
           setSearchResults(
             data.clubs.filter(
-              (c: ClubSearchResult) => c.id !== survivingClub.id && !selectedIds.includes(c.id),
+              (c: ClubSearchResult) =>
+                c.id !== survivingClub.id && !selectedIds.includes(c.id) && !c.archivedAt,
             ),
           );
         }
@@ -90,12 +86,11 @@ export default function MergeClubForm({ survivingClub }: MergeClubFormProps) {
       cancelled = true;
       clearTimeout(handle);
     };
-  }, [query, survivingClub.id, selectedIds]);
+  }, [query, survivingClub.id, selectedIds, hasSearchQuery]);
 
   async function addLosingClub(clubId: string) {
     setError(null);
     setSelectedIds((prev) => [...prev, clubId]);
-    setSearchResults((prev) => prev.filter((c) => c.id !== clubId));
 
     setLoadingPreview(true);
     try {
@@ -156,198 +151,263 @@ export default function MergeClubForm({ survivingClub }: MergeClubFormProps) {
     }
   }
 
+  const survivingMeta = [
+    survivingClub.teamCount != null ? `${survivingClub.teamCount} Team${survivingClub.teamCount === 1 ? "" : "s"}` : null,
+    survivingClub.hasProviderMapping ? "Anbieter-verknüpft" : "Manuell erfasst",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <div className="space-y-6">
-      <section className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-        <h3 className="mb-1 text-[1.05rem] font-semibold text-slate-900">Bleibender Verein</h3>
-        <p className="mb-4 text-sm text-slate-500">
-          Alle Teams und Anbieter-Verknüpfungen werden auf diesen Verein übertragen.
-        </p>
-        <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <ClubLogo logoUrl={survivingClub.logoUrl} name={survivingClub.name} size="sm" />
-          <div>
-            <p className="text-sm font-semibold text-slate-900">{survivingClub.name}</p>
+    <div className="mx-auto flex max-w-3xl flex-col gap-6" data-testid="merge-club-form">
+      <SectionCard
+        title="1 · Bleibender Verein"
+        description="Alle Teams und Anbieter-Verknüpfungen der ausgewählten Duplikate werden auf diesen Verein übertragen."
+        accent
+        bodyClassName="p-0"
+      >
+        <div
+          className="flex flex-wrap items-center gap-4 border-l-2 border-[var(--sce-success)] px-5 py-4"
+          data-testid="merge-surviving-club"
+        >
+          <ClubLogo logoUrl={survivingClub.logoUrl} name={survivingClub.name} size="md" />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-base font-semibold text-[var(--foreground)]">{survivingClub.name}</p>
+              <Badge variant="success" size="sm">Bleibt aktiv</Badge>
+            </div>
             {survivingClub.shortName ? (
-              <p className="text-xs text-slate-500">{survivingClub.shortName}</p>
+              <p className="text-xs text-[var(--muted)]">{survivingClub.shortName}</p>
+            ) : null}
+            {survivingMeta ? <p className="mt-1 text-xs text-[var(--text-2)]">{survivingMeta}</p> : null}
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="2 · Duplikate auswählen" description="Zu vereinigende Duplikate" noPadding>
+        <div className="space-y-4 px-5 py-4">
+          <p className="text-xs text-[var(--muted)]">
+            Duplikat-Vereine werden archiviert, nicht gelöscht. Teams und Anbieter-Verknüpfungen werden
+            verschoben.
+          </p>
+
+          <div className="sce-page-search" data-testid="merge-club-search">
+            <Search className="h-4 w-4 flex-shrink-0 text-[var(--muted)]" aria-hidden />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Verein suchen…"
+              aria-label="Verein suchen"
+              autoComplete="off"
+            />
+            {query ? (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="flex-shrink-0 text-xs font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
+              >
+                Löschen
+              </button>
             ) : null}
           </div>
-          <Badge variant="success" size="sm">
-            Bleibt aktiv
-          </Badge>
-        </div>
-      </section>
 
-      <section className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-        <h3 className="mb-1 text-[1.05rem] font-semibold text-slate-900">
-          Zu vereinigende Duplikate
-        </h3>
-        <p className="mb-4 text-sm text-slate-500">
-          Wähle einen oder mehrere Vereine, die in &bdquo;{survivingClub.name}&ldquo; aufgehen sollen.
-          Sie werden danach archiviert, nie gelöscht.
-        </p>
+          {searching ? (
+            <p className="text-xs text-[var(--muted)]">Suche…</p>
+          ) : null}
 
-        <div className="relative mb-3">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Verein suchen…"
-            className={`${fieldClass} pl-10`}
-          />
-        </div>
+          {!hasSearchQuery ? (
+            <p
+              className="rounded-lg border border-dashed border-[var(--border)] px-4 py-6 text-center text-sm text-[var(--muted)]"
+              data-testid="merge-search-empty-initial"
+            >
+              Suche nach einem Verein, um mögliche Duplikate auszuwählen.
+            </p>
+          ) : null}
 
-        {searching ? (
-          <p className="mb-3 text-xs text-slate-400">Suche…</p>
-        ) : searchResults.length > 0 ? (
-          <ul className="mb-4 max-h-56 space-y-1.5 overflow-y-auto rounded-xl border border-slate-100 p-1.5">
-            {searchResults.map((club) => (
-              <li key={club.id}>
-                <button
-                  type="button"
-                  onClick={() => addLosingClub(club.id)}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-slate-50"
-                >
-                  <ClubLogo logoUrl={club.logoUrl} name={club.name} size="sm" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-slate-900">{club.name}</span>
-                    <span className="block text-xs text-slate-400">
-                      {club.teamCount} Team{club.teamCount !== 1 ? "s" : ""}
-                      {club.archivedAt ? " · Archiviert" : ""}
-                    </span>
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mb-4 text-xs text-slate-400">Keine weiteren Treffer.</p>
-        )}
+          {hasSearchQuery && !searching && searchResults.length === 0 ? (
+            <p className="text-sm text-[var(--muted)]" data-testid="merge-search-no-results">
+              Keine passenden Vereine gefunden.
+            </p>
+          ) : null}
 
-        {selectedIds.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-400">
-            Noch keine Duplikate ausgewählt.
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {selectedIds.map((id) => {
-              const detail = selectedDetails[id];
-              return (
-                <li
-                  key={id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="truncate text-sm font-semibold text-slate-900">
-                        {detail?.name ?? id}
-                      </span>
-                      <Badge variant="default" size="sm">
-                        Wird archiviert
-                      </Badge>
-                    </div>
-                    {detail ? (
-                      <>
-                        <p className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
-                          <Users className="h-3 w-3" />
-                          {detail.teams.length} Team{detail.teams.length !== 1 ? "s" : ""} ·{" "}
-                          {detail.providerMappings.length} Anbieter-Verknüpfung
-                          {detail.providerMappings.length !== 1 ? "en" : ""} werden übertragen
-                        </p>
-                        {detail.teams.length > 0 ? (
-                          <ul className="mt-1.5 space-y-0.5 pl-5 text-xs text-slate-400">
-                            {detail.teams.map((team) => {
-                              const context = formatExternalTeamCompetitionContext(
-                                team.competitionContext,
-                              );
-                              return (
-                                <li key={team.id} className="truncate">
-                                  {team.name}
-                                  {context ? <span className="text-slate-300"> · {context}</span> : null}
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        ) : null}
-                      </>
-                    ) : (
-                      <p className="mt-0.5 text-xs text-slate-400">Lädt…</p>
-                    )}
-                  </div>
+          {searchResults.length > 0 ? (
+            <ul className="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/30 p-1">
+              {searchResults.map((club) => (
+                <li key={club.id}>
                   <button
                     type="button"
-                    onClick={() => removeLosingClub(id)}
-                    className="rounded-full p-1.5 text-slate-400 hover:bg-white hover:text-slate-600"
-                    aria-label="Entfernen"
+                    onClick={() => addLosingClub(club.id)}
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition hover:bg-[var(--surface-2)]"
                   >
-                    <X className="h-4 w-4" />
+                    <ClubLogo logoUrl={club.logoUrl} name={club.name} size="sm" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-[var(--foreground)]">
+                        {club.name}
+                      </span>
+                      <span className="block text-xs text-[var(--muted)]">
+                        {club.teamCount} Team{club.teamCount !== 1 ? "s" : ""}
+                        {club.hasProviderMapping ? " · Anbieter-verknüpft" : " · Manuell"}
+                      </span>
+                    </span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
                   </button>
                 </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+              ))}
+            </ul>
+          ) : null}
+
+          {selectedIds.length > 0 ? (
+            <div className="space-y-2" data-testid="merge-selected-list">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                Ausgewählt ({selectedIds.length})
+              </p>
+              <ul className="space-y-2">
+                {selectedIds.map((id) => {
+                  const detail = selectedDetails[id];
+                  return (
+                    <li
+                      key={id}
+                      className="flex items-start justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/60 px-4 py-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Check className="h-4 w-4 text-[var(--sce-success)]" aria-hidden />
+                          <span className="truncate text-sm font-semibold text-[var(--foreground)]">
+                            {detail?.name ?? id}
+                          </span>
+                          <Badge variant="outline" size="sm">Wird archiviert</Badge>
+                        </div>
+                        {detail ? (
+                          <p className="mt-1 text-xs text-[var(--muted)]">
+                            {detail.teams.length} Team{detail.teams.length !== 1 ? "s" : ""} ·{" "}
+                            {detail.providerMappings.length} Anbieter-Verknüpfung
+                            {detail.providerMappings.length !== 1 ? "en" : ""} werden übertragen
+                          </p>
+                        ) : (
+                          <p className="mt-1 text-xs text-[var(--muted)]">Lädt…</p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeLosingClub(id)}
+                        className="rounded-md p-1.5 text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]"
+                        aria-label="Auswahl entfernen"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      </SectionCard>
 
       {selectedIds.length > 0 ? (
-        <section className="rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-          <h3 className="mb-4 text-[1.05rem] font-semibold text-slate-900">Zusammenfassung</h3>
-          <ul className="mb-5 space-y-1.5 text-sm text-slate-600">
-            <li>
-              <strong>{totals.teams}</strong> Team{totals.teams !== 1 ? "s" : ""} werden zu &bdquo;
-              {survivingClub.name}&ldquo; verschoben.
-            </li>
-            <li>
-              <strong>{totals.mappings}</strong> Anbieter-Verknüpfung{totals.mappings !== 1 ? "en" : ""}{" "}
-              (z.B. SFV) werden übertragen.
-            </li>
-            <li>
-              <strong>{selectedIds.length}</strong> Verein{selectedIds.length !== 1 ? "e" : ""} werden
-              archiviert (nicht gelöscht).
-            </li>
-          </ul>
-
-          {error ? <p className="mb-3 text-sm font-medium text-rose-600">{error}</p> : null}
-
-          {!confirming ? (
-            <button
-              type="button"
-              onClick={() => setConfirming(true)}
-              disabled={loadingPreview}
-              className="inline-flex items-center gap-2 rounded-full bg-[#0b4aa2] px-6 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-60 hover:bg-[#08357a]"
-            >
-              <Merge className="h-4 w-4" />
-              Zusammenführung vorbereiten
-            </button>
-          ) : (
-            <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
-              <p className="text-sm font-semibold text-amber-800">
-                Zusammenführung wirklich durchführen? Diese Aktion verschiebt Teams und
-                Anbieter-Verknüpfungen unwiderruflich.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleConfirm}
-                  disabled={submitting}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-full bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-60 hover:bg-amber-700"
-                >
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Merge className="h-4 w-4" />}
-                  Ja, zusammenführen
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirming(false)}
-                  disabled={submitting}
-                  className="flex-1 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-                >
-                  Abbrechen
-                </button>
+        <SectionCard title="3 · Zusammenführung prüfen" noPadding>
+          <div className="space-y-4 px-5 py-4" data-testid="merge-review">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  Bleibt bestehen
+                </p>
+                <p className="mt-1 text-sm font-medium text-[var(--foreground)]">{survivingClub.name}</p>
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  Wird zusammengeführt
+                </p>
+                <ul className="mt-1 space-y-0.5 text-sm text-[var(--text-2)]">
+                  {selectedIds.map((id) => (
+                    <li key={id} className="truncate">
+                      {selectedDetails[id]?.name ?? id}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
-          )}
-        </section>
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 px-4 py-3 text-sm text-[var(--text-2)]">
+              <p className="font-medium text-[var(--foreground)]">Übernommen:</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
+                <li>
+                  <strong>{totals.teams}</strong> Team{totals.teams !== 1 ? "s" : ""} werden auf den
+                  bleibenden Verein verschoben
+                </li>
+                <li>
+                  <strong>{totals.mappings}</strong> Anbieter-Verknüpfung{totals.mappings !== 1 ? "en" : ""}{" "}
+                  werden übertragen
+                </li>
+                <li>
+                  <strong>{selectedIds.length}</strong> Duplikat-Verein{selectedIds.length !== 1 ? "e" : ""}{" "}
+                  werden archiviert (nicht gelöscht)
+                </li>
+              </ul>
+            </div>
+
+            {error ? <p className="text-sm font-medium text-[var(--sce-danger)]">{error}</p> : null}
+
+            {confirming ? (
+              <div
+                className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/60 p-4"
+                data-testid="merge-confirm-panel"
+              >
+                <p className="text-sm font-semibold text-[var(--foreground)]">
+                  {selectedIds.length} Verein{selectedIds.length !== 1 ? "e" : ""} in „{survivingClub.name}“
+                  zusammenführen?
+                </p>
+                <p className="text-xs text-[var(--muted)]">
+                  Teams und Anbieter-Verknüpfungen werden auf den bleibenden Verein übertragen. Die
+                  Duplikat-Vereine werden archiviert und können wiederhergestellt werden.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="primary"
+                    loading={submitting}
+                    iconLeft={<Merge className="h-4 w-4" />}
+                    onClick={handleConfirm}
+                  >
+                    Zusammenführung durchführen
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={submitting}
+                    onClick={() => setConfirming(false)}
+                  >
+                    Abbrechen
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </SectionCard>
       ) : null}
+
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
+        <Link href={`/dashboard/vereine/${survivingClub.id}`}>
+          <Button type="button" variant="secondary">Abbrechen</Button>
+        </Link>
+        <Button
+          type="button"
+          variant="primary"
+          disabled={selectedIds.length === 0 || loadingPreview}
+          iconLeft={<Merge className="h-4 w-4" />}
+          onClick={() => setConfirming(true)}
+          data-testid="merge-primary-cta"
+          aria-label={
+            selectedIds.length > 0
+              ? `${selectedIds.length} Vereine zusammenführen`
+              : "Vereine zusammenführen"
+          }
+        >
+          {selectedIds.length > 0
+            ? `${selectedIds.length} Verein${selectedIds.length !== 1 ? "e" : ""} zusammenführen`
+            : "Vereine zusammenführen"}
+        </Button>
+      </div>
     </div>
   );
 }
