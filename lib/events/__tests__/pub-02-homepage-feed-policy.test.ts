@@ -98,14 +98,16 @@ describe("PUB-02 — Homepage feed policy", () => {
     mockFindMany.mockResolvedValue([]);
   });
 
-  it("H-PUB02-4: homepage surface predicate does NOT require homepageVisible=true", async () => {
+  it("H-PUB02-4: homepage surface does NOT flat-require homepageVisible=true for all types", async () => {
     await getPublicEvents({ surface: "homepage", tenantId: "tenant-fca" });
 
     const call = mockFindMany.mock.calls[0][0];
     // homepage must use websiteVisible=true
     expect(call.where.websiteVisible).toBe(true);
-    // homepage must NOT require homepageVisible=true
+    // Matches stay eligible when homepageVisible=false (no top-level homepageVisible=true)
     expect(call.where).not.toHaveProperty("homepageVisible");
+    const andClauses = call.where.AND as Record<string, unknown>[];
+    expect(andClauses.some((clause) => "OR" in clause)).toBe(true);
   });
 
   it("H-PUB02-1: websiteVisible=true → match included in homepage surface", async () => {

@@ -8,7 +8,7 @@
  *   ACTIVE WochenplanPlan (tenant public metadata)
  *     → linked WeekplannerPlan for current week (by wochenplanPlanId) or Standardplan
  *     → getWeekplannerWeek (canonical /dashboard/planner/week data)
- *     → publication policy (shared HOME-match semantics + websiteVisible)
+ *     → publication policy (HOME-match semantics + websiteVisible + wochenplanVisible)
  *     → optional team filter (never overrides HOME/facility rules)
  *     → public DTO grouped Mon–Sun
  */
@@ -173,6 +173,7 @@ function isEligibleForPublicFeed(
         status: policy.status,
         infoboardVisible: policy.infoboardVisible,
         websiteVisible: policy.websiteVisible,
+        wochenplanVisible: policy.wochenplanVisible,
         trainingsplanVisible: policy.trainingsplanVisible,
         homeAway: policy.homeAway,
       };
@@ -187,6 +188,7 @@ function isEligibleForPublicFeed(
         status: policy.status,
         infoboardVisible: policy.infoboardVisible,
         websiteVisible: policy.websiteVisible,
+        wochenplanVisible: policy.wochenplanVisible,
         trainingsplanVisible: policy.trainingsplanVisible,
         homeAway: policy.homeAway,
       };

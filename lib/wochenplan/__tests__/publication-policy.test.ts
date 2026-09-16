@@ -48,6 +48,12 @@ describe("evaluateWochenplanMatchPublication", () => {
       evaluateWochenplanMatchPublication({ ...base, websiteVisible: false }, TENANT).reason,
     ).toBe("WEBSITE_HIDDEN");
   });
+
+  it("excludes match when wochenplanVisible is false", () => {
+    expect(
+      evaluateWochenplanMatchPublication({ ...base, wochenplanVisible: false }, TENANT).reason,
+    ).toBe("WOCHENPLAN_HIDDEN");
+  });
 });
 
 describe("evaluateWochenplanTournamentPublication", () => {
@@ -69,6 +75,19 @@ describe("evaluateWochenplanTournamentPublication", () => {
     expect(
       evaluateWochenplanTournamentPublication({ ...base, homeAway: "AWAY" }, TENANT).reason,
     ).toBe("AWAY_MATCH");
+  });
+
+  it("excludes tournament when wochenplanVisible is false", () => {
+    expect(
+      evaluateWochenplanTournamentPublication({ ...base, wochenplanVisible: false }, TENANT)
+        .reason,
+    ).toBe("WOCHENPLAN_HIDDEN");
+  });
+
+  it("includes tournament when wochenplanVisible is true", () => {
+    expect(
+      evaluateWochenplanTournamentPublication({ ...base, wochenplanVisible: true }, TENANT).eligible,
+    ).toBe(true);
   });
 });
 

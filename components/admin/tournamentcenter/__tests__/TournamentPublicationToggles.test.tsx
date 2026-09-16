@@ -22,8 +22,9 @@ describe("TournamentPublicationToggles", () => {
       />,
     );
 
-    expect(screen.getByRole("switch", { name: "Website" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Öffentliche Turnierseite" })).toBeChecked();
     expect(screen.getByRole("switch", { name: "Infoboard" })).not.toBeChecked();
+    expect(screen.getByText("Im öffentlichen Wochenplan anzeigen.")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("switch", { name: "Wochenplan" }));
     expect(onChange).toHaveBeenCalledWith({ wochenplanVisible: true });

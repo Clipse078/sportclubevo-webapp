@@ -124,6 +124,7 @@ export type CanonicalEventPolicyRow = {
   readonly status: string;
   readonly infoboardVisible: boolean;
   readonly websiteVisible: boolean;
+  readonly wochenplanVisible: boolean;
   readonly trainingsplanVisible: boolean;
   readonly homeAway: string | null;
   readonly organizerName: string | null;
@@ -235,6 +236,7 @@ export const CANONICAL_EVENT_POLICY_SELECT = {
   status: true,
   infoboardVisible: true,
   websiteVisible: true,
+  wochenplanVisible: true,
   trainingsplanVisible: true,
   homeAway: true,
   organizerName: true,

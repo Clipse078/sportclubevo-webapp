@@ -32,6 +32,7 @@ export type PublicationReason =
   | "INFOBOARD_HIDDEN"
   | "WEBSITE_HIDDEN"
   | "TRAININGSPLAN_HIDDEN"
+  | "WOCHENPLAN_HIDDEN"
   | "AWAY_MATCH"
   | "HOME_AWAY_UNKNOWN"
   | "TOURNAMENT_HOSTING_UNVERIFIED";
@@ -73,6 +74,12 @@ export type PublicationPolicyEvent = {
    * Required in addition to `websiteVisible` for WEBSITE_TRAININGS.
    */
   trainingsplanVisible: boolean;
+  /**
+   * Wochenplan channel flag. When false, the event must not appear on the public
+   * current-week Wochenplan feed (in addition to websiteVisible for matches).
+   * Omitted callers treat as visible (backward compatible).
+   */
+  wochenplanVisible?: boolean;
   /**
    * Match location — relevant only for MATCH events.
    * Normalized via trim and uppercase before comparison.
