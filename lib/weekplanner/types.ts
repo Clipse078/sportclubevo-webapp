@@ -41,7 +41,7 @@
  * Standardplan.
  */
 
-export type WeekplannerItemType = "TRAINING" | "MATCH" | "TOURNAMENT";
+export type WeekplannerItemType = "TRAINING" | "MATCH" | "TOURNAMENT" | "VERANSTALTUNG";
 
 /** The two allocation groups a WeekplannerPlan may override — see prisma/schema.prisma#WeekplannerAllocationGroup. */
 export type WeekplannerAllocationGroup = "PITCH_HALL" | "DRESSING_ROOM";
@@ -49,6 +49,7 @@ export type WeekplannerAllocationGroup = "PITCH_HALL" | "DRESSING_ROOM";
 /** Denormalised FacilityResource reference — the canonical resource, never duplicated. */
 export type WeekplannerResourceRef = {
   facilityResourceId: string;
+  facilityId: string;
   code: string;
   name: string;
   facilityName: string;
@@ -112,6 +113,7 @@ export type WeekplannerTrainingItem = WeekplannerItemBase & {
   type: "TRAINING";
   trainingSeriesId: string;
   trainingSessionId: string;
+  teamSeasonId: string;
 };
 
 export type WeekplannerMatchItem = WeekplannerItemBase & {
@@ -136,10 +138,19 @@ export type WeekplannerTournamentItem = WeekplannerItemBase & {
   participantAllocations: WeekplannerTournamentParticipantAllocation[];
 };
 
+/** CLUB-EVENTS / PLANNING-HUB-01 — tenant Veranstaltungen (Event.type=OTHER). */
+export type WeekplannerVeranstaltungItem = WeekplannerItemBase & {
+  type: "VERANSTALTUNG";
+  eventId: string;
+  location: string | null;
+  teamSeasonId: string | null;
+};
+
 export type WeekplannerItem =
   | WeekplannerTrainingItem
   | WeekplannerMatchItem
-  | WeekplannerTournamentItem;
+  | WeekplannerTournamentItem
+  | WeekplannerVeranstaltungItem;
 
 export type WeekplannerDay = {
   /** "YYYY-MM-DD", Europe/Zurich calendar date. */

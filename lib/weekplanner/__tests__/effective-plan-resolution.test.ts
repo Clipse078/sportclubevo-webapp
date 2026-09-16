@@ -13,6 +13,7 @@ import type { WeekplannerResourceRef } from "../types";
 
 const PITCH: WeekplannerResourceRef = {
   facilityResourceId: "res-1",
+  facilityId: "fac-1",
   code: "KR2_A",
   name: "Kunstrasen 2 A",
   facilityName: "Kunstrasen 2",

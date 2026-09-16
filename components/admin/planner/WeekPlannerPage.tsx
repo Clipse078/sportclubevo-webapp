@@ -37,6 +37,22 @@ import { WeekplannerOverridePanelProvider } from "./WeekplannerOverridePanelCont
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { WeekplannerPlanningSheet } from "./WeekplannerPlanningSheet";
 import { WeekplannerOperationalPlanningSheet } from "./WeekplannerOperationalPlanningSheet";
+import PlanningHubCreateMenu, {
+  type PlanningHubCreatePermissions,
+} from "@/components/admin/planning-hub/PlanningHubCreateMenu";
+import PlanningHubConflictAttention from "@/components/admin/planning-hub/PlanningHubConflictAttention";
+import PlanningHubConflictSheet from "@/components/admin/planning-hub/PlanningHubConflictSheet";
+import PlanningHubResourceWeekView from "@/components/admin/planning-hub/PlanningHubResourceWeekView";
+import PlanningHubWeekFilters from "@/components/admin/planning-hub/PlanningHubWeekFilters";
+import {
+  applyPlanningHubFilters,
+} from "@/lib/planning-hub/filters";
+import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
+import {
+  buildPlanningHubHref,
+  type PlanningHubUrlState,
+} from "@/lib/planning-hub/planner-url";
+import { CalendarDays } from "lucide-react";
 
 /**
  * WEEKPLANNER-01B — populated only when an alternative plan is selected AND
@@ -49,10 +65,13 @@ type OverrideEditingContext = {
   facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
 };
 
-const CANONICAL_MODULE_HREF: Record<WeekplannerItem["type"], { label: string; href: string }> = {
-  TRAINING: { label: "TrainingCenter", href: "/dashboard/training" },
-  MATCH: { label: "Matchcenter", href: "/dashboard/matchcenter" },
-  TOURNAMENT: { label: "TournamentCenter", href: "/dashboard/tournamentcenter" },
+const CANONICAL_MODULE_HREF: Record<
+  Exclude<WeekplannerItem["type"], "VERANSTALTUNG">,
+  { label: string; href: string }
+> = {
+  TRAINING: { label: "Trainings", href: "/dashboard/training" },
+  MATCH: { label: "Spiele", href: "/dashboard/matchcenter" },
+  TOURNAMENT: { label: "Turniere", href: "/dashboard/tournamentcenter" },
 };
 
 /**
@@ -78,6 +97,9 @@ type WeekPlannerPageProps = {
   canManagePlans?: boolean;
   overrideEditing?: OverrideEditingContext;
   canonicalEditing?: CanonicalEditingContext;
+  urlState?: PlanningHubUrlState;
+  facilityOptions?: { value: string; label: string }[];
+  createPermissions?: PlanningHubCreatePermissions;
 };
 
 const TYPE_META: Record<
@@ -99,10 +121,15 @@ const TYPE_META: Record<
     badgeClass: "border-amber-200 bg-amber-50 text-amber-700",
     icon: Trophy,
   },
+  VERANSTALTUNG: {
+    label: "Veranstaltung",
+    badgeClass: "border-violet-200 bg-violet-50 text-violet-700",
+    icon: CalendarDays,
+  },
 };
 
-function weekHref(param: string): string {
-  return `/dashboard/planner/week?week=${encodeURIComponent(param)}`;
+function weekHref(param: string, urlState: PlanningHubUrlState): string {
+  return buildPlanningHubHref({ ...urlState, week: param });
 }
 
 function formatTimeRange(startAt: Date, endAt: Date, locale: string, timeZone: string): string {
@@ -299,7 +326,8 @@ function IncompletePlanningBadge({
 }
 
 function activityIdOf(item: WeekplannerItem): string {
-  return item.type === "TRAINING" ? item.trainingSessionId : item.eventId;
+  if (item.type === "TRAINING") return item.trainingSessionId;
+  return item.eventId;
 }
 
 function WeekplannerCard({
@@ -332,6 +360,7 @@ function WeekplannerCard({
   const isStandardplan = !planName;
   const canEditThisItem =
     canonicalEditing &&
+    item.type !== "VERANSTALTUNG" &&
     ((item.type === "TRAINING" && canonicalEditing.canManageTrainings) ||
       ((item.type === "MATCH" || item.type === "TOURNAMENT") && canonicalEditing.canManageEvents));
   const showCanonicalEditButton = isStandardplan && canEditThisItem && !!onEdit;
@@ -340,7 +369,8 @@ function WeekplannerCard({
   // PLANNING-UX-C3 — incomplete planning detection
   const missingAllocations = isStandardplan ? getMissingAllocations(item) : [];
 
-  const timeEditor = overrideEditing ? (
+  const timeEditor =
+    overrideEditing && item.type !== "VERANSTALTUNG" ? (
     <WeekplannerActivityTimeOverrideEditor
       planId={overrideEditing.planId}
       activityType={item.type}
@@ -460,6 +490,25 @@ function WeekplannerCard({
               />
             </WeekplannerActivityOverridePanel>
           )}
+        </div>
+      )}
+
+      {item.type === "VERANSTALTUNG" && (
+        <div className="mt-2.5">
+          <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
+          {item.location && <p className="mt-0.5 text-xs text-[var(--text-2)]">{item.location}</p>}
+          <div className="mt-2 space-y-1">
+            <ResourceChips icon={MapPin} refs={item.pitchAllocations} />
+            <ResourceChips icon={DoorOpen} refs={item.dressingRoomAllocations} />
+          </div>
+          <div className="mt-2">
+            <Link
+              href={`/dashboard/veranstaltungen/${item.eventId}`}
+              className="text-xs font-medium text-[var(--sce-primary)] hover:underline"
+            >
+              Veranstaltung bearbeiten →
+            </Link>
+          </div>
         </div>
       )}
 
@@ -658,17 +707,26 @@ export default function WeekPlannerPage({
   canManagePlans = false,
   overrideEditing,
   canonicalEditing,
+  urlState: urlStateProp,
+  facilityOptions = [],
+  createPermissions,
 }: WeekPlannerPageProps) {
-  const totalItems = week.days.reduce((sum, day) => sum + day.items.length, 0);
-  const conflictCount = week.days.reduce(
-    (sum, day) => sum + day.items.filter((item) => item.conflicts.length > 0).length,
-    0,
-  );
+  const urlState: PlanningHubUrlState = urlStateProp ?? {
+    week: week.param,
+    perspective: "woche",
+    activity: "alle",
+    team: null,
+    facility: null,
+    conflictsOnly: false,
+    resourceCategory: "pitch",
+  };
+  const filteredWeek = applyPlanningHubFilters(week, urlState);
+  const totalItems = filteredWeek.days.reduce((sum, day) => sum + day.items.length, 0);
 
   // PLANNING-UX-C3 — incomplete planning count (Standardplan only)
   const isStandardplan = activePlanId === null;
   const incompleteCount = isStandardplan
-    ? week.days.reduce(
+    ? filteredWeek.days.reduce(
         (sum, day) =>
           sum + day.items.filter((item) => getMissingAllocations(item).length > 0).length,
         0,
@@ -677,11 +735,32 @@ export default function WeekPlannerPage({
 
   const planName = activePlanId ? plans.find((p) => p.id === activePlanId)?.name ?? null : null;
 
-  // PLANNING-UX-C3 — lifted Sheet state: one active editing item at most.
   const [editingItem, setEditingItem] = useState<WeekplannerItem | null>(null);
   const [operationalEditingItem, setOperationalEditingItem] = useState<WeekplannerItem | null>(null);
+  const [conflictsExpanded, setConflictsExpanded] = useState(false);
+  const [selectedIncident, setSelectedIncident] = useState<PlanningConflictIncident | null>(null);
 
   const canEdit = !!canonicalEditing;
+
+  const teamOptions = (() => {
+    const map = new Map<string, string>();
+    for (const day of week.days) {
+      for (const item of day.items) {
+        if (item.type === "TRAINING") {
+          map.set(item.teamSeasonId, item.teamNames[0] ?? item.title);
+        } else if (item.teamNames[0]) {
+          map.set(item.teamNames[0], item.teamNames[0]);
+        }
+      }
+    }
+    return [...map.entries()]
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, "de-CH"));
+  })();
+
+  const itemsById = new Map(
+    week.days.flatMap((day) => day.items.map((item) => [item.id, item] as const)),
+  );
 
   function handleEdit(item: WeekplannerItem) {
     if (!canonicalEditing) return;
@@ -700,8 +779,9 @@ export default function WeekPlannerPage({
     <div className="space-y-6">
       <AdminSectionHeader
         eyebrow="Planung"
-        title="Wochenplanung"
-        description="Trainings, Heimspiele und Heimturniere einer Kalenderwoche in einer koordinierten Ansicht — inklusive Platz- und Garderobenzuteilung."
+        title="Wochenplaner"
+        description="Alles, was diese Woche im Verein stattfindet."
+        actions={createPermissions ? <PlanningHubCreateMenu permissions={createPermissions} /> : undefined}
       />
 
       <SectionCard>
@@ -742,56 +822,104 @@ export default function WeekPlannerPage({
       )}
 
       <SectionCard noPadding>
-        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]" data-testid="weekplanner-week-number">
-              {week.weekNumberLabel}
-            </p>
-            <p className="mt-1 text-lg font-semibold text-[var(--foreground)]" data-testid="weekplanner-range-label">
-              {week.rangeLabel}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4">
+          <div className="flex flex-wrap items-center gap-2">
             <Link
-              href={weekHref(week.previousParam)}
+              href={weekHref(week.previousParam, urlState)}
               aria-label="Vorherige Woche"
               data-testid="weekplanner-previous-week"
               className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
             >
               <ChevronLeft className="h-4 w-4" />
             </Link>
-
+            <p className="text-base font-semibold text-[var(--foreground)]" data-testid="weekplanner-range-label">
+              {week.rangeLabel}
+            </p>
             <Link
-              href={weekHref(todayParam)}
-              data-testid="weekplanner-today"
-              className="inline-flex h-9 items-center rounded-lg border border-[var(--border)] px-3.5 text-sm font-semibold text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
-            >
-              Heute
-            </Link>
-
-            <Link
-              href={weekHref(week.nextParam)}
+              href={weekHref(week.nextParam, urlState)}
               aria-label="Nächste Woche"
               data-testid="weekplanner-next-week"
               className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
             >
               <ChevronRight className="h-4 w-4" />
             </Link>
+            <Link
+              href={weekHref(todayParam, urlState)}
+              data-testid="weekplanner-today"
+              className="inline-flex h-9 items-center rounded-lg border border-[var(--border)] px-3.5 text-sm font-semibold text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+            >
+              Heute
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-1 rounded-lg border border-[var(--border)] p-0.5" data-testid="planning-hub-perspective">
+            <Link
+              href={buildPlanningHubHref(urlState, { perspective: "woche" })}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-xs font-semibold",
+                urlState.perspective === "woche"
+                  ? "bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
+                  : "text-[var(--text-2)] hover:bg-[var(--surface-2)]",
+              )}
+            >
+              Woche
+            </Link>
+            <Link
+              href={buildPlanningHubHref(urlState, { perspective: "ressourcen" })}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-xs font-semibold",
+                urlState.perspective === "ressourcen"
+                  ? "bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
+                  : "text-[var(--text-2)] hover:bg-[var(--surface-2)]",
+              )}
+            >
+              Ressourcen
+            </Link>
           </div>
         </div>
+
+        {urlState.perspective === "ressourcen" && (
+          <div className="flex gap-1 border-b border-[var(--border)] px-5 py-2">
+            <Link
+              href={buildPlanningHubHref(urlState, { resourceCategory: "pitch" })}
+              className={cn(
+                "rounded-full border px-2.5 py-1 text-xs font-semibold",
+                urlState.resourceCategory === "pitch"
+                  ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
+                  : "border-[var(--border)] text-[var(--text-2)]",
+              )}
+            >
+              Spielfeld / Halle
+            </Link>
+            <Link
+              href={buildPlanningHubHref(urlState, { resourceCategory: "dressing" })}
+              className={cn(
+                "rounded-full border px-2.5 py-1 text-xs font-semibold",
+                urlState.resourceCategory === "dressing"
+                  ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
+                  : "border-[var(--border)] text-[var(--text-2)]",
+              )}
+            >
+              Garderobe
+            </Link>
+          </div>
+        )}
+
+        <PlanningHubWeekFilters
+          urlState={urlState}
+          teamOptions={teamOptions}
+          facilityOptions={facilityOptions}
+        />
       </SectionCard>
 
-      {/* PLANNING-UX-C3 — AMBER: shared resource occupancy (informational, not a hard error). */}
-      {conflictCount > 0 && (
-        <div
-          className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-800"
-          data-testid="weekplanner-conflict-summary"
-        >
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          {conflictCount} {conflictCount === 1 ? "Eintrag" : "Einträge"} mit geteilter Ressourcenbelegung diese Woche
-        </div>
-      )}
+      <PlanningHubConflictAttention
+        week={week}
+        locale={locale}
+        timezone={timezone}
+        expanded={conflictsExpanded}
+        onToggleExpanded={() => setConflictsExpanded((value) => !value)}
+        onSelectIncident={(incident) => setSelectedIncident(incident)}
+      />
 
       {/* PLANNING-UX-C3 — AMBER: incomplete planning (Standardplan only). Never classified as Doppelbelegung. */}
       {incompleteCount > 0 && (
@@ -804,19 +932,28 @@ export default function WeekPlannerPage({
         </div>
       )}
 
-      {totalItems === 0 ? (
+      {urlState.perspective === "ressourcen" ? (
+        <SectionCard noPadding>
+          <PlanningHubResourceWeekView
+            week={week}
+            urlState={urlState}
+            locale={locale}
+            timezone={timezone}
+          />
+        </SectionCard>
+      ) : totalItems === 0 ? (
         <SectionCard noPadding>
           <EmptyState
             icon={<Dumbbell className="h-8 w-8" />}
             heading="Keine Planungseinträge"
-            description="Für diese Kalenderwoche gibt es keine Trainings, Heimspiele oder Heimturniere."
+            description="Für diese Kalenderwoche gibt es keine passenden Aktivitäten."
           />
         </SectionCard>
       ) : (
         <div className="-mx-1 overflow-x-auto pb-2">
           <WeekplannerOverridePanelProvider>
             <div className="flex min-w-full gap-3 px-1">
-              {week.days.map((day) => (
+              {filteredWeek.days.map((day) => (
                 <DayColumn
                   key={day.dayKey}
                   day={day}
@@ -857,6 +994,18 @@ export default function WeekPlannerPage({
           onSaved={() => setOperationalEditingItem(null)}
         />
       )}
+
+      <PlanningHubConflictSheet
+        incident={selectedIncident}
+        itemsById={itemsById}
+        locale={locale}
+        timezone={timezone}
+        onClose={() => setSelectedIncident(null)}
+        onEditItem={(item) => {
+          setSelectedIncident(null);
+          handleEdit(item);
+        }}
+      />
     </div>
   );
 }

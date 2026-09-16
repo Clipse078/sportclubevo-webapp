@@ -95,6 +95,7 @@ import type {
   WeekplannerResourceRef,
   WeekplannerTournamentItem,
   WeekplannerTrainingItem,
+  WeekplannerVeranstaltungItem,
   WeekplannerWeek,
 } from "./types";
 
@@ -131,7 +132,7 @@ type FacilityResourceRow = {
   id: string;
   code: string;
   name: string;
-  facility: { name: string };
+  facility: { id: string; name: string };
 };
 
 function toResourceRef(
@@ -143,6 +144,7 @@ function toResourceRef(
 ): WeekplannerResourceRef {
   return {
     facilityResourceId: row.id,
+    facilityId: row.facility.id,
     code: row.code,
     name: row.name,
     facilityName: row.facility.name,
@@ -160,7 +162,7 @@ async function findFacilityResourceCodeMap(
       status: { not: "ARCHIVED" },
       facility: { status: { not: "ARCHIVED" } },
     },
-    select: { id: true, code: true, name: true, facility: { select: { name: true } } },
+    select: { id: true, code: true, name: true, facility: { select: { id: true, name: true } } },
   });
 
   return new Map(resources.map((resource) => [resource.code, toResourceRef(resource)]));
@@ -197,7 +199,9 @@ async function findWeekplannerPlanOverrides(
       participantId: true,
       occupancyBeforeMinutes: true,
       occupancyAfterMinutes: true,
-      facilityResource: { select: { id: true, code: true, name: true, facility: { select: { name: true } } } },
+      facilityResource: {
+        select: { id: true, code: true, name: true, facility: { select: { id: true, name: true } } },
+      },
     },
     orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
   });
@@ -346,6 +350,7 @@ function toWeekplannerResourceRefs(
 ): WeekplannerResourceRef[] {
   return rows.map((row) => ({
     facilityResourceId: row.facilityResource.id,
+    facilityId: row.facilityResource.facility.id,
     code: row.facilityResource.code,
     name: row.facilityResource.name,
     facilityName: row.facilityResource.facility.name,
@@ -386,7 +391,13 @@ async function findWeekplannerTrainingItems(
         createdAt: true,
         updatedAt: true,
         facilityResource: {
-          select: { id: true, code: true, name: true, type: true, facility: { select: { name: true } } },
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            type: true,
+            facility: { select: { id: true, name: true } },
+          },
         },
       },
       orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
@@ -399,7 +410,13 @@ async function findWeekplannerTrainingItems(
         createdAt: true,
         updatedAt: true,
         facilityResource: {
-          select: { id: true, code: true, name: true, type: true, facility: { select: { name: true } } },
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            type: true,
+            facility: { select: { id: true, name: true } },
+          },
         },
       },
       orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
@@ -473,6 +490,7 @@ async function findWeekplannerTrainingItems(
       conflicts: [],
       trainingSeriesId: session.trainingSeriesId,
       trainingSessionId: session.id,
+      teamSeasonId: session.teamSeasonId,
     } satisfies WeekplannerTrainingItem;
   });
 }
@@ -659,6 +677,71 @@ async function findWeekplannerHomeTournaments(
   });
 }
 
+// ── Event(type=OTHER) → WeekplannerVeranstaltungItem ───────────────────────
+
+async function findWeekplannerVeranstaltungen(
+  tenantId: string,
+  from: Date,
+  to: Date,
+  resourceByCode: ReadonlyMap<string, WeekplannerResourceRef>,
+): Promise<WeekplannerVeranstaltungItem[]> {
+  const events = await prisma.event.findMany({
+    where: {
+      tenantId,
+      type: "OTHER",
+      status: { notIn: ["CANCELLED", "CANCELED"] },
+      startAt: { lt: to },
+      OR: [{ endAt: { gt: from } }, { endAt: null, startAt: { gte: from } }],
+    },
+    select: {
+      id: true,
+      title: true,
+      location: true,
+      startAt: true,
+      endAt: true,
+      teamSeasonId: true,
+      pitchCode: true,
+      homeDressingRoomCode: true,
+      team: { select: { name: true } },
+    },
+    orderBy: [{ startAt: "asc" }, { title: "asc" }],
+  });
+
+  return events.map((event) => {
+    const endAt = event.endAt ?? new Date(event.startAt.getTime() + 60 * 60_000);
+    const pitchRef = event.pitchCode ? resourceByCode.get(event.pitchCode) : undefined;
+    const roomRef = event.homeDressingRoomCode
+      ? resourceByCode.get(event.homeDressingRoomCode)
+      : undefined;
+    const pitchAllocations = pitchRef ? [pitchRef] : [];
+    const dressingRoomAllocations = roomRef ? [roomRef] : [];
+    const teamNames = event.team?.name ? [event.team.name] : [];
+
+    return {
+      id: `veranstaltung:${event.id}`,
+      tenantId,
+      type: "VERANSTALTUNG",
+      startAt: event.startAt,
+      endAt,
+      canonicalStartAt: event.startAt,
+      canonicalEndAt: endAt,
+      timeOverridden: false,
+      title: event.title,
+      teamNames,
+      pitchAllocations,
+      dressingRoomAllocations,
+      canonicalPitchAllocations: pitchAllocations,
+      canonicalDressingRoomAllocations: dressingRoomAllocations,
+      pitchOverridden: false,
+      dressingRoomOverridden: false,
+      conflicts: [],
+      eventId: event.id,
+      location: event.location,
+      teamSeasonId: event.teamSeasonId,
+    } satisfies WeekplannerVeranstaltungItem;
+  });
+}
+
 // ── Public API ────────────────────────────────────────────────────────────
 
 /**
@@ -686,13 +769,19 @@ export async function getWeekplannerWeek(
     resolveWeekplannerPlanBaselineMode(tenantId, planId),
   ]);
 
-  const [trainingItems, matchItems, tournamentItems] = await Promise.all([
+  const [trainingItems, matchItems, tournamentItems, veranstaltungItems] = await Promise.all([
     findWeekplannerTrainingItems(tenantId, window.days, overridesByKey, timeOverridesByKey),
     findWeekplannerHomeMatches(tenantId, window.from, window.to, resourceByCode, overridesByKey, timeOverridesByKey),
     findWeekplannerHomeTournaments(tenantId, window.from, window.to, overridesByKey, timeOverridesByKey),
+    findWeekplannerVeranstaltungen(tenantId, window.from, window.to, resourceByCode),
   ]);
 
-  let items: WeekplannerItem[] = [...trainingItems, ...matchItems, ...tournamentItems];
+  let items: WeekplannerItem[] = [
+    ...trainingItems,
+    ...matchItems,
+    ...tournamentItems,
+    ...veranstaltungItems,
+  ];
 
   if (baselineMode === "empty") {
     const activitiesWithOverrides = collectActivitiesWithOverrides(overridesByKey, timeOverridesByKey);

@@ -107,7 +107,7 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
       <div className="max-w-[1600px] space-y-6">
         <AdminSectionHeader
           eyebrow="Planung"
-          title="TrainingCenter"
+          title="Trainings"
           description="Kalender, Planungsraster und Serien für alle Trainingsserien."
           actions={
             canManage ? (
@@ -176,7 +176,7 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
       <div className="space-y-6">
         <AdminSectionHeader
           eyebrow="Planung"
-          title="TrainingCenter"
+          title="Trainings"
           description="Kalender, Planungsraster und Serien für alle Trainingsserien."
           actions={
             canCreate ? (
@@ -251,7 +251,7 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
     <div className="max-w-[1400px] space-y-6">
       <AdminSectionHeader
         eyebrow="Planung"
-        title="TrainingCenter"
+        title="Trainings"
         description="Kalender, Planungsraster und Serien für alle Trainingsserien."
         actions={
           canManage ? (
@@ -300,7 +300,7 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
 
 function TopTabs({ active }: { active: "kalender" | "planungsraster" | "serien" }) {
   return (
-    <div role="tablist" aria-label="TrainingCenter-Bereiche" className="flex gap-1 border-b border-[var(--border)]">
+    <div role="tablist" aria-label="Trainings-Bereiche" className="flex gap-1 border-b border-[var(--border)]">
       {TOP_TABS.map((item) => {
         const isActive = item.key === active;
         return (

@@ -90,15 +90,41 @@ const TRAINING_ITEM = {
   timeOverridden: false,
   title: "E2 Training",
   teamNames: ["FC Allschwil E2"],
-  pitchAllocations: [{ facilityResourceId: "res-kr2", code: "KR2", name: "Kunstrasen 2", facilityName: "Sportanlage Bruel" }],
+  pitchAllocations: [{
+    facilityResourceId: "res-kr2",
+    facilityId: "fac-1",
+    code: "KR2",
+    name: "Kunstrasen 2",
+    facilityName: "Sportanlage Bruel",
+    occupancyBeforeMinutes: 0,
+    occupancyAfterMinutes: 0,
+  }],
   dressingRoomAllocations: [],
-  canonicalPitchAllocations: [{ facilityResourceId: "res-kr2", code: "KR2", name: "Kunstrasen 2", facilityName: "Sportanlage Bruel" }],
+  canonicalPitchAllocations: [{
+    facilityResourceId: "res-kr2",
+    facilityId: "fac-1",
+    code: "KR2",
+    name: "Kunstrasen 2",
+    facilityName: "Sportanlage Bruel",
+    occupancyBeforeMinutes: 0,
+    occupancyAfterMinutes: 0,
+  }],
   canonicalDressingRoomAllocations: [],
   pitchOverridden: false,
   dressingRoomOverridden: false,
   conflicts: [{ facilityResourceId: "res-kr2", facilityResourceName: "Kunstrasen 2" }],
   trainingSeriesId: "series-1",
   trainingSessionId: "session-1",
+  teamSeasonId: "ts-1",
+};
+
+const TRAINING_ITEM_CONFLICT = {
+  ...TRAINING_ITEM,
+  id: "training:session-2",
+  trainingSessionId: "session-2",
+  title: "E3 Training",
+  teamNames: ["FC Allschwil E3"],
+  conflicts: [{ facilityResourceId: "res-kr2", facilityResourceName: "Kunstrasen 2" }],
 };
 
 const MATCH_ITEM = {
@@ -172,9 +198,9 @@ describe("WeekPlannerPage — Standardplan safety", () => {
     expect(screen.queryByText("Spielfeld/Halle anpassen")).not.toBeInTheDocument();
     const note = screen.getByTestId("weekplanner-standardplan-safety-note");
     expect(note).toHaveTextContent("Standardplan aktiv");
-    expect(note).toHaveTextContent("TrainingCenter");
-    expect(note).toHaveTextContent("Matchcenter");
-    expect(note).toHaveTextContent("TournamentCenter");
+    expect(note).toHaveTextContent("Trainings");
+    expect(note).toHaveTextContent("Spiele");
+    expect(note).toHaveTextContent("Turniere");
   });
 
   it("hides the safety note for read-only viewers (no manage permission)", () => {
@@ -364,18 +390,18 @@ describe("WeekPlannerPage — WEEKPLANNER-01D time override indicator", () => {
 });
 
 describe("WeekPlannerPage — shared occupancy visibility", () => {
-  it("renders a shared-occupancy badge on the affected item and a week-level summary count", () => {
-    const week = makeWeek([{ dayKey: "2026-08-10", items: [TRAINING_ITEM] }]);
+  it("renders a shared-occupancy badge on the affected item and a week-level conflict attention count", () => {
+    const week = makeWeek([{ dayKey: "2026-08-10", items: [TRAINING_ITEM, TRAINING_ITEM_CONFLICT] }]);
     render(<WeekPlannerPage week={week} todayParam="2026-08-10" plans={[]} activePlanId={null} canManagePlans={false} />);
 
-    expect(screen.getByTestId("weekplanner-conflict-badge")).toHaveTextContent("Geteilte Belegung");
-    expect(screen.getByTestId("weekplanner-conflict-summary")).toHaveTextContent("1 Eintrag mit geteilter Ressourcenbelegung");
+    expect(screen.getAllByTestId("weekplanner-conflict-badge").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("planning-hub-conflict-attention")).toHaveTextContent(/Konflikt/);
   });
 
-  it("shows no conflict summary when the week has zero conflicts", () => {
+  it("shows compact no-conflict state when the week has zero conflicts", () => {
     const week = makeWeek([{ dayKey: "2026-08-15", items: [MATCH_ITEM] }]);
     render(<WeekPlannerPage week={week} todayParam="2026-08-10" plans={[]} activePlanId={null} canManagePlans={false} />);
 
-    expect(screen.queryByTestId("weekplanner-conflict-summary")).not.toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-conflict-none")).toBeInTheDocument();
   });
 });

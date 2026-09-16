@@ -41,29 +41,30 @@ function findItemByKey(
 // ── Static structure tests ────────────────────────────────────────────────────
 
 describe("NAV_SECTIONS static structure", () => {
-  it("Planung section contains exactly TrainingCenter, MatchCenter, TournamentCenter, Veranstaltungen and Wochenplanner in that order", () => {
+  it("Planung section contains Wochenplaner first, then Trainings, Spiele, Turniere, Veranstaltungen", () => {
     const tagesbetrieb = findSection("Tagesbetrieb");
     expect(tagesbetrieb).toBeDefined();
 
     const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     expect(planung).toBeDefined();
+    expect(planung?.href).toBe("/dashboard/planner/week");
 
     const childKeys = planung!.children?.map((c) => c.key) ?? [];
     expect(childKeys).toEqual([
+      "wochenplanner",
       "trainingcenter",
       "matchcenter",
       "tournamentcenter",
       "veranstaltungen",
-      "wochenplanner",
     ]);
   });
 
-  it("MatchCenter is nested under Planung, labelled exactly 'MatchCenter', pointing to /dashboard/matchcenter", () => {
+  it("Spiele is nested under Planung, labelled 'Spiele', pointing to /dashboard/matchcenter", () => {
     const tagesbetrieb = findSection("Tagesbetrieb");
     const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     const matchcenter = planung!.children?.find((c) => c.key === "matchcenter");
     expect(matchcenter).toBeDefined();
-    expect(matchcenter?.label).toBe("MatchCenter");
+    expect(matchcenter?.label).toBe("Spiele");
     expect(matchcenter?.href).toBe("/dashboard/matchcenter");
   });
 
@@ -74,12 +75,12 @@ describe("NAV_SECTIONS static structure", () => {
     expect(topLevelMatchcenter).toBeUndefined();
   });
 
-  it("Wochenplanner (WEEKPLANNER-01A/01B) points to /dashboard/planner/week", () => {
+  it("Wochenplaner points to /dashboard/planner/week", () => {
     const tagesbetrieb = findSection("Tagesbetrieb");
     const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     const wochenplanner = planung!.children?.find((c) => c.key === "wochenplanner");
     expect(wochenplanner?.href).toBe("/dashboard/planner/week");
-    expect(wochenplanner?.label).toBe("Wochenplanner");
+    expect(wochenplanner?.label).toBe("Wochenplaner");
   });
 
   it("exposes Übersicht and Vorschau inside the Infoboard module", () => {
@@ -99,12 +100,12 @@ describe("NAV_SECTIONS static structure", () => {
     ]);
   });
 
-  it("TournamentCenter points to /dashboard/tournamentcenter", () => {
+  it("Turniere points to /dashboard/tournamentcenter", () => {
     const tagesbetrieb = findSection("Tagesbetrieb");
     const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     const tournamentcenter = planung!.children?.find((c) => c.key === "tournamentcenter");
     expect(tournamentcenter?.href).toBe("/dashboard/tournamentcenter");
-    expect(tournamentcenter?.label).toBe("TournamentCenter");
+    expect(tournamentcenter?.label).toBe("Turniere");
   });
 
   it("Anlagen does not appear under Planung", () => {
@@ -135,12 +136,13 @@ describe("NAV_SECTIONS static structure", () => {
     expect(childLabels).not.toContain("Feld & Ressourcen");
   });
 
-  it("TrainingCenter points to /dashboard/training", () => {
+  it("Trainings points to /dashboard/training", () => {
     const tagesbetrieb = findSection("Tagesbetrieb");
     const planung = tagesbetrieb!.items.find((i) => i.key === "planung");
     const trainingcenter = planung!.children?.find(
       (c) => c.key === "trainingcenter",
     );
+    expect(trainingcenter?.label).toBe("Trainings");
     expect(trainingcenter?.href).toBe("/dashboard/training");
   });
 
@@ -303,7 +305,7 @@ describe("getVisibleNavSections permission filtering", () => {
     const sections = getVisibleNavSections([PERMISSIONS.EVENTS_VIEW]);
     const item = findItemByKey(sections, "matchcenter");
     expect(item).not.toBeNull();
-    expect(item?.label).toBe("MatchCenter");
+    expect(item?.label).toBe("Spiele");
     expect(item?.href).toBe("/dashboard/matchcenter");
   });
 
@@ -421,7 +423,7 @@ describe("route deduplication", () => {
     const sections = getVisibleNavSections(Object.values(PERMISSIONS));
     const flat = flatItems(sections);
     const wochenplanEntries = flat.filter((i) => i.label.toLowerCase().includes("wochenplan"));
-    expect(wochenplanEntries.map((i) => i.label)).toEqual(["Wochenplanner"]);
+    expect(wochenplanEntries.map((i) => i.label)).toEqual(["Wochenplaner"]);
     expect(wochenplanEntries[0]?.href).toBe("/dashboard/planner/week");
   });
 
@@ -434,14 +436,10 @@ describe("route deduplication", () => {
     expect(ressourcen).toBeUndefined();
   });
 
-  it("matches/tournaments are not listed under Planung", () => {
+  it("Spiele and Turniere are listed under Planung (PLANNING-HUB-01)", () => {
     const sections = getVisibleNavSections(Object.values(PERMISSIONS));
     const flat = flatItems(sections);
-    const spiele = flat.find(
-      (i) =>
-        i.label.toLowerCase().includes("spiele") ||
-        i.label.toLowerCase().includes("turnier"),
-    );
-    expect(spiele).toBeUndefined();
+    expect(flat.some((i) => i.label === "Spiele")).toBe(true);
+    expect(flat.some((i) => i.label === "Turniere")).toBe(true);
   });
 });

@@ -70,7 +70,7 @@ export default async function TournamentCenterPage({ searchParams }: TournamentC
     <div className="max-w-[1400px] space-y-6">
       <AdminSectionHeader
         eyebrow="Planung"
-        title="Tournament Center"
+        title="Turniere"
         description="Turniere planen, koordinieren und veröffentlichen."
         actions={
           canCreate ? (

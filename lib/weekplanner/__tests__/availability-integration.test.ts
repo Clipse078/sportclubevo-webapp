@@ -53,6 +53,7 @@ const resourceByCode = new Map([
     "KR2_A",
     {
       facilityResourceId: PITCH_ID,
+      facilityId: "fac-pitch",
       code: "KR2_A",
       name: "Kunstrasen 2 A",
       facilityName: "Kunstrasen 2",
@@ -64,6 +65,7 @@ const resourceByCode = new Map([
     "E1",
     {
       facilityResourceId: ROOM_ID,
+      facilityId: "fac-room",
       code: "E1",
       name: "Garderobe E1",
       facilityName: "Garderobentrakt",
