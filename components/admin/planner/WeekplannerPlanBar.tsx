@@ -32,6 +32,8 @@ type Props = {
   selectedPlanParam: string | null;
   materializedWeekplannerPlanId: string | null;
   canManage: boolean;
+  /** Inline switcher without redundant status banners (Planning Hub header). */
+  compact?: boolean;
 };
 
 function buildWeekplannerHref(weekParam: string, wochenplanPlanId: string | null): string {
@@ -60,6 +62,7 @@ export function WeekplannerPlanBar({
   selectedPlanParam,
   materializedWeekplannerPlanId: _materializedWeekplannerPlanId,
   canManage,
+  compact = false,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -143,18 +146,25 @@ export function WeekplannerPlanBar({
   if (wochenplanPlans.length === 0) return null;
 
   return (
-    <div className="space-y-2" data-testid="weekplanner-plan-bar">
+    <div className={cn(compact ? "space-y-1" : "space-y-2")} data-testid="weekplanner-plan-bar">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-          Wochenplan
-        </span>
+        {!compact && (
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+            Wochenplan
+          </span>
+        )}
 
         <button
           ref={switcherAnchorRef}
           type="button"
           data-testid="weekplanner-plan-switcher"
           onClick={() => setSwitcherOpen((open) => !open)}
-          className="inline-flex min-w-[14rem] max-w-[min(100vw-2rem,28rem)] items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-sm font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+          className={cn(
+            "inline-flex items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-white font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]",
+            compact
+              ? "min-w-[9rem] max-w-[min(100vw-2rem,20rem)] px-2.5 py-1 text-xs"
+              : "min-w-[14rem] max-w-[min(100vw-2rem,28rem)] px-3 py-1.5 text-sm",
+          )}
           aria-haspopup="listbox"
           aria-expanded={switcherOpen}
         >
@@ -178,14 +188,17 @@ export function WeekplannerPlanBar({
             onClick={() => setIsPublishDialogOpen(true)}
             disabled={isPending}
             data-testid="weekplanner-plan-publish-button"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--sce-primary)] px-3 py-1.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg bg-[var(--sce-primary)] font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+              compact ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-sm",
+            )}
           >
             {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
             Veröffentlichen
           </button>
         ) : null}
 
-        {canManage ? (
+        {canManage && !compact ? (
           <button
             type="button"
             onClick={() => setIsCreateDialogOpen(true)}
@@ -276,31 +289,33 @@ export function WeekplannerPlanBar({
         </p>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        {isViewingActive ? (
-          <div
-            className="inline-flex items-center gap-1.5 font-semibold text-emerald-700"
-            data-testid="weekplanner-active-plan-banner"
-          >
-            <Check className="h-3.5 w-3.5" aria-hidden="true" />
-            Aktiver Plan · {viewedPlan?.name ?? activePlan?.name ?? "—"}
-          </div>
-        ) : viewedPlan ? (
-          <>
+      {!compact && (
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          {isViewingActive ? (
             <div
-              className="inline-flex items-center gap-1.5 font-semibold text-amber-700"
-              data-testid="weekplanner-draft-plan-banner"
+              className="inline-flex items-center gap-1.5 font-semibold text-emerald-700"
+              data-testid="weekplanner-active-plan-banner"
             >
-              Entwurf · {viewedPlan.name}
+              <Check className="h-3.5 w-3.5" aria-hidden="true" />
+              Aktiver Plan · {viewedPlan?.name ?? activePlan?.name ?? "—"}
             </div>
-            {activePlan ? (
-              <span className="text-[var(--muted)]" data-testid="weekplanner-current-active-reference">
-                Aktiver Plan: {activePlan.name}
-              </span>
-            ) : null}
-          </>
-        ) : null}
-      </div>
+          ) : viewedPlan ? (
+            <>
+              <div
+                className="inline-flex items-center gap-1.5 font-semibold text-amber-700"
+                data-testid="weekplanner-draft-plan-banner"
+              >
+                Entwurf · {viewedPlan.name}
+              </div>
+              {activePlan ? (
+                <span className="text-[var(--muted)]" data-testid="weekplanner-current-active-reference">
+                  Aktiver Plan: {activePlan.name}
+                </span>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      )}
 
       <WeekplannerPlanCreateDialog
         open={isCreateDialogOpen}

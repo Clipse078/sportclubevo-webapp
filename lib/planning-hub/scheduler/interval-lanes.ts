@@ -10,7 +10,7 @@ export type IntervalLaneLayout = {
   totalLanes: number;
 };
 
-function intervalsOverlap(a: TimedInterval, b: TimedInterval): boolean {
+export function intervalsOverlap(a: TimedInterval, b: TimedInterval): boolean {
   return a.startMs < b.endMs && b.startMs < a.endMs;
 }
 

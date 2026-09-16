@@ -63,7 +63,7 @@ export default function PlanningHubConflictAttention({
       )}
       {incompleteCount > 0 && (
         <span className="text-amber-800" data-testid="weekplanner-incomplete-summary">
-          {incompleteCount} Eintrag{incompleteCount === 1 ? "" : "e"} benötigt Planung
+          · {incompleteCount} ungeplant
         </span>
       )}
     </div>

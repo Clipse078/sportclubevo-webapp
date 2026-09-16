@@ -9,14 +9,15 @@ export type TimeInterval = {
 export const SCHEDULER_MIN_VISIBLE_MINUTES = 6 * 60;
 
 /** Padding before earliest / after latest activity (minutes). */
-export const SCHEDULER_TIME_PADDING_MINUTES = 30;
+export const SCHEDULER_TIME_PADDING_MINUTES = 20;
 
 /** Fallback range when no activities exist (local minutes from midnight). */
 export const SCHEDULER_EMPTY_DAY_START_MINUTES = 8 * 60;
 export const SCHEDULER_EMPTY_DAY_END_MINUTES = 20 * 60;
 
 /** Vertical calendar: pixels per minute. */
-export const CALENDAR_PIXELS_PER_MINUTE = 1.35;
+/** ~6–8h visible in a typical laptop viewport at default zoom. */
+export const CALENDAR_PIXELS_PER_MINUTE = 0.95;
 
 /** Horizontal resource scheduler: pixels per minute. */
 export const RESOURCE_PIXELS_PER_MINUTE = 2.4;

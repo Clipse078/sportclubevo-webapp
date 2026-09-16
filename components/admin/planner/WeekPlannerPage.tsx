@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { EmptyState } from "@/components/ui/page/EmptyState";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
 import type { WochenplanPlanDto } from "@/lib/wochenplan/plan-types";
@@ -233,33 +232,22 @@ export default function WeekPlannerPage({
   };
 
   return (
-    <div className="space-y-3" data-testid="planning-hub-workspace">
-      <AdminSectionHeader
-        eyebrow="Planung"
-        title="Wochenplaner"
-        description="Alles, was diese Woche im Verein stattfindet."
-        actions={createPermissions ? <PlanningHubCreateMenu permissions={createPermissions} /> : undefined}
-      />
-
-      <div className="space-y-2 border-b border-[var(--border)] pb-3">
-        <WeekplannerPlanBar
-          weekParam={week.param}
-          wochenplanPlans={wochenplanPlans}
-          weekplannerPlans={plans}
-          selectedPlanParam={selectedPlanParam ?? viewedWochenplanPlanId}
-          materializedWeekplannerPlanId={materializedWeekplannerPlanId}
-          canManage={canManagePlans}
-        />
-
+    <div className="space-y-2" data-testid="planning-hub-workspace">
+      <div className="space-y-1.5 border-b border-[var(--border)] pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-1.5">
+          <h1 className="text-lg font-semibold tracking-tight text-[var(--foreground)]">Wochenplaner</h1>
+          {createPermissions ? <PlanningHubCreateMenu permissions={createPermissions} /> : null}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <div className="flex flex-wrap items-center gap-1">
             <Link
               href={weekHref(week.previousParam, resolvedUrlState)}
               aria-label="Vorherige Woche"
               data-testid="weekplanner-previous-week"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3.5 w-3.5" />
             </Link>
             <p className="text-sm font-semibold text-[var(--foreground)]" data-testid="weekplanner-range-label">
               {week.rangeLabel}
@@ -268,19 +256,31 @@ export default function WeekPlannerPage({
               href={weekHref(week.nextParam, resolvedUrlState)}
               aria-label="Nächste Woche"
               data-testid="weekplanner-next-week"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3.5 w-3.5" />
             </Link>
             <Link
               href={weekHref(todayParam, resolvedUrlState)}
               data-testid="weekplanner-today"
-              className="inline-flex h-8 items-center rounded-md border border-[var(--border)] px-2.5 text-xs font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+              className="inline-flex h-7 items-center rounded-md border border-[var(--border)] px-2 text-xs font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
             >
               Heute
             </Link>
           </div>
 
+          <WeekplannerPlanBar
+            weekParam={week.param}
+            wochenplanPlans={wochenplanPlans}
+            weekplannerPlans={plans}
+            selectedPlanParam={selectedPlanParam ?? viewedWochenplanPlanId}
+            materializedWeekplannerPlanId={materializedWeekplannerPlanId}
+            canManage={canManagePlans}
+            compact
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
           <div
             className="flex items-center gap-0.5 rounded-md border border-[var(--border)] p-0.5"
             data-testid="planning-hub-perspective"

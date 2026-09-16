@@ -41,8 +41,8 @@ type PlanningHubResourceDayViewProps = {
   onItemActivate: (item: WeekplannerItem) => void;
 };
 
-const RESOURCE_LABEL_WIDTH_PX = 168;
-const ROW_BASE_HEIGHT_PX = 44;
+const RESOURCE_LABEL_WIDTH_PX = 148;
+const ROW_BASE_HEIGHT_PX = 38;
 
 function dressingRefOnItem(
   item: WeekplannerItem,

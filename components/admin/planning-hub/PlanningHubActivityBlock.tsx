@@ -7,10 +7,12 @@ import {
   itemHasCanonicalConflict,
   itemHasCanonicalConflictOnResource,
   weekplannerAccessibleName,
-  weekplannerActivityTypeLabel,
-  weekplannerPrimaryLabel,
-  weekplannerResourceSummary,
 } from "@/lib/planning-hub/item-presenters";
+import {
+  schedulerBlockSubtitle,
+  schedulerDisplayIdentity,
+  schedulerResourceCodes,
+} from "@/lib/planning-hub/scheduler-display-label";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 
 const TYPE_ACCENT: Record<WeekplannerItem["type"], string> = {
@@ -66,10 +68,10 @@ export default function PlanningHubActivityBlock({
   const hasConflict = resourceId
     ? itemHasCanonicalConflictOnResource(item, resourceId)
     : itemHasCanonicalConflict(item);
-  const resources = weekplannerResourceSummary(item, compact ? 2 : 3);
+  const resources = schedulerResourceCodes(item, compact ? 2 : 3);
   const time = dragTimeLabel ?? formatTimeRange(item.startAt, item.endAt, locale, timezone);
-  const primary = weekplannerPrimaryLabel(item);
-  const typeLabel = weekplannerActivityTypeLabel(item.type);
+  const primary = schedulerDisplayIdentity(item);
+  const typeLabel = schedulerBlockSubtitle(item);
 
   const isGhost = visualVariant === "ghost";
   const isPreview = visualVariant === "preview" || visualVariant === "preview-warning";
@@ -89,7 +91,7 @@ export default function PlanningHubActivityBlock({
         isPreview &&
           "z-20 border-[var(--sce-primary)]/50 bg-[var(--surface)] shadow-md ring-1 ring-[var(--sce-primary)]/30",
         visualVariant === "preview-warning" && "ring-amber-400/50",
-        hasConflict && !isGhost && "ring-1 ring-amber-400/60",
+        hasConflict && !isGhost && "shadow-[inset_0_0_0_1px_rgba(251,191,36,0.45)]",
         compact ? "px-1 py-0.5 text-[10px] leading-tight" : "px-1.5 py-1 text-[11px] leading-snug",
         className,
       )}
@@ -123,13 +125,13 @@ export default function PlanningHubActivityBlock({
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold text-[var(--foreground)]">
               {primary}
-              {!compact && <span className="font-normal text-[var(--muted)]"> · {typeLabel}</span>}
+              {!compact && typeLabel && (
+                <span className="font-normal text-[var(--muted)]"> · {typeLabel}</span>
+              )}
             </p>
             {!compact && <p className="truncate text-[var(--text-2)]">{time}</p>}
-            {resources && (
-              <p className={cn("truncate text-[var(--muted)]", compact && "hidden sm:block")}>
-                {resources}
-              </p>
+            {!compact && resources && (
+              <p className="truncate text-[var(--muted)]">{resources}</p>
             )}
           </div>
           {hasConflict && !isGhost && (

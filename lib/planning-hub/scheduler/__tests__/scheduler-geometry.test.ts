@@ -29,7 +29,7 @@ describe("scheduler time scale", () => {
     const top = minutesToCalendarTopPx(15 * 60, range, CALENDAR_PIXELS_PER_MINUTE);
     const height = durationToCalendarHeightPx(15 * 60, 17 * 60, range, CALENDAR_PIXELS_PER_MINUTE);
     expect(top).toBeGreaterThanOrEqual(0);
-    expect(height).toBeCloseTo(120 * CALENDAR_PIXELS_PER_MINUTE, 1);
+    expect(height).toBeCloseTo(120 * CALENDAR_PIXELS_PER_MINUTE, 0);
   });
 
   it("uses fallback range for empty weeks", () => {

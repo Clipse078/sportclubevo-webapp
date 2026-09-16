@@ -4,7 +4,11 @@ import { Fragment, useMemo } from "react";
 import { cn } from "@/lib/cn";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
-import { assignIntervalLanes, laneHorizontalStyle } from "@/lib/planning-hub/scheduler/interval-lanes";
+import { laneHorizontalStyle } from "@/lib/planning-hub/scheduler/interval-lanes";
+import {
+  estimateDayColumnWidthPx,
+  planCalendarDayLayout,
+} from "@/lib/planning-hub/scheduler/calendar-day-layout";
 import {
   CALENDAR_PIXELS_PER_MINUTE,
   computeVisibleTimeRange,
@@ -14,6 +18,7 @@ import {
 import { dayKeyInTimeZone, zonedMinutesFromMidnight } from "@/lib/planning-hub/scheduler/time-zone";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningHubActivityBlock from "./PlanningHubActivityBlock";
+import PlanningHubCalendarClusterBlock from "./PlanningHubCalendarClusterBlock";
 import {
   effectiveItemTimes,
   projectedItemForRender,
@@ -31,8 +36,8 @@ type PlanningHubCalendarViewProps = {
   onItemActivate: (item: WeekplannerItem) => void;
 };
 
-const TIME_GUTTER_WIDTH_PX = 52;
-const DAY_MIN_WIDTH_PX = 108;
+const TIME_GUTTER_WIDTH_PX = 48;
+const DAY_MIN_WIDTH_PX = 120;
 
 export default function PlanningHubCalendarView({
   week,
@@ -90,7 +95,7 @@ export default function PlanningHubCalendarView({
               <div
                 key={day.dayKey}
                 className={cn(
-                  "border-l border-[var(--border)] px-2 py-2 text-center",
+                  "border-l border-[var(--border)] px-1.5 py-1.5 text-center",
                   isToday && "bg-[var(--sce-primary-light)]/40",
                 )}
                 data-testid="planning-hub-calendar-day-header"
@@ -136,12 +141,17 @@ export default function PlanningHubCalendarView({
           </div>
 
           {filtered.days.map((day) => {
-            const intervals = day.items.map((item) => ({
+            const dayItems = day.items.filter(
+              (item) => dayKeyInTimeZone(item.startAt, timezone) === day.dayKey,
+            );
+            const intervals = dayItems.map((item) => ({
               id: item.id,
               startMs: item.startAt.getTime(),
               endMs: item.endAt.getTime(),
             }));
-            const lanes = assignIntervalLanes(intervals);
+            const columnWidthPx = estimateDayColumnWidthPx(DAY_MIN_WIDTH_PX);
+            const layoutSegments = planCalendarDayLayout(intervals, columnWidthPx);
+            const itemsById = new Map(dayItems.map((item) => [item.id, item]));
             const isToday = day.dayKey === todayDayKey;
 
             return (
@@ -172,7 +182,7 @@ export default function PlanningHubCalendarView({
 
                 {showNowLine && isToday && nowMinutes !== null && (
                   <div
-                    className="pointer-events-none absolute left-0 right-0 z-10 border-t-2 border-[var(--sce-primary)]/50"
+                    className="pointer-events-none absolute left-0 right-0 z-10 border-t border-[var(--sce-primary)]/40"
                     style={{
                       top: minutesToCalendarTopPx(nowMinutes, timeRange, CALENDAR_PIXELS_PER_MINUTE),
                     }}
@@ -180,11 +190,46 @@ export default function PlanningHubCalendarView({
                   />
                 )}
 
-                {day.items.map((item) => {
-                  if (dayKeyInTimeZone(item.startAt, timezone) !== day.dayKey) {
-                    return null;
+                {layoutSegments.map((segment) => {
+                  if (segment.kind === "aggregate") {
+                    const clusterItems = segment.itemIds
+                      .map((id) => itemsById.get(id))
+                      .filter((item): item is WeekplannerItem => Boolean(item));
+                    const startMin = zonedMinutesFromMidnight(
+                      new Date(segment.startMs),
+                      timezone,
+                    );
+                    const endMin = Math.max(
+                      startMin + 15,
+                      zonedMinutesFromMidnight(new Date(segment.endMs), timezone),
+                    );
+                    const top = minutesToCalendarTopPx(startMin, timeRange, CALENDAR_PIXELS_PER_MINUTE);
+                    const height = durationToCalendarHeightPx(
+                      startMin,
+                      endMin,
+                      timeRange,
+                      CALENDAR_PIXELS_PER_MINUTE,
+                    );
+                    return (
+                      <PlanningHubCalendarClusterBlock
+                        key={`cluster-${segment.clusterId}`}
+                        items={clusterItems}
+                        locale={locale}
+                        timezone={timezone}
+                        onActivateItem={onItemActivate}
+                        style={{
+                          top,
+                          height,
+                          left: 2,
+                          width: "calc(100% - 4px)",
+                        }}
+                      />
+                    );
                   }
-                  const layout = lanes.get(item.id) ?? { lane: 0, totalLanes: 1 };
+
+                  const item = itemsById.get(segment.itemId);
+                  if (!item) return null;
+                  const layout = segment.layout;
                   const { leftPercent, widthPercent } = laneHorizontalStyle(layout);
                   const caps = manipulation?.getCapabilities(item);
                   const activeDraft =

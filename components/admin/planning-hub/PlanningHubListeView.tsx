@@ -3,11 +3,11 @@
 import { AlertTriangle, DoorOpen, MapPin } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
+import { weekplannerActivityTypeLabel } from "@/lib/planning-hub/item-presenters";
 import {
-  weekplannerActivityTypeLabel,
-  weekplannerPrimaryLabel,
-  weekplannerResourceSummary,
-} from "@/lib/planning-hub/item-presenters";
+  schedulerDisplayIdentity,
+  schedulerResourceCodes,
+} from "@/lib/planning-hub/scheduler-display-label";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import { computeResourceOccupancyWindow } from "@/lib/facilities/resource-occupancy-window";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
@@ -78,7 +78,7 @@ export default function PlanningHubListeView({
   const filtered = applyPlanningHubFilters(week, urlState);
 
   return (
-    <div className="space-y-6" data-testid="planning-hub-liste">
+    <div className="space-y-4" data-testid="planning-hub-liste">
       {filtered.days.map((day) => (
         <section key={day.dayKey}>
           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
@@ -87,7 +87,7 @@ export default function PlanningHubListeView({
           {day.items.length === 0 ? (
             <p className="text-sm text-[var(--muted)]">Keine Einträge</p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="divide-y divide-[var(--border)]/60 rounded-lg border border-[var(--border)]">
               {day.items.map((item) => {
                 const hasConflict = item.conflicts.length > 0;
                 const dressingDetail = dressingOccupancyDetail(item, locale, timezone);
@@ -98,13 +98,13 @@ export default function PlanningHubListeView({
                       onClick={() => onItemActivate(item)}
                       data-testid={`weekplanner-item-${item.type.toLowerCase()}`}
                       className={cn(
-                        "flex w-full flex-col gap-1 rounded-lg border bg-[var(--surface)] px-3 py-2.5 text-left transition hover:border-[var(--sce-primary)]/30",
-                        hasConflict ? "border-amber-300/60" : "border-[var(--border)]",
+                        "flex w-full flex-col gap-0.5 px-3 py-2 text-left transition hover:bg-[var(--surface-2)]",
+                        hasConflict && "shadow-[inset_2px_0_0_0_rgba(251,191,36,0.7)]",
                       )}
                     >
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <span className="text-sm font-semibold text-[var(--foreground)]">
-                          {weekplannerPrimaryLabel(item)}
+                          {schedulerDisplayIdentity(item)}
                         </span>
                         <span className="text-xs tabular-nums text-[var(--text-2)]">
                           {formatTimeRange(item.startAt, item.endAt, locale, timezone)}
@@ -112,12 +112,12 @@ export default function PlanningHubListeView({
                       </div>
                       <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-2)]">
                         <span>{weekplannerActivityTypeLabel(item.type)}</span>
-                        {weekplannerResourceSummary(item) && (
+                        {schedulerResourceCodes(item) && (
                           <>
                             <span className="text-[var(--muted)]">·</span>
                             <span className="inline-flex items-center gap-1">
                               <MapPin className="h-3 w-3" />
-                              {weekplannerResourceSummary(item)}
+                              {schedulerResourceCodes(item)}
                             </span>
                           </>
                         )}
