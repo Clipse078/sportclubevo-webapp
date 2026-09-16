@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import dynamic from "next/dynamic";
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,8 +11,15 @@ import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
 import type { WochenplanPlanDto } from "@/lib/wochenplan/plan-types";
 import { WeekplannerPlanBar } from "./WeekplannerPlanBar";
-import { WeekplannerPlanningSheet } from "./WeekplannerPlanningSheet";
-import { WeekplannerOperationalPlanningSheet } from "./WeekplannerOperationalPlanningSheet";
+const WeekplannerPlanningSheet = dynamic(
+  () => import("./WeekplannerPlanningSheet").then((m) => m.WeekplannerPlanningSheet),
+  { ssr: false },
+);
+const WeekplannerOperationalPlanningSheet = dynamic(
+  () =>
+    import("./WeekplannerOperationalPlanningSheet").then((m) => m.WeekplannerOperationalPlanningSheet),
+  { ssr: false },
+);
 import PlanningHubCreateMenu, {
   type PlanningHubCreatePermissions,
 } from "@/components/admin/planning-hub/PlanningHubCreateMenu";

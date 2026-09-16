@@ -1,10 +1,9 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
-import { buildPlanningHubHref, type PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
+import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import {
   daypartVisibleRange,
   defaultDaypartForLocalTime,
@@ -37,6 +36,7 @@ import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningHubActivityBlock from "./PlanningHubActivityBlock";
 import PlanningHubCalendarClusterBlock from "./PlanningHubCalendarClusterBlock";
 import PlanningHubDaypartSwitcher from "./PlanningHubDaypartSwitcher";
+import { usePlanningHubCalendarZeit } from "@/hooks/use-planning-hub-calendar-zeit";
 import {
   effectiveItemTimes,
   projectedItemForRender,
@@ -77,14 +77,27 @@ export default function PlanningHubCalendarView({
   onItemActivate,
 }: PlanningHubCalendarViewProps) {
   const manipulation = usePlanningHubManipulation();
-  const filtered = applyPlanningHubFilters(week, urlState);
+  const { urlState: calendarUrlState, setCalendarZeit } = usePlanningHubCalendarZeit(urlState, {
+    timeZone: timezone,
+  });
+  const onSelectDaypart = useCallback(
+    (daypart: PlanningHubCalendarDaypart) => setCalendarZeit(daypart),
+    [setCalendarZeit],
+  );
+  const onSelectFullDay = useCallback(() => setCalendarZeit("ganz"), [setCalendarZeit]);
+  const onExitFullDay = useCallback(
+    () => setCalendarZeit(defaultDaypartForLocalTime(new Date(), timezone)),
+    [setCalendarZeit, timezone],
+  );
+
+  const filtered = applyPlanningHubFilters(week, calendarUrlState);
   const allItems = week.days.flatMap((d) => d.items);
   const gridRef = useRef<HTMLDivElement>(null);
   const [measuredGridWidthPx, setMeasuredGridWidthPx] = useState<number | null>(null);
 
   const viewport = useMemo(
-    () => resolveCalendarViewport(urlState.calendarZeit, new Date(), timezone),
-    [urlState.calendarZeit, timezone],
+    () => resolveCalendarViewport(calendarUrlState.calendarZeit, new Date(), timezone),
+    [calendarUrlState.calendarZeit, timezone],
   );
 
   const isFullDay = viewport.mode === "full";
@@ -161,21 +174,22 @@ export default function PlanningHubCalendarView({
           data-testid="planning-hub-calendar-full-day-bar"
         >
           <span className="text-[11px] font-medium text-[var(--text-2)]">Ganzer Tag</span>
-          <Link
-            href={buildPlanningHubHref(urlState, {
-              calendarZeit: defaultDaypartForLocalTime(new Date(), timezone),
-            })}
+          <button
+            type="button"
+            onClick={onExitFullDay}
             className="text-[11px] font-semibold text-[var(--text-2)] hover:text-[var(--foreground)]"
             data-testid="planning-hub-calendar-exit-full-day"
           >
             Tagesabschnitte
-          </Link>
+          </button>
         </div>
       ) : (
         <PlanningHubDaypartSwitcher
-          urlState={urlState}
+          urlState={calendarUrlState}
           activeDaypart={activeDaypart}
           showAdvancedFullDay
+          onSelectDaypart={onSelectDaypart}
+          onSelectFullDay={onSelectFullDay}
         />
       )}
 

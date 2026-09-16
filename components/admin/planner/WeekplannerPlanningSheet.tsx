@@ -113,6 +113,24 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+function AvailabilitySectionSkeleton({ label }: { label: string }) {
+  return (
+    <div
+      className="animate-pulse space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3"
+      data-testid="weekplanner-availability-skeleton"
+      aria-busy="true"
+      aria-label={`${label} werden geladen`}
+    >
+      <div className="h-3 w-28 rounded bg-[var(--surface-2)]" />
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {[0, 1, 2].map((key) => (
+          <div key={key} className="h-[4.5rem] rounded-md bg-[var(--surface-2)]" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Editor context header ─────────────────────────────────────────────────────
 
 function EditorHeader({ item, timezone }: { item: WeekplannerItem; timezone: string }) {
@@ -248,7 +266,11 @@ function TrainingEditorContent({
     return localToUtcIso(date, endTime, timezone) ?? "";
   }, [date, endTime, timezone]);
 
-  const { pitchAvailability, dressingRoomAvailability } = useFacilityAvailability({
+  const {
+    pitchAvailability,
+    dressingRoomAvailability,
+    isLoading: availabilityLoading,
+  } = useFacilityAvailability({
     enabled: !!startAt,
     startAt,
     endAt,
@@ -398,6 +420,9 @@ function TrainingEditorContent({
         {/* Pitch */}
         <div className="space-y-2">
           <SectionLabel>Spielfeld / Halle</SectionLabel>
+          {availabilityLoading && pitchAvailability.size === 0 ? (
+            <AvailabilitySectionSkeleton label="Verfügbarkeiten Spielfeld" />
+          ) : (
           <VisualResourceAvailabilityPicker
             facilityGroups={facilityGroupsByAllocationGroup.PITCH_HALL}
             selectedResourceIds={selectedPitchIds}
@@ -413,11 +438,15 @@ function TrainingEditorContent({
             disabled={saving}
             testId="wochenplaner-canonical-pitch"
           />
+          )}
         </div>
 
         {/* Dressing room */}
         <div className="space-y-2">
           <SectionLabel>Garderobe</SectionLabel>
+          {availabilityLoading && dressingRoomAvailability.size === 0 ? (
+            <AvailabilitySectionSkeleton label="Verfügbarkeiten Garderobe" />
+          ) : (
           <VisualDressingRoomPicker
             facilityGroups={facilityGroupsByAllocationGroup.DRESSING_ROOM}
             selectedResourceIds={selectedRoomIds}
@@ -433,6 +462,7 @@ function TrainingEditorContent({
             disabled={saving}
             testId="wochenplaner-canonical-room"
           />
+          )}
           {tenantDressingRoomOccupancyPresets && selectedRoomIds.size > 0 && (
             <DressingRoomOccupancyEditor
               item={item}

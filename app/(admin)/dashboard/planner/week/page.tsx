@@ -9,13 +9,14 @@ import { planOverrideKey } from "@/lib/weekplanner/plan-override-key";
 import { listWeekplannerPlans, listWeekplannerPlanAllocations } from "@/lib/weekplanner/plan-service";
 import { listWochenplanPlans } from "@/lib/wochenplan/plan-service";
 import { materializeLinkedWeekplannerPlan } from "@/lib/wochenplan/plan-materialization";
-import { getFacilitiesForTenant } from "@/lib/facilities/queries";
-import { getTenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/tenant-preset-service";
-import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
+import {
+  getFacilitiesForTenantCached,
+  getTenantDressingRoomOccupancyPresetsCached,
+} from "@/lib/server/request-cache";
+import { buildFacilityGroupsByAllocationGroupFromFacilities } from "@/lib/planning-hub/facility-groups";
 import WeekPlannerPage from "@/components/admin/planner/WeekPlannerPage";
 import { parsePlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { WeekplannerOverrideRow } from "@/components/admin/planner/WeekplannerAllocationOverrideEditor";
-import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
 
 type PlannerWeekPageProps = {
@@ -135,7 +136,7 @@ export default async function PlannerWeekPageRoute({
 
   const activePlan = materializedWeekplannerPlan;
 
-  const [week, dressingRoomOccupancyPresets] = await Promise.all([
+  const [week, dressingRoomOccupancyPresets, facilities] = await Promise.all([
     getWeekplannerWeek(
       tenantContext.id,
       {
@@ -148,18 +149,13 @@ export default async function PlannerWeekPageRoute({
       },
       activePlan?.id,
     ),
-    getTenantDressingRoomOccupancyPresets(tenantContext.id),
+    getTenantDressingRoomOccupancyPresetsCached(tenantContext.id),
+    getFacilitiesForTenantCached(tenantContext.id),
   ]);
 
-  // WEEKPLANNER-01B — override editing context is only ever built when an
-  // alternative plan is selected AND the caller can manage plans; the
-  // Standardplan view and read-only viewers never pay this extra cost and
-  // never see editing affordances.
-  // PLANNING-RESOURCE-UX-01 — canonical editing context is built once for
-  // Standardplan view (activePlan === null) when the caller can manage plans.
-  // Facility groups are shared between override and canonical editing contexts.
-  const facilityGroupsByAllocationGroup =
-    canManagePlans ? await buildFacilityGroupsByAllocationGroup(tenantContext.id) : null;
+  const facilityGroupsByAllocationGroup = canManagePlans
+    ? buildFacilityGroupsByAllocationGroupFromFacilities(facilities)
+    : null;
 
   const overrideEditing =
     canManagePlans && activePlan && facilityGroupsByAllocationGroup
@@ -176,7 +172,6 @@ export default async function PlannerWeekPageRoute({
       ? { canManageTrainings, canManageEvents, facilityGroupsByAllocationGroup }
       : undefined;
 
-  const facilities = await getFacilitiesForTenant(tenantContext.id);
   const facilityOptions = facilities.map((facility) => ({
     value: facility.id,
     label: facility.name,
@@ -246,29 +241,3 @@ async function buildOverridesByKey(
   return byKey;
 }
 
-async function buildFacilityGroupsByAllocationGroup(
-  tenantId: string,
-): Promise<{ PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] }> {
-  const facilities = await getFacilitiesForTenant(tenantId);
-
-  function groupsFor(group: "PITCH_HALL" | "DRESSING_ROOM"): FacilityGroup[] {
-    return facilities
-      .map((facility) => ({
-        facilityId: facility.id,
-        facilityName: facility.name,
-        resources: facility.resources
-          .filter((resource) => classifyFacilityResourceType(resource.type) === group)
-          .map((resource) => ({
-            id: resource.id,
-            name: resource.name,
-            code: resource.code,
-            type: resource.type,
-            facilityId: facility.id,
-            facilityName: facility.name,
-          })),
-      }))
-      .filter((facilityGroup) => facilityGroup.resources.length > 0);
-  }
-
-  return { PITCH_HALL: groupsFor("PITCH_HALL"), DRESSING_ROOM: groupsFor("DRESSING_ROOM") };
-}

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import {
@@ -9,22 +8,28 @@ import {
   daypartTimeLabelDe,
   PLANNING_HUB_DAYPART_ORDER,
   type PlanningHubCalendarDaypart,
+  type PlanningHubCalendarZeitParam,
 } from "@/lib/planning-hub/planning-dayparts";
-import { buildPlanningHubHref, type PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
+import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 
 type PlanningHubDaypartSwitcherProps = {
   urlState: PlanningHubUrlState;
   activeDaypart: PlanningHubCalendarDaypart;
   showAdvancedFullDay?: boolean;
+  /** PLANNING-HUB-02E — client `zeit` updates without RSC navigation. */
+  onSelectDaypart?: (daypart: PlanningHubCalendarDaypart) => void;
+  onSelectFullDay?: () => void;
 };
 
 export default function PlanningHubDaypartSwitcher({
   urlState,
   activeDaypart,
   showAdvancedFullDay = false,
+  onSelectDaypart,
+  onSelectFullDay,
 }: PlanningHubDaypartSwitcherProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const segmentRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const segmentRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
 
   useLayoutEffect(() => {
@@ -60,12 +65,13 @@ export default function PlanningHubDaypartSwitcher({
         {PLANNING_HUB_DAYPART_ORDER.map((daypart) => {
           const selected = daypart === activeDaypart;
           return (
-            <Link
+            <button
               key={daypart}
+              type="button"
               ref={(el) => {
                 segmentRefs.current[daypart] = el;
               }}
-              href={buildPlanningHubHref(urlState, { calendarZeit: daypart })}
+              onClick={() => onSelectDaypart?.(daypart)}
               role="tab"
               aria-selected={selected}
               aria-label={daypartAccessibleLabelDe(daypart)}
@@ -80,18 +86,19 @@ export default function PlanningHubDaypartSwitcher({
               <span className="text-[10px] tabular-nums leading-tight text-[var(--muted)]">
                 {daypartTimeLabelDe(daypart)}
               </span>
-            </Link>
+            </button>
           );
         })}
       </div>
       {showAdvancedFullDay && (
-        <Link
-          href={buildPlanningHubHref(urlState, { calendarZeit: "ganz" })}
+        <button
+          type="button"
+          onClick={() => onSelectFullDay?.()}
           className="shrink-0 text-[10px] font-medium text-[var(--muted)] hover:text-[var(--text-2)]"
           data-testid="planning-hub-daypart-advanced-full"
         >
           Ganzer Tag
-        </Link>
+        </button>
       )}
     </div>
   );

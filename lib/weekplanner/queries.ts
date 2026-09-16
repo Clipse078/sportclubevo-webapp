@@ -76,7 +76,7 @@ import { prisma } from "@/lib/db/prisma";
 import { isMeaningfulEventInterval } from "@/lib/facilities/resource-occupancy-window";
 import { getWochenplanPlanBaselineMode, type WochenplanPlanBaselineMode } from "@/lib/wochenplan/plan-baseline";
 import { listTrainingSessions } from "@/lib/training/session-generation-service";
-import { getTenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/tenant-preset-service";
+import { getTenantDressingRoomOccupancyPresetsCached } from "@/lib/server/request-cache";
 import { enrichWeekplannerItemDressingRoomOccupancy } from "@/lib/dressing-room-occupancy/weekplanner-enrichment";
 import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
 import {
@@ -871,7 +871,7 @@ export async function getWeekplannerWeek(
       findWeekplannerPlanOverrides(tenantId, planId),
       findWeekplannerPlanTimeOverrides(tenantId, planId),
       resolveWeekplannerPlanBaselineMode(tenantId, planId),
-      getTenantDressingRoomOccupancyPresets(tenantId),
+      getTenantDressingRoomOccupancyPresetsCached(tenantId),
     ]);
 
   const [trainingItems, matchItems, tournamentItems, veranstaltungItems] = await Promise.all([

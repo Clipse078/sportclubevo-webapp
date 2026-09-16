@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => ({
   eventFindMany: vi.fn(),
   weekplannerPlanFindFirst: vi.fn(),
   wochenplanPlanFindFirst: vi.fn(),
+  tenantDressingRoomOccupancyPresetFindUnique: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -38,6 +39,7 @@ vi.mock("@/lib/db/prisma", () => ({
     event: { findMany: mocks.eventFindMany },
     weekplannerPlan: { findFirst: mocks.weekplannerPlanFindFirst },
     wochenplanPlan: { findFirst: mocks.wochenplanPlanFindFirst },
+    tenantDressingRoomOccupancyPreset: { findUnique: mocks.tenantDressingRoomOccupancyPresetFindUnique },
   },
 }));
 
@@ -239,6 +241,7 @@ beforeEach(() => {
   });
   mocks.weekplannerPlanFindFirst.mockResolvedValue({ wochenplanPlanId: null });
   mocks.wochenplanPlanFindFirst.mockResolvedValue(null);
+  mocks.tenantDressingRoomOccupancyPresetFindUnique.mockResolvedValue(null);
 });
 
 describe("getWeekplannerWeek — TrainingSession", () => {
