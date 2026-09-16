@@ -28,3 +28,43 @@ export function weekplannerTeamLine(item: WeekplannerItem): string | null {
   if (item.teamNames.length > 0) return item.teamNames.join(", ");
   return null;
 }
+
+export function weekplannerResourceSummary(item: WeekplannerItem, max = 3): string {
+  const names: string[] = [];
+  for (const ref of item.pitchAllocations) names.push(ref.name);
+  for (const ref of item.dressingRoomAllocations) names.push(ref.name);
+  if (item.type === "MATCH") {
+    for (const ref of item.awayDressingRoomAllocations) names.push(ref.name);
+  }
+  const unique = [...new Set(names)];
+  if (unique.length === 0) return "";
+  if (unique.length <= max) return unique.join(" · ");
+  return `${unique.slice(0, max).join(" · ")} +${unique.length - max}`;
+}
+
+export function weekplannerAccessibleName(
+  item: WeekplannerItem,
+  locale: string,
+  timeZone: string,
+): string {
+  const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
+  const time = `${fmt.format(item.startAt)} bis ${fmt.format(item.endAt)}`;
+  const resources = weekplannerResourceSummary(item, 5);
+  const type = weekplannerActivityTypeLabel(item.type);
+  const label = weekplannerPrimaryLabel(item);
+  const parts = [label, type, time];
+  if (resources) parts.push(resources);
+  if (item.conflicts.length > 0) parts.push("Planungskonflikt");
+  return parts.join(", ");
+}
+
+export function itemHasCanonicalConflictOnResource(
+  item: WeekplannerItem,
+  facilityResourceId: string,
+): boolean {
+  return item.conflicts.some((c) => c.facilityResourceId === facilityResourceId);
+}
+
+export function itemHasCanonicalConflict(item: WeekplannerItem): boolean {
+  return item.conflicts.length > 0;
+}

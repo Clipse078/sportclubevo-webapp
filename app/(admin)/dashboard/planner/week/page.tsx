@@ -27,6 +27,7 @@ type PlannerWeekPageProps = {
     facility?: string;
     konflikte?: string;
     ressource?: string;
+    day?: string;
   }>;
 };
 
@@ -180,6 +181,7 @@ export default async function PlannerWeekPageRoute({
     ...urlState,
     week: weekWindow.param,
     plan: requestedPlanId ?? urlState.plan,
+    day: urlState.day,
   };
 
   return (

@@ -2,39 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-  DoorOpen,
-  Dumbbell,
-  Info,
-  MapPin,
-  Shield,
-  Trophy,
-} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { SectionCard } from "@/components/ui/page/SectionCard";
 import { EmptyState } from "@/components/ui/page/EmptyState";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
-import type {
-  WeekplannerDay,
-  WeekplannerItem,
-  WeekplannerResourceRef,
-  WeekplannerWeek,
-} from "@/lib/weekplanner/types";
+import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
 import type { WochenplanPlanDto } from "@/lib/wochenplan/plan-types";
-import { planOverrideKey } from "@/lib/weekplanner/plan-override-key";
 import { WeekplannerPlanBar } from "./WeekplannerPlanBar";
-import {
-  WeekplannerAllocationOverrideEditor,
-  type WeekplannerOverrideRow,
-} from "./WeekplannerAllocationOverrideEditor";
-import { WeekplannerActivityTimeOverrideEditor } from "./WeekplannerActivityTimeOverrideEditor";
-import { WeekplannerActivityOverridePanel } from "./WeekplannerActivityOverridePanel";
-import { WeekplannerOverridePanelProvider } from "./WeekplannerOverridePanelContext";
-import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { WeekplannerPlanningSheet } from "./WeekplannerPlanningSheet";
 import { WeekplannerOperationalPlanningSheet } from "./WeekplannerOperationalPlanningSheet";
 import PlanningHubCreateMenu, {
@@ -42,22 +18,20 @@ import PlanningHubCreateMenu, {
 } from "@/components/admin/planning-hub/PlanningHubCreateMenu";
 import PlanningHubConflictAttention from "@/components/admin/planning-hub/PlanningHubConflictAttention";
 import PlanningHubConflictSheet from "@/components/admin/planning-hub/PlanningHubConflictSheet";
-import PlanningHubResourceWeekView from "@/components/admin/planning-hub/PlanningHubResourceWeekView";
+import PlanningHubCalendarView from "@/components/admin/planning-hub/PlanningHubCalendarView";
+import PlanningHubResourceDayView from "@/components/admin/planning-hub/PlanningHubResourceDayView";
+import PlanningHubListeView from "@/components/admin/planning-hub/PlanningHubListeView";
 import PlanningHubWeekFilters from "@/components/admin/planning-hub/PlanningHubWeekFilters";
-import {
-  applyPlanningHubFilters,
-} from "@/lib/planning-hub/filters";
+import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
 import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
 import {
   buildPlanningHubHref,
   type PlanningHubUrlState,
 } from "@/lib/planning-hub/planner-url";
-import { CalendarDays } from "lucide-react";
+import { dayKeyInTimeZone } from "@/lib/planning-hub/scheduler/time-zone";
+import type { WeekplannerOverrideRow } from "./WeekplannerAllocationOverrideEditor";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 
-/**
- * WEEKPLANNER-01B — populated only when an alternative plan is selected AND
- * the caller can manage plans.
- */
 type OverrideEditingContext = {
   planId: string;
   planName: string;
@@ -65,18 +39,6 @@ type OverrideEditingContext = {
   facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
 };
 
-const CANONICAL_MODULE_HREF: Record<
-  Exclude<WeekplannerItem["type"], "VERANSTALTUNG">,
-  { label: string; href: string }
-> = {
-  TRAINING: { label: "Trainings", href: "/dashboard/training" },
-  MATCH: { label: "Spiele", href: "/dashboard/matchcenter" },
-  TOURNAMENT: { label: "Turniere", href: "/dashboard/tournamentcenter" },
-};
-
-/**
- * PLANNING-RESOURCE-UX-01 — Standardplan canonical editing context.
- */
 type CanonicalEditingContext = {
   canManageTrainings: boolean;
   canManageEvents: boolean;
@@ -102,595 +64,18 @@ type WeekPlannerPageProps = {
   createPermissions?: PlanningHubCreatePermissions;
 };
 
-const TYPE_META: Record<
-  WeekplannerItem["type"],
-  { label: string; badgeClass: string; icon: typeof Dumbbell }
-> = {
-  TRAINING: {
-    label: "Training",
-    badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    icon: Dumbbell,
-  },
-  MATCH: {
-    label: "Match",
-    badgeClass: "border-blue-200 bg-blue-50 text-blue-700",
-    icon: Shield,
-  },
-  TOURNAMENT: {
-    label: "Turnier",
-    badgeClass: "border-amber-200 bg-amber-50 text-amber-700",
-    icon: Trophy,
-  },
-  VERANSTALTUNG: {
-    label: "Veranstaltung",
-    badgeClass: "border-violet-200 bg-violet-50 text-violet-700",
-    icon: CalendarDays,
-  },
-};
-
 function weekHref(param: string, urlState: PlanningHubUrlState): string {
   return buildPlanningHubHref({ ...urlState, week: param });
 }
 
-function formatTimeRange(startAt: Date, endAt: Date, locale: string, timeZone: string): string {
-  const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
-  const start = fmt.format(startAt);
-  const end = fmt.format(endAt);
-  return start === end ? start : `${start} – ${end}`;
-}
-
-function formatDayHeading(dayKey: string, locale: string, timeZone: string): string {
-  return new Intl.DateTimeFormat(locale, {
-    weekday: "long",
-    day: "2-digit",
-    month: "2-digit",
-    timeZone,
-  }).format(new Date(`${dayKey}T12:00:00.000Z`));
-}
-
-function isToday(dayKey: string, timeZone: string): boolean {
-  const todayKey = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-  return dayKey === todayKey;
-}
-
-function ResourceChips({
-  icon: Icon,
-  refs,
-  emptyLabel,
-  overridden,
-}: {
-  icon: typeof MapPin;
-  refs: WeekplannerResourceRef[];
-  emptyLabel?: string;
-  overridden?: boolean;
-}) {
-  if (refs.length === 0) {
-    // Empty label is now handled by IncompletePlanningBadge for required resources.
-    // Retain display only for non-required contexts (training dressing rooms).
-    return emptyLabel ? (
-      <span className="inline-flex items-center gap-1 text-[11px] text-[var(--muted)]">
-        <Icon className="h-3 w-3" />
-        {emptyLabel}
-      </span>
-    ) : null;
-  }
-
-  return (
-    <div className="flex flex-wrap items-center gap-1">
-      {refs.map((ref) => (
-        <span
-          key={ref.facilityResourceId}
-          className={cn(
-            "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
-            overridden
-              ? "border-blue-200 bg-blue-50 text-blue-700"
-              : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-2)]",
-          )}
-          title={ref.facilityName}
-        >
-          <Icon className="h-3 w-3" />
-          {ref.name}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function isItemOverridden(item: WeekplannerItem): boolean {
-  const resourceOverridden =
-    item.pitchOverridden ||
-    item.dressingRoomOverridden ||
-    (item.type === "TOURNAMENT" && item.participantAllocations.some((p) => p.dressingRoomOverridden));
-  return item.timeOverridden || resourceOverridden;
-}
-
-function formatStandardSummary(item: WeekplannerItem, locale: string, timeZone: string): string {
-  const parts = [formatTimeRange(item.canonicalStartAt, item.canonicalEndAt, locale, timeZone)];
-  for (const ref of item.canonicalPitchAllocations) parts.push(ref.name);
-  for (const ref of item.canonicalDressingRoomAllocations) parts.push(ref.name);
-  return parts.join(" · ");
-}
-
-function OverrideIndicator({
-  item,
-  planName,
-  locale,
-  timezone,
-}: {
-  item: WeekplannerItem;
-  planName: string;
-  locale: string;
-  timezone: string;
-}) {
-  if (!isItemOverridden(item)) return null;
-
-  return (
-    <div className="mt-1.5 space-y-0.5" data-testid="weekplanner-override-indicator">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-blue-600">{planName} angepasst</p>
-      <p className="text-[10px] text-[var(--muted)]">Standard: {formatStandardSummary(item, locale, timezone)}</p>
-    </div>
-  );
-}
-
-function ConflictBadge({ item }: { item: WeekplannerItem }) {
-  if (item.conflicts.length === 0) return null;
-
-  const resourceNames = item.conflicts.map((c) => c.facilityResourceName).join(", ");
-
-  return (
-    <div
-      className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800"
-      title={`Geteilte Belegung: ${resourceNames}`}
-      data-testid="weekplanner-conflict-badge"
-    >
-      <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-      Geteilte Belegung · {resourceNames}
-    </div>
-  );
-}
-
-/**
- * PLANNING-UX-C3 — AMBER urgency badge for incomplete planning.
- *
- * Returns the list of missing required resources for an item based on the
- * effective allocations for the current plan view:
- *   TRAINING:   pitch required
- *   MATCH HOME: pitch + home dressing room + away dressing room
- *   TOURNAMENT: pitch required
- *
- * The Weekplanner only surfaces HOME matches and HOME tournaments
- * (WeekplannerMatchItem.homeAway === "HOME"), so away-match false-positive
- * flagging is structurally impossible.
- */
 function getMissingAllocations(item: WeekplannerItem): string[] {
   const missing: string[] = [];
-
-  if (item.pitchAllocations.length === 0) {
-    missing.push("Spielfeld");
-  }
-
+  if (item.pitchAllocations.length === 0) missing.push("Spielfeld");
   if (item.type === "MATCH") {
-    if (item.dressingRoomAllocations.length === 0) {
-      missing.push("Heimkabine");
-    }
-    if (item.awayDressingRoomAllocations.length === 0) {
-      missing.push("Gastkabine");
-    }
+    if (item.dressingRoomAllocations.length === 0) missing.push("Heimkabine");
+    if (item.awayDressingRoomAllocations.length === 0) missing.push("Gastkabine");
   }
-
   return missing;
-}
-
-/**
- * PLANNING-UX-C3 — compact amber attention treatment for cards with
- * incomplete planning. Aggregates all missing resources into one badge
- * rather than showing per-resource noise.
- */
-function IncompletePlanningBadge({
-  missing,
-  onEdit,
-}: {
-  missing: string[];
-  onEdit?: () => void;
-}) {
-  if (missing.length === 0) return null;
-
-  return (
-    <div
-      className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5"
-      data-testid="weekplanner-incomplete-badge"
-    >
-      <div className="flex items-start gap-1.5">
-        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-amber-800">Planung unvollständig</p>
-          <p className="text-[11px] text-amber-700">{missing.join(" · ")}</p>
-        </div>
-        {onEdit && (
-          <button
-            type="button"
-            onClick={onEdit}
-            className="ml-auto shrink-0 text-[11px] font-medium text-amber-800 underline underline-offset-2 hover:text-amber-900"
-          >
-            Bearbeiten
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function activityIdOf(item: WeekplannerItem): string {
-  if (item.type === "TRAINING") return item.trainingSessionId;
-  return item.eventId;
-}
-
-function WeekplannerCard({
-  item,
-  locale,
-  timezone,
-  planName,
-  overrideEditing,
-  canonicalEditing,
-  onEdit,
-  onOperationalEdit,
-}: {
-  item: WeekplannerItem;
-  locale: string;
-  timezone: string;
-  planName?: string | null;
-  overrideEditing?: OverrideEditingContext;
-  canonicalEditing?: CanonicalEditingContext;
-  /** PLANNING-UX-C3 — opens the Sheet editor for this item. Undefined = editing not available. */
-  onEdit?: (item: WeekplannerItem) => void;
-  /** WOCHENPLAN-2.0-01H-C — opens operational override editor for alternative plans. */
-  onOperationalEdit?: (item: WeekplannerItem) => void;
-}) {
-  const meta = TYPE_META[item.type];
-  const Icon = meta.icon;
-  const hasConflict = item.conflicts.length > 0;
-  const activityId = activityIdOf(item);
-  const activityKey = `${item.type}:${activityId}`;
-
-  const isStandardplan = !planName;
-  const canEditThisItem =
-    canonicalEditing &&
-    item.type !== "VERANSTALTUNG" &&
-    ((item.type === "TRAINING" && canonicalEditing.canManageTrainings) ||
-      ((item.type === "MATCH" || item.type === "TOURNAMENT") && canonicalEditing.canManageEvents));
-  const showCanonicalEditButton = isStandardplan && canEditThisItem && !!onEdit;
-  const showOperationalEditButton = !isStandardplan && !!overrideEditing && !!onOperationalEdit;
-
-  // PLANNING-UX-C3 — incomplete planning detection
-  const missingAllocations = isStandardplan ? getMissingAllocations(item) : [];
-
-  const timeEditor =
-    overrideEditing && item.type !== "VERANSTALTUNG" ? (
-    <WeekplannerActivityTimeOverrideEditor
-      planId={overrideEditing.planId}
-      activityType={item.type}
-      activityId={activityId}
-      effectiveStartAt={item.startAt.toISOString()}
-      effectiveEndAt={item.endAt.toISOString()}
-      isOverridden={item.timeOverridden}
-      timeZone={timezone}
-    />
-  ) : null;
-
-  return (
-    <div
-      className={cn(
-        "rounded-[16px] border bg-[var(--surface)] p-3.5 shadow-sm",
-        hasConflict ? "border-rose-300" : "border-[var(--border)]",
-      )}
-      data-testid={`weekplanner-item-${item.type.toLowerCase()}`}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold",
-            meta.badgeClass,
-          )}
-        >
-          <Icon className="h-3.5 w-3.5" />
-          {meta.label}
-        </span>
-        <span className="shrink-0 text-xs font-semibold text-[var(--text-2)]">
-          {formatTimeRange(item.startAt, item.endAt, locale, timezone)}
-        </span>
-      </div>
-
-      {item.type === "TRAINING" && (
-        <div className="mt-2.5">
-          <p className="text-sm font-semibold text-[var(--foreground)]">{item.teamNames[0] ?? item.title}</p>
-          <p className="mt-0.5 text-xs text-[var(--text-2)]">{item.title}</p>
-          <div className="mt-2 space-y-1">
-            <ResourceChips icon={MapPin} refs={item.pitchAllocations} overridden={item.pitchOverridden} />
-            <ResourceChips icon={DoorOpen} refs={item.dressingRoomAllocations} overridden={item.dressingRoomOverridden} />
-          </div>
-          {planName && <OverrideIndicator item={item} planName={planName} locale={locale} timezone={timezone} />}
-          {overrideEditing && (
-            <WeekplannerActivityOverridePanel activityKey={activityKey}>
-              {timeEditor}
-              <WeekplannerAllocationOverrideEditor
-                planId={overrideEditing.planId}
-                planName={overrideEditing.planName}
-                activityType="TRAINING"
-                activityId={activityId}
-                allocationGroup="PITCH_HALL"
-                label="Spielfeld/Halle"
-                standardplanAllocations={toStandardplanRows(item.pitchAllocations)}
-                initialOverrideAllocations={overrideEditing.overridesByKey[planOverrideKey("TRAINING", activityId, "PITCH_HALL")] ?? []}
-                facilityGroups={overrideEditing.facilityGroupsByAllocationGroup.PITCH_HALL}
-                startAt={item.startAt.toISOString()}
-                endAt={item.endAt.toISOString()}
-              />
-              <WeekplannerAllocationOverrideEditor
-                planId={overrideEditing.planId}
-                planName={overrideEditing.planName}
-                activityType="TRAINING"
-                activityId={activityId}
-                allocationGroup="DRESSING_ROOM"
-                label="Garderobe"
-                standardplanAllocations={toStandardplanRows(item.dressingRoomAllocations)}
-                initialOverrideAllocations={overrideEditing.overridesByKey[planOverrideKey("TRAINING", activityId, "DRESSING_ROOM")] ?? []}
-                facilityGroups={overrideEditing.facilityGroupsByAllocationGroup.DRESSING_ROOM}
-                startAt={item.startAt.toISOString()}
-                endAt={item.endAt.toISOString()}
-              />
-            </WeekplannerActivityOverridePanel>
-          )}
-        </div>
-      )}
-
-      {item.type === "MATCH" && (
-        <div className="mt-2.5">
-          <p className="text-sm font-semibold text-[var(--foreground)]">
-            {item.teamNames[0] ?? item.title} <span className="text-[var(--text-2)]">vs.</span> {item.opponentName ?? "TBD"}
-          </p>
-          <div className="mt-2 space-y-1">
-            <ResourceChips icon={MapPin} refs={item.pitchAllocations} overridden={item.pitchOverridden} />
-            <ResourceChips icon={DoorOpen} refs={item.dressingRoomAllocations} overridden={item.dressingRoomOverridden} />
-            <ResourceChips icon={DoorOpen} refs={item.awayDressingRoomAllocations} />
-          </div>
-          {planName && <OverrideIndicator item={item} planName={planName} locale={locale} timezone={timezone} />}
-          {overrideEditing && (
-            <WeekplannerActivityOverridePanel activityKey={activityKey}>
-              {timeEditor}
-              <WeekplannerAllocationOverrideEditor
-                planId={overrideEditing.planId}
-                planName={overrideEditing.planName}
-                activityType="MATCH"
-                activityId={activityId}
-                allocationGroup="PITCH_HALL"
-                label="Spielfeld/Halle"
-                standardplanAllocations={toStandardplanRows(item.pitchAllocations)}
-                initialOverrideAllocations={overrideEditing.overridesByKey[planOverrideKey("MATCH", activityId, "PITCH_HALL")] ?? []}
-                facilityGroups={overrideEditing.facilityGroupsByAllocationGroup.PITCH_HALL}
-                startAt={item.startAt.toISOString()}
-                endAt={item.endAt.toISOString()}
-              />
-              <WeekplannerAllocationOverrideEditor
-                planId={overrideEditing.planId}
-                planName={overrideEditing.planName}
-                activityType="MATCH"
-                activityId={activityId}
-                allocationGroup="DRESSING_ROOM"
-                label="Garderobe (Heim)"
-                standardplanAllocations={toStandardplanRows(item.dressingRoomAllocations)}
-                initialOverrideAllocations={overrideEditing.overridesByKey[planOverrideKey("MATCH", activityId, "DRESSING_ROOM")] ?? []}
-                facilityGroups={overrideEditing.facilityGroupsByAllocationGroup.DRESSING_ROOM}
-                startAt={item.startAt.toISOString()}
-                endAt={item.endAt.toISOString()}
-              />
-            </WeekplannerActivityOverridePanel>
-          )}
-        </div>
-      )}
-
-      {item.type === "VERANSTALTUNG" && (
-        <div className="mt-2.5">
-          <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
-          {item.location && <p className="mt-0.5 text-xs text-[var(--text-2)]">{item.location}</p>}
-          <div className="mt-2 space-y-1">
-            <ResourceChips icon={MapPin} refs={item.pitchAllocations} />
-            <ResourceChips icon={DoorOpen} refs={item.dressingRoomAllocations} />
-          </div>
-          <div className="mt-2">
-            <Link
-              href={`/dashboard/veranstaltungen/${item.eventId}`}
-              className="text-xs font-medium text-[var(--sce-primary)] hover:underline"
-            >
-              Veranstaltung bearbeiten →
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {item.type === "TOURNAMENT" && (
-        <div className="mt-2.5">
-          <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
-          {item.teamNames.length > 0 && (
-            <p className="mt-0.5 text-xs text-[var(--text-2)]">{item.teamNames.join(", ")}</p>
-          )}
-          <div className="mt-2 space-y-1">
-            <ResourceChips icon={MapPin} refs={item.pitchAllocations} overridden={item.pitchOverridden} />
-            {item.participantAllocations.map((participant) =>
-              participant.dressingRoomAllocations.length > 0 ? (
-                <div key={participant.participantId} className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[11px] text-[var(--muted)]">{participant.participantLabel}:</span>
-                  <ResourceChips icon={DoorOpen} refs={participant.dressingRoomAllocations} overridden={participant.dressingRoomOverridden} />
-                </div>
-              ) : null,
-            )}
-          </div>
-          {planName && <OverrideIndicator item={item} planName={planName} locale={locale} timezone={timezone} />}
-          {overrideEditing && (
-            <WeekplannerActivityOverridePanel activityKey={activityKey}>
-              {timeEditor}
-              <WeekplannerAllocationOverrideEditor
-                planId={overrideEditing.planId}
-                planName={overrideEditing.planName}
-                activityType="TOURNAMENT"
-                activityId={activityId}
-                allocationGroup="PITCH_HALL"
-                label="Spielfeld/Halle"
-                standardplanAllocations={toStandardplanRows(item.pitchAllocations)}
-                initialOverrideAllocations={overrideEditing.overridesByKey[planOverrideKey("TOURNAMENT", activityId, "PITCH_HALL")] ?? []}
-                facilityGroups={overrideEditing.facilityGroupsByAllocationGroup.PITCH_HALL}
-                startAt={item.startAt.toISOString()}
-                endAt={item.endAt.toISOString()}
-              />
-              {item.participantAllocations.map((participant) => (
-                <WeekplannerAllocationOverrideEditor
-                  key={participant.participantId}
-                  planId={overrideEditing.planId}
-                  planName={overrideEditing.planName}
-                  activityType="TOURNAMENT"
-                  activityId={activityId}
-                  allocationGroup="DRESSING_ROOM"
-                  participantId={participant.participantId}
-                  label={`Garderobe · ${participant.participantLabel}`}
-                  standardplanAllocations={toStandardplanRows(participant.dressingRoomAllocations)}
-                  initialOverrideAllocations={
-                    overrideEditing.overridesByKey[
-                      planOverrideKey("TOURNAMENT", activityId, "DRESSING_ROOM", participant.participantId)
-                    ] ?? []
-                  }
-                  facilityGroups={overrideEditing.facilityGroupsByAllocationGroup.DRESSING_ROOM}
-                  startAt={item.startAt.toISOString()}
-                  endAt={item.endAt.toISOString()}
-                />
-              ))}
-            </WeekplannerActivityOverridePanel>
-          )}
-        </div>
-      )}
-
-      <ConflictBadge item={item} />
-
-      {/* PLANNING-UX-C3 — amber incomplete planning badge */}
-      <IncompletePlanningBadge
-        missing={missingAllocations}
-        onEdit={showCanonicalEditButton ? () => onEdit?.(item) : undefined}
-      />
-
-      {/* PLANNING-UX-C3 — "Planung bearbeiten" button (Standardplan) */}
-      {showCanonicalEditButton && missingAllocations.length === 0 && (
-        <div className="mt-2.5">
-          <button
-            type="button"
-            onClick={() => onEdit?.(item)}
-            className="text-xs font-medium text-[var(--sce-primary)] hover:underline"
-            data-testid={`weekplanner-canonical-edit-${item.type.toLowerCase()}`}
-          >
-            Planung bearbeiten
-          </button>
-        </div>
-      )}
-
-      {/* WOCHENPLAN-2.0-01H-C — operational editing for alternative plans */}
-      {showOperationalEditButton && (
-        <div className="mt-2.5">
-          <button
-            type="button"
-            onClick={() => onOperationalEdit?.(item)}
-            className="text-xs font-medium text-[var(--sce-primary)] hover:underline"
-            data-testid={`weekplanner-operational-edit-${item.type.toLowerCase()}`}
-          >
-            Planung bearbeiten
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function toStandardplanRows(
-  refs: WeekplannerResourceRef[],
-): { facilityResourceId: string; facilityResourceName: string; facilityResourceCode: string }[] {
-  return refs.map((ref) => ({
-    facilityResourceId: ref.facilityResourceId,
-    facilityResourceName: ref.name,
-    facilityResourceCode: ref.code,
-  }));
-}
-
-function DayColumn({
-  day,
-  locale,
-  timezone,
-  planName,
-  overrideEditing,
-  canonicalEditing,
-  onEdit,
-  onOperationalEdit,
-}: {
-  day: WeekplannerDay;
-  locale: string;
-  timezone: string;
-  planName?: string | null;
-  overrideEditing?: OverrideEditingContext;
-  canonicalEditing?: CanonicalEditingContext;
-  onEdit?: (item: WeekplannerItem) => void;
-  onOperationalEdit?: (item: WeekplannerItem) => void;
-}) {
-  const today = isToday(day.dayKey, timezone);
-
-  return (
-    <div
-      className={cn(
-        "flex min-w-[260px] flex-1 flex-col rounded-[20px] border bg-[var(--surface)]",
-        today ? "border-[var(--sce-primary)]" : "border-[var(--border)]",
-      )}
-      data-testid="weekplanner-day-column"
-      data-day={day.dayKey}
-    >
-      <div
-        className={cn(
-          "rounded-t-[20px] border-b px-3.5 py-2.5",
-          today ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)]" : "border-[var(--border)] bg-[var(--surface-2)]",
-        )}
-      >
-        <p
-          className={cn(
-            "text-xs font-semibold uppercase tracking-wide",
-            today ? "text-[var(--sce-primary)]" : "text-[var(--text-2)]",
-          )}
-        >
-          {formatDayHeading(day.dayKey, locale, timezone)}
-        </p>
-        <p className="mt-0.5 text-[11px] text-[var(--muted)]">
-          {day.items.length} {day.items.length === 1 ? "Eintrag" : "Einträge"}
-        </p>
-      </div>
-
-      <div className="flex-1 space-y-2.5 p-2.5">
-        {day.items.length === 0 ? (
-          <p className="px-1 py-3 text-center text-[11px] text-[var(--muted)]">Keine Einträge</p>
-        ) : (
-          day.items.map((item) => (
-            <WeekplannerCard
-              key={item.id}
-              item={item}
-              locale={locale}
-              timezone={timezone}
-              planName={planName}
-              overrideEditing={overrideEditing}
-              canonicalEditing={canonicalEditing}
-              onEdit={onEdit}
-              onOperationalEdit={onOperationalEdit}
-            />
-          ))
-        )}
-      </div>
-    </div>
-  );
 }
 
 export default function WeekPlannerPage({
@@ -711,19 +96,21 @@ export default function WeekPlannerPage({
   facilityOptions = [],
   createPermissions,
 }: WeekPlannerPageProps) {
+  const router = useRouter();
   const urlState: PlanningHubUrlState = urlStateProp ?? {
     week: week.param,
-    perspective: "woche",
+    perspective: "kalender",
     activity: "alle",
     team: null,
     facility: null,
     conflictsOnly: false,
     resourceCategory: "pitch",
   };
+
   const filteredWeek = applyPlanningHubFilters(week, urlState);
   const totalItems = filteredWeek.days.reduce((sum, day) => sum + day.items.length, 0);
+  const todayDayKey = dayKeyInTimeZone(new Date(), timezone);
 
-  // PLANNING-UX-C3 — incomplete planning count (Standardplan only)
   const isStandardplan = activePlanId === null;
   const incompleteCount = isStandardplan
     ? filteredWeek.days.reduce(
@@ -733,12 +120,10 @@ export default function WeekPlannerPage({
       )
     : 0;
 
-  const planName = activePlanId ? plans.find((p) => p.id === activePlanId)?.name ?? null : null;
-
   const [editingItem, setEditingItem] = useState<WeekplannerItem | null>(null);
   const [operationalEditingItem, setOperationalEditingItem] = useState<WeekplannerItem | null>(null);
-  const [conflictsExpanded, setConflictsExpanded] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<PlanningConflictIncident | null>(null);
+  const [conflictPicker, setConflictPicker] = useState<PlanningConflictIncident[] | null>(null);
 
   const canEdit = !!canonicalEditing;
 
@@ -765,8 +150,9 @@ export default function WeekPlannerPage({
   function handleEdit(item: WeekplannerItem) {
     if (!canonicalEditing) return;
     const canEditThisItem =
-      (item.type === "TRAINING" && canonicalEditing.canManageTrainings) ||
-      ((item.type === "MATCH" || item.type === "TOURNAMENT") && canonicalEditing.canManageEvents);
+      item.type !== "VERANSTALTUNG" &&
+      ((item.type === "TRAINING" && canonicalEditing.canManageTrainings) ||
+        ((item.type === "MATCH" || item.type === "TOURNAMENT") && canonicalEditing.canManageEvents));
     if (canEditThisItem) setEditingItem(item);
   }
 
@@ -775,8 +161,32 @@ export default function WeekPlannerPage({
     setOperationalEditingItem(item);
   }
 
+  function handleItemActivate(item: WeekplannerItem) {
+    if (item.type === "VERANSTALTUNG") {
+      router.push(`/dashboard/veranstaltungen/${item.eventId}`);
+      return;
+    }
+    if (activePlanId && overrideEditing) {
+      handleOperationalEdit(item);
+      return;
+    }
+    if (isStandardplan && canEdit) {
+      handleEdit(item);
+    }
+  }
+
+  function handleReviewConflicts(incidents: PlanningConflictIncident[]) {
+    if (incidents.length === 1) {
+      setSelectedIncident(incidents[0]!);
+      return;
+    }
+    setConflictPicker(incidents);
+  }
+
+  const resolvedUrlState = { ...urlState, week: week.param };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-3" data-testid="planning-hub-workspace">
       <AdminSectionHeader
         eyebrow="Planung"
         title="Wochenplaner"
@@ -784,7 +194,7 @@ export default function WeekPlannerPage({
         actions={createPermissions ? <PlanningHubCreateMenu permissions={createPermissions} /> : undefined}
       />
 
-      <SectionCard>
+      <div className="space-y-2 border-b border-[var(--border)] pb-3">
         <WeekplannerPlanBar
           weekParam={week.param}
           wochenplanPlans={wochenplanPlans}
@@ -793,97 +203,70 @@ export default function WeekPlannerPage({
           materializedWeekplannerPlanId={materializedWeekplannerPlanId}
           canManage={canManagePlans}
         />
-      </SectionCard>
 
-      {activePlanId === null && canManagePlans && (
-        <div
-          className="flex flex-wrap items-start gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2.5 text-sm text-[var(--text-2)]"
-          data-testid="weekplanner-standardplan-safety-note"
-        >
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" />
-          <span>
-            {canonicalEditing
-              ? "Standardplan — Planungsdaten direkt bearbeitbar (\"Planung bearbeiten\" auf jedem Eintrag) oder über "
-              : "Standardplan aktiv — Platz- und Garderobenzuteilungen sind hier nur lesbar. Um sie zu ändern, öffnen Sie "}
-            <Link href={CANONICAL_MODULE_HREF.TRAINING.href} className="font-semibold text-[var(--sce-primary)] hover:underline">
-              {CANONICAL_MODULE_HREF.TRAINING.label}
-            </Link>
-            ,{" "}
-            <Link href={CANONICAL_MODULE_HREF.MATCH.href} className="font-semibold text-[var(--sce-primary)] hover:underline">
-              {CANONICAL_MODULE_HREF.MATCH.label}
-            </Link>{" "}
-            oder{" "}
-            <Link href={CANONICAL_MODULE_HREF.TOURNAMENT.href} className="font-semibold text-[var(--sce-primary)] hover:underline">
-              {CANONICAL_MODULE_HREF.TOURNAMENT.label}
-            </Link>{" "}
-            — oder wählen Sie oben einen Alternativ-Wochenplan, um nur für diese Woche abzuweichen.
-          </span>
-        </div>
-      )}
-
-      <SectionCard noPadding>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             <Link
-              href={weekHref(week.previousParam, urlState)}
+              href={weekHref(week.previousParam, resolvedUrlState)}
               aria-label="Vorherige Woche"
               data-testid="weekplanner-previous-week"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]"
             >
               <ChevronLeft className="h-4 w-4" />
             </Link>
-            <p className="text-base font-semibold text-[var(--foreground)]" data-testid="weekplanner-range-label">
+            <p className="text-sm font-semibold text-[var(--foreground)]" data-testid="weekplanner-range-label">
               {week.rangeLabel}
             </p>
             <Link
-              href={weekHref(week.nextParam, urlState)}
+              href={weekHref(week.nextParam, resolvedUrlState)}
               aria-label="Nächste Woche"
               data-testid="weekplanner-next-week"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]"
             >
               <ChevronRight className="h-4 w-4" />
             </Link>
             <Link
-              href={weekHref(todayParam, urlState)}
+              href={weekHref(todayParam, resolvedUrlState)}
               data-testid="weekplanner-today"
-              className="inline-flex h-9 items-center rounded-lg border border-[var(--border)] px-3.5 text-sm font-semibold text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+              className="inline-flex h-8 items-center rounded-md border border-[var(--border)] px-2.5 text-xs font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
             >
               Heute
             </Link>
           </div>
 
-          <div className="flex items-center gap-1 rounded-lg border border-[var(--border)] p-0.5" data-testid="planning-hub-perspective">
-            <Link
-              href={buildPlanningHubHref(urlState, { perspective: "woche" })}
-              className={cn(
-                "rounded-md px-3 py-1.5 text-xs font-semibold",
-                urlState.perspective === "woche"
-                  ? "bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
-                  : "text-[var(--text-2)] hover:bg-[var(--surface-2)]",
-              )}
-            >
-              Woche
-            </Link>
-            <Link
-              href={buildPlanningHubHref(urlState, { perspective: "ressourcen" })}
-              className={cn(
-                "rounded-md px-3 py-1.5 text-xs font-semibold",
-                urlState.perspective === "ressourcen"
-                  ? "bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
-                  : "text-[var(--text-2)] hover:bg-[var(--surface-2)]",
-              )}
-            >
-              Ressourcen
-            </Link>
+          <div
+            className="flex items-center gap-0.5 rounded-md border border-[var(--border)] p-0.5"
+            data-testid="planning-hub-perspective"
+          >
+            {(
+              [
+                ["kalender", "Kalender"],
+                ["ressourcen", "Ressourcen"],
+                ["liste", "Liste"],
+              ] as const
+            ).map(([perspective, label]) => (
+              <Link
+                key={perspective}
+                href={buildPlanningHubHref(resolvedUrlState, { perspective })}
+                className={cn(
+                  "rounded px-2.5 py-1 text-xs font-semibold",
+                  urlState.perspective === perspective
+                    ? "bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
+                    : "text-[var(--text-2)] hover:bg-[var(--surface-2)]",
+                )}
+              >
+                {label}
+              </Link>
+            ))}
           </div>
         </div>
 
         {urlState.perspective === "ressourcen" && (
-          <div className="flex gap-1 border-b border-[var(--border)] px-5 py-2">
+          <div className="flex gap-1">
             <Link
-              href={buildPlanningHubHref(urlState, { resourceCategory: "pitch" })}
+              href={buildPlanningHubHref(resolvedUrlState, { resourceCategory: "pitch" })}
               className={cn(
-                "rounded-full border px-2.5 py-1 text-xs font-semibold",
+                "rounded-full border px-2.5 py-0.5 text-xs font-semibold",
                 urlState.resourceCategory === "pitch"
                   ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
                   : "border-[var(--border)] text-[var(--text-2)]",
@@ -892,9 +275,9 @@ export default function WeekPlannerPage({
               Spielfeld / Halle
             </Link>
             <Link
-              href={buildPlanningHubHref(urlState, { resourceCategory: "dressing" })}
+              href={buildPlanningHubHref(resolvedUrlState, { resourceCategory: "dressing" })}
               className={cn(
-                "rounded-full border px-2.5 py-1 text-xs font-semibold",
+                "rounded-full border px-2.5 py-0.5 text-xs font-semibold",
                 urlState.resourceCategory === "dressing"
                   ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
                   : "border-[var(--border)] text-[var(--text-2)]",
@@ -906,72 +289,52 @@ export default function WeekPlannerPage({
         )}
 
         <PlanningHubWeekFilters
-          urlState={urlState}
+          urlState={resolvedUrlState}
           teamOptions={teamOptions}
           facilityOptions={facilityOptions}
         />
-      </SectionCard>
 
-      <PlanningHubConflictAttention
-        week={week}
-        locale={locale}
-        timezone={timezone}
-        expanded={conflictsExpanded}
-        onToggleExpanded={() => setConflictsExpanded((value) => !value)}
-        onSelectIncident={(incident) => setSelectedIncident(incident)}
-      />
+        <PlanningHubConflictAttention
+          week={week}
+          incompleteCount={incompleteCount}
+          onReviewConflicts={handleReviewConflicts}
+        />
+      </div>
 
-      {/* PLANNING-UX-C3 — AMBER: incomplete planning (Standardplan only). Never classified as Doppelbelegung. */}
-      {incompleteCount > 0 && (
-        <div
-          className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-700"
-          data-testid="weekplanner-incomplete-summary"
-        >
-          <AlertTriangle className="h-4 w-4" />
-          {incompleteCount} {incompleteCount === 1 ? "Eintrag benötigt" : "Einträge benötigen"} Planung diese Woche
-        </div>
-      )}
-
-      {urlState.perspective === "ressourcen" ? (
-        <SectionCard noPadding>
-          <PlanningHubResourceWeekView
-            week={week}
-            urlState={urlState}
-            locale={locale}
-            timezone={timezone}
-          />
-        </SectionCard>
-      ) : totalItems === 0 ? (
-        <SectionCard noPadding>
-          <EmptyState
-            icon={<Dumbbell className="h-8 w-8" />}
-            heading="Keine Planungseinträge"
-            description="Für diese Kalenderwoche gibt es keine passenden Aktivitäten."
-          />
-        </SectionCard>
+      {totalItems === 0 ? (
+        <EmptyState
+          heading="Keine Planungseinträge"
+          description="Für diese Kalenderwoche gibt es keine passenden Aktivitäten."
+        />
+      ) : urlState.perspective === "kalender" ? (
+        <PlanningHubCalendarView
+          week={week}
+          urlState={resolvedUrlState}
+          locale={locale}
+          timezone={timezone}
+          todayDayKey={todayDayKey}
+          onItemActivate={handleItemActivate}
+        />
+      ) : urlState.perspective === "ressourcen" ? (
+        <PlanningHubResourceDayView
+          week={week}
+          urlState={resolvedUrlState}
+          locale={locale}
+          timezone={timezone}
+          todayDayKey={todayDayKey}
+          onItemActivate={handleItemActivate}
+        />
       ) : (
-        <div className="-mx-1 overflow-x-auto pb-2">
-          <WeekplannerOverridePanelProvider>
-            <div className="flex min-w-full gap-3 px-1">
-              {filteredWeek.days.map((day) => (
-                <DayColumn
-                  key={day.dayKey}
-                  day={day}
-                  locale={locale}
-                  timezone={timezone}
-                  planName={planName}
-                  overrideEditing={overrideEditing}
-                  canonicalEditing={activePlanId === null ? canonicalEditing : undefined}
-                  onEdit={canEdit && activePlanId === null ? handleEdit : undefined}
-                  onOperationalEdit={overrideEditing ? handleOperationalEdit : undefined}
-                />
-              ))}
-            </div>
-          </WeekplannerOverridePanelProvider>
-        </div>
+        <PlanningHubListeView
+          week={week}
+          urlState={resolvedUrlState}
+          locale={locale}
+          timezone={timezone}
+          planName={activePlanId ? plans.find((p) => p.id === activePlanId)?.name ?? null : null}
+          onItemActivate={handleItemActivate}
+        />
       )}
 
-      {/* PLANNING-UX-C3 — Sheet overlay for canonical editing workspace */}
       {canonicalEditing && (
         <WeekplannerPlanningSheet
           item={editingItem}
@@ -1015,6 +378,41 @@ export default function WeekPlannerPage({
           handleEdit(item);
         }}
       />
+
+      {conflictPicker && conflictPicker.length > 1 && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 p-4 sm:items-center"
+          role="dialog"
+          aria-label="Konflikte auswählen"
+        >
+          <div className="max-h-[70vh] w-full max-w-md overflow-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg">
+            <p className="mb-3 text-sm font-semibold text-[var(--foreground)]">Konflikte prüfen</p>
+            <ul className="space-y-1">
+              {conflictPicker.map((incident) => (
+                <li key={incident.id}>
+                  <button
+                    type="button"
+                    className="w-full rounded-lg px-2 py-2 text-left text-xs hover:bg-[var(--surface-2)]"
+                    onClick={() => {
+                      setConflictPicker(null);
+                      setSelectedIncident(incident);
+                    }}
+                  >
+                    {incident.facilityResourceName} · {incident.occupancyCount} Belegungen
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              className="mt-3 text-xs font-semibold text-[var(--text-2)]"
+              onClick={() => setConflictPicker(null)}
+            >
+              Schliessen
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

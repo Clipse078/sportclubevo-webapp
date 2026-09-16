@@ -1,18 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { buildPlanningHubHref, parsePlanningHubUrlState } from "../planner-url";
+import {
+  buildPlanningHubHref,
+  parsePlanningHubUrlState,
+  resolvePlanningHubResourceDay,
+} from "../planner-url";
 
 describe("planning-hub planner-url", () => {
-  it("defaults to Woche perspective and alle activity filter", () => {
+  it("defaults to Kalender perspective and alle activity filter", () => {
     const state = parsePlanningHubUrlState({});
-    expect(state.perspective).toBe("woche");
+    expect(state.perspective).toBe("kalender");
     expect(state.activity).toBe("alle");
     expect(state.conflictsOnly).toBe(false);
+  });
+
+  it("maps legacy ansicht=woche to Liste", () => {
+    expect(parsePlanningHubUrlState({ ansicht: "woche" }).perspective).toBe("liste");
   });
 
   it("round-trips week navigation and filters", () => {
     const state = parsePlanningHubUrlState({
       week: "2026-09-14",
       ansicht: "ressourcen",
+      day: "2026-09-16",
       typ: "trainings",
       team: "team-1",
       facility: "fac-1",
@@ -22,8 +31,15 @@ describe("planning-hub planner-url", () => {
     const href = buildPlanningHubHref(state);
     expect(href).toContain("week=2026-09-14");
     expect(href).toContain("ansicht=ressourcen");
+    expect(href).toContain("day=2026-09-16");
     expect(href).toContain("typ=trainings");
     expect(href).toContain("konflikte=1");
+  });
+
+  it("omits ansicht param for default Kalender", () => {
+    const href = buildPlanningHubHref(parsePlanningHubUrlState({ week: "2026-09-14" }));
+    expect(href).not.toContain("ansicht=");
+    expect(href).toContain("week=2026-09-14");
   });
 
   it("preserves filters when switching perspective", () => {
@@ -42,5 +58,12 @@ describe("planning-hub planner-url", () => {
     expect(href).toContain("week=2026-09-21");
     expect(href).toContain("typ=spiele");
     expect(href).toContain("konflikte=1");
+  });
+
+  it("resolves resource day from URL, today, or Monday", () => {
+    const days = ["2026-09-14", "2026-09-15", "2026-09-16"];
+    expect(resolvePlanningHubResourceDay(days, "2026-09-15", "2026-09-20")).toBe("2026-09-15");
+    expect(resolvePlanningHubResourceDay(days, undefined, "2026-09-15")).toBe("2026-09-15");
+    expect(resolvePlanningHubResourceDay(days, undefined, "2026-09-20")).toBe("2026-09-14");
   });
 });

@@ -1,9 +1,9 @@
 /**
  * PLANNING-HUB-01 — URL state for the unified Wochenplaner shell.
- * Keeps week, perspective, and filters in the query string for back/forward navigation.
+ * PLANNING-HUB-01B — Kalender (default) · Ressourcen · Liste
  */
 
-export type PlanningHubPerspective = "woche" | "ressourcen";
+export type PlanningHubPerspective = "kalender" | "ressourcen" | "liste";
 
 export type PlanningHubActivityFilter =
   | "alle"
@@ -16,6 +16,8 @@ export type PlanningHubUrlState = {
   week?: string;
   plan?: string;
   perspective: PlanningHubPerspective;
+  /** Selected calendar day for Ressourcen (`YYYY-MM-DD`). */
+  day?: string;
   activity: PlanningHubActivityFilter;
   team: string | null;
   facility: string | null;
@@ -25,10 +27,18 @@ export type PlanningHubUrlState = {
 
 const BASE_PATH = "/dashboard/planner/week";
 
+function parsePerspective(raw: string | undefined): PlanningHubPerspective {
+  const value = raw?.trim().toLowerCase();
+  if (value === "ressourcen") return "ressourcen";
+  if (value === "liste" || value === "woche") return "liste";
+  if (value === "kalender") return "kalender";
+  return "kalender";
+}
+
 export function parsePlanningHubUrlState(
   params: Record<string, string | undefined>,
 ): PlanningHubUrlState {
-  const perspective = params.ansicht === "ressourcen" ? "ressourcen" : "woche";
+  const perspective = parsePerspective(params.ansicht);
   const activityRaw = params.typ?.toLowerCase();
   const activity: PlanningHubActivityFilter =
     activityRaw === "trainings" ||
@@ -42,6 +52,7 @@ export function parsePlanningHubUrlState(
     week: params.week?.trim() || undefined,
     plan: params.plan?.trim() || undefined,
     perspective,
+    day: params.day?.trim() || undefined,
     activity,
     team: params.team?.trim() || null,
     facility: params.facility?.trim() || null,
@@ -60,6 +71,8 @@ export function buildPlanningHubHref(
   if (merged.week) query.set("week", merged.week);
   if (merged.plan) query.set("plan", merged.plan);
   if (merged.perspective === "ressourcen") query.set("ansicht", "ressourcen");
+  else if (merged.perspective === "liste") query.set("ansicht", "liste");
+  if (merged.perspective === "ressourcen" && merged.day) query.set("day", merged.day);
   if (merged.activity !== "alle") query.set("typ", merged.activity);
   if (merged.team) query.set("team", merged.team);
   if (merged.facility) query.set("facility", merged.facility);
@@ -70,4 +83,16 @@ export function buildPlanningHubHref(
 
   const qs = query.toString();
   return qs ? `${BASE_PATH}?${qs}` : BASE_PATH;
+}
+
+/** Picks the Ressourcen day: URL `day` if in week, else today if in week, else Monday. */
+export function resolvePlanningHubResourceDay(
+  weekDayKeys: readonly string[],
+  urlDay: string | undefined,
+  todayDayKey: string,
+): string {
+  if (weekDayKeys.length === 0) return todayDayKey;
+  if (urlDay && weekDayKeys.includes(urlDay)) return urlDay;
+  if (weekDayKeys.includes(todayDayKey)) return todayDayKey;
+  return weekDayKeys[0]!;
 }
