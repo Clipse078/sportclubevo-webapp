@@ -279,7 +279,7 @@ export default function ClubDirectorySearchableList({
     !loading && clubs.length > 0 && visibleClubs.length === 0 && filtersActive;
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-4">
+    <div className="w-full space-y-4" data-testid="vereine-directory-workspace">
       {archivedTotal > 0 || activeTotal > 0 ? (
         <div
           className="inline-flex items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1"

@@ -9,6 +9,7 @@ const FILES = [
   "ClubDirectoryRow.tsx",
   "ClubDirectoryFilterBar.tsx",
   "LogoUploadCard.tsx",
+  "../../admin/shared/SceSegmentedControl.tsx",
 ];
 
 describe("VEREINE-UX-03 dark-surface contract (club directory UI)", () => {

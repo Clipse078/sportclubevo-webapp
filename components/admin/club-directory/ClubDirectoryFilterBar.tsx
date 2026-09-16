@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
-import { cn } from "@/lib/cn";
+import { SceSegmentedControl } from "@/components/admin/shared/SceSegmentedControl";
 import {
   CLUB_DIRECTORY_PROVIDER_FILTER_LABELS,
   CLUB_DIRECTORY_TEAMS_FILTER_LABELS,
@@ -33,44 +33,15 @@ function buildVereineHref(
   return qs ? `/dashboard/vereine?${qs}` : "/dashboard/vereine";
 }
 
-const SEGMENT_CLASS =
-  "rounded-lg px-3 py-1.5 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--sce-primary)]";
+const PROVIDER_OPTIONS = (["all", "linked", "manual"] as const).map((key) => ({
+  value: key,
+  label: CLUB_DIRECTORY_PROVIDER_FILTER_LABELS[key],
+}));
 
-function SegmentGroup<T extends string>({
-  label,
-  value,
-  options,
-  onSelect,
-}: {
-  label: string;
-  value: T;
-  options: { key: T; label: string }[];
-  onSelect: (key: T) => void;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1.5">
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">{label}</span>
-      <div className="flex flex-wrap gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1">
-        {options.map((opt) => (
-          <button
-            key={opt.key}
-            type="button"
-            onClick={() => onSelect(opt.key)}
-            className={cn(
-              SEGMENT_CLASS,
-              value === opt.key
-                ? "bg-[var(--surface-2)] text-[var(--foreground)]"
-                : "text-[var(--muted)] hover:text-[var(--foreground)]",
-            )}
-            data-testid={`vereine-filter-${label}-${opt.key}`}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+const TEAMS_OPTIONS = (["all", "with", "without"] as const).map((key) => ({
+  value: key,
+  label: CLUB_DIRECTORY_TEAMS_FILTER_LABELS[key],
+}));
 
 export function ClubDirectoryFilterBar({ showArchived, provider, teams }: ClubDirectoryFilterBarProps) {
   const router = useRouter();
@@ -82,31 +53,33 @@ export function ClubDirectoryFilterBar({ showArchived, provider, teams }: ClubDi
     router.push(buildVereineHref(showArchived, nextProvider, nextTeams, q));
   }
 
-  const providerOptions = (["all", "linked", "manual"] as const).map((key) => ({
-    key,
-    label: CLUB_DIRECTORY_PROVIDER_FILTER_LABELS[key],
-  }));
-
-  const teamsOptions = (["all", "with", "without"] as const).map((key) => ({
-    key,
-    label: CLUB_DIRECTORY_TEAMS_FILTER_LABELS[key],
-  }));
-
   return (
     <div className="space-y-3" data-testid="vereine-directory-filters">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <SegmentGroup
-          label="provider"
-          value={provider}
-          options={providerOptions}
-          onSelect={(key) => navigate(key, teams)}
-        />
-        <SegmentGroup
-          label="teams"
-          value={teams}
-          options={teamsOptions}
-          onSelect={(key) => navigate(provider, key)}
-        />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+            Anbieter
+          </span>
+          <SceSegmentedControl
+            options={PROVIDER_OPTIONS}
+            value={provider}
+            onChange={(key) => navigate(key, teams)}
+            aria-label="Anbieter filtern"
+            testId="vereine-filter-provider"
+          />
+        </div>
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+            Teams
+          </span>
+          <SceSegmentedControl
+            options={TEAMS_OPTIONS}
+            value={teams}
+            onChange={(key) => navigate(provider, key)}
+            aria-label="Teams filtern"
+            testId="vereine-filter-teams"
+          />
+        </div>
       </div>
 
       {filtersActive ? (

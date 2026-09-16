@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { ChevronRight, Globe, Hash, MapPin, Merge, Pencil, Plus, Users } from "lucide-react";
+import { ChevronRight, Globe, MapPin, Merge, Pencil, Plus, Users } from "lucide-react";
 
 import { prisma } from "@/lib/db/prisma";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -34,14 +34,14 @@ function MetaRow({
   label: string;
   value: string;
   href?: string;
-  icon: ReactNode;
+  icon?: ReactNode;
 }) {
   const isMissing = value === "Nicht hinterlegt";
   return (
-    <div className="min-w-0">
+    <div className="min-w-0" data-testid={`club-meta-${label.toLowerCase().replace(/\s+/g, "-")}`}>
       <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">{label}</p>
       <div className="mt-1 flex items-center gap-1.5 text-sm text-[var(--foreground)]">
-        <span className="text-[var(--muted)]" aria-hidden>{icon}</span>
+        {icon ? <span className="text-[var(--muted)]" aria-hidden>{icon}</span> : null}
         {href && !isMissing ? (
           <a
             href={href}
@@ -163,15 +163,10 @@ export default async function ClubDetailPage({ params }: Props) {
                     />
                     {primaryMapping ? (
                       <>
-                        <MetaRow
-                          label="Anbieter"
-                          value={primaryMapping.provider}
-                          icon={<Hash className="h-3.5 w-3.5" />}
-                        />
+                        <MetaRow label="Anbieter" value={primaryMapping.provider} />
                         <MetaRow
                           label="Anbieter-ID"
                           value={String(primaryMapping.providerClubId)}
-                          icon={<Hash className="h-3.5 w-3.5" />}
                         />
                       </>
                     ) : null}

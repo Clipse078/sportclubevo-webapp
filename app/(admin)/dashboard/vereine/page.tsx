@@ -12,6 +12,8 @@ import {
   parseClubDirectoryProviderFilter,
   parseClubDirectoryTeamsFilter,
 } from "@/lib/club-directory/directory-view-filters";
+import { VEREINE_PAGE_CONTENT_WIDTH_CLASS } from "@/lib/club-directory/vereine-page-layout";
+import { cn } from "@/lib/cn";
 
 type PageProps = {
   searchParams: Promise<{ view?: string; provider?: string; teams?: string; q?: string }>;
@@ -30,6 +32,7 @@ export default async function VereinePage({ searchParams }: PageProps) {
   return (
     <PageShell fullWidth>
       <ListPagePattern
+        className={cn("w-full", VEREINE_PAGE_CONTENT_WIDTH_CLASS)}
         eyebrow="Organisation"
         title="Vereine"
         description="Kanonisches Verzeichnis externer Vereine und ihrer Teams — dieselbe Datenquelle wie TournamentCenter, MatchCenter und Infoboard."
