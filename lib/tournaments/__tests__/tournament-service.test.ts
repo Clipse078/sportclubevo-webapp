@@ -13,6 +13,14 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+const cacheNotificationMocks = vi.hoisted(() => ({
+  scheduleByTenantId: vi.fn(),
+}));
+
+vi.mock("@/lib/website/public-cache-notification", () => ({
+  scheduleTenantPublicWebsiteCacheNotificationByTenantId: cacheNotificationMocks.scheduleByTenantId,
+}));
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     event: {
@@ -252,6 +260,7 @@ describe("B. getTournament", () => {
 
 describe("C. updateTournament", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.mocked(prisma.event.findFirst).mockResolvedValue(baseRow as never);
     vi.mocked(prisma.event.update).mockResolvedValue(baseRow as never);
   });
@@ -341,6 +350,28 @@ describe("C. updateTournament", () => {
       updateTournament(TENANT_A, TOURNAMENT_ID, { homeAway: "BOTH" as never }),
     ).rejects.toThrow(TournamentValidationError);
     expect(prisma.event.update).not.toHaveBeenCalled();
+  });
+
+  it("schedules tenant website cache revalidation when publication flags change", async () => {
+    await updateTournament(TENANT_A, TOURNAMENT_ID, { wochenplanVisible: false });
+
+    expect(cacheNotificationMocks.scheduleByTenantId).toHaveBeenCalledWith(
+      TENANT_A,
+      expect.arrayContaining(["weekplan"]),
+    );
+  });
+
+  it("does not schedule website cache revalidation for non-publication field updates", async () => {
+    await updateTournament(TENANT_A, TOURNAMENT_ID, { title: "Neuer Titel" });
+
+    expect(cacheNotificationMocks.scheduleByTenantId).not.toHaveBeenCalled();
+  });
+
+  it("updates only the provided publication boolean (no cross-field mutation in payload)", async () => {
+    await updateTournament(TENANT_A, TOURNAMENT_ID, { wochenplanVisible: false });
+
+    const call = vi.mocked(prisma.event.update).mock.calls[0]![0] as { data: Record<string, unknown> };
+    expect(call.data).toEqual({ wochenplanVisible: false });
   });
 });
 

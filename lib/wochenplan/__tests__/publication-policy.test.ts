@@ -89,6 +89,15 @@ describe("evaluateWochenplanTournamentPublication", () => {
       evaluateWochenplanTournamentPublication({ ...base, wochenplanVisible: true }, TENANT).eligible,
     ).toBe(true);
   });
+
+  it("excludes tournament when websiteVisible is false even if wochenplanVisible is true", () => {
+    expect(
+      evaluateWochenplanTournamentPublication(
+        { ...base, websiteVisible: false, wochenplanVisible: true },
+        TENANT,
+      ).reason,
+    ).toBe("WEBSITE_HIDDEN");
+  });
 });
 
 describe("evaluateWochenplanTrainingPublication", () => {

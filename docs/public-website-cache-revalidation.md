@@ -93,6 +93,7 @@ SCE schedules notification via `scheduleTenantPublicWebsiteCacheNotificationByTe
 
 - Training series allocation create/update/delete (`lib/training/training-allocation-service.ts`)
 - Training session occurrence allocation create/delete (`lib/training/session-allocation-service.ts`)
+- Tournament publication field updates (`lib/tournaments/tournament-service.ts` → `updateTournament`, via `resolveTournamentPublicationCacheDomains`)
 
 Additional mutation paths should call the same helper with the appropriate `domains` array — no per-tenant hardcoding.
 

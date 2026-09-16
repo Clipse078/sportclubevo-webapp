@@ -30,17 +30,20 @@ const PUBLICATION_CHANNELS: PublicationChannelConfig[] = [
   {
     key: "homepageVisible",
     label: "Homepage",
-    description: "Auf der öffentlichen Vereins-Homepage hervorheben.",
+    description:
+      "Auf der öffentlichen Vereins-Homepage hervorheben. Zusätzlich muss die öffentliche Turnierseite aktiviert sein.",
   },
   {
     key: "wochenplanVisible",
     label: "Wochenplan",
-    description: "Im öffentlichen Wochenplan anzeigen.",
+    description:
+      "Im öffentlichen Wochenplan anzeigen. Zusätzlich muss die öffentliche Turnierseite aktiviert sein.",
   },
   {
     key: "teamPageVisible",
     label: "Teamseite",
-    description: "Auf der öffentlichen Teamseite des zugeordneten Teams.",
+    description:
+      "Auf der öffentlichen Teamseite des zugeordneten Teams. Zusätzlich muss die öffentliche Turnierseite aktiviert sein.",
   },
 ];
 
