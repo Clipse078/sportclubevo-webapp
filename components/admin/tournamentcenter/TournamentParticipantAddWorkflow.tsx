@@ -40,23 +40,28 @@ export default function TournamentParticipantAddWorkflow({
   const [showManualEntry, setShowManualEntry] = useState(false);
 
   return (
-    <div className="space-y-4 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2)]/40 p-4">
-      <p className="text-sm font-semibold text-[var(--foreground)]">Team hinzufügen</p>
+    <div
+      className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 p-3"
+      data-testid="tournament-participant-add-workflow"
+    >
+      <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">Teilnehmer hinzufügen</p>
 
       {noWritableTeamsMessage}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-[var(--text-2)]">FC Allschwil Team</p>
-          <TeamSearchablePicker
-            options={availableTeams}
-            value={teamPickId}
-            onChange={setTeamPickId}
-            tenantLogoUrl={tenantLogoUrl}
-            disabled={teamsLoading || pending || availableTeams.length === 0}
-            testId={teamSelectTestId}
-            placeholder={teamsLoading ? "Teams laden…" : "Team suchen…"}
-          />
+      <div className="flex flex-col gap-3 lg:max-w-2xl">
+        <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+          <div className="min-w-0 space-y-1">
+            <p className="text-[11px] font-medium text-[var(--text-2)]">FC-Team</p>
+            <TeamSearchablePicker
+              options={availableTeams}
+              value={teamPickId}
+              onChange={setTeamPickId}
+              tenantLogoUrl={tenantLogoUrl}
+              disabled={teamsLoading || pending || availableTeams.length === 0}
+              testId={teamSelectTestId}
+              placeholder={teamsLoading ? "Teams laden…" : "Team suchen…"}
+            />
+          </div>
           <button
             type="button"
             onClick={() => {
@@ -66,23 +71,25 @@ export default function TournamentParticipantAddWorkflow({
             }}
             disabled={!teamPickId || pending}
             data-testid={`${teamSelectTestId}-button`}
-            className="fca-button-secondary w-full sm:w-auto"
+            className="fca-button-secondary h-9 shrink-0 whitespace-nowrap"
           >
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            FC-Team hinzufügen
+            FC-Team
           </button>
         </div>
 
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-[var(--text-2)]">Verein / externes Team</p>
-          <ExternalClubPicker
-            selected={selectedClub}
-            onSelect={setSelectedClub}
-            onClearSelected={() => setSelectedClub(null)}
-            disabled={pending}
-            placeholder="Verein aus Verzeichnis suchen…"
-            testId={externalClubTestId}
-          />
+        <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+          <div className="min-w-0 space-y-1">
+            <p className="text-[11px] font-medium text-[var(--text-2)]">Externer Verein</p>
+            <ExternalClubPicker
+              selected={selectedClub}
+              onSelect={setSelectedClub}
+              onClearSelected={() => setSelectedClub(null)}
+              disabled={pending}
+              placeholder="Verein aus Verzeichnis suchen…"
+              testId={externalClubTestId}
+            />
+          </div>
           <button
             type="button"
             onClick={() => {
@@ -92,50 +99,50 @@ export default function TournamentParticipantAddWorkflow({
             }}
             disabled={!selectedClub || pending}
             data-testid={`${externalClubTestId}-button`}
-            className="fca-button-secondary w-full sm:w-auto"
+            className="fca-button-secondary h-9 shrink-0 whitespace-nowrap"
           >
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            Externen Verein hinzufügen
+            Externer Verein
           </button>
         </div>
-      </div>
 
-      {showManualEntry ? (
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <input
-            type="text"
-            value={manualLabel}
-            onChange={(e) => setManualLabel(e.target.value)}
-            placeholder="z. B. unbekanntes Gastteam"
-            disabled={pending}
-            data-testid={manualInputTestId}
-            className="fca-input flex-1"
-          />
+        {showManualEntry ? (
+          <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+            <input
+              type="text"
+              value={manualLabel}
+              onChange={(e) => setManualLabel(e.target.value)}
+              placeholder="z. B. unbekanntes Gastteam"
+              disabled={pending}
+              data-testid={manualInputTestId}
+              className="fca-input h-9"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const trimmed = manualLabel.trim();
+                if (!trimmed) return;
+                onAddManual(trimmed);
+                setManualLabel("");
+              }}
+              disabled={!manualLabel.trim() || pending}
+              data-testid={manualButtonTestId}
+              className="fca-button-secondary h-9 shrink-0 whitespace-nowrap"
+            >
+              {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              Manuell erfassen
+            </button>
+          </div>
+        ) : (
           <button
             type="button"
-            onClick={() => {
-              const trimmed = manualLabel.trim();
-              if (!trimmed) return;
-              onAddManual(trimmed);
-              setManualLabel("");
-            }}
-            disabled={!manualLabel.trim() || pending}
-            data-testid={manualButtonTestId}
-            className="fca-button-secondary shrink-0"
+            onClick={() => setShowManualEntry(true)}
+            className="text-left text-xs font-medium text-[var(--muted)] underline-offset-2 hover:text-[var(--foreground)] hover:underline"
           >
-            {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            Manuell hinzufügen
+            Manuell erfassen…
           </button>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setShowManualEntry(true)}
-          className="text-xs font-medium text-[var(--muted)] underline-offset-2 hover:underline"
-        >
-          Team ohne Verzeichniseintrag manuell erfassen…
-        </button>
-      )}
+        )}
+      </div>
     </div>
   );
 }

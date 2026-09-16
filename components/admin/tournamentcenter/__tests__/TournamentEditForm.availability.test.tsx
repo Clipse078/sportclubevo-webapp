@@ -168,9 +168,11 @@ describe("TournamentEditForm — RESOURCE-AVAILABILITY-UX-01 availability", () =
     const participantRow = screen.getByTestId("tournament-participant-row-participant-1");
     fireEvent.click(within(participantRow).getByRole("button", { name: "Details bearbeiten" }));
 
-    fireEvent.click(screen.getByTestId("tournament-participant-participant-1-dressing-room-select"));
     await waitFor(() => {
-      expect(screen.getByTestId("tournament-participant-participant-1-dressing-room-option-res-dressing-1").textContent).toContain("Frei");
+      expect(
+        screen.getByTestId("tournament-participant-participant-1-dressing-room-card-res-dressing-1"),
+      ).toBeInTheDocument();
+      expect(screen.getByText("Frei")).toBeInTheDocument();
     });
   });
 

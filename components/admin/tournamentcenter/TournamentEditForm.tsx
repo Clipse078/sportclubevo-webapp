@@ -6,8 +6,7 @@ import { AlertTriangle, Ban, Loader2, RotateCcw, Save, Trash2 } from "lucide-rea
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
-import { Card } from "@/components/ui";
-import { FormSection } from "@/components/ui/FormSection";
+import { TournamentFormSection } from "@/components/admin/tournamentcenter/TournamentFormSection";
 import type { TournamentDto } from "@/lib/tournaments/types";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import TournamentParticipantsEditor from "@/components/admin/tournamentcenter/TournamentParticipantsEditor";
@@ -301,9 +300,9 @@ export default function TournamentEditForm({
         }
       />
 
-      <FormSection title="Grunddaten" description="Turniername, Organisator und Zeitrahmen">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <label className="block space-y-2 sm:col-span-2 xl:col-span-3">
+      <TournamentFormSection title="Grunddaten" description="Turniername, Organisator und Zeitrahmen">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <label className="block space-y-2 sm:col-span-2 lg:col-span-3">
             <span className="fca-label">Titel</span>
             <input
               type="text"
@@ -423,7 +422,7 @@ export default function TournamentEditForm({
             />
           </label>
 
-          <label className="block space-y-2 sm:col-span-2 xl:col-span-3">
+          <label className="block space-y-2 sm:col-span-2 lg:col-span-3">
             <span className="fca-label">Beschreibung</span>
             <textarea
               value={description}
@@ -433,7 +432,7 @@ export default function TournamentEditForm({
             />
           </label>
 
-          <label className="block space-y-2 sm:col-span-2 xl:col-span-3">
+          <label className="block space-y-2 sm:col-span-2 lg:col-span-3">
             <span className="fca-label">Bemerkungen</span>
             <input
               type="text"
@@ -444,9 +443,9 @@ export default function TournamentEditForm({
             />
           </label>
         </div>
-      </FormSection>
+      </TournamentFormSection>
 
-      <FormSection
+      <TournamentFormSection
         title="Teilnehmende Teams"
         description="FC Allschwil Teams und externe Vereine aus dem Vereinsverzeichnis."
       >
@@ -459,10 +458,10 @@ export default function TournamentEditForm({
           dressingRoomAvailability={dressingRoomAvailability}
           tenantLogoUrl={tenantLogoUrl}
         />
-      </FormSection>
+      </TournamentFormSection>
 
       {homeAway === "HOME" && (
-        <FormSection
+        <TournamentFormSection
           title="Ressourcen"
           description="Spielfeld / Halle — Verfügbarkeit live für Start–Ende."
         >
@@ -473,29 +472,29 @@ export default function TournamentEditForm({
             facilityGroups={pitchHallFacilityGroups}
             availabilityByResourceId={pitchAvailability}
           />
-        </FormSection>
+        </TournamentFormSection>
       )}
 
-      <FormSection title="Veröffentlichung" description="Ausgabekanäle für dieses Turnier">
+      <TournamentFormSection title="Veröffentlichung" description="Ausgabekanäle für dieses Turnier">
         <TournamentPublicationToggles
           value={publication}
           onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
           disabled={!isEditable || saving}
         />
-      </FormSection>
+      </TournamentFormSection>
 
       {canManage && tournament.status !== "ARCHIVED" && tournament.status !== "COMPLETED" && (
-        <div className="border-b border-[var(--border)] py-6">
-          <h3 className="text-sm font-semibold text-[var(--foreground)]">Turnierstatus</h3>
-          <p className="mt-1 max-w-xl text-xs text-[var(--text-2)]">
-            Stornierung oder Wiederherstellung — getrennt vom Speichern der Turnierdaten.
-          </p>
+        <TournamentFormSection
+          title="Turnierstatus"
+          description="Stornierung oder Wiederherstellung — getrennt vom Speichern."
+          contentClassName="max-w-xl"
+        >
           <button
             type="button"
             onClick={handleLifecycleToggle}
             disabled={lifecycleLoading}
             data-testid="tournament-lifecycle-toggle"
-            className="fca-button-secondary mt-4 border-rose-200 text-rose-700 hover:border-rose-300 hover:bg-rose-500/10"
+            className="fca-button-secondary border-rose-200 text-rose-700 hover:border-rose-300 hover:bg-rose-500/10"
           >
             {lifecycleLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -506,25 +505,33 @@ export default function TournamentEditForm({
             )}
             {isCancelled ? "Turnier wiederherstellen" : "Turnier absagen"}
           </button>
-        </div>
+        </TournamentFormSection>
       )}
 
       {canDelete && (
-        <Card variant="warning" title="Gefahrenzone" className="mt-4">
-          <p className="text-sm text-[var(--text-2)]">
-            Das Turnier wird unwiderruflich gelöscht. Teilnehmende Vereine und Ressourcen selbst bleiben erhalten.
-          </p>
-          <Button
-            variant="danger"
-            size="sm"
-            iconLeft={<Trash2 className="h-4 w-4" />}
-            onClick={openDeleteConfirmation}
-            data-testid="tournament-delete-button"
-            className="mt-4"
-          >
-            Endgültig löschen
-          </Button>
-        </Card>
+        <TournamentFormSection
+          title="Gefahrenzone"
+          description="Endgültiges Löschen — Vereine und Ressourcen selbst bleiben erhalten."
+          contentClassName="max-w-xl"
+          className="border-rose-200/40"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-[var(--foreground)]">Turnier endgültig löschen</p>
+              <p className="text-xs text-[var(--text-2)]">Diese Aktion kann nicht rückgängig gemacht werden.</p>
+            </div>
+            <Button
+              variant="danger"
+              size="sm"
+              iconLeft={<Trash2 className="h-4 w-4" />}
+              onClick={openDeleteConfirmation}
+              data-testid="tournament-delete-button"
+              className="shrink-0"
+            >
+              Endgültig löschen
+            </Button>
+          </div>
+        </TournamentFormSection>
       )}
 
       <Dialog

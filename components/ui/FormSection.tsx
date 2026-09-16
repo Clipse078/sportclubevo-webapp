@@ -10,6 +10,8 @@ export type FormSectionProps = {
   actions?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Classes applied to the right-hand content column (fields). */
+  contentClassName?: string;
 };
 
 /**
@@ -31,6 +33,7 @@ export function FormSection({
   actions,
   children,
   className,
+  contentClassName,
 }: FormSectionProps) {
   return (
     <div
@@ -58,7 +61,7 @@ export function FormSection({
       </div>
 
       {/* Right column — form fields */}
-      <div className="flex flex-col gap-4">{children}</div>
+      <div className={cn("flex flex-col gap-4", contentClassName)}>{children}</div>
     </div>
   );
 }

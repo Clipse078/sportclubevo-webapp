@@ -29,7 +29,7 @@
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronRight, Loader2, Pencil, Shirt, Trash2, UsersRound } from "lucide-react";
-import { FormSection } from "@/components/ui/FormSection";
+import { TournamentFormSection } from "@/components/admin/tournamentcenter/TournamentFormSection";
 import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
 import StaticOptionSearchablePicker from "@/components/admin/shared/StaticOptionSearchablePicker";
 import TournamentEditorChrome from "@/components/admin/tournamentcenter/TournamentEditorChrome";
@@ -109,11 +109,6 @@ const HOME_AWAY_OPTIONS = [
   { value: "HOME", label: "Heim (FC Allschwil ausrichtend)" },
   { value: "AWAY", label: "Auswärts (extern ausgerichtet)" },
 ] as const;
-
-function formatTeamLabel(team: { name: string; ageGroup: string | null; genderGroup: string | null }): string {
-  const suffix = [team.ageGroup, team.genderGroup].filter(Boolean).join(" / ");
-  return suffix ? `${team.name} · ${suffix}` : team.name;
-}
 
 function resolveResourceDisplay(
   facilityGroups: FacilityGroup[],
@@ -700,9 +695,9 @@ export default function TournamentCreateForm({
         </div>
       )}
 
-      <FormSection title="Grunddaten" description="Titel, Zeitrahmen und Rahmendaten">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <label className="block space-y-2 sm:col-span-2 xl:col-span-3">
+      <TournamentFormSection title="Grunddaten" description="Titel, Zeitrahmen und Rahmendaten">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <label className="block space-y-2 sm:col-span-2 lg:col-span-3">
             <span className="fca-label">Titel</span>
             <input
               type="text"
@@ -809,7 +804,7 @@ export default function TournamentCreateForm({
             />
           </label>
 
-          <label className="block space-y-2 sm:col-span-2 xl:col-span-3">
+          <label className="block space-y-2 sm:col-span-2 lg:col-span-3">
             <span className="fca-label">Beschreibung</span>
             <textarea
               value={description}
@@ -818,14 +813,14 @@ export default function TournamentCreateForm({
             />
           </label>
 
-          <label className="block space-y-2 sm:col-span-2 xl:col-span-3">
+          <label className="block space-y-2 sm:col-span-2 lg:col-span-3">
             <span className="fca-label">Bemerkungen</span>
             <input type="text" value={remarks} onChange={(e) => setRemarks(e.target.value)} className="fca-input" />
           </label>
         </div>
-      </FormSection>
+      </TournamentFormSection>
 
-      <FormSection
+      <TournamentFormSection
         title="Teilnehmende Teams"
         description="Mindestens ein Team — FC Allschwil und Vereine aus dem Verzeichnis."
       >
@@ -840,20 +835,18 @@ export default function TournamentCreateForm({
               {participants.map((participant) => {
                 const expanded = expandedParticipantIds.has(participant.localId);
                 const needsExpand = participant.kind === "EXTERNAL_CLUB" || homeAway === "HOME";
-                const dressingSummary =
-                  homeAway === "HOME"
-                    ? participant.dressingRooms.length > 0
-                      ? participant.dressingRooms.map((d) => d.facilityResourceName).join(", ")
-                      : "Keine Garderobe"
+                const dressingLabel =
+                  homeAway === "HOME" && participant.dressingRooms.length > 0
+                    ? participant.dressingRooms.map((d) => d.facilityResourceName).join(", ")
                     : null;
 
                 return (
                   <li
                     key={participant.localId}
                     data-testid={`tournament-create-participant-row-${participant.localId}`}
-                    className="bg-[var(--surface)]"
+                    className="bg-[var(--surface)] transition-colors duration-150"
                   >
-                    <div className="flex items-center gap-2 px-3 py-2.5">
+                    <div className="flex items-center gap-2 px-2.5 py-2">
                       {needsExpand ? (
                         <button
                           type="button"
@@ -873,16 +866,30 @@ export default function TournamentCreateForm({
                         name={participant.displayName}
                         size="sm"
                         bare
-                        className="h-8 w-8 shrink-0"
+                        className="h-7 w-7 shrink-0"
                       />
 
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-[var(--foreground)]">{participant.displayName}</p>
-                        <p className="truncate text-xs text-[var(--text-2)]">
-                          {participant.subLabel}
-                          {dressingSummary ? ` · ${dressingSummary}` : null}
+                        <p className="truncate text-sm font-semibold leading-tight text-[var(--foreground)]">
+                          {participant.displayName}
                         </p>
+                        <p className="truncate text-[11px] leading-tight text-[var(--text-2)]">{participant.subLabel}</p>
                       </div>
+
+                      {homeAway === "HOME" ? (
+                        dressingLabel ? (
+                          <span
+                            className="max-w-[7rem] shrink-0 truncate rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-[var(--text-2)]"
+                            title={dressingLabel}
+                          >
+                            {dressingLabel}
+                          </span>
+                        ) : (
+                          <span className="shrink-0 rounded border border-dashed border-[var(--border)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--muted)]">
+                            —
+                          </span>
+                        )
+                      ) : null}
 
                       {needsExpand && !expanded ? (
                         <button
@@ -907,9 +914,9 @@ export default function TournamentCreateForm({
                     </div>
 
                     {expanded && (
-                      <div className="border-t border-[var(--border)] bg-[var(--surface-2)]/30 px-3 py-3">
+                      <div className="border-t border-[var(--border)] bg-[var(--surface-2)]/40 px-2.5 py-2">
                         {participant.kind === "EXTERNAL_CLUB" && (
-                          <label className="block max-w-md space-y-1.5">
+                          <label className="block max-w-sm space-y-1">
                             <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                               Anzeigename
                             </span>
@@ -925,9 +932,9 @@ export default function TournamentCreateForm({
                         )}
 
                         {homeAway === "HOME" && (
-                          <div className={cn(participant.kind === "EXTERNAL_CLUB" && "mt-3")}>
-                            <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                              <Shirt className="h-3.5 w-3.5" aria-hidden />
+                          <div className={cn(participant.kind === "EXTERNAL_CLUB" && "mt-2")}>
+                            <p className="mb-1.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                              <Shirt className="h-3 w-3" aria-hidden />
                               Garderobe
                             </p>
                             <VisualDressingRoomPicker
@@ -936,6 +943,7 @@ export default function TournamentCreateForm({
                               onSelect={(resourceId) => addDressingRoomDraft(participant.localId, resourceId)}
                               onDeselect={(resourceId) => removeDressingRoomDraft(participant.localId, resourceId)}
                               availabilityByResourceId={dressingRoomAvailability}
+                              compact
                               testId={`tournament-create-participant-${participant.localId}-dressing-room`}
                             />
                           </div>
@@ -968,10 +976,10 @@ export default function TournamentCreateForm({
             }
           />
         </div>
-      </FormSection>
+      </TournamentFormSection>
 
       {homeAway === "HOME" && (
-        <FormSection
+        <TournamentFormSection
           title="Ressourcen"
           description="Spielfeld / Halle — Verfügbarkeit live für Start–Ende."
         >
@@ -986,10 +994,10 @@ export default function TournamentCreateForm({
             availabilityByResourceId={pitchAvailability}
             testId="tournament-create-resource"
           />
-        </FormSection>
+        </TournamentFormSection>
       )}
 
-      <FormSection title="Veröffentlichung" description="Ausgabekanäle für dieses Turnier">
+      <TournamentFormSection title="Veröffentlichung" description="Ausgabekanäle für dieses Turnier">
         <TournamentPublicationToggles
           value={publication}
           onChange={(patch) => {
@@ -1001,7 +1009,7 @@ export default function TournamentCreateForm({
           }}
           testIdPrefix="tournament-create-publication"
         />
-      </FormSection>
+      </TournamentFormSection>
 
       <div className="fca-status-box fca-status-box-muted text-xs">
         Neue Turniere werden vor der Veröffentlichung geprüft, sofern kein Freigabe-Recht vorliegt. Teams, Ressourcen

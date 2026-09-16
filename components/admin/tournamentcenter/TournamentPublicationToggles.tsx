@@ -25,9 +25,13 @@ export default function TournamentPublicationToggles({
 }: Props) {
   return (
     <div
-      className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
-      data-testid={`${testIdPrefix}-grid`}
+      className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 p-3 sm:p-4"
+      data-testid={`${testIdPrefix}-group`}
     >
+      <div
+        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+        data-testid={`${testIdPrefix}-grid`}
+      >
       <SwitchToggle
         id={`${testIdPrefix}-website`}
         label="Website"
@@ -63,6 +67,7 @@ export default function TournamentPublicationToggles({
         onChange={(checked) => onChange({ teamPageVisible: checked })}
         disabled={disabled}
       />
+      </div>
     </div>
   );
 }

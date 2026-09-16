@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
-import { Building2, Loader2, MapPin, Plus, Search } from "lucide-react";
+import { Loader2, Plus, Search } from "lucide-react";
 import type { FacilityResourceType } from "@prisma/client";
 import { cn } from "@/lib/cn";
 import {
-  formatAvailabilitySuffix,
   type FacilityGroup,
   type ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
+import { FacilityResourceIdentity } from "@/components/admin/shared/planning/FacilityResourceIdentity";
 
 const RESOURCE_TYPE_LABELS: Record<FacilityResourceType, string> = {
   FULL_PITCH: "Ganzes Feld",
@@ -19,9 +19,13 @@ const RESOURCE_TYPE_LABELS: Record<FacilityResourceType, string> = {
 
 type FlatResourceOption = {
   id: string;
-  label: string;
+  name: string;
+  resourceType: FacilityResourceType;
+  facilityType?: string;
   facilityName: string;
   groupLabel: string;
+  typeLabel: string;
+  availability?: ResourceAvailabilityAnnotation;
 };
 
 type Props = {
@@ -71,12 +75,15 @@ export function FacilityResourceSearchableSelector({
       for (const r of fg.resources) {
         if (allocatedResourceIds.has(r.id)) continue;
         const typeLabel = RESOURCE_TYPE_LABELS[r.type] ?? r.type;
-        const availability = formatAvailabilitySuffix(availabilityByResourceId?.get(r.id));
         items.push({
           id: r.id,
-          label: `${r.name} (${typeLabel})${availability}`,
+          name: r.name,
+          resourceType: r.type,
+          facilityType: r.facilityType ?? fg.facilityType,
           facilityName: fg.facilityName,
           groupLabel: fg.facilityName,
+          availability: availabilityByResourceId?.get(r.id),
+          typeLabel,
         });
       }
     }
@@ -84,7 +91,8 @@ export function FacilityResourceSearchableSelector({
     if (!q) return items;
     return items.filter(
       (o) =>
-        o.label.toLowerCase().includes(q) ||
+        o.name.toLowerCase().includes(q) ||
+        o.typeLabel.toLowerCase().includes(q) ||
         o.facilityName.toLowerCase().includes(q) ||
         o.groupLabel.toLowerCase().includes(q),
     );
@@ -118,11 +126,10 @@ export function FacilityResourceSearchableSelector({
     return () => document.removeEventListener("mousedown", handlePointerDown);
   }, [open]);
 
-  useEffect(() => {
-    if (highlightIndex >= flatOptions.length) {
-      setHighlightIndex(Math.max(0, flatOptions.length - 1));
-    }
-  }, [flatOptions.length, highlightIndex]);
+  const clampedHighlightIndex = Math.min(
+    highlightIndex,
+    Math.max(0, flatOptions.length - 1),
+  );
 
   if (totalResourceCount === 0) {
     return (
@@ -146,7 +153,7 @@ export function FacilityResourceSearchableSelector({
 
   return (
     <div ref={containerRef} className="space-y-2" data-testid={testId}>
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex max-w-xl flex-col gap-2 sm:flex-row">
         <div className="relative min-w-0 flex-1">
           <Search
             className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--muted)]"
@@ -160,7 +167,7 @@ export function FacilityResourceSearchableSelector({
             aria-controls={listboxId}
             aria-autocomplete="list"
             aria-label={placeholder}
-            value={open ? query : selectedOption?.label ?? query}
+            value={open ? query : selectedOption?.name ?? query}
             onChange={(event) => {
               setQuery(event.target.value);
               setOpen(true);
@@ -179,7 +186,7 @@ export function FacilityResourceSearchableSelector({
                 setHighlightIndex((prev) => Math.max(prev - 1, 0));
               } else if (event.key === "Enter") {
                 event.preventDefault();
-                const option = flatOptions[highlightIndex];
+                const option = flatOptions[clampedHighlightIndex];
                 if (option) {
                   setSelectedId(option.id);
                   setOpen(false);
@@ -191,7 +198,7 @@ export function FacilityResourceSearchableSelector({
             }}
             disabled={disabled || isPending}
             placeholder={placeholder}
-            className="fca-input h-9 w-full pl-8 pr-3 text-sm"
+            className="fca-input h-9 w-full max-w-xl pl-8 pr-3 text-sm"
             data-testid={testId ? `${testId}-select` : undefined}
           />
         </div>
@@ -212,7 +219,7 @@ export function FacilityResourceSearchableSelector({
         <ul
           id={listboxId}
           role="listbox"
-          className="z-30 max-h-56 overflow-y-auto rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-lg"
+          className="z-30 max-h-60 overflow-y-auto rounded-lg border border-[var(--border-strong)] bg-[var(--surface-2)] py-1 shadow-[var(--shadow-lg)]"
           data-testid={testId ? `${testId}-listbox` : undefined}
         >
           {flatOptions.length === 0 ? (
@@ -221,7 +228,7 @@ export function FacilityResourceSearchableSelector({
             flatOptions.map((option, index) => {
               const showGroup = option.groupLabel !== lastGroup;
               lastGroup = option.groupLabel;
-              const isHighlighted = index === highlightIndex;
+              const isHighlighted = index === clampedHighlightIndex;
               const isSelected = option.id === selectedId;
               return (
                 <li key={option.id} role="presentation">
@@ -241,13 +248,22 @@ export function FacilityResourceSearchableSelector({
                       setQuery("");
                     }}
                     className={cn(
-                      "flex w-full px-3 py-2 text-left text-sm transition-colors",
-                      isHighlighted ? "bg-[var(--surface-2)]" : "hover:bg-[var(--surface-2)]",
-                      isSelected && "font-medium text-[var(--sce-primary)]",
+                      "flex w-full px-2 py-1.5 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--sce-primary)]",
+                      isHighlighted ? "bg-[var(--surface)]" : "hover:bg-[var(--surface)]/80",
+                      isSelected && "ring-1 ring-inset ring-[var(--sce-primary)]/40",
                     )}
                     data-testid={testId ? `${testId}-option-${option.id}` : undefined}
                   >
-                    {option.label}
+                    <FacilityResourceIdentity
+                      name={option.name}
+                      resourceType={option.resourceType}
+                      facilityType={option.facilityType}
+                      subtitle={option.typeLabel}
+                      availability={option.availability?.status ?? null}
+                      detail={option.availability?.conflictLabel ?? null}
+                      compact
+                      className="w-full"
+                    />
                   </button>
                 </li>
               );
@@ -262,12 +278,6 @@ export function FacilityResourceSearchableSelector({
         </p>
       ) : null}
 
-      <p className="text-xs text-[var(--muted)]">
-        <Building2 size={12} className="mr-1 inline" aria-hidden />
-        Ressourcen nach Anlage gruppiert.{" "}
-        <MapPin size={12} className="mr-1 inline" aria-hidden />
-        Archivierte Ressourcen werden nicht angezeigt.
-      </p>
     </div>
   );
 }

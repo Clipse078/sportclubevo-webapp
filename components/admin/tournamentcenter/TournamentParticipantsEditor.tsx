@@ -3,11 +3,8 @@
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { ChevronDown, ChevronRight, Pencil, Shirt, Trash2, UsersRound } from "lucide-react";
 import type { TournamentHomeAway, TournamentParticipantDto } from "@/lib/tournaments/types";
-import {
-  FacilityResourceSelector,
-  type FacilityGroup,
-  type ResourceAvailabilityAnnotation,
-} from "@/components/admin/training/FacilityResourceSelector";
+import { type FacilityGroup, type ResourceAvailabilityAnnotation } from "@/components/admin/training/FacilityResourceSelector";
+import { VisualDressingRoomPicker } from "@/components/admin/shared/planning/VisualDressingRoomPicker";
 import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
 import { cn } from "@/lib/cn";
 import TournamentParticipantAddWorkflow from "./TournamentParticipantAddWorkflow";
@@ -245,10 +242,24 @@ export default function TournamentParticipantsEditor({
     [tournamentId],
   );
 
-  const dressingSummary = (participant: TournamentParticipantDto) => {
+  const dressingBadge = (participant: TournamentParticipantDto) => {
     if (homeAway !== "HOME") return null;
-    if (participant.dressingRoomAllocations.length === 0) return "Keine Garderobe";
-    return participant.dressingRoomAllocations.map((a) => a.facilityResourceName).join(", ");
+    if (participant.dressingRoomAllocations.length === 0) {
+      return (
+        <span className="shrink-0 rounded border border-dashed border-[var(--border)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--muted)]">
+          —
+        </span>
+      );
+    }
+    const label = participant.dressingRoomAllocations.map((a) => a.facilityResourceName).join(", ");
+    return (
+      <span
+        className="max-w-[7rem] shrink-0 truncate rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-[var(--text-2)]"
+        title={label}
+      >
+        {label}
+      </span>
+    );
   };
 
   return (
@@ -266,15 +277,13 @@ export default function TournamentParticipantsEditor({
               participant.kind === "EXTERNAL_CLUB" ||
               (homeAway === "HOME" && canManage) ||
               (homeAway === "HOME" && participant.dressingRoomAllocations.length > 0);
-            const summary = dressingSummary(participant);
-
             return (
               <li
                 key={participant.id}
                 data-testid={`tournament-participant-row-${participant.id}`}
-                className="bg-[var(--surface)]"
+                className="bg-[var(--surface)] transition-colors duration-150"
               >
-                <div className="flex items-center gap-2 px-3 py-2.5">
+                <div className="flex items-center gap-2 px-2.5 py-2">
                   {needsExpand ? (
                     <button
                       type="button"
@@ -294,18 +303,19 @@ export default function TournamentParticipantsEditor({
                     name={participantMainLabel(participant)}
                     size="sm"
                     bare
-                    className="h-8 w-8 shrink-0"
+                    className="h-7 w-7 shrink-0"
                   />
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-[var(--foreground)]">
+                    <p className="truncate text-sm font-semibold leading-tight text-[var(--foreground)]">
                       {participantMainLabel(participant)}
                     </p>
-                    <p className="truncate text-xs text-[var(--text-2)]">
+                    <p className="truncate text-[11px] leading-tight text-[var(--text-2)]">
                       {participantSubLabel(participant)}
-                      {summary ? ` · ${summary}` : null}
                     </p>
                   </div>
+
+                  {dressingBadge(participant)}
 
                   {canManage && needsExpand && !expanded ? (
                     <button
@@ -333,9 +343,9 @@ export default function TournamentParticipantsEditor({
                 </div>
 
                 {expanded && (
-                  <div className="border-t border-[var(--border)] bg-[var(--surface-2)]/30 px-3 py-3">
+                  <div className="border-t border-[var(--border)] bg-[var(--surface-2)]/40 px-2.5 py-2">
                     {participant.kind === "EXTERNAL_CLUB" && (
-                      <label className="block max-w-md space-y-1.5">
+                      <label className="block max-w-sm space-y-1">
                         <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
                           Anzeigename
                         </span>
@@ -360,61 +370,56 @@ export default function TournamentParticipantsEditor({
                     )}
 
                     {homeAway === "HOME" && (
-                      <div className={cn(participant.kind === "EXTERNAL_CLUB" && "mt-3")}>
-                        <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                          <Shirt className="h-3.5 w-3.5" aria-hidden />
+                      <div className={cn(participant.kind === "EXTERNAL_CLUB" && "mt-2")}>
+                        <p className="mb-1.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                          <Shirt className="h-3 w-3" aria-hidden />
                           Garderobe
                         </p>
 
-                        {participant.dressingRoomAllocations.length > 0 && (
-                          <ul className="mb-2 flex flex-wrap gap-1.5">
-                            {participant.dressingRoomAllocations.map((allocation) => (
-                              <li
-                                key={allocation.id}
-                                className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-xs text-[var(--text-2)]"
-                              >
-                                {allocation.facilityResourceName}
-                                {canManage && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setError(null);
-                                      startTransition(async () => {
-                                        try {
-                                          await removeDressingRoom(participant.id, allocation.id);
-                                        } catch (err) {
-                                          setError(
-                                            err instanceof Error
-                                              ? err.message
-                                              : "Garderobe konnte nicht entfernt werden.",
-                                          );
-                                        }
-                                      });
-                                    }}
-                                    disabled={isPending}
-                                    aria-label={`Garderobe ${allocation.facilityResourceName} entfernen`}
-                                    className="text-[var(--muted)] hover:text-rose-600"
-                                  >
-                                    ×
-                                  </button>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-
-                        {canManage && (
-                          <FacilityResourceSelector
+                        {canManage ? (
+                          <VisualDressingRoomPicker
                             facilityGroups={dressingRoomFacilityGroups}
-                            allocatedResourceIds={
+                            selectedResourceIds={
                               new Set(participant.dressingRoomAllocations.map((a) => a.facilityResourceId))
                             }
-                            onAdd={(resourceId) => addDressingRoom(participant.id, resourceId)}
-                            placeholder="Garderobe auswählen…"
-                            addButtonLabel="Zuweisen"
+                            onSelect={(resourceId) => {
+                              setError(null);
+                              startTransition(async () => {
+                                try {
+                                  await addDressingRoom(participant.id, resourceId);
+                                } catch (err) {
+                                  setError(
+                                    err instanceof Error ? err.message : "Garderobe konnte nicht zugewiesen werden.",
+                                  );
+                                }
+                              });
+                            }}
+                            onDeselect={(resourceId) => {
+                              const allocation = participant.dressingRoomAllocations.find(
+                                (a) => a.facilityResourceId === resourceId,
+                              );
+                              if (!allocation) return;
+                              setError(null);
+                              startTransition(async () => {
+                                try {
+                                  await removeDressingRoom(participant.id, allocation.id);
+                                } catch (err) {
+                                  setError(
+                                    err instanceof Error ? err.message : "Garderobe konnte nicht entfernt werden.",
+                                  );
+                                }
+                              });
+                            }}
+                            disabled={isPending}
                             availabilityByResourceId={dressingRoomAvailability}
+                            compact
                             testId={`tournament-participant-${participant.id}-dressing-room`}
                           />
+                        ) : (
+                          <p className="text-xs text-[var(--text-2)]">
+                            {participant.dressingRoomAllocations.map((a) => a.facilityResourceName).join(", ") ||
+                              "Keine Garderobe"}
+                          </p>
                         )}
                       </div>
                     )}

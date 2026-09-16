@@ -29,8 +29,9 @@ export default function TournamentEditorChrome({
   return (
     <div
       className={cn(
-        "mb-6 space-y-4 border-b border-[var(--border)] pb-4",
-        sticky && "sticky top-0 z-20 -mx-5 bg-[var(--background)]/95 px-5 backdrop-blur md:-mx-8 md:px-8",
+        "mb-5 space-y-3 border-b border-[var(--border)] pb-3",
+        sticky &&
+          "sticky top-0 z-20 -mx-5 bg-[var(--background)]/92 px-5 shadow-[0_4px_12px_-8px_rgba(0,0,0,0.25)] backdrop-blur-sm md:-mx-8 md:px-8",
       )}
     >
       {breadcrumbs && breadcrumbs.length > 0 ? <PageBreadcrumbs items={breadcrumbs} /> : null}
