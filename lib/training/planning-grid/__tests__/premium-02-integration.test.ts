@@ -37,8 +37,10 @@ describe("PREMIUM-03 × PREMIUM-02 integration", () => {
     const source = readSource("app/(admin)/dashboard/training/page.tsx");
     expect(source).toContain("TrainingSeriesListView");
     expect(source).toContain("Neue Trainingsserie");
-    expect(source.match(/Neue Trainingsserie/g)?.length).toBe(3);
+    expect(source.match(/Neue Trainingsserie/g)?.length).toBe(2);
     expect(source).toContain('tab === "planungsraster"');
+    expect(source).toContain("buildWochenplanerResourcesHrefFromLegacyTrainingParams");
+    expect(source).not.toContain('label: "Planungsraster"');
   });
 
   it("create page still wires TrainingSeriesCreateForm", () => {

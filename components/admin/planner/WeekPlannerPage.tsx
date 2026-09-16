@@ -1000,8 +1000,17 @@ export default function WeekPlannerPage({
         itemsById={itemsById}
         locale={locale}
         timezone={timezone}
+        reassignContext={
+          canonicalEditing
+            ? {
+                canManageTrainings: canonicalEditing.canManageTrainings,
+                canManageEvents: canonicalEditing.canManageEvents,
+                isStandardplan: activePlanId === null,
+              }
+            : undefined
+        }
         onClose={() => setSelectedIncident(null)}
-        onEditItem={(item) => {
+        onReassignItem={(item) => {
           setSelectedIncident(null);
           handleEdit(item);
         }}

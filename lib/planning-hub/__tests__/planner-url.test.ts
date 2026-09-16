@@ -26,6 +26,16 @@ describe("planning-hub planner-url", () => {
     expect(href).toContain("konflikte=1");
   });
 
+  it("preserves filters when switching perspective", () => {
+    const base = parsePlanningHubUrlState({ typ: "turniere", team: "t1", konflikte: "1" });
+    const href = buildPlanningHubHref(base, { perspective: "ressourcen", resourceCategory: "dressing" });
+    expect(href).toContain("ansicht=ressourcen");
+    expect(href).toContain("typ=turniere");
+    expect(href).toContain("team=t1");
+    expect(href).toContain("konflikte=1");
+    expect(href).toContain("ressource=garderobe");
+  });
+
   it("preserves filters when changing week via patch", () => {
     const base = parsePlanningHubUrlState({ typ: "spiele", konflikte: "1" });
     const href = buildPlanningHubHref(base, { week: "2026-09-21" });

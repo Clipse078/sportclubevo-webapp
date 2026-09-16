@@ -10,6 +10,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { Sheet } from "@/components/ui/Sheet";
 import { useToast } from "@/hooks/use-toast";
 import { timeRangesOverlap } from "@/lib/facilities/allocation-rules";
+import { buildWochenplanerResourcesHrefFromLegacyTrainingParams } from "@/lib/planning-hub/training-planungsraster-redirect";
 import {
   activityOverlapsSegment,
   blockSegmentFragment,
@@ -52,15 +53,17 @@ type PendingReassignment = {
 };
 
 function buildPlanningHref(
-  basePath: string,
   params: Record<string, string | undefined>,
+  timezone: string,
 ): string {
-  const search = new URLSearchParams();
-  search.set("tab", "planungsraster");
-  for (const [key, value] of Object.entries(params)) {
-    if (value) search.set(key, value);
-  }
-  return `${basePath}?${search.toString()}`;
+  return buildWochenplanerResourcesHrefFromLegacyTrainingParams({
+    day: params.day,
+    facility: params.facility,
+    team: params.team,
+    conflicts: params.conflicts,
+    category: params.category,
+    timezone,
+  });
 }
 
 function formatTimeRange(startAt: string, endAt: string, locale: string, timezone: string): string {
@@ -252,6 +255,7 @@ export default function ResourcePlanningGridClient({
           onToggleConflicts={() => setShowConflictPanel((v) => !v)}
           availableSegments={availableSegments}
           activeDaySegment={activeDaySegment}
+          timezone={timezone}
         />
         <EmptyState
           icon={<CalendarDays className="h-8 w-8" />}
@@ -280,6 +284,7 @@ export default function ResourcePlanningGridClient({
         onToggleConflicts={() => setShowConflictPanel((v) => !v)}
         availableSegments={availableSegments}
         activeDaySegment={activeDaySegment}
+        timezone={timezone}
       />
 
       {/* Desktop / tablet grid */}
@@ -394,8 +399,8 @@ export default function ResourcePlanningGridClient({
         <DaySegmentSwitcher
           availableSegments={availableSegments}
           activeDaySegment={activeDaySegment}
-          basePath={basePath}
           hrefParams={hrefParams}
+          timezone={timezone}
           compact
         />
         {mobileBlocks.map((block) => (
@@ -567,6 +572,7 @@ function PlanningToolbar({
   onToggleConflicts,
   availableSegments,
   activeDaySegment,
+  timezone,
 }: {
   dayLabel: string;
   dayParam: string;
@@ -574,6 +580,7 @@ function PlanningToolbar({
   nextDayParam: string;
   basePath: string;
   hrefParams: Record<string, string | undefined>;
+  timezone: string;
   categories: PlanningGridViewModel["categories"];
   facilities: PlanningGridViewModel["facilities"];
   teams: PlanningGridViewModel["teams"];
@@ -599,20 +606,20 @@ function PlanningToolbar({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1">
           <Link
-            href={buildPlanningHref(basePath, { ...hrefParams, day: previousDayParam })}
+            href={buildPlanningHref({ ...hrefParams, day: previousDayParam }, timezone)}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)]"
             aria-label="Vorheriger Tag"
           >
             <ChevronLeft className="h-4 w-4" />
           </Link>
           <Link
-            href={buildPlanningHref(basePath, { ...hrefParams, day: todayParam })}
+            href={buildPlanningHref({ ...hrefParams, day: todayParam }, timezone)}
             className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-semibold"
           >
             Heute
           </Link>
           <Link
-            href={buildPlanningHref(basePath, { ...hrefParams, day: nextDayParam })}
+            href={buildPlanningHref({ ...hrefParams, day: nextDayParam }, timezone)}
             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)]"
             aria-label="Nächster Tag"
           >
@@ -636,8 +643,8 @@ function PlanningToolbar({
       <DaySegmentSwitcher
         availableSegments={availableSegments}
         activeDaySegment={activeDaySegment}
-        basePath={basePath}
         hrefParams={hrefParams}
+        timezone={timezone}
       />
 
       <div className="flex flex-wrap gap-2">
@@ -645,7 +652,7 @@ function PlanningToolbar({
           categories.map((cat) => (
             <Link
               key={cat.key}
-              href={buildPlanningHref(basePath, { ...hrefParams, category: cat.key })}
+              href={buildPlanningHref({ ...hrefParams, category: cat.key }, timezone)}
               className={cn(
                 "rounded-full border px-3 py-1 text-xs font-semibold",
                 hrefParams.category === cat.key
@@ -663,10 +670,13 @@ function PlanningToolbar({
             value={filters.facilityId ?? ""}
             onChange={(event) => {
               const value = event.target.value;
-              window.location.href = buildPlanningHref(basePath, {
-                ...hrefParams,
-                facility: value || undefined,
-              });
+              window.location.href = buildPlanningHref(
+                {
+                  ...hrefParams,
+                  facility: value || undefined,
+                },
+                timezone,
+              );
             }}
           >
             <option value="">Anlage: Alle</option>
@@ -684,10 +694,13 @@ function PlanningToolbar({
             value={filters.teamSeasonId ?? ""}
             onChange={(event) => {
               const value = event.target.value;
-              window.location.href = buildPlanningHref(basePath, {
-                ...hrefParams,
-                team: value || undefined,
-              });
+              window.location.href = buildPlanningHref(
+                {
+                  ...hrefParams,
+                  team: value || undefined,
+                },
+                timezone,
+              );
             }}
           >
             <option value="">Team: Alle</option>
@@ -700,10 +713,13 @@ function PlanningToolbar({
         )}
 
         <Link
-          href={buildPlanningHref(basePath, {
-            ...hrefParams,
-            conflicts: filters.conflictsOnly ? undefined : "1",
-          })}
+          href={buildPlanningHref(
+            {
+              ...hrefParams,
+              conflicts: filters.conflictsOnly ? undefined : "1",
+            },
+            timezone,
+          )}
           className={cn(
             "rounded-full border px-3 py-1 text-xs font-semibold",
             filters.conflictsOnly ? "border-amber-400 bg-amber-50 text-amber-800" : "border-[var(--border)]",
@@ -712,10 +728,13 @@ function PlanningToolbar({
           Nur Konflikte
         </Link>
         <Link
-          href={buildPlanningHref(basePath, {
-            ...hrefParams,
-            unallocated: filters.unallocatedOnly ? undefined : "1",
-          })}
+          href={buildPlanningHref(
+            {
+              ...hrefParams,
+              unallocated: filters.unallocatedOnly ? undefined : "1",
+            },
+            timezone,
+          )}
           className={cn(
             "rounded-full border px-3 py-1 text-xs font-semibold",
             filters.unallocatedOnly ? "border-amber-400 bg-amber-50 text-amber-800" : "border-[var(--border)]",
@@ -764,14 +783,14 @@ function SegmentTimelineAxis({
 function DaySegmentSwitcher({
   availableSegments,
   activeDaySegment,
-  basePath,
   hrefParams,
+  timezone,
   compact = false,
 }: {
   availableSegments: { key: DaySegmentKey; label: string }[];
   activeDaySegment: DaySegmentKey;
-  basePath: string;
   hrefParams: Record<string, string | undefined>;
+  timezone: string;
   compact?: boolean;
 }) {
   return (
@@ -783,7 +802,7 @@ function DaySegmentSwitcher({
           return (
             <Link
               key={segment.key}
-              href={buildPlanningHref(basePath, { ...hrefParams, daypart: segment.key })}
+              href={buildPlanningHref({ ...hrefParams, daypart: segment.key }, timezone)}
               data-testid={`day-segment-${segment.key}`}
               aria-pressed={isActive}
               className={cn(

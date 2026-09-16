@@ -1,6 +1,10 @@
 "use client";
 
 import { cn } from "@/lib/cn";
+import {
+  weekplannerActivityTypeLabel,
+  weekplannerPrimaryLabel,
+} from "@/lib/planning-hub/item-presenters";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
@@ -15,13 +19,6 @@ type PlanningHubResourceWeekViewProps = {
 function formatTime(start: Date, end: Date, locale: string, timeZone: string): string {
   const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
   return `${fmt.format(start)}–${fmt.format(end)}`;
-}
-
-function itemLabel(item: WeekplannerItem): string {
-  if (item.type === "TRAINING") return item.teamNames[0] ?? item.title;
-  if (item.type === "MATCH") return item.teamNames[0] ?? item.title;
-  if (item.type === "VERANSTALTUNG") return item.title;
-  return item.title;
 }
 
 function resourcesForItem(item: WeekplannerItem, category: PlanningHubUrlState["resourceCategory"]) {
@@ -91,7 +88,7 @@ export default function PlanningHubResourceWeekView({
             {filtered.days.map((day) => (
               <th
                 key={day.dayKey}
-                className="min-w-[140px] border-b border-[var(--border)] px-2 py-2 text-left font-semibold text-[var(--text-2)]"
+                className="min-w-[148px] border-b border-[var(--border)] px-2 py-2 text-left font-semibold text-[var(--text-2)]"
               >
                 {new Intl.DateTimeFormat(locale, {
                   weekday: "short",
@@ -115,22 +112,37 @@ export default function PlanningHubResourceWeekView({
                 return (
                   <td key={day.dayKey} className="px-2 py-2 align-top">
                     <div className="space-y-1">
-                      {items.map((item) => (
-                        <div
-                          key={item.id}
-                          className={cn(
-                            "rounded-md border px-2 py-1",
-                            item.conflicts.some((c) => c.facilityResourceId === lane.id)
-                              ? "border-rose-300 bg-rose-50"
-                              : "border-[var(--border)] bg-[var(--surface-2)]",
-                          )}
-                        >
-                          <p className="font-medium text-[var(--foreground)]">{itemLabel(item)}</p>
-                          <p className="text-[10px] text-[var(--muted)]">
-                            {formatTime(item.startAt, item.endAt, locale, timezone)}
-                          </p>
-                        </div>
-                      ))}
+                      {items.map((item) => {
+                        const hasConflict = item.conflicts.some(
+                          (c) => c.facilityResourceId === lane.id,
+                        );
+                        return (
+                          <div
+                            key={item.id}
+                            className={cn(
+                              "rounded-md border px-2 py-1.5",
+                              hasConflict
+                                ? "border-rose-300 bg-rose-50"
+                                : "border-[var(--border)] bg-[var(--surface-2)]",
+                            )}
+                          >
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-[9px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                                {weekplannerActivityTypeLabel(item.type)}
+                              </span>
+                              {hasConflict && (
+                                <span className="text-[9px] font-semibold text-rose-700">Konflikt</span>
+                              )}
+                            </div>
+                            <p className="font-medium text-[var(--foreground)]">
+                              {weekplannerPrimaryLabel(item)}
+                            </p>
+                            <p className="text-[10px] text-[var(--muted)]">
+                              {formatTime(item.startAt, item.endAt, locale, timezone)}
+                            </p>
+                          </div>
+                        );
+                      })}
                     </div>
                   </td>
                 );

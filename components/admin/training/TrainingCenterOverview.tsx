@@ -182,10 +182,10 @@ export default function TrainingCenterOverview({
           <>
             <span aria-hidden>·</span>
             <Link
-              href={`${basePath}?tab=planungsraster&day=${dayWindow.param}`}
+              href={`/dashboard/planner/week?ansicht=ressourcen&week=${encodeURIComponent(weekWindow.param)}`}
               className="font-semibold text-[var(--sce-primary)] hover:underline"
             >
-              Im Planungsraster öffnen
+              Ressourcen im Wochenplaner
             </Link>
           </>
         )}

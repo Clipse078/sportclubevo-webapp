@@ -4,6 +4,12 @@ import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
+import {
+  weekplannerActivityTypeLabel,
+  weekplannerPrimaryLabel,
+  weekplannerTeamLine,
+} from "@/lib/planning-hub/item-presenters";
+import { canInlineReassignItem, type PlanningHubReassignContext } from "@/lib/planning-hub/reassignment";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 
 type PlanningHubConflictSheetProps = {
@@ -11,8 +17,9 @@ type PlanningHubConflictSheetProps = {
   itemsById: Map<string, WeekplannerItem>;
   locale: string;
   timezone: string;
+  reassignContext?: PlanningHubReassignContext;
   onClose: () => void;
-  onEditItem?: (item: WeekplannerItem) => void;
+  onReassignItem?: (item: WeekplannerItem) => void;
 };
 
 function formatWhen(incident: PlanningConflictIncident, locale: string, timeZone: string): string {
@@ -27,6 +34,11 @@ function formatWhen(incident: PlanningConflictIncident, locale: string, timeZone
   return `${day}, ${time}`;
 }
 
+function formatItemTime(item: WeekplannerItem, locale: string, timeZone: string): string {
+  const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
+  return `${fmt.format(item.startAt)}–${fmt.format(item.endAt)}`;
+}
+
 function itemHref(item: WeekplannerItem): string | null {
   if (item.type === "TRAINING") return `/dashboard/training/sessions/${item.trainingSessionId}/edit`;
   if (item.type === "MATCH") return `/dashboard/matchcenter/${item.eventId}`;
@@ -38,7 +50,7 @@ function itemHref(item: WeekplannerItem): string | null {
 function resourceSummary(item: WeekplannerItem): string {
   const pitch = item.pitchAllocations.map((r) => r.name).join(", ");
   const rooms = item.dressingRoomAllocations.map((r) => r.name).join(", ");
-  return [pitch, rooms].filter(Boolean).join(" · ");
+  return [pitch, rooms].filter(Boolean).join(" · ") || "—";
 }
 
 export default function PlanningHubConflictSheet({
@@ -46,8 +58,9 @@ export default function PlanningHubConflictSheet({
   itemsById,
   locale,
   timezone,
+  reassignContext,
   onClose,
-  onEditItem,
+  onReassignItem,
 }: PlanningHubConflictSheetProps) {
   if (!incident) return null;
 
@@ -66,8 +79,11 @@ export default function PlanningHubConflictSheet({
           <div>
             <p className="text-lg font-semibold text-[var(--foreground)]">{kindLabel}</p>
             <p className="text-sm text-[var(--text-2)]">{formatWhen(incident, locale, timezone)}</p>
-            <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-[var(--foreground)]">
+            <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
               {incident.facilityResourceName}
+            </p>
+            <p className="mt-0.5 text-xs text-[var(--muted)]">
+              {incident.occupancyCount} überlappende Belegungen
             </p>
           </div>
         </div>
@@ -75,37 +91,40 @@ export default function PlanningHubConflictSheet({
         <ul className="space-y-3">
           {involved.map((item) => {
             const href = itemHref(item);
+            const canReassign = canInlineReassignItem(item, reassignContext);
+            const teamLine = weekplannerTeamLine(item);
+
             return (
               <li
                 key={item.id}
                 className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2.5"
               >
-                <p className="text-sm font-semibold text-[var(--foreground)]">
-                  {item.teamNames[0] ?? item.title}{" "}
-                  <span className="font-normal text-[var(--text-2)]">
-                    {item.type === "TRAINING"
-                      ? "Training"
-                      : item.type === "MATCH"
-                        ? "Spiel"
-                        : item.type === "TOURNAMENT"
-                          ? "Turnier"
-                          : "Veranstaltung"}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-2)]">
+                    {weekplannerActivityTypeLabel(item.type)}
                   </span>
+                  <span className="text-xs text-[var(--muted)]">
+                    {formatItemTime(item, locale, timezone)}
+                  </span>
+                </div>
+                <p className="mt-1.5 text-sm font-semibold text-[var(--foreground)]">
+                  {weekplannerPrimaryLabel(item)}
                 </p>
-                <p className="text-xs text-[var(--muted)]">{resourceSummary(item)}</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {onEditItem && (
+                {teamLine && <p className="text-xs text-[var(--text-2)]">{teamLine}</p>}
+                <p className="mt-1 text-xs text-[var(--muted)]">{resourceSummary(item)}</p>
+                <div className="mt-2 flex flex-wrap gap-3">
+                  {canReassign && onReassignItem && (
                     <button
                       type="button"
                       className="text-xs font-semibold text-[var(--sce-primary)] hover:underline"
-                      onClick={() => onEditItem(item)}
+                      onClick={() => onReassignItem(item)}
                     >
                       Neu zuweisen
                     </button>
                   )}
                   {href && (
                     <Link href={href} className="text-xs font-medium text-[var(--text-2)] hover:underline">
-                      Bearbeiten →
+                      {item.type === "VERANSTALTUNG" ? "Veranstaltung bearbeiten →" : "Bearbeiten →"}
                     </Link>
                   )}
                 </div>
