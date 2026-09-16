@@ -618,6 +618,7 @@ async function findWeekplannerHomeTournaments(
 
     const standardplanPitch = tournament.resourceAllocations.map((allocation) => ({
       facilityResourceId: allocation.facilityResourceId,
+      facilityId: allocation.facilityId,
       code: allocation.facilityResourceCode,
       name: allocation.facilityResourceName,
       facilityName: allocation.facilityName,
@@ -652,6 +653,7 @@ async function findWeekplannerHomeTournaments(
       participantAllocations: tournament.participants.map((participant) => {
         const standardplanParticipantDressingRoom = participant.dressingRoomAllocations.map((allocation) => ({
           facilityResourceId: allocation.facilityResourceId,
+          facilityId: allocation.facilityId,
           code: allocation.facilityResourceCode,
           name: allocation.facilityResourceName,
           facilityName: allocation.facilityName,
@@ -689,7 +691,7 @@ async function findWeekplannerVeranstaltungen(
     where: {
       tenantId,
       type: "OTHER",
-      status: { notIn: ["CANCELLED", "CANCELED"] },
+      status: { notIn: ["CANCELLED"] },
       startAt: { lt: to },
       OR: [{ endAt: { gt: from } }, { endAt: null, startAt: { gte: from } }],
     },
@@ -702,7 +704,7 @@ async function findWeekplannerVeranstaltungen(
       teamSeasonId: true,
       pitchCode: true,
       homeDressingRoomCode: true,
-      team: { select: { name: true } },
+      teamSeason: { select: { team: { select: { name: true } } } },
     },
     orderBy: [{ startAt: "asc" }, { title: "asc" }],
   });
@@ -715,7 +717,7 @@ async function findWeekplannerVeranstaltungen(
       : undefined;
     const pitchAllocations = pitchRef ? [pitchRef] : [];
     const dressingRoomAllocations = roomRef ? [roomRef] : [];
-    const teamNames = event.team?.name ? [event.team.name] : [];
+    const teamNames = event.teamSeason?.team?.name ? [event.teamSeason.team.name] : [];
 
     return {
       id: `veranstaltung:${event.id}`,

@@ -503,6 +503,8 @@ export function mapWeekplannerItemToPublic(
       const teamContext = resolveTournamentTeamContext(tournament);
       return mapTournamentToPublicEvent(item, policy, tournament, teamContext);
     }
+    case "VERANSTALTUNG":
+      throw new Error("VERANSTALTUNG items are excluded from the public Wochenplan feed");
   }
 }
 
@@ -523,5 +525,7 @@ export function resolveItemTeamContext(
       return resolveMatchTeamContext(context.eventPolicyByEventId.get(item.eventId));
     case "TOURNAMENT":
       return resolveTournamentTeamContext(context.tournamentByEventId.get(item.eventId));
+    case "VERANSTALTUNG":
+      return { primaryTeam: null, allTeams: [] };
   }
 }

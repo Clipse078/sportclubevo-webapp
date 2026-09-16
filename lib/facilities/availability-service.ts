@@ -459,6 +459,7 @@ export async function getResourceAvailability(
       r.code,
       {
         facilityResourceId: r.id,
+        facilityId: r.facilityId,
         code: r.code,
         name: r.name,
         facilityName: r.facility.name,
