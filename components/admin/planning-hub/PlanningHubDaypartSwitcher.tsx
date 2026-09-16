@@ -1,6 +1,5 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import {
   daypartAccessibleLabelDe,
@@ -8,98 +7,133 @@ import {
   daypartTimeLabelDe,
   PLANNING_HUB_DAYPART_ORDER,
   type PlanningHubCalendarDaypart,
-  type PlanningHubCalendarZeitParam,
 } from "@/lib/planning-hub/planning-dayparts";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 
 type PlanningHubDaypartSwitcherProps = {
   urlState: PlanningHubUrlState;
   activeDaypart: PlanningHubCalendarDaypart;
+  /** When `zeit=ganz`, the full-day segment is active instead of a daypart. */
+  fullDayActive?: boolean;
+  /** Subtle “now” cue on the active daypart when today falls in that window. */
+  showNowCueInActiveDaypart?: boolean;
   showAdvancedFullDay?: boolean;
-  /** PLANNING-HUB-02E — client `zeit` updates without RSC navigation. */
   onSelectDaypart?: (daypart: PlanningHubCalendarDaypart) => void;
   onSelectFullDay?: () => void;
 };
 
+function ActiveIndicator({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "pointer-events-none absolute bottom-0 left-1/2 h-0.5 w-7 -translate-x-1/2 rounded-full bg-[var(--sce-primary)]",
+        className,
+      )}
+      aria-hidden
+    />
+  );
+}
+
 export default function PlanningHubDaypartSwitcher({
-  urlState,
+  urlState: _urlState,
   activeDaypart,
+  fullDayActive = false,
+  showNowCueInActiveDaypart = false,
   showAdvancedFullDay = false,
   onSelectDaypart,
   onSelectFullDay,
 }: PlanningHubDaypartSwitcherProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const segmentRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
-
-  useLayoutEffect(() => {
-    const node = segmentRefs.current[activeDaypart];
-    const container = containerRef.current;
-    if (!node || !container) return;
-    const containerRect = container.getBoundingClientRect();
-    const rect = node.getBoundingClientRect();
-    setIndicator({
-      left: rect.left - containerRect.left,
-      width: rect.width,
-    });
-  }, [activeDaypart]);
-
   return (
     <div
-      className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)]/60 px-1 py-1.5"
+      className="border-b border-[var(--border)]/50 px-1.5 py-1"
       data-testid="planning-hub-daypart-switcher"
     >
       <div
-        ref={containerRef}
-        className="relative inline-flex min-w-0 flex-1 rounded-md bg-[var(--surface-2)]/60 p-0.5"
+        className="flex min-w-0 items-stretch overflow-x-auto rounded-md bg-[var(--surface-2)]/40 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         role="tablist"
         aria-label="Tagesabschnitt"
+        data-testid="planning-hub-daypart-rail"
       >
-        {indicator && (
-          <div
-            className="pointer-events-none absolute top-0.5 bottom-0.5 rounded-[5px] bg-[var(--surface)] shadow-sm transition-[left,width] duration-[175ms] ease-out"
-            style={{ left: indicator.left, width: indicator.width }}
-            aria-hidden
-          />
-        )}
-        {PLANNING_HUB_DAYPART_ORDER.map((daypart) => {
-          const selected = daypart === activeDaypart;
-          return (
+        <div className="flex min-w-0 flex-1 items-stretch justify-between gap-0.5 px-0.5 py-0.5">
+          {PLANNING_HUB_DAYPART_ORDER.map((daypart) => {
+            const selected = !fullDayActive && daypart === activeDaypart;
+            return (
+              <button
+                key={daypart}
+                type="button"
+                onClick={() => onSelectDaypart?.(daypart)}
+                role="tab"
+                aria-selected={selected}
+                aria-current={selected ? "true" : undefined}
+                aria-label={daypartAccessibleLabelDe(daypart)}
+                data-testid={`planning-hub-daypart-${daypart}`}
+                className={cn(
+                  "relative flex min-w-[4.25rem] flex-1 cursor-pointer flex-col items-center rounded-[4px] px-2 py-0.5 text-center outline-none transition-[color,background-color] duration-150 ease-out",
+                  "focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]/35 focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--surface)]",
+                  selected
+                    ? "bg-[var(--surface)]/85 text-[var(--foreground)] shadow-[0_1px_0_0_rgba(255,255,255,0.04)]"
+                    : "bg-transparent text-[var(--muted)] hover:bg-[var(--surface)]/35 hover:text-[var(--text-2)]",
+                )}
+              >
+                <span
+                  className={cn(
+                    "text-[11px] leading-tight",
+                    selected ? "font-medium" : "font-normal",
+                  )}
+                >
+                  {daypartLabelDe(daypart)}
+                </span>
+                <span
+                  className={cn(
+                    "text-[10px] tabular-nums leading-tight",
+                    selected ? "text-[var(--text-2)]" : "text-[var(--muted)]/75",
+                  )}
+                >
+                  {daypartTimeLabelDe(daypart)}
+                </span>
+                {selected && <ActiveIndicator />}
+                {selected && showNowCueInActiveDaypart && (
+                  <span
+                    className="pointer-events-none absolute bottom-1.5 right-[38%] h-1 w-1 rounded-full bg-[var(--sce-primary)]/80"
+                    aria-hidden
+                    title="Aktuelle Uhrzeit in diesem Abschnitt"
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {showAdvancedFullDay && (
+          <>
+            <div
+              className="my-1 w-px shrink-0 self-stretch bg-[var(--border)]/55"
+              aria-hidden
+              data-testid="planning-hub-daypart-rail-separator"
+            />
             <button
-              key={daypart}
               type="button"
-              ref={(el) => {
-                segmentRefs.current[daypart] = el;
-              }}
-              onClick={() => onSelectDaypart?.(daypart)}
               role="tab"
-              aria-selected={selected}
-              aria-label={daypartAccessibleLabelDe(daypart)}
-              data-testid={`planning-hub-daypart-${daypart}`}
+              aria-selected={fullDayActive}
+              aria-current={fullDayActive ? "true" : undefined}
+              onClick={() => onSelectFullDay?.()}
+              data-testid="planning-hub-daypart-advanced-full"
               className={cn(
-                "relative z-[1] flex min-w-[4.5rem] flex-1 flex-col items-center rounded-[5px] px-2 py-1 text-center outline-none transition-colors",
-                "focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]/40 focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--surface)]",
-                selected ? "text-[var(--foreground)]" : "text-[var(--text-2)] hover:text-[var(--foreground)]",
+                "relative shrink-0 cursor-pointer self-center rounded-[4px] px-3 py-1.5 text-[11px] outline-none transition-[color,background-color] duration-150 ease-out",
+                "focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]/35 focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--surface)]",
+                fullDayActive
+                  ? "bg-[var(--surface)]/85 font-medium text-[var(--foreground)]"
+                  : "bg-transparent font-normal text-[var(--muted)] hover:bg-[var(--surface)]/35 hover:text-[var(--text-2)]",
               )}
             >
-              <span className="text-[11px] font-semibold leading-tight">{daypartLabelDe(daypart)}</span>
-              <span className="text-[10px] tabular-nums leading-tight text-[var(--muted)]">
-                {daypartTimeLabelDe(daypart)}
-              </span>
+              Ganzer Tag
+              {fullDayActive && (
+                <ActiveIndicator className="bottom-0.5 w-8" />
+              )}
             </button>
-          );
-        })}
+          </>
+        )}
       </div>
-      {showAdvancedFullDay && (
-        <button
-          type="button"
-          onClick={() => onSelectFullDay?.()}
-          className="shrink-0 text-[10px] font-medium text-[var(--muted)] hover:text-[var(--text-2)]"
-          data-testid="planning-hub-daypart-advanced-full"
-        >
-          Ganzer Tag
-        </button>
-      )}
     </div>
   );
 }

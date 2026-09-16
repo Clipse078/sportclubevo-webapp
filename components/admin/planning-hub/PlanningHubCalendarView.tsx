@@ -6,7 +6,6 @@ import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import {
   daypartVisibleRange,
-  defaultDaypartForLocalTime,
   resolveCalendarViewport,
   type PlanningHubCalendarDaypart,
 } from "@/lib/planning-hub/planning-dayparts";
@@ -85,10 +84,6 @@ export default function PlanningHubCalendarView({
     [setCalendarZeit],
   );
   const onSelectFullDay = useCallback(() => setCalendarZeit("ganz"), [setCalendarZeit]);
-  const onExitFullDay = useCallback(
-    () => setCalendarZeit(defaultDaypartForLocalTime(new Date(), timezone)),
-    [setCalendarZeit, timezone],
-  );
 
   const filtered = applyPlanningHubFilters(week, calendarUrlState);
   const allItems = week.days.flatMap((d) => d.items);
@@ -168,30 +163,15 @@ export default function PlanningHubCalendarView({
       className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--surface)] [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]"
       data-testid="planning-hub-calendar"
     >
-      {isFullDay ? (
-        <div
-          className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)]/60 px-2 py-1.5"
-          data-testid="planning-hub-calendar-full-day-bar"
-        >
-          <span className="text-[11px] font-medium text-[var(--text-2)]">Ganzer Tag</span>
-          <button
-            type="button"
-            onClick={onExitFullDay}
-            className="text-[11px] font-semibold text-[var(--text-2)] hover:text-[var(--foreground)]"
-            data-testid="planning-hub-calendar-exit-full-day"
-          >
-            Tagesabschnitte
-          </button>
-        </div>
-      ) : (
-        <PlanningHubDaypartSwitcher
-          urlState={calendarUrlState}
-          activeDaypart={activeDaypart}
-          showAdvancedFullDay
-          onSelectDaypart={onSelectDaypart}
-          onSelectFullDay={onSelectFullDay}
-        />
-      )}
+      <PlanningHubDaypartSwitcher
+        urlState={calendarUrlState}
+        activeDaypart={activeDaypart}
+        fullDayActive={isFullDay}
+        showNowCueInActiveDaypart={showNowLine}
+        showAdvancedFullDay
+        onSelectDaypart={onSelectDaypart}
+        onSelectFullDay={onSelectFullDay}
+      />
 
       <div ref={gridRef} className="min-w-[720px]">
         <div
