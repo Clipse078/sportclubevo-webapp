@@ -188,3 +188,25 @@ describe("VisualDressingRoomPicker — reversible selection (TRAINING-CENTER-PRE
     expect(onDeselect).toHaveBeenCalledWith("room-occupied");
   });
 });
+
+describe("VisualDressingRoomPicker — 02F2 dark selected state", () => {
+  it("selected dressing room card does not use white/light background", () => {
+    render(
+      <VisualDressingRoomPicker
+        facilityGroups={FACILITY_GROUPS}
+        selectedResourceIds={new Set(["room-free"])}
+        onSelect={vi.fn()}
+        onDeselect={vi.fn()}
+        availabilityByResourceId={MIXED_AVAILABILITY}
+        layout="aggregated"
+        testId="dressing-picker"
+      />,
+    );
+
+    const card = screen.getByTestId("dressing-picker-card-room-free");
+    expect(card.className).toContain("bg-[var(--surface)]");
+    expect(card.className).not.toMatch(/\bbg-white\b/);
+    expect(card.className).not.toContain("bg-blue-50");
+    expect(screen.getByText("Gewählt")).toBeInTheDocument();
+  });
+});

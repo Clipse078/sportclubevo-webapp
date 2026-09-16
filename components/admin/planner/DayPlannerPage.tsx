@@ -7,6 +7,7 @@ import {
   Dumbbell,
   Info,
   MapPin,
+  Calendar,
   Shield,
   Trophy,
 } from "lucide-react";
@@ -15,7 +16,7 @@ import { SectionCard } from "@/components/ui/page/SectionCard";
 import { EmptyState } from "@/components/ui/page/EmptyState";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import type { WeekplannerDay, WeekplannerItem, WeekplannerResourceRef } from "@/lib/weekplanner/types";
-import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
+import { toWeekplannerPlanActivityType, type WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
 import { planOverrideKey } from "@/lib/weekplanner/plan-override-key";
 import { DayPlannerPlanSelect } from "./DayPlannerPlanSelect";
 import {
@@ -75,6 +76,7 @@ const TYPE_META: Record<WeekplannerItem["type"], { label: string; badgeClass: st
   TRAINING: { label: "Training", badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700", icon: Dumbbell },
   MATCH: { label: "Match", badgeClass: "border-blue-200 bg-blue-50 text-blue-700", icon: Shield },
   TOURNAMENT: { label: "Turnier", badgeClass: "border-amber-200 bg-amber-50 text-amber-700", icon: Trophy },
+  VERANSTALTUNG: { label: "Veranstaltung", badgeClass: "border-violet-200 bg-violet-50 text-violet-700", icon: Calendar },
 };
 
 function dayHref(dayParam: string, planId?: string | null): string {
@@ -230,11 +232,12 @@ function TimelineRow({
   const hasConflict = item.conflicts.length > 0;
   const activityId = activityIdOf(item);
   const activityKey = `${item.type}:${activityId}`;
+  const planActivityType = toWeekplannerPlanActivityType(item.type);
 
-  const timeEditor = overrideEditing ? (
+  const timeEditor = overrideEditing && planActivityType ? (
     <WeekplannerActivityTimeOverrideEditor
       planId={overrideEditing.planId}
-      activityType={item.type}
+      activityType={planActivityType}
       activityId={activityId}
       effectiveStartAt={item.startAt.toISOString()}
       effectiveEndAt={item.endAt.toISOString()}
@@ -286,6 +289,13 @@ function TimelineRow({
             {item.teamNames.length > 0 && <p className="mt-0.5 text-xs text-[var(--text-2)]">{item.teamNames.join(", ")}</p>}
           </div>
         )}
+        {item.type === "VERANSTALTUNG" && (
+          <div className="mt-2">
+            <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
+            {item.teamNames.length > 0 && <p className="mt-0.5 text-xs text-[var(--text-2)]">{item.teamNames.join(", ")}</p>}
+            {item.location && <p className="mt-0.5 text-xs text-[var(--text-2)]">{item.location}</p>}
+          </div>
+        )}
 
         <div className="mt-2 space-y-1">
           <ResourceChips icon={MapPin} refs={item.pitchAllocations} emptyLabel="Kein Platz zugewiesen" overridden={item.pitchOverridden} />
@@ -314,13 +324,13 @@ function TimelineRow({
         {planName && <OverrideIndicator item={item} planName={planName} locale={locale} timezone={timezone} />}
         <ConflictBadge item={item} />
 
-        {overrideEditing && (
+        {overrideEditing && planActivityType && (
           <WeekplannerActivityOverridePanel activityKey={activityKey}>
             {timeEditor}
             <WeekplannerAllocationOverrideEditor
               planId={overrideEditing.planId}
               planName={overrideEditing.planName}
-              activityType={item.type}
+              activityType={planActivityType}
               activityId={activityId}
               allocationGroup="PITCH_HALL"
               label="Spielfeld/Halle"
@@ -330,11 +340,11 @@ function TimelineRow({
               startAt={item.startAt.toISOString()}
               endAt={item.endAt.toISOString()}
             />
-            {item.type !== "TOURNAMENT" && (
+            {item.type !== "TOURNAMENT" && item.type !== "VERANSTALTUNG" && (
               <WeekplannerAllocationOverrideEditor
                 planId={overrideEditing.planId}
                 planName={overrideEditing.planName}
-                activityType={item.type}
+                activityType={planActivityType}
                 activityId={activityId}
                 allocationGroup="DRESSING_ROOM"
                 label={item.type === "MATCH" ? "Garderobe (Heim)" : "Garderobe"}

@@ -815,6 +815,8 @@ function mapWeekplannerItem(
       );
     case "TOURNAMENT":
       return mapTournamentItem(item, policy.eventPolicyByEventId.get(item.eventId));
+    case "VERANSTALTUNG":
+      throw new Error("VERANSTALTUNG is not mapped for Infoboard canonical source loading");
   }
 }
 

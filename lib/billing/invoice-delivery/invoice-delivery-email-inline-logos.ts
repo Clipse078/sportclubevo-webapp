@@ -11,7 +11,7 @@ export const INVOICE_DELIVERY_EMAIL_SCE_LOGO_CID = "sportclubevo-invoice-email-l
 export const INVOICE_DELIVERY_EMAIL_TULIP_LOGO_CID = "tulip-digital-invoice-email-logo";
 
 function readBrandingAsset(relativePath: string): Buffer {
-  const absolutePath = path.join(process.cwd(), relativePath);
+  const absolutePath = path.join(/* turbopackIgnore: true */ process.cwd(), relativePath);
   return readFileSync(absolutePath);
 }
 

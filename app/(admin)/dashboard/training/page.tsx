@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -26,11 +26,8 @@ import {
 import { buildTrainingCenterViewModel, normalizeTrainingActionFilter } from "@/lib/training/view-model";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import TrainingCenterOverview from "@/components/admin/training/TrainingCenterOverview";
-import ResourcePlanningGridClient from "@/components/admin/training/planning-grid/ResourcePlanningGridClient";
 import TrainingSeriesListView from "@/components/admin/training/TrainingSeriesListView";
-import { ToastProvider } from "@/components/ui/ToastProvider";
-import { fetchPlanningGridData, normalizePlanningGridFilters } from "@/lib/training/planning-grid/data-service";
-import type { PlanningResourceCategoryKey } from "@/lib/training/planning-grid/types";
+import { buildWochenplanerResourcesHrefFromLegacyTrainingParams } from "@/lib/planning-hub/training-planungsraster-redirect";
 import { cn } from "@/lib/cn";
 
 type TrainingPageSearchParams = {
@@ -53,18 +50,15 @@ type Props = {
   searchParams?: Promise<TrainingPageSearchParams>;
 };
 
-const TOP_TABS: { key: "kalender" | "planungsraster" | "serien"; label: string }[] = [
+const TOP_TABS: { key: "kalender" | "serien"; label: string }[] = [
   { key: "kalender", label: "Kalender" },
-  { key: "planungsraster", label: "Planungsraster" },
   { key: "serien", label: "Serien" },
 ];
 
+const TRAINING_DESCRIPTION =
+  "Trainingskalender, Einzeltrainings und Serien — Ressourcenplanung im Wochenplaner.";
+
 export default async function TrainingCenterPage({ searchParams }: Props) {
-  // ADMIN-DELETE-02A-C1: a delegated user may hold trainings.delete without
-  // trainings.view/trainings.manage — they must still be able to reach the
-  // actual Serien-Verwaltung list to exercise the permanent-delete action
-  // gated below (mirrors app/(admin)/dashboard/training/series/[seriesId]/
-  // edit/page.tsx, ADMIN-DELETE-02A).
   const session = await requireAnyPermission([
     PERMISSIONS.TRAININGS_VIEW,
     PERMISSIONS.TRAININGS_MANAGE,
@@ -75,66 +69,27 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
   if (!tenantContext) notFound();
 
   const canManage = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
-  // ORG-ACCESS-03: canCreate is broader than canManage — includes users with
-  // TRAININGS_VIEW at tenant level who may have OrgUnit-scoped write capability.
-  // The create page will show a "no teams" message if no writable teams exist.
   const canCreate = canManage || hasPermission(session, PERMISSIONS.TRAININGS_VIEW);
-  // ADMIN-DELETE-02A-C1: permanent "Endgültig löschen" gating in the actual
-  // Serien-Verwaltung list — deliberately independent of trainings.manage
-  // (manage alone must never authorize permanent deletion).
   const canDelete = hasPermission(session, PERMISSIONS.TRAININGS_DELETE);
   const params: TrainingPageSearchParams = searchParams ? await searchParams : {};
-  const tab =
-    params.tab === "serien" ? "serien" : params.tab === "planungsraster" ? "planungsraster" : "kalender";
   const timezone = tenantContext.timezone ?? TRAINING_DEFAULT_TIMEZONE;
   const locale = tenantContext.locale ?? "de-CH";
 
-  if (tab === "planungsraster") {
-    const planningData = await fetchPlanningGridData({
-      tenantId: tenantContext.id,
-      timezone,
-      dateParam: params.day,
-      category: (params.category?.toUpperCase() as PlanningResourceCategoryKey | undefined) ?? null,
-      filters: normalizePlanningGridFilters({
-        facilityId: params.facility ?? null,
-        teamSeasonId: params.team ?? null,
-        conflictsOnly: params.conflicts === "1",
-        unallocatedOnly: params.unallocated === "1",
+  if (params.tab === "planungsraster") {
+    redirect(
+      buildWochenplanerResourcesHrefFromLegacyTrainingParams({
+        day: params.day,
+        week: params.week,
+        facility: params.facility,
+        team: params.team,
+        conflicts: params.conflicts,
+        category: params.category,
+        timezone,
       }),
-    });
-
-    return (
-      <div className="max-w-[1600px] space-y-6">
-        <AdminSectionHeader
-          eyebrow="Planung"
-          title="TrainingCenter"
-          description="Kalender, Planungsraster und Serien für alle Trainingsserien."
-          actions={
-            canManage ? (
-              <Link href="/dashboard/training/new" className="fca-button-primary inline-flex items-center gap-1.5 text-sm">
-                <Plus className="h-3.5 w-3.5" />
-                Neue Trainingsserie
-              </Link>
-            ) : undefined
-          }
-        />
-        <TopTabs active={tab} />
-        <ToastProvider>
-          <ResourcePlanningGridClient
-            viewModel={planningData.viewModel}
-            dayLabel={formatTrainingDayLabel(planningData.viewModel.date, locale, timezone)}
-            dayParam={planningData.dayWindow.param}
-            previousDayParam={planningData.dayWindow.previousParam}
-            nextDayParam={planningData.dayWindow.nextParam}
-            canManage={canManage}
-            locale={locale}
-            timezone={timezone}
-            daypartParam={params.daypart ?? null}
-          />
-        </ToastProvider>
-      </div>
     );
   }
+
+  const tab = params.tab === "serien" ? "serien" : "kalender";
 
   if (tab === "serien") {
     const showArchived = params.archived === "1";
@@ -176,8 +131,8 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
       <div className="space-y-6">
         <AdminSectionHeader
           eyebrow="Planung"
-          title="TrainingCenter"
-          description="Kalender, Planungsraster und Serien für alle Trainingsserien."
+          title="Trainings"
+          description={TRAINING_DESCRIPTION}
           actions={
             canCreate ? (
               <Link href="/dashboard/training/new" className="fca-button-primary inline-flex items-center gap-1.5 text-sm">
@@ -202,17 +157,9 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
     );
   }
 
-  // ── Kalender tab: Monat | Woche | Tag operational overview ─────────────────
-
   const view = normalizeTrainingCenterView(params.view);
   const actionFilter = normalizeTrainingActionFilter(params.filter);
 
-  // TRAININGCENTER-01B: each window resolves strictly from its own URL
-  // param — Month/Week/Day never borrow a reference date from one another.
-  // Per the product rule, an absent param always defaults to the current
-  // Europe/Zurich month/week/day ("today"), and an explicit param is always
-  // preserved as-is. A single shared `now` keeps all three windows (and any
-  // cross-tab links built from them) consistent within one request.
   const now = new Date();
   const monthWindow = resolveTrainingMonthWindow({
     monthParam: params.month,
@@ -251,8 +198,8 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
     <div className="max-w-[1400px] space-y-6">
       <AdminSectionHeader
         eyebrow="Planung"
-        title="TrainingCenter"
-        description="Kalender, Planungsraster und Serien für alle Trainingsserien."
+        title="Trainings"
+        description={TRAINING_DESCRIPTION}
         actions={
           canManage ? (
             <Link href="/dashboard/training/new" className="fca-button-primary inline-flex items-center gap-1.5 text-sm">
@@ -298,9 +245,9 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
   );
 }
 
-function TopTabs({ active }: { active: "kalender" | "planungsraster" | "serien" }) {
+function TopTabs({ active }: { active: "kalender" | "serien" }) {
   return (
-    <div role="tablist" aria-label="TrainingCenter-Bereiche" className="flex gap-1 border-b border-[var(--border)]">
+    <div role="tablist" aria-label="Trainings-Bereiche" className="flex gap-1 border-b border-[var(--border)]">
       {TOP_TABS.map((item) => {
         const isActive = item.key === active;
         return (

@@ -41,7 +41,7 @@
  * Standardplan.
  */
 
-export type WeekplannerItemType = "TRAINING" | "MATCH" | "TOURNAMENT";
+export type WeekplannerItemType = "TRAINING" | "MATCH" | "TOURNAMENT" | "VERANSTALTUNG";
 
 /** The two allocation groups a WeekplannerPlan may override — see prisma/schema.prisma#WeekplannerAllocationGroup. */
 export type WeekplannerAllocationGroup = "PITCH_HALL" | "DRESSING_ROOM";
@@ -49,6 +49,7 @@ export type WeekplannerAllocationGroup = "PITCH_HALL" | "DRESSING_ROOM";
 /** Denormalised FacilityResource reference — the canonical resource, never duplicated. */
 export type WeekplannerResourceRef = {
   facilityResourceId: string;
+  facilityId: string;
   code: string;
   name: string;
   facilityName: string;
@@ -106,12 +107,23 @@ export type WeekplannerItemBase = {
   dressingRoomOverridden: boolean;
   /** Populated by the view-model's conflict pass — empty until then. */
   conflicts: WeekplannerConflict[];
+  /** PLANNING-HUB-02A — persisted intent for dressing-room occupancy timing. */
+  dressingRoomOccupancyMode: "DEFAULT" | "CUSTOM";
+  /** Custom before minutes when mode=CUSTOM; null when DEFAULT. */
+  dressingRoomOccupancyBeforeMinutes: number | null;
+  /** Custom after minutes when mode=CUSTOM; null when DEFAULT. */
+  dressingRoomOccupancyAfterMinutes: number | null;
+  /** Resolved before buffer used for dressing-room conflict/geometry. */
+  dressingRoomResolvedBeforeMinutes: number;
+  /** Resolved after buffer used for dressing-room conflict/geometry. */
+  dressingRoomResolvedAfterMinutes: number;
 };
 
 export type WeekplannerTrainingItem = WeekplannerItemBase & {
   type: "TRAINING";
   trainingSeriesId: string;
   trainingSessionId: string;
+  teamSeasonId: string;
 };
 
 export type WeekplannerMatchItem = WeekplannerItemBase & {
@@ -136,10 +148,19 @@ export type WeekplannerTournamentItem = WeekplannerItemBase & {
   participantAllocations: WeekplannerTournamentParticipantAllocation[];
 };
 
+/** CLUB-EVENTS / PLANNING-HUB-01 — tenant Veranstaltungen (Event.type=OTHER). */
+export type WeekplannerVeranstaltungItem = WeekplannerItemBase & {
+  type: "VERANSTALTUNG";
+  eventId: string;
+  location: string | null;
+  teamSeasonId: string | null;
+};
+
 export type WeekplannerItem =
   | WeekplannerTrainingItem
   | WeekplannerMatchItem
-  | WeekplannerTournamentItem;
+  | WeekplannerTournamentItem
+  | WeekplannerVeranstaltungItem;
 
 export type WeekplannerDay = {
   /** "YYYY-MM-DD", Europe/Zurich calendar date. */

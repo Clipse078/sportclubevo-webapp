@@ -7,8 +7,23 @@
  */
 
 import type { WeekplannerActivityType, WeekplannerAllocationGroup } from "@prisma/client";
+import type { WeekplannerItemType } from "./types";
 
 export type { WeekplannerActivityType, WeekplannerAllocationGroup };
+
+/** Plan overrides apply only to persisted weekplanner activities — not Veranstaltungen. */
+export function toWeekplannerPlanActivityType(
+  type: WeekplannerItemType,
+): WeekplannerActivityType | null {
+  switch (type) {
+    case "TRAINING":
+    case "MATCH":
+    case "TOURNAMENT":
+      return type;
+    case "VERANSTALTUNG":
+      return null;
+  }
+}
 
 export type WeekplannerPlanDto = {
   id: string;

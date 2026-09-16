@@ -33,6 +33,10 @@ import type {
   FacilityGroup,
   ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
+import {
+  RESOURCE_CARD_SELECTED_CLASSES,
+  RESOURCE_CARD_SELECTED_SUMMARY_CLASSES,
+} from "./resource-card-selection-style";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -261,11 +265,11 @@ function ResourceCard({
   const additionalConflicts = (annotation?.conflicts?.length ?? 0) > 1 ? annotation!.conflicts!.slice(1) : [];
   const isMultiOccupied = additionalConflicts.length > 0;
 
-  const borderClass = isSharedSelection
-    ? "border-amber-400 ring-1 ring-amber-300"
-    : isSelected
-      ? "border-[var(--sce-primary)] ring-1 ring-[var(--sce-primary)]"
-      : isFree
+  const borderClass = isSelected
+    ? "border-[var(--sce-primary)] ring-1 ring-[var(--sce-primary)]/35"
+    : isSharedSelection
+    ? "border-amber-400/70 ring-1 ring-amber-400/25"
+    : isFree
         ? "border-emerald-300 hover:border-emerald-400"
         : isOccupied
           ? pendingOccupiedConfirm
@@ -273,14 +277,14 @@ function ResourceCard({
             : "border-rose-200 hover:border-amber-300"
           : "border-[var(--border)]";
 
-  const bgClass = isSharedSelection
-    ? "bg-amber-50/70"
-    : isSelected
-      ? "bg-blue-50"
+  const bgClass = isSelected
+    ? "bg-[var(--surface)]"
+    : isSharedSelection
+      ? "bg-amber-500/10"
       : isOccupied
         ? pendingOccupiedConfirm
-          ? "bg-amber-50/60"
-          : "bg-rose-50/40"
+          ? "bg-amber-500/10"
+          : "bg-rose-500/10"
         : "bg-[var(--surface)]";
 
   const isClickable = !disabled;
@@ -603,9 +607,9 @@ function CompactFreeResourceRow({
       className={cn(
         "group flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-all",
         isSelected
-          ? "border-[var(--sce-primary)] bg-blue-50 ring-1 ring-[var(--sce-primary)]"
+          ? RESOURCE_CARD_SELECTED_CLASSES
           : isFree
-            ? "border-emerald-200 bg-[var(--surface)] hover:border-emerald-300 hover:bg-emerald-50/40"
+            ? "border-emerald-200 bg-[var(--surface)] hover:border-emerald-300 hover:bg-emerald-500/[0.06]"
             : "border-[var(--border)] bg-[var(--surface)]",
         disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-1",
       )}
@@ -658,7 +662,7 @@ function SelectedResourceSummary({
 
   return (
     <div
-      className="rounded-lg border border-[var(--sce-primary)]/30 bg-blue-50/50 px-3 py-2"
+      className={RESOURCE_CARD_SELECTED_SUMMARY_CLASSES}
       data-testid={testId ? `${testId}-selected-summary` : undefined}
     >
       {selected.map((entry) => {

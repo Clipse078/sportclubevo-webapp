@@ -32,6 +32,8 @@ import type { FacilityGroup } from "@/components/admin/training/FacilityResource
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
 import type { FacilityResourceType } from "@prisma/client";
+import DressingRoomOccupancyEditor from "@/components/admin/planning-hub/DressingRoomOccupancyEditor";
+import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -42,6 +44,7 @@ type SheetProps = {
     DRESSING_ROOM: FacilityGroup[];
   };
   timezone: string;
+  tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
   onClose: () => void;
   onSaved: () => void;
 };
@@ -110,6 +113,24 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+function AvailabilitySectionSkeleton({ label }: { label: string }) {
+  return (
+    <div
+      className="animate-pulse space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3"
+      data-testid="weekplanner-availability-skeleton"
+      aria-busy="true"
+      aria-label={`${label} werden geladen`}
+    >
+      <div className="h-3 w-28 rounded bg-[var(--surface-2)]" />
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {[0, 1, 2].map((key) => (
+          <div key={key} className="h-[4.5rem] rounded-md bg-[var(--surface-2)]" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Editor context header ─────────────────────────────────────────────────────
 
 function EditorHeader({ item, timezone }: { item: WeekplannerItem; timezone: string }) {
@@ -117,6 +138,7 @@ function EditorHeader({ item, timezone }: { item: WeekplannerItem; timezone: str
     TRAINING: { icon: Dumbbell, label: "Training", badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700" },
     MATCH: { icon: Shield, label: "Heimspiel", badgeClass: "border-blue-200 bg-blue-50 text-blue-700" },
     TOURNAMENT: { icon: Trophy, label: "Turnier", badgeClass: "border-amber-200 bg-amber-50 text-amber-700" },
+    VERANSTALTUNG: { icon: Calendar, label: "Veranstaltung", badgeClass: "border-violet-200 bg-violet-50 text-violet-700" },
   }[item.type];
 
   const Icon = typeConfig.icon;
@@ -206,12 +228,14 @@ function TrainingEditorContent({
   item,
   facilityGroupsByAllocationGroup,
   timezone,
+  tenantDressingRoomOccupancyPresets,
   onClose,
   onSaved,
 }: {
   item: Extract<WeekplannerItem, { type: "TRAINING" }>;
   facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   timezone: string;
+  tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -242,7 +266,11 @@ function TrainingEditorContent({
     return localToUtcIso(date, endTime, timezone) ?? "";
   }, [date, endTime, timezone]);
 
-  const { pitchAvailability, dressingRoomAvailability } = useFacilityAvailability({
+  const {
+    pitchAvailability,
+    dressingRoomAvailability,
+    isLoading: availabilityLoading,
+  } = useFacilityAvailability({
     enabled: !!startAt,
     startAt,
     endAt,
@@ -392,6 +420,9 @@ function TrainingEditorContent({
         {/* Pitch */}
         <div className="space-y-2">
           <SectionLabel>Spielfeld / Halle</SectionLabel>
+          {availabilityLoading && pitchAvailability.size === 0 ? (
+            <AvailabilitySectionSkeleton label="Verfügbarkeiten Spielfeld" />
+          ) : (
           <VisualResourceAvailabilityPicker
             facilityGroups={facilityGroupsByAllocationGroup.PITCH_HALL}
             selectedResourceIds={selectedPitchIds}
@@ -407,11 +438,15 @@ function TrainingEditorContent({
             disabled={saving}
             testId="wochenplaner-canonical-pitch"
           />
+          )}
         </div>
 
         {/* Dressing room */}
         <div className="space-y-2">
           <SectionLabel>Garderobe</SectionLabel>
+          {availabilityLoading && dressingRoomAvailability.size === 0 ? (
+            <AvailabilitySectionSkeleton label="Verfügbarkeiten Garderobe" />
+          ) : (
           <VisualDressingRoomPicker
             facilityGroups={facilityGroupsByAllocationGroup.DRESSING_ROOM}
             selectedResourceIds={selectedRoomIds}
@@ -427,6 +462,16 @@ function TrainingEditorContent({
             disabled={saving}
             testId="wochenplaner-canonical-room"
           />
+          )}
+          {tenantDressingRoomOccupancyPresets && selectedRoomIds.size > 0 && (
+            <DressingRoomOccupancyEditor
+              item={item}
+              activityType="TRAINING"
+              activityId={item.trainingSessionId}
+              tenantPresets={tenantDressingRoomOccupancyPresets}
+              onSaved={onSaved}
+            />
+          )}
         </div>
       </div>
     </Sheet>
@@ -439,12 +484,14 @@ function MatchEditorContent({
   item,
   facilityGroupsByAllocationGroup,
   timezone,
+  tenantDressingRoomOccupancyPresets,
   onClose,
   onSaved,
 }: {
   item: Extract<WeekplannerItem, { type: "MATCH" }>;
   facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   timezone: string;
+  tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -594,6 +641,16 @@ function MatchEditorContent({
             testId="wochenplaner-canonical-match-away-room"
           />
         </div>
+
+        {tenantDressingRoomOccupancyPresets && (homeDressingCode || awayDressingCode) && (
+          <DressingRoomOccupancyEditor
+            item={item}
+            activityType="MATCH"
+            activityId={item.eventId}
+            tenantPresets={tenantDressingRoomOccupancyPresets}
+            onSaved={onSaved}
+          />
+        )}
       </div>
     </Sheet>
   );
@@ -605,12 +662,14 @@ function TournamentEditorContent({
   item,
   facilityGroupsByAllocationGroup,
   timezone,
+  tenantDressingRoomOccupancyPresets,
   onClose,
   onSaved,
 }: {
   item: Extract<WeekplannerItem, { type: "TOURNAMENT" }>;
   facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   timezone: string;
+  tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -720,6 +779,17 @@ function TournamentEditorContent({
             testId="wochenplaner-canonical-tournament-pitch"
           />
         </div>
+
+        {tenantDressingRoomOccupancyPresets &&
+          item.participantAllocations.some((p) => p.dressingRoomAllocations.length > 0) && (
+            <DressingRoomOccupancyEditor
+              item={item}
+              activityType="TOURNAMENT"
+              activityId={item.eventId}
+              tenantPresets={tenantDressingRoomOccupancyPresets}
+              onSaved={onSaved}
+            />
+          )}
       </div>
     </Sheet>
   );
@@ -737,6 +807,7 @@ export function WeekplannerPlanningSheet({
   item,
   facilityGroupsByAllocationGroup,
   timezone,
+  tenantDressingRoomOccupancyPresets,
   onClose,
   onSaved,
 }: SheetProps) {
@@ -748,6 +819,7 @@ export function WeekplannerPlanningSheet({
         item={item}
         facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
         timezone={timezone}
+        tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
         onClose={onClose}
         onSaved={onSaved}
       />
@@ -760,6 +832,7 @@ export function WeekplannerPlanningSheet({
         item={item}
         facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
         timezone={timezone}
+        tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
         onClose={onClose}
         onSaved={onSaved}
       />
@@ -772,6 +845,7 @@ export function WeekplannerPlanningSheet({
         item={item}
         facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
         timezone={timezone}
+        tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
         onClose={onClose}
         onSaved={onSaved}
       />

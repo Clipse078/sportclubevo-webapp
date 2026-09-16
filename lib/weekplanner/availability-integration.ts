@@ -78,12 +78,13 @@ function toResourceRef(
     id: string;
     code: string;
     name: string;
-    facility: { name: string };
+    facility: { id: string; name: string };
   },
   occupancy: { occupancyBeforeMinutes: number; occupancyAfterMinutes: number },
 ): WeekplannerResourceRef {
   return {
     facilityResourceId: row.id,
+    facilityId: row.facility.id,
     code: row.code,
     name: row.name,
     facilityName: row.facility.name,
@@ -179,7 +180,7 @@ async function buildPlanOverrideMaps(
         occupancyBeforeMinutes: true,
         occupancyAfterMinutes: true,
         facilityResource: {
-          select: { id: true, code: true, name: true, type: true, facility: { select: { name: true } } },
+          select: { id: true, code: true, name: true, type: true, facility: { select: { id: true, name: true } } },
         },
       },
       orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
@@ -283,7 +284,7 @@ async function collectTrainingOccupants(
         createdAt: true,
         updatedAt: true,
         facilityResource: {
-          select: { id: true, code: true, name: true, type: true, facility: { select: { name: true } } },
+          select: { id: true, code: true, name: true, type: true, facility: { select: { id: true, name: true } } },
         },
       },
       orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
@@ -296,7 +297,7 @@ async function collectTrainingOccupants(
         createdAt: true,
         updatedAt: true,
         facilityResource: {
-          select: { id: true, code: true, name: true, type: true, facility: { select: { name: true } } },
+          select: { id: true, code: true, name: true, type: true, facility: { select: { id: true, name: true } } },
         },
       },
       orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
@@ -512,6 +513,7 @@ async function collectTournamentOccupants(
     if (group === "PITCH_HALL") {
       const standardplanPitch: WeekplannerResourceRef[] = tournament.resourceAllocations.map((allocation) => ({
         facilityResourceId: allocation.facilityResourceId,
+        facilityId: allocation.facilityId,
         code: allocation.facilityResourceCode,
         name: allocation.facilityResourceName,
         facilityName: allocation.facilityName,
@@ -541,6 +543,7 @@ async function collectTournamentOccupants(
       const standardplanParticipantDressingRoom: WeekplannerResourceRef[] =
         participant.dressingRoomAllocations.map((allocation) => ({
           facilityResourceId: allocation.facilityResourceId,
+          facilityId: allocation.facilityId,
           code: allocation.facilityResourceCode,
           name: allocation.facilityResourceName,
           facilityName: allocation.facilityName,

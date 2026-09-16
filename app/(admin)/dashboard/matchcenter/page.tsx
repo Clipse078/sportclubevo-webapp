@@ -113,8 +113,8 @@ export default async function MatchcenterPage({
     <ToastProvider>
       <div className="max-w-[1400px] space-y-8">
         <AdminSectionHeader
-          eyebrow="Spielbetrieb"
-          title="Matchcenter"
+          eyebrow="Planung"
+          title="Spiele"
           description="Zentrale Spielplanung und operative Matchvorbereitung."
           actions={
             <Link

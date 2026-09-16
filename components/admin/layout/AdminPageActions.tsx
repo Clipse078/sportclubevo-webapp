@@ -56,7 +56,11 @@ export default function AdminPageActions() {
     );
   }
 
-  if (pathname === "/dashboard/planner" || pathname === "/dashboard/planner/week" || pathname === "/dashboard/planner/day") {
+  if (pathname === "/dashboard/planner/week") {
+    return null;
+  }
+
+  if (pathname === "/dashboard/planner" || pathname === "/dashboard/planner/day") {
     return (
       <div className="flex flex-wrap items-center gap-2.5">
         <Link
@@ -77,15 +81,13 @@ export default function AdminPageActions() {
           </Link>
         ) : null}
 
-        {pathname !== "/dashboard/planner/week" ? (
-          <Link
-            href={weekHref}
-            className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:bg-slate-50"
-          >
-            <CalendarPlus className="h-4 w-4" />
-            Wochenplanner
-          </Link>
-        ) : null}
+        <Link
+          href={weekHref}
+          className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:bg-slate-50"
+        >
+          <CalendarPlus className="h-4 w-4" />
+          Wochenplanner
+        </Link>
 
         {pathname !== "/dashboard/planner/day" ? (
           <Link

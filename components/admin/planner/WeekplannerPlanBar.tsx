@@ -32,6 +32,8 @@ type Props = {
   selectedPlanParam: string | null;
   materializedWeekplannerPlanId: string | null;
   canManage: boolean;
+  /** Inline switcher without redundant status banners (Planning Hub header). */
+  compact?: boolean;
 };
 
 function buildWeekplannerHref(weekParam: string, wochenplanPlanId: string | null): string {
@@ -44,9 +46,12 @@ function PlanStatusBadge({ isActive }: { isActive: boolean }) {
   return (
     <span
       className={cn(
-        "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-        isActive ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700",
+        "rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
+        isActive
+          ? "bg-emerald-500/15 text-emerald-400/95"
+          : "bg-amber-500/12 text-amber-400/90",
       )}
+      data-testid={isActive ? "weekplanner-plan-status-aktiv" : "weekplanner-plan-status-entwurf"}
     >
       {isActive ? "Aktiv" : "Entwurf"}
     </span>
@@ -60,6 +65,7 @@ export function WeekplannerPlanBar({
   selectedPlanParam,
   materializedWeekplannerPlanId: _materializedWeekplannerPlanId,
   canManage,
+  compact = false,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -143,23 +149,32 @@ export function WeekplannerPlanBar({
   if (wochenplanPlans.length === 0) return null;
 
   return (
-    <div className="space-y-2" data-testid="weekplanner-plan-bar">
+    <div className={cn(compact ? "space-y-1" : "space-y-2")} data-testid="weekplanner-plan-bar">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-          Wochenplan
-        </span>
+        {!compact && (
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+            Wochenplan
+          </span>
+        )}
 
         <button
           ref={switcherAnchorRef}
           type="button"
           data-testid="weekplanner-plan-switcher"
           onClick={() => setSwitcherOpen((open) => !open)}
-          className="inline-flex min-w-[14rem] max-w-[min(100vw-2rem,28rem)] items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-sm font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+          className={cn(
+            "inline-flex w-auto max-w-[min(100vw-2rem,20rem)] items-center justify-between gap-2 rounded-md border border-[var(--border)]/80 bg-[var(--surface)] font-medium text-[var(--foreground)] shadow-sm transition hover:border-[var(--border)] hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]/40 focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--surface)]",
+            switcherOpen && "border-[var(--border)] bg-[var(--surface-2)]",
+            compact ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-sm",
+          )}
+          data-surface-theme="planning-hub-dark"
           aria-haspopup="listbox"
           aria-expanded={switcherOpen}
         >
           <span className="flex min-w-0 flex-1 items-center gap-2">
-            {isViewingActive ? <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden="true" /> : null}
+            {isViewingActive ? (
+              <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500/90" aria-hidden="true" />
+            ) : null}
             <span className="min-w-0 flex-1 text-left leading-snug [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical] overflow-hidden">
               {viewedPlan?.name ?? "Plan wählen"}
             </span>
@@ -178,14 +193,17 @@ export function WeekplannerPlanBar({
             onClick={() => setIsPublishDialogOpen(true)}
             disabled={isPending}
             data-testid="weekplanner-plan-publish-button"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--sce-primary)] px-3 py-1.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg bg-[var(--sce-primary)] font-semibold text-white transition hover:opacity-90 disabled:opacity-50",
+              compact ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-sm",
+            )}
           >
             {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
             Veröffentlichen
           </button>
         ) : null}
 
-        {canManage ? (
+        {canManage && !compact ? (
           <button
             type="button"
             onClick={() => setIsCreateDialogOpen(true)}
@@ -276,31 +294,33 @@ export function WeekplannerPlanBar({
         </p>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        {isViewingActive ? (
-          <div
-            className="inline-flex items-center gap-1.5 font-semibold text-emerald-700"
-            data-testid="weekplanner-active-plan-banner"
-          >
-            <Check className="h-3.5 w-3.5" aria-hidden="true" />
-            Aktiver Plan · {viewedPlan?.name ?? activePlan?.name ?? "—"}
-          </div>
-        ) : viewedPlan ? (
-          <>
+      {!compact && (
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          {isViewingActive ? (
             <div
-              className="inline-flex items-center gap-1.5 font-semibold text-amber-700"
-              data-testid="weekplanner-draft-plan-banner"
+              className="inline-flex items-center gap-1.5 font-semibold text-emerald-700"
+              data-testid="weekplanner-active-plan-banner"
             >
-              Entwurf · {viewedPlan.name}
+              <Check className="h-3.5 w-3.5" aria-hidden="true" />
+              Aktiver Plan · {viewedPlan?.name ?? activePlan?.name ?? "—"}
             </div>
-            {activePlan ? (
-              <span className="text-[var(--muted)]" data-testid="weekplanner-current-active-reference">
-                Aktiver Plan: {activePlan.name}
-              </span>
-            ) : null}
-          </>
-        ) : null}
-      </div>
+          ) : viewedPlan ? (
+            <>
+              <div
+                className="inline-flex items-center gap-1.5 font-semibold text-amber-700"
+                data-testid="weekplanner-draft-plan-banner"
+              >
+                Entwurf · {viewedPlan.name}
+              </div>
+              {activePlan ? (
+                <span className="text-[var(--muted)]" data-testid="weekplanner-current-active-reference">
+                  Aktiver Plan: {activePlan.name}
+                </span>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      )}
 
       <WeekplannerPlanCreateDialog
         open={isCreateDialogOpen}
@@ -432,7 +452,7 @@ function PlanSwitcherRow({
                 e.stopPropagation();
                 onOverflowToggle(!overflowOpen);
               }}
-              className="rounded-md p-1.5 text-[var(--muted)] transition hover:bg-white hover:text-[var(--foreground)]"
+              className="rounded-md p-1.5 text-[var(--muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>
@@ -448,7 +468,7 @@ function PlanSwitcherRow({
                 type="button"
                 onClick={onDelete}
                 data-testid={`weekplanner-plan-delete-${plan.id}`}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-rose-700 transition hover:bg-rose-50"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-rose-400 transition hover:bg-rose-500/10"
               >
                 <Trash2 className="h-4 w-4" />
                 Plan endgültig löschen

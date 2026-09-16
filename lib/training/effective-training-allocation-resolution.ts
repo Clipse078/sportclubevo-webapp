@@ -36,7 +36,7 @@ export type TrainingAllocationResourceRow = {
     code: string;
     name: string;
     type: string;
-    facility: { name: string };
+    facility: { id: string; name: string };
   };
 };
 

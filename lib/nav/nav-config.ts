@@ -222,7 +222,7 @@ export const NAV_SECTIONS: NavSection[] = [
       {
         key: "planung",
         label: "Planung",
-        href: "/dashboard/training",
+        href: "/dashboard/planner/week",
         carrySeason: false,
         permissionKeys: [
           PERMISSIONS.TRAININGS_VIEW,
@@ -240,8 +240,20 @@ export const NAV_SECTIONS: NavSection[] = [
         ],
         children: [
           {
+            // PLANNING-HUB-01 — Wochenplaner is the default operational surface.
+            key: "wochenplanner",
+            label: "Wochenplaner",
+            href: "/dashboard/planner/week",
+            permissionKeys: [
+              PERMISSIONS.TRAININGS_VIEW,
+              PERMISSIONS.TRAININGS_MANAGE,
+              PERMISSIONS.EVENTS_VIEW,
+              PERMISSIONS.EVENTS_MANAGE,
+            ],
+          },
+          {
             key: "trainingcenter",
-            label: "TrainingCenter",
+            label: "Trainings",
             href: "/dashboard/training",
             // ADMIN-DELETE-02A-C2: keep in sync with the page-level guard's
             // permission set (TRAININGS_VIEW | TRAININGS_MANAGE |
@@ -258,7 +270,7 @@ export const NAV_SECTIONS: NavSection[] = [
             // Betrieb entry into Planung, alongside the other two canonical
             // operational modules. Route/permissions unchanged.
             key: "matchcenter",
-            label: "MatchCenter",
+            label: "Spiele",
             href: "/dashboard/matchcenter",
             permissionKeys: [PERMISSIONS.EVENTS_VIEW, PERMISSIONS.EVENTS_MANAGE],
           },
@@ -267,7 +279,7 @@ export const NAV_SECTIONS: NavSection[] = [
             // Reuses Event.type=TOURNAMENT + events.view/events.manage —
             // no dedicated tournaments.* permission was introduced.
             key: "tournamentcenter",
-            label: "TournamentCenter",
+            label: "Turniere",
             href: "/dashboard/tournamentcenter",
             permissionKeys: [PERMISSIONS.EVENTS_VIEW, PERMISSIONS.EVENTS_MANAGE],
           },
@@ -279,21 +291,6 @@ export const NAV_SECTIONS: NavSection[] = [
             label: "Veranstaltungen",
             href: "/dashboard/veranstaltungen",
             permissionKeys: [PERMISSIONS.EVENTS_VIEW, PERMISSIONS.EVENTS_MANAGE],
-          },
-          {
-            // WEEKPLANNER-01A/01B: read-only aggregation of TrainingSession +
-            // HOME Event(MATCH) + HOME Event(TOURNAMENT), with optional
-            // named alternative planning variants — no permission of its
-            // own, reuses the exact set already gating "Planung".
-            key: "wochenplanner",
-            label: "Wochenplanner",
-            href: "/dashboard/planner/week",
-            permissionKeys: [
-              PERMISSIONS.TRAININGS_VIEW,
-              PERMISSIONS.TRAININGS_MANAGE,
-              PERMISSIONS.EVENTS_VIEW,
-              PERMISSIONS.EVENTS_MANAGE,
-            ],
           },
         ],
       },

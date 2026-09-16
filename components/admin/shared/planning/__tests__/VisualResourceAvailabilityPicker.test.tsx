@@ -159,6 +159,24 @@ describe("VisualResourceAvailabilityPicker — selection", () => {
     expect(screen.getByText("Ausgewählt")).toBeInTheDocument();
   });
 
+  it("selected pitch card does not use a white/light background", () => {
+    render(
+      <VisualResourceAvailabilityPicker
+        facilityGroups={FACILITY_GROUPS}
+        selectedResourceIds={new Set(["res-pitch-a"])}
+        onSelect={vi.fn()}
+        onDeselect={vi.fn()}
+        availabilityByResourceId={FREE_AVAILABILITY}
+        testId="picker"
+      />,
+    );
+    const card = screen.getByTestId("picker-card-res-pitch-a");
+    expect(card.className).toContain("bg-[var(--surface)]");
+    expect(card.className).not.toMatch(/\bbg-white\b/);
+    expect(card.className).not.toContain("bg-blue-50");
+    expect(card.className).toContain("sce-primary");
+  });
+
   it("shows occupied confirm flow and allows assign via Trotzdem zuweisen", () => {
     const onSelect = vi.fn();
     render(

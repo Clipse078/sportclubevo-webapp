@@ -7,8 +7,10 @@ import {
   PAYMENT_SECTION_BOUNDARY_Y_FROM_TOP_MM,
   planInvoiceBodyLayoutRegions,
 } from "../invoice-design-geometry";
+import { TULIP_DIGITAL_LOGO_VISIBLE_CONTENT_BOUNDS_PX } from "../tulip-logo-visible-bounds.constants";
 import {
   computeTulipVisibleDrawSizeMm,
+  loadTulipVisibleArtworkPngBytes,
   readTulipVisibleContentBoundsPx,
   TULIP_VISIBLE_MAX_HEIGHT_MM,
   TULIP_VISIBLE_MIN_HEIGHT_MM,
@@ -18,6 +20,16 @@ import {
 import { TULIP_DIGITAL_LOGO_PATH } from "../constants";
 
 describe("Tulip footer visible-content sizing (SWISS-01E4C3)", () => {
+  it("exposes static visible bounds matching the canonical Tulip PNG scan", () => {
+    expect(readTulipVisibleContentBoundsPx()).toEqual(TULIP_DIGITAL_LOGO_VISIBLE_CONTENT_BOUNDS_PX);
+  });
+
+  it("loads pre-cropped visible artwork bytes without scanning public/", () => {
+    const { pngBytes, bounds } = loadTulipVisibleArtworkPngBytes();
+    expect(bounds).toEqual(TULIP_DIGITAL_LOGO_VISIBLE_CONTENT_BOUNDS_PX);
+    expect(pngBytes.byteLength).toBeGreaterThan(10_000);
+  });
+
   it("detects meaningful artwork bounds for the canonical Tulip PNG", () => {
     const bounds = readTulipVisibleContentBoundsPx();
     expect(bounds.sourceWidthPx).toBeGreaterThan(0);

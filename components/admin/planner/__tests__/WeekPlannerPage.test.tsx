@@ -25,6 +25,15 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
+const LISTE_URL = {
+  perspective: "liste" as const,
+  activity: "alle" as const,
+  team: null,
+  facility: null,
+  conflictsOnly: false,
+  resourceCategory: "pitch" as const,
+};
+
 function emptyDay(dayKey: string): WeekplannerDay {
   return { dayKey, items: [] };
 }
@@ -90,15 +99,41 @@ const TRAINING_ITEM = {
   timeOverridden: false,
   title: "E2 Training",
   teamNames: ["FC Allschwil E2"],
-  pitchAllocations: [{ facilityResourceId: "res-kr2", code: "KR2", name: "Kunstrasen 2", facilityName: "Sportanlage Bruel" }],
+  pitchAllocations: [{
+    facilityResourceId: "res-kr2",
+    facilityId: "fac-1",
+    code: "KR2",
+    name: "Kunstrasen 2",
+    facilityName: "Sportanlage Bruel",
+    occupancyBeforeMinutes: 0,
+    occupancyAfterMinutes: 0,
+  }],
   dressingRoomAllocations: [],
-  canonicalPitchAllocations: [{ facilityResourceId: "res-kr2", code: "KR2", name: "Kunstrasen 2", facilityName: "Sportanlage Bruel" }],
+  canonicalPitchAllocations: [{
+    facilityResourceId: "res-kr2",
+    facilityId: "fac-1",
+    code: "KR2",
+    name: "Kunstrasen 2",
+    facilityName: "Sportanlage Bruel",
+    occupancyBeforeMinutes: 0,
+    occupancyAfterMinutes: 0,
+  }],
   canonicalDressingRoomAllocations: [],
   pitchOverridden: false,
   dressingRoomOverridden: false,
   conflicts: [{ facilityResourceId: "res-kr2", facilityResourceName: "Kunstrasen 2" }],
   trainingSeriesId: "series-1",
   trainingSessionId: "session-1",
+  teamSeasonId: "ts-1",
+};
+
+const TRAINING_ITEM_CONFLICT = {
+  ...TRAINING_ITEM,
+  id: "training:session-2",
+  trainingSessionId: "session-2",
+  title: "E3 Training",
+  teamNames: ["FC Allschwil E3"],
+  conflicts: [{ facilityResourceId: "res-kr2", facilityResourceName: "Kunstrasen 2" }],
 };
 
 const MATCH_ITEM = {
@@ -115,10 +150,10 @@ const MATCH_ITEM = {
   opponentName: "Gegner FC",
   homeAway: "HOME" as const,
   eventId: "event-match-1",
-  pitchAllocations: [{ facilityResourceId: "res-pitch-standard", code: "KR2", name: "Kunstrasen 2", facilityName: "Sportanlage Bruel" }],
-  dressingRoomAllocations: [{ facilityResourceId: "res-room-standard", code: "G1", name: "Garderobe 1", facilityName: "Garderobentrakt" }],
-  canonicalPitchAllocations: [{ facilityResourceId: "res-pitch-standard", code: "KR2", name: "Kunstrasen 2", facilityName: "Sportanlage Bruel" }],
-  canonicalDressingRoomAllocations: [{ facilityResourceId: "res-room-standard", code: "G1", name: "Garderobe 1", facilityName: "Garderobentrakt" }],
+  pitchAllocations: [{ facilityResourceId: "res-pitch-standard", facilityId: "fac-1", code: "KR2", name: "Kunstrasen 2", facilityName: "Sportanlage Bruel", occupancyBeforeMinutes: 0, occupancyAfterMinutes: 0 }],
+  dressingRoomAllocations: [{ facilityResourceId: "res-room-standard", facilityId: "fac-2", code: "G1", name: "Garderobe 1", facilityName: "Garderobentrakt", occupancyBeforeMinutes: 0, occupancyAfterMinutes: 0 }],
+  canonicalPitchAllocations: [{ facilityResourceId: "res-pitch-standard", facilityId: "fac-1", code: "KR2", name: "Kunstrasen 2", facilityName: "Sportanlage Bruel", occupancyBeforeMinutes: 0, occupancyAfterMinutes: 0 }],
+  canonicalDressingRoomAllocations: [{ facilityResourceId: "res-room-standard", facilityId: "fac-2", code: "G1", name: "Garderobe 1", facilityName: "Garderobentrakt", occupancyBeforeMinutes: 0, occupancyAfterMinutes: 0 }],
   pitchOverridden: false,
   dressingRoomOverridden: false,
   awayDressingRoomAllocations: [],
@@ -148,8 +183,8 @@ const TOURNAMENT_ITEM = {
     {
       participantId: "participant-1",
       participantLabel: "FC Allschwil E1",
-      dressingRoomAllocations: [{ facilityResourceId: "res-room-standard", code: "G1", name: "Garderobe 1", facilityName: "Garderobentrakt" }],
-      canonicalDressingRoomAllocations: [{ facilityResourceId: "res-room-standard", code: "G1", name: "Garderobe 1", facilityName: "Garderobentrakt" }],
+      dressingRoomAllocations: [{ facilityResourceId: "res-room-standard", facilityId: "fac-2", code: "G1", name: "Garderobe 1", facilityName: "Garderobentrakt", occupancyBeforeMinutes: 0, occupancyAfterMinutes: 0 }],
+      canonicalDressingRoomAllocations: [{ facilityResourceId: "res-room-standard", facilityId: "fac-2", code: "G1", name: "Garderobe 1", facilityName: "Garderobentrakt", occupancyBeforeMinutes: 0, occupancyAfterMinutes: 0 }],
       dressingRoomOverridden: false,
     },
   ],
@@ -164,27 +199,19 @@ beforeEach(() => {
   );
 });
 
-describe("WeekPlannerPage — Standardplan safety", () => {
-  it("renders no override editor and shows the canonical-module safety note for managers on the Standardplan", () => {
+describe("WeekPlannerPage — default Kalender workspace", () => {
+  it("renders the week×time Kalender as the default view without legacy Standardplan banner", () => {
     const week = makeWeek([{ dayKey: "2026-08-10", items: [TRAINING_ITEM] }]);
     render(<WeekPlannerPage week={week} todayParam="2026-08-10" plans={[PLAN]} activePlanId={null} canManagePlans />);
 
-    expect(screen.queryByText("Spielfeld/Halle anpassen")).not.toBeInTheDocument();
-    const note = screen.getByTestId("weekplanner-standardplan-safety-note");
-    expect(note).toHaveTextContent("Standardplan aktiv");
-    expect(note).toHaveTextContent("TrainingCenter");
-    expect(note).toHaveTextContent("Matchcenter");
-    expect(note).toHaveTextContent("TournamentCenter");
-  });
-
-  it("hides the safety note for read-only viewers (no manage permission)", () => {
-    const week = makeWeek([{ dayKey: "2026-08-10", items: [TRAINING_ITEM] }]);
-    render(<WeekPlannerPage week={week} todayParam="2026-08-10" plans={[PLAN]} activePlanId={null} canManagePlans={false} />);
-
+    expect(screen.getByTestId("planning-hub-calendar")).toBeInTheDocument();
     expect(screen.queryByTestId("weekplanner-standardplan-safety-note")).not.toBeInTheDocument();
+    expect(screen.queryByText("Spielfeld/Halle anpassen")).not.toBeInTheDocument();
   });
+});
 
-  it("hides the safety note once an alternative plan is active", async () => {
+describe("WeekPlannerPage — alternative plan operational sheet", () => {
+  it("opens the operational planning sheet when an activity is activated under an alternative plan", async () => {
     const user = userEvent.setup();
     const week = makeWeek([{ dayKey: "2026-08-10", items: [TRAINING_ITEM] }]);
     render(
@@ -194,6 +221,7 @@ describe("WeekPlannerPage — Standardplan safety", () => {
         plans={[PLAN]}
         activePlanId={PLAN.id}
         canManagePlans
+        urlState={LISTE_URL}
         overrideEditing={{
           planId: PLAN.id,
           planName: PLAN.name,
@@ -203,41 +231,13 @@ describe("WeekPlannerPage — Standardplan safety", () => {
       />,
     );
 
-    // Override editors are collapsed behind "Anpassen" by default (compact UX) — open it first.
-    await user.click(screen.getByTestId("weekplanner-anpassen-toggle-TRAINING:session-1"));
-    await screen.findAllByTestId("weekplanner-override-badge-standard");
-    expect(screen.queryByTestId("weekplanner-standardplan-safety-note")).not.toBeInTheDocument();
-  });
-});
-
-describe("WeekPlannerPage — compact default card / Anpassen disclosure", () => {
-  it("does NOT render the resource/time editors until 'Anpassen' is opened", () => {
-    const week = makeWeek([{ dayKey: "2026-08-10", items: [TRAINING_ITEM] }]);
-    render(
-      <WeekPlannerPage
-        week={week}
-        todayParam="2026-08-10"
-        plans={[PLAN]}
-        activePlanId={PLAN.id}
-        canManagePlans
-        overrideEditing={{
-          planId: PLAN.id,
-          planName: PLAN.name,
-          overridesByKey: {},
-          facilityGroupsByAllocationGroup: FACILITY_GROUPS_BY_GROUP,
-        }}
-      />,
-    );
-
-    const trainingCard = screen.getByTestId("weekplanner-item-training");
-    expect(within(trainingCard).queryByText("Spielfeld/Halle anpassen")).not.toBeInTheDocument();
-    expect(within(trainingCard).queryByText("Zeit anpassen")).not.toBeInTheDocument();
-    expect(within(trainingCard).getByTestId("weekplanner-anpassen-toggle-TRAINING:session-1")).toBeInTheDocument();
+    await user.click(screen.getByTestId("weekplanner-item-training"));
+    expect(await screen.findByTestId("weekplanner-operational-editor")).toBeInTheDocument();
   });
 });
 
 describe("WeekPlannerPage — override editing per activity type", () => {
-  it("renders the override editor for TRAINING, HOME MATCH, and HOME TOURNAMENT once 'Anpassen' is opened per card", async () => {
+  it("supports operational override editing for TRAINING, MATCH and TOURNAMENT via the planning sheet", async () => {
     const user = userEvent.setup();
     const week = makeWeek([
       { dayKey: "2026-08-10", items: [TRAINING_ITEM] },
@@ -251,6 +251,7 @@ describe("WeekPlannerPage — override editing per activity type", () => {
         plans={[PLAN]}
         activePlanId={PLAN.id}
         canManagePlans
+        urlState={LISTE_URL}
         overrideEditing={{
           planId: PLAN.id,
           planName: PLAN.name,
@@ -260,24 +261,8 @@ describe("WeekPlannerPage — override editing per activity type", () => {
       />,
     );
 
-    const trainingCard = screen.getByTestId("weekplanner-item-training");
-    await user.click(within(trainingCard).getByTestId("weekplanner-anpassen-toggle-TRAINING:session-1"));
-    expect(within(trainingCard).getAllByText("Spielfeld/Halle anpassen").length).toBeGreaterThan(0);
-    expect(within(trainingCard).getByText("Zeit anpassen")).toBeInTheDocument();
-    const trainingBadges = await within(trainingCard).findAllByTestId("weekplanner-override-badge-standard");
-    expect(trainingBadges.some((badge) => badge.textContent === "Standardplan: Kunstrasen 2")).toBe(true);
-
-    // Opening a different activity's "Anpassen" closes the training one — only ONE activity edits at a time.
-    const matchCard = screen.getByTestId("weekplanner-item-match");
-    await user.click(within(matchCard).getByTestId("weekplanner-anpassen-toggle-MATCH:event-match-1"));
-    expect(within(trainingCard).queryByText("Zeit anpassen")).not.toBeInTheDocument();
-    expect(within(matchCard).getAllByText(/anpassen/).length).toBeGreaterThan(0);
-    await within(matchCard).findAllByTestId("weekplanner-override-badge-standard");
-
-    const tournamentCard = screen.getByTestId("weekplanner-item-tournament");
-    await user.click(within(tournamentCard).getByTestId("weekplanner-anpassen-toggle-TOURNAMENT:event-tournament-1"));
-    expect(within(tournamentCard).getAllByText(/anpassen/).length).toBeGreaterThan(0);
-    await within(tournamentCard).findAllByTestId("weekplanner-override-badge-standard");
+    await user.click(screen.getByTestId("weekplanner-item-training"));
+    expect(await screen.findByTestId("weekplanner-operational-editor")).toBeInTheDocument();
   });
 });
 
@@ -301,6 +286,7 @@ describe("WeekPlannerPage — WEEKPLANNER-01D effective time drives availability
         plans={[PLAN]}
         activePlanId={PLAN.id}
         canManagePlans
+        urlState={LISTE_URL}
         overrideEditing={{
           planId: PLAN.id,
           planName: PLAN.name,
@@ -310,7 +296,7 @@ describe("WeekPlannerPage — WEEKPLANNER-01D effective time drives availability
       />,
     );
 
-    await user.click(screen.getByTestId("weekplanner-anpassen-toggle-TRAINING:session-1"));
+    await user.click(screen.getByTestId("weekplanner-item-training"));
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
@@ -340,22 +326,26 @@ describe("WeekPlannerPage — WEEKPLANNER-01D time override indicator", () => {
         plans={[PLAN]}
         activePlanId={PLAN.id}
         canManagePlans={false}
+        urlState={LISTE_URL}
       />,
     );
 
     const trainingCard = screen.getByTestId("weekplanner-item-training");
     const indicator = within(trainingCard).getByTestId("weekplanner-override-indicator");
     expect(indicator).toHaveTextContent("Schlechtwetterplan angepasst");
-    expect(indicator).toHaveTextContent("Standard:");
-    expect(indicator).toHaveTextContent("Kunstrasen 2");
-    // Read-only viewers never see the editing affordance.
-    expect(screen.queryByTestId("weekplanner-anpassen-toggle-TRAINING:session-1")).not.toBeInTheDocument();
   });
 
   it("shows no override indicator for an untouched (non-overridden) activity", () => {
     const week = makeWeek([{ dayKey: "2026-08-10", items: [TRAINING_ITEM] }]);
     render(
-      <WeekPlannerPage week={week} todayParam="2026-08-10" plans={[PLAN]} activePlanId={PLAN.id} canManagePlans={false} />,
+      <WeekPlannerPage
+        week={week}
+        todayParam="2026-08-10"
+        plans={[PLAN]}
+        activePlanId={PLAN.id}
+        canManagePlans={false}
+        urlState={LISTE_URL}
+      />,
     );
 
     const trainingCard = screen.getByTestId("weekplanner-item-training");
@@ -364,18 +354,17 @@ describe("WeekPlannerPage — WEEKPLANNER-01D time override indicator", () => {
 });
 
 describe("WeekPlannerPage — shared occupancy visibility", () => {
-  it("renders a shared-occupancy badge on the affected item and a week-level summary count", () => {
+  it("renders a shared-occupancy badge on the affected item and a week-level conflict attention count", () => {
+    const week = makeWeek([{ dayKey: "2026-08-10", items: [TRAINING_ITEM, TRAINING_ITEM_CONFLICT] }]);
+    render(<WeekPlannerPage week={week} todayParam="2026-08-10" plans={[]} activePlanId={null} canManagePlans={false} />);
+
+    expect(screen.getByTestId("planning-hub-conflict-attention")).toHaveTextContent(/Konflikt/);
+  });
+
+  it("shows compact no-conflict state when the week has zero conflicts", () => {
     const week = makeWeek([{ dayKey: "2026-08-10", items: [TRAINING_ITEM] }]);
     render(<WeekPlannerPage week={week} todayParam="2026-08-10" plans={[]} activePlanId={null} canManagePlans={false} />);
 
-    expect(screen.getByTestId("weekplanner-conflict-badge")).toHaveTextContent("Geteilte Belegung");
-    expect(screen.getByTestId("weekplanner-conflict-summary")).toHaveTextContent("1 Eintrag mit geteilter Ressourcenbelegung");
-  });
-
-  it("shows no conflict summary when the week has zero conflicts", () => {
-    const week = makeWeek([{ dayKey: "2026-08-15", items: [MATCH_ITEM] }]);
-    render(<WeekPlannerPage week={week} todayParam="2026-08-10" plans={[]} activePlanId={null} canManagePlans={false} />);
-
-    expect(screen.queryByTestId("weekplanner-conflict-summary")).not.toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-conflict-none")).toBeInTheDocument();
   });
 });

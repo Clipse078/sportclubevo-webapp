@@ -77,6 +77,9 @@ type PatchBody = {
   awayDressingRoomCode?: string | null;
   websiteVisible?: boolean;
   infoboardVisible?: boolean;
+  dressingRoomOccupancyMode?: "DEFAULT" | "CUSTOM";
+  dressingRoomBeforeMinutes?: number | null;
+  dressingRoomAfterMinutes?: number | null;
 };
 
 const ALLOWED_STRING_KEYS = [
@@ -186,11 +189,41 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     }
   }
 
-  if (Object.keys(data).length === 0) {
+  const hasOccupancyPatch =
+    "dressingRoomOccupancyMode" in body ||
+    "dressingRoomBeforeMinutes" in body ||
+    "dressingRoomAfterMinutes" in body;
+
+  if (hasOccupancyPatch) {
+    const { updateEventDressingRoomOccupancy } = await import(
+      "@/lib/dressing-room-occupancy/event-occupancy-service"
+    );
+    try {
+      await updateEventDressingRoomOccupancy(tenantId, matchId, {
+        mode: body.dressingRoomOccupancyMode ?? "DEFAULT",
+        beforeMinutes: body.dressingRoomBeforeMinutes,
+        afterMinutes: body.dressingRoomAfterMinutes,
+      });
+    } catch (err) {
+      return NextResponse.json(
+        { error: err instanceof Error ? err.message : "Ungültige Belegungszeit" },
+        { status: 400 },
+      );
+    }
+  }
+
+  if (Object.keys(data).length === 0 && !hasOccupancyPatch) {
     return NextResponse.json(
       { error: "Keine gültigen Felder zum Aktualisieren." },
       { status: 400 },
     );
+  }
+
+  if (Object.keys(data).length === 0) {
+    revalidatePath("/dashboard/matchcenter");
+    revalidatePath(`/dashboard/matchcenter/${matchId}`);
+    revalidatePath("/dashboard/planner/week");
+    return NextResponse.json({ ok: true });
   }
 
   // Validate teamId belongs to the same tenant if provided

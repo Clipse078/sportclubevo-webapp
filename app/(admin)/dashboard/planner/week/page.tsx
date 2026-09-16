@@ -9,23 +9,28 @@ import { planOverrideKey } from "@/lib/weekplanner/plan-override-key";
 import { listWeekplannerPlans, listWeekplannerPlanAllocations } from "@/lib/weekplanner/plan-service";
 import { listWochenplanPlans } from "@/lib/wochenplan/plan-service";
 import { materializeLinkedWeekplannerPlan } from "@/lib/wochenplan/plan-materialization";
-import { getFacilitiesForTenant } from "@/lib/facilities/queries";
-import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
+import {
+  getFacilitiesForTenantCached,
+  getTenantDressingRoomOccupancyPresetsCached,
+} from "@/lib/server/request-cache";
+import { buildFacilityGroupsByAllocationGroupFromFacilities } from "@/lib/planning-hub/facility-groups";
 import WeekPlannerPage from "@/components/admin/planner/WeekPlannerPage";
+import { parsePlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { WeekplannerOverrideRow } from "@/components/admin/planner/WeekplannerAllocationOverrideEditor";
-import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
 
 type PlannerWeekPageProps = {
   searchParams?: Promise<{
     week?: string;
-    /**
-     * WOCHENPLAN-2.0-01F — WochenplanPlan id for the selected variant.
-     * Non-default alternatives are materialized server-side into a linked
-     * WeekplannerPlan for this week. Legacy direct WeekplannerPlan ids are
-     * still accepted for backward compatibility.
-     */
     plan?: string;
+    ansicht?: string;
+    typ?: string;
+    team?: string;
+    facility?: string;
+    konflikte?: string;
+    ressource?: string;
+    day?: string;
+    zeit?: string;
   }>;
 };
 
@@ -72,13 +77,20 @@ export default async function PlannerWeekPageRoute({
 
   const canManageTrainings = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
   const canManageEvents = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
+  const canCreateTraining =
+    canManageTrainings || hasPermission(session, PERMISSIONS.TRAININGS_VIEW);
   const canManagePlans = canManageTrainings || canManageEvents;
 
   const timezone = tenantContext.timezone ?? TRAINING_DEFAULT_TIMEZONE;
   const params = (await searchParams) ?? {};
+  const urlState = parsePlanningHubUrlState(params);
 
   const now = new Date();
-  const weekWindow = resolveTrainingWeekWindow({ weekParam: params.week, now, timeZone: timezone });
+  const weekWindow = resolveTrainingWeekWindow({
+    weekParam: urlState.week ?? params.week,
+    now,
+    timeZone: timezone,
+  });
   const todayParam = resolveTrainingWeekWindow({ now, timeZone: timezone }).param;
 
   const [wochenplanPlans, weekplannerPlans] = await Promise.all([
@@ -88,7 +100,7 @@ export default async function PlannerWeekPageRoute({
 
   const defaultWochenplanPlan =
     wochenplanPlans.find((plan) => plan.isDefault) ?? wochenplanPlans[0] ?? null;
-  const requestedPlanId = params.plan?.trim();
+  const requestedPlanId = (urlState.plan ?? params.plan)?.trim();
 
   let viewedWochenplanPlanId = defaultWochenplanPlan?.id ?? null;
   let materializedWeekplannerPlan: WeekplannerPlanDto | null = null;
@@ -124,28 +136,26 @@ export default async function PlannerWeekPageRoute({
 
   const activePlan = materializedWeekplannerPlan;
 
-  const week = await getWeekplannerWeek(
-    tenantContext.id,
-    {
-      from: weekWindow.from,
-      to: weekWindow.to,
-      days: weekWindow.days,
-      param: weekWindow.param,
-      previousParam: weekWindow.previousParam,
-      nextParam: weekWindow.nextParam,
-    },
-    activePlan?.id,
-  );
+  const [week, dressingRoomOccupancyPresets, facilities] = await Promise.all([
+    getWeekplannerWeek(
+      tenantContext.id,
+      {
+        from: weekWindow.from,
+        to: weekWindow.to,
+        days: weekWindow.days,
+        param: weekWindow.param,
+        previousParam: weekWindow.previousParam,
+        nextParam: weekWindow.nextParam,
+      },
+      activePlan?.id,
+    ),
+    getTenantDressingRoomOccupancyPresetsCached(tenantContext.id),
+    getFacilitiesForTenantCached(tenantContext.id),
+  ]);
 
-  // WEEKPLANNER-01B — override editing context is only ever built when an
-  // alternative plan is selected AND the caller can manage plans; the
-  // Standardplan view and read-only viewers never pay this extra cost and
-  // never see editing affordances.
-  // PLANNING-RESOURCE-UX-01 — canonical editing context is built once for
-  // Standardplan view (activePlan === null) when the caller can manage plans.
-  // Facility groups are shared between override and canonical editing contexts.
-  const facilityGroupsByAllocationGroup =
-    canManagePlans ? await buildFacilityGroupsByAllocationGroup(tenantContext.id) : null;
+  const facilityGroupsByAllocationGroup = canManagePlans
+    ? buildFacilityGroupsByAllocationGroupFromFacilities(facilities)
+    : null;
 
   const overrideEditing =
     canManagePlans && activePlan && facilityGroupsByAllocationGroup
@@ -162,6 +172,18 @@ export default async function PlannerWeekPageRoute({
       ? { canManageTrainings, canManageEvents, facilityGroupsByAllocationGroup }
       : undefined;
 
+  const facilityOptions = facilities.map((facility) => ({
+    value: facility.id,
+    label: facility.name,
+  }));
+
+  const resolvedUrlState = {
+    ...urlState,
+    week: weekWindow.param,
+    plan: requestedPlanId ?? urlState.plan,
+    day: urlState.day,
+  };
+
   return (
     <WeekPlannerPage
       week={week}
@@ -177,6 +199,15 @@ export default async function PlannerWeekPageRoute({
       canManagePlans={canManagePlans}
       overrideEditing={overrideEditing}
       canonicalEditing={canonicalEditing}
+      urlState={resolvedUrlState}
+      facilityOptions={facilityOptions}
+      createPermissions={{
+        training: canCreateTraining,
+        match: canManageEvents,
+        tournament: canManageEvents,
+        veranstaltung: canManageEvents,
+      }}
+      dressingRoomOccupancyPresets={dressingRoomOccupancyPresets}
     />
   );
 }
@@ -210,29 +241,3 @@ async function buildOverridesByKey(
   return byKey;
 }
 
-async function buildFacilityGroupsByAllocationGroup(
-  tenantId: string,
-): Promise<{ PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] }> {
-  const facilities = await getFacilitiesForTenant(tenantId);
-
-  function groupsFor(group: "PITCH_HALL" | "DRESSING_ROOM"): FacilityGroup[] {
-    return facilities
-      .map((facility) => ({
-        facilityId: facility.id,
-        facilityName: facility.name,
-        resources: facility.resources
-          .filter((resource) => classifyFacilityResourceType(resource.type) === group)
-          .map((resource) => ({
-            id: resource.id,
-            name: resource.name,
-            code: resource.code,
-            type: resource.type,
-            facilityId: facility.id,
-            facilityName: facility.name,
-          })),
-      }))
-      .filter((facilityGroup) => facilityGroup.resources.length > 0);
-  }
-
-  return { PITCH_HALL: groupsFor("PITCH_HALL"), DRESSING_ROOM: groupsFor("DRESSING_ROOM") };
-}

@@ -194,6 +194,8 @@ function isEligibleForPublicFeed(
       };
       return evaluateWochenplanTournamentPublication(event, tenantId).eligible;
     }
+    case "VERANSTALTUNG":
+      return false;
   }
 }
 

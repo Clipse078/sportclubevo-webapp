@@ -125,6 +125,9 @@ function toDto(row: TrainingSessionRow): TrainingSessionDto {
     originalStartAt: row.startAt.toISOString(),
     originalEndAt: row.endAt.toISOString(),
     isRescheduled,
+    dressingRoomOccupancyMode: row.dressingRoomOccupancyMode as "DEFAULT" | "CUSTOM",
+    dressingRoomBeforeMinutes: row.dressingRoomBeforeMinutes,
+    dressingRoomAfterMinutes: row.dressingRoomAfterMinutes,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

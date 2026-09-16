@@ -716,6 +716,8 @@ model Tenant {
   weekplannerPlanAllocations       WeekplannerPlanAllocation[]
   // WEEKPLANNER-01D: sparse per-activity start/end TIME overrides.
   weekplannerPlanActivityOverrides WeekplannerPlanActivityOverride[]
+  /// PLANNING-HUB-02A — tenant-wide dressing-room occupancy presets.
+  dressingRoomOccupancyPreset      TenantDressingRoomOccupancyPreset?
 
   // RPERM-02
   tenantMemberships TenantMembership[]
@@ -1965,6 +1967,10 @@ model Event {
   pitchCode            String?
   homeDressingRoomCode String?
   awayDressingRoomCode String?
+  /// PLANNING-HUB-02A — dressing-room occupancy for MATCH/TOURNAMENT events.
+  dressingRoomOccupancyMode   DressingRoomOccupancyMode @default(DEFAULT)
+  dressingRoomBeforeMinutes Int?
+  dressingRoomAfterMinutes  Int?
 
   // Tenant isolation (nullable: backward-compat with seed/legacy events)
   tenantId String?
@@ -5587,6 +5593,10 @@ model TrainingSession {
   /// TRAININGCENTER-02: explicit occurrence-level override of the resolved
   /// UTC end instant. Null means "no override — use `endAt`".
   overrideEndAt    DateTime?
+  /// PLANNING-HUB-02A — dressing-room occupancy relative to effective session time.
+  dressingRoomOccupancyMode   DressingRoomOccupancyMode @default(DEFAULT)
+  dressingRoomBeforeMinutes Int?
+  dressingRoomAfterMinutes  Int?
   createdAt        DateTime              @default(now())
   updatedAt        DateTime              @updatedAt
 
@@ -5976,6 +5986,30 @@ model WeekplannerPlan {
   @@index([tenantId, weekId, archivedAt])
   @@index([tenantId, weekId, isActive])
   @@index([tenantId, weekId, wochenplanPlanId])
+}
+
+// ---------------------------------------------------------------------------
+// PLANNING-HUB-02A — tenant dressing-room occupancy presets (Training / Match / Tournament).
+// ---------------------------------------------------------------------------
+
+enum DressingRoomOccupancyMode {
+  DEFAULT
+  CUSTOM
+}
+
+model TenantDressingRoomOccupancyPreset {
+  id        String   @id @default(cuid())
+  tenantId  String   @unique
+  trainingBeforeMinutes   Int @default(30)
+  trainingAfterMinutes    Int @default(30)
+  matchBeforeMinutes      Int @default(60)
+  matchAfterMinutes       Int @default(45)
+  tournamentBeforeMinutes Int @default(60)
+  tournamentAfterMinutes  Int @default(60)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 // ---------------------------------------------------------------------------

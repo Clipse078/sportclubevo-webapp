@@ -1,30 +1,32 @@
 /**
  * @vitest-environment jsdom
  *
- * PLANNING-RESOURCE-UX-01-V — focused permission verification for the
- * Wochenplaner "Planung bearbeiten" button entity-specific gating.
- *
- * VERIFY 8: confirms that "Planung bearbeiten" is only offered for entities
- * the caller actually has permission to mutate:
- *   - TRAININGS_MANAGE only → Training button visible, Match/Tournament hidden
- *   - EVENTS_MANAGE only   → Match/Tournament buttons visible, Training hidden
- *   - both                 → all buttons visible
- *   - neither              → no buttons (canonicalEditing undefined)
+ * PLANNING-RESOURCE-UX-01-V — focused permission verification for
+ * Wochenplaner canonical edit gating (Planning Hub Liste activation path).
  */
 
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import WeekPlannerPage from "@/components/admin/planner/WeekPlannerPage";
 import type { WeekplannerWeek } from "@/lib/weekplanner/types";
+import { WEEKPLANNER_DRESSING_OCCUPANCY_STUB } from "@/lib/weekplanner/test-fixtures";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
-// Minimal facility groups (empty — just enough for props)
 const FACILITY_GROUPS = { PITCH_HALL: [], DRESSING_ROOM: [] };
 
-const NOW = new Date("2026-09-22T14:00:00.000Z");
+const LISTE_URL = {
+  week: "2026-38",
+  perspective: "liste" as const,
+  activity: "alle" as const,
+  team: null,
+  facility: null,
+  conflictsOnly: false,
+  resourceCategory: "pitch" as const,
+};
 
 function makeWeek(items: WeekplannerWeek["days"][0]["items"]): WeekplannerWeek {
   return {
@@ -65,6 +67,8 @@ const TRAINING_ITEM = {
   conflicts: [],
   trainingSeriesId: "series-1",
   trainingSessionId: "session-1",
+  teamSeasonId: "ts-1",
+  ...WEEKPLANNER_DRESSING_OCCUPANCY_STUB,
 };
 
 const MATCH_ITEM = {
@@ -88,11 +92,11 @@ const MATCH_ITEM = {
   conflicts: [],
   eventId: "event-1",
   opponentName: "FC Test",
-  homeAway: "HOME" as const,
+  ...WEEKPLANNER_DRESSING_OCCUPANCY_STUB,
 };
 
 const TOURNAMENT_ITEM = {
-  id: "tourn-1",
+  id: "tournament-1",
   tenantId: "tenant-1",
   type: "TOURNAMENT" as const,
   startAt: new Date("2026-09-22T09:00:00.000Z"),
@@ -112,18 +116,21 @@ const TOURNAMENT_ITEM = {
   eventId: "event-2",
   homeAway: "HOME" as const,
   participantAllocations: [],
+  ...WEEKPLANNER_DRESSING_OCCUPANCY_STUB,
 };
 
 const ALL_ITEMS = [TRAINING_ITEM, MATCH_ITEM, TOURNAMENT_ITEM];
 
 describe("WeekPlannerPage — Planung bearbeiten permission gating", () => {
-  it("TRAININGS_MANAGE only: Training button shown, Match/Tournament buttons hidden", () => {
+  it("TRAININGS_MANAGE only: Training opens editor, Match/Tournament do not", async () => {
+    const user = userEvent.setup();
     render(
       <WeekPlannerPage
         week={makeWeek(ALL_ITEMS)}
         todayParam="2026-38"
         activePlanId={null}
         canManagePlans
+        urlState={LISTE_URL}
         canonicalEditing={{
           canManageTrainings: true,
           canManageEvents: false,
@@ -132,20 +139,25 @@ describe("WeekPlannerPage — Planung bearbeiten permission gating", () => {
       />,
     );
 
-    expect(
-      screen.getAllByTestId("weekplanner-canonical-edit-training").length,
-    ).toBe(1);
-    expect(screen.queryByTestId("weekplanner-canonical-edit-match")).toBeNull();
-    expect(screen.queryByTestId("weekplanner-canonical-edit-tournament")).toBeNull();
+    await user.click(screen.getByTestId("weekplanner-item-training"));
+    expect(screen.getByTestId("weekplanner-canonical-editor")).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByTestId("weekplanner-item-match"));
+    expect(screen.queryByTestId("weekplanner-canonical-editor")).toBeNull();
+    await user.click(screen.getByTestId("weekplanner-item-tournament"));
+    expect(screen.queryByTestId("weekplanner-canonical-editor")).toBeNull();
   });
 
-  it("EVENTS_MANAGE only: Match/Tournament buttons shown, Training button hidden", () => {
+  it("EVENTS_MANAGE only: Match/Tournament open editor, Training does not", async () => {
+    const user = userEvent.setup();
     render(
       <WeekPlannerPage
         week={makeWeek(ALL_ITEMS)}
         todayParam="2026-38"
         activePlanId={null}
         canManagePlans
+        urlState={LISTE_URL}
         canonicalEditing={{
           canManageTrainings: false,
           canManageEvents: true,
@@ -154,22 +166,22 @@ describe("WeekPlannerPage — Planung bearbeiten permission gating", () => {
       />,
     );
 
-    expect(screen.queryByTestId("weekplanner-canonical-edit-training")).toBeNull();
-    expect(
-      screen.getAllByTestId("weekplanner-canonical-edit-match").length,
-    ).toBe(1);
-    expect(
-      screen.getAllByTestId("weekplanner-canonical-edit-tournament").length,
-    ).toBe(1);
+    await user.click(screen.getByTestId("weekplanner-item-training"));
+    expect(screen.queryByTestId("weekplanner-canonical-editor")).toBeNull();
+
+    await user.click(screen.getByTestId("weekplanner-item-match"));
+    expect(screen.getByTestId("weekplanner-canonical-editor")).toBeInTheDocument();
   });
 
-  it("both TRAININGS_MANAGE + EVENTS_MANAGE: all three buttons shown", () => {
+  it("both TRAININGS_MANAGE + EVENTS_MANAGE: all entity types open editor", async () => {
+    const user = userEvent.setup();
     render(
       <WeekPlannerPage
         week={makeWeek(ALL_ITEMS)}
         todayParam="2026-38"
         activePlanId={null}
         canManagePlans
+        urlState={LISTE_URL}
         canonicalEditing={{
           canManageTrainings: true,
           canManageEvents: true,
@@ -178,44 +190,57 @@ describe("WeekPlannerPage — Planung bearbeiten permission gating", () => {
       />,
     );
 
-    expect(screen.getAllByTestId("weekplanner-canonical-edit-training").length).toBe(1);
-    expect(screen.getAllByTestId("weekplanner-canonical-edit-match").length).toBe(1);
-    expect(screen.getAllByTestId("weekplanner-canonical-edit-tournament").length).toBe(1);
+    for (const testId of [
+      "weekplanner-item-training",
+      "weekplanner-item-match",
+      "weekplanner-item-tournament",
+    ]) {
+      await user.click(screen.getByTestId(testId));
+      expect(screen.getByTestId("weekplanner-canonical-editor")).toBeInTheDocument();
+      await user.keyboard("{Escape}");
+    }
   });
 
-  it("no canonicalEditing: no 'Planung bearbeiten' buttons at all", () => {
+  it("no canonicalEditing: canonical editor never opens", async () => {
+    const user = userEvent.setup();
     render(
       <WeekPlannerPage
         week={makeWeek(ALL_ITEMS)}
         todayParam="2026-38"
         activePlanId={null}
-        canManagePlans={false}
+        canManagePlans
+        urlState={LISTE_URL}
       />,
     );
 
-    expect(screen.queryByTestId("weekplanner-canonical-edit-training")).toBeNull();
-    expect(screen.queryByTestId("weekplanner-canonical-edit-match")).toBeNull();
-    expect(screen.queryByTestId("weekplanner-canonical-edit-tournament")).toBeNull();
+    await user.click(screen.getByTestId("weekplanner-item-training"));
+    expect(screen.queryByTestId("weekplanner-canonical-editor")).toBeNull();
   });
 
-  it("alternative plan active: Planung bearbeiten never shown (overrides only)", () => {
+  it("alternative plan active: canonical editor not used from Liste", async () => {
+    const user = userEvent.setup();
     render(
       <WeekPlannerPage
         week={makeWeek(ALL_ITEMS)}
         todayParam="2026-38"
-        activePlanId="some-plan-id"
+        activePlanId="plan-alt"
         canManagePlans
+        urlState={LISTE_URL}
         canonicalEditing={{
           canManageTrainings: true,
           canManageEvents: true,
           facilityGroupsByAllocationGroup: FACILITY_GROUPS,
         }}
+        overrideEditing={{
+          planId: "plan-alt",
+          planName: "Alt",
+          overridesByKey: {},
+          facilityGroupsByAllocationGroup: FACILITY_GROUPS,
+        }}
       />,
     );
 
-    // DayColumn passes canonicalEditing only when activePlanId === null
-    expect(screen.queryByTestId("weekplanner-canonical-edit-training")).toBeNull();
-    expect(screen.queryByTestId("weekplanner-canonical-edit-match")).toBeNull();
-    expect(screen.queryByTestId("weekplanner-canonical-edit-tournament")).toBeNull();
+    await user.click(screen.getByTestId("weekplanner-item-training"));
+    expect(screen.queryByTestId("weekplanner-canonical-editor")).toBeNull();
   });
 });

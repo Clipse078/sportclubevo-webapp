@@ -67,6 +67,8 @@ export type UseFacilityAvailabilityOptions = {
 export type FacilityAvailabilityMaps = {
   pitchAvailability: Map<string, ResourceAvailabilityAnnotation>;
   dressingRoomAvailability: Map<string, ResourceAvailabilityAnnotation>;
+  /** True while a fetch is in flight (enabled + startAt set). */
+  isLoading: boolean;
 };
 
 const EMPTY_AVAILABILITY_MAP = new Map<string, ResourceAvailabilityAnnotation>();
@@ -114,6 +116,7 @@ export function useFacilityAvailability({
   const [dressingRoomAvailability, setDressingRoomAvailability] = useState<
     Map<string, ResourceAvailabilityAnnotation>
   >(() => new Map());
+  const [isLoading, setIsLoading] = useState(false);
 
   const isActive = enabled && !!startAt;
 
@@ -126,6 +129,7 @@ export function useFacilityAvailability({
     if (!isActive) return;
 
     let active = true;
+    setIsLoading(true);
 
     async function loadAvailability() {
       const params = new URLSearchParams({ startAt });
@@ -145,9 +149,12 @@ export function useFacilityAvailability({
       if (!active) return;
       setPitchAvailability(pitch);
       setDressingRoomAvailability(room);
+      setIsLoading(false);
     }
 
-    loadAvailability();
+    void loadAvailability().catch(() => {
+      if (active) setIsLoading(false);
+    });
 
     return () => {
       active = false;
@@ -167,7 +174,11 @@ export function useFacilityAvailability({
   ]);
 
   if (!isActive) {
-    return { pitchAvailability: EMPTY_AVAILABILITY_MAP, dressingRoomAvailability: EMPTY_AVAILABILITY_MAP };
+    return {
+      pitchAvailability: EMPTY_AVAILABILITY_MAP,
+      dressingRoomAvailability: EMPTY_AVAILABILITY_MAP,
+      isLoading: false,
+    };
   }
-  return { pitchAvailability, dressingRoomAvailability };
+  return { pitchAvailability, dressingRoomAvailability, isLoading };
 }

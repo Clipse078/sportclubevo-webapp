@@ -22,6 +22,7 @@ const WEEK_DAYS = [
 
 const PITCH = {
   facilityResourceId: "res-pitch-1",
+  facilityId: "fac-1",
   code: "KUNSTRASEN_1",
   name: "Kunstrasen 1",
   facilityName: "Sportanlage",
@@ -30,6 +31,7 @@ const PITCH = {
 };
 const ROOM_A = {
   facilityResourceId: "res-room-a",
+  facilityId: "fac-2",
   code: "G1",
   name: "Garderobe 1",
   facilityName: "Garderobentrakt",
@@ -38,6 +40,7 @@ const ROOM_A = {
 };
 const ROOM_B = {
   facilityResourceId: "res-room-b",
+  facilityId: "fac-2",
   code: "G2",
   name: "Garderobe 2",
   facilityName: "Garderobentrakt",
@@ -66,6 +69,7 @@ function trainingItem(overrides: Partial<WeekplannerTrainingItem> = {}): Weekpla
     conflicts: [],
     trainingSeriesId: "series-1",
     trainingSessionId: "s1",
+    teamSeasonId: "ts-1",
     ...overrides,
   };
 }
