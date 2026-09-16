@@ -101,7 +101,7 @@ function TournamentGroupHeading({
   heading,
   groupKey,
   teamOptions,
-  tenantLogoUrl,
+  tenantLogoUrl = null,
   locale,
   timezone,
   count,
