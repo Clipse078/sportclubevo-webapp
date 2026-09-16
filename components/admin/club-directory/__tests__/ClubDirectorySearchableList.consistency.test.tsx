@@ -5,6 +5,11 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import ClubDirectorySearchableList from "../ClubDirectorySearchableList";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn(), replace: vi.fn(), push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}));
 import { CLUB_DIRECTORY_MAX_LIMIT } from "@/lib/club-directory/query-service";
 
 const VFR_ID = "club-vfr-kleinhueningen";

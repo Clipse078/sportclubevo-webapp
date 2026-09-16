@@ -8,16 +8,24 @@ import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import ClubDirectorySearchableList from "@/components/admin/club-directory/ClubDirectorySearchableList";
 import { ListPagePattern } from "@/components/ui/patterns";
 import { PageShell } from "@/components/ui/page";
+import {
+  parseClubDirectoryProviderFilter,
+  parseClubDirectoryTeamsFilter,
+} from "@/lib/club-directory/directory-view-filters";
 
-type PageProps = { searchParams: Promise<{ view?: string }> };
+type PageProps = {
+  searchParams: Promise<{ view?: string; provider?: string; teams?: string; q?: string }>;
+};
 
 export default async function VereinePage({ searchParams }: PageProps) {
   await requireAnyPermission([PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE]);
   const tenant = await getActiveTenant();
   if (!tenant) notFound();
 
-  const { view } = await searchParams;
+  const { view, provider, teams, q } = await searchParams;
   const showArchived = view === "archived";
+  const providerFilter = parseClubDirectoryProviderFilter(provider);
+  const teamsFilter = parseClubDirectoryTeamsFilter(teams);
 
   return (
     <PageShell fullWidth>
@@ -33,7 +41,12 @@ export default async function VereinePage({ searchParams }: PageProps) {
           </Link>
         }
       >
-        <ClubDirectorySearchableList showArchived={showArchived} />
+        <ClubDirectorySearchableList
+          showArchived={showArchived}
+          providerFilter={providerFilter}
+          teamsFilter={teamsFilter}
+          initialQuery={q ?? ""}
+        />
       </ListPagePattern>
     </PageShell>
   );

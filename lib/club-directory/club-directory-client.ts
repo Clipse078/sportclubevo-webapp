@@ -117,3 +117,25 @@ export async function fetchAllClubDirectorySearchMatches(
 
   return allClubs;
 }
+
+/** Walks every browse page (no search term) for client-side directory filters. */
+export async function fetchAllClubDirectoryBrowseClubs(
+  options?: { archivedOnly?: boolean; signal?: AbortSignal },
+): Promise<ClubDirectoryClientClub[]> {
+  const allClubs: ClubDirectoryClientClub[] = [];
+  let skip = 0;
+
+  for (let page = 0; page < CLUB_DIRECTORY_MAX_SEARCH_PAGES; page += 1) {
+    const { clubs, meta } = await fetchClubDirectoryClubsPage({
+      limit: CLUB_DIRECTORY_MAX_LIMIT,
+      skip,
+      archivedOnly: options?.archivedOnly,
+      signal: options?.signal,
+    });
+    allClubs.push(...clubs);
+    if (!meta.hasMore || clubs.length < CLUB_DIRECTORY_MAX_LIMIT) break;
+    skip += CLUB_DIRECTORY_MAX_LIMIT;
+  }
+
+  return allClubs;
+}

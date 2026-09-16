@@ -129,25 +129,31 @@ export default async function ClubDetailPage({ params }: Props) {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">
           <div className="flex min-w-0 flex-col gap-6">
             <SectionCard title="Vereinsprofil" noPadding>
-              <div className="flex flex-col gap-5 px-5 py-5 sm:flex-row sm:items-start">
-                <div className="flex flex-col items-start gap-3">
+              <div className="flex flex-col gap-6 px-5 py-5 lg:flex-row lg:items-start">
+                <div className="flex shrink-0 flex-col items-start gap-3" data-testid="club-profile-crest">
                   <ClubLogo logoUrl={club.logoUrl} name={club.name} size="lg" />
                   {canManage ? (
-                    <LogoUploadCard resource="club" id={club.id} name={club.name} logoUrl={club.logoUrl} />
+                    <LogoUploadCard
+                      resource="club"
+                      id={club.id}
+                      name={club.name}
+                      logoUrl={club.logoUrl}
+                      showCrest={false}
+                    />
                   ) : null}
                 </div>
-                <div className="min-w-0 flex-1 space-y-4">
-                  <div>
-                    <p className="text-lg font-semibold text-[var(--foreground)]">{club.name}</p>
+                <div className="min-w-0 flex-1">
+                  <div className="border-b border-[var(--border)] pb-4">
+                    <h2 className="text-xl font-semibold text-[var(--foreground)]">{club.name}</h2>
                     {club.shortName ? (
-                      <p className="text-sm text-[var(--muted)]">{club.shortName}</p>
+                      <p className="mt-0.5 text-sm text-[var(--muted)]">{club.shortName}</p>
                     ) : null}
                     <p className="mt-2 flex items-center gap-1.5 text-sm text-[var(--text-2)]">
                       <Users className="h-4 w-4 text-[var(--muted)]" aria-hidden />
                       {club.teamCount} Team{club.teamCount === 1 ? "" : "s"}
                     </p>
                   </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <MetaRow label="Ort" value={locationDisplay} icon={<MapPin className="h-3.5 w-3.5" />} />
                     <MetaRow
                       label="Website"
@@ -203,18 +209,28 @@ export default async function ClubDetailPage({ params }: Props) {
                         href={`/dashboard/vereine/teams/${team.id}/edit`}
                         className="group flex items-center gap-4 px-5 py-4 transition hover:bg-[var(--surface-2)]"
                       >
-                        <ClubLogo logoUrl={effectiveLogoUrl} name={team.name} size="sm" />
+                        <ClubLogo logoUrl={effectiveLogoUrl} name={team.name} size="sm" className="opacity-90" />
                         <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--sce-primary)]">
+                          {competitionContext ? (
+                            <p className="text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--sce-primary)]">
+                              {competitionContext}
+                            </p>
+                          ) : (
+                            <p className="text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--sce-primary)]">
                               {team.name}
-                            </span>
-                            {team.categoryLabel ? (
+                            </p>
+                          )}
+                          <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
+                            {competitionContext ? team.name : team.categoryLabel ?? "Keine Kategorie"}
+                          </p>
+                          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                            {team.categoryLabel && competitionContext ? (
                               <Badge variant="outline" size="sm">{team.categoryLabel}</Badge>
                             ) : null}
                             <Badge
                               variant={team.providerMappings.length > 0 ? "info" : "outline"}
                               size="sm"
+                              className="font-normal"
                             >
                               {team.providerMappings.length > 0 ? "Anbieter-verknüpft" : "Manuell"}
                             </Badge>
@@ -222,9 +238,6 @@ export default async function ClubDetailPage({ params }: Props) {
                               <Badge variant="default" size="sm">Archiviert</Badge>
                             ) : null}
                           </div>
-                          {competitionContext ? (
-                            <p className="mt-0.5 truncate text-xs text-[var(--muted)]">{competitionContext}</p>
-                          ) : null}
                         </div>
                         <ChevronRight className="h-5 w-5 shrink-0 text-[var(--muted)]" aria-hidden />
                       </Link>

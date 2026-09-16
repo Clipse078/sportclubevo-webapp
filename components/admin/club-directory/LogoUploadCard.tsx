@@ -12,9 +12,17 @@ type LogoUploadCardProps = {
   id: string;
   name: string;
   logoUrl: string | null;
+  /** When false, only the upload control is shown (crest rendered elsewhere). */
+  showCrest?: boolean;
 };
 
-export function LogoUploadCard({ resource, id, name, logoUrl }: LogoUploadCardProps) {
+export function LogoUploadCard({
+  resource,
+  id,
+  name,
+  logoUrl,
+  showCrest = true,
+}: LogoUploadCardProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -47,26 +55,28 @@ export function LogoUploadCard({ resource, id, name, logoUrl }: LogoUploadCardPr
   }
 
   return (
-    <div className="flex items-center gap-4">
-      <ClubLogo logoUrl={logoUrl} name={name} size="lg" />
+    <div className={showCrest ? "flex items-center gap-4" : "flex flex-col gap-1.5"}>
+      {showCrest ? <ClubLogo logoUrl={logoUrl} name={name} size="lg" /> : null}
       <div className="flex flex-col gap-1.5">
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
           className="inline-flex items-center gap-2 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3.5 py-2 text-sm font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] disabled:opacity-60"
+          data-testid="club-logo-upload-button"
         >
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
           {logoUrl ? "Logo ersetzen" : "Logo hochladen"}
         </button>
         <p className="text-xs text-[var(--muted)]">PNG, JPEG oder WebP, max. 2 MB.</p>
-        {error ? <p className="text-xs font-medium text-rose-600">{error}</p> : null}
+        {error ? <p className="text-xs font-medium text-[var(--sce-danger)]">{error}</p> : null}
         <input
           ref={inputRef}
           type="file"
           accept="image/png,image/jpeg,image/webp"
           className="hidden"
           onChange={handleFileChange}
+          data-testid="club-logo-upload-input"
         />
       </div>
     </div>
