@@ -32,7 +32,6 @@ export default function PlanningHubCreateMenu({ permissions }: PlanningHubCreate
   const rootRef = useRef<HTMLDivElement>(null);
 
   const allowed = CREATE_LINKS.filter((entry) => permissions[entry.key]);
-  if (allowed.length === 0) return null;
 
   useEffect(() => {
     if (!open) return;
@@ -42,6 +41,8 @@ export default function PlanningHubCreateMenu({ permissions }: PlanningHubCreate
     document.addEventListener("mousedown", onPointerDown);
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, [open]);
+
+  if (allowed.length === 0) return null;
 
   return (
     <div className="relative" ref={rootRef}>
