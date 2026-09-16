@@ -14,7 +14,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TournamentCreateForm from "@/components/admin/tournamentcenter/TournamentCreateForm";
-import { pickSearchableOption } from "./tournament-form-test-helpers";
+import { pickSearchableOption, selectHomeAway } from "./tournament-form-test-helpers";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 
 vi.mock("next/navigation", () => ({
@@ -146,7 +146,7 @@ describe("TournamentCreateForm — HOME/AWAY facility availability", () => {
     const { availabilityCalls } = installFetchMock();
     render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} />);
 
-    pickSearchableOption("tournament-create-home-away", "AWAY");
+    selectHomeAway("tournament-create-home-away", "AWAY");
     fireEvent.change(screen.getByTestId("tournament-create-start-at"), { target: { value: "2026-09-20T10:00" } });
 
     expect(screen.queryByTestId("tournament-create-resource")).not.toBeInTheDocument();

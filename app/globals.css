@@ -512,16 +512,26 @@ button {
     0 0 0 3px color-mix(in srgb, var(--sce-primary) 18%, transparent) !important;
 }
 
-.fca-search-input {
+/**
+ * Icon-leading / icon-trailing input padding — always pair with `.fca-input`.
+ * Chained selectors win over `.fca-input { padding: … }` shorthand regardless of
+ * bundle order (avoids leading Search icons overlapping placeholder text).
+ */
+.fca-input.fca-search-input {
   padding-top: 0;
   padding-bottom: 0;
   padding-right: 0.75rem;
-  /* icon offset (12px) + icon width (14px) + comfortable gap (12px) */
+  /* left-2.5 (10px) + 14px icon + 12px gap */
   padding-left: 2.375rem;
 }
 
-/** Search/combobox fields with a trailing chevron or action icon. */
-.fca-combobox-input {
+/** Trailing chevron or action icon (combine with `.fca-search-input` when both). */
+.fca-input.fca-combobox-input {
+  padding-right: 2.25rem;
+}
+
+.fca-input.fca-search-input.fca-combobox-input {
+  padding-left: 2.375rem;
   padding-right: 2.25rem;
 }
 

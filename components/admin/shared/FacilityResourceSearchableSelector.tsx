@@ -198,7 +198,7 @@ export function FacilityResourceSearchableSelector({
             }}
             disabled={disabled || isPending}
             placeholder={placeholder}
-            className="fca-input h-9 w-full max-w-xl pl-8 pr-3 text-sm"
+            className="fca-input fca-search-input h-9 w-full max-w-xl text-sm"
             data-testid={testId ? `${testId}-select` : undefined}
           />
         </div>

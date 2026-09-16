@@ -13,7 +13,7 @@ import TournamentParticipantsEditor from "@/components/admin/tournamentcenter/To
 import TournamentResourceAllocationEditor from "@/components/admin/tournamentcenter/TournamentResourceAllocationEditor";
 import TournamentPublicationToggles from "@/components/admin/tournamentcenter/TournamentPublicationToggles";
 import TournamentEditorChrome from "@/components/admin/tournamentcenter/TournamentEditorChrome";
-import StaticOptionSearchablePicker from "@/components/admin/shared/StaticOptionSearchablePicker";
+import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
 import TeamSearchablePicker from "@/components/admin/shared/TeamSearchablePicker";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import PlanningWorkflowBadge from "@/components/admin/shared/PlanningWorkflowBadge";
@@ -29,11 +29,6 @@ type TeamItem = {
   genderGroup: string | null;
   isActive: boolean;
 };
-
-const HOME_AWAY_OPTIONS = [
-  { value: "HOME", label: "Heim (FC Allschwil ausrichtend)" },
-  { value: "AWAY", label: "Auswärts (extern ausgerichtet)" },
-] as const;
 
 function toDateTimeLocalValue(iso: string | null, timezone: string): string {
   return utcInstantToDateTimeLocalValue(iso, timezone);
@@ -314,17 +309,16 @@ export default function TournamentEditForm({
             />
           </label>
 
-          <label className="block space-y-2">
+          <div className="block space-y-2">
             <span className="fca-label">Heim / Auswärts</span>
-            <StaticOptionSearchablePicker
-              options={[...HOME_AWAY_OPTIONS]}
+            <HomeAwaySegmentedControl
               value={homeAway}
-              onChange={(v) => setHomeAway(v === "AWAY" ? "AWAY" : "HOME")}
+              onChange={setHomeAway}
               disabled={!isEditable || saving}
               testId="tournament-home-away"
-              placeholder="Heim / Auswärts"
+              aria-label="Heim / Auswärts"
             />
-          </label>
+          </div>
 
           <label className="block space-y-2 sm:col-span-2">
             <span className="fca-label">Hauptteam (Teamseite / Wochenplan)</span>

@@ -32,6 +32,7 @@ import { ChevronDown, ChevronRight, Loader2, Pencil, Shirt, Trash2, UsersRound }
 import { TournamentFormSection } from "@/components/admin/tournamentcenter/TournamentFormSection";
 import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
 import StaticOptionSearchablePicker from "@/components/admin/shared/StaticOptionSearchablePicker";
+import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
 import TournamentEditorChrome from "@/components/admin/tournamentcenter/TournamentEditorChrome";
 import TournamentPublicationToggles from "@/components/admin/tournamentcenter/TournamentPublicationToggles";
 import TournamentParticipantAddWorkflow from "@/components/admin/tournamentcenter/TournamentParticipantAddWorkflow";
@@ -104,11 +105,6 @@ type TournamentCreateFormProps = {
   dressingRoomFacilityGroups: FacilityGroup[];
   tenantLogoUrl?: string | null;
 };
-
-const HOME_AWAY_OPTIONS = [
-  { value: "HOME", label: "Heim (FC Allschwil ausrichtend)" },
-  { value: "AWAY", label: "Auswärts (extern ausgerichtet)" },
-] as const;
 
 function resolveResourceDisplay(
   facilityGroups: FacilityGroup[],
@@ -755,16 +751,17 @@ export default function TournamentCreateForm({
             />
           </label>
 
-          <label className="block space-y-2">
-            <span className="fca-label">Heim / Auswärts</span>
-            <StaticOptionSearchablePicker
-              options={[...HOME_AWAY_OPTIONS]}
+          <div className="block space-y-2">
+            <span className="fca-label" id="tournament-create-home-away-label">
+              Heim / Auswärts
+            </span>
+            <HomeAwaySegmentedControl
               value={homeAway}
-              onChange={(v) => setHomeAway(v === "AWAY" ? "AWAY" : "HOME")}
+              onChange={setHomeAway}
               testId="tournament-create-home-away"
-              placeholder="Heim / Auswärts"
+              aria-label="Heim / Auswärts"
             />
-          </label>
+          </div>
 
           <label className="block space-y-2">
             <span className="fca-label">Start</span>
