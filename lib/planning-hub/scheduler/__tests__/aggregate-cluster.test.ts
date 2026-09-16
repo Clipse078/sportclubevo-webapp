@@ -48,5 +48,6 @@ describe("summarizeAggregateCluster", () => {
       { ...item("b"), teamNames: ["F3"] },
     ]);
     expect(summary.identityPreview).toBe("F2 · F3");
+    expect(summary.headline).toContain("2");
   });
 });

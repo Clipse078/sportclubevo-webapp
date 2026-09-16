@@ -26,6 +26,7 @@ const LISTE_URL = {
   facility: null,
   conflictsOnly: false,
   resourceCategory: "pitch" as const,
+  calendarTimeRange: "focused" as const,
 };
 
 function makeWeek(items: WeekplannerWeek["days"][0]["items"]): WeekplannerWeek {

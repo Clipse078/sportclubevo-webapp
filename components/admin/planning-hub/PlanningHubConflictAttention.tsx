@@ -41,29 +41,33 @@ export default function PlanningHubConflictAttention({
 
   return (
     <div
-      className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm"
+      className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"
       data-testid="planning-hub-conflict-attention"
     >
       {total > 0 && (
         <button
           type="button"
           onClick={() => onReviewConflicts?.(incidents)}
-          className="inline-flex items-center gap-1.5 font-semibold text-amber-900 hover:underline"
+          className="inline-flex items-center gap-1 rounded-md px-1 py-0.5 font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]/30"
         >
-          <AlertTriangle className="h-4 w-4 text-amber-700" aria-hidden />
-          {total} Konflikt{total === 1 ? "" : "e"}
-          {parts.length > 0 && (
-            <span className="font-normal text-amber-800">· {parts.join(" · ")}</span>
-          )}
-          <span className="inline-flex items-center gap-0.5 text-xs font-semibold">
+          <AlertTriangle className="h-3.5 w-3.5 text-amber-600/90" aria-hidden />
+          <span>
+            {total} Konflikt{total === 1 ? "" : "e"}
+            {parts.length > 0 ? ` · ${parts.join(" · ")}` : ""}
+          </span>
+          <span className="inline-flex items-center gap-0.5 text-[var(--sce-primary)]">
             Prüfen
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-3 w-3" />
           </span>
         </button>
       )}
       {incompleteCount > 0 && (
-        <span className="text-amber-800" data-testid="weekplanner-incomplete-summary">
-          · {incompleteCount} ungeplant
+        <span
+          className="text-[var(--text-2)]"
+          data-testid="weekplanner-incomplete-summary"
+        >
+          {total > 0 ? "· " : ""}
+          {incompleteCount} ungeplant
         </span>
       )}
     </div>

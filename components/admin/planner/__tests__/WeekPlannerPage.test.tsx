@@ -32,6 +32,7 @@ const LISTE_URL = {
   facility: null,
   conflictsOnly: false,
   resourceCategory: "pitch" as const,
+  calendarTimeRange: "focused" as const,
 };
 
 function emptyDay(dayKey: string): WeekplannerDay {

@@ -1,4 +1,4 @@
-import type { WeekplannerItem } from "@/lib/weekplanner/types";
+import type { WeekplannerItem, WeekplannerResourceRef } from "@/lib/weekplanner/types";
 import { weekplannerActivityTypeLabel } from "@/lib/planning-hub/item-presenters";
 
 /** Strip redundant leading club tokens (generic, not tenant-specific). */
@@ -38,17 +38,23 @@ export function schedulerDisplayIdentity(item: WeekplannerItem): string {
   return title.length > 32 ? `${title.slice(0, 30)}…` : title;
 }
 
+export function schedulerResourceLabel(ref: WeekplannerResourceRef): string {
+  const name = ref.name?.trim();
+  if (name) return name;
+  return ref.code.replace(/_/g, " ");
+}
+
 export function schedulerResourceCodes(item: WeekplannerItem, max = 3): string {
-  const codes: string[] = [];
-  for (const ref of item.pitchAllocations) codes.push(ref.code);
-  for (const ref of item.dressingRoomAllocations) codes.push(ref.code);
+  const labels: string[] = [];
+  for (const ref of item.pitchAllocations) labels.push(schedulerResourceLabel(ref));
+  for (const ref of item.dressingRoomAllocations) labels.push(schedulerResourceLabel(ref));
   if (item.type === "MATCH") {
-    for (const ref of item.awayDressingRoomAllocations) codes.push(ref.code);
+    for (const ref of item.awayDressingRoomAllocations) labels.push(schedulerResourceLabel(ref));
   }
-  const unique = [...new Set(codes)];
+  const unique = [...new Set(labels)];
   if (unique.length === 0) return "";
   if (unique.length <= max) return unique.join(" · ");
-  return `${unique.slice(0, max).join(" · ")} +${unique.length - max}`;
+  return `${unique.slice(0, max).join(" · ")} · +${unique.length - max}`;
 }
 
 export function schedulerBlockSubtitle(item: WeekplannerItem): string | null {

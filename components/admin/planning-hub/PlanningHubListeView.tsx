@@ -1,12 +1,13 @@
 "use client";
 
-import { AlertTriangle, DoorOpen, MapPin } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
 import { weekplannerActivityTypeLabel } from "@/lib/planning-hub/item-presenters";
 import {
   schedulerDisplayIdentity,
   schedulerResourceCodes,
+  schedulerResourceLabel,
 } from "@/lib/planning-hub/scheduler-display-label";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import { computeResourceOccupancyWindow } from "@/lib/facilities/resource-occupancy-window";
@@ -35,16 +36,14 @@ function formatDayHeading(dayKey: string, locale: string, timeZone: string): str
   }).format(new Date(`${dayKey}T12:00:00.000Z`));
 }
 
-function dressingOccupancyDetail(
+function dressingOccupancyShort(
   item: WeekplannerItem,
   locale: string,
   timeZone: string,
 ): string | null {
   const hasRoom =
     item.dressingRoomAllocations.length > 0 ||
-    (item.type === "MATCH" && item.awayDressingRoomAllocations.length > 0) ||
-    (item.type === "TOURNAMENT" &&
-      item.participantAllocations.some((p) => p.dressingRoomAllocations.length > 0));
+    (item.type === "MATCH" && item.awayDressingRoomAllocations.length > 0);
   if (!hasRoom || item.type === "VERANSTALTUNG") return null;
 
   const window = computeResourceOccupancyWindow(
@@ -54,8 +53,8 @@ function dressingOccupancyDetail(
     item.dressingRoomResolvedAfterMinutes,
   );
   const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
-  const roomLabel = item.dressingRoomAllocations.map((r) => r.code).join(", ");
-  return `Garderobe ${roomLabel} · Belegung ${fmt.format(window.effectiveStartAt)}–${fmt.format(window.effectiveEndAt)}`;
+  const room = item.dressingRoomAllocations.map((r) => schedulerResourceLabel(r)).join(", ");
+  return `${room} ${fmt.format(window.effectiveStartAt)}–${fmt.format(window.effectiveEndAt)}`;
 }
 
 function isItemOverridden(item: WeekplannerItem): boolean {
@@ -78,19 +77,23 @@ export default function PlanningHubListeView({
   const filtered = applyPlanningHubFilters(week, urlState);
 
   return (
-    <div className="space-y-4" data-testid="planning-hub-liste">
+    <div className="space-y-3" data-testid="planning-hub-liste">
       {filtered.days.map((day) => (
         <section key={day.dayKey}>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+          <h3 className="mb-1 px-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
             {formatDayHeading(day.dayKey, locale, timezone)}
           </h3>
           {day.items.length === 0 ? (
-            <p className="text-sm text-[var(--muted)]">Keine Einträge</p>
+            <p className="px-1 text-sm text-[var(--muted)]">Keine Einträge</p>
           ) : (
-            <ul className="divide-y divide-[var(--border)]/60 rounded-lg border border-[var(--border)]">
+            <ul className="divide-y divide-[var(--border)]/50 rounded-md border border-[var(--border)]/80">
               {day.items.map((item) => {
                 const hasConflict = item.conflicts.length > 0;
-                const dressingDetail = dressingOccupancyDetail(item, locale, timezone);
+                const resources = schedulerResourceCodes(item, 4);
+                const dressing = dressingOccupancyShort(item, locale, timezone);
+                const typeLabel =
+                  item.type === "TRAINING" ? null : weekplannerActivityTypeLabel(item.type);
+
                 return (
                   <li key={item.id}>
                     <button
@@ -98,58 +101,38 @@ export default function PlanningHubListeView({
                       onClick={() => onItemActivate(item)}
                       data-testid={`weekplanner-item-${item.type.toLowerCase()}`}
                       className={cn(
-                        "flex w-full flex-col gap-0.5 px-3 py-2 text-left transition hover:bg-[var(--surface-2)]",
-                        hasConflict && "shadow-[inset_2px_0_0_0_rgba(251,191,36,0.7)]",
+                        "grid w-full grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 px-2 py-1.5 text-left transition hover:bg-[var(--surface-2)] sm:grid-cols-[5rem_minmax(0,1.2fr)_minmax(0,1fr)_4rem]",
+                        hasConflict && "border-l-2 border-l-amber-500/60",
                       )}
                     >
-                      <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <span className="text-sm font-semibold text-[var(--foreground)]">
-                          {schedulerDisplayIdentity(item)}
-                        </span>
-                        <span className="text-xs tabular-nums text-[var(--text-2)]">
-                          {formatTimeRange(item.startAt, item.endAt, locale, timezone)}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-2)]">
-                        <span>{weekplannerActivityTypeLabel(item.type)}</span>
-                        {schedulerResourceCodes(item) && (
-                          <>
-                            <span className="text-[var(--muted)]">·</span>
-                            <span className="inline-flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {schedulerResourceCodes(item)}
-                            </span>
-                          </>
+                      <span className="text-xs tabular-nums text-[var(--text-2)]">
+                        {formatTimeRange(item.startAt, item.endAt, locale, timezone)}
+                      </span>
+                      <span className="min-w-0 truncate text-sm font-medium text-[var(--foreground)]">
+                        {schedulerDisplayIdentity(item)}
+                        {typeLabel && (
+                          <span className="ml-1 font-normal text-[var(--muted)]">· {typeLabel}</span>
                         )}
-                        {hasConflict && (
-                          <span className="inline-flex items-center gap-1 text-amber-800">
-                            <AlertTriangle className="h-3 w-3" aria-hidden />
-                            Konflikt
+                      </span>
+                      <span className="min-w-0 truncate text-xs text-[var(--muted)]">
+                        {resources || dressing || "—"}
+                      </span>
+                      <span className="flex items-center justify-end gap-1">
+                        {planName && isItemOverridden(item) && (
+                          <span
+                            className="max-w-[7rem] truncate text-[10px] text-[var(--muted)]"
+                            data-testid="weekplanner-override-indicator"
+                          >
+                            {planName} angepasst
                           </span>
                         )}
-                      </div>
-                      {item.type === "MATCH" && item.awayDressingRoomAllocations.length > 0 && (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-[var(--muted)]">
-                          <DoorOpen className="h-3 w-3" />
-                          Gast: {item.awayDressingRoomAllocations.map((r) => r.name).join(", ")}
-                        </span>
-                      )}
-                      {dressingDetail && (
-                        <span
-                          className="text-[11px] text-[var(--muted)]"
-                          data-testid="planning-hub-liste-dressing-occupancy"
-                        >
-                          {dressingDetail}
-                        </span>
-                      )}
-                      {planName && isItemOverridden(item) && (
-                        <p
-                          className="text-[10px] text-[var(--muted)]"
-                          data-testid="weekplanner-override-indicator"
-                        >
-                          {planName} angepasst
-                        </p>
-                      )}
+                        {hasConflict && (
+                          <AlertTriangle
+                            className="h-3.5 w-3.5 shrink-0 text-amber-600/80"
+                            aria-label="Konflikt"
+                          />
+                        )}
+                      </span>
                     </button>
                   </li>
                 );

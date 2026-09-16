@@ -1,8 +1,11 @@
 import { assignIntervalLanes, type IntervalLaneLayout, type TimedInterval } from "./interval-lanes";
 import { buildOverlapClusters } from "./overlap-clusters";
 
-/** Minimum pixel width for a readable activity column (not tenant-specific). */
+/** Comfortable minimum width for full activity detail. */
 export const CALENDAR_MIN_ACTIVITY_WIDTH_PX = 76;
+
+/** Below this lane width, overlap cluster aggregates instead of compact strips. */
+export const CALENDAR_AGGREGATE_BELOW_WIDTH_PX = 44;
 
 export type CalendarDayLayoutItem =
   | {
@@ -41,14 +44,27 @@ export function clusterMaxConcurrency(
   return max;
 }
 
+export function laneWidthPx(maxConcurrency: number, columnWidthPx: number): number {
+  if (maxConcurrency <= 1) return columnWidthPx;
+  return columnWidthPx / maxConcurrency;
+}
+
 export function shouldAggregateCluster(
   maxConcurrency: number,
   columnWidthPx: number,
-  minWidthPx = CALENDAR_MIN_ACTIVITY_WIDTH_PX,
+  aggregateBelowPx = CALENDAR_AGGREGATE_BELOW_WIDTH_PX,
 ): boolean {
   if (maxConcurrency <= 1) return false;
-  const laneWidth = columnWidthPx / maxConcurrency;
-  return laneWidth < minWidthPx;
+  return laneWidthPx(maxConcurrency, columnWidthPx) < aggregateBelowPx;
+}
+
+export function shouldUseCompactActivityBlock(
+  maxConcurrency: number,
+  columnWidthPx: number,
+): boolean {
+  if (maxConcurrency <= 1) return false;
+  const w = laneWidthPx(maxConcurrency, columnWidthPx);
+  return w >= CALENDAR_AGGREGATE_BELOW_WIDTH_PX && w < CALENDAR_MIN_ACTIVITY_WIDTH_PX;
 }
 
 /**

@@ -14,6 +14,7 @@ type PlanningHubWeekFiltersProps = {
   urlState: PlanningHubUrlState;
   teamOptions: Option[];
   facilityOptions: Option[];
+  inline?: boolean;
 };
 
 const ACTIVITY_FILTERS: { key: PlanningHubActivityFilter; label: string }[] = [
@@ -28,10 +29,11 @@ export default function PlanningHubWeekFilters({
   urlState,
   teamOptions,
   facilityOptions,
+  inline = false,
 }: PlanningHubWeekFiltersProps) {
   return (
     <div
-      className="flex flex-wrap items-center gap-2 py-1.5"
+      className={inline ? "flex flex-wrap items-center gap-1.5" : "flex flex-wrap items-center gap-2 py-1.5"}
       data-testid="planning-hub-filters"
     >
       <div className="flex flex-wrap gap-1">

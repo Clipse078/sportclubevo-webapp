@@ -132,7 +132,7 @@ export default function PlanningHubResourceDayView({
           Keine Ressourcenbelegungen an diesem Tag.
         </p>
       ) : (
-        <div className="overflow-auto">
+        <div className="overflow-auto [scrollbar-width:thin]">
           <div className="min-w-[640px]">
             <div
               className="sticky top-0 z-10 flex border-b border-[var(--border)] bg-[var(--surface)]"

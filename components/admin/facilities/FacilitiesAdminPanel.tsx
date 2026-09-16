@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useRef, useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -12,7 +12,10 @@ import {
   MapPin,
   Trash2,
   AlertTriangle,
+  MoreHorizontal,
 } from "lucide-react";
+import { cn } from "@/lib/cn";
+import { PopoverContent } from "@/components/ui/Popover";
 import type { FacilityType, FacilityResourceType, FacilityStatus } from "@prisma/client";
 
 // ── Types matching lib/facilities/queries.ts ─────────────────────────────────
@@ -310,6 +313,90 @@ function CreateResourceForm({
   );
 }
 
+function FacilityActionsMenu({
+  canManage,
+  canDelete,
+  isArchived,
+  onEdit,
+  onArchive,
+  onDelete,
+  label,
+}: {
+  canManage: boolean;
+  canDelete: boolean;
+  isArchived: boolean;
+  onEdit: () => void;
+  onArchive: () => void;
+  onDelete: () => void;
+  label: string;
+}) {
+  const anchorRef = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        ref={anchorRef}
+        type="button"
+        aria-label={`Aktionen für ${label}`}
+        className="rounded-md p-1.5 text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+      <PopoverContent
+        open={open}
+        onOpenChange={setOpen}
+        anchorRef={anchorRef}
+        matchAnchorWidth={false}
+        maxHeight={200}
+        className="min-w-[10rem] p-1"
+      >
+        {canManage && (
+          <>
+            <button
+              type="button"
+              disabled={isArchived}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-[var(--surface-2)] disabled:opacity-40"
+              onClick={() => {
+                setOpen(false);
+                onEdit();
+              }}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Bearbeiten
+            </button>
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-[var(--surface-2)]"
+              onClick={() => {
+                setOpen(false);
+                onArchive();
+              }}
+            >
+              <Archive className="h-3.5 w-3.5" />
+              {isArchived ? "Wiederherstellen" : "Archivieren"}
+            </button>
+          </>
+        )}
+        {canDelete && (
+          <button
+            type="button"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-rose-600 hover:bg-rose-500/10"
+            onClick={() => {
+              setOpen(false);
+              onDelete();
+            }}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Löschen
+          </button>
+        )}
+      </PopoverContent>
+    </>
+  );
+}
+
 // ── Resource row ──────────────────────────────────────────────────────────────
 
 type ResourceImpact = {
@@ -406,14 +493,14 @@ function ResourceItem({
 
   return (
     <div
-      className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 ${
-        isArchived
-          ? "border-slate-100 bg-slate-50 opacity-50"
-          : "border-slate-200 bg-white"
-      }`}
+      className={cn(
+        "flex items-center justify-between gap-2 px-2 py-1.5",
+        isArchived && "opacity-50",
+      )}
+      data-testid="facility-resource-row"
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+        <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
         <div className="min-w-0">
           {editingName ? (
             <InlineEditForm
@@ -429,11 +516,8 @@ function ResourceItem({
             />
           ) : (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-slate-800">{resource.name}</span>
-              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-mono text-slate-500">
-                {resource.code}
-              </code>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-sm font-medium text-[var(--foreground)]">{resource.name}</span>
+              <span className="text-[11px] text-[var(--muted)]">
                 {RESOURCE_TYPE_LABELS[resource.type]}
               </span>
             </div>
@@ -442,42 +526,19 @@ function ResourceItem({
       </div>
 
       {(canManage || canDelete) && !editingName ? (
-        <div className="flex shrink-0 items-center gap-1">
-          {canManage && (
-            <>
-              <button
-                onClick={() => setEditingName(true)}
-                disabled={isArchived}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none"
-                title="Name bearbeiten"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-              </button>
-              <button
-                onClick={() =>
-                  startTransition(async () => {
-                    await patchResource({
-                      status: isArchived ? "ACTIVE" : "ARCHIVED",
-                    });
-                  })
-                }
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                title={isArchived ? "Wiederherstellen" : "Archivieren"}
-              >
-                <Archive className="h-3.5 w-3.5" />
-              </button>
-            </>
-          )}
-          {canDelete && (
-            <button
-              onClick={openDeleteDialog}
-              className="rounded-lg p-1.5 text-red-400 hover:bg-red-50 hover:text-red-600"
-              title="Ressource endgültig löschen"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
+        <FacilityActionsMenu
+          canManage={canManage}
+          canDelete={canDelete}
+          isArchived={isArchived}
+          onEdit={() => setEditingName(true)}
+          onArchive={() =>
+            startTransition(async () => {
+              await patchResource({ status: isArchived ? "ACTIVE" : "ARCHIVED" });
+            })
+          }
+          onDelete={openDeleteDialog}
+          label={resource.name}
+        />
       ) : null}
 
       {/* Delete confirmation dialog */}
@@ -612,12 +673,14 @@ function FacilityCard({
 
   return (
     <div
-      className={`rounded-2xl border bg-white shadow-[0_4px_12px_rgba(15,23,42,0.04)] ${
-        isArchived ? "opacity-60" : ""
-      }`}
+      className={cn(
+        "rounded-lg border border-[var(--border)] bg-[var(--surface)]",
+        isArchived && "opacity-60",
+      )}
+      data-testid="facility-group"
     >
       {/* Facility header */}
-      <div className="flex items-center gap-3 px-5 py-4">
+      <div className="flex items-center gap-2 px-3 py-2">
         <button
           onClick={() => setExpanded((v) => !v)}
           className="shrink-0 text-slate-400 hover:text-slate-600"
@@ -646,68 +709,42 @@ function FacilityCard({
             />
           ) : (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[0.95rem] font-semibold text-slate-900">
+              <span className="text-sm font-semibold text-[var(--foreground)]">
                 {facility.name}
               </span>
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-500">
-                {FACILITY_TYPE_LABELS[facility.type]}
+              <span className="text-[11px] text-[var(--muted)]">
+                {FACILITY_TYPE_LABELS[facility.type]} · {facility.resources.filter((r) => r.status !== "ARCHIVED").length} Ressourcen
               </span>
               {isArchived ? (
                 <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
                   Archiviert
                 </span>
               ) : null}
-              <span className="text-[11px] text-slate-400">
-                {facility.resources.filter((r) => r.status !== "ARCHIVED").length} Ressource(n)
-              </span>
             </div>
           )}
         </div>
 
         {(canManage || canDelete) && !editingName ? (
-          <div className="flex shrink-0 items-center gap-1">
-            {canManage && (
-              <>
-                <button
-                  onClick={() => setEditingName(true)}
-                  disabled={isArchived}
-                  className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none"
-                  title="Name bearbeiten"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() =>
-                    startTransition(async () => {
-                      await patchFacility({
-                        status: isArchived ? "ACTIVE" : "ARCHIVED",
-                      });
-                    })
-                  }
-                  className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                  title={isArchived ? "Wiederherstellen" : "Archivieren"}
-                >
-                  <Archive className="h-4 w-4" />
-                </button>
-              </>
-            )}
-            {canDelete && (
-              <button
-                onClick={openDeleteDialog}
-                className="rounded-xl p-2 text-red-400 hover:bg-red-50 hover:text-red-600"
-                title="Anlage endgültig löschen"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+          <FacilityActionsMenu
+            canManage={canManage}
+            canDelete={canDelete}
+            isArchived={isArchived}
+            onEdit={() => setEditingName(true)}
+            onArchive={() =>
+              startTransition(async () => {
+                await patchFacility({ status: isArchived ? "ACTIVE" : "ARCHIVED" });
+              })
+            }
+            onDelete={openDeleteDialog}
+            label={facility.name}
+          />
         ) : null}
       </div>
 
       {/* Resources */}
       {expanded ? (
-        <div className="border-t border-slate-100 px-5 pb-5 pt-4">
-          <div className="space-y-2">
+        <div className="border-t border-[var(--border)]/60 px-2 pb-2 pt-1">
+          <div className="divide-y divide-[var(--border)]/40">
             {facility.resources.length === 0 ? (
               <p className="text-sm text-slate-400">Noch keine Ressourcen konfiguriert.</p>
             ) : (
@@ -858,17 +895,17 @@ export default function FacilitiesAdminPanel({
 
       {/* Facility list */}
       {facilities.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
-          <Building2 className="mx-auto h-8 w-8 text-slate-300" />
-          <p className="mt-3 text-sm font-medium text-slate-600">
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6 text-center">
+          <Building2 className="mx-auto h-8 w-8 text-[var(--muted)]" />
+          <p className="mt-3 text-sm font-medium text-[var(--foreground)]">
             Noch keine Anlagen konfiguriert
           </p>
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-1 text-sm text-[var(--muted)]">
             Erstelle deine erste Anlage mit dem Button oben.
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {facilities.map((facility) => (
             <FacilityCard
               key={facility.id}

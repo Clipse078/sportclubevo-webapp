@@ -65,7 +65,7 @@ export default function DressingRoomOccupancyPresetsPanel({ initialPresets, canM
 
   return (
     <section
-      className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
+      className="rounded-lg border border-[var(--border)]/80 bg-[var(--surface)] px-3 py-2.5"
       data-testid="dressing-room-occupancy-presets"
     >
       <h2 className="text-sm font-semibold text-[var(--foreground)]">Garderoben-Belegungszeiten</h2>

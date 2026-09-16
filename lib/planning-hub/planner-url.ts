@@ -12,6 +12,8 @@ export type PlanningHubActivityFilter =
   | "turniere"
   | "veranstaltungen";
 
+export type PlanningHubCalendarTimeRange = "focused" | "full";
+
 export type PlanningHubUrlState = {
   week?: string;
   plan?: string;
@@ -23,6 +25,8 @@ export type PlanningHubUrlState = {
   facility: string | null;
   conflictsOnly: boolean;
   resourceCategory: "pitch" | "dressing";
+  /** Kalender vertical range: focused operational window vs full activity span. */
+  calendarTimeRange: PlanningHubCalendarTimeRange;
 };
 
 const BASE_PATH = "/dashboard/planner/week";
@@ -58,6 +62,7 @@ export function parsePlanningHubUrlState(
     facility: params.facility?.trim() || null,
     conflictsOnly: params.konflikte === "1",
     resourceCategory: params.ressource === "garderobe" ? "dressing" : "pitch",
+    calendarTimeRange: params.zeit === "ganz" ? "full" : "focused",
   };
 }
 
@@ -80,6 +85,7 @@ export function buildPlanningHubHref(
   if (merged.perspective === "ressourcen" && merged.resourceCategory === "dressing") {
     query.set("ressource", "garderobe");
   }
+  if (merged.calendarTimeRange === "full") query.set("zeit", "ganz");
 
   const qs = query.toString();
   return qs ? `${BASE_PATH}?${qs}` : BASE_PATH;

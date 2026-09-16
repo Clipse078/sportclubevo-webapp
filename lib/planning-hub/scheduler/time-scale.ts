@@ -17,7 +17,7 @@ export const SCHEDULER_EMPTY_DAY_END_MINUTES = 20 * 60;
 
 /** Vertical calendar: pixels per minute. */
 /** ~6–8h visible in a typical laptop viewport at default zoom. */
-export const CALENDAR_PIXELS_PER_MINUTE = 0.95;
+export const CALENDAR_PIXELS_PER_MINUTE = 0.88;
 
 /** Horizontal resource scheduler: pixels per minute. */
 export const RESOURCE_PIXELS_PER_MINUTE = 2.4;

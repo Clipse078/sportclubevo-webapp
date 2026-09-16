@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  CALENDAR_AGGREGATE_BELOW_WIDTH_PX,
   CALENDAR_MIN_ACTIVITY_WIDTH_PX,
   planCalendarDayLayout,
   shouldAggregateCluster,
+  shouldUseCompactActivityBlock,
 } from "../calendar-day-layout";
 import { assignIntervalLanes } from "../interval-lanes";
 import { buildOverlapClusters } from "../overlap-clusters";
@@ -61,8 +63,25 @@ describe("planCalendarDayLayout", () => {
   });
 
   it("aggregation threshold responds to column width", () => {
-    expect(shouldAggregateCluster(4, 400, CALENDAR_MIN_ACTIVITY_WIDTH_PX)).toBe(false);
-    expect(shouldAggregateCluster(8, 120, CALENDAR_MIN_ACTIVITY_WIDTH_PX)).toBe(true);
+    expect(shouldAggregateCluster(4, 400)).toBe(false);
+    expect(shouldAggregateCluster(8, 120)).toBe(true);
+    expect(shouldUseCompactActivityBlock(4, 200)).toBe(true);
+    expect(shouldUseCompactActivityBlock(2, 200)).toBe(false);
+  });
+
+  it("measured wider column delays aggregation", () => {
+    const narrow = planCalendarDayLayout(
+      Array.from({ length: 6 }, (_, i) => ({ id: `t${i}`, startMs: 0, endMs: 60 })),
+      100,
+    );
+    const wide = planCalendarDayLayout(
+      Array.from({ length: 6 }, (_, i) => ({ id: `t${i}`, startMs: 0, endMs: 60 })),
+      480,
+    );
+    const narrowAgg = narrow.some((s) => s.kind === "aggregate");
+    const wideAgg = wide.some((s) => s.kind === "aggregate");
+    expect(narrowAgg).toBe(true);
+    expect(wideAgg).toBe(false);
   });
 
   it("keeps three overlapping activities separate when width allows", () => {

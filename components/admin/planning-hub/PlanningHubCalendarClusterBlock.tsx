@@ -4,13 +4,9 @@ import { useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { PopoverContent } from "@/components/ui/Popover";
 import { summarizeAggregateCluster } from "@/lib/planning-hub/scheduler/aggregate-cluster";
-import {
-  schedulerDisplayIdentity,
-  schedulerResourceCodes,
-} from "@/lib/planning-hub/scheduler-display-label";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
+import PlanningHubClusterInspector from "./PlanningHubClusterInspector";
 
 type Props = {
   items: WeekplannerItem[];
@@ -34,10 +30,10 @@ export default function PlanningHubCalendarClusterBlock({
 }: Props) {
   const anchorRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
-  const summary = summarizeAggregateCluster(items);
-  const sorted = [...items].sort(
-    (a, b) => a.startAt.getTime() - b.startAt.getTime() || a.id.localeCompare(b.id),
-  );
+  const start = new Date(Math.min(...items.map((i) => i.startAt.getTime())));
+  const end = new Date(Math.max(...items.map((i) => i.endAt.getTime())));
+  const timeLabel = formatTimeRange(start, end, locale, timezone);
+  const summary = summarizeAggregateCluster(items, timeLabel);
 
   return (
     <>
@@ -46,63 +42,37 @@ export default function PlanningHubCalendarClusterBlock({
         type="button"
         style={style}
         data-testid="planning-hub-calendar-cluster"
-        aria-label={`${summary.activityCount} gleichzeitige Aktivitäten, ${summary.conflictCount} mit Ressourcenkonflikt`}
-        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={`${summary.headline}, ${summary.conflictCount} mit Ressourcenkonflikt`}
+        onClick={() => setOpen(true)}
         className={cn(
-          "absolute overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface-2)]/90 px-1.5 py-1 text-left shadow-sm",
-          "hover:border-[var(--sce-primary)]/40 hover:bg-[var(--surface)]",
-          summary.conflictCount > 0 && "ring-1 ring-amber-400/50",
+          "absolute overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)] px-1.5 py-1 text-left shadow-sm",
+          "hover:border-[var(--sce-primary)]/30 hover:bg-[var(--surface-2)]",
+          summary.conflictCount > 0 && "border-l-2 border-l-amber-500/60",
         )}
       >
-        <p className="truncate text-[11px] font-semibold text-[var(--foreground)]">
-          {summary.activityCount} {summary.typeLabel} gleichzeitig
-        </p>
+        <p className="truncate text-[11px] font-semibold text-[var(--foreground)]">{summary.headline}</p>
         <p className="truncate text-[10px] text-[var(--text-2)]">{summary.identityPreview}</p>
-        {summary.conflictCount > 0 && (
-          <p className="mt-0.5 flex items-center gap-1 text-[10px] text-amber-800">
-            <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden />
-            {summary.conflictCount} Ressourcenkonflikt{summary.conflictCount === 1 ? "" : "e"}
+        <p className="truncate text-[10px] tabular-nums text-[var(--muted)]">{timeLabel}</p>
+        {summary.conflictLabel && (
+          <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-amber-800/90">
+            <AlertTriangle className="h-2.5 w-2.5 shrink-0" aria-hidden />
+            {summary.conflictLabel}
           </p>
         )}
       </button>
 
-      <PopoverContent
+      <PlanningHubClusterInspector
         open={open}
         onOpenChange={setOpen}
         anchorRef={anchorRef}
-        matchAnchorWidth
-        maxHeight={320}
-        className="p-0"
-      >
-        <div className="border-b border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--foreground)]">
-          Gleichzeitige Aktivitäten ({summary.activityCount})
-        </div>
-        <ul className="max-h-64 overflow-auto py-1">
-          {sorted.map((item) => (
-            <li key={item.id}>
-              <button
-                type="button"
-                className="flex w-full flex-col gap-0.5 px-3 py-2 text-left text-xs hover:bg-[var(--surface-2)]"
-                onClick={() => {
-                  setOpen(false);
-                  onActivateItem(item);
-                }}
-              >
-                <span className="font-semibold text-[var(--foreground)]">
-                  {schedulerDisplayIdentity(item)}
-                </span>
-                <span className="text-[var(--text-2)]">
-                  {formatTimeRange(item.startAt, item.endAt, locale, timezone)}
-                  {schedulerResourceCodes(item) ? ` · ${schedulerResourceCodes(item)}` : ""}
-                </span>
-                {item.conflicts.length > 0 && (
-                  <span className="text-amber-800">Ressourcenkonflikt</span>
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </PopoverContent>
+        summary={summary}
+        items={items}
+        locale={locale}
+        timezone={timezone}
+        onActivateItem={onActivateItem}
+      />
     </>
   );
 }

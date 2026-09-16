@@ -112,6 +112,7 @@ export default function WeekPlannerPage({
     facility: null,
     conflictsOnly: false,
     resourceCategory: "pitch",
+    calendarTimeRange: "focused",
   };
 
   const filteredWeek = applyPlanningHubFilters(week, urlState);
@@ -233,14 +234,14 @@ export default function WeekPlannerPage({
 
   return (
     <div className="space-y-2" data-testid="planning-hub-workspace">
-      <div className="space-y-1.5 border-b border-[var(--border)] pb-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-lg font-semibold tracking-tight text-[var(--foreground)]">Wochenplaner</h1>
+      <div className="space-y-1 border-b border-[var(--border)] pb-1.5">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <h1 className="text-base font-semibold tracking-tight text-[var(--foreground)]">Wochenplaner</h1>
           {createPermissions ? <PlanningHubCreateMenu permissions={createPermissions} /> : null}
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-          <div className="flex flex-wrap items-center gap-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <div className="flex flex-wrap items-center gap-0.5">
             <Link
               href={weekHref(week.previousParam, resolvedUrlState)}
               aria-label="Vorherige Woche"
@@ -280,9 +281,12 @@ export default function WeekPlannerPage({
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[var(--border)]/50 pt-1"
+          data-testid="planning-hub-toolbar"
+        >
           <div
-            className="flex items-center gap-0.5 rounded-md border border-[var(--border)] p-0.5"
+            className="flex items-center gap-px rounded-md border border-[var(--border)]/80 p-px"
             data-testid="planning-hub-perspective"
           >
             {(
@@ -296,20 +300,19 @@ export default function WeekPlannerPage({
                 key={perspective}
                 href={buildPlanningHubHref(resolvedUrlState, { perspective })}
                 className={cn(
-                  "rounded px-2.5 py-1 text-xs font-semibold",
+                  "rounded px-2 py-0.5 text-xs font-medium",
                   urlState.perspective === perspective
-                    ? "bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
-                    : "text-[var(--text-2)] hover:bg-[var(--surface-2)]",
+                    ? "bg-[var(--surface-2)] text-[var(--foreground)] shadow-sm"
+                    : "text-[var(--text-2)] hover:text-[var(--foreground)]",
                 )}
               >
                 {label}
               </Link>
             ))}
           </div>
-        </div>
 
         {urlState.perspective === "ressourcen" && (
-          <div className="flex gap-1">
+          <div className="flex gap-0.5">
             <Link
               href={buildPlanningHubHref(resolvedUrlState, { resourceCategory: "pitch" })}
               className={cn(
@@ -335,17 +338,23 @@ export default function WeekPlannerPage({
           </div>
         )}
 
-        <PlanningHubWeekFilters
-          urlState={resolvedUrlState}
-          teamOptions={teamOptions}
-          facilityOptions={facilityOptions}
-        />
+          <div className="hidden h-4 w-px bg-[var(--border)] sm:block" aria-hidden />
 
-        <PlanningHubConflictAttention
-          week={week}
-          incompleteCount={incompleteCount}
-          onReviewConflicts={handleReviewConflicts}
-        />
+          <PlanningHubWeekFilters
+            urlState={resolvedUrlState}
+            teamOptions={teamOptions}
+            facilityOptions={facilityOptions}
+            inline
+          />
+
+          <div className="ml-auto flex min-w-0 items-center">
+            <PlanningHubConflictAttention
+              week={week}
+              incompleteCount={incompleteCount}
+              onReviewConflicts={handleReviewConflicts}
+            />
+          </div>
+        </div>
       </div>
 
       {totalItems === 0 ? (

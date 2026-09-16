@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { compactSchedulerTeamName, schedulerDisplayIdentity } from "../scheduler-display-label";
+import {
+  compactSchedulerTeamName,
+  schedulerDisplayIdentity,
+  schedulerResourceLabel,
+} from "../scheduler-display-label";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 
 function training(teamName: string): WeekplannerItem {
@@ -48,5 +52,19 @@ describe("scheduler display labels", () => {
 
   it("does not use FCA-specific mapping tables", () => {
     expect(schedulerDisplayIdentity(training("FC Allschwil F2"))).not.toContain("Allschwil");
+  });
+
+  it("prefers human resource name over code", () => {
+    expect(
+      schedulerResourceLabel({
+        facilityResourceId: "1",
+        facilityId: "f",
+        code: "KUNSTRASEN_2_A",
+        name: "Kunstrasen 2 A",
+        facilityName: "Hauptfeld",
+        occupancyBeforeMinutes: 0,
+        occupancyAfterMinutes: 0,
+      }),
+    ).toBe("Kunstrasen 2 A");
   });
 });

@@ -87,11 +87,11 @@ export default function PlanningHubActivityBlock({
         isGhost && "pointer-events-none border-[var(--border)]/50 bg-[var(--surface)]/40 opacity-50",
         !isGhost &&
           !isPreview &&
-          "border-[var(--border)] bg-[var(--surface)] transition hover:border-[var(--sce-primary)]/40 hover:shadow",
+          "group border-[var(--border)] bg-[var(--surface)] transition hover:border-[var(--sce-primary)]/30",
         isPreview &&
           "z-20 border-[var(--sce-primary)]/50 bg-[var(--surface)] shadow-md ring-1 ring-[var(--sce-primary)]/30",
         visualVariant === "preview-warning" && "ring-amber-400/50",
-        hasConflict && !isGhost && "shadow-[inset_0_0_0_1px_rgba(251,191,36,0.45)]",
+        hasConflict && !isGhost && "border-l-amber-500/70",
         compact ? "px-1 py-0.5 text-[10px] leading-tight" : "px-1.5 py-1 text-[11px] leading-snug",
         className,
       )}
@@ -135,8 +135,8 @@ export default function PlanningHubActivityBlock({
             )}
           </div>
           {hasConflict && !isGhost && (
-            <span title="Planungskonflikt" className="shrink-0">
-              <AlertTriangle className="h-3 w-3 text-amber-600" aria-hidden />
+            <span title="Planungskonflikt" className="shrink-0 opacity-70 group-hover:opacity-100">
+              <AlertTriangle className="h-3 w-3 text-amber-600/90" aria-hidden />
             </span>
           )}
         </div>

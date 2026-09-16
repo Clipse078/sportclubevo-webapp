@@ -1,20 +1,23 @@
 "use client";
 
-import { Fragment, useMemo } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/cn";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
-import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
+import { buildPlanningHubHref, type PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import { laneHorizontalStyle } from "@/lib/planning-hub/scheduler/interval-lanes";
 import {
+  CALENDAR_MIN_ACTIVITY_WIDTH_PX,
   estimateDayColumnWidthPx,
+  laneWidthPx,
   planCalendarDayLayout,
 } from "@/lib/planning-hub/scheduler/calendar-day-layout";
 import {
   CALENDAR_PIXELS_PER_MINUTE,
-  computeVisibleTimeRange,
   durationToCalendarHeightPx,
   minutesToCalendarTopPx,
 } from "@/lib/planning-hub/scheduler/time-scale";
+import { resolveCalendarTimeRange } from "@/lib/planning-hub/scheduler/time-range-focus";
 import { dayKeyInTimeZone, zonedMinutesFromMidnight } from "@/lib/planning-hub/scheduler/time-zone";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningHubActivityBlock from "./PlanningHubActivityBlock";
@@ -50,17 +53,34 @@ export default function PlanningHubCalendarView({
   const manipulation = usePlanningHubManipulation();
   const filtered = applyPlanningHubFilters(week, urlState);
   const allItems = week.days.flatMap((d) => d.items);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [measuredGridWidthPx, setMeasuredGridWidthPx] = useState<number | null>(null);
 
-  const timeRange = useMemo(
+  useEffect(() => {
+    const node = gridRef.current;
+    if (!node || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width && width > 0) setMeasuredGridWidthPx(width);
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  const activityIntervals = useMemo(
     () =>
-      computeVisibleTimeRange(
-        filtered.days.flatMap((day) =>
-          day.items.map((item) => ({ startAt: item.startAt, endAt: item.endAt })),
-        ),
-        timezone,
+      filtered.days.flatMap((day) =>
+        day.items.map((item) => ({ startAt: item.startAt, endAt: item.endAt })),
       ),
-    [filtered.days, timezone],
+    [filtered.days],
   );
+
+  const timeRangeResult = useMemo(
+    () => resolveCalendarTimeRange(activityIntervals, timezone, urlState.calendarTimeRange),
+    [activityIntervals, timezone, urlState.calendarTimeRange],
+  );
+  const timeRange = timeRangeResult.range;
+  const columnWidthPx = estimateDayColumnWidthPx(DAY_MIN_WIDTH_PX, measuredGridWidthPx ?? undefined);
 
   const gridHeightPx = timeRange.totalMinutes * CALENDAR_PIXELS_PER_MINUTE;
   const hourMarks: number[] = [];
@@ -78,10 +98,41 @@ export default function PlanningHubCalendarView({
 
   return (
     <div
-      className="overflow-auto rounded-lg border border-[var(--border)] bg-[var(--surface)]"
+      className="overflow-auto rounded-md border border-[var(--border)] bg-[var(--surface)] [scrollbar-width:thin]"
       data-testid="planning-hub-calendar"
     >
-      <div className="min-w-[720px]">
+      {(timeRangeResult.hasEarlierActivities || timeRangeResult.hasLaterActivities) && (
+        <div
+          className="flex flex-wrap items-center gap-2 border-b border-[var(--border)]/60 px-2 py-1 text-[11px] text-[var(--text-2)]"
+          data-testid="planning-hub-calendar-range-hint"
+        >
+          {timeRangeResult.hasEarlierActivities && (
+            <span>Aktivitäten vor {String(Math.floor(timeRange.startMinutes / 60)).padStart(2, "0")}:00</span>
+          )}
+          {timeRangeResult.hasLaterActivities && (
+            <span>Aktivitäten nach {String(Math.floor(timeRange.endMinutes / 60)).padStart(2, "0")}:00</span>
+          )}
+          <Link
+            href={buildPlanningHubHref(urlState, { calendarTimeRange: "full" })}
+            className="font-semibold text-[var(--sce-primary)] hover:underline"
+            data-testid="planning-hub-calendar-show-full-range"
+          >
+            Ganzer Tag
+          </Link>
+        </div>
+      )}
+      {urlState.calendarTimeRange === "full" && activityIntervals.length > 0 && (
+        <div className="flex justify-end border-b border-[var(--border)]/60 px-2 py-1">
+          <Link
+            href={buildPlanningHubHref(urlState, { calendarTimeRange: "focused" })}
+            className="text-[11px] font-semibold text-[var(--text-2)] hover:text-[var(--foreground)]"
+            data-testid="planning-hub-calendar-show-focused-range"
+          >
+            Betriebszeiten
+          </Link>
+        </div>
+      )}
+      <div ref={gridRef} className="min-w-[720px]">
         <div
           className="sticky top-0 z-20 grid border-b border-[var(--border)] bg-[var(--surface)]"
           style={{
@@ -149,7 +200,6 @@ export default function PlanningHubCalendarView({
               startMs: item.startAt.getTime(),
               endMs: item.endAt.getTime(),
             }));
-            const columnWidthPx = estimateDayColumnWidthPx(DAY_MIN_WIDTH_PX);
             const layoutSegments = planCalendarDayLayout(intervals, columnWidthPx);
             const itemsById = new Map(dayItems.map((item) => [item.id, item]));
             const isToday = day.dayKey === todayDayKey;
@@ -257,7 +307,8 @@ export default function PlanningHubCalendarView({
                       timeRange,
                       CALENDAR_PIXELS_PER_MINUTE,
                     );
-                    const compact = height < 48;
+                    const laneW = laneWidthPx(layout.totalLanes, columnWidthPx);
+                    const compact = height < 48 || laneW < CALENDAR_MIN_ACTIVITY_WIDTH_PX;
                     const timeLabel = `${isoToLocalTime(startAt, timezone)}–${isoToLocalTime(endAt, timezone)}`;
                     return (
                       <PlanningHubActivityBlock
