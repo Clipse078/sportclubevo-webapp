@@ -23,6 +23,11 @@ import type {
   FacilityGroup,
   ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
+import {
+  RESOURCE_CARD_SELECTED_CLASSES,
+  RESOURCE_CARD_SELECTED_ICON_TILE_CLASSES,
+  RESOURCE_CARD_SELECTED_SUMMARY_CLASSES,
+} from "./resource-card-selection-style";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -127,10 +132,10 @@ function OccupiedRoomChip({
       className={cn(
         "flex w-full items-start gap-2 rounded-lg border px-2.5 py-1.5 text-left transition-all",
         isSharedSelection
-          ? "border-amber-400 bg-amber-50/70 ring-1 ring-amber-300"
+          ? RESOURCE_CARD_SELECTED_CLASSES
           : pendingOccupiedConfirm
-            ? "border-amber-300 bg-amber-50/60 ring-1 ring-amber-200"
-            : "border-rose-200 bg-rose-50/60 hover:border-amber-300",
+            ? "border-amber-400/50 bg-amber-500/10 ring-1 ring-amber-400/20"
+            : "border-rose-400/40 bg-rose-500/10 hover:border-amber-400/50",
         disabled ? "cursor-default opacity-50" : "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-1",
       )}
     >
@@ -236,9 +241,7 @@ function FreeRoomCard({
       ? "border-emerald-300 hover:border-emerald-400"
       : "border-[var(--border)]";
 
-  const bgClass = isSelected
-    ? "bg-blue-50"
-    : "bg-[var(--surface)]";
+  const bgClass = isSelected ? "bg-[var(--surface)]" : "bg-[var(--surface)]";
 
   return (
     <button
@@ -269,9 +272,9 @@ function FreeRoomCard({
           "flex items-center justify-center rounded-lg border-2",
           compact ? "mb-1 h-8 w-8" : "mb-2 h-10 w-10",
           isSelected
-            ? "border-[var(--sce-primary)] bg-blue-100 text-[var(--sce-primary)]"
+            ? RESOURCE_CARD_SELECTED_ICON_TILE_CLASSES
             : isFree
-              ? "border-emerald-300 bg-emerald-50 text-emerald-600"
+              ? "border-emerald-400/45 bg-emerald-500/10 text-emerald-400"
               : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)]",
         )}
       >
@@ -373,7 +376,7 @@ function SelectedDressingRoomSummary({
 
   return (
     <div
-      className="rounded-lg border border-[var(--sce-primary)]/30 bg-blue-50/50 px-3 py-2"
+      className={RESOURCE_CARD_SELECTED_SUMMARY_CLASSES}
       data-testid={testId ? `${testId}-selected-summary` : undefined}
     >
       {selected.map((resource) => {
@@ -447,9 +450,9 @@ function CompactFreeDressingRoomRow({
       className={cn(
         "flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-all",
         isSelected
-          ? "border-[var(--sce-primary)] bg-blue-50 ring-1 ring-[var(--sce-primary)]"
+          ? RESOURCE_CARD_SELECTED_CLASSES
           : isFree
-            ? "border-emerald-200 bg-[var(--surface)] hover:border-emerald-300"
+            ? "border-emerald-200 bg-[var(--surface)] hover:border-emerald-300 hover:bg-emerald-500/[0.06]"
             : "border-[var(--border)] bg-[var(--surface)]",
         disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
       )}
