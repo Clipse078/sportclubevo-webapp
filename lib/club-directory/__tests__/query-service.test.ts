@@ -7,6 +7,7 @@ import {
   findExternalTeamByProviderIdentity,
   getExternalClubById,
   getExternalTeamById,
+  countExternalClubs,
   listExternalClubs,
   listExternalTeams,
 } from "../query-service";
@@ -84,6 +85,7 @@ function createDatabase(input?: {
     externalClub: {
       findMany: vi.fn().mockResolvedValue(input?.clubList ?? []),
       findFirst: vi.fn().mockResolvedValue(input?.clubDetail ?? null),
+      count: vi.fn().mockResolvedValue(input?.clubList?.length ?? 0),
     },
     externalTeam: {
       findMany: vi.fn().mockResolvedValue(input?.teamList ?? []),
@@ -91,6 +93,30 @@ function createDatabase(input?: {
     },
   } satisfies ClubDirectoryQueryDatabase;
 }
+
+describe("countExternalClubs", () => {
+  it("scopes count by tenant and active-only default", async () => {
+    const database = createDatabase();
+    await countExternalClubs(database, { tenantId: "tenant-1", search: "Klein" });
+
+    expect(database.externalClub.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          tenantId: "tenant-1",
+          archivedAt: null,
+        }),
+      }),
+    );
+  });
+
+  it("archivedOnly restricts to archived clubs", async () => {
+    const database = createDatabase();
+    await countExternalClubs(database, { tenantId: "tenant-1", archivedOnly: true });
+
+    const args = database.externalClub.count.mock.calls[0][0] as { where: Record<string, unknown> };
+    expect(args.where.archivedAt).toEqual({ not: null });
+  });
+});
 
 describe("listExternalClubs", () => {
   it("scopes by tenantId, excludes archived by default, and orders by name", async () => {

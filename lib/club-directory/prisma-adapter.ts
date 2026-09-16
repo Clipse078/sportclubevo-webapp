@@ -42,7 +42,7 @@ const teamDetailInclude = {
 } as const;
 
 export interface ClubDirectoryPrismaClient {
-  externalClub: Pick<Prisma.ExternalClubDelegate, "findMany" | "findFirst">;
+  externalClub: Pick<Prisma.ExternalClubDelegate, "findMany" | "findFirst" | "count">;
   externalTeam: Pick<Prisma.ExternalTeamDelegate, "findMany" | "findFirst">;
 }
 
@@ -61,6 +61,8 @@ export function createClubDirectoryQueryDatabase(
           ...(args as Prisma.ExternalClubFindFirstArgs),
           include: clubDetailInclude,
         }) as unknown as ReturnType<ClubDirectoryQueryDatabase["externalClub"]["findFirst"]>,
+      count: (args: object) =>
+        client.externalClub.count(args as Prisma.ExternalClubCountArgs),
     },
     externalTeam: {
       findMany: (args: object) =>

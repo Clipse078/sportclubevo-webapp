@@ -4,7 +4,7 @@ import { createClubDirectoryQueryDatabase } from "../prisma-adapter";
 
 function makePrismaClient() {
   return {
-    externalClub: { findMany: vi.fn(), findFirst: vi.fn() },
+    externalClub: { findMany: vi.fn(), findFirst: vi.fn(), count: vi.fn() },
     externalTeam: { findMany: vi.fn(), findFirst: vi.fn() },
   };
 }
