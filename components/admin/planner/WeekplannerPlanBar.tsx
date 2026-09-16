@@ -46,9 +46,12 @@ function PlanStatusBadge({ isActive }: { isActive: boolean }) {
   return (
     <span
       className={cn(
-        "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-        isActive ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700",
+        "rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
+        isActive
+          ? "bg-emerald-500/15 text-emerald-400/95"
+          : "bg-amber-500/12 text-amber-400/90",
       )}
+      data-testid={isActive ? "weekplanner-plan-status-aktiv" : "weekplanner-plan-status-entwurf"}
     >
       {isActive ? "Aktiv" : "Entwurf"}
     </span>
@@ -160,16 +163,18 @@ export function WeekplannerPlanBar({
           data-testid="weekplanner-plan-switcher"
           onClick={() => setSwitcherOpen((open) => !open)}
           className={cn(
-            "inline-flex items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-white font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]",
-            compact
-              ? "min-w-[9rem] max-w-[min(100vw-2rem,20rem)] px-2.5 py-1 text-xs"
-              : "min-w-[14rem] max-w-[min(100vw-2rem,28rem)] px-3 py-1.5 text-sm",
+            "inline-flex w-auto max-w-[min(100vw-2rem,20rem)] items-center justify-between gap-2 rounded-md border border-[var(--border)]/80 bg-[var(--surface)] font-medium text-[var(--foreground)] shadow-sm transition hover:border-[var(--border)] hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]/40 focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--surface)]",
+            switcherOpen && "border-[var(--border)] bg-[var(--surface-2)]",
+            compact ? "px-2 py-1 text-xs" : "px-3 py-1.5 text-sm",
           )}
+          data-surface-theme="planning-hub-dark"
           aria-haspopup="listbox"
           aria-expanded={switcherOpen}
         >
           <span className="flex min-w-0 flex-1 items-center gap-2">
-            {isViewingActive ? <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden="true" /> : null}
+            {isViewingActive ? (
+              <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500/90" aria-hidden="true" />
+            ) : null}
             <span className="min-w-0 flex-1 text-left leading-snug [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical] overflow-hidden">
               {viewedPlan?.name ?? "Plan wählen"}
             </span>
@@ -447,7 +452,7 @@ function PlanSwitcherRow({
                 e.stopPropagation();
                 onOverflowToggle(!overflowOpen);
               }}
-              className="rounded-md p-1.5 text-[var(--muted)] transition hover:bg-white hover:text-[var(--foreground)]"
+              className="rounded-md p-1.5 text-[var(--muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>
@@ -463,7 +468,7 @@ function PlanSwitcherRow({
                 type="button"
                 onClick={onDelete}
                 data-testid={`weekplanner-plan-delete-${plan.id}`}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-rose-700 transition hover:bg-rose-50"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-rose-400 transition hover:bg-rose-500/10"
               >
                 <Trash2 className="h-4 w-4" />
                 Plan endgültig löschen

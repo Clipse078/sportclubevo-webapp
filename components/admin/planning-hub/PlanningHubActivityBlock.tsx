@@ -14,13 +14,10 @@ import {
   schedulerResourceCodes,
 } from "@/lib/planning-hub/scheduler-display-label";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
-
-const TYPE_ACCENT: Record<WeekplannerItem["type"], string> = {
-  TRAINING: "border-l-emerald-500/70",
-  MATCH: "border-l-blue-500/70",
-  TOURNAMENT: "border-l-amber-500/70",
-  VERANSTALTUNG: "border-l-violet-500/70",
-};
+import {
+  activityVisualStyle,
+  PLANNING_HUB_CONFLICT_BLOCK_CLASS,
+} from "@/lib/planning-hub/activity-visual-style";
 
 export type ActivityBlockVisualVariant = "default" | "ghost" | "preview" | "preview-warning";
 
@@ -76,6 +73,7 @@ export default function PlanningHubActivityBlock({
   const time = dragTimeLabel ?? formatTimeRange(item.startAt, item.endAt, locale, timezone);
   const primary = schedulerDisplayIdentity(item);
   const typeLabel = schedulerBlockSubtitle(item);
+  const semantic = activityVisualStyle(item.type);
 
   const isGhost = visualVariant === "ghost";
   const isPreview = visualVariant === "preview" || visualVariant === "preview-warning";
@@ -87,15 +85,18 @@ export default function PlanningHubActivityBlock({
       className={cn(
         "absolute overflow-hidden rounded-md border text-left shadow-sm",
         "border-l-[3px]",
-        TYPE_ACCENT[item.type],
+        semantic.leftAccentClass,
         isGhost && "pointer-events-none border-[var(--border)]/50 bg-[var(--surface)]/40 opacity-50",
         !isGhost &&
           !isPreview &&
-          "group border-[var(--border)] bg-[var(--surface)] transition hover:border-[var(--sce-primary)]/30",
+          cn(
+            "group border-[var(--border)] transition hover:border-[var(--sce-primary)]/30",
+            semantic.subtleSurfaceClass,
+          ),
         isPreview &&
           "z-20 border-[var(--sce-primary)]/50 bg-[var(--surface)] shadow-md ring-1 ring-[var(--sce-primary)]/30",
         visualVariant === "preview-warning" && "ring-amber-400/50",
-        hasConflict && !isGhost && "border-l-amber-500/70",
+        hasConflict && !isGhost && PLANNING_HUB_CONFLICT_BLOCK_CLASS,
         compact ? "px-1 py-0.5 text-[10px] leading-tight" : "px-1.5 py-1 text-[11px] leading-snug",
         className,
       )}
@@ -128,7 +129,9 @@ export default function PlanningHubActivityBlock({
         type="button"
         onClick={onActivate}
         aria-label={[
+          semantic.ariaSemanticLabel,
           weekplannerAccessibleName(item, locale, timezone),
+          hasConflict ? "Ressourcenkonflikt" : null,
           continuesFromBefore ? "Fortsetzung aus vorherigem Tagesabschnitt" : null,
           continuesAfter ? "Fortsetzung im nächsten Tagesabschnitt" : null,
         ]

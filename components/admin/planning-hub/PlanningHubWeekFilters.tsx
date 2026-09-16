@@ -7,6 +7,10 @@ import {
   type PlanningHubActivityFilter,
   type PlanningHubUrlState,
 } from "@/lib/planning-hub/planner-url";
+import {
+  activityFilterToSemanticType,
+  activityVisualStyle,
+} from "@/lib/planning-hub/activity-visual-style";
 
 type Option = { value: string; label: string };
 
@@ -37,20 +41,29 @@ export default function PlanningHubWeekFilters({
       data-testid="planning-hub-filters"
     >
       <div className="flex flex-wrap gap-1">
-        {ACTIVITY_FILTERS.map((filter) => (
-          <Link
-            key={filter.key}
-            href={buildPlanningHubHref(urlState, { activity: filter.key })}
-            className={cn(
-              "rounded-full border px-2.5 py-1 text-xs font-semibold transition",
-              urlState.activity === filter.key
-                ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
-                : "border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]",
-            )}
-          >
-            {filter.label}
-          </Link>
-        ))}
+        {ACTIVITY_FILTERS.map((filter) => {
+          const dotClass =
+            filter.key === "alle"
+              ? null
+              : activityVisualStyle(activityFilterToSemanticType(filter.key)).filterDotClass;
+          return (
+            <Link
+              key={filter.key}
+              href={buildPlanningHubHref(urlState, { activity: filter.key })}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition",
+                urlState.activity === filter.key
+                  ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
+                  : "border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]",
+              )}
+            >
+              {dotClass ? (
+                <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", dotClass)} aria-hidden />
+              ) : null}
+              {filter.label}
+            </Link>
+          );
+        })}
       </div>
 
       <div className="ml-auto flex flex-wrap items-center gap-2">

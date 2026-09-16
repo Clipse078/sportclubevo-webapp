@@ -10,6 +10,7 @@ import {
   schedulerResourceCodes,
 } from "@/lib/planning-hub/scheduler-display-label";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
+import { activityVisualStyle } from "@/lib/planning-hub/activity-visual-style";
 
 type Props = {
   open: boolean;
@@ -80,20 +81,26 @@ export default function PlanningHubClusterInspector({
         {sorted.map((item) => {
           const hasConflict = item.conflicts.length > 0;
           const resources = schedulerResourceCodes(item, 4);
+          const semantic = activityVisualStyle(item.type);
           return (
             <li key={item.id} role="none">
               <button
                 type="button"
                 role="option"
                 className={cn(
-                  "flex w-full min-w-0 gap-2 px-3 py-2.5 text-left transition hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--sce-primary)]/40",
-                  hasConflict && "border-l-2 border-l-amber-500/70",
+                  "flex w-full min-w-0 gap-2 border-l-[3px] px-3 py-2.5 text-left transition hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--sce-primary)]/40",
+                  semantic.listLeftEdgeClass,
+                  hasConflict && "ring-1 ring-inset ring-amber-500/20",
                 )}
                 onClick={() => {
                   onOpenChange(false);
                   onActivateItem(item);
                 }}
               >
+                <span
+                  className={cn("mt-1.5 h-2 w-0.5 shrink-0 rounded-full", semantic.markerClass)}
+                  aria-hidden
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-[var(--foreground)]">
                     {schedulerDisplayIdentity(item)}

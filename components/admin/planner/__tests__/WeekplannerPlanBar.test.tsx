@@ -62,6 +62,24 @@ beforeEach(() => {
 });
 
 describe("WeekplannerPlanBar — premium switcher", () => {
+  it("uses dark Planning Hub surface on the plan switcher (no white container)", () => {
+    render(
+      <WeekplannerPlanBar
+        weekParam="2026-08-25"
+        wochenplanPlans={[wochenplanPlan()]}
+        weekplannerPlans={[]}
+        selectedPlanParam={null}
+        materializedWeekplannerPlanId={null}
+        canManage
+        compact
+      />,
+    );
+    const switcher = screen.getByTestId("weekplanner-plan-switcher");
+    expect(switcher.className).not.toMatch(/\bbg-white\b/);
+    expect(switcher.className).toContain("bg-[var(--surface)]");
+    expect(screen.getByTestId("weekplanner-plan-status-aktiv")).toBeTruthy();
+  });
+
   it("lists active plan separately from drafts in the switcher panel", () => {
     render(
       <WeekplannerPlanBar

@@ -12,6 +12,7 @@ import {
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import { computeResourceOccupancyWindow } from "@/lib/facilities/resource-occupancy-window";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
+import { activityVisualStyle } from "@/lib/planning-hub/activity-visual-style";
 
 type PlanningHubListeViewProps = {
   week: WeekplannerWeek;
@@ -93,6 +94,7 @@ export default function PlanningHubListeView({
                 const dressing = dressingOccupancyShort(item, locale, timezone);
                 const typeLabel =
                   item.type === "TRAINING" ? null : weekplannerActivityTypeLabel(item.type);
+                const semantic = activityVisualStyle(item.type);
 
                 return (
                   <li key={item.id}>
@@ -101,8 +103,9 @@ export default function PlanningHubListeView({
                       onClick={() => onItemActivate(item)}
                       data-testid={`weekplanner-item-${item.type.toLowerCase()}`}
                       className={cn(
-                        "grid w-full grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 px-2 py-1.5 text-left transition hover:bg-[var(--surface-2)] sm:grid-cols-[5rem_minmax(0,1.2fr)_minmax(0,1fr)_4rem]",
-                        hasConflict && "border-l-2 border-l-amber-500/60",
+                        "grid w-full grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 border-l-[3px] px-2 py-1.5 text-left transition hover:bg-[var(--surface-2)] sm:grid-cols-[5rem_minmax(0,1.2fr)_minmax(0,1fr)_4rem]",
+                        semantic.listLeftEdgeClass,
+                        hasConflict && "ring-1 ring-inset ring-amber-500/20",
                       )}
                     >
                       <span className="text-xs tabular-nums text-[var(--text-2)]">

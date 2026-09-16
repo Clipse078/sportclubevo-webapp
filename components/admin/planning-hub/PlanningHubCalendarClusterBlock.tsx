@@ -4,6 +4,11 @@ import { useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/cn";
+import {
+  activityVisualStyle,
+  aggregateClusterSemanticType,
+  PLANNING_HUB_CONFLICT_BLOCK_CLASS,
+} from "@/lib/planning-hub/activity-visual-style";
 import { summarizeAggregateCluster } from "@/lib/planning-hub/scheduler/aggregate-cluster";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import PlanningHubClusterInspector from "./PlanningHubClusterInspector";
@@ -34,6 +39,7 @@ export default function PlanningHubCalendarClusterBlock({
   const end = new Date(Math.max(...items.map((i) => i.endAt.getTime())));
   const timeLabel = formatTimeRange(start, end, locale, timezone);
   const summary = summarizeAggregateCluster(items, timeLabel);
+  const clusterSemantic = activityVisualStyle(aggregateClusterSemanticType(items));
 
   return (
     <>
@@ -47,9 +53,11 @@ export default function PlanningHubCalendarClusterBlock({
         aria-label={`${summary.headline}, ${summary.conflictCount} mit Ressourcenkonflikt`}
         onClick={() => setOpen(true)}
         className={cn(
-          "absolute overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)] px-1.5 py-1 text-left shadow-sm",
-          "hover:border-[var(--sce-primary)]/30 hover:bg-[var(--surface-2)]",
-          summary.conflictCount > 0 && "border-l-2 border-l-amber-500/60",
+          "absolute overflow-hidden rounded-md border border-[var(--border)] px-1.5 py-1 text-left shadow-sm",
+          "border-l-[3px] hover:border-[var(--sce-primary)]/30",
+          clusterSemantic.leftAccentClass,
+          clusterSemantic.subtleSurfaceClass,
+          summary.conflictCount > 0 && PLANNING_HUB_CONFLICT_BLOCK_CLASS,
         )}
       >
         <p className="truncate text-[11px] font-semibold text-[var(--foreground)]">{summary.headline}</p>
