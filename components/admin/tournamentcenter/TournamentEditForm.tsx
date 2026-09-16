@@ -6,17 +6,20 @@ import { AlertTriangle, Ban, Loader2, RotateCcw, Save, Trash2 } from "lucide-rea
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
-import { SectionCard } from "@/components/ui/page/SectionCard";
+import { Card } from "@/components/ui";
+import { FormSection } from "@/components/ui/FormSection";
 import type { TournamentDto } from "@/lib/tournaments/types";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import TournamentParticipantsEditor from "@/components/admin/tournamentcenter/TournamentParticipantsEditor";
 import TournamentResourceAllocationEditor from "@/components/admin/tournamentcenter/TournamentResourceAllocationEditor";
+import TournamentPublicationToggles from "@/components/admin/tournamentcenter/TournamentPublicationToggles";
+import TournamentEditorChrome from "@/components/admin/tournamentcenter/TournamentEditorChrome";
+import StaticOptionSearchablePicker from "@/components/admin/shared/StaticOptionSearchablePicker";
+import TeamSearchablePicker from "@/components/admin/shared/TeamSearchablePicker";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import PlanningWorkflowBadge from "@/components/admin/shared/PlanningWorkflowBadge";
 import PlanningWorkflowActionsClient from "@/components/admin/shared/PlanningWorkflowActionsClient";
-import {
-  utcInstantToDateTimeLocalValue,
-} from "@/lib/events/tenant-local-datetime";
+import { utcInstantToDateTimeLocalValue } from "@/lib/events/tenant-local-datetime";
 
 type DeletionImpact = { key: string; label: string; count: number };
 
@@ -28,37 +31,25 @@ type TeamItem = {
   isActive: boolean;
 };
 
+const HOME_AWAY_OPTIONS = [
+  { value: "HOME", label: "Heim (FC Allschwil ausrichtend)" },
+  { value: "AWAY", label: "Auswärts (extern ausgerichtet)" },
+] as const;
+
 function toDateTimeLocalValue(iso: string | null, timezone: string): string {
   return utcInstantToDateTimeLocalValue(iso, timezone);
-}
-
-function formatTeamLabel(team: TeamItem): string {
-  const suffix = [team.ageGroup, team.genderGroup].filter(Boolean).join(" / ");
-  return suffix ? `${team.name} · ${suffix}` : team.name;
 }
 
 type TournamentEditFormProps = {
   tournament: TournamentDto;
   canManage: boolean;
-  /**
-   * ADMIN-DELETE-02A: effective PERMISSIONS.TOURNAMENTS_DELETE authority.
-   * Deliberately independent of canManage/events.manage — permanent
-   * deletion is a separate authority from cancel/restore/edit.
-   */
   canDelete?: boolean;
-  /** Non-archived FULL_PITCH/HALF_PITCH resources, grouped by facility — for the tournament-level Spielfeld/Halle editor. */
   pitchHallFacilityGroups: FacilityGroup[];
-  /** Non-archived DRESSING_ROOM resources, grouped by facility — for the per-participant Garderobe editor. */
   dressingRoomFacilityGroups: FacilityGroup[];
-  /**
-   * ORG-ACCESS-03: planning workflow flags.
-   * isCoordinatorForPlanning: true when user holds tenant-wide events.manage.
-   * isProtectedSource: true for SFV/provider records — no workflow UI.
-   */
   isCoordinatorForPlanning?: boolean;
   isProtectedSource?: boolean;
-  /** Tenant IANA timezone for datetime-local round-trip (e.g. Europe/Zurich). */
   timezone: string;
+  tenantLogoUrl?: string | null;
 };
 
 export default function TournamentEditForm({
@@ -70,6 +61,7 @@ export default function TournamentEditForm({
   isCoordinatorForPlanning = false,
   isProtectedSource = false,
   timezone,
+  tenantLogoUrl = null,
 }: TournamentEditFormProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -87,11 +79,13 @@ export default function TournamentEditForm({
   const [teamId, setTeamId] = useState(tournament.team?.id ?? "");
   const [homeAway, setHomeAway] = useState(tournament.homeAway);
 
-  const [websiteVisible, setWebsiteVisible] = useState(tournament.visibility.websiteVisible);
-  const [infoboardVisible, setInfoboardVisible] = useState(tournament.visibility.infoboardVisible);
-  const [homepageVisible, setHomepageVisible] = useState(tournament.visibility.homepageVisible);
-  const [wochenplanVisible, setWochenplanVisible] = useState(tournament.visibility.wochenplanVisible);
-  const [teamPageVisible, setTeamPageVisible] = useState(tournament.visibility.teamPageVisible);
+  const [publication, setPublication] = useState({
+    websiteVisible: tournament.visibility.websiteVisible,
+    infoboardVisible: tournament.visibility.infoboardVisible,
+    homepageVisible: tournament.visibility.homepageVisible,
+    wochenplanVisible: tournament.visibility.wochenplanVisible,
+    teamPageVisible: tournament.visibility.teamPageVisible,
+  });
 
   const [teams, setTeams] = useState<TeamItem[]>([]);
   const [teamsLoading, setTeamsLoading] = useState(false);
@@ -106,12 +100,6 @@ export default function TournamentEditForm({
   const isCancelled = tournament.status === "CANCELLED";
   const isEditable = canManage && tournament.status !== "ARCHIVED" && tournament.status !== "COMPLETED";
 
-  // RESOURCE-AVAILABILITY-UX-01 — live Frei/Belegt availability for the
-  // CURRENT (possibly unsaved) Start/Ende form values, reusing the EXISTING
-  // PLANNING-CREATION-UX-01A foundation. HOME-only, mirroring the Spielfeld/
-  // Halle section's own visibility below. This tournament's own existing
-  // allocations are excluded server-side (excludeEventId) so editing never
-  // flags its own resources as a conflict with itself.
   const { pitchAvailability, dressingRoomAvailability } = useFacilityAvailability({
     enabled: homeAway === "HOME" && !!startAt,
     startAt,
@@ -171,11 +159,7 @@ export default function TournamentEditForm({
           remarks: remarks.trim() || null,
           teamId: teamId || null,
           homeAway,
-          websiteVisible,
-          infoboardVisible,
-          homepageVisible,
-          wochenplanVisible,
-          teamPageVisible,
+          ...publication,
         }),
       });
 
@@ -268,11 +252,58 @@ export default function TournamentEditForm({
     }
   }
 
+  const saveButton = isEditable ? (
+    <button
+      type="button"
+      onClick={handleSave}
+      disabled={saving}
+      data-testid="tournament-save"
+      className="fca-button-primary"
+    >
+      {saving ? (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Wird gespeichert...
+        </>
+      ) : (
+        <>
+          <Save className="h-4 w-4" />
+          Änderungen speichern
+        </>
+      )}
+    </button>
+  ) : null;
+
   return (
-    <div className="space-y-5">
-      <SectionCard title="Grunddaten" description="Turniername, Organisator und Zeitrahmen">
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block space-y-2">
+    <div className="space-y-2">
+      <TournamentEditorChrome
+        eyebrow="TournamentCenter · Turnier bearbeiten"
+        title={title.trim() || tournament.title}
+        description="Änderungen gelten für dieses Turnier. Sichtbarkeits-Einstellungen wirken sich direkt auf Website, Wochenplan, Teamseite und Infoboard aus."
+        breadcrumbs={[
+          { label: "Tournament Center", href: "/dashboard/tournamentcenter" },
+          { label: "Bearbeiten" },
+        ]}
+        primaryAction={saveButton}
+        secondaryActions={
+          !isProtectedSource ? (
+            <div className="flex items-center gap-2">
+              <PlanningWorkflowBadge stage={tournament.reviewStage} size="sm" />
+              <PlanningWorkflowActionsClient
+                recordId={tournament.id}
+                domain="tournament"
+                planningStage={tournament.reviewStage}
+                isCoordinator={isCoordinatorForPlanning}
+                isProtectedSource={isProtectedSource}
+              />
+            </div>
+          ) : undefined
+        }
+      />
+
+      <FormSection title="Grunddaten" description="Turniername, Organisator und Zeitrahmen">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <label className="block space-y-2 sm:col-span-2 xl:col-span-3">
             <span className="fca-label">Titel</span>
             <input
               type="text"
@@ -286,34 +317,28 @@ export default function TournamentEditForm({
 
           <label className="block space-y-2">
             <span className="fca-label">Heim / Auswärts</span>
-            <select
+            <StaticOptionSearchablePicker
+              options={[...HOME_AWAY_OPTIONS]}
               value={homeAway}
-              onChange={(e) => setHomeAway(e.target.value === "AWAY" ? "AWAY" : "HOME")}
+              onChange={(v) => setHomeAway(v === "AWAY" ? "AWAY" : "HOME")}
               disabled={!isEditable || saving}
-              className="fca-select"
-              data-testid="tournament-home-away-select"
-            >
-              <option value="HOME">Heim (FC Allschwil ausrichtend)</option>
-              <option value="AWAY">Auswärts (extern ausgerichtet)</option>
-            </select>
+              testId="tournament-home-away"
+              placeholder="Heim / Auswärts"
+            />
           </label>
 
-          <label className="block space-y-2">
+          <label className="block space-y-2 sm:col-span-2">
             <span className="fca-label">Hauptteam (Teamseite / Wochenplan)</span>
-            <select
+            <TeamSearchablePicker
+              options={teams}
               value={teamId}
-              onChange={(e) => setTeamId(e.target.value)}
+              onChange={setTeamId}
+              tenantLogoUrl={tenantLogoUrl}
               disabled={!isEditable || teamsLoading || saving}
-              className="fca-select"
-              data-testid="tournament-team-select"
-            >
-              <option value="">{teamsLoading ? "Teams laden..." : "— Kein Hauptteam zugeordnet —"}</option>
-              {teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {formatTeamLabel(team)}
-                </option>
-              ))}
-            </select>
+              testId="tournament-team"
+              placeholder={teamsLoading ? "Teams laden…" : "Hauptteam auswählen…"}
+              emptyLabel="— Kein Hauptteam zugeordnet —"
+            />
           </label>
 
           <label className="block space-y-2">
@@ -398,17 +423,17 @@ export default function TournamentEditForm({
             />
           </label>
 
-          <label className="block space-y-2 md:col-span-2">
+          <label className="block space-y-2 sm:col-span-2 xl:col-span-3">
             <span className="fca-label">Beschreibung</span>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={!isEditable || saving}
-              className="fca-textarea min-h-[100px]"
+              className="fca-textarea min-h-[88px]"
             />
           </label>
 
-          <label className="block space-y-2 md:col-span-2">
+          <label className="block space-y-2 sm:col-span-2 xl:col-span-3">
             <span className="fca-label">Bemerkungen</span>
             <input
               type="text"
@@ -419,11 +444,11 @@ export default function TournamentEditForm({
             />
           </label>
         </div>
-      </SectionCard>
+      </FormSection>
 
-      <SectionCard
+      <FormSection
         title="Teilnehmende Teams"
-        description="FC Allschwil Teams und externe Vereine aus dem Vereinsverzeichnis — beliebig viele, in beliebiger Mischung."
+        description="FC Allschwil Teams und externe Vereine aus dem Vereinsverzeichnis."
       >
         <TournamentParticipantsEditor
           tournamentId={tournament.id}
@@ -432,13 +457,14 @@ export default function TournamentEditForm({
           initialParticipants={tournament.participants}
           dressingRoomFacilityGroups={dressingRoomFacilityGroups}
           dressingRoomAvailability={dressingRoomAvailability}
+          tenantLogoUrl={tenantLogoUrl}
         />
-      </SectionCard>
+      </FormSection>
 
       {homeAway === "HOME" && (
-        <SectionCard
-          title="Ressourcen · Spielfeld / Halle"
-          description="Ein Heimturnier kann mehr als ein Spielfeld bzw. mehr als eine Halle belegen. Verfügbarkeit wird live für Start–Ende angezeigt."
+        <FormSection
+          title="Ressourcen"
+          description="Spielfeld / Halle — Verfügbarkeit live für Start–Ende."
         >
           <TournamentResourceAllocationEditor
             tournamentId={tournament.id}
@@ -447,55 +473,29 @@ export default function TournamentEditForm({
             facilityGroups={pitchHallFacilityGroups}
             availabilityByResourceId={pitchAvailability}
           />
-        </SectionCard>
+        </FormSection>
       )}
 
-      <SectionCard title="Veröffentlichung" description="Ausgabekanäle für dieses Turnier">
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <Toggle label="Website" value={websiteVisible} onChange={setWebsiteVisible} disabled={!isEditable || saving} />
-          <Toggle label="Infoboard" value={infoboardVisible} onChange={setInfoboardVisible} disabled={!isEditable || saving} />
-          <Toggle label="Homepage" value={homepageVisible} onChange={setHomepageVisible} disabled={!isEditable || saving} />
-          <Toggle label="Wochenplan" value={wochenplanVisible} onChange={setWochenplanVisible} disabled={!isEditable || saving} />
-          <Toggle label="Teamseite" value={teamPageVisible} onChange={setTeamPageVisible} disabled={!isEditable || saving} />
-        </div>
-      </SectionCard>
+      <FormSection title="Veröffentlichung" description="Ausgabekanäle für dieses Turnier">
+        <TournamentPublicationToggles
+          value={publication}
+          onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
+          disabled={!isEditable || saving}
+        />
+      </FormSection>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          {isEditable && (
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving}
-              data-testid="tournament-save"
-              className="fca-button-primary"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Wird gespeichert...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4" />
-                  Änderungen speichern
-                </>
-              )}
-            </button>
-          )}
-        </div>
-
-        {canManage && tournament.status !== "ARCHIVED" && tournament.status !== "COMPLETED" && (
+      {canManage && tournament.status !== "ARCHIVED" && tournament.status !== "COMPLETED" && (
+        <div className="border-b border-[var(--border)] py-6">
+          <h3 className="text-sm font-semibold text-[var(--foreground)]">Turnierstatus</h3>
+          <p className="mt-1 max-w-xl text-xs text-[var(--text-2)]">
+            Stornierung oder Wiederherstellung — getrennt vom Speichern der Turnierdaten.
+          </p>
           <button
             type="button"
             onClick={handleLifecycleToggle}
             disabled={lifecycleLoading}
             data-testid="tournament-lifecycle-toggle"
-            className={
-              isCancelled
-                ? "inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3.5 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
-                : "inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3.5 py-2 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
-            }
+            className="fca-button-secondary mt-4 border-rose-200 text-rose-700 hover:border-rose-300 hover:bg-rose-500/10"
           >
             {lifecycleLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -506,39 +506,26 @@ export default function TournamentEditForm({
             )}
             {isCancelled ? "Turnier wiederherstellen" : "Turnier absagen"}
           </button>
-        )}
+        </div>
+      )}
 
-        {/*
-          ADMIN-DELETE-02A: permanent delete requires effective
-          tournaments.delete authority, independent of canManage/
-          events.manage — this button is gated on `canDelete` alone.
-        */}
-        {canDelete && (
+      {canDelete && (
+        <Card variant="warning" title="Gefahrenzone" className="mt-4">
+          <p className="text-sm text-[var(--text-2)]">
+            Das Turnier wird unwiderruflich gelöscht. Teilnehmende Vereine und Ressourcen selbst bleiben erhalten.
+          </p>
           <Button
             variant="danger"
             size="sm"
             iconLeft={<Trash2 className="h-4 w-4" />}
             onClick={openDeleteConfirmation}
             data-testid="tournament-delete-button"
+            className="mt-4"
           >
             Endgültig löschen
           </Button>
-        )}
-
-        {/* ORG-ACCESS-03: planning workflow actions for manual tournaments */}
-        {!isProtectedSource && (
-          <div className="flex items-center gap-2 border-l border-[var(--border)] pl-3">
-            <PlanningWorkflowBadge stage={tournament.reviewStage} size="sm" />
-            <PlanningWorkflowActionsClient
-              recordId={tournament.id}
-              domain="tournament"
-              planningStage={tournament.reviewStage}
-              isCoordinator={isCoordinatorForPlanning}
-              isProtectedSource={isProtectedSource}
-            />
-          </div>
-        )}
-      </div>
+        </Card>
+      )}
 
       <Dialog
         open={deleteConfirming}
@@ -585,8 +572,8 @@ export default function TournamentEditForm({
               <div className="flex items-start gap-2 rounded-lg border border-[var(--sce-warning-border)] bg-[var(--sce-warning-light)] p-3 text-[var(--sce-warning)]">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                 <p className="text-sm">
-                  Folgende verknüpfte Daten werden ebenfalls unwiderruflich entfernt. Teilnehmende
-                  Vereine, Teams und Ressourcen selbst bleiben erhalten.
+                  Folgende verknüpfte Daten werden ebenfalls unwiderruflich entfernt. Teilnehmende Vereine, Teams und
+                  Ressourcen selbst bleiben erhalten.
                 </p>
               </div>
               <ul className="list-inside list-disc space-y-1 text-sm text-[var(--text-2)]">
@@ -604,31 +591,6 @@ export default function TournamentEditForm({
           ) : null}
         </div>
       </Dialog>
-    </div>
-  );
-}
-
-function Toggle({
-  label,
-  value,
-  onChange,
-  disabled,
-}: {
-  label: string;
-  value: boolean;
-  onChange: (value: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="fca-toggle-row">
-      <span className="fca-label">{label}</span>
-      <input
-        type="checkbox"
-        checked={value}
-        onChange={(e) => onChange(e.target.checked)}
-        disabled={disabled}
-        className="fca-toggle-checkbox"
-      />
     </div>
   );
 }

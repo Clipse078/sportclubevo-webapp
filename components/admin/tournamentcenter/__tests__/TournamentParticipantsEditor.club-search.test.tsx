@@ -50,7 +50,11 @@ describe("TournamentParticipantsEditor — external club participant search (BUG
               displayName: "Testverein 0209",
               team: null,
               externalTeam: null,
-              externalClub: { club: { id: "club-many-209", name: "Testverein 0209", shortName: null }, rawDisplayName: null },
+              externalClub: {
+                club: { id: "club-many-209", name: "Testverein 0209", shortName: null, logoUrl: null },
+                rawDisplayName: null,
+              },
+              logoUrl: null,
               manualLabel: null,
               displayOrder: 0,
               dressingRoomAllocations: [],
@@ -83,7 +87,7 @@ describe("TournamentParticipantsEditor — external club participant search (BUG
 
     await screen.findByText("Testverein 0209");
     fireEvent.mouseDown(screen.getByTestId("tournament-participant-add-external-club-search-option-club-many-209"));
-    fireEvent.click(screen.getByTestId("tournament-participant-add-external-club-button"));
+    fireEvent.click(screen.getByTestId("tournament-participant-add-external-club-search-button"));
 
     const row = await screen.findByTestId("tournament-participant-row-participant-1");
     expect(row).toHaveTextContent("Testverein 0209");

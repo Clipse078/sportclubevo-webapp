@@ -9,7 +9,7 @@
  * ExternalClubPicker.
  */
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TournamentCreateForm from "@/components/admin/tournamentcenter/TournamentCreateForm";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
@@ -126,10 +126,12 @@ describe("TournamentCreateForm — external club participant search (BUG 2 fix)"
     });
     fireEvent.mouseDown(await screen.findByTestId("tournament-create-add-external-club-search-option-club-rossoneri"));
 
-    fireEvent.click(screen.getByTestId("tournament-create-add-external-club-button"));
+    fireEvent.click(screen.getByTestId("tournament-create-add-external-club-search-button"));
 
     const row = await screen.findByTestId(/tournament-create-participant-row-/);
     expect(row).toHaveTextContent("AC Rossoneri");
+
+    fireEvent.click(within(row).getByRole("button", { name: "Details bearbeiten" }));
 
     const displayNameInput = row.querySelector("input[placeholder='AC Rossoneri']") as HTMLInputElement;
     expect(displayNameInput).toBeInTheDocument();
@@ -146,7 +148,7 @@ describe("TournamentCreateForm — external club participant search (BUG 2 fix)"
         target: { value: "ro" },
       });
       fireEvent.mouseDown(await screen.findByTestId("tournament-create-add-external-club-search-option-club-rossoneri"));
-      fireEvent.click(screen.getByTestId("tournament-create-add-external-club-button"));
+      fireEvent.click(screen.getByTestId("tournament-create-add-external-club-search-button"));
     }
 
     await addRossoneri();
@@ -192,7 +194,7 @@ describe("TournamentCreateForm — external club participant search (BUG 2 fix)"
 
     await screen.findByText("Testverein 0209");
     fireEvent.mouseDown(screen.getByTestId("tournament-create-add-external-club-search-option-club-many-209"));
-    fireEvent.click(screen.getByTestId("tournament-create-add-external-club-button"));
+    fireEvent.click(screen.getByTestId("tournament-create-add-external-club-search-button"));
 
     const row = await screen.findByTestId(/tournament-create-participant-row-/);
     expect(row).toHaveTextContent("Testverein 0209");

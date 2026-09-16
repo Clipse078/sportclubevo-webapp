@@ -15,6 +15,7 @@
  */
 
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { pickFacilityResource } from "@/components/admin/tournamentcenter/__tests__/tournament-form-test-helpers";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TrainingAllocationEditor } from "@/components/admin/training/TrainingAllocationEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
@@ -117,8 +118,7 @@ describe("TrainingAllocationEditor", () => {
       />,
     );
 
-    const pitchSelect = screen.getByTestId("training-allocation-add-pitch-hall-select");
-    fireEvent.change(pitchSelect, { target: { value: "res-pitch-a" } });
+    pickFacilityResource("training-allocation-add-pitch-hall", "res-pitch-a");
     fireEvent.click(screen.getByTestId("training-allocation-add-pitch-hall-add-button"));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
@@ -164,8 +164,7 @@ describe("TrainingAllocationEditor", () => {
       />,
     );
 
-    const dressingSelect = screen.getByTestId("training-allocation-add-dressing-room-select");
-    fireEvent.change(dressingSelect, { target: { value: "res-dressing-1" } });
+    pickFacilityResource("training-allocation-add-dressing-room", "res-dressing-1");
     fireEvent.click(screen.getByTestId("training-allocation-add-dressing-room-add-button"));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
@@ -201,8 +200,7 @@ describe("TrainingAllocationEditor", () => {
       />,
     );
 
-    const otherSelect = screen.getByTestId("training-allocation-add-other-select");
-    fireEvent.change(otherSelect, { target: { value: "res-other-1" } });
+    pickFacilityResource("training-allocation-add-other", "res-other-1");
     fireEvent.click(screen.getByTestId("training-allocation-add-other-add-button"));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
@@ -227,9 +225,7 @@ describe("TrainingAllocationEditor", () => {
       />,
     );
 
-    fireEvent.change(screen.getByTestId("training-allocation-add-pitch-hall-select"), {
-      target: { value: "res-pitch-a" },
-    });
+    pickFacilityResource("training-allocation-add-pitch-hall", "res-pitch-a");
     fireEvent.click(screen.getByTestId("training-allocation-add-pitch-hall-add-button"));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("FacilityResource already allocated");
@@ -252,9 +248,7 @@ describe("TrainingAllocationEditor", () => {
       />,
     );
 
-    fireEvent.change(screen.getByTestId("training-allocation-add-dressing-room-select"), {
-      target: { value: "res-dressing-1" },
-    });
+    pickFacilityResource("training-allocation-add-dressing-room", "res-dressing-1");
     fireEvent.click(screen.getByTestId("training-allocation-add-dressing-room-add-button"));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("archived");

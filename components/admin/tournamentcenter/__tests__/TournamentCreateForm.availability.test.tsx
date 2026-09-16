@@ -14,6 +14,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TournamentCreateForm from "@/components/admin/tournamentcenter/TournamentCreateForm";
+import { pickSearchableOption } from "./tournament-form-test-helpers";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 
 vi.mock("next/navigation", () => ({
@@ -104,7 +105,7 @@ describe("TournamentCreateForm — guided-progress nudge summary", () => {
     await waitFor(() => expect(screen.getByTestId("tournament-create-guided-progress")).not.toHaveTextContent("Start angeben"));
 
     await waitFor(() => expect(screen.getByTestId("tournament-create-add-team-select")).not.toBeDisabled());
-    fireEvent.change(screen.getByTestId("tournament-create-add-team-select"), { target: { value: "team-1" } });
+    pickSearchableOption("tournament-create-add-team", "team-1");
     fireEvent.click(screen.getByTestId("tournament-create-add-team-button"));
 
     await waitFor(() =>
@@ -145,7 +146,7 @@ describe("TournamentCreateForm — HOME/AWAY facility availability", () => {
     const { availabilityCalls } = installFetchMock();
     render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} />);
 
-    fireEvent.change(screen.getByTestId("tournament-create-home-away-select"), { target: { value: "AWAY" } });
+    pickSearchableOption("tournament-create-home-away", "AWAY");
     fireEvent.change(screen.getByTestId("tournament-create-start-at"), { target: { value: "2026-09-20T10:00" } });
 
     expect(screen.queryByTestId("tournament-create-resource")).not.toBeInTheDocument();

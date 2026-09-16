@@ -12,7 +12,7 @@
  * conflict with itself.
  */
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TournamentEditForm from "@/components/admin/tournamentcenter/TournamentEditForm";
 import type { TournamentDto } from "@/lib/tournaments/types";
@@ -73,6 +73,7 @@ const TOURNAMENT: TournamentDto = {
       tournamentId: "tournament-1",
       kind: "TEAM",
       displayName: "1. Mannschaft",
+      logoUrl: null,
       team: { id: "team-1", name: "1. Mannschaft", slug: "1-mannschaft", category: "SENIOR", ageGroup: null, genderGroup: null },
       externalTeam: null,
       externalClub: null,
@@ -156,18 +157,20 @@ describe("TournamentEditForm — RESOURCE-AVAILABILITY-UX-01 availability", () =
       />,
     );
 
-    const pitchSelect = await screen.findByTestId("tournament-resource-allocation-add-select");
+    fireEvent.click(await screen.findByTestId("tournament-resource-allocation-add-select"));
     await waitFor(() => {
-      expect(pitchSelect.textContent).toContain("Kunstrasen 2");
-      expect(pitchSelect.textContent).toContain("Belegt");
-      expect(pitchSelect.textContent).toContain("Match vs. FC Muttenz");
+      const option = screen.getByTestId("tournament-resource-allocation-add-option-res-pitch-a");
+      expect(option.textContent).toContain("Kunstrasen 2");
+      expect(option.textContent).toContain("Belegt");
+      expect(option.textContent).toContain("Match vs. FC Muttenz");
     });
 
-    const dressingRoomSelect = await screen.findByTestId(
-      "tournament-participant-participant-1-dressing-room-select",
-    );
+    const participantRow = screen.getByTestId("tournament-participant-row-participant-1");
+    fireEvent.click(within(participantRow).getByRole("button", { name: "Details bearbeiten" }));
+
+    fireEvent.click(screen.getByTestId("tournament-participant-participant-1-dressing-room-select"));
     await waitFor(() => {
-      expect(dressingRoomSelect.textContent).toContain("Frei");
+      expect(screen.getByTestId("tournament-participant-participant-1-dressing-room-option-res-dressing-1").textContent).toContain("Frei");
     });
   });
 
