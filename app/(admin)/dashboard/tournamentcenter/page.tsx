@@ -71,7 +71,7 @@ export default async function TournamentCenterPage({ searchParams }: TournamentC
       <AdminSectionHeader
         eyebrow="Planung"
         title="Tournament Center"
-        description="Operative Übersicht über anstehende und vergangene Turniere — filtern, gruppieren und verwalten."
+        description="Turniere planen, koordinieren und veröffentlichen."
         actions={
           canCreate ? (
             <Link href="/dashboard/tournamentcenter/new" className="fca-button-primary">
@@ -93,6 +93,7 @@ export default async function TournamentCenterPage({ searchParams }: TournamentC
         group={group}
         sort={sort}
         teamOptions={teamOptions}
+        tenantLogoUrl={tenantContext.logoUrl}
         timezone={timezone}
         locale={locale}
         canCreate={canCreate}

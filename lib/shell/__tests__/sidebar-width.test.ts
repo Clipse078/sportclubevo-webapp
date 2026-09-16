@@ -13,7 +13,7 @@ describe("sidebar-width", () => {
     expect(clampSidebarWidth(240)).toBe(240);
   });
 
-  it("defaults to the canonical sidebar width", () => {
-    expect(SIDEBAR_WIDTH_DEFAULT).toBe(224);
+  it("defaults to the maximum sidebar width when no preference is stored", () => {
+    expect(SIDEBAR_WIDTH_DEFAULT).toBe(SIDEBAR_WIDTH_MAX);
   });
 });

@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState, type FocusEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Plus, Trophy, X } from "lucide-react";
+import { Plus, Trophy } from "lucide-react";
 import type { TournamentDto, TournamentStatus } from "@/lib/tournaments/types";
 import {
   buildTournamentCenterHref,
@@ -21,49 +21,27 @@ import {
 import { isTournamentInArchivList } from "@/lib/tournaments/operational-state";
 import type { TournamentActionFilter } from "@/lib/tournaments/view-model";
 import { formatMonthLabel, resolveMatchcenterMonthWindow } from "@/lib/matchcenter/month-range";
+import {
+  formatTournamentAgendaDateHeading,
+  formatTournamentAgendaMonthHeading,
+  TOURNAMENT_STATUS_LABELS,
+} from "@/lib/tournaments/presentation";
 import { cn } from "@/lib/cn";
 import { EmptyState } from "@/components/ui/page/EmptyState";
-import { SectionCard } from "@/components/ui/page/SectionCard";
-import { CenterSummaryStrip } from "@/components/centers/CenterSummaryStrip";
 import { CenterPeriodNavigation } from "@/components/centers/CenterPeriodNavigation";
 import { CenterWorkspaceSearchInput } from "@/components/centers/CenterWorkspaceSearchInput";
+import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
 import TournamentOperationalRow from "./TournamentOperationalRow";
+import {
+  TournamentCenterActiveFilterChips,
+  TournamentCenterFilterSurface,
+} from "./TournamentCenterFilterSurface";
 
 const TIME_SCOPES: { key: TournamentTimeScope; label: string }[] = [
   { key: "UPCOMING", label: "Anstehend" },
   { key: "PAST", label: "Vergangen" },
   { key: "ALL", label: "Alle" },
 ];
-
-const GROUP_OPTIONS: { key: TournamentGroupMode; label: string }[] = [
-  { key: "DATE", label: "Datum" },
-  { key: "MONTH", label: "Monat" },
-  { key: "TEAM", label: "Team" },
-  { key: "NONE", label: "Keine Gruppierung" },
-];
-
-const SORT_OPTIONS: { key: TournamentSortMode; label: string }[] = [
-  { key: "DATE_ASC", label: "Datum aufsteigend" },
-  { key: "DATE_DESC", label: "Datum absteigend" },
-  { key: "TITLE", label: "Turniername" },
-];
-
-const READINESS_FILTERS: { key: TournamentActionFilter; label: string }[] = [
-  { key: "ALLE", label: "Alle" },
-  { key: "OFFEN", label: "Offen" },
-  { key: "ERLEDIGT", label: "Erledigt" },
-];
-
-const STATUS_FILTER_OPTIONS = [
-  { value: "", label: "Status" },
-  { value: "DRAFT", label: "Entwurf" },
-  { value: "SCHEDULED", label: "Geplant" },
-  { value: "LIVE", label: "Live" },
-  { value: "COMPLETED", label: "Abgeschlossen" },
-  { value: "CANCELLED", label: "Storniert" },
-  { value: "POSTPONED", label: "Verschoben" },
-  { value: "ARCHIVED", label: "Archiviert" },
-] as const;
 
 export type TournamentCenterWorkspaceProps = {
   tournaments: TournamentDto[];
@@ -76,6 +54,7 @@ export type TournamentCenterWorkspaceProps = {
   group: TournamentGroupMode;
   sort: TournamentSortMode;
   teamOptions: TournamentTeamOption[];
+  tenantLogoUrl?: string | null;
   basePath?: string;
   timezone?: string;
   locale?: string;
@@ -117,95 +96,55 @@ function workspaceHref(
   });
 }
 
-function CompactSelect<T extends string>({
-  label,
-  value,
-  options,
-  hrefForValue,
-  active,
-  testId,
+function TournamentGroupHeading({
+  group,
+  heading,
+  groupKey,
+  teamOptions,
+  tenantLogoUrl,
+  locale,
+  timezone,
+  count,
 }: {
-  label: string;
-  value: T | "";
-  options: { value: T | ""; label: string }[];
-  hrefForValue: (value: T | "") => string;
-  active?: boolean;
-  testId?: string;
+  group: TournamentGroupMode;
+  heading: string;
+  groupKey: string;
+  teamOptions: TournamentTeamOption[];
+  tenantLogoUrl?: string | null;
+  locale: string;
+  timezone: string;
+  count: number;
 }) {
-  const router = useRouter();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useState(false);
-  const currentLabel = options.find((o) => o.value === value)?.label ?? label;
+  if (!heading) return null;
 
-  function select(next: T | "") {
-    setOpen(false);
-    router.push(hrefForValue(next));
+  let displayHeading = heading;
+  if (group === "DATE") {
+    displayHeading = formatTournamentAgendaDateHeading(groupKey, locale, timezone);
+  } else if (group === "MONTH") {
+    displayHeading = formatTournamentAgendaMonthHeading(groupKey, locale, timezone);
   }
 
-  function handleBlur(event: FocusEvent<HTMLButtonElement>) {
-    const nextTarget = event.relatedTarget as Node | null;
-    if (nextTarget && containerRef.current?.contains(nextTarget)) return;
-    window.setTimeout(() => setOpen(false), 150);
-  }
+  const teamOption = group === "TEAM" && groupKey !== "__none__"
+    ? teamOptions.find((t) => t.id === groupKey)
+    : null;
 
   return (
-    <div ref={containerRef} className="relative" data-testid={testId}>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        onBlur={handleBlur}
-        className={cn(
-          "inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors",
-          active || value
-            ? "border-[var(--tenant-primary)] bg-[var(--tenant-primary)]/10 text-[var(--tenant-primary)]"
-            : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-2)]",
-        )}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-label={label}
-      >
-        <span className="max-w-[140px] truncate">{value ? currentLabel : label}</span>
-        <ChevronDown className="h-3 w-3 shrink-0 opacity-60" aria-hidden />
-        {value ? (
-          <span
-            role="button"
-            tabIndex={0}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={(e) => {
-              e.stopPropagation();
-              select("" as T | "");
-            }}
-            className="flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-[var(--tenant-primary)]/20"
-            aria-label={`${label} zurücksetzen`}
-          >
-            <X className="h-2.5 w-2.5" />
-          </span>
+    <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] pb-2">
+      <div className="flex min-w-0 items-center gap-2">
+        {teamOption ? (
+          <ClubLogo
+            logoUrl={tenantLogoUrl}
+            name={teamOption.label}
+            size="sm"
+            bare
+            className="h-6 w-6 shrink-0"
+          />
         ) : null}
-      </button>
-
-      {open ? (
-        <div
-          role="listbox"
-          className="absolute left-0 top-full z-50 mt-1 max-h-64 min-w-[180px] overflow-y-auto rounded-[var(--radius-xl)] border border-[var(--border-strong)] bg-[var(--surface)] py-1 shadow-[var(--shadow-lg)]"
-        >
-          {options.map((option) => (
-            <button
-              key={option.value || "__all__"}
-              type="button"
-              role="option"
-              aria-selected={option.value === value}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => select(option.value)}
-              className={cn(
-                "flex w-full px-3 py-2 text-left text-xs hover:bg-[var(--surface-2)]",
-                option.value === value && "bg-[var(--surface-2)] font-semibold",
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
+        <h2 className="truncate text-xs font-bold uppercase tracking-wide text-[var(--foreground)]">
+          {displayHeading}
+        </h2>
+      </div>
+      <span className="shrink-0 text-[0.65rem] font-medium tabular-nums text-[var(--muted)]">{count}</span>
     </div>
   );
 }
@@ -222,6 +161,7 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
     group,
     sort,
     teamOptions,
+    tenantLogoUrl = null,
     basePath = "/dashboard/tournamentcenter",
     timezone = "Europe/Zurich",
     locale = "de-CH",
@@ -298,48 +238,68 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
     actionFilter,
   });
 
-  const summaryMetrics = [
-    {
-      key: "upcoming",
-      label: "Anstehend",
-      value: viewModel.summary.upcoming,
-      tone: "default" as const,
-      href: buildTournamentCenterHref(basePath, { scope: "UPCOMING", group }),
-      active: scope === "UPCOMING",
-      "data-testid": "tournamentcenter-kpi-anstehend",
-    },
-    {
-      key: "this-month",
-      label: "Diesen Monat",
-      value: viewModel.summary.thisMonth,
-      tone: "default" as const,
-      href: buildTournamentCenterHref(basePath, {
-        scope: "UPCOMING",
-        month: currentMonthWindow.param,
-        group,
-      }),
-      active: Boolean(monthParam === currentMonthWindow.param && scope === "UPCOMING"),
-      "data-testid": "tournamentcenter-kpi-this-month",
-    },
-    {
-      key: "teams",
-      label: "Teams",
-      value: viewModel.summary.teamsInvolved,
-      tone: "muted" as const,
-      "data-testid": "tournamentcenter-kpi-teams",
-    },
-    {
-      key: "past",
-      label: "Vergangen",
-      value: viewModel.summary.past,
-      tone: "muted" as const,
-      href: buildTournamentCenterHref(basePath, { scope: "PAST", group }),
-      active: scope === "PAST",
-      "data-testid": "tournamentcenter-kpi-archiv",
-    },
-  ];
-
   const compactDate = group === "DATE" || group === "MONTH";
+
+  const activeFilterChips = useMemo(() => {
+    const chips: { key: string; label: string; href: string }[] = [];
+
+    if (initialSearch.trim()) {
+      chips.push({
+        key: "q",
+        label: `„${initialSearch.trim()}“`,
+        href: buildHref({ search: "" }),
+      });
+    }
+
+    if (teamFilter) {
+      const label = teamOptions.find((t) => t.id === teamFilter)?.label ?? "Team";
+      chips.push({
+        key: "team",
+        label,
+        href: buildHref({ teamFilter: null }),
+      });
+    }
+
+    if (monthParam && monthWindow) {
+      chips.push({
+        key: "month",
+        label: formatMonthLabel(monthWindow, locale, timezone),
+        href: buildHref({ month: null }),
+      });
+    }
+
+    if (statusFilter) {
+      chips.push({
+        key: "status",
+        label: TOURNAMENT_STATUS_LABELS[statusFilter] ?? statusFilter,
+        href: buildHref({ statusFilter: null }),
+      });
+    }
+
+    if (scope === "UPCOMING" && actionFilter !== "ALLE") {
+      const readinessLabel =
+        actionFilter === "OFFEN" ? "Offen" : actionFilter === "ERLEDIGT" ? "Erledigt" : actionFilter;
+      chips.push({
+        key: "readiness",
+        label: readinessLabel,
+        href: buildHref({ actionFilter: "ALLE" }),
+      });
+    }
+
+    return chips;
+  }, [
+    initialSearch,
+    teamFilter,
+    monthParam,
+    monthWindow,
+    statusFilter,
+    actionFilter,
+    scope,
+    teamOptions,
+    buildHref,
+    locale,
+    timezone,
+  ]);
 
   function rowVariant(row: TournamentWorkspaceRow): "past" | "upcoming" {
     if (scope === "PAST") return "past";
@@ -348,7 +308,7 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 overflow-x-hidden">
       <div
         role="tablist"
         aria-label="Zeitraum"
@@ -377,127 +337,62 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
         })}
       </div>
 
-      <CenterSummaryStrip metrics={summaryMetrics} />
-
-      <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div className="space-y-2.5">
+        <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center">
           <CenterWorkspaceSearchInput
             value={searchDraft}
             onChange={pushSearch}
-            placeholder="Turniere, Teams, Orte…"
+            placeholder="Turniere durchsuchen…"
             ariaLabel="Turniere durchsuchen"
+            className="relative min-w-0 flex-1"
             data-testid="tournamentcenter-search"
           />
 
-          <div className="flex flex-wrap items-center gap-2">
-            <CompactSelect
-              label="Team"
-              value={teamFilter ?? ""}
-              options={[
-                { value: "", label: "Alle Teams" },
-                ...teamOptions.map((t) => ({ value: t.id, label: t.label })),
-              ]}
-              hrefForValue={(value) => buildHref({ teamFilter: value || null })}
-              active={Boolean(teamFilter)}
-              testId="tournamentcenter-filter-team"
-            />
-
-            <CompactSelect
-              label="Status"
-              value={statusFilter ?? ""}
-              options={STATUS_FILTER_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-              hrefForValue={(value) =>
-                buildHref({ statusFilter: value ? (value as TournamentStatus) : null })
-              }
-              active={Boolean(statusFilter)}
-              testId="tournamentcenter-filter-status"
-            />
-
-            <CompactSelect
-              label="Gruppieren nach"
-              value={group}
-              options={GROUP_OPTIONS.map((o) => ({ value: o.key, label: o.label }))}
-              hrefForValue={(value) => buildHref({ group: (value || "DATE") as TournamentGroupMode })}
-              testId="tournamentcenter-group"
-            />
-
-            <CompactSelect
-              label="Sortierung"
-              value={sort}
-              options={SORT_OPTIONS.map((o) => ({ value: o.key, label: o.label }))}
-              hrefForValue={(value) => buildHref({ sort: (value || "DATE_ASC") as TournamentSortMode })}
-              testId="tournamentcenter-sort"
-            />
-          </div>
+          <TournamentCenterFilterSurface
+            scope={scope}
+            teamFilter={teamFilter}
+            monthParam={monthParam}
+            statusFilter={statusFilter}
+            actionFilter={actionFilter}
+            group={group}
+            sort={sort}
+            teamOptions={teamOptions}
+            buildHref={buildHref}
+            timezone={timezone}
+            locale={locale}
+            filtersActive={filtersActive}
+          />
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-3 sm:flex-row sm:items-center sm:justify-between">
-          {monthWindow ? (
-            <CenterPeriodNavigation
-              label={formatMonthLabel(monthWindow, locale, timezone)}
-              previousHref={buildHref({ month: monthWindow.previousParam })}
-              nextHref={buildHref({ month: monthWindow.nextParam })}
-              todayHref={buildHref({ month: currentMonthWindow.param })}
-              data-testid-label="tournamentcenter-month-label"
-              data-testid-previous="tournamentcenter-month-previous"
-              data-testid-next="tournamentcenter-month-next"
-              data-testid-today="tournamentcenter-month-today"
-            />
-          ) : (
-            <CompactSelect
-              label="Monat"
-              value=""
-              options={[
-                { value: "", label: "Alle Monate" },
-                {
-                  value: currentMonthWindow.param,
-                  label: formatMonthLabel(currentMonthWindow, locale, timezone),
-                },
-              ]}
-              hrefForValue={(value) => buildHref({ month: value || null })}
-              testId="tournamentcenter-filter-month"
-            />
-          )}
+        {viewModel.totalMatching > 0 ? (
+          <p className="text-[0.68rem] font-medium text-[var(--muted)]" data-testid="tournamentcenter-result-count">
+            {viewModel.totalMatching}{" "}
+            {viewModel.totalMatching === 1 ? "Turnier" : "Turniere"}
+            {filtersActive ? " (gefiltert)" : ""}
+          </p>
+        ) : null}
 
-          <div className="flex flex-wrap items-center gap-2">
-            {scope === "UPCOMING" ? (
-              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Vorbereitungsfilter">
-                {READINESS_FILTERS.map((item) => {
-                  const isActive = item.key === actionFilter;
-                  return (
-                    <Link
-                      key={item.key}
-                      href={buildHref({ actionFilter: item.key })}
-                      data-testid={`tournamentcenter-filter-${item.key.toLowerCase()}`}
-                      className={cn(
-                        "rounded-full border px-3 py-1 text-[0.68rem] font-semibold transition",
-                        isActive
-                          ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
-                          : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-2)]",
-                      )}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : null}
+        <TournamentCenterActiveFilterChips
+          chips={activeFilterChips}
+          resetHref={buildTournamentCenterResetHref(basePath, scope, group)}
+        />
 
-            {filtersActive ? (
-              <Link
-                href={buildTournamentCenterResetHref(basePath, scope, group)}
-                className="text-xs font-semibold text-[var(--sce-primary)] hover:underline"
-                data-testid="tournamentcenter-reset-filters"
-              >
-                Filter zurücksetzen
-              </Link>
-            ) : null}
-          </div>
-        </div>
+        {monthWindow ? (
+          <CenterPeriodNavigation
+            label={formatMonthLabel(monthWindow, locale, timezone)}
+            previousHref={buildHref({ month: monthWindow.previousParam })}
+            nextHref={buildHref({ month: monthWindow.nextParam })}
+            todayHref={buildHref({ month: currentMonthWindow.param })}
+            data-testid-label="tournamentcenter-month-label"
+            data-testid-previous="tournamentcenter-month-previous"
+            data-testid-next="tournamentcenter-month-next"
+            data-testid-today="tournamentcenter-month-today"
+          />
+        ) : null}
       </div>
 
       {viewModel.emptyKind === "no_data" ? (
-        <SectionCard noPadding>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
           <EmptyState
             icon={<Trophy className="h-8 w-8" />}
             heading="Noch keine Turniere"
@@ -511,9 +406,9 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
               ) : undefined
             }
           />
-        </SectionCard>
+        </div>
       ) : viewModel.emptyKind === "no_scope" ? (
-        <SectionCard noPadding>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
           <EmptyState
             icon={<Trophy className="h-8 w-8" />}
             heading={
@@ -539,69 +434,53 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
               ) : undefined
             }
           />
-        </SectionCard>
+        </div>
       ) : viewModel.emptyKind === "filtered" ? (
-        <SectionCard noPadding>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
           <EmptyState
             icon={<Trophy className="h-8 w-8" />}
-            heading="Keine Turniere entsprechen den ausgewählten Filtern"
-            description="Passen Sie Suche oder Filter an, um mehr Ergebnisse zu sehen."
+            heading="Keine Turniere entsprechen den Filtern"
+            description="Passen Sie Suche oder Filter an — aktive Filter sind oben als Chips sichtbar."
             action={
               <Link
                 href={buildTournamentCenterResetHref(basePath, scope, group)}
                 className="fca-button-secondary text-sm"
                 data-testid="tournamentcenter-empty-reset"
               >
-                Filter zurücksetzen
+                Alle Filter zurücksetzen
               </Link>
             }
           />
-        </SectionCard>
+        </div>
       ) : (
-        <div className="space-y-4" data-testid="tournamentcenter-list">
-          {viewModel.groups.map((groupBlock) =>
-            groupBlock.heading ? (
-              <SectionCard key={groupBlock.key} noPadding>
-                <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2">
-                  <h2 className="text-xs font-bold uppercase tracking-wide text-[var(--foreground)]">
-                    {groupBlock.heading}
-                  </h2>
-                  <span className="text-[0.65rem] font-medium tabular-nums text-[var(--muted)]">
-                    {groupBlock.count}
-                  </span>
-                </div>
-                <div className="divide-y divide-[var(--border)]">
-                  {groupBlock.rows.map((row) => (
-                    <TournamentOperationalRow
-                      key={`${groupBlock.key}-${row.tournament.id}`}
-                      tournament={row.tournament}
-                      assessment={row.assessment}
-                      locale={locale}
-                      timezone={timezone}
-                      compactDate={compactDate}
-                      variant={rowVariant(row)}
-                    />
-                  ))}
-                </div>
-              </SectionCard>
-            ) : (
-              <SectionCard key={groupBlock.key} noPadding>
-                <div className="divide-y divide-[var(--border)]">
-                  {groupBlock.rows.map((row) => (
-                    <TournamentOperationalRow
-                      key={row.tournament.id}
-                      tournament={row.tournament}
-                      assessment={row.assessment}
-                      locale={locale}
-                      timezone={timezone}
-                      compactDate={false}
-                      variant={rowVariant(row)}
-                    />
-                  ))}
-                </div>
-              </SectionCard>
-            ),
-          )}
+        <div className="space-y-6" data-testid="tournamentcenter-list">
+          {viewModel.groups.map((groupBlock) => (
+            <section key={groupBlock.key} className="space-y-2">
+              <TournamentGroupHeading
+                group={group}
+                heading={groupBlock.heading}
+                groupKey={groupBlock.key}
+                teamOptions={teamOptions}
+                tenantLogoUrl={tenantLogoUrl}
+                locale={locale}
+                timezone={timezone}
+                count={groupBlock.count}
+              />
+              <div className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                {groupBlock.rows.map((row) => (
+                  <TournamentOperationalRow
+                    key={`${groupBlock.key}-${row.tournament.id}`}
+                    tournament={row.tournament}
+                    assessment={row.assessment}
+                    locale={locale}
+                    timezone={timezone}
+                    compactDate={compactDate && Boolean(groupBlock.heading)}
+                    variant={rowVariant(row)}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
       )}
     </div>

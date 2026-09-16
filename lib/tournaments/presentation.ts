@@ -61,6 +61,40 @@ export function formatTournamentDatePresentation(
   return { weekdayShort, day, monthShort, timeLabel };
 }
 
+/** Operational agenda group label, e.g. `SA · 19. SEPTEMBER`. */
+export function formatTournamentAgendaDateHeading(
+  dateKey: string,
+  locale: string,
+  timeZone: string,
+): string {
+  const parsed = new Date(`${dateKey}T12:00:00.000Z`);
+  const weekday = new Intl.DateTimeFormat(locale, { weekday: "short", timeZone })
+    .format(parsed)
+    .replace(/\.$/, "")
+    .toUpperCase();
+  const day = new Intl.DateTimeFormat(locale, { day: "numeric", timeZone }).format(parsed);
+  const month = new Intl.DateTimeFormat(locale, { month: "long", timeZone })
+    .format(parsed)
+    .toUpperCase();
+  return `${weekday} · ${day}. ${month}`;
+}
+
+export function formatTournamentAgendaMonthHeading(
+  monthKey: string,
+  locale: string,
+  timeZone: string,
+): string {
+  const [year, month] = monthKey.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year!, month! - 1, 15, 12));
+  return new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+    timeZone,
+  })
+    .format(parsed)
+    .toUpperCase();
+}
+
 export const TOURNAMENT_STATUS_LABELS: Record<string, string> = {
   DRAFT: "Entwurf",
   SCHEDULED: "Geplant",

@@ -97,7 +97,7 @@
   --shadow-xl:  0 16px 48px rgba(0, 0, 0, 0.44), 0 8px 16px rgba(0, 0, 0, 0.24);
 
   /* Sidebar */
-  --sidebar-width:          224px;
+  --sidebar-width:          320px;
   --sidebar-collapsed-width: 56px;
   --topnav-height:           52px;
 
@@ -518,6 +518,11 @@ button {
   padding-right: 0.75rem;
   /* icon offset (12px) + icon width (14px) + comfortable gap (12px) */
   padding-left: 2.375rem;
+}
+
+/** Search/combobox fields with a trailing chevron or action icon. */
+.fca-combobox-input {
+  padding-right: 2.25rem;
 }
 
 .fca-label {

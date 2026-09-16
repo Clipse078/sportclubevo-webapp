@@ -157,7 +157,7 @@ export default function TournamentOperationalRow({
 
         {variant === "upcoming" && assessment.status === "OPEN" ? (
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 text-[0.65rem] font-semibold text-amber-700">
+            <span className="inline-flex items-center gap-1 text-[0.65rem] font-semibold text-[var(--sce-warning)]">
               <CircleAlert className="h-3 w-3" aria-hidden />
               {assessment.actionCount === 1
                 ? "1 Angabe fehlt"
@@ -177,7 +177,7 @@ export default function TournamentOperationalRow({
           {statusLabel}
         </Badge>
         {variant === "upcoming" && assessment.status === "READY" ? (
-          <span className="inline-flex items-center gap-1 text-[0.65rem] font-medium text-emerald-700">
+          <span className="inline-flex items-center gap-1 text-[0.65rem] font-medium text-[var(--sce-success)]">
             <CheckCircle2 className="h-3 w-3" aria-hidden />
             Bereit
           </span>
