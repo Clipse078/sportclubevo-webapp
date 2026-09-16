@@ -67,6 +67,10 @@ export function evaluateWochenplanMatchPublication(
     return { eligible: false, reason: "WEBSITE_HIDDEN" };
   }
 
+  if (event.wochenplanVisible === false) {
+    return { eligible: false, reason: "WOCHENPLAN_HIDDEN" };
+  }
+
   return evaluateHomeMatchLocation(event.homeAway);
 }
 
@@ -88,6 +92,10 @@ export function evaluateWochenplanTournamentPublication(
 
   if (!event.websiteVisible) {
     return { eligible: false, reason: "WEBSITE_HIDDEN" };
+  }
+
+  if (event.wochenplanVisible === false) {
+    return { eligible: false, reason: "WOCHENPLAN_HIDDEN" };
   }
 
   // Weekplanner already filters to HOME tournaments; homeAway on the Event

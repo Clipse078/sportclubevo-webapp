@@ -4,7 +4,8 @@ export const SIDEBAR_WIDTH_STORAGE_KEY = "sce-sidebar-width";
 
 export const SIDEBAR_WIDTH_MIN = 180;
 export const SIDEBAR_WIDTH_MAX = 320;
-export const SIDEBAR_WIDTH_DEFAULT = 224;
+/** Default to max width when the user has not resized — labels stay comfortably readable. */
+export const SIDEBAR_WIDTH_DEFAULT = SIDEBAR_WIDTH_MAX;
 
 export function clampSidebarWidth(width: number): number {
   return Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, width));

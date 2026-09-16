@@ -181,13 +181,22 @@ function normalizeLimit(value?: number | null, max = DEFAULT_MAX_LIMIT) {
   return Math.max(1, Math.min(max, value));
 }
 
-function buildSurfaceWhere(surface: PublicEventSurface) {
+function buildSurfaceWhere(surface: PublicEventSurface): Record<string, unknown> {
   switch (surface) {
     case "homepage":
-      // Homepage uses the same predicate as the website feed: websiteVisible only.
-      // homepageVisible is a legacy field and must not independently gate homepage
-      // match eligibility (PUB-02 policy decision — see docs/public-website-api.md).
-      return { websiteVisible: true };
+      // Matches: websiteVisible only (PUB-02 — homepageVisible does not gate matches).
+      // Tournaments: websiteVisible plus homepageVisible (Tournament Center channel).
+      return {
+        websiteVisible: true,
+        AND: [
+          {
+            OR: [
+              { type: { not: "TOURNAMENT" } },
+              { homepageVisible: true },
+            ],
+          },
+        ],
+      };
     case "wochenplan":
       return { websiteVisible: true, wochenplanVisible: true };
     case "trainingsplan":
@@ -245,12 +254,20 @@ export async function getPublicEvents(input: GetPublicEventsInput): Promise<Publ
     return [];
   }
 
+  const surfaceWhere = buildSurfaceWhere(input.surface);
+  const surfaceAndClauses = Array.isArray(surfaceWhere.AND)
+    ? (surfaceWhere.AND as Record<string, unknown>[])
+    : [];
+  const surfaceFilters = { ...surfaceWhere };
+  delete surfaceFilters.AND;
+
   const where: Record<string, unknown> = {
-    ...buildSurfaceWhere(input.surface),
+    ...surfaceFilters,
     tenantId: input.tenantId,
     // A malformed historical cross-tenant Event → Team relation must not
     // expose the related Team through a tenant-owned Event.
     AND: [
+      ...surfaceAndClauses,
       {
         OR: [
           { teamId: null },

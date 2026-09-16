@@ -7,8 +7,7 @@ import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { createClubDirectoryQueryDatabase } from "@/lib/club-directory/prisma-adapter";
 import { getExternalClubById } from "@/lib/club-directory/query-service";
 import MergeClubForm from "@/components/admin/club-directory/MergeClubForm";
-import { PageShell } from "@/components/ui/page";
-import { FormPagePattern } from "@/components/ui/patterns";
+import { PageShell, PageBreadcrumbs, PageHeader } from "@/components/ui/page";
 
 type Props = { params: Promise<{ clubId: string }> };
 
@@ -26,26 +25,32 @@ export default async function MergeClubPage({ params }: Props) {
 
   return (
     <PageShell fullWidth>
-      <FormPagePattern
-        eyebrow="Organisation · Vereine"
-        title={`Duplikate in „${club.name}“ zusammenführen`}
-        description="Wähle Vereins-Duplikate, die als Team-Ansammlung fälschlicherweise eigene Vereine sind, und führe sie manuell zusammen."
-        breadcrumbs={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Vereine", href: "/dashboard/vereine" },
-          { label: club.name, href: `/dashboard/vereine/${club.id}` },
-          { label: "Zusammenführen" },
-        ]}
-      >
+      <div className="flex flex-col gap-6" data-testid="club-merge-page">
+        <PageBreadcrumbs
+          items={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Vereine", href: "/dashboard/vereine" },
+            { label: club.name, href: `/dashboard/vereine/${club.id}` },
+            { label: "Duplikate zusammenführen" },
+          ]}
+        />
+        <PageHeader
+          eyebrow="Organisation · Vereine"
+          title="Duplikate zusammenführen"
+          description={`Führe fälschlich als eigene Vereine angelegte Team-Duplikate mit ${club.name} zusammen.`}
+          className="mb-0"
+        />
         <MergeClubForm
           survivingClub={{
             id: club.id,
             name: club.name,
             shortName: club.shortName,
             logoUrl: club.logoUrl,
+            teamCount: club.teamCount,
+            hasProviderMapping: club.hasProviderMapping,
           }}
         />
-      </FormPagePattern>
+      </div>
     </PageShell>
   );
 }

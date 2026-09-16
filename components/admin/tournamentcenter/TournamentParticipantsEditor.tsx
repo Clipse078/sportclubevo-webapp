@@ -1,33 +1,14 @@
 "use client";
 
-/**
- * components/admin/tournamentcenter/TournamentParticipantsEditor.tsx
- *
- * TOURNAMENTCENTER-01B — "Teilnehmende Teams" editor.
- *
- * Supports a variable, unbounded number of participants mixing
- * tenant-owned canonical Teams and (TOURNAMENTCENTER-UX-03) canonical
- * Club-Directory ExternalClub participants — each with a tournament-specific
- * "Anzeigename" — and, as a smallest clean fallback, a free-text manual
- * label for a genuinely unknown team. HISTORICAL rows linked via
- * externalTeamId (created before TOURNAMENTCENTER-UX-03) remain fully
- * readable here, just not creatable anymore. Per-participant Garderobe
- * allocation is only shown for HOME tournaments (AWAY tournaments have no
- * FCA dressing-room requirement — see lib/tournaments/operational-state.ts).
- */
-
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
-import { Building2, Loader2, Plus, Shirt, Trash2, UserRound, UsersRound } from "lucide-react";
-import type {
-  TournamentHomeAway,
-  TournamentParticipantDto,
-} from "@/lib/tournaments/types";
-import {
-  FacilityResourceSelector,
-  type FacilityGroup,
-  type ResourceAvailabilityAnnotation,
-} from "@/components/admin/training/FacilityResourceSelector";
-import { ExternalClubPicker, type ExternalClubPickerResult } from "./ExternalClubPicker";
+import { ChevronDown, ChevronRight, Pencil, Shirt, Trash2, UsersRound } from "lucide-react";
+import type { TournamentHomeAway, TournamentParticipantDto } from "@/lib/tournaments/types";
+import { type FacilityGroup, type ResourceAvailabilityAnnotation } from "@/components/admin/training/FacilityResourceSelector";
+import { VisualDressingRoomPicker } from "@/components/admin/shared/planning/VisualDressingRoomPicker";
+import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
+import { cn } from "@/lib/cn";
+import TournamentParticipantAddWorkflow from "./TournamentParticipantAddWorkflow";
+import type { ExternalClubPickerResult } from "./ExternalClubPicker";
 
 type TeamOption = {
   id: string;
@@ -37,31 +18,16 @@ type TeamOption = {
   isActive: boolean;
 };
 
-/** TOURNAMENTCENTER-UX-03 — canonical external-participant club source, same eligible universe as /dashboard/vereine. */
-type ExternalClubOption = ExternalClubPickerResult;
-
 type Props = {
   tournamentId: string;
   canManage: boolean;
   homeAway: TournamentHomeAway;
   initialParticipants: TournamentParticipantDto[];
-  /** Non-archived DRESSING_ROOM resources, grouped by facility — only relevant for HOME tournaments. */
   dressingRoomFacilityGroups: FacilityGroup[];
-  /**
-   * RESOURCE-AVAILABILITY-UX-01 — live Frei/Belegt Garderobe availability
-   * for the tournament's current Start/Ende, keyed by resource id, shared
-   * across every participant's dressing-room selector below (a single
-   * fetch, never one per participant). Purely additive.
-   */
   dressingRoomAvailability?: Map<string, ResourceAvailabilityAnnotation>;
+  tenantLogoUrl?: string | null;
 };
 
-/**
- * Preferred external-participant display (PART 5): canonical Club name as
- * the prominent identity, tournament-specific Anzeigename below — e.g.
- * "AC Rossoneri" / "Gelb". For every other kind, the DTO's resolved
- * `displayName` is already the right main label.
- */
 function participantMainLabel(participant: TournamentParticipantDto): string {
   if (participant.kind === "EXTERNAL_CLUB" && participant.externalClub) {
     return participant.externalClub.club.name;
@@ -72,18 +38,22 @@ function participantMainLabel(participant: TournamentParticipantDto): string {
 function participantSubLabel(participant: TournamentParticipantDto): string | null {
   if (participant.kind === "TEAM" && participant.team) {
     const suffix = [participant.team.ageGroup, participant.team.genderGroup].filter(Boolean).join(" / ");
-    return suffix || null;
+    return suffix || "FC Allschwil Team";
   }
   if (participant.kind === "EXTERNAL_CLUB" && participant.externalClub) {
-    // Blank Anzeigename already falls back to the club name as the main
-    // label above — no redundant second line in that case.
     return participant.externalClub.rawDisplayName;
   }
   if (participant.kind === "EXTERNAL_TEAM" && participant.externalTeam) {
     const parts = [participant.externalTeam.club.name, participant.externalTeam.categoryLabel].filter(Boolean);
     return parts.length > 0 ? parts.join(" · ") : null;
   }
-  return "Manuell erfasst — kein kanonisches Team verknüpft";
+  return "Manuell erfasst";
+}
+
+function participantLogoUrl(participant: TournamentParticipantDto, tenantLogoUrl: string | null): string | null {
+  if (participant.logoUrl) return participant.logoUrl;
+  if (participant.kind === "TEAM") return tenantLogoUrl;
+  return null;
 }
 
 export default function TournamentParticipantsEditor({
@@ -93,24 +63,15 @@ export default function TournamentParticipantsEditor({
   initialParticipants,
   dressingRoomFacilityGroups,
   dressingRoomAvailability,
+  tenantLogoUrl = null,
 }: Props) {
   const [participants, setParticipants] = useState<TournamentParticipantDto[]>(initialParticipants);
   const [error, setError] = useState<string | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [teamsLoading, setTeamsLoading] = useState(false);
 
-  const [selectedTeamId, setSelectedTeamId] = useState("");
-  // MASTERDATA-SELECTOR-CONSISTENCY-03 (BUG 2): the club itself is held
-  // directly (from ExternalClubPicker's search results) instead of an id
-  // looked up in a full, eagerly-fetched (and silently capped) club list —
-  // see ExternalClubPicker's module doc for the root cause this replaces.
-  const [selectedClub, setSelectedClub] = useState<ExternalClubOption | null>(null);
-  const [manualLabel, setManualLabel] = useState("");
-  const [showManualEntry, setShowManualEntry] = useState(false);
-
-  // TOURNAMENTCENTER-UX-03: per-participant draft edit of the Anzeigename
-  // text input — keyed by participant.id, cleared once a save succeeds.
   const [displayNameEdits, setDisplayNameEdits] = useState<Record<string, string>>({});
 
   const [isPending, startTransition] = useTransition();
@@ -124,13 +85,10 @@ export default function TournamentParticipantsEditor({
       try {
         const teamsRes = await fetch("/api/teams", { cache: "no-store" });
         const teamsData = (await teamsRes.json().catch(() => null)) as TeamOption[] | null;
-
         if (!active) return;
         setTeams(Array.isArray(teamsData) ? teamsData.filter((t) => t.isActive) : []);
       } finally {
-        if (active) {
-          setTeamsLoading(false);
-        }
+        if (active) setTeamsLoading(false);
       }
     }
 
@@ -146,6 +104,15 @@ export default function TournamentParticipantsEditor({
   );
 
   const availableTeams = teams.filter((t) => !assignedTeamIds.has(t.id));
+
+  const toggleExpanded = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const addParticipant = useCallback(
     (body: { teamId?: string } | { externalClubId?: string; displayName?: string } | { manualLabel?: string }) => {
@@ -164,9 +131,6 @@ export default function TournamentParticipantsEditor({
             throw new Error(data?.error ?? "Teilnehmer konnte nicht hinzugefügt werden.");
           }
           setParticipants((prev) => [...prev, data.participant as TournamentParticipantDto]);
-          setSelectedTeamId("");
-          setSelectedClub(null);
-          setManualLabel("");
         } catch (err) {
           setError(err instanceof Error ? err.message : "Teilnehmer konnte nicht hinzugefügt werden.");
         }
@@ -278,6 +242,26 @@ export default function TournamentParticipantsEditor({
     [tournamentId],
   );
 
+  const dressingBadge = (participant: TournamentParticipantDto) => {
+    if (homeAway !== "HOME") return null;
+    if (participant.dressingRoomAllocations.length === 0) {
+      return (
+        <span className="shrink-0 rounded border border-dashed border-[var(--border)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--muted)]">
+          —
+        </span>
+      );
+    }
+    const label = participant.dressingRoomAllocations.map((a) => a.facilityResourceName).join(", ");
+    return (
+      <span
+        className="max-w-[7rem] shrink-0 truncate rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-[var(--text-2)]"
+        title={label}
+      >
+        {label}
+      </span>
+    );
+  };
+
   return (
     <div className="space-y-4" data-testid="tournament-participants-editor">
       {participants.length === 0 ? (
@@ -286,235 +270,185 @@ export default function TournamentParticipantsEditor({
           <p className="text-sm text-[var(--text-2)]">Noch keine Teams zugeordnet.</p>
         </div>
       ) : (
-        <ul className="space-y-2" data-testid="tournament-participant-list">
-          {participants.map((participant) => (
-            <li
-              key={participant.id}
-              data-testid={`tournament-participant-row-${participant.id}`}
-              className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-2.5">
-                  {participant.kind === "TEAM" ? (
-                    <UsersRound className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-primary)]" aria-hidden />
-                  ) : participant.kind === "EXTERNAL_CLUB" || participant.kind === "EXTERNAL_TEAM" ? (
-                    <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-info)]" aria-hidden />
+        <ul className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)]" data-testid="tournament-participant-list">
+          {participants.map((participant) => {
+            const expanded = expandedIds.has(participant.id);
+            const needsExpand =
+              participant.kind === "EXTERNAL_CLUB" ||
+              (homeAway === "HOME" && canManage) ||
+              (homeAway === "HOME" && participant.dressingRoomAllocations.length > 0);
+            return (
+              <li
+                key={participant.id}
+                data-testid={`tournament-participant-row-${participant.id}`}
+                className="bg-[var(--surface)] transition-colors duration-150"
+              >
+                <div className="flex items-center gap-2 px-2.5 py-2">
+                  {needsExpand ? (
+                    <button
+                      type="button"
+                      onClick={() => toggleExpanded(participant.id)}
+                      className="shrink-0 rounded p-1 text-[var(--muted)] hover:bg-[var(--surface-2)]"
+                      aria-expanded={expanded}
+                      aria-label={expanded ? "Details einklappen" : "Details bearbeiten"}
+                    >
+                      {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    </button>
                   ) : (
-                    <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
+                    <span className="w-6 shrink-0" aria-hidden />
                   )}
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[var(--foreground)]">
+
+                  <ClubLogo
+                    logoUrl={participantLogoUrl(participant, tenantLogoUrl)}
+                    name={participantMainLabel(participant)}
+                    size="sm"
+                    bare
+                    className="h-7 w-7 shrink-0"
+                  />
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold leading-tight text-[var(--foreground)]">
                       {participantMainLabel(participant)}
                     </p>
-                    {participantSubLabel(participant) ? (
-                      <p className="mt-0.5 text-xs text-[var(--text-2)]">{participantSubLabel(participant)}</p>
-                    ) : null}
+                    <p className="truncate text-[11px] leading-tight text-[var(--text-2)]">
+                      {participantSubLabel(participant)}
+                    </p>
                   </div>
-                </div>
 
-                {canManage && (
-                  <button
-                    type="button"
-                    onClick={() => removeParticipant(participant.id)}
-                    disabled={isPending}
-                    aria-label={`${participant.displayName} entfernen`}
-                    data-testid={`tournament-participant-remove-${participant.id}`}
-                    className="shrink-0 rounded p-1 text-[var(--muted)] transition hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
+                  {dressingBadge(participant)}
 
-              {participant.kind === "EXTERNAL_CLUB" && (
-                <div className="mt-3 border-t border-[var(--border)] pt-3">
-                  <label className="block space-y-1.5">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                      Anzeigename
-                    </span>
-                    <input
-                      type="text"
-                      value={displayNameEdits[participant.id] ?? participant.externalClub?.rawDisplayName ?? ""}
-                      onChange={(e) =>
-                        setDisplayNameEdits((prev) => ({ ...prev, [participant.id]: e.target.value }))
-                      }
-                      onBlur={(e) => {
-                        if (!canManage) return;
-                        const current = participant.externalClub?.rawDisplayName ?? "";
-                        if (e.target.value === current) return;
-                        saveDisplayName(participant.id, e.target.value);
-                      }}
-                      disabled={!canManage || isPending}
-                      placeholder={participant.externalClub?.club.name ?? "z. B. Gelb, E1"}
-                      data-testid={`tournament-participant-${participant.id}-display-name`}
-                      className="fca-input"
-                    />
-                  </label>
-                </div>
-              )}
-
-              {homeAway === "HOME" && (
-                <div className="mt-3 border-t border-[var(--border)] pt-3">
-                  <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                    <Shirt className="h-3.5 w-3.5" aria-hidden />
-                    Garderobe
-                  </p>
-
-                  {participant.dressingRoomAllocations.length > 0 && (
-                    <ul className="mb-2 flex flex-wrap gap-1.5">
-                      {participant.dressingRoomAllocations.map((allocation) => (
-                        <li
-                          key={allocation.id}
-                          className="inline-flex items-center gap-1 rounded-full bg-[var(--surface-2)] px-2.5 py-1 text-xs text-[var(--text-2)]"
-                        >
-                          {allocation.facilityResourceName}
-                          {canManage && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setError(null);
-                                startTransition(async () => {
-                                  try {
-                                    await removeDressingRoom(participant.id, allocation.id);
-                                  } catch (err) {
-                                    setError(
-                                      err instanceof Error
-                                        ? err.message
-                                        : "Garderobe konnte nicht entfernt werden.",
-                                    );
-                                  }
-                                });
-                              }}
-                              disabled={isPending}
-                              aria-label={`Garderobe ${allocation.facilityResourceName} entfernen`}
-                              className="text-[var(--muted)] hover:text-rose-600"
-                            >
-                              ×
-                            </button>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  {canManage && needsExpand && !expanded ? (
+                    <button
+                      type="button"
+                      onClick={() => toggleExpanded(participant.id)}
+                      className="shrink-0 rounded p-1.5 text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+                      aria-label="Bearbeiten"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                  ) : null}
 
                   {canManage && (
-                    <FacilityResourceSelector
-                      facilityGroups={dressingRoomFacilityGroups}
-                      allocatedResourceIds={
-                        new Set(participant.dressingRoomAllocations.map((a) => a.facilityResourceId))
-                      }
-                      onAdd={(resourceId) => addDressingRoom(participant.id, resourceId)}
-                      placeholder="Garderobe auswählen…"
-                      addButtonLabel="Zuweisen"
-                      availabilityByResourceId={dressingRoomAvailability}
-                      testId={`tournament-participant-${participant.id}-dressing-room`}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => removeParticipant(participant.id)}
+                      disabled={isPending}
+                      aria-label={`${participant.displayName} entfernen`}
+                      data-testid={`tournament-participant-remove-${participant.id}`}
+                      className="shrink-0 rounded p-1.5 text-[var(--muted)] transition hover:bg-rose-500/10 hover:text-rose-600 disabled:opacity-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   )}
                 </div>
-              )}
-            </li>
-          ))}
+
+                {expanded && (
+                  <div className="border-t border-[var(--border)] bg-[var(--surface-2)]/40 px-2.5 py-2">
+                    {participant.kind === "EXTERNAL_CLUB" && (
+                      <label className="block max-w-sm space-y-1">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                          Anzeigename
+                        </span>
+                        <input
+                          type="text"
+                          value={displayNameEdits[participant.id] ?? participant.externalClub?.rawDisplayName ?? ""}
+                          onChange={(e) =>
+                            setDisplayNameEdits((prev) => ({ ...prev, [participant.id]: e.target.value }))
+                          }
+                          onBlur={(e) => {
+                            if (!canManage) return;
+                            const current = participant.externalClub?.rawDisplayName ?? "";
+                            if (e.target.value === current) return;
+                            saveDisplayName(participant.id, e.target.value);
+                          }}
+                          disabled={!canManage || isPending}
+                          placeholder={participant.externalClub?.club.name ?? "z. B. Gelb, E1"}
+                          data-testid={`tournament-participant-${participant.id}-display-name`}
+                          className="fca-input"
+                        />
+                      </label>
+                    )}
+
+                    {homeAway === "HOME" && (
+                      <div className={cn(participant.kind === "EXTERNAL_CLUB" && "mt-2")}>
+                        <p className="mb-1.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                          <Shirt className="h-3 w-3" aria-hidden />
+                          Garderobe
+                        </p>
+
+                        {canManage ? (
+                          <VisualDressingRoomPicker
+                            facilityGroups={dressingRoomFacilityGroups}
+                            selectedResourceIds={
+                              new Set(participant.dressingRoomAllocations.map((a) => a.facilityResourceId))
+                            }
+                            onSelect={(resourceId) => {
+                              setError(null);
+                              startTransition(async () => {
+                                try {
+                                  await addDressingRoom(participant.id, resourceId);
+                                } catch (err) {
+                                  setError(
+                                    err instanceof Error ? err.message : "Garderobe konnte nicht zugewiesen werden.",
+                                  );
+                                }
+                              });
+                            }}
+                            onDeselect={(resourceId) => {
+                              const allocation = participant.dressingRoomAllocations.find(
+                                (a) => a.facilityResourceId === resourceId,
+                              );
+                              if (!allocation) return;
+                              setError(null);
+                              startTransition(async () => {
+                                try {
+                                  await removeDressingRoom(participant.id, allocation.id);
+                                } catch (err) {
+                                  setError(
+                                    err instanceof Error ? err.message : "Garderobe konnte nicht entfernt werden.",
+                                  );
+                                }
+                              });
+                            }}
+                            disabled={isPending}
+                            availabilityByResourceId={dressingRoomAvailability}
+                            compact
+                            testId={`tournament-participant-${participant.id}-dressing-room`}
+                          />
+                        ) : (
+                          <p className="text-xs text-[var(--text-2)]">
+                            {participant.dressingRoomAllocations.map((a) => a.facilityResourceName).join(", ") ||
+                              "Keine Garderobe"}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
 
       {error && (
-        <p className="text-sm text-rose-600" role="alert">
+        <p className="text-sm text-[var(--sce-danger)]" role="alert">
           {error}
         </p>
       )}
 
       {canManage && (
-        <div className="space-y-3 rounded-lg border border-dashed border-[var(--border)] p-4">
-          <p className="text-sm font-medium text-[var(--text-2)]">Team hinzufügen</p>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="flex gap-2">
-              <select
-                value={selectedTeamId}
-                onChange={(e) => setSelectedTeamId(e.target.value)}
-                disabled={teamsLoading || isPending}
-                data-testid="tournament-participant-add-team-select"
-                className="fca-select flex-1"
-              >
-                <option value="">
-                  {teamsLoading ? "Teams laden…" : "FC Allschwil Team…"}
-                </option>
-                {availableTeams.map((team) => {
-                  const suffix = [team.ageGroup, team.genderGroup].filter(Boolean).join(" / ");
-                  return (
-                    <option key={team.id} value={team.id}>
-                      {suffix ? `${team.name} · ${suffix}` : team.name}
-                    </option>
-                  );
-                })}
-              </select>
-              <button
-                type="button"
-                onClick={() => selectedTeamId && addParticipant({ teamId: selectedTeamId })}
-                disabled={!selectedTeamId || isPending}
-                data-testid="tournament-participant-add-team-button"
-                className="fca-button-secondary shrink-0"
-              >
-                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              </button>
-            </div>
-
-            <div className="flex items-start gap-2">
-              <div className="flex-1">
-                <ExternalClubPicker
-                  selected={selectedClub}
-                  onSelect={setSelectedClub}
-                  onClearSelected={() => setSelectedClub(null)}
-                  disabled={isPending}
-                  placeholder="Verein suchen…"
-                  testId="tournament-participant-add-external-club-search"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  selectedClub && addParticipant({ externalClubId: selectedClub.id, displayName: "" })
-                }
-                disabled={!selectedClub || isPending}
-                data-testid="tournament-participant-add-external-club-button"
-                className="fca-button-secondary shrink-0"
-              >
-                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-
-          {showManualEntry ? (
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={manualLabel}
-                onChange={(e) => setManualLabel(e.target.value)}
-                placeholder="z. B. unbekanntes Gastteam"
-                disabled={isPending}
-                data-testid="tournament-participant-manual-input"
-                className="fca-input flex-1"
-              />
-              <button
-                type="button"
-                onClick={() => manualLabel.trim() && addParticipant({ manualLabel: manualLabel.trim() })}
-                disabled={!manualLabel.trim() || isPending}
-                data-testid="tournament-participant-add-manual-button"
-                className="fca-button-secondary shrink-0"
-              >
-                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowManualEntry(true)}
-              className="text-xs font-medium text-[var(--muted)] underline-offset-2 hover:underline"
-            >
-              Team ohne Verzeichniseintrag manuell erfassen…
-            </button>
-          )}
-        </div>
+        <TournamentParticipantAddWorkflow
+          availableTeams={availableTeams}
+          teamsLoading={teamsLoading}
+          tenantLogoUrl={tenantLogoUrl}
+          pending={isPending}
+          onAddTeam={(teamId) => addParticipant({ teamId })}
+          onAddExternalClub={(club: ExternalClubPickerResult) =>
+            addParticipant({ externalClubId: club.id, displayName: "" })
+          }
+          onAddManual={(label) => addParticipant({ manualLabel: label })}
+        />
       )}
     </div>
   );

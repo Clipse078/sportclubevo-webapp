@@ -108,7 +108,17 @@ export type ExternalClubListInput = {
   search?: string;
   limit?: number;
   skip?: number;
+  /** When true, returns active and archived clubs. Ignored when `archivedOnly` is true. */
   includeArchived?: boolean;
+  /** When true, returns only archived clubs (for /dashboard/vereine archived tab). */
+  archivedOnly?: boolean;
+};
+
+export type ExternalClubCountInput = {
+  tenantId: string;
+  search?: string;
+  includeArchived?: boolean;
+  archivedOnly?: boolean;
 };
 
 export type ExternalClubDetailInput = {

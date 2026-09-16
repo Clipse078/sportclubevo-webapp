@@ -28,8 +28,15 @@
 
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Loader2, Plus, Shirt, Trash2, UserRound, UsersRound } from "lucide-react";
-import { SectionCard } from "@/components/ui/page/SectionCard";
+import { ChevronDown, ChevronRight, Loader2, Pencil, Shirt, Trash2, UsersRound } from "lucide-react";
+import { TournamentFormSection } from "@/components/admin/tournamentcenter/TournamentFormSection";
+import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
+import StaticOptionSearchablePicker from "@/components/admin/shared/StaticOptionSearchablePicker";
+import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
+import TournamentEditorChrome from "@/components/admin/tournamentcenter/TournamentEditorChrome";
+import TournamentPublicationToggles from "@/components/admin/tournamentcenter/TournamentPublicationToggles";
+import TournamentParticipantAddWorkflow from "@/components/admin/tournamentcenter/TournamentParticipantAddWorkflow";
+import { cn } from "@/lib/cn";
 import {
   type FacilityGroup,
   type ResourceAvailabilityAnnotation,
@@ -44,7 +51,7 @@ import {
   type TournamentParticipantDraftKind,
   type TournamentResourceAllocationDraft,
 } from "@/lib/tournaments/create-tournament-orchestration";
-import { ExternalClubPicker, type ExternalClubPickerResult } from "./ExternalClubPicker";
+import type { ExternalClubPickerResult } from "./ExternalClubPicker";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -75,6 +82,8 @@ type ParticipantDraftRow = {
   clubName?: string;
   /** Raw, editable "Anzeigename" input value — only meaningful for kind === "EXTERNAL_CLUB". */
   externalClubDisplayName?: string;
+  /** Canonical club crest when kind === EXTERNAL_CLUB. */
+  externalClubLogoUrl?: string | null;
   manualLabel?: string;
   displayName: string;
   subLabel: string | null;
@@ -94,12 +103,8 @@ type ResourceAvailabilityRow = ResourceAvailabilityAnnotation & { resourceId: st
 type TournamentCreateFormProps = {
   pitchHallFacilityGroups: FacilityGroup[];
   dressingRoomFacilityGroups: FacilityGroup[];
+  tenantLogoUrl?: string | null;
 };
-
-function formatTeamLabel(team: { name: string; ageGroup: string | null; genderGroup: string | null }): string {
-  const suffix = [team.ageGroup, team.genderGroup].filter(Boolean).join(" / ");
-  return suffix ? `${team.name} · ${suffix}` : team.name;
-}
 
 function resolveResourceDisplay(
   facilityGroups: FacilityGroup[],
@@ -123,6 +128,7 @@ function nextLocalId(prefix: string): string {
 export default function TournamentCreateForm({
   pitchHallFacilityGroups,
   dressingRoomFacilityGroups,
+  tenantLogoUrl = null,
 }: TournamentCreateFormProps) {
   const router = useRouter();
   const formId = useId();
@@ -156,14 +162,7 @@ export default function TournamentCreateForm({
 
   // ── Teilnehmende Teams (draft, pre-creation) ──────────────────────────
   const [participants, setParticipants] = useState<ParticipantDraftRow[]>([]);
-  const [selectedTeamId, setSelectedTeamId] = useState("");
-  // MASTERDATA-SELECTOR-CONSISTENCY-03 (BUG 2): the club itself is now held
-  // directly (from ExternalClubPicker's search results) instead of an id
-  // looked up in a full, eagerly-fetched (and silently capped) club list —
-  // see ExternalClubPicker's module doc for the root cause this replaces.
-  const [selectedClub, setSelectedClub] = useState<ExternalClubOption | null>(null);
-  const [manualLabel, setManualLabel] = useState("");
-  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [expandedParticipantIds, setExpandedParticipantIds] = useState<Set<string>>(new Set());
 
   // ── Ressourcen · Spielfeld/Halle (draft, pre-creation) ────────────────
   const [resources, setResources] = useState<ResourceDraftRow[]>([]);
@@ -287,9 +286,8 @@ export default function TournamentCreateForm({
 
   const availableTeams = teamOptions.filter((t) => !assignedTeamIds.has(t.id));
 
-  const addTeamParticipant = useCallback(() => {
-    if (!selectedTeamId) return;
-    const team = teamOptions.find((t) => t.id === selectedTeamId);
+  const addTeamParticipant = useCallback((teamId: string) => {
+    const team = teamOptions.find((t) => t.id === teamId);
     if (!team) return;
     setParticipants((prev) => [
       ...prev,
@@ -302,11 +300,9 @@ export default function TournamentCreateForm({
         dressingRooms: [],
       },
     ]);
-    setSelectedTeamId("");
-  }, [selectedTeamId, teamOptions]);
+  }, [teamOptions]);
 
-  const addExternalClubParticipant = useCallback(() => {
-    if (!selectedClub) return;
+  const addExternalClubParticipant = useCallback((selectedClub: ExternalClubOption) => {
     setParticipants((prev) => [
       ...prev,
       {
@@ -314,14 +310,14 @@ export default function TournamentCreateForm({
         kind: "EXTERNAL_CLUB",
         externalClubId: selectedClub.id,
         clubName: selectedClub.name,
+        externalClubLogoUrl: selectedClub.logoUrl ?? null,
         externalClubDisplayName: "",
         displayName: selectedClub.name,
         subLabel: "Anzeigename noch nicht gesetzt — Klub wird angezeigt",
         dressingRooms: [],
       },
     ]);
-    setSelectedClub(null);
-  }, [selectedClub]);
+  }, []);
 
   const updateExternalClubDisplayName = useCallback((localId: string, value: string) => {
     setParticipants((prev) =>
@@ -338,8 +334,7 @@ export default function TournamentCreateForm({
     );
   }, []);
 
-  const addManualParticipant = useCallback(() => {
-    const trimmed = manualLabel.trim();
+  const addManualParticipant = useCallback((trimmed: string) => {
     if (!trimmed) return;
     setParticipants((prev) => [
       ...prev,
@@ -352,8 +347,22 @@ export default function TournamentCreateForm({
         dressingRooms: [],
       },
     ]);
-    setManualLabel("");
-  }, [manualLabel]);
+  }, []);
+
+  const toggleParticipantExpanded = (localId: string) => {
+    setExpandedParticipantIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(localId)) next.delete(localId);
+      else next.add(localId);
+      return next;
+    });
+  };
+
+  function participantDraftLogo(participant: ParticipantDraftRow): string | null {
+    if (participant.kind === "TEAM") return tenantLogoUrl;
+    if (participant.kind === "EXTERNAL_CLUB") return participant.externalClubLogoUrl ?? null;
+    return null;
+  }
 
   const removeParticipant = useCallback((localId: string) => {
     setParticipants((prev) => prev.filter((p) => p.localId !== localId));
@@ -600,8 +609,65 @@ export default function TournamentCreateForm({
       partialResult.dressingRoomAllocationErrors.length
     : 0;
 
+  const seasonPickerOptions = useMemo(
+    () =>
+      seasonOptions.map((season) => ({
+        value: season.id,
+        label: `${season.name}${season.isActive ? " (aktuell)" : ""}`,
+      })),
+    [seasonOptions],
+  );
+
+  const publication = {
+    websiteVisible,
+    infoboardVisible,
+    homepageVisible,
+    wochenplanVisible,
+    teamPageVisible,
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-5" data-testid="tournament-create-form">
+    <form onSubmit={handleSubmit} className="space-y-2" data-testid="tournament-create-form">
+      <TournamentEditorChrome
+        eyebrow="TournamentCenter"
+        title="Turnier erstellen"
+        description="Teilnehmende Teams, Spielfeld/Halle und Garderoben werden direkt bei der Erstellung erfasst."
+        breadcrumbs={[
+          { label: "Tournament Center", href: "/dashboard/tournamentcenter" },
+          { label: "Neu" },
+        ]}
+        primaryAction={
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            data-testid="tournament-create-submit"
+            title={
+              hasUnresolvedPartialFailure
+                ? 'Turnier wurde bereits angelegt — bitte über "Zum Turnier wechseln und korrigieren" fortsetzen.'
+                : undefined
+            }
+            className="fca-button-primary"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Wird erstellt…
+              </>
+            ) : (
+              "Turnier erstellen"
+            )}
+          </button>
+        }
+        secondaryActions={
+          <button
+            type="button"
+            onClick={() => router.push("/dashboard/tournamentcenter")}
+            className="fca-button-secondary"
+          >
+            Abbrechen
+          </button>
+        }
+      />
       {missingItems.length > 0 ? (
         <div
           className="fca-status-box fca-status-box-muted text-sm"
@@ -625,9 +691,9 @@ export default function TournamentCreateForm({
         </div>
       )}
 
-      <SectionCard title="1 · Turnier" description="Titel, Zeitrahmen und Rahmendaten">
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block space-y-2 md:col-span-2">
+      <TournamentFormSection title="Grunddaten" description="Titel, Zeitrahmen und Rahmendaten">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <label className="block space-y-2 sm:col-span-2 lg:col-span-3">
             <span className="fca-label">Titel</span>
             <input
               type="text"
@@ -641,22 +707,15 @@ export default function TournamentCreateForm({
 
           <label className="block space-y-2">
             <span className="fca-label">Saison</span>
-            <select
+            <StaticOptionSearchablePicker
+              options={seasonPickerOptions}
               value={seasonId}
-              onChange={(e) => setSeasonId(e.target.value)}
-              className="fca-select"
-              required
+              onChange={setSeasonId}
               disabled={loadingSeasons}
-              data-testid="tournament-create-season-select"
-            >
-              <option value="">{loadingSeasons ? "Saisons laden..." : "Bitte wählen"}</option>
-              {seasonOptions.map((season) => (
-                <option key={season.id} value={season.id}>
-                  {season.name}
-                  {season.isActive ? " (aktuell)" : ""}
-                </option>
-              ))}
-            </select>
+              required
+              testId="tournament-create-season"
+              placeholder={loadingSeasons ? "Saisons laden…" : "Saison auswählen…"}
+            />
           </label>
 
           <label className="block space-y-2">
@@ -692,18 +751,17 @@ export default function TournamentCreateForm({
             />
           </label>
 
-          <label className="block space-y-2">
-            <span className="fca-label">Heim / Auswärts</span>
-            <select
+          <div className="block space-y-2">
+            <span className="fca-label" id="tournament-create-home-away-label">
+              Heim / Auswärts
+            </span>
+            <HomeAwaySegmentedControl
               value={homeAway}
-              onChange={(e) => setHomeAway(e.target.value === "AWAY" ? "AWAY" : "HOME")}
-              className="fca-select"
-              data-testid="tournament-create-home-away-select"
-            >
-              <option value="HOME">Heim (FC Allschwil ausrichtend)</option>
-              <option value="AWAY">Auswärts (extern ausgerichtet)</option>
-            </select>
-          </label>
+              onChange={setHomeAway}
+              testId="tournament-create-home-away"
+              aria-label="Heim / Auswärts"
+            />
+          </div>
 
           <label className="block space-y-2">
             <span className="fca-label">Start</span>
@@ -743,25 +801,25 @@ export default function TournamentCreateForm({
             />
           </label>
 
-          <label className="block space-y-2 md:col-span-2">
+          <label className="block space-y-2 sm:col-span-2 lg:col-span-3">
             <span className="fca-label">Beschreibung</span>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="fca-textarea min-h-[100px]"
+              className="fca-textarea min-h-[88px]"
             />
           </label>
 
-          <label className="block space-y-2 md:col-span-2">
+          <label className="block space-y-2 sm:col-span-2 lg:col-span-3">
             <span className="fca-label">Bemerkungen</span>
             <input type="text" value={remarks} onChange={(e) => setRemarks(e.target.value)} className="fca-input" />
           </label>
         </div>
-      </SectionCard>
+      </TournamentFormSection>
 
-      <SectionCard
-        title="2 · Teilnehmende Teams"
-        description="Mindestens ein Team erforderlich — FC Allschwil Teams und externe Vereine aus dem Vereinsverzeichnis, in beliebiger Mischung und Anzahl. Garderobenzuweisung (4 · Garderoben) erfolgt direkt pro Team."
+      <TournamentFormSection
+        title="Teilnehmende Teams"
+        description="Mindestens ein Team — FC Allschwil und Vereine aus dem Verzeichnis."
       >
         <div className="space-y-4">
           {participants.length === 0 ? (
@@ -770,176 +828,157 @@ export default function TournamentCreateForm({
               <p className="text-sm text-[var(--text-2)]">Noch keine Teams zugeordnet.</p>
             </div>
           ) : (
-            <ul className="space-y-2" data-testid="tournament-create-participant-list">
-              {participants.map((participant) => (
-                <li
-                  key={participant.localId}
-                  data-testid={`tournament-create-participant-row-${participant.localId}`}
-                  className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-start gap-2.5">
-                      {participant.kind === "TEAM" ? (
-                        <UsersRound className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-primary)]" aria-hidden />
-                      ) : participant.kind === "EXTERNAL_CLUB" || participant.kind === "EXTERNAL_TEAM" ? (
-                        <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-info)]" aria-hidden />
+            <ul className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)]" data-testid="tournament-create-participant-list">
+              {participants.map((participant) => {
+                const expanded = expandedParticipantIds.has(participant.localId);
+                const needsExpand = participant.kind === "EXTERNAL_CLUB" || homeAway === "HOME";
+                const dressingLabel =
+                  homeAway === "HOME" && participant.dressingRooms.length > 0
+                    ? participant.dressingRooms.map((d) => d.facilityResourceName).join(", ")
+                    : null;
+
+                return (
+                  <li
+                    key={participant.localId}
+                    data-testid={`tournament-create-participant-row-${participant.localId}`}
+                    className="bg-[var(--surface)] transition-colors duration-150"
+                  >
+                    <div className="flex items-center gap-2 px-2.5 py-2">
+                      {needsExpand ? (
+                        <button
+                          type="button"
+                          onClick={() => toggleParticipantExpanded(participant.localId)}
+                          className="shrink-0 rounded p-1 text-[var(--muted)] hover:bg-[var(--surface-2)]"
+                          aria-expanded={expanded}
+                          aria-label={expanded ? "Details einklappen" : "Details bearbeiten"}
+                        >
+                          {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        </button>
                       ) : (
-                        <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
+                        <span className="w-6 shrink-0" aria-hidden />
                       )}
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-[var(--foreground)]">{participant.displayName}</p>
-                        {participant.subLabel ? (
-                          <p className="mt-0.5 text-xs text-[var(--text-2)]">{participant.subLabel}</p>
-                        ) : null}
-                      </div>
-                    </div>
 
-                    <button
-                      type="button"
-                      onClick={() => removeParticipant(participant.localId)}
-                      aria-label={`${participant.displayName} entfernen`}
-                      data-testid={`tournament-create-participant-remove-${participant.localId}`}
-                      className="shrink-0 rounded p-1 text-[var(--muted)] transition hover:bg-rose-50 hover:text-rose-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  {participant.kind === "EXTERNAL_CLUB" && (
-                    <div className="mt-3 border-t border-[var(--border)] pt-3">
-                      <label className="block space-y-1.5">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                          Anzeigename
-                        </span>
-                        <input
-                          type="text"
-                          value={participant.externalClubDisplayName ?? ""}
-                          onChange={(e) => updateExternalClubDisplayName(participant.localId, e.target.value)}
-                          placeholder={participant.clubName ?? "z. B. Gelb, E1"}
-                          data-testid={`tournament-create-participant-${participant.localId}-display-name`}
-                          className="fca-input"
-                        />
-                      </label>
-                    </div>
-                  )}
-
-                  {homeAway === "HOME" && (
-                    <div className="mt-3 border-t border-[var(--border)] pt-3">
-                      <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                        <Shirt className="h-3.5 w-3.5" aria-hidden />
-                        Garderobe
-                      </p>
-
-                      <VisualDressingRoomPicker
-                        facilityGroups={dressingRoomFacilityGroups}
-                        selectedResourceIds={new Set(participant.dressingRooms.map((d) => d.facilityResourceId))}
-                        onSelect={(resourceId) => addDressingRoomDraft(participant.localId, resourceId)}
-                        onDeselect={(resourceId) => removeDressingRoomDraft(participant.localId, resourceId)}
-                        availabilityByResourceId={dressingRoomAvailability}
-                        testId={`tournament-create-participant-${participant.localId}-dressing-room`}
+                      <ClubLogo
+                        logoUrl={participantDraftLogo(participant)}
+                        name={participant.displayName}
+                        size="sm"
+                        bare
+                        className="h-7 w-7 shrink-0"
                       />
+
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold leading-tight text-[var(--foreground)]">
+                          {participant.displayName}
+                        </p>
+                        <p className="truncate text-[11px] leading-tight text-[var(--text-2)]">{participant.subLabel}</p>
+                      </div>
+
+                      {homeAway === "HOME" ? (
+                        dressingLabel ? (
+                          <span
+                            className="max-w-[7rem] shrink-0 truncate rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-[var(--text-2)]"
+                            title={dressingLabel}
+                          >
+                            {dressingLabel}
+                          </span>
+                        ) : (
+                          <span className="shrink-0 rounded border border-dashed border-[var(--border)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--muted)]">
+                            —
+                          </span>
+                        )
+                      ) : null}
+
+                      {needsExpand && !expanded ? (
+                        <button
+                          type="button"
+                          onClick={() => toggleParticipantExpanded(participant.localId)}
+                          className="shrink-0 rounded p-1.5 text-[var(--muted)] hover:bg-[var(--surface-2)]"
+                          aria-label="Bearbeiten"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      ) : null}
+
+                      <button
+                        type="button"
+                        onClick={() => removeParticipant(participant.localId)}
+                        aria-label={`${participant.displayName} entfernen`}
+                        data-testid={`tournament-create-participant-remove-${participant.localId}`}
+                        className="shrink-0 rounded p-1.5 text-[var(--muted)] hover:bg-rose-500/10 hover:text-rose-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
-                  )}
-                </li>
-              ))}
+
+                    {expanded && (
+                      <div className="border-t border-[var(--border)] bg-[var(--surface-2)]/40 px-2.5 py-2">
+                        {participant.kind === "EXTERNAL_CLUB" && (
+                          <label className="block max-w-sm space-y-1">
+                            <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                              Anzeigename
+                            </span>
+                            <input
+                              type="text"
+                              value={participant.externalClubDisplayName ?? ""}
+                              onChange={(e) => updateExternalClubDisplayName(participant.localId, e.target.value)}
+                              placeholder={participant.clubName ?? "z. B. Gelb, E1"}
+                              data-testid={`tournament-create-participant-${participant.localId}-display-name`}
+                              className="fca-input"
+                            />
+                          </label>
+                        )}
+
+                        {homeAway === "HOME" && (
+                          <div className={cn(participant.kind === "EXTERNAL_CLUB" && "mt-2")}>
+                            <p className="mb-1.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                              <Shirt className="h-3 w-3" aria-hidden />
+                              Garderobe
+                            </p>
+                            <VisualDressingRoomPicker
+                              facilityGroups={dressingRoomFacilityGroups}
+                              selectedResourceIds={new Set(participant.dressingRooms.map((d) => d.facilityResourceId))}
+                              onSelect={(resourceId) => addDressingRoomDraft(participant.localId, resourceId)}
+                              onDeselect={(resourceId) => removeDressingRoomDraft(participant.localId, resourceId)}
+                              availabilityByResourceId={dressingRoomAvailability}
+                              compact
+                              testId={`tournament-create-participant-${participant.localId}-dressing-room`}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
 
-          <div className="space-y-3 rounded-lg border border-dashed border-[var(--border)] p-4">
-            <p className="text-sm font-medium text-[var(--text-2)]">Team hinzufügen</p>
-
-            {!loadingTeams && teamOptions.length === 0 ? (
-              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
-                Kein Team mit Schreibzugriff verfügbar. Bitte wenden Sie sich an die Koordination.
-              </p>
-            ) : null}
-
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="flex gap-2">
-                <select
-                  value={selectedTeamId}
-                  onChange={(e) => setSelectedTeamId(e.target.value)}
-                  disabled={loadingTeams || teamOptions.length === 0}
-                  data-testid="tournament-create-add-team-select"
-                  className="fca-select flex-1"
-                >
-                  <option value="">{loadingTeams ? "Teams laden…" : "FC Allschwil Team…"}</option>
-                  {availableTeams.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {formatTeamLabel(t)}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={addTeamParticipant}
-                  disabled={!selectedTeamId}
-                  data-testid="tournament-create-add-team-button"
-                  className="fca-button-secondary shrink-0"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="flex items-start gap-2">
-                <div className="flex-1">
-                  <ExternalClubPicker
-                    selected={selectedClub}
-                    onSelect={setSelectedClub}
-                    onClearSelected={() => setSelectedClub(null)}
-                    placeholder="Verein suchen…"
-                    testId="tournament-create-add-external-club-search"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={addExternalClubParticipant}
-                  disabled={!selectedClub}
-                  data-testid="tournament-create-add-external-club-button"
-                  className="fca-button-secondary shrink-0"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            {showManualEntry ? (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={manualLabel}
-                  onChange={(e) => setManualLabel(e.target.value)}
-                  placeholder="z. B. unbekanntes Gastteam"
-                  data-testid="tournament-create-manual-input"
-                  className="fca-input flex-1"
-                />
-                <button
-                  type="button"
-                  onClick={addManualParticipant}
-                  disabled={!manualLabel.trim()}
-                  data-testid="tournament-create-add-manual-button"
-                  className="fca-button-secondary shrink-0"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowManualEntry(true)}
-                className="text-xs font-medium text-[var(--muted)] underline-offset-2 hover:underline"
-              >
-                Team ohne Verzeichniseintrag manuell erfassen…
-              </button>
-            )}
-          </div>
+          <TournamentParticipantAddWorkflow
+            availableTeams={availableTeams}
+            teamsLoading={loadingTeams}
+            tenantLogoUrl={tenantLogoUrl}
+            onAddTeam={addTeamParticipant}
+            onAddExternalClub={addExternalClubParticipant}
+            onAddManual={addManualParticipant}
+            teamSelectTestId="tournament-create-add-team"
+            externalClubTestId="tournament-create-add-external-club-search"
+            manualInputTestId="tournament-create-manual-input"
+            manualButtonTestId="tournament-create-add-manual-button"
+            noWritableTeamsMessage={
+              !loadingTeams && teamOptions.length === 0 ? (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
+                  Kein Team mit Schreibzugriff verfügbar. Bitte wenden Sie sich an die Koordination.
+                </p>
+              ) : null
+            }
+          />
         </div>
-      </SectionCard>
+      </TournamentFormSection>
 
       {homeAway === "HOME" && (
-        <SectionCard
-          title="3 · Spielfeld / Halle"
-          description="Ein Heimturnier kann mehr als ein Spielfeld bzw. mehr als eine Halle belegen. Verfügbarkeit wird live für Start–Ende angezeigt."
+        <TournamentFormSection
+          title="Ressourcen"
+          description="Spielfeld / Halle — Verfügbarkeit live für Start–Ende."
         >
           <VisualResourceAvailabilityPicker
             facilityGroups={pitchHallFacilityGroups}
@@ -952,18 +991,22 @@ export default function TournamentCreateForm({
             availabilityByResourceId={pitchAvailability}
             testId="tournament-create-resource"
           />
-        </SectionCard>
+        </TournamentFormSection>
       )}
 
-      <SectionCard title="5 · Prüfen & Einreichen — Veröffentlichung" description="Ausgabekanäle für dieses Turnier">
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <Toggle label="Website" value={websiteVisible} onChange={setWebsiteVisible} />
-          <Toggle label="Infoboard" value={infoboardVisible} onChange={setInfoboardVisible} />
-          <Toggle label="Homepage" value={homepageVisible} onChange={setHomepageVisible} />
-          <Toggle label="Wochenplan" value={wochenplanVisible} onChange={setWochenplanVisible} />
-          <Toggle label="Teamseite" value={teamPageVisible} onChange={setTeamPageVisible} />
-        </div>
-      </SectionCard>
+      <TournamentFormSection title="Veröffentlichung" description="Ausgabekanäle für dieses Turnier">
+        <TournamentPublicationToggles
+          value={publication}
+          onChange={(patch) => {
+            if (patch.websiteVisible !== undefined) setWebsiteVisible(patch.websiteVisible);
+            if (patch.infoboardVisible !== undefined) setInfoboardVisible(patch.infoboardVisible);
+            if (patch.homepageVisible !== undefined) setHomepageVisible(patch.homepageVisible);
+            if (patch.wochenplanVisible !== undefined) setWochenplanVisible(patch.wochenplanVisible);
+            if (patch.teamPageVisible !== undefined) setTeamPageVisible(patch.teamPageVisible);
+          }}
+          testIdPrefix="tournament-create-publication"
+        />
+      </TournamentFormSection>
 
       <div className="fca-status-box fca-status-box-muted text-xs">
         Neue Turniere werden vor der Veröffentlichung geprüft, sofern kein Freigabe-Recht vorliegt. Teams, Ressourcen
@@ -1004,44 +1047,9 @@ export default function TournamentCreateForm({
 
       {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
 
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          data-testid="tournament-create-submit"
-          title={
-            hasUnresolvedPartialFailure
-              ? "Turnier wurde bereits angelegt — bitte über \"Zum Turnier wechseln und korrigieren\" fortsetzen."
-              : undefined
-          }
-          className="fca-button-primary"
-        >
-          {submitting ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Wird erstellt…
-            </>
-          ) : (
-            "Turnier erstellen"
-          )}
-        </button>
-
-        <button type="button" onClick={() => router.push("/dashboard/tournamentcenter")} className="fca-button-secondary">
-          Abbrechen
-        </button>
-      </div>
       <p className="sr-only" id={`${formId}-hint`}>
         Mindestens ein teilnehmendes Team ist erforderlich, um ein Turnier zu erstellen.
       </p>
     </form>
-  );
-}
-
-function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (value: boolean) => void }) {
-  return (
-    <div className="fca-toggle-row">
-      <span className="fca-label">{label}</span>
-      <input type="checkbox" checked={value} onChange={(e) => onChange(e.target.checked)} className="fca-toggle-checkbox" />
-    </div>
   );
 }

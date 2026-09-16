@@ -2,58 +2,40 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Plus } from "lucide-react";
 
-import { prisma } from "@/lib/db/prisma";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
-import { createClubDirectoryQueryDatabase } from "@/lib/club-directory/prisma-adapter";
-import { listExternalClubs } from "@/lib/club-directory/query-service";
-import type { ClubDirectoryListItem } from "@/components/admin/club-directory/ClubDirectorySearchableList";
 import ClubDirectorySearchableList from "@/components/admin/club-directory/ClubDirectorySearchableList";
 import { ListPagePattern } from "@/components/ui/patterns";
 import { PageShell } from "@/components/ui/page";
+import {
+  parseClubDirectoryProviderFilter,
+  parseClubDirectoryTeamsFilter,
+} from "@/lib/club-directory/directory-view-filters";
+import { VEREINE_PAGE_CONTENT_WIDTH_CLASS } from "@/lib/club-directory/vereine-page-layout";
+import { cn } from "@/lib/cn";
 
-type PageProps = { searchParams: Promise<{ view?: string }> };
-
-function toListItem(
-  club: Awaited<ReturnType<typeof listExternalClubs>>[number],
-): ClubDirectoryListItem {
-  return {
-    id: club.id,
-    name: club.name,
-    shortName: club.shortName,
-    alternativeName: club.alternativeName,
-    logoUrl: club.logoUrl,
-    source: club.source,
-    archivedAt: club.archivedAt ? club.archivedAt.toISOString() : null,
-    teamCount: club.teamCount,
-    hasProviderMapping: club.hasProviderMapping,
-  };
-}
+type PageProps = {
+  searchParams: Promise<{ view?: string; provider?: string; teams?: string; q?: string }>;
+};
 
 export default async function VereinePage({ searchParams }: PageProps) {
   await requireAnyPermission([PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE]);
   const tenant = await getActiveTenant();
   if (!tenant) notFound();
 
-  const { view } = await searchParams;
+  const { view, provider, teams, q } = await searchParams;
   const showArchived = view === "archived";
-
-  const database = createClubDirectoryQueryDatabase(prisma);
-  const allClubs = await listExternalClubs(database, {
-    tenantId: tenant.id,
-    limit: 200,
-    includeArchived: true,
-  });
-  const clubs = allClubs.filter((c) => c.archivedAt === null);
-  const archivedClubs = allClubs.filter((c) => c.archivedAt !== null);
+  const providerFilter = parseClubDirectoryProviderFilter(provider);
+  const teamsFilter = parseClubDirectoryTeamsFilter(teams);
 
   return (
     <PageShell fullWidth>
       <ListPagePattern
+        className={cn("w-full", VEREINE_PAGE_CONTENT_WIDTH_CLASS)}
         eyebrow="Organisation"
         title="Vereine"
-        description="Kanonisches Verzeichnis externer Vereine und ihrer Teams — wiederverwendbar für Matchcenter, TournamentCenter, Infoboard und Website."
+        description="Kanonisches Verzeichnis externer Vereine und ihrer Teams — dieselbe Datenquelle wie TournamentCenter, MatchCenter und Infoboard."
         breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Vereine" }]}
         headerActions={
           <Link href="/dashboard/vereine/new" className="fca-button-primary">
@@ -63,9 +45,10 @@ export default async function VereinePage({ searchParams }: PageProps) {
         }
       >
         <ClubDirectorySearchableList
-          clubs={clubs.map(toListItem)}
-          archivedClubs={archivedClubs.map(toListItem)}
           showArchived={showArchived}
+          providerFilter={providerFilter}
+          teamsFilter={teamsFilter}
+          initialQuery={q ?? ""}
         />
       </ListPagePattern>
     </PageShell>

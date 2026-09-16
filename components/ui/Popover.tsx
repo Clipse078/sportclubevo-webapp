@@ -31,6 +31,8 @@ type PopoverContentProps = {
   role?: "listbox" | "dialog";
   matchAnchorWidth?: boolean;
   maxHeight?: number;
+  /** When false, the floating surface does not clip children horizontally (filter panels). */
+  clipOverflow?: boolean;
   className?: string;
 };
 
@@ -43,6 +45,7 @@ export function PopoverContent({
   role = "listbox",
   matchAnchorWidth = true,
   maxHeight = 224,
+  clipOverflow = true,
   className,
 }: PopoverContentProps) {
   const { refs, floatingStyles, context } = useFloating({
@@ -93,7 +96,8 @@ export function PopoverContent({
         style={floatingStyles}
         id={id}
         className={cn(
-          "z-[70] overflow-y-auto rounded-[var(--radius-xl)] border border-[var(--border-strong)] bg-[var(--surface)] py-1 shadow-[var(--shadow-lg)]",
+          "z-[70] rounded-[var(--radius-xl)] border border-[var(--border-strong)] bg-[var(--surface)] py-1 shadow-[var(--shadow-lg)]",
+          clipOverflow ? "overflow-y-auto" : "overflow-visible",
           className,
         )}
         {...getFloatingProps()}

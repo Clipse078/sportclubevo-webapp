@@ -196,6 +196,7 @@ export function findNextTournamentEventForTeamSeason(
       teamSeason: { team: { tenantId } },
       type: "TOURNAMENT",
       websiteVisible: true,
+      teamPageVisible: true,
       status: {
         in: ["SCHEDULED", "LIVE", "COMPLETED", "POSTPONED"],
       },

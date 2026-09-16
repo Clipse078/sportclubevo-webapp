@@ -1,16 +1,13 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import TournamentCreateForm from "@/components/admin/tournamentcenter/TournamentCreateForm";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
+import { PageShell } from "@/components/ui/page";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 
 export default async function NewTournamentCenterPage() {
-  // ORG-ACCESS-03: broaden gate to also allow EVENTS_VIEW so scoped users
-  // can reach this page; backend enforces 403 for unauthorized teams.
   await requireAnyPermission([PERMISSIONS.EVENTS_MANAGE, PERMISSIONS.EVENTS_VIEW]);
 
   const tenantContext = await getActiveTenant();
@@ -44,22 +41,12 @@ export default async function NewTournamentCenterPage() {
   const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
 
   return (
-    <div className="max-w-[1000px] space-y-6">
-      <AdminSectionHeader
-        eyebrow="TournamentCenter"
-        title="Turnier erstellen"
-        description="Teilnehmende Teams, Spielfeld/Halle und Garderoben werden direkt bei der Erstellung erfasst."
-        actions={
-          <Link href="/dashboard/tournamentcenter" className="fca-button-secondary">
-            Zurück zum TournamentCenter
-          </Link>
-        }
-      />
-
+    <PageShell fullWidth>
       <TournamentCreateForm
         pitchHallFacilityGroups={pitchHallFacilityGroups}
         dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+        tenantLogoUrl={tenantContext.logoUrl}
       />
-    </div>
+    </PageShell>
   );
 }

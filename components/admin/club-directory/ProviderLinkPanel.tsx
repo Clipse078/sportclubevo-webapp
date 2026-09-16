@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Link2, Loader2 } from "lucide-react";
-import { Badge } from "@/components/ui";
+import { Link2, Pencil } from "lucide-react";
+import { Badge, Button } from "@/components/ui";
 
 type ClubProviderMapping = {
   id: string;
@@ -28,24 +28,23 @@ type ProviderLinkPanelProps =
   | { resource: "club"; id: string; mappings: ClubProviderMapping[] }
   | { resource: "team"; id: string; mappings: TeamProviderMapping[] };
 
-const fieldClass =
-  "w-full rounded-[12px] border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0b4aa2]/30";
-const labelClass = "block text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 mb-1";
+const labelClass =
+  "mb-1 block text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]";
 
 /**
- * Manual provider-identity linking form. No live provider (SFV) call is
- * made — the admin enters the provider-reported numeric id and name
- * directly. See CLUB-DIRECTORY-01 deliverable notes for why this is
- * intentionally manual in this slice.
+ * Provider identity linking — read-first with explicit edit mode.
  */
 export function ProviderLinkPanel(props: ProviderLinkPanelProps) {
   const router = useRouter();
+  const [editing, setEditing] = useState(false);
   const [provider, setProvider] = useState("SFV");
   const [providerId, setProviderId] = useState("");
   const [providerName, setProviderName] = useState("");
   const [seasonId, setSeasonId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const hasMappings = props.mappings.length > 0;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -86,6 +85,7 @@ export function ProviderLinkPanel(props: ProviderLinkPanelProps) {
       setProviderId("");
       setProviderName("");
       setSeasonId("");
+      setEditing(false);
       router.refresh();
     } catch {
       setError("Netzwerkfehler.");
@@ -95,97 +95,132 @@ export function ProviderLinkPanel(props: ProviderLinkPanelProps) {
   }
 
   return (
-    <div className="space-y-4">
-      {props.mappings.length > 0 ? (
-        <ul className="space-y-2">
+    <div className="space-y-4" data-testid="provider-link-panel">
+      {hasMappings ? (
+        <ul className="space-y-3">
           {props.mappings.map((mapping) => (
             <li
               key={mapping.id}
-              className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2"
+              className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/60 px-4 py-3"
             >
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <Badge variant="info" size="sm">
-                    {mapping.provider}
-                  </Badge>
-                  <span className="truncate text-sm font-medium text-[var(--foreground)]">
-                    {"providerClubName" in mapping
-                      ? mapping.providerClubName ?? `#${mapping.providerClubId}`
-                      : mapping.providerTeamName ?? `#${mapping.providerTeamId}`}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-[11px] text-[var(--muted)]">
-                  {"providerClubId" in mapping
-                    ? `Anbieter-ID ${mapping.providerClubId}`
-                    : `Anbieter-ID ${mapping.providerTeamId} · Saison ${mapping.providerSeasonId}`}
-                  {mapping.lastSyncedAt
-                    ? ` · zuletzt synchronisiert ${new Date(mapping.lastSyncedAt).toLocaleDateString("de-CH")}`
-                    : ""}
-                </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="info" size="sm">
+                  {mapping.provider}
+                </Badge>
+                <span className="text-sm font-semibold text-[var(--foreground)]">
+                  {"providerClubName" in mapping
+                    ? mapping.providerClubName ?? `#${mapping.providerClubId}`
+                    : mapping.providerTeamName ?? `#${mapping.providerTeamId}`}
+                </span>
               </div>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                {"providerClubId" in mapping
+                  ? `Anbieter-ID ${mapping.providerClubId}`
+                  : `Anbieter-ID ${mapping.providerTeamId} · Saison ${mapping.providerSeasonId}`}
+              </p>
+              {mapping.lastSyncedAt ? (
+                <p className="mt-0.5 text-xs text-[var(--text-2)]">
+                  Zuletzt synchronisiert:{" "}
+                  {new Date(mapping.lastSyncedAt).toLocaleDateString("de-CH")}
+                </p>
+              ) : null}
             </li>
           ))}
         </ul>
       ) : (
         <p className="text-sm text-[var(--muted)]">
-          Noch keine Anbieter-Verknüpfung. {props.resource === "club" ? "Verein" : "Team"} kann
+          Noch keine Anbieter-Verknüpfung. Der {props.resource === "club" ? "Verein" : "Team"} kann
           weiterhin ohne Anbieter verwaltet werden.
         </p>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
-        {error ? <p className="text-xs font-medium text-rose-600">{error}</p> : null}
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div>
-            <label className={labelClass}>Anbieter</label>
-            <select value={provider} onChange={(e) => setProvider(e.target.value)} className={fieldClass}>
-              <option value="SFV">SFV</option>
-            </select>
-          </div>
-          <div>
-            <label className={labelClass}>Anbieter-ID *</label>
-            <input
-              type="number"
-              min={1}
-              value={providerId}
-              onChange={(e) => setProviderId(e.target.value)}
-              placeholder={props.resource === "club" ? "z.B. 483" : "z.B. 51234"}
-              className={fieldClass}
-              required
-            />
-          </div>
-          <div className={props.resource === "team" ? "" : "sm:col-span-2"}>
-            <label className={labelClass}>Anbieter-Name</label>
-            <input
-              type="text"
-              value={providerName}
-              onChange={(e) => setProviderName(e.target.value)}
-              placeholder="Optional"
-              className={fieldClass}
-            />
-          </div>
-          {props.resource === "team" ? (
+      {!editing ? (
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          iconLeft={<Pencil className="h-3.5 w-3.5" />}
+          onClick={() => setEditing(true)}
+          data-testid="provider-link-edit-toggle"
+        >
+          {hasMappings ? "Verknüpfung bearbeiten" : "Verknüpfung hinzufügen"}
+        </Button>
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 p-4"
+          data-testid="provider-link-edit-form"
+        >
+          {error ? <p className="text-xs font-medium text-[var(--sce-danger)]">{error}</p> : null}
+          <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className={labelClass}>Saison-ID</label>
+              <label className={labelClass} htmlFor="provider-select">Anbieter</label>
+              <select
+                id="provider-select"
+                value={provider}
+                onChange={(e) => setProvider(e.target.value)}
+                className="fca-input w-full"
+              >
+                <option value="SFV">SFV</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass} htmlFor="provider-id-input">Anbieter-ID *</label>
               <input
+                id="provider-id-input"
                 type="number"
-                value={seasonId}
-                onChange={(e) => setSeasonId(e.target.value)}
-                placeholder="0 = saisonlos"
-                className={fieldClass}
+                min={1}
+                value={providerId}
+                onChange={(e) => setProviderId(e.target.value)}
+                placeholder={props.resource === "club" ? "z.B. 483" : "z.B. 51234"}
+                className="fca-input w-full"
+                required
               />
             </div>
-          ) : null}
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="inline-flex items-center gap-2 rounded-full bg-[#0b4aa2] px-4 py-2 text-xs font-semibold text-white shadow-sm disabled:opacity-60 hover:bg-[#08357a]"
-        >
-          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Link2 className="h-3.5 w-3.5" />}
-          Verknüpfen
-        </button>
-      </form>
+            <div className={props.resource === "team" ? "" : "sm:col-span-2"}>
+              <label className={labelClass} htmlFor="provider-name-input">Anbieter-Name</label>
+              <input
+                id="provider-name-input"
+                type="text"
+                value={providerName}
+                onChange={(e) => setProviderName(e.target.value)}
+                placeholder="Optional"
+                className="fca-input w-full"
+              />
+            </div>
+            {props.resource === "team" ? (
+              <div>
+                <label className={labelClass} htmlFor="provider-season-input">Saison-ID</label>
+                <input
+                  id="provider-season-input"
+                  type="number"
+                  value={seasonId}
+                  onChange={(e) => setSeasonId(e.target.value)}
+                  placeholder="0 = saisonlos"
+                  className="fca-input w-full"
+                />
+              </div>
+            ) : null}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" variant="primary" size="sm" loading={loading} iconLeft={<Link2 className="h-3.5 w-3.5" />}>
+              Verknüpfung speichern
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={loading}
+              onClick={() => {
+                setEditing(false);
+                setError(null);
+              }}
+            >
+              Abbrechen
+            </Button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

@@ -12,6 +12,7 @@
 import type {
   ExternalClubDetailDto,
   ExternalClubDetailInput,
+  ExternalClubCountInput,
   ExternalClubListInput,
   ExternalClubProviderLookupResult,
   ExternalClubProviderMappingDto,
@@ -110,6 +111,7 @@ interface ExternalTeamDetailRecord extends ExternalTeamListRecord {
 interface ExternalClubDelegate {
   findMany(args: object): Promise<ExternalClubListRecord[]>;
   findFirst(args: object): Promise<ExternalClubDetailRecord | null>;
+  count(args: object): Promise<number>;
 }
 
 interface ExternalTeamDelegate {
@@ -170,6 +172,19 @@ function nameSearchClause(search: string) {
       { alternativeName: { contains: search, mode: "insensitive" as const } },
     ],
   };
+}
+
+function externalClubArchiveWhere(input: {
+  includeArchived?: boolean;
+  archivedOnly?: boolean;
+}): { archivedAt?: null | { not: null } } | Record<string, never> {
+  if (input.archivedOnly) {
+    return { archivedAt: { not: null } };
+  }
+  if (input.includeArchived) {
+    return {};
+  }
+  return { archivedAt: null };
 }
 
 function toMappingDto(
@@ -272,7 +287,10 @@ export async function listExternalClubs(
   const records = await database.externalClub.findMany({
     where: {
       tenantId,
-      ...(options.includeArchived ? {} : { archivedAt: null }),
+      ...externalClubArchiveWhere({
+        includeArchived: input.includeArchived,
+        archivedOnly: input.archivedOnly,
+      }),
       ...(options.search !== null ? nameSearchClause(options.search) : {}),
     },
     orderBy: [{ name: "asc" }, { id: "asc" }],
@@ -281,6 +299,26 @@ export async function listExternalClubs(
   });
 
   return records.map(toClubSummaryDto);
+}
+
+export async function countExternalClubs(
+  database: ClubDirectoryQueryDatabase,
+  input: ExternalClubCountInput,
+): Promise<number> {
+  const tenantId = requireIdentifier(input.tenantId, "tenantId");
+  const trimmedSearch = input.search?.trim() ?? "";
+  const search = trimmedSearch.length > 0 ? trimmedSearch : null;
+
+  return database.externalClub.count({
+    where: {
+      tenantId,
+      ...externalClubArchiveWhere({
+        includeArchived: input.includeArchived,
+        archivedOnly: input.archivedOnly,
+      }),
+      ...(search !== null ? nameSearchClause(search) : {}),
+    },
+  });
 }
 
 export async function getExternalClubById(

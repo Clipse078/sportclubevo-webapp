@@ -17,6 +17,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TournamentCreateForm from "@/components/admin/tournamentcenter/TournamentCreateForm";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import { pickSearchableOption } from "./tournament-form-test-helpers";
 
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
@@ -116,10 +117,11 @@ function installFetchMock(overrides: {
 async function fillMinimalRequiredFields() {
   fireEvent.change(screen.getByTestId("tournament-create-title"), { target: { value: "Testturnier" } });
   await waitFor(() => expect(screen.getByTestId("tournament-create-season-select")).not.toBeDisabled());
+  pickSearchableOption("tournament-create-season", "season-1");
   fireEvent.change(screen.getByTestId("tournament-create-start-at"), { target: { value: "2026-09-20T10:00" } });
 
   await waitFor(() => expect(screen.getByTestId("tournament-create-add-team-select")).not.toBeDisabled());
-  fireEvent.change(screen.getByTestId("tournament-create-add-team-select"), { target: { value: "team-1" } });
+  pickSearchableOption("tournament-create-add-team", "team-1");
   fireEvent.click(screen.getByTestId("tournament-create-add-team-button"));
 }
 

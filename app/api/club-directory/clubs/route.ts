@@ -9,6 +9,8 @@ import { createClubDirectoryQueryDatabase } from "@/lib/club-directory/prisma-ad
 import { createClubDirectoryMutationDatabase } from "@/lib/club-directory/prisma-mutation-adapter";
 import {
   CLUB_DIRECTORY_DEFAULT_LIMIT,
+  CLUB_DIRECTORY_MAX_LIMIT,
+  countExternalClubs,
   listExternalClubs,
 } from "@/lib/club-directory/query-service";
 import {
@@ -35,15 +37,39 @@ export async function GET(request: NextRequest) {
   const rawSkip = searchParams.get("skip");
 
   try {
-    const clubs = await listExternalClubs(createClubDirectoryQueryDatabase(prisma), {
+    const database = createClubDirectoryQueryDatabase(prisma);
+    const limit = rawLimit !== null ? parseInt(rawLimit, 10) : CLUB_DIRECTORY_DEFAULT_LIMIT;
+    const skip = rawSkip !== null ? parseInt(rawSkip, 10) : 0;
+    const archivedOnly = searchParams.get("archivedOnly") === "true";
+    const listInput = {
       tenantId: tenant.id,
       search: searchParams.get("search") ?? undefined,
       includeArchived: searchParams.get("includeArchived") === "true",
-      limit: rawLimit !== null ? parseInt(rawLimit, 10) : CLUB_DIRECTORY_DEFAULT_LIMIT,
-      skip: rawSkip !== null ? parseInt(rawSkip, 10) : 0,
-    });
+      archivedOnly,
+      limit,
+      skip,
+    };
 
-    return NextResponse.json({ clubs });
+    const [clubs, total] = await Promise.all([
+      listExternalClubs(database, listInput),
+      countExternalClubs(database, {
+        tenantId: tenant.id,
+        search: listInput.search,
+        includeArchived: listInput.includeArchived,
+        archivedOnly,
+      }),
+    ]);
+
+    return NextResponse.json({
+      clubs,
+      meta: {
+        total,
+        limit,
+        skip,
+        hasMore: skip + clubs.length < total,
+        maxLimit: CLUB_DIRECTORY_MAX_LIMIT,
+      },
+    });
   } catch (error) {
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message }, { status: 400 });

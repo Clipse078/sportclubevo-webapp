@@ -3,34 +3,52 @@
 /**
  * components/admin/tournamentcenter/TournamentResourceAllocationEditor.tsx
  *
- * TOURNAMENTCENTER-01B — "Ressourcen · Spielfeld / Halle" editor for a HOME
- * tournament. Supports one or more Spielfeld/Halle FacilityResource
- * allocations (e.g. KR2 + KR3 A + KR3 B) — never limited to a single
- * pitchCode.
+ * TOURNAMENTCENTER-01B — facility allocation presentation with shared pitch/hall identity.
  */
 
-import { useCallback, useState, useTransition } from "react";
-import { Building2, MapPin, X } from "lucide-react";
+import { useCallback, useMemo, useState, useTransition } from "react";
+import { X } from "lucide-react";
 import type { TournamentResourceAllocationDto } from "@/lib/tournaments/types";
 import {
   FacilityResourceSelector,
   type FacilityGroup,
   type ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
+import { FacilityResourceIdentity } from "@/components/admin/shared/planning/FacilityResourceIdentity";
+import type { FacilityResourceType } from "@prisma/client";
 
 type Props = {
   tournamentId: string;
   canManage: boolean;
   initialAllocations: TournamentResourceAllocationDto[];
-  /** Non-archived FULL_PITCH/HALF_PITCH (or other) resources, grouped by facility. */
   facilityGroups: FacilityGroup[];
-  /**
-   * RESOURCE-AVAILABILITY-UX-01 — live Frei/Belegt availability for the
-   * tournament's current Start/Ende, keyed by resource id. Purely additive:
-   * omitted, the selector renders exactly as before.
-   */
   availabilityByResourceId?: Map<string, ResourceAvailabilityAnnotation>;
 };
+
+function lookupResourceMeta(
+  facilityGroups: FacilityGroup[],
+  resourceId: string,
+): { type: FacilityResourceType; facilityType?: string; typeLabel: string } {
+  for (const fg of facilityGroups) {
+    const resource = fg.resources.find((r) => r.id === resourceId);
+    if (resource) {
+      const typeLabel =
+        resource.type === "FULL_PITCH"
+          ? "Spielfeld"
+          : resource.type === "HALF_PITCH"
+            ? "Halbes Feld"
+            : fg.facilityType === "INDOOR_HALL"
+              ? "Halle"
+              : "Ressource";
+      return {
+        type: resource.type,
+        facilityType: resource.facilityType ?? fg.facilityType,
+        typeLabel,
+      };
+    }
+  }
+  return { type: "OTHER", typeLabel: "Ressource" };
+}
 
 export default function TournamentResourceAllocationEditor({
   tournamentId,
@@ -43,7 +61,10 @@ export default function TournamentResourceAllocationEditor({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const allocatedResourceIds = new Set(allocations.map((a) => a.facilityResourceId));
+  const allocatedResourceIds = useMemo(
+    () => new Set(allocations.map((a) => a.facilityResourceId)),
+    [allocations],
+  );
 
   const handleAdd = useCallback(
     async (facilityResourceId: string) => {
@@ -86,42 +107,41 @@ export default function TournamentResourceAllocationEditor({
   );
 
   return (
-    <div className="space-y-4" data-testid="tournament-resource-allocation-editor">
+    <div className="space-y-3" data-testid="tournament-resource-allocation-editor">
       {allocations.length === 0 ? (
-        <div className="rounded-lg border-2 border-dashed border-[var(--border)] py-6 text-center">
-          <MapPin className="mx-auto mb-2 h-5 w-5 text-[var(--muted)]" aria-hidden />
-          <p className="text-sm text-[var(--text-2)]">Noch kein Spielfeld / keine Halle zugewiesen.</p>
-        </div>
+        <p className="text-sm text-[var(--text-2)]">Noch kein Spielfeld / keine Halle zugewiesen.</p>
       ) : (
-        <ul className="space-y-2" data-testid="tournament-resource-allocation-list">
-          {allocations.map((allocation) => (
-            <li
-              key={allocation.id}
-              className="group flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-[var(--foreground)]">
-                  {allocation.facilityResourceName}
-                </p>
-                <p className="mt-0.5 flex items-center gap-1 text-xs text-[var(--text-2)]">
-                  <Building2 className="h-3 w-3" aria-hidden />
-                  {allocation.facilityName}
-                </p>
-              </div>
+        <ul className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)]" data-testid="tournament-resource-allocation-list">
+          {allocations.map((allocation) => {
+            const meta = lookupResourceMeta(facilityGroups, allocation.facilityResourceId);
+            return (
+              <li
+                key={allocation.id}
+                className="flex items-center gap-2 bg-[var(--surface)] px-3 py-2"
+              >
+                <FacilityResourceIdentity
+                  name={allocation.facilityResourceName}
+                  resourceType={meta.type}
+                  facilityType={meta.facilityType}
+                  subtitle={`${meta.typeLabel} · ${allocation.facilityName}`}
+                  compact
+                  className="min-w-0 flex-1"
+                />
 
-              {canManage && (
-                <button
-                  type="button"
-                  onClick={() => handleRemove(allocation.id)}
-                  disabled={isPending}
-                  aria-label={`${allocation.facilityResourceName} entfernen`}
-                  className="shrink-0 rounded p-1 text-[var(--muted)] transition hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </li>
-          ))}
+                {canManage && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(allocation.id)}
+                    disabled={isPending}
+                    aria-label={`${allocation.facilityResourceName} entfernen`}
+                    className="shrink-0 rounded p-1.5 text-[var(--muted)] transition hover:bg-rose-500/10 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
 

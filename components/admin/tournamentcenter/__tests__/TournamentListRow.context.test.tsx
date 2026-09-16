@@ -93,11 +93,10 @@ describe("TournamentListRow — participating Team and organiser context", () =>
     );
 
     const el = screen.getByTestId("tournament-team-t1");
-    expect(el.textContent).toMatch(/Mannschaft/);
     expect(el.textContent).toMatch(/Junioren F1/);
   });
 
-  it("shows Veranstalter from organizerName (not inferred from title)", () => {
+  it("shows organiser name with logo alt text", () => {
     render(
       <TournamentListRow
         tournament={makeTournament({ organizerLogoUrl: "https://cdn.example.com/bsc.png" })}
@@ -107,13 +106,11 @@ describe("TournamentListRow — participating Team and organiser context", () =>
       />,
     );
 
-    const el = screen.getByTestId("tournament-organizer-t1");
-    expect(el.textContent).toMatch(/Veranstalter/);
-    expect(el.textContent).toMatch(/BSC Old Boys/);
+    expect(screen.getByTestId("tournament-organizer-t1").textContent).toMatch(/BSC Old Boys/);
     expect(screen.getByAltText("Logo BSC Old Boys")).toBeInTheDocument();
   });
 
-  it("omits Mannschaft row when team is null", () => {
+  it("omits team chip when team is null", () => {
     render(
       <TournamentListRow
         tournament={makeTournament({ team: null })}
@@ -197,11 +194,10 @@ describe("TournamentArchivRow — participating Team and organiser context", () 
     );
 
     const el = screen.getByTestId("tournament-archiv-team-t1");
-    expect(el.textContent).toMatch(/Mannschaft/);
-    expect(el.textContent).toMatch(/Junioren F1/);
+    expect(screen.getByTestId("tournament-archiv-team-t1").textContent).toMatch(/Junioren F1/);
   });
 
-  it("shows Veranstalter from organizerName", () => {
+  it("shows organiser name", () => {
     render(
       <TournamentArchivRow
         tournament={archivedTournament}
@@ -210,12 +206,10 @@ describe("TournamentArchivRow — participating Team and organiser context", () 
       />,
     );
 
-    const el = screen.getByTestId("tournament-archiv-organizer-t1");
-    expect(el.textContent).toMatch(/Veranstalter/);
-    expect(el.textContent).toMatch(/BSC Old Boys/);
+    expect(screen.getByTestId("tournament-organizer-t1").textContent).toMatch(/BSC Old Boys/);
   });
 
-  it("omits Mannschaft row when team is null", () => {
+  it("omits team chip when team is null", () => {
     render(
       <TournamentArchivRow
         tournament={makeTournament({ status: "COMPLETED", team: null })}
@@ -227,7 +221,7 @@ describe("TournamentArchivRow — participating Team and organiser context", () 
     expect(screen.queryByTestId("tournament-archiv-team-t1")).toBeNull();
   });
 
-  it("omits Veranstalter row when organizerName is null", () => {
+  it("omits organiser when organizerName is null", () => {
     render(
       <TournamentArchivRow
         tournament={makeTournament({ status: "COMPLETED", organizerName: null })}
@@ -236,10 +230,10 @@ describe("TournamentArchivRow — participating Team and organiser context", () 
       />,
     );
 
-    expect(screen.queryByTestId("tournament-archiv-organizer-t1")).toBeNull();
+    expect(screen.queryByTestId("tournament-organizer-t1")).toBeNull();
   });
 
-  it("preserves date/location fields", () => {
+  it("preserves title and location fields", () => {
     render(
       <TournamentArchivRow
         tournament={archivedTournament}

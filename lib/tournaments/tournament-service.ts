@@ -28,6 +28,11 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
+import { scheduleTenantPublicWebsiteCacheNotificationByTenantId } from "@/lib/website/public-cache-notification";
+import {
+  resolveTournamentPublicationCacheDomains,
+  updateTouchesPublicationVisibility,
+} from "@/lib/tournaments/tournament-public-cache-notification";
 import {
   findTournamentEventById,
   findAllTournamentEvents,
@@ -506,6 +511,14 @@ export async function updateTournament(
   }
 
   await prisma.event.update({ where: { id: tournamentId }, data });
+
+  if (updateTouchesPublicationVisibility(input)) {
+    const domains = resolveTournamentPublicationCacheDomains(input);
+    if (domains.length > 0) {
+      void scheduleTenantPublicWebsiteCacheNotificationByTenantId(tenantId, domains);
+    }
+  }
+
   return getTournament(tenantId, tournamentId);
 }
 

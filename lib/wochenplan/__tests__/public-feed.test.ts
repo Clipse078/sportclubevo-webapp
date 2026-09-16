@@ -439,6 +439,37 @@ describe("buildPublicCurrentWeekFeed", () => {
     expect(feed.summary.tournamentCount).toBe(1);
   });
 
+  it("10b. excludes home tournament when wochenplanVisible is false", async () => {
+    setupDefaultMocks([tournamentItem()], "2026-08-28");
+    mocks.eventFindMany.mockResolvedValue([
+      {
+        id: "event-tournament-1",
+        status: "SCHEDULED",
+        infoboardVisible: true,
+        websiteVisible: true,
+        wochenplanVisible: false,
+        trainingsplanVisible: false,
+        homeAway: "HOME",
+        organizerName: "FC Allschwil",
+        competitionLabel: null,
+        meetingTime: null,
+        resultLabel: null,
+        intermediateResultLabel: null,
+        season: { key: "2026-27" },
+        team: null,
+        opponentExternalClub: null,
+        matchExternalMapping: null,
+      },
+    ]);
+
+    const feed = await buildPublicCurrentWeekFeed({
+      tenantId: TENANT_ID,
+      tenantName: TENANT_NAME,
+      now: NOW,
+    });
+    expect(feed.summary.tournamentCount).toBe(0);
+  });
+
   it("11. excludes external/away tournament", async () => {
     setupDefaultMocks([tournamentItem()], "2026-08-28");
     mocks.eventFindMany.mockResolvedValue([

@@ -123,7 +123,7 @@ export default function PlanningWorkflowActionsClient({
           onClick={handleSubmit}
           disabled={loading}
           data-testid={`planning-action-submit-${recordId}`}
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-medium text-blue-700 transition hover:bg-blue-100 disabled:opacity-60 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
+          className="fca-button-primary h-8 px-3 text-xs"
         >
           {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
           Zur Prüfung einreichen
@@ -136,7 +136,7 @@ export default function PlanningWorkflowActionsClient({
           onClick={handleValidate}
           disabled={loading}
           data-testid={`planning-action-validate-${recordId}`}
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 text-xs font-medium text-green-700 transition hover:bg-green-100 disabled:opacity-60 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400"
+          className="fca-button-primary h-8 px-3 text-xs"
         >
           {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
           Validieren
@@ -149,7 +149,7 @@ export default function PlanningWorkflowActionsClient({
           onClick={handleReopen}
           disabled={loading}
           data-testid={`planning-action-reopen-${recordId}`}
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-white px-3 text-xs font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-2)] disabled:opacity-60"
+          className="fca-button-secondary h-8 px-3 text-xs"
         >
           {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
           Zur Bearbeitung öffnen

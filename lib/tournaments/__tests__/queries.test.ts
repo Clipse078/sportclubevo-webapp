@@ -86,6 +86,7 @@ describe("findNextTournamentEventForTeamSeason", () => {
     };
     expect(call.where).toMatchObject({
       websiteVisible: true,
+      teamPageVisible: true,
       status: {
         in: ["SCHEDULED", "LIVE", "COMPLETED", "POSTPONED"],
       },
