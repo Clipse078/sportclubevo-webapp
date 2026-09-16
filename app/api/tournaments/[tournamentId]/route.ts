@@ -198,7 +198,38 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
+  const hasOccupancyPatch =
+    "dressingRoomOccupancyMode" in body ||
+    "dressingRoomBeforeMinutes" in body ||
+    "dressingRoomAfterMinutes" in body;
+
   try {
+    if (hasOccupancyPatch) {
+      const { updateEventDressingRoomOccupancy } = await import(
+        "@/lib/dressing-room-occupancy/event-occupancy-service"
+      );
+      try {
+        await updateEventDressingRoomOccupancy(tenantId, tournamentId, {
+          mode: (body.dressingRoomOccupancyMode as "DEFAULT" | "CUSTOM" | undefined) ?? "DEFAULT",
+          beforeMinutes:
+            typeof body.dressingRoomBeforeMinutes === "number" ||
+            body.dressingRoomBeforeMinutes === null
+              ? body.dressingRoomBeforeMinutes
+              : undefined,
+          afterMinutes:
+            typeof body.dressingRoomAfterMinutes === "number" ||
+            body.dressingRoomAfterMinutes === null
+              ? body.dressingRoomAfterMinutes
+              : undefined,
+        });
+      } catch (err) {
+        return NextResponse.json(
+          { error: err instanceof Error ? err.message : "Ungültige Belegungszeit" },
+          { status: 400 },
+        );
+      }
+    }
+
     // ── Lifecycle transition ────────────────────────────────────────────────
     if ("status" in body) {
       const status = body.status;
@@ -285,8 +316,15 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       }
     }
 
-    if (Object.keys(data).length === 0) {
+    if (Object.keys(data).length === 0 && !hasOccupancyPatch) {
       return NextResponse.json({ error: "Keine gültigen Felder zum Aktualisieren." }, { status: 400 });
+    }
+
+    if (Object.keys(data).length === 0) {
+      revalidatePath("/dashboard/tournamentcenter");
+      revalidatePath(`/dashboard/tournamentcenter/${tournamentId}/edit`);
+      revalidatePath("/dashboard/planner/week");
+      return NextResponse.json({ ok: true });
     }
 
     const tournament = await updateTournament(tenantId, tournamentId, data);

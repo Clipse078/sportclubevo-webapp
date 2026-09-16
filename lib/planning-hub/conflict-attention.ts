@@ -3,7 +3,10 @@
  * operator-facing incidents for the attention layer.
  */
 
-import { resourceOccupancyWindowsOverlap } from "@/lib/facilities/resource-occupancy-window";
+import {
+  computeResourceOccupancyWindow,
+  resourceOccupancyWindowsOverlap,
+} from "@/lib/facilities/resource-occupancy-window";
 import type { WeekplannerItem, WeekplannerResourceRef, WeekplannerWeek } from "@/lib/weekplanner/types";
 
 export type PlanningResourceKind = "PITCH_HALL" | "DRESSING_ROOM";
@@ -34,13 +37,19 @@ function collectOccupied(item: WeekplannerItem): Occupied[] {
     }
   }
 
-  return refs.map((ref) => ({
-    ...ref,
-    effectiveStartAt: new Date(
-      item.startAt.getTime() - (ref.occupancyBeforeMinutes ?? 0) * 60_000,
-    ),
-    effectiveEndAt: new Date(item.endAt.getTime() + (ref.occupancyAfterMinutes ?? 0) * 60_000),
-  }));
+  return refs.map((ref) => {
+    const window = computeResourceOccupancyWindow(
+      item.startAt,
+      item.endAt,
+      ref.occupancyBeforeMinutes,
+      ref.occupancyAfterMinutes,
+    );
+    return {
+      ...ref,
+      effectiveStartAt: window.effectiveStartAt,
+      effectiveEndAt: window.effectiveEndAt,
+    };
+  });
 }
 
 function inferResourceKind(item: WeekplannerItem, resourceId: string): PlanningResourceKind {

@@ -10,6 +10,7 @@ import { listWeekplannerPlans, listWeekplannerPlanAllocations } from "@/lib/week
 import { listWochenplanPlans } from "@/lib/wochenplan/plan-service";
 import { materializeLinkedWeekplannerPlan } from "@/lib/wochenplan/plan-materialization";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
+import { getTenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/tenant-preset-service";
 import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
 import WeekPlannerPage from "@/components/admin/planner/WeekPlannerPage";
 import { parsePlanningHubUrlState } from "@/lib/planning-hub/planner-url";
@@ -133,18 +134,21 @@ export default async function PlannerWeekPageRoute({
 
   const activePlan = materializedWeekplannerPlan;
 
-  const week = await getWeekplannerWeek(
-    tenantContext.id,
-    {
-      from: weekWindow.from,
-      to: weekWindow.to,
-      days: weekWindow.days,
-      param: weekWindow.param,
-      previousParam: weekWindow.previousParam,
-      nextParam: weekWindow.nextParam,
-    },
-    activePlan?.id,
-  );
+  const [week, dressingRoomOccupancyPresets] = await Promise.all([
+    getWeekplannerWeek(
+      tenantContext.id,
+      {
+        from: weekWindow.from,
+        to: weekWindow.to,
+        days: weekWindow.days,
+        param: weekWindow.param,
+        previousParam: weekWindow.previousParam,
+        nextParam: weekWindow.nextParam,
+      },
+      activePlan?.id,
+    ),
+    getTenantDressingRoomOccupancyPresets(tenantContext.id),
+  ]);
 
   // WEEKPLANNER-01B — override editing context is only ever built when an
   // alternative plan is selected AND the caller can manage plans; the
@@ -207,6 +211,7 @@ export default async function PlannerWeekPageRoute({
         tournament: canManageEvents,
         veranstaltung: canManageEvents,
       }}
+      dressingRoomOccupancyPresets={dressingRoomOccupancyPresets}
     />
   );
 }

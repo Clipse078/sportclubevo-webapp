@@ -76,6 +76,9 @@ import { prisma } from "@/lib/db/prisma";
 import { isMeaningfulEventInterval } from "@/lib/facilities/resource-occupancy-window";
 import { getWochenplanPlanBaselineMode, type WochenplanPlanBaselineMode } from "@/lib/wochenplan/plan-baseline";
 import { listTrainingSessions } from "@/lib/training/session-generation-service";
+import { getTenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/tenant-preset-service";
+import { enrichWeekplannerItemDressingRoomOccupancy } from "@/lib/dressing-room-occupancy/weekplanner-enrichment";
+import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
 import {
   resolveTrainingOccurrenceAllocations,
   type TrainingAllocationResourceRow,
@@ -364,6 +367,7 @@ async function findWeekplannerTrainingItems(
   days: readonly string[],
   overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
   timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
+  tenantPresets: TenantDressingRoomOccupancyPresets,
 ): Promise<WeekplannerTrainingItem[]> {
   if (days.length === 0) return [];
 
@@ -470,10 +474,10 @@ async function findWeekplannerTrainingItems(
       new Date(session.endAt),
     );
 
-    return {
+    const base = {
       id: `training:${session.id}`,
       tenantId,
-      type: "TRAINING",
+      type: "TRAINING" as const,
       startAt: time.startAt,
       endAt: time.endAt,
       canonicalStartAt: time.canonicalStartAt,
@@ -491,7 +495,18 @@ async function findWeekplannerTrainingItems(
       trainingSeriesId: session.trainingSeriesId,
       trainingSessionId: session.id,
       teamSeasonId: session.teamSeasonId,
-    } satisfies WeekplannerTrainingItem;
+    };
+
+    return enrichWeekplannerItemDressingRoomOccupancy(
+      base as unknown as WeekplannerTrainingItem,
+      "TRAINING",
+      tenantPresets,
+      {
+        mode: session.dressingRoomOccupancyMode,
+        beforeMinutes: session.dressingRoomBeforeMinutes,
+        afterMinutes: session.dressingRoomAfterMinutes,
+      },
+    );
   });
 }
 
@@ -506,6 +521,41 @@ function isCancelled(status: string): boolean {
   return normalized === "CANCELLED" || normalized === "CANCELED";
 }
 
+async function loadEventDressingRoomOccupancyMap(
+  tenantId: string,
+  eventIds: readonly string[],
+): Promise<
+  Map<
+    string,
+    {
+      dressingRoomOccupancyMode: "DEFAULT" | "CUSTOM";
+      dressingRoomBeforeMinutes: number | null;
+      dressingRoomAfterMinutes: number | null;
+    }
+  >
+> {
+  if (eventIds.length === 0) return new Map();
+  const rows = await prisma.event.findMany({
+    where: { tenantId, id: { in: [...eventIds] } },
+    select: {
+      id: true,
+      dressingRoomOccupancyMode: true,
+      dressingRoomBeforeMinutes: true,
+      dressingRoomAfterMinutes: true,
+    },
+  });
+  return new Map(
+    rows.map((row) => [
+      row.id,
+      {
+        dressingRoomOccupancyMode: row.dressingRoomOccupancyMode,
+        dressingRoomBeforeMinutes: row.dressingRoomBeforeMinutes,
+        dressingRoomAfterMinutes: row.dressingRoomAfterMinutes,
+      },
+    ]),
+  );
+}
+
 async function findWeekplannerHomeMatches(
   tenantId: string,
   from: Date,
@@ -513,12 +563,18 @@ async function findWeekplannerHomeMatches(
   resourceByCode: ReadonlyMap<string, WeekplannerResourceRef>,
   overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
   timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
+  tenantPresets: TenantDressingRoomOccupancyPresets,
 ): Promise<WeekplannerMatchItem[]> {
   const database = prisma as unknown as MatchcenterQueryDatabase;
   const matches = await listMatchcenterMatches(database, { tenantId, from, to });
 
   const homeMatches = matches.filter(
     (match) => !isAwayHomeAway(match.homeAway) && !isCancelled(match.status),
+  );
+
+  const occupancyByEventId = await loadEventDressingRoomOccupancyMap(
+    tenantId,
+    homeMatches.map((match) => match.id),
   );
 
   return homeMatches.map((match) => {
@@ -556,10 +612,16 @@ async function findWeekplannerHomeMatches(
       canonicalEndAt,
     );
 
-    return {
+    const persistence = occupancyByEventId.get(match.id) ?? {
+      dressingRoomOccupancyMode: "DEFAULT" as const,
+      dressingRoomBeforeMinutes: null,
+      dressingRoomAfterMinutes: null,
+    };
+
+    const base = {
       id: `match:${match.id}`,
       tenantId: match.tenantId,
-      type: "MATCH",
+      type: "MATCH" as const,
       startAt: time.startAt,
       endAt: time.endAt,
       canonicalStartAt: time.canonicalStartAt,
@@ -568,7 +630,7 @@ async function findWeekplannerHomeMatches(
       title: match.title,
       teamNames: [match.home.displayName],
       opponentName: match.away.displayName,
-      homeAway: "HOME",
+      homeAway: "HOME" as const,
       eventId: match.id,
       pitchAllocations: pitch.allocations,
       dressingRoomAllocations: dressingRoom.allocations,
@@ -578,7 +640,18 @@ async function findWeekplannerHomeMatches(
       dressingRoomOverridden: dressingRoom.overridden,
       awayDressingRoomAllocations: awayRoomRef ? [awayRoomRef] : [],
       conflicts: [],
-    } satisfies WeekplannerMatchItem;
+    };
+
+    return enrichWeekplannerItemDressingRoomOccupancy(
+      base as unknown as WeekplannerMatchItem,
+      "MATCH",
+      tenantPresets,
+      {
+        mode: persistence.dressingRoomOccupancyMode,
+        beforeMinutes: persistence.dressingRoomBeforeMinutes,
+        afterMinutes: persistence.dressingRoomAfterMinutes,
+      },
+    );
   });
 }
 
@@ -590,6 +663,7 @@ async function findWeekplannerHomeTournaments(
   to: Date,
   overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
   timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
+  tenantPresets: TenantDressingRoomOccupancyPresets,
 ): Promise<WeekplannerTournamentItem[]> {
   const tournaments = await listTournaments(tenantId);
 
@@ -601,6 +675,11 @@ async function findWeekplannerHomeTournaments(
     const endAt = tournament.endAt ? new Date(tournament.endAt).getTime() : startAt;
     return startAt < to.getTime() && endAt >= from.getTime();
   });
+
+  const occupancyByEventId = await loadEventDressingRoomOccupancyMap(
+    tenantId,
+    homeTournaments.map((tournament) => tournament.id),
+  );
 
   return homeTournaments.map((tournament) => {
     const canonicalStartAt = new Date(tournament.startAt);
@@ -631,10 +710,16 @@ async function findWeekplannerHomeTournaments(
       standardplanPitch,
     );
 
-    return {
+    const persistence = occupancyByEventId.get(tournament.id) ?? {
+      dressingRoomOccupancyMode: "DEFAULT" as const,
+      dressingRoomBeforeMinutes: null,
+      dressingRoomAfterMinutes: null,
+    };
+
+    const base = {
       id: `tournament:${tournament.id}`,
       tenantId: tournament.tenantId,
-      type: "TOURNAMENT",
+      type: "TOURNAMENT" as const,
       startAt: time.startAt,
       endAt: time.endAt,
       canonicalStartAt: time.canonicalStartAt,
@@ -642,7 +727,7 @@ async function findWeekplannerHomeTournaments(
       timeOverridden: time.overridden,
       title: tournament.title,
       teamNames: ownTeamNames,
-      homeAway: "HOME",
+      homeAway: "HOME" as const,
       eventId: tournament.id,
       pitchAllocations: pitch.allocations,
       dressingRoomAllocations: [],
@@ -675,7 +760,18 @@ async function findWeekplannerHomeTournaments(
         };
       }),
       conflicts: [],
-    } satisfies WeekplannerTournamentItem;
+    };
+
+    return enrichWeekplannerItemDressingRoomOccupancy(
+      base as unknown as WeekplannerTournamentItem,
+      "TOURNAMENT",
+      tenantPresets,
+      {
+        mode: persistence.dressingRoomOccupancyMode,
+        beforeMinutes: persistence.dressingRoomBeforeMinutes,
+        afterMinutes: persistence.dressingRoomAfterMinutes,
+      },
+    );
   });
 }
 
@@ -740,6 +836,11 @@ async function findWeekplannerVeranstaltungen(
       eventId: event.id,
       location: event.location,
       teamSeasonId: event.teamSeasonId,
+      dressingRoomOccupancyMode: "DEFAULT",
+      dressingRoomOccupancyBeforeMinutes: null,
+      dressingRoomOccupancyAfterMinutes: null,
+      dressingRoomResolvedBeforeMinutes: 0,
+      dressingRoomResolvedAfterMinutes: 0,
     } satisfies WeekplannerVeranstaltungItem;
   });
 }
@@ -764,17 +865,40 @@ export async function getWeekplannerWeek(
   window: WeekplannerWindow,
   planId?: string,
 ): Promise<WeekplannerWeek> {
-  const [resourceByCode, overridesByKey, timeOverridesByKey, baselineMode] = await Promise.all([
-    findFacilityResourceCodeMap(tenantId),
-    findWeekplannerPlanOverrides(tenantId, planId),
-    findWeekplannerPlanTimeOverrides(tenantId, planId),
-    resolveWeekplannerPlanBaselineMode(tenantId, planId),
-  ]);
+  const [resourceByCode, overridesByKey, timeOverridesByKey, baselineMode, tenantPresets] =
+    await Promise.all([
+      findFacilityResourceCodeMap(tenantId),
+      findWeekplannerPlanOverrides(tenantId, planId),
+      findWeekplannerPlanTimeOverrides(tenantId, planId),
+      resolveWeekplannerPlanBaselineMode(tenantId, planId),
+      getTenantDressingRoomOccupancyPresets(tenantId),
+    ]);
 
   const [trainingItems, matchItems, tournamentItems, veranstaltungItems] = await Promise.all([
-    findWeekplannerTrainingItems(tenantId, window.days, overridesByKey, timeOverridesByKey),
-    findWeekplannerHomeMatches(tenantId, window.from, window.to, resourceByCode, overridesByKey, timeOverridesByKey),
-    findWeekplannerHomeTournaments(tenantId, window.from, window.to, overridesByKey, timeOverridesByKey),
+    findWeekplannerTrainingItems(
+      tenantId,
+      window.days,
+      overridesByKey,
+      timeOverridesByKey,
+      tenantPresets,
+    ),
+    findWeekplannerHomeMatches(
+      tenantId,
+      window.from,
+      window.to,
+      resourceByCode,
+      overridesByKey,
+      timeOverridesByKey,
+      tenantPresets,
+    ),
+    findWeekplannerHomeTournaments(
+      tenantId,
+      window.from,
+      window.to,
+      overridesByKey,
+      timeOverridesByKey,
+      tenantPresets,
+    ),
     findWeekplannerVeranstaltungen(tenantId, window.from, window.to, resourceByCode),
   ]);
 

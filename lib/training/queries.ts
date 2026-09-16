@@ -330,6 +330,9 @@ export type TrainingSessionRow = TrainingSessionScheduleRow & {
   teamSeasonId: string;
   createdAt: Date;
   updatedAt: Date;
+  dressingRoomOccupancyMode: "DEFAULT" | "CUSTOM";
+  dressingRoomBeforeMinutes: number | null;
+  dressingRoomAfterMinutes: number | null;
   /** TRAININGCENTER-02: occurrence-level schedule override fields — see TrainingSession doc comment in schema.prisma. */
   overrideDate: Date | null;
   overrideStartAt: Date | null;
@@ -363,6 +366,9 @@ const sessionFullSelect = {
   overrideDate: true,
   overrideStartAt: true,
   overrideEndAt: true,
+  dressingRoomOccupancyMode: true,
+  dressingRoomBeforeMinutes: true,
+  dressingRoomAfterMinutes: true,
   trainingSeries: {
     select: {
       title: true,

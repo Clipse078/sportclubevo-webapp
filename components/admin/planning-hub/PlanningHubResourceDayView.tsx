@@ -29,6 +29,8 @@ import {
 } from "./PlanningHubManipulationContext";
 import { evaluateManipulationConflicts } from "@/lib/planning-hub/manipulation-projection";
 import { isoToLocalTime } from "@/lib/planning-hub/planner-time";
+import { dressingSegmentDisplayWindow } from "@/lib/planning-hub/scheduler/dressing-segment-display";
+import type { WeekplannerResourceRef } from "@/lib/weekplanner/types";
 
 type PlanningHubResourceDayViewProps = {
   week: WeekplannerWeek;
@@ -42,6 +44,20 @@ type PlanningHubResourceDayViewProps = {
 const RESOURCE_LABEL_WIDTH_PX = 168;
 const ROW_BASE_HEIGHT_PX = 44;
 
+function dressingRefOnItem(
+  item: WeekplannerItem,
+  resourceId: string,
+): WeekplannerResourceRef | undefined {
+  const refs = [...item.dressingRoomAllocations];
+  if (item.type === "MATCH") refs.push(...item.awayDressingRoomAllocations);
+  if (item.type === "TOURNAMENT") {
+    for (const participant of item.participantAllocations) {
+      refs.push(...participant.dressingRoomAllocations);
+    }
+  }
+  return refs.find((r) => r.facilityResourceId === resourceId);
+}
+
 export default function PlanningHubResourceDayView({
   week,
   urlState,
@@ -51,6 +67,7 @@ export default function PlanningHubResourceDayView({
   onItemActivate,
 }: PlanningHubResourceDayViewProps) {
   const manipulation = usePlanningHubManipulation();
+  const isDressingCategory = urlState.resourceCategory === "dressing";
   const filtered = applyPlanningHubFilters(week, urlState);
   const allItems = week.days.flatMap((d) => d.items);
   const weekDayKeys = filtered.days.map((d) => d.dayKey);
@@ -198,12 +215,35 @@ export default function PlanningHubResourceDayView({
 
                       const renderSegment = (
                         segItem: typeof segment.item,
-                        startAt: Date,
-                        endAt: Date,
+                        activityStart: Date,
+                        activityEnd: Date,
                         variant: "default" | "ghost" | "preview" | "preview-warning",
                         keySuffix: string,
                         interactive: boolean,
                       ) => {
+                        const resourceRef =
+                          dressingRefOnItem(segItem, row.resourceId) ?? segment.resource;
+                        const displayWindow = isDressingCategory
+                          ? dressingSegmentDisplayWindow(activityStart, activityEnd, resourceRef)
+                          : { startAt: activityStart, endAt: activityEnd };
+                        const startAt = displayWindow.startAt;
+                        const endAt = displayWindow.endAt;
+
+                        const segmentSpanMs = endAt.getTime() - startAt.getTime();
+                        let nominalBand:
+                          | { leftPercent: number; widthPercent: number }
+                          | undefined;
+                        if (isDressingCategory && segmentSpanMs > 0) {
+                          const nominalStart = activityStart.getTime();
+                          const nominalEnd = activityEnd.getTime();
+                          const leftMs = Math.max(0, nominalStart - startAt.getTime());
+                          const widthMs = Math.max(0, Math.min(nominalEnd, endAt.getTime()) - Math.max(nominalStart, startAt.getTime()));
+                          nominalBand = {
+                            leftPercent: (leftMs / segmentSpanMs) * 100,
+                            widthPercent: (widthMs / segmentSpanMs) * 100,
+                          };
+                        }
+
                         const startMin = zonedMinutesFromMidnight(startAt, timezone);
                         const endMin = Math.max(
                           startMin + 15,
@@ -258,6 +298,7 @@ export default function PlanningHubResourceDayView({
                               width: Math.max(24, widthPx - 4),
                             }}
                             className="!absolute"
+                            nominalActivityBand={nominalBand}
                           />
                         );
                       };
@@ -327,13 +368,13 @@ export default function PlanningHubResourceDayView({
                             manipulation!.resolveResourceRef,
                           )
                         : segment.item;
-                      const startAt = activeDraft?.proposedStart ?? segment.startAt;
-                      const endAt = activeDraft?.proposedEnd ?? segment.endAt;
+                      const activityStart = activeDraft?.proposedStart ?? segment.item.startAt;
+                      const activityEnd = activeDraft?.proposedEnd ?? segment.item.endAt;
 
                       return renderSegment(
                         displayItem,
-                        startAt,
-                        endAt,
+                        activityStart,
+                        activityEnd,
                         "default",
                         "",
                         !!manipulation?.enabled,

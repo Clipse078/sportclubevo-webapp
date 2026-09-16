@@ -10,6 +10,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import WeekPlannerPage from "@/components/admin/planner/WeekPlannerPage";
 import type { WeekplannerWeek } from "@/lib/weekplanner/types";
+import { WEEKPLANNER_DRESSING_OCCUPANCY_STUB } from "@/lib/weekplanner/test-fixtures";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
@@ -67,6 +68,7 @@ const TRAINING_ITEM = {
   trainingSeriesId: "series-1",
   trainingSessionId: "session-1",
   teamSeasonId: "ts-1",
+  ...WEEKPLANNER_DRESSING_OCCUPANCY_STUB,
 };
 
 const MATCH_ITEM = {
@@ -90,6 +92,7 @@ const MATCH_ITEM = {
   conflicts: [],
   eventId: "event-1",
   opponentName: "FC Test",
+  ...WEEKPLANNER_DRESSING_OCCUPANCY_STUB,
 };
 
 const TOURNAMENT_ITEM = {
@@ -113,6 +116,7 @@ const TOURNAMENT_ITEM = {
   eventId: "event-2",
   homeAway: "HOME" as const,
   participantAllocations: [],
+  ...WEEKPLANNER_DRESSING_OCCUPANCY_STUB,
 };
 
 const ALL_ITEMS = [TRAINING_ITEM, MATCH_ITEM, TOURNAMENT_ITEM];

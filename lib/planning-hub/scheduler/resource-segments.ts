@@ -1,3 +1,4 @@
+import { computeResourceOccupancyWindow } from "@/lib/facilities/resource-occupancy-window";
 import type { WeekplannerItem, WeekplannerResourceRef } from "@/lib/weekplanner/types";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 
@@ -7,6 +8,9 @@ export type ResourceOccupancySegment = {
   resource: WeekplannerResourceRef;
   startAt: Date;
   endAt: Date;
+  /** Nominal activity interval (dressing rows only). */
+  nominalStartAt?: Date;
+  nominalEndAt?: Date;
 };
 
 export function resourcesForPlanningItem(
@@ -33,13 +37,31 @@ export function buildResourceSegmentsForDay(
   const segments: ResourceOccupancySegment[] = [];
   for (const item of items) {
     for (const resource of resourcesForPlanningItem(item, category)) {
-      segments.push({
-        segmentId: `${item.id}:${resource.facilityResourceId}`,
-        item,
-        resource,
-        startAt: item.startAt,
-        endAt: item.endAt,
-      });
+      if (category === "dressing") {
+        const window = computeResourceOccupancyWindow(
+          item.startAt,
+          item.endAt,
+          resource.occupancyBeforeMinutes,
+          resource.occupancyAfterMinutes,
+        );
+        segments.push({
+          segmentId: `${item.id}:${resource.facilityResourceId}`,
+          item,
+          resource,
+          startAt: window.effectiveStartAt,
+          endAt: window.effectiveEndAt,
+          nominalStartAt: item.startAt,
+          nominalEndAt: item.endAt,
+        });
+      } else {
+        segments.push({
+          segmentId: `${item.id}:${resource.facilityResourceId}`,
+          item,
+          resource,
+          startAt: item.startAt,
+          endAt: item.endAt,
+        });
+      }
     }
   }
   return segments;

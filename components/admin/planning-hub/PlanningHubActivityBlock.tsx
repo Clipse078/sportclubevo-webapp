@@ -37,6 +37,8 @@ type PlanningHubActivityBlockProps = {
   canResize?: boolean;
   onPointerDownMove?: (event: PointerEvent<HTMLButtonElement>) => void;
   onPointerDownResize?: (event: PointerEvent<HTMLDivElement>) => void;
+  /** Subtle inner band for nominal activity within effective Garderobe occupancy. */
+  nominalActivityBand?: { leftPercent: number; widthPercent: number };
 };
 
 function formatTimeRange(start: Date, end: Date, locale: string, timeZone: string): string {
@@ -59,6 +61,7 @@ export default function PlanningHubActivityBlock({
   canResize = false,
   onPointerDownMove,
   onPointerDownResize,
+  nominalActivityBand,
 }: PlanningHubActivityBlockProps) {
   const hasConflict = resourceId
     ? itemHasCanonicalConflictOnResource(item, resourceId)
@@ -91,6 +94,16 @@ export default function PlanningHubActivityBlock({
         className,
       )}
     >
+      {nominalActivityBand && nominalActivityBand.widthPercent > 2 && (
+        <div
+          className="pointer-events-none absolute inset-y-1 rounded-sm border border-[var(--foreground)]/10 bg-[var(--foreground)]/[0.04]"
+          style={{
+            left: `${nominalActivityBand.leftPercent}%`,
+            width: `${nominalActivityBand.widthPercent}%`,
+          }}
+          aria-hidden
+        />
+      )}
       <button
         type="button"
         onClick={onActivate}

@@ -17,12 +17,24 @@ function replaceResourceRef(
   return refs.map((r) => (r.facilityResourceId === fromId ? toRef : r));
 }
 
+function withDressingOccupancy(
+  ref: WeekplannerResourceRef,
+  item: WeekplannerItem,
+): WeekplannerResourceRef {
+  return {
+    ...ref,
+    occupancyBeforeMinutes: item.dressingRoomResolvedBeforeMinutes,
+    occupancyAfterMinutes: item.dressingRoomResolvedAfterMinutes,
+  };
+}
+
 function applyResourceSwap(
   item: WeekplannerItem,
   fromResourceId: string,
   toRef: WeekplannerResourceRef,
   category: PlanningHubUrlState["resourceCategory"],
 ): WeekplannerItem {
+  const enrichedToRef = withDressingOccupancy(toRef, item);
   if (category === "pitch") {
     return {
       ...item,
@@ -39,21 +51,29 @@ function applyResourceSwap(
         awayDressingRoomAllocations: replaceResourceRef(
           item.awayDressingRoomAllocations,
           fromResourceId,
-          toRef,
+          enrichedToRef,
         ),
       };
     }
     if (inHome) {
       return {
         ...item,
-        dressingRoomAllocations: replaceResourceRef(item.dressingRoomAllocations, fromResourceId, toRef),
+        dressingRoomAllocations: replaceResourceRef(
+          item.dressingRoomAllocations,
+          fromResourceId,
+          enrichedToRef,
+        ),
       };
     }
   }
 
   return {
     ...item,
-    dressingRoomAllocations: replaceResourceRef(item.dressingRoomAllocations, fromResourceId, toRef),
+    dressingRoomAllocations: replaceResourceRef(
+      item.dressingRoomAllocations,
+      fromResourceId,
+      enrichedToRef,
+    ),
   };
 }
 

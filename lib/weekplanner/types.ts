@@ -107,6 +107,16 @@ export type WeekplannerItemBase = {
   dressingRoomOverridden: boolean;
   /** Populated by the view-model's conflict pass — empty until then. */
   conflicts: WeekplannerConflict[];
+  /** PLANNING-HUB-02A — persisted intent for dressing-room occupancy timing. */
+  dressingRoomOccupancyMode: "DEFAULT" | "CUSTOM";
+  /** Custom before minutes when mode=CUSTOM; null when DEFAULT. */
+  dressingRoomOccupancyBeforeMinutes: number | null;
+  /** Custom after minutes when mode=CUSTOM; null when DEFAULT. */
+  dressingRoomOccupancyAfterMinutes: number | null;
+  /** Resolved before buffer used for dressing-room conflict/geometry. */
+  dressingRoomResolvedBeforeMinutes: number;
+  /** Resolved after buffer used for dressing-room conflict/geometry. */
+  dressingRoomResolvedAfterMinutes: number;
 };
 
 export type WeekplannerTrainingItem = WeekplannerItemBase & {

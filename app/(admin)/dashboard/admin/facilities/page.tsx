@@ -5,6 +5,8 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import FacilitiesAdminPanel from "@/components/admin/facilities/FacilitiesAdminPanel";
+import DressingRoomOccupancyPresetsPanel from "@/components/admin/facilities/DressingRoomOccupancyPresetsPanel";
+import { getTenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/tenant-preset-service";
 
 export default async function FacilitiesPage() {
   const session = await requireAnyPermission([
@@ -25,6 +27,8 @@ export default async function FacilitiesPage() {
     facilities = [];
   }
 
+  const dressingRoomPresets = await getTenantDressingRoomOccupancyPresets(tenantId);
+
   return (
     <div className="space-y-8">
       <AdminSectionHeader
@@ -32,6 +36,8 @@ export default async function FacilitiesPage() {
         title="Anlagen & Ressourcen"
         description="Sportanlagen, Plätze und Garderoben konfigurieren. Einmal gepflegt, werden die Bezeichnungen automatisch auf dem Infoboard und in der Wochenplanung verwendet."
       />
+      <DressingRoomOccupancyPresetsPanel initialPresets={dressingRoomPresets} canManage={canManage} />
+
       <FacilitiesAdminPanel
         initialFacilities={facilities}
         canManage={canManage}

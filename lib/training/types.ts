@@ -385,6 +385,9 @@ export interface TrainingSessionDto {
   originalEndAt: string;
   /** True when this occurrence's date and/or time was overridden away from its series-derived default. */
   isRescheduled: boolean;
+  dressingRoomOccupancyMode: "DEFAULT" | "CUSTOM";
+  dressingRoomBeforeMinutes: number | null;
+  dressingRoomAfterMinutes: number | null;
   createdAt: string;
   updatedAt: string;
 }

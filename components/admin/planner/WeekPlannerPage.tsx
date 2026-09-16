@@ -36,6 +36,7 @@ import {
 import { dayKeyInTimeZone } from "@/lib/planning-hub/scheduler/time-zone";
 import type { WeekplannerOverrideRow } from "./WeekplannerAllocationOverrideEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
 
 type OverrideEditingContext = {
   planId: string;
@@ -67,6 +68,7 @@ type WeekPlannerPageProps = {
   urlState?: PlanningHubUrlState;
   facilityOptions?: { value: string; label: string }[];
   createPermissions?: PlanningHubCreatePermissions;
+  dressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
 };
 
 function weekHref(param: string, urlState: PlanningHubUrlState): string {
@@ -100,6 +102,7 @@ export default function WeekPlannerPage({
   urlState: urlStateProp,
   facilityOptions = [],
   createPermissions,
+  dressingRoomOccupancyPresets,
 }: WeekPlannerPageProps) {
   const router = useRouter();
   const urlState: PlanningHubUrlState = urlStateProp ?? {
@@ -388,8 +391,12 @@ export default function WeekPlannerPage({
           item={editingItem}
           facilityGroupsByAllocationGroup={canonicalEditing.facilityGroupsByAllocationGroup}
           timezone={timezone}
+          tenantDressingRoomOccupancyPresets={dressingRoomOccupancyPresets}
           onClose={() => setEditingItem(null)}
-          onSaved={() => setEditingItem(null)}
+          onSaved={() => {
+            setEditingItem(null);
+            router.refresh();
+          }}
         />
       )}
 

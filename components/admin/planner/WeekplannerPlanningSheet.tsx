@@ -32,6 +32,8 @@ import type { FacilityGroup } from "@/components/admin/training/FacilityResource
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
 import type { FacilityResourceType } from "@prisma/client";
+import DressingRoomOccupancyEditor from "@/components/admin/planning-hub/DressingRoomOccupancyEditor";
+import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -42,6 +44,7 @@ type SheetProps = {
     DRESSING_ROOM: FacilityGroup[];
   };
   timezone: string;
+  tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
   onClose: () => void;
   onSaved: () => void;
 };
@@ -207,12 +210,14 @@ function TrainingEditorContent({
   item,
   facilityGroupsByAllocationGroup,
   timezone,
+  tenantDressingRoomOccupancyPresets,
   onClose,
   onSaved,
 }: {
   item: Extract<WeekplannerItem, { type: "TRAINING" }>;
   facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   timezone: string;
+  tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -428,6 +433,15 @@ function TrainingEditorContent({
             disabled={saving}
             testId="wochenplaner-canonical-room"
           />
+          {tenantDressingRoomOccupancyPresets && selectedRoomIds.size > 0 && (
+            <DressingRoomOccupancyEditor
+              item={item}
+              activityType="TRAINING"
+              activityId={item.trainingSessionId}
+              tenantPresets={tenantDressingRoomOccupancyPresets}
+              onSaved={onSaved}
+            />
+          )}
         </div>
       </div>
     </Sheet>
@@ -440,12 +454,14 @@ function MatchEditorContent({
   item,
   facilityGroupsByAllocationGroup,
   timezone,
+  tenantDressingRoomOccupancyPresets,
   onClose,
   onSaved,
 }: {
   item: Extract<WeekplannerItem, { type: "MATCH" }>;
   facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   timezone: string;
+  tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -595,6 +611,16 @@ function MatchEditorContent({
             testId="wochenplaner-canonical-match-away-room"
           />
         </div>
+
+        {tenantDressingRoomOccupancyPresets && (homeDressingCode || awayDressingCode) && (
+          <DressingRoomOccupancyEditor
+            item={item}
+            activityType="MATCH"
+            activityId={item.eventId}
+            tenantPresets={tenantDressingRoomOccupancyPresets}
+            onSaved={onSaved}
+          />
+        )}
       </div>
     </Sheet>
   );
@@ -606,12 +632,14 @@ function TournamentEditorContent({
   item,
   facilityGroupsByAllocationGroup,
   timezone,
+  tenantDressingRoomOccupancyPresets,
   onClose,
   onSaved,
 }: {
   item: Extract<WeekplannerItem, { type: "TOURNAMENT" }>;
   facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   timezone: string;
+  tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -721,6 +749,17 @@ function TournamentEditorContent({
             testId="wochenplaner-canonical-tournament-pitch"
           />
         </div>
+
+        {tenantDressingRoomOccupancyPresets &&
+          item.participantAllocations.some((p) => p.dressingRoomAllocations.length > 0) && (
+            <DressingRoomOccupancyEditor
+              item={item}
+              activityType="TOURNAMENT"
+              activityId={item.eventId}
+              tenantPresets={tenantDressingRoomOccupancyPresets}
+              onSaved={onSaved}
+            />
+          )}
       </div>
     </Sheet>
   );
@@ -738,6 +777,7 @@ export function WeekplannerPlanningSheet({
   item,
   facilityGroupsByAllocationGroup,
   timezone,
+  tenantDressingRoomOccupancyPresets,
   onClose,
   onSaved,
 }: SheetProps) {
@@ -749,6 +789,7 @@ export function WeekplannerPlanningSheet({
         item={item}
         facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
         timezone={timezone}
+        tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
         onClose={onClose}
         onSaved={onSaved}
       />
@@ -761,6 +802,7 @@ export function WeekplannerPlanningSheet({
         item={item}
         facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
         timezone={timezone}
+        tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
         onClose={onClose}
         onSaved={onSaved}
       />
@@ -773,6 +815,7 @@ export function WeekplannerPlanningSheet({
         item={item}
         facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
         timezone={timezone}
+        tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
         onClose={onClose}
         onSaved={onSaved}
       />

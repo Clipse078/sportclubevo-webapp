@@ -9,6 +9,7 @@ import {
   weekplannerResourceSummary,
 } from "@/lib/planning-hub/item-presenters";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
+import { computeResourceOccupancyWindow } from "@/lib/facilities/resource-occupancy-window";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 
 type PlanningHubListeViewProps = {
@@ -32,6 +33,29 @@ function formatDayHeading(dayKey: string, locale: string, timeZone: string): str
     month: "2-digit",
     timeZone,
   }).format(new Date(`${dayKey}T12:00:00.000Z`));
+}
+
+function dressingOccupancyDetail(
+  item: WeekplannerItem,
+  locale: string,
+  timeZone: string,
+): string | null {
+  const hasRoom =
+    item.dressingRoomAllocations.length > 0 ||
+    (item.type === "MATCH" && item.awayDressingRoomAllocations.length > 0) ||
+    (item.type === "TOURNAMENT" &&
+      item.participantAllocations.some((p) => p.dressingRoomAllocations.length > 0));
+  if (!hasRoom || item.type === "VERANSTALTUNG") return null;
+
+  const window = computeResourceOccupancyWindow(
+    item.startAt,
+    item.endAt,
+    item.dressingRoomResolvedBeforeMinutes,
+    item.dressingRoomResolvedAfterMinutes,
+  );
+  const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
+  const roomLabel = item.dressingRoomAllocations.map((r) => r.code).join(", ");
+  return `Garderobe ${roomLabel} · Belegung ${fmt.format(window.effectiveStartAt)}–${fmt.format(window.effectiveEndAt)}`;
 }
 
 function isItemOverridden(item: WeekplannerItem): boolean {
@@ -66,6 +90,7 @@ export default function PlanningHubListeView({
             <ul className="space-y-2">
               {day.items.map((item) => {
                 const hasConflict = item.conflicts.length > 0;
+                const dressingDetail = dressingOccupancyDetail(item, locale, timezone);
                 return (
                   <li key={item.id}>
                     <button
@@ -107,6 +132,14 @@ export default function PlanningHubListeView({
                         <span className="inline-flex items-center gap-1 text-[11px] text-[var(--muted)]">
                           <DoorOpen className="h-3 w-3" />
                           Gast: {item.awayDressingRoomAllocations.map((r) => r.name).join(", ")}
+                        </span>
+                      )}
+                      {dressingDetail && (
+                        <span
+                          className="text-[11px] text-[var(--muted)]"
+                          data-testid="planning-hub-liste-dressing-occupancy"
+                        >
+                          {dressingDetail}
                         </span>
                       )}
                       {planName && isItemOverridden(item) && (
