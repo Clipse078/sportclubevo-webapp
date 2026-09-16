@@ -15,9 +15,11 @@ export const SCHEDULER_TIME_PADDING_MINUTES = 20;
 export const SCHEDULER_EMPTY_DAY_START_MINUTES = 8 * 60;
 export const SCHEDULER_EMPTY_DAY_END_MINUTES = 20 * 60;
 
-/** Vertical calendar: pixels per minute. */
-/** ~6–8h visible in a typical laptop viewport at default zoom. */
+/** Vertical calendar (legacy full-day / advanced `zeit=ganz`). */
 export const CALENDAR_PIXELS_PER_MINUTE = 0.88;
+
+/** Vertical calendar for canonical four-hour daypart viewport (PLANNING-HUB-02D). */
+export const CALENDAR_DAYPART_PIXELS_PER_MINUTE = 1.55;
 
 /** Horizontal resource scheduler: pixels per minute. */
 export const RESOURCE_PIXELS_PER_MINUTE = 2.4;

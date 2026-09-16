@@ -38,7 +38,6 @@ export function buildWochenplanerResourcesHrefFromLegacyTrainingParams(
     facility: params.facility?.trim() || null,
     conflictsOnly: params.conflicts === "1",
     resourceCategory: category === "DRESSING_ROOM" ? "dressing" : "pitch",
-    calendarTimeRange: "focused",
   };
 
   return buildPlanningHubHref(state);

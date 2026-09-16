@@ -34,6 +34,7 @@ import {
 } from "@/lib/planning-hub/scheduler/time-snap";
 import { zonedMinutesFromMidnight } from "@/lib/planning-hub/scheduler/time-zone";
 import {
+  CALENDAR_DAYPART_PIXELS_PER_MINUTE,
   CALENDAR_PIXELS_PER_MINUTE,
   RESOURCE_PIXELS_PER_MINUTE,
 } from "@/lib/planning-hub/scheduler/time-scale";
@@ -123,6 +124,9 @@ export function PlanningHubManipulationProvider({
   pointerSessionRef.current = pointerSession;
   const previewDraftRef = useRef(previewDraft);
   previewDraftRef.current = previewDraft;
+
+  const calendarPixelsPerMinute =
+    urlState.calendarZeit === "ganz" ? CALENDAR_PIXELS_PER_MINUTE : CALENDAR_DAYPART_PIXELS_PER_MINUTE;
 
   const enabled = useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -239,7 +243,7 @@ export function PlanningHubManipulationProvider({
 
       if (session.surface === "kalender") {
         const deltaY = clientY - session.startClientY;
-        const deltaMinutes = snapPixelDeltaToMinutes(deltaY, CALENDAR_PIXELS_PER_MINUTE);
+        const deltaMinutes = snapPixelDeltaToMinutes(deltaY, calendarPixelsPerMinute);
         const originalStartMin = zonedMinutesFromMidnight(session.originalStart, timezone);
         const proposedStartMin = snapMinutesFromMidnight(originalStartMin + deltaMinutes);
         const { startAt, endAt } = preserveDurationOnMove(
@@ -251,7 +255,7 @@ export function PlanningHubManipulationProvider({
         );
         if (session.mode === "resize") {
           const originalEndMin = zonedMinutesFromMidnight(session.originalEnd, timezone);
-          const resizeDelta = snapPixelDeltaToMinutes(deltaY, CALENDAR_PIXELS_PER_MINUTE);
+          const resizeDelta = snapPixelDeltaToMinutes(deltaY, calendarPixelsPerMinute);
           const proposedEndMin = snapMinutesFromMidnight(originalEndMin + resizeDelta);
           const resized = resizeEndPreservingStart(
             session.originalStart,
@@ -311,7 +315,7 @@ export function PlanningHubManipulationProvider({
         buildDraft(session, proposedStart, proposedEnd, proposedResourceId),
       );
     },
-    [buildDraft, resourceRefById, timezone, urlState.resourceCategory],
+    [buildDraft, calendarPixelsPerMinute, resourceRefById, timezone, urlState.resourceCategory],
   );
 
   const endPointer = useCallback(() => {

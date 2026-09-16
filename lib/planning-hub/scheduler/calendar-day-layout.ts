@@ -7,6 +7,10 @@ export const CALENDAR_MIN_ACTIVITY_WIDTH_PX = 76;
 /** Below this lane width, overlap cluster aggregates instead of compact strips. */
 export const CALENDAR_AGGREGATE_BELOW_WIDTH_PX = 44;
 
+/** 02D daypart viewport — slightly higher thresholds so identities show more often. */
+export const CALENDAR_DAYPART_AGGREGATE_BELOW_WIDTH_PX = 38;
+export const CALENDAR_DAYPART_MIN_ACTIVITY_WIDTH_PX = 68;
+
 export type CalendarDayLayoutItem =
   | {
       kind: "activity";
@@ -71,10 +75,16 @@ export function shouldUseCompactActivityBlock(
  * Plans per-day calendar segments: individual lanes or one aggregate per
  * high-concurrency overlap cluster. Visual only — canonical items unchanged.
  */
+export type CalendarDayLayoutOptions = {
+  aggregateBelowPx?: number;
+};
+
 export function planCalendarDayLayout(
   intervals: readonly TimedInterval[],
   columnWidthPx: number,
+  options?: CalendarDayLayoutOptions,
 ): CalendarDayLayoutItem[] {
+  const aggregateBelowPx = options?.aggregateBelowPx ?? CALENDAR_AGGREGATE_BELOW_WIDTH_PX;
   if (intervals.length === 0) return [];
 
   const lanes = assignIntervalLanes(intervals);
@@ -84,7 +94,7 @@ export function planCalendarDayLayout(
 
   for (const cluster of clusters) {
     const maxConcurrency = clusterMaxConcurrency(cluster.intervalIds, lanes);
-    if (shouldAggregateCluster(maxConcurrency, columnWidthPx)) {
+    if (shouldAggregateCluster(maxConcurrency, columnWidthPx, aggregateBelowPx)) {
       const clusterIntervals = cluster.intervalIds
         .map((id) => intervals.find((i) => i.id === id))
         .filter((i): i is TimedInterval => Boolean(i));

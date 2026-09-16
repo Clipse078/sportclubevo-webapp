@@ -41,6 +41,8 @@ type PlanningHubActivityBlockProps = {
   onPointerDownResize?: (event: PointerEvent<HTMLDivElement>) => void;
   /** Subtle inner band for nominal activity within effective Garderobe occupancy. */
   nominalActivityBand?: { leftPercent: number; widthPercent: number };
+  continuesFromBefore?: boolean;
+  continuesAfter?: boolean;
 };
 
 function formatTimeRange(start: Date, end: Date, locale: string, timeZone: string): string {
@@ -64,6 +66,8 @@ export default function PlanningHubActivityBlock({
   onPointerDownMove,
   onPointerDownResize,
   nominalActivityBand,
+  continuesFromBefore = false,
+  continuesAfter = false,
 }: PlanningHubActivityBlockProps) {
   const hasConflict = resourceId
     ? itemHasCanonicalConflictOnResource(item, resourceId)
@@ -96,6 +100,20 @@ export default function PlanningHubActivityBlock({
         className,
       )}
     >
+      {continuesFromBefore && (
+        <div
+          className="pointer-events-none absolute inset-x-2 top-0 h-0.5 bg-[var(--foreground)]/15"
+          aria-hidden
+          title="Fortsetzung aus vorherigem Tagesabschnitt"
+        />
+      )}
+      {continuesAfter && (
+        <div
+          className="pointer-events-none absolute inset-x-2 bottom-0 h-0.5 bg-[var(--foreground)]/15"
+          aria-hidden
+          title="Fortsetzung im nächsten Tagesabschnitt"
+        />
+      )}
       {nominalActivityBand && nominalActivityBand.widthPercent > 2 && (
         <div
           className="pointer-events-none absolute inset-y-1 rounded-sm border border-[var(--foreground)]/10 bg-[var(--foreground)]/[0.04]"
@@ -109,7 +127,13 @@ export default function PlanningHubActivityBlock({
       <button
         type="button"
         onClick={onActivate}
-        aria-label={weekplannerAccessibleName(item, locale, timezone)}
+        aria-label={[
+          weekplannerAccessibleName(item, locale, timezone),
+          continuesFromBefore ? "Fortsetzung aus vorherigem Tagesabschnitt" : null,
+          continuesAfter ? "Fortsetzung im nächsten Tagesabschnitt" : null,
+        ]
+          .filter(Boolean)
+          .join(", ")}
         className={cn(
           "block h-full w-full text-left",
           canDrag && "cursor-grab active:cursor-grabbing",

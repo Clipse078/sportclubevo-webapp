@@ -1,7 +1,16 @@
 /**
  * PLANNING-HUB-01 — URL state for the unified Wochenplaner shell.
  * PLANNING-HUB-01B — Kalender (default) · Ressourcen · Liste
+ * PLANNING-HUB-02D — Kalender daypart viewport (`zeit=morgen|nachmittag|abend|spaet|ganz`)
  */
+
+import {
+  defaultDaypartForLocalTime,
+  isPlanningHubCalendarDaypart,
+  parsePlanningHubCalendarZeitParam,
+  type PlanningHubCalendarDaypart,
+  type PlanningHubCalendarZeitParam,
+} from "./planning-dayparts";
 
 export type PlanningHubPerspective = "kalender" | "ressourcen" | "liste";
 
@@ -12,6 +21,7 @@ export type PlanningHubActivityFilter =
   | "turniere"
   | "veranstaltungen";
 
+/** @deprecated Use `calendarZeit` — retained for tests migrating from 02C. */
 export type PlanningHubCalendarTimeRange = "focused" | "full";
 
 export type PlanningHubUrlState = {
@@ -25,8 +35,11 @@ export type PlanningHubUrlState = {
   facility: string | null;
   conflictsOnly: boolean;
   resourceCategory: "pitch" | "dressing";
-  /** Kalender vertical range: focused operational window vs full activity span. */
-  calendarTimeRange: PlanningHubCalendarTimeRange;
+  /**
+   * Kalender `zeit` query value when present in the URL.
+   * `undefined` = omit param → implicit default daypart from current local time.
+   */
+  calendarZeit?: PlanningHubCalendarZeitParam;
 };
 
 const BASE_PATH = "/dashboard/planner/week";
@@ -41,6 +54,7 @@ function parsePerspective(raw: string | undefined): PlanningHubPerspective {
 
 export function parsePlanningHubUrlState(
   params: Record<string, string | undefined>,
+  options?: { now?: Date; timeZone?: string },
 ): PlanningHubUrlState {
   const perspective = parsePerspective(params.ansicht);
   const activityRaw = params.typ?.toLowerCase();
@@ -52,6 +66,14 @@ export function parsePlanningHubUrlState(
       ? activityRaw
       : "alle";
 
+  const rawZeit = params.zeit?.trim();
+  let calendarZeit = parsePlanningHubCalendarZeitParam(rawZeit);
+  if (!calendarZeit && rawZeit) {
+    const now = options?.now ?? new Date();
+    const timeZone = options?.timeZone ?? "Europe/Zurich";
+    calendarZeit = defaultDaypartForLocalTime(now, timeZone);
+  }
+
   return {
     week: params.week?.trim() || undefined,
     plan: params.plan?.trim() || undefined,
@@ -62,8 +84,13 @@ export function parsePlanningHubUrlState(
     facility: params.facility?.trim() || null,
     conflictsOnly: params.konflikte === "1",
     resourceCategory: params.ressource === "garderobe" ? "dressing" : "pitch",
-    calendarTimeRange: params.zeit === "ganz" ? "full" : "focused",
+    calendarZeit,
   };
+}
+
+/** Maps URL patch daypart to `zeit` slug (explicit selection). */
+export function calendarDaypartToZeitParam(daypart: PlanningHubCalendarDaypart): PlanningHubCalendarZeitParam {
+  return daypart;
 }
 
 export function buildPlanningHubHref(
@@ -85,7 +112,7 @@ export function buildPlanningHubHref(
   if (merged.perspective === "ressourcen" && merged.resourceCategory === "dressing") {
     query.set("ressource", "garderobe");
   }
-  if (merged.calendarTimeRange === "full") query.set("zeit", "ganz");
+  if (merged.calendarZeit) query.set("zeit", merged.calendarZeit);
 
   const qs = query.toString();
   return qs ? `${BASE_PATH}?${qs}` : BASE_PATH;
@@ -102,3 +129,16 @@ export function resolvePlanningHubResourceDay(
   if (weekDayKeys.includes(todayDayKey)) return todayDayKey;
   return weekDayKeys[0]!;
 }
+
+/** @deprecated 02C field — derive from `calendarZeit` for legacy test fixtures. */
+export function legacyCalendarTimeRangeFromZeit(
+  calendarZeit?: PlanningHubCalendarZeitParam,
+): PlanningHubCalendarTimeRange {
+  return calendarZeit === "ganz" ? "full" : "focused";
+}
+
+export function heuteCalendarZeitParam(now: Date, timeZone: string): PlanningHubCalendarZeitParam {
+  return defaultDaypartForLocalTime(now, timeZone);
+}
+
+export { isPlanningHubCalendarDaypart };

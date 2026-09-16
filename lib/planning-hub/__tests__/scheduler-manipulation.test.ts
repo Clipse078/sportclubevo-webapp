@@ -106,7 +106,6 @@ describe("capabilities", () => {
       canManageEvents: false,
       alternativePlanId: null,
       resourceCategory: "pitch",
-      calendarTimeRange: "focused",
     });
     expect(hasAnyManipulationCapability(caps)).toBe(false);
   });
@@ -118,7 +117,6 @@ describe("capabilities", () => {
       canManageEvents: false,
       alternativePlanId: null,
       resourceCategory: "pitch",
-      calendarTimeRange: "focused",
     });
     expect(caps.canMoveTime).toBe(true);
     expect(caps.canResize).toBe(true);
@@ -133,7 +131,6 @@ describe("capabilities", () => {
       canManageEvents: true,
       alternativePlanId: null,
       resourceCategory: "pitch",
-      calendarTimeRange: "focused",
     });
     expect(caps.canMoveTime).toBe(false);
     expect(caps.canChangePrimaryResource).toBe(true);
@@ -147,7 +144,6 @@ describe("capabilities", () => {
       canManageEvents: true,
       alternativePlanId: null,
       resourceCategory: "pitch",
-      calendarTimeRange: "focused",
     });
     expect(hasAnyManipulationCapability(caps)).toBe(false);
   });
@@ -160,7 +156,6 @@ describe("capabilities", () => {
       canManageEvents: true,
       alternativePlanId: "plan-1",
       resourceCategory: "pitch",
-      calendarTimeRange: "focused",
     });
     expect(caps.canMoveTime).toBe(true);
   });

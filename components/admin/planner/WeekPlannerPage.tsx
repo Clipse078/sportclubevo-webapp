@@ -29,6 +29,7 @@ import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
 import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
 import {
   buildPlanningHubHref,
+  heuteCalendarZeitParam,
   resolvePlanningHubResourceDay,
   type PlanningHubUrlState,
 } from "@/lib/planning-hub/planner-url";
@@ -112,7 +113,6 @@ export default function WeekPlannerPage({
     facility: null,
     conflictsOnly: false,
     resourceCategory: "pitch",
-    calendarTimeRange: "focused",
   };
 
   const filteredWeek = applyPlanningHubFilters(week, urlState);
@@ -262,7 +262,10 @@ export default function WeekPlannerPage({
               <ChevronRight className="h-3.5 w-3.5" />
             </Link>
             <Link
-              href={weekHref(todayParam, resolvedUrlState)}
+              href={buildPlanningHubHref(resolvedUrlState, {
+                week: todayParam,
+                calendarZeit: heuteCalendarZeitParam(new Date(), timezone),
+              })}
               data-testid="weekplanner-today"
               className="inline-flex h-7 items-center rounded-md border border-[var(--border)] px-2 text-xs font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
             >

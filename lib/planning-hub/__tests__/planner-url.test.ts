@@ -11,12 +11,12 @@ describe("planning-hub planner-url", () => {
     expect(state.perspective).toBe("kalender");
     expect(state.activity).toBe("alle");
     expect(state.conflictsOnly).toBe(false);
-    expect(state.calendarTimeRange).toBe("focused");
+    expect(state.calendarZeit).toBeUndefined();
   });
 
   it("persists full day range via zeit=ganz", () => {
     const state = parsePlanningHubUrlState({ zeit: "ganz" });
-    expect(state.calendarTimeRange).toBe("full");
+    expect(state.calendarZeit).toBe("ganz");
     expect(buildPlanningHubHref(state)).toContain("zeit=ganz");
   });
 

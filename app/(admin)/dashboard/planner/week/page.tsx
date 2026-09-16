@@ -29,6 +29,7 @@ type PlannerWeekPageProps = {
     konflikte?: string;
     ressource?: string;
     day?: string;
+    zeit?: string;
   }>;
 };
 
