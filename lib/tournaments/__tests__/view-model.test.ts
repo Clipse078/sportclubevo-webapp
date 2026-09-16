@@ -125,6 +125,8 @@ describe("normalizeTournamentTab", () => {
 });
 
 describe("buildTournamentCenterViewModel", () => {
+  const REFERENCE_NOW = new Date("2026-09-03T12:00:00.000Z");
+
   it("partitions upcoming vs archived (COMPLETED/CANCELLED/ARCHIVED)", () => {
     const tournaments = [
       createTournament({ id: "t1", status: "SCHEDULED" }),
@@ -133,7 +135,7 @@ describe("buildTournamentCenterViewModel", () => {
       createTournament({ id: "t4", status: "ARCHIVED" }),
     ];
 
-    const vm = buildTournamentCenterViewModel(tournaments);
+    const vm = buildTournamentCenterViewModel(tournaments, { now: REFERENCE_NOW });
 
     expect(vm.anstehend.map((r) => r.tournament.id)).toEqual(["t1"]);
     expect(vm.archiv.map((t) => t.id).sort()).toEqual(["t2", "t3", "t4"]);
@@ -146,8 +148,8 @@ describe("buildTournamentCenterViewModel", () => {
       createTournament({ id: "t3", status: "COMPLETED" }),
     ];
 
-    const vmAlle = buildTournamentCenterViewModel(tournaments, { actionFilter: "ALLE" });
-    const vmOffen = buildTournamentCenterViewModel(tournaments, { actionFilter: "OFFEN" });
+    const vmAlle = buildTournamentCenterViewModel(tournaments, { actionFilter: "ALLE", now: REFERENCE_NOW });
+    const vmOffen = buildTournamentCenterViewModel(tournaments, { actionFilter: "OFFEN", now: REFERENCE_NOW });
 
     expect(vmAlle.kpis).toEqual({ anstehend: 2, offen: 1, bereit: 1, archiv: 1 });
     expect(vmOffen.kpis).toEqual(vmAlle.kpis);
@@ -159,7 +161,7 @@ describe("buildTournamentCenterViewModel", () => {
       createTournament({ id: "t2", status: "SCHEDULED" }),
     ];
 
-    const vm = buildTournamentCenterViewModel(tournaments, { actionFilter: "OFFEN" });
+    const vm = buildTournamentCenterViewModel(tournaments, { actionFilter: "OFFEN", now: REFERENCE_NOW });
     expect(vm.anstehend.map((r) => r.tournament.id)).toEqual(["t1"]);
   });
 
@@ -169,7 +171,7 @@ describe("buildTournamentCenterViewModel", () => {
       createTournament({ id: "t2", status: "SCHEDULED" }),
     ];
 
-    const vm = buildTournamentCenterViewModel(tournaments, { actionFilter: "ERLEDIGT" });
+    const vm = buildTournamentCenterViewModel(tournaments, { actionFilter: "ERLEDIGT", now: REFERENCE_NOW });
     expect(vm.anstehend.map((r) => r.tournament.id)).toEqual(["t2"]);
   });
 
@@ -193,8 +195,6 @@ describe("buildTournamentCenterViewModel", () => {
     const vm = buildTournamentCenterViewModel(tournaments);
     expect(vm.archiv.map((t) => t.id)).toEqual(["newer", "older"]);
   });
-
-  const REFERENCE_NOW = new Date("2026-09-03T12:00:00.000Z");
 
   it("classifies a future tournament as anstehend", () => {
     const tournaments = [
