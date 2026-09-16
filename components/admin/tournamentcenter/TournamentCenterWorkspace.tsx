@@ -308,7 +308,7 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
   }
 
   return (
-    <div className="space-y-4 overflow-x-hidden">
+    <div className="space-y-4">
       <div
         role="tablist"
         aria-label="Zeitraum"

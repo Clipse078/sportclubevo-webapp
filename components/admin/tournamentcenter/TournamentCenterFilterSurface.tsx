@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState, type FocusEvent } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Filter, LayoutGrid, SlidersHorizontal, X } from "lucide-react";
+import { Check, Filter, LayoutGrid, Search, SlidersHorizontal, X } from "lucide-react";
+import { PopoverContent } from "@/components/ui/Popover";
 import type { TournamentStatus } from "@/lib/tournaments/types";
 import type { TournamentActionFilter } from "@/lib/tournaments/view-model";
 import type { TournamentGroupMode, TournamentSortMode, TournamentTimeScope } from "@/lib/tournaments/workspace-view-model";
@@ -41,6 +42,18 @@ const READINESS_FILTERS: { key: TournamentActionFilter; label: string }[] = [
   { key: "ERLEDIGT", label: "Erledigt" },
 ];
 
+/** Viewport-safe filter panel width (~420px max). Exported for regression tests. */
+export const TOURNAMENT_FILTER_PANEL_WIDTH_CLASS =
+  "w-[min(26.25rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)]";
+
+const FILTER_POPOVER_PANEL_CLASS = cn(
+  TOURNAMENT_FILTER_PANEL_WIDTH_CLASS,
+  "!overflow-y-auto !p-3 !py-3 max-h-[min(80vh,36rem)]",
+);
+
+const FILTER_CHIP_CLASS =
+  "shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold transition";
+
 type PopoverKind = "filter" | "view" | null;
 
 type BuildHrefFn = (overrides: Record<string, unknown>) => string;
@@ -60,14 +73,6 @@ type TournamentCenterFilterSurfaceProps = {
   filtersActive: boolean;
 };
 
-function usePopoverBlur(containerRef: React.RefObject<HTMLDivElement | null>, onClose: () => void) {
-  return (event: FocusEvent<HTMLElement>) => {
-    const nextTarget = event.relatedTarget as Node | null;
-    if (nextTarget && containerRef.current?.contains(nextTarget)) return;
-    window.setTimeout(onClose, 150);
-  };
-}
-
 export function TournamentCenterFilterSurface({
   scope,
   teamFilter,
@@ -83,8 +88,8 @@ export function TournamentCenterFilterSurface({
   filtersActive,
 }: TournamentCenterFilterSurfaceProps) {
   const router = useRouter();
-  const filterRef = useRef<HTMLDivElement>(null);
-  const viewRef = useRef<HTMLDivElement>(null);
+  const filterTriggerRef = useRef<HTMLButtonElement>(null);
+  const viewTriggerRef = useRef<HTMLButtonElement>(null);
   const [openPopover, setOpenPopover] = useState<PopoverKind>(null);
   const [teamSearch, setTeamSearch] = useState("");
 
@@ -105,16 +110,13 @@ export function TournamentCenterFilterSurface({
     router.push(href);
   }
 
-  const filterBlur = usePopoverBlur(filterRef, () => setOpenPopover(null));
-  const viewBlur = usePopoverBlur(viewRef, () => setOpenPopover(null));
-
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div ref={filterRef} className="relative">
+      <div className="relative">
         <button
+          ref={filterTriggerRef}
           type="button"
           onClick={() => setOpenPopover((v) => (v === "filter" ? null : "filter"))}
-          onBlur={filterBlur}
           className={cn(
             "inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors",
             filtersActive || openPopover === "filter"
@@ -129,24 +131,35 @@ export function TournamentCenterFilterSurface({
           Filter
         </button>
 
-        {openPopover === "filter" ? (
-          <div
-            role="dialog"
-            aria-label="Turnierfilter"
-            className="absolute left-0 top-full z-50 mt-1.5 w-[min(100vw-2rem,22rem)] rounded-[var(--radius-xl)] border border-[var(--border-strong)] bg-[var(--surface)] p-3 shadow-[var(--shadow-lg)]"
-            data-testid="tournamentcenter-filter-panel"
-          >
-            <div className="space-y-4">
-              <div className="space-y-1.5">
+        <PopoverContent
+          open={openPopover === "filter"}
+          onOpenChange={(open) => {
+            if (!open) setOpenPopover(null);
+          }}
+          anchorRef={filterTriggerRef}
+          role="dialog"
+          matchAnchorWidth={false}
+          maxHeight={576}
+          clipOverflow={false}
+          className={FILTER_POPOVER_PANEL_CLASS}
+        >
+          <div className="space-y-4" data-testid="tournamentcenter-filter-panel" aria-label="Turnierfilter">
+              <div className="min-w-0 space-y-1.5">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">Team</p>
-                <input
-                  type="search"
-                  value={teamSearch}
-                  onChange={(e) => setTeamSearch(e.target.value)}
-                  placeholder="Team suchen…"
-                  className="fca-input fca-search-input h-8 text-xs"
-                  data-testid="tournamentcenter-filter-team-search"
-                />
+                <div className="relative min-w-0 w-full">
+                  <Search
+                    className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--muted)]"
+                    aria-hidden
+                  />
+                  <input
+                    type="search"
+                    value={teamSearch}
+                    onChange={(e) => setTeamSearch(e.target.value)}
+                    placeholder="Team suchen…"
+                    className="fca-input fca-search-input h-8 w-full min-w-0 text-xs"
+                    data-testid="tournamentcenter-filter-team-search"
+                  />
+                </div>
                 <ul className="max-h-40 overflow-y-auto rounded-lg border border-[var(--border)]" role="listbox">
                   <li>
                     <button
@@ -192,12 +205,12 @@ export function TournamentCenterFilterSurface({
 
               <div className="space-y-1.5">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">Monat / Zeitraum</p>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-1.5" data-testid="tournamentcenter-filter-month-chips">
                   <button
                     type="button"
                     onClick={() => navigate(buildHref({ month: null }))}
                     className={cn(
-                      "rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold",
+                      FILTER_CHIP_CLASS,
                       !monthParam
                         ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
                         : "border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]",
@@ -210,7 +223,7 @@ export function TournamentCenterFilterSurface({
                     type="button"
                     onClick={() => navigate(buildHref({ month: currentMonthWindow.param }))}
                     className={cn(
-                      "rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold",
+                      FILTER_CHIP_CLASS,
                       monthParam === currentMonthWindow.param
                         ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
                         : "border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]",
@@ -224,7 +237,7 @@ export function TournamentCenterFilterSurface({
 
               <div className="space-y-1.5">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">Status</p>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-1.5" data-testid="tournamentcenter-filter-status-chips">
                   {STATUS_OPTIONS.map((option) => {
                     const active = (statusFilter ?? "") === option.value;
                     return (
@@ -239,7 +252,7 @@ export function TournamentCenterFilterSurface({
                           )
                         }
                         className={cn(
-                          "rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold transition",
+                          FILTER_CHIP_CLASS,
                           active
                             ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
                             : "border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]",
@@ -256,7 +269,11 @@ export function TournamentCenterFilterSurface({
               {scope === "UPCOMING" ? (
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">Vorbereitung</p>
-                  <div className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-0.5" role="group">
+                  <div
+                    className="flex flex-wrap gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-1"
+                    role="group"
+                    data-testid="tournamentcenter-filter-readiness-chips"
+                  >
                     {READINESS_FILTERS.map((item) => {
                       const isActive = item.key === actionFilter;
                       return (
@@ -266,7 +283,7 @@ export function TournamentCenterFilterSurface({
                           onClick={() => navigate(buildHref({ actionFilter: item.key }))}
                           data-testid={`tournamentcenter-filter-${item.key.toLowerCase()}`}
                           className={cn(
-                            "rounded-md px-3 py-1 text-[0.68rem] font-semibold transition",
+                            "shrink-0 whitespace-nowrap rounded-md px-3 py-1 text-[0.68rem] font-semibold transition",
                             isActive
                               ? "bg-[var(--surface)] text-[var(--foreground)] shadow-sm"
                               : "text-[var(--text-2)] hover:text-[var(--foreground)]",
@@ -280,15 +297,14 @@ export function TournamentCenterFilterSurface({
                 </div>
               ) : null}
             </div>
-          </div>
-        ) : null}
+        </PopoverContent>
       </div>
 
-      <div ref={viewRef} className="relative">
+      <div className="relative">
         <button
+          ref={viewTriggerRef}
           type="button"
           onClick={() => setOpenPopover((v) => (v === "view" ? null : "view"))}
-          onBlur={viewBlur}
           className={cn(
             "inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors",
             openPopover === "view"
@@ -303,14 +319,19 @@ export function TournamentCenterFilterSurface({
           <span className="hidden sm:inline">Ansicht:</span> {groupLabel}
         </button>
 
-        {openPopover === "view" ? (
-          <div
-            role="dialog"
-            aria-label="Ansicht und Sortierung"
-            className="absolute right-0 top-full z-50 mt-1.5 w-56 rounded-[var(--radius-xl)] border border-[var(--border-strong)] bg-[var(--surface)] p-3 shadow-[var(--shadow-lg)] sm:left-auto"
-            data-testid="tournamentcenter-view-panel"
-          >
-            <div className="space-y-4">
+        <PopoverContent
+          open={openPopover === "view"}
+          onOpenChange={(open) => {
+            if (!open) setOpenPopover(null);
+          }}
+          anchorRef={viewTriggerRef}
+          role="dialog"
+          matchAnchorWidth={false}
+          maxHeight={480}
+          clipOverflow={false}
+          className="!overflow-y-auto !p-3 !py-3 w-56 max-w-[calc(100vw-2rem)]"
+        >
+          <div className="space-y-4" data-testid="tournamentcenter-view-panel" aria-label="Ansicht und Sortierung">
               <div className="space-y-1.5">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">Gruppierung</p>
                 <ul className="space-y-0.5">
@@ -367,8 +388,7 @@ export function TournamentCenterFilterSurface({
                 <p className="text-[0.65rem] text-[var(--muted)]">Aktuell: {sortLabel}</p>
               </div>
             </div>
-          </div>
-        ) : null}
+        </PopoverContent>
       </div>
     </div>
   );
