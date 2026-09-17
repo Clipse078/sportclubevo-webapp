@@ -1,9 +1,13 @@
 /**
  * SwitchToggle — SCE-standard boolean toggle switch.
  *
- * Use for on/off settings (Person ist aktiv, Spieler/in, Trainer/in, …).
+ * BINARY STATE / SETTING → Switch (this module)
+ * MULTI-SELECTION → Checkbox only when selecting multiple independent items
+ *   is genuinely the interaction model (bulk table rows, pick N players, …).
+ *
+ * Use switches for: Ganztägig, Website sichtbar, Aktiv, Benachrichtigungen,
+ * feature enabled/disabled, and similar ON/OFF application states.
  * Do NOT use checkboxes for these controls.
- * Checkboxes remain appropriate for genuine multi-row selection and bulk actions.
  *
  * Accessibility:
  *   - Uses role="switch" with aria-checked
@@ -43,7 +47,7 @@ export function SwitchThumb({
       onClick={() => onChange(!checked)}
       className={[
         "relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent",
-        "transition-colors duration-200 ease-in-out",
+        "transition-colors duration-150 ease-in-out",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2",
         checked
           ? "bg-[var(--sce-primary)]"
@@ -57,7 +61,7 @@ export function SwitchThumb({
         aria-hidden="true"
         className={[
           "pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow ring-0",
-          "transition-transform duration-200 ease-in-out",
+          "transition-transform duration-150 ease-in-out",
           checked ? "translate-x-4" : "translate-x-0",
         ].join(" ")}
       />

@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import { cn } from "@/lib/cn";
 
 export type VeranstaltungScheduleFieldValues = {
@@ -21,6 +23,8 @@ export default function VeranstaltungScheduleFields({
   onChange,
   disabled,
 }: VeranstaltungScheduleFieldsProps) {
+  const allDaySwitchId = useId();
+
   const summaryDate = values.startDate
     ? new Intl.DateTimeFormat("de-CH", {
         day: "numeric",
@@ -62,14 +66,18 @@ export default function VeranstaltungScheduleFields({
         ) : null}
       </div>
 
-      <label className="fca-toggle-row max-w-md">
+      <label
+        htmlFor={allDaySwitchId}
+        className="flex max-w-md cursor-pointer items-center justify-between gap-4 py-0.5"
+        data-testid="veranstaltung-all-day-row"
+      >
         <span className="fca-label">Ganztägig</span>
-        <input
-          type="checkbox"
+        <SwitchThumb
+          id={allDaySwitchId}
           checked={values.allDay}
-          onChange={(e) => onChange({ allDay: e.target.checked })}
-          className="fca-toggle-checkbox"
+          onChange={(checked) => onChange({ allDay: checked })}
           disabled={disabled}
+          aria-label="Ganztägig"
         />
       </label>
 
