@@ -76,7 +76,10 @@ import { prisma } from "@/lib/db/prisma";
 import { isMeaningfulEventInterval } from "@/lib/facilities/resource-occupancy-window";
 import { getWochenplanPlanBaselineMode, type WochenplanPlanBaselineMode } from "@/lib/wochenplan/plan-baseline";
 import { listTrainingSessions } from "@/lib/training/session-generation-service";
-import { getTenantDressingRoomOccupancyPresetsCached } from "@/lib/server/request-cache";
+import {
+  getFacilitiesForTenantCached,
+  getTenantDressingRoomOccupancyPresetsCached,
+} from "@/lib/server/request-cache";
 import { enrichWeekplannerItemDressingRoomOccupancy } from "@/lib/dressing-room-occupancy/weekplanner-enrichment";
 import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
 import {
@@ -159,16 +162,22 @@ function toResourceRef(
 async function findFacilityResourceCodeMap(
   tenantId: string,
 ): Promise<Map<string, WeekplannerResourceRef>> {
-  const resources = await prisma.facilityResource.findMany({
-    where: {
-      tenantId,
-      status: { not: "ARCHIVED" },
-      facility: { status: { not: "ARCHIVED" } },
-    },
-    select: { id: true, code: true, name: true, facility: { select: { id: true, name: true } } },
-  });
-
-  return new Map(resources.map((resource) => [resource.code, toResourceRef(resource)]));
+  const facilities = await getFacilitiesForTenantCached(tenantId);
+  const map = new Map<string, WeekplannerResourceRef>();
+  for (const facility of facilities) {
+    for (const resource of facility.resources) {
+      map.set(
+        resource.code,
+        toResourceRef({
+          id: resource.id,
+          code: resource.code,
+          name: resource.name,
+          facility: { id: facility.id, name: facility.name },
+        }),
+      );
+    }
+  }
+  return map;
 }
 
 // ── WEEKPLANNER-01B: plan override resolution ───────────────────────────────

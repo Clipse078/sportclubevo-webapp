@@ -64,9 +64,9 @@ describe("PLANNING-HUB-02D URL state", () => {
     expect(parsePlanningHubUrlState({ zeit: "spaet" }).calendarZeit).toBe("spaet");
   });
 
-  it("normalizes invalid zeit to operational default", () => {
+  it("normalizes invalid zeit to canonical Ganzer Tag (no param)", () => {
     const state = parsePlanningHubUrlState({ zeit: "invalid" }, { now: atLocal(14, 0), timeZone: TZ });
-    expect(state.calendarZeit).toBe("nachmittag");
+    expect(state.calendarZeit).toBeUndefined();
   });
 
   it("preserves filters when switching daypart", () => {
@@ -93,10 +93,10 @@ describe("PLANNING-HUB-02D URL state", () => {
     expect(href).not.toContain("zeit=");
   });
 
-  it("handles legacy zeit=ganz", () => {
+  it("handles explicit zeit=ganz as Ganzer Tag", () => {
     const state = parsePlanningHubUrlState({ zeit: "ganz" });
     expect(state.calendarZeit).toBe("ganz");
-    expect(buildPlanningHubHref(state)).toContain("zeit=ganz");
+    expect(buildPlanningHubHref(state)).not.toContain("zeit=");
     expect(resolveCalendarViewport("ganz", atLocal(10, 0), TZ).mode).toBe("full");
   });
 
@@ -112,19 +112,19 @@ describe("PLANNING-HUB-02D URL state", () => {
 });
 
 describe("PLANNING-HUB-02D Heute", () => {
-  it("selects current week daypart at 18:30", () => {
-    expect(heuteCalendarZeitParam(atLocal(18, 30), TZ)).toBe("abend");
+  it("preserves explicit Abend when navigating to Heute", () => {
+    expect(heuteCalendarZeitParam(atLocal(18, 30), TZ, "abend")).toBe("abend");
   });
 
-  it("early morning selects Morgen", () => {
-    expect(heuteCalendarZeitParam(atLocal(6, 0), TZ)).toBe("morgen");
+  it("preserves canonical Ganzer Tag (undefined) on Heute", () => {
+    expect(heuteCalendarZeitParam(atLocal(6, 0), TZ, undefined)).toBeUndefined();
   });
 
   it("preserves filters in Heute href patch", () => {
-    const base = parsePlanningHubUrlState({ typ: "turniere", konflikte: "1" });
+    const base = parsePlanningHubUrlState({ typ: "turniere", konflikte: "1", zeit: "spaet" });
     const href = buildPlanningHubHref(base, {
       week: "2026-09-14",
-      calendarZeit: heuteCalendarZeitParam(atLocal(21, 30), TZ),
+      calendarZeit: heuteCalendarZeitParam(atLocal(21, 30), TZ, base.calendarZeit),
     });
     expect(href).toContain("week=2026-09-14");
     expect(href).toContain("zeit=spaet");
@@ -217,13 +217,9 @@ describe("PLANNING-HUB-02D lanes / aggregation / conflicts", () => {
 });
 
 describe("PLANNING-HUB-02D implicit viewport", () => {
-  it("uses current time when zeit is omitted", () => {
+  it("uses Ganzer Tag when zeit is omitted", () => {
     const view = resolveCalendarViewport(undefined, atLocal(14, 15), TZ);
-    expect(view.mode).toBe("daypart");
-    if (view.mode === "daypart") {
-      expect(view.daypart).toBe("nachmittag");
-      expect(view.explicit).toBe(false);
-    }
+    expect(view.mode).toBe("full");
   });
 });
 

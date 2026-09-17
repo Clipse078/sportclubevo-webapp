@@ -14,10 +14,10 @@ describe("planning-hub planner-url", () => {
     expect(state.calendarZeit).toBeUndefined();
   });
 
-  it("persists full day range via zeit=ganz", () => {
+  it("accepts zeit=ganz as Ganzer Tag without requiring param in href", () => {
     const state = parsePlanningHubUrlState({ zeit: "ganz" });
     expect(state.calendarZeit).toBe("ganz");
-    expect(buildPlanningHubHref(state)).toContain("zeit=ganz");
+    expect(buildPlanningHubHref(state)).not.toContain("zeit=");
   });
 
   it("maps legacy ansicht=woche to Liste", () => {

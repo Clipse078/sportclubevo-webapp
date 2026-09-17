@@ -37,10 +37,10 @@ describe("PLANNING-HUB-02E calendar zeit URL helpers", () => {
     expect(href).not.toContain("week=2026-09-07");
   });
 
-  it("invalid zeit falls back to operational default", () => {
+  it("invalid zeit falls back to canonical Ganzer Tag (undefined)", () => {
     const at = new Date("2026-09-16T14:00:00.000+02:00");
-    expect(readCalendarZeitFromSearch("?zeit=not-a-daypart", { now: at, timeZone: TZ })).toBe(
-      "nachmittag",
-    );
+    expect(
+      readCalendarZeitFromSearch("?zeit=not-a-daypart", { now: at, timeZone: TZ }),
+    ).toBeUndefined();
   });
 });

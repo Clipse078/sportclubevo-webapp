@@ -16,6 +16,11 @@ import {
 import { buildFacilityGroupsByAllocationGroupFromFacilities } from "@/lib/planning-hub/facility-groups";
 import WeekPlannerPage from "@/components/admin/planner/WeekPlannerPage";
 import { parsePlanningHubUrlState } from "@/lib/planning-hub/planner-url";
+import {
+  createPlannerServerTimer,
+  isPlannerPerfTimingEnabled,
+  logPlannerServerTiming,
+} from "@/lib/planning-hub/planner-server-timing";
 import type { WeekplannerOverrideRow } from "@/components/admin/planner/WeekplannerAllocationOverrideEditor";
 import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
 
@@ -65,6 +70,8 @@ type PlannerWeekPageProps = {
 export default async function PlannerWeekPageRoute({
   searchParams,
 }: PlannerWeekPageProps) {
+  const perfTimer = isPlannerPerfTimingEnabled() ? createPlannerServerTimer() : null;
+
   const session = await requireAnyPermission([
     PERMISSIONS.TRAININGS_VIEW,
     PERMISSIONS.TRAININGS_MANAGE,
@@ -72,8 +79,11 @@ export default async function PlannerWeekPageRoute({
     PERMISSIONS.EVENTS_MANAGE,
   ]);
 
+  perfTimer?.mark("auth");
+
   const tenantContext = await getActiveTenant();
   if (!tenantContext) notFound();
+  perfTimer?.mark("tenant");
 
   const canManageTrainings = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
   const canManageEvents = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
@@ -97,6 +107,7 @@ export default async function PlannerWeekPageRoute({
     listWochenplanPlans(tenantContext.id),
     listWeekplannerPlans(tenantContext.id, weekWindow.param),
   ]);
+  perfTimer?.mark("plans");
 
   const defaultWochenplanPlan =
     wochenplanPlans.find((plan) => plan.isDefault) ?? wochenplanPlans[0] ?? null;
@@ -136,6 +147,8 @@ export default async function PlannerWeekPageRoute({
 
   const activePlan = materializedWeekplannerPlan;
 
+  perfTimer?.mark("plan-resolution");
+
   const [week, dressingRoomOccupancyPresets, facilities] = await Promise.all([
     getWeekplannerWeek(
       tenantContext.id,
@@ -152,6 +165,7 @@ export default async function PlannerWeekPageRoute({
     getTenantDressingRoomOccupancyPresetsCached(tenantContext.id),
     getFacilitiesForTenantCached(tenantContext.id),
   ]);
+  perfTimer?.mark("week-facilities-dressing");
 
   const facilityGroupsByAllocationGroup = canManagePlans
     ? buildFacilityGroupsByAllocationGroupFromFacilities(facilities)
@@ -183,6 +197,10 @@ export default async function PlannerWeekPageRoute({
     plan: requestedPlanId ?? urlState.plan,
     day: urlState.day,
   };
+
+  if (perfTimer) {
+    logPlannerServerTiming(perfTimer.finish());
+  }
 
   return (
     <WeekPlannerPage
