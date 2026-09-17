@@ -5,9 +5,8 @@
  */
 
 import {
-  defaultDaypartForLocalTime,
   isPlanningHubCalendarDaypart,
-  parsePlanningHubCalendarZeitParam,
+  normalizeInvalidCalendarZeit,
   type PlanningHubCalendarDaypart,
   type PlanningHubCalendarZeitParam,
 } from "./planning-dayparts";
@@ -37,7 +36,7 @@ export type PlanningHubUrlState = {
   resourceCategory: "pitch" | "dressing";
   /**
    * Kalender `zeit` query value when present in the URL.
-   * `undefined` = omit param → implicit default daypart from current local time.
+   * `undefined` = omit param → canonical Ganzer Tag (full accepted range).
    */
   calendarZeit?: PlanningHubCalendarZeitParam;
 };
@@ -67,12 +66,11 @@ export function parsePlanningHubUrlState(
       : "alle";
 
   const rawZeit = params.zeit?.trim();
-  let calendarZeit = parsePlanningHubCalendarZeitParam(rawZeit);
-  if (!calendarZeit && rawZeit) {
-    const now = options?.now ?? new Date();
-    const timeZone = options?.timeZone ?? "Europe/Zurich";
-    calendarZeit = defaultDaypartForLocalTime(now, timeZone);
-  }
+  const calendarZeit = normalizeInvalidCalendarZeit(
+    rawZeit,
+    options?.now ?? new Date(),
+    options?.timeZone ?? "Europe/Zurich",
+  );
 
   return {
     week: params.week?.trim() || undefined,
@@ -112,7 +110,13 @@ export function buildPlanningHubHref(
   if (merged.perspective === "ressourcen" && merged.resourceCategory === "dressing") {
     query.set("ressource", "garderobe");
   }
-  if (merged.calendarZeit) query.set("zeit", merged.calendarZeit);
+  if (
+    merged.calendarZeit &&
+    merged.calendarZeit !== "ganz" &&
+    isPlanningHubCalendarDaypart(merged.calendarZeit)
+  ) {
+    query.set("zeit", merged.calendarZeit);
+  }
 
   const qs = query.toString();
   return qs ? `${BASE_PATH}?${qs}` : BASE_PATH;
@@ -137,8 +141,21 @@ export function legacyCalendarTimeRangeFromZeit(
   return calendarZeit === "ganz" ? "full" : "focused";
 }
 
-export function heuteCalendarZeitParam(now: Date, timeZone: string): PlanningHubCalendarZeitParam {
-  return defaultDaypartForLocalTime(now, timeZone);
+/** Heute navigates to the current week; time zoom stays on the user's selection. */
+export function preserveCalendarZeitForHeute(
+  selected: PlanningHubCalendarZeitParam | undefined,
+): PlanningHubCalendarZeitParam | undefined {
+  if (selected === "ganz") return undefined;
+  return selected;
+}
+
+/** @deprecated Use `preserveCalendarZeitForHeute` — Heute no longer picks a daypart from clock time. */
+export function heuteCalendarZeitParam(
+  _now: Date,
+  _timeZone: string,
+  selected?: PlanningHubCalendarZeitParam | undefined,
+): PlanningHubCalendarZeitParam | undefined {
+  return preserveCalendarZeitForHeute(selected);
 }
 
 export { isPlanningHubCalendarDaypart };

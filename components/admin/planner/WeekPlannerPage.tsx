@@ -37,7 +37,7 @@ import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
 import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
 import {
   buildPlanningHubHref,
-  heuteCalendarZeitParam,
+  preserveCalendarZeitForHeute,
   resolvePlanningHubResourceDay,
   type PlanningHubUrlState,
 } from "@/lib/planning-hub/planner-url";
@@ -272,7 +272,7 @@ export default function WeekPlannerPage({
             <Link
               href={buildPlanningHubHref(resolvedUrlState, {
                 week: todayParam,
-                calendarZeit: heuteCalendarZeitParam(new Date(), timezone),
+                calendarZeit: preserveCalendarZeitForHeute(resolvedUrlState.calendarZeit),
               })}
               data-testid="weekplanner-today"
               className="inline-flex h-7 items-center rounded-md border border-[var(--border)] px-2 text-xs font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
