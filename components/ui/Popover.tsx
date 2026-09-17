@@ -19,6 +19,7 @@ import {
   useFloating,
   useInteractions,
   useRole,
+  type Placement,
 } from "@floating-ui/react";
 import { cn } from "@/lib/cn";
 
@@ -29,6 +30,7 @@ type PopoverContentProps = {
   children: ReactNode;
   id?: string;
   role?: "listbox" | "dialog";
+  placement?: Placement;
   matchAnchorWidth?: boolean;
   maxHeight?: number;
   /** When false, the floating surface does not clip children horizontally (filter panels). */
@@ -43,6 +45,7 @@ export function PopoverContent({
   children,
   id,
   role = "listbox",
+  placement = "bottom-start",
   matchAnchorWidth = true,
   maxHeight = 224,
   clipOverflow = true,
@@ -51,7 +54,7 @@ export function PopoverContent({
   const { refs, floatingStyles, context } = useFloating({
     open,
     onOpenChange,
-    placement: "bottom-start",
+    placement,
     whileElementsMounted: open ? autoUpdate : undefined,
     middleware: [
       offset(6),

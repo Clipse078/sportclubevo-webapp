@@ -21,7 +21,7 @@ type Props = {
 };
 
 const GRID =
-  "group relative grid min-h-[56px] grid-cols-1 gap-2 border-b border-[var(--border)]/70 px-4 py-3.5 transition-[background-color] duration-150 last:border-b-0 md:grid-cols-[minmax(0,1.85fr)_minmax(7.5rem,0.9fr)_minmax(7.75rem,0.85fr)_minmax(0,1.15fr)_minmax(5.75rem,0.75fr)_2.75rem] md:items-center md:gap-x-4";
+  "group relative grid min-h-[56px] grid-cols-1 gap-2 border-b border-[var(--border)]/70 px-4 py-3.5 transition-[background-color] duration-150 last:border-b-0 md:grid-cols-[minmax(0,1.85fr)_minmax(7.5rem,0.9fr)_minmax(7.75rem,0.85fr)_minmax(0,1.15fr)_minmax(5.75rem,0.75fr)_3rem] md:items-center md:gap-x-4";
 
 export default function TrainingSeriesManagementRow({
   row,
@@ -108,6 +108,7 @@ export default function TrainingSeriesManagementRow({
 
       <div className="relative z-[1] flex items-center justify-end md:col-span-1">
         <TrainingSeriesRowContextMenu
+          teamSeasonId={row.teamSeasonId}
           teamLabel={row.teamDisplayName}
           wochenplanerHref={wochenplanerHref}
           seriesEntries={row.seriesEntries}

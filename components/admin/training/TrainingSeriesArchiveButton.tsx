@@ -8,6 +8,9 @@ type Props = {
   seriesId: string;
   seriesTitle: string;
   variant?: "default" | "menu";
+  /** Overrides the visible label for variant="menu" (series chooser rows). */
+  menuLabel?: string;
+  startConfirming?: boolean;
   onComplete?: () => void;
 };
 
@@ -22,10 +25,12 @@ export default function TrainingSeriesArchiveButton({
   seriesId,
   seriesTitle,
   variant = "default",
+  menuLabel,
+  startConfirming = false,
   onComplete,
 }: Props) {
   const router = useRouter();
-  const [confirming, setConfirming] = useState(false);
+  const [confirming, setConfirming] = useState(startConfirming);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,10 +67,10 @@ export default function TrainingSeriesArchiveButton({
             type="button"
             role="menuitem"
             onClick={() => setConfirming(true)}
-            className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[0.8125rem] text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+            className="flex w-full min-h-[40px] items-center gap-3 rounded-[0.625rem] px-3 py-2 text-left text-[0.8125rem] font-medium text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)]/90 hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
           >
-            <Archive className="h-4 w-4 opacity-80" aria-hidden="true" />
-            Archivieren
+            <Archive className="h-4 w-4 shrink-0 text-[var(--muted)] opacity-90" aria-hidden="true" />
+            {menuLabel ?? "Archivieren"}
           </button>
           {error ? <p className="px-2 text-[11px] font-medium text-[var(--sce-danger)]">{error}</p> : null}
         </div>

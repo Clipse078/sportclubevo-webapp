@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertTriangle, ChevronRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -30,6 +30,9 @@ type Props = {
    * the actual Serien-Verwaltung list — the surface admins use day to day.
    */
   variant?: "section" | "inline" | "menu" | "danger-zone";
+  /** Overrides the visible label for variant="menu" (series chooser rows). */
+  menuLabel?: string;
+  autoOpen?: boolean;
   onOpen?: () => void;
 };
 
@@ -54,6 +57,8 @@ export default function TrainingSeriesDeleteControl({
   seriesTitle,
   canDelete,
   variant = "section",
+  menuLabel,
+  autoOpen = false,
   onOpen,
 }: Props) {
   const router = useRouter();
@@ -63,6 +68,12 @@ export default function TrainingSeriesDeleteControl({
   const [error, setError] = useState<string | null>(null);
   const [impact, setImpact] = useState<Impact[] | null>(null);
   const [dangerExpanded, setDangerExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!canDelete || !autoOpen || variant !== "menu") return;
+    void openConfirmation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot open when mounted for chooser selection
+  }, [autoOpen, canDelete, variant]);
 
   if (!canDelete) {
     return null;
@@ -153,10 +164,10 @@ export default function TrainingSeriesDeleteControl({
         role="menuitem"
         onClick={openConfirmation}
         data-testid="training-series-delete-inline"
-        className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[0.8125rem] text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--sce-danger)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+        className="flex w-full min-h-[40px] items-center gap-3 rounded-[0.625rem] px-3 py-2 text-left text-[0.8125rem] font-medium text-[var(--sce-danger)] transition-colors hover:bg-red-500/10 hover:text-[var(--sce-danger)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
       >
-        <Trash2 className="h-4 w-4 opacity-80" aria-hidden="true" />
-        Löschen
+        <Trash2 className="h-4 w-4 shrink-0 opacity-90" aria-hidden="true" />
+        {menuLabel ?? "Löschen"}
       </button>
     ) : variant === "inline" ? (
       <button
