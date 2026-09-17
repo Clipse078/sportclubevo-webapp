@@ -1,6 +1,9 @@
 ﻿import { redirect } from "next/navigation";
-import PlannerEntryCreateForm from "@/components/admin/planner/PlannerEntryCreateForm";
+import PlannerEntryEditForm from "@/components/admin/planner/PlannerEntryEditForm";
 import { getPlannerEditFormData } from "@/lib/planner/queries";
+import { hasPermission } from "@/lib/permissions/has-permission";
+import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 type PlannerEditPageProps = {
   params: Promise<{
@@ -8,7 +11,6 @@ type PlannerEditPageProps = {
   }>;
   searchParams?: Promise<{
     season?: string;
-    type?: string;
   }>;
 };
 
@@ -19,9 +21,19 @@ export default async function PlannerEditPage({
   const { eventId } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
 
-  const data = await getPlannerEditFormData(eventId, {
-    selectedType: resolvedSearchParams?.type ?? null,
-  });
+  const session = await requireAnyPermission([
+    PERMISSIONS.TRAININGS_VIEW,
+    PERMISSIONS.TRAININGS_MANAGE,
+    PERMISSIONS.EVENTS_VIEW,
+    PERMISSIONS.EVENTS_MANAGE,
+    PERMISSIONS.WOCHENPLAN_MANAGE,
+  ]);
+
+  const canManage =
+    hasPermission(session, PERMISSIONS.WOCHENPLAN_MANAGE) ||
+    hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
+
+  const data = await getPlannerEditFormData(eventId);
 
   if (!data) {
     const redirectSeason = resolvedSearchParams?.season;
@@ -36,5 +48,15 @@ export default async function PlannerEditPage({
     redirect(`/dashboard/planner?${params.toString()}`);
   }
 
-  return <PlannerEntryCreateForm data={data} mode="edit" />;
+  return (
+    <PlannerEntryEditForm
+      data={{
+        ...data,
+        eventId: data.eventId!,
+        teamName: data.teamName ?? null,
+        seasonName: data.seasonName,
+      }}
+      canManage={canManage}
+    />
+  );
 }

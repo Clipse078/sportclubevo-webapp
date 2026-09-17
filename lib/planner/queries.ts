@@ -200,12 +200,7 @@ export async function getPlannerCreateFormData(args?: {
   };
 }
 
-export async function getPlannerEditFormData(
-  eventId: string,
-  args?: {
-    selectedType?: string | null;
-  },
-) {
+export async function getPlannerEditFormData(eventId: string) {
   const tenantId = await requireActiveTenantId();
   const event = await prisma.event.findFirst({
     where: {
@@ -234,9 +229,15 @@ export async function getPlannerEditFormData(
       trainingsplanVisible: true,
       teamPageVisible: true,
       teamId: true,
+      team: {
+        select: {
+          name: true,
+        },
+      },
       season: {
         select: {
           key: true,
+          name: true,
         },
       },
     },
@@ -253,15 +254,9 @@ export async function getPlannerEditFormData(
     return null;
   }
 
-  const selectedType =
-    args?.selectedType &&
-    Object.values(EventType).includes(args.selectedType as EventType)
-      ? (args.selectedType as EventType)
-      : event.type;
-
   const base = await getPlannerCreateFormData({
     selectedSeasonKey: event.season.key,
-    selectedType,
+    selectedType: event.type,
   });
 
   return {
@@ -269,7 +264,9 @@ export async function getPlannerEditFormData(
     eventId: event.id,
     selectedSeasonId: event.seasonId ?? "",
     selectedSeasonKey: event.season.key,
-    selectedType,
+    selectedType: event.type,
+    teamName: event.team?.name ?? null,
+    seasonName: event.season.name,
     defaults: {
       title: event.title,
       source: event.source,
