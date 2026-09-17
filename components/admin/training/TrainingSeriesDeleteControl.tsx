@@ -29,7 +29,8 @@ type Props = {
    * matching the other row actions (Ressourcen/Bearbeiten/Archivieren) in
    * the actual Serien-Verwaltung list — the surface admins use day to day.
    */
-  variant?: "section" | "inline";
+  variant?: "section" | "inline" | "menu";
+  onOpen?: () => void;
 };
 
 /**
@@ -53,6 +54,7 @@ export default function TrainingSeriesDeleteControl({
   seriesTitle,
   canDelete,
   variant = "section",
+  onOpen,
 }: Props) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
@@ -66,6 +68,7 @@ export default function TrainingSeriesDeleteControl({
   }
 
   async function openConfirmation() {
+    onOpen?.();
     setConfirming(true);
     setError(null);
     setImpact(null);
@@ -121,12 +124,23 @@ export default function TrainingSeriesDeleteControl({
   }
 
   const trigger =
-    variant === "inline" ? (
+    variant === "menu" ? (
+      <button
+        type="button"
+        role="menuitem"
+        onClick={openConfirmation}
+        data-testid="training-series-delete-inline"
+        className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[0.8125rem] text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--sce-danger)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+      >
+        <Trash2 className="h-4 w-4 opacity-80" aria-hidden="true" />
+        Löschen
+      </button>
+    ) : variant === "inline" ? (
       <button
         type="button"
         onClick={openConfirmation}
         data-testid="training-series-delete-inline"
-        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 text-xs font-medium text-rose-700 transition hover:border-rose-300 hover:bg-rose-50"
+        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 text-xs font-medium text-[var(--sce-danger)] transition hover:bg-[var(--surface)]"
       >
         <Trash2 className="h-3.5 w-3.5" />
         Löschen
@@ -154,6 +168,8 @@ export default function TrainingSeriesDeleteControl({
             {trigger}
           </div>
         </SectionCard>
+      ) : variant === "menu" ? (
+        trigger
       ) : (
         trigger
       )}

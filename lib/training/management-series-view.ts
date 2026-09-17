@@ -2,11 +2,11 @@
  * SCE-TRAININGS-UX-01 — compact TrainingSeries management rows (Serien section).
  */
 
+import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
 import {
   COCKPIT_WEEKDAY_LABELS,
   COCKPIT_WEEKDAY_ORDER,
   resolveSeriesAllocationDisplay,
-  type TrainingSeriesCockpitRow,
 } from "@/lib/training/series-cockpit";
 import type { TrainingAllocationDto, TrainingSeriesDto, TrainingSeriesStatus, Weekday } from "@/lib/training/types";
 
@@ -20,6 +20,10 @@ const WEEKDAY_SHORT: Record<Weekday, string> = {
   SUNDAY: "So",
 };
 
+export type TrainingSeriesSchedulePresentation =
+  | { kind: "uniform"; rhythmLabel: string; timeLabel: string }
+  | { kind: "variable"; rhythmLabel: string; timeLines: string[] };
+
 export type TrainingSeriesManagementRow = {
   seriesId: string;
   teamSeasonId: string;
@@ -27,15 +31,13 @@ export type TrainingSeriesManagementRow = {
   teamDisplayName: string;
   rhythmLabel: string;
   timeLabel: string;
+  timeLines: string[] | null;
   facilityLabel: string | null;
   status: TrainingSeriesStatus;
   planningStage: string;
   validFrom: string | null;
   validUntil: string | null;
   sessionCount: number;
-  /** Representative cockpit row for inline resource edits (first weekday). */
-  primaryCockpitRowKey: string;
-  cockpitRows: TrainingSeriesCockpitRow[];
 };
 
 export type TrainingSeriesManagementFilters = {
@@ -48,59 +50,71 @@ function normalizeSearch(value: string | undefined): string {
   return value?.trim().toLowerCase() ?? "";
 }
 
+function resolveSchedulePresentation(series: TrainingSeriesDto): TrainingSeriesSchedulePresentation {
+  const schedules = [...series.weekdaySchedules].sort(
+    (a, b) => COCKPIT_WEEKDAY_ORDER.indexOf(a.weekday) - COCKPIT_WEEKDAY_ORDER.indexOf(b.weekday),
+  );
+
+  const rhythmLabel =
+    schedules.map((schedule) => WEEKDAY_SHORT[schedule.weekday]).join(" · ") || "—";
+
+  const timeKeys = new Set(schedules.map((s) => `${s.startsAt}–${s.endsAt}`));
+  if (timeKeys.size <= 1) {
+    const first = schedules[0];
+    const timeLabel = first
+      ? `${first.startsAt}–${first.endsAt}`
+      : `${series.startsAt}–${series.endsAt}`;
+    return { kind: "uniform", rhythmLabel, timeLabel };
+  }
+
+  const timeLines = schedules.map(
+    (schedule) => `${WEEKDAY_SHORT[schedule.weekday]} ${schedule.startsAt}–${schedule.endsAt}`,
+  );
+  return { kind: "variable", rhythmLabel, timeLines };
+}
+
+function buildCompactFacilityLabel(allocations: readonly TrainingAllocationDto[]): string | null {
+  const pitches = allocations.filter(
+    (allocation) => classifyFacilityResourceType(allocation.facilityResourceType) === "PITCH_HALL",
+  );
+  if (pitches.length === 0) {
+    const display = resolveSeriesAllocationDisplay(allocations);
+    return display.pitchName;
+  }
+
+  const codes = pitches
+    .map((allocation) => allocation.facilityResourceCode?.trim() || allocation.facilityResourceName.trim())
+    .filter((value) => value.length > 0);
+
+  const unique = [...new Set(codes)];
+  return unique.length > 0 ? unique.join(" · ") : null;
+}
+
 export function buildTrainingSeriesManagementRows(input: {
   series: readonly TrainingSeriesDto[];
   teamDisplayNameByTeamSeasonId: ReadonlyMap<string, string>;
   allocationsBySeriesId: ReadonlyMap<string, readonly TrainingAllocationDto[]>;
-  cockpitRows: readonly TrainingSeriesCockpitRow[];
 }): TrainingSeriesManagementRow[] {
-  const cockpitBySeries = new Map<string, TrainingSeriesCockpitRow[]>();
-  for (const row of input.cockpitRows) {
-    const bucket = cockpitBySeries.get(row.seriesId) ?? [];
-    bucket.push(row);
-    cockpitBySeries.set(row.seriesId, bucket);
-  }
-
   const rows: TrainingSeriesManagementRow[] = [];
 
   for (const series of input.series) {
-    const seriesCockpit = cockpitBySeries.get(series.id) ?? [];
-    const weekdays = [...series.weekdaySchedules]
-      .sort(
-        (a, b) => COCKPIT_WEEKDAY_ORDER.indexOf(a.weekday) - COCKPIT_WEEKDAY_ORDER.indexOf(b.weekday),
-      )
-      .map((schedule) => schedule.weekday);
-
-    const rhythmLabel = weekdays.map((day) => WEEKDAY_SHORT[day]).join(" · ");
-
-    const timeKeys = new Set(series.weekdaySchedules.map((s) => `${s.startsAt}–${s.endsAt}`));
-    const timeLabel =
-      timeKeys.size === 1
-        ? `${series.weekdaySchedules[0]?.startsAt ?? series.startsAt}–${series.weekdaySchedules[0]?.endsAt ?? series.endsAt}`
-        : "Variabel";
-
-    const allocationDisplay = resolveSeriesAllocationDisplay(
-      input.allocationsBySeriesId.get(series.id) ?? [],
-    );
+    const schedule = resolveSchedulePresentation(series);
+    const allocations = input.allocationsBySeriesId.get(series.id) ?? [];
 
     rows.push({
       seriesId: series.id,
       teamSeasonId: series.teamSeasonId,
       title: series.title,
-      teamDisplayName:
-        input.teamDisplayNameByTeamSeasonId.get(series.teamSeasonId) ??
-        seriesCockpit[0]?.teamDisplayName ??
-        "—",
-      rhythmLabel: rhythmLabel || "—",
-      timeLabel,
-      facilityLabel: allocationDisplay.pitchName,
+      teamDisplayName: input.teamDisplayNameByTeamSeasonId.get(series.teamSeasonId) ?? "—",
+      rhythmLabel: schedule.rhythmLabel,
+      timeLabel: schedule.kind === "uniform" ? schedule.timeLabel : "Variabel",
+      timeLines: schedule.kind === "variable" ? schedule.timeLines : null,
+      facilityLabel: buildCompactFacilityLabel(allocations),
       status: series.status,
       planningStage: series.planningStage,
       validFrom: series.validFrom,
       validUntil: series.validUntil,
       sessionCount: series.sessionCount,
-      primaryCockpitRowKey: seriesCockpit[0]?.rowKey ?? series.id,
-      cockpitRows: seriesCockpit,
     });
   }
 

@@ -11,7 +11,6 @@ import {
 } from "../management-session-view";
 import { isLegacyTrainingCalendarUrl, buildNormalizedTrainingManagementHref } from "../legacy-training-url";
 import { buildTrainingSessionWochenplanerHref } from "../wochenplaner-deep-links";
-import type { TrainingSeriesCockpitRow } from "../series-cockpit";
 import type { TrainingSessionDto, TrainingSeriesDto } from "../types";
 
 const SERIES: TrainingSeriesDto = {
@@ -45,33 +44,6 @@ const SERIES: TrainingSeriesDto = {
 
 describe("SCE-TRAININGS-UX-01 management view models", () => {
   it("aggregates series rows with rhythm and time labels", () => {
-    const cockpitRows: TrainingSeriesCockpitRow[] = [
-      {
-        rowKey: "series-1:MONDAY",
-        seriesId: "series-1",
-        teamSeasonId: "ts-1",
-        teamDisplayName: "Junioren F2 Team",
-        weekday: "MONDAY",
-        startsAt: "17:00",
-        endsAt: "18:30",
-        title: "Junioren F2",
-        status: "ACTIVE",
-        planningStage: "APPROVED",
-        validFrom: null,
-        validUntil: null,
-        timezone: "Europe/Zurich",
-        seriesWeekdaySchedules: SERIES.weekdaySchedules,
-        sessionCount: 12,
-        pitchName: "Kunstrasen 2",
-        dressingRoomName: null,
-        pitchAllocationId: "a1",
-        dressingRoomAllocationId: null,
-        pitchResourceId: "r1",
-        dressingRoomResourceId: null,
-        occurrenceExceptions: { occurrenceExceptionCount: 0, exceptions: [] },
-      },
-    ];
-
     const rows = buildTrainingSeriesManagementRows({
       series: [SERIES],
       teamDisplayNameByTeamSeasonId: new Map([["ts-1", "Junioren F2 Team"]]),
@@ -97,13 +69,38 @@ describe("SCE-TRAININGS-UX-01 management view models", () => {
           ],
         ],
       ]),
-      cockpitRows,
     });
 
     expect(rows).toHaveLength(1);
     expect(rows[0]?.rhythmLabel).toBe("Mo · Mi");
     expect(rows[0]?.timeLabel).toBe("17:00–18:30");
-    expect(rows[0]?.facilityLabel).toBe("Kunstrasen 2");
+    expect(rows[0]?.facilityLabel).toBe("KR2");
+  });
+
+  it("produces one management row per series with variable weekday times", () => {
+    const variableSeries: TrainingSeriesDto = {
+      ...SERIES,
+      weekdaySchedules: [
+        { weekday: "MONDAY", startsAt: "18:45", endsAt: "20:15" },
+        { weekday: "WEDNESDAY", startsAt: "19:45", endsAt: "21:15" },
+        { weekday: "FRIDAY", startsAt: "18:45", endsAt: "20:15" },
+      ],
+    };
+
+    const rows = buildTrainingSeriesManagementRows({
+      series: [variableSeries],
+      teamDisplayNameByTeamSeasonId: new Map([["ts-1", "1. Mannschaft"]]),
+      allocationsBySeriesId: new Map(),
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.rhythmLabel).toBe("Mo · Mi · Fr");
+    expect(rows[0]?.timeLabel).toBe("Variabel");
+    expect(rows[0]?.timeLines).toEqual([
+      "Mo 18:45–20:15",
+      "Mi 19:45–21:15",
+      "Fr 18:45–20:15",
+    ]);
   });
 
   it("filters series by search and team", () => {
@@ -111,7 +108,6 @@ describe("SCE-TRAININGS-UX-01 management view models", () => {
       series: [SERIES],
       teamDisplayNameByTeamSeasonId: new Map([["ts-1", "Junioren F2 Team"]]),
       allocationsBySeriesId: new Map(),
-      cockpitRows: [],
     });
 
     expect(filterTrainingSeriesManagementRows(rows, { search: "junioren", teamSeasonId: "ts-1" })).toHaveLength(1);

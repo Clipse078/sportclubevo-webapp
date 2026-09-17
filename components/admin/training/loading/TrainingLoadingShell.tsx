@@ -11,7 +11,7 @@ export default function TrainingLoadingShell() {
         <PlanningHubLoadingRing />
         <div className="mt-5 max-w-md text-center">
           <p className="text-sm font-semibold text-[var(--foreground)]">Trainings werden geladen …</p>
-          <p className="mt-1 text-xs text-[var(--muted)]">Serien und Einzeltrainings werden vorbereitet</p>
+          <p className="mt-1 text-xs text-[var(--muted)]">Trainingsübersicht wird vorbereitet</p>
         </div>
         <PlanningHubLoadingProgressRail className="mt-6" />
       </div>

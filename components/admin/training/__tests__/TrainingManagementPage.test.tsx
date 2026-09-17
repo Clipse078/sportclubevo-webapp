@@ -5,8 +5,15 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import TrainingLoadingShell from "@/components/admin/training/loading/TrainingLoadingShell";
+import TrainingManagementWorkspace from "@/components/admin/training/TrainingManagementWorkspace";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: vi.fn() }),
+  usePathname: () => "/dashboard/training",
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 const ROOT = resolve(__dirname, "../../../..");
 
@@ -14,7 +21,7 @@ function readSource(relativePath: string): string {
   return readFileSync(resolve(ROOT, relativePath), "utf8");
 }
 
-describe("SCE-TRAININGS-UX-01 Trainings management shell", () => {
+describe("SCE-TRAININGS-UX-01G Trainings management shell", () => {
   it("training page source does not render Kalender tab or calendar overview", () => {
     const source = readSource("app/(admin)/dashboard/training/page.tsx");
     expect(source).not.toContain("TrainingCenterOverview");
@@ -23,7 +30,9 @@ describe("SCE-TRAININGS-UX-01 Trainings management shell", () => {
     expect(source).not.toContain("buildTrainingCenterViewModel");
     expect(source).not.toContain("listTrainingSessionDateBounds");
     expect(source).toContain("TrainingManagementWorkspace");
-    expect(source).toContain("resolveManagementSessionDateWindow");
+    expect(source).not.toContain("listTrainingSessions");
+    expect(source).not.toContain("resolveManagementSessionDateWindow");
+    expect(source).not.toContain("buildTrainingSeriesCockpitViewModel");
   });
 
   it("legacy planungsraster redirect remains", () => {
@@ -36,6 +45,35 @@ describe("SCE-TRAININGS-UX-01 Trainings management shell", () => {
     render(<TrainingLoadingShell />);
     expect(screen.getByTestId("training-management-loading")).toBeInTheDocument();
     expect(screen.getByText("Trainings werden geladen …")).toBeInTheDocument();
-    expect(screen.getByText("Serien und Einzeltrainings werden vorbereitet")).toBeInTheDocument();
+  });
+
+  it("workspace has no Einzeltrainings section or create dropdown", () => {
+    render(
+      <TrainingManagementWorkspace
+        canCreate
+        canManage
+        canDelete={false}
+        isCoordinator
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        wochenplanerHref="/dashboard/planner/week"
+        seriesRows={[]}
+        teamOptions={[]}
+        archivedCount={0}
+        filters={{ archived: false }}
+      />,
+    );
+
+    expect(screen.queryByTestId("training-sessions-section")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("training-create-menu-trigger")).not.toBeInTheDocument();
+    expect(screen.getByTestId("training-create-link")).toHaveAttribute("href", "/dashboard/training/new");
+    expect(screen.queryByText("Serien")).not.toBeInTheDocument();
+    expect(screen.queryByText("Einzeltrainings")).not.toBeInTheDocument();
+    expect(screen.queryByText("Filtern")).not.toBeInTheDocument();
+  });
+
+  it("session edit route remains in codebase", () => {
+    const source = readSource("app/(admin)/dashboard/training/sessions/[sessionId]/edit/page.tsx");
+    expect(source).toContain("TrainingSessionEditForm");
   });
 });
