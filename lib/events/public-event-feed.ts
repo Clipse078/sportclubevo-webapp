@@ -186,15 +186,21 @@ function normalizeLimit(value?: number | null, max = DEFAULT_MAX_LIMIT) {
 function buildSurfaceWhere(surface: PublicEventSurface): Record<string, unknown> {
   switch (surface) {
     case "homepage":
-      // Matches: websiteVisible only (PUB-02 — homepageVisible does not gate matches).
+      // Matches / trainings: websiteVisible only (PUB-02 — homepageVisible does not gate them).
       // Tournaments: websiteVisible plus homepageVisible (Tournament Center channel).
+      // Veranstaltungen (OTHER): websiteVisible plus homepageVisible (SCE-EVENTS-01B3).
       return {
         websiteVisible: true,
         AND: [
           {
             OR: [
-              { type: { not: "TOURNAMENT" } },
-              { homepageVisible: true },
+              { type: { in: ["MATCH", "TRAINING"] } },
+              {
+                AND: [
+                  { type: { in: ["TOURNAMENT", "OTHER"] } },
+                  { homepageVisible: true },
+                ],
+              },
             ],
           },
         ],

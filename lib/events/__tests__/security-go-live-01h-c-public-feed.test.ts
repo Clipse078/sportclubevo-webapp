@@ -138,7 +138,7 @@ describe("SECURITY-GO-LIVE-01H-C — public Event tenant isolation", () => {
     expect(mocks.eventFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          infoboardVisible: true,
+          OR: [{ infoboardVisible: true }, { type: "OTHER" }],
           status: { in: ["SCHEDULED", "LIVE", "COMPLETED", "POSTPONED"] },
         }),
       }),
