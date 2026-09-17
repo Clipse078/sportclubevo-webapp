@@ -97,6 +97,11 @@ import {
   type MatchcenterQueryDatabase,
 } from "@/lib/matchcenter/query-service";
 import { listTournaments } from "@/lib/tournaments/tournament-service";
+import {
+  createAdminServerTimer,
+  isScePerfTimingEnabled,
+  logAdminServerTiming,
+} from "@/lib/planning-hub/admin-server-timing";
 import { formatWeekNumberLabel, formatWeekRangeLabel } from "./date";
 import { buildWeekplannerWeek } from "./view-model";
 import { planOverrideKey, planTimeOverrideKey } from "./plan-override-key";
@@ -903,6 +908,8 @@ export async function getWeekplannerWeek(
   window: WeekplannerWindow,
   planId?: string,
 ): Promise<WeekplannerWeek> {
+  const perfTimer = isScePerfTimingEnabled() ? createAdminServerTimer("weekplanner/data") : null;
+
   const [resourceByCode, overridesByKey, timeOverridesByKey, baselineMode, tenantPresets, tenantMatchPolicy] =
     await Promise.all([
       findFacilityResourceCodeMap(tenantId),
@@ -912,6 +919,7 @@ export async function getWeekplannerWeek(
       getTenantDressingRoomOccupancyPresetsCached(tenantId),
       getTenantMatchOperationalPolicyCached(tenantId),
     ]);
+  perfTimer?.mark("prefetch-policy-allocations");
 
   const [trainingItems, matchItems, tournamentItems, veranstaltungItems] = await Promise.all([
     findWeekplannerTrainingItems(
@@ -941,6 +949,11 @@ export async function getWeekplannerWeek(
     ),
     findWeekplannerVeranstaltungen(tenantId, window.from, window.to, resourceByCode),
   ]);
+  perfTimer?.mark("activity-sources-parallel");
+  perfTimer?.mark(`trainings:${trainingItems.length}`);
+  perfTimer?.mark(`matches:${matchItems.length}`);
+  perfTimer?.mark(`tournaments:${tournamentItems.length}`);
+  perfTimer?.mark(`events:${veranstaltungItems.length}`);
 
   let items: WeekplannerItem[] = [
     ...trainingItems,
@@ -954,7 +967,7 @@ export async function getWeekplannerWeek(
     items = filterItemsForEmptyBaseline(items, activitiesWithOverrides);
   }
 
-  return buildWeekplannerWeek({
+  const week = buildWeekplannerWeek({
     items,
     days: window.days,
     weekNumberLabel: formatWeekNumberLabel(window.days),
@@ -963,6 +976,13 @@ export async function getWeekplannerWeek(
     previousParam: window.previousParam,
     nextParam: window.nextParam,
   });
+  perfTimer?.mark("week-model-conflicts");
+
+  if (perfTimer) {
+    logAdminServerTiming(perfTimer.finish());
+  }
+
+  return week;
 }
 
 /**

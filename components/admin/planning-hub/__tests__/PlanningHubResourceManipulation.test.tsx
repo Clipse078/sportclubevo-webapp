@@ -245,10 +245,11 @@ describe("manipulation capabilities — Standardplan vs alternative", () => {
   };
   const altCtx = { ...stdCtx, isStandardplan: false, alternativePlanId: "plan-1" };
 
-  it("training on Standardplan supports time drag and dressing resize", () => {
+  it("training on Standardplan Garderobe supports occupancy manipulation not activity time", () => {
     const caps = getSchedulerManipulationCapabilities(TRAINING, stdCtx);
-    expect(caps.canMoveTime).toBe(true);
-    expect(caps.canResize).toBe(true);
+    expect(caps.canMoveTime).toBe(false);
+    expect(caps.canResize).toBe(false);
+    expect(caps.canMoveResourceOccupancy).toBe(true);
     expect(caps.canChangeDressingRoom).toBe(true);
   });
 
@@ -269,11 +270,14 @@ describe("manipulation capabilities — Standardplan vs alternative", () => {
     expect(caps.canChangeDressingRoom).toBe(false);
   });
 
-  it("alternative-plan match supports operational interval resize", () => {
-    const caps = getSchedulerManipulationCapabilities(MATCH, altCtx);
+  it("alternative-plan match supports operational interval on Kalender (pitch category)", () => {
+    const caps = getSchedulerManipulationCapabilities(MATCH, {
+      ...altCtx,
+      resourceCategory: "pitch",
+    });
     expect(caps.canMoveTime).toBe(true);
     expect(caps.canResize).toBe(true);
-    expect(caps.canChangeDressingRoom).toBe(true);
+    expect(caps.canChangePrimaryResource).toBe(true);
   });
 
   it("pitch allocation capability follows resource category", () => {

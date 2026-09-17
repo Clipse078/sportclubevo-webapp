@@ -47,10 +47,8 @@ import {
 import type { SchedulerDraftChange, SchedulerTimeTarget } from "@/lib/planning-hub/scheduler-draft";
 import { isNoOpDraft } from "@/lib/planning-hub/scheduler-draft";
 import { dressingSegmentDisplayWindow } from "@/lib/planning-hub/scheduler/dressing-segment-display";
-import {
-  draftOccupancyGeometryKey,
-  isValidDressingOccupancySpan,
-} from "@/lib/planning-hub/scheduler/resource-occupancy-manipulation";
+import { draftGeometryKey } from "@/lib/planning-hub/scheduler/draft-geometry-key";
+import { isValidDressingOccupancySpan } from "@/lib/planning-hub/scheduler/resource-occupancy-manipulation";
 import type { ManipulationConflictPreview } from "@/lib/planning-hub/manipulation-projection";
 import type { WeekplannerItem, WeekplannerResourceRef, WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningHubManipulationConfirm from "./PlanningHubManipulationConfirm";
@@ -157,7 +155,7 @@ type ProviderProps = {
   alternativePlanId: string | null;
   canManageTrainings: boolean;
   canManageEvents: boolean;
-  facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
+  facilityGroupsByAllocationGroup?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
   overridesByKey?: Record<string, WeekplannerOverrideRow[]>;
   resourceRows?: { resourceId: string; ref: WeekplannerResourceRef }[];
   children: ReactNode;
@@ -221,35 +219,55 @@ export function PlanningHubManipulationProvider({
 
   const resourceRefById = useMemo(() => {
     const map = new Map<string, WeekplannerResourceRef>();
-    for (const row of resourceRows) map.set(row.resourceId, row.ref);
-    for (const group of facilityGroupsByAllocationGroup.PITCH_HALL) {
-      for (const r of group.resources) {
-        map.set(r.id, {
-          facilityResourceId: r.id,
-          facilityId: r.facilityId,
-          code: r.code,
-          name: r.name,
-          facilityName: r.facilityName,
-          occupancyBeforeMinutes: 0,
-          occupancyAfterMinutes: 0,
-        });
+    const register = (ref: WeekplannerResourceRef) => {
+      map.set(ref.facilityResourceId, ref);
+    };
+    for (const row of resourceRows) register(row.ref);
+    for (const item of allItems) {
+      for (const ref of item.pitchAllocations) register(ref);
+      for (const ref of item.dressingRoomAllocations) register(ref);
+      for (const ref of item.canonicalPitchAllocations) register(ref);
+      for (const ref of item.canonicalDressingRoomAllocations) register(ref);
+      if (item.type === "MATCH") {
+        for (const ref of item.awayDressingRoomAllocations) register(ref);
+      }
+      if (item.type === "TOURNAMENT") {
+        for (const participant of item.participantAllocations) {
+          for (const ref of participant.dressingRoomAllocations) register(ref);
+          for (const ref of participant.canonicalDressingRoomAllocations) register(ref);
+        }
       }
     }
-    for (const group of facilityGroupsByAllocationGroup.DRESSING_ROOM) {
-      for (const r of group.resources) {
-        map.set(r.id, {
-          facilityResourceId: r.id,
-          facilityId: r.facilityId,
-          code: r.code,
-          name: r.name,
-          facilityName: r.facilityName,
-          occupancyBeforeMinutes: 0,
-          occupancyAfterMinutes: 0,
-        });
+    if (facilityGroupsByAllocationGroup) {
+      for (const group of facilityGroupsByAllocationGroup.PITCH_HALL) {
+        for (const r of group.resources) {
+          map.set(r.id, {
+            facilityResourceId: r.id,
+            facilityId: r.facilityId,
+            code: r.code,
+            name: r.name,
+            facilityName: r.facilityName,
+            occupancyBeforeMinutes: 0,
+            occupancyAfterMinutes: 0,
+          });
+        }
+      }
+      for (const group of facilityGroupsByAllocationGroup.DRESSING_ROOM) {
+        for (const r of group.resources) {
+          map.set(r.id, {
+            facilityResourceId: r.id,
+            facilityId: r.facilityId,
+            code: r.code,
+            name: r.name,
+            facilityName: r.facilityName,
+            occupancyBeforeMinutes: 0,
+            occupancyAfterMinutes: 0,
+          });
+        }
       }
     }
     return map;
-  }, [resourceRows, facilityGroupsByAllocationGroup]);
+  }, [resourceRows, facilityGroupsByAllocationGroup, allItems]);
 
   const resolveResourceRef = useCallback(
     (resourceId: string) => resourceRefById.get(resourceId) ?? null,
@@ -271,7 +289,7 @@ export function PlanningHubManipulationProvider({
 
   const commitPreviewDraft = useCallback(
     (draft: SchedulerDraftChange) => {
-      const key = draftOccupancyGeometryKey(draft);
+      const key = draftGeometryKey(draft);
       if (key === lastPreviewKeyRef.current) return;
       lastPreviewKeyRef.current = key;
       setPreviewDraft(draft);
@@ -671,10 +689,14 @@ export function PlanningHubManipulationProvider({
     setConfirmError(null);
     try {
       if (isStandardplan) {
+        const groups = facilityGroupsByAllocationGroup ?? {
+          PITCH_HALL: [],
+          DRESSING_ROOM: [],
+        };
         await applyStandardPlanSchedulerDraft(
           confirmationDraft,
           urlState.resourceCategory,
-          facilityGroupsByAllocationGroup,
+          groups,
           timezone,
         );
       } else if (alternativePlanId) {

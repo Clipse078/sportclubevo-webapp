@@ -149,6 +149,10 @@ export default async function PlannerWeekPageRoute({
 
   perfTimer?.mark("plan-resolution");
 
+  const needsEagerFacilityGroups =
+    canManagePlans &&
+    (urlState.perspective === "ressourcen" || Boolean(activePlan));
+
   const [week, dressingRoomOccupancyPresets, facilities] = await Promise.all([
     getWeekplannerWeek(
       tenantContext.id,
@@ -167,9 +171,12 @@ export default async function PlannerWeekPageRoute({
   ]);
   perfTimer?.mark("week-aggregation-facilities");
 
-  const facilityGroupsByAllocationGroup = canManagePlans
+  const facilityGroupsByAllocationGroup = needsEagerFacilityGroups
     ? buildFacilityGroupsByAllocationGroupFromFacilities(facilities)
     : null;
+  perfTimer?.mark(
+    facilityGroupsByAllocationGroup ? "facility-groups-eager" : "facility-groups-deferred",
+  );
 
   const overrideEditing =
     canManagePlans && activePlan && facilityGroupsByAllocationGroup
@@ -181,10 +188,13 @@ export default async function PlannerWeekPageRoute({
         }
       : undefined;
 
-  const canonicalEditing =
-    canManagePlans && facilityGroupsByAllocationGroup
-      ? { canManageTrainings, canManageEvents, facilityGroupsByAllocationGroup }
-      : undefined;
+  const canonicalEditing = canManagePlans
+    ? {
+        canManageTrainings,
+        canManageEvents,
+        ...(facilityGroupsByAllocationGroup ? { facilityGroupsByAllocationGroup } : {}),
+      }
+    : undefined;
 
   const facilityOptions = facilities.map((facility) => ({
     value: facility.id,

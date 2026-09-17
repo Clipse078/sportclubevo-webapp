@@ -78,16 +78,4 @@ export function applyDressingOccupancyBuffersToItem(
   return next;
 }
 
-export function draftOccupancyGeometryKey(draft: {
-  proposedStart: Date;
-  proposedEnd: Date;
-  proposedResourceId?: string;
-  originalResourceId?: string;
-}): string {
-  return [
-    draft.proposedStart.getTime(),
-    draft.proposedEnd.getTime(),
-    draft.proposedResourceId ?? "",
-    draft.originalResourceId ?? "",
-  ].join(":");
-}
+export { draftGeometryKey as draftOccupancyGeometryKey } from "@/lib/planning-hub/scheduler/draft-geometry-key";

@@ -1,7 +1,11 @@
 ﻿"use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  fetchPlanningHubFacilityGroupsClient,
+  type PlanningHubFacilityGroups,
+} from "@/lib/planning-hub/fetch-facility-groups-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -57,7 +61,7 @@ type OverrideEditingContext = {
 type CanonicalEditingContext = {
   canManageTrainings: boolean;
   canManageEvents: boolean;
-  facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
+  facilityGroupsByAllocationGroup?: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
 };
 
 type WeekPlannerPageProps = {
@@ -203,9 +207,32 @@ export default function WeekPlannerPage({
 
   const resolvedUrlState = { ...urlState, week: week.param };
 
+  const [lazyFacilityGroups, setLazyFacilityGroups] = useState<PlanningHubFacilityGroups | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!canonicalEditing && !overrideEditing) return;
+    if (canonicalEditing?.facilityGroupsByAllocationGroup || overrideEditing?.facilityGroupsByAllocationGroup) {
+      return;
+    }
+    let cancelled = false;
+    fetchPlanningHubFacilityGroupsClient()
+      .then((groups) => {
+        if (!cancelled) setLazyFacilityGroups(groups);
+      })
+      .catch(() => {
+        /* sheet/manipulation falls back to week item refs until retry */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [canonicalEditing, overrideEditing]);
+
   const manipulationFacilityGroups =
     canonicalEditing?.facilityGroupsByAllocationGroup ??
-    overrideEditing?.facilityGroupsByAllocationGroup;
+    overrideEditing?.facilityGroupsByAllocationGroup ??
+    lazyFacilityGroups;
 
   const resourceRowsForManipulation = useMemo(() => {
     if (urlState.perspective !== "ressourcen" || !manipulationFacilityGroups) return [];
@@ -222,7 +249,7 @@ export default function WeekPlannerPage({
   }, [week, resolvedUrlState, urlState.perspective, urlState.day, urlState.resourceCategory, todayDayKey, manipulationFacilityGroups]);
 
   const wrapManipulation = (node: ReactNode) => {
-    if (!manipulationFacilityGroups) return node;
+    if (!canonicalEditing && !overrideEditing) return node;
     return (
       <PlanningHubManipulationProvider
         week={week}
@@ -233,7 +260,7 @@ export default function WeekPlannerPage({
         alternativePlanId={activePlanId}
         canManageTrainings={canonicalEditing?.canManageTrainings ?? false}
         canManageEvents={canonicalEditing?.canManageEvents ?? false}
-        facilityGroupsByAllocationGroup={manipulationFacilityGroups}
+        facilityGroupsByAllocationGroup={manipulationFacilityGroups ?? undefined}
         overridesByKey={overrideEditing?.overridesByKey}
         resourceRows={resourceRowsForManipulation}
       >
@@ -412,7 +439,9 @@ export default function WeekPlannerPage({
       {canonicalEditing && (
         <WeekplannerPlanningSheet
           item={editingItem}
-          facilityGroupsByAllocationGroup={canonicalEditing.facilityGroupsByAllocationGroup}
+          facilityGroupsByAllocationGroup={
+            manipulationFacilityGroups ?? { PITCH_HALL: [], DRESSING_ROOM: [] }
+          }
           timezone={timezone}
           tenantDressingRoomOccupancyPresets={dressingRoomOccupancyPresets}
           onClose={() => setEditingItem(null)}

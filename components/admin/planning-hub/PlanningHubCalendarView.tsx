@@ -48,7 +48,6 @@ import {
   projectedItemForRender,
   usePlanningHubManipulation,
 } from "./PlanningHubManipulationContext";
-import { evaluateManipulationConflicts } from "@/lib/planning-hub/manipulation-projection";
 import { isoToLocalTime } from "@/lib/planning-hub/planner-time";
 
 type PlanningHubCalendarViewProps = {
@@ -98,7 +97,6 @@ export default function PlanningHubCalendarView({
     [week, calendarUrlState, timezone],
   );
   const allDayRows = allDayLaneRowCount(allDaySegments);
-  const allItems = week.days.flatMap((d) => d.items);
   const gridRef = useRef<HTMLDivElement>(null);
   const [measuredGridWidthPx, setMeasuredGridWidthPx] = useState<number | null>(null);
 
@@ -453,17 +451,10 @@ export default function PlanningHubCalendarView({
                       urlState.resourceCategory,
                       manipulation.resolveResourceRef,
                     );
-                    const targetRef = activeDraft.proposedResourceId
-                      ? manipulation.resolveResourceRef(activeDraft.proposedResourceId)
-                      : null;
-                    const conflict = evaluateManipulationConflicts(
-                      allItems,
-                      activeDraft,
-                      targetRef,
-                      urlState.resourceCategory,
-                    );
                     const previewVariant =
-                      conflict.status === "warning" ? "preview-warning" : "preview";
+                      manipulation.dragConflictPreview?.status === "warning"
+                        ? "preview-warning"
+                        : "preview";
                     return (
                       <Fragment key={item.id}>
                         {renderBlock(item, activeDraft.originalStart, activeDraft.originalEnd, "ghost", "-ghost")}
