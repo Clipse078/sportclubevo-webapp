@@ -20,7 +20,8 @@
  * The `DEFAULT` key is the catch-all for unknown or future event types.
  */
 export const DEFAULT_EVENT_DURATIONS_MINUTES = {
-  MATCH: 110,
+  /** Legacy publishing fallback only — Infoboard MATCH uses SCE-OPS-01A resolver. */
+  MATCH: 120,
   TRAINING: 90,
   TOURNAMENT: 240,
   OTHER: 60,
@@ -66,6 +67,11 @@ export type TemporalGroupingOptions = {
    * included regardless of how long ago they started.
    */
   horizonMs?: number;
+  /**
+   * Optional override for effective end resolution (e.g. SCE Match operational
+   * interval). When omitted, `getEffectiveEndAt()` is used.
+   */
+  resolveEffectiveEndAt?: (event: TemporalEvent) => Date;
 };
 
 /** Output of `partitionByTemporalGroup`. */
@@ -222,9 +228,13 @@ export function partitionByTemporalGroup<T extends TemporalEvent>(
   const current: Indexed[] = [];
   const futureCandidates: Indexed[] = [];
 
+  const resolveEnd =
+    options?.resolveEffectiveEndAt ??
+    ((event: T) => getEffectiveEndAt(event, durations));
+
   for (let i = 0; i < events.length; i++) {
     const event = events[i];
-    const effectiveEnd = getEffectiveEndAt(event, durations);
+    const effectiveEnd = resolveEnd(event);
 
     // Skip events that have already ended.
     if (effectiveEnd.getTime() <= nowMs) continue;

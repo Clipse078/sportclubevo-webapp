@@ -122,6 +122,8 @@ import { getPitchAllocationByCode } from "@/lib/facilities/pitches";
 /** Publication-policy / display metadata for a canonical MATCH or TOURNAMENT (Event-backed). */
 export type CanonicalEventPolicyRow = {
   readonly id: string;
+  readonly endAt: Date | null;
+  readonly operationalEndAtOverride: Date | null;
   readonly status: string;
   readonly infoboardVisible: boolean;
   readonly websiteVisible: boolean;
@@ -234,6 +236,8 @@ export type CanonicalInfoboardTeamDisplayNameRow = {
 
 export const CANONICAL_EVENT_POLICY_SELECT = {
   id: true,
+  endAt: true,
+  operationalEndAtOverride: true,
   status: true,
   infoboardVisible: true,
   websiteVisible: true,
@@ -740,6 +744,8 @@ function mapMatchItem(
     homeAway: policy?.homeAway ?? null,
     startAt: item.startAt,
     endAt: item.endAt,
+    authoritativeEndAt: policy?.endAt ?? null,
+    operationalEndAtOverride: policy?.operationalEndAtOverride ?? null,
     id: item.id,
     title: item.title,
     seasonKey: policy?.season?.key ?? "",

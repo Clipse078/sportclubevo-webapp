@@ -140,7 +140,7 @@ describe("getEffectiveEndAt", () => {
     expect(result.getTime()).toBe(endAt.getTime());
   });
 
-  it("null endAt for MATCH uses 110-minute default duration", () => {
+  it("null endAt for MATCH uses 120-minute legacy publishing fallback", () => {
     const result = getEffectiveEndAt({ startAt: start, endAt: null, type: "MATCH" });
     expect(result.getTime()).toBe(
       start.getTime() + DEFAULT_EVENT_DURATIONS_MINUTES.MATCH * 60_000,

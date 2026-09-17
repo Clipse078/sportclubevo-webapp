@@ -47,8 +47,9 @@ import type {
 } from "../event-types";
 import type { PublicationEventLoader } from "../policy/event-selection";
 import { selectEventsForPublication } from "../policy/event-selection";
+import type { TenantMatchOperationalPolicyResolved } from "@/lib/match/tenant-operational-policy-service";
+import { getPublishingEffectiveEndAt } from "../time/publishing-effective-end-at";
 import {
-  getEffectiveEndAt,
   partitionByTemporalGroup,
   toLocalDateKey,
 } from "../time/temporal-grouping";
@@ -194,6 +195,8 @@ export type BuildScreen1FeedInput = {
   readonly teamSlug?: string;
   /** Tenant club logo for own-team crest resolution (Tenant.logoUrl). */
   readonly tenantLogoUrl?: string | null;
+  /** Loaded at most once per Infoboard request (SCE-OPS-01A). */
+  readonly matchOperationalPolicy?: TenantMatchOperationalPolicyResolved;
 };
 
 // ── buildInfoboardScreen1Feed ──────────────────────────────────────────────────
@@ -240,6 +243,18 @@ export async function buildInfoboardScreen1Feed(
   // invalid IANA identifiers and also produces the display-date key we need.
   const displayDate = toLocalDateKey(input.now, input.timeZone);
 
+  const resolveEffectiveEndAt = (event: Screen1SourceEvent) =>
+    getPublishingEffectiveEndAt(
+      {
+        startAt: event.startAt,
+        endAt: event.endAt,
+        type: event.type,
+        authoritativeEndAt: event.authoritativeEndAt,
+        operationalEndAtOverride: event.operationalEndAtOverride,
+      },
+      { matchOperationalPolicy: input.matchOperationalPolicy },
+    );
+
   // Step 2: Load events through the policy selector.
   // selectEventsForPublication calls loadEvents exactly once.
   const selection = await selectEventsForPublication(loadEvents, {
@@ -264,7 +279,11 @@ export async function buildInfoboardScreen1Feed(
     selection.eligible,
     input.now,
     input.timeZone,
-    { horizonMs: SCREEN1_HORIZON_MS },
+    {
+      horizonMs: SCREEN1_HORIZON_MS,
+      resolveEffectiveEndAt: (event) =>
+        resolveEffectiveEndAt(event as Screen1SourceEvent),
+    },
   );
 
   // Step 3b: Minimum-card fill — DISPLAY-WINDOW-V2
@@ -310,7 +329,7 @@ export async function buildInfoboardScreen1Feed(
         if (alreadyShown.has(e.id)) return false;
         // Only future events (not completed)
         if (e.startAt <= input.now) return false;
-        if (getEffectiveEndAt(e).getTime() <= input.now.getTime()) return false;
+        if (resolveEffectiveEndAt(e).getTime() <= input.now.getTime()) return false;
         // Only today
         return toLocalDateKey(e.startAt, input.timeZone) === displayDate;
       })
@@ -341,7 +360,7 @@ export async function buildInfoboardScreen1Feed(
         if (toLocalDateKey(event.startAt, input.timeZone) !== displayDate) {
           return false;
         }
-        const effectiveEndMs = getEffectiveEndAt(event).getTime();
+        const effectiveEndMs = resolveEffectiveEndAt(event).getTime();
         const displayEndMs = effectiveEndMs + SCREEN1_POST_EVENT_GRACE_MS;
         if (displayEndMs <= input.now.getTime()) return false;
         return event.startAt.getTime() > input.now.getTime();

@@ -69,10 +69,9 @@ import type {
 } from "../event-types";
 import type { PublicationEventLoader } from "../policy/event-selection";
 import { selectEventsForPublication } from "../policy/event-selection";
-import {
-  getEffectiveEndAt,
-  toLocalDateKey,
-} from "../time/temporal-grouping";
+import type { TenantMatchOperationalPolicyResolved } from "@/lib/match/tenant-operational-policy-service";
+import { getPublishingEffectiveEndAt } from "../time/publishing-effective-end-at";
+import { toLocalDateKey } from "../time/temporal-grouping";
 import { SCREEN1_HORIZON_MS } from "./screen1-feed-builder";
 import {
   resolveTeamDisplayName,
@@ -137,6 +136,7 @@ export type BuildScreen2FeedInput = {
    */
   readonly dressingRooms?: readonly ConfiguredDressingRoom[];
   readonly loader: PublicationEventLoader<Screen1SourceEvent>;
+  readonly matchOperationalPolicy?: TenantMatchOperationalPolicyResolved;
 };
 
 // ── Allocation-code resolution (multi-resource aware) ─────────────────────────
@@ -229,12 +229,13 @@ function classifyForResource(
   candidates: readonly Screen1SourceEvent[],
   nowMs: number,
   horizonMs: number,
+  resolveEffectiveEndAt: (event: Screen1SourceEvent) => Date,
 ): Classified {
   const current: Screen1SourceEvent[] = [];
   const future: Screen1SourceEvent[] = [];
 
   for (const event of candidates) {
-    const effectiveEnd = getEffectiveEndAt(event);
+    const effectiveEnd = resolveEffectiveEndAt(event);
     if (effectiveEnd.getTime() <= nowMs) continue; // already ended
 
     if (event.startAt.getTime() <= nowMs) {
@@ -270,11 +271,17 @@ function resolvePitchOccupancy(
   eligibleEvents: readonly Screen1SourceEvent[],
   nowMs: number,
   horizonMs: number,
+  resolveEffectiveEndAt: (event: Screen1SourceEvent) => Date,
 ): PitchOccupancy {
   const candidates = eligibleEvents.filter((e) =>
     eventPitchCodes(e).includes(pitch.code),
   );
-  const { current, next } = classifyForResource(candidates, nowMs, horizonMs);
+  const { current, next } = classifyForResource(
+    candidates,
+    nowMs,
+    horizonMs,
+    resolveEffectiveEndAt,
+  );
   const hasConflict = current.length > 1;
 
   const currentEvents = current.map((e) => mapToPitchEventSummary(e, "current"));
@@ -358,6 +365,7 @@ function resolveDressingRoomOccupancy(
   eligibleEvents: readonly Screen1SourceEvent[],
   nowMs: number,
   horizonMs: number,
+  resolveEffectiveEndAt: (event: Screen1SourceEvent) => Date,
 ): DressingRoomOccupancy {
   const candidateEntries: Array<{ event: Screen1SourceEvent; side: "HOME" | "AWAY" }> = [];
   for (const event of eligibleEvents) {
@@ -370,7 +378,12 @@ function resolveDressingRoomOccupancy(
   }
 
   const candidateEvents = candidateEntries.map((entry) => entry.event);
-  const { current, next } = classifyForResource(candidateEvents, nowMs, horizonMs);
+  const { current, next } = classifyForResource(
+    candidateEvents,
+    nowMs,
+    horizonMs,
+    resolveEffectiveEndAt,
+  );
 
   const findEntry = (event: Screen1SourceEvent) =>
     candidateEntries.find((entry) => entry.event === event)!;
@@ -431,13 +444,19 @@ function resolveUnallocatedActivities(
   configuredPitchCodes: ReadonlySet<string>,
   nowMs: number,
   horizonMs: number,
+  resolveEffectiveEndAt: (event: Screen1SourceEvent) => Date,
 ): PitchEventSummary[] {
   const unmapped = eligibleEvents.filter((event) => {
     const codes = eventPitchCodes(event);
     return !codes.some((code) => configuredPitchCodes.has(code));
   });
 
-  const { current, next } = classifyForResource(unmapped, nowMs, horizonMs);
+  const { current, next } = classifyForResource(
+    unmapped,
+    nowMs,
+    horizonMs,
+    resolveEffectiveEndAt,
+  );
 
   return [
     ...current.map((event) => mapToPitchEventSummary(event, "current")),
@@ -474,6 +493,11 @@ export async function buildInfoboardScreen2Feed(
 
   const nowMs = now.getTime();
 
+  const resolveEffectiveEndAt = (event: Screen1SourceEvent) =>
+    getPublishingEffectiveEndAt(event, {
+      matchOperationalPolicy: input.matchOperationalPolicy,
+    });
+
   // ── Load and filter eligible events (same channel as Screen 1's shared
   // publication policy — training, HOME match, HOME tournament only) ────────
   const { eligible } = await selectEventsForPublication(loader, {
@@ -485,12 +509,24 @@ export async function buildInfoboardScreen2Feed(
 
   // ── Resolve per-pitch occupancy (current + next, independently) ──────────
   const pitchOccupancies: PitchOccupancy[] = pitches.map((pitch) =>
-    resolvePitchOccupancy(pitch, eligible, nowMs, SCREEN1_HORIZON_MS),
+    resolvePitchOccupancy(
+      pitch,
+      eligible,
+      nowMs,
+      SCREEN1_HORIZON_MS,
+      resolveEffectiveEndAt,
+    ),
   );
 
   // ── Resolve per-dressing-room occupancy ───────────────────────────────────
   const dressingRoomOccupancies: DressingRoomOccupancy[] = dressingRooms.map((room) =>
-    resolveDressingRoomOccupancy(room, eligible, nowMs, SCREEN1_HORIZON_MS),
+    resolveDressingRoomOccupancy(
+      room,
+      eligible,
+      nowMs,
+      SCREEN1_HORIZON_MS,
+      resolveEffectiveEndAt,
+    ),
   );
 
   // ── Unallocated activities (compact, restrained — never a warning flood) ──
@@ -500,6 +536,7 @@ export async function buildInfoboardScreen2Feed(
     configuredPitchCodes,
     nowMs,
     SCREEN1_HORIZON_MS,
+    resolveEffectiveEndAt,
   );
 
   return {
