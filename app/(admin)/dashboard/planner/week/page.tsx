@@ -1,27 +1,24 @@
-﻿import { notFound } from "next/navigation";
+﻿import { Suspense } from "react";
+import { notFound } from "next/navigation";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { resolveTrainingWeekWindow, TRAINING_DEFAULT_TIMEZONE } from "@/lib/training/date-range";
-import { getWeekplannerWeek } from "@/lib/weekplanner/queries";
-import { planOverrideKey } from "@/lib/weekplanner/plan-override-key";
-import { listWeekplannerPlans, listWeekplannerPlanAllocations } from "@/lib/weekplanner/plan-service";
+import { listWeekplannerPlans } from "@/lib/weekplanner/plan-service";
 import { listWochenplanPlans } from "@/lib/wochenplan/plan-service";
 import { materializeLinkedWeekplannerPlan } from "@/lib/wochenplan/plan-materialization";
-import {
-  getFacilitiesForTenantCached,
-  getTenantDressingRoomOccupancyPresetsCached,
-} from "@/lib/server/request-cache";
-import { buildFacilityGroupsByAllocationGroupFromFacilities } from "@/lib/planning-hub/facility-groups";
-import WeekPlannerPage from "@/components/admin/planner/WeekPlannerPage";
+import { formatWeekRangeLabel } from "@/lib/weekplanner/date";
+import PlannerWeekStreamingRoot from "@/components/admin/planner/PlannerWeekChromeBridge";
+import PlannerWeekDataSection from "@/components/admin/planner/PlannerWeekDataSection";
+import DelayedPlannerFallback from "@/components/admin/planning-hub/loading/DelayedPlannerFallback";
+import PlanningHubLoadingShell from "@/components/admin/planning-hub/loading/PlanningHubLoadingShell";
 import { parsePlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import {
   createPlannerServerTimer,
   isPlannerPerfTimingEnabled,
   logPlannerServerTiming,
 } from "@/lib/planning-hub/planner-server-timing";
-import type { WeekplannerOverrideRow } from "@/components/admin/planner/WeekplannerAllocationOverrideEditor";
 import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
 
 type PlannerWeekPageProps = {
@@ -39,34 +36,6 @@ type PlannerWeekPageProps = {
   }>;
 };
 
-/**
- * WEEKPLANNER-01A — canonical Weekplanner foundation.
- *
- * Reuses the existing /dashboard/planner/week route (the only pre-existing
- * Weekplanner surface) rather than introducing a duplicate — evolved from a
- * season-scoped generic-Event listing into a read-only aggregation of the
- * three canonical planning inputs (TrainingSession, HOME Event(MATCH),
- * HOME Event(TOURNAMENT)). See lib/weekplanner/queries.ts.
- *
- * Permission: reuses the exact permission set already gating the "Planung"
- * sidebar section (TrainingCenter + TournamentCenter + Veranstaltungen) —
- * Weekplanner has no permission contract of its own to invent, and its
- * three inputs are already governed by these VIEW permissions.
- *
- * WEEKPLANNER-01B — Multiple Planning Variants.
- *
- * Resolves the optional `?plan=<id>` query param against this tenant's
- * active WeekplannerPlans for the resolved week. An unknown/foreign/
- * different-week planId is silently treated as "no plan selected" (the
- * Standardplan) rather than a hard error — e.g. navigating to a week that
- * doesn't have the previously selected plan.
- *
- * WOCHENPLAN-2.0-01F — Plan materialization.
- *
- * When `?plan=` matches a non-default WochenplanPlan, the server
- * idempotently materializes (or reuses) the linked WeekplannerPlan for
- * (tenantId, weekId, wochenplanPlanId) before loading effective week state.
- */
 export default async function PlannerWeekPageRoute({
   searchParams,
 }: PlannerWeekPageProps) {
@@ -102,6 +71,7 @@ export default async function PlannerWeekPageRoute({
     timeZone: timezone,
   });
   const todayParam = resolveTrainingWeekWindow({ now, timeZone: timezone }).param;
+  const rangeLabel = formatWeekRangeLabel(weekWindow.days);
 
   const [wochenplanPlans, weekplannerPlans] = await Promise.all([
     listWochenplanPlans(tenantContext.id),
@@ -153,54 +123,6 @@ export default async function PlannerWeekPageRoute({
     canManagePlans &&
     (urlState.perspective === "ressourcen" || Boolean(activePlan));
 
-  const [week, dressingRoomOccupancyPresets, facilities] = await Promise.all([
-    getWeekplannerWeek(
-      tenantContext.id,
-      {
-        from: weekWindow.from,
-        to: weekWindow.to,
-        days: weekWindow.days,
-        param: weekWindow.param,
-        previousParam: weekWindow.previousParam,
-        nextParam: weekWindow.nextParam,
-      },
-      activePlan?.id,
-    ),
-    getTenantDressingRoomOccupancyPresetsCached(tenantContext.id),
-    getFacilitiesForTenantCached(tenantContext.id),
-  ]);
-  perfTimer?.mark("week-aggregation-facilities");
-
-  const facilityGroupsByAllocationGroup = needsEagerFacilityGroups
-    ? buildFacilityGroupsByAllocationGroupFromFacilities(facilities)
-    : null;
-  perfTimer?.mark(
-    facilityGroupsByAllocationGroup ? "facility-groups-eager" : "facility-groups-deferred",
-  );
-
-  const overrideEditing =
-    canManagePlans && activePlan && facilityGroupsByAllocationGroup
-      ? {
-          planId: activePlan.id,
-          planName: activePlan.name,
-          overridesByKey: await buildOverridesByKey(tenantContext.id, activePlan.id),
-          facilityGroupsByAllocationGroup,
-        }
-      : undefined;
-
-  const canonicalEditing = canManagePlans
-    ? {
-        canManageTrainings,
-        canManageEvents,
-        ...(facilityGroupsByAllocationGroup ? { facilityGroupsByAllocationGroup } : {}),
-      }
-    : undefined;
-
-  const facilityOptions = facilities.map((facility) => ({
-    value: facility.id,
-    label: facility.name,
-  }));
-
   const resolvedUrlState = {
     ...urlState,
     week: weekWindow.param,
@@ -213,59 +135,52 @@ export default async function PlannerWeekPageRoute({
   }
 
   return (
-    <WeekPlannerPage
-      week={week}
+    <PlannerWeekStreamingRoot
+      weekNav={{
+        param: weekWindow.param,
+        previousParam: weekWindow.previousParam,
+        nextParam: weekWindow.nextParam,
+        rangeLabel,
+      }}
+      urlState={resolvedUrlState}
       todayParam={todayParam}
-      locale={tenantContext.locale ?? "de-CH"}
-      timezone={timezone}
       wochenplanPlans={wochenplanPlans}
       plans={plans}
       viewedWochenplanPlanId={viewedWochenplanPlanId}
       selectedPlanParam={requestedPlanId ?? defaultWochenplanPlan?.id ?? null}
       materializedWeekplannerPlanId={activePlan?.id ?? null}
-      activePlanId={activePlan?.id ?? null}
       canManagePlans={canManagePlans}
-      overrideEditing={overrideEditing}
-      canonicalEditing={canonicalEditing}
-      urlState={resolvedUrlState}
-      facilityOptions={facilityOptions}
       createPermissions={{
         training: canCreateTraining,
         match: canManageEvents,
         tournament: canManageEvents,
         veranstaltung: canManageEvents,
       }}
-      dressingRoomOccupancyPresets={dressingRoomOccupancyPresets}
-    />
+    >
+      <Suspense
+        fallback={
+          <DelayedPlannerFallback>
+            <PlanningHubLoadingShell
+              perspective={urlState.perspective}
+              includeChromeSkeleton={false}
+            />
+          </DelayedPlannerFallback>
+        }
+      >
+        <PlannerWeekDataSection
+          tenantId={tenantContext.id}
+          weekWindow={weekWindow}
+          locale={tenantContext.locale ?? "de-CH"}
+          timezone={timezone}
+          activePlan={activePlan}
+          canManagePlans={canManagePlans}
+          canManageTrainings={canManageTrainings}
+          canManageEvents={canManageEvents}
+          urlState={resolvedUrlState}
+          plans={plans}
+          needsEagerFacilityGroups={needsEagerFacilityGroups}
+        />
+      </Suspense>
+    </PlannerWeekStreamingRoot>
   );
 }
-
-async function buildOverridesByKey(
-  tenantId: string,
-  planId: string,
-): Promise<Record<string, WeekplannerOverrideRow[]>> {
-  const allocations = await listWeekplannerPlanAllocations(tenantId, planId);
-  const byKey: Record<string, WeekplannerOverrideRow[]> = {};
-
-  for (const allocation of allocations) {
-    const key = planOverrideKey(
-      allocation.activityType,
-      allocation.activityId,
-      allocation.allocationGroup,
-      allocation.participantId,
-    );
-    const list = byKey[key] ?? [];
-    list.push({
-      id: allocation.id,
-      facilityResourceId: allocation.facilityResourceId,
-      facilityResourceName: allocation.facilityResourceName,
-      facilityResourceCode: allocation.facilityResourceCode,
-      occupancyBeforeMinutes: allocation.occupancyBeforeMinutes,
-      occupancyAfterMinutes: allocation.occupancyAfterMinutes,
-    });
-    byKey[key] = list;
-  }
-
-  return byKey;
-}
-

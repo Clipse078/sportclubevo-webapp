@@ -1,0 +1,57 @@
+@keyframes scePlannerShimmer {
+  0% {
+    background-position: 180% 0;
+  }
+  100% {
+    background-position: -40% 0;
+  }
+}
+
+@keyframes scePlannerTracer {
+  0% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(420%);
+    opacity: 0;
+  }
+}
+
+.placeholderBlock {
+  --ph-base: var(--surface-2);
+  --ph-highlight: var(--surface-3, color-mix(in srgb, var(--surface-2) 88%, white));
+  background: linear-gradient(
+    105deg,
+    var(--ph-base) 0%,
+    var(--ph-base) 42%,
+    var(--ph-highlight) 50%,
+    var(--ph-base) 58%,
+    var(--ph-base) 100%
+  );
+  background-size: 220% 100%;
+  animation: scePlannerShimmer 1.6s ease-in-out infinite;
+}
+
+.tracerSegment {
+  animation: scePlannerTracer 1.9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .placeholderBlock {
+    animation: none;
+    background: var(--ph-base);
+  }
+
+  .tracerSegment {
+    animation: none;
+    transform: none;
+    opacity: 0.55;
+  }
+}
