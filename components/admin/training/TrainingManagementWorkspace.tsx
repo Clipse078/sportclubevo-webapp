@@ -7,6 +7,7 @@ import TrainingManagementPagination from "./TrainingManagementPagination";
 import TrainingSeriesManagementRow from "./TrainingSeriesManagementRow";
 import type { TrainingSeriesManagementRow as SeriesRow } from "@/lib/training/management-series-view";
 import type { TrainingSeriesManagementSort } from "@/lib/training/management-series-view";
+import { buildTrainingManagementPaginationNavigation } from "@/lib/training/management-pagination";
 import { buildTrainingSeriesWochenplanerHref } from "@/lib/training/wochenplaner-deep-links";
 
 type TeamOption = { id: string; label: string };
@@ -47,18 +48,6 @@ function hasActiveFilters(filters: Props["filters"]): boolean {
   return Boolean(filters.seriesSearch?.trim() || filters.seriesTeam || filters.seriesStatus);
 }
 
-function buildPaginationHref(filters: Props["filters"], sort: TrainingSeriesManagementSort, page: number): string {
-  const params = new URLSearchParams();
-  if (filters.archived) params.set("archived", "1");
-  if (filters.seriesSearch?.trim()) params.set("seriesSearch", filters.seriesSearch.trim());
-  if (filters.seriesTeam) params.set("seriesTeam", filters.seriesTeam);
-  if (filters.seriesStatus) params.set("seriesStatus", filters.seriesStatus);
-  if (sort !== "UPDATED_DESC") params.set("seriesSort", sort);
-  if (page > 1) params.set("page", String(page));
-  const qs = params.toString();
-  return qs ? `/dashboard/training?${qs}` : "/dashboard/training";
-}
-
 export default function TrainingManagementWorkspace({
   canCreate,
   canManage,
@@ -80,6 +69,12 @@ export default function TrainingManagementWorkspace({
   const archiveToggleHref = filters.archived ? "/dashboard/training" : "/dashboard/training?archived=1";
   const filteredEmpty = pagination.totalCount === 0 && hasActiveFilters(filters);
   const resetFiltersHref = filters.archived ? "/dashboard/training?archived=1" : "/dashboard/training";
+  const paginationNavigation = buildTrainingManagementPaginationNavigation(
+    filters,
+    sort,
+    pagination.page,
+    pagination.pageCount,
+  );
 
   return (
     <div className="space-y-5" data-testid="training-management-workspace">
@@ -213,7 +208,7 @@ export default function TrainingManagementWorkspace({
               rangeStart={pagination.rangeStart}
               rangeEnd={pagination.rangeEnd}
               totalCount={pagination.totalCount}
-              buildPageHref={(page) => buildPaginationHref(filters, sort, page)}
+              navigation={paginationNavigation}
             />
           </>
         )}
