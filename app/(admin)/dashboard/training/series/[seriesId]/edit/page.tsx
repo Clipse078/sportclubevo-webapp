@@ -10,10 +10,12 @@ import { listAllocationsByTrainingSeries } from "@/lib/training/training-allocat
 import { findTeamSeasonPickerRow } from "@/lib/training/queries";
 import { TrainingSeriesNotFoundError } from "@/lib/training/errors";
 import { countSeriesOccurrenceAllocationExceptions } from "@/lib/training/series-cockpit-exception-data";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import { buildTrainingSeriesWochenplanerHref } from "@/lib/training/wochenplaner-deep-links";
+import { formatTrainingSeriesEditHeaderMeta } from "@/lib/training/training-series-edit-presentation";
 import { TRAINING_FORM_MAX_WIDTH_CLASS } from "@/components/admin/training/form/training-form-layout";
 import TrainingSeriesForm from "@/components/admin/training/TrainingSeriesForm";
 import TrainingSeriesDeleteControl from "@/components/admin/training/TrainingSeriesDeleteControl";
+import TrainingSeriesEditHeader from "@/components/admin/training/TrainingSeriesEditHeader";
 import { TrainingAllocationEditor } from "@/components/admin/training/TrainingAllocationEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 
@@ -26,19 +28,12 @@ function toDateInputValue(iso: string | null): string | null {
 }
 
 export default async function EditTrainingSeriesPage({ params }: Props) {
-  // ADMIN-DELETE-02A: a delegated user may hold trainings.delete without
-  // trainings.manage — they must still be able to reach this page to
-  // exercise the permanent-delete action gated below (mirrors
-  // app/(admin)/dashboard/teams/[teamId]/page.tsx, ADMIN-DELETE-01B).
   const session = await requireAnyPermission([
     PERMISSIONS.TRAININGS_MANAGE,
     PERMISSIONS.TRAININGS_DELETE,
   ]);
 
-  // ADMIN-DELETE-02A: permanent "Löschen" gating — deliberately independent
-  // of trainings.manage (manage alone must never authorize deletion).
   const canDelete = hasPermission(session, PERMISSIONS.TRAININGS_DELETE);
-
   const canManage = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
 
   const tenantId = session.user?.activeTenantId;
@@ -55,10 +50,6 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
   }
 
   const [teamSeasonRow, occurrenceExceptionCount, allocations, facilities] = await Promise.all([
-    // TEAMCENTER-UX-01C: the team/season assignment is immutable on edit, and
-    // findTeamSeasonsForTenant now intentionally scopes to the current season
-    // only (see lib/training/queries.ts) — so a series created in a prior
-    // season must still resolve its own TeamSeason for display here.
     findTeamSeasonPickerRow(tenantId, series.teamSeasonId),
     countSeriesOccurrenceAllocationExceptions(tenantId, seriesId, series.timezone),
     listAllocationsByTrainingSeries(tenantId, seriesId).catch((err) => {
@@ -88,12 +79,26 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
     }))
     .filter((fg) => fg.resources.length > 0);
 
+  const teamDisplayName = teamSeasonRow
+    ? `${teamSeasonRow.teamName} · ${teamSeasonRow.seasonName}`
+    : "—";
+
+  const headerMeta = formatTrainingSeriesEditHeaderMeta({ series, allocations });
+  const wochenplanerHref = buildTrainingSeriesWochenplanerHref({
+    teamSeasonId: series.teamSeasonId,
+    timezone: series.timezone,
+  });
+
   return (
-    <div className={`${TRAINING_FORM_MAX_WIDTH_CLASS} space-y-6`}>
-      <AdminSectionHeader
-        eyebrow="TrainingCenter"
-        title="Training bearbeiten"
-        description={series.title}
+    <div className={`${TRAINING_FORM_MAX_WIDTH_CLASS} space-y-5`} data-testid="training-series-edit-page">
+      <TrainingSeriesEditHeader
+        title={series.title}
+        teamDisplayName={teamDisplayName}
+        wochenplanerHref={wochenplanerHref}
+        statusLabel={headerMeta.statusLabel}
+        scheduleRail={headerMeta.scheduleRail}
+        pitchLabel={headerMeta.pitchLabel}
+        dressingRoomLabel={headerMeta.dressingRoomLabel}
       />
 
       {occurrenceExceptionCount > 0 ? (
@@ -135,31 +140,24 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
           validUntil: toDateInputValue(series.validUntil),
           weekdaySchedules: series.weekdaySchedules,
         }}
-      />
-
-      <div className="sce-detail-section" data-testid="training-series-edit-resources-section">
-        <div className="sce-detail-section-header">
-          <h2 className="text-sm font-semibold text-[var(--foreground)]">Ressourcen</h2>
-          <p className="text-xs text-[var(--muted)]">
-            Wiederkehrende Spielfeld- und Garderoben-Zuweisung für diese Serie. Einzeltermin-Ausnahmen bleiben unverändert.
-          </p>
-        </div>
-        <div className="sce-detail-section-body">
+        resourcesSection={
           <TrainingAllocationEditor
             trainingSeriesId={series.id}
             trainingSeriesTitle={series.title}
             initialAllocations={allocations}
             facilityGroups={facilityGroups}
             canManage={canManage}
-            embedded
+            layout="workspace"
           />
-        </div>
-      </div>
-
-      <TrainingSeriesDeleteControl
-        seriesId={series.id}
-        seriesTitle={series.title}
-        canDelete={canDelete}
+        }
+        dangerZoneSection={
+          <TrainingSeriesDeleteControl
+            seriesId={series.id}
+            seriesTitle={series.title}
+            canDelete={canDelete}
+            variant="danger-zone"
+          />
+        }
       />
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { AlertTriangle, Trash2 } from "lucide-react";
+import { AlertTriangle, ChevronRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { SectionCard } from "@/components/ui/page";
@@ -29,7 +29,7 @@ type Props = {
    * matching the other row actions (Ressourcen/Bearbeiten/Archivieren) in
    * the actual Serien-Verwaltung list — the surface admins use day to day.
    */
-  variant?: "section" | "inline" | "menu";
+  variant?: "section" | "inline" | "menu" | "danger-zone";
   onOpen?: () => void;
 };
 
@@ -62,6 +62,7 @@ export default function TrainingSeriesDeleteControl({
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [impact, setImpact] = useState<Impact[] | null>(null);
+  const [dangerExpanded, setDangerExpanded] = useState(false);
 
   if (!canDelete) {
     return null;
@@ -123,6 +124,28 @@ export default function TrainingSeriesDeleteControl({
     setError(null);
   }
 
+  const dangerZoneTrigger =
+    variant === "danger-zone" ? (
+      <button
+        type="button"
+        onClick={() => setDangerExpanded((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 px-3 py-2.5 text-left text-sm text-[var(--foreground)] transition hover:bg-[var(--surface-2)]"
+        data-testid="training-series-danger-zone-toggle"
+        aria-expanded={dangerExpanded}
+      >
+        <span>
+          <span className="block text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+            Gefahrenbereich
+          </span>
+          <span className="font-medium">Training dauerhaft löschen</span>
+        </span>
+        <ChevronRight
+          className={`h-4 w-4 shrink-0 text-[var(--muted)] transition-transform ${dangerExpanded ? "rotate-90" : ""}`}
+          aria-hidden="true"
+        />
+      </button>
+    ) : null;
+
   const trigger =
     variant === "menu" ? (
       <button
@@ -145,6 +168,16 @@ export default function TrainingSeriesDeleteControl({
         <Trash2 className="h-3.5 w-3.5" />
         Löschen
       </button>
+    ) : variant === "danger-zone" ? (
+      <Button
+        variant="danger"
+        size="sm"
+        iconLeft={<Trash2 className="h-3.5 w-3.5" />}
+        onClick={openConfirmation}
+        data-testid="training-series-delete-confirm-open"
+      >
+        Training endgültig löschen
+      </Button>
     ) : (
       <Button
         variant="danger"
@@ -168,6 +201,18 @@ export default function TrainingSeriesDeleteControl({
             {trigger}
           </div>
         </SectionCard>
+      ) : variant === "danger-zone" ? (
+        <div className="space-y-3" data-testid="training-series-danger-zone">
+          {dangerZoneTrigger}
+          {dangerExpanded ? (
+            <div className="space-y-3 rounded-lg border border-[var(--sce-danger-border)]/40 bg-[var(--surface-2)]/30 px-3 py-3">
+              <p className="text-xs text-[var(--text-2)]">
+                Diese Trainingsserie und die davon abhängigen Daten werden dauerhaft gelöscht.
+              </p>
+              {trigger}
+            </div>
+          ) : null}
+        </div>
       ) : variant === "menu" ? (
         trigger
       ) : (

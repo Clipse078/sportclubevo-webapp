@@ -3,12 +3,14 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, CheckCircle2, Users } from "lucide-react";
+import { Loader2, CheckCircle2, UserCircle2 } from "lucide-react";
+import type { ReactNode } from "react";
 import type { Weekday } from "@/lib/training/types";
 import TrainingWeekdayScheduleEditor from "@/components/admin/training/form/TrainingWeekdayScheduleEditor";
 import {
   TRAINING_FORM_STICKY_FOOTER_CLASS,
   TRAINING_FORM_STICKY_FOOTER_RESERVE_CLASS,
+  TRAINING_FORM_WORKSPACE_SURFACE_CLASS,
 } from "@/components/admin/training/form/training-form-layout";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -38,6 +40,10 @@ type Props = {
   seriesId?: string;
   teamSeasons: TeamSeasonOption[];
   defaultValues?: TrainingSeriesFormDefaultValues;
+  /** Integrated Ressourcen block (edit workspace). */
+  resourcesSection?: ReactNode;
+  /** Collapsed danger zone below the workspace (edit). */
+  dangerZoneSection?: ReactNode;
 };
 
 type WeekdayRow = {
@@ -85,7 +91,37 @@ function buildInitialWeekdayRows(
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaultValues }: Props) {
+function serializeFormSnapshot(input: {
+  teamSeasonId: string;
+  title: string;
+  description: string;
+  timezone: string;
+  validFrom: string;
+  validUntil: string;
+  weekdayRows: WeekdayRow[];
+}): string {
+  const enabled = input.weekdayRows
+    .filter((r) => r.enabled)
+    .map((r) => ({ weekday: r.weekday, startsAt: r.startsAt, endsAt: r.endsAt }));
+  return JSON.stringify({
+    teamSeasonId: input.teamSeasonId,
+    title: input.title.trim(),
+    description: input.description.trim(),
+    timezone: input.timezone.trim(),
+    validFrom: input.validFrom,
+    validUntil: input.validUntil,
+    weekdaySchedules: enabled,
+  });
+}
+
+export default function TrainingSeriesForm({
+  mode,
+  seriesId,
+  teamSeasons,
+  defaultValues,
+  resourcesSection,
+  dangerZoneSection,
+}: Props) {
   const router = useRouter();
 
   const [teamSeasonId, setTeamSeasonId] = useState(defaultValues?.teamSeasonId ?? "");
@@ -98,11 +134,37 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
     buildInitialWeekdayRows(defaultValues),
   );
 
+  const initialSnapshot = useMemo(
+    () =>
+      serializeFormSnapshot({
+        teamSeasonId: defaultValues?.teamSeasonId ?? "",
+        title: defaultValues?.title ?? "",
+        description: defaultValues?.description ?? "",
+        timezone: defaultValues?.timezone ?? "Europe/Zurich",
+        validFrom: defaultValues?.validFrom ?? "",
+        validUntil: defaultValues?.validUntil ?? "",
+        weekdayRows: buildInitialWeekdayRows(defaultValues),
+      }),
+    [defaultValues],
+  );
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [result, setResult] = useState<{ seriesId: string; generation: GenerationResult } | null>(
     null,
   );
+
+  const isDirty =
+    serializeFormSnapshot({
+      teamSeasonId,
+      title,
+      description,
+      timezone,
+      validFrom,
+      validUntil,
+      weekdayRows,
+    }) !== initialSnapshot;
 
   const selectedTeamSeason = useMemo(
     () => teamSeasons.find((ts) => ts.id === teamSeasonId) ?? null,
@@ -124,6 +186,7 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setSaveSuccess(null);
 
     if (mode === "create" && !teamSeasonId) {
       setError("Team / Saison ist erforderlich.");
@@ -180,7 +243,13 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
         return;
       }
 
-      setResult({ seriesId: data.series.id, generation: data.generation });
+      if (mode === "edit") {
+        setSaveSuccess(
+          `${data.generation.occurrencesInWindow} Termine — ${data.generation.updated} aktualisiert, ${data.generation.unchanged} unverändert.`,
+        );
+      } else {
+        setResult({ seriesId: data.series.id, generation: data.generation });
+      }
       router.refresh();
     } catch {
       setError("Netzwerkfehler. Bitte erneut versuchen.");
@@ -217,18 +286,30 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
     );
   }
 
+  const primaryTrainer = selectedTeamSeason?.trainers[0] ?? null;
+
   return (
     <form
       onSubmit={handleSubmit}
-      className={`space-y-5 ${TRAINING_FORM_STICKY_FOOTER_RESERVE_CLASS}`}
+      className={`space-y-4 ${TRAINING_FORM_STICKY_FOOTER_RESERVE_CLASS}`}
       data-testid="training-series-form"
     >
       {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
+      {saveSuccess ? (
+        <div
+          className="fca-status-box border border-emerald-500/30 bg-emerald-500/10 text-sm text-[var(--foreground)]"
+          data-testid="training-series-save-success"
+          role="status"
+        >
+          Training gespeichert — {saveSuccess}
+        </div>
+      ) : null}
 
-      <div className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+      <div className={`${TRAINING_FORM_WORKSPACE_SURFACE_CLASS} divide-y divide-[var(--border)]`}>
         <section className="px-4 py-4">
-          <h2 className="text-sm font-semibold text-[var(--foreground)]">Team</h2>
-          <p className="mb-3 text-xs text-[var(--text-2)]">Mannschaft und Trainingsname.</p>
+          <h2 className="mb-3 text-sm font-semibold text-[var(--foreground)]">
+            {mode === "edit" ? "Grunddaten" : "Team"}
+          </h2>
           <div className="grid gap-3 md:grid-cols-2">
             <label className="block space-y-1 md:col-span-2">
               <span className="fca-label">Team / Saison</span>
@@ -269,21 +350,20 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
             </label>
 
             <label className="block space-y-1 md:col-span-2">
-              <span className="fca-label">Beschreibung (optional)</span>
+              <span className="fca-label">Beschreibung</span>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={2}
                 placeholder="Kurze Notiz…"
-                className="fca-input min-h-[4.5rem]"
+                className="fca-input min-h-[3.5rem] max-h-28"
               />
             </label>
           </div>
         </section>
 
         <section className="px-4 py-4">
-          <h2 className="text-sm font-semibold text-[var(--foreground)]">Zeitraum</h2>
-          <p className="mb-3 text-xs text-[var(--text-2)]">Gültigkeit der Serie und Zeitzone.</p>
+          <h2 className="mb-3 text-sm font-semibold text-[var(--foreground)]">Zeitraum</h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <label className="block space-y-1">
               <span className="fca-label">Gültig ab</span>
@@ -319,8 +399,7 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
         </section>
 
         <section className="px-4 py-4">
-          <h2 className="text-sm font-semibold text-[var(--foreground)]">Wiederholung &amp; Zeiten</h2>
-          <p className="mb-3 text-xs text-[var(--text-2)]">Aktive Wochentage mit Start- und Endzeit.</p>
+          <h2 className="mb-3 text-sm font-semibold text-[var(--foreground)]">Wiederholung &amp; Zeiten</h2>
           <TrainingWeekdayScheduleEditor
             rows={weekdayRows}
             onToggle={toggleWeekday}
@@ -329,56 +408,67 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
           />
         </section>
 
+        {resourcesSection ? (
+          <section className="px-4 py-4" data-testid="training-series-edit-resources-section">
+            <h2 className="mb-3 text-sm font-semibold text-[var(--foreground)]">Ressourcen</h2>
+            {resourcesSection}
+          </section>
+        ) : null}
+
         <section className="px-4 py-4">
-          <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold text-[var(--foreground)]">
-            <Users className="h-4 w-4 text-[var(--blue)]" aria-hidden />
-            Trainer
-          </h2>
-          <p className="mb-3 text-xs text-[var(--text-2)]">Verwaltet auf Stufe Mannschaft.</p>
-          {selectedTeamSeason && selectedTeamSeason.trainers.length > 0 ? (
-            <ul className="flex flex-wrap gap-2">
-              {selectedTeamSeason.trainers.map((t) => (
-                <li
-                  key={t.id}
-                  className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1 text-xs font-medium text-[var(--foreground)]"
-                >
-                  {t.name}
-                  {t.roleLabel ? <span className="ml-1 text-[var(--muted)]">({t.roleLabel})</span> : null}
-                </li>
-              ))}
-            </ul>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-[var(--foreground)]">Trainer</h2>
+            {selectedTeamSeason ? (
+              <Link
+                href={`/dashboard/teams/${selectedTeamSeason.teamId}`}
+                className="text-xs font-semibold text-[var(--blue)] hover:underline"
+                data-testid="training-series-trainer-change-link"
+              >
+                {primaryTrainer ? "Ändern" : "Trainer zuweisen"}
+              </Link>
+            ) : null}
+          </div>
+          {primaryTrainer ? (
+            <div className="mt-3 flex items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 px-3 py-2.5">
+              <UserCircle2 className="mt-0.5 h-8 w-8 shrink-0 text-[var(--blue)]" aria-hidden="true" />
+              <div className="min-w-0">
+                <p className="font-medium text-[var(--foreground)]">{primaryTrainer.name}</p>
+                <p className="text-xs text-[var(--muted)]">
+                  {primaryTrainer.roleLabel ?? selectedTeamSeason?.teamName ?? "Team-Trainer"}
+                </p>
+                {selectedTeamSeason && selectedTeamSeason.trainers.length > 1 ? (
+                  <p className="mt-1 text-xs text-[var(--text-2)]">
+                    +{selectedTeamSeason.trainers.length - 1} weitere Trainer
+                  </p>
+                ) : null}
+              </div>
+            </div>
           ) : (
-            <p className="text-sm text-[var(--muted)]">
+            <p className="mt-2 text-sm text-[var(--muted)]">
               {selectedTeamSeason
-                ? "Keine Trainer für dieses Team hinterlegt."
+                ? "Noch kein Trainer zugewiesen"
                 : "Team auswählen, um zugewiesene Trainer zu sehen."}
             </p>
           )}
-          {selectedTeamSeason ? (
-            <Link
-              href={`/dashboard/teams/${selectedTeamSeason.teamId}`}
-              className="mt-3 inline-block text-xs font-medium text-[var(--blue)] hover:underline"
-            >
-              Trainer verwalten
-            </Link>
-          ) : null}
         </section>
+
+        <div className={TRAINING_FORM_STICKY_FOOTER_CLASS}>
+          <button type="button" onClick={() => router.back()} className="fca-button-secondary">
+            Abbrechen
+          </button>
+          <button
+            type="submit"
+            disabled={loading || (mode === "edit" && !isDirty)}
+            className="fca-button-primary inline-flex items-center gap-2 disabled:opacity-60"
+            data-testid="training-series-submit"
+          >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+            {mode === "create" ? "Training erstellen" : "Änderungen speichern"}
+          </button>
+        </div>
       </div>
 
-      <div className={TRAINING_FORM_STICKY_FOOTER_CLASS}>
-        <button type="button" onClick={() => router.back()} className="fca-button-secondary">
-          Abbrechen
-        </button>
-        <button
-          type="submit"
-          disabled={loading}
-          className="fca-button-primary inline-flex items-center gap-2 disabled:opacity-60"
-          data-testid="training-series-submit"
-        >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-          {mode === "create" ? "Training erstellen" : "Änderungen speichern"}
-        </button>
-      </div>
+      {dangerZoneSection ? <div className="pt-1">{dangerZoneSection}</div> : null}
     </form>
   );
 }

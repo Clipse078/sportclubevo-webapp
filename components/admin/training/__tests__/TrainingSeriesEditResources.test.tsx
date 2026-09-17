@@ -1,10 +1,11 @@
 /**
  * @vitest-environment jsdom
  *
- * TRAININGCENTER-EDIT-01F — series edit page resource editing via TrainingAllocationEditor.
+ * TRAININGCENTER-EDIT-01F / TRAININGS-UX-01I — series edit workspace resource editing.
  */
 
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { pickFacilityResource } from "@/components/admin/tournamentcenter/__tests__/tournament-form-test-helpers";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TrainingAllocationEditor } from "@/components/admin/training/TrainingAllocationEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
@@ -83,10 +84,18 @@ function renderSeriesEditResources(initialAllocations: TrainingAllocationDto[]) 
         initialAllocations={initialAllocations}
         facilityGroups={FACILITY_GROUPS}
         canManage
-        embedded
+        layout="workspace"
       />
     </div>,
   );
+}
+
+async function openPitchEditor() {
+  fireEvent.click(screen.getByTestId("training-allocation-change-pitch-hall"));
+}
+
+async function openDressingEditor() {
+  fireEvent.click(screen.getByTestId("training-allocation-change-dressing-room"));
 }
 
 describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
@@ -123,7 +132,7 @@ describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
     ]);
 
     const dressingGroup = screen.getByTestId("training-allocations-dressing-room");
-    expect(within(dressingGroup).getByRole("listitem")).toHaveTextContent("E3");
+    expect(within(dressingGroup).getByText("E3")).toBeInTheDocument();
   });
 
   it("changing pitch calls only the series allocation API for pitch resources", async () => {
@@ -156,8 +165,8 @@ describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
       }),
     ]);
 
-    const pitchGroup = screen.getByTestId("training-allocations-pitch-hall");
-    fireEvent.click(within(pitchGroup).getByRole("button", { name: /Zuweisung von Kunstrasen 3 A entfernen/i }));
+    await openPitchEditor();
+    fireEvent.click(screen.getByRole("button", { name: /Aktuelle Zuweisung entfernen/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(fetchMock).toHaveBeenCalledWith(
@@ -165,8 +174,7 @@ describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
       expect.objectContaining({ method: "DELETE" }),
     );
 
-    const pitchSelect = screen.getByTestId("training-allocation-add-pitch-hall-select");
-    fireEvent.change(pitchSelect, { target: { value: "res-pitch-b" } });
+    pickFacilityResource("training-allocation-add-pitch-hall", "res-pitch-b");
     fireEvent.click(screen.getByTestId("training-allocation-add-pitch-hall-add-button"));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
@@ -179,7 +187,7 @@ describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
     );
 
     expect(fetchMock.mock.calls.every(([url]) => !String(url).includes("/training-sessions/"))).toBe(true);
-    expect(within(screen.getByTestId("training-allocations-dressing-room")).getByRole("listitem")).toHaveTextContent("E3");
+    expect(within(screen.getByTestId("training-allocations-dressing-room")).getByText("E3")).toBeInTheDocument();
   });
 
   it("changing dressing room calls only the series allocation API for dressing-room resources", async () => {
@@ -213,8 +221,8 @@ describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
       }),
     ]);
 
-    const dressingGroup = screen.getByTestId("training-allocations-dressing-room");
-    fireEvent.click(within(dressingGroup).getByRole("button", { name: /Zuweisung von E3 entfernen/i }));
+    await openDressingEditor();
+    fireEvent.click(screen.getByRole("button", { name: /Aktuelle Zuweisung entfernen/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(fetchMock).toHaveBeenCalledWith(
@@ -222,8 +230,7 @@ describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
       expect.objectContaining({ method: "DELETE" }),
     );
 
-    const dressingSelect = screen.getByTestId("training-allocation-add-dressing-room-select");
-    fireEvent.change(dressingSelect, { target: { value: "res-dressing-o4" } });
+    pickFacilityResource("training-allocation-add-dressing-room", "res-dressing-o4");
     fireEvent.click(screen.getByTestId("training-allocation-add-dressing-room-add-button"));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
@@ -254,11 +261,8 @@ describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
       }),
     ]);
 
-    fireEvent.click(
-      within(screen.getByTestId("training-allocations-pitch-hall")).getByRole("button", {
-        name: /Zuweisung von Kunstrasen 3 A entfernen/i,
-      }),
-    );
+    await openPitchEditor();
+    fireEvent.click(screen.getByRole("button", { name: /Aktuelle Zuweisung entfernen/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(fetchMock.mock.calls.every(([url]) => String(url).includes("/training-series/series-123/allocations"))).toBe(

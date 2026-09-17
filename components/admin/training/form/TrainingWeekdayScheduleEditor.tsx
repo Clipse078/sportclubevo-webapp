@@ -35,54 +35,60 @@ export default function TrainingWeekdayScheduleEditor({
   testIdPrefix = "training-weekday",
 }: Props) {
   return (
-    <div className="space-y-1.5" data-testid={`${testIdPrefix}-editor`}>
+    <div className="space-y-1" data-testid={`${testIdPrefix}-editor`} role="group" aria-label="Wiederholung und Zeiten">
       {rows.map((row) => (
         <div
           key={row.weekday}
           className={cn(
-            "flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 transition-colors",
+            "flex min-h-[2.5rem] flex-wrap items-center gap-2 rounded-lg border px-3 py-1.5 transition-colors",
             row.enabled
-              ? "border-emerald-500/25 bg-emerald-500/[0.06]"
-              : "border-[var(--border)] bg-[var(--surface-2)]/40 py-1.5",
+              ? "border-l-2 border-l-emerald-400/70 border-[var(--border)] bg-emerald-500/[0.05]"
+              : "border-[var(--border)]/80 bg-[var(--surface-2)]/30",
           )}
           data-testid={`${testIdPrefix}-${row.weekday.toLowerCase()}`}
+          data-active={row.enabled ? "true" : "false"}
         >
           <button
             type="button"
             onClick={() => onToggle(row.weekday)}
             aria-pressed={row.enabled}
+            aria-label={`${row.label} ${row.enabled ? "deaktivieren" : "aktivieren"}`}
             className={cn(
-              "flex min-w-[3.25rem] items-center justify-center rounded-md px-2 py-1 text-xs font-semibold tabular-nums transition-colors",
+              "flex w-9 shrink-0 items-center justify-center rounded-md px-1 py-1 text-xs font-bold tabular-nums transition-colors",
               row.enabled
-                ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30"
+                ? "bg-emerald-500/15 text-emerald-200 ring-1 ring-emerald-500/35"
                 : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]",
             )}
           >
             {SHORT_LABELS[row.weekday]}
           </button>
           {row.enabled ? (
-            <div className="flex flex-wrap items-center gap-2 text-sm">
+            <div className="flex flex-1 flex-wrap items-center gap-2 text-sm">
               <input
                 type="time"
                 value={row.startsAt}
                 onChange={(e) => onTimeChange(row.weekday, "startsAt", e.target.value)}
-                className="fca-input h-9 w-[6.5rem] px-2 py-1"
+                className="fca-input h-8 w-[6.25rem] px-2 py-0.5 text-sm font-medium tabular-nums"
                 required
+                aria-label={`${row.label} Beginn`}
                 data-testid={`${testIdPrefix}-${row.weekday.toLowerCase()}-start`}
               />
-              <span className="text-[var(--muted)]">–</span>
+              <span className="text-[var(--muted)]" aria-hidden="true">
+                →
+              </span>
               <input
                 type="time"
                 value={row.endsAt}
                 onChange={(e) => onTimeChange(row.weekday, "endsAt", e.target.value)}
-                className="fca-input h-9 w-[6.5rem] px-2 py-1"
+                className="fca-input h-8 w-[6.25rem] px-2 py-0.5 text-sm font-medium tabular-nums"
                 required
+                aria-label={`${row.label} Ende`}
                 data-testid={`${testIdPrefix}-${row.weekday.toLowerCase()}-end`}
               />
-              <span className="hidden text-xs text-[var(--muted)] sm:inline">{row.label}</span>
+              <span className="sr-only">{row.label}</span>
             </div>
           ) : (
-            <span className="text-xs text-[var(--muted)]">Inaktiv</span>
+            <span className="flex-1 text-xs text-[var(--muted)]">Nicht aktiv</span>
           )}
         </div>
       ))}
