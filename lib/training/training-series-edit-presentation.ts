@@ -4,6 +4,7 @@
  */
 
 import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
+import { resolveTeamManagementPrimaryTitle } from "@/lib/training/management-series-view";
 import { COCKPIT_WEEKDAY_ORDER, resolveSeriesAllocationDisplay } from "@/lib/training/series-cockpit";
 import type { TrainingAllocationDto, TrainingSeriesDto, TrainingSeriesStatus, Weekday } from "@/lib/training/types";
 
@@ -16,6 +17,10 @@ const WEEKDAY_SHORT: Record<Weekday, string> = {
   SATURDAY: "Sa",
   SUNDAY: "So",
 };
+
+export function buildTrainingRecordPrimaryTitle(teamName: string, seriesTitle: string): string {
+  return resolveTeamManagementPrimaryTitle(teamName, [seriesTitle]);
+}
 
 export function trainingSeriesStatusLabel(status: TrainingSeriesStatus): string {
   switch (status) {

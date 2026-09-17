@@ -46,6 +46,14 @@ describe("PREMIUM-03 × PREMIUM-02 integration", () => {
   it("create page still wires TrainingSeriesCreateForm", () => {
     const source = readSource("app/(admin)/dashboard/training/new/page.tsx");
     expect(source).toContain("TrainingSeriesCreateForm");
+    expect(source).toContain("TrainingRecordWorkspaceShell");
+  });
+
+  it("edit page uses the premium training record workspace", () => {
+    const source = readSource("app/(admin)/dashboard/training/series/[seriesId]/edit/page.tsx");
+    expect(source).toContain("TrainingSeriesRecordWorkspace");
+    expect(source).not.toMatch(/from "@\/components\/admin\/training\/TrainingSeriesEditHeader"/);
+    expect(source).not.toMatch(/from "@\/components\/admin\/training\/TrainingSeriesDeleteControl"/);
   });
 
   it("create form still uses TeamSeasonSearchablePicker and visual pickers", () => {

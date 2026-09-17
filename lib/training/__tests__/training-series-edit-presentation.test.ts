@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { formatTrainingSeriesEditHeaderMeta, formatTrainingSeriesScheduleRail } from "@/lib/training/training-series-edit-presentation";
+import {
+  buildTrainingRecordPrimaryTitle,
+  formatTrainingSeriesEditHeaderMeta,
+  formatTrainingSeriesScheduleRail,
+} from "@/lib/training/training-series-edit-presentation";
 import type { TrainingAllocationDto, TrainingSeriesDto } from "@/lib/training/types";
 
 const baseSeries = {
@@ -24,6 +28,10 @@ const pitchAllocation: TrainingAllocationDto = {
 };
 
 describe("training-series-edit-presentation", () => {
+  it("buildTrainingRecordPrimaryTitle avoids duplicated Training suffix", () => {
+    expect(buildTrainingRecordPrimaryTitle("Junioren F2", "Junioren F2 Training")).toBe("Junioren F2 Training");
+  });
+
   it("formats schedule rail with short weekday and time", () => {
     expect(formatTrainingSeriesScheduleRail(baseSeries)).toBe("Do · 20:15–21:45");
   });
