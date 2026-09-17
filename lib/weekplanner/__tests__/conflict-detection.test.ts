@@ -150,16 +150,18 @@ describe("detectPairwiseWeekplannerConflicts", () => {
     expect(conflict?.resourceKind).toBe("PITCH_HALL");
   });
 
-  it("detects dressing-room buffer overlap for Junioren D-7 style scheduling (O4/E1)", () => {
+  it("detects dressing-room buffer overlap for Junioren D-7 vs FF-17 (STAGE-accurate times)", () => {
+    // STAGE: D-7 09:30–11:30 local; FF-17 13:00–15:00 local (not 11:00–13:00).
+    // Dressing 60/45 → overlap on O4/E1 is 12:00–12:15 local = 15 minutes.
     const d7 = matchBase({ id: "match:d7", eventId: "d7" });
     const ff17 = matchBase({
       id: "match:ff17",
       eventId: "ff17",
       title: "Juniorinnen FF-17 vs FC Arlesheim",
-      startAt: new Date("2026-09-20T09:00:00.000Z"),
-      endAt: new Date("2026-09-20T11:00:00.000Z"),
-      canonicalStartAt: new Date("2026-09-20T09:00:00.000Z"),
-      canonicalEndAt: new Date("2026-09-20T11:00:00.000Z"),
+      startAt: new Date("2026-09-20T11:00:00.000Z"),
+      endAt: new Date("2026-09-20T13:00:00.000Z"),
+      canonicalStartAt: new Date("2026-09-20T11:00:00.000Z"),
+      canonicalEndAt: new Date("2026-09-20T13:00:00.000Z"),
       pitchAllocations: [
         {
           ...KR2_FULL,
@@ -178,6 +180,12 @@ describe("detectPairwiseWeekplannerConflicts", () => {
     expect(d7Conflicts.some((c) => c.facilityResourceName === "O4")).toBe(true);
     expect(d7Conflicts.some((c) => c.facilityResourceName === "E1")).toBe(true);
     expect(d7Conflicts[0]?.partnerTitle).toContain("FF-17");
+    const o4Conflict = d7Conflicts.find((c) => c.facilityResourceName === "O4");
+    expect(o4Conflict?.overlapStartAt?.toISOString()).toBe("2026-09-20T10:00:00.000Z");
+    expect(o4Conflict?.overlapEndAt?.toISOString()).toBe("2026-09-20T10:15:00.000Z");
+    const overlapMinutes =
+      (o4Conflict!.overlapEndAt!.getTime() - o4Conflict!.overlapStartAt!.getTime()) / 60_000;
+    expect(overlapMinutes).toBe(15);
   });
 
   it("does not emit dressing-room conflict when buffers do not overlap", () => {
