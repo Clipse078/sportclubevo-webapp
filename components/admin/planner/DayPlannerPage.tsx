@@ -16,6 +16,10 @@ import { SectionCard } from "@/components/ui/page/SectionCard";
 import { EmptyState } from "@/components/ui/page/EmptyState";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import type { WeekplannerDay, WeekplannerItem, WeekplannerResourceRef } from "@/lib/weekplanner/types";
+import {
+  weekplannerConflictBadgeTitle,
+  weekplannerConflictSummaryLine,
+} from "@/lib/weekplanner/conflict-presenters";
 import { toWeekplannerPlanActivityType, type WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
 import { planOverrideKey } from "@/lib/weekplanner/plan-override-key";
 import { DayPlannerPlanSelect } from "./DayPlannerPlanSelect";
@@ -170,18 +174,28 @@ function ResourceChips({
   );
 }
 
-function ConflictBadge({ item }: { item: WeekplannerItem }) {
+function ConflictBadge({
+  item,
+  locale,
+  timezone,
+}: {
+  item: WeekplannerItem;
+  locale: string;
+  timezone: string;
+}) {
   if (item.conflicts.length === 0) return null;
-  const resourceNames = item.conflicts.map((c) => c.facilityResourceName).join(", ");
+  const primary = item.conflicts[0];
+  const line = weekplannerConflictSummaryLine(primary, locale, timezone);
+  const title = weekplannerConflictBadgeTitle(item.conflicts, locale, timezone);
 
   return (
     <div
-      className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800"
-      title={`Geteilte Belegung: ${resourceNames}`}
+      className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-md border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-200/95"
+      title={title}
       data-testid="dayplanner-conflict-badge"
     >
-      <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-      Geteilte Belegung · {resourceNames}
+      <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-400/90" />
+      <span className="truncate">{line}</span>
     </div>
   );
 }
@@ -322,7 +336,7 @@ function TimelineRow({
         </div>
 
         {planName && <OverrideIndicator item={item} planName={planName} locale={locale} timezone={timezone} />}
-        <ConflictBadge item={item} />
+        <ConflictBadge item={item} locale={locale} timezone={timezone} />
 
         {overrideEditing && planActivityType && (
           <WeekplannerActivityOverridePanel activityKey={activityKey}>

@@ -160,7 +160,13 @@ export default function PlanningHubListeView({
                         {hasConflict && (
                           <AlertTriangle
                             className="h-3.5 w-3.5 shrink-0 text-amber-600/80"
-                            aria-label="Konflikt"
+                            aria-label={
+                              item.conflicts[0]?.resourceKind === "DRESSING_ROOM"
+                                ? "Garderobenkonflikt"
+                                : item.conflicts[0]?.resourceKind === "PITCH_HALL"
+                                  ? "Spielfeldkonflikt"
+                                  : "Planungskonflikt"
+                            }
                           />
                         )}
                       </span>

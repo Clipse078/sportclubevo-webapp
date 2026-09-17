@@ -144,6 +144,7 @@ type FacilityResourceRow = {
   id: string;
   code: string;
   name: string;
+  type?: "FULL_PITCH" | "HALF_PITCH" | "DRESSING_ROOM" | "OTHER";
   facility: { id: string; name: string };
 };
 
@@ -160,6 +161,7 @@ function toResourceRef(
     code: row.code,
     name: row.name,
     facilityName: row.facility.name,
+    resourceType: row.type,
     occupancyBeforeMinutes: occupancy.occupancyBeforeMinutes,
     occupancyAfterMinutes: occupancy.occupancyAfterMinutes,
   };
@@ -178,6 +180,7 @@ async function findFacilityResourceCodeMap(
           id: resource.id,
           code: resource.code,
           name: resource.name,
+          type: resource.type,
           facility: { id: facility.id, name: facility.name },
         }),
       );
@@ -372,6 +375,7 @@ function toWeekplannerResourceRefs(
     code: row.facilityResource.code,
     name: row.facilityResource.name,
     facilityName: row.facilityResource.facility.name,
+    resourceType: row.facilityResource.type as WeekplannerResourceRef["resourceType"],
     occupancyBeforeMinutes: 0,
     occupancyAfterMinutes: 0,
   }));

@@ -146,12 +146,16 @@ describe("detectWeekplannerConflicts", () => {
     const match = matchItem(); // overlaps 16:30–18:00 with training's 16:00–17:30, same pitch
     const [flaggedTraining, flaggedMatch] = detectWeekplannerConflicts([training, match]);
 
-    expect(flaggedTraining.conflicts).toEqual([
-      { facilityResourceId: PITCH.facilityResourceId, facilityResourceName: PITCH.name },
-    ]);
-    expect(flaggedMatch.conflicts).toEqual([
-      { facilityResourceId: PITCH.facilityResourceId, facilityResourceName: PITCH.name },
-    ]);
+    expect(flaggedTraining.conflicts[0]).toMatchObject({
+      facilityResourceId: PITCH.facilityResourceId,
+      facilityResourceName: PITCH.name,
+      resourceKind: "PITCH_HALL",
+    });
+    expect(flaggedMatch.conflicts[0]).toMatchObject({
+      facilityResourceId: PITCH.facilityResourceId,
+      facilityResourceName: PITCH.name,
+      resourceKind: "PITCH_HALL",
+    });
   });
 
   it("does NOT flag items sharing a resource when their time windows do not overlap", () => {
@@ -211,9 +215,11 @@ describe("detectWeekplannerConflicts", () => {
     });
 
     const [, flaggedMatch] = detectWeekplannerConflicts([training, match]);
-    expect(flaggedMatch.conflicts).toEqual([
-      { facilityResourceId: ROOM_A.facilityResourceId, facilityResourceName: ROOM_A.name },
-    ]);
+    expect(flaggedMatch.conflicts[0]).toMatchObject({
+      facilityResourceId: ROOM_A.facilityResourceId,
+      facilityResourceName: ROOM_A.name,
+      resourceKind: "DRESSING_ROOM",
+    });
   });
 
   it("uses effective plan time override with occupancy buffers", () => {

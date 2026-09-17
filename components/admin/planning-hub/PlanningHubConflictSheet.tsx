@@ -66,7 +66,13 @@ export default function PlanningHubConflictSheet({
     .filter((item): item is WeekplannerItem => Boolean(item));
 
   const kindLabel =
-    incident.resourceKind === "PITCH_HALL" ? "Spielfeld-Konflikt" : "Garderoben-Konflikt";
+    incident.resourceKind === "PITCH_HALL" ? "Spielfeldkonflikt" : "Garderobenkonflikt";
+  const overlapFmt = new Intl.DateTimeFormat(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: timezone,
+  });
+  const overlapLabel = `${overlapFmt.format(incident.startAt)}–${overlapFmt.format(incident.endAt)}`;
 
   return (
     <Sheet open={Boolean(incident)} onClose={onClose} title="Planungskonflikt">
@@ -80,8 +86,14 @@ export default function PlanningHubConflictSheet({
               {incident.facilityResourceName}
             </p>
             <p className="mt-0.5 text-xs text-[var(--muted)]">
-              {incident.occupancyCount} überlappende Belegungen
+              Überlappende Belegung {overlapLabel} · {incident.occupancyCount}{" "}
+              {incident.occupancyCount === 1 ? "Aktivität" : "Aktivitäten"}
             </p>
+            {incident.resourceKind === "DRESSING_ROOM" ? (
+              <p className="mt-1 text-xs text-[var(--text-2)]">
+                Belegungsfenster inkl. Garderoben-Puffer vor/nach der Spielzeit.
+              </p>
+            ) : null}
           </div>
         </div>
 
