@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { Plus } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
@@ -13,28 +11,30 @@ import {
   isScePerfTimingEnabled,
   logAdminServerTiming,
 } from "@/lib/planning-hub/admin-server-timing";
-import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { listTrainingSessions } from "@/lib/training/session-generation-service";
-import { listAllocationSummaryByTenant } from "@/lib/training/training-allocation-service";
-import { listSessionAllocationSummaryByTenant } from "@/lib/training/session-allocation-service";
-import {
-  resolveTrainingDayWindow,
-  resolveTrainingMonthWindow,
-  resolveTrainingWeekWindow,
-  listTrainingSessionDateBounds,
-  formatTrainingDayLabel,
-  formatTrainingMonthLabel,
-  formatTrainingWeekLabel,
-  normalizeTrainingCenterView,
-  TRAINING_DEFAULT_TIMEZONE,
-} from "@/lib/training/date-range";
-import { buildTrainingCenterViewModel, normalizeTrainingActionFilter } from "@/lib/training/view-model";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
-import TrainingCenterOverview from "@/components/admin/training/TrainingCenterOverview";
-import TrainingSeriesListView from "@/components/admin/training/TrainingSeriesListView";
+import { listAllocationSummaryByTenant, listAllocationsGroupedBySeries } from "@/lib/training/training-allocation-service";
+import { listSessionAllocationsForSessionIds } from "@/lib/training/session-allocation-service";
+import { TRAINING_DEFAULT_TIMEZONE } from "@/lib/training/date-range";
 import { buildWochenplanerResourcesHrefFromLegacyTrainingParams } from "@/lib/planning-hub/training-planungsraster-redirect";
-import { cn } from "@/lib/cn";
-
+import { buildTrainingResourcesWochenplanerHref } from "@/lib/training/wochenplaner-deep-links";
+import {
+  buildNormalizedTrainingManagementHref,
+  isLegacyTrainingCalendarUrl,
+} from "@/lib/training/legacy-training-url";
+import {
+  buildTrainingSeriesManagementRows,
+  filterTrainingSeriesManagementRows,
+  type TrainingSeriesManagementFilters,
+} from "@/lib/training/management-series-view";
+import {
+  buildTrainingSessionManagementRows,
+  filterTrainingSessionManagementRows,
+  paginateTrainingSessionManagementRows,
+  resolveManagementSessionDateWindow,
+  type TrainingSessionManagementStatusFilter,
+} from "@/lib/training/management-session-view";
+import { buildPitchNameBySeriesId, listTeamSeasonFilterOptions } from "@/lib/training/management-data";
+import TrainingManagementWorkspace from "@/components/admin/training/TrainingManagementWorkspace";
 type TrainingPageSearchParams = {
   tab?: string;
   archived?: string;
@@ -47,26 +47,36 @@ type TrainingPageSearchParams = {
   facility?: string;
   team?: string;
   conflicts?: string;
-  unallocated?: string;
-  daypart?: string;
+  seriesSearch?: string;
+  seriesTeam?: string;
+  seriesStatus?: string;
+  sessionSearch?: string;
+  sessionTeam?: string;
+  sessionStatus?: string;
+  sessionsPage?: string;
 };
 
 type Props = {
   searchParams?: Promise<TrainingPageSearchParams>;
 };
 
-const TOP_TABS: { key: "kalender" | "serien"; label: string }[] = [
-  { key: "kalender", label: "Kalender" },
-  { key: "serien", label: "Serien" },
-];
+function parseSeriesStatusFilter(raw: string | undefined, showArchived: boolean): TrainingSeriesManagementFilters["status"] {
+  const value = raw?.trim().toUpperCase();
+  if (value === "ALL") return "ALL";
+  if (value === "ACTIVE") return "ACTIVE";
+  if (value === "INACTIVE") return "INACTIVE";
+  if (value === "ARCHIVED") return "ARCHIVED";
+  return showArchived ? "ALL" : "ACTIVE_ONLY";
+}
 
-const TRAINING_DESCRIPTION =
-  "Trainingskalender, Einzeltrainings und Serien — Ressourcenplanung im Wochenplaner.";
+function parseSessionStatusFilter(raw: string | undefined): TrainingSessionManagementStatusFilter {
+  const value = raw?.trim().toUpperCase();
+  if (value === "GEPLANT" || value === "AUSNAHME" || value === "ABGESAGT") return value;
+  return "ALL";
+}
 
 export default async function TrainingCenterPage({ searchParams }: Props) {
-  const perfTimer = isScePerfTimingEnabled()
-    ? createAdminServerTimer("training")
-    : null;
+  const perfTimer = isScePerfTimingEnabled() ? createAdminServerTimer("training") : null;
 
   const session = await requireAnyPermission([
     PERMISSIONS.TRAININGS_VIEW,
@@ -100,196 +110,129 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
     );
   }
 
-  const tab = params.tab === "serien" ? "serien" : "kalender";
-
-  if (tab === "serien") {
-    const showArchived = params.archived === "1";
-    const allSeries = await listTrainingSeries(tenantContext.id, { includeArchived: true });
-    const displayedSeries = showArchived ? allSeries : allSeries.filter((series) => series.status !== "ARCHIVED");
-    const archivedCount = allSeries.filter((series) => series.status === "ARCHIVED").length;
-
-    const [cockpitRows, facilities] = await Promise.all([
-      buildTrainingSeriesCockpitViewModel(tenantContext.id, displayedSeries, timezone),
-      getFacilitiesForTenantCached(tenantContext.id),
-    ]);
-    perfTimer?.mark("training-series-loader");
-
-    function facilityGroupsForTypes(types: readonly string[]): FacilityGroup[] {
-      return facilities
-        .filter((facility) => facility.status !== "ARCHIVED")
-        .map((facility) => ({
-          facilityId: facility.id,
-          facilityName: facility.name,
-          facilityType: facility.type as string,
-          resources: facility.resources
-            .filter((resource) => resource.status !== "ARCHIVED" && types.includes(resource.type))
-            .map((resource) => ({
-              id: resource.id,
-              name: resource.name,
-              code: resource.code,
-              type: resource.type,
-              facilityId: facility.id,
-              facilityName: facility.name,
-              facilityType: facility.type as string,
-            })),
-        }))
-        .filter((group) => group.resources.length > 0);
-    }
-
-    const pitchFacilityGroups = facilityGroupsForTypes(["FULL_PITCH", "HALF_PITCH"]);
-    const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
-
-    if (perfTimer) {
-      logAdminServerTiming(perfTimer.finish());
-    }
-
-    return (
-      <div className="space-y-6">
-        <AdminSectionHeader
-          eyebrow="Planung"
-          title="Trainings"
-          description={TRAINING_DESCRIPTION}
-          actions={
-            canCreate ? (
-              <Link href="/dashboard/training/new" className="fca-button-primary inline-flex items-center gap-1.5 text-sm">
-                <Plus className="h-3.5 w-3.5" />
-                Neue Trainingsserie
-              </Link>
-            ) : undefined
-          }
-        />
-        <TopTabs active={tab} />
-        <TrainingSeriesListView
-          cockpitRows={cockpitRows}
-          showArchived={showArchived}
-          archivedCount={archivedCount}
-          canManage={canManage}
-          isCoordinator={canManage}
-          canDelete={canDelete}
-          pitchFacilityGroups={pitchFacilityGroups}
-          dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-        />
-      </div>
+  if (isLegacyTrainingCalendarUrl(params)) {
+    redirect(
+      buildNormalizedTrainingManagementHref({
+        archived: params.archived,
+        seriesSearch: params.seriesSearch,
+        seriesTeam: params.seriesTeam,
+        seriesStatus: params.seriesStatus,
+        sessionSearch: params.sessionSearch,
+        sessionTeam: params.sessionTeam,
+        sessionStatus: params.sessionStatus,
+        sessionsPage: params.sessionsPage,
+      }),
     );
   }
 
-  const view = normalizeTrainingCenterView(params.view);
-  const actionFilter = normalizeTrainingActionFilter(params.filter);
+  const showArchived = params.archived === "1";
+  const sessionsPage = Number.parseInt(params.sessionsPage ?? "1", 10);
 
-  const now = new Date();
-  const monthWindow = resolveTrainingMonthWindow({
-    monthParam: params.month,
-    now,
-    timeZone: timezone,
-  });
-  const weekWindow = resolveTrainingWeekWindow({
-    weekParam: params.week,
-    now,
-    timeZone: timezone,
-  });
-  const dayWindow = resolveTrainingDayWindow({
-    dayParam: params.day,
-    now,
-    timeZone: timezone,
-  });
+  const sessionWindow = resolveManagementSessionDateWindow({ now: new Date() });
 
-  const sessionDateBounds = listTrainingSessionDateBounds(view, {
-    month: monthWindow,
-    week: weekWindow,
-    day: dayWindow,
-  });
+  const [allSeries, sessionsInWindow, allocationSummaries, allocationsBySeries, teamOptions] =
+    await Promise.all([
+      listTrainingSeries(tenantContext.id, { includeArchived: true }),
+      listTrainingSessions(tenantContext.id, {
+        dateFrom: sessionWindow.dateFrom,
+        dateTo: sessionWindow.dateTo,
+      }),
+      listAllocationSummaryByTenant(tenantContext.id),
+      listAllocationsGroupedBySeries(tenantContext.id),
+      listTeamSeasonFilterOptions(tenantContext.id),
+    ]);
+  perfTimer?.mark("training-core-queries");
 
-  const [sessions, allocationSummaries, sessionAllocationOverrides] = await Promise.all([
-    listTrainingSessions(tenantContext.id, sessionDateBounds),
-    listAllocationSummaryByTenant(tenantContext.id),
-    listSessionAllocationSummaryByTenant(tenantContext.id),
+  const displayedSeries = showArchived
+    ? allSeries
+    : allSeries.filter((series) => series.status !== "ARCHIVED");
+  const archivedCount = allSeries.filter((series) => series.status === "ARCHIVED").length;
+
+  const sessionIds = sessionsInWindow.map((item) => item.id);
+  const sessionAllocationsBySessionId = await listSessionAllocationsForSessionIds(
+    tenantContext.id,
+    sessionIds,
+  );
+  perfTimer?.mark("training-session-allocations");
+
+  const [cockpitRows] = await Promise.all([
+    buildTrainingSeriesCockpitViewModel(tenantContext.id, displayedSeries, timezone),
+    getFacilitiesForTenantCached(tenantContext.id),
   ]);
-  perfTimer?.mark("training-session-loader");
+  perfTimer?.mark("training-series-loader");
 
-  const viewModel = buildTrainingCenterViewModel(sessions, allocationSummaries, {
-    actionFilter,
-    sessionAllocationOverrides,
+  const teamDisplayNameByTeamSeasonId = new Map<string, string>();
+  for (const row of cockpitRows) {
+    if (!teamDisplayNameByTeamSeasonId.has(row.teamSeasonId)) {
+      teamDisplayNameByTeamSeasonId.set(row.teamSeasonId, row.teamDisplayName);
+    }
+  }
+
+  const seriesManagementRows = buildTrainingSeriesManagementRows({
+    series: displayedSeries,
+    teamDisplayNameByTeamSeasonId,
+    allocationsBySeriesId: allocationsBySeries,
+    cockpitRows,
   });
-  perfTimer?.mark("mapping");
+
+  const filteredSeriesRows = filterTrainingSeriesManagementRows(seriesManagementRows, {
+    search: params.seriesSearch,
+    teamSeasonId: params.seriesTeam,
+    status: parseSeriesStatusFilter(params.seriesStatus, showArchived),
+  });
+
+  const pitchNameBySeriesId = buildPitchNameBySeriesId(allocationsBySeries);
+
+  const sessionManagementRows = buildTrainingSessionManagementRows({
+    sessions: sessionsInWindow,
+    seriesAllocationSummaries: allocationSummaries,
+    sessionAllocationSummaries: new Map(),
+    sessionAllocationsBySessionId,
+    pitchNameBySeriesId,
+  });
+
+  const filteredSessionRows = filterTrainingSessionManagementRows(sessionManagementRows, {
+    search: params.sessionSearch,
+    teamSeasonId: params.sessionTeam,
+    status: parseSessionStatusFilter(params.sessionStatus),
+  });
+
+  const paginatedSessions = paginateTrainingSessionManagementRows(filteredSessionRows, sessionsPage);
 
   if (perfTimer) {
     logAdminServerTiming(perfTimer.finish());
   }
 
+  const sessionWindowLabel = `${sessionWindow.dateFromKey} – ${sessionWindow.dateToKey}`;
+
   return (
-    <div className="max-w-[1400px] space-y-6">
-      <AdminSectionHeader
-        eyebrow="Planung"
-        title="Trainings"
-        description={TRAINING_DESCRIPTION}
-        actions={
-          canManage ? (
-            <Link href="/dashboard/training/new" className="fca-button-primary inline-flex items-center gap-1.5 text-sm">
-              <Plus className="h-3.5 w-3.5" />
-              Neue Trainingsserie
-            </Link>
-          ) : undefined
-        }
-      />
-
-      <TopTabs active={tab} />
-
-      <TrainingCenterOverview
-        view={view}
-        actionFilter={actionFilter}
-        viewModel={viewModel}
-        monthWindow={{
-          param: monthWindow.param,
-          label: formatTrainingMonthLabel(monthWindow, locale, timezone),
-          previousParam: monthWindow.previousParam,
-          nextParam: monthWindow.nextParam,
-          weeks: monthWindow.weeks,
-        }}
-        weekWindow={{
-          param: weekWindow.param,
-          label: formatTrainingWeekLabel(weekWindow, locale, timezone),
-          previousParam: weekWindow.previousParam,
-          nextParam: weekWindow.nextParam,
-          days: weekWindow.days,
-        }}
-        dayWindow={{
-          param: dayWindow.param,
-          label: formatTrainingDayLabel(dayWindow.date, locale, timezone),
-          previousParam: dayWindow.previousParam,
-          nextParam: dayWindow.nextParam,
-          date: dayWindow.date,
-        }}
+    <div className="max-w-[1200px]">
+      <TrainingManagementWorkspace
+        canCreate={canCreate}
         canManage={canManage}
-        timezone={timezone}
+        canDelete={canDelete}
+        isCoordinator={canManage}
         locale={locale}
+        timezone={timezone}
+        wochenplanerHref={buildTrainingResourcesWochenplanerHref({ timezone })}
+        seriesRows={filteredSeriesRows}
+        sessionRows={paginatedSessions.rows}
+        sessionHasMore={paginatedSessions.hasMore}
+        sessionsNextPage={paginatedSessions.nextPage}
+        teamOptions={teamOptions}
+        archivedCount={archivedCount}
+        sessionWindowLabel={sessionWindowLabel}
+        filters={{
+          seriesSearch: params.seriesSearch,
+          seriesTeam: params.seriesTeam,
+          seriesStatus: params.seriesStatus,
+          sessionSearch: params.sessionSearch,
+          sessionTeam: params.sessionTeam,
+          sessionStatus: params.sessionStatus,
+          archived: showArchived,
+          sessionsPage,
+        }}
       />
-    </div>
-  );
-}
-
-function TopTabs({ active }: { active: "kalender" | "serien" }) {
-  return (
-    <div role="tablist" aria-label="Trainings-Bereiche" className="flex gap-1 border-b border-[var(--border)]">
-      {TOP_TABS.map((item) => {
-        const isActive = item.key === active;
-        return (
-          <Link
-            key={item.key}
-            href={`/dashboard/training?tab=${item.key}`}
-            role="tab"
-            aria-selected={isActive}
-            data-testid={`trainingcenter-tab-${item.key}`}
-            className={cn(
-              "-mb-px border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors",
-              isActive
-                ? "border-[var(--sce-primary)] text-[var(--sce-primary)]"
-                : "border-transparent text-[var(--text-2)] hover:text-[var(--foreground)]",
-            )}
-          >
-            {item.label}
-          </Link>
-        );
-      })}
     </div>
   );
 }
