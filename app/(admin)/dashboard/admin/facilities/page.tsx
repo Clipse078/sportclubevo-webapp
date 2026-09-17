@@ -5,8 +5,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import FacilitiesAdminPanel from "@/components/admin/facilities/FacilitiesAdminPanel";
-import DressingRoomOccupancyPresetsPanel from "@/components/admin/facilities/DressingRoomOccupancyPresetsPanel";
-import TenantOperationalDurationPolicyPanel from "@/components/admin/facilities/TenantOperationalDurationPolicyPanel";
+import FacilitiesOperationalSettingsPanel from "@/components/admin/facilities/FacilitiesOperationalSettingsPanel";
 import { getTenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/tenant-preset-service";
 import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
 
@@ -41,11 +40,11 @@ export default async function FacilitiesPage() {
         title="Anlagen & Ressourcen"
         description="Sportanlagen, Plätze und Garderoben konfigurieren. Einmal gepflegt, werden die Bezeichnungen automatisch auf dem Infoboard und in der Wochenplanung verwendet."
       />
-      <TenantOperationalDurationPolicyPanel
+      <FacilitiesOperationalSettingsPanel
         initialPolicy={operationalDurationPolicy}
+        initialPresets={dressingRoomPresets}
         canManage={canManage}
       />
-      <DressingRoomOccupancyPresetsPanel initialPresets={dressingRoomPresets} canManage={canManage} />
 
       <FacilitiesAdminPanel
         initialFacilities={facilities}
