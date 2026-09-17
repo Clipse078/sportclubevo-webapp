@@ -15,7 +15,7 @@
  *   3 · Wiederholung    — Ja/Nein; "Ja" adds a recurrence end date
  *   4 · Spielfeld/Halle — live Frei/Belegt availability (01A foundation)
  *   5 · Garderobe       — live Frei/Belegt availability (01A foundation)
- *   6 · Prüfen & Einreichen — summary + Freigeben / Zur Freigabe einreichen
+ *   (review/submit step removed — direct save; four-eye reserved for future tenant setting)
  *
  * PLANNING-CREATION-UX-01B-C1: the six steps now render as ONE bordered
  * surface with divided rows (not six separate cards) — same logical flow
@@ -78,6 +78,10 @@ import { VisualResourceAvailabilityPicker } from "@/components/admin/shared/plan
 import { VisualDressingRoomPicker } from "@/components/admin/shared/planning/VisualDressingRoomPicker";
 import TeamSeasonSearchablePicker from "@/components/admin/shared/TeamSeasonSearchablePicker";
 import { cn } from "@/lib/cn";
+import {
+  TRAINING_FORM_STICKY_FOOTER_CLASS,
+  TRAINING_FORM_STICKY_FOOTER_RESERVE_CLASS,
+} from "@/components/admin/training/form/training-form-layout";
 import { weekdayFromDate, zonedTimeToUtc } from "@/lib/training/recurrence";
 import type { Weekday } from "@/lib/training/types";
 
@@ -114,9 +118,8 @@ type TrainingSeriesCreateFormProps = {
   pitchHallFacilityGroups: FacilityGroup[];
   dressingRoomFacilityGroups: FacilityGroup[];
   /**
-   * Whether the current user can create-and-activate a TrainingSeries
-   * directly, sourced from the EXISTING trainings.manage permission — the
-   * same permission required to reach this page at all (see module doc).
+   * Reserved for a future tenant setting (Vier-Augen-Prinzip für Trainingsplanung).
+   * When four-eye is OFF (default), creation is always direct-save regardless of this flag.
    */
   canValidateDirectly: boolean;
 };
@@ -242,8 +245,9 @@ export default function TrainingSeriesCreateForm({
   teamSeasons,
   pitchHallFacilityGroups,
   dressingRoomFacilityGroups,
-  canValidateDirectly,
+  canValidateDirectly: _canValidateDirectlyReserved,
 }: TrainingSeriesCreateFormProps) {
+  void _canValidateDirectlyReserved;
   const router = useRouter();
   const formId = useId();
 
@@ -423,15 +427,12 @@ export default function TrainingSeriesCreateForm({
   const hasRequiredFields =
     !!teamSeasonId && !!title.trim() && !!date && timesValid && !!derivedWeekday && (!isRecurring || !!validUntil);
 
-  const canSubmit = !submitting && canValidateDirectly && hasRequiredFields;
+  const canSubmit = !submitting && hasRequiredFields;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
 
-    if (!canValidateDirectly) {
-      return;
-    }
     if (!hasRequiredFields || !derivedWeekday) {
       setError("Bitte alle erforderlichen Angaben ausfüllen.");
       return;
@@ -485,10 +486,14 @@ export default function TrainingSeriesCreateForm({
     }
   }
 
-  const submitLabel = canValidateDirectly ? "Trainingsserie erstellen" : "Zur Freigabe einreichen";
+  const submitLabel = "Training erstellen";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5" data-testid="training-create-form">
+    <form
+      onSubmit={handleSubmit}
+      className={`space-y-5 ${TRAINING_FORM_STICKY_FOOTER_RESERVE_CLASS}`}
+      data-testid="training-create-form"
+    >
       {missingItems.length > 0 ? (
         <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm" data-testid="training-create-guided-progress">
           <p className="text-xs text-[var(--text-2)]">
@@ -504,7 +509,10 @@ export default function TrainingSeriesCreateForm({
           </ul>
         </div>
       ) : (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-sm text-emerald-800" data-testid="training-create-guided-progress">
+        <div
+          className="rounded-lg border border-emerald-500/30 bg-emerald-500/[0.08] px-3 py-2 text-sm text-emerald-200"
+          data-testid="training-create-guided-progress"
+        >
           Bereit zum Erstellen
         </div>
       )}
@@ -513,7 +521,7 @@ export default function TrainingSeriesCreateForm({
         <GuidedStep
           index={1}
           title="Team"
-          hint="Team · Saison und Name der Trainingsserie."
+          hint="Team · Saison und Trainingsname."
           complete={teamStepComplete}
           collapsed={teamCollapsed}
           summary={selectedTeamSeason ? `${selectedTeamSeason.teamName} · ${selectedTeamSeason.seasonName} — „${title}“` : undefined}
@@ -540,7 +548,7 @@ export default function TrainingSeriesCreateForm({
 
             {selectedTeamSeason ? (
               <label className="block space-y-1">
-                <span className="fca-label">Name der Trainingsserie</span>
+                <span className="fca-label">Trainingsname</span>
                 <input
                   type="text"
                   value={title}
@@ -743,80 +751,22 @@ export default function TrainingSeriesCreateForm({
           </div>
         </div>
 
-        <div className="px-4 py-3">
-          <div className="mb-2.5 flex items-center gap-2.5">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] text-[0.7rem] font-semibold text-[var(--text-2)]" aria-hidden>
-              6
-            </span>
-            <h2 className="text-sm font-semibold text-[var(--foreground)]">Prüfen &amp; Einreichen</h2>
-          </div>
-          <dl className="grid gap-x-6 gap-y-1.5 pl-[2.125rem] text-sm md:grid-cols-2">
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Team</dt>
-              <dd className="text-[var(--foreground)]">
-                {selectedTeamSeason ? `${selectedTeamSeason.teamName} · ${selectedTeamSeason.seasonName}` : "—"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Titel</dt>
-              <dd className="text-[var(--foreground)]">{title || "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Termin</dt>
-              <dd className="text-[var(--foreground)]">
-                {date ? `${date} · ${startsAt}–${endsAt}${derivedWeekday ? ` (${WEEKDAY_LABELS[derivedWeekday]})` : ""}` : "—"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Wiederholung</dt>
-              <dd className="text-[var(--foreground)]">{isRecurring ? `Wöchentlich bis ${validUntil || "—"}` : "Einmalig"}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Spielfeld / Halle</dt>
-              <dd className="text-[var(--foreground)]">
-                {resources.length > 0 ? resources.map((r) => r.facilityResourceName).join(", ") : "—"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Garderobe</dt>
-              <dd className="text-[var(--foreground)]">
-                {dressingRooms.length > 0 ? dressingRooms.map((r) => r.facilityResourceName).join(", ") : "—"}
-              </dd>
-            </div>
-          </dl>
-
-          {!canValidateDirectly ? (
-            <div
-              className="fca-status-box fca-status-box-warn ml-[2.125rem] mt-3 text-xs"
-              data-testid="training-create-no-validation-right"
-            >
-              Für die direkte Erstellung ist die Berechtigung „Trainings verwalten“ erforderlich. Bitte wende dich an
-              eine Person mit Freigaberecht.
-            </div>
-          ) : (
-            <div className="fca-status-box fca-status-box-muted ml-[2.125rem] mt-3 text-xs">
-              Mit „{submitLabel}“ wird die Trainingsserie sofort erstellt und aktiv gesetzt (kein separater Prüfschritt
-              in der aktuellen TrainingCenter-Architektur).
-            </div>
-          )}
-        </div>
       </div>
 
       {result ? (
         <div className="fca-status-box fca-status-box-success text-sm" data-testid="training-create-success">
-          Trainingsserie erstellt — {result.generation.occurrencesInWindow} Termin
+          Training erstellt — {result.generation.occurrencesInWindow} Termin
           {result.generation.occurrencesInWindow === 1 ? "" : "e"} generiert.
         </div>
       ) : null}
 
       {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
 
-      <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--background)]/95 px-1 py-3 backdrop-blur-sm">
+      <div className={TRAINING_FORM_STICKY_FOOTER_CLASS}>
         <button
           type="submit"
           disabled={!canSubmit}
           data-testid="training-create-submit"
-          title={!canValidateDirectly ? "Berechtigung „Trainings verwalten“ erforderlich." : undefined}
           className="fca-button-primary"
         >
           {submitting ? (
@@ -834,8 +784,7 @@ export default function TrainingSeriesCreateForm({
         </button>
       </div>
       <p className="sr-only" id={`${formId}-hint`}>
-        Team, Tag, Start-/Endzeit und eine Wiederholungsentscheidung sind erforderlich, um eine Trainingsserie zu
-        erstellen.
+        Team, Tag, Start-/Endzeit und eine Wiederholungsentscheidung sind erforderlich, um ein Training zu erstellen.
       </p>
     </form>
   );

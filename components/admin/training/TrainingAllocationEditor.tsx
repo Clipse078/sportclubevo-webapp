@@ -63,28 +63,25 @@ function AllocationRow({
   }, [allocation.id, onRemove]);
 
   return (
-    <li className="group flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-      <GripVertical size={16} className="shrink-0 text-gray-300" aria-hidden />
+    <li className="group flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+      <GripVertical size={16} className="shrink-0 text-[var(--muted)]" aria-hidden />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-gray-900 truncate">
+          <span className="truncate font-medium text-[var(--foreground)]">
             {allocation.facilityResourceName}
           </span>
-          <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+          <span className="shrink-0 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-xs text-[var(--text-2)]">
             {RESOURCE_TYPE_LABELS[allocation.facilityResourceType as FacilityResourceType] ??
               allocation.facilityResourceType}
           </span>
         </div>
-        <div className="mt-0.5 flex items-center gap-1 text-xs text-gray-500">
+        <div className="mt-0.5 flex items-center gap-1 text-xs text-[var(--muted)]">
           <Building2 size={11} aria-hidden />
           <span className="truncate">{allocation.facilityName}</span>
-          <span className="text-gray-300 mx-1">·</span>
-          <MapPin size={11} aria-hidden />
-          <span>{allocation.facilityResourceCode}</span>
         </div>
         {allocation.notes && (
-          <p className="mt-1 text-xs text-gray-400 italic truncate">{allocation.notes}</p>
+          <p className="mt-1 truncate text-xs italic text-[var(--text-2)]">{allocation.notes}</p>
         )}
         {error && (
           <p className="mt-1 text-xs text-red-500" role="alert">

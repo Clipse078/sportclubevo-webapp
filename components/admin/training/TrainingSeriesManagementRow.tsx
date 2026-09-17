@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Pencil } from "lucide-react";
-import PlanningWorkflowBadge from "@/components/admin/shared/PlanningWorkflowBadge";
 import TrainingSeriesRowContextMenu from "./TrainingSeriesRowContextMenu";
 import { buildTrainingSeriesEditHref } from "@/lib/training/series-cockpit";
 import type { TrainingSeriesManagementRow as Row } from "@/lib/training/management-series-view";
@@ -13,7 +12,6 @@ type Props = {
   wochenplanerHref: string;
   canManage: boolean;
   canDelete: boolean;
-  isCoordinator: boolean;
 };
 
 function statusPresentation(status: Row["status"]): { label: string; className: string } {
@@ -44,7 +42,6 @@ export default function TrainingSeriesManagementRow({
   wochenplanerHref,
   canManage,
   canDelete,
-  isCoordinator,
 }: Props) {
   const editable = canManage && row.status !== "ARCHIVED";
   const editHref = buildTrainingSeriesEditHref(row.seriesId);
@@ -59,13 +56,13 @@ export default function TrainingSeriesManagementRow({
             className="block min-w-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
             data-testid={`training-series-edit-${row.seriesId}`}
           >
-            <p className="truncate text-sm font-semibold text-[var(--foreground)]">{row.title}</p>
-            <p className="truncate text-xs text-[var(--muted)]">{row.teamDisplayName}</p>
+            <p className="truncate text-sm font-semibold tracking-tight text-[var(--foreground)]">{row.title}</p>
+            <p className="truncate text-xs text-[var(--text-2)]">{row.teamDisplayName}</p>
           </Link>
         ) : (
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-[var(--foreground)]">{row.title}</p>
-            <p className="truncate text-xs text-[var(--muted)]">{row.teamDisplayName}</p>
+            <p className="truncate text-sm font-semibold tracking-tight text-[var(--foreground)]">{row.title}</p>
+            <p className="truncate text-xs text-[var(--text-2)]">{row.teamDisplayName}</p>
           </div>
         )}
       </div>
@@ -97,11 +94,6 @@ export default function TrainingSeriesManagementRow({
         >
           {status.label}
         </span>
-        {(row.planningStage === "DRAFT" ||
-          row.planningStage === "SUBMITTED" ||
-          (row.planningStage === "APPROVED" && !isCoordinator)) && (
-          <PlanningWorkflowBadge stage={row.planningStage} size="sm" />
-        )}
       </div>
 
       <div className="relative z-[1] flex items-center justify-end gap-1">

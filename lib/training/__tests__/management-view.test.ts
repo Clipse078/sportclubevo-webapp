@@ -74,7 +74,7 @@ describe("SCE-TRAININGS-UX-01 management view models", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]?.rhythmLabel).toBe("Mo · Mi");
     expect(rows[0]?.timeLabel).toBe("17:00–18:30");
-    expect(rows[0]?.facilityLabel).toBe("KR2");
+    expect(rows[0]?.facilityLabel).toBe("Kunstrasen 2");
   });
 
   it("produces one management row per series with variable weekday times", () => {

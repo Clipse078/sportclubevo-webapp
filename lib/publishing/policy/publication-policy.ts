@@ -99,7 +99,20 @@ const PUBLISHABLE_STATUSES = new Set([
 
 // ── Allowed types per channel ──────────────────────────────────────────────────
 
-const INFOBOARD_TYPES = new Set(["TRAINING", "MATCH", "TOURNAMENT", "OTHER"]);
+/**
+ * Infoboard-supported activity taxonomy (Screen 1 + Screen 2 share this set).
+ *
+ * TRAINING · MATCH · TOURNAMENT — eligible per existing home/visibility rules.
+ * OTHER (club Veranstaltung) — explicitly NOT supported on Infoboard; Wochenplaner
+ * and website club-event channels may still use OTHER.
+ */
+export const INFOBOARD_SUPPORTED_ACTIVITY_TYPES = [
+  "TRAINING",
+  "MATCH",
+  "TOURNAMENT",
+] as const;
+
+const INFOBOARD_TYPES = new Set<string>(INFOBOARD_SUPPORTED_ACTIVITY_TYPES);
 const WEBSITE_MATCH_TYPES = new Set(["MATCH"]);
 const WEBSITE_TRAINING_TYPES = new Set(["TRAINING"]);
 const WEBSITE_TOURNAMENT_TYPES = new Set(["TOURNAMENT"]);
@@ -171,9 +184,7 @@ function evaluateInfoboard(
   const typeCheck = checkType(event, INFOBOARD_TYPES);
   if (typeCheck) return typeCheck;
 
-  // Veranstaltungen (OTHER): Infoboard eligibility is operational — not gated
-  // by the manual infoboardVisible flag (SCE-EVENTS-01B2).
-  if (event.type !== "OTHER" && !event.infoboardVisible) {
+  if (!event.infoboardVisible) {
     return { eligible: false, reason: "INFOBOARD_HIDDEN" };
   }
 
@@ -181,7 +192,7 @@ function evaluateInfoboard(
     return evaluateHomeMatchLocation(event.homeAway);
   }
 
-  // TRAINING, TOURNAMENT, and OTHER (Veranstaltung): eligible when prior checks pass.
+  // TRAINING and TOURNAMENT: eligible when prior checks pass.
   // TOURNAMENT_HOSTING_UNVERIFIED is reserved for future administrative use
   // and is not returned in the current evaluation flow.
   return { eligible: true, reason: "ELIGIBLE" };

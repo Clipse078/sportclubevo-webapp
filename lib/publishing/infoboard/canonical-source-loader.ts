@@ -895,7 +895,7 @@ export function createCanonicalInfoboardSourceLoader(
     const days = await Promise.all(
       dayKeys.map((dayKey) => resolveEffectiveDayItems(input.tenantId, dayKey)),
     );
-    const items: WeekplannerItem[] = days.flat();
+    const items: WeekplannerItem[] = days.flat().filter((item) => item.type !== "VERANSTALTUNG");
 
     if (items.length === 0) return [];
 

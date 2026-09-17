@@ -5,6 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, CheckCircle2, Users } from "lucide-react";
 import type { Weekday } from "@/lib/training/types";
+import TrainingWeekdayScheduleEditor from "@/components/admin/training/form/TrainingWeekdayScheduleEditor";
+import {
+  TRAINING_FORM_STICKY_FOOTER_CLASS,
+  TRAINING_FORM_STICKY_FOOTER_RESERVE_CLASS,
+} from "@/components/admin/training/form/training-form-layout";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -125,7 +130,7 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
       return;
     }
     if (!title.trim()) {
-      setError("Name der Trainingsserie ist erforderlich.");
+      setError("Name des Trainings ist erforderlich.");
       return;
     }
     if (!validFrom || !validUntil) {
@@ -184,18 +189,13 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
     }
   }
 
-  const fieldClass =
-    "w-full rounded-[14px] border border-[var(--border)] bg-white px-4 py-2.5 text-sm text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--blue)]/30";
-  const labelClass =
-    "block text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)] mb-1.5";
-
   if (result) {
     return (
-      <div className="space-y-6 rounded-[24px] border border-emerald-200 bg-emerald-50/60 p-8 text-center">
-        <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-600" />
+      <div className="space-y-6 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.08] p-8 text-center">
+        <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-400" />
         <div>
           <p className="text-lg font-semibold text-[var(--foreground)]">
-            {mode === "edit" ? "Trainingsserie aktualisiert" : "Trainingsserie erstellt"}
+            {mode === "edit" ? "Training aktualisiert" : "Training erstellt"}
           </p>
           <p className="mt-1 text-sm text-[var(--text-2)]">
             {result.generation.occurrencesInWindow} Termine im gewählten Zeitraum — {result.generation.created} neu
@@ -218,202 +218,165 @@ export default function TrainingSeriesForm({ mode, seriesId, teamSeasons, defaul
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error ? (
-        <div className="rounded-[20px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700">
-          {error}
-        </div>
-      ) : null}
+    <form
+      onSubmit={handleSubmit}
+      className={`space-y-5 ${TRAINING_FORM_STICKY_FOOTER_RESERVE_CLASS}`}
+      data-testid="training-series-form"
+    >
+      {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
 
-      <section className="rounded-[28px] border border-[var(--border)] bg-white p-6 shadow-sm">
-        <h3 className="mb-5 text-[1.05rem] font-semibold text-[var(--foreground)]">Team &amp; Serie</h3>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="md:col-span-2">
-            <label className={labelClass}>Team / Saison *</label>
-            {mode === "create" ? (
-              <select
-                value={teamSeasonId}
-                onChange={(e) => setTeamSeasonId(e.target.value)}
-                className={fieldClass}
-                required
-              >
-                <option value="">— Auswählen —</option>
-                {teamSeasons.map((ts) => (
-                  <option key={ts.id} value={ts.id}>
-                    {ts.teamName} · {ts.seasonName}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <div className={`${fieldClass} bg-[var(--surface-2)] text-[var(--text-2)]`}>
-                {selectedTeamSeason
-                  ? `${selectedTeamSeason.teamName} · ${selectedTeamSeason.seasonName}`
-                  : "—"}
-              </div>
-            )}
-          </div>
-
-          <div className="md:col-span-2">
-            <label className={labelClass}>Name der Trainingsserie *</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="z.B. E1 Dienstagstraining"
-              className={fieldClass}
-              required
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <label className={labelClass}>Beschreibung</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={2}
-              placeholder="Optionale Beschreibung…"
-              className={fieldClass}
-            />
-          </div>
-
-          <div>
-            <label className={labelClass}>Gültig ab *</label>
-            <input
-              type="date"
-              value={validFrom}
-              onChange={(e) => setValidFrom(e.target.value)}
-              className={fieldClass}
-              required
-            />
-          </div>
-
-          <div>
-            <label className={labelClass}>Gültig bis *</label>
-            <input
-              type="date"
-              value={validUntil}
-              onChange={(e) => setValidUntil(e.target.value)}
-              className={fieldClass}
-              required
-            />
-          </div>
-
-          <div>
-            <label className={labelClass}>Zeitzone</label>
-            <input
-              type="text"
-              value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
-              placeholder="Europe/Zurich"
-              className={fieldClass}
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-[28px] border border-[var(--border)] bg-white p-6 shadow-sm">
-        <h3 className="mb-1 text-[1.05rem] font-semibold text-[var(--foreground)]">Wochentage &amp; Zeiten</h3>
-        <p className="mb-5 text-sm text-[var(--text-2)]">
-          Wähle einen oder mehrere Wochentage. Jeder Wochentag kann eine eigene Start- und Endzeit haben
-          (z.&nbsp;B. Montag 17:00–18:00, Mittwoch 16:00–17:00).
-        </p>
-        <div className="space-y-2">
-          {weekdayRows.map((row) => (
-            <div
-              key={row.weekday}
-              className={`flex flex-wrap items-center gap-3 rounded-[14px] border px-4 py-3 transition ${
-                row.enabled
-                  ? "border-[var(--blue)]/30 bg-[var(--blue-light)]"
-                  : "border-[var(--border)] bg-[var(--surface-2)]"
-              }`}
-            >
-              <label className="flex w-36 shrink-0 items-center gap-2 text-sm font-medium text-[var(--foreground)]">
-                <input
-                  type="checkbox"
-                  checked={row.enabled}
-                  onChange={() => toggleWeekday(row.weekday)}
-                  className="h-4 w-4 rounded border-[var(--border)]"
-                />
-                {row.label}
-              </label>
-              {row.enabled ? (
-                <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <input
-                    type="time"
-                    value={row.startsAt}
-                    onChange={(e) => updateWeekdayTime(row.weekday, "startsAt", e.target.value)}
-                    className="rounded-[10px] border border-[var(--border)] bg-white px-3 py-1.5"
-                    required
-                  />
-                  <span className="text-[var(--muted)]">–</span>
-                  <input
-                    type="time"
-                    value={row.endsAt}
-                    onChange={(e) => updateWeekdayTime(row.weekday, "endsAt", e.target.value)}
-                    className="rounded-[10px] border border-[var(--border)] bg-white px-3 py-1.5"
-                    required
-                  />
-                </div>
+      <div className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+        <section className="px-4 py-4">
+          <h2 className="text-sm font-semibold text-[var(--foreground)]">Team</h2>
+          <p className="mb-3 text-xs text-[var(--text-2)]">Mannschaft und Trainingsname.</p>
+          <div className="grid gap-3 md:grid-cols-2">
+            <label className="block space-y-1 md:col-span-2">
+              <span className="fca-label">Team / Saison</span>
+              {mode === "create" ? (
+                <select
+                  value={teamSeasonId}
+                  onChange={(e) => setTeamSeasonId(e.target.value)}
+                  className="fca-input"
+                  required
+                >
+                  <option value="">— Auswählen —</option>
+                  {teamSeasons.map((ts) => (
+                    <option key={ts.id} value={ts.id}>
+                      {ts.teamName} · {ts.seasonName}
+                    </option>
+                  ))}
+                </select>
               ) : (
-                <span className="text-sm text-[var(--muted)]">Nicht aktiv</span>
+                <div className="fca-input bg-[var(--surface-2)] text-[var(--text-2)]" aria-readonly>
+                  {selectedTeamSeason
+                    ? `${selectedTeamSeason.teamName} · ${selectedTeamSeason.seasonName}`
+                    : "—"}
+                </div>
               )}
-            </div>
-          ))}
-        </div>
-      </section>
+            </label>
 
-      <section className="rounded-[28px] border border-[var(--border)] bg-white p-6 shadow-sm">
-        <h3 className="mb-1 flex items-center gap-2 text-[1.05rem] font-semibold text-[var(--foreground)]">
-          <Users className="h-4 w-4 text-[var(--blue)]" />
-          Trainer
-        </h3>
-        <p className="mb-4 text-sm text-[var(--text-2)]">
-          Trainer werden auf Stufe Mannschaft verwaltet und hier nur angezeigt.
-        </p>
-        {selectedTeamSeason && selectedTeamSeason.trainers.length > 0 ? (
-          <ul className="flex flex-wrap gap-2">
-            {selectedTeamSeason.trainers.map((t) => (
-              <li
-                key={t.id}
-                className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1 text-xs font-medium text-[var(--foreground)]"
-              >
-                {t.name}
-                {t.roleLabel ? <span className="ml-1 text-[var(--muted)]">({t.roleLabel})</span> : null}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-[var(--muted)]">
-            {selectedTeamSeason
-              ? "Keine Trainer für dieses Team hinterlegt."
-              : "Team auswählen, um zugewiesene Trainer zu sehen."}
-          </p>
-        )}
-        {selectedTeamSeason ? (
-          <Link
-            href={`/dashboard/teams/${selectedTeamSeason.teamId}`}
-            className="mt-3 inline-block text-xs text-[var(--blue)] hover:underline"
-          >
-            Trainer für dieses Team verwalten
-          </Link>
-        ) : null}
-      </section>
+            <label className="block space-y-1 md:col-span-2">
+              <span className="fca-label">Trainingsname</span>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="z. B. Junioren D-7 D1 Training"
+                className="fca-input"
+                required
+                data-testid="training-series-title"
+              />
+            </label>
 
-      <div className="flex items-center justify-between gap-4">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="rounded-full border border-[var(--border)] bg-white px-5 py-2.5 text-sm font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)]"
-        >
+            <label className="block space-y-1 md:col-span-2">
+              <span className="fca-label">Beschreibung (optional)</span>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={2}
+                placeholder="Kurze Notiz…"
+                className="fca-input min-h-[4.5rem]"
+              />
+            </label>
+          </div>
+        </section>
+
+        <section className="px-4 py-4">
+          <h2 className="text-sm font-semibold text-[var(--foreground)]">Zeitraum</h2>
+          <p className="mb-3 text-xs text-[var(--text-2)]">Gültigkeit der Serie und Zeitzone.</p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <label className="block space-y-1">
+              <span className="fca-label">Gültig ab</span>
+              <input
+                type="date"
+                value={validFrom}
+                onChange={(e) => setValidFrom(e.target.value)}
+                className="fca-input"
+                required
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="fca-label">Gültig bis</span>
+              <input
+                type="date"
+                value={validUntil}
+                onChange={(e) => setValidUntil(e.target.value)}
+                className="fca-input"
+                required
+              />
+            </label>
+            <label className="block space-y-1 sm:col-span-2 lg:col-span-1">
+              <span className="fca-label">Zeitzone</span>
+              <input
+                type="text"
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
+                placeholder="Europe/Zurich"
+                className="fca-input"
+              />
+            </label>
+          </div>
+        </section>
+
+        <section className="px-4 py-4">
+          <h2 className="text-sm font-semibold text-[var(--foreground)]">Wiederholung &amp; Zeiten</h2>
+          <p className="mb-3 text-xs text-[var(--text-2)]">Aktive Wochentage mit Start- und Endzeit.</p>
+          <TrainingWeekdayScheduleEditor
+            rows={weekdayRows}
+            onToggle={toggleWeekday}
+            onTimeChange={updateWeekdayTime}
+            testIdPrefix="training-series-weekday"
+          />
+        </section>
+
+        <section className="px-4 py-4">
+          <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold text-[var(--foreground)]">
+            <Users className="h-4 w-4 text-[var(--blue)]" aria-hidden />
+            Trainer
+          </h2>
+          <p className="mb-3 text-xs text-[var(--text-2)]">Verwaltet auf Stufe Mannschaft.</p>
+          {selectedTeamSeason && selectedTeamSeason.trainers.length > 0 ? (
+            <ul className="flex flex-wrap gap-2">
+              {selectedTeamSeason.trainers.map((t) => (
+                <li
+                  key={t.id}
+                  className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1 text-xs font-medium text-[var(--foreground)]"
+                >
+                  {t.name}
+                  {t.roleLabel ? <span className="ml-1 text-[var(--muted)]">({t.roleLabel})</span> : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-[var(--muted)]">
+              {selectedTeamSeason
+                ? "Keine Trainer für dieses Team hinterlegt."
+                : "Team auswählen, um zugewiesene Trainer zu sehen."}
+            </p>
+          )}
+          {selectedTeamSeason ? (
+            <Link
+              href={`/dashboard/teams/${selectedTeamSeason.teamId}`}
+              className="mt-3 inline-block text-xs font-medium text-[var(--blue)] hover:underline"
+            >
+              Trainer verwalten
+            </Link>
+          ) : null}
+        </section>
+      </div>
+
+      <div className={TRAINING_FORM_STICKY_FOOTER_CLASS}>
+        <button type="button" onClick={() => router.back()} className="fca-button-secondary">
           Abbrechen
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="fca-button-primary inline-flex items-center gap-2 text-sm disabled:opacity-60"
+          className="fca-button-primary inline-flex items-center gap-2 disabled:opacity-60"
+          data-testid="training-series-submit"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-          {mode === "create" ? "Trainingsserie erstellen" : "Änderungen speichern"}
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+          {mode === "create" ? "Training erstellen" : "Änderungen speichern"}
         </button>
       </div>
     </form>

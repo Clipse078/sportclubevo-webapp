@@ -208,11 +208,11 @@ describe("type step — TYPE_MISMATCH evaluated after status, before visibility"
     expect(result.reason).toBe<PublicationReason>("TYPE_MISMATCH");
   });
 
-  it("infoboard: OTHER (Veranstaltung) is eligible without manual infoboardVisible", () => {
+  it("infoboard: OTHER (Veranstaltung) → TYPE_MISMATCH", () => {
     const event = infoboardEvent({ type: "OTHER", infoboardVisible: false });
     const result = evaluatePublication(event, "INFOBOARD_SCREEN_1", TENANT);
-    expect(result.eligible).toBe(true);
-    expect(result.reason).toBe<PublicationReason>("ELIGIBLE");
+    expect(result.eligible).toBe(false);
+    expect(result.reason).toBe<PublicationReason>("TYPE_MISMATCH");
   });
 
   it("infoboard: VACATION_PERIOD remains TYPE_MISMATCH", () => {
@@ -241,7 +241,7 @@ describe("infoboard shared policy — Screen 1 and Screen 2 return identical dec
     ["NEUTRAL homeAway MATCH", infoboardEvent({ type: "MATCH", homeAway: "NEUTRAL" })],
     ["tenant mismatch", infoboardEvent({ tenantId: "other" })],
     ["DRAFT status", infoboardEvent({ status: "DRAFT" })],
-    ["eligible OTHER (Veranstaltung)", infoboardEvent({ type: "OTHER", infoboardVisible: false })],
+    ["OTHER (Veranstaltung) TYPE_MISMATCH", infoboardEvent({ type: "OTHER", infoboardVisible: false })],
     ["infoboard hidden", infoboardEvent({ infoboardVisible: false })],
   ];
 
@@ -281,11 +281,11 @@ describe("infoboard supported event types", () => {
     });
   });
 
-  it("OTHER (Veranstaltung) is eligible on Infoboard", () => {
+  it("OTHER (Veranstaltung) is excluded from Infoboard", () => {
     const event = infoboardEvent({ type: "OTHER", infoboardVisible: false });
     expect(evaluatePublication(event, "INFOBOARD_SCREEN_1", TENANT)).toEqual({
-      eligible: true,
-      reason: "ELIGIBLE",
+      eligible: false,
+      reason: "TYPE_MISMATCH",
     });
   });
 
@@ -737,9 +737,9 @@ describe("evaluation order: tenant > status > type > visibility > homeAway", () 
     expect(evaluatePublication(e, "INFOBOARD_SCREEN_1", TENANT).reason).toBe<PublicationReason>("TYPE_MISMATCH");
   });
 
-  it("OTHER (Veranstaltung) ignores infoboardVisible=false", () => {
+  it("OTHER (Veranstaltung) is rejected before visibility checks", () => {
     const e = infoboardEvent({ type: "OTHER", infoboardVisible: false });
-    expect(evaluatePublication(e, "INFOBOARD_SCREEN_1", TENANT).reason).toBe<PublicationReason>("ELIGIBLE");
+    expect(evaluatePublication(e, "INFOBOARD_SCREEN_1", TENANT).reason).toBe<PublicationReason>("TYPE_MISMATCH");
   });
 
   it("visibility beats homeAway", () => {

@@ -291,8 +291,8 @@ describe("TrainingSeriesCreateForm — recurrence (Einmalig / Wiederkehrend)", (
   });
 });
 
-describe("TrainingSeriesCreateForm — validation right wiring", () => {
-  it("with validation right (trainings.manage): submit label reads 'Trainingsserie erstellen' and calls the create API", async () => {
+describe("TrainingSeriesCreateForm — direct create (no four-eye UX)", () => {
+  it("submit label reads 'Training erstellen' and calls the create API when required fields are set", async () => {
     const { fetchMock } = installFetchMock();
     render(
       <TrainingSeriesCreateForm
@@ -303,7 +303,9 @@ describe("TrainingSeriesCreateForm — validation right wiring", () => {
       />,
     );
 
-    expect(screen.getByTestId("training-create-submit")).toHaveTextContent("Trainingsserie erstellen");
+    expect(screen.getByTestId("training-create-submit")).toHaveTextContent("Training erstellen");
+    expect(screen.queryByText(/Prüfen/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Einreichen/i)).not.toBeInTheDocument();
 
     selectTeamSeason();
     fireEvent.change(screen.getByTestId("training-create-title"), { target: { value: "E1 Training" } });
@@ -315,7 +317,7 @@ describe("TrainingSeriesCreateForm — validation right wiring", () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/api/training-series", expect.anything()));
   });
 
-  it("without validation right: submit label reads 'Zur Freigabe einreichen', stays disabled, and never calls the create API", async () => {
+  it("does not expose review/submit workflow copy when canValidateDirectly is false (future four-eye hook)", async () => {
     const { fetchMock } = installFetchMock();
     render(
       <TrainingSeriesCreateForm
@@ -326,16 +328,16 @@ describe("TrainingSeriesCreateForm — validation right wiring", () => {
       />,
     );
 
-    expect(screen.getByTestId("training-create-submit")).toHaveTextContent("Zur Freigabe einreichen");
-    expect(screen.getByTestId("training-create-no-validation-right")).toBeInTheDocument();
+    expect(screen.getByTestId("training-create-submit")).toHaveTextContent("Training erstellen");
+    expect(screen.queryByText(/Zur Freigabe einreichen/i)).not.toBeInTheDocument();
 
     selectTeamSeason();
     fireEvent.change(screen.getByTestId("training-create-title"), { target: { value: "E1 Training" } });
     fireEvent.change(screen.getByTestId("training-create-date"), { target: { value: "2026-09-22" } });
 
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    expect(screen.getByTestId("training-create-submit")).toBeDisabled();
-    expect(fetchMock).not.toHaveBeenCalledWith("/api/training-series", expect.anything());
+    await waitFor(() => expect(screen.getByTestId("training-create-submit")).not.toBeDisabled());
+    fireEvent.click(screen.getByTestId("training-create-submit"));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/api/training-series", expect.anything()));
   });
 });
 

@@ -6,6 +6,9 @@ import { findTeamSeasonsForTenant } from "@/lib/training/queries";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import TrainingSeriesCreateForm from "@/components/admin/training/TrainingSeriesCreateForm";
+import {
+  TRAINING_FORM_MAX_WIDTH_CLASS,
+} from "@/components/admin/training/form/training-form-layout";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { prisma } from "@/lib/db/prisma";
 import { createPlanningAuthorizationPolicy } from "@/lib/planning/planning-authorization-policy";
@@ -73,10 +76,10 @@ export default async function NewTrainingSeriesPage() {
   const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
 
   return (
-    <div className="max-w-[1000px] space-y-6">
+    <div className={`${TRAINING_FORM_MAX_WIDTH_CLASS} space-y-6`}>
       <AdminSectionHeader
         eyebrow="TrainingCenter"
-        title="Neue Trainingsserie"
+        title="Neues Training"
         description="Team, Termin und Ressourcen in einem geführten Ablauf erfassen."
       />
 

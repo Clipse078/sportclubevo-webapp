@@ -24,9 +24,10 @@ import type {
   ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
 import {
-  RESOURCE_CARD_SELECTED_CLASSES,
-  RESOURCE_CARD_SELECTED_ICON_TILE_CLASSES,
-  RESOURCE_CARD_SELECTED_SUMMARY_CLASSES,
+  RESOURCE_CARD_DRESSING_SELECTED_CLASSES,
+  RESOURCE_CARD_DRESSING_SELECTED_ICON_TILE_CLASSES,
+  RESOURCE_CARD_DRESSING_SELECTED_SUMMARY_CLASSES,
+  RESOURCE_SEMANTIC_DRESSING_ICON_CLASS,
 } from "./resource-card-selection-style";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -132,7 +133,7 @@ function OccupiedRoomChip({
       className={cn(
         "flex w-full items-start gap-2 rounded-lg border px-2.5 py-1.5 text-left transition-all",
         isSharedSelection
-          ? RESOURCE_CARD_SELECTED_CLASSES
+          ? RESOURCE_CARD_DRESSING_SELECTED_CLASSES
           : pendingOccupiedConfirm
             ? "border-amber-400/50 bg-amber-500/10 ring-1 ring-amber-400/20"
             : "border-rose-400/40 bg-rose-500/10 hover:border-amber-400/50",
@@ -272,7 +273,7 @@ function FreeRoomCard({
           "flex items-center justify-center rounded-lg border-2",
           compact ? "mb-1 h-8 w-8" : "mb-2 h-10 w-10",
           isSelected
-            ? RESOURCE_CARD_SELECTED_ICON_TILE_CLASSES
+            ? RESOURCE_CARD_DRESSING_SELECTED_ICON_TILE_CLASSES
             : isFree
               ? "border-emerald-400/45 bg-emerald-500/10 text-emerald-400"
               : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)]",
@@ -376,7 +377,7 @@ function SelectedDressingRoomSummary({
 
   return (
     <div
-      className={RESOURCE_CARD_SELECTED_SUMMARY_CLASSES}
+      className={RESOURCE_CARD_DRESSING_SELECTED_SUMMARY_CLASSES}
       data-testid={testId ? `${testId}-selected-summary` : undefined}
     >
       {selected.map((resource) => {
@@ -450,7 +451,7 @@ function CompactFreeDressingRoomRow({
       className={cn(
         "flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-all",
         isSelected
-          ? RESOURCE_CARD_SELECTED_CLASSES
+          ? RESOURCE_CARD_DRESSING_SELECTED_CLASSES
           : isFree
             ? "border-emerald-200 bg-[var(--surface)] hover:border-emerald-300 hover:bg-emerald-500/[0.06]"
             : "border-[var(--border)] bg-[var(--surface)]",

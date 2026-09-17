@@ -11,6 +11,7 @@ import { findTeamSeasonPickerRow } from "@/lib/training/queries";
 import { TrainingSeriesNotFoundError } from "@/lib/training/errors";
 import { countSeriesOccurrenceAllocationExceptions } from "@/lib/training/series-cockpit-exception-data";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import { TRAINING_FORM_MAX_WIDTH_CLASS } from "@/components/admin/training/form/training-form-layout";
 import TrainingSeriesForm from "@/components/admin/training/TrainingSeriesForm";
 import TrainingSeriesDeleteControl from "@/components/admin/training/TrainingSeriesDeleteControl";
 import { TrainingAllocationEditor } from "@/components/admin/training/TrainingAllocationEditor";
@@ -88,19 +89,19 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
     .filter((fg) => fg.resources.length > 0);
 
   return (
-    <div className="space-y-6">
+    <div className={`${TRAINING_FORM_MAX_WIDTH_CLASS} space-y-6`}>
       <AdminSectionHeader
         eyebrow="TrainingCenter"
-        title={`Bearbeiten: ${series.title}`}
-        description="Änderungen an Wochentagen, Zeiten oder Zeitraum werden beim Speichern sofort in generierte Termine übernommen. Bereits generierte Termine werden nicht dupliziert."
+        title="Training bearbeiten"
+        description={series.title}
       />
 
       {occurrenceExceptionCount > 0 ? (
         <div
-          className="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900"
+          className="flex items-start gap-3 rounded-xl border border-[var(--blue)]/30 bg-[var(--blue)]/10 px-4 py-3 text-sm text-[var(--foreground)]"
           data-testid="training-series-edit-exception-notice"
         >
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" aria-hidden />
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--blue)]" aria-hidden />
           <div className="space-y-1">
             <p>
               Diese Serie hat{" "}
@@ -113,7 +114,7 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
             </p>
             <Link
               href={`/dashboard/training?tab=serien`}
-              className="inline-flex text-xs font-semibold text-blue-800 underline-offset-2 hover:underline"
+              className="inline-flex text-xs font-semibold text-[var(--blue)] underline-offset-2 hover:underline"
             >
               Ausnahmen im Serien-Cockpit ansehen
             </Link>

@@ -156,7 +156,6 @@ export default function TrainingManagementWorkspace({
               })}
               canManage={canManage}
               canDelete={canDelete}
-              isCoordinator={isCoordinator}
             />
           ))
         )}

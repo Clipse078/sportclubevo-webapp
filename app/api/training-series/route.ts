@@ -170,9 +170,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // ORG-ACCESS-03: coordinator-created records are directly APPROVED (authoritative).
-    // Scoped user records start as DRAFT (editable until submitted).
-    const planningStage = canCreate.isCoordinator ? "APPROVED" : "DRAFT";
+    // SCE-TRAININGS-UX-01H: default direct-save workflow (no four-eye in UX).
+    // All creators land in APPROVED so sessions stay operational without review.
+    // Future tenant flag `trainingsFourEyeEnabled` may restore DRAFT for scoped writers.
+    const planningStage = "APPROVED" as const;
 
     const created = await createTrainingSeries(tenantId, {
       teamSeasonId,

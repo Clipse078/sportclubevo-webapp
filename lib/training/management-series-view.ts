@@ -82,11 +82,11 @@ function buildCompactFacilityLabel(allocations: readonly TrainingAllocationDto[]
     return display.pitchName;
   }
 
-  const codes = pitches
-    .map((allocation) => allocation.facilityResourceCode?.trim() || allocation.facilityResourceName.trim())
+  const labels = pitches
+    .map((allocation) => allocation.facilityResourceName?.trim() || allocation.facilityResourceCode?.trim() || "")
     .filter((value) => value.length > 0);
 
-  const unique = [...new Set(codes)];
+  const unique = [...new Set(labels)];
   return unique.length > 0 ? unique.join(" · ") : null;
 }
 

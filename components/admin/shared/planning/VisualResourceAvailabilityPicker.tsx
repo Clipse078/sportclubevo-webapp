@@ -34,8 +34,9 @@ import type {
   ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
 import {
-  RESOURCE_CARD_SELECTED_CLASSES,
-  RESOURCE_CARD_SELECTED_SUMMARY_CLASSES,
+  RESOURCE_CARD_PITCH_SELECTED_CLASSES,
+  RESOURCE_CARD_PITCH_SELECTED_SUMMARY_CLASSES,
+  RESOURCE_SEMANTIC_PITCH_ICON_CLASS,
 } from "./resource-card-selection-style";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -607,7 +608,7 @@ function CompactFreeResourceRow({
       className={cn(
         "group flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-all",
         isSelected
-          ? RESOURCE_CARD_SELECTED_CLASSES
+          ? RESOURCE_CARD_PITCH_SELECTED_CLASSES
           : isFree
             ? "border-emerald-200 bg-[var(--surface)] hover:border-emerald-300 hover:bg-emerald-500/[0.06]"
             : "border-[var(--border)] bg-[var(--surface)]",
@@ -662,7 +663,7 @@ function SelectedResourceSummary({
 
   return (
     <div
-      className={RESOURCE_CARD_SELECTED_SUMMARY_CLASSES}
+      className={RESOURCE_CARD_PITCH_SELECTED_SUMMARY_CLASSES}
       data-testid={testId ? `${testId}-selected-summary` : undefined}
     >
       {selected.map((entry) => {

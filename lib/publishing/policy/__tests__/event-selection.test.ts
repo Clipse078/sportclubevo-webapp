@@ -332,20 +332,19 @@ describe("ordering: original input ordering is preserved in output", () => {
     const e1 = makeTraining();
     const e2 = makeTraining({ status: "DRAFT" }); // rejected
     const e3 = makeHomeMatch();
-    const e4 = makeTraining({ type: "OTHER" }); // eligible on Infoboard (SCE-EVENTS-01B2)
+    const e4 = makeTraining({ type: "OTHER" }); // excluded from Infoboard (SCE-TRAININGS-UX-01H)
     const e5 = makeTraining();
     const result = await selectEventsForPublication(
       makeLoader([e1, e2, e3, e4, e5]),
       makeInput("INFOBOARD_SCREEN_1"),
     );
-    expect(result.eligible).toHaveLength(4);
+    expect(result.eligible).toHaveLength(3);
     expect(result.eligible[0]).toBe(e1);
     expect(result.eligible[1]).toBe(e3);
-    expect(result.eligible[2]).toBe(e4);
-    expect(result.eligible[3]).toBe(e5);
+    expect(result.eligible[2]).toBe(e5);
 
-    expect(result.rejected).toHaveLength(1);
-    expect(result.rejected[0].event).toBe(e2);
+    expect(result.rejected).toHaveLength(2);
+    expect(result.rejected.map((r) => r.event)).toEqual(expect.arrayContaining([e2, e4]));
   });
 });
 
