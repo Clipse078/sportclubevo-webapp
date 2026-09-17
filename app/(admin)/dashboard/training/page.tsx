@@ -19,6 +19,9 @@ import {
 import {
   buildTrainingSeriesManagementRows,
   filterTrainingSeriesManagementRows,
+  paginateTrainingSeriesManagementRows,
+  parseTrainingSeriesManagementSort,
+  sortTrainingSeriesManagementRows,
   type TrainingSeriesManagementFilters,
 } from "@/lib/training/management-series-view";
 import {
@@ -43,6 +46,8 @@ type TrainingPageSearchParams = {
   seriesSearch?: string;
   seriesTeam?: string;
   seriesStatus?: string;
+  seriesSort?: string;
+  page?: string;
   sessionSearch?: string;
   sessionTeam?: string;
   sessionStatus?: string;
@@ -141,12 +146,17 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
     status: parseSeriesStatusFilter(params.seriesStatus, showArchived),
   });
 
+  const sort = parseTrainingSeriesManagementSort(params.seriesSort);
+  const sortedSeriesRows = sortTrainingSeriesManagementRows(filteredSeriesRows, sort);
+  const pageNumber = Number.parseInt(params.page ?? "1", 10);
+  const pagination = paginateTrainingSeriesManagementRows(sortedSeriesRows, pageNumber);
+
   if (perfTimer) {
     logAdminServerTiming(perfTimer.finish());
   }
 
   return (
-    <div className="w-full max-w-[min(100%,90rem)]">
+    <div className="w-full">
       <TrainingManagementWorkspace
         canCreate={canCreate}
         canManage={canManage}
@@ -155,8 +165,16 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
         locale={locale}
         timezone={timezone}
         wochenplanerHref={buildTrainingResourcesWochenplanerHref({ timezone })}
-        seriesRows={filteredSeriesRows}
+        seriesRows={pagination.rows}
         teamOptions={teamOptions}
+        pagination={{
+          page: pagination.page,
+          pageCount: pagination.pageCount,
+          rangeStart: pagination.rangeStart,
+          rangeEnd: pagination.rangeEnd,
+          totalCount: pagination.totalCount,
+        }}
+        sort={sort}
         archivedCount={archivedCount}
         filters={{
           seriesSearch: params.seriesSearch,

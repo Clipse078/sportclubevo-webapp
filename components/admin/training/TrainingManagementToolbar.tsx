@@ -59,6 +59,7 @@ export default function TrainingManagementToolbar({
       next.delete("sessionTeam");
       next.delete("sessionStatus");
       next.delete("sessionsPage");
+      next.delete("page");
 
       const qs = next.toString();
       startTransition(() => {
@@ -96,7 +97,7 @@ export default function TrainingManagementToolbar({
           type="search"
           value={searchDraft}
           onChange={(event) => setSearchDraft(event.target.value)}
-          placeholder="Trainings durchsuchen…"
+          placeholder="Trainings durchsuchen..."
           className={cn(CONTROL, "w-full pl-9 pr-3")}
           data-testid="training-search-input"
         />
@@ -110,7 +111,7 @@ export default function TrainingManagementToolbar({
           className={cn(CONTROL, "w-full min-w-[9rem] px-3")}
           data-testid="training-team-filter"
         >
-          <option value="">Team</option>
+          <option value="">Alle Teams</option>
           {teamOptions.map((team) => (
             <option key={team.id} value={team.id}>
               {team.label}

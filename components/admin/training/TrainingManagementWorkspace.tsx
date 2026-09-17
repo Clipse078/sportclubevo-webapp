@@ -1,12 +1,23 @@
 import Link from "next/link";
-import { Archive, Plus } from "lucide-react";
+import { Archive, CalendarDays, Plus } from "lucide-react";
 import { Suspense } from "react";
 import TrainingManagementToolbar from "./TrainingManagementToolbar";
+import TrainingManagementSortControl from "./TrainingManagementSortControl";
+import TrainingManagementPagination from "./TrainingManagementPagination";
 import TrainingSeriesManagementRow from "./TrainingSeriesManagementRow";
 import type { TrainingSeriesManagementRow as SeriesRow } from "@/lib/training/management-series-view";
+import type { TrainingSeriesManagementSort } from "@/lib/training/management-series-view";
 import { buildTrainingSeriesWochenplanerHref } from "@/lib/training/wochenplaner-deep-links";
 
 type TeamOption = { id: string; label: string };
+
+type PaginationMeta = {
+  page: number;
+  pageCount: number;
+  rangeStart: number;
+  rangeEnd: number;
+  totalCount: number;
+};
 
 type Props = {
   canCreate: boolean;
@@ -18,6 +29,8 @@ type Props = {
   wochenplanerHref: string;
   seriesRows: SeriesRow[];
   teamOptions: TeamOption[];
+  pagination: PaginationMeta;
+  sort: TrainingSeriesManagementSort;
   filters: {
     seriesSearch?: string;
     seriesTeam?: string;
@@ -28,47 +41,65 @@ type Props = {
 };
 
 const LIST_HEADER =
-  "hidden md:grid md:grid-cols-[minmax(0,1.6fr)_minmax(6rem,0.75fr)_minmax(7rem,0.85fr)_minmax(0,1fr)_5.5rem_2.75rem] md:gap-x-4 px-4 pb-2 text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--muted)]";
+  "hidden md:grid md:grid-cols-[minmax(0,1.75fr)_minmax(7.25rem,0.95fr)_minmax(7.5rem,0.95fr)_minmax(0,1.1fr)_5.5rem_2.5rem] md:gap-x-4 px-4 pb-2 pt-1 text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--muted)]";
 
 function hasActiveFilters(filters: Props["filters"]): boolean {
   return Boolean(filters.seriesSearch?.trim() || filters.seriesTeam || filters.seriesStatus);
+}
+
+function buildPaginationHref(filters: Props["filters"], sort: TrainingSeriesManagementSort, page: number): string {
+  const params = new URLSearchParams();
+  if (filters.archived) params.set("archived", "1");
+  if (filters.seriesSearch?.trim()) params.set("seriesSearch", filters.seriesSearch.trim());
+  if (filters.seriesTeam) params.set("seriesTeam", filters.seriesTeam);
+  if (filters.seriesStatus) params.set("seriesStatus", filters.seriesStatus);
+  if (sort !== "UPDATED_DESC") params.set("seriesSort", sort);
+  if (page > 1) params.set("page", String(page));
+  const qs = params.toString();
+  return qs ? `/dashboard/training?${qs}` : "/dashboard/training";
 }
 
 export default function TrainingManagementWorkspace({
   canCreate,
   canManage,
   canDelete,
-  isCoordinator,
+  isCoordinator: _isCoordinator,
   locale: _locale,
   timezone,
   wochenplanerHref,
   seriesRows,
   teamOptions,
+  pagination,
+  sort,
   filters,
   archivedCount,
 }: Props) {
+  void _isCoordinator;
   void _locale;
 
   const archiveToggleHref = filters.archived ? "/dashboard/training" : "/dashboard/training?archived=1";
-  const filteredEmpty = seriesRows.length === 0 && hasActiveFilters(filters);
+  const filteredEmpty = pagination.totalCount === 0 && hasActiveFilters(filters);
   const resetFiltersHref = filters.archived ? "/dashboard/training?archived=1" : "/dashboard/training";
 
   return (
     <div className="space-y-5" data-testid="training-management-workspace">
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
         <div className="min-w-0 space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-[var(--foreground)]">Trainings</h1>
+          <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
+            Trainings
+          </h1>
           <p className="text-sm text-[var(--text-2)]">
-            Trainings verwalten und im Wochenplaner koordinieren
+            Trainings verwalten und im Wochenplaner koordinieren.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={wochenplanerHref}
-            className="fca-button-secondary text-sm"
+            className="fca-button-secondary inline-flex items-center gap-1.5 text-sm"
             data-testid="training-open-wochenplaner"
           >
-            Wochenplaner
+            <CalendarDays className="h-4 w-4" aria-hidden="true" />
+            Wochenplaner öffnen
           </Link>
           {canCreate ? (
             <Link
@@ -83,30 +114,41 @@ export default function TrainingManagementWorkspace({
         </div>
       </header>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Suspense fallback={null}>
-          <TrainingManagementToolbar
-            teamOptions={teamOptions}
-            searchValue={filters.seriesSearch}
-            teamValue={filters.seriesTeam}
-            statusValue={filters.seriesStatus}
-            archived={filters.archived}
-          />
-        </Suspense>
-        {archivedCount > 0 ? (
-          <Link
-            href={archiveToggleHref}
-            className="fca-button-secondary inline-flex items-center gap-1.5 text-xs"
-            data-testid="training-archive-toggle"
-          >
-            <Archive className="h-3.5 w-3.5" aria-hidden="true" />
-            {filters.archived ? "Archiv ausblenden" : `Archiv (${archivedCount})`}
-          </Link>
-        ) : null}
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <Suspense fallback={null}>
+            <TrainingManagementToolbar
+              teamOptions={teamOptions}
+              searchValue={filters.seriesSearch}
+              teamValue={filters.seriesTeam}
+              statusValue={filters.seriesStatus}
+              archived={filters.archived}
+            />
+          </Suspense>
+
+          <div className="flex flex-wrap items-center gap-3 xl:justify-end">
+            <p className="text-sm text-[var(--text-2)]" data-testid="training-result-count">
+              {pagination.totalCount} {pagination.totalCount === 1 ? "Training" : "Trainings"}
+            </p>
+            <Suspense fallback={null}>
+              <TrainingManagementSortControl value={sort} archived={filters.archived} />
+            </Suspense>
+            {archivedCount > 0 ? (
+              <Link
+                href={archiveToggleHref}
+                className="fca-button-secondary inline-flex items-center gap-1.5 text-xs"
+                data-testid="training-archive-toggle"
+              >
+                <Archive className="h-3.5 w-3.5" aria-hidden="true" />
+                {filters.archived ? "Archiv ausblenden" : `Archiv (${archivedCount})`}
+              </Link>
+            ) : null}
+          </div>
+        </div>
       </div>
 
       <div
-        className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]/60"
+        className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]/70"
         data-testid="training-list"
       >
         <div className={LIST_HEADER}>
@@ -123,6 +165,7 @@ export default function TrainingManagementWorkspace({
             {filteredEmpty ? (
               <>
                 <p className="text-sm font-medium text-[var(--foreground)]">Keine Trainings gefunden</p>
+                <p className="mt-1 text-sm text-[var(--muted)]">Passe Suche oder Filter an.</p>
                 <Link href={resetFiltersHref} className="mt-3 inline-block text-sm text-[var(--blue)] hover:underline">
                   Filter zurücksetzen
                 </Link>
@@ -131,33 +174,48 @@ export default function TrainingManagementWorkspace({
               <>
                 <p className="text-sm font-medium text-[var(--foreground)]">Noch keine Trainings</p>
                 <p className="mt-1 text-sm text-[var(--muted)]">
-                  Erstelle das erste Training, um die Trainingsplanung zu beginnen.
+                  Erstelle das erste Training oder plane es direkt im Wochenplaner.
                 </p>
-                {canCreate ? (
-                  <Link
-                    href="/dashboard/training/new"
-                    className="fca-button-primary mt-4 inline-flex items-center gap-1.5 text-sm"
-                  >
-                    <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-                    Training
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                  {canCreate ? (
+                    <Link
+                      href="/dashboard/training/new"
+                      className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
+                    >
+                      <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                      Training
+                    </Link>
+                  ) : null}
+                  <Link href={wochenplanerHref} className="fca-button-secondary text-sm">
+                    Wochenplaner öffnen
                   </Link>
-                ) : null}
+                </div>
               </>
             )}
           </div>
         ) : (
-          seriesRows.map((row) => (
-            <TrainingSeriesManagementRow
-              key={row.seriesId}
-              row={row}
-              wochenplanerHref={buildTrainingSeriesWochenplanerHref({
-                teamSeasonId: row.teamSeasonId,
-                timezone,
-              })}
-              canManage={canManage}
-              canDelete={canDelete}
+          <>
+            {seriesRows.map((row) => (
+              <TrainingSeriesManagementRow
+                key={row.seriesId}
+                row={row}
+                wochenplanerHref={buildTrainingSeriesWochenplanerHref({
+                  teamSeasonId: row.teamSeasonId,
+                  timezone,
+                })}
+                canManage={canManage}
+                canDelete={canDelete}
+              />
+            ))}
+            <TrainingManagementPagination
+              page={pagination.page}
+              pageCount={pagination.pageCount}
+              rangeStart={pagination.rangeStart}
+              rangeEnd={pagination.rangeEnd}
+              totalCount={pagination.totalCount}
+              buildPageHref={(page) => buildPaginationHref(filters, sort, page)}
             />
-          ))
+          </>
         )}
       </div>
     </div>

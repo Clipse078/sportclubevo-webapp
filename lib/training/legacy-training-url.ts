@@ -29,6 +29,8 @@ export function buildNormalizedTrainingManagementHref(
     seriesSearch?: string;
     seriesTeam?: string;
     seriesStatus?: string;
+    seriesSort?: string;
+    page?: string;
     sessionSearch?: string;
     sessionTeam?: string;
     sessionStatus?: string;
@@ -41,6 +43,8 @@ export function buildNormalizedTrainingManagementHref(
   if (params.seriesSearch?.trim()) query.set("seriesSearch", params.seriesSearch.trim());
   if (params.seriesTeam?.trim()) query.set("seriesTeam", params.seriesTeam.trim());
   if (params.seriesStatus?.trim()) query.set("seriesStatus", params.seriesStatus.trim());
+  if (params.seriesSort?.trim()) query.set("seriesSort", params.seriesSort.trim());
+  if (params.page?.trim()) query.set("page", params.page.trim());
   if (params.sessionSearch?.trim()) query.set("sessionSearch", params.sessionSearch.trim());
   if (params.sessionTeam?.trim()) query.set("sessionTeam", params.sessionTeam.trim());
   if (params.sessionStatus?.trim()) query.set("sessionStatus", params.sessionStatus.trim());

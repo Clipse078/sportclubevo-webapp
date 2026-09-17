@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   buildTrainingSeriesManagementRows,
   filterTrainingSeriesManagementRows,
+  paginateTrainingSeriesManagementRows,
+  sortTrainingSeriesManagementRows,
 } from "../management-series-view";
+import { trainingManagementStatusPresentation } from "../management-presentation";
 import {
   buildTrainingSessionManagementRows,
   filterTrainingSessionManagementRows,
@@ -72,6 +75,7 @@ describe("SCE-TRAININGS-UX-01 management view models", () => {
     });
 
     expect(rows).toHaveLength(1);
+    expect(rows[0]?.weekdays).toEqual(["MONDAY", "WEDNESDAY"]);
     expect(rows[0]?.rhythmLabel).toBe("Mo · Mi");
     expect(rows[0]?.timeLabel).toBe("17:00–18:30");
     expect(rows[0]?.facilityLabel).toBe("Kunstrasen 2");
@@ -94,13 +98,135 @@ describe("SCE-TRAININGS-UX-01 management view models", () => {
     });
 
     expect(rows).toHaveLength(1);
+    expect(rows[0]?.weekdays).toEqual(["MONDAY", "WEDNESDAY", "FRIDAY"]);
     expect(rows[0]?.rhythmLabel).toBe("Mo · Mi · Fr");
-    expect(rows[0]?.timeLabel).toBe("Variabel");
+    expect(rows[0]?.timeLabel).toBe("Unterschiedliche Zeiten");
     expect(rows[0]?.timeLines).toEqual([
       "Mo 18:45–20:15",
       "Mi 19:45–21:15",
       "Fr 18:45–20:15",
     ]);
+  });
+
+  it("orders weekday pills Mo through So", () => {
+    const series: TrainingSeriesDto = {
+      ...SERIES,
+      weekdaySchedules: [
+        { weekday: "FRIDAY", startsAt: "18:45", endsAt: "20:15" },
+        { weekday: "MONDAY", startsAt: "18:45", endsAt: "20:15" },
+        { weekday: "WEDNESDAY", startsAt: "18:45", endsAt: "20:15" },
+      ],
+    };
+
+    const rows = buildTrainingSeriesManagementRows({
+      series: [series],
+      teamDisplayNameByTeamSeasonId: new Map([["ts-1", "1. Mannschaft"]]),
+      allocationsBySeriesId: new Map(),
+    });
+
+    expect(rows[0]?.weekdays).toEqual(["MONDAY", "WEDNESDAY", "FRIDAY"]);
+  });
+
+  it("sorts and paginates series rows globally", () => {
+    const older: TrainingSeriesDto = {
+      ...SERIES,
+      id: "series-old",
+      title: "Alpha",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    };
+    const newer: TrainingSeriesDto = {
+      ...SERIES,
+      id: "series-new",
+      title: "Beta",
+      updatedAt: "2026-02-01T00:00:00.000Z",
+    };
+
+    const rows = buildTrainingSeriesManagementRows({
+      series: [older, newer],
+      teamDisplayNameByTeamSeasonId: new Map([["ts-1", "Team"]]),
+      allocationsBySeriesId: new Map(),
+    });
+
+    const sorted = sortTrainingSeriesManagementRows(rows, "UPDATED_DESC");
+    expect(sorted.map((row) => row.seriesId)).toEqual(["series-new", "series-old"]);
+
+    const many = Array.from({ length: 11 }, (_, index) => ({
+      ...rows[0]!,
+      seriesId: `series-${index}`,
+      title: `Training ${index}`,
+    }));
+    const page1 = paginateTrainingSeriesManagementRows(many, 1, 10);
+    expect(page1.rows).toHaveLength(10);
+    expect(page1.totalCount).toBe(11);
+    expect(page1.rangeStart).toBe(1);
+    expect(page1.rangeEnd).toBe(10);
+    expect(page1.pageCount).toBe(2);
+
+    const page2 = paginateTrainingSeriesManagementRows(many, 2, 10);
+    expect(page2.rows).toHaveLength(1);
+    expect(page2.rangeStart).toBe(11);
+  });
+
+  it("exposes compact active/inactive status labels without workflow badges", () => {
+    expect(trainingManagementStatusPresentation("ACTIVE").label).toBe("Aktiv");
+    expect(trainingManagementStatusPresentation("INACTIVE").label).toBe("Inaktiv");
+    expect(trainingManagementStatusPresentation("ACTIVE").label).not.toContain("APPROVED");
+  });
+
+  it("summarizes multiple pitch allocations with primary label and extra count", () => {
+    const rows = buildTrainingSeriesManagementRows({
+      series: [SERIES],
+      teamDisplayNameByTeamSeasonId: new Map([["ts-1", "Team"]]),
+      allocationsBySeriesId: new Map([
+        [
+          "series-1",
+          [
+            {
+              id: "a1",
+              tenantId: "tenant-1",
+              trainingSeriesId: "series-1",
+              facilityResourceId: "r1",
+              facilityResourceName: "Kunstrasen 2 A",
+              facilityResourceCode: "KR2A",
+              facilityResourceType: "FULL_PITCH",
+              facilityId: "f1",
+              facilityName: "Anlage",
+              notes: null,
+              displayOrder: 0,
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+            {
+              id: "a2",
+              tenantId: "tenant-1",
+              trainingSeriesId: "series-1",
+              facilityResourceId: "r2",
+              facilityResourceName: "Kunstrasen 3 B",
+              facilityResourceCode: "KR3B",
+              facilityResourceType: "HALF_PITCH",
+              facilityId: "f1",
+              facilityName: "Anlage",
+              notes: null,
+              displayOrder: 1,
+              createdAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2026-01-01T00:00:00.000Z",
+            },
+          ],
+        ],
+      ]),
+    });
+
+    expect(rows[0]?.facilityLabel).toBe("Kunstrasen 2 A");
+    expect(rows[0]?.facilityExtraCount).toBe(1);
+  });
+
+  it("represents missing pitch allocation as null facility label", () => {
+    const rows = buildTrainingSeriesManagementRows({
+      series: [SERIES],
+      teamDisplayNameByTeamSeasonId: new Map([["ts-1", "Team"]]),
+      allocationsBySeriesId: new Map(),
+    });
+    expect(rows[0]?.facilityLabel).toBeNull();
   });
 
   it("filters series by search and team", () => {

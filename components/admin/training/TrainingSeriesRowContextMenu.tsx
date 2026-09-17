@@ -12,6 +12,7 @@ type Props = {
   seriesId: string;
   seriesTitle: string;
   wochenplanerHref: string;
+  resourcesHref: string;
   canManage: boolean;
   canDelete: boolean;
   editable: boolean;
@@ -61,6 +62,7 @@ export default function TrainingSeriesRowContextMenu({
   seriesId,
   seriesTitle,
   wochenplanerHref,
+  resourcesHref,
   canManage,
   canDelete,
   editable,
@@ -130,7 +132,7 @@ export default function TrainingSeriesRowContextMenu({
               <MenuItem
                 icon={<Layers className="h-4 w-4" />}
                 label="Ressourcen verwalten"
-                href={`/dashboard/training/series/${seriesId}/allocations`}
+                href={resourcesHref}
                 onSelect={() => setOpen(false)}
               />
             </>

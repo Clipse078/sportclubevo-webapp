@@ -409,7 +409,7 @@ export default function TrainingSeriesForm({
         </section>
 
         {resourcesSection ? (
-          <section className="px-4 py-4" data-testid="training-series-edit-resources-section">
+          <section id="training-series-ressourcen" className="px-4 py-4 scroll-mt-24" data-testid="training-series-edit-resources-section">
             <h2 className="mb-3 text-sm font-semibold text-[var(--foreground)]">Ressourcen</h2>
             {resourcesSection}
           </section>
