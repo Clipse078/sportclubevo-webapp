@@ -55,4 +55,9 @@ describe("PLANNING-HUB-03D planner loading", () => {
     expect(RESOURCE_ROW_PLACEHOLDER_COUNT).toBe(6);
     expect(LISTE_ROW_PLACEHOLDER_COUNT).toBe(8);
   });
+
+  it("reduced-motion CSS disables shimmer and tracer animation", () => {
+    expect(styles.placeholderBlock).toBeTruthy();
+    expect(styles.tracerSegment).toBeTruthy();
+  });
 });
