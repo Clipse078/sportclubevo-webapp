@@ -282,6 +282,29 @@ export async function listSessionAllocationsGroupedBySession(
   return grouped;
 }
 
+/** Scoped occurrence overrides for a bounded session id set (Trainings management list). */
+export async function listSessionAllocationsForSessionIds(
+  tenantId: string,
+  sessionIds: readonly string[],
+): Promise<Map<string, TrainingSessionAllocationDto[]>> {
+  if (sessionIds.length === 0) return new Map();
+
+  const rows = await prisma.trainingSessionAllocation.findMany({
+    where: { tenantId, trainingSessionId: { in: [...sessionIds] } },
+    include: sessionAllocationInclude,
+    orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
+  });
+
+  const grouped = new Map<string, TrainingSessionAllocationDto[]>();
+  for (const row of rows) {
+    const dto = allocationToDto(row as unknown as SessionAllocationRow);
+    const bucket = grouped.get(dto.trainingSessionId) ?? [];
+    bucket.push(dto);
+    grouped.set(dto.trainingSessionId, bucket);
+  }
+  return grouped;
+}
+
 export async function listSessionAllocationSummaryByTenant(
   tenantId: string,
 ): Promise<Map<string, TrainingAllocationSummary>> {
