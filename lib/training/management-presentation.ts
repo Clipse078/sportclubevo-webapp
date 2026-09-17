@@ -24,6 +24,7 @@ export function resolveTeamIdentityAccentClass(teamSeasonId: string): string {
 export type TrainingManagementStatusPresentation = {
   label: string;
   dotClassName: string;
+  badgeClassName: string;
 };
 
 export function trainingManagementStatusPresentation(
@@ -31,13 +32,29 @@ export function trainingManagementStatusPresentation(
 ): TrainingManagementStatusPresentation {
   switch (status) {
     case "ACTIVE":
-      return { label: "Aktiv", dotClassName: "bg-emerald-400" };
+      return {
+        label: "Aktiv",
+        dotClassName: "bg-emerald-400",
+        badgeClassName: "bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/25",
+      };
     case "INACTIVE":
-      return { label: "Inaktiv", dotClassName: "bg-slate-500" };
+      return {
+        label: "Inaktiv",
+        dotClassName: "bg-slate-500",
+        badgeClassName: "bg-slate-500/10 text-slate-300 ring-1 ring-slate-500/25",
+      };
     case "ARCHIVED":
-      return { label: "Archiviert", dotClassName: "bg-slate-600" };
+      return {
+        label: "Archiviert",
+        dotClassName: "bg-slate-600",
+        badgeClassName: "bg-slate-600/15 text-slate-400 ring-1 ring-slate-600/30",
+      };
     default:
-      return { label: status, dotClassName: "bg-slate-500" };
+      return {
+        label: status,
+        dotClassName: "bg-slate-500",
+        badgeClassName: "bg-slate-500/10 text-slate-300 ring-1 ring-slate-500/25",
+      };
   }
 }
 

@@ -20,7 +20,7 @@ describe("TRAININGS-UX-01J1 training management pagination (RSC-safe)", () => {
   });
 
   it("omits default sort and first page from href", () => {
-    expect(buildTrainingManagementPageHref(filters, "UPDATED_DESC", 1)).toBe(
+    expect(buildTrainingManagementPageHref(filters, "TEAM_ASC", 1)).toBe(
       "/dashboard/training?archived=1&seriesSearch=u17&seriesTeam=team-season-1&seriesStatus=ACTIVE",
     );
   });

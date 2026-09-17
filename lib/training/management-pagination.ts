@@ -28,7 +28,7 @@ export function buildTrainingManagementPageHref(
   if (filters.seriesSearch?.trim()) params.set("seriesSearch", filters.seriesSearch.trim());
   if (filters.seriesTeam) params.set("seriesTeam", filters.seriesTeam);
   if (filters.seriesStatus) params.set("seriesStatus", filters.seriesStatus);
-  if (sort !== "UPDATED_DESC") params.set("seriesSort", sort);
+  if (sort !== "TEAM_ASC") params.set("seriesSort", sort);
   if (page > 1) params.set("page", String(page));
   const qs = params.toString();
   return qs ? `/dashboard/training?${qs}` : "/dashboard/training";

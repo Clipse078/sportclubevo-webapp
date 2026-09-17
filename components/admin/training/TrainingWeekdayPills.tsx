@@ -17,7 +17,7 @@ export default function TrainingWeekdayPills({ weekdays, className }: Props) {
       {weekdays.map((weekday) => (
         <span
           key={weekday}
-          className="inline-flex h-6 min-w-[1.75rem] items-center justify-center rounded-md bg-[var(--surface-2)] px-1.5 text-[0.6875rem] font-medium tabular-nums text-[var(--text-2)] ring-1 ring-[var(--border)]/80"
+          className="inline-flex h-[1.625rem] min-w-[1.875rem] items-center justify-center rounded-md bg-[var(--surface-2)] px-1.5 text-[0.6875rem] font-semibold tabular-nums text-[var(--foreground)]/85 ring-1 ring-[var(--border)]/90"
         >
           {MANAGEMENT_WEEKDAY_SHORT[weekday]}
         </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { CircleDot, Search, Users } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { cn } from "@/lib/cn";
@@ -103,15 +103,19 @@ export default function TrainingManagementToolbar({
         />
       </label>
 
-      <label className="min-w-[9rem] sm:w-auto">
+      <label className="relative min-w-[9rem] sm:w-auto">
         <span className="sr-only">Team filtern</span>
+        <Users
+          className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--muted)]"
+          aria-hidden="true"
+        />
         <select
           value={teamValue}
           onChange={(event) => pushFilters({ team: event.target.value })}
-          className={cn(CONTROL, "w-full min-w-[9rem] px-3")}
+          className={cn(CONTROL, "w-full min-w-[9rem] appearance-none pl-9 pr-8")}
           data-testid="training-team-filter"
         >
-          <option value="">Alle Teams</option>
+          <option value="">Team</option>
           {teamOptions.map((team) => (
             <option key={team.id} value={team.id}>
               {team.label}
@@ -120,12 +124,16 @@ export default function TrainingManagementToolbar({
         </select>
       </label>
 
-      <label className="min-w-[9rem] sm:w-auto">
+      <label className="relative min-w-[9rem] sm:w-auto">
         <span className="sr-only">Status filtern</span>
+        <CircleDot
+          className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--muted)]"
+          aria-hidden="true"
+        />
         <select
           value={statusValue}
           onChange={(event) => pushFilters({ status: event.target.value })}
-          className={cn(CONTROL, "w-full min-w-[9rem] px-3")}
+          className={cn(CONTROL, "w-full min-w-[9rem] appearance-none pl-9 pr-8")}
           data-testid="training-status-filter"
         >
           <option value="">Status</option>

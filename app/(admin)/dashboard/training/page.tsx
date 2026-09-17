@@ -134,9 +134,13 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
   );
   perfTimer?.mark("training-team-labels");
 
+  const teamLabelByTeamSeasonId = new Map(teamOptions.map((team) => [team.id, team.label]));
+
   const seriesManagementRows = buildTrainingSeriesManagementRows({
     series: displayedSeries,
+    tenantName: tenantContext.name,
     teamDisplayNameByTeamSeasonId,
+    teamLabelByTeamSeasonId,
     allocationsBySeriesId: allocationsBySeries,
   });
 

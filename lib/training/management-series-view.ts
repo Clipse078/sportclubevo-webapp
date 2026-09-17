@@ -1,5 +1,5 @@
 /**
- * SCE-TRAININGS-UX-01 — compact TrainingSeries management rows (Serien section).
+ * SCE-TRAININGS-UX-01 / TRAININGS-UX-01J2 — team-grouped Trainings management rows.
  */
 
 import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
@@ -35,7 +35,49 @@ export type TrainingSeriesManagementSort =
   | "WEEKDAY"
   | "START_TIME";
 
+export type TrainingSeriesManagementSeriesEntry = {
+  seriesId: string;
+  title: string;
+  weekdays: Weekday[];
+  timeLabel: string;
+  timeLines: string[] | null;
+  actionLabel: string;
+  status: TrainingSeriesStatus;
+  updatedAt: string;
+};
+
 export type TrainingSeriesManagementRow = {
+  /** Primary series id for stable keys/tests when exactly one series; otherwise first series id. */
+  seriesId: string;
+  teamSeasonId: string;
+  title: string;
+  contextLabel: string;
+  teamDisplayName: string;
+  weekdays: Weekday[];
+  rhythmLabel: string;
+  timeLabel: string;
+  timeLines: string[] | null;
+  timeDetailLines: string[] | null;
+  sortStartTime: string;
+  facilityLabel: string | null;
+  facilityExtraCount: number;
+  facilityLabels: string[];
+  status: TrainingSeriesStatus;
+  planningStage: string;
+  validFrom: string | null;
+  validUntil: string | null;
+  sessionCount: number;
+  updatedAt: string;
+  seriesEntries: TrainingSeriesManagementSeriesEntry[];
+};
+
+export type TrainingSeriesManagementFilters = {
+  search?: string;
+  teamSeasonId?: string | null;
+  status?: TrainingSeriesStatus | "ALL" | "ACTIVE_ONLY";
+};
+
+type PerSeriesRow = {
   seriesId: string;
   teamSeasonId: string;
   title: string;
@@ -47,18 +89,14 @@ export type TrainingSeriesManagementRow = {
   sortStartTime: string;
   facilityLabel: string | null;
   facilityExtraCount: number;
+  facilityLabels: string[];
   status: TrainingSeriesStatus;
   planningStage: string;
   validFrom: string | null;
   validUntil: string | null;
   sessionCount: number;
   updatedAt: string;
-};
-
-export type TrainingSeriesManagementFilters = {
-  search?: string;
-  teamSeasonId?: string | null;
-  status?: TrainingSeriesStatus | "ALL" | "ACTIVE_ONLY";
+  actionLabel: string;
 };
 
 function normalizeSearch(value: string | undefined): string {
@@ -104,6 +142,7 @@ function resolveSortStartTime(series: TrainingSeriesDto): string {
 function buildCompactFacilityPresentation(allocations: readonly TrainingAllocationDto[]): {
   label: string | null;
   extraCount: number;
+  labels: string[];
 } {
   const pitches = allocations.filter(
     (allocation) => classifyFacilityResourceType(allocation.facilityResourceType) === "PITCH_HALL",
@@ -116,14 +155,265 @@ function buildCompactFacilityPresentation(allocations: readonly TrainingAllocati
 
   if (unique.length === 0) {
     const display = resolveSeriesAllocationDisplay(allocations);
-    return { label: display.pitchName, extraCount: 0 };
+    return { label: display.pitchName, extraCount: 0, labels: display.pitchName ? [display.pitchName] : [] };
   }
 
   if (unique.length === 1) {
-    return { label: unique[0]!, extraCount: 0 };
+    return { label: unique[0]!, extraCount: 0, labels: unique };
   }
 
+  return { label: unique[0]!, extraCount: unique.length - 1, labels: unique };
+}
+
+function resolveSeriesActionLabel(series: TrainingSeriesDto): string {
+  const schedules = [...series.weekdaySchedules].sort(
+    (a, b) => COCKPIT_WEEKDAY_ORDER.indexOf(a.weekday) - COCKPIT_WEEKDAY_ORDER.indexOf(b.weekday),
+  );
+  if (schedules.length === 0) {
+    return `${series.title} · ${series.startsAt}–${series.endsAt}`;
+  }
+  if (schedules.length === 1) {
+    const schedule = schedules[0]!;
+    return `${COCKPIT_WEEKDAY_LABELS[schedule.weekday]} · ${schedule.startsAt}–${schedule.endsAt}`;
+  }
+  const weekdayPart = schedules.map((s) => COCKPIT_WEEKDAY_LABELS[s.weekday]).join(", ");
+  const timeKeys = new Set(schedules.map((s) => `${s.startsAt}–${s.endsAt}`));
+  const timePart =
+    timeKeys.size === 1
+      ? `${schedules[0]!.startsAt}–${schedules[0]!.endsAt}`
+      : "Unterschiedliche Zeiten";
+  return `${weekdayPart} · ${timePart}`;
+}
+
+export function resolveTeamManagementPrimaryTitle(teamLabel: string, seriesTitles: readonly string[]): string {
+  const trimmedTeam = teamLabel.trim();
+  const canonical = trimmedTeam.length > 0 ? `${trimmedTeam} Training` : "Training";
+  const uniqueTitles = [...new Set(seriesTitles.map((title) => title.trim()).filter(Boolean))];
+
+  if (uniqueTitles.length === 1) {
+    const only = uniqueTitles[0]!;
+    const lowerOnly = only.toLowerCase();
+    const lowerCanonical = canonical.toLowerCase();
+    if (lowerOnly === lowerCanonical || lowerOnly === `${trimmedTeam.toLowerCase()} training training`) {
+      return canonical;
+    }
+    if (lowerOnly.endsWith(" training") && lowerOnly.includes(trimmedTeam.toLowerCase())) {
+      return only;
+    }
+    return only;
+  }
+
+  return canonical;
+}
+
+export function resolveTeamManagementContextLabel(tenantName: string, teamLabel: string): string {
+  const tenant = tenantName.trim();
+  const team = teamLabel.trim();
+  if (tenant && team) return `${tenant} · ${team}`;
+  return team || tenant || "—";
+}
+
+export function deriveGroupedTeamStatus(
+  entries: readonly { status: TrainingSeriesStatus }[],
+): TrainingSeriesStatus {
+  if (entries.some((entry) => entry.status === "ACTIVE")) return "ACTIVE";
+  if (entries.length > 0 && entries.every((entry) => entry.status === "ARCHIVED")) return "ARCHIVED";
+  return "INACTIVE";
+}
+
+function mergeOrderedWeekdays(weekdaySets: readonly Weekday[][]): Weekday[] {
+  const seen = new Set<Weekday>();
+  const merged: Weekday[] = [];
+  for (const weekday of COCKPIT_WEEKDAY_ORDER) {
+    if (weekdaySets.some((set) => set.includes(weekday))) {
+      if (!seen.has(weekday)) {
+        seen.add(weekday);
+        merged.push(weekday);
+      }
+    }
+  }
+  return merged;
+}
+
+function aggregateTeamTimePresentation(
+  entries: readonly PerSeriesRow[],
+): { timeLabel: string; timeLines: string[] | null; timeDetailLines: string[] | null } {
+  const uniformLabels = new Set<string>();
+  const detailLines = new Set<string>();
+
+  for (const entry of entries) {
+    if (entry.timeLines) {
+      for (const line of entry.timeLines) detailLines.add(line);
+    } else {
+      uniformLabels.add(entry.timeLabel);
+      for (const weekday of entry.weekdays) {
+        detailLines.add(`${WEEKDAY_SHORT[weekday]} ${entry.timeLabel}`);
+      }
+    }
+  }
+
+  if (uniformLabels.size === 1 && detailLines.size <= entries.reduce((sum, e) => sum + e.weekdays.length, 0)) {
+    const only = [...uniformLabels][0]!;
+    const allSame = entries.every((entry) => !entry.timeLines && entry.timeLabel === only);
+    if (allSame) {
+      return { timeLabel: only, timeLines: null, timeDetailLines: null };
+    }
+  }
+
+  if (detailLines.size === 0) {
+    return { timeLabel: "—", timeLines: null, timeDetailLines: null };
+  }
+
+  const weekdayRank = (line: string): number => {
+    const token = line.slice(0, 2);
+    const index = Object.values(WEEKDAY_SHORT).indexOf(token as (typeof WEEKDAY_SHORT)[Weekday]);
+    return index >= 0 ? index : 99;
+  };
+  const sortedDetails = [...detailLines].sort((a, b) => {
+    const weekdayDiff = weekdayRank(a) - weekdayRank(b);
+    return weekdayDiff !== 0 ? weekdayDiff : a.localeCompare(b, "de-CH");
+  });
+  return {
+    timeLabel: "Unterschiedliche Zeiten",
+    timeLines: null,
+    timeDetailLines: sortedDetails,
+  };
+}
+
+function collectUniqueFacilityLabels(entries: readonly PerSeriesRow[]): string[] {
+  const labels: string[] = [];
+  for (const entry of entries) {
+    labels.push(...entry.facilityLabels);
+  }
+  return [...new Set(labels.filter(Boolean))];
+}
+
+function aggregateTeamFacilityPresentation(
+  entries: readonly PerSeriesRow[],
+): { label: string | null; extraCount: number } {
+  const unique = collectUniqueFacilityLabels(entries);
+  if (unique.length === 0) return { label: null, extraCount: 0 };
+  if (unique.length === 1) return { label: unique[0]!, extraCount: 0 };
   return { label: unique[0]!, extraCount: unique.length - 1 };
+}
+
+function buildPerSeriesManagementRows(input: {
+  series: readonly TrainingSeriesDto[];
+  teamDisplayNameByTeamSeasonId: ReadonlyMap<string, string>;
+  teamLabelByTeamSeasonId: ReadonlyMap<string, string>;
+  allocationsBySeriesId: ReadonlyMap<string, readonly TrainingAllocationDto[]>;
+}): PerSeriesRow[] {
+  const rows: PerSeriesRow[] = [];
+
+  for (const series of input.series) {
+    const schedule = resolveSchedulePresentation(series);
+    const allocations = input.allocationsBySeriesId.get(series.id) ?? [];
+    const weekdays = resolveOrderedWeekdays(series);
+    const facility = buildCompactFacilityPresentation(allocations);
+    const teamLabel =
+      input.teamLabelByTeamSeasonId.get(series.teamSeasonId) ??
+      input.teamDisplayNameByTeamSeasonId.get(series.teamSeasonId) ??
+      "—";
+
+    rows.push({
+      seriesId: series.id,
+      teamSeasonId: series.teamSeasonId,
+      title: series.title,
+      teamDisplayName: teamLabel,
+      weekdays,
+      rhythmLabel: schedule.rhythmLabel,
+      timeLabel: schedule.kind === "uniform" ? schedule.timeLabel : "Unterschiedliche Zeiten",
+      timeLines: schedule.kind === "variable" ? schedule.timeLines : null,
+      sortStartTime: resolveSortStartTime(series),
+      facilityLabel: facility.label,
+      facilityExtraCount: facility.extraCount,
+      facilityLabels: facility.labels,
+      status: series.status,
+      planningStage: series.planningStage,
+      validFrom: series.validFrom,
+      validUntil: series.validUntil,
+      sessionCount: series.sessionCount,
+      updatedAt: series.updatedAt,
+      actionLabel: resolveSeriesActionLabel(series),
+    });
+  }
+
+  return rows;
+}
+
+export function groupPerSeriesRowsByTeam(input: {
+  perSeriesRows: readonly PerSeriesRow[];
+  tenantName: string;
+  teamLabelByTeamSeasonId: ReadonlyMap<string, string>;
+}): TrainingSeriesManagementRow[] {
+  const grouped = new Map<string, PerSeriesRow[]>();
+
+  for (const row of input.perSeriesRows) {
+    const bucket = grouped.get(row.teamSeasonId) ?? [];
+    bucket.push(row);
+    grouped.set(row.teamSeasonId, bucket);
+  }
+
+  const teamRows: TrainingSeriesManagementRow[] = [];
+
+  for (const [teamSeasonId, entries] of grouped) {
+    const sortedEntries = [...entries].sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
+    const teamLabel =
+      input.teamLabelByTeamSeasonId.get(teamSeasonId) ?? sortedEntries[0]?.teamDisplayName ?? "—";
+    const primaryTitle = resolveTeamManagementPrimaryTitle(
+      teamLabel,
+      sortedEntries.map((entry) => entry.title),
+    );
+    const weekdays = mergeOrderedWeekdays(sortedEntries.map((entry) => entry.weekdays));
+    const rhythmLabel = weekdays.map((weekday) => WEEKDAY_SHORT[weekday]).join(" · ") || "—";
+    const time = aggregateTeamTimePresentation(sortedEntries);
+    const facility = aggregateTeamFacilityPresentation(sortedEntries);
+    const seriesEntries: TrainingSeriesManagementSeriesEntry[] = sortedEntries.map((entry) => ({
+      seriesId: entry.seriesId,
+      title: entry.title,
+      weekdays: entry.weekdays,
+      timeLabel: entry.timeLabel,
+      timeLines: entry.timeLines,
+      actionLabel: entry.actionLabel,
+      status: entry.status,
+      updatedAt: entry.updatedAt,
+    }));
+    const status = deriveGroupedTeamStatus(seriesEntries);
+    const sortStartTime = sortedEntries
+      .map((entry) => entry.sortStartTime)
+      .sort((a, b) => a.localeCompare(b))[0] ?? "99:99";
+    const updatedAt = sortedEntries
+      .map((entry) => entry.updatedAt)
+      .sort((a, b) => b.localeCompare(a))[0] ?? "";
+    const sessionCount = sortedEntries.reduce((sum, entry) => sum + entry.sessionCount, 0);
+    const primarySeries = sortedEntries[0]!;
+
+    teamRows.push({
+      seriesId: primarySeries.seriesId,
+      teamSeasonId,
+      title: primaryTitle,
+      contextLabel: resolveTeamManagementContextLabel(input.tenantName, teamLabel),
+      teamDisplayName: teamLabel,
+      weekdays,
+      rhythmLabel,
+      timeLabel: time.timeLabel,
+      timeLines: time.timeLines,
+      timeDetailLines: time.timeDetailLines,
+      sortStartTime,
+      facilityLabel: facility.label,
+      facilityExtraCount: facility.extraCount,
+      facilityLabels: collectUniqueFacilityLabels(sortedEntries),
+      status,
+      planningStage: primarySeries.planningStage,
+      validFrom: primarySeries.validFrom,
+      validUntil: primarySeries.validUntil,
+      sessionCount,
+      updatedAt,
+      seriesEntries,
+    });
+  }
+
+  return teamRows;
 }
 
 export function parseTrainingSeriesManagementSort(raw: string | undefined): TrainingSeriesManagementSort {
@@ -132,7 +422,8 @@ export function parseTrainingSeriesManagementSort(raw: string | undefined): Trai
   if (value === "TEAM" || value === "TEAM_ASC") return "TEAM_ASC";
   if (value === "WEEKDAY") return "WEEKDAY";
   if (value === "START_TIME") return "START_TIME";
-  return "UPDATED_DESC";
+  if (value === "UPDATED_DESC") return "UPDATED_DESC";
+  return "TEAM_ASC";
 }
 
 export function sortTrainingSeriesManagementRows(
@@ -143,27 +434,30 @@ export function sortTrainingSeriesManagementRows(
   sorted.sort((a, b) => {
     switch (sort) {
       case "TITLE_ASC": {
-        const titleDiff = a.title.localeCompare(b.title, "de-CH");
-        return titleDiff !== 0 ? titleDiff : a.teamDisplayName.localeCompare(b.teamDisplayName, "de-CH");
+        const titleDiff = a.title.localeCompare(b.title, "de-CH", { sensitivity: "base", numeric: true });
+        return titleDiff !== 0 ? titleDiff : a.teamDisplayName.localeCompare(b.teamDisplayName, "de-CH", { numeric: true });
       }
       case "TEAM_ASC": {
-        const teamDiff = a.teamDisplayName.localeCompare(b.teamDisplayName, "de-CH");
-        return teamDiff !== 0 ? teamDiff : a.title.localeCompare(b.title, "de-CH");
+        const teamDiff = a.teamDisplayName.localeCompare(b.teamDisplayName, "de-CH", {
+          sensitivity: "base",
+          numeric: true,
+        });
+        return teamDiff !== 0 ? teamDiff : a.title.localeCompare(b.title, "de-CH", { numeric: true });
       }
       case "WEEKDAY": {
         const aIndex = a.weekdays[0] ? COCKPIT_WEEKDAY_ORDER.indexOf(a.weekdays[0]) : 99;
         const bIndex = b.weekdays[0] ? COCKPIT_WEEKDAY_ORDER.indexOf(b.weekdays[0]) : 99;
         if (aIndex !== bIndex) return aIndex - bIndex;
-        return a.title.localeCompare(b.title, "de-CH");
+        return a.teamDisplayName.localeCompare(b.teamDisplayName, "de-CH", { numeric: true });
       }
       case "START_TIME": {
         const timeDiff = a.sortStartTime.localeCompare(b.sortStartTime);
-        return timeDiff !== 0 ? timeDiff : a.title.localeCompare(b.title, "de-CH");
+        return timeDiff !== 0 ? timeDiff : a.teamDisplayName.localeCompare(b.teamDisplayName, "de-CH", { numeric: true });
       }
       case "UPDATED_DESC":
       default: {
         const updatedDiff = b.updatedAt.localeCompare(a.updatedAt);
-        return updatedDiff !== 0 ? updatedDiff : a.title.localeCompare(b.title, "de-CH");
+        return updatedDiff !== 0 ? updatedDiff : a.teamDisplayName.localeCompare(b.teamDisplayName, "de-CH", { numeric: true });
       }
     }
   });
@@ -200,39 +494,17 @@ export function paginateTrainingSeriesManagementRows(
 
 export function buildTrainingSeriesManagementRows(input: {
   series: readonly TrainingSeriesDto[];
+  tenantName: string;
   teamDisplayNameByTeamSeasonId: ReadonlyMap<string, string>;
+  teamLabelByTeamSeasonId: ReadonlyMap<string, string>;
   allocationsBySeriesId: ReadonlyMap<string, readonly TrainingAllocationDto[]>;
 }): TrainingSeriesManagementRow[] {
-  const rows: TrainingSeriesManagementRow[] = [];
-
-  for (const series of input.series) {
-    const schedule = resolveSchedulePresentation(series);
-    const allocations = input.allocationsBySeriesId.get(series.id) ?? [];
-    const weekdays = resolveOrderedWeekdays(series);
-    const facility = buildCompactFacilityPresentation(allocations);
-
-    rows.push({
-      seriesId: series.id,
-      teamSeasonId: series.teamSeasonId,
-      title: series.title,
-      teamDisplayName: input.teamDisplayNameByTeamSeasonId.get(series.teamSeasonId) ?? "—",
-      weekdays,
-      rhythmLabel: schedule.rhythmLabel,
-      timeLabel: schedule.kind === "uniform" ? schedule.timeLabel : "Unterschiedliche Zeiten",
-      timeLines: schedule.kind === "variable" ? schedule.timeLines : null,
-      sortStartTime: resolveSortStartTime(series),
-      facilityLabel: facility.label,
-      facilityExtraCount: facility.extraCount,
-      status: series.status,
-      planningStage: series.planningStage,
-      validFrom: series.validFrom,
-      validUntil: series.validUntil,
-      sessionCount: series.sessionCount,
-      updatedAt: series.updatedAt,
-    });
-  }
-
-  return rows;
+  const perSeriesRows = buildPerSeriesManagementRows(input);
+  return groupPerSeriesRowsByTeam({
+    perSeriesRows,
+    tenantName: input.tenantName,
+    teamLabelByTeamSeasonId: input.teamLabelByTeamSeasonId,
+  });
 }
 
 export function filterTrainingSeriesManagementRows(
@@ -253,7 +525,9 @@ export function filterTrainingSeriesManagementRows(
     }
 
     if (!search) return true;
-    const haystack = `${row.title} ${row.teamDisplayName} ${row.rhythmLabel} ${row.facilityLabel ?? ""}`.toLowerCase();
+    const seriesTitles = row.seriesEntries.map((entry) => entry.title).join(" ");
+    const haystack =
+      `${row.title} ${row.contextLabel} ${row.teamDisplayName} ${row.rhythmLabel} ${seriesTitles} ${row.facilityLabel ?? ""}`.toLowerCase();
     return haystack.includes(search);
   });
 }

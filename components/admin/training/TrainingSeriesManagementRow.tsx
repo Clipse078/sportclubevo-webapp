@@ -21,7 +21,7 @@ type Props = {
 };
 
 const GRID =
-  "group relative grid min-h-[58px] grid-cols-1 gap-2 border-b border-[var(--border)]/80 px-4 py-3 transition-[background-color] duration-150 last:border-b-0 md:grid-cols-[minmax(0,1.75fr)_minmax(7.25rem,0.95fr)_minmax(7.5rem,0.95fr)_minmax(0,1.1fr)_5.5rem_2.5rem] md:items-center md:gap-x-4";
+  "group relative grid min-h-[56px] grid-cols-1 gap-2 border-b border-[var(--border)]/70 px-4 py-3.5 transition-[background-color] duration-150 last:border-b-0 md:grid-cols-[minmax(0,1.85fr)_minmax(7.5rem,0.9fr)_minmax(7.75rem,0.85fr)_minmax(0,1.15fr)_minmax(5.75rem,0.75fr)_2.75rem] md:items-center md:gap-x-4";
 
 export default function TrainingSeriesManagementRow({
   row,
@@ -29,40 +29,45 @@ export default function TrainingSeriesManagementRow({
   canManage,
   canDelete,
 }: Props) {
+  const singleSeries = row.seriesEntries.length === 1 ? row.seriesEntries[0] : null;
   const editable = canManage && row.status !== "ARCHIVED";
-  const editHref = buildTrainingSeriesEditHref(row.seriesId);
-  const resourcesHref = `${editHref}#training-series-ressourcen`;
+  const editHref = singleSeries ? buildTrainingSeriesEditHref(singleSeries.seriesId) : null;
   const status = trainingManagementStatusPresentation(row.status);
   const identityAccent = resolveTeamIdentityAccentClass(row.teamSeasonId);
+  const timeDetails = row.timeDetailLines?.join(" · ");
 
   const identityBlock = (
-    <div className="flex min-w-0 items-start gap-3">
+    <div className="flex min-w-0 items-center gap-3">
       <span
         className={cn(
-          "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+          "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.625rem]",
           identityAccent,
         )}
         aria-hidden="true"
       >
-        <Users className="h-4 w-4" />
+        <Users className="h-[1.125rem] w-[1.125rem]" />
       </span>
       <div className="min-w-0">
-        <p className="truncate text-[0.9375rem] font-semibold leading-snug tracking-tight text-[var(--foreground)]">
+        <p className="truncate text-[0.9375rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
           {row.title}
         </p>
-        <p className="truncate text-xs text-[var(--text-2)]">{row.teamDisplayName}</p>
+        <p className="truncate text-[0.8125rem] leading-snug text-[var(--text-2)]">{row.contextLabel}</p>
       </div>
     </div>
   );
 
   return (
-    <article className={GRID} data-testid={`training-series-row-${row.seriesId}`}>
+    <article
+      className={GRID}
+      data-testid={`training-team-row-${row.teamSeasonId}`}
+      data-series-id={row.seriesId}
+    >
       <div className="relative z-[1] min-w-0 md:col-span-1">
-        {editable ? (
+        {editable && editHref ? (
           <Link
             href={editHref}
             className="block min-w-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
-            data-testid={`training-series-edit-${row.seriesId}`}
+            data-testid={`training-series-edit-${singleSeries!.seriesId}`}
           >
             {identityBlock}
           </Link>
@@ -74,14 +79,10 @@ export default function TrainingSeriesManagementRow({
       <TrainingWeekdayPills weekdays={row.weekdays} className="md:col-span-1" />
 
       <div className="text-sm tabular-nums text-[var(--foreground)] md:col-span-1">
-        {row.timeLines ? (
-          <ul className="space-y-0.5" aria-label="Unterschiedliche Zeiten">
-            {row.timeLines.map((line) => (
-              <li key={line} className="leading-tight">
-                {line}
-              </li>
-            ))}
-          </ul>
+        {timeDetails ? (
+          <p title={timeDetails} aria-label={`${row.timeLabel}: ${timeDetails}`}>
+            {row.timeLabel}
+          </p>
         ) : (
           <p>{row.timeLabel}</p>
         )}
@@ -93,25 +94,30 @@ export default function TrainingSeriesManagementRow({
         className="md:col-span-1"
       />
 
-      <div className="flex items-center gap-2 md:col-span-1">
-        <span className={cn("h-2 w-2 shrink-0 rounded-full", status.dotClassName)} aria-hidden="true" />
-        <span className="text-sm text-[var(--foreground)]">{status.label}</span>
+      <div className="flex items-center md:col-span-1">
+        <span
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+            status.badgeClassName,
+          )}
+        >
+          <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", status.dotClassName)} aria-hidden="true" />
+          {status.label}
+        </span>
       </div>
 
       <div className="relative z-[1] flex items-center justify-end md:col-span-1">
         <TrainingSeriesRowContextMenu
-          seriesId={row.seriesId}
-          seriesTitle={row.title}
+          teamLabel={row.teamDisplayName}
           wochenplanerHref={wochenplanerHref}
-          resourcesHref={resourcesHref}
+          seriesEntries={row.seriesEntries}
           canManage={canManage}
           canDelete={canDelete}
-          editable={editable}
         />
       </div>
 
       <div
-        className="pointer-events-none absolute inset-0 transition-colors duration-150 group-hover:bg-[var(--surface-2)]/40"
+        className="pointer-events-none absolute inset-0 transition-colors duration-150 group-hover:bg-[var(--surface-2)]/35"
         aria-hidden="true"
       />
     </article>
