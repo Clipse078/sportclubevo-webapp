@@ -96,7 +96,6 @@ const REVIEW_STAGE_BADGE: Record<string, string> = {
 function PublicationTargets({ event }: { event: VeranstaltungCardEvent }) {
   const targets: string[] = [];
   if (event.websiteVisible) targets.push("Website");
-  if (event.infoboardVisible) targets.push("Infoboard");
   if (event.homepageVisible) targets.push("Homepage");
   if (event.wochenplanVisible) targets.push("Wochenplan");
   if (targets.length === 0) return null;

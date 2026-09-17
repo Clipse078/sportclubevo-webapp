@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminSurfaceCard from "@/components/admin/shared/AdminSurfaceCard";
+import VeranstaltungAusspielungFields, {
+  type VeranstaltungAusspielungValues,
+} from "./VeranstaltungAusspielungFields";
 import VeranstaltungScheduleFields, {
   type VeranstaltungScheduleFieldValues,
 } from "./VeranstaltungScheduleFields";
@@ -35,28 +38,6 @@ const VERANSTALTUNG_CATEGORIES = [
 
 const DEFAULT_TIMES = { startTime: "18:00", endTime: "20:00" };
 
-function Toggle({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <div className="fca-toggle-row">
-      <span className="fca-label">{label}</span>
-      <input
-        type="checkbox"
-        checked={value}
-        onChange={(e) => onChange(e.target.checked)}
-        className="fca-toggle-checkbox"
-      />
-    </div>
-  );
-}
-
 export default function VeranstaltungCreateForm() {
   const router = useRouter();
 
@@ -76,10 +57,11 @@ export default function VeranstaltungCreateForm() {
   });
   const rememberedTimes = useRef({ ...DEFAULT_TIMES });
 
-  const [websiteVisible, setWebsiteVisible] = useState(true);
-  const [homepageVisible, setHomepageVisible] = useState(false);
-  const [infoboardVisible, setInfoboardVisible] = useState(false);
-  const [wochenplanVisible, setWochenplanVisible] = useState(false);
+  const [ausspielung, setAusspielung] = useState<VeranstaltungAusspielungValues>({
+    websiteVisible: true,
+    homepageVisible: false,
+    wochenplanVisible: false,
+  });
 
   const [seasonOptions, setSeasonOptions] = useState<SeasonItem[]>([]);
   const [loadingSeasons, setLoadingSeasons] = useState(true);
@@ -181,10 +163,9 @@ export default function VeranstaltungCreateForm() {
           endTime: schedule.allDay ? null : schedule.endTime || null,
           organizerName: organizerName || null,
           remarks: remarks || null,
-          websiteVisible,
-          infoboardVisible,
-          homepageVisible,
-          wochenplanVisible,
+          websiteVisible: ausspielung.websiteVisible,
+          homepageVisible: ausspielung.homepageVisible,
+          wochenplanVisible: ausspielung.wochenplanVisible,
           trainingsplanVisible: false,
           teamPageVisible: false,
         }),
@@ -305,15 +286,10 @@ export default function VeranstaltungCreateForm() {
           </label>
         </div>
 
-        <div>
-          <p className="fca-label mb-3">Ausspielung</p>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Toggle label="Website sichtbar" value={websiteVisible} onChange={setWebsiteVisible} />
-            <Toggle label="Homepage sichtbar" value={homepageVisible} onChange={setHomepageVisible} />
-            <Toggle label="Infoboard sichtbar" value={infoboardVisible} onChange={setInfoboardVisible} />
-            <Toggle label="Wochenplan sichtbar" value={wochenplanVisible} onChange={setWochenplanVisible} />
-          </div>
-        </div>
+        <VeranstaltungAusspielungFields
+          values={ausspielung}
+          onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
+        />
 
         {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
 

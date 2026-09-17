@@ -25,7 +25,7 @@ type VeranstaltungListRowProps = {
 
 function operationalState(event: ClubEvent): string {
   if (event.reviewStage === "PUBLISHED") return "Veröffentlicht";
-  if (!event.websiteVisible && !event.wochenplanVisible && !event.infoboardVisible) {
+  if (!event.websiteVisible && !event.homepageVisible && !event.wochenplanVisible) {
     return "Intern";
   }
   return REVIEW_STAGE_LABEL[event.reviewStage] ?? event.reviewStage;

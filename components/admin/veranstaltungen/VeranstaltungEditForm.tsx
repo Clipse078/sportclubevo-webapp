@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import AdminSurfaceCard from "@/components/admin/shared/AdminSurfaceCard";
 import { clubEventScheduleFormFromPersisted } from "@/lib/events/club-event-scheduling";
 import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
+import VeranstaltungAusspielungFields, {
+  type VeranstaltungAusspielungValues,
+} from "./VeranstaltungAusspielungFields";
 import VeranstaltungScheduleFields, {
   type VeranstaltungScheduleFieldValues,
 } from "./VeranstaltungScheduleFields";
@@ -39,31 +42,6 @@ type VeranstaltungEditFormProps = {
   timeZone?: string | null;
 };
 
-function Toggle({
-  label,
-  value,
-  onChange,
-  disabled,
-}: {
-  label: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="fca-toggle-row">
-      <span className="fca-label">{label}</span>
-      <input
-        type="checkbox"
-        checked={value}
-        onChange={(e) => onChange(e.target.checked)}
-        className="fca-toggle-checkbox"
-        disabled={disabled}
-      />
-    </div>
-  );
-}
-
 export default function VeranstaltungEditForm({ event, timeZone }: VeranstaltungEditFormProps) {
   const router = useRouter();
   const tz = resolveTenantEventTimezone(timeZone);
@@ -97,10 +75,11 @@ export default function VeranstaltungEditForm({ event, timeZone }: Veranstaltung
 
   const [organizerName, setOrganizerName] = useState(event.organizerName ?? "");
   const [remarks, setRemarks] = useState(event.remarks ?? "");
-  const [websiteVisible, setWebsiteVisible] = useState(event.websiteVisible);
-  const [infoboardVisible, setInfoboardVisible] = useState(event.infoboardVisible);
-  const [homepageVisible, setHomepageVisible] = useState(event.homepageVisible);
-  const [wochenplanVisible, setWochenplanVisible] = useState(event.wochenplanVisible);
+  const [ausspielung, setAusspielung] = useState<VeranstaltungAusspielungValues>({
+    websiteVisible: event.websiteVisible,
+    homepageVisible: event.homepageVisible,
+    wochenplanVisible: event.wochenplanVisible,
+  });
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -151,10 +130,9 @@ export default function VeranstaltungEditForm({ event, timeZone }: Veranstaltung
           endTime: schedule.allDay ? null : schedule.endTime || null,
           organizerName: organizerName || null,
           remarks: remarks || null,
-          websiteVisible,
-          infoboardVisible,
-          homepageVisible,
-          wochenplanVisible,
+          websiteVisible: ausspielung.websiteVisible,
+          homepageVisible: ausspielung.homepageVisible,
+          wochenplanVisible: ausspielung.wochenplanVisible,
         }),
       });
 
@@ -241,15 +219,11 @@ export default function VeranstaltungEditForm({ event, timeZone }: Veranstaltung
           </label>
         </div>
 
-        <div>
-          <p className="fca-label mb-3">Ausspielung</p>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Toggle label="Website sichtbar" value={websiteVisible} onChange={setWebsiteVisible} disabled={isReadonly} />
-            <Toggle label="Homepage sichtbar" value={homepageVisible} onChange={setHomepageVisible} disabled={isReadonly} />
-            <Toggle label="Infoboard sichtbar" value={infoboardVisible} onChange={setInfoboardVisible} disabled={isReadonly} />
-            <Toggle label="Wochenplan sichtbar" value={wochenplanVisible} onChange={setWochenplanVisible} disabled={isReadonly} />
-          </div>
-        </div>
+        <VeranstaltungAusspielungFields
+          values={ausspielung}
+          onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
+          disabled={isReadonly}
+        />
 
         {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
 

@@ -149,6 +149,7 @@ describe("VeranstaltungScheduleFields — Ganztägig switch (SCE-EVENTS-01B)", (
       "aria-checked",
       "true",
     );
-    expect(document.querySelectorAll('input[type="checkbox"]')).toHaveLength(4);
+    expect(document.querySelectorAll('input[type="checkbox"]')).toHaveLength(0);
+    expect(screen.getAllByRole("switch")).toHaveLength(4);
   });
 });

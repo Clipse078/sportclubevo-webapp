@@ -110,6 +110,7 @@ import type {
   WeekplannerResourceRef,
   WeekplannerTournamentItem,
   WeekplannerTrainingItem,
+  WeekplannerVeranstaltungItem,
 } from "@/lib/weekplanner/types";
 import type { PublicationEventLoader, PublicationEventLoadInput } from "../policy/event-selection";
 import type { Screen1SourceEvent } from "./screen1-event-mapper";
@@ -413,8 +414,16 @@ async function loadEventPolicyByEventId(
   const eventIds = [
     ...new Set(
       items
-        .filter((item): item is WeekplannerMatchItem | WeekplannerTournamentItem =>
-          item.type === "MATCH" || item.type === "TOURNAMENT",
+        .filter(
+          (
+            item,
+          ): item is
+            | WeekplannerMatchItem
+            | WeekplannerTournamentItem
+            | WeekplannerVeranstaltungItem =>
+            item.type === "MATCH" ||
+            item.type === "TOURNAMENT" ||
+            item.type === "VERANSTALTUNG",
         )
         .map((item) => item.eventId),
     ),
@@ -756,6 +765,40 @@ function mapMatchItem(
   };
 }
 
+function mapVeranstaltungItem(
+  item: WeekplannerVeranstaltungItem,
+  policy: CanonicalEventPolicyRow | undefined,
+): Screen1SourceEvent {
+  return {
+    tenantId: item.tenantId,
+    type: "OTHER",
+    status: (policy?.status as PublishingEventStatus | undefined) ?? "SCHEDULED",
+    infoboardVisible: true,
+    websiteVisible: policy?.websiteVisible ?? false,
+    trainingsplanVisible: false,
+    homeAway: null,
+    startAt: item.startAt,
+    endAt: item.endAt,
+    id: item.eventId,
+    title: item.title,
+    seasonKey: policy?.season?.key ?? "",
+    team: item.teamNames[0] ? { name: item.teamNames[0] } : null,
+    opponent: null,
+    opponentFallbackName: null,
+    organizerName: policy?.organizerName ?? null,
+    competitionLabel: null,
+    meetingTime: null,
+    resultLabel: null,
+    intermediateResultLabel: null,
+    pitch: toAllocationCandidate(item.pitchAllocations[0]),
+    pitchCodes: item.pitchAllocations.map((ref) => ref.code),
+    homeDressingRoom: toAllocationCandidate(item.dressingRoomAllocations[0]),
+    homeDressingRoomCodes: item.dressingRoomAllocations.map((ref) => ref.code),
+    awayDressingRoom: null,
+    refereeDressingRoom: null,
+  };
+}
+
 function mapTournamentItem(
   item: WeekplannerTournamentItem,
   policy: CanonicalEventPolicyRow | undefined,
@@ -816,7 +859,10 @@ function mapWeekplannerItem(
     case "TOURNAMENT":
       return mapTournamentItem(item, policy.eventPolicyByEventId.get(item.eventId));
     case "VERANSTALTUNG":
-      throw new Error("VERANSTALTUNG is not mapped for Infoboard canonical source loading");
+      return mapVeranstaltungItem(
+        item,
+        policy.eventPolicyByEventId.get(item.eventId),
+      );
   }
 }
 

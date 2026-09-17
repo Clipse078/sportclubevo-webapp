@@ -206,7 +206,10 @@ function buildSurfaceWhere(surface: PublicEventSurface): Record<string, unknown>
     case "team-page":
       return { websiteVisible: true, teamPageVisible: true };
     case "infoboard":
-      return { infoboardVisible: true };
+      // Veranstaltungen (OTHER) reach Infoboard via operational rules, not manual toggle.
+      return {
+        OR: [{ infoboardVisible: true }, { type: "OTHER" }],
+      };
     case "all":
     default:
       return { websiteVisible: true };
