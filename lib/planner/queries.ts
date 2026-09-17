@@ -1,5 +1,10 @@
 ﻿import { EventSource, EventType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import {
+  matchTimingToOperationalInput,
+  resolveMatchOperationalInterval,
+} from "@/lib/match/resolve-match-operational-interval";
+import { getTenantMatchOperationalPolicy } from "@/lib/match/tenant-operational-policy-service";
 import { getDayWindow, getWeekWindow } from "@/lib/planner/date-utils";
 import { getSeasonOptionsData } from "@/lib/seasons/queries";
 import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
@@ -218,6 +223,7 @@ export async function getPlannerEditFormData(eventId: string) {
       location: true,
       startAt: true,
       endAt: true,
+      operationalEndAtOverride: true,
       opponentName: true,
       organizerName: true,
       competitionLabel: true,
@@ -259,6 +265,24 @@ export async function getPlannerEditFormData(eventId: string) {
     selectedType: event.type,
   });
 
+  const matchOperationalPolicy =
+    event.type === EventType.MATCH
+      ? await getTenantMatchOperationalPolicy(tenantId)
+      : null;
+  const matchOperationalInterval =
+    event.type === EventType.MATCH
+      ? resolveMatchOperationalInterval(
+          matchTimingToOperationalInput(
+            {
+              startAt: event.startAt,
+              endAt: event.endAt,
+              operationalEndAtOverride: event.operationalEndAtOverride,
+            },
+            matchOperationalPolicy ?? undefined,
+          ),
+        )
+      : null;
+
   return {
     ...base,
     eventId: event.id,
@@ -274,6 +298,7 @@ export async function getPlannerEditFormData(eventId: string) {
       location: event.location ?? "",
       startAt: toDateTimeLocalValue(event.startAt),
       endAt: toDateTimeLocalValue(event.endAt),
+      operationalEndAtOverride: toDateTimeLocalValue(event.operationalEndAtOverride),
       opponentName: event.opponentName ?? "",
       organizerName: event.organizerName ?? "",
       competitionLabel: event.competitionLabel ?? "",
@@ -286,6 +311,14 @@ export async function getPlannerEditFormData(eventId: string) {
       trainingsplanVisible: event.trainingsplanVisible,
       teamPageVisible: event.teamPageVisible,
     },
+    matchOperationalInterval: matchOperationalInterval
+      ? {
+          endSource: matchOperationalInterval.endSource,
+          durationSource: matchOperationalInterval.durationSource,
+          durationMinutes: matchOperationalInterval.durationMinutes,
+          operationalEndAtIso: matchOperationalInterval.endAt.toISOString(),
+        }
+      : null,
   };
 }
 

@@ -12,6 +12,10 @@ vi.mock("@/components/admin/planner/PlannerEntryDeleteButton", () => ({
   default: () => <button type="button">Löschen</button>,
 }));
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
 const BASE_DATA = {
   seasons: [{ id: "s1", key: "2025-26", name: "Saison 2025/26", isActive: true }],
   teams: [{ id: "t1", name: "Junioren D-9", category: "Junioren" }],
@@ -29,6 +33,7 @@ const BASE_DATA = {
     location: "Hauptplatz",
     startAt: "2026-09-19T07:30",
     endAt: "",
+    operationalEndAtOverride: "",
     opponentName: "FC Ettingen",
     organizerName: "",
     competitionLabel: "Meisterschaft",
@@ -41,6 +46,7 @@ const BASE_DATA = {
     trainingsplanVisible: false,
     teamPageVisible: false,
   },
+  matchOperationalInterval: null,
 };
 
 describe("PlannerEntryEditForm", () => {
@@ -66,9 +72,11 @@ describe("PlannerEntryEditForm", () => {
     expect(screen.queryByText("Teamseite")).not.toBeInTheDocument();
   });
 
-  it("shows restrained end-time warning when end is missing", () => {
+  it("does not warn on missing manual end when policy can derive the interval", () => {
     render(<PlannerEntryEditForm data={BASE_DATA} canManage />);
-    expect(screen.getByTestId("planner-match-end-time-warning")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("planner-match-end-time-warning"),
+    ).not.toBeInTheDocument();
   });
 
   it("clears end-time warning when meaningful end is entered", () => {
@@ -96,7 +104,7 @@ describe("PlannerEntryEditForm", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("warns when start equals end", () => {
+  it("does not warn when manual start equals end (operational policy applies separately)", () => {
     const sameEnd = {
       ...BASE_DATA,
       defaults: {
@@ -105,7 +113,9 @@ describe("PlannerEntryEditForm", () => {
       },
     };
     render(<PlannerEntryEditForm data={sameEnd} canManage />);
-    expect(screen.getByTestId("planner-match-end-time-warning")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("planner-match-end-time-warning"),
+    ).not.toBeInTheDocument();
   });
 
   it("hides save controls for read-only RBAC", () => {

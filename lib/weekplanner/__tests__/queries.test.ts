@@ -22,6 +22,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 const cacheMocks = vi.hoisted(() => ({
   getFacilitiesForTenantCached: vi.fn(),
   getTenantDressingRoomOccupancyPresetsCached: vi.fn(),
+  getTenantMatchOperationalPolicyCached: vi.fn(),
 }));
 
 const mocks = vi.hoisted(() => ({
@@ -40,6 +41,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/server/request-cache", () => ({
   getFacilitiesForTenantCached: cacheMocks.getFacilitiesForTenantCached,
   getTenantDressingRoomOccupancyPresetsCached: cacheMocks.getTenantDressingRoomOccupancyPresetsCached,
+  getTenantMatchOperationalPolicyCached: cacheMocks.getTenantMatchOperationalPolicyCached,
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -282,6 +284,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   cacheMocks.getFacilitiesForTenantCached.mockResolvedValue(facilitiesFixture());
   cacheMocks.getTenantDressingRoomOccupancyPresetsCached.mockResolvedValue(null);
+  cacheMocks.getTenantMatchOperationalPolicyCached.mockResolvedValue({
+    defaultMatchDurationMinutes: 120,
+    isClubConfigured: false,
+  });
   mocks.facilityResourceFindMany.mockResolvedValue([PITCH_RESOURCE, HOME_ROOM_RESOURCE, AWAY_ROOM_RESOURCE]);
   mocks.trainingAllocationFindMany.mockResolvedValue([]);
   mocks.trainingSessionAllocationFindMany.mockResolvedValue([]);

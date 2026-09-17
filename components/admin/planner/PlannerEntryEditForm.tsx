@@ -2,6 +2,7 @@
 
 import { EventSource, EventType } from "@prisma/client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { updatePlannerEntryAction } from "@/app/(admin)/dashboard/planner/actions";
 import PlannerEntryDeleteButton from "@/components/admin/planner/PlannerEntryDeleteButton";
@@ -20,6 +21,11 @@ import {
   MATCH_END_TIME_MISSING_HEADLINE,
   matchRequiresEndTimeAction,
 } from "@/lib/match/match-operational-completeness";
+import { formatAutomaticEndProvenanceLabel } from "@/lib/match/match-operational-interval-presenters";
+import type {
+  MatchOperationalDurationSource,
+  MatchOperationalEndSource,
+} from "@/lib/match/resolve-match-operational-interval";
 import { cn } from "@/lib/cn";
 
 type PlannerEditFormData = {
@@ -48,6 +54,7 @@ type PlannerEditFormData = {
     location: string;
     startAt: string;
     endAt: string;
+    operationalEndAtOverride: string;
     opponentName: string;
     organizerName: string;
     competitionLabel: string;
@@ -60,6 +67,12 @@ type PlannerEditFormData = {
     trainingsplanVisible: boolean;
     teamPageVisible: boolean;
   };
+  matchOperationalInterval: {
+    endSource: MatchOperationalEndSource;
+    durationSource: MatchOperationalDurationSource;
+    durationMinutes: number;
+    operationalEndAtIso: string;
+  } | null;
 };
 
 type PlannerEntryEditFormProps = {
@@ -91,16 +104,41 @@ function ReadOnlyValue({ children }: { children: React.ReactNode }) {
   );
 }
 
+function toOperationalEndLocalValue(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  const hours = `${date.getHours()}`.padStart(2, "0");
+  const minutes = `${date.getMinutes()}`.padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
 export default function PlannerEntryEditForm({
   data,
   canManage,
 }: PlannerEntryEditFormProps) {
+  const router = useRouter();
   const defaults = data.defaults;
   const isExternallyOwned = isExternallySynchronizedSource(defaults.source);
-  const isReadonly = !canManage || isExternallyOwned;
+  const isCoreReadonly = !canManage || isExternallyOwned;
+  const isMatch = data.selectedType === EventType.MATCH;
+  const showMatchOperationalEnd = isMatch && isExternallyOwned;
 
   const [startAt, setStartAt] = useState(defaults.startAt);
   const [endAt, setEndAt] = useState(defaults.endAt);
+  const [operationalEndLocal, setOperationalEndLocal] = useState(() => {
+    if (defaults.operationalEndAtOverride) return defaults.operationalEndAtOverride;
+    return data.matchOperationalInterval
+      ? toOperationalEndLocalValue(data.matchOperationalInterval.operationalEndAtIso)
+      : "";
+  });
+  const [operationalProvenance, setOperationalProvenance] = useState(
+    () => data.matchOperationalInterval,
+  );
+  const [operationalSaving, setOperationalSaving] = useState(false);
+  const [operationalError, setOperationalError] = useState<string | null>(null);
   const [publication, setPublication] = useState<PlannerPublicationValues>({
     websiteVisible: defaults.websiteVisible,
     infoboardVisible: defaults.infoboardVisible,
@@ -121,14 +159,23 @@ export default function PlannerEntryEditForm({
   );
 
   const endTimeWarning = useMemo(() => {
-    if (data.selectedType !== EventType.MATCH) {
+    if (!isMatch || showMatchOperationalEnd) {
       return false;
     }
     return matchRequiresEndTimeAction({
       startAt: startAt || defaults.startAt,
       endAt: endAt,
     });
-  }, [data.selectedType, startAt, endAt, defaults.startAt]);
+  }, [isMatch, showMatchOperationalEnd, startAt, endAt, defaults.startAt]);
+
+  const operationalEndHint = useMemo(() => {
+    if (!operationalProvenance) return null;
+    return formatAutomaticEndProvenanceLabel({
+      endSource: operationalProvenance.endSource,
+      durationSource: operationalProvenance.durationSource,
+      durationMinutes: operationalProvenance.durationMinutes,
+    });
+  }, [operationalProvenance]);
 
   const pageTitle = plannerEditPageTitle(data.selectedType);
   const subtitle =
@@ -140,10 +187,42 @@ export default function PlannerEntryEditForm({
         })
       : defaults.title;
 
+  const displayEndForHeader = showMatchOperationalEnd
+    ? operationalEndLocal || data.matchOperationalInterval?.operationalEndAtIso || null
+    : endAt || null;
   const scheduleLine = formatPlannerEditScheduleLine(
     startAt || defaults.startAt,
-    endAt || null,
+    displayEndForHeader,
   );
+
+  async function saveOperationalEnd(overrideValue: string | null) {
+    if (!canManage || !showMatchOperationalEnd) return;
+    setOperationalSaving(true);
+    setOperationalError(null);
+    try {
+      const res = await fetch(`/api/events/${encodeURIComponent(data.eventId)}/operational-end`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          overrideValue === null
+            ? { reset: true }
+            : { operationalEndAtOverride: overrideValue },
+        ),
+      });
+      const body = (await res.json().catch(() => null)) as {
+        error?: string;
+        operationalEndAtOverride?: string | null;
+      };
+      if (!res.ok) {
+        throw new Error(body?.error ?? "Speichern fehlgeschlagen");
+      }
+      router.refresh();
+    } catch (err) {
+      setOperationalError(err instanceof Error ? err.message : "Speichern fehlgeschlagen");
+    } finally {
+      setOperationalSaving(false);
+    }
+  }
 
   const showMatchFields = data.selectedType === EventType.MATCH;
   const showTrainingFields = data.selectedType === EventType.TRAINING;
@@ -181,7 +260,7 @@ export default function PlannerEntryEditForm({
           >
             Zurück
           </Link>
-          {canManage && !isExternallyOwned ? (
+          {canManage && !isCoreReadonly ? (
             <button
               type="submit"
               form="planner-entry-edit-form"
@@ -223,7 +302,7 @@ export default function PlannerEntryEditForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <FieldLabel>Titel</FieldLabel>
-                {isReadonly ? (
+                {isCoreReadonly ? (
                   <ReadOnlyValue>{defaults.title}</ReadOnlyValue>
                 ) : (
                   <input
@@ -251,7 +330,7 @@ export default function PlannerEntryEditForm({
 
               <div>
                 <FieldLabel>Team</FieldLabel>
-                {isReadonly ? (
+                {isCoreReadonly ? (
                   <ReadOnlyValue>
                     {data.teams.find((t) => t.id === defaults.teamId)?.name ??
                       "Kein Team"}
@@ -275,7 +354,7 @@ export default function PlannerEntryEditForm({
               {showMatchFields ? (
                 <div>
                   <FieldLabel>Gegner</FieldLabel>
-                  {isReadonly ? (
+                  {isCoreReadonly ? (
                     <ReadOnlyValue>{defaults.opponentName || "—"}</ReadOnlyValue>
                   ) : (
                     <input
@@ -291,7 +370,7 @@ export default function PlannerEntryEditForm({
               {showCompetitionFields ? (
                 <div className="sm:col-span-2">
                   <FieldLabel>Wettbewerb / Label</FieldLabel>
-                  {isReadonly ? (
+                  {isCoreReadonly ? (
                     <ReadOnlyValue>
                       {defaults.competitionLabel || "—"}
                     </ReadOnlyValue>
@@ -317,7 +396,7 @@ export default function PlannerEntryEditForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <FieldLabel>Start</FieldLabel>
-                {isReadonly ? (
+                {isCoreReadonly ? (
                   <ReadOnlyValue>
                     {formatPlannerEditScheduleLine(startAt, null)}
                   </ReadOnlyValue>
@@ -336,11 +415,66 @@ export default function PlannerEntryEditForm({
 
               <div>
                 <FieldLabel>Ende</FieldLabel>
-                {isReadonly ? (
+                {showMatchOperationalEnd ? (
+                  <div className="mt-1.5 space-y-2">
+                    {canManage ? (
+                      <input
+                        type="datetime-local"
+                        value={operationalEndLocal}
+                        onChange={(e) => setOperationalEndLocal(e.target.value)}
+                        className="fca-input w-full"
+                        data-testid="planner-edit-operational-end-at"
+                        disabled={operationalSaving}
+                      />
+                    ) : (
+                      <ReadOnlyValue>
+                        {operationalEndLocal
+                          ? formatPlannerEditScheduleLine(operationalEndLocal, null)
+                          : "—"}
+                      </ReadOnlyValue>
+                    )}
+                    {operationalEndHint ? (
+                      <p className="text-xs text-[var(--muted)]" data-testid="planner-operational-end-provenance">
+                        {operationalEndHint}
+                      </p>
+                    ) : null}
+                    {canManage ? (
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          className="inline-flex h-8 items-center rounded-md border border-[var(--border)] px-3 text-xs font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)] disabled:opacity-50"
+                          disabled={operationalSaving || !operationalEndLocal}
+                          onClick={() =>
+                            void saveOperationalEnd(
+                              new Date(operationalEndLocal).toISOString(),
+                            )
+                          }
+                          data-testid="planner-save-operational-end"
+                        >
+                          Endzeit speichern
+                        </button>
+                        {operationalProvenance?.endSource === "SCE_OVERRIDE" ? (
+                          <button
+                            type="button"
+                            className="inline-flex h-8 items-center rounded-md px-3 text-xs font-medium text-[var(--sce-primary)] hover:underline disabled:opacity-50"
+                            disabled={operationalSaving}
+                            onClick={() => void saveOperationalEnd(null)}
+                            data-testid="planner-reset-operational-end"
+                          >
+                            Automatisch verwenden
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    {operationalError ? (
+                      <p className="text-xs text-[var(--danger)]" role="alert">
+                        {operationalError}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : isCoreReadonly ? (
                   <ReadOnlyValue>
-                    {endAt
-                      ? formatPlannerEditScheduleLine(endAt, null)
-                      : "—"}
+                    {endAt ? formatPlannerEditScheduleLine(endAt, null) : "—"}
                   </ReadOnlyValue>
                 ) : (
                   <>
@@ -380,7 +514,7 @@ export default function PlannerEntryEditForm({
 
               <div className="sm:col-span-2">
                 <FieldLabel>Ort</FieldLabel>
-                {isReadonly ? (
+                {isCoreReadonly ? (
                   <ReadOnlyValue>{defaults.location || "—"}</ReadOnlyValue>
                 ) : (
                   <input
@@ -395,7 +529,7 @@ export default function PlannerEntryEditForm({
 
           {(showTrainingFields ||
             defaults.organizerName ||
-            !isReadonly) && (
+            !isCoreReadonly) && (
             <section
               className="space-y-4"
               aria-labelledby="planner-section-org"
@@ -408,7 +542,7 @@ export default function PlannerEntryEditForm({
               </h2>
               <div>
                 <FieldLabel>Organisator</FieldLabel>
-                {isReadonly ? (
+                {isCoreReadonly ? (
                   <ReadOnlyValue>{defaults.organizerName || "—"}</ReadOnlyValue>
                 ) : (
                   <input
@@ -431,7 +565,7 @@ export default function PlannerEntryEditForm({
             </h2>
             <div>
               <FieldLabel>Beschreibung</FieldLabel>
-              {isReadonly ? (
+              {isCoreReadonly ? (
                 <ReadOnlyValue>{defaults.description || "—"}</ReadOnlyValue>
               ) : (
                 <textarea
@@ -444,7 +578,7 @@ export default function PlannerEntryEditForm({
             </div>
             <div>
               <FieldLabel>Bemerkungen (intern)</FieldLabel>
-              {isReadonly ? (
+              {isCoreReadonly ? (
                 <ReadOnlyValue>{defaults.remarks || "—"}</ReadOnlyValue>
               ) : (
                 <textarea
@@ -496,7 +630,7 @@ export default function PlannerEntryEditForm({
             onChange={(patch) =>
               setPublication((current) => ({ ...current, ...patch }))
             }
-            disabled={isReadonly}
+            disabled={isCoreReadonly}
           />
 
           {canManage && !isExternallyOwned ? (

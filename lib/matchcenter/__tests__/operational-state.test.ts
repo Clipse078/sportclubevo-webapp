@@ -33,6 +33,8 @@ function createMatch(
     status: "SCHEDULED",
     startAt: new Date("2026-12-05T16:00:00.000Z"),
     endAt: new Date("2026-12-05T18:00:00.000Z"),
+    operationalEndAtOverride: null,
+    operationalEndAt: new Date("2026-12-05T18:00:00.000Z"),
     location: "Im Brüel",
     competitionLabel: "Meisterschaft",
     homeAway: "HOME",
@@ -224,21 +226,26 @@ describe("assessMatchOperationalState — future HOME matches", () => {
     expect(assessment.actionCount).toBe(0);
   });
 
-  it("flags missing or equal end time as Endzeit setzen (derived, not a conflict)", () => {
-    const missingEnd = createMatch({ endAt: null });
-    expect(assessMatchOperationalState(missingEnd).actions.map((a) => a.label)).toContain(
-      "Endzeit setzen",
+  it("does not flag missing or equal provider end when operational interval resolves", () => {
+    const missingEnd = createMatch({
+      endAt: null,
+      operationalEndAt: new Date("2026-12-05T18:00:00.000Z"),
+    });
+    expect(assessMatchOperationalState(missingEnd).actions.map((a) => a.key)).not.toContain(
+      "end-time",
     );
 
     const equalEnd = createMatch({
       endAt: new Date("2026-12-05T16:00:00.000Z"),
+      operationalEndAt: new Date("2026-12-05T18:00:00.000Z"),
     });
-    expect(assessMatchOperationalState(equalEnd).actions.map((a) => a.label)).toContain(
-      "Endzeit setzen",
+    expect(assessMatchOperationalState(equalEnd).actions.map((a) => a.key)).not.toContain(
+      "end-time",
     );
 
     const validEnd = createMatch({
       endAt: new Date("2026-12-05T18:00:00.000Z"),
+      operationalEndAt: new Date("2026-12-05T18:00:00.000Z"),
     });
     expect(assessMatchOperationalState(validEnd).actions.map((a) => a.key)).not.toContain(
       "end-time",

@@ -26,9 +26,15 @@ import {
 } from "@/lib/training/effective-training-allocation-resolution";
 import { getWochenplanPlanBaselineMode } from "@/lib/wochenplan/plan-baseline";
 import {
+  matchTimingToOperationalInput,
+  resolveMatchOperationalInterval,
+} from "@/lib/match/resolve-match-operational-interval";
+import { getTenantMatchOperationalPolicyCached } from "@/lib/server/request-cache";
+import {
   listMatchcenterMatches,
   type MatchcenterQueryDatabase,
 } from "@/lib/matchcenter/query-service";
+import type { TenantMatchOperationalPolicyResolved } from "@/lib/match/tenant-operational-policy-service";
 import { listTournaments } from "@/lib/tournaments/tournament-service";
 import { planOverrideKey } from "@/lib/weekplanner/plan-override-key";
 import type { AvailabilityResourceGroup } from "@/lib/facilities/availability-service";
@@ -390,9 +396,15 @@ async function collectMatchOccupants(
   baselineMode: "canonical" | "empty",
   resourceByCode: ReadonlyMap<string, WeekplannerResourceRef>,
   conflicts: ConflictWindow[],
+  tenantMatchPolicy: TenantMatchOperationalPolicyResolved,
 ): Promise<void> {
   const database = prisma as unknown as MatchcenterQueryDatabase;
-  const matches = await listMatchcenterMatches(database, { tenantId, from: queryStartAt, to: queryEndAt });
+  const matches = await listMatchcenterMatches(database, {
+    tenantId,
+    from: queryStartAt,
+    to: queryEndAt,
+    matchOperationalPolicy: tenantMatchPolicy,
+  });
 
   for (const match of matches) {
     if (isAwayHomeAway(match.homeAway) || isCancelled(match.status)) continue;
@@ -423,9 +435,16 @@ async function collectMatchOccupants(
     );
 
     const canonicalStartAt = new Date(match.startAt);
-    const rawEndAt = match.endAt ? new Date(match.endAt) : null;
-    const canonicalEndAt =
-      rawEndAt && isMeaningfulEventInterval(canonicalStartAt, rawEndAt) ? rawEndAt : canonicalStartAt;
+    const canonicalEndAt = resolveMatchOperationalInterval(
+      matchTimingToOperationalInput(
+        {
+          startAt: match.startAt,
+          endAt: match.endAt,
+          operationalEndAtOverride: match.operationalEndAtOverride,
+        },
+        tenantMatchPolicy,
+      ),
+    ).endAt;
     const time = resolveEffectiveTime(
       timeOverridesByKey,
       activityIdentityKey("MATCH", match.id),
@@ -623,10 +642,12 @@ export async function findWeekplannerPlanConflicts(
   });
   if (!contextPlan) return [];
 
-  const [{ overridesByKey, timeOverridesByKey }, baselineMode] = await Promise.all([
-    buildPlanOverrideMaps(tenantId, context.weekplannerPlanId),
-    resolvePlanBaselineMode(tenantId, context.weekplannerPlanId),
-  ]);
+  const [{ overridesByKey, timeOverridesByKey }, baselineMode, tenantMatchPolicy] =
+    await Promise.all([
+      buildPlanOverrideMaps(tenantId, context.weekplannerPlanId),
+      resolvePlanBaselineMode(tenantId, context.weekplannerPlanId),
+      getTenantMatchOperationalPolicyCached(tenantId),
+    ]);
 
   const activitiesWithOverrides = collectActivitiesWithOverrides(overridesByKey, timeOverridesByKey);
   const conflicts: ConflictWindow[] = [];
@@ -656,6 +677,7 @@ export async function findWeekplannerPlanConflicts(
       baselineMode,
       resourceByCode,
       conflicts,
+      tenantMatchPolicy,
     ),
     collectTournamentOccupants(
       tenantId,

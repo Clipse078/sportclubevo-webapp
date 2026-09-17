@@ -7,6 +7,7 @@
 import { cache } from "react";
 import { getFacilitiesForTenant as loadFacilitiesForTenant } from "@/lib/facilities/queries";
 import { getTenantDressingRoomOccupancyPresets as loadTenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/tenant-preset-service";
+import { getTenantMatchOperationalPolicy as loadTenantMatchOperationalPolicy } from "@/lib/match/tenant-operational-policy-service";
 import { getCurrentTenantContextById as loadCurrentTenantContextById } from "@/lib/tenants/context";
 import { getTeamsListData as loadTeamsListData } from "@/lib/teams/queries";
 import { getPersonProfileByUserId as loadPersonProfileByUserId } from "@/lib/people/queries";
@@ -17,6 +18,10 @@ export const getFacilitiesForTenantCached = cache((tenantId: string) =>
 
 export const getTenantDressingRoomOccupancyPresetsCached = cache((tenantId: string) =>
   loadTenantDressingRoomOccupancyPresets(tenantId),
+);
+
+export const getTenantMatchOperationalPolicyCached = cache((tenantId: string) =>
+  loadTenantMatchOperationalPolicy(tenantId),
 );
 
 export const getCurrentTenantContextByIdCached = cache((tenantId: string) =>

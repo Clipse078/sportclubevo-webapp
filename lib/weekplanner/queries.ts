@@ -77,8 +77,14 @@ import { isMeaningfulEventInterval } from "@/lib/facilities/resource-occupancy-w
 import { getWochenplanPlanBaselineMode, type WochenplanPlanBaselineMode } from "@/lib/wochenplan/plan-baseline";
 import { listTrainingSessions } from "@/lib/training/session-generation-service";
 import {
+  matchTimingToOperationalInput,
+  resolveMatchOperationalInterval,
+} from "@/lib/match/resolve-match-operational-interval";
+import type { TenantMatchOperationalPolicyResolved } from "@/lib/match/tenant-operational-policy-service";
+import {
   getFacilitiesForTenantCached,
   getTenantDressingRoomOccupancyPresetsCached,
+  getTenantMatchOperationalPolicyCached,
 } from "@/lib/server/request-cache";
 import { enrichWeekplannerItemDressingRoomOccupancy } from "@/lib/dressing-room-occupancy/weekplanner-enrichment";
 import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
@@ -573,9 +579,15 @@ async function findWeekplannerHomeMatches(
   overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
   timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
   tenantPresets: TenantDressingRoomOccupancyPresets,
+  tenantMatchPolicy: TenantMatchOperationalPolicyResolved,
 ): Promise<WeekplannerMatchItem[]> {
   const database = prisma as unknown as MatchcenterQueryDatabase;
-  const matches = await listMatchcenterMatches(database, { tenantId, from, to });
+  const matches = await listMatchcenterMatches(database, {
+    tenantId,
+    from,
+    to,
+    matchOperationalPolicy: tenantMatchPolicy,
+  });
 
   const homeMatches = matches.filter(
     (match) => !isAwayHomeAway(match.homeAway) && !isCancelled(match.status),
@@ -611,9 +623,16 @@ async function findWeekplannerHomeMatches(
       homeRoomRef ? [homeRoomRef] : [],
     );
     const canonicalStartAt = new Date(match.startAt);
-    const rawEndAt = match.endAt ? new Date(match.endAt) : null;
-    const canonicalEndAt =
-      rawEndAt && isMeaningfulEventInterval(canonicalStartAt, rawEndAt) ? rawEndAt : canonicalStartAt;
+    const canonicalEndAt = resolveMatchOperationalInterval(
+      matchTimingToOperationalInput(
+        {
+          startAt: match.startAt,
+          endAt: match.endAt,
+          operationalEndAtOverride: match.operationalEndAtOverride,
+        },
+        tenantMatchPolicy,
+      ),
+    ).endAt;
     const time = resolveEffectiveTime(
       timeOverridesByKey,
       planTimeOverrideKey("MATCH", match.id),
@@ -880,13 +899,14 @@ export async function getWeekplannerWeek(
   window: WeekplannerWindow,
   planId?: string,
 ): Promise<WeekplannerWeek> {
-  const [resourceByCode, overridesByKey, timeOverridesByKey, baselineMode, tenantPresets] =
+  const [resourceByCode, overridesByKey, timeOverridesByKey, baselineMode, tenantPresets, tenantMatchPolicy] =
     await Promise.all([
       findFacilityResourceCodeMap(tenantId),
       findWeekplannerPlanOverrides(tenantId, planId),
       findWeekplannerPlanTimeOverrides(tenantId, planId),
       resolveWeekplannerPlanBaselineMode(tenantId, planId),
       getTenantDressingRoomOccupancyPresetsCached(tenantId),
+      getTenantMatchOperationalPolicyCached(tenantId),
     ]);
 
   const [trainingItems, matchItems, tournamentItems, veranstaltungItems] = await Promise.all([
@@ -905,6 +925,7 @@ export async function getWeekplannerWeek(
       overridesByKey,
       timeOverridesByKey,
       tenantPresets,
+      tenantMatchPolicy,
     ),
     findWeekplannerHomeTournaments(
       tenantId,

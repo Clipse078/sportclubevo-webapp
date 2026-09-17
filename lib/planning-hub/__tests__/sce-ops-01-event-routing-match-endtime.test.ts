@@ -105,12 +105,30 @@ describe("SCE-OPS-01 — Veranstaltung routing", () => {
 });
 
 describe("SCE-OPS-01 — match end time on weekplanner items", () => {
-  it("detects missing canonical end on match items", () => {
+  it("does not flag when canonical end is operationally resolved", () => {
     const start = new Date("2026-08-10T14:00:00.000Z");
+    const resolvedEnd = new Date("2026-08-10T16:00:00.000Z");
     const item = baseItem({
       id: "match:m1",
       type: "MATCH",
       eventId: "m1",
+      startAt: start,
+      endAt: resolvedEnd,
+      canonicalStartAt: start,
+      canonicalEndAt: resolvedEnd,
+      opponentName: "X",
+      homeAway: "HOME",
+      awayDressingRoomAllocations: [],
+    });
+    expect(weekplannerMatchRequiresEndTimeAction(item)).toBe(false);
+  });
+
+  it("detects when canonical interval is still not meaningful", () => {
+    const start = new Date("2026-08-10T14:00:00.000Z");
+    const item = baseItem({
+      id: "match:m0",
+      type: "MATCH",
+      eventId: "m0",
       startAt: start,
       endAt: start,
       canonicalStartAt: start,

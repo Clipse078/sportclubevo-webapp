@@ -24,7 +24,10 @@ import {
   normalizeMatchcenterTeamFilter,
   toMatchcenterTeamOptions,
 } from "@/lib/matchcenter/navigation";
-import { getTeamsListDataCached } from "@/lib/server/request-cache";
+import {
+  getTeamsListDataCached,
+  getTenantMatchOperationalPolicyCached,
+} from "@/lib/server/request-cache";
 import {
   createAdminServerTimer,
   isScePerfTimingEnabled,
@@ -98,11 +101,13 @@ export default async function MatchcenterPage({
   // Month-scoped server-side query (MATCHCENTER-UX-01 §13): avoids loading
   // the full season — only the selected month's window is fetched, for
   // both Spielplanung and Resultate (they share one month filter).
+  const matchOperationalPolicy = await getTenantMatchOperationalPolicyCached(tenantId);
   const [matches, tenantTeams] = await Promise.all([
     listMatchcenterMatches(matchcenterDatabase, {
       tenantId,
       from: resolvedMonth.from,
       to: resolvedMonth.to,
+      matchOperationalPolicy,
     }),
     getTeamsListDataCached(tenantId),
   ]);

@@ -1,3 +1,5 @@
+import type { TenantMatchOperationalPolicyResolved } from "@/lib/match/tenant-operational-policy-service";
+
 export type MatchcenterTeamResolution =
   | "RESOLVED"
   | "UNRESOLVED";
@@ -101,6 +103,10 @@ export interface MatchcenterMatchSummary {
   status: string;
   startAt: Date;
   endAt: Date | null;
+  /** SCE-OPS-01A — persisted SCE override; authoritative provider end remains in endAt. */
+  operationalEndAtOverride: Date | null;
+  /** SCE-OPS-01A — resolved operational end for display, conflicts, and planning. */
+  operationalEndAt: Date;
   location: string | null;
   competitionLabel: string | null;
   homeAway: string | null;
@@ -141,6 +147,8 @@ export interface MatchcenterListInput {
   to?: Date;
   limit?: number;
   now?: Date;
+  /** When omitted, platform fallback duration applies for operational resolution. */
+  matchOperationalPolicy?: TenantMatchOperationalPolicyResolved;
 }
 
 export interface MatchcenterDetailInput {

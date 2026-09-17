@@ -132,7 +132,13 @@ export function assessMatchOperationalState(
   const teamUnresolved = ownSide.resolution === "UNRESOLVED";
 
   const actions: MatchcenterOperationalAction[] = [];
-  if (matchRequiresEndTimeAction(match)) {
+  if (
+    matchRequiresEndTimeAction({
+      startAt: match.startAt,
+      endAt: match.endAt,
+      operationalEndAtOverride: match.operationalEndAtOverride,
+    })
+  ) {
     actions.push({
       key: MATCH_END_TIME_ACTION_KEY,
       label: MATCH_END_TIME_ACTION_LABEL,

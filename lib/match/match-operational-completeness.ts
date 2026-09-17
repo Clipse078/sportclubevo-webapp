@@ -5,7 +5,11 @@
  * implemented in this ticket.
  */
 
-import { isMeaningfulEventInterval } from "@/lib/facilities/resource-occupancy-window";
+import {
+  matchTimingToOperationalInput,
+  resolveMatchOperationalInterval,
+} from "@/lib/match/resolve-match-operational-interval";
+import type { TenantMatchOperationalPolicyResolved } from "@/lib/match/tenant-operational-policy-service";
 
 export const MATCH_END_TIME_ACTION_KEY = "end-time" as const;
 export const MATCH_END_TIME_ACTION_LABEL = "Endzeit setzen" as const;
@@ -16,6 +20,7 @@ export const MATCH_END_TIME_MISSING_COPY =
 export type MatchTimingFields = {
   startAt: Date | string;
   endAt?: Date | string | null;
+  operationalEndAtOverride?: Date | string | null;
 };
 
 export type MatchOperationalCompleteness = {
@@ -31,25 +36,21 @@ export function getMatchEndTimeCorrectionHref(matchId: string): string {
  * TRUE when canonical end time is missing/null/empty OR not meaningfully after start.
  * Overnight intervals (end on a later calendar instant) are valid when end > start.
  */
-export function matchRequiresEndTimeAction(match: MatchTimingFields): boolean {
-  const startAt = match.startAt;
-  const endAt = match.endAt;
-
-  if (endAt === null || endAt === undefined) {
-    return true;
-  }
-
-  if (typeof endAt === "string" && endAt.trim() === "") {
-    return true;
-  }
-
-  return !isMeaningfulEventInterval(startAt, endAt);
+export function matchRequiresEndTimeAction(
+  match: MatchTimingFields,
+  tenantPolicy?: TenantMatchOperationalPolicyResolved,
+): boolean {
+  const interval = resolveMatchOperationalInterval(
+    matchTimingToOperationalInput(match, tenantPolicy),
+  );
+  return !interval.isResolvable;
 }
 
 export function getMatchOperationalCompleteness(
   match: MatchTimingFields,
+  tenantPolicy?: TenantMatchOperationalPolicyResolved,
 ): MatchOperationalCompleteness {
   return {
-    requiresEndTime: matchRequiresEndTimeAction(match),
+    requiresEndTime: matchRequiresEndTimeAction(match, tenantPolicy),
   };
 }

@@ -8,18 +8,18 @@ import {
 const START = "2026-08-10T14:00:00.000Z";
 
 describe("matchRequiresEndTimeAction", () => {
-  it("flags missing end", () => {
-    expect(matchRequiresEndTimeAction({ startAt: START, endAt: null })).toBe(true);
-    expect(matchRequiresEndTimeAction({ startAt: START })).toBe(true);
+  it("does not flag missing end when policy can derive an interval", () => {
+    expect(matchRequiresEndTimeAction({ startAt: START, endAt: null })).toBe(false);
+    expect(matchRequiresEndTimeAction({ startAt: START })).toBe(false);
   });
 
-  it("flags empty end representation", () => {
-    expect(matchRequiresEndTimeAction({ startAt: START, endAt: "" })).toBe(true);
-    expect(matchRequiresEndTimeAction({ startAt: START, endAt: "   " })).toBe(true);
+  it("does not flag empty or equal provider end when policy can derive", () => {
+    expect(matchRequiresEndTimeAction({ startAt: START, endAt: "" })).toBe(false);
+    expect(matchRequiresEndTimeAction({ startAt: START, endAt: START })).toBe(false);
   });
 
-  it("flags start equal to end", () => {
-    expect(matchRequiresEndTimeAction({ startAt: START, endAt: START })).toBe(true);
+  it("flags invalid start", () => {
+    expect(matchRequiresEndTimeAction({ startAt: "invalid", endAt: null })).toBe(true);
   });
 
   it("accepts valid end after start", () => {
@@ -42,7 +42,7 @@ describe("matchRequiresEndTimeAction", () => {
 
   it("derives completeness without persisted flags", () => {
     expect(getMatchOperationalCompleteness({ startAt: START, endAt: null }).requiresEndTime).toBe(
-      true,
+      false,
     );
   });
 

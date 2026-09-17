@@ -718,6 +718,8 @@ model Tenant {
   weekplannerPlanActivityOverrides WeekplannerPlanActivityOverride[]
   /// PLANNING-HUB-02A — tenant-wide dressing-room occupancy presets.
   dressingRoomOccupancyPreset      TenantDressingRoomOccupancyPreset?
+  /// SCE-OPS-01A — tenant-wide default Match duration when no meaningful end exists.
+  matchOperationalPolicy           TenantMatchOperationalPolicy?
 
   // RPERM-02
   tenantMemberships TenantMembership[]
@@ -1930,6 +1932,10 @@ model Event {
 
   startAt DateTime
   endAt   DateTime?
+  /// SCE-OPS-01A — SCE-owned operational end override for Matches when the
+  /// authoritative provider end is missing or insufficient. Never written by
+  /// external sync; null means "use automatic policy resolution".
+  operationalEndAtOverride DateTime?
   /// SCE-EVENTS-01 — calendar all-day semantics for Veranstaltungen (Event.type=OTHER).
   /// When true, startAt/endAt encode inclusive calendar dates in the tenant timezone
   /// with exclusive endAt at midnight after the last day (iCal-style). Never 00:00–23:59.
@@ -6012,6 +6018,18 @@ model TenantDressingRoomOccupancyPreset {
   tournamentAfterMinutes  Int @default(60)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+/// SCE-OPS-01A — club-configurable default Match duration (minutes) for operational
+/// interval derivation when the provider supplies no meaningful end time.
+model TenantMatchOperationalPolicy {
+  id                          String   @id @default(cuid())
+  tenantId                    String   @unique
+  defaultMatchDurationMinutes Int
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
