@@ -33,11 +33,11 @@ describe("PREMIUM-03 × PREMIUM-02 integration", () => {
     expect(source).toContain("createTrainingAllocation");
   });
 
-  it("training page keeps PREMIUM-02 Serien list and single CTA per tab", () => {
+  it("training page is a minimal management workspace without calendar tab", () => {
     const source = readSource("app/(admin)/dashboard/training/page.tsx");
-    expect(source).toContain("TrainingSeriesListView");
-    expect(source).toContain("Neue Trainingsserie");
-    expect(source.match(/Neue Trainingsserie/g)?.length).toBe(2);
+    expect(source).toContain("TrainingManagementWorkspace");
+    expect(source).not.toContain("TrainingCenterOverview");
+    expect(source).toContain("TrainingManagementWorkspace");
     expect(source).toContain('tab === "planungsraster"');
     expect(source).toContain("buildWochenplanerResourcesHrefFromLegacyTrainingParams");
     expect(source).not.toContain('label: "Planungsraster"');
