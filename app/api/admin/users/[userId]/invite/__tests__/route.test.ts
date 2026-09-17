@@ -190,6 +190,16 @@ describe("POST /invite — success", () => {
     expect(mockResendTenantInvitation).not.toHaveBeenCalled();
     expect(mockSendMail).not.toHaveBeenCalled();
   });
+
+  it("RESEND-5. returns 429 when resend cooldown is active", async () => {
+    const { InvitationDomainError } = await import("@/lib/users/mutations");
+    mockResendTenantInvitation.mockRejectedValue(
+      new InvitationDomainError("INVITATION_RESEND_COOLDOWN"),
+    );
+    const res = await POST(makeRequest() as never, makeParams());
+    expect(res.status).toBe(429);
+    expect(res.headers.get("Retry-After")).toBeTruthy();
+  });
 });
 
 describe("POST /invite — not found", () => {

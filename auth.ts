@@ -2,6 +2,8 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db/prisma";
 import { verifyPassword } from "@/lib/auth/password";
+import { runLoginTimingMitigation } from "@/lib/auth/login-timing";
+import { logSecurityEvent } from "@/lib/security/security-events";
 import {
   applyTokenToSessionUser,
   applyTrustedJwtState,
@@ -50,20 +52,16 @@ const authResult = NextAuth({
           return null;
         }
 
-        if (!user) {
-          console.error("[auth] authorize: no user found for email prefix", email.slice(0, 3) + "***");
-          return null;
-        }
-
-        if (!user.isActive) {
-          console.error("[auth] authorize: user inactive");
+        if (!user || !user.isActive) {
+          await runLoginTimingMitigation(password);
+          logSecurityEvent("LOGIN_FAILED", { surface: "login" });
           return null;
         }
 
         const isPasswordValid = await verifyPassword(password, user.passwordHash);
 
         if (!isPasswordValid) {
-          console.error("[auth] authorize: bcrypt comparison failed — wrong password or stale hash");
+          logSecurityEvent("LOGIN_FAILED", { surface: "login" });
           return null;
         }
 

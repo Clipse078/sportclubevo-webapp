@@ -24,10 +24,20 @@ import {
   validatePasswordResetToken,
 } from "@/lib/auth/password-reset";
 import { activateInvitationMembership } from "@/lib/users/mutations";
+import { getClientIp } from "@/lib/security/client-ip";
+import { checkApplicationRateLimit } from "@/lib/security/abuse-policy";
+import { createRateLimitResponse } from "@/lib/security/rate-limit-response";
+import { logSecurityEvent } from "@/lib/security/security-events";
 
 const MIN_PASSWORD_LENGTH = 12;
 
 export async function POST(req: NextRequest) {
+  const rateCheck = checkApplicationRateLimit("resetPassword", getClientIp(req));
+  if (!rateCheck.allowed) {
+    logSecurityEvent("AUTH_RATE_LIMITED", { surface: "resetPassword" });
+    return createRateLimitResponse(rateCheck.retryAfterMs);
+  }
+
   let token: string;
   let newPassword: string;
   let confirmPassword: string;
