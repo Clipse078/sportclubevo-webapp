@@ -40,6 +40,8 @@ import {
   resolveSecurityLinkBaseUrl,
   SecurityLinkConfigurationError,
 } from "@/lib/server/security-link-url";
+import { createRateLimitResponse } from "@/lib/security/rate-limit-response";
+import { INVITATION_RESEND_COOLDOWN_MS } from "@/lib/security/abuse-policy";
 
 type RouteContext = { params: Promise<{ userId: string }> };
 
@@ -123,6 +125,9 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
           { error: "Plattformkonten können nicht über die Mandantenverwaltung eingeladen werden." },
           { status: 403 },
         );
+      }
+      if (error.code === "INVITATION_RESEND_COOLDOWN") {
+        return createRateLimitResponse(INVITATION_RESEND_COOLDOWN_MS);
       }
     }
     console.error("[resend-invite] Unexpected error:", error);

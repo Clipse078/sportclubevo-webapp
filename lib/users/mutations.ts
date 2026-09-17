@@ -9,6 +9,7 @@ import { setTenantUserRoles } from "@/lib/roles/mutations";
 import { assignScopedRoleToUser } from "@/lib/roles/scoped-mutations";
 import { assertTenantDelegationAllowed } from "@/lib/roles/delegation";
 import { isPlatformSuperAdmin } from "@/lib/security/platform-superadmin";
+import { INVITATION_RESEND_COOLDOWN_MS } from "@/lib/security/abuse-policy";
 
 // ── Error types ───────────────────────────────────────────────────────────────
 
@@ -34,7 +35,8 @@ export type InvitationErrorCode =
   | "ALREADY_HAS_ACTIVE_MEMBERSHIP"
   | "USER_NOT_FOUND"
   | "NO_ACTIVE_INVITATION"
-  | "PLATFORM_ACCOUNT_PROTECTED";
+  | "PLATFORM_ACCOUNT_PROTECTED"
+  | "INVITATION_RESEND_COOLDOWN";
 
 export class InvitationDomainError extends Error {
   constructor(public readonly code: InvitationErrorCode, message?: string) {
@@ -671,6 +673,19 @@ export async function resendTenantInvitation(
   if (!membership) throw new InvitationDomainError("USER_NOT_FOUND");
   if (await isPlatformSuperAdmin(prisma, userId)) {
     throw new InvitationDomainError("PLATFORM_ACCOUNT_PROTECTED");
+  }
+
+  const recentInvitation = await prisma.passwordResetToken.findFirst({
+    where: { userId, isInvitation: true, invitationTenantId: tenantId },
+    orderBy: { createdAt: "desc" },
+    select: { createdAt: true },
+  });
+
+  if (
+    recentInvitation &&
+    Date.now() - recentInvitation.createdAt.getTime() < INVITATION_RESEND_COOLDOWN_MS
+  ) {
+    throw new InvitationDomainError("INVITATION_RESEND_COOLDOWN");
   }
 
   const currentRoleIds = await prisma.userRole.findMany({

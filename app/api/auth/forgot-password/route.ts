@@ -6,13 +6,10 @@
  * Security properties:
  *   - Opaque response: always returns the same 200 JSON regardless of
  *     whether the email exists — never reveals user enumeration.
- *   - Rate limiting: 5 requests per IP per 15-minute window.
- *     NOTE: best-effort only — in-process store is not shared across
- *     Vercel serverless instances. See rate-limit.ts for details.
+ *   - Rate limiting: application best-effort 5 / 15 min per IP; Vercel WAF
+ *     provides distributed protection (see docs/security/vercel-auth-rate-limits.md).
  *   - Token: raw token is never logged; only the SHA-256 hash is stored.
- *   - Reset URL: constructed from APP_BASE_URL (preferred) or NEXTAUTH_URL.
- *     If neither is configured, email delivery fails internally (operational
- *     error) while the external response remains opaque.
+ *   - Reset URL: constructed via resolveSecurityLinkBaseUrl (APP_BASE_URL / NEXTAUTH_URL).
  *   - Missing RESEND_API_KEY or EMAIL_FROM: email delivery fails internally
  *     (MailConfigurationError) while the external response remains opaque.
  */
@@ -20,7 +17,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { createPasswordResetToken, TOKEN_EXPIRY_MS } from "@/lib/auth/password-reset";
-import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { sendMail, MailConfigurationError } from "@/lib/email/mailer";
 import { buildPasswordResetEmail } from "@/lib/email/templates/password-reset";
 import {
@@ -29,26 +25,26 @@ import {
   SecurityLinkConfigurationError,
 } from "@/lib/server/security-link-url";
 import { platformSuperAdminAssignmentWhere } from "@/lib/security/platform-superadmin";
+import { getClientIp } from "@/lib/security/client-ip";
+import {
+  AUTH_SECURITY_MESSAGES,
+  checkApplicationRateLimit,
+} from "@/lib/security/abuse-policy";
+import { createRateLimitResponse, GENERIC_RATE_LIMIT_MESSAGE } from "@/lib/security/rate-limit-response";
+import { logSecurityEvent } from "@/lib/security/security-events";
 
 const OPAQUE_SUCCESS = {
-  message:
-    "Falls ein Konto mit dieser E-Mail-Adresse existiert, haben wir dir einen Link zum Zurücksetzen des Passworts gesendet.",
+  message: AUTH_SECURITY_MESSAGES.forgotPasswordSuccess,
 };
 
-function getClientIp(req: NextRequest): string {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    req.headers.get("x-real-ip") ??
-    "unknown"
-  );
-}
-
 export async function POST(req: NextRequest) {
-  // Best-effort rate limiting by IP. Not shared across serverless instances.
   const ip = getClientIp(req);
-  const rateCheck = checkRateLimit(`forgot-password:${ip}`, 5, 15 * 60 * 1000);
+  const rateCheck = checkApplicationRateLimit("forgotPassword", ip);
   if (!rateCheck.allowed) {
-    return NextResponse.json(OPAQUE_SUCCESS, { status: 200 });
+    logSecurityEvent("AUTH_RATE_LIMITED", { surface: "forgotPassword" });
+    return createRateLimitResponse(rateCheck.retryAfterMs, {
+      error: GENERIC_RATE_LIMIT_MESSAGE,
+    });
   }
 
   let email: string;
@@ -117,7 +113,6 @@ export async function POST(req: NextRequest) {
     } catch (err) {
       const isConfigError = err instanceof MailConfigurationError;
       const isLinkConfigError = err instanceof SecurityLinkConfigurationError;
-      const emailPrefix = (userEmail ?? "").slice(0, 3) + "***";
 
       if (isLinkConfigError) {
         console.error(
@@ -125,12 +120,10 @@ export async function POST(req: NextRequest) {
           err.code,
         );
       } else if (isConfigError) {
-        // Operational/configuration failure — visible in logs, not to caller.
         console.error("[forgot-password] mail configuration error:", (err as Error).message);
       } else {
         console.error(
-          "[forgot-password] token/email error for prefix",
-          emailPrefix,
+          "[forgot-password] token/email delivery error",
           err instanceof Error ? err.message : String(err),
         );
       }

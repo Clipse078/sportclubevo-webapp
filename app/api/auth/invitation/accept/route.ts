@@ -14,6 +14,7 @@
  *   200  — { success: true }
  *   400  — missing/invalid/expired/already-used token, or token belongs to
  *           a new (not-yet-activated) user (must use the password-setup path)
+ *   429  — rate limited
  *   500  — unexpected internal error
  */
 
@@ -21,8 +22,28 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { consumeExistingUserInvitationToken } from "@/lib/auth/password-reset";
 import { activateInvitationMembership } from "@/lib/users/mutations";
+import { getClientIp } from "@/lib/security/client-ip";
+import {
+  AUTH_SECURITY_MESSAGES,
+  checkApplicationRateLimit,
+} from "@/lib/security/abuse-policy";
+import { createRateLimitResponse } from "@/lib/security/rate-limit-response";
+import { logSecurityEvent } from "@/lib/security/security-events";
+
+function invalidInvitationResponse() {
+  return NextResponse.json(
+    { error: AUTH_SECURITY_MESSAGES.invalidInvitationLink },
+    { status: 400 },
+  );
+}
 
 export async function POST(req: NextRequest) {
+  const rateCheck = checkApplicationRateLimit("invitationAccept", getClientIp(req));
+  if (!rateCheck.allowed) {
+    logSecurityEvent("AUTH_RATE_LIMITED", { surface: "invitationAccept" });
+    return createRateLimitResponse(rateCheck.retryAfterMs);
+  }
+
   let token: string;
   try {
     const body = await req.json();
@@ -32,7 +53,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!token) {
-    return NextResponse.json({ error: "Token fehlt." }, { status: 400 });
+    return invalidInvitationResponse();
   }
 
   let consumed: Awaited<
@@ -41,22 +62,19 @@ export async function POST(req: NextRequest) {
   try {
     consumed = await consumeExistingUserInvitationToken(prisma, token);
   } catch (err) {
-    console.error("[invitation/accept]", err);
+    console.error("[invitation/accept] unexpected error");
     return NextResponse.json({ error: "Interner Serverfehler." }, { status: 500 });
   }
   if (!consumed) {
-    return NextResponse.json(
-      { error: "Einladungslink ist ungültig, abgelaufen oder bereits verwendet." },
-      { status: 400 },
-    );
+    return invalidInvitationResponse();
   }
 
   // Activate exactly the membership for the invitation's tenant.
   // Non-fatal — token is already consumed; activation failure can be retried.
   if (consumed.invitationTenantId) {
     await activateInvitationMembership(consumed.userId, consumed.invitationTenantId).catch(
-      (err) => {
-        console.error("[invitation/accept] Failed to activate invitation membership:", err);
+      () => {
+        console.error("[invitation/accept] membership activation failed");
       },
     );
   }
