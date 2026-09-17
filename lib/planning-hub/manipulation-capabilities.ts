@@ -2,10 +2,15 @@ import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 
 export type SchedulerManipulationCapabilities = {
+  /** Kalender — official activity interval. */
   canMoveTime: boolean;
   canResize: boolean;
   canChangePrimaryResource: boolean;
   canChangeDressingRoom: boolean;
+  /** Ressourcen → Garderobe — resource occupancy window (not match kickoff). */
+  canMoveResourceOccupancy: boolean;
+  canChangeResourceOccupancyStart: boolean;
+  canChangeResourceOccupancyEnd: boolean;
 };
 
 export type ManipulationPermissionContext = {
@@ -22,7 +27,21 @@ const NONE: SchedulerManipulationCapabilities = {
   canResize: false,
   canChangePrimaryResource: false,
   canChangeDressingRoom: false,
+  canMoveResourceOccupancy: false,
+  canChangeResourceOccupancyStart: false,
+  canChangeResourceOccupancyEnd: false,
 };
+
+function dressingOccupancyCaps(enabled: boolean): Pick<
+  SchedulerManipulationCapabilities,
+  "canMoveResourceOccupancy" | "canChangeResourceOccupancyStart" | "canChangeResourceOccupancyEnd"
+> {
+  return {
+    canMoveResourceOccupancy: enabled,
+    canChangeResourceOccupancyStart: enabled,
+    canChangeResourceOccupancyEnd: enabled,
+  };
+}
 
 function canManageItem(
   item: WeekplannerItem,
@@ -45,19 +64,23 @@ export function getSchedulerManipulationCapabilities(
 
   if (ctx.isStandardplan) {
     if (item.type === "TRAINING") {
+      const dressing = ctx.resourceCategory === "dressing";
       return {
-        canMoveTime: true,
-        canResize: true,
+        canMoveTime: !dressing,
+        canResize: !dressing,
         canChangePrimaryResource: ctx.resourceCategory === "pitch",
-        canChangeDressingRoom: ctx.resourceCategory === "dressing",
+        canChangeDressingRoom: dressing,
+        ...dressingOccupancyCaps(dressing),
       };
     }
     if (item.type === "MATCH") {
+      const dressing = ctx.resourceCategory === "dressing";
       return {
         canMoveTime: false,
         canResize: false,
         canChangePrimaryResource: ctx.resourceCategory === "pitch",
-        canChangeDressingRoom: ctx.resourceCategory === "dressing",
+        canChangeDressingRoom: dressing,
+        ...dressingOccupancyCaps(dressing),
       };
     }
     if (item.type === "TOURNAMENT") {
@@ -66,6 +89,7 @@ export function getSchedulerManipulationCapabilities(
         canResize: false,
         canChangePrimaryResource: ctx.resourceCategory === "pitch",
         canChangeDressingRoom: false,
+        ...dressingOccupancyCaps(false),
       };
     }
     return NONE;
@@ -74,12 +98,15 @@ export function getSchedulerManipulationCapabilities(
   if (!ctx.alternativePlanId) return NONE;
 
   if (item.type === "TRAINING" || item.type === "MATCH" || item.type === "TOURNAMENT") {
+    const dressing = ctx.resourceCategory === "dressing";
+    const dressingRoom =
+      dressing && (item.type === "TRAINING" || item.type === "MATCH");
     return {
-      canMoveTime: true,
-      canResize: true,
+      canMoveTime: !dressing,
+      canResize: !dressing,
       canChangePrimaryResource: ctx.resourceCategory === "pitch",
-      canChangeDressingRoom:
-        ctx.resourceCategory === "dressing" && (item.type === "TRAINING" || item.type === "MATCH"),
+      canChangeDressingRoom: dressingRoom,
+      ...dressingOccupancyCaps(dressingRoom),
     };
   }
 
@@ -87,5 +114,13 @@ export function getSchedulerManipulationCapabilities(
 }
 
 export function hasAnyManipulationCapability(caps: SchedulerManipulationCapabilities): boolean {
-  return caps.canMoveTime || caps.canResize || caps.canChangePrimaryResource || caps.canChangeDressingRoom;
+  return (
+    caps.canMoveTime ||
+    caps.canResize ||
+    caps.canChangePrimaryResource ||
+    caps.canChangeDressingRoom ||
+    caps.canMoveResourceOccupancy ||
+    caps.canChangeResourceOccupancyStart ||
+    caps.canChangeResourceOccupancyEnd
+  );
 }

@@ -27,7 +27,6 @@ import {
   projectedItemForRender,
   usePlanningHubManipulation,
 } from "./PlanningHubManipulationContext";
-import { evaluateManipulationConflicts } from "@/lib/planning-hub/manipulation-projection";
 import { isoToLocalTime } from "@/lib/planning-hub/planner-time";
 import { dressingSegmentDisplayWindow } from "@/lib/planning-hub/scheduler/dressing-segment-display";
 import type { WeekplannerResourceRef } from "@/lib/weekplanner/types";
@@ -69,7 +68,6 @@ export default function PlanningHubResourceDayView({
   const manipulation = usePlanningHubManipulation();
   const isDressingCategory = urlState.resourceCategory === "dressing";
   const filtered = applyPlanningHubFilters(week, urlState);
-  const allItems = week.days.flatMap((d) => d.items);
   const weekDayKeys = filtered.days.map((d) => d.dayKey);
   const selectedDay = resolvePlanningHubResourceDay(weekDayKeys, urlState.day, todayDayKey);
   const day = filtered.days.find((d) => d.dayKey === selectedDay) ?? filtered.days[0];
@@ -223,12 +221,15 @@ export default function PlanningHubResourceDayView({
                         variant: "default" | "ghost" | "preview" | "preview-warning",
                         keySuffix: string,
                         interactive: boolean,
+                        occupancyOverride?: { startAt: Date; endAt: Date },
                       ) => {
                         const resourceRef =
                           dressingRefOnItem(segItem, row.resourceId) ?? segment.resource;
-                        const displayWindow = isDressingCategory
-                          ? dressingSegmentDisplayWindow(activityStart, activityEnd, resourceRef)
-                          : { startAt: activityStart, endAt: activityEnd };
+                        const displayWindow = occupancyOverride
+                          ? occupancyOverride
+                          : isDressingCategory
+                            ? dressingSegmentDisplayWindow(activityStart, activityEnd, resourceRef)
+                            : { startAt: activityStart, endAt: activityEnd };
                         const startAt = displayWindow.startAt;
                         const endAt = displayWindow.endAt;
 
@@ -277,8 +278,19 @@ export default function PlanningHubResourceDayView({
                             compact
                             visualVariant={variant}
                             dragTimeLabel={timeLabel}
-                            canDrag={interactive && (caps?.canMoveTime || caps?.canChangePrimaryResource || caps?.canChangeDressingRoom)}
-                            canResize={interactive && !!caps?.canResize}
+                            canDrag={
+                              interactive &&
+                              (caps?.canMoveTime ||
+                                caps?.canMoveResourceOccupancy ||
+                                caps?.canChangePrimaryResource ||
+                                caps?.canChangeDressingRoom)
+                            }
+                            canResize={
+                              interactive &&
+                              (!!caps?.canResize ||
+                                caps?.canChangeResourceOccupancyStart ||
+                                caps?.canChangeResourceOccupancyEnd)
+                            }
                             resizeOrientation="horizontal"
                             onPointerDownMove={
                               interactive && manipulation
@@ -334,37 +346,42 @@ export default function PlanningHubResourceDayView({
                           urlState.resourceCategory,
                           manipulation.resolveResourceRef,
                         );
-                        const targetRef = activeDraft.proposedResourceId
-                          ? manipulation.resolveResourceRef(activeDraft.proposedResourceId)
-                          : null;
-                        const conflict = evaluateManipulationConflicts(
-                          allItems,
-                          activeDraft,
-                          targetRef,
-                          urlState.resourceCategory,
-                        );
                         const previewVariant =
-                          conflict.status === "warning" ? "preview-warning" : "preview";
+                          manipulation.dragConflictPreview?.status === "warning"
+                            ? "preview-warning"
+                            : "preview";
 
                         return (
                           <Fragment key={segment.segmentId}>
                             {onOriginalRow &&
                               renderSegment(
                                 segment.item,
-                                activeDraft.originalStart,
-                                activeDraft.originalEnd,
+                                segment.item.startAt,
+                                segment.item.endAt,
                                 "ghost",
                                 "-ghost",
                                 false,
+                                activeDraft.timeTarget === "resourceOccupancy"
+                                  ? {
+                                      startAt: activeDraft.originalStart,
+                                      endAt: activeDraft.originalEnd,
+                                    }
+                                  : undefined,
                               )}
                             {onProposedRow &&
                               renderSegment(
                                 projected,
-                                activeDraft.proposedStart,
-                                activeDraft.proposedEnd,
+                                projected.startAt,
+                                projected.endAt,
                                 previewVariant,
                                 "-preview",
                                 false,
+                                activeDraft.timeTarget === "resourceOccupancy"
+                                  ? {
+                                      startAt: activeDraft.proposedStart,
+                                      endAt: activeDraft.proposedEnd,
+                                    }
+                                  : undefined,
                               )}
                           </Fragment>
                         );
@@ -386,16 +403,19 @@ export default function PlanningHubResourceDayView({
                             manipulation!.resolveResourceRef,
                           )
                         : segment.item;
-                      const activityStart = activeDraft?.proposedStart ?? segment.item.startAt;
-                      const activityEnd = activeDraft?.proposedEnd ?? segment.item.endAt;
-
                       return renderSegment(
                         displayItem,
-                        activityStart,
-                        activityEnd,
+                        displayItem.startAt,
+                        displayItem.endAt,
                         "default",
                         "",
                         !!manipulation?.enabled,
+                        activeDraft?.timeTarget === "resourceOccupancy"
+                          ? {
+                              startAt: activeDraft.proposedStart,
+                              endAt: activeDraft.proposedEnd,
+                            }
+                          : undefined,
                       );
                     })}
                   </div>

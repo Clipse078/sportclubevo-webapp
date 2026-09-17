@@ -294,7 +294,7 @@ export default function PlanningHubActivityBlock({
           <div
             role="separator"
             aria-label="Startzeit anpassen"
-            className="absolute inset-y-0 left-0 z-10 w-3 cursor-ew-resize"
+            className="absolute inset-y-0 left-0 z-10 w-3.5 cursor-ew-resize"
             onPointerDown={(event) => {
               if (event.button !== 0) return;
               event.preventDefault();
@@ -304,14 +304,14 @@ export default function PlanningHubActivityBlock({
             }}
           >
             <div
-              className="pointer-events-none absolute inset-y-2 left-0 w-0.5 rounded-full bg-transparent transition group-hover:bg-[var(--sce-primary)]/35"
+              className="pointer-events-none absolute inset-y-1 left-0 w-[2px] rounded-full bg-[var(--sce-primary)]/20 transition group-hover:bg-[var(--sce-primary)]/55"
               aria-hidden
             />
           </div>
           <div
             role="separator"
             aria-label="Endzeit anpassen"
-            className="absolute inset-y-0 right-0 z-10 w-3 cursor-ew-resize"
+            className="absolute inset-y-0 right-0 z-10 w-3.5 cursor-ew-resize"
             onPointerDown={(event) => {
               if (event.button !== 0) return;
               event.preventDefault();
@@ -321,7 +321,7 @@ export default function PlanningHubActivityBlock({
             }}
           >
             <div
-              className="pointer-events-none absolute inset-y-2 right-0 w-0.5 rounded-full bg-transparent transition group-hover:bg-[var(--sce-primary)]/35"
+              className="pointer-events-none absolute inset-y-1 right-0 w-[2px] rounded-full bg-[var(--sce-primary)]/20 transition group-hover:bg-[var(--sce-primary)]/55"
               aria-hidden
             />
           </div>

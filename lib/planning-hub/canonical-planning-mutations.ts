@@ -5,6 +5,7 @@ import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import type { SchedulerDraftChange } from "@/lib/planning-hub/scheduler-draft";
 import { isoToLocalDate, isoToLocalTime } from "@/lib/planning-hub/planner-time";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
+import { buffersFromOccupancyInterval } from "@/lib/planning-hub/scheduler/resource-occupancy-manipulation";
 
 function resolveResourceCode(facilityGroups: FacilityGroup[], resourceId: string): string | null {
   for (const fg of facilityGroups) {
@@ -27,6 +28,46 @@ function resourceChanged(draft: SchedulerDraftChange): boolean {
     !!draft.originalResourceId &&
     draft.proposedResourceId !== draft.originalResourceId
   );
+}
+
+function isResourceOccupancyDraft(draft: SchedulerDraftChange): boolean {
+  return draft.timeTarget === "resourceOccupancy";
+}
+
+function occupancyIntervalChanged(draft: SchedulerDraftChange): boolean {
+  return isResourceOccupancyDraft(draft) && timeChanged(draft);
+}
+
+async function applyTrainingDressingOccupancy(
+  sessionId: string,
+  beforeMinutes: number,
+  afterMinutes: number,
+) {
+  const res = await fetch(`/api/training-sessions/${sessionId}/dressing-room-occupancy`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      mode: "CUSTOM",
+      beforeMinutes,
+      afterMinutes,
+    }),
+  });
+  if (!res.ok) {
+    const data = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(data?.error ?? "Belegungszeit konnte nicht gespeichert werden.");
+  }
+}
+
+async function applyMatchPatch(eventId: string, body: Record<string, unknown>) {
+  const res = await fetch(`/api/matchcenter/${eventId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const data = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(data?.error ?? "Speichern fehlgeschlagen.");
+  }
 }
 
 async function applyTrainingTime(sessionId: string, startAt: Date, endAt: Date, timeZone: string) {
@@ -183,8 +224,17 @@ export async function applyStandardPlanSchedulerDraft(
   const item = draft.item;
 
   if (item.type === "TRAINING") {
-    if (timeChanged(draft)) {
+    if (timeChanged(draft) && !isResourceOccupancyDraft(draft)) {
       await applyTrainingTime(item.trainingSessionId, draft.proposedStart, draft.proposedEnd, timeZone);
+    }
+    if (occupancyIntervalChanged(draft)) {
+      const { beforeMinutes, afterMinutes } = buffersFromOccupancyInterval(
+        item.startAt,
+        item.endAt,
+        draft.proposedStart,
+        draft.proposedEnd,
+      );
+      await applyTrainingDressingOccupancy(item.trainingSessionId, beforeMinutes, afterMinutes);
     }
     if (resourceChanged(draft) && draft.originalResourceId && draft.proposedResourceId) {
       await applyTrainingResourceSwap(item, draft.originalResourceId, draft.proposedResourceId, resourceCategory);
@@ -193,17 +243,38 @@ export async function applyStandardPlanSchedulerDraft(
   }
 
   if (item.type === "MATCH") {
-    if (timeChanged(draft)) {
+    if (timeChanged(draft) && !isResourceOccupancyDraft(draft)) {
       throw new Error("Zeitänderung für Heimspiele ist im Standardplan nicht verfügbar.");
     }
+
+    const matchBody: Record<string, unknown> = {};
     if (resourceChanged(draft) && draft.originalResourceId && draft.proposedResourceId) {
-      await applyMatchResourceSwap(
-        item,
-        draft.originalResourceId,
+      const toCode = resolveResourceCode(
+        resourceCategory === "pitch" ? facilityGroups.PITCH_HALL : facilityGroups.DRESSING_ROOM,
         draft.proposedResourceId,
-        resourceCategory,
-        facilityGroups,
       );
+      if (!toCode) throw new Error("Ressource nicht gefunden.");
+      if (resourceCategory === "pitch") {
+        matchBody.pitchCode = toCode;
+      } else if (item.awayDressingRoomAllocations.some((r) => r.facilityResourceId === draft.originalResourceId)) {
+        matchBody.awayDressingRoomCode = toCode;
+      } else {
+        matchBody.homeDressingRoomCode = toCode;
+      }
+    }
+    if (occupancyIntervalChanged(draft)) {
+      const { beforeMinutes, afterMinutes } = buffersFromOccupancyInterval(
+        item.startAt,
+        item.endAt,
+        draft.proposedStart,
+        draft.proposedEnd,
+      );
+      matchBody.dressingRoomOccupancyMode = "CUSTOM";
+      matchBody.dressingRoomBeforeMinutes = beforeMinutes;
+      matchBody.dressingRoomAfterMinutes = afterMinutes;
+    }
+    if (Object.keys(matchBody).length > 0) {
+      await applyMatchPatch(item.eventId, matchBody);
     }
     return;
   }

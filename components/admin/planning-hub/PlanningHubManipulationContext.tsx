@@ -44,8 +44,14 @@ import {
   CALENDAR_PIXELS_PER_MINUTE,
   RESOURCE_PIXELS_PER_MINUTE,
 } from "@/lib/planning-hub/scheduler/time-scale";
-import type { SchedulerDraftChange } from "@/lib/planning-hub/scheduler-draft";
+import type { SchedulerDraftChange, SchedulerTimeTarget } from "@/lib/planning-hub/scheduler-draft";
 import { isNoOpDraft } from "@/lib/planning-hub/scheduler-draft";
+import { dressingSegmentDisplayWindow } from "@/lib/planning-hub/scheduler/dressing-segment-display";
+import {
+  draftOccupancyGeometryKey,
+  isValidDressingOccupancySpan,
+} from "@/lib/planning-hub/scheduler/resource-occupancy-manipulation";
+import type { ManipulationConflictPreview } from "@/lib/planning-hub/manipulation-projection";
 import type { WeekplannerItem, WeekplannerResourceRef, WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningHubManipulationConfirm from "./PlanningHubManipulationConfirm";
 import { useDesktopMinWidth768 } from "@/lib/planning-hub/use-desktop-min-width";
@@ -65,6 +71,7 @@ type ActivePointerSession = {
   startClientY: number;
   originalStart: Date;
   originalEnd: Date;
+  timeTarget: SchedulerTimeTarget;
   capabilities: SchedulerManipulationCapabilities;
 };
 
@@ -76,11 +83,41 @@ type CalendarDragLayout = {
 const RESOURCE_AUTO_SCROLL_EDGE_PX = 56;
 const RESOURCE_AUTO_SCROLL_SPEED_PX = 10;
 
+function dressingResourceRef(
+  item: WeekplannerItem,
+  resourceId: string,
+): WeekplannerResourceRef | null {
+  const refs = [...item.dressingRoomAllocations];
+  if (item.type === "MATCH") refs.push(...item.awayDressingRoomAllocations);
+  if (item.type === "TOURNAMENT") {
+    for (const participant of item.participantAllocations) {
+      refs.push(...participant.dressingRoomAllocations);
+    }
+  }
+  return refs.find((r) => r.facilityResourceId === resourceId) ?? null;
+}
+
+function resourceManipulationBounds(
+  item: WeekplannerItem,
+  resourceId: string | undefined,
+  category: PlanningHubUrlState["resourceCategory"],
+): { startAt: Date; endAt: Date; timeTarget: SchedulerTimeTarget } {
+  if (category === "dressing" && resourceId) {
+    const ref = dressingResourceRef(item, resourceId);
+    if (ref) {
+      const window = dressingSegmentDisplayWindow(item.startAt, item.endAt, ref);
+      return { ...window, timeTarget: "resourceOccupancy" };
+    }
+  }
+  return { startAt: item.startAt, endAt: item.endAt, timeTarget: "activity" };
+}
+
 type PlanningHubManipulationContextValue = {
   enabled: boolean;
   isDragging: boolean;
   permissionContext: ManipulationPermissionContext;
   previewDraft: SchedulerDraftChange | null;
+  dragConflictPreview: ManipulationConflictPreview | null;
   hoverResourceId: string | null;
   getCapabilities: (item: WeekplannerItem) => SchedulerManipulationCapabilities;
   beginCalendarMove: (item: WeekplannerItem, clientX: number, clientY: number) => void;
@@ -147,6 +184,10 @@ export function PlanningHubManipulationProvider({
   const [hoverResourceId, setHoverResourceId] = useState<string | null>(null);
   const [confirmSaving, setConfirmSaving] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [dragConflictPreview, setDragConflictPreview] = useState<ManipulationConflictPreview | null>(
+    null,
+  );
+  const lastPreviewKeyRef = useRef<string>("");
   const pointerSessionRef = useRef(pointerSession);
   pointerSessionRef.current = pointerSession;
   const previewDraftRef = useRef(previewDraft);
@@ -223,8 +264,24 @@ export function PlanningHubManipulationProvider({
   const clearTransient = useCallback(() => {
     setPointerSession(null);
     setPreviewDraft(null);
+    setDragConflictPreview(null);
     setHoverResourceId(null);
+    lastPreviewKeyRef.current = "";
   }, []);
+
+  const commitPreviewDraft = useCallback(
+    (draft: SchedulerDraftChange) => {
+      const key = draftOccupancyGeometryKey(draft);
+      if (key === lastPreviewKeyRef.current) return;
+      lastPreviewKeyRef.current = key;
+      setPreviewDraft(draft);
+      const targetRef = draft.proposedResourceId ? resolveResourceRef(draft.proposedResourceId) : null;
+      setDragConflictPreview(
+        evaluateManipulationConflicts(allItems, draft, targetRef, urlState.resourceCategory),
+      );
+    },
+    [allItems, resolveResourceRef, urlState.resourceCategory],
+  );
 
   const cancelManipulation = useCallback(() => {
     clearTransient();
@@ -256,6 +313,7 @@ export function PlanningHubManipulationProvider({
         originalResourceId: session.originalResourceId,
         proposedResourceId: proposedResourceId ?? session.originalResourceId,
         manipulationType,
+        timeTarget: session.timeTarget,
         item: session.item,
       };
     },
@@ -297,7 +355,7 @@ export function PlanningHubManipulationProvider({
               referenceDay,
             );
             if (!resized) return;
-            setPreviewDraft(buildDraft(session, resized.startAt, resized.endAt));
+            commitPreviewDraft(buildDraft(session, resized.startAt, resized.endAt));
             return;
           }
           const originalEndMin = zonedMinutesFromMidnight(session.originalEnd, timezone);
@@ -310,7 +368,7 @@ export function PlanningHubManipulationProvider({
             referenceDay,
           );
           if (!resized) return;
-          setPreviewDraft(buildDraft(session, resized.startAt, resized.endAt));
+          commitPreviewDraft(buildDraft(session, resized.startAt, resized.endAt));
           return;
         }
 
@@ -335,20 +393,28 @@ export function PlanningHubManipulationProvider({
                 referenceDay,
               );
         if (!moved) return;
-        setPreviewDraft(buildDraft(session, moved.startAt, moved.endAt));
+        commitPreviewDraft(buildDraft(session, moved.startAt, moved.endAt));
         return;
       }
 
       scrollResourceTimeline(clientX);
 
       const deltaX = clientX - session.startClientX;
-      const deltaY = clientY - session.startClientY;
+      const occupancySession = session.timeTarget === "resourceOccupancy";
       let proposedStart = session.originalStart;
       let proposedEnd = session.originalEnd;
-      if (session.mode === "resize" && session.capabilities.canResize) {
+      if (session.mode === "resize") {
+        const canResizeStart = occupancySession
+          ? session.capabilities.canChangeResourceOccupancyStart
+          : session.capabilities.canResize;
+        const canResizeEnd = occupancySession
+          ? session.capabilities.canChangeResourceOccupancyEnd
+          : session.capabilities.canResize;
+        if (!canResizeStart && !canResizeEnd) return;
+
         const resizeDelta = snapPixelDeltaToMinutes(deltaX, RESOURCE_PIXELS_PER_MINUTE);
         const referenceDay = session.originalStart;
-        if (session.resizeEdge === "start") {
+        if (session.resizeEdge === "start" && canResizeStart) {
           const originalStartMin = zonedMinutesFromMidnight(session.originalStart, timezone);
           const proposedStartMin = snapMinutesFromMidnight(originalStartMin + resizeDelta);
           const resized = resizeStartPreservingEnd(
@@ -360,7 +426,7 @@ export function PlanningHubManipulationProvider({
           if (!resized) return;
           proposedStart = resized.startAt;
           proposedEnd = resized.endAt;
-        } else {
+        } else if (session.resizeEdge === "end" && canResizeEnd) {
           const originalEndMin = zonedMinutesFromMidnight(session.originalEnd, timezone);
           const proposedEndMin = snapMinutesFromMidnight(originalEndMin + resizeDelta);
           const resized = resizeEndPreservingStart(
@@ -373,7 +439,11 @@ export function PlanningHubManipulationProvider({
           proposedStart = resized.startAt;
           proposedEnd = resized.endAt;
         }
-      } else if (session.capabilities.canMoveTime) {
+      } else if (
+        occupancySession
+          ? session.capabilities.canMoveResourceOccupancy
+          : session.capabilities.canMoveTime
+      ) {
         const deltaMinutes = snapPixelDeltaToMinutes(deltaX, RESOURCE_PIXELS_PER_MINUTE);
         const originalStartMin = zonedMinutesFromMidnight(session.originalStart, timezone);
         const proposedStartMin = snapMinutesFromMidnight(originalStartMin + deltaMinutes);
@@ -386,6 +456,10 @@ export function PlanningHubManipulationProvider({
         );
         proposedStart = shifted.startAt;
         proposedEnd = shifted.endAt;
+      }
+
+      if (occupancySession && !isValidDressingOccupancySpan(proposedStart, proposedEnd)) {
+        return;
       }
 
       let proposedResourceId = session.originalResourceId;
@@ -411,13 +485,12 @@ export function PlanningHubManipulationProvider({
         proposedResourceId = targetResourceId;
       }
 
-      setPreviewDraft(
-        buildDraft(session, proposedStart, proposedEnd, proposedResourceId),
-      );
+      commitPreviewDraft(buildDraft(session, proposedStart, proposedEnd, proposedResourceId));
     },
     [
       buildDraft,
       calendarPixelsPerMinute,
+      commitPreviewDraft,
       resourceRefById,
       scrollResourceTimeline,
       timezone,
@@ -464,12 +537,13 @@ export function PlanningHubManipulationProvider({
       if (!hasAnyManipulationCapability(session.capabilities)) return;
       setConfirmationDraft(null);
       setConfirmError(null);
+      lastPreviewKeyRef.current = "";
       setPointerSession(session);
-      setPreviewDraft(
+      commitPreviewDraft(
         buildDraft(session, session.originalStart, session.originalEnd, session.originalResourceId),
       );
     },
-    [enabled, buildDraft],
+    [enabled, buildDraft, commitPreviewDraft],
   );
 
   const setCalendarDragLayout = useCallback((layout: CalendarDragLayout) => {
@@ -488,6 +562,7 @@ export function PlanningHubManipulationProvider({
         startClientY: clientY,
         originalStart: item.startAt,
         originalEnd: item.endAt,
+        timeTarget: "activity",
         capabilities: caps,
       });
     },
@@ -507,6 +582,7 @@ export function PlanningHubManipulationProvider({
         startClientY: clientY,
         originalStart: item.startAt,
         originalEnd: item.endAt,
+        timeTarget: "activity",
         capabilities: caps,
       });
     },
@@ -522,7 +598,15 @@ export function PlanningHubManipulationProvider({
       clientY: number,
     ) => {
       const caps = getCapabilities(item);
-      if (!caps.canMoveTime && !caps.canChangePrimaryResource && !caps.canChangeDressingRoom) return;
+      if (
+        !caps.canMoveTime &&
+        !caps.canMoveResourceOccupancy &&
+        !caps.canChangePrimaryResource &&
+        !caps.canChangeDressingRoom
+      ) {
+        return;
+      }
+      const bounds = resourceManipulationBounds(item, resourceId, urlState.resourceCategory);
       beginSession({
         mode: "move",
         surface: "ressourcen",
@@ -531,12 +615,13 @@ export function PlanningHubManipulationProvider({
         originalResourceId: resourceId,
         startClientX: clientX,
         startClientY: clientY,
-        originalStart: item.startAt,
-        originalEnd: item.endAt,
+        originalStart: bounds.startAt,
+        originalEnd: bounds.endAt,
+        timeTarget: bounds.timeTarget,
         capabilities: caps,
       });
     },
-    [beginSession, getCapabilities],
+    [beginSession, getCapabilities, urlState.resourceCategory],
   );
 
   const beginResourceResize = useCallback(
@@ -549,7 +634,11 @@ export function PlanningHubManipulationProvider({
       clientY: number,
     ) => {
       const caps = getCapabilities(item);
-      if (!caps.canResize) return;
+      const occupancyResize =
+        urlState.resourceCategory === "dressing" &&
+        (caps.canChangeResourceOccupancyStart || caps.canChangeResourceOccupancyEnd);
+      if (!caps.canResize && !occupancyResize) return;
+      const bounds = resourceManipulationBounds(item, resourceId, urlState.resourceCategory);
       beginSession({
         mode: "resize",
         resizeEdge: edge,
@@ -559,21 +648,22 @@ export function PlanningHubManipulationProvider({
         originalResourceId: resourceId,
         startClientX: clientX,
         startClientY: clientY,
-        originalStart: item.startAt,
-        originalEnd: item.endAt,
+        originalStart: bounds.startAt,
+        originalEnd: bounds.endAt,
+        timeTarget: bounds.timeTarget,
         capabilities: caps,
       });
     },
-    [beginSession, getCapabilities],
+    [beginSession, getCapabilities, urlState.resourceCategory],
   );
 
   const conflictPreview = useMemo(() => {
-    const draft = confirmationDraft ?? previewDraft;
+    const draft = confirmationDraft;
     if (!draft) return null;
     const targetRef =
       draft.proposedResourceId ? resolveResourceRef(draft.proposedResourceId) : null;
     return evaluateManipulationConflicts(allItems, draft, targetRef, urlState.resourceCategory);
-  }, [confirmationDraft, previewDraft, allItems, resolveResourceRef, urlState.resourceCategory]);
+  }, [confirmationDraft, allItems, resolveResourceRef, urlState.resourceCategory]);
 
   const handleConfirm = useCallback(async () => {
     if (!confirmationDraft) return;
@@ -620,6 +710,7 @@ export function PlanningHubManipulationProvider({
     isDragging: pointerSession !== null,
     permissionContext,
     previewDraft,
+    dragConflictPreview,
     hoverResourceId,
     getCapabilities,
     beginCalendarMove,
@@ -656,7 +747,7 @@ export function effectiveItemTimes(
   item: WeekplannerItem,
   draft: SchedulerDraftChange | null,
 ): { startAt: Date; endAt: Date } {
-  if (!draft || draft.itemId !== item.id) {
+  if (!draft || draft.itemId !== item.id || draft.timeTarget === "resourceOccupancy") {
     return { startAt: item.startAt, endAt: item.endAt };
   }
   return { startAt: draft.proposedStart, endAt: draft.proposedEnd };

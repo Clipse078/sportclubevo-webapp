@@ -6,6 +6,7 @@ import { combineTimeWithReferenceDay, isoToLocalTime } from "@/lib/planning-hub/
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { WeekplannerOverrideRow } from "@/components/admin/planner/WeekplannerAllocationOverrideEditor";
 import { planOverrideKey } from "@/lib/weekplanner/plan-override-key";
+import { buffersFromOccupancyInterval } from "@/lib/planning-hub/scheduler/resource-occupancy-manipulation";
 
 async function saveTimeOverride(
   planId: string,
@@ -115,8 +116,9 @@ export async function applyAlternativePlanSchedulerDraft(
   const timeChanged =
     draft.proposedStart.getTime() !== draft.originalStart.getTime() ||
     draft.proposedEnd.getTime() !== draft.originalEnd.getTime();
+  const resourceOccupancyDraft = draft.timeTarget === "resourceOccupancy";
 
-  if (timeChanged) {
+  if (timeChanged && !resourceOccupancyDraft) {
     const nextStartAt = draft.proposedStart.toISOString();
     const nextEndAt = draft.proposedEnd.toISOString();
     const canonicalStart = isoToLocalTime(item.canonicalStartAt, timeZone);
@@ -132,7 +134,10 @@ export async function applyAlternativePlanSchedulerDraft(
     draft.originalResourceId &&
     draft.proposedResourceId !== draft.originalResourceId;
 
-  if (!resourceChanged || !draft.proposedResourceId || !draft.originalResourceId) return;
+  const occupancyIntervalChanged = resourceOccupancyDraft && timeChanged;
+
+  if (!resourceChanged && !occupancyIntervalChanged) return;
+  if (resourceChanged && (!draft.proposedResourceId || !draft.originalResourceId)) return;
 
   const allocationGroup = resourceCategory === "pitch" ? "PITCH_HALL" : "DRESSING_ROOM";
   const overrideRows = overridesByKey[planOverrideKey(activityType, activityId, allocationGroup)] ?? [];
@@ -150,21 +155,40 @@ export async function applyAlternativePlanSchedulerDraft(
   );
 
   const nextIds = new Set(currentIds);
-  nextIds.delete(draft.originalResourceId);
-  nextIds.add(draft.proposedResourceId);
+  if (resourceChanged && draft.originalResourceId && draft.proposedResourceId) {
+    nextIds.delete(draft.originalResourceId);
+    nextIds.add(draft.proposedResourceId);
+  }
+
+  let occupancyBeforeMinutes = item.dressingRoomResolvedBeforeMinutes;
+  let occupancyAfterMinutes = item.dressingRoomResolvedAfterMinutes;
+  if (occupancyIntervalChanged) {
+    const buffers = buffersFromOccupancyInterval(
+      item.startAt,
+      item.endAt,
+      draft.proposedStart,
+      draft.proposedEnd,
+    );
+    occupancyBeforeMinutes = buffers.beforeMinutes;
+    occupancyAfterMinutes = buffers.afterMinutes;
+  }
 
   const selectedAllocations = Array.from(nextIds).map((facilityResourceId) => ({
     facilityResourceId,
-    occupancyBeforeMinutes: 0,
-    occupancyAfterMinutes: 0,
+    occupancyBeforeMinutes:
+      allocationGroup === "DRESSING_ROOM" ? occupancyBeforeMinutes : 0,
+    occupancyAfterMinutes:
+      allocationGroup === "DRESSING_ROOM" ? occupancyAfterMinutes : 0,
   }));
 
-  if (
+  const canonicalOccupancyUnchanged =
+    !occupancyIntervalChanged &&
     isCanonicalAllocationGroupState({
       selectedAllocations,
       canonicalResourceIds: Array.from(canonicalIds),
-    })
-  ) {
+    });
+
+  if (canonicalOccupancyUnchanged) {
     await deleteAllocationOverrides(planId, overrideRows);
   } else {
     await replaceAllocationOverrides(
