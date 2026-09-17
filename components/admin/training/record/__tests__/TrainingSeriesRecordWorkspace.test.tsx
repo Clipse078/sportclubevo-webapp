@@ -45,6 +45,7 @@ const defaultProps = {
   },
   canManage: true,
   canDelete: true,
+  defaultTrainingDurationMinutes: 90,
 };
 
 function jsonResponse(data: unknown, status = 200): Response {
@@ -107,5 +108,17 @@ describe("TrainingSeriesRecordWorkspace", () => {
     render(<TrainingSeriesRecordWorkspace {...defaultProps} />);
     expect(screen.getByTestId("training-record-section-schedule")).toBeInTheDocument();
     expect(screen.getByText("1 h 30 min")).toBeInTheDocument();
+  });
+
+  it("does not overwrite persisted weekday end times on load", () => {
+    render(<TrainingSeriesRecordWorkspace {...defaultProps} defaultTrainingDurationMinutes={120} />);
+    expect(screen.getByTestId("training-series-weekday-monday-end")).toHaveValue("18:30");
+  });
+
+  it("uses canonical duration when enabling a new weekday slot", () => {
+    render(<TrainingSeriesRecordWorkspace {...defaultProps} defaultTrainingDurationMinutes={90} />);
+    fireEvent.click(screen.getByRole("button", { name: "Dienstag aktivieren" }));
+    expect(screen.getByTestId("training-series-weekday-tuesday-start")).toHaveValue("17:00");
+    expect(screen.getByTestId("training-series-weekday-tuesday-end")).toHaveValue("18:30");
   });
 });

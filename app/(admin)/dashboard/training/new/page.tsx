@@ -9,6 +9,7 @@ import TrainingRecordWorkspaceShell from "@/components/admin/training/record/Tra
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { prisma } from "@/lib/db/prisma";
 import { createPlanningAuthorizationPolicy } from "@/lib/planning/planning-authorization-policy";
+import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
 import type { BreadcrumbItem } from "@/components/ui/page";
 
 export default async function NewTrainingSeriesPage() {
@@ -27,11 +28,14 @@ export default async function NewTrainingSeriesPage() {
 
   const policy = createPlanningAuthorizationPolicy(prisma);
 
-  const [teamSeasons, facilities, writableTeamIds] = await Promise.all([
+  const [teamSeasons, facilities, writableTeamIds, operationalDurationPolicy] = await Promise.all([
     findTeamSeasonsForTenant(tenantId),
     getFacilitiesForTenant(tenantId),
     policy.getWritableTeamIds({ userId, tenantId }, "training"),
+    getTenantOperationalDurationPolicy(tenantId),
   ]);
+
+  const defaultTrainingDurationMinutes = operationalDurationPolicy.TRAINING.durationMinutes;
 
   const writableTeamIdSet = new Set(writableTeamIds);
   const filteredTeamSeasons =
@@ -96,6 +100,7 @@ export default async function NewTrainingSeriesPage() {
         pitchHallFacilityGroups={pitchHallFacilityGroups}
         dressingRoomFacilityGroups={dressingRoomFacilityGroups}
         canValidateDirectly={canValidateDirectly}
+        defaultTrainingDurationMinutes={defaultTrainingDurationMinutes}
       />
     </TrainingRecordWorkspaceShell>
   );

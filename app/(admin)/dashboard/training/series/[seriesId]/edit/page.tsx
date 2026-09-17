@@ -16,6 +16,7 @@ import { TrainingAllocationEditor } from "@/components/admin/training/TrainingAl
 import TrainingSeriesRecordWorkspace from "@/components/admin/training/record/TrainingSeriesRecordWorkspace";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { prisma } from "@/lib/db/prisma";
+import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
 
 type Props = { params: Promise<{ seriesId: string }> };
 
@@ -47,23 +48,30 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
     throw err;
   }
 
-  const [teamSeasonRow, teamSeasonPublication, occurrenceExceptionCount, allocations, facilities] =
-    await Promise.all([
-      findTeamSeasonPickerRow(tenantId, series.teamSeasonId),
-      prisma.teamSeason.findFirst({
-        where: { id: series.teamSeasonId, team: { tenantId } },
-        select: {
-          trainingWebsiteVisible: true,
-          infoboardVisible: true,
-        },
-      }),
-      countSeriesOccurrenceAllocationExceptions(tenantId, seriesId, series.timezone),
-      listAllocationsByTrainingSeries(tenantId, seriesId).catch((err) => {
-        if (err instanceof TrainingSeriesNotFoundError) notFound();
-        throw err;
-      }),
-      getFacilitiesForTenant(tenantId),
-    ]);
+  const [
+    teamSeasonRow,
+    teamSeasonPublication,
+    occurrenceExceptionCount,
+    allocations,
+    facilities,
+    operationalDurationPolicy,
+  ] = await Promise.all([
+    findTeamSeasonPickerRow(tenantId, series.teamSeasonId),
+    prisma.teamSeason.findFirst({
+      where: { id: series.teamSeasonId, team: { tenantId } },
+      select: {
+        trainingWebsiteVisible: true,
+        infoboardVisible: true,
+      },
+    }),
+    countSeriesOccurrenceAllocationExceptions(tenantId, seriesId, series.timezone),
+    listAllocationsByTrainingSeries(tenantId, seriesId).catch((err) => {
+      if (err instanceof TrainingSeriesNotFoundError) notFound();
+      throw err;
+    }),
+    getFacilitiesForTenant(tenantId),
+    getTenantOperationalDurationPolicy(tenantId),
+  ]);
 
   const facilityGroups: FacilityGroup[] = facilities
     .filter((f) => f.status !== "ARCHIVED")
@@ -155,6 +163,7 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
       canManage={canManage}
       canDelete={canDelete}
       exceptionNotice={exceptionNotice}
+      defaultTrainingDurationMinutes={operationalDurationPolicy.TRAINING.durationMinutes}
     />
   );
 }

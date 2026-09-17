@@ -14,6 +14,7 @@ import TrainingRecordPublicationSection from "@/components/admin/training/record
 import TrainingSeriesRecordContextMenu from "@/components/admin/training/record/TrainingSeriesRecordContextMenu";
 import TrainingRecordStatusBadge from "@/components/admin/training/record/TrainingRecordStatusBadge";
 import { buildTrainingRecordPrimaryTitle } from "@/lib/training/training-series-edit-presentation";
+import { defaultNewTrainingSlotTimes } from "@/lib/training/training-create-schedule-defaults";
 import type { BreadcrumbItem } from "@/components/ui/page";
 import type { TrainingSeriesStatus } from "@/lib/training/types";
 import { cn } from "@/lib/cn";
@@ -57,6 +58,8 @@ type Props = {
   canManage: boolean;
   canDelete: boolean;
   exceptionNotice?: ReactNode;
+  /** Canonical training duration for newly enabled weekday slots only. */
+  defaultTrainingDurationMinutes: number;
 };
 
 type WeekdayRow = {
@@ -77,7 +80,11 @@ const WEEKDAY_DEFS: { weekday: Weekday; label: string }[] = [
   { weekday: "SUNDAY", label: "Sonntag" },
 ];
 
-function buildInitialWeekdayRows(defaultValues: TrainingSeriesFormDefaultValues): WeekdayRow[] {
+function buildInitialWeekdayRows(
+  defaultValues: TrainingSeriesFormDefaultValues,
+  defaultTrainingDurationMinutes: number,
+): WeekdayRow[] {
+  const slotDefaults = defaultNewTrainingSlotTimes(defaultTrainingDurationMinutes);
   const byWeekday = new Map(defaultValues.weekdaySchedules.map((s) => [s.weekday, s]));
   return WEEKDAY_DEFS.map(({ weekday, label }) => {
     const existing = byWeekday.get(weekday);
@@ -85,8 +92,8 @@ function buildInitialWeekdayRows(defaultValues: TrainingSeriesFormDefaultValues)
       weekday,
       label,
       enabled: !!existing,
-      startsAt: existing?.startsAt ?? "17:00",
-      endsAt: existing?.endsAt ?? "18:00",
+      startsAt: existing?.startsAt ?? slotDefaults.startsAt,
+      endsAt: existing?.endsAt ?? slotDefaults.endsAt,
     };
   });
 }
@@ -140,6 +147,7 @@ export default function TrainingSeriesRecordWorkspace({
   canManage,
   canDelete,
   exceptionNotice,
+  defaultTrainingDurationMinutes,
 }: Props) {
   const router = useRouter();
 
@@ -149,7 +157,9 @@ export default function TrainingSeriesRecordWorkspace({
   const [timezone, setTimezone] = useState(defaultValues.timezone);
   const [validFrom, setValidFrom] = useState(defaultValues.validFrom ?? "");
   const [validUntil, setValidUntil] = useState(defaultValues.validUntil ?? "");
-  const [weekdayRows, setWeekdayRows] = useState<WeekdayRow[]>(() => buildInitialWeekdayRows(defaultValues));
+  const [weekdayRows, setWeekdayRows] = useState<WeekdayRow[]>(() =>
+    buildInitialWeekdayRows(defaultValues, defaultTrainingDurationMinutes),
+  );
 
   const initialSnapshot = useMemo(
     () =>
@@ -160,9 +170,9 @@ export default function TrainingSeriesRecordWorkspace({
         timezone: defaultValues.timezone,
         validFrom: defaultValues.validFrom ?? "",
         validUntil: defaultValues.validUntil ?? "",
-        weekdayRows: buildInitialWeekdayRows(defaultValues),
+        weekdayRows: buildInitialWeekdayRows(defaultValues, defaultTrainingDurationMinutes),
       }),
-    [defaultValues],
+    [defaultValues, defaultTrainingDurationMinutes],
   );
 
   const [loading, setLoading] = useState(false);

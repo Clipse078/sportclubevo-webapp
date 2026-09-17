@@ -12,6 +12,8 @@ import {
   TRAINING_FORM_STICKY_FOOTER_RESERVE_CLASS,
   TRAINING_FORM_WORKSPACE_SURFACE_CLASS,
 } from "@/components/admin/training/form/training-form-layout";
+import { defaultNewTrainingSlotTimes } from "@/lib/training/training-create-schedule-defaults";
+import { SCE_PLATFORM_DEFAULT_TRAINING_DURATION_MINUTES } from "@/lib/operational/defaults";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -44,6 +46,8 @@ type Props = {
   resourcesSection?: ReactNode;
   /** Collapsed danger zone below the workspace (edit). */
   dangerZoneSection?: ReactNode;
+  /** Canonical training duration for newly enabled weekday slots (defaults to 90 if omitted). */
+  defaultTrainingDurationMinutes?: number;
 };
 
 type WeekdayRow = {
@@ -73,7 +77,9 @@ const WEEKDAY_DEFS: { weekday: Weekday; label: string }[] = [
 
 function buildInitialWeekdayRows(
   defaultValues: TrainingSeriesFormDefaultValues | undefined,
+  defaultTrainingDurationMinutes: number,
 ): WeekdayRow[] {
+  const slotDefaults = defaultNewTrainingSlotTimes(defaultTrainingDurationMinutes);
   const byWeekday = new Map(
     (defaultValues?.weekdaySchedules ?? []).map((s) => [s.weekday, s]),
   );
@@ -83,8 +89,8 @@ function buildInitialWeekdayRows(
       weekday,
       label,
       enabled: !!existing,
-      startsAt: existing?.startsAt ?? "17:00",
-      endsAt: existing?.endsAt ?? "18:00",
+      startsAt: existing?.startsAt ?? slotDefaults.startsAt,
+      endsAt: existing?.endsAt ?? slotDefaults.endsAt,
     };
   });
 }
@@ -121,6 +127,7 @@ export default function TrainingSeriesForm({
   defaultValues,
   resourcesSection,
   dangerZoneSection,
+  defaultTrainingDurationMinutes = SCE_PLATFORM_DEFAULT_TRAINING_DURATION_MINUTES,
 }: Props) {
   const router = useRouter();
 
@@ -131,7 +138,7 @@ export default function TrainingSeriesForm({
   const [validFrom, setValidFrom] = useState(defaultValues?.validFrom ?? "");
   const [validUntil, setValidUntil] = useState(defaultValues?.validUntil ?? "");
   const [weekdayRows, setWeekdayRows] = useState<WeekdayRow[]>(
-    buildInitialWeekdayRows(defaultValues),
+    buildInitialWeekdayRows(defaultValues, defaultTrainingDurationMinutes),
   );
 
   const initialSnapshot = useMemo(
@@ -143,9 +150,9 @@ export default function TrainingSeriesForm({
         timezone: defaultValues?.timezone ?? "Europe/Zurich",
         validFrom: defaultValues?.validFrom ?? "",
         validUntil: defaultValues?.validUntil ?? "",
-        weekdayRows: buildInitialWeekdayRows(defaultValues),
+        weekdayRows: buildInitialWeekdayRows(defaultValues, defaultTrainingDurationMinutes),
       }),
-    [defaultValues],
+    [defaultValues, defaultTrainingDurationMinutes],
   );
 
   const [loading, setLoading] = useState(false);

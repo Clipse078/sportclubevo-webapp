@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { formatTrainingSlotDuration } from "@/lib/training/training-schedule-presentation";
+import {
+  addMinutesToTrainingWallClockTime,
+  formatTrainingSlotDuration,
+} from "@/lib/training/training-schedule-presentation";
 
 describe("formatTrainingSlotDuration", () => {
   it("formats sub-hour durations", () => {
@@ -17,5 +20,16 @@ describe("formatTrainingSlotDuration", () => {
 
   it("returns null for invalid ranges", () => {
     expect(formatTrainingSlotDuration("18:00", "17:00")).toBeNull();
+  });
+});
+
+describe("addMinutesToTrainingWallClockTime", () => {
+  it("adds minutes within the same day", () => {
+    expect(addMinutesToTrainingWallClockTime("17:00", 90)).toBe("18:30");
+    expect(addMinutesToTrainingWallClockTime("17:00", 120)).toBe("19:00");
+  });
+
+  it("returns null for invalid input", () => {
+    expect(addMinutesToTrainingWallClockTime("bad", 90)).toBeNull();
   });
 });

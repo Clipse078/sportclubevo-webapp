@@ -66,7 +66,7 @@
  * direct submission isn't available rather than pretending to queue it.
  */
 
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { FocusEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, CalendarDays, Check, Repeat } from "lucide-react";
@@ -84,6 +84,12 @@ import {
 } from "@/components/admin/training/form/training-form-layout";
 import { weekdayFromDate, zonedTimeToUtc } from "@/lib/training/recurrence";
 import type { Weekday } from "@/lib/training/types";
+import {
+  addMinutesToTrainingWallClockTime,
+  DEFAULT_TRAINING_WALL_CLOCK_START,
+  formatConfiguredTrainingDurationLabel,
+} from "@/lib/training/training-schedule-presentation";
+import { defaultTrainingCreateEndTime } from "@/lib/training/training-create-schedule-defaults";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -122,6 +128,8 @@ type TrainingSeriesCreateFormProps = {
    * When four-eye is OFF (default), creation is always direct-save regardless of this flag.
    */
   canValidateDirectly: boolean;
+  /** Resolved tenant/platform standard from Zeitstandards (Trainings). */
+  defaultTrainingDurationMinutes: number;
 };
 
 const WEEKDAY_LABELS: Record<Weekday, string> = {
@@ -246,6 +254,7 @@ export default function TrainingSeriesCreateForm({
   pitchHallFacilityGroups,
   dressingRoomFacilityGroups,
   canValidateDirectly: _canValidateDirectlyReserved,
+  defaultTrainingDurationMinutes,
 }: TrainingSeriesCreateFormProps) {
   void _canValidateDirectlyReserved;
   const router = useRouter();
@@ -271,8 +280,23 @@ export default function TrainingSeriesCreateForm({
 
   // ── 2 · Tag & Zeit ──────────────────────────────────────────────────────
   const [date, setDate] = useState("");
-  const [startsAt, setStartsAt] = useState("17:00");
-  const [endsAt, setEndsAt] = useState("18:00");
+  const [startsAt, setStartsAt] = useState(DEFAULT_TRAINING_WALL_CLOCK_START);
+  const [endsAt, setEndsAt] = useState(() =>
+    defaultTrainingCreateEndTime(defaultTrainingDurationMinutes),
+  );
+  const endsAtManuallySetRef = useRef(false);
+
+  function handleStartsAtChange(value: string) {
+    setStartsAt(value);
+    if (endsAtManuallySetRef.current) return;
+    const nextEnd = addMinutesToTrainingWallClockTime(value, defaultTrainingDurationMinutes);
+    if (nextEnd) setEndsAt(nextEnd);
+  }
+
+  function handleEndsAtChange(value: string) {
+    endsAtManuallySetRef.current = true;
+    setEndsAt(value);
+  }
 
   const derivedWeekday = useMemo<Weekday | null>(() => {
     if (!date) return null;
@@ -597,7 +621,7 @@ export default function TrainingSeriesCreateForm({
               <input
                 type="time"
                 value={startsAt}
-                onChange={(e) => setStartsAt(e.target.value)}
+                onChange={(e) => handleStartsAtChange(e.target.value)}
                 className="fca-input"
                 required
                 data-testid="training-create-starts-at"
@@ -608,7 +632,7 @@ export default function TrainingSeriesCreateForm({
               <input
                 type="time"
                 value={endsAt}
-                onChange={(e) => setEndsAt(e.target.value)}
+                onChange={(e) => handleEndsAtChange(e.target.value)}
                 className="fca-input"
                 required
                 data-testid="training-create-ends-at"
@@ -624,6 +648,12 @@ export default function TrainingSeriesCreateForm({
               </p>
             ) : null}
           </div>
+          <p
+            className="mt-1 text-xs text-[var(--muted)]"
+            data-testid="training-create-standard-duration"
+          >
+            Standarddauer · {formatConfiguredTrainingDurationLabel(defaultTrainingDurationMinutes)}
+          </p>
           {date && !timesValid ? <p className="mt-1 text-xs text-rose-600">Start muss vor Ende liegen.</p> : null}
         </GuidedStep>
 
