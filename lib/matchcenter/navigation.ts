@@ -22,6 +22,8 @@ export type MatchcenterHrefParams = {
   actionFilter: MatchcenterActionFilter;
   wochenplanFilter: MatchcenterWochenplanFilter;
   teamFilter?: string | null;
+  search?: string | null;
+  sort?: string | null;
 };
 
 /**
@@ -46,6 +48,16 @@ export function buildMatchcenterHref(
 
   if (params.teamFilter) {
     search.set("team", params.teamFilter);
+  }
+
+  const q = params.search?.trim();
+  if (q) {
+    search.set("q", q);
+  }
+
+  const sort = params.sort?.trim();
+  if (sort && sort.toUpperCase() !== "KICKOFF_ASC") {
+    search.set("sort", sort.toLowerCase());
   }
 
   return `${basePath}?${search.toString()}`;

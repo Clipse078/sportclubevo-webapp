@@ -14,7 +14,9 @@ import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 const push = vi.fn();
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push, refresh: vi.fn() }),
+  useRouter: () => ({ push, replace: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/dashboard/matchcenter",
+  useSearchParams: () => new URLSearchParams("tab=spielplanung&month=2026-08"),
 }));
 
 vi.mock("@/hooks/use-toast", () => ({
@@ -132,6 +134,7 @@ function renderOverview(
     wochenplanFilter: "ALLE" | "IM_WOCHENPLAN" | "NICHT_IM_WOCHENPLAN";
     teamFilter: string | null;
     teamOptions: { id: string; label: string }[];
+    canManage?: boolean;
   }> = {},
 ) {
   return render(
@@ -143,6 +146,7 @@ function renderOverview(
       teamFilter={props.teamFilter ?? null}
       teamOptions={props.teamOptions ?? DEFAULT_TEAM_OPTIONS}
       monthWindow={DEFAULT_MONTH_WINDOW}
+      canManage={props.canManage ?? false}
     />,
   );
 }
@@ -218,12 +222,13 @@ describe("MatchcenterOverview — tabs, month nav, KPIs", () => {
 
 describe("MatchcenterOverview — Spielplanung", () => {
   it("renders the empty state and create link when nothing matches", () => {
-    renderOverview([]);
+    renderOverview([], { canManage: true });
 
-    expect(screen.getByText("Keine Matches gefunden")).toBeTruthy();
-    expect(
-      screen.getByRole("link", { name: /Match erstellen/i }),
-    ).toHaveAttribute("href", "/dashboard/events/matches/new");
+    expect(screen.getByText("Keine Spiele gefunden")).toBeTruthy();
+    expect(screen.getByTestId("spiele-create-link")).toHaveAttribute(
+      "href",
+      "/dashboard/matchcenter/new",
+    );
   });
 
   it("renders home and away team names", () => {
@@ -274,13 +279,9 @@ describe("MatchcenterOverview — Spielplanung", () => {
       }),
     ]);
 
-    expect(screen.getByText("2 Aufgaben offen")).toBeTruthy();
-    // Missing items are shown as labels
-    expect(screen.getByText("Spielfeld")).toBeTruthy();
-    expect(screen.getByText("Heimkabine")).toBeTruthy();
-    // MATCHCENTER-UX-03: ready items (Gastkabine=G2) are NOT shown for OPEN matches
-    // (only the missing items are surfaced as actionable labels)
-    expect(screen.queryByText("Gastkabine")).toBeNull();
+    expect(screen.getByText("2 Punkte offen")).toBeTruthy();
+    expect(screen.getByText(/Platz —/)).toBeTruthy();
+    expect(screen.getByText(/Garderobe —/)).toBeTruthy();
   });
 
   it("G. shows a calm Auswärtsspiel state instead of manufactured facility warnings", () => {
@@ -439,7 +440,7 @@ describe("MatchcenterOverview — Spielplanung", () => {
       { actionFilter: "ALLE" },
     );
 
-    expect(screen.getByText("Keine Matches gefunden")).toBeTruthy();
+    expect(screen.getByText("Keine Spiele gefunden")).toBeTruthy();
   });
 });
 
@@ -582,7 +583,7 @@ describe("MatchcenterOverview — reconciliation admin surface", () => {
     expect(
       screen.getByTestId("matchcenter-reconciliation-row-match-reconcile"),
     ).toBeTruthy();
-    expect(screen.getByText("Keine Matches gefunden")).toBeTruthy();
+    expect(screen.getByText("Keine Spiele gefunden")).toBeTruthy();
   });
 
   it("does not show the reconciliation banner when no fixtures need review", () => {

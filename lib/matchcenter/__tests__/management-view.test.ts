@@ -1,0 +1,170 @@
+import { describe, expect, it } from "vitest";
+import {
+  filterSpielplanungRowsBySearch,
+  formatSpieleDayGroupLabel,
+  groupSpielplanungRowsByDay,
+  matchMatchesSpieleSearch,
+  parseSpieleManagementSort,
+  resolveSpieleStatusPresentation,
+} from "../management-view";
+import { assessMatchOperationalState } from "../operational-state";
+import type { MatchcenterMatchSummary } from "../types";
+
+function createMatch(
+  overrides: Partial<MatchcenterMatchSummary> = {},
+): MatchcenterMatchSummary {
+  return {
+    id: "match-1",
+    tenantId: "tenant-1",
+    teamId: "team-1",
+    seasonId: "season-2026-2027",
+    type: "MATCH",
+    title: "FC Allschwil – Gegner",
+    description: null,
+    status: "SCHEDULED",
+    startAt: new Date("2026-09-19T16:00:00.000Z"),
+    endAt: new Date("2026-09-19T18:00:00.000Z"),
+    location: "Im Brüel",
+    competitionLabel: "Meisterschaft",
+    homeAway: "HOME",
+    resultLabel: null,
+    intermediateResultLabel: null,
+    scoreHome: null,
+    scoreAway: null,
+    home: {
+      providerTeamId: 100,
+      providerTeamName: "FC Allschwil E1",
+      canonicalTeamId: "team-home",
+      canonicalTeamName: "FC Allschwil E1",
+      displayName: "FC Allschwil E1",
+      resolution: "RESOLVED",
+      isOwnTeam: true,
+    },
+    away: {
+      providerTeamId: 200,
+      providerTeamName: "FC Basel E1",
+      canonicalTeamId: null,
+      canonicalTeamName: null,
+      displayName: "FC Basel E1",
+      resolution: "UNRESOLVED",
+      isOwnTeam: false,
+    },
+    source: {
+      eventSource: "SFV",
+      externalSource: "SFV",
+      externalSourceId: "10001",
+      provider: "SFV",
+      externalMatchId: 10001,
+      externalSeasonId: 2027,
+      matchNumber: 12,
+    },
+    synchronization: {
+      eventLastSyncedAt: null,
+      mappingLastSyncedAt: null,
+      detailSyncedAt: null,
+      providerMatchState: null,
+      providerMatchStateName: null,
+    },
+    operational: {
+      pitchCode: "KR2",
+      homeDressingRoomCode: "G1",
+      awayDressingRoomCode: "G2",
+      meetingTime: null,
+      remarks: null,
+    },
+    visibility: {
+      websiteVisible: true,
+      infoboardVisible: true,
+      homepageVisible: false,
+      wochenplanVisible: true,
+      trainingsplanVisible: false,
+      teamPageVisible: true,
+    },
+    reviewStage: "APPROVED",
+    publishedAt: null,
+    ...overrides,
+  };
+}
+
+describe("management-view search", () => {
+  it("matches opponent and competition text", () => {
+    const match = createMatch();
+    expect(matchMatchesSpieleSearch(match, "basel")).toBe(true);
+    expect(matchMatchesSpieleSearch(match, "meisterschaft")).toBe(true);
+    expect(matchMatchesSpieleSearch(match, "unrelated")).toBe(false);
+  });
+
+  it("filters spielplanung rows", () => {
+    const rows = [
+      { match: createMatch({ id: "a" }), assessment: assessMatchOperationalState(createMatch({ id: "a" })) },
+      {
+        match: createMatch({
+          id: "b",
+          away: {
+            providerTeamId: 300,
+            providerTeamName: "FC Liestal",
+            canonicalTeamId: null,
+            canonicalTeamName: null,
+            displayName: "FC Liestal",
+            resolution: "UNRESOLVED",
+            isOwnTeam: false,
+          },
+        }),
+        assessment: assessMatchOperationalState(createMatch({ id: "b" })),
+      },
+    ];
+
+    const filtered = filterSpielplanungRowsBySearch(rows, "liestal");
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]?.match.id).toBe("b");
+  });
+});
+
+describe("management-view grouping", () => {
+  it("labels today as HEUTE", () => {
+    const now = new Date("2026-09-19T12:00:00.000Z");
+    const label = formatSpieleDayGroupLabel(
+      new Date("2026-09-19T16:00:00.000Z"),
+      "de-CH",
+      "Europe/Zurich",
+      now,
+    );
+    expect(label).toBe("HEUTE");
+  });
+
+  it("groups spielplanung rows chronologically by day key", () => {
+    const rowA = {
+      match: createMatch({ id: "a", startAt: new Date("2026-09-18T16:00:00.000Z") }),
+      assessment: assessMatchOperationalState(createMatch()),
+    };
+    const rowB = {
+      match: createMatch({ id: "b", startAt: new Date("2026-09-19T16:00:00.000Z") }),
+      assessment: assessMatchOperationalState(createMatch()),
+    };
+    const groups = groupSpielplanungRowsByDay([rowB, rowA], "de-CH", "Europe/Zurich");
+    expect(groups).toHaveLength(2);
+    expect(groups[0]?.rows[0]?.match.id).toBe("a");
+  });
+});
+
+describe("management-view status presentation", () => {
+  it("parses sort param", () => {
+    expect(parseSpieleManagementSort("kickoff_desc")).toBe("KICKOFF_DESC");
+    expect(parseSpieleManagementSort(undefined)).toBe("KICKOFF_ASC");
+  });
+
+  it("maps open readiness to punkte offen", () => {
+    const match = createMatch({
+      operational: {
+        pitchCode: null,
+        homeDressingRoomCode: null,
+        awayDressingRoomCode: "G2",
+        meetingTime: null,
+        remarks: null,
+      },
+    });
+    const assessment = assessMatchOperationalState(match);
+    const status = resolveSpieleStatusPresentation(match, assessment);
+    expect(status.label).toBe("2 Punkte offen");
+  });
+});

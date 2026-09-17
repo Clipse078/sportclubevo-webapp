@@ -1,6 +1,4 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Plus } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -33,8 +31,8 @@ import {
   isScePerfTimingEnabled,
   logAdminServerTiming,
 } from "@/lib/planning-hub/admin-server-timing";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
-import MatchcenterOverview from "@/components/admin/matchcenter/MatchcenterOverview";
+import SpieleManagementWorkspace from "@/components/admin/matchcenter/SpieleManagementWorkspace";
+import { normalizeSpieleSearchQuery } from "@/lib/matchcenter/management-view";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 
 type MatchcenterPageProps = {
@@ -44,6 +42,8 @@ type MatchcenterPageProps = {
     filter?: string;
     wochenplan?: string;
     team?: string;
+    q?: string;
+    sort?: string;
   }>;
 };
 
@@ -128,25 +128,12 @@ export default async function MatchcenterPage({
     logAdminServerTiming(perfTimer.finish());
   }
 
+  const searchQuery = normalizeSpieleSearchQuery(params.q);
+
   return (
     <ToastProvider>
-      <div className="max-w-[1400px] space-y-8">
-        <AdminSectionHeader
-          eyebrow="Planung"
-          title="Spiele"
-          description="Zentrale Spielplanung und operative Matchvorbereitung."
-          actions={
-            <Link
-              href="/dashboard/matchcenter/new"
-              className="fca-button-primary"
-            >
-              <Plus className="h-4 w-4" />
-              Match erstellen
-            </Link>
-          }
-        />
-
-        <MatchcenterOverview
+      <div className="w-full">
+        <SpieleManagementWorkspace
           matches={matches}
           tab={tab}
           actionFilter={actionFilter}
@@ -159,6 +146,8 @@ export default async function MatchcenterPage({
           canManage={canManage}
           currentMonthParam={currentMonthParam}
           tenantLogoUrl={tenantContext.logoUrl}
+          searchQuery={searchQuery}
+          sortParam={params.sort ?? null}
         />
       </div>
     </ToastProvider>

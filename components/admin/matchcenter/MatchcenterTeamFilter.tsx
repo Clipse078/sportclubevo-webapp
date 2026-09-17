@@ -24,6 +24,8 @@ type MatchcenterTeamFilterProps = {
   month: string;
   actionFilter: MatchcenterActionFilter;
   wochenplanFilter: MatchcenterWochenplanFilter;
+  urlSearch?: string | null;
+  urlSort?: string | null;
 };
 
 export default function MatchcenterTeamFilter({
@@ -34,6 +36,8 @@ export default function MatchcenterTeamFilter({
   month,
   actionFilter,
   wochenplanFilter,
+  urlSearch = null,
+  urlSort = null,
 }: MatchcenterTeamFilterProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -59,6 +63,8 @@ export default function MatchcenterTeamFilter({
       actionFilter,
       wochenplanFilter,
       teamFilter: nextTeamFilter,
+      search: urlSearch,
+      sort: urlSort,
     });
   }
 

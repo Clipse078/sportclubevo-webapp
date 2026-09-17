@@ -52,6 +52,21 @@ describe("buildMatchcenterHref", () => {
     expect(href).toContain("tab=resultate");
   });
 
+  it("includes search and sort when set", () => {
+    const href = buildMatchcenterHref("/dashboard/matchcenter", {
+      tab: "SPIELPLANUNG",
+      month: "2026-09",
+      actionFilter: "ALLE",
+      wochenplanFilter: "ALLE",
+      teamFilter: null,
+      search: "basel",
+      sort: "KICKOFF_DESC",
+    });
+
+    expect(href).toContain("q=basel");
+    expect(href).toContain("sort=kickoff_desc");
+  });
+
   it("preserves team when switching tabs via shared params", () => {
     const href = buildMatchcenterHref("/dashboard/matchcenter", {
       tab: "RESULTATE",
