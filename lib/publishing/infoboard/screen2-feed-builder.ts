@@ -69,7 +69,7 @@ import type {
 } from "../event-types";
 import type { PublicationEventLoader } from "../policy/event-selection";
 import { selectEventsForPublication } from "../policy/event-selection";
-import type { TenantMatchOperationalPolicyResolved } from "@/lib/match/tenant-operational-policy-service";
+import type { TenantOperationalDurationPolicyResolved } from "@/lib/operational/tenant-operational-duration-policy-service";
 import { getPublishingEffectiveEndAt } from "../time/publishing-effective-end-at";
 import { toLocalDateKey } from "../time/temporal-grouping";
 import { SCREEN1_HORIZON_MS } from "./screen1-feed-builder";
@@ -136,7 +136,7 @@ export type BuildScreen2FeedInput = {
    */
   readonly dressingRooms?: readonly ConfiguredDressingRoom[];
   readonly loader: PublicationEventLoader<Screen1SourceEvent>;
-  readonly matchOperationalPolicy?: TenantMatchOperationalPolicyResolved;
+  readonly operationalDurationPolicy?: TenantOperationalDurationPolicyResolved;
 };
 
 // ── Allocation-code resolution (multi-resource aware) ─────────────────────────
@@ -495,7 +495,7 @@ export async function buildInfoboardScreen2Feed(
 
   const resolveEffectiveEndAt = (event: Screen1SourceEvent) =>
     getPublishingEffectiveEndAt(event, {
-      matchOperationalPolicy: input.matchOperationalPolicy,
+      operationalDurationPolicy: input.operationalDurationPolicy,
     });
 
   // ── Load and filter eligible events (same channel as Screen 1's shared

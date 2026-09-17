@@ -154,7 +154,7 @@ describe("getEffectiveEndAt", () => {
     );
   });
 
-  it("null endAt for TOURNAMENT uses 240-minute default duration", () => {
+  it("null endAt for TOURNAMENT uses 120-minute default duration", () => {
     const result = getEffectiveEndAt({ startAt: start, endAt: null, type: "TOURNAMENT" });
     expect(result.getTime()).toBe(
       start.getTime() + DEFAULT_EVENT_DURATIONS_MINUTES.TOURNAMENT * 60_000,

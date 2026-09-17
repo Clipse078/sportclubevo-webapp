@@ -18,6 +18,8 @@
  */
 
 import { getEffectiveEndAt } from "@/lib/publishing/time/temporal-grouping";
+import { resolveTypeOperationalEndAt } from "@/lib/operational/resolve-type-operational-end-at";
+import type { TenantOperationalDurationPolicyResolved } from "@/lib/operational/map-tenant-operational-duration-policy";
 import type { TournamentDto } from "./types";
 
 export type TournamentActionStatus = "READY" | "OPEN" | "NOT_APPLICABLE";
@@ -50,12 +52,18 @@ export function isTournamentCompletedOrInactive(tournament: Pick<TournamentDto, 
 /** Canonical effective end for presentation — explicit endAt or TOURNAMENT default duration. */
 export function getTournamentEffectiveEndAt(
   tournament: Pick<TournamentDto, "startAt" | "endAt">,
+  tenantPolicy?: TenantOperationalDurationPolicyResolved,
 ): Date {
-  return getEffectiveEndAt({
-    startAt: new Date(tournament.startAt),
-    endAt: tournament.endAt ? new Date(tournament.endAt) : null,
-    type: "TOURNAMENT",
-  });
+  const startAt = new Date(tournament.startAt);
+  const endAt = tournament.endAt ? new Date(tournament.endAt) : null;
+  if (tenantPolicy) {
+    return resolveTypeOperationalEndAt(
+      { startAt, endAt, type: "TOURNAMENT" },
+      "TOURNAMENT",
+      tenantPolicy,
+    );
+  }
+  return getEffectiveEndAt({ startAt, endAt, type: "TOURNAMENT" });
 }
 
 /** True when the tournament's canonical effective end is at or before `now`. */

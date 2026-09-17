@@ -23,7 +23,7 @@ export const DEFAULT_EVENT_DURATIONS_MINUTES = {
   /** Legacy publishing fallback only — Infoboard MATCH uses SCE-OPS-01A resolver. */
   MATCH: 120,
   TRAINING: 90,
-  TOURNAMENT: 240,
+  TOURNAMENT: 120,
   OTHER: 60,
   VACATION_PERIOD: 1440,
   DEFAULT: 60,

@@ -25,7 +25,7 @@ import {
   createScreen1TournamentPresentationDatabase,
   resolveScreen1OrganizerClubsByName,
 } from "@/lib/infoboard/screen1-tournament-composition";
-import { getTenantMatchOperationalPolicyCached } from "@/lib/server/request-cache";
+import { getTenantOperationalDurationPolicyCached } from "@/lib/server/request-cache";
 
 export type Screen1KioskPresentation = {
   readonly payload: InfoboardScreen1LivePayload;
@@ -61,7 +61,7 @@ export async function buildScreen1KioskPresentation(params: {
     ((organizerNames) =>
       resolveScreen1OrganizerClubsByName(params.tenant.id, organizerNames));
 
-  const matchOperationalPolicy = await getTenantMatchOperationalPolicyCached(
+  const operationalDurationPolicy = await getTenantOperationalDurationPolicyCached(
     params.tenant.id,
   );
 
@@ -72,7 +72,7 @@ export async function buildScreen1KioskPresentation(params: {
     boardConfig,
     tournamentPresentationDatabase,
     resolveOrganizerClubsByName,
-    matchOperationalPolicy,
+    operationalDurationPolicy,
   });
 
   const weather = params.weather ?? (await getCanonicalKioskWeather());

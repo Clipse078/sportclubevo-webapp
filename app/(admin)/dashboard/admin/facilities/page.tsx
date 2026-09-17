@@ -6,9 +6,9 @@ import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import FacilitiesAdminPanel from "@/components/admin/facilities/FacilitiesAdminPanel";
 import DressingRoomOccupancyPresetsPanel from "@/components/admin/facilities/DressingRoomOccupancyPresetsPanel";
-import MatchOperationalPolicyPanel from "@/components/admin/facilities/MatchOperationalPolicyPanel";
+import TenantOperationalDurationPolicyPanel from "@/components/admin/facilities/TenantOperationalDurationPolicyPanel";
 import { getTenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/tenant-preset-service";
-import { getTenantMatchOperationalPolicy } from "@/lib/match/tenant-operational-policy-service";
+import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
 
 export default async function FacilitiesPage() {
   const session = await requireAnyPermission([
@@ -29,9 +29,9 @@ export default async function FacilitiesPage() {
     facilities = [];
   }
 
-  const [dressingRoomPresets, matchOperationalPolicy] = await Promise.all([
+  const [dressingRoomPresets, operationalDurationPolicy] = await Promise.all([
     getTenantDressingRoomOccupancyPresets(tenantId),
-    getTenantMatchOperationalPolicy(tenantId),
+    getTenantOperationalDurationPolicy(tenantId),
   ]);
 
   return (
@@ -41,7 +41,10 @@ export default async function FacilitiesPage() {
         title="Anlagen & Ressourcen"
         description="Sportanlagen, Plätze und Garderoben konfigurieren. Einmal gepflegt, werden die Bezeichnungen automatisch auf dem Infoboard und in der Wochenplanung verwendet."
       />
-      <MatchOperationalPolicyPanel initialPolicy={matchOperationalPolicy} canManage={canManage} />
+      <TenantOperationalDurationPolicyPanel
+        initialPolicy={operationalDurationPolicy}
+        canManage={canManage}
+      />
       <DressingRoomOccupancyPresetsPanel initialPresets={dressingRoomPresets} canManage={canManage} />
 
       <FacilitiesAdminPanel

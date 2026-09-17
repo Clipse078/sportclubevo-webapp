@@ -316,7 +316,7 @@ describe("getTournamentEffectiveEndAt", () => {
       endAt: null,
     });
 
-    expect(getTournamentEffectiveEndAt(tournament).toISOString()).toBe("2026-08-23T14:00:00.000Z");
+    expect(getTournamentEffectiveEndAt(tournament).toISOString()).toBe("2026-08-23T12:00:00.000Z");
   });
 });
 

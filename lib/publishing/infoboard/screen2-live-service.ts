@@ -44,7 +44,7 @@ import {
   resolveInfoboardDisplayTheme,
   type InfoboardDisplayTheme,
 } from "./display-theme";
-import { getTenantMatchOperationalPolicyCached } from "@/lib/server/request-cache";
+import { getTenantOperationalDurationPolicyCached } from "@/lib/server/request-cache";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -226,7 +226,7 @@ export async function buildScreen2LivePayload(params: {
   // Screen 2 consumes the SAME canonical Weekplanner-backed effective
   // activities as Screen 1 — never a second event/planning query.
   const loader = createCanonicalInfoboardSourceLoader(database);
-  const matchOperationalPolicy = await getTenantMatchOperationalPolicyCached(tenant.id);
+  const operationalDurationPolicy = await getTenantOperationalDurationPolicyCached(tenant.id);
 
   // ── Tenant reference ────────────────────────────────────────────────────────
   const tenantRef: InfoboardTenantRef = {
@@ -244,7 +244,7 @@ export async function buildScreen2LivePayload(params: {
     pitches,
     dressingRooms,
     loader,
-    matchOperationalPolicy,
+    operationalDurationPolicy,
   });
 
   // ── Resolve final facility name for the feed header ──────────────────────

@@ -1,8 +1,10 @@
-import { prisma } from "@/lib/db/prisma";
 import {
-  resolveEffectiveTenantMatchDurationMinutes,
-  validateTenantMatchDurationMinutes,
-} from "./validation";
+  getTenantOperationalDurationPolicy,
+  mapTenantOperationalDurationPolicyRow,
+  upsertTenantOperationalDurationPolicy,
+  type TenantOperationalDurationPolicyResolved,
+} from "@/lib/operational/tenant-operational-duration-policy-service";
+import { validateTenantMatchDurationMinutes } from "./validation";
 
 export type TenantMatchOperationalPolicyResolved = {
   /** Effective minutes used for automatic derivation (club config or platform fallback). */
@@ -11,29 +13,40 @@ export type TenantMatchOperationalPolicyResolved = {
   isClubConfigured: boolean;
 };
 
-export function mapTenantMatchOperationalPolicyRow(
-  row: { defaultMatchDurationMinutes: number } | null,
+export function operationalPolicyToMatchResolved(
+  policy: TenantOperationalDurationPolicyResolved,
 ): TenantMatchOperationalPolicyResolved {
-  if (!row) {
-    return {
-      defaultMatchDurationMinutes: resolveEffectiveTenantMatchDurationMinutes(null),
-      isClubConfigured: false,
-    };
-  }
   return {
-    defaultMatchDurationMinutes: row.defaultMatchDurationMinutes,
-    isClubConfigured: true,
+    defaultMatchDurationMinutes: policy.MATCH.durationMinutes,
+    isClubConfigured: policy.MATCH.isClubConfigured,
   };
+}
+
+/** @deprecated Prefer mapTenantOperationalDurationPolicyRow — kept for SCE-OPS-01A tests. */
+export function mapTenantMatchOperationalPolicyRow(
+  row: {
+    defaultMatchDurationMinutes: number;
+    defaultTrainingDurationMinutes?: number | null;
+    defaultTournamentDurationMinutes?: number | null;
+  } | null,
+): TenantMatchOperationalPolicyResolved {
+  const mapped = mapTenantOperationalDurationPolicyRow(
+    row
+      ? {
+          defaultMatchDurationMinutes: row.defaultMatchDurationMinutes,
+          defaultTrainingDurationMinutes: row.defaultTrainingDurationMinutes ?? null,
+          defaultTournamentDurationMinutes: row.defaultTournamentDurationMinutes ?? null,
+        }
+      : null,
+  );
+  return operationalPolicyToMatchResolved(mapped);
 }
 
 export async function getTenantMatchOperationalPolicy(
   tenantId: string,
 ): Promise<TenantMatchOperationalPolicyResolved> {
-  const row = await prisma.tenantMatchOperationalPolicy.findUnique({
-    where: { tenantId },
-    select: { defaultMatchDurationMinutes: true },
-  });
-  return mapTenantMatchOperationalPolicyRow(row);
+  const policy = await getTenantOperationalDurationPolicy(tenantId);
+  return operationalPolicyToMatchResolved(policy);
 }
 
 export async function upsertTenantMatchOperationalPolicy(
@@ -41,11 +54,11 @@ export async function upsertTenantMatchOperationalPolicy(
   defaultMatchDurationMinutes: number,
 ): Promise<TenantMatchOperationalPolicyResolved> {
   const validated = validateTenantMatchDurationMinutes(defaultMatchDurationMinutes);
-  const row = await prisma.tenantMatchOperationalPolicy.upsert({
-    where: { tenantId },
-    create: { tenantId, defaultMatchDurationMinutes: validated },
-    update: { defaultMatchDurationMinutes: validated },
-    select: { defaultMatchDurationMinutes: true },
+  const existing = await getTenantOperationalDurationPolicy(tenantId);
+  const policy = await upsertTenantOperationalDurationPolicy(tenantId, {
+    defaultMatchDurationMinutes: validated,
+    defaultTrainingDurationMinutes: existing.TRAINING.durationMinutes,
+    defaultTournamentDurationMinutes: existing.TOURNAMENT.durationMinutes,
   });
-  return mapTenantMatchOperationalPolicyRow(row);
+  return operationalPolicyToMatchResolved(policy);
 }

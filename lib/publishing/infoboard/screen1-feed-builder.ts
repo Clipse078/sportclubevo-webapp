@@ -47,7 +47,7 @@ import type {
 } from "../event-types";
 import type { PublicationEventLoader } from "../policy/event-selection";
 import { selectEventsForPublication } from "../policy/event-selection";
-import type { TenantMatchOperationalPolicyResolved } from "@/lib/match/tenant-operational-policy-service";
+import type { TenantOperationalDurationPolicyResolved } from "@/lib/operational/tenant-operational-duration-policy-service";
 import { getPublishingEffectiveEndAt } from "../time/publishing-effective-end-at";
 import {
   partitionByTemporalGroup,
@@ -195,8 +195,8 @@ export type BuildScreen1FeedInput = {
   readonly teamSlug?: string;
   /** Tenant club logo for own-team crest resolution (Tenant.logoUrl). */
   readonly tenantLogoUrl?: string | null;
-  /** Loaded at most once per Infoboard request (SCE-OPS-01A). */
-  readonly matchOperationalPolicy?: TenantMatchOperationalPolicyResolved;
+  /** Loaded at most once per Infoboard request (SCE-OPS-01A / 01B). */
+  readonly operationalDurationPolicy?: TenantOperationalDurationPolicyResolved;
 };
 
 // ── buildInfoboardScreen1Feed ──────────────────────────────────────────────────
@@ -252,7 +252,7 @@ export async function buildInfoboardScreen1Feed(
         authoritativeEndAt: event.authoritativeEndAt,
         operationalEndAtOverride: event.operationalEndAtOverride,
       },
-      { matchOperationalPolicy: input.matchOperationalPolicy },
+      { operationalDurationPolicy: input.operationalDurationPolicy },
     );
 
   // Step 2: Load events through the policy selector.
