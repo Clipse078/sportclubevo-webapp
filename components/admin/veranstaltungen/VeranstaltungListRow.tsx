@@ -7,6 +7,7 @@ import {
   formatClubEventTimingLabel,
 } from "@/lib/events/club-event-scheduling";
 import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
+import { getVeranstaltungHref } from "@/lib/events/veranstaltung-navigation";
 import { cn } from "@/lib/cn";
 
 const REVIEW_STAGE_LABEL: Record<string, string> = {
@@ -56,7 +57,7 @@ export default function VeranstaltungListRow({
 
   return (
     <Link
-      href={canManage ? `/dashboard/veranstaltungen/${event.id}/edit` : "#"}
+      href={canManage ? getVeranstaltungHref(event.id) : "#"}
       className={cn(
         "grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-[var(--border)]/60 px-1 py-2.5 transition hover:bg-[var(--surface-2)] sm:grid-cols-[5rem_minmax(0,1.4fr)_minmax(0,1fr)_auto]",
         !canManage && "pointer-events-none",

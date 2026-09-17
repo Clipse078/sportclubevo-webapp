@@ -9,6 +9,10 @@ import {
   weekplannerAccessibleName,
 } from "@/lib/planning-hub/item-presenters";
 import {
+  MATCH_END_TIME_ACTION_LABEL,
+  weekplannerMatchRequiresEndTimeAction,
+} from "@/lib/planning-hub/match-operational-presenters";
+import {
   schedulerBlockSubtitle,
   schedulerDisplayIdentity,
   schedulerResourceCodes,
@@ -69,6 +73,7 @@ export default function PlanningHubActivityBlock({
   const hasConflict = resourceId
     ? itemHasCanonicalConflictOnResource(item, resourceId)
     : itemHasCanonicalConflict(item);
+  const requiresEndTimeAction = weekplannerMatchRequiresEndTimeAction(item);
   const resources = schedulerResourceCodes(item, compact ? 2 : 3);
   const time = dragTimeLabel ?? formatTimeRange(item.startAt, item.endAt, locale, timezone);
   const primary = schedulerDisplayIdentity(item);
@@ -132,6 +137,7 @@ export default function PlanningHubActivityBlock({
           semantic.ariaSemanticLabel,
           weekplannerAccessibleName(item, locale, timezone),
           hasConflict ? "Ressourcenkonflikt" : null,
+          requiresEndTimeAction ? MATCH_END_TIME_ACTION_LABEL : null,
           continuesFromBefore ? "Fortsetzung aus vorherigem Tagesabschnitt" : null,
           continuesAfter ? "Fortsetzung im nächsten Tagesabschnitt" : null,
         ]
@@ -160,9 +166,15 @@ export default function PlanningHubActivityBlock({
             {!compact && resources && (
               <p className="truncate text-[var(--muted)]">{resources}</p>
             )}
+            {!compact && requiresEndTimeAction && (
+              <p className="truncate font-medium text-amber-800/90">{MATCH_END_TIME_ACTION_LABEL}</p>
+            )}
           </div>
-          {hasConflict && !isGhost && (
-            <span title="Planungskonflikt" className="shrink-0 opacity-70 group-hover:opacity-100">
+          {(hasConflict || requiresEndTimeAction) && !isGhost && (
+            <span
+              title={hasConflict ? "Planungskonflikt" : MATCH_END_TIME_ACTION_LABEL}
+              className="shrink-0 opacity-70 group-hover:opacity-100"
+            >
               <AlertTriangle className="h-3 w-3 text-amber-600/90" aria-hidden />
             </span>
           )}

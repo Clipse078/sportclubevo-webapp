@@ -31,8 +31,8 @@ function createMatch(
     title: "FC Allschwil B2 – Gegner",
     description: null,
     status: "SCHEDULED",
-    startAt: new Date("2026-09-05T16:00:00.000Z"),
-    endAt: null,
+    startAt: new Date("2026-12-05T16:00:00.000Z"),
+    endAt: new Date("2026-12-05T18:00:00.000Z"),
     location: "Im Brüel",
     competitionLabel: "Meisterschaft",
     homeAway: "HOME",
@@ -222,6 +222,27 @@ describe("assessMatchOperationalState — future HOME matches", () => {
 
     expect(assessment.status).toBe("READY");
     expect(assessment.actionCount).toBe(0);
+  });
+
+  it("flags missing or equal end time as Endzeit setzen (derived, not a conflict)", () => {
+    const missingEnd = createMatch({ endAt: null });
+    expect(assessMatchOperationalState(missingEnd).actions.map((a) => a.label)).toContain(
+      "Endzeit setzen",
+    );
+
+    const equalEnd = createMatch({
+      endAt: new Date("2026-12-05T16:00:00.000Z"),
+    });
+    expect(assessMatchOperationalState(equalEnd).actions.map((a) => a.label)).toContain(
+      "Endzeit setzen",
+    );
+
+    const validEnd = createMatch({
+      endAt: new Date("2026-12-05T18:00:00.000Z"),
+    });
+    expect(assessMatchOperationalState(validEnd).actions.map((a) => a.key)).not.toContain(
+      "end-time",
+    );
   });
 });
 

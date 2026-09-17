@@ -23,6 +23,19 @@ vi.mock("@/hooks/use-toast", () => ({
   }),
 }));
 
+/** Past kickoff window for completed / resultate fixtures (stable vs. wall clock). */
+const PAST_MATCH_START = new Date("2026-08-02T16:00:00.000Z");
+const PAST_MATCH_END = new Date("2026-08-02T18:00:00.000Z");
+
+/** Provider label aligned with a finished fixture (avoids reconciliation bucket). */
+const COMPLETED_PROVIDER_SYNC = {
+  eventLastSyncedAt: new Date("2026-08-20T10:00:00.000Z"),
+  mappingLastSyncedAt: new Date("2026-08-20T10:00:00.000Z"),
+  detailSyncedAt: new Date("2026-08-20T10:00:00.000Z"),
+  providerMatchState: 1,
+  providerMatchStateName: "ausgetragen",
+} as const;
+
 const DEFAULT_MONTH_WINDOW = {
   param: "2026-08",
   label: "August 2026",
@@ -42,8 +55,8 @@ function createMatch(
     title: "FC Allschwil – Gegner",
     description: null,
     status: "SCHEDULED",
-    startAt: new Date("2026-09-05T16:00:00.000Z"),
-    endAt: null,
+    startAt: new Date("2027-03-05T16:00:00.000Z"),
+    endAt: new Date("2027-03-05T18:00:00.000Z"),
     location: "Im Brüel",
     competitionLabel: "Meisterschaft",
     homeAway: "HOME",
@@ -89,7 +102,7 @@ function createMatch(
       pitchCode: "KR2",
       homeDressingRoomCode: "G1",
       awayDressingRoomCode: "G2",
-      meetingTime: new Date("2026-09-05T15:00:00.000Z"),
+      meetingTime: new Date("2027-03-05T15:00:00.000Z"),
       remarks: null,
     },
     visibility: {
@@ -179,6 +192,9 @@ describe("MatchcenterOverview — tabs, month nav, KPIs", () => {
     const completedMatch = createMatch({
       id: "match-completed",
       status: "COMPLETED",
+      startAt: PAST_MATCH_START,
+      endAt: PAST_MATCH_END,
+      synchronization: { ...COMPLETED_PROVIDER_SYNC },
       scoreHome: 2,
       scoreAway: 1,
     });
@@ -361,6 +377,12 @@ describe("MatchcenterOverview — Spielplanung", () => {
     renderOverview([
       createMatch({
         status: "LIVE",
+        startAt: PAST_MATCH_START,
+        endAt: PAST_MATCH_END,
+        synchronization: {
+          ...COMPLETED_PROVIDER_SYNC,
+          providerMatchStateName: "läuft",
+        },
         scoreHome: 1,
         scoreAway: 0,
       }),
@@ -405,7 +427,15 @@ describe("MatchcenterOverview — Spielplanung", () => {
 
   it("a COMPLETED match never appears in Spielplanung, even with Alle selected", () => {
     renderOverview(
-      [createMatch({ id: "match-completed", status: "COMPLETED" })],
+      [
+        createMatch({
+          id: "match-completed",
+          status: "COMPLETED",
+          startAt: PAST_MATCH_START,
+          endAt: PAST_MATCH_END,
+          synchronization: { ...COMPLETED_PROVIDER_SYNC },
+        }),
+      ],
       { actionFilter: "ALLE" },
     );
 
@@ -420,6 +450,9 @@ describe("MatchcenterOverview — Resultate", () => {
         createMatch({
           id: "match-draw",
           status: "COMPLETED",
+          startAt: PAST_MATCH_START,
+          endAt: PAST_MATCH_END,
+          synchronization: { ...COMPLETED_PROVIDER_SYNC },
           scoreHome: 0,
           scoreAway: 0,
         }),
@@ -438,6 +471,9 @@ describe("MatchcenterOverview — Resultate", () => {
         createMatch({
           id: "match-1",
           status: "COMPLETED",
+          startAt: PAST_MATCH_START,
+          endAt: PAST_MATCH_END,
+          synchronization: { ...COMPLETED_PROVIDER_SYNC },
           scoreHome: 3,
           scoreAway: 1,
         }),
@@ -456,6 +492,9 @@ describe("MatchcenterOverview — Resultate", () => {
         createMatch({
           id: "match-1",
           status: "COMPLETED",
+          startAt: PAST_MATCH_START,
+          endAt: PAST_MATCH_END,
+          synchronization: { ...COMPLETED_PROVIDER_SYNC },
           resultLabel: "2:2",
         }),
       ],
@@ -501,7 +540,15 @@ describe("MatchcenterOverview — Resultate", () => {
 
   it("links each Resultate row to its detail page", () => {
     renderOverview(
-      [createMatch({ id: "match-1", status: "COMPLETED" })],
+      [
+        createMatch({
+          id: "match-1",
+          status: "COMPLETED",
+          startAt: PAST_MATCH_START,
+          endAt: PAST_MATCH_END,
+          synchronization: { ...COMPLETED_PROVIDER_SYNC },
+        }),
+      ],
       { tab: "RESULTATE" },
     );
 
@@ -594,6 +641,9 @@ describe("MatchcenterOverview — team filter", () => {
       id: "res-team-1",
       teamId: "team-1",
       status: "COMPLETED",
+      startAt: PAST_MATCH_START,
+      endAt: PAST_MATCH_END,
+      synchronization: { ...COMPLETED_PROVIDER_SYNC },
       scoreHome: 2,
       scoreAway: 1,
     });
@@ -601,6 +651,9 @@ describe("MatchcenterOverview — team filter", () => {
       id: "res-team-2",
       teamId: "team-2",
       status: "COMPLETED",
+      startAt: PAST_MATCH_START,
+      endAt: PAST_MATCH_END,
+      synchronization: { ...COMPLETED_PROVIDER_SYNC },
       scoreHome: 1,
       scoreAway: 0,
     });

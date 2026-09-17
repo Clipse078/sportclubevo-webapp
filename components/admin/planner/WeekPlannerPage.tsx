@@ -42,6 +42,7 @@ import {
   type PlanningHubUrlState,
 } from "@/lib/planning-hub/planner-url";
 import { dayKeyInTimeZone } from "@/lib/planning-hub/scheduler/time-zone";
+import { getPlanningHubItemHref } from "@/lib/planning-hub/planning-navigation";
 import type { WeekplannerOverrideRow } from "./WeekplannerAllocationOverrideEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
@@ -179,7 +180,8 @@ export default function WeekPlannerPage({
 
   function handleItemActivate(item: WeekplannerItem) {
     if (item.type === "VERANSTALTUNG") {
-      router.push(`/dashboard/veranstaltungen/${item.eventId}`);
+      const href = getPlanningHubItemHref(item);
+      if (href) router.push(href);
       return;
     }
     if (activePlanId && overrideEditing) {
@@ -403,6 +405,7 @@ export default function WeekPlannerPage({
           timezone={timezone}
           planName={activePlanId ? plans.find((p) => p.id === activePlanId)?.name ?? null : null}
           onItemActivate={handleItemActivate}
+          canManageMatchSchedule={canonicalEditing?.canManageEvents ?? false}
         />
       )}
 

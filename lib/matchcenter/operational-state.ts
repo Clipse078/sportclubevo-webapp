@@ -19,6 +19,11 @@
  */
 
 import { isSportingMatchPastKickoff } from "@/lib/sporting-data/lifecycle";
+import {
+  matchRequiresEndTimeAction,
+  MATCH_END_TIME_ACTION_KEY,
+  MATCH_END_TIME_ACTION_LABEL,
+} from "@/lib/match/match-operational-completeness";
 import type { MatchcenterMatchSummary } from "./types";
 import {
   getMatchcenterLifecycleClassification,
@@ -127,6 +132,12 @@ export function assessMatchOperationalState(
   const teamUnresolved = ownSide.resolution === "UNRESOLVED";
 
   const actions: MatchcenterOperationalAction[] = [];
+  if (matchRequiresEndTimeAction(match)) {
+    actions.push({
+      key: MATCH_END_TIME_ACTION_KEY,
+      label: MATCH_END_TIME_ACTION_LABEL,
+    });
+  }
   if (teamUnresolved) {
     actions.push({ key: "team", label: "Team nicht zugeordnet" });
   }

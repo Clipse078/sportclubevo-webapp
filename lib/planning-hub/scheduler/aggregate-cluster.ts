@@ -1,14 +1,17 @@
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import { schedulerDisplayIdentity } from "@/lib/planning-hub/scheduler-display-label";
 import { weekplannerActivityTypeLabel } from "@/lib/planning-hub/item-presenters";
+import { weekplannerMatchRequiresEndTimeAction } from "@/lib/planning-hub/match-operational-presenters";
 
 export type AggregateClusterSummary = {
   activityCount: number;
   headline: string;
   identityPreview: string;
   conflictCount: number;
+  endTimeActionCount: number;
   timeLabel: string | null;
   conflictLabel: string | null;
+  endTimeActionLabel: string | null;
 };
 
 function pluralActivityTypeLabel(dominantType: string, count: number): string {
@@ -50,12 +53,22 @@ export function summarizeAggregateCluster(
       ? `${conflictCount} Konflikt${conflictCount === 1 ? "" : "e"}`
       : null;
 
+  const endTimeActionCount = items.filter((item) =>
+    weekplannerMatchRequiresEndTimeAction(item),
+  ).length;
+  const endTimeActionLabel =
+    endTimeActionCount > 0
+      ? `${endTimeActionCount} Endzeit${endTimeActionCount === 1 ? "" : "en"} fehlt`
+      : null;
+
   return {
     activityCount,
     headline,
     identityPreview: preview,
     conflictCount,
+    endTimeActionCount,
     timeLabel: timeLabel ?? null,
     conflictLabel,
+    endTimeActionLabel,
   };
 }

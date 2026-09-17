@@ -63,6 +63,12 @@ export default function PlanningHubCalendarClusterBlock({
         <p className="truncate text-[11px] font-semibold text-[var(--foreground)]">{summary.headline}</p>
         <p className="truncate text-[10px] text-[var(--text-2)]">{summary.identityPreview}</p>
         <p className="truncate text-[10px] tabular-nums text-[var(--muted)]">{timeLabel}</p>
+        {summary.endTimeActionLabel && (
+          <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-amber-800/90">
+            <AlertTriangle className="h-2.5 w-2.5 shrink-0" aria-hidden />
+            {summary.endTimeActionLabel}
+          </p>
+        )}
         {summary.conflictLabel && (
           <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-amber-800/90">
             <AlertTriangle className="h-2.5 w-2.5 shrink-0" aria-hidden />

@@ -40,6 +40,7 @@ describe("summarizeAggregateCluster", () => {
     ]);
     expect(summary.activityCount).toBe(2);
     expect(summary.conflictCount).toBe(1);
+    expect(summary.endTimeActionCount).toBe(0);
   });
 
   it("orders identity preview deterministically", () => {

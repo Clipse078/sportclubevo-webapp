@@ -502,9 +502,12 @@ export function MatchCard({
                   assessment={assessment}
                 />
               )}
-              {isAway && (
-                <AwayOpsInfo venue={match.location} />
-              )}
+              {isAway &&
+                (assessment.status === "OPEN" ? (
+                  <ReadinessRail items={[]} assessment={assessment} />
+                ) : (
+                  <AwayOpsInfo venue={match.location} />
+                ))}
             </div>
           )}
         </div>

@@ -36,6 +36,9 @@ import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
 import { resolveClubIdentityLogoUrl } from "@/lib/matchcenter/club-identity";
 import { resolveMatchcenterCompactSideName } from "@/lib/matchcenter/team-display";
 import { isMatchOperationallyActionable } from "@/lib/matchcenter/operational-state";
+import { getEventEditability } from "@/lib/events/editability-rules";
+import { matchRequiresEndTimeAction } from "@/lib/match/match-operational-completeness";
+import MatchEndTimeOperationalCallout from "@/components/admin/matchcenter/MatchEndTimeOperationalCallout";
 
 type MatchcenterDetailProps = {
   match: MatchcenterMatchDetail;
@@ -182,6 +185,12 @@ export default function MatchcenterDetail({
 
   const result = getMatchcenterResultLabel(match);
   const operationallyActionable = isMatchOperationallyActionable(match);
+  const requiresEndTimeAction =
+    operationallyActionable && matchRequiresEndTimeAction(match);
+  const scheduleEditability = getEventEditability({
+    source: match.source.eventSource ?? "",
+    eventType: "MATCH",
+  });
 
   const homeName = resolveMatchcenterCompactSideName(match.home);
   const awayName = resolveMatchcenterCompactSideName(match.away);
@@ -363,6 +372,13 @@ export default function MatchcenterDetail({
           />
         }
       >
+        <MatchEndTimeOperationalCallout
+          matchId={match.id}
+          requiresEndTimeAction={requiresEndTimeAction}
+          canManage={canManageMappings}
+          canReschedule={scheduleEditability.canReschedule}
+        />
+
         <MatchcenterDetailOperational
           matchId={match.id}
           homeAway={match.homeAway}
