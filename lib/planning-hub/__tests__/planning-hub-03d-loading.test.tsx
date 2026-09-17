@@ -2,11 +2,13 @@
  * @vitest-environment jsdom
  */
 
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { Suspense } from "react";
+import { act, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import PlanningHubLoadingShell from "@/components/admin/planning-hub/loading/PlanningHubLoadingShell";
 import PlanningHubCalendarSkeleton from "@/components/admin/planning-hub/loading/PlanningHubCalendarSkeleton";
 import PlanningHubLoadingTracer from "@/components/admin/planning-hub/loading/PlanningHubLoadingTracer";
+import PlanningHubLoadingStatus from "@/components/admin/planning-hub/loading/PlanningHubLoadingStatus";
 import {
   CALENDAR_PLACEHOLDER_BLOCKS,
   LISTE_ROW_PLACEHOLDER_COUNT,
@@ -59,5 +61,56 @@ describe("PLANNING-HUB-03D planner loading", () => {
   it("reduced-motion CSS disables shimmer and tracer animation", () => {
     expect(styles.placeholderBlock).toBeTruthy();
     expect(styles.tracerSegment).toBeTruthy();
+    expect(styles.loadingWorkspace).toBeTruthy();
+  });
+
+  it("loading workspace region has explicit non-zero layout class", () => {
+    render(<PlanningHubLoadingShell perspective="kalender" includeChromeSkeleton={false} />);
+    const root = screen.getByTestId("planning-hub-loading");
+    expect(root.className).toContain(styles.loadingWorkspace);
+  });
+
+  it("Suspense pending state renders planning hub loading shell immediately", () => {
+    function PendingWeekData() {
+      throw new Promise<void>(() => {});
+    }
+
+    render(
+      <Suspense
+        fallback={
+          <PlanningHubLoadingShell perspective="kalender" includeChromeSkeleton={false} />
+        }
+      >
+        <PendingWeekData />
+      </Suspense>,
+    );
+
+    expect(screen.getByTestId("planning-hub-loading")).toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-calendar-skeleton")).toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-loading-tracer")).toBeInTheDocument();
+    expect(screen.queryByTestId("planning-hub-loading-delayed")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Wochenplanung wird geladen");
+  });
+
+  it("primary loading status is present without waiting on long-wait timer", () => {
+    vi.useFakeTimers();
+    render(<PlanningHubLoadingStatus />);
+    expect(screen.getByText("Wochenplanung wird geladen")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Trainings, Spiele und Ressourcen werden vorbereitet"),
+    ).not.toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it("long-wait supporting copy may appear after two seconds", () => {
+    vi.useFakeTimers();
+    render(<PlanningHubLoadingStatus />);
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(
+      screen.getByText("Trainings, Spiele und Ressourcen werden vorbereitet"),
+    ).toBeInTheDocument();
+    vi.useRealTimers();
   });
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/cn";
 import styles from "./planning-hub-loading.module.css";
 
 type PlanningHubLoadingTracerProps = {
@@ -10,7 +11,7 @@ type PlanningHubLoadingTracerProps = {
 export default function PlanningHubLoadingTracer({ className }: PlanningHubLoadingTracerProps) {
   return (
     <div
-      className={className}
+      className={cn(styles.tracerMotionFade, className)}
       data-testid="planning-hub-loading-tracer"
       role="progressbar"
       aria-valuetext="Wochenplanung wird geladen"

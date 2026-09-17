@@ -11,7 +11,6 @@ import { materializeLinkedWeekplannerPlan } from "@/lib/wochenplan/plan-material
 import { formatWeekRangeLabel } from "@/lib/weekplanner/date";
 import PlannerWeekStreamingRoot from "@/components/admin/planner/PlannerWeekChromeBridge";
 import PlannerWeekDataSection from "@/components/admin/planner/PlannerWeekDataSection";
-import DelayedPlannerFallback from "@/components/admin/planning-hub/loading/DelayedPlannerFallback";
 import PlanningHubLoadingShell from "@/components/admin/planning-hub/loading/PlanningHubLoadingShell";
 import { parsePlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import {
@@ -159,12 +158,10 @@ export default async function PlannerWeekPageRoute({
     >
       <Suspense
         fallback={
-          <DelayedPlannerFallback>
-            <PlanningHubLoadingShell
-              perspective={urlState.perspective}
-              includeChromeSkeleton={false}
-            />
-          </DelayedPlannerFallback>
+          <PlanningHubLoadingShell
+            perspective={urlState.perspective}
+            includeChromeSkeleton={false}
+          />
         }
       >
         <PlannerWeekDataSection

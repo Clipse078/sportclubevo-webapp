@@ -6,6 +6,7 @@ import PlanningHubListeSkeleton from "./PlanningHubListeSkeleton";
 import PlanningHubLoadingStatus from "./PlanningHubLoadingStatus";
 import PlanningHubLoadingTracer from "./PlanningHubLoadingTracer";
 import PlanningHubResourceSkeleton from "./PlanningHubResourceSkeleton";
+import styles from "./planning-hub-loading.module.css";
 
 export type PlanningHubLoadingShellProps = {
   perspective?: PlanningHubPerspective;
@@ -30,7 +31,11 @@ export default function PlanningHubLoadingShell({
   includeChromeSkeleton = true,
 }: PlanningHubLoadingShellProps) {
   return (
-    <div className="space-y-2" data-testid="planning-hub-loading" aria-busy="true">
+    <div
+      className={`space-y-2 ${styles.loadingWorkspace}`}
+      data-testid="planning-hub-loading"
+      aria-busy="true"
+    >
       {includeChromeSkeleton ? (
         <div className="space-y-1 border-b border-[var(--border)] pb-1.5">
           <div className="h-5 w-28 rounded bg-[var(--surface-2)]/80" />
