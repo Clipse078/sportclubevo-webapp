@@ -79,8 +79,10 @@ import { VisualDressingRoomPicker } from "@/components/admin/shared/planning/Vis
 import TeamSeasonSearchablePicker from "@/components/admin/shared/TeamSeasonSearchablePicker";
 import { cn } from "@/lib/cn";
 import {
+  TRAINING_FORM_COMPACT_TIME_INPUT_CLASS,
   TRAINING_FORM_STICKY_FOOTER_CLASS,
   TRAINING_FORM_STICKY_FOOTER_RESERVE_CLASS,
+  TRAINING_FORM_TIME_FIELD_WIDTH_CLASS,
 } from "@/components/admin/training/form/training-form-layout";
 import { weekdayFromDate, zonedTimeToUtc } from "@/lib/training/recurrence";
 import type { Weekday } from "@/lib/training/types";
@@ -616,24 +618,24 @@ export default function TrainingSeriesCreateForm({
                 data-testid="training-create-date"
               />
             </label>
-            <label className="block w-28 space-y-1">
+            <label className={cn("block space-y-1", TRAINING_FORM_TIME_FIELD_WIDTH_CLASS)}>
               <span className="fca-label">Start</span>
               <input
                 type="time"
                 value={startsAt}
                 onChange={(e) => handleStartsAtChange(e.target.value)}
-                className="fca-input"
+                className={TRAINING_FORM_COMPACT_TIME_INPUT_CLASS}
                 required
                 data-testid="training-create-starts-at"
               />
             </label>
-            <label className="block w-28 space-y-1">
+            <label className={cn("block space-y-1", TRAINING_FORM_TIME_FIELD_WIDTH_CLASS)}>
               <span className="fca-label">Ende</span>
               <input
                 type="time"
                 value={endsAt}
                 onChange={(e) => handleEndsAtChange(e.target.value)}
-                className="fca-input"
+                className={TRAINING_FORM_COMPACT_TIME_INPUT_CLASS}
                 required
                 data-testid="training-create-ends-at"
               />

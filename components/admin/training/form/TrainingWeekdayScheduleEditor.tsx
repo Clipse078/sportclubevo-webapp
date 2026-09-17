@@ -3,6 +3,10 @@
 import { cn } from "@/lib/cn";
 import { formatTrainingSlotDuration } from "@/lib/training/training-schedule-presentation";
 import type { Weekday } from "@/lib/training/types";
+import {
+  TRAINING_FORM_COMPACT_TIME_INPUT_CLASS,
+  TRAINING_WEEKDAY_SCHEDULE_GRID_CLASS,
+} from "@/components/admin/training/form/training-form-layout";
 
 export type TrainingWeekdayScheduleRow = {
   weekday: Weekday;
@@ -40,7 +44,10 @@ export default function TrainingWeekdayScheduleEditor({
   return (
     <div className="space-y-2" data-testid={`${testIdPrefix}-editor`} role="group" aria-label="Wiederholung und Zeiten">
       <div
-        className="hidden grid-cols-[minmax(0,1.2fr)_5.5rem_5.5rem_minmax(4.5rem,0.8fr)] gap-3 px-1 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--muted)] sm:grid"
+        className={cn(
+          "hidden gap-3 px-1 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--muted)] sm:grid",
+          TRAINING_WEEKDAY_SCHEDULE_GRID_CLASS,
+        )}
         aria-hidden
       >
         <span>Wochentag</span>
@@ -56,7 +63,8 @@ export default function TrainingWeekdayScheduleEditor({
             <div
               key={row.weekday}
               className={cn(
-                "grid grid-cols-1 gap-2 px-3 py-2.5 sm:grid-cols-[minmax(0,1.2fr)_5.5rem_5.5rem_minmax(4.5rem,0.8fr)] sm:items-center sm:gap-3",
+                "grid grid-cols-1 gap-2 px-3 py-2.5 sm:items-center sm:gap-3",
+                TRAINING_WEEKDAY_SCHEDULE_GRID_CLASS,
                 row.enabled ? "bg-[var(--surface)]/40" : "bg-[var(--surface-2)]/20",
               )}
               data-testid={`${testIdPrefix}-${row.weekday.toLowerCase()}`}
@@ -87,7 +95,7 @@ export default function TrainingWeekdayScheduleEditor({
                     type="time"
                     value={row.startsAt}
                     onChange={(e) => onTimeChange(row.weekday, "startsAt", e.target.value)}
-                    className="fca-input h-8 w-full px-2 py-0.5 text-sm font-medium tabular-nums"
+                    className={TRAINING_FORM_COMPACT_TIME_INPUT_CLASS}
                     required
                     aria-label={`${row.label} Beginn`}
                     data-testid={`${testIdPrefix}-${row.weekday.toLowerCase()}-start`}
@@ -96,7 +104,7 @@ export default function TrainingWeekdayScheduleEditor({
                     type="time"
                     value={row.endsAt}
                     onChange={(e) => onTimeChange(row.weekday, "endsAt", e.target.value)}
-                    className="fca-input h-8 w-full px-2 py-0.5 text-sm font-medium tabular-nums"
+                    className={TRAINING_FORM_COMPACT_TIME_INPUT_CLASS}
                     required
                     aria-label={`${row.label} Ende`}
                     data-testid={`${testIdPrefix}-${row.weekday.toLowerCase()}-end`}

@@ -14,3 +14,23 @@ export const TRAINING_FORM_STICKY_FOOTER_CLASS =
 /** Single coherent edit/create workspace surface. */
 export const TRAINING_FORM_WORKSPACE_SURFACE_CLASS =
   "overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]/80 shadow-sm";
+
+/**
+ * Compact native `input[type=time]` width — fits HH:MM plus the browser clock
+ * affordance without clipping (matches create-form `w-28` labels).
+ */
+export const TRAINING_FORM_TIME_FIELD_WIDTH_CLASS = "w-28 min-w-[7rem]";
+
+/** Shared class for compact training HH:MM inputs (create + weekday schedule). */
+export const TRAINING_FORM_COMPACT_TIME_INPUT_CLASS =
+  "fca-input h-8 w-full px-2 py-0.5 text-sm font-medium tabular-nums";
+
+/**
+ * Grid track width for Von/Bis columns in TrainingWeekdayScheduleEditor —
+ * must stay in sync with TRAINING_FORM_TIME_FIELD_WIDTH_CLASS (7rem).
+ */
+export const TRAINING_WEEKDAY_SCHEDULE_TIME_GRID_TRACK = "7rem";
+
+/** Full sm+ grid template for weekday schedule rows (static string for Tailwind). */
+export const TRAINING_WEEKDAY_SCHEDULE_GRID_CLASS =
+  "sm:grid-cols-[minmax(0,1.2fr)_7rem_7rem_minmax(4.5rem,0.8fr)]";
