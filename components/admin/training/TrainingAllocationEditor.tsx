@@ -200,7 +200,7 @@ function WorkspaceResourceBlock({
         </div>
       ) : (
         <div className="rounded-lg border border-dashed border-[var(--border)] px-3 py-3 text-sm text-[var(--muted)]">
-          Noch nicht zugewiesen
+          Nicht zugewiesen
           {canManage ? (
             <button
               type="button"

@@ -4,20 +4,15 @@ import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { findTeamSeasonsForTenant } from "@/lib/training/queries";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import TrainingSeriesCreateForm from "@/components/admin/training/TrainingSeriesCreateForm";
-import {
-  TRAINING_FORM_MAX_WIDTH_CLASS,
-} from "@/components/admin/training/form/training-form-layout";
+import TrainingRecordWorkspaceShell from "@/components/admin/training/record/TrainingRecordWorkspaceShell";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { prisma } from "@/lib/db/prisma";
 import { createPlanningAuthorizationPolicy } from "@/lib/planning/planning-authorization-policy";
+import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
+import type { BreadcrumbItem } from "@/components/ui/page";
 
 export default async function NewTrainingSeriesPage() {
-  // ORG-ACCESS-03: broaden gate to also allow TRAININGS_VIEW so scoped users
-  // (who have trainings.manage at OrgUnit scope only, plus trainings.view at
-  // tenant level) can reach this create page. The backend enforces 403 if
-  // the submitted teamSeason is outside their write scope.
   const session = await requireAnyPermission([
     PERMISSIONS.TRAININGS_MANAGE,
     PERMISSIONS.TRAININGS_VIEW,
@@ -29,26 +24,22 @@ export default async function NewTrainingSeriesPage() {
   const userId = session.user?.effectiveUserId ?? session.user?.id;
   if (!userId) notFound();
 
-  // PLANNING-CREATION-UX-01B: canValidateDirectly is true for tenant-wide
-  // trainings.manage holders (coordinators). Scoped users start records as DRAFT.
   const canValidateDirectly = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
 
   const policy = createPlanningAuthorizationPolicy(prisma);
 
-  const [teamSeasons, facilities, writableTeamIds] = await Promise.all([
+  const [teamSeasons, facilities, writableTeamIds, operationalDurationPolicy] = await Promise.all([
     findTeamSeasonsForTenant(tenantId),
     getFacilitiesForTenant(tenantId),
-    // ORG-ACCESS-03: compute writable team IDs for this user.
-    // Coordinators get all teams; scoped users get only their OrgUnit-covered teams.
     policy.getWritableTeamIds({ userId, tenantId }, "training"),
+    getTenantOperationalDurationPolicy(tenantId),
   ]);
 
-  // ORG-ACCESS-03: filter teamSeasons to those the user may write.
-  // For coordinators, writableTeamIds covers all teams so no filtering effect.
+  const defaultTrainingDurationMinutes = operationalDurationPolicy.TRAINING.durationMinutes;
+
   const writableTeamIdSet = new Set(writableTeamIds);
-  const filteredTeamSeasons = writableTeamIds.length > 0
-    ? teamSeasons.filter((ts) => writableTeamIdSet.has(ts.teamId))
-    : [];
+  const filteredTeamSeasons =
+    writableTeamIds.length > 0 ? teamSeasons.filter((ts) => writableTeamIdSet.has(ts.teamId)) : [];
 
   function facilityGroupsForTypes(types: readonly string[]): FacilityGroup[] {
     return facilities
@@ -75,14 +66,28 @@ export default async function NewTrainingSeriesPage() {
   const pitchHallFacilityGroups = facilityGroupsForTypes(["FULL_PITCH", "HALF_PITCH"]);
   const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
 
-  return (
-    <div className={`${TRAINING_FORM_MAX_WIDTH_CLASS} space-y-6`}>
-      <AdminSectionHeader
-        eyebrow="TrainingCenter"
-        title="Neues Training"
-        description="Team, Termin und Ressourcen in einem geführten Ablauf erfassen."
-      />
+  const breadcrumbs: BreadcrumbItem[] = [
+    { label: "Planung", href: "/dashboard/planner" },
+    { label: "Trainings", href: "/dashboard/training" },
+    { label: "Training erstellen" },
+  ];
 
+  const header = (
+    <div className="space-y-1 pt-1">
+      <p className="text-xs font-medium text-[var(--text-2)]">Neue Trainingsserie</p>
+      <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
+        Training erstellen
+      </h1>
+      <p className="text-sm text-[var(--text-2)]">Team, Termin und Ressourcen für die neue Serie erfassen.</p>
+    </div>
+  );
+
+  return (
+    <TrainingRecordWorkspaceShell
+      breadcrumbs={breadcrumbs}
+      header={header}
+      testId="training-create-page"
+    >
       <TrainingSeriesCreateForm
         teamSeasons={filteredTeamSeasons.map((ts) => ({
           id: ts.id,
@@ -95,7 +100,8 @@ export default async function NewTrainingSeriesPage() {
         pitchHallFacilityGroups={pitchHallFacilityGroups}
         dressingRoomFacilityGroups={dressingRoomFacilityGroups}
         canValidateDirectly={canValidateDirectly}
+        defaultTrainingDurationMinutes={defaultTrainingDurationMinutes}
       />
-    </div>
+    </TrainingRecordWorkspaceShell>
   );
 }

@@ -48,6 +48,14 @@ const DRESSING_ROOM_GROUPS: FacilityGroup[] = [
   },
 ];
 
+const CREATE_FORM_BASE_PROPS = {
+  teamSeasons: TEAM_SEASONS,
+  pitchHallFacilityGroups: PITCH_HALL_GROUPS,
+  dressingRoomFacilityGroups: DRESSING_ROOM_GROUPS,
+  canValidateDirectly: true as const,
+  defaultTrainingDurationMinutes: 90,
+};
+
 function selectTeamSeason(value = "ts-1") {
   fireEvent.click(screen.getByTestId("training-create-team-season-select-search"));
   fireEvent.click(screen.getByTestId(`training-create-team-season-select-option-${value}`));
@@ -101,12 +109,7 @@ describe("TrainingSeriesCreateForm — guided-progress nudge summary", () => {
   it("lists missing items and shrinks the list as fields are filled", async () => {
     installFetchMock();
     render(
-      <TrainingSeriesCreateForm
-        teamSeasons={TEAM_SEASONS}
-        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
-        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
-        canValidateDirectly
-      />,
+      <TrainingSeriesCreateForm {...CREATE_FORM_BASE_PROPS} />,
     );
 
     const progress = screen.getByTestId("training-create-guided-progress");
@@ -131,12 +134,7 @@ describe("TrainingSeriesCreateForm — guided-progress nudge summary", () => {
   it("derives and displays the weekday from the chosen date", async () => {
     installFetchMock();
     render(
-      <TrainingSeriesCreateForm
-        teamSeasons={TEAM_SEASONS}
-        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
-        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
-        canValidateDirectly
-      />,
+      <TrainingSeriesCreateForm {...CREATE_FORM_BASE_PROPS} />,
     );
 
     // 2026-09-22 is a Tuesday.
@@ -150,12 +148,7 @@ describe("TrainingSeriesCreateForm — live Spielfeld/Halle + Garderobe availabi
   it("fetches and displays live Frei/Belegt availability once Tag + Start/Ende are known", async () => {
     installFetchMock();
     render(
-      <TrainingSeriesCreateForm
-        teamSeasons={TEAM_SEASONS}
-        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
-        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
-        canValidateDirectly
-      />,
+      <TrainingSeriesCreateForm {...CREATE_FORM_BASE_PROPS} />,
     );
 
     fireEvent.change(screen.getByTestId("training-create-date"), { target: { value: "2026-09-22" } });
@@ -180,16 +173,11 @@ describe("TrainingSeriesCreateForm — live Spielfeld/Halle + Garderobe availabi
   it("PLANNING-CREATION-UX-01B-C1: resolves the Europe/Zurich wall-clock time to the matching UTC instant, not the raw local string", async () => {
     const { availabilityCalls } = installFetchMock();
     render(
-      <TrainingSeriesCreateForm
-        teamSeasons={TEAM_SEASONS}
-        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
-        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
-        canValidateDirectly
-      />,
+      <TrainingSeriesCreateForm {...CREATE_FORM_BASE_PROPS} />,
     );
 
-    // 2026-09-22 is CEST (UTC+2) in Europe/Zurich, so 17:00-18:00 local must
-    // resolve to 15:00-16:00 UTC — the same instant a real TrainingSession
+    // 2026-09-22 is CEST (UTC+2) in Europe/Zurich, so 17:00-18:30 local must
+    // resolve to 15:00-16:30 UTC — the same instant a real TrainingSession
     // generated for a default-timezone series would use (see
     // lib/training/recurrence.ts#zonedTimeToUtc). Sending the naive
     // "2026-09-22T17:00" string instead (no zone) would silently drift the
@@ -199,21 +187,16 @@ describe("TrainingSeriesCreateForm — live Spielfeld/Halle + Garderobe availabi
     await waitFor(() => expect(availabilityCalls.length).toBeGreaterThan(0));
     const url = new URL(availabilityCalls[0], "http://localhost");
     expect(url.searchParams.get("startAt")).toBe("2026-09-22T15:00:00.000Z");
-    expect(url.searchParams.get("endAt")).toBe("2026-09-22T16:00:00.000Z");
+    expect(url.searchParams.get("endAt")).toBe("2026-09-22T16:30:00.000Z");
   });
 
   it("does not query availability before both a date and valid start/end times exist", async () => {
     const { availabilityCalls } = installFetchMock();
     render(
-      <TrainingSeriesCreateForm
-        teamSeasons={TEAM_SEASONS}
-        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
-        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
-        canValidateDirectly
-      />,
+      <TrainingSeriesCreateForm {...CREATE_FORM_BASE_PROPS} />,
     );
 
-    // Only a date, no valid time range (defaults 17:00-18:00 are already
+    // Only a date, no valid time range (defaults 17:00-18:30 are already
     // valid, so explicitly break it to prove the guard).
     fireEvent.change(screen.getByTestId("training-create-starts-at"), { target: { value: "18:00" } });
     fireEvent.change(screen.getByTestId("training-create-ends-at"), { target: { value: "17:00" } });
@@ -228,12 +211,7 @@ describe("TrainingSeriesCreateForm — recurrence (Einmalig / Wiederkehrend)", (
   it("defaults to 'Einmalig' and hides the recurrence end date", () => {
     installFetchMock();
     render(
-      <TrainingSeriesCreateForm
-        teamSeasons={TEAM_SEASONS}
-        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
-        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
-        canValidateDirectly
-      />,
+      <TrainingSeriesCreateForm {...CREATE_FORM_BASE_PROPS} />,
     );
 
     expect(screen.getByTestId("training-create-recurrence-no")).toHaveAttribute("aria-pressed", "true");
@@ -243,12 +221,7 @@ describe("TrainingSeriesCreateForm — recurrence (Einmalig / Wiederkehrend)", (
   it("'Wiederkehrend' reveals a required recurrence end date and adds it to the missing-state nudge until filled", async () => {
     installFetchMock();
     render(
-      <TrainingSeriesCreateForm
-        teamSeasons={TEAM_SEASONS}
-        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
-        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
-        canValidateDirectly
-      />,
+      <TrainingSeriesCreateForm {...CREATE_FORM_BASE_PROPS} />,
     );
 
     fireEvent.change(screen.getByTestId("training-create-date"), { target: { value: "2026-09-22" } });
@@ -266,12 +239,7 @@ describe("TrainingSeriesCreateForm — recurrence (Einmalig / Wiederkehrend)", (
   it("submits a single-occurrence weekdaySchedule with validUntil = date + 1 day when not recurring", async () => {
     const { fetchMock } = installFetchMock();
     render(
-      <TrainingSeriesCreateForm
-        teamSeasons={TEAM_SEASONS}
-        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
-        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
-        canValidateDirectly
-      />,
+      <TrainingSeriesCreateForm {...CREATE_FORM_BASE_PROPS} />,
     );
 
     selectTeamSeason();
@@ -287,7 +255,34 @@ describe("TrainingSeriesCreateForm — recurrence (Einmalig / Wiederkehrend)", (
     const body = JSON.parse((call?.[1] as RequestInit).body as string);
     expect(body.validFrom).toBe("2026-09-22");
     expect(body.validUntil).toBe("2026-09-23");
-    expect(body.weekdaySchedules).toEqual([{ weekday: "TUESDAY", startsAt: "17:00", endsAt: "18:00" }]);
+    expect(body.weekdaySchedules).toEqual([{ weekday: "TUESDAY", startsAt: "17:00", endsAt: "18:30" }]);
+  });
+});
+
+describe("TrainingSeriesCreateForm — canonical training duration default (TRAININGS-UX-02A)", () => {
+  it("initial end is start + configured duration (90 → 18:30)", () => {
+    installFetchMock();
+    render(<TrainingSeriesCreateForm {...CREATE_FORM_BASE_PROPS} defaultTrainingDurationMinutes={90} />);
+    expect(screen.getByTestId("training-create-starts-at")).toHaveValue("17:00");
+    expect(screen.getByTestId("training-create-ends-at")).toHaveValue("18:30");
+    expect(screen.getByTestId("training-create-standard-duration")).toHaveTextContent("Standarddauer · 90 Min.");
+  });
+
+  it("initial end is start + configured duration (120 → 19:00)", () => {
+    installFetchMock();
+    render(<TrainingSeriesCreateForm {...CREATE_FORM_BASE_PROPS} defaultTrainingDurationMinutes={120} />);
+    expect(screen.getByTestId("training-create-ends-at")).toHaveValue("19:00");
+  });
+
+  it("shifts end with start until end is manually overridden", () => {
+    installFetchMock();
+    render(<TrainingSeriesCreateForm {...CREATE_FORM_BASE_PROPS} defaultTrainingDurationMinutes={90} />);
+    fireEvent.change(screen.getByTestId("training-create-starts-at"), { target: { value: "18:00" } });
+    expect(screen.getByTestId("training-create-ends-at")).toHaveValue("19:30");
+
+    fireEvent.change(screen.getByTestId("training-create-ends-at"), { target: { value: "20:00" } });
+    fireEvent.change(screen.getByTestId("training-create-starts-at"), { target: { value: "18:30" } });
+    expect(screen.getByTestId("training-create-ends-at")).toHaveValue("20:00");
   });
 });
 
@@ -295,12 +290,7 @@ describe("TrainingSeriesCreateForm — direct create (no four-eye UX)", () => {
   it("submit label reads 'Training erstellen' and calls the create API when required fields are set", async () => {
     const { fetchMock } = installFetchMock();
     render(
-      <TrainingSeriesCreateForm
-        teamSeasons={TEAM_SEASONS}
-        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
-        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
-        canValidateDirectly
-      />,
+      <TrainingSeriesCreateForm {...CREATE_FORM_BASE_PROPS} />,
     );
 
     expect(screen.getByTestId("training-create-submit")).toHaveTextContent("Training erstellen");
@@ -320,12 +310,7 @@ describe("TrainingSeriesCreateForm — direct create (no four-eye UX)", () => {
   it("does not expose review/submit workflow copy when canValidateDirectly is false (future four-eye hook)", async () => {
     const { fetchMock } = installFetchMock();
     render(
-      <TrainingSeriesCreateForm
-        teamSeasons={TEAM_SEASONS}
-        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
-        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
-        canValidateDirectly={false}
-      />,
+      <TrainingSeriesCreateForm {...CREATE_FORM_BASE_PROPS} canValidateDirectly={false} />,
     );
 
     expect(screen.getByTestId("training-create-submit")).toHaveTextContent("Training erstellen");
@@ -345,12 +330,7 @@ describe("TrainingSeriesCreateForm — reversible resource selection (TRAINING-C
   async function setupFormWithAvailability() {
     const mocks = installFetchMock();
     render(
-      <TrainingSeriesCreateForm
-        teamSeasons={TEAM_SEASONS}
-        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
-        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
-        canValidateDirectly
-      />,
+      <TrainingSeriesCreateForm {...CREATE_FORM_BASE_PROPS} />,
     );
 
     selectTeamSeason();
