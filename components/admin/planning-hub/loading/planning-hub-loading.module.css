@@ -1,56 +1,62 @@
 .loadingWorkspace {
+  display: flex;
   width: 100%;
   min-height: min(72vh, 640px);
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem 2rem;
 }
 
-@keyframes scePlannerShimmer {
-  0% {
-    background-position: 180% 0;
-  }
-  100% {
-    background-position: -40% 0;
+.loadingComposition {
+  display: flex;
+  width: 100%;
+  max-width: 28rem;
+  flex-direction: column;
+  align-items: center;
+  transform: translateY(-2%);
+}
+
+@keyframes scePlannerRingSpin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
-@keyframes scePlannerTracer {
+.loadingRingArc {
+  transform-origin: 50% 50%;
+  animation: scePlannerRingSpin 1.05s linear infinite;
+}
+
+@keyframes scePlannerProgressRail {
   0% {
     transform: translateX(-120%);
-    opacity: 0;
+    opacity: 0.35;
   }
-  12% {
+  20% {
     opacity: 1;
   }
-  88% {
+  80% {
     opacity: 1;
   }
   100% {
-    transform: translateX(420%);
-    opacity: 0;
+    transform: translateX(320%);
+    opacity: 0.35;
   }
 }
 
-.placeholderBlock {
-  --ph-base: var(--surface-2);
-  --ph-highlight: var(--surface-3, color-mix(in srgb, var(--surface-2) 88%, white));
+.progressRailSegment {
   background: linear-gradient(
-    105deg,
-    var(--ph-base) 0%,
-    var(--ph-base) 42%,
-    var(--ph-highlight) 50%,
-    var(--ph-base) 58%,
-    var(--ph-base) 100%
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--sce-primary) 35%, transparent) 18%,
+    var(--sce-primary) 50%,
+    color-mix(in srgb, var(--sce-primary) 35%, transparent) 82%,
+    transparent 100%
   );
-  background-size: 220% 100%;
-  animation: scePlannerShimmer 1.6s ease-in-out infinite;
-  animation-delay: 120ms;
+  animation: scePlannerProgressRail 1.75s ease-in-out infinite;
 }
 
-.tracerSegment {
-  animation: scePlannerTracer 1.9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-  animation-delay: 120ms;
-}
-
-@keyframes scePlannerMotionFadeIn {
+@keyframes scePlannerContentReveal {
   from {
     opacity: 0;
   }
@@ -59,23 +65,24 @@
   }
 }
 
-.tracerMotionFade {
-  animation: scePlannerMotionFadeIn 280ms ease-out 120ms both;
+.plannerContentReveal {
+  animation: scePlannerContentReveal 165ms ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .placeholderBlock {
+  .loadingRingArc {
     animation: none;
-    background: var(--ph-base);
+    transform: rotate(-38deg);
   }
 
-  .tracerSegment {
+  .progressRailSegment {
     animation: none;
-    transform: none;
-    opacity: 0.55;
+    transform: translateX(34%);
+    opacity: 0.85;
+    background: var(--sce-primary);
   }
 
-  .tracerMotionFade {
+  .plannerContentReveal {
     animation: none;
     opacity: 1;
   }

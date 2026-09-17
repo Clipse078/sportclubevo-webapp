@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { usePublishPlannerWeekChrome } from "./PlannerWeekChromeBridge";
 import {
   fetchPlanningHubFacilityGroupsClient,
@@ -163,7 +163,7 @@ export default function WeekPlannerWorkspace({
   );
 
   const publishChrome = usePublishPlannerWeekChrome();
-  useEffect(() => {
+  useLayoutEffect(() => {
     publishChrome({
       week,
       teamOptions,

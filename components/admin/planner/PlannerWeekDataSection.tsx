@@ -7,6 +7,7 @@ import {
 } from "@/lib/server/request-cache";
 import { buildFacilityGroupsByAllocationGroupFromFacilities } from "@/lib/planning-hub/facility-groups";
 import WeekPlannerWorkspace from "./WeekPlannerWorkspace";
+import PlannerWeekContentReveal from "./PlannerWeekContentReveal";
 import type { WeekplannerOverrideRow } from "./WeekplannerAllocationOverrideEditor";
 import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
@@ -94,17 +95,19 @@ export default async function PlannerWeekDataSection({
   }
 
   return (
-    <WeekPlannerWorkspace
-      week={week}
-      locale={locale}
-      timezone={timezone}
-      plans={plans}
-      activePlanId={activePlan?.id ?? null}
-      overrideEditing={overrideEditing}
-      canonicalEditing={canonicalEditing}
-      urlState={{ ...urlState, week: weekWindow.param }}
-      dressingRoomOccupancyPresets={dressingRoomOccupancyPresets}
-    />
+    <PlannerWeekContentReveal>
+      <WeekPlannerWorkspace
+        week={week}
+        locale={locale}
+        timezone={timezone}
+        plans={plans}
+        activePlanId={activePlan?.id ?? null}
+        overrideEditing={overrideEditing}
+        canonicalEditing={canonicalEditing}
+        urlState={{ ...urlState, week: weekWindow.param }}
+        dressingRoomOccupancyPresets={dressingRoomOccupancyPresets}
+      />
+    </PlannerWeekContentReveal>
   );
 }
 

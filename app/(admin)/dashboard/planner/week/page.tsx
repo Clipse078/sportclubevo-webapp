@@ -158,10 +158,7 @@ export default async function PlannerWeekPageRoute({
     >
       <Suspense
         fallback={
-          <PlanningHubLoadingShell
-            perspective={urlState.perspective}
-            includeChromeSkeleton={false}
-          />
+          <PlanningHubLoadingShell />
         }
       >
         <PlannerWeekDataSection

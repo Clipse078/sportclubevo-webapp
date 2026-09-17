@@ -3,114 +3,104 @@
  */
 
 import { Suspense } from "react";
-import { act, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import PlanningHubLoadingShell from "@/components/admin/planning-hub/loading/PlanningHubLoadingShell";
-import PlanningHubCalendarSkeleton from "@/components/admin/planning-hub/loading/PlanningHubCalendarSkeleton";
-import PlanningHubLoadingTracer from "@/components/admin/planning-hub/loading/PlanningHubLoadingTracer";
-import PlanningHubLoadingStatus from "@/components/admin/planning-hub/loading/PlanningHubLoadingStatus";
-import {
-  CALENDAR_PLACEHOLDER_BLOCKS,
-  LISTE_ROW_PLACEHOLDER_COUNT,
-  RESOURCE_ROW_PLACEHOLDER_COUNT,
-} from "@/lib/planning-hub/loading/deterministic-placeholders";
+import PlanningHubLoadingRing from "@/components/admin/planning-hub/loading/PlanningHubLoadingRing";
+import PlanningHubLoadingProgressRail from "@/components/admin/planning-hub/loading/PlanningHubLoadingProgressRail";
 import styles from "@/components/admin/planning-hub/loading/planning-hub-loading.module.css";
 
-describe("PLANNING-HUB-03D planner loading", () => {
-  it("planning hub loading shell renders", () => {
-    render(<PlanningHubLoadingShell perspective="kalender" />);
+describe("PLANNING-HUB-03D2 planner loading", () => {
+  it("application route loading state renders minimal loader", () => {
+    render(<PlanningHubLoadingShell />);
     expect(screen.getByTestId("planning-hub-loading")).toBeInTheDocument();
   });
 
-  it("calendar skeleton has seven-day geometry", () => {
-    render(<PlanningHubCalendarSkeleton />);
-    expect(screen.getByTestId("planning-hub-calendar-skeleton")).toBeInTheDocument();
-    for (let i = 0; i < 7; i++) {
-      expect(screen.getByTestId(`planning-hub-skeleton-day-${i}`)).toBeInTheDocument();
-    }
+  it("scheduler skeleton is not rendered", () => {
+    render(<PlanningHubLoadingShell />);
+    expect(screen.queryByTestId("planning-hub-calendar-skeleton")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("planning-hub-skeleton-day-0")).not.toBeInTheDocument();
   });
 
-  it("placeholder blocks are deterministic", () => {
-    expect(CALENDAR_PLACEHOLDER_BLOCKS.length).toBeGreaterThan(0);
-    const snapshot = CALENDAR_PLACEHOLDER_BLOCKS.map(
-      (b) => `${b.dayIndex}:${b.topPct}:${b.heightPct}:${b.tint}`,
-    ).join("|");
-    expect(snapshot).toMatchInlineSnapshot(
-      `"5:8:14:event|0:52:18:training|1:48:16:training|2:55:20:match|3:50:17:training|4:58:15:training|4:38:12:match"`,
-    );
+  it("fake activity placeholders are not rendered", () => {
+    render(<PlanningHubLoadingShell />);
+    expect(screen.queryByTestId("planning-hub-placeholder-block")).not.toBeInTheDocument();
   });
 
-  it("loading tracer present without fake percentage", () => {
-    render(<PlanningHubLoadingTracer />);
-    const tracer = screen.getByTestId("planning-hub-loading-tracer");
-    expect(tracer).toBeInTheDocument();
-    expect(tracer.querySelector("[aria-valuenow]")).toBeNull();
+  it("loading ring is present", () => {
+    render(<PlanningHubLoadingShell />);
+    expect(screen.getByTestId("planning-hub-loading-ring")).toBeInTheDocument();
+  });
+
+  it("primary loading status copy", () => {
+    render(<PlanningHubLoadingShell />);
+    expect(screen.getByText("Wochenplaner wird geladen …")).toBeInTheDocument();
+  });
+
+  it("secondary loading status copy", () => {
+    render(<PlanningHubLoadingShell />);
+    expect(
+      screen.getByText("Trainings, Spiele und Ressourcen werden vorbereitet"),
+    ).toBeInTheDocument();
+  });
+
+  it("indeterminate progress rail is present", () => {
+    render(<PlanningHubLoadingShell />);
+    expect(screen.getByTestId("planning-hub-loading-progress-rail")).toBeInTheDocument();
+  });
+
+  it("progress rail has no fake percentage", () => {
+    render(<PlanningHubLoadingProgressRail />);
+    const rail = screen.getByTestId("planning-hub-loading-progress-rail");
+    expect(rail.querySelector("[aria-valuenow]")).toBeNull();
     expect(screen.queryByText(/%/)).toBeNull();
   });
 
-  it("loading status is accessible", () => {
-    render(<PlanningHubLoadingShell perspective="liste" includeChromeSkeleton={false} />);
-    expect(screen.getByRole("status")).toHaveTextContent("Wochenplanung wird geladen");
+  it("does not show fake loading stages", () => {
+    render(<PlanningHubLoadingShell />);
+    expect(screen.queryByText(/Schritt/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Initialisiere/i)).not.toBeInTheDocument();
   });
 
-  it("resource and liste skeleton counts are stable", () => {
-    expect(RESOURCE_ROW_PLACEHOLDER_COUNT).toBe(6);
-    expect(LISTE_ROW_PLACEHOLDER_COUNT).toBe(8);
-  });
-
-  it("reduced-motion CSS disables shimmer and tracer animation", () => {
-    expect(styles.placeholderBlock).toBeTruthy();
-    expect(styles.tracerSegment).toBeTruthy();
+  it("reduced-motion CSS provides static ring and rail classes", () => {
+    expect(styles.loadingRingArc).toBeTruthy();
+    expect(styles.progressRailSegment).toBeTruthy();
     expect(styles.loadingWorkspace).toBeTruthy();
   });
 
-  it("loading workspace region has explicit non-zero layout class", () => {
-    render(<PlanningHubLoadingShell perspective="kalender" includeChromeSkeleton={false} />);
+  it("loading workspace has aria-busy and status semantics", () => {
+    render(<PlanningHubLoadingShell />);
+    const root = screen.getByTestId("planning-hub-loading");
+    expect(root).toHaveAttribute("aria-busy", "true");
+    expect(screen.getByRole("status")).toHaveTextContent("Wochenplaner wird geladen …");
+  });
+
+  it("loading workspace uses centered layout region", () => {
+    render(<PlanningHubLoadingShell />);
     const root = screen.getByTestId("planning-hub-loading");
     expect(root.className).toContain(styles.loadingWorkspace);
   });
 
-  it("Suspense pending state renders planning hub loading shell immediately", () => {
+  it("Suspense pending state renders minimal shell without skeleton chrome", () => {
     function PendingWeekData() {
       throw new Promise<void>(() => {});
     }
 
     render(
-      <Suspense
-        fallback={
-          <PlanningHubLoadingShell perspective="kalender" includeChromeSkeleton={false} />
-        }
-      >
+      <Suspense fallback={<PlanningHubLoadingShell />}>
         <PendingWeekData />
       </Suspense>,
     );
 
     expect(screen.getByTestId("planning-hub-loading")).toBeInTheDocument();
-    expect(screen.getByTestId("planning-hub-calendar-skeleton")).toBeInTheDocument();
-    expect(screen.getByTestId("planning-hub-loading-tracer")).toBeInTheDocument();
-    expect(screen.queryByTestId("planning-hub-loading-delayed")).not.toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("Wochenplanung wird geladen");
+    expect(screen.queryByTestId("planning-hub-calendar-skeleton")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("planning-hub-loading-tracer")).not.toBeInTheDocument();
+    expect(screen.getByTestId("planning-hub-loading-ring")).toBeInTheDocument();
   });
 
-  it("primary loading status is present without waiting on long-wait timer", () => {
-    vi.useFakeTimers();
-    render(<PlanningHubLoadingStatus />);
-    expect(screen.getByText("Wochenplanung wird geladen")).toBeInTheDocument();
-    expect(
-      screen.queryByText("Trainings, Spiele und Ressourcen werden vorbereitet"),
-    ).not.toBeInTheDocument();
-    vi.useRealTimers();
-  });
-
-  it("long-wait supporting copy may appear after two seconds", () => {
-    vi.useFakeTimers();
-    render(<PlanningHubLoadingStatus />);
-    act(() => {
-      vi.advanceTimersByTime(2000);
-    });
-    expect(
-      screen.getByText("Trainings, Spiele und Ressourcen werden vorbereitet"),
-    ).toBeInTheDocument();
-    vi.useRealTimers();
+  it("ring uses compositor-friendly animation class", () => {
+    render(<PlanningHubLoadingRing />);
+    const arc = document.querySelector(`.${styles.loadingRingArc}`);
+    expect(arc).toBeTruthy();
   });
 });

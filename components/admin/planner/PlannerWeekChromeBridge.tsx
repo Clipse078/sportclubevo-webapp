@@ -68,10 +68,12 @@ export default function PlannerWeekStreamingRoot({
     onReviewConflicts: bridge.onReviewConflicts,
   };
 
+  const plannerReady = Boolean(bridge.week);
+
   return (
     <BridgeContext.Provider value={setBridge}>
       <div className="space-y-2" data-testid="planning-hub-workspace">
-        <WeekPlannerChrome {...mergedChrome} />
+        {plannerReady ? <WeekPlannerChrome {...mergedChrome} /> : null}
         {children}
       </div>
     </BridgeContext.Provider>
