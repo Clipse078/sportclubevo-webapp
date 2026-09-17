@@ -28,6 +28,8 @@ const mocks = vi.hoisted(() => ({
   weekplannerPlanFindFirst: vi.fn(),
   wochenplanPlanFindFirst: vi.fn(),
   tenantDressingRoomOccupancyPresetFindUnique: vi.fn(),
+  tenantFindFirst: vi.fn(),
+  externalClubFindMany: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -40,6 +42,8 @@ vi.mock("@/lib/db/prisma", () => ({
     weekplannerPlan: { findFirst: mocks.weekplannerPlanFindFirst },
     wochenplanPlan: { findFirst: mocks.wochenplanPlanFindFirst },
     tenantDressingRoomOccupancyPreset: { findUnique: mocks.tenantDressingRoomOccupancyPresetFindUnique },
+    tenant: { findFirst: mocks.tenantFindFirst },
+    externalClub: { findMany: mocks.externalClubFindMany },
   },
 }));
 
@@ -242,6 +246,8 @@ beforeEach(() => {
   mocks.weekplannerPlanFindFirst.mockResolvedValue({ wochenplanPlanId: null });
   mocks.wochenplanPlanFindFirst.mockResolvedValue(null);
   mocks.tenantDressingRoomOccupancyPresetFindUnique.mockResolvedValue(null);
+  mocks.tenantFindFirst.mockResolvedValue({ name: "FC Allschwil", logoUrl: null });
+  mocks.externalClubFindMany.mockResolvedValue([]);
 });
 
 describe("getWeekplannerWeek — TrainingSession", () => {

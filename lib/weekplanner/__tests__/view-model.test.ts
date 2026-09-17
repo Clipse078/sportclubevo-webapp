@@ -8,7 +8,12 @@
 
 import { describe, expect, it } from "vitest";
 import { buildWeekplannerWeek, detectWeekplannerConflicts } from "../view-model";
-import type { WeekplannerItem, WeekplannerMatchItem, WeekplannerTrainingItem } from "../types";
+import type {
+  WeekplannerItem,
+  WeekplannerMatchItem,
+  WeekplannerTrainingItem,
+  WeekplannerVeranstaltungItem,
+} from "../types";
 
 const WEEK_DAYS = [
   "2026-08-10",
@@ -101,6 +106,40 @@ function matchItem(overrides: Partial<WeekplannerMatchItem> = {}): WeekplannerMa
   };
 }
 
+function veranstaltungItem(
+  overrides: Partial<WeekplannerVeranstaltungItem> = {},
+): WeekplannerVeranstaltungItem {
+  return {
+    id: "veranstaltung:e1",
+    tenantId: "tenant-a",
+    type: "VERANSTALTUNG",
+    startAt: new Date("2026-08-10T00:00:00.000Z"),
+    endAt: new Date("2026-08-11T00:00:00.000Z"),
+    canonicalStartAt: new Date("2026-08-10T00:00:00.000Z"),
+    canonicalEndAt: new Date("2026-08-11T00:00:00.000Z"),
+    timeOverridden: false,
+    title: "Sommerfest",
+    teamNames: [],
+    pitchAllocations: [],
+    dressingRoomAllocations: [],
+    canonicalPitchAllocations: [],
+    canonicalDressingRoomAllocations: [],
+    pitchOverridden: false,
+    dressingRoomOverridden: false,
+    conflicts: [],
+    eventId: "e1",
+    location: null,
+    teamSeasonId: null,
+    allDay: true,
+    dressingRoomOccupancyMode: "DEFAULT",
+    dressingRoomOccupancyBeforeMinutes: null,
+    dressingRoomOccupancyAfterMinutes: null,
+    dressingRoomResolvedBeforeMinutes: 0,
+    dressingRoomResolvedAfterMinutes: 0,
+    ...overrides,
+  };
+}
+
 describe("detectWeekplannerConflicts", () => {
   it("flags two items sharing the same FacilityResource for an overlapping time window", () => {
     const training = trainingItem();
@@ -146,6 +185,17 @@ describe("detectWeekplannerConflicts", () => {
     const training = trainingItem();
     const [flagged] = detectWeekplannerConflicts([training]);
     expect(flagged.conflicts).toEqual([]);
+  });
+
+  it("does not fabricate resource conflicts for all-day Veranstaltung without allocations (SCE-EVENTS-01)", () => {
+    const allDay = veranstaltungItem();
+    const training = trainingItem({
+      pitchAllocations: [PITCH],
+      dressingRoomAllocations: [ROOM_A],
+    });
+    const [flaggedAllDay, flaggedTraining] = detectWeekplannerConflicts([allDay, training]);
+    expect(flaggedAllDay.conflicts).toEqual([]);
+    expect(flaggedTraining.conflicts).toEqual([]);
   });
 
   it("detects dressing-room occupancy overlap when event windows only touch", () => {

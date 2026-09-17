@@ -88,6 +88,30 @@ describe("SCE-EVENTS-01 all-day lane", () => {
     expect(segments[0]?.startDayIndex).toBe(4);
   });
 
+  it("dedupes multi-day all-day into one lane segment (not once per day column)", () => {
+    const item = veranstaltung("lager", {
+      allDay: true,
+      startAt: zonedTimeToUtc("2026-09-25", "00:00", TZ),
+      endAt: zonedTimeToUtc("2026-09-28", "00:00", TZ),
+    });
+    const week = buildWeekplannerWeek({
+      items: [item],
+      days: WEEK_DAYS,
+      weekNumberLabel: "KW 39",
+      rangeLabel: "range",
+      param: "2026-09-21",
+      previousParam: "prev",
+      nextParam: "next",
+      timeZone: TZ,
+    });
+    const segments = collectAllDayLaneSegments(
+      week,
+      { activity: "veranstaltungen", team: null, facility: null, conflictsOnly: false },
+      TZ,
+    );
+    expect(segments.filter((s) => s.item.id === item.id)).toHaveLength(1);
+  });
+
   it("hides all-day events when Veranstaltungen filter is off", () => {
     const item = veranstaltung("fest", {
       allDay: true,
