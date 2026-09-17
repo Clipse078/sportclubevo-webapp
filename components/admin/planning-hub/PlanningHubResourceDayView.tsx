@@ -282,26 +282,26 @@ export default function PlanningHubResourceDayView({
                             resizeOrientation="horizontal"
                             onPointerDownMove={
                               interactive && manipulation
-                                ? (event) =>
+                                ? (clientX, clientY) =>
                                     manipulation.beginResourceMove(
                                       segment.item,
                                       segment.segmentId,
                                       row.resourceId,
-                                      event.clientX,
-                                      event.clientY,
+                                      clientX,
+                                      clientY,
                                     )
                                 : undefined
                             }
                             onPointerDownResize={
                               interactive && manipulation
-                                ? (event, edge) =>
+                                ? (edge, clientX, clientY) =>
                                     manipulation.beginResourceResize(
                                       segment.item,
                                       segment.segmentId,
                                       row.resourceId,
                                       edge,
-                                      event.clientX,
-                                      event.clientY,
+                                      clientX,
+                                      clientY,
                                     )
                                 : undefined
                             }

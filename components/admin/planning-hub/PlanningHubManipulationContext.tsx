@@ -48,6 +48,7 @@ import type { SchedulerDraftChange } from "@/lib/planning-hub/scheduler-draft";
 import { isNoOpDraft } from "@/lib/planning-hub/scheduler-draft";
 import type { WeekplannerItem, WeekplannerResourceRef, WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningHubManipulationConfirm from "./PlanningHubManipulationConfirm";
+import { useDesktopMinWidth768 } from "@/lib/planning-hub/use-desktop-min-width";
 
 export type ManipulationSurface = "kalender" | "ressourcen";
 
@@ -158,16 +159,11 @@ export function PlanningHubManipulationProvider({
   const calendarPixelsPerMinute =
     urlState.calendarZeit === "ganz" ? CALENDAR_PIXELS_PER_MINUTE : CALENDAR_DAYPART_PIXELS_PER_MINUTE;
 
-  const enabled = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    const mq = window.matchMedia?.("(min-width: 768px)");
-    const desktop = mq ? mq.matches : true;
-    return (
-      desktop &&
-      (canManageTrainings || canManageEvents) &&
-      (isStandardplan || !!alternativePlanId)
-    );
-  }, [canManageTrainings, canManageEvents, isStandardplan, alternativePlanId]);
+  const desktopMinWidth = useDesktopMinWidth768();
+  const enabled =
+    desktopMinWidth &&
+    (canManageTrainings || canManageEvents) &&
+    (isStandardplan || !!alternativePlanId);
 
   const permissionContext: ManipulationPermissionContext = useMemo(
     () => ({
@@ -393,7 +389,10 @@ export function PlanningHubManipulationProvider({
       }
 
       let proposedResourceId = session.originalResourceId;
-      const targetEl = document.elementFromPoint(clientX, clientY);
+      const targetEl =
+        typeof document.elementFromPoint === "function"
+          ? document.elementFromPoint(clientX, clientY)
+          : null;
       const rowEl = targetEl?.closest("[data-planning-resource-id]") as HTMLElement | null;
       const targetResourceId = rowEl?.dataset.planningResourceId ?? null;
       setHoverResourceId(targetResourceId);

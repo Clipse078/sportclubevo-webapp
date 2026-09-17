@@ -61,3 +61,66 @@ export function schedulerBlockSubtitle(item: WeekplannerItem): string | null {
   if (item.type === "TRAINING") return null;
   return weekplannerActivityTypeLabel(item.type);
 }
+
+function uniqueCompactTeamNames(teamNames: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of teamNames) {
+    const compact = compactSchedulerTeamName(raw);
+    if (!compact || seen.has(compact)) continue;
+    seen.add(compact);
+    out.push(compact);
+  }
+  return out;
+}
+
+/** Join canonical assigned teams for secondary timeline context (no title parsing). */
+export function formatSchedulerTeamContext(names: readonly string[], maxVisible = 2): string {
+  const unique = uniqueCompactTeamNames(names);
+  if (unique.length === 0) return "";
+  if (unique.length <= maxVisible) return unique.join(" · ");
+  const shown = unique.slice(0, maxVisible - 1);
+  const hidden = unique.length - shown.length;
+  return `${shown.join(" · ")} · +${hidden} Teams`;
+}
+
+/**
+ * Secondary team/club assignment line for dense scheduler blocks.
+ * Returns null when nothing should be shown or primary already carries the team.
+ */
+export function schedulerAssignedTeamContext(
+  item: WeekplannerItem,
+  options?: { primaryLine?: string },
+): string | null {
+  const names = uniqueCompactTeamNames(item.teamNames);
+  if (names.length === 0) return null;
+
+  const primary = options?.primaryLine ?? schedulerDisplayIdentity(item);
+
+  if (item.type === "TRAINING") {
+    return null;
+  }
+
+  if (item.type === "MATCH") {
+    const team = names[0]!;
+    if (primary.startsWith(team) || primary.includes(`${team} vs`)) {
+      return null;
+    }
+    return team;
+  }
+
+  const formatted = formatSchedulerTeamContext(names);
+  return formatted || null;
+}
+
+/** Width-aware truncation for compact resource timeline blocks. */
+export function schedulerTeamContextForBlockWidth(
+  context: string,
+  blockWidthPx: number,
+): string | null {
+  if (!context) return null;
+  if (blockWidthPx < 56) return null;
+  if (blockWidthPx >= 120) return context;
+  if (context.length <= 18) return context;
+  return `${context.slice(0, 16)}…`;
+}

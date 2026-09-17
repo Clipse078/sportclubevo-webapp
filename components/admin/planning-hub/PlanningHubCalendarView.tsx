@@ -423,13 +423,13 @@ export default function PlanningHubCalendarView({
                         canResize={pointerHandlers?.canResize ?? false}
                         onPointerDownMove={
                           pointerHandlers?.onMove
-                            ? (event) => pointerHandlers.onMove!(event.clientX, event.clientY)
+                            ? (clientX, clientY) => pointerHandlers.onMove!(clientX, clientY)
                             : undefined
                         }
                         onPointerDownResize={
                           pointerHandlers?.onResize
-                            ? (event, edge) =>
-                                pointerHandlers.onResize!(edge, event.clientX, event.clientY)
+                            ? (edge, clientX, clientY) =>
+                                pointerHandlers.onResize!(edge, clientX, clientY)
                             : undefined
                         }
                         onActivate={() => {

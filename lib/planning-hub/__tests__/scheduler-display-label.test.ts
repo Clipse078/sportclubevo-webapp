@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   compactSchedulerTeamName,
+  formatSchedulerTeamContext,
+  schedulerAssignedTeamContext,
   schedulerDisplayIdentity,
   schedulerResourceLabel,
+  schedulerTeamContextForBlockWidth,
 } from "../scheduler-display-label";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 
@@ -52,6 +55,28 @@ describe("scheduler display labels", () => {
 
   it("does not use FCA-specific mapping tables", () => {
     expect(schedulerDisplayIdentity(training("FC Allschwil F2"))).not.toContain("Allschwil");
+  });
+
+  it("formats multi-team tournament context from canonical teamNames", () => {
+    expect(formatSchedulerTeamContext(["Junioren F1", "Junioren F2"])).toBe("Junioren F1 · Junioren F2");
+    expect(formatSchedulerTeamContext(["A", "B", "C"])).toBe("A · +2 Teams");
+  });
+
+  it("omits redundant match team line when primary already contains team", () => {
+    const item = {
+      ...training("Junioren D-7 D2"),
+      type: "MATCH" as const,
+      opponentName: "FC Münchenstein b",
+      eventId: "e",
+      homeAway: "HOME" as const,
+      awayDressingRoomAllocations: [],
+    } as WeekplannerItem;
+    expect(schedulerAssignedTeamContext(item)).toBeNull();
+  });
+
+  it("hides secondary team metadata on very narrow blocks", () => {
+    expect(schedulerTeamContextForBlockWidth("Junioren F2", 40)).toBeNull();
+    expect(schedulerTeamContextForBlockWidth("Junioren F2", 140)).toBe("Junioren F2");
   });
 
   it("prefers human resource name over code", () => {
