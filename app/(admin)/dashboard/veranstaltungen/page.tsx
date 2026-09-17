@@ -81,6 +81,7 @@ export default async function VeranstaltungenPage({
           tab={tab}
           canManage={canManage}
           canDelete={canDelete}
+          timeZone={tenantContext.timezone}
         />
       </div>
     </ToastProvider>

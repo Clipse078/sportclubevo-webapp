@@ -11,6 +11,10 @@ import { createPlanningAuthorizationPolicy } from "@/lib/planning/planning-autho
 import type { PlanningDomain } from "@/lib/planning/planning-authorization-policy";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import {
+  parseClubEventScheduleFromApiBody,
+  ClubEventScheduleError,
+} from "@/lib/events/club-event-api-scheduling";
+import {
   parseTenantLocalDateTimeInput,
   resolveTenantEventTimezone,
 } from "@/lib/events/tenant-local-datetime";
@@ -304,7 +308,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Titel ist erforderlich." }, { status: 400 });
     }
 
-    if (!startAtRaw) {
+    const hasStructuredSchedule =
+      type === "OTHER" &&
+      (Boolean(body.startDate) ||
+        Boolean(body.startTime) ||
+        Boolean(body.endDate) ||
+        Boolean(body.endTime) ||
+        Boolean(body.allDay));
+
+    if (!startAtRaw && !hasStructuredSchedule) {
       return NextResponse.json({ error: "Startdatum ist erforderlich." }, { status: 400 });
     }
 
@@ -323,17 +335,57 @@ export async function POST(request: NextRequest) {
     let startAt: Date;
     let endAt: Date | null;
     let meetingTime: Date | null;
+    let allDay = false;
 
-    if (type === "TOURNAMENT") {
-      const tenant = await prisma.tenant.findUnique({
-        where: { id: actorTenantId },
-        select: { timezone: true },
-      });
-      const timeZone = resolveTenantEventTimezone(tenant?.timezone);
+    const tenantForTimezone = await prisma.tenant.findUnique({
+      where: { id: actorTenantId },
+      select: { timezone: true },
+    });
+    const tenantTimeZone = resolveTenantEventTimezone(tenantForTimezone?.timezone);
 
-      startAt = parseTenantLocalDateTimeInput(startAtRaw, timeZone) ?? new Date(Number.NaN);
-      endAt = endAtRaw ? parseTenantLocalDateTimeInput(endAtRaw, timeZone) : null;
-      meetingTime = meetingTimeRaw ? parseTenantLocalDateTimeInput(meetingTimeRaw, timeZone) : null;
+    if (type === "OTHER") {
+      try {
+        const schedule = parseClubEventScheduleFromApiBody(
+          {
+            allDay: Boolean(body.allDay),
+            startAt: startAtRaw,
+            endAt: endAtRaw,
+            startDate:
+              body.startDate === null || body.startDate === undefined
+                ? undefined
+                : String(body.startDate),
+            endDate:
+              body.endDate === null || body.endDate === undefined
+                ? undefined
+                : String(body.endDate),
+            startTime:
+              body.startTime === null || body.startTime === undefined
+                ? undefined
+                : String(body.startTime),
+            endTime:
+              body.endTime === null || body.endTime === undefined
+                ? undefined
+                : String(body.endTime),
+          },
+          tenantTimeZone,
+        );
+        startAt = schedule.startAt;
+        endAt = schedule.endAt;
+        allDay = schedule.allDay;
+      } catch (err) {
+        if (err instanceof ClubEventScheduleError) {
+          return NextResponse.json(
+            { error: err.message, field: err.field },
+            { status: 400 },
+          );
+        }
+        throw err;
+      }
+      meetingTime = null;
+    } else if (type === "TOURNAMENT") {
+      startAt = parseTenantLocalDateTimeInput(startAtRaw, tenantTimeZone) ?? new Date(Number.NaN);
+      endAt = endAtRaw ? parseTenantLocalDateTimeInput(endAtRaw, tenantTimeZone) : null;
+      meetingTime = meetingTimeRaw ? parseTenantLocalDateTimeInput(meetingTimeRaw, tenantTimeZone) : null;
     } else {
       startAt = new Date(startAtRaw);
       endAt = endAtRaw ? new Date(endAtRaw) : null;
@@ -513,6 +565,7 @@ export async function POST(request: NextRequest) {
             location,
             startAt: occurrenceStart,
             endAt: occurrenceEnd,
+            allDay: type === "OTHER" ? allDay : false,
             organizerName,
             opponentName: resolvedOpponentName,
             opponentExternalClubId: resolvedOpponentExternalClubId,

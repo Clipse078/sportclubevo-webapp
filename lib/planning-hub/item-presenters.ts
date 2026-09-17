@@ -1,3 +1,7 @@
+import {
+  formatClubEventTimingLabel,
+  formatClubEventListDateColumn,
+} from "@/lib/events/club-event-scheduling";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 
 export function weekplannerActivityTypeLabel(type: WeekplannerItem["type"]): string {
@@ -42,13 +46,53 @@ export function weekplannerResourceSummary(item: WeekplannerItem, max = 3): stri
   return `${unique.slice(0, max).join(" · ")} +${unique.length - max}`;
 }
 
+export function weekplannerTimeColumnLabel(
+  item: WeekplannerItem,
+  locale: string,
+  timeZone: string,
+  contextDayKey?: string,
+): string {
+  if (item.type === "VERANSTALTUNG" && item.allDay) {
+    return formatClubEventListDateColumn(
+      {
+        allDay: true,
+        startAt: item.startAt,
+        endAt: item.endAt,
+        contextDayKey,
+      },
+      locale,
+      timeZone,
+    );
+  }
+  const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
+  return `${fmt.format(item.startAt)}–${fmt.format(item.endAt)}`;
+}
+
+export function weekplannerTimingDetail(
+  item: WeekplannerItem,
+  locale: string,
+  timeZone: string,
+): string {
+  if (item.type === "VERANSTALTUNG") {
+    return formatClubEventTimingLabel(
+      { allDay: item.allDay, startAt: item.startAt, endAt: item.endAt },
+      locale,
+      timeZone,
+    );
+  }
+  const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
+  return `${fmt.format(item.startAt)}–${fmt.format(item.endAt)}`;
+}
+
 export function weekplannerAccessibleName(
   item: WeekplannerItem,
   locale: string,
   timeZone: string,
 ): string {
-  const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
-  const time = `${fmt.format(item.startAt)} bis ${fmt.format(item.endAt)}`;
+  const time =
+    item.type === "VERANSTALTUNG" && item.allDay
+      ? "Ganztägig"
+      : `${new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone }).format(item.startAt)} bis ${new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone }).format(item.endAt)}`;
   const resources = weekplannerResourceSummary(item, 5);
   const type = weekplannerActivityTypeLabel(item.type);
   const label = weekplannerPrimaryLabel(item);

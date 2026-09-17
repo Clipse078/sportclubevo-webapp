@@ -32,6 +32,7 @@ export type ClubEvent = {
   location: string | null;
   startAt: Date;
   endAt: Date | null;
+  allDay: boolean;
   organizerName: string | null;
   remarks: string | null;
   status: string;
@@ -62,6 +63,7 @@ const CLUB_EVENT_SELECT = {
   location: true,
   startAt: true,
   endAt: true,
+  allDay: true,
   organizerName: true,
   remarks: true,
   status: true,
@@ -125,6 +127,7 @@ export type UpdateClubEventInput = {
   location?: string | null;
   startAt?: Date;
   endAt?: Date | null;
+  allDay?: boolean;
   organizerName?: string | null;
   remarks?: string | null;
   websiteVisible?: boolean;
@@ -192,6 +195,7 @@ export async function updateClubEvent(
       input.location === null ? null : String(input.location).trim() || null;
   if (input.startAt !== undefined) data.startAt = input.startAt;
   if (input.endAt !== undefined) data.endAt = input.endAt;
+  if (input.allDay !== undefined) data.allDay = Boolean(input.allDay);
   if (input.organizerName !== undefined)
     data.organizerName =
       input.organizerName === null

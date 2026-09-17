@@ -797,6 +797,7 @@ async function findWeekplannerVeranstaltungen(
       location: true,
       startAt: true,
       endAt: true,
+      allDay: true,
       teamSeasonId: true,
       pitchCode: true,
       homeDressingRoomCode: true,
@@ -806,7 +807,11 @@ async function findWeekplannerVeranstaltungen(
   });
 
   return events.map((event) => {
-    const endAt = event.endAt ?? new Date(event.startAt.getTime() + 60 * 60_000);
+    const endAt =
+      event.endAt ??
+      (event.allDay
+        ? new Date(event.startAt.getTime() + 24 * 60 * 60_000)
+        : new Date(event.startAt.getTime() + 60 * 60_000));
     const pitchRef = event.pitchCode ? resourceByCode.get(event.pitchCode) : undefined;
     const roomRef = event.homeDressingRoomCode
       ? resourceByCode.get(event.homeDressingRoomCode)
@@ -836,6 +841,7 @@ async function findWeekplannerVeranstaltungen(
       eventId: event.id,
       location: event.location,
       teamSeasonId: event.teamSeasonId,
+      allDay: Boolean(event.allDay),
       dressingRoomOccupancyMode: "DEFAULT",
       dressingRoomOccupancyBeforeMinutes: null,
       dressingRoomOccupancyAfterMinutes: null,

@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminSurfaceCard from "@/components/admin/shared/AdminSurfaceCard";
+import VeranstaltungScheduleFields, {
+  type VeranstaltungScheduleFieldValues,
+} from "./VeranstaltungScheduleFields";
 
 type SeasonItem = {
   id: string;
@@ -29,6 +32,8 @@ const VERANSTALTUNG_CATEGORIES = [
   "Interne Veranstaltung",
   "Sonstiges",
 ] as const;
+
+const DEFAULT_TIMES = { startTime: "18:00", endTime: "20:00" };
 
 function Toggle({
   label,
@@ -60,10 +65,16 @@ export default function VeranstaltungCreateForm() {
   const [category, setCategory] = useState<string>("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
-  const [startAt, setStartAt] = useState("");
-  const [endAt, setEndAt] = useState("");
   const [organizerName, setOrganizerName] = useState("");
   const [remarks, setRemarks] = useState("");
+  const [schedule, setSchedule] = useState<VeranstaltungScheduleFieldValues>({
+    allDay: false,
+    startDate: "",
+    endDate: "",
+    startTime: DEFAULT_TIMES.startTime,
+    endTime: DEFAULT_TIMES.endTime,
+  });
+  const rememberedTimes = useRef({ ...DEFAULT_TIMES });
 
   const [websiteVisible, setWebsiteVisible] = useState(true);
   const [homepageVisible, setHomepageVisible] = useState(false);
@@ -96,14 +107,11 @@ export default function VeranstaltungCreateForm() {
         const seasons = Array.isArray(data.seasons) ? data.seasons : [];
         setSeasonOptions(seasons);
 
-        const preferred =
-          seasons.find((s) => s.isActive) ?? seasons[0] ?? null;
+        const preferred = seasons.find((s) => s.isActive) ?? seasons[0] ?? null;
         setSeasonId(preferred?.id ?? "");
       } catch (err) {
         if (!active) return;
-        setError(
-          err instanceof Error ? err.message : "Ein Fehler ist aufgetreten.",
-        );
+        setError(err instanceof Error ? err.message : "Ein Fehler ist aufgetreten.");
       } finally {
         if (active) setLoadingSeasons(false);
       }
@@ -115,12 +123,39 @@ export default function VeranstaltungCreateForm() {
     };
   }, []);
 
-  // When category changes, pre-fill title if title is still empty or matches previous category
   function handleCategoryChange(value: string) {
     setCategory(value);
-    if (!title || VERANSTALTUNG_CATEGORIES.includes(title as typeof VERANSTALTUNG_CATEGORIES[number])) {
+    if (
+      !title ||
+      VERANSTALTUNG_CATEGORIES.includes(title as (typeof VERANSTALTUNG_CATEGORIES)[number])
+    ) {
       setTitle(value);
     }
+  }
+
+  function handleScheduleChange(patch: Partial<VeranstaltungScheduleFieldValues>) {
+    setSchedule((current) => {
+      if (patch.allDay === true && !current.allDay) {
+        rememberedTimes.current = {
+          startTime: current.startTime || DEFAULT_TIMES.startTime,
+          endTime: current.endTime || DEFAULT_TIMES.endTime,
+        };
+        return {
+          ...current,
+          ...patch,
+          endDate: patch.endDate ?? (current.endDate || current.startDate),
+        };
+      }
+      if (patch.allDay === false && current.allDay) {
+        return {
+          ...current,
+          ...patch,
+          startTime: rememberedTimes.current.startTime,
+          endTime: rememberedTimes.current.endTime,
+        };
+      }
+      return { ...current, ...patch };
+    });
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -139,8 +174,11 @@ export default function VeranstaltungCreateForm() {
           title: title.trim(),
           description: description || null,
           location: location || null,
-          startAt,
-          endAt: endAt || null,
+          allDay: schedule.allDay,
+          startDate: schedule.startDate,
+          endDate: schedule.allDay ? schedule.endDate || schedule.startDate : null,
+          startTime: schedule.allDay ? null : schedule.startTime,
+          endTime: schedule.allDay ? null : schedule.endTime || null,
           organizerName: organizerName || null,
           remarks: remarks || null,
           websiteVisible,
@@ -152,14 +190,10 @@ export default function VeranstaltungCreateForm() {
         }),
       });
 
-      const data = (await res.json().catch(() => null)) as {
-        error?: string;
-      } | null;
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
 
       if (!res.ok) {
-        setError(
-          data?.error ?? "Veranstaltung konnte nicht erstellt werden.",
-        );
+        setError(data?.error ?? "Veranstaltung konnte nicht erstellt werden.");
         return;
       }
 
@@ -225,6 +259,8 @@ export default function VeranstaltungCreateForm() {
             />
           </label>
 
+          <VeranstaltungScheduleFields values={schedule} onChange={handleScheduleChange} />
+
           <label className="block space-y-2 md:col-span-2">
             <span className="fca-label">Beschreibung</span>
             <textarea
@@ -242,7 +278,7 @@ export default function VeranstaltungCreateForm() {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               className="fca-input"
-              placeholder="z. B. Vereinslokal, Halle West"
+              placeholder="z. B. Clubhaus"
             />
           </label>
 
@@ -253,30 +289,7 @@ export default function VeranstaltungCreateForm() {
               value={organizerName}
               onChange={(e) => setOrganizerName(e.target.value)}
               className="fca-input"
-              placeholder="z. B. Vorstand / Sponsorenteam"
-            />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="fca-label">
-              Start <span className="text-rose-500">*</span>
-            </span>
-            <input
-              type="datetime-local"
-              value={startAt}
-              onChange={(e) => setStartAt(e.target.value)}
-              className="fca-input"
-              required
-            />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="fca-label">Ende</span>
-            <input
-              type="datetime-local"
-              value={endAt}
-              onChange={(e) => setEndAt(e.target.value)}
-              className="fca-input"
+              placeholder="z. B. Vorstand"
             />
           </label>
 
@@ -287,51 +300,31 @@ export default function VeranstaltungCreateForm() {
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               className="fca-input"
-              placeholder="Interne Notizen oder Hinweise"
+              placeholder="Interne Notizen"
             />
           </label>
         </div>
 
-        {/* Visibility */}
         <div>
           <p className="fca-label mb-3">Ausspielung</p>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Toggle
-              label="Website sichtbar"
-              value={websiteVisible}
-              onChange={setWebsiteVisible}
-            />
-            <Toggle
-              label="Homepage sichtbar"
-              value={homepageVisible}
-              onChange={setHomepageVisible}
-            />
-            <Toggle
-              label="Infoboard sichtbar"
-              value={infoboardVisible}
-              onChange={setInfoboardVisible}
-            />
-            <Toggle
-              label="Wochenplan sichtbar"
-              value={wochenplanVisible}
-              onChange={setWochenplanVisible}
-            />
+            <Toggle label="Website sichtbar" value={websiteVisible} onChange={setWebsiteVisible} />
+            <Toggle label="Homepage sichtbar" value={homepageVisible} onChange={setHomepageVisible} />
+            <Toggle label="Infoboard sichtbar" value={infoboardVisible} onChange={setInfoboardVisible} />
+            <Toggle label="Wochenplan sichtbar" value={wochenplanVisible} onChange={setWochenplanVisible} />
           </div>
         </div>
 
-        {error ? (
-          <div className="fca-status-box fca-status-box-error">{error}</div>
-        ) : null}
+        {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
 
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="submit"
-            disabled={submitting || loadingSeasons || !seasonId}
+            disabled={submitting || loadingSeasons || !seasonId || !schedule.startDate}
             className="fca-button-primary"
           >
             {submitting ? "Wird erstellt..." : "Veranstaltung erstellen"}
           </button>
-
           <button
             type="button"
             onClick={() => router.push("/dashboard/veranstaltungen")}

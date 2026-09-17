@@ -82,6 +82,7 @@ export type PublicEventItem = {
   status: string;
   startAt: Date;
   endAt: Date | null;
+  allDay: boolean;
   opponentName: string | null;
   organizerName: string | null;
   competitionLabel: string | null;
@@ -131,6 +132,7 @@ type PublicEventQueryRow = {
   status: string;
   startAt: Date;
   endAt: Date | null;
+  allDay: boolean;
   opponentName: string | null;
   organizerName: string | null;
   competitionLabel: string | null;
@@ -222,6 +224,7 @@ function toPublicEventItem(event: PublicEventQueryRow): PublicEventItem {
     status: event.status,
     startAt: event.startAt,
     endAt: event.endAt,
+    allDay: event.allDay ?? false,
     opponentName: event.opponentName,
     organizerName: event.organizerName,
     competitionLabel: event.competitionLabel,
@@ -329,6 +332,7 @@ export async function getPublicEvents(input: GetPublicEventsInput): Promise<Publ
       status: true,
       startAt: true,
       endAt: true,
+      allDay: true,
       opponentName: true,
       organizerName: true,
       competitionLabel: true,

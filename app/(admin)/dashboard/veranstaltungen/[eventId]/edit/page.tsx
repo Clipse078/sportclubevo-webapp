@@ -51,7 +51,7 @@ export default async function VeranstaltungEditPage({ params }: Props) {
           </div>
         )}
 
-        <VeranstaltungEditForm event={event} />
+        <VeranstaltungEditForm event={event} timeZone={tenantContext.timezone} />
       </div>
     </ToastProvider>
   );

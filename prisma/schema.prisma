@@ -1930,6 +1930,10 @@ model Event {
 
   startAt DateTime
   endAt   DateTime?
+  /// SCE-EVENTS-01 — calendar all-day semantics for Veranstaltungen (Event.type=OTHER).
+  /// When true, startAt/endAt encode inclusive calendar dates in the tenant timezone
+  /// with exclusive endAt at midnight after the last day (iCal-style). Never 00:00–23:59.
+  allDay Boolean @default(false)
 
   externalSource   String?
   externalSourceId String?

@@ -22,6 +22,7 @@
  */
 
 import { computeResourceOccupancyWindow, resourceOccupancyWindowsOverlap } from "@/lib/facilities/resource-occupancy-window";
+import { allDayInclusiveDayKeys } from "@/lib/events/club-event-scheduling";
 import { zonedDateKey, WEEKPLANNER_DEFAULT_TIMEZONE } from "./date";
 import type {
   WeekplannerConflict,
@@ -150,10 +151,15 @@ export function buildWeekplannerWeek(input: {
 
   const byDay = new Map<string, WeekplannerItem[]>();
   for (const item of annotated) {
-    const dayKey = zonedDateKey(item.startAt, timeZone);
-    const bucket = byDay.get(dayKey) ?? [];
-    bucket.push(item);
-    byDay.set(dayKey, bucket);
+    const dayKeys =
+      item.type === "VERANSTALTUNG" && item.allDay
+        ? allDayInclusiveDayKeys(item.startAt, item.endAt, timeZone)
+        : [zonedDateKey(item.startAt, timeZone)];
+    for (const dayKey of dayKeys) {
+      const bucket = byDay.get(dayKey) ?? [];
+      bucket.push(item);
+      byDay.set(dayKey, bucket);
+    }
   }
 
   const days: WeekplannerDay[] = input.days.map((dayKey) => ({

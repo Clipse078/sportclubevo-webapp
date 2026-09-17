@@ -3,7 +3,11 @@
 import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
-import { weekplannerActivityTypeLabel } from "@/lib/planning-hub/item-presenters";
+import {
+  weekplannerActivityTypeLabel,
+  weekplannerTimeColumnLabel,
+  weekplannerTimingDetail,
+} from "@/lib/planning-hub/item-presenters";
 import {
   schedulerDisplayIdentity,
   schedulerResourceCodes,
@@ -22,11 +26,6 @@ type PlanningHubListeViewProps = {
   planName?: string | null;
   onItemActivate: (item: WeekplannerItem) => void;
 };
-
-function formatTimeRange(start: Date, end: Date, locale: string, timeZone: string): string {
-  const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
-  return `${fmt.format(start)}–${fmt.format(end)}`;
-}
 
 function formatDayHeading(dayKey: string, locale: string, timeZone: string): string {
   return new Intl.DateTimeFormat(locale, {
@@ -109,7 +108,9 @@ export default function PlanningHubListeView({
                       )}
                     >
                       <span className="text-xs tabular-nums text-[var(--text-2)]">
-                        {formatTimeRange(item.startAt, item.endAt, locale, timezone)}
+                        {item.type === "VERANSTALTUNG" && item.allDay
+                          ? weekplannerTimeColumnLabel(item, locale, timezone, day.dayKey)
+                          : weekplannerTimingDetail(item, locale, timezone)}
                       </span>
                       <span className="min-w-0 truncate text-sm font-medium text-[var(--foreground)]">
                         {schedulerDisplayIdentity(item)}
@@ -118,7 +119,9 @@ export default function PlanningHubListeView({
                         )}
                       </span>
                       <span className="min-w-0 truncate text-xs text-[var(--muted)]">
-                        {resources || dressing || "—"}
+                        {item.type === "VERANSTALTUNG" && item.allDay
+                          ? [resources, dressing, "Ganztägig"].filter(Boolean).join(" · ") || "Ganztägig"
+                          : resources || dressing || "—"}
                       </span>
                       <span className="flex items-center justify-end gap-1">
                         {planName && isItemOverridden(item) && (

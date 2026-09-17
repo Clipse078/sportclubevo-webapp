@@ -2,6 +2,11 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+import {
+  allDayLaneRowCount,
+  collectAllDayLaneSegments,
+  isTimedCalendarItem,
+} from "@/lib/planning-hub/all-day-lane";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import {
@@ -32,6 +37,7 @@ import {
 import { resolveCalendarTimeRange } from "@/lib/planning-hub/scheduler/time-range-focus";
 import { dayKeyInTimeZone, zonedMinutesFromMidnight } from "@/lib/planning-hub/scheduler/time-zone";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
+import PlanningHubAllDayLane from "./PlanningHubAllDayLane";
 import PlanningHubActivityBlock from "./PlanningHubActivityBlock";
 import PlanningHubCalendarClusterBlock from "./PlanningHubCalendarClusterBlock";
 import PlanningHubDaypartSwitcher from "./PlanningHubDaypartSwitcher";
@@ -86,6 +92,11 @@ export default function PlanningHubCalendarView({
   const onSelectFullDay = useCallback(() => setCalendarZeit("ganz"), [setCalendarZeit]);
 
   const filtered = applyPlanningHubFilters(week, calendarUrlState);
+  const allDaySegments = useMemo(
+    () => collectAllDayLaneSegments(week, calendarUrlState, timezone),
+    [week, calendarUrlState, timezone],
+  );
+  const allDayRows = allDayLaneRowCount(allDaySegments);
   const allItems = week.days.flatMap((d) => d.items);
   const gridRef = useRef<HTMLDivElement>(null);
   const [measuredGridWidthPx, setMeasuredGridWidthPx] = useState<number | null>(null);
@@ -213,6 +224,14 @@ export default function PlanningHubCalendarView({
           })}
         </div>
 
+        <PlanningHubAllDayLane
+          segments={allDaySegments}
+          rowCount={allDayRows}
+          dayMinWidthPx={DAY_MIN_WIDTH_PX}
+          timeGutterWidthPx={TIME_GUTTER_WIDTH_PX}
+          onItemActivate={onItemActivate}
+        />
+
         <div
           className="grid"
           style={{
@@ -237,9 +256,7 @@ export default function PlanningHubCalendarView({
           </div>
 
           {filtered.days.map((day) => {
-            const dayItems = day.items.filter(
-              (item) => dayKeyInTimeZone(item.startAt, timezone) === day.dayKey,
-            );
+            const dayItems = day.items.filter(isTimedCalendarItem);
             const intervals = dayItems
               .map((item) => {
                 const { startAt, endAt } = effectiveItemTimes(

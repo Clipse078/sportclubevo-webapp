@@ -30,6 +30,7 @@ export function toPublicWebsiteEvent(event: PublicEventItem): PublicWebsiteEvent
     status: event.status,
     startAt: event.startAt,
     endAt: event.endAt,
+    allDay: event.allDay ?? false,
     location: event.location,
     description: event.description,
     opponentName: event.opponentName,

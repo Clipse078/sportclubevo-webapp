@@ -154,6 +154,8 @@ export type WeekplannerVeranstaltungItem = WeekplannerItemBase & {
   eventId: string;
   location: string | null;
   teamSeasonId: string | null;
+  /** SCE-EVENTS-01 — genuine all-day semantics; lane rendering only (not 00:00–23:59). */
+  allDay: boolean;
 };
 
 export type WeekplannerItem =
