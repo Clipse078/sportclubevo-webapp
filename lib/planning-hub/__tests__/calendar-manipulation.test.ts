@@ -105,7 +105,7 @@ describe("PLANNING-HUB-03C calendar manipulation", () => {
   it("bottom resize changes end preserving start", () => {
     const start = new Date("2026-09-20T15:00:00.000Z");
     const end = new Date("2026-09-20T16:30:00.000Z");
-    const endMin = 18 * 60 + 30;
+    const endMin = 20 * 60;
     const resized = resizeEndPreservingStart(start, endMin, "Europe/Zurich", start);
     expect(resized?.startAt).toEqual(start);
     expect(resized!.endAt.getTime()).toBeGreaterThan(end.getTime());
