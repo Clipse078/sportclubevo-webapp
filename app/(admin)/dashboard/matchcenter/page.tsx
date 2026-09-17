@@ -24,7 +24,15 @@ import {
   normalizeMatchcenterTeamFilter,
   toMatchcenterTeamOptions,
 } from "@/lib/matchcenter/navigation";
-import { getTeamsListData } from "@/lib/teams/queries";
+import {
+  getTeamsListDataCached,
+  getTenantMatchOperationalPolicyCached,
+} from "@/lib/server/request-cache";
+import {
+  createAdminServerTimer,
+  isScePerfTimingEnabled,
+  logAdminServerTiming,
+} from "@/lib/planning-hub/admin-server-timing";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import MatchcenterOverview from "@/components/admin/matchcenter/MatchcenterOverview";
 import { ToastProvider } from "@/components/ui/ToastProvider";
@@ -42,16 +50,22 @@ type MatchcenterPageProps = {
 export default async function MatchcenterPage({
   searchParams,
 }: MatchcenterPageProps) {
+  const perfTimer = isScePerfTimingEnabled()
+    ? createAdminServerTimer("matchcenter")
+    : null;
+
   const session = await requireAnyPermission([
     PERMISSIONS.EVENTS_VIEW,
     PERMISSIONS.EVENTS_MANAGE,
   ]);
+  perfTimer?.mark("auth-rbac");
 
   const tenantContext = await getActiveTenant();
 
   if (!tenantContext) {
     notFound();
   }
+  perfTimer?.mark("tenant");
 
   const tenantId = tenantContext.id;
   const timezone = tenantContext.timezone ?? MATCHCENTER_DEFAULT_TIMEZONE;
@@ -87,16 +101,17 @@ export default async function MatchcenterPage({
   // Month-scoped server-side query (MATCHCENTER-UX-01 §13): avoids loading
   // the full season — only the selected month's window is fetched, for
   // both Spielplanung and Resultate (they share one month filter).
-  const matches = await listMatchcenterMatches(
-    matchcenterDatabase,
-    {
+  const matchOperationalPolicy = await getTenantMatchOperationalPolicyCached(tenantId);
+  const [matches, tenantTeams] = await Promise.all([
+    listMatchcenterMatches(matchcenterDatabase, {
       tenantId,
       from: resolvedMonth.from,
       to: resolvedMonth.to,
-    },
-  );
-
-  const tenantTeams = await getTeamsListData(tenantId);
+      matchOperationalPolicy,
+    }),
+    getTeamsListDataCached(tenantId),
+  ]);
+  perfTimer?.mark("match-loader-teams");
   const activeTeams = tenantTeams.filter((team) => team.isActive);
   const validTeamIds = new Set(activeTeams.map((team) => team.id));
   const teamFilter = normalizeMatchcenterTeamFilter(params.team, validTeamIds);
@@ -108,6 +123,10 @@ export default async function MatchcenterPage({
     previousParam: resolvedMonth.previousParam,
     nextParam: resolvedMonth.nextParam,
   };
+
+  if (perfTimer) {
+    logAdminServerTiming(perfTimer.finish());
+  }
 
   return (
     <ToastProvider>

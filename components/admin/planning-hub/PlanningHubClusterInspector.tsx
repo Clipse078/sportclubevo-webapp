@@ -11,6 +11,10 @@ import {
 } from "@/lib/planning-hub/scheduler-display-label";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import { activityVisualStyle } from "@/lib/planning-hub/activity-visual-style";
+import {
+  MATCH_END_TIME_ACTION_LABEL,
+  weekplannerMatchRequiresEndTimeAction,
+} from "@/lib/planning-hub/match-operational-presenters";
 
 type Props = {
   open: boolean;
@@ -80,6 +84,7 @@ export default function PlanningHubClusterInspector({
       >
         {sorted.map((item) => {
           const hasConflict = item.conflicts.length > 0;
+          const requiresEndTime = weekplannerMatchRequiresEndTimeAction(item);
           const resources = schedulerResourceCodes(item, 4);
           const semantic = activityVisualStyle(item.type);
           return (
@@ -111,9 +116,17 @@ export default function PlanningHubClusterInspector({
                   {resources && (
                     <p className="mt-0.5 truncate text-[11px] text-[var(--muted)]">{resources}</p>
                   )}
+                  {requiresEndTime && (
+                    <p className="mt-0.5 truncate text-[11px] font-medium text-amber-800/90">
+                      {MATCH_END_TIME_ACTION_LABEL}
+                    </p>
+                  )}
                 </div>
-                {hasConflict && (
-                  <span className="shrink-0 self-center" title="Ressourcenkonflikt">
+                {(hasConflict || requiresEndTime) && (
+                  <span
+                    className="shrink-0 self-center"
+                    title={hasConflict ? "Ressourcenkonflikt" : MATCH_END_TIME_ACTION_LABEL}
+                  >
                     <AlertTriangle className="h-3.5 w-3.5 text-amber-600/90" aria-hidden />
                   </span>
                 )}

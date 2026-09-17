@@ -53,6 +53,8 @@ export type WeekplannerResourceRef = {
   code: string;
   name: string;
   facilityName: string;
+  /** Used for pitch FULL/HALF capacity rules in conflict detection. */
+  resourceType?: "FULL_PITCH" | "HALF_PITCH" | "DRESSING_ROOM" | "OTHER";
   /** WOCHENPLAN-2.0-01H-E2 — minutes reserved before effective event start (0 when canonical/default). */
   occupancyBeforeMinutes: number;
   /** WOCHENPLAN-2.0-01H-E2 — minutes reserved after effective event end (0 when canonical/default). */
@@ -63,6 +65,13 @@ export type WeekplannerResourceRef = {
 export type WeekplannerConflict = {
   facilityResourceId: string;
   facilityResourceName: string;
+  resourceKind?: "PITCH_HALL" | "DRESSING_ROOM";
+  partnerItemId?: string;
+  partnerTitle?: string;
+  overlapStartAt?: Date;
+  overlapEndAt?: Date;
+  occupancyStartAt?: Date;
+  occupancyEndAt?: Date;
 };
 
 export type WeekplannerTournamentParticipantAllocation = {
@@ -154,6 +163,8 @@ export type WeekplannerVeranstaltungItem = WeekplannerItemBase & {
   eventId: string;
   location: string | null;
   teamSeasonId: string | null;
+  /** SCE-EVENTS-01 — genuine all-day semantics; lane rendering only (not 00:00–23:59). */
+  allDay: boolean;
 };
 
 export type WeekplannerItem =

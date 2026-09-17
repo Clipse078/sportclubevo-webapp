@@ -6,6 +6,11 @@ import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { listClubEvents } from "@/lib/events/club-events-service";
+import {
+  createAdminServerTimer,
+  isScePerfTimingEnabled,
+  logAdminServerTiming,
+} from "@/lib/planning-hub/admin-server-timing";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import VeranstaltungenOverview, {
@@ -25,15 +30,21 @@ type VeranstaltungenPageProps = {
 export default async function VeranstaltungenPage({
   searchParams,
 }: VeranstaltungenPageProps) {
+  const perfTimer = isScePerfTimingEnabled()
+    ? createAdminServerTimer("veranstaltungen")
+    : null;
+
   const session = await requireAnyPermission([
     PERMISSIONS.EVENTS_VIEW,
     PERMISSIONS.EVENTS_MANAGE,
   ]);
+  perfTimer?.mark("auth-rbac");
 
   const tenantContext = await getActiveTenant();
   if (!tenantContext) {
     notFound();
   }
+  perfTimer?.mark("tenant");
 
   const canManage = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
   const canDelete = hasPermission(session, PERMISSIONS.EVENTS_DELETE);
@@ -43,6 +54,11 @@ export default async function VeranstaltungenPage({
   const tab = normalizeVeranstaltungenTab(params.tab);
 
   const events = await listClubEvents(tenantContext.id);
+  perfTimer?.mark("club-event-loader");
+
+  if (perfTimer) {
+    logAdminServerTiming(perfTimer.finish());
+  }
 
   return (
     <ToastProvider>
@@ -81,6 +97,7 @@ export default async function VeranstaltungenPage({
           tab={tab}
           canManage={canManage}
           canDelete={canDelete}
+          timeZone={tenantContext.timezone}
         />
       </div>
     </ToastProvider>

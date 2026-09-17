@@ -139,6 +139,8 @@ export type PublicWebsiteEventItem = {
   status: string;
   startAt: Date;
   endAt: Date | null;
+  /** SCE-EVENTS-01 — true for genuine all-day Veranstaltungen (optional for backward compatibility). */
+  allDay?: boolean;
   location: string | null;
   description: string | null;
   opponentName: string | null;

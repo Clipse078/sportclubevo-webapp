@@ -2,6 +2,11 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+import {
+  allDayLaneRowCount,
+  collectAllDayLaneSegments,
+  isTimedCalendarItem,
+} from "@/lib/planning-hub/all-day-lane";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import {
@@ -18,6 +23,7 @@ import { laneHorizontalStyle } from "@/lib/planning-hub/scheduler/interval-lanes
 import {
   CALENDAR_DAYPART_AGGREGATE_BELOW_WIDTH_PX,
   CALENDAR_DAYPART_MIN_ACTIVITY_WIDTH_PX,
+  CALENDAR_FULL_DAY_AGGREGATE_BELOW_WIDTH_PX,
   CALENDAR_MIN_ACTIVITY_WIDTH_PX,
   estimateDayColumnWidthPx,
   laneWidthPx,
@@ -32,6 +38,7 @@ import {
 import { resolveCalendarTimeRange } from "@/lib/planning-hub/scheduler/time-range-focus";
 import { dayKeyInTimeZone, zonedMinutesFromMidnight } from "@/lib/planning-hub/scheduler/time-zone";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
+import PlanningHubAllDayLane from "./PlanningHubAllDayLane";
 import PlanningHubActivityBlock from "./PlanningHubActivityBlock";
 import PlanningHubCalendarClusterBlock from "./PlanningHubCalendarClusterBlock";
 import PlanningHubDaypartSwitcher from "./PlanningHubDaypartSwitcher";
@@ -41,7 +48,6 @@ import {
   projectedItemForRender,
   usePlanningHubManipulation,
 } from "./PlanningHubManipulationContext";
-import { evaluateManipulationConflicts } from "@/lib/planning-hub/manipulation-projection";
 import { isoToLocalTime } from "@/lib/planning-hub/planner-time";
 
 type PlanningHubCalendarViewProps = {
@@ -86,7 +92,11 @@ export default function PlanningHubCalendarView({
   const onSelectFullDay = useCallback(() => setCalendarZeit("ganz"), [setCalendarZeit]);
 
   const filtered = applyPlanningHubFilters(week, calendarUrlState);
-  const allItems = week.days.flatMap((d) => d.items);
+  const allDaySegments = useMemo(
+    () => collectAllDayLaneSegments(week, calendarUrlState, timezone),
+    [week, calendarUrlState, timezone],
+  );
+  const allDayRows = allDayLaneRowCount(allDaySegments);
   const gridRef = useRef<HTMLDivElement>(null);
   const [measuredGridWidthPx, setMeasuredGridWidthPx] = useState<number | null>(null);
 
@@ -127,13 +137,21 @@ export default function PlanningHubCalendarView({
 
   const pixelsPerMinute = isFullDay ? CALENDAR_PIXELS_PER_MINUTE : CALENDAR_DAYPART_PIXELS_PER_MINUTE;
   const layoutAggregateBelow = isFullDay
-    ? undefined
+    ? CALENDAR_FULL_DAY_AGGREGATE_BELOW_WIDTH_PX
     : CALENDAR_DAYPART_AGGREGATE_BELOW_WIDTH_PX;
   const minActivityWidth = isFullDay
     ? CALENDAR_MIN_ACTIVITY_WIDTH_PX
     : CALENDAR_DAYPART_MIN_ACTIVITY_WIDTH_PX;
 
   const columnWidthPx = estimateDayColumnWidthPx(DAY_MIN_WIDTH_PX, measuredGridWidthPx ?? undefined);
+  const weekDayKeys = useMemo(() => filtered.days.map((d) => d.dayKey), [filtered.days]);
+
+  useEffect(() => {
+    manipulation?.setCalendarDragLayout({
+      dayColumnWidthPx: columnWidthPx,
+      weekDayKeys,
+    });
+  }, [manipulation, columnWidthPx, weekDayKeys]);
 
   const gridHeightPx = timeRange.totalMinutes * pixelsPerMinute;
   const hourMarks: number[] = [];
@@ -213,6 +231,14 @@ export default function PlanningHubCalendarView({
           })}
         </div>
 
+        <PlanningHubAllDayLane
+          segments={allDaySegments}
+          rowCount={allDayRows}
+          dayMinWidthPx={DAY_MIN_WIDTH_PX}
+          timeGutterWidthPx={TIME_GUTTER_WIDTH_PX}
+          onItemActivate={onItemActivate}
+        />
+
         <div
           className="grid"
           style={{
@@ -237,9 +263,7 @@ export default function PlanningHubCalendarView({
           </div>
 
           {filtered.days.map((day) => {
-            const dayItems = day.items.filter(
-              (item) => dayKeyInTimeZone(item.startAt, timezone) === day.dayKey,
-            );
+            const dayItems = day.items.filter(isTimedCalendarItem);
             const intervals = dayItems
               .map((item) => {
                 const { startAt, endAt } = effectiveItemTimes(
@@ -363,8 +387,8 @@ export default function PlanningHubCalendarView({
                     pointerHandlers?: {
                       canDrag: boolean;
                       canResize: boolean;
-                      onMove?: (clientY: number) => void;
-                      onResize?: (clientY: number) => void;
+                      onMove?: (clientX: number, clientY: number) => void;
+                      onResize?: (edge: "start" | "end", clientX: number, clientY: number) => void;
                     },
                   ) => {
                     const clip = clipItemMinutes(startAt, endAt, timeRange, timezone);
@@ -397,12 +421,13 @@ export default function PlanningHubCalendarView({
                         canResize={pointerHandlers?.canResize ?? false}
                         onPointerDownMove={
                           pointerHandlers?.onMove
-                            ? (event) => pointerHandlers.onMove!(event.clientY)
+                            ? (clientX, clientY) => pointerHandlers.onMove!(clientX, clientY)
                             : undefined
                         }
                         onPointerDownResize={
                           pointerHandlers?.onResize
-                            ? (event) => pointerHandlers.onResize!(event.clientY)
+                            ? (edge, clientX, clientY) =>
+                                pointerHandlers.onResize!(edge, clientX, clientY)
                             : undefined
                         }
                         onActivate={() => {
@@ -426,17 +451,10 @@ export default function PlanningHubCalendarView({
                       urlState.resourceCategory,
                       manipulation.resolveResourceRef,
                     );
-                    const targetRef = activeDraft.proposedResourceId
-                      ? manipulation.resolveResourceRef(activeDraft.proposedResourceId)
-                      : null;
-                    const conflict = evaluateManipulationConflicts(
-                      allItems,
-                      activeDraft,
-                      targetRef,
-                      urlState.resourceCategory,
-                    );
                     const previewVariant =
-                      conflict.status === "warning" ? "preview-warning" : "preview";
+                      manipulation.dragConflictPreview?.status === "warning"
+                        ? "preview-warning"
+                        : "preview";
                     return (
                       <Fragment key={item.id}>
                         {renderBlock(item, activeDraft.originalStart, activeDraft.originalEnd, "ghost", "-ghost")}
@@ -471,8 +489,10 @@ export default function PlanningHubCalendarView({
                       ? {
                           canDrag: caps.canMoveTime,
                           canResize: caps.canResize,
-                          onMove: (clientY) => manipulation.beginCalendarMove(item, clientY),
-                          onResize: (clientY) => manipulation.beginCalendarResize(item, clientY),
+                          onMove: (clientX, clientY) =>
+                            manipulation.beginCalendarMove(item, clientX, clientY),
+                          onResize: (edge, clientX, clientY) =>
+                            manipulation.beginCalendarResize(item, edge, clientX, clientY),
                         }
                       : undefined,
                   );

@@ -13,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getVeranstaltungHref } from "@/lib/events/veranstaltung-navigation";
 
 type VeranstaltungCardEvent = {
   id: string;
@@ -96,7 +97,6 @@ const REVIEW_STAGE_BADGE: Record<string, string> = {
 function PublicationTargets({ event }: { event: VeranstaltungCardEvent }) {
   const targets: string[] = [];
   if (event.websiteVisible) targets.push("Website");
-  if (event.infoboardVisible) targets.push("Infoboard");
   if (event.homepageVisible) targets.push("Homepage");
   if (event.wochenplanVisible) targets.push("Wochenplan");
   if (targets.length === 0) return null;
@@ -245,7 +245,7 @@ export default function VeranstaltungCard({
           <div className="flex shrink-0 items-center gap-2">
             {!isArchived && (
               <Link
-                href={`/dashboard/veranstaltungen/${event.id}/edit`}
+                href={getVeranstaltungHref(event.id)}
                 className="fca-button-secondary inline-flex items-center gap-1.5 py-1 text-xs"
               >
                 <Pencil className="h-3.5 w-3.5" />

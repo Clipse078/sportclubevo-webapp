@@ -1,9 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
-import { weekplannerActivityTypeLabel } from "@/lib/planning-hub/item-presenters";
+import {
+  weekplannerActivityTypeLabel,
+  weekplannerTimeColumnLabel,
+  weekplannerTimingDetail,
+} from "@/lib/planning-hub/item-presenters";
 import {
   schedulerDisplayIdentity,
   schedulerResourceCodes,
@@ -13,6 +18,11 @@ import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import { computeResourceOccupancyWindow } from "@/lib/facilities/resource-occupancy-window";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import { activityVisualStyle } from "@/lib/planning-hub/activity-visual-style";
+import { getMatchEndTimeCorrectionHref } from "@/lib/match/match-operational-completeness";
+import {
+  MATCH_END_TIME_ACTION_LABEL,
+  weekplannerMatchRequiresEndTimeAction,
+} from "@/lib/planning-hub/match-operational-presenters";
 
 type PlanningHubListeViewProps = {
   week: WeekplannerWeek;
@@ -21,12 +31,8 @@ type PlanningHubListeViewProps = {
   timezone: string;
   planName?: string | null;
   onItemActivate: (item: WeekplannerItem) => void;
+  canManageMatchSchedule?: boolean;
 };
-
-function formatTimeRange(start: Date, end: Date, locale: string, timeZone: string): string {
-  const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
-  return `${fmt.format(start)}–${fmt.format(end)}`;
-}
 
 function formatDayHeading(dayKey: string, locale: string, timeZone: string): string {
   return new Intl.DateTimeFormat(locale, {
@@ -74,6 +80,7 @@ export default function PlanningHubListeView({
   timezone,
   planName,
   onItemActivate,
+  canManageMatchSchedule = false,
 }: PlanningHubListeViewProps) {
   const filtered = applyPlanningHubFilters(week, urlState);
 
@@ -90,6 +97,7 @@ export default function PlanningHubListeView({
             <ul className="divide-y divide-[var(--border)]/50 rounded-md border border-[var(--border)]/80">
               {day.items.map((item) => {
                 const hasConflict = item.conflicts.length > 0;
+                const requiresEndTime = weekplannerMatchRequiresEndTimeAction(item);
                 const resources = schedulerResourceCodes(item, 4);
                 const dressing = dressingOccupancyShort(item, locale, timezone);
                 const typeLabel =
@@ -109,7 +117,9 @@ export default function PlanningHubListeView({
                       )}
                     >
                       <span className="text-xs tabular-nums text-[var(--text-2)]">
-                        {formatTimeRange(item.startAt, item.endAt, locale, timezone)}
+                        {item.type === "VERANSTALTUNG" && item.allDay
+                          ? weekplannerTimeColumnLabel(item, locale, timezone, day.dayKey)
+                          : weekplannerTimingDetail(item, locale, timezone)}
                       </span>
                       <span className="min-w-0 truncate text-sm font-medium text-[var(--foreground)]">
                         {schedulerDisplayIdentity(item)}
@@ -118,7 +128,9 @@ export default function PlanningHubListeView({
                         )}
                       </span>
                       <span className="min-w-0 truncate text-xs text-[var(--muted)]">
-                        {resources || dressing || "—"}
+                        {item.type === "VERANSTALTUNG" && item.allDay
+                          ? [resources, dressing, "Ganztägig"].filter(Boolean).join(" · ") || "Ganztägig"
+                          : resources || dressing || "—"}
                       </span>
                       <span className="flex items-center justify-end gap-1">
                         {planName && isItemOverridden(item) && (
@@ -129,10 +141,32 @@ export default function PlanningHubListeView({
                             {planName} angepasst
                           </span>
                         )}
+                        {requiresEndTime &&
+                          item.type === "MATCH" &&
+                          (canManageMatchSchedule ? (
+                            <Link
+                              href={getMatchEndTimeCorrectionHref(item.eventId)}
+                              onClick={(event) => event.stopPropagation()}
+                              className="text-[11px] font-semibold text-amber-800/90 hover:underline"
+                              data-testid="planning-hub-end-time-action"
+                            >
+                              {MATCH_END_TIME_ACTION_LABEL}
+                            </Link>
+                          ) : (
+                            <span className="text-[11px] font-semibold text-amber-800/90">
+                              {MATCH_END_TIME_ACTION_LABEL}
+                            </span>
+                          ))}
                         {hasConflict && (
                           <AlertTriangle
                             className="h-3.5 w-3.5 shrink-0 text-amber-600/80"
-                            aria-label="Konflikt"
+                            aria-label={
+                              item.conflicts[0]?.resourceKind === "DRESSING_ROOM"
+                                ? "Garderobenkonflikt"
+                                : item.conflicts[0]?.resourceKind === "PITCH_HALL"
+                                  ? "Spielfeldkonflikt"
+                                  : "Planungskonflikt"
+                            }
                           />
                         )}
                       </span>

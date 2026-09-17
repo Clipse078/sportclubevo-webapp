@@ -4,8 +4,7 @@
  */
 
 import {
-  defaultDaypartForLocalTime,
-  parsePlanningHubCalendarZeitParam,
+  normalizeInvalidCalendarZeit,
   type PlanningHubCalendarZeitParam,
 } from "./planning-dayparts";
 import { buildPlanningHubHref, type PlanningHubUrlState } from "./planner-url";
@@ -17,11 +16,11 @@ export function readCalendarZeitFromSearch(
   const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
   const raw = params.get("zeit");
   if (!raw?.trim()) return undefined;
-  const parsed = parsePlanningHubCalendarZeitParam(raw);
-  if (parsed) return parsed;
-  const now = options?.now ?? new Date();
-  const timeZone = options?.timeZone ?? "Europe/Zurich";
-  return defaultDaypartForLocalTime(now, timeZone);
+  return normalizeInvalidCalendarZeit(
+    raw,
+    options?.now ?? new Date(),
+    options?.timeZone ?? "Europe/Zurich",
+  );
 }
 
 export function mergeCalendarZeitIntoUrlState(
@@ -35,5 +34,7 @@ export function hrefForCalendarZeit(
   base: PlanningHubUrlState,
   calendarZeit: PlanningHubCalendarZeitParam,
 ): string {
-  return buildPlanningHubHref(base, { calendarZeit });
+  const canonical =
+    calendarZeit === "ganz" ? undefined : calendarZeit;
+  return buildPlanningHubHref(base, { calendarZeit: canonical });
 }

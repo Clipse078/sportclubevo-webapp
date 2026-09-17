@@ -15,6 +15,7 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { AddFacilityResourceButton } from "@/components/admin/facilities/AddFacilityResourceButton";
 import { PopoverContent } from "@/components/ui/Popover";
 import type { FacilityType, FacilityResourceType, FacilityStatus } from "@prisma/client";
 
@@ -780,13 +781,7 @@ function FacilityCard({
                 onRefresh={onRefresh}
               />
             ) : (
-              <button
-                onClick={() => setAddingResource(true)}
-                className="mt-3 flex items-center gap-1.5 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-500 transition hover:border-[var(--blue)]/40 hover:bg-[var(--blue-light)] hover:text-[var(--blue)]"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Ressource hinzufügen
-              </button>
+              <AddFacilityResourceButton onClick={() => setAddingResource(true)} />
             )
           ) : null}
         </div>

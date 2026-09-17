@@ -140,7 +140,7 @@ describe("getEffectiveEndAt", () => {
     expect(result.getTime()).toBe(endAt.getTime());
   });
 
-  it("null endAt for MATCH uses 110-minute default duration", () => {
+  it("null endAt for MATCH uses 120-minute legacy publishing fallback", () => {
     const result = getEffectiveEndAt({ startAt: start, endAt: null, type: "MATCH" });
     expect(result.getTime()).toBe(
       start.getTime() + DEFAULT_EVENT_DURATIONS_MINUTES.MATCH * 60_000,
@@ -154,7 +154,7 @@ describe("getEffectiveEndAt", () => {
     );
   });
 
-  it("null endAt for TOURNAMENT uses 240-minute default duration", () => {
+  it("null endAt for TOURNAMENT uses 120-minute default duration", () => {
     const result = getEffectiveEndAt({ startAt: start, endAt: null, type: "TOURNAMENT" });
     expect(result.getTime()).toBe(
       start.getTime() + DEFAULT_EVENT_DURATIONS_MINUTES.TOURNAMENT * 60_000,

@@ -7,6 +7,12 @@ export const CALENDAR_MIN_ACTIVITY_WIDTH_PX = 76;
 /** Below this lane width, overlap cluster aggregates instead of compact strips. */
 export const CALENDAR_AGGREGATE_BELOW_WIDTH_PX = 44;
 
+/**
+ * Ganzer Tag overview — aggregate before lanes shrink below a readable card
+ * (same as {@link CALENDAR_MIN_ACTIVITY_WIDTH_PX}). Avoids compact sliver strips.
+ */
+export const CALENDAR_FULL_DAY_AGGREGATE_BELOW_WIDTH_PX = CALENDAR_MIN_ACTIVITY_WIDTH_PX;
+
 /** 02D daypart viewport — slightly higher thresholds so identities show more often. */
 export const CALENDAR_DAYPART_AGGREGATE_BELOW_WIDTH_PX = 38;
 export const CALENDAR_DAYPART_MIN_ACTIVITY_WIDTH_PX = 68;

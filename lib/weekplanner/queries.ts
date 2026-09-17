@@ -76,7 +76,16 @@ import { prisma } from "@/lib/db/prisma";
 import { isMeaningfulEventInterval } from "@/lib/facilities/resource-occupancy-window";
 import { getWochenplanPlanBaselineMode, type WochenplanPlanBaselineMode } from "@/lib/wochenplan/plan-baseline";
 import { listTrainingSessions } from "@/lib/training/session-generation-service";
-import { getTenantDressingRoomOccupancyPresetsCached } from "@/lib/server/request-cache";
+import {
+  matchTimingToOperationalInput,
+  resolveMatchOperationalInterval,
+} from "@/lib/match/resolve-match-operational-interval";
+import type { TenantMatchOperationalPolicyResolved } from "@/lib/match/tenant-operational-policy-service";
+import {
+  getFacilitiesForTenantCached,
+  getTenantDressingRoomOccupancyPresetsCached,
+  getTenantMatchOperationalPolicyCached,
+} from "@/lib/server/request-cache";
 import { enrichWeekplannerItemDressingRoomOccupancy } from "@/lib/dressing-room-occupancy/weekplanner-enrichment";
 import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
 import {
@@ -88,6 +97,11 @@ import {
   type MatchcenterQueryDatabase,
 } from "@/lib/matchcenter/query-service";
 import { listTournaments } from "@/lib/tournaments/tournament-service";
+import {
+  createAdminServerTimer,
+  isScePerfTimingEnabled,
+  logAdminServerTiming,
+} from "@/lib/planning-hub/admin-server-timing";
 import { formatWeekNumberLabel, formatWeekRangeLabel } from "./date";
 import { buildWeekplannerWeek } from "./view-model";
 import { planOverrideKey, planTimeOverrideKey } from "./plan-override-key";
@@ -135,6 +149,7 @@ type FacilityResourceRow = {
   id: string;
   code: string;
   name: string;
+  type?: "FULL_PITCH" | "HALF_PITCH" | "DRESSING_ROOM" | "OTHER";
   facility: { id: string; name: string };
 };
 
@@ -151,6 +166,7 @@ function toResourceRef(
     code: row.code,
     name: row.name,
     facilityName: row.facility.name,
+    resourceType: row.type,
     occupancyBeforeMinutes: occupancy.occupancyBeforeMinutes,
     occupancyAfterMinutes: occupancy.occupancyAfterMinutes,
   };
@@ -159,16 +175,23 @@ function toResourceRef(
 async function findFacilityResourceCodeMap(
   tenantId: string,
 ): Promise<Map<string, WeekplannerResourceRef>> {
-  const resources = await prisma.facilityResource.findMany({
-    where: {
-      tenantId,
-      status: { not: "ARCHIVED" },
-      facility: { status: { not: "ARCHIVED" } },
-    },
-    select: { id: true, code: true, name: true, facility: { select: { id: true, name: true } } },
-  });
-
-  return new Map(resources.map((resource) => [resource.code, toResourceRef(resource)]));
+  const facilities = await getFacilitiesForTenantCached(tenantId);
+  const map = new Map<string, WeekplannerResourceRef>();
+  for (const facility of facilities) {
+    for (const resource of facility.resources) {
+      map.set(
+        resource.code,
+        toResourceRef({
+          id: resource.id,
+          code: resource.code,
+          name: resource.name,
+          type: resource.type,
+          facility: { id: facility.id, name: facility.name },
+        }),
+      );
+    }
+  }
+  return map;
 }
 
 // ── WEEKPLANNER-01B: plan override resolution ───────────────────────────────
@@ -357,6 +380,7 @@ function toWeekplannerResourceRefs(
     code: row.facilityResource.code,
     name: row.facilityResource.name,
     facilityName: row.facilityResource.facility.name,
+    resourceType: row.facilityResource.type as WeekplannerResourceRef["resourceType"],
     occupancyBeforeMinutes: 0,
     occupancyAfterMinutes: 0,
   }));
@@ -564,9 +588,15 @@ async function findWeekplannerHomeMatches(
   overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
   timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
   tenantPresets: TenantDressingRoomOccupancyPresets,
+  tenantMatchPolicy: TenantMatchOperationalPolicyResolved,
 ): Promise<WeekplannerMatchItem[]> {
   const database = prisma as unknown as MatchcenterQueryDatabase;
-  const matches = await listMatchcenterMatches(database, { tenantId, from, to });
+  const matches = await listMatchcenterMatches(database, {
+    tenantId,
+    from,
+    to,
+    matchOperationalPolicy: tenantMatchPolicy,
+  });
 
   const homeMatches = matches.filter(
     (match) => !isAwayHomeAway(match.homeAway) && !isCancelled(match.status),
@@ -602,9 +632,16 @@ async function findWeekplannerHomeMatches(
       homeRoomRef ? [homeRoomRef] : [],
     );
     const canonicalStartAt = new Date(match.startAt);
-    const rawEndAt = match.endAt ? new Date(match.endAt) : null;
-    const canonicalEndAt =
-      rawEndAt && isMeaningfulEventInterval(canonicalStartAt, rawEndAt) ? rawEndAt : canonicalStartAt;
+    const canonicalEndAt = resolveMatchOperationalInterval(
+      matchTimingToOperationalInput(
+        {
+          startAt: match.startAt,
+          endAt: match.endAt,
+          operationalEndAtOverride: match.operationalEndAtOverride,
+        },
+        tenantMatchPolicy,
+      ),
+    ).endAt;
     const time = resolveEffectiveTime(
       timeOverridesByKey,
       planTimeOverrideKey("MATCH", match.id),
@@ -797,6 +834,7 @@ async function findWeekplannerVeranstaltungen(
       location: true,
       startAt: true,
       endAt: true,
+      allDay: true,
       teamSeasonId: true,
       pitchCode: true,
       homeDressingRoomCode: true,
@@ -806,7 +844,11 @@ async function findWeekplannerVeranstaltungen(
   });
 
   return events.map((event) => {
-    const endAt = event.endAt ?? new Date(event.startAt.getTime() + 60 * 60_000);
+    const endAt =
+      event.endAt ??
+      (event.allDay
+        ? new Date(event.startAt.getTime() + 24 * 60 * 60_000)
+        : new Date(event.startAt.getTime() + 60 * 60_000));
     const pitchRef = event.pitchCode ? resourceByCode.get(event.pitchCode) : undefined;
     const roomRef = event.homeDressingRoomCode
       ? resourceByCode.get(event.homeDressingRoomCode)
@@ -836,6 +878,7 @@ async function findWeekplannerVeranstaltungen(
       eventId: event.id,
       location: event.location,
       teamSeasonId: event.teamSeasonId,
+      allDay: Boolean(event.allDay),
       dressingRoomOccupancyMode: "DEFAULT",
       dressingRoomOccupancyBeforeMinutes: null,
       dressingRoomOccupancyAfterMinutes: null,
@@ -865,14 +908,18 @@ export async function getWeekplannerWeek(
   window: WeekplannerWindow,
   planId?: string,
 ): Promise<WeekplannerWeek> {
-  const [resourceByCode, overridesByKey, timeOverridesByKey, baselineMode, tenantPresets] =
+  const perfTimer = isScePerfTimingEnabled() ? createAdminServerTimer("weekplanner/data") : null;
+
+  const [resourceByCode, overridesByKey, timeOverridesByKey, baselineMode, tenantPresets, tenantMatchPolicy] =
     await Promise.all([
       findFacilityResourceCodeMap(tenantId),
       findWeekplannerPlanOverrides(tenantId, planId),
       findWeekplannerPlanTimeOverrides(tenantId, planId),
       resolveWeekplannerPlanBaselineMode(tenantId, planId),
       getTenantDressingRoomOccupancyPresetsCached(tenantId),
+      getTenantMatchOperationalPolicyCached(tenantId),
     ]);
+  perfTimer?.mark("prefetch-policy-allocations");
 
   const [trainingItems, matchItems, tournamentItems, veranstaltungItems] = await Promise.all([
     findWeekplannerTrainingItems(
@@ -890,6 +937,7 @@ export async function getWeekplannerWeek(
       overridesByKey,
       timeOverridesByKey,
       tenantPresets,
+      tenantMatchPolicy,
     ),
     findWeekplannerHomeTournaments(
       tenantId,
@@ -901,6 +949,11 @@ export async function getWeekplannerWeek(
     ),
     findWeekplannerVeranstaltungen(tenantId, window.from, window.to, resourceByCode),
   ]);
+  perfTimer?.mark("activity-sources-parallel");
+  perfTimer?.mark(`trainings:${trainingItems.length}`);
+  perfTimer?.mark(`matches:${matchItems.length}`);
+  perfTimer?.mark(`tournaments:${tournamentItems.length}`);
+  perfTimer?.mark(`events:${veranstaltungItems.length}`);
 
   let items: WeekplannerItem[] = [
     ...trainingItems,
@@ -914,7 +967,7 @@ export async function getWeekplannerWeek(
     items = filterItemsForEmptyBaseline(items, activitiesWithOverrides);
   }
 
-  return buildWeekplannerWeek({
+  const week = buildWeekplannerWeek({
     items,
     days: window.days,
     weekNumberLabel: formatWeekNumberLabel(window.days),
@@ -923,6 +976,13 @@ export async function getWeekplannerWeek(
     previousParam: window.previousParam,
     nextParam: window.nextParam,
   });
+  perfTimer?.mark("week-model-conflicts");
+
+  if (perfTimer) {
+    logAdminServerTiming(perfTimer.finish());
+  }
+
+  return week;
 }
 
 /**

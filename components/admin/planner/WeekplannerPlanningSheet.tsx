@@ -22,6 +22,7 @@
 
 import { useId, useMemo, useState } from "react";
 import { AlertCircle, Check, Loader2, Shield, Dumbbell, Trophy, Calendar, Clock } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { Sheet } from "@/components/ui/Sheet";
@@ -33,6 +34,12 @@ import type { WeekplannerItem } from "@/lib/weekplanner/types";
 import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
 import type { FacilityResourceType } from "@prisma/client";
 import DressingRoomOccupancyEditor from "@/components/admin/planning-hub/DressingRoomOccupancyEditor";
+import {
+  getMatchEndTimeCorrectionHref,
+  matchRequiresEndTimeAction,
+  MATCH_END_TIME_ACTION_LABEL,
+  MATCH_END_TIME_MISSING_COPY,
+} from "@/lib/match/match-operational-completeness";
 import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -589,6 +596,22 @@ function MatchEditorContent({
     >
       <div data-testid="weekplanner-canonical-editor" className="space-y-6">
         <EditorHeader item={item} timezone={timezone} />
+
+        {matchRequiresEndTimeAction({
+          startAt: item.canonicalStartAt,
+          endAt: item.canonicalEndAt,
+        }) ? (
+          <div className="rounded-lg border border-amber-200/80 bg-amber-50/80 px-3 py-2.5 text-sm text-amber-900">
+            <p className="font-semibold">{MATCH_END_TIME_ACTION_LABEL}</p>
+            <p className="mt-0.5 text-xs text-amber-800/90">{MATCH_END_TIME_MISSING_COPY}</p>
+            <Link
+              href={getMatchEndTimeCorrectionHref(item.eventId)}
+              className="mt-2 inline-block text-xs font-semibold text-amber-900 hover:underline"
+            >
+              {MATCH_END_TIME_ACTION_LABEL}
+            </Link>
+          </div>
+        ) : null}
 
         {error && (
           <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">

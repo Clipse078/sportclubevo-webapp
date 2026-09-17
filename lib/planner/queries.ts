@@ -1,5 +1,10 @@
 ﻿import { EventSource, EventType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import {
+  matchTimingToOperationalInput,
+  resolveMatchOperationalInterval,
+} from "@/lib/match/resolve-match-operational-interval";
+import { getTenantMatchOperationalPolicy } from "@/lib/match/tenant-operational-policy-service";
 import { getDayWindow, getWeekWindow } from "@/lib/planner/date-utils";
 import { getSeasonOptionsData } from "@/lib/seasons/queries";
 import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
@@ -200,12 +205,7 @@ export async function getPlannerCreateFormData(args?: {
   };
 }
 
-export async function getPlannerEditFormData(
-  eventId: string,
-  args?: {
-    selectedType?: string | null;
-  },
-) {
+export async function getPlannerEditFormData(eventId: string) {
   const tenantId = await requireActiveTenantId();
   const event = await prisma.event.findFirst({
     where: {
@@ -223,6 +223,7 @@ export async function getPlannerEditFormData(
       location: true,
       startAt: true,
       endAt: true,
+      operationalEndAtOverride: true,
       opponentName: true,
       organizerName: true,
       competitionLabel: true,
@@ -234,9 +235,15 @@ export async function getPlannerEditFormData(
       trainingsplanVisible: true,
       teamPageVisible: true,
       teamId: true,
+      team: {
+        select: {
+          name: true,
+        },
+      },
       season: {
         select: {
           key: true,
+          name: true,
         },
       },
     },
@@ -253,23 +260,37 @@ export async function getPlannerEditFormData(
     return null;
   }
 
-  const selectedType =
-    args?.selectedType &&
-    Object.values(EventType).includes(args.selectedType as EventType)
-      ? (args.selectedType as EventType)
-      : event.type;
-
   const base = await getPlannerCreateFormData({
     selectedSeasonKey: event.season.key,
-    selectedType,
+    selectedType: event.type,
   });
+
+  const matchOperationalPolicy =
+    event.type === EventType.MATCH
+      ? await getTenantMatchOperationalPolicy(tenantId)
+      : null;
+  const matchOperationalInterval =
+    event.type === EventType.MATCH
+      ? resolveMatchOperationalInterval(
+          matchTimingToOperationalInput(
+            {
+              startAt: event.startAt,
+              endAt: event.endAt,
+              operationalEndAtOverride: event.operationalEndAtOverride,
+            },
+            matchOperationalPolicy ?? undefined,
+          ),
+        )
+      : null;
 
   return {
     ...base,
     eventId: event.id,
     selectedSeasonId: event.seasonId ?? "",
     selectedSeasonKey: event.season.key,
-    selectedType,
+    selectedType: event.type,
+    teamName: event.team?.name ?? null,
+    seasonName: event.season.name,
     defaults: {
       title: event.title,
       source: event.source,
@@ -277,6 +298,7 @@ export async function getPlannerEditFormData(
       location: event.location ?? "",
       startAt: toDateTimeLocalValue(event.startAt),
       endAt: toDateTimeLocalValue(event.endAt),
+      operationalEndAtOverride: toDateTimeLocalValue(event.operationalEndAtOverride),
       opponentName: event.opponentName ?? "",
       organizerName: event.organizerName ?? "",
       competitionLabel: event.competitionLabel ?? "",
@@ -289,6 +311,14 @@ export async function getPlannerEditFormData(
       trainingsplanVisible: event.trainingsplanVisible,
       teamPageVisible: event.teamPageVisible,
     },
+    matchOperationalInterval: matchOperationalInterval
+      ? {
+          endSource: matchOperationalInterval.endSource,
+          durationSource: matchOperationalInterval.durationSource,
+          durationMinutes: matchOperationalInterval.durationMinutes,
+          operationalEndAtIso: matchOperationalInterval.endAt.toISOString(),
+        }
+      : null,
   };
 }
 

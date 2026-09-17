@@ -38,6 +38,13 @@ vi.mock("@/lib/tournaments/tournament-service", () => ({
   listTournaments: mocks.listTournaments,
 }));
 
+vi.mock("@/lib/server/request-cache", () => ({
+  getTenantMatchOperationalPolicyCached: vi.fn().mockResolvedValue({
+    defaultMatchDurationMinutes: 120,
+    isClubConfigured: false,
+  }),
+}));
+
 import {
   findWeekplannerReplacedActivities,
   findWeekplannerPlanConflicts,

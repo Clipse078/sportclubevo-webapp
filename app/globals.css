@@ -469,6 +469,18 @@ button {
   cursor: not-allowed;
 }
 
+/* SCE-OPS-01C — hide native number spinners on duration/minutes fields */
+.fca-minutes-input::-webkit-outer-spin-button,
+.fca-minutes-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.fca-minutes-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 /* Chromium/WebKit autofill paints a light surface unless overridden in-place. */
 .fca-input:-webkit-autofill,
 .fca-input:-webkit-autofill:hover,
@@ -847,6 +859,15 @@ button {
 }
 
 /* Success motion — one-shot check draw/scale */
+@keyframes plannerContentReveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes sce-success-in {
   from {
     opacity: 0;

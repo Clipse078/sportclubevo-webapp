@@ -44,6 +44,7 @@ import type {
   WeekplannerMatchItem,
   WeekplannerTournamentItem,
   WeekplannerTrainingItem,
+  WeekplannerVeranstaltungItem,
 } from "@/lib/weekplanner/types";
 import { evaluatePublication } from "../../policy/publication-policy";
 
@@ -130,9 +131,40 @@ function tournamentItem(overrides: Partial<WeekplannerTournamentItem> = {}): Wee
   };
 }
 
+function veranstaltungItem(
+  overrides: Partial<WeekplannerVeranstaltungItem> = {},
+): WeekplannerVeranstaltungItem {
+  return {
+    id: "veranstaltung:event-v1",
+    tenantId: TENANT_A,
+    type: "VERANSTALTUNG",
+    startAt: new Date("2026-08-10T10:00:00.000Z"),
+    endAt: new Date("2026-08-10T12:00:00.000Z"),
+    canonicalStartAt: new Date("2026-08-10T10:00:00.000Z"),
+    canonicalEndAt: new Date("2026-08-10T12:00:00.000Z"),
+    timeOverridden: false,
+    title: "Clubfest",
+    teamNames: [],
+    pitchAllocations: [],
+    dressingRoomAllocations: [],
+    canonicalPitchAllocations: [],
+    canonicalDressingRoomAllocations: [],
+    pitchOverridden: false,
+    dressingRoomOverridden: false,
+    conflicts: [],
+    eventId: "event-v1",
+    location: "Clubhaus",
+    teamSeasonId: null,
+    allDay: false,
+    ...overrides,
+  };
+}
+
 function eventPolicyRow(overrides: Partial<CanonicalEventPolicyRow> = {}): CanonicalEventPolicyRow {
   return {
     id: "event-1",
+    endAt: null,
+    operationalEndAtOverride: null,
     status: "SCHEDULED",
     infoboardVisible: true,
     websiteVisible: true,
@@ -425,6 +457,21 @@ describe("MATCH / TOURNAMENT publication-policy metadata pass-through", () => {
     expect(event.type).toBe("TOURNAMENT");
     const decision = evaluatePublication(event, "INFOBOARD_SCREEN_1", TENANT_A);
     expect(decision).toEqual({ eligible: true, reason: "ELIGIBLE" });
+  });
+
+  it("11b. VERANSTALTUNG maps to canonical OTHER without throwing", async () => {
+    mocks.getWeekplannerDay.mockResolvedValue(makeDay([veranstaltungItem()], "2026-08-10"));
+    const database = makeDatabase([
+      eventPolicyRow({ id: "event-v1", infoboardVisible: false, websiteVisible: true }),
+    ]);
+    const loader = createCanonicalInfoboardSourceLoader(database);
+
+    const [event] = await loader({ tenantId: TENANT_A, dateFrom: DATE_FROM, dateTo: DATE_FROM });
+    expect(event.type).toBe("OTHER");
+    expect(event.id).toBe("event-v1");
+    expect(event.infoboardVisible).toBe(true);
+    const decision = evaluatePublication(event, "INFOBOARD_SCREEN_2", TENANT_A);
+    expect(decision.eligible).toBe(true);
   });
 
   it("12a. a match with infoboardVisible=false is excluded (hidden activity)", async () => {

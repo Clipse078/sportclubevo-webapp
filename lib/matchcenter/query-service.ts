@@ -1,3 +1,8 @@
+import {
+  matchTimingToOperationalInput,
+  resolveMatchOperationalInterval,
+} from "@/lib/match/resolve-match-operational-interval";
+import type { TenantMatchOperationalPolicyResolved } from "@/lib/match/tenant-operational-policy-service";
 import { resolveLongTeamName } from "@/lib/teams/team-naming";
 import { resolveExternalClubLogoUrl, resolveExternalTeamLogoUrl } from "@/lib/club-directory/logo";
 import type {
@@ -101,6 +106,7 @@ interface MatchcenterEventRecord {
   location: string | null;
   startAt: Date;
   endAt: Date | null;
+  operationalEndAtOverride: Date | null;
   externalSource: string | null;
   externalSourceId: string | null;
   lastSyncedAt: Date | null;
@@ -473,6 +479,7 @@ function resolveSides(event: MatchcenterEventRecord): {
 
 function toSummary(
   event: MatchcenterEventRecord,
+  matchOperationalPolicy?: TenantMatchOperationalPolicyResolved,
 ): MatchcenterMatchSummary {
   if (event.tenantId === null) {
     throw new Error(
@@ -482,6 +489,16 @@ function toSummary(
 
   const mapping = event.matchExternalMapping;
   const sides = resolveSides(event);
+  const operationalInterval = resolveMatchOperationalInterval(
+    matchTimingToOperationalInput(
+      {
+        startAt: event.startAt,
+        endAt: event.endAt,
+        operationalEndAtOverride: event.operationalEndAtOverride,
+      },
+      matchOperationalPolicy,
+    ),
+  );
 
   return {
     id: event.id,
@@ -494,6 +511,8 @@ function toSummary(
     status: event.status,
     startAt: event.startAt,
     endAt: event.endAt,
+    operationalEndAtOverride: event.operationalEndAtOverride,
+    operationalEndAt: operationalInterval.endAt,
     location: event.location,
     competitionLabel: event.competitionLabel,
     homeAway: event.homeAway,
@@ -551,8 +570,9 @@ function toSummary(
 
 function toDetail(
   event: MatchcenterEventRecord,
+  matchOperationalPolicy?: TenantMatchOperationalPolicyResolved,
 ): MatchcenterMatchDetail {
-  const summary = toSummary(event);
+  const summary = toSummary(event, matchOperationalPolicy);
   const mapping = event.matchExternalMapping;
 
   return {
@@ -613,12 +633,14 @@ export async function listMatchcenterMatches(
     take: window.limit,
   });
 
-  return events.map(toSummary);
+  return events.map((event) => toSummary(event, input.matchOperationalPolicy));
 }
 
 export async function getMatchcenterMatchDetail(
   database: MatchcenterQueryDatabase,
-  input: MatchcenterDetailInput,
+  input: MatchcenterDetailInput & {
+    matchOperationalPolicy?: TenantMatchOperationalPolicyResolved;
+  },
 ): Promise<MatchcenterMatchDetail | null> {
   const tenantId = requireIdentifier(
     input.tenantId,
@@ -638,5 +660,5 @@ export async function getMatchcenterMatchDetail(
     include: matchcenterRelations,
   });
 
-  return event === null ? null : toDetail(event);
+  return event === null ? null : toDetail(event, input.matchOperationalPolicy);
 }

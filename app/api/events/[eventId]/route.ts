@@ -38,6 +38,11 @@ import {
   ClubEventNotFoundError,
   ClubEventValidationError,
 } from "@/lib/events/club-events-service";
+import {
+  ClubEventScheduleError,
+  parseClubEventScheduleFromApiBody,
+} from "@/lib/events/club-event-api-scheduling";
+import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -171,18 +176,6 @@ export async function PATCH(
   }
 
   // Core field update — remains under EVENTS_MANAGE
-  const startAtRaw =
-    raw.startAt !== undefined && raw.startAt !== null && raw.startAt !== ""
-      ? String(raw.startAt)
-      : undefined;
-
-  const endAtRaw =
-    raw.endAt === null
-      ? null
-      : raw.endAt !== undefined && raw.endAt !== ""
-        ? String(raw.endAt)
-        : undefined;
-
   const input: Parameters<typeof updateClubEvent>[2] = {};
 
   if (raw.title !== undefined) input.title = String(raw.title ?? "");
@@ -191,8 +184,77 @@ export async function PATCH(
       raw.description === null ? null : String(raw.description) || null;
   if (raw.location !== undefined)
     input.location = raw.location === null ? null : String(raw.location) || null;
-  if (startAtRaw !== undefined) input.startAt = new Date(startAtRaw);
-  if (endAtRaw !== undefined) input.endAt = endAtRaw === null ? null : new Date(endAtRaw as string);
+
+  const scheduleTouched =
+    raw.allDay !== undefined ||
+    raw.startDate !== undefined ||
+    raw.endDate !== undefined ||
+    raw.startTime !== undefined ||
+    raw.endTime !== undefined ||
+    raw.startAt !== undefined ||
+    raw.endAt !== undefined;
+
+  if (scheduleTouched) {
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { timezone: true },
+    });
+    const timeZone = resolveTenantEventTimezone(tenant?.timezone);
+    const existing = await getClubEvent(tenantId, eventId);
+    if (!existing) {
+      return NextResponse.json(
+        { error: "Veranstaltung nicht gefunden." },
+        { status: 404 },
+      );
+    }
+
+    try {
+      const schedule = parseClubEventScheduleFromApiBody(
+        {
+          allDay: raw.allDay !== undefined ? Boolean(raw.allDay) : undefined,
+          startAt:
+            raw.startAt !== undefined && raw.startAt !== null && raw.startAt !== ""
+              ? String(raw.startAt)
+              : undefined,
+          endAt:
+            raw.endAt === null
+              ? null
+              : raw.endAt !== undefined && raw.endAt !== ""
+                ? String(raw.endAt)
+                : undefined,
+          startDate:
+            raw.startDate !== undefined && raw.startDate !== null
+              ? String(raw.startDate)
+              : undefined,
+          endDate:
+            raw.endDate !== undefined && raw.endDate !== null
+              ? String(raw.endDate)
+              : undefined,
+          startTime:
+            raw.startTime !== undefined && raw.startTime !== null
+              ? String(raw.startTime)
+              : undefined,
+          endTime:
+            raw.endTime !== undefined && raw.endTime !== null
+              ? String(raw.endTime)
+              : undefined,
+        },
+        timeZone,
+        existing,
+      );
+      input.startAt = schedule.startAt;
+      input.endAt = schedule.endAt;
+      input.allDay = schedule.allDay;
+    } catch (err) {
+      if (err instanceof ClubEventScheduleError) {
+        return NextResponse.json(
+          { error: err.message, field: err.field },
+          { status: 400 },
+        );
+      }
+      throw err;
+    }
+  }
   if (raw.organizerName !== undefined)
     input.organizerName =
       raw.organizerName === null ? null : String(raw.organizerName) || null;

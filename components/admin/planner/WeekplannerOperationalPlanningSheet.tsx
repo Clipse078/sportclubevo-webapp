@@ -739,8 +739,8 @@ function MatchOperationalEditor({
           {!timesValid && endTime ? (
             <p className="text-xs text-amber-700">Bitte eine gültige Endzeit angeben (nach Beginn).</p>
           ) : null}
-          {!endTime ? (
-            <p className="text-xs text-[var(--muted)]">Endzeit für die operative Spielplanung festlegen.</p>
+          {!endTime || !timesValid ? (
+            <p className="text-xs font-medium text-amber-800/90">Endzeit setzen</p>
           ) : null}
         </div>
 

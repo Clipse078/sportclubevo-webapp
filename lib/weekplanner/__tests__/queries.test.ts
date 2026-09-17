@@ -19,6 +19,12 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+const cacheMocks = vi.hoisted(() => ({
+  getFacilitiesForTenantCached: vi.fn(),
+  getTenantDressingRoomOccupancyPresetsCached: vi.fn(),
+  getTenantMatchOperationalPolicyCached: vi.fn(),
+}));
+
 const mocks = vi.hoisted(() => ({
   facilityResourceFindMany: vi.fn(),
   trainingAllocationFindMany: vi.fn(),
@@ -28,6 +34,14 @@ const mocks = vi.hoisted(() => ({
   weekplannerPlanFindFirst: vi.fn(),
   wochenplanPlanFindFirst: vi.fn(),
   tenantDressingRoomOccupancyPresetFindUnique: vi.fn(),
+  tenantFindFirst: vi.fn(),
+  externalClubFindMany: vi.fn(),
+}));
+
+vi.mock("@/lib/server/request-cache", () => ({
+  getFacilitiesForTenantCached: cacheMocks.getFacilitiesForTenantCached,
+  getTenantDressingRoomOccupancyPresetsCached: cacheMocks.getTenantDressingRoomOccupancyPresetsCached,
+  getTenantMatchOperationalPolicyCached: cacheMocks.getTenantMatchOperationalPolicyCached,
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -40,6 +54,8 @@ vi.mock("@/lib/db/prisma", () => ({
     weekplannerPlan: { findFirst: mocks.weekplannerPlanFindFirst },
     wochenplanPlan: { findFirst: mocks.wochenplanPlanFindFirst },
     tenantDressingRoomOccupancyPreset: { findUnique: mocks.tenantDressingRoomOccupancyPresetFindUnique },
+    tenant: { findFirst: mocks.tenantFindFirst },
+    externalClub: { findMany: mocks.externalClubFindMany },
   },
 }));
 
@@ -229,8 +245,49 @@ function tournamentEventRow(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function facilitiesFixture() {
+  return [
+    {
+      id: "fac-pitch",
+      name: PITCH_RESOURCE.facility.name,
+      resources: [
+        {
+          id: PITCH_RESOURCE.id,
+          code: PITCH_RESOURCE.code,
+          name: PITCH_RESOURCE.name,
+          status: "ACTIVE",
+        },
+      ],
+    },
+    {
+      id: "fac-rooms",
+      name: HOME_ROOM_RESOURCE.facility.name,
+      resources: [
+        {
+          id: HOME_ROOM_RESOURCE.id,
+          code: HOME_ROOM_RESOURCE.code,
+          name: HOME_ROOM_RESOURCE.name,
+          status: "ACTIVE",
+        },
+        {
+          id: AWAY_ROOM_RESOURCE.id,
+          code: AWAY_ROOM_RESOURCE.code,
+          name: AWAY_ROOM_RESOURCE.name,
+          status: "ACTIVE",
+        },
+      ],
+    },
+  ];
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
+  cacheMocks.getFacilitiesForTenantCached.mockResolvedValue(facilitiesFixture());
+  cacheMocks.getTenantDressingRoomOccupancyPresetsCached.mockResolvedValue(null);
+  cacheMocks.getTenantMatchOperationalPolicyCached.mockResolvedValue({
+    defaultMatchDurationMinutes: 120,
+    isClubConfigured: false,
+  });
   mocks.facilityResourceFindMany.mockResolvedValue([PITCH_RESOURCE, HOME_ROOM_RESOURCE, AWAY_ROOM_RESOURCE]);
   mocks.trainingAllocationFindMany.mockResolvedValue([]);
   mocks.trainingSessionAllocationFindMany.mockResolvedValue([]);
@@ -242,6 +299,8 @@ beforeEach(() => {
   mocks.weekplannerPlanFindFirst.mockResolvedValue({ wochenplanPlanId: null });
   mocks.wochenplanPlanFindFirst.mockResolvedValue(null);
   mocks.tenantDressingRoomOccupancyPresetFindUnique.mockResolvedValue(null);
+  mocks.tenantFindFirst.mockResolvedValue({ name: "FC Allschwil", logoUrl: null });
+  mocks.externalClubFindMany.mockResolvedValue([]);
 });
 
 describe("getWeekplannerWeek — TrainingSession", () => {
@@ -428,9 +487,7 @@ describe("getWeekplannerWeek — tenant isolation", () => {
 
     await getWeekplannerWeek(TENANT_A, WEEK_WINDOW);
 
-    expect(mocks.facilityResourceFindMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ tenantId: TENANT_A }) }),
-    );
+    expect(cacheMocks.getFacilitiesForTenantCached).toHaveBeenCalledWith(TENANT_A);
     expect(mocks.trainingSessionFindMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ tenantId: TENANT_A }) }),
     );
@@ -450,5 +507,45 @@ describe("getWeekplannerWeek — tenant isolation", () => {
     expect(week.param).toBe(WEEK_WINDOW.param);
     expect(week.previousParam).toBe(WEEK_WINDOW.previousParam);
     expect(week.nextParam).toBe(WEEK_WINDOW.nextParam);
+  });
+});
+
+describe("getWeekplannerWeek — Veranstaltung (SCE-EVENTS-01C)", () => {
+  it("loads OTHER events with one bounded tenant/week query (no public feed)", async () => {
+    mocks.eventFindMany.mockImplementation((args: { where?: { type?: string } }) => {
+      if (args.where?.type === "OTHER") {
+        return Promise.resolve([
+          {
+            id: "evt-other-1",
+            title: "Sommerfest",
+            location: "Clubhaus",
+            startAt: new Date("2026-08-12T10:00:00.000Z"),
+            endAt: new Date("2026-08-12T18:00:00.000Z"),
+            allDay: false,
+            teamSeasonId: null,
+            pitchCode: null,
+            homeDressingRoomCode: null,
+            teamSeason: null,
+          },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
+
+    await getWeekplannerWeek(TENANT_A, WEEK_WINDOW);
+
+    const otherCalls = mocks.eventFindMany.mock.calls.filter(
+      (call) => call[0]?.where?.type === "OTHER",
+    );
+    expect(otherCalls).toHaveLength(1);
+    expect(otherCalls[0]![0]).toEqual(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          tenantId: TENANT_A,
+          type: "OTHER",
+          startAt: expect.objectContaining({ lt: WEEK_WINDOW.to }),
+        }),
+      }),
+    );
   });
 });

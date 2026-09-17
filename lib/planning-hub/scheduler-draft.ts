@@ -2,6 +2,9 @@ import type { WeekplannerItem } from "@/lib/weekplanner/types";
 
 export type SchedulerManipulationType = "move" | "resize" | "combined";
 
+/** Whether draft interval fields refer to activity time or dressing occupancy. */
+export type SchedulerTimeTarget = "activity" | "resourceOccupancy";
+
 export type SchedulerDraftChange = {
   itemId: string;
   segmentId?: string;
@@ -12,6 +15,8 @@ export type SchedulerDraftChange = {
   originalResourceId?: string;
   proposedResourceId?: string;
   manipulationType: SchedulerManipulationType;
+  /** Defaults to activity for Kalender / pitch rows. */
+  timeTarget?: SchedulerTimeTarget;
   item: WeekplannerItem;
 };
 

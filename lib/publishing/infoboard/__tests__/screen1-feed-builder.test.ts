@@ -215,13 +215,16 @@ describe("buildInfoboardScreen1Feed — publication policy integration", () => {
     expect(all.some((e) => e.id === tournament.id)).toBe(true);
   });
 
-  it("excludes OTHER type events", async () => {
-    // OTHER is not in the allowed infoboard types
-    const other = makeEvent({ type: "OTHER" as Screen1SourceEvent["type"] });
+  it("includes scheduled OTHER (Veranstaltung) events", async () => {
+    const other = makeEvent({
+      type: "OTHER" as Screen1SourceEvent["type"],
+      infoboardVisible: false,
+      homeAway: null,
+    });
     const loader = makeLoader([other as Screen1SourceEvent]);
     const feed = await buildInfoboardScreen1Feed(loader, makeInput());
     const all = [...feed.current, ...feed.next, ...feed.later];
-    expect(all.some((e) => e.id === other.id)).toBe(false);
+    expect(all.some((e) => e.id === other.id)).toBe(true);
   });
 
   it("excludes DRAFT status events", async () => {

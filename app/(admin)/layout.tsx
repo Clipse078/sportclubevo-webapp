@@ -8,7 +8,7 @@ import AppTopNav from "@/components/admin/layout/AppTopNav";
 import StopImpersonationButton from "@/components/admin/layout/StopImpersonationButton";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { generateTenantCssVars } from "@/lib/tenant-runtime/theme";
-import { getPersonProfileByUserId } from "@/lib/people/queries";
+import { getPersonProfileByUserIdCached } from "@/lib/server/request-cache";
 import { resolveAccountIdentityName } from "@/lib/people/identity";
 import { resolveWorkspaceContextFromSessionUser } from "@/lib/workspace/workspace-context";
 
@@ -28,7 +28,10 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   // User.tenantId column). generateTenantCssVars() applies PLATFORM_BRANDING
   // defaults when null, so the layout is always safe even for platform-only
   // administrators with no active tenant.
-  const ctx = await getActiveTenant();
+  const [ctx, linkedPersonProfile] = await Promise.all([
+    getActiveTenant(),
+    getPersonProfileByUserIdCached(session.user.id),
+  ]);
   const tenantCssVars = generateTenantCssVars(ctx);
 
   // DASHBOARD-SHELL-UX-01-C2: the sidebar footer identity (directly above
@@ -39,7 +42,6 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   // (Person.userId, ADMIN-MASTERDATA-UX-01), same relationship already used
   // for the dashboard greeting. See lib/people/identity.ts for the fallback
   // rule.
-  const linkedPersonProfile = await getPersonProfileByUserId(session.user.id);
   const shellIdentity = resolveAccountIdentityName({
     linkedPerson: linkedPersonProfile,
     sessionFirstName: session.user.firstName,

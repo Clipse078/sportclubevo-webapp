@@ -6,6 +6,7 @@ import type { ManipulationConflictPreview } from "@/lib/planning-hub/manipulatio
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { SchedulerDraftChange } from "@/lib/planning-hub/scheduler-draft";
 import { weekplannerActivityTypeLabel, weekplannerPrimaryLabel } from "@/lib/planning-hub/item-presenters";
+import { isoToLocalTime } from "@/lib/planning-hub/planner-time";
 import type { WeekplannerResourceRef } from "@/lib/weekplanner/types";
 
 type Props = {
@@ -21,25 +22,24 @@ type Props = {
   onConfirm: () => void;
 };
 
-function formatWhen(start: Date, end: Date, locale: string, timeZone: string): string {
-  const day = new Intl.DateTimeFormat(locale, { weekday: "short", timeZone }).format(start);
-  const fmt = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", timeZone });
-  return `${day} ${fmt.format(start)}–${fmt.format(end)}`;
+function formatOccupancyRange(start: Date, end: Date, timeZone: string): string {
+  return `${isoToLocalTime(start, timeZone)}–${isoToLocalTime(end, timeZone)}`;
 }
 
-function resourceLabel(
+function resourceShortLabel(
   resourceId: string | undefined,
   resolve: (id: string) => WeekplannerResourceRef | null,
 ): string {
   if (!resourceId) return "—";
   const ref = resolve(resourceId);
-  return ref ? `${ref.name} (${ref.facilityName})` : resourceId;
+  return ref ? ref.name : resourceId;
 }
 
 export default function PlanningHubManipulationConfirm({
   draft,
   locale,
   timezone,
+  resourceCategory,
   conflictPreview,
   saving,
   error,
@@ -49,7 +49,11 @@ export default function PlanningHubManipulationConfirm({
 }: Props) {
   const typeLabel = weekplannerActivityTypeLabel(draft.item.type);
   const primary = weekplannerPrimaryLabel(draft.item);
-  const title = `${typeLabel} ${primary} verschieben`;
+  const title = "Planung ändern";
+  const subtitle = `${typeLabel} · ${primary}`;
+  const isOccupancyDraft = draft.timeTarget === "resourceOccupancy";
+
+  const activityRange = formatOccupancyRange(draft.item.startAt, draft.item.endAt, timezone);
 
   return (
     <div
@@ -60,31 +64,76 @@ export default function PlanningHubManipulationConfirm({
     >
       <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg">
         <p className="text-sm font-semibold text-[var(--foreground)]">{title}</p>
+        <p className="mt-0.5 text-xs text-[var(--text-2)]">{subtitle}</p>
 
         <div className="mt-3 grid gap-3 text-xs sm:grid-cols-2">
           <div className="rounded-lg bg-[var(--surface-2)] p-2.5">
             <p className="font-semibold uppercase tracking-wide text-[var(--muted)]">Von</p>
-            <p className="mt-1 text-[var(--foreground)]">
-              {formatWhen(draft.originalStart, draft.originalEnd, locale, timezone)}
-            </p>
-            {draft.originalResourceId && (
+            {isOccupancyDraft ? (
+              <>
+                {draft.originalResourceId && (
+                  <p className="mt-1 font-semibold text-[var(--foreground)]">
+                    {resourceShortLabel(draft.originalResourceId, resolveResourceRef)}
+                  </p>
+                )}
+                <p className="mt-1 text-[var(--foreground)]">
+                  Reserviert {formatOccupancyRange(draft.originalStart, draft.originalEnd, timezone)}
+                </p>
+              </>
+            ) : (
+              <p className="mt-1 text-[var(--foreground)]">
+                {new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: timezone }).format(
+                  draft.originalStart,
+                )}{" "}
+                {formatOccupancyRange(draft.originalStart, draft.originalEnd, timezone)}
+              </p>
+            )}
+            {!isOccupancyDraft && draft.originalResourceId && (
               <p className="mt-1 text-[var(--text-2)]">
-                {resourceLabel(draft.originalResourceId, resolveResourceRef)}
+                {resourceShortLabel(draft.originalResourceId, resolveResourceRef)}
               </p>
             )}
           </div>
           <div className="rounded-lg border border-[var(--sce-primary)]/30 bg-[var(--sce-primary-light)]/20 p-2.5">
             <p className="font-semibold uppercase tracking-wide text-[var(--muted)]">Nach</p>
-            <p className="mt-1 text-[var(--foreground)]">
-              {formatWhen(draft.proposedStart, draft.proposedEnd, locale, timezone)}
-            </p>
-            {draft.proposedResourceId && (
+            {isOccupancyDraft ? (
+              <>
+                {draft.proposedResourceId && (
+                  <p className="mt-1 font-semibold text-[var(--foreground)]">
+                    {resourceShortLabel(draft.proposedResourceId, resolveResourceRef)}
+                  </p>
+                )}
+                <p className="mt-1 text-[var(--foreground)]">
+                  Reserviert {formatOccupancyRange(draft.proposedStart, draft.proposedEnd, timezone)}
+                </p>
+              </>
+            ) : (
+              <p className="mt-1 text-[var(--foreground)]">
+                {new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: timezone }).format(
+                  draft.proposedStart,
+                )}{" "}
+                {formatOccupancyRange(draft.proposedStart, draft.proposedEnd, timezone)}
+              </p>
+            )}
+            {!isOccupancyDraft && draft.proposedResourceId && (
               <p className="mt-1 text-[var(--text-2)]">
-                {resourceLabel(draft.proposedResourceId, resolveResourceRef)}
+                {resourceShortLabel(draft.proposedResourceId, resolveResourceRef)}
               </p>
             )}
           </div>
         </div>
+
+        {isOccupancyDraft && draft.item.type === "MATCH" && (
+          <p className="mt-2 text-xs text-[var(--text-2)]" data-testid="planning-hub-manipulation-activity-unchanged">
+            Spielzeit {activityRange} unverändert
+          </p>
+        )}
+
+        {isOccupancyDraft && resourceCategory === "dressing" && draft.item.type === "TRAINING" && (
+          <p className="mt-2 text-xs text-[var(--text-2)]">
+            Trainingszeit {activityRange} unverändert
+          </p>
+        )}
 
         <p
           className={cn(
@@ -123,7 +172,7 @@ export default function PlanningHubManipulationConfirm({
             disabled={saving}
             data-testid="planning-hub-manipulation-confirm-apply"
           >
-            Übernehmen
+            Änderung übernehmen
           </button>
         </div>
       </div>

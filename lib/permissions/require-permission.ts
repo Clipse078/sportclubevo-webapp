@@ -1,7 +1,6 @@
 ﻿import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/db/prisma";
-import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
+import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 
 /**
@@ -34,11 +33,10 @@ export async function requirePermission(permissionKey: PermissionKey, tenantId?:
 
   const effectiveTenantId = tenantId ?? session.user.activeTenantId ?? undefined;
 
-  const resolver = createEffectivePermissionResolver(prisma);
-  const { platform, tenant } = await resolver.getEffectivePermissions({
-    userId: session.user.id,
-    tenantId: effectiveTenantId,
-  });
+  const { platform, tenant } = await getRequestEffectivePermissions(
+    session.user.id,
+    effectiveTenantId,
+  );
 
   const allowed = platform.includes(permissionKey) || tenant.includes(permissionKey);
 

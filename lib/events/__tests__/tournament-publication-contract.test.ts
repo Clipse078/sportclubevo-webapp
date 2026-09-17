@@ -90,13 +90,13 @@ describe("tournament publication surfaces", () => {
     expect(lastWhere().teamPageVisible).toBe(true);
   });
 
-  it("infoboard: requires infoboardVisible only (not websiteVisible)", async () => {
+  it("infoboard: uses infoboardVisible OR manual types (not websiteVisible)", async () => {
     await getPublicEvents({
       surface: "infoboard",
       tenantId: TENANT,
       eventTypes: ["TOURNAMENT"],
     });
-    expect(lastWhere().infoboardVisible).toBe(true);
+    expect(lastWhere().OR).toEqual([{ infoboardVisible: true }, { type: "OTHER" }]);
     expect(lastWhere()).not.toHaveProperty("websiteVisible");
   });
 
@@ -118,8 +118,10 @@ describe("tournament publication surfaces", () => {
     ) as { OR: unknown[] } | undefined;
     expect(tournamentGate?.OR).toEqual(
       expect.arrayContaining([
-        { type: { not: "TOURNAMENT" } },
-        { homepageVisible: true },
+        { type: { in: ["MATCH", "TRAINING"] } },
+        {
+          AND: [{ type: { in: ["TOURNAMENT", "OTHER"] } }, { homepageVisible: true }],
+        },
       ]),
     );
   });

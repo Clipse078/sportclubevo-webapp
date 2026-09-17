@@ -10,6 +10,7 @@ import {
   weekplannerTeamLine,
 } from "@/lib/planning-hub/item-presenters";
 import { canInlineReassignItem, type PlanningHubReassignContext } from "@/lib/planning-hub/reassignment";
+import { getPlanningHubItemHref } from "@/lib/planning-hub/planning-navigation";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 
 type PlanningHubConflictSheetProps = {
@@ -40,11 +41,7 @@ function formatItemTime(item: WeekplannerItem, locale: string, timeZone: string)
 }
 
 function itemHref(item: WeekplannerItem): string | null {
-  if (item.type === "TRAINING") return `/dashboard/training/sessions/${item.trainingSessionId}/edit`;
-  if (item.type === "MATCH") return `/dashboard/matchcenter/${item.eventId}`;
-  if (item.type === "TOURNAMENT") return `/dashboard/tournamentcenter/${item.eventId}`;
-  if (item.type === "VERANSTALTUNG") return `/dashboard/veranstaltungen/${item.eventId}`;
-  return null;
+  return getPlanningHubItemHref(item);
 }
 
 function resourceSummary(item: WeekplannerItem): string {
@@ -69,7 +66,13 @@ export default function PlanningHubConflictSheet({
     .filter((item): item is WeekplannerItem => Boolean(item));
 
   const kindLabel =
-    incident.resourceKind === "PITCH_HALL" ? "Spielfeld-Konflikt" : "Garderoben-Konflikt";
+    incident.resourceKind === "PITCH_HALL" ? "Spielfeldkonflikt" : "Garderobenkonflikt";
+  const overlapFmt = new Intl.DateTimeFormat(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: timezone,
+  });
+  const overlapLabel = `${overlapFmt.format(incident.startAt)}–${overlapFmt.format(incident.endAt)}`;
 
   return (
     <Sheet open={Boolean(incident)} onClose={onClose} title="Planungskonflikt">
@@ -83,8 +86,14 @@ export default function PlanningHubConflictSheet({
               {incident.facilityResourceName}
             </p>
             <p className="mt-0.5 text-xs text-[var(--muted)]">
-              {incident.occupancyCount} überlappende Belegungen
+              Überlappende Belegung {overlapLabel} · {incident.occupancyCount}{" "}
+              {incident.occupancyCount === 1 ? "Aktivität" : "Aktivitäten"}
             </p>
+            {incident.resourceKind === "DRESSING_ROOM" ? (
+              <p className="mt-1 text-xs text-[var(--text-2)]">
+                Belegungsfenster inkl. Garderoben-Puffer vor/nach der Spielzeit.
+              </p>
+            ) : null}
           </div>
         </div>
 

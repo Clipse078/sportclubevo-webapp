@@ -46,9 +46,10 @@ export function usePlanningHubCalendarZeit(
 
   const setCalendarZeit = useCallback(
     (zeit: PlanningHubCalendarZeitParam) => {
-      setCalendarZeitState(zeit);
+      const canonical = zeit === "ganz" ? undefined : zeit;
+      setCalendarZeitState(canonical);
       const href = hrefForCalendarZeit(serverUrlState, zeit);
-      window.history.pushState({ planningHubZeit: zeit }, "", href);
+      window.history.pushState({ planningHubZeit: canonical ?? "ganz" }, "", href);
     },
     [serverUrlState],
   );

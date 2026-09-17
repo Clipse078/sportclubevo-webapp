@@ -46,6 +46,7 @@ const VERANSTALTUNG: WeekplannerVeranstaltungItem = {
   eventId: "e1",
   location: "Saal",
   teamSeasonId: null,
+  allDay: false,
 };
 
 describe("canInlineReassignItem", () => {

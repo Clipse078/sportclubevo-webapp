@@ -47,6 +47,21 @@ export function resizeEndPreservingStart(
   return { startAt, endAt };
 }
 
+export function resizeStartPreservingEnd(
+  originalEnd: Date,
+  proposedStartMinutes: number,
+  timeZone: string,
+  referenceDay: Date,
+  minDurationMinutes = SCHEDULER_MIN_DURATION_MINUTES,
+): { startAt: Date; endAt: Date } | null {
+  const endAt = originalEnd;
+  const startAt = minutesOnReferenceDayToDate(proposedStartMinutes, referenceDay, timeZone);
+  const durationMinutes = (endAt.getTime() - startAt.getTime()) / 60_000;
+  if (durationMinutes < minDurationMinutes) return null;
+  if (endAt.getTime() <= startAt.getTime()) return null;
+  return { startAt, endAt };
+}
+
 /** Build a Date at `minutesFromMidnight` on the same calendar day as `referenceDay` in `timeZone`. */
 export function minutesOnReferenceDayToDate(
   minutesFromMidnight: number,

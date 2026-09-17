@@ -1,7 +1,15 @@
 import { detectWeekplannerConflicts } from "@/lib/weekplanner/view-model";
 import type { WeekplannerItem, WeekplannerResourceRef } from "@/lib/weekplanner/types";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
+import {
+  applyDressingOccupancyBuffersToItem,
+  buffersFromOccupancyInterval,
+} from "@/lib/planning-hub/scheduler/resource-occupancy-manipulation";
 import type { SchedulerDraftChange } from "./scheduler-draft";
+
+function isResourceOccupancyDraft(draft: SchedulerDraftChange): boolean {
+  return draft.timeTarget === "resourceOccupancy";
+}
 
 export type ManipulationConflictPreview = {
   status: "valid" | "warning" | "invalid";
@@ -81,16 +89,32 @@ export function projectItemWithDraft(
   item: WeekplannerItem,
   draft: Pick<
     SchedulerDraftChange,
-    "proposedStart" | "proposedEnd" | "originalResourceId" | "proposedResourceId"
+    | "proposedStart"
+    | "proposedEnd"
+    | "originalResourceId"
+    | "proposedResourceId"
+    | "timeTarget"
   >,
   targetResourceRef: WeekplannerResourceRef | null,
   resourceCategory: PlanningHubUrlState["resourceCategory"],
 ): WeekplannerItem {
-  let projected: WeekplannerItem = {
-    ...item,
-    startAt: draft.proposedStart,
-    endAt: draft.proposedEnd,
-  };
+  let projected: WeekplannerItem;
+
+  if (isResourceOccupancyDraft(draft as SchedulerDraftChange)) {
+    const { beforeMinutes, afterMinutes } = buffersFromOccupancyInterval(
+      item.startAt,
+      item.endAt,
+      draft.proposedStart,
+      draft.proposedEnd,
+    );
+    projected = applyDressingOccupancyBuffersToItem(item, beforeMinutes, afterMinutes);
+  } else {
+    projected = {
+      ...item,
+      startAt: draft.proposedStart,
+      endAt: draft.proposedEnd,
+    };
+  }
 
   if (
     draft.originalResourceId &&

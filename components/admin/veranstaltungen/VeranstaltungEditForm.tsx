@@ -1,8 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminSurfaceCard from "@/components/admin/shared/AdminSurfaceCard";
+import { clubEventScheduleFormFromPersisted } from "@/lib/events/club-event-scheduling";
+import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
+import VeranstaltungAusspielungFields, {
+  type VeranstaltungAusspielungValues,
+} from "./VeranstaltungAusspielungFields";
+import VeranstaltungScheduleFields, {
+  type VeranstaltungScheduleFieldValues,
+} from "./VeranstaltungScheduleFields";
 
 type SeasonSummary = {
   id: string;
@@ -18,6 +26,7 @@ type VeranstaltungEditFormProps = {
     location: string | null;
     startAt: Date | string;
     endAt: Date | string | null;
+    allDay: boolean;
     organizerName: string | null;
     remarks: string | null;
     status: string;
@@ -30,123 +39,109 @@ type VeranstaltungEditFormProps = {
     teamPageVisible: boolean;
     season: SeasonSummary | null;
   };
+  timeZone?: string | null;
 };
 
-function toDatetimeLocal(value: Date | string | null | undefined): string {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-  // Format to "YYYY-MM-DDTHH:mm" for datetime-local input
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return (
-    d.getFullYear() +
-    "-" +
-    pad(d.getMonth() + 1) +
-    "-" +
-    pad(d.getDate()) +
-    "T" +
-    pad(d.getHours()) +
-    ":" +
-    pad(d.getMinutes())
-  );
-}
-
-function Toggle({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <div className="fca-toggle-row">
-      <span className="fca-label">{label}</span>
-      <input
-        type="checkbox"
-        checked={value}
-        onChange={(e) => onChange(e.target.checked)}
-        className="fca-toggle-checkbox"
-      />
-    </div>
-  );
-}
-
-export default function VeranstaltungEditForm({
-  event,
-}: VeranstaltungEditFormProps) {
+export default function VeranstaltungEditForm({ event, timeZone }: VeranstaltungEditFormProps) {
   const router = useRouter();
+  const tz = resolveTenantEventTimezone(timeZone);
 
   const isArchived = event.status === "ARCHIVED";
   const isReadonly = isArchived || event.source === "CLUBCORNER_FVNWS";
 
+  const initialSchedule = clubEventScheduleFormFromPersisted(
+    {
+      allDay: event.allDay,
+      startAt: new Date(event.startAt),
+      endAt: event.endAt ? new Date(event.endAt) : null,
+    },
+    tz,
+  );
+
   const [title, setTitle] = useState(event.title);
   const [description, setDescription] = useState(event.description ?? "");
   const [location, setLocation] = useState(event.location ?? "");
-  const [startAt, setStartAt] = useState(toDatetimeLocal(event.startAt));
-  const [endAt, setEndAt] = useState(toDatetimeLocal(event.endAt));
-  const [organizerName, setOrganizerName] = useState(
-    event.organizerName ?? "",
-  );
+  const [schedule, setSchedule] = useState<VeranstaltungScheduleFieldValues>({
+    allDay: initialSchedule.allDay,
+    startDate: initialSchedule.startDate,
+    endDate: initialSchedule.endDate ?? initialSchedule.startDate,
+    startTime: initialSchedule.startTime ?? "18:00",
+    endTime: initialSchedule.endTime ?? "",
+  });
+  const rememberedTimes = useRef({
+    startTime: initialSchedule.startTime ?? "18:00",
+    endTime: initialSchedule.endTime ?? "20:00",
+  });
+
+  const [organizerName, setOrganizerName] = useState(event.organizerName ?? "");
   const [remarks, setRemarks] = useState(event.remarks ?? "");
-  const [websiteVisible, setWebsiteVisible] = useState(event.websiteVisible);
-  const [infoboardVisible, setInfoboardVisible] = useState(
-    event.infoboardVisible,
-  );
-  const [homepageVisible, setHomepageVisible] = useState(event.homepageVisible);
-  const [wochenplanVisible, setWochenplanVisible] = useState(
-    event.wochenplanVisible,
-  );
-  const [teamPageVisible, setTeamPageVisible] = useState(event.teamPageVisible);
+  const [ausspielung, setAusspielung] = useState<VeranstaltungAusspielungValues>({
+    websiteVisible: event.websiteVisible,
+    homepageVisible: event.homepageVisible,
+    wochenplanVisible: event.wochenplanVisible,
+  });
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  function handleScheduleChange(patch: Partial<VeranstaltungScheduleFieldValues>) {
+    setSchedule((current) => {
+      if (patch.allDay === true && !current.allDay) {
+        rememberedTimes.current = {
+          startTime: current.startTime,
+          endTime: current.endTime,
+        };
+        return {
+          ...current,
+          ...patch,
+          endDate: patch.endDate ?? (current.endDate || current.startDate),
+        };
+      }
+      if (patch.allDay === false && current.allDay) {
+        return {
+          ...current,
+          ...patch,
+          startTime: rememberedTimes.current.startTime,
+          endTime: rememberedTimes.current.endTime,
+        };
+      }
+      return { ...current, ...patch };
+    });
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (submitting || isReadonly) return;
-
+    if (isReadonly) return;
     setSubmitting(true);
     setError(null);
-    setSuccessMessage(null);
 
     try {
       const res = await fetch(`/api/events/${event.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title,
+          title: title.trim(),
           description: description || null,
           location: location || null,
-          startAt,
-          endAt: endAt || null,
+          allDay: schedule.allDay,
+          startDate: schedule.startDate,
+          endDate: schedule.allDay ? schedule.endDate || schedule.startDate : null,
+          startTime: schedule.allDay ? null : schedule.startTime,
+          endTime: schedule.allDay ? null : schedule.endTime || null,
           organizerName: organizerName || null,
           remarks: remarks || null,
-          websiteVisible,
-          infoboardVisible,
-          homepageVisible,
-          wochenplanVisible,
-          trainingsplanVisible: false,
-          teamPageVisible,
+          websiteVisible: ausspielung.websiteVisible,
+          homepageVisible: ausspielung.homepageVisible,
+          wochenplanVisible: ausspielung.wochenplanVisible,
         }),
       });
 
-      const data = (await res.json().catch(() => null)) as {
-        error?: string;
-      } | null;
-
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
       if (!res.ok) {
-        setError(
-          data?.error ?? "Veranstaltung konnte nicht gespeichert werden.",
-        );
+        setError(data?.error ?? "Speichern fehlgeschlagen.");
         return;
       }
 
-      setSuccessMessage(
-        "Veranstaltung wurde gespeichert. Du wirst zur Übersicht weitergeleitet.",
-      );
       router.push("/dashboard/veranstaltungen?updated=1");
       router.refresh();
     } finally {
@@ -156,27 +151,14 @@ export default function VeranstaltungEditForm({
 
   return (
     <AdminSurfaceCard className="p-6">
-      {isArchived && (
-        <div className="fca-status-box fca-status-box-warning mb-6">
-          Diese Veranstaltung ist archiviert und kann nicht bearbeitet werden.
-          Stelle sie zuerst wieder her.
-        </div>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Season info (read-only) */}
-        {event.season && (
-          <div className="sce-data-field">
-            <p className="sce-data-label">Saison</p>
-            <p className="sce-data-value mt-1">{event.season.name}</p>
-          </div>
-        )}
+        {event.season ? (
+          <p className="text-sm text-[var(--muted)]">Saison: {event.season.name}</p>
+        ) : null}
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block space-y-2 md:col-span-2">
-            <span className="fca-label">
-              Titel <span className="text-rose-500">*</span>
-            </span>
+            <span className="fca-label">Titel</span>
             <input
               type="text"
               value={title}
@@ -186,6 +168,12 @@ export default function VeranstaltungEditForm({
               disabled={isReadonly}
             />
           </label>
+
+          <VeranstaltungScheduleFields
+            values={schedule}
+            onChange={handleScheduleChange}
+            disabled={isReadonly}
+          />
 
           <label className="block space-y-2 md:col-span-2">
             <span className="fca-label">Beschreibung</span>
@@ -215,32 +203,6 @@ export default function VeranstaltungEditForm({
               value={organizerName}
               onChange={(e) => setOrganizerName(e.target.value)}
               className="fca-input"
-              placeholder="z. B. FC Muster / Business Club"
-              disabled={isReadonly}
-            />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="fca-label">
-              Start <span className="text-rose-500">*</span>
-            </span>
-            <input
-              type="datetime-local"
-              value={startAt}
-              onChange={(e) => setStartAt(e.target.value)}
-              className="fca-input"
-              required
-              disabled={isReadonly}
-            />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="fca-label">Ende</span>
-            <input
-              type="datetime-local"
-              value={endAt}
-              onChange={(e) => setEndAt(e.target.value)}
-              className="fca-input"
               disabled={isReadonly}
             />
           </label>
@@ -257,53 +219,19 @@ export default function VeranstaltungEditForm({
           </label>
         </div>
 
-        {/* Visibility toggles */}
-        <div>
-          <p className="fca-label mb-3">Ausspielung</p>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Toggle
-              label="Website sichtbar"
-              value={websiteVisible}
-              onChange={setWebsiteVisible}
-            />
-            <Toggle
-              label="Homepage sichtbar"
-              value={homepageVisible}
-              onChange={setHomepageVisible}
-            />
-            <Toggle
-              label="Infoboard sichtbar"
-              value={infoboardVisible}
-              onChange={setInfoboardVisible}
-            />
-            <Toggle
-              label="Wochenplan sichtbar"
-              value={wochenplanVisible}
-              onChange={setWochenplanVisible}
-            />
-          </div>
-        </div>
+        <VeranstaltungAusspielungFields
+          values={ausspielung}
+          onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
+          disabled={isReadonly}
+        />
 
-        {successMessage ? (
-          <div className="fca-status-box fca-status-box-success">
-            {successMessage}
-          </div>
-        ) : null}
+        {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
 
-        {error ? (
-          <div className="fca-status-box fca-status-box-error">{error}</div>
-        ) : null}
-
-        {!isReadonly && (
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="fca-button-primary"
-            >
-              {submitting ? "Wird gespeichert..." : "Änderungen speichern"}
+        {!isReadonly ? (
+          <div className="flex flex-wrap gap-3">
+            <button type="submit" disabled={submitting} className="fca-button-primary">
+              {submitting ? "Speichern..." : "Speichern"}
             </button>
-
             <button
               type="button"
               onClick={() => router.push("/dashboard/veranstaltungen")}
@@ -312,19 +240,7 @@ export default function VeranstaltungEditForm({
               Abbrechen
             </button>
           </div>
-        )}
-
-        {isReadonly && (
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => router.push("/dashboard/veranstaltungen")}
-              className="fca-button-secondary"
-            >
-              Zurück zur Übersicht
-            </button>
-          </div>
-        )}
+        ) : null}
       </form>
     </AdminSurfaceCard>
   );

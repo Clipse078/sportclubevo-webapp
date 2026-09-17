@@ -3,11 +3,14 @@
  * operator-facing incidents for the attention layer.
  */
 
+import { resourceOccupancyWindowsOverlap } from "@/lib/facilities/resource-occupancy-window";
 import {
-  computeResourceOccupancyWindow,
-  resourceOccupancyWindowsOverlap,
-} from "@/lib/facilities/resource-occupancy-window";
-import type { WeekplannerItem, WeekplannerResourceRef, WeekplannerWeek } from "@/lib/weekplanner/types";
+  collectWeekplannerOccupiedResources,
+  type OccupiedWeekplannerResource,
+} from "@/lib/weekplanner/conflict-detection";
+import { weekplannerCanonicalActivityKey } from "@/lib/weekplanner/canonical-activity-key";
+import { facilityResourcesShareConflictCapacity } from "@/lib/weekplanner/pitch-capacity-overlap";
+import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 
 export type PlanningResourceKind = "PITCH_HALL" | "DRESSING_ROOM";
 
@@ -23,40 +26,11 @@ export type PlanningConflictIncident = {
   itemIds: string[];
 };
 
-type Occupied = WeekplannerResourceRef & {
-  effectiveStartAt: Date;
-  effectiveEndAt: Date;
-};
-
-function collectOccupied(item: WeekplannerItem): Occupied[] {
-  const refs: WeekplannerResourceRef[] = [...item.pitchAllocations, ...item.dressingRoomAllocations];
-  if (item.type === "MATCH") refs.push(...item.awayDressingRoomAllocations);
-  if (item.type === "TOURNAMENT") {
-    for (const participant of item.participantAllocations) {
-      refs.push(...participant.dressingRoomAllocations);
-    }
-  }
-
-  return refs.map((ref) => {
-    const window = computeResourceOccupancyWindow(
-      item.startAt,
-      item.endAt,
-      ref.occupancyBeforeMinutes,
-      ref.occupancyAfterMinutes,
-    );
-    return {
-      ...ref,
-      effectiveStartAt: window.effectiveStartAt,
-      effectiveEndAt: window.effectiveEndAt,
-    };
-  });
-}
-
-function inferResourceKind(item: WeekplannerItem, resourceId: string): PlanningResourceKind {
-  if (item.pitchAllocations.some((r) => r.facilityResourceId === resourceId)) {
-    return "PITCH_HALL";
-  }
-  return "DRESSING_ROOM";
+function findSharedResource(
+  resourceA: OccupiedWeekplannerResource,
+  resourcesB: OccupiedWeekplannerResource[],
+): OccupiedWeekplannerResource | undefined {
+  return resourcesB.find((candidate) => facilityResourcesShareConflictCapacity(resourceA, candidate));
 }
 
 function incidentKey(resourceId: string, startMs: number, endMs: number): string {
@@ -72,7 +46,8 @@ export function buildPlanningConflictIncidents(week: WeekplannerWeek): PlanningC
   const withOccupancy = items.map(({ item, dayKey }) => ({
     item,
     dayKey,
-    resources: collectOccupied(item),
+    canonicalKey: weekplannerCanonicalActivityKey(item),
+    resources: collectWeekplannerOccupiedResources(item),
   }));
 
   const seen = new Set<string>();
@@ -82,11 +57,10 @@ export function buildPlanningConflictIncidents(week: WeekplannerWeek): PlanningC
     for (let j = i + 1; j < withOccupancy.length; j += 1) {
       const a = withOccupancy[i];
       const b = withOccupancy[j];
+      if (a.canonicalKey === b.canonicalKey) continue;
 
       for (const resourceA of a.resources) {
-        const resourceB = b.resources.find(
-          (candidate) => candidate.facilityResourceId === resourceA.facilityResourceId,
-        );
+        const resourceB = findSharedResource(resourceA, b.resources);
         if (!resourceB) continue;
         if (!resourceOccupancyWindowsOverlap(resourceA, resourceB)) continue;
 
@@ -108,7 +82,7 @@ export function buildPlanningConflictIncidents(week: WeekplannerWeek): PlanningC
         const participants = withOccupancy.filter((entry) =>
           entry.resources.some(
             (resource) =>
-              resource.facilityResourceId === resourceA.facilityResourceId &&
+              facilityResourcesShareConflictCapacity(resource, resourceA) &&
               resourceOccupancyWindowsOverlap(resource, {
                 ...resourceA,
                 effectiveStartAt: overlapStart,
@@ -121,7 +95,7 @@ export function buildPlanningConflictIncidents(week: WeekplannerWeek): PlanningC
           id: key,
           facilityResourceId: resourceA.facilityResourceId,
           facilityResourceName: resourceA.name,
-          resourceKind: inferResourceKind(a.item, resourceA.facilityResourceId),
+          resourceKind: resourceA.resourceKind,
           dayKey: a.dayKey,
           startAt: overlapStart,
           endAt: overlapEnd,

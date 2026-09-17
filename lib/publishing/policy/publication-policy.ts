@@ -99,7 +99,7 @@ const PUBLISHABLE_STATUSES = new Set([
 
 // ── Allowed types per channel ──────────────────────────────────────────────────
 
-const INFOBOARD_TYPES = new Set(["TRAINING", "MATCH", "TOURNAMENT"]);
+const INFOBOARD_TYPES = new Set(["TRAINING", "MATCH", "TOURNAMENT", "OTHER"]);
 const WEBSITE_MATCH_TYPES = new Set(["MATCH"]);
 const WEBSITE_TRAINING_TYPES = new Set(["TRAINING"]);
 const WEBSITE_TOURNAMENT_TYPES = new Set(["TOURNAMENT"]);
@@ -171,7 +171,9 @@ function evaluateInfoboard(
   const typeCheck = checkType(event, INFOBOARD_TYPES);
   if (typeCheck) return typeCheck;
 
-  if (!event.infoboardVisible) {
+  // Veranstaltungen (OTHER): Infoboard eligibility is operational — not gated
+  // by the manual infoboardVisible flag (SCE-EVENTS-01B2).
+  if (event.type !== "OTHER" && !event.infoboardVisible) {
     return { eligible: false, reason: "INFOBOARD_HIDDEN" };
   }
 
@@ -179,7 +181,7 @@ function evaluateInfoboard(
     return evaluateHomeMatchLocation(event.homeAway);
   }
 
-  // TRAINING and TOURNAMENT: a visible event is eligible.
+  // TRAINING, TOURNAMENT, and OTHER (Veranstaltung): eligible when prior checks pass.
   // TOURNAMENT_HOSTING_UNVERIFIED is reserved for future administrative use
   // and is not returned in the current evaluation flow.
   return { eligible: true, reason: "ELIGIBLE" };

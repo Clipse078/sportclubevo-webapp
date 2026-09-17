@@ -79,6 +79,9 @@ export type Screen1SourceEvent = {
   // ── TemporalEvent fields (shared with TemporalEvent shape) ────────────────
   readonly startAt: Date;
   readonly endAt: Date | null;
+  /** Provider Event.endAt for MATCH — used when `endAt` is not yet operational. */
+  readonly authoritativeEndAt?: Date | null;
+  readonly operationalEndAtOverride?: Date | null;
 
   // ── Identity ──────────────────────────────────────────────────────────────
   readonly id: string;

@@ -5,8 +5,9 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import FacilitiesAdminPanel from "@/components/admin/facilities/FacilitiesAdminPanel";
-import DressingRoomOccupancyPresetsPanel from "@/components/admin/facilities/DressingRoomOccupancyPresetsPanel";
+import FacilitiesOperationalSettingsPanel from "@/components/admin/facilities/FacilitiesOperationalSettingsPanel";
 import { getTenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/tenant-preset-service";
+import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
 
 export default async function FacilitiesPage() {
   const session = await requireAnyPermission([
@@ -27,7 +28,10 @@ export default async function FacilitiesPage() {
     facilities = [];
   }
 
-  const dressingRoomPresets = await getTenantDressingRoomOccupancyPresets(tenantId);
+  const [dressingRoomPresets, operationalDurationPolicy] = await Promise.all([
+    getTenantDressingRoomOccupancyPresets(tenantId),
+    getTenantOperationalDurationPolicy(tenantId),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -36,7 +40,11 @@ export default async function FacilitiesPage() {
         title="Anlagen & Ressourcen"
         description="Sportanlagen, Plätze und Garderoben konfigurieren. Einmal gepflegt, werden die Bezeichnungen automatisch auf dem Infoboard und in der Wochenplanung verwendet."
       />
-      <DressingRoomOccupancyPresetsPanel initialPresets={dressingRoomPresets} canManage={canManage} />
+      <FacilitiesOperationalSettingsPanel
+        initialPolicy={operationalDurationPolicy}
+        initialPresets={dressingRoomPresets}
+        canManage={canManage}
+      />
 
       <FacilitiesAdminPanel
         initialFacilities={facilities}

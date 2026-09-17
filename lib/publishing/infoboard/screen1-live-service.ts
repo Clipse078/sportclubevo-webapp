@@ -36,6 +36,7 @@
 import { buildInfoboardScreen1Feed } from "./screen1-feed-builder";
 import type { InfoboardScreen1Feed, InfoboardTenantRef } from "../event-types";
 import type { PublicationEventLoader } from "../policy/event-selection";
+import type { TenantOperationalDurationPolicyResolved } from "@/lib/operational/tenant-operational-duration-policy-service";
 import type { Screen1SourceEvent } from "./screen1-event-mapper";
 import {
   resolveInfoboardDisplayTheme,
@@ -215,6 +216,7 @@ export async function buildScreen1LivePayload(params: {
   readonly resolveOrganizerClubsByName?: (
     organizerNames: readonly string[],
   ) => Promise<ReadonlyMap<string, ResolvedOrganizerClub>>;
+  readonly operationalDurationPolicy?: TenantOperationalDurationPolicyResolved;
 }): Promise<InfoboardScreen1LivePayload> {
   const {
     tenant,
@@ -223,6 +225,7 @@ export async function buildScreen1LivePayload(params: {
     boardConfig,
     tournamentPresentationDatabase,
     resolveOrganizerClubsByName,
+    operationalDurationPolicy,
   } = params;
 
   // ── Bounded date window ───────────────────────────────────────────────────
@@ -248,6 +251,7 @@ export async function buildScreen1LivePayload(params: {
     dateFrom,
     dateTo,
     tenantLogoUrl: tenant.logoUrl ?? null,
+    operationalDurationPolicy,
   });
 
   // ── Presentation extensions ───────────────────────────────────────────────

@@ -33,6 +33,7 @@ function createEvent(overrides: Record<string, unknown> = {}) {
     location: "Im Brüel",
     startAt: new Date("2026-08-20T18:00:00.000Z"),
     endAt: null,
+    operationalEndAtOverride: null,
     externalSource: "SFV",
     externalSourceId: "9001",
     lastSyncedAt: new Date("2026-07-20T10:00:00.000Z"),

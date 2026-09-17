@@ -26,6 +26,9 @@ vi.mock("@/lib/tenants/context", () => ({
   getCurrentTenantContextById: mocks.getCurrentTenantContextById,
   getCurrentTenantContext: mocks.getCurrentTenantContext,
 }));
+vi.mock("@/lib/server/request-cache", () => ({
+  getCurrentTenantContextByIdCached: (id: string) => mocks.getCurrentTenantContextById(id),
+}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     tenantMembership: {

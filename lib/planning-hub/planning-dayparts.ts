@@ -119,14 +119,11 @@ export function defaultDaypartForLocalTime(
 
 export function normalizeInvalidCalendarZeit(
   raw: string | undefined,
-  now: Date,
-  timeZone: string,
+  _now: Date,
+  _timeZone: string,
 ): PlanningHubCalendarZeitParam | undefined {
   const parsed = parsePlanningHubCalendarZeitParam(raw);
   if (parsed) return parsed;
-  if (raw?.trim()) {
-    return defaultDaypartForLocalTime(now, timeZone);
-  }
   return undefined;
 }
 
@@ -136,18 +133,14 @@ export type ResolvedCalendarViewport =
 
 export function resolveCalendarViewport(
   calendarZeit: PlanningHubCalendarZeitParam | undefined,
-  now: Date,
-  timeZone: string,
+  _now: Date,
+  _timeZone: string,
 ): ResolvedCalendarViewport {
-  if (calendarZeit === "ganz") {
+  if (calendarZeit === undefined || calendarZeit === "ganz") {
     return { mode: "full" };
   }
-  if (calendarZeit && isPlanningHubCalendarDaypart(calendarZeit)) {
+  if (isPlanningHubCalendarDaypart(calendarZeit)) {
     return { mode: "daypart", daypart: calendarZeit, explicit: true };
   }
-  return {
-    mode: "daypart",
-    daypart: defaultDaypartForLocalTime(now, timeZone),
-    explicit: false,
-  };
+  return { mode: "full" };
 }

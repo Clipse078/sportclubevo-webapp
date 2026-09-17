@@ -208,15 +208,15 @@ describe("type step — TYPE_MISMATCH evaluated after status, before visibility"
     expect(result.reason).toBe<PublicationReason>("TYPE_MISMATCH");
   });
 
-  it("infoboard: OTHER → TYPE_MISMATCH", () => {
-    const event = infoboardEvent({ type: "OTHER" });
+  it("infoboard: OTHER (Veranstaltung) is eligible without manual infoboardVisible", () => {
+    const event = infoboardEvent({ type: "OTHER", infoboardVisible: false });
     const result = evaluatePublication(event, "INFOBOARD_SCREEN_1", TENANT);
-    expect(result.eligible).toBe(false);
-    expect(result.reason).toBe<PublicationReason>("TYPE_MISMATCH");
+    expect(result.eligible).toBe(true);
+    expect(result.reason).toBe<PublicationReason>("ELIGIBLE");
   });
 
-  it("type beats visibility: unsupported type with infoboardVisible=false → TYPE_MISMATCH (not INFOBOARD_HIDDEN)", () => {
-    const event = infoboardEvent({ type: "OTHER", infoboardVisible: false });
+  it("infoboard: VACATION_PERIOD remains TYPE_MISMATCH", () => {
+    const event = infoboardEvent({ type: "VACATION_PERIOD", infoboardVisible: false });
     const result = evaluatePublication(event, "INFOBOARD_SCREEN_1", TENANT);
     expect(result.reason).toBe<PublicationReason>("TYPE_MISMATCH");
   });
@@ -241,7 +241,7 @@ describe("infoboard shared policy — Screen 1 and Screen 2 return identical dec
     ["NEUTRAL homeAway MATCH", infoboardEvent({ type: "MATCH", homeAway: "NEUTRAL" })],
     ["tenant mismatch", infoboardEvent({ tenantId: "other" })],
     ["DRAFT status", infoboardEvent({ status: "DRAFT" })],
-    ["TYPE not supported (OTHER)", infoboardEvent({ type: "OTHER" })],
+    ["eligible OTHER (Veranstaltung)", infoboardEvent({ type: "OTHER", infoboardVisible: false })],
     ["infoboard hidden", infoboardEvent({ infoboardVisible: false })],
   ];
 
@@ -281,11 +281,11 @@ describe("infoboard supported event types", () => {
     });
   });
 
-  it("OTHER is TYPE_MISMATCH", () => {
-    const event = infoboardEvent({ type: "OTHER" });
+  it("OTHER (Veranstaltung) is eligible on Infoboard", () => {
+    const event = infoboardEvent({ type: "OTHER", infoboardVisible: false });
     expect(evaluatePublication(event, "INFOBOARD_SCREEN_1", TENANT)).toEqual({
-      eligible: false,
-      reason: "TYPE_MISMATCH",
+      eligible: true,
+      reason: "ELIGIBLE",
     });
   });
 
@@ -684,7 +684,7 @@ describe("all ten decision reasons are reachable (or statically present)", () =>
   });
 
   it("TYPE_MISMATCH is reachable", () => {
-    const e = infoboardEvent({ type: "OTHER" });
+    const e = infoboardEvent({ type: "VACATION_PERIOD" });
     expect(evaluatePublication(e, "INFOBOARD_SCREEN_1", TENANT).reason).toBe<PublicationReason>("TYPE_MISMATCH");
   });
 
@@ -733,8 +733,13 @@ describe("evaluation order: tenant > status > type > visibility > homeAway", () 
   });
 
   it("type beats visibility", () => {
-    const e = infoboardEvent({ type: "OTHER", infoboardVisible: false });
+    const e = infoboardEvent({ type: "VACATION_PERIOD", infoboardVisible: false });
     expect(evaluatePublication(e, "INFOBOARD_SCREEN_1", TENANT).reason).toBe<PublicationReason>("TYPE_MISMATCH");
+  });
+
+  it("OTHER (Veranstaltung) ignores infoboardVisible=false", () => {
+    const e = infoboardEvent({ type: "OTHER", infoboardVisible: false });
+    expect(evaluatePublication(e, "INFOBOARD_SCREEN_1", TENANT).reason).toBe<PublicationReason>("ELIGIBLE");
   });
 
   it("visibility beats homeAway", () => {
