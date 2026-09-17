@@ -23,6 +23,7 @@ import { laneHorizontalStyle } from "@/lib/planning-hub/scheduler/interval-lanes
 import {
   CALENDAR_DAYPART_AGGREGATE_BELOW_WIDTH_PX,
   CALENDAR_DAYPART_MIN_ACTIVITY_WIDTH_PX,
+  CALENDAR_FULL_DAY_AGGREGATE_BELOW_WIDTH_PX,
   CALENDAR_MIN_ACTIVITY_WIDTH_PX,
   estimateDayColumnWidthPx,
   laneWidthPx,
@@ -138,7 +139,7 @@ export default function PlanningHubCalendarView({
 
   const pixelsPerMinute = isFullDay ? CALENDAR_PIXELS_PER_MINUTE : CALENDAR_DAYPART_PIXELS_PER_MINUTE;
   const layoutAggregateBelow = isFullDay
-    ? undefined
+    ? CALENDAR_FULL_DAY_AGGREGATE_BELOW_WIDTH_PX
     : CALENDAR_DAYPART_AGGREGATE_BELOW_WIDTH_PX;
   const minActivityWidth = isFullDay
     ? CALENDAR_MIN_ACTIVITY_WIDTH_PX
