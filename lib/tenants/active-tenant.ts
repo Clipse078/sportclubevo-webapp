@@ -43,19 +43,24 @@
  *   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });
  */
 
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
+import { getCurrentTenantContextByIdCached } from "@/lib/server/request-cache";
 import {
   getCurrentTenantContext,
-  getCurrentTenantContextById,
   type TenantContext,
 } from "@/lib/tenants/context";
 
-/** Returns the current session's active tenant id, or null if none. No DB query. */
-export async function getActiveTenantId(): Promise<string | null> {
+const resolveActiveTenantIdFromSession = cache(async (): Promise<string | null> => {
   const session = await auth();
   return session?.user?.activeTenantId ?? null;
+});
+
+/** Returns the current session's active tenant id, or null if none. No DB query. */
+export async function getActiveTenantId(): Promise<string | null> {
+  return resolveActiveTenantIdFromSession();
 }
 
 /**
@@ -75,7 +80,7 @@ export async function requireActiveTenantId(): Promise<string> {
 export async function getActiveTenant(): Promise<TenantContext | null> {
   const tenantId = await getActiveTenantId();
   if (!tenantId) return null;
-  return getCurrentTenantContextById(tenantId);
+  return getCurrentTenantContextByIdCached(tenantId);
 }
 
 /**

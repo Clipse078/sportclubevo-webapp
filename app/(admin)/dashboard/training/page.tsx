@@ -7,7 +7,12 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { listTrainingSeries } from "@/lib/training/training-service";
 import { buildTrainingSeriesCockpitViewModel } from "@/lib/training/series-cockpit-data";
-import { getFacilitiesForTenant } from "@/lib/facilities/queries";
+import { getFacilitiesForTenantCached } from "@/lib/server/request-cache";
+import {
+  createAdminServerTimer,
+  isScePerfTimingEnabled,
+  logAdminServerTiming,
+} from "@/lib/planning-hub/admin-server-timing";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { listTrainingSessions } from "@/lib/training/session-generation-service";
 import { listAllocationSummaryByTenant } from "@/lib/training/training-allocation-service";
@@ -59,14 +64,20 @@ const TRAINING_DESCRIPTION =
   "Trainingskalender, Einzeltrainings und Serien — Ressourcenplanung im Wochenplaner.";
 
 export default async function TrainingCenterPage({ searchParams }: Props) {
+  const perfTimer = isScePerfTimingEnabled()
+    ? createAdminServerTimer("training")
+    : null;
+
   const session = await requireAnyPermission([
     PERMISSIONS.TRAININGS_VIEW,
     PERMISSIONS.TRAININGS_MANAGE,
     PERMISSIONS.TRAININGS_DELETE,
   ]);
+  perfTimer?.mark("auth-rbac");
 
   const tenantContext = await getActiveTenant();
   if (!tenantContext) notFound();
+  perfTimer?.mark("tenant");
 
   const canManage = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
   const canCreate = canManage || hasPermission(session, PERMISSIONS.TRAININGS_VIEW);
@@ -99,8 +110,9 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
 
     const [cockpitRows, facilities] = await Promise.all([
       buildTrainingSeriesCockpitViewModel(tenantContext.id, displayedSeries, timezone),
-      getFacilitiesForTenant(tenantContext.id),
+      getFacilitiesForTenantCached(tenantContext.id),
     ]);
+    perfTimer?.mark("training-series-loader");
 
     function facilityGroupsForTypes(types: readonly string[]): FacilityGroup[] {
       return facilities
@@ -126,6 +138,10 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
 
     const pitchFacilityGroups = facilityGroupsForTypes(["FULL_PITCH", "HALF_PITCH"]);
     const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
+
+    if (perfTimer) {
+      logAdminServerTiming(perfTimer.finish());
+    }
 
     return (
       <div className="space-y-6">
@@ -188,11 +204,17 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
     listAllocationSummaryByTenant(tenantContext.id),
     listSessionAllocationSummaryByTenant(tenantContext.id),
   ]);
+  perfTimer?.mark("training-session-loader");
 
   const viewModel = buildTrainingCenterViewModel(sessions, allocationSummaries, {
     actionFilter,
     sessionAllocationOverrides,
   });
+  perfTimer?.mark("mapping");
+
+  if (perfTimer) {
+    logAdminServerTiming(perfTimer.finish());
+  }
 
   return (
     <div className="max-w-[1400px] space-y-6">

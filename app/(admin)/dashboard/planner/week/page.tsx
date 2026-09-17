@@ -79,7 +79,7 @@ export default async function PlannerWeekPageRoute({
     PERMISSIONS.EVENTS_MANAGE,
   ]);
 
-  perfTimer?.mark("auth");
+  perfTimer?.mark("auth-rbac");
 
   const tenantContext = await getActiveTenant();
   if (!tenantContext) notFound();
@@ -165,7 +165,7 @@ export default async function PlannerWeekPageRoute({
     getTenantDressingRoomOccupancyPresetsCached(tenantContext.id),
     getFacilitiesForTenantCached(tenantContext.id),
   ]);
-  perfTimer?.mark("week-facilities-dressing");
+  perfTimer?.mark("week-aggregation-facilities");
 
   const facilityGroupsByAllocationGroup = canManagePlans
     ? buildFacilityGroupsByAllocationGroupFromFacilities(facilities)

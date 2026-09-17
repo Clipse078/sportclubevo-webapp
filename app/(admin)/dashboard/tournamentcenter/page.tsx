@@ -5,7 +5,12 @@ import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
-import { getTeamsListData } from "@/lib/teams/queries";
+import { getTeamsListDataCached } from "@/lib/server/request-cache";
+import {
+  createAdminServerTimer,
+  isScePerfTimingEnabled,
+  logAdminServerTiming,
+} from "@/lib/planning-hub/admin-server-timing";
 import { listTournaments } from "@/lib/tournaments/tournament-service";
 import { normalizeTournamentActionFilter } from "@/lib/tournaments/view-model";
 import {
@@ -36,12 +41,18 @@ type TournamentCenterPageProps = {
 };
 
 export default async function TournamentCenterPage({ searchParams }: TournamentCenterPageProps) {
+  const perfTimer = isScePerfTimingEnabled()
+    ? createAdminServerTimer("tournamentcenter")
+    : null;
+
   const session = await requireAnyPermission([PERMISSIONS.EVENTS_VIEW, PERMISSIONS.EVENTS_MANAGE]);
+  perfTimer?.mark("auth-rbac");
 
   const tenantContext = await getActiveTenant();
   if (!tenantContext) {
     notFound();
   }
+  perfTimer?.mark("tenant");
 
   const timezone = tenantContext.timezone ?? "Europe/Zurich";
   const locale = tenantContext.locale ?? "de-CH";
@@ -56,8 +67,9 @@ export default async function TournamentCenterPage({ searchParams }: TournamentC
 
   const [tournaments, tenantTeams] = await Promise.all([
     listTournaments(tenantContext.id),
-    getTeamsListData(tenantContext.id),
+    getTeamsListDataCached(tenantContext.id),
   ]);
+  perfTimer?.mark("tournament-loader-teams");
 
   const activeTeams = tenantTeams.filter((team) => team.isActive);
   const validTeamIds = new Set(activeTeams.map((team) => team.id));
@@ -65,6 +77,10 @@ export default async function TournamentCenterPage({ searchParams }: TournamentC
   const teamOptions = toTournamentTeamOptions(activeTeams);
   const statusFilter = normalizeTournamentStatusFilter(params.status);
   const monthParam = params.month?.trim() || null;
+
+  if (perfTimer) {
+    logAdminServerTiming(perfTimer.finish());
+  }
 
   return (
     <div className="max-w-[1400px] space-y-6">
