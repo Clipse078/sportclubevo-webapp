@@ -27,8 +27,14 @@ import {
 } from "@/lib/planning-hub/manipulation-capabilities";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import {
+  calendarDayDeltaFromPixelDrag,
+  calendarMoveWithDayAndTimeDelta,
+  resolveCalendarTargetDayKey,
+} from "@/lib/planning-hub/scheduler/calendar-date-shift";
+import {
   preserveDurationOnMove,
   resizeEndPreservingStart,
+  resizeStartPreservingEnd,
   snapMinutesFromMidnight,
   snapPixelDeltaToMinutes,
 } from "@/lib/planning-hub/scheduler/time-snap";
@@ -45,8 +51,11 @@ import PlanningHubManipulationConfirm from "./PlanningHubManipulationConfirm";
 
 export type ManipulationSurface = "kalender" | "ressourcen";
 
+type ResizeEdge = "start" | "end";
+
 type ActivePointerSession = {
   mode: "move" | "resize";
+  resizeEdge?: ResizeEdge;
   surface: ManipulationSurface;
   item: WeekplannerItem;
   segmentId?: string;
@@ -58,6 +67,14 @@ type ActivePointerSession = {
   capabilities: SchedulerManipulationCapabilities;
 };
 
+type CalendarDragLayout = {
+  dayColumnWidthPx: number;
+  weekDayKeys: readonly string[];
+};
+
+const RESOURCE_AUTO_SCROLL_EDGE_PX = 56;
+const RESOURCE_AUTO_SCROLL_SPEED_PX = 10;
+
 type PlanningHubManipulationContextValue = {
   enabled: boolean;
   isDragging: boolean;
@@ -65,8 +82,8 @@ type PlanningHubManipulationContextValue = {
   previewDraft: SchedulerDraftChange | null;
   hoverResourceId: string | null;
   getCapabilities: (item: WeekplannerItem) => SchedulerManipulationCapabilities;
-  beginCalendarMove: (item: WeekplannerItem, clientY: number) => void;
-  beginCalendarResize: (item: WeekplannerItem, clientY: number) => void;
+  beginCalendarMove: (item: WeekplannerItem, clientX: number, clientY: number) => void;
+  beginCalendarResize: (item: WeekplannerItem, edge: ResizeEdge, clientX: number, clientY: number) => void;
   beginResourceMove: (
     item: WeekplannerItem,
     segmentId: string,
@@ -74,6 +91,15 @@ type PlanningHubManipulationContextValue = {
     clientX: number,
     clientY: number,
   ) => void;
+  beginResourceResize: (
+    item: WeekplannerItem,
+    segmentId: string,
+    resourceId: string,
+    edge: ResizeEdge,
+    clientX: number,
+    clientY: number,
+  ) => void;
+  setCalendarDragLayout: (layout: CalendarDragLayout) => void;
   cancelManipulation: () => void;
   resolveResourceRef: (resourceId: string) => WeekplannerResourceRef | null;
 };
@@ -124,6 +150,10 @@ export function PlanningHubManipulationProvider({
   pointerSessionRef.current = pointerSession;
   const previewDraftRef = useRef(previewDraft);
   previewDraftRef.current = previewDraft;
+  const calendarDragLayoutRef = useRef<CalendarDragLayout>({
+    dayColumnWidthPx: 120,
+    weekDayKeys: [],
+  });
 
   const calendarPixelsPerMinute =
     urlState.calendarZeit === "ganz" ? CALENDAR_PIXELS_PER_MINUTE : CALENDAR_DAYPART_PIXELS_PER_MINUTE;
@@ -236,6 +266,17 @@ export function PlanningHubManipulationProvider({
     [],
   );
 
+  const scrollResourceTimeline = useCallback((clientX: number) => {
+    const scrollEl = document.querySelector("[data-planning-hub-resource-scroll]");
+    if (!scrollEl) return;
+    const rect = scrollEl.getBoundingClientRect();
+    if (clientX < rect.left + RESOURCE_AUTO_SCROLL_EDGE_PX) {
+      scrollEl.scrollLeft -= RESOURCE_AUTO_SCROLL_SPEED_PX;
+    } else if (clientX > rect.right - RESOURCE_AUTO_SCROLL_EDGE_PX) {
+      scrollEl.scrollLeft += RESOURCE_AUTO_SCROLL_SPEED_PX;
+    }
+  }, []);
+
   const updateFromPointer = useCallback(
     (clientX: number, clientY: number) => {
       const session = pointerSessionRef.current;
@@ -243,17 +284,26 @@ export function PlanningHubManipulationProvider({
 
       if (session.surface === "kalender") {
         const deltaY = clientY - session.startClientY;
+        const deltaX = clientX - session.startClientX;
         const deltaMinutes = snapPixelDeltaToMinutes(deltaY, calendarPixelsPerMinute);
-        const originalStartMin = zonedMinutesFromMidnight(session.originalStart, timezone);
-        const proposedStartMin = snapMinutesFromMidnight(originalStartMin + deltaMinutes);
-        const { startAt, endAt } = preserveDurationOnMove(
-          session.originalStart,
-          session.originalEnd,
-          proposedStartMin,
-          timezone,
-          session.originalStart,
-        );
+        const layout = calendarDragLayoutRef.current;
+        const dayDelta = calendarDayDeltaFromPixelDrag(deltaX, layout.dayColumnWidthPx);
+        const referenceDay = session.originalStart;
+
         if (session.mode === "resize") {
+          if (session.resizeEdge === "start") {
+            const originalStartMin = zonedMinutesFromMidnight(session.originalStart, timezone);
+            const proposedStartMin = snapMinutesFromMidnight(originalStartMin + deltaMinutes);
+            const resized = resizeStartPreservingEnd(
+              session.originalEnd,
+              proposedStartMin,
+              timezone,
+              referenceDay,
+            );
+            if (!resized) return;
+            setPreviewDraft(buildDraft(session, resized.startAt, resized.endAt));
+            return;
+          }
           const originalEndMin = zonedMinutesFromMidnight(session.originalEnd, timezone);
           const resizeDelta = snapPixelDeltaToMinutes(deltaY, calendarPixelsPerMinute);
           const proposedEndMin = snapMinutesFromMidnight(originalEndMin + resizeDelta);
@@ -261,22 +311,73 @@ export function PlanningHubManipulationProvider({
             session.originalStart,
             proposedEndMin,
             timezone,
-            session.originalStart,
+            referenceDay,
           );
           if (!resized) return;
           setPreviewDraft(buildDraft(session, resized.startAt, resized.endAt));
           return;
         }
+
         if (!session.capabilities.canMoveTime) return;
-        setPreviewDraft(buildDraft(session, startAt, endAt));
+        const moved =
+          layout.weekDayKeys.length > 0
+            ? calendarMoveWithDayAndTimeDelta(
+                session.originalStart,
+                session.originalEnd,
+                dayDelta,
+                deltaMinutes,
+                layout.weekDayKeys,
+                timezone,
+              )
+            : preserveDurationOnMove(
+                session.originalStart,
+                session.originalEnd,
+                snapMinutesFromMidnight(
+                  zonedMinutesFromMidnight(session.originalStart, timezone) + deltaMinutes,
+                ),
+                timezone,
+                referenceDay,
+              );
+        if (!moved) return;
+        setPreviewDraft(buildDraft(session, moved.startAt, moved.endAt));
         return;
       }
+
+      scrollResourceTimeline(clientX);
 
       const deltaX = clientX - session.startClientX;
       const deltaY = clientY - session.startClientY;
       let proposedStart = session.originalStart;
       let proposedEnd = session.originalEnd;
-      if (session.capabilities.canMoveTime) {
+      if (session.mode === "resize" && session.capabilities.canResize) {
+        const resizeDelta = snapPixelDeltaToMinutes(deltaX, RESOURCE_PIXELS_PER_MINUTE);
+        const referenceDay = session.originalStart;
+        if (session.resizeEdge === "start") {
+          const originalStartMin = zonedMinutesFromMidnight(session.originalStart, timezone);
+          const proposedStartMin = snapMinutesFromMidnight(originalStartMin + resizeDelta);
+          const resized = resizeStartPreservingEnd(
+            session.originalEnd,
+            proposedStartMin,
+            timezone,
+            referenceDay,
+          );
+          if (!resized) return;
+          proposedStart = resized.startAt;
+          proposedEnd = resized.endAt;
+        } else {
+          const originalEndMin = zonedMinutesFromMidnight(session.originalEnd, timezone);
+          const proposedEndMin = snapMinutesFromMidnight(originalEndMin + resizeDelta);
+          const resized = resizeEndPreservingStart(
+            session.originalStart,
+            proposedEndMin,
+            timezone,
+            referenceDay,
+          );
+          if (!resized) return;
+          proposedStart = resized.startAt;
+          proposedEnd = resized.endAt;
+        }
+      } else if (session.capabilities.canMoveTime) {
         const deltaMinutes = snapPixelDeltaToMinutes(deltaX, RESOURCE_PIXELS_PER_MINUTE);
         const originalStartMin = zonedMinutesFromMidnight(session.originalStart, timezone);
         const proposedStartMin = snapMinutesFromMidnight(originalStartMin + deltaMinutes);
@@ -315,7 +416,14 @@ export function PlanningHubManipulationProvider({
         buildDraft(session, proposedStart, proposedEnd, proposedResourceId),
       );
     },
-    [buildDraft, calendarPixelsPerMinute, resourceRefById, timezone, urlState.resourceCategory],
+    [
+      buildDraft,
+      calendarPixelsPerMinute,
+      resourceRefById,
+      scrollResourceTimeline,
+      timezone,
+      urlState.resourceCategory,
+    ],
   );
 
   const endPointer = useCallback(() => {
@@ -365,15 +473,19 @@ export function PlanningHubManipulationProvider({
     [enabled, buildDraft],
   );
 
+  const setCalendarDragLayout = useCallback((layout: CalendarDragLayout) => {
+    calendarDragLayoutRef.current = layout;
+  }, []);
+
   const beginCalendarMove = useCallback(
-    (item: WeekplannerItem, clientY: number) => {
+    (item: WeekplannerItem, clientX: number, clientY: number) => {
       const caps = getCapabilities(item);
       if (!caps.canMoveTime) return;
       beginSession({
         mode: "move",
         surface: "kalender",
         item,
-        startClientX: 0,
+        startClientX: clientX,
         startClientY: clientY,
         originalStart: item.startAt,
         originalEnd: item.endAt,
@@ -384,14 +496,15 @@ export function PlanningHubManipulationProvider({
   );
 
   const beginCalendarResize = useCallback(
-    (item: WeekplannerItem, clientY: number) => {
+    (item: WeekplannerItem, edge: ResizeEdge, clientX: number, clientY: number) => {
       const caps = getCapabilities(item);
       if (!caps.canResize) return;
       beginSession({
         mode: "resize",
+        resizeEdge: edge,
         surface: "kalender",
         item,
-        startClientX: 0,
+        startClientX: clientX,
         startClientY: clientY,
         originalStart: item.startAt,
         originalEnd: item.endAt,
@@ -413,6 +526,34 @@ export function PlanningHubManipulationProvider({
       if (!caps.canMoveTime && !caps.canChangePrimaryResource && !caps.canChangeDressingRoom) return;
       beginSession({
         mode: "move",
+        surface: "ressourcen",
+        item,
+        segmentId,
+        originalResourceId: resourceId,
+        startClientX: clientX,
+        startClientY: clientY,
+        originalStart: item.startAt,
+        originalEnd: item.endAt,
+        capabilities: caps,
+      });
+    },
+    [beginSession, getCapabilities],
+  );
+
+  const beginResourceResize = useCallback(
+    (
+      item: WeekplannerItem,
+      segmentId: string,
+      resourceId: string,
+      edge: ResizeEdge,
+      clientX: number,
+      clientY: number,
+    ) => {
+      const caps = getCapabilities(item);
+      if (!caps.canResize) return;
+      beginSession({
+        mode: "resize",
+        resizeEdge: edge,
         surface: "ressourcen",
         item,
         segmentId,
@@ -485,6 +626,8 @@ export function PlanningHubManipulationProvider({
     beginCalendarMove,
     beginCalendarResize,
     beginResourceMove,
+    beginResourceResize,
+    setCalendarDragLayout,
     cancelManipulation,
     resolveResourceRef,
   };

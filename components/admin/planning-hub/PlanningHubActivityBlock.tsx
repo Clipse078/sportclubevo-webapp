@@ -38,8 +38,10 @@ type PlanningHubActivityBlockProps = {
   dragTimeLabel?: string;
   canDrag?: boolean;
   canResize?: boolean;
+  /** Resource timeline uses horizontal start/end handles; calendar uses vertical end (and start) handles. */
+  resizeOrientation?: "horizontal" | "vertical";
   onPointerDownMove?: (event: PointerEvent<HTMLButtonElement>) => void;
-  onPointerDownResize?: (event: PointerEvent<HTMLDivElement>) => void;
+  onPointerDownResize?: (event: PointerEvent<HTMLDivElement>, edge: "start" | "end") => void;
   /** Subtle inner band for nominal activity within effective Garderobe occupancy. */
   nominalActivityBand?: { leftPercent: number; widthPercent: number };
   continuesFromBefore?: boolean;
@@ -64,6 +66,7 @@ export default function PlanningHubActivityBlock({
   dragTimeLabel,
   canDrag = false,
   canResize = false,
+  resizeOrientation = "vertical",
   onPointerDownMove,
   onPointerDownResize,
   nominalActivityBand,
@@ -181,18 +184,57 @@ export default function PlanningHubActivityBlock({
         </div>
       </button>
 
-      {canResize && onPointerDownResize && !isGhost && (
-        <div
-          role="separator"
-          aria-label="Dauer anpassen"
-          className="absolute inset-x-0 bottom-0 h-1.5 cursor-ns-resize bg-transparent hover:bg-[var(--sce-primary)]/20"
-          onPointerDown={(event) => {
-            if (event.button !== 0) return;
-            event.preventDefault();
-            event.stopPropagation();
-            onPointerDownResize(event);
-          }}
-        />
+      {canResize && onPointerDownResize && !isGhost && resizeOrientation === "vertical" && (
+        <>
+          <div
+            role="separator"
+            aria-label="Startzeit anpassen"
+            className="absolute inset-x-0 top-0 h-1.5 cursor-ns-resize bg-transparent opacity-0 transition hover:bg-[var(--sce-primary)]/25 hover:opacity-100 group-hover:opacity-60"
+            onPointerDown={(event) => {
+              if (event.button !== 0) return;
+              event.preventDefault();
+              event.stopPropagation();
+              onPointerDownResize(event, "start");
+            }}
+          />
+          <div
+            role="separator"
+            aria-label="Endzeit anpassen"
+            className="absolute inset-x-0 bottom-0 h-1.5 cursor-ns-resize bg-transparent opacity-0 transition hover:bg-[var(--sce-primary)]/25 hover:opacity-100 group-hover:opacity-60"
+            onPointerDown={(event) => {
+              if (event.button !== 0) return;
+              event.preventDefault();
+              event.stopPropagation();
+              onPointerDownResize(event, "end");
+            }}
+          />
+        </>
+      )}
+      {canResize && onPointerDownResize && !isGhost && resizeOrientation === "horizontal" && (
+        <>
+          <div
+            role="separator"
+            aria-label="Startzeit anpassen"
+            className="absolute inset-y-1 left-0 w-1.5 cursor-ew-resize bg-transparent opacity-0 transition hover:bg-[var(--sce-primary)]/30 hover:opacity-100 group-hover:opacity-60"
+            onPointerDown={(event) => {
+              if (event.button !== 0) return;
+              event.preventDefault();
+              event.stopPropagation();
+              onPointerDownResize(event, "start");
+            }}
+          />
+          <div
+            role="separator"
+            aria-label="Endzeit anpassen"
+            className="absolute inset-y-1 right-0 w-1.5 cursor-ew-resize bg-transparent opacity-0 transition hover:bg-[var(--sce-primary)]/30 hover:opacity-100 group-hover:opacity-60"
+            onPointerDown={(event) => {
+              if (event.button !== 0) return;
+              event.preventDefault();
+              event.stopPropagation();
+              onPointerDownResize(event, "end");
+            }}
+          />
+        </>
       )}
     </div>
   );

@@ -49,7 +49,8 @@ export default function PlanningHubManipulationConfirm({
 }: Props) {
   const typeLabel = weekplannerActivityTypeLabel(draft.item.type);
   const primary = weekplannerPrimaryLabel(draft.item);
-  const title = `${typeLabel} ${primary} verschieben`;
+  const title = "Planung ändern";
+  const subtitle = `${typeLabel} · ${primary}`;
 
   return (
     <div
@@ -60,6 +61,7 @@ export default function PlanningHubManipulationConfirm({
     >
       <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg">
         <p className="text-sm font-semibold text-[var(--foreground)]">{title}</p>
+        <p className="mt-0.5 text-xs text-[var(--text-2)]">{subtitle}</p>
 
         <div className="mt-3 grid gap-3 text-xs sm:grid-cols-2">
           <div className="rounded-lg bg-[var(--surface-2)] p-2.5">
@@ -123,7 +125,7 @@ export default function PlanningHubManipulationConfirm({
             disabled={saving}
             data-testid="planning-hub-manipulation-confirm-apply"
           >
-            Übernehmen
+            Änderung übernehmen
           </button>
         </div>
       </div>

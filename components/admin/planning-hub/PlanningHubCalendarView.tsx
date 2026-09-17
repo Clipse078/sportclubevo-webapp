@@ -146,6 +146,14 @@ export default function PlanningHubCalendarView({
     : CALENDAR_DAYPART_MIN_ACTIVITY_WIDTH_PX;
 
   const columnWidthPx = estimateDayColumnWidthPx(DAY_MIN_WIDTH_PX, measuredGridWidthPx ?? undefined);
+  const weekDayKeys = useMemo(() => filtered.days.map((d) => d.dayKey), [filtered.days]);
+
+  useEffect(() => {
+    manipulation?.setCalendarDragLayout({
+      dayColumnWidthPx: columnWidthPx,
+      weekDayKeys,
+    });
+  }, [manipulation, columnWidthPx, weekDayKeys]);
 
   const gridHeightPx = timeRange.totalMinutes * pixelsPerMinute;
   const hourMarks: number[] = [];
@@ -381,8 +389,8 @@ export default function PlanningHubCalendarView({
                     pointerHandlers?: {
                       canDrag: boolean;
                       canResize: boolean;
-                      onMove?: (clientY: number) => void;
-                      onResize?: (clientY: number) => void;
+                      onMove?: (clientX: number, clientY: number) => void;
+                      onResize?: (edge: "start" | "end", clientX: number, clientY: number) => void;
                     },
                   ) => {
                     const clip = clipItemMinutes(startAt, endAt, timeRange, timezone);
@@ -415,12 +423,13 @@ export default function PlanningHubCalendarView({
                         canResize={pointerHandlers?.canResize ?? false}
                         onPointerDownMove={
                           pointerHandlers?.onMove
-                            ? (event) => pointerHandlers.onMove!(event.clientY)
+                            ? (event) => pointerHandlers.onMove!(event.clientX, event.clientY)
                             : undefined
                         }
                         onPointerDownResize={
                           pointerHandlers?.onResize
-                            ? (event) => pointerHandlers.onResize!(event.clientY)
+                            ? (event, edge) =>
+                                pointerHandlers.onResize!(edge, event.clientX, event.clientY)
                             : undefined
                         }
                         onActivate={() => {
@@ -489,8 +498,10 @@ export default function PlanningHubCalendarView({
                       ? {
                           canDrag: caps.canMoveTime,
                           canResize: caps.canResize,
-                          onMove: (clientY) => manipulation.beginCalendarMove(item, clientY),
-                          onResize: (clientY) => manipulation.beginCalendarResize(item, clientY),
+                          onMove: (clientX, clientY) =>
+                            manipulation.beginCalendarMove(item, clientX, clientY),
+                          onResize: (edge, clientX, clientY) =>
+                            manipulation.beginCalendarResize(item, edge, clientX, clientY),
                         }
                       : undefined,
                   );

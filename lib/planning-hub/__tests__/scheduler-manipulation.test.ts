@@ -11,10 +11,13 @@ import { isNoOpDraft, type SchedulerDraftChange } from "../scheduler-draft";
 import {
   preserveDurationOnMove,
   resizeEndPreservingStart,
+  resizeStartPreservingEnd,
   snapMinutesFromMidnight,
   snapPixelDeltaToMinutes,
   SCHEDULER_SNAP_MINUTES,
 } from "../scheduler/time-snap";
+import { calendarMoveWithDayAndTimeDelta } from "../scheduler/calendar-date-shift";
+import { dayKeyInTimeZone } from "../scheduler/time-zone";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
 
 const PITCH_A = {
@@ -93,6 +96,14 @@ describe("time snap", () => {
     const start = new Date("2026-08-10T15:00:00.000Z");
     const result = resizeEndPreservingStart(start, 15 * 60, "Europe/Zurich", start);
     expect(result).toBeNull();
+  });
+
+  it("resizes start preserving end", () => {
+    const start = new Date("2026-08-10T15:00:00.000Z");
+    const end = new Date("2026-08-10T16:30:00.000Z");
+    const resized = resizeStartPreservingEnd(end, 15 * 60 + 30, "Europe/Zurich", start);
+    expect(resized?.startAt.toISOString()).toBe("2026-08-10T13:30:00.000Z");
+    expect(resized?.endAt).toEqual(end);
   });
 });
 
@@ -242,6 +253,66 @@ describe("draft + conflicts", () => {
   });
 });
 
+describe("resource timeline geometry", () => {
+  it("horizontal drag applies snapped time delta", () => {
+    const item = training();
+    const delta = snapPixelDeltaToMinutes(36, 2.4);
+    expect(delta).toBe(15);
+    const originalStartMin = 17 * 60;
+    const shifted = preserveDurationOnMove(
+      item.startAt,
+      item.endAt,
+      snapMinutesFromMidnight(originalStartMin + delta),
+      "Europe/Zurich",
+      item.startAt,
+    );
+    expect((shifted.startAt.getTime() - item.startAt.getTime()) / 60_000).toBe(15);
+  });
+
+  it("diagonal draft marks combined manipulation when time and resource change", () => {
+    const item = training();
+    const draft: SchedulerDraftChange = {
+      itemId: item.id,
+      originalStart: item.startAt,
+      originalEnd: item.endAt,
+      proposedStart: new Date(item.startAt.getTime() + 30 * 60_000),
+      proposedEnd: new Date(item.endAt.getTime() + 30 * 60_000),
+      originalResourceId: PITCH_A.facilityResourceId,
+      proposedResourceId: PITCH_B.facilityResourceId,
+      manipulationType: "combined",
+      item,
+    };
+    expect(draft.manipulationType).toBe("combined");
+  });
+
+  it("preserves activity identity in projection", () => {
+    const item = training();
+    const draft: SchedulerDraftChange = {
+      itemId: item.id,
+      originalStart: item.startAt,
+      originalEnd: item.endAt,
+      proposedStart: new Date(item.startAt.getTime() + 30 * 60_000),
+      proposedEnd: new Date(item.endAt.getTime() + 30 * 60_000),
+      manipulationType: "move",
+      item,
+    };
+    const projected = projectItemWithDraft(item, draft, null, "pitch");
+    expect(projected.id).toBe(item.id);
+    expect(projected.trainingSessionId).toBe(item.trainingSessionId);
+  });
+});
+
+describe("calendar manipulation", () => {
+  const week = ["2026-09-14", "2026-09-15", "2026-09-16", "2026-09-17", "2026-09-18", "2026-09-19", "2026-09-20"];
+
+  it("drag between days changes canonical day", () => {
+    const start = new Date("2026-09-20T07:30:00.000Z");
+    const end = new Date("2026-09-20T09:30:00.000Z");
+    const moved = calendarMoveWithDayAndTimeDelta(start, end, -1, 0, week, "Europe/Zurich");
+    expect(dayKeyInTimeZone(moved!.startAt, "Europe/Zurich")).toBe("2026-09-19");
+  });
+});
+
 describe("canonical mutation apply", () => {
   it("calls reschedule exactly once on confirm path", async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
@@ -262,6 +333,25 @@ describe("canonical mutation apply", () => {
       String(c[0]).includes("/reschedule"),
     );
     expect(rescheduleCalls).toHaveLength(1);
+    vi.unstubAllGlobals();
+  });
+
+  it("surfaces persistence failure without silent success", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: "Nope" }) }));
+    const { applyStandardPlanSchedulerDraft } = await import("../canonical-planning-mutations");
+    const item = training();
+    const draft: SchedulerDraftChange = {
+      itemId: item.id,
+      originalStart: item.startAt,
+      originalEnd: item.endAt,
+      proposedStart: new Date("2026-08-10T16:00:00.000Z"),
+      proposedEnd: new Date("2026-08-10T17:30:00.000Z"),
+      manipulationType: "move",
+      item,
+    };
+    await expect(
+      applyStandardPlanSchedulerDraft(draft, "pitch", { PITCH_HALL: [], DRESSING_ROOM: [] }, "Europe/Zurich"),
+    ).rejects.toThrow("Nope");
     vi.unstubAllGlobals();
   });
 });

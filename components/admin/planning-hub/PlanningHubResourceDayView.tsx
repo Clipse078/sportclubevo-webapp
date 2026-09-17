@@ -132,7 +132,10 @@ export default function PlanningHubResourceDayView({
           Keine Ressourcenbelegungen an diesem Tag.
         </p>
       ) : (
-        <div className="overflow-auto [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]">
+        <div
+          className="overflow-auto [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]"
+          data-planning-hub-resource-scroll
+        >
           <div className="min-w-[640px]">
             <div
               className="sticky top-0 z-10 flex border-b border-[var(--border)] bg-[var(--surface)]"
@@ -275,6 +278,8 @@ export default function PlanningHubResourceDayView({
                             visualVariant={variant}
                             dragTimeLabel={timeLabel}
                             canDrag={interactive && (caps?.canMoveTime || caps?.canChangePrimaryResource || caps?.canChangeDressingRoom)}
+                            canResize={interactive && !!caps?.canResize}
+                            resizeOrientation="horizontal"
                             onPointerDownMove={
                               interactive && manipulation
                                 ? (event) =>
@@ -282,6 +287,19 @@ export default function PlanningHubResourceDayView({
                                       segment.item,
                                       segment.segmentId,
                                       row.resourceId,
+                                      event.clientX,
+                                      event.clientY,
+                                    )
+                                : undefined
+                            }
+                            onPointerDownResize={
+                              interactive && manipulation
+                                ? (event, edge) =>
+                                    manipulation.beginResourceResize(
+                                      segment.item,
+                                      segment.segmentId,
+                                      row.resourceId,
+                                      edge,
                                       event.clientX,
                                       event.clientY,
                                     )
