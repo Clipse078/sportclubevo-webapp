@@ -105,15 +105,25 @@
   --sce-sidebar-effective-width: var(--sidebar-width);
   --sce-content-viewport-width: calc(100vw - var(--sce-sidebar-effective-width));
   --sce-overlay-gutter: 1rem;
-  --sce-dialog-workspace-desired-max: 97.5rem;
+  --sce-overlay-gutter-x: 1rem;
+  --sce-overlay-gutter-y: 1.5rem;
+  --sce-dialog-workspace-desired-max: 72.5rem;
+  --sce-dialog-compact-max-width: min(
+    32.5rem,
+    calc(var(--sce-content-viewport-width) - 2 * var(--sce-overlay-gutter-x))
+  );
+  --sce-dialog-form-max-width: min(
+    60rem,
+    calc(var(--sce-content-viewport-width) - 2 * var(--sce-overlay-gutter-x))
+  );
   --sce-dialog-workspace-max-width: min(
     var(--sce-dialog-workspace-desired-max),
-    calc(var(--sce-content-viewport-width) - 2 * var(--sce-overlay-gutter))
+    calc(var(--sce-content-viewport-width) - 2 * var(--sce-overlay-gutter-x))
   );
   --sce-dialog-standard-max-width: calc(
-    var(--sce-content-viewport-width) - 2 * var(--sce-overlay-gutter)
+    var(--sce-content-viewport-width) - 2 * var(--sce-overlay-gutter-x)
   );
-  --sce-dialog-max-height: min(85dvh, calc(100dvh - 2 * var(--sce-overlay-gutter)));
+  --sce-dialog-max-height: calc(100dvh - 2 * var(--sce-overlay-gutter-y));
   --sce-page-gutter: 1.25rem;
   /* SCE-RESPONSIVE-01G — zero visible backdrop; hierarchy from dialog surface only */
   --sce-modal-backdrop: transparent;
@@ -1064,6 +1074,8 @@ html[data-sidebar-collapsed="1"] {
 .sce-modal-overlay-root {
   position: fixed;
   inset: 0;
+  width: 100%;
+  height: 100dvh;
   z-index: 100;
   pointer-events: none;
 }
@@ -1090,11 +1102,11 @@ html[data-sidebar-collapsed="1"] {
 @keyframes sce-modal-panel-in {
   from {
     opacity: 0;
-    transform: translateY(5px) scale(0.985);
+    transform: scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: scale(1);
   }
 }
 
@@ -1115,7 +1127,9 @@ html[data-sidebar-collapsed="1"] {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  padding: var(--sce-overlay-gutter);
+  min-width: 0;
+  min-height: 0;
+  padding: var(--sce-overlay-gutter-y) var(--sce-overlay-gutter-x);
   overflow: hidden;
   pointer-events: none;
 }
@@ -1126,7 +1140,7 @@ html[data-sidebar-collapsed="1"] {
 
 @media (min-width: 640px) {
   .sce-modal-overlay-content-viewport {
-    padding: calc(var(--sce-overlay-gutter) * 1.25);
+    --sce-overlay-gutter-y: 1.75rem;
   }
 }
 

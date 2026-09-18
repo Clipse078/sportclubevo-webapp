@@ -25,7 +25,9 @@ describe("AggregatedActivityInspectionDialog SCE-RESPONSIVE-01", () => {
       "components/admin/planning-hub/AggregatedActivityInspectionDialog.tsx",
     );
     const headerIdx = source.indexOf("<header");
-    const listScrollIdx = source.indexOf('className="min-h-0 flex-1 overflow-auto overflow-x-auto"');
+    const listScrollIdx = source.indexOf("overflow-y-auto overflow-x-hidden");
+    expect(source).toContain("table-fixed");
+    expect(source).not.toContain("overflow-x-auto");
     expect(headerIdx).toBeGreaterThan(-1);
     expect(listScrollIdx).toBeGreaterThan(headerIdx);
   });

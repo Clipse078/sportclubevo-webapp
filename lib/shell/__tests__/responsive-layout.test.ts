@@ -21,7 +21,7 @@ describe("SCE-RESPONSIVE-01 responsive-layout contract", () => {
 
   it("workspace dialog panel uses CSS max-width token", () => {
     expect(SCE_DIALOG_WORKSPACE_PANEL).toContain("--sce-dialog-workspace-max-width");
-    expect(SCE_DIALOG_WORKSPACE_DESIRED_MAX_PX).toBe(1560);
+    expect(SCE_DIALOG_WORKSPACE_DESIRED_MAX_PX).toBe(1160);
   });
 
   it("authenticated main column allows flex shrink", () => {

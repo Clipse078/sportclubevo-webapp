@@ -20,11 +20,11 @@ export type SceModalOverlayProps = {
 };
 
 /**
- * Full-screen modal backdrop with panel centering constrained to the authenticated
- * main content band (respects sidebar width / collapsed state via CSS variables on html).
+ * SCE dialog portal foundation (SCE-RESPONSIVE-01J):
+ * viewport-fixed root → transparent interaction layer → sidebar-aware application
+ * viewport (flex center) → panel host. Dialog variant components own max-width/height.
  *
- * Portalled to document.body so shell ancestors cannot alter fixed containing blocks
- * or stacking relative to the persistent sidebar.
+ * Portalled to document.body so admin shell transforms never become the containing block.
  */
 export function SceModalOverlay({
   open,

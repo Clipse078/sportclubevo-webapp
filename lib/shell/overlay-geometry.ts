@@ -11,8 +11,11 @@ import {
 import { SCE_DIALOG_WORKSPACE_DESIRED_MAX_PX } from "@/lib/shell/responsive-layout";
 import { SIDEBAR_WIDTH_DEFAULT, SIDEBAR_WIDTH_MAX } from "@/lib/shell/sidebar-width";
 
-/** Default --sce-overlay-gutter (1rem) at 16px root font. */
+/** Default --sce-overlay-gutter-x (1rem) at 16px root font. */
 export const SCE_OVERLAY_GUTTER_PX = 16;
+
+/** Default --sce-overlay-gutter-y (1.5rem) at 16px root font. */
+export const SCE_OVERLAY_GUTTER_Y_PX = 24;
 
 export type ContentRegionBounds = {
   /** Left edge of the overlay content viewport (px from viewport origin). */
@@ -97,7 +100,7 @@ export function computeFlexCenteredDialogVerticalBounds(options: {
   dialogHeightPx: number;
   gutterPx?: number;
 }): Pick<DialogBounds, "top" | "bottom" | "height"> {
-  const gutterPx = options.gutterPx ?? SCE_OVERLAY_GUTTER_PX;
+  const gutterPx = options.gutterPx ?? SCE_OVERLAY_GUTTER_Y_PX;
   const innerTop = gutterPx;
   const innerBottom = options.viewportHeightPx - gutterPx;
   const innerHeight = Math.max(0, innerBottom - innerTop);
@@ -113,7 +116,7 @@ export function computeFlexCenteredDialogVerticalBounds(options: {
 export function assertDialogWithinVerticalViewport(
   dialog: Pick<DialogBounds, "top" | "bottom">,
   viewportHeightPx: number,
-  gutterPx: number = SCE_OVERLAY_GUTTER_PX,
+  gutterPx: number = SCE_OVERLAY_GUTTER_Y_PX,
 ): GeometryInvariantResult {
   const violations: string[] = [];
   const minTop = gutterPx;

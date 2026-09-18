@@ -12,8 +12,9 @@ import {
   SCE_DIALOG_PANEL_BASE,
   SCE_DIALOG_SIZE_LG,
   SCE_DIALOG_SIZE_MD,
-  SCE_DIALOG_SIZE_SM,
-  SCE_DIALOG_SIZE_XL,
+  SCE_DIALOG_VARIANT_COMPACT,
+  SCE_DIALOG_VARIANT_FORM,
+  SCE_DIALOG_VARIANT_WORKSPACE,
 } from "@/lib/shell/responsive-layout";
 
 export type DialogSize = "sm" | "md" | "lg" | "xl" | "workspace";
@@ -36,11 +37,11 @@ export type DialogProps = {
 };
 
 const sizeClass: Record<DialogSize, string> = {
-  sm: SCE_DIALOG_SIZE_SM,
+  sm: SCE_DIALOG_VARIANT_COMPACT,
   md: SCE_DIALOG_SIZE_MD,
   lg: SCE_DIALOG_SIZE_LG,
-  xl: SCE_DIALOG_SIZE_XL,
-  workspace: "max-w-[var(--sce-dialog-workspace-max-width)]",
+  xl: SCE_DIALOG_VARIANT_FORM,
+  workspace: SCE_DIALOG_VARIANT_WORKSPACE,
 };
 
 /**
@@ -101,7 +102,6 @@ export function Dialog({
         aria-modal="true"
         aria-labelledby="sce-dialog-title"
         aria-describedby={description ? "sce-dialog-desc" : undefined}
-        tabIndex={-1}
         onKeyDown={handlePanelKeyDown}
         className={cn(SCE_DIALOG_PANEL_BASE, sizeClass[size])}
       >
