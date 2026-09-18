@@ -56,6 +56,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
     <div
       className="flex min-h-screen bg-[var(--background)]"
       style={tenantCssVars as React.CSSProperties}
+      data-sce-modal-background
     >
       {/* Fixed sidebar */}
       <Suspense fallback={null}>

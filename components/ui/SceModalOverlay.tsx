@@ -3,6 +3,7 @@
 import { useEffect, type MouseEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
+import { lockSceDocumentScroll } from "@/lib/ui/sce-modal-scroll-lock";
 import {
   SCE_OVERLAY_CONTENT_VIEWPORT,
   SCE_OVERLAY_ROOT,
@@ -34,10 +35,17 @@ export function SceModalOverlay({
 }: SceModalOverlayProps) {
   useEffect(() => {
     if (!open) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    return lockSceDocumentScroll();
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const backgroundRoots = document.querySelectorAll<HTMLElement>("[data-sce-modal-background]");
+    backgroundRoots.forEach((el) => el.setAttribute("inert", ""));
+
     return () => {
-      document.body.style.overflow = previousOverflow;
+      backgroundRoots.forEach((el) => el.removeAttribute("inert"));
     };
   }, [open]);
 
@@ -53,6 +61,7 @@ export function SceModalOverlay({
     <div
       className={SCE_OVERLAY_ROOT}
       role="presentation"
+      data-state="open"
       data-testid={testId}
       onClick={handleBackdropClick}
     >
@@ -61,7 +70,7 @@ export function SceModalOverlay({
         className={cn(SCE_OVERLAY_CONTENT_VIEWPORT, contentViewportClassName)}
         onClick={handleBackdropClick}
       >
-        {children}
+        <div className="sce-modal-overlay-panel-host">{children}</div>
       </div>
     </div>
   );

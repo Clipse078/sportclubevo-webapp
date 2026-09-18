@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useSceModalDialog } from "@/lib/ui/use-sce-modal-dialog";
 import { AlertTriangle, MoreHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
@@ -104,7 +99,7 @@ export default function AggregatedActivityInspectionDialog({
   canEditItem,
 }: AggregatedActivityInspectionDialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const titleId = "aggregated-activity-inspection-title";
   const descId = "aggregated-activity-inspection-desc";
 
@@ -144,49 +139,12 @@ export default function AggregatedActivityInspectionDialog({
     setSelectedId((current) => resolveAggregateSelectionId(visibleItems, current));
   }, [visibleItems]);
 
-  useEffect(() => {
-    if (open) {
-      previousFocusRef.current = document.activeElement as HTMLElement;
-      requestAnimationFrame(() => {
-        panelRef.current?.focus();
-      });
-    } else {
-      previousFocusRef.current?.focus();
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    function handleKeyDown(e: globalThis.KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-
-      if (e.key !== "Tab" || !panelRef.current) return;
-
-      const focusable = panelRef.current.querySelectorAll<HTMLElement>(
-        'a[href],button:not([disabled]),textarea,input,select,[tabindex]:not([tabindex="-1"])',
-      );
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-
-      if (e.shiftKey) {
-        if (document.activeElement === first) {
-          e.preventDefault();
-          last?.focus();
-        }
-      } else if (document.activeElement === last) {
-        e.preventDefault();
-        first?.focus();
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
+  useSceModalDialog({
+    open,
+    onClose,
+    panelRef,
+    initialFocusRef: titleRef,
+  });
 
   if (!open) return null;
 
@@ -223,14 +181,16 @@ export default function AggregatedActivityInspectionDialog({
         aria-describedby={descId}
         tabIndex={-1}
         onKeyDown={handlePanelKeyDown}
-        className={cn(SCE_DIALOG_WORKSPACE_PANEL, "h-[var(--sce-dialog-max-height)]")}
+        className={cn(SCE_DIALOG_WORKSPACE_PANEL, "max-h-[var(--sce-dialog-max-height)]")}
       >
         <header className="shrink-0 border-b border-[var(--border)] px-5 py-4 sm:px-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <h2
+                ref={titleRef}
                 id={titleId}
-                className="text-base font-semibold text-[var(--foreground)] sm:text-lg"
+                tabIndex={-1}
+                className="text-base font-semibold text-[var(--foreground)] outline-none sm:text-lg"
                 data-testid="aggregate-inspection-title"
               >
                 {metrics.activityCount} gleichzeitige Aktivitäten

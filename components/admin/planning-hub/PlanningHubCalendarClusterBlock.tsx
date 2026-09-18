@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import type { CSSProperties } from "react";
 import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -39,7 +39,6 @@ export default function PlanningHubCalendarClusterBlock({
   onEditItem,
   canEditItem,
 }: Props) {
-  const anchorRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const start = new Date(Math.min(...items.map((i) => i.startAt.getTime())));
   const end = new Date(Math.max(...items.map((i) => i.endAt.getTime())));
@@ -49,15 +48,11 @@ export default function PlanningHubCalendarClusterBlock({
 
   function handleClose() {
     setOpen(false);
-    requestAnimationFrame(() => {
-      anchorRef.current?.focus();
-    });
   }
 
   return (
     <>
       <button
-        ref={anchorRef}
         type="button"
         style={style}
         data-testid="planning-hub-calendar-cluster"

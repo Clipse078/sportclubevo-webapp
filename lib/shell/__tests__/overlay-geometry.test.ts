@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   assertDialogWithinContentRegion,
+  assertDialogWithinVerticalViewport,
   computeFlexCenteredDialogBounds,
+  computeFlexCenteredDialogVerticalBounds,
   computeOverlayContentRegion,
   computeWorkspaceDialogWidth,
   LAPTOP_VIEWPORT_WIDTHS_PX,
@@ -99,6 +101,31 @@ describe("overlay-geometry SCE-RESPONSIVE-01B", () => {
       );
       expect(assertDialogWithinContentRegion(dialog, region).ok).toBe(true);
     });
+  });
+
+  describe("vertical geometry M", () => {
+    it.each(LAPTOP_VIEWPORT_WIDTHS_PX)(
+      "viewport %ipx height — workspace dialog fits within vertical gutters",
+      (viewportWidthPx) => {
+        const viewportHeightPx = 864;
+        const region = computeOverlayContentRegion({
+          viewportWidthPx,
+          sidebarWidthPx: SIDEBAR_WIDTH_DEFAULT,
+          collapsed: false,
+        });
+        const dialogWidth = computeWorkspaceDialogWidth(region.innerWidth);
+        const horizontal = computeFlexCenteredDialogBounds(region, dialogWidth);
+        const vertical = computeFlexCenteredDialogVerticalBounds({
+          viewportHeightPx,
+          dialogHeightPx: viewportHeightPx * 0.85,
+        });
+        const dialog = { ...horizontal, ...vertical };
+        expect(
+          assertDialogWithinVerticalViewport(dialog, viewportHeightPx, region.gutterPx).ok,
+        ).toBe(true);
+        expect(assertDialogWithinContentRegion(dialog, region).ok).toBe(true);
+      },
+    );
   });
 
   it("fails when dialog is viewport-centered (regression sentinel)", () => {

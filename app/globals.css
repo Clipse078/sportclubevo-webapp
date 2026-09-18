@@ -285,6 +285,7 @@
 html {
   background: var(--background);
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -1069,6 +1070,44 @@ html[data-sidebar-collapsed="1"] {
   inset: 0;
   background: rgb(0 0 0 / 65%);
   backdrop-filter: blur(3px);
+  animation: sce-modal-backdrop-in var(--sce-motion-duration-fast) var(--sce-motion-ease-out)
+    forwards;
+}
+
+.sce-modal-overlay-panel-host {
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  max-height: 100%;
+  justify-content: center;
+  animation: sce-modal-panel-in var(--sce-motion-duration-fast) var(--sce-motion-ease-out) forwards;
+}
+
+@keyframes sce-modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sce-modal-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sce-modal-overlay-backdrop,
+  .sce-modal-overlay-panel-host {
+    animation: none;
+  }
 }
 
 .sce-modal-overlay-content-viewport {
@@ -1082,6 +1121,7 @@ html[data-sidebar-collapsed="1"] {
   justify-content: center;
   box-sizing: border-box;
   padding: var(--sce-overlay-gutter);
+  overflow: hidden;
 }
 
 @media (min-width: 640px) {

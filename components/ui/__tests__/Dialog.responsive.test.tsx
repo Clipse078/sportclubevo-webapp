@@ -20,5 +20,12 @@ describe("Dialog SCE-RESPONSIVE-01", () => {
     expect(overlay).toContain("createPortal");
     expect(overlay).toContain("SCE_OVERLAY_CONTENT_VIEWPORT");
     expect(overlay).not.toContain("translate-x");
+    expect(overlay).toContain("lockSceDocumentScroll");
+  });
+
+  it("Dialog uses shared modal focus helper with preventScroll semantics", () => {
+    const dialog = readSource("components/ui/Dialog.tsx");
+    expect(dialog).toContain("useSceModalDialog");
+    expect(dialog).not.toMatch(/panelRef\.current\?\.focus\(\)/);
   });
 });

@@ -32,6 +32,9 @@ export type DialogBounds = {
   left: number;
   right: number;
   width: number;
+  top?: number;
+  bottom?: number;
+  height?: number;
 };
 
 export function computeOverlayContentRegion(options: {
@@ -88,6 +91,43 @@ export type GeometryInvariantResult = {
   ok: boolean;
   violations: string[];
 };
+
+export function computeFlexCenteredDialogVerticalBounds(options: {
+  viewportHeightPx: number;
+  dialogHeightPx: number;
+  gutterPx?: number;
+}): Pick<DialogBounds, "top" | "bottom" | "height"> {
+  const gutterPx = options.gutterPx ?? SCE_OVERLAY_GUTTER_PX;
+  const innerTop = gutterPx;
+  const innerBottom = options.viewportHeightPx - gutterPx;
+  const innerHeight = Math.max(0, innerBottom - innerTop);
+  const height = Math.min(options.dialogHeightPx, innerHeight);
+  const top = innerTop + (innerHeight - height) / 2;
+  return {
+    top,
+    bottom: top + height,
+    height,
+  };
+}
+
+export function assertDialogWithinVerticalViewport(
+  dialog: Pick<DialogBounds, "top" | "bottom">,
+  viewportHeightPx: number,
+  gutterPx: number = SCE_OVERLAY_GUTTER_PX,
+): GeometryInvariantResult {
+  const violations: string[] = [];
+  const minTop = gutterPx;
+  const maxBottom = viewportHeightPx - gutterPx;
+
+  if (dialog.top != null && dialog.top < minTop - 0.5) {
+    violations.push(`dialog top ${dialog.top}px < gutter ${minTop}px`);
+  }
+  if (dialog.bottom != null && dialog.bottom > maxBottom + 0.5) {
+    violations.push(`dialog bottom ${dialog.bottom}px > viewport-gutter ${maxBottom}px`);
+  }
+
+  return { ok: violations.length === 0, violations };
+}
 
 export function assertDialogWithinContentRegion(
   dialog: DialogBounds,

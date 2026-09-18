@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  type KeyboardEvent,
-  type ReactNode,
-} from "react";
+import { useRef, type KeyboardEvent, type ReactNode } from "react";
+import { useSceModalDialog } from "@/lib/ui/use-sce-modal-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { SceModalOverlay } from "@/components/ui/SceModalOverlay";
@@ -83,54 +79,14 @@ export function Dialog({
   size = "md",
 }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
 
-  useEffect(() => {
-    if (open) {
-      previousFocusRef.current = document.activeElement as HTMLElement;
-      // Focus the panel so screen readers announce the dialog
-      requestAnimationFrame(() => {
-        panelRef.current?.focus();
-      });
-    } else {
-      previousFocusRef.current?.focus();
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    function handleKeyDown(e: globalThis.KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-
-      if (e.key !== "Tab" || !panelRef.current) return;
-
-      const focusable = panelRef.current.querySelectorAll<HTMLElement>(
-        'a[href],button:not([disabled]),textarea,input,select,[tabindex]:not([tabindex="-1"])',
-      );
-      const first = focusable[0];
-      const last  = focusable[focusable.length - 1];
-
-      if (e.shiftKey) {
-        if (document.activeElement === first) {
-          e.preventDefault();
-          last?.focus();
-        }
-      } else {
-        if (document.activeElement === last) {
-          e.preventDefault();
-          first?.focus();
-        }
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
+  useSceModalDialog({
+    open,
+    onClose,
+    panelRef,
+    initialFocusRef: titleRef,
+  });
 
   function handlePanelKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     // Prevent Escape from bubbling — already handled globally above
@@ -153,8 +109,10 @@ export function Dialog({
         <div className={SCE_DIALOG_HEADER}>
           <div className="min-w-0 flex-1">
             <h2
+              ref={titleRef}
               id="sce-dialog-title"
-              className="text-base font-semibold text-[var(--foreground)]"
+              tabIndex={-1}
+              className="text-base font-semibold text-[var(--foreground)] outline-none"
             >
               {title}
             </h2>
