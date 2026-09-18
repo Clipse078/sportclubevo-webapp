@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TurniereTournamentRecordWorkspace from "../TurniereTournamentRecordWorkspace";
 import type { TournamentDto } from "@/lib/tournaments/types";
@@ -130,6 +130,72 @@ describe("TURNIERE-UX-02 record workspace", () => {
     expect(screen.getByTestId("turniere-record-main-rail-grid").className).toContain(
       TURNIERE_RECORD_MAIN_RAIL_GRID,
     );
+  });
+
+  it("uses searchable Verein picker for Veranstalter (not free text)", () => {
+    render(
+      <TurniereTournamentRecordWorkspace
+        tournament={BASE_TOURNAMENT}
+        canManage
+        pitchHallFacilityGroups={[]}
+        dressingRoomFacilityGroups={[]}
+        timezone="Europe/Zurich"
+        defaultTournamentDurationMinutes={120}
+      />,
+    );
+
+    expect(screen.getByTestId("turniere-record-organizer-club")).toBeInTheDocument();
+    expect(screen.getByText("FC Allschwil")).toBeInTheDocument();
+    expect(screen.queryByDisplayValue("FC Allschwil")).not.toBeInTheDocument();
+  });
+
+  it("PATCHes canonical organizerName when Veranstalter is changed", async () => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (url === "/api/teams") {
+        return { ok: true, json: async () => [] };
+      }
+      if (url.startsWith("/api/club-directory/clubs")) {
+        const search =
+          new URL(url, "http://localhost").searchParams.get("search")?.toLowerCase() ?? "";
+        const clubs = [{ id: "club-aesch", name: "FC Aesch", shortName: null }];
+        const matches = clubs.filter((c) => c.name.toLowerCase().includes(search));
+        return { ok: true, json: async () => ({ clubs: matches }) };
+      }
+      if (url === `/api/tournaments/${BASE_TOURNAMENT.id}` && init?.method === "PATCH") {
+        return { ok: true, json: async () => ({}) };
+      }
+      return { ok: true, json: async () => [] };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <TurniereTournamentRecordWorkspace
+        tournament={BASE_TOURNAMENT}
+        canManage
+        pitchHallFacilityGroups={[]}
+        dressingRoomFacilityGroups={[]}
+        timezone="Europe/Zurich"
+        defaultTournamentDurationMinutes={120}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("turniere-record-organizer-club-picker-clear"));
+    fireEvent.change(screen.getByTestId("turniere-record-organizer-club-picker-input"), {
+      target: { value: "Ae" },
+    });
+    await screen.findByTestId("turniere-record-organizer-club-picker-option-club-aesch");
+    fireEvent.mouseDown(screen.getByTestId("turniere-record-organizer-club-picker-option-club-aesch"));
+
+    fireEvent.click(screen.getByTestId("tournament-save"));
+
+    await waitFor(() => {
+      const patchCall = fetchMock.mock.calls.find(
+        (c) => c[0] === `/api/tournaments/${BASE_TOURNAMENT.id}` && (c[1] as RequestInit)?.method === "PATCH",
+      );
+      expect(patchCall).toBeTruthy();
+      const body = JSON.parse((patchCall![1] as RequestInit).body as string);
+      expect(body.organizerName).toBe("FC Aesch");
+    });
   });
 
   it("disables save until the record is dirty", () => {

@@ -57,6 +57,8 @@ import {
   type TournamentResourceAllocationDraft,
 } from "@/lib/tournaments/create-tournament-orchestration";
 import type { ExternalClubPickerResult } from "./ExternalClubPicker";
+import TournamentOrganizerClubField from "./TournamentOrganizerClubField";
+import { organizerNameFromPickerSelection } from "@/lib/tournaments/organizer-picker-state";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -145,7 +147,7 @@ export default function TournamentCreateForm({
   // ── Turnier fields ─────────────────────────────────────────────────────
   const [seasonId, setSeasonId] = useState("");
   const [title, setTitle] = useState("Turnier");
-  const [organizerName, setOrganizerName] = useState("");
+  const [organizerSelection, setOrganizerSelection] = useState<ExternalClubPickerResult | null>(null);
   const [competitionLabel, setCompetitionLabel] = useState("");
   const [location, setLocation] = useState("");
   const [homeAway, setHomeAway] = useState<"HOME" | "AWAY">("HOME");
@@ -524,7 +526,7 @@ export default function TournamentCreateForm({
                 startAt,
                 endAt: endAt || null,
                 meetingTime: meetingTime || null,
-                organizerName: organizerName.trim() || null,
+                organizerName: organizerNameFromPickerSelection(organizerSelection),
                 competitionLabel: competitionLabel.trim() || null,
                 homeAway,
                 resultLabel: resultLabel.trim() || null,
@@ -750,16 +752,11 @@ export default function TournamentCreateForm({
             />
           </label>
 
-          <label className="block space-y-2">
-            <span className="fca-label">Organisator</span>
-            <input
-              type="text"
-              value={organizerName}
-              onChange={(e) => setOrganizerName(e.target.value)}
-              className="fca-input"
-              placeholder="z. B. FC Aesch"
-            />
-          </label>
+          <TournamentOrganizerClubField
+            selected={organizerSelection}
+            onChange={setOrganizerSelection}
+            testId="tournament-create-organizer-club"
+          />
 
           <label className="block space-y-2">
             <span className="fca-label">Ort</span>

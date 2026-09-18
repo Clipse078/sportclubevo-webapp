@@ -190,6 +190,17 @@ describe("B. getTournament", () => {
     expect(result.teamLogoUrl).toBe("https://cdn.example.com/fca.png");
   });
 
+  it("keeps organizerName readable when directory no longer lists the Verein (archived)", async () => {
+    vi.mocked(prisma.event.findFirst).mockResolvedValue(baseRow as never);
+    vi.mocked(prisma.externalClub.findMany).mockResolvedValue([] as never);
+
+    const result = await getTournament(TENANT_A, TOURNAMENT_ID);
+
+    expect(result.organizerName).toBe("FC Aesch");
+    expect(result.organizerExternalClubId).toBeNull();
+    expect(result.organizerLogoUrl).toBeNull();
+  });
+
   it("maps tournamentResourceAllocations to the resourceAllocations DTO list", async () => {
     vi.mocked(prisma.event.findFirst).mockResolvedValue({
       ...baseRow,

@@ -43,6 +43,12 @@ import TurniereTournamentRecordDeleteDialog from "./TurniereTournamentRecordDele
 import TurniereTournamentRecordReadinessPill from "./TurniereTournamentRecordReadinessPill";
 import TurniereTournamentRecordResourceSummary from "./TurniereTournamentRecordResourceSummary";
 import { TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS } from "./turniere-record-layout";
+import TournamentOrganizerClubField from "@/components/admin/tournamentcenter/TournamentOrganizerClubField";
+import type { ExternalClubPickerResult } from "@/components/admin/tournamentcenter/ExternalClubPicker";
+import {
+  organizerNameFromPickerSelection,
+  organizerPickerSelectionFromTournament,
+} from "@/lib/tournaments/organizer-picker-state";
 
 type DeletionImpact = { key: string; label: string; count: number };
 
@@ -56,7 +62,8 @@ type TeamItem = {
 
 type FormSnapshot = {
   title: string;
-  organizerName: string;
+  organizerClubId: string | null;
+  organizerClubName: string | null;
   competitionLabel: string;
   location: string;
   startAt: string;
@@ -76,7 +83,7 @@ function toDateTimeLocalValue(iso: string | null, timezone: string): string {
 
 function buildFormSnapshot(input: {
   title: string;
-  organizerName: string;
+  organizerSelection: ExternalClubPickerResult | null;
   competitionLabel: string;
   location: string;
   startAt: string;
@@ -91,7 +98,8 @@ function buildFormSnapshot(input: {
 }): FormSnapshot {
   return {
     title: input.title.trim(),
-    organizerName: input.organizerName.trim(),
+    organizerClubId: input.organizerSelection?.id ?? null,
+    organizerClubName: input.organizerSelection?.name.trim() ?? null,
     competitionLabel: input.competitionLabel.trim(),
     location: input.location.trim(),
     startAt: input.startAt,
@@ -153,7 +161,9 @@ export default function TurniereTournamentRecordWorkspace({
   const { toast } = useToast();
 
   const [title, setTitle] = useState(tournament.title);
-  const [organizerName, setOrganizerName] = useState(tournament.organizerName ?? "");
+  const [organizerSelection, setOrganizerSelection] = useState<ExternalClubPickerResult | null>(() =>
+    organizerPickerSelectionFromTournament(tournament),
+  );
   const [competitionLabel, setCompetitionLabel] = useState(tournament.competitionLabel ?? "");
   const [location, setLocation] = useState(tournament.location ?? "");
   const [startAt, setStartAt] = useState(toDateTimeLocalValue(tournament.startAt, timezone));
@@ -176,7 +186,7 @@ export default function TurniereTournamentRecordWorkspace({
   const initialSnapshotRef = useRef(
     buildFormSnapshot({
       title: tournament.title,
-      organizerName: tournament.organizerName ?? "",
+      organizerSelection: organizerPickerSelectionFromTournament(tournament),
       competitionLabel: tournament.competitionLabel ?? "",
       location: tournament.location ?? "",
       startAt: toDateTimeLocalValue(tournament.startAt, timezone),
@@ -233,7 +243,7 @@ export default function TurniereTournamentRecordWorkspace({
     () =>
       buildFormSnapshot({
         title,
-        organizerName,
+        organizerSelection,
         competitionLabel,
         location,
         startAt,
@@ -248,7 +258,7 @@ export default function TurniereTournamentRecordWorkspace({
       }),
     [
       title,
-      organizerName,
+      organizerSelection,
       competitionLabel,
       location,
       startAt,
@@ -309,7 +319,7 @@ export default function TurniereTournamentRecordWorkspace({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: title.trim(),
-          organizerName: organizerName.trim() || null,
+          organizerName: organizerNameFromPickerSelection(organizerSelection),
           competitionLabel: competitionLabel.trim() || null,
           location: location.trim() || null,
           startAt,
@@ -563,17 +573,12 @@ export default function TurniereTournamentRecordWorkspace({
                 />
               </label>
 
-              <label className="block space-y-2">
-                <span className="fca-label">Veranstalter</span>
-                <input
-                  type="text"
-                  value={organizerName}
-                  onChange={(e) => setOrganizerName(e.target.value)}
-                  disabled={!isEditable || saving}
-                  className="fca-input"
-                  placeholder="z. B. FC Aesch"
-                />
-              </label>
+              <TournamentOrganizerClubField
+                selected={organizerSelection}
+                onChange={setOrganizerSelection}
+                disabled={!isEditable || saving}
+                testId="turniere-record-organizer-club"
+              />
 
               <label className="block space-y-2">
                 <span className="fca-label">Ort</span>
