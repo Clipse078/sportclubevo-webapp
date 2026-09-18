@@ -35,7 +35,10 @@ describe("SCE-RESPONSIVE-01 responsive-layout contract", () => {
     expect(css).toContain('html[data-sidebar-collapsed="1"]');
     expect(css).toContain(".sce-modal-overlay-content-viewport");
     expect(css).toContain(".sce-modal-overlay-root");
-    expect(css).toMatch(/\.sce-modal-overlay-root[\s\S]*left: var\(--sce-sidebar-effective-width\)/);
+    expect(css).toMatch(/\.sce-modal-overlay-root[\s\S]*inset: 0/);
+    expect(css).toMatch(
+      /\.sce-modal-overlay-content-viewport[\s\S]*left: var\(--sce-sidebar-effective-width\)/,
+    );
     expect(css).toContain("--sce-modal-backdrop");
     expect(css).toContain("background: var(--sce-modal-backdrop)");
   });

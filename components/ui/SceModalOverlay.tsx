@@ -67,26 +67,21 @@ export function SceModalOverlay({
   }
 
   const overlay = (
-    <>
-      {/* Transparent hit target only — sidebar pixels stay visible (SCE-RESPONSIVE-01H). */}
-      <div className="sce-modal-overlay-sidebar-shield" aria-hidden="true" data-testid={testId ? `${testId}-sidebar-shield` : undefined} />
+    <div
+      className={SCE_OVERLAY_ROOT}
+      role="presentation"
+      data-state="open"
+      data-testid={testId}
+    >
       <div
-        className={SCE_OVERLAY_ROOT}
-        role="presentation"
-        data-state="open"
-        data-testid={testId}
+        className="sce-modal-overlay-interaction-layer sce-modal-overlay-backdrop"
+        aria-hidden="true"
         onClick={handleBackdropClick}
-      >
-        <div
-          className="sce-modal-overlay-backdrop"
-          aria-hidden="true"
-          onClick={handleBackdropClick}
-        />
-        <div className={cn(SCE_OVERLAY_CONTENT_VIEWPORT, contentViewportClassName)}>
-          <div className="sce-modal-overlay-panel-host">{children}</div>
-        </div>
+      />
+      <div className={cn(SCE_OVERLAY_CONTENT_VIEWPORT, contentViewportClassName)}>
+        <div className="sce-modal-overlay-panel-host">{children}</div>
       </div>
-    </>
+    </div>
   );
 
   return createPortal(overlay, portalTarget);

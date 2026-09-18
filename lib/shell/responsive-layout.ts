@@ -9,11 +9,11 @@
  * Tailwind arbitrary values reference those vars where needed.
  */
 
-/** Application-region modal stack (inset by {@code --sce-sidebar-effective-width}). */
+/** Viewport-fixed portal root ({@code inset: 0}) — transparent coordinate system, no sidebar inset. */
 export const SCE_OVERLAY_ROOT = "sce-modal-overlay-root";
 
 /**
- * Flex centering region within {@link SCE_OVERLAY_ROOT} (fills the application overlay root).
+ * Sidebar-aware flex centering region within {@link SCE_OVERLAY_ROOT} (application band only).
  */
 export const SCE_OVERLAY_CONTENT_VIEWPORT = "sce-modal-overlay-content-viewport";
 

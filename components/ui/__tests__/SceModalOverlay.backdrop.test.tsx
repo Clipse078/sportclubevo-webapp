@@ -45,22 +45,23 @@ describe("SceModalOverlay backdrop SCE-RESPONSIVE-01F", () => {
     );
   });
 
-  it("C — backdrop covers application overlay root only (sidebar band excluded)", () => {
+  it("C — interaction layer covers full viewport root (transparent hit target)", () => {
     const css = readGlobalsCss();
     const block = backdropBlock(css);
     expect(block).toMatch(/position:\s*absolute/);
     expect(block).toMatch(/inset:\s*0/);
     const rootBlock = css.match(/\.sce-modal-overlay-root\s*\{[^}]+\}/)?.[0] ?? "";
-    expect(rootBlock).toMatch(/left:\s*var\(--sce-sidebar-effective-width\)/);
+    expect(rootBlock).toMatch(/inset:\s*0/);
+    expect(rootBlock).not.toMatch(/left:\s*var\(--sce-sidebar-effective-width\)/);
 
     render(
       <SceModalOverlay open testId="viewport-backdrop">
         <div>Panel</div>
       </SceModalOverlay>,
     );
-    expect(screen.getByTestId("viewport-backdrop").classList.contains("sce-modal-overlay-root")).toBe(
-      true,
-    );
+    const root = screen.getByTestId("viewport-backdrop");
+    expect(root.classList.contains("sce-modal-overlay-root")).toBe(true);
+    expect(root.querySelector(".sce-modal-overlay-interaction-layer")).toBeTruthy();
   });
 
   it("D — does not apply backdrop blur or filter on the scrim", () => {

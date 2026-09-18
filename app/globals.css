@@ -1060,28 +1060,15 @@ html[data-sidebar-collapsed="1"] {
   --sce-sidebar-effective-width: var(--sidebar-collapsed-width);
 }
 
-/* SCE-RESPONSIVE-01H — modal layers sit above app content, not over the persistent sidebar */
-.sce-modal-overlay-sidebar-shield {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: var(--sce-sidebar-effective-width);
-  z-index: 100;
-  background: transparent;
-  pointer-events: auto;
-}
-
+/* SCE-RESPONSIVE-01I — viewport-fixed portal root; dialog geometry on content viewport only */
 .sce-modal-overlay-root {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: var(--sce-sidebar-effective-width);
+  inset: 0;
   z-index: 100;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
+.sce-modal-overlay-interaction-layer,
 .sce-modal-overlay-backdrop {
   position: absolute;
   inset: 0;
@@ -1120,7 +1107,10 @@ html[data-sidebar-collapsed="1"] {
 
 .sce-modal-overlay-content-viewport {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--sce-sidebar-effective-width);
   display: flex;
   align-items: center;
   justify-content: center;

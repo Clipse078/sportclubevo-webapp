@@ -51,13 +51,14 @@ describe("SceModalOverlay portal contract SCE-RESPONSIVE-01G", () => {
 
   it("C — fixed root geometry classes remain authoritative in CSS", () => {
     const css = readGlobalsCss();
-    expect(css).toMatch(/\.sce-modal-overlay-root\s*\{[\s\S]*position:\s*fixed/);
-    expect(css).toMatch(
-      /\.sce-modal-overlay-root\s*\{[\s\S]*left:\s*var\(--sce-sidebar-effective-width\)/,
-    );
-    expect(css).toMatch(/\.sce-modal-overlay-content-viewport\s*\{[\s\S]*inset:\s*0/);
-    expect(css).toMatch(/align-items:\s*center/);
-    expect(css).toMatch(/justify-content:\s*center/);
+    const rootBlock = css.match(/\.sce-modal-overlay-root\s*\{[^}]+\}/)?.[0] ?? "";
+    const viewportBlock = css.match(/\.sce-modal-overlay-content-viewport\s*\{[^}]+\}/)?.[0] ?? "";
+    expect(rootBlock).toMatch(/position:\s*fixed/);
+    expect(rootBlock).toMatch(/inset:\s*0/);
+    expect(rootBlock).not.toMatch(/left:\s*var\(--sce-sidebar-effective-width\)/);
+    expect(viewportBlock).toMatch(/left:\s*var\(--sce-sidebar-effective-width\)/);
+    expect(viewportBlock).toMatch(/align-items:\s*center/);
+    expect(viewportBlock).toMatch(/justify-content:\s*center/);
   });
 
   it("D — zero visible backdrop token and no blur/filter scrim", () => {

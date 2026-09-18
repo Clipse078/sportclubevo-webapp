@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  *
- * SCE-RESPONSIVE-01H — sidebar remains visually present while modal is open.
+ * SCE-RESPONSIVE-01I — sidebar remains visible under transparent full-viewport portal stack.
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -19,7 +19,7 @@ function readSource(relativePath: string): string {
   return readFileSync(join(process.cwd(), relativePath), "utf8");
 }
 
-describe("SceModalOverlay sidebar preservation SCE-RESPONSIVE-01H", () => {
+describe("SceModalOverlay sidebar preservation SCE-RESPONSIVE-01I", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
     applyShellLayoutVarsToDocument({
@@ -29,22 +29,27 @@ describe("SceModalOverlay sidebar preservation SCE-RESPONSIVE-01H", () => {
     });
   });
 
-  it("A — overlay root is inset to application region, not full viewport", () => {
+  it("A — overlay root spans full viewport (transparent); sidebar inset is on content viewport only", () => {
     const css = readGlobalsCss();
     const rootBlock = css.match(/\.sce-modal-overlay-root\s*\{[^}]+\}/)?.[0] ?? "";
-    expect(rootBlock).toMatch(/left:\s*var\(--sce-sidebar-effective-width\)/);
-    expect(rootBlock).not.toMatch(/inset:\s*0/);
+    expect(rootBlock).toMatch(/inset:\s*0/);
+    expect(rootBlock).not.toMatch(/left:\s*var\(--sce-sidebar-effective-width\)/);
+    expect(rootBlock).toMatch(/pointer-events:\s*none/);
     expect(rootBlock).toMatch(/z-index:\s*100/);
+
+    const viewportBlock = css.match(/\.sce-modal-overlay-content-viewport\s*\{[^}]+\}/)?.[0] ?? "";
+    expect(viewportBlock).toMatch(/left:\s*var\(--sce-sidebar-effective-width\)/);
   });
 
-  it("B — sidebar shield is transparent and does not use visual dimming", () => {
+  it("B — no sidebar shield layer; interaction layer is transparent", () => {
     const css = readGlobalsCss();
-    const shieldBlock = css.match(/\.sce-modal-overlay-sidebar-shield\s*\{[^}]+\}/)?.[0] ?? "";
-    expect(shieldBlock).toMatch(/background:\s*transparent/);
-    expect(shieldBlock).not.toMatch(/backdrop-filter/);
-    expect(shieldBlock).not.toMatch(/filter:/);
-    expect(shieldBlock).not.toMatch(/opacity:/);
-    expect(shieldBlock).toMatch(/width:\s*var\(--sce-sidebar-effective-width\)/);
+    expect(css).not.toContain(".sce-modal-overlay-sidebar-shield");
+
+    const interactionBlock = css.match(/\.sce-modal-overlay-interaction-layer[\s\S]*?\}/)?.[0] ?? "";
+    expect(interactionBlock).toMatch(/background:\s*var\(--sce-modal-backdrop\)/);
+    expect(interactionBlock).not.toMatch(/backdrop-filter/);
+    expect(interactionBlock).not.toMatch(/filter:/);
+    expect(interactionBlock).not.toMatch(/opacity:/);
   });
 
   it("C — admin shell inert contract unchanged; no visual hide rules on background or inert", () => {
@@ -59,24 +64,25 @@ describe("SceModalOverlay sidebar preservation SCE-RESPONSIVE-01H", () => {
     expect(overlaySource).toContain('setAttribute("inert"');
   });
 
-  it("D — renders transparent sidebar shield and application-region overlay", () => {
+  it("D — renders single portalled root (no sidebar shield sibling)", () => {
     render(
       <SceModalOverlay open testId="sidebar-preservation">
         <div>Panel</div>
       </SceModalOverlay>,
     );
 
-    expect(screen.getByTestId("sidebar-preservation-sidebar-shield")).toBeInTheDocument();
+    expect(screen.queryByTestId("sidebar-preservation-sidebar-shield")).toBeNull();
     const root = screen.getByTestId("sidebar-preservation");
     expect(root.classList.contains("sce-modal-overlay-root")).toBe(true);
     expect(root.parentElement).toBe(document.body);
   });
 
-  it("E — content viewport fills overlay root (no double sidebar inset)", () => {
+  it("E — content viewport uses sidebar-aware horizontal band only", () => {
     const css = readGlobalsCss();
     const viewportBlock = css.match(/\.sce-modal-overlay-content-viewport\s*\{[^}]+\}/)?.[0] ?? "";
-    expect(viewportBlock).toMatch(/inset:\s*0/);
-    expect(viewportBlock).not.toMatch(/left:\s*var\(--sce-sidebar-effective-width\)/);
+    expect(viewportBlock).toMatch(/left:\s*var\(--sce-sidebar-effective-width\)/);
+    expect(viewportBlock).toMatch(/top:\s*0/);
+    expect(viewportBlock).toMatch(/bottom:\s*0/);
   });
 
   it("F — zero-backdrop token remains transparent", () => {
