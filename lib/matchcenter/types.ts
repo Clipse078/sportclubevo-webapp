@@ -102,6 +102,8 @@ export interface MatchcenterMatchSummary {
   description: string | null;
   status: string;
   startAt: Date;
+  /** False for provider-synced date-only fixtures (SFV midnight placeholder kickoff). */
+  kickoffKnown: boolean;
   endAt: Date | null;
   /** SCE-OPS-01A — persisted SCE override; authoritative provider end remains in endAt. */
   operationalEndAtOverride: Date | null;

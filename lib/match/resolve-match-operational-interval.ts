@@ -21,6 +21,11 @@ export type MatchOperationalIntervalInput = {
   authoritativeEndAt?: Date | string | null;
   operationalEndAtOverride?: Date | string | null;
   tenantPolicy?: TenantMatchOperationalPolicyResolved;
+  /**
+   * When false, configured/platform match duration must not synthesize an
+   * operational end from a provider date-only placeholder kickoff.
+   */
+  kickoffKnown?: boolean;
 };
 
 export type MatchOperationalInterval = {
@@ -116,6 +121,19 @@ export function resolveMatchOperationalInterval(
     }
   }
 
+  if (input.kickoffKnown === false) {
+    return {
+      startAt,
+      endAt: startAt,
+      endSource: "PLATFORM_FALLBACK",
+      durationMinutes: 0,
+      durationSource: "PLATFORM_DEFAULT",
+      isDerived: false,
+      isOverride: false,
+      isResolvable: true,
+    };
+  }
+
   const configured = resolveConfiguredDurationMinutes(input.tenantPolicy);
   const derivedEnd = addMinutes(startAt, configured.minutes);
   return {
@@ -135,6 +153,7 @@ export function matchTimingToOperationalInput(
     startAt: Date | string;
     endAt?: Date | string | null;
     operationalEndAtOverride?: Date | string | null;
+    kickoffKnown?: boolean;
   },
   tenantPolicy?: TenantMatchOperationalPolicyResolved,
 ): MatchOperationalIntervalInput {
@@ -143,5 +162,6 @@ export function matchTimingToOperationalInput(
     authoritativeEndAt: match.endAt ?? null,
     operationalEndAtOverride: match.operationalEndAtOverride ?? null,
     tenantPolicy,
+    kickoffKnown: match.kickoffKnown,
   };
 }

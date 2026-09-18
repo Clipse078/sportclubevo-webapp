@@ -7,7 +7,7 @@ import { resolveClubIdentityLogoUrl } from "@/lib/matchcenter/club-identity";
 import { resolveMatchcenterCompactSideName } from "@/lib/matchcenter/team-display";
 import {
   formatSpieleKickoffDateShort,
-  formatSpieleKickoffTime,
+  formatSpieleKickoffForMatch,
   resolveSpieleStatusPresentation,
 } from "@/lib/matchcenter/management-view";
 import { assessMatchOperationalState } from "@/lib/matchcenter/operational-state";
@@ -63,7 +63,7 @@ export default function SpieleManagementResultRow({
     >
       <div className="relative z-[1] text-sm tabular-nums text-[var(--foreground)] md:col-start-1 md:row-start-1">
         <p className="font-medium">
-          {formatSpieleKickoffTime(match.startAt, locale, timezone)}
+          {formatSpieleKickoffForMatch(match, locale, timezone)}
         </p>
         <p className="text-[0.75rem] text-[var(--muted)]">
           {formatSpieleKickoffDateShort(match.startAt, locale, timezone)}

@@ -29,7 +29,9 @@ import { cn } from "@/lib/cn";
 import {
   assessSpieleRecordOperationalState,
   formatSpieleRecordDate,
-  formatSpieleRecordDateTimeLine,
+  formatSpieleRecordDateTimeLineForMatch,
+  formatSpieleKickoffPresentation,
+  formatSpieleOperationalEndPresentation,
   formatSpieleRecordTime,
   resolveHomeAwaySemanticLabel,
   resolveSpieleRecordLastChangedLabel,
@@ -170,9 +172,9 @@ export default function SpieleMatchRecordWorkspace({
   const headerMetaLine = useMemo(() => {
     const parts: string[] = [];
     if (match.competitionLabel) parts.push(match.competitionLabel);
-    parts.push(formatSpieleRecordDateTimeLine(match.startAt, locale, timezone));
+    parts.push(formatSpieleRecordDateTimeLineForMatch(match, locale, timezone));
     return parts.join(" · ");
-  }, [match.competitionLabel, match.startAt, locale, timezone]);
+  }, [match, locale, timezone]);
 
   const breadcrumbs = [
     { label: "Spiele", href: "/dashboard/matchcenter" },
@@ -345,7 +347,7 @@ export default function SpieleMatchRecordWorkspace({
             homeName={homeName}
             awayName={awayName}
             scheduleLine={formatSpieleRecordDate(match.startAt, locale, timezone)}
-            kickoffTime={formatSpieleRecordTime(match.startAt, locale, timezone)}
+            kickoffTime={formatSpieleKickoffPresentation(match, locale, timezone)}
             facilityLine={
               isHome && match.operational.pitchCode
                 ? pitchOptions.find((o) => o.code === match.operational.pitchCode)?.name ??
@@ -412,13 +414,15 @@ export default function SpieleMatchRecordWorkspace({
               />
               <RecordField
                 label="Anpfiff"
-                value={formatSpieleRecordTime(match.startAt, locale, timezone)}
+                value={formatSpieleKickoffPresentation(match, locale, timezone)}
                 locked={isProtectedSource}
                 testId="spiele-record-kickoff"
               />
               <RecordField
                 label="Ende (betrieblich)"
-                value={formatSpieleRecordTime(match.operationalEndAt, locale, timezone)}
+                value={
+                  formatSpieleOperationalEndPresentation(match, locale, timezone) ?? "—"
+                }
               />
               {match.endAt ? (
                 <RecordField

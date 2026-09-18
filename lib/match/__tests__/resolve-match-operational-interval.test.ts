@@ -120,6 +120,19 @@ describe("resolveMatchOperationalInterval", () => {
     expect(result.endAt.toISOString()).toBe("2026-09-19T23:00:00.000Z");
   });
 
+  it("unknown provider kickoff must not derive configured duration end", () => {
+    const startAt = "2026-09-18T22:00:00.000Z"; // SFV 2026-09-19T00:00:00 Europe/Zurich
+    const result = resolveMatchOperationalInterval(
+      matchTimingToOperationalInput(
+        { startAt, endAt: null, kickoffKnown: false },
+        clubPolicy(120),
+      ),
+    );
+    expect(result.isDerived).toBe(false);
+    expect(result.durationMinutes).toBe(0);
+    expect(result.endAt.toISOString()).toBe(startAt);
+  });
+
   it("override wins over later authoritative end (precedence contract)", () => {
     const result = resolveMatchOperationalInterval(
       matchTimingToOperationalInput(

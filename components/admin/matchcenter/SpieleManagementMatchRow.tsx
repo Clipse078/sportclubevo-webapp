@@ -12,7 +12,7 @@ import {
   buildSpieleTeamContextLine,
   buildSpieleVenueLine,
   formatSpieleEndTime,
-  formatSpieleKickoffTime,
+  formatSpieleKickoffForMatch,
   resolveSpieleOperationalEndTime,
   resolveSpieleStatusPresentation,
 } from "@/lib/matchcenter/management-view";
@@ -235,7 +235,7 @@ export default function SpieleManagementMatchRow({
     timezone,
   });
 
-  const kickoff = formatSpieleKickoffTime(match.startAt, locale, timezone);
+  const kickoff = formatSpieleKickoffForMatch(match, locale, timezone);
   const endTime = formatSpieleEndTime(
     resolveSpieleOperationalEndTime(match),
     locale,

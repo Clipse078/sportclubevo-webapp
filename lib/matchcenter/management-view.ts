@@ -444,6 +444,8 @@ export function formatSpieleKickoffTime(
   }).format(date);
 }
 
+export { formatSpieleKickoffPresentation as formatSpieleKickoffForMatch } from "./spiele-record-presentation";
+
 export function formatSpieleKickoffDateShort(
   date: Date,
   locale: string,
@@ -637,6 +639,7 @@ export function formatSpieleEndTime(
 export function resolveSpieleOperationalEndTime(
   match: MatchcenterMatchSummary,
 ): Date | null {
+  if (!match.kickoffKnown) return null;
   if (match.operationalEndAt) return match.operationalEndAt;
   if (match.endAt) return match.endAt;
   return null;

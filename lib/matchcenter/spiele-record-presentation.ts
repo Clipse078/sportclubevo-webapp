@@ -1,4 +1,8 @@
-import type { MatchcenterMatchDetail } from "./types";
+import {
+  isKnownKickoffForMatch,
+  SCE_UNKNOWN_KICKOFF_TIME_LABEL,
+} from "@/lib/match/kickoff-semantics";
+import type { MatchcenterMatchDetail, MatchcenterMatchSummary } from "./types";
 import { assessMatchOperationalState, type MatchcenterOperationalAssessment } from "./operational-state";
 import { getMatchcenterLifecycleClassification, getMatchcenterLifecycleLabel } from "./match-lifecycle";
 
@@ -83,6 +87,49 @@ export function formatSpieleRecordDateTimeLine(
   const date = formatSpieleRecordDate(startAt, locale, timezone);
   const time = formatSpieleRecordTime(startAt, locale, timezone);
   return `${date} · ${time}`;
+}
+
+type SpieleKickoffPresentationMatch = Pick<
+  MatchcenterMatchSummary,
+  "startAt" | "source" | "kickoffKnown"
+>;
+
+export function formatSpieleKickoffPresentation(
+  match: SpieleKickoffPresentationMatch,
+  locale: string,
+  timezone: string,
+): string {
+  if (!match.kickoffKnown) {
+    return SCE_UNKNOWN_KICKOFF_TIME_LABEL;
+  }
+  return formatSpieleRecordTime(match.startAt, locale, timezone);
+}
+
+export function formatSpieleRecordDateTimeLineForMatch(
+  match: SpieleKickoffPresentationMatch,
+  locale: string,
+  timezone: string,
+): string {
+  const date = formatSpieleRecordDate(match.startAt, locale, timezone);
+  const time = formatSpieleKickoffPresentation(match, locale, timezone);
+  return `${date} · ${time}`;
+}
+
+export function formatSpieleOperationalEndPresentation(
+  match: Pick<
+    MatchcenterMatchSummary,
+    "kickoffKnown" | "operationalEndAt" | "operationalEndAtOverride" | "endAt"
+  >,
+  locale: string,
+  timezone: string,
+): string | null {
+  if (!match.kickoffKnown) {
+    return null;
+  }
+  const end =
+    match.operationalEndAtOverride ?? match.operationalEndAt ?? match.endAt;
+  if (!end) return null;
+  return formatSpieleRecordTime(end, locale, timezone);
 }
 
 export function assessSpieleRecordOperationalState(
