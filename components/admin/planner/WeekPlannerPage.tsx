@@ -11,6 +11,7 @@ import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import type { WeekplannerOverrideRow } from "./WeekplannerAllocationOverrideEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
+import { WeekplannerVisibleTimeRangeProvider } from "@/components/admin/planning-hub/WeekplannerVisibleTimeRangeContext";
 import WeekPlannerChrome from "./WeekPlannerChrome";
 import WeekPlannerWorkspace from "./WeekPlannerWorkspace";
 
@@ -124,6 +125,7 @@ export default function WeekPlannerPage({
   }
 
   return (
+    <WeekplannerVisibleTimeRangeProvider>
     <div className="space-y-2" data-testid="planning-hub-workspace">
       <WeekPlannerChrome
         weekNav={{
@@ -168,5 +170,6 @@ export default function WeekPlannerPage({
         }}
       />
     </div>
+    </WeekplannerVisibleTimeRangeProvider>
   );
 }

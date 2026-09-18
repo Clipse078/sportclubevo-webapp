@@ -12,6 +12,7 @@ import PlanningHubCreateMenu, {
 } from "@/components/admin/planning-hub/PlanningHubCreateMenu";
 import PlanningHubConflictAttention from "@/components/admin/planning-hub/PlanningHubConflictAttention";
 import PlanningHubWeekFilters from "@/components/admin/planning-hub/PlanningHubWeekFilters";
+import PlanningHubVisibleTimeRangeControl from "@/components/admin/planning-hub/PlanningHubVisibleTimeRangeControl";
 import {
   buildPlanningHubHref,
   preserveCalendarZeitForHeute,
@@ -193,6 +194,7 @@ export default function WeekPlannerChrome({
             facilityOptions={facilityOptions}
             inline
           />
+          <PlanningHubVisibleTimeRangeControl />
         </div>
       </div>
     </div>

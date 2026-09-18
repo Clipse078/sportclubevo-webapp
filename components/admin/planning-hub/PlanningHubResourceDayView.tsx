@@ -15,11 +15,11 @@ import {
   groupSegmentsByResource,
 } from "@/lib/planning-hub/scheduler/resource-segments";
 import {
-  computeVisibleTimeRange,
   durationToResourceWidthPx,
   minutesToResourceLeftPx,
   RESOURCE_PIXELS_PER_MINUTE,
 } from "@/lib/planning-hub/scheduler/time-scale";
+import { useWeekplannerVisibleTimeRange } from "./WeekplannerVisibleTimeRangeContext";
 import { zonedMinutesFromMidnight } from "@/lib/planning-hub/scheduler/time-zone";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningHubActivityBlock from "./PlanningHubActivityBlock";
@@ -66,6 +66,7 @@ export default function PlanningHubResourceDayView({
   onItemActivate,
 }: PlanningHubResourceDayViewProps) {
   const manipulation = usePlanningHubManipulation();
+  const { visibleRange: userVisibleRange } = useWeekplannerVisibleTimeRange();
   const isDressingCategory = urlState.resourceCategory === "dressing";
   const filtered = applyPlanningHubFilters(week, urlState);
   const weekDayKeys = filtered.days.map((d) => d.dayKey);
@@ -79,14 +80,7 @@ export default function PlanningHubResourceDayView({
 
   const rows = useMemo(() => groupSegmentsByResource(segments), [segments]);
 
-  const timeRange = useMemo(
-    () =>
-      computeVisibleTimeRange(
-        segments.map((s) => ({ startAt: s.startAt, endAt: s.endAt })),
-        timezone,
-      ),
-    [segments, timezone],
-  );
+  const timeRange = userVisibleRange;
 
   const timelineWidthPx = timeRange.totalMinutes * RESOURCE_PIXELS_PER_MINUTE;
   const halfHourMarks: number[] = [];

@@ -35,7 +35,7 @@ import {
   minutesToCalendarTopPx,
   type VisibleTimeRange,
 } from "@/lib/planning-hub/scheduler/time-scale";
-import { resolveCalendarTimeRange } from "@/lib/planning-hub/scheduler/time-range-focus";
+import { useWeekplannerVisibleTimeRange } from "./WeekplannerVisibleTimeRangeContext";
 import { dayKeyInTimeZone, zonedMinutesFromMidnight } from "@/lib/planning-hub/scheduler/time-zone";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningHubAllDayLane from "./PlanningHubAllDayLane";
@@ -82,6 +82,7 @@ export default function PlanningHubCalendarView({
   onItemActivate,
 }: PlanningHubCalendarViewProps) {
   const manipulation = usePlanningHubManipulation();
+  const { visibleRange: userVisibleRange } = useWeekplannerVisibleTimeRange();
   const { urlState: calendarUrlState, setCalendarZeit } = usePlanningHubCalendarZeit(urlState, {
     timeZone: timezone,
   });
@@ -120,20 +121,12 @@ export default function PlanningHubCalendarView({
     return () => observer.disconnect();
   }, []);
 
-  const activityIntervals = useMemo(
-    () =>
-      filtered.days.flatMap((day) =>
-        day.items.map((item) => ({ startAt: item.startAt, endAt: item.endAt })),
-      ),
-    [filtered.days],
-  );
-
   const timeRange = useMemo((): VisibleTimeRange => {
-    if (isFullDay) {
-      return resolveCalendarTimeRange(activityIntervals, timezone, "full").range;
+    if (!isFullDay) {
+      return daypartVisibleRange(activeDaypart);
     }
-    return daypartVisibleRange(activeDaypart);
-  }, [activityIntervals, timezone, isFullDay, activeDaypart]);
+    return userVisibleRange;
+  }, [isFullDay, activeDaypart, userVisibleRange]);
 
   const pixelsPerMinute = isFullDay ? CALENDAR_PIXELS_PER_MINUTE : CALENDAR_DAYPART_PIXELS_PER_MINUTE;
   const layoutAggregateBelow = isFullDay

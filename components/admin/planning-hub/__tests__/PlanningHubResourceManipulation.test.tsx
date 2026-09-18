@@ -10,6 +10,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import WeekPlannerPage from "@/components/admin/planner/WeekPlannerPage";
 import PlanningHubResourceDayView from "@/components/admin/planning-hub/PlanningHubResourceDayView";
 import { PlanningHubManipulationProvider } from "@/components/admin/planning-hub/PlanningHubManipulationContext";
+import { WeekplannerVisibleTimeRangeProvider } from "@/components/admin/planning-hub/WeekplannerVisibleTimeRangeContext";
 import { getSchedulerManipulationCapabilities } from "@/lib/planning-hub/manipulation-capabilities";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { WeekplannerDay, WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
@@ -207,30 +208,32 @@ function renderResourceView(items: WeekplannerItem[], isStandardplan = true) {
   const week = weekWithDay("2026-09-20", items);
   const onActivate = vi.fn();
   render(
-    <PlanningHubManipulationProvider
-      week={week}
-      urlState={URL_STATE}
-      locale="de-CH"
-      timezone="Europe/Zurich"
-      isStandardplan={isStandardplan}
-      alternativePlanId={isStandardplan ? null : "plan-alt"}
-      canManageTrainings
-      canManageEvents
-      facilityGroupsByAllocationGroup={FACILITY_GROUPS}
-      resourceRows={[
-        { resourceId: "room-a", ref: TRAINING.dressingRoomAllocations[0]! },
-        { resourceId: "room-b", ref: MATCH.dressingRoomAllocations[0]! },
-      ]}
-    >
-      <PlanningHubResourceDayView
+    <WeekplannerVisibleTimeRangeProvider>
+      <PlanningHubManipulationProvider
         week={week}
         urlState={URL_STATE}
         locale="de-CH"
         timezone="Europe/Zurich"
-        todayDayKey="2026-09-20"
-        onItemActivate={onActivate}
-      />
-    </PlanningHubManipulationProvider>,
+        isStandardplan={isStandardplan}
+        alternativePlanId={isStandardplan ? null : "plan-alt"}
+        canManageTrainings
+        canManageEvents
+        facilityGroupsByAllocationGroup={FACILITY_GROUPS}
+        resourceRows={[
+          { resourceId: "room-a", ref: TRAINING.dressingRoomAllocations[0]! },
+          { resourceId: "room-b", ref: MATCH.dressingRoomAllocations[0]! },
+        ]}
+      >
+        <PlanningHubResourceDayView
+          week={week}
+          urlState={URL_STATE}
+          locale="de-CH"
+          timezone="Europe/Zurich"
+          todayDayKey="2026-09-20"
+          onItemActivate={onActivate}
+        />
+      </PlanningHubManipulationProvider>
+    </WeekplannerVisibleTimeRangeProvider>,
   );
   return { onActivate };
 }

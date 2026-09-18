@@ -4,6 +4,7 @@
 
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { WeekplannerVisibleTimeRangeProvider } from "@/components/admin/planning-hub/WeekplannerVisibleTimeRangeContext";
 import WeekPlannerChrome from "@/components/admin/planner/WeekPlannerChrome";
 
 vi.mock("next/navigation", () => ({
@@ -13,6 +14,7 @@ vi.mock("next/navigation", () => ({
 describe("WeekPlannerChrome — planning family shell", () => {
   it("renders planning header, week navigation, and perspective switcher", () => {
     render(
+      <WeekplannerVisibleTimeRangeProvider>
       <WeekPlannerChrome
         weekNav={{
           param: "2026-08-10",
@@ -32,7 +34,8 @@ describe("WeekPlannerChrome — planning family shell", () => {
         todayParam="2026-08-12"
         teamOptions={[]}
         facilityOptions={[]}
-      />,
+      />
+      </WeekplannerVisibleTimeRangeProvider>,
     );
 
     expect(screen.getByTestId("weekplanner-management-chrome")).toBeInTheDocument();
