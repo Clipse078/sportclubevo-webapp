@@ -102,6 +102,7 @@
   --topnav-height:           52px;
 
   /* SCE-RESPONSIVE-01 — authenticated content viewport + overlay sizing */
+  /* Authoritative persistent inset — collapsed + mobile overrides below (SCE-RESPONSIVE-01L). */
   --sce-sidebar-effective-width: var(--sidebar-width);
   --sce-content-viewport-width: calc(100vw - var(--sce-sidebar-effective-width));
   --sce-overlay-gutter: 1rem;

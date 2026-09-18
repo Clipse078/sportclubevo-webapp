@@ -60,8 +60,7 @@ for (const width of VIEWPORTS) {
       ({ sidebarWidth, collapsed }) => {
         const root = document.documentElement;
         root.style.setProperty("--sidebar-width", `${sidebarWidth}px`);
-        const effective = collapsed ? 56 : sidebarWidth;
-        root.style.setProperty("--sce-sidebar-effective-width", `${effective}px`);
+        root.style.removeProperty("--sce-sidebar-effective-width");
         if (collapsed) root.dataset.sidebarCollapsed = "1";
         else root.removeAttribute("data-sidebar-collapsed");
       },

@@ -36,7 +36,7 @@ describe("shell-layout-vars", () => {
     ).toBe(0);
   });
 
-  it("applyShellLayoutVarsToDocument sets explicit px on documentElement", () => {
+  it("applyShellLayoutVarsToDocument sets persisted width only (effective from CSS)", () => {
     applyShellLayoutVarsToDocument({
       sidebarWidthPx: 300,
       collapsed: false,
@@ -47,6 +47,15 @@ describe("shell-layout-vars", () => {
     );
     expect(
       document.documentElement.style.getPropertyValue("--sce-sidebar-effective-width"),
-    ).toBe("300px");
+    ).toBe("");
+  });
+
+  it("applyShellLayoutVarsToDocument clears inline tokens on mobile shell", () => {
+    applyShellLayoutVarsToDocument({
+      sidebarWidthPx: 300,
+      collapsed: false,
+      viewportWidthPx: 640,
+    });
+    expect(document.documentElement.style.getPropertyValue("--sidebar-width")).toBe("");
   });
 });

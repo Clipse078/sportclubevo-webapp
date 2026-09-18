@@ -1,8 +1,8 @@
 /**
- * SCE-RESPONSIVE-01B — explicit document-level shell layout variables for portalled overlays.
+ * SCE-RESPONSIVE-01L — document-level shell layout variables for portalled overlays.
  *
- * Modal overlays render on document.body; sidebar width must be mirrored on html so
- * --sce-sidebar-effective-width is always available (never inferred from DOM inheritance).
+ * JS sets only the persisted desktop sidebar width token (--sidebar-width).
+ * --sce-sidebar-effective-width is derived in CSS (collapsed + mobile breakpoints).
  */
 
 import { SIDEBAR_WIDTH_DEFAULT } from "@/lib/shell/sidebar-width";
@@ -42,15 +42,18 @@ export function applyShellLayoutVarsToDocument(
     snapshot.viewportWidthPx ??
     (typeof window !== "undefined" ? window.innerWidth : 1280);
 
-  const effective = resolveEffectiveSidebarWidthPx({
-    sidebarWidthPx: snapshot.sidebarWidthPx,
-    collapsed: snapshot.collapsed,
-    viewportWidthPx,
-  });
-
   const root = document.documentElement;
+  const isMobileShell = viewportWidthPx <= SCE_MOBILE_SHELL_MAX_WIDTH_PX;
+
+  if (isMobileShell) {
+    // Let @media (max-width: 768px) own zero-width shell geometry — inline px overrides break modal inset.
+    root.style.removeProperty("--sidebar-width");
+    root.style.removeProperty("--sce-sidebar-effective-width");
+    return;
+  }
+
   root.style.setProperty("--sidebar-width", `${snapshot.sidebarWidthPx}px`);
-  root.style.setProperty("--sce-sidebar-effective-width", `${effective}px`);
+  root.style.removeProperty("--sce-sidebar-effective-width");
 }
 
 export function readShellLayoutSnapshotFromDocument(): ShellLayoutSnapshot | null {
@@ -63,7 +66,6 @@ export function readShellLayoutSnapshotFromDocument(): ShellLayoutSnapshot | nul
     .trim();
 
   const sidebarWidthPx = parseCssPx(sidebarRaw) ?? SIDEBAR_WIDTH_DEFAULT;
-  const effectivePx = parseCssPx(effectiveRaw) ?? sidebarWidthPx;
   const collapsed = root.dataset.sidebarCollapsed === "1";
 
   return {
