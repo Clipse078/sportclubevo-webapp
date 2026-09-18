@@ -89,7 +89,14 @@ function PickerClubLogo({
   name: string;
 }) {
   return (
-    <ClubLogo logoUrl={logoUrl ?? null} name={name} size="sm" bare className="shrink-0" />
+    <ClubLogo
+      logoUrl={logoUrl ?? null}
+      name={name}
+      size="sm"
+      bare
+      decorative
+      className="shrink-0"
+    />
   );
 }
 

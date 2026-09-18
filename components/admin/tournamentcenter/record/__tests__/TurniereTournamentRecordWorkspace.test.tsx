@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TurniereTournamentRecordWorkspace from "../TurniereTournamentRecordWorkspace";
 import type { TournamentDto } from "@/lib/tournaments/types";
@@ -107,7 +107,13 @@ describe("TURNIERE-UX-02 record workspace", () => {
 
     expect(screen.getByTestId("turniere-tournament-record-workspace")).toBeInTheDocument();
     expect(screen.getByTestId("turniere-record-identity")).toHaveTextContent("U13 Hallenturnier");
-    expect(screen.getByAltText(/FC Allschwil/i)).toHaveAttribute("src", "https://example.com/crest.png");
+    const identity = screen.getByTestId("turniere-record-identity");
+    expect(within(identity).getByAltText(/FC Allschwil/i)).toHaveAttribute(
+      "src",
+      "https://example.com/crest.png",
+    );
+    expect(screen.getByTestId("turniere-record-organizer-club")).toHaveTextContent("FC Allschwil");
+    expect(within(screen.getByTestId("turniere-record-organizer-club")).queryByAltText(/FC Allschwil/i)).toBeNull();
     expect(screen.getByTestId("turniere-record-section-overview")).toBeInTheDocument();
     expect(screen.getByTestId("turniere-record-section-schedule")).toBeInTheDocument();
     expect(screen.getByTestId("turniere-record-section-participants")).toHaveTextContent("1 Team");
