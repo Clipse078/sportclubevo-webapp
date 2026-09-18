@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   WEEKPLANNER_VISIBLE_TIME_RANGE_STORAGE_KEY,
   defaultWeekplannerVisibleTimeRange,
+  parseStoredWeekplannerVisibleTimeRange,
   persistWeekplannerVisibleTimeRange,
   readStoredWeekplannerVisibleTimeRange,
   validateWeekplannerVisibleTimeRange,
@@ -36,5 +37,22 @@ describe("weekplanner visible time range", () => {
     expect(validateWeekplannerVisibleTimeRange(10 * 60, 10 * 60)).toMatch(/Endzeit/);
     expect(validateWeekplannerVisibleTimeRange(12 * 60, 10 * 60)).toMatch(/Endzeit/);
     expect(validateWeekplannerVisibleTimeRange(8 * 60 + 15, 23 * 60)).toMatch(/30-Minuten/);
+  });
+
+  it("falls back for malformed persisted shapes without throwing", () => {
+    const fallback = defaultWeekplannerVisibleTimeRange();
+    expect(parseStoredWeekplannerVisibleTimeRange(null)).toEqual(fallback);
+    expect(parseStoredWeekplannerVisibleTimeRange("")).toEqual(fallback);
+    expect(parseStoredWeekplannerVisibleTimeRange("{")).toEqual(fallback);
+    expect(parseStoredWeekplannerVisibleTimeRange({ startMinutes: "08:00", endMinutes: "bad" })).toEqual(
+      fallback,
+    );
+    expect(parseStoredWeekplannerVisibleTimeRange({ start: "07:00", end: "21:30" })).toEqual({
+      startMinutes: 7 * 60,
+      endMinutes: 21 * 60 + 30,
+    });
+    expect(parseStoredWeekplannerVisibleTimeRange({ startMinutes: 23 * 60, endMinutes: 8 * 60 })).toEqual(
+      fallback,
+    );
   });
 });

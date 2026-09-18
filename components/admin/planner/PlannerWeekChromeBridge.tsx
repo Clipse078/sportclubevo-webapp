@@ -13,6 +13,7 @@ import {
 } from "react";
 import type { WeekplannerWeek } from "@/lib/weekplanner/types";
 import type { PlanningConflictIncident } from "@/lib/planning-hub/conflict-attention";
+import { WeekplannerVisibleTimeRangeProvider } from "@/components/admin/planning-hub/WeekplannerVisibleTimeRangeContext";
 import WeekPlannerChrome, { type WeekPlannerChromeProps } from "./WeekPlannerChrome";
 
 export type PlannerWeekChromeBridgePayload = {
@@ -71,12 +72,14 @@ export default function PlannerWeekStreamingRoot({
   const plannerReady = Boolean(bridge.week);
 
   return (
-    <BridgeContext.Provider value={setBridge}>
-      <div className="space-y-2" data-testid="planning-hub-workspace">
-        {plannerReady ? <WeekPlannerChrome {...mergedChrome} /> : null}
-        {children}
-      </div>
-    </BridgeContext.Provider>
+    <WeekplannerVisibleTimeRangeProvider>
+      <BridgeContext.Provider value={setBridge}>
+        <div className="space-y-2" data-testid="planning-hub-workspace">
+          {plannerReady ? <WeekPlannerChrome {...mergedChrome} /> : null}
+          {children}
+        </div>
+      </BridgeContext.Provider>
+    </WeekplannerVisibleTimeRangeProvider>
   );
 }
 

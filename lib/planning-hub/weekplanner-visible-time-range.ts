@@ -70,6 +70,47 @@ export function validateWeekplannerVisibleTimeRange(
   return null;
 }
 
+function coerceMinutesValue(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const fromLabel = parseTimeLabelToMinutes(trimmed);
+    if (fromLabel !== null) return fromLabel;
+    const numeric = Number(trimmed);
+    if (Number.isFinite(numeric)) return numeric;
+  }
+  return null;
+}
+
+export function parseStoredWeekplannerVisibleTimeRange(
+  raw: unknown,
+): WeekplannerVisibleTimeRangePreference {
+  const fallback = defaultWeekplannerVisibleTimeRange();
+  if (raw === null || raw === undefined) return fallback;
+
+  let parsed: unknown = raw;
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (!trimmed) return fallback;
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch {
+      return fallback;
+    }
+  }
+
+  if (typeof parsed !== "object" || parsed === null) return fallback;
+  const record = parsed as Record<string, unknown>;
+
+  const startMinutes =
+    coerceMinutesValue(record.startMinutes) ?? coerceMinutesValue(record.start);
+  const endMinutes = coerceMinutesValue(record.endMinutes) ?? coerceMinutesValue(record.end);
+  if (startMinutes === null || endMinutes === null) return fallback;
+
+  return normalizeWeekplannerVisibleTimeRange({ startMinutes, endMinutes });
+}
+
 export function normalizeWeekplannerVisibleTimeRange(
   raw: WeekplannerVisibleTimeRangePreference | null | undefined,
 ): WeekplannerVisibleTimeRangePreference {
@@ -106,9 +147,7 @@ export function readStoredWeekplannerVisibleTimeRange(): WeekplannerVisibleTimeR
   }
   try {
     const raw = localStorage.getItem(WEEKPLANNER_VISIBLE_TIME_RANGE_STORAGE_KEY);
-    if (!raw) return defaultWeekplannerVisibleTimeRange();
-    const parsed = JSON.parse(raw) as WeekplannerVisibleTimeRangePreference;
-    return normalizeWeekplannerVisibleTimeRange(parsed);
+    return parseStoredWeekplannerVisibleTimeRange(raw);
   } catch {
     return defaultWeekplannerVisibleTimeRange();
   }
