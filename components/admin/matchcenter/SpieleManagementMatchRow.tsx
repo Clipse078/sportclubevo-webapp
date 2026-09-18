@@ -58,6 +58,22 @@ function HomeAwayPill({ homeAway }: { homeAway: "HOME" | "AWAY" | null }) {
   );
 }
 
+function shouldShowReadinessPill({
+  homeAway,
+  statusLabel,
+  live,
+}: {
+  homeAway: "HOME" | "AWAY" | null;
+  statusLabel: string;
+  live: boolean;
+}): boolean {
+  if (live) return true;
+  if (homeAway === "AWAY" && statusLabel === "Auswärtsspiel") {
+    return false;
+  }
+  return true;
+}
+
 function ReadinessPill({ label, tone }: { label: string; tone: "ready" | "open" | "neutral" }) {
   return (
     <span
@@ -96,21 +112,15 @@ function PreparationColumn({
   const isAway = homeAway === "AWAY";
 
   if (isAway) {
+    if (layout === "compact") {
+      return null;
+    }
     const venue = buildSpieleVenueLine(match) ?? match.location?.trim();
     if (!venue) {
-      return layout === "wide" ? (
-        <span className="text-xs text-[var(--muted)]">—</span>
-      ) : null;
+      return <span className="text-xs text-[var(--muted)]">—</span>;
     }
     return (
-      <p
-        className={cn(
-          "text-xs text-[var(--text-2)]",
-          layout === "wide" ? "line-clamp-3 break-words" : "line-clamp-2 break-words",
-        )}
-      >
-        {venue}
-      </p>
+      <p className="line-clamp-3 break-words text-xs text-[var(--text-2)]">{venue}</p>
     );
   }
 
@@ -122,7 +132,7 @@ function PreparationColumn({
   const listClass =
     layout === "wide"
       ? "mt-1.5 space-y-1"
-      : "mt-1 flex flex-wrap gap-x-3 gap-y-1";
+      : "mt-0.5 flex flex-wrap gap-x-2.5 gap-y-0.5";
 
   return (
     <div className="min-w-0">
@@ -139,8 +149,9 @@ function PreparationColumn({
           <li
             key={item.key}
             className={cn(
-              "flex min-w-[8.5rem] items-start gap-2 text-xs",
-              layout === "compact" && "max-w-full flex-1 basis-[calc(50%-0.375rem)] sm:basis-[calc(33.333%-0.5rem)]",
+              "flex items-start gap-1.5 text-xs",
+              layout === "wide" && "min-w-[8.5rem] gap-2",
+              layout === "compact" && "max-w-full shrink-0 basis-auto",
             )}
           >
             {item.ready ? (
@@ -165,6 +176,40 @@ function PreparationColumn({
       </ul>
       {assessment.teamUnresolved ? (
         <p className="mt-1 text-[0.6875rem] text-amber-600">Team nicht zugeordnet</p>
+      ) : null}
+    </div>
+  );
+}
+
+function StatusPillsRow({
+  homeAway,
+  statusLabel,
+  live,
+  readinessTone,
+}: {
+  homeAway: "HOME" | "AWAY" | null;
+  statusLabel: string;
+  live: boolean;
+  readinessTone: "ready" | "open" | "neutral";
+}) {
+  const showReadiness = shouldShowReadinessPill({
+    homeAway,
+    statusLabel,
+    live,
+  });
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+      <HomeAwayPill homeAway={homeAway} />
+      {showReadiness ? (
+        <>
+          {homeAway === "HOME" ? (
+            <span className="text-xs text-[var(--muted)]" aria-hidden="true">
+              ·
+            </span>
+          ) : null}
+          <ReadinessPill label={statusLabel} tone={live ? "ready" : readinessTone} />
+        </>
       ) : null}
     </div>
   );
@@ -225,7 +270,7 @@ export default function SpieleManagementMatchRow({
   return (
     <article
       className={cn(
-        "group relative grid grid-cols-1 gap-3 border-b border-[var(--border)]/50 px-4 py-4 last:border-b-0",
+        "group relative grid grid-cols-1 gap-3 border-b border-[var(--border)]/50 px-4 py-3 last:border-b-0 md:py-3",
         SPIELE_MATCH_ROW_INTERMEDIATE_GRID,
         SPIELE_MATCH_ROW_WIDE_GRID,
         isSelecting && isSelected && "bg-emerald-500/5",
@@ -319,7 +364,7 @@ export default function SpieleManagementMatchRow({
       </div>
 
       <div
-        className="relative z-[1] space-y-2 md:col-span-2 md:col-start-2 md:row-start-2 min-[105rem]:hidden"
+        className="relative z-[1] flex min-w-0 flex-col gap-1 md:col-span-2 md:col-start-2 md:row-start-2 min-[105rem]:hidden"
         data-testid={`matchcenter-action-${match.id}`}
       >
         {venueLine ? (
@@ -328,24 +373,26 @@ export default function SpieleManagementMatchRow({
             <span className="line-clamp-2 break-words">{venueLine}</span>
           </p>
         ) : null}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <HomeAwayPill homeAway={homeAway} />
-          <ReadinessPill
-            label={status.label}
-            tone={live ? "ready" : readinessTone}
-          />
-        </div>
-        <PreparationColumn match={match} assessment={assessment} layout="compact" />
+        <StatusPillsRow
+          homeAway={homeAway}
+          statusLabel={status.label}
+          live={live}
+          readinessTone={readinessTone}
+        />
+        {homeAway === "HOME" ? (
+          <PreparationColumn match={match} assessment={assessment} layout="compact" />
+        ) : null}
       </div>
 
       <div
         className="hidden min-w-0 flex-wrap items-center gap-1.5 min-[105rem]:col-start-3 min-[105rem]:flex min-[105rem]:col-span-1"
         data-testid={`matchcenter-action-wide-${match.id}`}
       >
-        <HomeAwayPill homeAway={homeAway} />
-        <ReadinessPill
-          label={status.label}
-          tone={live ? "ready" : readinessTone}
+        <StatusPillsRow
+          homeAway={homeAway}
+          statusLabel={status.label}
+          live={live}
+          readinessTone={readinessTone}
         />
       </div>
 

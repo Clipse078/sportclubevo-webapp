@@ -50,3 +50,22 @@ describe("SPIELE-UX-01C — responsive composition contract", () => {
     expect(workspace).toContain("SpieleManagementSchnellfilter");
   });
 });
+
+describe("SPIELE-UX-01D — intermediate away deduplication contract", () => {
+  it("compact away preparation returns null (no second venue block)", () => {
+    const row = readSource("components/admin/matchcenter/SpieleManagementMatchRow.tsx");
+    expect(row).toMatch(/if \(layout === "compact"\)\s*\{\s*return null;/);
+  });
+
+  it("suppresses redundant away readiness pill when home/away pill suffices", () => {
+    const row = readSource("components/admin/matchcenter/SpieleManagementMatchRow.tsx");
+    expect(row).toContain("shouldShowReadinessPill");
+    expect(row).toContain('statusLabel === "Auswärtsspiel"');
+  });
+
+  it("home compact preparation only mounts for HOME fixtures", () => {
+    const row = readSource("components/admin/matchcenter/SpieleManagementMatchRow.tsx");
+    expect(row).toContain('{homeAway === "HOME" ? (');
+    expect(row).toContain('<PreparationColumn match={match} assessment={assessment} layout="compact" />');
+  });
+});

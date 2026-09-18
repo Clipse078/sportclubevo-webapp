@@ -24,7 +24,7 @@ export const SPIELE_WORKSPACE_RAIL_STACK =
 
 /** Spielplanung match row — laptop / constrained desktop (stacked operational row). */
 export const SPIELE_MATCH_ROW_INTERMEDIATE_GRID =
-  "md:grid md:grid-cols-[4.75rem_minmax(0,1fr)_2.5rem] md:grid-rows-[auto_auto] md:items-start md:gap-x-4 md:gap-y-2.5";
+  "md:grid md:grid-cols-[4.75rem_minmax(0,1fr)_2.5rem] md:grid-rows-[auto_auto] md:items-start md:gap-x-4 md:gap-y-2";
 
 /** Spielplanung match row — wide desktop target horizontal grid. */
 export const SPIELE_MATCH_ROW_WIDE_GRID =
