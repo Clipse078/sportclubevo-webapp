@@ -3,19 +3,17 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * SCE-RESPONSIVE-01E — training single-session editor was already legacy on STAGE;
- * current branch must not be mistaken for a shared-shell regression.
+ * SCE-RESPONSIVE-01E/01F — Class C legacy training session editor (pre-existing on STAGE).
+ * Documents route classification only; does not lock legacy light-surface visuals as product contract.
  */
-describe("Training session edit route legacy surface contract", () => {
+describe("Training session edit route — Class C legacy classification", () => {
   const pagePath = join(
     process.cwd(),
     "app/(admin)/dashboard/training/sessions/[sessionId]/edit/page.tsx",
   );
 
-  it("uses explicit legacy light card surfaces (Class C backlog, not branch regression)", () => {
+  it("remains on the dedicated legacy page shell (not shared training workspace components)", () => {
     const source = readFileSync(pagePath, "utf8");
-    expect(source).toContain("border-gray-200 bg-white");
-    expect(source).toContain("Zurück zu Trainings");
     expect(source).not.toMatch(/TrainingManagementWorkspace|TrainingRecordWorkspace/);
   });
 });

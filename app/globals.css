@@ -115,8 +115,8 @@
   );
   --sce-dialog-max-height: min(85dvh, calc(100dvh - 2 * var(--sce-overlay-gutter)));
   --sce-page-gutter: 1.25rem;
-  /* SCE-RESPONSIVE-01E — context-preserving modal scrim (single authoritative dimming layer) */
-  --sce-modal-backdrop: rgb(2 6 15 / 55%);
+  /* SCE-RESPONSIVE-01F — near-transparent contextual scrim (single authoritative dimming layer) */
+  --sce-modal-backdrop: rgb(2 6 15 / 12%);
 
   /* Typography */
   --font-body:    var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
@@ -1071,7 +1071,6 @@ html[data-sidebar-collapsed="1"] {
   position: absolute;
   inset: 0;
   background: var(--sce-modal-backdrop);
-  backdrop-filter: blur(1px) saturate(0.9);
   animation: sce-modal-backdrop-in var(--sce-motion-duration-fast) var(--sce-motion-ease-out)
     forwards;
 }
