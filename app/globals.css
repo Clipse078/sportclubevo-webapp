@@ -115,8 +115,8 @@
   );
   --sce-dialog-max-height: min(85dvh, calc(100dvh - 2 * var(--sce-overlay-gutter)));
   --sce-page-gutter: 1.25rem;
-  /* SCE-RESPONSIVE-01F — near-transparent contextual scrim (single authoritative dimming layer) */
-  --sce-modal-backdrop: rgb(2 6 15 / 12%);
+  /* SCE-RESPONSIVE-01G — zero visible backdrop; hierarchy from dialog surface only */
+  --sce-modal-backdrop: transparent;
 
   /* Typography */
   --font-body:    var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
@@ -1071,26 +1071,18 @@ html[data-sidebar-collapsed="1"] {
   position: absolute;
   inset: 0;
   background: var(--sce-modal-backdrop);
-  animation: sce-modal-backdrop-in var(--sce-motion-duration-fast) var(--sce-motion-ease-out)
-    forwards;
+  pointer-events: auto;
 }
 
 .sce-modal-overlay-panel-host {
   display: flex;
   width: 100%;
+  min-width: 0;
   min-height: 0;
   max-height: 100%;
+  max-width: 100%;
   justify-content: center;
   animation: sce-modal-panel-in var(--sce-motion-duration-fast) var(--sce-motion-ease-out) forwards;
-}
-
-@keyframes sce-modal-backdrop-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 @keyframes sce-modal-panel-in {

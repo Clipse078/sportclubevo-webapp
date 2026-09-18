@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  *
- * SCE-RESPONSIVE-01F — near-transparent contextual modal backdrop (single scrim layer, no blur).
+ * SCE-RESPONSIVE-01G — zero visible modal backdrop (transparent pointer-capture layer, no blur).
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -37,9 +37,9 @@ describe("SceModalOverlay backdrop SCE-RESPONSIVE-01F", () => {
     expect(overlay.querySelectorAll(".sce-modal-overlay-backdrop")).toHaveLength(1);
   });
 
-  it("B — backdrop uses shared semantic token", () => {
+  it("B — backdrop uses shared transparent semantic token", () => {
     const css = readGlobalsCss();
-    expect(css).toContain("--sce-modal-backdrop: rgb(2 6 15 / 12%);");
+    expect(css).toContain("--sce-modal-backdrop: transparent;");
     expect(css).toMatch(
       /\.sce-modal-overlay-backdrop\s*\{[\s\S]*background:\s*var\(--sce-modal-backdrop\)/,
     );
@@ -105,9 +105,10 @@ describe("SceModalOverlay backdrop SCE-RESPONSIVE-01F", () => {
     expect(overlaySource).toContain("[data-sce-modal-background]");
   });
 
-  it("I — backdrop is intentionally low-opacity and rejects heavy dimming", () => {
+  it("I — backdrop rejects visible dimming tokens", () => {
     const css = readGlobalsCss();
-    expect(css).toContain("rgb(2 6 15 / 12%)");
+    expect(css).toContain("--sce-modal-backdrop: transparent;");
+    expect(css).not.toContain("rgb(2 6 15 / 12%)");
     expect(css).not.toContain("rgb(2 6 15 / 55%)");
     expect(css).not.toMatch(/\.sce-modal-overlay-backdrop[\s\S]*rgb\(0 0 0 \/ 65%\)/);
   });

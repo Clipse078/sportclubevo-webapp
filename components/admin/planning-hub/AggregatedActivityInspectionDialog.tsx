@@ -280,8 +280,8 @@ export default function AggregatedActivityInspectionDialog({
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-auto">
-              <table className="w-full min-w-[640px] border-collapse text-left text-xs">
+            <div className="min-h-0 flex-1 overflow-auto overflow-x-auto">
+              <table className="w-full min-w-0 border-collapse text-left text-xs">
                 <thead className="sticky top-0 z-[1] bg-[var(--surface)] shadow-[0_1px_0_var(--border)]">
                   <tr className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
                     <th className="px-3 py-2 font-semibold sm:px-4">Zeit</th>

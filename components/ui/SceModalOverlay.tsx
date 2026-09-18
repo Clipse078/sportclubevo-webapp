@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useState, type MouseEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
 import { lockSceDocumentScroll } from "@/lib/ui/sce-modal-scroll-lock";
@@ -33,6 +33,15 @@ export function SceModalOverlay({
   testId,
   contentViewportClassName,
 }: SceModalOverlayProps) {
+  /** Client-only portal target — never render overlay inline in the React tree (SCE-RESPONSIVE-01G). */
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+
+  useLayoutEffect(() => {
+    if (typeof document !== "undefined" && document.body) {
+      setPortalTarget(document.body);
+    }
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     return lockSceDocumentScroll();
@@ -49,7 +58,7 @@ export function SceModalOverlay({
     };
   }, [open]);
 
-  if (!open) return null;
+  if (!open || !portalTarget) return null;
 
   function handleBackdropClick(e: MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) {
@@ -75,5 +84,5 @@ export function SceModalOverlay({
     </div>
   );
 
-  return createPortal(overlay, document.body);
+  return createPortal(overlay, portalTarget);
 }
