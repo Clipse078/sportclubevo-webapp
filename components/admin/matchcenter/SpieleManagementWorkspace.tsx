@@ -30,6 +30,13 @@ import SpieleManagementMonthCalendar from "./SpieleManagementMonthCalendar";
 import SpieleManagementSchnellfilter from "./SpieleManagementSchnellfilter";
 import type { SpieleSchnellfilterLinkOption } from "./spiele-schnellfilter-types";
 import { cn } from "@/lib/cn";
+import {
+  SPIELE_RESULT_LIST_INTERMEDIATE_GRID,
+  SPIELE_RESULT_LIST_WIDE_GRID,
+  SPIELE_WORKSPACE_MAIN_RAIL_GRID,
+  SPIELE_WORKSPACE_RAIL_ASIDE,
+  SPIELE_WORKSPACE_RAIL_STACK,
+} from "./spiele-management-layout";
 
 export type MatchcenterMonthWindowLike = {
   param: string;
@@ -77,8 +84,11 @@ const DOMAIN_TABS: DomainTab[] = [
   { key: "archiv", label: "Archiv", disabled: true },
 ];
 
-const RESULT_LIST_HEADER =
-  "hidden md:grid md:grid-cols-[minmax(5.5rem,0.55fr)_minmax(0,1.85fr)_minmax(0,1fr)_minmax(5.75rem,0.85fr)_3rem] md:gap-x-4 border-b border-[var(--border)]/60 bg-[var(--surface-2)]/25 px-4 py-2.5 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--muted)]";
+const RESULT_LIST_HEADER = cn(
+  "hidden border-b border-[var(--border)]/60 bg-[var(--surface-2)]/25 px-4 py-2.5 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--muted)] md:gap-x-4",
+  SPIELE_RESULT_LIST_INTERMEDIATE_GRID,
+  SPIELE_RESULT_LIST_WIDE_GRID,
+);
 
 function buildHref(
   basePath: string,
@@ -443,7 +453,7 @@ export default function SpieleManagementWorkspace({
 
       <SpieleManagementKpiCards metrics={summaryMetrics} />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_17.5rem]">
+      <div className={SPIELE_WORKSPACE_MAIN_RAIL_GRID}>
         <div className="min-w-0 space-y-3">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <CenterPeriodNavigation
@@ -541,8 +551,8 @@ export default function SpieleManagementWorkspace({
               <div className={RESULT_LIST_HEADER}>
                 <span>Datum</span>
                 <span>Spiel</span>
-                <span>Ort</span>
-                <span>Status</span>
+                <span className="hidden min-[105rem]:block">Ort</span>
+                <span className="hidden min-[105rem]:block">Status</span>
                 <span className="sr-only">Aktionen</span>
               </div>
               {resultateGroups.map((group) => (
@@ -568,34 +578,36 @@ export default function SpieleManagementWorkspace({
           )}
         </div>
 
-        <aside className="min-w-0 space-y-3 xl:sticky xl:top-4 xl:self-start">
-          <SpieleManagementMonthCalendar
-            monthParam={monthWindow.param}
-            timezone={timezone}
-            matchDayKeys={matchDayKeys}
-            previousMonthHref={buildHref(basePath, {
-              ...navParams,
-              month: monthWindow.previousParam,
-            })}
-            nextMonthHref={buildHref(basePath, {
-              ...navParams,
-              month: monthWindow.nextParam,
-            })}
-          />
-          <SpieleManagementSchnellfilter
-            homeAwayFilter={homeAwayFilter}
-            statusMask={statusMask}
-            statusCounts={statusCounts}
-            alleHref={buildHref(basePath, { ...navParams, homeAwayFilter: "ALLE" })}
-            heimHref={buildHref(basePath, { ...navParams, homeAwayFilter: "HOME" })}
-            auswaertsHref={buildHref(basePath, { ...navParams, homeAwayFilter: "AWAY" })}
-            statusToggleHrefs={statusToggleHrefs}
-            resetHref={resetHref}
-            teamFilterLinks={teamFilterLinks}
-            competitionFilterLinks={competitionFilterLinks}
-            venueFilterLinks={venueFilterLinks}
-            zeitraumLinks={zeitraumLinks}
-          />
+        <aside className={SPIELE_WORKSPACE_RAIL_ASIDE} data-testid="spiele-management-rail">
+          <div className={SPIELE_WORKSPACE_RAIL_STACK}>
+            <SpieleManagementMonthCalendar
+              monthParam={monthWindow.param}
+              timezone={timezone}
+              matchDayKeys={matchDayKeys}
+              previousMonthHref={buildHref(basePath, {
+                ...navParams,
+                month: monthWindow.previousParam,
+              })}
+              nextMonthHref={buildHref(basePath, {
+                ...navParams,
+                month: monthWindow.nextParam,
+              })}
+            />
+            <SpieleManagementSchnellfilter
+              homeAwayFilter={homeAwayFilter}
+              statusMask={statusMask}
+              statusCounts={statusCounts}
+              alleHref={buildHref(basePath, { ...navParams, homeAwayFilter: "ALLE" })}
+              heimHref={buildHref(basePath, { ...navParams, homeAwayFilter: "HOME" })}
+              auswaertsHref={buildHref(basePath, { ...navParams, homeAwayFilter: "AWAY" })}
+              statusToggleHrefs={statusToggleHrefs}
+              resetHref={resetHref}
+              teamFilterLinks={teamFilterLinks}
+              competitionFilterLinks={competitionFilterLinks}
+              venueFilterLinks={venueFilterLinks}
+              zeitraumLinks={zeitraumLinks}
+            />
+          </div>
         </aside>
       </div>
     </div>

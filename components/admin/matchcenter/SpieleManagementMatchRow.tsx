@@ -19,6 +19,10 @@ import {
 import { buildMatchWochenplanerHref } from "@/lib/matchcenter/wochenplaner-deep-links";
 import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
 import SpieleMatchRowContextMenu from "./SpieleMatchRowContextMenu";
+import {
+  SPIELE_MATCH_ROW_INTERMEDIATE_GRID,
+  SPIELE_MATCH_ROW_WIDE_GRID,
+} from "./spiele-management-layout";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -34,8 +38,8 @@ type Props = {
   onToggleSelect?: (id: string) => void;
 };
 
-const DESKTOP_GRID =
-  "md:grid md:grid-cols-[4.75rem_minmax(0,1.55fr)_minmax(0,9.5rem)_minmax(0,1.15fr)_2.5rem] md:items-center md:gap-x-4";
+const TEAM_NAME =
+  "min-w-[3.25rem] flex-1 basis-0 text-sm leading-snug md:line-clamp-2 md:whitespace-normal min-[105rem]:truncate min-[105rem]:whitespace-nowrap min-[105rem]:line-clamp-none md:text-base";
 
 function HomeAwayPill({ homeAway }: { homeAway: "HOME" | "AWAY" | null }) {
   if (!homeAway) return null;
@@ -43,7 +47,7 @@ function HomeAwayPill({ homeAway }: { homeAway: "HOME" | "AWAY" | null }) {
   return (
     <span
       className={cn(
-        "inline-flex rounded-full px-2 py-0.5 text-[0.625rem] font-bold uppercase tracking-wide",
+        "inline-flex shrink-0 rounded-full px-2 py-0.5 text-[0.625rem] font-bold uppercase tracking-wide",
         isHome
           ? "bg-sky-500/15 text-sky-300"
           : "bg-[var(--surface-2)] text-[var(--muted)]",
@@ -58,7 +62,7 @@ function ReadinessPill({ label, tone }: { label: string; tone: "ready" | "open" 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.625rem] font-semibold",
+        "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[0.625rem] font-semibold",
         tone === "ready" && "bg-emerald-500/15 text-emerald-400",
         tone === "open" && "bg-amber-500/15 text-amber-400",
         tone === "neutral" && "bg-[var(--surface-2)] text-[var(--muted)]",
@@ -81,9 +85,11 @@ function ReadinessPill({ label, tone }: { label: string; tone: "ready" | "open" 
 function PreparationColumn({
   match,
   assessment,
+  layout,
 }: {
   match: MatchcenterMatchSummary;
   assessment: MatchcenterOperationalAssessment;
+  layout: "wide" | "compact";
 }) {
   const homeAway = match.homeAway?.trim().toUpperCase();
   const isHome = homeAway === "HOME";
@@ -91,45 +97,64 @@ function PreparationColumn({
 
   if (isAway) {
     const venue = buildSpieleVenueLine(match) ?? match.location?.trim();
+    if (!venue) {
+      return layout === "wide" ? (
+        <span className="text-xs text-[var(--muted)]">—</span>
+      ) : null;
+    }
     return (
-      <div className="min-w-0">
-        <p className="text-[0.625rem] font-bold uppercase tracking-wide text-[var(--muted)]">
-          Auswärtsspiel
-        </p>
-        {venue ? (
-          <p className="mt-1 truncate text-xs text-[var(--text-2)]">{venue}</p>
-        ) : (
-          <p className="mt-1 text-xs text-[var(--muted)]">—</p>
+      <p
+        className={cn(
+          "text-xs text-[var(--text-2)]",
+          layout === "wide" ? "line-clamp-3 break-words" : "line-clamp-2 break-words",
         )}
-      </div>
+      >
+        {venue}
+      </p>
     );
   }
 
   if (!isHome) {
-    return <span className="text-xs text-[var(--muted)]">—</span>;
+    return layout === "wide" ? <span className="text-xs text-[var(--muted)]">—</span> : null;
   }
 
   const items = buildHomeReadinessChecklist(match);
+  const listClass =
+    layout === "wide"
+      ? "mt-1.5 space-y-1"
+      : "mt-1 flex flex-wrap gap-x-3 gap-y-1";
+
   return (
     <div className="min-w-0">
-      <p className="text-[0.625rem] font-bold uppercase tracking-wide text-[var(--muted)]">
-        Matchvorbereitung
-      </p>
-      <ul className="mt-1.5 space-y-1" aria-label="Matchvorbereitung">
+      {layout === "wide" ? (
+        <p className="text-[0.625rem] font-bold uppercase tracking-wide text-[var(--muted)]">
+          Matchvorbereitung
+        </p>
+      ) : null}
+      <ul
+        className={listClass}
+        aria-label="Matchvorbereitung"
+      >
         {items.map((item) => (
-          <li key={item.key} className="flex items-center gap-2 text-xs">
+          <li
+            key={item.key}
+            className={cn(
+              "flex min-w-[8.5rem] items-start gap-2 text-xs",
+              layout === "compact" && "max-w-full flex-1 basis-[calc(50%-0.375rem)] sm:basis-[calc(33.333%-0.5rem)]",
+            )}
+          >
             {item.ready ? (
-              <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" aria-hidden="true" />
+              <CheckCircle2 className="mt-0.5 h-3 w-3 shrink-0 text-emerald-500" aria-hidden="true" />
             ) : (
               <span
-                className="h-3 w-3 shrink-0 rounded-full border border-amber-500/60"
+                className="mt-0.5 h-3 w-3 shrink-0 rounded-full border border-amber-500/60"
                 aria-hidden="true"
               />
             )}
-            <span className="w-[5.5rem] shrink-0 text-[var(--muted)]">{item.label}</span>
+            <span className="shrink-0 text-[var(--muted)]">{item.label}</span>
             <span
               className={cn(
-                "min-w-0 truncate font-medium",
+                "min-w-0 break-words font-medium leading-snug",
                 item.ready ? "text-[var(--text-2)]" : "text-amber-600/90",
               )}
             >
@@ -201,13 +226,14 @@ export default function SpieleManagementMatchRow({
     <article
       className={cn(
         "group relative grid grid-cols-1 gap-3 border-b border-[var(--border)]/50 px-4 py-4 last:border-b-0",
-        DESKTOP_GRID,
+        SPIELE_MATCH_ROW_INTERMEDIATE_GRID,
+        SPIELE_MATCH_ROW_WIDE_GRID,
         isSelecting && isSelected && "bg-emerald-500/5",
       )}
       data-testid={`matchcenter-spielplanung-row-${match.id}`}
     >
       {isSelecting ? (
-        <label className="relative z-[2] flex items-center gap-2 md:col-span-1">
+        <label className="relative z-[2] flex items-center gap-2 md:col-span-3 min-[105rem]:col-span-1">
           <input
             type="checkbox"
             checked={isSelected}
@@ -218,21 +244,21 @@ export default function SpieleManagementMatchRow({
         </label>
       ) : null}
 
-      <div className="relative z-[1] tabular-nums md:col-span-1">
+      <div className="relative z-[1] tabular-nums md:col-start-1 md:row-start-1 min-[105rem]:col-span-1">
         <p className="text-lg font-semibold leading-none text-[var(--foreground)]">{kickoff}</p>
         {endTime && endTime !== kickoff ? (
           <p className="mt-1 text-sm text-[var(--muted)]">{endTime}</p>
         ) : null}
       </div>
 
-      <div className="relative z-[1] min-w-0 md:col-span-1">
+      <div className="relative z-[1] min-w-0 md:col-start-2 md:row-start-1 min-[105rem]:col-span-1">
         <Link
           href={detailHref}
           className="block min-w-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
           aria-label={`Details zu ${match.title} anzeigen`}
         >
           {contextLine ? (
-            <p className="mb-2 truncate text-[0.6875rem] text-[var(--muted)]">{contextLine}</p>
+            <p className="mb-2 line-clamp-1 text-[0.6875rem] text-[var(--muted)]">{contextLine}</p>
           ) : null}
 
           <div className="flex min-w-0 items-center gap-2">
@@ -240,7 +266,7 @@ export default function SpieleManagementMatchRow({
               <ClubLogo logoUrl={homeLogoUrl} name={homeName} size={logoSize} bare className="shrink-0" />
               <span
                 className={cn(
-                  "min-w-0 truncate text-sm leading-tight md:text-base",
+                  TEAM_NAME,
                   match.home.isOwnTeam ? "font-bold text-[var(--foreground)]" : "font-semibold text-[var(--text-2)]",
                 )}
               >
@@ -258,7 +284,8 @@ export default function SpieleManagementMatchRow({
             <div className="flex min-w-0 flex-1 items-center justify-end gap-2.5">
               <span
                 className={cn(
-                  "min-w-0 truncate text-right text-sm leading-tight md:text-base",
+                  TEAM_NAME,
+                  "text-right",
                   match.away.isOwnTeam ? "font-bold text-[var(--foreground)]" : "font-semibold text-[var(--text-2)]",
                 )}
               >
@@ -269,9 +296,9 @@ export default function SpieleManagementMatchRow({
           </div>
 
           {venueLine ? (
-            <p className="mt-2 flex items-center gap-1 truncate text-xs text-[var(--muted)]">
-              <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
-              {venueLine}
+            <p className="mt-2 flex items-start gap-1 text-xs text-[var(--muted)] md:hidden min-[105rem]:flex">
+              <MapPin className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+              <span className="line-clamp-2 break-words">{venueLine}</span>
             </p>
           ) : null}
 
@@ -279,21 +306,8 @@ export default function SpieleManagementMatchRow({
       </div>
 
       <div
-        className="flex flex-wrap items-center gap-1.5 md:col-span-1"
-        data-testid={`matchcenter-action-${match.id}`}
+        className="relative z-[2] flex items-start justify-end md:col-start-3 md:row-start-1 min-[105rem]:col-start-5 min-[105rem]:items-center"
       >
-        <HomeAwayPill homeAway={homeAway} />
-        <ReadinessPill
-          label={status.label}
-          tone={live ? "ready" : readinessTone}
-        />
-      </div>
-
-      <div className="md:col-span-1">
-        <PreparationColumn match={match} assessment={assessment} />
-      </div>
-
-      <div className="relative z-[2] flex items-start justify-end md:col-span-1 md:items-center">
         {!isSelecting ? (
           <SpieleMatchRowContextMenu
             matchId={match.id}
@@ -302,6 +316,41 @@ export default function SpieleManagementMatchRow({
             canManage={canManage}
           />
         ) : null}
+      </div>
+
+      <div
+        className="relative z-[1] space-y-2 md:col-span-2 md:col-start-2 md:row-start-2 min-[105rem]:hidden"
+        data-testid={`matchcenter-action-${match.id}`}
+      >
+        {venueLine ? (
+          <p className="hidden items-start gap-1 text-xs text-[var(--muted)] md:flex min-[105rem]:hidden">
+            <MapPin className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+            <span className="line-clamp-2 break-words">{venueLine}</span>
+          </p>
+        ) : null}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <HomeAwayPill homeAway={homeAway} />
+          <ReadinessPill
+            label={status.label}
+            tone={live ? "ready" : readinessTone}
+          />
+        </div>
+        <PreparationColumn match={match} assessment={assessment} layout="compact" />
+      </div>
+
+      <div
+        className="hidden min-w-0 flex-wrap items-center gap-1.5 min-[105rem]:col-start-3 min-[105rem]:flex min-[105rem]:col-span-1"
+        data-testid={`matchcenter-action-wide-${match.id}`}
+      >
+        <HomeAwayPill homeAway={homeAway} />
+        <ReadinessPill
+          label={status.label}
+          tone={live ? "ready" : readinessTone}
+        />
+      </div>
+
+      <div className="hidden min-w-0 min-[105rem]:col-start-4 min-[105rem]:block min-[105rem]:col-span-1">
+        <PreparationColumn match={match} assessment={assessment} layout="wide" />
       </div>
 
       <div
