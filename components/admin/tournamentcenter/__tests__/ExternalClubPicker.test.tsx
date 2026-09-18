@@ -286,7 +286,7 @@ describe("ExternalClubPicker — logos (MATCHCENTER-CANONICAL-OPPONENT-01B)", ()
     render(<ExternalClubPicker selected={null} onSelect={vi.fn()} testId="club-picker" />);
     fireEvent.change(screen.getByTestId("club-picker-input"), { target: { value: "cr" } });
 
-    const logo = await screen.findByAltText("");
+    const logo = await screen.findByAltText("Logo FC Crest");
     expect(logo).toHaveAttribute("src", "https://cdn.example.com/crest.png");
   });
 
@@ -299,7 +299,7 @@ describe("ExternalClubPicker — logos (MATCHCENTER-CANONICAL-OPPONENT-01B)", ()
       />,
     );
 
-    expect(screen.getByAltText("")).toHaveAttribute(
+    expect(screen.getByAltText("Logo FC Crest")).toHaveAttribute(
       "src",
       "https://cdn.example.com/crest.png",
     );

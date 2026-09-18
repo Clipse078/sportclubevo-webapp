@@ -53,7 +53,7 @@ import {
   CLUB_DIRECTORY_SEARCH_MIN_CHARS,
   fetchAllClubDirectorySearchMatches,
 } from "@/lib/club-directory/club-directory-client";
-import SportingTeamLogo from "@/components/shared/SportingTeamLogo";
+import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
 
 export type ExternalClubPickerResult = {
   id: string;
@@ -81,13 +81,15 @@ function getClubLabel(club: ExternalClubPickerResult): string {
   return club.name;
 }
 
-function ClubAvatar({ logoUrl }: { logoUrl?: string | null }) {
+function PickerClubLogo({
+  logoUrl,
+  name,
+}: {
+  logoUrl?: string | null;
+  name: string;
+}) {
   return (
-    <SportingTeamLogo
-      logoUrl={logoUrl}
-      size="md"
-      className="rounded-full border border-slate-200 bg-gradient-to-br from-white to-slate-100"
-    />
+    <ClubLogo logoUrl={logoUrl ?? null} name={name} size="sm" bare className="shrink-0" />
   );
 }
 
@@ -215,7 +217,7 @@ export function ExternalClubPicker({
     <div ref={containerRef} className="relative w-full" data-testid={testId}>
       {selected ? (
         <div className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--border-strong)] bg-[var(--surface-2)] px-3 py-2.5">
-          <ClubAvatar logoUrl={selected.logoUrl} />
+          <PickerClubLogo logoUrl={selected.logoUrl} name={getClubLabel(selected)} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-[var(--foreground)]">
               {getClubLabel(selected)}
@@ -324,7 +326,7 @@ export function ExternalClubPicker({
                     isFocused ? " bg-[var(--surface-2)]" : " hover:bg-[var(--surface-2)]"
                   }`}
                 >
-                  <ClubAvatar logoUrl={club.logoUrl} />
+                  <PickerClubLogo logoUrl={club.logoUrl} name={club.name} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-[var(--foreground)]">{club.name}</p>
                     {club.shortName ? (
