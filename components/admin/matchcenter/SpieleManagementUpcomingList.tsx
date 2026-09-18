@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2, SquareCheck, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { MatchcenterRowViewModel } from "@/lib/matchcenter/view-model";
-import { groupSpielplanungRowsByDay } from "@/lib/matchcenter/management-view";
+import {
+  formatSpieleDayGroupHeadingLong,
+  groupSpielplanungRowsByDay,
+} from "@/lib/matchcenter/management-view";
 import SpieleManagementMatchRow from "./SpieleManagementMatchRow";
 import { cn } from "@/lib/cn";
 
@@ -15,10 +18,8 @@ type Props = {
   timezone: string;
   tenantLogoUrl?: string | null;
   canManage: boolean;
+  compact?: boolean;
 };
-
-const LIST_HEADER =
-  "hidden md:grid md:grid-cols-[minmax(5.5rem,0.55fr)_minmax(0,1.85fr)_minmax(0,1fr)_minmax(5.75rem,0.85fr)_3rem] md:gap-x-4 border-b border-[var(--border)]/60 bg-[var(--surface-2)]/25 px-4 py-2.5 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--muted)]";
 
 export default function SpieleManagementUpcomingList({
   rows,
@@ -26,6 +27,7 @@ export default function SpieleManagementUpcomingList({
   timezone,
   tenantLogoUrl = null,
   canManage,
+  compact = false,
 }: Props) {
   const router = useRouter();
   const { toast } = useToast();
@@ -93,7 +95,7 @@ export default function SpieleManagementUpcomingList({
   const allSelected = selectedCount > 0 && selectedCount === rows.length;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {canManage ? (
         <div className="flex flex-wrap items-center justify-end gap-2">
           {isSelecting ? (
@@ -162,44 +164,51 @@ export default function SpieleManagementUpcomingList({
         </div>
       ) : null}
 
-      <div
-        className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]/70"
-        data-testid="matchcenter-spielplanung-list"
-      >
-        <div className={LIST_HEADER}>
-          <span>Datum</span>
-          <span>Spiel</span>
-          <span>Ort</span>
-          <span>Status</span>
-          <span className="sr-only">Aktionen</span>
-        </div>
-
-        {dayGroups.map((group) => (
-          <div key={group.dayKey}>
-            <div className="border-b border-[var(--border)]/50 bg-[var(--surface-2)]/20 px-4 py-2">
-              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
-                {group.label}
-                <span className="ml-2 tabular-nums text-[var(--text-2)]">{group.rows.length}</span>
-              </p>
-            </div>
-            <div>
-              {group.rows.map((row) => (
-                <SpieleManagementMatchRow
-                  key={row.match.id}
-                  match={row.match}
-                  assessment={row.assessment}
-                  locale={locale}
-                  timezone={timezone}
-                  tenantLogoUrl={tenantLogoUrl}
-                  canManage={canManage}
-                  isSelecting={isSelecting}
-                  isSelected={selectedIds.has(row.match.id)}
-                  onToggleSelect={toggleSelection}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
+      <div className="space-y-3" data-testid="matchcenter-spielplanung-list">
+        {dayGroups.map((group) => {
+          const heading = formatSpieleDayGroupHeadingLong(
+            group.rows[0]!.match.startAt,
+            locale,
+            timezone,
+          );
+          const count = group.rows.length;
+          return (
+            <section
+              key={group.dayKey}
+              className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]/90"
+              data-testid={`spiele-day-group-${group.dayKey}`}
+            >
+              <header className="flex items-center justify-between gap-3 border-b border-[var(--border)]/60 bg-[var(--surface-2)]/30 px-4 py-2.5">
+                <h3 className="text-[0.6875rem] font-bold uppercase tracking-[0.06em] text-[var(--foreground)]">
+                  {heading}
+                </h3>
+                <p
+                  className="text-xs tabular-nums text-[var(--muted)]"
+                  data-testid={`spiele-day-count-${group.dayKey}`}
+                >
+                  {count} {count === 1 ? "Spiel" : "Spiele"}
+                </p>
+              </header>
+              <div>
+                {group.rows.map((row) => (
+                  <SpieleManagementMatchRow
+                    key={row.match.id}
+                    match={row.match}
+                    assessment={row.assessment}
+                    locale={locale}
+                    timezone={timezone}
+                    tenantLogoUrl={tenantLogoUrl}
+                    canManage={canManage}
+                    compact={compact}
+                    isSelecting={isSelecting}
+                    isSelected={selectedIds.has(row.match.id)}
+                    onToggleSelect={toggleSelection}
+                  />
+                ))}
+              </div>
+            </section>
+          );
+        })}
       </div>
     </div>
   );

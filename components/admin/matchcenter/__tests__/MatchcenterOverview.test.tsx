@@ -156,13 +156,20 @@ describe("MatchcenterOverview — tabs, month nav, KPIs", () => {
     renderOverview([createMatch()]);
 
     expect(screen.getByTestId("matchcenter-tab-spielplanung")).toHaveAttribute(
-      "aria-selected",
-      "true",
+      "aria-current",
+      "page",
     );
-    expect(screen.getByTestId("matchcenter-tab-resultate")).toHaveAttribute(
-      "aria-selected",
-      "false",
+    expect(screen.getByTestId("matchcenter-tab-resultate")).not.toHaveAttribute(
+      "aria-current",
+      "page",
     );
+    expect(screen.getByTestId("spiele-header-subtitle")).toHaveTextContent(
+      "Zentrale Spielplanung und operative Matchvorbereitung.",
+    );
+    expect(screen.getByTestId("spiele-kpi-cards")).toBeTruthy();
+    expect(screen.getByTestId("spiele-view-switcher")).toBeTruthy();
+    expect(screen.getByTestId("spiele-schnellfilter")).toBeTruthy();
+    expect(screen.getByTestId("spiele-month-calendar")).toBeTruthy();
     expect(screen.getByTestId("matchcenter-month-label")).toHaveTextContent(
       "August 2026",
     );
@@ -173,11 +180,11 @@ describe("MatchcenterOverview — tabs, month nav, KPIs", () => {
 
     expect(screen.getByTestId("matchcenter-month-previous")).toHaveAttribute(
       "href",
-      "/dashboard/matchcenter?tab=spielplanung&month=2026-07&filter=offen",
+      "/dashboard/matchcenter?tab=spielplanung&month=2026-07&status=offen&filter=offen",
     );
     expect(screen.getByTestId("matchcenter-month-next")).toHaveAttribute(
       "href",
-      "/dashboard/matchcenter?tab=spielplanung&month=2026-09&filter=offen",
+      "/dashboard/matchcenter?tab=spielplanung&month=2026-09&status=offen&filter=offen",
     );
   });
 
@@ -280,8 +287,8 @@ describe("MatchcenterOverview — Spielplanung", () => {
     ]);
 
     expect(screen.getByText("2 Punkte offen")).toBeTruthy();
-    expect(screen.getByText(/Platz —/)).toBeTruthy();
-    expect(screen.getByText(/Garderobe —/)).toBeTruthy();
+    expect(screen.getByText("Spielfeld")).toBeTruthy();
+    expect(screen.getByText("Heimkabine")).toBeTruthy();
   });
 
   it("G. shows a calm Auswärtsspiel state instead of manufactured facility warnings", () => {
@@ -316,7 +323,7 @@ describe("MatchcenterOverview — Spielplanung", () => {
       }),
     ]);
 
-    expect(screen.getAllByText("Auswärtsspiel").length).toBeGreaterThanOrEqual(
+    expect(screen.getAllByText(/Auswärtsspiel/i).length).toBeGreaterThanOrEqual(
       1,
     );
     expect(screen.queryByText("Spielfeld")).toBeNull();
@@ -389,7 +396,9 @@ describe("MatchcenterOverview — Spielplanung", () => {
       }),
     ]);
 
-    expect(screen.getByText("Live")).toBeTruthy();
+    expect(
+      within(screen.getByTestId("matchcenter-action-match-1")).getByText("Live"),
+    ).toBeTruthy();
     expect(screen.getByTestId("matchcenter-live-score-match-1")).toHaveTextContent(
       "1:0",
     );
@@ -690,7 +699,7 @@ describe("MatchcenterOverview — team filter", () => {
 
     expect(screen.getByTestId("matchcenter-month-next")).toHaveAttribute(
       "href",
-      "/dashboard/matchcenter?tab=spielplanung&month=2026-09&filter=offen&team=team-2",
+      "/dashboard/matchcenter?tab=spielplanung&month=2026-09&status=offen&filter=offen&team=team-2",
     );
   });
 });

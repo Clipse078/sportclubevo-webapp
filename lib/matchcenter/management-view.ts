@@ -4,11 +4,15 @@
  */
 
 import type { MatchcenterMatchSummary } from "./types";
-import type { MatchcenterOperationalAssessment } from "./operational-state";
+import {
+  assessMatchOperationalState,
+  type MatchcenterOperationalAssessment,
+} from "./operational-state";
 import type { MatchcenterRowViewModel } from "./view-model";
 import { getMatchcenterLifecycleClassification } from "./match-lifecycle";
 import { isMatchLive } from "./match-lifecycle";
 import { resolveMatchcenterCompactSideName } from "./team-display";
+import type { SpieleHomeAwayFilter, SpieleStatusMaskKey } from "./navigation";
 
 export type SpieleManagementSort = "KICKOFF_ASC" | "KICKOFF_DESC";
 
@@ -104,6 +108,59 @@ export type SpieleDayGroup<T> = {
   label: string;
   rows: T[];
 };
+
+/** Target-style date group heading, e.g. "FR, 18. SEPTEMBER 2026". */
+export function formatSpieleDayGroupHeadingLong(
+  date: Date,
+  locale: string,
+  timezone: string,
+  now?: Date,
+): string {
+  const referenceNow = now ?? new Date();
+  const todayKey = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(referenceNow);
+  const dayKey = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+
+  if (dayKey === todayKey) {
+    return "HEUTE";
+  }
+
+  const weekday = new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    timeZone: timezone,
+  })
+    .format(date)
+    .replace(/\.$/, "")
+    .toUpperCase();
+
+  const day = new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    timeZone: timezone,
+  }).format(date);
+
+  const month = new Intl.DateTimeFormat(locale, {
+    month: "long",
+    timeZone: timezone,
+  })
+    .format(date)
+    .toUpperCase();
+
+  const year = new Intl.DateTimeFormat(locale, {
+    year: "numeric",
+    timeZone: timezone,
+  }).format(date);
+
+  return `${weekday}, ${day}. ${month} ${year}`;
+}
 
 export function formatSpieleDayGroupLabel(
   date: Date,
@@ -389,4 +446,193 @@ export function resolveOwnTeamSideLabel(match: MatchcenterMatchSummary): string 
     return resolveMatchcenterCompactSideName(match.away);
   }
   return null;
+}
+
+export type SpieleReadinessChecklistItem = {
+  key: string;
+  label: string;
+  value: string | null;
+  ready: boolean;
+};
+
+export function buildHomeReadinessChecklist(
+  match: MatchcenterMatchSummary,
+): SpieleReadinessChecklistItem[] {
+  return [
+    {
+      key: "pitch",
+      label: "Spielfeld",
+      value: match.operational.pitchCode?.trim() || null,
+      ready: !!match.operational.pitchCode?.trim(),
+    },
+    {
+      key: "home-dressing",
+      label: "Heimkabine",
+      value: match.operational.homeDressingRoomCode?.trim() || null,
+      ready: !!match.operational.homeDressingRoomCode?.trim(),
+    },
+    {
+      key: "away-dressing",
+      label: "Gastkabine",
+      value: match.operational.awayDressingRoomCode?.trim() || null,
+      ready: !!match.operational.awayDressingRoomCode?.trim(),
+    },
+    {
+      key: "infoboard",
+      label: "Infoboard",
+      value: match.visibility.infoboardVisible ? "✓" : null,
+      ready: match.visibility.infoboardVisible,
+    },
+  ];
+}
+
+export function resolveSpieleRowStatusBucket(
+  row: MatchcenterRowViewModel,
+  now?: Date,
+): SpieleStatusMaskKey {
+  const lifecycle = getMatchcenterLifecycleClassification(row.match, now).lifecycle;
+  if (lifecycle === "CANCELLED") return "abgesagt";
+  if (row.assessment.status === "OPEN") return "offen";
+  if (row.assessment.status === "READY") return "bereit";
+  return "anstehend";
+}
+
+export function filterSpielplanungRowsByStatusMask(
+  rows: readonly MatchcenterRowViewModel[],
+  mask: readonly SpieleStatusMaskKey[],
+  now?: Date,
+): MatchcenterRowViewModel[] {
+  const allowed = new Set(mask);
+  if (allowed.size === 0) return [];
+  return rows.filter((row) => allowed.has(resolveSpieleRowStatusBucket(row, now)));
+}
+
+export function filterSpielplanungRowsByHomeAway(
+  rows: readonly MatchcenterRowViewModel[],
+  filter: SpieleHomeAwayFilter,
+): MatchcenterRowViewModel[] {
+  if (filter === "ALLE") return [...rows];
+  const want = filter === "HOME" ? "HOME" : "AWAY";
+  return rows.filter(
+    (row) => row.match.homeAway?.trim().toUpperCase() === want,
+  );
+}
+
+export function filterSpielplanungRowsByCompetition(
+  rows: readonly MatchcenterRowViewModel[],
+  competition: string | null,
+): MatchcenterRowViewModel[] {
+  const needle = competition?.trim();
+  if (!needle) return [...rows];
+  return rows.filter((row) => row.match.competitionLabel?.trim() === needle);
+}
+
+export function filterSpielplanungRowsByVenue(
+  rows: readonly MatchcenterRowViewModel[],
+  venue: string | null,
+): MatchcenterRowViewModel[] {
+  const needle = venue?.trim();
+  if (!needle) return [...rows];
+  return rows.filter((row) => row.match.location?.trim() === needle);
+}
+
+export function deriveSpieleCompetitionOptions(
+  rows: readonly MatchcenterRowViewModel[],
+): string[] {
+  const set = new Set<string>();
+  for (const row of rows) {
+    const label = row.match.competitionLabel?.trim();
+    if (label) set.add(label);
+  }
+  return [...set].sort((a, b) => a.localeCompare(b, "de"));
+}
+
+export function deriveSpieleVenueOptions(
+  rows: readonly MatchcenterRowViewModel[],
+): string[] {
+  const set = new Set<string>();
+  for (const row of rows) {
+    const loc = row.match.location?.trim();
+    if (loc) set.add(loc);
+  }
+  return [...set].sort((a, b) => a.localeCompare(b, "de"));
+}
+
+export function countSpieleStatusBuckets(
+  rows: readonly MatchcenterRowViewModel[],
+  cancelledCount: number,
+  now?: Date,
+): Record<SpieleStatusMaskKey, number> {
+  const counts: Record<SpieleStatusMaskKey, number> = {
+    anstehend: 0,
+    offen: 0,
+    bereit: 0,
+    abgesagt: cancelledCount,
+  };
+  for (const row of rows) {
+    const bucket = resolveSpieleRowStatusBucket(row, now);
+    if (bucket !== "abgesagt") counts[bucket] += 1;
+  }
+  return counts;
+}
+
+export function countCancelledMatchesInMonth(
+  matches: readonly MatchcenterMatchSummary[],
+  now?: Date,
+): number {
+  return buildCancelledSpielplanungRows(matches, now).length;
+}
+
+export function buildCancelledSpielplanungRows(
+  matches: readonly MatchcenterMatchSummary[],
+  now?: Date,
+): MatchcenterRowViewModel[] {
+  const rows: MatchcenterRowViewModel[] = [];
+  for (const match of matches) {
+    const lifecycle = getMatchcenterLifecycleClassification(match, now).lifecycle;
+    if (lifecycle === "CANCELLED") {
+      rows.push({
+        match,
+        assessment: assessMatchOperationalState(match, now),
+      });
+    }
+  }
+  return rows.sort(
+    (a, b) => a.match.startAt.getTime() - b.match.startAt.getTime(),
+  );
+}
+
+export function formatSpieleEndTime(
+  date: Date | null | undefined,
+  locale: string,
+  timezone: string,
+): string | null {
+  if (!date) return null;
+  return new Intl.DateTimeFormat(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: timezone,
+  }).format(date);
+}
+
+export function resolveSpieleOperationalEndTime(
+  match: MatchcenterMatchSummary,
+): Date | null {
+  if (match.operationalEndAt) return match.operationalEndAt;
+  if (match.endAt) return match.endAt;
+  return null;
+}
+
+export function buildSpieleTeamContextLine(match: MatchcenterMatchSummary): string | null {
+  const ownTeam = resolveOwnTeamSideLabel(match);
+  const competition = match.competitionLabel?.trim();
+  if (ownTeam && competition) return `${ownTeam} · ${competition}`;
+  return ownTeam ?? competition ?? null;
+}
+
+export function buildSpieleVenueLine(match: MatchcenterMatchSummary): string | null {
+  const location = match.location?.trim();
+  const pitch = match.operational.pitchCode?.trim();
+  if (location && pitch) return `${location} · ${pitch}`;
+  return location ?? pitch ?? null;
 }

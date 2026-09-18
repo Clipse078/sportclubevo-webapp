@@ -20,6 +20,9 @@ import {
 } from "@/lib/matchcenter/view-model";
 import {
   normalizeMatchcenterTeamFilter,
+  normalizeSpieleHomeAwayFilter,
+  normalizeSpieleListView,
+  normalizeSpieleStatusMask,
   toMatchcenterTeamOptions,
 } from "@/lib/matchcenter/navigation";
 import {
@@ -44,6 +47,11 @@ type MatchcenterPageProps = {
     team?: string;
     q?: string;
     sort?: string;
+    ha?: string;
+    view?: string;
+    competition?: string;
+    venue?: string;
+    status?: string;
   }>;
 };
 
@@ -129,6 +137,11 @@ export default async function MatchcenterPage({
   }
 
   const searchQuery = normalizeSpieleSearchQuery(params.q);
+  const homeAwayFilter = normalizeSpieleHomeAwayFilter(params.ha);
+  const listView = normalizeSpieleListView(params.view);
+  const competitionFilter = params.competition?.trim() || null;
+  const venueFilter = params.venue?.trim() || null;
+  const statusMask = normalizeSpieleStatusMask(params.status, actionFilter);
 
   return (
     <ToastProvider>
@@ -148,6 +161,11 @@ export default async function MatchcenterPage({
           tenantLogoUrl={tenantContext.logoUrl}
           searchQuery={searchQuery}
           sortParam={params.sort ?? null}
+          homeAwayFilter={homeAwayFilter}
+          listView={listView}
+          competitionFilter={competitionFilter}
+          venueFilter={venueFilter}
+          statusMask={statusMask}
         />
       </div>
     </ToastProvider>

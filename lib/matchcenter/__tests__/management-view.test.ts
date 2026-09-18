@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   filterSpielplanungRowsBySearch,
+  formatSpieleDayGroupHeadingLong,
   formatSpieleDayGroupLabel,
   groupSpielplanungRowsByDay,
   matchMatchesSpieleSearch,
@@ -130,6 +131,17 @@ describe("management-view grouping", () => {
       now,
     );
     expect(label).toBe("HEUTE");
+  });
+
+  it("formats long day group headings for premium date surfaces", () => {
+    const label = formatSpieleDayGroupHeadingLong(
+      new Date("2026-09-18T16:00:00.000Z"),
+      "de-CH",
+      "Europe/Zurich",
+      new Date("2026-08-01T12:00:00.000Z"),
+    );
+    expect(label).toMatch(/SEPTEMBER 2026/i);
+    expect(label).toMatch(/18/);
   });
 
   it("groups spielplanung rows chronologically by day key", () => {

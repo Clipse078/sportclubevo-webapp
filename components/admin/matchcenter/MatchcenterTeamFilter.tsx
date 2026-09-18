@@ -6,6 +6,9 @@ import { ChevronDown, Users, X } from "lucide-react";
 import {
   buildMatchcenterHref,
   type MatchcenterTeamOption,
+  type SpieleHomeAwayFilter,
+  type SpieleListView,
+  type SpieleStatusMaskKey,
 } from "@/lib/matchcenter/navigation";
 import type {
   MatchcenterActionFilter,
@@ -26,6 +29,13 @@ type MatchcenterTeamFilterProps = {
   wochenplanFilter: MatchcenterWochenplanFilter;
   urlSearch?: string | null;
   urlSort?: string | null;
+  spieleFilters?: {
+    homeAwayFilter?: SpieleHomeAwayFilter;
+    listView?: SpieleListView;
+    competitionFilter?: string | null;
+    venueFilter?: string | null;
+    statusMask?: readonly SpieleStatusMaskKey[] | null;
+  };
 };
 
 export default function MatchcenterTeamFilter({
@@ -38,6 +48,7 @@ export default function MatchcenterTeamFilter({
   wochenplanFilter,
   urlSearch = null,
   urlSort = null,
+  spieleFilters,
 }: MatchcenterTeamFilterProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -65,6 +76,11 @@ export default function MatchcenterTeamFilter({
       teamFilter: nextTeamFilter,
       search: urlSearch,
       sort: urlSort,
+      homeAwayFilter: spieleFilters?.homeAwayFilter,
+      listView: spieleFilters?.listView,
+      competitionFilter: spieleFilters?.competitionFilter,
+      venueFilter: spieleFilters?.venueFilter,
+      statusMask: spieleFilters?.statusMask,
     });
   }
 

@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { CalendarDays, Plus } from "lucide-react";
-import { Suspense } from "react";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 import {
   buildMatchcenterViewModel,
@@ -10,11 +8,23 @@ import {
 } from "@/lib/matchcenter/view-model";
 import {
   buildMatchcenterHref,
+  normalizeSpieleStatusMask,
   type MatchcenterTeamOption,
+  type SpieleHomeAwayFilter,
+  type SpieleListView,
+  type SpieleStatusMaskKey,
 } from "@/lib/matchcenter/navigation";
 import {
+  buildCancelledSpielplanungRows,
+  countSpieleStatusBuckets,
+  deriveSpieleCompetitionOptions,
+  deriveSpieleVenueOptions,
   filterResultateBySearch,
+  filterSpielplanungRowsByCompetition,
+  filterSpielplanungRowsByHomeAway,
   filterSpielplanungRowsBySearch,
+  filterSpielplanungRowsByStatusMask,
+  filterSpielplanungRowsByVenue,
   groupResultateByDay,
   parseSpieleManagementSort,
   sortResultateMatches,
@@ -24,10 +34,15 @@ import { buildSpieleManagementWochenplanerHref } from "@/lib/matchcenter/wochenp
 import { CenterPeriodNavigation } from "@/components/centers/CenterPeriodNavigation";
 import MatchcenterReconciliationPanel from "./MatchcenterReconciliationPanel";
 import SpieleManagementToolbar from "./SpieleManagementToolbar";
-import SpieleManagementSortControl from "./SpieleManagementSortControl";
-import SpieleManagementStatusStrip from "./SpieleManagementStatusStrip";
+import SpieleManagementKpiCards from "./SpieleManagementKpiCards";
 import SpieleManagementUpcomingList from "./SpieleManagementUpcomingList";
 import SpieleManagementResultRow from "./SpieleManagementResultRow";
+import SpieleManagementViewSwitcher from "./SpieleManagementViewSwitcher";
+import SpieleManagementHeaderMenu from "./SpieleManagementHeaderMenu";
+import SpieleManagementMonthCalendar, {
+  collectMatchDayKeys,
+} from "./SpieleManagementMonthCalendar";
+import SpieleManagementSchnellfilter from "./SpieleManagementSchnellfilter";
 import { cn } from "@/lib/cn";
 
 export type MatchcenterMonthWindowLike = {
@@ -53,11 +68,27 @@ type Props = {
   tenantLogoUrl?: string | null;
   searchQuery?: string;
   sortParam?: string | null;
+  homeAwayFilter?: SpieleHomeAwayFilter;
+  listView?: SpieleListView;
+  competitionFilter?: string | null;
+  venueFilter?: string | null;
+  statusMask?: readonly SpieleStatusMaskKey[] | null;
 };
 
-const TABS: { key: MatchcenterTab; label: string }[] = [
-  { key: "SPIELPLANUNG", label: "Anstehend" },
-  { key: "RESULTATE", label: "Resultate" },
+type DomainTab = {
+  key: string;
+  label: string;
+  href?: string;
+  disabled?: boolean;
+};
+
+const DOMAIN_TABS: DomainTab[] = [
+  { key: "spielplanung", label: "Spielplanung" },
+  { key: "resultate", label: "Resultate" },
+  { key: "statistiken", label: "Statistiken", disabled: true },
+  { key: "kalender", label: "Kalender", disabled: true },
+  { key: "ressourcen", label: "Ressourcen", disabled: true },
+  { key: "archiv", label: "Archiv", disabled: true },
 ];
 
 const RESULT_LIST_HEADER =
@@ -73,9 +104,25 @@ function buildHref(
     teamFilter: string | null;
     search?: string;
     sort?: string | null;
+    homeAwayFilter?: SpieleHomeAwayFilter;
+    listView?: SpieleListView;
+    competitionFilter?: string | null;
+    venueFilter?: string | null;
+    statusMask?: readonly SpieleStatusMaskKey[];
   },
 ): string {
   return buildMatchcenterHref(basePath, params);
+}
+
+function toggleStatusMask(
+  current: readonly SpieleStatusMaskKey[],
+  key: SpieleStatusMaskKey,
+): SpieleStatusMaskKey[] {
+  const set = new Set(current);
+  if (set.has(key)) set.delete(key);
+  else set.add(key);
+  if (set.size === 0) return ["anstehend", "offen", "bereit"];
+  return [...set];
 }
 
 export default function SpieleManagementWorkspace({
@@ -94,9 +141,16 @@ export default function SpieleManagementWorkspace({
   tenantLogoUrl = null,
   searchQuery = "",
   sortParam = null,
+  homeAwayFilter = "ALLE",
+  listView = "LISTE",
+  competitionFilter = null,
+  venueFilter = null,
+  statusMask: statusMaskProp = null,
 }: Props) {
+  const statusMask = statusMaskProp ?? normalizeSpieleStatusMask(undefined, actionFilter);
+
   const viewModel = buildMatchcenterViewModel(matches, {
-    actionFilter,
+    actionFilter: "ALLE",
     wochenplanFilter,
     teamFilter,
   });
@@ -109,15 +163,47 @@ export default function SpieleManagementWorkspace({
         ? "KICKOFF_DESC"
         : "KICKOFF_ASC";
 
+  const cancelledRows = buildCancelledSpielplanungRows(matches);
+  const baseSpielplanung = [...viewModel.spielplanung];
+  const withCancelled =
+    statusMask.includes("abgesagt") && tab === "SPIELPLANUNG"
+      ? sortSpielplanungRows([...baseSpielplanung, ...cancelledRows], sort)
+      : sortSpielplanungRows(baseSpielplanung, sort);
+
   const spielplanungRows = sortSpielplanungRows(
-    filterSpielplanungRowsBySearch(viewModel.spielplanung, searchQuery),
+    filterSpielplanungRowsByVenue(
+      filterSpielplanungRowsByCompetition(
+        filterSpielplanungRowsByHomeAway(
+          filterSpielplanungRowsByStatusMask(
+            filterSpielplanungRowsBySearch(withCancelled, searchQuery),
+            statusMask,
+          ),
+          homeAwayFilter,
+        ),
+        competitionFilter,
+      ),
+      venueFilter,
+    ),
     sort,
   );
+
   const resultateMatches = sortResultateMatches(
     filterResultateBySearch(viewModel.resultate, searchQuery),
     sort,
   );
   const resultateGroups = groupResultateByDay(resultateMatches, locale, timezone);
+
+  const competitionOptions = deriveSpieleCompetitionOptions(viewModel.spielplanung);
+  const venueOptions = deriveSpieleVenueOptions(viewModel.spielplanung);
+  const statusCounts = countSpieleStatusBuckets(
+    viewModel.spielplanung,
+    cancelledRows.length,
+  );
+
+  const matchDayKeys = collectMatchDayKeys(
+    [...viewModel.spielplanung, ...cancelledRows].map((row) => row.match.startAt),
+    timezone,
+  );
 
   const todayHref = currentMonthParam
     ? buildHref(basePath, {
@@ -128,10 +214,18 @@ export default function SpieleManagementWorkspace({
         teamFilter,
         search: searchQuery,
         sort: sortParam,
+        homeAwayFilter,
+        listView,
+        competitionFilter,
+        venueFilter,
+        statusMask,
       })
     : undefined;
 
   const wochenplanerHref = buildSpieleManagementWochenplanerHref({ timezone });
+  const kalenderPlannerHref = buildSpieleManagementWochenplanerHref({
+    timezone,
+  });
 
   const navParams = {
     tab,
@@ -141,6 +235,11 @@ export default function SpieleManagementWorkspace({
     teamFilter,
     search: searchQuery,
     sort: sortParam,
+    homeAwayFilter,
+    listView,
+    competitionFilter,
+    venueFilter,
+    statusMask,
   };
 
   const summaryMetrics =
@@ -158,7 +257,11 @@ export default function SpieleManagementWorkspace({
             label: "Offen",
             value: viewModel.kpis.offen,
             tone: "amber" as const,
-            href: buildHref(basePath, { ...navParams, actionFilter: "OFFEN" }),
+            href: buildHref(basePath, {
+              ...navParams,
+              actionFilter: "OFFEN",
+              statusMask: ["offen"],
+            }),
             active: actionFilter === "OFFEN",
             "data-testid": "matchcenter-kpi-offen",
           },
@@ -167,7 +270,11 @@ export default function SpieleManagementWorkspace({
             label: "Bereit",
             value: viewModel.kpis.bereit,
             tone: "emerald" as const,
-            href: buildHref(basePath, { ...navParams, actionFilter: "ERLEDIGT" }),
+            href: buildHref(basePath, {
+              ...navParams,
+              actionFilter: "ERLEDIGT",
+              statusMask: ["bereit"],
+            }),
             active: actionFilter === "ERLEDIGT",
             "data-testid": "matchcenter-kpi-bereit",
           },
@@ -203,178 +310,257 @@ export default function SpieleManagementWorkspace({
     (tab === "RESULTATE" && resultateMatches.length === 0);
   const hasSearch = Boolean(searchQuery.trim());
 
+  const resetHref = buildHref(basePath, {
+    tab,
+    month: monthWindow.param,
+    actionFilter: "ALLE",
+    wochenplanFilter: "ALLE",
+    teamFilter: null,
+    search: "",
+    sort: null,
+    homeAwayFilter: "ALLE",
+    listView: "LISTE",
+    competitionFilter: null,
+    venueFilter: null,
+    statusMask: ["anstehend", "offen", "bereit"],
+  });
+
+  const listeHref = buildHref(basePath, { ...navParams, listView: "LISTE" });
+  const kompaktHref = buildHref(basePath, { ...navParams, listView: "KOMPAKT" });
+  const kalenderHref = buildHref(basePath, { ...navParams, listView: "KALENDER" });
+
   return (
-    <div className="w-full space-y-5" data-testid="spiele-management-workspace">
-      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border)] pb-5">
-        <div className="min-w-0 space-y-1">
-          <p className="text-xs font-medium tracking-wide text-[var(--muted)]">Planung</p>
-          <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
-            Spiele
-          </h1>
-          <p className="text-sm text-[var(--text-2)]">
-            Spiele verwalten, vorbereiten und im Wochenplaner koordinieren.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href={wochenplanerHref}
-            className="fca-button-secondary inline-flex items-center gap-1.5 text-sm"
-            data-testid="spiele-open-wochenplaner"
-          >
-            <CalendarDays className="h-4 w-4" aria-hidden="true" />
-            Wochenplaner öffnen
-          </Link>
-          {canManage ? (
-            <Link
-              href="/dashboard/matchcenter/new"
-              className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-              data-testid="spiele-create-link"
-            >
-              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-              Spiel
-            </Link>
-          ) : null}
+    <div className="w-full space-y-4" data-testid="spiele-management-workspace">
+      <header className="space-y-3 border-b border-[var(--border)] pb-4">
+        <p className="text-xs text-[var(--muted)]">
+          <span>Planung</span>
+          <span className="mx-1.5 text-[var(--border-strong)]">›</span>
+          <span className="text-[var(--text-2)]">Spiele</span>
+        </p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 space-y-1">
+            <h1 className="text-[1.625rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
+              Spiele
+            </h1>
+            <p className="text-sm text-[var(--text-2)]" data-testid="spiele-header-subtitle">
+              Zentrale Spielplanung und operative Matchvorbereitung.
+            </p>
+          </div>
+          <SpieleManagementHeaderMenu
+            canManage={canManage}
+            wochenplanerHref={wochenplanerHref}
+          />
         </div>
       </header>
 
-      <div
-        role="tablist"
-        aria-label="Spiele-Bereiche"
-        className="inline-flex gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-0.5"
-      >
-        {TABS.map((item) => {
-          const isActive = item.key === tab;
+      <nav aria-label="Spiele-Bereiche" className="flex flex-wrap gap-x-5 gap-y-2 border-b border-[var(--border)]/70">
+        {DOMAIN_TABS.map((item) => {
+          const isResultate = item.key === "resultate";
+          const isSpielplanung = item.key === "spielplanung";
+          const isActive =
+            (isSpielplanung && tab === "SPIELPLANUNG") ||
+            (isResultate && tab === "RESULTATE");
+
+          if (item.disabled) {
+            return (
+              <span
+                key={item.key}
+                className="cursor-not-allowed border-b-2 border-transparent pb-2.5 text-sm font-medium text-[var(--muted)]/60"
+                aria-disabled="true"
+                data-testid={`spiele-domain-tab-${item.key}`}
+              >
+                {item.label}
+              </span>
+            );
+          }
+
+          const href = buildHref(basePath, {
+            ...navParams,
+            tab: isResultate ? "RESULTATE" : "SPIELPLANUNG",
+          });
+
           return (
             <Link
               key={item.key}
-              href={buildHref(basePath, { ...navParams, tab: item.key })}
-              role="tab"
-              aria-selected={isActive}
-              data-testid={`matchcenter-tab-${item.key.toLowerCase()}`}
+              href={href}
+              data-testid={`matchcenter-tab-${item.key}`}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
-                "rounded-md px-3 py-1.5 text-sm font-semibold transition-colors",
+                "border-b-2 pb-2.5 text-sm font-semibold transition-colors",
                 isActive
-                  ? "bg-[var(--foreground)] text-white"
-                  : "text-[var(--text-2)] hover:text-[var(--foreground)]",
+                  ? "border-[var(--sce-primary)] text-[var(--foreground)]"
+                  : "border-transparent text-[var(--muted)] hover:text-[var(--text-2)]",
               )}
             >
               {item.label}
             </Link>
           );
         })}
-      </div>
+      </nav>
 
-      <CenterPeriodNavigation
-        label={monthWindow.label}
-        previousHref={buildHref(basePath, {
-          ...navParams,
-          month: monthWindow.previousParam,
-        })}
-        nextHref={buildHref(basePath, {
-          ...navParams,
-          month: monthWindow.nextParam,
-        })}
-        todayHref={todayHref}
-        data-testid-label="matchcenter-month-label"
-        data-testid-previous="matchcenter-month-previous"
-        data-testid-next="matchcenter-month-next"
-      />
+      <SpieleManagementKpiCards metrics={summaryMetrics} />
 
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        <SpieleManagementToolbar
-          teamOptions={teamOptions}
-          teamFilter={teamFilter}
-          basePath={basePath}
-          tab={tab}
-          month={monthWindow.param}
-          actionFilter={actionFilter}
-          wochenplanFilter={wochenplanFilter}
-          searchValue={searchQuery}
-          sortValue={sortParam ?? undefined}
-        />
-        <Suspense fallback={null}>
-          <SpieleManagementSortControl value={sort} tab={tab} />
-        </Suspense>
-      </div>
-
-      <SpieleManagementStatusStrip metrics={summaryMetrics} />
-
-      <MatchcenterReconciliationPanel
-        rows={viewModel.needsReconciliation}
-        locale={locale}
-        timezone={timezone}
-      />
-
-      {tab === "SPIELPLANUNG" ? (
-        filteredEmpty ? (
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/70 px-4 py-10 text-center">
-            <p className="text-sm font-medium text-[var(--foreground)]">Keine Spiele gefunden</p>
-            <p className="mt-1 text-sm text-[var(--muted)]">
-              {hasSearch
-                ? "Passe Suche oder Filter an."
-                : "Für den ausgewählten Monat gibt es keine anstehenden Spiele."}
-            </p>
-            {canManage && !hasSearch ? (
-              <Link
-                href="/dashboard/matchcenter/new"
-                className="fca-button-primary mt-4 inline-flex items-center gap-1.5 text-sm"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Spiel
-              </Link>
-            ) : null}
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_17.5rem]">
+        <div className="min-w-0 space-y-3">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <CenterPeriodNavigation
+              label={monthWindow.label}
+              previousHref={buildHref(basePath, {
+                ...navParams,
+                month: monthWindow.previousParam,
+              })}
+              nextHref={buildHref(basePath, {
+                ...navParams,
+                month: monthWindow.nextParam,
+              })}
+              todayHref={todayHref}
+              data-testid-label="matchcenter-month-label"
+              data-testid-previous="matchcenter-month-previous"
+              data-testid-next="matchcenter-month-next"
+            />
+            <SpieleManagementViewSwitcher
+              listView={listView}
+              listeHref={listeHref}
+              kompaktHref={kompaktHref}
+              kalenderHref={kalenderHref}
+            />
           </div>
-        ) : (
-          <SpieleManagementUpcomingList
-            rows={spielplanungRows}
+
+          <SpieleManagementToolbar
+            teamOptions={teamOptions}
+            teamFilter={teamFilter}
+            basePath={basePath}
+            tab={tab}
+            month={monthWindow.param}
+            actionFilter={actionFilter}
+            wochenplanFilter={wochenplanFilter}
+            searchValue={searchQuery}
+            sortValue={sortParam ?? undefined}
+            homeAwayFilter={homeAwayFilter}
+            listView={listView}
+            competitionFilter={competitionFilter}
+            venueFilter={venueFilter}
+            statusMask={statusMask}
+            competitionOptions={competitionOptions}
+            venueOptions={venueOptions}
+          />
+
+          <MatchcenterReconciliationPanel
+            rows={viewModel.needsReconciliation}
             locale={locale}
             timezone={timezone}
-            tenantLogoUrl={tenantLogoUrl}
-            canManage={canManage}
           />
-        )
-      ) : filteredEmpty ? (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/70 px-4 py-10 text-center">
-          <p className="text-sm font-medium text-[var(--foreground)]">Keine Resultate vorhanden</p>
-          <p className="mt-1 text-sm text-[var(--muted)]">
-            {hasSearch
-              ? "Passe Suche oder Filter an."
-              : "Für den ausgewählten Monat wurden noch keine Spiele abgeschlossen."}
-          </p>
-        </div>
-      ) : (
-        <div
-          className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]/70"
-          data-testid="matchcenter-resultate-list"
-        >
-          <div className={RESULT_LIST_HEADER}>
-            <span>Datum</span>
-            <span>Spiel</span>
-            <span>Ort</span>
-            <span>Status</span>
-            <span className="sr-only">Aktionen</span>
-          </div>
-          {resultateGroups.map((group) => (
-            <div key={group.dayKey}>
-              <div className="border-b border-[var(--border)]/50 bg-[var(--surface-2)]/20 px-4 py-2">
-                <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
-                  {group.label}
+
+          {tab === "SPIELPLANUNG" && listView === "KALENDER" ? (
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/80 px-4 py-8 text-center">
+              <p className="text-sm font-medium text-[var(--foreground)]">Kalenderansicht</p>
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                Die Spielkalender-Ansicht im Wochenplaner bündelt Ressourcen und Termine.
+              </p>
+              <Link href={kalenderPlannerHref} className="fca-button-primary mt-4 inline-flex text-sm">
+                Im Wochenplaner öffnen
+              </Link>
+            </div>
+          ) : tab === "SPIELPLANUNG" ? (
+            filteredEmpty ? (
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/70 px-4 py-10 text-center">
+                <p className="text-sm font-medium text-[var(--foreground)]">Keine Spiele gefunden</p>
+                <p className="mt-1 text-sm text-[var(--muted)]">
+                  {hasSearch
+                    ? "Passe Suche oder Filter an."
+                    : "Für den ausgewählten Monat gibt es keine anstehenden Spiele."}
                 </p>
               </div>
-              {group.rows.map((match) => (
-                <SpieleManagementResultRow
-                  key={match.id}
-                  match={match}
-                  locale={locale}
-                  timezone={timezone}
-                  tenantLogoUrl={tenantLogoUrl}
-                  canManage={canManage}
-                />
+            ) : (
+              <SpieleManagementUpcomingList
+                rows={spielplanungRows}
+                locale={locale}
+                timezone={timezone}
+                tenantLogoUrl={tenantLogoUrl}
+                canManage={canManage}
+                compact={listView === "KOMPAKT"}
+              />
+            )
+          ) : filteredEmpty ? (
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/70 px-4 py-10 text-center">
+              <p className="text-sm font-medium text-[var(--foreground)]">Keine Resultate vorhanden</p>
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                {hasSearch
+                  ? "Passe Suche oder Filter an."
+                  : "Für den ausgewählten Monat wurden noch keine Spiele abgeschlossen."}
+              </p>
+            </div>
+          ) : (
+            <div
+              className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]/70"
+              data-testid="matchcenter-resultate-list"
+            >
+              <div className={RESULT_LIST_HEADER}>
+                <span>Datum</span>
+                <span>Spiel</span>
+                <span>Ort</span>
+                <span>Status</span>
+                <span className="sr-only">Aktionen</span>
+              </div>
+              {resultateGroups.map((group) => (
+                <div key={group.dayKey}>
+                  <div className="border-b border-[var(--border)]/50 bg-[var(--surface-2)]/20 px-4 py-2">
+                    <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+                      {group.label}
+                    </p>
+                  </div>
+                  {group.rows.map((match) => (
+                    <SpieleManagementResultRow
+                      key={match.id}
+                      match={match}
+                      locale={locale}
+                      timezone={timezone}
+                      tenantLogoUrl={tenantLogoUrl}
+                      canManage={canManage}
+                    />
+                  ))}
+                </div>
               ))}
             </div>
-          ))}
+          )}
         </div>
-      )}
+
+        <aside className="min-w-0 space-y-3 xl:sticky xl:top-4 xl:self-start">
+          <SpieleManagementMonthCalendar
+            monthParam={monthWindow.param}
+            timezone={timezone}
+            matchDayKeys={matchDayKeys}
+            previousMonthHref={buildHref(basePath, {
+              ...navParams,
+              month: monthWindow.previousParam,
+            })}
+            nextMonthHref={buildHref(basePath, {
+              ...navParams,
+              month: monthWindow.nextParam,
+            })}
+            dayHref={() => "#"}
+          />
+          <SpieleManagementSchnellfilter
+            homeAwayFilter={homeAwayFilter}
+            statusMask={statusMask}
+            statusCounts={statusCounts}
+            alleHref={buildHref(basePath, { ...navParams, homeAwayFilter: "ALLE" })}
+            heimHref={buildHref(basePath, { ...navParams, homeAwayFilter: "HOME" })}
+            auswaertsHref={buildHref(basePath, { ...navParams, homeAwayFilter: "AWAY" })}
+            toggleStatusHref={(key) =>
+              buildHref(basePath, {
+                ...navParams,
+                statusMask: toggleStatusMask(statusMask, key),
+                actionFilter: "ALLE",
+              })
+            }
+            resetHref={resetHref}
+            teamOptionsCount={teamOptions.length}
+            competitionOptionsCount={competitionOptions.length}
+            venueOptionsCount={venueOptions.length}
+          />
+        </aside>
+      </div>
     </div>
   );
 }
