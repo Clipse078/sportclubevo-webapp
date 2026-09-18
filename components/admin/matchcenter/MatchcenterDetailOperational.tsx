@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  useCallback,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -30,8 +32,17 @@ import type { FacilityGroup } from "@/components/admin/training/FacilityResource
 import { formatOperationalHistoryLabel } from "@/lib/matchcenter/operational-history";
 import { VisualResourceAvailabilityPicker } from "@/components/admin/shared/planning/VisualResourceAvailabilityPicker";
 import { VisualDressingRoomPicker } from "@/components/admin/shared/planning/VisualDressingRoomPicker";
+import TrainingRecordSection from "@/components/admin/training/record/TrainingRecordSection";
+import { assessMatchOperationalState } from "@/lib/matchcenter/operational-state";
+import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
+
+export type MatchOperationalActionsBinding = {
+  save: () => Promise<void>;
+  isDirty: boolean;
+  saving: boolean;
+};
 
 export type MatchcenterDetailOperationalProps = {
   matchId: string;
@@ -52,6 +63,8 @@ export type MatchcenterDetailOperationalProps = {
   currentWebsiteVisible: boolean;
   /** Current infoboard visibility */
   currentInfoboardVisible: boolean;
+  /** Read-only Wochenplan publication state (not PATCHable on matchcenter). */
+  currentWochenplanVisible?: boolean;
   /** ISO date string for infoboard preview link */
   matchDateIso: string;
   /**
@@ -96,6 +109,10 @@ export type MatchcenterDetailOperationalProps = {
    * or readiness workflow is shown. Historical allocations may render read-only.
    */
   isOperationallyActionable?: boolean;
+  layout?: "default" | "record";
+  hideFooterActions?: boolean;
+  onActionsBinding?: (binding: MatchOperationalActionsBinding) => void;
+  assessmentBase?: MatchcenterMatchSummary;
 };
 
 // ── Readiness helpers ─────────────────────────────────────────────────────────
@@ -229,6 +246,11 @@ export default function MatchcenterDetailOperational({
   pitchHallFacilityGroups,
   dressingRoomFacilityGroups,
   isOperationallyActionable = true,
+  currentWochenplanVisible = false,
+  layout = "default",
+  hideFooterActions = false,
+  onActionsBinding,
+  assessmentBase,
 }: MatchcenterDetailOperationalProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -297,7 +319,14 @@ export default function MatchcenterDetailOperational({
   // ── Save ───────────────────────────────────────────────────────────────────
   const [saving, setSaving] = useState(false);
 
-  async function handleSave() {
+  const isDirty =
+    (pitchCode ?? "") !== (currentPitchCode ?? "") ||
+    (homeDressingRoomCode ?? "") !== (currentHomeDressingRoomCode ?? "") ||
+    (awayDressingRoomCode ?? "") !== (currentAwayDressingRoomCode ?? "") ||
+    websiteVisible !== currentWebsiteVisible ||
+    infoboardVisible !== currentInfoboardVisible;
+
+  const handleSave = useCallback(async () => {
     setSaving(true);
 
     try {
@@ -336,7 +365,26 @@ export default function MatchcenterDetailOperational({
     } finally {
       setSaving(false);
     }
-  }
+  }, [
+    awayDressingRoomCode,
+    currentAwayDressingRoomCode,
+    currentHomeDressingRoomCode,
+    currentInfoboardVisible,
+    currentPitchCode,
+    currentWebsiteVisible,
+    homeDressingRoomCode,
+    infoboardVisible,
+    matchId,
+    pitchCode,
+    router,
+    teamId,
+    toast,
+    websiteVisible,
+  ]);
+
+  useEffect(() => {
+    onActionsBinding?.({ save: handleSave, isDirty, saving });
+  }, [handleSave, isDirty, onActionsBinding, saving]);
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const normalizedHomeAway = homeAway?.trim().toUpperCase() ?? null;
@@ -377,6 +425,60 @@ export default function MatchcenterDetailOperational({
     },
   );
 
+  const liveAssessment = useMemo(() => {
+    if (!assessmentBase) return null;
+    return assessMatchOperationalState({
+      ...assessmentBase,
+      operational: {
+        ...assessmentBase.operational,
+        pitchCode: pitchCode.trim() || null,
+        homeDressingRoomCode: homeDressingRoomCode.trim() || null,
+        awayDressingRoomCode: awayDressingRoomCode.trim() || null,
+      },
+      visibility: {
+        ...assessmentBase.visibility,
+        websiteVisible,
+        infoboardVisible,
+      },
+    });
+  }, [
+    assessmentBase,
+    awayDressingRoomCode,
+    homeDressingRoomCode,
+    infoboardVisible,
+    pitchCode,
+    websiteVisible,
+  ]);
+
+  const preparationChecks = useMemo(() => {
+    if (!liveAssessment || !isHomeMatch) return [];
+    const openKeys = new Set(liveAssessment.actions.map((action) => action.key));
+    const rows: { key: string; label: string; passed: boolean }[] = [
+      { key: "pitch", label: "Spielfeld", passed: !openKeys.has("pitch") },
+      { key: "home-dressing-room", label: "Heimkabine", passed: !openKeys.has("home-dressing-room") },
+      { key: "away-dressing-room", label: "Gastkabine", passed: !openKeys.has("away-dressing-room") },
+      { key: "infoboard", label: "Infoboard", passed: !openKeys.has("infoboard") },
+    ];
+    if (openKeys.has("team")) {
+      rows.unshift({ key: "team", label: "Team zugeordnet", passed: false });
+    }
+    return rows;
+  }, [isHomeMatch, liveAssessment]);
+
+  if (!isOperationallyActionable && layout === "record") {
+    return (
+      <TrainingRecordSection title="Ressourcen" testId="spiele-record-section-resources-history">
+        {operationalHistoryLabel ? (
+          <p className="text-sm font-medium text-[var(--foreground)]" data-testid="matchcenter-operational-history-label">
+            {operationalHistoryLabel}
+          </p>
+        ) : (
+          <p className="text-sm text-[var(--text-2)]">Keine historischen Zuteilungen.</p>
+        )}
+      </TrainingRecordSection>
+    );
+  }
+
   if (!isOperationallyActionable) {
     return (
       <div className="space-y-5" data-testid="matchcenter-operational-history">
@@ -397,10 +499,185 @@ export default function MatchcenterDetailOperational({
     );
   }
 
+  const recordSurface = layout === "record";
+
+  const publicationContent = (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
+        <div>
+          <p className="text-sm font-semibold text-[var(--foreground)]">Website</p>
+          <p className="text-xs text-[var(--muted)]">
+            Das Spiel wird im Spielplan und in den nächsten Spielen auf der Website angezeigt.
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={websiteVisible}
+          onClick={() => canManage && !saving && setWebsiteVisible((v) => !v)}
+          disabled={!canManage || saving}
+          data-testid="website-visible-toggle"
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 ${
+            websiteVisible ? "bg-emerald-500" : "bg-[var(--border-strong)]"
+          } ${!canManage ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+        >
+          <span
+            className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+              websiteVisible ? "translate-x-6" : "translate-x-1"
+            }`}
+          />
+        </button>
+      </div>
+
+      <div
+        className="flex items-start justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/60 px-4 py-3"
+        data-testid="spiele-record-wochenplan-status"
+      >
+        <div>
+          <p className="text-sm font-semibold text-[var(--foreground)]">Wochenplan</p>
+          <p className="text-xs text-[var(--muted)]">
+            {currentWochenplanVisible
+              ? "Dieses Spiel ist für den öffentlichen Wochenplan markiert (sofern Website aktiv ist)."
+              : "Nicht im öffentlichen Wochenplan markiert. Bulk-Aktionen im Spiele-Overview verfügbar."}
+          </p>
+        </div>
+        <span className="text-xs font-semibold text-[var(--text-2)]">
+          {currentWochenplanVisible ? "Aktiv" : "Aus"}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
+        <div>
+          <p className="text-sm font-semibold text-[var(--foreground)]">Infoboard</p>
+          <p className="text-xs text-[var(--muted)]">
+            {isAwayMatch
+              ? recordSurface
+                ? "Auswärtsspiele erscheinen nicht auf dem Vereins-Infoboard."
+                : "Dieses Auswärtsspiel kann nicht auf dem FC-Allschwil-Infoboard veröffentlicht werden."
+              : isHomeMatch
+                ? "Dieses Heimspiel erscheint auf dem Infoboard, sofern es freigegeben ist und nicht abgesagt wurde."
+                : "Infoboard-Freigabe für Heimspiele."}
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={infoboardVisible}
+          onClick={() => canManage && !saving && !isAwayMatch && setInfoboardVisible((v) => !v)}
+          disabled={!canManage || saving || isAwayMatch}
+          data-testid="infoboard-visible-toggle"
+          aria-label="Auf Infoboard anzeigen"
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 ${
+            infoboardVisible && !isAwayMatch ? "bg-emerald-500" : "bg-[var(--border-strong)]"
+          } ${!canManage || isAwayMatch ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+        >
+          <span
+            className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+              infoboardVisible && !isAwayMatch ? "translate-x-6" : "translate-x-1"
+            }`}
+          />
+        </button>
+      </div>
+
+      <p className="text-xs text-[var(--muted)]">
+        Die Freigabe allein genügt nicht. Das Spiel wird nur angezeigt, wenn alle Publikationsregeln
+        erfüllt sind.
+      </p>
+
+      {recordSurface && isHomeMatch ? (
+        <a
+          href={previewHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid="infoboard-preview-link"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--sce-primary)] hover:underline"
+        >
+          <Monitor className="h-3.5 w-3.5" aria-hidden />
+          Infoboard-Vorschau öffnen
+          <ExternalLink className="h-3 w-3 opacity-60" aria-hidden />
+        </a>
+      ) : null}
+    </div>
+  );
+
+  const footerActions = (
+    <div className="flex flex-wrap items-center gap-3">
+      {canManage ? (
+        <button
+          type="button"
+          onClick={() => void handleSave()}
+          disabled={saving}
+          data-testid="save-match-operational"
+          className="fca-button-primary"
+        >
+          {saving ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Wird gespeichert...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" />
+              Änderungen speichern
+            </>
+          )}
+        </button>
+      ) : null}
+
+      {!recordSurface ? (
+        <a
+          href={previewHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid="infoboard-preview-link"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3.5 py-2 text-sm font-semibold text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+        >
+          <Monitor className="h-3.5 w-3.5" />
+          Infoboard-Vorschau öffnen
+          <ExternalLink className="h-3 w-3 opacity-60" />
+        </a>
+      ) : null}
+
+      {readinessState === "not-ready" && !recordSurface ? (
+        <Badge variant="warning" size="sm">
+          <CircleAlert className="h-3 w-3" />
+          Einrichtung erforderlich
+        </Badge>
+      ) : null}
+    </div>
+  );
+
   return (
-    <div className="space-y-5">
+    <div className={recordSurface ? undefined : "space-y-5"}>
+      {recordSurface && isHomeMatch ? (
+        <TrainingRecordSection title="Matchvorbereitung" testId="spiele-record-section-preparation">
+          <ul className="space-y-2" data-testid="spiele-record-preparation-checks">
+            {preparationChecks.map((row) => (
+              <li key={row.key} className="flex items-center gap-2 text-sm">
+                {row.passed ? (
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" aria-hidden />
+                ) : (
+                  <CircleAlert className="h-4 w-4 shrink-0 text-amber-500" aria-hidden />
+                )}
+                <span className={row.passed ? "text-[var(--foreground)]" : "text-amber-100/95"}>
+                  {row.passed ? row.label : `${row.label} fehlt`}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {allocationWarning ? (
+            <p
+              className="mt-3 text-xs text-amber-200/90"
+              data-testid="infoboard-allocation-warning-text"
+            >
+              {allocationWarning}
+            </p>
+          ) : null}
+        </TrainingRecordSection>
+      ) : null}
+
       {/* D2 — Infoboard Readiness (HOME actionable only) */}
-      {isHomeMatch ? (
+      {!recordSurface && isHomeMatch ? (
       <SectionCard
         title="Infoboard-Bereitschaft"
         description="Prüfung der Voraussetzungen für die Infoboard-Anzeige"
@@ -501,266 +778,275 @@ export default function MatchcenterDetailOperational({
       </SectionCard>
       ) : null}
 
-      {/* D4 — Pitch Assignment (HOME only) */}
+      {/* D4 + D5 — Resources (HOME only) */}
       {isHomeMatch ? (
-      <SectionCard
-        title="Sportanlage und Spielfeld"
-        description="Spielfeldwahl für dieses Match"
-      >
-        {useVisualPickers && pitchGroupsByCode ? (
-          <VisualResourceAvailabilityPicker
-            facilityGroups={pitchGroupsByCode}
-            selectedResourceIds={pitchCode ? new Set([pitchCode]) : new Set()}
-            onSelect={(code) => setPitchCode(code)}
-            onDeselect={() => setPitchCode("")}
-            availabilityByResourceId={pitchAvailabilityByCode}
-            disabled={!canManage || saving}
-            singleSelect
-            testId="pitch-assignment"
-          />
-        ) : (
-          <label className="block space-y-2">
-            <span className="fca-label">
-              <Volleyball className="inline h-3.5 w-3.5 align-text-bottom" />{" "}
-              Spielfeld
-            </span>
-            <select
-              value={pitchCode}
-              onChange={(e) => setPitchCode(e.target.value)}
-              disabled={!canManage || saving}
-              className="fca-select"
-              data-testid="pitch-assignment-select"
-            >
-              <option value="">— Kein Spielfeld zugeordnet —</option>
-              {effectivePitchOptions.map((opt) => (
-                <option key={opt.code} value={opt.code}>
-                  {opt.name}
-                  {formatAvailabilitySuffix(pitchAvailabilityByCode.get(opt.code))}
-                </option>
-              ))}
-            </select>
-            {!pitchCode.trim() && (
-              <p className="text-xs text-amber-700">Spielfeld fehlt.</p>
-            )}
-          </label>
-        )}
-      </SectionCard>
-      ) : null}
+        recordSurface ? (
+          <TrainingRecordSection title="Ressourcen" testId="spiele-record-section-resources">
+            <div className="space-y-8">
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  Spielfeld / Halle
+                </p>
+                {useVisualPickers && pitchGroupsByCode ? (
+                  <VisualResourceAvailabilityPicker
+                    facilityGroups={pitchGroupsByCode}
+                    selectedResourceIds={pitchCode ? new Set([pitchCode]) : new Set()}
+                    onSelect={(code) => setPitchCode(code)}
+                    onDeselect={() => setPitchCode("")}
+                    availabilityByResourceId={pitchAvailabilityByCode}
+                    disabled={!canManage || saving}
+                    singleSelect
+                    testId="pitch-assignment"
+                  />
+                ) : (
+                  <label className="block space-y-2">
+                    <span className="fca-label">
+                      <Volleyball className="inline h-3.5 w-3.5 align-text-bottom" /> Spielfeld
+                    </span>
+                    <select
+                      value={pitchCode}
+                      onChange={(e) => setPitchCode(e.target.value)}
+                      disabled={!canManage || saving}
+                      className="fca-select"
+                      data-testid="pitch-assignment-select"
+                    >
+                      <option value="">— Kein Spielfeld zugeordnet —</option>
+                      {effectivePitchOptions.map((opt) => (
+                        <option key={opt.code} value={opt.code}>
+                          {opt.name}
+                          {formatAvailabilitySuffix(pitchAvailabilityByCode.get(opt.code))}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+              </div>
 
-      {/* D5 — Dressing Room Assignment (HOME only) */}
-      {isHomeMatch ? (
-      <SectionCard
-        title="Garderobenzuteilung"
-        description="Garderobenzuteilung für Heim- und Gastteam"
-      >
-        {useVisualPickers && dressingRoomGroupsByCode ? (
-          <div className="space-y-4">
-            <VisualDressingRoomPicker
-              facilityGroups={dressingRoomGroupsByCode}
-              selectedResourceIds={homeDressingRoomCode ? new Set([homeDressingRoomCode]) : new Set()}
-              onSelect={(code) => setHomeDressingRoomCode(code)}
-              onDeselect={() => setHomeDressingRoomCode("")}
-              availabilityByResourceId={dressingRoomAvailabilityByCode}
-              disabled={!canManage || saving}
-              label={`Heimkabine (${homeDisplayName})`}
-              singleSelect
-              testId="home-dressing-room"
-            />
-            <VisualDressingRoomPicker
-              facilityGroups={dressingRoomGroupsByCode}
-              selectedResourceIds={awayDressingRoomCode ? new Set([awayDressingRoomCode]) : new Set()}
-              onSelect={(code) => setAwayDressingRoomCode(code)}
-              onDeselect={() => setAwayDressingRoomCode("")}
-              availabilityByResourceId={dressingRoomAvailabilityByCode}
-              disabled={!canManage || saving}
-              label={`Gastkabine (${awayDisplayName})`}
-              singleSelect
-              testId="away-dressing-room"
-            />
-          </div>
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  Garderoben
+                </p>
+                {useVisualPickers && dressingRoomGroupsByCode ? (
+                  <div className="space-y-4">
+                    <VisualDressingRoomPicker
+                      facilityGroups={dressingRoomGroupsByCode}
+                      selectedResourceIds={
+                        homeDressingRoomCode ? new Set([homeDressingRoomCode]) : new Set()
+                      }
+                      onSelect={(code) => setHomeDressingRoomCode(code)}
+                      onDeselect={() => setHomeDressingRoomCode("")}
+                      availabilityByResourceId={dressingRoomAvailabilityByCode}
+                      disabled={!canManage || saving}
+                      label={`Heimkabine (${homeDisplayName})`}
+                      singleSelect
+                      testId="home-dressing-room"
+                    />
+                    <VisualDressingRoomPicker
+                      facilityGroups={dressingRoomGroupsByCode}
+                      selectedResourceIds={
+                        awayDressingRoomCode ? new Set([awayDressingRoomCode]) : new Set()
+                      }
+                      onSelect={(code) => setAwayDressingRoomCode(code)}
+                      onDeselect={() => setAwayDressingRoomCode("")}
+                      availabilityByResourceId={dressingRoomAvailabilityByCode}
+                      disabled={!canManage || saving}
+                      label={`Gastkabine (${awayDisplayName})`}
+                      singleSelect
+                      testId="away-dressing-room"
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <label className="block space-y-2">
+                      <span className="fca-label">
+                        <Shirt className="inline h-3.5 w-3.5 align-text-bottom" /> Heimkabine (
+                        {homeDisplayName})
+                      </span>
+                      <select
+                        value={homeDressingRoomCode}
+                        onChange={(e) => setHomeDressingRoomCode(e.target.value)}
+                        disabled={!canManage || saving}
+                        className="fca-select"
+                        data-testid="home-dressing-room-select"
+                      >
+                        <option value="">— Keine Garderobe zugeordnet —</option>
+                        {effectiveDressingRoomOptions.map((room) => (
+                          <option key={room.code} value={room.code}>
+                            {room.name}
+                            {formatAvailabilitySuffix(dressingRoomAvailabilityByCode.get(room.code))}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="block space-y-2">
+                      <span className="fca-label">
+                        <Shirt className="inline h-3.5 w-3.5 align-text-bottom" /> Gastkabine (
+                        {awayDisplayName})
+                      </span>
+                      <select
+                        value={awayDressingRoomCode}
+                        onChange={(e) => setAwayDressingRoomCode(e.target.value)}
+                        disabled={!canManage || saving}
+                        className="fca-select"
+                        data-testid="away-dressing-room-select"
+                      >
+                        <option value="">— Keine Garderobe zugeordnet —</option>
+                        {effectiveDressingRoomOptions.map((room) => (
+                          <option key={room.code} value={room.code}>
+                            {room.name}
+                            {formatAvailabilitySuffix(dressingRoomAvailabilityByCode.get(room.code))}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
+          </TrainingRecordSection>
         ) : (
-          <div className="space-y-4">
-            <label className="block space-y-2">
-              <span className="fca-label">
-                <Shirt className="inline h-3.5 w-3.5 align-text-bottom" />{" "}
-                Garderobe Heimteam ({homeDisplayName})
-              </span>
-              <select
-                value={homeDressingRoomCode}
-                onChange={(e) => setHomeDressingRoomCode(e.target.value)}
-                disabled={!canManage || saving}
-                className="fca-select"
-                data-testid="home-dressing-room-select"
-              >
-                <option value="">— Keine Garderobe zugeordnet —</option>
-                {effectiveDressingRoomOptions.map((room) => (
-                  <option key={room.code} value={room.code}>
-                    {room.name}
-                    {formatAvailabilitySuffix(dressingRoomAvailabilityByCode.get(room.code))}
-                  </option>
-                ))}
-              </select>
-              {!homeDressingRoomCode.trim() && (
-                <p className="text-xs text-amber-700">Garderobe Heimteam fehlt.</p>
+          <>
+            <SectionCard title="Sportanlage und Spielfeld" description="Spielfeldwahl für dieses Match">
+              {useVisualPickers && pitchGroupsByCode ? (
+                <VisualResourceAvailabilityPicker
+                  facilityGroups={pitchGroupsByCode}
+                  selectedResourceIds={pitchCode ? new Set([pitchCode]) : new Set()}
+                  onSelect={(code) => setPitchCode(code)}
+                  onDeselect={() => setPitchCode("")}
+                  availabilityByResourceId={pitchAvailabilityByCode}
+                  disabled={!canManage || saving}
+                  singleSelect
+                  testId="pitch-assignment"
+                />
+              ) : (
+                <label className="block space-y-2">
+                  <span className="fca-label">
+                    <Volleyball className="inline h-3.5 w-3.5 align-text-bottom" /> Spielfeld
+                  </span>
+                  <select
+                    value={pitchCode}
+                    onChange={(e) => setPitchCode(e.target.value)}
+                    disabled={!canManage || saving}
+                    className="fca-select"
+                    data-testid="pitch-assignment-select"
+                  >
+                    <option value="">— Kein Spielfeld zugeordnet —</option>
+                    {effectivePitchOptions.map((opt) => (
+                      <option key={opt.code} value={opt.code}>
+                        {opt.name}
+                        {formatAvailabilitySuffix(pitchAvailabilityByCode.get(opt.code))}
+                      </option>
+                    ))}
+                  </select>
+                  {!pitchCode.trim() && (
+                    <p className="text-xs text-amber-700">Spielfeld fehlt.</p>
+                  )}
+                </label>
               )}
-            </label>
-            <label className="block space-y-2">
-              <span className="fca-label">
-                <Shirt className="inline h-3.5 w-3.5 align-text-bottom" />{" "}
-                Garderobe Gastteam ({awayDisplayName})
-              </span>
-              <select
-                value={awayDressingRoomCode}
-                onChange={(e) => setAwayDressingRoomCode(e.target.value)}
-                disabled={!canManage || saving}
-                className="fca-select"
-                data-testid="away-dressing-room-select"
-              >
-                <option value="">— Keine Garderobe zugeordnet —</option>
-                {effectiveDressingRoomOptions.map((room) => (
-                  <option key={room.code} value={room.code}>
-                    {room.name}
-                    {formatAvailabilitySuffix(dressingRoomAvailabilityByCode.get(room.code))}
-                  </option>
-                ))}
-              </select>
-              {!awayDressingRoomCode.trim() && (
-                <p className="text-xs text-amber-700">Garderobe Gastteam fehlt.</p>
+            </SectionCard>
+
+            <SectionCard
+              title="Garderobenzuteilung"
+              description="Garderobenzuteilung für Heim- und Gastteam"
+            >
+              {useVisualPickers && dressingRoomGroupsByCode ? (
+                <div className="space-y-4">
+                  <VisualDressingRoomPicker
+                    facilityGroups={dressingRoomGroupsByCode}
+                    selectedResourceIds={
+                      homeDressingRoomCode ? new Set([homeDressingRoomCode]) : new Set()
+                    }
+                    onSelect={(code) => setHomeDressingRoomCode(code)}
+                    onDeselect={() => setHomeDressingRoomCode("")}
+                    availabilityByResourceId={dressingRoomAvailabilityByCode}
+                    disabled={!canManage || saving}
+                    label={`Heimkabine (${homeDisplayName})`}
+                    singleSelect
+                    testId="home-dressing-room"
+                  />
+                  <VisualDressingRoomPicker
+                    facilityGroups={dressingRoomGroupsByCode}
+                    selectedResourceIds={
+                      awayDressingRoomCode ? new Set([awayDressingRoomCode]) : new Set()
+                    }
+                    onSelect={(code) => setAwayDressingRoomCode(code)}
+                    onDeselect={() => setAwayDressingRoomCode("")}
+                    availabilityByResourceId={dressingRoomAvailabilityByCode}
+                    disabled={!canManage || saving}
+                    label={`Gastkabine (${awayDisplayName})`}
+                    singleSelect
+                    testId="away-dressing-room"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <label className="block space-y-2">
+                    <span className="fca-label">
+                      <Shirt className="inline h-3.5 w-3.5 align-text-bottom" /> Garderobe Heimteam (
+                      {homeDisplayName})
+                    </span>
+                    <select
+                      value={homeDressingRoomCode}
+                      onChange={(e) => setHomeDressingRoomCode(e.target.value)}
+                      disabled={!canManage || saving}
+                      className="fca-select"
+                      data-testid="home-dressing-room-select"
+                    >
+                      <option value="">— Keine Garderobe zugeordnet —</option>
+                      {effectiveDressingRoomOptions.map((room) => (
+                        <option key={room.code} value={room.code}>
+                          {room.name}
+                          {formatAvailabilitySuffix(dressingRoomAvailabilityByCode.get(room.code))}
+                        </option>
+                      ))}
+                    </select>
+                    {!homeDressingRoomCode.trim() && (
+                      <p className="text-xs text-amber-700">Garderobe Heimteam fehlt.</p>
+                    )}
+                  </label>
+                  <label className="block space-y-2">
+                    <span className="fca-label">
+                      <Shirt className="inline h-3.5 w-3.5 align-text-bottom" /> Garderobe Gastteam (
+                      {awayDisplayName})
+                    </span>
+                    <select
+                      value={awayDressingRoomCode}
+                      onChange={(e) => setAwayDressingRoomCode(e.target.value)}
+                      disabled={!canManage || saving}
+                      className="fca-select"
+                      data-testid="away-dressing-room-select"
+                    >
+                      <option value="">— Keine Garderobe zugeordnet —</option>
+                      {effectiveDressingRoomOptions.map((room) => (
+                        <option key={room.code} value={room.code}>
+                          {room.name}
+                          {formatAvailabilitySuffix(dressingRoomAvailabilityByCode.get(room.code))}
+                        </option>
+                      ))}
+                    </select>
+                    {!awayDressingRoomCode.trim() && (
+                      <p className="text-xs text-amber-700">Garderobe Gastteam fehlt.</p>
+                    )}
+                  </label>
+                </div>
               )}
-            </label>
-          </div>
-        )}
-      </SectionCard>
+            </SectionCard>
+          </>
+        )
       ) : null}
 
       {/* D6 — Publication */}
-      <SectionCard
-        title="Veröffentlichung"
-        description="Ausgabekanäle für dieses Match"
-      >
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
-            <div>
-              <p className="text-sm font-semibold text-[var(--foreground)]">
-                Auf Website anzeigen
-              </p>
-              <p className="text-xs text-[var(--muted)]">
-                Das Spiel wird im Spielplan und in den nächsten Spielen auf der Website angezeigt.
-              </p>
-            </div>
+      {recordSurface ? (
+        <TrainingRecordSection title="Veröffentlichung" testId="spiele-record-section-publication">
+          {publicationContent}
+        </TrainingRecordSection>
+      ) : (
+        <SectionCard title="Veröffentlichung" description="Ausgabekanäle für dieses Match">
+          {publicationContent}
+        </SectionCard>
+      )}
 
-            <button
-              type="button"
-              role="switch"
-              aria-checked={websiteVisible}
-              onClick={() => canManage && !saving && setWebsiteVisible((v) => !v)}
-              disabled={!canManage || saving}
-              data-testid="website-visible-toggle"
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 ${
-                websiteVisible
-                  ? "bg-emerald-500"
-                  : "bg-[var(--border-strong)]"
-              } ${!canManage ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-            >
-              <span
-                className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                  websiteVisible ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
-            <div>
-              <p className="text-sm font-semibold text-[var(--foreground)]">
-                Auf Infoboard anzeigen
-              </p>
-              <p className="text-xs text-[var(--muted)]">
-                {isAwayMatch
-                  ? "Dieses Auswärtsspiel kann nicht auf dem FC-Allschwil-Infoboard veröffentlicht werden."
-                  : "Sichtbar auf dem FC-Allschwil-Infoboard (Screen 1)."}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              role="switch"
-              aria-checked={infoboardVisible}
-              onClick={() =>
-                canManage &&
-                !saving &&
-                !isAwayMatch &&
-                setInfoboardVisible((v) => !v)
-              }
-              disabled={!canManage || saving || isAwayMatch}
-              data-testid="infoboard-visible-toggle"
-              aria-label="Auf Infoboard anzeigen"
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 ${
-                infoboardVisible && !isAwayMatch
-                  ? "bg-emerald-500"
-                  : "bg-[var(--border-strong)]"
-              } ${!canManage || isAwayMatch ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-            >
-              <span
-                className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                  infoboardVisible && !isAwayMatch
-                    ? "translate-x-6"
-                    : "translate-x-1"
-                }`}
-              />
-            </button>
-          </div>
-
-          <p className="text-xs text-[var(--muted)]">
-            Die Freigabe allein genügt nicht. Das Spiel wird nur angezeigt,
-            wenn alle Publikationsregeln erfüllt sind.
-          </p>
-        </div>
-      </SectionCard>
-
-      {/* D7 — Save + D8 — Preview */}
-      <div className="flex flex-wrap items-center gap-3">
-        {canManage && (
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            data-testid="save-match-operational"
-            className="fca-button-primary"
-          >
-            {saving ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Wird gespeichert...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                Änderungen speichern
-              </>
-            )}
-          </button>
-        )}
-
-        <a
-          href={previewHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          data-testid="infoboard-preview-link"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3.5 py-2 text-sm font-semibold text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
-        >
-          <Monitor className="h-3.5 w-3.5" />
-          Infoboard-Vorschau öffnen
-          <ExternalLink className="h-3 w-3 opacity-60" />
-        </a>
-
-        {readinessState === "not-ready" && (
-          <Badge variant="warning" size="sm">
-            <CircleAlert className="h-3 w-3" />
-            Einrichtung erforderlich
-          </Badge>
-        )}
-      </div>
+      {!hideFooterActions ? footerActions : null}
     </div>
   );
 }

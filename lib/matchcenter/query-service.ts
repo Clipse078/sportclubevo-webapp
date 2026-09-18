@@ -1,3 +1,4 @@
+import { isKnownKickoffForMatch } from "@/lib/match/kickoff-semantics";
 import {
   matchTimingToOperationalInput,
   resolveMatchOperationalInterval,
@@ -489,12 +490,17 @@ function toSummary(
 
   const mapping = event.matchExternalMapping;
   const sides = resolveSides(event);
+  const kickoffKnown = isKnownKickoffForMatch({
+    startAt: event.startAt,
+    eventSource: event.source,
+  });
   const operationalInterval = resolveMatchOperationalInterval(
     matchTimingToOperationalInput(
       {
         startAt: event.startAt,
         endAt: event.endAt,
         operationalEndAtOverride: event.operationalEndAtOverride,
+        kickoffKnown,
       },
       matchOperationalPolicy,
     ),
@@ -510,6 +516,7 @@ function toSummary(
     description: event.description,
     status: event.status,
     startAt: event.startAt,
+    kickoffKnown,
     endAt: event.endAt,
     operationalEndAtOverride: event.operationalEndAtOverride,
     operationalEndAt: operationalInterval.endAt,

@@ -152,11 +152,7 @@ describe("MatchcenterDetail", () => {
       screen.getByTestId("matchcenter-detail-status"),
     ).toHaveTextContent("Geplant");
 
-    expect(
-      screen.getByRole("link", {
-        name: "Zurück zum Matchcenter",
-      }),
-    ).toHaveAttribute(
+    expect(screen.getByTestId("spiele-record-back-link")).toHaveAttribute(
       "href",
       "/dashboard/matchcenter",
     );

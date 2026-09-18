@@ -1,18 +1,15 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import MatchCreateForm from "@/components/admin/matchcenter/MatchCreateForm";
+import SpieleRecordWorkspaceShell from "@/components/admin/matchcenter/record/SpieleRecordWorkspaceShell";
+import { SPIELE_RECORD_WORKSPACE_SURFACE_CLASS } from "@/components/admin/matchcenter/record/spiele-record-layout";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import { notFound } from "next/navigation";
 
 export default async function NewMatchCenterPage() {
-  // ORG-ACCESS-03: broaden gate to also allow EVENTS_VIEW so scoped users
-  // (who have events.manage at OrgUnit scope only, plus events.view at
-  // tenant level) can reach this create page. The backend enforces 403
-  // if the submitted team is outside their write scope.
   const session = await requireAnyPermission([
     PERMISSIONS.EVENTS_MANAGE,
     PERMISSIONS.EVENTS_VIEW,
@@ -21,10 +18,6 @@ export default async function NewMatchCenterPage() {
   const tenantId = session.user?.activeTenantId;
   if (!tenantId) notFound();
 
-  // PLANNING-CREATION-UX-01C: mirrors POST /api/events' own decision
-  // (lib/workflow/event-review-policy.ts) — same permissions, same
-  // reasoning — so the guided form's copy reflects the real lifecycle
-  // outcome instead of inventing a separate review-right check.
   const canValidateDirectly =
     hasPermission(session, PERMISSIONS.EVENTS_PUBLISH_WEBSITE) ||
     hasPermission(session, PERMISSIONS.EVENTS_PUBLISH_INFOBOARD);
@@ -56,24 +49,40 @@ export default async function NewMatchCenterPage() {
   const pitchHallFacilityGroups = facilityGroupsForTypes(["FULL_PITCH", "HALF_PITCH"]);
   const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
 
-  return (
-    <div className="max-w-[1000px] space-y-6">
-      <AdminSectionHeader
-        eyebrow="Matchcenter"
-        title="Match erstellen"
-        description="Geführte Erstellung: Team, Heim/Auswärts, Ort, Gegner und Termin sowie — bei Heimspielen — Spielfeld/Halle und Garderobe werden direkt erfasst."
-        actions={
-          <Link href="/dashboard/matchcenter" className="fca-button-secondary">
-            Zurück zum Matchcenter
-          </Link>
-        }
-      />
-
-      <MatchCreateForm
-        pitchHallFacilityGroups={pitchHallFacilityGroups}
-        dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-        canValidateDirectly={canValidateDirectly}
-      />
+  const header = (
+    <div className="space-y-2 pt-1">
+      <p className="text-xs text-[var(--text-2)]">Spiel erstellen</p>
+      <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
+        Neues Spiel
+      </h1>
+      <p className="max-w-2xl text-sm text-[var(--text-2)]">
+        Heim/Auswärts, Gegner, Termin und — bei Heimspielen — Ressourcen in einem geführten Ablauf.
+      </p>
+      <Link
+        href="/dashboard/matchcenter"
+        className="fca-button-secondary inline-flex w-fit text-xs"
+      >
+        Abbrechen
+      </Link>
     </div>
+  );
+
+  return (
+    <SpieleRecordWorkspaceShell
+      breadcrumbs={[
+        { label: "Spiele", href: "/dashboard/matchcenter" },
+        { label: "Neues Spiel" },
+      ]}
+      header={header}
+      testId="spiele-match-create-workspace"
+    >
+      <div className={SPIELE_RECORD_WORKSPACE_SURFACE_CLASS}>
+        <MatchCreateForm
+          pitchHallFacilityGroups={pitchHallFacilityGroups}
+          dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+          canValidateDirectly={canValidateDirectly}
+        />
+      </div>
+    </SpieleRecordWorkspaceShell>
   );
 }
