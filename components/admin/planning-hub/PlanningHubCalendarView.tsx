@@ -181,6 +181,7 @@ export default function PlanningHubCalendarView({
     <div
       className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--surface)] [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]"
       data-testid="planning-hub-calendar"
+      data-sce-planner-calendar-scroll-root
     >
       <PlanningHubDaypartSwitcher
         urlState={calendarUrlState}

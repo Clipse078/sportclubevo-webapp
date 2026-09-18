@@ -95,7 +95,7 @@ export function Dialog({
   }
 
   return (
-    <SceModalOverlay open={open} onBackdropClick={onClose}>
+    <SceModalOverlay open={open} onBackdropClick={onClose} initialFocusRef={titleRef}>
       <div
         ref={panelRef}
         role="dialog"

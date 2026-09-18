@@ -172,6 +172,7 @@ export default function AggregatedActivityInspectionDialog({
       open={open}
       onBackdropClick={onClose}
       testId="aggregated-activity-inspection-dialog"
+      initialFocusRef={titleRef}
     >
       <div
         ref={panelRef}

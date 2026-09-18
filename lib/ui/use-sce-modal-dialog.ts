@@ -10,38 +10,21 @@ export type UseSceModalDialogOptions = {
   open: boolean;
   onClose: () => void;
   panelRef: RefObject<HTMLElement | null>;
-  /** Preferred initial focus target (e.g. dialog heading). Falls back to panelRef. */
+  /** @deprecated Initial focus is handled by SceModalOverlay.initialFocusRef (01K). */
   initialFocusRef?: RefObject<HTMLElement | null>;
-  /** Restore focus to the element that was active when the dialog opened. @default true */
+  /** @deprecated Focus restore is handled by SceModalOverlay open lifecycle (01K). */
   restoreFocus?: boolean;
 };
 
 /**
- * Shared modal focus trap + initial/restored focus for SCE Dialog primitives.
+ * Shared modal focus trap for SCE Dialog primitives.
+ * Open/close focus + background inert ordering lives in {@link SceModalOverlay}.
  */
 export function useSceModalDialog({
   open,
   onClose,
   panelRef,
-  initialFocusRef,
-  restoreFocus = true,
 }: UseSceModalDialogOptions): void {
-  useEffect(() => {
-    if (!open) return;
-
-    const previousFocus = document.activeElement as HTMLElement | null;
-
-    requestAnimationFrame(() => {
-      const target = initialFocusRef?.current ?? panelRef.current;
-      sceFocusWithoutScroll(target);
-    });
-
-    return () => {
-      if (!restoreFocus) return;
-      sceFocusWithoutScroll(previousFocus);
-    };
-  }, [open, initialFocusRef, panelRef, restoreFocus]);
-
   useEffect(() => {
     if (!open) return;
 

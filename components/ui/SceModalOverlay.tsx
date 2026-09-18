@@ -1,8 +1,20 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState, type MouseEvent, type ReactNode } from "react";
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
+import { restoreSceBackgroundScrollPositions } from "@/lib/ui/sce-modal-background-scroll";
+import {
+  applySceModalOpenSideEffects,
+  releaseSceModalOpenSideEffects,
+} from "@/lib/ui/sce-modal-open-lifecycle";
 import { lockSceDocumentScroll } from "@/lib/ui/sce-modal-scroll-lock";
 import {
   SCE_OVERLAY_CONTENT_VIEWPORT,
@@ -17,6 +29,8 @@ export type SceModalOverlayProps = {
   testId?: string;
   /** Extra classes on the content viewport (centering region). */
   contentViewportClassName?: string;
+  /** Initial focus target (e.g. dialog title) — focused with preventScroll before background inert. */
+  initialFocusRef?: RefObject<HTMLElement | null>;
 };
 
 /**
@@ -32,9 +46,11 @@ export function SceModalOverlay({
   children,
   testId,
   contentViewportClassName,
+  initialFocusRef,
 }: SceModalOverlayProps) {
   /** Client-only portal target — never render overlay inline in the React tree (SCE-RESPONSIVE-01G). */
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  const openLifecycleRef = useRef<ReturnType<typeof applySceModalOpenSideEffects> | null>(null);
 
   useLayoutEffect(() => {
     if (typeof document !== "undefined" && document.body) {
@@ -42,21 +58,34 @@ export function SceModalOverlay({
     }
   }, []);
 
-  useEffect(() => {
-    if (!open) return;
-    return lockSceDocumentScroll();
-  }, [open]);
+  useLayoutEffect(() => {
+    if (!open || !portalTarget) return;
 
-  useEffect(() => {
-    if (!open) return;
+    const backgroundRoots = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-sce-modal-background]"),
+    );
 
-    const backgroundRoots = document.querySelectorAll<HTMLElement>("[data-sce-modal-background]");
-    backgroundRoots.forEach((el) => el.setAttribute("inert", ""));
+    openLifecycleRef.current = applySceModalOpenSideEffects({
+      initialFocusTarget: initialFocusRef?.current,
+      backgroundRoots,
+    });
+
+    const scrollSnapshot = openLifecycleRef.current.scrollSnapshot;
+    const unlockScroll = lockSceDocumentScroll();
+    restoreSceBackgroundScrollPositions(scrollSnapshot);
 
     return () => {
-      backgroundRoots.forEach((el) => el.removeAttribute("inert"));
+      unlockScroll();
+      if (openLifecycleRef.current) {
+        releaseSceModalOpenSideEffects({
+          backgroundRoots,
+          previousFocus: openLifecycleRef.current.previousFocus,
+          scrollSnapshot: openLifecycleRef.current.scrollSnapshot,
+        });
+        openLifecycleRef.current = null;
+      }
     };
-  }, [open]);
+  }, [open, portalTarget, initialFocusRef]);
 
   if (!open || !portalTarget) return null;
 

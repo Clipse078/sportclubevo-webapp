@@ -61,7 +61,9 @@ describe("SceModalOverlay sidebar preservation SCE-RESPONSIVE-01I", () => {
 
     const overlaySource = readSource("components/ui/SceModalOverlay.tsx");
     expect(overlaySource).toContain("[data-sce-modal-background]");
-    expect(overlaySource).toContain('setAttribute("inert"');
+    expect(overlaySource).toContain("applySceModalOpenSideEffects");
+    const lifecycleSource = readSource("lib/ui/sce-modal-open-lifecycle.ts");
+    expect(lifecycleSource).toContain('setAttribute("inert"');
   });
 
   it("D — renders single portalled root (no sidebar shield sibling)", () => {

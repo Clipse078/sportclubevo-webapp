@@ -22,8 +22,8 @@ function FocusProbeDialog({ open, onClose }: { open: boolean; onClose: () => voi
   if (!open) return null;
 
   return (
-    <SceModalOverlay open testId="focus-probe-overlay">
-      <div ref={panelRef} role="dialog" aria-modal="true" aria-labelledby="probe-title" tabIndex={-1}>
+    <SceModalOverlay open testId="focus-probe-overlay" initialFocusRef={titleRef}>
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-labelledby="probe-title">
         <h2 ref={titleRef} id="probe-title" tabIndex={-1}>
           Probe
         </h2>
@@ -103,13 +103,11 @@ describe("SceModalOverlay stationary contract SCE-RESPONSIVE-01D", () => {
     render(<Dialog open onClose={() => {}} title="Test" description="Desc" />);
 
     await waitFor(() => {
-      expect(focusSpy).toHaveBeenCalled();
+      const preventScrollCall = focusSpy.mock.calls.find(
+        (call) => typeof call[0] === "object" && call[0]?.preventScroll === true,
+      );
+      expect(preventScrollCall).toBeTruthy();
     });
-
-    const preventScrollCall = focusSpy.mock.calls.find(
-      (call) => typeof call[0] === "object" && call[0]?.preventScroll === true,
-    );
-    expect(preventScrollCall).toBeTruthy();
     expect(window.scrollY).toBe(1200);
     expect(scrollToSpy).not.toHaveBeenCalled();
   });

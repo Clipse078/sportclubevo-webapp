@@ -127,6 +127,7 @@ export default function PlanningHubResourceDayView({
         <div
           className="overflow-auto [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]"
           data-planning-hub-resource-scroll
+          data-sce-planner-scroll-root
         >
           <div className="min-w-[640px]">
             <div
