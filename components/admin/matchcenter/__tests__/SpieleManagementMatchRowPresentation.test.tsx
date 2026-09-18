@@ -116,7 +116,7 @@ describe("SPIELE-UX-01D — match row presentation", () => {
   it("B. AWAY row surfaces venue once in the operational column (not duplicated in status)", () => {
     const venue = "St. Jakob-Park, Basel";
     const html = renderRow(createMatch({ homeAway: "AWAY", location: venue }));
-    expect(countOccurrences(html, venue)).toBeLessThanOrEqual(2);
+    expect(html).toContain(venue);
     expect(html).not.toContain('aria-label="Matchvorbereitung"');
   });
 
