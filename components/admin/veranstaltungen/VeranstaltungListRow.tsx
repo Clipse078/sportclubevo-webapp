@@ -39,11 +39,6 @@ export default function VeranstaltungListRow({
 }: VeranstaltungListRowProps) {
   const tz = resolveTenantEventTimezone(timeZone);
   const start = new Date(event.startAt);
-  const dayNum = new Intl.DateTimeFormat("de-CH", {
-    day: "2-digit",
-    month: "short",
-    timeZone: tz,
-  }).format(start);
   const timing = formatClubEventTimingLabel(
     { allDay: event.allDay, startAt: event.startAt, endAt: event.endAt },
     "de-CH",
@@ -55,33 +50,52 @@ export default function VeranstaltungListRow({
     tz,
   );
 
+  const weekdayShort = new Intl.DateTimeFormat("de-CH", {
+    weekday: "short",
+    timeZone: tz,
+  }).format(start);
+  const day = new Intl.DateTimeFormat("de-CH", { day: "numeric", timeZone: tz }).format(start);
+  const monthShort = new Intl.DateTimeFormat("de-CH", {
+    month: "short",
+    timeZone: tz,
+  }).format(start);
+
   return (
     <Link
       href={canManage ? getVeranstaltungHref(event.id) : "#"}
       className={cn(
-        "grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-[var(--border)]/60 px-1 py-2.5 transition hover:bg-[var(--surface-2)] sm:grid-cols-[5rem_minmax(0,1.4fr)_minmax(0,1fr)_auto]",
+        "grid gap-2 border-b border-[var(--border)]/60 px-4 py-2.5 transition last:border-b-0 hover:bg-[var(--surface-2)]/40 md:grid-cols-[4.75rem_minmax(0,1fr)_minmax(0,9rem)] md:items-center md:gap-x-4",
         !canManage && "pointer-events-none",
       )}
       data-testid={`veranstaltung-row-${event.id}`}
     >
-      <div className="text-center">
-        <p className="text-lg font-semibold tabular-nums leading-none text-[var(--foreground)]">
-          {dayNum.split(" ")[0]}
-        </p>
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-          {dayNum.split(" ")[1] ?? ""}
-        </p>
+      <div
+        className="flex w-[4.75rem] shrink-0 flex-col items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-1.5 py-1.5 text-center"
+        aria-hidden
+      >
+        <span className="text-[0.6rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+          {weekdayShort}
+        </span>
+        <span className="text-xl font-bold leading-none text-[var(--foreground)]">{day}</span>
+        <span className="text-[0.6rem] font-semibold uppercase text-[var(--text-2)]">
+          {monthShort}
+        </span>
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 space-y-0.5">
         <p className="truncate text-sm font-semibold text-[var(--foreground)]">{event.title}</p>
-        <p className="truncate text-xs text-[var(--muted)]">{timing}</p>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[var(--text-2)]">
+          <span>{timing}</span>
+          {event.organizerName ? <span className="truncate">{event.organizerName}</span> : null}
+        </div>
+        {event.location ? (
+          <p className="truncate text-[0.6875rem] text-[var(--muted)]">{event.location}</p>
+        ) : null}
       </div>
-      <p className="hidden truncate text-xs text-[var(--text-2)] sm:block">
-        {event.location ?? "—"}
-      </p>
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-        {operationalState(event)}
-      </span>
+      <div className="flex flex-wrap items-center gap-2 md:justify-end">
+        <span className="inline-flex shrink-0 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[0.625rem] font-semibold text-[var(--muted)]">
+          {operationalState(event)}
+        </span>
+      </div>
       <span className="sr-only">{longDate}</span>
     </Link>
   );

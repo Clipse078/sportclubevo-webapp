@@ -1,6 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { Plus } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -11,16 +9,25 @@ import {
   isScePerfTimingEnabled,
   logAdminServerTiming,
 } from "@/lib/planning-hub/admin-server-timing";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import { resolveMatchcenterMonthWindow } from "@/lib/matchcenter/month-range";
 import { ToastProvider } from "@/components/ui/ToastProvider";
-import VeranstaltungenOverview, {
+import VeranstaltungenManagementWorkspace from "@/components/admin/veranstaltungen/VeranstaltungenManagementWorkspace";
+import {
+  normalizeVeranstaltungenPublicationFilter,
+  normalizeVeranstaltungenReviewFilter,
+  normalizeVeranstaltungenSearch,
   normalizeVeranstaltungenTab,
-} from "@/components/admin/veranstaltungen/VeranstaltungenOverview";
+} from "@/lib/veranstaltungen/navigation";
 
 type SearchParams = Promise<{
   updated?: string;
   submitted?: string;
   tab?: string;
+  month?: string;
+  q?: string;
+  location?: string;
+  review?: string;
+  pub?: string;
 }>;
 
 type VeranstaltungenPageProps = {
@@ -48,10 +55,17 @@ export default async function VeranstaltungenPage({
 
   const canManage = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
   const canDelete = hasPermission(session, PERMISSIONS.EVENTS_DELETE);
+  void canDelete;
   const params = (await searchParams) ?? {};
   const showUpdated = params.updated === "1";
   const showSubmitted = params.submitted === "1";
   const tab = normalizeVeranstaltungenTab(params.tab);
+  const timezone = tenantContext.timezone ?? "Europe/Zurich";
+  const monthWindow = resolveMatchcenterMonthWindow({
+    monthParam: params.month,
+    timeZone: timezone,
+  });
+  const currentMonthParam = resolveMatchcenterMonthWindow({ timeZone: timezone }).param;
 
   const events = await listClubEvents(tenantContext.id);
   perfTimer?.mark("club-event-loader");
@@ -62,24 +76,7 @@ export default async function VeranstaltungenPage({
 
   return (
     <ToastProvider>
-      <div className="max-w-[1200px] space-y-8">
-        <AdminSectionHeader
-          eyebrow="Planung"
-          title="Veranstaltungen"
-          description="Tenant-verwaltete Vereinsanlässe wie Generalversammlung, Trainersitzung, Sponsorenanlass und weitere Vereinsevents."
-          actions={
-            canManage ? (
-              <Link
-                href="/dashboard/veranstaltungen/new"
-                className="fca-button-primary"
-              >
-                <Plus className="h-4 w-4" />
-                Veranstaltung erstellen
-              </Link>
-            ) : null
-          }
-        />
-
+      <div className="w-full space-y-4">
         {showUpdated ? (
           <div className="fca-status-box fca-status-box-success">
             Veranstaltung wurde erfolgreich gespeichert.
@@ -92,12 +89,17 @@ export default async function VeranstaltungenPage({
           </div>
         ) : null}
 
-        <VeranstaltungenOverview
+        <VeranstaltungenManagementWorkspace
           events={events}
           tab={tab}
           canManage={canManage}
-          canDelete={canDelete}
           timeZone={tenantContext.timezone}
+          monthParam={monthWindow.param}
+          currentMonthParam={currentMonthParam}
+          searchQuery={normalizeVeranstaltungenSearch(params.q)}
+          locationFilter={params.location?.trim() || null}
+          reviewFilter={normalizeVeranstaltungenReviewFilter(params.review)}
+          publicationFilter={normalizeVeranstaltungenPublicationFilter(params.pub)}
         />
       </div>
     </ToastProvider>

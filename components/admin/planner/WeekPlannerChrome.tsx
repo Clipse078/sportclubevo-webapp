@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
 import type { WochenplanPlanDto } from "@/lib/wochenplan/plan-types";
 import type { WeekplannerWeek } from "@/lib/weekplanner/types";
+import PlanningManagementPageHeader from "@/components/admin/planning/PlanningManagementPageHeader";
+import PlanningWeekNavigation from "@/components/admin/planning/PlanningWeekNavigation";
 import PlanningHubCreateMenu, {
   type PlanningHubCreatePermissions,
 } from "@/components/admin/planning-hub/PlanningHubCreateMenu";
@@ -67,63 +68,60 @@ export default function WeekPlannerChrome({
 }: WeekPlannerChromeProps) {
   const resolvedUrlState = { ...urlState, week: weekNav.param };
 
-  return (
-    <div className="space-y-1 border-b border-[var(--border)] pb-1.5">
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <h1 className="text-base font-semibold tracking-tight text-[var(--foreground)]">Wochenplaner</h1>
-        {createPermissions ? <PlanningHubCreateMenu permissions={createPermissions} /> : null}
-      </div>
+  const todayHref = buildPlanningHubHref(resolvedUrlState, {
+    week: todayParam,
+    calendarZeit: preserveCalendarZeitForHeute(resolvedUrlState.calendarZeit),
+  });
 
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <div className="flex flex-wrap items-center gap-0.5">
-          <Link
-            href={weekHref(weekNav.previousParam, resolvedUrlState)}
-            aria-label="Vorherige Woche"
-            data-testid="weekplanner-previous-week"
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-          </Link>
-          <p className="text-sm font-semibold text-[var(--foreground)]" data-testid="weekplanner-range-label">
-            {weekNav.rangeLabel}
-          </p>
-          <Link
-            href={weekHref(weekNav.nextParam, resolvedUrlState)}
-            aria-label="Nächste Woche"
-            data-testid="weekplanner-next-week"
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]"
-          >
-            <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
-          <Link
-            href={buildPlanningHubHref(resolvedUrlState, {
-              week: todayParam,
-              calendarZeit: preserveCalendarZeitForHeute(resolvedUrlState.calendarZeit),
-            })}
-            data-testid="weekplanner-today"
-            className="inline-flex h-7 items-center rounded-md border border-[var(--border)] px-2 text-xs font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
-          >
-            Heute
-          </Link>
+  return (
+    <div className="w-full space-y-4" data-testid="weekplanner-management-chrome">
+      <PlanningManagementPageHeader
+        breadcrumbLeaf="Wochenplaner"
+        title="Wochenplaner"
+        subtitle="Zentrale Wochenplanung und operative Übersicht über Trainings, Spiele, Turniere und Veranstaltungen."
+        subtitleTestId="weekplanner-header-subtitle"
+        actions={createPermissions ? <PlanningHubCreateMenu permissions={createPermissions} /> : null}
+      />
+
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 flex-1 space-y-3">
+          <PlanningWeekNavigation
+            rangeLabel={weekNav.rangeLabel}
+            previousWeekHref={weekHref(weekNav.previousParam, resolvedUrlState)}
+            nextWeekHref={weekHref(weekNav.nextParam, resolvedUrlState)}
+            todayHref={todayHref}
+          />
+
+          <WeekplannerPlanBar
+            weekParam={weekNav.param}
+            wochenplanPlans={wochenplanPlans}
+            weekplannerPlans={plans}
+            selectedPlanParam={selectedPlanParam ?? viewedWochenplanPlanId}
+            materializedWeekplannerPlanId={materializedWeekplannerPlanId}
+            canManage={canManagePlans}
+            compact
+          />
         </div>
 
-        <WeekplannerPlanBar
-          weekParam={weekNav.param}
-          wochenplanPlans={wochenplanPlans}
-          weekplannerPlans={plans}
-          selectedPlanParam={selectedPlanParam ?? viewedWochenplanPlanId}
-          materializedWeekplannerPlanId={materializedWeekplannerPlanId}
-          canManage={canManagePlans}
-          compact
-        />
+        {week && onReviewConflicts ? (
+          <div className="flex min-w-0 items-start lg:max-w-sm lg:justify-end">
+            <PlanningHubConflictAttention
+              week={week}
+              incompleteCount={incompleteCount}
+              onReviewConflicts={onReviewConflicts}
+            />
+          </div>
+        ) : null}
       </div>
 
       <div
-        className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[var(--border)]/50 pt-1"
+        className="flex flex-col gap-3 border-t border-[var(--border)]/70 pt-3 sm:flex-row sm:flex-wrap sm:items-center"
         data-testid="planning-hub-toolbar"
       >
         <div
-          className="flex items-center gap-px rounded-md border border-[var(--border)]/80 p-px"
+          className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-0.5"
+          role="group"
+          aria-label="Ansicht"
           data-testid="planning-hub-perspective"
         >
           {(
@@ -132,42 +130,49 @@ export default function WeekPlannerChrome({
               ["ressourcen", "Ressourcen"],
               ["liste", "Liste"],
             ] as const
-          ).map(([perspective, label]) => (
-            <Link
-              key={perspective}
-              href={buildPlanningHubHref(resolvedUrlState, { perspective })}
-              className={cn(
-                "rounded px-2 py-0.5 text-xs font-medium",
-                urlState.perspective === perspective
-                  ? "bg-[var(--surface-2)] text-[var(--foreground)] shadow-sm"
-                  : "text-[var(--text-2)] hover:text-[var(--foreground)]",
-              )}
-            >
-              {label}
-            </Link>
-          ))}
+          ).map(([perspective, label]) => {
+            const active = urlState.perspective === perspective;
+            return (
+              <Link
+                key={perspective}
+                href={buildPlanningHubHref(resolvedUrlState, { perspective })}
+                data-testid={`planning-hub-perspective-${perspective}`}
+                aria-current={active ? "true" : undefined}
+                className={cn(
+                  "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors duration-150",
+                  active
+                    ? "bg-[var(--sce-primary)] text-white shadow-sm"
+                    : "text-[var(--text-2)] hover:text-[var(--foreground)]",
+                )}
+              >
+                {label}
+              </Link>
+            );
+          })}
         </div>
 
         {urlState.perspective === "ressourcen" && (
-          <div className="flex gap-0.5">
+          <div className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-0.5">
             <Link
               href={buildPlanningHubHref(resolvedUrlState, { resourceCategory: "pitch" })}
+              data-testid="planning-hub-resource-pitch"
               className={cn(
-                "rounded-full border px-2.5 py-0.5 text-xs font-semibold",
+                "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
                 urlState.resourceCategory === "pitch"
-                  ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
-                  : "border-[var(--border)] text-[var(--text-2)]",
+                  ? "bg-[var(--sce-primary)] text-white shadow-sm"
+                  : "text-[var(--text-2)] hover:text-[var(--foreground)]",
               )}
             >
               Spielfeld / Halle
             </Link>
             <Link
               href={buildPlanningHubHref(resolvedUrlState, { resourceCategory: "dressing" })}
+              data-testid="planning-hub-resource-dressing"
               className={cn(
-                "rounded-full border px-2.5 py-0.5 text-xs font-semibold",
+                "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
                 urlState.resourceCategory === "dressing"
-                  ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
-                  : "border-[var(--border)] text-[var(--text-2)]",
+                  ? "bg-[var(--sce-primary)] text-white shadow-sm"
+                  : "text-[var(--text-2)] hover:text-[var(--foreground)]",
               )}
             >
               Garderobe
@@ -175,24 +180,20 @@ export default function WeekPlannerChrome({
           </div>
         )}
 
-        <div className="hidden h-4 w-px bg-[var(--border)] sm:block" aria-hidden />
-
-        <PlanningHubWeekFilters
-          urlState={resolvedUrlState}
-          teamOptions={teamOptions}
-          facilityOptions={facilityOptions}
-          inline
-        />
-
-        {week && onReviewConflicts ? (
-          <div className="ml-auto flex min-w-0 items-center">
-            <PlanningHubConflictAttention
-              week={week}
-              incompleteCount={incompleteCount}
-              onReviewConflicts={onReviewConflicts}
-            />
-          </div>
-        ) : null}
+        <div
+          className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/80 p-3 sm:ml-auto sm:min-w-[min(100%,20rem)]"
+          data-testid="planning-hub-filter-panel"
+        >
+          <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+            Filter
+          </p>
+          <PlanningHubWeekFilters
+            urlState={resolvedUrlState}
+            teamOptions={teamOptions}
+            facilityOptions={facilityOptions}
+            inline
+          />
+        </div>
       </div>
     </div>
   );

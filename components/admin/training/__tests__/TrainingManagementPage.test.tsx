@@ -69,16 +69,56 @@ describe("SCE-TRAININGS-UX-01G Trainings management shell", () => {
           totalCount: 0,
         }}
         filters={{ archived: false }}
+        kpis={{ active: 0, inactive: 0, archived: 0, total: 0 }}
+        teamHrefByValue={{ "": "/dashboard/training" }}
+        statusHrefByValue={{ "": "/dashboard/training" }}
+        resetFiltersHref="/dashboard/training"
       />,
     );
 
     expect(screen.queryByTestId("training-sessions-section")).not.toBeInTheDocument();
     expect(screen.queryByTestId("training-create-menu-trigger")).not.toBeInTheDocument();
     expect(screen.getByTestId("training-create-link")).toHaveAttribute("href", "/dashboard/training/new");
-    expect(screen.getByTestId("training-open-wochenplaner")).toHaveTextContent("Wochenplaner öffnen");
+    expect(screen.getByTestId("training-quick-wochenplaner")).toHaveTextContent("Wochenplaner öffnen");
     expect(screen.queryByText("Serien")).not.toBeInTheDocument();
     expect(screen.queryByText("Einzeltrainings")).not.toBeInTheDocument();
     expect(screen.queryByText("Filtern")).not.toBeInTheDocument();
+  });
+
+  it("workspace uses planning management shell with KPIs and filter rail", () => {
+    render(
+      <TrainingManagementWorkspace
+        canCreate
+        canManage
+        canDelete={false}
+        isCoordinator
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        wochenplanerHref="/dashboard/planner/week"
+        seriesRows={[]}
+        teamOptions={[]}
+        archivedCount={0}
+        sort="UPDATED_DESC"
+        kpis={{ active: 2, inactive: 1, archived: 0, total: 3 }}
+        pagination={{
+          page: 1,
+          pageCount: 1,
+          rangeStart: 0,
+          rangeEnd: 0,
+          totalCount: 0,
+        }}
+        filters={{ archived: false }}
+        teamHrefByValue={{ "": "/dashboard/training" }}
+        statusHrefByValue={{ "": "/dashboard/training", ALL: "/dashboard/training?seriesStatus=ALL" }}
+        resetFiltersHref="/dashboard/training"
+      />,
+    );
+
+    expect(screen.getByTestId("training-kpi-cards")).toBeInTheDocument();
+    expect(screen.getByTestId("training-management-rail")).toBeInTheDocument();
+    expect(screen.getByTestId("training-filter-rail")).toBeInTheDocument();
+    expect(screen.getByTestId("training-search")).toBeInTheDocument();
+    expect(screen.getByText("Planung")).toBeInTheDocument();
   });
 
   it("session edit route remains in codebase", () => {

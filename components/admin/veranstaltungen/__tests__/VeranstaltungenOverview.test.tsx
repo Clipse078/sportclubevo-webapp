@@ -8,7 +8,9 @@ import type { ClubEvent } from "@/lib/events/club-events-service";
 import VeranstaltungenOverview from "@/components/admin/veranstaltungen/VeranstaltungenOverview";
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }),
+  usePathname: () => "/dashboard/veranstaltungen",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 function createEvent(overrides: Partial<ClubEvent> = {}): ClubEvent {
@@ -53,7 +55,8 @@ describe("VeranstaltungenOverview", () => {
         events={events}
         tab="BEVORSTEHEND"
         canManage
-        canDelete={false}
+        monthParam="2099-10"
+        currentMonthParam="2026-09"
       />,
     );
 
@@ -63,5 +66,34 @@ describe("VeranstaltungenOverview", () => {
     expect(screen.queryByText("TOTAL")).toBeNull();
     expect(screen.getByText("Trainersitzung")).toBeInTheDocument();
     expect(screen.queryByText("Altanlass")).toBeNull();
+  });
+
+  it("renders planning management shell with KPIs, search, and filter rail", () => {
+    const events = [
+      createEvent({
+        id: "future-1",
+        title: "Sponsorenanlass",
+        startAt: new Date("2099-10-01T18:00:00.000Z"),
+      }),
+    ];
+
+    render(
+      <VeranstaltungenOverview
+        events={events}
+        tab="BEVORSTEHEND"
+        canManage
+        monthParam="2099-10"
+        currentMonthParam="2026-09"
+      />,
+    );
+
+    expect(screen.getByTestId("veranstaltungen-management-workspace")).toBeInTheDocument();
+    expect(screen.getByTestId("veranstaltungen-kpi-cards")).toBeInTheDocument();
+    expect(screen.getByTestId("veranstaltungen-search")).toBeInTheDocument();
+    expect(screen.getByTestId("veranstaltungen-management-rail")).toBeInTheDocument();
+    expect(screen.getByTestId("spiele-month-calendar")).toBeInTheDocument();
+    expect(screen.getByTestId("veranstaltungen-filter-rail")).toBeInTheDocument();
+    expect(screen.getByText("Planung")).toBeInTheDocument();
+    expect(screen.getByTestId("veranstaltungen-create-link")).toBeInTheDocument();
   });
 });
