@@ -16,6 +16,7 @@ import {
 } from "@/lib/matchcenter/navigation";
 import {
   buildCancelledSpielplanungRows,
+  collectMatchDayKeys,
   countSpieleStatusBuckets,
   deriveSpieleCompetitionOptions,
   deriveSpieleVenueOptions,
@@ -39,9 +40,7 @@ import SpieleManagementUpcomingList from "./SpieleManagementUpcomingList";
 import SpieleManagementResultRow from "./SpieleManagementResultRow";
 import SpieleManagementViewSwitcher from "./SpieleManagementViewSwitcher";
 import SpieleManagementHeaderMenu from "./SpieleManagementHeaderMenu";
-import SpieleManagementMonthCalendar, {
-  collectMatchDayKeys,
-} from "./SpieleManagementMonthCalendar";
+import SpieleManagementMonthCalendar from "./SpieleManagementMonthCalendar";
 import SpieleManagementSchnellfilter from "./SpieleManagementSchnellfilter";
 import { cn } from "@/lib/cn";
 
@@ -325,6 +324,29 @@ export default function SpieleManagementWorkspace({
     statusMask: ["anstehend", "offen", "bereit"],
   });
 
+  const statusToggleHrefs: Record<SpieleStatusMaskKey, string> = {
+    anstehend: buildHref(basePath, {
+      ...navParams,
+      statusMask: toggleStatusMask(statusMask, "anstehend"),
+      actionFilter: "ALLE",
+    }),
+    offen: buildHref(basePath, {
+      ...navParams,
+      statusMask: toggleStatusMask(statusMask, "offen"),
+      actionFilter: "ALLE",
+    }),
+    bereit: buildHref(basePath, {
+      ...navParams,
+      statusMask: toggleStatusMask(statusMask, "bereit"),
+      actionFilter: "ALLE",
+    }),
+    abgesagt: buildHref(basePath, {
+      ...navParams,
+      statusMask: toggleStatusMask(statusMask, "abgesagt"),
+      actionFilter: "ALLE",
+    }),
+  };
+
   const listeHref = buildHref(basePath, { ...navParams, listView: "LISTE" });
   const kompaktHref = buildHref(basePath, { ...navParams, listView: "KOMPAKT" });
   const kalenderHref = buildHref(basePath, { ...navParams, listView: "KALENDER" });
@@ -538,7 +560,6 @@ export default function SpieleManagementWorkspace({
               ...navParams,
               month: monthWindow.nextParam,
             })}
-            dayHref={() => "#"}
           />
           <SpieleManagementSchnellfilter
             homeAwayFilter={homeAwayFilter}
@@ -547,13 +568,7 @@ export default function SpieleManagementWorkspace({
             alleHref={buildHref(basePath, { ...navParams, homeAwayFilter: "ALLE" })}
             heimHref={buildHref(basePath, { ...navParams, homeAwayFilter: "HOME" })}
             auswaertsHref={buildHref(basePath, { ...navParams, homeAwayFilter: "AWAY" })}
-            toggleStatusHref={(key) =>
-              buildHref(basePath, {
-                ...navParams,
-                statusMask: toggleStatusMask(statusMask, key),
-                actionFilter: "ALLE",
-              })
-            }
+            statusToggleHrefs={statusToggleHrefs}
             resetHref={resetHref}
             teamOptionsCount={teamOptions.length}
             competitionOptionsCount={competitionOptions.length}

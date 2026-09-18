@@ -12,29 +12,22 @@ import {
   startOfWeek,
 } from "date-fns";
 import { de } from "date-fns/locale";
+import { matchDayKeyInTimezone } from "@/lib/matchcenter/management-view";
 import { cn } from "@/lib/cn";
 
 type Props = {
   monthParam: string;
   timezone: string;
-  matchDayKeys: ReadonlySet<string>;
+  matchDayKeys: readonly string[];
   previousMonthHref: string;
   nextMonthHref: string;
-  dayHref: (dayKey: string) => string;
+  /** Optional per-day link; defaults to inert `#` when omitted. */
+  dayLinkHref?: string;
 };
 
 function parseMonthParam(param: string): Date {
   const [y, m] = param.split("-").map(Number);
   return new Date(y, (m ?? 1) - 1, 1);
-}
-
-function dayKeyInTimezone(date: Date, timezone: string): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
 }
 
 export default function SpieleManagementMonthCalendar({
@@ -43,8 +36,9 @@ export default function SpieleManagementMonthCalendar({
   matchDayKeys,
   previousMonthHref,
   nextMonthHref,
-  dayHref,
+  dayLinkHref = "#",
 }: Props) {
+  const matchDayKeySet = new Set(matchDayKeys);
   const monthStart = parseMonthParam(monthParam);
   const monthEnd = endOfMonth(monthStart);
   const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
@@ -97,13 +91,13 @@ export default function SpieleManagementMonthCalendar({
         {days.map((day) => {
           const inMonth = isSameMonth(day, monthStart);
           const isToday = isSameDay(day, today);
-          const key = dayKeyInTimezone(day, timezone);
-          const hasMatches = matchDayKeys.has(key);
+          const key = matchDayKeyInTimezone(day, timezone);
+          const hasMatches = matchDayKeySet.has(key);
 
           return (
             <Link
               key={day.toISOString()}
-              href={dayHref(key)}
+              href={dayLinkHref}
               data-testid={`spiele-calendar-day-${key}`}
               className={cn(
                 "relative flex h-8 items-center justify-center rounded-full text-xs tabular-nums transition-colors",
@@ -129,13 +123,3 @@ export default function SpieleManagementMonthCalendar({
   );
 }
 
-export function collectMatchDayKeys(
-  dates: readonly Date[],
-  timezone: string,
-): Set<string> {
-  const set = new Set<string>();
-  for (const date of dates) {
-    set.add(dayKeyInTimezone(date, timezone));
-  }
-  return set;
-}

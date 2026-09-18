@@ -16,7 +16,7 @@ type Props = {
   alleHref: string;
   heimHref: string;
   auswaertsHref: string;
-  toggleStatusHref: (key: SpieleStatusMaskKey) => string;
+  statusToggleHrefs: Record<SpieleStatusMaskKey, string>;
   resetHref: string;
   teamOptionsCount: number;
   competitionOptionsCount: number;
@@ -71,7 +71,7 @@ export default function SpieleManagementSchnellfilter({
   alleHref,
   heimHref,
   auswaertsHref,
-  toggleStatusHref,
+  statusToggleHrefs,
   resetHref,
   teamOptionsCount,
   competitionOptionsCount,
@@ -129,7 +129,7 @@ export default function SpieleManagementSchnellfilter({
             return (
               <li key={item.key}>
                 <Link
-                  href={toggleStatusHref(item.key)}
+                  href={statusToggleHrefs[item.key]}
                   data-testid={`spiele-status-toggle-${item.key}`}
                   className="flex items-center justify-between gap-2 rounded-md px-1 py-0.5 text-xs hover:bg-[var(--surface-2)]"
                   aria-pressed={checked}

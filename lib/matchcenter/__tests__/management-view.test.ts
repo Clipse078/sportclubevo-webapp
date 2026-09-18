@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   filterSpielplanungRowsBySearch,
+  collectMatchDayKeys,
   formatSpieleDayGroupHeadingLong,
   formatSpieleDayGroupLabel,
   groupSpielplanungRowsByDay,
@@ -131,6 +132,18 @@ describe("management-view grouping", () => {
       now,
     );
     expect(label).toBe("HEUTE");
+  });
+
+  it("collectMatchDayKeys deduplicates kickoff dates for calendar dots", () => {
+    const keys = collectMatchDayKeys(
+      [
+        new Date("2026-09-18T14:00:00.000Z"),
+        new Date("2026-09-18T20:00:00.000Z"),
+        new Date("2026-09-19T14:00:00.000Z"),
+      ],
+      "Europe/Zurich",
+    );
+    expect(keys.sort()).toEqual(["2026-09-18", "2026-09-19"]);
   });
 
   it("formats long day group headings for premium date surfaces", () => {

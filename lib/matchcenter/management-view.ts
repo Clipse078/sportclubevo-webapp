@@ -219,6 +219,22 @@ function dayKeyForDate(date: Date, timezone: string): string {
   }).format(date);
 }
 
+/** Server/client-safe en-CA day key for calendar dots and grouping. */
+export function matchDayKeyInTimezone(date: Date, timezone: string): string {
+  return dayKeyForDate(date, timezone);
+}
+
+export function collectMatchDayKeys(
+  dates: readonly Date[],
+  timezone: string,
+): string[] {
+  const set = new Set<string>();
+  for (const date of dates) {
+    set.add(dayKeyForDate(date, timezone));
+  }
+  return [...set];
+}
+
 export function groupSpielplanungRowsByDay(
   rows: readonly MatchcenterRowViewModel[],
   locale: string,
