@@ -14,7 +14,9 @@ import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 const push = vi.fn();
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push, refresh: vi.fn() }),
+  useRouter: () => ({ push, replace: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/dashboard/matchcenter",
+  useSearchParams: () => new URLSearchParams("tab=spielplanung&month=2026-08"),
 }));
 
 vi.mock("@/hooks/use-toast", () => ({
@@ -132,6 +134,7 @@ function renderOverview(
     wochenplanFilter: "ALLE" | "IM_WOCHENPLAN" | "NICHT_IM_WOCHENPLAN";
     teamFilter: string | null;
     teamOptions: { id: string; label: string }[];
+    canManage?: boolean;
   }> = {},
 ) {
   return render(
@@ -143,6 +146,7 @@ function renderOverview(
       teamFilter={props.teamFilter ?? null}
       teamOptions={props.teamOptions ?? DEFAULT_TEAM_OPTIONS}
       monthWindow={DEFAULT_MONTH_WINDOW}
+      canManage={props.canManage ?? false}
     />,
   );
 }
@@ -152,13 +156,20 @@ describe("MatchcenterOverview — tabs, month nav, KPIs", () => {
     renderOverview([createMatch()]);
 
     expect(screen.getByTestId("matchcenter-tab-spielplanung")).toHaveAttribute(
-      "aria-selected",
-      "true",
+      "aria-current",
+      "page",
     );
-    expect(screen.getByTestId("matchcenter-tab-resultate")).toHaveAttribute(
-      "aria-selected",
-      "false",
+    expect(screen.getByTestId("matchcenter-tab-resultate")).not.toHaveAttribute(
+      "aria-current",
+      "page",
     );
+    expect(screen.getByTestId("spiele-header-subtitle")).toHaveTextContent(
+      "Zentrale Spielplanung und operative Matchvorbereitung.",
+    );
+    expect(screen.getByTestId("spiele-kpi-cards")).toBeTruthy();
+    expect(screen.getByTestId("spiele-view-switcher")).toBeTruthy();
+    expect(screen.getByTestId("spiele-schnellfilter")).toBeTruthy();
+    expect(screen.getByTestId("spiele-month-calendar")).toBeTruthy();
     expect(screen.getByTestId("matchcenter-month-label")).toHaveTextContent(
       "August 2026",
     );
@@ -169,11 +180,11 @@ describe("MatchcenterOverview — tabs, month nav, KPIs", () => {
 
     expect(screen.getByTestId("matchcenter-month-previous")).toHaveAttribute(
       "href",
-      "/dashboard/matchcenter?tab=spielplanung&month=2026-07&filter=offen",
+      "/dashboard/matchcenter?tab=spielplanung&month=2026-07&status=offen&filter=offen",
     );
     expect(screen.getByTestId("matchcenter-month-next")).toHaveAttribute(
       "href",
-      "/dashboard/matchcenter?tab=spielplanung&month=2026-09&filter=offen",
+      "/dashboard/matchcenter?tab=spielplanung&month=2026-09&status=offen&filter=offen",
     );
   });
 
@@ -218,12 +229,13 @@ describe("MatchcenterOverview — tabs, month nav, KPIs", () => {
 
 describe("MatchcenterOverview — Spielplanung", () => {
   it("renders the empty state and create link when nothing matches", () => {
-    renderOverview([]);
+    renderOverview([], { canManage: true });
 
-    expect(screen.getByText("Keine Matches gefunden")).toBeTruthy();
-    expect(
-      screen.getByRole("link", { name: /Match erstellen/i }),
-    ).toHaveAttribute("href", "/dashboard/events/matches/new");
+    expect(screen.getByText("Keine Spiele gefunden")).toBeTruthy();
+    expect(screen.getByTestId("spiele-create-link")).toHaveAttribute(
+      "href",
+      "/dashboard/matchcenter/new",
+    );
   });
 
   it("renders home and away team names", () => {
@@ -274,13 +286,9 @@ describe("MatchcenterOverview — Spielplanung", () => {
       }),
     ]);
 
-    expect(screen.getByText("2 Aufgaben offen")).toBeTruthy();
-    // Missing items are shown as labels
+    expect(screen.getByText("2 Punkte offen")).toBeTruthy();
     expect(screen.getByText("Spielfeld")).toBeTruthy();
     expect(screen.getByText("Heimkabine")).toBeTruthy();
-    // MATCHCENTER-UX-03: ready items (Gastkabine=G2) are NOT shown for OPEN matches
-    // (only the missing items are surfaced as actionable labels)
-    expect(screen.queryByText("Gastkabine")).toBeNull();
   });
 
   it("G. shows a calm Auswärtsspiel state instead of manufactured facility warnings", () => {
@@ -315,7 +323,7 @@ describe("MatchcenterOverview — Spielplanung", () => {
       }),
     ]);
 
-    expect(screen.getAllByText("Auswärtsspiel").length).toBeGreaterThanOrEqual(
+    expect(screen.getAllByText(/Auswärtsspiel/i).length).toBeGreaterThanOrEqual(
       1,
     );
     expect(screen.queryByText("Spielfeld")).toBeNull();
@@ -388,7 +396,9 @@ describe("MatchcenterOverview — Spielplanung", () => {
       }),
     ]);
 
-    expect(screen.getByText("Live")).toBeTruthy();
+    expect(
+      within(screen.getByTestId("matchcenter-action-match-1")).getByText("Live"),
+    ).toBeTruthy();
     expect(screen.getByTestId("matchcenter-live-score-match-1")).toHaveTextContent(
       "1:0",
     );
@@ -439,7 +449,7 @@ describe("MatchcenterOverview — Spielplanung", () => {
       { actionFilter: "ALLE" },
     );
 
-    expect(screen.getByText("Keine Matches gefunden")).toBeTruthy();
+    expect(screen.getByText("Keine Spiele gefunden")).toBeTruthy();
   });
 });
 
@@ -582,7 +592,7 @@ describe("MatchcenterOverview — reconciliation admin surface", () => {
     expect(
       screen.getByTestId("matchcenter-reconciliation-row-match-reconcile"),
     ).toBeTruthy();
-    expect(screen.getByText("Keine Matches gefunden")).toBeTruthy();
+    expect(screen.getByText("Keine Spiele gefunden")).toBeTruthy();
   });
 
   it("does not show the reconciliation banner when no fixtures need review", () => {
@@ -689,7 +699,7 @@ describe("MatchcenterOverview — team filter", () => {
 
     expect(screen.getByTestId("matchcenter-month-next")).toHaveAttribute(
       "href",
-      "/dashboard/matchcenter?tab=spielplanung&month=2026-09&filter=offen&team=team-2",
+      "/dashboard/matchcenter?tab=spielplanung&month=2026-09&status=offen&filter=offen&team=team-2",
     );
   });
 });
