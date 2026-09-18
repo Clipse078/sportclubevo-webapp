@@ -307,7 +307,8 @@ export class PlanningAuthorizationPolicy {
    * (SFV/provider source — those fields are managed by the provider sync).
    *
    * Scoped user: can edit ONLY when:
-   *   - planningStage is DRAFT (SUBMITTED/APPROVED are locked)
+   *   - for training/match: planningStage is DRAFT (SUBMITTED/APPROVED are locked)
+   *   - for tournament: planning stage is ignored (no coordinator-validation gate)
    *   - source is MANUAL or null (provider records are protected)
    *   - user has OrgUnit scope for the record's team
    */
@@ -327,8 +328,8 @@ export class PlanningAuthorizationPolicy {
       return true;
     }
 
-    // Scoped: only DRAFT stage
-    if (record.planningStage !== "DRAFT") {
+    // Scoped: training/match lock after submit; tournaments skip review-stage gating.
+    if (domain !== "tournament" && record.planningStage !== "DRAFT") {
       return false;
     }
 

@@ -51,7 +51,7 @@ export default function TournamentParticipantAddWorkflow({
       <div className="flex flex-col gap-3 lg:max-w-2xl">
         <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
           <div className="min-w-0 space-y-1">
-            <p className="text-[11px] font-medium text-[var(--text-2)]">FC-Team</p>
+            <p className="text-[11px] font-medium text-[var(--text-2)]">Team</p>
             <TeamSearchablePicker
               options={availableTeams}
               value={teamPickId}
@@ -74,7 +74,7 @@ export default function TournamentParticipantAddWorkflow({
             className="fca-button-secondary h-9 shrink-0 whitespace-nowrap"
           >
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            FC-Team
+            Team
           </button>
         </div>
 

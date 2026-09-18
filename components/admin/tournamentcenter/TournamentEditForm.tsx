@@ -16,8 +16,6 @@ import TournamentEditorChrome from "@/components/admin/tournamentcenter/Tourname
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
 import TeamSearchablePicker from "@/components/admin/shared/TeamSearchablePicker";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
-import PlanningWorkflowBadge from "@/components/admin/shared/PlanningWorkflowBadge";
-import PlanningWorkflowActionsClient from "@/components/admin/shared/PlanningWorkflowActionsClient";
 import { utcInstantToDateTimeLocalValue } from "@/lib/events/tenant-local-datetime";
 
 type DeletionImpact = { key: string; label: string; count: number };
@@ -40,8 +38,6 @@ type TournamentEditFormProps = {
   canDelete?: boolean;
   pitchHallFacilityGroups: FacilityGroup[];
   dressingRoomFacilityGroups: FacilityGroup[];
-  isCoordinatorForPlanning?: boolean;
-  isProtectedSource?: boolean;
   timezone: string;
   tenantLogoUrl?: string | null;
 };
@@ -52,8 +48,6 @@ export default function TournamentEditForm({
   canDelete = false,
   pitchHallFacilityGroups,
   dressingRoomFacilityGroups,
-  isCoordinatorForPlanning = false,
-  isProtectedSource = false,
   timezone,
   tenantLogoUrl = null,
 }: TournamentEditFormProps) {
@@ -279,20 +273,6 @@ export default function TournamentEditForm({
           { label: "Bearbeiten" },
         ]}
         primaryAction={saveButton}
-        secondaryActions={
-          !isProtectedSource ? (
-            <div className="flex items-center gap-2">
-              <PlanningWorkflowBadge stage={tournament.reviewStage} size="sm" />
-              <PlanningWorkflowActionsClient
-                recordId={tournament.id}
-                domain="tournament"
-                planningStage={tournament.reviewStage}
-                isCoordinator={isCoordinatorForPlanning}
-                isProtectedSource={isProtectedSource}
-              />
-            </div>
-          ) : undefined
-        }
       />
 
       <TournamentFormSection title="Grunddaten" description="Turniername, Organisator und Zeitrahmen">
@@ -469,7 +449,11 @@ export default function TournamentEditForm({
         </TournamentFormSection>
       )}
 
-      <TournamentFormSection title="Veröffentlichung" description="Ausgabekanäle für dieses Turnier">
+      <TournamentFormSection
+        title="Veröffentlichung"
+        description="Ausgabekanäle für dieses Turnier"
+        contentClassName="w-full max-w-none"
+      >
         <TournamentPublicationToggles
           value={publication}
           onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}

@@ -1,6 +1,6 @@
 "use client";
 
-import { SwitchToggle } from "@/components/ui/SwitchToggle";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
 
 export type TournamentPublicationState = {
   websiteVisible: boolean;
@@ -20,12 +20,12 @@ const PUBLICATION_CHANNELS: PublicationChannelConfig[] = [
   {
     key: "websiteVisible",
     label: "Öffentliche Turnierseite",
-    description: "Turnier auf der Vereinswebsite und in öffentlichen Turnierlisten.",
+    description: "Turnier auf der öffentlichen Turnierseite anzeigen.",
   },
   {
     key: "infoboardVisible",
     label: "Infoboard",
-    description: "Auf den Infoboard-Anzeigen berücksichtigen.",
+    description: "Auf den Infoboards des Vereins anzeigen.",
   },
   {
     key: "homepageVisible",
@@ -62,25 +62,37 @@ export default function TournamentPublicationToggles({
 }: Props) {
   return (
     <div
-      className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 p-3 sm:p-4"
+      className="w-full divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40"
       data-testid={`${testIdPrefix}-group`}
+      role="group"
+      aria-label="Veröffentlichung"
     >
-      <div
-        className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
-        data-testid={`${testIdPrefix}-grid`}
-      >
-        {PUBLICATION_CHANNELS.map((channel) => (
-          <SwitchToggle
+      {PUBLICATION_CHANNELS.map((channel) => {
+        const controlId = `${testIdPrefix}-${channel.key}`;
+        return (
+          <div
             key={channel.key}
-            id={`${testIdPrefix}-${channel.key}`}
-            label={channel.label}
-            description={channel.description}
-            checked={value[channel.key]}
-            onChange={(checked) => onChange({ [channel.key]: checked })}
-            disabled={disabled}
-          />
-        ))}
-      </div>
+            className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
+            data-testid={`${testIdPrefix}-row-${channel.key}`}
+          >
+            <div className="min-w-0 flex-1">
+              <label htmlFor={controlId} className="block text-sm font-medium text-[var(--foreground)]">
+                {channel.label}
+              </label>
+              <p className="mt-0.5 text-xs text-[var(--muted)]">{channel.description}</p>
+            </div>
+            <div className="flex shrink-0 items-center sm:justify-end">
+              <SwitchThumb
+                id={controlId}
+                checked={value[channel.key]}
+                onChange={(checked) => onChange({ [channel.key]: checked })}
+                disabled={disabled}
+                aria-label={channel.label}
+              />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
