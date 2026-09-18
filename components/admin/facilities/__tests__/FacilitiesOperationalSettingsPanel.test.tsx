@@ -67,6 +67,17 @@ describe("FacilitiesOperationalSettingsPanel", () => {
     expect(screen.getByTestId("tournament-default-duration-minutes")).toHaveValue(120);
   });
 
+  it("exposes a stable zeitstandards anchor for deep links", () => {
+    render(
+      <FacilitiesOperationalSettingsPanel
+        initialPolicy={platformPolicy}
+        initialPresets={defaultPresets}
+        canManage
+      />,
+    );
+    expect(document.getElementById("zeitstandards")).toBeTruthy();
+  });
+
   it("disables save and cancel until the form is dirty", () => {
     render(
       <FacilitiesOperationalSettingsPanel

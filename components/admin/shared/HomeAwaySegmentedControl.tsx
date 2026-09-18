@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Plane } from "lucide-react";
+import { Bus, Home } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 export type TournamentHomeAway = "HOME" | "AWAY";
@@ -9,8 +9,8 @@ export const TOURNAMENT_HOME_AWAY_SEGMENTS: ReadonlyArray<{
   value: TournamentHomeAway;
   label: string;
 }> = [
-  { value: "HOME", label: "Heim (FC Allschwil ausrichtend)" },
-  { value: "AWAY", label: "Auswärts (extern ausgerichtet)" },
+  { value: "HOME", label: "Heim" },
+  { value: "AWAY", label: "Auswärts" },
 ];
 
 type HomeAwaySegmentedControlProps = {
@@ -37,7 +37,15 @@ export function HomeAwaySegmentedControl({
     >
       {TOURNAMENT_HOME_AWAY_SEGMENTS.map((segment) => {
         const isSelected = value === segment.value;
-        const Icon = segment.value === "HOME" ? Home : Plane;
+        const Icon = segment.value === "HOME" ? Home : Bus;
+        const iconToneClass =
+          segment.value === "HOME"
+            ? isSelected
+              ? "text-emerald-400"
+              : "text-[var(--muted)] group-hover:text-emerald-400/80"
+            : isSelected
+              ? "text-[var(--blue)]"
+              : "text-[var(--muted)] group-hover:text-[var(--blue)]/80";
         return (
           <button
             key={segment.value}
@@ -57,7 +65,7 @@ export function HomeAwaySegmentedControl({
               }
             }}
             className={cn(
-              "flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-left text-xs font-medium transition-colors sm:text-sm",
+              "group flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-left text-xs font-medium transition-colors sm:text-sm",
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
               "disabled:cursor-not-allowed disabled:opacity-50",
               isSelected
@@ -65,13 +73,7 @@ export function HomeAwaySegmentedControl({
                 : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]",
             )}
           >
-            <Icon
-              className={cn(
-                "h-4 w-4 shrink-0",
-                isSelected ? "text-[var(--sce-accent)]" : "text-[var(--muted)]",
-              )}
-              aria-hidden
-            />
+            <Icon className={cn("h-4 w-4 shrink-0", iconToneClass)} aria-hidden data-testid={`${testId}-icon-${segment.value.toLowerCase()}`} />
             <span className="min-w-0 leading-snug">{segment.label}</span>
           </button>
         );

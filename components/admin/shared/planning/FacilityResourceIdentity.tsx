@@ -10,6 +10,10 @@
 import type { FacilityResourceType } from "@prisma/client";
 import { DoorOpen, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/cn";
+import {
+  RESOURCE_SEMANTIC_DRESSING_ICON_CLASS,
+  RESOURCE_SEMANTIC_PITCH_ICON_CLASS,
+} from "@/components/admin/shared/planning/resource-card-selection-style";
 
 export type FacilityResourceVisualKind = "pitch" | "hall" | "dressing_room" | "other";
 
@@ -98,6 +102,8 @@ export type FacilityResourceIdentityProps = {
   detail?: string | null;
   compact?: boolean;
   className?: string;
+  /** When true, pitch/hall and dressing tiles use Planning resource semantics (green / blue). */
+  semanticResourceColors?: boolean;
 };
 
 export function FacilityResourceIdentity({
@@ -109,16 +115,35 @@ export function FacilityResourceIdentity({
   detail,
   compact = false,
   className,
+  semanticResourceColors = false,
 }: FacilityResourceIdentityProps) {
+  const visualKind = resolveFacilityResourceVisualKind(resourceType, facilityType);
+  const isPitch = visualKind === "pitch" || visualKind === "hall";
+  const isDressing = visualKind === "dressing_room";
+
   return (
     <div className={cn("flex min-w-0 items-start gap-2.5", className)}>
       <span
         className={cn(
-          "mt-0.5 flex items-center justify-center rounded-md border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-2)]",
+          "mt-0.5 flex items-center justify-center rounded-md border bg-[var(--surface-2)]",
           compact ? "h-7 w-7" : "h-8 w-8",
+          semanticResourceColors && isPitch && "border-emerald-500/30 text-emerald-400",
+          semanticResourceColors && isDressing && "border-[var(--blue)]/30 text-[var(--blue)]",
+          !semanticResourceColors || (!isPitch && !isDressing)
+            ? "border-[var(--border)] text-[var(--text-2)]"
+            : null,
         )}
+        data-testid={semanticResourceColors ? "facility-resource-semantic-icon-tile" : undefined}
       >
-        <FacilityResourceGlyph resourceType={resourceType} facilityType={facilityType} className="opacity-90" />
+        <FacilityResourceGlyph
+          resourceType={resourceType}
+          facilityType={facilityType}
+          className={cn(
+            "opacity-90",
+            semanticResourceColors && isPitch && RESOURCE_SEMANTIC_PITCH_ICON_CLASS,
+            semanticResourceColors && isDressing && RESOURCE_SEMANTIC_DRESSING_ICON_CLASS,
+          )}
+        />
       </span>
       <div className="min-w-0 flex-1">
         <p className={cn("truncate font-semibold text-[var(--foreground)]", compact ? "text-xs" : "text-sm")}>

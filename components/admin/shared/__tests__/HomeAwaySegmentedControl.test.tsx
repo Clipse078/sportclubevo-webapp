@@ -4,7 +4,10 @@
 
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
+import {
+  HomeAwaySegmentedControl,
+  TOURNAMENT_HOME_AWAY_SEGMENTS,
+} from "@/components/admin/shared/HomeAwaySegmentedControl";
 
 describe("HomeAwaySegmentedControl", () => {
   it("renders two immediate radio options without combobox/dropdown", () => {
@@ -26,6 +29,12 @@ describe("HomeAwaySegmentedControl", () => {
 
     fireEvent.click(screen.getByTestId("ha-option-home"));
     expect(onChange).toHaveBeenCalledWith("HOME");
+  });
+
+  it("uses concise Heim and Auswärts labels", () => {
+    expect(TOURNAMENT_HOME_AWAY_SEGMENTS.map((s) => s.label)).toEqual(["Heim", "Auswärts"]);
+    render(<HomeAwaySegmentedControl value="HOME" onChange={() => {}} testId="ha" />);
+    expect(screen.queryByText(/FC Allschwil/i)).not.toBeInTheDocument();
   });
 
   it("marks the active segment with aria-checked", () => {

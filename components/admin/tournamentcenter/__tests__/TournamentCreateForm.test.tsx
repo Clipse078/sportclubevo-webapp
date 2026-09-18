@@ -17,7 +17,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TournamentCreateForm from "@/components/admin/tournamentcenter/TournamentCreateForm";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
-import { pickSearchableOption } from "./tournament-form-test-helpers";
+import { pickSearchableOption, TOURNAMENT_FORM_TEST_SCHEDULE_PROPS } from "./tournament-form-test-helpers";
 
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
@@ -136,7 +136,7 @@ describe("TournamentCreateForm — retry guard after partial failure", () => {
     installFetchMock({});
 
     render(
-      <TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} />,
+      <TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />,
     );
     await fillMinimalRequiredFields();
 
@@ -153,7 +153,7 @@ describe("TournamentCreateForm — retry guard after partial failure", () => {
     });
 
     render(
-      <TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} />,
+      <TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />,
     );
     await fillMinimalRequiredFields();
 

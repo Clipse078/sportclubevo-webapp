@@ -13,6 +13,7 @@ import TournamentParticipantsEditor from "@/components/admin/tournamentcenter/To
 import TournamentResourceAllocationEditor from "@/components/admin/tournamentcenter/TournamentResourceAllocationEditor";
 import TournamentPublicationToggles from "@/components/admin/tournamentcenter/TournamentPublicationToggles";
 import TournamentEditorChrome from "@/components/admin/tournamentcenter/TournamentEditorChrome";
+import TournamentStandardDurationHint from "@/components/admin/tournamentcenter/TournamentStandardDurationHint";
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
 import TeamSearchablePicker from "@/components/admin/shared/TeamSearchablePicker";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
@@ -40,6 +41,8 @@ type TournamentEditFormProps = {
   dressingRoomFacilityGroups: FacilityGroup[];
   timezone: string;
   tenantLogoUrl?: string | null;
+  defaultTournamentDurationMinutes: number;
+  canManageFacilitiesTimeStandards?: boolean;
 };
 
 export default function TournamentEditForm({
@@ -50,6 +53,8 @@ export default function TournamentEditForm({
   dressingRoomFacilityGroups,
   timezone,
   tenantLogoUrl = null,
+  defaultTournamentDurationMinutes,
+  canManageFacilitiesTimeStandards = false,
 }: TournamentEditFormProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -275,7 +280,11 @@ export default function TournamentEditForm({
         primaryAction={saveButton}
       />
 
-      <TournamentFormSection title="Grunddaten" description="Turniername, Organisator und Zeitrahmen">
+      <TournamentFormSection
+        iconVariant="grunddaten"
+        title="Grunddaten"
+        description="Turniername, Organisator und Zeitrahmen"
+      >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <label className="block space-y-2 sm:col-span-2 lg:col-span-3">
             <span className="fca-label">Titel</span>
@@ -396,6 +405,13 @@ export default function TournamentEditForm({
             />
           </label>
 
+          <div className="sm:col-span-2 lg:col-span-3">
+            <TournamentStandardDurationHint
+              defaultTournamentDurationMinutes={defaultTournamentDurationMinutes}
+              canManageFacilitiesTimeStandards={canManageFacilitiesTimeStandards}
+            />
+          </div>
+
           <label className="block space-y-2 sm:col-span-2 lg:col-span-3">
             <span className="fca-label">Beschreibung</span>
             <textarea
@@ -420,6 +436,7 @@ export default function TournamentEditForm({
       </TournamentFormSection>
 
       <TournamentFormSection
+        iconVariant="participants"
         title="Teilnehmende Teams"
         description="FC Allschwil Teams und externe Vereine aus dem Vereinsverzeichnis."
       >
@@ -436,6 +453,7 @@ export default function TournamentEditForm({
 
       {homeAway === "HOME" && (
         <TournamentFormSection
+          iconVariant="resources"
           title="Ressourcen"
           description="Spielfeld / Halle — Verfügbarkeit live für Start–Ende."
         >
@@ -450,6 +468,7 @@ export default function TournamentEditForm({
       )}
 
       <TournamentFormSection
+        iconVariant="publication"
         title="Veröffentlichung"
         description="Ausgabekanäle für dieses Turnier"
         contentClassName="w-full max-w-none"
@@ -463,6 +482,7 @@ export default function TournamentEditForm({
 
       {canManage && tournament.status !== "ARCHIVED" && tournament.status !== "COMPLETED" && (
         <TournamentFormSection
+          iconVariant="status"
           title="Turnierstatus"
           description="Stornierung oder Wiederherstellung — getrennt vom Speichern."
           contentClassName="max-w-xl"
@@ -488,6 +508,7 @@ export default function TournamentEditForm({
 
       {canDelete && (
         <TournamentFormSection
+          iconVariant="danger"
           title="Gefahrenzone"
           description="Endgültiges Löschen — Vereine und Ressourcen selbst bleiben erhalten."
           contentClassName="max-w-xl"

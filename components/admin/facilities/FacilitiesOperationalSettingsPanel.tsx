@@ -134,7 +134,7 @@ export default function FacilitiesOperationalSettingsPanel({
       data-testid="facilities-operational-settings"
     >
       <div className="space-y-4">
-        <div>
+        <div id="zeitstandards" className="scroll-mt-24">
           <h2 className="text-sm font-semibold text-[var(--foreground)]">Zeitstandards</h2>
           <p className="mt-0.5 max-w-2xl text-xs text-[var(--muted)]">
             Legt die effektive Dauer fest, wenn keine gültige Endzeit vorliegt.

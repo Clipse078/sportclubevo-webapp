@@ -1,6 +1,8 @@
 "use client";
 
 import { SwitchThumb } from "@/components/ui/SwitchToggle";
+import { TOURNAMENT_PUBLICATION_CHANNEL_ICONS } from "@/components/admin/tournamentcenter/tournament-semantic-icons";
+import { cn } from "@/lib/cn";
 
 export type TournamentPublicationState = {
   websiteVisible: boolean;
@@ -69,6 +71,7 @@ export default function TournamentPublicationToggles({
     >
       {PUBLICATION_CHANNELS.map((channel) => {
         const controlId = `${testIdPrefix}-${channel.key}`;
+        const ChannelIcon = TOURNAMENT_PUBLICATION_CHANNEL_ICONS[channel.key];
         return (
           <div
             key={channel.key}
@@ -76,7 +79,18 @@ export default function TournamentPublicationToggles({
             data-testid={`${testIdPrefix}-row-${channel.key}`}
           >
             <div className="min-w-0 flex-1">
-              <label htmlFor={controlId} className="block text-sm font-medium text-[var(--foreground)]">
+              <label
+                htmlFor={controlId}
+                className="flex items-center gap-2 text-sm font-medium text-[var(--foreground)]"
+              >
+                <span
+                  className={cn(
+                    "flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)]",
+                  )}
+                  aria-hidden
+                >
+                  <ChannelIcon className="h-3.5 w-3.5" />
+                </span>
                 {channel.label}
               </label>
               <p className="mt-0.5 text-xs text-[var(--muted)]">{channel.description}</p>

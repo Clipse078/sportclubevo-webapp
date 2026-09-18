@@ -9,6 +9,7 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TournamentEditForm from "@/components/admin/tournamentcenter/TournamentEditForm";
 import type { TournamentDto } from "@/lib/tournaments/types";
+import { TOURNAMENT_FORM_TEST_SCHEDULE_PROPS } from "./tournament-form-test-helpers";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
@@ -72,6 +73,7 @@ describe("TournamentEditForm — TURNIERE-UX-01B", () => {
         pitchHallFacilityGroups={[]}
         dressingRoomFacilityGroups={[]}
         timezone="Europe/Zurich"
+        {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS}
       />,
     );
 
@@ -88,6 +90,7 @@ describe("TournamentEditForm — TURNIERE-UX-01B", () => {
         pitchHallFacilityGroups={[]}
         dressingRoomFacilityGroups={[]}
         timezone="Europe/Zurich"
+        {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS}
       />,
     );
 
@@ -102,6 +105,7 @@ describe("TournamentEditForm — TURNIERE-UX-01B", () => {
         pitchHallFacilityGroups={[]}
         dressingRoomFacilityGroups={[]}
         timezone="Europe/Zurich"
+        {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS}
       />,
     );
 

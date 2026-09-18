@@ -15,6 +15,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TournamentEditForm from "@/components/admin/tournamentcenter/TournamentEditForm";
+import { TOURNAMENT_FORM_TEST_SCHEDULE_PROPS } from "./tournament-form-test-helpers";
 import type { TournamentDto } from "@/lib/tournaments/types";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 
@@ -154,6 +155,7 @@ describe("TournamentEditForm — RESOURCE-AVAILABILITY-UX-01 availability", () =
         pitchHallFacilityGroups={PITCH_HALL_GROUPS}
         dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
         timezone="Europe/Zurich"
+        {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS}
       />,
     );
 
@@ -186,6 +188,7 @@ describe("TournamentEditForm — RESOURCE-AVAILABILITY-UX-01 availability", () =
         pitchHallFacilityGroups={PITCH_HALL_GROUPS}
         dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
         timezone="Europe/Zurich"
+        {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS}
       />,
     );
 
@@ -203,6 +206,7 @@ describe("TournamentEditForm — RESOURCE-AVAILABILITY-UX-01 availability", () =
         pitchHallFacilityGroups={PITCH_HALL_GROUPS}
         dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
         timezone="Europe/Zurich"
+        {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS}
       />,
     );
 
@@ -226,6 +230,7 @@ describe("TournamentEditForm — RESOURCE-AVAILABILITY-UX-01 availability", () =
         pitchHallFacilityGroups={PITCH_HALL_GROUPS}
         dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
         timezone="Europe/Zurich"
+        {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS}
       />,
     );
 
