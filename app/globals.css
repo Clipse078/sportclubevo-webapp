@@ -101,6 +101,21 @@
   --sidebar-collapsed-width: 56px;
   --topnav-height:           52px;
 
+  /* SCE-RESPONSIVE-01 — authenticated content viewport + overlay sizing */
+  --sce-sidebar-effective-width: var(--sidebar-width);
+  --sce-content-viewport-width: calc(100vw - var(--sce-sidebar-effective-width));
+  --sce-overlay-gutter: 1rem;
+  --sce-dialog-workspace-desired-max: 97.5rem;
+  --sce-dialog-workspace-max-width: min(
+    var(--sce-dialog-workspace-desired-max),
+    calc(var(--sce-content-viewport-width) - 2 * var(--sce-overlay-gutter))
+  );
+  --sce-dialog-standard-max-width: calc(
+    var(--sce-content-viewport-width) - 2 * var(--sce-overlay-gutter)
+  );
+  --sce-dialog-max-height: min(85dvh, calc(100dvh - 2 * var(--sce-overlay-gutter)));
+  --sce-page-gutter: 1.25rem;
+
   /* Typography */
   --font-body:    var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
   --font-display: var(--font-display), "Barlow Condensed", Arial, sans-serif;
@@ -1038,6 +1053,10 @@ button {
   width: var(--sidebar-collapsed-width);
 }
 
+html[data-sidebar-collapsed="1"] {
+  --sce-sidebar-effective-width: var(--sidebar-collapsed-width);
+}
+
 .sce-sidebar-resizing {
   transition: none;
 }
@@ -1948,5 +1967,6 @@ button {
 
   :root {
     --sidebar-width: 0px;
+    --sce-sidebar-effective-width: 0px;
   }
 }

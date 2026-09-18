@@ -6,11 +6,12 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
-  type MouseEvent,
 } from "react";
 import { AlertTriangle, MoreHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
+import { SceModalOverlay } from "@/components/ui/SceModalOverlay";
+import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
 import { CenterWorkspaceSearchInput } from "@/components/centers/CenterWorkspaceSearchInput";
 import {
   aggregateInspectionRowStatus,
@@ -197,10 +198,6 @@ export default function AggregatedActivityInspectionDialog({
       : "—";
   const conflictsOnlyDisabled = metrics.conflictActivityCount === 0;
 
-  function handleBackdropClick(e: MouseEvent<HTMLDivElement>) {
-    if (e.target === e.currentTarget) onClose();
-  }
-
   function handlePanelKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     if (e.key === "Escape") e.stopPropagation();
   }
@@ -213,14 +210,11 @@ export default function AggregatedActivityInspectionDialog({
   const openHref = selectedItem ? getPlanningHubItemHref(selectedItem) : null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
-      role="presentation"
-      onClick={handleBackdropClick}
-      data-testid="aggregated-activity-inspection-dialog"
+    <SceModalOverlay
+      open={open}
+      onBackdropClick={onClose}
+      testId="aggregated-activity-inspection-dialog"
     >
-      <div className="absolute inset-0 bg-black/65 backdrop-blur-[3px]" aria-hidden="true" />
-
       <div
         ref={panelRef}
         role="dialog"
@@ -229,11 +223,7 @@ export default function AggregatedActivityInspectionDialog({
         aria-describedby={descId}
         tabIndex={-1}
         onKeyDown={handlePanelKeyDown}
-        className={cn(
-          "relative z-10 flex max-h-[85vh] w-[min(92vw,1560px)] flex-col overflow-hidden",
-          "rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xl)] outline-none",
-        )}
-        style={{ height: "min(85vh, calc(100vh - 1.5rem))" }}
+        className={cn(SCE_DIALOG_WORKSPACE_PANEL, "h-[var(--sce-dialog-max-height)]")}
       >
         <header className="shrink-0 border-b border-[var(--border)] px-5 py-4 sm:px-6">
           <div className="flex items-start justify-between gap-4">
@@ -593,6 +583,6 @@ export default function AggregatedActivityInspectionDialog({
           </aside>
         </div>
       </div>
-    </div>
+    </SceModalOverlay>
   );
 }

@@ -93,6 +93,16 @@ export default function AdminSidebar({
   const isCollapsed =
     typeof collapsed === "boolean" ? collapsed : internalCollapsed;
 
+  useEffect(() => {
+    if (!collapsedHydrated) return;
+    const root = document.documentElement;
+    if (isCollapsed) {
+      root.dataset.sidebarCollapsed = "1";
+    } else {
+      root.removeAttribute("data-sidebar-collapsed");
+    }
+  }, [isCollapsed, collapsedHydrated]);
+
   const handleToggle = useCallback(() => {
     const next = !isCollapsed;
     if (typeof collapsed !== "boolean") {

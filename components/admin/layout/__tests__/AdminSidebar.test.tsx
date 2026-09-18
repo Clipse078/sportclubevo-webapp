@@ -304,4 +304,21 @@ describe("AdminSidebar", () => {
     expect(screen.queryByRole("link", { name: "Website" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Planung" })).not.toBeInTheDocument();
   });
+
+  it("SCE-RESPONSIVE-01 — syncs html data-sidebar-collapsed for overlay inset CSS", async () => {
+    localStorage.setItem("sce-sidebar-collapsed", "1");
+    render(
+      <AdminSidebar
+        permissionKeys={CLUB_ADMIN_PERMISSIONS}
+        clubName="FC Allschwil"
+        logoUrl={null}
+      />,
+    );
+    expect(document.documentElement.dataset.sidebarCollapsed).toBe("1");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /Navigation ausklappen|Navigation einklappen/i }),
+    );
+    expect(document.documentElement.hasAttribute("data-sidebar-collapsed")).toBe(false);
+  });
 });
