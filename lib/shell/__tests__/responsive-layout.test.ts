@@ -35,6 +35,8 @@ describe("SCE-RESPONSIVE-01 responsive-layout contract", () => {
     expect(css).toContain('html[data-sidebar-collapsed="1"]');
     expect(css).toContain(".sce-modal-overlay-content-viewport");
     expect(css).toContain("left: var(--sce-sidebar-effective-width)");
+    expect(css).toContain("--sce-modal-backdrop");
+    expect(css).toContain("background: var(--sce-modal-backdrop)");
   });
 
   it("admin layout uses SCE_APP_MAIN_COLUMN", () => {
