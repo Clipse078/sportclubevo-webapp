@@ -9,7 +9,7 @@ import {
   isScePerfTimingEnabled,
   logAdminServerTiming,
 } from "@/lib/planning-hub/admin-server-timing";
-import { resolveMatchcenterMonthWindow } from "@/lib/matchcenter/month-range";
+import { parseMonthParam } from "@/lib/matchcenter/month-range";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import VeranstaltungenManagementWorkspace from "@/components/admin/veranstaltungen/VeranstaltungenManagementWorkspace";
 import {
@@ -24,6 +24,7 @@ type SearchParams = Promise<{
   submitted?: string;
   tab?: string;
   month?: string;
+  cal?: string;
   q?: string;
   location?: string;
   review?: string;
@@ -61,11 +62,9 @@ export default async function VeranstaltungenPage({
   const showSubmitted = params.submitted === "1";
   const tab = normalizeVeranstaltungenTab(params.tab);
   const timezone = tenantContext.timezone ?? "Europe/Zurich";
-  const monthWindow = resolveMatchcenterMonthWindow({
-    monthParam: params.month,
-    timeZone: timezone,
-  });
-  const currentMonthParam = resolveMatchcenterMonthWindow({ timeZone: timezone }).param;
+  const monthParam = parseMonthParam(params.month) ? params.month!.trim() : null;
+  const calMonthParam =
+    !monthParam && parseMonthParam(params.cal) ? params.cal!.trim() : null;
 
   const events = await listClubEvents(tenantContext.id);
   perfTimer?.mark("club-event-loader");
@@ -94,8 +93,8 @@ export default async function VeranstaltungenPage({
           tab={tab}
           canManage={canManage}
           timeZone={tenantContext.timezone}
-          monthParam={monthWindow.param}
-          currentMonthParam={currentMonthParam}
+          monthParam={monthParam}
+          calMonthParam={calMonthParam}
           searchQuery={normalizeVeranstaltungenSearch(params.q)}
           locationFilter={params.location?.trim() || null}
           reviewFilter={normalizeVeranstaltungenReviewFilter(params.review)}

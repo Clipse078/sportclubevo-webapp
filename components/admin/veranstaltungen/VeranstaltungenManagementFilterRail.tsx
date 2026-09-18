@@ -1,13 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { cn } from "@/lib/cn";
 import type {
   VeranstaltungenPublicationFilter,
   VeranstaltungenReviewFilter,
 } from "@/lib/veranstaltungen/navigation";
 
+const FILTER_CHIP_CLASS =
+  "rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors";
+
 type Props = {
   resetHref: string;
+  monthParam: string | null;
+  currentMonthLabel: string;
+  monthAllHref: string;
+  monthCurrentHref: string;
   locationFilter: string | null;
   locationOptions: string[];
   reviewFilter: VeranstaltungenReviewFilter;
@@ -40,6 +48,38 @@ export default function VeranstaltungenManagementFilterRail(props: Props) {
       </div>
 
       <div className="space-y-3">
+        <div className="space-y-1.5">
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+            Monat / Zeitraum
+          </p>
+          <div className="flex flex-wrap gap-1.5" data-testid="veranstaltungen-filter-month-chips">
+            <Link
+              href={props.monthAllHref}
+              className={cn(
+                FILTER_CHIP_CLASS,
+                !props.monthParam
+                  ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
+                  : "border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]",
+              )}
+              data-testid="veranstaltungen-filter-month-all"
+            >
+              Alle Monate
+            </Link>
+            <Link
+              href={props.monthCurrentHref}
+              className={cn(
+                FILTER_CHIP_CLASS,
+                props.monthParam
+                  ? "border-[var(--sce-primary)] bg-[var(--sce-primary-light)] text-[var(--sce-primary)]"
+                  : "border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]",
+              )}
+              data-testid="veranstaltungen-filter-month-current"
+            >
+              {props.currentMonthLabel}
+            </Link>
+          </div>
+        </div>
+
         <label className="block space-y-1">
           <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
             Status

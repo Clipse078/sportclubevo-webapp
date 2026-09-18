@@ -3,8 +3,10 @@ import type { ClubEvent } from "@/lib/events/club-events-service";
 import {
   computeVeranstaltungenKpis,
   filterVeranstaltungenEvents,
+  groupVeranstaltungenByMonth,
   partitionVeranstaltungenByTab,
 } from "@/lib/veranstaltungen/management-view";
+import { resolveMatchcenterMonthWindow } from "@/lib/matchcenter/month-range";
 
 function event(overrides: Partial<ClubEvent> = {}): ClubEvent {
   return {
@@ -67,5 +69,40 @@ describe("veranstaltungen management-view", () => {
     });
     expect(filtered).toHaveLength(1);
     expect(filtered[0]?.title).toBe("Trainersitzung");
+  });
+
+  it("groups months chronologically and filters only when month window provided", () => {
+    const events = [
+      event({ id: "nov", title: "Nov", startAt: new Date("2099-11-01T10:00:00.000Z") }),
+      event({ id: "oct", title: "Oct", startAt: new Date("2099-10-01T10:00:00.000Z") }),
+    ];
+    const tabEvents = partitionVeranstaltungenByTab(events, "BEVORSTEHEND", now);
+    const all = filterVeranstaltungenEvents(tabEvents, {
+      search: "",
+      location: null,
+      review: "ALLE",
+      publication: "ALLE",
+      timeZone: "Europe/Zurich",
+    });
+    const groups = groupVeranstaltungenByMonth(all, "Europe/Zurich");
+    expect(groups).toHaveLength(2);
+    expect(groups[0]?.events[0]?.id).toBe("oct");
+    expect(groups[1]?.events[0]?.id).toBe("nov");
+
+    const monthWindow = resolveMatchcenterMonthWindow({
+      monthParam: "2099-10",
+      timeZone: "Europe/Zurich",
+    });
+    const scoped = filterVeranstaltungenEvents(tabEvents, {
+      search: "",
+      location: null,
+      review: "ALLE",
+      publication: "ALLE",
+      monthFrom: monthWindow.from,
+      monthTo: monthWindow.to,
+      timeZone: "Europe/Zurich",
+    });
+    expect(scoped).toHaveLength(1);
+    expect(scoped[0]?.id).toBe("oct");
   });
 });

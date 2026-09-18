@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { CalendarClock, History, MapPin, Plus, Trophy } from "lucide-react";
 import type { ClubEvent } from "@/lib/events/club-events-service";
-import { resolveMatchcenterMonthWindow } from "@/lib/matchcenter/month-range";
+import {
+  formatMonthLabel,
+  resolveMatchcenterMonthWindow,
+} from "@/lib/matchcenter/month-range";
 import { cn } from "@/lib/cn";
 import { EmptyState } from "@/components/ui/page/EmptyState";
 import PlanningManagementPageHeader from "@/components/admin/planning/PlanningManagementPageHeader";
@@ -46,7 +49,10 @@ type Props = {
   canManage: boolean;
   timeZone?: string | null;
   basePath?: string;
+  /** Explicit list filter month (`YYYY-MM`), null = all months in tab scope. */
   monthParam?: string | null;
+  /** Calendar rail browse month when no list filter is active. */
+  calMonthParam?: string | null;
   currentMonthParam?: string;
   searchQuery?: string;
   locationFilter?: string | null;
@@ -61,6 +67,7 @@ export default function VeranstaltungenManagementWorkspace({
   timeZone,
   basePath = "/dashboard/veranstaltungen",
   monthParam = null,
+  calMonthParam = null,
   currentMonthParam,
   searchQuery = "",
   locationFilter = null,
@@ -70,14 +77,19 @@ export default function VeranstaltungenManagementWorkspace({
   const tz = timeZone ?? "Europe/Zurich";
   const now = new Date();
 
-  const monthWindow = resolveMatchcenterMonthWindow({
-    monthParam: monthParam ?? undefined,
+  const listMonthWindow = monthParam
+    ? resolveMatchcenterMonthWindow({ monthParam, timeZone: tz })
+    : null;
+
+  const calendarMonthWindow = resolveMatchcenterMonthWindow({
+    monthParam: monthParam ?? calMonthParam ?? undefined,
     timeZone: tz,
   });
 
   const urlState = {
     tab,
-    month: monthWindow.param,
+    month: monthParam,
+    cal: monthParam ? null : calMonthParam,
     search: searchQuery,
     location: locationFilter,
     review: reviewFilter,
@@ -94,24 +106,34 @@ export default function VeranstaltungenManagementWorkspace({
     location: locationFilter,
     review: reviewFilter,
     publication: publicationFilter,
-    monthFrom: monthWindow.from,
-    monthTo: monthWindow.to,
+    monthFrom: listMonthWindow?.from,
+    monthTo: listMonthWindow?.to,
     timeZone: tz,
   });
   const groups = groupVeranstaltungenByMonth(filtered, tz);
   const calendarDayKeys = collectVeranstaltungenCalendarDayKeys(tabEvents, tz);
   const locationOptions = listVeranstaltungenLocationOptions(events);
 
-  const todayHref = currentMonthParam
-    ? buildHref({ month: currentMonthParam })
-    : buildHref({ month: monthWindow.param });
+  const todayHref = monthParam
+    ? buildHref({ month: currentMonthParam ?? calendarMonthWindow.param })
+    : buildHref({ cal: currentMonthParam ?? calendarMonthWindow.param, month: null });
 
   const resetHref = buildHref({
     search: "",
     location: null,
     review: "ALLE",
     publication: "ALLE",
+    month: null,
+    cal: null,
   });
+
+  const calendarPreviousHref = monthParam
+    ? buildHref({ month: calendarMonthWindow.previousParam })
+    : buildHref({ cal: calendarMonthWindow.previousParam, month: null });
+
+  const calendarNextHref = monthParam
+    ? buildHref({ month: calendarMonthWindow.nextParam })
+    : buildHref({ cal: calendarMonthWindow.nextParam, month: null });
 
   const locationHrefByValue: Record<string, string> = {
     "": buildHref({ location: null }),
@@ -134,6 +156,7 @@ export default function VeranstaltungenManagementWorkspace({
   const filtersActive =
     Boolean(searchQuery.trim()) ||
     Boolean(locationFilter) ||
+    Boolean(monthParam) ||
     reviewFilter !== "ALLE" ||
     publicationFilter !== "ALLE";
 
@@ -297,16 +320,23 @@ export default function VeranstaltungenManagementWorkspace({
           data-testid="veranstaltungen-management-rail"
         >
           <SpieleManagementMonthCalendar
-            monthParam={monthWindow.param}
+            monthParam={calendarMonthWindow.param}
             timezone={tz}
             matchDayKeys={calendarDayKeys}
             todayHref={todayHref}
-            previousMonthHref={buildHref({ month: monthWindow.previousParam })}
-            nextMonthHref={buildHref({ month: monthWindow.nextParam })}
+            previousMonthHref={calendarPreviousHref}
+            nextMonthHref={calendarNextHref}
           />
           <VeranstaltungenManagementQuickAccess canManage={canManage} />
           <VeranstaltungenManagementFilterRail
             resetHref={resetHref}
+            monthParam={monthParam}
+            currentMonthLabel={formatMonthLabel(calendarMonthWindow, "de-CH", tz)}
+            monthAllHref={buildHref({ month: null, cal: calendarMonthWindow.param })}
+            monthCurrentHref={buildHref({
+              month: calendarMonthWindow.param,
+              cal: null,
+            })}
             locationFilter={locationFilter}
             locationOptions={locationOptions}
             reviewFilter={reviewFilter}

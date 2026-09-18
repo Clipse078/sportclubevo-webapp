@@ -14,7 +14,10 @@ export type VeranstaltungenReviewFilter = "ALLE" | "DRAFT" | "APPROVED" | "PUBLI
 
 export type VeranstaltungenUrlState = {
   tab: VeranstaltungenTab;
-  month: string;
+  /** Explicit list filter — only set after user action, never implicit default month. */
+  month: string | null;
+  /** Calendar rail display month when browsing without list filter. */
+  cal: string | null;
   search: string;
   location: string | null;
   review: VeranstaltungenReviewFilter;
@@ -29,6 +32,7 @@ export function buildVeranstaltungenHref(
   if (state.tab === "VERGANGEN") params.set("tab", "vergangen");
   if (state.tab === "ARCHIV") params.set("tab", "archiv");
   if (state.month) params.set("month", state.month);
+  if (state.cal && !state.month) params.set("cal", state.cal);
   if (state.search.trim()) params.set("q", state.search.trim());
   if (state.location) params.set("location", state.location);
   if (state.review !== "ALLE") params.set("review", state.review.toLowerCase());
