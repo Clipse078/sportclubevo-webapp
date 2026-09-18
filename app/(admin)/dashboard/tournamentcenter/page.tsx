@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { Plus } from "lucide-react";
 import { notFound } from "next/navigation";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
@@ -14,8 +12,14 @@ import {
 import { listTournaments } from "@/lib/tournaments/tournament-service";
 import { normalizeTournamentActionFilter } from "@/lib/tournaments/view-model";
 import {
+  normalizeTournamentAgeFilter,
+  normalizeTournamentCategoryFilter,
+  normalizeTournamentLocationFilter,
+  normalizeTournamentOwnOnlyFilter,
+  normalizeTournamentPublicOnlyFilter,
   normalizeTournamentStatusFilter,
   normalizeTournamentTeamFilter,
+  normalizeTournamentListView,
   resolveTournamentTimeScopeFromParams,
   toTournamentTeamOptions,
 } from "@/lib/tournaments/navigation";
@@ -23,7 +27,6 @@ import {
   normalizeTournamentGroupMode,
   normalizeTournamentSortMode,
 } from "@/lib/tournaments/workspace-view-model";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import TournamentCenterWorkspace from "@/components/admin/tournamentcenter/TournamentCenterWorkspace";
 
 type TournamentCenterPageProps = {
@@ -37,6 +40,12 @@ type TournamentCenterPageProps = {
     filter?: string;
     group?: string;
     sort?: string;
+    category?: string;
+    age?: string;
+    location?: string;
+    ownership?: string;
+    visibility?: string;
+    view?: string;
   }>;
 };
 
@@ -64,6 +73,7 @@ export default async function TournamentCenterPage({ searchParams }: TournamentC
   const group = normalizeTournamentGroupMode(params.group);
   const sort = normalizeTournamentSortMode(params.sort, scope);
   const search = params.q?.trim() ?? "";
+  const listView = normalizeTournamentListView(params.view);
 
   const [tournaments, tenantTeams] = await Promise.all([
     listTournaments(tenantContext.id),
@@ -77,27 +87,18 @@ export default async function TournamentCenterPage({ searchParams }: TournamentC
   const teamOptions = toTournamentTeamOptions(activeTeams);
   const statusFilter = normalizeTournamentStatusFilter(params.status);
   const monthParam = params.month?.trim() || null;
+  const categoryFilter = normalizeTournamentCategoryFilter(params.category);
+  const ageFilter = normalizeTournamentAgeFilter(params.age);
+  const locationFilter = normalizeTournamentLocationFilter(params.location);
+  const ownOnly = normalizeTournamentOwnOnlyFilter(params.ownership);
+  const publicOnly = normalizeTournamentPublicOnlyFilter(params.visibility);
 
   if (perfTimer) {
     logAdminServerTiming(perfTimer.finish());
   }
 
   return (
-    <div className="max-w-[1400px] space-y-6">
-      <AdminSectionHeader
-        eyebrow="Planung"
-        title="Turniere"
-        description="Turniere planen, koordinieren und veröffentlichen."
-        actions={
-          canCreate ? (
-            <Link href="/dashboard/tournamentcenter/new" className="fca-button-primary">
-              <Plus className="h-4 w-4" />
-              Turnier erstellen
-            </Link>
-          ) : undefined
-        }
-      />
-
+    <div className="w-full max-w-none space-y-6">
       <TournamentCenterWorkspace
         tournaments={tournaments}
         scope={scope}
@@ -108,6 +109,12 @@ export default async function TournamentCenterPage({ searchParams }: TournamentC
         actionFilter={actionFilter}
         group={group}
         sort={sort}
+        categoryFilter={categoryFilter}
+        ageFilter={ageFilter}
+        locationFilter={locationFilter}
+        ownOnly={ownOnly}
+        publicOnly={publicOnly}
+        listView={listView}
         teamOptions={teamOptions}
         tenantLogoUrl={tenantContext.logoUrl}
         timezone={timezone}

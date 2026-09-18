@@ -8,8 +8,10 @@
 import type { TournamentStatus } from "./types";
 import type { TournamentActionFilter } from "./view-model";
 import {
+  normalizeTournamentListView,
   normalizeTournamentTimeScope,
   type TournamentGroupMode,
+  type TournamentListView,
   type TournamentSortMode,
   type TournamentTimeScope,
 } from "./workspace-view-model";
@@ -30,6 +32,12 @@ export type TournamentCenterHrefParams = {
   actionFilter?: TournamentActionFilter;
   group?: TournamentGroupMode;
   sort?: TournamentSortMode;
+  categoryFilter?: string | null;
+  ageFilter?: string | null;
+  locationFilter?: string | null;
+  ownOnly?: boolean;
+  publicOnly?: boolean;
+  listView?: TournamentListView;
 };
 
 const VALID_STATUSES = new Set<TournamentStatus>([
@@ -132,9 +140,34 @@ export function buildTournamentCenterHref(
     search.set("filter", actionFilter.toLowerCase());
   }
 
-  const group = params.group ?? "DATE";
-  if (group !== "DATE") {
+  const group = params.group ?? "MONTH";
+  if (group !== "MONTH") {
     search.set("group", group.toLowerCase());
+  }
+
+  if (params.categoryFilter) {
+    search.set("category", params.categoryFilter);
+  }
+
+  if (params.ageFilter) {
+    search.set("age", params.ageFilter);
+  }
+
+  if (params.locationFilter) {
+    search.set("location", params.locationFilter);
+  }
+
+  if (params.ownOnly) {
+    search.set("ownership", "own");
+  }
+
+  if (params.publicOnly) {
+    search.set("visibility", "public");
+  }
+
+  const listView = params.listView ?? "LISTE";
+  if (listView !== "LISTE") {
+    search.set("view", listView.toLowerCase());
   }
 
   const sort = params.sort ?? "DATE_ASC";
@@ -146,19 +179,56 @@ export function buildTournamentCenterHref(
   return qs ? `${basePath}?${qs}` : basePath;
 }
 
+export function normalizeTournamentCategoryFilter(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? "";
+  return trimmed ? trimmed.toUpperCase() : null;
+}
+
+export function normalizeTournamentAgeFilter(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? "";
+  return trimmed ? trimmed.toUpperCase() : null;
+}
+
+export function normalizeTournamentLocationFilter(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? "";
+  return trimmed || null;
+}
+
+export function normalizeTournamentOwnOnlyFilter(value: string | null | undefined): boolean {
+  const lower = value?.trim().toLowerCase() ?? "";
+  return lower === "own" || lower === "eigen" || lower === "1" || lower === "true";
+}
+
+export function normalizeTournamentPublicOnlyFilter(value: string | null | undefined): boolean {
+  const lower = value?.trim().toLowerCase() ?? "";
+  return lower === "public" || lower === "oeffentlich" || lower === "1" || lower === "true";
+}
+
+export { normalizeTournamentListView };
+
 export function hasActiveTournamentWorkspaceFilters(params: {
   search?: string;
   teamFilter?: string | null;
   month?: string | null;
   statusFilter?: TournamentStatus | null;
   actionFilter?: TournamentActionFilter;
+  categoryFilter?: string | null;
+  ageFilter?: string | null;
+  locationFilter?: string | null;
+  ownOnly?: boolean;
+  publicOnly?: boolean;
 }): boolean {
   return Boolean(
     params.search?.trim() ||
       params.teamFilter ||
       params.month ||
       params.statusFilter ||
-      (params.actionFilter && params.actionFilter !== "ALLE"),
+      (params.actionFilter && params.actionFilter !== "ALLE") ||
+      params.categoryFilter ||
+      params.ageFilter ||
+      params.locationFilter ||
+      params.ownOnly ||
+      params.publicOnly,
   );
 }
 
@@ -171,5 +241,15 @@ export function buildTournamentCenterResetHref(
     scope,
     group,
     actionFilter: "ALLE",
+    search: "",
+    teamFilter: null,
+    month: null,
+    statusFilter: null,
+    categoryFilter: null,
+    ageFilter: null,
+    locationFilter: null,
+    ownOnly: false,
+    publicOnly: false,
+    listView: "LISTE",
   });
 }
