@@ -15,10 +15,13 @@ import PlanningHubClusterInspector from "./PlanningHubClusterInspector";
 
 type Props = {
   items: WeekplannerItem[];
+  dayKey: string;
   locale: string;
   timezone: string;
   style?: CSSProperties;
-  onActivateItem: (item: WeekplannerItem) => void;
+  onOpenItem: (item: WeekplannerItem) => void;
+  onEditItem?: (item: WeekplannerItem) => void;
+  canEditItem?: (item: WeekplannerItem) => boolean;
 };
 
 function formatTimeRange(start: Date, end: Date, locale: string, timeZone: string): string {
@@ -28,10 +31,13 @@ function formatTimeRange(start: Date, end: Date, locale: string, timeZone: strin
 
 export default function PlanningHubCalendarClusterBlock({
   items,
+  dayKey,
   locale,
   timezone,
   style,
-  onActivateItem,
+  onOpenItem,
+  onEditItem,
+  canEditItem,
 }: Props) {
   const anchorRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -40,6 +46,13 @@ export default function PlanningHubCalendarClusterBlock({
   const timeLabel = formatTimeRange(start, end, locale, timezone);
   const summary = summarizeAggregateCluster(items, timeLabel);
   const clusterSemantic = activityVisualStyle(aggregateClusterSemanticType(items));
+
+  function handleClose() {
+    setOpen(false);
+    requestAnimationFrame(() => {
+      anchorRef.current?.focus();
+    });
+  }
 
   return (
     <>
@@ -79,13 +92,14 @@ export default function PlanningHubCalendarClusterBlock({
 
       <PlanningHubClusterInspector
         open={open}
-        onOpenChange={setOpen}
-        anchorRef={anchorRef}
-        summary={summary}
+        onClose={handleClose}
         items={items}
+        dayKey={dayKey}
         locale={locale}
         timezone={timezone}
-        onActivateItem={onActivateItem}
+        onOpenItem={onOpenItem}
+        onEditItem={onEditItem}
+        canEditItem={canEditItem}
       />
     </>
   );

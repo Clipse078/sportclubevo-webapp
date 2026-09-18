@@ -57,6 +57,9 @@ type PlanningHubCalendarViewProps = {
   timezone: string;
   todayDayKey: string;
   onItemActivate: (item: WeekplannerItem) => void;
+  onItemOpen?: (item: WeekplannerItem) => void;
+  onItemEdit?: (item: WeekplannerItem) => void;
+  canEditItem?: (item: WeekplannerItem) => boolean;
 };
 
 const TIME_GUTTER_WIDTH_PX = 48;
@@ -80,7 +83,12 @@ export default function PlanningHubCalendarView({
   timezone,
   todayDayKey,
   onItemActivate,
+  onItemOpen,
+  onItemEdit,
+  canEditItem,
 }: PlanningHubCalendarViewProps) {
+  const openClusterItem = onItemOpen ?? onItemActivate;
+  const editClusterItem = onItemEdit ?? onItemActivate;
   const manipulation = usePlanningHubManipulation();
   const { visibleRange: userVisibleRange } = useWeekplannerVisibleTimeRange();
   const { urlState: calendarUrlState, setCalendarZeit } = usePlanningHubCalendarZeit(urlState, {
@@ -350,9 +358,12 @@ export default function PlanningHubCalendarView({
                       <PlanningHubCalendarClusterBlock
                         key={`cluster-${segment.clusterId}`}
                         items={clusterItems}
+                        dayKey={day.dayKey}
                         locale={locale}
                         timezone={timezone}
-                        onActivateItem={onItemActivate}
+                        onOpenItem={openClusterItem}
+                        onEditItem={editClusterItem}
+                        canEditItem={canEditItem}
                         style={{
                           top,
                           height,
