@@ -1,6 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, CalendarDays, Layers } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -10,13 +8,12 @@ import { TrainingSessionNotFoundError } from "@/lib/training/errors";
 import { listAllocationsByTrainingSeries } from "@/lib/training/training-allocation-service";
 import { listAllocationsByTrainingSession } from "@/lib/training/session-allocation-service";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import { ToastProvider } from "@/components/ui/ToastProvider";
-import TrainingSessionEditForm from "@/components/admin/training/TrainingSessionEditForm";
-import { TrainingSessionAllocationEditor } from "@/components/admin/training/TrainingSessionAllocationEditor";
+import TrainingSessionRecordWorkspace from "@/components/admin/training/record/TrainingSessionRecordWorkspace";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { buildTrainingSeriesEditHref } from "@/lib/training/series-cockpit";
 import { buildTrainingSessionWochenplanerHref } from "@/lib/training/wochenplaner-deep-links";
+import { weekdayFromDate, toDateOnlyUtc } from "@/lib/training/recurrence";
 
 type Props = { params: Promise<{ sessionId: string }> };
 
@@ -86,66 +83,37 @@ export default async function TrainingSessionEditPage({ params }: Props) {
     timezone,
   });
 
+  const seriesWeekday = weekdayFromDate(
+    toDateOnlyUtc(new Date(`${trainingSession.originalDate}T12:00:00.000Z`)),
+  );
+
   return (
     <ToastProvider>
-      <div className="max-w-[900px] space-y-6">
-        <Link
-          href="/dashboard/training"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--text-2)] transition hover:text-[var(--foreground)]"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Zurück zu Trainings
-        </Link>
-
-        <AdminSectionHeader
-          eyebrow="Einzeltraining bearbeiten"
-          title={`${trainingSession.teamName} · ${trainingSession.trainingSeriesTitle}`}
-          description={`Teil der Serie «${trainingSession.trainingSeriesTitle}». Änderungen gelten ausschliesslich für dieses eine Training.`}
-          actions={
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href={buildTrainingSeriesEditHref(trainingSession.trainingSeriesId)}
-                className="fca-button-secondary inline-flex items-center gap-1.5 text-sm"
-              >
-                <Layers className="h-3.5 w-3.5" />
-                Zur Serie
-              </Link>
-              <Link href={wochenplanerHref} className="fca-button-secondary inline-flex items-center gap-1.5 text-sm">
-                <CalendarDays className="h-3.5 w-3.5" />
-                Im Wochenplaner anzeigen
-              </Link>
-            </div>
-          }
-        />
-
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <TrainingSessionEditForm
-            sessionId={trainingSession.id}
-            canManage={canManage}
-            isRescheduled={trainingSession.isRescheduled}
-            effectiveDate={trainingSession.date}
-            effectiveStartTime={formatWallTime(trainingSession.startAt, trainingSession.timezone)}
-            effectiveEndTime={formatWallTime(trainingSession.endAt, trainingSession.timezone)}
-            originalDate={trainingSession.originalDate}
-            originalStartTime={formatWallTime(trainingSession.originalStartAt, trainingSession.timezone)}
-            originalEndTime={formatWallTime(trainingSession.originalEndAt, trainingSession.timezone)}
-            timezone={trainingSession.timezone}
-            locale={locale}
-          />
-        </div>
-
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <TrainingSessionAllocationEditor
-            sessionId={trainingSession.id}
-            initialAllocations={sessionAllocations}
-            seriesAllocations={seriesAllocations}
-            facilityGroups={facilityGroups}
-            canManage={canManage}
-            sessionStartAt={trainingSession.startAt}
-            sessionEndAt={trainingSession.endAt}
-          />
-        </div>
-      </div>
+      <TrainingSessionRecordWorkspace
+        sessionId={trainingSession.id}
+        trainingSeriesId={trainingSession.trainingSeriesId}
+        trainingSeriesTitle={trainingSession.trainingSeriesTitle}
+        teamName={trainingSession.teamName}
+        canManage={canManage}
+        isRescheduled={trainingSession.isRescheduled}
+        effectiveDate={trainingSession.date}
+        effectiveStartTime={formatWallTime(trainingSession.startAt, trainingSession.timezone)}
+        effectiveEndTime={formatWallTime(trainingSession.endAt, trainingSession.timezone)}
+        originalDate={trainingSession.originalDate}
+        originalStartTime={formatWallTime(trainingSession.originalStartAt, trainingSession.timezone)}
+        originalEndTime={formatWallTime(trainingSession.originalEndAt, trainingSession.timezone)}
+        seriesWeekday={seriesWeekday}
+        timezone={trainingSession.timezone}
+        locale={locale}
+        seriesEditHref={buildTrainingSeriesEditHref(trainingSession.trainingSeriesId)}
+        wochenplanerHref={wochenplanerHref}
+        dressingRoomOccupancyMode={trainingSession.dressingRoomOccupancyMode}
+        initialSessionAllocations={sessionAllocations}
+        seriesAllocations={seriesAllocations}
+        facilityGroups={facilityGroups}
+        sessionStartAt={trainingSession.startAt}
+        sessionEndAt={trainingSession.endAt}
+      />
     </ToastProvider>
   );
 }

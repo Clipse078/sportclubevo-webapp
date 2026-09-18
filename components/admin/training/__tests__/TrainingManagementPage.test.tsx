@@ -123,6 +123,6 @@ describe("SCE-TRAININGS-UX-01G Trainings management shell", () => {
 
   it("session edit route remains in codebase", () => {
     const source = readSource("app/(admin)/dashboard/training/sessions/[sessionId]/edit/page.tsx");
-    expect(source).toContain("TrainingSessionEditForm");
+    expect(source).toContain("TrainingSessionRecordWorkspace");
   });
 });
