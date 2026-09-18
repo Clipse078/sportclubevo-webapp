@@ -42,6 +42,7 @@ import SpieleManagementViewSwitcher from "./SpieleManagementViewSwitcher";
 import SpieleManagementHeaderMenu from "./SpieleManagementHeaderMenu";
 import SpieleManagementMonthCalendar from "./SpieleManagementMonthCalendar";
 import SpieleManagementSchnellfilter from "./SpieleManagementSchnellfilter";
+import type { SpieleSchnellfilterLinkOption } from "./spiele-schnellfilter-types";
 import { cn } from "@/lib/cn";
 
 export type MatchcenterMonthWindowLike = {
@@ -351,6 +352,64 @@ export default function SpieleManagementWorkspace({
   const kompaktHref = buildHref(basePath, { ...navParams, listView: "KOMPAKT" });
   const kalenderHref = buildHref(basePath, { ...navParams, listView: "KALENDER" });
 
+  const teamFilterLinks: SpieleSchnellfilterLinkOption[] = [
+    {
+      key: "all-teams",
+      label: "Alle Teams",
+      href: buildHref(basePath, { ...navParams, teamFilter: null }),
+      active: !teamFilter,
+    },
+    ...teamOptions.map((team) => ({
+      key: team.id,
+      label: team.label,
+      href: buildHref(basePath, { ...navParams, teamFilter: team.id }),
+      active: teamFilter === team.id,
+    })),
+  ];
+
+  const competitionFilterLinks: SpieleSchnellfilterLinkOption[] = [
+    {
+      key: "all-competitions",
+      label: "Alle Wettbewerbe",
+      href: buildHref(basePath, { ...navParams, competitionFilter: null }),
+      active: !competitionFilter,
+    },
+    ...competitionOptions.map((label) => ({
+      key: `competition-${label}`,
+      label,
+      href: buildHref(basePath, { ...navParams, competitionFilter: label }),
+      active: competitionFilter === label,
+    })),
+  ];
+
+  const venueFilterLinks: SpieleSchnellfilterLinkOption[] = [
+    {
+      key: "all-venues",
+      label: "Alle Spielorte",
+      href: buildHref(basePath, { ...navParams, venueFilter: null }),
+      active: !venueFilter,
+    },
+    ...venueOptions.map((label) => ({
+      key: `venue-${label}`,
+      label,
+      href: buildHref(basePath, { ...navParams, venueFilter: label }),
+      active: venueFilter === label,
+    })),
+  ];
+
+  const zeitraumLinks = {
+    monthLabel: monthWindow.label,
+    previousHref: buildHref(basePath, {
+      ...navParams,
+      month: monthWindow.previousParam,
+    }),
+    nextHref: buildHref(basePath, {
+      ...navParams,
+      month: monthWindow.nextParam,
+    }),
+    todayHref: todayHref ?? null,
+  };
+
   return (
     <div className="w-full space-y-4" data-testid="spiele-management-workspace">
       <header className="space-y-3 border-b border-[var(--border)] pb-4">
@@ -570,9 +629,10 @@ export default function SpieleManagementWorkspace({
             auswaertsHref={buildHref(basePath, { ...navParams, homeAwayFilter: "AWAY" })}
             statusToggleHrefs={statusToggleHrefs}
             resetHref={resetHref}
-            teamOptionsCount={teamOptions.length}
-            competitionOptionsCount={competitionOptions.length}
-            venueOptionsCount={venueOptions.length}
+            teamFilterLinks={teamFilterLinks}
+            competitionFilterLinks={competitionFilterLinks}
+            venueFilterLinks={venueFilterLinks}
+            zeitraumLinks={zeitraumLinks}
           />
         </aside>
       </div>

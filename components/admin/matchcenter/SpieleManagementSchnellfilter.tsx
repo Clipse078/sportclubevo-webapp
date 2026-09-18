@@ -2,11 +2,15 @@
 
 import Link from "next/link";
 import { ChevronDown, Info } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import type {
   SpieleHomeAwayFilter,
   SpieleStatusMaskKey,
 } from "@/lib/matchcenter/navigation";
+import type {
+  SpieleSchnellfilterLinkOption,
+  SpieleSchnellfilterZeitraumLinks,
+} from "./spiele-schnellfilter-types";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -18,9 +22,10 @@ type Props = {
   auswaertsHref: string;
   statusToggleHrefs: Record<SpieleStatusMaskKey, string>;
   resetHref: string;
-  teamOptionsCount: number;
-  competitionOptionsCount: number;
-  venueOptionsCount: number;
+  teamFilterLinks: readonly SpieleSchnellfilterLinkOption[];
+  competitionFilterLinks: readonly SpieleSchnellfilterLinkOption[];
+  venueFilterLinks: readonly SpieleSchnellfilterLinkOption[];
+  zeitraumLinks: SpieleSchnellfilterZeitraumLinks;
 };
 
 const STATUS_ITEMS: { key: SpieleStatusMaskKey; label: string }[] = [
@@ -30,23 +35,64 @@ const STATUS_ITEMS: { key: SpieleStatusMaskKey; label: string }[] = [
   { key: "abgesagt", label: "Abgesagt" },
 ];
 
+function FilterLinkList({
+  options,
+  emptyLabel,
+}: {
+  options: readonly SpieleSchnellfilterLinkOption[];
+  emptyLabel: string;
+}) {
+  if (options.length === 0) {
+    return <p className="px-1 py-1 text-[0.6875rem] text-[var(--muted)]">{emptyLabel}</p>;
+  }
+
+  return (
+    <ul className="max-h-40 space-y-0.5 overflow-y-auto" role="list">
+      {options.map((option) => (
+        <li key={option.key}>
+          <Link
+            href={option.href}
+            data-testid={`spiele-schnellfilter-link-${option.key}`}
+            aria-current={option.active ? "true" : undefined}
+            className={cn(
+              "block rounded-md px-2 py-1.5 text-xs transition-colors hover:bg-[var(--surface-2)]",
+              option.active
+                ? "bg-[var(--surface-2)] font-semibold text-[var(--foreground)]"
+                : "text-[var(--text-2)]",
+            )}
+          >
+            {option.label}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function CollapsibleSection({
   title,
   count,
+  testId,
   children,
 }: {
   title: string;
   count?: number;
-  children?: React.ReactNode;
+  testId: string;
+  children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const panelId = useId();
+
   return (
     <div className="border-t border-[var(--border)]/60 pt-2">
       <button
         type="button"
+        id={`${testId}-trigger`}
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between py-1.5 text-left text-xs font-semibold text-[var(--text-2)]"
+        className="flex w-full items-center justify-between rounded-md py-1.5 text-left text-xs font-semibold text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
         aria-expanded={open}
+        aria-controls={panelId}
+        data-testid={testId}
       >
         <span>
           {title}
@@ -55,11 +101,15 @@ function CollapsibleSection({
           ) : null}
         </span>
         <ChevronDown
-          className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")}
+          className={cn("h-3.5 w-3.5 shrink-0 transition-transform", open && "rotate-180")}
           aria-hidden="true"
         />
       </button>
-      {open && children ? <div className="pb-2 pt-1">{children}</div> : null}
+      {open ? (
+        <div id={panelId} className="pb-2 pt-1" data-testid={`${testId}-panel`}>
+          {children}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -73,9 +123,10 @@ export default function SpieleManagementSchnellfilter({
   auswaertsHref,
   statusToggleHrefs,
   resetHref,
-  teamOptionsCount,
-  competitionOptionsCount,
-  venueOptionsCount,
+  teamFilterLinks,
+  competitionFilterLinks,
+  venueFilterLinks,
+  zeitraumLinks,
 }: Props) {
   const maskSet = new Set(statusMask);
 
@@ -158,10 +209,66 @@ export default function SpieleManagementSchnellfilter({
         </ul>
       </div>
 
-      <CollapsibleSection title="Teams" count={teamOptionsCount} />
-      <CollapsibleSection title="Wettbewerbe" count={competitionOptionsCount} />
-      <CollapsibleSection title="Spielorte" count={venueOptionsCount} />
-      <CollapsibleSection title="Zeitraum" />
+      <CollapsibleSection
+        title="Teams"
+        count={teamFilterLinks.length > 0 ? teamFilterLinks.length - 1 : 0}
+        testId="spiele-schnellfilter-teams"
+      >
+        <FilterLinkList options={teamFilterLinks} emptyLabel="Keine Teams verfügbar." />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Wettbewerbe"
+        count={competitionFilterLinks.length > 0 ? competitionFilterLinks.length - 1 : 0}
+        testId="spiele-schnellfilter-competitions"
+      >
+        <FilterLinkList
+          options={competitionFilterLinks}
+          emptyLabel="Keine Wettbewerbe in diesem Monat."
+        />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Spielorte"
+        count={venueFilterLinks.length > 0 ? venueFilterLinks.length - 1 : 0}
+        testId="spiele-schnellfilter-venues"
+      >
+        <FilterLinkList
+          options={venueFilterLinks}
+          emptyLabel="Keine Spielorte in diesem Monat."
+        />
+      </CollapsibleSection>
+
+      <CollapsibleSection title="Zeitraum" testId="spiele-schnellfilter-zeitraum">
+        <div className="space-y-2 px-1">
+          <p className="text-xs font-medium text-[var(--foreground)]">{zeitraumLinks.monthLabel}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={zeitraumLinks.previousHref}
+              className="rounded-md border border-[var(--border)] px-2 py-1 text-[0.6875rem] font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+              data-testid="spiele-schnellfilter-month-previous"
+            >
+              ‹ Vorheriger Monat
+            </Link>
+            <Link
+              href={zeitraumLinks.nextHref}
+              className="rounded-md border border-[var(--border)] px-2 py-1 text-[0.6875rem] font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+              data-testid="spiele-schnellfilter-month-next"
+            >
+              Nächster Monat ›
+            </Link>
+            {zeitraumLinks.todayHref ? (
+              <Link
+                href={zeitraumLinks.todayHref}
+                className="rounded-md border border-[var(--border)] px-2 py-1 text-[0.6875rem] font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+                data-testid="spiele-schnellfilter-month-today"
+              >
+                Heute
+              </Link>
+            ) : null}
+          </div>
+        </div>
+      </CollapsibleSection>
 
       <Link
         href={resetHref}

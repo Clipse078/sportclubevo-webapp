@@ -63,6 +63,9 @@ describe("SPIELE-UX-01B — Spiele workspace RSC props", () => {
     expect(calendarBlock).not.toMatch(/dayHref=\{/);
     expect(schnellBlock).not.toContain("toggleStatusHref=");
     expect(schnellBlock).toContain("statusToggleHrefs=");
+    expect(schnellBlock).toContain("teamFilterLinks=");
+    expect(schnellBlock).toContain("zeitraumLinks=");
+    expect(schnellBlock).not.toMatch(/toggleStatusHref=\{/);
   });
 
   it("matchcenter page remains a Server Component entry", () => {
