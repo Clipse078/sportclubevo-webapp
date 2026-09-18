@@ -369,21 +369,10 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
           <TurniereManagementToolbar
             searchDraft={searchDraft}
             onSearchChange={pushSearch}
-            categoryFilter={categoryFilter}
-            ageFilter={ageFilter}
-            statusFilter={statusFilter}
-            locationFilter={locationFilter}
-            categoryOptions={filterOptions.categories}
-            ageOptions={filterOptions.ageClasses}
-            locationOptions={filterOptions.locations}
             listView={listView}
             listeHref={buildHref({ listView: "LISTE" })}
             kompaktHref={buildHref({ listView: "KOMPAKT" })}
             kalenderHref={wochenplanerHref}
-            buildCategoryHref={(value) => buildHref({ categoryFilter: value })}
-            buildAgeHref={(value) => buildHref({ ageFilter: value })}
-            buildStatusHref={(value) => buildHref({ statusFilter: value })}
-            buildLocationHref={(value) => buildHref({ locationFilter: value })}
           />
 
           {viewModel.emptyKind === "no_data" ? (

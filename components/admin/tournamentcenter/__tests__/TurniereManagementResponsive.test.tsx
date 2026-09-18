@@ -35,4 +35,11 @@ describe("TURNIERE-UX-01 — responsive composition contract", () => {
     expect(workspace).toContain("TurniereManagementQuickAccess");
     expect(workspace).toContain("TurniereManagementFilterRail");
   });
+
+  it("TURNIERE-UX-01D — main toolbar does not duplicate sidebar filter selects", () => {
+    const toolbar = readSource("components/admin/tournamentcenter/TurniereManagementToolbar.tsx");
+    expect(toolbar).not.toContain("Alle Kategorien");
+    expect(toolbar).not.toContain("Alle Altersklassen");
+    expect(toolbar).toContain("Turniere durchsuchen");
+  });
 });
