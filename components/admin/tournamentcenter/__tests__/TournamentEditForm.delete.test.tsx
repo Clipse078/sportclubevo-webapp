@@ -3,11 +3,8 @@
  *
  * components/admin/tournamentcenter/__tests__/TournamentEditForm.delete.test.tsx
  *
- * ADMIN-DELETE-02A — focused UI-gating tests for the permanent "Endgültig
- * löschen" action on a Tournament. `canDelete` is an independent authority
- * signal from `canManage`/events.manage — cancel/restore/edit remain
- * governed by `canManage` alone, and this suite verifies the delete button
- * only renders when the caller holds tournaments.delete.
+ * ADMIN-DELETE-02A — focused UI-gating tests for the permanent delete action
+ * on a Tournament record workspace.
  */
 
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
@@ -59,15 +56,16 @@ const TOURNAMENT: TournamentDto = {
   updatedAt: "2026-01-01T00:00:00.000Z",
 };
 
+function openRecordMenu() {
+  fireEvent.click(screen.getByTestId("turniere-record-context-menu-trigger"));
+}
+
 beforeEach(() => {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn().mockResolvedValue({ ok: true, json: async () => [] }),
-  );
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => [] }));
 });
 
 describe("TournamentEditForm — ADMIN-DELETE-02A permission gating", () => {
-  it("hides the permanent delete button for a canManage-only caller (canDelete=false)", () => {
+  it("hides the permanent delete action for a canManage-only caller (canDelete=false)", () => {
     render(
       <TournamentEditForm
         tournament={TOURNAMENT}
@@ -80,10 +78,11 @@ describe("TournamentEditForm — ADMIN-DELETE-02A permission gating", () => {
       />,
     );
 
-    expect(screen.queryByTestId("tournament-delete-button")).toBeNull();
+    openRecordMenu();
+    expect(screen.queryByTestId("turniere-record-menu-delete")).toBeNull();
   });
 
-  it("shows the permanent delete button for a tournaments.delete-authorized caller", () => {
+  it("shows the permanent delete action for a tournaments.delete-authorized caller", () => {
     render(
       <TournamentEditForm
         tournament={TOURNAMENT}
@@ -96,10 +95,11 @@ describe("TournamentEditForm — ADMIN-DELETE-02A permission gating", () => {
       />,
     );
 
-    expect(screen.getByTestId("tournament-delete-button")).toBeTruthy();
+    openRecordMenu();
+    expect(screen.getByTestId("turniere-record-menu-delete")).toBeTruthy();
   });
 
-  it("shows both the cancel toggle and delete button when the caller holds both authorities", () => {
+  it("shows both lifecycle and delete actions when the caller holds both authorities", () => {
     render(
       <TournamentEditForm
         tournament={TOURNAMENT}
@@ -112,8 +112,9 @@ describe("TournamentEditForm — ADMIN-DELETE-02A permission gating", () => {
       />,
     );
 
-    expect(screen.getByTestId("tournament-lifecycle-toggle")).toBeTruthy();
-    expect(screen.getByTestId("tournament-delete-button")).toBeTruthy();
+    openRecordMenu();
+    expect(screen.getByTestId("turniere-record-menu-lifecycle")).toBeTruthy();
+    expect(screen.getByTestId("turniere-record-menu-delete")).toBeTruthy();
   });
 });
 
@@ -142,7 +143,8 @@ describe("TournamentEditForm — ADMIN-DELETE-02A-C1 impact never blocks", () =>
       />,
     );
 
-    fireEvent.click(screen.getByTestId("tournament-delete-button"));
+    openRecordMenu();
+    fireEvent.click(screen.getByTestId("turniere-record-menu-delete"));
 
     await waitFor(() => {
       expect(screen.getByText(/Teilnehmende Teams\/Vereine: 4/)).toBeTruthy();
@@ -158,11 +160,6 @@ describe("TournamentEditForm — ADMIN-DELETE-02A-C1 impact never blocks", () =>
   });
 
   it("confirming calls the permanent-delete endpoint with ?confirm=true", async () => {
-    // RESOURCE-AVAILABILITY-UX-01: TournamentEditForm now also fires a live
-    // Frei/Belegt availability lookup on mount (this tournament is HOME with
-    // a startAt) — keyed by URL rather than positional mockResolvedValueOnce
-    // so that unrelated fetch doesn't consume the two delete-flow responses
-    // this test actually asserts on.
     const fetchMock = vi.fn((url: string) => {
       if (url === "/api/tournaments/tournament-1") {
         return Promise.resolve({ ok: true, json: async () => ({ impact: [] }) });
@@ -186,7 +183,8 @@ describe("TournamentEditForm — ADMIN-DELETE-02A-C1 impact never blocks", () =>
       />,
     );
 
-    fireEvent.click(screen.getByTestId("tournament-delete-button"));
+    openRecordMenu();
+    fireEvent.click(screen.getByTestId("turniere-record-menu-delete"));
 
     await waitFor(() => {
       expect(screen.getByText(/Keine Teilnehmer, Ressourcen-Zuordnungen/)).toBeTruthy();

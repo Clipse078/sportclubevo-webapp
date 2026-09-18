@@ -21,31 +21,30 @@ type PublicationChannelConfig = {
 const PUBLICATION_CHANNELS: PublicationChannelConfig[] = [
   {
     key: "websiteVisible",
-    label: "Öffentliche Turnierseite",
-    description: "Turnier auf der öffentlichen Turnierseite anzeigen.",
+    label: "Website",
+    description: "Das Turnier wird auf der Vereinswebsite veröffentlicht.",
   },
   {
     key: "infoboardVisible",
     label: "Infoboard",
-    description: "Auf den Infoboards des Vereins anzeigen.",
+    description: "Das Turnier wird auf dem Vereins-Infoboard angezeigt.",
   },
   {
     key: "homepageVisible",
     label: "Homepage",
     description:
-      "Auf der öffentlichen Vereins-Homepage hervorheben. Zusätzlich muss die öffentliche Turnierseite aktiviert sein.",
+      "Das Turnier wird auf der Vereins-Homepage hervorgehoben. Zusätzlich muss die Website-Veröffentlichung aktiv sein.",
   },
   {
     key: "wochenplanVisible",
     label: "Wochenplan",
-    description:
-      "Im öffentlichen Wochenplan anzeigen. Zusätzlich muss die öffentliche Turnierseite aktiviert sein.",
+    description: "Das Turnier erscheint im öffentlichen Wochenplan.",
   },
   {
     key: "teamPageVisible",
     label: "Teamseite",
     description:
-      "Auf der öffentlichen Teamseite des zugeordneten Teams. Zusätzlich muss die öffentliche Turnierseite aktiviert sein.",
+      "Das Turnier erscheint auf der Teamseite des zugeordneten Hauptteams. Zusätzlich muss die Website-Veröffentlichung aktiv sein.",
   },
 ];
 
