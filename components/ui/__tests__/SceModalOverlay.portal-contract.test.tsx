@@ -52,10 +52,10 @@ describe("SceModalOverlay portal contract SCE-RESPONSIVE-01G", () => {
   it("C — fixed root geometry classes remain authoritative in CSS", () => {
     const css = readGlobalsCss();
     expect(css).toMatch(/\.sce-modal-overlay-root\s*\{[\s\S]*position:\s*fixed/);
-    expect(css).toMatch(/\.sce-modal-overlay-root\s*\{[\s\S]*inset:\s*0/);
     expect(css).toMatch(
-      /\.sce-modal-overlay-content-viewport\s*\{[\s\S]*left:\s*var\(--sce-sidebar-effective-width\)/,
+      /\.sce-modal-overlay-root\s*\{[\s\S]*left:\s*var\(--sce-sidebar-effective-width\)/,
     );
+    expect(css).toMatch(/\.sce-modal-overlay-content-viewport\s*\{[\s\S]*inset:\s*0/);
     expect(css).toMatch(/align-items:\s*center/);
     expect(css).toMatch(/justify-content:\s*center/);
   });

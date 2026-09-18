@@ -1060,11 +1060,26 @@ html[data-sidebar-collapsed="1"] {
   --sce-sidebar-effective-width: var(--sidebar-collapsed-width);
 }
 
-/* SCE-RESPONSIVE-01B — portalled modal overlay (authoritative geometry on :root vars) */
+/* SCE-RESPONSIVE-01H — modal layers sit above app content, not over the persistent sidebar */
+.sce-modal-overlay-sidebar-shield {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--sce-sidebar-effective-width);
+  z-index: 100;
+  background: transparent;
+  pointer-events: auto;
+}
+
 .sce-modal-overlay-root {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--sce-sidebar-effective-width);
   z-index: 100;
+  pointer-events: auto;
 }
 
 .sce-modal-overlay-backdrop {
@@ -1105,16 +1120,18 @@ html[data-sidebar-collapsed="1"] {
 
 .sce-modal-overlay-content-viewport {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  left: var(--sce-sidebar-effective-width);
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
   padding: var(--sce-overlay-gutter);
   overflow: hidden;
+  pointer-events: none;
+}
+
+.sce-modal-overlay-content-viewport > .sce-modal-overlay-panel-host {
+  pointer-events: auto;
 }
 
 @media (min-width: 640px) {

@@ -45,10 +45,13 @@ describe("SceModalOverlay backdrop SCE-RESPONSIVE-01F", () => {
     );
   });
 
-  it("C — backdrop remains full viewport within the portalled overlay root", () => {
-    const block = backdropBlock(readGlobalsCss());
+  it("C — backdrop covers application overlay root only (sidebar band excluded)", () => {
+    const css = readGlobalsCss();
+    const block = backdropBlock(css);
     expect(block).toMatch(/position:\s*absolute/);
     expect(block).toMatch(/inset:\s*0/);
+    const rootBlock = css.match(/\.sce-modal-overlay-root\s*\{[^}]+\}/)?.[0] ?? "";
+    expect(rootBlock).toMatch(/left:\s*var\(--sce-sidebar-effective-width\)/);
 
     render(
       <SceModalOverlay open testId="viewport-backdrop">

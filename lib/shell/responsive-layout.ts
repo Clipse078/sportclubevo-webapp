@@ -9,12 +9,11 @@
  * Tailwind arbitrary values reference those vars where needed.
  */
 
-/** Full-viewport backdrop; panel positioning uses {@link SCE_OVERLAY_CONTENT_VIEWPORT}. */
+/** Application-region modal stack (inset by {@code --sce-sidebar-effective-width}). */
 export const SCE_OVERLAY_ROOT = "sce-modal-overlay-root";
 
 /**
- * Usable horizontal band for centered overlays (absolute within {@link SCE_OVERLAY_ROOT}).
- * Backdrop remains full-screen; only the flex centering region is sidebar-inset.
+ * Flex centering region within {@link SCE_OVERLAY_ROOT} (fills the application overlay root).
  */
 export const SCE_OVERLAY_CONTENT_VIEWPORT = "sce-modal-overlay-content-viewport";
 
