@@ -37,6 +37,7 @@ import {
   resolveSpieleRecordLastChangedLabel,
   resolveSpieleRecordSourceLabel,
   resolveSpieleRecordStatusRailLabel,
+  shouldShowSpieleRecordHeaderReadinessPill,
 } from "@/lib/matchcenter/spiele-record-presentation";
 import { formatOperationalHistoryLabel } from "@/lib/matchcenter/operational-history";
 import SpieleRecordWorkspaceShell from "./SpieleRecordWorkspaceShell";
@@ -283,13 +284,6 @@ export default function SpieleMatchRecordWorkspace({
             <span className="text-[var(--text-2)]">{match.location}</span>
           ) : null}
           {homeAwayLabel ? (
-            <SpieleMatchRecordReadinessPill
-              assessment={assessment}
-              homeAway={match.homeAway}
-              className="normal-case"
-            />
-          ) : null}
-          {homeAwayLabel ? (
             <span
               className={cn(
                 "rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-wide",
@@ -301,6 +295,13 @@ export default function SpieleMatchRecordWorkspace({
             >
               {homeAwayLabel}
             </span>
+          ) : null}
+          {shouldShowSpieleRecordHeaderReadinessPill(match.homeAway, assessment) ? (
+            <SpieleMatchRecordReadinessPill
+              assessment={assessment}
+              homeAway={match.homeAway}
+              className="normal-case"
+            />
           ) : null}
         </div>
       </div>

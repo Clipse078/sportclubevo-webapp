@@ -3,7 +3,10 @@ import {
   SCE_UNKNOWN_KICKOFF_TIME_LABEL,
 } from "@/lib/match/kickoff-semantics";
 import type { MatchcenterMatchDetail, MatchcenterMatchSummary } from "./types";
-import { assessMatchOperationalState, type MatchcenterOperationalAssessment } from "./operational-state";
+import {
+  assessMatchOperationalState,
+  type MatchcenterOperationalAssessment,
+} from "./operational-state";
 import { getMatchcenterLifecycleClassification, getMatchcenterLifecycleLabel } from "./match-lifecycle";
 
 const PROTECTED_SOURCES = new Set(["SFV", "CLUBCORNER_FVNWS", "CSV_EXCEL_IMPORT"]);
@@ -155,6 +158,23 @@ export function resolveSpieleRecordStatusRailLabel(
     return `${assessment.actionCount} ${assessment.actionCount === 1 ? "Punkt" : "Punkte"} offen`;
   }
   return getMatchcenterLifecycleLabel(getMatchcenterLifecycleClassification(match, now));
+}
+
+/**
+ * Readiness pill (Bereit / N Punkte offen) in the record header — not HOME/AWAY identity.
+ */
+export function shouldShowSpieleRecordHeaderReadinessPill(
+  homeAway: string | null,
+  assessment: MatchcenterOperationalAssessment,
+): boolean {
+  const normalized = homeAway?.trim().toUpperCase() ?? null;
+  if (normalized === "AWAY" || assessment.status === "AWAY") {
+    return false;
+  }
+  if (assessment.status === "NOT_APPLICABLE") {
+    return false;
+  }
+  return true;
 }
 
 export function resolveHomeAwaySemanticLabel(homeAway: string | null): string | null {

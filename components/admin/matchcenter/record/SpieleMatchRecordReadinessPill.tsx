@@ -29,17 +29,8 @@ export default function SpieleMatchRecordReadinessPill({
   }
 
   if (assessment.status === "AWAY" || normalized === "AWAY") {
-    return (
-      <span
-        className={cn(
-          "inline-flex items-center gap-1.5 rounded-full border border-sky-500/30 bg-sky-500/10 px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-sky-200",
-          className,
-        )}
-        data-testid="spiele-record-readiness-pill"
-      >
-        Auswärtsspiel
-      </span>
-    );
+    // HOME/AWAY identity is shown once via matchcenter-detail-homeaway — not here.
+    return null;
   }
 
   if (assessment.status === "READY") {

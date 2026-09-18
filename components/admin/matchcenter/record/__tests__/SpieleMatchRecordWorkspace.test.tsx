@@ -4,6 +4,7 @@
 
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { parseSfvMatchDateTime } from "@/lib/integrations/sfv/sync/provider-time";
 import SpieleMatchRecordWorkspace from "../SpieleMatchRecordWorkspace";
 import type { MatchcenterMatchDetail } from "@/lib/matchcenter/types";
 
@@ -30,6 +31,7 @@ function createMatch(overrides: Partial<MatchcenterMatchDetail> = {}): Matchcent
     title: "FC Allschwil – FC Example",
     description: null,
     status: "SCHEDULED",
+    kickoffKnown: true,
     startAt: new Date("2026-09-19T16:00:00.000Z"),
     endAt: new Date("2026-09-19T18:00:00.000Z"),
     operationalEndAtOverride: null,
@@ -154,6 +156,150 @@ describe("SpieleMatchRecordWorkspace", () => {
 
     expect(screen.getByTestId("spiele-record-section-away")).toBeInTheDocument();
     expect(screen.queryByTestId("spiele-record-section-preparation")).not.toBeInTheDocument();
+  });
+
+  function countHomeAwayIndicators(container: HTMLElement): number {
+    const homeAwayPill = container.querySelector('[data-testid="matchcenter-detail-homeaway"]');
+    const readinessPills = container.querySelectorAll('[data-testid="spiele-record-readiness-pill"]');
+    let count = homeAwayPill ? 1 : 0;
+    for (const pill of readinessPills) {
+      const text = pill.textContent?.trim() ?? "";
+      if (/Auswärtsspiel|Heimspiel/i.test(text)) {
+        count += 1;
+      }
+    }
+    return count;
+  }
+
+  it("A/D. AWAY header renders exactly one HOME/AWAY semantic indicator", () => {
+    const { container } = render(
+      <SpieleMatchRecordWorkspace
+        match={createMatch({
+          homeAway: "AWAY",
+          location: "In den Widen, Arlesheim – wird vor Ort zugeteilt",
+        })}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        canManageMappings={false}
+        canDelete={false}
+        pitchOptions={[]}
+        dressingRoomOptions={[]}
+        isProtectedSource
+        wochenplanerHref="/dashboard/planner"
+      />,
+    );
+
+    expect(screen.getByTestId("matchcenter-detail-homeaway")).toHaveTextContent("Auswärtsspiel");
+    expect(screen.queryByTestId("spiele-record-readiness-pill")).not.toBeInTheDocument();
+    expect(countHomeAwayIndicators(container)).toBe(1);
+    expect(screen.queryByText(/^AUSWÄRTSSPIEL$/)).not.toBeInTheDocument();
+  });
+
+  it("B. HOME header renders exactly one HOME/AWAY semantic indicator", () => {
+    const { container } = render(
+      <SpieleMatchRecordWorkspace
+        match={createMatch({ homeAway: "HOME" })}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        canManageMappings={false}
+        canDelete={false}
+        pitchOptions={[]}
+        dressingRoomOptions={[]}
+        isProtectedSource
+        wochenplanerHref="/dashboard/planner"
+      />,
+    );
+
+    expect(screen.getByTestId("matchcenter-detail-homeaway")).toHaveTextContent("Heimspiel");
+    expect(countHomeAwayIndicators(container)).toBe(1);
+  });
+
+  it("C. HOME header can show HEIMSPIEL and Bereit readiness together", () => {
+    render(
+      <SpieleMatchRecordWorkspace
+        match={createMatch({
+          homeAway: "HOME",
+          operational: {
+            pitchCode: "KR3",
+            homeDressingRoomCode: "O4",
+            awayDressingRoomCode: "E1",
+            meetingTime: null,
+            remarks: null,
+          },
+          visibility: {
+            websiteVisible: true,
+            infoboardVisible: true,
+            homepageVisible: false,
+            wochenplanVisible: true,
+            trainingsplanVisible: false,
+            teamPageVisible: true,
+          },
+        })}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        canManageMappings={false}
+        canDelete={false}
+        pitchOptions={[{ code: "KR3", name: "Kunstrasen 3" }]}
+        dressingRoomOptions={[]}
+        isProtectedSource
+        wochenplanerHref="/dashboard/planner"
+      />,
+    );
+
+    expect(screen.getByTestId("matchcenter-detail-homeaway")).toHaveTextContent("Heimspiel");
+    const readinessPills = screen.getAllByTestId("spiele-record-readiness-pill");
+    expect(readinessPills.some((el) => el.textContent?.includes("Bereit"))).toBe(true);
+  });
+
+  it("E. SFV unknown kickoff still renders Zeit offen and no operational end in schedule", () => {
+    const startAt = parseSfvMatchDateTime("2026-09-19T00:00:00");
+    render(
+      <SpieleMatchRecordWorkspace
+        match={createMatch({
+          homeAway: "AWAY",
+          startAt,
+          kickoffKnown: false,
+          endAt: null,
+          operationalEndAt: startAt,
+          location: "In den Widen, Arlesheim",
+        })}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        canManageMappings={false}
+        canDelete={false}
+        pitchOptions={[]}
+        dressingRoomOptions={[]}
+        isProtectedSource
+        wochenplanerHref="/dashboard/planner"
+      />,
+    );
+
+    expect(screen.getByTestId("spiele-record-kickoff")).toHaveTextContent("Zeit offen");
+    expect(screen.getByTestId("spiele-record-context-rail")).toHaveTextContent("Zeit offen");
+    expect(screen.queryByText("02:00")).not.toBeInTheDocument();
+  });
+
+  it("F. known kickoff still renders HH:mm in record schedule", () => {
+    render(
+      <SpieleMatchRecordWorkspace
+        match={createMatch({
+          startAt: parseSfvMatchDateTime("2026-09-19T20:30:00"),
+          kickoffKnown: true,
+          endAt: null,
+          operationalEndAt: parseSfvMatchDateTime("2026-09-19T22:30:00"),
+        })}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        canManageMappings={false}
+        canDelete={false}
+        pitchOptions={[]}
+        dressingRoomOptions={[]}
+        isProtectedSource
+        wochenplanerHref="/dashboard/planner"
+      />,
+    );
+
+    expect(screen.getByTestId("spiele-record-kickoff")).toHaveTextContent("20:30");
   });
 
   it("displays SFV result read-only when present", () => {
