@@ -7,13 +7,13 @@ import { useToast } from "@/hooks/use-toast";
 import type { MatchcenterRowViewModel } from "@/lib/matchcenter/view-model";
 import {
   formatSpieleDayGroupHeadingLong,
-  groupSpielplanungRowsByDay,
+  type SpieleDayGroup,
 } from "@/lib/matchcenter/management-view";
 import SpieleManagementMatchRow from "./SpieleManagementMatchRow";
 import { cn } from "@/lib/cn";
 
 type Props = {
-  rows: MatchcenterRowViewModel[];
+  dayGroups: SpieleDayGroup<MatchcenterRowViewModel>[];
   locale: string;
   timezone: string;
   tenantLogoUrl?: string | null;
@@ -22,7 +22,7 @@ type Props = {
 };
 
 export default function SpieleManagementUpcomingList({
-  rows,
+  dayGroups,
   locale,
   timezone,
   tenantLogoUrl = null,
@@ -35,7 +35,7 @@ export default function SpieleManagementUpcomingList({
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const dayGroups = groupSpielplanungRowsByDay(rows, locale, timezone);
+  const rows = dayGroups.flatMap((group) => group.rows);
 
   const toggleSelection = useCallback((id: string) => {
     setSelectedIds((prev) => {

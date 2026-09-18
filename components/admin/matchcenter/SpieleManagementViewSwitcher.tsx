@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { Suspense } from "react";
 import type { SpieleListView } from "@/lib/matchcenter/navigation";
 import { cn } from "@/lib/cn";
 
@@ -12,7 +9,12 @@ type Props = {
   kalenderHref: string;
 };
 
-function Inner({ listView, listeHref, kompaktHref, kalenderHref }: Props) {
+export default function SpieleManagementViewSwitcher({
+  listView,
+  listeHref,
+  kompaktHref,
+  kalenderHref,
+}: Props) {
   const items: { key: SpieleListView; label: string; href: string }[] = [
     { key: "LISTE", label: "Liste", href: listeHref },
     { key: "KALENDER", label: "Kalender", href: kalenderHref },
@@ -35,7 +37,7 @@ function Inner({ listView, listeHref, kompaktHref, kalenderHref }: Props) {
             data-testid={`spiele-view-${item.key.toLowerCase()}`}
             aria-current={active ? "true" : undefined}
             className={cn(
-              "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
+              "rounded-md px-3 py-1.5 text-xs font-semibold transition-colors duration-150",
               active
                 ? "bg-[var(--sce-primary)] text-white shadow-sm"
                 : "text-[var(--text-2)] hover:text-[var(--foreground)]",
@@ -46,13 +48,5 @@ function Inner({ listView, listeHref, kompaktHref, kalenderHref }: Props) {
         );
       })}
     </div>
-  );
-}
-
-export default function SpieleManagementViewSwitcher(props: Props) {
-  return (
-    <Suspense fallback={null}>
-      <Inner {...props} />
-    </Suspense>
   );
 }

@@ -1,10 +1,9 @@
 import Link from "next/link";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
-import {
-  buildMatchcenterViewModel,
-  type MatchcenterActionFilter,
-  type MatchcenterTab,
-  type MatchcenterWochenplanFilter,
+import type {
+  MatchcenterActionFilter,
+  MatchcenterTab,
+  MatchcenterWochenplanFilter,
 } from "@/lib/matchcenter/view-model";
 import {
   buildMatchcenterHref,
@@ -15,21 +14,8 @@ import {
   type SpieleStatusMaskKey,
 } from "@/lib/matchcenter/navigation";
 import {
-  buildCancelledSpielplanungRows,
-  collectMatchDayKeys,
-  countSpieleStatusBuckets,
-  deriveSpieleCompetitionOptions,
-  deriveSpieleVenueOptions,
-  filterResultateBySearch,
-  filterSpielplanungRowsByCompetition,
-  filterSpielplanungRowsByHomeAway,
-  filterSpielplanungRowsBySearch,
-  filterSpielplanungRowsByStatusMask,
-  filterSpielplanungRowsByVenue,
-  groupResultateByDay,
+  deriveSpieleManagementPresentation,
   parseSpieleManagementSort,
-  sortResultateMatches,
-  sortSpielplanungRows,
 } from "@/lib/matchcenter/management-view";
 import { buildSpieleManagementWochenplanerHref } from "@/lib/matchcenter/wochenplaner-deep-links";
 import { CenterPeriodNavigation } from "@/components/centers/CenterPeriodNavigation";
@@ -149,12 +135,6 @@ export default function SpieleManagementWorkspace({
 }: Props) {
   const statusMask = statusMaskProp ?? normalizeSpieleStatusMask(undefined, actionFilter);
 
-  const viewModel = buildMatchcenterViewModel(matches, {
-    actionFilter: "ALLE",
-    wochenplanFilter,
-    teamFilter,
-  });
-
   const parsedSort = parseSpieleManagementSort(sortParam);
   const sort =
     sortParam != null
@@ -163,47 +143,29 @@ export default function SpieleManagementWorkspace({
         ? "KICKOFF_DESC"
         : "KICKOFF_ASC";
 
-  const cancelledRows = buildCancelledSpielplanungRows(matches);
-  const baseSpielplanung = [...viewModel.spielplanung];
-  const withCancelled =
-    statusMask.includes("abgesagt") && tab === "SPIELPLANUNG"
-      ? sortSpielplanungRows([...baseSpielplanung, ...cancelledRows], sort)
-      : sortSpielplanungRows(baseSpielplanung, sort);
-
-  const spielplanungRows = sortSpielplanungRows(
-    filterSpielplanungRowsByVenue(
-      filterSpielplanungRowsByCompetition(
-        filterSpielplanungRowsByHomeAway(
-          filterSpielplanungRowsByStatusMask(
-            filterSpielplanungRowsBySearch(withCancelled, searchQuery),
-            statusMask,
-          ),
-          homeAwayFilter,
-        ),
-        competitionFilter,
-      ),
-      venueFilter,
-    ),
+  const {
+    viewModel,
+    spielplanungRows,
+    spielplanungDayGroups,
+    resultateMatches,
+    resultateGroups,
+    competitionOptions,
+    venueOptions,
+    statusCounts,
+    matchDayKeys,
+  } = deriveSpieleManagementPresentation(matches, {
+    tab,
+    searchQuery,
     sort,
-  );
-
-  const resultateMatches = sortResultateMatches(
-    filterResultateBySearch(viewModel.resultate, searchQuery),
-    sort,
-  );
-  const resultateGroups = groupResultateByDay(resultateMatches, locale, timezone);
-
-  const competitionOptions = deriveSpieleCompetitionOptions(viewModel.spielplanung);
-  const venueOptions = deriveSpieleVenueOptions(viewModel.spielplanung);
-  const statusCounts = countSpieleStatusBuckets(
-    viewModel.spielplanung,
-    cancelledRows.length,
-  );
-
-  const matchDayKeys = collectMatchDayKeys(
-    [...viewModel.spielplanung, ...cancelledRows].map((row) => row.match.startAt),
+    statusMask,
+    homeAwayFilter,
+    competitionFilter,
+    venueFilter,
+    locale,
     timezone,
-  );
+    wochenplanFilter,
+    teamFilter,
+  });
 
   const todayHref = currentMonthParam
     ? buildHref(basePath, {
@@ -554,7 +516,7 @@ export default function SpieleManagementWorkspace({
               </div>
             ) : (
               <SpieleManagementUpcomingList
-                rows={spielplanungRows}
+                dayGroups={spielplanungDayGroups}
                 locale={locale}
                 timezone={timezone}
                 tenantLogoUrl={tenantLogoUrl}

@@ -8,11 +8,17 @@ import {
   assessMatchOperationalState,
   type MatchcenterOperationalAssessment,
 } from "./operational-state";
-import type { MatchcenterRowViewModel } from "./view-model";
 import { getMatchcenterLifecycleClassification } from "./match-lifecycle";
 import { isMatchLive } from "./match-lifecycle";
 import { resolveMatchcenterCompactSideName } from "./team-display";
 import type { SpieleHomeAwayFilter, SpieleStatusMaskKey } from "./navigation";
+import {
+  buildMatchcenterViewModel,
+  type MatchcenterRowViewModel,
+  type MatchcenterTab,
+  type MatchcenterViewModel,
+  type MatchcenterWochenplanFilter,
+} from "./view-model";
 
 export type SpieleManagementSort = "KICKOFF_ASC" | "KICKOFF_DESC";
 
@@ -30,10 +36,19 @@ export function normalizeSpieleSearchQuery(
 }
 
 function sideSearchText(side: MatchcenterMatchSummary["home"]): string {
+  return [side.displayName, side.canonicalTeamName, side.providerTeamName]
+    .filter(Boolean)
+    .join(" ");
+}
+
+/** Lowercase search index for a match (stable across filter passes). */
+export function buildSpieleMatchSearchIndex(match: MatchcenterMatchSummary): string {
   return [
-    side.displayName,
-    side.canonicalTeamName,
-    side.providerTeamName,
+    match.title,
+    match.competitionLabel,
+    match.location,
+    sideSearchText(match.home),
+    sideSearchText(match.away),
   ]
     .filter(Boolean)
     .join(" ")
@@ -46,19 +61,7 @@ export function matchMatchesSpieleSearch(
 ): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
-
-  const haystack = [
-    match.title,
-    match.competitionLabel,
-    match.location,
-    sideSearchText(match.home),
-    sideSearchText(match.away),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-
-  return haystack.includes(q);
+  return buildSpieleMatchSearchIndex(match).includes(q);
 }
 
 export function filterSpielplanungRowsBySearch(
@@ -651,4 +654,115 @@ export function buildSpieleVenueLine(match: MatchcenterMatchSummary): string | n
   const pitch = match.operational.pitchCode?.trim();
   if (location && pitch) return `${location} · ${pitch}`;
   return location ?? pitch ?? null;
+}
+
+export type SpieleManagementDerivationInput = {
+  tab: MatchcenterTab;
+  searchQuery: string;
+  sort: SpieleManagementSort;
+  statusMask: readonly SpieleStatusMaskKey[];
+  homeAwayFilter: SpieleHomeAwayFilter;
+  competitionFilter: string | null;
+  venueFilter: string | null;
+  locale: string;
+  timezone: string;
+  wochenplanFilter: MatchcenterWochenplanFilter;
+  teamFilter: string | null;
+  now?: Date;
+};
+
+export type SpieleManagementDerivation = {
+  viewModel: MatchcenterViewModel;
+  cancelledRows: MatchcenterRowViewModel[];
+  spielplanungRows: MatchcenterRowViewModel[];
+  spielplanungDayGroups: SpieleDayGroup<MatchcenterRowViewModel>[];
+  resultateMatches: MatchcenterMatchSummary[];
+  resultateGroups: SpieleDayGroup<MatchcenterMatchSummary>[];
+  competitionOptions: string[];
+  venueOptions: string[];
+  statusCounts: Record<SpieleStatusMaskKey, number>;
+  matchDayKeys: string[];
+};
+
+/**
+ * Single-pass derivation for Spiele management overview presentation.
+ * Canonical month matches → filtered rows, groups, KPI inputs, calendar keys.
+ */
+export function deriveSpieleManagementPresentation(
+  matches: readonly MatchcenterMatchSummary[],
+  input: SpieleManagementDerivationInput,
+): SpieleManagementDerivation {
+  const {
+    tab,
+    searchQuery,
+    sort,
+    statusMask,
+    homeAwayFilter,
+    competitionFilter,
+    venueFilter,
+    locale,
+    timezone,
+    wochenplanFilter,
+    teamFilter,
+    now,
+  } = input;
+
+  const viewModel = buildMatchcenterViewModel(matches, {
+    actionFilter: "ALLE",
+    wochenplanFilter,
+    teamFilter,
+  });
+
+  const cancelledRows = buildCancelledSpielplanungRows(matches, now);
+  const baseSpielplanung = [...viewModel.spielplanung];
+  const withCancelled =
+    statusMask.includes("abgesagt") && tab === "SPIELPLANUNG"
+      ? sortSpielplanungRows([...baseSpielplanung, ...cancelledRows], sort)
+      : sortSpielplanungRows(baseSpielplanung, sort);
+
+  const spielplanungRows = sortSpielplanungRows(
+    filterSpielplanungRowsByVenue(
+      filterSpielplanungRowsByCompetition(
+        filterSpielplanungRowsByHomeAway(
+          filterSpielplanungRowsByStatusMask(
+            filterSpielplanungRowsBySearch(withCancelled, searchQuery),
+            statusMask,
+            now,
+          ),
+          homeAwayFilter,
+        ),
+        competitionFilter,
+      ),
+      venueFilter,
+    ),
+    sort,
+  );
+
+  const resultateMatches = sortResultateMatches(
+    filterResultateBySearch(viewModel.resultate, searchQuery),
+    sort,
+  );
+
+  const matchDayKeys = collectMatchDayKeys(
+    [...viewModel.spielplanung, ...cancelledRows].map((row) => row.match.startAt),
+    timezone,
+  );
+
+  return {
+    viewModel,
+    cancelledRows,
+    spielplanungRows,
+    spielplanungDayGroups: groupSpielplanungRowsByDay(
+      spielplanungRows,
+      locale,
+      timezone,
+      now,
+    ),
+    resultateMatches,
+    resultateGroups: groupResultateByDay(resultateMatches, locale, timezone, now),
+    competitionOptions: deriveSpieleCompetitionOptions(viewModel.spielplanung),
+    venueOptions: deriveSpieleVenueOptions(viewModel.spielplanung),
+    statusCounts: countSpieleStatusBuckets(viewModel.spielplanung, cancelledRows.length, now),
+    matchDayKeys,
+  };
 }

@@ -21,8 +21,6 @@ type Props = {
   matchDayKeys: readonly string[];
   previousMonthHref: string;
   nextMonthHref: string;
-  /** Optional per-day link; defaults to inert `#` when omitted. */
-  dayLinkHref?: string;
 };
 
 function parseMonthParam(param: string): Date {
@@ -36,7 +34,6 @@ export default function SpieleManagementMonthCalendar({
   matchDayKeys,
   previousMonthHref,
   nextMonthHref,
-  dayLinkHref = "#",
 }: Props) {
   const matchDayKeySet = new Set(matchDayKeys);
   const monthStart = parseMonthParam(monthParam);
@@ -94,28 +91,29 @@ export default function SpieleManagementMonthCalendar({
           const key = matchDayKeyInTimezone(day, timezone);
           const hasMatches = matchDayKeySet.has(key);
 
+          const dayLabel = format(day, "d. MMMM yyyy", { locale: de });
+          const cellClassName = cn(
+            "relative flex h-8 items-center justify-center rounded-full text-xs tabular-nums",
+            !inMonth && "text-[var(--muted)]/50",
+            inMonth && "text-[var(--text-2)]",
+            isToday && "bg-[var(--sce-primary)] font-semibold text-white",
+          );
+
           return (
-            <Link
+            <span
               key={day.toISOString()}
-              href={dayLinkHref}
               data-testid={`spiele-calendar-day-${key}`}
-              className={cn(
-                "relative flex h-8 items-center justify-center rounded-full text-xs tabular-nums transition-colors",
-                !inMonth && "text-[var(--muted)]/50",
-                inMonth && "text-[var(--text-2)] hover:bg-[var(--surface-2)]",
-                isToday &&
-                  "bg-[var(--sce-primary)] font-semibold text-white hover:bg-[var(--sce-primary)]",
-              )}
-              aria-label={format(day, "d. MMMM yyyy", { locale: de })}
+              className={cellClassName}
+              aria-label={dayLabel}
             >
-              {format(day, "d")}
+              <time dateTime={key}>{format(day, "d")}</time>
               {hasMatches && !isToday ? (
                 <span
                   className="absolute bottom-0.5 h-1 w-1 rounded-full bg-sky-400"
                   aria-hidden="true"
                 />
               ) : null}
-            </Link>
+            </span>
           );
         })}
       </div>

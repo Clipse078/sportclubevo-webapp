@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, ChevronDown, MoreHorizontal, Plus } from "lucide-react";
+import { CalendarDays, MoreHorizontal, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
@@ -38,7 +38,6 @@ export default function SpieleManagementHeaderMenu({
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
           Spiel erstellen
-          <ChevronDown className="h-3.5 w-3.5 opacity-80" aria-hidden="true" />
         </Link>
       ) : null}
       <div ref={overflowRef} className="relative">

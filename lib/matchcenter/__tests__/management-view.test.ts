@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  deriveSpieleManagementPresentation,
   filterSpielplanungRowsBySearch,
   collectMatchDayKeys,
   formatSpieleDayGroupHeadingLong,
@@ -169,6 +170,84 @@ describe("management-view grouping", () => {
     const groups = groupSpielplanungRowsByDay([rowB, rowA], "de-CH", "Europe/Zurich");
     expect(groups).toHaveLength(2);
     expect(groups[0]?.rows[0]?.match.id).toBe("a");
+  });
+});
+
+describe("deriveSpieleManagementPresentation", () => {
+  it("derives calendar keys, groups, and filtered rows in one pass", () => {
+    const matchA = createMatch({
+      id: "a",
+      startAt: new Date("2026-09-18T16:00:00.000Z"),
+    });
+    const matchB = createMatch({
+      id: "b",
+      startAt: new Date("2026-09-19T16:00:00.000Z"),
+      homeAway: "AWAY",
+      away: {
+        ...createMatch().away,
+        isOwnTeam: true,
+      },
+      home: {
+        ...createMatch().home,
+        isOwnTeam: false,
+      },
+    });
+
+    const derived = deriveSpieleManagementPresentation([matchA, matchB], {
+      tab: "SPIELPLANUNG",
+      searchQuery: "",
+      sort: "KICKOFF_ASC",
+      statusMask: ["anstehend", "offen", "bereit"],
+      homeAwayFilter: "HOME",
+      competitionFilter: null,
+      venueFilter: null,
+      locale: "de-CH",
+      timezone: "Europe/Zurich",
+      wochenplanFilter: "ALLE",
+      teamFilter: null,
+    });
+
+    expect(derived.spielplanungRows).toHaveLength(1);
+    expect(derived.spielplanungRows[0]?.match.id).toBe("a");
+    expect(derived.spielplanungDayGroups).toHaveLength(1);
+    expect(derived.matchDayKeys.sort()).toEqual(["2026-09-18", "2026-09-19"]);
+    expect(derived.statusCounts.offen).toBeGreaterThanOrEqual(0);
+  });
+
+  it("filters resultate by search via shared search index", () => {
+    const match = createMatch({
+      status: "COMPLETED",
+      resultLabel: "2:1",
+      scoreHome: 2,
+      scoreAway: 1,
+    });
+    const derived = deriveSpieleManagementPresentation([match], {
+      tab: "RESULTATE",
+      searchQuery: "basel",
+      sort: "KICKOFF_DESC",
+      statusMask: ["anstehend", "offen", "bereit"],
+      homeAwayFilter: "ALLE",
+      competitionFilter: null,
+      venueFilter: null,
+      locale: "de-CH",
+      timezone: "Europe/Zurich",
+      wochenplanFilter: "ALLE",
+      teamFilter: null,
+    });
+    expect(derived.resultateMatches).toHaveLength(1);
+    expect(deriveSpieleManagementPresentation([match], {
+      tab: "RESULTATE",
+      searchQuery: "xyz-not-found",
+      sort: "KICKOFF_DESC",
+      statusMask: ["anstehend", "offen", "bereit"],
+      homeAwayFilter: "ALLE",
+      competitionFilter: null,
+      venueFilter: null,
+      locale: "de-CH",
+      timezone: "Europe/Zurich",
+      wochenplanFilter: "ALLE",
+      teamFilter: null,
+    }).resultateMatches).toHaveLength(0);
   });
 });
 

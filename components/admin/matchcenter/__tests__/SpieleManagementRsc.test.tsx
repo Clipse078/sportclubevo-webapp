@@ -43,9 +43,10 @@ describe("SPIELE-UX-01B — management-view calendar helpers (server-safe)", () 
 });
 
 describe("SPIELE-UX-01B — Spiele workspace RSC props", () => {
-  it("SpieleManagementWorkspace derives matchDayKeys via management-view on the server", () => {
+  it("SpieleManagementWorkspace uses server-safe management derivation", () => {
     const source = readSource("components/admin/matchcenter/SpieleManagementWorkspace.tsx");
-    expect(source).toContain("const matchDayKeys = collectMatchDayKeys(");
+    expect(source).toContain("deriveSpieleManagementPresentation");
+    expect(source).not.toContain("const matchDayKeys = collectMatchDayKeys(");
     expect(source).toContain("@/lib/matchcenter/management-view");
   });
 
