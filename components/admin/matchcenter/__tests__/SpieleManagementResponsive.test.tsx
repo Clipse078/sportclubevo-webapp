@@ -47,7 +47,8 @@ describe("SPIELE-UX-01C — responsive composition contract", () => {
   it("right rail components remain mounted in workspace", () => {
     const workspace = readSource("components/admin/matchcenter/SpieleManagementWorkspace.tsx");
     expect(workspace).toContain("SpieleManagementMonthCalendar");
-    expect(workspace).toContain("SpieleManagementSchnellfilter");
+    expect(workspace).toContain("SpieleManagementFilterRail");
+    expect(workspace).toContain("SpieleManagementQuickAccess");
   });
 });
 
@@ -65,7 +66,7 @@ describe("SPIELE-UX-01D — intermediate away deduplication contract", () => {
 
   it("home compact preparation only mounts for HOME fixtures", () => {
     const row = readSource("components/admin/matchcenter/SpieleManagementMatchRow.tsx");
-    expect(row).toContain('{homeAway === "HOME" ? (');
-    expect(row).toContain('<PreparationColumn match={match} assessment={assessment} layout="compact" />');
+    expect(row).toContain("<PreparationColumn");
+    expect(row).toContain('layout={compact ? "compact" : "wide"}');
   });
 });

@@ -607,16 +607,16 @@ describe("MatchcenterOverview — reconciliation admin surface", () => {
 describe("MatchcenterOverview — team filter", () => {
   beforeEach(() => {
     push.mockReset();
+    vi.stubGlobal("location", { ...window.location, assign: vi.fn() });
   });
 
   it("opens the team dropdown and navigates when a team is selected", async () => {
     const user = userEvent.setup();
     renderOverview([createMatch()]);
 
-    await user.click(screen.getByTestId("matchcenter-team-filter-trigger"));
-    await user.click(screen.getByTestId("matchcenter-team-filter-option-team-2"));
+    await user.selectOptions(screen.getByTestId("matchcenter-team-filter-trigger"), "team-2");
 
-    expect(push).toHaveBeenCalledWith(
+    expect(vi.mocked(window.location.assign)).toHaveBeenCalledWith(
       "/dashboard/matchcenter?tab=spielplanung&month=2026-08&filter=alle&team=team-2",
     );
   });

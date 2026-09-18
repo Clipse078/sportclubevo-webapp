@@ -164,7 +164,7 @@ export default function SpieleManagementUpcomingList({
         </div>
       ) : null}
 
-      <div className="space-y-3" data-testid="matchcenter-spielplanung-list">
+      <div className="space-y-6" data-testid="matchcenter-spielplanung-list">
         {dayGroups.map((group) => {
           const heading = formatSpieleDayGroupHeadingLong(
             group.rows[0]!.match.startAt,
@@ -173,23 +173,19 @@ export default function SpieleManagementUpcomingList({
           );
           const count = group.rows.length;
           return (
-            <section
-              key={group.dayKey}
-              className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]/90"
-              data-testid={`spiele-day-group-${group.dayKey}`}
-            >
-              <header className="flex items-center justify-between gap-3 border-b border-[var(--border)]/60 bg-[var(--surface-2)]/30 px-4 py-2.5">
-                <h3 className="text-[0.6875rem] font-bold uppercase tracking-[0.06em] text-[var(--foreground)]">
+            <section key={group.dayKey} className="space-y-2" data-testid={`spiele-day-group-${group.dayKey}`}>
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
                   {heading}
-                </h3>
+                </h2>
                 <p
-                  className="text-xs tabular-nums text-[var(--muted)]"
+                  className="text-[0.6875rem] tabular-nums text-[var(--muted)]"
                   data-testid={`spiele-day-count-${group.dayKey}`}
                 >
                   {count} {count === 1 ? "Spiel" : "Spiele"}
                 </p>
-              </header>
-              <div>
+              </div>
+              <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
                 {group.rows.map((row) => (
                   <SpieleManagementMatchRow
                     key={row.match.id}
