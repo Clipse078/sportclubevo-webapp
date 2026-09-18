@@ -3,7 +3,7 @@ import { cn } from "@/lib/cn";
 
 export type FormSectionProps = {
   /** Section heading. */
-  title: string;
+  title: ReactNode;
   /** Optional supporting description below the title. */
   description?: string;
   /** Optional slot for section-level actions (right side of header row). */

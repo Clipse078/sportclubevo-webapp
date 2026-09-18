@@ -3,7 +3,7 @@ import { cn } from "@/lib/cn";
 
 type PageHeaderProps = {
   /** Short muted label above the title (e.g. module name). */
-  eyebrow?: string;
+  eyebrow?: ReactNode;
   /** Primary page title — required. */
   title: string;
   /** Optional supporting description shown below the title. */

@@ -14,7 +14,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TournamentCreateForm from "@/components/admin/tournamentcenter/TournamentCreateForm";
-import { pickSearchableOption, selectHomeAway } from "./tournament-form-test-helpers";
+import { pickSearchableOption, selectHomeAway, TOURNAMENT_FORM_TEST_SCHEDULE_PROPS } from "./tournament-form-test-helpers";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 
 vi.mock("next/navigation", () => ({
@@ -95,7 +95,7 @@ beforeEach(() => {
 describe("TournamentCreateForm — guided-progress nudge summary", () => {
   it("lists missing items and shrinks the list as fields are filled", async () => {
     installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} />);
+    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
 
     const progress = await screen.findByTestId("tournament-create-guided-progress");
     expect(progress).toHaveTextContent("Start angeben");
@@ -117,7 +117,7 @@ describe("TournamentCreateForm — guided-progress nudge summary", () => {
 
   it("shows a Spielfeld/Halle nudge for HOME once a start date exists but no resource is assigned", async () => {
     installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} />);
+    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
 
     fireEvent.change(screen.getByTestId("tournament-create-start-at"), { target: { value: "2026-09-20T10:00" } });
 
@@ -130,7 +130,7 @@ describe("TournamentCreateForm — guided-progress nudge summary", () => {
 describe("TournamentCreateForm — HOME/AWAY facility availability", () => {
   it("HOME: fetches and displays live Frei/Belegt availability once Start is set", async () => {
     installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} />);
+    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
 
     fireEvent.change(screen.getByTestId("tournament-create-start-at"), { target: { value: "2026-09-20T10:00" } });
 
@@ -144,7 +144,7 @@ describe("TournamentCreateForm — HOME/AWAY facility availability", () => {
 
   it("AWAY: never calls the availability endpoint and hides the Spielfeld/Halle section", async () => {
     const { availabilityCalls } = installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} />);
+    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
 
     selectHomeAway("tournament-create-home-away", "AWAY");
     fireEvent.change(screen.getByTestId("tournament-create-start-at"), { target: { value: "2026-09-20T10:00" } });

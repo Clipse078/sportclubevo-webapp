@@ -1,11 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
-import { ChevronDown, ChevronRight, Pencil, Shirt, Trash2, UsersRound } from "lucide-react";
+import { ChevronDown, ChevronRight, Pencil, Trash2, UsersRound } from "lucide-react";
+import {
+  TournamentDressingRoomLabelIcon,
+  TournamentTeamLogo,
+} from "@/components/admin/tournamentcenter/tournament-semantic-icons";
 import type { TournamentHomeAway, TournamentParticipantDto } from "@/lib/tournaments/types";
 import { type FacilityGroup, type ResourceAvailabilityAnnotation } from "@/components/admin/training/FacilityResourceSelector";
 import { VisualDressingRoomPicker } from "@/components/admin/shared/planning/VisualDressingRoomPicker";
-import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
 import { cn } from "@/lib/cn";
 import TournamentParticipantAddWorkflow from "./TournamentParticipantAddWorkflow";
 import type { ExternalClubPickerResult } from "./ExternalClubPicker";
@@ -298,11 +301,9 @@ export default function TournamentParticipantsEditor({
                     <span className="w-6 shrink-0" aria-hidden />
                   )}
 
-                  <ClubLogo
+                  <TournamentTeamLogo
                     logoUrl={participantLogoUrl(participant, tenantLogoUrl)}
                     name={participantMainLabel(participant)}
-                    size="sm"
-                    bare
                     className="h-7 w-7 shrink-0"
                   />
 
@@ -372,7 +373,7 @@ export default function TournamentParticipantsEditor({
                     {homeAway === "HOME" && (
                       <div className={cn(participant.kind === "EXTERNAL_CLUB" && "mt-2")}>
                         <p className="mb-1.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-                          <Shirt className="h-3 w-3" aria-hidden />
+                          <TournamentDressingRoomLabelIcon />
                           Garderobe
                         </p>
 

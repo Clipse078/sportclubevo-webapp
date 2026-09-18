@@ -125,6 +125,7 @@ export default function TournamentResourceAllocationEditor({
                   facilityType={meta.facilityType}
                   subtitle={`${meta.typeLabel} · ${allocation.facilityName}`}
                   compact
+                  semanticResourceColors
                   className="min-w-0 flex-1"
                 />
 

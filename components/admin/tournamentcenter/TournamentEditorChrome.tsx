@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trophy } from "lucide-react";
 import { PageBreadcrumbs, PageHeader, PageActions } from "@/components/ui/page";
 import type { BreadcrumbItem } from "@/components/ui/page";
 import { cn } from "@/lib/cn";
@@ -45,7 +45,19 @@ export default function TournamentEditorChrome({
       </Link>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <PageHeader eyebrow={eyebrow} title={title} description={description} className="mb-0" />
+        <PageHeader
+          eyebrow={
+            <span className="inline-flex items-center gap-1.5">
+              <span className="flex h-5 w-5 items-center justify-center rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-400">
+                <Trophy className="h-3 w-3" aria-hidden />
+              </span>
+              {eyebrow}
+            </span>
+          }
+          title={title}
+          description={description}
+          className="mb-0"
+        />
         {(primaryAction || secondaryActions) && (
           <PageActions className="shrink-0">
             {secondaryActions}

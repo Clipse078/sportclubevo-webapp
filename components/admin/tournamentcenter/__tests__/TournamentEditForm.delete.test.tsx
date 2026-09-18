@@ -13,6 +13,7 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TournamentEditForm from "@/components/admin/tournamentcenter/TournamentEditForm";
+import { TOURNAMENT_FORM_TEST_SCHEDULE_PROPS } from "./tournament-form-test-helpers";
 import type { TournamentDto } from "@/lib/tournaments/types";
 
 vi.mock("next/navigation", () => ({
@@ -75,6 +76,7 @@ describe("TournamentEditForm — ADMIN-DELETE-02A permission gating", () => {
         pitchHallFacilityGroups={[]}
         dressingRoomFacilityGroups={[]}
         timezone="Europe/Zurich"
+        {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS}
       />,
     );
 
@@ -90,6 +92,7 @@ describe("TournamentEditForm — ADMIN-DELETE-02A permission gating", () => {
         pitchHallFacilityGroups={[]}
         dressingRoomFacilityGroups={[]}
         timezone="Europe/Zurich"
+        {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS}
       />,
     );
 
@@ -105,6 +108,7 @@ describe("TournamentEditForm — ADMIN-DELETE-02A permission gating", () => {
         pitchHallFacilityGroups={[]}
         dressingRoomFacilityGroups={[]}
         timezone="Europe/Zurich"
+        {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS}
       />,
     );
 
@@ -134,6 +138,7 @@ describe("TournamentEditForm — ADMIN-DELETE-02A-C1 impact never blocks", () =>
         pitchHallFacilityGroups={[]}
         dressingRoomFacilityGroups={[]}
         timezone="Europe/Zurich"
+        {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS}
       />,
     );
 
@@ -177,6 +182,7 @@ describe("TournamentEditForm — ADMIN-DELETE-02A-C1 impact never blocks", () =>
         pitchHallFacilityGroups={[]}
         dressingRoomFacilityGroups={[]}
         timezone="Europe/Zurich"
+        {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS}
       />,
     );
 

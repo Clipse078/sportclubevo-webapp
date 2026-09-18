@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trophy } from "lucide-react";
+import { Lightbulb, Plus, Trophy } from "lucide-react";
 import type { TournamentDto, TournamentStatus } from "@/lib/tournaments/types";
 import {
   buildTournamentCenterHref,
@@ -12,8 +12,12 @@ import {
   type TournamentTeamOption,
 } from "@/lib/tournaments/navigation";
 import {
-  buildTournamentWorkspaceViewModel,
+  buildTurniereManagementWochenplanerHref,
+  deriveTurniereManagementPresentation,
+} from "@/lib/tournaments/management-view";
+import {
   type TournamentGroupMode,
+  type TournamentListView,
   type TournamentSortMode,
   type TournamentTimeScope,
   type TournamentWorkspaceRow,
@@ -21,27 +25,22 @@ import {
 import { isTournamentInArchivList } from "@/lib/tournaments/operational-state";
 import type { TournamentActionFilter } from "@/lib/tournaments/view-model";
 import { formatMonthLabel, resolveMatchcenterMonthWindow } from "@/lib/matchcenter/month-range";
-import {
-  formatTournamentAgendaDateHeading,
-  formatTournamentAgendaMonthHeading,
-  TOURNAMENT_STATUS_LABELS,
-} from "@/lib/tournaments/presentation";
 import { cn } from "@/lib/cn";
 import { EmptyState } from "@/components/ui/page/EmptyState";
-import { CenterPeriodNavigation } from "@/components/centers/CenterPeriodNavigation";
-import { CenterWorkspaceSearchInput } from "@/components/centers/CenterWorkspaceSearchInput";
-import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
-import TournamentOperationalRow from "./TournamentOperationalRow";
+import TurniereManagementKpiCards from "./TurniereManagementKpiCards";
+import TurniereManagementToolbar from "./TurniereManagementToolbar";
+import TurniereManagementRow from "./TurniereManagementRow";
+import TurniereManagementMonthCalendar from "./TurniereManagementMonthCalendar";
+import TurniereManagementQuickAccess from "./TurniereManagementQuickAccess";
+import TurniereManagementFilterRail from "./TurniereManagementFilterRail";
+import TurniereManagementHeaderMenu, {
+  TurniereManagementPageTitle,
+} from "./TurniereManagementHeaderMenu";
 import {
-  TournamentCenterActiveFilterChips,
-  TournamentCenterFilterSurface,
-} from "./TournamentCenterFilterSurface";
-
-const TIME_SCOPES: { key: TournamentTimeScope; label: string }[] = [
-  { key: "UPCOMING", label: "Anstehend" },
-  { key: "PAST", label: "Vergangen" },
-  { key: "ALL", label: "Alle" },
-];
+  TURNIERE_WORKSPACE_MAIN_RAIL_GRID,
+  TURNIERE_WORKSPACE_RAIL_ASIDE,
+  TURNIERE_WORKSPACE_RAIL_STACK,
+} from "./turniere-management-layout";
 
 export type TournamentCenterWorkspaceProps = {
   tournaments: TournamentDto[];
@@ -53,6 +52,12 @@ export type TournamentCenterWorkspaceProps = {
   actionFilter: TournamentActionFilter;
   group: TournamentGroupMode;
   sort: TournamentSortMode;
+  categoryFilter: string | null;
+  ageFilter: string | null;
+  locationFilter: string | null;
+  ownOnly: boolean;
+  publicOnly: boolean;
+  listView: TournamentListView;
   teamOptions: TournamentTeamOption[];
   tenantLogoUrl?: string | null;
   basePath?: string;
@@ -61,29 +66,24 @@ export type TournamentCenterWorkspaceProps = {
   canCreate?: boolean;
 };
 
-function workspaceHref(
-  basePath: string,
-  state: {
-    scope: TournamentTimeScope;
-    search: string;
-    teamFilter: string | null;
-    monthParam: string | null;
-    statusFilter: TournamentStatus | null;
-    actionFilter: TournamentActionFilter;
-    group: TournamentGroupMode;
-    sort: TournamentSortMode;
-  },
-  overrides: Partial<{
-    scope: TournamentTimeScope;
-    search: string;
-    teamFilter: string | null;
-    month: string | null;
-    statusFilter: TournamentStatus | null;
-    actionFilter: TournamentActionFilter;
-    group: TournamentGroupMode;
-    sort: TournamentSortMode;
-  }> = {},
-) {
+type WorkspaceOverrides = Partial<{
+  scope: TournamentTimeScope;
+  search: string;
+  teamFilter: string | null;
+  month: string | null;
+  statusFilter: TournamentStatus | null;
+  actionFilter: TournamentActionFilter;
+  group: TournamentGroupMode;
+  sort: TournamentSortMode;
+  categoryFilter: string | null;
+  ageFilter: string | null;
+  locationFilter: string | null;
+  ownOnly: boolean;
+  publicOnly: boolean;
+  listView: TournamentListView;
+}>;
+
+function workspaceHref(basePath: string, state: TournamentCenterWorkspaceProps, overrides: WorkspaceOverrides = {}) {
   return buildTournamentCenterHref(basePath, {
     scope: overrides.scope ?? state.scope,
     search: overrides.search ?? state.search,
@@ -93,60 +93,13 @@ function workspaceHref(
     actionFilter: overrides.actionFilter ?? state.actionFilter,
     group: overrides.group ?? state.group,
     sort: overrides.sort ?? state.sort,
+    categoryFilter: overrides.categoryFilter !== undefined ? overrides.categoryFilter : state.categoryFilter,
+    ageFilter: overrides.ageFilter !== undefined ? overrides.ageFilter : state.ageFilter,
+    locationFilter: overrides.locationFilter !== undefined ? overrides.locationFilter : state.locationFilter,
+    ownOnly: overrides.ownOnly ?? state.ownOnly,
+    publicOnly: overrides.publicOnly ?? state.publicOnly,
+    listView: overrides.listView ?? state.listView,
   });
-}
-
-function TournamentGroupHeading({
-  group,
-  heading,
-  groupKey,
-  teamOptions,
-  tenantLogoUrl = null,
-  locale,
-  timezone,
-  count,
-}: {
-  group: TournamentGroupMode;
-  heading: string;
-  groupKey: string;
-  teamOptions: TournamentTeamOption[];
-  tenantLogoUrl?: string | null;
-  locale: string;
-  timezone: string;
-  count: number;
-}) {
-  if (!heading) return null;
-
-  let displayHeading = heading;
-  if (group === "DATE") {
-    displayHeading = formatTournamentAgendaDateHeading(groupKey, locale, timezone);
-  } else if (group === "MONTH") {
-    displayHeading = formatTournamentAgendaMonthHeading(groupKey, locale, timezone);
-  }
-
-  const teamOption = group === "TEAM" && groupKey !== "__none__"
-    ? teamOptions.find((t) => t.id === groupKey)
-    : null;
-
-  return (
-    <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] pb-2">
-      <div className="flex min-w-0 items-center gap-2">
-        {teamOption ? (
-          <ClubLogo
-            logoUrl={tenantLogoUrl}
-            name={teamOption.label}
-            size="sm"
-            bare
-            className="h-6 w-6 shrink-0"
-          />
-        ) : null}
-        <h2 className="truncate text-xs font-bold uppercase tracking-wide text-[var(--foreground)]">
-          {displayHeading}
-        </h2>
-      </div>
-      <span className="shrink-0 text-[0.65rem] font-medium tabular-nums text-[var(--muted)]">{count}</span>
-    </div>
-  );
 }
 
 export default function TournamentCenterWorkspace(props: TournamentCenterWorkspaceProps) {
@@ -160,7 +113,12 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
     actionFilter,
     group,
     sort,
-    teamOptions,
+    categoryFilter,
+    ageFilter,
+    locationFilter,
+    ownOnly,
+    publicOnly,
+    listView,
     tenantLogoUrl = null,
     basePath = "/dashboard/tournamentcenter",
     timezone = "Europe/Zurich",
@@ -178,6 +136,7 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
 
   const workspaceState = useMemo(
     () => ({
+      tournaments,
       scope,
       search: initialSearch,
       teamFilter,
@@ -186,13 +145,46 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
       actionFilter,
       group,
       sort,
+      categoryFilter,
+      ageFilter,
+      locationFilter,
+      ownOnly,
+      publicOnly,
+      listView,
+      teamOptions: props.teamOptions,
+      tenantLogoUrl,
+      basePath,
+      timezone,
+      locale,
+      canCreate,
     }),
-    [scope, initialSearch, teamFilter, monthParam, statusFilter, actionFilter, group, sort],
+    [
+      tournaments,
+      scope,
+      initialSearch,
+      teamFilter,
+      monthParam,
+      statusFilter,
+      actionFilter,
+      group,
+      sort,
+      categoryFilter,
+      ageFilter,
+      locationFilter,
+      ownOnly,
+      publicOnly,
+      listView,
+      props.teamOptions,
+      tenantLogoUrl,
+      basePath,
+      timezone,
+      locale,
+      canCreate,
+    ],
   );
 
   const buildHref = useCallback(
-    (overrides: Parameters<typeof workspaceHref>[2]) =>
-      workspaceHref(basePath, workspaceState, overrides),
+    (overrides: WorkspaceOverrides) => workspaceHref(basePath, workspaceState, overrides),
     [basePath, workspaceState],
   );
 
@@ -209,26 +201,57 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
     [router, buildHref],
   );
 
-  const viewModel = useMemo(
+  const effectiveGroup = group === "DATE" ? "MONTH" : group;
+
+  const { viewModel, kpis, filterOptions, calendarDayKeys } = useMemo(
     () =>
-      buildTournamentWorkspaceViewModel(tournaments, {
-        scope: workspaceState.scope,
-        search: workspaceState.search,
-        teamFilter: workspaceState.teamFilter,
-        monthParam: workspaceState.monthParam,
-        statusFilter: workspaceState.statusFilter,
-        actionFilter: workspaceState.actionFilter,
-        group: workspaceState.group,
-        sort: workspaceState.sort,
-      }, { timeZone: timezone, locale }),
-    [tournaments, workspaceState, timezone, locale],
+      deriveTurniereManagementPresentation(
+        tournaments,
+        {
+          scope,
+          search: initialSearch,
+          teamFilter,
+          monthParam,
+          statusFilter,
+          actionFilter,
+          group: effectiveGroup,
+          sort,
+          categoryFilter,
+          ageFilter,
+          locationFilter,
+          ownOnly,
+          publicOnly,
+          listView,
+        },
+        { timeZone: timezone, locale },
+      ),
+    [
+      tournaments,
+      scope,
+      initialSearch,
+      teamFilter,
+      monthParam,
+      statusFilter,
+      actionFilter,
+      effectiveGroup,
+      sort,
+      categoryFilter,
+      ageFilter,
+      locationFilter,
+      ownOnly,
+      publicOnly,
+      listView,
+      timezone,
+      locale,
+    ],
   );
 
-  const monthWindow = monthParam
+  const calendarMonthWindow = monthParam
     ? resolveMatchcenterMonthWindow({ monthParam, timeZone: timezone })
-    : null;
+    : resolveMatchcenterMonthWindow({ timeZone: timezone });
 
-  const currentMonthWindow = resolveMatchcenterMonthWindow({ timeZone: timezone });
+  const wochenplanerHref = buildTurniereManagementWochenplanerHref({ timezone });
+  const createHref = "/dashboard/tournamentcenter/new";
 
   const filtersActive = hasActiveTournamentWorkspaceFilters({
     search: initialSearch,
@@ -236,70 +259,14 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
     month: monthParam,
     statusFilter,
     actionFilter,
+    categoryFilter,
+    ageFilter,
+    locationFilter,
+    ownOnly,
+    publicOnly,
   });
 
-  const compactDate = group === "DATE" || group === "MONTH";
-
-  const activeFilterChips = useMemo(() => {
-    const chips: { key: string; label: string; href: string }[] = [];
-
-    if (initialSearch.trim()) {
-      chips.push({
-        key: "q",
-        label: `„${initialSearch.trim()}“`,
-        href: buildHref({ search: "" }),
-      });
-    }
-
-    if (teamFilter) {
-      const label = teamOptions.find((t) => t.id === teamFilter)?.label ?? "Team";
-      chips.push({
-        key: "team",
-        label,
-        href: buildHref({ teamFilter: null }),
-      });
-    }
-
-    if (monthParam && monthWindow) {
-      chips.push({
-        key: "month",
-        label: formatMonthLabel(monthWindow, locale, timezone),
-        href: buildHref({ month: null }),
-      });
-    }
-
-    if (statusFilter) {
-      chips.push({
-        key: "status",
-        label: TOURNAMENT_STATUS_LABELS[statusFilter] ?? statusFilter,
-        href: buildHref({ statusFilter: null }),
-      });
-    }
-
-    if (scope === "UPCOMING" && actionFilter !== "ALLE") {
-      const readinessLabel =
-        actionFilter === "OFFEN" ? "Offen" : actionFilter === "ERLEDIGT" ? "Erledigt" : actionFilter;
-      chips.push({
-        key: "readiness",
-        label: readinessLabel,
-        href: buildHref({ actionFilter: "ALLE" }),
-      });
-    }
-
-    return chips;
-  }, [
-    initialSearch,
-    teamFilter,
-    monthParam,
-    monthWindow,
-    statusFilter,
-    actionFilter,
-    scope,
-    teamOptions,
-    buildHref,
-    locale,
-    timezone,
-  ]);
+  const resetHref = buildTournamentCenterResetHref(basePath, scope, effectiveGroup);
 
   function rowVariant(row: TournamentWorkspaceRow): "past" | "upcoming" {
     if (scope === "PAST") return "past";
@@ -307,182 +274,255 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
     return isTournamentInArchivList(row.tournament) ? "past" : "upcoming";
   }
 
+  const compactRows = listView === "KOMPAKT";
+
+  const domainTabs = [
+    {
+      key: "UPCOMING",
+      label: `Anstehend (${kpis.upcoming})`,
+      href: buildHref({ scope: "UPCOMING" }),
+    },
+    {
+      key: "PAST",
+      label: `Vergangen (${kpis.past})`,
+      href: buildHref({ scope: "PAST" }),
+    },
+    {
+      key: "ALL",
+      label: `Alle (${kpis.total})`,
+      href: buildHref({ scope: "ALL" }),
+    },
+  ] as const;
+
   return (
-    <div className="space-y-4">
-      <div
-        role="tablist"
-        aria-label="Zeitraum"
-        className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-0.5"
-        data-testid="tournamentcenter-scope"
+    <div className="w-full space-y-4" data-testid="turniere-management-workspace">
+      <header className="space-y-3 border-b border-[var(--border)] pb-4">
+        <p className="text-xs text-[var(--muted)]">
+          <span>Planung</span>
+          <span className="mx-1.5 text-[var(--border-strong)]">›</span>
+          <span className="text-[var(--text-2)]">Turniere</span>
+        </p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 space-y-1">
+            <TurniereManagementPageTitle />
+            <p className="text-sm text-[var(--text-2)]" data-testid="turniere-header-subtitle">
+              Turniere planen, koordinieren und veröffentlichen.
+            </p>
+          </div>
+          <TurniereManagementHeaderMenu
+            canCreate={canCreate}
+            createHref={createHref}
+            wochenplanerHref={wochenplanerHref}
+          />
+        </div>
+      </header>
+
+      <nav
+        aria-label="Turniere-Bereiche"
+        className="flex flex-wrap gap-x-5 gap-y-2 border-b border-[var(--border)]/70"
+        data-testid="turniere-domain-tabs"
       >
-        {TIME_SCOPES.map((item) => {
-          const isActive = item.key === scope;
+        {domainTabs.map((tab) => {
+          const isActive = tab.key === scope;
           return (
             <Link
-              key={item.key}
-              href={buildHref({ scope: item.key })}
-              role="tab"
-              aria-selected={isActive}
-              data-testid={`tournamentcenter-scope-${item.key.toLowerCase()}`}
+              key={tab.key}
+              href={tab.href}
+              aria-current={isActive ? "page" : undefined}
+              data-testid={`turniere-tab-${tab.key.toLowerCase()}`}
               className={cn(
-                "rounded-md px-3.5 py-1.5 text-xs font-semibold transition",
+                "border-b-2 pb-2.5 text-sm font-semibold transition-colors",
                 isActive
-                  ? "bg-[var(--surface)] text-[var(--foreground)] shadow-sm"
-                  : "text-[var(--text-2)] hover:text-[var(--foreground)]",
+                  ? "border-[var(--sce-primary)] text-[var(--foreground)]"
+                  : "border-transparent text-[var(--muted)] hover:text-[var(--text-2)]",
               )}
             >
-              {item.label}
+              {tab.label}
             </Link>
           );
         })}
-      </div>
+        <span
+          className="cursor-not-allowed border-b-2 border-transparent pb-2.5 text-sm font-medium text-[var(--muted)]/60"
+          aria-disabled="true"
+          data-testid="turniere-tab-kalender-disabled"
+        >
+          Kalender
+        </span>
+        <span
+          className="cursor-not-allowed border-b-2 border-transparent pb-2.5 text-sm font-medium text-[var(--muted)]/60"
+          aria-disabled="true"
+          data-testid="turniere-tab-statistiken-disabled"
+        >
+          Statistiken
+        </span>
+      </nav>
 
-      <div className="space-y-2.5">
-        <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center">
-          <CenterWorkspaceSearchInput
-            value={searchDraft}
-            onChange={pushSearch}
-            placeholder="Turniere durchsuchen…"
-            ariaLabel="Turniere durchsuchen"
-            className="relative min-w-0 flex-1"
-            data-testid="tournamentcenter-search"
-          />
+      <TurniereManagementKpiCards
+        kpis={kpis}
+        scope={scope}
+        anstehendHref={buildHref({ scope: "UPCOMING" })}
+        vergangenHref={buildHref({ scope: "PAST" })}
+      />
 
-          <TournamentCenterFilterSurface
-            scope={scope}
-            teamFilter={teamFilter}
-            monthParam={monthParam}
+      <div className={cn(TURNIERE_WORKSPACE_MAIN_RAIL_GRID)}>
+        <div className="min-w-0 space-y-4">
+          <TurniereManagementToolbar
+            searchDraft={searchDraft}
+            onSearchChange={pushSearch}
+            categoryFilter={categoryFilter}
+            ageFilter={ageFilter}
             statusFilter={statusFilter}
-            actionFilter={actionFilter}
-            group={group}
-            sort={sort}
-            teamOptions={teamOptions}
-            buildHref={buildHref}
-            timezone={timezone}
-            locale={locale}
-            filtersActive={filtersActive}
+            locationFilter={locationFilter}
+            categoryOptions={filterOptions.categories}
+            ageOptions={filterOptions.ageClasses}
+            locationOptions={filterOptions.locations}
+            listView={listView}
+            listeHref={buildHref({ listView: "LISTE" })}
+            kompaktHref={buildHref({ listView: "KOMPAKT" })}
+            kalenderHref={wochenplanerHref}
+            buildCategoryHref={(value) => buildHref({ categoryFilter: value })}
+            buildAgeHref={(value) => buildHref({ ageFilter: value })}
+            buildStatusHref={(value) => buildHref({ statusFilter: value })}
+            buildLocationHref={(value) => buildHref({ locationFilter: value })}
           />
-        </div>
 
-        {viewModel.totalMatching > 0 ? (
-          <p className="text-[0.68rem] font-medium text-[var(--muted)]" data-testid="tournamentcenter-result-count">
-            {viewModel.totalMatching}{" "}
-            {viewModel.totalMatching === 1 ? "Turnier" : "Turniere"}
-            {filtersActive ? " (gefiltert)" : ""}
-          </p>
-        ) : null}
-
-        <TournamentCenterActiveFilterChips
-          chips={activeFilterChips}
-          resetHref={buildTournamentCenterResetHref(basePath, scope, group)}
-        />
-
-        {monthWindow ? (
-          <CenterPeriodNavigation
-            label={formatMonthLabel(monthWindow, locale, timezone)}
-            previousHref={buildHref({ month: monthWindow.previousParam })}
-            nextHref={buildHref({ month: monthWindow.nextParam })}
-            todayHref={buildHref({ month: currentMonthWindow.param })}
-            data-testid-label="tournamentcenter-month-label"
-            data-testid-previous="tournamentcenter-month-previous"
-            data-testid-next="tournamentcenter-month-next"
-            data-testid-today="tournamentcenter-month-today"
-          />
-        ) : null}
-      </div>
-
-      {viewModel.emptyKind === "no_data" ? (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-          <EmptyState
-            icon={<Trophy className="h-8 w-8" />}
-            heading="Noch keine Turniere"
-            description="Erstellen Sie das erste Turnier für Ihren Verein."
-            action={
-              canCreate ? (
-                <Link href="/dashboard/tournamentcenter/new" className="fca-button-primary">
-                  <Plus className="h-4 w-4" />
-                  Turnier erstellen
-                </Link>
-              ) : undefined
-            }
-          />
-        </div>
-      ) : viewModel.emptyKind === "no_scope" ? (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-          <EmptyState
-            icon={<Trophy className="h-8 w-8" />}
-            heading={
-              scope === "UPCOMING"
-                ? "Keine anstehenden Turniere"
-                : scope === "PAST"
-                  ? "Keine vergangenen Turniere"
-                  : "Keine Turniere vorhanden"
-            }
-            description={
-              scope === "UPCOMING"
-                ? "Aktuell sind keine kommenden Turniere geplant. Wechseln Sie zu Vergangen oder Alle."
-                : "Für diesen Zeitraum liegen keine Einträge vor."
-            }
-            action={
-              scope === "UPCOMING" ? (
-                <Link
-                  href={buildTournamentCenterHref(basePath, { scope: "PAST", group })}
-                  className="fca-button-secondary text-sm"
-                >
-                  Vergangene Turniere anzeigen
-                </Link>
-              ) : undefined
-            }
-          />
-        </div>
-      ) : viewModel.emptyKind === "filtered" ? (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-          <EmptyState
-            icon={<Trophy className="h-8 w-8" />}
-            heading="Keine Turniere entsprechen den Filtern"
-            description="Passen Sie Suche oder Filter an — aktive Filter sind oben als Chips sichtbar."
-            action={
-              <Link
-                href={buildTournamentCenterResetHref(basePath, scope, group)}
-                className="fca-button-secondary text-sm"
-                data-testid="tournamentcenter-empty-reset"
-              >
-                Alle Filter zurücksetzen
-              </Link>
-            }
-          />
-        </div>
-      ) : (
-        <div className="space-y-6" data-testid="tournamentcenter-list">
-          {viewModel.groups.map((groupBlock) => (
-            <section key={groupBlock.key} className="space-y-2">
-              <TournamentGroupHeading
-                group={group}
-                heading={groupBlock.heading}
-                groupKey={groupBlock.key}
-                teamOptions={teamOptions}
-                tenantLogoUrl={tenantLogoUrl}
-                locale={locale}
-                timezone={timezone}
-                count={groupBlock.count}
+          {viewModel.emptyKind === "no_data" ? (
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+              <EmptyState
+                icon={<Trophy className="h-8 w-8" />}
+                heading="Noch keine Turniere"
+                description="Erstellen Sie das erste Turnier für Ihren Verein."
+                action={
+                  canCreate ? (
+                    <Link href={createHref} className="fca-button-primary">
+                      <Plus className="h-4 w-4" />
+                      Turnier erstellen
+                    </Link>
+                  ) : undefined
+                }
               />
-              <div className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-                {groupBlock.rows.map((row) => (
-                  <TournamentOperationalRow
-                    key={`${groupBlock.key}-${row.tournament.id}`}
-                    tournament={row.tournament}
-                    assessment={row.assessment}
-                    locale={locale}
-                    timezone={timezone}
-                    compactDate={compactDate && Boolean(groupBlock.heading)}
-                    variant={rowVariant(row)}
-                  />
-                ))}
-              </div>
-            </section>
-          ))}
+            </div>
+          ) : viewModel.emptyKind === "no_scope" ? (
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+              <EmptyState
+                icon={<Trophy className="h-8 w-8" />}
+                heading={
+                  scope === "UPCOMING"
+                    ? "Keine anstehenden Turniere"
+                    : scope === "PAST"
+                      ? "Keine vergangenen Turniere"
+                      : "Keine Turniere vorhanden"
+                }
+                description="Für diesen Zeitraum liegen keine Einträge vor."
+                action={
+                  scope === "UPCOMING" ? (
+                    <Link href={buildHref({ scope: "PAST" })} className="fca-button-secondary text-sm">
+                      Vergangene Turniere anzeigen
+                    </Link>
+                  ) : undefined
+                }
+              />
+            </div>
+          ) : viewModel.emptyKind === "filtered" ? (
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+              <EmptyState
+                icon={<Trophy className="h-8 w-8" />}
+                heading="Keine Turniere entsprechen den Filtern"
+                description="Passen Sie Suche oder Filter an."
+                action={
+                  <Link href={resetHref} className="fca-button-secondary text-sm" data-testid="turniere-empty-reset">
+                    Filter zurücksetzen
+                  </Link>
+                }
+              />
+            </div>
+          ) : (
+            <div className="space-y-6" data-testid="turniere-list">
+              {viewModel.groups.map((groupBlock) => (
+                <section key={groupBlock.key} className="space-y-2">
+                  {groupBlock.heading ? (
+                    <h2
+                      className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]"
+                      data-testid={`turniere-month-${groupBlock.key}`}
+                    >
+                      {groupBlock.heading}
+                    </h2>
+                  ) : null}
+                  <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+                    {groupBlock.rows.map((row) => (
+                      <TurniereManagementRow
+                        key={`${groupBlock.key}-${row.tournament.id}`}
+                        tournament={row.tournament}
+                        assessment={row.assessment}
+                        locale={locale}
+                        timezone={timezone}
+                        tenantLogoUrl={tenantLogoUrl}
+                        canManage={canCreate}
+                        compact={compactRows}
+                        variant={rowVariant(row)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+
+        <aside
+          className={cn(TURNIERE_WORKSPACE_RAIL_ASIDE, TURNIERE_WORKSPACE_RAIL_STACK)}
+          data-testid="turniere-management-rail"
+        >
+          <TurniereManagementMonthCalendar
+            monthParam={calendarMonthWindow.param}
+            timezone={timezone}
+            tournamentDayKeys={calendarDayKeys}
+            previousMonthHref={buildHref({ month: calendarMonthWindow.previousParam })}
+            nextMonthHref={buildHref({ month: calendarMonthWindow.nextParam })}
+          />
+          <TurniereManagementQuickAccess canCreate={canCreate} createHref={createHref} />
+          <TurniereManagementFilterRail
+            resetHref={resetHref}
+            categoryFilter={categoryFilter}
+            ageFilter={ageFilter}
+            statusFilter={statusFilter}
+            locationFilter={locationFilter}
+            ownOnly={ownOnly}
+            publicOnly={publicOnly}
+            categoryOptions={filterOptions.categories}
+            ageOptions={filterOptions.ageClasses}
+            locationOptions={filterOptions.locations}
+            buildCategoryHref={(value) => buildHref({ categoryFilter: value })}
+            buildAgeHref={(value) => buildHref({ ageFilter: value })}
+            buildStatusHref={(value) => buildHref({ statusFilter: value })}
+            buildLocationHref={(value) => buildHref({ locationFilter: value })}
+            buildOwnOnlyHref={(enabled) => buildHref({ ownOnly: enabled })}
+            buildPublicOnlyHref={(enabled) => buildHref({ publicOnly: enabled })}
+          />
+          <section
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/80 p-3 sm:col-span-2 min-[105rem]:col-span-1"
+            data-testid="turniere-tip-card"
+          >
+            <div className="flex gap-2">
+              <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
+              <div className="min-w-0 space-y-1">
+                <p className="text-sm font-semibold text-[var(--foreground)]">Tipp</p>
+                <p className="text-xs text-[var(--text-2)]">
+                  Koordinieren Sie Turnier-Ressourcen und Garderoben im Wochenplaner — dort sehen Sie
+                  Spielfeld- und Hallenbelegungen im Vereinskontext.
+                </p>
+                <Link
+                  href={wochenplanerHref}
+                  className="inline-block text-xs font-medium text-[var(--sce-primary)] hover:underline"
+                  data-testid="turniere-tip-wochenplaner"
+                >
+                  Wochenplaner öffnen
+                </Link>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { getTournament } from "@/lib/tournaments/tournament-service";
 import { TournamentNotFoundError } from "@/lib/tournaments/errors";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
+import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { PageShell } from "@/components/ui/page";
 import TournamentEditForm from "@/components/admin/tournamentcenter/TournamentEditForm";
@@ -25,8 +26,8 @@ export default async function TournamentEditPage({ params }: Props) {
 
   const canManage = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
   const canDelete = hasPermission(session, PERMISSIONS.TOURNAMENTS_DELETE);
+  const canManageFacilitiesTimeStandards = hasPermission(session, PERMISSIONS.FACILITIES_MANAGE);
 
-  const PROTECTED_SOURCES = new Set(["SFV", "CLUBCORNER_FVNWS", "CSV_EXCEL_IMPORT"]);
   const { tournamentId } = await params;
 
   let tournament;
@@ -37,9 +38,10 @@ export default async function TournamentEditPage({ params }: Props) {
     throw err;
   }
 
-  const isProtectedSource = PROTECTED_SOURCES.has(tournament.source);
-
-  const facilities = await getFacilitiesForTenant(tenantContext.id);
+  const [facilities, operationalDurationPolicy] = await Promise.all([
+    getFacilitiesForTenant(tenantContext.id),
+    getTenantOperationalDurationPolicy(tenantContext.id),
+  ]);
 
   function facilityGroupsForTypes(types: readonly string[]): FacilityGroup[] {
     return facilities
@@ -75,10 +77,10 @@ export default async function TournamentEditPage({ params }: Props) {
           canDelete={canDelete}
           pitchHallFacilityGroups={pitchHallFacilityGroups}
           dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-          isCoordinatorForPlanning={canManage}
-          isProtectedSource={isProtectedSource}
           timezone={tenantContext.timezone ?? "Europe/Zurich"}
           tenantLogoUrl={tenantContext.logoUrl}
+          defaultTournamentDurationMinutes={operationalDurationPolicy.TOURNAMENT.durationMinutes}
+          canManageFacilitiesTimeStandards={canManageFacilitiesTimeStandards}
         />
       </ToastProvider>
     </PageShell>

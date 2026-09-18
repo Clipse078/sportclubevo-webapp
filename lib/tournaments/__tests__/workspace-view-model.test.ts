@@ -79,6 +79,20 @@ function createTournament(overrides: Partial<TournamentDto> = {}): TournamentDto
 const NOW = new Date("2026-09-03T12:00:00.000Z");
 const TZ = "Europe/Zurich";
 
+const BASE_QUERY = {
+  search: "",
+  teamFilter: null as string | null,
+  monthParam: null as string | null,
+  statusFilter: null,
+  actionFilter: "ALLE" as const,
+  categoryFilter: null,
+  ageFilter: null,
+  locationFilter: null,
+  ownOnly: false,
+  publicOnly: false,
+  listView: "LISTE" as const,
+};
+
 describe("normalizeTournamentTimeScope", () => {
   it("defaults to UPCOMING", () => {
     expect(normalizeTournamentTimeScope(undefined)).toBe("UPCOMING");
@@ -91,8 +105,8 @@ describe("normalizeTournamentTimeScope", () => {
 });
 
 describe("normalizeTournamentGroupMode", () => {
-  it("defaults to DATE", () => {
-    expect(normalizeTournamentGroupMode(undefined)).toBe("DATE");
+  it("defaults to MONTH", () => {
+    expect(normalizeTournamentGroupMode(undefined)).toBe("MONTH");
   });
 
   it("accepts keine/month/team", () => {
@@ -119,12 +133,8 @@ describe("buildTournamentWorkspaceViewModel", () => {
     const upcoming = buildTournamentWorkspaceViewModel(
       tournaments,
       {
+        ...BASE_QUERY,
         scope: "UPCOMING",
-        search: "",
-        teamFilter: null,
-        monthParam: null,
-        statusFilter: null,
-        actionFilter: "ALLE",
         group: "NONE",
         sort: "DATE_ASC",
       },
@@ -137,12 +147,8 @@ describe("buildTournamentWorkspaceViewModel", () => {
     const past = buildTournamentWorkspaceViewModel(
       tournaments,
       {
+        ...BASE_QUERY,
         scope: "PAST",
-        search: "",
-        teamFilter: null,
-        monthParam: null,
-        statusFilter: null,
-        actionFilter: "ALLE",
         group: "NONE",
         sort: "DATE_DESC",
       },
@@ -174,12 +180,9 @@ describe("buildTournamentWorkspaceViewModel", () => {
     const bySearch = buildTournamentWorkspaceViewModel(
       tournaments,
       {
+        ...BASE_QUERY,
         scope: "UPCOMING",
         search: "f2 cup",
-        teamFilter: null,
-        monthParam: null,
-        statusFilter: null,
-        actionFilter: "ALLE",
         group: "NONE",
         sort: "DATE_ASC",
       },
@@ -191,12 +194,9 @@ describe("buildTournamentWorkspaceViewModel", () => {
     const byTeam = buildTournamentWorkspaceViewModel(
       tournaments,
       {
+        ...BASE_QUERY,
         scope: "UPCOMING",
-        search: "",
         teamFilter: "team-f1",
-        monthParam: null,
-        statusFilter: null,
-        actionFilter: "ALLE",
         group: "NONE",
         sort: "DATE_ASC",
       },
@@ -216,12 +216,8 @@ describe("buildTournamentWorkspaceViewModel", () => {
     const vm = buildTournamentWorkspaceViewModel(
       tournaments,
       {
+        ...BASE_QUERY,
         scope: "UPCOMING",
-        search: "",
-        teamFilter: null,
-        monthParam: null,
-        statusFilter: null,
-        actionFilter: "ALLE",
         group: "DATE",
         sort: "DATE_ASC",
       },
@@ -237,12 +233,9 @@ describe("buildTournamentWorkspaceViewModel", () => {
     const vm = buildTournamentWorkspaceViewModel(
       [createTournament()],
       {
+        ...BASE_QUERY,
         scope: "UPCOMING",
         search: "does-not-exist",
-        teamFilter: null,
-        monthParam: null,
-        statusFilter: null,
-        actionFilter: "ALLE",
         group: "DATE",
         sort: "DATE_ASC",
       },
@@ -257,12 +250,8 @@ describe("buildTournamentWorkspaceViewModel", () => {
     const vm = buildTournamentWorkspaceViewModel(
       [createTournament()],
       {
+        ...BASE_QUERY,
         scope: "UPCOMING",
-        search: "",
-        teamFilter: null,
-        monthParam: null,
-        statusFilter: null,
-        actionFilter: "ALLE",
         group: "TEAM",
         sort: "DATE_ASC",
       },

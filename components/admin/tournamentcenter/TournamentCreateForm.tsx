@@ -28,9 +28,13 @@
 
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ChevronRight, Loader2, Pencil, Shirt, Trash2, UsersRound } from "lucide-react";
+import { ChevronDown, ChevronRight, Loader2, Pencil, Trash2, UsersRound } from "lucide-react";
 import { TournamentFormSection } from "@/components/admin/tournamentcenter/TournamentFormSection";
-import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
+import TournamentStandardDurationHint from "@/components/admin/tournamentcenter/TournamentStandardDurationHint";
+import {
+  TournamentDressingRoomLabelIcon,
+  TournamentTeamLogo,
+} from "@/components/admin/tournamentcenter/tournament-semantic-icons";
 import StaticOptionSearchablePicker from "@/components/admin/shared/StaticOptionSearchablePicker";
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
 import TournamentEditorChrome from "@/components/admin/tournamentcenter/TournamentEditorChrome";
@@ -104,6 +108,8 @@ type TournamentCreateFormProps = {
   pitchHallFacilityGroups: FacilityGroup[];
   dressingRoomFacilityGroups: FacilityGroup[];
   tenantLogoUrl?: string | null;
+  defaultTournamentDurationMinutes: number;
+  canManageFacilitiesTimeStandards?: boolean;
 };
 
 function resolveResourceDisplay(
@@ -129,6 +135,8 @@ export default function TournamentCreateForm({
   pitchHallFacilityGroups,
   dressingRoomFacilityGroups,
   tenantLogoUrl = null,
+  defaultTournamentDurationMinutes,
+  canManageFacilitiesTimeStandards = false,
 }: TournamentCreateFormProps) {
   const router = useRouter();
   const formId = useId();
@@ -691,7 +699,11 @@ export default function TournamentCreateForm({
         </div>
       )}
 
-      <TournamentFormSection title="Grunddaten" description="Titel, Zeitrahmen und Rahmendaten">
+      <TournamentFormSection
+        iconVariant="grunddaten"
+        title="Grunddaten"
+        description="Titel, Zeitrahmen und Rahmendaten"
+      >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <label className="block space-y-2 sm:col-span-2 lg:col-span-3">
             <span className="fca-label">Titel</span>
@@ -780,6 +792,14 @@ export default function TournamentCreateForm({
             <input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} className="fca-input" />
           </label>
 
+          <div className="sm:col-span-2 lg:col-span-3">
+            <TournamentStandardDurationHint
+              defaultTournamentDurationMinutes={defaultTournamentDurationMinutes}
+              canManageFacilitiesTimeStandards={canManageFacilitiesTimeStandards}
+              testId="tournament-create-standard-duration"
+            />
+          </div>
+
           <label className="block space-y-2">
             <span className="fca-label">Treffpunkt Zeit</span>
             <input
@@ -818,6 +838,7 @@ export default function TournamentCreateForm({
       </TournamentFormSection>
 
       <TournamentFormSection
+        iconVariant="participants"
         title="Teilnehmende Teams"
         description="Mindestens ein Team — FC Allschwil und Vereine aus dem Verzeichnis."
       >
@@ -858,11 +879,9 @@ export default function TournamentCreateForm({
                         <span className="w-6 shrink-0" aria-hidden />
                       )}
 
-                      <ClubLogo
+                      <TournamentTeamLogo
                         logoUrl={participantDraftLogo(participant)}
                         name={participant.displayName}
-                        size="sm"
-                        bare
                         className="h-7 w-7 shrink-0"
                       />
 
@@ -931,7 +950,7 @@ export default function TournamentCreateForm({
                         {homeAway === "HOME" && (
                           <div className={cn(participant.kind === "EXTERNAL_CLUB" && "mt-2")}>
                             <p className="mb-1.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-                              <Shirt className="h-3 w-3" aria-hidden />
+                              <TournamentDressingRoomLabelIcon />
                               Garderobe
                             </p>
                             <VisualDressingRoomPicker
@@ -977,6 +996,7 @@ export default function TournamentCreateForm({
 
       {homeAway === "HOME" && (
         <TournamentFormSection
+          iconVariant="resources"
           title="Ressourcen"
           description="Spielfeld / Halle — Verfügbarkeit live für Start–Ende."
         >
@@ -994,7 +1014,11 @@ export default function TournamentCreateForm({
         </TournamentFormSection>
       )}
 
-      <TournamentFormSection title="Veröffentlichung" description="Ausgabekanäle für dieses Turnier">
+      <TournamentFormSection
+        iconVariant="publication"
+        title="Veröffentlichung"
+        description="Ausgabekanäle für dieses Turnier"
+      >
         <TournamentPublicationToggles
           value={publication}
           onChange={(patch) => {

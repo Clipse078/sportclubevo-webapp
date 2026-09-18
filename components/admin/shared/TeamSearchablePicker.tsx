@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
+import { TournamentTeamLogo } from "@/components/admin/tournamentcenter/tournament-semantic-icons";
 
 export type TeamPickerOption = {
   id: string;
@@ -189,7 +189,7 @@ export default function TeamSearchablePicker({
                     )}
                     data-testid={`${testId}-option-${option.id}`}
                   >
-                    <ClubLogo logoUrl={tenantLogoUrl} name={option.name} size="sm" bare className="h-6 w-6 shrink-0" />
+                    <TournamentTeamLogo logoUrl={tenantLogoUrl ?? null} name={option.name} className="h-6 w-6 shrink-0" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium text-[var(--foreground)]">{option.name}</span>
                       {meta ? (

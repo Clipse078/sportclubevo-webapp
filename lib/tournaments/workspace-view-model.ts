@@ -40,9 +40,13 @@ export type TournamentWorkspaceGroup = {
 
 export type TournamentWorkspaceSummary = {
   upcoming: number;
+  /** Upcoming tournaments whose start falls within the next three calendar months. */
+  upcomingWithin3Months: number;
   thisMonth: number;
   teamsInvolved: number;
   past: number;
+  total: number;
+  uniqueVenues: number;
 };
 
 export type TournamentWorkspaceViewModel = {
@@ -51,6 +55,8 @@ export type TournamentWorkspaceViewModel = {
   totalMatching: number;
   emptyKind: "none" | "no_data" | "no_scope" | "filtered";
 };
+
+export type TournamentListView = "LISTE" | "KOMPAKT" | "KALENDER";
 
 export type TournamentWorkspaceQuery = {
   scope: TournamentTimeScope;
@@ -61,6 +67,12 @@ export type TournamentWorkspaceQuery = {
   actionFilter: TournamentActionFilter;
   group: TournamentGroupMode;
   sort: TournamentSortMode;
+  categoryFilter: string | null;
+  ageFilter: string | null;
+  locationFilter: string | null;
+  ownOnly: boolean;
+  publicOnly: boolean;
+  listView: TournamentListView;
 };
 
 const GROUP_VALUES: TournamentGroupMode[] = ["NONE", "DATE", "MONTH", "TEAM"];
@@ -77,9 +89,17 @@ export function normalizeTournamentTimeScope(value: string | null | undefined): 
 export function normalizeTournamentGroupMode(value: string | null | undefined): TournamentGroupMode {
   const upper = value?.trim().toUpperCase() ?? "";
   if (upper === "NONE" || upper === "KEINE") return "NONE";
+  if (upper === "DATE" || upper === "DATUM") return "DATE";
   if (upper === "MONTH" || upper === "MONAT") return "MONTH";
   if (upper === "TEAM") return "TEAM";
-  return "DATE";
+  return "MONTH";
+}
+
+export function normalizeTournamentListView(value: string | null | undefined): TournamentListView {
+  const upper = value?.trim().toUpperCase() ?? "";
+  if (upper === "KOMPAKT") return "KOMPAKT";
+  if (upper === "KALENDER") return "KALENDER";
+  return "LISTE";
 }
 
 export function normalizeTournamentSortMode(
@@ -155,6 +175,41 @@ function tournamentMatchesSearch(tournament: TournamentDto, query: string): bool
   return false;
 }
 
+function tournamentMatchesCategoryFilter(
+  tournament: Pick<TournamentDto, "participants" | "team">,
+  categoryFilter: string,
+): boolean {
+  const target = categoryFilter.trim().toUpperCase();
+  return getTournamentParticipatingTeams(tournament).some(
+    (team) => team.category.trim().toUpperCase() === target,
+  );
+}
+
+function tournamentMatchesAgeFilter(
+  tournament: Pick<TournamentDto, "participants" | "team">,
+  ageFilter: string,
+): boolean {
+  const target = ageFilter.trim().toUpperCase();
+  return getTournamentParticipatingTeams(tournament).some((team) => {
+    const age = team.ageGroup?.trim().toUpperCase() ?? "";
+    return age === target;
+  });
+}
+
+function tournamentMatchesLocationFilter(tournament: Pick<TournamentDto, "location">, locationFilter: string): boolean {
+  const target = locationFilter.trim().toLowerCase();
+  const location = tournament.location?.trim().toLowerCase() ?? "";
+  return location === target;
+}
+
+function tournamentMatchesOwnOnly(tournament: Pick<TournamentDto, "homeAway">): boolean {
+  return tournament.homeAway === "HOME";
+}
+
+function tournamentMatchesPublicOnly(tournament: Pick<TournamentDto, "visibility">): boolean {
+  return tournament.visibility.websiteVisible;
+}
+
 function isUpcoming(tournament: TournamentDto, now: Date): boolean {
   return !isTournamentInArchivList(tournament, now);
 }
@@ -201,22 +256,42 @@ function formatMonthGroupHeading(monthKey: string, locale: string, timeZone: str
   }).format(parsed);
 }
 
+function addCalendarMonths(base: Date, months: number, timeZone: string): Date {
+  const parts = getZonedDateParts(base.toISOString(), timeZone);
+  const monthIndex = parts.month - 1 + months;
+  const year = parts.year + Math.floor(monthIndex / 12);
+  const month = ((monthIndex % 12) + 12) % 12;
+  return new Date(Date.UTC(year, month, 15, 12));
+}
+
 function buildSummary(
   tournaments: readonly TournamentDto[],
   now: Date,
   timeZone: string,
 ): TournamentWorkspaceSummary {
   const thisMonthKey = toCalendarMonthKey(now.toISOString(), timeZone);
+  const threeMonthHorizon = addCalendarMonths(now, 3, timeZone);
   const teamIds = new Set<string>();
+  const venueKeys = new Set<string>();
 
   let upcoming = 0;
+  let upcomingWithin3Months = 0;
   let past = 0;
   let thisMonth = 0;
 
   for (const tournament of tournaments) {
+    const locationKey = tournament.location?.trim().toLowerCase();
+    if (locationKey) {
+      venueKeys.add(locationKey);
+    }
+
     const upcomingRow = isUpcoming(tournament, now);
     if (upcomingRow) {
       upcoming += 1;
+      const start = new Date(tournament.startAt);
+      if (start.getTime() <= threeMonthHorizon.getTime()) {
+        upcomingWithin3Months += 1;
+      }
       if (toCalendarMonthKey(tournament.startAt, timeZone) === thisMonthKey) {
         thisMonth += 1;
       }
@@ -231,9 +306,12 @@ function buildSummary(
 
   return {
     upcoming,
+    upcomingWithin3Months,
     thisMonth,
     teamsInvolved: teamIds.size,
     past,
+    total: tournaments.length,
+    uniqueVenues: venueKeys.size,
   };
 }
 
@@ -273,6 +351,21 @@ export function buildTournamentWorkspaceViewModel(
     if (!tournamentMatchesSearch(tournament, query.search)) continue;
     if (query.teamFilter && !tournamentMatchesTeamFilter(tournament, query.teamFilter)) continue;
     if (query.statusFilter && tournament.status !== query.statusFilter) continue;
+    if (query.categoryFilter && !tournamentMatchesCategoryFilter(tournament, query.categoryFilter)) {
+      continue;
+    }
+    if (query.ageFilter && !tournamentMatchesAgeFilter(tournament, query.ageFilter)) {
+      continue;
+    }
+    if (query.locationFilter && !tournamentMatchesLocationFilter(tournament, query.locationFilter)) {
+      continue;
+    }
+    if (query.ownOnly && !tournamentMatchesOwnOnly(tournament)) {
+      continue;
+    }
+    if (query.publicOnly && !tournamentMatchesPublicOnly(tournament)) {
+      continue;
+    }
     if (monthWindow) {
       const start = new Date(tournament.startAt);
       if (start.getTime() < monthWindow.from.getTime() || start.getTime() > monthWindow.to.getTime()) {

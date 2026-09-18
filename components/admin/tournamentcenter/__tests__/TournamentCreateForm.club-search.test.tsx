@@ -13,6 +13,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TournamentCreateForm from "@/components/admin/tournamentcenter/TournamentCreateForm";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import { TOURNAMENT_FORM_TEST_SCHEDULE_PROPS } from "./tournament-form-test-helpers";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
@@ -71,7 +72,7 @@ beforeEach(() => {
 describe("TournamentCreateForm — external club participant search (BUG 2 fix)", () => {
   it("never eagerly fetches the full Club Directory on mount (no un-searched GET /api/club-directory/clubs call)", async () => {
     const { fetchMock, clubSearchCalls } = installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} />);
+    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     // Give any stray mount-time effect a tick to fire before asserting.
@@ -83,7 +84,7 @@ describe("TournamentCreateForm — external club participant search (BUG 2 fix)"
   // 9. eligible club beyond previous result cap is retrievable
   it("9. a club positioned well beyond the previous 50-item cap is retrievable via search", async () => {
     installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} />);
+    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
 
     fireEvent.change(screen.getByTestId("tournament-create-add-external-club-search-input"), {
       target: { value: "zu" },
@@ -95,7 +96,7 @@ describe("TournamentCreateForm — external club participant search (BUG 2 fix)"
   // 12. 2-character search returns matching canonical clubs
   it("12. a 2-character search returns matching canonical clubs", async () => {
     installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} />);
+    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
 
     fireEvent.change(screen.getByTestId("tournament-create-add-external-club-search-input"), {
       target: { value: "ro" },
@@ -107,7 +108,7 @@ describe("TournamentCreateForm — external club participant search (BUG 2 fix)"
   // 13. non-matching clubs excluded from search result
   it("13. non-matching clubs are excluded from the search result", async () => {
     installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} />);
+    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
 
     fireEvent.change(screen.getByTestId("tournament-create-add-external-club-search-input"), {
       target: { value: "ro" },
@@ -119,7 +120,7 @@ describe("TournamentCreateForm — external club participant search (BUG 2 fix)"
 
   it("selecting a searched club and clicking + adds it as a participant, then the Anzeigename field is editable (PR #348 behavior preserved)", async () => {
     installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} />);
+    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
 
     fireEvent.change(screen.getByTestId("tournament-create-add-external-club-search-input"), {
       target: { value: "ro" },
@@ -141,7 +142,7 @@ describe("TournamentCreateForm — external club participant search (BUG 2 fix)"
 
   it("the same club can be added twice with distinct Anzeigename values (PR #348 behavior preserved)", async () => {
     installFetchMock();
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} />);
+    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
 
     async function addRossoneri() {
       fireEvent.change(screen.getByTestId("tournament-create-add-external-club-search-input"), {
@@ -186,7 +187,7 @@ describe("TournamentCreateForm — external club participant search (BUG 2 fix)"
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} />);
+    render(<TournamentCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} {...TOURNAMENT_FORM_TEST_SCHEDULE_PROPS} />);
 
     fireEvent.change(screen.getByTestId("tournament-create-add-external-club-search-input"), {
       target: { value: "testverein" },
