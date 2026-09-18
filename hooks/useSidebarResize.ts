@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { applyShellLayoutVarsToDocument } from "@/lib/shell/shell-layout-vars";
 import {
   clampSidebarWidth,
   persistSidebarWidth,
@@ -16,23 +17,34 @@ export function useSidebarResize({ collapsed }: UseSidebarResizeOptions) {
   const [isResizing, setIsResizing] = useState(false);
   const widthRef = useRef(width);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     widthRef.current = width;
-    document.documentElement.style.setProperty("--sidebar-width", `${width}px`);
-  }, [width]);
+    applyShellLayoutVarsToDocument({
+      sidebarWidthPx: width,
+      collapsed,
+    });
+  }, [width, collapsed]);
 
   useEffect(() => {
-    if (!collapsed) {
-      document.documentElement.style.setProperty("--sidebar-width", `${widthRef.current}px`);
+    function onResize() {
+      applyShellLayoutVarsToDocument({
+        sidebarWidthPx: widthRef.current,
+        collapsed,
+      });
     }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, [collapsed]);
 
   const applyWidth = useCallback((nextWidth: number) => {
     const clamped = clampSidebarWidth(nextWidth);
     widthRef.current = clamped;
     setWidth(clamped);
-    document.documentElement.style.setProperty("--sidebar-width", `${clamped}px`);
-  }, []);
+    applyShellLayoutVarsToDocument({
+      sidebarWidthPx: clamped,
+      collapsed,
+    });
+  }, [collapsed]);
 
   const startResize = useCallback(
     (clientX: number) => {

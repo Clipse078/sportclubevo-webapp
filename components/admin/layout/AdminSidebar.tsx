@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { applyShellLayoutVarsToDocument } from "@/lib/shell/shell-layout-vars";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import SidebarBrandHeader from "@/components/admin/branding/SidebarBrandHeader";
 import SidebarPlatformBrand from "@/components/admin/branding/SidebarPlatformBrand";
@@ -93,7 +94,16 @@ export default function AdminSidebar({
   const isCollapsed =
     typeof collapsed === "boolean" ? collapsed : internalCollapsed;
 
-  useEffect(() => {
+  const {
+    width: sidebarWidthPx,
+    isResizing,
+    onResizePointerDown,
+    onResizeKeyDown,
+  } = useSidebarResize({
+    collapsed: isCollapsed,
+  });
+
+  useLayoutEffect(() => {
     if (!collapsedHydrated) return;
     const root = document.documentElement;
     if (isCollapsed) {
@@ -101,7 +111,11 @@ export default function AdminSidebar({
     } else {
       root.removeAttribute("data-sidebar-collapsed");
     }
-  }, [isCollapsed, collapsedHydrated]);
+    applyShellLayoutVarsToDocument({
+      sidebarWidthPx,
+      collapsed: isCollapsed,
+    });
+  }, [isCollapsed, collapsedHydrated, sidebarWidthPx]);
 
   const handleToggle = useCallback(() => {
     const next = !isCollapsed;
@@ -113,10 +127,6 @@ export default function AdminSidebar({
       onToggle();
     }
   }, [collapsed, isCollapsed, onToggle]);
-
-  const { isResizing, onResizePointerDown, onResizeKeyDown } = useSidebarResize({
-    collapsed: isCollapsed,
-  });
 
   const sections: NavSection[] = getVisibleNavSections(
     permissionKeys as PermissionKey[],

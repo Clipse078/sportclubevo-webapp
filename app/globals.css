@@ -1057,6 +1057,39 @@ html[data-sidebar-collapsed="1"] {
   --sce-sidebar-effective-width: var(--sidebar-collapsed-width);
 }
 
+/* SCE-RESPONSIVE-01B — portalled modal overlay (authoritative geometry on :root vars) */
+.sce-modal-overlay-root {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+.sce-modal-overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 65%);
+  backdrop-filter: blur(3px);
+}
+
+.sce-modal-overlay-content-viewport {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: var(--sce-sidebar-effective-width);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: var(--sce-overlay-gutter);
+}
+
+@media (min-width: 640px) {
+  .sce-modal-overlay-content-viewport {
+    padding: calc(var(--sce-overlay-gutter) * 1.25);
+  }
+}
+
 .sce-sidebar-resizing {
   transition: none;
 }

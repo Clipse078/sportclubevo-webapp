@@ -5,6 +5,7 @@ import {
   SCE_APP_MAIN_COLUMN,
   SCE_DIALOG_WORKSPACE_PANEL,
   SCE_OVERLAY_CONTENT_VIEWPORT,
+  SCE_OVERLAY_ROOT,
   SCE_DIALOG_WORKSPACE_DESIRED_MAX_PX,
 } from "@/lib/shell/responsive-layout";
 
@@ -14,8 +15,8 @@ function readSource(relativePath: string): string {
 
 describe("SCE-RESPONSIVE-01 responsive-layout contract", () => {
   it("exports content-viewport overlay positioning (not raw 100vw centering)", () => {
-    expect(SCE_OVERLAY_CONTENT_VIEWPORT).toContain("--sce-sidebar-effective-width");
-    expect(SCE_OVERLAY_CONTENT_VIEWPORT).not.toContain("100vw");
+    expect(SCE_OVERLAY_ROOT).toBe("sce-modal-overlay-root");
+    expect(SCE_OVERLAY_CONTENT_VIEWPORT).toBe("sce-modal-overlay-content-viewport");
   });
 
   it("workspace dialog panel uses CSS max-width token", () => {
@@ -32,6 +33,8 @@ describe("SCE-RESPONSIVE-01 responsive-layout contract", () => {
     expect(css).toContain("--sce-content-viewport-width");
     expect(css).toContain("--sce-dialog-workspace-max-width");
     expect(css).toContain('html[data-sidebar-collapsed="1"]');
+    expect(css).toContain(".sce-modal-overlay-content-viewport");
+    expect(css).toContain("left: var(--sce-sidebar-effective-width)");
   });
 
   it("admin layout uses SCE_APP_MAIN_COLUMN", () => {

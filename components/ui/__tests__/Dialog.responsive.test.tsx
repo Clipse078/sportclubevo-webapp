@@ -15,8 +15,10 @@ describe("Dialog SCE-RESPONSIVE-01", () => {
     expect(dialog).not.toContain("fixed inset-0 z-50 flex items-center justify-center");
   });
 
-  it("SceModalOverlay constrains centering to sidebar inset", () => {
+  it("SceModalOverlay portalls and uses sidebar-inset content viewport", () => {
     const overlay = readSource("components/ui/SceModalOverlay.tsx");
+    expect(overlay).toContain("createPortal");
     expect(overlay).toContain("SCE_OVERLAY_CONTENT_VIEWPORT");
+    expect(overlay).not.toContain("translate-x");
   });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type MouseEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
 import {
   SCE_OVERLAY_CONTENT_VIEWPORT,
@@ -19,7 +20,10 @@ export type SceModalOverlayProps = {
 
 /**
  * Full-screen modal backdrop with panel centering constrained to the authenticated
- * main content band (respects sidebar width / collapsed state via CSS variables).
+ * main content band (respects sidebar width / collapsed state via CSS variables on html).
+ *
+ * Portalled to document.body so shell ancestors cannot alter fixed containing blocks
+ * or stacking relative to the persistent sidebar.
  */
 export function SceModalOverlay({
   open,
@@ -45,14 +49,14 @@ export function SceModalOverlay({
     }
   }
 
-  return (
+  const overlay = (
     <div
       className={SCE_OVERLAY_ROOT}
       role="presentation"
       data-testid={testId}
       onClick={handleBackdropClick}
     >
-      <div className="absolute inset-0 bg-black/65 backdrop-blur-[3px]" aria-hidden="true" />
+      <div className="sce-modal-overlay-backdrop" aria-hidden="true" />
       <div
         className={cn(SCE_OVERLAY_CONTENT_VIEWPORT, contentViewportClassName)}
         onClick={handleBackdropClick}
@@ -61,4 +65,6 @@ export function SceModalOverlay({
       </div>
     </div>
   );
+
+  return createPortal(overlay, document.body);
 }

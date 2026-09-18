@@ -10,22 +10,21 @@
  */
 
 /** Full-viewport backdrop; panel positioning uses {@link SCE_OVERLAY_CONTENT_VIEWPORT}. */
-export const SCE_OVERLAY_ROOT = "fixed inset-0 z-50";
+export const SCE_OVERLAY_ROOT = "sce-modal-overlay-root";
 
 /**
- * Usable horizontal band for centered overlays while the persistent sidebar is in flow.
- * Backdrop remains full-screen; only the flex centering region is inset.
+ * Usable horizontal band for centered overlays (absolute within {@link SCE_OVERLAY_ROOT}).
+ * Backdrop remains full-screen; only the flex centering region is sidebar-inset.
  */
-export const SCE_OVERLAY_CONTENT_VIEWPORT =
-  "fixed top-0 bottom-0 right-0 left-[var(--sce-sidebar-effective-width)] flex items-center justify-center p-[var(--sce-overlay-gutter)] sm:p-[calc(var(--sce-overlay-gutter)*1.25)]";
+export const SCE_OVERLAY_CONTENT_VIEWPORT = "sce-modal-overlay-content-viewport";
 
 /** Workspace-scale dialog shell (PLANNING-UX-03D reference). */
 export const SCE_DIALOG_WORKSPACE_PANEL =
-  "relative z-10 flex w-full max-w-[var(--sce-dialog-workspace-max-width)] flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xl)] outline-none max-h-[var(--sce-dialog-max-height)]";
+  "relative z-10 flex w-full min-w-0 max-w-[min(100%,var(--sce-dialog-workspace-max-width))] flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xl)] outline-none max-h-[var(--sce-dialog-max-height)]";
 
 /** Standard dialog panel widths — sized against content viewport via CSS vars. */
 export const SCE_DIALOG_PANEL_BASE =
-  "relative z-10 flex w-full flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xl)] outline-none max-h-[var(--sce-dialog-max-height)]";
+  "relative z-10 flex w-full min-w-0 max-w-full flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xl)] outline-none max-h-[var(--sce-dialog-max-height)]";
 
 export const SCE_DIALOG_SIZE_SM = "max-w-[min(24rem,var(--sce-dialog-standard-max-width))]";
 export const SCE_DIALOG_SIZE_MD = "max-w-[min(32rem,var(--sce-dialog-standard-max-width))]";
