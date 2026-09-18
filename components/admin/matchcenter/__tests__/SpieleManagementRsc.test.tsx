@@ -59,14 +59,13 @@ describe("SPIELE-UX-01B — Spiele workspace RSC props", () => {
   it("workspace does not pass function props into client rail components", () => {
     const source = readSource("components/admin/matchcenter/SpieleManagementWorkspace.tsx");
     const calendarBlock = source.slice(source.indexOf("<SpieleManagementMonthCalendar"));
-    const schnellBlock = source.slice(source.indexOf("<SpieleManagementSchnellfilter"));
+    const filterBlock = source.slice(source.indexOf("<SpieleManagementFilterRail"));
 
-    expect(calendarBlock).not.toMatch(/dayHref=\{/);
-    expect(schnellBlock).not.toContain("toggleStatusHref=");
-    expect(schnellBlock).toContain("statusToggleHrefs=");
-    expect(schnellBlock).toContain("teamFilterLinks=");
-    expect(schnellBlock).toContain("zeitraumLinks=");
-    expect(schnellBlock).not.toMatch(/toggleStatusHref=\{/);
+    expect(calendarBlock).not.toMatch(/\bdayHref=\{/);
+    expect(filterBlock).not.toContain("toggleStatusHref=");
+    expect(filterBlock).toContain("statusToggleHrefs=");
+    expect(filterBlock).toContain("competitionHrefByValue=");
+    expect(filterBlock).not.toMatch(/toggleStatusHref=\{/);
   });
 
   it("matchcenter page remains a Server Component entry", () => {

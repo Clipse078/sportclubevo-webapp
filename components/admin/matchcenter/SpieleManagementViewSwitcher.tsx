@@ -23,7 +23,7 @@ export default function SpieleManagementViewSwitcher({
 
   return (
     <div
-      className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface)]/90 p-0.5"
+      className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-0.5"
       role="group"
       aria-label="Ansicht"
       data-testid="spiele-view-switcher"

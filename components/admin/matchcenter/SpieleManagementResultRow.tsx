@@ -29,7 +29,7 @@ type Props = {
 };
 
 const GRID = cn(
-  "group relative grid min-h-[56px] grid-cols-1 gap-2 border-b border-[var(--border)]/70 px-4 py-3.5 transition-[background-color] duration-150 last:border-b-0 md:gap-x-4",
+  "group relative grid min-h-0 grid-cols-1 gap-2 border-b border-[var(--border)]/60 px-4 py-2.5 transition last:border-b-0 hover:bg-[var(--surface-2)]/40 md:gap-x-4",
   SPIELE_RESULT_LIST_INTERMEDIATE_GRID,
   SPIELE_RESULT_LIST_WIDE_GRID,
   "min-[105rem]:items-center",

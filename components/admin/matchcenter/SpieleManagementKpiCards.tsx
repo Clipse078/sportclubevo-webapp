@@ -55,7 +55,10 @@ export default function SpieleManagementKpiCards({ metrics }: Props) {
               <p className="text-2xl font-semibold tabular-nums leading-none text-[var(--foreground)]">
                 {metric.value}
               </p>
-              <p className="mt-1 text-xs font-medium text-[var(--muted)]">{metric.label}</p>
+              <p className="mt-1 text-xs font-medium text-[var(--foreground)]">{metric.label}</p>
+              {metric.hint ? (
+                <p className="text-[0.65rem] text-[var(--muted)]">{metric.hint}</p>
+              ) : null}
             </div>
           </>
         );
