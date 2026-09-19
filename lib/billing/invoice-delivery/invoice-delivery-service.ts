@@ -43,6 +43,7 @@ import type {
   SendNativeInvoiceEmailResult,
 } from "./invoice-delivery-types";
 import { buildInvoiceDeliveryEmailAttachments } from "./invoice-delivery-email-inline-logos";
+import { buildInvoiceDeliveryBillingTransportPayload } from "./invoice-delivery-transport-payload";
 import { buildInvoicePdfAttachmentFilename } from "./invoice-pdf-filename";
 import { buildInvoiceDeliverySummary } from "./invoice-delivery-summary";
 import { BillingSmtpConfigurationError } from "./billing-smtp-config";
@@ -305,18 +306,20 @@ export async function sendNativeInvoiceEmail(
 
     const identity = await resolveBillingEmailIdentity();
 
-    const transportResult = await sendBillingEmail({
-      from: identity.from,
-      to: context.recipientEmail,
-      replyTo: identity.replyTo,
-      subject: emailContent.subject,
-      html: emailContent.html,
-      text: emailContent.text,
-      attachments: buildInvoiceDeliveryEmailAttachments(attachment),
-      idempotencyKey: `invoice-delivery:${delivery.key}`,
-      simulateFailure: input.simulateFailure === true,
-      deliveryIntent: "normal",
-    });
+    const transportResult = await sendBillingEmail(
+      buildInvoiceDeliveryBillingTransportPayload({
+        deliveryIntent: "normal",
+        from: identity.from,
+        to: context.recipientEmail,
+        replyTo: identity.replyTo,
+        subject: emailContent.subject,
+        html: emailContent.html,
+        text: emailContent.text,
+        attachments: buildInvoiceDeliveryEmailAttachments(attachment),
+        idempotencyKey: `invoice-delivery:${delivery.key}`,
+        simulateFailure: input.simulateFailure === true,
+      }),
+    );
 
     assertRealInvoiceDeliveryTransportResult(transportResult, context.recipientEmail);
 

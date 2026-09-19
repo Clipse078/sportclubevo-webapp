@@ -86,7 +86,7 @@ export function buildInvoiceDeliveryEmailContent(
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td align="left" valign="middle" style="padding:0;">
-                    <img src="${sceLogoSrc}" width="168" height="auto" alt="SportClubEvo" style="display:block;border:0;outline:none;text-decoration:none;max-width:168px;height:auto;" />
+                    <img src="${sceLogoSrc}" width="168" height="37" alt="SportClubEvo" style="display:block;border:0;outline:none;text-decoration:none;max-width:168px;height:auto;" />
                   </td>
                   <td align="right" valign="middle" style="padding:0 0 0 16px;">
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="right">
@@ -95,7 +95,7 @@ export function buildInvoiceDeliveryEmailContent(
                       </tr>
                       <tr>
                         <td align="right">
-                          <img src="${tulipLogoSrc}" width="88" height="auto" alt="Tulip Digital" style="display:block;border:0;outline:none;text-decoration:none;max-width:88px;height:auto;opacity:0.92;" />
+                          <img src="${tulipLogoSrc}" width="88" height="23" alt="Tulip Digital" style="display:block;border:0;outline:none;text-decoration:none;max-width:88px;height:auto;opacity:0.92;" />
                         </td>
                       </tr>
                     </table>
