@@ -23,7 +23,7 @@ import {
   TULIP_DIGITAL_LOGO_PATH,
 } from "./constants";
 import { mmToPt } from "./mm";
-import { renderSwissQrCodePng, SWISS_QR_RENDER_PIXEL_SIZE } from "./swiss-qr-code-image";
+import { renderSwissQrCodePng } from "./swiss-qr-code-image";
 import type { InvoicePaymentInstructionRecord } from "../invoice-payment-instruction-types";
 import type {
   InvoiceIssuerSnapshotRecord,
@@ -304,7 +304,7 @@ export async function drawSwissPaymentSlipOnPage(
     color: color(INVOICE_PDF_BRAND.text),
   });
 
-  const qrPng = await renderSwissQrCodePng(input.spcPayload, SWISS_QR_RENDER_PIXEL_SIZE);
+  const qrPng = await renderSwissQrCodePng(input.spcPayload);
   const qrImage = await pdfDoc.embedPng(qrPng);
   const qrX = paymentPartX + mmToPt(5);
   const qrY = sectionY + (sectionHeight - metrics.qrSizePt) / 2 - mmToPt(4);

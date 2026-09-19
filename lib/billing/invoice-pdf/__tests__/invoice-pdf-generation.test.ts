@@ -219,8 +219,8 @@ describe("invoice PDF generation (SWISS-01E)", () => {
       referenceType: "QRR",
       reference: "273282026000002025434650072",
     });
-    const a = await renderSwissQrCodePng(payload, 400);
-    const b = await renderSwissQrCodePng(payload, 400);
+    const a = await renderSwissQrCodePng(payload);
+    const b = await renderSwissQrCodePng(payload);
     expect(createHash("sha256").update(a).digest("hex")).toBe(
       createHash("sha256").update(b).digest("hex"),
     );

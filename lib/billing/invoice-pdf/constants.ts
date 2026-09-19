@@ -6,7 +6,10 @@ export const A4_HEIGHT_MM = 297;
 export const SWISS_RECEIPT_WIDTH_MM = 62;
 export const SWISS_PAYMENT_PART_WIDTH_MM = 148;
 export const SWISS_PAYMENT_SECTION_HEIGHT_MM = 105;
+/** Printed Swiss QR symbol (IG §6.4), excluding quiet zone. */
 export const SWISS_QR_CODE_SIZE_MM = 46;
+/** Style guide: 5 mm unprinted border around the 46 mm symbol (≥ 4 modules / 1.6 mm). */
+export const SWISS_QR_QUIET_ZONE_MM = 5;
 export const SWISS_CROSS_SIZE_MM = 7;
 
 export const INVOICE_PDF_BRAND = {
