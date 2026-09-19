@@ -7,6 +7,7 @@ import {
   buildTodayTournamentParticipantSummary,
   formatTodayEventTypeBadge,
 } from "@/lib/dashboard/today-event-card-presentation";
+import { sliceTournamentParticipantLogos } from "@/lib/dashboard/tournament-participant-logos";
 import { DashboardVenueMetadata } from "./DashboardVenueMetadata";
 import type { DashboardTodayTimelineItem } from "./DashboardTodayTimeline";
 import type { CommandCenterClubSide } from "@/lib/dashboard/command-center-presentation";
@@ -198,7 +199,8 @@ export function DashboardTodayMatchCard({ item }: { item: DashboardTodayTimeline
 
 export function DashboardTodayTournamentCard({ item }: { item: DashboardTodayTimelineItem }) {
   const participants = item.tournamentParticipants ?? [];
-  const visibleParticipants = participants.slice(0, 6);
+  const { visible: visibleParticipants, overflowCount: participantOverflow } =
+    sliceTournamentParticipantLogos(participants);
   const participantSummary = buildTodayTournamentParticipantSummary(participants.length);
   const venueGroups = item.venuePresentation?.groups ?? [];
 
@@ -255,9 +257,9 @@ export function DashboardTodayTournamentCard({ item }: { item: DashboardTodayTim
                 />
               </div>
             ))}
-            {participants.length > visibleParticipants.length && (
+            {participantOverflow > 0 && (
               <span className="px-0.5 text-[0.6875rem] font-medium text-[var(--muted)]">
-                +{participants.length - visibleParticipants.length}
+                +{participantOverflow}
               </span>
             )}
           </div>
