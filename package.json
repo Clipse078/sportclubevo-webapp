@@ -39,7 +39,8 @@
     "team-sfv-mapping-04:dry-run": "tsx scripts/team-sfv-mapping-04-stale-match-reconciliation.ts --dry-run",
     "club-directory-02c:inventory": "tsx scripts/club-directory-02c-sfv-consolidation.ts --inventory",
     "club-directory-02c:dry-run": "tsx scripts/club-directory-02c-sfv-consolidation.ts --dry-run",
-    "deploy:check": "npm run db:generate && npm run lint && npm run build"
+    "deploy:check": "npm run db:generate && npm run lint && npm run build",
+    "billing:qr-04a:generate": "tsx scripts/generate-billing-qr-04a-six-validation-pack.ts"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.20",
