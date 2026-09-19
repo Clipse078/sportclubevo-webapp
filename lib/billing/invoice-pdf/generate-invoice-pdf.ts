@@ -22,6 +22,10 @@ export async function generateInvoicePdfFromDocumentData(
   const pdfDoc = await PDFDocument.create();
   pdfDoc.setTitle(`Rechnung ${data.invoice.invoiceNumber ?? data.invoice.key}`);
   pdfDoc.setProducer("SportClubEvo Billing");
+  const metadataDate =
+    data.invoice.finalizedAt ?? data.invoice.invoiceDate ?? data.invoice.createdAt;
+  pdfDoc.setCreationDate(metadataDate);
+  pdfDoc.setModificationDate(metadataDate);
 
   const singlePageLayout = data.includeSwissPaymentSection
     ? shouldUseSinglePageWithPayment(data)
