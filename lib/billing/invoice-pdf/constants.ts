@@ -10,7 +10,20 @@ export const SWISS_PAYMENT_SECTION_HEIGHT_MM = 105;
 export const SWISS_QR_CODE_SIZE_MM = 46;
 /** Style guide: 5 mm unprinted border around the 46 mm symbol (≥ 4 modules / 1.6 mm). */
 export const SWISS_QR_QUIET_ZONE_MM = 5;
+/** Recognition symbol overlay (IG §6.4.2); must match official SIX artwork at print size. */
 export const SWISS_CROSS_SIZE_MM = 7;
+
+/**
+ * Official SIX black/white Swiss QR recognition symbol (7×7 mm at print).
+ * Source: SIX Swiss Payment Standards
+ * Asset: Black-White Cross for Swiss QR Code (Download Centre: swiss-cross-graphic-en.zip)
+ */
+export const SWISS_QR_RECOGNITION_CROSS_ASSET_PATH =
+  "lib/billing/invoice-pdf/assets/six-swiss-qr-black-white-cross-7mm.png";
+
+/** SHA-256 of the unmodified CH-Kreuz_7mm.png from the official SIX ZIP. */
+export const SWISS_QR_RECOGNITION_CROSS_ASSET_SHA256 =
+  "1322fcfc8b87bffc57da0b3c9c5a22adfbbcb07f62dda4a005d8dc2824612320";
 
 export const INVOICE_PDF_BRAND = {
   /** SCE navy ~#111B29 */

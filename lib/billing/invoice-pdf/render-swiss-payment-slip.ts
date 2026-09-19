@@ -16,6 +16,7 @@ import {
   INVOICE_PDF_BRAND,
   SPORTCLUBEVO_HEADER_LOGO_PATH,
   SWISS_CROSS_SIZE_MM,
+  SWISS_QR_RECOGNITION_CROSS_ASSET_PATH,
   SWISS_PAYMENT_PART_WIDTH_MM,
   SWISS_PAYMENT_SECTION_HEIGHT_MM,
   SWISS_QR_CODE_SIZE_MM,
@@ -97,43 +98,48 @@ function drawLabelValueBlock(
   return y;
 }
 
-function drawSwissCrossOverlay(
+export type SwissQrRecognitionSymbolPlacementPt = {
+  x: number;
+  y: number;
+  widthPt: number;
+  heightPt: number;
+};
+
+/** Mathematically centers the 7 mm SIX recognition symbol on the 46 mm QR symbol. */
+export function getSwissQrRecognitionSymbolPlacementPt(
+  qrX: number,
+  qrY: number,
+  qrSizePt: number,
+): SwissQrRecognitionSymbolPlacementPt {
+  const crossSizePt = mmToPt(SWISS_CROSS_SIZE_MM);
+  return {
+    x: qrX + (qrSizePt - crossSizePt) / 2,
+    y: qrY + (qrSizePt - crossSizePt) / 2,
+    widthPt: crossSizePt,
+    heightPt: crossSizePt,
+  };
+}
+
+async function drawSixRecognitionSymbolOverlay(
+  pdfDoc: PDFDocument,
   page: PDFPage,
   qrX: number,
   qrY: number,
   qrSizePt: number,
-): void {
-  const crossSizePt = mmToPt(SWISS_CROSS_SIZE_MM);
-  const crossX = qrX + (qrSizePt - crossSizePt) / 2;
-  const crossY = qrY + (qrSizePt - crossSizePt) / 2;
-
-  page.drawRectangle({
-    x: crossX,
-    y: crossY,
-    width: crossSizePt,
-    height: crossSizePt,
-    color: rgb(1, 1, 1),
-    borderWidth: 0,
-  });
-
-  const armWidth = mmToPt(1.4);
-  const armLength = crossSizePt;
-  const cx = crossX + crossSizePt / 2;
-  const cy = crossY + crossSizePt / 2;
-
-  page.drawRectangle({
-    x: cx - armWidth / 2,
-    y: crossY,
-    width: armWidth,
-    height: armLength,
-    color: rgb(0, 0, 0),
-  });
-  page.drawRectangle({
-    x: crossX,
-    y: cy - armWidth / 2,
-    width: armLength,
-    height: armWidth,
-    color: rgb(0, 0, 0),
+): Promise<void> {
+  const bytes = await loadBrandingAsset(SWISS_QR_RECOGNITION_CROSS_ASSET_PATH);
+  if (!bytes) {
+    throw new Error(
+      "Missing official SIX Swiss QR recognition symbol asset (Black-White Cross for Swiss QR Code)",
+    );
+  }
+  const crossImage = await pdfDoc.embedPng(bytes);
+  const placement = getSwissQrRecognitionSymbolPlacementPt(qrX, qrY, qrSizePt);
+  page.drawImage(crossImage, {
+    x: placement.x,
+    y: placement.y,
+    width: placement.widthPt,
+    height: placement.heightPt,
   });
 }
 
@@ -314,7 +320,7 @@ export async function drawSwissPaymentSlipOnPage(
     width: metrics.qrSizePt,
     height: metrics.qrSizePt,
   });
-  drawSwissCrossOverlay(page, qrX, qrY, metrics.qrSizePt);
+  await drawSixRecognitionSymbolOverlay(pdfDoc, page, qrX, qrY, metrics.qrSizePt);
 
   const paymentTextX = qrX + metrics.qrSizePt + mmToPt(5);
   drawLabelValueBlock(

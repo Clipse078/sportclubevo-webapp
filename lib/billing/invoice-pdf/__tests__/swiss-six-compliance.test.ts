@@ -1,20 +1,26 @@
 import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { PDFDocument } from "pdf-lib";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import {
   A4_HEIGHT_MM,
   A4_WIDTH_MM,
+  SWISS_CROSS_SIZE_MM,
   SWISS_PAYMENT_PART_WIDTH_MM,
   SWISS_PAYMENT_SECTION_HEIGHT_MM,
   SWISS_QR_CODE_SIZE_MM,
   SWISS_QR_QUIET_ZONE_MM,
+  SWISS_QR_RECOGNITION_CROSS_ASSET_PATH,
+  SWISS_QR_RECOGNITION_CROSS_ASSET_SHA256,
   SWISS_RECEIPT_WIDTH_MM,
 } from "../constants";
 import { generateInvoicePdfFromDocumentData } from "../generate-invoice-pdf";
 import { mmToPt, ptToMm } from "../mm";
 import {
   getSwissPaymentSlipMetrics,
+  getSwissQrRecognitionSymbolPlacementPt,
   type SwissPaymentSlipMetrics,
 } from "../render-swiss-payment-slip";
 import {
@@ -172,6 +178,35 @@ describe("Swiss QR-bill SIX compliance (BILLING-QR-02)", () => {
     const metrics = getSwissPaymentSlipMetrics();
     expectPaymentSlipMetrics(metrics);
     expect(SWISS_QR_QUIET_ZONE_MM).toBeGreaterThanOrEqual(1.6);
+  });
+
+  it("uses the canonical SIX Black-White Cross asset unchanged", async () => {
+    const absolute = path.join(process.cwd(), SWISS_QR_RECOGNITION_CROSS_ASSET_PATH);
+    const bytes = await readFile(absolute);
+    expect(createHash("sha256").update(bytes).digest("hex")).toBe(
+      SWISS_QR_RECOGNITION_CROSS_ASSET_SHA256,
+    );
+  });
+
+  it("places the 7 mm recognition symbol centered on the 46 mm QR symbol", () => {
+    const metrics = getSwissPaymentSlipMetrics();
+    const qrX = 100;
+    const qrY = 200;
+    const placement = getSwissQrRecognitionSymbolPlacementPt(qrX, qrY, metrics.qrSizePt);
+
+    expect(ptToMm(placement.widthPt)).toBeCloseTo(SWISS_CROSS_SIZE_MM, 4);
+    expect(ptToMm(placement.heightPt)).toBeCloseTo(SWISS_CROSS_SIZE_MM, 4);
+
+    const qrCenterX = qrX + metrics.qrSizePt / 2;
+    const qrCenterY = qrY + metrics.qrSizePt / 2;
+    expect(placement.x + placement.widthPt / 2).toBeCloseTo(qrCenterX, 4);
+    expect(placement.y + placement.heightPt / 2).toBeCloseTo(qrCenterY, 4);
+
+    expect(ptToMm(metrics.qrSizePt)).toBeCloseTo(SWISS_QR_CODE_SIZE_MM, 2);
+    expect(ptToMm(qrX + metrics.qrSizePt - (placement.x + placement.widthPt))).toBeCloseTo(
+      (SWISS_QR_CODE_SIZE_MM - SWISS_CROSS_SIZE_MM) / 2,
+      2,
+    );
   });
 
   it("generates A4 PDF with 210×105 mm payment section at page bottom", async () => {

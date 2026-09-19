@@ -56,7 +56,7 @@ async function main() {
 
   const outDir = "/opt/cursor/artifacts";
   await mkdir(outDir, { recursive: true });
-  const pdfPath = path.join(outDir, "billing-qr-02-invoice-2026-000002-test.pdf");
+  const pdfPath = path.join(outDir, "billing-qr-02b-invoice-2026-000002-test.pdf");
   await writeFile(pdfPath, pdfBytes);
   console.log(`Wrote ${pdfPath} (${pdfBytes.byteLength} bytes)`);
 }
