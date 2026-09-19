@@ -18,7 +18,7 @@ export type UseSceModalDialogOptions = {
 
 /**
  * Shared modal focus trap for SCE Dialog primitives.
- * Open/close focus + background inert ordering lives in {@link SceModalOverlay}.
+ * Open/close focus + background aria-hidden ordering lives in {@link SceModalOverlay}.
  */
 export function useSceModalDialog({
   open,

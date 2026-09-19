@@ -31,4 +31,15 @@ describe("AggregatedActivityInspectionDialog SCE-RESPONSIVE-01", () => {
     expect(headerIdx).toBeGreaterThan(-1);
     expect(listScrollIdx).toBeGreaterThan(headerIdx);
   });
+
+  it("N — TYP column is wide enough for Training without ellipsis truncation", () => {
+    const source = readSource(
+      "components/admin/planning-hub/AggregatedActivityInspectionDialog.tsx",
+    );
+    expect(source).toMatch(/<col className="w-\[5\.5rem\]" \/>/);
+    expect(source).toContain("whitespace-nowrap text-[var(--foreground)]");
+    expect(source).not.toMatch(
+      /weekplannerActivityTypeLabel\(item\.type\)[\s\S]{0,120}truncate/,
+    );
+  });
 });

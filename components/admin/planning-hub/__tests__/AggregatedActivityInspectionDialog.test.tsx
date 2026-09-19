@@ -108,6 +108,9 @@ describe("AggregatedActivityInspectionDialog", () => {
     expect(screen.getByText(/September 2026/)).toBeInTheDocument();
     const rows = within(screen.getByTestId("aggregate-inspection-table-body")).getAllByRole("row");
     expect(rows).toHaveLength(8);
+    expect(screen.getAllByText("Training").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/^Train\.\.\.$/)).toBeNull();
+    expect(screen.queryByText(/^Train…$/)).toBeNull();
   });
 
   it("selects first conflicting activity by default and shows conflict explanation", () => {

@@ -10,7 +10,6 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
-import { restoreSceBackgroundScrollPositions } from "@/lib/ui/sce-modal-background-scroll";
 import {
   applySceModalOpenSideEffects,
   releaseSceModalOpenSideEffects,
@@ -29,7 +28,7 @@ export type SceModalOverlayProps = {
   testId?: string;
   /** Extra classes on the content viewport (centering region). */
   contentViewportClassName?: string;
-  /** Initial focus target (e.g. dialog title) — focused with preventScroll before background inert. */
+  /** Initial focus target (e.g. dialog title) — focused with preventScroll before background is aria-hidden. */
   initialFocusRef?: RefObject<HTMLElement | null>;
 };
 
@@ -70,9 +69,7 @@ export function SceModalOverlay({
       backgroundRoots,
     });
 
-    const scrollSnapshot = openLifecycleRef.current.scrollSnapshot;
     const unlockScroll = lockSceDocumentScroll();
-    restoreSceBackgroundScrollPositions(scrollSnapshot);
 
     return () => {
       unlockScroll();
@@ -106,6 +103,7 @@ export function SceModalOverlay({
         className="sce-modal-overlay-interaction-layer sce-modal-overlay-backdrop"
         aria-hidden="true"
         onClick={handleBackdropClick}
+        onWheel={(e) => e.preventDefault()}
       />
       <div className={cn(SCE_OVERLAY_CONTENT_VIEWPORT, contentViewportClassName)}>
         <div className="sce-modal-overlay-panel-host">{children}</div>

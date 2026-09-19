@@ -158,7 +158,7 @@ describe("SceModalOverlay stationary contract SCE-RESPONSIVE-01D", () => {
     expect(dialog).toHaveAttribute("aria-labelledby", "aggregated-activity-inspection-title");
   });
 
-  it("K — marks background roots inert while open", () => {
+  it("K — marks background roots aria-hidden while open", () => {
     const root = document.createElement("div");
     root.setAttribute("data-sce-modal-background", "");
     document.body.appendChild(root);
@@ -169,9 +169,9 @@ describe("SceModalOverlay stationary contract SCE-RESPONSIVE-01D", () => {
       </SceModalOverlay>,
     );
 
-    expect(root.hasAttribute("inert")).toBe(true);
+    expect(root.getAttribute("aria-hidden")).toBe("true");
     unmount();
-    expect(root.hasAttribute("inert")).toBe(false);
+    expect(root.hasAttribute("aria-hidden")).toBe(false);
   });
 
   it("P — planning dialog source has no planner scroll hacks", async () => {

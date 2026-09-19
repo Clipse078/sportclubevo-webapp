@@ -52,7 +52,7 @@ describe("SceModalOverlay sidebar preservation SCE-RESPONSIVE-01I", () => {
     expect(interactionBlock).not.toMatch(/opacity:/);
   });
 
-  it("C — admin shell inert contract unchanged; no visual hide rules on background or inert", () => {
+  it("C — admin shell accessibility hide contract; no visual hide rules on background", () => {
     const css = readGlobalsCss();
     expect(css).not.toMatch(/\[data-sce-modal-background\][\s\S]*visibility:\s*hidden/);
     expect(css).not.toMatch(/\[data-sce-modal-background\][\s\S]*display:\s*none/);
@@ -63,7 +63,8 @@ describe("SceModalOverlay sidebar preservation SCE-RESPONSIVE-01I", () => {
     expect(overlaySource).toContain("[data-sce-modal-background]");
     expect(overlaySource).toContain("applySceModalOpenSideEffects");
     const lifecycleSource = readSource("lib/ui/sce-modal-open-lifecycle.ts");
-    expect(lifecycleSource).toContain('setAttribute("inert"');
+    expect(lifecycleSource).toContain("aria-hidden");
+    expect(lifecycleSource).not.toContain('setAttribute("inert"');
   });
 
   it("D — renders single portalled root (no sidebar shield sibling)", () => {

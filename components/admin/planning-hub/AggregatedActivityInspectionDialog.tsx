@@ -280,11 +280,11 @@ export default function AggregatedActivityInspectionDialog({
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain">
               <table className="w-full table-fixed border-collapse text-left text-xs">
                 <colgroup>
                   <col className="w-[4.25rem]" />
-                  <col className="w-[3.75rem]" />
+                  <col className="w-[5.5rem]" />
                   <col />
                   <col className="hidden md:table-column md:w-[18%]" />
                   <col className="hidden lg:table-column lg:w-[14%]" />
@@ -340,7 +340,7 @@ export default function AggregatedActivityInspectionDialog({
                                 className={cn("h-2 w-2 shrink-0 rounded-full", semantic.markerClass)}
                                 aria-hidden
                               />
-                              <span className="truncate text-[var(--foreground)]">
+                              <span className="whitespace-nowrap text-[var(--foreground)]">
                                 {weekplannerActivityTypeLabel(item.type)}
                               </span>
                             </span>

@@ -79,7 +79,7 @@ describe("SceModalOverlay backdrop SCE-RESPONSIVE-01F", () => {
     expect(css).not.toMatch(/\[inert\][\s\S]*opacity/);
   });
 
-  it("F — modal background roots become inert semantically while open", () => {
+  it("F — modal background roots become aria-hidden while open", () => {
     const root = document.createElement("div");
     root.setAttribute("data-sce-modal-background", "");
     document.body.appendChild(root);
@@ -89,10 +89,10 @@ describe("SceModalOverlay backdrop SCE-RESPONSIVE-01F", () => {
         <div>Panel</div>
       </SceModalOverlay>,
     );
-    expect(root.hasAttribute("inert")).toBe(true);
+    expect(root.getAttribute("aria-hidden")).toBe("true");
 
     unmount();
-    expect(root.hasAttribute("inert")).toBe(false);
+    expect(root.hasAttribute("aria-hidden")).toBe(false);
     root.remove();
   });
 

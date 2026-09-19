@@ -100,7 +100,7 @@ describe("SceModalOverlay scroll preservation SCE-RESPONSIVE-01K", () => {
     scrollToSpy.mockRestore();
   });
 
-  it("applies inert only after moving focus into the modal", async () => {
+  it("hides background from AT only after moving focus into the modal", async () => {
     function InertOrderProbe({ open }: { open: boolean }) {
       const titleRef = useRef<HTMLHeadingElement>(null);
       return (
@@ -126,7 +126,7 @@ describe("SceModalOverlay scroll preservation SCE-RESPONSIVE-01K", () => {
     rerender(<InertOrderProbe open />);
 
     await waitFor(() => {
-      expect(background.hasAttribute("inert")).toBe(true);
+      expect(background.getAttribute("aria-hidden")).toBe("true");
     });
     expect(document.activeElement?.textContent).toBe("Title");
   });

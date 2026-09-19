@@ -200,7 +200,7 @@ describe("sce-modal-background-scroll SCE-RESPONSIVE-01K/01M", () => {
     });
 
     expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
-    expect(background.hasAttribute("inert")).toBe(true);
+    expect(background.getAttribute("aria-hidden")).toBe("true");
     expect(previousFocus).toBe(trigger);
     expect(window.scrollY).toBe(700);
     expect(scrollToSpy).not.toHaveBeenCalled();
@@ -211,7 +211,7 @@ describe("sce-modal-background-scroll SCE-RESPONSIVE-01K/01M", () => {
       scrollSnapshot,
     });
 
-    expect(background.hasAttribute("inert")).toBe(false);
+    expect(background.hasAttribute("aria-hidden")).toBe(false);
     focusSpy.mockRestore();
     scrollToSpy.mockRestore();
   });
