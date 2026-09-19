@@ -13,8 +13,25 @@ vi.mock("@/lib/billing/operations/billing-operations-service", () => ({
   getBillingOperationsDashboard: mocks.getBillingOperationsDashboard,
 }));
 
-vi.mock("@/lib/billing/billing-inbound/billing-inbound-mailbox-repository", () => ({
-  countBillingInboundUnresolvedMessages: vi.fn().mockResolvedValue(0),
+vi.mock("@/lib/billing/billing-inbound/billing-inbound-operations-service", () => ({
+  getBillingCommunicationOperationsSnapshot: vi.fn().mockResolvedValue({
+    mailbox: {
+      configured: false,
+      enabled: false,
+      mailboxKey: "billing@sportclubevo.com",
+      lastSyncAt: null,
+      lastSyncStatus: null,
+      lastError: null,
+      uidValidity: null,
+      lastProcessedUid: null,
+      unresolvedCount: 0,
+      cronHealth: "NOT_CONFIGURED",
+      cronHealthLabel: "Inbound-E-Mail nicht konfiguriert",
+    },
+    unresolved: [],
+    retentionPolicy: {},
+    malwareScanning: { status: "NOT_CONFIGURED", operatorNote: "" },
+  }),
 }));
 
 import PlatformCommercialBillingPage from "../page";

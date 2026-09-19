@@ -155,3 +155,39 @@ export async function deleteStagedBillingCommunicationAttachments(input: {
   });
   return staged;
 }
+
+export async function listStaleStagedBillingCommunicationAttachments(input: {
+  olderThan: Date;
+  limit: number;
+}): Promise<BillingCommunicationAttachmentRecord[]> {
+  return prisma.billingCommunicationAttachment.findMany({
+    where: {
+      lifecycleStatus: "STAGED",
+      billingCommunicationId: null,
+      createdAt: { lt: input.olderThan },
+    },
+    orderBy: { createdAt: "asc" },
+    take: input.limit,
+    select: attachmentSelect,
+  });
+}
+
+export async function deleteStagedBillingCommunicationAttachmentById(input: {
+  id: string;
+  tenantId: string;
+}): Promise<BillingCommunicationAttachmentRecord | null> {
+  const row = await prisma.billingCommunicationAttachment.findFirst({
+    where: {
+      id: input.id,
+      tenantId: input.tenantId,
+      lifecycleStatus: "STAGED",
+      billingCommunicationId: null,
+    },
+    select: attachmentSelect,
+  });
+  if (!row) return null;
+  await prisma.billingCommunicationAttachment.delete({
+    where: { id: row.id },
+  });
+  return row;
+}

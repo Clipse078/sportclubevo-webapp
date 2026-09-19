@@ -76,6 +76,11 @@ function CommunicationItem({
 
         <div className="flex flex-wrap items-center gap-2">
           <BillingStatusBadge label={item.statusLabel} tone={item.statusTone} />
+          {item.status === "FAILED" ? (
+            <span className="text-xs text-[var(--muted)]">
+              Versand fehlgeschlagen — keine automatische Wiederholung.
+            </span>
+          ) : null}
           {item.deliveryStatusLabel ? (
             <BillingStatusBadge
               label={item.deliveryStatusLabel}

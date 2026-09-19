@@ -17,6 +17,7 @@ import {
 } from "./billing-imap-config";
 import { createBillingImapClient } from "./billing-imap-client";
 import { formatBillingImapSyncError } from "./billing-imap-sync-error";
+import { runStaleStagedBillingCommunicationAttachmentCleanup } from "@/lib/billing/billing-communication/billing-communication-attachment-cleanup-service";
 
 function isBillingInboundImapConfigured(): boolean {
   const readiness = getBillingImapConfigReadiness();
@@ -158,6 +159,14 @@ export async function runBillingInboundImapSync(): Promise<BillingInboundSyncSum
       lastError: message,
     });
     throw error;
+  }
+
+  try {
+    summary.attachmentCleanup = await runStaleStagedBillingCommunicationAttachmentCleanup();
+  } catch (error) {
+    console.warn("[billing/inbound-sync] staged attachment cleanup failed", {
+      message: error instanceof Error ? error.message : "unknown",
+    });
   }
 
   return summary;
