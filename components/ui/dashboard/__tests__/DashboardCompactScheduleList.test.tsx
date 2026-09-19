@@ -42,7 +42,7 @@ describe("DashboardCompactScheduleList", () => {
     expect(viewAll).toHaveAttribute("href", "/dashboard/planner/day?day=2026-09-08");
   });
 
-  it("shows overflow indicator for compact tournament participant logos", () => {
+  it("renders all tournament participant identities up to 16 without overflow", () => {
     const item: DashboardTodayTimelineItem = {
       key: "t-1",
       sortAt: new Date("2026-09-08T10:00:00Z"),
@@ -58,7 +58,45 @@ describe("DashboardCompactScheduleList", () => {
 
     render(<DashboardCompactScheduleList items={[item]} />);
 
-    expect(screen.getByText("+6")).toBeInTheDocument();
+    expect(screen.queryByText(/^\+/)).not.toBeInTheDocument();
     expect(screen.getByText("10 Teilnehmer")).toBeInTheDocument();
+    expect(screen.getAllByTitle(/^Team /)).toHaveLength(10);
+  });
+
+  it("shows +N only when more than 16 participants", () => {
+    const item: DashboardTodayTimelineItem = {
+      key: "t-2",
+      sortAt: new Date("2026-09-08T11:00:00Z"),
+      timeLabel: "11:00",
+      typeLabel: "Turnier",
+      eventType: "TOURNAMENT",
+      title: "Grosses Turnier",
+      tournamentParticipants: Array.from({ length: 20 }, (_, index) => ({
+        displayName: `Club ${index}`,
+        logoUrl: null,
+      })),
+    };
+
+    render(<DashboardCompactScheduleList items={[item]} />);
+
+    expect(screen.getByText("+4")).toBeInTheDocument();
+    expect(screen.getAllByTitle(/^Club /)).toHaveLength(16);
+  });
+
+  it("renders fallback identity for participants without crest files", () => {
+    const item: DashboardTodayTimelineItem = {
+      key: "t-3",
+      sortAt: new Date("2026-09-08T12:00:00Z"),
+      timeLabel: "12:00",
+      typeLabel: "Turnier",
+      eventType: "TOURNAMENT",
+      title: "Einzelturnier",
+      tournamentParticipants: [{ displayName: "FC Allschwil", logoUrl: null }],
+    };
+
+    render(<DashboardCompactScheduleList items={[item]} />);
+
+    expect(screen.getByTitle("FC Allschwil")).toBeInTheDocument();
+    expect(screen.queryByText(/^\+/)).not.toBeInTheDocument();
   });
 });

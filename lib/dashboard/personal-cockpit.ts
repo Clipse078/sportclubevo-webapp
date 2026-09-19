@@ -249,7 +249,7 @@ export function buildPersonalCockpitKpiStrip(input: {
         input.personalTasksAvailable && input.personalTaskCount !== null
           ? String(input.personalTaskCount)
           : "—",
-      context: input.personalTasksAvailable ? undefined : "Noch kein persönliches Aufgabenmodell",
+      context: undefined,
     },
     {
       key: "my-schedule",

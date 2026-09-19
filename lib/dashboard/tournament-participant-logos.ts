@@ -1,8 +1,10 @@
-/** Default tournament crest capacity for full dashboard event cards. */
-export const MAX_VISIBLE_TOURNAMENT_LOGOS = 6;
+/** Maximum tournament participant identities shown before "+N" overflow. */
+export const MAX_VISIBLE_TOURNAMENT_LOGOS = 16;
 
-/** Compact schedule row — fewer logos to prevent vertical growth. */
-export const COMPACT_TOURNAMENT_LOGO_LIMIT = 4;
+/**
+ * @deprecated Use MAX_VISIBLE_TOURNAMENT_LOGOS — compact Heute-im-Verein uses the same cap.
+ */
+export const COMPACT_TOURNAMENT_LOGO_LIMIT = MAX_VISIBLE_TOURNAMENT_LOGOS;
 
 export function sliceTournamentParticipantLogos<T>(
   participants: readonly T[],

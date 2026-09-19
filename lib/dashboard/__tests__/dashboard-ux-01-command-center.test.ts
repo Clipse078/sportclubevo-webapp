@@ -7,10 +7,7 @@ import {
   buildCompactSchedulePrimaryLine,
   DASHBOARD_TODAY_PREVIEW_LIMIT,
 } from "@/lib/dashboard/compact-schedule-presentation";
-import {
-  COMPACT_TOURNAMENT_LOGO_LIMIT,
-  sliceTournamentParticipantLogos,
-} from "@/lib/dashboard/tournament-participant-logos";
+import { MAX_VISIBLE_TOURNAMENT_LOGOS } from "@/lib/dashboard/tournament-participant-logos";
 import { getDashboardQuickActionDefs } from "@/lib/dashboard/quick-actions";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { TodayScheduleItem } from "@/lib/dashboard/command-center";
@@ -33,8 +30,23 @@ describe("DASHBOARD-UX-01 — personal cockpit KPI strip", () => {
       "Offene Anmeldungen",
     ]);
     expect(strip.find((kpi) => kpi.key === "my-tasks")?.value).toBe("—");
+    expect(strip.find((kpi) => kpi.key === "my-tasks")?.context).toBeUndefined();
     expect(strip.find((kpi) => kpi.key === "my-schedule")?.value).toBe("3");
     expect(strip.find((kpi) => kpi.key === "attention")?.value).toBe("2");
+  });
+
+  it("does not surface Aufgabenmodell implementation copy on unavailable tasks", () => {
+    const strip = buildPersonalCockpitKpiStrip({
+      personalScheduleCount: 0,
+      personalTasksAvailable: false,
+      personalTaskCount: null,
+      attentionCount: 0,
+      openRegistrationCount: 0,
+      canSeeRegistrations: false,
+    });
+    const serialized = JSON.stringify(strip);
+    expect(serialized).not.toContain("Aufgabenmodell");
+    expect(serialized).not.toContain("Datenmodell");
   });
 });
 
@@ -89,18 +101,8 @@ describe("DASHBOARD-UX-01 — Heute im Verein limits", () => {
 });
 
 describe("DASHBOARD-UX-01 — tournament participant logos", () => {
-  it("caps compact tournament logo rows", () => {
-    const participants = Array.from({ length: 10 }, (_, index) => ({
-      displayName: `Team ${index}`,
-      logoUrl: null,
-    }));
-    const { visible, overflowCount } = sliceTournamentParticipantLogos(
-      participants,
-      COMPACT_TOURNAMENT_LOGO_LIMIT,
-    );
-
-    expect(visible).toHaveLength(COMPACT_TOURNAMENT_LOGO_LIMIT);
-    expect(overflowCount).toBe(10 - COMPACT_TOURNAMENT_LOGO_LIMIT);
+  it("uses the shared 16-identity cap for dashboard presentation", () => {
+    expect(MAX_VISIBLE_TOURNAMENT_LOGOS).toBe(16);
   });
 });
 

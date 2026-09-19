@@ -14,7 +14,7 @@ import {
   buildTodayTournamentParticipantSummary,
 } from "@/lib/dashboard/today-event-card-presentation";
 import {
-  COMPACT_TOURNAMENT_LOGO_LIMIT,
+  MAX_VISIBLE_TOURNAMENT_LOGOS,
   sliceTournamentParticipantLogos,
 } from "@/lib/dashboard/tournament-participant-logos";
 import { DashboardEmptyState } from "./DashboardEmptyState";
@@ -45,7 +45,7 @@ function CompactTournamentRow({ item }: { item: DashboardTodayTimelineItem }) {
   const participants = item.tournamentParticipants ?? [];
   const { visible, overflowCount } = sliceTournamentParticipantLogos(
     participants,
-    COMPACT_TOURNAMENT_LOGO_LIMIT,
+    MAX_VISIBLE_TOURNAMENT_LOGOS,
   );
   const summary = buildTodayTournamentParticipantSummary(participants.length);
 
@@ -58,7 +58,7 @@ function CompactTournamentRow({ item }: { item: DashboardTodayTimelineItem }) {
         <p className="truncate text-[0.6875rem] leading-snug text-[var(--text-2)]">{item.subtitle}</p>
       )}
       {visible.length > 0 && (
-        <div className="mt-1 flex max-w-full flex-nowrap items-center gap-1 overflow-hidden">
+        <div className="mt-1 flex max-w-full flex-wrap items-center gap-1">
           {visible.map((participant, index) => (
             <div key={`${participant.displayName}-${index}`} title={participant.displayName}>
               <ClubLogo

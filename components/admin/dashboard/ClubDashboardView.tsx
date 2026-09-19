@@ -223,26 +223,6 @@ export default async function ClubDashboardView() {
       )}
 
       <DashboardOperationalGrid
-        operationalRow={
-          <>
-            <HeuteImVereinWidget
-              items={todayWithHrefs}
-              dateLabel={todayFormatted}
-              viewAllHref={todayPlannerHref}
-            />
-            <DashboardSection
-              title="Benötigt Aufmerksamkeit"
-              icon={<BellRing className="h-4 w-4" />}
-              iconAccent="warning"
-              noPadding
-              variant="card"
-            >
-              <div className="px-4 py-0.5 sm:px-5">
-                <DashboardAttentionList items={commandCenter.attentionItems} />
-              </div>
-            </DashboardSection>
-          </>
-        }
         personalRow={
           <>
             <MeineAgendaWidget
@@ -251,6 +231,26 @@ export default async function ClubDashboardView() {
             />
             <MeineAufgabenWidget />
           </>
+        }
+        clubToday={
+          <HeuteImVereinWidget
+            items={todayWithHrefs}
+            dateLabel={todayFormatted}
+            viewAllHref={todayPlannerHref}
+          />
+        }
+        clubAttention={
+          <DashboardSection
+            title="Benötigt Aufmerksamkeit"
+            icon={<BellRing className="h-4 w-4" />}
+            iconAccent="warning"
+            noPadding
+            variant="card"
+          >
+            <div className="px-4 py-0.5 sm:px-5">
+              <DashboardAttentionList items={commandCenter.attentionItems} />
+            </div>
+          </DashboardSection>
         }
         tertiary={
           <>
