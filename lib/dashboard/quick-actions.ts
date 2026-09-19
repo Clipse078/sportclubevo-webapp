@@ -28,6 +28,27 @@ const QUICK_ACTION_CATALOG: DashboardQuickActionDef[] = [
     permissionKeys: [PERMISSIONS.EVENTS_MANAGE, PERMISSIONS.EVENTS_VIEW],
   },
   {
+    key: "match",
+    href: "/dashboard/events/matches/new",
+    title: "Spiel planen",
+    subtitle: "Match erfassen",
+    permissionKeys: [PERMISSIONS.EVENTS_MANAGE, PERMISSIONS.EVENTS_VIEW],
+  },
+  {
+    key: "tournament",
+    href: "/dashboard/events/tournaments/new",
+    title: "Turnier planen",
+    subtitle: "Turnier erfassen",
+    permissionKeys: [PERMISSIONS.EVENTS_MANAGE, PERMISSIONS.EVENTS_VIEW],
+  },
+  {
+    key: "veranstaltung",
+    href: "/dashboard/events/other/new",
+    title: "Veranstaltung",
+    subtitle: "Event erfassen",
+    permissionKeys: [PERMISSIONS.EVENTS_MANAGE, PERMISSIONS.EVENTS_VIEW],
+  },
+  {
     key: "planner-week",
     href: "/dashboard/planner/week",
     title: "Wochenplanung",
@@ -75,10 +96,10 @@ function hasAccess(userKeys: PermissionKey[], required: PermissionKey[]): boolea
   return required.some((key) => userKeys.includes(key));
 }
 
-/** Returns up to four quick actions the actor may use. */
+/** Returns quick actions the actor may use (default cap keeps the cockpit compact). */
 export function getDashboardQuickActionDefs(
   permissionKeys: PermissionKey[],
-  limit = 4,
+  limit = 6,
 ): DashboardQuickActionDef[] {
   return QUICK_ACTION_CATALOG.filter((action) =>
     hasAccess(permissionKeys, action.permissionKeys),
