@@ -66,6 +66,60 @@ export async function countBillingInboundUnresolvedMessages(): Promise<number> {
   return prisma.billingInboundUnresolvedMessage.count();
 }
 
+export type BillingInboundUnresolvedListItem = {
+  id: string;
+  key: string;
+  receivedAt: Date | null;
+  senderAddress: string;
+  subject: string | null;
+  reason: BillingInboundUnresolvedReason;
+  detail: string | null;
+  attachmentCount: number;
+  createdAt: Date;
+};
+
+export async function listBillingInboundUnresolvedMessages(input: {
+  limit: number;
+}): Promise<BillingInboundUnresolvedListItem[]> {
+  const rows = await prisma.billingInboundUnresolvedMessage.findMany({
+    orderBy: [{ receivedAt: "desc" }, { createdAt: "desc" }],
+    take: input.limit,
+    select: {
+      id: true,
+      key: true,
+      receivedAt: true,
+      senderAddress: true,
+      subject: true,
+      reason: true,
+      detail: true,
+      createdAt: true,
+      _count: { select: { attachments: true } },
+    },
+  });
+  return rows.map((row) => ({
+    id: row.id,
+    key: row.key,
+    receivedAt: row.receivedAt,
+    senderAddress: row.senderAddress,
+    subject: row.subject,
+    reason: row.reason,
+    detail: row.detail,
+    attachmentCount: row._count.attachments,
+    createdAt: row.createdAt,
+  }));
+}
+
+export async function findBillingInboundUnresolvedMessageById(id: string) {
+  return prisma.billingInboundUnresolvedMessage.findUnique({
+    where: { id },
+    include: {
+      attachments: {
+        orderBy: { sortOrder: "asc" },
+      },
+    },
+  });
+}
+
 export async function createBillingInboundUnresolvedMessage(input: {
   mailboxKey: string;
   provider: string;

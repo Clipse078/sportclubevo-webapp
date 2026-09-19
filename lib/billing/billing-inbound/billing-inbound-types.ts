@@ -25,6 +25,8 @@ export type BillingInboundIngestResult =
   | { kind: "UNRESOLVED"; unresolvedId: string; reason: string }
   | { kind: "FAILED"; retryable: boolean; reason: string };
 
+import type { BillingCommunicationAttachmentCleanupSummary } from "@/lib/billing/billing-communication/billing-communication-attachment-cleanup-service";
+
 export type BillingInboundSyncSummary = {
   mailboxKey: string;
   fetched: number;
@@ -34,4 +36,5 @@ export type BillingInboundSyncSummary = {
   failed: number;
   skipped: boolean;
   skipReason?: string;
+  attachmentCleanup?: BillingCommunicationAttachmentCleanupSummary;
 };

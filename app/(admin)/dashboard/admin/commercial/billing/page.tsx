@@ -5,23 +5,28 @@ import BillingOperationsAttentionQueue from "@/components/admin/billing/BillingO
 import BillingOperationsKpiStrip from "@/components/admin/billing/BillingOperationsKpiStrip";
 import BillingOperationsReconciliationSummary from "@/components/admin/billing/BillingOperationsReconciliationSummary";
 import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
-import { countBillingInboundUnresolvedMessages } from "@/lib/billing/billing-inbound/billing-inbound-mailbox-repository";
+import BillingCommunicationOperationsPanel from "@/components/admin/billing/BillingCommunicationOperationsPanel";
+import { getBillingCommunicationOperationsSnapshot } from "@/lib/billing/billing-inbound/billing-inbound-operations-service";
 import { getBillingOperationsDashboard } from "@/lib/billing/operations/billing-operations-service";
+import { hasPermission } from "@/lib/permissions/has-permission";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 export default async function PlatformCommercialBillingPage() {
-  await requirePermission(PERMISSIONS.BILLING_VIEW);
+  const session = await requirePermission(PERMISSIONS.BILLING_VIEW);
+  const canManage = hasPermission(session, PERMISSIONS.BILLING_MANAGE);
 
   let dashboard: Awaited<ReturnType<typeof getBillingOperationsDashboard>> | null = null;
-  let unresolvedInboundCount = 0;
+  let communicationsOps: Awaited<
+    ReturnType<typeof getBillingCommunicationOperationsSnapshot>
+  > | null = null;
   try {
-    const [loadedDashboard, unresolvedCount] = await Promise.all([
+    const [loadedDashboard, opsSnapshot] = await Promise.all([
       getBillingOperationsDashboard(),
-      countBillingInboundUnresolvedMessages(),
+      getBillingCommunicationOperationsSnapshot(),
     ]);
     dashboard = loadedDashboard;
-    unresolvedInboundCount = unresolvedCount;
+    communicationsOps = opsSnapshot;
   } catch {
     dashboard = null;
   }
@@ -50,10 +55,11 @@ export default async function PlatformCommercialBillingPage() {
 
       <BillingOperationsKpiStrip metrics={dashboard.metrics} />
 
-      {unresolvedInboundCount > 0 ? (
-        <p className="rounded-md bg-[color-mix(in_srgb,var(--muted)_12%,transparent)] px-4 py-3 text-sm text-[var(--text-2)] ring-1 ring-[color-mix(in_srgb,var(--border)_45%,transparent)]">
-          Nicht zugeordnete Nachrichten: {unresolvedInboundCount}
-        </p>
+      {communicationsOps ? (
+        <BillingCommunicationOperationsPanel
+          snapshot={communicationsOps}
+          canManage={canManage}
+        />
       ) : null}
 
       <section className="space-y-3">

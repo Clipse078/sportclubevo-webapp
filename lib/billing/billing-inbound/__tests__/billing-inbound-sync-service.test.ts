@@ -28,6 +28,16 @@ vi.mock("../billing-imap-client", () => ({
   }),
 }));
 
+vi.mock("@/lib/billing/billing-communication/billing-communication-attachment-cleanup-service", () => ({
+  runStaleStagedBillingCommunicationAttachmentCleanup: vi.fn().mockResolvedValue({
+    attempted: 0,
+    removed: 0,
+    storageFailures: 0,
+    dbFailures: 0,
+    skippedNotStaged: 0,
+  }),
+}));
+
 const { runBillingInboundImapSync } = await import("../billing-inbound-sync-service");
 
 describe("billing inbound sync cursor", () => {
