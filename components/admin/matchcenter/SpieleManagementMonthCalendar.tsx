@@ -21,6 +21,7 @@ type Props = {
   matchDayKeys: readonly string[];
   previousMonthHref: string;
   nextMonthHref: string;
+  todayHref?: string;
 };
 
 function parseMonthParam(param: string): Date {
@@ -34,6 +35,7 @@ export default function SpieleManagementMonthCalendar({
   matchDayKeys,
   previousMonthHref,
   nextMonthHref,
+  todayHref,
 }: Props) {
   const matchDayKeySet = new Set(matchDayKeys);
   const monthStart = parseMonthParam(monthParam);
@@ -53,7 +55,10 @@ export default function SpieleManagementMonthCalendar({
       data-testid="spiele-month-calendar"
     >
       <div className="mb-2 flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold capitalize text-[var(--foreground)]">
+        <h3
+          className="text-sm font-semibold capitalize text-[var(--foreground)]"
+          data-testid="matchcenter-month-label"
+        >
           {monthLabel}
         </h3>
         <div className="flex items-center gap-0.5">
@@ -61,15 +66,24 @@ export default function SpieleManagementMonthCalendar({
             href={previousMonthHref}
             aria-label="Vorheriger Monat"
             className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-2)] hover:bg-[var(--surface-2)]"
-            data-testid="spiele-calendar-prev"
+            data-testid="matchcenter-month-previous"
           >
             <ChevronLeft className="h-4 w-4" />
           </Link>
+          {todayHref ? (
+            <Link
+              href={todayHref}
+              className="rounded-md px-2 py-1 text-[0.6875rem] font-semibold text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+              data-testid="spiele-calendar-today"
+            >
+              Heute
+            </Link>
+          ) : null}
           <Link
             href={nextMonthHref}
             aria-label="Nächster Monat"
             className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-2)] hover:bg-[var(--surface-2)]"
-            data-testid="spiele-calendar-next"
+            data-testid="matchcenter-month-next"
           >
             <ChevronRight className="h-4 w-4" />
           </Link>

@@ -94,7 +94,7 @@ describe("TournamentEditForm — TURNIERE-UX-01B", () => {
       />,
     );
 
-    expect(screen.getByRole("textbox", { name: /Titel/i })).not.toBeDisabled();
+    expect(screen.getByRole("textbox", { name: /Turniername/i })).not.toBeDisabled();
   });
 
   it("uses generic Team terminology in participant add workflow", () => {

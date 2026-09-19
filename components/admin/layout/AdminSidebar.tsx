@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { applyShellLayoutVarsToDocument } from "@/lib/shell/shell-layout-vars";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import SidebarBrandHeader from "@/components/admin/branding/SidebarBrandHeader";
 import SidebarPlatformBrand from "@/components/admin/branding/SidebarPlatformBrand";
@@ -81,7 +82,6 @@ export default function AdminSidebar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const selectedSeason = searchParams.get("season");
-
   const [internalCollapsed, setInternalCollapsed] = useState(false);
   const [collapsedHydrated, setCollapsedHydrated] = useState(false);
 
@@ -93,6 +93,29 @@ export default function AdminSidebar({
   const isCollapsed =
     typeof collapsed === "boolean" ? collapsed : internalCollapsed;
 
+  const {
+    width: sidebarWidthPx,
+    isResizing,
+    onResizePointerDown,
+    onResizeKeyDown,
+  } = useSidebarResize({
+    collapsed: isCollapsed,
+  });
+
+  useLayoutEffect(() => {
+    if (!collapsedHydrated) return;
+    const root = document.documentElement;
+    if (isCollapsed) {
+      root.dataset.sidebarCollapsed = "1";
+    } else {
+      root.removeAttribute("data-sidebar-collapsed");
+    }
+    applyShellLayoutVarsToDocument({
+      sidebarWidthPx,
+      collapsed: isCollapsed,
+    });
+  }, [isCollapsed, collapsedHydrated, sidebarWidthPx]);
+
   const handleToggle = useCallback(() => {
     const next = !isCollapsed;
     if (typeof collapsed !== "boolean") {
@@ -103,10 +126,6 @@ export default function AdminSidebar({
       onToggle();
     }
   }, [collapsed, isCollapsed, onToggle]);
-
-  const { isResizing, onResizePointerDown, onResizeKeyDown } = useSidebarResize({
-    collapsed: isCollapsed,
-  });
 
   const sections: NavSection[] = getVisibleNavSections(
     permissionKeys as PermissionKey[],
@@ -314,6 +333,7 @@ export default function AdminSidebar({
 
       <nav
         id="admin-sidebar-nav"
+        data-sce-sidebar-scroll-root
         className="sce-sidebar-nav flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-3"
         aria-label="Modulnavigation"
       >

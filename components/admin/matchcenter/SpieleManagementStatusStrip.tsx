@@ -5,6 +5,7 @@ export type SpieleStatusMetric = {
   key: string;
   label: string;
   value: number;
+  hint?: string;
   href?: string;
   active?: boolean;
   tone?: "default" | "amber" | "emerald" | "muted";

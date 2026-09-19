@@ -131,16 +131,11 @@ export type ResolvedCalendarViewport =
   | { mode: "daypart"; daypart: PlanningHubCalendarDaypart; explicit: boolean }
   | { mode: "full" };
 
+/** PLANNING-UX-03D — calendar uses Sichtbarer Zeitraum; legacy `zeit` no longer selects daypart windows. */
 export function resolveCalendarViewport(
-  calendarZeit: PlanningHubCalendarZeitParam | undefined,
+  _calendarZeit: PlanningHubCalendarZeitParam | undefined,
   _now: Date,
   _timeZone: string,
 ): ResolvedCalendarViewport {
-  if (calendarZeit === undefined || calendarZeit === "ganz") {
-    return { mode: "full" };
-  }
-  if (isPlanningHubCalendarDaypart(calendarZeit)) {
-    return { mode: "daypart", daypart: calendarZeit, explicit: true };
-  }
   return { mode: "full" };
 }

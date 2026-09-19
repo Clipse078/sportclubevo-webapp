@@ -36,6 +36,7 @@ type MatchcenterTeamFilterProps = {
     venueFilter?: string | null;
     statusMask?: readonly SpieleStatusMaskKey[] | null;
   };
+  fullWidth?: boolean;
 };
 
 export default function MatchcenterTeamFilter({
@@ -49,6 +50,7 @@ export default function MatchcenterTeamFilter({
   urlSearch = null,
   urlSort = null,
   spieleFilters,
+  fullWidth = false,
 }: MatchcenterTeamFilterProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -102,7 +104,7 @@ export default function MatchcenterTeamFilter({
   return (
     <div
       ref={containerRef}
-      className="relative"
+      className={cn("relative", fullWidth && "w-full")}
       data-testid="matchcenter-team-filter"
     >
       <button
@@ -111,6 +113,7 @@ export default function MatchcenterTeamFilter({
         onBlur={handleTriggerBlur}
         className={cn(
           "inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors",
+          fullWidth && "w-full justify-between",
           teamFilter
             ? "border-[var(--tenant-primary)] bg-[var(--tenant-primary)]/10 text-[var(--tenant-primary)]"
             : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]",
@@ -152,7 +155,10 @@ export default function MatchcenterTeamFilter({
         <div
           role="listbox"
           aria-label="Teams"
-          className="absolute right-0 top-full z-50 mt-1 w-[min(100vw-2rem,240px)] overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border-strong)] bg-[var(--surface)] shadow-[var(--shadow-lg)]"
+          className={cn(
+            "absolute top-full z-50 mt-1 w-[min(100vw-2rem,240px)] overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border-strong)] bg-[var(--surface)] shadow-[var(--shadow-lg)]",
+            fullWidth ? "left-0 right-0 w-full" : "right-0",
+          )}
           data-testid="matchcenter-team-filter-menu"
         >
           {teams.length >= SEARCH_THRESHOLD ? (

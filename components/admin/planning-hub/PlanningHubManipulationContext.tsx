@@ -40,7 +40,6 @@ import {
 } from "@/lib/planning-hub/scheduler/time-snap";
 import { zonedMinutesFromMidnight } from "@/lib/planning-hub/scheduler/time-zone";
 import {
-  CALENDAR_DAYPART_PIXELS_PER_MINUTE,
   CALENDAR_PIXELS_PER_MINUTE,
   RESOURCE_PIXELS_PER_MINUTE,
 } from "@/lib/planning-hub/scheduler/time-scale";
@@ -195,8 +194,7 @@ export function PlanningHubManipulationProvider({
     weekDayKeys: [],
   });
 
-  const calendarPixelsPerMinute =
-    urlState.calendarZeit === "ganz" ? CALENDAR_PIXELS_PER_MINUTE : CALENDAR_DAYPART_PIXELS_PER_MINUTE;
+  const calendarPixelsPerMinute = CALENDAR_PIXELS_PER_MINUTE;
 
   const desktopMinWidth = useDesktopMinWidth768();
   const enabled =

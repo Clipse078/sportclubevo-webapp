@@ -194,10 +194,24 @@ export default function WeekPlannerWorkspace({
     setOperationalEditingItem(item);
   }
 
+  function handleItemOpen(item: WeekplannerItem) {
+    const href = getPlanningHubItemHref(item);
+    if (href) router.push(href);
+  }
+
+  function canEditPlannerItem(item: WeekplannerItem): boolean {
+    if (item.type === "VERANSTALTUNG") return false;
+    if (activePlanId && overrideEditing) return true;
+    if (!canonicalEditing) return false;
+    return (
+      (item.type === "TRAINING" && canonicalEditing.canManageTrainings) ||
+      ((item.type === "MATCH" || item.type === "TOURNAMENT") && canonicalEditing.canManageEvents)
+    );
+  }
+
   function handleItemActivate(item: WeekplannerItem) {
     if (item.type === "VERANSTALTUNG") {
-      const href = getPlanningHubItemHref(item);
-      if (href) router.push(href);
+      handleItemOpen(item);
       return;
     }
     if (activePlanId && overrideEditing) {
@@ -292,6 +306,9 @@ export default function WeekPlannerWorkspace({
             timezone={timezone}
             todayDayKey={todayDayKey}
             onItemActivate={handleItemActivate}
+            onItemOpen={handleItemOpen}
+            onItemEdit={handleItemActivate}
+            canEditItem={canEditPlannerItem}
           />,
         )
       ) : urlState.perspective === "ressourcen" ? (

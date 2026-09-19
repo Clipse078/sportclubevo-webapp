@@ -30,6 +30,7 @@ import {
 } from "@/lib/training/management-data";
 import { listAllocationsGroupedBySeries } from "@/lib/training/training-allocation-service";
 import TrainingManagementWorkspace from "@/components/admin/training/TrainingManagementWorkspace";
+import { buildTrainingFilterHrefMaps } from "@/lib/training/management-navigation";
 
 type TrainingPageSearchParams = {
   tab?: string;
@@ -126,6 +127,14 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
     ? allSeries
     : allSeries.filter((series) => series.status !== "ARCHIVED");
   const archivedCount = allSeries.filter((series) => series.status === "ARCHIVED").length;
+  const activeCount = allSeries.filter((series) => series.status === "ACTIVE").length;
+  const inactiveCount = allSeries.filter((series) => series.status === "INACTIVE").length;
+  const trainingKpis = {
+    active: activeCount,
+    inactive: inactiveCount,
+    archived: archivedCount,
+    total: allSeries.length,
+  };
 
   const teamSeasonIds = [...new Set(displayedSeries.map((series) => series.teamSeasonId))];
   const teamDisplayNameByTeamSeasonId = await listTeamSeasonDisplayNamesForManagement(
@@ -159,6 +168,19 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
     logAdminServerTiming(perfTimer.finish());
   }
 
+  const filterBase = {
+    archived: showArchived,
+    seriesSearch: params.seriesSearch,
+    seriesTeam: params.seriesTeam,
+    seriesStatus: params.seriesStatus,
+    seriesSort: params.seriesSort,
+  };
+  const { teamHrefByValue, statusHrefByValue, resetFiltersHref } = buildTrainingFilterHrefMaps(
+    "/dashboard/training",
+    filterBase,
+    teamOptions.map((team) => team.id),
+  );
+
   return (
     <div className="w-full">
       <TrainingManagementWorkspace
@@ -179,7 +201,11 @@ export default async function TrainingCenterPage({ searchParams }: Props) {
           totalCount: pagination.totalCount,
         }}
         sort={sort}
+        kpis={trainingKpis}
         archivedCount={archivedCount}
+        teamHrefByValue={teamHrefByValue}
+        statusHrefByValue={statusHrefByValue}
+        resetFiltersHref={resetFiltersHref}
         filters={{
           seriesSearch: params.seriesSearch,
           seriesTeam: params.seriesTeam,

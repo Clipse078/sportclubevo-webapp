@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import {
   allDayLaneRowCount,
@@ -10,19 +10,12 @@ import {
 import { applyPlanningHubFilters } from "@/lib/planning-hub/filters";
 import type { PlanningHubUrlState } from "@/lib/planning-hub/planner-url";
 import {
-  daypartVisibleRange,
-  resolveCalendarViewport,
-  type PlanningHubCalendarDaypart,
-} from "@/lib/planning-hub/planning-dayparts";
-import {
   calendarHeightPxForClippedActivity,
   calendarTopPxForClippedActivity,
   clipActivityToVisibleWindow,
 } from "@/lib/planning-hub/scheduler/activity-window";
 import { laneHorizontalStyle } from "@/lib/planning-hub/scheduler/interval-lanes";
 import {
-  CALENDAR_DAYPART_AGGREGATE_BELOW_WIDTH_PX,
-  CALENDAR_DAYPART_MIN_ACTIVITY_WIDTH_PX,
   CALENDAR_FULL_DAY_AGGREGATE_BELOW_WIDTH_PX,
   CALENDAR_MIN_ACTIVITY_WIDTH_PX,
   estimateDayColumnWidthPx,
@@ -30,19 +23,16 @@ import {
   planCalendarDayLayout,
 } from "@/lib/planning-hub/scheduler/calendar-day-layout";
 import {
-  CALENDAR_DAYPART_PIXELS_PER_MINUTE,
   CALENDAR_PIXELS_PER_MINUTE,
   minutesToCalendarTopPx,
   type VisibleTimeRange,
 } from "@/lib/planning-hub/scheduler/time-scale";
-import { resolveCalendarTimeRange } from "@/lib/planning-hub/scheduler/time-range-focus";
+import { useWeekplannerVisibleTimeRange } from "./WeekplannerVisibleTimeRangeContext";
 import { dayKeyInTimeZone, zonedMinutesFromMidnight } from "@/lib/planning-hub/scheduler/time-zone";
 import type { WeekplannerItem, WeekplannerWeek } from "@/lib/weekplanner/types";
 import PlanningHubAllDayLane from "./PlanningHubAllDayLane";
 import PlanningHubActivityBlock from "./PlanningHubActivityBlock";
 import PlanningHubCalendarClusterBlock from "./PlanningHubCalendarClusterBlock";
-import PlanningHubDaypartSwitcher from "./PlanningHubDaypartSwitcher";
-import { usePlanningHubCalendarZeit } from "@/hooks/use-planning-hub-calendar-zeit";
 import {
   effectiveItemTimes,
   projectedItemForRender,
@@ -57,6 +47,9 @@ type PlanningHubCalendarViewProps = {
   timezone: string;
   todayDayKey: string;
   onItemActivate: (item: WeekplannerItem) => void;
+  onItemOpen?: (item: WeekplannerItem) => void;
+  onItemEdit?: (item: WeekplannerItem) => void;
+  canEditItem?: (item: WeekplannerItem) => boolean;
 };
 
 const TIME_GUTTER_WIDTH_PX = 48;
@@ -80,34 +73,23 @@ export default function PlanningHubCalendarView({
   timezone,
   todayDayKey,
   onItemActivate,
+  onItemOpen,
+  onItemEdit,
+  canEditItem,
 }: PlanningHubCalendarViewProps) {
+  const openClusterItem = onItemOpen ?? onItemActivate;
+  const editClusterItem = onItemEdit ?? onItemActivate;
   const manipulation = usePlanningHubManipulation();
-  const { urlState: calendarUrlState, setCalendarZeit } = usePlanningHubCalendarZeit(urlState, {
-    timeZone: timezone,
-  });
-  const onSelectDaypart = useCallback(
-    (daypart: PlanningHubCalendarDaypart) => setCalendarZeit(daypart),
-    [setCalendarZeit],
-  );
-  const onSelectFullDay = useCallback(() => setCalendarZeit("ganz"), [setCalendarZeit]);
+  const { visibleRange: timeRange } = useWeekplannerVisibleTimeRange();
 
-  const filtered = applyPlanningHubFilters(week, calendarUrlState);
+  const filtered = applyPlanningHubFilters(week, urlState);
   const allDaySegments = useMemo(
-    () => collectAllDayLaneSegments(week, calendarUrlState, timezone),
-    [week, calendarUrlState, timezone],
+    () => collectAllDayLaneSegments(week, urlState, timezone),
+    [week, urlState, timezone],
   );
   const allDayRows = allDayLaneRowCount(allDaySegments);
   const gridRef = useRef<HTMLDivElement>(null);
   const [measuredGridWidthPx, setMeasuredGridWidthPx] = useState<number | null>(null);
-
-  const viewport = useMemo(
-    () => resolveCalendarViewport(calendarUrlState.calendarZeit, new Date(), timezone),
-    [calendarUrlState.calendarZeit, timezone],
-  );
-
-  const isFullDay = viewport.mode === "full";
-  const activeDaypart: PlanningHubCalendarDaypart =
-    viewport.mode === "daypart" ? viewport.daypart : "morgen";
 
   useEffect(() => {
     const node = gridRef.current;
@@ -120,28 +102,9 @@ export default function PlanningHubCalendarView({
     return () => observer.disconnect();
   }, []);
 
-  const activityIntervals = useMemo(
-    () =>
-      filtered.days.flatMap((day) =>
-        day.items.map((item) => ({ startAt: item.startAt, endAt: item.endAt })),
-      ),
-    [filtered.days],
-  );
-
-  const timeRange = useMemo((): VisibleTimeRange => {
-    if (isFullDay) {
-      return resolveCalendarTimeRange(activityIntervals, timezone, "full").range;
-    }
-    return daypartVisibleRange(activeDaypart);
-  }, [activityIntervals, timezone, isFullDay, activeDaypart]);
-
-  const pixelsPerMinute = isFullDay ? CALENDAR_PIXELS_PER_MINUTE : CALENDAR_DAYPART_PIXELS_PER_MINUTE;
-  const layoutAggregateBelow = isFullDay
-    ? CALENDAR_FULL_DAY_AGGREGATE_BELOW_WIDTH_PX
-    : CALENDAR_DAYPART_AGGREGATE_BELOW_WIDTH_PX;
-  const minActivityWidth = isFullDay
-    ? CALENDAR_MIN_ACTIVITY_WIDTH_PX
-    : CALENDAR_DAYPART_MIN_ACTIVITY_WIDTH_PX;
+  const pixelsPerMinute = CALENDAR_PIXELS_PER_MINUTE;
+  const layoutAggregateBelow = CALENDAR_FULL_DAY_AGGREGATE_BELOW_WIDTH_PX;
+  const minActivityWidth = CALENDAR_MIN_ACTIVITY_WIDTH_PX;
 
   const columnWidthPx = estimateDayColumnWidthPx(DAY_MIN_WIDTH_PX, measuredGridWidthPx ?? undefined);
   const weekDayKeys = useMemo(() => filtered.days.map((d) => d.dayKey), [filtered.days]);
@@ -163,7 +126,6 @@ export default function PlanningHubCalendarView({
   const nowMinutes =
     week.days.some((d) => d.dayKey === todayDayKey) ? zonedMinutesFromMidnight(now, timezone) : null;
   const showNowLine =
-    !isFullDay &&
     nowMinutes !== null &&
     nowMinutes >= timeRange.startMinutes &&
     nowMinutes < timeRange.endMinutes;
@@ -180,17 +142,8 @@ export default function PlanningHubCalendarView({
     <div
       className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--surface)] [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]"
       data-testid="planning-hub-calendar"
+      data-sce-planner-calendar-scroll-root
     >
-      <PlanningHubDaypartSwitcher
-        urlState={calendarUrlState}
-        activeDaypart={activeDaypart}
-        fullDayActive={isFullDay}
-        showNowCueInActiveDaypart={showNowLine}
-        showAdvancedFullDay
-        onSelectDaypart={onSelectDaypart}
-        onSelectFullDay={onSelectFullDay}
-      />
-
       <div ref={gridRef} className="min-w-[720px]">
         <div
           className="sticky top-0 z-20 grid border-b border-[var(--border)] bg-[var(--surface)]"
@@ -357,9 +310,12 @@ export default function PlanningHubCalendarView({
                       <PlanningHubCalendarClusterBlock
                         key={`cluster-${segment.clusterId}`}
                         items={clusterItems}
+                        dayKey={day.dayKey}
                         locale={locale}
                         timezone={timezone}
-                        onActivateItem={onItemActivate}
+                        onOpenItem={openClusterItem}
+                        onEditItem={editClusterItem}
+                        canEditItem={canEditItem}
                         style={{
                           top,
                           height,

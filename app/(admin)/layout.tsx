@@ -11,6 +11,7 @@ import { generateTenantCssVars } from "@/lib/tenant-runtime/theme";
 import { getPersonProfileByUserIdCached } from "@/lib/server/request-cache";
 import { resolveAccountIdentityName } from "@/lib/people/identity";
 import { resolveWorkspaceContextFromSessionUser } from "@/lib/workspace/workspace-context";
+import { SCE_APP_MAIN_COLUMN } from "@/lib/shell/responsive-layout";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -55,6 +56,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
     <div
       className="flex min-h-screen bg-[var(--background)]"
       style={tenantCssVars as React.CSSProperties}
+      data-sce-modal-background
     >
       {/* Fixed sidebar */}
       <Suspense fallback={null}>
@@ -67,7 +69,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
       </Suspense>
 
       {/* Main content area — flex-1, no margin needed since sidebar is in flow */}
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+      <div className={SCE_APP_MAIN_COLUMN}>
         {/* Deployment environment banner */}
         <StageEnvironmentBanner />
 

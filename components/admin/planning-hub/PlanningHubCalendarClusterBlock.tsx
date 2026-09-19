@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import type { CSSProperties } from "react";
 import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -15,10 +15,13 @@ import PlanningHubClusterInspector from "./PlanningHubClusterInspector";
 
 type Props = {
   items: WeekplannerItem[];
+  dayKey: string;
   locale: string;
   timezone: string;
   style?: CSSProperties;
-  onActivateItem: (item: WeekplannerItem) => void;
+  onOpenItem: (item: WeekplannerItem) => void;
+  onEditItem?: (item: WeekplannerItem) => void;
+  canEditItem?: (item: WeekplannerItem) => boolean;
 };
 
 function formatTimeRange(start: Date, end: Date, locale: string, timeZone: string): string {
@@ -28,12 +31,14 @@ function formatTimeRange(start: Date, end: Date, locale: string, timeZone: strin
 
 export default function PlanningHubCalendarClusterBlock({
   items,
+  dayKey,
   locale,
   timezone,
   style,
-  onActivateItem,
+  onOpenItem,
+  onEditItem,
+  canEditItem,
 }: Props) {
-  const anchorRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const start = new Date(Math.min(...items.map((i) => i.startAt.getTime())));
   const end = new Date(Math.max(...items.map((i) => i.endAt.getTime())));
@@ -41,10 +46,13 @@ export default function PlanningHubCalendarClusterBlock({
   const summary = summarizeAggregateCluster(items, timeLabel);
   const clusterSemantic = activityVisualStyle(aggregateClusterSemanticType(items));
 
+  function handleClose() {
+    setOpen(false);
+  }
+
   return (
     <>
       <button
-        ref={anchorRef}
         type="button"
         style={style}
         data-testid="planning-hub-calendar-cluster"
@@ -79,13 +87,14 @@ export default function PlanningHubCalendarClusterBlock({
 
       <PlanningHubClusterInspector
         open={open}
-        onOpenChange={setOpen}
-        anchorRef={anchorRef}
-        summary={summary}
+        onClose={handleClose}
         items={items}
+        dayKey={dayKey}
         locale={locale}
         timezone={timezone}
-        onActivateItem={onActivateItem}
+        onOpenItem={onOpenItem}
+        onEditItem={onEditItem}
+        canEditItem={canEditItem}
       />
     </>
   );

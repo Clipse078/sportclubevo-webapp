@@ -24,11 +24,9 @@ describe("TournamentPublicationToggles", () => {
       />,
     );
 
-    expect(screen.getByRole("switch", { name: "Öffentliche Turnierseite" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Website" })).toBeChecked();
     expect(screen.getByRole("switch", { name: "Infoboard" })).not.toBeChecked();
-    expect(
-      screen.getByText(/Im öffentlichen Wochenplan anzeigen\./),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Das Turnier erscheint im öffentlichen Wochenplan\./)).toBeInTheDocument();
 
     expect(screen.getByTestId("tournament-publication-row-websiteVisible")).toBeInTheDocument();
     expect(screen.queryByTestId("tournament-publication-grid")).not.toBeInTheDocument();
@@ -53,7 +51,7 @@ describe("TournamentPublicationToggles", () => {
     );
 
     const cases: Array<{ label: string; key: keyof TournamentPublicationState }> = [
-      { label: "Öffentliche Turnierseite", key: "websiteVisible" },
+      { label: "Website", key: "websiteVisible" },
       { label: "Infoboard", key: "infoboardVisible" },
       { label: "Homepage", key: "homepageVisible" },
       { label: "Wochenplan", key: "wochenplanVisible" },

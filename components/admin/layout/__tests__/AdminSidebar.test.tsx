@@ -13,6 +13,8 @@
  *   - collapsed icon rail
  */
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import AdminSidebar from "@/components/admin/layout/AdminSidebar";
@@ -303,5 +305,44 @@ describe("AdminSidebar", () => {
     expect(screen.getByRole("link", { name: "Administration" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Website" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Planung" })).not.toBeInTheDocument();
+  });
+
+  it("SCE-RESPONSIVE-01 — syncs html data-sidebar-collapsed for overlay inset CSS", async () => {
+    localStorage.setItem("sce-sidebar-collapsed", "1");
+    render(
+      <AdminSidebar
+        permissionKeys={CLUB_ADMIN_PERMISSIONS}
+        clubName="FC Allschwil"
+        logoUrl={null}
+      />,
+    );
+    expect(document.documentElement.dataset.sidebarCollapsed).toBe("1");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /Navigation ausklappen|Navigation einklappen/i }),
+    );
+    expect(document.documentElement.hasAttribute("data-sidebar-collapsed")).toBe(false);
+  });
+
+  it("SCE-RESPONSIVE-01P — sidebar has no modal freeze or scroll guard hooks", () => {
+    const source = readFileSync(
+      join(process.cwd(), "components/admin/layout/AdminSidebar.tsx"),
+      "utf8",
+    );
+    expect(source).not.toContain("useSidebarScrollFreezeDuringModal");
+    expect(source).not.toContain("sidebar-modal-scroll-freeze");
+  });
+
+  it("SCE-RESPONSIVE-01M — marks module nav as canonical sidebar scroll root", () => {
+    render(
+      <AdminSidebar
+        permissionKeys={CLUB_ADMIN_PERMISSIONS}
+        clubName="FC Allschwil"
+        logoUrl={null}
+      />,
+    );
+    const nav = document.getElementById("admin-sidebar-nav");
+    expect(nav).toHaveAttribute("data-sce-sidebar-scroll-root");
+    expect(nav?.className).toMatch(/overflow-y-auto/);
   });
 });

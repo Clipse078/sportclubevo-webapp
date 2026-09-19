@@ -29,7 +29,9 @@
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronRight, Loader2, Pencil, Trash2, UsersRound } from "lucide-react";
-import { TournamentFormSection } from "@/components/admin/tournamentcenter/TournamentFormSection";
+import TurniereRecordSection from "@/components/admin/tournamentcenter/record/TurniereRecordSection";
+import TurniereRecordWorkspaceShell from "@/components/admin/tournamentcenter/record/TurniereRecordWorkspaceShell";
+import { TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS } from "@/components/admin/tournamentcenter/record/turniere-record-layout";
 import TournamentStandardDurationHint from "@/components/admin/tournamentcenter/TournamentStandardDurationHint";
 import {
   TournamentDressingRoomLabelIcon,
@@ -37,7 +39,6 @@ import {
 } from "@/components/admin/tournamentcenter/tournament-semantic-icons";
 import StaticOptionSearchablePicker from "@/components/admin/shared/StaticOptionSearchablePicker";
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
-import TournamentEditorChrome from "@/components/admin/tournamentcenter/TournamentEditorChrome";
 import TournamentPublicationToggles from "@/components/admin/tournamentcenter/TournamentPublicationToggles";
 import TournamentParticipantAddWorkflow from "@/components/admin/tournamentcenter/TournamentParticipantAddWorkflow";
 import { cn } from "@/lib/cn";
@@ -56,6 +57,8 @@ import {
   type TournamentResourceAllocationDraft,
 } from "@/lib/tournaments/create-tournament-orchestration";
 import type { ExternalClubPickerResult } from "./ExternalClubPicker";
+import TournamentOrganizerClubField from "./TournamentOrganizerClubField";
+import { organizerNameFromPickerSelection } from "@/lib/tournaments/organizer-picker-state";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -144,7 +147,7 @@ export default function TournamentCreateForm({
   // ── Turnier fields ─────────────────────────────────────────────────────
   const [seasonId, setSeasonId] = useState("");
   const [title, setTitle] = useState("Turnier");
-  const [organizerName, setOrganizerName] = useState("");
+  const [organizerSelection, setOrganizerSelection] = useState<ExternalClubPickerResult | null>(null);
   const [competitionLabel, setCompetitionLabel] = useState("");
   const [location, setLocation] = useState("");
   const [homeAway, setHomeAway] = useState<"HOME" | "AWAY">("HOME");
@@ -523,7 +526,7 @@ export default function TournamentCreateForm({
                 startAt,
                 endAt: endAt || null,
                 meetingTime: meetingTime || null,
-                organizerName: organizerName.trim() || null,
+                organizerName: organizerNameFromPickerSelection(organizerSelection),
                 competitionLabel: competitionLabel.trim() || null,
                 homeAway,
                 resultLabel: resultLabel.trim() || null,
@@ -634,48 +637,59 @@ export default function TournamentCreateForm({
     teamPageVisible,
   };
 
+  const createHeader = (
+    <div className="flex flex-col gap-4 pt-1 lg:flex-row lg:items-start lg:justify-between">
+      <div className="min-w-0 space-y-1">
+        <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">Turnier erstellen</p>
+        <h1 className="text-xl font-semibold tracking-tight text-[var(--foreground)] sm:text-2xl">Neues Turnier</h1>
+        <p className="text-sm text-[var(--text-2)]">
+          Teilnehmende Teams, Spielfeld/Halle und Garderoben werden direkt bei der Erstellung erfasst.
+        </p>
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => router.push("/dashboard/tournamentcenter")}
+          className="fca-button-secondary"
+          data-testid="tournament-create-cancel"
+        >
+          Abbrechen
+        </button>
+        <button
+          type="submit"
+          disabled={!canSubmit}
+          data-testid="tournament-create-submit"
+          title={
+            hasUnresolvedPartialFailure
+              ? 'Turnier wurde bereits angelegt — bitte über "Zum Turnier wechseln und korrigieren" fortsetzen.'
+              : undefined
+          }
+          className="fca-button-primary"
+        >
+          {submitting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Wird erstellt…
+            </>
+          ) : (
+            "Turnier erstellen"
+          )}
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-2" data-testid="tournament-create-form">
-      <TournamentEditorChrome
-        eyebrow="TournamentCenter"
-        title="Turnier erstellen"
-        description="Teilnehmende Teams, Spielfeld/Halle und Garderoben werden direkt bei der Erstellung erfasst."
+    <form id={formId} onSubmit={handleSubmit} className="space-y-4" data-testid="tournament-create-form">
+      <TurniereRecordWorkspaceShell
         breadcrumbs={[
-          { label: "Tournament Center", href: "/dashboard/tournamentcenter" },
-          { label: "Neu" },
+          { label: "Planung", href: "/dashboard/planner/week" },
+          { label: "Turniere", href: "/dashboard/tournamentcenter" },
+          { label: "Neues Turnier" },
         ]}
-        primaryAction={
-          <button
-            type="submit"
-            disabled={!canSubmit}
-            data-testid="tournament-create-submit"
-            title={
-              hasUnresolvedPartialFailure
-                ? 'Turnier wurde bereits angelegt — bitte über "Zum Turnier wechseln und korrigieren" fortsetzen.'
-                : undefined
-            }
-            className="fca-button-primary"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Wird erstellt…
-              </>
-            ) : (
-              "Turnier erstellen"
-            )}
-          </button>
-        }
-        secondaryActions={
-          <button
-            type="button"
-            onClick={() => router.push("/dashboard/tournamentcenter")}
-            className="fca-button-secondary"
-          >
-            Abbrechen
-          </button>
-        }
-      />
+        header={createHeader}
+        testId="turniere-tournament-create-workspace"
+      >
       {missingItems.length > 0 ? (
         <div
           className="fca-status-box fca-status-box-muted text-sm"
@@ -699,13 +713,10 @@ export default function TournamentCreateForm({
         </div>
       )}
 
-      <TournamentFormSection
-        iconVariant="grunddaten"
-        title="Grunddaten"
-        description="Titel, Zeitrahmen und Rahmendaten"
-      >
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <label className="block space-y-2 sm:col-span-2 lg:col-span-3">
+      <div className={`${TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS} divide-y divide-[var(--border)]/80`}>
+      <TurniereRecordSection title="Grunddaten" testId="turniere-create-section-grunddaten">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block space-y-2 sm:col-span-2">
             <span className="fca-label">Titel</span>
             <input
               type="text"
@@ -741,16 +752,11 @@ export default function TournamentCreateForm({
             />
           </label>
 
-          <label className="block space-y-2">
-            <span className="fca-label">Organisator</span>
-            <input
-              type="text"
-              value={organizerName}
-              onChange={(e) => setOrganizerName(e.target.value)}
-              className="fca-input"
-              placeholder="z. B. FC Aesch"
-            />
-          </label>
+          <TournamentOrganizerClubField
+            selected={organizerSelection}
+            onChange={setOrganizerSelection}
+            testId="tournament-create-organizer-club"
+          />
 
           <label className="block space-y-2">
             <span className="fca-label">Ort</span>
@@ -763,18 +769,24 @@ export default function TournamentCreateForm({
             />
           </label>
 
-          <div className="block space-y-2">
-            <span className="fca-label" id="tournament-create-home-away-label">
-              Heim / Auswärts
-            </span>
-            <HomeAwaySegmentedControl
-              value={homeAway}
-              onChange={setHomeAway}
-              testId="tournament-create-home-away"
-              aria-label="Heim / Auswärts"
+          <label className="block space-y-2 sm:col-span-2">
+            <span className="fca-label">Beschreibung</span>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="fca-textarea min-h-[88px]"
             />
-          </div>
+          </label>
 
+          <label className="block space-y-2 sm:col-span-2">
+            <span className="fca-label">Bemerkungen</span>
+            <input type="text" value={remarks} onChange={(e) => setRemarks(e.target.value)} className="fca-input" />
+          </label>
+        </div>
+      </TurniereRecordSection>
+
+      <TurniereRecordSection title="Termin" testId="turniere-create-section-termin">
+        <div className="grid gap-3 sm:grid-cols-2">
           <label className="block space-y-2">
             <span className="fca-label">Start</span>
             <input
@@ -792,16 +804,8 @@ export default function TournamentCreateForm({
             <input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} className="fca-input" />
           </label>
 
-          <div className="sm:col-span-2 lg:col-span-3">
-            <TournamentStandardDurationHint
-              defaultTournamentDurationMinutes={defaultTournamentDurationMinutes}
-              canManageFacilitiesTimeStandards={canManageFacilitiesTimeStandards}
-              testId="tournament-create-standard-duration"
-            />
-          </div>
-
           <label className="block space-y-2">
-            <span className="fca-label">Treffpunkt Zeit</span>
+            <span className="fca-label">Treffpunkt</span>
             <input
               type="datetime-local"
               value={meetingTime}
@@ -809,6 +813,30 @@ export default function TournamentCreateForm({
               className="fca-input"
             />
           </label>
+
+          <div className="sm:col-span-2">
+            <TournamentStandardDurationHint
+              defaultTournamentDurationMinutes={defaultTournamentDurationMinutes}
+              canManageFacilitiesTimeStandards={canManageFacilitiesTimeStandards}
+              testId="tournament-create-standard-duration"
+            />
+          </div>
+        </div>
+      </TurniereRecordSection>
+
+      <TurniereRecordSection title="Format & Kategorie" testId="turniere-create-section-format">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="block space-y-2">
+            <span className="fca-label" id="tournament-create-home-away-label">
+              Heim / Auswärts
+            </span>
+            <HomeAwaySegmentedControl
+              value={homeAway}
+              onChange={setHomeAway}
+              testId="tournament-create-home-away"
+              aria-label="Heim / Auswärts"
+            />
+          </div>
 
           <label className="block space-y-2">
             <span className="fca-label">Resultat / Rang</span>
@@ -820,27 +848,13 @@ export default function TournamentCreateForm({
               placeholder="z. B. 2. Platz"
             />
           </label>
-
-          <label className="block space-y-2 sm:col-span-2 lg:col-span-3">
-            <span className="fca-label">Beschreibung</span>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="fca-textarea min-h-[88px]"
-            />
-          </label>
-
-          <label className="block space-y-2 sm:col-span-2 lg:col-span-3">
-            <span className="fca-label">Bemerkungen</span>
-            <input type="text" value={remarks} onChange={(e) => setRemarks(e.target.value)} className="fca-input" />
-          </label>
         </div>
-      </TournamentFormSection>
+      </TurniereRecordSection>
 
-      <TournamentFormSection
-        iconVariant="participants"
-        title="Teilnehmende Teams"
-        description="Mindestens ein Team — FC Allschwil und Vereine aus dem Verzeichnis."
+      <TurniereRecordSection
+        title="Teilnehmer"
+        description="Mindestens ein Team — eigene Teams und Vereine aus dem Verzeichnis."
+        testId="turniere-create-section-participants"
       >
         <div className="space-y-4">
           {participants.length === 0 ? (
@@ -992,14 +1006,10 @@ export default function TournamentCreateForm({
             }
           />
         </div>
-      </TournamentFormSection>
+      </TurniereRecordSection>
 
       {homeAway === "HOME" && (
-        <TournamentFormSection
-          iconVariant="resources"
-          title="Ressourcen"
-          description="Spielfeld / Halle — Verfügbarkeit live für Start–Ende."
-        >
+        <TurniereRecordSection title="Anlage & Ressourcen" testId="turniere-create-section-resources">
           <VisualResourceAvailabilityPicker
             facilityGroups={pitchHallFacilityGroups}
             selectedResourceIds={allocatedResourceIds}
@@ -1011,14 +1021,10 @@ export default function TournamentCreateForm({
             availabilityByResourceId={pitchAvailability}
             testId="tournament-create-resource"
           />
-        </TournamentFormSection>
+        </TurniereRecordSection>
       )}
 
-      <TournamentFormSection
-        iconVariant="publication"
-        title="Veröffentlichung"
-        description="Ausgabekanäle für dieses Turnier"
-      >
+      <TurniereRecordSection title="Veröffentlichung" testId="turniere-create-section-publication">
         <TournamentPublicationToggles
           value={publication}
           onChange={(patch) => {
@@ -1030,7 +1036,8 @@ export default function TournamentCreateForm({
           }}
           testIdPrefix="tournament-create-publication"
         />
-      </TournamentFormSection>
+      </TurniereRecordSection>
+      </div>
 
       <div className="fca-status-box fca-status-box-muted text-xs">
         Neue Turniere werden vor der Veröffentlichung geprüft, sofern kein Freigabe-Recht vorliegt. Teams, Ressourcen
@@ -1074,6 +1081,7 @@ export default function TournamentCreateForm({
       <p className="sr-only" id={`${formId}-hint`}>
         Mindestens ein teilnehmendes Team ist erforderlich, um ein Turnier zu erstellen.
       </p>
+      </TurniereRecordWorkspaceShell>
     </form>
   );
 }

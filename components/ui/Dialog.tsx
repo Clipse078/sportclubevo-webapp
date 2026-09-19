@@ -1,16 +1,23 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  type KeyboardEvent,
-  type MouseEvent,
-  type ReactNode,
-} from "react";
+import { useRef, type KeyboardEvent, type ReactNode } from "react";
+import { useSceModalDialog } from "@/lib/ui/use-sce-modal-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { SceModalOverlay } from "@/components/ui/SceModalOverlay";
+import {
+  SCE_DIALOG_BODY,
+  SCE_DIALOG_FOOTER,
+  SCE_DIALOG_HEADER,
+  SCE_DIALOG_PANEL_BASE,
+  SCE_DIALOG_SIZE_LG,
+  SCE_DIALOG_SIZE_MD,
+  SCE_DIALOG_VARIANT_COMPACT,
+  SCE_DIALOG_VARIANT_FORM,
+  SCE_DIALOG_VARIANT_WORKSPACE,
+} from "@/lib/shell/responsive-layout";
 
-export type DialogSize = "sm" | "md" | "lg";
+export type DialogSize = "sm" | "md" | "lg" | "xl" | "workspace";
 
 export type DialogProps = {
   /** Controls visibility. */
@@ -30,9 +37,11 @@ export type DialogProps = {
 };
 
 const sizeClass: Record<DialogSize, string> = {
-  sm: "max-w-sm",
-  md: "max-w-lg",
-  lg: "max-w-2xl",
+  sm: SCE_DIALOG_VARIANT_COMPACT,
+  md: SCE_DIALOG_SIZE_MD,
+  lg: SCE_DIALOG_SIZE_LG,
+  xl: SCE_DIALOG_VARIANT_FORM,
+  workspace: SCE_DIALOG_VARIANT_WORKSPACE,
 };
 
 /**
@@ -71,60 +80,14 @@ export function Dialog({
   size = "md",
 }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
 
-  useEffect(() => {
-    if (open) {
-      previousFocusRef.current = document.activeElement as HTMLElement;
-      // Focus the panel so screen readers announce the dialog
-      requestAnimationFrame(() => {
-        panelRef.current?.focus();
-      });
-    } else {
-      previousFocusRef.current?.focus();
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    function handleKeyDown(e: globalThis.KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-        return;
-      }
-
-      if (e.key !== "Tab" || !panelRef.current) return;
-
-      const focusable = panelRef.current.querySelectorAll<HTMLElement>(
-        'a[href],button:not([disabled]),textarea,input,select,[tabindex]:not([tabindex="-1"])',
-      );
-      const first = focusable[0];
-      const last  = focusable[focusable.length - 1];
-
-      if (e.shiftKey) {
-        if (document.activeElement === first) {
-          e.preventDefault();
-          last?.focus();
-        }
-      } else {
-        if (document.activeElement === last) {
-          e.preventDefault();
-          first?.focus();
-        }
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
-
-  if (!open) return null;
-
-  function handleBackdropClick(e: MouseEvent<HTMLDivElement>) {
-    if (e.target === e.currentTarget) onClose();
-  }
+  useSceModalDialog({
+    open,
+    onClose,
+    panelRef,
+    initialFocusRef: titleRef,
+  });
 
   function handlePanelKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     // Prevent Escape from bubbling — already handled globally above
@@ -132,40 +95,24 @@ export function Dialog({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      role="presentation"
-      onClick={handleBackdropClick}
-    >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/65 backdrop-blur-[3px]"
-        aria-hidden="true"
-      />
-
-      {/* Panel */}
+    <SceModalOverlay open={open} onBackdropClick={onClose} initialFocusRef={titleRef}>
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="sce-dialog-title"
         aria-describedby={description ? "sce-dialog-desc" : undefined}
-        tabIndex={-1}
         onKeyDown={handlePanelKeyDown}
-        className={cn(
-          "relative z-10 flex w-full flex-col",
-          "rounded-2xl border border-[var(--border)] bg-[var(--surface)]",
-          "shadow-[var(--shadow-xl)]",
-          "outline-none",
-          sizeClass[size],
-        )}
+        className={cn(SCE_DIALOG_PANEL_BASE, sizeClass[size])}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-6 py-4">
+        <div className={SCE_DIALOG_HEADER}>
           <div className="min-w-0 flex-1">
             <h2
+              ref={titleRef}
               id="sce-dialog-title"
-              className="text-base font-semibold text-[var(--foreground)]"
+              tabIndex={-1}
+              className="text-base font-semibold text-[var(--foreground)] outline-none"
             >
               {title}
             </h2>
@@ -195,19 +142,11 @@ export function Dialog({
         </div>
 
         {/* Body */}
-        {children !== undefined && (
-          <div className="overflow-y-auto px-6 py-5 text-sm text-[var(--text-2)]">
-            {children}
-          </div>
-        )}
+        {children !== undefined && <div className={SCE_DIALOG_BODY}>{children}</div>}
 
         {/* Footer */}
-        {footer && (
-          <div className="flex flex-wrap items-center justify-end gap-3 border-t border-[var(--border)] px-6 py-4">
-            {footer}
-          </div>
-        )}
+        {footer && <div className={SCE_DIALOG_FOOTER}>{footer}</div>}
       </div>
-    </div>
+    </SceModalOverlay>
   );
 }

@@ -101,6 +101,34 @@
   --sidebar-collapsed-width: 56px;
   --topnav-height:           52px;
 
+  /* SCE-RESPONSIVE-01 — authenticated content viewport + overlay sizing */
+  /* Authoritative persistent inset — collapsed + mobile overrides below (SCE-RESPONSIVE-01L). */
+  --sce-sidebar-effective-width: var(--sidebar-width);
+  --sce-content-viewport-width: calc(100vw - var(--sce-sidebar-effective-width));
+  --sce-overlay-gutter: 1rem;
+  --sce-overlay-gutter-x: 1rem;
+  --sce-overlay-gutter-y: 1.5rem;
+  --sce-dialog-workspace-desired-max: 72.5rem;
+  --sce-dialog-compact-max-width: min(
+    32.5rem,
+    calc(var(--sce-content-viewport-width) - 2 * var(--sce-overlay-gutter-x))
+  );
+  --sce-dialog-form-max-width: min(
+    60rem,
+    calc(var(--sce-content-viewport-width) - 2 * var(--sce-overlay-gutter-x))
+  );
+  --sce-dialog-workspace-max-width: min(
+    var(--sce-dialog-workspace-desired-max),
+    calc(var(--sce-content-viewport-width) - 2 * var(--sce-overlay-gutter-x))
+  );
+  --sce-dialog-standard-max-width: calc(
+    var(--sce-content-viewport-width) - 2 * var(--sce-overlay-gutter-x)
+  );
+  --sce-dialog-max-height: calc(100dvh - 2 * var(--sce-overlay-gutter-y));
+  --sce-page-gutter: 1.25rem;
+  /* SCE-RESPONSIVE-01G — zero visible backdrop; hierarchy from dialog surface only */
+  --sce-modal-backdrop: transparent;
+
   /* Typography */
   --font-body:    var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
   --font-display: var(--font-display), "Barlow Condensed", Arial, sans-serif;
@@ -270,6 +298,7 @@
 html {
   background: var(--background);
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -1036,6 +1065,84 @@ button {
 
 .sce-sidebar.collapsed {
   width: var(--sidebar-collapsed-width);
+}
+
+html[data-sidebar-collapsed="1"] {
+  --sce-sidebar-effective-width: var(--sidebar-collapsed-width);
+}
+
+/* SCE-RESPONSIVE-01I — viewport-fixed portal root; dialog geometry on content viewport only */
+.sce-modal-overlay-root {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.sce-modal-overlay-interaction-layer,
+.sce-modal-overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--sce-modal-backdrop);
+  pointer-events: auto;
+}
+
+.sce-modal-overlay-panel-host {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-height: 100%;
+  max-width: 100%;
+  justify-content: center;
+  animation: sce-modal-panel-in var(--sce-motion-duration-fast) var(--sce-motion-ease-out) forwards;
+}
+
+@keyframes sce-modal-panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sce-modal-overlay-backdrop,
+  .sce-modal-overlay-panel-host {
+    animation: none;
+  }
+}
+
+.sce-modal-overlay-content-viewport {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--sce-sidebar-effective-width);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--sce-overlay-gutter-y) var(--sce-overlay-gutter-x);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sce-modal-overlay-content-viewport > .sce-modal-overlay-panel-host {
+  pointer-events: auto;
+}
+
+@media (min-width: 640px) {
+  .sce-modal-overlay-content-viewport {
+    --sce-overlay-gutter-y: 1.75rem;
+  }
 }
 
 .sce-sidebar-resizing {
@@ -1948,5 +2055,6 @@ button {
 
   :root {
     --sidebar-width: 0px;
+    --sce-sidebar-effective-width: 0px;
   }
 }

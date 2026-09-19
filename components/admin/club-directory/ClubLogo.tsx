@@ -13,6 +13,8 @@ type ClubLogoProps = {
    * The fallback placeholder also renders without border/bg in bare mode.
    */
   bare?: boolean;
+  /** When true, crest is redundant with adjacent visible text (alt="" + aria-hidden). */
+  decorative?: boolean;
   className?: string;
 };
 
@@ -43,7 +45,14 @@ const ICON_SIZE_CLASSES: Record<NonNullable<ClubLogoProps["size"]>, string> = {
  * renders as a clean visual element without avatar chrome — mandatory for
  * dominant match-card logo presentation.
  */
-export function ClubLogo({ logoUrl, name, size = "md", bare = false, className }: ClubLogoProps) {
+export function ClubLogo({
+  logoUrl,
+  name,
+  size = "md",
+  bare = false,
+  decorative = false,
+  className,
+}: ClubLogoProps) {
   const sizeClass = SIZE_CLASSES[size];
   const iconSizeClass = ICON_SIZE_CLASSES[size];
 
@@ -52,7 +61,8 @@ export function ClubLogo({ logoUrl, name, size = "md", bare = false, className }
       // eslint-disable-next-line @next/next/no-img-element -- external, tenant-supplied crest URLs (Vercel Blob or provider CDN), not a static local asset.
       <img
         src={logoUrl}
-        alt={`Logo ${name}`}
+        alt={decorative ? "" : `Logo ${name}`}
+        aria-hidden={decorative ? true : undefined}
         className={cn(
           sizeClass,
           "shrink-0 object-contain",

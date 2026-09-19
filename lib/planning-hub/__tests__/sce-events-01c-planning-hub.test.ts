@@ -27,12 +27,10 @@ describe("SCE-EVENTS-01C default Ganzer Tag", () => {
     ["nachmittag", "nachmittag"],
     ["abend", "abend"],
     ["spaet", "spaet"],
-  ] as const)("explicit ?zeit=%s resolves daypart", (param, expected) => {
+  ] as const)("legacy ?zeit=%s still parses; viewport uses Sichtbarer Zeitraum (full)", (param, expected) => {
     const state = parsePlanningHubUrlState({ zeit: param });
     expect(state.calendarZeit).toBe(expected);
-    const view = resolveCalendarViewport(state.calendarZeit, atLocal(14, 0), TZ);
-    expect(view.mode).toBe("daypart");
-    if (view.mode === "daypart") expect(view.daypart).toBe(expected);
+    expect(resolveCalendarViewport(state.calendarZeit, atLocal(14, 0), TZ).mode).toBe("full");
   });
 
   it("explicit ?zeit=ganz resolves Ganzer Tag", () => {
