@@ -13,6 +13,8 @@
  *   - collapsed icon rail
  */
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import AdminSidebar from "@/components/admin/layout/AdminSidebar";
@@ -320,6 +322,16 @@ describe("AdminSidebar", () => {
       screen.getByRole("button", { name: /Navigation ausklappen|Navigation einklappen/i }),
     );
     expect(document.documentElement.hasAttribute("data-sidebar-collapsed")).toBe(false);
+  });
+
+  it("SCE-RESPONSIVE-01O — attaches sidebar scroll freeze while SCE modals are open", () => {
+    const source = readFileSync(
+      join(process.cwd(), "components/admin/layout/AdminSidebar.tsx"),
+      "utf8",
+    );
+    expect(source).toContain("useSidebarScrollFreezeDuringModal");
+    expect(source).toContain("sidebarNavRef");
+    expect(source).toContain("ref={sidebarNavRef}");
   });
 
   it("SCE-RESPONSIVE-01M — marks module nav as canonical sidebar scroll root", () => {
