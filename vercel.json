@@ -6,7 +6,7 @@
   "crons": [
     {
       "path": "/api/cron/sfv-sync",
-      "schedule": "0 1 * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/sfv-club-master-import",
@@ -18,7 +18,7 @@
     },
     {
       "path": "/api/cron/billing-inbound-sync",
-      "schedule": "*/15 * * * *"
+      "schedule": "*/5 * * * *"
     }
   ]
 }
