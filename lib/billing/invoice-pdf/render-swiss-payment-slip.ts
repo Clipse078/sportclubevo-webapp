@@ -16,7 +16,6 @@ import {
   INVOICE_PDF_BRAND,
   SPORTCLUBEVO_HEADER_LOGO_PATH,
   SWISS_CROSS_SIZE_MM,
-  SWISS_QR_RECOGNITION_CROSS_ASSET_PATH,
   SWISS_PAYMENT_PART_WIDTH_MM,
   SWISS_PAYMENT_SECTION_HEIGHT_MM,
   SWISS_QR_CODE_SIZE_MM,
@@ -25,6 +24,7 @@ import {
 } from "./constants";
 import { mmToPt } from "./mm";
 import { renderSwissQrCodePng } from "./swiss-qr-code-image";
+import { loadSwissQrRecognitionCrossAssetBytes } from "./swiss-qr-recognition-cross-asset";
 import type { InvoicePaymentInstructionRecord } from "../invoice-payment-instruction-types";
 import type {
   InvoiceIssuerSnapshotRecord,
@@ -127,12 +127,7 @@ async function drawSixRecognitionSymbolOverlay(
   qrY: number,
   qrSizePt: number,
 ): Promise<void> {
-  const bytes = await loadBrandingAsset(SWISS_QR_RECOGNITION_CROSS_ASSET_PATH);
-  if (!bytes) {
-    throw new Error(
-      "Missing official SIX Swiss QR recognition symbol asset (Black-White Cross for Swiss QR Code)",
-    );
-  }
+  const bytes = await loadSwissQrRecognitionCrossAssetBytes();
   const crossImage = await pdfDoc.embedPng(bytes);
   const placement = getSwissQrRecognitionSymbolPlacementPt(qrX, qrY, qrSizePt);
   page.drawImage(crossImage, {

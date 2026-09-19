@@ -1,6 +1,4 @@
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { PDFDocument } from "pdf-lib";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
@@ -12,7 +10,6 @@ import {
   SWISS_PAYMENT_SECTION_HEIGHT_MM,
   SWISS_QR_CODE_SIZE_MM,
   SWISS_QR_QUIET_ZONE_MM,
-  SWISS_QR_RECOGNITION_CROSS_ASSET_PATH,
   SWISS_QR_RECOGNITION_CROSS_ASSET_SHA256,
   SWISS_RECEIPT_WIDTH_MM,
 } from "../constants";
@@ -23,6 +20,7 @@ import {
   getSwissQrRecognitionSymbolPlacementPt,
   type SwissPaymentSlipMetrics,
 } from "../render-swiss-payment-slip";
+import { loadSwissQrRecognitionCrossAssetBytes } from "../swiss-qr-recognition-cross-asset";
 import {
   getSwissQrRenderMetrics,
   renderSwissQrCodePng,
@@ -181,11 +179,26 @@ describe("Swiss QR-bill SIX compliance (BILLING-QR-02)", () => {
   });
 
   it("uses the canonical SIX Black-White Cross asset unchanged", async () => {
-    const absolute = path.join(process.cwd(), SWISS_QR_RECOGNITION_CROSS_ASSET_PATH);
-    const bytes = await readFile(absolute);
+    const bytes = await loadSwissQrRecognitionCrossAssetBytes();
     expect(createHash("sha256").update(bytes).digest("hex")).toBe(
       SWISS_QR_RECOGNITION_CROSS_ASSET_SHA256,
     );
+  });
+
+  it("loads the SIX cross asset without relying on process.cwd() (Vercel serverless)", async () => {
+    const previousCwd = process.cwd();
+    process.chdir("/tmp");
+    try {
+      const bytes = await loadSwissQrRecognitionCrossAssetBytes();
+      expect(bytes.byteLength).toBeGreaterThan(1000);
+      expect(createHash("sha256").update(bytes).digest("hex")).toBe(
+        SWISS_QR_RECOGNITION_CROSS_ASSET_SHA256,
+      );
+      const { pdfBytes } = await buildReferencePdf();
+      expect(pdfBytes.byteLength).toBeGreaterThan(5000);
+    } finally {
+      process.chdir(previousCwd);
+    }
   });
 
   it("places the 7 mm recognition symbol centered on the 46 mm QR symbol", () => {
