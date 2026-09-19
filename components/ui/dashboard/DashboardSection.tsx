@@ -6,6 +6,8 @@ export type DashboardSectionVariant = "flat" | "card";
 
 export type DashboardSectionIconAccent = DashboardKpiAccent;
 
+export type DashboardSectionDensity = "default" | "compact";
+
 export type DashboardSectionProps = {
   title?: string;
   description?: string;
@@ -15,6 +17,8 @@ export type DashboardSectionProps = {
   footer?: ReactNode;
   noPadding?: boolean;
   variant?: DashboardSectionVariant;
+  /** Tighter header/body rhythm for compact dashboard strips (default unchanged). */
+  density?: DashboardSectionDensity;
   className?: string;
   bodyClassName?: string;
   children?: ReactNode;
@@ -83,12 +87,14 @@ export function DashboardSection({
   footer,
   noPadding = false,
   variant = "flat",
+  density = "default",
   className,
   bodyClassName,
   children,
 }: DashboardSectionProps) {
   const hasHeader = !!(title || description || actions);
   const isCard = variant === "card";
+  const isCompactDensity = density === "compact";
 
   return (
     <section
@@ -104,7 +110,12 @@ export function DashboardSection({
         <div
           className={cn(
             "flex items-start justify-between gap-3",
-            isCard ? "border-b border-[color-mix(in_srgb,var(--border)_90%,transparent)] px-4 py-3.5 sm:px-5" : "pb-2.5",
+            isCard
+              ? cn(
+                  "border-b border-[color-mix(in_srgb,var(--border)_90%,transparent)] px-4 sm:px-5",
+                  isCompactDensity ? "py-2.5" : "py-3.5",
+                )
+              : "pb-2.5",
           )}
         >
           <div className="min-w-0 flex-1">
