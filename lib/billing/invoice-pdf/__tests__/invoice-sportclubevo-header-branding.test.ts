@@ -84,12 +84,9 @@ describe("SportClubEvo invoice PDF header branding (BILLING-PDF-04)", () => {
     );
     const saved = await pdfDoc.save();
     expect(countPdfImageXObjects(saved)).toBeGreaterThanOrEqual(1);
-    const embedded = pdfDoc.context.enumerateIndirectObjects();
-    const hasPngLogo = embedded.some(([, obj]) => {
-      const dict = obj as { get?: (k: unknown) => unknown };
-      return dict.get?.(pdfDoc.context.obj("Subtype")) === pdfDoc.context.obj("Image");
-    });
-    expect(hasPngLogo).toBe(true);
+    expect(sha256Hex(await loadSportClubEvoHeaderLogoAssetBytes())).toBe(
+      SPORTCLUBEVO_HEADER_LOGO_ASSET_SHA256,
+    );
   });
 
   it("generates invoice PDF with header logo, Tulip footer, and unchanged SIX asset", async () => {
