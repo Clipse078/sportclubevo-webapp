@@ -62,6 +62,10 @@ export async function findBillingInboundUnresolvedByProviderMessageId(input: {
   });
 }
 
+export async function countBillingInboundUnresolvedMessages(): Promise<number> {
+  return prisma.billingInboundUnresolvedMessage.count();
+}
+
 export async function createBillingInboundUnresolvedMessage(input: {
   mailboxKey: string;
   provider: string;

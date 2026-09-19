@@ -5,6 +5,7 @@ import BillingOperationsAttentionQueue from "@/components/admin/billing/BillingO
 import BillingOperationsKpiStrip from "@/components/admin/billing/BillingOperationsKpiStrip";
 import BillingOperationsReconciliationSummary from "@/components/admin/billing/BillingOperationsReconciliationSummary";
 import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
+import { countBillingInboundUnresolvedMessages } from "@/lib/billing/billing-inbound/billing-inbound-mailbox-repository";
 import { getBillingOperationsDashboard } from "@/lib/billing/operations/billing-operations-service";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -13,8 +14,14 @@ export default async function PlatformCommercialBillingPage() {
   await requirePermission(PERMISSIONS.BILLING_VIEW);
 
   let dashboard: Awaited<ReturnType<typeof getBillingOperationsDashboard>> | null = null;
+  let unresolvedInboundCount = 0;
   try {
-    dashboard = await getBillingOperationsDashboard();
+    const [loadedDashboard, unresolvedCount] = await Promise.all([
+      getBillingOperationsDashboard(),
+      countBillingInboundUnresolvedMessages(),
+    ]);
+    dashboard = loadedDashboard;
+    unresolvedInboundCount = unresolvedCount;
   } catch {
     dashboard = null;
   }
@@ -42,6 +49,12 @@ export default async function PlatformCommercialBillingPage() {
       />
 
       <BillingOperationsKpiStrip metrics={dashboard.metrics} />
+
+      {unresolvedInboundCount > 0 ? (
+        <p className="rounded-md bg-[color-mix(in_srgb,var(--muted)_12%,transparent)] px-4 py-3 text-sm text-[var(--text-2)] ring-1 ring-[color-mix(in_srgb,var(--border)_45%,transparent)]">
+          Nicht zugeordnete Nachrichten: {unresolvedInboundCount}
+        </p>
+      ) : null}
 
       <section className="space-y-3">
         <div className="flex items-baseline justify-between gap-4">

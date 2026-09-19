@@ -54,6 +54,7 @@ import {
 } from "./billing-real-invoice-delivery-validation";
 import { resolveBillingEmailIdentity } from "./resolve-billing-email-identity";
 import { recordOutboundInvoiceEmailCommunication } from "@/lib/billing/billing-communication/billing-communication-service";
+import { resolvePlatformInvoiceEmailBcc } from "./billing-invoice-email-policy";
 
 const recipientEmailSchema = z.string().email();
 
@@ -334,6 +335,7 @@ export async function sendNativeInvoiceEmail(
     });
 
     if (sent.sentAt) {
+      const platformBcc = resolvePlatformInvoiceEmailBcc("normal");
       try {
         await recordOutboundInvoiceEmailCommunication({
           invoice: {
@@ -350,6 +352,7 @@ export async function sendNativeInvoiceEmail(
             subject: emailContent.subject,
             textBody: emailContent.text,
             fromAddress: transportResult.from,
+            bccAddresses: platformBcc ? [platformBcc] : [],
           },
           transport: {
             provider: transportResult.provider,

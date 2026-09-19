@@ -5,6 +5,7 @@ import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import NativeBillingInvoiceActions from "@/components/admin/billing/NativeBillingInvoiceActions";
 import NativeBillingInvoiceDeliverySection from "@/components/admin/billing/NativeBillingInvoiceDeliverySection";
+import NativeBillingInvoiceCommunicationTimeline from "@/components/admin/billing/NativeBillingInvoiceCommunicationTimeline";
 import NativeBillingInvoiceLifecycleTimeline from "@/components/admin/billing/NativeBillingInvoiceLifecycleTimeline";
 import NativeBillingInvoicePaymentSection from "@/components/admin/billing/NativeBillingInvoicePaymentSection";
 import NativeBillingInvoiceSendReviewDialog from "@/components/admin/billing/NativeBillingInvoiceSendReviewDialog";
@@ -25,6 +26,7 @@ import {
 } from "@/lib/billing/invoice-payment-instruction-serializers";
 import { getInvoiceDeliverySummary } from "@/lib/billing/invoice-delivery/invoice-delivery-summary";
 import { serializeInvoiceDeliverySummary } from "@/lib/billing/invoice-delivery/invoice-delivery-serializers";
+import { getInvoiceBillingCommunicationTimeline } from "@/lib/billing/billing-communication/billing-communication-service";
 import { getInvoiceDetail } from "@/lib/billing/native-billing-commercial-service";
 import { findBillingContractById } from "@/lib/billing/native-billing-commercial-repository";
 import { findBillingCustomerById } from "@/lib/billing/native-billing-repository";
@@ -143,6 +145,17 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
     deliverySummarySerialized?.aggregateStatus,
     deliverySummarySerialized?.aggregateStatusLabel,
   );
+
+  let communicationTimeline: Awaited<
+    ReturnType<typeof getInvoiceBillingCommunicationTimeline>
+  > = [];
+  if (invoice.status !== "DRAFT") {
+    try {
+      communicationTimeline = await getInvoiceBillingCommunicationTimeline(invoice.key);
+    } catch {
+      communicationTimeline = [];
+    }
+  }
 
   const paidFormatted =
     paymentSummarySerialized?.paidTotalFormatted ??
@@ -338,6 +351,12 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
           </BillingPanel>
         ) : null}
       </div>
+
+      {invoice.status !== "DRAFT" ? (
+        <BillingPanel title="Kommunikation">
+          <NativeBillingInvoiceCommunicationTimeline items={communicationTimeline} />
+        </BillingPanel>
+      ) : null}
 
       {invoice.status === "FINALIZED" ? (
         <BillingPanel title="Versand">

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { BillingCommunicationRecord } from "./billing-communication-types";
+import type { BillingCommunicationTimelineRow } from "./billing-communication-timeline-types";
 
 const communicationSelect = {
   id: true,
@@ -164,6 +165,69 @@ export async function createInboundBillingCommunication(
   return mapRow(row);
 }
 
+const timelineSelect = {
+  id: true,
+  direction: true,
+  channel: true,
+  status: true,
+  subject: true,
+  senderAddress: true,
+  toAddresses: true,
+  ccAddresses: true,
+  bccAddresses: true,
+  sentAt: true,
+  receivedAt: true,
+  createdAt: true,
+  internetMessageId: true,
+  providerMessageId: true,
+  parentCommunicationId: true,
+  invoiceDeliveryId: true,
+  invoiceDelivery: {
+    select: {
+      status: true,
+    },
+  },
+} as const;
+
+function mapTimelineRow(
+  row: Prisma.BillingCommunicationGetPayload<{ select: typeof timelineSelect }>,
+): BillingCommunicationTimelineRow {
+  return {
+    id: row.id,
+    direction: row.direction,
+    channel: row.channel,
+    status: row.status,
+    subject: row.subject,
+    fromAddress: row.senderAddress,
+    toAddresses: row.toAddresses,
+    ccAddresses: row.ccAddresses,
+    bccAddresses: row.bccAddresses,
+    sentAt: row.sentAt,
+    receivedAt: row.receivedAt,
+    createdAt: row.createdAt,
+    internetMessageId: row.internetMessageId,
+    providerMessageId: row.providerMessageId,
+    parentCommunicationId: row.parentCommunicationId,
+    invoiceDeliveryId: row.invoiceDeliveryId,
+    invoiceDeliveryStatus: row.invoiceDelivery?.status ?? null,
+  };
+}
+
+export async function listBillingCommunicationsForInvoiceTenant(input: {
+  tenantId: string;
+  invoiceId: string;
+}): Promise<BillingCommunicationTimelineRow[]> {
+  const rows = await prisma.billingCommunication.findMany({
+    where: {
+      tenantId: input.tenantId,
+      invoiceId: input.invoiceId,
+    },
+    select: timelineSelect,
+    orderBy: [{ sentAt: "asc" }, { receivedAt: "asc" }, { createdAt: "asc" }],
+  });
+  return rows.map(mapTimelineRow);
+}
+
 export async function createOutboundBillingCommunication(
   input: {
     tenantId: string;
@@ -172,6 +236,8 @@ export async function createOutboundBillingCommunication(
     invoiceDeliveryId: string;
     senderAddress: string;
     toAddresses: string[];
+    ccAddresses?: string[];
+    bccAddresses?: string[];
     subject: string;
     textBody: string;
     sentAt: Date;
@@ -192,8 +258,8 @@ export async function createOutboundBillingCommunication(
       invoiceDeliveryId: input.invoiceDeliveryId,
       senderAddress: input.senderAddress,
       toAddresses: input.toAddresses,
-      ccAddresses: [],
-      bccAddresses: [],
+      ccAddresses: input.ccAddresses ?? [],
+      bccAddresses: input.bccAddresses ?? [],
       subject: input.subject,
       textBody: input.textBody,
       htmlBody: null,

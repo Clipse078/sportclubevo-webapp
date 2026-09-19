@@ -1,13 +1,20 @@
 import {
   findBillingContractById,
   findInvoiceById,
+  findInvoiceByKey,
 } from "@/lib/billing/native-billing-commercial-repository";
-import { NativeBillingValidationError } from "@/lib/billing/native-billing-types";
+import {
+  NativeBillingNotFoundError,
+  NativeBillingValidationError,
+} from "@/lib/billing/native-billing-types";
 import {
   createOutboundBillingCommunication,
   findBillingCommunicationByInvoiceDeliveryId,
   findBillingCommunicationByProviderMessageId,
+  listBillingCommunicationsForInvoiceTenant,
 } from "./billing-communication-repository";
+import { serializeBillingCommunicationTimeline } from "./billing-communication-serializers";
+import type { SerializedBillingCommunicationTimelineItem } from "./billing-communication-timeline-types";
 import { normalizeInternetMessageId } from "@/lib/billing/billing-inbound/billing-inbound-message-id";
 import {
   assertTenantMatchesBillingCustomer,
@@ -30,6 +37,8 @@ export type RecordOutboundInvoiceEmailCommunicationInput = {
     subject: string;
     textBody: string;
     fromAddress: string;
+    ccAddresses?: string[];
+    bccAddresses?: string[];
   };
   transport: {
     provider: string;
@@ -91,6 +100,8 @@ export async function recordOutboundInvoiceEmailCommunication(
     invoiceDeliveryId: input.delivery.id,
     senderAddress: input.email.fromAddress,
     toAddresses: [input.delivery.recipientEmail],
+    ccAddresses: input.email.ccAddresses ?? [],
+    bccAddresses: input.email.bccAddresses ?? [],
     subject: input.email.subject,
     textBody: input.email.textBody,
     sentAt: input.delivery.sentAt,
@@ -106,6 +117,8 @@ export type CreateOutboundBillingCommunicationForTenantInput = {
   billingContractId?: string | null;
   senderAddress: string;
   toAddresses: string[];
+  ccAddresses?: string[];
+  bccAddresses?: string[];
   subject: string;
   textBody: string;
   invoiceDeliveryId: string;
@@ -158,6 +171,8 @@ export async function createOutboundBillingCommunicationForTenant(
     invoiceDeliveryId: input.invoiceDeliveryId,
     senderAddress: input.senderAddress,
     toAddresses: input.toAddresses,
+    ccAddresses: input.ccAddresses ?? [],
+    bccAddresses: input.bccAddresses ?? [],
     subject: input.subject,
     textBody: input.textBody,
     sentAt: input.sentAt,
@@ -165,4 +180,36 @@ export async function createOutboundBillingCommunicationForTenant(
     providerMessageId: input.providerMessageId,
     internetMessageId: normalizeInternetMessageId(input.providerMessageId),
   });
+}
+
+function timelineSortKey(row: {
+  sentAt: Date | null;
+  receivedAt: Date | null;
+  createdAt: Date;
+}): number {
+  const primary = row.sentAt ?? row.receivedAt ?? row.createdAt;
+  return primary.getTime();
+}
+
+/**
+ * Tenant-safe invoice communication timeline (ascending chronological order).
+ */
+export async function getInvoiceBillingCommunicationTimeline(
+  invoiceKey: string,
+): Promise<SerializedBillingCommunicationTimelineItem[]> {
+  const invoice = await findInvoiceByKey(invoiceKey);
+  if (!invoice) {
+    throw new NativeBillingNotFoundError("Rechnung nicht gefunden.");
+  }
+
+  const tenantId = await resolveTenantIdForBillingCustomer(invoice.billingCustomerId);
+  await assertTenantMatchesBillingCustomer(tenantId, invoice.billingCustomerId);
+
+  const rows = await listBillingCommunicationsForInvoiceTenant({
+    tenantId,
+    invoiceId: invoice.id,
+  });
+
+  rows.sort((a, b) => timelineSortKey(a) - timelineSortKey(b));
+  return serializeBillingCommunicationTimeline(rows);
 }
