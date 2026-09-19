@@ -3,13 +3,24 @@ import type { SerializedBillingCommunicationTimelineItem } from "@/lib/billing/b
 
 type Props = {
   items: SerializedBillingCommunicationTimelineItem[];
+  canManage?: boolean;
+  onReply?: (item: SerializedBillingCommunicationTimelineItem) => void;
+  canReplyToItem?: (item: SerializedBillingCommunicationTimelineItem) => boolean;
 };
 
 function formatAddressList(addresses: string[]): string {
   return addresses.join(", ");
 }
 
-function CommunicationItem({ item }: { item: SerializedBillingCommunicationTimelineItem }) {
+function CommunicationItem({
+  item,
+  onReply,
+  showReply,
+}: {
+  item: SerializedBillingCommunicationTimelineItem;
+  onReply?: (item: SerializedBillingCommunicationTimelineItem) => void;
+  showReply?: boolean;
+}) {
   const routeLabel = `${item.fromAddress} → ${formatAddressList(item.toAddresses)}`;
 
   return (
@@ -49,6 +60,15 @@ function CommunicationItem({ item }: { item: SerializedBillingCommunicationTimel
               label={item.deliveryStatusLabel}
               tone={item.deliveryStatusTone ?? "default"}
             />
+          ) : null}
+          {showReply && onReply ? (
+            <button
+              type="button"
+              className="text-xs font-medium text-primary hover:underline"
+              onClick={() => onReply(item)}
+            >
+              Antworten
+            </button>
           ) : null}
         </div>
 
@@ -91,7 +111,12 @@ function CommunicationItem({ item }: { item: SerializedBillingCommunicationTimel
   );
 }
 
-export default function NativeBillingInvoiceCommunicationTimeline({ items }: Props) {
+export default function NativeBillingInvoiceCommunicationTimeline({
+  items,
+  canManage,
+  onReply,
+  canReplyToItem,
+}: Props) {
   if (items.length === 0) {
     return (
       <div className="space-y-2 text-sm text-[var(--text-2)]">
@@ -107,7 +132,12 @@ export default function NativeBillingInvoiceCommunicationTimeline({ items }: Pro
   return (
     <ol className="space-y-0">
       {items.map((item) => (
-        <CommunicationItem key={item.id} item={item} />
+        <CommunicationItem
+          key={item.id}
+          item={item}
+          onReply={onReply}
+          showReply={Boolean(canManage && onReply && canReplyToItem?.(item))}
+        />
       ))}
     </ol>
   );

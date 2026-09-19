@@ -47,6 +47,18 @@ describe("NativeBillingInvoiceCommunicationTimeline", () => {
     expect(screen.getByText("Gesendet")).toBeInTheDocument();
   });
 
+  it("shows Antworten when reply handler and external recipient exist", () => {
+    render(
+      <NativeBillingInvoiceCommunicationTimeline
+        items={[outboundItem]}
+        canManage
+        onReply={() => {}}
+        canReplyToItem={() => true}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Antworten" })).toBeInTheDocument();
+  });
+
   it("wraps long subjects and addresses without clipping", () => {
     const longSubject = `${"Sehr lange Betreffzeile ".repeat(8)}Ende`;
     const longEmail = `${"very-long-mailbox-name".repeat(4)}@example.test`;

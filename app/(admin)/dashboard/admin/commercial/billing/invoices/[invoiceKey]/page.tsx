@@ -5,7 +5,7 @@ import BillingPanel from "@/components/admin/billing/shell/BillingPanel";
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
 import NativeBillingInvoiceActions from "@/components/admin/billing/NativeBillingInvoiceActions";
 import NativeBillingInvoiceDeliverySection from "@/components/admin/billing/NativeBillingInvoiceDeliverySection";
-import NativeBillingInvoiceCommunicationTimeline from "@/components/admin/billing/NativeBillingInvoiceCommunicationTimeline";
+import NativeBillingInvoiceCommunicationSection from "@/components/admin/billing/NativeBillingInvoiceCommunicationSection";
 import NativeBillingInvoiceLifecycleTimeline from "@/components/admin/billing/NativeBillingInvoiceLifecycleTimeline";
 import NativeBillingInvoicePaymentSection from "@/components/admin/billing/NativeBillingInvoicePaymentSection";
 import NativeBillingInvoiceSendReviewDialog from "@/components/admin/billing/NativeBillingInvoiceSendReviewDialog";
@@ -27,6 +27,11 @@ import {
 import { getInvoiceDeliverySummary } from "@/lib/billing/invoice-delivery/invoice-delivery-summary";
 import { serializeInvoiceDeliverySummary } from "@/lib/billing/invoice-delivery/invoice-delivery-serializers";
 import { getInvoiceBillingCommunicationTimeline } from "@/lib/billing/billing-communication/billing-communication-service";
+import {
+  getInvoiceBillingCommunicationComposeDefaults,
+} from "@/lib/billing/billing-communication/billing-communication-send-service";
+import { collectInternalBillingEmailAddresses } from "@/lib/billing/billing-communication/billing-communication-reply";
+import { resolveBillingEmailIdentity } from "@/lib/billing/invoice-delivery/resolve-billing-email-identity";
 import { getInvoiceDetail } from "@/lib/billing/native-billing-commercial-service";
 import { findBillingContractById } from "@/lib/billing/native-billing-commercial-repository";
 import { findBillingCustomerById } from "@/lib/billing/native-billing-repository";
@@ -149,11 +154,30 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
   let communicationTimeline: Awaited<
     ReturnType<typeof getInvoiceBillingCommunicationTimeline>
   > = [];
+  let communicationComposeDefaults: Awaited<
+    ReturnType<typeof getInvoiceBillingCommunicationComposeDefaults>
+  > | null = null;
+  let communicationInternalEmails: string[] = [];
   if (invoice.status !== "DRAFT") {
     try {
       communicationTimeline = await getInvoiceBillingCommunicationTimeline(invoice.key);
     } catch {
       communicationTimeline = [];
+    }
+    try {
+      communicationComposeDefaults = await getInvoiceBillingCommunicationComposeDefaults(
+        invoice.key,
+      );
+      const identity = await resolveBillingEmailIdentity();
+      communicationInternalEmails = Array.from(
+        collectInternalBillingEmailAddresses({
+          fromAddress: identity.from,
+          replyToAddress: identity.replyTo,
+        }),
+      );
+    } catch {
+      communicationComposeDefaults = null;
+      communicationInternalEmails = [];
     }
   }
 
@@ -354,7 +378,15 @@ export default async function NativeBillingInvoiceDetailPage({ params }: PagePro
 
       {invoice.status !== "DRAFT" ? (
         <BillingPanel title="Kommunikation">
-          <NativeBillingInvoiceCommunicationTimeline items={communicationTimeline} />
+          <NativeBillingInvoiceCommunicationSection
+            invoiceKey={invoice.key}
+            items={communicationTimeline}
+            canManage={canManage}
+            fromAddress={communicationComposeDefaults?.fromAddress ?? "SportClubEvo Billing"}
+            defaultTo={communicationComposeDefaults?.defaultTo ?? null}
+            defaultSubject={communicationComposeDefaults?.defaultSubject ?? "SportClubEvo Abrechnung"}
+            internalEmailAddresses={communicationInternalEmails}
+          />
         </BillingPanel>
       ) : null}
 

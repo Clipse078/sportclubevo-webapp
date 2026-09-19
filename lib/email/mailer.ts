@@ -51,6 +51,7 @@ export type MailMessage = {
   /** Optional provider-authorized sender. Unusable custom senders fall back to EMAIL_FROM. */
   from?: string;
   to: string;
+  cc?: string;
   subject: string;
   html: string;
   text?: string;
@@ -201,6 +202,7 @@ export async function sendMail(message: MailMessage): Promise<MailDeliveryResult
     {
       from,
       to: message.to,
+      cc: message.cc,
       subject: message.subject,
       html: message.html,
       text: message.text,

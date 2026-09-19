@@ -60,6 +60,22 @@ export async function findBillingCommunicationByIdForTenant(input: {
   return row ? mapRow(row) : null;
 }
 
+export async function findBillingCommunicationByIdForInvoiceTenant(input: {
+  id: string;
+  tenantId: string;
+  invoiceId: string;
+}): Promise<BillingCommunicationRecord | null> {
+  const row = await prisma.billingCommunication.findFirst({
+    where: {
+      id: input.id,
+      tenantId: input.tenantId,
+      invoiceId: input.invoiceId,
+    },
+    select: communicationSelect,
+  });
+  return row ? mapRow(row) : null;
+}
+
 export async function findBillingCommunicationByInvoiceDeliveryId(
   invoiceDeliveryId: string,
 ): Promise<BillingCommunicationRecord | null> {
@@ -233,17 +249,22 @@ export async function createOutboundBillingCommunication(
     tenantId: string;
     invoiceId: string;
     billingContractId: string | null;
-    invoiceDeliveryId: string;
+    invoiceDeliveryId?: string | null;
+    parentCommunicationId?: string | null;
     senderAddress: string;
     toAddresses: string[];
     ccAddresses?: string[];
     bccAddresses?: string[];
     subject: string;
     textBody: string;
-    sentAt: Date;
-    provider: string;
-    providerMessageId: string;
+    htmlBody?: string | null;
+    sentAt: Date | null;
+    status?: "SENT" | "FAILED";
+    provider?: string | null;
+    providerMessageId?: string | null;
     internetMessageId?: string | null;
+    inReplyTo?: string | null;
+    referencesHeader?: string | null;
   },
 ): Promise<BillingCommunicationRecord> {
   const row = await prisma.billingCommunication.create({
@@ -252,21 +273,24 @@ export async function createOutboundBillingCommunication(
       tenantId: input.tenantId,
       direction: "OUTBOUND",
       channel: "EMAIL",
-      status: "SENT",
+      status: input.status ?? "SENT",
       invoiceId: input.invoiceId,
       billingContractId: input.billingContractId,
-      invoiceDeliveryId: input.invoiceDeliveryId,
+      invoiceDeliveryId: input.invoiceDeliveryId ?? null,
+      parentCommunicationId: input.parentCommunicationId ?? null,
       senderAddress: input.senderAddress,
       toAddresses: input.toAddresses,
       ccAddresses: input.ccAddresses ?? [],
       bccAddresses: input.bccAddresses ?? [],
       subject: input.subject,
       textBody: input.textBody,
-      htmlBody: null,
+      htmlBody: input.htmlBody ?? null,
       sentAt: input.sentAt,
-      provider: input.provider,
-      providerMessageId: input.providerMessageId,
+      provider: input.provider ?? null,
+      providerMessageId: input.providerMessageId ?? null,
       internetMessageId: input.internetMessageId ?? null,
+      inReplyTo: input.inReplyTo ?? null,
+      referencesHeader: input.referencesHeader ?? null,
     },
     select: communicationSelect,
   });

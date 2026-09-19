@@ -10,6 +10,7 @@ import {
 export type BillingEmailTransportPayload = {
   from?: string;
   to: string;
+  cc?: string;
   replyTo?: string;
   bcc?: string;
   subject: string;
@@ -18,6 +19,8 @@ export type BillingEmailTransportPayload = {
   attachments?: MailAttachment[];
   idempotencyKey?: string;
   simulateFailure?: boolean;
+  inReplyTo?: string;
+  references?: string;
   /** Defaults to normal (Preview dry-run). Only protected test delivery may opt into live transport. */
   deliveryIntent?: BillingEmailDeliveryIntent;
 };
@@ -62,12 +65,15 @@ export async function sendBillingEmail(
     const smtpResult = await sendInfomaniakBillingEmail({
       from: payload.from?.trim() || "SportClubEvo Billing <billing@sportclubevo.com>",
       to: payload.to,
+      cc: payload.cc,
       replyTo: payload.replyTo,
       bcc: payload.bcc,
       subject: payload.subject,
       html: payload.html,
       text: payload.text,
       attachments: payload.attachments,
+      inReplyTo: payload.inReplyTo,
+      references: payload.references,
     });
     return {
       provider: smtpResult.provider,
@@ -81,6 +87,7 @@ export async function sendBillingEmail(
   const result: MailDeliveryResult = await sendMail({
     from: payload.from,
     to: payload.to,
+    cc: payload.cc,
     replyTo: payload.replyTo,
     bcc: payload.bcc,
     subject: payload.subject,
