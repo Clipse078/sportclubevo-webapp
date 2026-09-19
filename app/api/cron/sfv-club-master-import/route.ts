@@ -17,10 +17,10 @@
  * (app/api/cron/sfv-sync/route.ts) — never coupled to, or invoked from,
  * that route or its orchestrator.
  *
- * Scheduling (see vercel.json "crons"): once daily, Hobby-plan compatible
- * (Vercel Hobby only permits daily-or-coarser cron). Scheduled a few hours
- * after the match/schedule sync cron purely to spread provider load —
- * the two crons do not depend on each other and either may run, succeed,
+ * Scheduling (see vercel.json "crons"): once daily at 04:00 UTC ("0 4 * * *").
+ * Club master/reference data changes infrequently; daily import is sufficient.
+ * Scheduled a few hours after the match/schedule sync cron to spread provider
+ * load — the two crons do not depend on each other and either may run, succeed,
  * or fail independently of the other.
  *
  * Authorization:
