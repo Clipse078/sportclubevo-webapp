@@ -29,12 +29,37 @@ const outboundItem: SerializedBillingCommunicationTimelineItem = {
   invoiceDeliveryId: "del-1",
   deliveryStatusLabel: "Versand erfolgreich",
   deliveryStatusTone: "success",
+  attachments: [],
 };
 
 describe("NativeBillingInvoiceCommunicationTimeline", () => {
   it("renders empty state copy", () => {
     render(<NativeBillingInvoiceCommunicationTimeline items={[]} />);
     expect(screen.getByText("Noch keine Kommunikation vorhanden.")).toBeInTheDocument();
+  });
+
+  it("renders attachment metadata compactly", () => {
+    render(
+      <NativeBillingInvoiceCommunicationTimeline
+        items={[
+          {
+            ...outboundItem,
+            attachments: [
+              {
+                id: "att-1",
+                filename: "rechnungskopie.pdf",
+                contentType: "application/pdf",
+                sizeBytes: 188_416,
+                downloadUrl: "/api/platform/billing/invoices/inv-key/communications/attachments/att-1",
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText("Anhänge")).toBeInTheDocument();
+    expect(screen.getByText(/rechnungskopie\.pdf/)).toBeInTheDocument();
+    expect(screen.getByText(/184 KB/)).toBeInTheDocument();
   });
 
   it("renders outbound route, subject, and status", () => {

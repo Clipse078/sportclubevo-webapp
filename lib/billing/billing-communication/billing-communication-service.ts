@@ -15,6 +15,8 @@ import {
 } from "./billing-communication-repository";
 import { serializeBillingCommunicationTimeline } from "./billing-communication-serializers";
 import type { SerializedBillingCommunicationTimelineItem } from "./billing-communication-timeline-types";
+import { listBillingCommunicationAttachmentsForCommunications } from "./billing-communication-attachment-repository";
+import { serializeBillingCommunicationAttachment } from "./billing-communication-attachment-service";
 import { normalizeInternetMessageId } from "@/lib/billing/billing-inbound/billing-inbound-message-id";
 import {
   assertTenantMatchesBillingCustomer,
@@ -211,5 +213,25 @@ export async function getInvoiceBillingCommunicationTimeline(
   });
 
   rows.sort((a, b) => timelineSortKey(a) - timelineSortKey(b));
-  return serializeBillingCommunicationTimeline(rows);
+
+  const attachmentRows = await listBillingCommunicationAttachmentsForCommunications({
+    tenantId,
+    invoiceId: invoice.id,
+    communicationIds: rows.map((row) => row.id),
+  });
+  const attachmentsByCommunicationId: Record<
+    string,
+    ReturnType<typeof serializeBillingCommunicationAttachment>[]
+  > = {};
+  for (const attachment of attachmentRows) {
+    const serialized = serializeBillingCommunicationAttachment({
+      attachment,
+      invoiceKey,
+    });
+    const bucket = attachmentsByCommunicationId[attachment.billingCommunicationId ?? ""] ?? [];
+    bucket.push(serialized);
+    attachmentsByCommunicationId[attachment.billingCommunicationId ?? ""] = bucket;
+  }
+
+  return serializeBillingCommunicationTimeline(rows, attachmentsByCommunicationId);
 }

@@ -7,6 +7,7 @@ import {
 } from "./billing-communication-presentation";
 import type {
   BillingCommunicationTimelineRow,
+  SerializedBillingCommunicationAttachment,
   SerializedBillingCommunicationTimelineItem,
 } from "./billing-communication-timeline-types";
 
@@ -22,6 +23,7 @@ function resolveOccurredAt(row: BillingCommunicationTimelineRow): Date {
 
 export function serializeBillingCommunicationTimelineItem(
   row: BillingCommunicationTimelineRow,
+  attachments: SerializedBillingCommunicationAttachment[] = [],
 ): SerializedBillingCommunicationTimelineItem {
   const directionPresentation = presentBillingCommunicationDirection(row.direction);
   const statusPresentation = presentBillingCommunicationStatus(
@@ -63,11 +65,18 @@ export function serializeBillingCommunicationTimelineItem(
     invoiceDeliveryId: row.invoiceDeliveryId,
     deliveryStatusLabel,
     deliveryStatusTone,
+    attachments,
   };
 }
 
 export function serializeBillingCommunicationTimeline(
   rows: BillingCommunicationTimelineRow[],
+  attachmentsByCommunicationId?: Record<string, SerializedBillingCommunicationAttachment[]>,
 ): SerializedBillingCommunicationTimelineItem[] {
-  return rows.map(serializeBillingCommunicationTimelineItem);
+  return rows.map((row) =>
+    serializeBillingCommunicationTimelineItem(
+      row,
+      attachmentsByCommunicationId?.[row.id] ?? [],
+    ),
+  );
 }

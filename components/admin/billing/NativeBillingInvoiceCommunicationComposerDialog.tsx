@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  EmailAttachmentComposer,
+  formatAttachmentSize,
+  type ComposerAttachment,
+} from "@/components/admin/communications/EmailAttachmentComposer";
 import { Dialog } from "@/components/ui/Dialog";
+import {
+  MAX_BILLING_COMMUNICATION_ATTACHMENT_SIZE_BYTES,
+  MAX_BILLING_COMMUNICATION_ATTACHMENTS_PER_COMMUNICATION,
+} from "@/lib/billing/billing-communication/billing-communication-attachment-policy";
 
 export type CommunicationComposerMode = "compose" | "reply";
 
@@ -46,6 +55,8 @@ export default function NativeBillingInvoiceCommunicationComposerDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -55,12 +66,97 @@ export default function NativeBillingInvoiceCommunicationComposerDialog({
     setMessage(initial.message);
     setError(null);
     setSuccess(null);
+    setAttachments([]);
+    setAttachmentError(null);
   }, [open, initial]);
+
+  async function uploadAttachment(file: File, localId: string) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetch(
+      `/api/platform/billing/invoices/${encodeURIComponent(invoiceKey)}/communications/attachments`,
+      { method: "POST", body: formData },
+    );
+    const payload = (await response.json()) as {
+      error?: string;
+      attachment?: { id: string; filename: string; contentType: string; sizeBytes: number };
+    };
+    if (!response.ok || !payload.attachment) {
+      throw new Error(payload.error ?? "Upload fehlgeschlagen.");
+    }
+    setAttachments((current) =>
+      current.map((entry) =>
+        entry.localId === localId
+          ? {
+              ...entry,
+              attachmentId: payload.attachment!.id,
+              filename: payload.attachment!.filename,
+              contentType: payload.attachment!.contentType,
+              size: payload.attachment!.sizeBytes,
+              status: "READY",
+            }
+          : entry,
+      ),
+    );
+  }
+
+  function handleFilesSelected(files: File[] | FileList | null) {
+    const list = files ? Array.from(files) : [];
+    if (list.length === 0) return;
+    setAttachmentError(null);
+    const next = [...attachments];
+    for (const file of list) {
+      if (next.length >= MAX_BILLING_COMMUNICATION_ATTACHMENTS_PER_COMMUNICATION) {
+        setAttachmentError("Maximal 10 Anhänge pro Nachricht.");
+        break;
+      }
+      if (file.size > MAX_BILLING_COMMUNICATION_ATTACHMENT_SIZE_BYTES) {
+        setAttachmentError(`${file.name} überschreitet 10 MiB.`);
+        continue;
+      }
+      const localId = crypto.randomUUID();
+      next.push({
+        localId,
+        attachmentId: null,
+        filename: file.name,
+        contentType: file.type || "application/octet-stream",
+        size: file.size,
+        status: "UPLOADING",
+      });
+      void uploadAttachment(file, localId).catch((uploadError) => {
+        setAttachments((current) =>
+          current.map((entry) =>
+            entry.localId === localId
+              ? {
+                  ...entry,
+                  status: "ERROR",
+                  error: uploadError instanceof Error ? uploadError.message : "Upload fehlgeschlagen.",
+                }
+              : entry,
+          ),
+        );
+      });
+    }
+    setAttachments(next);
+  }
 
   async function handleSend() {
     setLoading(true);
     setError(null);
     setSuccess(null);
+    if (attachments.some((entry) => entry.status === "UPLOADING")) {
+      setError("Bitte warten, bis alle Anhänge hochgeladen sind.");
+      setLoading(false);
+      return;
+    }
+    if (attachments.some((entry) => entry.status === "ERROR")) {
+      setError("Bitte fehlerhafte Anhänge entfernen oder erneut hochladen.");
+      setLoading(false);
+      return;
+    }
+    const attachmentIds = attachments
+      .map((entry) => entry.attachmentId)
+      .filter((id): id is string => Boolean(id));
     try {
       const res = await fetch(
         `/api/platform/billing/invoices/${encodeURIComponent(invoiceKey)}/communications`,
@@ -74,6 +170,7 @@ export default function NativeBillingInvoiceCommunicationComposerDialog({
             cc: parseAddressField(cc),
             subject,
             message,
+            attachmentIds: attachmentIds.length > 0 ? attachmentIds : undefined,
           }),
         },
       );
@@ -196,6 +293,23 @@ export default function NativeBillingInvoiceCommunicationComposerDialog({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
           />
+        </div>
+
+        <div className="space-y-2">
+          <EmailAttachmentComposer
+            attachments={attachments}
+            onAddFiles={(files) => handleFilesSelected(files)}
+            onRemove={(localId) =>
+              setAttachments((current) => current.filter((entry) => entry.localId !== localId))
+            }
+            disabled={loading}
+            error={attachmentError}
+          />
+          {attachments.length > 0 ? (
+            <p className="text-xs text-[var(--muted)]">
+              Gesamt {formatAttachmentSize(attachments.reduce((sum, entry) => sum + entry.size, 0))}
+            </p>
+          ) : null}
         </div>
       </div>
     </Dialog>

@@ -24,6 +24,14 @@ export type BillingCommunicationTimelineRow = {
   invoiceDeliveryStatus: string | null;
 };
 
+export type SerializedBillingCommunicationAttachment = {
+  id: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  downloadUrl: string;
+};
+
 export type SerializedBillingCommunicationTimelineItem = {
   id: string;
   direction: BillingCommunicationDirection;
@@ -47,4 +55,5 @@ export type SerializedBillingCommunicationTimelineItem = {
   invoiceDeliveryId: string | null;
   deliveryStatusLabel: string | null;
   deliveryStatusTone: "default" | "success" | "warning" | "muted" | null;
+  attachments: SerializedBillingCommunicationAttachment[];
 };

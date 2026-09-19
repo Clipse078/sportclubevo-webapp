@@ -1,4 +1,5 @@
 import BillingStatusBadge from "@/components/admin/billing/BillingStatusBadge";
+import { formatAttachmentSize } from "@/components/admin/communications/EmailAttachmentComposer";
 import type { SerializedBillingCommunicationTimelineItem } from "@/lib/billing/billing-communication/billing-communication-timeline-types";
 
 type Props = {
@@ -51,6 +52,26 @@ function CommunicationItem({
           <p className="break-words text-sm font-medium text-[var(--foreground)]">
             {item.subject}
           </p>
+        ) : null}
+
+        {item.attachments.length > 0 ? (
+          <div className="space-y-1 text-xs text-[var(--muted)]">
+            <p className="font-medium text-[var(--foreground)]">Anhänge</p>
+            <ul className="space-y-0.5">
+              {item.attachments.map((attachment) => (
+                <li key={attachment.id} className="truncate">
+                  <a
+                    href={attachment.downloadUrl}
+                    className="text-primary hover:underline"
+                    title={attachment.filename}
+                  >
+                    {attachment.filename}
+                  </a>
+                  <span>{` · ${formatAttachmentSize(attachment.sizeBytes)}`}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         ) : null}
 
         <div className="flex flex-wrap items-center gap-2">

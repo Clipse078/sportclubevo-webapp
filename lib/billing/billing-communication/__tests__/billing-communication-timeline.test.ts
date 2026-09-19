@@ -11,6 +11,10 @@ const tenantMocks = vi.hoisted(() => ({
   assertTenantMatchesBillingCustomer: vi.fn(),
 }));
 
+const attachmentMocks = vi.hoisted(() => ({
+  listBillingCommunicationAttachmentsForCommunications: vi.fn(),
+}));
+
 vi.mock("@/lib/billing/native-billing-commercial-repository", () => ({
   findInvoiceByKey: repoMocks.findInvoiceByKey,
   findInvoiceById: vi.fn(),
@@ -31,6 +35,11 @@ vi.mock("../billing-communication-repository", async (importOriginal) => {
 vi.mock("../billing-communication-tenant", () => ({
   resolveTenantIdForBillingCustomer: tenantMocks.resolveTenantIdForBillingCustomer,
   assertTenantMatchesBillingCustomer: tenantMocks.assertTenantMatchesBillingCustomer,
+}));
+
+vi.mock("../billing-communication-attachment-repository", () => ({
+  listBillingCommunicationAttachmentsForCommunications:
+    attachmentMocks.listBillingCommunicationAttachmentsForCommunications,
 }));
 
 const { getInvoiceBillingCommunicationTimeline } = await import("../billing-communication-service");
@@ -58,6 +67,7 @@ const baseRow = {
 describe("getInvoiceBillingCommunicationTimeline", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    attachmentMocks.listBillingCommunicationAttachmentsForCommunications.mockResolvedValue([]);
     repoMocks.findInvoiceByKey.mockResolvedValue({
       id: "inv-1",
       key: "inv-key",

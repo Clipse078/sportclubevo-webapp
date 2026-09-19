@@ -38,6 +38,13 @@ import {
 import { serializeBillingCommunicationTimeline } from "./billing-communication-serializers";
 import type { SerializedBillingCommunicationTimelineItem } from "./billing-communication-timeline-types";
 import type { BillingCommunicationRecord } from "./billing-communication-types";
+import {
+  BillingCommunicationAttachmentServiceError,
+  finalizeOutboundAttachments,
+  loadMailAttachmentsFromRecords,
+  resolveStagedAttachmentsForSend,
+  serializeBillingCommunicationAttachment,
+} from "./billing-communication-attachment-service";
 
 const sendBodySchema = z.object({
   mode: z.enum(["compose", "reply"]),
@@ -50,6 +57,7 @@ const sendBodySchema = z.object({
   fromAddress: z.string().optional(),
   bcc: z.union([z.string(), z.array(z.string())]).optional(),
   providerMessageId: z.string().optional(),
+  attachmentIds: z.array(z.string().trim().min(1)).optional(),
 });
 
 export type SendInvoiceBillingCommunicationInput = z.infer<typeof sendBodySchema>;
@@ -230,6 +238,28 @@ export async function sendInvoiceBillingCommunication(
   const bccAddresses = resolvePersistedPlatformBccAddresses();
   const idempotencyKey = randomUUID();
 
+  const attachmentIds = body.attachmentIds ?? [];
+  let stagedAttachments: Awaited<ReturnType<typeof resolveStagedAttachmentsForSend>> = [];
+  if (attachmentIds.length > 0) {
+    try {
+      stagedAttachments = await resolveStagedAttachmentsForSend({
+        tenantId,
+        invoiceId: invoice.id,
+        attachmentIds,
+      });
+    } catch (error) {
+      if (error instanceof BillingCommunicationAttachmentServiceError) {
+        throw new NativeBillingValidationError(error.message);
+      }
+      throw error;
+    }
+  }
+
+  const mailAttachments =
+    stagedAttachments.length > 0
+      ? await loadMailAttachmentsFromRecords(stagedAttachments)
+      : undefined;
+
   const transportPayload = buildBillingCorrespondenceTransportPayload({
     from: identity.from,
     to,
@@ -241,13 +271,14 @@ export async function sendInvoiceBillingCommunication(
     idempotencyKey,
     inReplyTo: threading.inReplyTo,
     referencesHeader: threading.referencesHeader,
+    attachments: mailAttachments,
   });
 
   let transportResult;
   try {
     transportResult = await sendBillingEmail(transportPayload);
   } catch (error) {
-    await createOutboundBillingCommunication({
+    const failedRecord = await createOutboundBillingCommunication({
       tenantId,
       invoiceId: invoice.id,
       billingContractId,
@@ -267,6 +298,14 @@ export async function sendInvoiceBillingCommunication(
       inReplyTo: threading.inReplyTo,
       referencesHeader: threading.referencesHeader,
     });
+    if (stagedAttachments.length > 0) {
+      await finalizeOutboundAttachments({
+        tenantId,
+        invoiceId: invoice.id,
+        attachmentIds: stagedAttachments.map((row) => row.id),
+        billingCommunicationId: failedRecord.id,
+      });
+    }
     throw new NativeBillingValidationError(mapTransportFailure(error));
   }
 
@@ -293,6 +332,29 @@ export async function sendInvoiceBillingCommunication(
     referencesHeader: threading.referencesHeader,
   });
 
+  if (stagedAttachments.length > 0) {
+    await finalizeOutboundAttachments({
+      tenantId,
+      invoiceId: invoice.id,
+      attachmentIds: stagedAttachments.map((row) => row.id),
+      billingCommunicationId: record.id,
+    });
+  }
+
+  const attachmentRows =
+    stagedAttachments.length > 0
+      ? stagedAttachments.map((attachment) =>
+          serializeBillingCommunicationAttachment({
+            attachment: {
+              ...attachment,
+              billingCommunicationId: record.id,
+              lifecycleStatus: "READY",
+            },
+            invoiceKey,
+          }),
+        )
+      : [];
+
   const [serialized] = serializeBillingCommunicationTimeline([
     {
       id: record.id,
@@ -313,7 +375,7 @@ export async function sendInvoiceBillingCommunication(
       invoiceDeliveryId: record.invoiceDeliveryId,
       invoiceDeliveryStatus: null,
     },
-  ]);
+  ], attachmentRows.length > 0 ? { [record.id]: attachmentRows } : undefined);
 
-  return { communication: serialized };
+  return { communication: { ...serialized, attachments: attachmentRows } };
 }

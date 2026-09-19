@@ -13,7 +13,16 @@ import {
   createBillingInboundUnresolvedMessage,
   findBillingInboundUnresolvedByProviderMessageId,
 } from "./billing-inbound-mailbox-repository";
-import { parseInboundBillingEmailSource } from "./billing-inbound-mail-parser";
+import {
+  parseInboundBillingEmailAttachments,
+  parseInboundBillingEmailSource,
+} from "./billing-inbound-mail-parser";
+import {
+  BillingCommunicationAttachmentServiceError,
+  persistInboundBillingCommunicationAttachments,
+  persistInboundUnresolvedAttachments,
+} from "@/lib/billing/billing-communication/billing-communication-attachment-service";
+import { prisma } from "@/lib/db/prisma";
 import {
   assertInvoiceBelongsToTenant,
   resolveBillingInboundTenant,
@@ -52,6 +61,18 @@ export async function ingestBillingInboundImapMessage(
     providerMessageId,
   });
   if (existingUnresolved) {
+    try {
+      const parts = await parseInboundBillingEmailAttachments(message.rawSource);
+      await persistInboundUnresolvedAttachments({
+        unresolvedMessageId: existingUnresolved.id,
+        parts,
+      });
+    } catch (error) {
+      if (error instanceof BillingCommunicationAttachmentServiceError) {
+        return { kind: "FAILED", retryable: true, reason: "ATTACHMENT_PERSISTENCE" };
+      }
+      throw error;
+    }
     return {
       kind: "UNRESOLVED",
       unresolvedId: existingUnresolved.id,
@@ -131,6 +152,18 @@ export async function ingestBillingInboundImapMessage(
       inReplyTo: parsed.inReplyTo,
       referencesHeader: parsed.referencesHeader,
     });
+    try {
+      const parts = await parseInboundBillingEmailAttachments(message.rawSource);
+      await persistInboundUnresolvedAttachments({
+        unresolvedMessageId: unresolved.id,
+        parts,
+      });
+    } catch (error) {
+      if (error instanceof BillingCommunicationAttachmentServiceError) {
+        return { kind: "FAILED", retryable: true, reason: "ATTACHMENT_PERSISTENCE" };
+      }
+      throw error;
+    }
     return {
       kind: "UNRESOLVED",
       unresolvedId: unresolved.id,
@@ -166,6 +199,13 @@ export async function ingestBillingInboundImapMessage(
     }
   }
 
+  let attachmentParts: Awaited<ReturnType<typeof parseInboundBillingEmailAttachments>> = [];
+  try {
+    attachmentParts = await parseInboundBillingEmailAttachments(message.rawSource);
+  } catch {
+    return { kind: "FAILED", retryable: true, reason: "ATTACHMENT_PARSE" };
+  }
+
   try {
     const created = await createInboundBillingCommunication({
       tenantId: resolution.tenantId,
@@ -185,6 +225,21 @@ export async function ingestBillingInboundImapMessage(
       inReplyTo: parsed.inReplyTo,
       referencesHeader: parsed.referencesHeader,
     });
+
+    try {
+      await persistInboundBillingCommunicationAttachments({
+        tenantId: resolution.tenantId,
+        invoiceId: resolution.invoiceId,
+        billingCommunicationId: created.id,
+        parts: attachmentParts,
+      });
+    } catch (attachmentError) {
+      await prisma.billingCommunication.delete({ where: { id: created.id } }).catch(() => undefined);
+      if (attachmentError instanceof BillingCommunicationAttachmentServiceError) {
+        return { kind: "FAILED", retryable: true, reason: "ATTACHMENT_PERSISTENCE" };
+      }
+      throw attachmentError;
+    }
 
     return {
       kind: "INGESTED",
