@@ -8,6 +8,13 @@ import { SceModalOverlay } from "@/components/ui/SceModalOverlay";
 function PlannerScrollFixture() {
   return (
     <div data-sce-modal-background>
+      <nav
+        data-sce-sidebar-scroll-root
+        data-testid="sidebar-scroll"
+        style={{ overflow: "auto", height: 200 }}
+      >
+        <div style={{ height: 1200 }}>Sidebar nav</div>
+      </nav>
       <div
         data-sce-planner-scroll-root
         data-testid="planner-scroll"
@@ -62,9 +69,12 @@ describe("SceModalOverlay scroll preservation SCE-RESPONSIVE-01K", () => {
 
     const { rerender } = render(<ModalWithTitle open={false} />);
 
+    const sidebar = screen.getByTestId("sidebar-scroll");
     const planner = screen.getByTestId("planner-scroll");
     const calendar = screen.getByTestId("calendar-scroll");
+    sidebar.scrollTop = 315;
     planner.scrollTop = 940;
+    planner.scrollLeft = 180;
     calendar.scrollLeft = 420;
 
     rerender(<ModalWithTitle open />);
@@ -74,13 +84,17 @@ describe("SceModalOverlay scroll preservation SCE-RESPONSIVE-01K", () => {
     });
 
     expect(window.scrollY).toBe(1200);
+    expect(sidebar.scrollTop).toBe(315);
     expect(planner.scrollTop).toBe(940);
+    expect(planner.scrollLeft).toBe(180);
     expect(calendar.scrollLeft).toBe(420);
 
     rerender(<ModalWithTitle open={false} />);
 
     expect(window.scrollY).toBe(1200);
+    expect(sidebar.scrollTop).toBe(315);
     expect(planner.scrollTop).toBe(940);
+    expect(planner.scrollLeft).toBe(180);
     expect(calendar.scrollLeft).toBe(420);
 
     scrollToSpy.mockRestore();

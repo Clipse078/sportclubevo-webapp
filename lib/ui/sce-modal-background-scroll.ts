@@ -7,8 +7,10 @@
 
 export const SCE_PLANNER_SCROLL_ROOT_ATTR = "data-sce-planner-scroll-root";
 export const SCE_PLANNER_CALENDAR_SCROLL_ROOT_ATTR = "data-sce-planner-calendar-scroll-root";
+export const SCE_SIDEBAR_SCROLL_ROOT_ATTR = "data-sce-sidebar-scroll-root";
 
 export const SCE_MODAL_BACKGROUND_SCROLL_SELECTORS = [
+  `[${SCE_SIDEBAR_SCROLL_ROOT_ATTR}]`,
   `[${SCE_PLANNER_SCROLL_ROOT_ATTR}]`,
   `[${SCE_PLANNER_CALENDAR_SCROLL_ROOT_ATTR}]`,
 ] as const;

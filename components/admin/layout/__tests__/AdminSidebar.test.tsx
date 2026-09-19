@@ -321,4 +321,17 @@ describe("AdminSidebar", () => {
     );
     expect(document.documentElement.hasAttribute("data-sidebar-collapsed")).toBe(false);
   });
+
+  it("SCE-RESPONSIVE-01M — marks module nav as canonical sidebar scroll root", () => {
+    render(
+      <AdminSidebar
+        permissionKeys={CLUB_ADMIN_PERMISSIONS}
+        clubName="FC Allschwil"
+        logoUrl={null}
+      />,
+    );
+    const nav = document.getElementById("admin-sidebar-nav");
+    expect(nav).toHaveAttribute("data-sce-sidebar-scroll-root");
+    expect(nav?.className).toMatch(/overflow-y-auto/);
+  });
 });

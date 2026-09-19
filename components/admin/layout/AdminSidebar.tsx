@@ -334,6 +334,7 @@ export default function AdminSidebar({
 
       <nav
         id="admin-sidebar-nav"
+        data-sce-sidebar-scroll-root
         className="sce-sidebar-nav flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-3"
         aria-label="Modulnavigation"
       >
