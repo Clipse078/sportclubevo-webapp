@@ -673,6 +673,7 @@ model Tenant {
   billingAccount                   TenantBillingAccount?
   billingCustomerLinks             BillingCustomerTenant[]
   billingCommunications            BillingCommunication[]
+  billingCommunicationAttachments  BillingCommunicationAttachment[]
   teamExternalMappings             TeamExternalMapping[]
   matchExternalMappings            MatchExternalMapping[]
   // ADMIN-DELETE-02A-C1: intentionally-deleted SFV match suppression — see
@@ -4372,6 +4373,7 @@ model Invoice {
   paymentInstruction             InvoicePaymentInstruction?
   deliveries                     InvoiceDelivery[]
   billingCommunications          BillingCommunication[]
+  billingCommunicationAttachments BillingCommunicationAttachment[]
   payments                       InvoicePayment[]
   bankReconciliationTransactions BankReconciliationTransaction[]
 
@@ -4707,6 +4709,7 @@ model BillingCommunication {
   invoiceDelivery     InvoiceDelivery?       @relation(fields: [invoiceDeliveryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   parentCommunication BillingCommunication?  @relation("BillingCommunicationThread", fields: [parentCommunicationId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   childCommunications BillingCommunication[] @relation("BillingCommunicationThread")
+  attachments         BillingCommunicationAttachment[]
 
   @@unique([provider, providerMessageId])
   @@index([tenantId, createdAt])
@@ -4715,6 +4718,39 @@ model BillingCommunication {
   @@index([billingContractId])
   @@index([internetMessageId])
   @@index([parentCommunicationId])
+}
+
+enum BillingCommunicationAttachmentLifecycleStatus {
+  STAGED
+  READY
+}
+
+/// Tenant-scoped billing communication file metadata. Binary content lives in private object storage.
+model BillingCommunicationAttachment {
+  id                     String                                      @id @default(cuid())
+  tenantId               String
+  invoiceId              String?
+  billingCommunicationId String?
+  storageKey             String                                      @unique
+  originalFilename       String
+  sanitizedFilename      String
+  contentType            String
+  sizeBytes              Int
+  checksumSha256         String
+  contentDisposition     String?
+  providerContentId      String?
+  sortOrder              Int                                         @default(0)
+  lifecycleStatus        BillingCommunicationAttachmentLifecycleStatus @default(READY)
+  createdAt              DateTime                                    @default(now())
+  updatedAt              DateTime                                    @updatedAt
+
+  tenant               Tenant                @relation(fields: [tenantId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  invoice              Invoice?              @relation(fields: [invoiceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  billingCommunication BillingCommunication? @relation(fields: [billingCommunicationId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([tenantId, invoiceId])
+  @@index([tenantId, billingCommunicationId, sortOrder])
+  @@index([billingCommunicationId])
 }
 
 enum BillingInboundUnresolvedReason {
@@ -4742,9 +4778,32 @@ model BillingInboundUnresolvedMessage {
   referencesHeader  String?
   createdAt         DateTime                       @default(now())
   updatedAt         DateTime                       @updatedAt
+  attachments       BillingInboundUnresolvedAttachment[]
 
   @@unique([provider, providerMessageId])
   @@index([mailboxKey, createdAt])
+}
+
+/// Platform-scoped inbound attachment held until tenant/invoice resolution (no tenantId).
+model BillingInboundUnresolvedAttachment {
+  id                 String   @id @default(cuid())
+  unresolvedMessageId String
+  storageKey         String   @unique
+  originalFilename   String
+  sanitizedFilename  String
+  contentType        String
+  sizeBytes          Int
+  checksumSha256     String
+  contentDisposition String?
+  providerContentId  String?
+  sortOrder          Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  unresolvedMessage BillingInboundUnresolvedMessage @relation(fields: [unresolvedMessageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([unresolvedMessageId, providerContentId])
+  @@index([unresolvedMessageId, sortOrder])
 }
 
 /// Incremental IMAP cursor for billing inbound polling (separate from tenant communications).

@@ -1,4 +1,5 @@
-import { simpleParser, type AddressObject } from "mailparser";
+import { simpleParser, type AddressObject, type Attachment } from "mailparser";
+import type { ParsedBillingEmailAttachment } from "@/lib/billing/billing-communication/billing-communication-attachment-service";
 import {
   normalizeInternetMessageId,
 } from "./billing-inbound-message-id";
@@ -20,6 +21,43 @@ function flattenAddresses(addresses: AddressObject | AddressObject[] | undefined
 function extractSender(from: AddressObject | undefined): string | null {
   const address = from?.value?.[0]?.address?.trim();
   return address ?? null;
+}
+
+function mapMailparserAttachment(part: Attachment): ParsedBillingEmailAttachment {
+  const content = part.content;
+  const buffer =
+    content instanceof Buffer
+      ? new Uint8Array(content)
+      : typeof content === "string"
+        ? new Uint8Array(Buffer.from(content))
+        : new Uint8Array();
+  const contentDisposition =
+    typeof part.contentDisposition === "string" ? part.contentDisposition : null;
+  const related = part.related === true;
+  const cid =
+    typeof part.cid === "string"
+      ? part.cid.replace(/^<|>$/g, "").trim() || null
+      : null;
+  const isInline =
+    related ||
+    contentDisposition?.toLowerCase().includes("inline") === true ||
+    Boolean(cid);
+  return {
+    filename: part.filename?.trim() || "anhang.bin",
+    contentType: part.contentType?.split(";")[0]?.trim() || "application/octet-stream",
+    buffer,
+    contentDisposition,
+    providerContentId: cid,
+    isInline,
+  };
+}
+
+export async function parseInboundBillingEmailAttachments(
+  source: Buffer,
+): Promise<ParsedBillingEmailAttachment[]> {
+  const parsed = await simpleParser(source);
+  if (!Array.isArray(parsed.attachments)) return [];
+  return parsed.attachments.map(mapMailparserAttachment);
 }
 
 export async function parseInboundBillingEmailSource(

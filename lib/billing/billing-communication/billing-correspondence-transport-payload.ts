@@ -1,4 +1,5 @@
 import type { BillingEmailTransportPayload } from "@/lib/billing/invoice-delivery/billing-email-transport";
+import type { MailAttachment } from "@/lib/email/mailer";
 import { resolvePlatformInvoiceEmailBcc } from "@/lib/billing/invoice-delivery/billing-invoice-email-policy";
 import { joinRecipientListForTransport } from "./billing-communication-recipients";
 
@@ -13,6 +14,7 @@ export type BillingCorrespondenceTransportInput = {
   idempotencyKey?: string;
   inReplyTo?: string | null;
   referencesHeader?: string | null;
+  attachments?: MailAttachment[];
 };
 
 export function buildBillingCorrespondenceTransportPayload(
@@ -32,6 +34,7 @@ export function buildBillingCorrespondenceTransportPayload(
     deliveryIntent: "normal",
     inReplyTo: input.inReplyTo ?? undefined,
     references: input.referencesHeader ?? undefined,
+    attachments: input.attachments,
   };
 }
 
