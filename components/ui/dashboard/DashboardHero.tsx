@@ -60,7 +60,7 @@ export function DashboardHero({
         "relative overflow-hidden rounded-[var(--radius-xl)]",
         "border border-[color-mix(in_srgb,var(--border)_30%,transparent)]",
         "shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_4%,transparent)]",
-        "lg:min-h-[9.5rem]",
+        "lg:min-h-[9rem]",
         isEditingBackground &&
           "ring-2 ring-[color-mix(in_srgb,var(--sce-primary)_55%,transparent)] ring-offset-2 ring-offset-[var(--background)]",
         className,
@@ -135,7 +135,7 @@ export function DashboardHero({
 
       <div
         className={cn(
-          "relative flex min-h-[9.5rem] flex-col px-5 py-4 sm:px-6 lg:px-7 lg:py-4",
+          "relative flex min-h-[9rem] flex-col px-5 py-3.5 sm:px-6 lg:px-7 lg:py-3.5",
           isEditingBackground &&
             "pointer-events-none [&_[data-hero-interactive]]:pointer-events-auto",
         )}

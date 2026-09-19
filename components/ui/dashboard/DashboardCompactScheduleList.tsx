@@ -50,15 +50,15 @@ function CompactTournamentRow({ item }: { item: DashboardTodayTimelineItem }) {
   const summary = buildTodayTournamentParticipantSummary(participants.length);
 
   return (
-    <div className="mt-1 min-w-0">
-      <p className="truncate text-[0.8125rem] font-semibold text-[var(--foreground)]">
+    <div className="mt-0.5 min-w-0">
+      <p className="truncate text-[0.8125rem] font-semibold leading-snug text-[var(--foreground)]">
         {item.title}
       </p>
       {item.subtitle && (
-        <p className="truncate text-[0.6875rem] text-[var(--text-2)]">{item.subtitle}</p>
+        <p className="truncate text-[0.6875rem] leading-snug text-[var(--text-2)]">{item.subtitle}</p>
       )}
       {visible.length > 0 && (
-        <div className="mt-1.5 flex max-w-full flex-nowrap items-center gap-1.5 overflow-hidden">
+        <div className="mt-1 flex max-w-full flex-nowrap items-center gap-1 overflow-hidden">
           {visible.map((participant, index) => (
             <div key={`${participant.displayName}-${index}`} title={participant.displayName}>
               <ClubLogo
@@ -77,7 +77,7 @@ function CompactTournamentRow({ item }: { item: DashboardTodayTimelineItem }) {
         </div>
       )}
       {summary && (
-        <p className="mt-1 truncate text-[0.6875rem] text-[var(--muted)]">{summary}</p>
+        <p className="mt-0.5 truncate text-[0.6875rem] leading-snug text-[var(--muted)]">{summary}</p>
       )}
     </div>
   );
@@ -90,11 +90,11 @@ function CompactScheduleRow({ item }: { item: DashboardTodayTimelineItem }) {
 
   const rowInner = (
     <>
-      <p className="w-[3.25rem] shrink-0 pt-0.5 text-right font-mono text-[0.8125rem] font-semibold tabular-nums text-[var(--foreground)]">
+      <p className="w-[3.25rem] shrink-0 text-right font-mono text-[0.8125rem] font-semibold leading-snug tabular-nums text-[var(--foreground)]">
         {item.timeLabel}
       </p>
       <p
-        className="w-[4.75rem] shrink-0 pt-0.5 text-[0.625rem] font-bold uppercase tracking-[0.08em] text-[var(--text-2)]"
+        className="w-[4.75rem] shrink-0 text-[0.625rem] font-bold uppercase leading-snug tracking-[0.08em] text-[var(--text-2)]"
         aria-hidden="true"
       >
         {formatTodayEventTypeBadge(item.typeLabel)}
@@ -113,7 +113,7 @@ function CompactScheduleRow({ item }: { item: DashboardTodayTimelineItem }) {
       </div>
       {item.href && (
         <ChevronRight
-          className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)] motion-safe:transition-colors group-hover:text-[var(--sce-primary)]"
+          className="h-4 w-4 shrink-0 text-[var(--muted)] motion-safe:transition-colors group-hover:text-[var(--sce-primary)]"
           aria-hidden="true"
         />
       )}
@@ -121,7 +121,8 @@ function CompactScheduleRow({ item }: { item: DashboardTodayTimelineItem }) {
   );
 
   const rowClassName = cn(
-    "group grid grid-cols-[3.25rem_4.75rem_minmax(0,1fr)_auto] items-start gap-x-2 rounded-[var(--radius-md)] px-0.5 py-2",
+    "group grid grid-cols-[3.25rem_4.75rem_minmax(0,1fr)_auto] items-center gap-x-2 rounded-[var(--radius-md)] px-0.5 py-1.5",
+    isTournament && "items-start",
     "border-b border-[color-mix(in_srgb,var(--border)_85%,transparent)] last:border-b-0",
     item.href &&
       "motion-safe:transition-colors motion-safe:hover:bg-[color-mix(in_srgb,var(--surface-2)_55%,transparent)]",
@@ -177,7 +178,7 @@ export function DashboardCompactScheduleList({
       {hiddenCount > 0 && (
         <Link
           href={viewAllHref}
-          className="mt-2 inline-flex text-[0.8125rem] font-medium text-[var(--sce-primary)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+          className="mt-1 inline-flex text-[0.8125rem] font-medium text-[var(--sce-primary)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
         >
           Alle {items.length} anzeigen →
         </Link>

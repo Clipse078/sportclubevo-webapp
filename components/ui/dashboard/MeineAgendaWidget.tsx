@@ -79,7 +79,7 @@ export function MeineAgendaWidget({ items, supported }: MeineAgendaWidgetProps) 
       icon={<CalendarDays className="h-4 w-4" />}
       iconAccent="primary"
       variant="card"
-      bodyClassName="px-4 py-2.5 sm:px-5 sm:py-3"
+      bodyClassName="px-4 py-1.5 sm:px-5 sm:py-2"
       actions={
         <Link href="/dashboard/planner" className="sce-link-primary text-[0.8125rem] font-medium">
           Kalender öffnen →
@@ -95,9 +95,10 @@ export function MeineAgendaWidget({ items, supported }: MeineAgendaWidgetProps) 
         />
       ) : items.length === 0 ? (
         <DashboardEmptyState
-          icon={<CalendarDays className="h-5 w-5" />}
+          icon={<CalendarDays className="h-4 w-4" />}
           title="Keine persönlichen Termine"
           variant="compact"
+          compactLayout="inline"
         />
       ) : (
         <div className="space-y-3">

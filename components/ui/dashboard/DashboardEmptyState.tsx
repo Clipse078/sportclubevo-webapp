@@ -8,6 +8,11 @@ export type DashboardEmptyStateProps = {
   action?: ReactNode;
   /** Compact layout for personal dashboard cards with no data. */
   variant?: "default" | "compact";
+  /**
+   * With `variant="compact"`, `inline` places icon beside the title (personal cards).
+   * Default stacked compact keeps centered icon + text (other dashboard sections).
+   */
+  compactLayout?: "stacked" | "inline";
   className?: string;
 };
 
@@ -20,23 +25,27 @@ export function DashboardEmptyState({
   description,
   action,
   variant = "default",
+  compactLayout = "stacked",
   className,
 }: DashboardEmptyStateProps) {
   const isCompact = variant === "compact";
+  const isInlineCompact = isCompact && compactLayout === "inline";
 
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-2.5 text-center",
-        isCompact ? "py-4 sm:py-4" : "py-7 sm:py-8",
+        isInlineCompact
+          ? "flex flex-row items-center gap-2 py-0.5 text-left"
+          : "flex flex-col items-center gap-2.5 text-center",
+        !isInlineCompact && (isCompact ? "py-3 sm:py-3" : "py-7 sm:py-8"),
         className,
       )}
     >
       {icon && (
         <span
           className={cn(
-            "flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)]",
-            isCompact ? "h-9 w-9" : "h-11 w-11",
+            "flex shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)]",
+            isInlineCompact ? "h-8 w-8" : isCompact ? "h-9 w-9" : "h-11 w-11",
           )}
           aria-hidden="true"
         >
@@ -46,6 +55,7 @@ export function DashboardEmptyState({
       <p
         className={cn(
           "font-semibold text-[var(--foreground)]",
+          isInlineCompact && "min-w-0 flex-1",
           isCompact ? "text-[0.8125rem]" : "text-[0.875rem]",
         )}
       >

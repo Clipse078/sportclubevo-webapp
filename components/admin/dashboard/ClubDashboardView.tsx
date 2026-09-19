@@ -203,7 +203,7 @@ export default async function ClubDashboardView() {
   const todayWithHrefs = withTodayItemHrefs(commandCenter.todayItems);
 
   return (
-    <div className="flex min-w-0 flex-col gap-4 lg:gap-5">
+    <div className="flex min-w-0 flex-col gap-3.5 lg:gap-4">
       <DashboardHeroSection
         initialBackgroundImageUrl={commandCenter.heroBackgroundImageUrl}
         initialBackgroundTransform={commandCenter.heroBackgroundTransform}
@@ -260,7 +260,8 @@ export default async function ClubDashboardView() {
                 icon={<Zap className="h-4 w-4" />}
                 iconAccent="primary"
                 variant="card"
-                bodyClassName="px-4 py-2.5 sm:px-5"
+                density="compact"
+                bodyClassName="px-4 py-1.5 sm:px-5 sm:py-1.5"
               >
                 <DashboardQuickActionStrip actions={cockpitQuickActions} />
               </DashboardSection>

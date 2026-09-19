@@ -20,11 +20,11 @@ export function DashboardOperationalGrid({
   className,
 }: DashboardOperationalGridProps) {
   return (
-    <div className={cn("flex flex-col gap-4 lg:gap-5", className)}>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.62fr)_minmax(0,1fr)] lg:items-start lg:gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">
+    <div className={cn("flex flex-col gap-3.5 lg:gap-4", className)}>
+      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[minmax(0,1.62fr)_minmax(0,1fr)] lg:items-start lg:gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">
         {operationalRow}
       </div>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start lg:gap-5">
+      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2 lg:items-start lg:gap-4">
         {personalRow}
       </div>
       {tertiary}

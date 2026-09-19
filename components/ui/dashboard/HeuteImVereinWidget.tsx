@@ -26,7 +26,7 @@ export function HeuteImVereinWidget({
       icon={<CalendarDays className="h-4 w-4" />}
       iconAccent="info"
       variant="card"
-      bodyClassName="px-4 py-2 sm:px-5 sm:py-2.5"
+      bodyClassName="px-4 py-1.5 sm:px-5 sm:py-2"
       actions={
         <Link href={viewAllHref} className="sce-link-primary text-[0.8125rem] font-medium">
           Tagesplan →

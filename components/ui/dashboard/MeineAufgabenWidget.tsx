@@ -10,7 +10,7 @@ export function MeineAufgabenWidget() {
       icon={<ListChecks className="h-4 w-4" />}
       iconAccent="info"
       variant="card"
-      bodyClassName="px-4 py-2.5 sm:px-5 sm:py-3"
+      bodyClassName="px-4 py-1.5 sm:px-5 sm:py-2"
       actions={
         <Link href="/dashboard/aufgaben" className="sce-link-primary text-[0.8125rem] font-medium">
           Alle Aufgaben →
@@ -18,9 +18,10 @@ export function MeineAufgabenWidget() {
       }
     >
       <DashboardEmptyState
-        icon={<ListChecks className="h-5 w-5" />}
+        icon={<ListChecks className="h-4 w-4" />}
         title="Keine offenen Aufgaben"
         variant="compact"
+        compactLayout="inline"
       />
     </DashboardSection>
   );
