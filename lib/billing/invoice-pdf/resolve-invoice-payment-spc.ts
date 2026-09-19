@@ -6,7 +6,10 @@ import type {
 } from "../native-billing-commercial-types";
 import { NativeBillingNotFoundError, NativeBillingValidationError } from "../native-billing-types";
 import { paymentAccountForStrategy } from "../swiss-qr/swiss-iban";
-import { buildSwissSpcPayload } from "../swiss-qr/swiss-spc-payload";
+import { buildSwissQrBillDataFromInvoiceContext } from "../swiss-qr-compliance/build-swiss-qr-bill-from-instruction";
+import { runSwissQrCompliance } from "../swiss-qr-compliance/run-swiss-qr-compliance";
+import { SWISS_QR_COMPLIANCE_CODES } from "../swiss-qr-compliance/swiss-qr-compliance-codes";
+import { SwissQrComplianceBlockedError } from "../swiss-qr-compliance/swiss-qr-compliance-error";
 
 export type ResolvedInvoicePaymentSpc = {
   spcPayload: string;
@@ -28,34 +31,26 @@ export async function resolveInvoicePaymentSpcFromInstruction(input: {
     input.instruction.referenceType,
   );
 
-  const spcPayload = buildSwissSpcPayload({
-    creditorAccount,
-    creditor: {
-      name: input.issuer.legalName,
-      street: input.issuer.addressLine1,
-      houseNumber: input.issuer.houseNumber,
-      postalCode: input.issuer.postalCode,
-      city: input.issuer.city,
-      countryCode: input.issuer.countryCode,
-    },
-    amountMinor: input.instruction.amountMinor,
-    currency: input.instruction.currency,
-    debtor: {
-      name: input.recipient.companyOrName,
-      street: input.recipient.street,
-      houseNumber: input.recipient.houseNumber,
-      postalCode: input.recipient.postalCode,
-      city: input.recipient.city,
-      countryCode: input.recipient.countryCode,
-    },
-    referenceType: input.instruction.referenceType,
-    reference: input.instruction.reference,
-    additionalInformation: input.instruction.additionalInformation,
+  const billData = await buildSwissQrBillDataFromInvoiceContext(input);
+  const compliance = await runSwissQrCompliance(billData, {
+    verifyQrArtifact: true,
+    verifyPdfArtifact: false,
   });
+  if (!compliance.ok) {
+    const issue = compliance.issues[0];
+    throw new SwissQrComplianceBlockedError(
+      issue?.code ?? SWISS_QR_COMPLIANCE_CODES.QR_PAYLOAD_MISMATCH,
+      issue?.message ?? "Swiss QR compliance failed",
+      "Swiss-QR-Daten sind nicht standardskonform. PDF kann nicht erstellt werden.",
+    );
+  }
 
   if (input.instruction.referenceType === "QRR" && !input.instruction.reference?.trim()) {
     throw new NativeBillingValidationError("QRR-Referenz fehlt in der Zahlungsanweisung.");
   }
 
-  return { spcPayload, creditorAccount };
+  return {
+    spcPayload: compliance.canonicalPayload,
+    creditorAccount,
+  };
 }
