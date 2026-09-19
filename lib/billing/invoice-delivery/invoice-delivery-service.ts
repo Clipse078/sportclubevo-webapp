@@ -55,6 +55,8 @@ import {
 import { resolveBillingEmailIdentity } from "./resolve-billing-email-identity";
 import { recordOutboundInvoiceEmailCommunication } from "@/lib/billing/billing-communication/billing-communication-service";
 import { resolvePlatformInvoiceEmailBcc } from "./billing-invoice-email-policy";
+import { assertInvoiceSwissQrDeliveryCompliance } from "@/lib/billing/swiss-qr-compliance/assert-invoice-swiss-qr-delivery-compliance";
+import { SwissQrComplianceBlockedError } from "@/lib/billing/swiss-qr-compliance/swiss-qr-compliance-error";
 
 const recipientEmailSchema = z.string().email();
 
@@ -172,6 +174,13 @@ function mapDeliveryFailure(error: unknown): { code: string; message: string; us
       userMessage: "Die Rechnungs-PDF konnte nicht erstellt werden.",
     };
   }
+  if (error instanceof SwissQrComplianceBlockedError) {
+    return {
+      code: error.code,
+      message: error.message,
+      userMessage: error.userMessage,
+    };
+  }
   if (error instanceof BillingEmailDryRunFailureError) {
     return {
       code: "PROVIDER_SIMULATED_FAILURE",
@@ -227,6 +236,7 @@ export async function sendNativeInvoiceEmail(
   }
 
   const context = await validateInvoiceForDelivery(input.invoiceKey);
+  await assertInvoiceSwissQrDeliveryCompliance(input.invoiceKey);
   const acceptanceSimulatedFailure =
     input.simulateFailure === true &&
     isBillingDeliveryAcceptanceSimulateFailureAllowed();

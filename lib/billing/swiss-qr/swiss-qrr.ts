@@ -95,6 +95,20 @@ export function buildQrrPayload26(
   return body;
 }
 
+/** Validates a 27-digit QRR reference (Modulo-10 recursive check digit). */
+export function validateQrrReference(reference: string): string {
+  const normalized = reference.replace(/\s+/g, "");
+  if (!/^\d{27}$/.test(normalized)) {
+    throw new SwissQrrError("QRR-Referenz muss 27 Ziffern haben.");
+  }
+  const body = normalized.slice(0, 26);
+  const expectedCheck = appendModulo10CheckDigit(body).slice(-1);
+  if (normalized.slice(-1) !== expectedCheck) {
+    throw new SwissQrrError("QRR-Prüfziffer ungültig.");
+  }
+  return normalized;
+}
+
 /** Full 27-digit QRR reference (26-digit payload + Modulo-10 check digit). */
 export function generateQrrReference(
   identity: SwissQrrInvoiceIdentity,
