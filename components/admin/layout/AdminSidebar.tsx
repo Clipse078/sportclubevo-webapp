@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useSidebarScrollFreezeDuringModal } from "@/hooks/useSidebarScrollFreezeDuringModal";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { applyShellLayoutVarsToDocument } from "@/lib/shell/shell-layout-vars";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import SidebarBrandHeader from "@/components/admin/branding/SidebarBrandHeader";
@@ -83,9 +82,6 @@ export default function AdminSidebar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const selectedSeason = searchParams.get("season");
-  const sidebarNavRef = useRef<HTMLElement | null>(null);
-  useSidebarScrollFreezeDuringModal(sidebarNavRef);
-
   const [internalCollapsed, setInternalCollapsed] = useState(false);
   const [collapsedHydrated, setCollapsedHydrated] = useState(false);
 
@@ -336,7 +332,6 @@ export default function AdminSidebar({
       </div>
 
       <nav
-        ref={sidebarNavRef}
         id="admin-sidebar-nav"
         data-sce-sidebar-scroll-root
         className="sce-sidebar-nav flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-3"

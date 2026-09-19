@@ -111,6 +111,11 @@ describe("AggregatedActivityInspectionDialog", () => {
     expect(screen.getAllByText("Training").length).toBeGreaterThan(0);
     expect(screen.queryByText(/^Train\.\.\.$/)).toBeNull();
     expect(screen.queryByText(/^Train…$/)).toBeNull();
+    expect(screen.getByTestId("aggregate-inspection-zeit-training:0").textContent).toMatch(
+      /\d{2}:\d{2}–\d{2}:\d{2}/,
+    );
+    expect(screen.getByTestId("aggregate-inspection-zeit-training:0").textContent).not.toContain("…");
+    expect(screen.getByTestId("aggregate-inspection-typ-training:0").textContent).toBe("Training");
   });
 
   it("selects first conflicting activity by default and shows conflict explanation", () => {

@@ -102,10 +102,10 @@ describe("SceModalOverlay backdrop SCE-RESPONSIVE-01F", () => {
     expect(dialogSource).toMatch(/<SceModalOverlay[\s\S]*open=\{open\}/);
   });
 
-  it("H — stationary modal architecture remains on SceModalOverlay (portal + scroll lock hook)", () => {
+  it("H — stationary modal architecture remains on SceModalOverlay (portal only, no scroll lock)", () => {
     const overlaySource = readSource("components/ui/SceModalOverlay.tsx");
     expect(overlaySource).toContain("createPortal");
-    expect(overlaySource).toContain("lockSceDocumentScroll");
+    expect(overlaySource).not.toContain("lockSceDocumentScroll");
     expect(overlaySource).toContain("[data-sce-modal-background]");
   });
 

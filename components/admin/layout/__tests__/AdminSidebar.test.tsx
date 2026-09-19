@@ -324,14 +324,13 @@ describe("AdminSidebar", () => {
     expect(document.documentElement.hasAttribute("data-sidebar-collapsed")).toBe(false);
   });
 
-  it("SCE-RESPONSIVE-01O — attaches sidebar scroll freeze while SCE modals are open", () => {
+  it("SCE-RESPONSIVE-01P — sidebar has no modal freeze or scroll guard hooks", () => {
     const source = readFileSync(
       join(process.cwd(), "components/admin/layout/AdminSidebar.tsx"),
       "utf8",
     );
-    expect(source).toContain("useSidebarScrollFreezeDuringModal");
-    expect(source).toContain("sidebarNavRef");
-    expect(source).toContain("ref={sidebarNavRef}");
+    expect(source).not.toContain("useSidebarScrollFreezeDuringModal");
+    expect(source).not.toContain("sidebar-modal-scroll-freeze");
   });
 
   it("SCE-RESPONSIVE-01M — marks module nav as canonical sidebar scroll root", () => {

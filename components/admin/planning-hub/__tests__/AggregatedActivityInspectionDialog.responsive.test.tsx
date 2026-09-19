@@ -25,21 +25,24 @@ describe("AggregatedActivityInspectionDialog SCE-RESPONSIVE-01", () => {
       "components/admin/planning-hub/AggregatedActivityInspectionDialog.tsx",
     );
     const headerIdx = source.indexOf("<header");
-    const listScrollIdx = source.indexOf("overflow-y-auto overflow-x-hidden");
+    const listScrollIdx = source.indexOf("aggregate-inspection-table-scroll");
     expect(source).toContain("table-fixed");
-    expect(source).not.toContain("overflow-x-auto");
     expect(headerIdx).toBeGreaterThan(-1);
     expect(listScrollIdx).toBeGreaterThan(headerIdx);
   });
 
-  it("N — TYP column is wide enough for Training without ellipsis truncation", () => {
+  it("P — table column contract: ZEIT and TYP never ellipsize", () => {
     const source = readSource(
       "components/admin/planning-hub/AggregatedActivityInspectionDialog.tsx",
     );
-    expect(source).toMatch(/<col className="w-\[5\.5rem\]" \/>/);
-    expect(source).toContain("whitespace-nowrap text-[var(--foreground)]");
-    expect(source).not.toMatch(
-      /weekplannerActivityTypeLabel\(item\.type\)[\s\S]{0,120}truncate/,
-    );
+    expect(source).toMatch(/<col className="w-\[7\.5rem\]" \/>/);
+    expect(source).toMatch(/<col className="w-\[6\.25rem\]" \/>/);
+    expect(source).toContain("aggregate-inspection-zeit-");
+    expect(source).toContain("aggregate-inspection-typ-");
+    expect(source).toContain('className="whitespace-nowrap px-2 py-1.5 tabular-nums');
+    expect(source).not.toMatch(/aggregate-inspection-zeit[\s\S]{0,120}truncate/);
+    expect(source).toContain('className="whitespace-nowrap text-[var(--foreground)]"');
+    expect(source).not.toMatch(/aggregate-inspection-typ[\s\S]{0,80}truncate/);
+    expect(source).toContain('className="block truncate font-medium');
   });
 });

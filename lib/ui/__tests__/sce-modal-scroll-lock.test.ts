@@ -7,7 +7,7 @@ import {
   lockSceDocumentScroll,
 } from "@/lib/ui/sce-modal-scroll-lock";
 
-describe("sce-modal-scroll-lock SCE-RESPONSIVE-01D", () => {
+describe("sce-modal-scroll-lock SCE-RESPONSIVE-01P", () => {
   const scrollToSpy = vi.fn();
 
   beforeEach(() => {
@@ -16,33 +16,24 @@ describe("sce-modal-scroll-lock SCE-RESPONSIVE-01D", () => {
     Object.defineProperty(window, "scrollY", { value: 840, writable: true, configurable: true });
     document.documentElement.style.overflow = "";
     document.body.style.overflow = "";
-    document.body.style.paddingRight = "";
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("preserves scroll position when applying and releasing lock", () => {
+  it("does not mutate overflow or scroll position (pure overlay model)", () => {
     const snapshot = captureSceDocumentScrollSnapshot();
+    const unlock = lockSceDocumentScroll();
+
+    expect(document.documentElement.style.overflow).toBe("");
+    expect(document.body.style.overflow).toBe("");
+    expect(window.scrollY).toBe(840);
+    expect(scrollToSpy).not.toHaveBeenCalled();
+
+    unlock();
+    expect(window.scrollY).toBe(840);
+    expect(scrollToSpy).not.toHaveBeenCalled();
     expect(snapshot.scrollY).toBe(840);
-
-    const unlock = lockSceDocumentScroll();
-    expect(document.documentElement.style.overflow).toBe("hidden");
-    expect(document.body.style.overflow).toBe("hidden");
-    expect(window.scrollY).toBe(840);
-    expect(scrollToSpy).not.toHaveBeenCalled();
-
-    unlock();
-    expect(window.scrollY).toBe(840);
-    expect(scrollToSpy).not.toHaveBeenCalled();
-  });
-
-  it("lockSceDocumentScroll restores prior overflow styles on cleanup", () => {
-    document.body.style.overflow = "auto";
-    const unlock = lockSceDocumentScroll();
-    expect(document.body.style.overflow).toBe("hidden");
-    unlock();
-    expect(document.body.style.overflow).toBe("auto");
   });
 });

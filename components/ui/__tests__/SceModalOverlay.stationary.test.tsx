@@ -86,14 +86,16 @@ describe("SceModalOverlay stationary contract SCE-RESPONSIVE-01D", () => {
     expect(viewport).toBeTruthy();
   });
 
-  it("E — opening activates document scroll lock without changing scrollY", async () => {
+  it("E — opening does not mutate document overflow or scrollY (pure overlay)", async () => {
     const { rerender } = render(<FocusProbeDialog open={false} onClose={() => {}} />);
     scrollToSpy.mockClear();
     rerender(<FocusProbeDialog open onClose={() => {}} />);
 
     await waitFor(() => {
-      expect(document.documentElement.style.overflow).toBe("hidden");
+      expect(screen.getByTestId("focus-probe-overlay")).toBeInTheDocument();
     });
+    expect(document.documentElement.style.overflow).toBe("");
+    expect(document.body.style.overflow).toBe("");
     expect(window.scrollY).toBe(1200);
     expect(scrollToSpy).not.toHaveBeenCalled();
   });

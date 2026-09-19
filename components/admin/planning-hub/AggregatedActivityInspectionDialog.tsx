@@ -280,16 +280,22 @@ export default function AggregatedActivityInspectionDialog({
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain">
-              <table className="w-full table-fixed border-collapse text-left text-xs">
+            <div
+              className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain max-md:overflow-x-auto md:overflow-x-hidden"
+              data-testid="aggregate-inspection-table-scroll"
+            >
+              <table
+                className="w-full min-w-[42rem] table-fixed border-collapse text-left text-xs"
+                data-testid="aggregate-inspection-table"
+              >
                 <colgroup>
-                  <col className="w-[4.25rem]" />
-                  <col className="w-[5.5rem]" />
+                  <col className="w-[7.5rem]" />
+                  <col className="w-[6.25rem]" />
                   <col />
-                  <col className="hidden md:table-column md:w-[18%]" />
-                  <col className="hidden lg:table-column lg:w-[14%]" />
+                  <col className="hidden md:table-column md:w-[9rem]" />
+                  <col className="hidden lg:table-column lg:w-[7rem]" />
+                  <col className="w-[7rem]" />
                   <col className="w-[5.5rem]" />
-                  <col className="w-[3.75rem]" />
                 </colgroup>
                 <thead className="sticky top-0 z-[1] bg-[var(--surface)] shadow-[0_1px_0_var(--border)]">
                   <tr className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
@@ -331,7 +337,10 @@ export default function AggregatedActivityInspectionDialog({
                           onClick={() => setSelectedId(item.id)}
                           onDoubleClick={() => onOpenItem(item)}
                         >
-                          <td className="truncate whitespace-nowrap px-2 py-1.5 tabular-nums text-[var(--text-2)] sm:px-3">
+                          <td
+                            className="whitespace-nowrap px-2 py-1.5 tabular-nums text-[var(--text-2)] sm:px-3"
+                            data-testid={`aggregate-inspection-zeit-${item.id}`}
+                          >
                             {weekplannerTimingDetail(item, locale, timezone)}
                           </td>
                           <td className="px-1.5 py-1.5">
@@ -340,7 +349,10 @@ export default function AggregatedActivityInspectionDialog({
                                 className={cn("h-2 w-2 shrink-0 rounded-full", semantic.markerClass)}
                                 aria-hidden
                               />
-                              <span className="whitespace-nowrap text-[var(--foreground)]">
+                              <span
+                                className="whitespace-nowrap text-[var(--foreground)]"
+                                data-testid={`aggregate-inspection-typ-${item.id}`}
+                              >
                                 {weekplannerActivityTypeLabel(item.type)}
                               </span>
                             </span>
@@ -359,7 +371,7 @@ export default function AggregatedActivityInspectionDialog({
                           <td className="px-1.5 py-1.5">
                             <span
                               className={cn(
-                                "inline-flex max-w-full truncate rounded-full border px-1.5 py-0.5 text-[10px] font-semibold",
+                                "inline-flex whitespace-nowrap rounded-full border px-1.5 py-0.5 text-[10px] font-semibold",
                                 status === "conflict"
                                   ? "border-amber-500/35 bg-amber-500/10 text-amber-900/90"
                                   : status === "end-time-action"
@@ -376,7 +388,7 @@ export default function AggregatedActivityInspectionDialog({
                           <td className="px-1.5 py-1.5">
                             <button
                               type="button"
-                              className="rounded-md px-1.5 py-1 text-[10px] font-semibold text-[var(--sce-primary)] hover:bg-[var(--surface-2)]"
+                              className="whitespace-nowrap rounded-md px-1.5 py-1 text-[10px] font-semibold text-[var(--sce-primary)] hover:bg-[var(--surface-2)]"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onOpenItem(item);

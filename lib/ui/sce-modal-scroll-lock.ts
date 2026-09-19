@@ -1,6 +1,6 @@
 /**
- * Background scroll lock for portalled SCE modals.
- * Avoids body padding / scrollbar compensation — that reflow can shift nested scroll owners.
+ * SCE-RESPONSIVE-01P — portalled overlays no longer mutate document scroll/layout.
+ * Background interaction is blocked by the fixed interaction layer + focus trap.
  */
 
 export type SceDocumentScrollSnapshot = {
@@ -19,26 +19,12 @@ export function captureSceDocumentScrollSnapshot(): SceDocumentScrollSnapshot {
   };
 }
 
-export function applySceDocumentScrollLock(snapshot: SceDocumentScrollSnapshot): void {
-  document.documentElement.style.overflow = "hidden";
-  document.body.style.overflow = "hidden";
+/** No-op — retained for API compatibility; must not write overflow or call scrollTo. */
+export function applySceDocumentScrollLock(_snapshot: SceDocumentScrollSnapshot): void {}
 
-  if (window.scrollX !== snapshot.scrollX || window.scrollY !== snapshot.scrollY) {
-    window.scrollTo(snapshot.scrollX, snapshot.scrollY);
-  }
-}
-
-export function releaseSceDocumentScrollLock(snapshot: SceDocumentScrollSnapshot): void {
-  document.documentElement.style.overflow = snapshot.htmlOverflow;
-  document.body.style.overflow = snapshot.bodyOverflow;
-
-  if (window.scrollX !== snapshot.scrollX || window.scrollY !== snapshot.scrollY) {
-    window.scrollTo(snapshot.scrollX, snapshot.scrollY);
-  }
-}
+/** No-op */
+export function releaseSceDocumentScrollLock(_snapshot: SceDocumentScrollSnapshot): void {}
 
 export function lockSceDocumentScroll(): () => void {
-  const snapshot = captureSceDocumentScrollSnapshot();
-  applySceDocumentScrollLock(snapshot);
-  return () => releaseSceDocumentScrollLock(snapshot);
+  return () => {};
 }

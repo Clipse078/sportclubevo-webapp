@@ -14,8 +14,6 @@ import {
   applySceModalOpenSideEffects,
   releaseSceModalOpenSideEffects,
 } from "@/lib/ui/sce-modal-open-lifecycle";
-import { acquireSceModalOpenState } from "@/lib/ui/sce-modal-open-state";
-import { lockSceDocumentScroll } from "@/lib/ui/sce-modal-scroll-lock";
 import {
   SCE_OVERLAY_CONTENT_VIEWPORT,
   SCE_OVERLAY_ROOT,
@@ -61,8 +59,6 @@ export function SceModalOverlay({
   useLayoutEffect(() => {
     if (!open || !portalTarget) return;
 
-    const releaseModalOpenState = acquireSceModalOpenState();
-
     const backgroundRoots = Array.from(
       document.querySelectorAll<HTMLElement>("[data-sce-modal-background]"),
     );
@@ -72,19 +68,14 @@ export function SceModalOverlay({
       backgroundRoots,
     });
 
-    const unlockScroll = lockSceDocumentScroll();
-
     return () => {
-      unlockScroll();
       if (openLifecycleRef.current) {
         releaseSceModalOpenSideEffects({
           backgroundRoots,
           previousFocus: openLifecycleRef.current.previousFocus,
-          scrollSnapshot: openLifecycleRef.current.scrollSnapshot,
         });
         openLifecycleRef.current = null;
       }
-      releaseModalOpenState();
     };
   }, [open, portalTarget, initialFocusRef]);
 
