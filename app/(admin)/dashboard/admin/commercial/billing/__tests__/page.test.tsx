@@ -13,6 +13,10 @@ vi.mock("@/lib/billing/operations/billing-operations-service", () => ({
   getBillingOperationsDashboard: mocks.getBillingOperationsDashboard,
 }));
 
+vi.mock("@/lib/billing/billing-inbound/billing-inbound-mailbox-repository", () => ({
+  countBillingInboundUnresolvedMessages: vi.fn().mockResolvedValue(0),
+}));
+
 import PlatformCommercialBillingPage from "../page";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 

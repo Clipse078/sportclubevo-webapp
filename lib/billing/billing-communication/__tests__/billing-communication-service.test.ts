@@ -92,6 +92,39 @@ describe("billing communication service", () => {
     prismaMock.billingCommunication.create.mockResolvedValue(baseCommunication);
   });
 
+  it("persists platform BCC addresses on outbound recording", async () => {
+    await recordOutboundInvoiceEmailCommunication({
+      invoice: {
+        id: "inv-1",
+        billingCustomerId: "cust-1",
+        billingContractId: "contract-1",
+      },
+      delivery: {
+        id: "del-bcc",
+        recipientEmail: "club@example.test",
+        sentAt: new Date("2026-09-14T12:00:00.000Z"),
+      },
+      email: {
+        subject: "Rechnung",
+        textBody: "Plain text",
+        fromAddress: "billing@sportclubevo.com",
+        bccAddresses: ["hello@tulip-digital.ch"],
+      },
+      transport: {
+        provider: "resend",
+        providerMessageId: "msg-bcc-1",
+      },
+    });
+
+    expect(prismaMock.billingCommunication.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          bccAddresses: ["hello@tulip-digital.ch"],
+        }),
+      }),
+    );
+  });
+
   it("creates outbound EMAIL communication with correct relations", async () => {
     const result = await recordOutboundInvoiceEmailCommunication({
       invoice: {
