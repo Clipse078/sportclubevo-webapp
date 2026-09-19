@@ -9,12 +9,15 @@ import {
 export type InfomaniakSmtpSendPayload = {
   from: string;
   to: string;
+  cc?: string;
   replyTo?: string;
   bcc?: string;
   subject: string;
   html: string;
   text: string;
   attachments?: import("@/lib/email/mailer").MailAttachment[];
+  inReplyTo?: string;
+  references?: string;
 };
 
 export type InfomaniakSmtpSendResult = {
@@ -72,12 +75,15 @@ export async function sendInfomaniakBillingEmail(
     const info = await transport.sendMail({
       from: payload.from,
       to: payload.to,
+      cc: payload.cc,
       replyTo: payload.replyTo,
       bcc: payload.bcc,
       subject: payload.subject,
       html: payload.html,
       text: payload.text,
       attachments: mapMailAttachmentsForNodemailer(payload.attachments),
+      inReplyTo: payload.inReplyTo,
+      references: payload.references,
     });
 
     const messageId =
