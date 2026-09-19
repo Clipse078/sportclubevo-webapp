@@ -2,7 +2,11 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { PageBreadcrumbs, type BreadcrumbItem } from "@/components/ui/page";
-import { TRAINING_FORM_MAX_WIDTH_CLASS } from "@/components/admin/training/form/training-form-layout";
+import {
+  TRAINING_FORM_MAX_WIDTH_CLASS,
+  TRAINING_RECORD_MAIN_RAIL_GRID,
+  TRAINING_RECORD_RAIL_ASIDE,
+} from "@/components/admin/training/form/training-form-layout";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -39,9 +43,9 @@ export default function TrainingRecordWorkspaceShell({
         {header}
       </div>
 
-      <div className={cn(contextRail ? "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(14rem,22rem)] xl:grid-cols-[minmax(0,1fr)_minmax(16rem,24rem)]" : undefined)}>
+      <div className={cn(contextRail ? TRAINING_RECORD_MAIN_RAIL_GRID : undefined)}>
         <div className="min-w-0">{children}</div>
-        {contextRail ? <aside className="min-w-0 space-y-4 lg:sticky lg:top-4 lg:self-start">{contextRail}</aside> : null}
+        {contextRail ? <aside className={TRAINING_RECORD_RAIL_ASIDE}>{contextRail}</aside> : null}
       </div>
     </div>
   );

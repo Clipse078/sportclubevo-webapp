@@ -5,6 +5,13 @@
 /** Premium form workspace width (responsive below breakpoint). */
 export const TRAINING_FORM_MAX_WIDTH_CLASS = "mx-auto w-full max-w-[min(72rem,100%)]";
 
+/** Side-by-side main + context rail (aligned with SPIELE-UX-02 / SCE responsive suite). */
+export const TRAINING_RECORD_MAIN_RAIL_GRID =
+  "grid gap-6 min-[105rem]:grid-cols-[minmax(0,1fr)_minmax(16rem,24rem)]";
+
+export const TRAINING_RECORD_RAIL_ASIDE =
+  "min-w-0 space-y-4 min-[105rem]:sticky min-[105rem]:top-4 min-[105rem]:self-start";
+
 /** Reserve space so sticky footers never cover resource pickers. */
 export const TRAINING_FORM_STICKY_FOOTER_RESERVE_CLASS = "pb-24";
 

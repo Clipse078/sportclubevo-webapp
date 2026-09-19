@@ -141,7 +141,7 @@ describe("TrainingSessionAllocationEditor — Serien-Standard verwenden", () => 
     );
 
     expect(screen.getByTestId("training-session-allocations-dressing-room-series-default")).toHaveTextContent(
-      "Serien-Standard: E3",
+      "Serienstandard: E3",
     );
   });
 
