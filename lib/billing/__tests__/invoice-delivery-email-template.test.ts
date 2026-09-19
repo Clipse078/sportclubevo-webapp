@@ -22,8 +22,11 @@ describe("invoice delivery email template", () => {
     expect(content.html).toContain("<!DOCTYPE html>");
     expect(content.html).toContain('alt="SportClubEvo"');
     expect(content.html).toContain('alt="Tulip Digital"');
-    expect(content.html).toContain("cid:sportclubevo-invoice-email-logo");
-    expect(content.html).toContain("cid:tulip-digital-invoice-email-logo");
+    expect(content.html).toContain("cid:sportclubevo-invoice-email-logo@sportclubevo.com");
+    expect(content.html).toContain("cid:tulip-digital-invoice-email-logo@tulip-digital.ch");
+    expect(content.html).not.toMatch(/src="https?:\/\//);
+    expect(content.html).not.toContain("localhost");
+    expect(content.html).not.toContain("vercel.app");
     expect(content.html).toContain("Rechnungsbetrag");
     expect(content.html).toContain("Fällig am");
   });
@@ -36,10 +39,13 @@ describe("invoice delivery email template", () => {
 
     expect(attachments).toHaveLength(3);
     expect(attachments[0].contentType).toBe("image/png");
-    expect(attachments[0].cid).toBe("sportclubevo-invoice-email-logo");
+    expect(attachments[0].cid).toBe("sportclubevo-invoice-email-logo@sportclubevo.com");
+    expect(attachments[0].contentDisposition).toBe("inline");
     expect(attachments[1].contentType).toBe("image/png");
-    expect(attachments[1].cid).toBe("tulip-digital-invoice-email-logo");
+    expect(attachments[1].cid).toBe("tulip-digital-invoice-email-logo@tulip-digital.ch");
+    expect(attachments[1].contentDisposition).toBe("inline");
     expect(attachments[2].contentType).toBe("application/pdf");
+    expect(attachments[2].contentDisposition).toBe("attachment");
     expect(attachments[2].filename).toBe("SportClubEvo-Rechnung-2026-000002.pdf");
     expect(attachments[0].content.byteLength).toBeGreaterThan(1000);
   });

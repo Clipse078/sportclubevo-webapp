@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import type { MailAttachment } from "@/lib/email/mailer";
+import { mapMailAttachmentsForNodemailer } from "./nodemailer-mail-attachments";
 import {
   BillingSmtpConfigurationError,
   requireBillingSmtpConfig,
@@ -10,10 +10,11 @@ export type InfomaniakSmtpSendPayload = {
   from: string;
   to: string;
   replyTo?: string;
+  bcc?: string;
   subject: string;
   html: string;
   text: string;
-  attachments?: MailAttachment[];
+  attachments?: import("@/lib/email/mailer").MailAttachment[];
 };
 
 export type InfomaniakSmtpSendResult = {
@@ -72,15 +73,11 @@ export async function sendInfomaniakBillingEmail(
       from: payload.from,
       to: payload.to,
       replyTo: payload.replyTo,
+      bcc: payload.bcc,
       subject: payload.subject,
       html: payload.html,
       text: payload.text,
-      attachments: payload.attachments?.map((attachment) => ({
-        filename: attachment.filename,
-        content: attachment.content,
-        contentType: attachment.contentType,
-        cid: attachment.cid,
-      })),
+      attachments: mapMailAttachmentsForNodemailer(payload.attachments),
     });
 
     const messageId =

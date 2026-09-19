@@ -9,6 +9,7 @@ import {
   resolveInvoiceDeliveryLocale,
 } from "./invoice-delivery-email-template";
 import { buildInvoiceDeliveryEmailAttachments } from "./invoice-delivery-email-inline-logos";
+import { buildInvoiceDeliveryBillingTransportPayload } from "./invoice-delivery-transport-payload";
 import { buildInvoicePdfAttachmentFilename } from "./invoice-pdf-filename";
 import { resolveBillingEmailIdentity } from "./resolve-billing-email-identity";
 import { requireBillingTestDeliveryRecipient } from "./billing-test-delivery-guards";
@@ -88,17 +89,19 @@ export async function executeBillingInvoiceTestDelivery(
 
   const identity = await resolveBillingEmailIdentity();
 
-  const transportResult = await sendBillingEmail({
-    from: identity.from,
-    to: parsedRecipient.data,
-    replyTo: identity.replyTo,
-    subject: `[TEST DELIVERY] ${emailContent.subject}`,
-    html: emailContent.html,
-    text: emailContent.text,
-    attachments: buildInvoiceDeliveryEmailAttachments(attachment),
-    idempotencyKey: `billing-test-delivery:${invoice.key}:${input.actorUserId}`,
-    deliveryIntent: "protected-test",
-  });
+  const transportResult = await sendBillingEmail(
+    buildInvoiceDeliveryBillingTransportPayload({
+      deliveryIntent: "protected-test",
+      from: identity.from,
+      to: parsedRecipient.data,
+      replyTo: identity.replyTo,
+      subject: `[TEST DELIVERY] ${emailContent.subject}`,
+      html: emailContent.html,
+      text: emailContent.text,
+      attachments: buildInvoiceDeliveryEmailAttachments(attachment),
+      idempotencyKey: `billing-test-delivery:${invoice.key}:${input.actorUserId}`,
+    }),
+  );
 
   return {
     kind: TEST_DELIVERY_KIND,

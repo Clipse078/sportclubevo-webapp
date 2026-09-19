@@ -1,18 +1,19 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import type { MailAttachment } from "@/lib/email/mailer";
-import {
-  SPORTCLUBEVO_FOOTER_LOGO_PATH,
-  TULIP_DIGITAL_LOGO_PATH,
-} from "@/lib/billing/invoice-pdf/constants";
+import { loadSportClubEvoFooterLogoAssetBytesSync } from "@/lib/billing/invoice-pdf/sportclubevo-footer-logo-asset";
+import { loadTulipVisibleArtworkPngBytes } from "@/lib/billing/invoice-pdf/tulip-logo-visible-bounds";
 
 /** Content-IDs referenced from the invoice delivery HTML (`cid:…`). */
-export const INVOICE_DELIVERY_EMAIL_SCE_LOGO_CID = "sportclubevo-invoice-email-logo";
-export const INVOICE_DELIVERY_EMAIL_TULIP_LOGO_CID = "tulip-digital-invoice-email-logo";
+export const INVOICE_DELIVERY_EMAIL_SCE_LOGO_CID =
+  "sportclubevo-invoice-email-logo@sportclubevo.com";
+export const INVOICE_DELIVERY_EMAIL_TULIP_LOGO_CID =
+  "tulip-digital-invoice-email-logo@tulip-digital.ch";
 
-function readBrandingAsset(relativePath: string): Buffer {
-  const absolutePath = path.join(/* turbopackIgnore: true */ process.cwd(), relativePath);
-  return readFileSync(absolutePath);
+function loadSportClubEvoEmailLogoBytes(): Buffer {
+  return Buffer.from(loadSportClubEvoFooterLogoAssetBytesSync());
+}
+
+function loadTulipDigitalEmailLogoBytes(): Buffer {
+  return loadTulipVisibleArtworkPngBytes().pngBytes;
 }
 
 let cachedLogoAttachments: MailAttachment[] | null = null;
@@ -28,15 +29,17 @@ export function getInvoiceDeliveryEmailInlineLogoAttachments(): MailAttachment[]
   cachedLogoAttachments = [
     {
       filename: "sportclubevo-logo.png",
-      content: readBrandingAsset(SPORTCLUBEVO_FOOTER_LOGO_PATH),
+      content: loadSportClubEvoEmailLogoBytes(),
       contentType: "image/png",
       cid: INVOICE_DELIVERY_EMAIL_SCE_LOGO_CID,
+      contentDisposition: "inline",
     },
     {
       filename: "tulip-digital-logo.png",
-      content: readBrandingAsset(TULIP_DIGITAL_LOGO_PATH),
+      content: loadTulipDigitalEmailLogoBytes(),
       contentType: "image/png",
       cid: INVOICE_DELIVERY_EMAIL_TULIP_LOGO_CID,
+      contentDisposition: "inline",
     },
   ];
 
@@ -56,6 +59,7 @@ export function buildInvoiceDeliveryEmailAttachments(pdf: {
       filename: pdf.filename,
       content: pdf.content,
       contentType: "application/pdf",
+      contentDisposition: "attachment",
     },
   ];
 }

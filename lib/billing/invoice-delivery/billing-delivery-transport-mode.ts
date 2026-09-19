@@ -4,7 +4,8 @@ import { getBillingSmtpConfigReadiness } from "./billing-smtp-config";
 import { isInfomaniakBillingSmtpTransportSelected } from "./billing-email-transport-selection";
 import { NativeBillingValidationError } from "@/lib/billing/native-billing-types";
 
-export type BillingEmailDeliveryIntent = "normal" | "protected-test";
+export type { BillingEmailDeliveryIntent } from "./billing-invoice-email-policy";
+import type { BillingEmailDeliveryIntent } from "./billing-invoice-email-policy";
 
 /**
  * Preview / acceptance / local test runs must not deliver real customer email by default.

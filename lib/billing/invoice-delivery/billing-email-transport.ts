@@ -11,6 +11,7 @@ export type BillingEmailTransportPayload = {
   from?: string;
   to: string;
   replyTo?: string;
+  bcc?: string;
   subject: string;
   html: string;
   text: string;
@@ -62,6 +63,7 @@ export async function sendBillingEmail(
       from: payload.from?.trim() || "SportClubEvo Billing <billing@sportclubevo.com>",
       to: payload.to,
       replyTo: payload.replyTo,
+      bcc: payload.bcc,
       subject: payload.subject,
       html: payload.html,
       text: payload.text,
@@ -80,6 +82,7 @@ export async function sendBillingEmail(
     from: payload.from,
     to: payload.to,
     replyTo: payload.replyTo,
+    bcc: payload.bcc,
     subject: payload.subject,
     html: payload.html,
     text: payload.text,
