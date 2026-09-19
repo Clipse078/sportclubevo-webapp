@@ -37,9 +37,15 @@ export const INVOICE_PDF_BRAND = {
   white: { r: 1, g: 1, b: 1 },
 } as const;
 
-/** White/orange mark for dark invoice header. */
+/** White/orange mark for dark invoice header (public web canonical). */
 export const SPORTCLUBEVO_HEADER_LOGO_PATH =
   "public/images/branding/sportclubevo_logo_alt.png";
+/** Serverless-safe copy of {@link SPORTCLUBEVO_HEADER_LOGO_PATH} for PDF embed. */
+export const SPORTCLUBEVO_HEADER_LOGO_ASSET_PATH =
+  "lib/billing/invoice-pdf/assets/sportclubevo-header-logo-alt.png";
+/** SHA-256 of unmodified sportclubevo_logo_alt.png (864×174). */
+export const SPORTCLUBEVO_HEADER_LOGO_ASSET_SHA256 =
+  "0ecf986930e0b9898e3038b7b3047462c60bf972f3066db4aab736da93a097a4";
 /** Full-color mark for white invoice body (footer operator row). */
 export const SPORTCLUBEVO_FOOTER_LOGO_PATH = "public/images/branding/sportclubevo_logo.png";
 /** @deprecated Use SPORTCLUBEVO_HEADER_LOGO_PATH or SPORTCLUBEVO_FOOTER_LOGO_PATH. */
