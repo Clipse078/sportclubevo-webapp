@@ -67,3 +67,23 @@ export type { DashboardNewsGridProps, DashboardNewsSectionProps } from "./Dashbo
 
 export { DashboardEmptyState } from "./DashboardEmptyState";
 export type { DashboardEmptyStateProps } from "./DashboardEmptyState";
+
+export { MeineAgendaWidget } from "./MeineAgendaWidget";
+export type { MeineAgendaWidgetProps } from "./MeineAgendaWidget";
+
+export { MeineAufgabenWidget } from "./MeineAufgabenWidget";
+
+export { HeuteImVereinWidget } from "./HeuteImVereinWidget";
+export type { HeuteImVereinWidgetProps } from "./HeuteImVereinWidget";
+
+export { DashboardOperationalGrid } from "./DashboardOperationalGrid";
+export type { DashboardOperationalGridProps } from "./DashboardOperationalGrid";
+
+export { DashboardCompactScheduleList } from "./DashboardCompactScheduleList";
+export type { DashboardCompactScheduleListProps } from "./DashboardCompactScheduleList";
+
+export { DashboardQuickActionStrip } from "./DashboardQuickActionStrip";
+export type {
+  DashboardQuickActionStripProps,
+  QuickActionStripItem,
+} from "./DashboardQuickActionStrip";

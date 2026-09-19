@@ -6,6 +6,8 @@ export type DashboardEmptyStateProps = {
   title: string;
   description?: string;
   action?: ReactNode;
+  /** Compact layout for personal dashboard cards with no data. */
+  variant?: "default" | "compact";
   className?: string;
 };
 
@@ -17,24 +19,38 @@ export function DashboardEmptyState({
   title,
   description,
   action,
+  variant = "default",
   className,
 }: DashboardEmptyStateProps) {
+  const isCompact = variant === "compact";
+
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-2.5 py-7 text-center sm:py-8",
+        "flex flex-col items-center gap-2.5 text-center",
+        isCompact ? "py-4 sm:py-4" : "py-7 sm:py-8",
         className,
       )}
     >
       {icon && (
         <span
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)]"
+          className={cn(
+            "flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)]",
+            isCompact ? "h-9 w-9" : "h-11 w-11",
+          )}
           aria-hidden="true"
         >
           {icon}
         </span>
       )}
-      <p className="text-[0.875rem] font-semibold text-[var(--foreground)]">{title}</p>
+      <p
+        className={cn(
+          "font-semibold text-[var(--foreground)]",
+          isCompact ? "text-[0.8125rem]" : "text-[0.875rem]",
+        )}
+      >
+        {title}
+      </p>
       {description && (
         <p className="max-w-sm text-[0.8125rem] leading-relaxed text-[var(--muted)]">
           {description}

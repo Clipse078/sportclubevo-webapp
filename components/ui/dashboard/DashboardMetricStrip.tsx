@@ -43,7 +43,7 @@ export function DashboardMetricStrip({
     <div
       className={cn(
         "grid grid-cols-2 gap-x-4 gap-y-5 lg:flex lg:items-stretch lg:gap-0",
-        "border-y border-[var(--border)] py-5",
+        "border-y border-[var(--border)] py-3 sm:py-3.5",
         className,
       )}
     >
@@ -64,7 +64,7 @@ export function DashboardMetricStrip({
                 <p className="text-[0.75rem] font-medium text-[var(--muted)]">
                   {metric.label}
                 </p>
-                <p className="mt-1.5 text-[1.75rem] font-bold leading-none tracking-tight text-[var(--foreground)]">
+                <p className="mt-1 text-[1.5rem] font-bold leading-none tracking-tight text-[var(--foreground)] sm:text-[1.625rem]">
                   {metric.value}
                 </p>
                 {metric.description && (

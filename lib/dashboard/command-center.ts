@@ -48,6 +48,12 @@ import {
   formatTodayEventVenueMeta,
   type TodayEventVenuePresentation,
 } from "@/lib/dashboard/event-venue-presentation";
+import {
+  buildPersonalCockpitKpiStrip,
+  loadPersonalAgendaItems,
+  resolvePersonalTeamIds,
+  type PersonalAgendaItem,
+} from "@/lib/dashboard/personal-cockpit";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -105,11 +111,14 @@ export type ActivitySourceItem = {
 
 export type CommandCenterData = {
   kpis: CommandCenterKpi[];
+  kpiStrip: CommandCenterKpi[];
   todayItems: TodayScheduleItem[];
   attentionItems: AttentionItem[];
   upcomingItems: UpcomingScheduleItem[];
   activitySources: ActivitySourceItem[];
   newsItems: CommandCenterNewsItem[];
+  personalAgendaItems: PersonalAgendaItem[];
+  personalAgendaSupported: boolean;
   /** Personal dashboard hero background — user-scoped, persisted on User. */
   heroBackgroundImageUrl: string | null;
   heroBackgroundTransform: HeroImageTransform;
@@ -767,27 +776,59 @@ export async function getCommandCenterData(args: {
 
   const heroState = args.userId ? await getUserDashboardHeroState(args.userId) : null;
 
+  const { teamIds, hasLinkedPerson } = await resolvePersonalTeamIds({
+    tenantId: args.tenantId,
+    userId: args.userId,
+  });
+
+  const personalAgenda = await loadPersonalAgendaItems({
+    tenantId: args.tenantId,
+    userId: args.userId,
+    teamIds,
+    hasLinkedPerson,
+    fmtCfg: args.fmtCfg,
+    now,
+  });
+
+  const attentionItems = buildAttentionItems({
+    newsInReviewCount,
+    openRegistrationCount,
+    scheduledNewsCount,
+    overdueActionCount: operativeCounts.overdueActionCount,
+    canSeeNews,
+    canSeeRegistrations,
+    canSeeMeetings,
+  });
+
+  const legacyKpis = buildCommandCenterKpis({
+    teamCount,
+    activePersonCount,
+    todayEventCount,
+    openRegistrationCount,
+    canSeeRegistrations,
+  });
+
+  const kpiStrip = buildPersonalCockpitKpiStrip({
+    personalScheduleCount: personalAgenda.supported
+      ? personalAgenda.items.length
+      : null,
+    personalTasksAvailable: false,
+    personalTaskCount: null,
+    attentionCount: attentionItems.length,
+    openRegistrationCount,
+    canSeeRegistrations,
+  });
+
   return {
-    kpis: buildCommandCenterKpis({
-      teamCount,
-      activePersonCount,
-      todayEventCount,
-      openRegistrationCount,
-      canSeeRegistrations,
-    }),
+    kpis: legacyKpis,
+    kpiStrip,
     todayItems,
-    attentionItems: buildAttentionItems({
-      newsInReviewCount,
-      openRegistrationCount,
-      scheduledNewsCount,
-      overdueActionCount: operativeCounts.overdueActionCount,
-      canSeeNews,
-      canSeeRegistrations,
-      canSeeMeetings,
-    }),
+    attentionItems,
     upcomingItems,
     activitySources,
     newsItems,
+    personalAgendaItems: personalAgenda.items,
+    personalAgendaSupported: personalAgenda.supported,
     heroBackgroundImageUrl: heroState?.imageUrl ?? null,
     heroBackgroundTransform: heroState
       ? {
