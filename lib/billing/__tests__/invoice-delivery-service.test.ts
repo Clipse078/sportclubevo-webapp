@@ -4,11 +4,19 @@ import {
   NativeBillingValidationError,
 } from "../native-billing-types";
 import { MailConfigurationError } from "@/lib/email/mailer";
+import { SWISS_QR_COMPLIANCE_CODES } from "../swiss-qr-compliance/swiss-qr-compliance-codes";
+import {
+  buildFixtureIssuer,
+  buildFixturePaymentInstruction,
+  buildFixtureRecipient,
+} from "../invoice-pdf/__tests__/invoice-pdf-fixtures";
 
 const mocks = vi.hoisted(() => ({
   findInvoiceByKey: vi.fn(),
+  findInvoiceIssuerSnapshot: vi.fn(),
   findInvoiceRecipientSnapshot: vi.fn(),
   findBillingCustomerById: vi.fn(),
+  findBillingBankAccountById: vi.fn(),
   getInvoicePaymentInstruction: vi.fn(),
   listInvoiceDeliveriesForInvoiceId: vi.fn(),
   getNextAttemptNumber: vi.fn(),
@@ -25,11 +33,13 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("../native-billing-commercial-repository", () => ({
   findInvoiceByKey: mocks.findInvoiceByKey,
+  findInvoiceIssuerSnapshot: mocks.findInvoiceIssuerSnapshot,
   findInvoiceRecipientSnapshot: mocks.findInvoiceRecipientSnapshot,
 }));
 
 vi.mock("../native-billing-repository", () => ({
   findBillingCustomerById: mocks.findBillingCustomerById,
+  findBillingBankAccountById: mocks.findBillingBankAccountById,
 }));
 
 vi.mock("../invoice-payment-instruction-service", () => ({
@@ -102,6 +112,46 @@ const recipientWithEmail = {
   countryCode: "CH",
   invoiceEmail: "billing@example-club.test",
 };
+
+const SWISS_QR_IBAN = "CH9300762011623852957";
+const SWISS_QR_QR_IBAN = "CH693000523573415901X";
+const SWISS_QR_QRR_REF = "273282026000002025434650072";
+
+const swissQrRecipientWithEmail = {
+  ...buildFixtureRecipient(),
+  invoiceEmail: "billing@example-club.test",
+};
+
+function mockDeterministicSwissQrBankAccount(overrides: { qrIban?: string | null } = {}) {
+  mocks.findBillingBankAccountById.mockResolvedValue({
+    id: "bba-swiss-qr",
+    legalEntityId: finalizedInvoice.legalEntityId,
+    iban: SWISS_QR_IBAN,
+    qrIban: overrides.qrIban === undefined ? SWISS_QR_QR_IBAN : overrides.qrIban,
+    referenceStrategy: "QRR",
+    qrrReferencePrefix: null,
+    currency: "CHF",
+    isDefault: true,
+    status: "ACTIVE",
+  });
+}
+
+function mockDeterministicSwissQrPaymentPath(options: {
+  bankAccount?: { qrIban?: string | null };
+  paymentInstruction?: ReturnType<typeof buildFixturePaymentInstruction>;
+} = {}) {
+  mocks.findInvoiceIssuerSnapshot.mockResolvedValue(buildFixtureIssuer());
+  mocks.findInvoiceRecipientSnapshot.mockResolvedValue(swissQrRecipientWithEmail);
+  mocks.getInvoicePaymentInstruction.mockResolvedValue(
+    options.paymentInstruction ??
+      buildFixturePaymentInstruction({
+        invoiceId: finalizedInvoice.id,
+        amountMinor: finalizedInvoice.grossTotalMinor,
+        billingBankAccountId: "bba-swiss-qr",
+      }),
+  );
+  mockDeterministicSwissQrBankAccount(options.bankAccount ?? {});
+}
 
 function deliveryRow(overrides: Record<string, unknown> = {}) {
   return {
@@ -339,5 +389,57 @@ describe("invoice delivery service", () => {
         deliveryRow({ status: "SENT", attemptNumber: 1 }),
       ]),
     ).toBe("FAILED");
+  });
+
+  it("blocks Swiss QR invoice delivery before transport when compliance fails (fail-closed)", async () => {
+    mockDeterministicSwissQrPaymentPath({
+      bankAccount: { qrIban: null },
+      paymentInstruction: buildFixturePaymentInstruction({
+        invoiceId: finalizedInvoice.id,
+        amountMinor: finalizedInvoice.grossTotalMinor,
+        billingBankAccountId: "bba-swiss-qr",
+        referenceType: "QRR",
+        reference: SWISS_QR_QRR_REF,
+      }),
+    });
+
+    await expect(
+      sendNativeInvoiceEmail({
+        invoiceKey: "inv-key",
+        actorUserId: "user-1",
+        resend: false,
+      }),
+    ).rejects.toMatchObject({
+      name: "SwissQrComplianceBlockedError",
+      code: SWISS_QR_COMPLIANCE_CODES.INVALID_REFERENCE_COMBINATION,
+    });
+
+    expect(mocks.createInvoiceDeliverySendingAttempt).not.toHaveBeenCalled();
+    expect(mocks.sendBillingEmail).not.toHaveBeenCalled();
+    expect(mocks.markInvoiceDeliverySent).not.toHaveBeenCalled();
+    expect(mocks.markInvoiceDeliveryFailed).not.toHaveBeenCalled();
+    expect(mocks.recordOutboundInvoiceEmailCommunication).not.toHaveBeenCalled();
+    expect(mocks.logAction).not.toHaveBeenCalledWith(
+      expect.objectContaining({ action: "INVOICE_DELIVERY_SENT" }),
+    );
+  });
+
+  it("reaches mocked transport for valid deterministic Swiss QR payment instruction", async () => {
+    mockDeterministicSwissQrPaymentPath();
+    mocks.listInvoiceDeliveriesForInvoiceId
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([deliveryRow({ status: "SENT", attemptNumber: 1 })]);
+
+    const result = await sendNativeInvoiceEmail({
+      invoiceKey: "inv-key",
+      actorUserId: "user-1",
+      resend: false,
+    });
+
+    expect(result.delivery.status).toBe("SENT");
+    expect(mocks.findInvoiceIssuerSnapshot).toHaveBeenCalled();
+    expect(mocks.findBillingBankAccountById).toHaveBeenCalledWith("bba-swiss-qr");
+    expect(mocks.createInvoiceDeliverySendingAttempt).toHaveBeenCalled();
+    expect(mocks.sendBillingEmail).toHaveBeenCalled();
   });
 });
