@@ -4,6 +4,9 @@ import path from "node:path";
 import { PDFDocument } from "pdf-lib";
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  SPORTCLUBEVO_FOOTER_LOGO_ASSET_PATH,
+  SPORTCLUBEVO_FOOTER_LOGO_ASSET_SHA256,
+  SPORTCLUBEVO_FOOTER_LOGO_PATH,
   SPORTCLUBEVO_HEADER_LOGO_ASSET_PATH,
   SPORTCLUBEVO_HEADER_LOGO_ASSET_SHA256,
   SPORTCLUBEVO_HEADER_LOGO_PATH,
@@ -16,6 +19,10 @@ import {
   getSportClubEvoHeaderLogoAssetAbsolutePath,
   loadSportClubEvoHeaderLogoAssetBytes,
 } from "../sportclubevo-header-logo-asset";
+import {
+  getSportClubEvoFooterLogoAssetAbsolutePath,
+  loadSportClubEvoFooterLogoAssetBytes,
+} from "../sportclubevo-footer-logo-asset";
 import { loadTulipVisibleArtworkPngBytes } from "../tulip-logo-visible-bounds";
 import { loadSwissQrRecognitionCrossAssetBytesSync } from "../swiss-qr-recognition-cross-asset";
 import {
@@ -40,7 +47,51 @@ function countPdfImageXObjects(pdfBytes: Uint8Array): number {
   return (raw.match(/\/Subtype\s*\/Image/g) ?? []).length;
 }
 
-describe("SportClubEvo invoice PDF header branding (BILLING-PDF-04)", () => {
+async function generateReferenceInvoicePdfBytes(): Promise<Uint8Array> {
+  const issuer = buildFixtureIssuer();
+  const recipient = buildFixtureRecipient();
+  const spcPayload = buildSwissSpcPayload({
+    creditorAccount: FIXTURE_QR_IBAN,
+    creditor: {
+      name: issuer.legalName,
+      street: issuer.addressLine1,
+      houseNumber: issuer.houseNumber,
+      postalCode: issuer.postalCode,
+      city: issuer.city,
+      countryCode: issuer.countryCode,
+    },
+    debtor: {
+      name: recipient.companyOrName,
+      street: recipient.street,
+      houseNumber: recipient.houseNumber,
+      postalCode: recipient.postalCode,
+      city: recipient.city,
+      countryCode: recipient.countryCode,
+    },
+    amountMinor: 21512,
+    currency: "CHF",
+    referenceType: "QRR",
+    reference: "273282026000002025434650072",
+  });
+
+  const { pdfBytes } = await generateInvoicePdfFromDocumentData({
+    invoice: buildFixtureInvoice(),
+    lines: [buildFixtureLine()],
+    taxSnapshots: [buildFixtureTax()],
+    issuer,
+    recipient,
+    paymentInstruction: buildFixturePaymentInstruction({
+      reference: "273282026000002025434650072",
+    }),
+    spcPayload,
+    creditorAccount: FIXTURE_QR_IBAN,
+    isVoid: false,
+    includeSwissPaymentSection: true,
+  });
+  return pdfBytes;
+}
+
+describe("SportClubEvo invoice PDF branding (BILLING-PDF-04 / 04B)", () => {
   const originalCwd = process.cwd();
 
   afterEach(() => {
@@ -53,6 +104,12 @@ describe("SportClubEvo invoice PDF header branding (BILLING-PDF-04)", () => {
     );
     expect(SPORTCLUBEVO_HEADER_LOGO_ASSET_PATH).toBe(
       "lib/billing/invoice-pdf/assets/sportclubevo-header-logo-alt.png",
+    );
+    expect(SPORTCLUBEVO_FOOTER_LOGO_PATH).toBe(
+      "public/images/branding/sportclubevo_logo.png",
+    );
+    expect(SPORTCLUBEVO_FOOTER_LOGO_ASSET_PATH).toBe(
+      "lib/billing/invoice-pdf/assets/sportclubevo-footer-logo.png",
     );
   });
 
@@ -73,6 +130,23 @@ describe("SportClubEvo invoice PDF header branding (BILLING-PDF-04)", () => {
     expect(sha256Hex(bytes)).toBe(SPORTCLUBEVO_HEADER_LOGO_ASSET_SHA256);
   });
 
+  it("ships the canonical footer logo bytes next to the PDF module", () => {
+    const assetPath = getSportClubEvoFooterLogoAssetAbsolutePath();
+    expect(assetPath).toContain(`${path.sep}lib${path.sep}billing${path.sep}invoice-pdf${path.sep}assets${path.sep}`);
+    const bytes = readFileSync(assetPath);
+    expect(sha256Hex(new Uint8Array(bytes))).toBe(SPORTCLUBEVO_FOOTER_LOGO_ASSET_SHA256);
+    const publicBytes = readFileSync(
+      path.join(process.cwd(), SPORTCLUBEVO_FOOTER_LOGO_PATH),
+    );
+    expect(sha256Hex(new Uint8Array(publicBytes))).toBe(SPORTCLUBEVO_FOOTER_LOGO_ASSET_SHA256);
+  });
+
+  it("loads footer logo independently of process.cwd()", async () => {
+    process.chdir("/tmp");
+    const bytes = await loadSportClubEvoFooterLogoAssetBytes();
+    expect(sha256Hex(bytes)).toBe(SPORTCLUBEVO_FOOTER_LOGO_ASSET_SHA256);
+  });
+
   it("embeds the header logo via drawSportClubEvoInvoiceHeader", async () => {
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([mmToPt(A4_WIDTH_MM), mmToPt(A4_HEIGHT_MM)]);
@@ -89,49 +163,9 @@ describe("SportClubEvo invoice PDF header branding (BILLING-PDF-04)", () => {
     );
   });
 
-  it("generates invoice PDF with header logo, Tulip footer, and unchanged SIX asset", async () => {
-    const issuer = buildFixtureIssuer();
-    const recipient = buildFixtureRecipient();
-    const spcPayload = buildSwissSpcPayload({
-      creditorAccount: FIXTURE_QR_IBAN,
-      creditor: {
-        name: issuer.legalName,
-        street: issuer.addressLine1,
-        houseNumber: issuer.houseNumber,
-        postalCode: issuer.postalCode,
-        city: issuer.city,
-        countryCode: issuer.countryCode,
-      },
-      debtor: {
-        name: recipient.companyOrName,
-        street: recipient.street,
-        houseNumber: recipient.houseNumber,
-        postalCode: recipient.postalCode,
-        city: recipient.city,
-        countryCode: recipient.countryCode,
-      },
-      amountMinor: 21512,
-      currency: "CHF",
-      referenceType: "QRR",
-      reference: "273282026000002025434650072",
-    });
-
-    const { pdfBytes } = await generateInvoicePdfFromDocumentData({
-      invoice: buildFixtureInvoice(),
-      lines: [buildFixtureLine()],
-      taxSnapshots: [buildFixtureTax()],
-      issuer,
-      recipient,
-      paymentInstruction: buildFixturePaymentInstruction({
-        reference: "273282026000002025434650072",
-      }),
-      spcPayload,
-      creditorAccount: FIXTURE_QR_IBAN,
-      isVoid: false,
-      includeSwissPaymentSection: true,
-    });
-
-    expect(countPdfImageXObjects(pdfBytes)).toBeGreaterThanOrEqual(3);
+  it("generates invoice PDF with header logo, lower SCE + Tulip lockup, and unchanged SIX asset", async () => {
+    const pdfBytes = await generateReferenceInvoicePdfBytes();
+    expect(countPdfImageXObjects(pdfBytes)).toBeGreaterThanOrEqual(4);
     expect(sha256Hex(loadSwissQrRecognitionCrossAssetBytesSync())).toBe(
       SWISS_QR_RECOGNITION_CROSS_ASSET_SHA256,
     );
@@ -140,5 +174,20 @@ describe("SportClubEvo invoice PDF header branding (BILLING-PDF-04)", () => {
     );
     const { pngBytes: tulipBytes } = loadTulipVisibleArtworkPngBytes();
     expect(tulipBytes.byteLength).toBeGreaterThan(10_000);
+    expect(sha256Hex(await loadSportClubEvoFooterLogoAssetBytes())).toBe(
+      SPORTCLUBEVO_FOOTER_LOGO_ASSET_SHA256,
+    );
+  });
+
+  it("embeds lower SportClubEvo branding when process.cwd() is outside the repo", async () => {
+    process.chdir("/tmp");
+    const pdfBytes = await generateReferenceInvoicePdfBytes();
+    expect(countPdfImageXObjects(pdfBytes)).toBeGreaterThanOrEqual(4);
+    expect(sha256Hex(await loadSportClubEvoHeaderLogoAssetBytes())).toBe(
+      SPORTCLUBEVO_HEADER_LOGO_ASSET_SHA256,
+    );
+    expect(sha256Hex(await loadSportClubEvoFooterLogoAssetBytes())).toBe(
+      SPORTCLUBEVO_FOOTER_LOGO_ASSET_SHA256,
+    );
   });
 });

@@ -48,6 +48,12 @@ export const SPORTCLUBEVO_HEADER_LOGO_ASSET_SHA256 =
   "0ecf986930e0b9898e3038b7b3047462c60bf972f3066db4aab736da93a097a4";
 /** Full-color mark for white invoice body (footer operator row). */
 export const SPORTCLUBEVO_FOOTER_LOGO_PATH = "public/images/branding/sportclubevo_logo.png";
+/** Serverless-safe copy of {@link SPORTCLUBEVO_FOOTER_LOGO_PATH} for PDF embed. */
+export const SPORTCLUBEVO_FOOTER_LOGO_ASSET_PATH =
+  "lib/billing/invoice-pdf/assets/sportclubevo-footer-logo.png";
+/** SHA-256 of unmodified sportclubevo_logo.png (937×204). */
+export const SPORTCLUBEVO_FOOTER_LOGO_ASSET_SHA256 =
+  "4ff6d498f234b4c44173242d2af650d890e479681a66024d571e577f973d8db8";
 /** @deprecated Use SPORTCLUBEVO_HEADER_LOGO_PATH or SPORTCLUBEVO_FOOTER_LOGO_PATH. */
 export const SPORTCLUBEVO_LOGO_PATH = SPORTCLUBEVO_HEADER_LOGO_PATH;
 export const TULIP_DIGITAL_LOGO_PATH =

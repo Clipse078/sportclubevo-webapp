@@ -4,7 +4,6 @@ import {
   A4_WIDTH_MM,
   INVOICE_PDF_BRAND,
   INVOICE_PDF_SITE_URL,
-  SPORTCLUBEVO_FOOTER_LOGO_PATH,
 } from "./constants";
 import { drawSportClubEvoInvoiceHeader } from "./draw-invoice-header";
 import {
@@ -64,7 +63,7 @@ import {
   TOTALS_BLOCK_TOP_CONTENT_OFFSET_MM,
 } from "./invoice-creative-layout-planner";
 import { mmToPt } from "./mm";
-import { embedLogoIfPresent } from "./render-swiss-payment-slip";
+import { loadSportClubEvoFooterLogoAssetBytes } from "./sportclubevo-footer-logo-asset";
 import { loadTulipVisibleArtworkPngBytes } from "./tulip-logo-visible-bounds";
 import type { InvoicePdfDocumentData } from "./invoice-pdf-types";
 import type { InvoiceLineRecord } from "../native-billing-commercial-types";
@@ -608,23 +607,22 @@ export async function drawInvoiceBody(
     });
 
     let brandCursorX = margin;
-    const sceLogo = await embedLogoIfPresent(pdfDoc, SPORTCLUBEVO_FOOTER_LOGO_PATH);
-    if (sceLogo) {
-      const sceHeight = mmToPt(FOOTER_SCE_LOGO_HEIGHT_MM);
-      const sceScale = sceHeight / sceLogo.height;
-      const sceWidth = sceLogo.width * sceScale;
-      page.drawImage(sceLogo, {
-        x: brandCursorX,
-        y: brandRowY,
-        width: sceWidth,
-        height: sceHeight,
-      });
-      brandCursorX += sceWidth + mmToPt(FOOTER_BRAND_LOGO_GAP_MM);
-    }
+    const sceLogoBytes = await loadSportClubEvoFooterLogoAssetBytes();
+    const sceLogo = await pdfDoc.embedPng(sceLogoBytes);
+    const sceHeight = mmToPt(FOOTER_SCE_LOGO_HEIGHT_MM);
+    const sceScale = sceHeight / sceLogo.height;
+    const sceWidth = sceLogo.width * sceScale;
+    page.drawImage(sceLogo, {
+      x: brandCursorX,
+      y: brandRowY,
+      width: sceWidth,
+      height: sceHeight,
+    });
+    brandCursorX += sceWidth + mmToPt(FOOTER_BRAND_LOGO_GAP_MM);
 
     const tulipArtwork = loadTulipVisibleArtworkPngBytes();
     const tulipEmbedded = await pdfDoc.embedPng(tulipArtwork.pngBytes);
-    if (sceLogo && tulipEmbedded) {
+    if (tulipEmbedded) {
       page.drawLine({
         start: { x: brandCursorX, y: brandRowY + mmToPt(0.5) },
         end: {
