@@ -64,6 +64,9 @@ vi.mock("@/lib/db/prisma", () => ({
     team: {
       findFirst: vi.fn().mockResolvedValue({ id: "team-99", tenantId: "tenant-a" }),
     },
+    meeting: {
+      findFirst: vi.fn().mockResolvedValue({ id: "meeting-1", tenantId: "tenant-a" }),
+    },
     $transaction: mocks.transaction,
     auditLog: { create: mocks.auditCreate },
   },
@@ -435,11 +438,22 @@ describe("AUFGABEN-05-ORG-01 tenant org ownership", () => {
     mocks.orgUnitFindFirst.mockResolvedValue(null);
     await expect(
       assertTaskOrgUnitBelongsToTenant(TENANT_A, "org-b"),
-    ).rejects.toBeInstanceOf(TaskValidationError);
+    ).rejects.toMatchObject({
+      message: "Organisationseinheit gehört nicht zu diesem Mandanten.",
+    });
     expect(mocks.orgUnitFindFirst).toHaveBeenCalledWith({
       where: { id: "org-b", tenantId: TENANT_A },
       select: { id: true },
     });
+  });
+
+  it("requires non-empty tenantId and orgUnitId", async () => {
+    await expect(assertTaskOrgUnitBelongsToTenant("", ORG_FINANCE)).rejects.toBeInstanceOf(
+      TaskValidationError,
+    );
+    await expect(assertTaskOrgUnitBelongsToTenant(TENANT_A, "")).rejects.toBeInstanceOf(
+      TaskValidationError,
+    );
   });
 
   it("accepts OrgUnit in same tenant", async () => {
@@ -488,5 +502,55 @@ describe("AUFGABEN-05-ORG-01 context independence", () => {
     expect(createArg.data.contextType).toBe("TEAM");
     expect(createArg.data.contextId).toBe("team-99");
     expect(createArg.data.orgUnitId).toBeUndefined();
+  });
+
+  it("does not derive orgUnitId from MEETING context on create", async () => {
+    const meetingCtx = {
+      ...manageCtx,
+      permissionKeys: [...manageCtx.permissionKeys, PERMISSIONS.MEETINGS_VIEW],
+    };
+    await createTask(meetingCtx, {
+      title: "Meeting task",
+      contextType: "MEETING",
+      contextId: "meeting-1",
+    });
+
+    const createArg = mocks.taskCreate.mock.calls[0]?.[0] as {
+      data: Record<string, unknown>;
+    };
+    expect(createArg.data.contextType).toBe("MEETING");
+    expect(createArg.data.contextId).toBe("meeting-1");
+    expect(createArg.data.orgUnitId).toBeUndefined();
+  });
+});
+
+describe("AUFGABEN-05-ORG-01 subtask snapshot stability", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.taskFindFirst.mockResolvedValue(
+      taskRow({
+        orgUnitId: ORG_FINANCE,
+        visibilityScope: TaskVisibilityScope.ORG_UNIT,
+      }),
+    );
+    mocks.taskUpdate.mockResolvedValue(taskRow({ title: "Parent renamed" }));
+    mocks.transaction.mockImplementation(async (fn: (tx: unknown) => unknown) =>
+      fn({
+        task: { update: mocks.taskUpdate },
+        auditLog: { create: mocks.auditCreate },
+      }),
+    );
+    mocks.auditCreate.mockResolvedValue({});
+  });
+
+  it("parent update does not rewrite subtask org metadata (no cascade)", async () => {
+    await updateTask(manageCtx, PARENT, { title: "Parent renamed" });
+
+    const updateArg = mocks.taskUpdate.mock.calls[0]?.[0] as {
+      data: Record<string, unknown>;
+    };
+    expect(updateArg.data.orgUnitId).toBeUndefined();
+    expect(updateArg.data.visibilityScope).toBeUndefined();
+    expect(mocks.taskFindMany).not.toHaveBeenCalled();
   });
 });
