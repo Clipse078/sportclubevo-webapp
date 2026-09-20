@@ -1,20 +1,40 @@
-import { ListChecks } from "lucide-react";
-import { AufgabenProofPanel } from "@/components/admin/aufgaben/AufgabenProofPanel";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { listEligibleTaskAssignees } from "@/lib/tasks/queries";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import {
-  getTaskProgress,
-  listSubtasks,
-  listTasks,
-} from "@/lib/tasks/task-service";
+  getTaskManagementSummary,
+  listTaskManagementItems,
+  listTaskSeriesManagementRows,
+} from "@/lib/tasks/management-service";
+import {
+  parseTaskManagementQuery,
+  parseTaskManagementSort,
+} from "@/lib/tasks/management-navigation";
 import { hasTaskPermission } from "@/lib/tasks/visibility";
+import AufgabenManagementWorkspace from "@/components/admin/aufgaben/AufgabenManagementWorkspace";
 
 export const dynamic = "force-dynamic";
 
-export default async function AufgabenPage() {
+type PageSearchParams = {
+  view?: string;
+  q?: string;
+  sort?: string;
+  status?: string;
+  assignee?: string;
+  priority?: string;
+  deadline?: string;
+  recurring?: string;
+  context?: string;
+  page?: string;
+};
+
+type Props = {
+  searchParams?: Promise<PageSearchParams>;
+};
+
+export default async function AufgabenPage({ searchParams }: Props) {
   await requirePermission(PERMISSIONS.TASKS_VIEW);
 
   const ctx = await getTaskServiceContext();
@@ -23,46 +43,63 @@ export default async function AufgabenPage() {
     return null;
   }
 
-  const [tasks, assigneeOptions] = await Promise.all([
-    listTasks(ctx, { rootsOnly: true }),
+  const params: PageSearchParams = searchParams ? await searchParams : {};
+  const query = parseTaskManagementQuery(params);
+  const sort = parseTaskManagementSort(params.sort);
+  const timeZone = tenant?.timezone ?? "Europe/Zurich";
+  const locale = tenant?.locale ?? "de-CH";
+
+  const [summary, assigneeOptions] = await Promise.all([
+    getTaskManagementSummary(ctx, timeZone),
     listEligibleTaskAssignees(ctx.tenantId),
   ]);
 
-  const enriched = await Promise.all(
-    tasks.map(async (task) => ({
-      task,
-      subtasks: await listSubtasks(ctx, task.id),
-      progress: await getTaskProgress(ctx, task.id),
-    })),
-  );
+  let items: Awaited<ReturnType<typeof listTaskManagementItems>>["items"] = [];
+  let totalCount = 0;
+  let page = 1;
+  let pageCount = 1;
+  let seriesRows: Awaited<ReturnType<typeof listTaskSeriesManagementRows>>["rows"] = [];
+  let loadError = false;
+
+  try {
+    if (query.view === "WIEDERKEHREND") {
+      const seriesResult = await listTaskSeriesManagementRows(ctx, query);
+      seriesRows = seriesResult.rows;
+    } else {
+      const listResult = await listTaskManagementItems(ctx, query, timeZone);
+      items = listResult.items;
+      totalCount = listResult.totalCount;
+      page = listResult.page;
+      pageCount = listResult.pageCount;
+    }
+  } catch {
+    loadError = true;
+  }
 
   const canCreate = hasTaskPermission(ctx, PERMISSIONS.TASKS_CREATE);
   const canAssign =
     hasTaskPermission(ctx, PERMISSIONS.TASKS_ASSIGN) ||
     hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE);
-  const canManageSeries = hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE);
+  const canManage = hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE);
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-6 sm:px-6">
-      <header className="flex flex-col gap-1">
-        <div className="flex items-center gap-2 text-[var(--muted-foreground)]">
-          <ListChecks className="h-5 w-5" aria-hidden />
-          <span className="text-xs uppercase tracking-wide">Operatives Modul</span>
-        </div>
-        <h1 className="text-2xl font-semibold tracking-tight">Aufgaben</h1>
-        <p className="max-w-2xl text-sm text-[var(--muted-foreground)]">
-          Funktionsprobe für Aufgaben, Subtasks und Serien (AUFGABEN-01/01B). Die
-          Management-Oberfläche folgt in AUFGABEN-02.
-        </p>
-      </header>
-
-      <AufgabenProofPanel
-        taskTrees={enriched}
+    <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
+      <AufgabenManagementWorkspace
+        locale={locale}
+        timeZone={timeZone}
+        query={query}
+        sort={sort}
+        summary={summary}
+        items={items}
+        seriesRows={seriesRows}
+        totalCount={totalCount}
+        page={page}
+        pageCount={pageCount}
         assigneeOptions={assigneeOptions}
-        tenantTimezone={tenant?.timezone ?? "Europe/Zurich"}
         canCreate={canCreate}
         canAssign={canAssign}
-        canManageSeries={canManageSeries}
+        canManage={canManage}
+        loadError={loadError}
       />
     </div>
   );

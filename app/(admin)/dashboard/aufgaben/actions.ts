@@ -1,13 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { TaskPriority } from "@prisma/client";
+import type { TaskPriority, TaskStatus } from "@prisma/client";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import {
   assignTask,
   completeTask,
   createSubtask,
   createTask,
+  updateTask,
 } from "@/lib/tasks/task-service";
 import {
   createTaskSeries,
@@ -228,6 +229,33 @@ export async function completeAufgabeAction(
     }
 
     await completeTask(ctx, taskId.trim());
+    revalidatePath("/dashboard/aufgaben");
+    revalidatePath("/dashboard");
+    return { ok: true };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+export async function updateAufgabeStatusAction(
+  formData: FormData,
+): Promise<AufgabenActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    const taskId = formData.get("taskId");
+    const status = formData.get("status");
+    const valid = ["OPEN", "IN_PROGRESS", "DONE", "CANCELLED"] as const;
+
+    if (typeof taskId !== "string" || !taskId.trim()) {
+      return { ok: false, message: "Aufgabe fehlt." };
+    }
+    if (typeof status !== "string" || !(valid as readonly string[]).includes(status)) {
+      return { ok: false, message: "Ungültiger Status." };
+    }
+
+    await updateTask(ctx, taskId.trim(), { status: status as TaskStatus });
     revalidatePath("/dashboard/aufgaben");
     revalidatePath("/dashboard");
     return { ok: true };
