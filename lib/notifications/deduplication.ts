@@ -24,6 +24,15 @@ export function buildTaskDueSoonDedupKey(input: {
   return `TASK_DUE_SOON:${input.taskId}:${input.recipientUserId}:${input.dueAtIso}`;
 }
 
+export function buildTaskReminderDedupKey(input: {
+  taskId: string;
+  recipientUserId: string;
+  stage: 1 | 2;
+  reminderAtIso: string;
+}): string {
+  return `task-reminder:${input.taskId}:${input.recipientUserId}:${input.stage}:${input.reminderAtIso}`;
+}
+
 export function buildTaskOverdueDedupKey(input: {
   taskId: string;
   recipientUserId: string;

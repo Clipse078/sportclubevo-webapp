@@ -15,6 +15,7 @@ const VALID_TYPES = new Set<string>([
   "TASK_DUE_SOON",
   "TASK_OVERDUE",
   "TASK_DEADLINE_CHANGED",
+  "TASK_REMINDER",
 ]);
 
 export async function GET(): Promise<NextResponse> {

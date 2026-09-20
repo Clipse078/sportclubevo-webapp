@@ -31,6 +31,10 @@ export type TaskDto = {
   status: TaskStatus;
   priority: TaskPriority;
   dueAt: string | null;
+  reminder1At: string | null;
+  reminder2At: string | null;
+  reminder1PresetKey: string | null;
+  reminder2PresetKey: string | null;
   completedAt: string | null;
   contextType: TaskContextType | null;
   contextId: string | null;
@@ -55,11 +59,19 @@ export type TaskProgressDto = {
   label: string;
 };
 
+export type TaskReminderMutationInput = {
+  reminder1At?: Date | null;
+  reminder2At?: Date | null;
+  reminder1PresetKey?: string | null;
+  reminder2PresetKey?: string | null;
+};
+
 export type CreateTaskInput = {
   title: string;
   description?: string | null;
   priority?: TaskPriority;
   dueAt?: Date | null;
+} & TaskReminderMutationInput & {
   contextType?: TaskContextType | null;
   contextId?: string | null;
   assigneeUserIds?: string[];
@@ -73,7 +85,7 @@ export type CreateSubtaskInput = {
   priority?: TaskPriority;
   dueAt?: Date | null;
   assigneeUserIds?: string[];
-};
+} & TaskReminderMutationInput;
 
 export type UpdateTaskInput = {
   title?: string;
@@ -81,6 +93,7 @@ export type UpdateTaskInput = {
   priority?: TaskPriority;
   dueAt?: Date | null;
   status?: TaskStatus;
+} & TaskReminderMutationInput & {
   contextType?: TaskContextType | null;
   contextId?: string | null;
   orgUnitId?: string | null;

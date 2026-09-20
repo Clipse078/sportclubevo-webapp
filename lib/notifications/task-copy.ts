@@ -1,4 +1,4 @@
-import { formatDueDateLabel } from "@/lib/tasks/management-deadline";
+import { formatTaskDeadlineLabel } from "@/lib/tasks/task-reminder-schedule";
 
 export function formatTaskDueLabel(
   dueAt: Date | null | undefined,
@@ -6,7 +6,19 @@ export function formatTaskDueLabel(
   timeZone: string,
 ): string | null {
   if (!dueAt) return null;
-  return formatDueDateLabel(dueAt, locale, timeZone);
+  return formatTaskDeadlineLabel(dueAt, locale, timeZone);
+}
+
+export function buildTaskReminderCopy(
+  taskTitle: string,
+  dueLabel: string,
+  stage: 1 | 2,
+): { title: string; body: string } {
+  const stageHint = stage === 1 ? "Erste Erinnerung" : "Zweite Erinnerung";
+  return {
+    title: "Aufgabe wird bald fällig",
+    body: `"${taskTitle}"\n${stageHint}\nDeadline: ${dueLabel}`,
+  };
 }
 
 export function buildTaskAssignedCopy(taskTitle: string, isSubtask: boolean): {

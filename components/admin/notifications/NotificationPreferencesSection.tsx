@@ -9,6 +9,7 @@ const TYPE_LABELS: Record<string, string> = {
   TASK_DUE_SOON: "Aufgabe bald fällig",
   TASK_OVERDUE: "Aufgabe überfällig",
   TASK_DEADLINE_CHANGED: "Frist geändert",
+  TASK_REMINDER: "Aufgaben-Erinnerung",
 };
 
 type Props = {
