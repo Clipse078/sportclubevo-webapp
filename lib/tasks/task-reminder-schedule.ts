@@ -114,8 +114,10 @@ export function calculateReminderAtFromPreset(input: {
   const daysBefore = localDaysBeforeForPreset(presetKey);
   const { localDateIso, hour, minute } = getDueLocalParts(dueAt, timeZone);
   const reminderLocalDate = addDaysToLocalDateIso(localDateIso, -daysBefore);
+  const legacyDateOnly = isLegacyDateOnlyDueAtIso(dueAt.toISOString());
 
-  if (presetKey === "SAME_DAY") {
+  /** Date-only deadlines use tenant-local calendar semantics at 09:00, not the T12:00Z sentinel hour. */
+  if (presetKey === "SAME_DAY" || legacyDateOnly) {
     return localDateTimeToUtc(
       reminderLocalDate,
       TASK_REMINDER_SAME_DAY_LOCAL_HOUR,
@@ -178,6 +180,7 @@ export function resolveTaskReminderSchedule(
       presetKey: reminder1PresetKey as TaskReminderPresetKey,
       timeZone,
     });
+    assertReminderBeforeDue(reminder1At, dueAt, "Reminder 1");
   } else if (input.reminder1At) {
     reminder1At = input.reminder1At;
     reminder1PresetKey = null;
@@ -195,6 +198,7 @@ export function resolveTaskReminderSchedule(
       presetKey: reminder2PresetKey as TaskReminderPresetKey,
       timeZone,
     });
+    assertReminderBeforeDue(reminder2At, dueAt, "Reminder 2");
   } else if (input.reminder2At) {
     reminder2At = input.reminder2At;
     reminder2PresetKey = null;

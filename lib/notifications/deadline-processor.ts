@@ -100,7 +100,12 @@ async function emitReminderNotificationsForTask(input: {
   locale: string;
   timeZone: string;
 }): Promise<number> {
-  if (!input.task.dueAt) return 0;
+  if (
+    !input.task.dueAt ||
+    input.reminderAt.getTime() >= input.task.dueAt.getTime()
+  ) {
+    return 0;
+  }
 
   const dueLabel = formatTaskDueLabel(input.task.dueAt, input.locale, input.timeZone)!;
   const copy = buildTaskReminderCopy(input.task.title, dueLabel, input.stage);
@@ -164,6 +169,7 @@ export async function processTaskDeadlineNotifications(
     const reminder1Candidates = await fetchTaskBatchForDeadlineProcessing(
       {
         tenantId,
+        dueAt: { gt: now },
         reminder1At: { not: null, lte: now },
         status: { in: [TaskStatus.OPEN, TaskStatus.IN_PROGRESS] },
       },
@@ -171,17 +177,28 @@ export async function processTaskDeadlineNotifications(
     );
 
     for (const task of reminder1Candidates) {
-      if (!task.reminder1At || !isActiveTaskStatus(task.status)) continue;
+      if (!task.reminder1At || !task.dueAt || !isActiveTaskStatus(task.status)) continue;
+      const fresh = await prisma.task.findFirst({
+        where: {
+          id: task.id,
+          tenantId,
+          status: { in: [TaskStatus.OPEN, TaskStatus.IN_PROGRESS] },
+          dueAt: { gt: now },
+          reminder1At: task.reminder1At,
+        },
+        include: { assignees: true },
+      });
+      if (!fresh?.reminder1At) continue;
       reminderCreated += await emitReminderNotificationsForTask({
         tenantId,
         task: {
-          id: task.id,
-          title: task.title,
-          dueAt: task.dueAt,
-          assignees: task.assignees,
+          id: fresh.id,
+          title: fresh.title,
+          dueAt: fresh.dueAt,
+          assignees: fresh.assignees,
         },
         stage: 1,
-        reminderAt: task.reminder1At,
+        reminderAt: fresh.reminder1At,
         locale,
         timeZone,
       });
@@ -190,6 +207,7 @@ export async function processTaskDeadlineNotifications(
     const reminder2Candidates = await fetchTaskBatchForDeadlineProcessing(
       {
         tenantId,
+        dueAt: { gt: now },
         reminder2At: { not: null, lte: now },
         status: { in: [TaskStatus.OPEN, TaskStatus.IN_PROGRESS] },
       },
@@ -197,17 +215,28 @@ export async function processTaskDeadlineNotifications(
     );
 
     for (const task of reminder2Candidates) {
-      if (!task.reminder2At || !isActiveTaskStatus(task.status)) continue;
+      if (!task.reminder2At || !task.dueAt || !isActiveTaskStatus(task.status)) continue;
+      const fresh = await prisma.task.findFirst({
+        where: {
+          id: task.id,
+          tenantId,
+          status: { in: [TaskStatus.OPEN, TaskStatus.IN_PROGRESS] },
+          dueAt: { gt: now },
+          reminder2At: task.reminder2At,
+        },
+        include: { assignees: true },
+      });
+      if (!fresh?.reminder2At) continue;
       reminderCreated += await emitReminderNotificationsForTask({
         tenantId,
         task: {
-          id: task.id,
-          title: task.title,
-          dueAt: task.dueAt,
-          assignees: task.assignees,
+          id: fresh.id,
+          title: fresh.title,
+          dueAt: fresh.dueAt,
+          assignees: fresh.assignees,
         },
         stage: 2,
-        reminderAt: task.reminder2At,
+        reminderAt: fresh.reminder2At,
         locale,
         timeZone,
       });

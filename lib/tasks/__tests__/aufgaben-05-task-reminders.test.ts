@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { TaskStatus } from "@prisma/client";
 import {
   calculateReminderAtFromPreset,
+  formatTaskDeadlineLabel,
   isLegacyDateOnlyDueAtIso,
   parseTaskDueAtFromForm,
   resolveTaskReminderSchedule,
@@ -109,6 +110,69 @@ describe("AUFGABEN-05 task reminders — schedule", () => {
     expect(r1.getTime()).toBeLessThan(dueAt.getTime());
   });
 
+  it("R10 — same-day rejected when deadline is before 09:00 local", () => {
+    const dueAt = parseTaskDueAtFromForm({
+      dateRaw: "2026-09-30",
+      timeRaw: "08:00",
+      timeZone: tz,
+    }) as Date;
+    expect(() =>
+      resolveTaskReminderSchedule({
+        dueAt,
+        reminder1At: null,
+        reminder2At: null,
+        reminder1PresetKey: "SAME_DAY",
+        reminder2PresetKey: null,
+        timeZone: tz,
+      }),
+    ).toThrow(/Reminder 1/);
+  });
+
+  it("R8 — date-only deadline uses 09:00 local for day presets (not T12:00Z hour)", () => {
+    const dueAt = parseTaskDueAtFromForm({
+      dateRaw: "2026-09-30",
+      timeRaw: "",
+      timeZone: tz,
+    }) as Date;
+    expect(isLegacyDateOnlyDueAtIso(dueAt.toISOString())).toBe(true);
+    const r1 = calculateReminderAtFromPreset({ dueAt, presetKey: "DAYS_1", timeZone: tz });
+    const hour = Number(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: tz,
+        hour: "numeric",
+        hour12: false,
+      }).format(r1),
+    );
+    expect(hour).toBe(9);
+    const day = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(r1);
+    expect(day).toBe("2026-09-29");
+  });
+
+  it("R6/R7 — legacy date-only winter/summer preserve date-only labels", () => {
+    for (const iso of ["2026-01-15T12:00:00.000Z", "2026-07-15T12:00:00.000Z"]) {
+      expect(isLegacyDateOnlyDueAtIso(iso)).toBe(true);
+      const label = formatTaskDeadlineLabel(new Date(iso), "de-CH", tz);
+      expect(label).not.toMatch(/12:00/);
+    }
+  });
+
+  it("R9 — explicit Zurich deadline round-trip", () => {
+    const dueAt = parseTaskDueAtFromForm({
+      dateRaw: "2026-09-30",
+      timeRaw: "17:00",
+      timeZone: tz,
+    }) as Date;
+    const iso = dueAt.toISOString();
+    const backTime = dueAt.toLocaleTimeString("en-GB", {
+      timeZone: tz,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    expect(backTime).toBe("17:00");
+    expect(isLegacyDateOnlyDueAtIso(iso)).toBe(false);
+  });
+
   it("R40 — 1-day preset preserves local wall-clock across DST boundary", () => {
     const dueAt = parseTaskDueAtFromForm({
       dateRaw: "2026-03-30",
@@ -196,6 +260,7 @@ describe("AUFGABEN-05 task reminders — schedule", () => {
 describe("AUFGABEN-05 task reminders — processor integration (mocked)", () => {
   const mocks = vi.hoisted(() => ({
     findMany: vi.fn(),
+    findFirst: vi.fn(),
     count: vi.fn(),
     findUnique: vi.fn(),
     transaction: vi.fn(),
@@ -208,6 +273,7 @@ describe("AUFGABEN-05 task reminders — processor integration (mocked)", () => 
     vi.resetModules();
     mocks.count.mockResolvedValue(0);
     mocks.findMany.mockResolvedValue([]);
+    mocks.findFirst.mockResolvedValue(null);
     mocks.findUnique.mockResolvedValue({ locale: "de-CH", timezone: "Europe/Zurich" });
     mocks.loadEffectivePreferencesForUsers.mockResolvedValue(
       new Map([["u1", { inAppEnabled: true, emailEnabled: true }]]),
@@ -227,6 +293,19 @@ describe("AUFGABEN-05 task reminders — processor integration (mocked)", () => 
         return [{ tenantId: "tenant-1" }];
       }
       if (where.reminder1At) {
+        if (where.id && where.reminder1At) {
+          return [
+            {
+              id: "task-1",
+              title: "T",
+              dueAt,
+              reminder1At,
+              reminder2At: null,
+              status: TaskStatus.OPEN,
+              assignees: [{ userId: "u1" }],
+            },
+          ];
+        }
         return [
           {
             id: "task-1",
@@ -255,9 +334,18 @@ describe("AUFGABEN-05 task reminders — processor integration (mocked)", () => 
       return [];
     });
 
+    mocks.findFirst.mockImplementation(async (args: { where?: Record<string, unknown> }) => {
+      const rows = await mocks.findMany(args);
+      return rows[0] ?? null;
+    });
+
     vi.doMock("@/lib/db/prisma", () => ({
       prisma: {
-        task: { findMany: mocks.findMany, count: mocks.count },
+        task: {
+          findMany: mocks.findMany,
+          findFirst: mocks.findFirst,
+          count: mocks.count,
+        },
         tenant: { findUnique: mocks.findUnique },
         $transaction: mocks.transaction,
       },
@@ -276,5 +364,49 @@ describe("AUFGABEN-05 task reminders — processor integration (mocked)", () => 
     expect(result.reminderCreated).toBeGreaterThan(0);
     expect(result.dueSoonCreated).toBe(0);
     expect(mocks.createNotificationIdempotent).toHaveBeenCalled();
+  });
+
+  it("R23 — stale reminder skipped after deadline passed", async () => {
+    const now = new Date("2026-10-01T10:00:00.000Z");
+    const dueAt = new Date("2026-09-30T10:00:00.000Z");
+    const reminder1At = new Date("2026-09-28T10:00:00.000Z");
+
+    mocks.findMany.mockImplementation(async (args: { where?: Record<string, unknown> }) => {
+      const where = args.where ?? {};
+      if (where.tenantId === undefined && where.OR) {
+        return [{ tenantId: "tenant-1" }];
+      }
+      if (where.reminder1At) {
+        return [];
+      }
+      return [];
+    });
+
+    mocks.findFirst.mockResolvedValue(null);
+
+    vi.doMock("@/lib/db/prisma", () => ({
+      prisma: {
+        task: {
+          findMany: mocks.findMany,
+          findFirst: mocks.findFirst,
+          count: mocks.count,
+        },
+        tenant: { findUnique: mocks.findUnique },
+        $transaction: mocks.transaction,
+      },
+    }));
+    vi.doMock("@/lib/notifications/notification-service", () => ({
+      createNotificationIdempotent: mocks.createNotificationIdempotent,
+    }));
+    vi.doMock("@/lib/notifications/preference-service", () => ({
+      loadEffectivePreferencesForUsers: mocks.loadEffectivePreferencesForUsers,
+    }));
+
+    const { processTaskDeadlineNotifications } = await import(
+      "@/lib/notifications/deadline-processor"
+    );
+    const result = await processTaskDeadlineNotifications(now);
+    expect(result.reminderCreated).toBe(0);
+    expect(mocks.createNotificationIdempotent).not.toHaveBeenCalled();
   });
 });
