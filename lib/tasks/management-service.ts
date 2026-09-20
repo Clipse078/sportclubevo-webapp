@@ -13,7 +13,7 @@ import type {
   TaskProgressDto,
   TaskServiceContext,
 } from "./types";
-import { buildTaskVisibilityWhere, canManageAllTasks } from "./visibility";
+import { buildTaskVisibilityWhere, canViewAllTasks } from "./visibility";
 import {
   endOfWeekSunday,
   getUpcomingHorizonEnd,
@@ -263,8 +263,13 @@ async function batchEnrichRoots(
   if (roots.length === 0) return [];
 
   const rootIds = roots.map((r) => r.id);
+  const childWhere: Prisma.TaskWhereInput = canViewAllTasks(ctx)
+    ? { tenantId: ctx.tenantId, parentTaskId: { in: rootIds } }
+    : {
+        AND: [buildTaskVisibilityWhere(ctx), { parentTaskId: { in: rootIds } }],
+      };
   const childRows = await prisma.task.findMany({
-    where: { tenantId: ctx.tenantId, parentTaskId: { in: rootIds } },
+    where: childWhere,
     include: TASK_INCLUDE,
     orderBy: [{ dueAt: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
   });
@@ -308,11 +313,19 @@ async function batchEnrichPersonalRows(
 
   const childrenByParent = new Map<string, TaskDto[]>();
   if (rootIdsNeedingChildren.length > 0) {
+    const childWhere: Prisma.TaskWhereInput = canViewAllTasks(ctx)
+      ? {
+          tenantId: ctx.tenantId,
+          parentTaskId: { in: rootIdsNeedingChildren },
+        }
+      : {
+          AND: [
+            buildTaskVisibilityWhere(ctx),
+            { parentTaskId: { in: rootIdsNeedingChildren } },
+          ],
+        };
     const childRows = await prisma.task.findMany({
-      where: {
-        tenantId: ctx.tenantId,
-        parentTaskId: { in: rootIdsNeedingChildren },
-      },
+      where: childWhere,
       include: TASK_INCLUDE,
       orderBy: [{ dueAt: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
     });
@@ -492,7 +505,7 @@ export async function listTaskSeriesManagementRows(
 ): Promise<{ rows: TaskSeriesManagementRow[]; totalCount: number }> {
   const and: Prisma.TaskSeriesWhereInput[] = [{ tenantId: ctx.tenantId }];
 
-  if (!canManageAllTasks(ctx)) {
+  if (!canViewAllTasks(ctx)) {
     const taskVisibility = buildTaskVisibilityWhere(ctx);
     and.push({
       OR: [

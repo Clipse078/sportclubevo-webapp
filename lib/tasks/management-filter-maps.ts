@@ -8,6 +8,7 @@ import { TASK_CONTEXT_LABELS } from "./management-labels";
 export function buildTaskManagementFilterHrefMaps(
   basePath: string,
   query: TaskManagementQueryState,
+  options?: { tenantWideVisibility?: boolean },
 ): {
   resetHref: string;
   statusHrefByValue: Record<string, string>;
@@ -24,65 +25,138 @@ export function buildTaskManagementFilterHrefMaps(
     my: string;
   };
 } {
+  const hrefOptions = {
+    tenantWideVisibility: options?.tenantWideVisibility ?? true,
+  };
+
   const statusHrefByValue: Record<string, string> = {
-    ACTIVE: buildTaskManagementHref(basePath, { status: "ACTIVE", page: 1 }, query),
-    OPEN: buildTaskManagementHref(basePath, { status: "OPEN", page: 1 }, query),
+    ACTIVE: buildTaskManagementHref(basePath, { status: "ACTIVE", page: 1 }, query, hrefOptions),
+    OPEN: buildTaskManagementHref(basePath, { status: "OPEN", page: 1 }, query, hrefOptions),
     IN_PROGRESS: buildTaskManagementHref(
       basePath,
       { status: "IN_PROGRESS", page: 1 },
       query,
+      hrefOptions,
     ),
-    DONE: buildTaskManagementHref(basePath, { status: "DONE", page: 1 }, query),
-    CANCELLED: buildTaskManagementHref(basePath, { status: "CANCELLED", page: 1 }, query),
+    DONE: buildTaskManagementHref(basePath, { status: "DONE", page: 1 }, query, hrefOptions),
+    CANCELLED: buildTaskManagementHref(
+      basePath,
+      { status: "CANCELLED", page: 1 },
+      query,
+      hrefOptions,
+    ),
   };
 
   const assigneeHrefByValue: Record<string, string> = {
-    "": buildTaskManagementHref(basePath, { assigneeUserId: null, page: 1 }, query),
+    "": buildTaskManagementHref(
+      basePath,
+      { assigneeUserId: null, page: 1 },
+      query,
+      hrefOptions,
+    ),
   };
 
   const priorityHrefByValue: Record<string, string> = {
-    "": buildTaskManagementHref(basePath, { priority: null, page: 1 }, query),
-    LOW: buildTaskManagementHref(basePath, { priority: "LOW", page: 1 }, query),
-    NORMAL: buildTaskManagementHref(basePath, { priority: "NORMAL", page: 1 }, query),
-    HIGH: buildTaskManagementHref(basePath, { priority: "HIGH", page: 1 }, query),
-    URGENT: buildTaskManagementHref(basePath, { priority: "URGENT", page: 1 }, query),
+    "": buildTaskManagementHref(basePath, { priority: null, page: 1 }, query, hrefOptions),
+    LOW: buildTaskManagementHref(basePath, { priority: "LOW", page: 1 }, query, hrefOptions),
+    NORMAL: buildTaskManagementHref(
+      basePath,
+      { priority: "NORMAL", page: 1 },
+      query,
+      hrefOptions,
+    ),
+    HIGH: buildTaskManagementHref(basePath, { priority: "HIGH", page: 1 }, query, hrefOptions),
+    URGENT: buildTaskManagementHref(
+      basePath,
+      { priority: "URGENT", page: 1 },
+      query,
+      hrefOptions,
+    ),
   };
 
   const deadlineHrefByValue: Record<string, string> = {
-    ALL: buildTaskManagementHref(basePath, { deadline: "ALL", page: 1 }, query),
-    OVERDUE: buildTaskManagementHref(basePath, { deadline: "OVERDUE", page: 1 }, query),
-    THIS_WEEK: buildTaskManagementHref(basePath, { deadline: "THIS_WEEK", page: 1 }, query),
-    NO_DEADLINE: buildTaskManagementHref(basePath, { deadline: "NO_DEADLINE", page: 1 }, query),
+    ALL: buildTaskManagementHref(basePath, { deadline: "ALL", page: 1 }, query, hrefOptions),
+    OVERDUE: buildTaskManagementHref(
+      basePath,
+      { deadline: "OVERDUE", page: 1 },
+      query,
+      hrefOptions,
+    ),
+    THIS_WEEK: buildTaskManagementHref(
+      basePath,
+      { deadline: "THIS_WEEK", page: 1 },
+      query,
+      hrefOptions,
+    ),
+    NO_DEADLINE: buildTaskManagementHref(
+      basePath,
+      { deadline: "NO_DEADLINE", page: 1 },
+      query,
+      hrefOptions,
+    ),
   };
 
   const recurringHrefByValue: Record<string, string> = {
-    ALL: buildTaskManagementHref(basePath, { recurring: "ALL", page: 1 }, query),
-    RECURRING: buildTaskManagementHref(basePath, { recurring: "RECURRING", page: 1 }, query),
-    SINGLE: buildTaskManagementHref(basePath, { recurring: "SINGLE", page: 1 }, query),
+    ALL: buildTaskManagementHref(basePath, { recurring: "ALL", page: 1 }, query, hrefOptions),
+    RECURRING: buildTaskManagementHref(
+      basePath,
+      { recurring: "RECURRING", page: 1 },
+      query,
+      hrefOptions,
+    ),
+    SINGLE: buildTaskManagementHref(
+      basePath,
+      { recurring: "SINGLE", page: 1 },
+      query,
+      hrefOptions,
+    ),
   };
 
   const contextHrefByValue: Record<string, string> = {
-    "": buildTaskManagementHref(basePath, { contextType: null, page: 1 }, query),
+    "": buildTaskManagementHref(basePath, { contextType: null, page: 1 }, query, hrefOptions),
   };
   for (const key of Object.keys(TASK_CONTEXT_LABELS)) {
     contextHrefByValue[key] = buildTaskManagementHref(
       basePath,
       { contextType: key, page: 1 },
       query,
+      hrefOptions,
     );
   }
 
   const viewHrefByValue: Record<string, string> = {
-    MEINE: buildTaskManagementHref(basePath, { view: "MEINE", page: 1 }, query),
-    ALLE: buildTaskManagementHref(basePath, { view: "ALLE", page: 1 }, query),
-    UEBERFAELLIG: buildTaskManagementHref(basePath, { view: "UEBERFAELLIG", page: 1 }, query),
-    DEMNAECHST: buildTaskManagementHref(basePath, { view: "DEMNAECHST", page: 1 }, query),
-    WIEDERKEHREND: buildTaskManagementHref(basePath, { view: "WIEDERKEHREND", page: 1 }, query),
-    ERLEDIGT: buildTaskManagementHref(basePath, { view: "ERLEDIGT", page: 1 }, query),
+    MEINE: buildTaskManagementHref(basePath, { view: "MEINE", page: 1 }, query, hrefOptions),
+    ALLE: buildTaskManagementHref(basePath, { view: "ALLE", page: 1 }, query, hrefOptions),
+    UEBERFAELLIG: buildTaskManagementHref(
+      basePath,
+      { view: "UEBERFAELLIG", page: 1 },
+      query,
+      hrefOptions,
+    ),
+    DEMNAECHST: buildTaskManagementHref(
+      basePath,
+      { view: "DEMNAECHST", page: 1 },
+      query,
+      hrefOptions,
+    ),
+    WIEDERKEHREND: buildTaskManagementHref(
+      basePath,
+      { view: "WIEDERKEHREND", page: 1 },
+      query,
+      hrefOptions,
+    ),
+    ERLEDIGT: buildTaskManagementHref(
+      basePath,
+      { view: "ERLEDIGT", page: 1 },
+      query,
+      hrefOptions,
+    ),
   };
 
+  const openListView = hrefOptions.tenantWideVisibility ? "ALLE" : "MEINE";
+
   return {
-    resetHref: buildTaskManagementResetHref(basePath, query.view),
+    resetHref: buildTaskManagementResetHref(basePath, query.view, hrefOptions),
     statusHrefByValue,
     assigneeHrefByValue,
     priorityHrefByValue,
@@ -91,12 +165,13 @@ export function buildTaskManagementFilterHrefMaps(
     contextHrefByValue,
     viewHrefByValue,
     kpiHrefs: {
-      open: viewHrefByValue.ALLE,
+      open: viewHrefByValue[openListView]!,
       overdue: viewHrefByValue.UEBERFAELLIG,
       dueThisWeek: buildTaskManagementHref(
         basePath,
-        { view: "ALLE", deadline: "THIS_WEEK", page: 1 },
-        { ...query, view: "ALLE", deadline: "THIS_WEEK" },
+        { view: openListView, deadline: "THIS_WEEK", page: 1 },
+        { ...query, view: openListView, deadline: "THIS_WEEK" },
+        hrefOptions,
       ),
       my: viewHrefByValue.MEINE,
     },
@@ -108,6 +183,7 @@ export function mergeAssigneeFilterHrefs(
   basePath: string,
   query: TaskManagementQueryState,
   assigneeOptions: { userId: string }[],
+  options?: { tenantWideVisibility?: boolean },
 ): Record<string, string> {
   const hrefs = { ...maps.assigneeHrefByValue };
   for (const option of assigneeOptions) {
@@ -115,6 +191,7 @@ export function mergeAssigneeFilterHrefs(
       basePath,
       { assigneeUserId: option.userId, page: 1 },
       query,
+      { tenantWideVisibility: options?.tenantWideVisibility ?? true },
     );
   }
   return hrefs;

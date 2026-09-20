@@ -48,6 +48,14 @@ function managerCtx() {
   };
 }
 
+function viewAllCtx() {
+  return {
+    tenantId: TENANT_A,
+    userId: USER_MANAGER,
+    permissionKeys: [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_VIEW_ALL],
+  };
+}
+
 describe("AUFGABEN-02 management listTaskManagementItems", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -147,6 +155,17 @@ describe("AUFGABEN-02 management listTaskSeriesManagementRows", () => {
   it("allows tenant-wide series listing for tasks.manage", async () => {
     const query = parseTaskManagementQuery({ view: "WIEDERKEHREND" });
     await listTaskSeriesManagementRows(managerCtx(), query);
+
+    expect(mocks.taskSeriesFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { AND: [{ tenantId: TENANT_A }] },
+      }),
+    );
+  });
+
+  it("allows tenant-wide series listing for tasks.view_all", async () => {
+    const query = parseTaskManagementQuery({ view: "WIEDERKEHREND" });
+    await listTaskSeriesManagementRows(viewAllCtx(), query);
 
     expect(mocks.taskSeriesFindMany).toHaveBeenCalledWith(
       expect.objectContaining({

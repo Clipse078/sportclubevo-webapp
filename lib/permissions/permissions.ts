@@ -130,8 +130,10 @@ export const PERMISSIONS = {
   // AUFGABEN-01 — operational task module (not membership administration).
   TASKS_VIEW: "tasks.view",
   TASKS_CREATE: "tasks.create",
-  TASKS_MANAGE: "tasks.manage",
   TASKS_ASSIGN: "tasks.assign",
+  /** Tenant-wide task visibility (read-only operational perspective). */
+  TASKS_VIEW_ALL: "tasks.view_all",
+  TASKS_MANAGE: "tasks.manage",
 
   TEMPLATES_VIEW: "templates.view",
   TEMPLATES_MANAGE: "templates.manage",

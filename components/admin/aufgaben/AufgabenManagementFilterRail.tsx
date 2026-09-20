@@ -14,6 +14,7 @@ type Props = {
   deadlineValue: string;
   recurringValue: string;
   contextValue: string | undefined;
+  showAssigneeFilter?: boolean;
   assigneeOptions: AssigneeOption[];
   statusHrefByValue: Record<string, string>;
   assigneeHrefByValue: Record<string, string>;
@@ -35,6 +36,7 @@ export default function AufgabenManagementFilterRail({
   deadlineValue,
   recurringValue,
   contextValue,
+  showAssigneeFilter = true,
   assigneeOptions,
   statusHrefByValue,
   assigneeHrefByValue,
@@ -80,27 +82,29 @@ export default function AufgabenManagementFilterRail({
           </select>
         </label>
 
-        <label className="block space-y-1">
-          <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-            Verantwortlich
-          </span>
-          <select
-            className="fca-input w-full text-sm"
-            value={assigneeValue ?? ""}
-            onChange={(e) =>
-              navigate(assigneeHrefByValue[e.target.value] ?? assigneeHrefByValue[""]!)
-            }
-            aria-label="Verantwortliche Person filtern"
-            data-testid="aufgaben-assignee-filter"
-          >
-            <option value="">Alle</option>
-            {assigneeOptions.map((option) => (
-              <option key={option.userId} value={option.userId}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        {showAssigneeFilter ? (
+          <label className="block space-y-1">
+            <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+              Verantwortlich
+            </span>
+            <select
+              className="fca-input w-full text-sm"
+              value={assigneeValue ?? ""}
+              onChange={(e) =>
+                navigate(assigneeHrefByValue[e.target.value] ?? assigneeHrefByValue[""]!)
+              }
+              aria-label="Verantwortliche Person filtern"
+              data-testid="aufgaben-assignee-filter"
+            >
+              <option value="">Alle</option>
+              {assigneeOptions.map((option) => (
+                <option key={option.userId} value={option.userId}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
 
         <label className="block space-y-1">
           <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">

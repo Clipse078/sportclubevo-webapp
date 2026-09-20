@@ -26,6 +26,7 @@ import {
 } from "@/lib/tasks/management-filter-maps";
 import {
   hasSecondaryTaskFilters,
+  taskManagementViewsForScope,
   type TaskManagementQueryState,
   type TaskManagementSort,
   type TaskManagementView,
@@ -55,17 +56,9 @@ type Props = {
   canCreate: boolean;
   canAssign: boolean;
   canManage: boolean;
+  tenantWideVisibility: boolean;
   loadError?: boolean;
 };
-
-const LIST_VIEWS: TaskManagementView[] = [
-  "MEINE",
-  "ALLE",
-  "UEBERFAELLIG",
-  "DEMNAECHST",
-  "WIEDERKEHREND",
-  "ERLEDIGT",
-];
 
 function emptyCopy(view: TaskManagementView, filtered: boolean): { title: string; description: string } {
   if (filtered) {
@@ -124,17 +117,22 @@ export default function AufgabenManagementWorkspace({
   canCreate,
   canAssign,
   canManage,
+  tenantWideVisibility,
   loadError = false,
 }: Props) {
-  const filterMaps = buildTaskManagementFilterHrefMaps(basePath, query);
+  const filterMaps = buildTaskManagementFilterHrefMaps(basePath, query, {
+    tenantWideVisibility,
+  });
+  const listViews = taskManagementViewsForScope(tenantWideVisibility);
   const assigneeHrefByValue = mergeAssigneeFilterHrefs(
     filterMaps,
     basePath,
     query,
     assigneeOptions,
+    { tenantWideVisibility },
   );
 
-  const viewLinks = LIST_VIEWS.map((view) => ({
+  const viewLinks = listViews.map((view) => ({
     view,
     href: filterMaps.viewHrefByValue[view]!,
     active: query.view === view,
@@ -178,7 +176,9 @@ export default function AufgabenManagementWorkspace({
             value: summary.open,
             hint: "aktive Hauptaufgaben",
             href: filterMaps.kpiHrefs.open,
-            active: query.view === "ALLE" && !filtered,
+            active:
+              (tenantWideVisibility ? query.view === "ALLE" : query.view === "MEINE") &&
+              !filtered,
             icon: ListChecks,
             surface: "border-sky-500/25 bg-sky-950/40",
             iconTile: "bg-sky-500/15 text-sky-400",
@@ -202,7 +202,9 @@ export default function AufgabenManagementWorkspace({
             value: summary.dueThisWeek,
             hint: "fällig",
             href: filterMaps.kpiHrefs.dueThisWeek,
-            active: query.deadline === "THIS_WEEK" && query.view === "ALLE",
+            active:
+              query.deadline === "THIS_WEEK" &&
+              query.view === (tenantWideVisibility ? "ALLE" : "MEINE"),
             icon: CalendarClock,
             surface: "border-amber-500/25 bg-amber-950/30",
             iconTile: "bg-amber-500/15 text-amber-400",
@@ -314,6 +316,7 @@ export default function AufgabenManagementWorkspace({
               deadlineValue={query.deadline}
               recurringValue={query.recurring}
               contextValue={query.contextType ?? undefined}
+              showAssigneeFilter={tenantWideVisibility}
               assigneeOptions={assigneeOptions.map((a) => ({
                 userId: a.userId,
                 label: `${a.firstName} ${a.lastName}`.trim(),

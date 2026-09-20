@@ -127,8 +127,9 @@ const PERMISSION_LABELS_DE: Record<string, string> = {
 
   "tasks.view": "Aufgaben ansehen",
   "tasks.create": "Aufgaben erstellen",
-  "tasks.manage": "Aufgaben verwalten",
   "tasks.assign": "Aufgaben zuweisen",
+  "tasks.view_all": "Alle Aufgaben im Verein ansehen",
+  "tasks.manage": "Aufgaben verwalten",
 
   "templates.view": "Vorlagen ansehen",
   "templates.manage": "Vorlagen verwalten",
@@ -234,10 +235,11 @@ const PERMISSION_DESCRIPTIONS_DE: Record<string, string> = {
   "initiatives.manage": "Initiativen erstellen, bearbeiten und verwalten.",
   "initiatives.delete": "Initiativen endgültig aus dem System entfernen.",
 
-  "tasks.view": "Aufgaben sehen, die für die Person sichtbar sind (eigene Zuweisungen, erstellte Aufgaben oder Verwaltungszugriff).",
+  "tasks.view": "Aufgaben-Modul nutzen und Aufgaben in persönlichem/relevantem Sichtbereich sehen.",
   "tasks.create": "Operative Aufgaben im Verein erstellen.",
-  "tasks.manage": "Aufgaben bearbeiten, Status verwalten und archivieren.",
   "tasks.assign": "Aufgaben anderen berechtigten Benutzern zuweisen.",
+  "tasks.view_all": "Alle Aufgaben im Verein einsehen (ohne automatische Verwaltungsrechte).",
+  "tasks.manage": "Aufgaben bearbeiten, Status verwalten und archivieren (inkl. Sicht auf alle Vereinsaufgaben).",
 
   "templates.view": "Kommunikationsvorlagen einsehen.",
   "templates.manage": "Kommunikationsvorlagen erstellen und bearbeiten.",
