@@ -14,10 +14,12 @@ import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
 import { createAufgabeFullAction } from "@/app/(admin)/dashboard/aufgaben/actions";
 import TaskContextField from "./TaskContextField";
 import TaskOrgVisibilityFields from "./TaskOrgVisibilityFields";
+import { TaskDeadlineFields, TaskReminderFields } from "./TaskReminderFields";
 
 type Props = {
   assigneeOptions: TaskAssigneeOption[];
   orgUnitOptions: TaskOrgUnitPickerOption[];
+  timeZone: string;
   backHref: string;
   initialContextType?: TaskContextType | null;
   initialContextId?: string | null;
@@ -26,6 +28,7 @@ type Props = {
 export default function AufgabenFullCreateClient({
   assigneeOptions,
   orgUnitOptions,
+  timeZone,
   backHref,
   initialContextType = null,
   initialContextId = null,
@@ -114,10 +117,16 @@ export default function AufgabenFullCreateClient({
                   ))}
                 </select>
               </label>
-              <label className="block space-y-1">
-                <span className="text-xs font-medium text-[var(--text-2)]">Termin</span>
-                <input type="date" name="dueAt" className="fca-input w-full text-sm" />
-              </label>
+              <TaskDeadlineFields timeZone={timeZone} dueAt={null} />
+              <TaskReminderFields
+                timeZone={timeZone}
+                values={{
+                  reminder1At: null,
+                  reminder2At: null,
+                  reminder1PresetKey: null,
+                  reminder2PresetKey: null,
+                }}
+              />
               <TaskContextField
                 initialContextType={initialContextType}
                 initialContextId={initialContextId}

@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import type { TaskStatus } from "@prisma/client";
-import { Check, ChevronRight, MoreHorizontal, Repeat2 } from "lucide-react";
+import { Bell, Check, ChevronRight, MoreHorizontal, Repeat2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import type { TaskManagementListItem } from "@/lib/tasks/management-service";
@@ -14,6 +14,7 @@ import {
   updateAufgabeStatusAction,
 } from "@/app/(admin)/dashboard/aufgaben/actions";
 import { presentTaskDeadline } from "@/lib/tasks/management-deadline";
+import { countConfiguredReminders } from "@/lib/tasks/task-reminder-schedule";
 import { formatAssigneeName } from "@/lib/tasks/management-labels";
 import {
   taskPriorityPresentation,
@@ -266,6 +267,7 @@ function TaskListRow({
     locale,
     timeZone,
   });
+  const reminderCount = countConfiguredReminders(task);
   const priority = taskPriorityPresentation(task.priority);
   const status = taskStatusPresentation(task.status);
   const contextLine = item.context?.compactSecondary ?? null;
@@ -344,13 +346,23 @@ function TaskListRow({
 
         <span
           className={cn(
-            "text-[0.8125rem] tabular-nums md:text-right",
+            "inline-flex items-center justify-end gap-1 text-[0.8125rem] tabular-nums md:text-right",
             deadline.emphasis === "urgent" && "font-medium text-orange-400",
             deadline.emphasis === "attention" && "text-amber-300",
             deadline.emphasis === "calm" && "text-[var(--text-2)]",
           )}
         >
           {deadline.label || <span className="sr-only">Kein Termin</span>}
+          {reminderCount > 0 ? (
+            <span
+              className="inline-flex items-center gap-0.5 text-[0.6875rem] text-[var(--muted)]"
+              title={`${reminderCount} Erinnerung(en)`}
+              data-testid={`aufgaben-reminder-count-${task.id}`}
+            >
+              <Bell className="h-3 w-3" aria-hidden="true" />
+              {reminderCount}
+            </span>
+          ) : null}
         </span>
 
         <span className={cn("hidden text-[0.8125rem] md:inline", priority.className)}>

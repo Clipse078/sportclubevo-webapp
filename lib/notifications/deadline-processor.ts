@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { NotificationEntityType, NotificationType as NotificationTypeEnum } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { isActiveTaskStatus } from "@/lib/tasks/management-deadline";
+import { taskHasExplicitReminders } from "@/lib/tasks/task-reminder-schedule";
 import {
   TASK_DUE_SOON_LEAD_MS,
   TASK_DEADLINE_TASK_BATCH_SIZE,
@@ -11,6 +12,7 @@ import {
 import {
   buildTaskDueSoonDedupKey,
   buildTaskOverdueDedupKey,
+  buildTaskReminderDedupKey,
   taskWorkspaceHref,
 } from "./deduplication";
 import { createNotificationIdempotent } from "./notification-service";
@@ -18,12 +20,14 @@ import { loadEffectivePreferencesForUsers } from "./preference-service";
 import {
   buildTaskDueSoonCopy,
   buildTaskOverdueCopy,
+  buildTaskReminderCopy,
   formatTaskDueLabel,
 } from "./task-copy";
 
 export type ProcessTaskDeadlineNotificationsResult = {
   dueSoonCreated: number;
   overdueCreated: number;
+  reminderCreated: number;
   tenantsProcessed: number;
 };
 
@@ -44,7 +48,11 @@ export async function selectTenantIdsForDeadlineBatch(
 ): Promise<string[]> {
   const rows = await prisma.task.findMany({
     where: {
-      dueAt: { not: null },
+      OR: [
+        { dueAt: { not: null } },
+        { reminder1At: { not: null } },
+        { reminder2At: { not: null } },
+      ],
       status: { in: [TaskStatus.OPEN, TaskStatus.IN_PROGRESS] },
     },
     distinct: ["tenantId"],
@@ -77,6 +85,63 @@ async function fetchTaskBatchForDeadlineProcessing(
   });
 }
 
+type ReminderStage = 1 | 2;
+
+async function emitReminderNotificationsForTask(input: {
+  tenantId: string;
+  task: {
+    id: string;
+    title: string;
+    dueAt: Date | null;
+    assignees: { userId: string }[];
+  };
+  stage: ReminderStage;
+  reminderAt: Date;
+  locale: string;
+  timeZone: string;
+}): Promise<number> {
+  if (!input.task.dueAt) return 0;
+
+  const dueLabel = formatTaskDueLabel(input.task.dueAt, input.locale, input.timeZone)!;
+  const copy = buildTaskReminderCopy(input.task.title, dueLabel, input.stage);
+  const href = taskWorkspaceHref(input.task.id);
+  const reminderAtIso = input.reminderAt.toISOString();
+
+  const userIds = input.task.assignees.map((a) => a.userId);
+  const preferences = await loadEffectivePreferencesForUsers(
+    prisma,
+    input.tenantId,
+    userIds,
+    NotificationTypeEnum.TASK_REMINDER,
+  );
+
+  let created = 0;
+  for (const assignee of input.task.assignees) {
+    const pref = preferences.get(assignee.userId)!;
+    const result = await prisma.$transaction(async (tx) =>
+      createNotificationIdempotent(tx, {
+        tenantId: input.tenantId,
+        recipientUserId: assignee.userId,
+        type: NotificationTypeEnum.TASK_REMINDER,
+        title: copy.title,
+        body: copy.body,
+        href,
+        entityType: NotificationEntityType.TASK,
+        entityId: input.task.id,
+        deduplicationKey: buildTaskReminderDedupKey({
+          taskId: input.task.id,
+          recipientUserId: assignee.userId,
+          stage: input.stage,
+          reminderAtIso,
+        }),
+        preferences: pref,
+      }),
+    );
+    if (result?.kind === "CREATED") created += 1;
+  }
+  return created;
+}
+
 export async function processTaskDeadlineNotifications(
   now: Date = new Date(),
 ): Promise<ProcessTaskDeadlineNotificationsResult> {
@@ -86,6 +151,7 @@ export async function processTaskDeadlineNotifications(
 
   let dueSoonCreated = 0;
   let overdueCreated = 0;
+  let reminderCreated = 0;
 
   for (const tenantId of tenantIds) {
     const tenant = await prisma.tenant.findUnique({
@@ -94,6 +160,58 @@ export async function processTaskDeadlineNotifications(
     });
     const locale = tenant?.locale ?? "de-CH";
     const timeZone = tenant?.timezone ?? "Europe/Zurich";
+
+    const reminder1Candidates = await fetchTaskBatchForDeadlineProcessing(
+      {
+        tenantId,
+        reminder1At: { not: null, lte: now },
+        status: { in: [TaskStatus.OPEN, TaskStatus.IN_PROGRESS] },
+      },
+      now,
+    );
+
+    for (const task of reminder1Candidates) {
+      if (!task.reminder1At || !isActiveTaskStatus(task.status)) continue;
+      reminderCreated += await emitReminderNotificationsForTask({
+        tenantId,
+        task: {
+          id: task.id,
+          title: task.title,
+          dueAt: task.dueAt,
+          assignees: task.assignees,
+        },
+        stage: 1,
+        reminderAt: task.reminder1At,
+        locale,
+        timeZone,
+      });
+    }
+
+    const reminder2Candidates = await fetchTaskBatchForDeadlineProcessing(
+      {
+        tenantId,
+        reminder2At: { not: null, lte: now },
+        status: { in: [TaskStatus.OPEN, TaskStatus.IN_PROGRESS] },
+      },
+      now,
+    );
+
+    for (const task of reminder2Candidates) {
+      if (!task.reminder2At || !isActiveTaskStatus(task.status)) continue;
+      reminderCreated += await emitReminderNotificationsForTask({
+        tenantId,
+        task: {
+          id: task.id,
+          title: task.title,
+          dueAt: task.dueAt,
+          assignees: task.assignees,
+        },
+        stage: 2,
+        reminderAt: task.reminder2At,
+        locale,
+        timeZone,
+      });
+    }
 
     const dueSoonCandidates = await fetchTaskBatchForDeadlineProcessing(
       {
@@ -106,6 +224,15 @@ export async function processTaskDeadlineNotifications(
 
     for (const task of dueSoonCandidates) {
       if (!task.dueAt || !isActiveTaskStatus(task.status)) continue;
+      if (
+        taskHasExplicitReminders({
+          reminder1At: task.reminder1At,
+          reminder2At: task.reminder2At,
+        })
+      ) {
+        continue;
+      }
+
       const dueLabel = formatTaskDueLabel(task.dueAt, locale, timeZone)!;
       const copy = buildTaskDueSoonCopy(task.title, dueLabel);
       const href = taskWorkspaceHref(task.id);
@@ -195,6 +322,7 @@ export async function processTaskDeadlineNotifications(
   return {
     dueSoonCreated,
     overdueCreated,
+    reminderCreated,
     tenantsProcessed: tenantIds.length,
   };
 }

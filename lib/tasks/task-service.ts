@@ -53,6 +53,10 @@ import {
   resolvePropagatedTaskOrgVisibility,
   requestsTaskOrgVisibilityChange,
 } from "./task-org-propagation";
+import {
+  recomputeRemindersForDueChange,
+  resolveTaskReminderSchedule,
+} from "./task-reminder-schedule";
 
 const TASK_INCLUDE = {
   assignees: {
@@ -75,6 +79,10 @@ function mapTask(row: TaskRow): TaskDto {
     status: row.status,
     priority: row.priority,
     dueAt: row.dueAt?.toISOString() ?? null,
+    reminder1At: row.reminder1At?.toISOString() ?? null,
+    reminder2At: row.reminder2At?.toISOString() ?? null,
+    reminder1PresetKey: row.reminder1PresetKey,
+    reminder2PresetKey: row.reminder2PresetKey,
     completedAt: row.completedAt?.toISOString() ?? null,
     contextType: row.contextType,
     contextId: row.contextId,
@@ -207,6 +215,111 @@ function applyStatusTransition(
   return { status: next, completedAt: null };
 }
 
+async function loadTenantTimeZone(tenantId: string): Promise<string> {
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { timezone: true },
+  });
+  return tenant?.timezone ?? "Europe/Zurich";
+}
+
+function reminderFieldsRequested(input: {
+  reminder1At?: Date | null;
+  reminder2At?: Date | null;
+  reminder1PresetKey?: string | null;
+  reminder2PresetKey?: string | null;
+}): boolean {
+  return (
+    input.reminder1At !== undefined ||
+    input.reminder2At !== undefined ||
+    input.reminder1PresetKey !== undefined ||
+    input.reminder2PresetKey !== undefined
+  );
+}
+
+async function resolveReminderScheduleForCreate(
+  tenantId: string,
+  input: {
+    dueAt?: Date | null;
+    reminder1At?: Date | null;
+    reminder2At?: Date | null;
+    reminder1PresetKey?: string | null;
+    reminder2PresetKey?: string | null;
+  },
+) {
+  const dueAt = input.dueAt ?? null;
+  if (!reminderFieldsRequested(input)) {
+    return {
+      dueAt,
+      reminder1At: null,
+      reminder2At: null,
+      reminder1PresetKey: null,
+      reminder2PresetKey: null,
+    };
+  }
+
+  const timeZone = await loadTenantTimeZone(tenantId);
+  return resolveTaskReminderSchedule({
+    dueAt,
+    reminder1At: input.reminder1At ?? null,
+    reminder2At: input.reminder2At ?? null,
+    reminder1PresetKey: input.reminder1PresetKey ?? null,
+    reminder2PresetKey: input.reminder2PresetKey ?? null,
+    timeZone,
+  });
+}
+
+async function resolveReminderScheduleForUpdate(
+  tenantId: string,
+  existing: TaskRow,
+  input: UpdateTaskInput,
+) {
+  if (!reminderFieldsRequested(input) && input.dueAt === undefined) {
+    return null;
+  }
+
+  const timeZone = await loadTenantTimeZone(tenantId);
+  const nextDueAt = input.dueAt !== undefined ? input.dueAt : existing.dueAt;
+
+  const nextPreset1 =
+    input.reminder1PresetKey !== undefined
+      ? input.reminder1PresetKey
+      : existing.reminder1PresetKey;
+  const nextPreset2 =
+    input.reminder2PresetKey !== undefined
+      ? input.reminder2PresetKey
+      : existing.reminder2PresetKey;
+
+  let nextR1 =
+    input.reminder1At !== undefined ? input.reminder1At : existing.reminder1At;
+  let nextR2 =
+    input.reminder2At !== undefined ? input.reminder2At : existing.reminder2At;
+
+  if (input.dueAt !== undefined && input.dueAt?.getTime() !== existing.dueAt?.getTime()) {
+    return recomputeRemindersForDueChange({
+      dueAt: nextDueAt,
+      reminder1At: nextR1,
+      reminder2At: nextR2,
+      reminder1PresetKey: nextPreset1,
+      reminder2PresetKey: nextPreset2,
+      timeZone,
+    });
+  }
+
+  if (reminderFieldsRequested(input) || input.dueAt !== undefined) {
+    return resolveTaskReminderSchedule({
+      dueAt: nextDueAt,
+      reminder1At: nextPreset1 ? null : nextR1,
+      reminder2At: nextPreset2 ? null : nextR2,
+      reminder1PresetKey: nextPreset1,
+      reminder2PresetKey: nextPreset2,
+      timeZone,
+    });
+  }
+
+  return null;
+}
+
 async function recordTaskAudit(
   tx: Prisma.TransactionClient,
   input: {
@@ -248,6 +361,8 @@ export async function createTask(
     { mode: "create" },
   );
 
+  const reminderSchedule = await resolveReminderScheduleForCreate(ctx.tenantId, input);
+
   const task = await prisma.$transaction(async (tx) => {
     const created = await tx.task.create({
       data: {
@@ -255,7 +370,11 @@ export async function createTask(
         title,
         description: input.description?.trim() || null,
         priority: input.priority ?? "NORMAL",
-        dueAt: input.dueAt ?? null,
+        dueAt: reminderSchedule.dueAt,
+        reminder1At: reminderSchedule.reminder1At,
+        reminder2At: reminderSchedule.reminder2At,
+        reminder1PresetKey: reminderSchedule.reminder1PresetKey,
+        reminder2PresetKey: reminderSchedule.reminder2PresetKey,
         contextType: input.contextType ?? null,
         contextId: input.contextId ?? null,
         orgUnitId: orgVisibility.orgUnitId,
@@ -443,6 +562,8 @@ export async function createSubtask(
     orgUnitId: parent.orgUnitId,
   });
 
+  const reminderSchedule = await resolveReminderScheduleForCreate(ctx.tenantId, input);
+
   const task = await prisma.$transaction(async (tx) => {
     const created = await tx.task.create({
       data: {
@@ -451,7 +572,11 @@ export async function createSubtask(
         title,
         description: input.description?.trim() || null,
         priority: input.priority ?? "NORMAL",
-        dueAt: input.dueAt ?? null,
+        dueAt: reminderSchedule.dueAt,
+        reminder1At: reminderSchedule.reminder1At,
+        reminder2At: reminderSchedule.reminder2At,
+        reminder1PresetKey: reminderSchedule.reminder1PresetKey,
+        reminder2PresetKey: reminderSchedule.reminder2PresetKey,
         orgUnitId: propagatedOrg.orgUnitId,
         visibilityScope: propagatedOrg.visibilityScope,
         createdByUserId: ctx.userId,
@@ -578,6 +703,7 @@ export async function updateTask(
       input.description !== undefined ||
       input.priority !== undefined ||
       input.dueAt !== undefined ||
+      reminderFieldsRequested(input) ||
       input.contextType !== undefined ||
       input.contextId !== undefined ||
       orgVisibilityMutation
@@ -622,7 +748,16 @@ export async function updateTask(
     data.description = input.description?.trim() || null;
   }
   if (input.priority !== undefined) data.priority = input.priority;
-  if (input.dueAt !== undefined) data.dueAt = input.dueAt;
+  const reminderSchedule = await resolveReminderScheduleForUpdate(ctx.tenantId, existing, input);
+  if (reminderSchedule) {
+    data.dueAt = reminderSchedule.dueAt;
+    data.reminder1At = reminderSchedule.reminder1At;
+    data.reminder2At = reminderSchedule.reminder2At;
+    data.reminder1PresetKey = reminderSchedule.reminder1PresetKey;
+    data.reminder2PresetKey = reminderSchedule.reminder2PresetKey;
+  } else if (input.dueAt !== undefined) {
+    data.dueAt = input.dueAt;
+  }
 
   const contextMutation =
     input.contextType !== undefined || input.contextId !== undefined;
@@ -674,6 +809,10 @@ export async function updateTask(
         status: existing.status,
         priority: existing.priority,
         dueAt: existing.dueAt?.toISOString() ?? null,
+        reminder1At: existing.reminder1At?.toISOString() ?? null,
+        reminder2At: existing.reminder2At?.toISOString() ?? null,
+        reminder1PresetKey: existing.reminder1PresetKey,
+        reminder2PresetKey: existing.reminder2PresetKey,
         contextType: existing.contextType,
         contextId: existing.contextId,
         orgUnitId: existing.orgUnitId,
@@ -684,6 +823,10 @@ export async function updateTask(
         status: row.status,
         priority: row.priority,
         dueAt: row.dueAt?.toISOString() ?? null,
+        reminder1At: row.reminder1At?.toISOString() ?? null,
+        reminder2At: row.reminder2At?.toISOString() ?? null,
+        reminder1PresetKey: row.reminder1PresetKey,
+        reminder2PresetKey: row.reminder2PresetKey,
         contextType: row.contextType,
         contextId: row.contextId,
         orgUnitId: row.orgUnitId,

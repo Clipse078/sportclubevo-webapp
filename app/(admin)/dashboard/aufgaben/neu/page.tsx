@@ -8,6 +8,7 @@ import { canViewAllTasks } from "@/lib/tasks/visibility";
 import type { TaskContextType } from "@prisma/client";
 import AufgabenFullCreateClient from "@/components/admin/aufgaben/AufgabenFullCreateClient";
 import { isSupportedTaskContextType } from "@/lib/tasks/context-registry";
+import { prisma } from "@/lib/db/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -28,10 +29,15 @@ export default async function AufgabenCreatePage({ searchParams }: Props) {
     tenantWideVisibility,
   });
 
-  const [assigneeOptions, orgUnitOptions] = await Promise.all([
+  const [assigneeOptions, orgUnitOptions, tenantRow] = await Promise.all([
     listEligibleTaskAssignees(ctx.tenantId),
     loadTaskOrgUnitMutationOptions(ctx),
+    prisma.tenant.findUnique({
+      where: { id: ctx.tenantId },
+      select: { timezone: true },
+    }),
   ]);
+  const timeZone = tenantRow?.timezone ?? "Europe/Zurich";
 
   const contextTypeRaw = sp.contextType?.trim() ?? "";
   const contextIdRaw = sp.contextId?.trim() ?? "";
@@ -45,6 +51,7 @@ export default async function AufgabenCreatePage({ searchParams }: Props) {
     <AufgabenFullCreateClient
       assigneeOptions={assigneeOptions}
       orgUnitOptions={orgUnitOptions}
+      timeZone={timeZone}
       backHref={backHref}
       initialContextType={initialContextType}
       initialContextId={initialContextId}

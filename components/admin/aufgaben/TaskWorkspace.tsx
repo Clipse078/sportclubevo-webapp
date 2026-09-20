@@ -36,7 +36,6 @@ import {
   completeAufgabeAction,
   createSubtaskAction,
   updateAufgabeDescriptionAction,
-  updateAufgabeDueAtAction,
   updateAufgabePriorityAction,
   updateAufgabeStatusAction,
   updateAufgabeTitleAction,
@@ -46,6 +45,7 @@ import type { TaskWorkspaceViewProps } from "@/lib/tasks/task-workspace-view-pro
 import type { TaskContextPresentation } from "@/lib/tasks/context-presentation";
 import TaskContextField from "./TaskContextField";
 import TaskOrgVisibilityEditor from "./TaskOrgVisibilityEditor";
+import { TaskDeadlineReminderEditor } from "./TaskDeadlineReminderEditor";
 
 function InlineTitle({
   task,
@@ -790,42 +790,15 @@ export function TaskWorkspacePanel({
             )}
           </PropertyRow>
 
-          <PropertyRow label="Termin">
+          <PropertyRow label="Deadline">
             {capabilities.canEditDueAt ? (
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  className="fca-input flex-1 text-sm"
-                  defaultValue={task.dueAt ? task.dueAt.slice(0, 10) : ""}
-                  disabled={pending}
-                  onChange={(e) =>
-                    runAction(() => {
-                      const fd = new FormData();
-                      fd.set("taskId", task.id);
-                      fd.set("dueAt", e.target.value);
-                      return updateAufgabeDueAtAction(fd);
-                    })
-                  }
-                  data-testid="task-workspace-due"
-                />
-                {task.dueAt ? (
-                  <button
-                    type="button"
-                    className="text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
-                    disabled={pending}
-                    onClick={() =>
-                      runAction(() => {
-                        const fd = new FormData();
-                        fd.set("taskId", task.id);
-                        fd.set("dueAt", "");
-                        return updateAufgabeDueAtAction(fd);
-                      })
-                    }
-                  >
-                    Entfernen
-                  </button>
-                ) : null}
-              </div>
+              <TaskDeadlineReminderEditor
+                task={task}
+                timeZone={timeZone}
+                disabled={pending}
+                onError={(message) => setActionError(message)}
+                onUpdated={() => router.refresh()}
+              />
             ) : (
               <span
                 className={cn(

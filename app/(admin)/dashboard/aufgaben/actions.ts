@@ -38,6 +38,12 @@ import {
   TaskValidationError,
 } from "@/lib/tasks/errors";
 import { parseTaskVisibilityScope } from "@/lib/tasks/task-org-mutation-policy";
+import { prisma } from "@/lib/db/prisma";
+import { parseTaskReminderFieldsFromForm } from "@/lib/tasks/parse-task-reminder-form";
+import {
+  parseTaskDueAtFromForm,
+  parseTaskReminderPresetKey,
+} from "@/lib/tasks/task-reminder-schedule";
 
 export type AufgabenActionResult =
   | { ok: true; taskId?: string }
@@ -168,8 +174,28 @@ export async function createAufgabeAction(
         ? (priority as TaskPriority)
         : undefined;
 
+    const schedule =
+      formData.has("dueTime") || formData.has("reminder1Preset")
+        ? await parseDeadlineAndRemindersFromForm(ctx.tenantId, formData)
+        : null;
+
     let dueAt: Date | null = null;
-    if (typeof dueAtRaw === "string" && dueAtRaw.trim()) {
+    let reminderFields = {};
+    if (schedule) {
+      if (schedule === "invalid_due") {
+        return { ok: false, message: "Ungültiges Fälligkeitsdatum." };
+      }
+      if (schedule === "invalid_reminder") {
+        return { ok: false, message: "Ungültige Erinnerung." };
+      }
+      dueAt = schedule.dueAt;
+      reminderFields = {
+        reminder1At: schedule.reminder1At,
+        reminder2At: schedule.reminder2At,
+        reminder1PresetKey: schedule.reminder1PresetKey,
+        reminder2PresetKey: schedule.reminder2PresetKey,
+      };
+    } else if (typeof dueAtRaw === "string" && dueAtRaw.trim()) {
       dueAt = new Date(`${dueAtRaw}T12:00:00.000Z`);
       if (Number.isNaN(dueAt.getTime())) {
         return { ok: false, message: "Ungültiges Fälligkeitsdatum." };
@@ -183,6 +209,7 @@ export async function createAufgabeAction(
       description: typeof description === "string" ? description : null,
       priority: parsedPriority,
       dueAt,
+      ...reminderFields,
       assigneeUserIds:
         typeof assigneeUserId === "string" && assigneeUserId.trim()
           ? [assigneeUserId.trim()]
@@ -388,6 +415,45 @@ function parseOptionalDueAt(raw: FormDataEntryValue | null): Date | null | "inva
   return dueAt;
 }
 
+async function loadActionTenantTimeZone(tenantId: string): Promise<string> {
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { timezone: true },
+  });
+  return tenant?.timezone ?? "Europe/Zurich";
+}
+
+async function parseDeadlineAndRemindersFromForm(
+  tenantId: string,
+  formData: FormData,
+): Promise<
+  | {
+      dueAt: Date | null;
+      reminder1At: Date | null;
+      reminder2At: Date | null;
+      reminder1PresetKey: string | null;
+      reminder2PresetKey: string | null;
+    }
+  | "invalid_due"
+  | "invalid_reminder"
+> {
+  const timeZone = await loadActionTenantTimeZone(tenantId);
+  const dueAt = parseTaskDueAtFromForm({
+    dateRaw: formData.get("dueAt")?.toString(),
+    timeRaw: formData.get("dueTime")?.toString(),
+    timeZone,
+  });
+  if (dueAt === "invalid") return "invalid_due";
+
+  const reminders = parseTaskReminderFieldsFromForm(formData, timeZone);
+  if (reminders === "invalid") return "invalid_reminder";
+
+  return {
+    dueAt,
+    ...reminders,
+  };
+}
+
 function parseTaskContextFromForm(formData: FormData): {
   contextType: TaskContextType | null;
   contextId: string | null;
@@ -542,14 +608,25 @@ export async function updateAufgabeDueAtAction(
 
   try {
     const taskId = formData.get("taskId");
-    const dueAt = parseOptionalDueAt(formData.get("dueAt"));
     if (typeof taskId !== "string" || !taskId.trim()) {
       return { ok: false, message: "Aufgabe fehlt." };
     }
-    if (dueAt === "invalid") {
+
+    const schedule = await parseDeadlineAndRemindersFromForm(ctx.tenantId, formData);
+    if (schedule === "invalid_due") {
       return { ok: false, message: "Ungültiges Fälligkeitsdatum." };
     }
-    await updateTask(ctx, taskId.trim(), { dueAt });
+    if (schedule === "invalid_reminder") {
+      return { ok: false, message: "Ungültige Erinnerung." };
+    }
+
+    await updateTask(ctx, taskId.trim(), {
+      dueAt: schedule.dueAt,
+      reminder1At: schedule.reminder1At,
+      reminder2At: schedule.reminder2At,
+      reminder1PresetKey: schedule.reminder1PresetKey,
+      reminder2PresetKey: schedule.reminder2PresetKey,
+    });
     revalidateTaskPaths(taskId.trim());
     return { ok: true };
   } catch (error) {
@@ -635,6 +712,11 @@ export async function createTaskSeriesAction(
         : 59;
 
     const orgVisibility = parseOrgVisibilityFromForm(formData);
+    const reminder1PresetKey = parseTaskReminderPresetKey(formData.get("reminder1Preset"));
+    const reminder2PresetKey = parseTaskReminderPresetKey(formData.get("reminder2Preset"));
+    if (reminder1PresetKey === "invalid" || reminder2PresetKey === "invalid") {
+      return { ok: false, message: "Ungültige Serien-Erinnerung." };
+    }
 
     const created = await createTaskSeries(ctx, {
       title,
@@ -646,6 +728,8 @@ export async function createTaskSeriesAction(
       monthDay,
       dueHour,
       dueMinute,
+      reminder1PresetKey,
+      reminder2PresetKey,
       timezone: timezone.trim(),
       startsOn,
       assigneeUserIds: parseAssigneeIds(formData.get("assigneeUserIds")),
@@ -817,11 +901,14 @@ export async function createAufgabeFullAction(
     const title = formData.get("title");
     const description = formData.get("description");
     const priority = parsePriority(formData.get("priority"));
-    const dueAt = parseOptionalDueAt(formData.get("dueAt"));
+    const schedule = await parseDeadlineAndRemindersFromForm(ctx.tenantId, formData);
     const assigneeRaw = formData.get("assigneeUserIds");
 
-    if (dueAt === "invalid") {
+    if (schedule === "invalid_due") {
       return { ok: false, message: "Ungültiges Fälligkeitsdatum." };
+    }
+    if (schedule === "invalid_reminder") {
+      return { ok: false, message: "Ungültige Erinnerung." };
     }
 
     let assigneeUserIds: string[] = [];
@@ -840,7 +927,11 @@ export async function createAufgabeFullAction(
       title: typeof title === "string" ? title : "",
       description: typeof description === "string" ? description : null,
       priority: priority ?? "NORMAL",
-      dueAt,
+      dueAt: schedule.dueAt,
+      reminder1At: schedule.reminder1At,
+      reminder2At: schedule.reminder2At,
+      reminder1PresetKey: schedule.reminder1PresetKey,
+      reminder2PresetKey: schedule.reminder2PresetKey,
       assigneeUserIds,
       contextType,
       contextId,

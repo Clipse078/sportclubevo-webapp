@@ -35,6 +35,7 @@ import {
   validateTaskOrgVisibilityMutation,
 } from "./task-org-mutation-policy";
 import { resolvePropagatedTaskOrgVisibility } from "./task-org-propagation";
+import { resolveTaskReminderSchedule } from "./task-reminder-schedule";
 
 const SERIES_INCLUDE = {
   assigneeTemplates: true,
@@ -51,6 +52,8 @@ export type TaskSeriesSubtaskTemplateInput = {
   description?: string | null;
   priority?: TaskPriority;
   dueOffsetDays?: number;
+  reminder1PresetKey?: string | null;
+  reminder2PresetKey?: string | null;
   assigneeUserIds?: string[];
 };
 
@@ -64,6 +67,8 @@ export type CreateTaskSeriesInput = {
   monthDay?: number | null;
   dueHour?: number;
   dueMinute?: number;
+  reminder1PresetKey?: string | null;
+  reminder2PresetKey?: string | null;
   timezone: string;
   startsOn?: Date | null;
   endsOn?: Date | null;
@@ -171,6 +176,8 @@ async function replaceSubtaskTemplates(
         description: template.description?.trim() || null,
         priority: template.priority ?? "NORMAL",
         dueOffsetDays: template.dueOffsetDays ?? 0,
+        reminder1PresetKey: template.reminder1PresetKey ?? null,
+        reminder2PresetKey: template.reminder2PresetKey ?? null,
         orderIndex: index,
       },
     });
@@ -276,6 +283,8 @@ export async function createTaskSeries(
         monthDay: input.monthDay ?? null,
         dueHour: input.dueHour ?? 23,
         dueMinute: input.dueMinute ?? 59,
+        reminder1PresetKey: input.reminder1PresetKey ?? null,
+        reminder2PresetKey: input.reminder2PresetKey ?? null,
         timezone: input.timezone,
         startsOn: input.startsOn ?? null,
         endsOn: input.endsOn ?? null,
@@ -305,6 +314,8 @@ export async function createTaskSeries(
           description: template.description?.trim() || null,
           priority: template.priority ?? "NORMAL",
           dueOffsetDays: template.dueOffsetDays ?? 0,
+          reminder1PresetKey: template.reminder1PresetKey ?? null,
+          reminder2PresetKey: template.reminder2PresetKey ?? null,
           orderIndex: index,
         },
       });
@@ -409,6 +420,10 @@ export async function updateTaskSeries(
         monthDay: input.monthDay !== undefined ? input.monthDay : undefined,
         dueHour: input.dueHour,
         dueMinute: input.dueMinute,
+        reminder1PresetKey:
+          input.reminder1PresetKey !== undefined ? input.reminder1PresetKey : undefined,
+        reminder2PresetKey:
+          input.reminder2PresetKey !== undefined ? input.reminder2PresetKey : undefined,
         timezone: input.timezone,
         startsOn: input.startsOn,
         endsOn: input.endsOn,
@@ -543,6 +558,15 @@ async function createOccurrenceTree(
     series.timezone,
   );
 
+  const parentReminders = resolveTaskReminderSchedule({
+    dueAt: parentDueAt,
+    reminder1At: null,
+    reminder2At: null,
+    reminder1PresetKey: series.reminder1PresetKey,
+    reminder2PresetKey: series.reminder2PresetKey,
+    timeZone: series.timezone,
+  });
+
   const occurrenceOrg = resolvePropagatedTaskOrgVisibility({
     visibilityScope: series.visibilityScope,
     orgUnitId: series.orgUnitId,
@@ -557,7 +581,11 @@ async function createOccurrenceTree(
         description: series.description,
         priority: series.priority,
         status: TaskStatusEnum.OPEN,
-        dueAt: parentDueAt,
+        dueAt: parentReminders.dueAt,
+        reminder1At: parentReminders.reminder1At,
+        reminder2At: parentReminders.reminder2At,
+        reminder1PresetKey: parentReminders.reminder1PresetKey,
+        reminder2PresetKey: parentReminders.reminder2PresetKey,
         taskSeriesId: series.id,
         seriesOccurrenceKey: occurrenceKey,
         orgUnitId: occurrenceOrg.orgUnitId,
@@ -616,6 +644,15 @@ async function createOccurrenceTree(
       series.timezone,
     );
 
+    const childReminders = resolveTaskReminderSchedule({
+      dueAt: childDueAt,
+      reminder1At: null,
+      reminder2At: null,
+      reminder1PresetKey: template.reminder1PresetKey,
+      reminder2PresetKey: template.reminder2PresetKey,
+      timeZone: series.timezone,
+    });
+
     const child = await tx.task.create({
       data: {
         tenantId: ctx.tenantId,
@@ -624,7 +661,11 @@ async function createOccurrenceTree(
         description: template.description,
         priority: template.priority,
         status: TaskStatusEnum.OPEN,
-        dueAt: childDueAt,
+        dueAt: childReminders.dueAt,
+        reminder1At: childReminders.reminder1At,
+        reminder2At: childReminders.reminder2At,
+        reminder1PresetKey: childReminders.reminder1PresetKey,
+        reminder2PresetKey: childReminders.reminder2PresetKey,
         orgUnitId: occurrenceOrg.orgUnitId,
         visibilityScope: occurrenceOrg.visibilityScope,
         createdByUserId: ctx.userId,

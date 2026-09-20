@@ -385,6 +385,7 @@ enum NotificationType {
   TASK_DUE_SOON
   TASK_OVERDUE
   TASK_DEADLINE_CHANGED
+  TASK_REMINDER
 }
 
 enum NotificationEntityType {
@@ -2796,6 +2797,12 @@ model Task {
   status          TaskStatus    @default(OPEN)
   priority        TaskPriority  @default(NORMAL)
   dueAt           DateTime?
+  /// AUFGABEN-05 — concrete reminder trigger (absolute UTC).
+  reminder1At     DateTime?
+  reminder2At     DateTime?
+  /// Preset key when relative (SAME_DAY, DAYS_1, …); null with reminderAt = custom absolute.
+  reminder1PresetKey String?
+  reminder2PresetKey String?
   completedAt     DateTime?
   contextType     TaskContextType?
   contextId       String?
@@ -2825,6 +2832,8 @@ model Task {
   @@index([tenantId])
   @@index([tenantId, status])
   @@index([tenantId, dueAt])
+  @@index([tenantId, status, reminder1At])
+  @@index([tenantId, status, reminder2At])
   @@index([tenantId, contextType, contextId])
   @@index([parentTaskId])
   @@index([taskSeriesId])
@@ -2849,6 +2858,8 @@ model TaskSeries {
   monthDay        Int?
   dueHour         Int                     @default(23)
   dueMinute       Int                     @default(59)
+  reminder1PresetKey String?
+  reminder2PresetKey String?
   timezone        String
   startsOn        DateTime?
   endsOn          DateTime?
@@ -2894,6 +2905,8 @@ model TaskSeriesSubtaskTemplate {
   description   String?
   priority      TaskPriority @default(NORMAL)
   dueOffsetDays Int          @default(0)
+  reminder1PresetKey String?
+  reminder2PresetKey String?
   orderIndex    Int          @default(0)
 
   tenant    Tenant                              @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
