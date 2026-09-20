@@ -3,7 +3,6 @@
  */
 
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { TaskStatus } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 vi.mock("@/lib/permissions/request-effective-permissions", () => ({
