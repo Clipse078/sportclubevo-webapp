@@ -86,7 +86,7 @@ function emptyCopy(view: TaskManagementView, filtered: boolean): { title: string
     case "WIEDERKEHREND":
       return {
         title: "Keine wiederkehrenden Serien.",
-        description: "Serien werden separat verwaltet (Detail folgt in AUFGABEN-03).",
+        description: "Lege eine Serie an, um wiederkehrende operative Aufgaben automatisch zu erzeugen.",
       };
     case "DEMNAECHST":
       return {
@@ -164,7 +164,20 @@ export default function AufgabenManagementWorkspace({
         title="Aufgaben"
         subtitle="Operatives Task Center — Arbeit im Verein koordinieren und nachverfolgen."
         subtitleTestId="aufgaben-header-subtitle"
-        actions={<AufgabenQuickCreateDialog canCreate={canCreate} assigneeOptions={assigneeOptions} />}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {canManage ? (
+              <Link
+                href="/dashboard/aufgaben/serien/neu"
+                className="fca-button-secondary inline-flex items-center text-sm"
+                data-testid="aufgaben-recurring-create-header"
+              >
+                Wiederkehrend
+              </Link>
+            ) : null}
+            <AufgabenQuickCreateDialog canCreate={canCreate} assigneeOptions={assigneeOptions} canManage={canManage} />
+          </div>
+        }
       />
 
       <PlanningManagementKpiCards
@@ -263,7 +276,12 @@ export default function AufgabenManagementWorkspace({
                   <p className="mt-1 text-sm text-[var(--muted)]">{empty.description}</p>
                 </div>
               ) : (
-                <AufgabenSeriesList rows={seriesRows} locale={locale} timeZone={timeZone} />
+                <AufgabenSeriesList
+                  rows={seriesRows}
+                  locale={locale}
+                  timeZone={timeZone}
+                  canManage={canManage}
+                />
               )
             ) : items.length === 0 ? (
               <div className="px-4 py-10 text-center" data-testid="aufgaben-empty-state">

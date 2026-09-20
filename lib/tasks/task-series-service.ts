@@ -2,7 +2,12 @@
  * AUFGABEN-01B — recurrence series + bounded occurrence generation.
  */
 
-import type { Prisma, TaskPriority, TaskRecurrenceFrequency, TaskSeriesWeekday } from "@prisma/client";
+import {
+  Prisma,
+  type TaskPriority,
+  type TaskRecurrenceFrequency,
+  type TaskSeriesWeekday,
+} from "@prisma/client";
 import { TaskSeriesStatus, TaskStatus as TaskStatusEnum } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { writeAuditRecord } from "@/lib/audit/audit-record";
@@ -15,7 +20,7 @@ import {
   localDateTimeToUtc,
 } from "./recurrence-dates";
 import type { TaskServiceContext } from "./types";
-import { hasTaskPermission } from "./visibility";
+import { buildTaskVisibilityWhere, hasTaskPermission } from "./visibility";
 
 const SERIES_INCLUDE = {
   assigneeTemplates: true,
@@ -52,6 +57,10 @@ export type CreateTaskSeriesInput = {
   subtaskTemplates?: TaskSeriesSubtaskTemplateInput[];
 };
 
+export type UpdateTaskSeriesInput = Partial<CreateTaskSeriesInput> & {
+  subtaskTemplates?: TaskSeriesSubtaskTemplateInput[];
+};
+
 function assertSeriesManage(ctx: TaskServiceContext) {
   if (!hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE)) {
     throw new TaskForbiddenError("Missing tasks.manage");
@@ -81,6 +90,79 @@ async function requireSeries(ctx: TaskServiceContext, seriesId: string): Promise
   return series;
 }
 
+function buildSeriesReadWhere(ctx: TaskServiceContext): Prisma.TaskSeriesWhereInput {
+  if (hasTaskPermission(ctx, PERMISSIONS.TASKS_VIEW_ALL)) {
+    return { tenantId: ctx.tenantId };
+  }
+  const taskVisibility = buildTaskVisibilityWhere(ctx);
+  return {
+    tenantId: ctx.tenantId,
+    OR: [
+      { createdByUserId: ctx.userId },
+      {
+        assigneeTemplates: {
+          some: { userId: ctx.userId, tenantId: ctx.tenantId },
+        },
+      },
+      { occurrences: { some: taskVisibility } },
+    ],
+  };
+}
+
+export async function getTaskSeriesForRead(ctx: TaskServiceContext, seriesId: string) {
+  const series = await prisma.taskSeries.findFirst({
+    where: { AND: [buildSeriesReadWhere(ctx), { id: seriesId }] },
+    include: SERIES_INCLUDE,
+  });
+  if (!series) throw new TaskNotFoundError(seriesId);
+  return series;
+}
+
+async function replaceSubtaskTemplates(
+  tx: Prisma.TransactionClient,
+  ctx: TaskServiceContext,
+  seriesId: string,
+  templates: TaskSeriesSubtaskTemplateInput[],
+) {
+  const existing = await tx.taskSeriesSubtaskTemplate.findMany({
+    where: { seriesId, tenantId: ctx.tenantId },
+    select: { id: true },
+  });
+  if (existing.length) {
+    await tx.taskSeriesSubtaskAssigneeTemplate.deleteMany({
+      where: { templateId: { in: existing.map((e) => e.id) }, tenantId: ctx.tenantId },
+    });
+    await tx.taskSeriesSubtaskTemplate.deleteMany({
+      where: { seriesId, tenantId: ctx.tenantId },
+    });
+  }
+
+  for (const [index, template] of templates.entries()) {
+    await validateAssigneeUserIds(ctx.tenantId, template.assigneeUserIds ?? []);
+    const createdTemplate = await tx.taskSeriesSubtaskTemplate.create({
+      data: {
+        tenantId: ctx.tenantId,
+        seriesId,
+        title: template.title.trim(),
+        description: template.description?.trim() || null,
+        priority: template.priority ?? "NORMAL",
+        dueOffsetDays: template.dueOffsetDays ?? 0,
+        orderIndex: index,
+      },
+    });
+    const assignees = [...new Set(template.assigneeUserIds ?? [])];
+    if (assignees.length) {
+      await tx.taskSeriesSubtaskAssigneeTemplate.createMany({
+        data: assignees.map((userId) => ({
+          tenantId: ctx.tenantId,
+          templateId: createdTemplate.id,
+          userId,
+        })),
+      });
+    }
+  }
+}
+
 async function recordSeriesAudit(
   tx: Prisma.TransactionClient,
   input: {
@@ -104,7 +186,26 @@ async function recordSeriesAudit(
   });
 }
 
+function isPrismaUniqueConstraintError(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    return true;
+  }
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code: string }).code === "P2002"
+  );
+}
+
 function validateSeriesShape(input: CreateTaskSeriesInput) {
+  if (!input.title.trim()) {
+    throw new TaskValidationError("title is required");
+  }
+  const interval = input.intervalCount ?? 1;
+  if (!Number.isFinite(interval) || interval <= 0) {
+    throw new TaskValidationError("intervalCount must be greater than 0");
+  }
   if (input.frequency === "WEEKLY" && !input.weekday) {
     throw new TaskValidationError("weekday is required for WEEKLY series");
   }
@@ -205,13 +306,29 @@ export async function createTaskSeries(
 export async function updateTaskSeries(
   ctx: TaskServiceContext,
   seriesId: string,
-  input: Partial<CreateTaskSeriesInput>,
+  input: UpdateTaskSeriesInput,
 ) {
   assertSeriesManage(ctx);
   const existing = await requireSeries(ctx, seriesId);
 
+  if (input.frequency || input.weekday !== undefined || input.monthDay !== undefined) {
+    validateSeriesShape({
+      title: existing.title,
+      frequency: input.frequency ?? existing.frequency,
+      weekday: input.weekday !== undefined ? input.weekday : existing.weekday,
+      monthDay: input.monthDay !== undefined ? input.monthDay : existing.monthDay,
+      timezone: input.timezone ?? existing.timezone,
+    });
+  }
+
   if (input.assigneeUserIds) {
     await validateAssigneeUserIds(ctx.tenantId, input.assigneeUserIds);
+  }
+
+  if (input.subtaskTemplates) {
+    for (const template of input.subtaskTemplates) {
+      await validateAssigneeUserIds(ctx.tenantId, template.assigneeUserIds ?? []);
+    }
   }
 
   return prisma.$transaction(async (tx) => {
@@ -224,9 +341,10 @@ export async function updateTaskSeries(
             ? input.description?.trim() || null
             : undefined,
         priority: input.priority,
+        frequency: input.frequency,
         intervalCount: input.intervalCount,
-        weekday: input.weekday ?? undefined,
-        monthDay: input.monthDay ?? undefined,
+        weekday: input.weekday !== undefined ? input.weekday : undefined,
+        monthDay: input.monthDay !== undefined ? input.monthDay : undefined,
         dueHour: input.dueHour,
         dueMinute: input.dueMinute,
         timezone: input.timezone,
@@ -240,13 +358,19 @@ export async function updateTaskSeries(
       await tx.taskSeriesAssigneeTemplate.deleteMany({
         where: { seriesId: existing.id, tenantId: ctx.tenantId },
       });
-      await tx.taskSeriesAssigneeTemplate.createMany({
-        data: input.assigneeUserIds.map((userId) => ({
-          tenantId: ctx.tenantId,
-          seriesId: existing.id,
-          userId,
-        })),
-      });
+      if (input.assigneeUserIds.length) {
+        await tx.taskSeriesAssigneeTemplate.createMany({
+          data: input.assigneeUserIds.map((userId) => ({
+            tenantId: ctx.tenantId,
+            seriesId: existing.id,
+            userId,
+          })),
+        });
+      }
+    }
+
+    if (input.subtaskTemplates) {
+      await replaceSubtaskTemplates(tx, ctx, existing.id, input.subtaskTemplates);
     }
 
     await recordSeriesAudit(tx, {
@@ -258,7 +382,10 @@ export async function updateTaskSeries(
       afterJson: { title: updated.title },
     });
 
-    return updated;
+    return tx.taskSeries.findFirstOrThrow({
+      where: { id: existing.id },
+      include: SERIES_INCLUDE,
+    });
   });
 }
 
@@ -270,6 +397,23 @@ async function setSeriesStatus(
 ) {
   assertSeriesManage(ctx);
   const existing = await requireSeries(ctx, seriesId);
+
+  if (status === TaskSeriesStatus.PAUSED && existing.status !== TaskSeriesStatus.ACTIVE) {
+    throw new TaskValidationError("Only ACTIVE series can be paused");
+  }
+  if (
+    status === TaskSeriesStatus.ACTIVE &&
+    auditAction === "TASK_SERIES_RESUMED" &&
+    existing.status !== TaskSeriesStatus.PAUSED
+  ) {
+    throw new TaskValidationError("Only PAUSED series can be resumed");
+  }
+  if (
+    status === TaskSeriesStatus.ENDED &&
+    existing.status === TaskSeriesStatus.ENDED
+  ) {
+    throw new TaskValidationError("Series is already ended");
+  }
 
   return prisma.$transaction(async (tx) => {
     const updated = await tx.taskSeries.update({
@@ -321,19 +465,31 @@ async function createOccurrenceTree(
     series.timezone,
   );
 
-  const parent = await tx.task.create({
-    data: {
-      tenantId: ctx.tenantId,
-      title: series.title,
-      description: series.description,
-      priority: series.priority,
-      status: TaskStatusEnum.OPEN,
-      dueAt: parentDueAt,
-      taskSeriesId: series.id,
-      seriesOccurrenceKey: occurrenceKey,
-      createdByUserId: ctx.userId,
-    },
-  });
+  let parent: { id: string };
+  try {
+    parent = await tx.task.create({
+      data: {
+        tenantId: ctx.tenantId,
+        title: series.title,
+        description: series.description,
+        priority: series.priority,
+        status: TaskStatusEnum.OPEN,
+        dueAt: parentDueAt,
+        taskSeriesId: series.id,
+        seriesOccurrenceKey: occurrenceKey,
+        createdByUserId: ctx.userId,
+      },
+    });
+  } catch (error) {
+    if (isPrismaUniqueConstraintError(error)) {
+      const raced = await tx.task.findFirst({
+        where: { tenantId: ctx.tenantId, seriesOccurrenceKey: occurrenceKey },
+        select: { id: true },
+      });
+      if (raced) return raced.id;
+    }
+    throw error;
+  }
 
   const parentAssignees = series.assigneeTemplates.map((a) => a.userId);
   if (parentAssignees.length) {
@@ -395,15 +551,20 @@ async function createOccurrenceTree(
   return parent.id;
 }
 
-export async function generateTaskOccurrences(
-  ctx: TaskServiceContext,
+export async function generateTaskOccurrencesInternal(
+  tenantId: string,
+  actorUserId: string,
   seriesId?: string,
 ): Promise<{ generatedTaskIds: string[] }> {
-  assertSeriesManage(ctx);
+  const ctx: TaskServiceContext = {
+    tenantId,
+    userId: actorUserId,
+    permissionKeys: [PERMISSIONS.TASKS_MANAGE],
+  };
 
   const seriesList = await prisma.taskSeries.findMany({
     where: {
-      tenantId: ctx.tenantId,
+      tenantId,
       status: TaskSeriesStatus.ACTIVE,
       ...(seriesId ? { id: seriesId } : {}),
     },
@@ -427,4 +588,12 @@ export async function generateTaskOccurrences(
   }
 
   return { generatedTaskIds };
+}
+
+export async function generateTaskOccurrences(
+  ctx: TaskServiceContext,
+  seriesId?: string,
+): Promise<{ generatedTaskIds: string[] }> {
+  assertSeriesManage(ctx);
+  return generateTaskOccurrencesInternal(ctx.tenantId, ctx.userId, seriesId);
 }

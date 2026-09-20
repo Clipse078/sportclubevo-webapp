@@ -11,10 +11,15 @@ import { TASK_PRIORITY_LABELS } from "@/lib/tasks/management-labels";
 
 type Props = {
   canCreate: boolean;
+  canManage?: boolean;
   assigneeOptions: TaskAssigneeOption[];
 };
 
-export default function AufgabenQuickCreateDialog({ canCreate, assigneeOptions }: Props) {
+export default function AufgabenQuickCreateDialog({
+  canCreate,
+  canManage = false,
+  assigneeOptions,
+}: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -140,14 +145,26 @@ export default function AufgabenQuickCreateDialog({ canCreate, assigneeOptions }
               </label>
 
               <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
-                <Link
-                  href="/dashboard/aufgaben/neu"
-                  className="mr-auto text-xs font-medium text-[var(--primary)] hover:underline"
-                  onClick={() => setOpen(false)}
-                  data-testid="aufgaben-create-more-details"
-                >
-                  Weitere Details
-                </Link>
+                <div className="mr-auto flex flex-col gap-1">
+                  <Link
+                    href="/dashboard/aufgaben/neu"
+                    className="text-xs font-medium text-[var(--primary)] hover:underline"
+                    onClick={() => setOpen(false)}
+                    data-testid="aufgaben-create-more-details"
+                  >
+                    Weitere Details
+                  </Link>
+                  {canManage ? (
+                    <Link
+                      href="/dashboard/aufgaben/serien/neu"
+                      className="text-xs font-medium text-[var(--primary)] hover:underline"
+                      onClick={() => setOpen(false)}
+                      data-testid="aufgaben-create-recurring"
+                    >
+                      Wiederkehrende Aufgabe erstellen
+                    </Link>
+                  ) : null}
+                </div>
                 <button
                   type="button"
                   className="fca-button-secondary text-sm"

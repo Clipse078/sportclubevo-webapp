@@ -209,15 +209,19 @@ describe("AUFGABEN-03 loadTaskWorkspace", () => {
     mocks.taskFindMany.mockResolvedValue([]);
     mocks.taskSeriesFindFirst.mockResolvedValue({
       id: "series-1",
+      tenantId: TENANT,
+      title: "Wochenplan kontrollieren",
       frequency: "WEEKLY",
       intervalCount: 1,
       weekday: "SUNDAY",
       monthDay: null,
+      assigneeTemplates: [],
+      subtaskTemplates: [],
     });
     mocks.userFindFirst.mockResolvedValue(null);
 
     const bundle = await loadTaskWorkspace(managerCtx(), TASK_ID);
-    expect(bundle.seriesRecurrenceLabel).toBe("Wöchentlich · Sonntag");
+    expect(bundle.seriesRecurrenceLabel).toBe("Jeden Sonntag");
   });
 
   it("A — unauthorized task surfaces as forbidden for personal scope", async () => {

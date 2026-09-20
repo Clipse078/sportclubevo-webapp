@@ -46,19 +46,43 @@ export function formatTaskSeriesRecurrenceLabel(input: {
   if (input.frequency === "WEEKLY") {
     const day = input.weekday ? WEEKDAY_LABELS[input.weekday] : "—";
     if (input.intervalCount <= 1) {
-      return `Wöchentlich · ${day}`;
+      return `Jeden ${day}`;
     }
     return `Alle ${input.intervalCount} Wochen · ${day}`;
   }
   if (input.frequency === "MONTHLY") {
     const day = input.monthDay ?? "—";
     if (input.intervalCount <= 1) {
-      return `Monatlich · Tag ${day}`;
+      return `Jeden Monat · am ${day}.`;
     }
-    return `Alle ${input.intervalCount} Monate · Tag ${day}`;
+    return `Alle ${input.intervalCount} Monate · am ${day}.`;
   }
   return "Wiederkehrend";
 }
+
+export function formatSeriesDeadlineRule(dueHour: number, dueMinute: number): string {
+  const hh = String(dueHour).padStart(2, "0");
+  const mm = String(dueMinute).padStart(2, "0");
+  return `Fällig am Serientermin um ${hh}:${mm}`;
+}
+
+export function formatSubtaskDueOffsetDays(offset: number): string {
+  if (offset === 0) return "Am Serientermin";
+  if (offset < 0) {
+    const days = Math.abs(offset);
+    return days === 1 ? "1 Tag vorher" : `${days} Tage vorher`;
+  }
+  return offset === 1 ? "1 Tag danach" : `${offset} Tage danach`;
+}
+
+export const TASK_SERIES_STATUS_LABELS = {
+  ACTIVE: "Aktiv",
+  PAUSED: "Pausiert",
+  ENDED: "Beendet",
+} as const;
+
+export const TASK_SERIES_EDIT_FUTURE_NOTICE =
+  "Änderungen gelten für neu erzeugte Aufgaben. Bereits erstellte Aufgaben bleiben unverändert.";
 
 export function formatAssigneeName(firstName: string, lastName: string): string {
   return `${firstName} ${lastName}`.trim();

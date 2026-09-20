@@ -177,15 +177,35 @@ export function listMonthlyOccurrenceLocalDates(input: {
   return dates;
 }
 
-export function listOccurrenceLocalDatesForSeries(series: {
-  frequency: TaskRecurrenceFrequency;
-  intervalCount: number;
-  weekday: TaskSeriesWeekday | null;
-  monthDay: number | null;
-  timezone: string;
-  startsOn: Date | null;
-  endsOn: Date | null;
-}): string[] {
+export function getNextScheduledOccurrenceLocalDate(
+  series: {
+    frequency: TaskRecurrenceFrequency;
+    intervalCount: number;
+    weekday: TaskSeriesWeekday | null;
+    monthDay: number | null;
+    timezone: string;
+    startsOn: Date | null;
+    endsOn: Date | null;
+  },
+  now: Date = new Date(),
+): string | null {
+  const dates = listOccurrenceLocalDatesForSeries(series, now);
+  const todayIso = formatLocalDateIso(now, series.timezone);
+  return dates.find((d) => d >= todayIso) ?? dates[0] ?? null;
+}
+
+export function listOccurrenceLocalDatesForSeries(
+  series: {
+    frequency: TaskRecurrenceFrequency;
+    intervalCount: number;
+    weekday: TaskSeriesWeekday | null;
+    monthDay: number | null;
+    timezone: string;
+    startsOn: Date | null;
+    endsOn: Date | null;
+  },
+  now?: Date,
+): string[] {
   if (series.frequency === "WEEKLY") {
     if (!series.weekday) return [];
     return listWeeklyOccurrenceLocalDates({
@@ -194,6 +214,7 @@ export function listOccurrenceLocalDatesForSeries(series: {
       timeZone: series.timezone,
       startsOn: series.startsOn,
       endsOn: series.endsOn,
+      now,
     });
   }
 
@@ -204,5 +225,6 @@ export function listOccurrenceLocalDatesForSeries(series: {
     timeZone: series.timezone,
     startsOn: series.startsOn,
     endsOn: series.endsOn,
+    now,
   });
 }
