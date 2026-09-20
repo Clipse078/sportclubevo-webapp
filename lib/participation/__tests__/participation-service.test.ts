@@ -170,6 +170,38 @@ describe("TEAM-COCKPIT-03A — respondToParticipation", () => {
     expect(result.status).toBe("MAYBE");
   });
 
+  it("recovers from concurrent first-create unique race (P2002) via update", async () => {
+    mockTrainingEventContext();
+    mockRoster();
+    vi.mocked(prisma.participationResponse.findFirst)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        id: "response-race",
+        status: "OPEN",
+        note: null,
+      } as never);
+    vi.mocked(prisma.participationResponse.create).mockRejectedValue({
+      code: "P2002",
+      clientVersion: "test",
+    });
+    vi.mocked(prisma.participationResponse.update).mockResolvedValue({
+      id: "response-race",
+      status: "YES",
+    } as never);
+
+    const result = await respondToParticipation(TENANT_A, "user-01", {
+      personId: PERSON_ID,
+      teamSeasonId: TEAM_SEASON_ID,
+      event: { eventKind: "TRAINING", trainingSessionId: SESSION_ID },
+      status: "YES",
+      responseSource: "PARENT",
+    });
+
+    expect(result.status).toBe("YES");
+    expect(prisma.participationResponse.update).toHaveBeenCalled();
+    expect(prisma.participationResponse.create).toHaveBeenCalledTimes(1);
+  });
+
   it("updates existing response idempotently", async () => {
     mockTrainingEventContext();
     mockRoster();

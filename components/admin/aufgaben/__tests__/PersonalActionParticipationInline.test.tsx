@@ -51,6 +51,22 @@ describe("AUFGABEN-05-PARTICIPATION — inline controls", () => {
     });
   });
 
+  it("ignores double click while pending", async () => {
+    let resolveRespond: (value: { ok: true }) => void = () => {};
+    mockRespond.mockImplementation(
+      () =>
+        new Promise<{ ok: true }>((resolve) => {
+          resolveRespond = resolve;
+        }),
+    );
+    render(<PersonalActionParticipationInline participation={participation} />);
+    fireEvent.click(screen.getByTestId("personal-participation-yes"));
+    fireEvent.click(screen.getByTestId("personal-participation-yes"));
+    expect(mockRespond).toHaveBeenCalledTimes(1);
+    resolveRespond({ ok: true });
+    await waitFor(() => expect(mockRefresh).toHaveBeenCalled());
+  });
+
   it("shows error and restores controls on failure", async () => {
     mockRespond.mockResolvedValue({ ok: false, message: "Fehler beim Speichern." });
     render(<PersonalActionParticipationInline participation={participation} />);
