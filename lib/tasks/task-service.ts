@@ -714,7 +714,12 @@ export async function completeTask(
 
   if (!existing.parentTaskId) {
     const children = await prisma.task.findMany({
-      where: { tenantId: ctx.tenantId, parentTaskId: existing.id },
+      where: {
+        AND: [
+          buildTaskVisibilityWhere(ctx),
+          { parentTaskId: existing.id },
+        ],
+      },
       select: { status: true },
     });
     if (hasActionableSubtasks(children)) {
