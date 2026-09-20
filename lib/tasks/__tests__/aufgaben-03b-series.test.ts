@@ -195,6 +195,29 @@ describe("AUFGABEN-03B validation", () => {
       }),
     ).rejects.toBeInstanceOf(TaskValidationError);
   });
+
+  it("rejects empty title on create", async () => {
+    await expect(
+      createTaskSeries(manageCtx, {
+        title: "   ",
+        frequency: "WEEKLY",
+        weekday: "MONDAY",
+        timezone: "Europe/Zurich",
+      }),
+    ).rejects.toBeInstanceOf(TaskValidationError);
+  });
+
+  it("rejects non-positive interval on create", async () => {
+    await expect(
+      createTaskSeries(manageCtx, {
+        title: "X",
+        frequency: "WEEKLY",
+        weekday: "MONDAY",
+        intervalCount: 0,
+        timezone: "Europe/Zurich",
+      }),
+    ).rejects.toBeInstanceOf(TaskValidationError);
+  });
 });
 
 describe("AUFGABEN-03B resume horizon", () => {

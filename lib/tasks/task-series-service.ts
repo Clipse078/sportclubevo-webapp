@@ -2,7 +2,12 @@
  * AUFGABEN-01B — recurrence series + bounded occurrence generation.
  */
 
-import type { Prisma, TaskPriority, TaskRecurrenceFrequency, TaskSeriesWeekday } from "@prisma/client";
+import {
+  Prisma,
+  type TaskPriority,
+  type TaskRecurrenceFrequency,
+  type TaskSeriesWeekday,
+} from "@prisma/client";
 import { TaskSeriesStatus, TaskStatus as TaskStatusEnum } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { writeAuditRecord } from "@/lib/audit/audit-record";
@@ -181,7 +186,26 @@ async function recordSeriesAudit(
   });
 }
 
+function isPrismaUniqueConstraintError(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    return true;
+  }
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code: string }).code === "P2002"
+  );
+}
+
 function validateSeriesShape(input: CreateTaskSeriesInput) {
+  if (!input.title.trim()) {
+    throw new TaskValidationError("title is required");
+  }
+  const interval = input.intervalCount ?? 1;
+  if (!Number.isFinite(interval) || interval <= 0) {
+    throw new TaskValidationError("intervalCount must be greater than 0");
+  }
   if (input.frequency === "WEEKLY" && !input.weekday) {
     throw new TaskValidationError("weekday is required for WEEKLY series");
   }
@@ -374,6 +398,23 @@ async function setSeriesStatus(
   assertSeriesManage(ctx);
   const existing = await requireSeries(ctx, seriesId);
 
+  if (status === TaskSeriesStatus.PAUSED && existing.status !== TaskSeriesStatus.ACTIVE) {
+    throw new TaskValidationError("Only ACTIVE series can be paused");
+  }
+  if (
+    status === TaskSeriesStatus.ACTIVE &&
+    auditAction === "TASK_SERIES_RESUMED" &&
+    existing.status !== TaskSeriesStatus.PAUSED
+  ) {
+    throw new TaskValidationError("Only PAUSED series can be resumed");
+  }
+  if (
+    status === TaskSeriesStatus.ENDED &&
+    existing.status === TaskSeriesStatus.ENDED
+  ) {
+    throw new TaskValidationError("Series is already ended");
+  }
+
   return prisma.$transaction(async (tx) => {
     const updated = await tx.taskSeries.update({
       where: { id: existing.id },
@@ -424,19 +465,31 @@ async function createOccurrenceTree(
     series.timezone,
   );
 
-  const parent = await tx.task.create({
-    data: {
-      tenantId: ctx.tenantId,
-      title: series.title,
-      description: series.description,
-      priority: series.priority,
-      status: TaskStatusEnum.OPEN,
-      dueAt: parentDueAt,
-      taskSeriesId: series.id,
-      seriesOccurrenceKey: occurrenceKey,
-      createdByUserId: ctx.userId,
-    },
-  });
+  let parent: { id: string };
+  try {
+    parent = await tx.task.create({
+      data: {
+        tenantId: ctx.tenantId,
+        title: series.title,
+        description: series.description,
+        priority: series.priority,
+        status: TaskStatusEnum.OPEN,
+        dueAt: parentDueAt,
+        taskSeriesId: series.id,
+        seriesOccurrenceKey: occurrenceKey,
+        createdByUserId: ctx.userId,
+      },
+    });
+  } catch (error) {
+    if (isPrismaUniqueConstraintError(error)) {
+      const raced = await tx.task.findFirst({
+        where: { tenantId: ctx.tenantId, seriesOccurrenceKey: occurrenceKey },
+        select: { id: true },
+      });
+      if (raced) return raced.id;
+    }
+    throw error;
+  }
 
   const parentAssignees = series.assigneeTemplates.map((a) => a.userId);
   if (parentAssignees.length) {
