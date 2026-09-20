@@ -363,8 +363,19 @@ export function TaskWorkspacePanel({
   onClose,
 }: TaskWorkspaceViewProps) {
   const router = useRouter();
-  const { task, parentTask, subtasks, progress, seriesRecurrenceLabel, context, creator, capabilities } =
-    bundle;
+  const {
+    task,
+    parentTask,
+    subtasks,
+    progress,
+    seriesRecurrenceLabel,
+    seriesId,
+    seriesTitle,
+    canOpenSeriesWorkspace,
+    context,
+    creator,
+    capabilities,
+  } = bundle;
   const [menuOpen, setMenuOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -712,11 +723,25 @@ export function TaskWorkspacePanel({
           </PropertyRow>
 
           {seriesRecurrenceLabel ? (
-            <PropertyRow label="Serie">
-              <span className="inline-flex items-center gap-1.5 text-sm text-[var(--text-2)]">
-                <Repeat2 className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden="true" />
-                {seriesRecurrenceLabel}
-              </span>
+            <PropertyRow label="Wiederkehrende Aufgabe">
+              {canOpenSeriesWorkspace && seriesId ? (
+                <Link
+                  href={`/dashboard/aufgaben/serien/${seriesId}`}
+                  className="inline-flex items-center gap-1.5 text-sm text-[var(--sce-primary)] hover:underline"
+                  data-testid="task-workspace-series-link"
+                >
+                  <Repeat2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {seriesTitle ?? seriesRecurrenceLabel}
+                </Link>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-sm text-[var(--text-2)]">
+                  <Repeat2 className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden="true" />
+                  {seriesTitle ?? seriesRecurrenceLabel}
+                </span>
+              )}
+              {seriesTitle ? (
+                <p className="mt-0.5 text-xs text-[var(--muted)]">{seriesRecurrenceLabel}</p>
+              ) : null}
             </PropertyRow>
           ) : null}
 

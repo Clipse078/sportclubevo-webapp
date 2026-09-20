@@ -8,6 +8,7 @@ import { formatTaskSeriesRecurrenceLabel } from "./management-labels";
 import { resolveTaskContextPresentation, type TaskContextPresentation } from "./context-presentation";
 import { computeSubtaskProgress } from "./subtask-rules";
 import { getTask } from "./task-service";
+import { getTaskSeriesForRead } from "./task-series-service";
 import type {
   TaskDto,
   TaskProgressDto,
@@ -88,6 +89,8 @@ export type TaskWorkspaceBundle = {
   progress: TaskProgressDto;
   seriesRecurrenceLabel: string | null;
   seriesId: string | null;
+  seriesTitle: string | null;
+  canOpenSeriesWorkspace: boolean;
   context: TaskContextPresentation | null;
   creator: TaskWorkspaceCreator;
   capabilities: TaskWorkspaceCapabilities;
@@ -99,6 +102,10 @@ export async function loadTaskWorkspace(
 ): Promise<TaskWorkspaceBundle> {
   const task = await getTask(ctx, taskId);
 
+  const seriesRowPromise = task.taskSeriesId
+    ? getTaskSeriesForRead(ctx, task.taskSeriesId).catch(() => null)
+    : Promise.resolve(null);
+
   const [subtasks, parentTask, seriesRow, creatorUser, context] = await Promise.all([
     task.parentTaskId ? Promise.resolve([]) : loadVisibleSubtasks(ctx, task.id),
     task.parentTaskId
@@ -107,18 +114,7 @@ export async function loadTaskWorkspace(
           select: { id: true, title: true },
         })
       : Promise.resolve(null),
-    task.taskSeriesId
-      ? prisma.taskSeries.findFirst({
-          where: { id: task.taskSeriesId, tenantId: ctx.tenantId },
-          select: {
-            id: true,
-            frequency: true,
-            intervalCount: true,
-            weekday: true,
-            monthDay: true,
-          },
-        })
-      : Promise.resolve(null),
+    seriesRowPromise,
     task.createdByUserId
       ? prisma.user.findFirst({
           where: { id: task.createdByUserId },
@@ -149,6 +145,8 @@ export async function loadTaskWorkspace(
     progress,
     seriesRecurrenceLabel,
     seriesId: seriesRow?.id ?? task.taskSeriesId,
+    seriesTitle: seriesRow?.title ?? null,
+    canOpenSeriesWorkspace: Boolean(seriesRow),
     context,
     creator: creatorUser
       ? {

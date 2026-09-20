@@ -11,9 +11,18 @@ import {
   createTask,
   updateTask,
 } from "@/lib/tasks/task-service";
+import type {
+  TaskRecurrenceFrequency,
+  TaskSeriesWeekday,
+} from "@prisma/client";
 import {
   createTaskSeries,
+  endTaskSeries,
   generateTaskOccurrences,
+  pauseTaskSeries,
+  resumeTaskSeries,
+  updateTaskSeries,
+  type TaskSeriesSubtaskTemplateInput,
 } from "@/lib/tasks/task-series-service";
 import {
   ParentHasOpenSubtasksError,
@@ -32,6 +41,83 @@ function revalidateTaskPaths(taskId?: string) {
   if (taskId) {
     revalidatePath(`/dashboard/aufgaben/${taskId}`);
   }
+}
+
+function revalidateSeriesPaths(seriesId?: string) {
+  revalidatePath("/dashboard/aufgaben");
+  revalidatePath("/dashboard/aufgaben", "layout");
+  if (seriesId) {
+    revalidatePath(`/dashboard/aufgaben/serien/${seriesId}`);
+  }
+}
+
+const WEEKDAYS = [
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+  "SUNDAY",
+] as const;
+
+function parseWeekday(raw: FormDataEntryValue | null): TaskSeriesWeekday | undefined {
+  if (typeof raw === "string" && (WEEKDAYS as readonly string[]).includes(raw)) {
+    return raw as TaskSeriesWeekday;
+  }
+  return undefined;
+}
+
+function parseFrequency(raw: FormDataEntryValue | null): TaskRecurrenceFrequency | undefined {
+  if (raw === "WEEKLY" || raw === "MONTHLY") return raw;
+  return undefined;
+}
+
+function parseAssigneeIds(raw: FormDataEntryValue | null): string[] {
+  if (typeof raw !== "string" || !raw.trim()) return [];
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function parseSubtaskTemplatesJson(
+  raw: FormDataEntryValue | null,
+): TaskSeriesSubtaskTemplateInput[] {
+  if (typeof raw !== "string" || !raw.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    const templates: TaskSeriesSubtaskTemplateInput[] = [];
+    for (const item of parsed) {
+      if (!item || typeof item !== "object") continue;
+      const row = item as Record<string, unknown>;
+      if (typeof row.title !== "string" || !row.title.trim()) continue;
+      templates.push({
+        title: row.title,
+        description: typeof row.description === "string" ? row.description : null,
+        priority: parsePriority(String(row.priority ?? "")),
+        dueOffsetDays:
+          typeof row.dueOffsetDays === "number"
+            ? row.dueOffsetDays
+            : Number(row.dueOffsetDays ?? 0) || 0,
+        assigneeUserIds: Array.isArray(row.assigneeUserIds)
+          ? row.assigneeUserIds.filter((id): id is string => typeof id === "string")
+          : [],
+      });
+    }
+    return templates;
+  } catch {
+    return [];
+  }
+}
+
+function parseStartsOn(raw: FormDataEntryValue | null): Date | null | "invalid" {
+  if (raw === null || (typeof raw === "string" && !raw.trim())) return null;
+  if (typeof raw !== "string") return "invalid";
+  const d = new Date(`${raw.trim()}T12:00:00.000Z`);
+  if (Number.isNaN(d.getTime())) return "invalid";
+  return d;
 }
 
 function failure(error: unknown): AufgabenActionResult {
@@ -224,11 +310,10 @@ export async function generateSeriesOccurrencesAction(
 
   try {
     const seriesId = formData.get("seriesId");
-    await generateTaskOccurrences(
-      ctx,
-      typeof seriesId === "string" && seriesId.trim() ? seriesId.trim() : undefined,
-    );
-    revalidatePath("/dashboard/aufgaben");
+    const sid =
+      typeof seriesId === "string" && seriesId.trim() ? seriesId.trim() : undefined;
+    await generateTaskOccurrences(ctx, sid);
+    revalidateSeriesPaths(sid);
     revalidatePath("/dashboard");
     return { ok: true };
   } catch (error) {
@@ -406,6 +491,209 @@ export async function cancelAufgabeAction(
     }
     await cancelTask(ctx, taskId.trim());
     revalidateTaskPaths(taskId.trim());
+    return { ok: true };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+export async function createTaskSeriesAction(
+  formData: FormData,
+): Promise<AufgabenActionResult & { seriesId?: string }> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    const title = formData.get("title");
+    const description = formData.get("description");
+    const priority = parsePriority(formData.get("priority"));
+    const frequency = parseFrequency(formData.get("frequency"));
+    const intervalRaw = formData.get("intervalCount");
+    const weekday = parseWeekday(formData.get("weekday"));
+    const monthDayRaw = formData.get("monthDay");
+    const timezone = formData.get("timezone");
+    const dueHourRaw = formData.get("dueHour");
+    const dueMinuteRaw = formData.get("dueMinute");
+    const startsOn = parseStartsOn(formData.get("startsOn"));
+
+    if (typeof title !== "string" || !title.trim()) {
+      return { ok: false, message: "Titel fehlt." };
+    }
+    if (!frequency) {
+      return { ok: false, message: "Rhythmus fehlt." };
+    }
+    if (typeof timezone !== "string" || !timezone.trim()) {
+      return { ok: false, message: "Zeitzone fehlt." };
+    }
+    if (startsOn === "invalid") {
+      return { ok: false, message: "Ungültiges Startdatum." };
+    }
+
+    const intervalCount =
+      typeof intervalRaw === "string" && intervalRaw.trim()
+        ? Number(intervalRaw)
+        : 1;
+    if (!Number.isFinite(intervalCount) || intervalCount < 1) {
+      return { ok: false, message: "Ungültiges Intervall." };
+    }
+
+    let monthDay: number | null = null;
+    if (frequency === "MONTHLY") {
+      monthDay =
+        typeof monthDayRaw === "string" && monthDayRaw.trim()
+          ? Number(monthDayRaw)
+          : NaN;
+      if (!Number.isFinite(monthDay)) {
+        return { ok: false, message: "Monatstag fehlt." };
+      }
+    }
+
+    const dueHour =
+      typeof dueHourRaw === "string" && dueHourRaw.trim() ? Number(dueHourRaw) : 23;
+    const dueMinute =
+      typeof dueMinuteRaw === "string" && dueMinuteRaw.trim()
+        ? Number(dueMinuteRaw)
+        : 59;
+
+    const created = await createTaskSeries(ctx, {
+      title,
+      description: typeof description === "string" ? description : null,
+      priority: priority ?? "NORMAL",
+      frequency,
+      intervalCount,
+      weekday: frequency === "WEEKLY" ? weekday ?? null : null,
+      monthDay,
+      dueHour,
+      dueMinute,
+      timezone: timezone.trim(),
+      startsOn,
+      assigneeUserIds: parseAssigneeIds(formData.get("assigneeUserIds")),
+      subtaskTemplates: parseSubtaskTemplatesJson(formData.get("subtaskTemplatesJson")),
+    });
+
+    await generateTaskOccurrences(ctx, created.id);
+    revalidateSeriesPaths(created.id);
+    return { ok: true, seriesId: created.id };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+export async function updateTaskSeriesAction(
+  formData: FormData,
+): Promise<AufgabenActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    const seriesId = formData.get("seriesId");
+    if (typeof seriesId !== "string" || !seriesId.trim()) {
+      return { ok: false, message: "Serie fehlt." };
+    }
+
+    const frequency = parseFrequency(formData.get("frequency"));
+    const weekday = parseWeekday(formData.get("weekday"));
+    const monthDayRaw = formData.get("monthDay");
+    const startsOn = parseStartsOn(formData.get("startsOn"));
+    if (startsOn === "invalid") {
+      return { ok: false, message: "Ungültiges Startdatum." };
+    }
+
+    let monthDay: number | null | undefined;
+    if (typeof monthDayRaw === "string" && monthDayRaw.trim()) {
+      monthDay = Number(monthDayRaw);
+    }
+
+    const intervalRaw = formData.get("intervalCount");
+    const intervalCount =
+      typeof intervalRaw === "string" && intervalRaw.trim()
+        ? Number(intervalRaw)
+        : undefined;
+
+    const title = formData.get("title");
+    const description = formData.get("description");
+    const priority = parsePriority(formData.get("priority"));
+    const timezone = formData.get("timezone");
+    const dueHourRaw = formData.get("dueHour");
+    const dueMinuteRaw = formData.get("dueMinute");
+    const subtaskJson = formData.get("subtaskTemplatesJson");
+
+    await updateTaskSeries(ctx, seriesId.trim(), {
+      title: typeof title === "string" ? title : undefined,
+      description: typeof description === "string" ? description : undefined,
+      priority,
+      frequency,
+      intervalCount,
+      weekday,
+      monthDay,
+      timezone: typeof timezone === "string" ? timezone : undefined,
+      dueHour:
+        typeof dueHourRaw === "string" && dueHourRaw.trim()
+          ? Number(dueHourRaw)
+          : undefined,
+      dueMinute:
+        typeof dueMinuteRaw === "string" && dueMinuteRaw.trim()
+          ? Number(dueMinuteRaw)
+          : undefined,
+      startsOn: startsOn === undefined ? undefined : startsOn,
+      assigneeUserIds: formData.has("assigneeUserIds")
+        ? parseAssigneeIds(formData.get("assigneeUserIds"))
+        : undefined,
+      subtaskTemplates: formData.has("subtaskTemplatesJson")
+        ? parseSubtaskTemplatesJson(subtaskJson)
+        : undefined,
+    });
+
+    revalidateSeriesPaths(seriesId.trim());
+    return { ok: true };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+export async function pauseTaskSeriesAction(formData: FormData): Promise<AufgabenActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+  try {
+    const seriesId = formData.get("seriesId");
+    if (typeof seriesId !== "string" || !seriesId.trim()) {
+      return { ok: false, message: "Serie fehlt." };
+    }
+    await pauseTaskSeries(ctx, seriesId.trim());
+    revalidateSeriesPaths(seriesId.trim());
+    return { ok: true };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+export async function resumeTaskSeriesAction(formData: FormData): Promise<AufgabenActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+  try {
+    const seriesId = formData.get("seriesId");
+    if (typeof seriesId !== "string" || !seriesId.trim()) {
+      return { ok: false, message: "Serie fehlt." };
+    }
+    await resumeTaskSeries(ctx, seriesId.trim());
+    await generateTaskOccurrences(ctx, seriesId.trim());
+    revalidateSeriesPaths(seriesId.trim());
+    return { ok: true };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+export async function endTaskSeriesAction(formData: FormData): Promise<AufgabenActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+  try {
+    const seriesId = formData.get("seriesId");
+    if (typeof seriesId !== "string" || !seriesId.trim()) {
+      return { ok: false, message: "Serie fehlt." };
+    }
+    await endTaskSeries(ctx, seriesId.trim());
+    revalidateSeriesPaths(seriesId.trim());
     return { ok: true };
   } catch (error) {
     return failure(error);
