@@ -31,6 +31,7 @@ export default async function AufgabenTaskDetailPage({ params, searchParams }: P
           locale={data.locale}
           timeZone={data.timeZone}
           backHref={data.backHref}
+          currentUserId={data.currentUserId}
           presentation="page"
         />
       </div>

@@ -35,10 +35,10 @@ import type {
 import {
   buildTaskVisibilityWhere,
   canManageTask,
-  canReadTask,
   hasTaskPermission,
   loadAuthorizedParentTaskRefs,
 } from "./visibility";
+import { TASK_AUTH_INCLUDE, requireVisibleTask } from "./task-access";
 import {
   computeNewAssigneeRows,
   emitTaskAssignmentNotifications,
@@ -58,15 +58,7 @@ import {
   resolveTaskReminderSchedule,
 } from "./task-reminder-schedule";
 
-const TASK_INCLUDE = {
-  assignees: {
-    include: {
-      user: { select: { id: true, firstName: true, lastName: true } },
-    },
-    orderBy: { assignedAt: "asc" as const },
-  },
-  orgUnit: { select: { tenantId: true } },
-} satisfies Prisma.TaskInclude;
+const TASK_INCLUDE = TASK_AUTH_INCLUDE;
 
 type TaskRow = Prisma.TaskGetPayload<{ include: typeof TASK_INCLUDE }>;
 
@@ -136,37 +128,6 @@ function normalizeTitle(title: string): string {
     throw new TaskValidationError("Title must not exceed 500 characters");
   }
   return trimmed;
-}
-
-async function loadTaskForTenant(
-  tenantId: string,
-  taskId: string,
-): Promise<TaskRow | null> {
-  return prisma.task.findFirst({
-    where: { id: taskId, tenantId },
-    include: TASK_INCLUDE,
-  });
-}
-
-async function requireVisibleTask(
-  ctx: TaskServiceContext,
-  taskId: string,
-): Promise<TaskRow> {
-  assertCanView(ctx);
-  const task = await loadTaskForTenant(ctx.tenantId, taskId);
-  if (!task) throw new TaskNotFoundError(taskId);
-
-  const visible = canReadTask(ctx, {
-    tenantId: task.tenantId,
-    createdByUserId: task.createdByUserId,
-    assigneeUserIds: task.assignees.map((a) => a.userId),
-    visibilityScope: task.visibilityScope,
-    orgUnitId: task.orgUnitId,
-    orgUnitTenantId: task.orgUnit?.tenantId ?? null,
-  });
-  if (!visible) throw new TaskForbiddenError();
-
-  return task;
 }
 
 async function validateAssigneeUserIds(

@@ -44,9 +44,24 @@ import {
   parseTaskDueAtFromForm,
   parseTaskReminderPresetKey,
 } from "@/lib/tasks/task-reminder-schedule";
+import {
+  createTaskComment,
+  deleteTaskComment,
+  updateTaskComment,
+} from "@/lib/tasks/task-comment-service";
+import { loadTaskTimelinePage } from "@/lib/tasks/task-timeline-service";
+import type { TaskTimelinePageDto } from "@/lib/tasks/task-timeline-types";
 
 export type AufgabenActionResult =
   | { ok: true; taskId?: string }
+  | { ok: false; message: string };
+
+export type TaskTimelineActionResult =
+  | { ok: true; page: TaskTimelinePageDto }
+  | { ok: false; message: string };
+
+export type TaskCommentActionResult =
+  | { ok: true; commentId: string }
   | { ok: false; message: string };
 
 function revalidateTaskPaths(taskId?: string) {
@@ -132,6 +147,11 @@ function parseStartsOn(raw: FormDataEntryValue | null): Date | null | "invalid" 
   const d = new Date(`${raw.trim()}T12:00:00.000Z`);
   if (Number.isNaN(d.getTime())) return "invalid";
   return d;
+}
+
+function actionErrorMessage(error: unknown): string {
+  const result = failure(error);
+  return result.ok ? "Unbekannter Fehler." : result.message;
 }
 
 function failure(error: unknown): AufgabenActionResult {
@@ -942,5 +962,77 @@ export async function createAufgabeFullAction(
     return { ok: true, taskId: created.id };
   } catch (error) {
     return failure(error);
+  }
+}
+
+export async function loadTaskTimelineAction(
+  taskId: string,
+  cursor?: string | null,
+): Promise<TaskTimelineActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) {
+    return { ok: false, message: "Nicht angemeldet." };
+  }
+
+  try {
+    const page = await loadTaskTimelinePage(ctx, taskId, cursor);
+    return { ok: true, page };
+  } catch (error) {
+    return { ok: false, message: actionErrorMessage(error) };
+  }
+}
+
+export async function createTaskCommentAction(
+  taskId: string,
+  body: string,
+): Promise<TaskCommentActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) {
+    return { ok: false, message: "Nicht angemeldet." };
+  }
+
+  try {
+    const comment = await createTaskComment(ctx, taskId, body);
+    revalidateTaskPaths(taskId);
+    return { ok: true, commentId: comment.id };
+  } catch (error) {
+    return { ok: false, message: actionErrorMessage(error) };
+  }
+}
+
+export async function updateTaskCommentAction(
+  taskId: string,
+  commentId: string,
+  body: string,
+): Promise<TaskCommentActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) {
+    return { ok: false, message: "Nicht angemeldet." };
+  }
+
+  try {
+    const comment = await updateTaskComment(ctx, taskId, commentId, body);
+    revalidateTaskPaths(taskId);
+    return { ok: true, commentId: comment.id };
+  } catch (error) {
+    return { ok: false, message: actionErrorMessage(error) };
+  }
+}
+
+export async function deleteTaskCommentAction(
+  taskId: string,
+  commentId: string,
+): Promise<TaskCommentActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) {
+    return { ok: false, message: "Nicht angemeldet." };
+  }
+
+  try {
+    const comment = await deleteTaskComment(ctx, taskId, commentId);
+    revalidateTaskPaths(taskId);
+    return { ok: true, commentId: comment.id };
+  } catch (error) {
+    return { ok: false, message: actionErrorMessage(error) };
   }
 }

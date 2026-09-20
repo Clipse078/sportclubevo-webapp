@@ -292,4 +292,13 @@ describe("AUFGABEN-03 matrix coverage hooks", () => {
     );
     expect(source).toMatch(/else if \(result\.ok\)\s*\{\s*router\.refresh\(\);/s);
   });
+
+  it("06A — task workspace embeds collaboration activity section", () => {
+    const source = readFileSync(
+      join(process.cwd(), "components/admin/aufgaben/TaskWorkspace.tsx"),
+      "utf8",
+    );
+    expect(source).toContain("TaskActivitySection");
+    expect(source).not.toContain("Aktivität — folgt in einer späteren Version.");
+  });
 });

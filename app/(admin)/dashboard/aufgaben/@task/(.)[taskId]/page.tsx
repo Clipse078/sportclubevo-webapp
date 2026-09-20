@@ -27,6 +27,7 @@ export default async function AufgabenTaskInterceptPage({ params, searchParams }
       locale={data.locale}
       timeZone={data.timeZone}
       backHref={data.backHref}
+      currentUserId={data.currentUserId}
     />
   );
 }

@@ -1,3 +1,4 @@
+import { auth } from "@/auth";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -16,9 +17,10 @@ import { TaskForbiddenError, TaskNotFoundError } from "@/lib/tasks/errors";
 export async function loadTaskWorkspacePageData(taskId: string, searchParams: Record<string, string | undefined>) {
   await requirePermission(PERMISSIONS.TASKS_VIEW);
 
-  const ctx = await getTaskServiceContext();
+  const [ctx, session] = await Promise.all([getTaskServiceContext(), auth()]);
   const tenant = await getActiveTenant();
-  if (!ctx) {
+  const currentUserId = session?.user?.id;
+  if (!ctx || !currentUserId) {
     return { kind: "unauthorized" as const };
   }
 
@@ -66,6 +68,7 @@ export async function loadTaskWorkspacePageData(taskId: string, searchParams: Re
       locale,
       timeZone,
       backHref,
+      currentUserId,
     };
   } catch (error) {
     if (error instanceof TaskNotFoundError || error instanceof TaskForbiddenError) {
