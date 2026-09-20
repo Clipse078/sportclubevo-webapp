@@ -62,6 +62,42 @@ describe("AUFGABEN-05-UI — personal actions access", () => {
     expect(caps.moduleAccess).toBe(true);
   });
 
+  it("I — guardian capability remains when zero open obligations (nav question only)", async () => {
+    vi.mocked(prisma.person.findFirst).mockResolvedValue({ id: "person-g" } as never);
+    vi.mocked(prisma.guardianRelationship.count).mockResolvedValue(1);
+    vi.mocked(prisma.playerSquadMember.count).mockResolvedValue(0);
+
+    const capable = await resolvePersonalParticipationNavCapability({
+      tenantId: "tenant-a",
+      userId: "guardian-user",
+    });
+    expect(capable).toBe(true);
+  });
+
+  it("N — cross-tenant guardian relationship does not grant tenant-a nav capability", async () => {
+    vi.mocked(prisma.person.findFirst).mockResolvedValue({ id: "person-a" } as never);
+    vi.mocked(prisma.guardianRelationship.count).mockResolvedValue(0);
+    vi.mocked(prisma.playerSquadMember.count).mockResolvedValue(0);
+
+    const capable = await resolvePersonalParticipationNavCapability({
+      tenantId: "tenant-a",
+      userId: "user-with-tenant-b-guardian-only",
+    });
+    expect(capable).toBe(false);
+  });
+
+  it("O — cross-tenant squad membership does not grant tenant-a nav capability", async () => {
+    vi.mocked(prisma.person.findFirst).mockResolvedValue({ id: "person-a" } as never);
+    vi.mocked(prisma.guardianRelationship.count).mockResolvedValue(0);
+    vi.mocked(prisma.playerSquadMember.count).mockResolvedValue(0);
+
+    const capable = await resolvePersonalParticipationNavCapability({
+      tenantId: "tenant-a",
+      userId: "player-tenant-b-only",
+    });
+    expect(capable).toBe(false);
+  });
+
   it("S — user without task or participation capability has no module access", () => {
     const caps = resolvePersonalActionsModuleCapabilities({
       tenantId: "tenant-a",

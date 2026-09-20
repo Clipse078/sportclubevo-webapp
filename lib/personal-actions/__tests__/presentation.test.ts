@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
 import type { PersonalAction } from "../types";
-import { mapPersonalActionToListItem } from "../presentation";
+import {
+  formatPersonalInboxRangeSummary,
+  mapPersonalActionToListItem,
+} from "../presentation";
 
 const fmtCfg = { locale: "de-CH", timezone: "Europe/Zurich" };
 
 describe("AUFGABEN-05-UI — personal action presentation", () => {
+  it("S — bounded inbox communicates total actionable count", () => {
+    expect(formatPersonalInboxRangeSummary(50, 65)).toBe("1–50 von 65");
+    expect(formatPersonalInboxRangeSummary(50, 50)).toBeNull();
+    expect(formatPersonalInboxRangeSummary(0, 10)).toBeNull();
+  });
+
   it("M — attendance href null stays non-link row", () => {
     const action: PersonalAction = {
       id: "pa-att-1",

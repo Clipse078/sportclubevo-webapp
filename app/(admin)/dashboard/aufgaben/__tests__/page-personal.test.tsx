@@ -25,6 +25,11 @@ vi.mock("@/lib/personal-actions/require-module-access", () => ({
 }));
 
 vi.mock("@/lib/personal-actions", () => ({
+  countPersonalActions: vi.fn().mockResolvedValue({
+    totalActionable: 1,
+    taskActionable: 0,
+    attendanceActionable: 1,
+  }),
   loadPersonalActions: vi.fn().mockResolvedValue([
     {
       id: "pa-att",
@@ -57,6 +62,25 @@ vi.mock("@/lib/tasks/server-context", () => ({
 import AufgabenPage from "../page";
 
 describe("AUFGABEN-05-UI — parent-only Aufgaben page", () => {
+  it("K — parent-only ?bereich=verwaltung stays on personal inbox", async () => {
+    const jsx = await AufgabenPage({
+      searchParams: Promise.resolve({ bereich: "verwaltung" }),
+    });
+    render(jsx);
+
+    expect(screen.getByTestId("personal-actions-inbox")).toBeInTheDocument();
+    expect(screen.queryByTestId("aufgaben-management-workspace")).toBeNull();
+    expect(screen.queryByTestId("aufgaben-scope-toggle")).toBeNull();
+  });
+
+  it("L — unknown bereich falls back to personal inbox", async () => {
+    const jsx = await AufgabenPage({
+      searchParams: Promise.resolve({ bereich: "foo" }),
+    });
+    render(jsx);
+    expect(screen.getByTestId("personal-actions-inbox")).toBeInTheDocument();
+  });
+
   it("P — renders personal inbox without management workspace", async () => {
     const jsx = await AufgabenPage({ searchParams: Promise.resolve({}) });
     render(jsx);

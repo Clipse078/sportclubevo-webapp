@@ -16,7 +16,7 @@ import AufgabenManagementWorkspace from "@/components/admin/aufgaben/AufgabenMan
 import PersonalActionsInbox from "@/components/admin/aufgaben/PersonalActionsInbox";
 import AufgabenScopeToggle from "@/components/admin/aufgaben/AufgabenScopeToggle";
 import { requirePersonalActionsModuleAccess } from "@/lib/personal-actions/require-module-access";
-import { loadPersonalActions } from "@/lib/personal-actions";
+import { countPersonalActions, loadPersonalActions } from "@/lib/personal-actions";
 import {
   filterPersonalActionsForInbox,
   mapPersonalActionToListItem,
@@ -65,12 +65,19 @@ export default async function AufgabenPage({ searchParams }: Props) {
     bereich === "verwaltung" && showManagement ? "verwaltung" : "meine";
 
   if (effectiveBereich === "meine") {
-    const rawActions = await loadPersonalActions({
-      tenantId,
-      userId: session.user.id,
-      permissionKeys: capabilities.permissionKeys,
-      limit: PERSONAL_ACTION_INBOX_DEFAULT_LIMIT,
-    });
+    const [rawActions, actionCounts] = await Promise.all([
+      loadPersonalActions({
+        tenantId,
+        userId: session.user.id,
+        permissionKeys: capabilities.permissionKeys,
+        limit: PERSONAL_ACTION_INBOX_DEFAULT_LIMIT,
+      }),
+      countPersonalActions({
+        tenantId,
+        userId: session.user.id,
+        permissionKeys: capabilities.permissionKeys,
+      }),
+    ]);
     const filtered = filterPersonalActionsForInbox(rawActions, inboxFilter);
     const items = filtered.map((action) =>
       mapPersonalActionToListItem(action, fmtCfg, locale, timeZone),
@@ -89,6 +96,7 @@ export default async function AufgabenPage({ searchParams }: Props) {
           bereich="meine"
           filter={inboxFilter}
           showSourceFilters={hasMixedSources}
+          totalActionableCount={actionCounts.totalActionable}
         />
       </div>
     );

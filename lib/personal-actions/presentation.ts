@@ -111,6 +111,20 @@ export function mapPersonalActionToListItem(
   };
 }
 
+/** When the inbox list is bounded, communicate partial display vs total actionable count. */
+export function formatPersonalInboxRangeSummary(
+  displayedCount: number,
+  totalActionableCount: number,
+): string | null {
+  if (totalActionableCount <= 0 || displayedCount <= 0) {
+    return null;
+  }
+  if (totalActionableCount <= displayedCount) {
+    return null;
+  }
+  return `1–${displayedCount} von ${totalActionableCount}`;
+}
+
 export function filterPersonalActionsForInbox(
   actions: PersonalAction[],
   filter: PersonalActionSourceFilter,

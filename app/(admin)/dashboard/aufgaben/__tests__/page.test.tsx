@@ -26,6 +26,11 @@ vi.mock("@/lib/personal-actions/require-module-access", () => ({
 
 vi.mock("@/lib/personal-actions", () => ({
   loadPersonalActions: vi.fn().mockResolvedValue([]),
+  countPersonalActions: vi.fn().mockResolvedValue({
+    totalActionable: 0,
+    taskActionable: 0,
+    attendanceActionable: 0,
+  }),
 }));
 
 vi.mock("@/lib/tasks/server-context", () => ({

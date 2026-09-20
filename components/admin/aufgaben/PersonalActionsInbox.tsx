@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 import PlanningManagementPageHeader from "@/components/admin/planning/PlanningManagementPageHeader";
-import type { PersonalActionListItem } from "@/lib/personal-actions/presentation";
+import {
+  formatPersonalInboxRangeSummary,
+  type PersonalActionListItem,
+} from "@/lib/personal-actions/presentation";
 import type { PersonalInboxFilterParam } from "@/lib/personal-actions/aufgaben-scope";
 import { buildPersonalInboxFilterHref } from "@/lib/personal-actions/aufgaben-scope";
 import PersonalActionRow from "./PersonalActionRow";
@@ -16,6 +19,8 @@ type Props = {
   bereich: AufgabenBereich;
   filter: PersonalInboxFilterParam;
   showSourceFilters: boolean;
+  /** Full actionable count (independent of inbox list limit). */
+  totalActionableCount?: number | null;
   basePath?: string;
 };
 
@@ -31,9 +36,14 @@ export default function PersonalActionsInbox({
   bereich,
   filter,
   showSourceFilters,
+  totalActionableCount = null,
   basePath = "/dashboard/aufgaben",
 }: Props) {
   const hasItems = items.length > 0;
+  const rangeSummary =
+    totalActionableCount != null
+      ? formatPersonalInboxRangeSummary(items.length, totalActionableCount)
+      : null;
 
   return (
     <div className="space-y-4" data-testid="personal-actions-inbox">
@@ -85,13 +95,23 @@ export default function PersonalActionsInbox({
         aria-label="Meine Aufgaben"
       >
         {hasItems ? (
-          <ul className="divide-y divide-[var(--border)]" role="list">
-            {items.map((item) => (
-              <li key={item.id}>
-                <PersonalActionRow item={item} />
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="divide-y divide-[var(--border)]" role="list">
+              {items.map((item) => (
+                <li key={item.id}>
+                  <PersonalActionRow item={item} />
+                </li>
+              ))}
+            </ul>
+            {rangeSummary ? (
+              <p
+                className="border-t border-[var(--border)] px-4 py-2.5 text-center text-[0.8125rem] text-[var(--text-2)] sm:px-6"
+                data-testid="personal-inbox-range-summary"
+              >
+                {rangeSummary}
+              </p>
+            ) : null}
+          </>
         ) : (
           <div className="px-4 py-10 text-center sm:px-6" data-testid="personal-inbox-empty">
             <h2 className="text-base font-semibold text-[var(--foreground)]">Alles erledigt</h2>
