@@ -1,11 +1,13 @@
 import { getDayWindow, formatIsoDay } from "@/lib/planner/date-utils";
-import { startOfLocalDay } from "@/lib/tasks/management-deadline";
+import { addDaysUtc, startOfLocalDay } from "@/lib/tasks/management-deadline";
 import { resolvePersonalTeamIds } from "./team-scope";
 import { loadPersonalCalendarEntryProjections } from "./calendar-entries";
 import { loadTaskDeadlineProjections } from "./task-projections";
 import type { PersonalAgendaSourceType, PersonalCalendarItem } from "./types";
 
 export const DASHBOARD_PERSONAL_AGENDA_ITEM_LIMIT = 12;
+/** Dashboard overdue surfacing: avoid unbounded historical task scans. */
+export const DASHBOARD_OVERDUE_TASK_LOOKBACK_DAYS = 90;
 
 export type LoadPersonalAgendaArgs = {
   tenantId: string;
@@ -93,7 +95,10 @@ export async function loadPersonalAgenda(
       ? loadTaskDeadlineProjections({
           tenantId: args.tenantId,
           userId: args.userId,
-          rangeStart: new Date(0),
+          rangeStart: addDaysUtc(
+            startOfLocalDay(now, args.timeZone),
+            -DASHBOARD_OVERDUE_TASK_LOOKBACK_DAYS,
+          ),
           rangeEnd: overdueRangeEnd,
           tasksViewAuthorized: args.tasksViewAuthorized,
         })

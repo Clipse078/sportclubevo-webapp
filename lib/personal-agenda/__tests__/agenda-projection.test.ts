@@ -132,4 +132,29 @@ describe("AUFGABEN-04A — loadPersonalAgenda", () => {
   it("M — aggregation does not touch Event create APIs", async () => {
     expect(prisma.event).not.toHaveProperty("create");
   });
+
+  it("K — dashboard overdue task query uses bounded lookback, not epoch", async () => {
+    const now = new Date("2026-09-20T10:00:00.000Z");
+    await loadPersonalAgenda({
+      tenantId: "tenant-a",
+      userId: "user-a",
+      timeZone: "Europe/Zurich",
+      now,
+      mode: "dashboard",
+      tasksViewAuthorized: true,
+      includeOverdueTasks: true,
+    });
+
+    const overdueCall = vi
+      .mocked(prisma.task.findMany)
+      .mock.calls.find((call) => {
+        const where = (call[0] as { where?: { dueAt?: { gte?: Date } } }).where;
+        return Boolean(where?.dueAt?.gte && where.dueAt.gte.getTime() > 0);
+      });
+    expect(overdueCall).toBeDefined();
+    const overdueStart = (
+      overdueCall![0] as { where: { dueAt: { gte: Date } } }
+    ).where.dueAt.gte;
+    expect(overdueStart.getTime()).toBeGreaterThan(new Date(0).getTime());
+  });
 });

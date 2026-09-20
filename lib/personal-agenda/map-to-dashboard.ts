@@ -59,15 +59,16 @@ export function mapPersonalCalendarItemsToAgendaItems(input: {
 
   for (const item of input.items) {
     let isOverdue = false;
+    let taskPresentation: ReturnType<typeof presentTaskDeadline> | null = null;
     if (item.sourceType === "TASK" && item.taskStatus) {
-      const presentation = presentTaskDeadline({
+      taskPresentation = presentTaskDeadline({
         dueAt: item.startAt.toISOString(),
         status: item.taskStatus,
         now,
         locale: input.locale ?? input.fmtCfg.locale ?? "de-CH",
         timeZone: input.timeZone,
       });
-      isOverdue = presentation.kind === "OVERDUE";
+      isOverdue = taskPresentation.kind === "OVERDUE";
     } else if (item.startAt.getTime() < todayStartLocal.getTime()) {
       isOverdue = false;
     }
@@ -81,11 +82,11 @@ export function mapPersonalCalendarItemsToAgendaItems(input: {
     if (!dayGroup) continue;
 
     const timeLabel =
-      item.sourceType === "TASK" && isOverdue
-        ? "Überfällig"
-        : item.allDay
-          ? formatTime(item.startAt, input.fmtCfg)
-          : formatTime(item.startAt, input.fmtCfg);
+      item.sourceType === "TASK" && taskPresentation
+        ? isOverdue
+          ? "Überfällig"
+          : taskPresentation.label
+        : formatTime(item.startAt, input.fmtCfg);
 
     agenda.push({
       key: item.id,
