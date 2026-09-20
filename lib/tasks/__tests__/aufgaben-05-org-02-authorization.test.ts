@@ -254,8 +254,10 @@ describe("AUFGABEN-05-ORG-02 query predicates", () => {
     );
     expect(where.tenantId).toBe(TENANT_A);
     expect(where.OR).toEqual(
+      expect.arrayContaining([{ visibilityScope: TaskVisibilityScope.CLUB }]),
+    );
+    expect(where.OR).not.toEqual(
       expect.arrayContaining([
-        { visibilityScope: TaskVisibilityScope.CLUB },
         expect.objectContaining({ occurrences: expect.any(Object) }),
       ]),
     );

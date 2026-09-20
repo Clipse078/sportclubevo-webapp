@@ -713,12 +713,12 @@ export async function completeTask(
   }
 
   if (!existing.parentTaskId) {
+    // Opaque completion guard: block while any tenant child remains actionable,
+    // including children the actor cannot read (no disclosure via query filters).
     const children = await prisma.task.findMany({
       where: {
-        AND: [
-          buildTaskVisibilityWhere(ctx),
-          { parentTaskId: existing.id },
-        ],
+        tenantId: ctx.tenantId,
+        parentTaskId: existing.id,
       },
       select: { status: true },
     });

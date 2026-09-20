@@ -130,24 +130,6 @@ describe("AUFGABEN-02 management listTaskSeriesManagementRows", () => {
                     some: { userId: USER_ASSIGNEE, tenantId: TENANT_A },
                   },
                 },
-                {
-                  occurrences: {
-                    some: expect.objectContaining({
-                      tenantId: TENANT_A,
-                      OR: expect.arrayContaining([
-                        { createdByUserId: USER_ASSIGNEE },
-                        {
-                          assignees: {
-                            some: {
-                              userId: USER_ASSIGNEE,
-                              tenantId: TENANT_A,
-                            },
-                          },
-                        },
-                      ]),
-                    }),
-                  },
-                },
               ]),
             }),
           ],

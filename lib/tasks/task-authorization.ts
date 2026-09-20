@@ -382,7 +382,6 @@ export async function loadAuthorizedParentTaskRefs(
 export function buildTaskSeriesReadWhere(
   ctx: TaskServiceContext,
 ): Prisma.TaskSeriesWhereInput {
-  const taskRead = buildTaskReadWhere(ctx);
   const auth = resolveAuth(ctx);
   const orgIds = orgReadableUnitIds(auth);
 
@@ -409,6 +408,6 @@ export function buildTaskSeriesReadWhere(
 
   return {
     tenantId: ctx.tenantId,
-    OR: [...scopeBranches, { occurrences: { some: taskRead } }],
+    OR: scopeBranches,
   };
 }
