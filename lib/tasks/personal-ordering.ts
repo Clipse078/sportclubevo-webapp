@@ -8,7 +8,7 @@ export type PersonalOrderableTask = {
   priority: string;
 };
 
-type UrgencyBucket = 0 | 1 | 2 | 3;
+type UrgencyBucket = 0 | 1 | 2 | 3 | 4;
 
 /**
  * Operational ordering for personal work:

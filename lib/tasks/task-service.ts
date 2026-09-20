@@ -182,10 +182,6 @@ function applyStatusTransition(
     return { status: next, completedAt: new Date() };
   }
 
-  if (current === TaskStatusEnum.DONE && next !== TaskStatusEnum.DONE) {
-    return { status: next, completedAt: null };
-  }
-
   return { status: next, completedAt: null };
 }
 
