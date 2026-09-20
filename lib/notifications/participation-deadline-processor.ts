@@ -129,26 +129,28 @@ async function emitForTarget(input: {
       for (const recipientUserId of recipientUserIds) {
         const pref = preferences.get(recipientUserId);
         if (!pref) continue;
-        const result = await createNotificationIdempotent(prisma, {
-          tenantId: input.tenantId,
-          recipientUserId,
-          type: NotificationTypeEnum.PARTICIPATION_REMINDER,
-          title: copy.title,
-          body: copy.body,
-          href,
-          entityType,
-          entityId: input.target.entityId,
-          deduplicationKey: buildParticipationReminderDedupKey({
+        const result = await prisma.$transaction(async (tx) =>
+          createNotificationIdempotent(tx, {
             tenantId: input.tenantId,
-            personId: person.id,
-            kind: input.target.kind,
-            entityId: input.target.entityId,
             recipientUserId,
-            stage,
-            reminderAtIso: reminderAt.toISOString(),
+            type: NotificationTypeEnum.PARTICIPATION_REMINDER,
+            title: copy.title,
+            body: copy.body,
+            href,
+            entityType,
+            entityId: input.target.entityId,
+            deduplicationKey: buildParticipationReminderDedupKey({
+              tenantId: input.tenantId,
+              personId: person.id,
+              kind: input.target.kind,
+              entityId: input.target.entityId,
+              recipientUserId,
+              stage,
+              reminderAtIso: reminderAt.toISOString(),
+            }),
+            preferences: pref,
           }),
-          preferences: pref,
-        });
+        );
         if (result?.kind === "CREATED") reminderCreated++;
       }
     }
@@ -168,25 +170,27 @@ async function emitForTarget(input: {
       for (const recipientUserId of recipientUserIds) {
         const pref = preferences.get(recipientUserId);
         if (!pref) continue;
-        const result = await createNotificationIdempotent(prisma, {
-          tenantId: input.tenantId,
-          recipientUserId,
-          type: NotificationTypeEnum.PARTICIPATION_OVERDUE,
-          title: copy.title,
-          body: copy.body,
-          href,
-          entityType,
-          entityId: input.target.entityId,
-          deduplicationKey: buildParticipationOverdueDedupKey({
+        const result = await prisma.$transaction(async (tx) =>
+          createNotificationIdempotent(tx, {
             tenantId: input.tenantId,
-            personId: person.id,
-            kind: input.target.kind,
-            entityId: input.target.entityId,
             recipientUserId,
-            dueAtIso: input.target.participationResponseDueAt.toISOString(),
+            type: NotificationTypeEnum.PARTICIPATION_OVERDUE,
+            title: copy.title,
+            body: copy.body,
+            href,
+            entityType,
+            entityId: input.target.entityId,
+            deduplicationKey: buildParticipationOverdueDedupKey({
+              tenantId: input.tenantId,
+              personId: person.id,
+              kind: input.target.kind,
+              entityId: input.target.entityId,
+              recipientUserId,
+              dueAtIso: input.target.participationResponseDueAt.toISOString(),
+            }),
+            preferences: pref,
           }),
-          preferences: pref,
-        });
+        );
         if (result?.kind === "CREATED") overdueCreated++;
       }
     }
