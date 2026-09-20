@@ -46,7 +46,7 @@ export function MeineAufgabenWidget({ available, previewItems }: Props) {
           {previewItems.map((task) => (
             <li key={task.id} className="py-2.5">
               <Link
-                href="/dashboard/aufgaben"
+                href={`/dashboard/aufgaben/${task.id}`}
                 className="block text-[0.875rem] font-medium text-[var(--foreground)] hover:text-[var(--primary)]"
               >
                 {task.title}

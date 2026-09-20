@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { TaskPriority } from "@prisma/client";
 import { Plus, X } from "lucide-react";
@@ -13,6 +15,7 @@ type Props = {
 };
 
 export default function AufgabenQuickCreateDialog({ canCreate, assigneeOptions }: Props) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -25,6 +28,9 @@ export default function AufgabenQuickCreateDialog({ canCreate, assigneeOptions }
       const result = await createAufgabeAction(formData);
       if (result.ok) {
         setOpen(false);
+        if (result.taskId) {
+          router.push(`/dashboard/aufgaben/${result.taskId}`);
+        }
         return;
       }
       setError(result.message);
@@ -133,7 +139,15 @@ export default function AufgabenQuickCreateDialog({ canCreate, assigneeOptions }
                 <textarea name="description" rows={2} className="fca-input w-full text-sm" />
               </label>
 
-              <div className="flex justify-end gap-2 pt-1">
+              <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+                <Link
+                  href="/dashboard/aufgaben/neu"
+                  className="mr-auto text-xs font-medium text-[var(--primary)] hover:underline"
+                  onClick={() => setOpen(false)}
+                  data-testid="aufgaben-create-more-details"
+                >
+                  Weitere Details
+                </Link>
                 <button
                   type="button"
                   className="fca-button-secondary text-sm"
