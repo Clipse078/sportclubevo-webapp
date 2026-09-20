@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { TaskStatus } from "@prisma/client";
+import { TaskStatus, TaskVisibilityScope } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 const mocks = vi.hoisted(() => ({
@@ -68,6 +68,8 @@ function taskDto(overrides: Partial<TaskDto> = {}): TaskDto {
     contextId: null,
     parentTaskId: null,
     taskSeriesId: null,
+    orgUnitId: null,
+    visibilityScope: TaskVisibilityScope.CLUB,
     createdByUserId: USER_MANAGER,
     createdAt: "2026-09-01T10:00:00.000Z",
     updatedAt: "2026-09-01T10:00:00.000Z",
@@ -97,6 +99,8 @@ function taskRow(overrides: Record<string, unknown> = {}) {
     contextId: null,
     parentTaskId: null,
     taskSeriesId: null,
+    orgUnitId: null,
+    visibilityScope: TaskVisibilityScope.CLUB,
     createdByUserId: USER_MANAGER,
     createdAt: new Date("2026-09-01T10:00:00.000Z"),
     updatedAt: new Date("2026-09-01T10:00:00.000Z"),

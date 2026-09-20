@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { TaskVisibilityScope } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
   buildTaskVisibilityWhere,
@@ -77,7 +78,14 @@ describe("AUFGABEN-02B visibility primitives", () => {
     const viewAllCtx = ctx([PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_VIEW_ALL]);
     expect(canViewAllTasks(viewAllCtx)).toBe(true);
     expect(canManageAllTasks(viewAllCtx)).toBe(false);
-    expect(buildTaskVisibilityWhere(viewAllCtx)).toEqual({ tenantId: TENANT_A });
+    expect(buildTaskVisibilityWhere(viewAllCtx)).toEqual({
+      tenantId: TENANT_A,
+      OR: [
+        { createdByUserId: USER },
+        { assignees: { some: { userId: USER, tenantId: TENANT_A } } },
+        { visibilityScope: TaskVisibilityScope.CLUB },
+      ],
+    });
   });
 
   it("C — tasks.manage includes tenant-wide visibility", () => {
@@ -170,7 +178,12 @@ describe("AUFGABEN-02B management queries", () => {
     expect(mocks.taskCount).toHaveBeenCalledWith({
       where: {
         AND: [
-          { tenantId: TENANT_A },
+          expect.objectContaining({
+            tenantId: TENANT_A,
+            OR: expect.arrayContaining([
+              { visibilityScope: TaskVisibilityScope.CLUB },
+            ]),
+          }),
           { parentTaskId: null, status: { in: ["OPEN", "IN_PROGRESS"] } },
           { status: { in: ["OPEN", "IN_PROGRESS"] } },
         ],
@@ -208,7 +221,16 @@ describe("AUFGABEN-02B management queries", () => {
 
     expect(mocks.taskSeriesFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { AND: [{ tenantId: TENANT_A }] },
+        where: {
+          AND: [
+            { tenantId: TENANT_A },
+            expect.objectContaining({
+              OR: expect.arrayContaining([
+                { visibilityScope: TaskVisibilityScope.CLUB },
+              ]),
+            }),
+          ],
+        },
       }),
     );
   });
@@ -251,6 +273,8 @@ describe("AUFGABEN-02B mutation vs view_all", () => {
       contextId: null,
       parentTaskId: null,
       taskSeriesId: null,
+      orgUnitId: null,
+      visibilityScope: TaskVisibilityScope.CLUB,
       createdByUserId: OTHER,
       createdAt: new Date(),
       updatedAt: new Date(),

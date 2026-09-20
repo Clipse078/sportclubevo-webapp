@@ -410,24 +410,18 @@ describe("AUFGABEN-05-ORG-01 mutation surface", () => {
   });
 });
 
-describe("AUFGABEN-05-ORG-01 authorization unchanged", () => {
-  it("buildTaskVisibilityWhere ignores visibilityScope (creator/assignee only)", () => {
-    expect(buildTaskVisibilityWhere(manageCtx)).toEqual({ tenantId: TENANT_A });
-    expect(
-      buildTaskVisibilityWhere({
-        tenantId: TENANT_A,
-        userId: "viewer",
-        permissionKeys: [PERMISSIONS.TASKS_VIEW],
-      }),
-    ).toEqual({
+describe("AUFGABEN-05-ORG-01 authorization baseline (pre-ORG-02 cutover)", () => {
+  it("buildTaskVisibilityWhere uses CLUB tenant-wide branch for manage", () => {
+    expect(buildTaskVisibilityWhere(manageCtx)).toEqual({
       tenantId: TENANT_A,
       OR: [
-        { createdByUserId: "viewer" },
+        { createdByUserId: USER },
         {
           assignees: {
-            some: { userId: "viewer", tenantId: TENANT_A },
+            some: { userId: USER, tenantId: TENANT_A },
           },
         },
+        { visibilityScope: TaskVisibilityScope.CLUB },
       ],
     });
   });

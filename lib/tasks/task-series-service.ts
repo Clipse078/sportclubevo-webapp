@@ -7,6 +7,7 @@ import {
   type TaskPriority,
   type TaskRecurrenceFrequency,
   type TaskSeriesWeekday,
+  type TaskVisibilityScope,
 } from "@prisma/client";
 import { TaskSeriesStatus, TaskStatus as TaskStatusEnum } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
@@ -20,7 +21,11 @@ import {
   localDateTimeToUtc,
 } from "./recurrence-dates";
 import type { TaskServiceContext } from "./types";
-import { buildTaskVisibilityWhere, hasTaskPermission } from "./visibility";
+import {
+  buildTaskSeriesReadWhere,
+  canManageTaskSeries,
+  hasTaskPermission,
+} from "./visibility";
 import {
   computeNewAssigneeRows,
   emitTaskAssignmentNotifications,
@@ -65,9 +70,32 @@ export type UpdateTaskSeriesInput = Partial<CreateTaskSeriesInput> & {
   subtaskTemplates?: TaskSeriesSubtaskTemplateInput[];
 };
 
-function assertSeriesManage(ctx: TaskServiceContext) {
+function assertTenantWideSeriesManage(ctx: TaskServiceContext) {
   if (!hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE)) {
     throw new TaskForbiddenError("Missing tasks.manage");
+  }
+}
+
+function assertSeriesManage(
+  ctx: TaskServiceContext,
+  series: {
+    tenantId: string;
+    createdByUserId: string | null;
+    visibilityScope: TaskVisibilityScope;
+    orgUnitId: string | null;
+    assigneeTemplates: { userId: string }[];
+  },
+) {
+  if (
+    !canManageTaskSeries(ctx, {
+      tenantId: series.tenantId,
+      createdByUserId: series.createdByUserId,
+      visibilityScope: series.visibilityScope,
+      orgUnitId: series.orgUnitId,
+      assigneeUserIds: series.assigneeTemplates.map((a) => a.userId),
+    })
+  ) {
+    throw new TaskForbiddenError("Missing tasks.manage for this series");
   }
 }
 
@@ -95,22 +123,7 @@ async function requireSeries(ctx: TaskServiceContext, seriesId: string): Promise
 }
 
 function buildSeriesReadWhere(ctx: TaskServiceContext): Prisma.TaskSeriesWhereInput {
-  if (hasTaskPermission(ctx, PERMISSIONS.TASKS_VIEW_ALL)) {
-    return { tenantId: ctx.tenantId };
-  }
-  const taskVisibility = buildTaskVisibilityWhere(ctx);
-  return {
-    tenantId: ctx.tenantId,
-    OR: [
-      { createdByUserId: ctx.userId },
-      {
-        assigneeTemplates: {
-          some: { userId: ctx.userId, tenantId: ctx.tenantId },
-        },
-      },
-      { occurrences: { some: taskVisibility } },
-    ],
-  };
+  return buildTaskSeriesReadWhere(ctx);
 }
 
 export async function getTaskSeriesForRead(ctx: TaskServiceContext, seriesId: string) {
@@ -227,7 +240,7 @@ export async function createTaskSeries(
   ctx: TaskServiceContext,
   input: CreateTaskSeriesInput,
 ) {
-  assertSeriesManage(ctx);
+  assertTenantWideSeriesManage(ctx);
   validateSeriesShape(input);
 
   const parentAssignees = [...new Set(input.assigneeUserIds ?? [])];
@@ -312,8 +325,8 @@ export async function updateTaskSeries(
   seriesId: string,
   input: UpdateTaskSeriesInput,
 ) {
-  assertSeriesManage(ctx);
-  const existing = await requireSeries(ctx, seriesId);
+  const existing = await getTaskSeriesForRead(ctx, seriesId);
+  assertSeriesManage(ctx, existing);
 
   if (input.frequency || input.weekday !== undefined || input.monthDay !== undefined) {
     validateSeriesShape({
@@ -399,8 +412,8 @@ async function setSeriesStatus(
   status: TaskSeriesStatus,
   auditAction: string,
 ) {
-  assertSeriesManage(ctx);
-  const existing = await requireSeries(ctx, seriesId);
+  const existing = await getTaskSeriesForRead(ctx, seriesId);
+  assertSeriesManage(ctx, existing);
 
   if (status === TaskSeriesStatus.PAUSED && existing.status !== TaskSeriesStatus.ACTIVE) {
     throw new TaskValidationError("Only ACTIVE series can be paused");
@@ -635,6 +648,11 @@ export async function generateTaskOccurrences(
   ctx: TaskServiceContext,
   seriesId?: string,
 ): Promise<{ generatedTaskIds: string[] }> {
-  assertSeriesManage(ctx);
+  if (seriesId) {
+    const series = await getTaskSeriesForRead(ctx, seriesId);
+    assertSeriesManage(ctx, series);
+  } else {
+    assertTenantWideSeriesManage(ctx);
+  }
   return generateTaskOccurrencesInternal(ctx.tenantId, ctx.userId, seriesId);
 }

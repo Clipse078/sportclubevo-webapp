@@ -34,8 +34,10 @@ import type {
 } from "./types";
 import {
   buildTaskVisibilityWhere,
-  canViewTaskRecord,
+  canManageTask,
+  canReadTask,
   hasTaskPermission,
+  loadAuthorizedParentTaskRefs,
 } from "./visibility";
 import {
   computeNewAssigneeRows,
@@ -50,6 +52,7 @@ const TASK_INCLUDE = {
     },
     orderBy: { assignedAt: "asc" as const },
   },
+  orgUnit: { select: { tenantId: true } },
 } satisfies Prisma.TaskInclude;
 
 type TaskRow = Prisma.TaskGetPayload<{ include: typeof TASK_INCLUDE }>;
@@ -68,6 +71,8 @@ function mapTask(row: TaskRow): TaskDto {
     contextId: row.contextId,
     parentTaskId: row.parentTaskId,
     taskSeriesId: row.taskSeriesId,
+    orgUnitId: row.orgUnitId,
+    visibilityScope: row.visibilityScope,
     createdByUserId: row.createdByUserId,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -134,10 +139,13 @@ async function requireVisibleTask(
   const task = await loadTaskForTenant(ctx.tenantId, taskId);
   if (!task) throw new TaskNotFoundError(taskId);
 
-  const visible = canViewTaskRecord(ctx, {
+  const visible = canReadTask(ctx, {
     tenantId: task.tenantId,
     createdByUserId: task.createdByUserId,
     assigneeUserIds: task.assignees.map((a) => a.userId),
+    visibilityScope: task.visibilityScope,
+    orgUnitId: task.orgUnitId,
+    orgUnitTenantId: task.orgUnit?.tenantId ?? null,
   });
   if (!visible) throw new TaskForbiddenError();
 
@@ -372,15 +380,10 @@ export async function listMyTasks(
     ),
   ];
 
-  const parents =
+  const parentById =
     parentIds.length > 0
-      ? await prisma.task.findMany({
-          where: { tenantId: ctx.tenantId, id: { in: parentIds } },
-          select: { id: true, title: true },
-        })
-      : [];
-
-  const parentById = new Map(parents.map((p) => [p.id, p]));
+      ? await loadAuthorizedParentTaskRefs(ctx, parentIds)
+      : new Map<string, { id: string; title: string }>();
 
   const personal = rows.map((row) => {
     const dto = mapTask(row);
@@ -483,7 +486,9 @@ export async function listSubtasks(
   await requireVisibleTask(ctx, parentTaskId);
 
   const rows = await prisma.task.findMany({
-    where: { tenantId: ctx.tenantId, parentTaskId },
+    where: {
+      AND: [buildTaskVisibilityWhere(ctx), { parentTaskId }],
+    },
     include: TASK_INCLUDE,
     orderBy: [{ dueAt: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
   });
@@ -498,7 +503,9 @@ export async function getTaskProgress(
   await requireVisibleTask(ctx, taskId);
 
   const children = await prisma.task.findMany({
-    where: { tenantId: ctx.tenantId, parentTaskId: taskId },
+    where: {
+      AND: [buildTaskVisibilityWhere(ctx), { parentTaskId: taskId }],
+    },
     select: { status: true },
   });
 
@@ -518,7 +525,13 @@ export async function updateTask(
 
   const isAssignee = existing.assignees.some((a) => a.userId === ctx.userId);
   const isCreator = existing.createdByUserId === ctx.userId;
-  const canManage = hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE);
+  const canManage = canManageTask(ctx, {
+    tenantId: existing.tenantId,
+    createdByUserId: existing.createdByUserId,
+    assigneeUserIds: existing.assignees.map((a) => a.userId),
+    visibilityScope: existing.visibilityScope,
+    orgUnitId: existing.orgUnitId,
+  });
 
   if (!canManage && !(isCreator && hasTaskPermission(ctx, PERMISSIONS.TASKS_CREATE))) {
     if (!isAssignee || input.status === undefined) {
@@ -536,8 +549,6 @@ export async function updateTask(
     }
   } else if (!canManage) {
     assertCanCreate(ctx);
-  } else {
-    assertCanManage(ctx);
   }
 
   const data: Prisma.TaskUpdateInput = {};
@@ -702,8 +713,13 @@ export async function completeTask(
   }
 
   if (!existing.parentTaskId) {
+    // Opaque completion guard: block while any tenant child remains actionable,
+    // including children the actor cannot read (no disclosure via query filters).
     const children = await prisma.task.findMany({
-      where: { tenantId: ctx.tenantId, parentTaskId: existing.id },
+      where: {
+        tenantId: ctx.tenantId,
+        parentTaskId: existing.id,
+      },
       select: { status: true },
     });
     if (hasActionableSubtasks(children)) {

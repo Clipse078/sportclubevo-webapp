@@ -13,7 +13,12 @@ import type {
   TaskProgressDto,
   TaskServiceContext,
 } from "./types";
-import { buildTaskVisibilityWhere, canViewAllTasks } from "./visibility";
+import {
+  buildTaskSeriesReadWhere,
+  buildTaskVisibilityWhere,
+  canViewAllTasks,
+  loadAuthorizedParentTaskRefs,
+} from "./visibility";
 import {
   endOfWeekSunday,
   getUpcomingHorizonEnd,
@@ -94,6 +99,8 @@ function mapTask(row: TaskRow): TaskDto {
     contextId: row.contextId,
     parentTaskId: row.parentTaskId,
     taskSeriesId: row.taskSeriesId,
+    orgUnitId: row.orgUnitId,
+    visibilityScope: row.visibilityScope,
     createdByUserId: row.createdByUserId,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -248,18 +255,6 @@ function sortTaskRowsByPriority(rows: TaskRow[]): TaskRow[] {
   });
 }
 
-async function loadParentSummaries(
-  tenantId: string,
-  parentIds: string[],
-): Promise<Map<string, { id: string; title: string }>> {
-  if (parentIds.length === 0) return new Map();
-  const parents = await prisma.task.findMany({
-    where: { tenantId, id: { in: parentIds } },
-    select: { id: true, title: true },
-  });
-  return new Map(parents.map((p) => [p.id, p]));
-}
-
 async function loadContextPresentationsForTasks(
   ctx: TaskServiceContext,
   tasks: TaskDto[],
@@ -294,11 +289,9 @@ async function batchEnrichRoots(
   if (roots.length === 0) return [];
 
   const rootIds = roots.map((r) => r.id);
-  const childWhere: Prisma.TaskWhereInput = canViewAllTasks(ctx)
-    ? { tenantId: ctx.tenantId, parentTaskId: { in: rootIds } }
-    : {
-        AND: [buildTaskVisibilityWhere(ctx), { parentTaskId: { in: rootIds } }],
-      };
+  const childWhere: Prisma.TaskWhereInput = {
+    AND: [buildTaskVisibilityWhere(ctx), { parentTaskId: { in: rootIds } }],
+  };
   const childRows = await prisma.task.findMany({
     where: childWhere,
     include: TASK_INCLUDE,
@@ -354,17 +347,12 @@ async function batchEnrichPersonalRows(
 
   const childrenByParent = new Map<string, TaskDto[]>();
   if (rootIdsNeedingChildren.length > 0) {
-    const childWhere: Prisma.TaskWhereInput = canViewAllTasks(ctx)
-      ? {
-          tenantId: ctx.tenantId,
-          parentTaskId: { in: rootIdsNeedingChildren },
-        }
-      : {
-          AND: [
-            buildTaskVisibilityWhere(ctx),
-            { parentTaskId: { in: rootIdsNeedingChildren } },
-          ],
-        };
+    const childWhere: Prisma.TaskWhereInput = {
+      AND: [
+        buildTaskVisibilityWhere(ctx),
+        { parentTaskId: { in: rootIdsNeedingChildren } },
+      ],
+    };
     const childRows = await prisma.task.findMany({
       where: childWhere,
       include: TASK_INCLUDE,
@@ -535,7 +523,7 @@ export async function listTaskManagementItems(
     const parentIds = [
       ...new Set(rows.map((r) => r.parentTaskId).filter((id): id is string => Boolean(id))),
     ];
-    const parentById = await loadParentSummaries(ctx.tenantId, parentIds);
+    const parentById = await loadAuthorizedParentTaskRefs(ctx, parentIds);
     const personal =
       query.view === "MEINE"
         ? sortPersonalTasks(rows.map((r) => mapPersonal(r, parentById)))
@@ -561,20 +549,7 @@ export async function listTaskSeriesManagementRows(
 ): Promise<{ rows: TaskSeriesManagementRow[]; totalCount: number }> {
   const and: Prisma.TaskSeriesWhereInput[] = [{ tenantId: ctx.tenantId }];
 
-  if (!canViewAllTasks(ctx)) {
-    const taskVisibility = buildTaskVisibilityWhere(ctx);
-    and.push({
-      OR: [
-        { createdByUserId: ctx.userId },
-        {
-          assigneeTemplates: {
-            some: { userId: ctx.userId, tenantId: ctx.tenantId },
-          },
-        },
-        { occurrences: { some: taskVisibility } },
-      ],
-    });
-  }
+  and.push(buildTaskSeriesReadWhere(ctx));
 
   if (query.search) {
     and.push({ title: { contains: query.search, mode: "insensitive" } });

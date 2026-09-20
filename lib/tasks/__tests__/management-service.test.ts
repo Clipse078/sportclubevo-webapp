@@ -122,34 +122,16 @@ describe("AUFGABEN-02 management listTaskSeriesManagementRows", () => {
         where: {
           AND: [
             { tenantId: TENANT_A },
-            {
-              OR: [
+            expect.objectContaining({
+              OR: expect.arrayContaining([
                 { createdByUserId: USER_ASSIGNEE },
                 {
                   assigneeTemplates: {
                     some: { userId: USER_ASSIGNEE, tenantId: TENANT_A },
                   },
                 },
-                {
-                  occurrences: {
-                    some: {
-                      tenantId: TENANT_A,
-                      OR: [
-                        { createdByUserId: USER_ASSIGNEE },
-                        {
-                          assignees: {
-                            some: {
-                              userId: USER_ASSIGNEE,
-                              tenantId: TENANT_A,
-                            },
-                          },
-                        },
-                      ],
-                    },
-                  },
-                },
-              ],
-            },
+              ]),
+            }),
           ],
         },
       }),
@@ -162,7 +144,14 @@ describe("AUFGABEN-02 management listTaskSeriesManagementRows", () => {
 
     expect(mocks.taskSeriesFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { AND: [{ tenantId: TENANT_A }] },
+        where: {
+          AND: [
+            { tenantId: TENANT_A },
+            expect.objectContaining({
+              OR: expect.arrayContaining([{ visibilityScope: "CLUB" }]),
+            }),
+          ],
+        },
       }),
     );
   });
@@ -173,7 +162,14 @@ describe("AUFGABEN-02 management listTaskSeriesManagementRows", () => {
 
     expect(mocks.taskSeriesFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { AND: [{ tenantId: TENANT_A }] },
+        where: {
+          AND: [
+            { tenantId: TENANT_A },
+            expect.objectContaining({
+              OR: expect.arrayContaining([{ visibilityScope: "CLUB" }]),
+            }),
+          ],
+        },
       }),
     );
   });

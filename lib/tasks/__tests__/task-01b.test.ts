@@ -175,7 +175,18 @@ describe("AUFGABEN-01B listMyTasks", () => {
           ],
         },
       ])
-      .mockResolvedValueOnce([{ id: PARENT, title: "Heimturnier F2" }]);
+      .mockResolvedValueOnce([
+        {
+          id: PARENT,
+          title: "Heimturnier F2",
+          tenantId: TENANT,
+          createdByUserId: USER,
+          visibilityScope: "CLUB",
+          orgUnitId: null,
+          orgUnit: { tenantId: TENANT },
+          assignees: [],
+        },
+      ]);
 
     const items = await listMyTasks(ctx, { openOnly: true });
     expect(items).toHaveLength(1);

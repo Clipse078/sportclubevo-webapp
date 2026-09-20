@@ -19,7 +19,7 @@ import {
 } from "./recurrence-dates";
 import { getTaskSeriesForRead } from "./task-series-service";
 import type { TaskDto, TaskProgressDto, TaskServiceContext } from "./types";
-import { hasTaskPermission } from "./visibility";
+import { buildTaskVisibilityWhere, hasTaskPermission } from "./visibility";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 const OCCURRENCE_PAGE_SIZE = 25;
@@ -49,6 +49,8 @@ function mapTask(row: TaskRow): TaskDto {
     contextId: row.contextId,
     parentTaskId: row.parentTaskId,
     taskSeriesId: row.taskSeriesId,
+    orgUnitId: row.orgUnitId,
+    visibilityScope: row.visibilityScope,
     createdByUserId: row.createdByUserId,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -110,13 +112,18 @@ export type TaskSeriesWorkspaceBundle = {
 };
 
 async function loadOccurrenceProgress(
-  tenantId: string,
+  ctx: TaskServiceContext,
   parentIds: string[],
 ): Promise<Map<string, TaskProgressDto>> {
   if (!parentIds.length) return new Map();
 
   const children = await prisma.task.findMany({
-    where: { tenantId, parentTaskId: { in: parentIds } },
+    where: {
+      AND: [
+        buildTaskVisibilityWhere(ctx),
+        { parentTaskId: { in: parentIds } },
+      ],
+    },
     select: { parentTaskId: true, status: true },
   });
 
@@ -150,12 +157,15 @@ export async function loadTaskSeriesWorkspace(
   const series = await getTaskSeriesForRead(ctx, seriesId);
   const canManage = hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE);
 
+  const authorizedOccurrenceWhere: Prisma.TaskWhereInput = {
+    AND: [
+      buildTaskVisibilityWhere(ctx),
+      { taskSeriesId: series.id, parentTaskId: null },
+    ],
+  };
+
   const occurrenceTotalCount = await prisma.task.count({
-    where: {
-      tenantId: ctx.tenantId,
-      taskSeriesId: series.id,
-      parentTaskId: null,
-    },
+    where: authorizedOccurrenceWhere,
   });
 
   const occurrencePageCount = Math.max(
@@ -166,11 +176,7 @@ export async function loadTaskSeriesWorkspace(
   const skip = (page - 1) * OCCURRENCE_PAGE_SIZE;
 
   const occurrenceRows = await prisma.task.findMany({
-    where: {
-      tenantId: ctx.tenantId,
-      taskSeriesId: series.id,
-      parentTaskId: null,
-    },
+    where: authorizedOccurrenceWhere,
     include: TASK_INCLUDE,
     orderBy: [{ dueAt: "desc" }, { createdAt: "desc" }],
     skip,
@@ -178,7 +184,7 @@ export async function loadTaskSeriesWorkspace(
   });
 
   const progressByParent = await loadOccurrenceProgress(
-    ctx.tenantId,
+    ctx,
     occurrenceRows.map((r) => r.id),
   );
 

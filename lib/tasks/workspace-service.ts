@@ -14,7 +14,10 @@ import type {
   TaskProgressDto,
   TaskServiceContext,
 } from "./types";
-import { buildTaskVisibilityWhere, canViewAllTasks } from "./visibility";
+import {
+  buildTaskVisibilityWhere,
+  loadAuthorizedParentTaskRefs,
+} from "./visibility";
 import {
   resolveTaskWorkspaceCapabilities,
   type TaskWorkspaceCapabilities,
@@ -45,6 +48,8 @@ function mapTask(row: TaskRow): TaskDto {
     contextId: row.contextId,
     parentTaskId: row.parentTaskId,
     taskSeriesId: row.taskSeriesId,
+    orgUnitId: row.orgUnitId,
+    visibilityScope: row.visibilityScope,
     createdByUserId: row.createdByUserId,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -61,11 +66,9 @@ async function loadVisibleSubtasks(
   ctx: TaskServiceContext,
   parentTaskId: string,
 ): Promise<TaskDto[]> {
-  const childWhere: Prisma.TaskWhereInput = canViewAllTasks(ctx)
-    ? { tenantId: ctx.tenantId, parentTaskId }
-    : {
-        AND: [buildTaskVisibilityWhere(ctx), { parentTaskId }],
-      };
+  const childWhere: Prisma.TaskWhereInput = {
+    AND: [buildTaskVisibilityWhere(ctx), { parentTaskId }],
+  };
 
   const rows = await prisma.task.findMany({
     where: childWhere,
@@ -111,10 +114,9 @@ export async function loadTaskWorkspace(
   const [subtasks, parentTask, seriesRow, creatorUser, context] = await Promise.all([
     task.parentTaskId ? Promise.resolve([]) : loadVisibleSubtasks(ctx, task.id),
     task.parentTaskId
-      ? prisma.task.findFirst({
-          where: { id: task.parentTaskId, tenantId: ctx.tenantId },
-          select: { id: true, title: true },
-        })
+      ? loadAuthorizedParentTaskRefs(ctx, [task.parentTaskId]).then(
+          (map) => map.get(task.parentTaskId!) ?? null,
+        )
       : Promise.resolve(null),
     seriesRowPromise,
     task.createdByUserId
