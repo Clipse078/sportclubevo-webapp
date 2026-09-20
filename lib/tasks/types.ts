@@ -73,6 +73,8 @@ export type ListTasksFilter = {
   openOnly?: boolean;
   /** When true, only root tasks (no parentTaskId). */
   rootsOnly?: boolean;
+  /** Max rows after personal ordering (dashboard preview, etc.). */
+  limit?: number;
 };
 
 export type TaskServiceContext = {

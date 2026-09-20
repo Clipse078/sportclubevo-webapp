@@ -46,5 +46,13 @@ describe("DASHBOARD-UX-01B — dashboard structure contract", () => {
 
   it("does not expose task-model implementation language in dashboard source", () => {
     expect(clubDashboardSource).not.toContain("Aufgabenmodell");
+    expect(clubDashboardSource).not.toContain("Aufgaben nicht verfügbar");
+  });
+
+  it("omits Meine Aufgaben widget when personal tasks are unauthorized", () => {
+    expect(clubDashboardSource).toContain("commandCenter.personalTasksAvailable");
+    expect(clubDashboardSource).toMatch(
+      /personalTasksAvailable\s*\?\s*\(\s*<MeineAufgabenWidget/s,
+    );
   });
 });

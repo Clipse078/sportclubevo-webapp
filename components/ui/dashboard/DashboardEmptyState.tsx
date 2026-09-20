@@ -52,20 +52,31 @@ export function DashboardEmptyState({
           {icon}
         </span>
       )}
-      <p
+      <div
         className={cn(
-          "font-semibold text-[var(--foreground)]",
           isInlineCompact && "min-w-0 flex-1",
-          isCompact ? "text-[0.8125rem]" : "text-[0.875rem]",
+          !isInlineCompact && "flex flex-col items-center gap-1",
         )}
       >
-        {title}
-      </p>
-      {description && (
-        <p className="max-w-sm text-[0.8125rem] leading-relaxed text-[var(--muted)]">
-          {description}
+        <p
+          className={cn(
+            "font-semibold text-[var(--foreground)]",
+            isCompact ? "text-[0.8125rem]" : "text-[0.875rem]",
+          )}
+        >
+          {title}
         </p>
-      )}
+        {description && (
+          <p
+            className={cn(
+              "text-[0.8125rem] leading-relaxed text-[var(--muted)]",
+              isInlineCompact ? "mt-0.5" : "max-w-sm text-center",
+            )}
+          >
+            {description}
+          </p>
+        )}
+      </div>
       {action && <div className="mt-1">{action}</div>}
     </div>
   );

@@ -395,7 +395,11 @@ export async function listMyTasks(
     };
   });
 
-  return sortPersonalTasks(personal);
+  const ordered = sortPersonalTasks(personal);
+  if (filter?.limit != null && filter.limit > 0) {
+    return ordered.slice(0, filter.limit);
+  }
+  return ordered;
 }
 
 export async function createSubtask(

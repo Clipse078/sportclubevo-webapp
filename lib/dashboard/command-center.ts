@@ -54,10 +54,7 @@ import {
   resolvePersonalTeamIds,
   type PersonalAgendaItem,
 } from "@/lib/dashboard/personal-cockpit";
-import {
-  listMyTasks,
-  resolvePersonalTasksAvailability,
-} from "@/lib/tasks/task-service";
+import { loadDashboardPersonalTasks } from "@/lib/dashboard/personal-tasks-loader";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -820,37 +817,19 @@ export async function getCommandCenterData(args: {
     canSeeRegistrations,
   });
 
-  const taskCtx =
-    args.userId && args.actor
-      ? {
-          tenantId: args.tenantId,
-          userId: args.userId,
-          permissionKeys: args.actor.permissionKeys,
-        }
-      : null;
-
-  const personalTasksMeta = taskCtx
-    ? await resolvePersonalTasksAvailability(taskCtx)
-    : { available: false, count: null };
-
-  const personalTaskPreview =
-    taskCtx && personalTasksMeta.available
-      ? (await listMyTasks(taskCtx, { openOnly: true }))
-          .slice(0, 5)
-          .map((task) => ({
-            id: task.id,
-            title: task.title,
-            dueAt: task.dueAt,
-            parentTitle: task.parentTask?.title ?? null,
-          }))
-      : [];
+  const personalTasksSnapshot = args.userId
+    ? await loadDashboardPersonalTasks({
+        tenantId: args.tenantId,
+        userId: args.userId,
+      })
+    : { authorized: false, count: null, preview: [] };
 
   const kpiStrip = buildPersonalCockpitKpiStrip({
     personalScheduleCount: personalAgenda.supported
       ? personalAgenda.items.length
       : null,
-    personalTasksAvailable: personalTasksMeta.available,
-    personalTaskCount: personalTasksMeta.count,
+    personalTasksAvailable: personalTasksSnapshot.authorized,
+    personalTaskCount: personalTasksSnapshot.count,
     attentionCount: attentionItems.length,
     openRegistrationCount,
     canSeeRegistrations,
@@ -866,9 +845,9 @@ export async function getCommandCenterData(args: {
     newsItems,
     personalAgendaItems: personalAgenda.items,
     personalAgendaSupported: personalAgenda.supported,
-    personalTasksAvailable: personalTasksMeta.available,
-    personalTaskCount: personalTasksMeta.count,
-    personalTaskPreview,
+    personalTasksAvailable: personalTasksSnapshot.authorized,
+    personalTaskCount: personalTasksSnapshot.count,
+    personalTaskPreview: personalTasksSnapshot.preview,
     heroBackgroundImageUrl: heroState?.imageUrl ?? null,
     heroBackgroundTransform: heroState
       ? {

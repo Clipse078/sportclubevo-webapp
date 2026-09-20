@@ -11,11 +11,10 @@ export type PersonalTaskPreviewItem = {
 };
 
 type Props = {
-  available: boolean;
   previewItems: PersonalTaskPreviewItem[];
 };
 
-export function MeineAufgabenWidget({ available, previewItems }: Props) {
+export function MeineAufgabenWidget({ previewItems }: Props) {
   const hasTasks = previewItems.length > 0;
 
   return (
@@ -26,22 +25,12 @@ export function MeineAufgabenWidget({ available, previewItems }: Props) {
       variant="card"
       bodyClassName="px-4 py-1.5 sm:px-5 sm:py-2"
       actions={
-        available ? (
-          <Link href="/dashboard/aufgaben" className="sce-link-primary text-[0.8125rem] font-medium">
-            Alle Aufgaben →
-          </Link>
-        ) : undefined
+        <Link href="/dashboard/aufgaben" className="sce-link-primary text-[0.8125rem] font-medium">
+          Alle Aufgaben →
+        </Link>
       }
     >
-      {!available ? (
-        <DashboardEmptyState
-          icon={<ListChecks className="h-4 w-4" />}
-          title="Aufgaben nicht verfügbar"
-          description="Für dein Konto ist das Aufgabenmodul noch nicht freigeschaltet."
-          variant="compact"
-          compactLayout="inline"
-        />
-      ) : hasTasks ? (
+      {hasTasks ? (
         <ul className="divide-y divide-[var(--border)]">
           {previewItems.map((task) => (
             <li key={task.id} className="py-2.5">
@@ -66,8 +55,9 @@ export function MeineAufgabenWidget({ available, previewItems }: Props) {
         <DashboardEmptyState
           icon={<ListChecks className="h-4 w-4" />}
           title="Keine offenen Aufgaben"
+          description="Aktuell ist nichts für dich offen."
           variant="compact"
-          compactLayout="inline"
+          compactLayout="stacked"
         />
       )}
     </DashboardSection>
