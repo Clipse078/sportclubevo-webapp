@@ -19,6 +19,7 @@ type MatchcenterDetailProps = {
   canValidatePlanning?: boolean;
   isProtectedSource?: boolean;
   tenantLogoUrl?: string | null;
+  canCreateTask?: boolean;
 };
 
 export default function MatchcenterDetail({
@@ -35,6 +36,7 @@ export default function MatchcenterDetail({
   canValidatePlanning = false,
   isProtectedSource = false,
   tenantLogoUrl = null,
+  canCreateTask = false,
 }: MatchcenterDetailProps) {
   void canSubmitPlanning;
 
@@ -61,6 +63,7 @@ export default function MatchcenterDetail({
         isProtectedSource={isProtectedSource}
         tenantLogoUrl={tenantLogoUrl}
         wochenplanerHref={wochenplanerHref}
+        canCreateTask={canCreateTask}
       />
     </PageShell>
   );

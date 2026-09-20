@@ -64,6 +64,7 @@ export type SpieleMatchRecordWorkspaceProps = {
   isProtectedSource: boolean;
   tenantLogoUrl?: string | null;
   wochenplanerHref: string;
+  canCreateTask?: boolean;
 };
 
 function RecordField({
@@ -108,6 +109,7 @@ export default function SpieleMatchRecordWorkspace({
   isProtectedSource,
   tenantLogoUrl = null,
   wochenplanerHref,
+  canCreateTask = false,
 }: SpieleMatchRecordWorkspaceProps) {
   const saveActionRef = useRef<(() => Promise<void>) | null>(null);
   const [saveUi, setSaveUi] = useState({ isDirty: false, saving: false });
@@ -310,7 +312,11 @@ export default function SpieleMatchRecordWorkspace({
       <div className="flex shrink-0 flex-wrap items-center gap-2">
         <SpieleMatchRecordContextMenu
           wochenplanerHref={wochenplanerHref}
-          createTaskHref={buildTaskCreateFromContextHref("MATCH", match.id)}
+          createTaskHref={
+            canCreateTask
+              ? buildTaskCreateFromContextHref("MATCH", match.id)
+              : null
+          }
           canDelete={canDelete}
           onDeleteRequest={canDelete ? () => setDeleteOpen(true) : undefined}
         />
