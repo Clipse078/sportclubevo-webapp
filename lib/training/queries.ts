@@ -44,6 +44,10 @@ export type TrainingSeriesRow = {
   planningValidatedAt: Date | null;
   planningValidatedById: string | null;
   createdByUserId: string | null;
+  participationResponseDueDaysBefore: number | null;
+  participationResponseDueLocalTime: string | null;
+  participationReminder1PresetKey: string | null;
+  participationReminder2PresetKey: string | null;
 };
 
 export const trainingSeriesInclude = {
@@ -413,6 +417,11 @@ export type CreateTrainingSessionRow = {
   startAt: Date;
   endAt: Date;
   timezone: string;
+  participationResponseDueAt?: Date | null;
+  participationReminder1At?: Date | null;
+  participationReminder2At?: Date | null;
+  participationReminder1PresetKey?: string | null;
+  participationReminder2PresetKey?: string | null;
 };
 
 /**

@@ -64,9 +64,11 @@ import {
   TrainingSessionNotFoundError,
 } from "./errors";
 import { findTrainingSeriesById } from "./queries";
+import { buildParticipationScheduleSnapshotFromSeries } from "@/lib/participation/participation-response-deadline-schedule";
 import {
   findAllTrainingSessionsForSeries,
   createManyTrainingSessions,
+  type CreateTrainingSessionRow,
   updateTrainingSessionSchedule,
   deactivateTrainingSession,
   reactivateTrainingSessionSchedule,
@@ -232,16 +234,7 @@ export async function generateTrainingSessions(
     existingRows.map((row) => [dateKeyFromDate(row.date), row]),
   );
 
-  const toCreate: Array<{
-    tenantId: string;
-    trainingSeriesId: string;
-    teamSeasonId: string;
-    date: Date;
-    weekday: Weekday;
-    startAt: Date;
-    endAt: Date;
-    timezone: string;
-  }> = [];
+  const toCreate: CreateTrainingSessionRow[] = [];
 
   let updated = 0;
   let unchanged = 0;
@@ -251,6 +244,14 @@ export async function generateTrainingSessions(
     const existing = existingByDateKey.get(occ.dateKey);
 
     if (!existing) {
+      const participationSnapshot = buildParticipationScheduleSnapshotFromSeries({
+        sessionStartAt: occ.startAt,
+        timeZone: series.timezone,
+        participationResponseDueDaysBefore: series.participationResponseDueDaysBefore ?? null,
+        participationResponseDueLocalTime: series.participationResponseDueLocalTime ?? null,
+        participationReminder1PresetKey: series.participationReminder1PresetKey ?? null,
+        participationReminder2PresetKey: series.participationReminder2PresetKey ?? null,
+      });
       toCreate.push({
         tenantId,
         trainingSeriesId,
@@ -260,6 +261,11 @@ export async function generateTrainingSessions(
         startAt: occ.startAt,
         endAt: occ.endAt,
         timezone: series.timezone,
+        participationResponseDueAt: participationSnapshot.dueAt,
+        participationReminder1At: participationSnapshot.reminder1At,
+        participationReminder2At: participationSnapshot.reminder2At,
+        participationReminder1PresetKey: participationSnapshot.reminder1PresetKey,
+        participationReminder2PresetKey: participationSnapshot.reminder2PresetKey,
       });
       continue;
     }

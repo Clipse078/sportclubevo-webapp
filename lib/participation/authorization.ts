@@ -83,3 +83,32 @@ export async function getAuthorizedPersonIdsForUser(
 
   return [...personIds];
 }
+
+/**
+ * Inverse of getAuthorizedPersonIdsForUser — users who may respond for a player (self + guardians).
+ */
+export async function getUserIdsAuthorizedToRespondForPerson(
+  tenantId: string,
+  personId: string,
+): Promise<string[]> {
+  const person = await prisma.person.findFirst({
+    where: { id: personId, tenantId },
+    select: {
+      userId: true,
+      guardianRelationshipsAsChild: {
+        select: { guardianPerson: { select: { userId: true } } },
+      },
+    },
+  });
+
+  if (!person) return [];
+
+  const userIds = new Set<string>();
+  if (person.userId) userIds.add(person.userId);
+  for (const link of person.guardianRelationshipsAsChild) {
+    if (link.guardianPerson.userId) {
+      userIds.add(link.guardianPerson.userId);
+    }
+  }
+  return [...userIds];
+}

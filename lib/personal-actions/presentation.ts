@@ -97,15 +97,33 @@ export function mapPersonalActionToListItem(
           }
         : undefined;
 
+    const deadline = presentTaskDeadline({
+      dueAt: action.dueAt,
+      status: TaskStatus.OPEN,
+      locale,
+      timeZone,
+    });
+
+    let metaLine: string | null = null;
+    if (action.dueAt) {
+      if (deadline.kind === "OVERDUE") {
+        metaLine = `Überfällig · Antwortfrist: ${deadline.label.replace(/^Fällig · /, "")}`;
+      } else if (deadline.kind !== "NONE") {
+        metaLine = `Antwortfrist: ${deadline.label.replace(/^Fällig · /, "")}`;
+      }
+    } else if (eventStart) {
+      metaLine = formatEventStartContext(eventStart, cfg);
+    }
+
     return {
       id: action.id,
       sourceType: action.sourceType,
       sourceLabel: "Teilnahme",
       title: attendanceActionTitle(action),
       subtitle: attendanceSubtitle(action),
-      metaLine: eventStart ? formatEventStartContext(eventStart, cfg) : null,
+      metaLine,
       href: action.href,
-      emphasis: "calm",
+      emphasis: action.dueAt ? deadline.emphasis : "calm",
       inlineParticipationReady: Boolean(inlineParticipation),
       inlineParticipation,
     };

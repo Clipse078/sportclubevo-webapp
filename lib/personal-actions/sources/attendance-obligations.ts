@@ -16,6 +16,7 @@ export type AttendanceObligationCandidate = {
   eventId?: string;
   eventTitle: string;
   eventStartAt: Date;
+  participationResponseDueAt: Date | null;
   responseId: string | null;
   responseStatus: ParticipationResponseStatus;
 };
@@ -127,6 +128,7 @@ export async function loadAttendanceObligationCandidates(
         id: true,
         teamSeasonId: true,
         startAt: true,
+        participationResponseDueAt: true,
         trainingSeries: { select: { title: true } },
       },
       orderBy: [{ startAt: "asc" }],
@@ -137,6 +139,7 @@ export async function loadAttendanceObligationCandidates(
         teamId: { in: teamIds },
         seasonId: { in: seasonIds },
         type: { in: ["MATCH", "TOURNAMENT"] },
+        status: { not: "CANCELLED" },
         startAt: { gte: now, lte: until },
       },
       select: {
@@ -146,6 +149,7 @@ export async function loadAttendanceObligationCandidates(
         type: true,
         title: true,
         startAt: true,
+        participationResponseDueAt: true,
       },
       orderBy: [{ startAt: "asc" }],
     }),
@@ -188,6 +192,7 @@ export async function loadAttendanceObligationCandidates(
       eventId?: string;
       title: string;
       startAt: Date;
+      participationResponseDueAt: Date | null;
     }>
   >();
 
@@ -203,6 +208,7 @@ export async function loadAttendanceObligationCandidates(
       trainingSessionId: session.id,
       title: session.trainingSeries.title,
       startAt: session.startAt,
+      participationResponseDueAt: session.participationResponseDueAt,
     });
   }
 
@@ -222,6 +228,7 @@ export async function loadAttendanceObligationCandidates(
         eventId: calendarEvent.id,
         title: calendarEvent.title,
         startAt: calendarEvent.startAt,
+        participationResponseDueAt: calendarEvent.participationResponseDueAt,
       });
     }
   }
@@ -259,6 +266,7 @@ export async function loadAttendanceObligationCandidates(
         eventId: event.eventId,
         eventTitle: event.title,
         eventStartAt: event.startAt,
+        participationResponseDueAt: event.participationResponseDueAt,
         responseId: response?.id ?? null,
         responseStatus: status,
       });

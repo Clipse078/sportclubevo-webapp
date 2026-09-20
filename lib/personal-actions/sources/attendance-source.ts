@@ -34,7 +34,7 @@ function mapCandidateToPersonalAction(
     },
     title: candidate.eventTitle,
     subtitle: `${eventKindLabel} · ${candidate.teamDisplayName}`,
-    dueAt: null,
+    dueAt: candidate.participationResponseDueAt?.toISOString() ?? null,
     status: "ACTIONABLE",
     href: null,
     actionKind: "PARTICIPATION_RESPONSE",
