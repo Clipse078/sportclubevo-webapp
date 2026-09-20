@@ -207,6 +207,11 @@ async function main() {
 
     { key: "initiatives.view", name: "View initiatives", module: PermissionModule.INITIATIVES, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "initiatives.manage", name: "Manage initiatives", module: PermissionModule.INITIATIVES, scope: PermissionScope.TENANT, grantableByAdmin: true },
+
+    { key: "tasks.view", name: "View tasks", module: PermissionModule.TASKS, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "tasks.create", name: "Create tasks", module: PermissionModule.TASKS, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "tasks.manage", name: "Manage tasks", module: PermissionModule.TASKS, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "tasks.assign", name: "Assign tasks", module: PermissionModule.TASKS, scope: PermissionScope.TENANT, grantableByAdmin: true },
     // ADMIN-HARD-DELETE-UI: canonical permanent-deletion permission for Initiatives.
     // Deliberately separate from initiatives.manage. Follows the "<module>.delete" convention.
     { key: "initiatives.delete", name: "Permanently delete initiatives", module: PermissionModule.INITIATIVES, scope: PermissionScope.TENANT, grantableByAdmin: true },

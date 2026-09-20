@@ -127,6 +127,12 @@ export const PERMISSIONS = {
   INITIATIVES_VIEW: "initiatives.view",
   INITIATIVES_MANAGE: "initiatives.manage",
 
+  // AUFGABEN-01 — operational task module (not membership administration).
+  TASKS_VIEW: "tasks.view",
+  TASKS_CREATE: "tasks.create",
+  TASKS_MANAGE: "tasks.manage",
+  TASKS_ASSIGN: "tasks.assign",
+
   TEMPLATES_VIEW: "templates.view",
   TEMPLATES_MANAGE: "templates.manage",
 

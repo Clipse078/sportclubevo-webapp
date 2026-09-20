@@ -128,6 +128,7 @@ const PERMISSION_MODULES: Record<string, PermissionModule> = {
   facilities: "FACILITIES",
   workspace: "WORKSPACE",
   roles: "ROLES",
+  tasks: "TASKS",
 };
 
 export type AcceptancePermissionDefinition = {

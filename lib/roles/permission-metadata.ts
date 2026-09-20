@@ -23,6 +23,7 @@ export const MODULE_DESCRIPTIONS_DE: Record<string, string> = {
   WOCHENPLAN: "Operativer Wochenplan mit Spielfeldern und Zuteilungen.",
   FIXTURES: "Spielpläne, Termine und Veröffentlichung.",
   REGISTRATIONS: "Anmeldungen und Teilnahmeprozesse.",
+  TASKS: "Operative Aufgaben und Follow-ups im Verein.",
   COMPETITIONS: "Wettbewerbe und Ligen.",
   INFOBOARD: "Infoboard-Inhalte und Ausspielung.",
   MEETINGS: "Sitzungen, Protokolle und Beschlüsse.",
@@ -123,6 +124,11 @@ const PERMISSION_LABELS_DE: Record<string, string> = {
   "initiatives.view": "Initiativen ansehen",
   "initiatives.manage": "Initiativen verwalten",
   "initiatives.delete": "Initiativen dauerhaft löschen",
+
+  "tasks.view": "Aufgaben ansehen",
+  "tasks.create": "Aufgaben erstellen",
+  "tasks.manage": "Aufgaben verwalten",
+  "tasks.assign": "Aufgaben zuweisen",
 
   "templates.view": "Vorlagen ansehen",
   "templates.manage": "Vorlagen verwalten",
@@ -227,6 +233,11 @@ const PERMISSION_DESCRIPTIONS_DE: Record<string, string> = {
   "initiatives.view": "Initiativen und Projekte einsehen.",
   "initiatives.manage": "Initiativen erstellen, bearbeiten und verwalten.",
   "initiatives.delete": "Initiativen endgültig aus dem System entfernen.",
+
+  "tasks.view": "Aufgaben sehen, die für die Person sichtbar sind (eigene Zuweisungen, erstellte Aufgaben oder Verwaltungszugriff).",
+  "tasks.create": "Operative Aufgaben im Verein erstellen.",
+  "tasks.manage": "Aufgaben bearbeiten, Status verwalten und archivieren.",
+  "tasks.assign": "Aufgaben anderen berechtigten Benutzern zuweisen.",
 
   "templates.view": "Kommunikationsvorlagen einsehen.",
   "templates.manage": "Kommunikationsvorlagen erstellen und bearbeiten.",

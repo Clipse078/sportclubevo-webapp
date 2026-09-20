@@ -128,6 +128,9 @@ export default async function ClubDashboardView() {
         newsItems: [],
         personalAgendaItems: [],
         personalAgendaSupported: false,
+        personalTasksAvailable: false,
+        personalTaskCount: null,
+        personalTaskPreview: [],
         heroBackgroundImageUrl: null,
         heroBackgroundTransform: DEFAULT_HERO_TRANSFORM,
       };
@@ -229,7 +232,10 @@ export default async function ClubDashboardView() {
               items={commandCenter.personalAgendaItems}
               supported={commandCenter.personalAgendaSupported}
             />
-            <MeineAufgabenWidget />
+            <MeineAufgabenWidget
+              available={commandCenter.personalTasksAvailable}
+              previewItems={commandCenter.personalTaskPreview}
+            />
           </>
         }
         clubToday={
