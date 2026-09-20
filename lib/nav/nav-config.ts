@@ -28,11 +28,18 @@ export type NavItemChild = {
   navIconLabel?: string;
 };
 
+export type NavCapabilityContext = {
+  /** AUFGABEN-05-UI: participation/self/guardian domain without tasks.view */
+  personalActionsModule?: boolean;
+};
+
 export type NavItem = {
   key: string;
   label: string;
   href: string;
   permissionKeys?: PermissionKey[];
+  /** When true, item is also visible when {@link NavCapabilityContext.personalActionsModule}. */
+  personalActionsNavFallback?: boolean;
   /** Shell workspace visibility; defaults to club-only. */
   navContexts?: NavContext[];
   /** Whether the active season query param should propagate to this href. */
@@ -392,6 +399,7 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Aufgaben",
         href: "/dashboard/aufgaben",
         permissionKeys: [PERMISSIONS.TASKS_VIEW],
+        personalActionsNavFallback: true,
       },
       {
         key: "helfereinsaetze",
@@ -782,6 +790,20 @@ function hasAccess(userKeys: PermissionKey[], required?: PermissionKey[]): boole
   return required.some((p) => userKeys.includes(p));
 }
 
+function hasNavItemAccess(
+  userKeys: PermissionKey[],
+  item: Pick<NavItem, "permissionKeys" | "personalActionsNavFallback">,
+  capabilities?: NavCapabilityContext,
+): boolean {
+  if (hasAccess(userKeys, item.permissionKeys)) {
+    return true;
+  }
+  if (item.personalActionsNavFallback && capabilities?.personalActionsModule) {
+    return true;
+  }
+  return false;
+}
+
 const DEFAULT_NAV_CONTEXTS: NavContext[] = ["club"];
 
 function isVisibleInNavContext(
@@ -796,12 +818,13 @@ function isVisibleInNavContext(
 export function getVisibleNavSections(
   permissionKeys: PermissionKey[],
   workspaceContext: NavContext = "club",
+  capabilities?: NavCapabilityContext,
 ): NavSection[] {
   return NAV_SECTIONS.map((section) => ({
     ...section,
     items: section.items
       .filter((item) => isVisibleInNavContext(item.navContexts, workspaceContext))
-      .filter((item) => hasAccess(permissionKeys, item.permissionKeys))
+      .filter((item) => hasNavItemAccess(permissionKeys, item, capabilities))
       .map((item) => ({
         ...item,
         children: item.children
@@ -815,9 +838,10 @@ export function getVisibleNavSections(
 export function getTopLevelNavModuleKeys(
   permissionKeys: PermissionKey[],
   workspaceContext: NavContext = "club",
+  capabilities?: NavCapabilityContext,
 ): string[] {
-  return getVisibleNavSections(permissionKeys, workspaceContext).flatMap((section) =>
-    section.items.map((item) => item.key),
+  return getVisibleNavSections(permissionKeys, workspaceContext, capabilities).flatMap(
+    (section) => section.items.map((item) => item.key),
   );
 }
 

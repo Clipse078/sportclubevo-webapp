@@ -30,3 +30,28 @@ export {
 } from "./load-personal-actions";
 
 export { countPersonalActions } from "./count-personal-actions";
+
+export {
+  loadPersonalActionsModuleCapabilities,
+  resolvePersonalActionsModuleCapabilities,
+  resolvePersonalParticipationNavCapability,
+} from "./access";
+export type { PersonalActionsModuleCapabilities } from "./access";
+
+export { requirePersonalActionsModuleAccess } from "./require-module-access";
+
+export {
+  PERSONAL_ACTION_INBOX_DEFAULT_LIMIT,
+  filterPersonalActionsForInbox,
+  mapPersonalActionToListItem,
+  mapPersonalActionsToPreviewItems,
+} from "./presentation";
+export type { PersonalActionListItem, PersonalActionSourceFilter } from "./presentation";
+
+export {
+  buildAufgabenBereichHref,
+  buildPersonalInboxFilterHref,
+  parseAufgabenBereich,
+  parsePersonalInboxFilter,
+} from "./aufgaben-scope";
+export type { AufgabenBereich, PersonalInboxFilterParam } from "./aufgaben-scope";

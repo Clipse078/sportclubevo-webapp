@@ -6,8 +6,10 @@ import { DashboardEmptyState } from "./DashboardEmptyState";
 export type PersonalTaskPreviewItem = {
   id: string;
   title: string;
-  dueAt: string | null;
-  parentTitle?: string | null;
+  subtitle?: string | null;
+  metaLine?: string | null;
+  href?: string | null;
+  sourceLabel?: string;
 };
 
 type Props = {
@@ -15,7 +17,7 @@ type Props = {
 };
 
 export function MeineAufgabenWidget({ previewItems }: Props) {
-  const hasTasks = previewItems.length > 0;
+  const hasItems = previewItems.length > 0;
 
   return (
     <DashboardSection
@@ -25,37 +27,49 @@ export function MeineAufgabenWidget({ previewItems }: Props) {
       variant="card"
       bodyClassName="px-4 py-1.5 sm:px-5 sm:py-2"
       actions={
-        <Link href="/dashboard/aufgaben" className="sce-link-primary text-[0.8125rem] font-medium">
-          Alle Aufgaben →
+        <Link href="/dashboard/aufgaben?bereich=meine" className="sce-link-primary text-[0.8125rem] font-medium">
+          Alle anzeigen →
         </Link>
       }
     >
-      {hasTasks ? (
+      {hasItems ? (
         <ul className="divide-y divide-[var(--border)]">
-          {previewItems.map((task) => (
-            <li key={task.id} className="py-2.5">
-              <Link
-                href={`/dashboard/aufgaben/${task.id}`}
-                className="block text-[0.875rem] font-medium text-[var(--foreground)] hover:text-[var(--primary)]"
-              >
-                {task.title}
-              </Link>
-              {task.parentTitle ? (
-                <p className="text-[0.75rem] text-[var(--muted-foreground)]">↳ {task.parentTitle}</p>
-              ) : null}
-              {task.dueAt ? (
-                <p className="mt-0.5 text-[0.75rem] text-[var(--muted-foreground)]">
-                  Fällig: {new Date(task.dueAt).toLocaleDateString("de-CH")}
-                </p>
-              ) : null}
-            </li>
-          ))}
+          {previewItems.map((item) => {
+            const content = (
+              <>
+                <span className="block text-[0.875rem] font-medium text-[var(--foreground)]">
+                  {item.title}
+                </span>
+                {item.subtitle ? (
+                  <p className="text-[0.75rem] text-[var(--muted-foreground)]">{item.subtitle}</p>
+                ) : null}
+                {item.metaLine ? (
+                  <p className="mt-0.5 text-[0.75rem] text-[var(--muted-foreground)]">{item.metaLine}</p>
+                ) : null}
+              </>
+            );
+
+            return (
+              <li key={item.id} className="py-2.5">
+                {item.href ? (
+                  <Link
+                    href={item.href}
+                    className="block hover:text-[var(--primary)]"
+                  >
+                    {content}
+                  </Link>
+                ) : (
+                  <div className="block">{content}</div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       ) : (
         <DashboardEmptyState
           icon={<ListChecks className="h-4 w-4" />}
-          title="Keine offenen Aufgaben"
-          description="Aktuell ist nichts für dich offen."
+          title="Alles erledigt"
+          description="Aktuell gibt es keine offenen Aufgaben oder Rückmeldungen."
           variant="compact"
           compactLayout="stacked"
         />

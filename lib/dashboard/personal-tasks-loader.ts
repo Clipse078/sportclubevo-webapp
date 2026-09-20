@@ -1,28 +1,30 @@
 /**
- * Dashboard personal Aufgaben — canonical RBAC + bounded task preview.
- *
- * Uses the same live effective-permission resolution as requirePermission /
- * getTaskServiceContext (not session JWT snapshots or legacy availability stubs).
+ * Dashboard personal Aufgaben — PersonalAction read model (AUFGABEN-05-UI).
  */
 
-import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { countMyOpenTasks, listMyTasks } from "@/lib/tasks/task-service";
-import type { TaskServiceContext } from "@/lib/tasks/types";
+import { loadPersonalActionsModuleCapabilities } from "@/lib/personal-actions/access";
+import {
+  countPersonalActions,
+  loadDashboardPersonalActions,
+} from "@/lib/personal-actions";
+import { mapPersonalActionsToPreviewItems } from "@/lib/personal-actions/presentation";
+import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 
 export const DASHBOARD_PERSONAL_TASK_PREVIEW_LIMIT = 5;
 
 export type DashboardPersonalTaskPreviewItem = {
   id: string;
   title: string;
-  dueAt: string | null;
-  parentTitle: string | null;
+  subtitle: string | null;
+  metaLine: string | null;
+  href: string | null;
+  sourceLabel: string;
 };
 
 export type DashboardPersonalTasksSnapshot = {
-  /** User holds tasks.view in the active tenant. */
+  /** User may use Meine Aufgaben (task and/or participation domain). */
   authorized: boolean;
-  /** Personal open/actionable count; null when unauthorized. */
+  /** Actionable personal count after stable-id deduplication; null when unauthorized. */
   count: number | null;
   preview: DashboardPersonalTaskPreviewItem[];
 };
@@ -30,39 +32,42 @@ export type DashboardPersonalTasksSnapshot = {
 export async function loadDashboardPersonalTasks(args: {
   tenantId: string;
   userId: string;
+  fmtCfg?: TenantFormatConfig;
+  locale?: string;
+  timeZone?: string;
 }): Promise<DashboardPersonalTasksSnapshot> {
-  const { platform, tenant } = await getRequestEffectivePermissions(
-    args.userId,
-    args.tenantId,
-  );
-  const permissionKeys = [...platform, ...tenant];
+  const capabilities = await loadPersonalActionsModuleCapabilities({
+    tenantId: args.tenantId,
+    userId: args.userId,
+  });
 
-  if (!permissionKeys.includes(PERMISSIONS.TASKS_VIEW)) {
+  if (!capabilities.personalInbox) {
     return { authorized: false, count: null, preview: [] };
   }
 
-  const ctx: TaskServiceContext = {
-    tenantId: args.tenantId,
-    userId: args.userId,
-    permissionKeys,
+  const locale = args.locale ?? args.fmtCfg?.locale ?? "de-CH";
+  const timeZone = args.timeZone ?? args.fmtCfg?.timezone ?? "Europe/Zurich";
+  const fmtCfg: TenantFormatConfig = args.fmtCfg ?? {
+    locale,
+    timezone: timeZone,
   };
 
-  const [count, previewTasks] = await Promise.all([
-    countMyOpenTasks(ctx),
-    listMyTasks(ctx, {
-      openOnly: true,
-      limit: DASHBOARD_PERSONAL_TASK_PREVIEW_LIMIT,
+  const [counts, actions] = await Promise.all([
+    countPersonalActions({
+      tenantId: args.tenantId,
+      userId: args.userId,
+      permissionKeys: capabilities.permissionKeys,
+    }),
+    loadDashboardPersonalActions({
+      tenantId: args.tenantId,
+      userId: args.userId,
+      permissionKeys: capabilities.permissionKeys,
     }),
   ]);
 
   return {
     authorized: true,
-    count,
-    preview: previewTasks.map((task) => ({
-      id: task.id,
-      title: task.title,
-      dueAt: task.dueAt,
-      parentTitle: task.parentTask?.title ?? null,
-    })),
+    count: counts.totalActionable,
+    preview: mapPersonalActionsToPreviewItems(actions, fmtCfg, locale, timeZone),
   };
 }

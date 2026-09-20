@@ -12,6 +12,7 @@ import { getPersonProfileByUserIdCached } from "@/lib/server/request-cache";
 import { resolveAccountIdentityName } from "@/lib/people/identity";
 import { resolveWorkspaceContextFromSessionUser } from "@/lib/workspace/workspace-context";
 import { SCE_APP_MAIN_COLUMN } from "@/lib/shell/responsive-layout";
+import { resolvePersonalParticipationNavCapability } from "@/lib/personal-actions/access";
 
 type AdminLayoutProps = {
   children: ReactNode;
@@ -33,6 +34,14 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
     getActiveTenant(),
     getPersonProfileByUserIdCached(session.user.id),
   ]);
+
+  const participationNavCapable = ctx?.id
+    ? await resolvePersonalParticipationNavCapability({
+        tenantId: ctx.id,
+        userId: session.user.id,
+      })
+    : false;
+
   const tenantCssVars = generateTenantCssVars(ctx);
 
   // DASHBOARD-SHELL-UX-01-C2: the sidebar footer identity (directly above
@@ -65,6 +74,9 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
           workspaceContext={workspaceContext}
           clubName={ctx?.name}
           logoUrl={ctx?.logoUrl}
+          navCapabilities={{
+            personalActionsModule: participationNavCapable,
+          }}
         />
       </Suspense>
 

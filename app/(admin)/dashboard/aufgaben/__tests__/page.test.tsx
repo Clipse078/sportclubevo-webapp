@@ -11,8 +11,26 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-vi.mock("@/lib/permissions/require-permission", () => ({
-  requirePermission: vi.fn().mockResolvedValue({ user: { id: "user-1" } }),
+vi.mock("@/lib/personal-actions/require-module-access", () => ({
+  requirePersonalActionsModuleAccess: vi.fn().mockResolvedValue({
+    session: { user: { id: "user-1" } },
+    tenantId: "tenant-1",
+    capabilities: {
+      taskManagement: true,
+      personalInbox: true,
+      moduleAccess: true,
+      permissionKeys: ["tasks.view", "tasks.create", "tasks.assign", "tasks.manage"],
+    },
+  }),
+}));
+
+vi.mock("@/lib/personal-actions", () => ({
+  loadPersonalActions: vi.fn().mockResolvedValue([]),
+  countPersonalActions: vi.fn().mockResolvedValue({
+    totalActionable: 0,
+    taskActionable: 0,
+    attendanceActionable: 0,
+  }),
 }));
 
 vi.mock("@/lib/tasks/server-context", () => ({
@@ -90,19 +108,20 @@ vi.mock("@/lib/tasks/management-service", () => ({
 import AufgabenPage from "../page";
 
 describe("AUFGABEN-02 — Aufgaben management page", () => {
-  it("renders management workspace without proof or future-module shell", async () => {
+  it("renders personal inbox by default for authorized users", async () => {
     const jsx = await AufgabenPage({ searchParams: Promise.resolve({}) });
     render(jsx);
-    expect(screen.getByRole("heading", { level: 1, name: "Aufgaben" })).toBeInTheDocument();
-    expect(screen.getByTestId("aufgaben-management-workspace")).toBeInTheDocument();
-    expect(screen.getByText("Material bestellen")).toBeInTheDocument();
-    expect(screen.queryByText("In Vorbereitung")).toBeNull();
-    expect(screen.queryByText(/Funktionsprobe/)).toBeNull();
+    expect(screen.getByTestId("personal-actions-inbox")).toBeInTheDocument();
+    expect(screen.getByTestId("personal-inbox-empty")).toBeInTheDocument();
   });
 
-  it("exposes management perspectives in quick access", async () => {
-    const jsx = await AufgabenPage({ searchParams: Promise.resolve({ view: "MEINE" }) });
+  it("renders management workspace when bereich=verwaltung", async () => {
+    const jsx = await AufgabenPage({
+      searchParams: Promise.resolve({ bereich: "verwaltung", view: "MEINE" }),
+    });
     render(jsx);
+    expect(screen.getByTestId("aufgaben-management-workspace")).toBeInTheDocument();
+    expect(screen.getByText("Material bestellen")).toBeInTheDocument();
     expect(screen.getByTestId("aufgaben-view-meine")).toHaveAttribute("aria-current", "true");
   });
 });
