@@ -1,5 +1,8 @@
 import type { TaskContextType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { canSeeMeeting } from "@/lib/meetings/queries";
+import { loadOrgUnitIds, loadTargetGroupIds } from "@/lib/org/queries";
+import { buildActorContext } from "@/lib/visibility/actor-context";
 import { canAttachTaskContext } from "./context-access";
 import { isSupportedTaskContextType } from "./context-registry";
 import { TaskValidationError } from "./errors";
@@ -33,19 +36,33 @@ export async function validateTaskContext(
     );
   }
 
-  const exists = await resolveContextExists(ctx.tenantId, type, id);
-  if (!exists) {
+  const attachable = await resolveContextAttachable(ctx, type, id);
+  if (!attachable) {
     throw new TaskValidationError(
       "Context entity not found in this tenant or type mismatch",
     );
   }
 }
 
-async function resolveContextExists(
-  tenantId: string,
+async function buildMeetingActor(ctx: TaskServiceContext) {
+  const [orgUnitIds, targetGroupIds] = await Promise.all([
+    loadOrgUnitIds(ctx.userId, ctx.tenantId),
+    loadTargetGroupIds(ctx.userId, ctx.tenantId),
+  ]);
+  return buildActorContext(
+    { id: ctx.userId, roleKeys: [], permissionKeys: [...ctx.permissionKeys] },
+    orgUnitIds,
+    targetGroupIds,
+    ctx.tenantId,
+  );
+}
+
+async function resolveContextAttachable(
+  ctx: TaskServiceContext,
   type: TaskContextType,
   id: string,
 ): Promise<boolean> {
+  const tenantId = ctx.tenantId;
   switch (type) {
     case "MATCH":
       return Boolean(
@@ -75,13 +92,25 @@ async function resolveContextExists(
           select: { id: true },
         }),
       );
-    case "MEETING":
-      return Boolean(
-        await prisma.meeting.findFirst({
-          where: { id, tenantId },
-          select: { id: true },
-        }),
-      );
+    case "MEETING": {
+      const meeting = await prisma.meeting.findFirst({
+        where: { id, tenantId },
+        select: {
+          id: true,
+          visibilityScope: true,
+          createdByUserId: true,
+          visibleRoleRefs: true,
+          visibleUserRefs: true,
+          visibleTeamRefs: true,
+          visibleOrgUnitRefs: true,
+          visiblePersonRefs: true,
+          visibleTargetGroupRefs: true,
+        },
+      });
+      if (!meeting) return false;
+      const actor = await buildMeetingActor(ctx);
+      return canSeeMeeting(meeting, actor);
+    }
     case "REGISTRATION":
       return Boolean(
         await prisma.registration.findFirst({

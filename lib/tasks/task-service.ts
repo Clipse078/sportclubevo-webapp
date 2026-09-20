@@ -48,6 +48,11 @@ import {
   normalizeTaskOrgVisibilityState,
   validateTaskOrgVisibilityMutation,
 } from "./task-org-mutation-policy";
+import {
+  assertTaskOrgVisibilityPropagationEditable,
+  resolvePropagatedTaskOrgVisibility,
+  requestsTaskOrgVisibilityChange,
+} from "./task-org-propagation";
 
 const TASK_INCLUDE = {
   assignees: {
@@ -433,6 +438,11 @@ export async function createSubtask(
   const assigneeUserIds = [...new Set(input.assigneeUserIds ?? [])];
   await validateAssigneeUserIds(ctx.tenantId, assigneeUserIds);
 
+  const propagatedOrg = resolvePropagatedTaskOrgVisibility({
+    visibilityScope: parent.visibilityScope,
+    orgUnitId: parent.orgUnitId,
+  });
+
   const task = await prisma.$transaction(async (tx) => {
     const created = await tx.task.create({
       data: {
@@ -442,8 +452,8 @@ export async function createSubtask(
         description: input.description?.trim() || null,
         priority: input.priority ?? "NORMAL",
         dueAt: input.dueAt ?? null,
-        orgUnitId: parent.orgUnitId,
-        visibilityScope: parent.visibilityScope,
+        orgUnitId: propagatedOrg.orgUnitId,
+        visibilityScope: propagatedOrg.visibilityScope,
         createdByUserId: ctx.userId,
         status: TaskStatusEnum.OPEN,
       },
@@ -551,8 +561,13 @@ export async function updateTask(
     orgUnitId: existing.orgUnitId,
   });
 
-  const orgVisibilityMutation =
-    input.orgUnitId !== undefined || input.visibilityScope !== undefined;
+  const orgVisibilityMutation = requestsTaskOrgVisibilityChange(
+    {
+      visibilityScope: existing.visibilityScope,
+      orgUnitId: existing.orgUnitId,
+    },
+    input,
+  );
 
   if (!canManage && !(isCreator && hasTaskPermission(ctx, PERMISSIONS.TASKS_CREATE))) {
     if (!isAssignee || input.status === undefined) {
@@ -577,6 +592,10 @@ export async function updateTask(
     | Awaited<ReturnType<typeof validateTaskOrgVisibilityMutation>>
     | null = null;
   if (orgVisibilityMutation) {
+    assertTaskOrgVisibilityPropagationEditable({
+      parentTaskId: existing.parentTaskId,
+      taskSeriesId: existing.taskSeriesId,
+    });
     nextOrgVisibility = await validateTaskOrgVisibilityMutation(
       ctx,
       normalizeTaskOrgVisibilityState(

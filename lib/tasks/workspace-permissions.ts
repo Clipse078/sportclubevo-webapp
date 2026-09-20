@@ -2,6 +2,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { TaskDto, TaskServiceContext } from "./types";
 import { canManageTask, hasTaskPermission } from "./visibility";
 import { canMutateTaskOrgVisibility } from "./task-org-mutation-policy";
+import { isTaskOrgVisibilityPropagationLocked } from "./task-org-propagation";
 
 export type TaskWorkspaceCapabilities = {
   readOnly: boolean;
@@ -46,15 +47,20 @@ export function resolveTaskWorkspaceCapabilities(
     visibilityScope: task.visibilityScope,
     orgUnitId: task.orgUnitId,
   };
-  const canEditOrgVisibility = canMutateTaskOrgVisibility(
-    ctx,
-    authRecord,
-    {
-      visibilityScope: task.visibilityScope,
-      orgUnitId: task.orgUnitId,
-    },
-    "edit",
-  );
+  const canEditOrgVisibility =
+    !isTaskOrgVisibilityPropagationLocked({
+      parentTaskId: task.parentTaskId,
+      taskSeriesId: task.taskSeriesId,
+    }) &&
+    canMutateTaskOrgVisibility(
+      ctx,
+      authRecord,
+      {
+        visibilityScope: task.visibilityScope,
+        orgUnitId: task.orgUnitId,
+      },
+      "edit",
+    );
 
   const caps: TaskWorkspaceCapabilities = {
     readOnly: false,

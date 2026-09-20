@@ -25,6 +25,15 @@ const mocks = vi.hoisted(() => ({
   auditCreate: vi.fn(),
 }));
 
+vi.mock("@/lib/meetings/queries", () => ({
+  canSeeMeeting: vi.fn(() => true),
+}));
+
+vi.mock("@/lib/org/queries", () => ({
+  loadOrgUnitIds: vi.fn().mockResolvedValue([]),
+  loadTargetGroupIds: vi.fn().mockResolvedValue([]),
+}));
+
 vi.mock("@/lib/notifications/task-producer", () => ({
   emitTaskAssignmentNotifications: vi.fn().mockResolvedValue(undefined),
   emitTaskDeadlineChangedNotifications: vi.fn().mockResolvedValue(undefined),
@@ -65,7 +74,17 @@ vi.mock("@/lib/db/prisma", () => ({
       findFirst: vi.fn().mockResolvedValue({ id: "team-99", tenantId: "tenant-a" }),
     },
     meeting: {
-      findFirst: vi.fn().mockResolvedValue({ id: "meeting-1", tenantId: "tenant-a" }),
+      findFirst: vi.fn().mockResolvedValue({
+        id: "meeting-1",
+        visibilityScope: "CLUB",
+        createdByUserId: "user-mgr",
+        visibleRoleRefs: [],
+        visibleUserRefs: [],
+        visibleTeamRefs: [],
+        visibleOrgUnitRefs: [],
+        visiblePersonRefs: [],
+        visibleTargetGroupRefs: [],
+      }),
     },
     $transaction: mocks.transaction,
     auditLog: { create: mocks.auditCreate },
