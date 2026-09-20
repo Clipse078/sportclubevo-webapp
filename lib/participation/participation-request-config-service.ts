@@ -7,6 +7,12 @@ import { prisma } from "@/lib/db/prisma";
 import { logAction } from "@/lib/audit/log-action";
 import { ParticipationEventNotFoundError, ParticipationValidationError } from "./errors";
 import {
+  assertParticipationDueBeforeEventStart,
+  assertParticipationDueBeforeTrainingStart,
+  PARTICIPATION_EVENT_START_ERROR,
+  PARTICIPATION_TRAINING_START_ERROR,
+} from "./participation-start-invariant";
+import {
   recomputeParticipationRemindersAfterDueChange,
   resolveParticipationResponseDeadlineSchedule,
   type ParticipationResponseDeadlineSchedule,
@@ -236,11 +242,7 @@ export async function assertEventStartCompatibleWithParticipationDue(
   });
   if (!event?.participationResponseDueAt) return;
   if (!PARTICIPATION_EVENT_TYPES.has(event.type)) return;
-  if (event.participationResponseDueAt.getTime() >= newStartAt.getTime()) {
-    throw new ParticipationValidationError(
-      "Der neue Eventbeginn liegt vor oder auf der Antwortfrist. Bitte Antwortfrist anpassen.",
-    );
-  }
+  assertParticipationDueBeforeEventStart(event.participationResponseDueAt, newStartAt);
 }
 
 export async function updateTrainingSeriesParticipationRequestPolicy(
@@ -313,9 +315,7 @@ export async function assertTrainingSessionStartCompatibleWithParticipationDue(
     select: { participationResponseDueAt: true },
   });
   if (!session?.participationResponseDueAt) return;
-  if (session.participationResponseDueAt.getTime() >= newStartAt.getTime()) {
-    throw new ParticipationValidationError(
-      "Der neue Trainingsbeginn liegt vor oder auf der Antwortfrist. Bitte Antwortfrist anpassen.",
-    );
-  }
+  assertParticipationDueBeforeTrainingStart(session.participationResponseDueAt, newStartAt);
 }
+
+export { PARTICIPATION_EVENT_START_ERROR, PARTICIPATION_TRAINING_START_ERROR };

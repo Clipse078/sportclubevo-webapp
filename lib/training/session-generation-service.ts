@@ -65,6 +65,7 @@ import {
 } from "./errors";
 import { findTrainingSeriesById } from "./queries";
 import { buildParticipationScheduleSnapshotFromSeries } from "@/lib/participation/participation-response-deadline-schedule";
+import { assertTrainingSessionStartCompatibleWithParticipationDue } from "@/lib/participation/participation-request-config-service";
 import {
   findAllTrainingSessionsForSeries,
   createManyTrainingSessions,
@@ -130,6 +131,11 @@ function toDto(row: TrainingSessionRow): TrainingSessionDto {
     dressingRoomOccupancyMode: row.dressingRoomOccupancyMode as "DEFAULT" | "CUSTOM",
     dressingRoomBeforeMinutes: row.dressingRoomBeforeMinutes,
     dressingRoomAfterMinutes: row.dressingRoomAfterMinutes,
+    participationResponseDueAt: row.participationResponseDueAt?.toISOString() ?? null,
+    participationReminder1At: row.participationReminder1At?.toISOString() ?? null,
+    participationReminder2At: row.participationReminder2At?.toISOString() ?? null,
+    participationReminder1PresetKey: row.participationReminder1PresetKey ?? null,
+    participationReminder2PresetKey: row.participationReminder2PresetKey ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -294,6 +300,12 @@ export async function generateTrainingSessions(
     // (see updateTrainingSessionSchedule doc comment); only the derived
     // schedule is re-synced when it actually changed.
     if (scheduleChanged) {
+      const nextEffectiveStart = existing.overrideStartAt ?? occ.startAt;
+      await assertTrainingSessionStartCompatibleWithParticipationDue(
+        tenantId,
+        existing.id,
+        nextEffectiveStart,
+      );
       await updateTrainingSessionSchedule(existing.id, {
         weekday: occ.weekday,
         startAt: occ.startAt,

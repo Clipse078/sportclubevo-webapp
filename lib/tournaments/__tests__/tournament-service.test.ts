@@ -21,6 +21,10 @@ vi.mock("@/lib/website/public-cache-notification", () => ({
   scheduleTenantPublicWebsiteCacheNotificationByTenantId: cacheNotificationMocks.scheduleByTenantId,
 }));
 
+vi.mock("@/lib/participation/participation-request-config-service", () => ({
+  assertEventStartCompatibleWithParticipationDue: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     event: {

@@ -46,6 +46,12 @@ const defaultProps = {
   canManage: true,
   canDelete: true,
   defaultTrainingDurationMinutes: 90,
+  participationPolicy: {
+    participationResponseDueDaysBefore: 1,
+    participationResponseDueLocalTime: "18:00",
+    participationReminder1PresetKey: "DAYS_1",
+    participationReminder2PresetKey: null,
+  },
 };
 
 function jsonResponse(data: unknown, status = 200): Response {

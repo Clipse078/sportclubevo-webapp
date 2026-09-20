@@ -164,6 +164,12 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
       canDelete={canDelete}
       exceptionNotice={exceptionNotice}
       defaultTrainingDurationMinutes={operationalDurationPolicy.TRAINING.durationMinutes}
+      participationPolicy={{
+        participationResponseDueDaysBefore: series.participationResponseDueDaysBefore,
+        participationResponseDueLocalTime: series.participationResponseDueLocalTime,
+        participationReminder1PresetKey: series.participationReminder1PresetKey,
+        participationReminder2PresetKey: series.participationReminder2PresetKey,
+      }}
     />
   );
 }

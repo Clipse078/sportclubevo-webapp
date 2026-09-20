@@ -22,6 +22,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { rescheduleTrainingSession, resetTrainingSessionSchedule } from "@/lib/training/session-reschedule-service";
+import { ParticipationValidationError } from "@/lib/participation/errors";
 import {
   TrainingSessionInvalidTransitionError,
   TrainingSessionNotFoundError,
@@ -63,6 +64,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: err.message }, { status: 422 });
     }
     if (err instanceof TrainingSessionRescheduleValidationError) {
+      return NextResponse.json({ error: err.message }, { status: 400 });
+    }
+    if (err instanceof ParticipationValidationError) {
       return NextResponse.json({ error: err.message }, { status: 400 });
     }
     throw err;

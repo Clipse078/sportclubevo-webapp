@@ -27,6 +27,7 @@
  * recurring *template*, which a tournament never is).
  */
 
+import { assertEventStartCompatibleWithParticipationDue } from "@/lib/participation/participation-request-config-service";
 import { prisma } from "@/lib/db/prisma";
 import { scheduleTenantPublicWebsiteCacheNotificationByTenantId } from "@/lib/website/public-cache-notification";
 import {
@@ -274,6 +275,11 @@ function toDto(
       ),
     ),
     resourceAllocations: row.tournamentResourceAllocations.map(toResourceAllocationDto),
+    participationResponseDueAt: row.participationResponseDueAt?.toISOString() ?? null,
+    participationReminder1At: row.participationReminder1At?.toISOString() ?? null,
+    participationReminder2At: row.participationReminder2At?.toISOString() ?? null,
+    participationReminder1PresetKey: row.participationReminder1PresetKey ?? null,
+    participationReminder2PresetKey: row.participationReminder2PresetKey ?? null,
     visibility: {
       websiteVisible: row.websiteVisible,
       infoboardVisible: row.infoboardVisible,
@@ -466,7 +472,14 @@ export async function updateTournament(
   if (input.title !== undefined) data.title = input.title.trim();
   if (input.description !== undefined) data.description = input.description?.trim() || null;
   if (input.location !== undefined) data.location = input.location?.trim() || null;
-  if (input.startAt !== undefined) data.startAt = input.startAt;
+  if (input.startAt !== undefined) {
+    await assertEventStartCompatibleWithParticipationDue(
+      tenantId,
+      tournamentId,
+      input.startAt,
+    );
+    data.startAt = input.startAt;
+  }
   if (input.endAt !== undefined) data.endAt = input.endAt;
   if (input.meetingTime !== undefined) data.meetingTime = input.meetingTime;
   if (input.organizerName !== undefined) data.organizerName = input.organizerName?.trim() || null;

@@ -83,6 +83,7 @@ import {
   deleteTournamentPermanently,
   getTournamentDeletionImpact,
 } from "@/lib/tournaments/tournament-lifecycle-service";
+import { ParticipationValidationError } from "@/lib/participation/errors";
 import {
   TournamentNotFoundError,
   TournamentValidationError,
@@ -338,6 +339,9 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Turnier nicht gefunden." }, { status: 404 });
     }
     if (err instanceof TournamentValidationError) {
+      return NextResponse.json({ error: err.message }, { status: 400 });
+    }
+    if (err instanceof ParticipationValidationError) {
       return NextResponse.json({ error: err.message }, { status: 400 });
     }
     if (err instanceof TournamentInvalidTransitionError) {

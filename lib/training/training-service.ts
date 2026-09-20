@@ -91,6 +91,10 @@ function toDto(row: TrainingSeriesRow): TrainingSeriesDto {
     planningValidatedAt: row.planningValidatedAt?.toISOString() ?? null,
     planningValidatedById: row.planningValidatedById ?? null,
     createdByUserId: row.createdByUserId ?? null,
+    participationResponseDueDaysBefore: row.participationResponseDueDaysBefore ?? null,
+    participationResponseDueLocalTime: row.participationResponseDueLocalTime ?? null,
+    participationReminder1PresetKey: row.participationReminder1PresetKey ?? null,
+    participationReminder2PresetKey: row.participationReminder2PresetKey ?? null,
   };
 }
 

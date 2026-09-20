@@ -36,6 +36,7 @@
  */
 
 import { TrainingSessionInvalidTransitionError, TrainingSessionNotFoundError, TrainingSessionRescheduleValidationError } from "./errors";
+import { assertTrainingSessionStartCompatibleWithParticipationDue } from "@/lib/participation/participation-request-config-service";
 import { findTrainingSessionById, updateTrainingSessionOverride } from "./queries";
 import { getTrainingSession } from "./session-generation-service";
 import { dateKeyFromDate, toDateOnlyUtc, zonedTimeToUtc } from "./recurrence";
@@ -106,6 +107,12 @@ export async function rescheduleTrainingSession(
 
   const newStartAt = zonedTimeToUtc(targetDateKey, input.startsAt, existing.timezone);
   const newEndAt = zonedTimeToUtc(targetDateKey, input.endsAt, existing.timezone);
+
+  await assertTrainingSessionStartCompatibleWithParticipationDue(
+    tenantId,
+    sessionId,
+    newStartAt,
+  );
 
   const matchesCanonicalSchedule =
     targetDateKey === canonicalDateKey &&

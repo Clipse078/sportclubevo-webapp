@@ -129,6 +129,11 @@ interface MatchcenterEventRecord {
   pitchCode: string | null;
   homeDressingRoomCode: string | null;
   awayDressingRoomCode: string | null;
+  participationResponseDueAt: Date | null;
+  participationReminder1At: Date | null;
+  participationReminder2At: Date | null;
+  participationReminder1PresetKey: string | null;
+  participationReminder2PresetKey: string | null;
   team: MatchcenterTeamRecord | null;
   opponentExternalClub: MatchcenterExternalClubRecord | null;
   matchExternalMapping: MatchcenterMappingRecord | null;
@@ -572,6 +577,11 @@ function toSummary(
     },
     reviewStage: event.reviewStage,
     publishedAt: event.publishedAt,
+    participationResponseDueAt: event.participationResponseDueAt ?? null,
+    participationReminder1At: event.participationReminder1At ?? null,
+    participationReminder2At: event.participationReminder2At ?? null,
+    participationReminder1PresetKey: event.participationReminder1PresetKey ?? null,
+    participationReminder2PresetKey: event.participationReminder2PresetKey ?? null,
   };
 }
 

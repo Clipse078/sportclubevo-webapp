@@ -84,6 +84,10 @@ export interface TrainingSeriesDto {
   planningValidatedAt: string | null;
   planningValidatedById: string | null;
   createdByUserId: string | null;
+  participationResponseDueDaysBefore: number | null;
+  participationResponseDueLocalTime: string | null;
+  participationReminder1PresetKey: string | null;
+  participationReminder2PresetKey: string | null;
 }
 
 /** Public shape for a tenant-defined training plan. */
@@ -388,6 +392,11 @@ export interface TrainingSessionDto {
   dressingRoomOccupancyMode: "DEFAULT" | "CUSTOM";
   dressingRoomBeforeMinutes: number | null;
   dressingRoomAfterMinutes: number | null;
+  participationResponseDueAt: string | null;
+  participationReminder1At: string | null;
+  participationReminder2At: string | null;
+  participationReminder1PresetKey: string | null;
+  participationReminder2PresetKey: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -44,6 +44,7 @@ import TurniereTournamentRecordReadinessPill from "./TurniereTournamentRecordRea
 import TurniereTournamentRecordResourceSummary from "./TurniereTournamentRecordResourceSummary";
 import { TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS } from "./turniere-record-layout";
 import TournamentOrganizerClubField from "@/components/admin/tournamentcenter/TournamentOrganizerClubField";
+import { ParticipationRequestConfigEditor } from "@/components/admin/participation/ParticipationRequestConfigEditor";
 import type { ExternalClubPickerResult } from "@/components/admin/tournamentcenter/ExternalClubPicker";
 import {
   organizerNameFromPickerSelection,
@@ -710,6 +711,24 @@ export default function TurniereTournamentRecordWorkspace({
               </div>
             </div>
           </TurniereRecordSection>
+
+          {tournament.status !== "CANCELLED" ? (
+            <TurniereRecordSection title="Teilnahme" testId="turniere-record-section-participation">
+              <ParticipationRequestConfigEditor
+                apiPath={`/api/tournaments/${tournament.id}/participation-request`}
+                timeZone={timezone}
+                disabled={!isEditable}
+                values={{
+                  participationResponseDueAt: tournament.participationResponseDueAt,
+                  participationReminder1At: tournament.participationReminder1At,
+                  participationReminder2At: tournament.participationReminder2At,
+                  participationReminder1PresetKey: tournament.participationReminder1PresetKey,
+                  participationReminder2PresetKey: tournament.participationReminder2PresetKey,
+                }}
+                onSaved={() => router.refresh()}
+              />
+            </TurniereRecordSection>
+          ) : null}
 
           <TurniereRecordSection
             title="Teilnehmer"

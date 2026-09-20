@@ -64,7 +64,7 @@ async function loadOpenPersonIdsForTarget(
   return personIds.filter((personId) => (statusByPerson.get(personId) ?? "OPEN") === "OPEN");
 }
 
-async function emitForTarget(input: {
+export async function emitParticipationDeadlineNotificationsForTarget(input: {
   tenantId: string;
   target: ParticipationTarget;
   now: Date;
@@ -259,7 +259,7 @@ export async function processParticipationDeadlineNotifications(
 
     for (const session of sessions) {
       if (!session.participationResponseDueAt) continue;
-      const counts = await emitForTarget({
+      const counts = await emitParticipationDeadlineNotificationsForTarget({
         tenantId,
         now,
         locale,
@@ -303,7 +303,7 @@ export async function processParticipationDeadlineNotifications(
     for (const event of events) {
       if (!event.participationResponseDueAt || !event.teamSeasonId) continue;
       if (event.type !== "MATCH" && event.type !== "TOURNAMENT") continue;
-      const counts = await emitForTarget({
+      const counts = await emitParticipationDeadlineNotificationsForTarget({
         tenantId,
         now,
         locale,

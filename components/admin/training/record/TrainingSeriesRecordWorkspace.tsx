@@ -18,6 +18,10 @@ import { defaultNewTrainingSlotTimes } from "@/lib/training/training-create-sche
 import type { BreadcrumbItem } from "@/components/ui/page";
 import type { TrainingSeriesStatus } from "@/lib/training/types";
 import { cn } from "@/lib/cn";
+import {
+  ParticipationSeriesPolicyEditor,
+  type ParticipationSeriesPolicyValues,
+} from "@/components/admin/participation/ParticipationSeriesPolicyEditor";
 
 export type TeamSeasonOption = {
   id: string;
@@ -60,6 +64,7 @@ type Props = {
   exceptionNotice?: ReactNode;
   /** Canonical training duration for newly enabled weekday slots only. */
   defaultTrainingDurationMinutes: number;
+  participationPolicy: ParticipationSeriesPolicyValues;
 };
 
 type WeekdayRow = {
@@ -148,6 +153,7 @@ export default function TrainingSeriesRecordWorkspace({
   canDelete,
   exceptionNotice,
   defaultTrainingDurationMinutes,
+  participationPolicy,
 }: Props) {
   const router = useRouter();
 
@@ -456,6 +462,20 @@ export default function TrainingSeriesRecordWorkspace({
               onToggle={toggleWeekday}
               onTimeChange={updateWeekdayTime}
               testIdPrefix="training-series-weekday"
+            />
+          </TrainingRecordSection>
+
+          <TrainingRecordSection
+            title="Teilnahme"
+            description="Antwortfrist und Erinnerungen für neu erzeugte Trainingstermine."
+            testId="training-record-section-participation"
+          >
+            <ParticipationSeriesPolicyEditor
+              seriesId={seriesId}
+              timeZone={timezone}
+              values={participationPolicy}
+              disabled={!canManage}
+              onSaved={() => router.refresh()}
             />
           </TrainingRecordSection>
 

@@ -62,6 +62,11 @@ export const tournamentEventSelect = {
   teamPageVisible: true,
   createdAt: true,
   updatedAt: true,
+  participationResponseDueAt: true,
+  participationReminder1At: true,
+  participationReminder2At: true,
+  participationReminder1PresetKey: true,
+  participationReminder2PresetKey: true,
   season: {
     select: {
       id: true,
