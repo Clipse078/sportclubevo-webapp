@@ -70,6 +70,7 @@ enum PermissionModule {
   FACILITIES
   WORKSPACE
   ROLES
+  TASKS
 }
 
 // RPERM-02: Distinguishes platform-wide roles/permissions from tenant-scoped ones.
@@ -325,6 +326,34 @@ enum MeetingActionStatus {
   IN_PROGRESS
   DONE
   CANCELLED
+}
+
+// AUFGABEN-01 — canonical tenant-scoped operational tasks (distinct from MeetingAction).
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+/// Future SCE entity link for tasks (AUFGABEN-04 owns cross-module wiring).
+enum TaskContextType {
+  MATCH
+  TRAINING
+  TOURNAMENT
+  CLUB_EVENT
+  MEETING
+  REGISTRATION
+  TEAM
+  PERSON
+  DOCUMENT
 }
 
 enum MeetingParticipantStatus {
@@ -697,6 +726,8 @@ model Tenant {
   meetings                         Meeting[]
   initiatives                      Initiative[]
   targets                          Target[]
+  tasks                            Task[]
+  taskAssignees                    TaskAssignee[]
   // TRAINING-PLANS-01: tenant-defined training plans and assignments
   trainingPlans                    TrainingPlan[]
   trainingPlanAssignments          TrainingPlanAssignment[]
@@ -853,6 +884,10 @@ model User {
   commentMentionsReceived      CommentMention[]       @relation("CommentMentionUser")
 
   linkedTenantBillingAccounts TenantBillingAccount[] @relation("TenantBillingAccountLinkedBy")
+
+  taskAssignments TaskAssignee[] @relation("TaskAssigneeUser")
+  tasksAssignedBy TaskAssignee[] @relation("TaskAssignedByUser")
+  tasksCreated    Task[]         @relation("TaskCreatedBy")
 
   @@index([isActive])
   @@index([tenantId])
@@ -2665,6 +2700,56 @@ model MeetingAction {
 
   @@index([meetingId])
   @@index([meetingId, status])
+}
+
+// ---------------------------------------------------------------------------
+// Task — AUFGABEN-01 canonical tenant-scoped operational work item.
+//
+// Visibility (MVP): assignee, creator, or users with tasks.manage.
+// Assignment uses structured User IDs (TenantMembership-validated), never
+// free-text owner fields. MeetingAction remains separate until AUFGABEN-04.
+// ---------------------------------------------------------------------------
+model Task {
+  id              String        @id @default(cuid())
+  tenantId        String
+  title           String
+  description     String?
+  status          TaskStatus    @default(OPEN)
+  priority        TaskPriority  @default(NORMAL)
+  dueAt           DateTime?
+  completedAt     DateTime?
+  contextType     TaskContextType?
+  contextId       String?
+  createdByUserId String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdBy User?          @relation("TaskCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  assignees TaskAssignee[]
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, dueAt])
+  @@index([tenantId, contextType, contextId])
+}
+
+model TaskAssignee {
+  id               String   @id @default(cuid())
+  tenantId         String
+  taskId           String
+  userId           String
+  assignedByUserId String?
+  assignedAt       DateTime @default(now())
+
+  tenant     Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  task       Task   @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user       User   @relation("TaskAssigneeUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  assignedBy User?  @relation("TaskAssignedByUser", fields: [assignedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([taskId, userId])
+  @@index([tenantId, userId])
+  @@index([taskId])
 }
 
 model MeetingParticipant {

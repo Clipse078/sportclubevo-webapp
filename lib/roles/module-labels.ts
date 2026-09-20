@@ -39,6 +39,7 @@ export const MODULE_LABELS: Record<string, string> = {
   FACILITIES: "Anlagen & Ressourcen",
   WORKSPACE: "Dokumente",
   ROLES: "Rollen & Berechtigungen",
+  TASKS: "Aufgaben",
 };
 
 /**
@@ -54,6 +55,7 @@ export const MODULE_DISPLAY_ORDER: readonly string[] = [
   "WOCHENPLAN",
   "FIXTURES",
   "REGISTRATIONS",
+  "TASKS",
   "COMPETITIONS",
   "INFOBOARD",
   "MEETINGS",

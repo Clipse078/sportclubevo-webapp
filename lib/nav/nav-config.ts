@@ -391,7 +391,7 @@ export const NAV_SECTIONS: NavSection[] = [
         key: "aufgaben",
         label: "Aufgaben",
         href: "/dashboard/aufgaben",
-        permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
+        permissionKeys: [PERMISSIONS.TASKS_VIEW],
       },
       {
         key: "helfereinsaetze",

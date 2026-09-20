@@ -36,7 +36,6 @@ const CANONICAL_FULL_ORDER = [
 
 const FUTURE_MODULE_KEYS = [
   "mitglieder",
-  "aufgaben",
   "helfereinsaetze",
   "trainer-staff",
   "formulare-freigaben",
@@ -61,10 +60,9 @@ describe("PLATFORM-UX-01 — final sidebar order", () => {
     expect(keys.at(-1)).toBe("administration");
   });
 
-  it("exposes all six future modules with correct routes and tenant-admin permissions", () => {
+  it("exposes future module shells with correct routes and tenant-admin permissions", () => {
     const routes: Record<string, string> = {
       mitglieder: "/dashboard/mitglieder",
-      aufgaben: "/dashboard/aufgaben",
       helfereinsaetze: "/dashboard/helfereinsaetze",
       "trainer-staff": "/dashboard/trainer-staff",
       "formulare-freigaben": "/dashboard/formulare-freigaben",
@@ -79,6 +77,24 @@ describe("PLATFORM-UX-01 — final sidebar order", () => {
         }
       }
     }
+  });
+
+  it("gates Aufgaben navigation on tasks.view (AUFGABEN-01)", () => {
+    const tagesbetrieb = findSection("Tagesbetrieb");
+    const aufgaben = tagesbetrieb!.items.find((i) => i.key === "aufgaben");
+    expect(aufgaben?.href).toBe("/dashboard/aufgaben");
+    expect(aufgaben?.permissionKeys).toEqual([PERMISSIONS.TASKS_VIEW]);
+
+    const keysWithoutTasks = getTopLevelNavModuleKeys([
+      PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
+    ]);
+    expect(keysWithoutTasks).not.toContain("aufgaben");
+
+    const keysWithTasks = getTopLevelNavModuleKeys([
+      PERMISSIONS.TASKS_VIEW,
+      PERMISSIONS.REGISTRATIONS_VIEW,
+    ]);
+    expect(keysWithTasks).toContain("aufgaben");
   });
 
   it("omits permission-gated modules while preserving relative order", () => {
@@ -108,7 +124,6 @@ describe("PLATFORM-UX-01 — final sidebar order", () => {
     expect(keys).toEqual([
       "dashboard",
       "mitglieder",
-      "aufgaben",
       "helfereinsaetze",
       "communication",
       "trainer-staff",

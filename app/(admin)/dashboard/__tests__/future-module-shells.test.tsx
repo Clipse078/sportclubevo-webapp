@@ -7,14 +7,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import MitgliederPage from "@/app/(admin)/dashboard/mitglieder/page";
-import AufgabenPage from "@/app/(admin)/dashboard/aufgaben/page";
 import HelfereinsaetzePage from "@/app/(admin)/dashboard/helfereinsaetze/page";
 import TrainerStaffPage from "@/app/(admin)/dashboard/trainer-staff/page";
 import FormulareFreigabenPage from "@/app/(admin)/dashboard/formulare-freigaben/page";
 import VorfaelleDisziplinPage from "@/app/(admin)/dashboard/vorfaelle-disziplin/page";
 import {
   MITGLIEDER_CAPABILITIES,
-  AUFGABEN_CAPABILITIES,
   HELFEREINSAETZE_CAPABILITIES,
   TRAINER_STAFF_CAPABILITIES,
   FORMULARE_FREIGABEN_CAPABILITIES,
@@ -31,12 +29,6 @@ const FUTURE_MODULE_PAGES = [
     Page: MitgliederPage,
     capabilities: MITGLIEDER_CAPABILITIES,
     href: "/dashboard/mitglieder",
-  },
-  {
-    name: "Aufgaben",
-    Page: AufgabenPage,
-    capabilities: AUFGABEN_CAPABILITIES,
-    href: "/dashboard/aufgaben",
   },
   {
     name: "Helfereinsätze",
