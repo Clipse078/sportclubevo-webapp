@@ -414,6 +414,13 @@ enum TaskSeriesWeekday {
   SUNDAY
 }
 
+/// AUFGABEN-05-ORG-01 — intended Task read audience (persistence-only until ORG-02 authorization).
+enum TaskVisibilityScope {
+  ASSIGNEES_ONLY
+  ORG_UNIT
+  CLUB
+}
+
 enum MeetingParticipantStatus {
   INVITED
   PRESENT
@@ -2337,6 +2344,8 @@ model OrgUnit {
   personAssignments  PersonAssignment[]  @relation("OrgUnitPersonAssignments")
   // REG-WAIT-01: waiting list entries scoped to this OrgUnit
   waitingListEntries WaitingListEntry[]  @relation("WaitingListEntryOrgUnit")
+  tasks              Task[]              @relation("TaskOrgUnit")
+  taskSeries         TaskSeries[]        @relation("TaskSeriesOrgUnit")
 
   @@unique([tenantId, key])
   @@index([tenantId])
@@ -2796,11 +2805,16 @@ model Task {
   taskSeriesId    String?
   /// Deterministic idempotency key: `{seriesId}:{YYYY-MM-DD}` in series timezone.
   seriesOccurrenceKey String?
+  /// AUFGABEN-05-ORG-01 — organisational ownership (nullable; not security-enforced until ORG-02).
+  orgUnitId       String?
+  /// AUFGABEN-05-ORG-01 — intended visibility (defaults CLUB; enforced in ORG-02, not in ORG-01).
+  visibilityScope TaskVisibilityScope @default(CLUB)
   createdByUserId String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orgUnit    OrgUnit?    @relation("TaskOrgUnit", fields: [orgUnitId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   createdBy  User?       @relation("TaskCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   parentTask Task?       @relation("TaskSubtasks", fields: [parentTaskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   subtasks   Task[]      @relation("TaskSubtasks")
@@ -2814,6 +2828,9 @@ model Task {
   @@index([tenantId, contextType, contextId])
   @@index([parentTaskId])
   @@index([taskSeriesId])
+  @@index([tenantId, visibilityScope])
+  @@index([tenantId, orgUnitId])
+  @@index([tenantId, orgUnitId, visibilityScope])
 }
 
 /// AUFGABEN-01B — recurrence definition (series), distinct from actionable Task occurrences.
@@ -2835,11 +2852,15 @@ model TaskSeries {
   timezone        String
   startsOn        DateTime?
   endsOn          DateTime?
+  /// AUFGABEN-05-ORG-01 — snapshot config for generated occurrences (not retroactive).
+  orgUnitId       String?
+  visibilityScope TaskVisibilityScope          @default(CLUB)
   createdByUserId String?
   createdAt       DateTime                @default(now())
   updatedAt       DateTime                @updatedAt
 
   tenant            Tenant                       @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orgUnit           OrgUnit?                     @relation("TaskSeriesOrgUnit", fields: [orgUnitId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   createdBy         User?                        @relation("TaskSeriesCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   assigneeTemplates TaskSeriesAssigneeTemplate[]
   subtaskTemplates  TaskSeriesSubtaskTemplate[]
@@ -2847,6 +2868,8 @@ model TaskSeries {
 
   @@index([tenantId])
   @@index([tenantId, status])
+  @@index([tenantId, visibilityScope])
+  @@index([tenantId, orgUnitId])
 }
 
 model TaskSeriesAssigneeTemplate {

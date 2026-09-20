@@ -469,6 +469,9 @@ async function createOccurrenceTree(
     series.timezone,
   );
 
+  const occurrenceOrgUnitId = series.orgUnitId;
+  const occurrenceVisibilityScope = series.visibilityScope;
+
   let parent: { id: string };
   try {
     parent = await tx.task.create({
@@ -481,6 +484,8 @@ async function createOccurrenceTree(
         dueAt: parentDueAt,
         taskSeriesId: series.id,
         seriesOccurrenceKey: occurrenceKey,
+        orgUnitId: occurrenceOrgUnitId,
+        visibilityScope: occurrenceVisibilityScope,
         createdByUserId: ctx.userId,
       },
     });
@@ -544,6 +549,8 @@ async function createOccurrenceTree(
         priority: template.priority,
         status: TaskStatusEnum.OPEN,
         dueAt: childDueAt,
+        orgUnitId: occurrenceOrgUnitId,
+        visibilityScope: occurrenceVisibilityScope,
         createdByUserId: ctx.userId,
       },
     });

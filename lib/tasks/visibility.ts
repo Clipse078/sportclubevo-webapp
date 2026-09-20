@@ -12,6 +12,9 @@
  *
  * tasks.manage grants mutation authority and includes tenant-wide visibility.
  * tasks.view_all grants visibility only — not mutation.
+ *
+ * Task.visibilityScope (AUFGABEN-05-ORG-01) is persisted for future org-scoped reads
+ * but is NOT consulted here until ORG-02 performs the authorization cutover.
  */
 
 import type { Prisma } from "@prisma/client";
