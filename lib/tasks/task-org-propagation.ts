@@ -5,8 +5,12 @@
  * source at creation time. Client mutations must not widen or repoint scope.
  */
 
+import type { TaskVisibilityScope } from "@prisma/client";
 import { TaskForbiddenError } from "./errors";
-import type { TaskOrgVisibilityState } from "./task-org-mutation-policy";
+import {
+  normalizeTaskOrgVisibilityState,
+  type TaskOrgVisibilityState,
+} from "./task-org-mutation-policy";
 
 export function resolvePropagatedTaskOrgVisibility(
   source: TaskOrgVisibilityState,
@@ -22,6 +26,27 @@ export function isTaskOrgVisibilityPropagationLocked(task: {
   taskSeriesId: string | null;
 }): boolean {
   return task.parentTaskId != null || task.taskSeriesId != null;
+}
+
+/** True only when requested org/visibility differs from persisted task state. */
+export function requestsTaskOrgVisibilityChange(
+  existing: TaskOrgVisibilityState,
+  input: {
+    orgUnitId?: string | null;
+    visibilityScope?: TaskVisibilityScope;
+  },
+): boolean {
+  if (input.orgUnitId === undefined && input.visibilityScope === undefined) {
+    return false;
+  }
+  const next = normalizeTaskOrgVisibilityState(
+    input.visibilityScope ?? existing.visibilityScope,
+    input.orgUnitId !== undefined ? input.orgUnitId : existing.orgUnitId,
+  );
+  return (
+    next.visibilityScope !== existing.visibilityScope ||
+    (next.orgUnitId ?? null) !== (existing.orgUnitId ?? null)
+  );
 }
 
 export function assertTaskOrgVisibilityPropagationEditable(task: {

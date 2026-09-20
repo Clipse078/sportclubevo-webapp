@@ -184,11 +184,39 @@ describe("AUFGABEN-04A1 cross-tenant validation", () => {
 });
 
 describe("AUFGABEN-04A1 attach authorization", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    prismaMocks.loadOrgUnitIds.mockResolvedValue([]);
+    prismaMocks.loadTargetGroupIds.mockResolvedValue([]);
+  });
+
   it("rejects MATCH without events.view", async () => {
     await expect(
       validateTaskContext(ctx([PERMISSIONS.TASKS_CREATE]), "MATCH", "m1"),
     ).rejects.toThrow(TaskValidationError);
     expect(canAttachTaskContext(ctx([PERMISSIONS.TASKS_CREATE]), "MATCH")).toBe(false);
+  });
+
+  it("MEETING — rejects known-but-unreadable meeting id", async () => {
+    prismaMocks.meetingFindFirst.mockResolvedValue({
+      id: "mtg-hidden",
+      visibilityScope: "RESTRICTED",
+      createdByUserId: "other",
+      visibleRoleRefs: [],
+      visibleUserRefs: [],
+      visibleTeamRefs: [],
+      visibleOrgUnitRefs: [],
+      visiblePersonRefs: [],
+      visibleTargetGroupRefs: [],
+    });
+    prismaMocks.canSeeMeeting.mockReturnValue(false);
+    await expect(
+      validateTaskContext(
+        ctx(createPerms(PERMISSIONS.MEETINGS_VIEW)),
+        "MEETING",
+        "mtg-hidden",
+      ),
+    ).rejects.toThrow(TaskValidationError);
   });
 });
 

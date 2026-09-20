@@ -8,6 +8,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
   assertTaskOrgVisibilityPropagationEditable,
   isTaskOrgVisibilityPropagationLocked,
+  requestsTaskOrgVisibilityChange,
   resolvePropagatedTaskOrgVisibility,
 } from "../task-org-propagation";
 import { createSubtask, updateTask } from "../task-service";
@@ -140,6 +141,23 @@ describe("AUFGABEN-05-ORG-04 propagation helpers", () => {
     ).toBe(false);
   });
 
+  it("detects actual org/visibility transitions only", () => {
+    const existing = {
+      visibilityScope: TaskVisibilityScope.ORG_UNIT,
+      orgUnitId: ORG_A,
+    };
+    expect(
+      requestsTaskOrgVisibilityChange(existing, {
+        visibilityScope: TaskVisibilityScope.ORG_UNIT,
+        orgUnitId: ORG_A,
+      }),
+    ).toBe(false);
+    expect(
+      requestsTaskOrgVisibilityChange(existing, { visibilityScope: TaskVisibilityScope.CLUB }),
+    ).toBe(true);
+    expect(requestsTaskOrgVisibilityChange(existing, { orgUnitId: "org-b" })).toBe(true);
+  });
+
   it("rejects org edits on propagation-locked tasks", () => {
     expect(() =>
       assertTaskOrgVisibilityPropagationEditable({
@@ -212,6 +230,89 @@ describe("AUFGABEN-05-ORG-04 mutation hardening", () => {
     vi.clearAllMocks();
     mocks.orgUnitFindFirst.mockResolvedValue({ id: ORG_A, status: "ACTIVE" });
     mocks.tenantMembershipFindMany.mockResolvedValue([]);
+  });
+
+  it("denies org-only mutation on propagation-locked subtask", async () => {
+    mocks.taskFindFirst.mockResolvedValue(
+      taskRow({
+        id: "sub-1",
+        parentTaskId: PARENT,
+        visibilityScope: TaskVisibilityScope.ORG_UNIT,
+        orgUnitId: ORG_A,
+      }),
+    );
+
+    await expect(
+      updateTask(ctx([PERMISSIONS.TASKS_MANAGE, PERMISSIONS.TASKS_VIEW]), "sub-1", {
+        orgUnitId: "org-b",
+      }),
+    ).rejects.toMatchObject({ name: "TaskForbiddenError" });
+    expect(mocks.taskUpdate).not.toHaveBeenCalled();
+  });
+
+  it("denies visibility-only mutation on propagation-locked subtask", async () => {
+    mocks.taskFindFirst.mockResolvedValue(
+      taskRow({
+        id: "sub-1",
+        parentTaskId: PARENT,
+        visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
+        orgUnitId: null,
+      }),
+    );
+
+    await expect(
+      updateTask(ctx([PERMISSIONS.TASKS_MANAGE, PERMISSIONS.TASKS_VIEW]), "sub-1", {
+        visibilityScope: TaskVisibilityScope.ORG_UNIT,
+        orgUnitId: ORG_A,
+      }),
+    ).rejects.toMatchObject({ name: "TaskForbiddenError" });
+    expect(mocks.taskUpdate).not.toHaveBeenCalled();
+  });
+
+  it("allows legitimate field updates when serialized org values are unchanged", async () => {
+    mocks.taskFindFirst.mockResolvedValue(
+      taskRow({
+        id: "sub-1",
+        parentTaskId: PARENT,
+        title: "After",
+        visibilityScope: TaskVisibilityScope.ORG_UNIT,
+        orgUnitId: ORG_A,
+      }),
+    );
+    mocks.transaction.mockImplementation(async (fn: (tx: unknown) => unknown) =>
+      fn({
+        task: { update: mocks.taskUpdate },
+        auditLog: { create: mocks.auditCreate },
+        tenant: { findUnique: vi.fn() },
+      }),
+    );
+    mocks.taskUpdate.mockResolvedValue(
+      taskRow({
+        id: "sub-1",
+        parentTaskId: PARENT,
+        title: "After",
+        visibilityScope: TaskVisibilityScope.ORG_UNIT,
+        orgUnitId: ORG_A,
+      }),
+    );
+    mocks.auditCreate.mockResolvedValue({});
+
+    await updateTask(ctx([PERMISSIONS.TASKS_MANAGE, PERMISSIONS.TASKS_VIEW]), "sub-1", {
+      title: "After",
+      visibilityScope: TaskVisibilityScope.ORG_UNIT,
+      orgUnitId: ORG_A,
+    });
+
+    expect(mocks.taskUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ title: "After" }),
+      }),
+    );
+    expect(mocks.taskUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.not.objectContaining({ visibilityScope: expect.anything() }),
+      }),
+    );
   });
 
   it("blocks club admin from widening subtask visibility via updateTask", async () => {

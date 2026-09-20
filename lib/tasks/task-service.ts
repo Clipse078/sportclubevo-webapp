@@ -51,6 +51,7 @@ import {
 import {
   assertTaskOrgVisibilityPropagationEditable,
   resolvePropagatedTaskOrgVisibility,
+  requestsTaskOrgVisibilityChange,
 } from "./task-org-propagation";
 
 const TASK_INCLUDE = {
@@ -560,8 +561,13 @@ export async function updateTask(
     orgUnitId: existing.orgUnitId,
   });
 
-  const orgVisibilityMutation =
-    input.orgUnitId !== undefined || input.visibilityScope !== undefined;
+  const orgVisibilityMutation = requestsTaskOrgVisibilityChange(
+    {
+      visibilityScope: existing.visibilityScope,
+      orgUnitId: existing.orgUnitId,
+    },
+    input,
+  );
 
   if (!canManage && !(isCreator && hasTaskPermission(ctx, PERMISSIONS.TASKS_CREATE))) {
     if (!isAssignee || input.status === undefined) {
