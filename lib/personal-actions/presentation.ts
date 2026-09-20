@@ -11,6 +11,17 @@ export const PERSONAL_ACTION_INBOX_DEFAULT_LIMIT = 50;
 
 export type PersonalActionSourceFilter = "all" | "tasks" | "attendance";
 
+/** Inline RSVP controls — only YES/NO in Meine Aufgaben (see AUFGABEN-05-PARTICIPATION). */
+export type PersonalActionInlineParticipation = {
+  personalActionId: string;
+  personId: string;
+  subjectDisplayName?: string;
+  teamSeasonId: string;
+  eventKind: "TRAINING" | "MATCH" | "TOURNAMENT";
+  trainingSessionId?: string;
+  eventId?: string;
+};
+
 export type PersonalActionListItem = {
   id: string;
   sourceType: PersonalActionSourceType;
@@ -21,6 +32,7 @@ export type PersonalActionListItem = {
   href: string | null;
   emphasis: "calm" | "attention" | "urgent";
   inlineParticipationReady: boolean;
+  inlineParticipation?: PersonalActionInlineParticipation;
 };
 
 function formatEventStartContext(iso: string, cfg: TenantFormatConfig): string {
@@ -71,6 +83,20 @@ export function mapPersonalActionToListItem(
 ): PersonalActionListItem {
   if (action.sourceType === "ATTENDANCE_RESPONSE") {
     const eventStart = action.context?.eventStartAt;
+    const participation = action.inlineActions?.participation;
+    const inlineParticipation: PersonalActionInlineParticipation | undefined =
+      participation && action.subject?.personId
+        ? {
+            personalActionId: action.id,
+            personId: action.subject.personId,
+            subjectDisplayName: action.subject.displayName,
+            teamSeasonId: participation.teamSeasonId,
+            eventKind: participation.eventKind,
+            trainingSessionId: participation.trainingSessionId,
+            eventId: participation.eventId,
+          }
+        : undefined;
+
     return {
       id: action.id,
       sourceType: action.sourceType,
@@ -80,7 +106,8 @@ export function mapPersonalActionToListItem(
       metaLine: eventStart ? formatEventStartContext(eventStart, cfg) : null,
       href: action.href,
       emphasis: "calm",
-      inlineParticipationReady: Boolean(action.inlineActions?.participation),
+      inlineParticipationReady: Boolean(inlineParticipation),
+      inlineParticipation,
     };
   }
 

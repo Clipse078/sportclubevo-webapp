@@ -70,7 +70,7 @@ describe("AUFGABEN-05 — attendance PersonalAction source", () => {
     expect(actions[0].sourceId).toBeNull();
   });
 
-  it("27 — exposes participation inline metadata with YES/NO/MAYBE capability", async () => {
+  it("27 — exposes participation inline metadata with YES/NO capability", async () => {
     vi.mocked(loadAttendanceObligationCandidates).mockResolvedValue([
       {
         personId: "child-1",
@@ -88,11 +88,7 @@ describe("AUFGABEN-05 — attendance PersonalAction source", () => {
 
     const actions = await attendancePersonalActionSource.loadActionable(ctx);
     expect(actions[0].actionKind).toBe("PARTICIPATION_RESPONSE");
-    expect(actions[0].inlineActions?.participation?.allowedResponses).toEqual([
-      "YES",
-      "NO",
-      "MAYBE",
-    ]);
+    expect(actions[0].inlineActions?.participation?.allowedResponses).toEqual(["YES", "NO"]);
   });
 
   it("C — runs without tasks.view permission keys", async () => {

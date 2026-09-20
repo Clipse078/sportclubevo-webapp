@@ -2,6 +2,12 @@
  * @vitest-environment jsdom
  */
 
+import { vi } from "vitest";
+
+vi.mock("@/app/(admin)/dashboard/aufgaben/personal-participation-actions", () => ({
+  respondToPersonalParticipationAction: vi.fn(),
+}));
+
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import PersonalActionsInbox from "../PersonalActionsInbox";

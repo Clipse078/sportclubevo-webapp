@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { CalendarClock, ListChecks } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { PersonalActionListItem } from "@/lib/personal-actions/presentation";
+import PersonalActionParticipationInline from "./PersonalActionParticipationInline";
 
 type Props = {
   item: PersonalActionListItem;
@@ -41,7 +44,9 @@ export default function PersonalActionRow({ item, compact = false }: Props) {
           {item.metaLine ? (
             <p className={cn("mt-0.5 text-[0.75rem]", emphasisClass)}>{item.metaLine}</p>
           ) : null}
-          {item.inlineParticipationReady ? (
+          {item.inlineParticipation ? (
+            <PersonalActionParticipationInline participation={item.inlineParticipation} />
+          ) : item.inlineParticipationReady ? (
             <div
               className="mt-2 min-h-[2rem]"
               data-testid="personal-action-inline-slot"
