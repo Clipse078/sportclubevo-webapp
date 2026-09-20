@@ -48,6 +48,10 @@ import {
   normalizeTaskOrgVisibilityState,
   validateTaskOrgVisibilityMutation,
 } from "./task-org-mutation-policy";
+import {
+  assertTaskOrgVisibilityPropagationEditable,
+  resolvePropagatedTaskOrgVisibility,
+} from "./task-org-propagation";
 
 const TASK_INCLUDE = {
   assignees: {
@@ -433,6 +437,11 @@ export async function createSubtask(
   const assigneeUserIds = [...new Set(input.assigneeUserIds ?? [])];
   await validateAssigneeUserIds(ctx.tenantId, assigneeUserIds);
 
+  const propagatedOrg = resolvePropagatedTaskOrgVisibility({
+    visibilityScope: parent.visibilityScope,
+    orgUnitId: parent.orgUnitId,
+  });
+
   const task = await prisma.$transaction(async (tx) => {
     const created = await tx.task.create({
       data: {
@@ -442,8 +451,8 @@ export async function createSubtask(
         description: input.description?.trim() || null,
         priority: input.priority ?? "NORMAL",
         dueAt: input.dueAt ?? null,
-        orgUnitId: parent.orgUnitId,
-        visibilityScope: parent.visibilityScope,
+        orgUnitId: propagatedOrg.orgUnitId,
+        visibilityScope: propagatedOrg.visibilityScope,
         createdByUserId: ctx.userId,
         status: TaskStatusEnum.OPEN,
       },
@@ -577,6 +586,10 @@ export async function updateTask(
     | Awaited<ReturnType<typeof validateTaskOrgVisibilityMutation>>
     | null = null;
   if (orgVisibilityMutation) {
+    assertTaskOrgVisibilityPropagationEditable({
+      parentTaskId: existing.parentTaskId,
+      taskSeriesId: existing.taskSeriesId,
+    });
     nextOrgVisibility = await validateTaskOrgVisibilityMutation(
       ctx,
       normalizeTaskOrgVisibilityState(

@@ -34,6 +34,7 @@ import {
   normalizeTaskOrgVisibilityState,
   validateTaskOrgVisibilityMutation,
 } from "./task-org-mutation-policy";
+import { resolvePropagatedTaskOrgVisibility } from "./task-org-propagation";
 
 const SERIES_INCLUDE = {
   assigneeTemplates: true,
@@ -542,8 +543,10 @@ async function createOccurrenceTree(
     series.timezone,
   );
 
-  const occurrenceOrgUnitId = series.orgUnitId;
-  const occurrenceVisibilityScope = series.visibilityScope;
+  const occurrenceOrg = resolvePropagatedTaskOrgVisibility({
+    visibilityScope: series.visibilityScope,
+    orgUnitId: series.orgUnitId,
+  });
 
   let parent: { id: string };
   try {
@@ -557,8 +560,8 @@ async function createOccurrenceTree(
         dueAt: parentDueAt,
         taskSeriesId: series.id,
         seriesOccurrenceKey: occurrenceKey,
-        orgUnitId: occurrenceOrgUnitId,
-        visibilityScope: occurrenceVisibilityScope,
+        orgUnitId: occurrenceOrg.orgUnitId,
+        visibilityScope: occurrenceOrg.visibilityScope,
         createdByUserId: ctx.userId,
       },
     });
@@ -622,8 +625,8 @@ async function createOccurrenceTree(
         priority: template.priority,
         status: TaskStatusEnum.OPEN,
         dueAt: childDueAt,
-        orgUnitId: occurrenceOrgUnitId,
-        visibilityScope: occurrenceVisibilityScope,
+        orgUnitId: occurrenceOrg.orgUnitId,
+        visibilityScope: occurrenceOrg.visibilityScope,
         createdByUserId: ctx.userId,
       },
     });
