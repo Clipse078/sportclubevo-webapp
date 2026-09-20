@@ -1,6 +1,6 @@
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { TaskDto, TaskServiceContext } from "./types";
-import { hasTaskPermission } from "./visibility";
+import { canManageTask, hasTaskPermission } from "./visibility";
 
 export type TaskWorkspaceCapabilities = {
   readOnly: boolean;
@@ -22,7 +22,13 @@ export function resolveTaskWorkspaceCapabilities(
 ): TaskWorkspaceCapabilities {
   const isAssignee = task.assignees.some((a) => a.userId === ctx.userId);
   const isCreator = task.createdByUserId === ctx.userId;
-  const canManage = hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE);
+  const canManage = canManageTask(ctx, {
+    tenantId: task.tenantId,
+    createdByUserId: task.createdByUserId,
+    assigneeUserIds: task.assignees.map((a) => a.userId),
+    visibilityScope: task.visibilityScope,
+    orgUnitId: task.orgUnitId,
+  });
   const canCreate = hasTaskPermission(ctx, PERMISSIONS.TASKS_CREATE);
   const canAssign =
     hasTaskPermission(ctx, PERMISSIONS.TASKS_ASSIGN) || canManage;

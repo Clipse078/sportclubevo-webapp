@@ -1,4 +1,15 @@
-import type { TaskContextType, TaskPriority, TaskStatus } from "@prisma/client";
+import type {
+  TaskContextType,
+  TaskPriority,
+  TaskStatus,
+  TaskVisibilityScope,
+} from "@prisma/client";
+
+export type TaskAuthScope = {
+  memberOrgUnitIds: readonly string[];
+  permissionReadOrgUnitIds: readonly string[];
+  permissionManageOrgUnitIds: readonly string[];
+};
 
 export type TaskAssigneeDto = {
   userId: string;
@@ -25,6 +36,8 @@ export type TaskDto = {
   contextId: string | null;
   parentTaskId: string | null;
   taskSeriesId: string | null;
+  orgUnitId: string | null;
+  visibilityScope: TaskVisibilityScope;
   createdByUserId: string | null;
   createdAt: string;
   updatedAt: string;
@@ -83,4 +96,6 @@ export type TaskServiceContext = {
   tenantId: string;
   userId: string;
   permissionKeys: readonly string[];
+  /** Hydrated by getTaskServiceContext; optional in unit tests. */
+  auth?: TaskAuthScope;
 };

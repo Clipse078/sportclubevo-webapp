@@ -49,6 +49,8 @@ function mapTask(row: TaskRow): TaskDto {
     contextId: row.contextId,
     parentTaskId: row.parentTaskId,
     taskSeriesId: row.taskSeriesId,
+    orgUnitId: row.orgUnitId,
+    visibilityScope: row.visibilityScope,
     createdByUserId: row.createdByUserId,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),

@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { TaskSeriesStatus } from "@prisma/client";
+import { TaskSeriesStatus, TaskVisibilityScope } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 const mocks = vi.hoisted(() => ({
@@ -77,6 +77,8 @@ function activeSeries() {
     timezone: "Europe/Zurich",
     startsOn: null,
     endsOn: null,
+    orgUnitId: null,
+    visibilityScope: TaskVisibilityScope.CLUB,
     createdByUserId: USER,
     assigneeTemplates: [],
     subtaskTemplates: [],

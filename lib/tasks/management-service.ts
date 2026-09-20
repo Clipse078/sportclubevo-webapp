@@ -13,7 +13,11 @@ import type {
   TaskProgressDto,
   TaskServiceContext,
 } from "./types";
-import { buildTaskVisibilityWhere, canViewAllTasks } from "./visibility";
+import {
+  buildTaskSeriesReadWhere,
+  buildTaskVisibilityWhere,
+  canViewAllTasks,
+} from "./visibility";
 import {
   endOfWeekSunday,
   getUpcomingHorizonEnd,
@@ -94,6 +98,8 @@ function mapTask(row: TaskRow): TaskDto {
     contextId: row.contextId,
     parentTaskId: row.parentTaskId,
     taskSeriesId: row.taskSeriesId,
+    orgUnitId: row.orgUnitId,
+    visibilityScope: row.visibilityScope,
     createdByUserId: row.createdByUserId,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -294,11 +300,9 @@ async function batchEnrichRoots(
   if (roots.length === 0) return [];
 
   const rootIds = roots.map((r) => r.id);
-  const childWhere: Prisma.TaskWhereInput = canViewAllTasks(ctx)
-    ? { tenantId: ctx.tenantId, parentTaskId: { in: rootIds } }
-    : {
-        AND: [buildTaskVisibilityWhere(ctx), { parentTaskId: { in: rootIds } }],
-      };
+  const childWhere: Prisma.TaskWhereInput = {
+    AND: [buildTaskVisibilityWhere(ctx), { parentTaskId: { in: rootIds } }],
+  };
   const childRows = await prisma.task.findMany({
     where: childWhere,
     include: TASK_INCLUDE,
@@ -354,17 +358,12 @@ async function batchEnrichPersonalRows(
 
   const childrenByParent = new Map<string, TaskDto[]>();
   if (rootIdsNeedingChildren.length > 0) {
-    const childWhere: Prisma.TaskWhereInput = canViewAllTasks(ctx)
-      ? {
-          tenantId: ctx.tenantId,
-          parentTaskId: { in: rootIdsNeedingChildren },
-        }
-      : {
-          AND: [
-            buildTaskVisibilityWhere(ctx),
-            { parentTaskId: { in: rootIdsNeedingChildren } },
-          ],
-        };
+    const childWhere: Prisma.TaskWhereInput = {
+      AND: [
+        buildTaskVisibilityWhere(ctx),
+        { parentTaskId: { in: rootIdsNeedingChildren } },
+      ],
+    };
     const childRows = await prisma.task.findMany({
       where: childWhere,
       include: TASK_INCLUDE,
@@ -561,20 +560,7 @@ export async function listTaskSeriesManagementRows(
 ): Promise<{ rows: TaskSeriesManagementRow[]; totalCount: number }> {
   const and: Prisma.TaskSeriesWhereInput[] = [{ tenantId: ctx.tenantId }];
 
-  if (!canViewAllTasks(ctx)) {
-    const taskVisibility = buildTaskVisibilityWhere(ctx);
-    and.push({
-      OR: [
-        { createdByUserId: ctx.userId },
-        {
-          assigneeTemplates: {
-            some: { userId: ctx.userId, tenantId: ctx.tenantId },
-          },
-        },
-        { occurrences: { some: taskVisibility } },
-      ],
-    });
-  }
+  and.push(buildTaskSeriesReadWhere(ctx));
 
   if (query.search) {
     and.push({ title: { contains: query.search, mode: "insensitive" } });

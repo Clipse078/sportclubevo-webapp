@@ -122,8 +122,8 @@ describe("AUFGABEN-02 management listTaskSeriesManagementRows", () => {
         where: {
           AND: [
             { tenantId: TENANT_A },
-            {
-              OR: [
+            expect.objectContaining({
+              OR: expect.arrayContaining([
                 { createdByUserId: USER_ASSIGNEE },
                 {
                   assigneeTemplates: {
@@ -132,9 +132,9 @@ describe("AUFGABEN-02 management listTaskSeriesManagementRows", () => {
                 },
                 {
                   occurrences: {
-                    some: {
+                    some: expect.objectContaining({
                       tenantId: TENANT_A,
-                      OR: [
+                      OR: expect.arrayContaining([
                         { createdByUserId: USER_ASSIGNEE },
                         {
                           assignees: {
@@ -144,12 +144,12 @@ describe("AUFGABEN-02 management listTaskSeriesManagementRows", () => {
                             },
                           },
                         },
-                      ],
-                    },
+                      ]),
+                    }),
                   },
                 },
-              ],
-            },
+              ]),
+            }),
           ],
         },
       }),
@@ -162,7 +162,14 @@ describe("AUFGABEN-02 management listTaskSeriesManagementRows", () => {
 
     expect(mocks.taskSeriesFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { AND: [{ tenantId: TENANT_A }] },
+        where: {
+          AND: [
+            { tenantId: TENANT_A },
+            expect.objectContaining({
+              OR: expect.arrayContaining([{ visibilityScope: "CLUB" }]),
+            }),
+          ],
+        },
       }),
     );
   });
@@ -173,7 +180,14 @@ describe("AUFGABEN-02 management listTaskSeriesManagementRows", () => {
 
     expect(mocks.taskSeriesFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { AND: [{ tenantId: TENANT_A }] },
+        where: {
+          AND: [
+            { tenantId: TENANT_A },
+            expect.objectContaining({
+              OR: expect.arrayContaining([{ visibilityScope: "CLUB" }]),
+            }),
+          ],
+        },
       }),
     );
   });
