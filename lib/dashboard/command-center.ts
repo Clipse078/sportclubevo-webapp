@@ -796,6 +796,7 @@ export async function getCommandCenterData(args: {
     teamIds,
     hasLinkedPerson,
     fmtCfg: args.fmtCfg,
+    timeZone: args.fmtCfg.timezone ?? "Europe/Zurich",
     now,
   });
 

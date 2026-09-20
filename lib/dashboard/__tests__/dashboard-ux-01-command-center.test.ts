@@ -72,6 +72,8 @@ describe("DASHBOARD-UX-01 — Meine Agenda grouping", () => {
         typeLabel: "Training",
         title: "F2 Training",
         dayGroup: "today",
+        sourceType: "TEAM_EVENT",
+        ariaLabel: "Training: F2 Training",
       },
       {
         key: "b",
@@ -80,11 +82,14 @@ describe("DASHBOARD-UX-01 — Meine Agenda grouping", () => {
         typeLabel: "Spiel",
         title: "FCA – Gegner",
         dayGroup: "tomorrow",
+        sourceType: "TEAM_EVENT",
+        ariaLabel: "Spiel: FCA – Gegner",
       },
     ]);
 
     expect(grouped.today).toHaveLength(1);
     expect(grouped.tomorrow).toHaveLength(1);
+    expect(grouped.overdue).toHaveLength(0);
   });
 });
 
