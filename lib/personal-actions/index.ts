@@ -17,6 +17,13 @@ export {
   buildTaskPersonalActionId,
 } from "./identity";
 
+export { parseParticipationPersonalActionId } from "./parse-participation-action-id";
+export {
+  submitParticipationPersonalAction,
+  type SubmitParticipationPersonalActionInput,
+  type SubmitParticipationPersonalActionResult,
+} from "./submit-participation-response";
+
 export {
   comparePersonalActions,
   dedupePersonalActionsById,

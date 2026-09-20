@@ -4,7 +4,7 @@
  * TEAM-COCKPIT-03A — canonical participation response write path.
  */
 
-import type { ParticipationResponseStatus, Prisma } from "@prisma/client";
+import { Prisma, type ParticipationResponseStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { logAction } from "@/lib/audit/log-action";
 import { resolveParticipationEventContext } from "./event-reference";
@@ -13,10 +13,72 @@ import {
   ParticipationValidationError,
 } from "./errors";
 import { PARTICIPATION_STATUSES } from "./types";
-import type { ParticipationEventRef, ParticipationResponseInput } from "./types";
+import type { ParticipationResponseInput } from "./types";
 
 function isParticipationStatus(value: string): value is ParticipationResponseStatus {
   return (PARTICIPATION_STATUSES as readonly string[]).includes(value);
+}
+
+function isPrismaUniqueConstraintError(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    return true;
+  }
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: string }).code === "P2002"
+  );
+}
+
+type ParticipationResponseWriteContext = {
+  tenantId: string;
+  actorUserId: string | null;
+  input: ParticipationResponseInput;
+  eventContext: Awaited<ReturnType<typeof resolveParticipationEventContext>>;
+  note: string | null;
+  respondedAt: Date | null;
+};
+
+async function applyParticipationResponseUpdate(
+  existing: { id: string; status: ParticipationResponseStatus; note: string | null },
+  ctx: ParticipationResponseWriteContext,
+): Promise<{ id: string; status: ParticipationResponseStatus }> {
+  const updated = await prisma.participationResponse.update({
+    where: { id: existing.id },
+    data: {
+      status: ctx.input.status,
+      note: ctx.note,
+      respondedAt: ctx.respondedAt,
+      responseSource: ctx.input.responseSource,
+      respondedByUserId: ctx.actorUserId,
+      updatedByUserId: ctx.actorUserId,
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+
+  void logAction({
+    tenantId: ctx.tenantId,
+    actorUserId: ctx.actorUserId,
+    moduleKey: "participation",
+    entityType: "ParticipationResponse",
+    entityId: updated.id,
+    action: "PARTICIPATION_UPDATE",
+    beforeJson: {
+      status: existing.status,
+      note: existing.note,
+    },
+    afterJson: {
+      status: updated.status,
+      note: ctx.note,
+      responseSource: ctx.input.responseSource,
+    },
+  });
+
+  return updated;
 }
 
 async function assertPersonOnRoster(
@@ -92,10 +154,28 @@ export async function respondToParticipation(
     },
   });
 
+  const writeContext: ParticipationResponseWriteContext = {
+    tenantId,
+    actorUserId,
+    input,
+    eventContext,
+    note,
+    respondedAt,
+  };
+
   if (existing) {
-    const updated = await prisma.participationResponse.update({
-      where: { id: existing.id },
+    return applyParticipationResponseUpdate(existing, writeContext);
+  }
+
+  try {
+    const created = await prisma.participationResponse.create({
       data: {
+        tenantId,
+        personId: input.personId,
+        teamSeasonId: input.teamSeasonId,
+        eventKind: eventContext.eventKind,
+        trainingSessionId: eventContext.trainingSessionId,
+        eventId: eventContext.eventId,
         status: input.status,
         note,
         respondedAt,
@@ -114,62 +194,40 @@ export async function respondToParticipation(
       actorUserId,
       moduleKey: "participation",
       entityType: "ParticipationResponse",
-      entityId: updated.id,
-      action: "PARTICIPATION_UPDATE",
-      beforeJson: {
-        status: existing.status,
-        note: existing.note,
-      },
+      entityId: created.id,
+      action: "PARTICIPATION_RESPONSE",
       afterJson: {
-        status: updated.status,
+        status: created.status,
         note,
+        personId: input.personId,
+        eventKind: eventContext.eventKind,
+        trainingSessionId: eventContext.trainingSessionId,
+        eventId: eventContext.eventId,
         responseSource: input.responseSource,
       },
     });
 
-    return updated;
+    return created;
+  } catch (error) {
+    if (!isPrismaUniqueConstraintError(error)) {
+      throw error;
+    }
+
+    const raced = await prisma.participationResponse.findFirst({
+      where: lookupWhere,
+      select: {
+        id: true,
+        status: true,
+        note: true,
+      },
+    });
+
+    if (!raced) {
+      throw error;
+    }
+
+    return applyParticipationResponseUpdate(raced, writeContext);
   }
-
-  const created = await prisma.participationResponse.create({
-    data: {
-      tenantId,
-      personId: input.personId,
-      teamSeasonId: input.teamSeasonId,
-      eventKind: eventContext.eventKind,
-      trainingSessionId: eventContext.trainingSessionId,
-      eventId: eventContext.eventId,
-      status: input.status,
-      note,
-      respondedAt,
-      responseSource: input.responseSource,
-      respondedByUserId: actorUserId,
-      updatedByUserId: actorUserId,
-    },
-    select: {
-      id: true,
-      status: true,
-    },
-  });
-
-  void logAction({
-    tenantId,
-    actorUserId,
-    moduleKey: "participation",
-    entityType: "ParticipationResponse",
-    entityId: created.id,
-    action: "PARTICIPATION_RESPONSE",
-    afterJson: {
-      status: created.status,
-      note,
-      personId: input.personId,
-      eventKind: eventContext.eventKind,
-      trainingSessionId: eventContext.trainingSessionId,
-      eventId: eventContext.eventId,
-      responseSource: input.responseSource,
-    },
-  });
-
-  return created;
 }
 
 export async function updateParticipationResponse(

@@ -46,6 +46,8 @@ describe("AUFGABEN-05-UI — personal action presentation", () => {
     expect(item.title).toBe("Teilnahme für James bestätigen");
     expect(item.href).toBeNull();
     expect(item.inlineParticipationReady).toBe(true);
+    expect(item.inlineParticipation?.personId).toBe("child-1");
+    expect(item.inlineParticipation?.trainingSessionId).toBe("sess-1");
     expect(item.metaLine).toMatch(/·/);
     expect(item.metaLine).not.toMatch(/Fällig/i);
   });

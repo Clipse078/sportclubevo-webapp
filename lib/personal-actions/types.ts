@@ -34,7 +34,7 @@ export type PersonalActionInlineActions = {
     eventKind: "TRAINING" | "MATCH" | "TOURNAMENT";
     trainingSessionId?: string;
     eventId?: string;
-    allowedResponses: readonly ("YES" | "NO" | "MAYBE")[];
+    allowedResponses: readonly ("YES" | "NO" | "MAYBE")[]; // MAYBE: domain-only until member UX exposes it
   };
 };
 
