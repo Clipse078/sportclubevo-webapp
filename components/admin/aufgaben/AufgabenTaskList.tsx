@@ -320,6 +320,17 @@ function TaskListRow({
                 {contextLine ? (
                   <span data-testid={`aufgaben-context-${task.id}`}>{contextLine}</span>
                 ) : null}
+                {item.organisationLabel ? (
+                  <span data-testid={`aufgaben-org-${task.id}`}>{item.organisationLabel}</span>
+                ) : null}
+                {item.visibilityLabel ? (
+                  <span
+                    className="rounded border border-[var(--border)]/60 px-1 py-0.5"
+                    data-testid={`aufgaben-visibility-${task.id}`}
+                  >
+                    {item.visibilityLabel}
+                  </span>
+                ) : null}
               </div>
             </div>
           </div>

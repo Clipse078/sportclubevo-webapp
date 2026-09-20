@@ -10,11 +10,14 @@ import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
 import type { TaskContextType } from "@prisma/client";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import { TASK_PRIORITY_LABELS } from "@/lib/tasks/management-labels";
+import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
 import { createAufgabeFullAction } from "@/app/(admin)/dashboard/aufgaben/actions";
 import TaskContextField from "./TaskContextField";
+import TaskOrgVisibilityFields from "./TaskOrgVisibilityFields";
 
 type Props = {
   assigneeOptions: TaskAssigneeOption[];
+  orgUnitOptions: TaskOrgUnitPickerOption[];
   backHref: string;
   initialContextType?: TaskContextType | null;
   initialContextId?: string | null;
@@ -22,6 +25,7 @@ type Props = {
 
 export default function AufgabenFullCreateClient({
   assigneeOptions,
+  orgUnitOptions,
   backHref,
   initialContextType = null,
   initialContextId = null,
@@ -32,6 +36,15 @@ export default function AufgabenFullCreateClient({
 
   function onSubmit(formData: FormData) {
     setError(null);
+    const visibility = formData.get("visibilityScope");
+    const orgUnit = formData.get("orgUnitId");
+    if (
+      visibility === "ORG_UNIT" &&
+      !(typeof orgUnit === "string" && orgUnit.trim())
+    ) {
+      setError("Bitte eine Organisationseinheit für «Organisationseinheit» wählen.");
+      return;
+    }
     startTransition(async () => {
       const result = await createAufgabeFullAction(formData);
       if (result.ok && result.taskId) {
@@ -109,6 +122,7 @@ export default function AufgabenFullCreateClient({
                 initialContextType={initialContextType}
                 initialContextId={initialContextId}
               />
+              <TaskOrgVisibilityFields orgUnitOptions={orgUnitOptions} />
               <button type="submit" className="fca-button-primary w-full text-sm" disabled={pending}>
                 {pending ? "Erstellen …" : "Aufgabe erstellen"}
               </button>

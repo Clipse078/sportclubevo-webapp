@@ -1,6 +1,7 @@
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { TaskDto, TaskServiceContext } from "./types";
 import { canManageTask, hasTaskPermission } from "./visibility";
+import { canMutateTaskOrgVisibility } from "./task-org-mutation-policy";
 
 export type TaskWorkspaceCapabilities = {
   readOnly: boolean;
@@ -14,6 +15,7 @@ export type TaskWorkspaceCapabilities = {
   canCancel: boolean;
   canCreateSubtask: boolean;
   canEditContext: boolean;
+  canEditOrgVisibility: boolean;
 };
 
 export function resolveTaskWorkspaceCapabilities(
@@ -37,6 +39,23 @@ export function resolveTaskWorkspaceCapabilities(
   const canEditStatus =
     canManage || (isCreator && canCreate) || isAssignee;
 
+  const authRecord = {
+    tenantId: task.tenantId,
+    createdByUserId: task.createdByUserId,
+    assigneeUserIds: task.assignees.map((a) => a.userId),
+    visibilityScope: task.visibilityScope,
+    orgUnitId: task.orgUnitId,
+  };
+  const canEditOrgVisibility = canMutateTaskOrgVisibility(
+    ctx,
+    authRecord,
+    {
+      visibilityScope: task.visibilityScope,
+      orgUnitId: task.orgUnitId,
+    },
+    "edit",
+  );
+
   const caps: TaskWorkspaceCapabilities = {
     readOnly: false,
     canEditTitle: canEditFields,
@@ -49,6 +68,7 @@ export function resolveTaskWorkspaceCapabilities(
     canCancel: canManage || isCreator,
     canCreateSubtask: canCreate && !task.parentTaskId,
     canEditContext: canEditFields,
+    canEditOrgVisibility,
   };
 
   caps.readOnly =
@@ -61,7 +81,8 @@ export function resolveTaskWorkspaceCapabilities(
     !caps.canComplete &&
     !caps.canCancel &&
     !caps.canCreateSubtask &&
-    !caps.canEditContext;
+    !caps.canEditContext &&
+    !caps.canEditOrgVisibility;
 
   return caps;
 }

@@ -7,6 +7,8 @@ import type { TaskPriority } from "@prisma/client";
 import { ArrowLeft, Plus, Repeat2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
+import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
+import TaskOrgVisibilityFields from "./TaskOrgVisibilityFields";
 import type { TaskSeriesWorkspaceBundle } from "@/lib/tasks/series-workspace-service";
 import {
   TASK_PRIORITY_LABELS,
@@ -24,6 +26,7 @@ import {
 type Props = {
   bundle: TaskSeriesWorkspaceBundle;
   assigneeOptions: TaskAssigneeOption[];
+  orgUnitOptions: TaskOrgUnitPickerOption[];
   locale: string;
   timeZone: string;
   backHref: string;
@@ -40,6 +43,7 @@ type SubtaskDraft = {
 export default function TaskSeriesWorkspace({
   bundle,
   assigneeOptions,
+  orgUnitOptions,
   locale,
   timeZone,
   backHref,
@@ -74,6 +78,15 @@ export default function TaskSeriesWorkspace({
   function saveSeries(form: HTMLFormElement) {
     setError(null);
     const formData = new FormData(form);
+    const visibility = formData.get("visibilityScope");
+    const orgUnit = formData.get("orgUnitId");
+    if (
+      visibility === "ORG_UNIT" &&
+      !(typeof orgUnit === "string" && orgUnit.trim())
+    ) {
+      setError("Bitte eine Organisationseinheit für «Organisationseinheit» wählen.");
+      return;
+    }
     formData.set("seriesId", bundle.id);
     formData.set("title", title);
     formData.set("description", description);
@@ -218,6 +231,15 @@ export default function TaskSeriesWorkspace({
                 />
               </label>
               <p className="mt-2 text-xs text-[var(--muted)]">{bundle.editFutureNotice}</p>
+
+              <div className="mt-4">
+                <TaskOrgVisibilityFields
+                  orgUnitOptions={orgUnitOptions}
+                  defaultOrgUnitId={bundle.orgUnitId}
+                  defaultVisibilityScope={bundle.visibilityScope}
+                  disabled={pending}
+                />
+              </div>
 
               <input type="hidden" name="frequency" value={bundle.frequency} />
               <input type="hidden" name="intervalCount" value={String(bundle.intervalCount)} />

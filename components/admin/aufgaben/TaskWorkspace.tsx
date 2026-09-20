@@ -45,6 +45,7 @@ import {
 import type { TaskWorkspaceViewProps } from "@/lib/tasks/task-workspace-view-props";
 import type { TaskContextPresentation } from "@/lib/tasks/context-presentation";
 import TaskContextField from "./TaskContextField";
+import TaskOrgVisibilityEditor from "./TaskOrgVisibilityEditor";
 
 function InlineTitle({
   task,
@@ -481,6 +482,8 @@ function SubtaskCreateInline({
 export function TaskWorkspacePanel({
   bundle,
   assigneeOptions,
+  orgUnitOptions,
+  orgUnitDisplayLabel,
   locale,
   timeZone,
   backHref,
@@ -867,6 +870,13 @@ export function TaskWorkspacePanel({
             </PropertyRow>
           ) : null}
 
+          <TaskOrgVisibilityEditor
+            task={task}
+            orgUnitOptions={orgUnitOptions}
+            orgUnitDisplayLabel={orgUnitDisplayLabel}
+            canEdit={capabilities.canEditOrgVisibility}
+          />
+
           <PropertyRow label="Erstellt">
             <span className="text-xs text-[var(--muted)]">
               {creator
@@ -907,6 +917,8 @@ function PropertyRow({ label, children }: { label: string; children: React.React
 export function TaskWorkspaceModal({
   bundle,
   assigneeOptions,
+  orgUnitOptions,
+  orgUnitDisplayLabel,
   locale,
   timeZone,
   backHref,
@@ -921,6 +933,8 @@ export function TaskWorkspaceModal({
         <TaskWorkspacePanel
           bundle={bundle}
           assigneeOptions={assigneeOptions}
+          orgUnitOptions={orgUnitOptions}
+          orgUnitDisplayLabel={orgUnitDisplayLabel}
           locale={locale}
           timeZone={timeZone}
           backHref={backHref}

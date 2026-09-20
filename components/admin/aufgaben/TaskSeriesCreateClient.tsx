@@ -8,8 +8,10 @@ import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
+import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
 import { TASK_PRIORITY_LABELS } from "@/lib/tasks/management-labels";
 import { createTaskSeriesAction } from "@/app/(admin)/dashboard/aufgaben/actions";
+import TaskOrgVisibilityFields from "./TaskOrgVisibilityFields";
 
 type SubtaskDraft = {
   key: string;
@@ -22,6 +24,7 @@ type SubtaskDraft = {
 
 type Props = {
   assigneeOptions: TaskAssigneeOption[];
+  orgUnitOptions: TaskOrgUnitPickerOption[];
   timeZone: string;
   backHref: string;
 };
@@ -47,7 +50,12 @@ function newSubtask(): SubtaskDraft {
   };
 }
 
-export default function TaskSeriesCreateClient({ assigneeOptions, timeZone, backHref }: Props) {
+export default function TaskSeriesCreateClient({
+  assigneeOptions,
+  orgUnitOptions,
+  timeZone,
+  backHref,
+}: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -59,6 +67,15 @@ export default function TaskSeriesCreateClient({ assigneeOptions, timeZone, back
     setError(null);
     const form = e.currentTarget;
     const formData = new FormData(form);
+    const visibility = formData.get("visibilityScope");
+    const orgUnit = formData.get("orgUnitId");
+    if (
+      visibility === "ORG_UNIT" &&
+      !(typeof orgUnit === "string" && orgUnit.trim())
+    ) {
+      setError("Bitte eine Organisationseinheit für «Organisationseinheit» wählen.");
+      return;
+    }
     formData.set("frequency", frequency);
     formData.set("timezone", timeZone);
     const assigneeSelect = form.querySelector('[name="assigneeUserIds"]') as HTMLSelectElement | null;
@@ -287,6 +304,8 @@ export default function TaskSeriesCreateClient({ assigneeOptions, timeZone, back
                 </select>
                 <span className="text-[0.65rem] text-[var(--muted)]">Mehrfachauswahl mit Strg/Cmd</span>
               </label>
+
+              <TaskOrgVisibilityFields orgUnitOptions={orgUnitOptions} />
 
               <p className="text-[0.65rem] text-[var(--muted)]">Zeitzone: {timeZone}</p>
 

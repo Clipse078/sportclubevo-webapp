@@ -44,6 +44,10 @@ import {
   emitTaskAssignmentNotifications,
   emitTaskDeadlineChangedNotifications,
 } from "@/lib/notifications/task-producer";
+import {
+  normalizeTaskOrgVisibilityState,
+  validateTaskOrgVisibilityMutation,
+} from "./task-org-mutation-policy";
 
 const TASK_INCLUDE = {
   assignees: {
@@ -233,6 +237,12 @@ export async function createTask(
   const assigneeUserIds = [...new Set(input.assigneeUserIds ?? [])];
   await validateAssigneeUserIds(ctx.tenantId, assigneeUserIds);
 
+  const orgVisibility = await validateTaskOrgVisibilityMutation(
+    ctx,
+    normalizeTaskOrgVisibilityState(input.visibilityScope, input.orgUnitId),
+    { mode: "create" },
+  );
+
   const task = await prisma.$transaction(async (tx) => {
     const created = await tx.task.create({
       data: {
@@ -243,6 +253,8 @@ export async function createTask(
         dueAt: input.dueAt ?? null,
         contextType: input.contextType ?? null,
         contextId: input.contextId ?? null,
+        orgUnitId: orgVisibility.orgUnitId,
+        visibilityScope: orgVisibility.visibilityScope,
         createdByUserId: ctx.userId,
         status: TaskStatusEnum.OPEN,
       },
@@ -266,7 +278,13 @@ export async function createTask(
       actorUserId: ctx.userId,
       taskId: created.id,
       action: "TASK_CREATED",
-      afterJson: { title, status: created.status, assigneeUserIds },
+      afterJson: {
+        title,
+        status: created.status,
+        assigneeUserIds,
+        orgUnitId: orgVisibility.orgUnitId,
+        visibilityScope: orgVisibility.visibilityScope,
+      },
     });
 
     if (assigneeUserIds.length > 0) {
@@ -533,6 +551,9 @@ export async function updateTask(
     orgUnitId: existing.orgUnitId,
   });
 
+  const orgVisibilityMutation =
+    input.orgUnitId !== undefined || input.visibilityScope !== undefined;
+
   if (!canManage && !(isCreator && hasTaskPermission(ctx, PERMISSIONS.TASKS_CREATE))) {
     if (!isAssignee || input.status === undefined) {
       throw new TaskForbiddenError();
@@ -543,12 +564,37 @@ export async function updateTask(
       input.priority !== undefined ||
       input.dueAt !== undefined ||
       input.contextType !== undefined ||
-      input.contextId !== undefined
+      input.contextId !== undefined ||
+      orgVisibilityMutation
     ) {
       throw new TaskForbiddenError("Assignees may only update status");
     }
   } else if (!canManage) {
     assertCanCreate(ctx);
+  }
+
+  let nextOrgVisibility:
+    | Awaited<ReturnType<typeof validateTaskOrgVisibilityMutation>>
+    | null = null;
+  if (orgVisibilityMutation) {
+    nextOrgVisibility = await validateTaskOrgVisibilityMutation(
+      ctx,
+      normalizeTaskOrgVisibilityState(
+        input.visibilityScope ?? existing.visibilityScope,
+        input.orgUnitId !== undefined ? input.orgUnitId : existing.orgUnitId,
+      ),
+      {
+        mode: "edit",
+        existing: {
+          tenantId: existing.tenantId,
+          createdByUserId: existing.createdByUserId,
+          assigneeUserIds: existing.assignees.map((a) => a.userId),
+          visibilityScope: existing.visibilityScope,
+          orgUnitId: existing.orgUnitId,
+          orgUnitTenantId: existing.orgUnit?.tenantId ?? null,
+        },
+      },
+    );
   }
 
   const data: Prisma.TaskUpdateInput = {};
@@ -585,6 +631,13 @@ export async function updateTask(
     data.completedAt = transition.completedAt;
   }
 
+  if (nextOrgVisibility) {
+    data.visibilityScope = nextOrgVisibility.visibilityScope;
+    data.orgUnit = nextOrgVisibility.orgUnitId
+      ? { connect: { id: nextOrgVisibility.orgUnitId } }
+      : { disconnect: true };
+  }
+
   const updated = await prisma.$transaction(async (tx) => {
     const row = await tx.task.update({
       where: { id: existing.id },
@@ -604,6 +657,8 @@ export async function updateTask(
         dueAt: existing.dueAt?.toISOString() ?? null,
         contextType: existing.contextType,
         contextId: existing.contextId,
+        orgUnitId: existing.orgUnitId,
+        visibilityScope: existing.visibilityScope,
       },
       afterJson: {
         title: row.title,
@@ -612,6 +667,8 @@ export async function updateTask(
         dueAt: row.dueAt?.toISOString() ?? null,
         contextType: row.contextType,
         contextId: row.contextId,
+        orgUnitId: row.orgUnitId,
+        visibilityScope: row.visibilityScope,
       },
     });
 

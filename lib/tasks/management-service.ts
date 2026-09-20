@@ -2,7 +2,14 @@
  * AUFGABEN-02 — Task Center management queries (server-side filtering, batch enrichment).
  */
 
-import type { Prisma, TaskContextType, TaskPriority, TaskStatus } from "@prisma/client";
+import type {
+  Prisma,
+  TaskContextType,
+  TaskPriority,
+  TaskStatus,
+  TaskVisibilityScope,
+} from "@prisma/client";
+import { TaskVisibilityScope as TaskVisibilityScopeEnum } from "@prisma/client";
 import { TaskStatus as TaskStatusEnum } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { computeSubtaskProgress } from "./subtask-rules";
@@ -25,7 +32,12 @@ import {
   isActiveTaskStatus,
   startOfLocalDay,
 } from "./management-deadline";
-import { formatTaskSeriesRecurrenceLabel } from "./management-labels";
+import {
+  formatTaskOrgUnitListLabel,
+  formatTaskSeriesRecurrenceLabel,
+  formatTaskVisibilityLabel,
+} from "./management-labels";
+import { resolveTaskOrgUnitPresentationBatch } from "./task-org-options";
 import type {
   TaskManagementQueryState,
   TaskManagementSort,
@@ -73,6 +85,8 @@ export type TaskManagementListItem = {
   seriesRecurrenceLabel: string | null;
   context: TaskContextPresentation | null;
   expandable: boolean;
+  organisationLabel: string;
+  visibilityLabel: string;
 };
 
 export type TaskSeriesManagementRow = {
@@ -158,6 +172,16 @@ function buildSecondaryFilters(
 
   if (query.contextType) {
     and.push({ contextType: query.contextType as TaskContextType });
+  }
+
+  if (query.orgUnitId) {
+    and.push({ orgUnitId: query.orgUnitId });
+  }
+
+  if (query.visibilityScope && query.visibilityScope !== "ALL") {
+    and.push({
+      visibilityScope: query.visibilityScope as TaskVisibilityScope,
+    });
   }
 
   if (query.recurring === "RECURRING") {
@@ -279,6 +303,33 @@ function contextForTask(
   return map.get(`${task.contextType}:${task.contextId}`) ?? null;
 }
 
+function attachOrgVisibilityPresentation(
+  task: TaskDto,
+  orgPresentation: Map<string, { label: string; archived: boolean; missing: boolean }>,
+): Pick<TaskManagementListItem, "organisationLabel" | "visibilityLabel"> {
+  const visibilityLabel = formatTaskVisibilityLabel(task.visibilityScope);
+  let orgUnitLabel: string | null = null;
+  if (task.orgUnitId) {
+    const presentation = orgPresentation.get(task.orgUnitId);
+    if (presentation) {
+      orgUnitLabel = presentation.archived
+        ? `${presentation.label} · Archiviert`
+        : presentation.label;
+    }
+  }
+  return {
+    organisationLabel: formatTaskOrgUnitListLabel({
+      orgUnitId: task.orgUnitId,
+      orgUnitLabel,
+      visibilityScope: task.visibilityScope,
+    }),
+    visibilityLabel:
+      task.visibilityScope === TaskVisibilityScopeEnum.ASSIGNEES_ONLY
+        ? visibilityLabel
+        : visibilityLabel,
+  };
+}
+
 async function batchEnrichRoots(
   ctx: TaskServiceContext,
   roots: TaskDto[],
@@ -312,6 +363,10 @@ async function batchEnrichRoots(
     locale,
     timeZone,
   );
+  const orgPresentation = await resolveTaskOrgUnitPresentationBatch(
+    ctx.tenantId,
+    roots.map((t) => t.orgUnitId).filter((id): id is string => Boolean(id)),
+  );
 
   return roots.map((task) => {
     const subtasks = childrenByParent.get(task.id) ?? [];
@@ -330,6 +385,7 @@ async function batchEnrichRoots(
       seriesRecurrenceLabel,
       context: contextForTask(task, contextMap),
       expandable: subtasks.length > 0,
+      ...attachOrgVisibilityPresentation(task, orgPresentation),
     };
   });
 }
@@ -372,6 +428,10 @@ async function batchEnrichPersonalRows(
     locale,
     timeZone,
   );
+  const orgPresentation = await resolveTaskOrgUnitPresentationBatch(
+    ctx.tenantId,
+    personal.map((t) => t.orgUnitId).filter((id): id is string => Boolean(id)),
+  );
 
   return personal.map((task) => {
     const subtasks = task.parentTaskId ? [] : childrenByParent.get(task.id) ?? [];
@@ -389,6 +449,7 @@ async function batchEnrichPersonalRows(
         : null,
       context: contextForTask(task, contextMap),
       expandable: subtasks.length > 0,
+      ...attachOrgVisibilityPresentation(task, orgPresentation),
     };
   });
 }

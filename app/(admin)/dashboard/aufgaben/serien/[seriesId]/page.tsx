@@ -31,6 +31,7 @@ export default async function TaskSeriesDetailPage({ params, searchParams }: Pro
         <TaskSeriesWorkspace
           bundle={data.bundle}
           assigneeOptions={data.assigneeOptions}
+          orgUnitOptions={data.orgUnitOptions}
           locale={data.locale}
           timeZone={data.timeZone}
           backHref={data.backHref}

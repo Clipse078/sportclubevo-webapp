@@ -23,7 +23,9 @@ import {
 import {
   buildTaskManagementFilterHrefMaps,
   mergeAssigneeFilterHrefs,
+  mergeOrgUnitFilterHrefs,
 } from "@/lib/tasks/management-filter-maps";
+import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
 import {
   hasSecondaryTaskFilters,
   taskManagementViewsForScope,
@@ -53,6 +55,7 @@ type Props = {
   page: number;
   pageCount: number;
   assigneeOptions: TaskAssigneeOption[];
+  orgUnitFilterOptions: TaskOrgUnitPickerOption[];
   canCreate: boolean;
   canAssign: boolean;
   canManage: boolean;
@@ -114,6 +117,7 @@ export default function AufgabenManagementWorkspace({
   page,
   pageCount,
   assigneeOptions,
+  orgUnitFilterOptions,
   canCreate,
   canAssign,
   canManage,
@@ -129,6 +133,13 @@ export default function AufgabenManagementWorkspace({
     basePath,
     query,
     assigneeOptions,
+    { tenantWideVisibility },
+  );
+  const orgUnitHrefByValue = mergeOrgUnitFilterHrefs(
+    filterMaps,
+    basePath,
+    query,
+    orgUnitFilterOptions,
     { tenantWideVisibility },
   );
 
@@ -334,10 +345,16 @@ export default function AufgabenManagementWorkspace({
               deadlineValue={query.deadline}
               recurringValue={query.recurring}
               contextValue={query.contextType ?? undefined}
+              orgUnitValue={query.orgUnitId ?? undefined}
+              visibilityValue={query.visibilityScope}
               showAssigneeFilter={tenantWideVisibility}
               assigneeOptions={assigneeOptions.map((a) => ({
                 userId: a.userId,
                 label: `${a.firstName} ${a.lastName}`.trim(),
+              }))}
+              orgUnitOptions={orgUnitFilterOptions.map((o) => ({
+                id: o.id,
+                label: o.label,
               }))}
               statusHrefByValue={filterMaps.statusHrefByValue}
               assigneeHrefByValue={assigneeHrefByValue}
@@ -345,6 +362,8 @@ export default function AufgabenManagementWorkspace({
               deadlineHrefByValue={filterMaps.deadlineHrefByValue}
               recurringHrefByValue={filterMaps.recurringHrefByValue}
               contextHrefByValue={filterMaps.contextHrefByValue}
+              orgUnitHrefByValue={orgUnitHrefByValue}
+              visibilityHrefByValue={filterMaps.visibilityHrefByValue}
             />
           ) : null}
         </aside>

@@ -184,8 +184,8 @@ describe("AUFGABEN-05-ORG-01 defaults", () => {
     const createArg = mocks.taskCreate.mock.calls[0]?.[0] as {
       data: Record<string, unknown>;
     };
-    expect(createArg.data.orgUnitId).toBeUndefined();
-    expect(createArg.data.visibilityScope).toBeUndefined();
+    expect(createArg.data.orgUnitId).toBeNull();
+    expect(createArg.data.visibilityScope).toBe(TaskVisibilityScope.CLUB);
   });
 
   it("createTaskSeries relies on schema defaults for org metadata", async () => {
@@ -203,8 +203,8 @@ describe("AUFGABEN-05-ORG-01 defaults", () => {
     const createArg = mocks.taskSeriesCreate.mock.calls[0]?.[0] as {
       data: Record<string, unknown>;
     };
-    expect(createArg.data.orgUnitId).toBeUndefined();
-    expect(createArg.data.visibilityScope).toBeUndefined();
+    expect(createArg.data.orgUnitId).toBeNull();
+    expect(createArg.data.visibilityScope).toBe(TaskVisibilityScope.CLUB);
   });
 });
 
@@ -495,7 +495,7 @@ describe("AUFGABEN-05-ORG-01 context independence", () => {
     };
     expect(createArg.data.contextType).toBe("TEAM");
     expect(createArg.data.contextId).toBe("team-99");
-    expect(createArg.data.orgUnitId).toBeUndefined();
+    expect(createArg.data.orgUnitId).toBeNull();
   });
 
   it("does not derive orgUnitId from MEETING context on create", async () => {
@@ -514,7 +514,7 @@ describe("AUFGABEN-05-ORG-01 context independence", () => {
     };
     expect(createArg.data.contextType).toBe("MEETING");
     expect(createArg.data.contextId).toBe("meeting-1");
-    expect(createArg.data.orgUnitId).toBeUndefined();
+    expect(createArg.data.orgUnitId).toBeNull();
   });
 });
 
