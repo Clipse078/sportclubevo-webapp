@@ -6,16 +6,25 @@ import {
   parseTaskManagementQuery,
   parseTaskManagementSort,
   parseTaskManagementView,
+  resolveTaskManagementQuery,
+  PERSONAL_DEFAULT_VIEW,
+  TENANT_WIDE_DEFAULT_VIEW,
 } from "../management-navigation";
 
 describe("task management navigation", () => {
-  it("parses default query state", () => {
-    expect(parseTaskManagementQuery({})).toMatchObject({
-      view: "ALLE",
+  it("parses default query state for tenant-wide visibility", () => {
+    expect(parseTaskManagementQuery({}, { tenantWideVisibility: true })).toMatchObject({
+      view: TENANT_WIDE_DEFAULT_VIEW,
       search: "",
       sort: "DEADLINE_ASC",
       status: "ACTIVE",
       page: 1,
+    });
+  });
+
+  it("parses default query state for personal visibility", () => {
+    expect(parseTaskManagementQuery({}, { tenantWideVisibility: false })).toMatchObject({
+      view: PERSONAL_DEFAULT_VIEW,
     });
   });
 
@@ -58,5 +67,9 @@ describe("task management navigation", () => {
   it("parses sort param", () => {
     expect(parseTaskManagementSort("TITLE_ASC")).toBe("TITLE_ASC");
     expect(parseTaskManagementSort(undefined)).toBe("DEADLINE_ASC");
+  });
+
+  it("resolveTaskManagementQuery downscopes manipulated ALLE for personal users", () => {
+    expect(resolveTaskManagementQuery({ view: "ALLE" }, false).view).toBe("MEINE");
   });
 });

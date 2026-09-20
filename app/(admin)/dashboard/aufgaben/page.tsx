@@ -9,10 +9,10 @@ import {
   listTaskSeriesManagementRows,
 } from "@/lib/tasks/management-service";
 import {
-  parseTaskManagementQuery,
   parseTaskManagementSort,
+  resolveTaskManagementQuery,
 } from "@/lib/tasks/management-navigation";
-import { hasTaskPermission } from "@/lib/tasks/visibility";
+import { canViewAllTasks, hasTaskPermission } from "@/lib/tasks/visibility";
 import AufgabenManagementWorkspace from "@/components/admin/aufgaben/AufgabenManagementWorkspace";
 
 export const dynamic = "force-dynamic";
@@ -44,14 +44,17 @@ export default async function AufgabenPage({ searchParams }: Props) {
   }
 
   const params: PageSearchParams = searchParams ? await searchParams : {};
-  const query = parseTaskManagementQuery(params);
+  const tenantWideVisibility = canViewAllTasks(ctx);
+  const query = resolveTaskManagementQuery(params, tenantWideVisibility);
   const sort = parseTaskManagementSort(params.sort);
   const timeZone = tenant?.timezone ?? "Europe/Zurich";
   const locale = tenant?.locale ?? "de-CH";
 
   const [summary, assigneeOptions] = await Promise.all([
     getTaskManagementSummary(ctx, timeZone),
-    listEligibleTaskAssignees(ctx.tenantId),
+    tenantWideVisibility
+      ? listEligibleTaskAssignees(ctx.tenantId)
+      : Promise.resolve([]),
   ]);
 
   let items: Awaited<ReturnType<typeof listTaskManagementItems>>["items"] = [];
@@ -85,6 +88,7 @@ export default async function AufgabenPage({ searchParams }: Props) {
   return (
     <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
       <AufgabenManagementWorkspace
+        tenantWideVisibility={tenantWideVisibility}
         locale={locale}
         timeZone={timeZone}
         query={query}

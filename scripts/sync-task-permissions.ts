@@ -45,6 +45,9 @@ async function main() {
   console.log(`[sync-task-permissions] mode=${DRY_RUN ? "DRY_RUN" : "APPLY"}`);
   const result = await reconcileTaskPermissions(prisma, DRY_RUN);
   console.log(JSON.stringify(result, null, 2));
+  console.log(
+    `[sync-task-permissions] tenant Club Admin roles processed: ${result.tenantClubAdminRoles.length}`,
+  );
 }
 
 main()

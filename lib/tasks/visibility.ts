@@ -1,13 +1,17 @@
 /**
- * AUFGABEN-01 — MVP task visibility.
+ * AUFGABEN — canonical task visibility.
  *
- * A user may see a task when ANY of:
- *   1. They are a structured assignee (TaskAssignee.userId)
- *   2. They created the task (createdByUserId)
- *   3. They hold tasks.manage for the tenant (operational managers)
+ * tasks.view gates module access; row visibility is enforced separately:
  *
- * tasks.view alone does NOT grant tenant-wide visibility — it gates module
- * access; the rules above filter rows.
+ * PERSONAL / RELEVANT (default with tasks.view only):
+ *   - assigned to the current user
+ *   - created by the current user
+ *
+ * TENANT-WIDE (tasks.view_all or tasks.manage):
+ *   - all tasks in the active tenant (never cross-tenant)
+ *
+ * tasks.manage grants mutation authority and includes tenant-wide visibility.
+ * tasks.view_all grants visibility only — not mutation.
  */
 
 import type { Prisma } from "@prisma/client";
@@ -25,10 +29,18 @@ export function canManageAllTasks(ctx: TaskServiceContext): boolean {
   return hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE);
 }
 
+/** Tenant-wide read visibility (management perspective, KPIs, assignee browsing). */
+export function canViewAllTasks(ctx: TaskServiceContext): boolean {
+  return (
+    hasTaskPermission(ctx, PERMISSIONS.TASKS_VIEW_ALL) ||
+    hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE)
+  );
+}
+
 export function buildTaskVisibilityWhere(
   ctx: TaskServiceContext,
 ): Prisma.TaskWhereInput {
-  if (canManageAllTasks(ctx)) {
+  if (canViewAllTasks(ctx)) {
     return { tenantId: ctx.tenantId };
   }
 
@@ -50,7 +62,7 @@ export function canViewTaskRecord(
   },
 ): boolean {
   if (task.tenantId !== ctx.tenantId) return false;
-  if (canManageAllTasks(ctx)) return true;
+  if (canViewAllTasks(ctx)) return true;
   if (task.createdByUserId === ctx.userId) return true;
   return task.assigneeUserIds.includes(ctx.userId);
 }
