@@ -2,6 +2,8 @@
  * AUFGABEN-03 — task workspace read model, permissions, and integration tests.
  */
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { TaskStatus } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -267,5 +269,13 @@ describe("AUFGABEN-03 matrix coverage hooks", () => {
   it("I/J — personal dashboard and overview use same workspace route concept", () => {
     const href = `/dashboard/aufgaben/${TASK_ID}`;
     expect(href).toBe("/dashboard/aufgaben/task-root");
+  });
+
+  it("V — successful workspace mutations refresh server props for overview consistency", () => {
+    const source = readFileSync(
+      join(process.cwd(), "components/admin/aufgaben/TaskWorkspace.tsx"),
+      "utf8",
+    );
+    expect(source).toMatch(/else if \(result\.ok\)\s*\{\s*router\.refresh\(\);/s);
   });
 });

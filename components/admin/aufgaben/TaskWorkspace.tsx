@@ -50,6 +50,7 @@ function InlineTitle({
   task: TaskDto;
   canEdit: boolean;
 }) {
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(task.title);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +66,7 @@ function InlineTitle({
       const result = await updateAufgabeTitleAction(fd);
       if (result.ok) {
         setEditing(false);
+        router.refresh();
       } else {
         setError(result.message);
       }
@@ -129,6 +131,7 @@ function InlineDescription({
   task: TaskDto;
   canEdit: boolean;
 }) {
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(task.description ?? "");
   const [pending, startTransition] = useTransition();
@@ -139,8 +142,11 @@ function InlineDescription({
       const fd = new FormData();
       fd.set("taskId", task.id);
       fd.set("description", value);
-      await updateAufgabeDescriptionAction(fd);
-      setEditing(false);
+      const result = await updateAufgabeDescriptionAction(fd);
+      if (result.ok) {
+        setEditing(false);
+        router.refresh();
+      }
     });
   }
 
@@ -281,6 +287,7 @@ function SubtaskCreateInline({
   assigneeOptions: TaskAssigneeOption[];
   canCreate: boolean;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -294,6 +301,7 @@ function SubtaskCreateInline({
       const result = await createSubtaskAction(formData);
       if (result.ok) {
         setOpen(false);
+        router.refresh();
       } else {
         setError(result.message);
       }
@@ -377,11 +385,13 @@ export function TaskWorkspacePanel({
         const result = await runner();
         if (!result.ok && result.message) {
           setActionError(result.message);
+        } else if (result.ok) {
+          router.refresh();
         }
         setMenuOpen(false);
       });
     },
-    [],
+    [router],
   );
 
   function navigateToTask(id: string) {
