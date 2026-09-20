@@ -421,6 +421,8 @@ export async function createSubtask(
         description: input.description?.trim() || null,
         priority: input.priority ?? "NORMAL",
         dueAt: input.dueAt ?? null,
+        orgUnitId: parent.orgUnitId,
+        visibilityScope: parent.visibilityScope,
         createdByUserId: ctx.userId,
         status: TaskStatusEnum.OPEN,
       },
