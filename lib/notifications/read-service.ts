@@ -1,7 +1,10 @@
 import type { Prisma } from "@prisma/client";
+import {
+  NotificationChannel,
+  NotificationDeliveryStatus,
+} from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { NOTIFICATION_CENTER_PAGE_SIZE, NOTIFICATION_HEADER_LATEST_LIMIT } from "./constants";
-import { getEffectiveNotificationPreference } from "./preference-service";
 
 export class NotificationAccessError extends Error {
   constructor(message = "Notification not found") {
@@ -51,42 +54,42 @@ function mapRow(row: {
   };
 }
 
-async function isInAppVisible(
-  tenantId: string,
-  userId: string,
-  type: Parameters<typeof getEffectiveNotificationPreference>[2],
-): Promise<boolean> {
-  const pref = await getEffectiveNotificationPreference(tenantId, userId, type);
-  return pref.inAppEnabled;
+/** In-app inbox visibility follows successful IN_APP channel delivery rows. */
+export function inAppVisibleNotificationWhere(): Prisma.NotificationWhereInput {
+  return {
+    deliveries: {
+      some: {
+        channel: NotificationChannel.IN_APP,
+        status: NotificationDeliveryStatus.SENT,
+      },
+    },
+  };
 }
 
 export async function getNotificationHeaderSummary(
   tenantId: string,
   userId: string,
 ): Promise<{ unreadCount: number; latest: NotificationListItem[] }> {
-  const unreadRows = await prisma.notification.findMany({
-    where: { tenantId, recipientUserId: userId, readAt: null },
-    select: { type: true },
+  const baseWhere: Prisma.NotificationWhereInput = {
+    tenantId,
+    recipientUserId: userId,
+    ...inAppVisibleNotificationWhere(),
+  };
+
+  const unreadCount = await prisma.notification.count({
+    where: { ...baseWhere, readAt: null },
   });
-  let unreadCount = 0;
-  for (const row of unreadRows) {
-    if (await isInAppVisible(tenantId, userId, row.type)) unreadCount += 1;
-  }
 
   const rows = await prisma.notification.findMany({
-    where: { tenantId, recipientUserId: userId },
+    where: baseWhere,
     orderBy: { createdAt: "desc" },
-    take: NOTIFICATION_HEADER_LATEST_LIMIT + 30,
+    take: NOTIFICATION_HEADER_LATEST_LIMIT,
   });
 
-  const latest: NotificationListItem[] = [];
-  for (const row of rows) {
-    if (!(await isInAppVisible(tenantId, userId, row.type))) continue;
-    latest.push(mapRow(row));
-    if (latest.length >= NOTIFICATION_HEADER_LATEST_LIMIT) break;
-  }
-
-  return { unreadCount, latest };
+  return {
+    unreadCount,
+    latest: rows.map(mapRow),
+  };
 }
 
 export async function listNotificationsForUser(input: {
@@ -99,27 +102,27 @@ export async function listNotificationsForUser(input: {
   const where: Prisma.NotificationWhereInput = {
     tenantId: input.tenantId,
     recipientUserId: input.userId,
+    ...inAppVisibleNotificationWhere(),
     ...(input.filter === "UNREAD" ? { readAt: null } : {}),
   };
 
-  const rows = await prisma.notification.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    skip: (page - 1) * NOTIFICATION_CENTER_PAGE_SIZE,
-    take: NOTIFICATION_CENTER_PAGE_SIZE,
-  });
+  const [rows, totalCount] = await Promise.all([
+    prisma.notification.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * NOTIFICATION_CENTER_PAGE_SIZE,
+      take: NOTIFICATION_CENTER_PAGE_SIZE,
+    }),
+    prisma.notification.count({ where }),
+  ]);
 
-  const items: NotificationListItem[] = [];
-  for (const row of rows) {
-    const visibleInApp = await isInAppVisible(input.tenantId, input.userId, row.type);
-    if (!visibleInApp) continue;
-    items.push(mapRow(row));
-  }
-
-  const totalCount = await prisma.notification.count({ where });
   const pageCount = Math.max(1, Math.ceil(totalCount / NOTIFICATION_CENTER_PAGE_SIZE));
 
-  return { items, totalCount, pageCount };
+  return {
+    items: rows.map(mapRow),
+    totalCount,
+    pageCount,
+  };
 }
 
 export async function markNotificationRead(
@@ -129,7 +132,12 @@ export async function markNotificationRead(
   read: boolean,
 ): Promise<void> {
   const result = await prisma.notification.updateMany({
-    where: { id: notificationId, tenantId, recipientUserId: userId },
+    where: {
+      id: notificationId,
+      tenantId,
+      recipientUserId: userId,
+      ...inAppVisibleNotificationWhere(),
+    },
     data: { readAt: read ? new Date() : null },
   });
   if (result.count !== 1) {
@@ -142,7 +150,12 @@ export async function markAllNotificationsRead(
   userId: string,
 ): Promise<number> {
   const result = await prisma.notification.updateMany({
-    where: { tenantId, recipientUserId: userId, readAt: null },
+    where: {
+      tenantId,
+      recipientUserId: userId,
+      readAt: null,
+      ...inAppVisibleNotificationWhere(),
+    },
     data: { readAt: new Date() },
   });
   return result.count;

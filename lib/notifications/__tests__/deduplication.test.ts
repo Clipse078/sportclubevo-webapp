@@ -16,6 +16,21 @@ describe("notification deduplication keys", () => {
     ).toBe("TASK_ASSIGNED:task-1:user-1:1000");
   });
 
+  it("scopes assignment keys per recipient so assignees do not suppress each other", () => {
+    const assignedAtMs = 1000;
+    const keyA = buildTaskAssignedDedupKey({
+      taskId: "task-1",
+      recipientUserId: "user-a",
+      assignedAtMs,
+    });
+    const keyB = buildTaskAssignedDedupKey({
+      taskId: "task-1",
+      recipientUserId: "user-b",
+      assignedAtMs,
+    });
+    expect(keyA).not.toBe(keyB);
+  });
+
   it("includes dueAt in due-soon and overdue keys", () => {
     const dueAtIso = "2026-09-21T12:00:00.000Z";
     expect(

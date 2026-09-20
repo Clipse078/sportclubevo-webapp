@@ -4,12 +4,13 @@ import {
   Prisma,
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { resolveSecurityLinkBaseUrl } from "@/lib/server/security-link-url";
 import {
   NOTIFICATION_EMAIL_DELIVERY_BATCH_SIZE,
   NOTIFICATION_EMAIL_MAX_ATTEMPTS,
+  NOTIFICATION_EMAIL_PROCESSING_LEASE_MS,
   NOTIFICATION_LOG_PREFIX,
 } from "./constants";
+import { buildNotificationAbsoluteHref } from "./internal-href";
 import {
   getNotificationEmailProvider,
   NotificationEmailProviderError,
@@ -37,6 +38,8 @@ type DeliveryRow = Prisma.NotificationDeliveryGetPayload<{
 export async function processPendingNotificationDeliveries(
   batchSize = NOTIFICATION_EMAIL_DELIVERY_BATCH_SIZE,
 ): Promise<ProcessPendingDeliveriesResult> {
+  await recoverStaleProcessingDeliveries();
+
   const candidates = await prisma.notificationDelivery.findMany({
     where: {
       channel: NotificationChannel.EMAIL,
@@ -71,13 +74,27 @@ export async function processPendingNotificationDeliveries(
     summary.claimed += 1;
 
     try {
-      await sendDeliveryEmail(provider, delivery);
+      const recipientEmail = delivery.notification.recipient.email?.trim();
+      if (!recipientEmail) {
+        await prisma.notificationDelivery.update({
+          where: { id: delivery.id },
+          data: {
+            status: NotificationDeliveryStatus.SKIPPED,
+            failureCode: "MISSING_RECIPIENT_EMAIL",
+          },
+        });
+        summary.skipped += 1;
+        continue;
+      }
+
+      const sendResult = await sendDeliveryEmail(provider, delivery, recipientEmail);
       await prisma.notificationDelivery.update({
         where: { id: delivery.id },
         data: {
           status: NotificationDeliveryStatus.SENT,
           deliveredAt: new Date(),
           failureCode: null,
+          providerMessageId: sendResult.providerMessageId,
         },
       });
       summary.sent += 1;
@@ -115,6 +132,25 @@ export async function processPendingNotificationDeliveries(
   return summary;
 }
 
+export async function recoverStaleProcessingDeliveries(
+  now: Date = new Date(),
+): Promise<number> {
+  const cutoff = new Date(now.getTime() - NOTIFICATION_EMAIL_PROCESSING_LEASE_MS);
+  const result = await prisma.notificationDelivery.updateMany({
+    where: {
+      channel: NotificationChannel.EMAIL,
+      status: NotificationDeliveryStatus.PROCESSING,
+      lastAttemptAt: { lt: cutoff },
+      attemptCount: { lt: NOTIFICATION_EMAIL_MAX_ATTEMPTS },
+    },
+    data: {
+      status: NotificationDeliveryStatus.FAILED,
+      failureCode: "PROCESSING_LEASE_EXPIRED",
+    },
+  });
+  return result.count;
+}
+
 async function claimDelivery(delivery: DeliveryRow): Promise<boolean> {
   const result = await prisma.notificationDelivery.updateMany({
     where: {
@@ -135,19 +171,19 @@ async function claimDelivery(delivery: DeliveryRow): Promise<boolean> {
 async function sendDeliveryEmail(
   provider: ReturnType<typeof getNotificationEmailProvider>,
   delivery: DeliveryRow,
-): Promise<void> {
+  recipientEmail: string,
+): Promise<{ providerMessageId: string }> {
   const notification = delivery.notification;
-  const baseUrl = resolveSecurityLinkBaseUrl();
-  const absoluteHref = new URL(notification.href, baseUrl).toString();
+  const absoluteHref = buildNotificationAbsoluteHref(notification.href);
 
   const tenant = notification.tenant;
 
   const deadlineFromBody =
     notification.body.match(/(?:Fällig|Neue Frist): (.+)$/m)?.[1] ?? null;
 
-  await provider.send({
+  return provider.send({
     tenantId: notification.tenantId,
-    to: notification.recipient.email,
+    to: recipientEmail,
     subject: notification.title,
     tenantName: tenant.name,
     platformName: "SportClubEvo",

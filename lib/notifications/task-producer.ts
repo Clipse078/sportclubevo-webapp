@@ -7,6 +7,7 @@ import {
   taskWorkspaceHref,
 } from "./deduplication";
 import { loadEffectivePreferencesForUsers } from "./preference-service";
+import { NOTIFICATION_LOG_PREFIX } from "./constants";
 import { createNotificationIdempotent } from "./notification-service";
 import { shouldEmitSeriesAssignmentNotification } from "./recurrence-assignment";
 import {
@@ -21,6 +22,29 @@ export type TaskAssignmentNotificationContext = {
 };
 
 export async function emitTaskAssignmentNotifications(
+  tx: Prisma.TransactionClient,
+  input: {
+    tenantId: string;
+    taskId: string;
+    taskTitle: string;
+    isSubtask: boolean;
+    assigneeRows: Array<{ userId: string; assignedAt: Date }>;
+    context: TaskAssignmentNotificationContext;
+    dueAt?: Date | null;
+  },
+): Promise<void> {
+  try {
+    await emitTaskAssignmentNotificationsInner(tx, input);
+  } catch (error) {
+    console.error(`${NOTIFICATION_LOG_PREFIX} assignment emit failed`, {
+      tenantId: input.tenantId,
+      taskId: input.taskId,
+      error: error instanceof Error ? error.message : "unknown",
+    });
+  }
+}
+
+async function emitTaskAssignmentNotificationsInner(
   tx: Prisma.TransactionClient,
   input: {
     tenantId: string;
@@ -88,6 +112,32 @@ export async function emitTaskAssignmentNotifications(
 }
 
 export async function emitTaskDeadlineChangedNotifications(
+  tx: Prisma.TransactionClient,
+  input: {
+    tenantId: string;
+    taskId: string;
+    taskTitle: string;
+    assigneeUserIds: string[];
+    actorUserId: string;
+    previousDueAt: Date | null;
+    nextDueAt: Date | null;
+    changedAt: Date;
+    locale: string;
+    timeZone: string;
+  },
+): Promise<void> {
+  try {
+    await emitTaskDeadlineChangedNotificationsInner(tx, input);
+  } catch (error) {
+    console.error(`${NOTIFICATION_LOG_PREFIX} deadline-changed emit failed`, {
+      tenantId: input.tenantId,
+      taskId: input.taskId,
+      error: error instanceof Error ? error.message : "unknown",
+    });
+  }
+}
+
+async function emitTaskDeadlineChangedNotificationsInner(
   tx: Prisma.TransactionClient,
   input: {
     tenantId: string;
