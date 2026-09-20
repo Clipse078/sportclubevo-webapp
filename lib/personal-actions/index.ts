@@ -10,10 +10,7 @@ export type {
   PersonalActionSubject,
 } from "./types";
 
-export {
-  PERSONAL_ACTION_ATTENDANCE_HORIZON_DAYS,
-  PERSONAL_ACTION_MAX_UPCOMING_EVENTS_PER_TEAM_SEASON,
-} from "./config";
+export { PERSONAL_ACTION_ATTENDANCE_HORIZON_DAYS } from "./config";
 
 export {
   buildParticipationPersonalActionId,

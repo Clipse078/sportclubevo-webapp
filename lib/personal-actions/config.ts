@@ -7,5 +7,10 @@
  */
 export const PERSONAL_ACTION_ATTENDANCE_HORIZON_DAYS = 90;
 
-/** Safety cap per team season when loading calendar/training rows inside the horizon. */
-export const PERSONAL_ACTION_MAX_UPCOMING_EVENTS_PER_TEAM_SEASON = 25;
+/**
+ * Completeness contract: attendance obligations are bounded only by
+ * {@link PERSONAL_ACTION_ATTENDANCE_HORIZON_DAYS} and canonical upcoming
+ * `startAt >= now` semantics. We do not truncate per team season, because
+ * dense training schedules (e.g. 3×/week) can exceed naive row caps inside
+ * 90 days and would silently drop actionable participation items.
+ */

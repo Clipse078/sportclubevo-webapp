@@ -4,10 +4,7 @@
 
 import type { AttendanceEventKind, ParticipationResponseStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import {
-  PERSONAL_ACTION_ATTENDANCE_HORIZON_DAYS,
-  PERSONAL_ACTION_MAX_UPCOMING_EVENTS_PER_TEAM_SEASON,
-} from "../config";
+import { PERSONAL_ACTION_ATTENDANCE_HORIZON_DAYS } from "../config";
 
 export type AttendanceObligationCandidate = {
   personId: string;
@@ -133,7 +130,6 @@ export async function loadAttendanceObligationCandidates(
         trainingSeries: { select: { title: true } },
       },
       orderBy: [{ startAt: "asc" }],
-      take: teamSeasonIds.length * PERSONAL_ACTION_MAX_UPCOMING_EVENTS_PER_TEAM_SEASON,
     }),
     prisma.event.findMany({
       where: {
@@ -152,7 +148,6 @@ export async function loadAttendanceObligationCandidates(
         startAt: true,
       },
       orderBy: [{ startAt: "asc" }],
-      take: teamIds.length * PERSONAL_ACTION_MAX_UPCOMING_EVENTS_PER_TEAM_SEASON,
     }),
     prisma.participationResponse.findMany({
       where: {
@@ -203,7 +198,6 @@ export async function loadAttendanceObligationCandidates(
   for (const session of trainingSessions) {
     const list = eventsByTeamSeason.get(session.teamSeasonId);
     if (!list) continue;
-    if (list.length >= PERSONAL_ACTION_MAX_UPCOMING_EVENTS_PER_TEAM_SEASON) continue;
     list.push({
       eventKind: "TRAINING",
       trainingSessionId: session.id,
@@ -222,7 +216,6 @@ export async function loadAttendanceObligationCandidates(
       }
       const list = eventsByTeamSeason.get(teamSeasonId);
       if (!list) continue;
-      if (list.length >= PERSONAL_ACTION_MAX_UPCOMING_EVENTS_PER_TEAM_SEASON) continue;
       if (calendarEvent.type !== "MATCH" && calendarEvent.type !== "TOURNAMENT") continue;
       list.push({
         eventKind: calendarEvent.type,

@@ -61,6 +61,34 @@ describe("AUFGABEN-05 — task PersonalAction source", () => {
     );
   });
 
+  it("B — assigned IN_PROGRESS task maps to PersonalAction", async () => {
+    vi.mocked(listMyTasks).mockResolvedValue([
+      {
+        id: "task-ip",
+        tenantId: "tenant-a",
+        title: "In progress",
+        description: null,
+        status: TaskStatus.IN_PROGRESS,
+        priority: "NORMAL",
+        dueAt: null,
+        completedAt: null,
+        contextType: null,
+        contextId: null,
+        parentTaskId: null,
+        taskSeriesId: null,
+        createdByUserId: null,
+        createdAt: "2026-09-01T00:00:00.000Z",
+        updatedAt: "2026-09-01T00:00:00.000Z",
+        assignees: [],
+        parentTask: null,
+      },
+    ]);
+
+    const actions = await taskPersonalActionSource.loadActionable(ctx);
+    expect(actions).toHaveLength(1);
+    expect(actions[0].id).toBe("task:task-ip");
+  });
+
   it("C — without tasks.view returns no actions and skips listMyTasks", async () => {
     const noPermCtx = { ...ctx, permissionKeys: [] as string[] };
     const actions = await taskPersonalActionSource.loadActionable(noPermCtx);
