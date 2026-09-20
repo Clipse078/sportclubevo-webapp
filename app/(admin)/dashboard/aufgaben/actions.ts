@@ -109,15 +109,21 @@ export async function assignAufgabeAction(
   try {
     const taskId = formData.get("taskId");
     const assigneeUserId = formData.get("assigneeUserId");
+    const assigneeUserIdsRaw = formData.get("assigneeUserIds");
 
     if (typeof taskId !== "string" || !taskId.trim()) {
       return { ok: false, message: "Aufgabe fehlt." };
     }
 
-    const assignees =
-      typeof assigneeUserId === "string" && assigneeUserId.trim()
-        ? [assigneeUserId.trim()]
-        : [];
+    let assignees: string[] = [];
+    if (typeof assigneeUserIdsRaw === "string" && assigneeUserIdsRaw.trim()) {
+      assignees = assigneeUserIdsRaw
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    } else if (typeof assigneeUserId === "string" && assigneeUserId.trim()) {
+      assignees = [assigneeUserId.trim()];
+    }
 
     await assignTask(ctx, taskId.trim(), assignees);
     revalidateTaskPaths(taskId.trim());

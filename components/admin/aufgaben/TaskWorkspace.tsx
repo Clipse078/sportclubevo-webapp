@@ -195,6 +195,56 @@ function InlineDescription({
   );
 }
 
+function AssigneeEditor({
+  task,
+  assigneeOptions,
+  canAssign,
+  onAssign,
+  pending,
+}: {
+  task: TaskDto;
+  assigneeOptions: TaskAssigneeOption[];
+  canAssign: boolean;
+  pending: boolean;
+  onAssign: (userIds: string[]) => void;
+}) {
+  const selected = new Set(task.assignees.map((a) => a.userId));
+
+  if (!canAssign) {
+    return <AssigneeAvatars assignees={task.assignees} />;
+  }
+
+  return (
+    <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border border-[var(--border)]/70 p-2">
+      {assigneeOptions.map((a) => {
+        const checked = selected.has(a.userId);
+        return (
+          <label
+            key={a.userId}
+            className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-sm hover:bg-[var(--surface-2)]"
+          >
+            <input
+              type="checkbox"
+              checked={checked}
+              disabled={pending}
+              onChange={() => {
+                const next = new Set(selected);
+                if (next.has(a.userId)) {
+                  next.delete(a.userId);
+                } else {
+                  next.add(a.userId);
+                }
+                onAssign([...next]);
+              }}
+            />
+            {a.firstName} {a.lastName}
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
 function AssigneeAvatars({ assignees }: { assignees: TaskDto["assignees"] }) {
   if (assignees.length === 0) {
     return <span className="text-sm text-[var(--muted)]">Nicht zugewiesen</span>;
@@ -558,31 +608,20 @@ export function TaskWorkspacePanel({
           </PropertyRow>
 
           <PropertyRow label="Verantwortlich">
-            {capabilities.canAssign ? (
-              <select
-                className="fca-input w-full text-sm"
-                value={task.assignees[0]?.userId ?? ""}
-                disabled={pending}
-                onChange={(e) =>
-                  runAction(() => {
-                    const fd = new FormData();
-                    fd.set("taskId", task.id);
-                    fd.set("assigneeUserId", e.target.value);
-                    return assignAufgabeAction(fd);
-                  })
-                }
-                data-testid="task-workspace-assignee"
-              >
-                <option value="">Nicht zugewiesen</option>
-                {assigneeOptions.map((a) => (
-                  <option key={a.userId} value={a.userId}>
-                    {a.firstName} {a.lastName}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <AssigneeAvatars assignees={task.assignees} />
-            )}
+            <AssigneeEditor
+              task={task}
+              assigneeOptions={assigneeOptions}
+              canAssign={capabilities.canAssign}
+              pending={pending}
+              onAssign={(userIds) =>
+                runAction(() => {
+                  const fd = new FormData();
+                  fd.set("taskId", task.id);
+                  fd.set("assigneeUserIds", userIds.join(","));
+                  return assignAufgabeAction(fd);
+                })
+              }
+            />
           </PropertyRow>
 
           <PropertyRow label="Priorität">
