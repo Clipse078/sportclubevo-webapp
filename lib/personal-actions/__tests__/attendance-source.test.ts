@@ -28,7 +28,7 @@ beforeEach(() => {
 });
 
 describe("AUFGABEN-05 — attendance PersonalAction source", () => {
-  it("S — attendance dueAt stays null", async () => {
+  it("S — attendance dueAt mirrors participationResponseDueAt when set", async () => {
     vi.mocked(loadAttendanceObligationCandidates).mockResolvedValue([
       {
         personId: "child-1",
@@ -39,14 +39,35 @@ describe("AUFGABEN-05 — attendance PersonalAction source", () => {
         eventId: "match-1",
         eventTitle: "Heimspiel",
         eventStartAt: new Date("2026-09-25T18:00:00.000Z"),
+        participationResponseDueAt: new Date("2026-09-24T16:00:00.000Z"),
         responseId: null,
         responseStatus: "OPEN",
       },
     ]);
 
     const actions = await attendancePersonalActionSource.loadActionable(ctx);
-    expect(actions[0].dueAt).toBeNull();
+    expect(actions[0].dueAt).toBe("2026-09-24T16:00:00.000Z");
     expect(actions[0].context?.eventStartAt).toBe("2026-09-25T18:00:00.000Z");
+  });
+
+  it("N17 — without RSVP deadline dueAt stays null", async () => {
+    vi.mocked(loadAttendanceObligationCandidates).mockResolvedValue([
+      {
+        personId: "child-1",
+        personDisplayName: "James",
+        teamSeasonId: "ts-1",
+        teamDisplayName: "U15",
+        eventKind: "MATCH",
+        eventId: "match-1",
+        eventTitle: "Heimspiel",
+        eventStartAt: new Date("2026-09-25T18:00:00.000Z"),
+        participationResponseDueAt: null,
+        responseId: null,
+        responseStatus: "OPEN",
+      },
+    ]);
+    const actions = await attendancePersonalActionSource.loadActionable(ctx);
+    expect(actions[0].dueAt).toBeNull();
   });
 
   it("stable id does not require ParticipationResponse row", async () => {

@@ -13,6 +13,7 @@ import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import TrainingSessionEditForm from "@/components/admin/training/TrainingSessionEditForm";
+import { ParticipationRequestConfigEditor } from "@/components/admin/participation/ParticipationRequestConfigEditor";
 import { TrainingSessionAllocationEditor } from "@/components/admin/training/TrainingSessionAllocationEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { buildTrainingSeriesEditHref } from "@/lib/training/series-cockpit";
@@ -131,6 +132,25 @@ export default async function TrainingSessionEditPage({ params }: Props) {
             originalEndTime={formatWallTime(trainingSession.originalEndAt, trainingSession.timezone)}
             timezone={trainingSession.timezone}
             locale={locale}
+          />
+        </div>
+
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-3 text-lg font-semibold text-gray-900">Teilnahme</h2>
+          <p className="mb-4 text-sm text-gray-500">
+            Antwortfrist für dieses einzelne Training (Serien-Standard bleibt unverändert).
+          </p>
+          <ParticipationRequestConfigEditor
+            apiPath={`/api/training-sessions/${trainingSession.id}/participation-request`}
+            timeZone={timezone}
+            disabled={!canManage}
+            values={{
+              participationResponseDueAt: trainingSession.participationResponseDueAt,
+              participationReminder1At: trainingSession.participationReminder1At,
+              participationReminder2At: trainingSession.participationReminder2At,
+              participationReminder1PresetKey: trainingSession.participationReminder1PresetKey,
+              participationReminder2PresetKey: trainingSession.participationReminder2PresetKey,
+            }}
           />
         </div>
 

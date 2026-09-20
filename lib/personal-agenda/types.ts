@@ -1,7 +1,7 @@
 import type { EventType, TaskStatus } from "@prisma/client";
 
 /** Normalized personal agenda / calendar projection sources (AUFGABEN-04A). */
-export type PersonalAgendaSourceType = "TEAM_EVENT" | "MEETING" | "TASK";
+export type PersonalAgendaSourceType = "TEAM_EVENT" | "MEETING" | "TASK" | "PARTICIPATION";
 
 export type PersonalCalendarItem = {
   /** Stable cross-entity identity, e.g. `task:{id}`, `event:{id}`, `meeting:{id}`. */

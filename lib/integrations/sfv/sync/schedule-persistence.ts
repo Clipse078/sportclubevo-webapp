@@ -29,6 +29,7 @@
  *   - No raw provider payloads are written to logs or error messages.
  */
 
+import { assertEventStartCompatibleWithParticipationDue } from "@/lib/participation/participation-request-config-service";
 import { prisma } from "@/lib/db/prisma";
 import { classifyProviderMatchDisposition } from "@/lib/sporting-data/provider-state";
 import type { Prisma } from "@prisma/client";
@@ -394,6 +395,11 @@ export async function updateMatchRecord(
   const homeAway = mapSfvHomeAway(isHome);
 
   try {
+    await assertEventStartCompatibleWithParticipationDue(
+      context.tenantId,
+      eventId,
+      kickoff,
+    );
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Update SFV-owned Event fields only
       await tx.event.update({

@@ -124,6 +124,11 @@ export interface MatchcenterMatchSummary {
   visibility: MatchcenterVisibility;
   reviewStage: string;
   publishedAt: Date | null;
+  participationResponseDueAt: Date | null;
+  participationReminder1At: Date | null;
+  participationReminder2At: Date | null;
+  participationReminder1PresetKey: string | null;
+  participationReminder2PresetKey: string | null;
 }
 
 export interface MatchcenterMatchDetail

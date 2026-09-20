@@ -54,7 +54,36 @@ export function taskWorkspaceHref(taskId: string): string {
   return `/dashboard/aufgaben/${taskId}`;
 }
 
-export function notificationTypeCategory(type: NotificationType): "TASK" {
-  void type;
+export function participationPersonalInboxHref(): string {
+  return "/dashboard/aufgaben?bereich=meine";
+}
+
+export function buildParticipationReminderDedupKey(input: {
+  tenantId: string;
+  personId: string;
+  kind: string;
+  entityId: string;
+  recipientUserId: string;
+  stage: 1 | 2;
+  reminderAtIso: string;
+}): string {
+  return `participation-reminder:${input.tenantId}:${input.personId}:${input.kind}:${input.entityId}:${input.recipientUserId}:${input.stage}:${input.reminderAtIso}`;
+}
+
+export function buildParticipationOverdueDedupKey(input: {
+  tenantId: string;
+  personId: string;
+  kind: string;
+  entityId: string;
+  recipientUserId: string;
+  dueAtIso: string;
+}): string {
+  return `participation-overdue:${input.tenantId}:${input.personId}:${input.kind}:${input.entityId}:${input.recipientUserId}:${input.dueAtIso}`;
+}
+
+export function notificationTypeCategory(type: NotificationType): "TASK" | "PARTICIPATION" {
+  if (type === "PARTICIPATION_REMINDER" || type === "PARTICIPATION_OVERDUE") {
+    return "PARTICIPATION";
+  }
   return "TASK";
 }

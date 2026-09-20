@@ -172,6 +172,11 @@ export type TournamentDto = {
   participants: TournamentParticipantDto[];
   /** Tournament-level Spielfeld/Halle allocations. Only operationally relevant when homeAway === "HOME". */
   resourceAllocations: TournamentResourceAllocationDto[];
+  participationResponseDueAt: string | null;
+  participationReminder1At: string | null;
+  participationReminder2At: string | null;
+  participationReminder1PresetKey: string | null;
+  participationReminder2PresetKey: string | null;
   visibility: {
     websiteVisible: boolean;
     infoboardVisible: boolean;

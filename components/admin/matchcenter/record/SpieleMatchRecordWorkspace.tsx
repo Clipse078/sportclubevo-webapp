@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ParticipationRequestConfigEditor } from "@/components/admin/participation/ParticipationRequestConfigEditor";
 import { Loader2, Lock, Radio } from "lucide-react";
 import type { MatchcenterMatchDetail } from "@/lib/matchcenter/types";
 import type { FacilityResourceOption } from "@/lib/facilities/resource-options";
@@ -111,6 +113,7 @@ export default function SpieleMatchRecordWorkspace({
   wochenplanerHref,
   canCreateTask = false,
 }: SpieleMatchRecordWorkspaceProps) {
+  const router = useRouter();
   const saveActionRef = useRef<(() => Promise<void>) | null>(null);
   const [saveUi, setSaveUi] = useState({ isDirty: false, saving: false });
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -442,6 +445,27 @@ export default function SpieleMatchRecordWorkspace({
               ) : null}
             </dl>
           </TrainingRecordSection>
+
+          {match.status !== "CANCELLED" ? (
+            <TrainingRecordSection title="Teilnahme" testId="spiele-record-section-participation">
+              <ParticipationRequestConfigEditor
+                apiPath={`/api/matchcenter/${match.id}/participation-request`}
+                timeZone={timezone}
+                disabled={!canManageMappings}
+                values={{
+                  participationResponseDueAt:
+                    match.participationResponseDueAt?.toISOString() ?? null,
+                  participationReminder1At:
+                    match.participationReminder1At?.toISOString() ?? null,
+                  participationReminder2At:
+                    match.participationReminder2At?.toISOString() ?? null,
+                  participationReminder1PresetKey: match.participationReminder1PresetKey,
+                  participationReminder2PresetKey: match.participationReminder2PresetKey,
+                }}
+                onSaved={() => router.refresh()}
+              />
+            </TrainingRecordSection>
+          ) : null}
 
           {isAway ? (
             <TrainingRecordSection title="Matchvorbereitung" testId="spiele-record-section-away">

@@ -44,6 +44,10 @@ export type TrainingSeriesRow = {
   planningValidatedAt: Date | null;
   planningValidatedById: string | null;
   createdByUserId: string | null;
+  participationResponseDueDaysBefore: number | null;
+  participationResponseDueLocalTime: string | null;
+  participationReminder1PresetKey: string | null;
+  participationReminder2PresetKey: string | null;
 };
 
 export const trainingSeriesInclude = {
@@ -321,6 +325,7 @@ export type TrainingSessionScheduleRow = {
   endAt: Date;
   timezone: string;
   status: TrainingSessionStatus;
+  overrideStartAt: Date | null;
 };
 
 /** Row shape returned by the public read queries (includes the denormalised series title). */
@@ -337,6 +342,11 @@ export type TrainingSessionRow = TrainingSessionScheduleRow & {
   overrideDate: Date | null;
   overrideStartAt: Date | null;
   overrideEndAt: Date | null;
+  participationResponseDueAt: Date | null;
+  participationReminder1At: Date | null;
+  participationReminder2At: Date | null;
+  participationReminder1PresetKey: string | null;
+  participationReminder2PresetKey: string | null;
   trainingSeries: {
     title: string;
     teamSeason: {
@@ -354,6 +364,7 @@ const sessionScheduleSelect = {
   endAt: true,
   timezone: true,
   status: true,
+  overrideStartAt: true,
 } as const;
 
 const sessionFullSelect = {
@@ -369,6 +380,11 @@ const sessionFullSelect = {
   dressingRoomOccupancyMode: true,
   dressingRoomBeforeMinutes: true,
   dressingRoomAfterMinutes: true,
+  participationResponseDueAt: true,
+  participationReminder1At: true,
+  participationReminder2At: true,
+  participationReminder1PresetKey: true,
+  participationReminder2PresetKey: true,
   trainingSeries: {
     select: {
       title: true,
@@ -413,6 +429,11 @@ export type CreateTrainingSessionRow = {
   startAt: Date;
   endAt: Date;
   timezone: string;
+  participationResponseDueAt?: Date | null;
+  participationReminder1At?: Date | null;
+  participationReminder2At?: Date | null;
+  participationReminder1PresetKey?: string | null;
+  participationReminder2PresetKey?: string | null;
 };
 
 /**

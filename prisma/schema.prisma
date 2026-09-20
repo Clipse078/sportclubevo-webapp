@@ -377,6 +377,7 @@ enum TaskRecurrenceMode {
 // AUFGABEN-04N — canonical SCE notification platform (extensible beyond tasks).
 enum NotificationCategory {
   TASK
+  PARTICIPATION
 }
 
 enum NotificationType {
@@ -386,10 +387,14 @@ enum NotificationType {
   TASK_OVERDUE
   TASK_DEADLINE_CHANGED
   TASK_REMINDER
+  PARTICIPATION_REMINDER
+  PARTICIPATION_OVERDUE
 }
 
 enum NotificationEntityType {
   TASK
+  TRAINING_SESSION
+  EVENT
 }
 
 enum NotificationChannel {
@@ -2096,6 +2101,13 @@ model Event {
   dressingRoomBeforeMinutes Int?
   dressingRoomAfterMinutes  Int?
 
+  /// AUFGABEN-05-NOTIFY-DEADLINE — RSVP response deadline for MATCH/TOURNAMENT (optional).
+  participationResponseDueAt       DateTime?
+  participationReminder1At         DateTime?
+  participationReminder2At         DateTime?
+  participationReminder1PresetKey    String?
+  participationReminder2PresetKey    String?
+
   // Tenant isolation (nullable: backward-compat with seed/legacy events)
   tenantId String?
   tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull, onUpdate: Cascade)
@@ -2135,6 +2147,9 @@ model Event {
   @@index([teamPageVisible])
   @@index([externalSource, externalSourceId])
   @@index([tenantId])
+  @@index([tenantId, participationResponseDueAt])
+  @@index([tenantId, participationReminder1At])
+  @@index([tenantId, participationReminder2At])
   @@index([importBatchKey])
   @@index([pitchCode])
   @@index([opponentExternalClubId])
@@ -5574,6 +5589,13 @@ model TrainingSeries {
   /// User who created this series — for workflow auditability.
   createdByUserId       String?
 
+  /// AUFGABEN-05-NOTIFY-DEADLINE — default RSVP policy for newly generated sessions (snapshotted).
+  /// Calendar days before the session's local date at participationResponseDueLocalTime.
+  participationResponseDueDaysBefore  Int?
+  participationResponseDueLocalTime   String?
+  participationReminder1PresetKey     String?
+  participationReminder2PresetKey     String?
+
   tenant          Tenant                        @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   teamSeason      TeamSeason                    @relation(fields: [teamSeasonId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   recurrenceDays  TrainingSeriesRecurrenceDay[]
@@ -6015,6 +6037,12 @@ model TrainingSession {
   dressingRoomOccupancyMode   DressingRoomOccupancyMode @default(DEFAULT)
   dressingRoomBeforeMinutes Int?
   dressingRoomAfterMinutes  Int?
+  /// AUFGABEN-05-NOTIFY-DEADLINE — concrete RSVP deadline/reminders (snapshotted from series or set per session).
+  participationResponseDueAt       DateTime?
+  participationReminder1At         DateTime?
+  participationReminder2At         DateTime?
+  participationReminder1PresetKey  String?
+  participationReminder2PresetKey  String?
   createdAt        DateTime              @default(now())
   updatedAt        DateTime              @updatedAt
 
@@ -6041,6 +6069,9 @@ model TrainingSession {
   @@index([tenantId, date])
   @@index([teamSeasonId, date])
   @@index([tenantId, status])
+  @@index([tenantId, participationResponseDueAt])
+  @@index([tenantId, participationReminder1At])
+  @@index([tenantId, participationReminder2At])
 }
 
 // ---------------------------------------------------------------------------

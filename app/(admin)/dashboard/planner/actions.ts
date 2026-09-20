@@ -8,6 +8,8 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireApiTenantPermissionContext } from "@/lib/permissions/require-api-tenant-context";
 import { TournamentValidationError } from "@/lib/tournaments/errors";
 import { resolveTournamentTeamSeasonId } from "@/lib/tournaments/team-season-resolution";
+import { ParticipationValidationError } from "@/lib/participation/errors";
+import { assertEventStartCompatibleWithParticipationDue } from "@/lib/participation/participation-request-config-service";
 
 function toBool(value: FormDataEntryValue | null) {
   return value === "on" || value === "true" || value === "1";
@@ -283,6 +285,20 @@ export async function updatePlannerEntryAction(formData: FormData) {
     type: data.type,
     mode: "update",
   });
+
+  try {
+    await assertEventStartCompatibleWithParticipationDue(tenantId, eventId, data.startAt);
+  } catch (error) {
+    if (error instanceof ParticipationValidationError) {
+      redirect(
+        buildPlannerRedirect({
+          seasonKey: data.seasonKey,
+          status: "update-participation-deadline-conflict",
+        }),
+      );
+    }
+    throw error;
+  }
 
   await prisma.event.update({
     where: { id: eventId, tenantId },

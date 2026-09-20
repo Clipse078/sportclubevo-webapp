@@ -3,6 +3,7 @@ import { addDaysUtc, startOfLocalDay } from "@/lib/tasks/management-deadline";
 import { resolvePersonalTeamIds } from "./team-scope";
 import { loadPersonalCalendarEntryProjections } from "./calendar-entries";
 import { loadTaskDeadlineProjections } from "./task-projections";
+import { loadParticipationDeadlineProjections } from "./participation-projections";
 import type { PersonalAgendaSourceType, PersonalCalendarItem } from "./types";
 
 export const DASHBOARD_PERSONAL_AGENDA_ITEM_LIMIT = 12;
@@ -49,8 +50,9 @@ export async function loadPersonalAgenda(
 
   const hasMeetingScope = Boolean(args.userId);
   const hasTaskScope = args.tasksViewAuthorized && Boolean(args.userId);
+  const hasParticipationScope = hasLinkedPerson && Boolean(args.userId);
   const supported =
-    hasLinkedPerson || hasMeetingScope || hasTaskScope;
+    hasLinkedPerson || hasMeetingScope || hasTaskScope || hasParticipationScope;
 
   if (!supported || !args.userId) {
     return { items: [], supported, teamIds, hasLinkedPerson };
@@ -76,7 +78,8 @@ export async function loadPersonalAgenda(
     rangeEnd = args.rangeEnd ?? getDayWindow(formatIsoDay(now)).end;
   }
 
-  const [calendarEntries, windowTasks, overdueTasks] = await Promise.all([
+  const [calendarEntries, windowTasks, overdueTasks, participationDeadlines] =
+    await Promise.all([
     loadPersonalCalendarEntryProjections({
       tenantId: args.tenantId,
       userId: args.userId,
@@ -103,12 +106,22 @@ export async function loadPersonalAgenda(
           tasksViewAuthorized: args.tasksViewAuthorized,
         })
       : Promise.resolve([]),
+    hasParticipationScope
+      ? loadParticipationDeadlineProjections({
+          tenantId: args.tenantId,
+          userId: args.userId,
+          rangeStart,
+          rangeEnd,
+          now,
+        })
+      : Promise.resolve([]),
   ]);
 
   const overdueIds = new Set(overdueTasks.map((t) => t.id));
   const merged = sortItemsChronologically([
     ...calendarEntries,
     ...windowTasks,
+    ...participationDeadlines,
     ...overdueTasks.filter((t) => !windowTasks.some((w) => w.id === t.id)),
   ]);
 

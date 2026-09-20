@@ -1,4 +1,5 @@
 import type { EventType } from "@prisma/client";
+import { TaskStatus } from "@prisma/client";
 import { getDayWindow, formatIsoDay } from "@/lib/planner/date-utils";
 import {
   presentTaskDeadline,
@@ -69,6 +70,15 @@ export function mapPersonalCalendarItemsToAgendaItems(input: {
         timeZone: input.timeZone,
       });
       isOverdue = taskPresentation.kind === "OVERDUE";
+    } else if (item.sourceType === "PARTICIPATION") {
+      taskPresentation = presentTaskDeadline({
+        dueAt: item.startAt.toISOString(),
+        status: TaskStatus.OPEN,
+        now,
+        locale: input.locale ?? input.fmtCfg.locale ?? "de-CH",
+        timeZone: input.timeZone,
+      });
+      isOverdue = taskPresentation.kind === "OVERDUE";
     } else if (item.startAt.getTime() < todayStartLocal.getTime()) {
       isOverdue = false;
     }
@@ -82,10 +92,10 @@ export function mapPersonalCalendarItemsToAgendaItems(input: {
     if (!dayGroup) continue;
 
     const timeLabel =
-      item.sourceType === "TASK" && taskPresentation
+      (item.sourceType === "TASK" || item.sourceType === "PARTICIPATION") && taskPresentation
         ? isOverdue
           ? "Überfällig"
-          : taskPresentation.label
+          : taskPresentation.label.replace(/^Fällig · /, "Antwortfrist: ")
         : formatTime(item.startAt, input.fmtCfg);
 
     agenda.push({

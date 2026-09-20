@@ -13,6 +13,10 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+vi.mock("@/lib/participation/participation-request-config-service", () => ({
+  assertTrainingSessionStartCompatibleWithParticipationDue: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     trainingSession: {

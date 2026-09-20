@@ -64,9 +64,12 @@ import {
   TrainingSessionNotFoundError,
 } from "./errors";
 import { findTrainingSeriesById } from "./queries";
+import { buildParticipationScheduleSnapshotFromSeries } from "@/lib/participation/participation-response-deadline-schedule";
+import { assertTrainingSessionStartCompatibleWithParticipationDue } from "@/lib/participation/participation-request-config-service";
 import {
   findAllTrainingSessionsForSeries,
   createManyTrainingSessions,
+  type CreateTrainingSessionRow,
   updateTrainingSessionSchedule,
   deactivateTrainingSession,
   reactivateTrainingSessionSchedule,
@@ -128,6 +131,11 @@ function toDto(row: TrainingSessionRow): TrainingSessionDto {
     dressingRoomOccupancyMode: row.dressingRoomOccupancyMode as "DEFAULT" | "CUSTOM",
     dressingRoomBeforeMinutes: row.dressingRoomBeforeMinutes,
     dressingRoomAfterMinutes: row.dressingRoomAfterMinutes,
+    participationResponseDueAt: row.participationResponseDueAt?.toISOString() ?? null,
+    participationReminder1At: row.participationReminder1At?.toISOString() ?? null,
+    participationReminder2At: row.participationReminder2At?.toISOString() ?? null,
+    participationReminder1PresetKey: row.participationReminder1PresetKey ?? null,
+    participationReminder2PresetKey: row.participationReminder2PresetKey ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -232,16 +240,7 @@ export async function generateTrainingSessions(
     existingRows.map((row) => [dateKeyFromDate(row.date), row]),
   );
 
-  const toCreate: Array<{
-    tenantId: string;
-    trainingSeriesId: string;
-    teamSeasonId: string;
-    date: Date;
-    weekday: Weekday;
-    startAt: Date;
-    endAt: Date;
-    timezone: string;
-  }> = [];
+  const toCreate: CreateTrainingSessionRow[] = [];
 
   let updated = 0;
   let unchanged = 0;
@@ -251,6 +250,14 @@ export async function generateTrainingSessions(
     const existing = existingByDateKey.get(occ.dateKey);
 
     if (!existing) {
+      const participationSnapshot = buildParticipationScheduleSnapshotFromSeries({
+        sessionStartAt: occ.startAt,
+        timeZone: series.timezone,
+        participationResponseDueDaysBefore: series.participationResponseDueDaysBefore ?? null,
+        participationResponseDueLocalTime: series.participationResponseDueLocalTime ?? null,
+        participationReminder1PresetKey: series.participationReminder1PresetKey ?? null,
+        participationReminder2PresetKey: series.participationReminder2PresetKey ?? null,
+      });
       toCreate.push({
         tenantId,
         trainingSeriesId,
@@ -260,6 +267,11 @@ export async function generateTrainingSessions(
         startAt: occ.startAt,
         endAt: occ.endAt,
         timezone: series.timezone,
+        participationResponseDueAt: participationSnapshot.dueAt,
+        participationReminder1At: participationSnapshot.reminder1At,
+        participationReminder2At: participationSnapshot.reminder2At,
+        participationReminder1PresetKey: participationSnapshot.reminder1PresetKey,
+        participationReminder2PresetKey: participationSnapshot.reminder2PresetKey,
       });
       continue;
     }
@@ -288,6 +300,12 @@ export async function generateTrainingSessions(
     // (see updateTrainingSessionSchedule doc comment); only the derived
     // schedule is re-synced when it actually changed.
     if (scheduleChanged) {
+      const nextEffectiveStart = existing.overrideStartAt ?? occ.startAt;
+      await assertTrainingSessionStartCompatibleWithParticipationDue(
+        tenantId,
+        existing.id,
+        nextEffectiveStart,
+      );
       await updateTrainingSessionSchedule(existing.id, {
         weekday: occ.weekday,
         startAt: occ.startAt,
