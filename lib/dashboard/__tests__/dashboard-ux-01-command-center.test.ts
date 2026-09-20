@@ -16,8 +16,8 @@ describe("DASHBOARD-UX-01 — personal cockpit KPI strip", () => {
   it("reframes KPIs toward personal operational semantics", () => {
     const strip = buildPersonalCockpitKpiStrip({
       personalScheduleCount: 3,
-      personalTasksAvailable: false,
-      personalTaskCount: null,
+      personalTasksAvailable: true,
+      personalTaskCount: 0,
       attentionCount: 2,
       openRegistrationCount: 4,
       canSeeRegistrations: true,
@@ -29,10 +29,22 @@ describe("DASHBOARD-UX-01 — personal cockpit KPI strip", () => {
       "Benötigt Aufmerksamkeit",
       "Offene Anmeldungen",
     ]);
-    expect(strip.find((kpi) => kpi.key === "my-tasks")?.value).toBe("—");
+    expect(strip.find((kpi) => kpi.key === "my-tasks")?.value).toBe("0");
     expect(strip.find((kpi) => kpi.key === "my-tasks")?.context).toBeUndefined();
     expect(strip.find((kpi) => kpi.key === "my-schedule")?.value).toBe("3");
     expect(strip.find((kpi) => kpi.key === "attention")?.value).toBe("2");
+  });
+
+  it("shows em dash for Meine Aufgaben when personal tasks are unauthorized", () => {
+    const strip = buildPersonalCockpitKpiStrip({
+      personalScheduleCount: 0,
+      personalTasksAvailable: false,
+      personalTaskCount: null,
+      attentionCount: 0,
+      openRegistrationCount: 0,
+      canSeeRegistrations: false,
+    });
+    expect(strip.find((kpi) => kpi.key === "my-tasks")?.value).toBe("—");
   });
 
   it("does not surface Aufgabenmodell implementation copy on unavailable tasks", () => {

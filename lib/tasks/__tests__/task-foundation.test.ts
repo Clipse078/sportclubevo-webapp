@@ -18,6 +18,19 @@ const mocks = vi.hoisted(() => ({
   auditCreate: vi.fn(),
 }));
 
+vi.mock("@/lib/notifications/task-producer", () => ({
+  emitTaskAssignmentNotifications: vi.fn().mockResolvedValue(undefined),
+  emitTaskDeadlineChangedNotifications: vi.fn().mockResolvedValue(undefined),
+  computeNewAssigneeRows: (
+    previousUserIds: string[],
+    nextUserIds: string[],
+    assignedAt: Date,
+  ) =>
+    nextUserIds
+      .filter((userId) => !previousUserIds.includes(userId))
+      .map((userId) => ({ userId, assignedAt })),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     task: {
@@ -212,6 +225,7 @@ describe("AUFGABEN-01 domain operations", () => {
           deleteMany: mocks.taskAssigneeDeleteMany,
         },
         auditLog: { create: mocks.auditCreate },
+        tenant: { findUnique: vi.fn().mockResolvedValue({ locale: "de-CH", timezone: "Europe/Zurich" }) },
       }),
     );
     mocks.auditCreate.mockResolvedValue({});

@@ -41,6 +41,8 @@ import {
 import { PageHeader } from "@/components/ui/page";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import NotificationPreferencesSection from "@/components/admin/notifications/NotificationPreferencesSection";
+import type { NotificationPreferenceDto } from "@/lib/notifications/preference-service";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -63,6 +65,7 @@ type AccountPageClientProps = {
   user: AccountUser;
   linkedPerson: LinkedPerson | null;
   tenantName: string | null;
+  notificationPreferences: NotificationPreferenceDto[];
 };
 
 // ── Feedback banner ───────────────────────────────────────────────────────────
@@ -409,6 +412,7 @@ export default function AccountPageClient({
   user,
   linkedPerson,
   tenantName,
+  notificationPreferences,
 }: AccountPageClientProps) {
   const router = useRouter();
 
@@ -700,6 +704,8 @@ export default function AccountPageClient({
           )}
         </div>
       </Card>
+
+      <NotificationPreferencesSection initialPreferences={notificationPreferences} />
 
       {/* ── Sicherheit card ─────────────────────────────────────────────── */}
       <Card title="Sicherheit">

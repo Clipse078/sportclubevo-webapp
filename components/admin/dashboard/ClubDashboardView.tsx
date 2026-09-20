@@ -232,10 +232,9 @@ export default async function ClubDashboardView() {
               items={commandCenter.personalAgendaItems}
               supported={commandCenter.personalAgendaSupported}
             />
-            <MeineAufgabenWidget
-              available={commandCenter.personalTasksAvailable}
-              previewItems={commandCenter.personalTaskPreview}
-            />
+            {commandCenter.personalTasksAvailable ? (
+              <MeineAufgabenWidget previewItems={commandCenter.personalTaskPreview} />
+            ) : null}
           </>
         }
         clubToday={
