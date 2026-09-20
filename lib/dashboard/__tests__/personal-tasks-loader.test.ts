@@ -2,18 +2,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 const mocks = vi.hoisted(() => ({
-  getRequestEffectivePermissions: vi.fn(),
-  countMyOpenTasks: vi.fn(),
-  listMyTasks: vi.fn(),
+  loadPersonalActionsModuleCapabilities: vi.fn(),
+  countPersonalActions: vi.fn(),
+  loadDashboardPersonalActions: vi.fn(),
 }));
 
-vi.mock("@/lib/permissions/request-effective-permissions", () => ({
-  getRequestEffectivePermissions: mocks.getRequestEffectivePermissions,
+vi.mock("@/lib/personal-actions/access", () => ({
+  loadPersonalActionsModuleCapabilities: mocks.loadPersonalActionsModuleCapabilities,
 }));
 
-vi.mock("@/lib/tasks/task-service", () => ({
-  countMyOpenTasks: mocks.countMyOpenTasks,
-  listMyTasks: mocks.listMyTasks,
+vi.mock("@/lib/personal-actions", () => ({
+  countPersonalActions: mocks.countPersonalActions,
+  loadDashboardPersonalActions: mocks.loadDashboardPersonalActions,
 }));
 
 import {
@@ -21,93 +21,76 @@ import {
   loadDashboardPersonalTasks,
 } from "@/lib/dashboard/personal-tasks-loader";
 
-describe("AUFGABEN-04NB — dashboard personal tasks loader", () => {
+describe("AUFGABEN-05-UI — dashboard personal actions loader", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("A — tasks.view personal user gets count, preview, and authorization", async () => {
-    mocks.getRequestEffectivePermissions.mockResolvedValue({
-      platform: [],
-      tenant: [PERMISSIONS.TASKS_VIEW],
+  it("A — personal inbox user gets PersonalAction count and preview", async () => {
+    mocks.loadPersonalActionsModuleCapabilities.mockResolvedValue({
+      personalInbox: true,
+      permissionKeys: [PERMISSIONS.TASKS_VIEW],
     });
-    mocks.countMyOpenTasks.mockResolvedValue(2);
-    mocks.listMyTasks.mockResolvedValue([
+    mocks.countPersonalActions.mockResolvedValue({
+      totalActionable: 4,
+      taskActionable: 2,
+      attendanceActionable: 2,
+    });
+    mocks.loadDashboardPersonalActions.mockResolvedValue([
       {
-        id: "t1",
+        id: "pa-1",
+        sourceType: "TASK",
         title: "Overdue item",
+        subtitle: null,
         dueAt: "2026-01-01T12:00:00.000Z",
-        parentTask: null,
+        href: "/dashboard/aufgaben/t1",
       },
     ]);
 
     const snapshot = await loadDashboardPersonalTasks({
       tenantId: "tenant-a",
       userId: "user-a",
+      locale: "de-CH",
+      timeZone: "Europe/Zurich",
     });
 
     expect(snapshot.authorized).toBe(true);
-    expect(snapshot.count).toBe(2);
+    expect(snapshot.count).toBe(4);
     expect(snapshot.preview).toHaveLength(1);
-    expect(mocks.listMyTasks).toHaveBeenCalledWith(
+    expect(mocks.loadDashboardPersonalActions).toHaveBeenCalledWith(
       expect.objectContaining({
         tenantId: "tenant-a",
         userId: "user-a",
         permissionKeys: [PERMISSIONS.TASKS_VIEW],
       }),
-      { openOnly: true, limit: DASHBOARD_PERSONAL_TASK_PREVIEW_LIMIT },
     );
   });
 
-  it("B — tasks.view + tasks.view_all keeps personal scope (assignee count + listMyTasks)", async () => {
-    mocks.getRequestEffectivePermissions.mockResolvedValue({
-      platform: [],
-      tenant: [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_VIEW_ALL],
+  it("K — parent without tasks.view still authorized via participation capability", async () => {
+    mocks.loadPersonalActionsModuleCapabilities.mockResolvedValue({
+      personalInbox: true,
+      permissionKeys: [],
     });
-    mocks.countMyOpenTasks.mockResolvedValue(0);
-    mocks.listMyTasks.mockResolvedValue([]);
+    mocks.countPersonalActions.mockResolvedValue({
+      totalActionable: 2,
+      taskActionable: 0,
+      attendanceActionable: 2,
+    });
+    mocks.loadDashboardPersonalActions.mockResolvedValue([]);
 
     const snapshot = await loadDashboardPersonalTasks({
       tenantId: "tenant-a",
-      userId: "user-a",
+      userId: "parent-user",
     });
 
     expect(snapshot.authorized).toBe(true);
-    expect(snapshot.count).toBe(0);
-    expect(snapshot.preview).toEqual([]);
-    expect(mocks.countMyOpenTasks).toHaveBeenCalledTimes(1);
-    expect(mocks.listMyTasks).toHaveBeenCalledTimes(1);
+    expect(snapshot.count).toBe(2);
   });
 
-  it("C — tasks.manage still uses personal count and preview queries", async () => {
-    mocks.getRequestEffectivePermissions.mockResolvedValue({
-      platform: [],
-      tenant: [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE],
-    });
-    mocks.countMyOpenTasks.mockResolvedValue(1);
-    mocks.listMyTasks.mockResolvedValue([
-      {
-        id: "t9",
-        title: "Personal only",
-        dueAt: null,
-        parentTask: { id: "p1", title: "Parent" },
-      },
-    ]);
-
-    const snapshot = await loadDashboardPersonalTasks({
-      tenantId: "tenant-a",
-      userId: "user-a",
-    });
-
-    expect(snapshot.authorized).toBe(true);
-    expect(snapshot.count).toBe(1);
-    expect(snapshot.preview[0]?.parentTitle).toBe("Parent");
-  });
-
-  it("D — user without tasks.view is unauthorized with no task data", async () => {
-    mocks.getRequestEffectivePermissions.mockResolvedValue({
-      platform: [],
-      tenant: [PERMISSIONS.EVENTS_MANAGE],
+  it("D — user without supported capability is unauthorized", async () => {
+    mocks.loadPersonalActionsModuleCapabilities.mockResolvedValue({
+      personalInbox: false,
+      permissionKeys: [PERMISSIONS.EVENTS_MANAGE],
     });
 
     const snapshot = await loadDashboardPersonalTasks({
@@ -116,26 +99,37 @@ describe("AUFGABEN-04NB — dashboard personal tasks loader", () => {
     });
 
     expect(snapshot).toEqual({ authorized: false, count: null, preview: [] });
-    expect(mocks.countMyOpenTasks).not.toHaveBeenCalled();
-    expect(mocks.listMyTasks).not.toHaveBeenCalled();
+    expect(mocks.countPersonalActions).not.toHaveBeenCalled();
+    expect(mocks.loadDashboardPersonalActions).not.toHaveBeenCalled();
   });
 
-  it("E — tenant isolation uses explicit tenantId in service context", async () => {
-    mocks.getRequestEffectivePermissions.mockResolvedValue({
-      platform: [],
-      tenant: [PERMISSIONS.TASKS_VIEW],
+  it("E — tenant isolation uses explicit tenantId", async () => {
+    mocks.loadPersonalActionsModuleCapabilities.mockResolvedValue({
+      personalInbox: true,
+      permissionKeys: [PERMISSIONS.TASKS_VIEW],
     });
-    mocks.countMyOpenTasks.mockResolvedValue(0);
-    mocks.listMyTasks.mockResolvedValue([]);
+    mocks.countPersonalActions.mockResolvedValue({
+      totalActionable: 0,
+      taskActionable: 0,
+      attendanceActionable: 0,
+    });
+    mocks.loadDashboardPersonalActions.mockResolvedValue([]);
 
     await loadDashboardPersonalTasks({
       tenantId: "tenant-b",
       userId: "user-a",
     });
 
-    expect(mocks.getRequestEffectivePermissions).toHaveBeenCalledWith("user-a", "tenant-b");
-    expect(mocks.countMyOpenTasks).toHaveBeenCalledWith(
+    expect(mocks.loadPersonalActionsModuleCapabilities).toHaveBeenCalledWith({
+      tenantId: "tenant-b",
+      userId: "user-a",
+    });
+    expect(mocks.loadDashboardPersonalActions).toHaveBeenCalledWith(
       expect.objectContaining({ tenantId: "tenant-b" }),
     );
+  });
+
+  it("uses dashboard preview limit from personal-actions foundation", () => {
+    expect(DASHBOARD_PERSONAL_TASK_PREVIEW_LIMIT).toBe(5);
   });
 });

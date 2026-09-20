@@ -79,16 +79,22 @@ describe("PLATFORM-UX-01 — final sidebar order", () => {
     }
   });
 
-  it("gates Aufgaben navigation on tasks.view (AUFGABEN-01)", () => {
+  it("gates Aufgaben navigation on tasks.view or personal-actions capability (AUFGABEN-05-UI)", () => {
     const tagesbetrieb = findSection("Tagesbetrieb");
     const aufgaben = tagesbetrieb!.items.find((i) => i.key === "aufgaben");
     expect(aufgaben?.href).toBe("/dashboard/aufgaben");
     expect(aufgaben?.permissionKeys).toEqual([PERMISSIONS.TASKS_VIEW]);
+    expect(aufgaben?.personalActionsNavFallback).toBe(true);
 
     const keysWithoutTasks = getTopLevelNavModuleKeys([
       PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
     ]);
     expect(keysWithoutTasks).not.toContain("aufgaben");
+
+    const keysParentOnly = getTopLevelNavModuleKeys([], "club", {
+      personalActionsModule: true,
+    });
+    expect(keysParentOnly).toContain("aufgaben");
 
     const keysWithTasks = getTopLevelNavModuleKeys([
       PERMISSIONS.TASKS_VIEW,

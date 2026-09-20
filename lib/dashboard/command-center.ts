@@ -54,7 +54,10 @@ import {
   resolvePersonalTeamIds,
   type PersonalAgendaItem,
 } from "@/lib/dashboard/personal-cockpit";
-import { loadDashboardPersonalTasks } from "@/lib/dashboard/personal-tasks-loader";
+import {
+  loadDashboardPersonalTasks,
+  type DashboardPersonalTaskPreviewItem,
+} from "@/lib/dashboard/personal-tasks-loader";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -122,12 +125,7 @@ export type CommandCenterData = {
   personalAgendaSupported: boolean;
   personalTasksAvailable: boolean;
   personalTaskCount: number | null;
-  personalTaskPreview: {
-    id: string;
-    title: string;
-    dueAt: string | null;
-    parentTitle: string | null;
-  }[];
+  personalTaskPreview: DashboardPersonalTaskPreviewItem[];
   /** Personal dashboard hero background — user-scoped, persisted on User. */
   heroBackgroundImageUrl: string | null;
   heroBackgroundTransform: HeroImageTransform;
@@ -822,6 +820,9 @@ export async function getCommandCenterData(args: {
     ? await loadDashboardPersonalTasks({
         tenantId: args.tenantId,
         userId: args.userId,
+        fmtCfg: args.fmtCfg,
+        locale: args.fmtCfg.locale ?? "de-CH",
+        timeZone: args.fmtCfg.timezone ?? "Europe/Zurich",
       })
     : { authorized: false, count: null, preview: [] };
 

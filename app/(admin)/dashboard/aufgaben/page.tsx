@@ -1,5 +1,4 @@
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { requirePermission } from "@/lib/permissions/require-permission";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { listEligibleTaskAssignees } from "@/lib/tasks/queries";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
@@ -14,10 +13,25 @@ import {
 } from "@/lib/tasks/management-navigation";
 import { canViewAllTasks, hasTaskPermission } from "@/lib/tasks/visibility";
 import AufgabenManagementWorkspace from "@/components/admin/aufgaben/AufgabenManagementWorkspace";
+import PersonalActionsInbox from "@/components/admin/aufgaben/PersonalActionsInbox";
+import AufgabenScopeToggle from "@/components/admin/aufgaben/AufgabenScopeToggle";
+import { requirePersonalActionsModuleAccess } from "@/lib/personal-actions/require-module-access";
+import { loadPersonalActions } from "@/lib/personal-actions";
+import {
+  filterPersonalActionsForInbox,
+  mapPersonalActionToListItem,
+  PERSONAL_ACTION_INBOX_DEFAULT_LIMIT,
+} from "@/lib/personal-actions/presentation";
+import {
+  parseAufgabenBereich,
+  parsePersonalInboxFilter,
+} from "@/lib/personal-actions/aufgaben-scope";
 
 export const dynamic = "force-dynamic";
 
 type PageSearchParams = {
+  bereich?: string;
+  filter?: string;
   view?: string;
   q?: string;
   sort?: string;
@@ -35,20 +49,59 @@ type Props = {
 };
 
 export default async function AufgabenPage({ searchParams }: Props) {
-  await requirePermission(PERMISSIONS.TASKS_VIEW);
+  const { session, tenantId, capabilities } = await requirePersonalActionsModuleAccess();
+
+  const params: PageSearchParams = searchParams ? await searchParams : {};
+  const bereich = parseAufgabenBereich(params.bereich);
+  const inboxFilter = parsePersonalInboxFilter(params.filter);
+
+  const tenant = await getActiveTenant();
+  const timeZone = tenant?.timezone ?? "Europe/Zurich";
+  const locale = tenant?.locale ?? "de-CH";
+  const fmtCfg = { locale, timezone: timeZone };
+
+  const showManagement = capabilities.taskManagement;
+  const effectiveBereich =
+    bereich === "verwaltung" && showManagement ? "verwaltung" : "meine";
+
+  if (effectiveBereich === "meine") {
+    const rawActions = await loadPersonalActions({
+      tenantId,
+      userId: session.user.id,
+      permissionKeys: capabilities.permissionKeys,
+      limit: PERSONAL_ACTION_INBOX_DEFAULT_LIMIT,
+    });
+    const filtered = filterPersonalActionsForInbox(rawActions, inboxFilter);
+    const items = filtered.map((action) =>
+      mapPersonalActionToListItem(action, fmtCfg, locale, timeZone),
+    );
+    const hasMixedSources =
+      rawActions.some((a) => a.sourceType === "TASK") &&
+      rawActions.some((a) => a.sourceType === "ATTENDANCE_RESPONSE");
+
+    return (
+      <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
+        <PersonalActionsInbox
+          items={items}
+          locale={locale}
+          timeZone={timeZone}
+          showManagementScope={showManagement}
+          bereich="meine"
+          filter={inboxFilter}
+          showSourceFilters={hasMixedSources}
+        />
+      </div>
+    );
+  }
 
   const ctx = await getTaskServiceContext();
-  const tenant = await getActiveTenant();
   if (!ctx) {
     return null;
   }
 
-  const params: PageSearchParams = searchParams ? await searchParams : {};
   const tenantWideVisibility = canViewAllTasks(ctx);
   const query = resolveTaskManagementQuery(params, tenantWideVisibility);
   const sort = parseTaskManagementSort(params.sort);
-  const timeZone = tenant?.timezone ?? "Europe/Zurich";
-  const locale = tenant?.locale ?? "de-CH";
 
   const [summary, assigneeOptions] = await Promise.all([
     getTaskManagementSummary(ctx, timeZone),
@@ -87,6 +140,11 @@ export default async function AufgabenPage({ searchParams }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
+      {showManagement ? (
+        <div className="mb-4">
+          <AufgabenScopeToggle active="verwaltung" showManagement />
+        </div>
+      ) : null}
       <AufgabenManagementWorkspace
         tenantWideVisibility={tenantWideVisibility}
         locale={locale}

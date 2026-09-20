@@ -10,7 +10,7 @@ import SidebarPlatformBrand from "@/components/admin/branding/SidebarPlatformBra
 import { AnimatedNavIcon } from "@/components/ui/motion/AnimatedNavIcon";
 import { useSidebarResize } from "@/hooks/useSidebarResize";
 import { getVisibleNavSections } from "@/lib/nav/nav-config";
-import type { NavItem, NavSection } from "@/lib/nav/nav-config";
+import type { NavCapabilityContext, NavItem, NavSection } from "@/lib/nav/nav-config";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
 import {
@@ -26,6 +26,7 @@ type AdminSidebarProps = {
   clubName?: string;
   /** Raw logoUrl from tenant config. Null/invalid → fallback icon. */
   logoUrl?: string | null;
+  navCapabilities?: NavCapabilityContext;
   collapsed?: boolean;
   onToggle?: () => void;
 };
@@ -76,6 +77,7 @@ export default function AdminSidebar({
   workspaceContext = "club",
   clubName,
   logoUrl,
+  navCapabilities,
   collapsed,
   onToggle,
 }: AdminSidebarProps) {
@@ -130,6 +132,7 @@ export default function AdminSidebar({
   const sections: NavSection[] = getVisibleNavSections(
     permissionKeys as PermissionKey[],
     workspaceContext,
+    navCapabilities,
   );
 
   const isPlatformWorkspace = workspaceContext === "platform";
