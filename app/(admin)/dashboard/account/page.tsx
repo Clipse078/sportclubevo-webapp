@@ -13,6 +13,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { PageShell } from "@/components/ui/page";
+import { listNotificationPreferencesForUser } from "@/lib/notifications/preference-service";
 import AccountPageClient from "./AccountPageClient";
 
 export const metadata = { title: "Mein Konto" };
@@ -68,6 +69,10 @@ export default async function AccountPage() {
     tenantName = tenant?.name ?? null;
   }
 
+  const notificationPreferences = activeTenantId
+    ? await listNotificationPreferencesForUser(activeTenantId, userId)
+    : [];
+
   return (
     <PageShell>
       <AccountPageClient
@@ -89,6 +94,7 @@ export default async function AccountPage() {
             : null
         }
         tenantName={tenantName}
+        notificationPreferences={notificationPreferences}
       />
     </PageShell>
   );

@@ -21,6 +21,10 @@ import {
 } from "./recurrence-dates";
 import type { TaskServiceContext } from "./types";
 import { buildTaskVisibilityWhere, hasTaskPermission } from "./visibility";
+import {
+  computeNewAssigneeRows,
+  emitTaskAssignmentNotifications,
+} from "@/lib/notifications/task-producer";
 
 const SERIES_INCLUDE = {
   assigneeTemplates: true,
@@ -492,6 +496,8 @@ async function createOccurrenceTree(
   }
 
   const parentAssignees = series.assigneeTemplates.map((a) => a.userId);
+  const assignedAt = new Date();
+
   if (parentAssignees.length) {
     await tx.taskAssignee.createMany({
       data: parentAssignees.map((userId) => ({
@@ -499,7 +505,24 @@ async function createOccurrenceTree(
         taskId: parent.id,
         userId,
         assignedByUserId: ctx.userId,
+        assignedAt,
       })),
+    });
+  }
+
+  const assignmentContext = {
+    actorUserId: ctx.userId,
+    seriesGenerated: true as const,
+  };
+  if (parentAssignees.length) {
+    await emitTaskAssignmentNotifications(tx, {
+      tenantId: ctx.tenantId,
+      taskId: parent.id,
+      taskTitle: series.title,
+      isSubtask: false,
+      assigneeRows: computeNewAssigneeRows([], parentAssignees, assignedAt),
+      context: assignmentContext,
+      dueAt: parentDueAt,
     });
   }
 
@@ -533,7 +556,18 @@ async function createOccurrenceTree(
           taskId: child.id,
           userId,
           assignedByUserId: ctx.userId,
+          assignedAt,
         })),
+      });
+
+      await emitTaskAssignmentNotifications(tx, {
+        tenantId: ctx.tenantId,
+        taskId: child.id,
+        taskTitle: template.title,
+        isSubtask: true,
+        assigneeRows: computeNewAssigneeRows([], childAssignees, assignedAt),
+        context: assignmentContext,
+        dueAt: childDueAt,
       });
     }
   }

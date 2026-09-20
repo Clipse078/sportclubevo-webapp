@@ -37,6 +37,11 @@ import {
   canViewTaskRecord,
   hasTaskPermission,
 } from "./visibility";
+import {
+  computeNewAssigneeRows,
+  emitTaskAssignmentNotifications,
+  emitTaskDeadlineChangedNotifications,
+} from "@/lib/notifications/task-producer";
 
 const TASK_INCLUDE = {
   assignees: {
@@ -270,10 +275,23 @@ export async function createTask(
       });
     }
 
-    return tx.task.findFirstOrThrow({
+    const finalRow = await tx.task.findFirstOrThrow({
       where: { id: created.id, tenantId: ctx.tenantId },
       include: TASK_INCLUDE,
     });
+
+    const assignedAt = new Date();
+    await emitTaskAssignmentNotifications(tx, {
+      tenantId: ctx.tenantId,
+      taskId: finalRow.id,
+      taskTitle: finalRow.title,
+      isSubtask: false,
+      assigneeRows: computeNewAssigneeRows([], assigneeUserIds, assignedAt),
+      context: { actorUserId: ctx.userId },
+      dueAt: finalRow.dueAt,
+    });
+
+    return finalRow;
   });
 
   return mapTask(task);
@@ -434,10 +452,23 @@ export async function createSubtask(
       },
     });
 
-    return tx.task.findFirstOrThrow({
+    const finalRow = await tx.task.findFirstOrThrow({
       where: { id: created.id, tenantId: ctx.tenantId },
       include: TASK_INCLUDE,
     });
+
+    const assignedAt = new Date();
+    await emitTaskAssignmentNotifications(tx, {
+      tenantId: ctx.tenantId,
+      taskId: finalRow.id,
+      taskTitle: finalRow.title,
+      isSubtask: true,
+      assigneeRows: computeNewAssigneeRows([], assigneeUserIds, assignedAt),
+      context: { actorUserId: ctx.userId },
+      dueAt: finalRow.dueAt,
+    });
+
+    return finalRow;
   });
 
   return mapTask(task);
@@ -535,13 +566,34 @@ export async function updateTask(
         title: existing.title,
         status: existing.status,
         priority: existing.priority,
+        dueAt: existing.dueAt?.toISOString() ?? null,
       },
       afterJson: {
         title: row.title,
         status: row.status,
         priority: row.priority,
+        dueAt: row.dueAt?.toISOString() ?? null,
       },
     });
+
+    if (input.dueAt !== undefined) {
+      const tenant = await tx.tenant.findUnique({
+        where: { id: ctx.tenantId },
+        select: { locale: true, timezone: true },
+      });
+      await emitTaskDeadlineChangedNotifications(tx, {
+        tenantId: ctx.tenantId,
+        taskId: row.id,
+        taskTitle: row.title,
+        assigneeUserIds: row.assignees.map((a) => a.userId),
+        actorUserId: ctx.userId,
+        previousDueAt: existing.dueAt,
+        nextDueAt: row.dueAt,
+        changedAt: new Date(),
+        locale: tenant?.locale ?? "de-CH",
+        timeZone: tenant?.timezone ?? "Europe/Zurich",
+      });
+    }
 
     return row;
   });
@@ -559,12 +611,14 @@ export async function assignTask(
 
   const unique = [...new Set(assigneeUserIds)];
   await validateAssigneeUserIds(ctx.tenantId, unique);
+  const previousUserIds = existing.assignees.map((a) => a.userId);
 
   const updated = await prisma.$transaction(async (tx) => {
     await tx.taskAssignee.deleteMany({
       where: { taskId: existing.id, tenantId: ctx.tenantId },
     });
 
+    const assignedAt = new Date();
     if (unique.length > 0) {
       await tx.taskAssignee.createMany({
         data: unique.map((userId) => ({
@@ -572,6 +626,7 @@ export async function assignTask(
           taskId: existing.id,
           userId,
           assignedByUserId: ctx.userId,
+          assignedAt,
         })),
       });
     }
@@ -581,14 +636,26 @@ export async function assignTask(
       actorUserId: ctx.userId,
       taskId: existing.id,
       action: "TASK_ASSIGNED",
-      beforeJson: { assigneeUserIds: existing.assignees.map((a) => a.userId) },
+      beforeJson: { assigneeUserIds: previousUserIds },
       afterJson: { assigneeUserIds: unique },
     });
 
-    return tx.task.findFirstOrThrow({
+    const row = await tx.task.findFirstOrThrow({
       where: { id: existing.id, tenantId: ctx.tenantId },
       include: TASK_INCLUDE,
     });
+
+    await emitTaskAssignmentNotifications(tx, {
+      tenantId: ctx.tenantId,
+      taskId: row.id,
+      taskTitle: row.title,
+      isSubtask: Boolean(row.parentTaskId),
+      assigneeRows: computeNewAssigneeRows(previousUserIds, unique, assignedAt),
+      context: { actorUserId: ctx.userId },
+      dueAt: row.dueAt,
+    });
+
+    return row;
   });
 
   return mapTask(updated);

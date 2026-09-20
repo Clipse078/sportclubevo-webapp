@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 import AdminPageActions from "@/components/admin/layout/AdminPageActions";
 import AccountMenu from "@/components/admin/layout/AccountMenu";
+import NotificationBell from "@/components/admin/notifications/NotificationBell";
 
 type AppTopNavProps = {
   firstName: string;
@@ -38,6 +39,9 @@ function getPageMeta(pathname: string): PageMeta {
   if (pathname.startsWith("/vereinsleitung/templates")) return { eyebrow: "Vereinsleitung", title: "Vorlagen" };
   if (pathname.startsWith("/vereinsleitung")) return { eyebrow: "Vereinsleitung", title: "Übersicht" };
   if (pathname.startsWith("/dashboard/account")) return { eyebrow: "Konto", title: "Mein Konto" };
+  if (pathname.startsWith("/dashboard/notifications")) {
+    return { eyebrow: "Konto", title: "Benachrichtigungen" };
+  }
   return { eyebrow: "SportClubEvo", title: "Übersicht" };
 }
 
@@ -61,6 +65,7 @@ export default function AppTopNav({
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
+        <NotificationBell />
         <div className="hidden xl:flex items-center gap-1">
           <Suspense fallback={null}>
             <AdminPageActions />
