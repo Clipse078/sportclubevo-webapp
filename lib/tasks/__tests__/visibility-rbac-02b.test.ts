@@ -32,6 +32,10 @@ const mocks = vi.hoisted(() => ({
   taskSeriesFindMany: vi.fn(),
 }));
 
+vi.mock("../context-presentation", () => ({
+  resolveTaskContextsBatch: vi.fn().mockResolvedValue(new Map()),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     task: {
@@ -140,7 +144,7 @@ describe("AUFGABEN-02B management queries", () => {
   it("A — personal user cannot use tenant-wide ALLE view filters", async () => {
     const query = resolveTaskManagementQuery({ view: "ALLE" }, false);
     expect(query.view).toBe("MEINE");
-    await listTaskManagementItems(ctx([PERMISSIONS.TASKS_VIEW]), query, "Europe/Zurich");
+    await listTaskManagementItems(ctx([PERMISSIONS.TASKS_VIEW]), query, "Europe/Zurich", "de-CH");
 
     const where = mocks.taskCount.mock.calls[0]![0].where;
     expect(where.AND[0]).toEqual(
@@ -160,6 +164,7 @@ describe("AUFGABEN-02B management queries", () => {
       ctx([PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_VIEW_ALL]),
       query,
       "Europe/Zurich",
+      "de-CH",
     );
 
     expect(mocks.taskCount).toHaveBeenCalledWith({

@@ -18,6 +18,10 @@ const mocks = vi.hoisted(() => ({
   auditCreate: vi.fn(),
 }));
 
+vi.mock("../context-presentation", () => ({
+  resolveTaskContextPresentation: vi.fn().mockResolvedValue(null),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     task: {
@@ -198,7 +202,7 @@ describe("AUFGABEN-03 loadTaskWorkspace", () => {
       lastName: "Manager",
     });
 
-    const bundle = await loadTaskWorkspace(managerCtx(), TASK_ID);
+    const bundle = await loadTaskWorkspace(managerCtx(), TASK_ID, "de-CH", "Europe/Zurich");
     expect(bundle.subtasks).toHaveLength(2);
     expect(bundle.progress.label).toBe("1 / 2 erledigt");
     expect(bundle.capabilities.canEditTitle).toBe(true);
@@ -220,7 +224,7 @@ describe("AUFGABEN-03 loadTaskWorkspace", () => {
     });
     mocks.userFindFirst.mockResolvedValue(null);
 
-    const bundle = await loadTaskWorkspace(managerCtx(), TASK_ID);
+    const bundle = await loadTaskWorkspace(managerCtx(), TASK_ID, "de-CH", "Europe/Zurich");
     expect(bundle.seriesRecurrenceLabel).toBe("Jeden Sonntag");
   });
 
@@ -236,6 +240,8 @@ describe("AUFGABEN-03 loadTaskWorkspace", () => {
           permissionKeys: [PERMISSIONS.TASKS_VIEW],
         },
         TASK_ID,
+        "de-CH",
+        "Europe/Zurich",
       ),
     ).rejects.toThrow(TaskForbiddenError);
   });

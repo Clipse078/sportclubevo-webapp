@@ -69,7 +69,7 @@ export default async function AufgabenPage({ searchParams }: Props) {
       const seriesResult = await listTaskSeriesManagementRows(ctx, query);
       seriesRows = seriesResult.rows;
     } else {
-      const listResult = await listTaskManagementItems(ctx, query, timeZone);
+      const listResult = await listTaskManagementItems(ctx, query, timeZone, locale);
       items = listResult.items;
       totalCount = listResult.totalCount;
       page = listResult.page;

@@ -16,6 +16,10 @@ const mocks = vi.hoisted(() => ({
   taskSeriesFindMany: vi.fn(),
 }));
 
+vi.mock("../context-presentation", () => ({
+  resolveTaskContextsBatch: vi.fn().mockResolvedValue(new Map()),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     task: {
@@ -65,7 +69,7 @@ describe("AUFGABEN-02 management listTaskManagementItems", () => {
 
   it("always composes canonical visibility with view filters", async () => {
     const query = parseTaskManagementQuery({ view: "ALLE" });
-    await listTaskManagementItems(assigneeCtx(), query, "Europe/Zurich");
+    await listTaskManagementItems(assigneeCtx(), query, "Europe/Zurich", "de-CH");
 
     expect(mocks.taskCount).toHaveBeenCalledWith({
       where: {
@@ -90,7 +94,7 @@ describe("AUFGABEN-02 management listTaskManagementItems", () => {
 
   it("scopes ERLEDIGT to completed root tasks within visibility", async () => {
     const query = parseTaskManagementQuery({ view: "ERLEDIGT" });
-    await listTaskManagementItems(assigneeCtx(), query, "Europe/Zurich");
+    await listTaskManagementItems(assigneeCtx(), query, "Europe/Zurich", "de-CH");
 
     expect(mocks.taskCount).toHaveBeenCalledWith({
       where: {

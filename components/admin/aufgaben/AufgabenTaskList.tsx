@@ -14,7 +14,7 @@ import {
   updateAufgabeStatusAction,
 } from "@/app/(admin)/dashboard/aufgaben/actions";
 import { presentTaskDeadline } from "@/lib/tasks/management-deadline";
-import { TASK_CONTEXT_LABELS, formatAssigneeName } from "@/lib/tasks/management-labels";
+import { formatAssigneeName } from "@/lib/tasks/management-labels";
 import {
   taskPriorityPresentation,
   taskStatusBadgeClass,
@@ -268,7 +268,7 @@ function TaskListRow({
   });
   const priority = taskPriorityPresentation(task.priority);
   const status = taskStatusPresentation(task.status);
-  const contextLabel = task.contextType ? TASK_CONTEXT_LABELS[task.contextType] : null;
+  const contextLine = item.context?.compactSecondary ?? null;
 
   return (
     <article
@@ -317,7 +317,9 @@ function TaskListRow({
                     {seriesRecurrenceLabel}
                   </span>
                 ) : null}
-                {contextLabel ? <span>{contextLabel}</span> : null}
+                {contextLine ? (
+                  <span data-testid={`aufgaben-context-${task.id}`}>{contextLine}</span>
+                ) : null}
               </div>
             </div>
           </div>

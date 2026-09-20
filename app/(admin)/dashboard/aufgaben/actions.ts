@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { TaskPriority, TaskStatus } from "@prisma/client";
+import type { TaskContextType, TaskPriority, TaskStatus } from "@prisma/client";
+import { isSupportedTaskContextType } from "@/lib/tasks/context-registry";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import {
   assignTask,
@@ -377,6 +378,26 @@ function parseOptionalDueAt(raw: FormDataEntryValue | null): Date | null | "inva
   return dueAt;
 }
 
+function parseTaskContextFromForm(formData: FormData): {
+  contextType: TaskContextType | null;
+  contextId: string | null;
+} {
+  const typeRaw = formData.get("contextType");
+  const idRaw = formData.get("contextId");
+  const type =
+    typeof typeRaw === "string" && typeRaw.trim() && isSupportedTaskContextType(typeRaw as TaskContextType)
+      ? (typeRaw as TaskContextType)
+      : null;
+  const id = typeof idRaw === "string" && idRaw.trim() ? idRaw.trim() : null;
+  if (!type) {
+    return { contextType: null, contextId: null };
+  }
+  if (!id) {
+    throw new TaskValidationError("Bitte einen Kontext auswählen oder Kontexttyp entfernen.");
+  }
+  return { contextType: type, contextId: id };
+}
+
 function parsePriority(raw: FormDataEntryValue | null): TaskPriority | undefined {
   const validPriorities = ["LOW", "NORMAL", "HIGH", "URGENT"] as const;
   if (
@@ -386,6 +407,29 @@ function parsePriority(raw: FormDataEntryValue | null): TaskPriority | undefined
     return raw as TaskPriority;
   }
   return undefined;
+}
+
+export async function updateAufgabeContextAction(
+  formData: FormData,
+): Promise<AufgabenActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    const taskId = formData.get("taskId");
+    if (typeof taskId !== "string" || !taskId.trim()) {
+      return { ok: false, message: "Aufgabe fehlt." };
+    }
+    const remove = formData.get("removeContext") === "true";
+    const parsed = remove
+      ? { contextType: null, contextId: null }
+      : parseTaskContextFromForm(formData);
+    await updateTask(ctx, taskId.trim(), parsed);
+    revalidateTaskPaths(taskId.trim());
+    return { ok: true };
+  } catch (error) {
+    return failure(error);
+  }
 }
 
 export async function updateAufgabeTitleAction(
@@ -725,12 +769,16 @@ export async function createAufgabeFullAction(
         .filter(Boolean);
     }
 
+    const { contextType, contextId } = parseTaskContextFromForm(formData);
+
     const created = await createTask(ctx, {
       title: typeof title === "string" ? title : "",
       description: typeof description === "string" ? description : null,
       priority: priority ?? "NORMAL",
       dueAt,
       assigneeUserIds,
+      contextType,
+      contextId,
     });
 
     revalidateTaskPaths(created.id);

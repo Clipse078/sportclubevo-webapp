@@ -13,6 +13,7 @@ export type TaskWorkspaceCapabilities = {
   canComplete: boolean;
   canCancel: boolean;
   canCreateSubtask: boolean;
+  canEditContext: boolean;
 };
 
 export function resolveTaskWorkspaceCapabilities(
@@ -41,6 +42,7 @@ export function resolveTaskWorkspaceCapabilities(
     canComplete: canManage || isAssignee,
     canCancel: canManage || isCreator,
     canCreateSubtask: canCreate && !task.parentTaskId,
+    canEditContext: canEditFields,
   };
 
   caps.readOnly =
@@ -52,7 +54,8 @@ export function resolveTaskWorkspaceCapabilities(
     !caps.canAssign &&
     !caps.canComplete &&
     !caps.canCancel &&
-    !caps.canCreateSubtask;
+    !caps.canCreateSubtask &&
+    !caps.canEditContext;
 
   return caps;
 }

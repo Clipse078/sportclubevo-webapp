@@ -65,6 +65,7 @@ const item: TaskManagementListItem = {
     label: "1 / 2 erledigt",
   },
   seriesRecurrenceLabel: null,
+  context: null,
   expandable: true,
 };
 

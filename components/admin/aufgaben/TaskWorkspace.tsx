@@ -40,8 +40,11 @@ import {
   updateAufgabePriorityAction,
   updateAufgabeStatusAction,
   updateAufgabeTitleAction,
+  updateAufgabeContextAction,
 } from "@/app/(admin)/dashboard/aufgaben/actions";
 import type { TaskWorkspaceViewProps } from "@/lib/tasks/task-workspace-view-props";
+import type { TaskContextPresentation } from "@/lib/tasks/context-presentation";
+import TaskContextField from "./TaskContextField";
 
 function InlineTitle({
   task,
@@ -121,6 +124,128 @@ function InlineTitle({
       />
       {error ? <p className="text-xs text-red-300">{error}</p> : null}
     </div>
+  );
+}
+
+function TaskContextSection({
+  taskId,
+  context,
+  canEdit,
+}: {
+  taskId: string;
+  context: TaskContextPresentation | null;
+  canEdit: boolean;
+}) {
+  const router = useRouter();
+  const [editing, setEditing] = useState(false);
+  const [pending, startTransition] = useTransition();
+
+  if (!context && !canEdit) return null;
+
+  if (editing && canEdit) {
+    return (
+      <section className="rounded-lg border border-[var(--border)]/70 px-3 py-2.5">
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+          Kontext
+        </p>
+        <form
+          className="mt-2 space-y-2"
+          action={(formData) => {
+            startTransition(async () => {
+              formData.set("taskId", taskId);
+              const result = await updateAufgabeContextAction(formData);
+              if (result.ok) {
+                setEditing(false);
+                router.refresh();
+              }
+            });
+          }}
+        >
+          <TaskContextField
+            initialContextType={null}
+            initialContextId={null}
+            disabled={pending}
+          />
+          <div className="flex flex-wrap gap-2">
+            <button type="submit" className="fca-button-primary text-xs" disabled={pending}>
+              Speichern
+            </button>
+            <button
+              type="button"
+              className="fca-button-secondary text-xs"
+              disabled={pending}
+              onClick={() => setEditing(false)}
+            >
+              Abbrechen
+            </button>
+            {context ? (
+              <button
+                type="button"
+                className="fca-button-secondary text-xs text-red-300"
+                disabled={pending}
+                onClick={() => {
+                  startTransition(async () => {
+                    const fd = new FormData();
+                    fd.set("taskId", taskId);
+                    fd.set("removeContext", "true");
+                    await updateAufgabeContextAction(fd);
+                    setEditing(false);
+                    router.refresh();
+                  });
+                }}
+              >
+                Kontext entfernen
+              </button>
+            ) : null}
+          </div>
+        </form>
+      </section>
+    );
+  }
+
+  if (!context) {
+    return canEdit ? (
+      <section className="rounded-lg border border-dashed border-[var(--border)]/60 px-3 py-2.5">
+        <button
+          type="button"
+          className="text-sm text-[var(--sce-primary)] hover:underline"
+          onClick={() => setEditing(true)}
+        >
+          Kontext hinzufügen
+        </button>
+      </section>
+    ) : null;
+  }
+
+  return (
+    <section className="rounded-lg border border-[var(--border)]/70 px-3 py-2.5">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+          Kontext
+        </p>
+        {canEdit ? (
+          <button
+            type="button"
+            className="text-xs text-[var(--sce-primary)] hover:underline"
+            onClick={() => setEditing(true)}
+          >
+            Bearbeiten
+          </button>
+        ) : null}
+      </div>
+      <p className="mt-1 text-sm text-[var(--text-2)]">
+        {context.typeLabel}
+        {context.title ? ` · ${context.title}` : ""}
+      </p>
+      {context.subtitle ? (
+        <p className="text-xs text-[var(--muted)]">{context.subtitle}</p>
+      ) : null}
+      {context.href ? (
+        <Link href={context.href} className="sce-link-primary mt-1 inline-block text-sm">
+          {context.title ?? context.typeLabel} öffnen →
+        </Link>
+      ) : null}
+    </section>
   );
 }
 
@@ -578,22 +703,11 @@ export function TaskWorkspacePanel({
             </section>
           ) : null}
 
-          {context ? (
-            <section className="rounded-lg border border-[var(--border)]/70 px-3 py-2.5">
-              <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-                Kontext
-              </p>
-              <p className="mt-1 text-sm text-[var(--text-2)]">
-                {context.typeLabel}
-                {context.title ? ` · ${context.title}` : ""}
-              </p>
-              {context.href ? (
-                <Link href={context.href} className="sce-link-primary mt-1 inline-block text-sm">
-                  Öffnen →
-                </Link>
-              ) : null}
-            </section>
-          ) : null}
+          <TaskContextSection
+            taskId={task.id}
+            context={context}
+            canEdit={capabilities.canEditContext}
+          />
 
           <section className="rounded-lg border border-dashed border-[var(--border)]/60 px-3 py-4 text-xs text-[var(--muted)]">
             Aktivität — folgt in einer späteren Version.
@@ -748,8 +862,7 @@ export function TaskWorkspacePanel({
           {context ? (
             <PropertyRow label="Kontext">
               <span className="text-sm text-[var(--text-2)]">
-                {context.typeLabel}
-                {context.title ? ` · ${context.title}` : ""}
+                {context.compactSecondary ?? context.typeLabel}
               </span>
             </PropertyRow>
           ) : null}

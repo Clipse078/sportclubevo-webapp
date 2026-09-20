@@ -7,16 +7,25 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
+import type { TaskContextType } from "@prisma/client";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import { TASK_PRIORITY_LABELS } from "@/lib/tasks/management-labels";
 import { createAufgabeFullAction } from "@/app/(admin)/dashboard/aufgaben/actions";
+import TaskContextField from "./TaskContextField";
 
 type Props = {
   assigneeOptions: TaskAssigneeOption[];
   backHref: string;
+  initialContextType?: TaskContextType | null;
+  initialContextId?: string | null;
 };
 
-export default function AufgabenFullCreateClient({ assigneeOptions, backHref }: Props) {
+export default function AufgabenFullCreateClient({
+  assigneeOptions,
+  backHref,
+  initialContextType = null,
+  initialContextId = null,
+}: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -96,6 +105,10 @@ export default function AufgabenFullCreateClient({ assigneeOptions, backHref }: 
                 <span className="text-xs font-medium text-[var(--text-2)]">Termin</span>
                 <input type="date" name="dueAt" className="fca-input w-full text-sm" />
               </label>
+              <TaskContextField
+                initialContextType={initialContextType}
+                initialContextId={initialContextId}
+              />
               <button type="submit" className="fca-button-primary w-full text-sm" disabled={pending}>
                 {pending ? "Erstellen …" : "Aufgabe erstellen"}
               </button>

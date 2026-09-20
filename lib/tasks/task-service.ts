@@ -220,11 +220,7 @@ export async function createTask(
   assertCanCreate(ctx);
 
   const title = normalizeTitle(input.title);
-  await validateTaskContext(
-    ctx.tenantId,
-    input.contextType,
-    input.contextId,
-  );
+  await validateTaskContext(ctx, input.contextType, input.contextId);
 
   const assigneeUserIds = [...new Set(input.assigneeUserIds ?? [])];
   await validateAssigneeUserIds(ctx.tenantId, assigneeUserIds);
@@ -530,7 +526,9 @@ export async function updateTask(
       input.title !== undefined ||
       input.description !== undefined ||
       input.priority !== undefined ||
-      input.dueAt !== undefined
+      input.dueAt !== undefined ||
+      input.contextType !== undefined ||
+      input.contextId !== undefined
     ) {
       throw new TaskForbiddenError("Assignees may only update status");
     }
@@ -547,6 +545,26 @@ export async function updateTask(
   }
   if (input.priority !== undefined) data.priority = input.priority;
   if (input.dueAt !== undefined) data.dueAt = input.dueAt;
+
+  const contextMutation =
+    input.contextType !== undefined || input.contextId !== undefined;
+  if (contextMutation) {
+    if (
+      !canManage &&
+      !(isCreator && hasTaskPermission(ctx, PERMISSIONS.TASKS_CREATE))
+    ) {
+      throw new TaskForbiddenError();
+    }
+    const nextType =
+      input.contextType !== undefined ? input.contextType : existing.contextType;
+    const nextId =
+      input.contextId !== undefined
+        ? input.contextId
+        : existing.contextId;
+    await validateTaskContext(ctx, nextType, nextId);
+    if (input.contextType !== undefined) data.contextType = input.contextType;
+    if (input.contextId !== undefined) data.contextId = input.contextId;
+  }
 
   if (input.status !== undefined) {
     const transition = applyStatusTransition(existing.status, input.status);
@@ -571,12 +589,16 @@ export async function updateTask(
         status: existing.status,
         priority: existing.priority,
         dueAt: existing.dueAt?.toISOString() ?? null,
+        contextType: existing.contextType,
+        contextId: existing.contextId,
       },
       afterJson: {
         title: row.title,
         status: row.status,
         priority: row.priority,
         dueAt: row.dueAt?.toISOString() ?? null,
+        contextType: row.contextType,
+        contextId: row.contextId,
       },
     });
 

@@ -26,6 +26,10 @@ import type {
   TaskManagementSort,
   TaskManagementView,
 } from "./management-navigation";
+import {
+  resolveTaskContextsBatch,
+  type TaskContextPresentation,
+} from "./context-presentation";
 
 const TASK_INCLUDE = {
   assignees: {
@@ -62,6 +66,7 @@ export type TaskManagementListItem = {
   subtasks: TaskDto[];
   progress: TaskProgressDto;
   seriesRecurrenceLabel: string | null;
+  context: TaskContextPresentation | null;
   expandable: boolean;
 };
 
@@ -255,10 +260,36 @@ async function loadParentSummaries(
   return new Map(parents.map((p) => [p.id, p]));
 }
 
+async function loadContextPresentationsForTasks(
+  ctx: TaskServiceContext,
+  tasks: TaskDto[],
+  locale: string,
+  timeZone: string,
+): Promise<Map<string, TaskContextPresentation>> {
+  const refs = tasks
+    .filter((t) => t.contextType && t.contextId)
+    .map((t) => ({
+      contextType: t.contextType!,
+      contextId: t.contextId!,
+    }));
+  if (refs.length === 0) return new Map();
+  return resolveTaskContextsBatch(ctx, refs, locale, timeZone);
+}
+
+function contextForTask(
+  task: TaskDto,
+  map: Map<string, TaskContextPresentation>,
+): TaskContextPresentation | null {
+  if (!task.contextType || !task.contextId) return null;
+  return map.get(`${task.contextType}:${task.contextId}`) ?? null;
+}
+
 async function batchEnrichRoots(
   ctx: TaskServiceContext,
   roots: TaskDto[],
   seriesLabels: Map<string, string>,
+  locale: string,
+  timeZone: string,
 ): Promise<TaskManagementListItem[]> {
   if (roots.length === 0) return [];
 
@@ -282,6 +313,13 @@ async function batchEnrichRoots(
     childrenByParent.set(parentId, list);
   }
 
+  const contextMap = await loadContextPresentationsForTasks(
+    ctx,
+    roots,
+    locale,
+    timeZone,
+  );
+
   return roots.map((task) => {
     const subtasks = childrenByParent.get(task.id) ?? [];
     const progress = computeSubtaskProgress(subtasks.map((s) => ({ status: s.status })));
@@ -297,6 +335,7 @@ async function batchEnrichRoots(
         percent: progress.totalCount === 0 ? 0 : progress.percent,
       },
       seriesRecurrenceLabel,
+      context: contextForTask(task, contextMap),
       expandable: subtasks.length > 0,
     };
   });
@@ -306,6 +345,8 @@ async function batchEnrichPersonalRows(
   ctx: TaskServiceContext,
   personal: PersonalTaskDto[],
   seriesLabels: Map<string, string>,
+  locale: string,
+  timeZone: string,
 ): Promise<TaskManagementListItem[]> {
   const rootIdsNeedingChildren = personal
     .filter((p) => !p.parentTaskId)
@@ -337,6 +378,13 @@ async function batchEnrichPersonalRows(
     }
   }
 
+  const contextMap = await loadContextPresentationsForTasks(
+    ctx,
+    personal,
+    locale,
+    timeZone,
+  );
+
   return personal.map((task) => {
     const subtasks = task.parentTaskId ? [] : childrenByParent.get(task.id) ?? [];
     const progress = computeSubtaskProgress(subtasks.map((s) => ({ status: s.status })));
@@ -351,6 +399,7 @@ async function batchEnrichPersonalRows(
       seriesRecurrenceLabel: task.taskSeriesId
         ? seriesLabels.get(task.taskSeriesId) ?? null
         : null,
+      context: contextForTask(task, contextMap),
       expandable: subtasks.length > 0,
     };
   });
@@ -435,6 +484,7 @@ export async function listTaskManagementItems(
   ctx: TaskServiceContext,
   query: TaskManagementQueryState,
   timeZone: string,
+  locale: string,
   now: Date = new Date(),
 ): Promise<{
   items: TaskManagementListItem[];
@@ -490,12 +540,18 @@ export async function listTaskManagementItems(
       query.view === "MEINE"
         ? sortPersonalTasks(rows.map((r) => mapPersonal(r, parentById)))
         : rows.map((r) => mapPersonal(r, parentById));
-    const items = await batchEnrichPersonalRows(ctx, personal, seriesLabels);
+    const items = await batchEnrichPersonalRows(
+      ctx,
+      personal,
+      seriesLabels,
+      locale,
+      timeZone,
+    );
     return { items, totalCount, page, pageCount };
   }
 
   const roots = rows.filter((r) => !r.parentTaskId).map(mapTask);
-  const items = await batchEnrichRoots(ctx, roots, seriesLabels);
+  const items = await batchEnrichRoots(ctx, roots, seriesLabels, locale, timeZone);
   return { items, totalCount, page, pageCount };
 }
 
