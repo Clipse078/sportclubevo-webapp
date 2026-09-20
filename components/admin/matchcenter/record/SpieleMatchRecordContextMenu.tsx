@@ -1,19 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, MoreHorizontal, Trash2 } from "lucide-react";
+import { CalendarDays, ListChecks, MoreHorizontal, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { PopoverContent } from "@/components/ui/Popover";
 import { cn } from "@/lib/cn";
 
 type Props = {
   wochenplanerHref: string;
+  createTaskHref?: string | null;
   canDelete: boolean;
   onDeleteRequest?: () => void;
 };
 
 export default function SpieleMatchRecordContextMenu({
   wochenplanerHref,
+  createTaskHref,
   canDelete,
   onDeleteRequest,
 }: Props) {
@@ -69,6 +71,19 @@ export default function SpieleMatchRecordContextMenu({
             <CalendarDays className="h-4 w-4 shrink-0 text-sky-400" aria-hidden />
             Im Wochenplaner anzeigen
           </Link>
+
+          {createTaskHref ? (
+            <Link
+              href={createTaskHref}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex w-full min-h-[40px] items-center gap-3 rounded-[0.625rem] px-3 py-2 text-left text-[0.8125rem] font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--surface-2)]/90"
+              data-testid="spiele-record-menu-create-task"
+            >
+              <ListChecks className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden />
+              Aufgabe erstellen
+            </Link>
+          ) : null}
 
           {canDelete && onDeleteRequest ? (
             <button

@@ -99,6 +99,8 @@ export type TaskWorkspaceBundle = {
 export async function loadTaskWorkspace(
   ctx: TaskServiceContext,
   taskId: string,
+  locale: string,
+  timeZone: string,
 ): Promise<TaskWorkspaceBundle> {
   const task = await getTask(ctx, taskId);
 
@@ -121,7 +123,13 @@ export async function loadTaskWorkspace(
           select: { id: true, firstName: true, lastName: true },
         })
       : Promise.resolve(null),
-    resolveTaskContextPresentation(ctx.tenantId, task.contextType, task.contextId),
+    resolveTaskContextPresentation(
+      ctx,
+      task.contextType,
+      task.contextId,
+      locale,
+      timeZone,
+    ),
   ]);
 
   const progressSource = task.parentTaskId

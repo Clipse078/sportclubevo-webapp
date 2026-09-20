@@ -66,6 +66,8 @@ export type UpdateTaskInput = {
   priority?: TaskPriority;
   dueAt?: Date | null;
   status?: TaskStatus;
+  contextType?: TaskContextType | null;
+  contextId?: string | null;
 };
 
 export type ListTasksFilter = {

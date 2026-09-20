@@ -1,21 +1,12 @@
 import type { TaskContextType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { canAttachTaskContext } from "./context-access";
+import { isSupportedTaskContextType } from "./context-registry";
 import { TaskValidationError } from "./errors";
-
-const CONTEXT_TYPES_REQUIRING_ID: TaskContextType[] = [
-  "MATCH",
-  "TRAINING",
-  "TOURNAMENT",
-  "CLUB_EVENT",
-  "MEETING",
-  "REGISTRATION",
-  "TEAM",
-  "PERSON",
-  "DOCUMENT",
-];
+import type { TaskServiceContext } from "./types";
 
 export async function validateTaskContext(
-  tenantId: string,
+  ctx: TaskServiceContext,
   contextType: TaskContextType | null | undefined,
   contextId: string | null | undefined,
 ): Promise<void> {
@@ -32,11 +23,17 @@ export async function validateTaskContext(
   }
   if (!type || !id) return;
 
-  if (!CONTEXT_TYPES_REQUIRING_ID.includes(type)) {
+  if (!isSupportedTaskContextType(type)) {
     throw new TaskValidationError(`Unsupported task context type: ${type}`);
   }
 
-  const exists = await resolveContextExists(tenantId, type, id);
+  if (!canAttachTaskContext(ctx, type)) {
+    throw new TaskValidationError(
+      "Missing permission to link this operational context type",
+    );
+  }
+
+  const exists = await resolveContextExists(ctx.tenantId, type, id);
   if (!exists) {
     throw new TaskValidationError(
       "Context entity not found in this tenant or type mismatch",

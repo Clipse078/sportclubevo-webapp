@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { parseSfvMatchDateTime } from "@/lib/integrations/sfv/sync/provider-time";
 import SpieleMatchRecordWorkspace from "../SpieleMatchRecordWorkspace";
@@ -300,6 +300,45 @@ describe("SpieleMatchRecordWorkspace", () => {
     );
 
     expect(screen.getByTestId("spiele-record-kickoff")).toHaveTextContent("20:30");
+  });
+
+  it("shows Aufgabe erstellen only when canCreateTask", async () => {
+    const { rerender } = render(
+      <SpieleMatchRecordWorkspace
+        match={createMatch()}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        canManageMappings={false}
+        canDelete={false}
+        pitchOptions={[]}
+        dressingRoomOptions={[]}
+        isProtectedSource
+        wochenplanerHref="/dashboard/planner/week"
+        canCreateTask={false}
+      />,
+    );
+    expect(screen.queryByTestId("spiele-record-menu-create-task")).not.toBeInTheDocument();
+
+    rerender(
+      <SpieleMatchRecordWorkspace
+        match={createMatch()}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+        canManageMappings={false}
+        canDelete={false}
+        pitchOptions={[]}
+        dressingRoomOptions={[]}
+        isProtectedSource
+        wochenplanerHref="/dashboard/planner/week"
+        canCreateTask
+      />,
+    );
+    fireEvent.click(screen.getByTestId("spiele-record-context-menu-trigger"));
+    const link = screen.getByTestId("spiele-record-menu-create-task");
+    expect(link).toHaveAttribute(
+      "href",
+      "/dashboard/aufgaben/neu?contextType=MATCH&contextId=match-1",
+    );
   });
 
   it("displays SFV result read-only when present", () => {

@@ -31,7 +31,7 @@ export async function loadTaskWorkspacePageData(taskId: string, searchParams: Re
 
   try {
     const [bundle, assigneeOptions] = await Promise.all([
-      loadTaskWorkspace(ctx, taskId),
+      loadTaskWorkspace(ctx, taskId, locale, timeZone),
       listEligibleTaskAssignees(ctx.tenantId),
     ]);
 

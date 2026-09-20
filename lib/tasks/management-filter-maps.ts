@@ -3,6 +3,7 @@ import {
   buildTaskManagementResetHref,
   type TaskManagementQueryState,
 } from "./management-navigation";
+import { SUPPORTED_TASK_CONTEXT_TYPES } from "./context-registry";
 import { TASK_CONTEXT_LABELS } from "./management-labels";
 
 export function buildTaskManagementFilterHrefMaps(
@@ -115,7 +116,7 @@ export function buildTaskManagementFilterHrefMaps(
   const contextHrefByValue: Record<string, string> = {
     "": buildTaskManagementHref(basePath, { contextType: null, page: 1 }, query, hrefOptions),
   };
-  for (const key of Object.keys(TASK_CONTEXT_LABELS)) {
+  for (const key of SUPPORTED_TASK_CONTEXT_TYPES) {
     contextHrefByValue[key] = buildTaskManagementHref(
       basePath,
       { contextType: key, page: 1 },

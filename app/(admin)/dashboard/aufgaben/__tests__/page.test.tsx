@@ -76,6 +76,7 @@ vi.mock("@/lib/tasks/management-service", () => ({
           label: "0 / 0 erledigt",
         },
         seriesRecurrenceLabel: null,
+        context: null,
         expandable: false,
       },
     ],
