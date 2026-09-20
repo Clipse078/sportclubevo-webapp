@@ -99,6 +99,22 @@ describe("AUFGABEN-05-NOTIFY-DEADLINE", () => {
     ).toThrow(ParticipationValidationError);
   });
 
+  it("N46 — invalid custom reminder after deadline change rejected", () => {
+    const due = new Date("2026-09-29T08:00:00.000Z");
+    const start = new Date("2026-09-30T15:00:00.000Z");
+    expect(() =>
+      resolveParticipationResponseDeadlineSchedule({
+        participationResponseDueAt: due,
+        participationReminder1At: new Date("2026-09-29T09:00:00.000Z"),
+        participationReminder2At: null,
+        participationReminder1PresetKey: null,
+        participationReminder2PresetKey: null,
+        timeZone: tz,
+        eventStartAt: start,
+      }),
+    ).toThrow(ParticipationValidationError);
+  });
+
   it("N11/N12 — SAME_DAY preset relative to RSVP deadline", () => {
     const due = new Date("2026-09-29T16:00:00.000Z");
     const start = new Date("2026-09-30T15:00:00.000Z");
