@@ -1,0 +1,162 @@
+/**
+ * AUFGABEN-03 — task workspace read model (single entry for detail UI).
+ */
+
+import type { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/db/prisma";
+import { formatTaskSeriesRecurrenceLabel } from "./management-labels";
+import { resolveTaskContextPresentation, type TaskContextPresentation } from "./context-presentation";
+import { computeSubtaskProgress } from "./subtask-rules";
+import { getTask } from "./task-service";
+import type {
+  TaskDto,
+  TaskProgressDto,
+  TaskServiceContext,
+} from "./types";
+import { buildTaskVisibilityWhere, canViewAllTasks } from "./visibility";
+import {
+  resolveTaskWorkspaceCapabilities,
+  type TaskWorkspaceCapabilities,
+} from "./workspace-permissions";
+
+const TASK_INCLUDE = {
+  assignees: {
+    include: {
+      user: { select: { id: true, firstName: true, lastName: true } },
+    },
+    orderBy: { assignedAt: "asc" as const },
+  },
+} satisfies Prisma.TaskInclude;
+
+type TaskRow = Prisma.TaskGetPayload<{ include: typeof TASK_INCLUDE }>;
+
+function mapTask(row: TaskRow): TaskDto {
+  return {
+    id: row.id,
+    tenantId: row.tenantId,
+    title: row.title,
+    description: row.description,
+    status: row.status,
+    priority: row.priority,
+    dueAt: row.dueAt?.toISOString() ?? null,
+    completedAt: row.completedAt?.toISOString() ?? null,
+    contextType: row.contextType,
+    contextId: row.contextId,
+    parentTaskId: row.parentTaskId,
+    taskSeriesId: row.taskSeriesId,
+    createdByUserId: row.createdByUserId,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    assignees: row.assignees.map((a) => ({
+      userId: a.userId,
+      firstName: a.user.firstName,
+      lastName: a.user.lastName,
+      assignedAt: a.assignedAt.toISOString(),
+    })),
+  };
+}
+
+async function loadVisibleSubtasks(
+  ctx: TaskServiceContext,
+  parentTaskId: string,
+): Promise<TaskDto[]> {
+  const childWhere: Prisma.TaskWhereInput = canViewAllTasks(ctx)
+    ? { tenantId: ctx.tenantId, parentTaskId }
+    : {
+        AND: [buildTaskVisibilityWhere(ctx), { parentTaskId }],
+      };
+
+  const rows = await prisma.task.findMany({
+    where: childWhere,
+    include: TASK_INCLUDE,
+    orderBy: [{ dueAt: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
+  });
+
+  return rows.map(mapTask);
+}
+
+export type TaskWorkspaceCreator = {
+  userId: string;
+  firstName: string;
+  lastName: string;
+} | null;
+
+export type TaskWorkspaceBundle = {
+  task: TaskDto;
+  parentTask: { id: string; title: string } | null;
+  subtasks: TaskDto[];
+  progress: TaskProgressDto;
+  seriesRecurrenceLabel: string | null;
+  seriesId: string | null;
+  context: TaskContextPresentation | null;
+  creator: TaskWorkspaceCreator;
+  capabilities: TaskWorkspaceCapabilities;
+};
+
+export async function loadTaskWorkspace(
+  ctx: TaskServiceContext,
+  taskId: string,
+): Promise<TaskWorkspaceBundle> {
+  const task = await getTask(ctx, taskId);
+
+  const [subtasks, parentTask, seriesRow, creatorUser, context] = await Promise.all([
+    task.parentTaskId ? Promise.resolve([]) : loadVisibleSubtasks(ctx, task.id),
+    task.parentTaskId
+      ? prisma.task.findFirst({
+          where: { id: task.parentTaskId, tenantId: ctx.tenantId },
+          select: { id: true, title: true },
+        })
+      : Promise.resolve(null),
+    task.taskSeriesId
+      ? prisma.taskSeries.findFirst({
+          where: { id: task.taskSeriesId, tenantId: ctx.tenantId },
+          select: {
+            id: true,
+            frequency: true,
+            intervalCount: true,
+            weekday: true,
+            monthDay: true,
+          },
+        })
+      : Promise.resolve(null),
+    task.createdByUserId
+      ? prisma.user.findFirst({
+          where: { id: task.createdByUserId },
+          select: { id: true, firstName: true, lastName: true },
+        })
+      : Promise.resolve(null),
+    resolveTaskContextPresentation(ctx.tenantId, task.contextType, task.contextId),
+  ]);
+
+  const progressSource = task.parentTaskId
+    ? []
+    : subtasks.map((s) => ({ status: s.status }));
+  const progressRaw = computeSubtaskProgress(progressSource);
+
+  const progress: TaskProgressDto = {
+    ...progressRaw,
+    percent: progressRaw.totalCount === 0 ? 0 : progressRaw.percent,
+  };
+
+  const seriesRecurrenceLabel = seriesRow
+    ? formatTaskSeriesRecurrenceLabel(seriesRow)
+    : null;
+
+  return {
+    task,
+    parentTask: parentTask ? { id: parentTask.id, title: parentTask.title } : null,
+    subtasks,
+    progress,
+    seriesRecurrenceLabel,
+    seriesId: seriesRow?.id ?? task.taskSeriesId,
+    context,
+    creator: creatorUser
+      ? {
+          userId: creatorUser.id,
+          firstName: creatorUser.firstName,
+          lastName: creatorUser.lastName,
+        }
+      : null,
+    capabilities: resolveTaskWorkspaceCapabilities(ctx, task),
+  };
+}

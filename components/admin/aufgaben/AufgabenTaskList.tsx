@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import type { TaskStatus } from "@prisma/client";
 import { Check, ChevronRight, MoreHorizontal, Repeat2 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -213,7 +214,12 @@ function SubtaskRow({
             done ? "text-[var(--muted)] line-through" : "text-[var(--text-2)]",
           )}
         >
-          {subtask.title}
+          <Link
+            href={`/dashboard/aufgaben/${subtask.id}`}
+            className="hover:text-[var(--primary)]"
+          >
+            {subtask.title}
+          </Link>
         </span>
       </div>
       <AssigneeCompact assignees={subtask.assignees} />
@@ -291,9 +297,13 @@ function TaskListRow({
             )}
 
             <div className="min-w-0">
-              <p className="truncate text-[0.9375rem] font-semibold leading-tight text-[var(--foreground)]">
+              <Link
+                href={`/dashboard/aufgaben/${task.id}`}
+                className="block truncate text-[0.9375rem] font-semibold leading-tight text-[var(--foreground)] hover:text-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                data-testid={`aufgaben-open-${task.id}`}
+              >
                 {task.title}
-              </p>
+              </Link>
               {showParentContext && parentTask ? (
                 <p className="truncate text-[0.75rem] text-[var(--muted)]">↳ {parentTask.title}</p>
               ) : null}
