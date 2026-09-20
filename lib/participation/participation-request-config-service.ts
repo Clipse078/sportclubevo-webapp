@@ -243,6 +243,66 @@ export async function assertEventStartCompatibleWithParticipationDue(
   }
 }
 
+export async function updateTrainingSeriesParticipationRequestPolicy(
+  tenantId: string,
+  trainingSeriesId: string,
+  input: {
+    participationResponseDueDaysBefore?: number | null;
+    participationResponseDueLocalTime?: string | null;
+    participationReminder1PresetKey?: string | null;
+    participationReminder2PresetKey?: string | null;
+  },
+  actorUserId: string | null,
+): Promise<void> {
+  const series = await prisma.trainingSeries.findFirst({
+    where: { id: trainingSeriesId, tenantId },
+    select: { id: true },
+  });
+  if (!series) {
+    throw new ParticipationEventNotFoundError("Trainingsserie nicht gefunden.");
+  }
+
+  if (
+    input.participationResponseDueDaysBefore != null &&
+    input.participationResponseDueDaysBefore < 0
+  ) {
+    throw new ParticipationValidationError("Antwortfrist-Offset der Serie ist ungültig.");
+  }
+
+  await prisma.trainingSeries.update({
+    where: { id: series.id },
+    data: {
+      participationResponseDueDaysBefore:
+        input.participationResponseDueDaysBefore !== undefined
+          ? input.participationResponseDueDaysBefore
+          : undefined,
+      participationResponseDueLocalTime:
+        input.participationResponseDueLocalTime !== undefined
+          ? input.participationResponseDueLocalTime
+          : undefined,
+      participationReminder1PresetKey:
+        input.participationReminder1PresetKey !== undefined
+          ? input.participationReminder1PresetKey
+          : undefined,
+      participationReminder2PresetKey:
+        input.participationReminder2PresetKey !== undefined
+          ? input.participationReminder2PresetKey
+          : undefined,
+    },
+  });
+
+  void logAction({
+    tenantId,
+    actorUserId,
+    moduleKey: "participation",
+    entityType: "TrainingSeries",
+    entityId: series.id,
+    action: "PARTICIPATION_SERIES_POLICY_UPDATE",
+    beforeJson: {},
+    afterJson: input,
+  });
+}
+
 export async function assertTrainingSessionStartCompatibleWithParticipationDue(
   tenantId: string,
   trainingSessionId: string,
