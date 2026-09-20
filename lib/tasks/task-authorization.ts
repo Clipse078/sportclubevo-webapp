@@ -31,6 +31,8 @@ export type TaskAuthorizationRecord = {
   assigneeUserIds: readonly string[];
   visibilityScope: TaskVisibilityScope;
   orgUnitId: string | null;
+  /** When set, ORG_UNIT org-derived access requires orgUnitTenantId === task tenantId. */
+  orgUnitTenantId?: string | null;
 };
 
 export type TaskSeriesAuthorizationRecord = {
@@ -209,6 +211,12 @@ export function canReadTask(
       return false;
     case TaskVisibilityScope.ORG_UNIT: {
       if (!task.orgUnitId) return false;
+      if (
+        task.orgUnitTenantId != null &&
+        task.orgUnitTenantId !== ctx.tenantId
+      ) {
+        return false;
+      }
       const readable = orgReadableUnitIds(resolveAuth(ctx));
       return readable.includes(task.orgUnitId);
     }
@@ -324,6 +332,51 @@ export function buildTaskVisibilityWhere(
   ctx: TaskServiceContext,
 ): Prisma.TaskWhereInput {
   return buildTaskReadWhere(ctx);
+}
+
+const PARENT_TASK_SELECT = {
+  id: true,
+  title: true,
+  tenantId: true,
+  createdByUserId: true,
+  visibilityScope: true,
+  orgUnitId: true,
+  orgUnit: { select: { tenantId: true } },
+  assignees: { select: { userId: true } },
+} satisfies Prisma.TaskSelect;
+
+type ParentTaskAuthRow = Prisma.TaskGetPayload<{ select: typeof PARENT_TASK_SELECT }>;
+
+function parentRowToAuthRecord(row: ParentTaskAuthRow): TaskAuthorizationRecord {
+  return {
+    tenantId: row.tenantId,
+    createdByUserId: row.createdByUserId,
+    assigneeUserIds: row.assignees?.map((a) => a.userId) ?? [],
+    visibilityScope: row.visibilityScope,
+    orgUnitId: row.orgUnitId,
+    orgUnitTenantId: row.orgUnit?.tenantId ?? null,
+  };
+}
+
+/** Parent titles are omitted when the actor cannot read the parent Task. */
+export async function loadAuthorizedParentTaskRefs(
+  ctx: TaskServiceContext,
+  parentIds: string[],
+): Promise<Map<string, { id: string; title: string }>> {
+  if (parentIds.length === 0) return new Map();
+
+  const parents = await prisma.task.findMany({
+    where: { tenantId: ctx.tenantId, id: { in: parentIds } },
+    select: PARENT_TASK_SELECT,
+  });
+
+  const map = new Map<string, { id: string; title: string }>();
+  for (const row of parents) {
+    if (canReadTask(ctx, parentRowToAuthRecord(row))) {
+      map.set(row.id, { id: row.id, title: row.title });
+    }
+  }
+  return map;
 }
 
 export function buildTaskSeriesReadWhere(

@@ -17,6 +17,7 @@ import {
   buildTaskSeriesReadWhere,
   buildTaskVisibilityWhere,
   canViewAllTasks,
+  loadAuthorizedParentTaskRefs,
 } from "./visibility";
 import {
   endOfWeekSunday,
@@ -252,18 +253,6 @@ function sortTaskRowsByPriority(rows: TaskRow[]): TaskRow[] {
     }
     return 0;
   });
-}
-
-async function loadParentSummaries(
-  tenantId: string,
-  parentIds: string[],
-): Promise<Map<string, { id: string; title: string }>> {
-  if (parentIds.length === 0) return new Map();
-  const parents = await prisma.task.findMany({
-    where: { tenantId, id: { in: parentIds } },
-    select: { id: true, title: true },
-  });
-  return new Map(parents.map((p) => [p.id, p]));
 }
 
 async function loadContextPresentationsForTasks(
@@ -534,7 +523,7 @@ export async function listTaskManagementItems(
     const parentIds = [
       ...new Set(rows.map((r) => r.parentTaskId).filter((id): id is string => Boolean(id))),
     ];
-    const parentById = await loadParentSummaries(ctx.tenantId, parentIds);
+    const parentById = await loadAuthorizedParentTaskRefs(ctx, parentIds);
     const personal =
       query.view === "MEINE"
         ? sortPersonalTasks(rows.map((r) => mapPersonal(r, parentById)))

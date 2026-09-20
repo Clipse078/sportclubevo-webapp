@@ -37,6 +37,7 @@ import {
   canManageTask,
   canReadTask,
   hasTaskPermission,
+  loadAuthorizedParentTaskRefs,
 } from "./visibility";
 import {
   computeNewAssigneeRows,
@@ -51,6 +52,7 @@ const TASK_INCLUDE = {
     },
     orderBy: { assignedAt: "asc" as const },
   },
+  orgUnit: { select: { tenantId: true } },
 } satisfies Prisma.TaskInclude;
 
 type TaskRow = Prisma.TaskGetPayload<{ include: typeof TASK_INCLUDE }>;
@@ -143,6 +145,7 @@ async function requireVisibleTask(
     assigneeUserIds: task.assignees.map((a) => a.userId),
     visibilityScope: task.visibilityScope,
     orgUnitId: task.orgUnitId,
+    orgUnitTenantId: task.orgUnit?.tenantId ?? null,
   });
   if (!visible) throw new TaskForbiddenError();
 
@@ -377,15 +380,10 @@ export async function listMyTasks(
     ),
   ];
 
-  const parents =
+  const parentById =
     parentIds.length > 0
-      ? await prisma.task.findMany({
-          where: { tenantId: ctx.tenantId, id: { in: parentIds } },
-          select: { id: true, title: true },
-        })
-      : [];
-
-  const parentById = new Map(parents.map((p) => [p.id, p]));
+      ? await loadAuthorizedParentTaskRefs(ctx, parentIds)
+      : new Map<string, { id: string; title: string }>();
 
   const personal = rows.map((row) => {
     const dto = mapTask(row);

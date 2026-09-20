@@ -14,7 +14,10 @@ import type {
   TaskProgressDto,
   TaskServiceContext,
 } from "./types";
-import { buildTaskVisibilityWhere } from "./visibility";
+import {
+  buildTaskVisibilityWhere,
+  loadAuthorizedParentTaskRefs,
+} from "./visibility";
 import {
   resolveTaskWorkspaceCapabilities,
   type TaskWorkspaceCapabilities,
@@ -111,10 +114,9 @@ export async function loadTaskWorkspace(
   const [subtasks, parentTask, seriesRow, creatorUser, context] = await Promise.all([
     task.parentTaskId ? Promise.resolve([]) : loadVisibleSubtasks(ctx, task.id),
     task.parentTaskId
-      ? prisma.task.findFirst({
-          where: { id: task.parentTaskId, tenantId: ctx.tenantId },
-          select: { id: true, title: true },
-        })
+      ? loadAuthorizedParentTaskRefs(ctx, [task.parentTaskId]).then(
+          (map) => map.get(task.parentTaskId!) ?? null,
+        )
       : Promise.resolve(null),
     seriesRowPromise,
     task.createdByUserId

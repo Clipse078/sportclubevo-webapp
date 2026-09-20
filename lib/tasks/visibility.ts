@@ -19,6 +19,7 @@ export {
   EMPTY_TASK_AUTH_SCOPE,
   hasTenantWideClubTaskRead,
   loadTaskAuthScope,
+  loadAuthorizedParentTaskRefs,
   orgReadableUnitIds,
   type TaskAuthorizationRecord,
   type TaskSeriesAuthorizationRecord,
