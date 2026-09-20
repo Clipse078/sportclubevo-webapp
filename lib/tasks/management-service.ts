@@ -13,7 +13,7 @@ import type {
   TaskProgressDto,
   TaskServiceContext,
 } from "./types";
-import { buildTaskVisibilityWhere } from "./visibility";
+import { buildTaskVisibilityWhere, canManageAllTasks } from "./visibility";
 import {
   endOfWeekSunday,
   getUpcomingHorizonEnd,
@@ -491,6 +491,21 @@ export async function listTaskSeriesManagementRows(
   query: TaskManagementQueryState,
 ): Promise<{ rows: TaskSeriesManagementRow[]; totalCount: number }> {
   const and: Prisma.TaskSeriesWhereInput[] = [{ tenantId: ctx.tenantId }];
+
+  if (!canManageAllTasks(ctx)) {
+    const taskVisibility = buildTaskVisibilityWhere(ctx);
+    and.push({
+      OR: [
+        { createdByUserId: ctx.userId },
+        {
+          assigneeTemplates: {
+            some: { userId: ctx.userId, tenantId: ctx.tenantId },
+          },
+        },
+        { occurrences: { some: taskVisibility } },
+      ],
+    });
+  }
 
   if (query.search) {
     and.push({ title: { contains: query.search, mode: "insensitive" } });
