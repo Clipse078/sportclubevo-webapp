@@ -18,3 +18,12 @@ export class TaskValidationError extends Error {
     this.name = "TaskValidationError";
   }
 }
+
+export class ParentHasOpenSubtasksError extends TaskValidationError {
+  constructor() {
+    super(
+      "Parent task cannot be completed while subtasks remain open or in progress",
+    );
+    this.name = "ParentHasOpenSubtasksError";
+  }
+}

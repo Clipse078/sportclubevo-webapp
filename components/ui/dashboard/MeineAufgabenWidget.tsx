@@ -7,6 +7,7 @@ export type PersonalTaskPreviewItem = {
   id: string;
   title: string;
   dueAt: string | null;
+  parentTitle?: string | null;
 };
 
 type Props = {
@@ -50,6 +51,9 @@ export function MeineAufgabenWidget({ available, previewItems }: Props) {
               >
                 {task.title}
               </Link>
+              {task.parentTitle ? (
+                <p className="text-[0.75rem] text-[var(--muted-foreground)]">↳ {task.parentTitle}</p>
+              ) : null}
               {task.dueAt ? (
                 <p className="mt-0.5 text-[0.75rem] text-[var(--muted-foreground)]">
                   Fällig: {new Date(task.dueAt).toLocaleDateString("de-CH")}

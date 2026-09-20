@@ -7,6 +7,11 @@ export type TaskAssigneeDto = {
   assignedAt: string;
 };
 
+export type TaskParentSummaryDto = {
+  id: string;
+  title: string;
+};
+
 export type TaskDto = {
   id: string;
   tenantId: string;
@@ -18,10 +23,23 @@ export type TaskDto = {
   completedAt: string | null;
   contextType: TaskContextType | null;
   contextId: string | null;
+  parentTaskId: string | null;
+  taskSeriesId: string | null;
   createdByUserId: string | null;
   createdAt: string;
   updatedAt: string;
   assignees: TaskAssigneeDto[];
+};
+
+export type PersonalTaskDto = TaskDto & {
+  parentTask: TaskParentSummaryDto | null;
+};
+
+export type TaskProgressDto = {
+  completedCount: number;
+  totalCount: number;
+  percent: number;
+  label: string;
 };
 
 export type CreateTaskInput = {
@@ -31,6 +49,14 @@ export type CreateTaskInput = {
   dueAt?: Date | null;
   contextType?: TaskContextType | null;
   contextId?: string | null;
+  assigneeUserIds?: string[];
+};
+
+export type CreateSubtaskInput = {
+  title: string;
+  description?: string | null;
+  priority?: TaskPriority;
+  dueAt?: Date | null;
   assigneeUserIds?: string[];
 };
 
@@ -45,6 +71,8 @@ export type UpdateTaskInput = {
 export type ListTasksFilter = {
   status?: TaskStatus | TaskStatus[];
   openOnly?: boolean;
+  /** When true, only root tasks (no parentTaskId). */
+  rootsOnly?: boolean;
 };
 
 export type TaskServiceContext = {

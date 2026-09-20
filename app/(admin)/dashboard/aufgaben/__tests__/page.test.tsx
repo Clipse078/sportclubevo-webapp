@@ -17,6 +17,10 @@ vi.mock("@/lib/tasks/server-context", () => ({
   }),
 }));
 
+vi.mock("@/lib/tenants/active-tenant", () => ({
+  getActiveTenant: vi.fn().mockResolvedValue({ timezone: "Europe/Zurich" }),
+}));
+
 vi.mock("@/lib/tasks/task-service", () => ({
   listTasks: vi.fn().mockResolvedValue([
     {
@@ -30,12 +34,21 @@ vi.mock("@/lib/tasks/task-service", () => ({
       completedAt: null,
       contextType: null,
       contextId: null,
+      parentTaskId: null,
+      taskSeriesId: null,
       createdByUserId: "user-1",
       createdAt: "2026-09-01T10:00:00.000Z",
       updatedAt: "2026-09-01T10:00:00.000Z",
       assignees: [],
     },
   ]),
+  listSubtasks: vi.fn().mockResolvedValue([]),
+  getTaskProgress: vi.fn().mockResolvedValue({
+    completedCount: 0,
+    totalCount: 0,
+    percent: 0,
+    label: "0 / 0 erledigt",
+  }),
 }));
 
 vi.mock("@/lib/tasks/queries", () => ({

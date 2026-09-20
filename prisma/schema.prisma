@@ -356,6 +356,34 @@ enum TaskContextType {
   DOCUMENT
 }
 
+// AUFGABEN-01B — recurrence series lifecycle.
+enum TaskSeriesStatus {
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+enum TaskRecurrenceFrequency {
+  WEEKLY
+  MONTHLY
+}
+
+/// ON_SCHEDULE is implemented in AUFGABEN-01B; AFTER_COMPLETION reserved for later.
+enum TaskRecurrenceMode {
+  ON_SCHEDULE
+  AFTER_COMPLETION
+}
+
+enum TaskSeriesWeekday {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
 enum MeetingParticipantStatus {
   INVITED
   PRESENT
@@ -728,6 +756,10 @@ model Tenant {
   targets                          Target[]
   tasks                            Task[]
   taskAssignees                    TaskAssignee[]
+  taskSeries                       TaskSeries[]
+  taskSeriesAssigneeTemplates      TaskSeriesAssigneeTemplate[]
+  taskSeriesSubtaskTemplates       TaskSeriesSubtaskTemplate[]
+  taskSeriesSubtaskAssigneeTemplates TaskSeriesSubtaskAssigneeTemplate[]
   // TRAINING-PLANS-01: tenant-defined training plans and assignments
   trainingPlans                    TrainingPlan[]
   trainingPlanAssignments          TrainingPlanAssignment[]
@@ -888,6 +920,9 @@ model User {
   taskAssignments TaskAssignee[] @relation("TaskAssigneeUser")
   tasksAssignedBy TaskAssignee[] @relation("TaskAssignedByUser")
   tasksCreated    Task[]         @relation("TaskCreatedBy")
+  taskSeriesCreated TaskSeries[] @relation("TaskSeriesCreatedBy")
+  taskSeriesAssigneeTemplates TaskSeriesAssigneeTemplate[] @relation("TaskSeriesAssigneeTemplateUser")
+  taskSeriesSubtaskAssigneeTemplates TaskSeriesSubtaskAssigneeTemplate[] @relation("TaskSeriesSubtaskAssigneeTemplateUser")
 
   @@index([isActive])
   @@index([tenantId])
@@ -2720,18 +2755,108 @@ model Task {
   completedAt     DateTime?
   contextType     TaskContextType?
   contextId       String?
+  /// AUFGABEN-01B — self-relation; max depth 1 (subtask only, no grandchildren).
+  parentTaskId    String?
+  /// AUFGABEN-01B — recurrence occurrence link (root tasks generated from a series).
+  taskSeriesId    String?
+  /// Deterministic idempotency key: `{seriesId}:{YYYY-MM-DD}` in series timezone.
+  seriesOccurrenceKey String?
   createdByUserId String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  createdBy User?          @relation("TaskCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  assignees TaskAssignee[]
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdBy  User?       @relation("TaskCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  parentTask Task?       @relation("TaskSubtasks", fields: [parentTaskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  subtasks   Task[]      @relation("TaskSubtasks")
+  taskSeries TaskSeries? @relation(fields: [taskSeriesId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  assignees  TaskAssignee[]
 
+  @@unique([tenantId, seriesOccurrenceKey])
   @@index([tenantId])
   @@index([tenantId, status])
   @@index([tenantId, dueAt])
   @@index([tenantId, contextType, contextId])
+  @@index([parentTaskId])
+  @@index([taskSeriesId])
+}
+
+/// AUFGABEN-01B — recurrence definition (series), distinct from actionable Task occurrences.
+model TaskSeries {
+  id              String                  @id @default(cuid())
+  tenantId        String
+  title           String
+  description     String?
+  priority        TaskPriority            @default(NORMAL)
+  status          TaskSeriesStatus        @default(ACTIVE)
+  frequency       TaskRecurrenceFrequency
+  mode            TaskRecurrenceMode      @default(ON_SCHEDULE)
+  intervalCount   Int                     @default(1)
+  weekday         TaskSeriesWeekday?
+  /// Monthly: day-of-month (1–28) for predictable scheduling.
+  monthDay        Int?
+  dueHour         Int                     @default(23)
+  dueMinute       Int                     @default(59)
+  timezone        String
+  startsOn        DateTime?
+  endsOn          DateTime?
+  createdByUserId String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  tenant            Tenant                       @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdBy         User?                        @relation("TaskSeriesCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  assigneeTemplates TaskSeriesAssigneeTemplate[]
+  subtaskTemplates  TaskSeriesSubtaskTemplate[]
+  occurrences       Task[]
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+model TaskSeriesAssigneeTemplate {
+  id       String @id @default(cuid())
+  tenantId String
+  seriesId String
+  userId   String
+
+  tenant Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  series TaskSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user   User       @relation("TaskSeriesAssigneeTemplateUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([seriesId, userId])
+  @@index([tenantId, seriesId])
+}
+
+model TaskSeriesSubtaskTemplate {
+  id            String       @id @default(cuid())
+  tenantId      String
+  seriesId      String
+  title         String
+  description   String?
+  priority      TaskPriority @default(NORMAL)
+  dueOffsetDays Int          @default(0)
+  orderIndex    Int          @default(0)
+
+  tenant    Tenant                              @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  series    TaskSeries                          @relation(fields: [seriesId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  assignees TaskSeriesSubtaskAssigneeTemplate[]
+
+  @@index([tenantId, seriesId, orderIndex])
+}
+
+model TaskSeriesSubtaskAssigneeTemplate {
+  id         String @id @default(cuid())
+  tenantId   String
+  templateId String
+  userId     String
+
+  tenant   Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  template TaskSeriesSubtaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user     User                      @relation("TaskSeriesSubtaskAssigneeTemplateUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([templateId, userId])
+  @@index([tenantId, templateId])
 }
 
 model TaskAssignee {

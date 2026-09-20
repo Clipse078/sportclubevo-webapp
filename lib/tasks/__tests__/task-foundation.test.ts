@@ -60,7 +60,7 @@ import {
   updateTask,
 } from "../task-service";
 import { buildTaskVisibilityWhere, canViewTaskRecord } from "../visibility";
-import { TaskForbiddenError, TaskNotFoundError } from "../errors";
+import { ParentHasOpenSubtasksError, TaskForbiddenError, TaskNotFoundError } from "../errors";
 
 const TENANT_A = "tenant-a";
 const TENANT_B = "tenant-b";
@@ -102,6 +102,8 @@ function taskRow(overrides: Record<string, unknown> = {}) {
     completedAt: null,
     contextType: null,
     contextId: null,
+    parentTaskId: null,
+    taskSeriesId: null,
     createdByUserId: USER_MANAGER,
     createdAt: new Date("2026-09-01T10:00:00.000Z"),
     updatedAt: new Date("2026-09-01T10:00:00.000Z"),
@@ -240,6 +242,7 @@ describe("AUFGABEN-01 domain operations", () => {
 
   it("sets completedAt when completing a task", async () => {
     mocks.taskFindFirst.mockResolvedValue(taskRow());
+    mocks.taskFindMany.mockResolvedValue([]);
     mocks.taskUpdate.mockResolvedValue(
       taskRow({
         status: TaskStatus.DONE,
@@ -261,8 +264,17 @@ describe("AUFGABEN-01 domain operations", () => {
 
   it("allows assignees to complete without manage permission", async () => {
     mocks.taskFindFirst.mockResolvedValue(taskRow());
+    mocks.taskFindMany.mockResolvedValue([]);
     mocks.taskUpdate.mockResolvedValue(taskRow({ status: TaskStatus.DONE }));
     await expect(completeTask(assigneeCtx(), TASK_ID)).resolves.toBeDefined();
+  });
+
+  it("blocks parent completion while actionable subtasks remain", async () => {
+    mocks.taskFindFirst.mockResolvedValue(taskRow());
+    mocks.taskFindMany.mockResolvedValue([{ status: TaskStatus.OPEN }]);
+    await expect(completeTask(managerCtx(), TASK_ID)).rejects.toBeInstanceOf(
+      ParentHasOpenSubtasksError,
+    );
   });
 
   it("blocks unauthorized users from managing task content", async () => {
@@ -297,7 +309,6 @@ describe("AUFGABEN-01 queries", () => {
           assignees: { some: { userId: USER_ASSIGNEE, tenantId: TENANT_A } },
           status: { in: [TaskStatus.OPEN, TaskStatus.IN_PROGRESS] },
         }),
-        orderBy: [{ dueAt: { sort: "asc", nulls: "last" } }, { createdAt: "desc" }],
       }),
     );
   });

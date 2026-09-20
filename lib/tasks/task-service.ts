@@ -11,14 +11,24 @@ import { writeAuditRecord } from "@/lib/audit/audit-record";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { validateTaskContext } from "./context-validation";
 import {
+  ParentHasOpenSubtasksError,
   TaskForbiddenError,
   TaskNotFoundError,
   TaskValidationError,
 } from "./errors";
+import { sortPersonalTasks } from "./personal-ordering";
+import {
+  assertNotSubtaskParent,
+  computeSubtaskProgress,
+  hasActionableSubtasks,
+} from "./subtask-rules";
 import type {
+  CreateSubtaskInput,
   CreateTaskInput,
   ListTasksFilter,
+  PersonalTaskDto,
   TaskDto,
+  TaskProgressDto,
   TaskServiceContext,
   UpdateTaskInput,
 } from "./types";
@@ -51,6 +61,8 @@ function mapTask(row: TaskRow): TaskDto {
     completedAt: row.completedAt?.toISOString() ?? null,
     contextType: row.contextType,
     contextId: row.contextId,
+    parentTaskId: row.parentTaskId,
+    taskSeriesId: row.taskSeriesId,
     createdByUserId: row.createdByUserId,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -286,6 +298,10 @@ function buildListWhere(
   const base = buildTaskVisibilityWhere(ctx);
   const and: Prisma.TaskWhereInput[] = [base];
 
+  if (filter?.rootsOnly) {
+    and.push({ parentTaskId: null });
+  }
+
   if (filter?.openOnly) {
     and.push({
       status: { in: [TaskStatusEnum.OPEN, TaskStatusEnum.IN_PROGRESS] },
@@ -318,7 +334,7 @@ export async function listTasks(
 export async function listMyTasks(
   ctx: TaskServiceContext,
   filter?: ListTasksFilter,
-): Promise<TaskDto[]> {
+): Promise<PersonalTaskDto[]> {
   assertCanView(ctx);
 
   const statusFilter: Prisma.TaskWhereInput = filter?.openOnly
@@ -338,10 +354,130 @@ export async function listMyTasks(
       ...statusFilter,
     },
     include: TASK_INCLUDE,
-    orderBy: [{ dueAt: { sort: "asc", nulls: "last" } }, { createdAt: "desc" }],
+  });
+
+  const parentIds = [
+    ...new Set(
+      rows.map((r) => r.parentTaskId).filter((id): id is string => Boolean(id)),
+    ),
+  ];
+
+  const parents =
+    parentIds.length > 0
+      ? await prisma.task.findMany({
+          where: { tenantId: ctx.tenantId, id: { in: parentIds } },
+          select: { id: true, title: true },
+        })
+      : [];
+
+  const parentById = new Map(parents.map((p) => [p.id, p]));
+
+  const personal = rows.map((row) => {
+    const dto = mapTask(row);
+    const parent = row.parentTaskId ? parentById.get(row.parentTaskId) : null;
+    return {
+      ...dto,
+      parentTask: parent ? { id: parent.id, title: parent.title } : null,
+    };
+  });
+
+  return sortPersonalTasks(personal);
+}
+
+export async function createSubtask(
+  ctx: TaskServiceContext,
+  parentTaskId: string,
+  input: CreateSubtaskInput,
+): Promise<TaskDto> {
+  assertCanCreate(ctx);
+
+  const parent = await requireVisibleTask(ctx, parentTaskId);
+  assertNotSubtaskParent(parent);
+
+  const title = normalizeTitle(input.title);
+  const assigneeUserIds = [...new Set(input.assigneeUserIds ?? [])];
+  await validateAssigneeUserIds(ctx.tenantId, assigneeUserIds);
+
+  const task = await prisma.$transaction(async (tx) => {
+    const created = await tx.task.create({
+      data: {
+        tenantId: ctx.tenantId,
+        parentTaskId: parent.id,
+        title,
+        description: input.description?.trim() || null,
+        priority: input.priority ?? "NORMAL",
+        dueAt: input.dueAt ?? null,
+        createdByUserId: ctx.userId,
+        status: TaskStatusEnum.OPEN,
+      },
+      include: TASK_INCLUDE,
+    });
+
+    if (assigneeUserIds.length > 0) {
+      assertCanAssign(ctx);
+      await tx.taskAssignee.createMany({
+        data: assigneeUserIds.map((userId) => ({
+          tenantId: ctx.tenantId,
+          taskId: created.id,
+          userId,
+          assignedByUserId: ctx.userId,
+        })),
+      });
+    }
+
+    await recordTaskAudit(tx, {
+      tenantId: ctx.tenantId,
+      actorUserId: ctx.userId,
+      taskId: created.id,
+      action: "TASK_CREATED",
+      afterJson: {
+        title,
+        parentTaskId: parent.id,
+        assigneeUserIds,
+        isSubtask: true,
+      },
+    });
+
+    return tx.task.findFirstOrThrow({
+      where: { id: created.id, tenantId: ctx.tenantId },
+      include: TASK_INCLUDE,
+    });
+  });
+
+  return mapTask(task);
+}
+
+export async function listSubtasks(
+  ctx: TaskServiceContext,
+  parentTaskId: string,
+): Promise<TaskDto[]> {
+  await requireVisibleTask(ctx, parentTaskId);
+
+  const rows = await prisma.task.findMany({
+    where: { tenantId: ctx.tenantId, parentTaskId },
+    include: TASK_INCLUDE,
+    orderBy: [{ dueAt: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
   });
 
   return rows.map(mapTask);
+}
+
+export async function getTaskProgress(
+  ctx: TaskServiceContext,
+  taskId: string,
+): Promise<TaskProgressDto> {
+  await requireVisibleTask(ctx, taskId);
+
+  const children = await prisma.task.findMany({
+    where: { tenantId: ctx.tenantId, parentTaskId: taskId },
+    select: { status: true },
+  });
+
+  const progress = computeSubtaskProgress(children);
+  return {
+    ...progress,
+    percent: progress.totalCount === 0 ? 0 : progress.percent,
+  };
 }
 
 export async function updateTask(
@@ -472,6 +608,16 @@ export async function completeTask(
 
   if (!canManage && !isAssignee) {
     throw new TaskForbiddenError("Only assignees or managers can complete tasks");
+  }
+
+  if (!existing.parentTaskId) {
+    const children = await prisma.task.findMany({
+      where: { tenantId: ctx.tenantId, parentTaskId: existing.id },
+      select: { status: true },
+    });
+    if (hasActionableSubtasks(children)) {
+      throw new ParentHasOpenSubtasksError();
+    }
   }
 
   const transition = applyStatusTransition(existing.status, TaskStatusEnum.DONE);

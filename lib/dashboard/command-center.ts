@@ -125,7 +125,12 @@ export type CommandCenterData = {
   personalAgendaSupported: boolean;
   personalTasksAvailable: boolean;
   personalTaskCount: number | null;
-  personalTaskPreview: { id: string; title: string; dueAt: string | null }[];
+  personalTaskPreview: {
+    id: string;
+    title: string;
+    dueAt: string | null;
+    parentTitle: string | null;
+  }[];
   /** Personal dashboard hero background — user-scoped, persisted on User. */
   heroBackgroundImageUrl: string | null;
   heroBackgroundTransform: HeroImageTransform;
@@ -836,6 +841,7 @@ export async function getCommandCenterData(args: {
             id: task.id,
             title: task.title,
             dueAt: task.dueAt,
+            parentTitle: task.parentTask?.title ?? null,
           }))
       : [];
 
