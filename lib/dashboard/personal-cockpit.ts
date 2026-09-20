@@ -1,26 +1,23 @@
 /**
  * DASHBOARD-UX-01 — Personal operational cockpit builders and constants.
+ * AUFGABEN-04A — delegates agenda loading to lib/personal-agenda.
  */
 
-import type { EventType } from "@prisma/client";
-import { prisma } from "@/lib/db/prisma";
-import { getDayWindow, formatIsoDay } from "@/lib/planner/date-utils";
+import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { CommandCenterKpi } from "@/lib/dashboard/command-center";
-import { formatTime, type TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
+import { loadPersonalAgenda } from "@/lib/personal-agenda/load-personal-agenda";
+import {
+  groupPersonalAgendaItems,
+  mapPersonalCalendarItemsToAgendaItems,
+  type PersonalAgendaDayGroup,
+  type PersonalAgendaItem,
+} from "@/lib/personal-agenda/map-to-dashboard";
+import { resolvePersonalTeamIds } from "@/lib/personal-agenda/team-scope";
+import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 
-export type PersonalAgendaDayGroup = "today" | "tomorrow";
-
-export type PersonalAgendaItem = {
-  key: string;
-  sortAt: Date;
-  timeLabel: string;
-  typeLabel: string;
-  eventType?: EventType | "MEETING";
-  title: string;
-  subtitle?: string;
-  href?: string;
-  dayGroup: PersonalAgendaDayGroup;
-};
+export type { PersonalAgendaDayGroup, PersonalAgendaItem };
+export { groupPersonalAgendaItems, resolvePersonalTeamIds };
 
 export type PersonalCockpitExtension = {
   personalAgendaItems: PersonalAgendaItem[];
@@ -29,207 +26,47 @@ export type PersonalCockpitExtension = {
   kpiStrip: CommandCenterKpi[];
 };
 
-function getEventTypeLabel(type: EventType): string {
-  switch (type) {
-    case "TRAINING":
-      return "Training";
-    case "MATCH":
-      return "Spiel";
-    case "TOURNAMENT":
-      return "Turnier";
-    case "OTHER":
-      return "Veranstaltung";
-    default:
-      return type;
-  }
-}
-
-function resolveAgendaDayGroup(
-  sortAt: Date,
-  todayWindow: { start: Date; end: Date },
-  tomorrowWindow: { start: Date; end: Date },
-): PersonalAgendaDayGroup | null {
-  const ts = sortAt.getTime();
-  if (ts >= todayWindow.start.getTime() && ts <= todayWindow.end.getTime()) {
-    return "today";
-  }
-  if (ts >= tomorrowWindow.start.getTime() && ts <= tomorrowWindow.end.getTime()) {
-    return "tomorrow";
-  }
-  return null;
-}
-
-function buildPersonalEventTitle(input: {
-  type: EventType;
-  title: string;
-  opponentName: string | null;
-  teamName: string | null;
-}): string {
-  if (input.type === "MATCH") {
-    const own = input.teamName?.trim();
-    const opp = input.opponentName?.trim();
-    if (own && opp) return `${own} – ${opp}`;
-    if (opp) return opp;
-    if (own) return own;
-  }
-  return input.title;
-}
-
-export async function resolvePersonalTeamIds(args: {
-  tenantId: string;
-  userId: string | null | undefined;
-}): Promise<{ teamIds: string[]; hasLinkedPerson: boolean }> {
-  if (!args.userId) {
-    return { teamIds: [], hasLinkedPerson: false };
-  }
-
-  const person = await prisma.person.findFirst({
-    where: { tenantId: args.tenantId, userId: args.userId },
-    select: { id: true },
-  });
-
-  if (!person) {
-    return { teamIds: [], hasLinkedPerson: false };
-  }
-
-  const [trainerRows, squadRows] = await Promise.all([
-    prisma.trainerTeamMember.findMany({
-      where: {
-        personId: person.id,
-        status: "ACTIVE",
-        teamSeason: { team: { tenantId: args.tenantId } },
-      },
-      select: { teamSeason: { select: { teamId: true } } },
-    }),
-    prisma.playerSquadMember.findMany({
-      where: {
-        personId: person.id,
-        status: "ACTIVE",
-        teamSeason: { team: { tenantId: args.tenantId } },
-      },
-      select: { teamSeason: { select: { teamId: true } } },
-    }),
-  ]);
-
-  const teamIds = [
-    ...new Set(
-      [
-        ...trainerRows.map((row) => row.teamSeason.teamId),
-        ...squadRows.map((row) => row.teamSeason.teamId),
-      ].filter((id): id is string => Boolean(id)),
-    ),
-  ];
-
-  return { teamIds, hasLinkedPerson: true };
-}
-
 export async function loadPersonalAgendaItems(args: {
   tenantId: string;
   userId: string | null | undefined;
   teamIds: string[];
   hasLinkedPerson: boolean;
   fmtCfg: TenantFormatConfig;
+  timeZone?: string;
   now?: Date;
 }): Promise<{ items: PersonalAgendaItem[]; supported: boolean }> {
-  const now = args.now ?? new Date();
-  const todayWindow = getDayWindow(formatIsoDay(now));
-  const tomorrowDay = getDayWindow(
-    formatIsoDay(new Date(todayWindow.end.getTime() + 24 * 60 * 60 * 1000)),
-  );
-
-  const hasTeamScope = args.teamIds.length > 0;
-  const hasMeetingScope = Boolean(args.userId);
-
-  if (!args.hasLinkedPerson && !hasMeetingScope) {
+  if (!args.userId) {
     return { items: [], supported: false };
   }
 
-  const windowEnd = tomorrowDay.end;
+  const { platform, tenant } = await getRequestEffectivePermissions(
+    args.userId,
+    args.tenantId,
+  );
+  const permissionKeys = [...platform, ...tenant];
+  const tasksViewAuthorized = permissionKeys.includes(PERMISSIONS.TASKS_VIEW);
+  const timeZone = args.timeZone ?? args.fmtCfg.timezone ?? "Europe/Zurich";
 
-  const [teamEvents, participantMeetings] = await Promise.all([
-    hasTeamScope
-      ? prisma.event.findMany({
-          where: {
-            tenantId: args.tenantId,
-            teamId: { in: args.teamIds },
-            startAt: { gte: todayWindow.start, lte: windowEnd },
-          },
-          orderBy: [{ startAt: "asc" }, { title: "asc" }],
-          select: {
-            id: true,
-            title: true,
-            type: true,
-            startAt: true,
-            opponentName: true,
-            team: { select: { name: true } },
-          },
-        })
-      : Promise.resolve([]),
-    hasMeetingScope
-      ? prisma.meeting.findMany({
-          where: {
-            tenantId: args.tenantId,
-            status: "PLANNED",
-            meetingDate: { gte: todayWindow.start, lte: windowEnd },
-            participants: { some: { userId: args.userId! } },
-          },
-          orderBy: { meetingDate: "asc" },
-          select: {
-            id: true,
-            slug: true,
-            title: true,
-            meetingDate: true,
-          },
-        })
-      : Promise.resolve([]),
-  ]);
+  const loaded = await loadPersonalAgenda({
+    tenantId: args.tenantId,
+    userId: args.userId,
+    timeZone,
+    now: args.now,
+    mode: "dashboard",
+    tasksViewAuthorized,
+    includeOverdueTasks: true,
+  });
 
-  const items: PersonalAgendaItem[] = [];
-
-  for (const event of teamEvents) {
-    const dayGroup = resolveAgendaDayGroup(event.startAt, todayWindow, tomorrowDay);
-    if (!dayGroup) continue;
-
-    items.push({
-      key: `event-${event.id}`,
-      sortAt: event.startAt,
-      timeLabel: formatTime(event.startAt, args.fmtCfg),
-      typeLabel: getEventTypeLabel(event.type),
-      eventType: event.type,
-      title: buildPersonalEventTitle({
-        type: event.type,
-        title: event.title,
-        opponentName: event.opponentName,
-        teamName: event.team?.name ?? null,
-      }),
-      subtitle:
-        event.type !== "MATCH" && event.team?.name ? event.team.name : undefined,
-      href: `/dashboard/planner/edit/${event.id}`,
-      dayGroup,
-    });
-  }
-
-  for (const meeting of participantMeetings) {
-    const dayGroup = resolveAgendaDayGroup(meeting.meetingDate, todayWindow, tomorrowDay);
-    if (!dayGroup) continue;
-
-    items.push({
-      key: `meeting-${meeting.id}`,
-      sortAt: meeting.meetingDate,
-      timeLabel: formatTime(meeting.meetingDate, args.fmtCfg),
-      typeLabel: "Meeting",
-      eventType: "MEETING",
-      title: meeting.title,
-      href: `/vereinsleitung/meetings/${meeting.slug}`,
-      dayGroup,
-    });
-  }
-
-  items.sort((a, b) => a.sortAt.getTime() - b.sortAt.getTime());
+  const items = mapPersonalCalendarItemsToAgendaItems({
+    items: loaded.items,
+    fmtCfg: args.fmtCfg,
+    timeZone,
+    now: args.now,
+  });
 
   return {
     items,
-    supported: args.hasLinkedPerson || hasMeetingScope,
+    supported: loaded.supported,
   };
 }
 
@@ -279,13 +116,4 @@ export function buildPersonalCockpitKpiStrip(input: {
   }
 
   return kpis.slice(0, 4);
-}
-
-export function groupPersonalAgendaItems(
-  items: PersonalAgendaItem[],
-): { today: PersonalAgendaItem[]; tomorrow: PersonalAgendaItem[] } {
-  return {
-    today: items.filter((item) => item.dayGroup === "today"),
-    tomorrow: items.filter((item) => item.dayGroup === "tomorrow"),
-  };
 }

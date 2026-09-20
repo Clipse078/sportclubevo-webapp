@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, ListChecks } from "lucide-react";
 import {
   groupPersonalAgendaItems,
   type PersonalAgendaItem,
@@ -29,16 +29,25 @@ function AgendaGroup({
       </p>
       <ol className="space-y-0">
         {items.map((item) => {
+          const isTask = item.sourceType === "TASK";
           const row = (
             <>
-              <span className="w-[3.25rem] shrink-0 text-right font-mono text-[0.8125rem] font-semibold tabular-nums">
+              <span
+                className={cn(
+                  "w-[3.25rem] shrink-0 text-right font-mono text-[0.8125rem] font-semibold tabular-nums",
+                  item.isOverdue && "text-[var(--destructive)]",
+                )}
+              >
                 {item.timeLabel}
               </span>
-              <span className="w-[4.5rem] shrink-0 text-[0.625rem] font-bold uppercase tracking-[0.08em] text-[var(--text-2)]">
+              <span className="flex w-[4.5rem] shrink-0 items-center gap-0.5 text-[0.625rem] font-bold uppercase tracking-[0.08em] text-[var(--text-2)]">
+                {isTask ? (
+                  <ListChecks className="h-3 w-3 shrink-0" aria-hidden />
+                ) : null}
                 {item.typeLabel}
               </span>
               <span className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium text-[var(--foreground)]">
-                {item.title}
+                {isTask ? `☑ ${item.title}` : item.title}
               </span>
             </>
           );
@@ -52,7 +61,11 @@ function AgendaGroup({
           if (item.href) {
             return (
               <li key={item.key}>
-                <Link href={item.href} className={cn(className, "no-underline")}>
+                <Link
+                  href={item.href}
+                  className={cn(className, "no-underline")}
+                  aria-label={item.ariaLabel}
+                >
                   {row}
                 </Link>
               </li>
@@ -60,7 +73,7 @@ function AgendaGroup({
           }
 
           return (
-            <li key={item.key} className={className}>
+            <li key={item.key} className={className} aria-label={item.ariaLabel}>
               {row}
             </li>
           );
@@ -81,7 +94,7 @@ export function MeineAgendaWidget({ items, supported }: MeineAgendaWidgetProps) 
       variant="card"
       bodyClassName="px-4 py-1.5 sm:px-5 sm:py-2"
       actions={
-        <Link href="/dashboard/planner" className="sce-link-primary text-[0.8125rem] font-medium">
+        <Link href="/dashboard/kalender" className="sce-link-primary text-[0.8125rem] font-medium">
           Kalender öffnen →
         </Link>
       }
@@ -90,18 +103,19 @@ export function MeineAgendaWidget({ items, supported }: MeineAgendaWidgetProps) 
         <DashboardEmptyState
           icon={<CalendarDays className="h-5 w-5" />}
           title="Keine persönliche Zuordnung"
-          description="Verknüpfe dein Benutzerkonto mit einer Person und Teamfunktion."
+          description="Verknüpfe dein Benutzerkonto mit einer Person und Teamfunktion, oder nutze Aufgaben mit Fälligkeit."
           variant="compact"
         />
       ) : items.length === 0 ? (
         <DashboardEmptyState
           icon={<CalendarDays className="h-4 w-4" />}
-          title="Keine persönlichen Termine"
+          title="Keine anstehenden Termine oder Aufgaben"
           variant="compact"
           compactLayout="inline"
         />
       ) : (
         <div className="space-y-3">
+          <AgendaGroup label="Überfällig" items={grouped.overdue} />
           <AgendaGroup label="Heute" items={grouped.today} />
           <AgendaGroup label="Morgen" items={grouped.tomorrow} />
         </div>
