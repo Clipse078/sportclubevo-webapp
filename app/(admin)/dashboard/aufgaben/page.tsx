@@ -1,6 +1,7 @@
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { listEligibleTaskAssignees } from "@/lib/tasks/queries";
+import { loadTaskOrgUnitFilterOptions } from "@/lib/tasks/task-org-options";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import {
   getTaskManagementSummary,
@@ -41,6 +42,8 @@ type PageSearchParams = {
   deadline?: string;
   recurring?: string;
   context?: string;
+  orgUnit?: string;
+  visibility?: string;
   page?: string;
 };
 
@@ -111,11 +114,12 @@ export default async function AufgabenPage({ searchParams }: Props) {
   const query = resolveTaskManagementQuery(params, tenantWideVisibility);
   const sort = parseTaskManagementSort(params.sort);
 
-  const [summary, assigneeOptions] = await Promise.all([
+  const [summary, assigneeOptions, orgUnitFilterOptions] = await Promise.all([
     getTaskManagementSummary(ctx, timeZone),
     tenantWideVisibility
       ? listEligibleTaskAssignees(ctx.tenantId)
       : Promise.resolve([]),
+    loadTaskOrgUnitFilterOptions(ctx),
   ]);
 
   let items: Awaited<ReturnType<typeof listTaskManagementItems>>["items"] = [];
@@ -166,6 +170,7 @@ export default async function AufgabenPage({ searchParams }: Props) {
         page={page}
         pageCount={pageCount}
         assigneeOptions={assigneeOptions}
+        orgUnitFilterOptions={orgUnitFilterOptions}
         canCreate={canCreate}
         canAssign={canAssign}
         canManage={canManage}

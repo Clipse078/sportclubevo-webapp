@@ -1,7 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { TaskContextType, TaskPriority, TaskStatus } from "@prisma/client";
+import type {
+  TaskContextType,
+  TaskPriority,
+  TaskStatus,
+  TaskVisibilityScope,
+} from "@prisma/client";
+import { TaskVisibilityScope as TaskVisibilityScopeEnum } from "@prisma/client";
 import { isSupportedTaskContextType } from "@/lib/tasks/context-registry";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import {
@@ -31,6 +37,7 @@ import {
   TaskNotFoundError,
   TaskValidationError,
 } from "@/lib/tasks/errors";
+import { parseTaskVisibilityScope } from "@/lib/tasks/task-org-mutation-policy";
 
 export type AufgabenActionResult =
   | { ok: true; taskId?: string }
@@ -169,6 +176,8 @@ export async function createAufgabeAction(
       }
     }
 
+    const orgVisibility = parseOrgVisibilityFromForm(formData);
+
     const created = await createTask(ctx, {
       title: typeof title === "string" ? title : "",
       description: typeof description === "string" ? description : null,
@@ -178,6 +187,7 @@ export async function createAufgabeAction(
         typeof assigneeUserId === "string" && assigneeUserId.trim()
           ? [assigneeUserId.trim()]
           : [],
+      ...orgVisibility,
     });
 
     revalidateTaskPaths(created.id);
@@ -398,6 +408,31 @@ function parseTaskContextFromForm(formData: FormData): {
   return { contextType: type, contextId: id };
 }
 
+function parseOrgVisibilityFromForm(formData: FormData): {
+  orgUnitId?: string | null;
+  visibilityScope?: TaskVisibilityScope;
+} {
+  if (!formData.has("visibilityScope") && !formData.has("orgUnitId")) {
+    return {};
+  }
+
+  const visibilityRaw = formData.get("visibilityScope");
+  const visibilityScope =
+    visibilityRaw === null || (typeof visibilityRaw === "string" && !visibilityRaw.trim())
+      ? TaskVisibilityScopeEnum.CLUB
+      : parseTaskVisibilityScope(visibilityRaw);
+
+  if (!visibilityScope) {
+    throw new TaskValidationError("Ungültige Sichtbarkeit.");
+  }
+
+  const orgRaw = formData.get("orgUnitId");
+  const orgUnitId =
+    typeof orgRaw === "string" && orgRaw.trim() ? orgRaw.trim() : null;
+
+  return { orgUnitId, visibilityScope };
+}
+
 function parsePriority(raw: FormDataEntryValue | null): TaskPriority | undefined {
   const validPriorities = ["LOW", "NORMAL", "HIGH", "URGENT"] as const;
   if (
@@ -599,6 +634,8 @@ export async function createTaskSeriesAction(
         ? Number(dueMinuteRaw)
         : 59;
 
+    const orgVisibility = parseOrgVisibilityFromForm(formData);
+
     const created = await createTaskSeries(ctx, {
       title,
       description: typeof description === "string" ? description : null,
@@ -613,6 +650,7 @@ export async function createTaskSeriesAction(
       startsOn,
       assigneeUserIds: parseAssigneeIds(formData.get("assigneeUserIds")),
       subtaskTemplates: parseSubtaskTemplatesJson(formData.get("subtaskTemplatesJson")),
+      ...orgVisibility,
     });
 
     await generateTaskOccurrences(ctx, created.id);
@@ -662,6 +700,10 @@ export async function updateTaskSeriesAction(
     const dueMinuteRaw = formData.get("dueMinute");
     const subtaskJson = formData.get("subtaskTemplatesJson");
 
+    const orgVisibility = formData.has("visibilityScope") || formData.has("orgUnitId")
+      ? parseOrgVisibilityFromForm(formData)
+      : {};
+
     await updateTaskSeries(ctx, seriesId.trim(), {
       title: typeof title === "string" ? title : undefined,
       description: typeof description === "string" ? description : undefined,
@@ -686,6 +728,7 @@ export async function updateTaskSeriesAction(
       subtaskTemplates: formData.has("subtaskTemplatesJson")
         ? parseSubtaskTemplatesJson(subtaskJson)
         : undefined,
+      ...orgVisibility,
     });
 
     revalidateSeriesPaths(seriesId.trim());
@@ -744,6 +787,26 @@ export async function endTaskSeriesAction(formData: FormData): Promise<AufgabenA
   }
 }
 
+export async function updateAufgabeOrgVisibilityAction(
+  formData: FormData,
+): Promise<AufgabenActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    const taskId = formData.get("taskId");
+    if (typeof taskId !== "string" || !taskId.trim()) {
+      return { ok: false, message: "Aufgabe fehlt." };
+    }
+    const orgVisibility = parseOrgVisibilityFromForm(formData);
+    await updateTask(ctx, taskId.trim(), orgVisibility);
+    revalidateTaskPaths(taskId.trim());
+    return { ok: true };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
 export async function createAufgabeFullAction(
   formData: FormData,
 ): Promise<AufgabenActionResult> {
@@ -771,6 +834,8 @@ export async function createAufgabeFullAction(
 
     const { contextType, contextId } = parseTaskContextFromForm(formData);
 
+    const orgVisibility = parseOrgVisibilityFromForm(formData);
+
     const created = await createTask(ctx, {
       title: typeof title === "string" ? title : "",
       description: typeof description === "string" ? description : null,
@@ -779,6 +844,7 @@ export async function createAufgabeFullAction(
       assigneeUserIds,
       contextType,
       contextId,
+      ...orgVisibility,
     });
 
     revalidateTaskPaths(created.id);

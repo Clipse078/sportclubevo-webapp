@@ -14,14 +14,19 @@ type Props = {
   deadlineValue: string;
   recurringValue: string;
   contextValue: string | undefined;
+  orgUnitValue: string | undefined;
+  visibilityValue: string;
   showAssigneeFilter?: boolean;
   assigneeOptions: AssigneeOption[];
+  orgUnitOptions: { id: string; label: string }[];
   statusHrefByValue: Record<string, string>;
   assigneeHrefByValue: Record<string, string>;
   priorityHrefByValue: Record<string, string>;
   deadlineHrefByValue: Record<string, string>;
   recurringHrefByValue: Record<string, string>;
   contextHrefByValue: Record<string, string>;
+  orgUnitHrefByValue: Record<string, string>;
+  visibilityHrefByValue: Record<string, string>;
 };
 
 function navigate(href: string) {
@@ -36,14 +41,19 @@ export default function AufgabenManagementFilterRail({
   deadlineValue,
   recurringValue,
   contextValue,
+  orgUnitValue,
+  visibilityValue,
   showAssigneeFilter = true,
   assigneeOptions,
+  orgUnitOptions,
   statusHrefByValue,
   assigneeHrefByValue,
   priorityHrefByValue,
   deadlineHrefByValue,
   recurringHrefByValue,
   contextHrefByValue,
+  orgUnitHrefByValue,
+  visibilityHrefByValue,
 }: Props) {
   return (
     <section
@@ -164,6 +174,48 @@ export default function AufgabenManagementFilterRail({
             <option value="ALL">Alle Aufgaben</option>
             <option value="RECURRING">Wiederkehrend</option>
             <option value="SINGLE">Einmalig</option>
+          </select>
+        </label>
+
+        <label className="block space-y-1">
+          <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+            Organisation
+          </span>
+          <select
+            className="fca-input w-full text-sm"
+            value={orgUnitValue ?? ""}
+            onChange={(e) =>
+              navigate(orgUnitHrefByValue[e.target.value] ?? orgUnitHrefByValue[""]!)
+            }
+            aria-label="Organisation filtern"
+            data-testid="aufgaben-org-filter"
+          >
+            <option value="">Alle</option>
+            {orgUnitOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block space-y-1">
+          <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+            Sichtbarkeit
+          </span>
+          <select
+            className="fca-input w-full text-sm"
+            value={visibilityValue}
+            onChange={(e) =>
+              navigate(visibilityHrefByValue[e.target.value] ?? visibilityHrefByValue.ALL!)
+            }
+            aria-label="Sichtbarkeit filtern"
+            data-testid="aufgaben-visibility-filter"
+          >
+            <option value="ALL">Alle</option>
+            <option value="CLUB">Im Verein</option>
+            <option value="ORG_UNIT">Organisationseinheit</option>
+            <option value="ASSIGNEES_ONLY">Nur Beteiligte</option>
           </select>
         </label>
 

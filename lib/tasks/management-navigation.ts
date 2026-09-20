@@ -23,6 +23,12 @@ export type TaskManagementDeadlineFilter =
 
 export type TaskManagementRecurringFilter = "ALL" | "RECURRING" | "SINGLE";
 
+export type TaskManagementVisibilityFilter =
+  | "ALL"
+  | "CLUB"
+  | "ORG_UNIT"
+  | "ASSIGNEES_ONLY";
+
 export type TaskManagementQueryState = {
   view: TaskManagementView;
   search: string;
@@ -33,6 +39,8 @@ export type TaskManagementQueryState = {
   deadline: TaskManagementDeadlineFilter;
   recurring: TaskManagementRecurringFilter;
   contextType: string | null;
+  orgUnitId: string | null;
+  visibilityScope: TaskManagementVisibilityFilter;
   page: number;
 };
 
@@ -115,6 +123,10 @@ export function parseTaskManagementQuery(
     deadline: (params.deadline?.trim().toUpperCase() as TaskManagementDeadlineFilter) || "ALL",
     recurring: (params.recurring?.trim().toUpperCase() as TaskManagementRecurringFilter) || "ALL",
     contextType: params.context?.trim() || null,
+    orgUnitId: params.orgUnit?.trim() || null,
+    visibilityScope:
+      (params.visibility?.trim().toUpperCase() as TaskManagementVisibilityFilter) ||
+      "ALL",
     page,
   };
 }
@@ -176,6 +188,8 @@ export function buildTaskManagementHref(
   if (merged.deadline !== "ALL") next.set("deadline", merged.deadline);
   if (merged.recurring !== "ALL") next.set("recurring", merged.recurring);
   if (merged.contextType) next.set("context", merged.contextType);
+  if (merged.orgUnitId) next.set("orgUnit", merged.orgUnitId);
+  if (merged.visibilityScope !== "ALL") next.set("visibility", merged.visibilityScope);
   if (merged.page > 1) next.set("page", String(merged.page));
 
   const qs = next.toString();
@@ -190,7 +204,9 @@ export function hasSecondaryTaskFilters(state: TaskManagementQueryState): boolea
       state.priority ||
       state.deadline !== "ALL" ||
       state.recurring !== "ALL" ||
-      state.contextType,
+      state.contextType ||
+      state.orgUnitId ||
+      state.visibilityScope !== "ALL",
   );
 }
 

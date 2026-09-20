@@ -13,6 +13,7 @@ export default async function TaskSeriesCreatePage() {
   return (
     <TaskSeriesCreateClient
       assigneeOptions={data.assigneeOptions}
+      orgUnitOptions={data.orgUnitOptions}
       timeZone={data.timeZone}
       backHref={data.backHref}
     />

@@ -30,6 +30,10 @@ import {
   computeNewAssigneeRows,
   emitTaskAssignmentNotifications,
 } from "@/lib/notifications/task-producer";
+import {
+  normalizeTaskOrgVisibilityState,
+  validateTaskOrgVisibilityMutation,
+} from "./task-org-mutation-policy";
 
 const SERIES_INCLUDE = {
   assigneeTemplates: true,
@@ -64,6 +68,8 @@ export type CreateTaskSeriesInput = {
   endsOn?: Date | null;
   assigneeUserIds?: string[];
   subtaskTemplates?: TaskSeriesSubtaskTemplateInput[];
+  orgUnitId?: string | null;
+  visibilityScope?: TaskVisibilityScope;
 };
 
 export type UpdateTaskSeriesInput = Partial<CreateTaskSeriesInput> & {
@@ -250,6 +256,12 @@ export async function createTaskSeries(
     await validateAssigneeUserIds(ctx.tenantId, template.assigneeUserIds ?? []);
   }
 
+  const orgVisibility = await validateTaskOrgVisibilityMutation(
+    ctx,
+    normalizeTaskOrgVisibilityState(input.visibilityScope, input.orgUnitId),
+    { mode: "create" },
+  );
+
   return prisma.$transaction(async (tx) => {
     const series = await tx.taskSeries.create({
       data: {
@@ -266,6 +278,8 @@ export async function createTaskSeries(
         timezone: input.timezone,
         startsOn: input.startsOn ?? null,
         endsOn: input.endsOn ?? null,
+        orgUnitId: orgVisibility.orgUnitId,
+        visibilityScope: orgVisibility.visibilityScope,
         createdByUserId: ctx.userId,
         status: TaskSeriesStatus.ACTIVE,
       },
@@ -310,7 +324,12 @@ export async function createTaskSeries(
       actorUserId: ctx.userId,
       seriesId: series.id,
       action: "TASK_SERIES_CREATED",
-      afterJson: { title: series.title, frequency: series.frequency },
+      afterJson: {
+        title: series.title,
+        frequency: series.frequency,
+        orgUnitId: orgVisibility.orgUnitId,
+        visibilityScope: orgVisibility.visibilityScope,
+      },
     });
 
     return tx.taskSeries.findFirstOrThrow({
@@ -348,6 +367,31 @@ export async function updateTaskSeries(
     }
   }
 
+  const orgVisibilityMutation =
+    input.orgUnitId !== undefined || input.visibilityScope !== undefined;
+  let nextOrgVisibility:
+    | Awaited<ReturnType<typeof validateTaskOrgVisibilityMutation>>
+    | null = null;
+  if (orgVisibilityMutation) {
+    nextOrgVisibility = await validateTaskOrgVisibilityMutation(
+      ctx,
+      normalizeTaskOrgVisibilityState(
+        input.visibilityScope ?? existing.visibilityScope,
+        input.orgUnitId !== undefined ? input.orgUnitId : existing.orgUnitId,
+      ),
+      {
+        mode: "edit",
+        existing: {
+          tenantId: existing.tenantId,
+          createdByUserId: existing.createdByUserId,
+          assigneeUserIds: existing.assigneeTemplates.map((a) => a.userId),
+          visibilityScope: existing.visibilityScope,
+          orgUnitId: existing.orgUnitId,
+        },
+      },
+    );
+  }
+
   return prisma.$transaction(async (tx) => {
     const updated = await tx.taskSeries.update({
       where: { id: existing.id },
@@ -367,6 +411,14 @@ export async function updateTaskSeries(
         timezone: input.timezone,
         startsOn: input.startsOn,
         endsOn: input.endsOn,
+        visibilityScope: nextOrgVisibility?.visibilityScope,
+        ...(nextOrgVisibility
+          ? {
+              orgUnit: nextOrgVisibility.orgUnitId
+                ? { connect: { id: nextOrgVisibility.orgUnitId } }
+                : { disconnect: true },
+            }
+          : {}),
       },
       include: SERIES_INCLUDE,
     });
@@ -395,8 +447,16 @@ export async function updateTaskSeries(
       actorUserId: ctx.userId,
       seriesId: existing.id,
       action: "TASK_SERIES_UPDATED",
-      beforeJson: { title: existing.title },
-      afterJson: { title: updated.title },
+      beforeJson: {
+        title: existing.title,
+        orgUnitId: existing.orgUnitId,
+        visibilityScope: existing.visibilityScope,
+      },
+      afterJson: {
+        title: updated.title,
+        orgUnitId: updated.orgUnitId,
+        visibilityScope: updated.visibilityScope,
+      },
     });
 
     return tx.taskSeries.findFirstOrThrow({

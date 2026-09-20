@@ -22,6 +22,8 @@ export default async function AufgabenTaskInterceptPage({ params, searchParams }
     <TaskWorkspaceInterceptClient
       bundle={data.bundle}
       assigneeOptions={data.assigneeOptions}
+      orgUnitOptions={data.orgUnitOptions}
+      orgUnitDisplayLabel={data.orgUnitDisplayLabel}
       locale={data.locale}
       timeZone={data.timeZone}
       backHref={data.backHref}

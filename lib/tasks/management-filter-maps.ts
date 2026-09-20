@@ -18,6 +18,8 @@ export function buildTaskManagementFilterHrefMaps(
   deadlineHrefByValue: Record<string, string>;
   recurringHrefByValue: Record<string, string>;
   contextHrefByValue: Record<string, string>;
+  orgUnitHrefByValue: Record<string, string>;
+  visibilityHrefByValue: Record<string, string>;
   viewHrefByValue: Record<string, string>;
   kpiHrefs: {
     open: string;
@@ -125,6 +127,37 @@ export function buildTaskManagementFilterHrefMaps(
     );
   }
 
+  const orgUnitHrefByValue: Record<string, string> = {
+    "": buildTaskManagementHref(basePath, { orgUnitId: null, page: 1 }, query, hrefOptions),
+  };
+
+  const visibilityHrefByValue: Record<string, string> = {
+    ALL: buildTaskManagementHref(
+      basePath,
+      { visibilityScope: "ALL", page: 1 },
+      query,
+      hrefOptions,
+    ),
+    CLUB: buildTaskManagementHref(
+      basePath,
+      { visibilityScope: "CLUB", page: 1 },
+      query,
+      hrefOptions,
+    ),
+    ORG_UNIT: buildTaskManagementHref(
+      basePath,
+      { visibilityScope: "ORG_UNIT", page: 1 },
+      query,
+      hrefOptions,
+    ),
+    ASSIGNEES_ONLY: buildTaskManagementHref(
+      basePath,
+      { visibilityScope: "ASSIGNEES_ONLY", page: 1 },
+      query,
+      hrefOptions,
+    ),
+  };
+
   const viewHrefByValue: Record<string, string> = {
     MEINE: buildTaskManagementHref(basePath, { view: "MEINE", page: 1 }, query, hrefOptions),
     ALLE: buildTaskManagementHref(basePath, { view: "ALLE", page: 1 }, query, hrefOptions),
@@ -164,6 +197,8 @@ export function buildTaskManagementFilterHrefMaps(
     deadlineHrefByValue,
     recurringHrefByValue,
     contextHrefByValue,
+    orgUnitHrefByValue,
+    visibilityHrefByValue,
     viewHrefByValue,
     kpiHrefs: {
       open: viewHrefByValue[openListView]!,
@@ -177,6 +212,25 @@ export function buildTaskManagementFilterHrefMaps(
       my: viewHrefByValue.MEINE,
     },
   };
+}
+
+export function mergeOrgUnitFilterHrefs(
+  maps: ReturnType<typeof buildTaskManagementFilterHrefMaps>,
+  basePath: string,
+  query: TaskManagementQueryState,
+  orgUnitOptions: { id: string }[],
+  options?: { tenantWideVisibility?: boolean },
+): Record<string, string> {
+  const hrefs = { ...maps.orgUnitHrefByValue };
+  for (const option of orgUnitOptions) {
+    hrefs[option.id] = buildTaskManagementHref(
+      basePath,
+      { orgUnitId: option.id, page: 1 },
+      query,
+      { tenantWideVisibility: options?.tenantWideVisibility ?? true },
+    );
+  }
+  return hrefs;
 }
 
 export function mergeAssigneeFilterHrefs(

@@ -1,4 +1,5 @@
-import type { TaskContextType, TaskPriority, TaskStatus } from "@prisma/client";
+import type { TaskContextType, TaskPriority, TaskStatus, TaskVisibilityScope } from "@prisma/client";
+import { TaskVisibilityScope as TaskVisibilityScopeEnum } from "@prisma/client";
 import type { TaskSeriesWeekday, TaskRecurrenceFrequency } from "@prisma/client";
 
 export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
@@ -86,4 +87,38 @@ export const TASK_SERIES_EDIT_FUTURE_NOTICE =
 
 export function formatAssigneeName(firstName: string, lastName: string): string {
   return `${firstName} ${lastName}`.trim();
+}
+
+export const TASK_VISIBILITY_SCOPE_LABELS: Record<TaskVisibilityScope, string> = {
+  CLUB: "Im Verein",
+  ORG_UNIT: "Organisationseinheit",
+  ASSIGNEES_ONLY: "Nur Beteiligte",
+};
+
+export const TASK_VISIBILITY_SCOPE_DESCRIPTIONS: Record<TaskVisibilityScope, string> = {
+  CLUB: "Für berechtigte Personen im Verein sichtbar.",
+  ORG_UNIT:
+    "Für Beteiligte und berechtigte Personen dieser Organisationseinheit sichtbar.",
+  ASSIGNEES_ONLY: "Nur für Ersteller und direkt zugewiesene Personen sichtbar.",
+};
+
+export function formatTaskVisibilityLabel(scope: TaskVisibilityScope): string {
+  return TASK_VISIBILITY_SCOPE_LABELS[scope];
+}
+
+export function formatTaskOrgUnitListLabel(input: {
+  orgUnitId: string | null;
+  orgUnitLabel: string | null;
+  visibilityScope: TaskVisibilityScope;
+}): string {
+  if (input.visibilityScope === TaskVisibilityScopeEnum.ASSIGNEES_ONLY) {
+    return TASK_VISIBILITY_SCOPE_LABELS.ASSIGNEES_ONLY;
+  }
+  if (input.orgUnitLabel) {
+    return input.orgUnitLabel;
+  }
+  if (input.visibilityScope === TaskVisibilityScopeEnum.CLUB) {
+    return "Verein";
+  }
+  return "—";
 }

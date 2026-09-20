@@ -19,8 +19,7 @@ import {
 } from "./recurrence-dates";
 import { getTaskSeriesForRead } from "./task-series-service";
 import type { TaskDto, TaskProgressDto, TaskServiceContext } from "./types";
-import { buildTaskVisibilityWhere, hasTaskPermission } from "./visibility";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { buildTaskVisibilityWhere, canManageTaskSeries } from "./visibility";
 
 const OCCURRENCE_PAGE_SIZE = 25;
 
@@ -108,6 +107,8 @@ export type TaskSeriesWorkspaceBundle = {
   nextOccurrenceLocalDate: string | null;
   nextOccurrenceDueAt: string | null;
   canManage: boolean;
+  orgUnitId: string | null;
+  visibilityScope: TaskDto["visibilityScope"];
   editFutureNotice: string;
 };
 
@@ -155,7 +156,13 @@ export async function loadTaskSeriesWorkspace(
   now: Date = new Date(),
 ): Promise<TaskSeriesWorkspaceBundle> {
   const series = await getTaskSeriesForRead(ctx, seriesId);
-  const canManage = hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE);
+  const canManage = canManageTaskSeries(ctx, {
+    tenantId: series.tenantId,
+    createdByUserId: series.createdByUserId,
+    visibilityScope: series.visibilityScope,
+    orgUnitId: series.orgUnitId,
+    assigneeUserIds: series.assigneeTemplates.map((a) => a.userId),
+  });
 
   const authorizedOccurrenceWhere: Prisma.TaskWhereInput = {
     AND: [
@@ -277,6 +284,8 @@ export async function loadTaskSeriesWorkspace(
     nextOccurrenceLocalDate: nextLocal,
     nextOccurrenceDueAt,
     canManage,
+    orgUnitId: series.orgUnitId,
+    visibilityScope: series.visibilityScope,
     editFutureNotice: TASK_SERIES_EDIT_FUTURE_NOTICE,
   };
 }

@@ -63,6 +63,8 @@ export type CreateTaskInput = {
   contextType?: TaskContextType | null;
   contextId?: string | null;
   assigneeUserIds?: string[];
+  orgUnitId?: string | null;
+  visibilityScope?: TaskVisibilityScope;
 };
 
 export type CreateSubtaskInput = {
@@ -81,6 +83,8 @@ export type UpdateTaskInput = {
   status?: TaskStatus;
   contextType?: TaskContextType | null;
   contextId?: string | null;
+  orgUnitId?: string | null;
+  visibilityScope?: TaskVisibilityScope;
 };
 
 export type ListTasksFilter = {
