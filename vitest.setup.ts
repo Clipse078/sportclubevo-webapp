@@ -2,6 +2,8 @@ import "@testing-library/jest-dom";
 import { vi } from "vitest";
 import { applyConfiguredTestDatabaseUrlToProcessEnv } from "./lib/test/safe-test-database";
 
+vi.mock("server-only", () => ({}));
+
 vi.mock("next/server", async () => import("next/server.js"));
 
 vi.mock("@/auth", () => ({
