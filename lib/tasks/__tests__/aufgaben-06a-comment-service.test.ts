@@ -5,6 +5,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TaskVisibilityScope } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { MAX_TASK_COMMENT_BODY_LENGTH } from "../constants";
 import { TaskForbiddenError, TaskNotFoundError, TaskValidationError } from "../errors";
 import { EMPTY_TASK_AUTH_SCOPE } from "../task-authorization";
 
@@ -126,6 +127,27 @@ describe("AUFGABEN-06A comment service", () => {
     await expect(createTaskComment(ctx(), TASK, "   \n  ")).rejects.toThrow(TaskValidationError);
   });
 
+  it("B4 accepts max length body", async () => {
+    const body = "ä".repeat(MAX_TASK_COMMENT_BODY_LENGTH);
+    mocks.taskCommentCreate.mockResolvedValue(commentRow({ body }));
+    await createTaskComment(ctx(), TASK, body);
+    expect(mocks.taskCommentCreate.mock.calls[0]?.[0].data.body).toHaveLength(
+      MAX_TASK_COMMENT_BODY_LENGTH,
+    );
+  });
+
+  it("B4b rejects over max length", async () => {
+    const body = "x".repeat(MAX_TASK_COMMENT_BODY_LENGTH + 1);
+    await expect(createTaskComment(ctx(), TASK, body)).rejects.toThrow(TaskValidationError);
+  });
+
+  it("B4c multiline and unicode preserved", async () => {
+    const body = "  Zeile 1\n🙂 Zeile 2  ";
+    mocks.taskCommentCreate.mockResolvedValue(commentRow({ body: "Zeile 1\n🙂 Zeile 2" }));
+    await createTaskComment(ctx(), TASK, body);
+    expect(mocks.taskCommentCreate.mock.calls[0]?.[0].data.body).toBe("Zeile 1\n🙂 Zeile 2");
+  });
+
   it("B4 body trimmed", async () => {
     mocks.taskCommentCreate.mockResolvedValue(commentRow({ body: "Trimmed" }));
     await createTaskComment(ctx(), TASK, "  Trimmed  ");
@@ -226,6 +248,20 @@ describe("AUFGABEN-06A comment service", () => {
 
   it("B15/B16 pagination helpers delegated to timeline service", () => {
     expect(true).toBe(true);
+  });
+
+  it("C2 deleted comment cannot be edited again", async () => {
+    mocks.taskCommentFindFirst.mockResolvedValue(null);
+    await expect(updateTaskComment(ctx(), TASK, "comment-1", "x")).rejects.toThrow(
+      TaskNotFoundError,
+    );
+  });
+
+  it("C3 repeated delete is idempotent", async () => {
+    mocks.taskCommentFindFirst.mockResolvedValue(commentRow({ deletedAt: new Date() }));
+    const dto = await deleteTaskComment(ctx(), TASK, "comment-1");
+    expect(dto.isDeleted).toBe(true);
+    expect(mocks.taskCommentUpdate).not.toHaveBeenCalled();
   });
 
   it("C16 crafted taskId/commentId pairing fails closed", async () => {

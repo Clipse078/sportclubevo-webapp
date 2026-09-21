@@ -68,13 +68,13 @@ function compareDesc(a: MergeItem, b: MergeItem): number {
 }
 
 function isOlderThanCursor(item: MergeItem, cursor: TaskTimelineCursor): boolean {
-  const cursorAt = new Date(cursor.occurredAt);
   const cursorItem: MergeItem = {
-    occurredAt: cursorAt,
+    occurredAt: new Date(cursor.occurredAt),
     source: cursor.source,
     id: cursor.id,
   };
-  return compareDesc(item, cursorItem) > 0;
+  // Item is older when it sorts after the cursor in newest-first order.
+  return compareDesc(cursorItem, item) < 0;
 }
 
 function buildAuditCursorFilter(cursor: TaskTimelineCursor | null): Prisma.AuditLogWhereInput {
@@ -97,7 +97,10 @@ function buildCommentCursorFilter(cursor: TaskTimelineCursor | null): Prisma.Tas
   if (!cursor) return {};
   const cursorAt = new Date(cursor.occurredAt);
   if (cursor.source === "AUDIT") {
-    return { createdAt: { lt: cursorAt } };
+    // Comments at the same timestamp sort after audits and may appear on the next page.
+    return {
+      OR: [{ createdAt: { lt: cursorAt } }, { createdAt: cursorAt }],
+    };
   }
   return {
     OR: [
@@ -131,6 +134,9 @@ export async function loadTaskTimelinePage(
 ): Promise<TaskTimelinePageDto> {
   await requireVisibleTask(ctx, taskId);
   const cursor = decodeTaskTimelineCursor(cursorRaw);
+  if (cursor && new Date(cursor.occurredAt).getTime() > Date.now()) {
+    return { entries: [], nextCursor: null, hasMore: false };
+  }
   const fetchSize = pageSize + 1;
 
   const auditWhere: Prisma.AuditLogWhereInput = {
@@ -200,7 +206,10 @@ export async function loadTaskTimelinePage(
   mergePool.sort((a, b) => compareDesc(a, b));
 
   const pageItems = mergePool.slice(0, pageSize);
-  const hasMore = mergePool.length > pageSize;
+  const hasMore =
+    mergePool.length > pageSize ||
+    auditRows.length >= fetchSize ||
+    commentRows.length >= fetchSize;
 
   const actorUserIds = new Set<string>();
   const assigneeUserIds = new Set<string>();

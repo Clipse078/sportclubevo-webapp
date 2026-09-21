@@ -267,6 +267,17 @@ describe("AUFGABEN-06A security sentinels", () => {
     ).rejects.toThrow(TaskNotFoundError);
   });
 
+  it("C17 manager can moderate delete on manageable CLUB task", async () => {
+    const ctx = serviceCtx([PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE], {}, MANAGER);
+    mocks.taskFindFirst.mockResolvedValue(
+      taskRow({ visibilityScope: TaskVisibilityScope.CLUB, orgUnitId: null, assignees: [] }),
+    );
+    mocks.taskCommentFindFirst.mockResolvedValue(commentRow({ authorUserId: ASSIGNEE }));
+    mocks.taskCommentUpdate.mockResolvedValue(commentRow({ deletedAt: new Date(), authorUserId: ASSIGNEE }));
+    const dto = await deleteTaskComment(ctx, TASK, "comment-foreign");
+    expect(dto.isDeleted).toBe(true);
+  });
+
   it("timeline respects task visibility", async () => {
     mocks.taskFindFirst.mockResolvedValue(taskRow({ assignees: [], createdByUserId: MANAGER }));
     await expect(
