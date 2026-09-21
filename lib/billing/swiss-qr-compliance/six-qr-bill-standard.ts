@@ -24,6 +24,9 @@ export const SIX_IG_QR_BILL_2_3_PARTIAL_EFFECTIVE_DATE = "2024-01-01";
 /** SIX IG v2.4 published; CHF has no technical payload change; EUR reference rules tighten. */
 export const SIX_IG_QR_BILL_2_4_EFFECTIVE_DATE = "2026-11-14";
 
+/** SIX QR-bill validation portal (registration required). Self-control / validation — not formal certification. */
+export const SIX_QR_VALIDATION_PORTAL_URL = "https://validation.iso-payments.ch/qrrechnung" as const;
+
 export const SIX_QR_BILL_OFFICIAL_SOURCES = {
   igQrBill23Pdf:
     "https://www.six-group.com/dam/download/banking-services/standardization/qr-bill/ig-qr-bill-v2.3-en.pdf",
@@ -35,7 +38,21 @@ export const SIX_QR_BILL_OFFICIAL_SOURCES = {
     "https://www.six-group.com/en/products-services/banking-services/payment-standardization/standards/qr-bill.html",
   paymentStandardization:
     "https://www.six-group.com/en/products-services/banking-services/payment-standardization.html",
+  toolsAndValidationPortals:
+    "https://www.six-group.com/en/products-services/banking-services/payment-standardization/expertise/tools.html",
+  validationPortalUserGuideEnPdf:
+    "https://www.six-group.com/dam/download/banking-services/standardization/validation-swiss-qr-code-user-guide-en.pdf",
+  validationPortalUrl: SIX_QR_VALIDATION_PORTAL_URL,
 } as const;
+
+/** Portal accepts QR payload as text file and QR images as JPG, PNG, or IMG (per SIX validation user guide). */
+export const SIX_QR_VALIDATION_PORTAL_INPUT_FORMATS = ["text", "png", "jpg", "img"] as const;
+
+/** SIC release introducing IG v2.4 (IG v2.4 effective 2026-11-14). */
+export const SIX_IG_QR_BILL_2_4_SIC_RELEASE_DATE = "2026-11-13";
+
+/** v2.3 IG remains valid until this month (per SIX IG v2.4 change control). */
+export const SIX_IG_QR_BILL_2_3_VALID_UNTIL = "2027-11";
 
 /** Currencies permitted by SIX IG v2.3 QR payload. */
 export const SIX_QR_PERMITTED_CURRENCIES = ["CHF", "EUR"] as const;

@@ -33,14 +33,16 @@ SportClubEvo implements **SIX Implementation Guidelines QR-bill v2.3** (`SIX_IG_
 2. Bump `SIX_IG_QR_BILL_VERSION` explicitly  
 3. Update golden fixtures + compliance suites  
 4. Independent validation + PDF certification  
-5. **BILLING-QR-04** external SIX / cross-bank validation  
-6. Explicit activation date—never via silent dependency upgrades  
+5. **BILLING-QR-04A** external SIX validation pack (`npm run billing:qr-04a:generate`) + portal acceptance (`docs/billing/QR-04A-SIX-EXTERNAL-VALIDATION-RESULT.md`)  
+6. **BILLING-QR-04B** cross-bank recognition → `SIX_VALIDATED` baseline  
+7. Cross-bank spot-check (same PDF artifact, unchanged SHA-256)  
+8. Explicit activation date—never via silent dependency upgrades  
 
 ## v2.4 forward compatibility
 
 SIX IG **v2.4** (effective **2026-11-14**) introduces no CHF payload changes. EUR combinations tighten (IBAN/SCOR or IBAN/unstructured only). SCE remains on v2.3 until a deliberate migration after QR-04.
 
-## QR-04 certification artifacts
+## QR-03 certification artifacts (internal)
 
 Run:
 
@@ -49,6 +51,26 @@ tsx scripts/generate-billing-qr-03-certification-artifacts.ts
 ```
 
 Outputs canonical payloads, QR PNGs, and sample PDFs under `artifacts/billing-qr-03/` (local only).
+
+## QR-04A SIX validation pack (external preparation)
+
+Run:
+
+```bash
+npm run billing:qr-04a:generate
+```
+
+Outputs `artifacts/billing-qr-04a/` including `manifest.json`, checklists, `.spc.txt`, `.qr.png`, and `sce-realistic-chf.pdf` (local/gitignored). Official SIX portal acceptance for QR-04A is recorded in `docs/billing/QR-04A-SIX-EXTERNAL-VALIDATION-RESULT.md`. See `docs/billing/QR-04A-SIX-COMPLIANCE-GOVERNANCE.md`.
+
+## QR-04B cross-bank acceptance pack
+
+Run:
+
+```bash
+npm run billing:qr-04b:generate
+```
+
+Outputs `artifacts/billing-qr-04b/` with the canonical synthetic `sce-realistic-chf` SPC, QR PNG, PDF, and `manifest.json` (local/gitignored). Manual UBS / Raiffeisen / PostFinance scan evidence is recorded in `docs/billing/QR-04B-CROSS-BANK-ACCEPTANCE.md`. Does not replace SIX validation.
 
 ## Do not remove
 

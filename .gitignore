@@ -49,6 +49,9 @@ next-env.d.ts
 /generated
 
 # local working artifacts
+/artifacts/billing-qr-03/
+/artifacts/billing-qr-04a/
+/artifacts/billing-qr-04b/
 /baseline-backups
 /PROJECT-SCAN-WEBAPP.txt
 /SCAN-01-ADMIN-ROUTES.txt
