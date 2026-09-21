@@ -22,6 +22,7 @@ import {
   resolveTaskWorkspaceCapabilities,
   type TaskWorkspaceCapabilities,
 } from "./workspace-permissions";
+import { getTaskFollowState, type TaskFollowStateDto } from "./task-follow-service";
 
 const TASK_INCLUDE = {
   assignees: {
@@ -101,6 +102,7 @@ export type TaskWorkspaceBundle = {
   context: TaskContextPresentation | null;
   creator: TaskWorkspaceCreator;
   capabilities: TaskWorkspaceCapabilities;
+  follow: TaskFollowStateDto;
 };
 
 export async function loadTaskWorkspace(
@@ -115,7 +117,7 @@ export async function loadTaskWorkspace(
     ? getTaskSeriesForRead(ctx, task.taskSeriesId).catch(() => null)
     : Promise.resolve(null);
 
-  const [subtasks, parentTask, seriesRow, creatorUser, context] = await Promise.all([
+  const [subtasks, parentTask, seriesRow, creatorUser, context, follow] = await Promise.all([
     task.parentTaskId ? Promise.resolve([]) : loadVisibleSubtasks(ctx, task.id),
     task.parentTaskId
       ? loadAuthorizedParentTaskRefs(ctx, [task.parentTaskId]).then(
@@ -136,6 +138,7 @@ export async function loadTaskWorkspace(
       locale,
       timeZone,
     ),
+    getTaskFollowState(ctx, taskId),
   ]);
 
   const progressSource = task.parentTaskId
@@ -170,5 +173,6 @@ export async function loadTaskWorkspace(
         }
       : null,
     capabilities: resolveTaskWorkspaceCapabilities(ctx, task),
+    follow,
   };
 }

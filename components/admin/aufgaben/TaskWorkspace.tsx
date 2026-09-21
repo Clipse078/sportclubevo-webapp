@@ -42,6 +42,7 @@ import {
   updateAufgabeContextAction,
 } from "@/app/(admin)/dashboard/aufgaben/actions";
 import type { TaskWorkspaceViewProps } from "@/lib/tasks/task-workspace-view-props";
+import { TaskFollowControl } from "@/components/admin/aufgaben/TaskFollowControl";
 import type { TaskContextPresentation } from "@/lib/tasks/context-presentation";
 import TaskContextField from "./TaskContextField";
 import TaskOrgVisibilityEditor from "./TaskOrgVisibilityEditor";
@@ -505,6 +506,7 @@ export function TaskWorkspacePanel({
     context,
     creator,
     capabilities,
+    follow,
   } = bundle;
   const [menuOpen, setMenuOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -714,13 +716,16 @@ export function TaskWorkspacePanel({
             canEdit={capabilities.canEditContext}
           />
 
-          <TaskActivitySection
-            taskId={task.id}
-            currentUserId={currentUserId}
-            canCollaborate
-            locale={locale}
-            timeZone={timeZone}
-          />
+          <div className="space-y-2">
+            <TaskFollowControl taskId={task.id} initialState={follow} />
+            <TaskActivitySection
+              taskId={task.id}
+              currentUserId={currentUserId}
+              canCollaborate
+              locale={locale}
+              timeZone={timeZone}
+            />
+          </div>
         </div>
 
         <aside className="min-w-0 space-y-4 lg:border-l lg:border-[var(--border)]/60 lg:pl-5">

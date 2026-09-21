@@ -388,6 +388,7 @@ enum NotificationType {
   TASK_DEADLINE_CHANGED
   TASK_REMINDER
   TASK_MENTION
+  TASK_COMMENT
   PARTICIPATION_REMINDER
   PARTICIPATION_OVERDUE
 }
@@ -872,6 +873,7 @@ model Tenant {
   commentMentions                 CommentMention[]
   taskComments                    TaskComment[]
   taskCommentMentions             TaskCommentMention[]
+  taskFollowers                   TaskFollower[]
 
   @@index([status])
   @@index([name])
@@ -965,6 +967,7 @@ model User {
   commentMentionsReceived      CommentMention[]       @relation("CommentMentionUser")
   authoredTaskComments         TaskComment[]          @relation("TaskCommentAuthor")
   taskCommentMentionsReceived  TaskCommentMention[]   @relation("TaskCommentMentionUser")
+  taskFollows                  TaskFollower[]         @relation("TaskFollowerUser")
 
   linkedTenantBillingAccounts TenantBillingAccount[] @relation("TenantBillingAccountLinkedBy")
 
@@ -2849,6 +2852,7 @@ model Task {
   taskSeries TaskSeries? @relation(fields: [taskSeriesId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   assignees  TaskAssignee[]
   comments   TaskComment[]
+  followers  TaskFollower[]
 
   @@unique([tenantId, seriesOccurrenceKey])
   @@index([tenantId])
@@ -2899,6 +2903,24 @@ model TaskCommentMention {
   @@unique([commentId, userId])
   @@index([tenantId])
   @@index([tenantId, commentId])
+  @@index([tenantId, userId])
+}
+
+/// AUFGABEN-06C — explicit task follow subscription (User identity only; not ACL).
+model TaskFollower {
+  id        String   @id @default(cuid())
+  tenantId  String
+  taskId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user   User   @relation("TaskFollowerUser", fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([taskId, userId])
+  @@index([tenantId])
+  @@index([tenantId, taskId])
   @@index([tenantId, userId])
 }
 

@@ -48,6 +48,10 @@ vi.mock("../task-mention-producer", () => ({
   emitTaskMentionNotifications: vi.fn(async () => undefined),
 }));
 
+vi.mock("../task-comment-producer", () => ({
+  emitTaskCommentNotifications: vi.fn(async () => undefined),
+}));
+
 import {
   createTaskComment,
   deleteTaskComment,

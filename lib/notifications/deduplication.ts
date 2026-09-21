@@ -66,6 +66,13 @@ export function buildTaskMentionDedupKey(input: {
   return `TASK_MENTION:${input.commentId}:${input.recipientUserId}`;
 }
 
+export function buildTaskCommentDedupKey(input: {
+  commentId: string;
+  recipientUserId: string;
+}): string {
+  return `TASK_COMMENT:${input.commentId}:${input.recipientUserId}`;
+}
+
 export function participationPersonalInboxHref(): string {
   return "/dashboard/aufgaben?bereich=meine";
 }
