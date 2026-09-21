@@ -59,7 +59,10 @@ import {
 } from "@/lib/tasks/task-comment-service";
 import { searchTaskMentionCandidates } from "@/lib/tasks/task-mention-candidates";
 import { requireVisibleTask } from "@/lib/tasks/task-access";
-import { loadTaskTimelinePage } from "@/lib/tasks/task-timeline-service";
+import {
+  loadTaskTimelinePage,
+  loadTaskTimelinePageForCommentAnchor,
+} from "@/lib/tasks/task-timeline-service";
 import type { TaskTimelinePageDto } from "@/lib/tasks/task-timeline-types";
 import {
   followTask,
@@ -1071,6 +1074,7 @@ export async function createAufgabeFullAction(
 export async function loadTaskTimelineAction(
   taskId: string,
   cursor?: string | null,
+  anchorCommentId?: string | null,
 ): Promise<TaskTimelineActionResult> {
   const ctx = await getTaskServiceContext();
   if (!ctx) {
@@ -1078,7 +1082,10 @@ export async function loadTaskTimelineAction(
   }
 
   try {
-    const page = await loadTaskTimelinePage(ctx, taskId, cursor);
+    const page =
+      anchorCommentId?.trim() && !cursor
+        ? await loadTaskTimelinePageForCommentAnchor(ctx, taskId, anchorCommentId.trim())
+        : await loadTaskTimelinePage(ctx, taskId, cursor);
     return { ok: true, page };
   } catch (error) {
     return { ok: false, message: actionErrorMessage(error) };

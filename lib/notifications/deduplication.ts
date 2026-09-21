@@ -50,14 +50,14 @@ export function buildTaskDeadlineChangedDedupKey(input: {
   return `TASK_DEADLINE_CHANGED:${input.taskId}:${input.recipientUserId}:${input.dueAtIso}:${input.changedAtMs}`;
 }
 
-export function taskWorkspaceHref(taskId: string): string {
-  return `/dashboard/aufgaben/${taskId}`;
-}
-
-/** AUFGABEN-06B — deep link to task workspace comment anchor (stable per comment). */
-export function taskWorkspaceCommentHref(taskId: string, commentId: string): string {
-  return `${taskWorkspaceHref(taskId)}#comment-${commentId}`;
-}
+export {
+  taskCreateFromContextHref,
+  taskCreateHref,
+  taskSeriesCreateHref,
+  taskSeriesHref,
+  taskWorkspaceCommentHref,
+  taskWorkspaceHref,
+} from "@/lib/tasks/task-navigation";
 
 export function buildTaskMentionDedupKey(input: {
   commentId: string;

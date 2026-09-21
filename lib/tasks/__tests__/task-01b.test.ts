@@ -138,10 +138,45 @@ describe("AUFGABEN-01B subtasks", () => {
     const dto = await createSubtask(ctx, PARENT, { title: "Garderoben" });
     expect(mocks.taskCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ parentTaskId: PARENT }),
+        data: expect.objectContaining({
+          parentTaskId: PARENT,
+          contextType: null,
+          contextId: null,
+        }),
       }),
     );
     expect(dto.parentTaskId).toBe(PARENT);
+  });
+
+  it("snapshots parent contextType/contextId on subtask create", async () => {
+    mocks.taskFindFirst
+      .mockResolvedValueOnce(
+        taskRow({
+          contextType: "MATCH",
+          contextId: "match-ctx-1",
+        }),
+      )
+      .mockResolvedValueOnce(
+        taskRow({
+          id: "sub-ctx",
+          parentTaskId: PARENT,
+          contextType: "MATCH",
+          contextId: "match-ctx-1",
+          assignees: [],
+        }),
+      );
+    mocks.taskCreate.mockResolvedValue({ id: "sub-ctx" });
+    mocks.tenantMembershipFindMany.mockResolvedValue([]);
+
+    await createSubtask(ctx, PARENT, { title: "Follow-up" });
+    expect(mocks.taskCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          contextType: "MATCH",
+          contextId: "match-ctx-1",
+        }),
+      }),
+    );
   });
 
   it("derives parent progress from direct children", async () => {

@@ -4,8 +4,8 @@ import {
   buildSubtaskAssignedDedupKey,
   buildTaskAssignedDedupKey,
   buildTaskDeadlineChangedDedupKey,
-  taskWorkspaceHref,
 } from "./deduplication";
+import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import { loadEffectivePreferencesForUsers } from "./preference-service";
 import { NOTIFICATION_LOG_PREFIX } from "./constants";
 import { createNotificationIdempotent } from "./notification-service";

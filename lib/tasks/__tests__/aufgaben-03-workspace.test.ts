@@ -24,10 +24,15 @@ vi.mock("../context-presentation", () => ({
 
 vi.mock("../task-follow-service", () => ({
   getTaskFollowState: vi.fn(async () => ({ isFollowing: false, followerCount: 0 })),
+  getTaskFollowStateForVisibleTask: vi.fn(async () => ({
+    isFollowing: false,
+    followerCount: 0,
+  })),
 }));
 
 vi.mock("../task-document-reference-service", () => ({
   listTaskDocumentReferences: vi.fn(async () => []),
+  listTaskDocumentReferencesForVisibleTask: vi.fn(async () => []),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({

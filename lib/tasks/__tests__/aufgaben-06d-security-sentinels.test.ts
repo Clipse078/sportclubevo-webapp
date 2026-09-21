@@ -157,7 +157,7 @@ describe("AUFGABEN-06D integration guards", () => {
   });
 
   it("R45 DOCUMENT context picker uses document-access search", () => {
-    const source = read("lib/tasks/context-selector-service.ts");
+    const source = read("lib/tasks/task-context-registry.ts");
     expect(source).toMatch(/searchWorkspaceDocumentsForTaskLink/);
   });
 

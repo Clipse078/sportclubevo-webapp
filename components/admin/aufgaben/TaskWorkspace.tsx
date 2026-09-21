@@ -42,6 +42,7 @@ import {
   updateAufgabeContextAction,
 } from "@/app/(admin)/dashboard/aufgaben/actions";
 import type { TaskWorkspaceViewProps } from "@/lib/tasks/task-workspace-view-props";
+import { taskSeriesHref, taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import { TaskFollowControl } from "@/components/admin/aufgaben/TaskFollowControl";
 import { TaskDocumentReferencesSection } from "@/components/admin/aufgaben/TaskDocumentReferencesSection";
 import type { TaskContextPresentation } from "@/lib/tasks/context-presentation";
@@ -540,7 +541,7 @@ export function TaskWorkspacePanel({
   );
 
   function navigateToTask(id: string) {
-    router.push(`/dashboard/aufgaben/${id}`);
+    router.push(taskWorkspaceHref(id));
   }
 
   function handleClose() {
@@ -729,7 +730,7 @@ export function TaskWorkspacePanel({
             <TaskActivitySection
               taskId={task.id}
               currentUserId={currentUserId}
-              canCollaborate
+              canCollaborate={capabilities.canCollaborate}
               locale={locale}
               timeZone={timeZone}
             />
@@ -835,7 +836,7 @@ export function TaskWorkspacePanel({
             <PropertyRow label="Wiederkehrende Aufgabe">
               {canOpenSeriesWorkspace && seriesId ? (
                 <Link
-                  href={`/dashboard/aufgaben/serien/${seriesId}`}
+                  href={taskSeriesHref(seriesId)}
                   className="inline-flex items-center gap-1.5 text-sm text-[var(--sce-primary)] hover:underline"
                   data-testid="task-workspace-series-link"
                 >

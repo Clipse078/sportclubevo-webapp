@@ -12,6 +12,7 @@ import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import { TASK_PRIORITY_LABELS } from "@/lib/tasks/management-labels";
 import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
 import { createAufgabeFullAction } from "@/app/(admin)/dashboard/aufgaben/actions";
+import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import TaskContextField from "./TaskContextField";
 import TaskOrgVisibilityFields from "./TaskOrgVisibilityFields";
 import { TaskDeadlineFields, TaskReminderFields } from "./TaskReminderFields";
@@ -51,7 +52,7 @@ export default function AufgabenFullCreateClient({
     startTransition(async () => {
       const result = await createAufgabeFullAction(formData);
       if (result.ok && result.taskId) {
-        router.push(`/dashboard/aufgaben/${result.taskId}`);
+        router.push(taskWorkspaceHref(result.taskId));
         return;
       }
       if (!result.ok) {

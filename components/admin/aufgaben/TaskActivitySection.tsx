@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, MoreHorizontal } from "lucide-react";
 import { formatDateTimeCompact } from "@/lib/tenant-runtime/formatters";
 import type { TaskTimelineEntryDto } from "@/lib/tasks/task-timeline-types";
+import { parseTaskCommentAnchorFromHash } from "@/lib/tasks/task-navigation";
 import { CoordinatorAvatar } from "@/components/admin/registrations/WaitingListCoordinatorPicker";
 import {
   createTaskCommentAction,
@@ -200,7 +201,12 @@ function TaskActivitySectionBody({
 
   useEffect(() => {
     let cancelled = false;
-    void loadTaskTimelineAction(taskId).then((result) => {
+    const anchorCommentId =
+      typeof window !== "undefined"
+        ? parseTaskCommentAnchorFromHash(window.location.hash)
+        : null;
+
+    void loadTaskTimelineAction(taskId, null, anchorCommentId).then((result) => {
       if (cancelled) return;
       if (!result.ok) {
         setError(result.message);
@@ -213,6 +219,15 @@ function TaskActivitySectionBody({
       setNextCursor(result.page.nextCursor);
       setHasMore(result.page.hasMore);
       setLoading(false);
+
+      if (anchorCommentId) {
+        requestAnimationFrame(() => {
+          document.getElementById(`comment-${anchorCommentId}`)?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        });
+      }
     });
     return () => {
       cancelled = true;

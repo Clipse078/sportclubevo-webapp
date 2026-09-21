@@ -15,7 +15,11 @@ import {
 } from "@/lib/workspace/document-access";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { TaskForbiddenError, TaskValidationError } from "./errors";
-import { requireVisibleTask, taskAuthorizationFromRow } from "./task-access";
+import {
+  requireVisibleTask,
+  taskAuthorizationFromRow,
+  type VisibleTaskRow,
+} from "./task-access";
 import { canManageTask, hasTaskPermission } from "./visibility";
 import type { TaskAuthorizationRecord } from "./task-authorization";
 import type { TaskServiceContext } from "./types";
@@ -68,12 +72,11 @@ function assertNotPrimaryDocumentDuplicate(
 }
 
 
-export async function listTaskDocumentReferences(
+export async function listTaskDocumentReferencesForVisibleTask(
   ctx: TaskServiceContext,
-  taskId: string,
+  visibleTask: VisibleTaskRow,
 ): Promise<TaskDocumentReferenceDto[]> {
-  await requireVisibleTask(ctx, taskId);
-
+  const taskId = visibleTask.id;
   const references = await prisma.taskDocumentReference.findMany({
     where: { tenantId: ctx.tenantId, taskId },
     orderBy: { createdAt: "asc" },
@@ -93,6 +96,14 @@ export async function listTaskDocumentReferences(
       ({ access: "restricted", documentId: row.documentId } satisfies WorkspaceDocumentPresentation),
     linkedAt: row.createdAt.toISOString(),
   }));
+}
+
+export async function listTaskDocumentReferences(
+  ctx: TaskServiceContext,
+  taskId: string,
+): Promise<TaskDocumentReferenceDto[]> {
+  const visibleTask = await requireVisibleTask(ctx, taskId);
+  return listTaskDocumentReferencesForVisibleTask(ctx, visibleTask);
 }
 
 export async function linkTaskDocument(

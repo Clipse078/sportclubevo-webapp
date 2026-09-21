@@ -642,6 +642,8 @@ export async function createSubtask(
         reminder2PresetKey: reminderSchedule.reminder2PresetKey,
         orgUnitId: propagatedOrg.orgUnitId,
         visibilityScope: propagatedOrg.visibilityScope,
+        contextType: parent.contextType,
+        contextId: parent.contextId,
         createdByUserId: ctx.userId,
         status: TaskStatusEnum.OPEN,
       },
@@ -670,6 +672,8 @@ export async function createSubtask(
         parentTaskId: parent.id,
         assigneeUserIds,
         isSubtask: true,
+        contextType: parent.contextType,
+        contextId: parent.contextId,
       },
     });
 

@@ -4,7 +4,11 @@
 
 import { prisma } from "@/lib/db/prisma";
 import { TaskForbiddenError, TaskValidationError } from "./errors";
-import { requireVisibleTask, taskAuthorizationFromRow } from "./task-access";
+import {
+  requireVisibleTask,
+  taskAuthorizationFromRow,
+  type VisibleTaskRow,
+} from "./task-access";
 import {
   canReadTask,
   type TaskAuthorizationRecord,
@@ -39,12 +43,11 @@ async function assertActiveTenantMember(ctx: TaskServiceContext): Promise<void> 
   }
 }
 
-export async function getTaskFollowState(
+export async function getTaskFollowStateForVisibleTask(
   ctx: TaskServiceContext,
-  taskId: string,
+  visibleTask: VisibleTaskRow,
 ): Promise<TaskFollowStateDto> {
-  await requireVisibleTask(ctx, taskId);
-
+  const taskId = visibleTask.id;
   const [followerCount, ownFollow] = await Promise.all([
     prisma.taskFollower.count({
       where: { tenantId: ctx.tenantId, taskId },
@@ -59,6 +62,14 @@ export async function getTaskFollowState(
     isFollowing: Boolean(ownFollow),
     followerCount,
   };
+}
+
+export async function getTaskFollowState(
+  ctx: TaskServiceContext,
+  taskId: string,
+): Promise<TaskFollowStateDto> {
+  const visibleTask = await requireVisibleTask(ctx, taskId);
+  return getTaskFollowStateForVisibleTask(ctx, visibleTask);
 }
 
 export async function followTask(ctx: TaskServiceContext, taskId: string): Promise<TaskFollowStateDto> {
