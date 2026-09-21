@@ -169,7 +169,12 @@ function TimelineEntryItem({
   );
 }
 
-export function TaskActivitySection({
+/** Remounts client timeline state when `taskId` changes (full page or intercept modal). */
+export function TaskActivitySection(props: Props) {
+  return <TaskActivitySectionBody key={props.taskId} {...props} />;
+}
+
+function TaskActivitySectionBody({
   taskId,
   currentUserId,
   canCollaborate,
@@ -183,7 +188,28 @@ export function TaskActivitySection({
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadInitial = useCallback(async () => {
+  useEffect(() => {
+    let cancelled = false;
+    void loadTaskTimelineAction(taskId).then((result) => {
+      if (cancelled) return;
+      if (!result.ok) {
+        setError(result.message);
+        setEntries([]);
+        setLoading(false);
+        return;
+      }
+      const chronological = [...result.page.entries].reverse();
+      setEntries(chronological);
+      setNextCursor(result.page.nextCursor);
+      setHasMore(result.page.hasMore);
+      setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [taskId]);
+
+  const refreshTimeline = useCallback(async () => {
     setLoading(true);
     setError(null);
     const result = await loadTaskTimelineAction(taskId);
@@ -199,10 +225,6 @@ export function TaskActivitySection({
     setHasMore(result.page.hasMore);
     setLoading(false);
   }, [taskId]);
-
-  useEffect(() => {
-    void loadInitial();
-  }, [loadInitial]);
 
   async function loadOlder() {
     if (!nextCursor || loadingMore) return;
@@ -226,7 +248,7 @@ export function TaskActivitySection({
     if (!result.ok) {
       throw new Error(result.message);
     }
-    await loadInitial();
+    await refreshTimeline();
   }
 
   async function handleEdit(commentId: string, body: string) {
@@ -234,7 +256,7 @@ export function TaskActivitySection({
     if (!result.ok) {
       throw new Error(result.message);
     }
-    await loadInitial();
+    await refreshTimeline();
   }
 
   async function handleDelete(commentId: string) {
@@ -243,7 +265,7 @@ export function TaskActivitySection({
       setError(result.message);
       return;
     }
-    await loadInitial();
+    await refreshTimeline();
   }
 
   return (

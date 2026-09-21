@@ -301,4 +301,13 @@ describe("AUFGABEN-03 matrix coverage hooks", () => {
     expect(source).toContain("TaskActivitySection");
     expect(source).not.toContain("Aktivität — folgt in einer späteren Version.");
   });
+
+  it("06A-C2 — activity section remounts timeline state per taskId", () => {
+    const source = readFileSync(
+      join(process.cwd(), "components/admin/aufgaben/TaskActivitySection.tsx"),
+      "utf8",
+    );
+    expect(source).toMatch(/key=\{props\.taskId\}/);
+    expect(source).not.toMatch(/eslint-disable.*set-state-in-effect/);
+  });
 });
