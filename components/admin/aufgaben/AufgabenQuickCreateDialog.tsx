@@ -13,6 +13,7 @@ import {
   taskWorkspaceHref,
 } from "@/lib/tasks/task-navigation";
 import { TASK_PRIORITY_LABELS } from "@/lib/tasks/management-labels";
+import TaskDescriptionFormField from "./TaskDescriptionFormField";
 
 type Props = {
   canCreate: boolean;
@@ -144,10 +145,7 @@ export default function AufgabenQuickCreateDialog({
                 </label>
               </div>
 
-              <label className="block space-y-1">
-                <span className="text-xs font-medium text-[var(--text-2)]">Beschreibung (optional)</span>
-                <textarea name="description" rows={2} className="fca-input w-full text-sm" />
-              </label>
+              <TaskDescriptionFormField optional compact inputId="aufgaben-quick-create-description" />
 
               <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
                 <div className="mr-auto flex flex-col gap-1">

@@ -50,6 +50,13 @@ import TaskContextField from "./TaskContextField";
 import TaskOrgVisibilityEditor from "./TaskOrgVisibilityEditor";
 import { TaskDeadlineReminderEditor } from "./TaskDeadlineReminderEditor";
 import { TaskActivitySection } from "./TaskActivitySection";
+import TaskDescriptionEditor from "./TaskDescriptionEditor";
+import TaskDescriptionContent from "./TaskDescriptionContent";
+import {
+  documentFromStoredTaskDescription,
+  serializeTaskDescriptionForStorage,
+  storedTaskDescriptionIsEmpty,
+} from "@/lib/tasks/task-description";
 
 function InlineTitle({
   task,
@@ -263,15 +270,16 @@ function InlineDescription({
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(task.description ?? "");
+  const [document, setDocument] = useState(() => documentFromStoredTaskDescription(task.description));
   const [pending, startTransition] = useTransition();
 
   function save() {
     if (!canEdit || pending) return;
+    const serialized = serializeTaskDescriptionForStorage(document) ?? "";
     startTransition(async () => {
       const fd = new FormData();
       fd.set("taskId", task.id);
-      fd.set("description", value);
+      fd.set("description", serialized);
       const result = await updateAufgabeDescriptionAction(fd);
       if (result.ok) {
         setEditing(false);
@@ -280,7 +288,7 @@ function InlineDescription({
     });
   }
 
-  const empty = !task.description?.trim();
+  const empty = storedTaskDescriptionIsEmpty(task.description);
 
   if (!canEdit && empty) {
     return null;
@@ -288,7 +296,10 @@ function InlineDescription({
 
   if (!canEdit) {
     return (
-      <p className="whitespace-pre-wrap text-sm text-[var(--text-2)]">{task.description}</p>
+      <TaskDescriptionContent
+        description={task.description}
+        data-testid="task-workspace-description"
+      />
     );
   }
 
@@ -301,33 +312,37 @@ function InlineDescription({
           empty && "text-[var(--muted)] italic",
         )}
         onClick={() => {
-          setValue(task.description ?? "");
+          setDocument(documentFromStoredTaskDescription(task.description));
           setEditing(true);
         }}
         data-testid="task-workspace-description"
       >
-        {empty ? "Beschreibung hinzufügen" : task.description}
+        {empty ? (
+          "Beschreibung hinzufügen"
+        ) : (
+          <TaskDescriptionContent description={task.description} className="text-sm text-[var(--text-2)]" />
+        )}
       </button>
     );
   }
 
   return (
-    <textarea
-      className="fca-input min-h-[6rem] w-full text-sm"
-      value={value}
-      autoFocus
-      disabled={pending}
-      onChange={(e) => setValue(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") {
-          e.preventDefault();
-          setValue(task.description ?? "");
-          setEditing(false);
+    <div
+      className="space-y-2"
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+          save();
         }
       }}
-      onBlur={save}
       data-testid="task-workspace-description-input"
-    />
+    >
+      <TaskDescriptionEditor
+        value={document}
+        onChange={setDocument}
+        disabled={pending}
+        minHeightClassName="min-h-[10rem]"
+      />
+    </div>
   );
 }
 

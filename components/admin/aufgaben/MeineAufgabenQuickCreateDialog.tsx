@@ -13,6 +13,7 @@ import {
 } from "@/app/(admin)/dashboard/aufgaben/actions";
 import { TASK_PRIORITY_LABELS } from "@/lib/tasks/management-labels";
 import { TaskReminderFields } from "./TaskReminderFields";
+import TaskDescriptionFormField from "./TaskDescriptionFormField";
 
 export type QuickCreateCurrentUser = {
   userId: string;
@@ -338,20 +339,7 @@ export default function MeineAufgabenQuickCreateDialog({
                 </label>
               </div>
 
-              <label className="block space-y-1">
-                <span className="text-xs font-medium text-[var(--text-2)]">Beschreibung</span>
-                <textarea
-                  name="description"
-                  rows={2}
-                  className="fca-input w-full text-sm"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      e.currentTarget.form?.requestSubmit();
-                    }
-                  }}
-                />
-              </label>
+              <TaskDescriptionFormField compact inputId="meine-aufgaben-create-description" />
 
               <TaskReminderFields
                 timeZone={timeZone}

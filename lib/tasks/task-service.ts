@@ -10,6 +10,7 @@ import { prisma } from "@/lib/db/prisma";
 import { writeAuditRecord } from "@/lib/audit/audit-record";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { validateTaskContext } from "./context-validation";
+import { normalizeTaskDescriptionInput } from "./task-description";
 import {
   ParentHasOpenSubtasksError,
   TaskForbiddenError,
@@ -324,7 +325,7 @@ export async function createTask(
       data: {
         tenantId: ctx.tenantId,
         title,
-        description: input.description?.trim() || null,
+        description: normalizeTaskDescriptionInput(input.description),
         priority: input.priority ?? "NORMAL",
         dueAt: reminderSchedule.dueAt,
         reminder1At: reminderSchedule.reminder1At,
@@ -444,7 +445,7 @@ export async function createQuickTask(
       data: {
         tenantId: ctx.tenantId,
         title,
-        description: input.description?.trim() || null,
+        description: normalizeTaskDescriptionInput(input.description),
         priority: input.priority ?? "NORMAL",
         dueAt: reminderSchedule.dueAt,
         reminder1At: reminderSchedule.reminder1At,
@@ -648,7 +649,7 @@ export async function createSubtask(
         tenantId: ctx.tenantId,
         parentTaskId: parent.id,
         title,
-        description: input.description?.trim() || null,
+        description: normalizeTaskDescriptionInput(input.description),
         priority: input.priority ?? "NORMAL",
         dueAt: reminderSchedule.dueAt,
         reminder1At: reminderSchedule.reminder1At,
@@ -827,7 +828,7 @@ export async function updateTask(
   const data: Prisma.TaskUpdateInput = {};
   if (input.title !== undefined) data.title = normalizeTitle(input.title);
   if (input.description !== undefined) {
-    data.description = input.description?.trim() || null;
+    data.description = normalizeTaskDescriptionInput(input.description);
   }
   if (input.priority !== undefined) data.priority = input.priority;
   const reminderSchedule = await resolveReminderScheduleForUpdate(ctx.tenantId, existing, input);

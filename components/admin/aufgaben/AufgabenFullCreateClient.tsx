@@ -16,6 +16,7 @@ import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import TaskContextField from "./TaskContextField";
 import TaskOrgVisibilityFields from "./TaskOrgVisibilityFields";
 import { TaskDeadlineFields, TaskReminderFields } from "./TaskReminderFields";
+import TaskDescriptionFormField from "./TaskDescriptionFormField";
 
 type Props = {
   assigneeOptions: TaskAssigneeOption[];
@@ -91,10 +92,7 @@ export default function AufgabenFullCreateClient({
                 <span className="text-xs font-medium text-[var(--text-2)]">Titel</span>
                 <input name="title" required className="fca-input w-full text-sm" />
               </label>
-              <label className="block space-y-1">
-                <span className="text-xs font-medium text-[var(--text-2)]">Beschreibung</span>
-                <textarea name="description" rows={5} className="fca-input w-full text-sm" />
-              </label>
+              <TaskDescriptionFormField label="Beschreibung" inputId="aufgaben-full-create-description" />
             </div>
             <aside className="space-y-4 lg:border-l lg:border-[var(--border)]/60 lg:pl-5">
               <label className="block space-y-1">
