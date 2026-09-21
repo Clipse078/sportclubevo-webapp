@@ -38,6 +38,7 @@ export default function ContextualTaskCreateDialog({
   timeZone,
   tenantWideVisibility,
 }: ContextualTaskCreateDialogProps) {
+  void tenantWideVisibility;
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();

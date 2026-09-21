@@ -13,7 +13,7 @@ import type {
   ListTasksForContextPageDto,
 } from "./context-related-task-types";
 import { TASK_AUTH_INCLUDE } from "./task-access";
-import { buildRelatedTaskWhere, decodeListTasksForContextCursor } from "./related-task-query";
+import { buildRelatedTaskWhere } from "./related-task-query";
 
 export { decodeListTasksForContextCursor } from "./related-task-query";
 import { hasTaskPermission } from "./visibility";
