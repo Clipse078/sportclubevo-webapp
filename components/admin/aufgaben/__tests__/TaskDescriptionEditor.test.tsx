@@ -3,10 +3,14 @@
  * AUFGABEN-06F2-UX1 — TaskDescriptionEditor (U4).
  */
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import TaskDescriptionEditor from "../TaskDescriptionEditor";
 import { emptyTaskDescriptionDocument } from "@/lib/tasks/task-description";
+import type { TaskDescriptionDocument } from "@/lib/tasks/task-description";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
@@ -21,5 +25,56 @@ describe("TaskDescriptionEditor", () => {
     expect(screen.getByTitle("Fett (Strg+B)")).toBeInTheDocument();
     expect(screen.getByTitle("Link (Strg+K)")).toBeInTheDocument();
     expect(screen.getByTitle("Checkliste")).toBeInTheDocument();
+  });
+
+  it("A43–A51 toolbar toggles update document JSON", async () => {
+    const user = userEvent.setup();
+    const seed: TaskDescriptionDocument = {
+      type: "doc",
+      content: [{ type: "paragraph", content: [{ type: "text", text: "Hello" }] }],
+    };
+    let latest: TaskDescriptionDocument = seed;
+    const onChange = vi.fn((doc: TaskDescriptionDocument) => {
+      latest = doc;
+    });
+
+    render(<TaskDescriptionEditor value={seed} onChange={onChange} />);
+    await waitFor(() => expect(screen.getByTestId("task-description-editor-toolbar")).toBeVisible());
+
+    const prose = screen.getByTestId("task-description-editor").querySelector(".ProseMirror") as HTMLElement;
+    await user.click(prose);
+    await user.tripleClick(prose);
+
+    await user.click(screen.getByTitle("Fett (Strg+B)"));
+    await waitFor(() => expect(JSON.stringify(latest)).toContain('"bold"'));
+
+    await user.click(screen.getByTitle("Kursiv (Strg+I)"));
+    await waitFor(() => expect(JSON.stringify(latest)).toContain('"italic"'));
+
+    await user.click(screen.getByTitle("Unterstrichen"));
+    await waitFor(() => expect(JSON.stringify(latest)).toContain('"underline"'));
+
+    await user.click(screen.getByTitle("Durchgestrichen"));
+    await waitFor(() => expect(JSON.stringify(latest)).toContain('"strike"'));
+
+    await user.click(screen.getByTitle("Code"));
+    await waitFor(() => expect(JSON.stringify(latest)).toContain('"code"'));
+
+    await user.click(screen.getByTitle("Aufzählung"));
+    await waitFor(() => expect(JSON.stringify(latest)).toContain('"bulletList"'));
+
+    await user.click(screen.getByTitle("Nummerierte Liste"));
+    await waitFor(() => expect(JSON.stringify(latest)).toContain('"orderedList"'));
+
+    await user.click(screen.getByTitle("Checkliste"));
+    await waitFor(() => expect(JSON.stringify(latest)).toContain('"taskList"'));
+  });
+
+  it("A50 link uses toolbar prompt — no Mod-K shortcut wired in editor", () => {
+    const src = readFileSync(
+      join(process.cwd(), "components/admin/aufgaben/TaskDescriptionEditor.tsx"),
+      "utf8",
+    );
+    expect(src).not.toMatch(/addKeyboardShortcuts|Mod-k|Mod-K/i);
   });
 });
