@@ -14,6 +14,8 @@ import { buildTrainingSeriesWochenplanerHref } from "@/lib/training/wochenplaner
 import { formatTrainingSeriesEditHeaderMeta } from "@/lib/training/training-series-edit-presentation";
 import { TrainingAllocationEditor } from "@/components/admin/training/TrainingAllocationEditor";
 import TrainingSeriesRecordWorkspace from "@/components/admin/training/record/TrainingSeriesRecordWorkspace";
+import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
+import ContextualTaskCreateTriggerServer from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTriggerServer";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { prisma } from "@/lib/db/prisma";
 import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-operational-duration-policy-service";
@@ -170,6 +172,23 @@ export default async function EditTrainingSeriesPage({ params }: Props) {
         participationReminder1PresetKey: series.participationReminder1PresetKey,
         participationReminder2PresetKey: series.participationReminder2PresetKey,
       }}
+      createTaskAction={
+        <ContextualTaskCreateTriggerServer
+          contextType="TRAINING"
+          contextId={series.id}
+          variant="menuItem"
+          locale="de-CH"
+          timeZone={series.timezone}
+        />
+      }
+      relatedTasksPanel={
+        <ContextRelatedTasksPanel
+          contextType="TRAINING"
+          contextId={series.id}
+          locale="de-CH"
+          timeZone={series.timezone}
+        />
+      }
     />
   );
 }

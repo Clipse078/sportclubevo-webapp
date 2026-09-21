@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type {
   TeamCockpitMatch,
   TeamCockpitResult,
@@ -81,6 +82,7 @@ type Props = {
   canManagePhoto: boolean;
   availableOrgUnits: OrgUnitOption[];
   availableCompetitions: CompetitionOption[];
+  relatedTasksPanel?: ReactNode;
 };
 
 /**
@@ -100,6 +102,7 @@ export default function TeamCockpitOverviewContent({
   canManagePhoto,
   availableOrgUnits,
   availableCompetitions,
+  relatedTasksPanel,
 }: Props) {
   return (
     <div className="space-y-6" data-testid="team-cockpit-overview-content">
@@ -135,6 +138,8 @@ export default function TeamCockpitOverviewContent({
       </div>
 
       <TeamOverviewOperationalLinks teamId={team.id} />
+
+      {relatedTasksPanel}
     </div>
   );
 }

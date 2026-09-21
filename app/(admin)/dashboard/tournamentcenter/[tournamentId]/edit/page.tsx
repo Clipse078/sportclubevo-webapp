@@ -10,6 +10,8 @@ import { getTenantOperationalDurationPolicy } from "@/lib/operational/tenant-ope
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { PageShell } from "@/components/ui/page";
 import TournamentEditForm from "@/components/admin/tournamentcenter/TournamentEditForm";
+import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
+import ContextualTaskCreateTriggerServer from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTriggerServer";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 
 type Props = { params: Promise<{ tournamentId: string }> };
@@ -81,6 +83,23 @@ export default async function TournamentEditPage({ params }: Props) {
           tenantLogoUrl={tenantContext.logoUrl}
           defaultTournamentDurationMinutes={operationalDurationPolicy.TOURNAMENT.durationMinutes}
           canManageFacilitiesTimeStandards={canManageFacilitiesTimeStandards}
+          createTaskAction={
+            <ContextualTaskCreateTriggerServer
+              contextType="TOURNAMENT"
+              contextId={tournament.id}
+              variant="menuItem"
+              locale={tenantContext.locale ?? "de-CH"}
+              timeZone={tenantContext.timezone ?? "Europe/Zurich"}
+            />
+          }
+          relatedTasksPanel={
+            <ContextRelatedTasksPanel
+              contextType="TOURNAMENT"
+              contextId={tournament.id}
+              locale={tenantContext.locale ?? "de-CH"}
+              timeZone={tenantContext.timezone ?? "Europe/Zurich"}
+            />
+          }
         />
       </ToastProvider>
     </PageShell>

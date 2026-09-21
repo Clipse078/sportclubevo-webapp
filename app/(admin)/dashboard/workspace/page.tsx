@@ -28,6 +28,8 @@ import {
 } from "@/lib/workspace/queries";
 import type { WorkspaceFolderDto } from "@/lib/workspace/dto";
 import { listWorkspaceDocuments } from "@/lib/workspace/document-service";
+import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
+import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { buildWorkspaceBreadcrumbs } from "@/lib/workspace/breadcrumbs";
 import {
   PageBreadcrumbs,
@@ -178,6 +180,20 @@ export default async function WorkspacePage({
     ? buildWorkspaceBreadcrumbs(folders, selectedFolder.id)
     : [];
 
+  const tenantContext = await getActiveTenant();
+  const workspaceLocale = tenantContext?.locale ?? "de-CH";
+  const workspaceTimeZone = tenantContext?.timezone ?? "Europe/Zurich";
+
+  const documentContextualTasksPanel =
+    initialSelectedDocumentId != null ? (
+      <ContextRelatedTasksPanel
+        contextType="DOCUMENT"
+        contextId={initialSelectedDocumentId}
+        locale={workspaceLocale}
+        timeZone={workspaceTimeZone}
+      />
+    ) : null;
+
   return (
     <PageShell fullWidth>
       <PageBreadcrumbs
@@ -245,6 +261,7 @@ export default async function WorkspacePage({
             folderPath={folderPath}
             canManage={canManage}
             canDelete={canDelete}
+            documentContextualTasksPanel={documentContextualTasksPanel}
             folderManagementSlot={
               canManage ? (
                 <div className="space-y-3">

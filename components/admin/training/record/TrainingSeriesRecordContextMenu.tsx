@@ -1,8 +1,8 @@
 "use client";
 
-import { CalendarDays, MoreHorizontal, RotateCcw, Trash2 } from "lucide-react";
+import { CalendarDays, MoreHorizontal, RotateCcw } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import TrainingSeriesArchiveButton from "@/components/admin/training/TrainingSeriesArchiveButton";
 import TrainingSeriesDeleteControl from "@/components/admin/training/TrainingSeriesDeleteControl";
 import { PopoverContent } from "@/components/ui/Popover";
@@ -15,6 +15,7 @@ type Props = {
   status: "ACTIVE" | "INACTIVE" | "ARCHIVED";
   canManage: boolean;
   canDelete: boolean;
+  createTaskAction?: ReactNode;
   onRestored?: () => void;
 };
 
@@ -25,6 +26,7 @@ export default function TrainingSeriesRecordContextMenu({
   status,
   canManage,
   canDelete,
+  createTaskAction,
   onRestored,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -104,6 +106,12 @@ export default function TrainingSeriesRecordContextMenu({
             <CalendarDays className="h-4 w-4 shrink-0 text-violet-400" aria-hidden />
             Im Wochenplaner anzeigen
           </Link>
+
+          {createTaskAction ? (
+            <div onClick={closeMenu} data-testid="training-record-menu-create-task">
+              {createTaskAction}
+            </div>
+          ) : null}
 
           {showRestore ? (
             <>

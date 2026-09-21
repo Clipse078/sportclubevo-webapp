@@ -37,6 +37,8 @@ import { Badge, StatusIndicator } from "@/components/ui";
 import { MetadataCard } from "@/components/ui/MetadataCard";
 import PersonHeaderPhotoAdmin from "@/components/admin/persons/PersonHeaderPhotoAdmin";
 import PersonDetailTabs from "@/components/admin/persons/PersonDetailTabs";
+import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
+import ContextualTaskCreateTriggerServer from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTriggerServer";
 import PersonDeleteButton from "@/components/admin/persons/PersonDeleteButton";
 import { TENANT_ROLES_ASSIGN, TENANT_ROLES_VIEW } from "@/lib/roles/access";
 import { getTenantRoleAssignmentForUser, getTenantRolesOverview } from "@/lib/roles/tenant-queries";
@@ -212,6 +214,12 @@ export default async function PersonDetailPage({ params }: PageProps) {
         ]}
         headerActions={
           <div className="flex items-center gap-2">
+            <ContextualTaskCreateTriggerServer
+              contextType="PERSON"
+              contextId={person.id}
+              variant="button"
+              label="+ Aufgabe"
+            />
             {canManage ? (
               <Link
                 href={`/dashboard/persons/${person.id}/edit`}
@@ -289,6 +297,7 @@ export default async function PersonDetailPage({ params }: PageProps) {
         }
         sidebar={
           <>
+            <ContextRelatedTasksPanel contextType="PERSON" contextId={person.id} />
             {/* Metadata only — AccessRolesCard moved to Zugang tab (PERSON-UX-01) */}
             <MetadataCard
               fields={[

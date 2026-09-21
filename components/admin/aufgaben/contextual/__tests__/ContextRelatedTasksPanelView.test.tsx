@@ -57,6 +57,31 @@ describe("ContextRelatedTasksPanelView empty states", () => {
     expect(screen.queryByTestId("contextual-task-create-trigger")).not.toBeInTheDocument();
   });
 
+  it("visible tasks render rows linked to canonical workspace", () => {
+    render(
+      <ContextRelatedTasksPanelView
+        {...baseProps}
+        canCreate={false}
+        createDialogProps={null}
+        actionableCount={2}
+        tasks={[
+          {
+            id: "task-1",
+            title: "First",
+            status: "OPEN",
+            priority: "NORMAL",
+            dueAt: null,
+            assignees: [{ userId: "u1", firstName: "A", lastName: "B" }],
+          },
+        ]}
+      />,
+    );
+    const row = screen.getByTestId("context-related-task-row");
+    expect(row).toHaveAttribute("href", "/dashboard/aufgaben/task-1");
+    expect(screen.getByTestId("context-related-tasks-list")).toBeInTheDocument();
+    expect(screen.queryByTestId("context-related-tasks-empty")).not.toBeInTheDocument();
+  });
+
   it("hidden-only Tasks appear as zero visible (count 0, no task rows)", () => {
     render(
       <ContextRelatedTasksPanelView
