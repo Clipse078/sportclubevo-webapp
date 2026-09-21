@@ -1,5 +1,5 @@
 /**
- * AUFGABEN-06A — Task-native comment service (visibility follows canonical Task auth).
+ * AUFGABEN-06A/06B — Task-native comment service (visibility follows canonical Task auth).
  */
 
 import type { Prisma } from "@prisma/client";
@@ -13,7 +13,20 @@ import {
 } from "./task-access";
 import type { TaskServiceContext } from "./types";
 import { canManageTask } from "./visibility";
-import { enrichTaskComments, type TaskCommentDto } from "./task-comment-enrichment";
+import {
+  enrichTaskComments,
+  type TaskCommentDto,
+  type TaskCommentMentionDto,
+} from "./task-comment-enrichment";
+import { validateMentionedUsersForTask } from "./task-mention-auth";
+import { emitTaskMentionNotifications } from "./task-mention-producer";
+import { resolveAuditActorDisplayName } from "@/lib/registrations/actor-display";
+
+const mentionSelect = {
+  id: true,
+  userId: true,
+  createdAt: true,
+} as const;
 
 const commentSelect = {
   id: true,
@@ -24,6 +37,10 @@ const commentSelect = {
   deletedAt: true,
   createdAt: true,
   updatedAt: true,
+  mentions: {
+    select: mentionSelect,
+    orderBy: { createdAt: "asc" as const },
+  },
 } as const;
 
 export type TaskCommentRecord = Prisma.TaskCommentGetPayload<{ select: typeof commentSelect }>;
@@ -43,6 +60,28 @@ function normalizeBody(body: string): string {
 
 function authFromTaskRow(row: VisibleTaskRow) {
   return taskAuthorizationFromRow(row);
+}
+
+function mentionExcerpt(body: string): string {
+  const line = body.split("\n")[0]?.trim() ?? body.trim();
+  return line;
+}
+
+async function resolveActorDisplayName(tenantId: string, userId: string): Promise<string> {
+  const user = await prisma.user.findFirst({
+    where: { id: userId },
+    select: {
+      firstName: true,
+      lastName: true,
+      email: true,
+      person: {
+        where: { tenantId },
+        select: { firstName: true, lastName: true, displayName: true },
+      },
+    },
+  });
+  if (!user) return "Unbekannt";
+  return resolveAuditActorDisplayName(user) ?? user.email ?? "Unbekannt";
 }
 
 async function requireCommentForTask(
@@ -86,19 +125,43 @@ export async function createTaskComment(
   ctx: TaskServiceContext,
   taskId: string,
   body: string,
+  mentionedUserIds: string[] = [],
 ): Promise<TaskCommentDto> {
-  await requireVisibleTask(ctx, taskId);
+  const task = await requireVisibleTask(ctx, taskId);
   const normalizedBody = normalizeBody(body);
+  const validatedMentions = await validateMentionedUsersForTask(ctx, task, mentionedUserIds);
 
-  const comment = await prisma.taskComment.create({
-    data: {
-      tenantId: ctx.tenantId,
-      taskId,
-      authorUserId: ctx.userId,
-      body: normalizedBody,
-    },
-    select: commentSelect,
+  const comment = await prisma.$transaction(async (tx) => {
+    return tx.taskComment.create({
+      data: {
+        tenantId: ctx.tenantId,
+        taskId,
+        authorUserId: ctx.userId,
+        body: normalizedBody,
+        mentions:
+          validatedMentions.length > 0
+            ? {
+                create: validatedMentions.map((userId) => ({
+                  tenantId: ctx.tenantId,
+                  userId,
+                })),
+              }
+            : undefined,
+      },
+      select: commentSelect,
+    });
   });
+
+  if (validatedMentions.length > 0) {
+    const actorDisplayName = await resolveActorDisplayName(ctx.tenantId, ctx.userId);
+    await emitTaskMentionNotifications(task, {
+      commentId: comment.id,
+      commentExcerpt: mentionExcerpt(normalizedBody),
+      actorUserId: ctx.userId,
+      actorDisplayName,
+      mentionedUserIds: validatedMentions,
+    });
+  }
 
   const [dto] = await enrichTaskComments(ctx.tenantId, [comment]);
   return dto!;
@@ -109,8 +172,9 @@ export async function updateTaskComment(
   taskId: string,
   commentId: string,
   body: string,
+  mentionedUserIds: string[] = [],
 ): Promise<TaskCommentDto> {
-  await requireVisibleTask(ctx, taskId);
+  const task = await requireVisibleTask(ctx, taskId);
   const normalizedBody = normalizeBody(body);
   const existing = await requireCommentForTask(ctx, taskId, commentId);
 
@@ -118,11 +182,42 @@ export async function updateTaskComment(
     throw new TaskForbiddenError("Nur der Autor kann diesen Kommentar bearbeiten.");
   }
 
-  const comment = await prisma.taskComment.update({
-    where: { id: commentId },
-    data: { body: normalizedBody },
-    select: commentSelect,
+  const validatedMentions = await validateMentionedUsersForTask(ctx, task, mentionedUserIds);
+  const oldMentionIds = new Set(existing.mentions.map((m) => m.userId));
+  const addedMentions = validatedMentions.filter((id) => !oldMentionIds.has(id));
+
+  const comment = await prisma.$transaction(async (tx) => {
+    await tx.taskCommentMention.deleteMany({
+      where: { tenantId: ctx.tenantId, commentId },
+    });
+
+    if (validatedMentions.length > 0) {
+      await tx.taskCommentMention.createMany({
+        data: validatedMentions.map((userId) => ({
+          tenantId: ctx.tenantId,
+          commentId,
+          userId,
+        })),
+      });
+    }
+
+    return tx.taskComment.update({
+      where: { id: commentId },
+      data: { body: normalizedBody },
+      select: commentSelect,
+    });
   });
+
+  if (addedMentions.length > 0) {
+    const actorDisplayName = await resolveActorDisplayName(ctx.tenantId, ctx.userId);
+    await emitTaskMentionNotifications(task, {
+      commentId: comment.id,
+      commentExcerpt: mentionExcerpt(normalizedBody),
+      actorUserId: ctx.userId,
+      actorDisplayName,
+      mentionedUserIds: addedMentions,
+    });
+  }
 
   const [dto] = await enrichTaskComments(ctx.tenantId, [comment]);
   return dto!;
@@ -177,3 +272,5 @@ export async function getTaskCommentForTimeline(
     take,
   });
 }
+
+export type { TaskCommentMentionDto };

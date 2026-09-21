@@ -219,6 +219,7 @@ describe("AUFGABEN-06A timeline mapper", () => {
       authorUserId: USER,
       authorDisplayName: actor,
       body: null,
+      mentions: [],
       isDeleted: true,
       isEdited: false,
       createdAt: "2026-09-01T10:00:00.000Z",
@@ -235,6 +236,7 @@ describe("AUFGABEN-06A timeline mapper", () => {
       authorUserId: USER,
       authorDisplayName: actor,
       body: "Text",
+      mentions: [],
       isDeleted: false,
       isEdited: true,
       createdAt: "2026-09-01T10:00:00.000Z",
@@ -266,6 +268,7 @@ describe("AUFGABEN-06A timeline page loader", () => {
         deletedAt: null,
         createdAt: new Date("2026-09-02T10:00:00.000Z"),
         updatedAt: new Date("2026-09-02T10:00:00.000Z"),
+        mentions: [],
       },
     ]);
 
@@ -337,6 +340,7 @@ describe("AUFGABEN-06A timeline page loader", () => {
         deletedAt: null,
         createdAt: same,
         updatedAt: same,
+        mentions: [],
       },
     ]);
     const page = await loadTaskTimelinePage(ctx(), TASK);

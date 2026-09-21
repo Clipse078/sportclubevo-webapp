@@ -95,6 +95,7 @@ function comment(id: string, createdAt: Date) {
     deletedAt: null,
     createdAt,
     updatedAt: createdAt,
+    mentions: [],
   };
 }
 

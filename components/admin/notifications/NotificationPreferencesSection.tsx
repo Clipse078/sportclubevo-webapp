@@ -10,6 +10,7 @@ const TYPE_LABELS: Record<string, string> = {
   TASK_OVERDUE: "Aufgabe überfällig",
   TASK_DEADLINE_CHANGED: "Frist geändert",
   TASK_REMINDER: "Aufgaben-Erinnerung",
+  TASK_MENTION: "Erwähnung in Aufgabe",
   PARTICIPATION_REMINDER: "Teilnahme-Erinnerung",
   PARTICIPATION_OVERDUE: "Teilnahme-Antwort ausstehend",
 };
