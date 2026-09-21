@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, MoreHorizontal, RotateCcw, Trash2 } from "lucide-react";
+import { CalendarDays, MoreHorizontal, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import TrainingSeriesArchiveButton from "@/components/admin/training/TrainingSeriesArchiveButton";
