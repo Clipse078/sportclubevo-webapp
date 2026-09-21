@@ -20,6 +20,7 @@ import {
 } from "./task-comment-enrichment";
 import { validateMentionedUsersForTask } from "./task-mention-auth";
 import { emitTaskMentionNotifications } from "./task-mention-producer";
+import { emitTaskCommentNotifications } from "./task-comment-producer";
 import { resolveAuditActorDisplayName } from "@/lib/registrations/actor-display";
 
 const mentionSelect = {
@@ -152,8 +153,9 @@ export async function createTaskComment(
     });
   });
 
+  const actorDisplayName = await resolveActorDisplayName(ctx.tenantId, ctx.userId);
+
   if (validatedMentions.length > 0) {
-    const actorDisplayName = await resolveActorDisplayName(ctx.tenantId, ctx.userId);
     await emitTaskMentionNotifications(task, {
       commentId: comment.id,
       commentExcerpt: mentionExcerpt(normalizedBody),
@@ -162,6 +164,14 @@ export async function createTaskComment(
       mentionedUserIds: validatedMentions,
     });
   }
+
+  await emitTaskCommentNotifications(task, {
+    commentId: comment.id,
+    commentExcerpt: mentionExcerpt(normalizedBody),
+    actorUserId: ctx.userId,
+    actorDisplayName,
+    excludeRecipientUserIds: validatedMentions,
+  });
 
   const [dto] = await enrichTaskComments(ctx.tenantId, [comment]);
   return dto!;

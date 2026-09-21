@@ -61,6 +61,11 @@ import { searchTaskMentionCandidates } from "@/lib/tasks/task-mention-candidates
 import { requireVisibleTask } from "@/lib/tasks/task-access";
 import { loadTaskTimelinePage } from "@/lib/tasks/task-timeline-service";
 import type { TaskTimelinePageDto } from "@/lib/tasks/task-timeline-types";
+import {
+  followTask,
+  unfollowTask,
+  type TaskFollowStateDto,
+} from "@/lib/tasks/task-follow-service";
 
 export type AufgabenActionResult =
   | { ok: true; taskId?: string }
@@ -72,6 +77,10 @@ export type TaskTimelineActionResult =
 
 export type TaskCommentActionResult =
   | { ok: true; commentId: string }
+  | { ok: false; message: string };
+
+export type TaskFollowActionResult =
+  | { ok: true; state: TaskFollowStateDto }
   | { ok: false; message: string };
 
 function revalidateTaskPaths(taskId?: string) {
@@ -1083,6 +1092,36 @@ export async function searchTaskMentionCandidatesAction(
     const task = await requireVisibleTask(ctx, taskId);
     const options = await searchTaskMentionCandidates(ctx, task, query);
     return { ok: true, options };
+  } catch (error) {
+    return { ok: false, message: actionErrorMessage(error) };
+  }
+}
+
+export async function followTaskAction(taskId: string): Promise<TaskFollowActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) {
+    return { ok: false, message: "Nicht angemeldet." };
+  }
+
+  try {
+    const state = await followTask(ctx, taskId);
+    revalidateTaskPaths(taskId);
+    return { ok: true, state };
+  } catch (error) {
+    return { ok: false, message: actionErrorMessage(error) };
+  }
+}
+
+export async function unfollowTaskAction(taskId: string): Promise<TaskFollowActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) {
+    return { ok: false, message: "Nicht angemeldet." };
+  }
+
+  try {
+    const state = await unfollowTask(ctx, taskId);
+    revalidateTaskPaths(taskId);
+    return { ok: true, state };
   } catch (error) {
     return { ok: false, message: actionErrorMessage(error) };
   }

@@ -49,6 +49,10 @@ vi.mock("../context-presentation", () => ({
   resolveTaskContextPresentation: vi.fn().mockResolvedValue(null),
 }));
 
+vi.mock("../task-follow-service", () => ({
+  getTaskFollowState: vi.fn(async () => ({ isFollowing: false, followerCount: 0 })),
+}));
+
 vi.mock("../task-service", () => ({
   getTask: vi.fn(),
 }));

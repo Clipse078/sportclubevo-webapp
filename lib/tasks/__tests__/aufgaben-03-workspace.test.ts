@@ -22,6 +22,10 @@ vi.mock("../context-presentation", () => ({
   resolveTaskContextPresentation: vi.fn().mockResolvedValue(null),
 }));
 
+vi.mock("../task-follow-service", () => ({
+  getTaskFollowState: vi.fn(async () => ({ isFollowing: false, followerCount: 0 })),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     task: {
@@ -299,6 +303,7 @@ describe("AUFGABEN-03 matrix coverage hooks", () => {
       "utf8",
     );
     expect(source).toContain("TaskActivitySection");
+    expect(source).toContain("TaskFollowControl");
     expect(source).not.toContain("Aktivität — folgt in einer späteren Version.");
   });
 

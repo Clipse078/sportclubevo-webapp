@@ -48,6 +48,10 @@ vi.mock("../task-mention-producer", () => ({
   emitTaskMentionNotifications: (...args: unknown[]) => mocks.emitNotifications(...args),
 }));
 
+vi.mock("../task-comment-producer", () => ({
+  emitTaskCommentNotifications: vi.fn(async () => undefined),
+}));
+
 import { createTaskComment, updateTaskComment } from "../task-comment-service";
 
 const TENANT = "tenant-a";

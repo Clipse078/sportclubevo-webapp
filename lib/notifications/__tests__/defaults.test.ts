@@ -6,6 +6,7 @@ describe("notification defaults", () => {
     const defaults = getDefaultNotificationPreferences();
     expect(defaults.TASK_ASSIGNED).toEqual({ inAppEnabled: true, emailEnabled: true });
     expect(defaults.TASK_MENTION).toEqual({ inAppEnabled: true, emailEnabled: true });
+    expect(defaults.TASK_COMMENT).toEqual({ inAppEnabled: true, emailEnabled: true });
     expect(defaults.TASK_DEADLINE_CHANGED).toEqual({
       inAppEnabled: true,
       emailEnabled: false,

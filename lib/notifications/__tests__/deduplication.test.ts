@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildTaskAssignedDedupKey,
   buildTaskDueSoonDedupKey,
+  buildTaskCommentDedupKey,
   buildTaskMentionDedupKey,
   buildTaskOverdueDedupKey,
 } from "../deduplication";
@@ -36,6 +37,12 @@ describe("notification deduplication keys", () => {
     expect(
       buildTaskMentionDedupKey({ commentId: "comment-1", recipientUserId: "user-1" }),
     ).toBe("TASK_MENTION:comment-1:user-1");
+  });
+
+  it("builds stable task comment keys per comment and recipient", () => {
+    expect(
+      buildTaskCommentDedupKey({ commentId: "comment-1", recipientUserId: "user-1" }),
+    ).toBe("TASK_COMMENT:comment-1:user-1");
   });
 
   it("includes dueAt in due-soon and overdue keys", () => {

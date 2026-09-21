@@ -57,6 +57,22 @@ export function buildTaskOverdueCopy(taskTitle: string, dueLabel: string): {
   };
 }
 
+export function buildTaskCommentCopy(input: {
+  actorDisplayName: string;
+  taskTitle: string;
+  commentExcerpt: string;
+}): { title: string; body: string } {
+  const actor = input.actorDisplayName.trim() || "Jemand";
+  const excerpt =
+    input.commentExcerpt.length > 120
+      ? `${input.commentExcerpt.slice(0, 117).trim()}…`
+      : input.commentExcerpt;
+  return {
+    title: `${actor} hat „${input.taskTitle}“ kommentiert`,
+    body: excerpt ? `${excerpt}\nZur Aufgabe` : "Zur Aufgabe",
+  };
+}
+
 export function buildTaskMentionCopy(input: {
   actorDisplayName: string;
   taskTitle: string;
