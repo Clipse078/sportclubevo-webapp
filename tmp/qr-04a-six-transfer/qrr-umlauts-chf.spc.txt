@@ -1,0 +1,31 @@
+SPC
+0200
+1
+CH693000523573415901X
+S
+Müller & Söhne Verwaltung
+Musterstrasse
+1
+8000
+Zürich
+CH
+
+
+
+
+
+
+
+215.12
+CHF
+S
+Grüezi Bäcker AG
+Brötwg
+12
+4000
+Basel
+CH
+QRR
+273282026000002025434650072
+Rechnung für Grösse & Qualität
+EPD
