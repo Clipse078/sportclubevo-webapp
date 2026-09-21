@@ -15,7 +15,11 @@ const mocks = vi.hoisted(() => ({
   taskCommentFindMany: vi.fn(),
   taskCommentCreate: vi.fn(),
   taskCommentUpdate: vi.fn(),
+  mentionDeleteMany: vi.fn(),
+  mentionCreateMany: vi.fn(),
   userFindMany: vi.fn(),
+  userFindFirst: vi.fn(),
+  transaction: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -27,8 +31,21 @@ vi.mock("@/lib/db/prisma", () => ({
       create: mocks.taskCommentCreate,
       update: mocks.taskCommentUpdate,
     },
-    user: { findMany: mocks.userFindMany },
+    taskCommentMention: {
+      deleteMany: mocks.mentionDeleteMany,
+      createMany: mocks.mentionCreateMany,
+    },
+    user: { findMany: mocks.userFindMany, findFirst: mocks.userFindFirst },
+    $transaction: mocks.transaction,
   },
+}));
+
+vi.mock("../task-mention-auth", () => ({
+  validateMentionedUsersForTask: vi.fn(async (_ctx, _task, ids: string[]) => ids),
+}));
+
+vi.mock("../task-mention-producer", () => ({
+  emitTaskMentionNotifications: vi.fn(async () => undefined),
 }));
 
 import {
@@ -92,6 +109,7 @@ function commentRow(overrides: Record<string, unknown> = {}) {
     deletedAt: null,
     createdAt,
     updatedAt: createdAt,
+    mentions: [],
     ...overrides,
   };
 }
@@ -102,6 +120,22 @@ beforeEach(() => {
   mocks.userFindMany.mockResolvedValue([
     { id: AUTHOR, firstName: "Anna", lastName: "Author", email: "a@example.com", person: null },
   ]);
+  mocks.transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+    fn({
+      taskComment: {
+        create: mocks.taskCommentCreate,
+        update: mocks.taskCommentUpdate,
+      },
+      taskCommentMention: {
+        deleteMany: mocks.mentionDeleteMany,
+        createMany: mocks.mentionCreateMany,
+      },
+    }),
+  );
+  mocks.taskCommentCreate.mockImplementation(async (args: { select: unknown }) =>
+    commentRow({ ...(args as { data?: Record<string, unknown> }).data }),
+  );
+  mocks.taskCommentUpdate.mockImplementation(async () => commentRow());
 });
 
 describe("AUFGABEN-06A comment service", () => {
@@ -109,12 +143,11 @@ describe("AUFGABEN-06A comment service", () => {
     mocks.taskCommentCreate.mockResolvedValue(commentRow());
     const dto = await createTaskComment(ctx(), TASK, "  Hallo Team  ");
     expect(dto.body).toBe("Hallo Team");
-    expect(mocks.taskCommentCreate).toHaveBeenCalledWith(
+    expect(mocks.taskCommentCreate).toHaveBeenCalled();
+    expect(mocks.taskCommentCreate.mock.calls[0]?.[0].data).toEqual(
       expect.objectContaining({
-        data: expect.objectContaining({
-          authorUserId: AUTHOR,
-          body: "Hallo Team",
-        }),
+        authorUserId: AUTHOR,
+        body: "Hallo Team",
       }),
     );
   });
@@ -131,7 +164,7 @@ describe("AUFGABEN-06A comment service", () => {
     const body = "ä".repeat(MAX_TASK_COMMENT_BODY_LENGTH);
     mocks.taskCommentCreate.mockResolvedValue(commentRow({ body }));
     await createTaskComment(ctx(), TASK, body);
-    expect(mocks.taskCommentCreate.mock.calls[0]?.[0].data.body).toHaveLength(
+    expect(mocks.taskCommentCreate.mock.calls[0]?.[0].data.body as string).toHaveLength(
       MAX_TASK_COMMENT_BODY_LENGTH,
     );
   });

@@ -1,10 +1,15 @@
 /**
- * AUFGABEN-06A — Human-facing task comment DTO enrichment.
+ * AUFGABEN-06A/06B — Human-facing task comment DTO enrichment.
  */
 
 import { prisma } from "@/lib/db/prisma";
 import { resolveAuditActorDisplayName } from "@/lib/registrations/actor-display";
 import type { TaskCommentRecord } from "./task-comment-service";
+
+export type TaskCommentMentionDto = {
+  userId: string;
+  displayName: string;
+};
 
 export type TaskCommentDto = {
   id: string;
@@ -12,6 +17,7 @@ export type TaskCommentDto = {
   authorUserId: string;
   authorDisplayName: string;
   body: string | null;
+  mentions: TaskCommentMentionDto[];
   isDeleted: boolean;
   isEdited: boolean;
   createdAt: string;
@@ -40,9 +46,16 @@ export async function enrichTaskComments(
 ): Promise<TaskCommentDto[]> {
   if (comments.length === 0) return [];
 
-  const userIds = [...new Set(comments.map((c) => c.authorUserId))];
+  const userIds = new Set<string>();
+  for (const comment of comments) {
+    userIds.add(comment.authorUserId);
+    for (const mention of comment.mentions) {
+      userIds.add(mention.userId);
+    }
+  }
+
   const users = await prisma.user.findMany({
-    where: { id: { in: userIds } },
+    where: { id: { in: [...userIds] } },
     select: {
       id: true,
       ...auditActorSelect(tenantId),
@@ -62,12 +75,20 @@ export async function enrichTaskComments(
     const isEdited =
       !isDeleted && comment.updatedAt.getTime() > comment.createdAt.getTime() + 1000;
 
+    const mentions: TaskCommentMentionDto[] = isDeleted
+      ? []
+      : comment.mentions.map((mention) => ({
+          userId: mention.userId,
+          displayName: displayByUserId.get(mention.userId) ?? "Unbekannt",
+        }));
+
     return {
       id: comment.id,
       taskId: comment.taskId,
       authorUserId: comment.authorUserId,
       authorDisplayName: displayByUserId.get(comment.authorUserId) ?? "Unbekannt",
       body: isDeleted ? null : comment.body,
+      mentions,
       isDeleted,
       isEdited,
       createdAt: comment.createdAt.toISOString(),

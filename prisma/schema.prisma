@@ -387,6 +387,7 @@ enum NotificationType {
   TASK_OVERDUE
   TASK_DEADLINE_CHANGED
   TASK_REMINDER
+  TASK_MENTION
   PARTICIPATION_REMINDER
   PARTICIPATION_OVERDUE
 }
@@ -870,6 +871,7 @@ model Tenant {
   internalComments                InternalComment[]
   commentMentions                 CommentMention[]
   taskComments                    TaskComment[]
+  taskCommentMentions             TaskCommentMention[]
 
   @@index([status])
   @@index([name])
@@ -962,6 +964,7 @@ model User {
   authoredInternalComments     InternalComment[]      @relation("InternalCommentAuthor")
   commentMentionsReceived      CommentMention[]       @relation("CommentMentionUser")
   authoredTaskComments         TaskComment[]          @relation("TaskCommentAuthor")
+  taskCommentMentionsReceived  TaskCommentMention[]   @relation("TaskCommentMentionUser")
 
   linkedTenantBillingAccounts TenantBillingAccount[] @relation("TenantBillingAccountLinkedBy")
 
@@ -2875,9 +2878,28 @@ model TaskComment {
   tenant     Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   task       Task   @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   authorUser User   @relation("TaskCommentAuthor", fields: [authorUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  mentions   TaskCommentMention[]
 
   @@index([tenantId])
   @@index([tenantId, taskId, createdAt])
+}
+
+/// AUFGABEN-06B — structured @mention metadata for task comments (User identity only).
+model TaskCommentMention {
+  id        String   @id @default(cuid())
+  tenantId  String
+  commentId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  tenant  Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  comment TaskComment @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user    User        @relation("TaskCommentMentionUser", fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([commentId, userId])
+  @@index([tenantId])
+  @@index([tenantId, commentId])
+  @@index([tenantId, userId])
 }
 
 /// AUFGABEN-01B — recurrence definition (series), distinct from actionable Task occurrences.

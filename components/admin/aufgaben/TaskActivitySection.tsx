@@ -12,6 +12,7 @@ import {
   updateTaskCommentAction,
 } from "@/app/(admin)/dashboard/aufgaben/actions";
 import { TaskCommentComposer } from "./TaskCommentComposer";
+import { TaskCommentBody } from "./TaskCommentBody";
 
 type Props = {
   taskId: string;
@@ -85,6 +86,7 @@ function CommentActionsMenu({
 }
 
 function TimelineEntryItem({
+  taskId,
   entry,
   currentUserId,
   canCollaborate,
@@ -93,12 +95,17 @@ function TimelineEntryItem({
   onEditComment,
   onDeleteComment,
 }: {
+  taskId: string;
   entry: TaskTimelineEntryDto;
   currentUserId: string;
   canCollaborate: boolean;
   locale: string;
   timeZone: string;
-  onEditComment: (commentId: string, body: string) => Promise<void>;
+  onEditComment: (
+    commentId: string,
+    body: string,
+    mentionedUserIds: string[],
+  ) => Promise<void>;
   onDeleteComment: (commentId: string) => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
@@ -108,7 +115,8 @@ function TimelineEntryItem({
 
   return (
     <article
-      className="border-b border-[var(--border)]/60 py-3 last:border-b-0"
+      id={entry.commentAnchorId ?? undefined}
+      className="border-b border-[var(--border)]/60 py-3 last:border-b-0 scroll-mt-24"
       data-testid={`task-timeline-entry-${entry.id}`}
     >
       <div className="flex items-start gap-3">
@@ -150,18 +158,20 @@ function TimelineEntryItem({
               <p className="italic text-[var(--muted)]">Kommentar gelöscht</p>
             ) : editing ? (
               <TaskCommentComposer
+                taskId={taskId}
                 initialBody={entry.body ?? ""}
+                initialMentionedUserIds={entry.mentions.map((m) => m.userId)}
                 submitLabel="Speichern"
                 onCancel={() => setEditing(false)}
-                onSubmit={async (body) => {
+                onSubmit={async (payload) => {
                   if (!commentId) return;
-                  await onEditComment(commentId, body);
+                  await onEditComment(commentId, payload.body, payload.mentionedUserIds);
                   setEditing(false);
                 }}
               />
-            ) : (
-              <p className="whitespace-pre-wrap break-words">{entry.body}</p>
-            )}
+            ) : entry.body ? (
+              <TaskCommentBody body={entry.body} mentions={entry.mentions} />
+            ) : null}
           </div>
         </div>
       </div>
@@ -243,16 +253,20 @@ function TaskActivitySectionBody({
     setLoadingMore(false);
   }
 
-  async function handleCreate(body: string) {
-    const result = await createTaskCommentAction(taskId, body);
+  async function handleCreate(payload: { body: string; mentionedUserIds: string[] }) {
+    const result = await createTaskCommentAction(taskId, payload.body, payload.mentionedUserIds);
     if (!result.ok) {
       throw new Error(result.message);
     }
     await refreshTimeline();
   }
 
-  async function handleEdit(commentId: string, body: string) {
-    const result = await updateTaskCommentAction(taskId, commentId, body);
+  async function handleEdit(
+    commentId: string,
+    body: string,
+    mentionedUserIds: string[],
+  ) {
+    const result = await updateTaskCommentAction(taskId, commentId, body, mentionedUserIds);
     if (!result.ok) {
       throw new Error(result.message);
     }
@@ -274,7 +288,7 @@ function TaskActivitySectionBody({
 
       {canCollaborate ? (
         <div className="mb-4">
-          <TaskCommentComposer onSubmit={handleCreate} />
+          <TaskCommentComposer taskId={taskId} onSubmit={handleCreate} />
         </div>
       ) : null}
 
@@ -313,6 +327,7 @@ function TaskActivitySectionBody({
           {entries.map((entry) => (
             <TimelineEntryItem
               key={timelineEntryKey(entry)}
+              taskId={taskId}
               entry={entry}
               currentUserId={currentUserId}
               canCollaborate={canCollaborate}

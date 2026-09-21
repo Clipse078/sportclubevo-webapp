@@ -54,6 +54,18 @@ export function taskWorkspaceHref(taskId: string): string {
   return `/dashboard/aufgaben/${taskId}`;
 }
 
+/** AUFGABEN-06B — deep link to task workspace comment anchor (stable per comment). */
+export function taskWorkspaceCommentHref(taskId: string, commentId: string): string {
+  return `${taskWorkspaceHref(taskId)}#comment-${commentId}`;
+}
+
+export function buildTaskMentionDedupKey(input: {
+  commentId: string;
+  recipientUserId: string;
+}): string {
+  return `TASK_MENTION:${input.commentId}:${input.recipientUserId}`;
+}
+
 export function participationPersonalInboxHref(): string {
   return "/dashboard/aufgaben?bereich=meine";
 }

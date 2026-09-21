@@ -27,6 +27,9 @@ const mocks = vi.hoisted(() => ({
   taskCommentUpdate: vi.fn(),
   auditFindMany: vi.fn(),
   userFindMany: vi.fn(),
+  mentionDeleteMany: vi.fn(),
+  mentionCreateMany: vi.fn(),
+  transaction: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -38,9 +41,22 @@ vi.mock("@/lib/db/prisma", () => ({
       create: mocks.taskCommentCreate,
       update: mocks.taskCommentUpdate,
     },
+    taskCommentMention: {
+      deleteMany: mocks.mentionDeleteMany,
+      createMany: mocks.mentionCreateMany,
+    },
     auditLog: { findMany: mocks.auditFindMany },
     user: { findMany: mocks.userFindMany },
+    $transaction: mocks.transaction,
   },
+}));
+
+vi.mock("../task-mention-auth", () => ({
+  validateMentionedUsersForTask: vi.fn(async (_ctx, _task, ids: string[]) => ids),
+}));
+
+vi.mock("../task-mention-producer", () => ({
+  emitTaskMentionNotifications: vi.fn(async () => undefined),
 }));
 
 const TENANT_A = "tenant-a";
@@ -121,6 +137,7 @@ function commentRow(overrides: Record<string, unknown> = {}) {
     deletedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
+    mentions: [],
     ...overrides,
   };
 }
@@ -130,6 +147,19 @@ beforeEach(() => {
   mocks.userFindMany.mockResolvedValue([]);
   mocks.auditFindMany.mockResolvedValue([]);
   mocks.taskCommentFindMany.mockResolvedValue([]);
+  mocks.transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+    fn({
+      taskComment: {
+        create: mocks.taskCommentCreate,
+        update: mocks.taskCommentUpdate,
+      },
+      taskCommentMention: {
+        deleteMany: mocks.mentionDeleteMany,
+        createMany: mocks.mentionCreateMany,
+      },
+    }),
+  );
+  mocks.taskCommentCreate.mockImplementation(async () => commentRow());
 });
 
 describe("AUFGABEN-06A security sentinels", () => {

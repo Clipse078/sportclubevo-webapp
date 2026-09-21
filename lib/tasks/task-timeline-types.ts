@@ -9,6 +9,11 @@ export type TaskTimelineActorDto = {
 
 export type TaskTimelineEntryKind = "AUDIT" | "COMMENT";
 
+export type TaskTimelineMentionDto = {
+  userId: string;
+  displayName: string;
+};
+
 export type TaskTimelineEntryDto = {
   id: string;
   kind: TaskTimelineEntryKind;
@@ -16,6 +21,8 @@ export type TaskTimelineEntryDto = {
   actor: TaskTimelineActorDto;
   title: string | null;
   body: string | null;
+  mentions: TaskTimelineMentionDto[];
+  commentAnchorId: string | null;
   isEdited: boolean;
   isDeleted: boolean;
   details: string[];

@@ -57,6 +57,8 @@ import {
   deleteTaskComment,
   updateTaskComment,
 } from "@/lib/tasks/task-comment-service";
+import { searchTaskMentionCandidates } from "@/lib/tasks/task-mention-candidates";
+import { requireVisibleTask } from "@/lib/tasks/task-access";
 import { loadTaskTimelinePage } from "@/lib/tasks/task-timeline-service";
 import type { TaskTimelinePageDto } from "@/lib/tasks/task-timeline-types";
 
@@ -1067,9 +1069,29 @@ export async function loadTaskTimelineAction(
   }
 }
 
+export async function searchTaskMentionCandidatesAction(
+  taskId: string,
+  query: string,
+): Promise<
+  | { ok: true; options: Awaited<ReturnType<typeof searchTaskMentionCandidates>> }
+  | { ok: false; message: string }
+> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    const task = await requireVisibleTask(ctx, taskId);
+    const options = await searchTaskMentionCandidates(ctx, task, query);
+    return { ok: true, options };
+  } catch (error) {
+    return { ok: false, message: actionErrorMessage(error) };
+  }
+}
+
 export async function createTaskCommentAction(
   taskId: string,
   body: string,
+  mentionedUserIds: string[] = [],
 ): Promise<TaskCommentActionResult> {
   const ctx = await getTaskServiceContext();
   if (!ctx) {
@@ -1077,7 +1099,7 @@ export async function createTaskCommentAction(
   }
 
   try {
-    const comment = await createTaskComment(ctx, taskId, body);
+    const comment = await createTaskComment(ctx, taskId, body, mentionedUserIds);
     revalidateTaskPaths(taskId);
     return { ok: true, commentId: comment.id };
   } catch (error) {
@@ -1089,6 +1111,7 @@ export async function updateTaskCommentAction(
   taskId: string,
   commentId: string,
   body: string,
+  mentionedUserIds: string[] = [],
 ): Promise<TaskCommentActionResult> {
   const ctx = await getTaskServiceContext();
   if (!ctx) {
@@ -1096,7 +1119,7 @@ export async function updateTaskCommentAction(
   }
 
   try {
-    const comment = await updateTaskComment(ctx, taskId, commentId, body);
+    const comment = await updateTaskComment(ctx, taskId, commentId, body, mentionedUserIds);
     revalidateTaskPaths(taskId);
     return { ok: true, commentId: comment.id };
   } catch (error) {
