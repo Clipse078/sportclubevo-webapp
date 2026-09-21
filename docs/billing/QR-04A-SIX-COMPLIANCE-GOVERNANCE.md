@@ -5,8 +5,8 @@
 | State | Meaning |
 | --- | --- |
 | `UNVALIDATED` | Engine not yet prepared for external validation. |
-| `PENDING_EXTERNAL_SIX_VALIDATION` | Internal pack ready; awaiting official SIX portal evidence (QR-04A/04B). |
-| `SIX_VALIDATED` | Official SIX validation evidence recorded — **never set without evidence**. |
+| `PENDING_EXTERNAL_SIX_VALIDATION` | Internal pack ready; awaiting official SIX portal evidence. |
+| `SIX_VALIDATED` | Full external baseline locked (SIX portal **and** QR-04B cross-bank evidence) — **never set without evidence**. |
 | `REVALIDATION_REQUIRED` | Compliance-relevant change detected; external validation must be repeated. |
 
 SportClubEvo is **not** “SIX certified” unless SIX explicitly grants formal certification. Portal use is **validation / self-control**.
@@ -90,7 +90,7 @@ SportClubEvo **does** guarantee by architecture that:
 1. Every generated Swiss QR invoice is validated against implemented SIX v2.3 rules.
 2. Invalid invoices fail closed before delivery.
 3. QR artifacts are decoded and compared to the canonical payload.
-4. The compliance engine maintains an externally SIX-validated golden baseline (after QR-04B).
+4. The compliance engine maintains an externally SIX-validated golden baseline (SIX portal recorded in QR-04A; cross-bank baseline completed in QR-04B).
 5. Compliance-relevant engine changes require revalidation.
 6. Normal monthly invoice data changes do not require manual SIX validation.
 
@@ -105,3 +105,9 @@ npm run billing:qr-04a:generate
 Output: `artifacts/billing-qr-04a/`
 
 Stop after preparation — **do not** submit to SIX portal from automation.
+
+## QR-04A external SIX validation (accepted)
+
+**External SIX validation: PASS** (2026-09-21) via the official SIX Swiss QR-bill Validation Portal, reference standard **QR;2.3;CH**, synthetic data only. Full record: `docs/billing/QR-04A-SIX-EXTERNAL-VALIDATION-RESULT.md`.
+
+**QR-04B** (cross-bank recognition) is still required before treating the engine lifecycle as `SIX_VALIDATED`.

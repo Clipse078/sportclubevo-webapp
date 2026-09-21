@@ -33,8 +33,8 @@ SportClubEvo implements **SIX Implementation Guidelines QR-bill v2.3** (`SIX_IG_
 2. Bump `SIX_IG_QR_BILL_VERSION` explicitly  
 3. Update golden fixtures + compliance suites  
 4. Independent validation + PDF certification  
-5. **BILLING-QR-04A** external SIX validation pack (`npm run billing:qr-04a:generate`)  
-6. **BILLING-QR-04B** record official SIX evidence → `SIX_VALIDATED` baseline  
+5. **BILLING-QR-04A** external SIX validation pack (`npm run billing:qr-04a:generate`) + portal acceptance (`docs/billing/QR-04A-SIX-EXTERNAL-VALIDATION-RESULT.md`)  
+6. **BILLING-QR-04B** cross-bank recognition → `SIX_VALIDATED` baseline  
 7. Cross-bank spot-check (same PDF artifact, unchanged SHA-256)  
 8. Explicit activation date—never via silent dependency upgrades  
 
@@ -60,7 +60,7 @@ Run:
 npm run billing:qr-04a:generate
 ```
 
-Outputs `artifacts/billing-qr-04a/` including `manifest.json`, checklists, `.spc.txt`, `.qr.png`, and `sce-realistic-chf.pdf`. Engine state remains `PENDING_EXTERNAL_SIX_VALIDATION` until QR-04B records portal evidence. See `docs/billing/QR-04A-SIX-COMPLIANCE-GOVERNANCE.md`.
+Outputs `artifacts/billing-qr-04a/` including `manifest.json`, checklists, `.spc.txt`, `.qr.png`, and `sce-realistic-chf.pdf` (local/gitignored). Official SIX portal acceptance for QR-04A is recorded in `docs/billing/QR-04A-SIX-EXTERNAL-VALIDATION-RESULT.md`. Cross-bank acceptance (QR-04B) remains open. See `docs/billing/QR-04A-SIX-COMPLIANCE-GOVERNANCE.md`.
 
 ## Do not remove
 
