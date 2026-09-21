@@ -9,6 +9,7 @@ import type {
 } from "@prisma/client";
 import { TaskVisibilityScope as TaskVisibilityScopeEnum } from "@prisma/client";
 import { isSupportedTaskContextType } from "@/lib/tasks/context-registry";
+import { createTaskWithContextDefaults } from "@/lib/tasks/contextual-task-create";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import {
   assignTask,
@@ -1012,6 +1013,78 @@ export async function updateAufgabeOrgVisibilityAction(
     await updateTask(ctx, taskId.trim(), orgVisibility);
     revalidateTaskPaths(taskId.trim());
     return { ok: true };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+export async function createContextualAufgabeAction(
+  contextTypeRaw: string,
+  contextIdRaw: string,
+  formData: FormData,
+): Promise<AufgabenActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  const contextType = contextTypeRaw.trim();
+  const contextId = contextIdRaw.trim();
+  if (!isSupportedTaskContextType(contextType as TaskContextType)) {
+    return { ok: false, message: "Keine Berechtigung für diese Aktion." };
+  }
+  if (!contextId) {
+    return { ok: false, message: "Keine Berechtigung für diese Aktion." };
+  }
+
+  if (formData.has("contextType") || formData.has("contextId")) {
+    return { ok: false, message: "Keine Berechtigung für diese Aktion." };
+  }
+
+  try {
+    const title = formData.get("title");
+    const description = formData.get("description");
+    const priority = parsePriority(formData.get("priority"));
+    const schedule = await parseDeadlineAndRemindersFromForm(ctx.tenantId, formData);
+    const assigneeRaw = formData.get("assigneeUserIds");
+
+    if (schedule === "invalid_due") {
+      return { ok: false, message: "Ungültiges Fälligkeitsdatum." };
+    }
+    if (schedule === "invalid_reminder") {
+      return { ok: false, message: "Ungültige Erinnerung." };
+    }
+
+    let assigneeUserIds: string[] = [];
+    if (typeof assigneeRaw === "string" && assigneeRaw.trim()) {
+      assigneeUserIds = assigneeRaw
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    const orgVisibility = parseOrgVisibilityFromForm(formData);
+
+    const created = await createTaskWithContextDefaults(ctx, {
+      trustedContext: {
+        contextType: contextType as TaskContextType,
+        contextId,
+      },
+      task: {
+        title: typeof title === "string" ? title : "",
+        description: typeof description === "string" ? description : null,
+        priority: priority ?? "NORMAL",
+        dueAt: schedule.dueAt,
+        reminder1At: schedule.reminder1At,
+        reminder2At: schedule.reminder2At,
+        reminder1PresetKey: schedule.reminder1PresetKey,
+        reminder2PresetKey: schedule.reminder2PresetKey,
+        assigneeUserIds,
+        ...orgVisibility,
+      },
+    });
+
+    revalidateTaskPaths(created.id);
+    revalidatePath("/dashboard/matchcenter");
+    return { ok: true, taskId: created.id };
   } catch (error) {
     return failure(error);
   }

@@ -20,6 +20,8 @@ export type ContextRelatedTaskSummaryDto = {
 export type ListTasksForContextOptions = {
   /** When true, only root tasks (no parentTaskId). */
   rootsOnly?: boolean;
+  /** When set, restrict to these Task statuses (same predicate used for count). */
+  statuses?: TaskStatus[];
   limit?: number;
   cursor?: string | null;
 };

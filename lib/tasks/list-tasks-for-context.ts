@@ -5,6 +5,7 @@
 import type { Prisma, TaskContextType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { assertTaskContextEntityReadable } from "./context-entity-read";
 import { TaskForbiddenError } from "./errors";
 import type {
   ContextRelatedTaskSummaryDto,
@@ -12,76 +13,25 @@ import type {
   ListTasksForContextPageDto,
 } from "./context-related-task-types";
 import { TASK_AUTH_INCLUDE } from "./task-access";
-import { buildTaskReadWhere, hasTaskPermission } from "./visibility";
+import { buildRelatedTaskWhere, decodeListTasksForContextCursor } from "./related-task-query";
+
+export { decodeListTasksForContextCursor } from "./related-task-query";
+import { hasTaskPermission } from "./visibility";
 import type { TaskServiceContext } from "./types";
+
+export { buildRelatedTaskWhere, buildListTasksForContextWhere } from "./related-task-query";
 
 const DEFAULT_LIMIT = 25;
 const MAX_LIMIT = 50;
 
-type ContextTaskCursor = {
-  createdAt: string;
-  id: string;
-};
-
-function encodeCursor(cursor: ContextTaskCursor): string {
+function encodeCursor(cursor: { createdAt: string; id: string }): string {
   return Buffer.from(JSON.stringify(cursor), "utf8").toString("base64url");
-}
-
-export function decodeListTasksForContextCursor(
-  raw: string | null | undefined,
-): ContextTaskCursor | null {
-  if (!raw?.trim()) return null;
-  try {
-    const parsed = JSON.parse(Buffer.from(raw, "base64url").toString("utf8")) as ContextTaskCursor;
-    if (parsed && typeof parsed.id === "string" && typeof parsed.createdAt === "string") {
-      return parsed;
-    }
-  } catch {
-    return null;
-  }
-  return null;
 }
 
 function assertCanQueryRelatedTasks(ctx: TaskServiceContext): void {
   if (!hasTaskPermission(ctx, PERMISSIONS.TASKS_VIEW)) {
     throw new TaskForbiddenError("Missing tasks.view");
   }
-}
-
-export function buildListTasksForContextWhere(
-  ctx: TaskServiceContext,
-  contextType: TaskContextType,
-  contextId: string,
-  options?: ListTasksForContextOptions,
-): Prisma.TaskWhereInput {
-  const normalizedId = contextId.trim();
-  const and: Prisma.TaskWhereInput[] = [
-    buildTaskReadWhere(ctx),
-    {
-      tenantId: ctx.tenantId,
-      contextType,
-      contextId: normalizedId,
-    },
-  ];
-
-  if (options?.rootsOnly) {
-    and.push({ parentTaskId: null });
-  }
-
-  const cursor = decodeListTasksForContextCursor(options?.cursor);
-  if (cursor) {
-    const cursorCreated = new Date(cursor.createdAt);
-    and.push({
-      OR: [
-        { createdAt: { lt: cursorCreated } },
-        {
-          AND: [{ createdAt: cursorCreated }, { id: { lt: cursor.id } }],
-        },
-      ],
-    });
-  }
-
-  return { AND: and };
 }
 
 function mapSummary(
@@ -109,12 +59,13 @@ export async function listTasksForContext(
   options?: ListTasksForContextOptions,
 ): Promise<ListTasksForContextPageDto> {
   assertCanQueryRelatedTasks(ctx);
+  await assertTaskContextEntityReadable(ctx, contextType, contextId);
 
   const limit = Math.min(Math.max(options?.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
   const fetchSize = limit + 1;
 
   const rows = await prisma.task.findMany({
-    where: buildListTasksForContextWhere(ctx, contextType, contextId.trim(), options),
+    where: buildRelatedTaskWhere(ctx, contextType, contextId.trim(), options),
     include: TASK_AUTH_INCLUDE,
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: fetchSize,

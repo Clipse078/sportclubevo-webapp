@@ -78,7 +78,7 @@ export function buildOperationalContextHref(
         ? `/vereinsleitung/meetings/${encodeURIComponent(entity.slug)}/edit`
         : null;
     case "TEAM":
-      return `/dashboard/teams?teamId=${encodeURIComponent(entity.id)}`;
+      return `/dashboard/teams/${encodeURIComponent(entity.id)}`;
     case "PERSON":
       return `/dashboard/persons/${encodeURIComponent(entity.id)}`;
     case "REGISTRATION":

@@ -81,6 +81,10 @@ vi.mock("../context-validation", () => ({
   validateTaskContext: vi.fn(async () => undefined),
 }));
 
+vi.mock("../context-entity-read", () => ({
+  assertTaskContextEntityReadable: vi.fn(async () => undefined),
+}));
+
 import { createTask } from "../task-service";
 import { loadTaskTimelinePageForCommentAnchor } from "../task-timeline-service";
 import { TASK_TIMELINE_ANCHOR_MAX_PAGES } from "../constants";

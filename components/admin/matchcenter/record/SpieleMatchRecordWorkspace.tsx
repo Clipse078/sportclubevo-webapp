@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ParticipationRequestConfigEditor } from "@/components/admin/participation/ParticipationRequestConfigEditor";
 import { Loader2, Lock, Radio } from "lucide-react";
+import type { ReactNode } from "react";
 import type { MatchcenterMatchDetail } from "@/lib/matchcenter/types";
 import type { FacilityResourceOption } from "@/lib/facilities/resource-options";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
@@ -49,7 +50,6 @@ import SpieleMatchRecordDeleteDialog from "./SpieleMatchRecordDeleteDialog";
 import SpieleMatchRecordReadinessPill from "./SpieleMatchRecordReadinessPill";
 import SpieleMatchRecordTechnicalDetails from "./SpieleMatchRecordTechnicalDetails";
 import { SPIELE_RECORD_WORKSPACE_SURFACE_CLASS } from "./spiele-record-layout";
-import { taskCreateFromContextHref } from "@/lib/tasks/task-navigation";
 
 export type SpieleMatchRecordWorkspaceProps = {
   match: MatchcenterMatchDetail;
@@ -66,7 +66,8 @@ export type SpieleMatchRecordWorkspaceProps = {
   isProtectedSource: boolean;
   tenantLogoUrl?: string | null;
   wochenplanerHref: string;
-  canCreateTask?: boolean;
+  createTaskAction?: ReactNode;
+  relatedTasksPanel?: ReactNode;
 };
 
 function RecordField({
@@ -111,7 +112,8 @@ export default function SpieleMatchRecordWorkspace({
   isProtectedSource,
   tenantLogoUrl = null,
   wochenplanerHref,
-  canCreateTask = false,
+  createTaskAction,
+  relatedTasksPanel,
 }: SpieleMatchRecordWorkspaceProps) {
   const router = useRouter();
   const saveActionRef = useRef<(() => Promise<void>) | null>(null);
@@ -315,11 +317,7 @@ export default function SpieleMatchRecordWorkspace({
       <div className="flex shrink-0 flex-wrap items-center gap-2">
         <SpieleMatchRecordContextMenu
           wochenplanerHref={wochenplanerHref}
-          createTaskHref={
-            canCreateTask
-              ? taskCreateFromContextHref("MATCH", match.id)
-              : null
-          }
+          createTaskAction={createTaskAction}
           canDelete={canDelete}
           onDeleteRequest={canDelete ? () => setDeleteOpen(true) : undefined}
         />
@@ -352,26 +350,29 @@ export default function SpieleMatchRecordWorkspace({
         header={header}
         testId="spiele-match-record-workspace"
         contextRail={
-          <SpieleMatchRecordContextRail
-            statusLabel={railStatusLabel}
-            assessment={assessment}
-            homeAway={match.homeAway}
-            homeName={homeName}
-            awayName={awayName}
-            scheduleLine={formatSpieleRecordDate(match.startAt, locale, timezone)}
-            kickoffTime={formatSpieleKickoffPresentation(match, locale, timezone)}
-            facilityLine={
-              isHome && match.operational.pitchCode
-                ? pitchOptions.find((o) => o.code === match.operational.pitchCode)?.name ??
-                  match.operational.pitchCode
-                : null
-            }
-            dressingLine={isHome ? facilityHistory : null}
-            sourceLabel={sourceLabel}
-            isProtectedSource={isProtectedSource}
-            lastChangedLabel={lastChangedLabel}
-            wochenplanerHref={wochenplanerHref}
-          />
+          <div className="space-y-4">
+            <SpieleMatchRecordContextRail
+              statusLabel={railStatusLabel}
+              assessment={assessment}
+              homeAway={match.homeAway}
+              homeName={homeName}
+              awayName={awayName}
+              scheduleLine={formatSpieleRecordDate(match.startAt, locale, timezone)}
+              kickoffTime={formatSpieleKickoffPresentation(match, locale, timezone)}
+              facilityLine={
+                isHome && match.operational.pitchCode
+                  ? pitchOptions.find((o) => o.code === match.operational.pitchCode)?.name ??
+                    match.operational.pitchCode
+                  : null
+              }
+              dressingLine={isHome ? facilityHistory : null}
+              sourceLabel={sourceLabel}
+              isProtectedSource={isProtectedSource}
+              lastChangedLabel={lastChangedLabel}
+              wochenplanerHref={wochenplanerHref}
+            />
+            {relatedTasksPanel}
+          </div>
         }
       >
         <MatchEndTimeOperationalCallout
