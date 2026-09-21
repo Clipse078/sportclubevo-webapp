@@ -1,5 +1,5 @@
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { taskWorkspaceHref } from "@/lib/notifications/deduplication";
+import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import { listMyTasks, countMyOpenTasks } from "@/lib/tasks/task-service";
 import { hasTaskPermission } from "@/lib/tasks/visibility";
 import type { TaskServiceContext } from "@/lib/tasks/types";

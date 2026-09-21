@@ -7,6 +7,11 @@ import type { TaskPriority } from "@prisma/client";
 import { Plus, X } from "lucide-react";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import { createAufgabeAction } from "@/app/(admin)/dashboard/aufgaben/actions";
+import {
+  taskCreateHref,
+  taskSeriesCreateHref,
+  taskWorkspaceHref,
+} from "@/lib/tasks/task-navigation";
 import { TASK_PRIORITY_LABELS } from "@/lib/tasks/management-labels";
 
 type Props = {
@@ -34,7 +39,7 @@ export default function AufgabenQuickCreateDialog({
       if (result.ok) {
         setOpen(false);
         if (result.taskId) {
-          router.push(`/dashboard/aufgaben/${result.taskId}`);
+          router.push(taskWorkspaceHref(result.taskId));
         }
         return;
       }
@@ -147,7 +152,7 @@ export default function AufgabenQuickCreateDialog({
               <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
                 <div className="mr-auto flex flex-col gap-1">
                   <Link
-                    href="/dashboard/aufgaben/neu"
+                    href={taskCreateHref()}
                     className="text-xs font-medium text-[var(--primary)] hover:underline"
                     onClick={() => setOpen(false)}
                     data-testid="aufgaben-create-more-details"
@@ -156,7 +161,7 @@ export default function AufgabenQuickCreateDialog({
                   </Link>
                   {canManage ? (
                     <Link
-                      href="/dashboard/aufgaben/serien/neu"
+                      href={taskSeriesCreateHref()}
                       className="text-xs font-medium text-[var(--primary)] hover:underline"
                       onClick={() => setOpen(false)}
                       data-testid="aufgaben-create-recurring"

@@ -49,7 +49,7 @@ import SpieleMatchRecordDeleteDialog from "./SpieleMatchRecordDeleteDialog";
 import SpieleMatchRecordReadinessPill from "./SpieleMatchRecordReadinessPill";
 import SpieleMatchRecordTechnicalDetails from "./SpieleMatchRecordTechnicalDetails";
 import { SPIELE_RECORD_WORKSPACE_SURFACE_CLASS } from "./spiele-record-layout";
-import { buildTaskCreateFromContextHref } from "@/lib/tasks/context-registry";
+import { taskCreateFromContextHref } from "@/lib/tasks/task-navigation";
 
 export type SpieleMatchRecordWorkspaceProps = {
   match: MatchcenterMatchDetail;
@@ -317,7 +317,7 @@ export default function SpieleMatchRecordWorkspace({
           wochenplanerHref={wochenplanerHref}
           createTaskHref={
             canCreateTask
-              ? buildTaskCreateFromContextHref("MATCH", match.id)
+              ? taskCreateFromContextHref("MATCH", match.id)
               : null
           }
           canDelete={canDelete}

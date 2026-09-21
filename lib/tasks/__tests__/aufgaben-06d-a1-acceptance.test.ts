@@ -346,8 +346,10 @@ describe("AUFGABEN-06D-A1 integrity & side effects (A5–A10, R15, R24, R30–R3
       expect(read(rel)).not.toMatch(/TaskDocumentReference|taskDocumentReference/);
     }
     const workspace = read("lib/tasks/workspace-service.ts");
-    expect(workspace).toMatch(/listTaskDocumentReferences\(ctx, taskId\)/);
-    expect(workspace.match(/listTaskDocumentReferences\(ctx, taskId\)/g)?.length).toBe(1);
+    expect(workspace).toMatch(/listTaskDocumentReferencesForVisibleTask\(ctx, visibleTask\)/);
+    expect(
+      workspace.match(/listTaskDocumentReferencesForVisibleTask\(ctx, visibleTask\)/g)?.length,
+    ).toBe(1);
   });
 });
 
@@ -433,6 +435,6 @@ describe("AUFGABEN-06D-A1 wiring (R41–R42)", () => {
   it("R42 workspace bundle loads documentReferences for the requested task", () => {
     const source = read("lib/tasks/workspace-service.ts");
     expect(source).toMatch(/documentReferences: TaskDocumentReferenceDto\[\]/);
-    expect(source).toMatch(/listTaskDocumentReferences\(ctx, taskId\)/);
+    expect(source).toMatch(/listTaskDocumentReferencesForVisibleTask\(ctx, visibleTask\)/);
   });
 });

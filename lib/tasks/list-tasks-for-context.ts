@@ -1,0 +1,139 @@
+/**
+ * AUFGABEN-06E — canonical related Tasks query (context never grants Task access).
+ */
+
+import type { Prisma, TaskContextType } from "@prisma/client";
+import { prisma } from "@/lib/db/prisma";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { TaskForbiddenError } from "./errors";
+import type {
+  ContextRelatedTaskSummaryDto,
+  ListTasksForContextOptions,
+  ListTasksForContextPageDto,
+} from "./context-related-task-types";
+import { TASK_AUTH_INCLUDE } from "./task-access";
+import { buildTaskReadWhere, hasTaskPermission } from "./visibility";
+import type { TaskServiceContext } from "./types";
+
+const DEFAULT_LIMIT = 25;
+const MAX_LIMIT = 50;
+
+type ContextTaskCursor = {
+  createdAt: string;
+  id: string;
+};
+
+function encodeCursor(cursor: ContextTaskCursor): string {
+  return Buffer.from(JSON.stringify(cursor), "utf8").toString("base64url");
+}
+
+export function decodeListTasksForContextCursor(
+  raw: string | null | undefined,
+): ContextTaskCursor | null {
+  if (!raw?.trim()) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(raw, "base64url").toString("utf8")) as ContextTaskCursor;
+    if (parsed && typeof parsed.id === "string" && typeof parsed.createdAt === "string") {
+      return parsed;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function assertCanQueryRelatedTasks(ctx: TaskServiceContext): void {
+  if (!hasTaskPermission(ctx, PERMISSIONS.TASKS_VIEW)) {
+    throw new TaskForbiddenError("Missing tasks.view");
+  }
+}
+
+export function buildListTasksForContextWhere(
+  ctx: TaskServiceContext,
+  contextType: TaskContextType,
+  contextId: string,
+  options?: ListTasksForContextOptions,
+): Prisma.TaskWhereInput {
+  const normalizedId = contextId.trim();
+  const and: Prisma.TaskWhereInput[] = [
+    buildTaskReadWhere(ctx),
+    {
+      tenantId: ctx.tenantId,
+      contextType,
+      contextId: normalizedId,
+    },
+  ];
+
+  if (options?.rootsOnly) {
+    and.push({ parentTaskId: null });
+  }
+
+  const cursor = decodeListTasksForContextCursor(options?.cursor);
+  if (cursor) {
+    const cursorCreated = new Date(cursor.createdAt);
+    and.push({
+      OR: [
+        { createdAt: { lt: cursorCreated } },
+        {
+          AND: [{ createdAt: cursorCreated }, { id: { lt: cursor.id } }],
+        },
+      ],
+    });
+  }
+
+  return { AND: and };
+}
+
+function mapSummary(
+  row: Prisma.TaskGetPayload<{ include: typeof TASK_AUTH_INCLUDE }>,
+): ContextRelatedTaskSummaryDto {
+  return {
+    id: row.id,
+    title: row.title,
+    status: row.status,
+    priority: row.priority,
+    dueAt: row.dueAt?.toISOString() ?? null,
+    parentTaskId: row.parentTaskId,
+    assignees: row.assignees.map((a) => ({
+      userId: a.userId,
+      firstName: a.user.firstName,
+      lastName: a.user.lastName,
+    })),
+  };
+}
+
+export async function listTasksForContext(
+  ctx: TaskServiceContext,
+  contextType: TaskContextType,
+  contextId: string,
+  options?: ListTasksForContextOptions,
+): Promise<ListTasksForContextPageDto> {
+  assertCanQueryRelatedTasks(ctx);
+
+  const limit = Math.min(Math.max(options?.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
+  const fetchSize = limit + 1;
+
+  const rows = await prisma.task.findMany({
+    where: buildListTasksForContextWhere(ctx, contextType, contextId.trim(), options),
+    include: TASK_AUTH_INCLUDE,
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: fetchSize,
+  });
+
+  const hasMore = rows.length > limit;
+  const pageRows = hasMore ? rows.slice(0, limit) : rows;
+  const last = pageRows.at(-1);
+  const nextCursor =
+    hasMore && last
+      ? encodeCursor({
+          createdAt: last.createdAt.toISOString(),
+          id: last.id,
+        })
+      : null;
+
+  return {
+    tasks: pageRows.map(mapSummary),
+    nextCursor,
+    hasMore,
+  };
+}

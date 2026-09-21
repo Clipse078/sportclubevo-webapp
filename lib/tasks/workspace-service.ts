@@ -7,8 +7,8 @@ import { prisma } from "@/lib/db/prisma";
 import { formatTaskSeriesRecurrenceLabel } from "./management-labels";
 import { resolveTaskContextPresentation, type TaskContextPresentation } from "./context-presentation";
 import { computeSubtaskProgress } from "./subtask-rules";
-import { getTask } from "./task-service";
 import { getTaskSeriesForRead } from "./task-series-service";
+import { requireVisibleTask } from "./task-access";
 import type {
   TaskDto,
   TaskProgressDto,
@@ -22,9 +22,12 @@ import {
   resolveTaskWorkspaceCapabilities,
   type TaskWorkspaceCapabilities,
 } from "./workspace-permissions";
-import { getTaskFollowState, type TaskFollowStateDto } from "./task-follow-service";
 import {
-  listTaskDocumentReferences,
+  getTaskFollowStateForVisibleTask,
+  type TaskFollowStateDto,
+} from "./task-follow-service";
+import {
+  listTaskDocumentReferencesForVisibleTask,
   type TaskDocumentReferenceDto,
 } from "./task-document-reference-service";
 
@@ -116,7 +119,8 @@ export async function loadTaskWorkspace(
   locale: string,
   timeZone: string,
 ): Promise<TaskWorkspaceBundle> {
-  const task = await getTask(ctx, taskId);
+  const visibleTask = await requireVisibleTask(ctx, taskId);
+  const task = mapTask(visibleTask);
 
   const seriesRowPromise = task.taskSeriesId
     ? getTaskSeriesForRead(ctx, task.taskSeriesId).catch(() => null)
@@ -144,8 +148,8 @@ export async function loadTaskWorkspace(
       locale,
       timeZone,
     ),
-    getTaskFollowState(ctx, taskId),
-    listTaskDocumentReferences(ctx, taskId),
+    getTaskFollowStateForVisibleTask(ctx, visibleTask),
+    listTaskDocumentReferencesForVisibleTask(ctx, visibleTask),
   ]);
 
   const progressSource = task.parentTaskId

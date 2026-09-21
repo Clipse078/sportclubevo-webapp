@@ -1,6 +1,6 @@
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { TaskDto, TaskServiceContext } from "./types";
-import { canManageTask, hasTaskPermission } from "./visibility";
+import { canManageTask, canReadTask, hasTaskPermission } from "./visibility";
 import { canMutateTaskOrgVisibility } from "./task-org-mutation-policy";
 import { isTaskOrgVisibilityPropagationLocked } from "./task-org-propagation";
 
@@ -18,6 +18,8 @@ export type TaskWorkspaceCapabilities = {
   canEditContext: boolean;
   canLinkDocuments: boolean;
   canEditOrgVisibility: boolean;
+  /** Comment / timeline collaboration (readers may participate; server auth remains authoritative). */
+  canCollaborate: boolean;
 };
 
 export function resolveTaskWorkspaceCapabilities(
@@ -77,6 +79,7 @@ export function resolveTaskWorkspaceCapabilities(
     canEditContext: canEditFields,
     canLinkDocuments: canEditFields,
     canEditOrgVisibility,
+    canCollaborate: canReadTask(ctx, authRecord),
   };
 
   caps.readOnly =

@@ -6,8 +6,12 @@
 
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { TASK_TIMELINE_PAGE_SIZE } from "./constants";
+import {
+  TASK_TIMELINE_ANCHOR_MAX_PAGES,
+  TASK_TIMELINE_PAGE_SIZE,
+} from "./constants";
 import { requireVisibleTask } from "./task-access";
+import { TaskNotFoundError } from "./errors";
 import type { TaskServiceContext } from "./types";
 import { getTaskCommentForTimeline } from "./task-comment-service";
 import {
@@ -254,4 +258,54 @@ export async function loadTaskTimelinePage(
     nextCursor,
     hasMore,
   };
+}
+
+function timelineEntryContainsComment(
+  page: TaskTimelinePageDto,
+  commentId: string,
+): boolean {
+  const needle = `comment:${commentId}`;
+  return page.entries.some(
+    (entry) => entry.kind === "COMMENT" && entry.id === needle,
+  );
+}
+
+/**
+ * Resolves a timeline page that includes the target comment (bounded server-side scan).
+ * Preserves Task/comment authorization and soft-delete presentation semantics.
+ */
+export async function loadTaskTimelinePageForCommentAnchor(
+  ctx: TaskServiceContext,
+  taskId: string,
+  commentId: string,
+  pageSize = TASK_TIMELINE_PAGE_SIZE,
+): Promise<TaskTimelinePageDto> {
+  await requireVisibleTask(ctx, taskId);
+
+  const comment = await prisma.taskComment.findFirst({
+    where: {
+      id: commentId,
+      tenantId: ctx.tenantId,
+      taskId,
+    },
+    select: { id: true, deletedAt: true },
+  });
+
+  if (!comment) {
+    throw new TaskNotFoundError(commentId);
+  }
+
+  let cursor: string | null = null;
+  for (let pageIndex = 0; pageIndex < TASK_TIMELINE_ANCHOR_MAX_PAGES; pageIndex += 1) {
+    const page = await loadTaskTimelinePage(ctx, taskId, cursor, pageSize);
+    if (timelineEntryContainsComment(page, commentId)) {
+      return page;
+    }
+    if (!page.hasMore || !page.nextCursor) {
+      break;
+    }
+    cursor = page.nextCursor;
+  }
+
+  return loadTaskTimelinePage(ctx, taskId, null, pageSize);
 }

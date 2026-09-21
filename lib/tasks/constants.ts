@@ -14,3 +14,6 @@ export const TASK_MENTION_SEARCH_LIMIT = 25;
 export const TASK_MENTION_SEARCH_MAX_DB_ROWS = TASK_MENTION_SEARCH_LIMIT * 6;
 
 export const TASK_TIMELINE_PAGE_SIZE = 28;
+
+/** Max timeline pages scanned server-side for comment deep-link resolution (bounded). */
+export const TASK_TIMELINE_ANCHOR_MAX_PAGES = 15;

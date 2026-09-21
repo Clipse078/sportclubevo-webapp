@@ -51,17 +51,16 @@ vi.mock("../context-presentation", () => ({
 
 vi.mock("../task-follow-service", () => ({
   getTaskFollowState: vi.fn(async () => ({ isFollowing: false, followerCount: 0 })),
+  getTaskFollowStateForVisibleTask: vi.fn(async () => ({
+    isFollowing: false,
+    followerCount: 0,
+  })),
 }));
 
 vi.mock("../task-document-reference-service", () => ({
   listTaskDocumentReferences: vi.fn(async () => []),
+  listTaskDocumentReferencesForVisibleTask: vi.fn(async () => []),
 }));
-
-vi.mock("../task-service", () => ({
-  getTask: vi.fn(),
-}));
-
-import { getTask } from "../task-service";
 
 const TENANT_A = "tenant-a";
 const TENANT_B = "tenant-b";
@@ -413,8 +412,8 @@ describe("AUFGABEN-05-ORG-02-A1 subtask parent confidentiality", () => {
       orgUnitId: null,
       visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
       createdByUserId: OTHER,
-      createdAt: "2026-01-01T00:00:00.000Z",
-      updatedAt: "2026-01-01T00:00:00.000Z",
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      updatedAt: new Date("2026-01-01T00:00:00.000Z"),
       assignees: [
         {
           userId: USER,
@@ -424,7 +423,21 @@ describe("AUFGABEN-05-ORG-02-A1 subtask parent confidentiality", () => {
         },
       ],
     };
-    vi.mocked(getTask).mockResolvedValue(child);
+    orgMocks.taskFindFirst.mockResolvedValue({
+      ...child,
+      reminder1At: null,
+      reminder2At: null,
+      reminder1PresetKey: null,
+      reminder2PresetKey: null,
+      orgUnit: null,
+      assignees: [
+        {
+          userId: USER,
+          assignedAt: new Date("2026-01-01T00:00:00.000Z"),
+          user: { id: USER, firstName: "A", lastName: "B" },
+        },
+      ],
+    });
 
     orgMocks.taskFindMany.mockImplementation(async (args: { where?: { id?: { in?: string[] } } }) => {
       const ids = args?.where?.id?.in;

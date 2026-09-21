@@ -11,6 +11,7 @@ import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
 import { TASK_PRIORITY_LABELS } from "@/lib/tasks/management-labels";
 import { createTaskSeriesAction } from "@/app/(admin)/dashboard/aufgaben/actions";
+import { taskSeriesHref } from "@/lib/tasks/task-navigation";
 import TaskOrgVisibilityFields from "./TaskOrgVisibilityFields";
 
 type SubtaskDraft = {
@@ -101,7 +102,7 @@ export default function TaskSeriesCreateClient({
     startTransition(async () => {
       const result = await createTaskSeriesAction(formData);
       if (result.ok && result.seriesId) {
-        router.push(`/dashboard/aufgaben/serien/${result.seriesId}`);
+        router.push(taskSeriesHref(result.seriesId));
         return;
       }
       if (!result.ok) setError(result.message);

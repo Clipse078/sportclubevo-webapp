@@ -1,7 +1,7 @@
 import { TaskStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { isActiveTaskStatus } from "@/lib/tasks/management-deadline";
-import { taskWorkspaceHref } from "@/lib/notifications/deduplication";
+import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import {
   buildTaskProjectionId,
   type PersonalCalendarItem,
