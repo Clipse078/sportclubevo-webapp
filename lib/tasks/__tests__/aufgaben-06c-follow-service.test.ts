@@ -130,6 +130,21 @@ describe("AUFGABEN-06C follow service", () => {
     await expect(followTask(ctx(), TASK)).rejects.toThrow(TaskValidationError);
   });
 
+  it("F38 — unreadable task cannot load follower state", async () => {
+    await expect(
+      getTaskFollowState(
+        {
+          tenantId: TENANT,
+          userId: "outsider",
+          permissionKeys: [PERMISSIONS.TASKS_VIEW],
+          auth: { ...EMPTY_TASK_AUTH_SCOPE },
+        },
+        TASK,
+      ),
+    ).rejects.toThrow(TaskForbiddenError);
+    expect(mocks.taskFollowerCount).not.toHaveBeenCalled();
+  });
+
   it("returns own follow state and count without listing identities", async () => {
     mocks.taskFollowerCount.mockResolvedValue(3);
     mocks.taskFollowerFindFirst.mockResolvedValue(null);

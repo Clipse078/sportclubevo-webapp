@@ -48,8 +48,12 @@ vi.mock("../task-mention-producer", () => ({
   emitTaskMentionNotifications: vi.fn(async () => undefined),
 }));
 
-vi.mock("../task-comment-producer", () => ({
+const commentProducerMocks = vi.hoisted(() => ({
   emitTaskCommentNotifications: vi.fn(async () => undefined),
+}));
+
+vi.mock("../task-comment-producer", () => ({
+  emitTaskCommentNotifications: commentProducerMocks.emitTaskCommentNotifications,
 }));
 
 import {
@@ -304,5 +308,35 @@ describe("AUFGABEN-06A comment service", () => {
   it("C16 crafted taskId/commentId pairing fails closed", async () => {
     mocks.taskCommentFindFirst.mockResolvedValue(commentRow({ taskId: "other-task" }));
     await expect(updateTaskComment(ctx(), TASK, "comment-1", "x")).rejects.toThrow(TaskNotFoundError);
+  });
+
+  it("F26 — edit comment does not emit TASK_COMMENT", async () => {
+    mocks.taskCommentFindFirst.mockResolvedValue(commentRow());
+    mocks.taskCommentUpdate.mockResolvedValue(commentRow({ body: "Neu" }));
+    await updateTaskComment(ctx(), TASK, "comment-1", "Neu");
+    expect(commentProducerMocks.emitTaskCommentNotifications).not.toHaveBeenCalled();
+  });
+
+  it("F27 — delete comment does not emit TASK_COMMENT", async () => {
+    mocks.taskCommentFindFirst.mockResolvedValue(commentRow());
+    mocks.taskCommentUpdate.mockResolvedValue(commentRow({ deletedAt: new Date() }));
+    await deleteTaskComment(ctx(), TASK, "comment-1");
+    expect(commentProducerMocks.emitTaskCommentNotifications).not.toHaveBeenCalled();
+  });
+
+  it("F32 — comment persisted when TASK_COMMENT producer fails", async () => {
+    commentProducerMocks.emitTaskCommentNotifications.mockImplementationOnce(async () => {
+      try {
+        throw new Error("producer down");
+      } catch {
+        /* production emitTaskCommentNotifications swallows delivery failures */
+      }
+    });
+    mocks.taskCommentCreate.mockResolvedValue(
+      commentRow({ body: "Persisted despite notify failure" }),
+    );
+    const dto = await createTaskComment(ctx(), TASK, "Persisted despite notify failure");
+    expect(dto.body).toBe("Persisted despite notify failure");
+    expect(mocks.taskCommentCreate).toHaveBeenCalled();
   });
 });

@@ -93,7 +93,7 @@ describe("AUFGABEN-06C comment notifications", () => {
     expect(notificationTypeCategory(NotificationType.TASK_COMMENT)).toBe("TASK");
   });
 
-  it("recipient matrix A/B/C/D/E with mention precedence", async () => {
+  it("F22 — recipient matrix A/B/C/D/E with mention precedence", async () => {
     await emitTaskCommentNotifications(taskRow as never, {
       commentId: "comment-1",
       commentExcerpt: "Kannst du bitte die Reservation prüfen?",
@@ -216,7 +216,7 @@ describe("AUFGABEN-06C comment notifications", () => {
     expect(mocks.createNotification.mock.calls[0]?.[1].type).toBe(NotificationType.TASK_COMMENT);
   });
 
-  it("deep link reuses comment anchor", () => {
+  it("F25 — deep link reuses comment anchor (fresh auth required at navigation)", () => {
     expect(taskWorkspaceCommentHref("task-1", "comment-1")).toBe(
       "/dashboard/aufgaben/task-1#comment-comment-1",
     );

@@ -4,7 +4,7 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { TaskVisibilityScope } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
@@ -18,7 +18,6 @@ import { notificationTypeCategory } from "@/lib/notifications/deduplication";
 import { NotificationType } from "@prisma/client";
 
 const TENANT = "tenant-a";
-const TASK = "task-1";
 const AUTHOR = "user-author";
 const ASSIGNEE = "user-assignee";
 const OTHER = "user-other";
@@ -50,6 +49,10 @@ function serviceCtx(
 describe("AUFGABEN-06C authorization matrix", () => {
   it("F1 readable task → follow allowed", () => {
     expect(canFollowTask(serviceCtx(ASSIGNEE, [PERMISSIONS.TASKS_VIEW]), authRecord())).toBe(true);
+  });
+
+  it("F3 same tenant unreadable Task → denied", () => {
+    expect(canFollowTask(serviceCtx(OTHER, [PERMISSIONS.TASKS_VIEW]), authRecord())).toBe(false);
   });
 
   it("F4 ASSIGNEES_ONLY unrelated tasks.view denied", () => {
@@ -129,8 +132,15 @@ describe("AUFGABEN-06C authorization matrix", () => {
   });
 
   it("F39 TaskFollower is not consulted by canReadTask", () => {
-    const source = readFileSync(join(process.cwd(), "lib/tasks/task-authorization.ts"), "utf8");
-    expect(source).not.toMatch(/TaskFollower|taskFollower/);
+    const paths = [
+      "lib/tasks/task-authorization.ts",
+      "lib/tasks/task-access.ts",
+      "lib/tasks/visibility.ts",
+    ];
+    for (const rel of paths) {
+      const source = readFileSync(join(process.cwd(), rel), "utf8");
+      expect(source).not.toMatch(/TaskFollower|taskFollower|listTaskFollowerUserIds/);
+    }
   });
 
   it("F29 dedup identity", () => {
