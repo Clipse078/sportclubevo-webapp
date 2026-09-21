@@ -495,6 +495,11 @@ describe("AUFGABEN-06C-A1 static regression guards", () => {
     expect(source).toMatch(/select:\s*\{\s*userId:\s*true\s*\}/);
   });
 
+  it("F30/F31 — unfollow and preferences remain independent (no preference mutation)", () => {
+    const source = readFileSync(join(process.cwd(), "lib/tasks/task-follow-service.ts"), "utf8");
+    expect(source).not.toMatch(/UserNotificationPreference|notificationPreference|loadEffectivePreferences/);
+  });
+
   it("F24 default subscription — no auto TaskFollower on create/assign/comment paths", () => {
     const paths = [
       "lib/tasks/task-comment-service.ts",
