@@ -2,7 +2,7 @@
  * AUFGABEN-06A — Map Task audit rows and comments to user-facing German timeline entries.
  */
 
-import type { TaskPriority, TaskStatus, TaskVisibilityScope } from "@prisma/client";
+import type { TaskPriority, TaskStatus } from "@prisma/client";
 import {
   TASK_CONTEXT_LABELS,
   TASK_PRIORITY_LABELS,

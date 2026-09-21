@@ -425,16 +425,6 @@ export async function updateAufgabeStatusAction(
   }
 }
 
-function parseOptionalDueAt(raw: FormDataEntryValue | null): Date | null | "invalid" {
-  if (raw === null || (typeof raw === "string" && !raw.trim())) {
-    return null;
-  }
-  if (typeof raw !== "string") return "invalid";
-  const dueAt = new Date(`${raw.trim()}T12:00:00.000Z`);
-  if (Number.isNaN(dueAt.getTime())) return "invalid";
-  return dueAt;
-}
-
 async function loadActionTenantTimeZone(tenantId: string): Promise<string> {
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
