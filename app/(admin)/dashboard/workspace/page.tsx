@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { prisma } from "@/lib/db/prisma";
+import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
+import { canReadWorkspaceDocument } from "@/lib/workspace/document-access";
 import {
   FolderClosed,
   FolderOpen,
@@ -35,6 +38,7 @@ import {
 type WorkspacePageProps = {
   searchParams?: Promise<{
     folder?: string;
+    document?: string;
   }>;
 };
 
@@ -124,9 +128,37 @@ export default async function WorkspacePage({
   if (!tenantId) notFound();
 
   const params = (await searchParams) ?? {};
-  const selectedFolderId = params.folder?.trim() || null;
+  const folderParam = params.folder?.trim() || null;
+  const documentParam = params.document?.trim() || null;
   const canManage = hasPermission(session, PERMISSIONS.WORKSPACE_MANAGE);
   const canDelete = hasPermission(session, PERMISSIONS.WORKSPACE_DELETE);
+
+  let selectedFolderId = folderParam;
+  let initialSelectedDocumentId: string | null = null;
+
+  if (documentParam) {
+    const userId = session.user?.id;
+    if (!userId) notFound();
+
+    const { platform, tenant } = await getRequestEffectivePermissions(userId, tenantId);
+    const documentAccessCtx = {
+      tenantId,
+      userId,
+      permissionKeys: [...platform, ...tenant],
+    };
+
+    const readable = await canReadWorkspaceDocument(documentAccessCtx, documentParam);
+    if (!readable) notFound();
+
+    const documentRow = await prisma.workspaceDocument.findFirst({
+      where: { id: documentParam, tenantId },
+      select: { id: true, folderId: true },
+    });
+    if (!documentRow?.folderId) notFound();
+
+    selectedFolderId = documentRow.folderId;
+    initialSelectedDocumentId = documentRow.id;
+  }
 
   const [folders, selectedFolder, archivedFolders] = await Promise.all([
     getWorkspaceFolderTree(tenantId),
@@ -204,6 +236,7 @@ export default async function WorkspacePage({
         {selectedFolder ? (
           <WorkspaceClientShell
             documents={documents}
+            initialSelectedDocumentId={initialSelectedDocumentId}
             folderId={selectedFolder.id}
             folderName={selectedFolder.name}
             folderDescription={selectedFolder.description}

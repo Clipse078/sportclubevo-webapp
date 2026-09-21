@@ -43,6 +43,7 @@ import {
 } from "@/app/(admin)/dashboard/aufgaben/actions";
 import type { TaskWorkspaceViewProps } from "@/lib/tasks/task-workspace-view-props";
 import { TaskFollowControl } from "@/components/admin/aufgaben/TaskFollowControl";
+import { TaskDocumentReferencesSection } from "@/components/admin/aufgaben/TaskDocumentReferencesSection";
 import type { TaskContextPresentation } from "@/lib/tasks/context-presentation";
 import TaskContextField from "./TaskContextField";
 import TaskOrgVisibilityEditor from "./TaskOrgVisibilityEditor";
@@ -507,6 +508,7 @@ export function TaskWorkspacePanel({
     creator,
     capabilities,
     follow,
+    documentReferences,
   } = bundle;
   const [menuOpen, setMenuOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -714,6 +716,12 @@ export function TaskWorkspacePanel({
             taskId={task.id}
             context={context}
             canEdit={capabilities.canEditContext}
+          />
+
+          <TaskDocumentReferencesSection
+            taskId={task.id}
+            references={documentReferences}
+            canLink={capabilities.canLinkDocuments}
           />
 
           <div className="space-y-2">

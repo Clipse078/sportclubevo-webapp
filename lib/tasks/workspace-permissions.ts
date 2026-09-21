@@ -16,6 +16,7 @@ export type TaskWorkspaceCapabilities = {
   canCancel: boolean;
   canCreateSubtask: boolean;
   canEditContext: boolean;
+  canLinkDocuments: boolean;
   canEditOrgVisibility: boolean;
 };
 
@@ -74,6 +75,7 @@ export function resolveTaskWorkspaceCapabilities(
     canCancel: canManage || isCreator,
     canCreateSubtask: canCreate && !task.parentTaskId,
     canEditContext: canEditFields,
+    canLinkDocuments: canEditFields,
     canEditOrgVisibility,
   };
 
@@ -88,6 +90,7 @@ export function resolveTaskWorkspaceCapabilities(
     !caps.canCancel &&
     !caps.canCreateSubtask &&
     !caps.canEditContext &&
+    !caps.canLinkDocuments &&
     !caps.canEditOrgVisibility;
 
   return caps;

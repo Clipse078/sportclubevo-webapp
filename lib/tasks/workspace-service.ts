@@ -23,6 +23,10 @@ import {
   type TaskWorkspaceCapabilities,
 } from "./workspace-permissions";
 import { getTaskFollowState, type TaskFollowStateDto } from "./task-follow-service";
+import {
+  listTaskDocumentReferences,
+  type TaskDocumentReferenceDto,
+} from "./task-document-reference-service";
 
 const TASK_INCLUDE = {
   assignees: {
@@ -103,6 +107,7 @@ export type TaskWorkspaceBundle = {
   creator: TaskWorkspaceCreator;
   capabilities: TaskWorkspaceCapabilities;
   follow: TaskFollowStateDto;
+  documentReferences: TaskDocumentReferenceDto[];
 };
 
 export async function loadTaskWorkspace(
@@ -117,7 +122,8 @@ export async function loadTaskWorkspace(
     ? getTaskSeriesForRead(ctx, task.taskSeriesId).catch(() => null)
     : Promise.resolve(null);
 
-  const [subtasks, parentTask, seriesRow, creatorUser, context, follow] = await Promise.all([
+  const [subtasks, parentTask, seriesRow, creatorUser, context, follow, documentReferences] =
+    await Promise.all([
     task.parentTaskId ? Promise.resolve([]) : loadVisibleSubtasks(ctx, task.id),
     task.parentTaskId
       ? loadAuthorizedParentTaskRefs(ctx, [task.parentTaskId]).then(
@@ -139,6 +145,7 @@ export async function loadTaskWorkspace(
       timeZone,
     ),
     getTaskFollowState(ctx, taskId),
+    listTaskDocumentReferences(ctx, taskId),
   ]);
 
   const progressSource = task.parentTaskId
@@ -174,5 +181,6 @@ export async function loadTaskWorkspace(
       : null,
     capabilities: resolveTaskWorkspaceCapabilities(ctx, task),
     follow,
+    documentReferences,
   };
 }

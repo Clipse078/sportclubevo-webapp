@@ -874,6 +874,7 @@ model Tenant {
   taskComments                    TaskComment[]
   taskCommentMentions             TaskCommentMention[]
   taskFollowers                   TaskFollower[]
+  taskDocumentReferences          TaskDocumentReference[]
 
   @@index([status])
   @@index([name])
@@ -968,6 +969,7 @@ model User {
   authoredTaskComments         TaskComment[]          @relation("TaskCommentAuthor")
   taskCommentMentionsReceived  TaskCommentMention[]   @relation("TaskCommentMentionUser")
   taskFollows                  TaskFollower[]         @relation("TaskFollowerUser")
+  createdTaskDocumentReferences TaskDocumentReference[] @relation("TaskDocumentReferenceCreatedBy")
 
   linkedTenantBillingAccounts TenantBillingAccount[] @relation("TenantBillingAccountLinkedBy")
 
@@ -2853,6 +2855,7 @@ model Task {
   assignees  TaskAssignee[]
   comments   TaskComment[]
   followers  TaskFollower[]
+  documentReferences TaskDocumentReference[]
 
   @@unique([tenantId, seriesOccurrenceKey])
   @@index([tenantId])
@@ -2922,6 +2925,26 @@ model TaskFollower {
   @@index([tenantId])
   @@index([tenantId, taskId])
   @@index([tenantId, userId])
+}
+
+/// AUFGABEN-06D — supporting Workspace document links (distinct from DOCUMENT primary context).
+model TaskDocumentReference {
+  id              String   @id @default(cuid())
+  tenantId        String
+  taskId          String
+  documentId      String
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  task      Task              @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  document  WorkspaceDocument @relation(fields: [documentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdBy User?             @relation("TaskDocumentReferenceCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([taskId, documentId])
+  @@index([tenantId])
+  @@index([tenantId, taskId])
+  @@index([tenantId, documentId])
 }
 
 /// AUFGABEN-01B — recurrence definition (series), distinct from actionable Task occurrences.
@@ -3995,6 +4018,7 @@ model WorkspaceDocument {
   currentVersion                   WorkspaceDocumentVersion?  @relation("WorkspaceDocumentCurrentVersion", fields: [currentVersionId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   versions                         WorkspaceDocumentVersion[] @relation("WorkspaceDocumentVersions")
   communicationAttachmentSnapshots CommunicationAttachment[]  @relation("CommunicationAttachmentSourceDocument")
+  taskDocumentReferences           TaskDocumentReference[]
 
   createdByUser User? @relation("WorkspaceDocumentCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   updatedByUser User? @relation("WorkspaceDocumentUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)

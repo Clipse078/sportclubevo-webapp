@@ -8,6 +8,7 @@ import {
   buildOperationalContextHref,
   taskContextTypeLabel,
 } from "./context-registry";
+import { resolveWorkspaceDocumentPresentations } from "@/lib/workspace/document-access";
 import { canResolveTaskContextDetails } from "./context-access";
 import type { TaskServiceContext } from "./types";
 
@@ -325,16 +326,19 @@ export async function resolveTaskContextsBatch(
     const ids = [...(byType.get("DOCUMENT") ?? [])];
     loads.push(
       (async () => {
-        const rows = await prisma.workspaceDocument.findMany({
-          where: { id: { in: ids }, tenantId: ctx.tenantId },
-          select: { id: true, name: true },
-        });
-        const rowById = new Map(rows.map((r) => [r.id, r]));
+        const [presentations, existenceRows] = await Promise.all([
+          resolveWorkspaceDocumentPresentations(ctx, ids),
+          prisma.workspaceDocument.findMany({
+            where: { id: { in: ids }, tenantId: ctx.tenantId },
+            select: { id: true, status: true, archivedAt: true },
+          }),
+        ]);
+        const existenceById = new Map(existenceRows.map((row) => [row.id, row]));
         const canSee = canResolveTaskContextDetails(ctx, "DOCUMENT");
         for (const id of ids) {
           const key = contextKey("DOCUMENT", id);
-          const row = rowById.get(id);
-          if (!row) {
+          const existence = existenceById.get(id);
+          if (!existence) {
             resolvedRows.set(key, {
               title: TASK_CONTEXT_UNAVAILABLE_LABEL,
               subtitle: null,
@@ -343,14 +347,24 @@ export async function resolveTaskContextsBatch(
             });
             continue;
           }
-          if (!canSee) {
+          if (existence.archivedAt !== null || existence.status !== "ACTIVE") {
+            resolvedRows.set(key, {
+              title: TASK_CONTEXT_UNAVAILABLE_LABEL,
+              subtitle: null,
+              href: null,
+              unavailable: true,
+            });
+            continue;
+          }
+          const presentation = presentations.get(id);
+          if (!canSee || !presentation || presentation.access === "restricted") {
             resolvedRows.set(key, { title: null, subtitle: null, href: null, unavailable: false });
             continue;
           }
           resolvedRows.set(key, {
-            title: row.name,
-            subtitle: null,
-            href: buildOperationalContextHref("DOCUMENT", { id: row.id }),
+            title: presentation.title,
+            subtitle: presentation.folderBreadcrumb,
+            href: presentation.href,
             unavailable: false,
           });
         }

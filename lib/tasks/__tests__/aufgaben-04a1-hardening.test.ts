@@ -12,6 +12,12 @@ import { buildOperationalContextHref } from "../context-registry";
 import { TaskValidationError } from "../errors";
 import type { TaskServiceContext } from "../types";
 
+const documentAccessMocks = vi.hoisted(() => ({
+  canReadWorkspaceDocument: vi.fn(),
+  resolveWorkspaceDocumentPresentations: vi.fn(),
+  searchWorkspaceDocumentsForTaskLink: vi.fn(),
+}));
+
 const prismaMocks = vi.hoisted(() => ({
   eventFindFirst: vi.fn(),
   eventFindMany: vi.fn(),
@@ -70,6 +76,12 @@ vi.mock("@/lib/org/queries", () => ({
 
 vi.mock("@/lib/meetings/queries", () => ({
   canSeeMeeting: prismaMocks.canSeeMeeting,
+}));
+
+vi.mock("@/lib/workspace/document-access", () => ({
+  canReadWorkspaceDocument: documentAccessMocks.canReadWorkspaceDocument,
+  resolveWorkspaceDocumentPresentations: documentAccessMocks.resolveWorkspaceDocumentPresentations,
+  searchWorkspaceDocumentsForTaskLink: documentAccessMocks.searchWorkspaceDocumentsForTaskLink,
 }));
 
 const TENANT_A = "tenant-a";
@@ -175,7 +187,11 @@ describe("AUFGABEN-04A1 cross-tenant validation", () => {
   it.each(cases)(
     "%s rejects when entity is not in task tenant",
     async (type, perm, mockFn) => {
-      mockFn.mockResolvedValue(null);
+      if (type === "DOCUMENT") {
+        documentAccessMocks.canReadWorkspaceDocument.mockResolvedValue(false);
+      } else {
+        mockFn.mockResolvedValue(null);
+      }
       await expect(
         validateTaskContext(ctx(createPerms(perm)), type as "MATCH", "foreign-id"),
       ).rejects.toThrow(TaskValidationError);
@@ -250,8 +266,11 @@ describe("AUFGABEN-04A1 resolution privacy", () => {
 
   it("DOCUMENT — no title leak without workspace.view", async () => {
     prismaMocks.workspaceDocumentFindMany.mockResolvedValue([
-      { id: "d1", name: "Private Doc" },
+      { id: "d1", status: "ACTIVE", archivedAt: null },
     ]);
+    documentAccessMocks.resolveWorkspaceDocumentPresentations.mockResolvedValue(
+      new Map([["d1", { access: "restricted", documentId: "d1" }]]),
+    );
     const map = await resolveTaskContextsBatch(
       ctx([PERMISSIONS.TASKS_VIEW]),
       [{ contextType: "DOCUMENT", contextId: "d1" }],

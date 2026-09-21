@@ -173,6 +173,12 @@ export function mapAuditLogToTimelineEntry(
     case "TASK_OCCURRENCE_GENERATED":
       title = `${actorName} hat einen Serientermin erzeugt.`;
       break;
+    case "TASK_DOCUMENT_LINKED":
+      title = `${actorName} hat ein Dokument verknüpft.`;
+      break;
+    case "TASK_DOCUMENT_UNLINKED":
+      title = `${actorName} hat ein Dokument entfernt.`;
+      break;
     default:
       title = `${actorName} hat die Aufgabe bearbeitet.`;
       break;
