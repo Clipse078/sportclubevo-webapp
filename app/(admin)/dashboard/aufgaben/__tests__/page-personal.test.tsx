@@ -59,6 +59,10 @@ vi.mock("@/lib/tasks/server-context", () => ({
   getTaskServiceContext: vi.fn(),
 }));
 
+vi.mock("@/components/admin/aufgaben/MeineAufgabenQuickCreateDialog", () => ({
+  default: () => null,
+}));
+
 import AufgabenPage from "../page";
 
 describe("AUFGABEN-05-UI — parent-only Aufgaben page", () => {

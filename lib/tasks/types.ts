@@ -79,6 +79,15 @@ export type CreateTaskInput = {
   visibilityScope?: TaskVisibilityScope;
 };
 
+/** AUFGABEN-06P — compact Meine Aufgaben creation (canonical Task, fixed privacy defaults). */
+export type CreateQuickTaskInput = {
+  title: string;
+  description?: string | null;
+  priority?: TaskPriority;
+  dueAt?: Date | null;
+  assigneeUserIds: string[];
+} & TaskReminderMutationInput;
+
 export type CreateSubtaskInput = {
   title: string;
   description?: string | null;
