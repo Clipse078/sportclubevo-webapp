@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { TaskContextType, TaskVisibilityScope } from "@prisma/client";
+import { TaskVisibilityScope } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
   canReadTask,
@@ -18,7 +18,6 @@ import { mapAuditLogToTimelineEntry } from "../task-timeline-mapper";
 import { MAX_WORKSPACE_DOCUMENT_PICKER_LIMIT } from "@/lib/workspace/document-access";
 
 const TENANT = "tenant-a";
-const TASK = "task-1";
 const CREATOR = "creator";
 const ASSIGNEE = "assignee";
 const OTHER = "other";
@@ -197,12 +196,14 @@ describe("AUFGABEN-06D non-grant matrix", () => {
 });
 
 describe("AUFGABEN-06D migration safety", () => {
-  it("additive migration hash recorded", () => {
+  it("R7 additive migration hash pinned", () => {
     const sql = read(
       "prisma/migrations/20260921193000_aufgaben_06d_document_references/migration.sql",
     );
     const hash = createHash("sha256").update(sql).digest("hex");
-    expect(hash.length).toBe(64);
+    expect(hash).toBe(
+      "4919f4b45121183a395505a60b8a9ada9635aebc2d60e74584913bcffb0287f0",
+    );
     expect(sql).toContain("CREATE TABLE \"TaskDocumentReference\"");
   });
 });

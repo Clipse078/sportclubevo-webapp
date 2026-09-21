@@ -93,6 +93,12 @@ describe("document-access seam", () => {
     }
   });
 
+  it("R27 picker default limit is 20 before hard cap", async () => {
+    mocks.findMany.mockResolvedValue([activeDoc()]);
+    await searchWorkspaceDocumentsForTaskLink(ctx([PERMISSIONS.WORKSPACE_VIEW]), "hand");
+    expect(mocks.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 20 }));
+  });
+
   it("picker excludes archived and respects max limit constant", async () => {
     mocks.findMany.mockResolvedValue([activeDoc()]);
     await searchWorkspaceDocumentsForTaskLink(ctx([PERMISSIONS.WORKSPACE_VIEW]), "hand", 999);
