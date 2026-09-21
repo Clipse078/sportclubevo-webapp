@@ -8,15 +8,28 @@ Operational acceptance for **one synthetic** SportClubEvo Swiss QR invoice scann
 
 ## What QR-04B can prove
 
-Only the channels actually tested with recorded evidence, for example:
-
-> Successfully parsed by UBS, Raiffeisen and PostFinance during cross-bank acceptance testing.
+Only the channels actually tested with recorded evidence.
 
 Never claim that every Swiss bank or device is guaranteed to work.
 
-Intended conclusion after successful QR-04B evidence:
+**SIX standards validation** (QR-04A) is the bank-independent compliance evidence: it confirms the QR-bill payload and image conform to **QR;2.3;CH** in the official SIX Swiss QR-bill Validation Portal.
 
-> SCE Swiss QR invoices conform to the applicable SIX QR-bill standard and have additionally been successfully parsed in representative Swiss banking channels.
+**Practical banking-channel parsing** (QR-04B) is additional evidence that a real bank app can read the same artifact and reach the normal payment workflow without a visible QR validation error. It does **not** replace SIX validation and does **not** imply formal SIX certification of SCE.
+
+## Conclusion (QR-04B)
+
+| Check | Result |
+| --- | --- |
+| Official SIX external validation against **QR;2.3;CH** | **PASS** (QR-04A) |
+| UBS practical banking-channel parsing | **PASS** |
+| Raiffeisen | **NOT TESTED** |
+| PostFinance | **NOT TESTED** |
+
+SCE Swiss QR invoices conform to the tested SIX QR-bill standard **QR;2.3;CH**, as evidenced by successful validation in the official SIX Swiss QR-bill Validation Portal. The same canonical synthetic QR artifact was additionally successfully parsed by UBS mobile banking and reached the normal payment workflow without a visible QR validation error.
+
+**Not claimed:** all Swiss banks were tested; every Swiss bank is guaranteed to accept the invoice; Raiffeisen or PostFinance were tested; SIX formally certified SCE.
+
+---
 
 ## Canonical fixture (synthetic only)
 
@@ -29,6 +42,10 @@ Intended conclusion after successful QR-04B evidence:
 | Reference type | QRR |
 | Reference | `273282026000002025434650072` |
 | Message | SportClubEvo Abonnement SYNTH-2026-000042 |
+
+**Canonical artifact (QR-04B bank test):** `sce-realistic-chf.pdf`
+
+**PDF SHA-256:** `8c5aa76e03d8ee326f19e1222f7bbd7dc723f3334685c3031f71860c47043b5f`
 
 Generate artifacts (local, gitignored):
 
@@ -53,9 +70,9 @@ Output directory: `artifacts/billing-qr-04b/` — use **`sce-realistic-chf.pdf`*
 7. Continue only until the **final payment review / confirmation** screen.
 8. **Do not** confirm or send the payment.
 9. Capture a screenshot showing successful parsing where permitted.
-10. Record **PASS** or **FAIL** in the checklist below (and update `manifest.json` bank channel results only after evidence review).
+10. Record **PASS** or **FAIL** in the checklist below.
 
-Do **not** include in evidence: account balances, account numbers, unrelated transactions, login or authentication data, or other personal banking information.
+Do **not** include in evidence: account balances, account numbers, unrelated transactions, login or authentication data, or other personal banking information. Prefer textual recording of observed fields; do not commit banking screenshots unless redacted and required by an existing repository convention.
 
 ---
 
@@ -63,66 +80,65 @@ Do **not** include in evidence: account balances, account numbers, unrelated tra
 
 **PASS** = QR detected, fields parsed, payment review screen reached **before** confirmation.  
 **FAIL** = QR not detected, parse error, or wrong fields.  
-**NOT TESTED** = no evidence yet.
+**NOT TESTED** = no evidence yet (or test access unavailable).
 
 ### UBS
 
 | Field | Value |
 | --- | --- |
-| Test date | |
-| Bank / channel | UBS |
-| Mobile / web | |
-| QR detected | |
-| QR parsed | |
-| Creditor displayed | |
-| Amount displayed | |
-| Currency displayed | |
-| Reference displayed | |
-| Payment screen reached before confirmation | |
-| Error / warning | |
-| **Result** | **NOT TESTED** |
-| Evidence note | |
+| Test date | 2026-09-21 |
+| Bank / channel | UBS mobile banking |
+| Mobile / web | Mobile |
+| QR detected | YES |
+| QR parsed | YES |
+| Creditor displayed | YES — visible as “SportClubEvo Plat…” |
+| QR-IBAN displayed | YES — visible beginning “CH69 3000 5235 73…” |
+| Amount displayed | CHF 429.00 |
+| Currency displayed | CHF |
+| Payment screen reached before confirmation | YES — normal QR payment workflow; could proceed to next review step |
+| Error / warning | None visible (no QR validation error; no QR warning) |
+| Payment executed | **NO** (test stopped before confirmation; no payment initiated or settled) |
+| **Result** | **PASS** |
+| Evidence note | User-observed manual test on canonical `sce-realistic-chf.pdf` (SHA-256 above). No personal banking data stored in this repository. |
 
 ### Raiffeisen
 
 | Field | Value |
 | --- | --- |
-| Test date | |
+| Test date | — |
 | Bank / channel | Raiffeisen |
-| Mobile / web | |
-| QR detected | |
-| QR parsed | |
-| Creditor displayed | |
-| Amount displayed | |
-| Currency displayed | |
-| Reference displayed | |
-| Payment screen reached before confirmation | |
-| Error / warning | |
-| **Result** | **NOT TESTED** |
-| Evidence note | |
+| Mobile / web | — |
+| QR detected | — |
+| QR parsed | — |
+| Creditor displayed | — |
+| Amount displayed | — |
+| Currency displayed | — |
+| Reference displayed | — |
+| Payment screen reached before confirmation | — |
+| Error / warning | — |
+| **Result** | **NOT TESTED — test access unavailable** |
+| Evidence note | No online banking access for Raiffeisen; not marked PASS or FAIL. |
 
 ### PostFinance
 
 | Field | Value |
 | --- | --- |
-| Test date | |
+| Test date | — |
 | Bank / channel | PostFinance |
-| Mobile / web | |
-| QR detected | |
-| QR parsed | |
-| Creditor displayed | |
-| Amount displayed | |
-| Currency displayed | |
-| Reference displayed | |
-| Payment screen reached before confirmation | |
-| Error / warning | |
-| **Result** | **NOT TESTED** |
-| Evidence note | |
+| Mobile / web | — |
+| QR detected | — |
+| QR parsed | — |
+| Creditor displayed | — |
+| Amount displayed | — |
+| Currency displayed | — |
+| Reference displayed | — |
+| Payment screen reached before confirmation | — |
+| Error / warning | — |
+| **Result** | **NOT TESTED — test access unavailable** |
+| Evidence note | No online banking access for PostFinance; not marked PASS or FAIL. |
 
 ---
 
 ## Status
 
-**QR-04B status:** WAITING FOR MANUAL CROSS-BANK EVIDENCE
-
-Do not mark any bank **PASS** without actual test evidence from the steps above.
+**QR-04B status:** **PASS / READY FOR MERGE REVIEW** (UBS practical acceptance evidenced; Raiffeisen/PostFinance explicitly not tested)
