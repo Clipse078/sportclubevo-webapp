@@ -869,6 +869,7 @@ model Tenant {
   communicationMessageAttachments CommunicationMessageAttachment[]
   internalComments                InternalComment[]
   commentMentions                 CommentMention[]
+  taskComments                    TaskComment[]
 
   @@index([status])
   @@index([name])
@@ -960,6 +961,7 @@ model User {
   createdCommunicationMessages CommunicationMessage[] @relation("CommunicationMessageCreatedBy")
   authoredInternalComments     InternalComment[]      @relation("InternalCommentAuthor")
   commentMentionsReceived      CommentMention[]       @relation("CommentMentionUser")
+  authoredTaskComments         TaskComment[]          @relation("TaskCommentAuthor")
 
   linkedTenantBillingAccounts TenantBillingAccount[] @relation("TenantBillingAccountLinkedBy")
 
@@ -2214,6 +2216,7 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([createdAt])
   @@index([tenantId, createdAt])
+  @@index([tenantId, moduleKey, entityType, entityId, createdAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -2842,6 +2845,7 @@ model Task {
   subtasks   Task[]      @relation("TaskSubtasks")
   taskSeries TaskSeries? @relation(fields: [taskSeriesId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   assignees  TaskAssignee[]
+  comments   TaskComment[]
 
   @@unique([tenantId, seriesOccurrenceKey])
   @@index([tenantId])
@@ -2855,6 +2859,25 @@ model Task {
   @@index([tenantId, visibilityScope])
   @@index([tenantId, orgUnitId])
   @@index([tenantId, orgUnitId, visibilityScope])
+}
+
+/// AUFGABEN-06A — canonical task-native collaboration comments (not CommunicationThread).
+model TaskComment {
+  id           String    @id @default(cuid())
+  tenantId     String
+  taskId       String
+  authorUserId String
+  body         String
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant     Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  task       Task   @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  authorUser User   @relation("TaskCommentAuthor", fields: [authorUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, taskId, createdAt])
 }
 
 /// AUFGABEN-01B — recurrence definition (series), distinct from actionable Task occurrences.

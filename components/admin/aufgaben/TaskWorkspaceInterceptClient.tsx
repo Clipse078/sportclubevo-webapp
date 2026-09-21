@@ -14,6 +14,7 @@ type Props = {
   locale: string;
   timeZone: string;
   backHref: string;
+  currentUserId: string;
 };
 
 export default function TaskWorkspaceInterceptClient(props: Props) {

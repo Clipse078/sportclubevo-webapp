@@ -46,6 +46,7 @@ import type { TaskContextPresentation } from "@/lib/tasks/context-presentation";
 import TaskContextField from "./TaskContextField";
 import TaskOrgVisibilityEditor from "./TaskOrgVisibilityEditor";
 import { TaskDeadlineReminderEditor } from "./TaskDeadlineReminderEditor";
+import { TaskActivitySection } from "./TaskActivitySection";
 
 function InlineTitle({
   task,
@@ -488,6 +489,7 @@ export function TaskWorkspacePanel({
   timeZone,
   backHref,
   presentation,
+  currentUserId,
   onClose,
 }: TaskWorkspaceViewProps) {
   const router = useRouter();
@@ -712,9 +714,13 @@ export function TaskWorkspacePanel({
             canEdit={capabilities.canEditContext}
           />
 
-          <section className="rounded-lg border border-dashed border-[var(--border)]/60 px-3 py-4 text-xs text-[var(--muted)]">
-            Aktivität — folgt in einer späteren Version.
-          </section>
+          <TaskActivitySection
+            taskId={task.id}
+            currentUserId={currentUserId}
+            canCollaborate
+            locale={locale}
+            timeZone={timeZone}
+          />
         </div>
 
         <aside className="min-w-0 space-y-4 lg:border-l lg:border-[var(--border)]/60 lg:pl-5">
@@ -895,6 +901,7 @@ export function TaskWorkspaceModal({
   locale,
   timeZone,
   backHref,
+  currentUserId,
   onClose,
 }: TaskWorkspaceViewProps & { onClose: () => void }) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -911,6 +918,7 @@ export function TaskWorkspaceModal({
           locale={locale}
           timeZone={timeZone}
           backHref={backHref}
+          currentUserId={currentUserId}
           presentation="modal"
           onClose={onClose}
         />

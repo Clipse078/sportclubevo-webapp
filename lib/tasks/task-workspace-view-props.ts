@@ -11,6 +11,7 @@ export type TaskWorkspaceViewProps = {
   timeZone: string;
   backHref: string;
   presentation: "page" | "modal";
+  currentUserId: string;
   onClose?: () => void;
 };
 
