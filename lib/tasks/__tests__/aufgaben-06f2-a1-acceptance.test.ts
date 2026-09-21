@@ -13,8 +13,17 @@ import { loadContextRelatedTasksPanel } from "../load-context-related-tasks-pane
 import { listTasksForContext } from "../list-tasks-for-context";
 import { countTasksForContext } from "../count-tasks-for-context";
 import { validateTaskContextAttachable } from "../task-context-registry";
-import { TaskVisibilityScope } from "@prisma/client";
+import { TaskStatus, TaskVisibilityScope } from "@prisma/client";
 import { EMPTY_TASK_AUTH_SCOPE } from "../task-authorization";
+import {
+  DEFAULT_ENTITY_RELATED_TASK_ROOTS_ONLY,
+  DEFAULT_ENTITY_RELATED_TASK_STATUSES,
+} from "../context-related-defaults";
+import {
+  mapFixtureToListRow,
+  matchesRelatedTaskWhere,
+  type RelatedTaskFixture,
+} from "./helpers/related-task-where-matcher";
 
 function read(rel: string): string {
   return readFileSync(join(process.cwd(), rel), "utf8");
@@ -397,5 +406,207 @@ describe("AUFGABEN-06F2 open-by-default visibility (R19, R38–R40)", () => {
       /CLUB visibility/,
     );
     expect(TaskVisibilityScope.CLUB).toBe("CLUB");
+  });
+});
+
+describe("AUFGABEN-06F2-A1 mixed contextual count (R32–R35)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    prismaMocks.eventFindFirst.mockResolvedValue({ id: "match-1" });
+    prismaMocks.resolveEligibility.mockResolvedValue({
+      canCreate: true,
+      canViewRelatedTasks: true,
+    });
+  });
+
+  it("returns EXPECTED_COUNT 2 for mixed fixture via countTasksForContext", async () => {
+    const ctx = serviceCtx(USER, [PERMISSIONS.TASKS_VIEW, PERMISSIONS.EVENTS_VIEW, PERMISSIONS.TASKS_VIEW_ALL]);
+    const clubVisible = TaskVisibilityScope.CLUB;
+    const mixed: RelatedTaskFixture[] = [
+      {
+        id: "A-open-root",
+        tenantId: TENANT,
+        contextType: TaskContextType.MATCH,
+        contextId: "match-1",
+        status: TaskStatus.OPEN,
+        parentTaskId: null,
+        createdByUserId: "creator",
+        assigneeUserIds: [],
+        visibilityScope: clubVisible,
+        orgUnitId: null,
+        title: "A",
+      },
+      {
+        id: "B-inprog-root",
+        tenantId: TENANT,
+        contextType: TaskContextType.MATCH,
+        contextId: "match-1",
+        status: TaskStatus.IN_PROGRESS,
+        parentTaskId: null,
+        createdByUserId: "creator",
+        assigneeUserIds: [],
+        visibilityScope: clubVisible,
+        orgUnitId: null,
+        title: "B",
+      },
+      {
+        id: "C-done-root",
+        tenantId: TENANT,
+        contextType: TaskContextType.MATCH,
+        contextId: "match-1",
+        status: TaskStatus.DONE,
+        parentTaskId: null,
+        createdByUserId: "creator",
+        assigneeUserIds: [],
+        visibilityScope: clubVisible,
+        orgUnitId: null,
+        title: "C",
+      },
+      {
+        id: "D-cancel-root",
+        tenantId: TENANT,
+        contextType: TaskContextType.MATCH,
+        contextId: "match-1",
+        status: TaskStatus.CANCELLED,
+        parentTaskId: null,
+        createdByUserId: "creator",
+        assigneeUserIds: [],
+        visibilityScope: clubVisible,
+        orgUnitId: null,
+        title: "D",
+      },
+      {
+        id: "E-open-sub",
+        tenantId: TENANT,
+        contextType: TaskContextType.MATCH,
+        contextId: "match-1",
+        status: TaskStatus.OPEN,
+        parentTaskId: "parent-1",
+        createdByUserId: "creator",
+        assigneeUserIds: [],
+        visibilityScope: clubVisible,
+        orgUnitId: null,
+        title: "E",
+      },
+      {
+        id: "F-hidden-assignees",
+        tenantId: TENANT,
+        contextType: TaskContextType.MATCH,
+        contextId: "match-1",
+        status: TaskStatus.OPEN,
+        parentTaskId: null,
+        createdByUserId: "creator",
+        assigneeUserIds: ["assignee"],
+        visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
+        orgUnitId: null,
+        title: "F",
+      },
+      {
+        id: "G-hidden-org",
+        tenantId: TENANT,
+        contextType: TaskContextType.MATCH,
+        contextId: "match-1",
+        status: TaskStatus.OPEN,
+        parentTaskId: null,
+        createdByUserId: "creator",
+        assigneeUserIds: [],
+        visibilityScope: TaskVisibilityScope.ORG_UNIT,
+        orgUnitId: "org-1",
+        title: "G",
+      },
+    ];
+
+    prismaMocks.taskCount.mockImplementation(async (args: { where: unknown }) =>
+      mixed.filter((t) => matchesRelatedTaskWhere(t, args.where as never, ctx)).length,
+    );
+    prismaMocks.taskFindMany.mockImplementation(async (args: { where: unknown; take?: number }) => {
+      const matched = mixed
+        .filter((t) => matchesRelatedTaskWhere(t, args.where as never, ctx))
+        .map(mapFixtureToListRow);
+      return matched.slice(0, args.take ?? matched.length);
+    });
+
+    const actual = await countTasksForContext(ctx, TaskContextType.MATCH, "match-1", {
+      rootsOnly: DEFAULT_ENTITY_RELATED_TASK_ROOTS_ONLY,
+      statuses: DEFAULT_ENTITY_RELATED_TASK_STATUSES,
+    });
+    expect(actual).toBe(2);
+  });
+});
+
+describe("AUFGABEN-06F2-A1 MEETING slug/id boundary (§18)", () => {
+  it("slug page resolves dbMeeting.id for contextual integration", () => {
+    const meetingPage = read("app/(admin)/vereinsleitung/meetings/[slug]/page.tsx");
+    expect(meetingPage).toMatch(/getMeetingBySlug\(slug/);
+    expect(meetingPage).toMatch(/contextId=\{dbMeeting\.id\}/);
+    expect(meetingPage).not.toMatch(/contextId=\{slug\}/);
+  });
+
+  it("unknown slug omits contextual Task integration", () => {
+    const meetingPage = read("app/(admin)/vereinsleitung/meetings/[slug]/page.tsx");
+    expect(meetingPage).toMatch(/dbMeeting \?/);
+    expect(meetingPage).toMatch(/relatedTasksPanel=\{\s*dbMeeting \?/);
+  });
+});
+
+describe("AUFGABEN-06F2-A1 REGISTRATION routing (§19)", () => {
+  it("uses canonical Registration.id and tenant slug gate before panel", () => {
+    const page = read("app/(admin)/tenant/[tenantSlug]/cockpit/registrations/[registrationId]/page.tsx");
+    expect(page).toMatch(/requireTenantContextForSlug\(tenantSlug\)/);
+    expect(page).toMatch(/getRegistrationForTenant\(tenantSlug, registrationId\)/);
+    expect(page).toMatch(/contextId=\{registration\.id\}/);
+    expect(page).not.toMatch(/prisma\.task/);
+  });
+});
+
+describe("AUFGABEN-06F2-A1 DOCUMENT URL server gate (§17)", () => {
+  it("folder tree links omit document param (no stale document on folder change)", () => {
+    const page = read("app/(admin)/dashboard/workspace/page.tsx");
+    expect(page).toMatch(/href=\{`\/dashboard\/workspace\?folder=\$\{encodeURIComponent\(folder\.id\)\}`\}/);
+    expect(page).toMatch(/canReadWorkspaceDocument/);
+    expect(page).toMatch(/initialSelectedDocumentId != null/);
+  });
+
+  it("forbidden document fails closed before contextual panel", () => {
+    const page = read("app/(admin)/dashboard/workspace/page.tsx");
+    expect(page).toMatch(/if \(!readable\) notFound\(\)/);
+  });
+});
+
+describe("AUFGABEN-06F2-A1 module query audit (§21)", () => {
+  const changed = [
+    "app/(admin)/dashboard/persons/[id]/page.tsx",
+    "app/(admin)/dashboard/teams/[teamId]/page.tsx",
+    "app/(admin)/dashboard/tournamentcenter/[tournamentId]/edit/page.tsx",
+    "app/(admin)/dashboard/training/series/[seriesId]/edit/page.tsx",
+    "app/(admin)/dashboard/veranstaltungen/[eventId]/edit/page.tsx",
+    "app/(admin)/dashboard/workspace/page.tsx",
+    "app/(admin)/tenant/[tenantSlug]/cockpit/registrations/[registrationId]/page.tsx",
+    "app/(admin)/vereinsleitung/meetings/[slug]/page.tsx",
+    "components/admin/workspace/WorkspaceClientShell.tsx",
+  ];
+
+  it("changed integration surfaces delegate to shared panel (no direct Task queries)", () => {
+    for (const file of changed) {
+      const src = read(file);
+      expect(src).not.toMatch(/prisma\.task\.(findMany|count|create)/);
+      expect(src).not.toMatch(/from "@\/lib\/tasks\/task-service"/);
+    }
+  });
+});
+
+describe("AUFGABEN-06F2-A1 R10 TEAM id", () => {
+  it("TEAM page uses team.id context", () => {
+    const page = read("app/(admin)/dashboard/teams/[teamId]/page.tsx");
+    expect(page).toMatch(/contextType="TEAM"/);
+    expect(page).toMatch(/contextId=\{team\.id\}/);
+  });
+});
+
+describe("AUFGABEN-06F2-A1 R12 PERSON id", () => {
+  it("PERSON page uses person.id context", () => {
+    const page = read("app/(admin)/dashboard/persons/[id]/page.tsx");
+    expect(page).toMatch(/contextType="PERSON"/);
+    expect(page).toMatch(/contextId=\{person\.id\}/);
   });
 });
