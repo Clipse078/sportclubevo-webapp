@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import type { TaskDescriptionDocument } from "@/lib/tasks/task-description";
 import { emptyTaskDescriptionDocument } from "@/lib/tasks/task-description";
+import { SCE_TASK_RICH_CONTENT_CLASS } from "@/lib/tasks/task-description-rich-content";
 
 type Props = {
   value: TaskDescriptionDocument;
@@ -68,17 +69,23 @@ function ToolbarButton({
   );
 }
 
-function EditorToolbar({ editor }: { editor: Editor }) {
-  const addLink = useCallback(() => {
-    const previousUrl = editor.getAttributes("link").href as string | undefined;
-    const url = window.prompt("URL:", previousUrl ?? "https://");
-    if (url === null) return;
-    if (url === "") {
-      editor.chain().focus().extendMarkRange("link").unsetLink().run();
-      return;
-    }
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
-  }, [editor]);
+function isAllowedEditorLinkHref(href: string): boolean {
+  const trimmed = href.trim();
+  return (
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("mailto:")
+  );
+}
+
+function EditorToolbar({
+  editor,
+  onAddLink,
+}: {
+  editor: Editor;
+  onAddLink: () => void;
+}) {
 
   return (
     <div
@@ -120,7 +127,7 @@ function EditorToolbar({ editor }: { editor: Editor }) {
       >
         <Code className="h-3.5 w-3.5" />
       </ToolbarButton>
-      <ToolbarButton onClick={addLink} active={editor.isActive("link")} title="Link (Strg+K)">
+      <ToolbarButton onClick={onAddLink} active={editor.isActive("link")} title="Link (Strg+K)">
         <Link2 className="h-3.5 w-3.5" />
       </ToolbarButton>
 
@@ -173,7 +180,10 @@ export default function TaskDescriptionEditor({
       TaskList.configure({
         HTMLAttributes: { class: "task-description-checklist" },
       }),
-      TaskItem.configure({ nested: false }),
+      TaskItem.configure({
+        nested: false,
+        HTMLAttributes: { class: "task-description-task-item" },
+      }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -188,13 +198,38 @@ export default function TaskDescriptionEditor({
     editorProps: {
       attributes: {
         ...(inputId ? { id: inputId } : {}),
-        class: `${minHeightClassName} outline-none`,
+        class: `${SCE_TASK_RICH_CONTENT_CLASS} ${minHeightClassName} outline-none`,
       },
     },
     onUpdate({ editor: ed }) {
       onChange(ed.getJSON() as TaskDescriptionDocument);
     },
   });
+
+  const addLink = useCallback(() => {
+    if (!editor) return;
+    const previousUrl = editor.getAttributes("link").href as string | undefined;
+    const url = window.prompt("URL:", previousUrl ?? "https://");
+    if (url === null) return;
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+    if (!isAllowedEditorLinkHref(url)) return;
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url.trim() }).run();
+  }, [editor]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        addLink();
+      }
+    };
+    editor.view.dom.addEventListener("keydown", onKeyDown);
+    return () => editor.view.dom.removeEventListener("keydown", onKeyDown);
+  }, [editor, addLink]);
 
   useEffect(() => {
     if (!editor) return;
@@ -210,10 +245,10 @@ export default function TaskDescriptionEditor({
       className={`overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] ${disabled ? "opacity-60" : ""}`}
       data-testid={testId}
     >
-      {editor && !disabled ? <EditorToolbar editor={editor} /> : null}
+      {editor && !disabled ? <EditorToolbar editor={editor} onAddLink={addLink} /> : null}
       <EditorContent
         editor={editor}
-        className="task-description-editor prose prose-sm max-w-none px-3 py-2 text-sm text-[var(--foreground)] focus-within:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0 [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-[var(--muted)] [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_ul.task-description-checklist]:list-none [&_.ProseMirror_ul.task-description-checklist]:pl-0"
+        className={`task-description-editor ${SCE_TASK_RICH_CONTENT_CLASS} max-w-none px-3 py-2 text-sm text-[var(--foreground)] focus-within:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0 [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-[var(--muted)] [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]`}
       />
     </div>
   );

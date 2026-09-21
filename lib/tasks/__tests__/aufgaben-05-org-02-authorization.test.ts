@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { TaskVisibilityScope } from "@prisma/client";
+import { TaskAccessGrantSubjectType, TaskVisibilityScope } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
   buildTaskReadWhere,
@@ -225,6 +225,16 @@ describe("AUFGABEN-05-ORG-02 query predicates", () => {
         { createdByUserId: USER },
         { assignees: { some: { userId: USER, tenantId: TENANT_A } } },
         { visibilityScope: TaskVisibilityScope.CLUB },
+        {
+          visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
+          accessGrants: {
+            some: {
+              tenantId: TENANT_A,
+              subjectType: TaskAccessGrantSubjectType.USER,
+              userId: USER,
+            },
+          },
+        },
       ],
     });
   });
@@ -241,8 +251,32 @@ describe("AUFGABEN-05-ORG-02 query predicates", () => {
         { assignees: { some: { userId: USER, tenantId: TENANT_A } } },
         {
           visibilityScope: TaskVisibilityScope.ORG_UNIT,
-          orgUnitId: { in: [ORG_FINANCE] },
-          orgUnit: { tenantId: TENANT_A },
+          OR: [
+            {
+              orgUnitId: { in: [ORG_FINANCE] },
+              orgUnit: { tenantId: TENANT_A },
+            },
+            {
+              accessGrants: {
+                some: {
+                  tenantId: TENANT_A,
+                  subjectType: TaskAccessGrantSubjectType.ORG_UNIT,
+                  orgUnitId: { in: [ORG_FINANCE] },
+                  orgUnit: { tenantId: TENANT_A },
+                },
+              },
+            },
+          ],
+        },
+        {
+          visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
+          accessGrants: {
+            some: {
+              tenantId: TENANT_A,
+              subjectType: TaskAccessGrantSubjectType.USER,
+              userId: USER,
+            },
+          },
         },
       ],
     });

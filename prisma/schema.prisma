@@ -805,6 +805,8 @@ model Tenant {
   taskSeriesAssigneeTemplates      TaskSeriesAssigneeTemplate[]
   taskSeriesSubtaskTemplates       TaskSeriesSubtaskTemplate[]
   taskSeriesSubtaskAssigneeTemplates TaskSeriesSubtaskAssigneeTemplate[]
+  taskAccessGrants                   TaskAccessGrant[]
+  taskSeriesAccessGrants             TaskSeriesAccessGrant[]
   notifications                      Notification[]
   notificationDeliveries             NotificationDelivery[]
   userNotificationPreferences        UserNotificationPreference[]
@@ -974,6 +976,8 @@ model User {
   linkedTenantBillingAccounts TenantBillingAccount[] @relation("TenantBillingAccountLinkedBy")
 
   taskAssignments TaskAssignee[] @relation("TaskAssigneeUser")
+  taskAccessGrants TaskAccessGrant[] @relation("TaskAccessGrantUser")
+  taskSeriesAccessGrants TaskSeriesAccessGrant[] @relation("TaskSeriesAccessGrantUser")
   tasksAssignedBy TaskAssignee[] @relation("TaskAssignedByUser")
   tasksCreated    Task[]         @relation("TaskCreatedBy")
   taskSeriesCreated TaskSeries[] @relation("TaskSeriesCreatedBy")
@@ -2373,6 +2377,8 @@ model OrgUnit {
   waitingListEntries WaitingListEntry[]  @relation("WaitingListEntryOrgUnit")
   tasks              Task[]              @relation("TaskOrgUnit")
   taskSeries         TaskSeries[]        @relation("TaskSeriesOrgUnit")
+  taskAccessGrants   TaskAccessGrant[]   @relation("TaskAccessGrantOrgUnit")
+  taskSeriesAccessGrants TaskSeriesAccessGrant[] @relation("TaskSeriesAccessGrantOrgUnit")
 
   @@unique([tenantId, key])
   @@index([tenantId])
@@ -2856,6 +2862,7 @@ model Task {
   comments   TaskComment[]
   followers  TaskFollower[]
   documentReferences TaskDocumentReference[]
+  accessGrants TaskAccessGrant[]
 
   @@unique([tenantId, seriesOccurrenceKey])
   @@index([tenantId])
@@ -2981,11 +2988,63 @@ model TaskSeries {
   assigneeTemplates TaskSeriesAssigneeTemplate[]
   subtaskTemplates  TaskSeriesSubtaskTemplate[]
   occurrences       Task[]
+  accessGrants      TaskSeriesAccessGrant[]
 
   @@index([tenantId])
   @@index([tenantId, status])
   @@index([tenantId, visibilityScope])
   @@index([tenantId, orgUnitId])
+}
+
+/// AUFGABEN-06F2-UX1-A2 — explicit Task visibility grants (org units / viewer users).
+model TaskAccessGrant {
+  id          String                    @id @default(cuid())
+  tenantId    String
+  taskId      String
+  subjectType TaskAccessGrantSubjectType
+  orgUnitId   String?
+  userId      String?
+  createdAt   DateTime                  @default(now())
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  task    Task     @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orgUnit OrgUnit? @relation("TaskAccessGrantOrgUnit", fields: [orgUnitId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user    User?    @relation("TaskAccessGrantUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([taskId, orgUnitId])
+  @@unique([taskId, userId])
+  @@index([tenantId])
+  @@index([tenantId, taskId])
+  @@index([tenantId, orgUnitId])
+  @@index([tenantId, userId])
+}
+
+/// AUFGABEN-06F2-UX1-A2 — recurrence series visibility grant templates.
+model TaskSeriesAccessGrant {
+  id          String                    @id @default(cuid())
+  tenantId    String
+  seriesId    String
+  subjectType TaskAccessGrantSubjectType
+  orgUnitId   String?
+  userId      String?
+  createdAt   DateTime                  @default(now())
+
+  tenant  Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  series  TaskSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orgUnit OrgUnit?   @relation("TaskSeriesAccessGrantOrgUnit", fields: [orgUnitId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user    User?      @relation("TaskSeriesAccessGrantUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([seriesId, orgUnitId])
+  @@unique([seriesId, userId])
+  @@index([tenantId])
+  @@index([tenantId, seriesId])
+  @@index([tenantId, orgUnitId])
+  @@index([tenantId, userId])
+}
+
+enum TaskAccessGrantSubjectType {
+  ORG_UNIT
+  USER
 }
 
 model TaskSeriesAssigneeTemplate {

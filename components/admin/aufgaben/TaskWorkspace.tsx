@@ -525,6 +525,7 @@ export function TaskWorkspacePanel({
     capabilities,
     follow,
     documentReferences,
+    accessGrants,
   } = bundle;
   const [menuOpen, setMenuOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -882,6 +883,7 @@ export function TaskWorkspacePanel({
             task={task}
             orgUnitOptions={orgUnitOptions}
             orgUnitDisplayLabel={orgUnitDisplayLabel}
+            accessGrants={accessGrants}
             canEdit={capabilities.canEditOrgVisibility}
           />
 

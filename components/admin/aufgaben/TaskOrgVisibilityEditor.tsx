@@ -9,6 +9,7 @@ import {
 } from "@/lib/tasks/management-labels";
 import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
 import type { TaskDto } from "@/lib/tasks/types";
+import type { TaskAccessGrantSnapshot } from "@/lib/tasks/task-access-grants";
 import { updateAufgabeOrgVisibilityAction } from "@/app/(admin)/dashboard/aufgaben/actions";
 import TaskOrgVisibilityFields from "./TaskOrgVisibilityFields";
 
@@ -16,6 +17,7 @@ type Props = {
   task: TaskDto;
   orgUnitOptions: TaskOrgUnitPickerOption[];
   orgUnitDisplayLabel: string;
+  accessGrants: TaskAccessGrantSnapshot;
   canEdit: boolean;
 };
 
@@ -23,6 +25,7 @@ export default function TaskOrgVisibilityEditor({
   task,
   orgUnitOptions,
   orgUnitDisplayLabel,
+  accessGrants,
   canEdit,
 }: Props) {
   const router = useRouter();
@@ -80,9 +83,9 @@ export default function TaskOrgVisibilityEditor({
     setError(null);
     formData.set("taskId", task.id);
     const visibility = formData.get("visibilityScope") as TaskVisibilityScope | null;
-    const orgUnit = formData.get("orgUnitId");
-    if (visibility === "ORG_UNIT" && !(typeof orgUnit === "string" && orgUnit.trim())) {
-      setError("Bitte eine Organisationseinheit wählen.");
+    const orgGrants = formData.get("orgUnitGrantIds");
+    if (visibility === "ORG_UNIT" && !(typeof orgGrants === "string" && orgGrants.trim())) {
+      setError("Bitte mindestens eine Organisationseinheit wählen.");
       return;
     }
     startTransition(async () => {
@@ -101,6 +104,8 @@ export default function TaskOrgVisibilityEditor({
       <TaskOrgVisibilityFields
         orgUnitOptions={orgUnitOptions}
         defaultOrgUnitId={task.orgUnitId}
+        defaultOrgUnitGrantIds={[...accessGrants.orgUnitIds]}
+        defaultViewerUserGrantIds={[...accessGrants.viewerUserIds]}
         defaultVisibilityScope={task.visibilityScope}
         disabled={pending}
         showSectionHeading={false}

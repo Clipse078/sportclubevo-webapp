@@ -7,11 +7,17 @@
  */
 
 import type { Prisma } from "@prisma/client";
-import { TaskVisibilityScope } from "@prisma/client";
+import { TaskAccessGrantSubjectType, TaskVisibilityScope } from "@prisma/client";
 import { loadOrgUnitIds } from "@/lib/org/queries";
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { TaskAuthScope, TaskServiceContext } from "./types";
+import {
+  emptyTaskAccessGrantSnapshot,
+  grantsRowsToSnapshot,
+  resolveEffectiveOrgUnitGrantIds,
+  type TaskAccessGrantSnapshot,
+} from "./task-access-grants";
 
 const TASK_READ_PERMISSIONS = [
   PERMISSIONS.TASKS_VIEW,
@@ -33,6 +39,7 @@ export type TaskAuthorizationRecord = {
   orgUnitId: string | null;
   /** When set, ORG_UNIT org-derived access requires orgUnitTenantId === task tenantId. */
   orgUnitTenantId?: string | null;
+  accessGrants?: TaskAccessGrantSnapshot;
 };
 
 export type TaskSeriesAuthorizationRecord = {
@@ -41,7 +48,12 @@ export type TaskSeriesAuthorizationRecord = {
   assigneeUserIds: readonly string[];
   visibilityScope: TaskVisibilityScope;
   orgUnitId: string | null;
+  accessGrants?: TaskAccessGrantSnapshot;
 };
+
+function grantSnapshot(task: TaskAuthorizationRecord): TaskAccessGrantSnapshot {
+  return task.accessGrants ?? emptyTaskAccessGrantSnapshot();
+}
 
 function hasTaskPermission(ctx: TaskServiceContext, permission: string): boolean {
   return ctx.permissionKeys.includes(permission);
@@ -207,18 +219,25 @@ export function canReadTask(
   switch (task.visibilityScope) {
     case TaskVisibilityScope.CLUB:
       return hasTenantWideClubTaskRead(ctx);
-    case TaskVisibilityScope.ASSIGNEES_ONLY:
-      return false;
+    case TaskVisibilityScope.ASSIGNEES_ONLY: {
+      const viewerIds = grantSnapshot(task).viewerUserIds;
+      return viewerIds.includes(ctx.userId);
+    }
     case TaskVisibilityScope.ORG_UNIT: {
-      if (!task.orgUnitId) return false;
       if (
         task.orgUnitTenantId != null &&
         task.orgUnitTenantId !== ctx.tenantId
       ) {
         return false;
       }
+      const orgUnitIds = resolveEffectiveOrgUnitGrantIds(
+        task.visibilityScope,
+        task.orgUnitId,
+        grantSnapshot(task),
+      );
+      if (orgUnitIds.length === 0) return false;
       const readable = orgReadableUnitIds(resolveAuth(ctx));
-      return readable.includes(task.orgUnitId);
+      return orgUnitIds.some((id) => readable.includes(id));
     }
     default:
       return false;
@@ -255,8 +274,14 @@ export function canManageTask(
     return hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE);
   }
 
-  if (task.visibilityScope === TaskVisibilityScope.ORG_UNIT && task.orgUnitId) {
-    return resolveAuth(ctx).permissionManageOrgUnitIds.includes(task.orgUnitId);
+  if (task.visibilityScope === TaskVisibilityScope.ORG_UNIT) {
+    const orgUnitIds = resolveEffectiveOrgUnitGrantIds(
+      task.visibilityScope,
+      task.orgUnitId,
+      grantSnapshot(task),
+    );
+    const manageable = resolveAuth(ctx).permissionManageOrgUnitIds;
+    return orgUnitIds.some((id) => manageable.includes(id));
   }
 
   return false;
@@ -316,10 +341,35 @@ export function buildTaskReadWhere(ctx: TaskServiceContext): Prisma.TaskWhereInp
   if (orgIds.length > 0) {
     orBranches.push({
       visibilityScope: TaskVisibilityScope.ORG_UNIT,
-      orgUnitId: { in: orgIds },
-      orgUnit: { tenantId: ctx.tenantId },
+      OR: [
+        {
+          orgUnitId: { in: orgIds },
+          orgUnit: { tenantId: ctx.tenantId },
+        },
+        {
+          accessGrants: {
+            some: {
+              tenantId: ctx.tenantId,
+              subjectType: TaskAccessGrantSubjectType.ORG_UNIT,
+              orgUnitId: { in: orgIds },
+              orgUnit: { tenantId: ctx.tenantId },
+            },
+          },
+        },
+      ],
     });
   }
+
+  orBranches.push({
+    visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
+    accessGrants: {
+      some: {
+        tenantId: ctx.tenantId,
+        subjectType: TaskAccessGrantSubjectType.USER,
+        userId: ctx.userId,
+      },
+    },
+  });
 
   return {
     tenantId: ctx.tenantId,
@@ -343,6 +393,9 @@ const PARENT_TASK_SELECT = {
   orgUnitId: true,
   orgUnit: { select: { tenantId: true } },
   assignees: { select: { userId: true } },
+  accessGrants: {
+    select: { subjectType: true, orgUnitId: true, userId: true },
+  },
 } satisfies Prisma.TaskSelect;
 
 type ParentTaskAuthRow = Prisma.TaskGetPayload<{ select: typeof PARENT_TASK_SELECT }>;
@@ -355,6 +408,7 @@ function parentRowToAuthRecord(row: ParentTaskAuthRow): TaskAuthorizationRecord 
     visibilityScope: row.visibilityScope,
     orgUnitId: row.orgUnitId,
     orgUnitTenantId: row.orgUnit?.tenantId ?? null,
+    accessGrants: grantsRowsToSnapshot(row.accessGrants ?? []),
   };
 }
 
@@ -401,10 +455,35 @@ export function buildTaskSeriesReadWhere(
   if (orgIds.length > 0) {
     scopeBranches.push({
       visibilityScope: TaskVisibilityScope.ORG_UNIT,
-      orgUnitId: { in: orgIds },
-      orgUnit: { tenantId: ctx.tenantId },
+      OR: [
+        {
+          orgUnitId: { in: orgIds },
+          orgUnit: { tenantId: ctx.tenantId },
+        },
+        {
+          accessGrants: {
+            some: {
+              tenantId: ctx.tenantId,
+              subjectType: TaskAccessGrantSubjectType.ORG_UNIT,
+              orgUnitId: { in: orgIds },
+              orgUnit: { tenantId: ctx.tenantId },
+            },
+          },
+        },
+      ],
     });
   }
+
+  scopeBranches.push({
+    visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
+    accessGrants: {
+      some: {
+        tenantId: ctx.tenantId,
+        subjectType: TaskAccessGrantSubjectType.USER,
+        userId: ctx.userId,
+      },
+    },
+  });
 
   return {
     tenantId: ctx.tenantId,

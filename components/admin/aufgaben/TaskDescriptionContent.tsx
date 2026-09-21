@@ -1,6 +1,7 @@
 "use client";
 
 import { taskDescriptionToSafeHtml, storedTaskDescriptionIsEmpty } from "@/lib/tasks/task-description";
+import { SCE_TASK_RICH_CONTENT_CLASS } from "@/lib/tasks/task-description-rich-content";
 
 type Props = {
   description: string | null | undefined;
@@ -20,7 +21,7 @@ export default function TaskDescriptionContent({
   const html = taskDescriptionToSafeHtml(description);
   return (
     <div
-      className={`task-description-content prose prose-sm max-w-none ${className}`}
+      className={`task-description-content ${SCE_TASK_RICH_CONTENT_CLASS} max-w-none ${className}`}
       data-testid={testId}
       dangerouslySetInnerHTML={{ __html: html }}
     />

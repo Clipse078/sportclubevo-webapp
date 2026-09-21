@@ -91,15 +91,16 @@ export function formatAssigneeName(firstName: string, lastName: string): string 
 
 export const TASK_VISIBILITY_SCOPE_LABELS: Record<TaskVisibilityScope, string> = {
   CLUB: "Im Verein",
-  ORG_UNIT: "Organisationseinheit",
+  ORG_UNIT: "Organisationseinheiten",
   ASSIGNEES_ONLY: "Nur Beteiligte",
 };
 
 export const TASK_VISIBILITY_SCOPE_DESCRIPTIONS: Record<TaskVisibilityScope, string> = {
   CLUB: "Für berechtigte Personen im Verein sichtbar.",
   ORG_UNIT:
-    "Für Beteiligte und berechtigte Personen dieser Organisationseinheit sichtbar.",
-  ASSIGNEES_ONLY: "Nur für Ersteller und direkt zugewiesene Personen sichtbar.",
+    "Nur für Beteiligte und berechtigte Personen der ausgewählten Organisationseinheiten sichtbar.",
+  ASSIGNEES_ONLY:
+    "Nur für Ersteller, Verantwortliche und ausdrücklich ausgewählte Personen sichtbar.",
 };
 
 export function formatTaskVisibilityLabel(scope: TaskVisibilityScope): string {

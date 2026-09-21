@@ -2,17 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
-import type { TaskContextType, TaskPriority } from "@prisma/client";
-import type { TaskAssigneeOption } from "@/lib/tasks/queries";
+import type { TaskContextType } from "@prisma/client";
 import type { TaskContextPresentation } from "@/lib/tasks/context-resolution";
 import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
-import { TASK_PRIORITY_LABELS } from "@/lib/tasks/management-labels";
 import { taskContextTypeLabel } from "@/lib/tasks/context-registry";
 import { createContextualAufgabeAction } from "@/app/(admin)/dashboard/aufgaben/actions";
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import TaskOrgVisibilityFields from "../TaskOrgVisibilityFields";
 import { TaskDeadlineFields } from "../TaskReminderFields";
 import TaskDescriptionFormField from "../TaskDescriptionFormField";
+import TaskPeopleMultiPicker from "../TaskPeopleMultiPicker";
+import TaskPriorityField from "../TaskPriorityField";
 import { Dialog } from "@/components/ui/Dialog";
 
 export type ContextualTaskCreateDialogProps = {
@@ -21,7 +21,6 @@ export type ContextualTaskCreateDialogProps = {
   contextType: TaskContextType;
   contextId: string;
   presentation: TaskContextPresentation | null;
-  assigneeOptions: TaskAssigneeOption[];
   orgUnitOptions: TaskOrgUnitPickerOption[];
   timeZone: string;
   tenantWideVisibility: boolean;
@@ -34,7 +33,6 @@ export default function ContextualTaskCreateDialog({
   contextType,
   contextId,
   presentation,
-  assigneeOptions,
   orgUnitOptions,
   timeZone,
   tenantWideVisibility,
@@ -44,6 +42,7 @@ export default function ContextualTaskCreateDialog({
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [pending, startTransition] = useTransition();
+  const [assigneeUserIds, setAssigneeUserIds] = useState<string[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
 
   const contextLabel = presentation?.title ?? taskContextTypeLabel(contextType);
@@ -55,14 +54,15 @@ export default function ContextualTaskCreateDialog({
   function onSubmit(formData: FormData) {
     setError(null);
     const visibility = formData.get("visibilityScope");
-    const orgUnit = formData.get("orgUnitId");
+    const orgGrants = formData.get("orgUnitGrantIds");
     if (
       visibility === "ORG_UNIT" &&
-      !(typeof orgUnit === "string" && orgUnit.trim())
+      !(typeof orgGrants === "string" && orgGrants.trim())
     ) {
-      setError("Bitte eine Organisationseinheit für «Organisationseinheit» wählen.");
+      setError("Bitte mindestens eine Organisationseinheit wählen.");
       return;
     }
+    formData.set("assigneeUserIds", assigneeUserIds.join(","));
     startTransition(async () => {
       const result = await createContextualAufgabeAction(contextType, contextId, formData);
       if (result.ok && result.taskId) {
@@ -136,26 +136,17 @@ export default function ContextualTaskCreateDialog({
         <TaskDescriptionFormField optional inputId="contextual-task-create-description" />
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block space-y-1">
-            <span className="text-xs font-medium text-[var(--text-2)]">Verantwortlich</span>
-            <select name="assigneeUserIds" className="fca-input w-full text-sm">
-              <option value="">Optional</option>
-              {assigneeOptions.map((a) => (
-                <option key={a.userId} value={a.userId}>
-                  {a.firstName} {a.lastName}
-                </option>
-              ))}
-            </select>
-          </label>
+          <TaskPeopleMultiPicker
+            label="Verantwortlich"
+            fieldName="assigneeUserIds"
+            selectedIds={assigneeUserIds}
+            onSelectedIdsChange={setAssigneeUserIds}
+            disabled={pending}
+            testIdPrefix="contextual-task-create-assignees"
+          />
           <label className="block space-y-1">
             <span className="text-xs font-medium text-[var(--text-2)]">Priorität</span>
-            <select name="priority" className="fca-input w-full text-sm" defaultValue="NORMAL">
-              {(["LOW", "NORMAL", "HIGH", "URGENT"] as TaskPriority[]).map((p) => (
-                <option key={p} value={p}>
-                  {TASK_PRIORITY_LABELS[p]}
-                </option>
-              ))}
-            </select>
+            <TaskPriorityField disabled={pending} testId="contextual-task-create-priority" />
           </label>
         </div>
 

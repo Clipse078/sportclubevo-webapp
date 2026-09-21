@@ -4,12 +4,8 @@
 
 import type { Prisma, TaskContextType, TaskStatus } from "@prisma/client";
 import { TaskVisibilityScope } from "@prisma/client";
-import {
-  EMPTY_TASK_AUTH_SCOPE,
-  hasTenantWideClubTaskRead,
-  orgReadableUnitIds,
-  type TaskAuthorizationRecord,
-} from "../../task-authorization";
+import { canReadTask, type TaskAuthorizationRecord } from "../../task-authorization";
+import type { TaskAccessGrantSnapshot } from "../../task-access-grants";
 import type { TaskServiceContext } from "../../types";
 
 export type RelatedTaskFixture = {
@@ -23,6 +19,7 @@ export type RelatedTaskFixture = {
   assigneeUserIds: string[];
   visibilityScope: TaskVisibilityScope;
   orgUnitId: string | null;
+  accessGrants?: TaskAccessGrantSnapshot;
   title: string;
 };
 
@@ -33,40 +30,16 @@ export function toAuthRecord(task: RelatedTaskFixture): TaskAuthorizationRecord 
     assigneeUserIds: task.assigneeUserIds,
     visibilityScope: task.visibilityScope,
     orgUnitId: task.orgUnitId,
+    accessGrants: task.accessGrants,
   };
 }
 
-/** Mirrors buildTaskReadWhere OR branches (see aufgaben-05-org-02-a1). */
+/** Mirrors canonical canReadTask for in-memory fixtures. */
 export function matchesBuildTaskReadWhere(
   task: TaskAuthorizationRecord,
   serviceCtx: TaskServiceContext,
 ): boolean {
-  if (task.tenantId !== serviceCtx.tenantId) return false;
-
-  const direct =
-    task.createdByUserId === serviceCtx.userId ||
-    task.assigneeUserIds.includes(serviceCtx.userId);
-  if (direct) return true;
-
-  if (
-    hasTenantWideClubTaskRead(serviceCtx) &&
-    task.visibilityScope === TaskVisibilityScope.CLUB
-  ) {
-    return true;
-  }
-
-  const auth = serviceCtx.auth ?? EMPTY_TASK_AUTH_SCOPE;
-  const orgIds = orgReadableUnitIds(auth);
-  if (
-    orgIds.length > 0 &&
-    task.visibilityScope === TaskVisibilityScope.ORG_UNIT &&
-    task.orgUnitId &&
-    orgIds.includes(task.orgUnitId)
-  ) {
-    return true;
-  }
-
-  return false;
+  return canReadTask(serviceCtx, task);
 }
 
 function readAndClause(where: Prisma.TaskWhereInput): Prisma.TaskWhereInput[] {

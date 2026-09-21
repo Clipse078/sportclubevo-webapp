@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { TaskVisibilityScope } from "@prisma/client";
+import { TaskAccessGrantSubjectType, TaskVisibilityScope } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
   buildTaskVisibilityWhere,
@@ -70,6 +70,16 @@ describe("AUFGABEN-02B visibility primitives", () => {
       OR: [
         { createdByUserId: USER },
         { assignees: { some: { userId: USER, tenantId: TENANT_A } } },
+        {
+          visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
+          accessGrants: {
+            some: {
+              tenantId: TENANT_A,
+              subjectType: TaskAccessGrantSubjectType.USER,
+              userId: USER,
+            },
+          },
+        },
       ],
     });
   });
@@ -84,6 +94,16 @@ describe("AUFGABEN-02B visibility primitives", () => {
         { createdByUserId: USER },
         { assignees: { some: { userId: USER, tenantId: TENANT_A } } },
         { visibilityScope: TaskVisibilityScope.CLUB },
+        {
+          visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
+          accessGrants: {
+            some: {
+              tenantId: TENANT_A,
+              subjectType: TaskAccessGrantSubjectType.USER,
+              userId: USER,
+            },
+          },
+        },
       ],
     });
   });

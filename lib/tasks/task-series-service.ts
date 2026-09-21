@@ -7,9 +7,12 @@ import {
   type TaskPriority,
   type TaskRecurrenceFrequency,
   type TaskSeriesWeekday,
-  type TaskVisibilityScope,
 } from "@prisma/client";
-import { TaskSeriesStatus, TaskStatus as TaskStatusEnum } from "@prisma/client";
+import {
+  TaskSeriesStatus,
+  TaskStatus as TaskStatusEnum,
+  TaskVisibilityScope,
+} from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { writeAuditRecord } from "@/lib/audit/audit-record";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -34,6 +37,11 @@ import {
   normalizeTaskOrgVisibilityState,
   validateTaskOrgVisibilityMutation,
 } from "./task-org-mutation-policy";
+import {
+  replaceTaskSeriesAccessGrants,
+  snapshotSeriesAccessGrantsToOccurrence,
+  validateTaskAccessGrantMutation,
+} from "./task-access-grants";
 import { resolvePropagatedTaskOrgVisibility } from "./task-org-propagation";
 import { resolveTaskReminderSchedule } from "./task-reminder-schedule";
 
@@ -75,6 +83,8 @@ export type CreateTaskSeriesInput = {
   assigneeUserIds?: string[];
   subtaskTemplates?: TaskSeriesSubtaskTemplateInput[];
   orgUnitId?: string | null;
+  orgUnitGrantIds?: string[];
+  viewerUserGrantIds?: string[];
   visibilityScope?: TaskVisibilityScope;
 };
 
@@ -269,6 +279,17 @@ export async function createTaskSeries(
     normalizeTaskOrgVisibilityState(input.visibilityScope, input.orgUnitId),
     { mode: "create" },
   );
+  const accessGrants = await validateTaskAccessGrantMutation(ctx.tenantId, {
+    visibilityScope: orgVisibility.visibilityScope,
+    orgUnitGrantIds:
+      input.orgUnitGrantIds ??
+      (orgVisibility.orgUnitId ? [orgVisibility.orgUnitId] : undefined),
+    viewerUserGrantIds: input.viewerUserGrantIds,
+  });
+  const primaryOrgUnitId =
+    orgVisibility.visibilityScope === TaskVisibilityScope.ORG_UNIT
+      ? accessGrants.orgUnitIds[0] ?? orgVisibility.orgUnitId
+      : null;
 
   return prisma.$transaction(async (tx) => {
     const series = await tx.taskSeries.create({
@@ -288,12 +309,20 @@ export async function createTaskSeries(
         timezone: input.timezone,
         startsOn: input.startsOn ?? null,
         endsOn: input.endsOn ?? null,
-        orgUnitId: orgVisibility.orgUnitId,
+        orgUnitId: primaryOrgUnitId,
         visibilityScope: orgVisibility.visibilityScope,
         createdByUserId: ctx.userId,
         status: TaskSeriesStatus.ACTIVE,
       },
     });
+
+    await replaceTaskSeriesAccessGrants(
+      tx,
+      ctx.tenantId,
+      series.id,
+      orgVisibility.visibilityScope,
+      accessGrants,
+    );
 
     if (parentAssignees.length) {
       await tx.taskSeriesAssigneeTemplate.createMany({
@@ -380,10 +409,15 @@ export async function updateTaskSeries(
   }
 
   const orgVisibilityMutation =
-    input.orgUnitId !== undefined || input.visibilityScope !== undefined;
+    input.orgUnitId !== undefined ||
+    input.visibilityScope !== undefined ||
+    input.orgUnitGrantIds !== undefined ||
+    input.viewerUserGrantIds !== undefined;
   let nextOrgVisibility:
     | Awaited<ReturnType<typeof validateTaskOrgVisibilityMutation>>
     | null = null;
+  let nextAccessGrants: Awaited<ReturnType<typeof validateTaskAccessGrantMutation>> | null =
+    null;
   if (orgVisibilityMutation) {
     nextOrgVisibility = await validateTaskOrgVisibilityMutation(
       ctx,
@@ -402,6 +436,18 @@ export async function updateTaskSeries(
         },
       },
     );
+    const scope = nextOrgVisibility?.visibilityScope ?? existing.visibilityScope;
+    nextAccessGrants = await validateTaskAccessGrantMutation(ctx.tenantId, {
+      visibilityScope: scope,
+      orgUnitGrantIds:
+        input.orgUnitGrantIds ??
+        (input.orgUnitId !== undefined && input.orgUnitId
+          ? [input.orgUnitId]
+          : existing.orgUnitId
+            ? [existing.orgUnitId]
+            : undefined),
+      viewerUserGrantIds: input.viewerUserGrantIds,
+    });
   }
 
   return prisma.$transaction(async (tx) => {
@@ -428,16 +474,34 @@ export async function updateTaskSeries(
         startsOn: input.startsOn,
         endsOn: input.endsOn,
         visibilityScope: nextOrgVisibility?.visibilityScope,
-        ...(nextOrgVisibility
+        ...(nextAccessGrants && nextOrgVisibility
           ? {
-              orgUnit: nextOrgVisibility.orgUnitId
-                ? { connect: { id: nextOrgVisibility.orgUnitId } }
-                : { disconnect: true },
+              orgUnit:
+                nextOrgVisibility.visibilityScope === TaskVisibilityScope.ORG_UNIT &&
+                nextAccessGrants.orgUnitIds[0]
+                  ? { connect: { id: nextAccessGrants.orgUnitIds[0] } }
+                  : { disconnect: true },
             }
-          : {}),
+          : nextOrgVisibility
+            ? {
+                orgUnit: nextOrgVisibility.orgUnitId
+                  ? { connect: { id: nextOrgVisibility.orgUnitId } }
+                  : { disconnect: true },
+              }
+            : {}),
       },
       include: SERIES_INCLUDE,
     });
+
+    if (nextAccessGrants && nextOrgVisibility) {
+      await replaceTaskSeriesAccessGrants(
+        tx,
+        ctx.tenantId,
+        existing.id,
+        updated.visibilityScope,
+        nextAccessGrants,
+      );
+    }
 
     if (input.assigneeUserIds) {
       await tx.taskSeriesAssigneeTemplate.deleteMany({
@@ -618,6 +682,14 @@ async function createOccurrenceTree(
       })),
     });
   }
+
+  await snapshotSeriesAccessGrantsToOccurrence(
+    tx,
+    ctx.tenantId,
+    series.id,
+    parent.id,
+    occurrenceOrg.visibilityScope,
+  );
 
   const assignmentContext = {
     actorUserId: ctx.userId,

@@ -1,6 +1,7 @@
 import type { TaskPriority, TaskStatus } from "@prisma/client";
 import { cn } from "@/lib/cn";
-import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from "./management-labels";
+import { taskPriorityVisual } from "./task-priority-visual";
+import { TASK_STATUS_LABELS } from "./management-labels";
 
 export function taskStatusPresentation(status: TaskStatus): {
   label: string;
@@ -37,31 +38,11 @@ export function taskPriorityPresentation(priority: TaskPriority): {
   className: string;
   visible: boolean;
 } {
-  if (priority === "NORMAL") {
-    return {
-      label: TASK_PRIORITY_LABELS.NORMAL,
-      className: "text-[var(--muted)]",
-      visible: false,
-    };
-  }
-  if (priority === "LOW") {
-    return {
-      label: TASK_PRIORITY_LABELS.LOW,
-      className: "text-[var(--muted)]",
-      visible: true,
-    };
-  }
-  if (priority === "HIGH") {
-    return {
-      label: TASK_PRIORITY_LABELS.HIGH,
-      className: "font-medium text-amber-400",
-      visible: true,
-    };
-  }
+  const visual = taskPriorityVisual(priority);
   return {
-    label: TASK_PRIORITY_LABELS.URGENT,
-    className: "font-semibold text-orange-400",
-    visible: true,
+    label: visual.label,
+    className: cn(visual.emphasis && priority !== "NORMAL" ? "font-medium" : "", visual.className),
+    visible: visual.emphasis,
   };
 }
 

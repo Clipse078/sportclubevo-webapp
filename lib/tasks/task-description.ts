@@ -237,8 +237,8 @@ function listItemToHtml(node: BlockNode): string {
 function taskItemToHtml(node: BlockNode): string {
   const checked = node.attrs?.checked === true;
   const inner = ((node.content ?? []) as BlockNode[]).map(blockToHtml).join("");
-  const box = checked ? "☑" : "☐";
-  return `<li><span aria-hidden="true">${box}</span> ${inner}</li>`;
+  const checkedAttr = checked ? ' checked=""' : "";
+  return `<li class="task-description-task-item" data-checked="${checked ? "true" : "false"}"><label class="task-description-task-item-label"><input type="checkbox" disabled${checkedAttr} /><span class="task-description-task-item-text">${inner}</span></label></li>`;
 }
 
 /**

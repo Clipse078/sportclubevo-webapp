@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { TaskStatus } from "@prisma/client";
+import { TaskAccessGrantSubjectType, TaskStatus, TaskVisibilityScope } from "@prisma/client";
 
 const mocks = vi.hoisted(() => ({
   taskFindFirst: vi.fn(),
@@ -165,6 +165,16 @@ describe("AUFGABEN-01 visibility", () => {
       OR: [
         { createdByUserId: USER_ASSIGNEE },
         { assignees: { some: { userId: USER_ASSIGNEE, tenantId: TENANT_A } } },
+        {
+          visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
+          accessGrants: {
+            some: {
+              tenantId: TENANT_A,
+              subjectType: TaskAccessGrantSubjectType.USER,
+              userId: USER_ASSIGNEE,
+            },
+          },
+        },
       ],
     });
   });

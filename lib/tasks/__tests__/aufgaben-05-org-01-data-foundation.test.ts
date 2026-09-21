@@ -4,6 +4,7 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
+  TaskAccessGrantSubjectType,
   TaskSeriesStatus,
   TaskStatus,
   TaskVisibilityScope,
@@ -441,6 +442,16 @@ describe("AUFGABEN-05-ORG-01 authorization baseline (pre-ORG-02 cutover)", () =>
           },
         },
         { visibilityScope: TaskVisibilityScope.CLUB },
+        {
+          visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
+          accessGrants: {
+            some: {
+              tenantId: TENANT_A,
+              subjectType: TaskAccessGrantSubjectType.USER,
+              userId: USER,
+            },
+          },
+        },
       ],
     });
   });

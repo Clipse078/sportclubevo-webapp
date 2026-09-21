@@ -2,14 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import type { TaskPriority } from "@prisma/client";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
 import type { TaskContextType } from "@prisma/client";
-import type { TaskAssigneeOption } from "@/lib/tasks/queries";
-import { TASK_PRIORITY_LABELS } from "@/lib/tasks/management-labels";
+import TaskPeopleMultiPicker from "./TaskPeopleMultiPicker";
+import TaskPriorityField from "./TaskPriorityField";
 import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
 import { createAufgabeFullAction } from "@/app/(admin)/dashboard/aufgaben/actions";
 import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
@@ -19,7 +18,6 @@ import { TaskDeadlineFields, TaskReminderFields } from "./TaskReminderFields";
 import TaskDescriptionFormField from "./TaskDescriptionFormField";
 
 type Props = {
-  assigneeOptions: TaskAssigneeOption[];
   orgUnitOptions: TaskOrgUnitPickerOption[];
   timeZone: string;
   backHref: string;
@@ -28,7 +26,6 @@ type Props = {
 };
 
 export default function AufgabenFullCreateClient({
-  assigneeOptions,
   orgUnitOptions,
   timeZone,
   backHref,
@@ -38,18 +35,20 @@ export default function AufgabenFullCreateClient({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [assigneeUserIds, setAssigneeUserIds] = useState<string[]>([]);
 
   function onSubmit(formData: FormData) {
     setError(null);
     const visibility = formData.get("visibilityScope");
-    const orgUnit = formData.get("orgUnitId");
+    const orgGrants = formData.get("orgUnitGrantIds");
     if (
       visibility === "ORG_UNIT" &&
-      !(typeof orgUnit === "string" && orgUnit.trim())
+      !(typeof orgGrants === "string" && orgGrants.trim())
     ) {
-      setError("Bitte eine Organisationseinheit für «Organisationseinheit» wählen.");
+      setError("Bitte mindestens eine Organisationseinheit wählen.");
       return;
     }
+    formData.set("assigneeUserIds", assigneeUserIds.join(","));
     startTransition(async () => {
       const result = await createAufgabeFullAction(formData);
       if (result.ok && result.taskId) {
@@ -95,26 +94,18 @@ export default function AufgabenFullCreateClient({
               <TaskDescriptionFormField label="Beschreibung" inputId="aufgaben-full-create-description" />
             </div>
             <aside className="space-y-4 lg:border-l lg:border-[var(--border)]/60 lg:pl-5">
-              <label className="block space-y-1">
-                <span className="text-xs font-medium text-[var(--text-2)]">Verantwortlich</span>
-                <select name="assigneeUserIds" className="fca-input w-full text-sm">
-                  <option value="">Optional</option>
-                  {assigneeOptions.map((a) => (
-                    <option key={a.userId} value={a.userId}>
-                      {a.firstName} {a.lastName}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <TaskPeopleMultiPicker
+                label="Verantwortlich"
+                fieldName="assigneeUserIds"
+                selectedIds={assigneeUserIds}
+                onSelectedIdsChange={setAssigneeUserIds}
+                disabled={pending}
+                addButtonLabel="Person hinzufügen"
+                testIdPrefix="task-create-assignees"
+              />
               <label className="block space-y-1">
                 <span className="text-xs font-medium text-[var(--text-2)]">Priorität</span>
-                <select name="priority" className="fca-input w-full text-sm" defaultValue="NORMAL">
-                  {(["LOW", "NORMAL", "HIGH", "URGENT"] as TaskPriority[]).map((p) => (
-                    <option key={p} value={p}>
-                      {TASK_PRIORITY_LABELS[p]}
-                    </option>
-                  ))}
-                </select>
+                <TaskPriorityField disabled={pending} testId="task-create-priority" />
               </label>
               <TaskDeadlineFields timeZone={timeZone} dueAt={null} />
               <TaskReminderFields

@@ -7,7 +7,12 @@ import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { TaskForbiddenError, TaskNotFoundError } from "./errors";
 import type { TaskServiceContext } from "./types";
+import { grantsRowsToSnapshot } from "./task-access-grants";
 import { canReadTask, hasTaskPermission } from "./visibility";
+
+const TASK_ACCESS_GRANT_SELECT = {
+  select: { subjectType: true, orgUnitId: true, userId: true },
+} as const;
 
 export const TASK_AUTH_INCLUDE = {
   assignees: {
@@ -17,6 +22,7 @@ export const TASK_AUTH_INCLUDE = {
     orderBy: { assignedAt: "asc" as const },
   },
   orgUnit: { select: { tenantId: true } },
+  accessGrants: TASK_ACCESS_GRANT_SELECT,
 } satisfies Prisma.TaskInclude;
 
 export type VisibleTaskRow = Prisma.TaskGetPayload<{ include: typeof TASK_AUTH_INCLUDE }>;
@@ -45,6 +51,7 @@ export function taskAuthorizationFromRow(row: VisibleTaskRow) {
     visibilityScope: row.visibilityScope,
     orgUnitId: row.orgUnitId,
     orgUnitTenantId: row.orgUnit?.tenantId ?? null,
+    accessGrants: grantsRowsToSnapshot(row.accessGrants ?? []),
   };
 }
 
