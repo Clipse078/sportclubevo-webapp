@@ -303,6 +303,7 @@ describe("AUFGABEN-03 matrix coverage hooks", () => {
       "utf8",
     );
     expect(source).toContain("TaskActivitySection");
+    expect(source).toContain("TaskFollowControl");
     expect(source).not.toContain("Aktivität — folgt in einer späteren Version.");
   });
 
