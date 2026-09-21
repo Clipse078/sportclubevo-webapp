@@ -9,7 +9,6 @@ import { TaskForbiddenError, TaskValidationError } from "./errors";
 import {
   canReadTask,
   loadTaskAuthScope,
-  orgReadableUnitIds,
   type TaskAuthorizationRecord,
 } from "./task-authorization";
 import { taskAuthorizationFromRow, type VisibleTaskRow } from "./task-access";

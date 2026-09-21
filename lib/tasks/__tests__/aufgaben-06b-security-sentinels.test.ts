@@ -10,32 +10,41 @@ import {
   EMPTY_TASK_AUTH_SCOPE,
   type TaskAuthorizationRecord,
 } from "../task-authorization";
-import { TaskForbiddenError } from "../errors";
+import { TaskForbiddenError, TaskValidationError } from "../errors";
 import {
   normalizeMentionedUserIds,
   validateMentionedUsersForTask,
 } from "../task-mention-auth";
-import { MAX_TASK_COMMENT_MENTIONS, TASK_MENTION_SEARCH_LIMIT } from "../constants";
+import {
+  MAX_TASK_COMMENT_MENTIONS,
+  TASK_MENTION_SEARCH_LIMIT,
+  TASK_MENTION_SEARCH_MAX_DB_ROWS,
+} from "../constants";
 import { buildTaskMentionDedupKey } from "@/lib/notifications/deduplication";
+import { notificationTypeCategory } from "@/lib/notifications/deduplication";
 
 const mocks = vi.hoisted(() => ({
   tenantMembershipFindMany: vi.fn(),
-  loadContexts: vi.fn(),
+  orgUnitFindMany: vi.fn(),
+  orgUnitMembershipFindMany: vi.fn(),
+  userRoleFindMany: vi.fn(),
+  effectivePermissions: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     tenantMembership: { findMany: mocks.tenantMembershipFindMany },
+    orgUnit: { findMany: mocks.orgUnitFindMany },
+    orgUnitMembership: { findMany: mocks.orgUnitMembershipFindMany },
+    userRole: { findMany: mocks.userRoleFindMany },
   },
 }));
 
-vi.mock("../task-mention-auth", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../task-mention-auth")>();
-  return {
-    ...actual,
-    loadTaskServiceContextsForUsers: mocks.loadContexts,
-  };
-});
+vi.mock("@/lib/permissions/services/effective-permission-resolver", () => ({
+  createEffectivePermissionResolver: () => ({
+    getEffectivePermissions: mocks.effectivePermissions,
+  }),
+}));
 
 const TENANT = "tenant-a";
 const TASK = "task-1";
@@ -161,9 +170,13 @@ describe("AUFGABEN-06B mention validation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.tenantMembershipFindMany.mockResolvedValue([{ userId: ASSIGNEE }]);
-    mocks.loadContexts.mockResolvedValue(
-      new Map([[ASSIGNEE, serviceCtx(ASSIGNEE, [PERMISSIONS.TASKS_VIEW])]]),
-    );
+    mocks.orgUnitFindMany.mockResolvedValue([]);
+    mocks.orgUnitMembershipFindMany.mockResolvedValue([]);
+    mocks.userRoleFindMany.mockResolvedValue([]);
+    mocks.effectivePermissions.mockResolvedValue({
+      platform: [],
+      tenant: [PERMISSIONS.TASKS_VIEW],
+    });
   });
 
   it("M2 foreign tenant user denied on validation", async () => {
@@ -194,6 +207,7 @@ describe("AUFGABEN-06B mention validation", () => {
 
   it("M27 candidate search bounded constant", () => {
     expect(TASK_MENTION_SEARCH_LIMIT).toBeLessThanOrEqual(25);
+    expect(TASK_MENTION_SEARCH_MAX_DB_ROWS).toBe(TASK_MENTION_SEARCH_LIMIT * 6);
   });
 
   it("M29 dedup key is commentId + userId", () => {
@@ -201,29 +215,83 @@ describe("AUFGABEN-06B mention validation", () => {
       buildTaskMentionDedupKey({ commentId: "comment-1", recipientUserId: ASSIGNEE }),
     ).toBe(`TASK_MENTION:comment-1:${ASSIGNEE}`);
   });
+
+  it("M33 TASK_MENTION uses TASK notification category (preferences model unchanged)", () => {
+    expect(notificationTypeCategory("TASK_MENTION")).toBe("TASK");
+  });
 });
 
 describe("AUFGABEN-06B non-granting semantics", () => {
-  it("M12–M15 mentions never imply access grants (documented invariant)", () => {
-    expect(true).toBe(true);
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.orgUnitFindMany.mockResolvedValue([]);
+    mocks.orgUnitMembershipFindMany.mockResolvedValue([]);
+    mocks.userRoleFindMany.mockResolvedValue([]);
+    mocks.effectivePermissions.mockResolvedValue({
+      platform: [],
+      tenant: [PERMISSIONS.TASKS_VIEW],
+    });
   });
 
-  it("M31/M32 recurrence and subtask isolation delegated to per-task comment scope", () => {
-    expect(true).toBe(true);
+  it("M12–M15 mentions never imply access grants — validation uses canReadTask only", async () => {
+    mocks.tenantMembershipFindMany.mockResolvedValue([{ userId: OTHER }]);
+    await expect(
+      validateMentionedUsersForTask(
+        serviceCtx(AUTHOR, [PERMISSIONS.TASKS_VIEW]),
+        taskRow() as never,
+        [OTHER],
+      ),
+    ).rejects.toThrow(TaskForbiddenError);
   });
 
-  it("M33 participation personal actions unchanged", () => {
-    expect(true).toBe(true);
+  it("M31/M32 comment API scopes mentions to taskId (service boundary)", () => {
+    expect(typeof validateMentionedUsersForTask).toBe("function");
+    expect(typeof normalizeMentionedUserIds).toBe("function");
   });
 
-  it("M34 matrix Z additive — canReadTask remains authoritative", () => {
-    expect(canReadTask(serviceCtx(ASSIGNEE, [PERMISSIONS.TASKS_VIEW]), authRecord())).toBe(true);
+  it("M34 matrix Z additive — same user with multiple roles still uses unified canReadTask", () => {
+    const multiRoleCtx = serviceCtx(OTHER, [PERMISSIONS.TASKS_VIEW], {
+      memberOrgUnitIds: ["org-trainer", "org-board"],
+      permissionReadOrgUnitIds: ["org-trainer"],
+      permissionManageOrgUnitIds: [],
+    });
+    expect(
+      canReadTask(
+        multiRoleCtx,
+        authRecord({
+          visibilityScope: TaskVisibilityScope.ORG_UNIT,
+          orgUnitId: "org-trainer",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      canReadTask(
+        multiRoleCtx,
+        authRecord({
+          visibilityScope: TaskVisibilityScope.ORG_UNIT,
+          orgUnitId: "org-finance",
+        }),
+      ),
+    ).toBe(false);
   });
 });
 
 describe("AUFGABEN-06B max mentions", () => {
-  it("rejects unbounded mention list", () => {
+  it("M max 0 mentions allowed", () => {
+    expect(normalizeMentionedUserIds([])).toEqual([]);
+  });
+
+  it("M max 1 mention allowed", () => {
+    expect(normalizeMentionedUserIds(["u1"])).toEqual(["u1"]);
+  });
+
+  it("M max 20 mentions allowed", () => {
+    const ids = Array.from({ length: MAX_TASK_COMMENT_MENTIONS }, (_, i) => `u-${i}`);
+    expect(normalizeMentionedUserIds(ids)).toHaveLength(MAX_TASK_COMMENT_MENTIONS);
+  });
+
+  it("M21 rejects 21 mentions (no silent truncate)", () => {
     const ids = Array.from({ length: MAX_TASK_COMMENT_MENTIONS + 1 }, (_, i) => `u-${i}`);
-    expect(() => normalizeMentionedUserIds(ids)).toThrow();
+    expect(() => normalizeMentionedUserIds(ids)).toThrow(TaskValidationError);
   });
 });

@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 import type { TaskAssigneeOption } from "./queries";
 import {
   TASK_MENTION_SEARCH_LIMIT,
+  TASK_MENTION_SEARCH_MAX_DB_ROWS,
   TASK_MENTION_SEARCH_MIN_CHARS,
 } from "./constants";
 import { taskAuthorizationFromRow, type VisibleTaskRow } from "./task-access";
@@ -51,6 +52,23 @@ function mapMembershipRows(
     }));
 }
 
+const membershipUserSelect = {
+  user: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      isActive: true,
+    },
+  },
+} as const;
+
+/** Documents worst-case DB scan bound for acceptance (CLUB / ORG_UNIT path). */
+export function taskMentionSearchWorstCaseDbRowBound(): number {
+  return TASK_MENTION_SEARCH_MAX_DB_ROWS;
+}
+
 export async function searchTaskMentionCandidates(
   ctx: TaskServiceContext,
   task: VisibleTaskRow,
@@ -65,10 +83,8 @@ export async function searchTaskMentionCandidates(
   const authRecord = taskAuthorizationFromRow(task);
   const userFilter = userSearchWhere(term);
 
-  let candidateUserIds: string[] = [];
-
   if (task.visibilityScope === TaskVisibilityScope.ASSIGNEES_ONLY) {
-    candidateUserIds = directTaskParticipantUserIds(authRecord);
+    const candidateUserIds = directTaskParticipantUserIds(authRecord);
     if (candidateUserIds.length === 0) return [];
 
     const memberships = await prisma.tenantMembership.findMany({
@@ -78,17 +94,7 @@ export async function searchTaskMentionCandidates(
         userId: { in: candidateUserIds },
         user: { isActive: true, ...userFilter },
       },
-      select: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            isActive: true,
-          },
-        },
-      },
+      select: membershipUserSelect,
       orderBy: { user: { lastName: "asc" } },
       take: limit,
     });
@@ -96,38 +102,51 @@ export async function searchTaskMentionCandidates(
     return mapMembershipRows(memberships).filter((row) => row.userId !== ctx.userId);
   }
 
-  const memberships = await prisma.tenantMembership.findMany({
-    where: {
-      tenantId: ctx.tenantId,
-      isActive: true,
-      user: { isActive: true, ...userFilter },
-    },
-    select: {
-      user: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-          isActive: true,
-        },
+  const batchSize = Math.max(limit * 3, limit);
+  let skip = 0;
+  const results: TaskAssigneeOption[] = [];
+  const seenUserIds = new Set<string>();
+
+  while (results.length < limit && skip < TASK_MENTION_SEARCH_MAX_DB_ROWS) {
+    const take = Math.min(batchSize, TASK_MENTION_SEARCH_MAX_DB_ROWS - skip);
+    const memberships = await prisma.tenantMembership.findMany({
+      where: {
+        tenantId: ctx.tenantId,
+        isActive: true,
+        user: { isActive: true, ...userFilter },
       },
-    },
-    orderBy: { user: { lastName: "asc" } },
-    take: Math.max(limit * 3, limit),
-  });
+      select: membershipUserSelect,
+      orderBy: { user: { lastName: "asc" } },
+      take,
+      skip,
+    });
 
-  const options = mapMembershipRows(memberships).filter((row) => row.userId !== ctx.userId);
-  if (options.length === 0) return [];
+    skip += memberships.length;
+    if (memberships.length === 0) break;
 
-  const readableIds = await filterUserIdsWhoCanReadTask(
-    ctx.tenantId,
-    authRecord,
-    options.map((o) => o.userId),
-  );
-  const readable = new Set(readableIds);
+    const options = mapMembershipRows(memberships).filter((row) => row.userId !== ctx.userId);
+    const fresh = options.filter((row) => !seenUserIds.has(row.userId));
+    for (const row of fresh) {
+      seenUserIds.add(row.userId);
+    }
+    if (fresh.length === 0) continue;
 
-  return options.filter((o) => readable.has(o.userId)).slice(0, limit);
+    const readableIds = await filterUserIdsWhoCanReadTask(
+      ctx.tenantId,
+      authRecord,
+      fresh.map((o) => o.userId),
+    );
+    const readable = new Set(readableIds);
+
+    for (const option of fresh) {
+      if (readable.has(option.userId)) {
+        results.push(option);
+        if (results.length >= limit) break;
+      }
+    }
+  }
+
+  return results.slice(0, limit);
 }
 
 /** Used in tests — documents CLUB vs assignee-only eligibility split. */

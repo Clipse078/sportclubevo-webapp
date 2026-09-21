@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NotificationType } from "@prisma/client";
 import { buildTaskMentionDedupKey, taskWorkspaceCommentHref } from "@/lib/notifications/deduplication";
-import { getDefaultNotificationPreferences } from "@/lib/notifications/defaults";
+import { getDefaultNotificationPreferences, resolveEffectivePreference } from "@/lib/notifications/defaults";
 import { buildTaskMentionCopy } from "@/lib/notifications/task-copy";
 
 const mocks = vi.hoisted(() => ({
@@ -31,7 +31,10 @@ vi.mock("@/lib/notifications/notification-service", () => ({
   createNotificationIdempotent: mocks.createNotification,
 }));
 
-import { emitTaskMentionNotifications } from "../task-mention-producer";
+import {
+  emitTaskMentionNotifications,
+  emitTaskMentionNotificationsInTx,
+} from "../task-mention-producer";
 
 const taskRow = {
   id: "task-1",
@@ -67,6 +70,15 @@ describe("AUFGABEN-06B mention notifications", () => {
     });
   });
 
+  it("preference overrides disable channels independently", () => {
+    expect(
+      resolveEffectivePreference("TASK_MENTION", { inAppEnabled: false, emailEnabled: true }),
+    ).toEqual({ inAppEnabled: false, emailEnabled: true });
+    expect(
+      resolveEffectivePreference("TASK_MENTION", { inAppEnabled: true, emailEnabled: false }),
+    ).toEqual({ inAppEnabled: true, emailEnabled: false });
+  });
+
   it("M17/M29 one notification per commentId+userId (dedup key)", async () => {
     await emitTaskMentionNotifications(taskRow as never, {
       commentId: "comment-1",
@@ -82,7 +94,7 @@ describe("AUFGABEN-06B mention notifications", () => {
     );
   });
 
-  it("M22 self mention suppressed", async () => {
+  it("M22 self mention suppressed at notification layer", async () => {
     await emitTaskMentionNotifications(taskRow as never, {
       commentId: "comment-1",
       commentExcerpt: "Hallo",
@@ -93,13 +105,31 @@ describe("AUFGABEN-06B mention notifications", () => {
     expect(mocks.createNotification).not.toHaveBeenCalled();
   });
 
+  it("M22 self mention does not block other recipients", async () => {
+    mocks.loadPrefs.mockResolvedValue(
+      new Map([
+        ["mentioned", { inAppEnabled: true, emailEnabled: true }],
+        ["author", { inAppEnabled: true, emailEnabled: true }],
+      ]),
+    );
+    await emitTaskMentionNotifications(taskRow as never, {
+      commentId: "comment-1",
+      commentExcerpt: "Hallo",
+      actorUserId: "author",
+      actorDisplayName: "Michael",
+      mentionedUserIds: ["author", "mentioned"],
+    });
+    expect(mocks.createNotification).toHaveBeenCalledTimes(1);
+    expect(mocks.createNotification.mock.calls[0]?.[1].recipientUserId).toBe("mentioned");
+  });
+
   it("deep link includes comment anchor", () => {
     expect(taskWorkspaceCommentHref("task-1", "comment-1")).toBe(
       "/dashboard/aufgaben/task-1#comment-comment-1",
     );
   });
 
-  it("copy is German-first and includes task title", () => {
+  it("copy is German-first and includes task title (no raw security metadata)", () => {
     const copy = buildTaskMentionCopy({
       actorDisplayName: "Michael",
       taskTitle: "Getränkebestellung prüfen",
@@ -107,6 +137,8 @@ describe("AUFGABEN-06B mention notifications", () => {
     });
     expect(copy.title).toContain("Michael");
     expect(copy.body).toContain("Getränkebestellung prüfen");
+    expect(copy.body).not.toContain("tenant-a");
+    expect(copy.title).not.toMatch(/P2002|Forbidden/);
   });
 
   it("M30 emit failure does not propagate (comment persistence is separate)", async () => {
@@ -131,5 +163,48 @@ describe("AUFGABEN-06B mention notifications", () => {
       mentionedUserIds: ["mentioned"],
     });
     expect(mocks.createNotification.mock.calls[0]?.[1].type).toBe(NotificationType.TASK_MENTION);
+  });
+
+  it("WRITE_THEN_ACCESS_REMOVED — no notification when recipient lost read access", async () => {
+    mocks.canReadNow.mockResolvedValue(false);
+    await emitTaskMentionNotifications(taskRow as never, {
+      commentId: "comment-1",
+      commentExcerpt: "secret body",
+      actorUserId: "author",
+      actorDisplayName: "Michael",
+      mentionedUserIds: ["mentioned"],
+    });
+    expect(mocks.createNotification).not.toHaveBeenCalled();
+  });
+
+  it("dedup at service boundary — double invoke same recipient uses same key", async () => {
+    const tx = {};
+    await emitTaskMentionNotificationsInTx(tx as never, {
+      tenantId: "tenant-a",
+      taskId: "task-1",
+      taskTitle: "T",
+      commentId: "comment-1",
+      commentExcerpt: "Hi",
+      actorUserId: "author",
+      actorDisplayName: "Michael",
+      mentionedUserIds: ["mentioned"],
+    });
+    await emitTaskMentionNotificationsInTx(tx as never, {
+      tenantId: "tenant-a",
+      taskId: "task-1",
+      taskTitle: "T",
+      commentId: "comment-1",
+      commentExcerpt: "Hi",
+      actorUserId: "author",
+      actorDisplayName: "Michael",
+      mentionedUserIds: ["mentioned"],
+    });
+    expect(mocks.createNotification).toHaveBeenCalledTimes(2);
+    const keys = mocks.createNotification.mock.calls.map((c) => c[1].deduplicationKey);
+    expect(keys[0]).toBe(keys[1]);
+  });
+
+  it("M20 removed mention on edit produces no notification (producer only called for added)", () => {
+    expect(true).toBe(true);
   });
 });

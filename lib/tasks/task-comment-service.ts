@@ -184,7 +184,6 @@ export async function updateTaskComment(
 
   const validatedMentions = await validateMentionedUsersForTask(ctx, task, mentionedUserIds);
   const oldMentionIds = new Set(existing.mentions.map((m) => m.userId));
-  const newMentionIds = new Set(validatedMentions);
   const addedMentions = validatedMentions.filter((id) => !oldMentionIds.has(id));
 
   const comment = await prisma.$transaction(async (tx) => {
