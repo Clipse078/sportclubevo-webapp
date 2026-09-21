@@ -45,6 +45,14 @@ vi.mock("@/lib/tenants/active-tenant", () => ({
   getActiveTenant: vi.fn().mockResolvedValue({ timezone: "Europe/Zurich", locale: "de-CH" }),
 }));
 
+vi.mock("@/lib/tasks/task-org-options", () => ({
+  loadTaskOrgUnitFilterOptions: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("@/components/admin/aufgaben/MeineAufgabenQuickCreateDialog", () => ({
+  default: () => null,
+}));
+
 vi.mock("@/lib/tasks/queries", () => ({
   listEligibleTaskAssignees: vi.fn().mockResolvedValue([
     {

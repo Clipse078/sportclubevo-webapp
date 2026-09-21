@@ -20,9 +20,12 @@ import {
   updateTask,
 } from "@/lib/tasks/task-service";
 import {
+  findForbiddenQuickCreateFormFields,
   normalizeQuickCreateAssigneeIds,
+  parseQuickCreateAssigneeField,
   resolveQuickCreateCapabilities,
 } from "@/lib/tasks/quick-create";
+import { searchEligibleTaskAssignees } from "@/lib/tasks/queries";
 import type {
   TaskRecurrenceFrequency,
   TaskSeriesWeekday,
@@ -179,6 +182,27 @@ function failure(error: unknown): AufgabenActionResult {
   return { ok: false, message: "Aktion fehlgeschlagen." };
 }
 
+export async function searchQuickCreateAssigneesAction(
+  query: string,
+): Promise<
+  | { ok: true; options: Awaited<ReturnType<typeof searchEligibleTaskAssignees>> }
+  | { ok: false; message: string }
+> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  const quickCaps = resolveQuickCreateCapabilities(ctx);
+  if (!quickCaps.canAssignOthers) {
+    return { ok: false, message: "Keine Berechtigung für diese Aktion." };
+  }
+
+  const options = await searchEligibleTaskAssignees(ctx.tenantId, query);
+  return {
+    ok: true,
+    options: options.filter((o) => o.userId !== ctx.userId),
+  };
+}
+
 export async function createQuickAufgabeAction(
   formData: FormData,
 ): Promise<AufgabenActionResult> {
@@ -190,7 +214,7 @@ export async function createQuickAufgabeAction(
     return { ok: false, message: "Keine Berechtigung für diese Aktion." };
   }
 
-  if (formData.has("tenantId") || formData.has("createdByUserId")) {
+  if (findForbiddenQuickCreateFormFields(formData)) {
     return { ok: false, message: "Keine Berechtigung für diese Aktion." };
   }
 
@@ -198,7 +222,6 @@ export async function createQuickAufgabeAction(
     const title = formData.get("title");
     const description = formData.get("description");
     const priority = formData.get("priority");
-    const assigneeUserIdsRaw = formData.get("assigneeUserIds");
 
     const validPriorities = ["LOW", "NORMAL", "HIGH", "URGENT"] as const;
     const parsedPriority =
@@ -215,18 +238,16 @@ export async function createQuickAufgabeAction(
       return { ok: false, message: "Ungültige Erinnerung." };
     }
 
-    let rawAssigneeIds: string[] = [];
-    if (typeof assigneeUserIdsRaw === "string" && assigneeUserIdsRaw.trim()) {
-      rawAssigneeIds = assigneeUserIdsRaw
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
+    const assigneeParse = parseQuickCreateAssigneeField(formData);
+    if (!assigneeParse.ok) {
+      return { ok: false, message: "Ungültige Zuweisung." };
     }
 
     const assigneeUserIds = normalizeQuickCreateAssigneeIds(
       ctx,
-      rawAssigneeIds,
+      assigneeParse.ids,
       quickCaps.canAssignOthers,
+      assigneeParse.defaultToSelfWhenEmpty,
     );
 
     const created = await createQuickTask(ctx, {

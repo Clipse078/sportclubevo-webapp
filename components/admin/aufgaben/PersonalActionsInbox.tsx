@@ -12,7 +12,6 @@ import AufgabenScopeToggle from "./AufgabenScopeToggle";
 import MeineAufgabenQuickCreateDialog, {
   type QuickCreateCurrentUser,
 } from "./MeineAufgabenQuickCreateDialog";
-import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import type { AufgabenBereich } from "@/lib/personal-actions/aufgaben-scope";
 
 type Props = {
@@ -31,7 +30,6 @@ type Props = {
     canAssignOthers: boolean;
     canOpenFullCreate: boolean;
     currentUser: QuickCreateCurrentUser;
-    assigneeOptions: TaskAssigneeOption[];
     timeZone: string;
   } | null;
 };
@@ -79,7 +77,6 @@ export default function PersonalActionsInbox({
               canCreateSelf={quickCreate.canCreateSelf}
               canAssignOthers={quickCreate.canAssignOthers}
               currentUser={quickCreate.currentUser}
-              assigneeOptions={quickCreate.assigneeOptions}
               timeZone={quickCreate.timeZone}
               canOpenFullCreate={quickCreate.canOpenFullCreate}
             />

@@ -8,7 +8,7 @@
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import type { TaskServiceContext } from "./types";
 import { hasTaskPermission } from "./visibility";
-import { TaskForbiddenError } from "./errors";
+import { TaskForbiddenError, TaskValidationError } from "./errors";
 
 export type QuickCreateCapabilities = {
   /** May open quick create and assign only to self (tasks.view). */
@@ -62,10 +62,14 @@ export function normalizeQuickCreateAssigneeIds(
   ctx: TaskServiceContext,
   rawIds: string[],
   canAssignOthers: boolean,
+  defaultToSelfWhenEmpty = false,
 ): string[] {
   const unique = [...new Set(rawIds.filter(Boolean))];
   if (unique.length === 0) {
-    return [ctx.userId];
+    if (defaultToSelfWhenEmpty) {
+      return [ctx.userId];
+    }
+    throw new TaskValidationError("Missing assignee");
   }
 
   if (!canAssignOthers) {
@@ -75,4 +79,50 @@ export function normalizeQuickCreateAssigneeIds(
   }
 
   return unique;
+}
+
+/** Parse assigneeUserIds from Quick Create FormData (fail-closed on corrupt explicit input). */
+export function parseQuickCreateAssigneeField(
+  formData: FormData,
+): { ok: true; ids: string[]; defaultToSelfWhenEmpty: boolean } | { ok: false } {
+  const hasField = formData.has("assigneeUserIds");
+  if (!hasField) {
+    return { ok: true, ids: [], defaultToSelfWhenEmpty: true };
+  }
+
+  const raw = formData.get("assigneeUserIds");
+  if (typeof raw !== "string") {
+    return { ok: false };
+  }
+  if (raw.trim() === "") {
+    return { ok: false };
+  }
+
+  const tokens = raw.split(",").map((s) => s.trim());
+  const ids = tokens.filter(Boolean);
+  if (ids.length === 0) {
+    return { ok: false };
+  }
+
+  return { ok: true, ids, defaultToSelfWhenEmpty: false };
+}
+
+const QUICK_CREATE_FORBIDDEN_FORM_KEYS = [
+  "tenantId",
+  "createdByUserId",
+  "creatorId",
+  "createdBy",
+  "userId",
+  "orgUnitId",
+  "visibilityScope",
+  "status",
+  "contextType",
+  "contextId",
+] as const;
+
+export function findForbiddenQuickCreateFormFields(formData: FormData): string | null {
+  for (const key of QUICK_CREATE_FORBIDDEN_FORM_KEYS) {
+    if (formData.has(key)) return key;
+  }
+  return null;
 }

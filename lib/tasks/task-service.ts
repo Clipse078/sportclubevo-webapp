@@ -4,7 +4,7 @@
  * tenantId and actor identity always come from trusted server context.
  */
 
-import type { Prisma, TaskPriority, TaskStatus } from "@prisma/client";
+import type { Prisma, TaskStatus } from "@prisma/client";
 import { TaskStatus as TaskStatusEnum, TaskVisibilityScope } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { writeAuditRecord } from "@/lib/audit/audit-record";
@@ -13,7 +13,6 @@ import { validateTaskContext } from "./context-validation";
 import {
   ParentHasOpenSubtasksError,
   TaskForbiddenError,
-  TaskNotFoundError,
   TaskValidationError,
 } from "./errors";
 import { sortPersonalTasks } from "./personal-ordering";
@@ -105,12 +104,6 @@ function assertCanView(ctx: TaskServiceContext): void {
 function assertCanCreate(ctx: TaskServiceContext): void {
   if (!hasTaskPermission(ctx, PERMISSIONS.TASKS_CREATE)) {
     throw new TaskForbiddenError("Missing tasks.create");
-  }
-}
-
-function assertCanManage(ctx: TaskServiceContext): void {
-  if (!hasTaskPermission(ctx, PERMISSIONS.TASKS_MANAGE)) {
-    throw new TaskForbiddenError("Missing tasks.manage");
   }
 }
 
@@ -253,9 +246,9 @@ async function resolveReminderScheduleForUpdate(
       ? input.reminder2PresetKey
       : existing.reminder2PresetKey;
 
-  let nextR1 =
+  const nextR1 =
     input.reminder1At !== undefined ? input.reminder1At : existing.reminder1At;
-  let nextR2 =
+  const nextR2 =
     input.reminder2At !== undefined ? input.reminder2At : existing.reminder2At;
 
   if (input.dueAt !== undefined && input.dueAt?.getTime() !== existing.dueAt?.getTime()) {

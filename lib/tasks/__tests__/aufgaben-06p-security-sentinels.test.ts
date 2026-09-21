@@ -73,7 +73,6 @@ vi.mock("@/lib/db/prisma", () => ({
 }));
 
 const TENANT_A = "tenant-a";
-const TENANT_B = "tenant-b";
 const MICHAEL = "user-michael";
 const SANDRA = "user-sandra";
 const OUTSIDER = "user-outsider";

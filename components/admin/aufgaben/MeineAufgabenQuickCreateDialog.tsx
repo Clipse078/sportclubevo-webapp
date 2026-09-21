@@ -6,7 +6,11 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import type { TaskPriority } from "@prisma/client";
 import { Plus, X } from "lucide-react";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
-import { createQuickAufgabeAction } from "@/app/(admin)/dashboard/aufgaben/actions";
+import { ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS } from "@/lib/tasks/quick-create-assignee-search";
+import {
+  createQuickAufgabeAction,
+  searchQuickCreateAssigneesAction,
+} from "@/app/(admin)/dashboard/aufgaben/actions";
 import { TASK_PRIORITY_LABELS } from "@/lib/tasks/management-labels";
 import { TaskReminderFields } from "./TaskReminderFields";
 
@@ -20,7 +24,6 @@ type Props = {
   canCreateSelf: boolean;
   canAssignOthers: boolean;
   currentUser: QuickCreateCurrentUser;
-  assigneeOptions: TaskAssigneeOption[];
   timeZone: string;
   canOpenFullCreate?: boolean;
 };
@@ -37,32 +40,72 @@ export default function MeineAufgabenQuickCreateDialog({
   canCreateSelf,
   canAssignOthers,
   currentUser,
-  assigneeOptions,
   timeZone,
   canOpenFullCreate = false,
 }: Props) {
   const router = useRouter();
   const titleRef = useRef<HTMLInputElement>(null);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [selectedIds, setSelectedIds] = useState<string[]>([currentUser.userId]);
   const [addOpen, setAddOpen] = useState(false);
+  const [assigneeSearch, setAssigneeSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<TaskAssigneeOption[]>([]);
+  const [knownAssignees, setKnownAssignees] = useState<Record<string, TaskAssigneeOption>>(
+    {},
+  );
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  function resetDialogState() {
+    setSelectedIds([currentUser.userId]);
+    setAddOpen(false);
+    setAssigneeSearch("");
+    setSearchResults([]);
+    setKnownAssignees({});
+    setSearchLoading(false);
+    setSearchError(null);
+    setError(null);
+  }
+
+  function openDialog() {
+    resetDialogState();
+    setOpen(true);
+    window.setTimeout(() => titleRef.current?.focus(), 0);
+  }
 
   useEffect(() => {
-    if (open) {
-      setSelectedIds([currentUser.userId]);
-      setAddOpen(false);
-      setError(null);
-      const t = window.setTimeout(() => titleRef.current?.focus(), 0);
-      return () => window.clearTimeout(t);
+    if (!addOpen || !canAssignOthers) return undefined;
+    clearTimeout(searchDebounceRef.current);
+    const term = assigneeSearch.trim();
+    if (term.length < ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS) {
+      return undefined;
     }
-    return undefined;
-  }, [open, currentUser.userId]);
+    searchDebounceRef.current = setTimeout(async () => {
+      setSearchLoading(true);
+      const result = await searchQuickCreateAssigneesAction(term);
+      if (!result.ok) {
+        setSearchError(result.message);
+        setSearchResults([]);
+      } else {
+        setSearchError(null);
+        setSearchResults(
+          result.options.filter((o) => !selectedIds.includes(o.userId)),
+        );
+      }
+      setSearchLoading(false);
+    }, 300);
+    return () => clearTimeout(searchDebounceRef.current);
+  }, [addOpen, assigneeSearch, canAssignOthers, selectedIds]);
+
+  const assigneeSearchTerm = assigneeSearch.trim();
+  const assigneeSearchReady =
+    assigneeSearchTerm.length >= ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS;
 
   if (!canCreateSelf) return null;
 
-  const selectedSet = new Set(selectedIds);
   const selectedPeople = selectedIds
     .map((id) => {
       if (id === currentUser.userId) {
@@ -72,13 +115,9 @@ export default function MeineAufgabenQuickCreateDialog({
           lastName: currentUser.lastName,
         };
       }
-      return assigneeOptions.find((a) => a.userId === id);
+      return knownAssignees[id] ?? searchResults.find((a) => a.userId === id);
     })
     .filter(Boolean) as TaskAssigneeOption[];
-
-  const addableOptions = canAssignOthers
-    ? assigneeOptions.filter((a) => !selectedSet.has(a.userId))
-    : [];
 
   function closeDialog() {
     if (!pending) setOpen(false);
@@ -104,8 +143,11 @@ export default function MeineAufgabenQuickCreateDialog({
     setSelectedIds((prev) => prev.filter((id) => id !== userId));
   }
 
-  function addAssignee(userId: string) {
+  function addAssignee(userId: string, person?: TaskAssigneeOption) {
     if (!canAssignOthers || !userId) return;
+    if (person) {
+      setKnownAssignees((prev) => ({ ...prev, [userId]: person }));
+    }
     setSelectedIds((prev) => (prev.includes(userId) ? prev : [...prev, userId]));
     setAddOpen(false);
   }
@@ -115,7 +157,7 @@ export default function MeineAufgabenQuickCreateDialog({
       <button
         type="button"
         className="fca-button-primary inline-flex items-center gap-1.5 text-sm"
-        onClick={() => setOpen(true)}
+        onClick={openDialog}
         data-testid="meine-aufgaben-create-open"
       >
         <Plus className="h-4 w-4" aria-hidden="true" />
@@ -218,7 +260,7 @@ export default function MeineAufgabenQuickCreateDialog({
                       ) : null}
                     </span>
                   ))}
-                  {canAssignOthers && addableOptions.length > 0 ? (
+                  {canAssignOthers ? (
                     <div className="relative">
                       <button
                         type="button"
@@ -231,17 +273,42 @@ export default function MeineAufgabenQuickCreateDialog({
                         Person
                       </button>
                       {addOpen ? (
-                        <div className="absolute left-0 top-full z-10 mt-1 max-h-40 w-56 overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--surface)] py-1 shadow-lg">
-                          {addableOptions.map((a) => (
-                            <button
-                              key={a.userId}
-                              type="button"
-                              className="block w-full px-3 py-1.5 text-left text-sm hover:bg-[var(--surface-2)]"
-                              onClick={() => addAssignee(a.userId)}
-                            >
-                              {a.firstName} {a.lastName}
-                            </button>
-                          ))}
+                        <div className="absolute left-0 top-full z-10 mt-1 w-64 rounded-md border border-[var(--border)] bg-[var(--surface)] p-2 shadow-lg">
+                          <input
+                            type="search"
+                            className="fca-input w-full text-sm"
+                            placeholder="Name oder E-Mail …"
+                            value={assigneeSearch}
+                            onChange={(e) => setAssigneeSearch(e.target.value)}
+                            data-testid="meine-aufgaben-create-assignee-search"
+                            disabled={pending}
+                          />
+                          <div className="mt-1 max-h-36 overflow-y-auto">
+                            {searchLoading ? (
+                              <p className="px-2 py-1.5 text-xs text-[var(--muted)]">Suche …</p>
+                            ) : searchError ? (
+                              <p className="px-2 py-1.5 text-xs text-red-300">{searchError}</p>
+                            ) : !assigneeSearchReady ? (
+                              <p className="px-2 py-1.5 text-xs text-[var(--muted)]">
+                                Mindestens {ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS} Zeichen
+                              </p>
+                            ) : searchResults.length === 0 ? (
+                              <p className="px-2 py-1.5 text-xs text-[var(--muted)]">
+                                Keine Treffer
+                              </p>
+                            ) : (
+                              searchResults.map((a) => (
+                                <button
+                                  key={a.userId}
+                                  type="button"
+                                  className="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-[var(--surface-2)]"
+                                  onClick={() => addAssignee(a.userId, a)}
+                                >
+                                  {a.firstName} {a.lastName}
+                                </button>
+                              ))
+                            )}
+                          </div>
                         </div>
                       ) : null}
                     </div>

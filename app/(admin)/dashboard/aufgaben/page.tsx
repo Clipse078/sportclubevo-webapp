@@ -96,9 +96,6 @@ export default async function AufgabenPage({ searchParams }: Props) {
       permissionKeys: capabilities.permissionKeys,
     };
     const quickCreateCaps = resolveQuickCreateCapabilities(taskCtx);
-    const assigneeOptionsForQuick = quickCreateCaps.canAssignOthers
-      ? await listEligibleTaskAssignees(tenantId)
-      : [];
 
     return (
       <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
@@ -120,7 +117,6 @@ export default async function AufgabenPage({ searchParams }: Props) {
               firstName: session.user.firstName ?? "",
               lastName: session.user.lastName ?? "",
             },
-            assigneeOptions: assigneeOptionsForQuick,
             timeZone,
           }}
         />

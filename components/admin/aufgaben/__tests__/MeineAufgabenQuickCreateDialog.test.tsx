@@ -11,6 +11,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/app/(admin)/dashboard/aufgaben/actions", () => ({
   createQuickAufgabeAction: vi.fn().mockResolvedValue({ ok: true, taskId: "t1" }),
+  searchQuickCreateAssigneesAction: vi.fn().mockResolvedValue({ ok: true, options: [] }),
 }));
 
 import MeineAufgabenQuickCreateDialog from "../MeineAufgabenQuickCreateDialog";
@@ -28,7 +29,6 @@ describe("MeineAufgabenQuickCreateDialog", () => {
         canCreateSelf
         canAssignOthers={false}
         currentUser={currentUser}
-        assigneeOptions={[]}
         timeZone="Europe/Zurich"
       />,
     );
