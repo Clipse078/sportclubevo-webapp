@@ -5,7 +5,7 @@
  */
 
 import type { Prisma, TaskPriority, TaskStatus } from "@prisma/client";
-import { TaskStatus as TaskStatusEnum } from "@prisma/client";
+import { TaskStatus as TaskStatusEnum, TaskVisibilityScope } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { writeAuditRecord } from "@/lib/audit/audit-record";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -23,6 +23,7 @@ import {
   hasActionableSubtasks,
 } from "./subtask-rules";
 import type {
+  CreateQuickTaskInput,
   CreateSubtaskInput,
   CreateTaskInput,
   ListTasksFilter,
@@ -32,6 +33,7 @@ import type {
   TaskServiceContext,
   UpdateTaskInput,
 } from "./types";
+import { assertQuickCreateAssigneeAuthorization } from "./quick-create";
 import {
   buildTaskVisibilityWhere,
   canManageTask,
@@ -348,6 +350,113 @@ export async function createTask(
 
     if (assigneeUserIds.length > 0) {
       assertCanAssign(ctx);
+      await tx.taskAssignee.createMany({
+        data: assigneeUserIds.map((userId) => ({
+          tenantId: ctx.tenantId,
+          taskId: created.id,
+          userId,
+          assignedByUserId: ctx.userId,
+        })),
+      });
+    }
+
+    await recordTaskAudit(tx, {
+      tenantId: ctx.tenantId,
+      actorUserId: ctx.userId,
+      taskId: created.id,
+      action: "TASK_CREATED",
+      afterJson: {
+        title,
+        status: created.status,
+        assigneeUserIds,
+        orgUnitId: orgVisibility.orgUnitId,
+        visibilityScope: orgVisibility.visibilityScope,
+      },
+    });
+
+    if (assigneeUserIds.length > 0) {
+      await recordTaskAudit(tx, {
+        tenantId: ctx.tenantId,
+        actorUserId: ctx.userId,
+        taskId: created.id,
+        action: "TASK_ASSIGNED",
+        afterJson: { assigneeUserIds },
+      });
+    }
+
+    const finalRow = await tx.task.findFirstOrThrow({
+      where: { id: created.id, tenantId: ctx.tenantId },
+      include: TASK_INCLUDE,
+    });
+
+    const assignedAt = new Date();
+    await emitTaskAssignmentNotifications(tx, {
+      tenantId: ctx.tenantId,
+      taskId: finalRow.id,
+      taskTitle: finalRow.title,
+      isSubtask: false,
+      assigneeRows: computeNewAssigneeRows([], assigneeUserIds, assignedAt),
+      context: { actorUserId: ctx.userId },
+      dueAt: finalRow.dueAt,
+    });
+
+    return finalRow;
+  });
+
+  return mapTask(task);
+}
+
+/**
+ * AUFGABEN-06P — Meine Aufgaben quick create.
+ * Always ASSIGNEES_ONLY, no org unit, no context. Self-only needs tasks.view;
+ * other assignees require tasks.create + tasks.assign (or manage).
+ */
+export async function createQuickTask(
+  ctx: TaskServiceContext,
+  input: CreateQuickTaskInput,
+): Promise<TaskDto> {
+  const title = normalizeTitle(input.title);
+  const assigneeUserIds = [...new Set(input.assigneeUserIds ?? [])];
+
+  assertQuickCreateAssigneeAuthorization(ctx, assigneeUserIds);
+  await validateAssigneeUserIds(ctx.tenantId, assigneeUserIds);
+
+  const orgVisibility = {
+    visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
+    orgUnitId: null as string | null,
+  };
+
+  const reminderSchedule = await resolveReminderScheduleForCreate(ctx.tenantId, input);
+
+  const selfOnly =
+    assigneeUserIds.length === 1 && assigneeUserIds[0] === ctx.userId;
+
+  const task = await prisma.$transaction(async (tx) => {
+    const created = await tx.task.create({
+      data: {
+        tenantId: ctx.tenantId,
+        title,
+        description: input.description?.trim() || null,
+        priority: input.priority ?? "NORMAL",
+        dueAt: reminderSchedule.dueAt,
+        reminder1At: reminderSchedule.reminder1At,
+        reminder2At: reminderSchedule.reminder2At,
+        reminder1PresetKey: reminderSchedule.reminder1PresetKey,
+        reminder2PresetKey: reminderSchedule.reminder2PresetKey,
+        contextType: null,
+        contextId: null,
+        orgUnitId: orgVisibility.orgUnitId,
+        visibilityScope: orgVisibility.visibilityScope,
+        createdByUserId: ctx.userId,
+        status: TaskStatusEnum.OPEN,
+      },
+      include: TASK_INCLUDE,
+    });
+
+    if (assigneeUserIds.length > 0) {
+      if (!selfOnly) {
+        assertCanAssign(ctx);
+      }
       await tx.taskAssignee.createMany({
         data: assigneeUserIds.map((userId) => ({
           tenantId: ctx.tenantId,

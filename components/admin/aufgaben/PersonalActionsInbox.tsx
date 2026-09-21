@@ -9,6 +9,10 @@ import type { PersonalInboxFilterParam } from "@/lib/personal-actions/aufgaben-s
 import { buildPersonalInboxFilterHref } from "@/lib/personal-actions/aufgaben-scope";
 import PersonalActionRow from "./PersonalActionRow";
 import AufgabenScopeToggle from "./AufgabenScopeToggle";
+import MeineAufgabenQuickCreateDialog, {
+  type QuickCreateCurrentUser,
+} from "./MeineAufgabenQuickCreateDialog";
+import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import type { AufgabenBereich } from "@/lib/personal-actions/aufgaben-scope";
 
 type Props = {
@@ -22,6 +26,14 @@ type Props = {
   /** Full actionable count (independent of inbox list limit). */
   totalActionableCount?: number | null;
   basePath?: string;
+  quickCreate?: {
+    canCreateSelf: boolean;
+    canAssignOthers: boolean;
+    canOpenFullCreate: boolean;
+    currentUser: QuickCreateCurrentUser;
+    assigneeOptions: TaskAssigneeOption[];
+    timeZone: string;
+  } | null;
 };
 
 const FILTER_LABELS: Record<PersonalInboxFilterParam, string> = {
@@ -38,6 +50,7 @@ export default function PersonalActionsInbox({
   showSourceFilters,
   totalActionableCount = null,
   basePath = "/dashboard/aufgaben",
+  quickCreate = null,
 }: Props) {
   const hasItems = items.length > 0;
   const rangeSummary =
@@ -55,11 +68,23 @@ export default function PersonalActionsInbox({
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <AufgabenScopeToggle
-          active={bereich}
-          showManagement={showManagementScope}
-          basePath={basePath}
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          <AufgabenScopeToggle
+            active={bereich}
+            showManagement={showManagementScope}
+            basePath={basePath}
+          />
+          {quickCreate?.canCreateSelf ? (
+            <MeineAufgabenQuickCreateDialog
+              canCreateSelf={quickCreate.canCreateSelf}
+              canAssignOthers={quickCreate.canAssignOthers}
+              currentUser={quickCreate.currentUser}
+              assigneeOptions={quickCreate.assigneeOptions}
+              timeZone={quickCreate.timeZone}
+              canOpenFullCreate={quickCreate.canOpenFullCreate}
+            />
+          ) : null}
+        </div>
         {showSourceFilters ? (
           <div
             className="flex flex-wrap gap-1"

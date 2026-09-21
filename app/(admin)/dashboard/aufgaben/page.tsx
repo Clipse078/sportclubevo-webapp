@@ -1,6 +1,7 @@
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { listEligibleTaskAssignees } from "@/lib/tasks/queries";
+import { resolveQuickCreateCapabilities } from "@/lib/tasks/quick-create";
 import { loadTaskOrgUnitFilterOptions } from "@/lib/tasks/task-org-options";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import {
@@ -89,6 +90,16 @@ export default async function AufgabenPage({ searchParams }: Props) {
       rawActions.some((a) => a.sourceType === "TASK") &&
       rawActions.some((a) => a.sourceType === "ATTENDANCE_RESPONSE");
 
+    const taskCtx = {
+      tenantId,
+      userId: session.user.id,
+      permissionKeys: capabilities.permissionKeys,
+    };
+    const quickCreateCaps = resolveQuickCreateCapabilities(taskCtx);
+    const assigneeOptionsForQuick = quickCreateCaps.canAssignOthers
+      ? await listEligibleTaskAssignees(tenantId)
+      : [];
+
     return (
       <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
         <PersonalActionsInbox
@@ -100,6 +111,18 @@ export default async function AufgabenPage({ searchParams }: Props) {
           filter={inboxFilter}
           showSourceFilters={hasMixedSources}
           totalActionableCount={actionCounts.totalActionable}
+          quickCreate={{
+            canCreateSelf: quickCreateCaps.canCreateSelf,
+            canAssignOthers: quickCreateCaps.canAssignOthers,
+            canOpenFullCreate: hasTaskPermission(taskCtx, PERMISSIONS.TASKS_CREATE),
+            currentUser: {
+              userId: session.user.id,
+              firstName: session.user.firstName ?? "",
+              lastName: session.user.lastName ?? "",
+            },
+            assigneeOptions: assigneeOptionsForQuick,
+            timeZone,
+          }}
         />
       </div>
     );

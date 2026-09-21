@@ -15,9 +15,14 @@ import {
   cancelTask,
   completeTask,
   createSubtask,
+  createQuickTask,
   createTask,
   updateTask,
 } from "@/lib/tasks/task-service";
+import {
+  normalizeQuickCreateAssigneeIds,
+  resolveQuickCreateCapabilities,
+} from "@/lib/tasks/quick-create";
 import type {
   TaskRecurrenceFrequency,
   TaskSeriesWeekday,
@@ -172,6 +177,75 @@ function failure(error: unknown): AufgabenActionResult {
     return { ok: false, message: "Aufgabe nicht gefunden." };
   }
   return { ok: false, message: "Aktion fehlgeschlagen." };
+}
+
+export async function createQuickAufgabeAction(
+  formData: FormData,
+): Promise<AufgabenActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  const quickCaps = resolveQuickCreateCapabilities(ctx);
+  if (!quickCaps.canCreateSelf) {
+    return { ok: false, message: "Keine Berechtigung für diese Aktion." };
+  }
+
+  if (formData.has("tenantId") || formData.has("createdByUserId")) {
+    return { ok: false, message: "Keine Berechtigung für diese Aktion." };
+  }
+
+  try {
+    const title = formData.get("title");
+    const description = formData.get("description");
+    const priority = formData.get("priority");
+    const assigneeUserIdsRaw = formData.get("assigneeUserIds");
+
+    const validPriorities = ["LOW", "NORMAL", "HIGH", "URGENT"] as const;
+    const parsedPriority =
+      typeof priority === "string" &&
+      (validPriorities as readonly string[]).includes(priority)
+        ? (priority as TaskPriority)
+        : undefined;
+
+    const schedule = await parseDeadlineAndRemindersFromForm(ctx.tenantId, formData);
+    if (schedule === "invalid_due") {
+      return { ok: false, message: "Ungültiges Fälligkeitsdatum." };
+    }
+    if (schedule === "invalid_reminder") {
+      return { ok: false, message: "Ungültige Erinnerung." };
+    }
+
+    let rawAssigneeIds: string[] = [];
+    if (typeof assigneeUserIdsRaw === "string" && assigneeUserIdsRaw.trim()) {
+      rawAssigneeIds = assigneeUserIdsRaw
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    const assigneeUserIds = normalizeQuickCreateAssigneeIds(
+      ctx,
+      rawAssigneeIds,
+      quickCaps.canAssignOthers,
+    );
+
+    const created = await createQuickTask(ctx, {
+      title: typeof title === "string" ? title : "",
+      description: typeof description === "string" ? description : null,
+      priority: parsedPriority,
+      dueAt: schedule?.dueAt ?? null,
+      reminder1At: schedule?.reminder1At ?? null,
+      reminder2At: schedule?.reminder2At ?? null,
+      reminder1PresetKey: schedule?.reminder1PresetKey ?? null,
+      reminder2PresetKey: schedule?.reminder2PresetKey ?? null,
+      assigneeUserIds,
+    });
+
+    revalidateTaskPaths(created.id);
+    return { ok: true, taskId: created.id };
+  } catch (error) {
+    return failure(error);
+  }
 }
 
 export async function createAufgabeAction(
