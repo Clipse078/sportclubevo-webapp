@@ -53,6 +53,10 @@ vi.mock("../task-follow-service", () => ({
   getTaskFollowState: vi.fn(async () => ({ isFollowing: false, followerCount: 0 })),
 }));
 
+vi.mock("../task-document-reference-service", () => ({
+  listTaskDocumentReferences: vi.fn(async () => []),
+}));
+
 vi.mock("../task-service", () => ({
   getTask: vi.fn(),
 }));

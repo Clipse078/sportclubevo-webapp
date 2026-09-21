@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { canSeeMeeting } from "@/lib/meetings/queries";
 import { buildActorContext } from "@/lib/visibility/actor-context";
 import { loadOrgUnitIds, loadTargetGroupIds } from "@/lib/org/queries";
+import { searchWorkspaceDocumentsForTaskLink } from "@/lib/workspace/document-access";
 import { canAttachTaskContext } from "./context-access";
 import { isSupportedTaskContextType } from "./context-registry";
 import type { TaskServiceContext } from "./types";
@@ -156,19 +157,11 @@ async function searchDocuments(
   query: string,
   take: number,
 ): Promise<TaskContextOption[]> {
-  const rows = await prisma.workspaceDocument.findMany({
-    where: {
-      tenantId: ctx.tenantId,
-      ...(query ? { name: { contains: query, mode: "insensitive" } } : {}),
-    },
-    orderBy: { updatedAt: "desc" },
-    take,
-    select: { id: true, name: true },
-  });
+  const rows = await searchWorkspaceDocumentsForTaskLink(ctx, query, take);
   return rows.map((row) => ({
     id: row.id,
-    label: row.name,
-    secondary: null,
+    label: row.title,
+    secondary: row.folderBreadcrumb,
   }));
 }
 

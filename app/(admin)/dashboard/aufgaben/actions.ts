@@ -66,6 +66,13 @@ import {
   unfollowTask,
   type TaskFollowStateDto,
 } from "@/lib/tasks/task-follow-service";
+import {
+  linkTaskDocument,
+  searchWorkspaceDocumentsForTaskReferenceLink,
+  unlinkTaskDocument,
+  type TaskDocumentReferenceDto,
+} from "@/lib/tasks/task-document-reference-service";
+import type { WorkspaceDocumentPickerOption } from "@/lib/workspace/document-access";
 
 export type AufgabenActionResult =
   | { ok: true; taskId?: string }
@@ -1183,3 +1190,66 @@ export async function deleteTaskCommentAction(
     return { ok: false, message: actionErrorMessage(error) };
   }
 }
+
+export type TaskDocumentReferenceActionResult =
+  | { ok: true }
+  | { ok: false; message: string };
+
+export type TaskDocumentSearchActionResult =
+  | { ok: true; options: WorkspaceDocumentPickerOption[] }
+  | { ok: false; message: string };
+
+export async function searchTaskDocumentLinkCandidatesAction(
+  taskId: string,
+  query: string,
+  limit?: number,
+): Promise<TaskDocumentSearchActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    const options = await searchWorkspaceDocumentsForTaskReferenceLink(
+      ctx,
+      taskId,
+      query,
+      limit,
+    );
+    return { ok: true, options };
+  } catch (error) {
+    return { ok: false, message: actionErrorMessage(error) };
+  }
+}
+
+export async function linkTaskDocumentAction(
+  taskId: string,
+  documentId: string,
+): Promise<TaskDocumentReferenceActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    await linkTaskDocument(ctx, taskId, documentId);
+    revalidateTaskPaths(taskId);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: actionErrorMessage(error) };
+  }
+}
+
+export async function unlinkTaskDocumentAction(
+  taskId: string,
+  documentId: string,
+): Promise<TaskDocumentReferenceActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    await unlinkTaskDocument(ctx, taskId, documentId);
+    revalidateTaskPaths(taskId);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: actionErrorMessage(error) };
+  }
+}
+
+export type { TaskDocumentReferenceDto };

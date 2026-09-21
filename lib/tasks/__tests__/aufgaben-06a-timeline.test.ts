@@ -162,6 +162,23 @@ describe("AUFGABEN-06A timeline mapper", () => {
     expect(entry.title).toContain("abgebrochen");
   });
 
+  it("T5b document link mapped without document title", () => {
+    const entry = mapAuditLogToTimelineEntry(
+      {
+        id: "a5b",
+        actorUserId: USER,
+        action: "TASK_DOCUMENT_LINKED",
+        beforeJson: null,
+        afterJson: { documentId: "doc-secret" },
+        createdAt: new Date("2026-09-01T10:00:00.000Z"),
+      },
+      actor,
+      new Map(),
+    );
+    expect(entry.title).toContain("Dokument verknüpft");
+    expect(entry.title).not.toContain("doc-secret");
+  });
+
   it("T6 generated occurrence mapped", () => {
     const entry = mapAuditLogToTimelineEntry(
       {

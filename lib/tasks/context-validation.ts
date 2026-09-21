@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/prisma";
 import { canSeeMeeting } from "@/lib/meetings/queries";
 import { loadOrgUnitIds, loadTargetGroupIds } from "@/lib/org/queries";
 import { buildActorContext } from "@/lib/visibility/actor-context";
+import { canReadWorkspaceDocument } from "@/lib/workspace/document-access";
 import { canAttachTaskContext } from "./context-access";
 import { isSupportedTaskContextType } from "./context-registry";
 import { TaskValidationError } from "./errors";
@@ -133,12 +134,7 @@ async function resolveContextAttachable(
         }),
       );
     case "DOCUMENT":
-      return Boolean(
-        await prisma.workspaceDocument.findFirst({
-          where: { id, tenantId },
-          select: { id: true },
-        }),
-      );
+      return canReadWorkspaceDocument(ctx, id);
     default:
       return false;
   }

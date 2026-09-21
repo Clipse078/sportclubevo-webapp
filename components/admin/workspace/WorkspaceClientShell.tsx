@@ -17,6 +17,7 @@ import { WorkspaceFilePreview } from "./WorkspaceFilePreview";
 
 type WorkspaceClientShellProps = {
   documents: WorkspaceDocumentListItemDto[];
+  initialSelectedDocumentId?: string | null;
   folderId: string;
   folderName: string;
   folderDescription?: string | null;
@@ -38,6 +39,7 @@ function formatDate(value: string): string {
 
 export function WorkspaceClientShell({
   documents,
+  initialSelectedDocumentId = null,
   folderId,
   folderName,
   folderDescription,
@@ -50,7 +52,9 @@ export function WorkspaceClientShell({
 }: WorkspaceClientShellProps) {
   const t = useTranslations("Workspace");
   const router = useRouter();
-  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
+    initialSelectedDocumentId,
+  );
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const dropzoneRef = useRef<HTMLDivElement>(null);
