@@ -31,3 +31,11 @@ export function canResolveTaskContextDetails(
 ): boolean {
   return canAttachTaskContext(ctx, type);
 }
+
+/** Operational entity read gate for related Task list/count (06F1). */
+export function canReadTaskContextEntity(
+  ctx: TaskServiceContext,
+  type: TaskContextType,
+): boolean {
+  return canAttachTaskContext(ctx, type);
+}

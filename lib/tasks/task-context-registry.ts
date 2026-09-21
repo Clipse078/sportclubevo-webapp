@@ -39,6 +39,8 @@ export type TaskContextRegistryEntry = {
     tenantKey?: string | null;
   }) => string | null;
   validateAttachable: (ctx: TaskServiceContext, id: string) => Promise<boolean>;
+  /** Entity readability for related Task reads; defaults to attachable semantics per domain. */
+  validateReadable?: (ctx: TaskServiceContext, id: string) => Promise<boolean>;
   searchOptions: (
     ctx: TaskServiceContext,
     query: string,
@@ -253,7 +255,7 @@ export const TASK_CONTEXT_REGISTRY: TaskContextRegistryEntry[] = [
   {
     type: "TEAM",
     operationalReadPermission: PERMISSIONS.TEAMS_VIEW,
-    buildHref: (entity) => `/dashboard/teams?teamId=${encodeURIComponent(entity.id)}`,
+    buildHref: (entity) => `/dashboard/teams/${encodeURIComponent(entity.id)}`,
     validateAttachable: async (ctx, id) =>
       Boolean(
         await prisma.team.findFirst({
@@ -362,6 +364,17 @@ export async function validateTaskContextAttachable(
   const entry = getTaskContextRegistryEntry(type);
   if (!entry) return false;
   return entry.validateAttachable(ctx, id);
+}
+
+export async function validateTaskContextReadable(
+  ctx: TaskServiceContext,
+  type: TaskContextType,
+  id: string,
+): Promise<boolean> {
+  const entry = getTaskContextRegistryEntry(type);
+  if (!entry) return false;
+  const validate = entry.validateReadable ?? entry.validateAttachable;
+  return validate(ctx, id);
 }
 
 export async function searchTaskContextOptionsForType(

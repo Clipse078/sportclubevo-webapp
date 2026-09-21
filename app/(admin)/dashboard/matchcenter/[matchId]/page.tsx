@@ -76,8 +76,6 @@ export default async function MatchcenterDetailPage({
   // ADMIN-DELETE-02A: permanent "Löschen" gating — deliberately independent
   // of events.manage (manage alone must never authorize deletion).
   const canDelete = hasPermission(session, PERMISSIONS.MATCHES_DELETE);
-  const canCreateTask = hasPermission(session, PERMISSIONS.TASKS_CREATE);
-
   // ORG-ACCESS-03: planning workflow action visibility.
   // Coordinator = tenant-wide EVENTS_MANAGE → can validate/reopen.
   // Scoped user = no tenant-wide EVENTS_MANAGE → can submit DRAFT manual records.
@@ -168,7 +166,6 @@ export default async function MatchcenterDetailPage({
         canValidatePlanning={canValidatePlanning}
         isProtectedSource={isProtectedSource}
         tenantLogoUrl={tenantContext.logoUrl}
-        canCreateTask={canCreateTask}
       />
     </ToastProvider>
   );

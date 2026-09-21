@@ -117,7 +117,7 @@ function taskRow(overrides: Record<string, unknown> = {}) {
     parentTaskId: null,
     taskSeriesId: null,
     orgUnitId: null,
-    visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
+    visibilityScope: TaskVisibilityScope.CLUB,
     createdByUserId: MICHAEL,
     createdAt: new Date("2026-09-21T10:00:00.000Z"),
     updatedAt: new Date("2026-09-21T10:00:00.000Z"),
@@ -179,16 +179,17 @@ describe("AUFGABEN-06P quick create sentinels", () => {
     );
   });
 
-  it("Q3 — self-assigned Task defaults ASSIGNEES_ONLY", async () => {
+  it("Q3 — self-assigned Task defaults CLUB (organisation-wide)", async () => {
     setupSuccessfulCreate(taskRow());
     await createQuickTask(viewOnlyCtx(), {
-      title: "Private",
+      title: "Organisation task",
       assigneeUserIds: [MICHAEL],
     });
     expect(mocks.taskCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
+          visibilityScope: TaskVisibilityScope.CLUB,
+          orgUnitId: null,
         }),
       }),
     );

@@ -2,7 +2,7 @@
 
 > **Document type:** Architecture Decision Record (ADR) log  
 > **Status:** Active  
-> **Last updated:** 2026-06-25  
+> **Last updated:** 2026-09-21  
 > **Maintained by:** SportClubEvo engineering team
 
 ---
@@ -259,6 +259,37 @@ Do not reset passwords, change authentication secrets, modify production credent
 - Bootstrap and seed scripts exist (`prisma/bootstrap-admin.ts`, `prisma/seed.ts`) but are only run under explicit authorisation.
 - Agents and developers are instructed not to run these scripts during normal development tasks.
 - Authentication issues are escalated rather than self-healed with credential resets.
+
+---
+
+## ADR-013 — Open by Default, Restrictable by Creator (SCE Access Principle)
+
+**Status:** Accepted (partial implementation)
+
+### Context
+
+Collaborative management records in SportClubEvo (Tasks, Files, Meetings, Initiatives) should default to organisation-wide visibility so teams can coordinate without hidden silos. Creators who need tighter confidentiality must be able to restrict visibility deliberately to an organisation unit or a bounded set of people.
+
+### Decision
+
+New records default to whole-organisation visibility. Optional, creator-selected restrictions include organisation unit scope and specific people (exact mechanics per domain). This ADR states the cross-module product principle; each domain implements it in its own security package.
+
+**Implementation status:**
+
+| Domain | Status |
+| --- | --- |
+| Tasks | Implemented (AUFGABEN-06F1-A3): new root Tasks default to `CLUB` / `orgUnitId = null`; creator may choose `ORG_UNIT` or `ASSIGNEES_ONLY`. |
+| Files / Workspace | Deferred to Phase 10 Workspace Security |
+| Meetings | Not implemented (future Meeting authorization package) |
+| Initiatives | Not implemented (future Initiative domain/security package) |
+
+Task `ASSIGNEES_ONLY` currently limits visibility to creator plus explicit assignees only; arbitrary viewer-only grants are future work.
+
+### Consequences
+
+- Task creation paths must apply server-side defaults; UI pre-selection alone is insufficient.
+- Changing creation defaults does not backfill existing records or weaken explicit confidential Tasks.
+- Personal projections (e.g. Meine Aufgaben) and notifications remain driven by assignment and mention rules, not visibility scope alone.
 
 ---
 

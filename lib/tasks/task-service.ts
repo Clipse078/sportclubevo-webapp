@@ -401,9 +401,27 @@ export async function createTask(
 
 /**
  * AUFGABEN-06P — Meine Aufgaben quick create.
- * Always ASSIGNEES_ONLY, no org unit, no context. Self-only needs tasks.view;
- * other assignees require tasks.create + tasks.assign (or manage).
+ * Organisation-wide (CLUB) by default; no org unit, no context. Self-only needs
+ * tasks.view; other assignees require tasks.create + tasks.assign (or manage).
  */
+async function resolveQuickCreateOrgVisibility(
+  ctx: TaskServiceContext,
+  selfOnly: boolean,
+): Promise<{ visibilityScope: TaskVisibilityScope; orgUnitId: string | null }> {
+  if (selfOnly && !hasTaskPermission(ctx, PERMISSIONS.TASKS_CREATE)) {
+    return {
+      visibilityScope: TaskVisibilityScope.CLUB,
+      orgUnitId: null,
+    };
+  }
+
+  return validateTaskOrgVisibilityMutation(
+    ctx,
+    normalizeTaskOrgVisibilityState(undefined, null),
+    { mode: "create" },
+  );
+}
+
 export async function createQuickTask(
   ctx: TaskServiceContext,
   input: CreateQuickTaskInput,
@@ -414,15 +432,12 @@ export async function createQuickTask(
   assertQuickCreateAssigneeAuthorization(ctx, assigneeUserIds);
   await validateAssigneeUserIds(ctx.tenantId, assigneeUserIds);
 
-  const orgVisibility = {
-    visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
-    orgUnitId: null as string | null,
-  };
-
   const reminderSchedule = await resolveReminderScheduleForCreate(ctx.tenantId, input);
 
   const selfOnly =
     assigneeUserIds.length === 1 && assigneeUserIds[0] === ctx.userId;
+
+  const orgVisibility = await resolveQuickCreateOrgVisibility(ctx, selfOnly);
 
   const task = await prisma.$transaction(async (tx) => {
     const created = await tx.task.create({

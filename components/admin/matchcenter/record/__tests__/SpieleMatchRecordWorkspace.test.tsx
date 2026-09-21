@@ -302,7 +302,7 @@ describe("SpieleMatchRecordWorkspace", () => {
     expect(screen.getByTestId("spiele-record-kickoff")).toHaveTextContent("20:30");
   });
 
-  it("shows Aufgabe erstellen only when canCreateTask", async () => {
+  it("shows contextual create action slot when provided", async () => {
     const { rerender } = render(
       <SpieleMatchRecordWorkspace
         match={createMatch()}
@@ -314,7 +314,6 @@ describe("SpieleMatchRecordWorkspace", () => {
         dressingRoomOptions={[]}
         isProtectedSource
         wochenplanerHref="/dashboard/planner/week"
-        canCreateTask={false}
       />,
     );
     expect(screen.queryByTestId("spiele-record-menu-create-task")).not.toBeInTheDocument();
@@ -330,14 +329,17 @@ describe("SpieleMatchRecordWorkspace", () => {
         dressingRoomOptions={[]}
         isProtectedSource
         wochenplanerHref="/dashboard/planner/week"
-        canCreateTask
+        createTaskAction={
+          <button type="button" data-testid="contextual-task-create-trigger">
+            Aufgabe erstellen
+          </button>
+        }
       />,
     );
     fireEvent.click(screen.getByTestId("spiele-record-context-menu-trigger"));
-    const link = screen.getByTestId("spiele-record-menu-create-task");
-    expect(link).toHaveAttribute(
-      "href",
-      "/dashboard/aufgaben/neu?contextType=MATCH&contextId=match-1",
+    expect(screen.getByTestId("spiele-record-menu-create-task")).toBeInTheDocument();
+    expect(screen.getByTestId("contextual-task-create-trigger")).toHaveTextContent(
+      "Aufgabe erstellen",
     );
   });
 

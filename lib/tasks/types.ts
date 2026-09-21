@@ -79,7 +79,7 @@ export type CreateTaskInput = {
   visibilityScope?: TaskVisibilityScope;
 };
 
-/** AUFGABEN-06P — compact Meine Aufgaben creation (canonical Task, fixed privacy defaults). */
+/** AUFGABEN-06P — compact Meine Aufgaben creation (canonical Task, CLUB visibility default). */
 export type CreateQuickTaskInput = {
   title: string;
   description?: string | null;

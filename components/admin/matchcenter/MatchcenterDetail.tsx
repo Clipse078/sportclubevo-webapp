@@ -3,6 +3,8 @@ import type { FacilityResourceOption } from "@/lib/facilities/resource-options";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { PageShell } from "@/components/ui/page/PageShell";
 import SpieleMatchRecordWorkspace from "@/components/admin/matchcenter/record/SpieleMatchRecordWorkspace";
+import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
+import ContextualTaskCreateTriggerServer from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTriggerServer";
 import { buildMatchWochenplanerHref } from "@/lib/matchcenter/wochenplaner-deep-links";
 
 type MatchcenterDetailProps = {
@@ -19,7 +21,6 @@ type MatchcenterDetailProps = {
   canValidatePlanning?: boolean;
   isProtectedSource?: boolean;
   tenantLogoUrl?: string | null;
-  canCreateTask?: boolean;
 };
 
 export default function MatchcenterDetail({
@@ -36,7 +37,6 @@ export default function MatchcenterDetail({
   canValidatePlanning = false,
   isProtectedSource = false,
   tenantLogoUrl = null,
-  canCreateTask = false,
 }: MatchcenterDetailProps) {
   void canSubmitPlanning;
 
@@ -63,7 +63,23 @@ export default function MatchcenterDetail({
         isProtectedSource={isProtectedSource}
         tenantLogoUrl={tenantLogoUrl}
         wochenplanerHref={wochenplanerHref}
-        canCreateTask={canCreateTask}
+        createTaskAction={
+          <ContextualTaskCreateTriggerServer
+            contextType="MATCH"
+            contextId={match.id}
+            variant="menuItem"
+            locale={locale}
+            timeZone={timezone}
+          />
+        }
+        relatedTasksPanel={
+          <ContextRelatedTasksPanel
+            contextType="MATCH"
+            contextId={match.id}
+            locale={locale}
+            timeZone={timezone}
+          />
+        }
       />
     </PageShell>
   );
