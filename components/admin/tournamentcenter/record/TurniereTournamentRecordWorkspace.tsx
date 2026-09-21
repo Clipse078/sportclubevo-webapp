@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -144,6 +144,8 @@ export type TurniereTournamentRecordWorkspaceProps = {
   defaultTournamentDurationMinutes: number;
   canManageFacilitiesTimeStandards?: boolean;
   locale?: string;
+  createTaskAction?: ReactNode;
+  relatedTasksPanel?: ReactNode;
 };
 
 export default function TurniereTournamentRecordWorkspace({
@@ -157,6 +159,8 @@ export default function TurniereTournamentRecordWorkspace({
   defaultTournamentDurationMinutes,
   canManageFacilitiesTimeStandards = false,
   locale = "de-CH",
+  createTaskAction,
+  relatedTasksPanel,
 }: TurniereTournamentRecordWorkspaceProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -506,6 +510,7 @@ export default function TurniereTournamentRecordWorkspace({
           onLifecycleToggle={() => void handleLifecycleToggle()}
           canDelete={canDelete}
           onDeleteRequest={canDelete ? () => void openDeleteConfirmation() : undefined}
+          createTaskAction={createTaskAction}
         />
         {isEditable ? (
           <button
@@ -543,19 +548,22 @@ export default function TurniereTournamentRecordWorkspace({
         header={header}
         testId="turniere-tournament-record-workspace"
         contextRail={
-          <TurniereTournamentRecordContextRail
-            statusLabel={statusPresentation.label}
-            assessment={assessment}
-            tournamentTitle={displayTitle}
-            scheduleLine={formatTurniereRecordScheduleRailLine(tournament.startAt, locale, timezone)}
-            timeLine={formatTurniereRecordTimeOnly(tournament.startAt, locale, timezone)}
-            participantSummary={participantSummary}
-            facilityLine={resourcePresentation.facilityName ?? venueLine}
-            publicationLabel={identity.publication.label}
-            lastChangedLabel={resolveTurniereRecordLastChangedLabel(tournament, locale, timezone)}
-            wochenplanerHref={wochenplanerHref}
-            showReadiness={shouldShowTurniereRecordReadinessPill(tournament.homeAway, assessment)}
-          />
+          <div className="space-y-4">
+            <TurniereTournamentRecordContextRail
+              statusLabel={statusPresentation.label}
+              assessment={assessment}
+              tournamentTitle={displayTitle}
+              scheduleLine={formatTurniereRecordScheduleRailLine(tournament.startAt, locale, timezone)}
+              timeLine={formatTurniereRecordTimeOnly(tournament.startAt, locale, timezone)}
+              participantSummary={participantSummary}
+              facilityLine={resourcePresentation.facilityName ?? venueLine}
+              publicationLabel={identity.publication.label}
+              lastChangedLabel={resolveTurniereRecordLastChangedLabel(tournament, locale, timezone)}
+              wochenplanerHref={wochenplanerHref}
+              showReadiness={shouldShowTurniereRecordReadinessPill(tournament.homeAway, assessment)}
+            />
+            {relatedTasksPanel}
+          </div>
         }
       >
         <div className={`${TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS} divide-y divide-[var(--border)]/80`}>

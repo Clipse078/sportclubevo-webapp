@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import RegistrationDetailCard from "@/components/admin/registrations/RegistrationDetailCard";
+import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -78,6 +79,14 @@ export default async function TenantRegistrationDetailPage({ params }: Props) {
       targetGroups={targetGroups}
       orgUnits={scopeOptions.orgUnits}
       teamSeasons={scopeOptions.teamSeasons}
+      relatedTasksPanel={
+        <ContextRelatedTasksPanel
+          contextType="REGISTRATION"
+          contextId={registration.id}
+          locale={tenantContext.locale ?? "de-CH"}
+          timeZone={tenantContext.timezone ?? "Europe/Zurich"}
+        />
+      }
     />
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Ban, CalendarDays, MoreHorizontal, RotateCcw, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { PopoverContent } from "@/components/ui/Popover";
 import { cn } from "@/lib/cn";
 
@@ -14,6 +14,7 @@ type Props = {
   onLifecycleToggle: () => void;
   canDelete: boolean;
   onDeleteRequest?: () => void;
+  createTaskAction?: ReactNode;
 };
 
 export default function TurniereTournamentRecordContextMenu({
@@ -24,6 +25,7 @@ export default function TurniereTournamentRecordContextMenu({
   onLifecycleToggle,
   canDelete,
   onDeleteRequest,
+  createTaskAction,
 }: Props) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -77,6 +79,12 @@ export default function TurniereTournamentRecordContextMenu({
             <CalendarDays className="h-4 w-4 shrink-0 text-sky-400" aria-hidden />
             Im Wochenplaner anzeigen
           </Link>
+
+          {createTaskAction ? (
+            <div onClick={() => setOpen(false)} data-testid="turniere-record-menu-create-task">
+              {createTaskAction}
+            </div>
+          ) : null}
 
           {canManageLifecycle ? (
             <button

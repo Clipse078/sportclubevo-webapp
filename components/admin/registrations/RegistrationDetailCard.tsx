@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   Baby,
@@ -88,6 +88,7 @@ type RegistrationDetailCardProps = {
   targetGroups?: TargetGroupOption[];
   orgUnits?: OrgUnitOption[];
   teamSeasons?: TeamSeasonOption[];
+  relatedTasksPanel?: ReactNode;
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -243,6 +244,7 @@ export default function RegistrationDetailCard({
   targetGroups = [],
   orgUnits = [],
   teamSeasons = [],
+  relatedTasksPanel,
 }: RegistrationDetailCardProps) {
   const [registration, setRegistration] = useState(initialRegistration);
 
@@ -576,6 +578,8 @@ export default function RegistrationDetailCard({
 
         {/* Sidebar */}
         <div className="space-y-5">
+          {relatedTasksPanel}
+
           {/* Status overview */}
           <div className="sce-detail-section">
             <div className="sce-detail-section-header">

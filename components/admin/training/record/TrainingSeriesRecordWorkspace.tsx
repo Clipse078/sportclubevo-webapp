@@ -65,6 +65,8 @@ type Props = {
   /** Canonical training duration for newly enabled weekday slots only. */
   defaultTrainingDurationMinutes: number;
   participationPolicy: ParticipationSeriesPolicyValues;
+  createTaskAction?: ReactNode;
+  relatedTasksPanel?: ReactNode;
 };
 
 type WeekdayRow = {
@@ -154,6 +156,8 @@ export default function TrainingSeriesRecordWorkspace({
   exceptionNotice,
   defaultTrainingDurationMinutes,
   participationPolicy,
+  createTaskAction,
+  relatedTasksPanel,
 }: Props) {
   const router = useRouter();
 
@@ -330,6 +334,7 @@ export default function TrainingSeriesRecordWorkspace({
           status={seriesStatus}
           canManage={canManage}
           canDelete={canDelete}
+          createTaskAction={createTaskAction}
           onRestored={() => router.refresh()}
         />
         <button
@@ -355,15 +360,18 @@ export default function TrainingSeriesRecordWorkspace({
       header={header}
       testId="training-series-edit-page"
       contextRail={
-        <TrainingRecordContextRail
-          status={seriesStatus}
-          teamLabel={teamLabel}
-          scheduleSummary={scheduleRail}
-          facilityLabel={pitchLabel}
-          dressingRoomLabel={dressingRoomLabel}
-          updatedAtLabel={formatUpdatedAt(updatedAtIso, "de-CH")}
-          wochenplanerHref={wochenplanerHref}
-        />
+        <div className="space-y-4">
+          <TrainingRecordContextRail
+            status={seriesStatus}
+            teamLabel={teamLabel}
+            scheduleSummary={scheduleRail}
+            facilityLabel={pitchLabel}
+            dressingRoomLabel={dressingRoomLabel}
+            updatedAtLabel={formatUpdatedAt(updatedAtIso, "de-CH")}
+            wochenplanerHref={wochenplanerHref}
+          />
+          {relatedTasksPanel}
+        </div>
       }
     >
       {exceptionNotice}

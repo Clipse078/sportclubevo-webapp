@@ -1,4 +1,5 @@
 ﻿import TeamCockpitOverviewContent from "@/components/admin/teams/overview/TeamCockpitOverviewContent";
+import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import {
   TEAM_COCKPIT_CATEGORY_LABELS,
   TEAM_COCKPIT_PARTICIPATION_TYPE_LABELS,
@@ -101,6 +102,14 @@ export default async function TeamOverviewPage({ params }: Props) {
         officialName: c.officialName,
         shortName: c.shortName,
       }))}
+      relatedTasksPanel={
+        <ContextRelatedTasksPanel
+          contextType="TEAM"
+          contextId={team.id}
+          locale={tenant?.locale ?? "de-CH"}
+          timeZone={tenant?.timezone ?? "Europe/Zurich"}
+        />
+      }
     />
   );
 }

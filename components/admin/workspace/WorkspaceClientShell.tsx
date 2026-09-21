@@ -28,6 +28,8 @@ type WorkspaceClientShellProps = {
   /** ADMIN-DELETE-03A: resolved server-side from PERMISSIONS.WORKSPACE_DELETE. */
   canDelete?: boolean;
   folderManagementSlot?: React.ReactNode;
+  /** Server-rendered contextual tasks for the document selected via URL (?document=). */
+  documentContextualTasksPanel?: React.ReactNode;
 };
 
 function formatDate(value: string): string {
@@ -49,6 +51,7 @@ export function WorkspaceClientShell({
   canManage,
   canDelete = false,
   folderManagementSlot,
+  documentContextualTasksPanel,
 }: WorkspaceClientShellProps) {
   const t = useTranslations("Workspace");
   const router = useRouter();
@@ -75,7 +78,14 @@ export function WorkspaceClientShell({
   }
 
   function handleSelectDocument(id: string) {
-    setSelectedDocumentId((current) => (current === id ? null : id));
+    const nextId = selectedDocumentId === id ? null : id;
+    setSelectedDocumentId(nextId);
+    const params = new URLSearchParams();
+    params.set("folder", folderId);
+    if (nextId) {
+      params.set("document", nextId);
+    }
+    router.push(`/dashboard/workspace?${params.toString()}`, { scroll: false });
   }
 
   const docCount = documents.length;
@@ -174,10 +184,13 @@ export function WorkspaceClientShell({
 
         <div className="flex-1 overflow-y-auto">
           {selectedDocument ? (
-            <WorkspaceFilePreview
-              document={selectedDocument}
-              folderName={folderName}
-            />
+            <div className="space-y-4 px-5 py-5">
+              <WorkspaceFilePreview
+                document={selectedDocument}
+                folderName={folderName}
+              />
+              {documentContextualTasksPanel}
+            </div>
           ) : (
             <div className="px-5 py-5">
               <dl className="space-y-4">

@@ -8,6 +8,8 @@ import { createEffectivePermissionResolver } from "@/lib/permissions/services/ef
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import VereinsleitungMeetingDetail from "@/components/admin/vereinsleitung/VereinsleitungMeetingDetail";
+import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
+import ContextualTaskCreateTriggerServer from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTriggerServer";
 import MeetingGovernanceBanner from "@/components/admin/meetings/MeetingGovernanceBanner";
 import MeetingDeleteButton from "@/components/admin/meetings/MeetingDeleteButton";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
@@ -62,6 +64,14 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
         ]}
         headerActions={
           <div className="flex items-center gap-2">
+            {dbMeeting ? (
+              <ContextualTaskCreateTriggerServer
+                contextType="MEETING"
+                contextId={dbMeeting.id}
+                variant="button"
+                label="+ Aufgabe"
+              />
+            ) : null}
             {canDelete && dbMeeting ? (
               <MeetingDeleteButton
                 meetingId={dbMeeting.id}
@@ -83,7 +93,15 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
           ) : undefined
         }
       >
-        <VereinsleitungMeetingDetail dbMeeting={dbMeeting} subEntities={subEntities} />
+        <VereinsleitungMeetingDetail
+          dbMeeting={dbMeeting}
+          subEntities={subEntities}
+          relatedTasksPanel={
+            dbMeeting ? (
+              <ContextRelatedTasksPanel contextType="MEETING" contextId={dbMeeting.id} />
+            ) : null
+          }
+        />
       </DetailPagePattern>
     </PageShell>
   );
