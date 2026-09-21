@@ -31,6 +31,7 @@ const listMocks = vi.hoisted(() => ({
   taskFindMany: vi.fn(),
   taskFindFirst: vi.fn(),
   taskCommentFindFirst: vi.fn(),
+  taskCommentFindMany: vi.fn(),
   auditFindMany: vi.fn(),
 }));
 
@@ -40,14 +41,20 @@ vi.mock("@/lib/db/prisma", () => ({
       findMany: listMocks.taskFindMany,
       findFirst: listMocks.taskFindFirst,
     },
-    taskComment: { findFirst: listMocks.taskCommentFindFirst },
+    taskComment: {
+      findFirst: listMocks.taskCommentFindFirst,
+      findMany: listMocks.taskCommentFindMany,
+    },
     auditLog: { findMany: listMocks.auditFindMany },
     taskFollower: {
       count: vi.fn().mockResolvedValue(0),
       findFirst: vi.fn().mockResolvedValue(null),
     },
     taskDocumentReference: { findMany: vi.fn().mockResolvedValue([]) },
-    user: { findFirst: vi.fn().mockResolvedValue(null) },
+    user: {
+      findFirst: vi.fn().mockResolvedValue(null),
+      findMany: vi.fn().mockResolvedValue([]),
+    },
   },
 }));
 
@@ -76,6 +83,7 @@ vi.mock("../context-validation", () => ({
 
 import { createTask } from "../task-service";
 import { loadTaskTimelinePageForCommentAnchor } from "../task-timeline-service";
+import { TASK_TIMELINE_ANCHOR_MAX_PAGES } from "../constants";
 
 const TENANT = "tenant-a";
 const USER = "user-1";
@@ -225,6 +233,26 @@ describe("AUFGABEN-06E related tasks (E1–E6, E15)", () => {
       listTasksForContext(serviceCtx(USER, []), TaskContextType.MATCH, CONTEXT_ID),
     ).rejects.toBeInstanceOf(TaskForbiddenError);
   });
+
+  it("R15 caps requested limit at 50 results", async () => {
+    await listTasksForContext(
+      serviceCtx(USER, [PERMISSIONS.TASKS_VIEW]),
+      TaskContextType.MATCH,
+      CONTEXT_ID,
+      { limit: 500 },
+    );
+    expect(listMocks.taskFindMany.mock.calls[0]?.[0]?.take).toBe(51);
+  });
+
+  it("R18 rootsOnly excludes subtasks in query predicate", () => {
+    const where = buildListTasksForContextWhere(
+      serviceCtx(USER, [PERMISSIONS.TASKS_VIEW]),
+      TaskContextType.MATCH,
+      CONTEXT_ID,
+      { rootsOnly: true },
+    );
+    expect(JSON.stringify(where)).toContain('"parentTaskId":null');
+  });
 });
 
 describe("AUFGABEN-06E context registry (E12–E14)", () => {
@@ -322,6 +350,38 @@ describe("AUFGABEN-06E workspace + timeline (E26–E31)", () => {
         "missing",
       ),
     ).rejects.toThrow();
+  });
+
+  it("R138/R25 comment anchor scan is bounded (max pages + controlled fallback)", async () => {
+    listMocks.taskCommentFindFirst.mockResolvedValue({
+      id: "deep-comment",
+      deletedAt: null,
+    });
+    listMocks.taskCommentFindMany.mockResolvedValue([]);
+    listMocks.auditFindMany.mockResolvedValue([
+      {
+        id: "audit-1",
+        actorUserId: USER,
+        action: "TASK_CREATED",
+        beforeJson: null,
+        afterJson: null,
+        createdAt: new Date(),
+      },
+    ]);
+
+    await loadTaskTimelinePageForCommentAnchor(
+      serviceCtx(USER, [PERMISSIONS.TASKS_VIEW]),
+      "task-1",
+      "deep-comment",
+    );
+
+    const timelineLoads =
+      listMocks.auditFindMany.mock.calls.length +
+      listMocks.taskCommentFindMany.mock.calls.length;
+    expect(timelineLoads).toBeLessThanOrEqual(
+      (TASK_TIMELINE_ANCHOR_MAX_PAGES + 1) * 2,
+    );
+    expect(timelineLoads).toBeGreaterThan(0);
   });
 });
 
