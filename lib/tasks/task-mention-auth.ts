@@ -298,7 +298,3 @@ export function directTaskParticipantUserIds(task: TaskAuthorizationRecord): str
     ),
   ];
 }
-
-export function orgUnitReadableUserIdsFromAuth(auth: TaskAuthScope, orgUnitId: string): boolean {
-  return orgReadableUnitIds(auth).includes(orgUnitId);
-}
