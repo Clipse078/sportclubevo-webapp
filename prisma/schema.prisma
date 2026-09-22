@@ -838,6 +838,10 @@ model Tenant {
   taskSeriesAccessGrants             TaskSeriesAccessGrant[]
   requirements                       Requirement[]                    @relation("TenantRequirements")
   requirementDraftAudiencePersons    RequirementDraftAudiencePerson[] @relation("TenantRequirementDraftAudience")
+  requirementDraftAudienceTeams      RequirementDraftAudienceTeam[]   @relation("TenantRequirementDraftAudienceTeam")
+  requirementDraftAudienceOrgUnits   RequirementDraftAudienceOrgUnit[] @relation("TenantRequirementDraftAudienceOrgUnit")
+  requirementDraftAudienceRoles      RequirementDraftAudienceRole[]   @relation("TenantRequirementDraftAudienceRole")
+  requirementDraftAudienceTargetGroups RequirementDraftAudienceTargetGroup[] @relation("TenantRequirementDraftAudienceTargetGroup")
   requirementRecipients              RequirementRecipient[]           @relation("TenantRequirementRecipients")
   notifications                      Notification[]
   notificationDeliveries             NotificationDelivery[]
@@ -1254,6 +1258,7 @@ model Role {
   rolePermissions           RolePermission[]
   workflowRules             RoleWorkflowRule[]
   workflowReviewAssignments RoleWorkflowReviewAssignment[] @relation("WorkflowReviewerRole")
+  requirementDraftAudienceRoles RequirementDraftAudienceRole[] @relation("RequirementDraftAudienceRole")
 
   @@index([name])
   @@index([canAccessVereinsleitung])
@@ -1828,6 +1833,7 @@ model Team {
   tournamentParticipations TournamentParticipant[]
   // PERSONS-02: PersonAssignment back-relation — persons assigned to this team.
   personAssignments        PersonAssignment[]      @relation("TeamPersonAssignments")
+  requirementDraftAudienceTeams RequirementDraftAudienceTeam[] @relation("RequirementDraftAudienceTeam")
   // TEAM-COCKPIT-PREMIUM-01J-A: team-bound private documents
   teamDocuments            TeamDocument[]          @relation("TeamDocuments")
 
@@ -2408,6 +2414,7 @@ model OrgUnit {
   teamSeasonOrgUnits TeamSeasonOrgUnit[]
   // ORG-ACCESS-01: scoped role assignments targeting this OrgUnit
   userRoles          UserRole[]
+  requirementDraftAudienceOrgUnits RequirementDraftAudienceOrgUnit[] @relation("RequirementDraftAudienceOrgUnit")
   // PERSONS-02: person assignment back-relation (dedicated model, not OrgUnitMembership)
   personAssignments  PersonAssignment[]  @relation("OrgUnitPersonAssignments")
   // REG-WAIT-01: waiting list entries scoped to this OrgUnit
@@ -2563,6 +2570,7 @@ model TargetGroup {
 
   registrations      Registration[]
   waitingListEntries WaitingListEntry[] @relation("WaitingListEntryTargetGroup")
+  requirementDraftAudienceTargetGroups RequirementDraftAudienceTargetGroup[] @relation("RequirementDraftAudienceTargetGroup")
 
   @@unique([tenantId, key])
   @@index([status])
@@ -3173,7 +3181,11 @@ model Requirement {
 
   tenant        Tenant                           @relation("TenantRequirements", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   createdBy     User?                            @relation("RequirementCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  draftAudience RequirementDraftAudiencePerson[] @relation("RequirementDraftAudience")
+  draftAudience          RequirementDraftAudiencePerson[] @relation("RequirementDraftAudience")
+  draftAudienceTeams     RequirementDraftAudienceTeam[]   @relation("RequirementDraftAudienceTeams")
+  draftAudienceOrgUnits  RequirementDraftAudienceOrgUnit[] @relation("RequirementDraftAudienceOrgUnits")
+  draftAudienceRoles     RequirementDraftAudienceRole[]   @relation("RequirementDraftAudienceRoles")
+  draftAudienceTargetGroups RequirementDraftAudienceTargetGroup[] @relation("RequirementDraftAudienceTargetGroups")
   recipients    RequirementRecipient[]           @relation("RequirementRecipients")
 
   @@index([tenantId])
@@ -3198,6 +3210,78 @@ model RequirementDraftAudiencePerson {
   @@index([tenantId])
   @@index([tenantId, requirementId])
   @@index([tenantId, personId])
+}
+
+/// Team audience selector while Requirement remains DRAFT.
+model RequirementDraftAudienceTeam {
+  id            String   @id @default(cuid())
+  tenantId      String
+  requirementId String
+  teamId        String
+  createdAt     DateTime @default(now())
+
+  tenant      Tenant      @relation("TenantRequirementDraftAudienceTeam", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  requirement Requirement @relation("RequirementDraftAudienceTeams", fields: [requirementId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  team        Team        @relation("RequirementDraftAudienceTeam", fields: [teamId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([requirementId, teamId])
+  @@index([tenantId])
+  @@index([tenantId, requirementId])
+  @@index([tenantId, teamId])
+}
+
+/// OrgUnit audience selector while Requirement remains DRAFT.
+model RequirementDraftAudienceOrgUnit {
+  id            String   @id @default(cuid())
+  tenantId      String
+  requirementId String
+  orgUnitId     String
+  createdAt     DateTime @default(now())
+
+  tenant      Tenant      @relation("TenantRequirementDraftAudienceOrgUnit", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  requirement Requirement @relation("RequirementDraftAudienceOrgUnits", fields: [requirementId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orgUnit     OrgUnit     @relation("RequirementDraftAudienceOrgUnit", fields: [orgUnitId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([requirementId, orgUnitId])
+  @@index([tenantId])
+  @@index([tenantId, requirementId])
+  @@index([tenantId, orgUnitId])
+}
+
+/// Tenant Role audience selector while Requirement remains DRAFT (ROLE_AUDIENCE).
+model RequirementDraftAudienceRole {
+  id            String   @id @default(cuid())
+  tenantId      String
+  requirementId String
+  roleId        String
+  createdAt     DateTime @default(now())
+
+  tenant      Tenant      @relation("TenantRequirementDraftAudienceRole", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  requirement Requirement @relation("RequirementDraftAudienceRoles", fields: [requirementId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  role        Role        @relation("RequirementDraftAudienceRole", fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([requirementId, roleId])
+  @@index([tenantId])
+  @@index([tenantId, requirementId])
+  @@index([tenantId, roleId])
+}
+
+/// TargetGroup audience selector while Requirement remains DRAFT.
+model RequirementDraftAudienceTargetGroup {
+  id            String   @id @default(cuid())
+  tenantId      String
+  requirementId String
+  targetGroupId String
+  createdAt     DateTime @default(now())
+
+  tenant      Tenant      @relation("TenantRequirementDraftAudienceTargetGroup", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  requirement Requirement @relation("RequirementDraftAudienceTargetGroups", fields: [requirementId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  targetGroup TargetGroup @relation("RequirementDraftAudienceTargetGroup", fields: [targetGroupId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([requirementId, targetGroupId])
+  @@index([tenantId])
+  @@index([tenantId, requirementId])
+  @@index([tenantId, targetGroupId])
 }
 
 /// Authoritative audience snapshot + per-Person obligation state after activation.

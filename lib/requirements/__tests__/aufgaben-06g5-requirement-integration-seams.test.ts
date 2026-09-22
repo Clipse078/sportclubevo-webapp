@@ -246,9 +246,11 @@ describe("AUFGABEN-06G5 — canonical contracts", () => {
     ]);
     expect(ids).toEqual(["p1", "p2"]);
     expect(read("lib/requirements/requirement-service.ts")).toMatch(
-      /resolveRequirementAudiencePersonIdsFromDraftRows/,
+      /resolveRequirementAudiencePersonIds\(/,
     );
-    expect(read("lib/requirements/requirement-audience.ts")).not.toMatch(/TargetGroup|TEAM|ORG_UNIT/);
+    expect(read("lib/requirements/requirement-audience.ts")).toMatch(
+      /resolveRequirementAudiencePersonIdsFromSnapshot/,
+    );
   });
 
   it("I31 — management server actions delegate to domain service", () => {
@@ -288,7 +290,7 @@ describe("AUFGABEN-06G5 — canonical contracts", () => {
     ]
       .map(read)
       .join("\n");
-    expect(repoScan).not.toMatch(/PUSH|TargetGroup|Workspace|Mobile/i);
+    expect(repoScan).not.toMatch(/PUSH|Workspace|Mobile/i);
   });
 
   it("I39 — no duplicate requirement-specific preference model", () => {

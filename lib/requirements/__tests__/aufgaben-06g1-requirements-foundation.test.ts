@@ -55,6 +55,10 @@ vi.mock("@/lib/db/prisma", () => ({
       deleteMany: mocks.draftDeleteMany,
       createMany: mocks.draftCreateMany,
     },
+    requirementDraftAudienceTeam: { deleteMany: mocks.draftDeleteMany },
+    requirementDraftAudienceOrgUnit: { deleteMany: mocks.draftDeleteMany },
+    requirementDraftAudienceRole: { deleteMany: mocks.draftDeleteMany },
+    requirementDraftAudienceTargetGroup: { deleteMany: mocks.draftDeleteMany },
     requirementRecipient: {
       findFirst: mocks.recipientFindFirst,
       findMany: mocks.recipientFindMany,
@@ -151,6 +155,21 @@ function requirementRow(overrides: Record<string, unknown> = {}) {
     createdAt: new Date("2026-09-01T10:00:00.000Z"),
     updatedAt: new Date("2026-09-01T10:00:00.000Z"),
     draftAudience: [{ personId: PERSON_A }],
+    draftAudienceTeams: [],
+    draftAudienceOrgUnits: [],
+    draftAudienceRoles: [],
+    draftAudienceTargetGroups: [],
+    ...overrides,
+  };
+}
+
+function audienceResolutionRow(overrides: Record<string, unknown> = {}) {
+  return {
+    draftAudience: [{ personId: PERSON_A }],
+    draftAudienceTeams: [],
+    draftAudienceOrgUnits: [],
+    draftAudienceRoles: [],
+    draftAudienceTargetGroups: [],
     ...overrides,
   };
 }
@@ -191,6 +210,10 @@ beforeEach(() => {
         deleteMany: mocks.draftDeleteMany,
         createMany: mocks.draftCreateMany,
       },
+      requirementDraftAudienceTeam: { deleteMany: mocks.draftDeleteMany },
+      requirementDraftAudienceOrgUnit: { deleteMany: mocks.draftDeleteMany },
+      requirementDraftAudienceRole: { deleteMany: mocks.draftDeleteMany },
+      requirementDraftAudienceTargetGroup: { deleteMany: mocks.draftDeleteMany },
     }),
   );
   mocks.personFindMany.mockImplementation(async ({ where }: { where: { id: { in: string[] } } }) =>
@@ -306,7 +329,9 @@ describe("AUFGABEN-06G1 draft & activation (R4–R11, R29, R35–R36)", () => {
   });
 
   it("R7 empty audience cannot activate", async () => {
-    mocks.requirementFindFirst.mockResolvedValue(requirementRow({ draftAudience: [] }));
+    mocks.requirementFindFirst
+      .mockResolvedValueOnce(requirementRow({ draftAudience: [] }))
+      .mockResolvedValueOnce(audienceResolutionRow({ draftAudience: [] }));
     await expect(activateRequirement(managerCtx(), REQ_ID)).rejects.toBeInstanceOf(
       RequirementValidationError,
     );
@@ -315,6 +340,7 @@ describe("AUFGABEN-06G1 draft & activation (R4–R11, R29, R35–R36)", () => {
   it("R8–R11 activation creates recipients and sets ACTIVE atomically", async () => {
     mocks.requirementFindFirst
       .mockResolvedValueOnce(requirementRow())
+      .mockResolvedValueOnce(audienceResolutionRow())
       .mockResolvedValueOnce({ status: "DRAFT" })
       .mockResolvedValueOnce(requirementRow({ status: "ACTIVE", activatedAt: new Date(), draftAudience: [] }));
     mocks.requirementUpdateMany.mockResolvedValue({ count: 1 });
@@ -334,6 +360,11 @@ describe("AUFGABEN-06G1 draft & activation (R4–R11, R29, R35–R36)", () => {
     mocks.requirementFindFirst
       .mockResolvedValueOnce(
         requirementRow({
+          draftAudience: withDup.map((personId) => ({ personId })),
+        }),
+      )
+      .mockResolvedValueOnce(
+        audienceResolutionRow({
           draftAudience: withDup.map((personId) => ({ personId })),
         }),
       )

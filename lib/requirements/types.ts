@@ -26,6 +26,18 @@ export type RequirementDto = {
   createdAt: string;
   updatedAt: string;
   draftAudiencePersonIds: string[];
+  draftAudienceTeamIds: string[];
+  draftAudienceOrgUnitIds: string[];
+  draftAudienceRoleIds: string[];
+  draftAudienceTargetGroupIds: string[];
+};
+
+export type RequirementDraftAudienceInput = {
+  personIds?: readonly string[];
+  teamIds?: readonly string[];
+  orgUnitIds?: readonly string[];
+  roleIds?: readonly string[];
+  targetGroupIds?: readonly string[];
 };
 
 export type RequirementRecipientDto = {
