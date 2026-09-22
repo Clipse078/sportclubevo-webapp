@@ -486,7 +486,7 @@ describe("POST /api/workspace/folders", () => {
     ).not.toHaveBeenCalled();
   });
 
-  it("returns 401 when actor user ID is missing", async () => {
+  it("returns 403 when actor user ID is missing", async () => {
     mockAuthorizedSession({
       userId: null,
     });

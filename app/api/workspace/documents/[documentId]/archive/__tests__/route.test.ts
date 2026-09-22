@@ -246,7 +246,7 @@ describe(
     );
 
     it("returns 403 when the session has no tenant", async () => {
-      mockAuthorizedSession(null);
+      mockAuthorizedSession({ tenantId: null });
 
       const response = await POST(
         makeRequest(),
@@ -264,18 +264,17 @@ describe(
       ).not.toHaveBeenCalled();
     });
 
-    it("returns 401 when the session has no actor ID", async () => {
-      mockAuthorizedSession(
-        SESSION_TENANT_ID,
-        null,
-      );
+    it("returns 403 when the session has no actor ID", async () => {
+      mockAuthorizedSession({
+        userId: null,
+      });
 
       const response = await POST(
         makeRequest(),
         makeParams(),
       );
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(403);
 
       expect(
         mocks.archiveWorkspaceDocument,

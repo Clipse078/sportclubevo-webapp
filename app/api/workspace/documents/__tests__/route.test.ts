@@ -632,7 +632,7 @@ describe("POST /api/workspace/documents", () => {
     expect(mocks.upload).not.toHaveBeenCalled();
   });
 
-  it("returns 401 when actor user ID is missing", async () => {
+  it("returns 403 when actor user ID is missing", async () => {
     mockAuthorizedSession({
       userId: null,
     });
@@ -643,7 +643,7 @@ describe("POST /api/workspace/documents", () => {
       }),
     );
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(403);
     expect(await response.json()).toEqual({
       error: "Authenticated tenant and user are required.",
     });

@@ -274,7 +274,7 @@ describe(
       ).not.toHaveBeenCalled();
     });
 
-    it("returns 401 when actor identity is missing", async () => {
+    it("returns 403 when actor identity is missing", async () => {
       mockAuthorizedSession({
         userId: null,
       });
@@ -284,7 +284,7 @@ describe(
         makeParams(),
       );
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(403);
       expect(await response.json()).toEqual({
         error: "Authenticated tenant and user are required.",
       });

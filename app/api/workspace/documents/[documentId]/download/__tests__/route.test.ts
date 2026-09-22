@@ -220,7 +220,7 @@ describe(
     });
 
     it("returns 403 when the session has no tenant", async () => {
-      mockAuthorizedSession(null);
+      mockAuthorizedSession({ tenantId: null });
 
       const response = await GET(
         makeRequest(),

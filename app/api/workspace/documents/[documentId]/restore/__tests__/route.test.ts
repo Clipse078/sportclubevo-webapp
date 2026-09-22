@@ -290,7 +290,7 @@ describe(
       ).not.toHaveBeenCalled();
     });
 
-    it("returns 401 when the actor user ID is missing", async () => {
+    it("returns 403 when the actor user ID is missing", async () => {
       configureAuthorizedSession(
         SessionTenantId,
         null,
@@ -301,7 +301,7 @@ describe(
         createContext(),
       );
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(403);
 
       expect(
         mocks.restoreWorkspaceDocument,
