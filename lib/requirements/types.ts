@@ -1,0 +1,82 @@
+import type {
+  RequirementResolutionStatus,
+  RequirementResponseMode,
+  RequirementResponseValue,
+  RequirementStatus,
+} from "@prisma/client";
+
+export type RequirementServiceContext = {
+  tenantId: string;
+  userId: string;
+  permissionKeys: readonly string[];
+};
+
+export type RequirementDto = {
+  id: string;
+  tenantId: string;
+  title: string;
+  description: string | null;
+  status: RequirementStatus;
+  responseMode: RequirementResponseMode;
+  dueAt: string | null;
+  activatedAt: string | null;
+  closedAt: string | null;
+  cancelledAt: string | null;
+  createdByUserId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  draftAudiencePersonIds: string[];
+};
+
+export type RequirementRecipientDto = {
+  id: string;
+  tenantId: string;
+  requirementId: string;
+  subjectPersonId: string;
+  resolutionStatus: RequirementResolutionStatus;
+  responseValue: RequirementResponseValue | null;
+  respondedAt: string | null;
+  respondedByUserId: string | null;
+  responseActorPersonId: string | null;
+  removedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type RequirementAggregateDto = {
+  totalRecipients: number;
+  openCount: number;
+  resolvedCount: number;
+  acknowledgedCount: number;
+  resolvedPercent: number;
+};
+
+export type CreateRequirementDraftInput = {
+  title: string;
+  description?: string | null;
+  responseMode?: RequirementResponseMode;
+  dueAt?: Date | null;
+};
+
+export type UpdateRequirementDraftInput = {
+  title?: string;
+  description?: string | null;
+  responseMode?: RequirementResponseMode;
+  dueAt?: Date | null;
+};
+
+export type ListRequirementsFilter = {
+  status?: RequirementStatus | RequirementStatus[];
+  limit?: number;
+  cursor?: string;
+};
+
+export type ListRequirementRecipientsFilter = {
+  requirementId: string;
+  resolutionStatus?: RequirementResolutionStatus;
+  limit?: number;
+  cursor?: string;
+};
+
+export const DEFAULT_REQUIREMENT_LIST_LIMIT = 50;
+export const MAX_REQUIREMENT_LIST_LIMIT = 100;
