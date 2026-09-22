@@ -33,6 +33,7 @@ const mocks = vi.hoisted(() => ({
   workspaceDocumentFindMany: vi.fn(),
   workspaceDocumentDelete: vi.fn(),
   taskDocumentReferenceFindMany: vi.fn(),
+  requirementDocumentVersionReferenceFindMany: vi.fn(),
   executeRaw: vi.fn(),
   transactionFn: vi.fn(),
 }));
@@ -51,6 +52,10 @@ vi.mock("@/lib/db/prisma", () => ({
     taskDocumentReference: {
       findMany: (...args: unknown[]) => mocks.taskDocumentReferenceFindMany(...args),
     },
+    requirementWorkspaceDocumentVersionReference: {
+      findMany: (...args: unknown[]) =>
+        mocks.requirementDocumentVersionReferenceFindMany(...args),
+    },
     $transaction: (fn: (tx: unknown) => Promise<unknown>) =>
       fn({
         $executeRaw: mocks.executeRaw,
@@ -63,6 +68,10 @@ vi.mock("@/lib/db/prisma", () => ({
         },
         taskDocumentReference: {
           findMany: (...args: unknown[]) => mocks.taskDocumentReferenceFindMany(...args),
+        },
+        requirementWorkspaceDocumentVersionReference: {
+          findMany: (...args: unknown[]) =>
+            mocks.requirementDocumentVersionReferenceFindMany(...args),
         },
       }),
   },
@@ -89,6 +98,7 @@ beforeEach(() => {
   mocks.workspaceFolderDeleteMany.mockResolvedValue({ count: 1 });
   mocks.workspaceDocumentFindMany.mockResolvedValue([]);
   mocks.taskDocumentReferenceFindMany.mockResolvedValue([]);
+  mocks.requirementDocumentVersionReferenceFindMany.mockResolvedValue([]);
   mocks.executeRaw.mockResolvedValue(undefined);
 });
 

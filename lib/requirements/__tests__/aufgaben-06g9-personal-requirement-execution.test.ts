@@ -420,7 +420,8 @@ describe("AUFGABEN-06G9 — tasks regression & static contracts", () => {
 describe("AUFGABEN-06G9 — workspace boundary", () => {
   it("WORKSPACE_DEPENDENCY — no document execution invented in personal surface", () => {
     const workspace = read("components/admin/aufgaben/PersonalRequirementExecutionWorkspace.tsx");
-    expect(workspace).not.toMatch(/WorkspaceDocument|documentVersion/i);
-    expect(read("prisma/schema.prisma")).not.toMatch(/requirementDocument/i);
+    expect(workspace).not.toMatch(/WorkspaceDocument|documentVersion|RequirementDocumentReferencesSection/i);
+    expect(read("prisma/schema.prisma")).toMatch(/model RequirementWorkspaceDocumentVersionReference/);
+    expect(read("prisma/schema.prisma")).toMatch(/model RequirementRecipient/);
   });
 });

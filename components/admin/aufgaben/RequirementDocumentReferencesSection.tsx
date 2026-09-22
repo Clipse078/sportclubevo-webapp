@@ -4,18 +4,18 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FileText, Plus, X } from "lucide-react";
-import type { TaskDocumentReferenceDto } from "@/lib/tasks/task-document-reference-service";
+import type { RequirementDocumentReferenceDto } from "@/lib/requirements/requirement-document-reference-service";
 import {
-  linkTaskDocumentAction,
-  listTaskDocumentVersionsForLinkAction,
-  searchTaskDocumentLinkCandidatesAction,
-  unlinkTaskDocumentReferenceAction,
-} from "@/app/(admin)/dashboard/aufgaben/actions";
+  linkRequirementDocumentAction,
+  listRequirementDocumentVersionsForLinkAction,
+  searchRequirementDocumentLinkCandidatesAction,
+  unlinkRequirementDocumentReferenceAction,
+} from "@/app/(admin)/dashboard/aufgaben/requirement-actions";
 import { WorkspaceDocumentVersionReferencePicker } from "./WorkspaceDocumentVersionReferencePicker";
 
 type Props = {
-  taskId: string;
-  references: TaskDocumentReferenceDto[];
+  requirementId: string;
+  references: RequirementDocumentReferenceDto[];
   canLink: boolean;
 };
 
@@ -25,7 +25,11 @@ function lifecycleLabel(lifecycle: string): string {
   return "Aktiv";
 }
 
-export function TaskDocumentReferencesSection({ taskId, references, canLink }: Props) {
+export function RequirementDocumentReferencesSection({
+  requirementId,
+  references,
+  canLink,
+}: Props) {
   const router = useRouter();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +37,7 @@ export function TaskDocumentReferencesSection({ taskId, references, canLink }: P
 
   function linkDocument(input: { documentId: string; workspaceDocumentVersionId: string }) {
     startTransition(async () => {
-      const result = await linkTaskDocumentAction(taskId, input);
+      const result = await linkRequirementDocumentAction(requirementId, input);
       if (!result.ok) {
         setError(result.message);
         return;
@@ -45,7 +49,7 @@ export function TaskDocumentReferencesSection({ taskId, references, canLink }: P
 
   function unlinkReference(referenceId: string) {
     startTransition(async () => {
-      const result = await unlinkTaskDocumentReferenceAction(taskId, referenceId);
+      const result = await unlinkRequirementDocumentReferenceAction(requirementId, referenceId);
       if (!result.ok) {
         setError(result.message);
         return;
@@ -59,18 +63,18 @@ export function TaskDocumentReferencesSection({ taskId, references, canLink }: P
   return (
     <section
       className="rounded-lg border border-[var(--border)]/70 px-3 py-2.5"
-      data-testid="task-document-references"
+      data-testid="requirement-document-references"
     >
       <div className="flex items-center justify-between gap-2">
         <p className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-          Dokumente · {count}
+          Workspace-Dokumente · {count}
         </p>
         {canLink ? (
           <button
             type="button"
             className="inline-flex items-center gap-1 text-xs text-[var(--sce-primary)] hover:underline"
             onClick={() => setPickerOpen((open) => !open)}
-            data-testid="task-document-link-open"
+            data-testid="requirement-document-link-open"
           >
             <Plus className="h-3 w-3" aria-hidden="true" />
             Dokument verknüpfen
@@ -89,7 +93,7 @@ export function TaskDocumentReferencesSection({ taskId, references, canLink }: P
                 <li
                   key={ref.referenceId}
                   className="flex items-center gap-2 rounded-md bg-[var(--surface-2)]/60 px-2 py-1.5 text-sm text-[var(--text-2)]"
-                  data-testid={`task-document-row-restricted-${ref.referenceId}`}
+                  data-testid={`requirement-document-row-restricted-${ref.referenceId}`}
                 >
                   <FileText className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden="true" />
                   <span>Dokument (kein Zugriff)</span>
@@ -97,52 +101,28 @@ export function TaskDocumentReferencesSection({ taskId, references, canLink }: P
               );
             }
 
-            if (presentation.accessible === "legacy_unresolved") {
-              return (
-                <li
-                  key={ref.referenceId}
-                  className="flex items-center gap-2 rounded-md bg-[var(--surface-2)]/40 px-2 py-1.5"
-                  data-testid={`task-document-row-legacy-${ref.referenceId}`}
-                >
-                  <FileText className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden="true" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-[var(--foreground)]">
-                      {presentation.documentTitle}
-                    </p>
-                    <p className="text-xs text-[var(--muted)]">{presentation.message}</p>
-                  </div>
-                  {canLink ? (
-                    <button
-                      type="button"
-                      className="rounded p-1 text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-red-300"
-                      aria-label="Verknüpfung entfernen"
-                      disabled={pending}
-                      onClick={() => unlinkReference(ref.referenceId)}
-                    >
-                      <X className="h-3.5 w-3.5" aria-hidden="true" />
-                    </button>
-                  ) : null}
-                </li>
-              );
+            if (presentation.accessible !== true) {
+              return null;
             }
 
             return (
               <li
                 key={ref.referenceId}
                 className="flex items-center gap-2 rounded-md bg-[var(--surface-2)]/40 px-2 py-1.5"
-                data-testid={`task-document-row-${ref.referenceId}`}
+                data-testid={`requirement-document-row-${ref.referenceId}`}
               >
                 <FileText className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
                   <Link
                     href={presentation.canonicalWorkspaceUrl}
                     className="text-sm font-medium text-[var(--foreground)] hover:text-[var(--primary)]"
-                    data-testid={`task-document-open-${ref.referenceId}`}
+                    data-testid={`requirement-document-open-${ref.referenceId}`}
                   >
                     {presentation.documentTitle}
                   </Link>
                   <p className="text-xs text-[var(--muted)]">
-                    Version {presentation.versionNumber} · {lifecycleLabel(presentation.documentLifecycle)}
+                    Version {presentation.versionNumber} ·{" "}
+                    {lifecycleLabel(presentation.documentLifecycle)}
                   </p>
                 </div>
                 {canLink ? (
@@ -152,7 +132,7 @@ export function TaskDocumentReferencesSection({ taskId, references, canLink }: P
                     aria-label="Verknüpfung entfernen"
                     disabled={pending}
                     onClick={() => unlinkReference(ref.referenceId)}
-                    data-testid={`task-document-unlink-${ref.referenceId}`}
+                    data-testid={`requirement-document-unlink-${ref.referenceId}`}
                   >
                     <X className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
@@ -167,12 +147,12 @@ export function TaskDocumentReferencesSection({ taskId, references, canLink }: P
         <div className="mt-3">
           <WorkspaceDocumentVersionReferencePicker
             disabled={pending}
-            searchAction={(q) => searchTaskDocumentLinkCandidatesAction(taskId, q)}
+            searchAction={(q) => searchRequirementDocumentLinkCandidatesAction(requirementId, q)}
             listVersionsAction={(documentId) =>
-              listTaskDocumentVersionsForLinkAction(taskId, documentId)
+              listRequirementDocumentVersionsForLinkAction(requirementId, documentId)
             }
             onConfirm={linkDocument}
-            testIdPrefix="task-document"
+            testIdPrefix="requirement-document"
           />
         </div>
       ) : null}

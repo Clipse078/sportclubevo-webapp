@@ -92,3 +92,37 @@ This record supports `WORKSPACE-07D-DISCOVERY.md`. It is **not** a feature-parit
 | ADOPT / DIFFER / DEFER / REJECT recorded | PASS |
 
 **Verdict:** World-class benchmark gate **PASS** — ready to implement W07 with intentional SCE stronger immutability invariant.
+
+---
+
+## WORKSPACE-07 implementation record (2026-09-22)
+
+**Branch:** `cursor/workspace-07-immutable-document-reference-integration`  
+**Migration:** `20260922240000_workspace_07_immutable_document_version_references` (not applied to STAGE)
+
+### ADOPTED (implementation)
+
+- Stable immutable revision identity via `WorkspaceDocumentVersion.id` on new Task/Requirement links
+- Exact-version internal routes (`buildWorkspaceInternalLink` with `versionId`)
+- Access-time dual-domain authorization (domain mutation + workspace VIEW at link; domain read + current VIEW at resolve)
+- Durable reference / permanent-delete safety via extended `getWorkspaceDocumentDeletionBlockers`
+- Explicit inaccessible and legacy-unresolved reference presentation (zero disclosure)
+- Acknowledgement identity seam: `lib/workspace/acknowledgement/document-version-acknowledgement-identity.ts`
+
+### SCE DIFFERENCES (confirmed in code)
+
+- DB-level `WorkspaceDocumentVersion` FK with `ON DELETE RESTRICT` (not latest-only document pointer)
+- Legacy `TaskDocumentReference` rows classified (`LEGACY_UNRESOLVED` / `LEGACY_SINGLE_VERSION`) without fabricating multi-version intent
+- No copied attachment model; reference-only integration
+- Requirement parallel table `RequirementWorkspaceDocumentVersionReference` (not polymorphic mega-table)
+
+### DEFERRED (unchanged)
+
+- Retention / legal hold → W08
+- Mobile client → after Workspace closure
+- Universal Search indexing → after Mobile
+- Performance programme → last
+
+### Data migration note
+
+Production/STAGE backfill for ambiguous multi-version Task rows remains a **separate acceptance step**; schema supports nullable `workspaceDocumentVersionId` + explicit `versionBinding` without rewriting to `currentVersionId`.

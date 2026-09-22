@@ -110,8 +110,9 @@ describe("AUFGABEN-06G11 — security & identity static review", () => {
 describe("AUFGABEN-06G11 — workspace seam & deferred capabilities", () => {
   it("WORKSPACE_DEPENDENCY — text/ack Requirements operational without document execution", () => {
     const personal = read("components/admin/aufgaben/PersonalRequirementExecutionWorkspace.tsx");
-    expect(personal).not.toMatch(/WorkspaceDocument|documentVersion/i);
-    expect(read("prisma/schema.prisma")).not.toMatch(/requirementDocument/i);
+    expect(personal).not.toMatch(/WorkspaceDocument|documentVersion|RequirementDocumentReferencesSection/i);
+    expect(read("prisma/schema.prisma")).toMatch(/model RequirementWorkspaceDocumentVersionReference/);
+    expect(read("prisma/schema.prisma")).toMatch(/model RequirementRecipient/);
   });
 
   it("manual manager reminder remains deferred (no domain operation)", () => {
