@@ -2,17 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
-import type { TaskPriority } from "@prisma/client";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { Plus, X } from "lucide-react";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
-import { ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS } from "@/lib/tasks/quick-create-assignee-search";
-import {
-  createQuickAufgabeAction,
-  searchQuickCreateAssigneesAction,
-} from "@/app/(admin)/dashboard/aufgaben/actions";
-import { TASK_PRIORITY_LABELS } from "@/lib/tasks/management-labels";
+import { createQuickAufgabeAction } from "@/app/(admin)/dashboard/aufgaben/actions";
 import { TaskReminderFields } from "./TaskReminderFields";
+import TaskDescriptionFormField from "./TaskDescriptionFormField";
+import TaskPeopleMultiPicker from "./TaskPeopleMultiPicker";
+import TaskPriorityField from "./TaskPriorityField";
 
 export type QuickCreateCurrentUser = {
   userId: string;
@@ -28,14 +25,6 @@ type Props = {
   canOpenFullCreate?: boolean;
 };
 
-function initials(firstName: string, lastName: string): string {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-}
-
-function formatName(firstName: string, lastName: string): string {
-  return `${firstName} ${lastName}`.trim();
-}
-
 export default function MeineAufgabenQuickCreateDialog({
   canCreateSelf,
   canAssignOthers,
@@ -45,28 +34,33 @@ export default function MeineAufgabenQuickCreateDialog({
 }: Props) {
   const router = useRouter();
   const titleRef = useRef<HTMLInputElement>(null);
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [selectedIds, setSelectedIds] = useState<string[]>([currentUser.userId]);
-  const [addOpen, setAddOpen] = useState(false);
-  const [assigneeSearch, setAssigneeSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<TaskAssigneeOption[]>([]);
-  const [knownAssignees, setKnownAssignees] = useState<Record<string, TaskAssigneeOption>>(
-    {},
+
+  const initialKnown = useMemo<TaskAssigneeOption[]>(
+    () => [
+      {
+        userId: currentUser.userId,
+        firstName: currentUser.firstName,
+        lastName: currentUser.lastName,
+        email: "",
+      },
+    ],
+    [currentUser.firstName, currentUser.lastName, currentUser.userId],
   );
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
+
+  const lockedUserIds = useMemo(() => {
+    if (!canAssignOthers) return [currentUser.userId];
+    if (selectedIds.length === 1 && selectedIds[0] === currentUser.userId) {
+      return [currentUser.userId];
+    }
+    return [];
+  }, [canAssignOthers, currentUser.userId, selectedIds]);
 
   function resetDialogState() {
     setSelectedIds([currentUser.userId]);
-    setAddOpen(false);
-    setAssigneeSearch("");
-    setSearchResults([]);
-    setKnownAssignees({});
-    setSearchLoading(false);
-    setSearchError(null);
     setError(null);
   }
 
@@ -76,48 +70,7 @@ export default function MeineAufgabenQuickCreateDialog({
     window.setTimeout(() => titleRef.current?.focus(), 0);
   }
 
-  useEffect(() => {
-    if (!addOpen || !canAssignOthers) return undefined;
-    clearTimeout(searchDebounceRef.current);
-    const term = assigneeSearch.trim();
-    if (term.length < ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS) {
-      return undefined;
-    }
-    searchDebounceRef.current = setTimeout(async () => {
-      setSearchLoading(true);
-      const result = await searchQuickCreateAssigneesAction(term);
-      if (!result.ok) {
-        setSearchError(result.message);
-        setSearchResults([]);
-      } else {
-        setSearchError(null);
-        setSearchResults(
-          result.options.filter((o) => !selectedIds.includes(o.userId)),
-        );
-      }
-      setSearchLoading(false);
-    }, 300);
-    return () => clearTimeout(searchDebounceRef.current);
-  }, [addOpen, assigneeSearch, canAssignOthers, selectedIds]);
-
-  const assigneeSearchTerm = assigneeSearch.trim();
-  const assigneeSearchReady =
-    assigneeSearchTerm.length >= ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS;
-
   if (!canCreateSelf) return null;
-
-  const selectedPeople = selectedIds
-    .map((id) => {
-      if (id === currentUser.userId) {
-        return {
-          userId: currentUser.userId,
-          firstName: currentUser.firstName,
-          lastName: currentUser.lastName,
-        };
-      }
-      return knownAssignees[id] ?? searchResults.find((a) => a.userId === id);
-    })
-    .filter(Boolean) as TaskAssigneeOption[];
 
   function closeDialog() {
     if (!pending) setOpen(false);
@@ -135,21 +88,6 @@ export default function MeineAufgabenQuickCreateDialog({
       }
       setError(result.message);
     });
-  }
-
-  function removeAssignee(userId: string) {
-    if (!canAssignOthers) return;
-    if (userId === currentUser.userId && selectedIds.length === 1) return;
-    setSelectedIds((prev) => prev.filter((id) => id !== userId));
-  }
-
-  function addAssignee(userId: string, person?: TaskAssigneeOption) {
-    if (!canAssignOthers || !userId) return;
-    if (person) {
-      setKnownAssignees((prev) => ({ ...prev, [userId]: person }));
-    }
-    setSelectedIds((prev) => (prev.includes(userId) ? prev : [...prev, userId]));
-    setAddOpen(false);
   }
 
   return (
@@ -231,90 +169,18 @@ export default function MeineAufgabenQuickCreateDialog({
                 />
               </label>
 
-              <div className="space-y-1">
-                <span className="text-xs font-medium text-[var(--text-2)]">Zugewiesen an</span>
-                <div
-                  className="flex flex-wrap items-center gap-1.5"
-                  data-testid="meine-aufgaben-create-assignees"
-                >
-                  {selectedPeople.map((person) => (
-                    <span
-                      key={person.userId}
-                      className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-2)]/60 pl-1 pr-1.5 py-0.5 text-xs text-[var(--text-2)]"
-                    >
-                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--surface-3)] text-[0.625rem] font-semibold">
-                        {initials(person.firstName, person.lastName)}
-                      </span>
-                      {formatName(person.firstName, person.lastName)}
-                      {canAssignOthers &&
-                      !(person.userId === currentUser.userId && selectedIds.length === 1) ? (
-                        <button
-                          type="button"
-                          className="rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-3)]"
-                          aria-label={`${formatName(person.firstName, person.lastName)} entfernen`}
-                          onClick={() => removeAssignee(person.userId)}
-                          disabled={pending}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      ) : null}
-                    </span>
-                  ))}
-                  {canAssignOthers ? (
-                    <div className="relative">
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-0.5 rounded-full border border-dashed border-[var(--border)] px-2 py-0.5 text-xs font-medium text-[var(--primary)] hover:bg-[var(--surface-2)]"
-                        onClick={() => setAddOpen((v) => !v)}
-                        disabled={pending}
-                        data-testid="meine-aufgaben-create-add-person"
-                      >
-                        <Plus className="h-3 w-3" />
-                        Person
-                      </button>
-                      {addOpen ? (
-                        <div className="absolute left-0 top-full z-10 mt-1 w-64 rounded-md border border-[var(--border)] bg-[var(--surface)] p-2 shadow-lg">
-                          <input
-                            type="search"
-                            className="fca-input w-full text-sm"
-                            placeholder="Name oder E-Mail …"
-                            value={assigneeSearch}
-                            onChange={(e) => setAssigneeSearch(e.target.value)}
-                            data-testid="meine-aufgaben-create-assignee-search"
-                            disabled={pending}
-                          />
-                          <div className="mt-1 max-h-36 overflow-y-auto">
-                            {searchLoading ? (
-                              <p className="px-2 py-1.5 text-xs text-[var(--muted)]">Suche …</p>
-                            ) : searchError ? (
-                              <p className="px-2 py-1.5 text-xs text-red-300">{searchError}</p>
-                            ) : !assigneeSearchReady ? (
-                              <p className="px-2 py-1.5 text-xs text-[var(--muted)]">
-                                Mindestens {ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS} Zeichen
-                              </p>
-                            ) : searchResults.length === 0 ? (
-                              <p className="px-2 py-1.5 text-xs text-[var(--muted)]">
-                                Keine Treffer
-                              </p>
-                            ) : (
-                              searchResults.map((a) => (
-                                <button
-                                  key={a.userId}
-                                  type="button"
-                                  className="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-[var(--surface-2)]"
-                                  onClick={() => addAssignee(a.userId, a)}
-                                >
-                                  {a.firstName} {a.lastName}
-                                </button>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
+              <TaskPeopleMultiPicker
+                label="Zugewiesen an"
+                fieldName="assigneeUserIds"
+                selectedIds={selectedIds}
+                onSelectedIdsChange={setSelectedIds}
+                disabled={pending}
+                allowAdd={canAssignOthers}
+                lockedUserIds={lockedUserIds}
+                initialKnown={initialKnown}
+                addButtonLabel="Person"
+                testIdPrefix="meine-aufgaben-create-assignees"
+              />
 
               <div className="grid grid-cols-2 gap-3">
                 <label className="block space-y-1">
@@ -328,30 +194,14 @@ export default function MeineAufgabenQuickCreateDialog({
                 </label>
                 <label className="block space-y-1">
                   <span className="text-xs font-medium text-[var(--text-2)]">Priorität</span>
-                  <select name="priority" className="fca-input w-full text-sm" defaultValue="NORMAL">
-                    {(["LOW", "NORMAL", "HIGH", "URGENT"] as TaskPriority[]).map((p) => (
-                      <option key={p} value={p}>
-                        {TASK_PRIORITY_LABELS[p]}
-                      </option>
-                    ))}
-                  </select>
+                  <TaskPriorityField
+                    disabled={pending}
+                    testId="meine-aufgaben-create-priority"
+                  />
                 </label>
               </div>
 
-              <label className="block space-y-1">
-                <span className="text-xs font-medium text-[var(--text-2)]">Beschreibung</span>
-                <textarea
-                  name="description"
-                  rows={2}
-                  className="fca-input w-full text-sm"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      e.currentTarget.form?.requestSubmit();
-                    }
-                  }}
-                />
-              </label>
+              <TaskDescriptionFormField compact inputId="meine-aufgaben-create-description" />
 
               <TaskReminderFields
                 timeZone={timeZone}
@@ -370,9 +220,8 @@ export default function MeineAufgabenQuickCreateDialog({
                     href="/dashboard/aufgaben/neu"
                     className="mr-auto text-xs font-medium text-[var(--primary)] hover:underline"
                     onClick={() => setOpen(false)}
-                    data-testid="meine-aufgaben-create-more-options"
                   >
-                    Weitere Optionen
+                    Weitere Details
                   </Link>
                 ) : null}
                 <button
@@ -389,7 +238,7 @@ export default function MeineAufgabenQuickCreateDialog({
                   disabled={pending}
                   data-testid="meine-aufgaben-create-submit"
                 >
-                  {pending ? "Erstellen …" : "Aufgabe erstellen"}
+                  Erstellen
                 </button>
               </div>
             </form>

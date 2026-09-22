@@ -2,8 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useRef, useState, useTransition, type KeyboardEvent } from "react";
-import type { TaskPriority, TaskStatus } from "@prisma/client";
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type KeyboardEvent,
+} from "react";
+import type { TaskStatus } from "@prisma/client";
 import {
   ArrowLeft,
   MoreHorizontal,
@@ -18,17 +25,12 @@ import {
   SCE_DIALOG_WORKSPACE_PANEL,
 } from "@/lib/shell/responsive-layout";
 import { useSceModalDialog } from "@/lib/ui/use-sce-modal-dialog";
-import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import { presentTaskDeadline } from "@/lib/tasks/management-deadline";
-import {
-  TASK_PRIORITY_LABELS,
-  formatAssigneeName,
-} from "@/lib/tasks/management-labels";
-import {
-  taskPriorityPresentation,
-  taskStatusBadgeClass,
-  taskStatusPresentation,
-} from "@/lib/tasks/management-presentation";
+import { formatAssigneeName } from "@/lib/tasks/management-labels";
+import TaskPeopleMultiPicker from "./TaskPeopleMultiPicker";
+import TaskPriorityField from "./TaskPriorityField";
+import { TaskPriorityIconLabel } from "./TaskPriorityPresentation";
+import { taskStatusBadgeClass, taskStatusPresentation } from "@/lib/tasks/management-presentation";
 import type { TaskDto } from "@/lib/tasks/types";
 import {
   assignAufgabeAction,
@@ -50,6 +52,13 @@ import TaskContextField from "./TaskContextField";
 import TaskOrgVisibilityEditor from "./TaskOrgVisibilityEditor";
 import { TaskDeadlineReminderEditor } from "./TaskDeadlineReminderEditor";
 import { TaskActivitySection } from "./TaskActivitySection";
+import TaskDescriptionEditor from "./TaskDescriptionEditor";
+import TaskDescriptionContent from "./TaskDescriptionContent";
+import {
+  documentFromStoredTaskDescription,
+  serializeTaskDescriptionForStorage,
+  storedTaskDescriptionIsEmpty,
+} from "@/lib/tasks/task-description";
 
 function InlineTitle({
   task,
@@ -263,15 +272,16 @@ function InlineDescription({
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(task.description ?? "");
+  const [document, setDocument] = useState(() => documentFromStoredTaskDescription(task.description));
   const [pending, startTransition] = useTransition();
 
   function save() {
     if (!canEdit || pending) return;
+    const serialized = serializeTaskDescriptionForStorage(document) ?? "";
     startTransition(async () => {
       const fd = new FormData();
       fd.set("taskId", task.id);
-      fd.set("description", value);
+      fd.set("description", serialized);
       const result = await updateAufgabeDescriptionAction(fd);
       if (result.ok) {
         setEditing(false);
@@ -280,7 +290,7 @@ function InlineDescription({
     });
   }
 
-  const empty = !task.description?.trim();
+  const empty = storedTaskDescriptionIsEmpty(task.description);
 
   if (!canEdit && empty) {
     return null;
@@ -288,7 +298,10 @@ function InlineDescription({
 
   if (!canEdit) {
     return (
-      <p className="whitespace-pre-wrap text-sm text-[var(--text-2)]">{task.description}</p>
+      <TaskDescriptionContent
+        description={task.description}
+        data-testid="task-workspace-description"
+      />
     );
   }
 
@@ -301,83 +314,82 @@ function InlineDescription({
           empty && "text-[var(--muted)] italic",
         )}
         onClick={() => {
-          setValue(task.description ?? "");
+          setDocument(documentFromStoredTaskDescription(task.description));
           setEditing(true);
         }}
         data-testid="task-workspace-description"
       >
-        {empty ? "Beschreibung hinzufügen" : task.description}
+        {empty ? (
+          "Beschreibung hinzufügen"
+        ) : (
+          <TaskDescriptionContent description={task.description} className="text-sm text-[var(--text-2)]" />
+        )}
       </button>
     );
   }
 
   return (
-    <textarea
-      className="fca-input min-h-[6rem] w-full text-sm"
-      value={value}
-      autoFocus
-      disabled={pending}
-      onChange={(e) => setValue(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") {
-          e.preventDefault();
-          setValue(task.description ?? "");
-          setEditing(false);
+    <div
+      className="space-y-2"
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+          save();
         }
       }}
-      onBlur={save}
       data-testid="task-workspace-description-input"
-    />
+    >
+      <TaskDescriptionEditor
+        value={document}
+        onChange={setDocument}
+        disabled={pending}
+        minHeightClassName="min-h-[10rem]"
+      />
+    </div>
   );
 }
 
 function AssigneeEditor({
   task,
-  assigneeOptions,
   canAssign,
   onAssign,
   pending,
 }: {
   task: TaskDto;
-  assigneeOptions: TaskAssigneeOption[];
   canAssign: boolean;
   pending: boolean;
   onAssign: (userIds: string[]) => void;
 }) {
-  const selected = new Set(task.assignees.map((a) => a.userId));
+  const initialKnown = useMemo(
+    () =>
+      task.assignees.map((a) => ({
+        userId: a.userId,
+        firstName: a.firstName,
+        lastName: a.lastName,
+        email: "",
+      })),
+    [task.assignees],
+  );
+  const [selectedIds, setSelectedIds] = useState(() => task.assignees.map((a) => a.userId));
 
   if (!canAssign) {
     return <AssigneeAvatars assignees={task.assignees} />;
   }
 
   return (
-    <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border border-[var(--border)]/70 p-2">
-      {assigneeOptions.map((a) => {
-        const checked = selected.has(a.userId);
-        return (
-          <label
-            key={a.userId}
-            className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-sm hover:bg-[var(--surface-2)]"
-          >
-            <input
-              type="checkbox"
-              checked={checked}
-              disabled={pending}
-              onChange={() => {
-                const next = new Set(selected);
-                if (next.has(a.userId)) {
-                  next.delete(a.userId);
-                } else {
-                  next.add(a.userId);
-                }
-                onAssign([...next]);
-              }}
-            />
-            {a.firstName} {a.lastName}
-          </label>
-        );
-      })}
-    </div>
+    <TaskPeopleMultiPicker
+      label="Verantwortlich"
+      fieldName="assigneeUserIds"
+      selectedIds={selectedIds}
+      onSelectedIdsChange={(ids) => {
+        setSelectedIds(ids);
+        onAssign(ids);
+      }}
+      disabled={pending}
+      hideLabel
+      omitHiddenField
+      initialKnown={initialKnown}
+      testIdPrefix="task-workspace-assignees"
+    />
   );
 }
 
@@ -410,17 +422,16 @@ function AssigneeAvatars({ assignees }: { assignees: TaskDto["assignees"] }) {
 
 function SubtaskCreateInline({
   parentTaskId,
-  assigneeOptions,
   canCreate,
 }: {
   parentTaskId: string;
-  assigneeOptions: TaskAssigneeOption[];
   canCreate: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
 
   if (!canCreate) return null;
 
@@ -455,16 +466,18 @@ function SubtaskCreateInline({
     <form action={submit} className="mt-3 space-y-2 rounded-lg border border-[var(--border)] p-3">
       {error ? <p className="text-xs text-red-300">{error}</p> : null}
       <input name="title" required className="fca-input w-full text-sm" placeholder="Titel" />
+      <TaskPeopleMultiPicker
+        label="Verantwortlich"
+        fieldName="assigneeUserIds"
+        selectedIds={assigneeIds}
+        onSelectedIdsChange={setAssigneeIds}
+        disabled={pending}
+        addButtonLabel="Verantwortliche hinzufügen"
+        testIdPrefix="task-workspace-subtask-assignees"
+      />
       <div className="grid gap-2 sm:grid-cols-2">
-        <select name="assigneeUserId" className="fca-input text-sm">
-          <option value="">Verantwortlich (optional)</option>
-          {assigneeOptions.map((a) => (
-            <option key={a.userId} value={a.userId}>
-              {a.firstName} {a.lastName}
-            </option>
-          ))}
-        </select>
         <input type="date" name="dueAt" className="fca-input text-sm" />
+        <TaskPriorityField disabled={pending} testId="task-workspace-subtask-priority" />
       </div>
       <div className="flex justify-end gap-2">
         <button
@@ -485,7 +498,6 @@ function SubtaskCreateInline({
 
 export function TaskWorkspacePanel({
   bundle,
-  assigneeOptions,
   orgUnitOptions,
   orgUnitDisplayLabel,
   locale,
@@ -510,6 +522,7 @@ export function TaskWorkspacePanel({
     capabilities,
     follow,
     documentReferences,
+    accessGrants,
   } = bundle;
   const [menuOpen, setMenuOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -521,7 +534,6 @@ export function TaskWorkspacePanel({
     locale,
     timeZone,
   });
-  const priority = taskPriorityPresentation(task.priority);
   const status = taskStatusPresentation(task.status);
 
   const runAction = useCallback(
@@ -707,7 +719,6 @@ export function TaskWorkspacePanel({
               )}
               <SubtaskCreateInline
                 parentTaskId={task.id}
-                assigneeOptions={assigneeOptions}
                 canCreate={capabilities.canCreateSubtask}
               />
             </section>
@@ -767,8 +778,12 @@ export function TaskWorkspacePanel({
 
           <PropertyRow label="Verantwortlich">
             <AssigneeEditor
+              key={task.assignees
+                .map((a) => a.userId)
+                .slice()
+                .sort()
+                .join(",")}
               task={task}
-              assigneeOptions={assigneeOptions}
               canAssign={capabilities.canAssign}
               pending={pending}
               onAssign={(userIds) =>
@@ -784,29 +799,22 @@ export function TaskWorkspacePanel({
 
           <PropertyRow label="Priorität">
             {capabilities.canEditPriority ? (
-              <select
-                className="fca-input w-full text-sm"
+              <TaskPriorityField
                 value={task.priority}
+                omitName
                 disabled={pending}
-                onChange={(e) =>
+                testId="task-workspace-priority"
+                onValueChange={(next) =>
                   runAction(() => {
                     const fd = new FormData();
                     fd.set("taskId", task.id);
-                    fd.set("priority", e.target.value);
+                    fd.set("priority", next);
                     return updateAufgabePriorityAction(fd);
                   })
                 }
-              >
-                {(["LOW", "NORMAL", "HIGH", "URGENT"] as TaskPriority[]).map((p) => (
-                  <option key={p} value={p}>
-                    {TASK_PRIORITY_LABELS[p]}
-                  </option>
-                ))}
-              </select>
+              />
             ) : (
-              <span className={cn("text-sm", priority.className)}>
-                {priority.visible ? priority.label : TASK_PRIORITY_LABELS[task.priority]}
-              </span>
+              <TaskPriorityIconLabel priority={task.priority} />
             )}
           </PropertyRow>
 
@@ -867,6 +875,7 @@ export function TaskWorkspacePanel({
             task={task}
             orgUnitOptions={orgUnitOptions}
             orgUnitDisplayLabel={orgUnitDisplayLabel}
+            accessGrants={accessGrants}
             canEdit={capabilities.canEditOrgVisibility}
           />
 

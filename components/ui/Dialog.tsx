@@ -14,10 +14,11 @@ import {
   SCE_DIALOG_SIZE_MD,
   SCE_DIALOG_VARIANT_COMPACT,
   SCE_DIALOG_VARIANT_FORM,
+  SCE_DIALOG_VARIANT_STANDARD,
   SCE_DIALOG_VARIANT_WORKSPACE,
 } from "@/lib/shell/responsive-layout";
 
-export type DialogSize = "sm" | "md" | "lg" | "xl" | "workspace";
+export type DialogSize = "sm" | "md" | "standard" | "lg" | "xl" | "workspace";
 
 export type DialogProps = {
   /** Controls visibility. */
@@ -39,6 +40,7 @@ export type DialogProps = {
 const sizeClass: Record<DialogSize, string> = {
   sm: SCE_DIALOG_VARIANT_COMPACT,
   md: SCE_DIALOG_SIZE_MD,
+  standard: SCE_DIALOG_VARIANT_STANDARD,
   lg: SCE_DIALOG_SIZE_LG,
   xl: SCE_DIALOG_VARIANT_FORM,
   workspace: SCE_DIALOG_VARIANT_WORKSPACE,

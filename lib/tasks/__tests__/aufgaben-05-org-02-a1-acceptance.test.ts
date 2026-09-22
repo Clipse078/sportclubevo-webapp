@@ -11,9 +11,7 @@ import {
   canReadTask,
   canReadTaskSeries,
   EMPTY_TASK_AUTH_SCOPE,
-  hasTenantWideClubTaskRead,
   loadTaskAuthScope,
-  orgReadableUnitIds,
   type TaskAuthorizationRecord,
 } from "../task-authorization";
 import { loadTaskWorkspace } from "../workspace-service";
@@ -99,42 +97,11 @@ function record(
   };
 }
 
-/** Mirrors buildTaskReadWhere OR branches for parity checks (in-memory). */
 function matchesBuildTaskReadWhere(
   task: TaskAuthorizationRecord,
   serviceCtx: ReturnType<typeof ctx>,
 ): boolean {
-  if (task.tenantId !== serviceCtx.tenantId) return false;
-
-  const direct =
-    task.createdByUserId === serviceCtx.userId ||
-    task.assigneeUserIds.includes(serviceCtx.userId);
-  if (direct) return true;
-
-  if (
-    hasTenantWideClubTaskRead(serviceCtx) &&
-    task.visibilityScope === TaskVisibilityScope.CLUB
-  ) {
-    return true;
-  }
-
-  const orgIds = orgReadableUnitIds(serviceCtx.auth ?? EMPTY_TASK_AUTH_SCOPE);
-  if (
-    orgIds.length > 0 &&
-    task.visibilityScope === TaskVisibilityScope.ORG_UNIT &&
-    task.orgUnitId &&
-    orgIds.includes(task.orgUnitId)
-  ) {
-    if (
-      task.orgUnitTenantId != null &&
-      task.orgUnitTenantId !== serviceCtx.tenantId
-    ) {
-      return false;
-    }
-    return true;
-  }
-
-  return false;
+  return canReadTask(serviceCtx, task);
 }
 
 describe("AUFGABEN-05-ORG-02-A1 canonical org scope loading", () => {

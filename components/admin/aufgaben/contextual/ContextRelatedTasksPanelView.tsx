@@ -73,11 +73,8 @@ export default function ContextRelatedTasksPanelView({
       </div>
 
       {tasks.length === 0 ? (
-        <div className="space-y-2 py-2 text-sm text-[var(--text-2)]" data-testid="context-related-tasks-empty">
+        <div className="py-2 text-sm text-[var(--text-2)]" data-testid="context-related-tasks-empty">
           <p>Noch keine offenen Aufgaben</p>
-          {canCreate && createDialogProps ? (
-            <ContextualTaskCreateTrigger variant="button" label="+ Aufgabe" {...createDialogProps} />
-          ) : null}
         </div>
       ) : (
         <ul className="divide-y divide-[var(--border)]/60" data-testid="context-related-tasks-list">

@@ -41,6 +41,7 @@ vi.mock("@/lib/db/prisma", () => ({
       findFirst: mocks.taskFindFirst,
       findMany: mocks.taskFindMany,
     },
+    taskAccessGrant: { findMany: vi.fn().mockResolvedValue([]) },
     taskSeries: { findFirst: mocks.taskSeriesFindFirst },
     user: { findFirst: mocks.userFindFirst },
     tenantMembership: { findMany: mocks.tenantMembershipFindMany },

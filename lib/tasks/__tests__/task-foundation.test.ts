@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { TaskStatus } from "@prisma/client";
+import { TaskAccessGrantSubjectType, TaskStatus, TaskVisibilityScope } from "@prisma/client";
 
 const mocks = vi.hoisted(() => ({
   taskFindFirst: vi.fn(),
@@ -60,7 +60,6 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 
-import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
   assignTask,
@@ -76,7 +75,6 @@ import { buildTaskVisibilityWhere, canViewTaskRecord } from "../visibility";
 import { ParentHasOpenSubtasksError, TaskForbiddenError, TaskNotFoundError } from "../errors";
 
 const TENANT_A = "tenant-a";
-const TENANT_B = "tenant-b";
 const USER_MANAGER = "user-manager";
 const USER_ASSIGNEE = "user-assignee";
 const USER_OTHER = "user-other";
@@ -165,6 +163,16 @@ describe("AUFGABEN-01 visibility", () => {
       OR: [
         { createdByUserId: USER_ASSIGNEE },
         { assignees: { some: { userId: USER_ASSIGNEE, tenantId: TENANT_A } } },
+        {
+          visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
+          accessGrants: {
+            some: {
+              tenantId: TENANT_A,
+              subjectType: TaskAccessGrantSubjectType.USER,
+              userId: USER_ASSIGNEE,
+            },
+          },
+        },
       ],
     });
   });

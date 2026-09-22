@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { TaskAccessGrantSubjectType, TaskVisibilityScope } from "@prisma/client";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
   listTaskManagementItems,
@@ -81,6 +82,16 @@ describe("AUFGABEN-02 management listTaskManagementItems", () => {
               {
                 assignees: {
                   some: { userId: USER_ASSIGNEE, tenantId: TENANT_A },
+                },
+              },
+              {
+                visibilityScope: TaskVisibilityScope.ASSIGNEES_ONLY,
+                accessGrants: {
+                  some: {
+                    tenantId: TENANT_A,
+                    subjectType: TaskAccessGrantSubjectType.USER,
+                    userId: USER_ASSIGNEE,
+                  },
                 },
               },
             ],

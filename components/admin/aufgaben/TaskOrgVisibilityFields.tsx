@@ -1,17 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { TaskVisibilityScope } from "@prisma/client";
+import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import {
   TASK_VISIBILITY_SCOPE_DESCRIPTIONS,
   TASK_VISIBILITY_SCOPE_LABELS,
 } from "@/lib/tasks/management-labels";
 import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
+import TaskOrgUnitMultiPicker from "./TaskOrgUnitMultiPicker";
+import TaskPeopleMultiPicker from "./TaskPeopleMultiPicker";
 
 type Props = {
   orgUnitOptions: TaskOrgUnitPickerOption[];
+  defaultOrgUnitGrantIds?: string[];
+  defaultViewerUserGrantIds?: string[];
   defaultOrgUnitId?: string | null;
   defaultVisibilityScope?: TaskVisibilityScope;
+  defaultViewerPeople?: TaskAssigneeOption[];
   disabled?: boolean;
   showSectionHeading?: boolean;
 };
@@ -22,29 +28,35 @@ const VISIBILITY_OPTIONS: TaskVisibilityScope[] = [
   "ASSIGNEES_ONLY",
 ];
 
-function formatOrgUnitLabel(option: TaskOrgUnitPickerOption): string {
-  const indent = option.level > 0 ? `${"  ".repeat(option.level)}↳ ` : "";
-  return `${indent}${option.label}`;
-}
-
 export default function TaskOrgVisibilityFields({
   orgUnitOptions,
+  defaultOrgUnitGrantIds = [],
+  defaultViewerUserGrantIds = [],
   defaultOrgUnitId = null,
   defaultVisibilityScope = "CLUB",
+  defaultViewerPeople = [],
   disabled = false,
   showSectionHeading = true,
 }: Props) {
+  const initialOrgGrants = useMemo(() => {
+    if (defaultOrgUnitGrantIds.length > 0) return defaultOrgUnitGrantIds;
+    return defaultOrgUnitId ? [defaultOrgUnitId] : [];
+  }, [defaultOrgUnitGrantIds, defaultOrgUnitId]);
+
   const [visibilityScope, setVisibilityScope] =
     useState<TaskVisibilityScope>(defaultVisibilityScope);
-  const [orgUnitId, setOrgUnitId] = useState(defaultOrgUnitId ?? "");
-
-  const requiresOrgUnit = visibilityScope === "ORG_UNIT";
-  const description = TASK_VISIBILITY_SCOPE_DESCRIPTIONS[visibilityScope];
-
-  const sortedOptions = useMemo(
-    () => [...orgUnitOptions].sort((a, b) => a.level - b.level || a.label.localeCompare(b.label, "de")),
-    [orgUnitOptions],
+  const [orgUnitGrantIds, setOrgUnitGrantIds] = useState<string[]>(initialOrgGrants);
+  const [viewerUserGrantIds, setViewerUserGrantIds] = useState<string[]>(
+    defaultViewerUserGrantIds,
   );
+
+  useEffect(() => {
+    setOrgUnitGrantIds(initialOrgGrants);
+  }, [initialOrgGrants]);
+
+  const requiresOrgUnits = visibilityScope === "ORG_UNIT";
+  const description = TASK_VISIBILITY_SCOPE_DESCRIPTIONS[visibilityScope];
+  const primaryOrgUnitId = orgUnitGrantIds[0] ?? "";
 
   return (
     <fieldset className="space-y-3" disabled={disabled} data-testid="task-org-visibility-fields">
@@ -72,28 +84,42 @@ export default function TaskOrgVisibilityFields({
         <p className="text-[0.6875rem] leading-snug text-[var(--muted)]">{description}</p>
       </label>
 
-      <label className="block space-y-1">
-        <span className="text-xs font-medium text-[var(--text-2)]">Organisation</span>
-        <select
-          name="orgUnitId"
-          className="fca-input w-full text-sm"
-          value={orgUnitId}
-          onChange={(e) => setOrgUnitId(e.target.value)}
-          data-testid="task-org-unit-select"
-        >
-          <option value="">Keine Zuordnung</option>
-          {sortedOptions.map((option) => (
-            <option key={option.id} value={option.id}>
-              {formatOrgUnitLabel(option)}
-            </option>
-          ))}
-        </select>
-      </label>
+      {visibilityScope === "ORG_UNIT" ? (
+        <div className="space-y-1">
+          <span className="text-xs font-medium text-[var(--text-2)]">Organisationseinheiten</span>
+          <TaskOrgUnitMultiPicker
+            fieldName="orgUnitGrantIds"
+            options={orgUnitOptions}
+            selectedIds={orgUnitGrantIds}
+            onSelectedIdsChange={setOrgUnitGrantIds}
+            disabled={disabled}
+          />
+          {requiresOrgUnits && orgUnitGrantIds.length === 0 ? (
+            <p className="text-xs text-amber-300" data-testid="task-org-unit-required-hint">
+              Bitte mindestens eine Organisationseinheit wählen.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
-      {requiresOrgUnit && !orgUnitId ? (
-        <p className="text-xs text-amber-300" data-testid="task-org-unit-required-hint">
-          Bitte eine Organisationseinheit wählen.
-        </p>
+      {visibilityScope === "ASSIGNEES_ONLY" ? (
+        <TaskPeopleMultiPicker
+          label="Sichtbar für"
+          fieldName="viewerUserGrantIds"
+          selectedIds={viewerUserGrantIds}
+          onSelectedIdsChange={setViewerUserGrantIds}
+          disabled={disabled}
+          addButtonLabel="Person hinzufügen"
+          testIdPrefix="task-viewer-people-picker"
+          initialKnown={defaultViewerPeople}
+        />
+      ) : (
+        <input type="hidden" name="viewerUserGrantIds" value="" />
+      )}
+
+      <input type="hidden" name="orgUnitId" value={primaryOrgUnitId} />
+      {visibilityScope !== "ORG_UNIT" ? (
+        <input type="hidden" name="orgUnitGrantIds" value="" />
       ) : null}
     </fieldset>
   );

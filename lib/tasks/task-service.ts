@@ -10,6 +10,7 @@ import { prisma } from "@/lib/db/prisma";
 import { writeAuditRecord } from "@/lib/audit/audit-record";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { validateTaskContext } from "./context-validation";
+import { normalizeTaskDescriptionInput } from "./task-description";
 import {
   ParentHasOpenSubtasksError,
   TaskForbiddenError,
@@ -58,6 +59,11 @@ import {
   recomputeRemindersForDueChange,
   resolveTaskReminderSchedule,
 } from "./task-reminder-schedule";
+import {
+  replaceTaskAccessGrants,
+  snapshotTaskAccessGrantsToChild,
+  validateTaskAccessGrantMutation,
+} from "./task-access-grants";
 
 const TASK_INCLUDE = TASK_AUTH_INCLUDE;
 
@@ -316,6 +322,17 @@ export async function createTask(
     normalizeTaskOrgVisibilityState(input.visibilityScope, input.orgUnitId),
     { mode: "create" },
   );
+  const accessGrants = await validateTaskAccessGrantMutation(ctx.tenantId, {
+    visibilityScope: orgVisibility.visibilityScope,
+    orgUnitGrantIds:
+      input.orgUnitGrantIds ??
+      (orgVisibility.orgUnitId ? [orgVisibility.orgUnitId] : undefined),
+    viewerUserGrantIds: input.viewerUserGrantIds,
+  });
+  const primaryOrgUnitId =
+    orgVisibility.visibilityScope === TaskVisibilityScope.ORG_UNIT
+      ? accessGrants.orgUnitIds[0] ?? orgVisibility.orgUnitId
+      : null;
 
   const reminderSchedule = await resolveReminderScheduleForCreate(ctx.tenantId, input);
 
@@ -324,7 +341,7 @@ export async function createTask(
       data: {
         tenantId: ctx.tenantId,
         title,
-        description: input.description?.trim() || null,
+        description: normalizeTaskDescriptionInput(input.description),
         priority: input.priority ?? "NORMAL",
         dueAt: reminderSchedule.dueAt,
         reminder1At: reminderSchedule.reminder1At,
@@ -333,13 +350,21 @@ export async function createTask(
         reminder2PresetKey: reminderSchedule.reminder2PresetKey,
         contextType: input.contextType ?? null,
         contextId: input.contextId ?? null,
-        orgUnitId: orgVisibility.orgUnitId,
+        orgUnitId: primaryOrgUnitId,
         visibilityScope: orgVisibility.visibilityScope,
         createdByUserId: ctx.userId,
         status: TaskStatusEnum.OPEN,
       },
       include: TASK_INCLUDE,
     });
+
+    await replaceTaskAccessGrants(
+      tx,
+      ctx.tenantId,
+      created.id,
+      orgVisibility.visibilityScope,
+      accessGrants,
+    );
 
     if (assigneeUserIds.length > 0) {
       assertCanAssign(ctx);
@@ -362,8 +387,9 @@ export async function createTask(
         title,
         status: created.status,
         assigneeUserIds,
-        orgUnitId: orgVisibility.orgUnitId,
+        orgUnitId: primaryOrgUnitId,
         visibilityScope: orgVisibility.visibilityScope,
+        accessGrants,
       },
     });
 
@@ -444,7 +470,7 @@ export async function createQuickTask(
       data: {
         tenantId: ctx.tenantId,
         title,
-        description: input.description?.trim() || null,
+        description: normalizeTaskDescriptionInput(input.description),
         priority: input.priority ?? "NORMAL",
         dueAt: reminderSchedule.dueAt,
         reminder1At: reminderSchedule.reminder1At,
@@ -648,7 +674,7 @@ export async function createSubtask(
         tenantId: ctx.tenantId,
         parentTaskId: parent.id,
         title,
-        description: input.description?.trim() || null,
+        description: normalizeTaskDescriptionInput(input.description),
         priority: input.priority ?? "NORMAL",
         dueAt: reminderSchedule.dueAt,
         reminder1At: reminderSchedule.reminder1At,
@@ -664,6 +690,14 @@ export async function createSubtask(
       },
       include: TASK_INCLUDE,
     });
+
+    await snapshotTaskAccessGrantsToChild(
+      tx,
+      ctx.tenantId,
+      parent.id,
+      created.id,
+      propagatedOrg.visibilityScope,
+    );
 
     if (assigneeUserIds.length > 0) {
       assertCanAssign(ctx);
@@ -799,6 +833,12 @@ export async function updateTask(
   let nextOrgVisibility:
     | Awaited<ReturnType<typeof validateTaskOrgVisibilityMutation>>
     | null = null;
+  const accessGrantMutation =
+    input.orgUnitGrantIds !== undefined ||
+    input.viewerUserGrantIds !== undefined ||
+    orgVisibilityMutation;
+  let nextAccessGrants: Awaited<ReturnType<typeof validateTaskAccessGrantMutation>> | null =
+    null;
   if (orgVisibilityMutation) {
     assertTaskOrgVisibilityPropagationEditable({
       parentTaskId: existing.parentTaskId,
@@ -824,10 +864,26 @@ export async function updateTask(
     );
   }
 
+  if (accessGrantMutation) {
+    const scope =
+      nextOrgVisibility?.visibilityScope ?? existing.visibilityScope;
+    nextAccessGrants = await validateTaskAccessGrantMutation(ctx.tenantId, {
+      visibilityScope: scope,
+      orgUnitGrantIds:
+        input.orgUnitGrantIds ??
+        (input.orgUnitId !== undefined && input.orgUnitId
+          ? [input.orgUnitId]
+          : existing.orgUnitId
+            ? [existing.orgUnitId]
+            : undefined),
+      viewerUserGrantIds: input.viewerUserGrantIds,
+    });
+  }
+
   const data: Prisma.TaskUpdateInput = {};
   if (input.title !== undefined) data.title = normalizeTitle(input.title);
   if (input.description !== undefined) {
-    data.description = input.description?.trim() || null;
+    data.description = normalizeTaskDescriptionInput(input.description);
   }
   if (input.priority !== undefined) data.priority = input.priority;
   const reminderSchedule = await resolveReminderScheduleForUpdate(ctx.tenantId, existing, input);
@@ -869,6 +925,15 @@ export async function updateTask(
 
   if (nextOrgVisibility) {
     data.visibilityScope = nextOrgVisibility.visibilityScope;
+  }
+  if (nextAccessGrants) {
+    if (nextOrgVisibility?.visibilityScope === TaskVisibilityScope.ORG_UNIT) {
+      const primary = nextAccessGrants.orgUnitIds[0] ?? null;
+      data.orgUnit = primary ? { connect: { id: primary } } : { disconnect: true };
+    } else if (nextOrgVisibility) {
+      data.orgUnit = { disconnect: true };
+    }
+  } else if (nextOrgVisibility) {
     data.orgUnit = nextOrgVisibility.orgUnitId
       ? { connect: { id: nextOrgVisibility.orgUnitId } }
       : { disconnect: true };
@@ -880,6 +945,16 @@ export async function updateTask(
       data,
       include: TASK_INCLUDE,
     });
+
+    if (nextAccessGrants) {
+      await replaceTaskAccessGrants(
+        tx,
+        ctx.tenantId,
+        row.id,
+        row.visibilityScope,
+        nextAccessGrants,
+      );
+    }
 
     await recordTaskAudit(tx, {
       tenantId: ctx.tenantId,

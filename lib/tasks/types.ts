@@ -76,6 +76,8 @@ export type CreateTaskInput = {
   contextId?: string | null;
   assigneeUserIds?: string[];
   orgUnitId?: string | null;
+  orgUnitGrantIds?: string[];
+  viewerUserGrantIds?: string[];
   visibilityScope?: TaskVisibilityScope;
 };
 
@@ -106,6 +108,8 @@ export type UpdateTaskInput = {
   contextType?: TaskContextType | null;
   contextId?: string | null;
   orgUnitId?: string | null;
+  orgUnitGrantIds?: string[];
+  viewerUserGrantIds?: string[];
   visibilityScope?: TaskVisibilityScope;
 };
 

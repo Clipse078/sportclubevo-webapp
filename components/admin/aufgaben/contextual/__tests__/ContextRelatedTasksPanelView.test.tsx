@@ -40,7 +40,7 @@ describe("ContextRelatedTasksPanelView empty states", () => {
       <ContextRelatedTasksPanelView {...baseProps} canCreate actionableCount={0} />,
     );
     expect(screen.getByTestId("context-related-tasks-empty")).toBeInTheDocument();
-    expect(screen.getAllByTestId("contextual-task-create-trigger").length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId("contextual-task-create-trigger")).toHaveLength(1);
     expect(screen.getByText(/Aufgaben · 0/)).toBeInTheDocument();
   });
 
@@ -55,6 +55,27 @@ describe("ContextRelatedTasksPanelView empty states", () => {
     );
     expect(screen.getByTestId("context-related-tasks-empty")).toBeInTheDocument();
     expect(screen.queryByTestId("contextual-task-create-trigger")).not.toBeInTheDocument();
+  });
+
+  it("U2 visible tasks still expose only one header create CTA", () => {
+    render(
+      <ContextRelatedTasksPanelView
+        {...baseProps}
+        canCreate
+        actionableCount={1}
+        tasks={[
+          {
+            id: "task-1",
+            title: "First",
+            status: "OPEN",
+            priority: "NORMAL",
+            dueAt: null,
+            assignees: [],
+          },
+        ]}
+      />,
+    );
+    expect(screen.getAllByTestId("contextual-task-create-trigger")).toHaveLength(1);
   });
 
   it("visible tasks render rows linked to canonical workspace", () => {

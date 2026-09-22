@@ -38,7 +38,6 @@ export default async function ContextualTaskCreateTriggerServer({
       contextType={view.contextType}
       contextId={view.contextId}
       presentation={view.presentation}
-      assigneeOptions={view.assigneeOptions}
       orgUnitOptions={view.orgUnitOptions}
       timeZone={view.timeZone}
       tenantWideVisibility={view.tenantWideVisibility}

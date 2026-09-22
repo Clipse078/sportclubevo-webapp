@@ -30,6 +30,10 @@ import {
   listTaskDocumentReferencesForVisibleTask,
   type TaskDocumentReferenceDto,
 } from "./task-document-reference-service";
+import {
+  loadTaskAccessGrantSnapshot,
+  type TaskAccessGrantSnapshot,
+} from "./task-access-grants";
 
 const TASK_INCLUDE = {
   assignees: {
@@ -111,6 +115,7 @@ export type TaskWorkspaceBundle = {
   capabilities: TaskWorkspaceCapabilities;
   follow: TaskFollowStateDto;
   documentReferences: TaskDocumentReferenceDto[];
+  accessGrants: TaskAccessGrantSnapshot;
 };
 
 export async function loadTaskWorkspace(
@@ -126,7 +131,7 @@ export async function loadTaskWorkspace(
     ? getTaskSeriesForRead(ctx, task.taskSeriesId).catch(() => null)
     : Promise.resolve(null);
 
-  const [subtasks, parentTask, seriesRow, creatorUser, context, follow, documentReferences] =
+  const [subtasks, parentTask, seriesRow, creatorUser, context, follow, documentReferences, accessGrants] =
     await Promise.all([
     task.parentTaskId ? Promise.resolve([]) : loadVisibleSubtasks(ctx, task.id),
     task.parentTaskId
@@ -150,6 +155,7 @@ export async function loadTaskWorkspace(
     ),
     getTaskFollowStateForVisibleTask(ctx, visibleTask),
     listTaskDocumentReferencesForVisibleTask(ctx, visibleTask),
+    loadTaskAccessGrantSnapshot(ctx.tenantId, task.id),
   ]);
 
   const progressSource = task.parentTaskId
@@ -186,5 +192,6 @@ export async function loadTaskWorkspace(
     capabilities: resolveTaskWorkspaceCapabilities(ctx, task),
     follow,
     documentReferences,
+    accessGrants,
   };
 }

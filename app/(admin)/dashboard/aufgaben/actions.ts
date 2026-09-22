@@ -27,6 +27,7 @@ import {
   resolveQuickCreateCapabilities,
 } from "@/lib/tasks/quick-create";
 import { searchEligibleTaskAssignees } from "@/lib/tasks/queries";
+import { parseIdListFromForm } from "@/lib/tasks/task-access-grants";
 import type {
   TaskRecurrenceFrequency,
   TaskSeriesWeekday,
@@ -405,6 +406,7 @@ export async function createSubtaskAction(
     const title = formData.get("title");
     const dueAtRaw = formData.get("dueAt");
     const assigneeUserId = formData.get("assigneeUserId");
+    const assigneeUserIdsRaw = formData.get("assigneeUserIds");
     const priority = formData.get("priority");
 
     if (typeof parentTaskId !== "string" || !parentTaskId.trim()) {
@@ -423,14 +425,21 @@ export async function createSubtaskAction(
       dueAt = new Date(`${dueAtRaw}T12:00:00.000Z`);
     }
 
+    let subAssignees: string[] = [];
+    if (typeof assigneeUserIdsRaw === "string" && assigneeUserIdsRaw.trim()) {
+      subAssignees = assigneeUserIdsRaw
+        .split(/[,;\s]+/)
+        .map((id) => id.trim())
+        .filter(Boolean);
+    } else if (typeof assigneeUserId === "string" && assigneeUserId.trim()) {
+      subAssignees = [assigneeUserId.trim()];
+    }
+
     await createSubtask(ctx, parentTaskId.trim(), {
       title: typeof title === "string" ? title : "",
       dueAt,
       priority: parsedPriority,
-      assigneeUserIds:
-        typeof assigneeUserId === "string" && assigneeUserId.trim()
-          ? [assigneeUserId.trim()]
-          : [],
+      assigneeUserIds: subAssignees,
     });
 
     revalidateTaskPaths(parentTaskId.trim());
@@ -603,9 +612,16 @@ function parseTaskContextFromForm(formData: FormData): {
 
 function parseOrgVisibilityFromForm(formData: FormData): {
   orgUnitId?: string | null;
+  orgUnitGrantIds?: string[];
+  viewerUserGrantIds?: string[];
   visibilityScope?: TaskVisibilityScope;
 } {
-  if (!formData.has("visibilityScope") && !formData.has("orgUnitId")) {
+  if (
+    !formData.has("visibilityScope") &&
+    !formData.has("orgUnitId") &&
+    !formData.has("orgUnitGrantIds") &&
+    !formData.has("viewerUserGrantIds")
+  ) {
     return {};
   }
 
@@ -619,11 +635,16 @@ function parseOrgVisibilityFromForm(formData: FormData): {
     throw new TaskValidationError("Ungültige Sichtbarkeit.");
   }
 
+  const orgUnitGrantIds = parseIdListFromForm(formData.get("orgUnitGrantIds"));
+  const viewerUserGrantIds = parseIdListFromForm(formData.get("viewerUserGrantIds"));
+
   const orgRaw = formData.get("orgUnitId");
   const orgUnitId =
-    typeof orgRaw === "string" && orgRaw.trim() ? orgRaw.trim() : null;
+    typeof orgRaw === "string" && orgRaw.trim()
+      ? orgRaw.trim()
+      : orgUnitGrantIds[0] ?? null;
 
-  return { orgUnitId, visibilityScope };
+  return { orgUnitId, orgUnitGrantIds, viewerUserGrantIds, visibilityScope };
 }
 
 function parsePriority(raw: FormDataEntryValue | null): TaskPriority | undefined {
@@ -911,7 +932,11 @@ export async function updateTaskSeriesAction(
     const dueMinuteRaw = formData.get("dueMinute");
     const subtaskJson = formData.get("subtaskTemplatesJson");
 
-    const orgVisibility = formData.has("visibilityScope") || formData.has("orgUnitId")
+    const orgVisibility =
+      formData.has("visibilityScope") ||
+      formData.has("orgUnitId") ||
+      formData.has("orgUnitGrantIds") ||
+      formData.has("viewerUserGrantIds")
       ? parseOrgVisibilityFromForm(formData)
       : {};
 

@@ -2044,6 +2044,69 @@ html[data-sidebar-collapsed="1"] {
 /* ─────────────────────────────────────────────────────────────────────────
    RESPONSIVE
 ───────────────────────────────────────────────────────────────────────── */
+/* AUFGABEN-06F2-UX1-A2 — shared Task rich description lists/checklists */
+.sce-task-rich-content ul:not(.task-description-checklist) {
+  list-style: disc;
+  margin: 0.35rem 0 0.35rem 1.25rem;
+  padding: 0;
+}
+
+.sce-task-rich-content ol {
+  list-style: decimal;
+  margin: 0.35rem 0 0.35rem 1.25rem;
+  padding: 0;
+}
+
+.sce-task-rich-content li {
+  margin: 0.15rem 0;
+  padding-left: 0.15rem;
+}
+
+.sce-task-rich-content li > p {
+  margin: 0;
+}
+
+.sce-task-rich-content ul.task-description-checklist {
+  list-style: none;
+  margin: 0.35rem 0;
+  padding: 0;
+}
+
+.sce-task-rich-content li.task-description-task-item,
+.sce-task-rich-content .ProseMirror li[data-type="taskItem"] {
+  list-style: none;
+  margin: 0.2rem 0;
+}
+
+.sce-task-rich-content .task-description-task-item-label,
+.sce-task-rich-content .ProseMirror li[data-type="taskItem"] > label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.sce-task-rich-content .task-description-task-item-label input[type="checkbox"],
+.sce-task-rich-content .ProseMirror li[data-type="taskItem"] input[type="checkbox"] {
+  margin-top: 0.15rem;
+  height: 1rem;
+  width: 1rem;
+  flex-shrink: 0;
+  accent-color: var(--brand-primary, #f97316);
+  border-radius: 0.2rem;
+}
+
+.sce-task-rich-content .task-description-task-item-text,
+.sce-task-rich-content .ProseMirror li[data-type="taskItem"] > label > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.sce-task-rich-content li.task-description-task-item[data-checked="true"] .task-description-task-item-text,
+.sce-task-rich-content .ProseMirror li[data-type="taskItem"][data-checked="true"] > label > div {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
 @media (max-width: 768px) {
   body {
     font-size: 13px;

@@ -1,7 +1,6 @@
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
-import { listEligibleTaskAssignees } from "@/lib/tasks/queries";
 import { loadTaskOrgUnitMutationOptions } from "@/lib/tasks/task-org-options";
 import { buildTaskManagementHref, resolveTaskManagementQuery } from "@/lib/tasks/management-navigation";
 import { canViewAllTasks } from "@/lib/tasks/visibility";
@@ -29,8 +28,7 @@ export default async function AufgabenCreatePage({ searchParams }: Props) {
     tenantWideVisibility,
   });
 
-  const [assigneeOptions, orgUnitOptions, tenantRow] = await Promise.all([
-    listEligibleTaskAssignees(ctx.tenantId),
+  const [orgUnitOptions, tenantRow] = await Promise.all([
     loadTaskOrgUnitMutationOptions(ctx),
     prisma.tenant.findUnique({
       where: { id: ctx.tenantId },
@@ -49,7 +47,6 @@ export default async function AufgabenCreatePage({ searchParams }: Props) {
 
   return (
     <AufgabenFullCreateClient
-      assigneeOptions={assigneeOptions}
       orgUnitOptions={orgUnitOptions}
       timeZone={timeZone}
       backHref={backHref}
