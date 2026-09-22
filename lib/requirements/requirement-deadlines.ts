@@ -59,7 +59,35 @@ export function openRequirementRecipientReminderWhere(
     resolutionStatus: "OPEN",
     requirement: {
       status: "ACTIVE",
+      remindersConfigured: false,
       dueAt: { gt: now, lte: dueSoonUpper },
     },
+  };
+}
+
+/** Explicit configured reminder fire times (AUFGABEN-06G7). */
+export function openRequirementRecipientExplicitReminderWhere(
+  now: Date,
+  stage: 1 | 2,
+): Prisma.RequirementRecipientWhereInput {
+  const requirementReminderFilter =
+    stage === 1
+      ? {
+          status: "ACTIVE" as const,
+          remindersConfigured: true,
+          reminder1At: { lte: now },
+          dueAt: { gt: now },
+        }
+      : {
+          status: "ACTIVE" as const,
+          remindersConfigured: true,
+          reminder2At: { lte: now },
+          dueAt: { gt: now },
+        };
+
+  return {
+    removedAt: null,
+    resolutionStatus: "OPEN",
+    requirement: requirementReminderFilter,
   };
 }

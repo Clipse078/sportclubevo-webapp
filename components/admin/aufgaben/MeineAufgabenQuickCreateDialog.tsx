@@ -10,11 +10,13 @@ import { TaskReminderFields } from "./TaskReminderFields";
 import TaskDescriptionFormField from "./TaskDescriptionFormField";
 import TaskPeopleMultiPicker from "./TaskPeopleMultiPicker";
 import TaskPriorityField from "./TaskPriorityField";
+import { SCE_AUFGABEN_TASK_FORM_DIALOG_PANEL } from "@/lib/shell/responsive-layout";
 
 export type QuickCreateCurrentUser = {
   userId: string;
   firstName: string;
   lastName: string;
+  displayName?: string;
 };
 
 type Props = {
@@ -46,6 +48,9 @@ export default function MeineAufgabenQuickCreateDialog({
         firstName: currentUser.firstName,
         lastName: currentUser.lastName,
         email: "",
+        displayName:
+          currentUser.displayName ||
+          `${currentUser.firstName} ${currentUser.lastName}`.trim(),
       },
     ],
     [currentUser.firstName, currentUser.lastName, currentUser.userId],
@@ -116,9 +121,10 @@ export default function MeineAufgabenQuickCreateDialog({
             role="dialog"
             aria-modal="true"
             aria-labelledby="meine-aufgaben-create-title"
-            className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-xl"
+            className={`${SCE_AUFGABEN_TASK_FORM_DIALOG_PANEL} p-4 sm:p-5`}
             onClick={(e) => e.stopPropagation()}
             data-testid="meine-aufgaben-create-dialog"
+            data-dialog-size="aufgaben-form"
           >
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>

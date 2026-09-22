@@ -18,6 +18,15 @@ import {
 } from "@/lib/requirements/errors";
 import { canCreateRequirement, canManageRequirement } from "@/lib/requirements/requirement-authorization";
 import { searchRequirementAudiencePersons } from "@/lib/requirements/person-search";
+import {
+  searchRequirementAudienceOrgUnits,
+  searchRequirementAudienceRoles,
+  searchRequirementAudienceTargetGroups,
+  searchRequirementAudienceTeams,
+} from "@/lib/requirements/audience-selector-search";
+import { previewRequirementDraftAudience } from "@/lib/requirements/requirement-audience-preview";
+import { parseRequirementDeadlineAndRemindersFromForm } from "@/lib/requirements/requirement-reminder-form";
+import type { RequirementAudienceSelection } from "@/lib/requirements/types";
 import { requirementDetailHref } from "@/lib/requirements/management-navigation";
 import { parseIdListFromForm } from "@/lib/tasks/task-access-grants";
 
@@ -55,6 +64,41 @@ function parseDueAtFromForm(formData: FormData): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+function parseAudienceSelectionFromForm(formData: FormData) {
+  return {
+    personIds: parseIdListFromForm(formData.get("audiencePersonIds")),
+    teamIds: parseIdListFromForm(formData.get("audienceTeamIds")),
+    orgUnitIds: parseIdListFromForm(formData.get("audienceOrgUnitIds")),
+    roleIds: parseIdListFromForm(formData.get("audienceRoleIds")),
+    targetGroupIds: parseIdListFromForm(formData.get("audienceTargetGroupIds")),
+  };
+}
+
+async function parseRequirementScheduleFields(
+  tenantId: string,
+  formData: FormData,
+): Promise<
+  | { ok: false; message: string }
+  | {
+      ok: true;
+      dueAt: Date | null;
+      reminder1At: Date | null;
+      reminder2At: Date | null;
+      reminder1PresetKey: string | null;
+      reminder2PresetKey: string | null;
+      remindersConfigured: boolean;
+    }
+> {
+  const schedule = await parseRequirementDeadlineAndRemindersFromForm(tenantId, formData);
+  if (schedule === "invalid_due") {
+    return { ok: false, message: "Ungültiges Fälligkeitsdatum." };
+  }
+  if (schedule === "invalid_reminder") {
+    return { ok: false, message: "Ungültige Erinnerung." };
+  }
+  return { ok: true, ...schedule };
+}
+
 export async function searchRequirementPersonsAction(
   query: string,
 ): Promise<
@@ -68,6 +112,56 @@ export async function searchRequirementPersonsAction(
   }
   const options = await searchRequirementAudiencePersons(ctx.tenantId, query);
   return { ok: true, options };
+}
+
+async function audienceSearchAction<T>(
+  searchFn: (tenantId: string, query: string) => Promise<T>,
+  query: string,
+): Promise<{ ok: true; options: T } | { ok: false; message: string }> {
+  const ctx = await getRequirementServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+  if (!canCreateRequirement(ctx) && !canManageRequirement(ctx)) {
+    return { ok: false, message: "Keine Berechtigung für diese Aktion." };
+  }
+  return { ok: true, options: await searchFn(ctx.tenantId, query) };
+}
+
+export async function searchRequirementAudienceTeamsAction(query: string) {
+  return audienceSearchAction(searchRequirementAudienceTeams, query);
+}
+
+export async function searchRequirementAudienceOrgUnitsAction(query: string) {
+  return audienceSearchAction(searchRequirementAudienceOrgUnits, query);
+}
+
+export async function searchRequirementAudienceRolesAction(query: string) {
+  return audienceSearchAction(searchRequirementAudienceRoles, query);
+}
+
+export async function searchRequirementAudienceTargetGroupsAction(query: string) {
+  return audienceSearchAction(searchRequirementAudienceTargetGroups, query);
+}
+
+export async function previewRequirementDraftAudienceAction(
+  selection: RequirementAudienceSelection,
+): Promise<
+  | { ok: true; preview: Awaited<ReturnType<typeof previewRequirementDraftAudience>> }
+  | { ok: false; message: string }
+> {
+  const ctx = await getRequirementServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+  if (!canCreateRequirement(ctx) && !canManageRequirement(ctx)) {
+    return { ok: false, message: "Keine Berechtigung für diese Aktion." };
+  }
+  try {
+    const preview = await previewRequirementDraftAudience(ctx.tenantId, selection);
+    return { ok: true, preview };
+  } catch (error) {
+    if (error instanceof RequirementTenantMismatchError) {
+      return { ok: false, message: "Ungültige Empfängerauswahl." };
+    }
+    return { ok: false, message: "Empfängervorschau fehlgeschlagen." };
+  }
 }
 
 export async function createRequirementDraftAction(
@@ -85,31 +179,29 @@ export async function createRequirementDraftAction(
       return { ok: false, message: "Titel ist erforderlich." };
     }
     const description = formData.get("description");
+    const schedule = await parseRequirementScheduleFields(ctx.tenantId, formData);
+    if (!schedule.ok) return schedule;
+
     const draft = await createRequirementDraft(ctx, {
       title,
       description: typeof description === "string" ? description : null,
-      dueAt: parseDueAtFromForm(formData),
+      dueAt: schedule.dueAt,
+      reminder1At: schedule.reminder1At,
+      reminder2At: schedule.reminder2At,
+      reminder1PresetKey: schedule.reminder1PresetKey,
+      reminder2PresetKey: schedule.reminder2PresetKey,
+      remindersConfigured: schedule.remindersConfigured,
     });
 
-    const audienceIds = parseIdListFromForm(formData.get("audiencePersonIds"));
-    const audienceTeamIds = parseIdListFromForm(formData.get("audienceTeamIds"));
-    const audienceOrgUnitIds = parseIdListFromForm(formData.get("audienceOrgUnitIds"));
-    const audienceRoleIds = parseIdListFromForm(formData.get("audienceRoleIds"));
-    const audienceTargetGroupIds = parseIdListFromForm(formData.get("audienceTargetGroupIds"));
+    const audience = parseAudienceSelectionFromForm(formData);
     if (
-      audienceIds.length > 0 ||
-      audienceTeamIds.length > 0 ||
-      audienceOrgUnitIds.length > 0 ||
-      audienceRoleIds.length > 0 ||
-      audienceTargetGroupIds.length > 0
+      audience.personIds.length > 0 ||
+      audience.teamIds.length > 0 ||
+      audience.orgUnitIds.length > 0 ||
+      audience.roleIds.length > 0 ||
+      audience.targetGroupIds.length > 0
     ) {
-      await setRequirementDraftAudienceSelectors(ctx, draft.id, {
-        personIds: audienceIds,
-        teamIds: audienceTeamIds,
-        orgUnitIds: audienceOrgUnitIds,
-        roleIds: audienceRoleIds,
-        targetGroupIds: audienceTargetGroupIds,
-      });
+      await setRequirementDraftAudienceSelectors(ctx, draft.id, audience);
     }
 
     revalidateRequirementPaths(draft.id);
@@ -128,13 +220,23 @@ export async function updateRequirementDraftAction(
 
   try {
     const title = formData.get("title");
+    const schedule = formData.has("dueAt") || formData.has("reminder1Preset")
+      ? await parseRequirementScheduleFields(ctx.tenantId, formData)
+      : null;
+    if (schedule && !schedule.ok) return schedule;
+
     await updateRequirementDraft(ctx, requirementId, {
       title: typeof title === "string" ? title : undefined,
       description:
         formData.has("description") && typeof formData.get("description") === "string"
           ? (formData.get("description") as string)
           : undefined,
-      dueAt: formData.has("dueAt") ? parseDueAtFromForm(formData) : undefined,
+      dueAt: schedule?.ok ? schedule.dueAt : formData.has("dueAt") ? parseDueAtFromForm(formData) : undefined,
+      reminder1At: schedule?.ok ? schedule.reminder1At : undefined,
+      reminder2At: schedule?.ok ? schedule.reminder2At : undefined,
+      reminder1PresetKey: schedule?.ok ? schedule.reminder1PresetKey : undefined,
+      reminder2PresetKey: schedule?.ok ? schedule.reminder2PresetKey : undefined,
+      remindersConfigured: schedule?.ok ? schedule.remindersConfigured : undefined,
     });
 
     if (
@@ -144,13 +246,7 @@ export async function updateRequirementDraftAction(
       formData.has("audienceRoleIds") ||
       formData.has("audienceTargetGroupIds")
     ) {
-      await setRequirementDraftAudienceSelectors(ctx, requirementId, {
-        personIds: parseIdListFromForm(formData.get("audiencePersonIds")),
-        teamIds: parseIdListFromForm(formData.get("audienceTeamIds")),
-        orgUnitIds: parseIdListFromForm(formData.get("audienceOrgUnitIds")),
-        roleIds: parseIdListFromForm(formData.get("audienceRoleIds")),
-        targetGroupIds: parseIdListFromForm(formData.get("audienceTargetGroupIds")),
-      });
+      await setRequirementDraftAudienceSelectors(ctx, requirementId, parseAudienceSelectionFromForm(formData));
     }
 
     revalidateRequirementPaths(requirementId);

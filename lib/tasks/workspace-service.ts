@@ -4,6 +4,7 @@
 
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { enrichTaskDtosWithResponsibleDisplayNames } from "./task-assignee-display";
 import { formatTaskSeriesRecurrenceLabel } from "./management-labels";
 import { resolveTaskContextPresentation, type TaskContextPresentation } from "./context-presentation";
 import { computeSubtaskProgress } from "./subtask-rules";
@@ -73,6 +74,7 @@ function mapTask(row: TaskRow): TaskDto {
       userId: a.userId,
       firstName: a.user.firstName,
       lastName: a.user.lastName,
+      displayName: `${a.user.firstName} ${a.user.lastName}`.trim(),
       assignedAt: a.assignedAt.toISOString(),
     })),
   };
@@ -125,7 +127,7 @@ export async function loadTaskWorkspace(
   timeZone: string,
 ): Promise<TaskWorkspaceBundle> {
   const visibleTask = await requireVisibleTask(ctx, taskId);
-  const task = mapTask(visibleTask);
+  let task = mapTask(visibleTask);
 
   const seriesRowPromise = task.taskSeriesId
     ? getTaskSeriesForRead(ctx, task.taskSeriesId).catch(() => null)
@@ -158,9 +160,15 @@ export async function loadTaskWorkspace(
     loadTaskAccessGrantSnapshot(ctx.tenantId, task.id),
   ]);
 
+  [task] = await enrichTaskDtosWithResponsibleDisplayNames(ctx.tenantId, [task]);
+  const enrichedSubtasks = await enrichTaskDtosWithResponsibleDisplayNames(
+    ctx.tenantId,
+    subtasks,
+  );
+
   const progressSource = task.parentTaskId
     ? []
-    : subtasks.map((s) => ({ status: s.status }));
+    : enrichedSubtasks.map((s) => ({ status: s.status }));
   const progressRaw = computeSubtaskProgress(progressSource);
 
   const progress: TaskProgressDto = {
@@ -175,7 +183,7 @@ export async function loadTaskWorkspace(
   return {
     task,
     parentTask: parentTask ? { id: parentTask.id, title: parentTask.title } : null,
-    subtasks,
+    subtasks: enrichedSubtasks,
     progress,
     seriesRecurrenceLabel,
     seriesId: seriesRow?.id ?? task.taskSeriesId,

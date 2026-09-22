@@ -3,7 +3,8 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import type { TaskStatus } from "@prisma/client";
-import { Bell, Check, ChevronRight, MoreHorizontal, Repeat2 } from "lucide-react";
+import { Bell, ChevronRight, Repeat2 } from "lucide-react";
+import { TASK_ROW_ACTION_PRESENTATION } from "@/lib/tasks/task-row-action-presentation";
 import { cn } from "@/lib/cn";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import type { TaskManagementListItem } from "@/lib/tasks/management-service";
@@ -37,7 +38,7 @@ function AssigneeCompact({ assignees }: { assignees: TaskDto["assignees"] }) {
     return <span className="text-[0.8125rem] text-[var(--muted)]">—</span>;
   }
   const first = assignees[0]!;
-  const firstName = formatAssigneeName(first.firstName, first.lastName);
+  const firstName = formatAssigneeName(first.firstName, first.lastName, first.displayName);
   if (assignees.length === 1) {
     return <span className="truncate text-[0.8125rem] text-[var(--text-2)]">{firstName}</span>;
   }
@@ -72,14 +73,19 @@ function TaskRowActions({
     });
   }
 
+  const completeAction = TASK_ROW_ACTION_PRESENTATION.complete;
+  const moreAction = TASK_ROW_ACTION_PRESENTATION.more;
+  const CompleteIcon = completeAction.icon;
+  const MoreIcon = moreAction.icon;
+
   return (
     <div className="relative flex items-center justify-end gap-1">
       {canMarkDone ? (
         <button
           type="button"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-transparent text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-950/30"
-          title="Als erledigt markieren"
-          aria-label={`${task.title} als erledigt markieren`}
+          className={`${completeAction.className} ${completeAction.hoverClassName} ${completeAction.focusRingClassName}`}
+          title={completeAction.label}
+          aria-label={`${task.title} ${completeAction.label}`}
           disabled={pending}
           onClick={() =>
             run(() =>
@@ -93,20 +99,22 @@ function TaskRowActions({
             )
           }
           data-testid={`aufgaben-complete-${task.id}`}
+          data-action-intent={completeAction.intent}
         >
-          <Check className="h-4 w-4" />
+          <CompleteIcon className="h-4 w-4" aria-hidden="true" />
         </button>
       ) : null}
 
       <button
         type="button"
-        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-transparent text-[var(--text-2)] hover:border-[var(--border)] hover:bg-[var(--surface-2)]"
-        aria-label="Weitere Aktionen"
+        className={`${moreAction.className} ${moreAction.hoverClassName} ${moreAction.focusRingClassName}`}
+        aria-label={moreAction.label}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         data-testid={`aufgaben-row-menu-${task.id}`}
+        data-action-intent={moreAction.intent}
       >
-        <MoreHorizontal className="h-4 w-4" />
+        <MoreIcon className="h-4 w-4" aria-hidden="true" />
       </button>
 
       {open ? (
@@ -162,7 +170,7 @@ function TaskRowActions({
                 <option value="">Nicht zugewiesen</option>
                 {assigneeOptions.map((a) => (
                   <option key={a.userId} value={a.userId}>
-                    {a.firstName} {a.lastName}
+                    {a.displayName || `${a.firstName} ${a.lastName}`.trim()}
                   </option>
                 ))}
               </select>

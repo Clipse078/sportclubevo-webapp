@@ -2078,6 +2078,17 @@ html[data-sidebar-collapsed="1"] {
   margin: 0.2rem 0;
 }
 
+.sce-task-rich-content li.task-description-task-item > .task-description-task-item-label,
+.sce-task-rich-content .ProseMirror li[data-type="taskItem"] > label {
+  width: 100%;
+}
+
+.sce-task-rich-content .task-description-task-item-text p,
+.sce-task-rich-content .ProseMirror li[data-type="taskItem"] > label > div p {
+  display: inline;
+  margin: 0;
+}
+
 .sce-task-rich-content .task-description-task-item-label,
 .sce-task-rich-content .ProseMirror li[data-type="taskItem"] > label {
   display: flex;

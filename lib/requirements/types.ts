@@ -19,6 +19,11 @@ export type RequirementDto = {
   status: RequirementStatus;
   responseMode: RequirementResponseMode;
   dueAt: string | null;
+  reminder1At: string | null;
+  reminder2At: string | null;
+  reminder1PresetKey: string | null;
+  reminder2PresetKey: string | null;
+  remindersConfigured: boolean;
   activatedAt: string | null;
   closedAt: string | null;
   cancelledAt: string | null;
@@ -38,6 +43,14 @@ export type RequirementDraftAudienceInput = {
   orgUnitIds?: readonly string[];
   roleIds?: readonly string[];
   targetGroupIds?: readonly string[];
+};
+
+export type RequirementAudienceSelection = {
+  personIds: string[];
+  teamIds: string[];
+  orgUnitIds: string[];
+  roleIds: string[];
+  targetGroupIds: string[];
 };
 
 export type RequirementRecipientDto = {
@@ -68,6 +81,11 @@ export type CreateRequirementDraftInput = {
   description?: string | null;
   responseMode?: RequirementResponseMode;
   dueAt?: Date | null;
+  reminder1At?: Date | null;
+  reminder2At?: Date | null;
+  reminder1PresetKey?: string | null;
+  reminder2PresetKey?: string | null;
+  remindersConfigured?: boolean;
 };
 
 export type UpdateRequirementDraftInput = {
@@ -75,6 +93,11 @@ export type UpdateRequirementDraftInput = {
   description?: string | null;
   responseMode?: RequirementResponseMode;
   dueAt?: Date | null;
+  reminder1At?: Date | null;
+  reminder2At?: Date | null;
+  reminder1PresetKey?: string | null;
+  reminder2PresetKey?: string | null;
+  remindersConfigured?: boolean;
 };
 
 export type ListRequirementsFilter = {

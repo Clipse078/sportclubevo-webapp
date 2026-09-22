@@ -350,7 +350,7 @@ export default function AufgabenManagementWorkspace({
               showAssigneeFilter={tenantWideVisibility}
               assigneeOptions={assigneeOptions.map((a) => ({
                 userId: a.userId,
-                label: `${a.firstName} ${a.lastName}`.trim(),
+                label: a.displayName || `${a.firstName} ${a.lastName}`.trim(),
               }))}
               orgUnitOptions={orgUnitFilterOptions.map((o) => ({
                 id: o.id,

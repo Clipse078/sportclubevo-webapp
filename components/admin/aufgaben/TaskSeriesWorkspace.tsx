@@ -423,6 +423,7 @@ export default function TaskSeriesWorkspace({
                   firstName: a.firstName,
                   lastName: a.lastName,
                   email: "",
+                  displayName: formatAssigneeName(a.firstName, a.lastName),
                 }))}
                 testIdPrefix="series-workspace-assignees"
               />

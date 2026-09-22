@@ -14,6 +14,7 @@ import {
 import TaskDescriptionFormField from "./TaskDescriptionFormField";
 import TaskPeopleMultiPicker from "./TaskPeopleMultiPicker";
 import TaskPriorityField from "./TaskPriorityField";
+import { SCE_AUFGABEN_TASK_FORM_DIALOG_PANEL } from "@/lib/shell/responsive-layout";
 
 type Props = {
   canCreate: boolean;
@@ -71,9 +72,10 @@ export default function AufgabenQuickCreateDialog({
             role="dialog"
             aria-modal="true"
             aria-labelledby="aufgaben-create-title"
-            className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-xl"
+            className={`${SCE_AUFGABEN_TASK_FORM_DIALOG_PANEL} p-4 sm:p-5`}
             onClick={(e) => e.stopPropagation()}
             data-testid="aufgaben-create-dialog"
+            data-dialog-size="aufgaben-form"
           >
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>

@@ -92,7 +92,7 @@ describe("ContextRelatedTasksPanelView empty states", () => {
             status: "OPEN",
             priority: "NORMAL",
             dueAt: null,
-            assignees: [{ userId: "u1", firstName: "A", lastName: "B" }],
+            assignees: [{ userId: "u1", firstName: "A", lastName: "B", displayName: "A B", assignedAt: "" }],
           },
         ]}
       />,
