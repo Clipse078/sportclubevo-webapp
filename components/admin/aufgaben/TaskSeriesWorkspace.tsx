@@ -10,10 +10,9 @@ import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
 import TaskOrgVisibilityFields from "./TaskOrgVisibilityFields";
 import type { TaskSeriesWorkspaceBundle } from "@/lib/tasks/series-workspace-service";
-import {
-  TASK_PRIORITY_LABELS,
-  formatAssigneeName,
-} from "@/lib/tasks/management-labels";
+import { formatAssigneeName } from "@/lib/tasks/management-labels";
+import TaskPeopleMultiPicker from "./TaskPeopleMultiPicker";
+import { TaskPriorityIconLabel } from "./TaskPriorityPresentation";
 import { presentTaskDeadline } from "@/lib/tasks/management-deadline";
 import { taskStatusBadgeClass, taskStatusPresentation } from "@/lib/tasks/management-presentation";
 import {
@@ -42,7 +41,7 @@ type SubtaskDraft = {
 
 export default function TaskSeriesWorkspace({
   bundle,
-  assigneeOptions,
+  assigneeOptions: _assigneeOptions,
   orgUnitOptions,
   locale,
   timeZone,
@@ -62,6 +61,9 @@ export default function TaskSeriesWorkspace({
       priority: t.priority,
       dueOffsetDays: t.dueOffsetDays,
     })),
+  );
+  const [seriesAssigneeIds, setSeriesAssigneeIds] = useState<string[]>(() =>
+    bundle.assigneeTemplates.map((a) => a.userId),
   );
 
   function runStatusAction(action: (fd: FormData) => Promise<{ ok: boolean; message?: string }>) {
@@ -90,11 +92,7 @@ export default function TaskSeriesWorkspace({
     formData.set("seriesId", bundle.id);
     formData.set("title", title);
     formData.set("description", description);
-    const assigneeSelect = form.querySelector('[name="assigneeUserIds"]') as HTMLSelectElement | null;
-    if (assigneeSelect) {
-      const selected = [...assigneeSelect.selectedOptions].map((o) => o.value);
-      formData.set("assigneeUserIds", selected.join(","));
-    }
+    formData.set("assigneeUserIds", seriesAssigneeIds.join(","));
     formData.set(
       "subtaskTemplatesJson",
       JSON.stringify(
@@ -406,26 +404,29 @@ export default function TaskSeriesWorkspace({
             <span className="text-sm">{bundle.deadlineRuleLabel}</span>
           </PropertyRow>
           <PropertyRow label="Priorität">
-            <span className="text-sm">{TASK_PRIORITY_LABELS[bundle.priority]}</span>
+            <TaskPriorityIconLabel priority={bundle.priority} />
           </PropertyRow>
           <PropertyRow label="Zeitzone">
             <span className="text-sm">{bundle.timezone}</span>
           </PropertyRow>
           <PropertyRow label="Verantwortliche">
             {bundle.canManage ? (
-              <select
-                name="assigneeUserIds"
+              <TaskPeopleMultiPicker
+                label="Verantwortliche"
+                fieldName="assigneeUserIds"
                 form="series-edit-form"
-                multiple
-                defaultValue={bundle.assigneeTemplates.map((a) => a.userId)}
-                className="fca-input min-h-[4rem] w-full text-sm"
-              >
-                {assigneeOptions.map((a) => (
-                  <option key={a.userId} value={a.userId}>
-                    {a.firstName} {a.lastName}
-                  </option>
-                ))}
-              </select>
+                selectedIds={seriesAssigneeIds}
+                onSelectedIdsChange={setSeriesAssigneeIds}
+                disabled={pending}
+                hideLabel
+                initialKnown={bundle.assigneeTemplates.map((a) => ({
+                  userId: a.userId,
+                  firstName: a.firstName,
+                  lastName: a.lastName,
+                  email: "",
+                }))}
+                testIdPrefix="series-workspace-assignees"
+              />
             ) : (
               <span className="text-sm text-[var(--text-2)]">
                 {bundle.assigneeTemplates.length

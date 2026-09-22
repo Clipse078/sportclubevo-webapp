@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import type { TaskPriority } from "@prisma/client";
 import { Plus, X } from "lucide-react";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import { createAufgabeAction } from "@/app/(admin)/dashboard/aufgaben/actions";
@@ -12,8 +11,9 @@ import {
   taskSeriesCreateHref,
   taskWorkspaceHref,
 } from "@/lib/tasks/task-navigation";
-import { TASK_PRIORITY_LABELS } from "@/lib/tasks/management-labels";
 import TaskDescriptionFormField from "./TaskDescriptionFormField";
+import TaskPeopleMultiPicker from "./TaskPeopleMultiPicker";
+import TaskPriorityField from "./TaskPriorityField";
 
 type Props = {
   canCreate: boolean;
@@ -24,12 +24,13 @@ type Props = {
 export default function AufgabenQuickCreateDialog({
   canCreate,
   canManage = false,
-  assigneeOptions,
+  assigneeOptions: _assigneeOptions,
 }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
 
   if (!canCreate) return null;
 
@@ -111,17 +112,14 @@ export default function AufgabenQuickCreateDialog({
                 />
               </label>
 
-              <label className="block space-y-1">
-                <span className="text-xs font-medium text-[var(--text-2)]">Verantwortlich</span>
-                <select name="assigneeUserId" className="fca-input w-full text-sm">
-                  <option value="">Optional</option>
-                  {assigneeOptions.map((a) => (
-                    <option key={a.userId} value={a.userId}>
-                      {a.firstName} {a.lastName}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <TaskPeopleMultiPicker
+                label="Verantwortlich"
+                fieldName="assigneeUserIds"
+                selectedIds={assigneeIds}
+                onSelectedIdsChange={setAssigneeIds}
+                disabled={pending}
+                testIdPrefix="aufgaben-quick-create-assignees"
+              />
 
               <div className="grid grid-cols-2 gap-3">
                 <label className="block space-y-1">
@@ -135,13 +133,7 @@ export default function AufgabenQuickCreateDialog({
                 </label>
                 <label className="block space-y-1">
                   <span className="text-xs font-medium text-[var(--text-2)]">Priorität</span>
-                  <select name="priority" className="fca-input w-full text-sm" defaultValue="NORMAL">
-                    {(["LOW", "NORMAL", "HIGH", "URGENT"] as TaskPriority[]).map((p) => (
-                      <option key={p} value={p}>
-                        {TASK_PRIORITY_LABELS[p]}
-                      </option>
-                    ))}
-                  </select>
+                  <TaskPriorityField disabled={pending} testId="aufgaben-quick-create-priority" />
                 </label>
               </div>
 

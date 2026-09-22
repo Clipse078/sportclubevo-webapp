@@ -15,6 +15,13 @@ type Props = {
   addButtonLabel?: string;
   testIdPrefix?: string;
   initialKnown?: TaskAssigneeOption[];
+  /** Selected users that cannot be removed (e.g. self on Meine Aufgaben quick create). */
+  lockedUserIds?: string[];
+  hideLabel?: boolean;
+  omitHiddenField?: boolean;
+  allowAdd?: boolean;
+  /** Associates hidden field with an external form (e.g. series workspace edit). */
+  form?: string;
 };
 
 function formatName(firstName: string, lastName: string): string {
@@ -30,7 +37,13 @@ export default function TaskPeopleMultiPicker({
   addButtonLabel = "Person hinzufügen",
   testIdPrefix = "task-people-picker",
   initialKnown = [],
+  lockedUserIds = [],
+  hideLabel = false,
+  omitHiddenField = false,
+  allowAdd = true,
+  form,
 }: Props) {
+  const locked = new Set(lockedUserIds);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [addOpen, setAddOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -91,8 +104,12 @@ export default function TaskPeopleMultiPicker({
 
   return (
     <div className="space-y-1" data-testid={testIdPrefix}>
-      <span className="text-xs font-medium text-[var(--text-2)]">{label}</span>
-      <input type="hidden" name={fieldName} value={selectedIds.join(",")} />
+      {hideLabel ? null : (
+        <span className="text-xs font-medium text-[var(--text-2)]">{label}</span>
+      )}
+      {omitHiddenField ? null : (
+        <input type="hidden" name={fieldName} form={form} value={selectedIds.join(",")} />
+      )}
       <div className="flex flex-wrap items-center gap-1.5">
         {selectedPeople.map((person) => (
           <span
@@ -100,17 +117,20 @@ export default function TaskPeopleMultiPicker({
             className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-2)]/60 pl-2 pr-1 py-0.5 text-xs text-[var(--text-2)]"
           >
             {formatName(person.firstName, person.lastName)}
-            <button
-              type="button"
-              className="rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-3)]"
-              aria-label={`${formatName(person.firstName, person.lastName)} entfernen`}
-              onClick={() => removePerson(person.userId)}
-              disabled={disabled}
-            >
-              <X className="h-3 w-3" />
-            </button>
+            {locked.has(person.userId) ? null : (
+              <button
+                type="button"
+                className="rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-3)]"
+                aria-label={`${formatName(person.firstName, person.lastName)} entfernen`}
+                onClick={() => removePerson(person.userId)}
+                disabled={disabled}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
           </span>
         ))}
+        {allowAdd ? (
         <div className="relative">
           <button
             type="button"
@@ -165,6 +185,7 @@ export default function TaskPeopleMultiPicker({
             </div>
           ) : null}
         </div>
+        ) : null}
       </div>
     </div>
   );

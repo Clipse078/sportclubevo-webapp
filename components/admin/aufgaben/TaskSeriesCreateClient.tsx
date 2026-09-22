@@ -9,10 +9,11 @@ import { cn } from "@/lib/cn";
 import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import type { TaskOrgUnitPickerOption } from "@/lib/tasks/task-org-options";
-import { TASK_PRIORITY_LABELS } from "@/lib/tasks/management-labels";
 import { createTaskSeriesAction } from "@/app/(admin)/dashboard/aufgaben/actions";
 import { taskSeriesHref } from "@/lib/tasks/task-navigation";
 import TaskOrgVisibilityFields from "./TaskOrgVisibilityFields";
+import TaskPeopleMultiPicker from "./TaskPeopleMultiPicker";
+import TaskPriorityField from "./TaskPriorityField";
 
 type SubtaskDraft = {
   key: string;
@@ -52,7 +53,7 @@ function newSubtask(): SubtaskDraft {
 }
 
 export default function TaskSeriesCreateClient({
-  assigneeOptions,
+  assigneeOptions: _assigneeOptions,
   orgUnitOptions,
   timeZone,
   backHref,
@@ -62,6 +63,7 @@ export default function TaskSeriesCreateClient({
   const [pending, startTransition] = useTransition();
   const [frequency, setFrequency] = useState<"WEEKLY" | "MONTHLY">("WEEKLY");
   const [subtasks, setSubtasks] = useState<SubtaskDraft[]>([]);
+  const [seriesAssigneeIds, setSeriesAssigneeIds] = useState<string[]>([]);
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -79,11 +81,7 @@ export default function TaskSeriesCreateClient({
     }
     formData.set("frequency", frequency);
     formData.set("timezone", timeZone);
-    const assigneeSelect = form.querySelector('[name="assigneeUserIds"]') as HTMLSelectElement | null;
-    if (assigneeSelect) {
-      const selected = [...assigneeSelect.selectedOptions].map((o) => o.value);
-      formData.set("assigneeUserIds", selected.join(","));
-    }
+    formData.set("assigneeUserIds", seriesAssigneeIds.join(","));
     formData.set(
       "subtaskTemplatesJson",
       JSON.stringify(
@@ -201,28 +199,20 @@ export default function TaskSeriesCreateClient({
                         />
                         <span className="text-[0.65rem]">Tage relativ zum Serientermin (− vorher, + danach)</span>
                       </label>
-                      <label className="text-xs text-[var(--muted)]">
+                      <div className="text-xs text-[var(--muted)]">
                         Priorität
-                        <select
-                          className="fca-input mt-1 w-full"
-                          value={sub.priority}
-                          onChange={(e) =>
-                            setSubtasks((prev) =>
-                              prev.map((s) =>
-                                s.key === sub.key
-                                  ? { ...s, priority: e.target.value as TaskPriority }
-                                  : s,
-                              ),
-                            )
-                          }
-                        >
-                          {Object.entries(TASK_PRIORITY_LABELS).map(([value, label]) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                        <div className="mt-1">
+                          <TaskPriorityField
+                            value={sub.priority}
+                            omitName
+                            onValueChange={(priority) =>
+                              setSubtasks((prev) =>
+                                prev.map((s) => (s.key === sub.key ? { ...s, priority } : s)),
+                              )
+                            }
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -232,13 +222,7 @@ export default function TaskSeriesCreateClient({
             <aside className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)]/25 p-4">
               <label className="block space-y-1">
                 <span className="text-xs font-medium text-[var(--muted)]">Priorität</span>
-                <select name="priority" defaultValue="NORMAL" className="fca-input w-full">
-                  {Object.entries(TASK_PRIORITY_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
+                <TaskPriorityField testId="series-create-priority" />
               </label>
 
               <label className="block space-y-1">
@@ -289,22 +273,14 @@ export default function TaskSeriesCreateClient({
                 </div>
               </label>
 
-              <label className="block space-y-1">
-                <span className="text-xs font-medium text-[var(--muted)]">Verantwortliche</span>
-                <select
-                  name="assigneeUserIds"
-                  multiple
-                  className="fca-input min-h-[5rem] w-full"
-                  data-testid="series-create-assignees"
-                >
-                  {assigneeOptions.map((a) => (
-                    <option key={a.userId} value={a.userId}>
-                      {a.firstName} {a.lastName}
-                    </option>
-                  ))}
-                </select>
-                <span className="text-[0.65rem] text-[var(--muted)]">Mehrfachauswahl mit Strg/Cmd</span>
-              </label>
+              <TaskPeopleMultiPicker
+                label="Verantwortliche"
+                fieldName="assigneeUserIds"
+                selectedIds={seriesAssigneeIds}
+                onSelectedIdsChange={setSeriesAssigneeIds}
+                disabled={pending}
+                testIdPrefix="series-create-assignees"
+              />
 
               <TaskOrgVisibilityFields orgUnitOptions={orgUnitOptions} />
 

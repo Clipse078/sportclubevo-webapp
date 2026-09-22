@@ -406,6 +406,7 @@ export async function createSubtaskAction(
     const title = formData.get("title");
     const dueAtRaw = formData.get("dueAt");
     const assigneeUserId = formData.get("assigneeUserId");
+    const assigneeUserIdsRaw = formData.get("assigneeUserIds");
     const priority = formData.get("priority");
 
     if (typeof parentTaskId !== "string" || !parentTaskId.trim()) {
@@ -424,14 +425,21 @@ export async function createSubtaskAction(
       dueAt = new Date(`${dueAtRaw}T12:00:00.000Z`);
     }
 
+    let subAssignees: string[] = [];
+    if (typeof assigneeUserIdsRaw === "string" && assigneeUserIdsRaw.trim()) {
+      subAssignees = assigneeUserIdsRaw
+        .split(/[,;\s]+/)
+        .map((id) => id.trim())
+        .filter(Boolean);
+    } else if (typeof assigneeUserId === "string" && assigneeUserId.trim()) {
+      subAssignees = [assigneeUserId.trim()];
+    }
+
     await createSubtask(ctx, parentTaskId.trim(), {
       title: typeof title === "string" ? title : "",
       dueAt,
       priority: parsedPriority,
-      assigneeUserIds:
-        typeof assigneeUserId === "string" && assigneeUserId.trim()
-          ? [assigneeUserId.trim()]
-          : [],
+      assigneeUserIds: subAssignees,
     });
 
     revalidateTaskPaths(parentTaskId.trim());
