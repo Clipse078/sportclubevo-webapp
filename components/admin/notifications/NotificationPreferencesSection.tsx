@@ -14,6 +14,11 @@ const TYPE_LABELS: Record<string, string> = {
   TASK_COMMENT: "Kommentar in Aufgabe",
   PARTICIPATION_REMINDER: "Teilnahme-Erinnerung",
   PARTICIPATION_OVERDUE: "Teilnahme-Antwort ausstehend",
+  REQUIREMENT_ASSIGNED: "Neue Anforderung",
+  REQUIREMENT_REMINDER: "Anforderungs-Erinnerung",
+  REQUIREMENT_OVERDUE: "Anforderung überfällig",
+  REQUIREMENT_CHANGED: "Anforderung geändert",
+  REQUIREMENT_CANCELLED: "Anforderung aufgehoben",
 };
 
 type Props = {

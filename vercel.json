@@ -31,6 +31,10 @@
     {
       "path": "/api/cron/participation-notifications",
       "schedule": "30 * * * *"
+    },
+    {
+      "path": "/api/cron/requirement-notifications",
+      "schedule": "45 * * * *"
     }
   ]
 }

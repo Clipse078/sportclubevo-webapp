@@ -1,0 +1,11 @@
+-- AUFGABEN-06G4 — Requirement notification types (shared SCE notification platform)
+
+ALTER TYPE "NotificationCategory" ADD VALUE 'REQUIREMENT';
+
+ALTER TYPE "NotificationType" ADD VALUE 'REQUIREMENT_ASSIGNED';
+ALTER TYPE "NotificationType" ADD VALUE 'REQUIREMENT_REMINDER';
+ALTER TYPE "NotificationType" ADD VALUE 'REQUIREMENT_OVERDUE';
+ALTER TYPE "NotificationType" ADD VALUE 'REQUIREMENT_CHANGED';
+ALTER TYPE "NotificationType" ADD VALUE 'REQUIREMENT_CANCELLED';
+
+ALTER TYPE "NotificationEntityType" ADD VALUE 'REQUIREMENT';

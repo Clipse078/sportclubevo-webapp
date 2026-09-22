@@ -16,6 +16,11 @@ const DEFAULTS: Record<NotificationType, NotificationChannelDefaults> = {
   TASK_COMMENT: { inAppEnabled: true, emailEnabled: true },
   PARTICIPATION_REMINDER: { inAppEnabled: true, emailEnabled: true },
   PARTICIPATION_OVERDUE: { inAppEnabled: true, emailEnabled: true },
+  REQUIREMENT_ASSIGNED: { inAppEnabled: true, emailEnabled: true },
+  REQUIREMENT_REMINDER: { inAppEnabled: true, emailEnabled: true },
+  REQUIREMENT_OVERDUE: { inAppEnabled: true, emailEnabled: true },
+  REQUIREMENT_CHANGED: { inAppEnabled: true, emailEnabled: true },
+  REQUIREMENT_CANCELLED: { inAppEnabled: true, emailEnabled: true },
 };
 
 export function getDefaultNotificationPreferences(): Record<

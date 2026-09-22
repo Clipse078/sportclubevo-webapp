@@ -77,6 +77,48 @@ export function participationPersonalInboxHref(): string {
   return "/dashboard/aufgaben?bereich=meine";
 }
 
+export function requirementPersonalInboxHref(): string {
+  return "/dashboard/aufgaben?bereich=meine";
+}
+
+export function buildRequirementAssignedDedupKey(input: {
+  recipientId: string;
+  recipientUserId: string;
+}): string {
+  return `REQUIREMENT_ASSIGNED:${input.recipientId}:${input.recipientUserId}`;
+}
+
+export function buildRequirementReminderDedupKey(input: {
+  recipientId: string;
+  recipientUserId: string;
+  dueAtIso: string;
+}): string {
+  return `REQUIREMENT_REMINDER:${input.recipientId}:${input.recipientUserId}:${input.dueAtIso}`;
+}
+
+export function buildRequirementOverdueDedupKey(input: {
+  recipientId: string;
+  recipientUserId: string;
+  dueAtIso: string;
+}): string {
+  return `REQUIREMENT_OVERDUE:${input.recipientId}:${input.recipientUserId}:${input.dueAtIso}`;
+}
+
+export function buildRequirementChangedDedupKey(input: {
+  recipientId: string;
+  recipientUserId: string;
+  changeToken: string;
+}): string {
+  return `REQUIREMENT_CHANGED:${input.recipientId}:${input.recipientUserId}:${input.changeToken}`;
+}
+
+export function buildRequirementCancelledDedupKey(input: {
+  recipientId: string;
+  recipientUserId: string;
+}): string {
+  return `REQUIREMENT_CANCELLED:${input.recipientId}:${input.recipientUserId}`;
+}
+
 export function buildParticipationReminderDedupKey(input: {
   tenantId: string;
   personId: string;
@@ -100,9 +142,20 @@ export function buildParticipationOverdueDedupKey(input: {
   return `participation-overdue:${input.tenantId}:${input.personId}:${input.kind}:${input.entityId}:${input.recipientUserId}:${input.dueAtIso}`;
 }
 
-export function notificationTypeCategory(type: NotificationType): "TASK" | "PARTICIPATION" {
+export function notificationTypeCategory(
+  type: NotificationType,
+): "TASK" | "PARTICIPATION" | "REQUIREMENT" {
   if (type === "PARTICIPATION_REMINDER" || type === "PARTICIPATION_OVERDUE") {
     return "PARTICIPATION";
+  }
+  if (
+    type === "REQUIREMENT_ASSIGNED" ||
+    type === "REQUIREMENT_REMINDER" ||
+    type === "REQUIREMENT_OVERDUE" ||
+    type === "REQUIREMENT_CHANGED" ||
+    type === "REQUIREMENT_CANCELLED"
+  ) {
+    return "REQUIREMENT";
   }
   return "TASK";
 }
