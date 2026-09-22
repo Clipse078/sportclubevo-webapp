@@ -283,13 +283,14 @@ export async function createPersonDocument(
   }
 
   const documentId = randomUUID();
+  const versionId = randomUUID().replaceAll("-", "");
   const sanitizedFilename = validatedFile.sanitizedFilename;
 
   // Upload to private blob store
   const uploadResult = await workspaceStorageProvider.upload({
-    tenantKey: input.tenantKey,
+    tenantId: input.tenantId,
     documentId,
-    versionNumber: 1,
+    versionId,
     filename: sanitizedFilename,
     mimeType: validatedFile.contentType,
     buffer: input.fileBuffer,

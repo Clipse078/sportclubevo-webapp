@@ -53,7 +53,7 @@ const MIME_MAP: Record<string, MimeCategoryEntry> = {
   "image/png": { category: "image", previewCapable: true },
   "image/webp": { category: "image", previewCapable: true },
   "image/gif": { category: "image", previewCapable: true },
-  "image/svg+xml": { category: "image", previewCapable: true },
+  "image/svg+xml": { category: "image", previewCapable: false },
 
   "video/mp4": { category: "video", previewCapable: false },
   "video/webm": { category: "video", previewCapable: false },
@@ -86,7 +86,7 @@ const EXTENSION_MAP: Record<string, MimeCategoryEntry> = {
   png: { category: "image", previewCapable: true },
   webp: { category: "image", previewCapable: true },
   gif: { category: "image", previewCapable: true },
-  svg: { category: "image", previewCapable: true },
+  svg: { category: "image", previewCapable: false },
   mp4: { category: "video", previewCapable: false },
   webm: { category: "video", previewCapable: false },
   mp3: { category: "audio", previewCapable: false },
@@ -118,7 +118,12 @@ export function resolveWorkspaceFileType(
   const mimeResult = MIME_MAP[normMime];
   if (mimeResult) return mimeResult;
 
-  if (normMime.startsWith("image/")) return { category: "image", previewCapable: true };
+  if (normMime.startsWith("image/")) {
+    return {
+      category: "image",
+      previewCapable: normMime !== "image/svg+xml",
+    };
+  }
   if (normMime.startsWith("video/")) return { category: "video", previewCapable: false };
   if (normMime.startsWith("audio/")) return { category: "audio", previewCapable: false };
   if (normMime.startsWith("text/")) return { category: "text", previewCapable: false };

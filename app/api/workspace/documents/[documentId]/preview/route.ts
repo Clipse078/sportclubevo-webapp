@@ -24,15 +24,8 @@ import {
   getWorkspaceDocumentForDownload,
   WorkspaceDocumentServiceError,
 } from "@/lib/workspace/document-service";
+import { isWorkspaceInlinePreviewSupported } from "@/lib/workspace/storage/preview-policy";
 import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
-
-const INLINE_MIME_PREFIXES = ["image/", "application/pdf"];
-
-function isInlineSupported(mimeType: string): boolean {
-  return INLINE_MIME_PREFIXES.some((prefix) =>
-    mimeType.toLowerCase().startsWith(prefix),
-  );
-}
 
 function safeFilename(raw: string): string {
   return raw.replace(/[^\w.\-]/g, "_").slice(0, 200);
@@ -97,7 +90,7 @@ export async function GET(
       );
     }
 
-    if (!isInlineSupported(document.mimeType)) {
+    if (!isWorkspaceInlinePreviewSupported(document.mimeType)) {
       const downloadUrl = `/api/workspace/documents/${encodeURIComponent(documentId)}/download`;
       return NextResponse.redirect(
         new URL(downloadUrl, request.url),

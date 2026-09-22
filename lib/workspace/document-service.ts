@@ -71,6 +71,7 @@ export async function createWorkspaceDocumentWithInitialVersion(
     input.documentId,
     "documentId",
   );
+  const versionId = normalizeRequiredText(input.versionId, "versionId");
   const tenantId = normalizeRequiredText(input.tenantId, "tenantId");
   const actorUserId = normalizeRequiredText(input.actorUserId, "actorUserId");
   const name = normalizeRequiredText(input.name, "name");
@@ -178,6 +179,7 @@ export async function createWorkspaceDocumentWithInitialVersion(
 
     const version = await transaction.workspaceDocumentVersion.create({
       data: {
+        id: versionId,
         tenantId,
         documentId: document.id,
         versionNumber: 1,
