@@ -21,7 +21,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   workspaceDocumentFindUnique: vi.fn(),
+  workspaceDocumentFindFirst: vi.fn(),
   workspaceDocumentDelete: vi.fn(),
+  taskDocumentReferenceFindMany: vi.fn(),
+  executeRaw: vi.fn(),
   storageDelete: vi.fn(),
 }));
 
@@ -29,8 +32,23 @@ vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     workspaceDocument: {
       findUnique: (...args: unknown[]) => mocks.workspaceDocumentFindUnique(...args),
+      findFirst: (...args: unknown[]) => mocks.workspaceDocumentFindFirst(...args),
       delete: (...args: unknown[]) => mocks.workspaceDocumentDelete(...args),
     },
+    taskDocumentReference: {
+      findMany: (...args: unknown[]) => mocks.taskDocumentReferenceFindMany(...args),
+    },
+    $transaction: (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({
+        $executeRaw: mocks.executeRaw,
+        workspaceDocument: {
+          findFirst: (...args: unknown[]) => mocks.workspaceDocumentFindFirst(...args),
+          delete: (...args: unknown[]) => mocks.workspaceDocumentDelete(...args),
+        },
+        taskDocumentReference: {
+          findMany: (...args: unknown[]) => mocks.taskDocumentReferenceFindMany(...args),
+        },
+      }),
   },
 }));
 
@@ -63,6 +81,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.workspaceDocumentDelete.mockResolvedValue({ id: DOC_ID });
   mocks.storageDelete.mockResolvedValue(undefined);
+  mocks.taskDocumentReferenceFindMany.mockResolvedValue([]);
+  mocks.executeRaw.mockResolvedValue(undefined);
 });
 
 describe("getWorkspaceDocumentDeletionImpact", () => {
@@ -75,7 +95,7 @@ describe("getWorkspaceDocumentDeletionImpact", () => {
 
     const result = await getWorkspaceDocumentDeletionImpact(TENANT_A, DOC_ID);
 
-    expect(result).toEqual({ versionCount: 3 });
+    expect(result).toEqual({ versionCount: 3, referenceBlockers: [] });
   });
 
   it("2 — returns null when document does not exist", async () => {
@@ -101,7 +121,7 @@ describe("getWorkspaceDocumentDeletionImpact", () => {
 
 describe("deleteWorkspaceDocumentPermanently", () => {
   it("4 — happy path: DB deleted, storage cleaned up, correct result returned", async () => {
-    mocks.workspaceDocumentFindUnique.mockResolvedValueOnce(
+    mocks.workspaceDocumentFindFirst.mockResolvedValueOnce(
       makeDocumentWithVersions([
         { id: "v1", storageKey: "workspace/tenant-a/doc/v1/file.pdf", storageUrl: "https://blob.example/file.pdf" },
         { id: "v2", storageKey: "workspace/tenant-a/doc/v2/file.pdf", storageUrl: null },
@@ -119,7 +139,7 @@ describe("deleteWorkspaceDocumentPermanently", () => {
   });
 
   it("5 — throws DOCUMENT_NOT_FOUND for missing document", async () => {
-    mocks.workspaceDocumentFindUnique.mockResolvedValueOnce(null);
+    mocks.workspaceDocumentFindFirst.mockResolvedValueOnce(null);
 
     await expect(
       deleteWorkspaceDocumentPermanently(TENANT_A, DOC_ID),
@@ -131,22 +151,20 @@ describe("deleteWorkspaceDocumentPermanently", () => {
     expect(mocks.storageDelete).not.toHaveBeenCalled();
   });
 
-  it("6 — throws TENANT_FORBIDDEN for wrong-tenant document", async () => {
-    mocks.workspaceDocumentFindUnique.mockResolvedValueOnce(
-      makeDocumentWithVersions([]),
-    );
+  it("6 — throws DOCUMENT_NOT_FOUND when document missing in tenant scope", async () => {
+    mocks.workspaceDocumentFindFirst.mockResolvedValueOnce(null);
 
     await expect(
       deleteWorkspaceDocumentPermanently(TENANT_B, DOC_ID),
     ).rejects.toMatchObject({
-      code: "TENANT_FORBIDDEN",
+      code: "DOCUMENT_NOT_FOUND",
     });
 
     expect(mocks.workspaceDocumentDelete).not.toHaveBeenCalled();
   });
 
   it("7 — storage delete uses owned keys and never persisted URLs", async () => {
-    mocks.workspaceDocumentFindUnique.mockResolvedValueOnce(
+    mocks.workspaceDocumentFindFirst.mockResolvedValueOnce(
       makeDocumentWithVersions([
         { id: "v1", storageKey: "workspace/key1", storageUrl: "https://blob.example/url1" },
         { id: "v2", storageKey: "workspace/key2", storageUrl: null },
@@ -163,7 +181,7 @@ describe("deleteWorkspaceDocumentPermanently", () => {
   it("8 — storage failure does not throw (best-effort cleanup; DB delete already committed)", async () => {
     const storageUrl = "https://blob.example/private/url1";
     const providerSecret = "provider-secret-bearing-error";
-    mocks.workspaceDocumentFindUnique.mockResolvedValueOnce(
+    mocks.workspaceDocumentFindFirst.mockResolvedValueOnce(
       makeDocumentWithVersions([
         { id: "v1", storageKey: "workspace/key1", storageUrl },
       ]),

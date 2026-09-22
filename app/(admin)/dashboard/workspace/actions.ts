@@ -9,14 +9,43 @@ import { getRequestEffectivePermissions } from "@/lib/permissions/request-effect
 import { resolveWorkspaceActor } from "@/lib/workspace/access/actor-context";
 import { evaluateWorkspaceFolderMove } from "@/lib/workspace/access/folder-move-authorization";
 import { normalizeWorkspaceFolderName } from "@/lib/workspace/folder-service";
+import { WorkspaceAuthorizationError } from "@/lib/workspace/access/workspace-authorization";
+import { assertWorkspaceFolderDestructiveSubtreeManage } from "@/lib/workspace/access/folder-destructive-authorization";
+import { assertWorkspaceFolderEdit } from "@/lib/workspace/workspace-resource-guards";
 import {
   deleteWorkspaceFolderPermanently,
   getWorkspaceFolderDeletionImpact,
   WorkspaceFolderDeleteServiceError,
 } from "@/lib/workspace/folder-delete-service";
+import {
+  archiveWorkspaceFolder,
+  restoreWorkspaceFolderFromArchive,
+  restoreWorkspaceFolderFromTrash,
+  trashWorkspaceFolderSubtree,
+  WorkspaceFolderLifecycleServiceError,
+} from "@/lib/workspace/lifecycle/folder-lifecycle-service";
 
 const MAX_FOLDER_NAME_LENGTH = 120;
 const DISPLAY_ORDER_STEP = 10;
+
+async function resolveWorkspaceActorForSession(session: {
+  user?: { id?: string; activeTenantId?: string | null };
+}) {
+  const tenantId = session.user?.activeTenantId;
+  const userId = session.user?.id;
+  if (!tenantId || !userId) {
+    return null;
+  }
+  const { platform, tenant: tenantPerms } = await getRequestEffectivePermissions(
+    userId,
+    tenantId,
+  );
+  return resolveWorkspaceActor({
+    tenantId,
+    userId,
+    permissionKeys: [...platform, ...tenantPerms],
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Typed result types
@@ -482,65 +511,55 @@ export async function archiveWorkspaceFolderAction(
   }
 
   try {
-    const folder = await prisma.workspaceFolder.findFirst({
-      where: {
-        id: folderId,
-        tenantId,
-        archivedAt: null,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (!folder) {
+    const actor = await resolveWorkspaceActorForSession(session);
+    if (!actor) {
       return {
         ok: false,
-        code: "WORKSPACE_FOLDER_NOT_FOUND",
-        message: "Folder was not found.",
+        code: "WORKSPACE_FORBIDDEN",
+        message: "Authenticated tenant and user are required.",
       };
     }
 
-    const activeChildCount = await prisma.workspaceFolder.count({
-      where: {
-        tenantId,
-        parentId: folder.id,
-        archivedAt: null,
-      },
-    });
-
-    if (activeChildCount > 0) {
-      return {
-        ok: false,
-        code: "WORKSPACE_FOLDER_ARCHIVE_FAILED",
-        message:
-          "This folder cannot be archived while it contains active subfolders.",
-      };
+    try {
+      assertWorkspaceFolderEdit(actor, folderId);
+    } catch (error) {
+      if (error instanceof WorkspaceAuthorizationError) {
+        return {
+          ok: false,
+          code: "WORKSPACE_FOLDER_NOT_FOUND",
+          message: "Folder was not found.",
+        };
+      }
+      throw error;
     }
 
-    const archived = await prisma.workspaceFolder.updateMany({
-      where: {
-        id: folder.id,
-        tenantId,
-        archivedAt: null,
-      },
-      data: {
-        archivedAt: new Date(),
-        updatedByUserId: userId,
-      },
+    await archiveWorkspaceFolder({
+      tenantId,
+      actorUserId: userId,
+      folderId,
     });
-
-    if (archived.count !== 1) {
-      return {
-        ok: false,
-        code: "WORKSPACE_FOLDER_ARCHIVE_FAILED",
-        message: "Folder could not be archived.",
-      };
-    }
 
     revalidatePath("/dashboard/workspace");
     return { ok: true, data: undefined };
   } catch (error) {
+    if (error instanceof WorkspaceFolderLifecycleServiceError) {
+      if (error.code === "FOLDER_NOT_FOUND") {
+        return {
+          ok: false,
+          code: "WORKSPACE_FOLDER_NOT_FOUND",
+          message: "Folder was not found.",
+        };
+      }
+      if (error.code === "FOLDER_HAS_ACTIVE_CHILDREN") {
+        return {
+          ok: false,
+          code: "WORKSPACE_FOLDER_ARCHIVE_FAILED",
+          message:
+            "This folder cannot be archived while it contains active subfolders.",
+        };
+      }
+    }
+
     console.error("[workspace-actions] archiveWorkspaceFolder failed", error);
 
     return {
@@ -588,6 +607,28 @@ export async function restoreWorkspaceFolderAction(
   }
 
   try {
+    const actor = await resolveWorkspaceActorForSession(session);
+    if (!actor) {
+      return {
+        ok: false,
+        code: "WORKSPACE_FORBIDDEN",
+        message: "Authenticated tenant and user are required.",
+      };
+    }
+
+    try {
+      assertWorkspaceFolderEdit(actor, folderId);
+    } catch (error) {
+      if (error instanceof WorkspaceAuthorizationError) {
+        return {
+          ok: false,
+          code: "WORKSPACE_FOLDER_NOT_FOUND",
+          message: "Archived folder was not found.",
+        };
+      }
+      throw error;
+    }
+
     const folder = await prisma.workspaceFolder.findFirst({
       where: {
         id: folderId,
@@ -1000,31 +1041,66 @@ export async function getWorkspaceFolderDeletionImpactAction(
     };
   }
 
-  const impact = await getWorkspaceFolderDeletionImpact(tenantId, folderId);
+  try {
+    const actor = await resolveWorkspaceActorForSession(session);
+    if (!actor) {
+      return {
+        ok: false,
+        code: "WORKSPACE_FORBIDDEN",
+        message: "Authenticated tenant is required.",
+      };
+    }
 
-  if (!impact) {
+    try {
+      await assertWorkspaceFolderDestructiveSubtreeManage(
+        actor,
+        tenantId,
+        folderId,
+      );
+    } catch (error) {
+      if (error instanceof WorkspaceAuthorizationError) {
+        return {
+          ok: false,
+          code: "WORKSPACE_FOLDER_NOT_FOUND",
+          message: "Folder was not found.",
+        };
+      }
+      throw error;
+    }
+
+    const impact = await getWorkspaceFolderDeletionImpact(tenantId, folderId);
+
+    if (!impact) {
+      return {
+        ok: false,
+        code: "WORKSPACE_FOLDER_NOT_FOUND",
+        message: "Folder was not found.",
+      };
+    }
+
+    return {
+      ok: true,
+      data: {
+        descendantFolderCount: impact.descendantFolderCount,
+        documentCount: impact.documentCount,
+      },
+    };
+  } catch (error) {
+    console.error(
+      "[workspace-actions] getWorkspaceFolderDeletionImpact failed",
+      error,
+    );
     return {
       ok: false,
-      code: "WORKSPACE_FOLDER_NOT_FOUND",
-      message: "Folder was not found.",
+      code: "WORKSPACE_FOLDER_DELETE_FAILED",
+      message: "Folder deletion impact could not be loaded.",
     };
   }
-
-  return {
-    ok: true,
-    data: {
-      descendantFolderCount: impact.descendantFolderCount,
-      documentCount: impact.documentCount,
-    },
-  };
 }
 
 /**
  * Permanently deletes a WorkspaceFolder and its entire descendant subtree.
- * Requires WORKSPACE_DELETE permission.
- *
- * Documents in the deleted folder(s) will have their folderId set to null by
- * the DB constraint (onDelete: SetNull) — they are not deleted.
+ * Requires WORKSPACE_DELETE permission and MANAGE on every affected resource.
  */
 export async function deleteWorkspaceFolderPermanentlyAction(
   formData: FormData,
@@ -1063,6 +1139,32 @@ export async function deleteWorkspaceFolderPermanentlyAction(
   }
 
   try {
+    const actor = await resolveWorkspaceActorForSession(session);
+    if (!actor) {
+      return {
+        ok: false,
+        code: "WORKSPACE_FORBIDDEN",
+        message: "Authenticated tenant is required.",
+      };
+    }
+
+    try {
+      await assertWorkspaceFolderDestructiveSubtreeManage(
+        actor,
+        tenantId,
+        folderId,
+      );
+    } catch (error) {
+      if (error instanceof WorkspaceAuthorizationError) {
+        return {
+          ok: false,
+          code: "WORKSPACE_FOLDER_NOT_FOUND",
+          message: "Folder was not found.",
+        };
+      }
+      throw error;
+    }
+
     await deleteWorkspaceFolderPermanently(tenantId, folderId);
     await logAction({
       tenantId,
@@ -1090,6 +1192,15 @@ export async function deleteWorkspaceFolderPermanentlyAction(
           ok: false,
           code: "WORKSPACE_FORBIDDEN",
           message: "Access denied.",
+        };
+      }
+
+      if (error.code === "RESOURCE_REFERENCED") {
+        return {
+          ok: false,
+          code: "WORKSPACE_FOLDER_DELETE_FAILED",
+          message:
+            "Folder cannot be deleted while documents are referenced by tasks.",
         };
       }
     }

@@ -128,6 +128,12 @@ export async function linkTaskDocument(
   }
 
   await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`
+      SELECT "id" FROM "WorkspaceDocument"
+      WHERE "id" = ${normalizedDocumentId} AND "tenantId" = ${ctx.tenantId}
+      FOR UPDATE
+    `;
+
     const created = await tx.taskDocumentReference.createMany({
       data: [
         {

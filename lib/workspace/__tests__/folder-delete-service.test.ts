@@ -30,7 +30,10 @@ const mocks = vi.hoisted(() => ({
   workspaceFolderFindFirst: vi.fn(),
   workspaceFolderFindMany: vi.fn(),
   workspaceFolderDeleteMany: vi.fn(),
-  workspaceDocumentCount: vi.fn(),
+  workspaceDocumentFindMany: vi.fn(),
+  workspaceDocumentDelete: vi.fn(),
+  taskDocumentReferenceFindMany: vi.fn(),
+  executeRaw: vi.fn(),
   transactionFn: vi.fn(),
 }));
 
@@ -42,15 +45,31 @@ vi.mock("@/lib/db/prisma", () => ({
       deleteMany: (...args: unknown[]) => mocks.workspaceFolderDeleteMany(...args),
     },
     workspaceDocument: {
-      count: (...args: unknown[]) => mocks.workspaceDocumentCount(...args),
+      findMany: (...args: unknown[]) => mocks.workspaceDocumentFindMany(...args),
+      delete: (...args: unknown[]) => mocks.workspaceDocumentDelete(...args),
+    },
+    taskDocumentReference: {
+      findMany: (...args: unknown[]) => mocks.taskDocumentReferenceFindMany(...args),
     },
     $transaction: (fn: (tx: unknown) => Promise<unknown>) =>
       fn({
+        $executeRaw: mocks.executeRaw,
         workspaceFolder: {
           deleteMany: (...args: unknown[]) => mocks.workspaceFolderDeleteMany(...args),
         },
+        workspaceDocument: {
+          findMany: (...args: unknown[]) => mocks.workspaceDocumentFindMany(...args),
+          delete: (...args: unknown[]) => mocks.workspaceDocumentDelete(...args),
+        },
+        taskDocumentReference: {
+          findMany: (...args: unknown[]) => mocks.taskDocumentReferenceFindMany(...args),
+        },
       }),
   },
+}));
+
+vi.mock("@/lib/workspace/upload-storage", () => ({
+  workspaceStorageProvider: { delete: vi.fn() },
 }));
 
 import {
@@ -68,7 +87,9 @@ const TENANT_B = "tenant-b";
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.workspaceFolderDeleteMany.mockResolvedValue({ count: 1 });
-  mocks.workspaceDocumentCount.mockResolvedValue(0);
+  mocks.workspaceDocumentFindMany.mockResolvedValue([]);
+  mocks.taskDocumentReferenceFindMany.mockResolvedValue([]);
+  mocks.executeRaw.mockResolvedValue(undefined);
 });
 
 // ── getWorkspaceFolderDeletionImpact ─────────────────────────────────────────
@@ -77,11 +98,15 @@ describe("getWorkspaceFolderDeletionImpact", () => {
   it("1 — leaf folder: zero descendants and zero documents", async () => {
     mocks.workspaceFolderFindFirst.mockResolvedValueOnce({ id: FOLDER_ID });
     mocks.workspaceFolderFindMany.mockResolvedValueOnce([]);
-    mocks.workspaceDocumentCount.mockResolvedValueOnce(0);
+    mocks.workspaceDocumentFindMany.mockResolvedValueOnce([]);
 
     const result = await getWorkspaceFolderDeletionImpact(TENANT_A, FOLDER_ID);
 
-    expect(result).toEqual({ descendantFolderCount: 0, documentCount: 0 });
+    expect(result).toEqual({
+      descendantFolderCount: 0,
+      documentCount: 0,
+      referenceBlockers: [],
+    });
   });
 
   it("2 — folder with two children and three documents", async () => {
@@ -91,11 +116,19 @@ describe("getWorkspaceFolderDeletionImpact", () => {
       .mockResolvedValueOnce([{ id: CHILD_ID_A }, { id: CHILD_ID_B }])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
-    mocks.workspaceDocumentCount.mockResolvedValueOnce(3);
+    mocks.workspaceDocumentFindMany.mockResolvedValueOnce([
+      { id: "d1" },
+      { id: "d2" },
+      { id: "d3" },
+    ]);
 
     const result = await getWorkspaceFolderDeletionImpact(TENANT_A, FOLDER_ID);
 
-    expect(result).toEqual({ descendantFolderCount: 2, documentCount: 3 });
+    expect(result).toEqual({
+      descendantFolderCount: 2,
+      documentCount: 3,
+      referenceBlockers: [],
+    });
   });
 
   it("3 — returns null when folder does not exist", async () => {
@@ -143,7 +176,7 @@ describe("deleteWorkspaceFolderPermanently", () => {
       name: "Trainers",
     });
     mocks.workspaceFolderFindMany.mockResolvedValueOnce([]);
-    mocks.workspaceDocumentCount.mockResolvedValueOnce(0);
+    mocks.workspaceDocumentFindMany.mockResolvedValueOnce([]);
     mocks.workspaceFolderDeleteMany.mockResolvedValueOnce({ count: 1 });
 
     const result = await deleteWorkspaceFolderPermanently(TENANT_A, FOLDER_ID);
@@ -168,7 +201,7 @@ describe("deleteWorkspaceFolderPermanently", () => {
       name: "Archived Folder",
     });
     mocks.workspaceFolderFindMany.mockResolvedValueOnce([]);
-    mocks.workspaceDocumentCount.mockResolvedValueOnce(0);
+    mocks.workspaceDocumentFindMany.mockResolvedValueOnce([]);
     mocks.workspaceFolderDeleteMany.mockResolvedValueOnce({ count: 1 });
 
     const result = await deleteWorkspaceFolderPermanently(TENANT_A, FOLDER_ID);
@@ -192,7 +225,10 @@ describe("deleteWorkspaceFolderPermanently", () => {
       .mockResolvedValueOnce([{ id: CHILD_ID_A }, { id: CHILD_ID_B }])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
-    mocks.workspaceDocumentCount.mockResolvedValueOnce(2);
+    mocks.workspaceDocumentFindMany.mockResolvedValueOnce([
+      { id: "d1", versions: [{ storageKey: "k1" }] },
+      { id: "d2", versions: [{ storageKey: "k2" }] },
+    ]);
     mocks.workspaceFolderDeleteMany.mockResolvedValueOnce({ count: 3 });
 
     const result = await deleteWorkspaceFolderPermanently(TENANT_A, FOLDER_ID);
@@ -253,5 +289,46 @@ describe("deleteWorkspaceFolderPermanently", () => {
     expect(err).toBeInstanceOf(Error);
     expect(err.code).toBe("FOLDER_NOT_FOUND");
     expect(err.name).toBe("WorkspaceFolderDeleteServiceError");
+  });
+
+  it("W06-13/W06-A1-02 descendant reference blocker aborts entire folder permanent delete", async () => {
+    mocks.workspaceFolderFindFirst.mockResolvedValueOnce({
+      id: FOLDER_ID,
+      tenantId: TENANT_A,
+      name: "Root",
+    });
+    mocks.workspaceFolderFindMany
+      .mockResolvedValueOnce([{ id: CHILD_ID_A }])
+      .mockResolvedValueOnce([]);
+    mocks.workspaceDocumentFindMany.mockResolvedValueOnce([
+      { id: "d-blocked", versions: [{ storageKey: "k1" }] },
+    ]);
+    mocks.taskDocumentReferenceFindMany.mockResolvedValueOnce([{ id: "ref-1" }]);
+
+    await expect(
+      deleteWorkspaceFolderPermanently(TENANT_A, FOLDER_ID),
+    ).rejects.toMatchObject({ code: "RESOURCE_REFERENCED" });
+
+    expect(mocks.workspaceFolderDeleteMany).not.toHaveBeenCalled();
+    expect(mocks.workspaceDocumentDelete).not.toHaveBeenCalled();
+  });
+
+  it("W06-A1-05 folder delete DB failure causes zero partial subtree deletion", async () => {
+    mocks.workspaceFolderFindFirst.mockResolvedValueOnce({
+      id: FOLDER_ID,
+      tenantId: TENANT_A,
+      name: "Root",
+    });
+    mocks.workspaceFolderFindMany.mockResolvedValueOnce([]);
+    mocks.workspaceDocumentFindMany.mockResolvedValueOnce([
+      { id: "d1", versions: [{ storageKey: "k1" }] },
+    ]);
+    mocks.workspaceDocumentDelete.mockRejectedValueOnce(new Error("db fail"));
+
+    await expect(
+      deleteWorkspaceFolderPermanently(TENANT_A, FOLDER_ID),
+    ).rejects.toThrow("db fail");
+
+    expect(mocks.workspaceFolderDeleteMany).not.toHaveBeenCalled();
   });
 });

@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db/prisma";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
-import { canReadWorkspaceDocument } from "@/lib/workspace/document-access";
+import {
+  resolveWorkspaceDocumentDirectLinkAccess,
+  resolveWorkspaceDocumentVersionDirectLinkAccess,
+} from "@/lib/workspace/document-link-access";
 import { resolveWorkspaceActor } from "@/lib/workspace/access/actor-context";
 import { buildWorkspaceReadWhere } from "@/lib/workspace/access/query-predicate";
 import {
@@ -28,10 +30,15 @@ import { hasPermission } from "@/lib/permissions/has-permission";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
+  getArchivedWorkspaceDocuments,
   getArchivedWorkspaceFolders,
+  getTrashedWorkspaceDocuments,
+  getTrashedWorkspaceFolders,
   getWorkspaceFolderById,
+  getWorkspaceFolderByIdIncludingLifecycle,
   getWorkspaceFolderTree,
 } from "@/lib/workspace/queries";
+import { WorkspaceDiscoveryPanel } from "@/components/admin/workspace/WorkspaceDiscoveryPanel";
 import { listWorkspaceDocuments } from "@/lib/workspace/document-service";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -46,6 +53,8 @@ type WorkspacePageProps = {
   searchParams?: Promise<{
     folder?: string;
     document?: string;
+    version?: string;
+    view?: string;
   }>;
 };
 
@@ -72,6 +81,8 @@ export default async function WorkspacePage({
   const params = (await searchParams) ?? {};
   const folderParam = params.folder?.trim() || null;
   const documentParam = params.document?.trim() || null;
+  const versionParam = params.version?.trim() || null;
+  const lifecycleView = params.view?.trim() || "active";
   const canManage = hasPermission(session, PERMISSIONS.WORKSPACE_MANAGE);
   const canDelete = hasPermission(session, PERMISSIONS.WORKSPACE_DELETE);
 
@@ -91,36 +102,54 @@ export default async function WorkspacePage({
 
   let selectedFolderId = folderParam;
   let initialSelectedDocumentId: string | null = null;
+  let directLinkLifecycle: "ACTIVE" | "ARCHIVED" | "TRASHED" | null = null;
+
+  const documentAccessCtx = {
+    tenantId,
+    userId,
+    permissionKeys: [...platform, ...tenantPerms],
+  };
 
   if (documentParam) {
-    const documentAccessCtx = {
-      tenantId,
-      userId,
-      permissionKeys: [...platform, ...tenantPerms],
-    };
+    const linkAccess = await resolveWorkspaceDocumentDirectLinkAccess(
+      documentAccessCtx,
+      documentParam,
+    );
+    if (!linkAccess.allowed) notFound();
 
-    const readable = await canReadWorkspaceDocument(documentAccessCtx, documentParam);
-    if (!readable) notFound();
+    if (versionParam) {
+      const versionAccess = await resolveWorkspaceDocumentVersionDirectLinkAccess(
+        documentAccessCtx,
+        documentParam,
+        versionParam,
+      );
+      if (!versionAccess.allowed) notFound();
+    }
 
-    const documentRow = await prisma.workspaceDocument.findFirst({
-      where: { id: documentParam, tenantId },
-      select: { id: true, folderId: true },
-    });
-    if (!documentRow?.folderId) notFound();
-
-    selectedFolderId = documentRow.folderId;
-    initialSelectedDocumentId = documentRow.id;
+    directLinkLifecycle = linkAccess.lifecycle;
+    if (linkAccess.folderId) {
+      selectedFolderId = linkAccess.folderId;
+    }
+    initialSelectedDocumentId = linkAccess.documentId;
   }
 
-  const [folders, selectedFolder, archivedFolders] = await Promise.all([
-    getWorkspaceFolderTree(tenantId, readWhere.folderIds),
-    selectedFolderId
-      ? getWorkspaceFolderById(tenantId, selectedFolderId, readWhere.folderIds)
-      : Promise.resolve(null),
-    canManage
-      ? getArchivedWorkspaceFolders(tenantId)
-      : Promise.resolve([]),
-  ]);
+  const [folders, selectedFolder, archivedFolders, archivedDocuments, trashedFolders, trashedDocuments] =
+    await Promise.all([
+      getWorkspaceFolderTree(tenantId, readWhere.folderIds),
+      selectedFolderId
+        ? directLinkLifecycle && directLinkLifecycle !== "ACTIVE"
+          ? getWorkspaceFolderByIdIncludingLifecycle(
+              tenantId,
+              selectedFolderId,
+              readWhere.folderIds,
+            )
+          : getWorkspaceFolderById(tenantId, selectedFolderId, readWhere.folderIds)
+        : Promise.resolve(null),
+      getArchivedWorkspaceFolders(tenantId, readWhere.folderIds),
+      getArchivedWorkspaceDocuments(tenantId, readWhere.documentIds),
+      getTrashedWorkspaceFolders(tenantId, readWhere.folderIds),
+      getTrashedWorkspaceDocuments(tenantId, readWhere.documentIds),
+    ]);
 
   const documentsRaw = selectedFolder
     ? await listWorkspaceDocuments({
@@ -188,6 +217,16 @@ export default async function WorkspacePage({
         title={t("page.title")}
         description={t("page.description")}
       />
+
+      <div className="mb-4">
+        <WorkspaceDiscoveryPanel />
+      </div>
+
+      {directLinkLifecycle && directLinkLifecycle !== "ACTIVE" ? (
+        <p className="mb-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm text-[var(--text-2)]">
+          Lebenszyklus: {directLinkLifecycle === "ARCHIVED" ? "Archiviert" : "Papierkorb"}
+        </p>
+      ) : null}
 
       <div className="grid min-h-[620px] gap-4 lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)_minmax(0,300px)]">
         {/* ── Left: folder tree ─────────────────────────────────────── */}
@@ -340,7 +379,39 @@ export default async function WorkspacePage({
       </div>
 
       {/* ── Archived folders ──────────────────────────────────────── */}
-      {canManage && archivedFolders.length > 0 ? (
+      {lifecycleView === "archived" && (archivedFolders.length > 0 || archivedDocuments.length > 0) ? (
+        <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
+          <h2 className="text-sm font-semibold">Archivierte Inhalte</h2>
+          <ul className="mt-3 space-y-2 text-sm">
+            {archivedFolders.map((f) => (
+              <li key={f.id}>{f.name}</li>
+            ))}
+            {archivedDocuments.map((d) => (
+              <li key={d.id}>
+                <a href={`/dashboard/workspace?document=${d.id}`}>{d.name}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {lifecycleView === "trash" && (trashedFolders.length > 0 || trashedDocuments.length > 0) ? (
+        <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
+          <h2 className="text-sm font-semibold">Papierkorb</h2>
+          <ul className="mt-3 space-y-2 text-sm">
+            {trashedFolders.map((f) => (
+              <li key={f.id}>{f.name}</li>
+            ))}
+            {trashedDocuments.map((d) => (
+              <li key={d.id}>
+                <a href={`/dashboard/workspace?document=${d.id}`}>{d.name}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {archivedFolders.length > 0 ? (
         <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
           <div className="border-b border-[var(--border)] px-5 py-4">
             <h2 className="text-sm font-semibold text-[var(--text)]">
