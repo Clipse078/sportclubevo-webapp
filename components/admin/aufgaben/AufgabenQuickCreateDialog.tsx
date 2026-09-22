@@ -24,7 +24,6 @@ type Props = {
 export default function AufgabenQuickCreateDialog({
   canCreate,
   canManage = false,
-  assigneeOptions: _assigneeOptions,
 }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   useCallback,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -26,7 +25,6 @@ import {
   SCE_DIALOG_WORKSPACE_PANEL,
 } from "@/lib/shell/responsive-layout";
 import { useSceModalDialog } from "@/lib/ui/use-sce-modal-dialog";
-import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import { presentTaskDeadline } from "@/lib/tasks/management-deadline";
 import { formatAssigneeName } from "@/lib/tasks/management-labels";
 import TaskPeopleMultiPicker from "./TaskPeopleMultiPicker";
@@ -373,10 +371,6 @@ function AssigneeEditor({
   );
   const [selectedIds, setSelectedIds] = useState(() => task.assignees.map((a) => a.userId));
 
-  useEffect(() => {
-    setSelectedIds(task.assignees.map((a) => a.userId));
-  }, [task.assignees]);
-
   if (!canAssign) {
     return <AssigneeAvatars assignees={task.assignees} />;
   }
@@ -504,7 +498,6 @@ function SubtaskCreateInline({
 
 export function TaskWorkspacePanel({
   bundle,
-  assigneeOptions,
   orgUnitOptions,
   orgUnitDisplayLabel,
   locale,
@@ -785,6 +778,11 @@ export function TaskWorkspacePanel({
 
           <PropertyRow label="Verantwortlich">
             <AssigneeEditor
+              key={task.assignees
+                .map((a) => a.userId)
+                .slice()
+                .sort()
+                .join(",")}
               task={task}
               canAssign={capabilities.canAssign}
               pending={pending}

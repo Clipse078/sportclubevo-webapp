@@ -135,15 +135,6 @@ async function validateAssigneeUserIds(tenantId: string, userIds: string[]) {
   }
 }
 
-async function requireSeries(ctx: TaskServiceContext, seriesId: string): Promise<SeriesRow> {
-  const series = await prisma.taskSeries.findFirst({
-    where: { id: seriesId, tenantId: ctx.tenantId },
-    include: SERIES_INCLUDE,
-  });
-  if (!series) throw new TaskNotFoundError(seriesId);
-  return series;
-}
-
 function buildSeriesReadWhere(ctx: TaskServiceContext): Prisma.TaskSeriesWhereInput {
   return buildTaskSeriesReadWhere(ctx);
 }

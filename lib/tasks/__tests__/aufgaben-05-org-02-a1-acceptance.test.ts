@@ -11,9 +11,7 @@ import {
   canReadTask,
   canReadTaskSeries,
   EMPTY_TASK_AUTH_SCOPE,
-  hasTenantWideClubTaskRead,
   loadTaskAuthScope,
-  orgReadableUnitIds,
   type TaskAuthorizationRecord,
 } from "../task-authorization";
 import { loadTaskWorkspace } from "../workspace-service";

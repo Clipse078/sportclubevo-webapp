@@ -53,7 +53,6 @@ function newSubtask(): SubtaskDraft {
 }
 
 export default function TaskSeriesCreateClient({
-  assigneeOptions: _assigneeOptions,
   orgUnitOptions,
   timeZone,
   backHref,

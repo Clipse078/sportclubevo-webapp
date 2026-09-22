@@ -13,8 +13,6 @@ import {
 } from "../task-authorization";
 import { grantsRowsToSnapshot, resolveEffectiveOrgUnitGrantIds } from "../task-access-grants";
 import { taskPriorityVisual } from "../task-priority-visual";
-import { SCE_TASK_RICH_CONTENT_CLASS } from "../task-description-rich-content";
-
 function read(rel: string): string {
   return readFileSync(join(process.cwd(), rel), "utf8");
 }

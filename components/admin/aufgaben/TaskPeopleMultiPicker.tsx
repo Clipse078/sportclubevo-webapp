@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
 import { ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS } from "@/lib/tasks/quick-create-assignee-search";
@@ -48,13 +48,7 @@ export default function TaskPeopleMultiPicker({
   const [addOpen, setAddOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<TaskAssigneeOption[]>([]);
-  const [known, setKnown] = useState<Record<string, TaskAssigneeOption>>(() => {
-    const map: Record<string, TaskAssigneeOption> = {};
-    for (const person of initialKnown) {
-      map[person.userId] = person;
-    }
-    return map;
-  });
+  const [addedKnown, setAddedKnown] = useState<Record<string, TaskAssigneeOption>>({});
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
@@ -63,7 +57,6 @@ export default function TaskPeopleMultiPicker({
     clearTimeout(searchDebounceRef.current);
     const term = search.trim();
     if (term.length < ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS) {
-      setSearchResults([]);
       return undefined;
     }
     searchDebounceRef.current = setTimeout(async () => {
@@ -82,14 +75,23 @@ export default function TaskPeopleMultiPicker({
   }, [addOpen, search, selectedIds]);
 
   const searchReady = search.trim().length >= ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS;
+  const searchLoadingVisible = searchReady && searchLoading;
+
+  const effectiveKnown = useMemo(() => {
+    const map: Record<string, TaskAssigneeOption> = {};
+    for (const person of initialKnown) {
+      map[person.userId] = person;
+    }
+    return { ...map, ...addedKnown };
+  }, [initialKnown, addedKnown]);
 
   const selectedPeople = selectedIds
-    .map((id) => known[id] ?? searchResults.find((p) => p.userId === id))
+    .map((id) => effectiveKnown[id] ?? searchResults.find((p) => p.userId === id))
     .filter(Boolean) as TaskAssigneeOption[];
 
   function addPerson(userId: string, person?: TaskAssigneeOption) {
     if (person) {
-      setKnown((prev) => ({ ...prev, [userId]: person }));
+      setAddedKnown((prev) => ({ ...prev, [userId]: person }));
     }
     if (!selectedIds.includes(userId)) {
       onSelectedIdsChange([...selectedIds, userId]);
@@ -154,7 +156,7 @@ export default function TaskPeopleMultiPicker({
                 disabled={disabled}
               />
               <div className="mt-1 max-h-40 overflow-y-auto">
-                {searchLoading ? (
+                {searchLoadingVisible ? (
                   <p className="px-2 py-1.5 text-xs text-[var(--muted)]">Suche …</p>
                 ) : searchError ? (
                   <p className="px-2 py-1.5 text-xs text-red-300">{searchError}</p>

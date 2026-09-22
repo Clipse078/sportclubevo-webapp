@@ -41,7 +41,6 @@ type SubtaskDraft = {
 
 export default function TaskSeriesWorkspace({
   bundle,
-  assigneeOptions: _assigneeOptions,
   orgUnitOptions,
   locale,
   timeZone,
