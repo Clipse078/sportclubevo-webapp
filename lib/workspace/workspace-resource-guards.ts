@@ -7,6 +7,8 @@ import { WorkspaceResourceType } from "@prisma/client";
 import {
   assertWorkspaceAccess,
   canWorkspaceView,
+  hasWorkspaceTenantManageCapability,
+  WorkspaceAuthorizationError,
   type WorkspaceActorContext,
 } from "@/lib/workspace/access/workspace-authorization";
 
@@ -78,4 +80,24 @@ export function canViewWorkspaceDocument(
     resourceType: WorkspaceResourceType.DOCUMENT,
     documentId,
   });
+}
+
+/**
+ * Upload destination authorization — folder uploads require folder EDIT;
+ * root uploads require tenant manage capability (same API gate as W03).
+ */
+export function assertWorkspaceUploadDestinationEdit(
+  actor: WorkspaceActorContext,
+  folderId: string | null,
+): void {
+  if (folderId) {
+    assertWorkspaceFolderEdit(actor, folderId);
+    return;
+  }
+
+  if (!hasWorkspaceTenantManageCapability(actor.permissionKeys)) {
+    throw new WorkspaceAuthorizationError(
+      "Workspace upload destination is not authorized.",
+    );
+  }
 }

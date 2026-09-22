@@ -29,11 +29,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getTenantFromSession } from "@/lib/tenants/queries";
 import { buildWorkspaceReadWhere } from "@/lib/workspace/access/query-predicate";
-import {
-  assertWorkspaceAccess,
-  WorkspaceAuthorizationError,
-} from "@/lib/workspace/access/workspace-authorization";
-import { WorkspaceResourceType } from "@prisma/client";
+import { WorkspaceAuthorizationError } from "@/lib/workspace/access/workspace-authorization";
 import { requireWorkspaceApiActor } from "@/lib/workspace/workspace-api-actor";
 import {
   createWorkspaceDocumentWithInitialVersion,
@@ -45,8 +41,9 @@ import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
 import { validateWorkspaceUploadFile } from "@/lib/workspace/upload-types";
 import {
   TeamDocumentValidationError,
-  validateTeamDocumentUpload,
-} from "@/lib/teams/team-document-validation";
+  validateWorkspaceDocumentUpload,
+} from "@/lib/workspace/storage/upload-policy";
+import { assertWorkspaceUploadDestinationEdit } from "@/lib/workspace/workspace-resource-guards";
 
 function getOptionalFormText(
   formData: FormData,
@@ -275,12 +272,13 @@ export async function POST(request: NextRequest) {
     requestedName ?? validation.filename;
 
   const documentId = randomUUID().replaceAll("-", "");
+  const versionId = randomUUID().replaceAll("-", "");
 
   const arrayBuffer = await fileEntry.arrayBuffer();
   const buffer = new Uint8Array(arrayBuffer);
 
   try {
-    await validateTeamDocumentUpload({
+    await validateWorkspaceDocumentUpload({
       filename: fileEntry.name,
       declaredContentType: fileEntry.type,
       buffer,
@@ -295,27 +293,22 @@ export async function POST(request: NextRequest) {
     throw error;
   }
 
-  if (folderId) {
-    try {
-      assertWorkspaceAccess(access.actor, "EDIT", {
-        resourceType: WorkspaceResourceType.FOLDER,
-        folderId,
-      });
-    } catch (error) {
-      if (error instanceof WorkspaceAuthorizationError) {
-        return NextResponse.json(
-          { error: "Ordnerzugriff verweigert.", code: "WORKSPACE_FORBIDDEN" },
-          { status: 403 },
-        );
-      }
-      throw error;
+  try {
+    assertWorkspaceUploadDestinationEdit(access.actor, folderId);
+  } catch (error) {
+    if (error instanceof WorkspaceAuthorizationError) {
+      return NextResponse.json(
+        { error: "Ordnerzugriff verweigert.", code: "WORKSPACE_FORBIDDEN" },
+        { status: 403 },
+      );
     }
+    throw error;
   }
 
   const uploadResult = await workspaceStorageProvider.upload({
-    tenantKey: tenant.key,
+    tenantId: tenant.id,
     documentId,
-    versionNumber: 1,
+    versionId,
     filename: validation.filename,
     mimeType: validation.mimeType,
     buffer,
@@ -337,6 +330,7 @@ export async function POST(request: NextRequest) {
     const document =
       await createWorkspaceDocumentWithInitialVersion({
         documentId,
+        versionId,
         tenantId: tenant.id,
         folderId,
         name: documentName,

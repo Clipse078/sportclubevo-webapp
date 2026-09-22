@@ -62,9 +62,11 @@ export type WorkspaceUploadValidationResult =
   | WorkspaceUploadValidationFailure;
 
 export type WorkspaceStorageUploadInput = {
-  tenantKey: string;
+  /** Immutable tenant id — never a slug or client-provided namespace. */
+  tenantId: string;
   documentId: string;
-  versionNumber: number;
+  /** Immutable version row id used in the secure object key. */
+  versionId: string;
   filename: string;
   mimeType: AllowedWorkspaceMimeType;
   buffer: Uint8Array;

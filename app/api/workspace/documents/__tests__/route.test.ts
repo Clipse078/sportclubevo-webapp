@@ -144,6 +144,7 @@ function mockAuthorizedSession(
         userId,
         personId: null,
       },
+      permissionKeys: [PERMISSIONS.WORKSPACE_MANAGE],
     },
   });
 }
@@ -772,12 +773,12 @@ describe("POST /api/workspace/documents", () => {
       "storageUrl",
     );
 
-    expect(mocks.randomUUID).toHaveBeenCalledTimes(1);
+    expect(mocks.randomUUID).toHaveBeenCalledTimes(2);
 
     expect(mocks.upload).toHaveBeenCalledWith({
-      tenantKey: TENANT_KEY,
+      tenantId: TENANT_ID,
       documentId: DOCUMENT_ID,
-      versionNumber: 1,
+      versionId: DOCUMENT_ID,
       filename: "Trainer Handbuch.pdf",
       mimeType: "application/pdf",
       buffer: expect.any(Uint8Array),
@@ -785,6 +786,7 @@ describe("POST /api/workspace/documents", () => {
 
     expect(mocks.createDocument).toHaveBeenCalledWith({
       documentId: DOCUMENT_ID,
+      versionId: DOCUMENT_ID,
       tenantId: TENANT_ID,
       folderId: "folder-1",
       name: "Trainer-Handbuch",
@@ -836,7 +838,7 @@ describe("POST /api/workspace/documents", () => {
 
     expect(mocks.upload).toHaveBeenCalledWith(
       expect.objectContaining({
-        tenantKey: TENANT_KEY,
+        tenantId: TENANT_ID,
         documentId: DOCUMENT_ID,
       }),
     );

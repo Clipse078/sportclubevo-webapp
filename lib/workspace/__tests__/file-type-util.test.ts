@@ -70,6 +70,12 @@ describe("resolveWorkspaceFileType – MIME type mapping", () => {
     expect(result.previewCapable).toBe(true);
   });
 
+  it("does not mark SVG as inline-preview capable", () => {
+    const result = resolveWorkspaceFileType("image/svg+xml", "icon.svg");
+    expect(result.category).toBe("image");
+    expect(result.previewCapable).toBe(false);
+  });
+
   it("resolves video/mp4 to video category without preview", () => {
     const result = resolveWorkspaceFileType("video/mp4");
     expect(result.category).toBe("video");

@@ -38,6 +38,7 @@ import {
 
 const validInput = {
   documentId: "document-1",
+  versionId: "version-1",
   tenantId: "tenant-1",
   folderId: "folder-1",
   name: "Trainerhandbuch",
@@ -201,6 +202,7 @@ describe("createWorkspaceDocumentWithInitialVersion", () => {
 
     expect(mocks.workspaceDocumentVersionCreate).toHaveBeenCalledWith({
       data: {
+        id: "version-1",
         tenantId: "tenant-1",
         documentId: "document-1",
         versionNumber: 1,

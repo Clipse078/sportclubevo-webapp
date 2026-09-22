@@ -171,44 +171,28 @@ describe("Workspace upload storage", () => {
   it("creates deterministic tenant-scoped storage keys", () => {
     expect(
       getWorkspaceStorageKey({
-        tenantKey: "FC Allschwil",
+        tenantId: "tenant-abc-123",
         documentId: "Document 123",
-        versionNumber: 2,
+        versionId: "version-456",
         filename: "Trainer: Handbuch.pdf",
       }),
     ).toBe(
-      "workspace/fc-allschwil/document-123/v2/Trainer- Handbuch.pdf",
+      "workspace/tenants/tenant-abc-123/documents/document-123/versions/version-456/Trainer- Handbuch.pdf",
     );
   });
 
   it("normalizes unsafe tenant and document segments", () => {
     expect(
       getWorkspaceStorageKey({
-        tenantKey: "../../Tenant",
+        tenantId: "../../Tenant",
         documentId: "Document/ABC",
-        versionNumber: 1,
+        versionId: "../version",
         filename: "../report.xlsx",
       }),
     ).toBe(
-      "workspace/tenant/document-abc/v1/report.xlsx",
+      "workspace/tenants/tenant/documents/document-abc/versions/version/report.xlsx",
     );
   });
-
-  it.each([0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1])(
-    "rejects invalid version number %s",
-    (versionNumber) => {
-      expect(() =>
-        getWorkspaceStorageKey({
-          tenantKey: "tenant",
-          documentId: "document",
-          versionNumber,
-          filename: "file.pdf",
-        }),
-      ).toThrow(
-        "versionNumber must be a positive safe integer.",
-      );
-    },
-  );
 
   it("calculates a deterministic SHA-256 checksum", () => {
     expect(
@@ -226,9 +210,9 @@ describe("Workspace upload storage", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     const result = await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new Uint8Array([1, 2, 3]),
@@ -251,9 +235,9 @@ describe("Workspace upload storage", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     const result = await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new Uint8Array([1, 2, 3]),
@@ -274,9 +258,9 @@ describe("Workspace upload storage", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     const result = await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new Uint8Array([1, 2, 3]),
@@ -300,9 +284,9 @@ describe("Workspace upload storage", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     const result = await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new Uint8Array([1, 2, 3]),
@@ -321,9 +305,9 @@ describe("Workspace upload storage", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     const result = await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new Uint8Array([1, 2, 3]),
@@ -341,9 +325,9 @@ describe("Workspace upload storage", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     const result = await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 0,
+      versionId: "  ",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new Uint8Array([1]),
@@ -353,7 +337,7 @@ describe("Workspace upload storage", () => {
       ok: false,
       status: 400,
       code: "WORKSPACE_UPLOAD_INVALID_FILE",
-      error: "Ungültige Versionsnummer.",
+      error: "Ungültige Versionskennung.",
     });
 
     expect(blobMocks.put).not.toHaveBeenCalled();
@@ -365,9 +349,9 @@ describe("Workspace upload storage", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     const result = await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new Uint8Array(),
@@ -390,7 +374,7 @@ describe("Workspace upload storage", () => {
       url: "https://blob.example.test/document.pdf",
       downloadUrl: "https://blob.example.test/document.pdf?download=1",
       pathname:
-        "workspace/tenant-1/document-1/v1/document.pdf",
+        "workspace/tenants/tenant-1/documents/document-1/versions/version-1/document.pdf",
       contentDisposition:
         'attachment; filename="document.pdf"',
       contentType: "application/pdf",
@@ -401,9 +385,9 @@ describe("Workspace upload storage", () => {
     const inputBuffer = new TextEncoder().encode("hello");
 
     const result = await storage.upload({
-      tenantKey: "Tenant 1",
+      tenantId: "tenant-1",
       documentId: "Document 1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: inputBuffer,
@@ -412,7 +396,7 @@ describe("Workspace upload storage", () => {
     expect(blobMocks.put).toHaveBeenCalledTimes(1);
 
     expect(blobMocks.put).toHaveBeenCalledWith(
-      "workspace/tenant-1/document-1/v1/document.pdf",
+      "workspace/tenants/tenant-1/documents/document-1/versions/version-1/document.pdf",
       expect.any(Buffer),
       {
         access: "private",
@@ -427,7 +411,7 @@ describe("Workspace upload storage", () => {
     expect(result).toEqual({
       ok: true,
       storageKey:
-        "workspace/tenant-1/document-1/v1/document.pdf",
+        "workspace/tenants/tenant-1/documents/document-1/versions/version-1/document.pdf",
       storageUrl:
         "https://blob.example.test/document.pdf",
       checksum:
@@ -445,7 +429,8 @@ describe("Workspace upload storage", () => {
     blobMocks.put.mockResolvedValue({
       url: "https://blob.example.test/document.pdf",
       downloadUrl: "https://blob.example.test/document.pdf?download=1",
-      pathname: "workspace/tenant-1/document-1/v1/document.pdf",
+      pathname:
+        "workspace/tenants/tenant-1/documents/document-1/versions/version-1/document.pdf",
       contentDisposition: 'attachment; filename="document.pdf"',
       contentType: "application/pdf",
     });
@@ -453,9 +438,9 @@ describe("Workspace upload storage", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new TextEncoder().encode("hello"),
@@ -482,9 +467,9 @@ describe("Workspace upload storage", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     const result = await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new Uint8Array([1]),
@@ -852,9 +837,9 @@ describe("Workspace storage: BlobError classification", () => {
       const storage = new VercelBlobWorkspaceStorage();
 
       const result = await storage.upload({
-        tenantKey: "tenant-1",
+        tenantId: "tenant-1",
         documentId: "document-1",
-        versionNumber: 1,
+        versionId: "version-1",
         filename: "document.pdf",
         mimeType: "application/pdf",
         buffer: new Uint8Array([1, 2, 3]),
@@ -919,9 +904,9 @@ describe("Workspace storage: BlobError classification", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     const result = await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new Uint8Array([1, 2, 3]),
@@ -949,9 +934,9 @@ describe("Workspace storage: BlobError classification", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     const result = await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new Uint8Array([1, 2, 3]),
@@ -980,9 +965,9 @@ describe("Workspace storage: BlobError classification", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     const result = await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new Uint8Array([1, 2, 3]),
@@ -1011,9 +996,9 @@ describe("Workspace storage: BlobError classification", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     const result = await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new Uint8Array([1, 2, 3]),
@@ -1042,9 +1027,9 @@ describe("Workspace storage: BlobError classification", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     const result = await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new Uint8Array([1, 2, 3]),
@@ -1073,9 +1058,9 @@ describe("Workspace storage: BlobError classification", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     const result = await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new Uint8Array([1, 2, 3]),
@@ -1131,9 +1116,9 @@ describe("Workspace storage: BlobError classification", () => {
     const storage = new VercelBlobWorkspaceStorage();
 
     await storage.upload({
-      tenantKey: "tenant-1",
+      tenantId: "tenant-1",
       documentId: "document-1",
-      versionNumber: 1,
+      versionId: "version-1",
       filename: "document.pdf",
       mimeType: "application/pdf",
       buffer: new Uint8Array([1, 2, 3]),

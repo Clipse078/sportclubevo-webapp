@@ -38,6 +38,10 @@ import {
   getWorkspaceBlobConfig,
   WorkspaceBlobConfigError,
 } from "@/lib/workspace/blob-config";
+import {
+  isAllowedWorkspaceStorageReference,
+  normalizeWorkspaceStorageReference,
+} from "@/lib/workspace/storage/storage-locator";
 import type {
   WorkspaceStorageDownloadInput,
   WorkspaceStorageDownloadResult,
@@ -69,39 +73,11 @@ function makeUploadFailure(
   return { ok: false as const, status, code, error };
 }
 
-const WORKSPACE_STORAGE_PREFIX = "workspace";
-const PRIVATE_STORAGE_PREFIXES = [
-  "workspace/",
-  "team-docs/",
-  "communication/",
-] as const;
-
-export function isAllowedWorkspaceStorageReference(
-  value: string,
-): boolean {
-  const normalized = value.trim();
-  if (
-    !normalized ||
-    normalized.includes("\\") ||
-    normalized.includes("://")
-  ) {
-    return false;
-  }
-
-  const segments = normalized.split("/");
-  if (
-    segments.some(
-      (segment) =>
-        !segment || segment === "." || segment === "..",
-    )
-  ) {
-    return false;
-  }
-
-  return PRIVATE_STORAGE_PREFIXES.some((prefix) =>
-    normalized.startsWith(prefix),
-  );
-}
+export {
+  isAllowedWorkspaceStorageReference,
+  isLegacyWorkspaceStorageKey,
+  isSecureTenantScopedStorageKey,
+} from "@/lib/workspace/storage/storage-locator";
 
 function normalizeStorageSegment(
   value: string,
@@ -117,37 +93,31 @@ function normalizeStorageSegment(
 }
 
 export function getWorkspaceStorageKey(input: {
-  tenantKey: string;
+  tenantId: string;
   documentId: string;
-  versionNumber: number;
+  versionId: string;
   filename: string;
 }): string {
-  const tenantKey = normalizeStorageSegment(
-    input.tenantKey,
-    "tenant",
-  );
-
+  const tenantId = normalizeStorageSegment(input.tenantId, "tenant");
   const documentId = normalizeStorageSegment(
     input.documentId,
     "document",
   );
-
-  if (
-    !Number.isSafeInteger(input.versionNumber) ||
-    input.versionNumber < 1
-  ) {
-    throw new Error(
-      "versionNumber must be a positive safe integer.",
-    );
-  }
+  const versionId = normalizeStorageSegment(
+    input.versionId,
+    "version",
+  );
 
   const filename = sanitizeWorkspaceFilename(input.filename);
 
   return [
-    WORKSPACE_STORAGE_PREFIX,
-    tenantKey,
+    "workspace",
+    "tenants",
+    tenantId,
+    "documents",
     documentId,
-    `v${input.versionNumber}`,
+    "versions",
+    versionId,
     filename,
   ].join("/");
 }
@@ -241,14 +211,12 @@ export class VercelBlobWorkspaceStorage
       );
     }
 
-    if (
-      !Number.isSafeInteger(input.versionNumber) ||
-      input.versionNumber < 1
-    ) {
+    const versionId = input.versionId.trim();
+    if (!versionId) {
       return makeUploadFailure(
         400,
         "WORKSPACE_UPLOAD_INVALID_FILE",
-        "Ungültige Versionsnummer.",
+        "Ungültige Versionskennung.",
       );
     }
 
@@ -263,9 +231,9 @@ export class VercelBlobWorkspaceStorage
     const filename = sanitizeWorkspaceFilename(input.filename);
 
     const storageKey = getWorkspaceStorageKey({
-      tenantKey: input.tenantKey,
+      tenantId: input.tenantId,
       documentId: input.documentId,
-      versionNumber: input.versionNumber,
+      versionId,
       filename,
     });
 
@@ -437,7 +405,9 @@ export class VercelBlobWorkspaceStorage
       };
     }
 
-    const storageReference = input.storageReference.trim();
+    const storageReference = normalizeWorkspaceStorageReference(
+      input.storageReference,
+    );
 
     if (!isAllowedWorkspaceStorageReference(storageReference)) {
       return {
@@ -537,7 +507,9 @@ export class VercelBlobWorkspaceStorage
       return;
     }
 
-    const normalizedReference = storageReference.trim();
+    const normalizedReference = normalizeWorkspaceStorageReference(
+      storageReference,
+    );
 
     if (!isAllowedWorkspaceStorageReference(normalizedReference)) {
       return;
