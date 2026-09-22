@@ -17,7 +17,7 @@
 | MIME trust from browser alone | Mitigated via `validateWorkspaceDocumentUpload` (extension + signature checks) |
 | Inline preview broader than explicit allowlist | Tightened via `preview-policy` (PDF + safe raster only) |
 | SVG / HTML active content | Blocked from inline preview; SVG blocked from upload allowlist |
-| Optional public historical blobs (if any) | **Remediation:** objects uploaded before private store migration may still be anonymously reachable at provider layer — requires infrastructure audit, not mass rewrite in W04 |
+| Optional public historical blobs (if any) | **W04-A1 STAGE read-only audit (2026-09-22):** 6 active legacy `workspace/{slug}/…` version rows; all persisted `storageUrl` values returned HTTP 403 on unauthenticated HEAD — **CASE L1** (legacy locators remain; no anonymous retrieval via stored provider URLs). No mass rewrite in W04. |
 
 ## Dropbox Business patterns (reference)
 
@@ -66,6 +66,7 @@
 - Keys matching `workspace/{slug}/…` (pre-W04) remain valid storage references when resolved from authorized version rows.
 - New uploads use tenant-id namespace only.
 - No mass delete/re-upload of STAGE objects in W04.
+- **W04-A1 classification:** **L1** — STAGE holds 6 legacy-namespace version rows (0 new-namespace rows yet); anonymous probe of stored URLs: 0/6 publicly reachable (403). Keep legacy resolver; no provider-layer blocker for W04 closure.
 
 ## Swiss-hosting portability
 
