@@ -7,25 +7,23 @@ import {
   History,
   MoreHorizontal,
   Pencil,
+  Shield,
 } from "lucide-react";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import type { WorkspaceDocumentListItemDto } from "@/lib/workspace/document-dto";
 
+import { WorkspaceAccessManagementDialog } from "./WorkspaceAccessManagementDialog";
 import { WorkspaceDocumentDeleteControl } from "./WorkspaceDocumentDeleteControl";
 import { WorkspaceDocumentVersionHistoryDialog } from "./WorkspaceDocumentVersionHistoryDialog";
+import { WorkspaceFloatingContextMenu } from "./WorkspaceFloatingContextMenu";
 
 type WorkspaceDocumentActionsProps = {
   document: WorkspaceDocumentListItemDto;
   onSelect?: () => void;
-  /** ADMIN-DELETE-03A: resolved server-side from PERMISSIONS.WORKSPACE_DELETE. */
   canDelete?: boolean;
+  canManageAccess?: boolean;
 };
 
 type ActionButtonProps = {
@@ -34,6 +32,7 @@ type ActionButtonProps = {
   onClick?: () => void;
   disabled?: boolean;
   comingSoonLabel?: string;
+  destructive?: boolean;
 };
 
 function ActionButton({
@@ -42,6 +41,7 @@ function ActionButton({
   onClick,
   disabled = false,
   comingSoonLabel,
+  destructive = false,
 }: ActionButtonProps) {
   return (
     <button
@@ -49,7 +49,11 @@ function ActionButton({
       role="menuitem"
       disabled={disabled}
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-50"
+      className={`flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-50 ${
+        destructive
+          ? "text-[var(--sce-danger)] hover:text-[var(--sce-danger)]"
+          : "text-[var(--text-2)] hover:text-[var(--foreground)]"
+      }`}
     >
       <span
         className="inline-flex h-4 w-4 shrink-0 items-center justify-center"
@@ -71,40 +75,17 @@ function ActionButton({
 
 export function WorkspaceDocumentActions({
   document: workspaceDocument,
-  onSelect,
   canDelete = false,
+  canManageAccess = false,
 }: WorkspaceDocumentActionsProps) {
   const t = useTranslations("Workspace.actions");
+  const tAccess = useTranslations("Workspace.access");
   const [menuOpen, setMenuOpen] = useState(false);
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
-  const menuContainerRef = useRef<HTMLDivElement>(null);
+  const [accessOpen, setAccessOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const hasDownload = Boolean(workspaceDocument.currentVersion);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-
-    function handlePointerDown(event: MouseEvent) {
-      if (
-        menuContainerRef.current &&
-        !menuContainerRef.current.contains(event.target as Node)
-      ) {
-        setMenuOpen(false);
-      }
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setMenuOpen(false);
-    }
-
-    globalThis.document.addEventListener("mousedown", handlePointerDown);
-    globalThis.document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      globalThis.document.removeEventListener("mousedown", handlePointerDown);
-      globalThis.document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [menuOpen]);
 
   function downloadDocument() {
     if (!hasDownload) return;
@@ -119,6 +100,11 @@ export function WorkspaceDocumentActions({
     setVersionHistoryOpen(true);
   }
 
+  function openAccessManagement() {
+    setMenuOpen(false);
+    setAccessOpen(true);
+  }
+
   function handleToggleMenu(event: React.MouseEvent) {
     event.stopPropagation();
     setMenuOpen((current) => !current);
@@ -126,8 +112,9 @@ export function WorkspaceDocumentActions({
 
   return (
     <>
-      <div ref={menuContainerRef} className="relative inline-flex">
+      <div className="relative inline-flex">
         <button
+          ref={triggerRef}
           type="button"
           aria-label={t("menuAriaLabel", { name: workspaceDocument.name })}
           aria-haspopup="menu"
@@ -138,62 +125,72 @@ export function WorkspaceDocumentActions({
           <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
 
-        {menuOpen ? (
-          <div
-            role="menu"
-            aria-label={t("menuAriaLabel", { name: workspaceDocument.name })}
-            className="absolute right-0 top-full z-30 mt-1 w-56 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] py-1 shadow-lg"
-          >
-            <ActionButton
-              icon={<Download className="h-4 w-4" />}
-              label={t("download")}
-              onClick={downloadDocument}
-              disabled={!hasDownload}
-            />
+        <WorkspaceFloatingContextMenu
+          open={menuOpen}
+          onOpenChange={setMenuOpen}
+          anchorRef={triggerRef}
+          ariaLabel={t("menuAriaLabel", { name: workspaceDocument.name })}
+        >
+          <ActionButton
+            icon={<Download className="h-4 w-4" />}
+            label={t("download")}
+            onClick={downloadDocument}
+            disabled={!hasDownload}
+          />
 
-            <div className="my-1 border-t border-[var(--border)]" role="separator" />
+          <div className="my-1 border-t border-[var(--border)]" role="separator" />
 
-            <ActionButton
-              icon={<Pencil className="h-4 w-4" />}
-              label={t("rename")}
-              disabled
-              comingSoonLabel={t("comingSoon")}
-            />
+          {canManageAccess ? (
+            <>
+              <ActionButton
+                icon={<Shield className="h-4 w-4" />}
+                label={tAccess("manageButton")}
+                onClick={openAccessManagement}
+              />
+              <div className="my-1 border-t border-[var(--border)]" role="separator" />
+            </>
+          ) : null}
 
-            <ActionButton
-              icon={<FolderInput className="h-4 w-4" />}
-              label={t("move")}
-              disabled
-              comingSoonLabel={t("comingSoon")}
-            />
+          <ActionButton
+            icon={<Pencil className="h-4 w-4" />}
+            label={t("rename")}
+            disabled
+            comingSoonLabel={t("comingSoon")}
+          />
 
-            <ActionButton
-              icon={<History className="h-4 w-4" />}
-              label={t("versionHistory")}
-              onClick={openVersionHistory}
-            />
+          <ActionButton
+            icon={<FolderInput className="h-4 w-4" />}
+            label={t("move")}
+            disabled
+            comingSoonLabel={t("comingSoon")}
+          />
 
-            <div className="my-1 border-t border-[var(--border)]" role="separator" />
+          <ActionButton
+            icon={<History className="h-4 w-4" />}
+            label={t("versionHistory")}
+            onClick={openVersionHistory}
+          />
 
-            <ActionButton
-              icon={<Archive className="h-4 w-4" />}
-              label={t("archive")}
-              disabled
-              comingSoonLabel={t("comingSoon")}
-            />
+          <div className="my-1 border-t border-[var(--border)]" role="separator" />
 
-            {canDelete ? (
-              <>
-                <div className="my-1 border-t border-[var(--border)]" role="separator" />
-                <WorkspaceDocumentDeleteControl
-                  documentId={workspaceDocument.id}
-                  documentName={workspaceDocument.name}
-                  canDelete={canDelete}
-                />
-              </>
-            ) : null}
-          </div>
-        ) : null}
+          <ActionButton
+            icon={<Archive className="h-4 w-4" />}
+            label={t("archive")}
+            disabled
+            comingSoonLabel={t("comingSoon")}
+          />
+
+          {canDelete ? (
+            <>
+              <div className="my-1 border-t border-[var(--border)]" role="separator" />
+              <WorkspaceDocumentDeleteControl
+                documentId={workspaceDocument.id}
+                documentName={workspaceDocument.name}
+                canDelete={canDelete}
+              />
+            </>
+          ) : null}
+        </WorkspaceFloatingContextMenu>
       </div>
 
       <WorkspaceDocumentVersionHistoryDialog
@@ -202,6 +199,16 @@ export function WorkspaceDocumentActions({
         open={versionHistoryOpen}
         onClose={() => setVersionHistoryOpen(false)}
       />
+
+      {canManageAccess ? (
+        <WorkspaceAccessManagementDialog
+          open={accessOpen}
+          onClose={() => setAccessOpen(false)}
+          resourceType="DOCUMENT"
+          resourceId={workspaceDocument.id}
+          resourceName={workspaceDocument.name}
+        />
+      ) : null}
     </>
   );
 }

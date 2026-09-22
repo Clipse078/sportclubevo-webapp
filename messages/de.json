@@ -123,7 +123,11 @@
       "uploadingLabel": "Wird hochgeladen …",
       "dropzoneTitle": "Datei hier ablegen oder klicken",
       "dropzoneHint": "Eine Datei auf einmal, bis zu 100 MB.",
+      "dropzoneHintMulti": "Mehrere Dateien möglich, bis zu 100 MB pro Datei.",
       "dragOverTitle": "Datei hier ablegen",
+      "dragOverFolderTitle": "In {folder} hochladen",
+      "dragOverSubtitle": "Dateien hier ablegen",
+      "partialFailureMessage": "Einige Dateien konnten nicht hochgeladen werden.",
       "successMessage": "Datei erfolgreich hochgeladen",
       "errorStorageNotConfigured": "Upload ist momentan nicht verfügbar. Bitte wenden Sie sich an den Administrator.",
       "errorFolderNotFound": "Der ausgewählte Ordner existiert nicht mehr. Bitte laden Sie die Seite neu.",
@@ -132,6 +136,27 @@
       "errorConflict": "Diese Datei existiert bereits. Bitte benennen Sie die Datei um und versuchen Sie es erneut.",
       "errorPersistenceFailed": "Das Dokument konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
       "errorGeneric": "Die Datei konnte nicht hochgeladen werden."
+    },
+
+    "access": {
+      "summaryTitle": "Zugriff",
+      "summaryLoading": "Zugriff wird geladen …",
+      "summaryMore": "+{count} weitere",
+      "manageButton": "Berechtigungen verwalten",
+      "dialogTitle": "Berechtigungen verwalten",
+      "dialogDescription": "Zugriff für «{name}»",
+      "closeButton": "Schliessen",
+      "loading": "Berechtigungen werden geladen …",
+      "loadError": "Berechtigungen konnten nicht geladen werden.",
+      "saveError": "Berechtigungen konnten nicht gespeichert werden.",
+      "saving": "Wird gespeichert …",
+      "resourceSection": "Ressource",
+      "effectiveSection": "Effektiver Zugriff",
+      "explicitSection": "Direkte Regeln",
+      "inheritedSection": "Geerbter Zugriff",
+      "inheritedFrom": "Geerbt von «{name}»",
+      "returnToInheritance": "Wieder vom übergeordneten Ordner erben",
+      "restrictHint": "Um den Zugriff einzuschränken, wenden Sie sich an einen Workspace-Manager mit Manage-Berechtigung auf dieser Ressource."
     },
 
     "actions": {

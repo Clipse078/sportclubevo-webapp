@@ -18,6 +18,7 @@ type WorkspaceDocumentRowProps = {
   onSelect?: (id: string) => void;
   /** ADMIN-DELETE-03A: resolved server-side from PERMISSIONS.WORKSPACE_DELETE. */
   canDelete?: boolean;
+  canManageAccess?: boolean;
 };
 
 export function WorkspaceDocumentRow({
@@ -25,6 +26,7 @@ export function WorkspaceDocumentRow({
   isSelected = false,
   onSelect,
   canDelete = false,
+  canManageAccess = false,
 }: WorkspaceDocumentRowProps) {
   const ft = useTranslations("Workspace.fileTypes");
   const currentVersion = document.currentVersion;
@@ -87,7 +89,7 @@ export function WorkspaceDocumentRow({
         <div className="min-w-0">
           <p
             className={[
-              "max-w-64 truncate text-sm font-medium leading-snug transition-colors duration-100",
+              "max-w-[min(100%,18rem)] truncate text-sm font-medium leading-snug transition-colors duration-100 sm:max-w-[min(100%,24rem)]",
               isSelected ? "text-[var(--blue)]" : "text-[var(--text)] group-hover:text-[var(--blue)]",
             ].join(" ")}
             title={displayName.length > 36 ? displayName : undefined}
@@ -124,6 +126,7 @@ export function WorkspaceDocumentRow({
           document={document}
           onSelect={() => onSelect?.(document.id)}
           canDelete={canDelete}
+          canManageAccess={canManageAccess || document.canManageAccess}
         />
       </td>
     </tr>

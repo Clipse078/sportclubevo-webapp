@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
+import { isExternalFileDrag } from "@/lib/workspace/drag-transfer";
 import { CalendarClock, CheckCircle2, FolderClosed, FileText } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -13,6 +14,8 @@ import { WorkspaceDocumentTable } from "./WorkspaceDocumentTable";
 import { WorkspaceDocumentEmptyState } from "./WorkspaceDocumentEmptyState";
 import { WorkspaceUploadButton } from "./WorkspaceUploadButton";
 import { WorkspaceUploadDropzone } from "./WorkspaceUploadDropzone";
+import { WorkspaceAccessManagementDialog } from "./WorkspaceAccessManagementDialog";
+import { WorkspaceAccessSummaryPanel } from "./WorkspaceAccessSummaryPanel";
 import { WorkspaceFilePreview } from "./WorkspaceFilePreview";
 
 type WorkspaceClientShellProps = {
@@ -25,6 +28,8 @@ type WorkspaceClientShellProps = {
   folderUpdatedAt: string;
   folderPath: BreadcrumbItem[];
   canManage: boolean;
+  canUpload?: boolean;
+  canManageFolderAccess?: boolean;
   /** ADMIN-DELETE-03A: resolved server-side from PERMISSIONS.WORKSPACE_DELETE. */
   canDelete?: boolean;
   folderManagementSlot?: React.ReactNode;
@@ -48,7 +53,9 @@ export function WorkspaceClientShell({
   folderCreatedAt,
   folderUpdatedAt,
   folderPath,
-  canManage,
+  canManage: _canManage,
+  canUpload = false,
+  canManageFolderAccess = false,
   canDelete = false,
   folderManagementSlot,
   documentContextualTasksPanel,
@@ -60,8 +67,31 @@ export function WorkspaceClientShell({
   );
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [accessTarget, setAccessTarget] = useState<{
+    resourceType: "FOLDER" | "DOCUMENT";
+    resourceId: string;
+    resourceName: string;
+  } | null>(null);
   const dropzoneRef = useRef<HTMLDivElement>(null);
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleContentDragEnter = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (!canUpload) return;
+      if (!isExternalFileDrag(event.dataTransfer)) return;
+      event.preventDefault();
+      setIsDragOver(true);
+    },
+    [canUpload],
+  );
+
+  const handleContentDragOver = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (!canUpload || !isExternalFileDrag(event.dataTransfer)) return;
+      event.preventDefault();
+    },
+    [canUpload],
+  );
 
   const selectedDocument =
     documents.find((d) => d.id === selectedDocumentId) ?? null;
@@ -114,7 +144,7 @@ export function WorkspaceClientShell({
             </div>
           </div>
 
-          {canManage && hasDocuments ? (
+          {canUpload ? (
             <WorkspaceUploadButton
               folderId={folderId}
               onUploadComplete={handleUploadComplete}
@@ -123,11 +153,16 @@ export function WorkspaceClientShell({
         </div>
 
         {/* Content */}
-        <div className="relative flex-1">
-          {/* Invisible drag capture when documents exist */}
-          {canManage && hasDocuments ? (
+        <div
+          className="relative flex-1 overflow-y-auto overflow-x-hidden"
+          onDragEnter={handleContentDragEnter}
+          onDragOver={handleContentDragOver}
+        >
+          {canUpload ? (
             <WorkspaceUploadDropzone
               folderId={folderId}
+              folderName={folderName}
+              disabled={!canUpload}
               onUploadComplete={handleUploadComplete}
               onDragStateChange={setIsDragOver}
             />
@@ -137,18 +172,9 @@ export function WorkspaceClientShell({
             <div
               ref={dropzoneRef}
               className={`relative transition-colors duration-150 ${
-                isDragOver ? "bg-[var(--blue-light)]" : ""
+                isDragOver ? "bg-[var(--blue-light)]/30" : ""
               }`}
             >
-              {isDragOver ? (
-                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
-                  <div className="flex flex-col items-center gap-2 rounded-xl bg-white/90 px-6 py-4 shadow-lg ring-1 ring-[var(--blue)]/20">
-                    <p className="text-sm font-semibold text-[var(--blue)]">
-                      {t("upload.dragOverTitle")}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
               <WorkspaceDocumentTable
                 documents={documents}
                 selectedDocumentId={selectedDocumentId}
@@ -159,9 +185,9 @@ export function WorkspaceClientShell({
           ) : (
             <WorkspaceDocumentEmptyState
               isDragging={isDragOver}
-              canManage={canManage}
-              folderId={canManage ? folderId : undefined}
-              onUploadComplete={canManage ? handleUploadComplete : undefined}
+              canManage={canUpload}
+              folderId={canUpload ? folderId : undefined}
+              onUploadComplete={canUpload ? handleUploadComplete : undefined}
             />
           )}
         </div>
@@ -189,10 +215,34 @@ export function WorkspaceClientShell({
                 document={selectedDocument}
                 folderName={folderName}
               />
+              <WorkspaceAccessSummaryPanel
+                resourceType="DOCUMENT"
+                resourceId={selectedDocument.id}
+                canManageAccess={Boolean(selectedDocument.canManageAccess)}
+                onManageAccess={() =>
+                  setAccessTarget({
+                    resourceType: "DOCUMENT",
+                    resourceId: selectedDocument.id,
+                    resourceName: selectedDocument.name,
+                  })
+                }
+              />
               {documentContextualTasksPanel}
             </div>
           ) : (
-            <div className="px-5 py-5">
+            <div className="space-y-4 px-5 py-5">
+              <WorkspaceAccessSummaryPanel
+                resourceType="FOLDER"
+                resourceId={folderId}
+                canManageAccess={canManageFolderAccess}
+                onManageAccess={() =>
+                  setAccessTarget({
+                    resourceType: "FOLDER",
+                    resourceId: folderId,
+                    resourceName: folderName,
+                  })
+                }
+              />
               <dl className="space-y-4">
                 <div>
                   <dt className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
@@ -240,6 +290,16 @@ export function WorkspaceClientShell({
           )}
         </div>
       </aside>
+
+      {accessTarget ? (
+        <WorkspaceAccessManagementDialog
+          open
+          onClose={() => setAccessTarget(null)}
+          resourceType={accessTarget.resourceType}
+          resourceId={accessTarget.resourceId}
+          resourceName={accessTarget.resourceName}
+        />
+      ) : null}
     </>
   );
 }
