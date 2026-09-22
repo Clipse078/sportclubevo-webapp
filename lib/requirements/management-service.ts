@@ -103,7 +103,7 @@ function mapRequirement(row: RequirementRow): RequirementDto {
   };
 }
 
-async function resolveRequirementCreatorLabel(
+export async function resolveRequirementCreatorLabel(
   tenantId: string,
   createdByUserId: string | null,
 ): Promise<string | null> {

@@ -117,15 +117,17 @@ export function mapPersonalActionToListItem(
 ): PersonalActionListItem {
   if (action.sourceType === "REQUIREMENT") {
     const requirement = action.inlineActions?.requirement;
-    const inlineRequirement: PersonalActionInlineRequirement | undefined = requirement
-      ? {
-          personalActionId: action.id,
-          requirementRecipientId: requirement.requirementRecipientId,
-          description: requirement.description,
-          subjectDisplayName: requirement.subjectDisplayName,
-          actingForOtherPerson: requirement.actingForOtherPerson,
-        }
-      : undefined;
+    const useDetailSurface = Boolean(action.href);
+    const inlineRequirement: PersonalActionInlineRequirement | undefined =
+      requirement && !useDetailSurface
+        ? {
+            personalActionId: action.id,
+            requirementRecipientId: requirement.requirementRecipientId,
+            description: requirement.description,
+            subjectDisplayName: requirement.subjectDisplayName,
+            actingForOtherPerson: requirement.actingForOtherPerson,
+          }
+        : undefined;
 
     const { metaLine, emphasis } = mapRequirementDeadlineMeta(action, locale, timeZone);
     const subjectName = action.subject?.displayName?.trim();

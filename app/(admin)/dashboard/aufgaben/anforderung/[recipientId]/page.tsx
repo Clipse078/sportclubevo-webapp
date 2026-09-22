@@ -1,0 +1,35 @@
+import { notFound } from "next/navigation";
+import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
+import { cn } from "@/lib/cn";
+import PersonalRequirementExecutionWorkspace from "@/components/admin/aufgaben/PersonalRequirementExecutionWorkspace";
+import { loadPersonalRequirementExecutionPageData } from "@/lib/requirements/personal-execution-page";
+
+export const dynamic = "force-dynamic";
+
+type Props = {
+  params: Promise<{ recipientId: string }>;
+  searchParams?: Promise<Record<string, string | undefined>>;
+};
+
+export default async function PersonalRequirementExecutionPage({ params, searchParams }: Props) {
+  const { recipientId } = await params;
+  const sp = searchParams ? await searchParams : {};
+  const data = await loadPersonalRequirementExecutionPageData(recipientId, sp);
+
+  if (data.kind === "unauthorized" || data.kind === "not_found") {
+    notFound();
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
+      <div className={cn(SCE_DIALOG_WORKSPACE_PANEL, "min-h-[70vh] w-full")}>
+        <PersonalRequirementExecutionWorkspace
+          view={data.view}
+          locale={data.locale}
+          timeZone={data.timeZone}
+          backHref={data.backHref}
+        />
+      </div>
+    </div>
+  );
+}

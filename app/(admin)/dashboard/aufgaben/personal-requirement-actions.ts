@@ -22,6 +22,7 @@ export async function acknowledgePersonalRequirementAction(
   if (result.ok) {
     revalidatePath("/dashboard/aufgaben");
     revalidatePath("/dashboard");
+    revalidatePath(`/dashboard/aufgaben/anforderung/${input.requirementRecipientId}`);
     return { ok: true };
   }
 
