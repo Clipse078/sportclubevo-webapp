@@ -7,12 +7,19 @@
 } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  getWorkspaceDocumentForDownload: vi.fn(),
+  getWorkspaceDocumentVersionForDownload: vi.fn(),
 }));
 
-vi.mock("@/lib/workspace/document-service", () => ({
-  getWorkspaceDocumentForDownload:
-    mocks.getWorkspaceDocumentForDownload,
+vi.mock("@/lib/workspace/document-version-access-service", () => ({
+  getWorkspaceDocumentVersionForDownload:
+    mocks.getWorkspaceDocumentVersionForDownload,
+  WorkspaceDocumentVersionAccessError: class WorkspaceDocumentVersionAccessError extends Error {
+    code: string;
+    constructor(code: string, message: string) {
+      super(message);
+      this.code = code;
+    }
+  },
 }));
 
 import {
@@ -69,7 +76,7 @@ describe("downloadWorkspaceDocument", () => {
       }),
     };
 
-    mocks.getWorkspaceDocumentForDownload.mockResolvedValue(
+    mocks.getWorkspaceDocumentVersionForDownload.mockResolvedValue(
       documentDownloadDto,
     );
 
@@ -79,10 +86,12 @@ describe("downloadWorkspaceDocument", () => {
     });
 
     expect(
-      mocks.getWorkspaceDocumentForDownload,
+      mocks.getWorkspaceDocumentVersionForDownload,
     ).toHaveBeenCalledWith({
       tenantId: "tenant-1",
+      actorUserId: "user-1",
       documentId: "document-1",
+      versionId: undefined,
     });
 
     expect(storageProvider.download).toHaveBeenCalledWith({
@@ -119,7 +128,7 @@ describe("downloadWorkspaceDocument", () => {
       }),
     };
 
-    mocks.getWorkspaceDocumentForDownload.mockResolvedValue(
+    mocks.getWorkspaceDocumentVersionForDownload.mockResolvedValue(
       documentDownloadDto,
     );
 
@@ -131,10 +140,12 @@ describe("downloadWorkspaceDocument", () => {
     });
 
     expect(
-      mocks.getWorkspaceDocumentForDownload,
+      mocks.getWorkspaceDocumentVersionForDownload,
     ).toHaveBeenCalledWith({
       tenantId: "tenant-1",
+      actorUserId: "user-1",
       documentId: "document-1",
+      versionId: undefined,
     });
 
     expect(result.etag).toBeNull();
@@ -161,13 +172,13 @@ describe("downloadWorkspaceDocument", () => {
       });
 
       expect(
-        mocks.getWorkspaceDocumentForDownload,
+        mocks.getWorkspaceDocumentVersionForDownload,
       ).not.toHaveBeenCalled();
     },
   );
 
   it("returns DOCUMENT_NOT_FOUND when no active current document version exists", async () => {
-    mocks.getWorkspaceDocumentForDownload.mockResolvedValue(
+    mocks.getWorkspaceDocumentVersionForDownload.mockResolvedValue(
       null,
     );
 
@@ -190,7 +201,7 @@ describe("downloadWorkspaceDocument", () => {
   });
 
   it("maps a missing Blob object to BLOB_NOT_FOUND", async () => {
-    mocks.getWorkspaceDocumentForDownload.mockResolvedValue(
+    mocks.getWorkspaceDocumentVersionForDownload.mockResolvedValue(
       documentDownloadDto,
     );
 
@@ -216,7 +227,7 @@ describe("downloadWorkspaceDocument", () => {
   it.each([400, 500, 503])(
     "maps storage status %s to STORAGE_FAILURE",
     async (status) => {
-      mocks.getWorkspaceDocumentForDownload.mockResolvedValue(
+      mocks.getWorkspaceDocumentVersionForDownload.mockResolvedValue(
         documentDownloadDto,
       );
 

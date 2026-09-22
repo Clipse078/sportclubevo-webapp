@@ -123,12 +123,13 @@ describe("getDocumentVersions", () => {
             filename: true,
             mimeType: true,
             sizeBytes: true,
-            checksum: true,
-            status: true,
-          },
+          checksum: true,
+          status: true,
+          changeNote: true,
         },
       },
-    });
+    },
+  });
 
     expect(result).toEqual([
       {
@@ -143,6 +144,7 @@ describe("getDocumentVersions", () => {
         checksum: "checksum-3",
         status: WorkspaceDocumentVersionStatus.CURRENT,
         isCurrent: true,
+        restoredFromVersionId: null,
       },
       {
         id: "version-2",
@@ -156,6 +158,7 @@ describe("getDocumentVersions", () => {
         checksum: "checksum-2",
         status: WorkspaceDocumentVersionStatus.SUPERSEDED,
         isCurrent: false,
+        restoredFromVersionId: null,
       },
       {
         id: "version-1",
@@ -169,6 +172,7 @@ describe("getDocumentVersions", () => {
         checksum: null,
         status: WorkspaceDocumentVersionStatus.SUPERSEDED,
         isCurrent: false,
+        restoredFromVersionId: null,
       },
     ]);
   });

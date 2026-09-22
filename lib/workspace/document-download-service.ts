@@ -1,6 +1,7 @@
 ﻿import {
-  getWorkspaceDocumentForDownload,
-} from "@/lib/workspace/document-service";
+  getWorkspaceDocumentVersionForDownload,
+  WorkspaceDocumentVersionAccessError,
+} from "@/lib/workspace/document-version-access-service";
 import {
   workspaceStorageProvider,
 } from "@/lib/workspace/upload-storage";
@@ -31,6 +32,7 @@ export type DownloadWorkspaceDocumentInput = {
   tenantId: string;
   actorUserId: string;
   documentId: string;
+  versionId?: string | null;
   storageProvider?: Pick<WorkspaceStorageProvider, "download">;
 };
 
@@ -72,7 +74,7 @@ export async function downloadWorkspaceDocument(
     "tenantId",
   );
 
-  normalizeRequiredText(
+  const actorUserId = normalizeRequiredText(
     input.actorUserId,
     "actorUserId",
   );
@@ -82,10 +84,27 @@ export async function downloadWorkspaceDocument(
     "documentId",
   );
 
-  const document = await getWorkspaceDocumentForDownload({
-    tenantId,
-    documentId,
-  });
+  let document;
+
+  try {
+    document = await getWorkspaceDocumentVersionForDownload({
+      tenantId,
+      actorUserId,
+      documentId,
+      versionId: input.versionId,
+    });
+  } catch (error) {
+    if (error instanceof WorkspaceDocumentVersionAccessError) {
+      throw new WorkspaceDocumentDownloadServiceError(
+        error.code === "VERSION_NOT_FOUND" ||
+          error.code === "VERSION_NOT_IN_DOCUMENT"
+          ? "DOCUMENT_NOT_FOUND"
+          : "INVALID_INPUT",
+        "Dokument nicht gefunden.",
+      );
+    }
+    throw error;
+  }
 
   if (!document) {
     throw new WorkspaceDocumentDownloadServiceError(

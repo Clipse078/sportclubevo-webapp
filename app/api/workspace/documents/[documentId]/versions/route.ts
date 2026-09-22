@@ -1,14 +1,31 @@
+export const runtime = "nodejs";
+
+import { randomUUID } from "node:crypto";
+
 import { NextResponse } from "next/server";
 
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getTenantFromSession } from "@/lib/tenants/queries";
 import { WorkspaceAuthorizationError } from "@/lib/workspace/access/workspace-authorization";
-import { assertWorkspaceDocumentView } from "@/lib/workspace/workspace-resource-guards";
+import {
+  assertWorkspaceDocumentEdit,
+  assertWorkspaceDocumentView,
+} from "@/lib/workspace/workspace-resource-guards";
 import { requireWorkspaceApiActor } from "@/lib/workspace/workspace-api-actor";
 import {
   getDocumentVersions,
   WorkspaceDocumentVersionServiceError,
 } from "@/lib/workspace/document-version-service";
+import {
+  appendWorkspaceDocumentVersion,
+  WorkspaceDocumentVersionWriteError,
+} from "@/lib/workspace/document-version-write-service";
+import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
+import { validateWorkspaceUploadFile } from "@/lib/workspace/upload-types";
+import {
+  TeamDocumentValidationError,
+  validateWorkspaceDocumentUpload,
+} from "@/lib/workspace/storage/upload-policy";
 
 type Params = {
   params: Promise<{
@@ -122,6 +139,180 @@ export async function GET(
       {
         status: 500,
       },
+    );
+  }
+}
+
+function getOptionalFormText(
+  formData: FormData,
+  key: string,
+): string | null {
+  const value = formData.get(key);
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function mapVersionWriteError(
+  error: WorkspaceDocumentVersionWriteError,
+): number {
+  switch (error.code) {
+    case "INVALID_INPUT":
+      return 400;
+    case "DOCUMENT_NOT_FOUND":
+    case "VERSION_NOT_FOUND":
+    case "VERSION_NOT_IN_DOCUMENT":
+      return 404;
+    case "VERSION_CONTENT_UNAVAILABLE":
+      return 404;
+    case "VERSION_CONFLICT":
+      return 409;
+    case "STORAGE_FAILURE":
+      return 502;
+    default:
+      return 500;
+  }
+}
+
+export async function POST(
+  request: Request,
+  { params }: Params,
+) {
+  const access = await requireWorkspaceApiActor(
+    PERMISSIONS.WORKSPACE_VIEW,
+  );
+
+  if (!access.ok) {
+    return NextResponse.json(
+      { error: access.error },
+      { status: access.status },
+    );
+  }
+
+  const tenant = await getTenantFromSession(access.tenantId);
+
+  if (!tenant) {
+    return NextResponse.json(
+      { error: "Tenant nicht gefunden." },
+      { status: 404 },
+    );
+  }
+
+  const { documentId } = await params;
+
+  try {
+    assertWorkspaceDocumentEdit(access.actor, documentId);
+  } catch (error) {
+    if (error instanceof WorkspaceAuthorizationError) {
+      return NextResponse.json(
+        { error: "Dokument nicht gefunden.", code: "WORKSPACE_FORBIDDEN" },
+        { status: 404 },
+      );
+    }
+    throw error;
+  }
+
+  let formData: FormData;
+
+  try {
+    formData = await request.formData();
+  } catch {
+    return NextResponse.json(
+      { error: "Ungültige Anfrage: multipart/form-data erwartet." },
+      { status: 400 },
+    );
+  }
+
+  const fileEntry = formData.get("file");
+
+  if (!(fileEntry instanceof File)) {
+    return NextResponse.json(
+      { error: "Kein Datei-Feld 'file' gefunden." },
+      { status: 400 },
+    );
+  }
+
+  const validation = validateWorkspaceUploadFile(fileEntry);
+
+  if (!validation.ok) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
+
+  const changeNote = getOptionalFormText(formData, "changeNote");
+  const versionId = randomUUID().replaceAll("-", "");
+
+  const arrayBuffer = await fileEntry.arrayBuffer();
+  const buffer = new Uint8Array(arrayBuffer);
+
+  try {
+    await validateWorkspaceDocumentUpload({
+      filename: fileEntry.name,
+      declaredContentType: fileEntry.type,
+      buffer,
+    });
+  } catch (error) {
+    if (error instanceof TeamDocumentValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    throw error;
+  }
+
+  const uploadResult = await workspaceStorageProvider.upload({
+    tenantId: tenant.id,
+    documentId,
+    versionId,
+    filename: validation.filename,
+    mimeType: validation.mimeType,
+    buffer,
+  });
+
+  if (!uploadResult.ok) {
+    const body: { error: string; code?: string } = {
+      error: uploadResult.error,
+    };
+    if (uploadResult.code !== undefined) {
+      body.code = uploadResult.code;
+    }
+    return NextResponse.json(body, { status: uploadResult.status });
+  }
+
+  try {
+    const document = await appendWorkspaceDocumentVersion({
+      tenantId: tenant.id,
+      actorUserId: access.actorUserId,
+      documentId,
+      versionId,
+      filename: uploadResult.filename,
+      mimeType: uploadResult.mimeType,
+      sizeBytes: uploadResult.sizeBytes,
+      storageKey: uploadResult.storageKey,
+      storageUrl: uploadResult.storageUrl,
+      checksum: uploadResult.checksum,
+      changeNote,
+    });
+
+    return NextResponse.json({ document }, { status: 201 });
+  } catch (error) {
+    await workspaceStorageProvider.delete(uploadResult.storageKey);
+
+    if (error instanceof WorkspaceDocumentVersionWriteError) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: mapVersionWriteError(error) },
+      );
+    }
+
+    console.error(
+      "[workspace-documents] version append failed",
+      error,
+    );
+
+    return NextResponse.json(
+      {
+        error: "Die neue Version konnte nicht gespeichert werden.",
+        code: "WORKSPACE_UPLOAD_PERSISTENCE_FAILED",
+      },
+      { status: 500 },
     );
   }
 }

@@ -21,11 +21,12 @@ import { WorkspaceAuthorizationError } from "@/lib/workspace/access/workspace-au
 import { assertWorkspaceDocumentView } from "@/lib/workspace/workspace-resource-guards";
 import { requireWorkspaceApiActor } from "@/lib/workspace/workspace-api-actor";
 import {
-  getWorkspaceDocumentForDownload,
-  WorkspaceDocumentServiceError,
-} from "@/lib/workspace/document-service";
+  getWorkspaceDocumentVersionForDownload,
+  WorkspaceDocumentVersionAccessError,
+} from "@/lib/workspace/document-version-access-service";
 import { isWorkspaceInlinePreviewSupported } from "@/lib/workspace/storage/preview-policy";
 import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
+import { resolveWorkspaceVersionIdQuery } from "@/lib/workspace/version/version-query";
 
 function safeFilename(raw: string): string {
   return raw.replace(/[^\w.\-]/g, "_").slice(0, 200);
@@ -64,6 +65,19 @@ export async function GET(
   }
 
   const { documentId } = await params;
+  const versionQuery = resolveWorkspaceVersionIdQuery(
+    new URL(request.url).searchParams,
+  );
+
+  if (versionQuery.mode === "invalid") {
+    return NextResponse.json(
+      { error: "Dokument nicht gefunden." },
+      { status: 404 },
+    );
+  }
+
+  const versionId =
+    versionQuery.mode === "historical" ? versionQuery.versionId : null;
 
   try {
     assertWorkspaceDocumentView(access.actor, documentId);
@@ -78,10 +92,24 @@ export async function GET(
   }
 
   try {
-    const document = await getWorkspaceDocumentForDownload({
-      tenantId: tenant.id,
-      documentId,
-    });
+    let document;
+
+    try {
+      document = await getWorkspaceDocumentVersionForDownload({
+        tenantId: tenant.id,
+        actorUserId: access.actorUserId,
+        documentId,
+        versionId,
+      });
+    } catch (error) {
+      if (error instanceof WorkspaceDocumentVersionAccessError) {
+        return NextResponse.json(
+          { error: "Dokument nicht gefunden." },
+          { status: 404 },
+        );
+      }
+      throw error;
+    }
 
     if (!document) {
       return NextResponse.json(
@@ -91,7 +119,9 @@ export async function GET(
     }
 
     if (!isWorkspaceInlinePreviewSupported(document.mimeType)) {
-      const downloadUrl = `/api/workspace/documents/${encodeURIComponent(documentId)}/download`;
+      const downloadUrl = versionId
+        ? `/api/workspace/documents/${encodeURIComponent(documentId)}/download?versionId=${encodeURIComponent(versionId)}`
+        : `/api/workspace/documents/${encodeURIComponent(documentId)}/download`;
       return NextResponse.redirect(
         new URL(downloadUrl, request.url),
       );
@@ -132,13 +162,6 @@ export async function GET(
       headers,
     });
   } catch (error) {
-    if (error instanceof WorkspaceDocumentServiceError) {
-      return NextResponse.json(
-        { error: error.message, code: error.code },
-        { status: 400 },
-      );
-    }
-
     console.error(
       "[workspace-preview] document preview failed",
       error,

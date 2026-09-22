@@ -24,6 +24,7 @@ type WorkspaceDocumentActionsProps = {
   onSelect?: () => void;
   canDelete?: boolean;
   canManageAccess?: boolean;
+  canEditDocument?: boolean;
 };
 
 type ActionButtonProps = {
@@ -77,6 +78,7 @@ export function WorkspaceDocumentActions({
   document: workspaceDocument,
   canDelete = false,
   canManageAccess = false,
+  canEditDocument = false,
 }: WorkspaceDocumentActionsProps) {
   const t = useTranslations("Workspace.actions");
   const tAccess = useTranslations("Workspace.access");
@@ -198,6 +200,7 @@ export function WorkspaceDocumentActions({
         documentName={workspaceDocument.name}
         open={versionHistoryOpen}
         onClose={() => setVersionHistoryOpen(false)}
+        canRestore={canEditDocument}
       />
 
       {canManageAccess ? (

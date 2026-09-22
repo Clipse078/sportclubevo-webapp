@@ -11,8 +11,7 @@ const mocks = vi.hoisted(() => ({
   buildWorkspaceReadWhere: vi.fn(),
   assertWorkspaceAccess: vi.fn(),
   getTenantFromSession: vi.fn(),
-  getDocumentForDownload: vi.fn(),
-  download: vi.fn(),
+  downloadWorkspaceDocument: vi.fn(),
 }));
 
 vi.mock("@/lib/workspace/workspace-api-actor", () => ({
@@ -35,37 +34,22 @@ vi.mock("@/lib/tenants/queries", () => ({
   getTenantFromSession: mocks.getTenantFromSession,
 }));
 
-vi.mock("@/lib/workspace/document-service", () => {
-  type WorkspaceDocumentServiceErrorCode =
-    | "INVALID_INPUT"
-    | "FOLDER_NOT_FOUND"
-    | "DUPLICATE_DOCUMENT_NAME";
+vi.mock("@/lib/workspace/document-download-service", () => {
+  class WorkspaceDocumentDownloadServiceError extends Error {
+    readonly code: string;
 
-  class WorkspaceDocumentServiceError extends Error {
-    readonly code: WorkspaceDocumentServiceErrorCode;
-
-    constructor(
-      code: WorkspaceDocumentServiceErrorCode,
-      message: string,
-    ) {
+    constructor(code: string, message: string) {
       super(message);
-      this.name = "WorkspaceDocumentServiceError";
+      this.name = "WorkspaceDocumentDownloadServiceError";
       this.code = code;
     }
   }
 
   return {
-    WorkspaceDocumentServiceError,
-    getWorkspaceDocumentForDownload:
-      mocks.getDocumentForDownload,
+    WorkspaceDocumentDownloadServiceError,
+    downloadWorkspaceDocument: mocks.downloadWorkspaceDocument,
   };
 });
-
-vi.mock("@/lib/workspace/upload-storage", () => ({
-  workspaceStorageProvider: {
-    download: mocks.download,
-  },
-}));
 
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { GET } from "@/app/api/workspace/documents/[documentId]/download/route";
@@ -179,9 +163,13 @@ describe(
         key: TENANT_KEY,
       });
 
-      mocks.getDocumentForDownload.mockResolvedValue(
-        downloadableDocument,
-      );
+      mocks.downloadWorkspaceDocument.mockResolvedValue({
+        stream: new ReadableStream(),
+        filename: downloadableDocument.filename,
+        contentType: downloadableDocument.mimeType,
+        sizeBytes: downloadableDocument.sizeBytes,
+        etag: '"download-etag"',
+      });
     });
 
     it("requires WORKSPACE_VIEW before resolving the tenant", async () => {
@@ -213,10 +201,8 @@ describe(
       ).not.toHaveBeenCalled();
 
       expect(
-        mocks.getDocumentForDownload,
+        mocks.downloadWorkspaceDocument,
       ).not.toHaveBeenCalled();
-
-      expect(mocks.download).not.toHaveBeenCalled();
     });
 
     it("returns 403 when the session has no tenant", async () => {
@@ -237,14 +223,21 @@ describe(
       ).not.toHaveBeenCalled();
 
       expect(
-        mocks.getDocumentForDownload,
+        mocks.downloadWorkspaceDocument,
       ).not.toHaveBeenCalled();
-
-      expect(mocks.download).not.toHaveBeenCalled();
     });
 
     it("returns 404 when the document is unavailable", async () => {
-      mocks.getDocumentForDownload.mockResolvedValue(null);
+      const { WorkspaceDocumentDownloadServiceError } = await import(
+        "@/lib/workspace/document-download-service"
+      );
+
+      mocks.downloadWorkspaceDocument.mockRejectedValue(
+        new WorkspaceDocumentDownloadServiceError(
+          "DOCUMENT_NOT_FOUND",
+          "Dokument nicht gefunden.",
+        ),
+      );
 
       const response = await GET(
         makeRequest(),
@@ -254,39 +247,7 @@ describe(
       expect(response.status).toBe(404);
       await expect(response.json()).resolves.toEqual({
         error: "Dokument nicht gefunden.",
-      });
-
-      expect(
-        mocks.getDocumentForDownload,
-      ).toHaveBeenCalledWith({
-        tenantId: TENANT_ID,
-        documentId: DOCUMENT_ID,
-      });
-
-      expect(mocks.download).not.toHaveBeenCalled();
-    });
-
-    it("returns the storage-provider failure", async () => {
-      mocks.download.mockResolvedValue({
-        ok: false,
-        status: 404,
-        error: "Datei nicht gefunden.",
-      });
-
-      const response = await GET(
-        makeRequest(),
-        makeParams(),
-      );
-
-      expect(response.status).toBe(404);
-      await expect(response.json()).resolves.toEqual({
-        error: "Datei nicht gefunden.",
-      });
-
-      expect(mocks.download).toHaveBeenCalledWith({
-        storageReference: STORAGE_KEY,
-        filename: downloadableDocument.filename,
-        mimeType: downloadableDocument.mimeType,
+        code: "DOCUMENT_NOT_FOUND",
       });
     });
 
@@ -302,13 +263,10 @@ describe(
         },
       });
 
-      mocks.download.mockResolvedValue({
-        ok: true,
+      mocks.downloadWorkspaceDocument.mockResolvedValue({
         stream,
         filename: downloadableDocument.filename,
         contentType: "application/pdf",
-        contentDisposition:
-          'attachment; filename="Trainer-Handbuch.pdf"',
         sizeBytes: content.byteLength,
         etag: '"download-etag"',
       });
@@ -329,9 +287,7 @@ describe(
 
       expect(
         response.headers.get("content-disposition"),
-      ).toBe(
-        'attachment; filename="Trainer-Handbuch.pdf"',
-      );
+      ).toContain('attachment; filename="Trainer-Handbuch.pdf"');
 
       expect(
         response.headers.get("content-length"),
@@ -349,11 +305,13 @@ describe(
         response.headers.get("x-content-type-options"),
       ).toBe("nosniff");
 
-      expect(mocks.download).toHaveBeenCalledWith({
-        storageReference: STORAGE_KEY,
-        filename: downloadableDocument.filename,
-        mimeType: downloadableDocument.mimeType,
-      });
+      expect(mocks.downloadWorkspaceDocument).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tenantId: TENANT_ID,
+          documentId: DOCUMENT_ID,
+          actorUserId: ACTOR_USER_ID,
+        }),
+      );
     });
   },
 );

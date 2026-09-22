@@ -8,10 +8,11 @@ import { WorkspaceAuthorizationError } from "@/lib/workspace/access/workspace-au
 import { assertWorkspaceDocumentView } from "@/lib/workspace/workspace-resource-guards";
 import { requireWorkspaceApiActor } from "@/lib/workspace/workspace-api-actor";
 import {
-  getWorkspaceDocumentForDownload,
-  WorkspaceDocumentServiceError,
-} from "@/lib/workspace/document-service";
-import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
+  downloadWorkspaceDocument,
+  WorkspaceDocumentDownloadServiceError,
+} from "@/lib/workspace/document-download-service";
+import { getWorkspaceAttachmentContentDisposition } from "@/lib/workspace/upload-types";
+import { resolveWorkspaceVersionIdQuery } from "@/lib/workspace/version/version-query";
 
 type Params = {
   params: Promise<{
@@ -20,7 +21,7 @@ type Params = {
 };
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: Params,
 ) {
   const access = await requireWorkspaceApiActor(
@@ -54,6 +55,22 @@ export async function GET(
   }
 
   const { documentId } = await params;
+  const versionQuery = resolveWorkspaceVersionIdQuery(
+    new URL(request.url).searchParams,
+  );
+
+  if (versionQuery.mode === "invalid") {
+    return NextResponse.json(
+      {
+        error: "Dokument nicht gefunden.",
+        code: "DOCUMENT_NOT_FOUND",
+      },
+      { status: 404 },
+    );
+  }
+
+  const versionId =
+    versionQuery.mode === "historical" ? versionQuery.versionId : null;
 
   try {
     assertWorkspaceDocumentView(access.actor, documentId);
@@ -68,44 +85,18 @@ export async function GET(
   }
 
   try {
-    const document = await getWorkspaceDocumentForDownload({
+    const downloadResult = await downloadWorkspaceDocument({
       tenantId: tenant.id,
+      actorUserId: access.actorUserId,
       documentId,
+      versionId,
     });
-
-    if (!document) {
-      return NextResponse.json(
-        {
-          error: "Dokument nicht gefunden.",
-        },
-        {
-          status: 404,
-        },
-      );
-    }
-
-    const downloadResult =
-      await workspaceStorageProvider.download({
-        storageReference: document.storageKey,
-        filename: document.filename,
-        mimeType: document.mimeType,
-      });
-
-    if (!downloadResult.ok) {
-      return NextResponse.json(
-        {
-          error: downloadResult.error,
-        },
-        {
-          status: downloadResult.status,
-        },
-      );
-    }
 
     const headers = new Headers({
       "Cache-Control": "private, no-store",
-      "Content-Disposition":
-        downloadResult.contentDisposition,
+      "Content-Disposition": getWorkspaceAttachmentContentDisposition(
+        downloadResult.filename,
+      ),
       "Content-Type": downloadResult.contentType,
       "X-Content-Type-Options": "nosniff",
     });
@@ -129,14 +120,20 @@ export async function GET(
       headers,
     });
   } catch (error) {
-    if (error instanceof WorkspaceDocumentServiceError) {
+    if (error instanceof WorkspaceDocumentDownloadServiceError) {
+      const status =
+        error.code === "DOCUMENT_NOT_FOUND" ||
+        error.code === "BLOB_NOT_FOUND"
+          ? 404
+          : 400;
+
       return NextResponse.json(
         {
           error: error.message,
           code: error.code,
         },
         {
-          status: 400,
+          status,
         },
       );
     }

@@ -21,9 +21,15 @@ vi.mock("@/lib/tenants/queries", () => ({
   getTenantFromSession: mocks.getTenantFromSession,
 }));
 
-vi.mock("@/lib/workspace/document-service", () => ({
-  WorkspaceDocumentServiceError: class extends Error {},
-  getWorkspaceDocumentForDownload: mocks.getDocument,
+vi.mock("@/lib/workspace/document-version-access-service", () => ({
+  WorkspaceDocumentVersionAccessError: class extends Error {
+    code: string;
+    constructor(code: string, message: string) {
+      super(message);
+      this.code = code;
+    }
+  },
+  getWorkspaceDocumentVersionForDownload: mocks.getDocument,
 }));
 
 vi.mock("@/lib/workspace/upload-storage", () => ({
@@ -97,7 +103,9 @@ describe("Workspace private preview security", () => {
     );
     expect(mocks.getDocument).toHaveBeenCalledWith({
       tenantId: "tenant-a",
+      actorUserId: "user-a",
       documentId: "document-a",
+      versionId: null,
     });
     expect(mocks.download).toHaveBeenCalledWith({
       storageReference:

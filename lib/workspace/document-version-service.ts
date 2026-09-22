@@ -5,6 +5,10 @@ import type {
   GetWorkspaceDocumentVersionsInput,
   WorkspaceDocumentVersionHistoryItemDto,
 } from "@/lib/workspace/document-dto";
+import {
+  deriveWorkspaceVersionIsCurrent,
+  parseRestoredFromVersionId,
+} from "@/lib/workspace/version/version-domain";
 
 export type WorkspaceDocumentVersionServiceErrorCode =
   "INVALID_INPUT";
@@ -95,6 +99,7 @@ export async function getDocumentVersions(
           sizeBytes: true,
           checksum: true,
           status: true,
+          changeNote: true,
         },
       },
     },
@@ -115,6 +120,12 @@ export async function getDocumentVersions(
     sizeBytes: version.sizeBytes,
     checksum: version.checksum,
     status: version.status,
-    isCurrent: document.currentVersionId === version.id,
+    isCurrent: deriveWorkspaceVersionIsCurrent(
+      document.currentVersionId,
+      version.id,
+    ),
+    restoredFromVersionId: parseRestoredFromVersionId(
+      version.changeNote,
+    ),
   }));
 }

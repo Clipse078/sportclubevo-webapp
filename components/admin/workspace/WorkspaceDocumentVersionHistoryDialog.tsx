@@ -11,6 +11,7 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
+import { isWorkspaceInlinePreviewSupported } from "@/lib/workspace/storage/preview-policy";
 
 import {
   formatWorkspaceDate,
@@ -29,6 +30,7 @@ type WorkspaceDocumentVersionHistoryItem = {
   checksum: string | null;
   status: string;
   isCurrent: boolean;
+  restoredFromVersionId?: string | null;
 };
 
 type WorkspaceDocumentVersionHistoryResponse = {
@@ -41,6 +43,7 @@ type WorkspaceDocumentVersionHistoryDialogProps = {
   documentName: string;
   open: boolean;
   onClose: () => void;
+  canRestore?: boolean;
 };
 
 export function WorkspaceDocumentVersionHistoryDialog({
@@ -48,6 +51,7 @@ export function WorkspaceDocumentVersionHistoryDialog({
   documentName,
   open,
   onClose,
+  canRestore = false,
 }: WorkspaceDocumentVersionHistoryDialogProps) {
   const t = useTranslations("Workspace.versionHistory");
   const [versions, setVersions] = useState<
@@ -55,6 +59,9 @@ export function WorkspaceDocumentVersionHistoryDialog({
   >([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [restoreBusyId, setRestoreBusyId] = useState<string | null>(
+    null,
+  );
   const requestIdRef = useRef(0);
 
   const loadVersions = useCallback(async () => {
@@ -110,6 +117,7 @@ export function WorkspaceDocumentVersionHistoryDialog({
       setLoading(false);
       setError(null);
       setVersions([]);
+      setRestoreBusyId(null);
       return;
     }
 
@@ -119,6 +127,62 @@ export function WorkspaceDocumentVersionHistoryDialog({
       requestIdRef.current += 1;
     };
   }, [loadVersions, open]);
+
+  function downloadVersion(versionId: string) {
+    window.location.assign(
+      `/api/workspace/documents/${encodeURIComponent(documentId)}/download?versionId=${encodeURIComponent(versionId)}`,
+    );
+  }
+
+  function previewVersion(versionId: string) {
+    window.open(
+      `/api/workspace/documents/${encodeURIComponent(documentId)}/preview?versionId=${encodeURIComponent(versionId)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }
+
+  async function restoreVersion(versionId: string) {
+    if (!canRestore || restoreBusyId) return;
+
+    if (!window.confirm(t("restoreConfirm"))) {
+      return;
+    }
+
+    setRestoreBusyId(versionId);
+
+    try {
+      const response = await fetch(
+        `/api/workspace/documents/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}/restore`,
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        },
+      );
+
+      const data = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+
+      if (!response.ok) {
+        throw new Error(data?.error ?? t("restoreError"));
+      }
+
+      await loadVersions();
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : t("restoreError"),
+      );
+    } finally {
+      setRestoreBusyId(null);
+    }
+  }
 
   return (
     <Dialog
@@ -182,7 +246,7 @@ export function WorkspaceDocumentVersionHistoryDialog({
 
         {!loading && !error && versions.length > 0 ? (
           <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
-            <table className="w-full min-w-[760px] border-collapse text-left text-sm">
+            <table className="w-full min-w-[860px] border-collapse text-left text-sm">
               <thead className="bg-[var(--surface-2)] text-xs uppercase tracking-wide text-[var(--muted)]">
                 <tr>
                   <th className="px-4 py-3 font-medium">{t("versionHeader")}</th>
@@ -191,6 +255,7 @@ export function WorkspaceDocumentVersionHistoryDialog({
                   <th className="px-4 py-3 font-medium">{t("filenameHeader")}</th>
                   <th className="px-4 py-3 font-medium">{t("sizeHeader")}</th>
                   <th className="px-4 py-3 font-medium">{t("statusHeader")}</th>
+                  <th className="px-4 py-3 font-medium">{t("actionsHeader")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -201,6 +266,11 @@ export function WorkspaceDocumentVersionHistoryDialog({
                   >
                     <td className="whitespace-nowrap px-4 py-3 font-medium text-[var(--foreground)]">
                       v{version.versionNumber}
+                      {version.restoredFromVersionId ? (
+                        <span className="mt-1 block text-xs font-normal text-[var(--muted)]">
+                          {t("restoredFromLabel")}
+                        </span>
+                      ) : null}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3">
                       {formatWorkspaceDate(version.createdAt)}
@@ -231,6 +301,41 @@ export function WorkspaceDocumentVersionHistoryDialog({
                             : version.status}
                         </span>
                       )}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3">
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => downloadVersion(version.id)}
+                        >
+                          {t("downloadVersion")}
+                        </Button>
+                        {isWorkspaceInlinePreviewSupported(
+                          version.mimeType,
+                        ) ? (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => previewVersion(version.id)}
+                          >
+                            {t("previewVersion")}
+                          </Button>
+                        ) : null}
+                        {canRestore && !version.isCurrent ? (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            disabled={restoreBusyId === version.id}
+                            onClick={() => void restoreVersion(version.id)}
+                          >
+                            {t("restoreVersion")}
+                          </Button>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))}
