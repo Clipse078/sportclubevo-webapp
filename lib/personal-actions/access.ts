@@ -7,10 +7,13 @@ import { getRequestEffectivePermissions } from "@/lib/permissions/request-effect
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { hasTaskPermission } from "@/lib/tasks/visibility";
 import type { TaskServiceContext } from "@/lib/tasks/types";
+import { canAccessRequirementManagementFromKeys } from "@/lib/requirements/access";
 
 export type PersonalActionsModuleCapabilities = {
   /** User may open Task Center management views (tasks.view). */
   taskManagement: boolean;
+  /** User may open Anforderungen management (requirements.* management permissions). */
+  requirementManagement: boolean;
   /** User may use the personal Meine Aufgaben inbox (tasks and/or participation). */
   personalInbox: boolean;
   /** Aufgaben nav + route entry (task management and/or participation domain). */
@@ -67,11 +70,13 @@ export function resolvePersonalActionsModuleCapabilities(input: {
 }): PersonalActionsModuleCapabilities {
   const taskCtx = taskContextFromKeys(input.tenantId, input.userId, input.permissionKeys);
   const taskManagement = hasTaskPermission(taskCtx, PERMISSIONS.TASKS_VIEW);
+  const requirementManagement = canAccessRequirementManagementFromKeys(input.permissionKeys);
   const personalInbox = taskManagement || input.participationNavCapable;
-  const moduleAccess = personalInbox;
+  const moduleAccess = personalInbox || requirementManagement;
 
   return {
     taskManagement,
+    requirementManagement,
     personalInbox,
     moduleAccess,
   };

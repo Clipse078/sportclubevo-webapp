@@ -6,21 +6,40 @@ import { buildAufgabenBereichHref } from "@/lib/personal-actions/aufgaben-scope"
 type Props = {
   active: AufgabenBereich;
   showManagement: boolean;
+  showRequirements?: boolean;
   basePath?: string;
 };
 
 export default function AufgabenScopeToggle({
   active,
   showManagement,
+  showRequirements = false,
   basePath = "/dashboard/aufgaben",
 }: Props) {
-  if (!showManagement) {
+  if (!showManagement && !showRequirements) {
     return null;
   }
 
   const tabs: { id: AufgabenBereich; label: string; testId: string }[] = [
-    { id: "meine", label: "Meine Aufgaben", testId: "aufgaben-bereich-meine" },
-    { id: "verwaltung", label: "Aufgabenverwaltung", testId: "aufgaben-bereich-verwaltung" },
+    ...(showManagement
+      ? ([
+          { id: "meine" as const, label: "Meine Aufgaben", testId: "aufgaben-bereich-meine" },
+          {
+            id: "verwaltung" as const,
+            label: "Aufgabenverwaltung",
+            testId: "aufgaben-bereich-verwaltung",
+          },
+        ] as const)
+      : []),
+    ...(showRequirements
+      ? ([
+          {
+            id: "anforderungen" as const,
+            label: "Anforderungen",
+            testId: "aufgaben-bereich-anforderungen",
+          },
+        ] as const)
+      : []),
   ];
 
   return (
