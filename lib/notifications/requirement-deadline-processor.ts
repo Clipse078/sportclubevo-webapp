@@ -25,6 +25,7 @@ import { loadEffectivePreferencesForUsers } from "./preference-service";
 import {
   buildRequirementOverdueCopy,
   buildRequirementReminderCopy,
+  type RequirementAutomaticReminderChannel,
 } from "./requirement-copy";
 import {
   isGuardianNotificationRecipient,
@@ -102,7 +103,11 @@ export async function processRequirementDeadlineNotifications(
 
     type ReminderCandidate = Awaited<ReturnType<typeof fetchRecipientBatch>>[number];
 
-    async function emitReminderBatch(candidates: ReminderCandidate[], stageSuffix: string) {
+    async function emitReminderBatch(
+      candidates: ReminderCandidate[],
+      stageSuffix: string,
+      reminderChannel: RequirementAutomaticReminderChannel | undefined,
+    ) {
       if (candidates.length === 0) return;
 
       const subjectContexts = await loadSubjectPersonNotificationContexts(
@@ -145,6 +150,7 @@ export async function processRequirementDeadlineNotifications(
           subjectDisplayName: subject.displayName,
           notifyAsGuardian,
           dueLabel,
+          reminderChannel,
         });
         const pref = reminderPrefs.get(pair.recipientUserId)!;
         const dueAtIso = `${dueAt.toISOString()}${stageSuffix}`;
@@ -178,7 +184,7 @@ export async function processRequirementDeadlineNotifications(
       },
       now,
     );
-    await emitReminderBatch(legacyReminderCandidates, "");
+    await emitReminderBatch(legacyReminderCandidates, "", "due_soon_window");
 
     for (const stage of [1, 2] as const) {
       const explicitCandidates = await fetchRecipientBatch(
@@ -188,7 +194,11 @@ export async function processRequirementDeadlineNotifications(
         },
         now,
       );
-      await emitReminderBatch(explicitCandidates, `:r${stage}`);
+      await emitReminderBatch(
+        explicitCandidates,
+        `:r${stage}`,
+        stage === 1 ? "configured_stage_1" : "configured_stage_2",
+      );
     }
 
     const overdueCandidates = await fetchRecipientBatch(
