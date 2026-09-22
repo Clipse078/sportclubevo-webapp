@@ -1,4 +1,8 @@
 import { prisma } from "@/lib/db/prisma";
+import {
+  collectUserIdsAuthorizedToRespondForSubjectPerson,
+  isGuardianResponderUser,
+} from "@/lib/participation/subject-responder-users";
 
 export type SubjectPersonNotificationContext = {
   personId: string;
@@ -44,9 +48,10 @@ export async function loadSubjectPersonNotificationContexts(
 
   const map = new Map<string, SubjectPersonNotificationContext>();
   for (const row of rows) {
-    const guardianUserIds = row.guardianRelationshipsAsChild
-      .map((link) => link.guardianPerson.userId)
-      .filter((userId): userId is string => !!userId);
+    const responderUserIds = collectUserIdsAuthorizedToRespondForSubjectPerson(row);
+    const guardianUserIds = responderUserIds.filter(
+      (userId) => userId !== row.userId,
+    );
     map.set(row.id, {
       personId: row.id,
       displayName: formatPersonDisplayName(row),
@@ -72,5 +77,5 @@ export function isGuardianNotificationRecipient(
   recipientUserId: string,
   context: SubjectPersonNotificationContext,
 ): boolean {
-  return recipientUserId !== context.selfUserId;
+  return isGuardianResponderUser(recipientUserId, context.selfUserId);
 }

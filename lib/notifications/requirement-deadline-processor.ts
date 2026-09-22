@@ -10,6 +10,10 @@ import {
   TASK_DUE_SOON_LEAD_MS,
 } from "./constants";
 import {
+  openRequirementRecipientOverdueWhere,
+  openRequirementRecipientReminderWhere,
+} from "@/lib/requirements/requirement-deadlines";
+import {
   buildRequirementOverdueDedupKey,
   buildRequirementReminderDedupKey,
   requirementPersonalInboxHref,
@@ -87,7 +91,6 @@ export async function processRequirementDeadlineNotifications(
   let reminderCreated = 0;
   let overdueCreated = 0;
 
-  const dueSoonUpper = new Date(now.getTime() + TASK_DUE_SOON_LEAD_MS);
   const href = requirementPersonalInboxHref();
 
   for (const tenantId of tenantIds) {
@@ -101,12 +104,7 @@ export async function processRequirementDeadlineNotifications(
     const reminderCandidates = await fetchRecipientBatch(
       {
         tenantId,
-        removedAt: null,
-        resolutionStatus: "OPEN",
-        requirement: {
-          status: "ACTIVE",
-          dueAt: { gt: now, lte: dueSoonUpper },
-        },
+        ...openRequirementRecipientReminderWhere(now, TASK_DUE_SOON_LEAD_MS),
       },
       now,
     );
@@ -181,12 +179,7 @@ export async function processRequirementDeadlineNotifications(
     const overdueCandidates = await fetchRecipientBatch(
       {
         tenantId,
-        removedAt: null,
-        resolutionStatus: "OPEN",
-        requirement: {
-          status: "ACTIVE",
-          dueAt: { lte: now },
-        },
+        ...openRequirementRecipientOverdueWhere(now),
       },
       now,
     );

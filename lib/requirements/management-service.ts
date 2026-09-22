@@ -12,6 +12,7 @@ import {
   canReadRequirementAggregate,
 } from "./requirement-authorization";
 import { computeRequirementAggregate, isRequirementRecipientOverdue } from "./requirement-aggregate";
+import { isRequirementDueAtOverdue, openRequirementRecipientOverdueWhere } from "./requirement-deadlines";
 import { RequirementForbiddenError } from "./errors";
 import type { RequirementAggregateDto, RequirementDto, RequirementServiceContext } from "./types";
 import { loadRequirementPersonNameMap } from "./person-search";
@@ -128,7 +129,7 @@ function sortListItems(
 function itemIsOverdue(item: RequirementManagementListItem, now: Date): boolean {
   const req = item.requirement;
   if (req.status !== "ACTIVE" || !req.dueAt) return false;
-  if (Date.parse(req.dueAt) >= now.getTime()) return false;
+  if (!isRequirementDueAtOverdue(new Date(req.dueAt), now)) return false;
   return (item.aggregate?.openCount ?? 0) > 0;
 }
 
@@ -165,12 +166,7 @@ export async function getRequirementManagementSummary(
       prisma.requirementRecipient.count({
         where: {
           tenantId: ctx.tenantId,
-          removedAt: null,
-          resolutionStatus: "OPEN",
-          requirement: {
-            status: "ACTIVE",
-            dueAt: { lt: now },
-          },
+          ...openRequirementRecipientOverdueWhere(now),
         },
       }),
     ]);
