@@ -501,6 +501,101 @@ describe("AUFGABEN-06G1 aggregate & list privacy (R14, R33–R34)", () => {
   });
 });
 
+describe("AUFGABEN-06G1 guardian authorization seam (G1–G10)", () => {
+  const PERSON_CHILD = "person-child";
+  const GUARDIAN_PERSON = "person-guardian";
+  const GUARDIAN_USER = "user-guardian";
+
+  it("G3 authorized guardian may ACK for child subject", async () => {
+    const open = recipientRow({ subjectPersonId: PERSON_CHILD });
+    mocks.recipientFindFirst.mockResolvedValueOnce(open);
+    mocks.assertActor.mockResolvedValue({ source: "PARENT", actorPersonId: GUARDIAN_PERSON });
+    mocks.authorizedPersonIds.mockResolvedValue([GUARDIAN_PERSON, PERSON_CHILD]);
+    mocks.recipientUpdate.mockResolvedValue({
+      ...open,
+      resolutionStatus: "RESOLVED",
+      responseValue: "ACKNOWLEDGED",
+      respondedAt: new Date("2026-09-02T12:00:00.000Z"),
+      respondedByUserId: GUARDIAN_USER,
+      responseActorPersonId: GUARDIAN_PERSON,
+    });
+
+    const resolved = await acknowledgeRequirementRecipient(
+      { tenantId: TENANT_A, userId: GUARDIAN_USER, permissionKeys: [] },
+      RECIP_ID,
+    );
+    expect(resolved.subjectPersonId).toBe(PERSON_CHILD);
+    expect(resolved.responseActorPersonId).toBe(GUARDIAN_PERSON);
+    expect(resolved.respondedByUserId).toBe(GUARDIAN_USER);
+  });
+
+  it("G4 unrelated parent cannot ACK (participation seam fail-closed)", async () => {
+    mocks.recipientFindFirst.mockResolvedValue(recipientRow({ subjectPersonId: PERSON_CHILD }));
+    mocks.assertActor.mockRejectedValue(new Error("ParticipationUnauthorizedError"));
+    await expect(
+      acknowledgeRequirementRecipient(
+        { tenantId: TENANT_A, userId: "unrelated-parent", permissionKeys: [] },
+        RECIP_ID,
+      ),
+    ).rejects.toBeInstanceOf(Error);
+    expect(mocks.recipientUpdate).not.toHaveBeenCalled();
+  });
+
+  it("G7 audit actor records guardian Person while subject remains child", async () => {
+    const open = recipientRow({ subjectPersonId: PERSON_CHILD });
+    mocks.recipientFindFirst.mockResolvedValueOnce(open);
+    mocks.assertActor.mockResolvedValue({ source: "PARENT", actorPersonId: GUARDIAN_PERSON });
+    mocks.authorizedPersonIds.mockResolvedValue([PERSON_CHILD]);
+    mocks.recipientUpdate.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
+      ...open,
+      ...data,
+    }));
+
+    await acknowledgeRequirementRecipient(
+      { tenantId: TENANT_A, userId: GUARDIAN_USER, permissionKeys: [] },
+      RECIP_ID,
+    );
+    expect(mocks.recipientUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          responseActorPersonId: GUARDIAN_PERSON,
+          respondedByUserId: GUARDIAN_USER,
+        }),
+      }),
+    );
+  });
+
+  it("G8/G9 guardian ACK resolves single child recipient; replay is idempotent", async () => {
+    const open = recipientRow({ subjectPersonId: PERSON_CHILD });
+    mocks.recipientFindFirst.mockResolvedValueOnce(open);
+    mocks.assertActor.mockResolvedValue({ source: "PARENT", actorPersonId: GUARDIAN_PERSON });
+    mocks.authorizedPersonIds.mockResolvedValue([PERSON_CHILD]);
+    const resolvedRow = {
+      ...open,
+      resolutionStatus: "RESOLVED",
+      responseValue: "ACKNOWLEDGED",
+      respondedAt: new Date("2026-09-02T12:00:00.000Z"),
+      respondedByUserId: GUARDIAN_USER,
+      responseActorPersonId: GUARDIAN_PERSON,
+    };
+    mocks.recipientUpdate.mockResolvedValue(resolvedRow);
+
+    await acknowledgeRequirementRecipient(
+      { tenantId: TENANT_A, userId: GUARDIAN_USER, permissionKeys: [] },
+      RECIP_ID,
+    );
+
+    mocks.recipientFindFirst.mockResolvedValue(resolvedRow);
+    mocks.assertActor.mockResolvedValue({ source: "PARENT", actorPersonId: GUARDIAN_PERSON });
+    const replay = await acknowledgeRequirementRecipient(
+      { tenantId: TENANT_A, userId: GUARDIAN_USER, permissionKeys: [] },
+      RECIP_ID,
+    );
+    expect(mocks.recipientUpdate).toHaveBeenCalledTimes(1);
+    expect(replay.resolutionStatus).toBe("RESOLVED");
+  });
+});
+
 describe("AUFGABEN-06G1 Matrix Z additive capabilities", () => {
   it("management and recipient response capabilities are independent", () => {
     const matrixCtx = {
