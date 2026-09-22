@@ -60,6 +60,16 @@ export function assertWorkspaceFolderEdit(
   });
 }
 
+export function assertWorkspaceFolderManage(
+  actor: WorkspaceActorContext,
+  folderId: string,
+): void {
+  assertWorkspaceAccess(actor, "MANAGE", {
+    resourceType: WorkspaceResourceType.FOLDER,
+    folderId,
+  });
+}
+
 export function canViewWorkspaceDocument(
   actor: WorkspaceActorContext,
   documentId: string,

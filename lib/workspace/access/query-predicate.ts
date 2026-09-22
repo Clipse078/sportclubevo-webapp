@@ -3,6 +3,11 @@
  *
  * Unauthorized resources are excluded via ID sets derived from effective ACL —
  * not by loading full rows and filtering in presentation code.
+ *
+ * Scalability (W02-R1 / benchmark C2): authorization cost scales with hierarchy
+ * and audience grants. Actor organisational membership is resolved once per
+ * request when building `WorkspaceActorContext`; readable IDs are computed in
+ * one pass over the in-memory tenant graph (no per-resource DB membership queries).
  */
 
 import type { Prisma } from "@prisma/client";

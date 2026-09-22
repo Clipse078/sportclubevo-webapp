@@ -147,7 +147,7 @@ export async function loadWorkspaceResourceGraph(
   };
 }
 
-function folderNodeFromGraph(
+export function folderNodeFromGraph(
   graph: WorkspaceResourceGraph,
   folderId: string,
 ): WorkspaceResourceAccessNode | null {
