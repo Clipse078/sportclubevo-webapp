@@ -38,6 +38,8 @@ export interface CreateWorkspaceFolderRequestDto {
 export interface ListWorkspaceFoldersInput {
   tenantId: string;
   parentId?: string | null;
+  /** WORKSPACE-02 — only folders the actor may VIEW (query-boundary enforcement). */
+  authorizedFolderIds: readonly string[];
 }
 
 export interface CreateWorkspaceFolderInput {

@@ -25,8 +25,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { requireApiPermission } from "@/lib/permissions/require-api-permission";
+import { buildWorkspaceReadWhere } from "@/lib/workspace/access/query-predicate";
+import {
+  assertWorkspaceAccess,
+  WorkspaceAuthorizationError,
+} from "@/lib/workspace/access/workspace-authorization";
+import { WorkspaceResourceType } from "@prisma/client";
 import { getTenantFromSession } from "@/lib/tenants/queries";
+import { requireWorkspaceApiActor } from "@/lib/workspace/workspace-api-actor";
 import {
   toCreateWorkspaceFolderResponseDto,
   toWorkspaceFolderListResponseDto,
@@ -146,7 +152,7 @@ function parseCreateFolderRequest(
 }
 
 export async function GET(request: NextRequest) {
-  const access = await requireApiPermission(
+  const access = await requireWorkspaceApiActor(
     PERMISSIONS.WORKSPACE_VIEW,
   );
 
@@ -161,18 +167,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const tenantId = access.session.user?.activeTenantId;
-
-  if (!tenantId) {
-    return NextResponse.json(
-      {
-        error: "Kein Mandant in der Sitzung.",
-      },
-      {
-        status: 403,
-      },
-    );
-  }
+  const tenantId = access.tenantId;
 
   const tenant = await getTenantFromSession(tenantId);
 
@@ -193,9 +188,11 @@ export async function GET(request: NextRequest) {
   const parentId = rawParentId?.trim() || null;
 
   try {
+    const readWhere = await buildWorkspaceReadWhere(access.actor);
     const folders = await listWorkspaceFolders({
       tenantId: tenant.id,
       parentId,
+      authorizedFolderIds: readWhere.folderIds,
     });
 
     return NextResponse.json(
@@ -234,7 +231,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const access = await requireApiPermission(
+  const access = await requireWorkspaceApiActor(
     PERMISSIONS.WORKSPACE_MANAGE,
   );
 
@@ -249,31 +246,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const tenantId = access.session.user?.activeTenantId;
-
-  if (!tenantId) {
-    return NextResponse.json(
-      {
-        error: "Kein Mandant in der Sitzung.",
-      },
-      {
-        status: 403,
-      },
-    );
-  }
-
-  const actorUserId = access.session.user?.id;
-
-  if (!actorUserId) {
-    return NextResponse.json(
-      {
-        error: "Benutzer-ID fehlt in der Sitzung.",
-      },
-      {
-        status: 401,
-      },
-    );
-  }
+  const tenantId = access.tenantId;
+  const actorUserId = access.actorUserId;
 
   const tenant = await getTenantFromSession(tenantId);
 
@@ -305,6 +279,23 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = parseCreateFolderRequest(rawBody);
+
+    if (body.parentId?.trim()) {
+      try {
+        assertWorkspaceAccess(access.actor, "EDIT", {
+          resourceType: WorkspaceResourceType.FOLDER,
+          folderId: body.parentId.trim(),
+        });
+      } catch (error) {
+        if (error instanceof WorkspaceAuthorizationError) {
+          return NextResponse.json(
+            { error: "Ordnerzugriff verweigert.", code: "WORKSPACE_FORBIDDEN" },
+            { status: 403 },
+          );
+        }
+        throw error;
+      }
+    }
 
     const folder = await createWorkspaceFolder({
       tenantId: tenant.id,

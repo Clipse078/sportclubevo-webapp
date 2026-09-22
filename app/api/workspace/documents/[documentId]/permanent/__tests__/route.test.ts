@@ -34,6 +34,9 @@ const mocks = vi.hoisted(() => ({
   workspaceDocumentFindUnique: vi.fn(),
   deleteWorkspaceDocumentPermanently: vi.fn(),
   getWorkspaceDocumentDeletionImpact: vi.fn(),
+  getRequestEffectivePermissions: vi.fn(),
+  resolveWorkspaceActor: vi.fn(),
+  assertWorkspaceDocumentManage: vi.fn(),
 }));
 
 vi.mock("@/auth", () => ({
@@ -60,6 +63,18 @@ vi.mock("@/lib/db/prisma", () => ({
 
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
+}));
+
+vi.mock("@/lib/permissions/request-effective-permissions", () => ({
+  getRequestEffectivePermissions: mocks.getRequestEffectivePermissions,
+}));
+
+vi.mock("@/lib/workspace/access/actor-context", () => ({
+  resolveWorkspaceActor: mocks.resolveWorkspaceActor,
+}));
+
+vi.mock("@/lib/workspace/workspace-resource-guards", () => ({
+  assertWorkspaceDocumentManage: mocks.assertWorkspaceDocumentManage,
 }));
 
 vi.mock("@/lib/workspace/document-delete-service", () => {
@@ -108,6 +123,17 @@ beforeEach(() => {
   });
   mocks.logAction.mockResolvedValue(undefined);
   mocks.getWorkspaceDocumentDeletionImpact.mockResolvedValue({ versionCount: 0 });
+  mocks.getRequestEffectivePermissions.mockResolvedValue({
+    platform: [],
+    tenant: ["workspace.delete", "workspace.manage"],
+  });
+  mocks.resolveWorkspaceActor.mockResolvedValue({
+    identity: { tenantId: TENANT_A, userId: "user-01", personId: null },
+    membership: { tenantId: TENANT_A, personId: null, orgUnitIds: new Set(), teamIds: new Set(), roleAssignments: [] },
+    permissionKeys: ["workspace.delete"],
+    graph: { tenantId: TENANT_A, folders: new Map(), documents: new Map(), folderGrants: new Map(), documentGrants: new Map() },
+  });
+  mocks.assertWorkspaceDocumentManage.mockImplementation(() => undefined);
 });
 
 describe("DELETE /api/workspace/documents/[documentId]/permanent — ADMIN-DELETE-03A", () => {

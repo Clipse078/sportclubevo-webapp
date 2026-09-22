@@ -10,10 +10,16 @@ const {
   workspaceFolderCreateMock,
   workspaceFolderFindFirstMock,
   workspaceFolderFindManyMock,
+  workspaceAccessGrantCreateManyMock,
+  personFindFirstMock,
+  prismaTransactionMock,
 } = vi.hoisted(() => ({
   workspaceFolderCreateMock: vi.fn(),
   workspaceFolderFindFirstMock: vi.fn(),
   workspaceFolderFindManyMock: vi.fn(),
+  workspaceAccessGrantCreateManyMock: vi.fn(),
+  personFindFirstMock: vi.fn(),
+  prismaTransactionMock: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -23,6 +29,10 @@ vi.mock("@/lib/db/prisma", () => ({
       findFirst: workspaceFolderFindFirstMock,
       findMany: workspaceFolderFindManyMock,
     },
+    person: {
+      findFirst: personFindFirstMock,
+    },
+    $transaction: prismaTransactionMock,
   },
 }));
 
@@ -56,6 +66,17 @@ const folderRecord = {
 describe("workspace folder service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    personFindFirstMock.mockResolvedValue(null);
+    prismaTransactionMock.mockImplementation(async (callback) =>
+      callback({
+        workspaceFolder: {
+          create: workspaceFolderCreateMock,
+        },
+        workspaceAccessGrant: {
+          createMany: workspaceAccessGrantCreateManyMock,
+        },
+      }),
+    );
   });
 
   describe("listWorkspaceFolders", () => {
@@ -67,6 +88,7 @@ describe("workspace folder service", () => {
       await expect(
         listWorkspaceFolders({
           tenantId: "tenant-1",
+          authorizedFolderIds: ["folder-1"],
         }),
       ).resolves.toEqual([
         folderRecord,
@@ -79,6 +101,7 @@ describe("workspace folder service", () => {
           tenantId: "tenant-1",
           parentId: null,
           archivedAt: null,
+          id: { in: ["folder-1"] },
         },
         orderBy: [
           {
@@ -115,6 +138,7 @@ describe("workspace folder service", () => {
       await listWorkspaceFolders({
         tenantId: " tenant-1 ",
         parentId: " folder-parent ",
+        authorizedFolderIds: ["folder-1"],
       });
 
       expect(
@@ -138,6 +162,7 @@ describe("workspace folder service", () => {
             tenantId: "tenant-1",
             parentId: "folder-parent",
             archivedAt: null,
+            id: { in: ["folder-1"] },
           },
         }),
       );
@@ -149,6 +174,7 @@ describe("workspace folder service", () => {
       await listWorkspaceFolders({
         tenantId: "tenant-1",
         parentId: "   ",
+        authorizedFolderIds: [],
       });
 
       expect(
@@ -163,6 +189,7 @@ describe("workspace folder service", () => {
             tenantId: "tenant-1",
             parentId: null,
             archivedAt: null,
+            id: { in: ["__workspace_unauthorized__"] },
           },
         }),
       );
@@ -172,6 +199,7 @@ describe("workspace folder service", () => {
       await expect(
         listWorkspaceFolders({
           tenantId: "   ",
+          authorizedFolderIds: [],
         }),
       ).rejects.toMatchObject({
         code: "INVALID_INPUT",
@@ -189,6 +217,7 @@ describe("workspace folder service", () => {
         listWorkspaceFolders({
           tenantId: "tenant-1",
           parentId: "folder-other",
+          authorizedFolderIds: [],
         }),
       ).rejects.toMatchObject({
         code: "PARENT_FOLDER_NOT_FOUND",
@@ -236,7 +265,7 @@ describe("workspace folder service", () => {
       expect(
         workspaceFolderCreateMock,
       ).toHaveBeenCalledWith({
-        data: {
+        data: expect.objectContaining({
           tenantId: "tenant-1",
           parentId: null,
           name: "Trainer",
@@ -244,7 +273,8 @@ describe("workspace folder service", () => {
           displayOrder: 0,
           createdByUserId: "user-1",
           updatedByUserId: "user-1",
-        },
+          accessInheritanceMode: "EXPLICIT",
+        }),
         select: {
           id: true,
           parentId: true,

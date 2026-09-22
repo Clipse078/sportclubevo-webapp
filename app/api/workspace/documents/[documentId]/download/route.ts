@@ -3,8 +3,10 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { getTenantFromSession } from "@/lib/tenants/queries";
+import { WorkspaceAuthorizationError } from "@/lib/workspace/access/workspace-authorization";
+import { assertWorkspaceDocumentView } from "@/lib/workspace/workspace-resource-guards";
+import { requireWorkspaceApiActor } from "@/lib/workspace/workspace-api-actor";
 import {
   getWorkspaceDocumentForDownload,
   WorkspaceDocumentServiceError,
@@ -21,7 +23,7 @@ export async function GET(
   _request: Request,
   { params }: Params,
 ) {
-  const access = await requireApiPermission(
+  const access = await requireWorkspaceApiActor(
     PERMISSIONS.WORKSPACE_VIEW,
   );
 
@@ -36,18 +38,7 @@ export async function GET(
     );
   }
 
-  const sessionTenantId = access.session.user?.activeTenantId;
-
-  if (!sessionTenantId) {
-    return NextResponse.json(
-      {
-        error: "Kein Mandant in der Sitzung.",
-      },
-      {
-        status: 403,
-      },
-    );
-  }
+  const sessionTenantId = access.tenantId;
 
   const tenant = await getTenantFromSession(sessionTenantId);
 
@@ -63,6 +54,18 @@ export async function GET(
   }
 
   const { documentId } = await params;
+
+  try {
+    assertWorkspaceDocumentView(access.actor, documentId);
+  } catch (error) {
+    if (error instanceof WorkspaceAuthorizationError) {
+      return NextResponse.json(
+        { error: "Dokument nicht gefunden." },
+        { status: 404 },
+      );
+    }
+    throw error;
+  }
 
   try {
     const document = await getWorkspaceDocumentForDownload({

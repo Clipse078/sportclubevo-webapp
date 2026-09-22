@@ -5,6 +5,9 @@ import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { logAction } from "@/lib/audit/log-action";
+import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
+import { resolveWorkspaceActor } from "@/lib/workspace/access/actor-context";
+import { evaluateWorkspaceFolderMove } from "@/lib/workspace/access/folder-move-authorization";
 import { normalizeWorkspaceFolderName } from "@/lib/workspace/folder-service";
 import {
   deleteWorkspaceFolderPermanently,
@@ -843,6 +846,43 @@ export async function moveWorkspaceFolderAction(
           message: "A folder cannot be moved into one of its descendants.",
         };
       }
+    }
+
+    const effectiveUserId = session.user?.effectiveUserId ?? userId;
+    const effective = await getRequestEffectivePermissions(
+      effectiveUserId,
+      tenantId,
+    );
+    const permissionKeys = [...effective.platform, ...effective.tenant];
+    const workspaceActor = await resolveWorkspaceActor({
+      tenantId,
+      userId: effectiveUserId,
+      permissionKeys,
+    });
+
+    const moveAuthorization = evaluateWorkspaceFolderMove({
+      actor: workspaceActor,
+      folderId: folder.id,
+      newParentId,
+    });
+
+    if (!moveAuthorization.allowed) {
+      const outcome = moveAuthorization.impact.outcome;
+      if (outcome === "DENIED_RESOURCE_NOT_FOUND") {
+        return {
+          ok: false,
+          code: "WORKSPACE_FOLDER_NOT_FOUND",
+          message: moveAuthorization.message ?? "Folder was not found.",
+        };
+      }
+
+      return {
+        ok: false,
+        code: "WORKSPACE_FOLDER_MOVE_FAILED",
+        message:
+          moveAuthorization.message ??
+          "The folder could not be moved due to workspace authorization.",
+      };
     }
 
     const duplicate = await prisma.workspaceFolder.findFirst({

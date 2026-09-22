@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { getTenantFromSession } from "@/lib/tenants/queries";
+import { WorkspaceAuthorizationError } from "@/lib/workspace/access/workspace-authorization";
+import { assertWorkspaceDocumentEdit } from "@/lib/workspace/workspace-resource-guards";
+import { requireWorkspaceApiActor } from "@/lib/workspace/workspace-api-actor";
 import {
   restoreWorkspaceDocument,
   WorkspaceDocumentRestoreServiceError,
@@ -36,7 +38,7 @@ export async function POST(
   _request: Request,
   context: RouteContext,
 ) {
-  const access = await requireApiPermission(
+  const access = await requireWorkspaceApiActor(
     PERMISSIONS.WORKSPACE_MANAGE,
   );
 
@@ -51,31 +53,8 @@ export async function POST(
     );
   }
 
-  const sessionTenantId = access.session.user?.activeTenantId;
-
-  if (!sessionTenantId) {
-    return NextResponse.json(
-      {
-        error: "Kein Mandant in der Sitzung.",
-      },
-      {
-        status: 403,
-      },
-    );
-  }
-
-  const actorUserId = access.session.user?.id;
-
-  if (!actorUserId) {
-    return NextResponse.json(
-      {
-        error: "Benutzer-ID fehlt in der Sitzung.",
-      },
-      {
-        status: 401,
-      },
-    );
-  }
+  const sessionTenantId = access.tenantId;
+  const actorUserId = access.actorUserId;
 
   const tenant = await getTenantFromSession(
     sessionTenantId,
@@ -93,6 +72,18 @@ export async function POST(
   }
 
   const { documentId } = await context.params;
+
+  try {
+    assertWorkspaceDocumentEdit(access.actor, documentId);
+  } catch (error) {
+    if (error instanceof WorkspaceAuthorizationError) {
+      return NextResponse.json(
+        { error: "Dokument nicht gefunden.", code: "DOCUMENT_NOT_FOUND" },
+        { status: 404 },
+      );
+    }
+    throw error;
+  }
 
   try {
     await restoreWorkspaceDocument({

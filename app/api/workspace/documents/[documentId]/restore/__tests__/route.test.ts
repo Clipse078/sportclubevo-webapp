@@ -7,18 +7,29 @@ import {
 } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  requireApiPermission: vi.fn(),
+  requireWorkspaceApiActor: vi.fn(),
+  buildWorkspaceReadWhere: vi.fn(),
+  assertWorkspaceAccess: vi.fn(),
   getTenantFromSession: vi.fn(),
   restoreWorkspaceDocument: vi.fn(),
 }));
 
-vi.mock(
-  "@/lib/permissions/require-api-permission",
-  () => ({
-    requireApiPermission:
-      mocks.requireApiPermission,
-  }),
-);
+vi.mock("@/lib/workspace/workspace-api-actor", () => ({
+  requireWorkspaceApiActor: mocks.requireWorkspaceApiActor,
+}));
+
+vi.mock("@/lib/workspace/access/query-predicate", () => ({
+  buildWorkspaceReadWhere: mocks.buildWorkspaceReadWhere,
+}));
+
+vi.mock("@/lib/workspace/access/workspace-authorization", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/workspace/access/workspace-authorization")>();
+  return {
+    ...actual,
+    assertWorkspaceAccess: (...args: unknown[]) => mocks.assertWorkspaceAccess(...args),
+  };
+});
 
 vi.mock("@/lib/tenants/queries", () => ({
   getTenantFromSession:
@@ -71,7 +82,16 @@ function configureAuthorizedSession(
   tenantId: string | null = SessionTenantId,
   userId: string | null = UserId,
 ) {
-  mocks.requireApiPermission.mockResolvedValue({
+  if (!tenantId || !userId) {
+    mocks.requireWorkspaceApiActor.mockResolvedValue({
+      ok: false,
+      status: 403,
+      error: "Authenticated tenant and user are required.",
+      session: { user: { id: userId, activeTenantId: tenantId } },
+    });
+    return;
+  }
+  mocks.requireWorkspaceApiActor.mockResolvedValue({
     ok: true,
     status: 200,
     error: null,
@@ -80,6 +100,11 @@ function configureAuthorizedSession(
         id: userId,
         activeTenantId: tenantId,
       },
+    },
+    tenantId,
+    actorUserId: userId,
+    actor: {
+      identity: { tenantId, userId, personId: null },
     },
   });
 }
@@ -123,7 +148,7 @@ describe(
     });
 
     it("requires WORKSPACE_MANAGE", async () => {
-      mocks.requireApiPermission.mockResolvedValue({
+      mocks.requireWorkspaceApiActor.mockResolvedValue({
         ok: false,
         status: 403,
         error: "Forbidden",
@@ -144,7 +169,7 @@ describe(
       });
 
       expect(
-        mocks.requireApiPermission,
+        mocks.requireWorkspaceApiActor,
       ).toHaveBeenCalledWith(
         PERMISSIONS.WORKSPACE_MANAGE,
       );
@@ -265,7 +290,7 @@ describe(
       ).not.toHaveBeenCalled();
     });
 
-    it("returns 401 when the actor user ID is missing", async () => {
+    it("returns 403 when the actor user ID is missing", async () => {
       configureAuthorizedSession(
         SessionTenantId,
         null,
@@ -276,7 +301,7 @@ describe(
         createContext(),
       );
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(403);
 
       expect(
         mocks.restoreWorkspaceDocument,

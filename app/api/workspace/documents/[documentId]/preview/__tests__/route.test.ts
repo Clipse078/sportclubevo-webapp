@@ -1,14 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  requireApiPermission: vi.fn(),
+  requireWorkspaceApiActor: vi.fn(),
+  assertWorkspaceDocumentView: vi.fn(),
   getTenantFromSession: vi.fn(),
   getDocument: vi.fn(),
   download: vi.fn(),
 }));
 
-vi.mock("@/lib/permissions/require-api-permission", () => ({
-  requireApiPermission: mocks.requireApiPermission,
+vi.mock("@/lib/workspace/workspace-api-actor", () => ({
+  requireWorkspaceApiActor: mocks.requireWorkspaceApiActor,
+}));
+
+vi.mock("@/lib/workspace/workspace-resource-guards", () => ({
+  assertWorkspaceDocumentView: (...args: unknown[]) =>
+    mocks.assertWorkspaceDocumentView(...args),
 }));
 
 vi.mock("@/lib/tenants/queries", () => ({
@@ -31,12 +37,21 @@ import { GET } from "@/app/api/workspace/documents/[documentId]/preview/route";
 describe("Workspace private preview security", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireApiPermission.mockResolvedValue({
+    mocks.requireWorkspaceApiActor.mockResolvedValue({
       ok: true,
       session: {
         user: {
           id: "user-a",
           activeTenantId: "tenant-a",
+        },
+      },
+      tenantId: "tenant-a",
+      actorUserId: "user-a",
+      actor: {
+        identity: {
+          tenantId: "tenant-a",
+          userId: "user-a",
+          personId: null,
         },
       },
     });

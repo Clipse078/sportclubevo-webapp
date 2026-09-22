@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { canReadWorkspaceDocument } from "@/lib/workspace/document-access";
+import { resolveWorkspaceActor } from "@/lib/workspace/access/actor-context";
+import { buildWorkspaceReadWhere } from "@/lib/workspace/access/query-predicate";
 import {
   FolderClosed,
   FolderOpen,
@@ -135,18 +137,28 @@ export default async function WorkspacePage({
   const canManage = hasPermission(session, PERMISSIONS.WORKSPACE_MANAGE);
   const canDelete = hasPermission(session, PERMISSIONS.WORKSPACE_DELETE);
 
+  const userId = session.user?.id;
+  if (!userId) notFound();
+
+  const { platform, tenant: tenantPerms } = await getRequestEffectivePermissions(
+    userId,
+    tenantId,
+  );
+  const workspaceActor = await resolveWorkspaceActor({
+    tenantId,
+    userId,
+    permissionKeys: [...platform, ...tenantPerms],
+  });
+  const readWhere = await buildWorkspaceReadWhere(workspaceActor);
+
   let selectedFolderId = folderParam;
   let initialSelectedDocumentId: string | null = null;
 
   if (documentParam) {
-    const userId = session.user?.id;
-    if (!userId) notFound();
-
-    const { platform, tenant } = await getRequestEffectivePermissions(userId, tenantId);
     const documentAccessCtx = {
       tenantId,
       userId,
-      permissionKeys: [...platform, ...tenant],
+      permissionKeys: [...platform, ...tenantPerms],
     };
 
     const readable = await canReadWorkspaceDocument(documentAccessCtx, documentParam);
@@ -163,9 +175,9 @@ export default async function WorkspacePage({
   }
 
   const [folders, selectedFolder, archivedFolders] = await Promise.all([
-    getWorkspaceFolderTree(tenantId),
+    getWorkspaceFolderTree(tenantId, readWhere.folderIds),
     selectedFolderId
-      ? getWorkspaceFolderById(tenantId, selectedFolderId)
+      ? getWorkspaceFolderById(tenantId, selectedFolderId, readWhere.folderIds)
       : Promise.resolve(null),
     canManage
       ? getArchivedWorkspaceFolders(tenantId)
@@ -173,7 +185,11 @@ export default async function WorkspacePage({
   ]);
 
   const documents = selectedFolder
-    ? await listWorkspaceDocuments({ tenantId, folderId: selectedFolder.id })
+    ? await listWorkspaceDocuments({
+        tenantId,
+        folderId: selectedFolder.id,
+        authorizedDocumentIds: readWhere.documentIds,
+      })
     : [];
 
   const folderPath = selectedFolder

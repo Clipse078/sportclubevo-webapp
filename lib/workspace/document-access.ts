@@ -1,13 +1,17 @@
 /**
- * AUFGABEN-06D — canonical Workspace document authorization & presentation seam.
- * Phase 10 ACL upgrades should be localized here.
+ * AUFGABEN-06D / WORKSPACE-02 — canonical Workspace document authorization seam.
  */
 
-import { WorkspaceDocumentStatus } from "@prisma/client";
+import { WorkspaceDocumentStatus, WorkspaceResourceType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { resolveWorkspaceActorFromSessionUser } from "@/lib/workspace/access/actor-context";
+import { buildWorkspaceReadWhere } from "@/lib/workspace/access/query-predicate";
+import {
+  canWorkspaceView,
+  hasWorkspaceTenantViewCapability,
+} from "@/lib/workspace/access/workspace-authorization";
 import type { TaskServiceContext } from "@/lib/tasks/types";
-
 export type WorkspaceDocumentAccessContext = Pick<
   TaskServiceContext,
   "tenantId" | "userId" | "permissionKeys"
@@ -44,19 +48,6 @@ type DocumentAccessRow = {
   folder: { name: string } | null;
 };
 
-function hasWorkspaceReadPermission(ctx: WorkspaceDocumentAccessContext): boolean {
-  return (
-    ctx.permissionKeys.includes(PERMISSIONS.WORKSPACE_VIEW) ||
-    ctx.permissionKeys.includes(PERMISSIONS.WORKSPACE_MANAGE)
-  );
-}
-
-function canReadDocumentRow(ctx: WorkspaceDocumentAccessContext, row: DocumentAccessRow): boolean {
-  if (row.tenantId !== ctx.tenantId) return false;
-  if (!hasWorkspaceReadPermission(ctx)) return false;
-  return row.status === WorkspaceDocumentStatus.ACTIVE && row.archivedAt === null;
-}
-
 function workspaceDocumentHref(documentId: string): string {
   return `/dashboard/workspace?document=${encodeURIComponent(documentId)}`;
 }
@@ -87,6 +78,31 @@ async function loadDocumentRowsByIds(
   return new Map(rows.map((row) => [row.id, row]));
 }
 
+async function resolveActor(ctx: WorkspaceDocumentAccessContext) {
+  return resolveWorkspaceActorFromSessionUser({
+    tenantId: ctx.tenantId,
+    userId: ctx.userId,
+    permissionKeys: ctx.permissionKeys,
+  });
+}
+
+async function canReadDocumentRow(
+  ctx: WorkspaceDocumentAccessContext,
+  row: DocumentAccessRow,
+): Promise<boolean> {
+  if (row.tenantId !== ctx.tenantId) return false;
+  if (!hasWorkspaceTenantViewCapability(ctx.permissionKeys)) return false;
+  if (row.status !== WorkspaceDocumentStatus.ACTIVE || row.archivedAt !== null) {
+    return false;
+  }
+
+  const actor = await resolveActor(ctx);
+  return canWorkspaceView(actor, {
+    resourceType: WorkspaceResourceType.DOCUMENT,
+    documentId: row.id,
+  });
+}
+
 export async function filterReadableWorkspaceDocumentIds(
   ctx: WorkspaceDocumentAccessContext,
   documentIds: readonly string[],
@@ -95,7 +111,7 @@ export async function filterReadableWorkspaceDocumentIds(
   const readable = new Set<string>();
   for (const id of documentIds) {
     const row = rows.get(id);
-    if (row && canReadDocumentRow(ctx, row)) readable.add(id);
+    if (row && (await canReadDocumentRow(ctx, row))) readable.add(id);
   }
   return readable;
 }
@@ -112,8 +128,9 @@ function toPresentation(
   ctx: WorkspaceDocumentAccessContext,
   documentId: string,
   row: DocumentAccessRow | undefined,
+  readable: boolean,
 ): WorkspaceDocumentPresentation {
-  if (!row || !canReadDocumentRow(ctx, row)) {
+  if (!row || !readable) {
     return { access: "restricted", documentId };
   }
   return {
@@ -140,7 +157,9 @@ export async function resolveWorkspaceDocumentPresentations(
   const rows = await loadDocumentRowsByIds(ctx.tenantId, documentIds);
   const result = new Map<string, WorkspaceDocumentPresentation>();
   for (const id of documentIds) {
-    result.set(id, toPresentation(ctx, id, rows.get(id)));
+    const row = rows.get(id);
+    const readable = row ? await canReadDocumentRow(ctx, row) : false;
+    result.set(id, toPresentation(ctx, id, row, readable));
   }
   return result;
 }
@@ -153,11 +172,12 @@ export async function searchWorkspaceDocumentsForTaskLink(
   const take = Math.min(Math.max(limit, 1), MAX_WORKSPACE_DOCUMENT_PICKER_LIMIT);
   const q = query.trim();
 
+  const actor = await resolveActor(ctx);
+  const readWhere = await buildWorkspaceReadWhere(actor);
+
   const rows = await prisma.workspaceDocument.findMany({
     where: {
-      tenantId: ctx.tenantId,
-      status: WorkspaceDocumentStatus.ACTIVE,
-      archivedAt: null,
+      ...readWhere.documentWhere,
       ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
     },
     orderBy: { updatedAt: "desc" },
@@ -174,7 +194,7 @@ export async function searchWorkspaceDocumentsForTaskLink(
 
   const options: WorkspaceDocumentPickerOption[] = [];
   for (const row of rows) {
-    if (!canReadDocumentRow(ctx, row)) continue;
+    if (!(await canReadDocumentRow(ctx, row))) continue;
     options.push({
       id: row.id,
       title: row.name,
@@ -203,7 +223,7 @@ export async function assertWorkspaceDocumentLinkable(
     },
   });
 
-  if (!row || !canReadDocumentRow(ctx, row)) {
+  if (!row || !(await canReadDocumentRow(ctx, row))) {
     throw new Error(LINKABLE_DOCUMENT_ERROR);
   }
 }
