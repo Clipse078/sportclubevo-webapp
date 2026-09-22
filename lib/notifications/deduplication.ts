@@ -81,6 +81,11 @@ export function requirementPersonalInboxHref(): string {
   return "/dashboard/aufgaben?bereich=meine";
 }
 
+/** Deep link to personal Requirement execution for one recipient. */
+export function requirementPersonalExecutionHref(recipientId: string): string {
+  return `/dashboard/aufgaben/anforderung/${encodeURIComponent(recipientId)}`;
+}
+
 export function buildRequirementAssignedDedupKey(input: {
   recipientId: string;
   recipientUserId: string;

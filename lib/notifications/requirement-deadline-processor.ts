@@ -17,7 +17,7 @@ import {
 import {
   buildRequirementOverdueDedupKey,
   buildRequirementReminderDedupKey,
-  requirementPersonalInboxHref,
+  requirementPersonalExecutionHref,
 } from "./deduplication";
 import { selectDeadlineProcessingPageIndex } from "./deadline-processor";
 import { createNotificationIdempotent } from "./notification-service";
@@ -92,8 +92,6 @@ export async function processRequirementDeadlineNotifications(
   let reminderCreated = 0;
   let overdueCreated = 0;
 
-  const href = requirementPersonalInboxHref();
-
   for (const tenantId of tenantIds) {
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
@@ -158,7 +156,7 @@ export async function processRequirementDeadlineNotifications(
             type: NotificationTypeEnum.REQUIREMENT_REMINDER,
             title: copy.title,
             body: copy.body,
-            href,
+            href: requirementPersonalExecutionHref(pair.row.id),
             entityType: NotificationEntityType.REQUIREMENT,
             entityId: pair.row.requirement.id,
             deduplicationKey: buildRequirementReminderDedupKey({
@@ -253,7 +251,7 @@ export async function processRequirementDeadlineNotifications(
             type: NotificationTypeEnum.REQUIREMENT_OVERDUE,
             title: copy.title,
             body: copy.body,
-            href,
+            href: requirementPersonalExecutionHref(pair.row.id),
             entityType: NotificationEntityType.REQUIREMENT,
             entityId: pair.row.requirement.id,
             deduplicationKey: buildRequirementOverdueDedupKey({

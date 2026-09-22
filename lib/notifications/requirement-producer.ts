@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 import {
   buildRequirementAssignedDedupKey,
   buildRequirementCancelledDedupKey,
+  requirementPersonalExecutionHref,
   requirementPersonalInboxHref,
 } from "./deduplication";
 import { loadEffectivePreferencesForUsers } from "./preference-service";
@@ -97,7 +98,6 @@ async function emitRequirementAssignedNotificationsInner(
     NotificationTypeEnum.REQUIREMENT_ASSIGNED,
   );
 
-  const href = requirementPersonalInboxHref();
   const dueLabel = input.dueAt
     ? formatTaskDueLabel(input.dueAt, input.locale, input.timeZone)
     : null;
@@ -122,7 +122,7 @@ async function emitRequirementAssignedNotificationsInner(
       type: NotificationTypeEnum.REQUIREMENT_ASSIGNED,
       title: copy.title,
       body,
-      href,
+      href: requirementPersonalExecutionHref(pair.recipientId),
       entityType: NotificationEntityType.REQUIREMENT,
       entityId: input.requirementId,
       deduplicationKey: buildRequirementAssignedDedupKey({

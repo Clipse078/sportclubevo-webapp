@@ -1,3 +1,4 @@
+import { personalRequirementExecutionHref } from "@/lib/requirements/personal-navigation";
 import { buildRequirementPersonalActionId } from "../identity";
 import type { PersonalAction } from "../types";
 import type { PersonalActionSourceAdapter, PersonalActionSourceContext } from "./types";
@@ -20,7 +21,7 @@ function mapCandidateToPersonalAction(
     subtitle: null,
     dueAt: candidate.dueAt?.toISOString() ?? null,
     status: "ACTIONABLE",
-    href: null,
+    href: personalRequirementExecutionHref(candidate.recipientId),
     actionKind: "REQUIREMENT_ACK",
     inlineActions: {
       requirement: {

@@ -466,9 +466,10 @@ describe("AUFGABEN-06G3 — presentation & UI safety", () => {
     expect(item.subtitle).toBe("Für: James");
   });
 
-  it("R35 — personal execution does not link to management detail route", async () => {
+  it("R35 — personal execution links to recipient execution surface, not management", async () => {
     const actions = await requirementPersonalActionSource.loadActionable(ctx);
-    expect(actions[0].href).toBeNull();
+    expect(actions[0].href).toBe(`/dashboard/aufgaben/anforderung/${RECIP_ID}`);
+    expect(actions[0].href).not.toContain("/anforderungen/");
     expect(read("components/admin/aufgaben/PersonalActionRequirementInline.tsx")).not.toMatch(
       /anforderungen\/\[requirementId\]/,
     );
