@@ -296,15 +296,14 @@ describe("AUFGABEN-06G4 deadline processor (N16–N25, N42–N44)", () => {
   });
 
   it("N16/N22 — reminder and overdue notifications for eligible open obligations", async () => {
-    producerMocks.recipientFindMany.mockImplementation(async (args: { distinct?: string[] }) => {
-      if (args.distinct) return [{ tenantId: "tenant-1" }];
-      return [
-        {
-          id: "recip-1",
-          subjectPersonId: "person-1",
-          requirement: { id: "req-1", title: "Handbuch", status: "ACTIVE", dueAt: due },
-        },
-      ];
+    const openRow = {
+      id: "recip-1",
+      subjectPersonId: "person-1",
+      requirement: { id: "req-1", title: "Handbuch", status: "ACTIVE", dueAt: due },
+    };
+    installRequirementDeadlineRecipientFindManyMock({
+      legacyDueSoon: [openRow],
+      overdue: [openRow],
     });
 
     const { processRequirementDeadlineNotifications } = await import(
@@ -333,25 +332,6 @@ describe("AUFGABEN-06G4 deadline processor (N16–N25, N42–N44)", () => {
         ],
       ]),
     );
-    producerMocks.recipientFindMany.mockImplementation(async (args: {
-      where?: { requirement?: unknown };
-      distinct?: string[];
-    }) => {
-      if (args.distinct) return [{ tenantId: "tenant-1" }];
-      const reqFilter = args.where?.requirement as { dueAt?: { lte?: Date; gt?: Date } } | undefined;
-      const dueAtFilter = reqFilter?.dueAt;
-      if (dueAtFilter && "lte" in dueAtFilter && !("gt" in dueAtFilter)) {
-        return [
-          {
-            id: "recip-1",
-            subjectPersonId: "person-1",
-            requirement: { id: "req-1", title: "Handbuch", status: "ACTIVE", dueAt: due },
-          },
-        ];
-      }
-      return [];
-    });
-
     const overdueResult = await processRequirementDeadlineNotifications(nowOverdue);
     expect(overdueResult.overdueCreated).toBe(1);
     expect(producerMocks.createNotificationIdempotent).toHaveBeenCalledWith(
@@ -361,20 +341,14 @@ describe("AUFGABEN-06G4 deadline processor (N16–N25, N42–N44)", () => {
   });
 
   it("N23/N44 — repeated cron uses stable overdue dedup keys", async () => {
-    producerMocks.recipientFindMany.mockImplementation(async (args: { where?: { requirement?: unknown }; distinct?: string[] }) => {
-      if (args.distinct) return [{ tenantId: "tenant-1" }];
-      const reqFilter = args.where?.requirement as { dueAt?: { lte?: Date; gt?: Date } } | undefined;
-      const dueAtFilter = reqFilter?.dueAt;
-      if (dueAtFilter && "lte" in dueAtFilter && !("gt" in dueAtFilter)) {
-        return [
-          {
-            id: "recip-1",
-            subjectPersonId: "person-1",
-            requirement: { id: "req-1", title: "Handbuch", status: "ACTIVE", dueAt: due },
-          },
-        ];
-      }
-      return [];
+    installRequirementDeadlineRecipientFindManyMock({
+      overdue: [
+        {
+          id: "recip-1",
+          subjectPersonId: "person-1",
+          requirement: { id: "req-1", title: "Handbuch", status: "ACTIVE", dueAt: due },
+        },
+      ],
     });
 
     const { processRequirementDeadlineNotifications } = await import(
@@ -489,6 +463,55 @@ describe("AUFGABEN-06G4 regression sentinels (N36–N40)", () => {
     );
   });
 });
+
+type DeadlineRecipientRow = {
+  id: string;
+  subjectPersonId: string;
+  requirement: { id: string; title: string; status: string; dueAt: Date };
+};
+
+/** Respects mutually exclusive 06G7 reminder query paths (legacy vs explicit stages vs overdue). */
+function installRequirementDeadlineRecipientFindManyMock(rows: {
+  legacyDueSoon?: DeadlineRecipientRow[];
+  explicitStage1?: DeadlineRecipientRow[];
+  explicitStage2?: DeadlineRecipientRow[];
+  overdue?: DeadlineRecipientRow[];
+}) {
+  producerMocks.recipientFindMany.mockImplementation(
+    async (args: { where?: { requirement?: unknown }; distinct?: string[] }) => {
+      if (args.distinct) return [{ tenantId: "tenant-1" }];
+      const reqFilter = args.where?.requirement as
+        | {
+            dueAt?: { lte?: Date; gt?: Date };
+            remindersConfigured?: boolean;
+            reminder1At?: unknown;
+            reminder2At?: unknown;
+          }
+        | undefined;
+      if (!reqFilter) return [];
+
+      const dueAtFilter = reqFilter.dueAt;
+      if (dueAtFilter && "lte" in dueAtFilter && !("gt" in dueAtFilter)) {
+        return rows.overdue ?? [];
+      }
+      if (
+        reqFilter.remindersConfigured === false &&
+        dueAtFilter &&
+        "gt" in dueAtFilter &&
+        "lte" in dueAtFilter
+      ) {
+        return rows.legacyDueSoon ?? [];
+      }
+      if (reqFilter.remindersConfigured === true && reqFilter.reminder1At !== undefined) {
+        return rows.explicitStage1 ?? [];
+      }
+      if (reqFilter.remindersConfigured === true && reqFilter.reminder2At !== undefined) {
+        return rows.explicitStage2 ?? [];
+      }
+      return [];
+    },
+  );
+}
 
 function readFileSafe(rel: string): string {
   const { readFileSync } = require("node:fs");

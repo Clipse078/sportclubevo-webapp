@@ -23,23 +23,46 @@ export function buildRequirementAssignedCopy(input: {
   };
 }
 
+/** Canonical automatic reminder channel (mutually exclusive per Requirement). */
+export type RequirementAutomaticReminderChannel =
+  | "due_soon_window"
+  | "configured_stage_1"
+  | "configured_stage_2";
+
+function requirementReminderStageHint(
+  channel: RequirementAutomaticReminderChannel | undefined,
+): string {
+  switch (channel) {
+    case "configured_stage_1":
+      return "Geplante Erinnerung (1/2).";
+    case "configured_stage_2":
+      return "Geplante Erinnerung (2/2).";
+    case "due_soon_window":
+      return "Die Frist rückt näher.";
+    default:
+      return "Bitte erledige diese Anforderung rechtzeitig.";
+  }
+}
+
 export function buildRequirementReminderCopy(input: {
   requirementTitle: string;
   subjectDisplayName?: string | null;
   notifyAsGuardian: boolean;
   dueLabel?: string | null;
+  reminderChannel?: RequirementAutomaticReminderChannel;
 }): { title: string; body: string } {
   const actionTitle = normalizeRequirementActionTitle(input.requirementTitle);
+  const stageHint = requirementReminderStageHint(input.reminderChannel);
   const dueSuffix = input.dueLabel ? `\n\nFällig: ${input.dueLabel}` : "";
   if (input.notifyAsGuardian && input.subjectDisplayName) {
     return {
       title: `Erinnerung: ${input.subjectDisplayName}: ${actionTitle}`,
-      body: `Erinnerung für ${input.subjectDisplayName}.${dueSuffix}`,
+      body: `${stageHint} Erinnerung für ${input.subjectDisplayName}.${dueSuffix}`,
     };
   }
   return {
     title: `Erinnerung: ${actionTitle}`,
-    body: `Bitte erledige diese Anforderung rechtzeitig.${dueSuffix}`,
+    body: `${stageHint}${dueSuffix}`,
   };
 }
 

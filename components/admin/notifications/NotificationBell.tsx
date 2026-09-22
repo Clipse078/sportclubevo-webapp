@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bell, CheckCheck, ClipboardList } from "lucide-react";
+import { Bell as BellIcon, CheckCheck } from "lucide-react";
 import { PopoverContent } from "@/components/ui/Popover";
 import { cn } from "@/lib/cn";
 import type { NotificationListItem } from "@/lib/notifications/read-service";
+import { notificationListIcon } from "@/lib/notifications/notification-presentation";
 
 type SummaryResponse = {
   unreadCount: number;
@@ -29,11 +30,20 @@ function formatRelativeTime(iso: string): string {
   });
 }
 
-function NotificationIcon({ type }: { type: string }) {
+function NotificationIcon({ item }: { item: NotificationListItem }) {
+  const { Icon, className } = notificationListIcon({
+    category: item.category,
+    type: item.type,
+  });
   return (
-    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[var(--surface-2)] text-[var(--sce-primary)]">
-      <ClipboardList className="h-4 w-4" aria-hidden="true" />
-      <span className="sr-only">{type}</span>
+    <span
+      className={cn(
+        "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[var(--surface-2)]",
+        className,
+      )}
+    >
+      <Icon className="h-4 w-4" aria-hidden="true" />
+      <span className="sr-only">{item.type}</span>
     </span>
   );
 }
@@ -110,7 +120,7 @@ export default function NotificationBell() {
         aria-expanded={open}
         aria-haspopup="dialog"
       >
-        <Bell className="h-[1.05rem] w-[1.05rem]" aria-hidden="true" />
+        <BellIcon className="h-[1.05rem] w-[1.05rem]" aria-hidden="true" />
         {badge}
       </button>
 
@@ -156,7 +166,7 @@ export default function NotificationBell() {
                       item.unread && "bg-[var(--surface-1)]",
                     )}
                   >
-                    <NotificationIcon type={item.type} />
+                    <NotificationIcon item={item} />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-start justify-between gap-2">
                         <span className="text-sm font-semibold text-[var(--foreground)]">{item.title}</span>

@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ClipboardList } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { NotificationListItem } from "@/lib/notifications/read-service";
+import { notificationListIcon } from "@/lib/notifications/notification-presentation";
 import { Button } from "@/components/ui/Button";
 
 type Props = {
@@ -91,11 +91,21 @@ export default function NotificationCenterClient({
         </p>
       ) : (
         <ul className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-[var(--surface-1)]">
-          {items.map((item) => (
+          {items.map((item) => {
+            const { Icon, className } = notificationListIcon({
+              category: item.category,
+              type: item.type,
+            });
+            return (
             <li key={item.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex min-w-0 gap-3">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[var(--surface-2)] text-[var(--sce-primary)]">
-                  <ClipboardList className="h-4 w-4" aria-hidden="true" />
+                <span
+                  className={cn(
+                    "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[var(--surface-2)]",
+                    className,
+                  )}
+                >
+                  <Icon className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -123,7 +133,8 @@ export default function NotificationCenterClient({
                 </Button>
               </div>
             </li>
-          ))}
+          );
+          })}
         </ul>
       )}
 
