@@ -22,6 +22,7 @@ import {
   taskStatusBadgeClass,
   taskStatusPresentation,
 } from "@/lib/tasks/management-presentation";
+import TaskStatusLabel from "./TaskStatusLabel";
 
 type Props = {
   items: TaskManagementListItem[];
@@ -141,7 +142,7 @@ function TaskRowActions({
                 )
               }
             >
-              {taskStatusPresentation(status).label}
+              <TaskStatusLabel status={status} />
             </button>
           ))}
 
@@ -346,7 +347,9 @@ function TaskListRow({
           </div>
         </div>
 
-        <span className={taskStatusBadgeClass(task.status)}>{status.label}</span>
+        <span className={taskStatusBadgeClass(task.status)}>
+          <TaskStatusLabel status={task.status} />
+        </span>
 
         <div className="hidden md:block">
           <AssigneeCompact assignees={task.assignees} />

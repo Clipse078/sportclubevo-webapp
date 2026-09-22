@@ -65,12 +65,17 @@ export async function loadTaskResponsibleDisplayNamesByUserIds(
   for (const membership of memberships) {
     const user = membership.user;
     if (!user.isActive) continue;
+    const linkedPerson = personByUserId.get(user.id);
+    if (!linkedPerson) {
+      map.set(user.id, TASK_LEGACY_ASSIGNEE_LABEL);
+      continue;
+    }
     map.set(
       user.id,
       formatTaskResponsibleDisplayName({
         userFirstName: user.firstName,
         userLastName: user.lastName,
-        linkedPerson: personByUserId.get(user.id),
+        linkedPerson,
         tenantName,
       }),
     );
@@ -79,6 +84,7 @@ export async function loadTaskResponsibleDisplayNamesByUserIds(
   return map;
 }
 
+import { TASK_LEGACY_ASSIGNEE_LABEL } from "./task-creator-labels";
 import type { TaskDto } from "./types";
 
 export async function enrichTaskDtosWithResponsibleDisplayNames(
@@ -92,14 +98,7 @@ export async function enrichTaskDtosWithResponsibleDisplayNames(
   return tasks.map((task) => ({
     ...task,
     assignees: task.assignees.map((assignee) => {
-      const displayName =
-        names.get(assignee.userId) ??
-        formatTaskResponsibleDisplayName({
-          userFirstName: assignee.firstName,
-          userLastName: assignee.lastName,
-          linkedPerson: null,
-          tenantName: null,
-        });
+      const displayName = names.get(assignee.userId) ?? TASK_LEGACY_ASSIGNEE_LABEL;
       const parts = splitTaskResponsibleDisplayName(displayName);
       return {
         ...assignee,

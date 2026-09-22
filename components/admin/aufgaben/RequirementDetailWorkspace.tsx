@@ -42,6 +42,7 @@ type Props = {
   matrixPageCount: number;
   canManage: boolean;
   canViewMatrix: boolean;
+  creatorLabel: string | null;
   locale: string;
   timeZone: string;
 };
@@ -69,6 +70,7 @@ export default function RequirementDetailWorkspace({
   matrixPageCount,
   canManage,
   canViewMatrix,
+  creatorLabel,
   locale,
   timeZone,
 }: Props) {
@@ -208,6 +210,24 @@ export default function RequirementDetailWorkspace({
 
       <header className="space-y-2 border-b border-[var(--border)] pb-4">
         <h1 className="text-xl font-semibold text-[var(--foreground)]">{requirement.title}</h1>
+        <dl className="grid gap-2 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+              Erstellt von
+            </dt>
+            <dd className="text-[var(--text-2)]">
+              {creatorLabel ?? "Ersteller nicht verfügbar"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+              Erstellt am
+            </dt>
+            <dd className="text-[var(--text-2)]">
+              {formatDateTime(requirement.createdAt, locale, timeZone)}
+            </dd>
+          </div>
+        </dl>
         <p className="text-sm text-[var(--text-2)]">
           Fällig{" "}
           {requirement.dueAt

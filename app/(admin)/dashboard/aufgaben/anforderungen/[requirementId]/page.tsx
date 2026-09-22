@@ -98,6 +98,7 @@ export default async function RequirementDetailPage({ params, searchParams }: Pr
         matrixPageCount={matrixPageCount}
         canManage={detail.canManage}
         canViewMatrix={detail.canViewMatrix}
+        creatorLabel={detail.creatorLabel}
         locale={locale}
         timeZone={timeZone}
       />
