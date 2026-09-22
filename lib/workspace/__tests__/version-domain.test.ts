@@ -5,7 +5,9 @@ import {
   formatRestoreProvenanceChangeNote,
   parseRestoredFromVersionId,
   deriveWorkspaceVersionIsCurrent,
+  userChangeNoteSpoofsRestoreProvenance,
 } from "@/lib/workspace/version/version-domain";
+import { resolveWorkspaceVersionIdQuery } from "@/lib/workspace/version/version-query";
 import { toWorkspaceDocumentVersionRefDto } from "@/lib/workspace/version/version-reference";
 
 describe("version-domain", () => {
@@ -34,6 +36,25 @@ describe("version-domain", () => {
   it("derives current flag from document pointer only", () => {
     expect(deriveWorkspaceVersionIsCurrent("v2", "v2")).toBe(true);
     expect(deriveWorkspaceVersionIsCurrent("v2", "v1")).toBe(false);
+  });
+
+  it("detects user spoofing of restore provenance prefix", () => {
+    expect(
+      userChangeNoteSpoofsRestoreProvenance(
+        "RESTORED_FROM_VERSION:evil",
+      ),
+    ).toBe(true);
+    expect(
+      userChangeNoteSpoofsRestoreProvenance("Legitimate note"),
+    ).toBe(false);
+  });
+
+  it("marks duplicate or empty versionId query params invalid", () => {
+    expect(
+      resolveWorkspaceVersionIdQuery(
+        new URL("http://localhost/x?versionId=").searchParams,
+      ),
+    ).toEqual({ mode: "invalid" });
   });
 
   it("builds immutable version reference dto without latest resolution", () => {

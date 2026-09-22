@@ -12,6 +12,7 @@ import {
   WorkspaceDocumentDownloadServiceError,
 } from "@/lib/workspace/document-download-service";
 import { getWorkspaceAttachmentContentDisposition } from "@/lib/workspace/upload-types";
+import { resolveWorkspaceVersionIdQuery } from "@/lib/workspace/version/version-query";
 
 type Params = {
   params: Promise<{
@@ -54,9 +55,22 @@ export async function GET(
   }
 
   const { documentId } = await params;
+  const versionQuery = resolveWorkspaceVersionIdQuery(
+    new URL(request.url).searchParams,
+  );
+
+  if (versionQuery.mode === "invalid") {
+    return NextResponse.json(
+      {
+        error: "Dokument nicht gefunden.",
+        code: "DOCUMENT_NOT_FOUND",
+      },
+      { status: 404 },
+    );
+  }
+
   const versionId =
-    new URL(request.url).searchParams.get("versionId")?.trim() ||
-    null;
+    versionQuery.mode === "historical" ? versionQuery.versionId : null;
 
   try {
     assertWorkspaceDocumentView(access.actor, documentId);

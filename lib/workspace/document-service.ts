@@ -18,6 +18,7 @@ import type {
   WorkspaceDocumentDto,
   WorkspaceDocumentListItemDto,
 } from "@/lib/workspace/document-dto";
+import { assertUserSuppliedChangeNoteAllowed } from "@/lib/workspace/version/version-domain";
 
 export type WorkspaceDocumentServiceErrorCode =
   "INVALID_INPUT" | "FOLDER_NOT_FOUND" | "DUPLICATE_DOCUMENT_NAME";
@@ -84,6 +85,15 @@ export async function createWorkspaceDocumentWithInitialVersion(
   const storageUrl = normalizeOptionalText(input.storageUrl);
   const checksum = normalizeOptionalText(input.checksum);
   const changeNote = normalizeOptionalText(input.changeNote);
+
+  try {
+    assertUserSuppliedChangeNoteAllowed(changeNote);
+  } catch {
+    throw new WorkspaceDocumentServiceError(
+      "INVALID_INPUT",
+      "Der Versionskommentar ist ungültig.",
+    );
+  }
 
   if (folderId) {
     const folder = await prisma.workspaceFolder.findFirst({

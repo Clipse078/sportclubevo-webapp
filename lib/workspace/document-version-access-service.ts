@@ -2,6 +2,7 @@ import { WorkspaceDocumentStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
 import type { WorkspaceDocumentDownloadDto } from "@/lib/workspace/document-dto";
+import { normalizeWorkspaceHistoricalVersionId } from "@/lib/workspace/version/version-query";
 
 export type WorkspaceDocumentVersionAccessErrorCode =
   | "INVALID_INPUT"
@@ -56,7 +57,18 @@ export async function getWorkspaceDocumentVersionForDownload(
   const tenantId = normalizeRequiredText(input.tenantId, "tenantId");
   normalizeRequiredText(input.actorUserId, "actorUserId");
   const documentId = normalizeRequiredText(input.documentId, "documentId");
-  const requestedVersionId = input.versionId?.trim() || null;
+  const normalizedVersionId = normalizeWorkspaceHistoricalVersionId(
+    input.versionId,
+  );
+
+  if (normalizedVersionId === undefined) {
+    throw new WorkspaceDocumentVersionAccessError(
+      "VERSION_NOT_FOUND",
+      "Dokument nicht gefunden.",
+    );
+  }
+
+  const requestedVersionId = normalizedVersionId;
 
   const document = await prisma.workspaceDocument.findFirst({
     where: {

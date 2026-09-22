@@ -7,6 +7,7 @@ import { writeAuditRecord } from "@/lib/audit/audit-record";
 import { prisma } from "@/lib/db/prisma";
 import type { WorkspaceDocumentDto } from "@/lib/workspace/document-dto";
 import {
+  assertUserSuppliedChangeNoteAllowed,
   formatRestoreProvenanceChangeNote,
 } from "@/lib/workspace/version/version-domain";
 import {
@@ -209,6 +210,15 @@ export async function appendWorkspaceDocumentVersion(
       restoredFromVersionId,
       changeNote,
     );
+  } else {
+    try {
+      assertUserSuppliedChangeNoteAllowed(changeNote);
+    } catch {
+      throw new WorkspaceDocumentVersionWriteError(
+        "INVALID_INPUT",
+        "Der Versionskommentar ist ungültig.",
+      );
+    }
   }
 
   const existingDocument = await prisma.workspaceDocument.findFirst({

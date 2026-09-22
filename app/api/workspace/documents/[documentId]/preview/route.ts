@@ -26,6 +26,7 @@ import {
 } from "@/lib/workspace/document-version-access-service";
 import { isWorkspaceInlinePreviewSupported } from "@/lib/workspace/storage/preview-policy";
 import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
+import { resolveWorkspaceVersionIdQuery } from "@/lib/workspace/version/version-query";
 
 function safeFilename(raw: string): string {
   return raw.replace(/[^\w.\-]/g, "_").slice(0, 200);
@@ -64,9 +65,19 @@ export async function GET(
   }
 
   const { documentId } = await params;
+  const versionQuery = resolveWorkspaceVersionIdQuery(
+    new URL(request.url).searchParams,
+  );
+
+  if (versionQuery.mode === "invalid") {
+    return NextResponse.json(
+      { error: "Dokument nicht gefunden." },
+      { status: 404 },
+    );
+  }
+
   const versionId =
-    new URL(request.url).searchParams.get("versionId")?.trim() ||
-    null;
+    versionQuery.mode === "historical" ? versionQuery.versionId : null;
 
   try {
     assertWorkspaceDocumentView(access.actor, documentId);

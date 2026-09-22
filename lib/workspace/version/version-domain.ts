@@ -70,6 +70,28 @@ export function compareWorkspaceDocumentVersionOrder(
   return right.id.localeCompare(left.id);
 }
 
+export function userChangeNoteSpoofsRestoreProvenance(
+  changeNote: string | null | undefined,
+): boolean {
+  if (!changeNote) return false;
+
+  const firstLine = changeNote.split("\n")[0]?.trim() ?? "";
+  return firstLine.startsWith(WORKSPACE_VERSION_RESTORE_CHANGE_NOTE_PREFIX);
+}
+
+/**
+ * Restore provenance prefix is reserved for server-side restore flows only.
+ */
+export function assertUserSuppliedChangeNoteAllowed(
+  changeNote: string | null | undefined,
+): void {
+  if (userChangeNoteSpoofsRestoreProvenance(changeNote)) {
+    throw new Error(
+      "WORKSPACE_CHANGE_NOTE_RESTORE_PROVENANCE_RESERVED",
+    );
+  }
+}
+
 export function formatRestoreProvenanceChangeNote(
   restoredFromVersionId: string,
   userNote?: string | null,

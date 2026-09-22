@@ -101,6 +101,21 @@ describe("getWorkspaceDocumentVersionForDownload", () => {
     });
   });
 
+  it("rejects explicit empty versionId without falling back to current", async () => {
+    await expect(
+      getWorkspaceDocumentVersionForDownload({
+        tenantId: "tenant-1",
+        actorUserId: "user-1",
+        documentId: "doc-1",
+        versionId: "",
+      }),
+    ).rejects.toMatchObject({
+      code: "VERSION_NOT_FOUND",
+    });
+
+    expect(mocks.workspaceDocumentFindFirst).not.toHaveBeenCalled();
+  });
+
   it("rejects empty actor context", async () => {
     await expect(
       getWorkspaceDocumentVersionForDownload({
