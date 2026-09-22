@@ -261,15 +261,14 @@ describe("WorkspaceUploadControls – upload flow", () => {
     });
   });
 
-  it("enforces one file at a time (no multiple attribute)", () => {
+  it("W03-27 allows multi-file selection on expanded dropzone input", () => {
     renderControls();
 
     const fileInputs = document.querySelectorAll<HTMLInputElement>(
       'input[type="file"]',
     );
-    for (const input of fileInputs) {
-      expect(input.multiple).toBe(false);
-    }
+    const dropzoneInput = fileInputs[fileInputs.length - 1];
+    expect(dropzoneInput?.multiple).toBe(true);
   });
 
   it("does not start a new upload while one is already in progress", async () => {
