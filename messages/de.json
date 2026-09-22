@@ -236,7 +236,15 @@
       "statusHeader": "Status",
       "statusCurrent": "Aktuell",
       "statusSuperseded": "Veraltet",
-      "unknownUser": "Unbekannt"
+      "unknownUser": "Unbekannt",
+      "actionsHeader": "Aktionen",
+      "downloadVersion": "Herunterladen",
+      "previewVersion": "Vorschau",
+      "restoreVersion": "Wiederherstellen",
+      "restoreConfirm": "Diese Version als neue aktuelle Version wiederherstellen?",
+      "restoreSuccess": "Version wiederhergestellt.",
+      "restoreError": "Wiederherstellung fehlgeschlagen.",
+      "restoredFromLabel": "Wiederhergestellt von Version"
     },
 
     "detailsDialog": {

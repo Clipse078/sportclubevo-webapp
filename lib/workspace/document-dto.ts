@@ -72,6 +72,7 @@ export type WorkspaceDocumentListItemDto = {
   /** WORKSPACE-03 — resource-level capabilities (computed server-side, not per-row API). */
   canManageAccess?: boolean;
   canUpload?: boolean;
+  canEditDocument?: boolean;
 };
 
 export type ListWorkspaceDocumentsInput = {
@@ -115,4 +116,12 @@ export type WorkspaceDocumentVersionHistoryItemDto = {
   checksum: string | null;
   status: WorkspaceDocumentVersionStatus;
   isCurrent: boolean;
+  restoredFromVersionId: string | null;
+};
+
+/** Immutable acknowledgement reference target (WORKSPACE-05 readiness). */
+export type WorkspaceDocumentVersionRefDto = {
+  tenantId: string;
+  documentId: string;
+  versionId: string;
 };

@@ -136,6 +136,10 @@ export default async function WorkspacePage({
       resourceType: WorkspaceResourceType.DOCUMENT,
       documentId: doc.id,
     }),
+    canEditDocument: canWorkspaceEdit(workspaceActor, {
+      resourceType: WorkspaceResourceType.DOCUMENT,
+      documentId: doc.id,
+    }),
   }));
 
   const canUploadSelectedFolder =

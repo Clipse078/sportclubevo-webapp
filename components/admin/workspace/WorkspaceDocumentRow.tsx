@@ -127,6 +127,7 @@ export function WorkspaceDocumentRow({
           onSelect={() => onSelect?.(document.id)}
           canDelete={canDelete}
           canManageAccess={canManageAccess || document.canManageAccess}
+          canEditDocument={document.canEditDocument}
         />
       </td>
     </tr>
