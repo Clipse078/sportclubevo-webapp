@@ -71,6 +71,7 @@ enum PermissionModule {
   WORKSPACE
   ROLES
   TASKS
+  REQUIREMENTS
 }
 
 // RPERM-02: Distinguishes platform-wide roles/permissions from tenant-scoped ones.
@@ -372,6 +373,27 @@ enum TaskRecurrenceFrequency {
 enum TaskRecurrenceMode {
   ON_SCHEDULE
   AFTER_COMPLETION
+}
+
+// AUFGABEN-06G1 — individual obligation campaigns (distinct from collaborative Task).
+enum RequirementStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  CANCELLED
+}
+
+enum RequirementResponseMode {
+  ACKNOWLEDGE
+}
+
+enum RequirementResolutionStatus {
+  OPEN
+  RESOLVED
+}
+
+enum RequirementResponseValue {
+  ACKNOWLEDGED
 }
 
 // AUFGABEN-04N — canonical SCE notification platform (extensible beyond tasks).
@@ -807,6 +829,9 @@ model Tenant {
   taskSeriesSubtaskAssigneeTemplates TaskSeriesSubtaskAssigneeTemplate[]
   taskAccessGrants                   TaskAccessGrant[]
   taskSeriesAccessGrants             TaskSeriesAccessGrant[]
+  requirements                       Requirement[]                    @relation("TenantRequirements")
+  requirementDraftAudiencePersons    RequirementDraftAudiencePerson[] @relation("TenantRequirementDraftAudience")
+  requirementRecipients              RequirementRecipient[]           @relation("TenantRequirementRecipients")
   notifications                      Notification[]
   notificationDeliveries             NotificationDelivery[]
   userNotificationPreferences        UserNotificationPreference[]
@@ -980,6 +1005,8 @@ model User {
   taskSeriesAccessGrants TaskSeriesAccessGrant[] @relation("TaskSeriesAccessGrantUser")
   tasksAssignedBy TaskAssignee[] @relation("TaskAssignedByUser")
   tasksCreated    Task[]         @relation("TaskCreatedBy")
+  requirementsCreated Requirement[] @relation("RequirementCreatedBy")
+  requirementResponsesSubmitted RequirementRecipient[] @relation("RequirementRespondedByUser")
   taskSeriesCreated TaskSeries[] @relation("TaskSeriesCreatedBy")
   taskSeriesAssigneeTemplates TaskSeriesAssigneeTemplate[] @relation("TaskSeriesAssigneeTemplateUser")
   taskSeriesSubtaskAssigneeTemplates TaskSeriesSubtaskAssigneeTemplate[] @relation("TaskSeriesSubtaskAssigneeTemplateUser")
@@ -1600,6 +1627,9 @@ model Person {
   attendanceRecords               AttendanceRecord[]       @relation("PersonAttendanceRecords")
   // TEAM-COCKPIT-03A: pre-event participation responses for this Person
   participationResponses          ParticipationResponse[]  @relation("PersonParticipationResponses")
+  requirementDraftAudienceEntries RequirementDraftAudiencePerson[] @relation("RequirementDraftAudiencePerson")
+  requirementRecipientObligations RequirementRecipient[]           @relation("RequirementRecipientSubject")
+  requirementResponseActorEntries RequirementRecipient[]           @relation("RequirementResponseActorPerson")
 
   @@index([lastName, firstName])
   @@index([email])
@@ -3110,6 +3140,88 @@ model TaskAssignee {
   @@unique([taskId, userId])
   @@index([tenantId, userId])
   @@index([taskId])
+}
+
+// ---------------------------------------------------------------------------
+// Requirement — AUFGABEN-06G1 canonical individual obligation campaign.
+//
+// Tasks = one shared collaborative state. Requirements = N independent
+// recipient obligations snapshotted at activation (RequirementRecipient).
+// Domain obligations (ParticipationResponse, etc.) remain canonical elsewhere.
+// ---------------------------------------------------------------------------
+model Requirement {
+  id              String                  @id @default(cuid())
+  tenantId        String
+  title           String
+  description     String?
+  status          RequirementStatus       @default(DRAFT)
+  responseMode    RequirementResponseMode @default(ACKNOWLEDGE)
+  dueAt           DateTime?
+  activatedAt     DateTime?
+  closedAt        DateTime?
+  cancelledAt     DateTime?
+  createdByUserId String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  tenant        Tenant                           @relation("TenantRequirements", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdBy     User?                            @relation("RequirementCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  draftAudience RequirementDraftAudiencePerson[] @relation("RequirementDraftAudience")
+  recipients    RequirementRecipient[]           @relation("RequirementRecipients")
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, dueAt])
+  @@index([tenantId, status, dueAt])
+}
+
+/// Explicit Person audience while Requirement remains DRAFT (relational, not JSON).
+model RequirementDraftAudiencePerson {
+  id            String   @id @default(cuid())
+  tenantId      String
+  requirementId String
+  personId      String
+  createdAt     DateTime @default(now())
+
+  tenant      Tenant      @relation("TenantRequirementDraftAudience", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  requirement Requirement @relation("RequirementDraftAudience", fields: [requirementId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  person      Person      @relation("RequirementDraftAudiencePerson", fields: [personId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([requirementId, personId])
+  @@index([tenantId])
+  @@index([tenantId, requirementId])
+  @@index([tenantId, personId])
+}
+
+/// Authoritative audience snapshot + per-Person obligation state after activation.
+model RequirementRecipient {
+  id                    String                       @id @default(cuid())
+  tenantId              String
+  requirementId         String
+  subjectPersonId       String
+  resolutionStatus      RequirementResolutionStatus  @default(OPEN)
+  responseValue         RequirementResponseValue?
+  respondedAt           DateTime?
+  respondedByUserId     String?
+  responseActorPersonId String?
+  removedAt             DateTime?
+  createdAt             DateTime                     @default(now())
+  updatedAt             DateTime                     @updatedAt
+
+  tenant              Tenant      @relation("TenantRequirementRecipients", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  requirement         Requirement @relation("RequirementRecipients", fields: [requirementId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  subjectPerson       Person      @relation("RequirementRecipientSubject", fields: [subjectPersonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  respondedByUser     User?       @relation("RequirementRespondedByUser", fields: [respondedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  responseActorPerson Person?     @relation("RequirementResponseActorPerson", fields: [responseActorPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([requirementId, subjectPersonId])
+  @@index([tenantId])
+  @@index([tenantId, requirementId])
+  @@index([tenantId, subjectPersonId])
+  @@index([tenantId, requirementId, resolutionStatus])
+  @@index([tenantId, subjectPersonId, resolutionStatus])
+  @@index([requirementId, resolutionStatus])
+  @@index([tenantId, respondedAt])
 }
 
 /// AUFGABEN-04N — personal, recipient-scoped notification feed item.

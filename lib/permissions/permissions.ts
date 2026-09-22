@@ -135,6 +135,12 @@ export const PERMISSIONS = {
   TASKS_VIEW_ALL: "tasks.view_all",
   TASKS_MANAGE: "tasks.manage",
 
+  // AUFGABEN-06G1 — individual requirement campaigns (separate from tasks.*).
+  REQUIREMENTS_VIEW: "requirements.view",
+  REQUIREMENTS_CREATE: "requirements.create",
+  REQUIREMENTS_MANAGE: "requirements.manage",
+  REQUIREMENTS_VIEW_AGGREGATE: "requirements.view_aggregate",
+
   TEMPLATES_VIEW: "templates.view",
   TEMPLATES_MANAGE: "templates.manage",
 
