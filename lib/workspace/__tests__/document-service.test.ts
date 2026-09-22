@@ -190,6 +190,7 @@ describe("createWorkspaceDocumentWithInitialVersion", () => {
         folderId: "folder-1",
         name: "Trainerhandbuch",
         status: WorkspaceDocumentStatus.ACTIVE,
+        accessInheritanceMode: "INHERIT",
         createdByUserId: "user-1",
         updatedByUserId: "user-1",
       },

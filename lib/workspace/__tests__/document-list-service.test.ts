@@ -119,6 +119,7 @@ describe("listWorkspaceDocuments", () => {
           folderId: null,
           status: WorkspaceDocumentStatus.ACTIVE,
           archivedAt: null,
+          id: { in: ["__workspace_unauthorized__"] },
         },
       }),
     );
