@@ -5,6 +5,10 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { enrichTaskDtosWithResponsibleDisplayNames } from "./task-assignee-display";
+import {
+  formatTaskCreatorDisplayName,
+  resolveTaskCreatorDisplayNamesByUserIds,
+} from "./task-creator-display";
 import { formatTaskSeriesRecurrenceLabel } from "./management-labels";
 import { resolveTaskContextPresentation, type TaskContextPresentation } from "./context-presentation";
 import { computeSubtaskProgress } from "./subtask-rules";
@@ -101,6 +105,7 @@ export type TaskWorkspaceCreator = {
   userId: string;
   firstName: string;
   lastName: string;
+  displayName: string;
 } | null;
 
 export type TaskWorkspaceBundle = {
@@ -180,6 +185,11 @@ export async function loadTaskWorkspace(
     ? formatTaskSeriesRecurrenceLabel(seriesRow)
     : null;
 
+  const creatorNames = await resolveTaskCreatorDisplayNamesByUserIds(
+    ctx.tenantId,
+    task.createdByUserId ? [task.createdByUserId] : [],
+  );
+
   return {
     task,
     parentTask: parentTask ? { id: parentTask.id, title: parentTask.title } : null,
@@ -195,6 +205,10 @@ export async function loadTaskWorkspace(
           userId: creatorUser.id,
           firstName: creatorUser.firstName,
           lastName: creatorUser.lastName,
+          displayName: formatTaskCreatorDisplayName(
+            creatorUser.id,
+            creatorNames,
+          ),
         }
       : null,
     capabilities: resolveTaskWorkspaceCapabilities(ctx, task),

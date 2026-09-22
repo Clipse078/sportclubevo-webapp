@@ -34,6 +34,8 @@ const mocks = vi.hoisted(() => ({
   recipientCount: vi.fn(),
   recipientFindMany: vi.fn(),
   personFindMany: vi.fn(),
+  tenantFindUnique: vi.fn(),
+  userFindMany: vi.fn(),
   taskCreate: vi.fn(),
   participationCreate: vi.fn(),
   notificationCreate: vi.fn(),
@@ -51,6 +53,8 @@ vi.mock("@/lib/db/prisma", () => ({
       findMany: mocks.recipientFindMany,
     },
     person: { findMany: mocks.personFindMany },
+    tenant: { findUnique: mocks.tenantFindUnique },
+    user: { findMany: mocks.userFindMany },
     task: { create: mocks.taskCreate },
     participationResponse: { create: mocks.participationCreate },
     notification: { create: mocks.notificationCreate },
@@ -79,6 +83,8 @@ function managerCtx(extra: string[] = []) {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.personFindMany.mockResolvedValue([]);
+  mocks.tenantFindUnique.mockResolvedValue({ name: "Test Tenant" });
+  mocks.userFindMany.mockResolvedValue([]);
 });
 
 describe("AUFGABEN-06G2 scope & authorization (M1–M3, M14–M16, M31–M32)", () => {
@@ -358,6 +364,7 @@ describe("AUFGABEN-06G2 management list (M4–M8, M12)", () => {
       .mockResolvedValueOnce(4)
       .mockResolvedValueOnce(6)
       .mockResolvedValueOnce(6);
+    mocks.userFindMany.mockResolvedValue([{ id: "mgr", firstName: "M", lastName: "G" }]);
 
     const result = await listRequirementManagementItems(managerCtx(), {
       search: "",

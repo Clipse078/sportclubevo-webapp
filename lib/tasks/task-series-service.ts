@@ -123,14 +123,12 @@ function assertSeriesManage(
 
 async function validateAssigneeUserIds(tenantId: string, userIds: string[]) {
   if (userIds.length === 0) return;
-  const unique = [...new Set(userIds)];
-  const memberships = await prisma.tenantMembership.findMany({
-    where: { tenantId, userId: { in: unique }, isActive: true },
-    select: { userId: true },
-  });
-  if (memberships.length !== unique.length) {
+  const { assertEligibleTaskAssigneeUserIds } = await import("./eligible-task-assignee-persons");
+  try {
+    await assertEligibleTaskAssigneeUserIds(tenantId, userIds);
+  } catch {
     throw new TaskValidationError(
-      "One or more assignees are not active members of this tenant",
+      "One or more assignees are not eligible Person-linked members of this tenant",
     );
   }
 }
@@ -645,7 +643,7 @@ async function createOccurrenceTree(
         seriesOccurrenceKey: occurrenceKey,
         orgUnitId: occurrenceOrg.orgUnitId,
         visibilityScope: occurrenceOrg.visibilityScope,
-        createdByUserId: ctx.userId,
+        createdByUserId: series.createdByUserId ?? ctx.userId,
       },
     });
   } catch (error) {
@@ -731,7 +729,7 @@ async function createOccurrenceTree(
         reminder2PresetKey: childReminders.reminder2PresetKey,
         orgUnitId: occurrenceOrg.orgUnitId,
         visibilityScope: occurrenceOrg.visibilityScope,
-        createdByUserId: ctx.userId,
+        createdByUserId: series.createdByUserId ?? ctx.userId,
       },
     });
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
+import { PopoverContent } from "@/components/ui/Popover";
 import RequirementPersonMultiPicker from "./RequirementPersonMultiPicker";
 import type { RequirementPersonOption } from "@/lib/requirements/person-search";
 import {
@@ -50,6 +51,7 @@ function SelectorAddPanel({
   disabled?: boolean;
   onPick: (id: string, label: string) => void;
 }) {
+  const anchorRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -99,47 +101,55 @@ function SelectorAddPanel({
   }, [kind, open, query]);
 
   return (
-    <div className="relative">
+    <div className="relative inline-block">
       <button
+        ref={anchorRef}
         type="button"
         disabled={disabled}
         className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1 text-xs hover:bg-[var(--surface-2)]"
         onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
         data-testid={`requirement-audience-add-${kind}`}
       >
         <Plus className="h-3.5 w-3.5" aria-hidden="true" />
         {KIND_LABEL[kind]}
       </button>
-      {open ? (
-        <div className="absolute left-0 top-full z-20 mt-1 w-72 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2 shadow-lg">
-          <input
-            className="fca-input mb-2 w-full text-sm"
-            placeholder="Suchen…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            data-testid={`requirement-audience-search-${kind}`}
-          />
-          {error ? <p className="text-xs text-red-500">{error}</p> : null}
-          {loading ? <p className="text-xs text-[var(--muted)]">Suche…</p> : null}
-          <ul className="max-h-48 overflow-y-auto">
-            {options.map((option) => (
-              <li key={option.id}>
-                <button
-                  type="button"
-                  className="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-[var(--surface-2)]"
-                  onClick={() => {
-                    onPick(option.id, option.label);
-                    setOpen(false);
-                    setQuery("");
-                  }}
-                >
-                  {option.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <PopoverContent
+        open={open}
+        onOpenChange={setOpen}
+        anchorRef={anchorRef}
+        matchAnchorWidth={false}
+        maxHeight={280}
+        className="w-72 p-2"
+        role="dialog"
+      >
+        <input
+          className="fca-input mb-2 w-full text-sm"
+          placeholder="Suchen…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          data-testid={`requirement-audience-search-${kind}`}
+        />
+        {error ? <p className="text-xs text-red-500">{error}</p> : null}
+        {loading ? <p className="text-xs text-[var(--muted)]">Suche…</p> : null}
+        <ul className="max-h-52 overflow-y-auto">
+          {options.map((option) => (
+            <li key={option.id}>
+              <button
+                type="button"
+                className="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-[var(--surface-2)]"
+                onClick={() => {
+                  onPick(option.id, option.label);
+                  setOpen(false);
+                  setQuery("");
+                }}
+              >
+                {option.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </PopoverContent>
     </div>
   );
 }

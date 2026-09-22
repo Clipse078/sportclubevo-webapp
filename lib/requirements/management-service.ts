@@ -21,6 +21,10 @@ import {
   type RequirementManagementQueryState,
   type RequirementManagementSort,
 } from "./management-navigation";
+import {
+  formatTaskCreatorDisplayName,
+  resolveTaskCreatorDisplayNamesByUserIds,
+} from "@/lib/tasks/task-creator-display";
 
 const REQUIREMENT_INCLUDE = {
   draftAudience: { select: { personId: true } },
@@ -89,10 +93,13 @@ function mapRequirement(row: RequirementRow): RequirementDto {
   };
 }
 
-function creatorLabel(row: RequirementRow): string | null {
-  if (!row.createdBy) return null;
-  const name = `${row.createdBy.firstName ?? ""} ${row.createdBy.lastName ?? ""}`.trim();
-  return name || null;
+async function resolveRequirementCreatorLabel(
+  tenantId: string,
+  createdByUserId: string | null,
+): Promise<string | null> {
+  if (!createdByUserId) return null;
+  const names = await resolveTaskCreatorDisplayNamesByUserIds(tenantId, [createdByUserId]);
+  return formatTaskCreatorDisplayName(createdByUserId, names);
 }
 
 async function loadAggregatesBatch(
@@ -226,6 +233,13 @@ export async function listRequirementManagementItems(
 
   const activeIds = rows.filter((r) => r.status !== "DRAFT").map((r) => r.id);
   const aggregates = await loadAggregatesBatch(ctx.tenantId, activeIds);
+  const creatorUserIds = rows
+    .map((row) => row.createdByUserId)
+    .filter((id): id is string => Boolean(id));
+  const creatorNames = await resolveTaskCreatorDisplayNamesByUserIds(
+    ctx.tenantId,
+    creatorUserIds,
+  );
 
   let items: RequirementManagementListItem[] = rows.map((row) => {
     const requirement = mapRequirement(row);
@@ -234,7 +248,9 @@ export async function listRequirementManagementItems(
     return {
       requirement,
       aggregate,
-      creatorLabel: creatorLabel(row),
+      creatorLabel: row.createdByUserId
+        ? formatTaskCreatorDisplayName(row.createdByUserId, creatorNames)
+        : null,
       isOverdue: false,
     };
   });
@@ -293,7 +309,7 @@ export async function loadRequirementManagementDetail(
   return {
     requirement,
     aggregate,
-    creatorLabel: creatorLabel(row),
+    creatorLabel: await resolveRequirementCreatorLabel(ctx.tenantId, row.createdByUserId),
     canManage: canManageRequirement(ctx, authRecord),
     canViewMatrix: canListRequirementRecipients(ctx, authRecord),
   };

@@ -31,6 +31,8 @@ import TaskPeopleMultiPicker from "./TaskPeopleMultiPicker";
 import TaskPriorityField from "./TaskPriorityField";
 import { TaskPriorityIconLabel } from "./TaskPriorityPresentation";
 import { taskStatusBadgeClass, taskStatusPresentation } from "@/lib/tasks/management-presentation";
+import TaskStatusLabel from "./TaskStatusLabel";
+import { TASK_CREATOR_UNAVAILABLE_LABEL } from "@/lib/tasks/task-creator-labels";
 import type { TaskDto } from "@/lib/tasks/types";
 import {
   assignAufgabeAction,
@@ -566,7 +568,9 @@ export function TaskWorkspacePanel({
   }
 
   const headerStatus = (
-    <span className={cn("shrink-0", taskStatusBadgeClass(task.status))}>{status.label}</span>
+    <span className={cn("shrink-0", taskStatusBadgeClass(task.status))}>
+      <TaskStatusLabel status={task.status} />
+    </span>
   );
 
   return (
@@ -773,7 +777,9 @@ export function TaskWorkspacePanel({
                 ))}
               </select>
             ) : (
-              <span className={taskStatusBadgeClass(task.status)}>{status.label}</span>
+              <span className={taskStatusBadgeClass(task.status)}>
+                <TaskStatusLabel status={task.status} />
+              </span>
             )}
           </PropertyRow>
 
@@ -880,11 +886,14 @@ export function TaskWorkspacePanel({
             canEdit={capabilities.canEditOrgVisibility}
           />
 
-          <PropertyRow label="Erstellt">
+          <PropertyRow label="Erstellt von">
+            <span className="text-sm text-[var(--text-2)]">
+              {creator?.displayName ?? TASK_CREATOR_UNAVAILABLE_LABEL}
+            </span>
+          </PropertyRow>
+
+          <PropertyRow label="Erstellt am">
             <span className="text-xs text-[var(--muted)]">
-              {creator
-                ? `${formatAssigneeName(creator.firstName, creator.lastName)} · `
-                : ""}
               {new Date(task.createdAt).toLocaleString(locale, { timeZone })}
             </span>
           </PropertyRow>

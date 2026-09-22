@@ -87,11 +87,11 @@ describe("AUFGABEN-06G7 UX contracts", () => {
         ],
       }),
     );
-    expect(html).toContain("task-description-task-item-label");
+    expect(html).toContain("task-description-task-item-checkbox");
     expect(html).toContain("task-description-task-item-text");
     expect(html).toMatch(/<ul class="task-description-checklist">/);
     expect(html).toMatch(/<ul>/);
-    expect(html).not.toMatch(/<span class="task-description-task-item-text"><p>/);
+    expect(html).not.toMatch(/<div class="task-description-task-item-text"><p>/);
   });
 
   it("U10–U14 — requirement form exposes all audience selector types", () => {
