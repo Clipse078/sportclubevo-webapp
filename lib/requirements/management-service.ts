@@ -13,9 +13,15 @@ import {
 } from "./requirement-authorization";
 import { computeRequirementAggregate, isRequirementRecipientOverdue } from "./requirement-aggregate";
 import { isRequirementDueAtOverdue, openRequirementRecipientOverdueWhere } from "./requirement-deadlines";
+import {
+  resolveRequirementRecipientManagementStatus,
+  sortRequirementRecipientMatrixRows,
+  type RequirementRecipientMatrixSort,
+} from "./recipient-progress-presentation";
 import { RequirementForbiddenError } from "./errors";
 import type { RequirementAggregateDto, RequirementDto, RequirementServiceContext } from "./types";
-import { loadRequirementPersonNameMap } from "./person-search";
+import { loadRequirementAudienceLabels } from "./audience-selector-search";
+import { loadRequirementPersonNameMap, loadRequirementPersonOptionsByIds } from "./person-search";
 import {
   REQUIREMENT_MANAGEMENT_PAGE_SIZE,
   type RequirementManagementQueryState,
@@ -60,10 +66,14 @@ export type RequirementRecipientMatrixRow = {
   respondedAt: string | null;
   responseActorPersonId: string | null;
   actorDisplayName: string | null;
+  dueAt: string | null;
   isOverdue: boolean;
+  managementStatus: ReturnType<typeof resolveRequirementRecipientManagementStatus>;
 };
 
 export type RequirementRecipientMatrixFilter = "ALL" | "OPEN" | "ACKNOWLEDGED" | "OVERDUE";
+
+export type { RequirementRecipientMatrixSort };
 
 function mapRequirement(row: RequirementRow): RequirementDto {
   return {
@@ -323,6 +333,7 @@ export async function listRequirementRecipientMatrix(
     search: string;
     page: number;
     pageSize?: number;
+    sort?: RequirementRecipientMatrixSort;
     now?: Date;
   },
 ): Promise<{
@@ -333,6 +344,8 @@ export async function listRequirementRecipientMatrix(
 }> {
   const pageSize = input.pageSize ?? 50;
   const now = input.now ?? new Date();
+  const sort = input.sort ?? "ATTENTION";
+  const searchTerm = input.search.trim();
 
   const requirement = await prisma.requirement.findFirst({
     where: { id: input.requirementId, tenantId: ctx.tenantId },
@@ -351,6 +364,8 @@ export async function listRequirementRecipientMatrix(
     return { rows: [], totalCount: 0, page: 1, pageCount: 1 };
   }
 
+  const dueAtIso = requirement.dueAt?.toISOString() ?? null;
+
   const recipientRows = await prisma.requirementRecipient.findMany({
     where: {
       tenantId: ctx.tenantId,
@@ -360,8 +375,33 @@ export async function listRequirementRecipientMatrix(
       ...(input.filter === "ACKNOWLEDGED"
         ? { resolutionStatus: "RESOLVED", responseValue: "ACKNOWLEDGED" }
         : {}),
+      ...(input.filter === "OVERDUE"
+        ? {
+            resolutionStatus: "OPEN",
+            requirement: { status: "ACTIVE", dueAt: { lte: now } },
+          }
+        : {}),
+      ...(searchTerm
+        ? {
+            subjectPerson: {
+              OR: [
+                { firstName: { contains: searchTerm, mode: "insensitive" } },
+                { lastName: { contains: searchTerm, mode: "insensitive" } },
+                { displayName: { contains: searchTerm, mode: "insensitive" } },
+              ],
+            },
+          }
+        : {}),
     },
-    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      subjectPersonId: true,
+      resolutionStatus: true,
+      responseValue: true,
+      respondedAt: true,
+      responseActorPersonId: true,
+      removedAt: true,
+    },
   });
 
   const personIds = new Set<string>();
@@ -379,6 +419,13 @@ export async function listRequirementRecipientMatrix(
       recipientRemovedAt: row.removedAt,
       now,
     });
+    const managementStatus = resolveRequirementRecipientManagementStatus({
+      requirementStatus: requirement.status,
+      dueAt: requirement.dueAt,
+      resolutionStatus: row.resolutionStatus,
+      removedAt: row.removedAt,
+      now,
+    });
     return {
       id: row.id,
       subjectPersonId: row.subjectPersonId,
@@ -390,18 +437,13 @@ export async function listRequirementRecipientMatrix(
       actorDisplayName: row.responseActorPersonId
         ? nameMap.get(row.responseActorPersonId) ?? null
         : null,
+      dueAt: dueAtIso,
       isOverdue,
+      managementStatus,
     };
   });
 
-  if (input.filter === "OVERDUE") {
-    rows = rows.filter((r) => r.isOverdue);
-  }
-
-  const search = input.search.trim().toLowerCase();
-  if (search) {
-    rows = rows.filter((r) => r.subjectDisplayName.toLowerCase().includes(search));
-  }
+  rows = sortRequirementRecipientMatrixRows(rows, sort);
 
   const totalCount = rows.length;
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
@@ -410,4 +452,43 @@ export async function listRequirementRecipientMatrix(
   const pageRows = rows.slice(start, start + pageSize);
 
   return { rows: pageRows, totalCount, page, pageCount };
+}
+
+export type RequirementAudienceOriginLabels = {
+  persons: { personId: string; label: string }[];
+  teams: { teamId: string; label: string }[];
+  orgUnits: { orgUnitId: string; label: string }[];
+  roles: { roleId: string; label: string }[];
+  targetGroups: { targetGroupId: string; label: string }[];
+};
+
+export async function loadRequirementAudienceOriginLabels(
+  tenantId: string,
+  requirement: Pick<
+    RequirementDto,
+    | "draftAudiencePersonIds"
+    | "draftAudienceTeamIds"
+    | "draftAudienceOrgUnitIds"
+    | "draftAudienceRoleIds"
+    | "draftAudienceTargetGroupIds"
+  >,
+): Promise<RequirementAudienceOriginLabels> {
+  const [personOptions, selectorLabels] = await Promise.all([
+    loadRequirementPersonOptionsByIds(tenantId, requirement.draftAudiencePersonIds),
+    loadRequirementAudienceLabels({
+      tenantId,
+      teamIds: requirement.draftAudienceTeamIds,
+      orgUnitIds: requirement.draftAudienceOrgUnitIds,
+      roleIds: requirement.draftAudienceRoleIds,
+      targetGroupIds: requirement.draftAudienceTargetGroupIds,
+    }),
+  ]);
+
+  return {
+    persons: personOptions.map((p) => ({ personId: p.personId, label: p.displayName })),
+    teams: selectorLabels.teams,
+    orgUnits: selectorLabels.orgUnits,
+    roles: selectorLabels.roles,
+    targetGroups: selectorLabels.targetGroups,
+  };
 }

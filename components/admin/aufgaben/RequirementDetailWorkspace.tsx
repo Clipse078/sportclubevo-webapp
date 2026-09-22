@@ -6,13 +6,17 @@ import { useMemo, useState, useTransition } from "react";
 import { ArrowLeft } from "lucide-react";
 import type { RequirementAggregateDto, RequirementDto } from "@/lib/requirements/types";
 import type { RequirementPersonOption } from "@/lib/requirements/person-search";
-import type { RequirementRecipientMatrixRow } from "@/lib/requirements/management-service";
+import type {
+  RequirementAudienceOriginLabels,
+  RequirementRecipientMatrixRow,
+} from "@/lib/requirements/management-service";
 import {
-  formatActingForLabel,
-  formatRecipientResolutionLabel,
-  formatRecipientResponseLabel,
+  formatRequirementReminderSummary,
   REQUIREMENT_STATUS_LABELS,
 } from "@/lib/requirements/presentation";
+import RequirementAudienceOriginPanel from "./RequirementAudienceOriginPanel";
+import RequirementRecipientDetailDrawer from "./RequirementRecipientDetailDrawer";
+import RequirementRecipientStatusLabel from "./RequirementRecipientStatusLabel";
 import TaskDescriptionFormField from "./TaskDescriptionFormField";
 import TaskDescriptionContent from "./TaskDescriptionContent";
 import RequirementAudienceBuilder from "./RequirementAudienceBuilder";
@@ -36,6 +40,7 @@ type Props = {
     roles: { roleId: string; label: string }[];
     targetGroups: { targetGroupId: string; label: string }[];
   } | null;
+  audienceOriginLabels: RequirementAudienceOriginLabels | null;
   matrixRows: RequirementRecipientMatrixRow[];
   matrixTotalCount: number;
   matrixPage: number;
@@ -64,6 +69,7 @@ export default function RequirementDetailWorkspace({
   aggregate,
   audienceKnown,
   audienceKnownLabels,
+  audienceOriginLabels,
   matrixRows,
   matrixTotalCount,
   matrixPage,
@@ -108,6 +114,9 @@ export default function RequirementDetailWorkspace({
   const [publishOpen, setPublishOpen] = useState(false);
   const [closeOpen, setCloseOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [selectedRecipient, setSelectedRecipient] = useState<RequirementRecipientMatrixRow | null>(
+    null,
+  );
 
   const matrixFilter = (searchParams.get("matrix") ?? "ALL").toUpperCase();
   const matrixSearch = searchParams.get("mq") ?? "";
@@ -117,6 +126,14 @@ export default function RequirementDetailWorkspace({
   const readOnly = requirement.status === "CLOSED" || requirement.status === "CANCELLED";
 
   const backHref = buildAufgabenBereichHref("anforderungen");
+
+  const reminderSummary = formatRequirementReminderSummary({
+    remindersConfigured: requirement.remindersConfigured,
+    reminder1At: requirement.reminder1At,
+    reminder2At: requirement.reminder2At,
+    locale,
+    timeZone,
+  });
 
   const matrixFilterHref = useMemo(() => {
     return (filter: string) => {
@@ -203,45 +220,71 @@ export default function RequirementDetailWorkspace({
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Anforderungen
         </Link>
-        <span className="inline-flex rounded-full border border-[var(--border)] px-2 py-0.5 text-xs">
-          {REQUIREMENT_STATUS_LABELS[requirement.status]}
-        </span>
       </div>
 
-      <header className="space-y-2 border-b border-[var(--border)] pb-4">
-        <h1 className="text-xl font-semibold text-[var(--foreground)]">{requirement.title}</h1>
-        <dl className="grid gap-2 text-sm sm:grid-cols-2">
+      <header
+        className="space-y-3 border-b border-[var(--border)] pb-4"
+        data-testid="requirement-detail-header"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h1 className="text-xl font-semibold text-[var(--foreground)]">{requirement.title}</h1>
+          <span className="inline-flex rounded-full border border-[var(--border)] px-2.5 py-0.5 text-xs font-medium text-[var(--text-2)]">
+            {REQUIREMENT_STATUS_LABELS[requirement.status]}
+          </span>
+        </div>
+        <dl className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
           <div>
             <dt className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
               Erstellt von
             </dt>
-            <dd className="text-[var(--text-2)]">
-              {creatorLabel ?? "Ersteller nicht verfügbar"}
-            </dd>
+            <dd className="text-[var(--text-2)]">{creatorLabel ?? "Ersteller nicht verfügbar"}</dd>
           </div>
           <div>
             <dt className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
               Erstellt am
             </dt>
             <dd className="text-[var(--text-2)]">
-              {formatDateTime(requirement.createdAt, locale, timeZone)}
+              {formatDateTime(requirement.createdAt, locale, timeZone).split(",")[0]}
             </dd>
           </div>
-        </dl>
-        <p className="text-sm text-[var(--text-2)]">
-          Fällig{" "}
-          {requirement.dueAt
-            ? formatDateTime(requirement.dueAt, locale, timeZone).split(",")[0]
-            : "—"}
-          {requirement.activatedAt ? (
-            <span className="ml-3 text-[var(--muted)]">
-              Veröffentlicht {formatDateTime(requirement.activatedAt, locale, timeZone)}
-            </span>
+          <div>
+            <dt className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+              Fällig
+            </dt>
+            <dd className="text-[var(--text-2)]">
+              {requirement.dueAt
+                ? formatDateTime(requirement.dueAt, locale, timeZone).split(",")[0]
+                : "—"}
+            </dd>
+          </div>
+          {reminderSummary ? (
+            <div>
+              <dt className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                Erinnerungen
+              </dt>
+              <dd className="text-[var(--text-2)]">{reminderSummary}</dd>
+            </div>
           ) : null}
-        </p>
-        <p className="text-xs text-[var(--muted)]">
-          Antwort: <span className="text-[var(--text-2)]">Bestätigung</span>
-        </p>
+          {aggregate ? (
+            <>
+              <div>
+                <dt className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  Empfänger
+                </dt>
+                <dd className="tabular-nums text-[var(--text-2)]">{aggregate.totalRecipients}</dd>
+              </div>
+              <div>
+                <dt className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  Erledigt
+                </dt>
+                <dd className="tabular-nums text-[var(--text-2)]">
+                  {aggregate.resolvedCount} / {aggregate.totalRecipients} · {aggregate.resolvedPercent}{" "}
+                  %
+                </dd>
+              </div>
+            </>
+          ) : null}
+        </dl>
       </header>
 
       {error ? (
@@ -314,10 +357,10 @@ export default function RequirementDetailWorkspace({
               </button>
             </div>
           ) : null}
-          <p className="text-xs text-[var(--muted)]">
+          <p className="text-xs text-[var(--muted)]" data-testid="requirement-draft-audience-hint">
             {hasAnyAudience
-              ? "Empfänger werden beim Veröffentlichen als Snapshot festgelegt."
-              : "Noch keine Empfänger ausgewählt."}
+              ? "Empfänger werden beim Veröffentlichen festgelegt."
+              : "Noch keine Empfänger festgelegt. Empfänger werden beim Aktivieren festgelegt."}
           </p>
         </form>
       ) : (
@@ -329,28 +372,59 @@ export default function RequirementDetailWorkspace({
           ) : null}
 
           {aggregate ? (
-            <section
-              className="rounded-lg border border-[var(--border)]/80 px-4 py-3"
-              data-testid="requirement-progress-block"
-            >
-              <p className="text-sm font-medium text-[var(--foreground)]">
-                {aggregate.resolvedCount} von {aggregate.totalRecipients} bestätigt
-                <span className="ml-2 text-[var(--muted)]">{aggregate.resolvedPercent} %</span>
-              </p>
-              <p className="mt-1 text-sm text-[var(--text-2)]">{aggregate.openCount} offen</p>
-              <div
-                className="mt-2 h-2 max-w-md overflow-hidden rounded-full bg-[var(--surface-2)]"
-                role="progressbar"
-                aria-valuenow={aggregate.resolvedPercent}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              >
+            <section className="space-y-3" data-testid="requirement-progress-block">
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                <p>
+                  <span className="font-semibold tabular-nums text-[var(--foreground)]">
+                    {aggregate.totalRecipients}
+                  </span>{" "}
+                  <span className="text-[var(--muted)]">Empfänger</span>
+                </p>
+                <p>
+                  <span className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                    {aggregate.resolvedCount}
+                  </span>{" "}
+                  <span className="text-[var(--muted)]">Erledigt</span>
+                </p>
+                <p>
+                  <span className="font-semibold tabular-nums text-[var(--foreground)]">
+                    {aggregate.openCount}
+                  </span>{" "}
+                  <span className="text-[var(--muted)]">Offen</span>
+                </p>
+                <p>
+                  <span className="font-semibold tabular-nums text-red-600 dark:text-red-400">
+                    {aggregate.overdueCount}
+                  </span>{" "}
+                  <span className="text-[var(--muted)]">Überfällig</span>
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
                 <div
-                  className="h-full rounded-full bg-[var(--accent)]"
-                  style={{ width: `${aggregate.resolvedPercent}%` }}
-                />
+                  className="h-2 min-w-[12rem] flex-1 max-w-xl overflow-hidden rounded-full bg-[var(--surface-2)]"
+                  role="progressbar"
+                  aria-valuenow={aggregate.resolvedPercent}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`Fortschritt ${aggregate.resolvedPercent} Prozent`}
+                >
+                  <div
+                    className="h-full rounded-full bg-[var(--accent)]"
+                    style={{ width: `${aggregate.resolvedPercent}%` }}
+                  />
+                </div>
+                <p className="text-sm font-medium tabular-nums text-[var(--foreground)]">
+                  {aggregate.resolvedPercent} %
+                </p>
               </div>
             </section>
+          ) : null}
+
+          {audienceOriginLabels ? (
+            <RequirementAudienceOriginPanel
+              labels={audienceOriginLabels}
+              snapshotRecipientCount={aggregate?.totalRecipients ?? 0}
+            />
           ) : null}
 
           {canManage && isActive ? (
@@ -384,7 +458,7 @@ export default function RequirementDetailWorkspace({
               {[
                 ["ALL", "Alle"],
                 ["OPEN", "Offen"],
-                ["ACKNOWLEDGED", "Bestätigt"],
+                ["ACKNOWLEDGED", "Erledigt"],
                 ["OVERDUE", "Überfällig"],
               ].map(([id, label]) => (
                 <Link
@@ -417,61 +491,105 @@ export default function RequirementDetailWorkspace({
               }
             }}
           />
-          <div className="overflow-hidden rounded-lg border border-[var(--border)]">
-            <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
+            <table className="w-full min-w-[640px] text-left text-sm">
               <thead className="border-b border-[var(--border)] bg-[var(--surface-2)]/40 text-xs text-[var(--muted)]">
                 <tr>
                   <th className="px-3 py-2 font-medium">Person</th>
                   <th className="px-3 py-2 font-medium">Status</th>
-                  <th className="hidden px-3 py-2 font-medium sm:table-cell">Antwort</th>
-                  <th className="hidden px-3 py-2 font-medium md:table-cell">Zeitpunkt</th>
-                  <th className="hidden px-3 py-2 font-medium lg:table-cell">Handelt für</th>
+                  <th className="hidden px-3 py-2 font-medium sm:table-cell">Erledigt am</th>
+                  <th className="hidden px-3 py-2 font-medium md:table-cell">Fällig</th>
+                  <th className="px-3 py-2 font-medium text-right">Aktion</th>
                 </tr>
               </thead>
               <tbody>
-                {matrixRows.length === 0 ? (
+                {matrixTotalCount === 0 && matrixFilter === "ALL" && !matrixSearch ? (
                   <tr>
                     <td colSpan={5} className="px-3 py-6 text-center text-sm text-[var(--muted)]">
-                      {matrixFilter === "OPEN" ? "Alle haben bestätigt" : "Keine Personen gefunden"}
+                      Keine Empfänger in dieser Anforderung.
+                    </td>
+                  </tr>
+                ) : matrixRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-3 py-6 text-center text-sm text-[var(--muted)]">
+                      Keine Empfänger entsprechen den Filtern.
                     </td>
                   </tr>
                 ) : (
-                  matrixRows.map((row) => {
-                    const actingFor = formatActingForLabel({
-                      subjectPersonId: row.subjectPersonId,
-                      responseActorPersonId: row.responseActorPersonId,
-                      subjectDisplayName: row.subjectDisplayName,
-                      actorDisplayName: row.actorDisplayName,
-                    });
-                    return (
-                      <tr key={row.id} className="border-b border-[var(--border)]/70 last:border-0">
-                        <td className="px-3 py-2">{row.subjectDisplayName}</td>
-                        <td className="px-3 py-2">
-                          {formatRecipientResolutionLabel(row.resolutionStatus)}
-                          {row.isOverdue ? (
-                            <span className="ml-2 text-xs text-amber-700">Überfällig</span>
-                          ) : null}
-                        </td>
-                        <td className="hidden px-3 py-2 sm:table-cell">
-                          {formatRecipientResponseLabel(row.responseValue)}
-                        </td>
-                        <td className="hidden px-3 py-2 md:table-cell">
-                          {formatDateTime(row.respondedAt, locale, timeZone)}
-                        </td>
-                        <td className="hidden px-3 py-2 lg:table-cell">{actingFor ?? "—"}</td>
-                      </tr>
-                    );
-                  })
+                  matrixRows.map((row) => (
+                    <tr key={row.id} className="border-b border-[var(--border)]/70 last:border-0">
+                      <td className="px-3 py-2 font-medium text-[var(--foreground)]">
+                        {row.subjectDisplayName}
+                      </td>
+                      <td className="px-3 py-2">
+                        <RequirementRecipientStatusLabel status={row.managementStatus} />
+                      </td>
+                      <td className="hidden px-3 py-2 sm:table-cell text-[var(--text-2)]">
+                        {formatDateTime(row.respondedAt, locale, timeZone)}
+                      </td>
+                      <td className="hidden px-3 py-2 md:table-cell text-[var(--text-2)]">
+                        {row.dueAt
+                          ? formatDateTime(row.dueAt, locale, timeZone).split(",")[0]
+                          : "—"}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <button
+                          type="button"
+                          className="text-xs font-medium text-[var(--link)] hover:underline"
+                          onClick={() => setSelectedRecipient(row)}
+                          data-testid={`requirement-recipient-detail-${row.id}`}
+                        >
+                          Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
           </div>
           {matrixPageCount > 1 ? (
-            <p className="text-xs text-[var(--muted)]">
-              Seite {matrixPage} / {matrixPageCount} ({matrixTotalCount} Empfänger)
-            </p>
+            <nav className="flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--muted)]">
+              <span>
+                Seite {matrixPage} / {matrixPageCount} ({matrixTotalCount} Empfänger)
+              </span>
+              <div className="flex gap-2">
+                {matrixPage > 1 ? (
+                  <Link
+                    href={`?${new URLSearchParams({
+                      ...Object.fromEntries(searchParams.entries()),
+                      mp: String(matrixPage - 1),
+                    }).toString()}`}
+                    className="rounded border border-[var(--border)] px-2 py-1 hover:bg-[var(--surface-2)]"
+                  >
+                    Zurück
+                  </Link>
+                ) : null}
+                {matrixPage < matrixPageCount ? (
+                  <Link
+                    href={`?${new URLSearchParams({
+                      ...Object.fromEntries(searchParams.entries()),
+                      mp: String(matrixPage + 1),
+                    }).toString()}`}
+                    className="rounded border border-[var(--border)] px-2 py-1 hover:bg-[var(--surface-2)]"
+                  >
+                    Weiter
+                  </Link>
+                ) : null}
+              </div>
+            </nav>
           ) : null}
         </section>
+      ) : null}
+
+      {selectedRecipient ? (
+        <RequirementRecipientDetailDrawer
+          row={selectedRecipient}
+          requirementTitle={requirement.title}
+          locale={locale}
+          timeZone={timeZone}
+          onClose={() => setSelectedRecipient(null)}
+        />
       ) : null}
 
       {publishOpen ? (

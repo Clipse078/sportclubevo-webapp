@@ -13,6 +13,7 @@ import {
 } from "@/lib/requirements/management-navigation";
 import {
   formatRequirementOpenLabel,
+  formatRequirementOverviewProgressLabel,
   formatRequirementProgressLabel,
   REQUIREMENT_STATUS_LABELS,
 } from "@/lib/requirements/presentation";
@@ -145,6 +146,7 @@ export default function RequirementsManagementWorkspace({
                   req.draftAudiencePersonIds.length,
                   req.status,
                 );
+                const compactProgress = formatRequirementOverviewProgressLabel(item.aggregate);
                 const openLabel = formatRequirementOpenLabel(item.aggregate);
                 return (
                   <tr
@@ -173,7 +175,9 @@ export default function RequirementsManagementWorkspace({
                     </td>
                     <td className="hidden px-3 py-2.5 lg:table-cell">
                       <div className="space-y-1">
-                        <p className="text-xs text-[var(--text-2)]">{progress}</p>
+                        <p className="text-xs text-[var(--text-2)]">
+                          {compactProgress ?? progress}
+                        </p>
                         {openLabel ? <p className="text-xs text-[var(--muted)]">{openLabel}</p> : null}
                         {item.aggregate && req.status !== "DRAFT" ? (
                           <div

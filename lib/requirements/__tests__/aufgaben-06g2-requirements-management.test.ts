@@ -179,7 +179,7 @@ describe("AUFGABEN-06G2 presentation & progress (M9, M13, M21, M24–M25)", () =
         0,
         "ACTIVE",
       ),
-    ).toBe("47 / 62 bestätigt");
+    ).toBe("47 / 62 erledigt");
   });
 
   it("M21 guardian actor rendered correctly", () => {
@@ -363,7 +363,8 @@ describe("AUFGABEN-06G2 management list (M4–M8, M12)", () => {
       .mockResolvedValueOnce(10)
       .mockResolvedValueOnce(4)
       .mockResolvedValueOnce(6)
-      .mockResolvedValueOnce(6);
+      .mockResolvedValueOnce(6)
+      .mockResolvedValueOnce(2);
     mocks.userFindMany.mockResolvedValue([{ id: "mgr", firstName: "M", lastName: "G" }]);
 
     const result = await listRequirementManagementItems(managerCtx(), {

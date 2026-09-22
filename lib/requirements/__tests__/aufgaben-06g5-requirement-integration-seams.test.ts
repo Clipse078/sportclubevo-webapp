@@ -215,7 +215,8 @@ describe("AUFGABEN-06G5 — canonical contracts", () => {
       .mockResolvedValueOnce(4)
       .mockResolvedValueOnce(2)
       .mockResolvedValueOnce(2)
-      .mockResolvedValueOnce(2);
+      .mockResolvedValueOnce(2)
+      .mockResolvedValueOnce(1);
     const db = { requirementRecipient: { count: counts } } as never;
     const aggregate = await computeRequirementAggregate(db, TENANT, "req-1");
     expect(aggregate).toEqual({
@@ -223,6 +224,7 @@ describe("AUFGABEN-06G5 — canonical contracts", () => {
       openCount: 2,
       resolvedCount: 2,
       acknowledgedCount: 2,
+      overdueCount: 1,
       resolvedPercent: 50,
     });
     expect(read("prisma/schema.prisma")).not.toMatch(/resolvedCount|openCount/);

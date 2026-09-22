@@ -73,6 +73,7 @@ export type RequirementAggregateDto = {
   openCount: number;
   resolvedCount: number;
   acknowledgedCount: number;
+  overdueCount: number;
   resolvedPercent: number;
 };
 
