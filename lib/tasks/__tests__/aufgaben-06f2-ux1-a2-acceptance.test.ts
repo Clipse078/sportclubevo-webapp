@@ -40,8 +40,11 @@ describe("AUFGABEN-06F2-UX1-A2 acceptance", () => {
 
   it("A1 assignee picker uses tenant people search, not role preload dropdown", () => {
     const create = read("components/admin/aufgaben/AufgabenFullCreateClient.tsx");
+    const quick = read("components/admin/aufgaben/AufgabenQuickCreateDialog.tsx");
     expect(create).toContain("TaskPeopleMultiPicker");
+    expect(quick).toContain("TaskPeopleMultiPicker");
     expect(create).not.toMatch(/assigneeOptions\.map/);
+    expect(quick).not.toMatch(/assigneeOptions\.map/);
     const picker = read("components/admin/aufgaben/TaskPeopleMultiPicker.tsx");
     expect(picker).toContain("searchQuickCreateAssigneesAction");
   });

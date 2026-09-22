@@ -46,6 +46,59 @@ describe("task-description storage", () => {
     expect(html).not.toContain("<img");
   });
 
+  it("R2 rendered HTML uses ul/ol and checklist semantics", () => {
+    const bullet = serializeTaskDescriptionForStorage({
+      type: "doc",
+      content: [
+        {
+          type: "bulletList",
+          content: [
+            {
+              type: "listItem",
+              content: [{ type: "paragraph", content: [{ type: "text", text: "A" }] }],
+            },
+          ],
+        },
+      ],
+    });
+    expect(taskDescriptionToSafeHtml(bullet!)).toMatch(/<ul[\s>]/);
+
+    const ordered = serializeTaskDescriptionForStorage({
+      type: "doc",
+      content: [
+        {
+          type: "orderedList",
+          content: [
+            {
+              type: "listItem",
+              content: [{ type: "paragraph", content: [{ type: "text", text: "1" }] }],
+            },
+          ],
+        },
+      ],
+    });
+    expect(taskDescriptionToSafeHtml(ordered!)).toMatch(/<ol[\s>]/);
+
+    const checklist = serializeTaskDescriptionForStorage({
+      type: "doc",
+      content: [
+        {
+          type: "taskList",
+          content: [
+            {
+              type: "taskItem",
+              attrs: { checked: false },
+              content: [{ type: "paragraph", content: [{ type: "text", text: "Todo" }] }],
+            },
+          ],
+        },
+      ],
+    });
+    const checklistHtml = taskDescriptionToSafeHtml(checklist!);
+    expect(checklistHtml).toContain("task-description-checklist");
+    expect(checklistHtml).toContain('type="checkbox"');
+  });
+
   it("U16 rich description renders bold in workspace HTML", () => {
     const stored = serializeTaskDescriptionForStorage({
       type: "doc",

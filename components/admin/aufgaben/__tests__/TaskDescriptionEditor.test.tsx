@@ -70,11 +70,26 @@ describe("TaskDescriptionEditor", () => {
     await waitFor(() => expect(JSON.stringify(latest)).toContain('"taskList"'));
   });
 
-  it("A50 link uses toolbar prompt — no Mod-K shortcut wired in editor", () => {
+  it("A50/E2 Mod+K uses the same canonical link handler as toolbar", async () => {
     const src = readFileSync(
       join(process.cwd(), "components/admin/aufgaben/TaskDescriptionEditor.tsx"),
       "utf8",
     );
-    expect(src).not.toMatch(/addKeyboardShortcuts|Mod-k|Mod-K/i);
+    expect(src).toMatch(/metaKey.*ctrlKey.*["']k["']/i);
+    expect(src).toContain("addLink()");
+
+    const promptSpy = vi.spyOn(window, "prompt").mockReturnValue(null);
+    const user = userEvent.setup();
+    const seed: TaskDescriptionDocument = {
+      type: "doc",
+      content: [{ type: "paragraph", content: [{ type: "text", text: "Link me" }] }],
+    };
+    render(<TaskDescriptionEditor value={seed} onChange={vi.fn()} />);
+    const prose = screen.getByTestId("task-description-editor").querySelector(".ProseMirror") as HTMLElement;
+    await user.click(prose);
+    await user.keyboard("{Control>}k{/Control}");
+    expect(promptSpy).toHaveBeenCalled();
+    promptSpy.mockRestore();
   });
+
 });
