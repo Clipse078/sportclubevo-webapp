@@ -95,6 +95,7 @@ describe("AUFGABEN-06G2 scope & authorization (M1–M3, M14–M16, M31–M32)", 
       userId: "member",
       permissionKeys: [],
       participationNavCapable: true,
+      requirementRecipientCapable: false,
     });
     expect(caps.requirementManagement).toBe(false);
   });
@@ -318,8 +319,10 @@ describe("AUFGABEN-06G2 deferred & safety (M27–M30)", () => {
     expect(read("app/(admin)/dashboard/aufgaben/requirement-actions.ts")).not.toMatch(/participation/i);
   });
 
-  it("M29 no PersonalAction Requirement source in codebase paths for 06G2", () => {
-    expect(read("lib/personal-actions/presentation.ts")).not.toMatch(/REQUIREMENT/);
+  it("M29 management workspace does not expose recipient matrix in personal inbox components", () => {
+    const workspace = read("components/admin/aufgaben/RequirementsManagementWorkspace.tsx");
+    expect(workspace).not.toMatch(/PersonalActionsInbox/);
+    expect(workspace).not.toMatch(/RequirementDetailWorkspace/);
   });
 
   it("M30 no Requirement notifications in 06G2 UI layer", () => {

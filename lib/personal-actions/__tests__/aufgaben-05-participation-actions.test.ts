@@ -38,6 +38,11 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 
+vi.mock("../sources/requirement-obligations", () => ({
+  loadRequirementObligationCandidates: vi.fn().mockResolvedValue([]),
+  countOpenRequirementObligationsForUser: vi.fn().mockResolvedValue(0),
+}));
+
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { listMyTasks, countMyOpenTasks } from "@/lib/tasks/task-service";
 import {
@@ -450,6 +455,7 @@ describe("AUFGABEN-05-PARTICIPATION — navigation & matrix", () => {
       userId: PARENT_USER,
       permissionKeys: [],
       participationNavCapable: true,
+      requirementRecipientCapable: false,
     });
     expect(caps.moduleAccess).toBe(true);
     expect(caps.taskManagement).toBe(false);
@@ -463,6 +469,7 @@ describe("AUFGABEN-05-PARTICIPATION — navigation & matrix", () => {
       userId: "no-participation-user",
       permissionKeys: [],
       participationNavCapable: false,
+      requirementRecipientCapable: false,
     });
     expect(capsZero.moduleAccess).toBe(false);
   });
@@ -477,6 +484,7 @@ describe("AUFGABEN-05-PARTICIPATION — navigation & matrix", () => {
         PERMISSIONS.TASKS_VIEW_ALL,
       ],
       participationNavCapable: true,
+      requirementRecipientCapable: false,
     });
     expect(caps.taskManagement).toBe(true);
     expect(caps.personalInbox).toBe(true);

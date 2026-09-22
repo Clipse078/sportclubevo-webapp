@@ -8,6 +8,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { hasTaskPermission } from "@/lib/tasks/visibility";
 import type { TaskServiceContext } from "@/lib/tasks/types";
 import { canAccessRequirementManagementFromKeys } from "@/lib/requirements/access";
+import { countOpenRequirementObligationsForUser } from "./sources/requirement-obligations";
 
 export type PersonalActionsModuleCapabilities = {
   /** User may open Task Center management views (tasks.view). */
@@ -62,16 +63,27 @@ export async function resolvePersonalParticipationNavCapability(args: {
   return guardianLinks > 0 || squadMemberships > 0;
 }
 
+/** User has at least one open Requirement obligation they may respond to (bounded count). */
+export async function resolvePersonalRequirementNavCapability(args: {
+  tenantId: string;
+  userId: string;
+}): Promise<boolean> {
+  const count = await countOpenRequirementObligationsForUser(args.tenantId, args.userId);
+  return count > 0;
+}
+
 export function resolvePersonalActionsModuleCapabilities(input: {
   tenantId: string;
   userId: string;
   permissionKeys: readonly string[];
   participationNavCapable: boolean;
+  requirementRecipientCapable: boolean;
 }): PersonalActionsModuleCapabilities {
   const taskCtx = taskContextFromKeys(input.tenantId, input.userId, input.permissionKeys);
   const taskManagement = hasTaskPermission(taskCtx, PERMISSIONS.TASKS_VIEW);
   const requirementManagement = canAccessRequirementManagementFromKeys(input.permissionKeys);
-  const personalInbox = taskManagement || input.participationNavCapable;
+  const personalInbox =
+    taskManagement || input.participationNavCapable || input.requirementRecipientCapable;
   const moduleAccess = personalInbox || requirementManagement;
 
   return {
@@ -98,10 +110,16 @@ export async function loadPersonalActionsModuleCapabilities(args: {
     permissionKeys = [...platform, ...tenant];
   }
 
-  const participationNavCapable = await resolvePersonalParticipationNavCapability({
-    tenantId: args.tenantId,
-    userId: args.userId,
-  });
+  const [participationNavCapable, requirementRecipientCapable] = await Promise.all([
+    resolvePersonalParticipationNavCapability({
+      tenantId: args.tenantId,
+      userId: args.userId,
+    }),
+    resolvePersonalRequirementNavCapability({
+      tenantId: args.tenantId,
+      userId: args.userId,
+    }),
+  ]);
 
   return {
     permissionKeys,
@@ -110,6 +128,7 @@ export async function loadPersonalActionsModuleCapabilities(args: {
       userId: args.userId,
       permissionKeys,
       participationNavCapable,
+      requirementRecipientCapable,
     }),
   };
 }

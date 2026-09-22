@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarClock, ListChecks } from "lucide-react";
+import { CalendarClock, ClipboardCheck, ListChecks } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { PersonalActionListItem } from "@/lib/personal-actions/presentation";
 import PersonalActionParticipationInline from "./PersonalActionParticipationInline";
+import PersonalActionRequirementInline from "./PersonalActionRequirementInline";
 
 type Props = {
   item: PersonalActionListItem;
@@ -12,7 +13,12 @@ type Props = {
 };
 
 export default function PersonalActionRow({ item, compact = false }: Props) {
-  const Icon = item.sourceType === "TASK" ? ListChecks : CalendarClock;
+  const Icon =
+    item.sourceType === "TASK"
+      ? ListChecks
+      : item.sourceType === "REQUIREMENT"
+        ? ClipboardCheck
+        : CalendarClock;
   const emphasisClass =
     item.emphasis === "urgent"
       ? "text-[var(--destructive)]"
@@ -43,6 +49,15 @@ export default function PersonalActionRow({ item, compact = false }: Props) {
           ) : null}
           {item.metaLine ? (
             <p className={cn("mt-0.5 text-[0.75rem]", emphasisClass)}>{item.metaLine}</p>
+          ) : null}
+          {item.inlineRequirement ? (
+            <PersonalActionRequirementInline requirement={item.inlineRequirement} />
+          ) : item.inlineRequirementReady ? (
+            <div
+              className="mt-2 min-h-[2rem]"
+              data-testid="personal-action-inline-requirement-slot"
+              data-inline-requirement-ready="true"
+            />
           ) : null}
           {item.inlineParticipation ? (
             <PersonalActionParticipationInline participation={item.inlineParticipation} />

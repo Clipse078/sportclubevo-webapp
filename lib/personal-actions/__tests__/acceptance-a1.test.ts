@@ -18,6 +18,11 @@ vi.mock("@/lib/participation/authorization", () => ({
   getAuthorizedPersonIdsForUser: vi.fn(),
 }));
 
+vi.mock("../sources/requirement-obligations", () => ({
+  loadRequirementObligationCandidates: vi.fn().mockResolvedValue([]),
+  countOpenRequirementObligationsForUser: vi.fn().mockResolvedValue(0),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     playerSquadMember: { findMany: vi.fn() },
@@ -457,10 +462,11 @@ describe("AUFGABEN-05-FOUNDATION-A1", () => {
     expect(Object.keys(subject).sort()).toEqual(["displayName", "personId"]);
   });
 
-  it("29 — only TASK and ATTENDANCE_RESPONSE sources are registered", () => {
+  it("29 — TASK, ATTENDANCE_RESPONSE, and REQUIREMENT sources are registered", () => {
     expect(personalActionSources.map((s) => s.sourceType)).toEqual([
       "TASK",
       "ATTENDANCE_RESPONSE",
+      "REQUIREMENT",
     ]);
   });
 

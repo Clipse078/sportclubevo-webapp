@@ -29,6 +29,7 @@ vi.mock("@/lib/personal-actions", () => ({
     totalActionable: 1,
     taskActionable: 0,
     attendanceActionable: 1,
+    requirementActionable: 0,
   }),
   loadPersonalActions: vi.fn().mockResolvedValue([
     {

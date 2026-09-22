@@ -4,6 +4,10 @@ export function buildTaskPersonalActionId(taskId: string): string {
   return `task:${taskId}`;
 }
 
+export function buildRequirementPersonalActionId(requirementRecipientId: string): string {
+  return `requirement:${requirementRecipientId}`;
+}
+
 export function buildParticipationPersonalActionId(
   personId: string,
   event: Pick<ParticipationEventRef, "eventKind"> & {

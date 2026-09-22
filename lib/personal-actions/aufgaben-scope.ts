@@ -1,6 +1,6 @@
 export type AufgabenBereich = "meine" | "verwaltung" | "anforderungen";
 
-export type PersonalInboxFilterParam = "all" | "tasks" | "attendance";
+export type PersonalInboxFilterParam = "all" | "tasks" | "attendance" | "requirements";
 
 export function parseAufgabenBereich(value: string | undefined): AufgabenBereich {
   if (value === "verwaltung") return "verwaltung";
@@ -9,7 +9,7 @@ export function parseAufgabenBereich(value: string | undefined): AufgabenBereich
 }
 
 export function parsePersonalInboxFilter(value: string | undefined): PersonalInboxFilterParam {
-  if (value === "tasks" || value === "attendance") {
+  if (value === "tasks" || value === "attendance" || value === "requirements") {
     return value;
   }
   return "all";

@@ -6,7 +6,12 @@ vi.mock("@/lib/db/prisma", () => ({
     person: { findFirst: vi.fn() },
     guardianRelationship: { count: vi.fn() },
     playerSquadMember: { count: vi.fn() },
+    requirementRecipient: { count: vi.fn() },
   },
+}));
+
+vi.mock("../sources/requirement-obligations", () => ({
+  countOpenRequirementObligationsForUser: vi.fn().mockResolvedValue(0),
 }));
 
 import { prisma } from "@/lib/db/prisma";
@@ -37,6 +42,7 @@ describe("AUFGABEN-05-UI — personal actions access", () => {
       userId: "guardian-user",
       permissionKeys: [],
       participationNavCapable: true,
+      requirementRecipientCapable: false,
     });
 
     expect(caps.taskManagement).toBe(false);
@@ -55,6 +61,7 @@ describe("AUFGABEN-05-UI — personal actions access", () => {
         PERMISSIONS.TRAININGS_MANAGE,
       ],
       participationNavCapable: true,
+      requirementRecipientCapable: false,
     });
 
     expect(caps.taskManagement).toBe(true);
@@ -104,6 +111,7 @@ describe("AUFGABEN-05-UI — personal actions access", () => {
       userId: "plain-user",
       permissionKeys: [PERMISSIONS.EVENTS_VIEW],
       participationNavCapable: false,
+      requirementRecipientCapable: false,
     });
 
     expect(caps.moduleAccess).toBe(false);

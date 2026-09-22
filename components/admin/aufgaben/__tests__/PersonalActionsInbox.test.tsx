@@ -24,6 +24,7 @@ describe("AUFGABEN-05-UI-A1 — PersonalActionsInbox", () => {
       href: null,
       emphasis: "calm" as const,
       inlineParticipationReady: false,
+      inlineRequirementReady: false,
     }));
 
     render(
