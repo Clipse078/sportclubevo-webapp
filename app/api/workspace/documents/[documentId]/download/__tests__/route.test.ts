@@ -71,6 +71,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { GET } from "@/app/api/workspace/documents/[documentId]/download/route";
 
 const SESSION_TENANT_ID = "tenant-session";
+const ACTOR_USER_ID = "user-1";
 const TENANT_ID = "tenant-1";
 const TENANT_KEY = "fc-allschwil";
 const DOCUMENT_ID = "1234567890abcdef1234567890abcdef";

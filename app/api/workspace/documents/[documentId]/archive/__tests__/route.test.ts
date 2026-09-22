@@ -82,7 +82,7 @@ function mockAuthorizedSession(
       ? SESSION_TENANT_ID
       : overrides.tenantId;
   const userId =
-    overrides.userId === undefined ? ACTOR_USER_ID : overrides.userId;
+    overrides.userId === undefined ? USER_ID : overrides.userId;
 
   if (!tenantId || !userId) {
     mocks.requireWorkspaceApiActor.mockResolvedValue({
