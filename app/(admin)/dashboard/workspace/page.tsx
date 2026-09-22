@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/prisma";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
@@ -6,8 +5,12 @@ import { canReadWorkspaceDocument } from "@/lib/workspace/document-access";
 import { resolveWorkspaceActor } from "@/lib/workspace/access/actor-context";
 import { buildWorkspaceReadWhere } from "@/lib/workspace/access/query-predicate";
 import {
+  canWorkspaceEdit,
+  canWorkspaceManage,
+} from "@/lib/workspace/access/workspace-authorization";
+import { WorkspaceResourceType } from "@prisma/client";
+import {
   FolderClosed,
-  FolderOpen,
   LockKeyhole,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
@@ -20,6 +23,7 @@ import { ArchiveFolderButton } from "@/app/(admin)/dashboard/workspace/ArchiveFo
 import { DeleteFolderButton } from "@/app/(admin)/dashboard/workspace/DeleteFolderButton";
 import { RestoreFolderButton } from "@/app/(admin)/dashboard/workspace/RestoreFolderButton";
 import { WorkspaceClientShell } from "@/components/admin/workspace/WorkspaceClientShell";
+import { WorkspaceFolderTreePanel } from "@/components/admin/workspace/WorkspaceFolderTreePanel";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -28,7 +32,6 @@ import {
   getWorkspaceFolderById,
   getWorkspaceFolderTree,
 } from "@/lib/workspace/queries";
-import type { WorkspaceFolderDto } from "@/lib/workspace/dto";
 import { listWorkspaceDocuments } from "@/lib/workspace/document-service";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -45,71 +48,6 @@ type WorkspacePageProps = {
     document?: string;
   }>;
 };
-
-type FolderTreeProps = {
-  folders: WorkspaceFolderDto[];
-  selectedFolderId: string | null;
-  canManage: boolean;
-  depth?: number;
-};
-
-function FolderTree({
-  folders,
-  selectedFolderId,
-  canManage,
-  depth = 0,
-}: FolderTreeProps) {
-  return (
-    <ul className={depth === 0 ? "space-y-px" : "mt-px space-y-px"}>
-      {folders.map((folder) => {
-        const isSelected = folder.id === selectedFolderId;
-        const FolderIcon = isSelected ? FolderOpen : FolderClosed;
-        const hasChildren = folder.children.length > 0;
-
-        return (
-          <li key={folder.id}>
-            <Link
-              href={`/dashboard/workspace?folder=${encodeURIComponent(folder.id)}`}
-              aria-current={isSelected ? "page" : undefined}
-              title={folder.name.length > 24 ? folder.name : undefined}
-              className={[
-                "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors duration-100",
-                isSelected
-                  ? "bg-[var(--blue)] font-semibold text-white"
-                  : "font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]",
-              ].join(" ")}
-              style={{ paddingLeft: `${depth * 12 + 8}px` }}
-            >
-              <FolderIcon
-                className={`h-3.5 w-3.5 shrink-0 transition-colors ${
-                  isSelected ? "text-white/80" : "text-[var(--muted)] group-hover:text-[var(--text-2)]"
-                }`}
-                aria-hidden="true"
-              />
-              <span className="min-w-0 truncate">{folder.name}</span>
-            </Link>
-
-            {/* Subfolder creation toggle — shown when this folder is selected */}
-            {canManage && isSelected ? (
-              <div style={{ paddingLeft: `${(depth + 1) * 12 + 8}px` }} className="mt-px pr-2">
-                <CreateSubfolderForm parentId={folder.id} />
-              </div>
-            ) : null}
-
-            {hasChildren ? (
-              <FolderTree
-                folders={folder.children}
-                selectedFolderId={selectedFolderId}
-                canManage={canManage}
-                depth={depth + 1}
-              />
-            ) : null}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("de-CH", {
@@ -184,13 +122,35 @@ export default async function WorkspacePage({
       : Promise.resolve([]),
   ]);
 
-  const documents = selectedFolder
+  const documentsRaw = selectedFolder
     ? await listWorkspaceDocuments({
         tenantId,
         folderId: selectedFolder.id,
         authorizedDocumentIds: readWhere.documentIds,
       })
     : [];
+
+  const documents = documentsRaw.map((doc) => ({
+    ...doc,
+    canManageAccess: canWorkspaceManage(workspaceActor, {
+      resourceType: WorkspaceResourceType.DOCUMENT,
+      documentId: doc.id,
+    }),
+  }));
+
+  const canUploadSelectedFolder =
+    selectedFolder != null &&
+    canWorkspaceEdit(workspaceActor, {
+      resourceType: WorkspaceResourceType.FOLDER,
+      folderId: selectedFolder.id,
+    });
+
+  const canManageFolderAccess =
+    selectedFolder != null &&
+    canWorkspaceManage(workspaceActor, {
+      resourceType: WorkspaceResourceType.FOLDER,
+      folderId: selectedFolder.id,
+    });
 
   const folderPath = selectedFolder
     ? buildWorkspaceBreadcrumbs(folders, selectedFolder.id)
@@ -225,7 +185,7 @@ export default async function WorkspacePage({
         description={t("page.description")}
       />
 
-      <div className="grid min-h-[620px] gap-4 xl:grid-cols-[240px_minmax(0,1fr)_340px]">
+      <div className="grid min-h-[620px] gap-4 lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)_minmax(0,300px)]">
         {/* ── Left: folder tree ─────────────────────────────────────── */}
         <aside className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
           <div className="shrink-0 border-b border-[var(--border)] px-3 py-3">
@@ -243,25 +203,32 @@ export default async function WorkspacePage({
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-2 py-2">
-            {folders.length > 0 ? (
-              <FolderTree
+          {folders.length > 0 ? (
+              <WorkspaceFolderTreePanel
                 folders={folders}
                 selectedFolderId={selectedFolder?.id ?? null}
                 canManage={canManage}
+                createSubfolderSlot={(folderId, isSelected) =>
+                  canManage && isSelected ? (
+                    <div className="mt-px pr-2 pl-6">
+                      <CreateSubfolderForm parentId={folderId} />
+                    </div>
+                  ) : null
+                }
               />
             ) : (
-              <div className="flex min-h-40 flex-col items-center justify-center px-4 py-8 text-center">
-                <FolderClosed className="h-8 w-8 text-[var(--muted)]" aria-hidden="true" />
-                <p className="mt-3 text-sm font-medium text-[var(--text)]">
-                  {t("folders.noFoldersTitle")}
-                </p>
-                <p className="mt-1 text-xs leading-5 text-[var(--text-2)]">
-                  {t("folders.noFoldersDescription")}
-                </p>
+              <div className="flex-1 overflow-y-auto px-2 py-2">
+                <div className="flex min-h-40 flex-col items-center justify-center px-4 py-8 text-center">
+                  <FolderClosed className="h-8 w-8 text-[var(--muted)]" aria-hidden="true" />
+                  <p className="mt-3 text-sm font-medium text-[var(--text)]">
+                    {t("folders.noFoldersTitle")}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-[var(--text-2)]">
+                    {t("folders.noFoldersDescription")}
+                  </p>
+                </div>
               </div>
             )}
-          </div>
         </aside>
 
         {/* ── Centre + Right panels ─────────────────────────────────── */}
@@ -276,6 +243,8 @@ export default async function WorkspacePage({
             folderUpdatedAt={selectedFolder.updatedAt}
             folderPath={folderPath}
             canManage={canManage}
+            canUpload={canUploadSelectedFolder}
+            canManageFolderAccess={canManageFolderAccess}
             canDelete={canDelete}
             documentContextualTasksPanel={documentContextualTasksPanel}
             folderManagementSlot={

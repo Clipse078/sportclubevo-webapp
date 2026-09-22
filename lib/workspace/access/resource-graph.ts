@@ -166,7 +166,7 @@ export function folderNodeFromGraph(
   };
 }
 
-function documentNodeFromGraph(
+export function documentNodeFromGraph(
   graph: WorkspaceResourceGraph,
   documentId: string,
 ): WorkspaceResourceAccessNode | null {

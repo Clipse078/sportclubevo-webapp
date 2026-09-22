@@ -68,6 +68,9 @@ export type WorkspaceDocumentListItemDto = {
   createdAt: Date;
   updatedAt: Date;
   currentVersion: WorkspaceDocumentListVersionDto | null;
+  /** WORKSPACE-03 — resource-level capabilities (computed server-side, not per-row API). */
+  canManageAccess?: boolean;
+  canUpload?: boolean;
 };
 
 export type ListWorkspaceDocumentsInput = {
