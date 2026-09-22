@@ -688,11 +688,30 @@ enum WorkspaceDocumentVersionStatus {
 }
 
 enum WorkspaceAccessSubjectType {
-  USER
-  ROLE
+  /// Tenant-wide organisation / CLUB boundary (not public internet).
+  ORGANISATION
   ORG_UNIT
   TEAM
+  /// Organisational function via PersonAssignment semantics (not tenant RBAC Role).
+  ROLE
+  /// Canonical People & Access identity (preferred over USER for new grants).
+  PERSON
+  /// Legacy enum member — do not use for new Workspace grants.
+  USER
+  /// Legacy enum member — not part of WORKSPACE-01 audience model.
   TARGET_GROUP
+}
+
+enum WorkspaceAccessInheritanceMode {
+  /// Effective boundary derived from ancestors (default for nested resources).
+  INHERIT
+  /// Resource adds an explicit restriction intersected with ancestors.
+  EXPLICIT
+}
+
+enum WorkspaceResourceType {
+  FOLDER
+  DOCUMENT
 }
 
 enum WorkspaceAccessLevel {
@@ -795,6 +814,7 @@ model Tenant {
   workspaceFolders          WorkspaceFolder[]
   workspaceDocuments        WorkspaceDocument[]
   workspaceDocumentVersions WorkspaceDocumentVersion[]
+  workspaceAccessGrants     WorkspaceAccessGrant[]
 
   // SFV Integration — Slice: Tenant-Scoped SFV Configuration
   // One config per tenant (@@unique on tenantId). Null when not configured.
@@ -1624,6 +1644,7 @@ model Person {
 
   /// PERSON-UX-07: private person-bound documents (SEPARATE from WorkspaceDocument)
   personDocuments PersonDocument[] @relation("PersonDocuments")
+  workspaceAccessGrants WorkspaceAccessGrant[] @relation("WorkspaceAccessGrantPerson")
 
   // PERSON-UX-10: canonical guardian relationships.
   // This Person is the CHILD in these relationships.
@@ -1836,6 +1857,7 @@ model Team {
   requirementDraftAudienceTeams RequirementDraftAudienceTeam[] @relation("RequirementDraftAudienceTeam")
   // TEAM-COCKPIT-PREMIUM-01J-A: team-bound private documents
   teamDocuments            TeamDocument[]          @relation("TeamDocuments")
+  workspaceAccessGrants    WorkspaceAccessGrant[]  @relation("WorkspaceAccessGrantTeam")
 
   @@unique([tenantId, slug])
   @@index([category, sortOrder])
@@ -2423,6 +2445,7 @@ model OrgUnit {
   taskSeries         TaskSeries[]        @relation("TaskSeriesOrgUnit")
   taskAccessGrants   TaskAccessGrant[]   @relation("TaskAccessGrantOrgUnit")
   taskSeriesAccessGrants TaskSeriesAccessGrant[] @relation("TaskSeriesAccessGrantOrgUnit")
+  workspaceAccessGrants WorkspaceAccessGrant[] @relation("WorkspaceAccessGrantOrgUnit")
 
   @@unique([tenantId, key])
   @@index([tenantId])
@@ -4241,6 +4264,10 @@ model WorkspaceFolder {
 
   archivedAt DateTime?
 
+  /// WORKSPACE-01 — INHERIT unless root or explicitly restricted.
+  accessInheritanceMode WorkspaceAccessInheritanceMode @default(INHERIT)
+  accessModelVersion    Int                            @default(1)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -4249,11 +4276,13 @@ model WorkspaceFolder {
   parent    WorkspaceFolder?    @relation("WorkspaceFolderHierarchy", fields: [parentId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   children  WorkspaceFolder[]   @relation("WorkspaceFolderHierarchy")
   documents WorkspaceDocument[]
+  accessGrants WorkspaceAccessGrant[] @relation("WorkspaceFolderAccessGrants")
 
   createdByUser User? @relation("WorkspaceFolderCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   updatedByUser User? @relation("WorkspaceFolderUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@index([tenantId])
+  @@index([tenantId, accessInheritanceMode])
   @@index([tenantId, parentId])
   @@index([tenantId, displayOrder])
   @@index([createdByUserId])
@@ -4280,6 +4309,9 @@ model WorkspaceDocument {
 
   archivedAt DateTime?
 
+  accessInheritanceMode WorkspaceAccessInheritanceMode @default(INHERIT)
+  accessModelVersion    Int                            @default(1)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -4290,12 +4322,14 @@ model WorkspaceDocument {
   versions                         WorkspaceDocumentVersion[] @relation("WorkspaceDocumentVersions")
   communicationAttachmentSnapshots CommunicationAttachment[]  @relation("CommunicationAttachmentSourceDocument")
   taskDocumentReferences           TaskDocumentReference[]
+  accessGrants                     WorkspaceAccessGrant[]     @relation("WorkspaceDocumentAccessGrants")
 
   createdByUser User? @relation("WorkspaceDocumentCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   updatedByUser User? @relation("WorkspaceDocumentUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@index([tenantId])
   @@index([tenantId, folderId])
+  @@index([tenantId, accessInheritanceMode])
   @@index([tenantId, status])
   @@index([tenantId, archivedAt])
   @@index([createdByUserId])
@@ -4341,6 +4375,59 @@ model WorkspaceDocumentVersion {
   @@index([tenantId, status])
   @@index([createdByUserId])
   @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// WorkspaceAccessGrant — resource-level audience grants (WORKSPACE-01)
+//
+// Tenant capability (workspace.view/manage/delete) remains separate from
+// resource access levels VIEW | EDIT | MANAGE on this table.
+// Dynamic org unit / team / role audiences resolve at query time (WORKSPACE-02).
+// ---------------------------------------------------------------------------
+model WorkspaceAccessGrant {
+  id           String                    @id @default(cuid())
+  tenantId     String
+  resourceType WorkspaceResourceType
+  folderId     String?
+  documentId   String?
+  subjectType  WorkspaceAccessSubjectType
+  accessLevel  WorkspaceAccessLevel
+
+  personId          String?
+  orgUnitId         String?
+  teamId            String?
+  /// PersonAssignment.functionKey — organisational role, not RPERM Role.key.
+  roleFunctionKey   String?
+  roleScopeOrgUnitId String?
+  roleScopeTeamId   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  folder   WorkspaceFolder?   @relation("WorkspaceFolderAccessGrants", fields: [folderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  document WorkspaceDocument? @relation("WorkspaceDocumentAccessGrants", fields: [documentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  person   Person?            @relation("WorkspaceAccessGrantPerson", fields: [personId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orgUnit  OrgUnit?           @relation("WorkspaceAccessGrantOrgUnit", fields: [orgUnitId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  team     Team?              @relation("WorkspaceAccessGrantTeam", fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([folderId, subjectType, orgUnitId])
+  @@unique([folderId, subjectType, teamId])
+  @@unique([folderId, subjectType, personId])
+  @@unique([folderId, subjectType, roleFunctionKey, roleScopeOrgUnitId, roleScopeTeamId])
+  @@unique([documentId, subjectType, orgUnitId])
+  @@unique([documentId, subjectType, teamId])
+  @@unique([documentId, subjectType, personId])
+  @@unique([documentId, subjectType, roleFunctionKey, roleScopeOrgUnitId, roleScopeTeamId])
+  @@index([tenantId])
+  @@index([tenantId, folderId])
+  @@index([tenantId, documentId])
+  @@index([tenantId, resourceType])
+  @@index([tenantId, subjectType])
+  @@index([tenantId, orgUnitId])
+  @@index([tenantId, teamId])
+  @@index([tenantId, personId])
+  @@index([tenantId, roleFunctionKey])
 }
 
 // ---------------------------------------------------------------------------
