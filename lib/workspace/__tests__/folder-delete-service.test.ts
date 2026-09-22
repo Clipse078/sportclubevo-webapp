@@ -290,4 +290,45 @@ describe("deleteWorkspaceFolderPermanently", () => {
     expect(err.code).toBe("FOLDER_NOT_FOUND");
     expect(err.name).toBe("WorkspaceFolderDeleteServiceError");
   });
+
+  it("W06-13/W06-A1-02 descendant reference blocker aborts entire folder permanent delete", async () => {
+    mocks.workspaceFolderFindFirst.mockResolvedValueOnce({
+      id: FOLDER_ID,
+      tenantId: TENANT_A,
+      name: "Root",
+    });
+    mocks.workspaceFolderFindMany
+      .mockResolvedValueOnce([{ id: CHILD_ID_A }])
+      .mockResolvedValueOnce([]);
+    mocks.workspaceDocumentFindMany.mockResolvedValueOnce([
+      { id: "d-blocked", versions: [{ storageKey: "k1" }] },
+    ]);
+    mocks.taskDocumentReferenceFindMany.mockResolvedValueOnce([{ id: "ref-1" }]);
+
+    await expect(
+      deleteWorkspaceFolderPermanently(TENANT_A, FOLDER_ID),
+    ).rejects.toMatchObject({ code: "RESOURCE_REFERENCED" });
+
+    expect(mocks.workspaceFolderDeleteMany).not.toHaveBeenCalled();
+    expect(mocks.workspaceDocumentDelete).not.toHaveBeenCalled();
+  });
+
+  it("W06-A1-05 folder delete DB failure causes zero partial subtree deletion", async () => {
+    mocks.workspaceFolderFindFirst.mockResolvedValueOnce({
+      id: FOLDER_ID,
+      tenantId: TENANT_A,
+      name: "Root",
+    });
+    mocks.workspaceFolderFindMany.mockResolvedValueOnce([]);
+    mocks.workspaceDocumentFindMany.mockResolvedValueOnce([
+      { id: "d1", versions: [{ storageKey: "k1" }] },
+    ]);
+    mocks.workspaceDocumentDelete.mockRejectedValueOnce(new Error("db fail"));
+
+    await expect(
+      deleteWorkspaceFolderPermanently(TENANT_A, FOLDER_ID),
+    ).rejects.toThrow("db fail");
+
+    expect(mocks.workspaceFolderDeleteMany).not.toHaveBeenCalled();
+  });
 });

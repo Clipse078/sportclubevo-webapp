@@ -70,6 +70,43 @@ export async function resolveWorkspaceDocumentDirectLinkAccess(
   };
 }
 
+/**
+ * Validates ?document=&version= without falling back to current version.
+ */
+export async function resolveWorkspaceDocumentVersionDirectLinkAccess(
+  ctx: WorkspaceDocumentAccessContext,
+  documentId: string,
+  versionId: string,
+): Promise<{ allowed: false } | { allowed: true; versionId: string }> {
+  const documentAccess = await resolveWorkspaceDocumentDirectLinkAccess(
+    ctx,
+    documentId,
+  );
+  if (!documentAccess.allowed) {
+    return { allowed: false };
+  }
+
+  const normalizedVersionId = versionId.trim();
+  if (!normalizedVersionId) {
+    return { allowed: false };
+  }
+
+  const version = await prisma.workspaceDocumentVersion.findFirst({
+    where: {
+      id: normalizedVersionId,
+      documentId,
+      document: { tenantId: ctx.tenantId },
+    },
+    select: { id: true },
+  });
+
+  if (!version) {
+    return { allowed: false };
+  }
+
+  return { allowed: true, versionId: version.id };
+}
+
 export async function resolveWorkspaceFolderDirectLinkAccess(
   ctx: WorkspaceDocumentAccessContext,
   folderId: string,

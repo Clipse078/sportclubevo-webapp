@@ -10,10 +10,8 @@ import { resolveWorkspaceActor } from "@/lib/workspace/access/actor-context";
 import { evaluateWorkspaceFolderMove } from "@/lib/workspace/access/folder-move-authorization";
 import { normalizeWorkspaceFolderName } from "@/lib/workspace/folder-service";
 import { WorkspaceAuthorizationError } from "@/lib/workspace/access/workspace-authorization";
-import {
-  assertWorkspaceFolderEdit,
-  assertWorkspaceFolderManage,
-} from "@/lib/workspace/workspace-resource-guards";
+import { assertWorkspaceFolderDestructiveSubtreeManage } from "@/lib/workspace/access/folder-destructive-authorization";
+import { assertWorkspaceFolderEdit } from "@/lib/workspace/workspace-resource-guards";
 import {
   deleteWorkspaceFolderPermanently,
   getWorkspaceFolderDeletionImpact,
@@ -1043,31 +1041,66 @@ export async function getWorkspaceFolderDeletionImpactAction(
     };
   }
 
-  const impact = await getWorkspaceFolderDeletionImpact(tenantId, folderId);
+  try {
+    const actor = await resolveWorkspaceActorForSession(session);
+    if (!actor) {
+      return {
+        ok: false,
+        code: "WORKSPACE_FORBIDDEN",
+        message: "Authenticated tenant is required.",
+      };
+    }
 
-  if (!impact) {
+    try {
+      await assertWorkspaceFolderDestructiveSubtreeManage(
+        actor,
+        tenantId,
+        folderId,
+      );
+    } catch (error) {
+      if (error instanceof WorkspaceAuthorizationError) {
+        return {
+          ok: false,
+          code: "WORKSPACE_FOLDER_NOT_FOUND",
+          message: "Folder was not found.",
+        };
+      }
+      throw error;
+    }
+
+    const impact = await getWorkspaceFolderDeletionImpact(tenantId, folderId);
+
+    if (!impact) {
+      return {
+        ok: false,
+        code: "WORKSPACE_FOLDER_NOT_FOUND",
+        message: "Folder was not found.",
+      };
+    }
+
+    return {
+      ok: true,
+      data: {
+        descendantFolderCount: impact.descendantFolderCount,
+        documentCount: impact.documentCount,
+      },
+    };
+  } catch (error) {
+    console.error(
+      "[workspace-actions] getWorkspaceFolderDeletionImpact failed",
+      error,
+    );
     return {
       ok: false,
-      code: "WORKSPACE_FOLDER_NOT_FOUND",
-      message: "Folder was not found.",
+      code: "WORKSPACE_FOLDER_DELETE_FAILED",
+      message: "Folder deletion impact could not be loaded.",
     };
   }
-
-  return {
-    ok: true,
-    data: {
-      descendantFolderCount: impact.descendantFolderCount,
-      documentCount: impact.documentCount,
-    },
-  };
 }
 
 /**
  * Permanently deletes a WorkspaceFolder and its entire descendant subtree.
- * Requires WORKSPACE_DELETE permission.
- *
- * Documents in the deleted folder(s) will have their folderId set to null by
- * the DB constraint (onDelete: SetNull) — they are not deleted.
+ * Requires WORKSPACE_DELETE permission and MANAGE on every affected resource.
  */
 export async function deleteWorkspaceFolderPermanentlyAction(
   formData: FormData,
@@ -1116,7 +1149,11 @@ export async function deleteWorkspaceFolderPermanentlyAction(
     }
 
     try {
-      assertWorkspaceFolderManage(actor, folderId);
+      await assertWorkspaceFolderDestructiveSubtreeManage(
+        actor,
+        tenantId,
+        folderId,
+      );
     } catch (error) {
       if (error instanceof WorkspaceAuthorizationError) {
         return {

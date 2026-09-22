@@ -83,3 +83,17 @@ ALTER TABLE "WorkspaceRecentAccess" ADD CONSTRAINT "WorkspaceRecentAccess_folder
 
 ALTER TABLE "WorkspaceRecentAccess" ADD CONSTRAINT "WorkspaceRecentAccess_documentId_fkey"
   FOREIGN KEY ("documentId") REFERENCES "WorkspaceDocument"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "WorkspaceFavorite" ADD CONSTRAINT "WorkspaceFavorite_exactly_one_resource_check"
+  CHECK (
+    (
+      CASE WHEN "folderId" IS NOT NULL THEN 1 ELSE 0 END
+      + CASE WHEN "documentId" IS NOT NULL THEN 1 ELSE 0 END
+    ) = 1
+  );
+
+-- Defense-in-depth: durable task references must not silently cascade away.
+ALTER TABLE "TaskDocumentReference" DROP CONSTRAINT IF EXISTS "TaskDocumentReference_documentId_fkey";
+
+ALTER TABLE "TaskDocumentReference" ADD CONSTRAINT "TaskDocumentReference_documentId_fkey"
+  FOREIGN KEY ("documentId") REFERENCES "WorkspaceDocument"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

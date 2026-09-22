@@ -3023,7 +3023,7 @@ model TaskDocumentReference {
 
   tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   task      Task              @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  document  WorkspaceDocument @relation(fields: [documentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  document  WorkspaceDocument @relation(fields: [documentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   createdBy User?             @relation("TaskDocumentReferenceCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@unique([taskId, documentId])

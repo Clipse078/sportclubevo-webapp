@@ -72,10 +72,15 @@ function mapGrantRow(
 
 export async function loadWorkspaceResourceGraph(
   tenantId: string,
+  options?: { includeAllLifecycleStates?: boolean },
 ): Promise<WorkspaceResourceGraph> {
+  const includeAllLifecycleStates = options?.includeAllLifecycleStates === true;
+
   const [folderRows, documentRows, grantRows] = await Promise.all([
     prisma.workspaceFolder.findMany({
-      where: { tenantId, archivedAt: null },
+      where: includeAllLifecycleStates
+        ? { tenantId }
+        : { tenantId, archivedAt: null },
       select: {
         id: true,
         parentId: true,
@@ -83,11 +88,13 @@ export async function loadWorkspaceResourceGraph(
       },
     }),
     prisma.workspaceDocument.findMany({
-      where: {
-        tenantId,
-        status: "ACTIVE",
-        archivedAt: null,
-      },
+      where: includeAllLifecycleStates
+        ? { tenantId }
+        : {
+            tenantId,
+            status: "ACTIVE",
+            archivedAt: null,
+          },
       select: {
         id: true,
         folderId: true,

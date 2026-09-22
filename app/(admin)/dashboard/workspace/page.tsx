@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db/prisma";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
-import { resolveWorkspaceDocumentDirectLinkAccess } from "@/lib/workspace/document-link-access";
+import {
+  resolveWorkspaceDocumentDirectLinkAccess,
+  resolveWorkspaceDocumentVersionDirectLinkAccess,
+} from "@/lib/workspace/document-link-access";
 import { resolveWorkspaceActor } from "@/lib/workspace/access/actor-context";
 import { buildWorkspaceReadWhere } from "@/lib/workspace/access/query-predicate";
 import {
@@ -79,6 +81,7 @@ export default async function WorkspacePage({
   const params = (await searchParams) ?? {};
   const folderParam = params.folder?.trim() || null;
   const documentParam = params.document?.trim() || null;
+  const versionParam = params.version?.trim() || null;
   const lifecycleView = params.view?.trim() || "active";
   const canManage = hasPermission(session, PERMISSIONS.WORKSPACE_MANAGE);
   const canDelete = hasPermission(session, PERMISSIONS.WORKSPACE_DELETE);
@@ -113,6 +116,15 @@ export default async function WorkspacePage({
       documentParam,
     );
     if (!linkAccess.allowed) notFound();
+
+    if (versionParam) {
+      const versionAccess = await resolveWorkspaceDocumentVersionDirectLinkAccess(
+        documentAccessCtx,
+        documentParam,
+        versionParam,
+      );
+      if (!versionAccess.allowed) notFound();
+    }
 
     directLinkLifecycle = linkAccess.lifecycle;
     if (linkAccess.folderId) {
