@@ -102,9 +102,15 @@ export async function archiveWorkspaceDocument(
     );
   }
 
+  if (existingDocument.status === WorkspaceDocumentStatus.TRASHED) {
+    throw new WorkspaceDocumentArchiveServiceError(
+      "DOCUMENT_ALREADY_ARCHIVED",
+      "Das Dokument ist im Papierkorb und kann nicht archiviert werden.",
+    );
+  }
+
   if (
-    existingDocument.status ===
-      WorkspaceDocumentStatus.ARCHIVED ||
+    existingDocument.status === WorkspaceDocumentStatus.ARCHIVED ||
     existingDocument.archivedAt !== null
   ) {
     throw new WorkspaceDocumentArchiveServiceError(

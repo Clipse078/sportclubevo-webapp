@@ -47,6 +47,7 @@ import {
   getWorkspaceDocumentDeletionImpact,
   WorkspaceDocumentDeleteServiceError,
 } from "@/lib/workspace/document-delete-service";
+import { WORKSPACE_DELETION_BLOCKED_CODE } from "@/lib/workspace/deletion/deletion-blockers";
 import { resolveWorkspaceActor } from "@/lib/workspace/access/actor-context";
 import { WorkspaceAuthorizationError } from "@/lib/workspace/access/workspace-authorization";
 import { assertWorkspaceDocumentManage } from "@/lib/workspace/workspace-resource-guards";
@@ -63,6 +64,8 @@ function mapDeleteServiceError(
       return 404;
     case "TENANT_FORBIDDEN":
       return 403;
+    case WORKSPACE_DELETION_BLOCKED_CODE:
+      return 409;
   }
 }
 
@@ -142,7 +145,13 @@ export async function DELETE(request: NextRequest, { params }: Params) {
       );
     }
 
-    return NextResponse.json({ impact, requiresConfirmation: true });
+    return NextResponse.json({
+      impact: {
+        versionCount: impact.versionCount,
+        referenceBlockers: impact.referenceBlockers,
+      },
+      requiresConfirmation: true,
+    });
   }
 
   try {

@@ -5,9 +5,11 @@ import {
   Download,
   FolderInput,
   History,
+  Link2,
   MoreHorizontal,
   Pencil,
   Shield,
+  Trash2,
 } from "lucide-react";
 import { useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
@@ -18,6 +20,7 @@ import { WorkspaceAccessManagementDialog } from "./WorkspaceAccessManagementDial
 import { WorkspaceDocumentDeleteControl } from "./WorkspaceDocumentDeleteControl";
 import { WorkspaceDocumentVersionHistoryDialog } from "./WorkspaceDocumentVersionHistoryDialog";
 import { WorkspaceFloatingContextMenu } from "./WorkspaceFloatingContextMenu";
+import { buildWorkspaceInternalLink } from "@/lib/workspace/internal-links";
 
 type WorkspaceDocumentActionsProps = {
   document: WorkspaceDocumentListItemDto;
@@ -107,6 +110,33 @@ export function WorkspaceDocumentActions({
     setAccessOpen(true);
   }
 
+  async function copyInternalLink() {
+    const path = buildWorkspaceInternalLink({
+      type: "document",
+      documentId: workspaceDocument.id,
+    });
+    await navigator.clipboard.writeText(`${window.location.origin}${path}`);
+    setMenuOpen(false);
+  }
+
+  async function trashDocument() {
+    setMenuOpen(false);
+    await fetch(
+      `/api/workspace/documents/${encodeURIComponent(workspaceDocument.id)}/trash`,
+      { method: "POST" },
+    );
+    window.location.reload();
+  }
+
+  async function archiveDocument() {
+    setMenuOpen(false);
+    await fetch(
+      `/api/workspace/documents/${encodeURIComponent(workspaceDocument.id)}/archive`,
+      { method: "POST" },
+    );
+    window.location.reload();
+  }
+
   function handleToggleMenu(event: React.MouseEvent) {
     event.stopPropagation();
     setMenuOpen((current) => !current);
@@ -173,14 +203,29 @@ export function WorkspaceDocumentActions({
             onClick={openVersionHistory}
           />
 
+          <ActionButton
+            icon={<Link2 className="h-4 w-4" />}
+            label="Link kopieren"
+            onClick={() => void copyInternalLink()}
+          />
+
           <div className="my-1 border-t border-[var(--border)]" role="separator" />
 
-          <ActionButton
-            icon={<Archive className="h-4 w-4" />}
-            label={t("archive")}
-            disabled
-            comingSoonLabel={t("comingSoon")}
-          />
+          {canEditDocument ? (
+            <>
+              <ActionButton
+                icon={<Archive className="h-4 w-4" />}
+                label={t("archive")}
+                onClick={() => void archiveDocument()}
+              />
+              <ActionButton
+                icon={<Trash2 className="h-4 w-4" />}
+                label="In Papierkorb"
+                onClick={() => void trashDocument()}
+                destructive
+              />
+            </>
+          ) : null}
 
           {canDelete ? (
             <>

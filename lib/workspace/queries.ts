@@ -1,9 +1,15 @@
+import { WorkspaceDocumentStatus } from "@prisma/client";
+
 import { prisma } from "@/lib/db/prisma";
 import type {
   WorkspaceArchivedFolderDto,
   WorkspaceFolderDto,
   WorkspaceFolderRecord,
 } from "@/lib/workspace/dto";
+import {
+  workspaceArchivedFolderWhere,
+  workspaceTrashedFolderWhere,
+} from "@/lib/workspace/lifecycle/lifecycle-domain";
 import { buildWorkspaceFolderTree } from "@/lib/workspace/tree";
 
 const WORKSPACE_FOLDER_SELECT = {
@@ -64,6 +70,7 @@ export async function getWorkspaceFolderTree(
     where: {
       tenantId: normalizedTenantId,
       archivedAt: null,
+      trashedAt: null,
       id: idFilter,
     },
     orderBy: [
@@ -101,6 +108,7 @@ export async function getWorkspaceFolderById(
       id: normalizedFolderId,
       tenantId: normalizedTenantId,
       archivedAt: null,
+      trashedAt: null,
     },
     select: WORKSPACE_FOLDER_SELECT,
   });
@@ -120,20 +128,49 @@ export async function getWorkspaceFolderById(
     folder satisfies WorkspaceFolderRecord,
   );
 }
+
+export async function getWorkspaceFolderByIdIncludingLifecycle(
+  tenantId: string,
+  folderId: string,
+  authorizedFolderIds: readonly string[],
+): Promise<WorkspaceFolderDto | null> {
+  const normalizedTenantId = normalizeTenantId(tenantId);
+  const normalizedFolderId = folderId.trim();
+  if (!normalizedFolderId) return null;
+
+  if (!authorizedFolderIds.includes(normalizedFolderId)) {
+    return null;
+  }
+
+  const folder = await prisma.workspaceFolder.findFirst({
+    where: { id: normalizedFolderId, tenantId: normalizedTenantId },
+    select: WORKSPACE_FOLDER_SELECT,
+  });
+
+  if (!folder) return null;
+
+  return toWorkspaceFolderDto(folder satisfies WorkspaceFolderRecord);
+}
+
 /**
  * Returns archived Workspace folders for exactly one tenant.
  */
 export async function getArchivedWorkspaceFolders(
   tenantId: string,
+  authorizedFolderIds: readonly string[],
 ): Promise<WorkspaceArchivedFolderDto[]> {
   const normalizedTenantId = normalizeTenantId(tenantId);
+
+  const idFilter =
+    authorizedFolderIds.length === 0
+      ? { in: ["__workspace_unauthorized__"] as string[] }
+      : { in: [...authorizedFolderIds] };
 
   const folders = await prisma.workspaceFolder.findMany({
     where: {
       tenantId: normalizedTenantId,
-      archivedAt: {
-        not: null,
-      },
+      ...workspaceArchivedFolderWhere(),
+      id: idFilter,
     },
     orderBy: [
       { updatedAt: "desc" },
@@ -166,4 +203,137 @@ export async function getArchivedWorkspaceFolders(
       },
     ];
   });
+}
+
+export type WorkspaceLifecycleFolderListItem = WorkspaceArchivedFolderDto & {
+  trashedAt?: string;
+};
+
+export async function getTrashedWorkspaceFolders(
+  tenantId: string,
+  authorizedFolderIds: readonly string[],
+): Promise<WorkspaceLifecycleFolderListItem[]> {
+  const normalizedTenantId = normalizeTenantId(tenantId);
+  const idFilter =
+    authorizedFolderIds.length === 0
+      ? { in: ["__workspace_unauthorized__"] as string[] }
+      : { in: [...authorizedFolderIds] };
+
+  const folders = await prisma.workspaceFolder.findMany({
+    where: {
+      tenantId: normalizedTenantId,
+      ...workspaceTrashedFolderWhere(),
+      id: idFilter,
+    },
+    orderBy: [{ updatedAt: "desc" }, { name: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      parentId: true,
+      name: true,
+      description: true,
+      archivedAt: true,
+      trashedAt: true,
+      updatedAt: true,
+    },
+  });
+
+  return folders.flatMap((folder) => {
+    if (!folder.trashedAt) return [];
+    return [
+      {
+        id: folder.id,
+        parentId: folder.parentId,
+        name: folder.name,
+        description: folder.description,
+        archivedAt: folder.archivedAt?.toISOString() ?? folder.trashedAt.toISOString(),
+        trashedAt: folder.trashedAt.toISOString(),
+        updatedAt: folder.updatedAt.toISOString(),
+      },
+    ];
+  });
+}
+
+export type WorkspaceLifecycleDocumentListItem = {
+  id: string;
+  name: string;
+  folderId: string | null;
+  archivedAt: string | null;
+  trashedAt: string | null;
+  updatedAt: string;
+};
+
+export async function getArchivedWorkspaceDocuments(
+  tenantId: string,
+  authorizedDocumentIds: readonly string[],
+): Promise<WorkspaceLifecycleDocumentListItem[]> {
+  const normalizedTenantId = normalizeTenantId(tenantId);
+  const idFilter =
+    authorizedDocumentIds.length === 0
+      ? { in: ["__workspace_unauthorized__"] as string[] }
+      : { in: [...authorizedDocumentIds] };
+
+  const rows = await prisma.workspaceDocument.findMany({
+    where: {
+      tenantId: normalizedTenantId,
+      status: WorkspaceDocumentStatus.ARCHIVED,
+      trashedAt: null,
+      id: idFilter,
+    },
+    orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      folderId: true,
+      archivedAt: true,
+      trashedAt: true,
+      updatedAt: true,
+    },
+  });
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    folderId: row.folderId,
+    archivedAt: row.archivedAt?.toISOString() ?? null,
+    trashedAt: row.trashedAt?.toISOString() ?? null,
+    updatedAt: row.updatedAt.toISOString(),
+  }));
+}
+
+export async function getTrashedWorkspaceDocuments(
+  tenantId: string,
+  authorizedDocumentIds: readonly string[],
+): Promise<WorkspaceLifecycleDocumentListItem[]> {
+  const normalizedTenantId = normalizeTenantId(tenantId);
+  const idFilter =
+    authorizedDocumentIds.length === 0
+      ? { in: ["__workspace_unauthorized__"] as string[] }
+      : { in: [...authorizedDocumentIds] };
+
+  const rows = await prisma.workspaceDocument.findMany({
+    where: {
+      tenantId: normalizedTenantId,
+      status: WorkspaceDocumentStatus.TRASHED,
+      trashedAt: { not: null },
+      id: idFilter,
+    },
+    orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      folderId: true,
+      archivedAt: true,
+      trashedAt: true,
+      updatedAt: true,
+    },
+  });
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    folderId: row.folderId,
+    archivedAt: row.archivedAt?.toISOString() ?? null,
+    trashedAt: row.trashedAt?.toISOString() ?? null,
+    updatedAt: row.updatedAt.toISOString(),
+  }));
 }

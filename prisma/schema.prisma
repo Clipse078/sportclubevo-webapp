@@ -680,6 +680,12 @@ enum WorkspaceItemType {
 enum WorkspaceDocumentStatus {
   ACTIVE
   ARCHIVED
+  TRASHED
+}
+
+enum WorkspaceCollaborationResourceType {
+  FOLDER
+  DOCUMENT
 }
 
 enum WorkspaceDocumentVersionStatus {
@@ -815,6 +821,8 @@ model Tenant {
   workspaceDocuments        WorkspaceDocument[]
   workspaceDocumentVersions WorkspaceDocumentVersion[]
   workspaceAccessGrants     WorkspaceAccessGrant[]
+  workspaceFavorites          WorkspaceFavorite[]
+  workspaceRecentAccess     WorkspaceRecentAccess[]
 
   // SFV Integration — Slice: Tenant-Scoped SFV Configuration
   // One config per tenant (@@unique on tenantId). Null when not configured.
@@ -995,6 +1003,8 @@ model User {
   createdWorkspaceDocuments        WorkspaceDocument[]        @relation("WorkspaceDocumentCreatedBy")
   updatedWorkspaceDocuments        WorkspaceDocument[]        @relation("WorkspaceDocumentUpdatedBy")
   createdWorkspaceDocumentVersions WorkspaceDocumentVersion[] @relation("WorkspaceDocumentVersionCreatedBy")
+  workspaceFavorites               WorkspaceFavorite[]        @relation("WorkspaceFavoriteUser")
+  workspaceRecentAccess            WorkspaceRecentAccess[]    @relation("WorkspaceRecentAccessUser")
   createdCommunicationAttachments  CommunicationAttachment[]  @relation("CommunicationAttachmentCreatedBy")
   // PERSON-UX-07: person-bound documents uploaded by this user
   uploadedPersonDocuments          PersonDocument[]           @relation("PersonDocumentUploadedBy")
@@ -4263,6 +4273,7 @@ model WorkspaceFolder {
   updatedByUserId String?
 
   archivedAt DateTime?
+  trashedAt  DateTime?
 
   /// WORKSPACE-01 — INHERIT unless root or explicitly restricted.
   accessInheritanceMode WorkspaceAccessInheritanceMode @default(INHERIT)
@@ -4277,6 +4288,8 @@ model WorkspaceFolder {
   children  WorkspaceFolder[]   @relation("WorkspaceFolderHierarchy")
   documents WorkspaceDocument[]
   accessGrants WorkspaceAccessGrant[] @relation("WorkspaceFolderAccessGrants")
+  favorites WorkspaceFavorite[] @relation("WorkspaceFolderFavorites")
+  recentAccess WorkspaceRecentAccess[] @relation("WorkspaceFolderRecentAccess")
 
   createdByUser User? @relation("WorkspaceFolderCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   updatedByUser User? @relation("WorkspaceFolderUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
@@ -4285,6 +4298,7 @@ model WorkspaceFolder {
   @@index([tenantId, accessInheritanceMode])
   @@index([tenantId, parentId])
   @@index([tenantId, displayOrder])
+  @@index([tenantId, trashedAt])
   @@index([createdByUserId])
   @@index([updatedByUserId])
 }
@@ -4308,6 +4322,7 @@ model WorkspaceDocument {
   updatedByUserId String?
 
   archivedAt DateTime?
+  trashedAt  DateTime?
 
   accessInheritanceMode WorkspaceAccessInheritanceMode @default(INHERIT)
   accessModelVersion    Int                            @default(1)
@@ -4323,6 +4338,8 @@ model WorkspaceDocument {
   communicationAttachmentSnapshots CommunicationAttachment[]  @relation("CommunicationAttachmentSourceDocument")
   taskDocumentReferences           TaskDocumentReference[]
   accessGrants                     WorkspaceAccessGrant[]     @relation("WorkspaceDocumentAccessGrants")
+  favorites                        WorkspaceFavorite[]        @relation("WorkspaceDocumentFavorites")
+  recentAccess                     WorkspaceRecentAccess[]    @relation("WorkspaceDocumentRecentAccess")
 
   createdByUser User? @relation("WorkspaceDocumentCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   updatedByUser User? @relation("WorkspaceDocumentUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
@@ -4332,6 +4349,7 @@ model WorkspaceDocument {
   @@index([tenantId, accessInheritanceMode])
   @@index([tenantId, status])
   @@index([tenantId, archivedAt])
+  @@index([tenantId, trashedAt])
   @@index([createdByUserId])
   @@index([updatedByUserId])
 }
@@ -4428,6 +4446,54 @@ model WorkspaceAccessGrant {
   @@index([tenantId, teamId])
   @@index([tenantId, personId])
   @@index([tenantId, roleFunctionKey])
+}
+
+// ---------------------------------------------------------------------------
+// WORKSPACE-06 — personal favorites (discovery metadata only; no ACL grant)
+// ---------------------------------------------------------------------------
+
+model WorkspaceFavorite {
+  id           String                           @id @default(cuid())
+  tenantId     String
+  userId       String
+  resourceType WorkspaceCollaborationResourceType
+  folderId     String?
+  documentId   String?
+  createdAt    DateTime                         @default(now())
+
+  tenant   Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user     User               @relation("WorkspaceFavoriteUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  folder   WorkspaceFolder?   @relation("WorkspaceFolderFavorites", fields: [folderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  document WorkspaceDocument? @relation("WorkspaceDocumentFavorites", fields: [documentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([tenantId, userId, folderId])
+  @@unique([tenantId, userId, documentId])
+  @@index([tenantId, userId])
+  @@index([tenantId, userId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// WORKSPACE-06 — bounded personal recent access (not an activity feed)
+// ---------------------------------------------------------------------------
+
+model WorkspaceRecentAccess {
+  id           String                           @id @default(cuid())
+  tenantId     String
+  userId       String
+  resourceType WorkspaceCollaborationResourceType
+  folderId     String?
+  documentId   String?
+  versionId    String?
+  accessedAt   DateTime                         @default(now())
+
+  tenant   Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user     User               @relation("WorkspaceRecentAccessUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  folder   WorkspaceFolder?   @relation("WorkspaceFolderRecentAccess", fields: [folderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  document WorkspaceDocument? @relation("WorkspaceDocumentRecentAccess", fields: [documentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([tenantId, userId, accessedAt])
+  @@index([tenantId, userId, documentId])
+  @@index([tenantId, userId, folderId])
 }
 
 // ---------------------------------------------------------------------------

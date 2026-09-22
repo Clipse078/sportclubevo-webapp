@@ -44,12 +44,14 @@ export function buildWorkspaceReadWhereFromIds(input: {
     folderWhere: {
       tenantId: input.tenantId,
       archivedAt: null,
+      trashedAt: null,
       id: idInFilter(input.folderIds),
     },
     documentWhere: {
       tenantId: input.tenantId,
       status: "ACTIVE",
       archivedAt: null,
+      trashedAt: null,
       id: idInFilter(input.documentIds),
     },
   };

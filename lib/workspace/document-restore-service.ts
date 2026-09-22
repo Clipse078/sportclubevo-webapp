@@ -96,6 +96,13 @@ export async function restoreWorkspaceDocument(
     );
   }
 
+  if (existingDocument.status === WorkspaceDocumentStatus.TRASHED) {
+    throw new WorkspaceDocumentRestoreServiceError(
+      "DOCUMENT_ALREADY_ACTIVE",
+      "Das Dokument ist im Papierkorb — zuerst aus dem Papierkorb wiederherstellen.",
+    );
+  }
+
   if (
     existingDocument.status === WorkspaceDocumentStatus.ACTIVE ||
     existingDocument.archivedAt === null

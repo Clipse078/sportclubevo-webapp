@@ -80,3 +80,33 @@ SharePoint/Dropbox treat file delete as deleting all versions. SCE **Tasks/Requi
 | Universal Search visibility rules | Post-Mobile Search |
 | External guest sharing | Separate security programme |
 | Malware scan gates on restore | W08 |
+
+---
+
+## WORKSPACE-06 implementation gate (2026-09-22)
+
+**Branch:** `cursor/workspace-06-collaboration-links-lifecycle`
+
+### ADOPTED
+
+- Archive distinct from trash (`TRASHED` + `trashedAt`, folder trash subtree)
+- Recoverable trash primitive (manual restore; no auto-purge)
+- Stable ID internal links + copy-link UX
+- Reference-safe permanent delete (`RESOURCE_REFERENCED` / `TaskDocumentReference` guard)
+- Favorites + recent (tenant/user scoped, ACL re-check at read)
+- Lifecycle-aware archived/trash lists (authorized ID sets only)
+
+### INTENTIONAL SCE DIFFERENCES
+
+- No anonymous sharing or link-based authorization
+- No per-version delete endpoint
+- No SharePoint-scale collaboration suite in W06
+- Stricter immutable-reference safety before W07 version binding
+
+### DEFERRED
+
+- Automatic purge / retention duration → W08
+- Governance / legal hold → W08
+- Activity feed → later
+- Comments / mentions / presence / co-authoring → later
+- External guest sharing → later (explicit approval only)

@@ -74,8 +74,13 @@ export async function getWorkspaceDocumentVersionForDownload(
     where: {
       id: documentId,
       tenantId,
-      status: WorkspaceDocumentStatus.ACTIVE,
-      archivedAt: null,
+      status: {
+        in: [
+          WorkspaceDocumentStatus.ACTIVE,
+          WorkspaceDocumentStatus.ARCHIVED,
+          WorkspaceDocumentStatus.TRASHED,
+        ],
+      },
     },
     select: {
       id: true,
