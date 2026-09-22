@@ -4,9 +4,11 @@ import { requirePersonalActionsModuleAccess } from "@/lib/personal-actions/requi
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { getRequirementServiceContext } from "@/lib/requirements/server-context";
 import {
+  loadRequirementAudienceOriginLabels,
   loadRequirementManagementDetail,
   listRequirementRecipientMatrix,
   type RequirementRecipientMatrixFilter,
+  type RequirementRecipientMatrixSort,
 } from "@/lib/requirements/management-service";
 import { loadRequirementPersonOptionsByIds } from "@/lib/requirements/person-search";
 import { loadRequirementAudienceLabels } from "@/lib/requirements/audience-selector-search";
@@ -21,8 +23,16 @@ type Props = {
 
 function parseMatrixFilter(raw: string | undefined): RequirementRecipientMatrixFilter {
   const value = raw?.trim().toUpperCase();
-  if (value === "OPEN" || value === "ACKNOWLEDGED" || value === "OVERDUE") return value;
+  if (value === "OPEN" || value === "ACKNOWLEDGED" || value === "OVERDUE" || value === "COMPLETED") {
+    return value === "COMPLETED" ? "ACKNOWLEDGED" : value;
+  }
   return "ALL";
+}
+
+function parseMatrixSort(raw: string | undefined): RequirementRecipientMatrixSort {
+  const value = raw?.trim().toUpperCase();
+  if (value === "PERSON_ASC" || value === "STATUS" || value === "COMPLETED_DESC") return value;
+  return "ATTENTION";
 }
 
 export default async function RequirementDetailPage({ params, searchParams }: Props) {
@@ -66,6 +76,11 @@ export default async function RequirementDetailPage({ params, searchParams }: Pr
         })
       : null;
 
+  const audienceOriginLabels =
+    detail.requirement.status !== "DRAFT"
+      ? await loadRequirementAudienceOriginLabels(ctx.tenantId, detail.requirement)
+      : null;
+
   let matrixRows: Awaited<ReturnType<typeof listRequirementRecipientMatrix>>["rows"] = [];
   let matrixTotalCount = 0;
   let matrixPage = 1;
@@ -77,6 +92,7 @@ export default async function RequirementDetailPage({ params, searchParams }: Pr
       requirementId,
       filter: parseMatrixFilter(sp.matrix),
       search: sp.mq ?? "",
+      sort: parseMatrixSort(sp.ms),
       page: Number.isFinite(matrixPageRaw) && matrixPageRaw > 0 ? matrixPageRaw : 1,
     });
     matrixRows = matrix.rows;
@@ -92,6 +108,7 @@ export default async function RequirementDetailPage({ params, searchParams }: Pr
         aggregate={detail.aggregate}
         audienceKnown={audienceKnown}
         audienceKnownLabels={audienceKnownLabels}
+        audienceOriginLabels={audienceOriginLabels}
         matrixRows={matrixRows}
         matrixTotalCount={matrixTotalCount}
         matrixPage={matrixPage}

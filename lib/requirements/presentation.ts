@@ -21,7 +21,7 @@ export function formatRequirementProgressLabel(
   if (!aggregate || aggregate.totalRecipients === 0) {
     return "—";
   }
-  return `${aggregate.resolvedCount} / ${aggregate.totalRecipients} bestätigt`;
+  return `${aggregate.resolvedCount} / ${aggregate.totalRecipients} erledigt`;
 }
 
 export function formatRequirementOpenLabel(aggregate: RequirementAggregateDto | null): string | null {
@@ -29,8 +29,36 @@ export function formatRequirementOpenLabel(aggregate: RequirementAggregateDto | 
   return `${aggregate.openCount} offen`;
 }
 
+export function formatRequirementOverviewProgressLabel(
+  aggregate: RequirementAggregateDto | null,
+): string | null {
+  if (!aggregate || aggregate.totalRecipients === 0) return null;
+  return `${aggregate.resolvedCount} / ${aggregate.totalRecipients} erledigt · ${aggregate.resolvedPercent} %`;
+}
+
+export function formatRequirementReminderSummary(input: {
+  remindersConfigured: boolean;
+  reminder1At: string | null;
+  reminder2At: string | null;
+  locale: string;
+  timeZone: string;
+}): string | null {
+  if (!input.remindersConfigured) return null;
+  const formatter = new Intl.DateTimeFormat(input.locale, {
+    timeZone: input.timeZone,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+  const parts: string[] = [];
+  if (input.reminder1At) parts.push(formatter.format(new Date(input.reminder1At)));
+  if (input.reminder2At) parts.push(formatter.format(new Date(input.reminder2At)));
+  if (parts.length === 0) return "Erinnerungen konfiguriert";
+  return parts.length === 1 ? `Erinnerung ${parts[0]}` : `Erinnerungen ${parts.join(", ")}`;
+}
+
 export function formatRecipientResolutionLabel(status: RequirementResolutionStatus): string {
-  return status === "RESOLVED" ? "Bestätigt" : "Offen";
+  return status === "RESOLVED" ? "Erledigt" : "Offen";
 }
 
 export function formatRecipientResponseLabel(responseValue: string | null): string {
