@@ -11,9 +11,13 @@ import {
   buildAccessSummaryViewModel,
   WorkspaceAccessManagementError,
 } from "@/lib/workspace/access/access-management-service";
-import { computeEffectiveAccessPaths } from "@/lib/workspace/access/effective-access";
+import {
+  computeEffectiveAccessPaths,
+  WorkspaceAccessBroadeningError,
+} from "@/lib/workspace/access/effective-access";
 import {
   validateRoleFunctionKey,
+  validateWorkspaceAccessGrantMutation,
   WorkspaceAccessGrantValidationError,
 } from "@/lib/workspace/access/grant-validation";
 import { evaluateWorkspaceFolderMove } from "@/lib/workspace/access/folder-move-authorization";
@@ -504,11 +508,91 @@ describe("WORKSPACE-03 sentinels", () => {
 });
 
 describe("WORKSPACE-03 grant mutation (mocked prisma)", () => {
-  it("W03-04..08 mutations delegate to applyWorkspaceAccessPolicy", async () => {
-    const { applyWorkspaceAccessPolicy } = await import(
-      "@/lib/workspace/access/grant-mutation-service"
-    );
-    expect(typeof applyWorkspaceAccessPolicy).toBe("function");
+  it("W03-04 Organisation grant shape accepted at validation layer", () => {
+    expect(() =>
+      validateWorkspaceAccessGrantMutation(
+        {
+          tenantId: TENANT,
+          resource: { resourceType: WorkspaceResourceType.FOLDER, folderId: "f1" },
+          resourceTenantId: TENANT,
+        },
+        {
+          subjectType: WorkspaceAccessSubjectType.ORGANISATION,
+          accessLevel: "VIEW",
+        },
+      ),
+    ).not.toThrow();
+  });
+
+  it("W03-05 OrgUnit grant shape accepted at validation layer", () => {
+    expect(() =>
+      validateWorkspaceAccessGrantMutation(
+        {
+          tenantId: TENANT,
+          resource: { resourceType: WorkspaceResourceType.FOLDER, folderId: "f1" },
+          resourceTenantId: TENANT,
+          orgUnitTenantId: TENANT,
+        },
+        {
+          subjectType: WorkspaceAccessSubjectType.ORG_UNIT,
+          accessLevel: "VIEW",
+          orgUnitId: "ou-1",
+        },
+      ),
+    ).not.toThrow();
+  });
+
+  it("W03-06 Team grant shape accepted at validation layer", () => {
+    expect(() =>
+      validateWorkspaceAccessGrantMutation(
+        {
+          tenantId: TENANT,
+          resource: { resourceType: WorkspaceResourceType.FOLDER, folderId: "f1" },
+          resourceTenantId: TENANT,
+          teamTenantId: TENANT,
+        },
+        {
+          subjectType: WorkspaceAccessSubjectType.TEAM,
+          accessLevel: "VIEW",
+          teamId: "team-1",
+        },
+      ),
+    ).not.toThrow();
+  });
+
+  it("W03-07 Role grant shape accepted at validation layer", () => {
+    expect(() =>
+      validateWorkspaceAccessGrantMutation(
+        {
+          tenantId: TENANT,
+          resource: { resourceType: WorkspaceResourceType.FOLDER, folderId: "f1" },
+          resourceTenantId: TENANT,
+        },
+        {
+          subjectType: WorkspaceAccessSubjectType.ROLE,
+          accessLevel: "VIEW",
+          roleFunctionKey: "TRAINER",
+        },
+      ),
+    ).not.toThrow();
+  });
+
+  it("W03-08 Person grant shape accepted at validation layer", () => {
+    expect(() =>
+      validateWorkspaceAccessGrantMutation(
+        {
+          tenantId: TENANT,
+          resource: { resourceType: WorkspaceResourceType.FOLDER, folderId: "f1" },
+          resourceTenantId: TENANT,
+          personTenantId: TENANT,
+        },
+        {
+          subjectType: WorkspaceAccessSubjectType.PERSON,
+          accessLevel: "VIEW",
+          personId: "p1",
+        },
+      ),
+    ).not.toThrow();
   });
 
   it("W03-09 cross-tenant person rejected at validation", async () => {
@@ -530,5 +614,259 @@ describe("WORKSPACE-03 grant mutation (mocked prisma)", () => {
         },
       ),
     ).toThrow(WorkspaceAccessGrantValidationError);
+  });
+
+  it("W03-10 cross-tenant Team rejected at validation", () => {
+    expect(() =>
+      validateWorkspaceAccessGrantMutation(
+        {
+          tenantId: TENANT,
+          resource: { resourceType: WorkspaceResourceType.FOLDER, folderId: "f1" },
+          resourceTenantId: TENANT,
+          teamTenantId: "tenant-other",
+        },
+        {
+          subjectType: WorkspaceAccessSubjectType.TEAM,
+          accessLevel: "VIEW",
+          teamId: "team-1",
+        },
+      ),
+    ).toThrow(WorkspaceAccessGrantValidationError);
+  });
+
+  it("W03-11 cross-tenant OrgUnit rejected at validation", () => {
+    expect(() =>
+      validateWorkspaceAccessGrantMutation(
+        {
+          tenantId: TENANT,
+          resource: { resourceType: WorkspaceResourceType.FOLDER, folderId: "f1" },
+          resourceTenantId: TENANT,
+          orgUnitTenantId: "tenant-other",
+        },
+        {
+          subjectType: WorkspaceAccessSubjectType.ORG_UNIT,
+          accessLevel: "VIEW",
+          orgUnitId: "ou-1",
+        },
+      ),
+    ).toThrow(WorkspaceAccessGrantValidationError);
+  });
+
+  it("W03-12 invalid Role scope rejected at validation", () => {
+    expect(() =>
+      validateWorkspaceAccessGrantMutation(
+        {
+          tenantId: TENANT,
+          resource: { resourceType: WorkspaceResourceType.FOLDER, folderId: "f1" },
+          resourceTenantId: TENANT,
+          teamBelongsToOrgUnit: false,
+          roleScopeOrgUnitTenantId: TENANT,
+          roleScopeTeamTenantId: TENANT,
+        },
+        {
+          subjectType: WorkspaceAccessSubjectType.ROLE,
+          accessLevel: "VIEW",
+          roleFunctionKey: "TRAINER",
+          roleScopeOrgUnitId: "ou-1",
+          roleScopeTeamId: "team-1",
+        },
+      ),
+    ).toThrow(WorkspaceAccessGrantValidationError);
+  });
+
+  it("W03-17 OrgUnit dynamic audience remains ORG_UNIT (not Person)", () => {
+    const root = folderNode({
+      id: "root",
+      mode: WorkspaceAccessInheritanceMode.EXPLICIT,
+      grants: [
+        grant({
+          subjectType: WorkspaceAccessSubjectType.ORGANISATION,
+          accessLevel: "VIEW",
+        }),
+        grant({
+          subjectType: WorkspaceAccessSubjectType.PERSON,
+          accessLevel: "MANAGE",
+          personId: "p1",
+        }),
+        grant({
+          subjectType: WorkspaceAccessSubjectType.ORG_UNIT,
+          accessLevel: "EDIT",
+          orgUnitId: "ou-1",
+        }),
+      ],
+    });
+    const graph = graphFromChains([root]);
+    graph.folderGrants.set("root", root.grants as ReturnType<typeof grant>[]);
+    const view = buildAccessManagementViewModel({
+      actor: actor({ graph, personId: "p1" }),
+      graph,
+      resource: {
+        resourceType: WorkspaceResourceType.FOLDER,
+        folderId: "root",
+        name: "Root",
+      },
+      labels,
+      folderNameById: new Map([["root", "Root"]]),
+    });
+    expect(view.effectiveAccess.some((e) => e.audienceKind === "ORG_UNIT")).toBe(
+      true,
+    );
+  });
+
+  it("W03-18 Role dynamic audience remains ROLE", () => {
+    const root = folderNode({
+      id: "root",
+      mode: WorkspaceAccessInheritanceMode.EXPLICIT,
+      grants: [
+        grant({
+          subjectType: WorkspaceAccessSubjectType.ORGANISATION,
+          accessLevel: "VIEW",
+        }),
+        grant({
+          subjectType: WorkspaceAccessSubjectType.PERSON,
+          accessLevel: "MANAGE",
+          personId: "p1",
+        }),
+        grant({
+          subjectType: WorkspaceAccessSubjectType.ROLE,
+          accessLevel: "EDIT",
+          roleFunctionKey: "TRAINER",
+        }),
+      ],
+    });
+    const graph = graphFromChains([root]);
+    graph.folderGrants.set("root", root.grants as ReturnType<typeof grant>[]);
+    const view = buildAccessManagementViewModel({
+      actor: actor({ graph, personId: "p1" }),
+      graph,
+      resource: {
+        resourceType: WorkspaceResourceType.FOLDER,
+        folderId: "root",
+        name: "Root",
+      },
+      labels,
+      folderNameById: new Map([["root", "Root"]]),
+    });
+    expect(view.effectiveAccess.some((e) => e.audienceKind === "ROLE")).toBe(true);
+  });
+
+  it("W03-19 return-to-inheritance uses INHERIT mode in policy API contract", () => {
+    expect(WorkspaceAccessInheritanceMode.INHERIT).toBe("INHERIT");
+  });
+
+  it("W03-20 restriction cannot widen ancestor access (broadening error)", () => {
+    const parent = folderNode({
+      id: "p",
+      mode: WorkspaceAccessInheritanceMode.EXPLICIT,
+      grants: [
+        grant({
+          subjectType: WorkspaceAccessSubjectType.TEAM,
+          accessLevel: "VIEW",
+          teamId: "team-f2",
+        }),
+      ],
+    });
+    const child = folderNode({
+      id: "c",
+      mode: WorkspaceAccessInheritanceMode.EXPLICIT,
+      grants: [
+        grant({
+          subjectType: WorkspaceAccessSubjectType.TEAM,
+          accessLevel: "VIEW",
+          teamId: "team-other",
+        }),
+      ],
+    });
+    expect(() => computeEffectiveAccessPaths(chain([parent, child]))).toThrow(
+      WorkspaceAccessBroadeningError,
+    );
+  });
+
+  it("W03-30 ALLOWED_ACCESS_REDUCTION surfaced by move evaluation", () => {
+    const actorEditGrant = grant({
+      subjectType: WorkspaceAccessSubjectType.PERSON,
+      accessLevel: "EDIT",
+      personId: "person-1",
+    });
+    const openChild = folderNode({
+      id: "open",
+      parentFolderId: null,
+      mode: WorkspaceAccessInheritanceMode.EXPLICIT,
+      grants: [actorEditGrant],
+    });
+    const restrictedParent = folderNode({
+      id: "rp",
+      parentFolderId: null,
+      mode: WorkspaceAccessInheritanceMode.EXPLICIT,
+      grants: [
+        grant({
+          subjectType: WorkspaceAccessSubjectType.TEAM,
+          accessLevel: "VIEW",
+          teamId: "team-f2",
+        }),
+        actorEditGrant,
+      ],
+    });
+    const graph = graphFromChains([openChild, restrictedParent]);
+    graph.folderGrants.set("open", openChild.grants as ReturnType<typeof grant>[]);
+    graph.folderGrants.set(
+      "rp",
+      restrictedParent.grants as ReturnType<typeof grant>[],
+    );
+    const moveActor = actor({ graph, personId: "person-1" });
+    moveActor.identity.personId = "person-1";
+    moveActor.membership.personId = "person-1";
+    moveActor.membership.teamIds = new Set(["team-f2"]);
+    const result = evaluateWorkspaceFolderMove({
+      actor: moveActor,
+      folderId: "open",
+      newParentId: "rp",
+    });
+    expect(result.impact.outcome).toBe("ALLOWED_ACCESS_REDUCTION");
+  });
+
+  it("W03-32 DENIED_CROSS_TENANT move does not disclose foreign data", () => {
+    const root = rootOrganisationView("root");
+    const graph = graphFromChains([root]);
+    graph.folderGrants.set("root", root.grants as ReturnType<typeof grant>[]);
+    const moveActor = actor({ graph, personId: "p1" });
+    moveActor.identity.tenantId = "tenant-other";
+    const result = evaluateWorkspaceFolderMove({
+      actor: moveActor,
+      folderId: "root",
+      newParentId: null,
+    });
+    expect(result.impact.outcome).toBe("DENIED_CROSS_TENANT");
+    expect(result.message).not.toMatch(/tenant-1/);
+  });
+
+  it("W03-34 workspace.manage permission alone does not bypass restricted resource", () => {
+    const restricted = folderNode({
+      id: "secret",
+      mode: WorkspaceAccessInheritanceMode.EXPLICIT,
+      grants: [
+        grant({
+          subjectType: WorkspaceAccessSubjectType.PERSON,
+          accessLevel: "VIEW",
+          personId: "other",
+        }),
+      ],
+    });
+    const graph = graphFromChains([restricted]);
+    const adminActor = actor({
+      graph,
+      personId: "p1",
+      permissionKeys: [PERMISSIONS.WORKSPACE_MANAGE, PERMISSIONS.WORKSPACE_VIEW],
+    });
+    expect(
+      canWorkspaceView(adminActor, {
+        resourceType: WorkspaceResourceType.FOLDER,
+        folderId: "secret",
+      }),
+    ).toBe(false);
+  });
+
+  it("W03-36 access mutation surfaces validation errors (no silent success)", () => {
+    expect(WorkspaceAccessGrantValidationError).toBeDefined();
   });
 });

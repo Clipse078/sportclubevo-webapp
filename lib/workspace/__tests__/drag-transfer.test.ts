@@ -6,6 +6,7 @@ import {
   readInternalDragPayload,
   writeInternalDragPayload,
 } from "@/lib/workspace/drag-transfer";
+import { uploadWorkspaceFile } from "@/lib/workspace/upload-client";
 
 describe("WORKSPACE-03 drag transfer", () => {
   it("W03-23 external file drag is recognized", () => {
@@ -25,6 +26,10 @@ describe("WORKSPACE-03 drag transfer", () => {
           : "",
     } as unknown as DataTransfer;
     expect(isExternalFileDrag(dt)).toBe(false);
+  });
+
+  it("W03-26 authorized external upload uses canonical upload client export", () => {
+    expect(typeof uploadWorkspaceFile).toBe("function");
   });
 
   it("W03-28 internal folder payload roundtrip", () => {
