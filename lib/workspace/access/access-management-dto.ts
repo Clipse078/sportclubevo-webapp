@@ -15,6 +15,17 @@ export type WorkspaceAccessAudienceKindDto =
   | "ROLE"
   | "PERSON";
 
+export type WorkspaceAccessGrantMutationFieldsDto = {
+  subjectType: WorkspaceAccessAudienceKindDto;
+  accessLevel: CanonicalResourceLevel;
+  personId?: string | null;
+  orgUnitId?: string | null;
+  teamId?: string | null;
+  roleFunctionKey?: string | null;
+  roleScopeOrgUnitId?: string | null;
+  roleScopeTeamId?: string | null;
+};
+
 export type WorkspaceAccessGrantRuleDto = {
   id: string;
   audienceKind: WorkspaceAccessAudienceKindDto;
@@ -22,11 +33,16 @@ export type WorkspaceAccessGrantRuleDto = {
   accessLevel: CanonicalResourceLevel;
   accessLevelLabel: string;
   accessLevelDescription: string;
+  /** Canonical mutation payload for policy PUT (direct rules only). */
+  mutationFields: WorkspaceAccessGrantMutationFieldsDto;
+  /** Stable key for matching effective-access rows to configured grants. */
+  audienceKey: string;
 };
 
 export type WorkspaceEffectiveAccessEntryDto = {
   audienceKind: WorkspaceAccessAudienceKindDto;
   audienceLabel: string;
+  audienceKey: string;
   effectiveLevel: CanonicalResourceLevel;
   effectiveLevelLabel: string;
   sourceLabel: string;
@@ -61,6 +77,8 @@ export type WorkspaceAccessManagementViewModel = {
   effectiveAccess: WorkspaceEffectiveAccessEntryDto[];
   inheritedAccess: WorkspaceInheritedAccessEntryDto[];
   inheritDescription: string;
+  /** Safe initial grants when switching from INHERIT → EXPLICIT (no broadening). */
+  restrictionSeedGrants: WorkspaceAccessGrantMutationFieldsDto[];
 };
 
 export type WorkspaceAccessSummaryEntryDto = {

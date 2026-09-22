@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db/prisma";
+import { PERSON_FUNCTION_OPTIONS } from "@/lib/people/functions";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireWorkspaceApiActor } from "@/lib/workspace/workspace-api-actor";
 
@@ -80,6 +81,25 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       results: [{ type: "ORGANISATION", id: tenantId, label: "Organisation" }],
     });
+  }
+
+  if (type === "ROLE") {
+    const normalized = q.toLowerCase();
+    const results = PERSON_FUNCTION_OPTIONS.filter((option) => {
+      if (!normalized) return true;
+      return (
+        option.label.toLowerCase().includes(normalized) ||
+        option.value.toLowerCase().includes(normalized)
+      );
+    })
+      .slice(0, take)
+      .map((option) => ({
+        type: "ROLE" as const,
+        id: option.value,
+        label: option.label,
+        functionKey: option.value,
+      }));
+    return NextResponse.json({ results });
   }
 
   return NextResponse.json({ results: [] }, { status: 200 });

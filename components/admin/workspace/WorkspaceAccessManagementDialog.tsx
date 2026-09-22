@@ -7,6 +7,8 @@ import { WorkspaceAccessInheritanceMode } from "@prisma/client";
 import { Dialog } from "@/components/ui/Dialog";
 import type { WorkspaceAccessManagementViewModel } from "@/lib/workspace/access/access-management-dto";
 
+import { WorkspaceAccessGrantEditor } from "./WorkspaceAccessGrantEditor";
+
 type WorkspaceAccessManagementDialogProps = {
   open: boolean;
   onClose: () => void;
@@ -30,6 +32,7 @@ export function WorkspaceAccessManagementDialog({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [manageAccessLost, setManageAccessLost] = useState(false);
 
   const apiBase =
     resourceType === "FOLDER"
@@ -39,12 +42,17 @@ export function WorkspaceAccessManagementDialog({
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setManageAccessLost(false);
     try {
       const res = await fetch(apiBase);
       const data = (await res.json()) as {
         accessManagement?: WorkspaceAccessManagementViewModel;
         error?: string;
       };
+      if (res.status === 403) {
+        setManageAccessLost(true);
+        throw new Error(data.error ?? t("loadError"));
+      }
       if (!res.ok) {
         throw new Error(data.error ?? t("loadError"));
       }
@@ -55,7 +63,7 @@ export function WorkspaceAccessManagementDialog({
     } finally {
       setLoading(false);
     }
-  }, [apiBase, t]);
+  }, [apiBase]);
 
   useEffect(() => {
     if (open) void load();
@@ -78,6 +86,10 @@ export function WorkspaceAccessManagementDialog({
         accessManagement?: WorkspaceAccessManagementViewModel;
         error?: string;
       };
+      if (res.status === 403) {
+        setManageAccessLost(true);
+        throw new Error(data.error ?? t("saveError"));
+      }
       if (!res.ok) {
         throw new Error(data.error ?? t("saveError"));
       }
@@ -117,7 +129,11 @@ export function WorkspaceAccessManagementDialog({
         </p>
       ) : null}
 
-      {viewModel ? (
+      {manageAccessLost ? (
+        <p className="text-sm text-[var(--muted)]">{t("manageAccessLost")}</p>
+      ) : null}
+
+      {viewModel && !manageAccessLost ? (
         <div className="space-y-6">
           <section>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
@@ -141,7 +157,7 @@ export function WorkspaceAccessManagementDialog({
             <ul className="mt-2 space-y-2">
               {viewModel.effectiveAccess.map((entry) => (
                 <li
-                  key={`${entry.audienceLabel}-${entry.effectiveLevelLabel}`}
+                  key={`${entry.audienceKey}-${entry.effectiveLevelLabel}`}
                   className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
                 >
                   <p className="font-medium text-[var(--text)]">
@@ -160,27 +176,17 @@ export function WorkspaceAccessManagementDialog({
             </ul>
           </section>
 
-          {viewModel.policyMode === WorkspaceAccessInheritanceMode.EXPLICIT ? (
-            <section>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                {t("explicitSection")}
-              </h3>
-              <ul className="mt-2 space-y-2">
-                {viewModel.explicitGrants.map((grant) => (
-                  <li
-                    key={grant.id}
-                    className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
-                  >
-                    <p className="font-medium">
-                      {grant.audienceLabel} · {grant.accessLevelLabel}
-                    </p>
-                    <p className="text-xs text-[var(--muted)]">
-                      {grant.accessLevelDescription}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </section>
+          {viewModel.canManage ? (
+            <WorkspaceAccessGrantEditor
+              apiBase={apiBase}
+              viewModel={viewModel}
+              onViewModelUpdated={setViewModel}
+              onSaved={onSaved}
+              onManageAccessLost={() => {
+                setManageAccessLost(true);
+                void load();
+              }}
+            />
           ) : null}
 
           {viewModel.inheritedAccess.length > 0 ? (
@@ -196,6 +202,9 @@ export function WorkspaceAccessManagementDialog({
                   </li>
                 ))}
               </ul>
+              <p className="mt-2 text-xs text-[var(--muted)]">
+                {t("inheritedReadOnlyHint")}
+              </p>
             </section>
           ) : null}
 
@@ -208,9 +217,7 @@ export function WorkspaceAccessManagementDialog({
             >
               {saving ? t("saving") : t("returnToInheritance")}
             </button>
-          ) : (
-            <p className="text-xs text-[var(--muted)]">{t("restrictHint")}</p>
-          )}
+          ) : null}
         </div>
       ) : null}
     </Dialog>

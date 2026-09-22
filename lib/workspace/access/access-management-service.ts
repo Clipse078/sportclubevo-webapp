@@ -22,6 +22,8 @@ import {
   policyModeLabelDe,
 } from "@/lib/workspace/access/access-management-labels";
 import { audienceRefFromGrant, audienceKey } from "@/lib/workspace/access/audience";
+import type { WorkspaceAccessGrantMutationFieldsDto } from "@/lib/workspace/access/access-management-dto";
+import type { ResourceAccessChain } from "@/lib/workspace/access/effective-access";
 import {
   buildDocumentAccessChain,
   buildFolderAccessChain,
@@ -97,6 +99,41 @@ function buildSourceLabel(input: {
   };
 }
 
+function grantMutationFieldsFromSnapshot(
+  grant: WorkspaceAccessGrantSnapshot,
+): WorkspaceAccessGrantMutationFieldsDto {
+  return {
+    subjectType: grant.subjectType as WorkspaceAccessGrantMutationFieldsDto["subjectType"],
+    accessLevel: grant.accessLevel as CanonicalResourceLevel,
+    personId: grant.personId ?? null,
+    orgUnitId: grant.orgUnitId ?? null,
+    teamId: grant.teamId ?? null,
+    roleFunctionKey: grant.roleFunctionKey ?? null,
+    roleScopeOrgUnitId: grant.roleScopeOrgUnitId ?? null,
+    roleScopeTeamId: grant.roleScopeTeamId ?? null,
+  };
+}
+
+export function buildRestrictionSeedGrants(
+  chain: ResourceAccessChain,
+): WorkspaceAccessGrantMutationFieldsDto[] {
+  for (let index = chain.ancestors.length - 1; index >= 0; index -= 1) {
+    const node = chain.ancestors[index];
+    if (
+      node.accessInheritanceMode === WorkspaceAccessInheritanceMode.EXPLICIT &&
+      node.grants.length > 0
+    ) {
+      return node.grants.map((grant) => grantMutationFieldsFromSnapshot(grant));
+    }
+  }
+  return [
+    {
+      subjectType: WorkspaceAccessSubjectType.ORGANISATION,
+      accessLevel: "VIEW",
+    },
+  ];
+}
+
 function mapExplicitGrantRules(
   grants: readonly WorkspaceAccessGrantSnapshot[],
   labels: AudienceLabelResolver,
@@ -111,6 +148,8 @@ function mapExplicitGrantRules(
       accessLevel: level,
       accessLevelLabel: accessLevelLabelDe(level),
       accessLevelDescription: accessLevelDescriptionDe(level),
+      mutationFields: grantMutationFieldsFromSnapshot(grant),
+      audienceKey: audienceKey(audience),
     };
   });
 }
@@ -188,6 +227,7 @@ export function buildAccessManagementViewModel(input: {
     effectiveAccess.push({
       audienceKind: subjectTypeFromAudience(audience),
       audienceLabel: input.labels.resolve(audience),
+      audienceKey: audienceKey(audience),
       effectiveLevel: path.effectiveLevel,
       effectiveLevelLabel: accessLevelLabelDe(path.effectiveLevel),
       sourceLabel,
@@ -237,6 +277,8 @@ export function buildAccessManagementViewModel(input: {
     input.labels,
   );
 
+  const restrictionSeedGrants = buildRestrictionSeedGrants(chain);
+
   return {
     resource: {
       id:
@@ -258,6 +300,7 @@ export function buildAccessManagementViewModel(input: {
       node.accessInheritanceMode === WorkspaceAccessInheritanceMode.INHERIT
         ? "Berechtigungen vom übergeordneten Ordner"
         : "Zugriff ist auf dieser Ressource zusätzlich eingeschränkt.",
+    restrictionSeedGrants,
   };
 }
 

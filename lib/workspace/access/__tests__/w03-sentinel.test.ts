@@ -9,6 +9,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
   buildAccessManagementViewModel,
   buildAccessSummaryViewModel,
+  buildRestrictionSeedGrants,
   WorkspaceAccessManagementError,
 } from "@/lib/workspace/access/access-management-service";
 import {
@@ -26,7 +27,7 @@ import {
   canWorkspaceView,
   type WorkspaceActorContext,
 } from "@/lib/workspace/access/workspace-authorization";
-import type { WorkspaceResourceGraph } from "@/lib/workspace/access/resource-graph";
+import { buildFolderAccessChain, type WorkspaceResourceGraph } from "@/lib/workspace/access/resource-graph";
 import {
   chain,
   folderNode,
@@ -508,6 +509,37 @@ describe("WORKSPACE-03 sentinels", () => {
 });
 
 describe("WORKSPACE-03 grant mutation (mocked prisma)", () => {
+  it("W03-A1 restriction seed copies nearest explicit ancestor grants", () => {
+    const root = folderNode({
+      id: "root",
+      mode: WorkspaceAccessInheritanceMode.EXPLICIT,
+      grants: [
+        grant({
+          subjectType: WorkspaceAccessSubjectType.ORGANISATION,
+          accessLevel: "VIEW",
+        }),
+        grant({
+          subjectType: WorkspaceAccessSubjectType.TEAM,
+          accessLevel: "EDIT",
+          teamId: "team-1",
+        }),
+      ],
+    });
+    const child = folderNode({
+      id: "child",
+      parentFolderId: "root",
+      mode: WorkspaceAccessInheritanceMode.INHERIT,
+      grants: [],
+    });
+    const graph = graphFromChains([root, child]);
+    graph.folderGrants.set("root", root.grants as ReturnType<typeof grant>[]);
+    graph.folderGrants.set("child", child.grants as ReturnType<typeof grant>[]);
+    const chain = buildFolderAccessChain(graph, "child");
+    expect(chain).toBeTruthy();
+    const seed = buildRestrictionSeedGrants(chain!);
+    expect(seed.some((g) => g.subjectType === WorkspaceAccessSubjectType.TEAM)).toBe(true);
+  });
+
   it("W03-04 Organisation grant shape accepted at validation layer", () => {
     expect(() =>
       validateWorkspaceAccessGrantMutation(
