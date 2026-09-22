@@ -1,14 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  requireApiPermission: vi.fn(),
+  requireWorkspaceApiActor: vi.fn(),
+  buildWorkspaceReadWhere: vi.fn(),
+  assertWorkspaceAccess: vi.fn(),
   getTenantFromSession: vi.fn(),
   getDocument: vi.fn(),
   download: vi.fn(),
 }));
 
 vi.mock("@/lib/permissions/require-api-permission", () => ({
-  requireApiPermission: mocks.requireApiPermission,
+  requireWorkspaceApiActor: mocks.requireWorkspaceApiActor,
 }));
 
 vi.mock("@/lib/tenants/queries", () => ({
@@ -31,7 +33,7 @@ import { GET } from "@/app/api/workspace/documents/[documentId]/preview/route";
 describe("Workspace private preview security", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireApiPermission.mockResolvedValue({
+    mocks.requireWorkspaceApiActor.mockResolvedValue({
       ok: true,
       session: {
         user: {

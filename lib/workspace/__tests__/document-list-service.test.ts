@@ -56,6 +56,7 @@ describe("listWorkspaceDocuments", () => {
       listWorkspaceDocuments({
         tenantId: " tenant-1 ",
         folderId: " folder-1 ",
+        authorizedDocumentIds: ["document-1"],
       }),
     ).resolves.toEqual(rows);
 
@@ -67,6 +68,7 @@ describe("listWorkspaceDocuments", () => {
         folderId: "folder-1",
         status: WorkspaceDocumentStatus.ACTIVE,
         archivedAt: null,
+        id: { in: ["document-1"] },
       },
       orderBy: [
         {
@@ -106,6 +108,7 @@ describe("listWorkspaceDocuments", () => {
     await expect(
       listWorkspaceDocuments({
         tenantId: "tenant-1",
+        authorizedDocumentIds: [],
       }),
     ).resolves.toEqual([]);
 
@@ -127,6 +130,7 @@ describe("listWorkspaceDocuments", () => {
     await listWorkspaceDocuments({
       tenantId: "tenant-1",
       folderId: null,
+      authorizedDocumentIds: [],
     });
 
     expect(mocks.workspaceDocumentFindMany).toHaveBeenCalledWith(
@@ -144,6 +148,7 @@ describe("listWorkspaceDocuments", () => {
     await listWorkspaceDocuments({
       tenantId: "tenant-1",
       folderId: "   ",
+      authorizedDocumentIds: [],
     });
 
     expect(mocks.workspaceDocumentFindMany).toHaveBeenCalledWith(
@@ -178,6 +183,7 @@ describe("listWorkspaceDocuments", () => {
 
     const result = await listWorkspaceDocuments({
       tenantId: "tenant-1",
+      authorizedDocumentIds: ["document-2"],
     });
 
     expect(result).toEqual(rows);
@@ -243,6 +249,7 @@ describe("listWorkspaceDocuments", () => {
     const result = await listWorkspaceDocuments({
       tenantId: "tenant-1",
       folderId: "folder-1",
+      authorizedDocumentIds: ["document-a", "document-b"],
     });
 
     expect(result).toHaveLength(2);
@@ -258,6 +265,7 @@ describe("listWorkspaceDocuments", () => {
     await expect(
       listWorkspaceDocuments({
         tenantId: "   ",
+        authorizedDocumentIds: [],
       }),
     ).rejects.toMatchObject({
       name: "WorkspaceDocumentServiceError",

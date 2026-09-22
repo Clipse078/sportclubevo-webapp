@@ -46,17 +46,25 @@ function toWorkspaceFolderDto(
 }
 
 /**
- * Returns the active Workspace folder tree for exactly one tenant.
+ * Returns the active Workspace folder tree for exactly one tenant,
+ * restricted to folders the actor may VIEW (WORKSPACE-02 query boundary).
  */
 export async function getWorkspaceFolderTree(
   tenantId: string,
+  authorizedFolderIds: readonly string[],
 ): Promise<WorkspaceFolderDto[]> {
   const normalizedTenantId = normalizeTenantId(tenantId);
+
+  const idFilter =
+    authorizedFolderIds.length === 0
+      ? { in: ["__workspace_unauthorized__"] as string[] }
+      : { in: [...authorizedFolderIds] };
 
   const folders = await prisma.workspaceFolder.findMany({
     where: {
       tenantId: normalizedTenantId,
       archivedAt: null,
+      id: idFilter,
     },
     orderBy: [
       { displayOrder: "asc" },
@@ -79,6 +87,7 @@ export async function getWorkspaceFolderTree(
 export async function getWorkspaceFolderById(
   tenantId: string,
   folderId: string,
+  authorizedFolderIds?: readonly string[],
 ): Promise<WorkspaceFolderDto | null> {
   const normalizedTenantId = normalizeTenantId(tenantId);
   const normalizedFolderId = folderId.trim();
@@ -97,6 +106,13 @@ export async function getWorkspaceFolderById(
   });
 
   if (!folder) {
+    return null;
+  }
+
+  if (
+    authorizedFolderIds &&
+    !authorizedFolderIds.includes(normalizedFolderId)
+  ) {
     return null;
   }
 

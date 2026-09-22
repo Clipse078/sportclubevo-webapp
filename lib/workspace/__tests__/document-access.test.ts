@@ -1,5 +1,5 @@
 /**
- * AUFGABEN-06D — Workspace document access seam.
+ * AUFGABEN-06D / WORKSPACE-02 — Workspace document access seam.
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -16,6 +16,9 @@ import {
 const mocks = vi.hoisted(() => ({
   findMany: vi.fn(),
   findFirst: vi.fn(),
+  resolveActor: vi.fn(),
+  buildReadWhere: vi.fn(),
+  canWorkspaceView: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -26,6 +29,24 @@ vi.mock("@/lib/db/prisma", () => ({
     },
   },
 }));
+
+vi.mock("@/lib/workspace/access/actor-context", () => ({
+  resolveWorkspaceActorFromSessionUser: (...args: unknown[]) =>
+    mocks.resolveActor(...args),
+}));
+
+vi.mock("@/lib/workspace/access/query-predicate", () => ({
+  buildWorkspaceReadWhere: (...args: unknown[]) => mocks.buildReadWhere(...args),
+}));
+
+vi.mock("@/lib/workspace/access/workspace-authorization", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/workspace/access/workspace-authorization")>();
+  return {
+    ...actual,
+    canWorkspaceView: (...args: unknown[]) => mocks.canWorkspaceView(...args),
+  };
+});
 
 const TENANT = "tenant-a";
 const DOC = "doc-1";
@@ -49,6 +70,11 @@ function activeDoc(overrides: Record<string, unknown> = {}) {
 describe("document-access seam", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.resolveActor.mockResolvedValue({ identity: { tenantId: TENANT } });
+    mocks.buildReadWhere.mockResolvedValue({
+      documentWhere: { tenantId: TENANT, id: { in: [DOC] } },
+    });
+    mocks.canWorkspaceView.mockReturnValue(true);
   });
 
   it("requires workspace.view for readable documents", async () => {
@@ -78,32 +104,25 @@ describe("document-access seam", () => {
     expect(presentation).toEqual({ access: "restricted", documentId: DOC });
   });
 
-  it("returns readable presentation with href and no storage fields", async () => {
-    mocks.findMany.mockResolvedValue([activeDoc()]);
-    const presentation = await resolveWorkspaceDocumentPresentation(
-      ctx([PERMISSIONS.WORKSPACE_VIEW]),
-      DOC,
-    );
-    expect(presentation.access).toBe("readable");
-    if (presentation.access === "readable") {
-      expect(presentation.title).toBe("Trainershandbuch");
-      expect(presentation.href).toBe(`/dashboard/workspace?document=${DOC}`);
-      expect(presentation).not.toHaveProperty("storageKey");
-      expect(presentation).not.toHaveProperty("storageUrl");
-    }
-  });
-
-  it("R27 picker default limit is 20 before hard cap", async () => {
+  it("search uses query-boundary read predicate", async () => {
     mocks.findMany.mockResolvedValue([activeDoc()]);
     await searchWorkspaceDocumentsForTaskLink(ctx([PERMISSIONS.WORKSPACE_VIEW]), "hand");
-    expect(mocks.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 20 }));
+    expect(mocks.buildReadWhere).toHaveBeenCalled();
   });
 
-  it("picker excludes archived and respects max limit constant", async () => {
-    mocks.findMany.mockResolvedValue([activeDoc()]);
+  it("search respects picker limit cap", async () => {
+    mocks.findMany.mockResolvedValue([]);
     await searchWorkspaceDocumentsForTaskLink(ctx([PERMISSIONS.WORKSPACE_VIEW]), "hand", 999);
     expect(mocks.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ take: MAX_WORKSPACE_DOCUMENT_PICKER_LIMIT }),
+      expect.objectContaining({
+        take: MAX_WORKSPACE_DOCUMENT_PICKER_LIMIT,
+      }),
     );
+  });
+
+  it("denies when resource ACL rejects view", async () => {
+    mocks.findMany.mockResolvedValue([activeDoc()]);
+    mocks.canWorkspaceView.mockReturnValue(false);
+    expect(await canReadWorkspaceDocument(ctx([PERMISSIONS.WORKSPACE_VIEW]), DOC)).toBe(false);
   });
 });

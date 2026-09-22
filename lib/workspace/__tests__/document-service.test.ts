@@ -10,6 +10,8 @@ const mocks = vi.hoisted(() => ({
   workspaceDocumentCreate: vi.fn(),
   workspaceDocumentUpdate: vi.fn(),
   workspaceDocumentVersionCreate: vi.fn(),
+  workspaceAccessGrantCreateMany: vi.fn(),
+  personFindFirst: vi.fn(),
   auditLogCreate: vi.fn(),
   transaction: vi.fn(),
 }));
@@ -21,6 +23,9 @@ vi.mock("@/lib/db/prisma", () => ({
     },
     workspaceDocument: {
       findFirst: mocks.workspaceDocumentFindFirst,
+    },
+    person: {
+      findFirst: mocks.personFindFirst,
     },
     $transaction: mocks.transaction,
   },
@@ -94,6 +99,8 @@ describe("createWorkspaceDocumentWithInitialVersion", () => {
     });
 
     mocks.workspaceDocumentUpdate.mockResolvedValue(createdDocument);
+    mocks.personFindFirst.mockResolvedValue(null);
+    mocks.workspaceAccessGrantCreateMany.mockResolvedValue({ count: 0 });
 
     mocks.transaction.mockImplementation(
       async (
@@ -105,6 +112,9 @@ describe("createWorkspaceDocumentWithInitialVersion", () => {
           workspaceDocumentVersion: {
             create: typeof mocks.workspaceDocumentVersionCreate;
           };
+          workspaceAccessGrant: {
+            createMany: typeof mocks.workspaceAccessGrantCreateMany;
+          };
           auditLog: { create: typeof mocks.auditLogCreate };
         }) => Promise<unknown>,
       ) =>
@@ -115,6 +125,9 @@ describe("createWorkspaceDocumentWithInitialVersion", () => {
           },
           workspaceDocumentVersion: {
             create: mocks.workspaceDocumentVersionCreate,
+          },
+          workspaceAccessGrant: {
+            createMany: mocks.workspaceAccessGrantCreateMany,
           },
           auditLog: { create: mocks.auditLogCreate },
         }),

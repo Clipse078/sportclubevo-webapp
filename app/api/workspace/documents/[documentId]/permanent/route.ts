@@ -40,12 +40,16 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
+import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { logAction } from "@/lib/audit/log-action";
 import {
   deleteWorkspaceDocumentPermanently,
   getWorkspaceDocumentDeletionImpact,
   WorkspaceDocumentDeleteServiceError,
 } from "@/lib/workspace/document-delete-service";
+import { resolveWorkspaceActor } from "@/lib/workspace/access/actor-context";
+import { WorkspaceAuthorizationError } from "@/lib/workspace/access/workspace-authorization";
+import { assertWorkspaceDocumentManage } from "@/lib/workspace/workspace-resource-guards";
 
 type Params = { params: Promise<{ documentId: string }> };
 
@@ -96,6 +100,30 @@ export async function DELETE(request: NextRequest, { params }: Params) {
 
   if (!authorized) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const effectiveUserId = session.user.effectiveUserId ?? session.user.id;
+  const effectivePerms = await getRequestEffectivePermissions(
+    effectiveUserId,
+    documentTenantId,
+  );
+  const permissionKeys = [...effectivePerms.platform, ...effectivePerms.tenant];
+  const workspaceActor = await resolveWorkspaceActor({
+    tenantId: documentTenantId,
+    userId: effectiveUserId,
+    permissionKeys,
+  });
+
+  try {
+    assertWorkspaceDocumentManage(workspaceActor, documentId);
+  } catch (error) {
+    if (error instanceof WorkspaceAuthorizationError) {
+      return NextResponse.json(
+        { error: "Dokument nicht gefunden." },
+        { status: 404 },
+      );
+    }
+    throw error;
   }
 
   const confirmed = request.nextUrl.searchParams.get("confirm") === "true";

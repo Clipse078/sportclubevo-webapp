@@ -73,6 +73,8 @@ export type WorkspaceDocumentListItemDto = {
 export type ListWorkspaceDocumentsInput = {
   tenantId: string;
   folderId?: string | null;
+  /** WORKSPACE-02 — only documents the actor may VIEW (query-boundary enforcement). */
+  authorizedDocumentIds: readonly string[];
 };
 
 export type GetWorkspaceDocumentForDownloadInput = {

@@ -1,4 +1,10 @@
+import { WorkspaceAccessInheritanceMode } from "@prisma/client";
+
 import { prisma } from "@/lib/db/prisma";
+import {
+  nestedResourceInheritPolicy,
+  rootFolderPolicyCreateInput,
+} from "@/lib/workspace/access/policy-persistence";
 import {
   type CreateWorkspaceFolderInput,
   type ListWorkspaceFoldersInput,
@@ -170,11 +176,18 @@ export async function listWorkspaceFolders(
     );
   }
 
+  const authorizedIds = input.authorizedFolderIds;
+  const idFilter =
+    authorizedIds.length === 0
+      ? { in: ["__workspace_unauthorized__"] as string[] }
+      : { in: [...authorizedIds] };
+
   return prisma.workspaceFolder.findMany({
     where: {
       tenantId,
       parentId,
       archivedAt: null,
+      id: idFilter,
     },
     orderBy: [
       {
@@ -235,27 +248,65 @@ export async function createWorkspaceFolder(
     name,
   });
 
-  return prisma.workspaceFolder.create({
-    data: {
-      tenantId,
-      parentId,
-      name,
-      description,
-      displayOrder,
-      createdByUserId: actorUserId,
-      updatedByUserId: actorUserId,
-    },
-    select: {
-      id: true,
-      parentId: true,
-      name: true,
-      description: true,
-      displayOrder: true,
-      createdByUserId: true,
-      updatedByUserId: true,
-      archivedAt: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+  const creatorPerson = await prisma.person.findFirst({
+    where: { tenantId, userId: actorUserId },
+    select: { id: true },
+  });
+
+  const isRoot = parentId == null;
+
+  return prisma.$transaction(async (transaction) => {
+    const folder = await transaction.workspaceFolder.create({
+      data: {
+        tenantId,
+        parentId,
+        name,
+        description,
+        displayOrder,
+        createdByUserId: actorUserId,
+        updatedByUserId: actorUserId,
+        accessInheritanceMode: isRoot
+          ? WorkspaceAccessInheritanceMode.EXPLICIT
+          : nestedResourceInheritPolicy().accessInheritanceMode,
+      },
+      select: {
+        id: true,
+        parentId: true,
+        name: true,
+        description: true,
+        displayOrder: true,
+        createdByUserId: true,
+        updatedByUserId: true,
+        archivedAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (isRoot) {
+      const policy = rootFolderPolicyCreateInput({
+        tenantId,
+        folderId: folder.id,
+        creatorPersonId: creatorPerson?.id ?? null,
+      });
+      await transaction.workspaceAccessGrant.createMany({
+        data: policy.accessGrants.create.map((grant) => ({
+          tenantId: grant.tenantId,
+          resourceType: grant.resourceType,
+          folderId: folder.id,
+          documentId: null,
+          subjectType: grant.subjectType,
+          accessLevel: grant.accessLevel,
+          personId: grant.personId ?? null,
+          orgUnitId: grant.orgUnitId ?? null,
+          teamId: grant.teamId ?? null,
+          roleFunctionKey: grant.roleFunctionKey ?? null,
+          roleScopeOrgUnitId: grant.roleScopeOrgUnitId ?? null,
+          roleScopeTeamId: grant.roleScopeTeamId ?? null,
+        })),
+      });
+    }
+
+    return folder;
   });
 }

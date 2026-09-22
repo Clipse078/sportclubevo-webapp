@@ -1,9 +1,14 @@
 import {
+  WorkspaceAccessInheritanceMode,
   WorkspaceDocumentStatus,
   WorkspaceDocumentVersionStatus,
 } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
+import {
+  nestedResourceInheritPolicy,
+  rootDocumentPolicyCreateInput,
+} from "@/lib/workspace/access/policy-persistence";
 import { writeAuditRecord } from "@/lib/audit/audit-record";
 import type {
   CreateWorkspaceDocumentInput,
@@ -121,6 +126,13 @@ export async function createWorkspaceDocumentWithInitialVersion(
     );
   }
 
+  const creatorPerson = await prisma.person.findFirst({
+    where: { tenantId, userId: actorUserId },
+    select: { id: true },
+  });
+
+  const isRootDocument = folderId == null;
+
   return prisma.$transaction(async (transaction) => {
     const document = await transaction.workspaceDocument.create({
       data: {
@@ -131,11 +143,38 @@ export async function createWorkspaceDocumentWithInitialVersion(
         status: WorkspaceDocumentStatus.ACTIVE,
         createdByUserId: actorUserId,
         updatedByUserId: actorUserId,
+        accessInheritanceMode: isRootDocument
+          ? WorkspaceAccessInheritanceMode.EXPLICIT
+          : nestedResourceInheritPolicy().accessInheritanceMode,
       },
       select: {
         id: true,
       },
     });
+
+    if (isRootDocument) {
+      const policy = rootDocumentPolicyCreateInput({
+        tenantId,
+        documentId: document.id,
+        creatorPersonId: creatorPerson?.id ?? null,
+      });
+      await transaction.workspaceAccessGrant.createMany({
+        data: policy.accessGrants.create.map((grant) => ({
+          tenantId: grant.tenantId,
+          resourceType: grant.resourceType,
+          folderId: null,
+          documentId: document.id,
+          subjectType: grant.subjectType,
+          accessLevel: grant.accessLevel,
+          personId: grant.personId ?? null,
+          orgUnitId: grant.orgUnitId ?? null,
+          teamId: grant.teamId ?? null,
+          roleFunctionKey: grant.roleFunctionKey ?? null,
+          roleScopeOrgUnitId: grant.roleScopeOrgUnitId ?? null,
+          roleScopeTeamId: grant.roleScopeTeamId ?? null,
+        })),
+      });
+    }
 
     const version = await transaction.workspaceDocumentVersion.create({
       data: {
@@ -218,12 +257,19 @@ export async function listWorkspaceDocuments(
   const tenantId = normalizeRequiredText(input.tenantId, "tenantId");
   const folderId = normalizeOptionalText(input.folderId);
 
+  const authorizedIds = input.authorizedDocumentIds;
+  const idFilter =
+    authorizedIds.length === 0
+      ? { in: ["__workspace_unauthorized__"] as string[] }
+      : { in: [...authorizedIds] };
+
   return prisma.workspaceDocument.findMany({
     where: {
       tenantId,
       folderId,
       status: WorkspaceDocumentStatus.ACTIVE,
       archivedAt: null,
+      id: idFilter,
     },
     orderBy: [
       {
