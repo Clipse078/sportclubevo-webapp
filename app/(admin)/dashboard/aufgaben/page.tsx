@@ -17,6 +17,14 @@ import { canViewAllTasks, hasTaskPermission } from "@/lib/tasks/visibility";
 import AufgabenManagementWorkspace from "@/components/admin/aufgaben/AufgabenManagementWorkspace";
 import PersonalActionsInbox from "@/components/admin/aufgaben/PersonalActionsInbox";
 import AufgabenScopeToggle from "@/components/admin/aufgaben/AufgabenScopeToggle";
+import RequirementsManagementWorkspace from "@/components/admin/aufgaben/RequirementsManagementWorkspace";
+import { getRequirementServiceContext } from "@/lib/requirements/server-context";
+import { canCreateRequirement } from "@/lib/requirements/requirement-authorization";
+import {
+  getRequirementManagementSummary,
+  listRequirementManagementItems,
+} from "@/lib/requirements/management-service";
+import { resolveRequirementManagementQuery } from "@/lib/requirements/management-navigation";
 import { requirePersonalActionsModuleAccess } from "@/lib/personal-actions/require-module-access";
 import { countPersonalActions, loadPersonalActions } from "@/lib/personal-actions";
 import {
@@ -65,8 +73,65 @@ export default async function AufgabenPage({ searchParams }: Props) {
   const fmtCfg = { locale, timezone: timeZone };
 
   const showManagement = capabilities.taskManagement;
+  const showRequirementManagement = capabilities.requirementManagement;
   const effectiveBereich =
-    bereich === "verwaltung" && showManagement ? "verwaltung" : "meine";
+    bereich === "anforderungen" && showRequirementManagement
+      ? "anforderungen"
+      : bereich === "verwaltung" && showManagement
+        ? "verwaltung"
+        : "meine";
+
+  if (effectiveBereich === "anforderungen") {
+    const reqCtx = await getRequirementServiceContext();
+    if (!reqCtx) return null;
+
+    const reqQuery = resolveRequirementManagementQuery(params);
+    let summary: Awaited<ReturnType<typeof getRequirementManagementSummary>> = {
+      active: 0,
+      openRecipients: 0,
+      overdue: 0,
+      completed: 0,
+    };
+    let items: Awaited<ReturnType<typeof listRequirementManagementItems>>["items"] = [];
+    let totalCount = 0;
+    let page = 1;
+    let pageCount = 1;
+    let loadError = false;
+
+    try {
+      const [summaryResult, listResult] = await Promise.all([
+        getRequirementManagementSummary(reqCtx),
+        listRequirementManagementItems(reqCtx, reqQuery, new Date()),
+      ]);
+      summary = summaryResult;
+      items = listResult.items;
+      totalCount = listResult.totalCount;
+      page = listResult.page;
+      pageCount = listResult.pageCount;
+    } catch {
+      loadError = true;
+    }
+
+    const canCreate = canCreateRequirement(reqCtx);
+
+    return (
+      <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
+        <RequirementsManagementWorkspace
+          locale={locale}
+          timeZone={timeZone}
+          query={reqQuery}
+          summary={summary}
+          items={items}
+          totalCount={totalCount}
+          page={page}
+          pageCount={pageCount}
+          canCreate={canCreate}
+          showTaskManagementScope={showManagement}
+          loadError={loadError}
+        />
+      </div>
+    );
+  }
 
   if (effectiveBereich === "meine") {
     const [rawActions, actionCounts] = await Promise.all([
@@ -104,6 +169,7 @@ export default async function AufgabenPage({ searchParams }: Props) {
           locale={locale}
           timeZone={timeZone}
           showManagementScope={showManagement}
+          showRequirementScope={showRequirementManagement}
           bereich="meine"
           filter={inboxFilter}
           showSourceFilters={hasMixedSources}
@@ -171,9 +237,13 @@ export default async function AufgabenPage({ searchParams }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-[120rem] px-4 py-4 sm:px-6">
-      {showManagement ? (
+      {showManagement || showRequirementManagement ? (
         <div className="mb-4">
-          <AufgabenScopeToggle active="verwaltung" showManagement />
+          <AufgabenScopeToggle
+            active="verwaltung"
+            showManagement={showManagement}
+            showRequirements={showRequirementManagement}
+          />
         </div>
       ) : null}
       <AufgabenManagementWorkspace

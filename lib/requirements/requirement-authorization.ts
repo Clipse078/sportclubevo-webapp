@@ -75,7 +75,9 @@ export function canListRequirementRecipients(
   ctx: RequirementServiceContext,
   record: RequirementAuthorizationRecord,
 ): boolean {
-  return canManageRequirement(ctx, record);
+  return (
+    canManageRequirement(ctx, record) || canReadRequirementAggregate(ctx, record)
+  );
 }
 
 export function canReadOwnRequirementRecipient(

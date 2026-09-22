@@ -19,6 +19,7 @@ type Props = {
   locale: string;
   timeZone: string;
   showManagementScope: boolean;
+  showRequirementScope?: boolean;
   bereich: AufgabenBereich;
   filter: PersonalInboxFilterParam;
   showSourceFilters: boolean;
@@ -43,6 +44,7 @@ const FILTER_LABELS: Record<PersonalInboxFilterParam, string> = {
 export default function PersonalActionsInbox({
   items,
   showManagementScope,
+  showRequirementScope = false,
   bereich,
   filter,
   showSourceFilters,
@@ -70,6 +72,7 @@ export default function PersonalActionsInbox({
           <AufgabenScopeToggle
             active={bereich}
             showManagement={showManagementScope}
+            showRequirements={showRequirementScope}
             basePath={basePath}
           />
           {quickCreate?.canCreateSelf ? (
