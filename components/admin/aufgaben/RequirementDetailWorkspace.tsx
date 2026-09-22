@@ -15,7 +15,9 @@ import {
 } from "@/lib/requirements/presentation";
 import TaskDescriptionFormField from "./TaskDescriptionFormField";
 import TaskDescriptionContent from "./TaskDescriptionContent";
-import RequirementPersonMultiPicker from "./RequirementPersonMultiPicker";
+import RequirementAudienceBuilder from "./RequirementAudienceBuilder";
+import { TaskReminderFields } from "./TaskReminderFields";
+import type { RequirementAudienceSelection } from "@/lib/requirements/types";
 import {
   activateRequirementAction,
   cancelRequirementAction,
@@ -28,6 +30,12 @@ type Props = {
   requirement: RequirementDto;
   aggregate: RequirementAggregateDto | null;
   audienceKnown: RequirementPersonOption[];
+  audienceKnownLabels: {
+    teams: { teamId: string; label: string }[];
+    orgUnits: { orgUnitId: string; label: string }[];
+    roles: { roleId: string; label: string }[];
+    targetGroups: { targetGroupId: string; label: string }[];
+  } | null;
   matrixRows: RequirementRecipientMatrixRow[];
   matrixTotalCount: number;
   matrixPage: number;
@@ -54,6 +62,7 @@ export default function RequirementDetailWorkspace({
   requirement,
   aggregate,
   audienceKnown,
+  audienceKnownLabels,
   matrixRows,
   matrixTotalCount,
   matrixPage,
@@ -67,7 +76,33 @@ export default function RequirementDetailWorkspace({
   const searchParams = useSearchParams();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [audienceIds, setAudienceIds] = useState(requirement.draftAudiencePersonIds);
+  const [audience, setAudience] = useState<RequirementAudienceSelection>({
+    personIds: requirement.draftAudiencePersonIds,
+    teamIds: requirement.draftAudienceTeamIds,
+    orgUnitIds: requirement.draftAudienceOrgUnitIds,
+    roleIds: requirement.draftAudienceRoleIds,
+    targetGroupIds: requirement.draftAudienceTargetGroupIds,
+  });
+  const audienceKnownLabelMaps = useMemo(
+    () => ({
+      teams: Object.fromEntries(audienceKnownLabels?.teams.map((t) => [t.teamId, t.label]) ?? []),
+      orgUnits: Object.fromEntries(
+        audienceKnownLabels?.orgUnits.map((o) => [o.orgUnitId, o.label]) ?? [],
+      ),
+      roles: Object.fromEntries(audienceKnownLabels?.roles.map((r) => [r.roleId, r.label]) ?? []),
+      targetGroups: Object.fromEntries(
+        audienceKnownLabels?.targetGroups.map((g) => [g.targetGroupId, g.label]) ?? [],
+      ),
+    }),
+    [audienceKnownLabels],
+  );
+  const hasAnyAudience =
+    audience.personIds.length +
+      audience.teamIds.length +
+      audience.orgUnitIds.length +
+      audience.roleIds.length +
+      audience.targetGroupIds.length >
+    0;
   const [publishOpen, setPublishOpen] = useState(false);
   const [closeOpen, setCloseOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -92,7 +127,11 @@ export default function RequirementDetailWorkspace({
 
   function onSaveDraft(formData: FormData) {
     setError(null);
-    formData.set("audiencePersonIds", audienceIds.join(","));
+    formData.set("audiencePersonIds", audience.personIds.join(","));
+    formData.set("audienceTeamIds", audience.teamIds.join(","));
+    formData.set("audienceOrgUnitIds", audience.orgUnitIds.join(","));
+    formData.set("audienceRoleIds", audience.roleIds.join(","));
+    formData.set("audienceTargetGroupIds", audience.targetGroupIds.join(","));
     startTransition(async () => {
       const result = await updateRequirementDraftAction(requirement.id, formData);
       if (!result.ok) {
@@ -109,7 +148,11 @@ export default function RequirementDetailWorkspace({
       const formEl = document.getElementById("requirement-draft-form") as HTMLFormElement | null;
       if (formEl) {
         const formData = new FormData(formEl);
-        formData.set("audiencePersonIds", audienceIds.join(","));
+        formData.set("audiencePersonIds", audience.personIds.join(","));
+    formData.set("audienceTeamIds", audience.teamIds.join(","));
+    formData.set("audienceOrgUnitIds", audience.orgUnitIds.join(","));
+    formData.set("audienceRoleIds", audience.roleIds.join(","));
+    formData.set("audienceTargetGroupIds", audience.targetGroupIds.join(","));
         const saveResult = await updateRequirementDraftAction(requirement.id, formData);
         if (!saveResult.ok) {
           setError(saveResult.message);
@@ -206,21 +249,34 @@ export default function RequirementDetailWorkspace({
             disabled={!canManage || pending}
             compact
           />
-          <label className="block space-y-1">
-            <span className="text-xs font-medium text-[var(--text-2)]">Fällig am</span>
-            <input
-              type="date"
-              name="dueAt"
-              defaultValue={requirement.dueAt?.slice(0, 10) ?? ""}
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="block space-y-1">
+              <span className="text-xs font-medium text-[var(--text-2)]">Fällig am</span>
+              <input
+                type="date"
+                name="dueAt"
+                defaultValue={requirement.dueAt?.slice(0, 10) ?? ""}
+                disabled={!canManage || pending}
+                className="w-full rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
+              />
+            </label>
+            <TaskReminderFields
+              timeZone={timeZone}
               disabled={!canManage || pending}
-              className="rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
+              values={{
+                reminder1PresetKey: requirement.reminder1PresetKey,
+                reminder2PresetKey: requirement.reminder2PresetKey,
+                reminder1At: requirement.reminder1At,
+                reminder2At: requirement.reminder2At,
+              }}
             />
-          </label>
-          <RequirementPersonMultiPicker
-            selectedIds={audienceIds}
-            onSelectedIdsChange={setAudienceIds}
+          </div>
+          <RequirementAudienceBuilder
+            value={audience}
+            onChange={setAudience}
             disabled={!canManage || pending}
-            initialKnown={audienceKnown}
+            knownLabels={audienceKnownLabelMaps}
+            initialKnownPersons={audienceKnown}
           />
           {canManage ? (
             <div className="flex flex-wrap gap-2">
@@ -230,7 +286,7 @@ export default function RequirementDetailWorkspace({
               <button
                 type="button"
                 className="fca-button-primary text-sm"
-                disabled={pending || audienceIds.length === 0}
+                disabled={pending || !hasAnyAudience}
                 onClick={() => setPublishOpen(true)}
                 data-testid="requirement-publish-open"
               >
@@ -239,9 +295,9 @@ export default function RequirementDetailWorkspace({
             </div>
           ) : null}
           <p className="text-xs text-[var(--muted)]">
-            {audienceIds.length === 1
-              ? "1 Person ausgewählt"
-              : `${audienceIds.length} Personen ausgewählt`}
+            {hasAnyAudience
+              ? "Empfänger werden beim Veröffentlichen als Snapshot festgelegt."
+              : "Noch keine Empfänger ausgewählt."}
           </p>
         </form>
       ) : (
@@ -408,8 +464,8 @@ export default function RequirementDetailWorkspace({
           >
             <h2 className="text-base font-semibold">Anforderung veröffentlichen?</h2>
             <p className="mt-2 text-sm text-[var(--text-2)]">
-              {audienceIds.length} Personen werden als Empfänger übernommen. Die Empfängerliste kann
-              danach nicht mehr direkt geändert werden.
+              Die ausgewählten Empfänger werden beim Veröffentlichen als Snapshot übernommen. Die
+              Empfängerliste kann danach nicht mehr direkt geändert werden.
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button type="button" className="fca-button-secondary text-sm" onClick={() => setPublishOpen(false)}>

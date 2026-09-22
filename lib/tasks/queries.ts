@@ -1,16 +1,20 @@
 import { prisma } from "@/lib/db/prisma";
+import {
+  ELIGIBLE_TASK_ASSIGNEE_SEARCH_LIMIT,
+  ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS,
+} from "./quick-create-assignee-search";
+import {
+  enrichTaskAssigneeOptionsWithDisplayNames,
+  splitTaskResponsibleDisplayName,
+} from "./task-assignee-display";
 
 export type TaskAssigneeOption = {
   userId: string;
   firstName: string;
   lastName: string;
   email: string;
+  displayName: string;
 };
-
-import {
-  ELIGIBLE_TASK_ASSIGNEE_SEARCH_LIMIT,
-  ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS,
-} from "./quick-create-assignee-search";
 
 export async function searchEligibleTaskAssignees(
   tenantId: string,
@@ -54,7 +58,7 @@ export async function searchEligibleTaskAssignees(
     take: limit,
   });
 
-  return memberships
+  const base = memberships
     .map((m) => m.user)
     .filter((u) => u.isActive)
     .map((u) => ({
@@ -62,7 +66,9 @@ export async function searchEligibleTaskAssignees(
       firstName: u.firstName,
       lastName: u.lastName,
       email: u.email,
+      displayName: "",
     }));
+  return enrichTaskAssigneeOptionsWithDisplayNames(tenantId, base);
 }
 
 export async function listEligibleTaskAssignees(
@@ -84,7 +90,7 @@ export async function listEligibleTaskAssignees(
     orderBy: { user: { lastName: "asc" } },
   });
 
-  return memberships
+  const base = memberships
     .map((m) => m.user)
     .filter((u) => u.isActive)
     .map((u) => ({
@@ -92,5 +98,9 @@ export async function listEligibleTaskAssignees(
       firstName: u.firstName,
       lastName: u.lastName,
       email: u.email,
+      displayName: "",
     }));
+  return enrichTaskAssigneeOptionsWithDisplayNames(tenantId, base);
 }
+
+export { splitTaskResponsibleDisplayName };

@@ -73,6 +73,11 @@ function mapRequirement(row: RequirementRow): RequirementDto {
     status: row.status,
     responseMode: row.responseMode,
     dueAt: row.dueAt?.toISOString() ?? null,
+    reminder1At: row.reminder1At?.toISOString() ?? null,
+    reminder2At: row.reminder2At?.toISOString() ?? null,
+    reminder1PresetKey: row.reminder1PresetKey,
+    reminder2PresetKey: row.reminder2PresetKey,
+    remindersConfigured: row.remindersConfigured,
     activatedAt: row.activatedAt?.toISOString() ?? null,
     closedAt: row.closedAt?.toISOString() ?? null,
     cancelledAt: row.cancelledAt?.toISOString() ?? null,
@@ -260,6 +265,11 @@ export async function createRequirementDraft(
       description: input.description?.trim() || null,
       responseMode: input.responseMode ?? "ACKNOWLEDGE",
       dueAt: input.dueAt ?? null,
+      reminder1At: input.reminder1At ?? null,
+      reminder2At: input.reminder2At ?? null,
+      reminder1PresetKey: input.reminder1PresetKey ?? null,
+      reminder2PresetKey: input.reminder2PresetKey ?? null,
+      remindersConfigured: input.remindersConfigured ?? false,
       createdByUserId: ctx.userId,
     },
     include: REQUIREMENT_INCLUDE,
@@ -289,6 +299,13 @@ export async function updateRequirementDraft(
     if (input.description !== undefined) data.description = input.description?.trim() || null;
     if (input.responseMode !== undefined) data.responseMode = input.responseMode;
     if (input.dueAt !== undefined) data.dueAt = input.dueAt;
+    if (input.reminder1At !== undefined) data.reminder1At = input.reminder1At;
+    if (input.reminder2At !== undefined) data.reminder2At = input.reminder2At;
+    if (input.reminder1PresetKey !== undefined) data.reminder1PresetKey = input.reminder1PresetKey;
+    if (input.reminder2PresetKey !== undefined) data.reminder2PresetKey = input.reminder2PresetKey;
+    if (input.remindersConfigured !== undefined) {
+      data.remindersConfigured = input.remindersConfigured;
+    }
   } else if (existing.status === "ACTIVE") {
     if (input.responseMode !== undefined && input.responseMode !== existing.responseMode) {
       throw new RequirementValidationError("Response mode is frozen after activation");
@@ -296,6 +313,13 @@ export async function updateRequirementDraft(
     if (input.title !== undefined) data.title = normalizeTitle(input.title);
     if (input.description !== undefined) data.description = input.description?.trim() || null;
     if (input.dueAt !== undefined) data.dueAt = input.dueAt;
+    if (input.reminder1At !== undefined) data.reminder1At = input.reminder1At;
+    if (input.reminder2At !== undefined) data.reminder2At = input.reminder2At;
+    if (input.reminder1PresetKey !== undefined) data.reminder1PresetKey = input.reminder1PresetKey;
+    if (input.reminder2PresetKey !== undefined) data.reminder2PresetKey = input.reminder2PresetKey;
+    if (input.remindersConfigured !== undefined) {
+      data.remindersConfigured = input.remindersConfigured;
+    }
   } else {
     throw new RequirementValidationError("Invalid requirement status for update");
   }

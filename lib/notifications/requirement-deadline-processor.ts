@@ -10,6 +10,7 @@ import {
   TASK_DUE_SOON_LEAD_MS,
 } from "./constants";
 import {
+  openRequirementRecipientExplicitReminderWhere,
   openRequirementRecipientOverdueWhere,
   openRequirementRecipientReminderWhere,
 } from "@/lib/requirements/requirement-deadlines";
@@ -101,26 +102,22 @@ export async function processRequirementDeadlineNotifications(
     const locale = tenant?.locale ?? "de-CH";
     const timeZone = tenant?.timezone ?? "Europe/Zurich";
 
-    const reminderCandidates = await fetchRecipientBatch(
-      {
-        tenantId,
-        ...openRequirementRecipientReminderWhere(now, TASK_DUE_SOON_LEAD_MS),
-      },
-      now,
-    );
+    type ReminderCandidate = Awaited<ReturnType<typeof fetchRecipientBatch>>[number];
 
-    if (reminderCandidates.length > 0) {
+    async function emitReminderBatch(candidates: ReminderCandidate[], stageSuffix: string) {
+      if (candidates.length === 0) return;
+
       const subjectContexts = await loadSubjectPersonNotificationContexts(
         tenantId,
-        reminderCandidates.map((r) => r.subjectPersonId),
+        candidates.map((r) => r.subjectPersonId),
       );
 
       const reminderPairs: Array<{
-        row: (typeof reminderCandidates)[number];
+        row: ReminderCandidate;
         recipientUserId: string;
       }> = [];
 
-      for (const row of reminderCandidates) {
+      for (const row of candidates) {
         const dueAt = row.requirement.dueAt;
         if (!dueAt) continue;
         const subject = subjectContexts.get(row.subjectPersonId);
@@ -152,7 +149,7 @@ export async function processRequirementDeadlineNotifications(
           dueLabel,
         });
         const pref = reminderPrefs.get(pair.recipientUserId)!;
-        const dueAtIso = dueAt.toISOString();
+        const dueAtIso = `${dueAt.toISOString()}${stageSuffix}`;
 
         const result = await prisma.$transaction(async (tx) =>
           createNotificationIdempotent(tx, {
@@ -174,6 +171,26 @@ export async function processRequirementDeadlineNotifications(
         );
         if (result?.kind === "CREATED") reminderCreated += 1;
       }
+    }
+
+    const legacyReminderCandidates = await fetchRecipientBatch(
+      {
+        tenantId,
+        ...openRequirementRecipientReminderWhere(now, TASK_DUE_SOON_LEAD_MS),
+      },
+      now,
+    );
+    await emitReminderBatch(legacyReminderCandidates, "");
+
+    for (const stage of [1, 2] as const) {
+      const explicitCandidates = await fetchRecipientBatch(
+        {
+          tenantId,
+          ...openRequirementRecipientExplicitReminderWhere(now, stage),
+        },
+        now,
+      );
+      await emitReminderBatch(explicitCandidates, `:r${stage}`);
     }
 
     const overdueCandidates = await fetchRecipientBatch(

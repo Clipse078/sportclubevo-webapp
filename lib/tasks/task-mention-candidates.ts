@@ -49,6 +49,7 @@ function mapMembershipRows(
       firstName: u.firstName,
       lastName: u.lastName,
       email: u.email,
+      displayName: `${u.firstName} ${u.lastName}`.trim(),
     }));
 }
 

@@ -366,6 +366,7 @@ function AssigneeEditor({
         firstName: a.firstName,
         lastName: a.lastName,
         email: "",
+        displayName: a.displayName,
       })),
     [task.assignees],
   );
@@ -410,7 +411,7 @@ function AssigneeAvatars({ assignees }: { assignees: TaskDto["assignees"] }) {
             {a.firstName.charAt(0)}
             {a.lastName.charAt(0)}
           </span>
-          {formatAssigneeName(a.firstName, a.lastName)}
+          {formatAssigneeName(a.firstName, a.lastName, a.displayName)}
         </span>
       ))}
       {overflow > 0 ? (

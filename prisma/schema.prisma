@@ -3172,6 +3172,13 @@ model Requirement {
   status          RequirementStatus       @default(DRAFT)
   responseMode    RequirementResponseMode @default(ACKNOWLEDGE)
   dueAt           DateTime?
+  /// AUFGABEN-06G7 — explicit reminder schedule (canonical task reminder semantics).
+  reminder1At     DateTime?
+  reminder2At     DateTime?
+  reminder1PresetKey String?
+  reminder2PresetKey String?
+  /// When true, UI/admin configured reminders; null presets/at = no reminder (not legacy due-soon window).
+  remindersConfigured Boolean             @default(false)
   activatedAt     DateTime?
   closedAt        DateTime?
   cancelledAt     DateTime?
@@ -3192,6 +3199,8 @@ model Requirement {
   @@index([tenantId, status])
   @@index([tenantId, dueAt])
   @@index([tenantId, status, dueAt])
+  @@index([tenantId, status, reminder1At])
+  @@index([tenantId, status, reminder2At])
 }
 
 /// Explicit Person audience while Requirement remains DRAFT (relational, not JSON).

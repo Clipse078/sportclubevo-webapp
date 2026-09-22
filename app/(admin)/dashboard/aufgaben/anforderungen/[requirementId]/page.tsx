@@ -9,6 +9,7 @@ import {
   type RequirementRecipientMatrixFilter,
 } from "@/lib/requirements/management-service";
 import { loadRequirementPersonOptionsByIds } from "@/lib/requirements/person-search";
+import { loadRequirementAudienceLabels } from "@/lib/requirements/audience-selector-search";
 import { RequirementForbiddenError } from "@/lib/requirements/errors";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +55,17 @@ export default async function RequirementDetailPage({ params, searchParams }: Pr
         )
       : [];
 
+  const audienceKnownLabels =
+    detail.requirement.status === "DRAFT"
+      ? await loadRequirementAudienceLabels({
+          tenantId: ctx.tenantId,
+          teamIds: detail.requirement.draftAudienceTeamIds,
+          orgUnitIds: detail.requirement.draftAudienceOrgUnitIds,
+          roleIds: detail.requirement.draftAudienceRoleIds,
+          targetGroupIds: detail.requirement.draftAudienceTargetGroupIds,
+        })
+      : null;
+
   let matrixRows: Awaited<ReturnType<typeof listRequirementRecipientMatrix>>["rows"] = [];
   let matrixTotalCount = 0;
   let matrixPage = 1;
@@ -79,6 +91,7 @@ export default async function RequirementDetailPage({ params, searchParams }: Pr
         requirement={detail.requirement}
         aggregate={detail.aggregate}
         audienceKnown={audienceKnown}
+        audienceKnownLabels={audienceKnownLabels}
         matrixRows={matrixRows}
         matrixTotalCount={matrixTotalCount}
         matrixPage={matrixPage}

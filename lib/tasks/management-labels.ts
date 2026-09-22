@@ -85,7 +85,13 @@ export const TASK_SERIES_STATUS_LABELS = {
 export const TASK_SERIES_EDIT_FUTURE_NOTICE =
   "Änderungen gelten für neu erzeugte Aufgaben. Bereits erstellte Aufgaben bleiben unverändert.";
 
-export function formatAssigneeName(firstName: string, lastName: string): string {
+export function formatAssigneeName(
+  firstName: string,
+  lastName: string,
+  displayName?: string | null,
+): string {
+  const canonical = displayName?.trim();
+  if (canonical) return canonical;
   return `${firstName} ${lastName}`.trim();
 }
 

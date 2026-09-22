@@ -24,8 +24,8 @@ type Props = {
   form?: string;
 };
 
-function formatName(firstName: string, lastName: string): string {
-  return `${firstName} ${lastName}`.trim();
+function formatName(firstName: string, lastName: string, displayName?: string): string {
+  return displayName?.trim() || `${firstName} ${lastName}`.trim();
 }
 
 export default function TaskPeopleMultiPicker({
@@ -118,12 +118,12 @@ export default function TaskPeopleMultiPicker({
             key={person.userId}
             className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-2)]/60 pl-2 pr-1 py-0.5 text-xs text-[var(--text-2)]"
           >
-            {formatName(person.firstName, person.lastName)}
+            {formatName(person.firstName, person.lastName, person.displayName)}
             {locked.has(person.userId) ? null : (
               <button
                 type="button"
                 className="rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-3)]"
-                aria-label={`${formatName(person.firstName, person.lastName)} entfernen`}
+                aria-label={`${formatName(person.firstName, person.lastName, person.displayName)} entfernen`}
                 onClick={() => removePerson(person.userId)}
                 disabled={disabled}
               >
@@ -175,7 +175,7 @@ export default function TaskPeopleMultiPicker({
                       onClick={() => addPerson(person.userId, person)}
                     >
                       <span className="font-medium text-[var(--foreground)]">
-                        {formatName(person.firstName, person.lastName)}
+                        {formatName(person.firstName, person.lastName, person.displayName)}
                       </span>
                       {person.email ? (
                         <span className="ml-1 text-xs text-[var(--muted)]">{person.email}</span>

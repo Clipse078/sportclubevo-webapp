@@ -26,6 +26,7 @@ import {
   canViewAllTasks,
   loadAuthorizedParentTaskRefs,
 } from "./visibility";
+import { enrichTaskDtosWithResponsibleDisplayNames } from "./task-assignee-display";
 import {
   endOfWeekSunday,
   getUpcomingHorizonEnd,
@@ -126,6 +127,7 @@ function mapTask(row: TaskRow): TaskDto {
       userId: a.userId,
       firstName: a.user.firstName,
       lastName: a.user.lastName,
+      displayName: `${a.user.firstName} ${a.user.lastName}`.trim(),
       assignedAt: a.assignedAt.toISOString(),
     })),
   };
@@ -361,18 +363,34 @@ async function batchEnrichRoots(
     childrenByParent.set(parentId, list);
   }
 
+  const enrichedById = new Map(
+    (
+      await enrichTaskDtosWithResponsibleDisplayNames(ctx.tenantId, [
+        ...roots,
+        ...Array.from(childrenByParent.values()).flat(),
+      ])
+    ).map((task) => [task.id, task]),
+  );
+  const enrichedRoots = roots.map((task) => enrichedById.get(task.id) ?? task);
+  for (const [parentId, subtasks] of childrenByParent) {
+    childrenByParent.set(
+      parentId,
+      subtasks.map((subtask) => enrichedById.get(subtask.id) ?? subtask),
+    );
+  }
+
   const contextMap = await loadContextPresentationsForTasks(
     ctx,
-    roots,
+    enrichedRoots,
     locale,
     timeZone,
   );
   const orgPresentation = await resolveTaskOrgUnitPresentationBatch(
     ctx.tenantId,
-    roots.map((t) => t.orgUnitId).filter((id): id is string => Boolean(id)),
+    enrichedRoots.map((t) => t.orgUnitId).filter((id): id is string => Boolean(id)),
   );
 
-  return roots.map((task) => {
+  return enrichedRoots.map((task) => {
     const subtasks = childrenByParent.get(task.id) ?? [];
     const progress = computeSubtaskProgress(subtasks.map((s) => ({ status: s.status })));
     const seriesRecurrenceLabel = task.taskSeriesId
@@ -426,23 +444,41 @@ async function batchEnrichPersonalRows(
     }
   }
 
+  const enrichedById = new Map(
+    (
+      await enrichTaskDtosWithResponsibleDisplayNames(ctx.tenantId, [
+        ...personal,
+        ...Array.from(childrenByParent.values()).flat(),
+      ])
+    ).map((task) => [task.id, task]),
+  );
+  const enrichedPersonal = personal.map((task) => enrichedById.get(task.id) ?? task);
+  for (const [parentId, subtasks] of childrenByParent) {
+    childrenByParent.set(
+      parentId,
+      subtasks.map((subtask) => enrichedById.get(subtask.id) ?? subtask),
+    );
+  }
+
   const contextMap = await loadContextPresentationsForTasks(
     ctx,
-    personal,
+    enrichedPersonal,
     locale,
     timeZone,
   );
+
   const orgPresentation = await resolveTaskOrgUnitPresentationBatch(
     ctx.tenantId,
-    personal.map((t) => t.orgUnitId).filter((id): id is string => Boolean(id)),
+    enrichedPersonal.map((t) => t.orgUnitId).filter((id): id is string => Boolean(id)),
   );
 
-  return personal.map((task) => {
+  return personal.map((personalRow) => {
+    const task = enrichedById.get(personalRow.id) ?? personalRow;
     const subtasks = task.parentTaskId ? [] : childrenByParent.get(task.id) ?? [];
     const progress = computeSubtaskProgress(subtasks.map((s) => ({ status: s.status })));
     return {
       task,
-      parentTask: task.parentTask,
+      parentTask: personalRow.parentTask,
       subtasks,
       progress: {
         ...progress,

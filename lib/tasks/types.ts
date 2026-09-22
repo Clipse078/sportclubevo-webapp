@@ -15,6 +15,8 @@ export type TaskAssigneeDto = {
   userId: string;
   firstName: string;
   lastName: string;
+  /** Canonical Person-first label for responsibility UI. */
+  displayName: string;
   assignedAt: string;
 };
 

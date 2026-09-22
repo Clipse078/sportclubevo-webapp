@@ -96,6 +96,7 @@ function mapTask(row: TaskRow): TaskDto {
       userId: a.userId,
       firstName: a.user.firstName,
       lastName: a.user.lastName,
+      displayName: `${a.user.firstName} ${a.user.lastName}`.trim(),
       assignedAt: a.assignedAt.toISOString(),
     })),
   };
