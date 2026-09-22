@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   buildParticipationPersonalActionId,
+  buildRequirementPersonalActionId,
   buildTaskPersonalActionId,
 } from "../identity";
 
 describe("AUFGABEN-05 — PersonalAction stable identity", () => {
   it("TASK — task:{taskId}", () => {
     expect(buildTaskPersonalActionId("abc")).toBe("task:abc");
+  });
+
+  it("REQUIREMENT — requirement:{requirementRecipientId}", () => {
+    expect(buildRequirementPersonalActionId("recip-99")).toBe("requirement:recip-99");
   });
 
   it("TRAINING — participation:{personId}:TRAINING:{trainingSessionId}", () => {

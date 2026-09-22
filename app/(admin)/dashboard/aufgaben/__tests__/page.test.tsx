@@ -33,6 +33,7 @@ vi.mock("@/lib/personal-actions", () => ({
     totalActionable: 0,
     taskActionable: 0,
     attendanceActionable: 0,
+    requirementActionable: 0,
   }),
 }));
 

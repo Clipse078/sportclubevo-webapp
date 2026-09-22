@@ -5,6 +5,7 @@
 export type PersonalActionSourceType =
   | "TASK"
   | "ATTENDANCE_RESPONSE"
+  | "REQUIREMENT"
   // Future adapters (not implemented in foundation):
   | "REGISTRATION_ACTION"
   | "DOCUMENT_ACTION";
@@ -12,7 +13,7 @@ export type PersonalActionSourceType =
 /** Presentation/actionability for the personal inbox (not TaskStatus / ParticipationResponseStatus). */
 export type PersonalActionStatus = "ACTIONABLE" | "RESOLVED";
 
-export type PersonalActionKind = "TASK" | "PARTICIPATION_RESPONSE";
+export type PersonalActionKind = "TASK" | "PARTICIPATION_RESPONSE" | "REQUIREMENT_ACK";
 
 export type PersonalActionSubject = {
   personId: string;
@@ -35,6 +36,14 @@ export type PersonalActionInlineActions = {
     trainingSessionId?: string;
     eventId?: string;
     allowedResponses: readonly ("YES" | "NO" | "MAYBE")[]; // MAYBE: domain-only until member UX exposes it
+  };
+  requirement?: {
+    requirementRecipientId: string;
+    requirementId: string;
+    description: string | null;
+    subjectPersonId: string;
+    subjectDisplayName: string;
+    actingForOtherPerson: boolean;
   };
 };
 
@@ -61,6 +70,7 @@ export type PersonalActionCounts = {
   totalActionable: number;
   taskActionable: number;
   attendanceActionable: number;
+  requirementActionable: number;
 };
 
 export type LoadPersonalActionsArgs = {

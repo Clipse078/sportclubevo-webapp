@@ -9,7 +9,7 @@ import type { PersonalAction, PersonalActionSourceType } from "./types";
 
 export const PERSONAL_ACTION_INBOX_DEFAULT_LIMIT = 50;
 
-export type PersonalActionSourceFilter = "all" | "tasks" | "attendance";
+export type PersonalActionSourceFilter = "all" | "tasks" | "attendance" | "requirements";
 
 /** Inline RSVP controls — only YES/NO in Meine Aufgaben (see AUFGABEN-05-PARTICIPATION). */
 export type PersonalActionInlineParticipation = {
@@ -20,6 +20,14 @@ export type PersonalActionInlineParticipation = {
   eventKind: "TRAINING" | "MATCH" | "TOURNAMENT";
   trainingSessionId?: string;
   eventId?: string;
+};
+
+export type PersonalActionInlineRequirement = {
+  personalActionId: string;
+  requirementRecipientId: string;
+  description: string | null;
+  subjectDisplayName?: string;
+  actingForOtherPerson: boolean;
 };
 
 export type PersonalActionListItem = {
@@ -33,6 +41,8 @@ export type PersonalActionListItem = {
   emphasis: "calm" | "attention" | "urgent";
   inlineParticipationReady: boolean;
   inlineParticipation?: PersonalActionInlineParticipation;
+  inlineRequirementReady: boolean;
+  inlineRequirement?: PersonalActionInlineRequirement;
 };
 
 function formatEventStartContext(iso: string, cfg: TenantFormatConfig): string {
@@ -75,12 +85,66 @@ function attendanceSubtitle(action: PersonalAction): string {
   return action.subtitle?.trim() ?? eventTitle ?? team ?? null;
 }
 
+function mapRequirementDeadlineMeta(
+  action: PersonalAction,
+  locale: string,
+  timeZone: string,
+): { metaLine: string | null; emphasis: "calm" | "attention" | "urgent" } {
+  const deadline = presentTaskDeadline({
+    dueAt: action.dueAt,
+    status: TaskStatus.OPEN,
+    locale,
+    timeZone,
+  });
+
+  if (deadline.kind === "OVERDUE") {
+    return {
+      metaLine: `Überfällig · ${deadline.label}`,
+      emphasis: deadline.emphasis,
+    };
+  }
+  if (deadline.kind !== "NONE") {
+    return { metaLine: deadline.label, emphasis: deadline.emphasis };
+  }
+  return { metaLine: null, emphasis: "calm" };
+}
+
 export function mapPersonalActionToListItem(
   action: PersonalAction,
   cfg: TenantFormatConfig,
   locale: string,
   timeZone: string,
 ): PersonalActionListItem {
+  if (action.sourceType === "REQUIREMENT") {
+    const requirement = action.inlineActions?.requirement;
+    const inlineRequirement: PersonalActionInlineRequirement | undefined = requirement
+      ? {
+          personalActionId: action.id,
+          requirementRecipientId: requirement.requirementRecipientId,
+          description: requirement.description,
+          subjectDisplayName: requirement.subjectDisplayName,
+          actingForOtherPerson: requirement.actingForOtherPerson,
+        }
+      : undefined;
+
+    const { metaLine, emphasis } = mapRequirementDeadlineMeta(action, locale, timeZone);
+    const subjectName = action.subject?.displayName?.trim();
+
+    return {
+      id: action.id,
+      sourceType: action.sourceType,
+      sourceLabel: "Anforderung",
+      title: action.title,
+      subtitle: subjectName ? `Für: ${subjectName}` : null,
+      metaLine,
+      href: action.href,
+      emphasis,
+      inlineParticipationReady: false,
+      inlineRequirementReady: Boolean(inlineRequirement),
+      inlineRequirement,
+    };
+  }
+
   if (action.sourceType === "ATTENDANCE_RESPONSE") {
     const eventStart = action.context?.eventStartAt;
     const participation = action.inlineActions?.participation;
@@ -126,6 +190,7 @@ export function mapPersonalActionToListItem(
       emphasis: action.dueAt ? deadline.emphasis : "calm",
       inlineParticipationReady: Boolean(inlineParticipation),
       inlineParticipation,
+      inlineRequirementReady: false,
     };
   }
 
@@ -153,6 +218,7 @@ export function mapPersonalActionToListItem(
     href: action.href,
     emphasis: deadline.emphasis,
     inlineParticipationReady: false,
+    inlineRequirementReady: false,
   };
 }
 
@@ -179,6 +245,9 @@ export function filterPersonalActionsForInbox(
   }
   if (filter === "attendance") {
     return actions.filter((a) => a.sourceType === "ATTENDANCE_RESPONSE");
+  }
+  if (filter === "requirements") {
+    return actions.filter((a) => a.sourceType === "REQUIREMENT");
   }
   return actions;
 }

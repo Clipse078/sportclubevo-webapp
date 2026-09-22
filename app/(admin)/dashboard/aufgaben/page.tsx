@@ -151,9 +151,8 @@ export default async function AufgabenPage({ searchParams }: Props) {
     const items = filtered.map((action) =>
       mapPersonalActionToListItem(action, fmtCfg, locale, timeZone),
     );
-    const hasMixedSources =
-      rawActions.some((a) => a.sourceType === "TASK") &&
-      rawActions.some((a) => a.sourceType === "ATTENDANCE_RESPONSE");
+    const sourceTypes = new Set(rawActions.map((a) => a.sourceType));
+    const hasMixedSources = sourceTypes.size > 1;
 
     const taskCtx = {
       tenantId,

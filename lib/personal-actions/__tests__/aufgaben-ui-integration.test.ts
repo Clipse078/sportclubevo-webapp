@@ -24,6 +24,11 @@ vi.mock("../sources/attendance-obligations", () => ({
   filterActionableAttendanceCandidates: vi.fn((rows: unknown[]) => rows),
 }));
 
+vi.mock("../sources/requirement-obligations", () => ({
+  loadRequirementObligationCandidates: vi.fn().mockResolvedValue([]),
+  countOpenRequirementObligationsForUser: vi.fn().mockResolvedValue(0),
+}));
+
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { listMyTasks } from "@/lib/tasks/task-service";
 import { getAuthorizedPersonIdsForUser } from "@/lib/participation/authorization";
@@ -101,6 +106,7 @@ describe("AUFGABEN-05-UI — multi-role integration", () => {
       userId: "vp",
       permissionKeys: [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_VIEW_ALL, PERMISSIONS.TASKS_MANAGE],
       participationNavCapable: true,
+      requirementRecipientCapable: false,
     });
     expect(caps.taskManagement).toBe(true);
 

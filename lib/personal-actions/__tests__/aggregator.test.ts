@@ -20,6 +20,11 @@ vi.mock("../sources/attendance-obligations", () => ({
   filterActionableAttendanceCandidates: vi.fn((rows: unknown[]) => rows),
 }));
 
+vi.mock("../sources/requirement-obligations", () => ({
+  loadRequirementObligationCandidates: vi.fn().mockResolvedValue([]),
+  countOpenRequirementObligationsForUser: vi.fn().mockResolvedValue(0),
+}));
+
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { countMyOpenTasks, listMyTasks } from "@/lib/tasks/task-service";
 import { getAuthorizedPersonIdsForUser } from "@/lib/participation/authorization";
@@ -238,6 +243,7 @@ describe("AUFGABEN-05 — PersonalAction aggregator", () => {
     expect(counts).toEqual({
       taskActionable: 1,
       attendanceActionable: 1,
+      requirementActionable: 0,
       totalActionable: 2,
     });
   });

@@ -39,6 +39,7 @@ const FILTER_LABELS: Record<PersonalInboxFilterParam, string> = {
   all: "Alle",
   tasks: "Aufgaben",
   attendance: "Teilnahmen",
+  requirements: "Anforderungen",
 };
 
 export default function PersonalActionsInbox({

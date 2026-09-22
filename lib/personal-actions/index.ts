@@ -14,8 +14,11 @@ export { PERSONAL_ACTION_ATTENDANCE_HORIZON_DAYS } from "./config";
 
 export {
   buildParticipationPersonalActionId,
+  buildRequirementPersonalActionId,
   buildTaskPersonalActionId,
 } from "./identity";
+
+export { parseRequirementPersonalActionId } from "./parse-requirement-action-id";
 
 export { parseParticipationPersonalActionId } from "./parse-participation-action-id";
 export {
@@ -23,6 +26,12 @@ export {
   type SubmitParticipationPersonalActionInput,
   type SubmitParticipationPersonalActionResult,
 } from "./submit-participation-response";
+
+export {
+  submitRequirementPersonalAction,
+  type SubmitRequirementPersonalActionInput,
+  type SubmitRequirementPersonalActionResult,
+} from "./submit-requirement-response";
 
 export {
   comparePersonalActions,

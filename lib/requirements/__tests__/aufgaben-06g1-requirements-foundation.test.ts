@@ -636,9 +636,9 @@ describe("AUFGABEN-06G1 Matrix Z additive capabilities", () => {
 });
 
 describe("AUFGABEN-06G1 isolation sentinels (R35–R38)", () => {
-  it("R37/R38 PersonalAction sources unchanged", () => {
-    expect(read("lib/personal-actions/types.ts")).not.toMatch(/REQUIREMENT/);
+  it("R37/R38 Task inbox adapter still not coupled to Requirement domain", () => {
     expect(read("lib/tasks/inbox-adapter.ts")).not.toMatch(/RequirementRecipient/);
+    expect(read("lib/personal-actions/types.ts")).toMatch(/REGISTRATION_ACTION/);
   });
 
   it("R12 getOwnRequirementRecipient enforces subject relationship", async () => {
