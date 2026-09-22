@@ -400,6 +400,7 @@ enum RequirementResponseValue {
 enum NotificationCategory {
   TASK
   PARTICIPATION
+  REQUIREMENT
 }
 
 enum NotificationType {
@@ -413,12 +414,18 @@ enum NotificationType {
   TASK_COMMENT
   PARTICIPATION_REMINDER
   PARTICIPATION_OVERDUE
+  REQUIREMENT_ASSIGNED
+  REQUIREMENT_REMINDER
+  REQUIREMENT_OVERDUE
+  REQUIREMENT_CHANGED
+  REQUIREMENT_CANCELLED
 }
 
 enum NotificationEntityType {
   TASK
   TRAINING_SESSION
   EVENT
+  REQUIREMENT
 }
 
 enum NotificationChannel {

@@ -22,6 +22,10 @@ import {
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { computeRequirementAggregate } from "./requirement-aggregate";
 import {
+  emitRequirementAssignedNotifications,
+  emitRequirementCancelledNotifications,
+} from "@/lib/notifications/requirement-producer";
+import {
   RequirementForbiddenError,
   RequirementNotFoundError,
   RequirementRecipientNotFoundError,
@@ -270,6 +274,13 @@ export async function activateRequirement(
 
   const activatedAt = new Date();
 
+  const tenantLocaleRow = await prisma.tenant.findUnique({
+    where: { id: ctx.tenantId },
+    select: { locale: true, timezone: true },
+  });
+  const locale = tenantLocaleRow?.locale ?? "de-CH";
+  const timeZone = tenantLocaleRow?.timezone ?? "Europe/Zurich";
+
   await prisma.$transaction(async (tx) => {
     const locked = await tx.requirement.findFirst({
       where: { id: requirementId, tenantId: ctx.tenantId },
@@ -312,6 +323,21 @@ export async function activateRequirement(
 
     await tx.requirementDraftAudiencePerson.deleteMany({
       where: { tenantId: ctx.tenantId, requirementId },
+    });
+
+    const recipients = await tx.requirementRecipient.findMany({
+      where: { tenantId: ctx.tenantId, requirementId },
+      select: { id: true, subjectPersonId: true },
+    });
+
+    await emitRequirementAssignedNotifications(tx, {
+      tenantId: ctx.tenantId,
+      requirementId,
+      requirementTitle: existing.title,
+      dueAt: existing.dueAt,
+      recipients,
+      locale,
+      timeZone,
     });
   });
 
@@ -532,6 +558,23 @@ export async function cancelRequirement(
     data: { status: "CANCELLED", cancelledAt: new Date() },
     include: REQUIREMENT_INCLUDE,
   });
+
+  const recipients = await prisma.requirementRecipient.findMany({
+    where: {
+      tenantId: ctx.tenantId,
+      requirementId,
+      removedAt: null,
+    },
+    select: { id: true, subjectPersonId: true },
+  });
+
+  await emitRequirementCancelledNotifications({
+    tenantId: ctx.tenantId,
+    requirementId,
+    requirementTitle: row.title,
+    recipients,
+  });
+
   return mapRequirement(row);
 }
 

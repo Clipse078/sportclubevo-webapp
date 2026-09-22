@@ -37,6 +37,11 @@ vi.mock("@/lib/participation/authorization", () => ({
   getAuthorizedPersonIdsForUser: mocks.authorizedPersonIds,
 }));
 
+vi.mock("@/lib/notifications/requirement-producer", () => ({
+  emitRequirementAssignedNotifications: vi.fn().mockResolvedValue(undefined),
+  emitRequirementCancelledNotifications: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     requirement: {
@@ -58,6 +63,9 @@ vi.mock("@/lib/db/prisma", () => ({
       count: mocks.recipientCount,
     },
     person: { findMany: mocks.personFindMany },
+    tenant: {
+      findUnique: vi.fn().mockResolvedValue({ locale: "de-CH", timezone: "Europe/Zurich" }),
+    },
     task: { create: mocks.taskCreate },
     participationResponse: { create: mocks.participationCreate },
     $transaction: mocks.transaction,
@@ -175,7 +183,10 @@ beforeEach(() => {
         updateMany: mocks.requirementUpdateMany,
         update: mocks.requirementUpdate,
       },
-      requirementRecipient: { createMany: mocks.recipientCreateMany },
+      requirementRecipient: {
+        createMany: mocks.recipientCreateMany,
+        findMany: mocks.recipientFindMany,
+      },
       requirementDraftAudiencePerson: {
         deleteMany: mocks.draftDeleteMany,
         createMany: mocks.draftCreateMany,
@@ -309,6 +320,7 @@ describe("AUFGABEN-06G1 draft & activation (R4–R11, R29, R35–R36)", () => {
     mocks.requirementUpdateMany.mockResolvedValue({ count: 1 });
     mocks.recipientCreateMany.mockResolvedValue({ count: 1 });
     mocks.draftDeleteMany.mockResolvedValue({ count: 1 });
+    mocks.recipientFindMany.mockResolvedValue([{ id: RECIP_ID, subjectPersonId: PERSON_A }]);
 
     const result = await activateRequirement(managerCtx(), REQ_ID);
     expect(mocks.recipientCreateMany).toHaveBeenCalled();
@@ -332,6 +344,9 @@ describe("AUFGABEN-06G1 draft & activation (R4–R11, R29, R35–R36)", () => {
     mocks.requirementUpdateMany.mockResolvedValue({ count: 1 });
     mocks.recipientCreateMany.mockResolvedValue({ count: 500 });
     mocks.draftDeleteMany.mockResolvedValue({ count: 1 });
+    mocks.recipientFindMany.mockResolvedValue(
+      personIds.map((personId, index) => ({ id: `recip-${index}`, subjectPersonId: personId })),
+    );
     mocks.personFindMany.mockImplementation(async ({ where }: { where: { id: { in: string[] } } }) =>
       where.id.in.map((id) => ({ id })),
     );
