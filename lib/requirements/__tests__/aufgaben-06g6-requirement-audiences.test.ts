@@ -115,7 +115,6 @@ describe.skipIf(!hasSafeTestDb)("AUFGABEN-06G6 — audience integration (real DB
       await prisma.requirementRecipient.deleteMany({ where: { requirementId } });
     }
     await cleanupRequirementFixture({
-      tenantIds: fixture.tenantIds,
       userIds: fixture.userIds,
       personIds: fixture.personIds,
       requirementIds: fixture.requirementIds,
@@ -139,6 +138,10 @@ describe.skipIf(!hasSafeTestDb)("AUFGABEN-06G6 — audience integration (real DB
     }
     if (fixture.targetGroupIds.length) {
       await prisma.targetGroup.deleteMany({ where: { id: { in: fixture.targetGroupIds } } });
+    }
+    if (fixture.tenantIds.length) {
+      await prisma.tenantMembership.deleteMany({ where: { tenantId: { in: fixture.tenantIds } } });
+      await prisma.tenant.deleteMany({ where: { id: { in: fixture.tenantIds } } });
     }
   });
 
