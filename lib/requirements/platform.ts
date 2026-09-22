@@ -7,6 +7,7 @@ export {
   createRequirementDraft,
   updateRequirementDraft,
   setRequirementDraftAudience,
+  setRequirementDraftAudienceSelectors,
   activateRequirement,
   cancelRequirement,
   closeRequirement,
@@ -29,7 +30,9 @@ export {
 export {
   resolveRequirementAudiencePersonIds,
   resolveRequirementAudiencePersonIdsFromDraftRows,
+  resolveRequirementAudiencePersonIdsFromSnapshot,
 } from "./requirement-audience";
+export type { RequirementDraftAudienceSnapshot } from "./requirement-audience";
 export {
   openAcknowledgeableRequirementRecipientForPersons,
   openAcknowledgeableRequirementRecipientWhere,
@@ -54,4 +57,5 @@ export type {
   RequirementRecipientDto,
   RequirementServiceContext,
   UpdateRequirementDraftInput,
+  RequirementDraftAudienceInput,
 } from "./types";

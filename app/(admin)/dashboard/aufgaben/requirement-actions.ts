@@ -6,7 +6,7 @@ import {
   cancelRequirement,
   closeRequirement,
   createRequirementDraft,
-  setRequirementDraftAudience,
+  setRequirementDraftAudienceSelectors,
   updateRequirementDraft,
 } from "@/lib/requirements/requirement-service";
 import { getRequirementServiceContext } from "@/lib/requirements/server-context";
@@ -92,8 +92,24 @@ export async function createRequirementDraftAction(
     });
 
     const audienceIds = parseIdListFromForm(formData.get("audiencePersonIds"));
-    if (audienceIds.length > 0) {
-      await setRequirementDraftAudience(ctx, draft.id, audienceIds);
+    const audienceTeamIds = parseIdListFromForm(formData.get("audienceTeamIds"));
+    const audienceOrgUnitIds = parseIdListFromForm(formData.get("audienceOrgUnitIds"));
+    const audienceRoleIds = parseIdListFromForm(formData.get("audienceRoleIds"));
+    const audienceTargetGroupIds = parseIdListFromForm(formData.get("audienceTargetGroupIds"));
+    if (
+      audienceIds.length > 0 ||
+      audienceTeamIds.length > 0 ||
+      audienceOrgUnitIds.length > 0 ||
+      audienceRoleIds.length > 0 ||
+      audienceTargetGroupIds.length > 0
+    ) {
+      await setRequirementDraftAudienceSelectors(ctx, draft.id, {
+        personIds: audienceIds,
+        teamIds: audienceTeamIds,
+        orgUnitIds: audienceOrgUnitIds,
+        roleIds: audienceRoleIds,
+        targetGroupIds: audienceTargetGroupIds,
+      });
     }
 
     revalidateRequirementPaths(draft.id);
@@ -121,9 +137,20 @@ export async function updateRequirementDraftAction(
       dueAt: formData.has("dueAt") ? parseDueAtFromForm(formData) : undefined,
     });
 
-    if (formData.has("audiencePersonIds")) {
-      const audienceIds = parseIdListFromForm(formData.get("audiencePersonIds"));
-      await setRequirementDraftAudience(ctx, requirementId, audienceIds);
+    if (
+      formData.has("audiencePersonIds") ||
+      formData.has("audienceTeamIds") ||
+      formData.has("audienceOrgUnitIds") ||
+      formData.has("audienceRoleIds") ||
+      formData.has("audienceTargetGroupIds")
+    ) {
+      await setRequirementDraftAudienceSelectors(ctx, requirementId, {
+        personIds: parseIdListFromForm(formData.get("audiencePersonIds")),
+        teamIds: parseIdListFromForm(formData.get("audienceTeamIds")),
+        orgUnitIds: parseIdListFromForm(formData.get("audienceOrgUnitIds")),
+        roleIds: parseIdListFromForm(formData.get("audienceRoleIds")),
+        targetGroupIds: parseIdListFromForm(formData.get("audienceTargetGroupIds")),
+      });
     }
 
     revalidateRequirementPaths(requirementId);

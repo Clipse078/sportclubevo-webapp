@@ -21,9 +21,13 @@ import {
 } from "./requirement-authorization";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { computeRequirementAggregate } from "./requirement-aggregate";
+import { resolveRequirementAudiencePersonIds } from "./requirement-audience";
 import {
-  resolveRequirementAudiencePersonIdsFromDraftRows,
-} from "./requirement-audience";
+  resolveOrgUnitAudiencePersonIds,
+  resolveRoleAudiencePersonIds,
+  resolveTargetGroupAudiencePersonIds,
+  resolveTeamAudiencePersonIds,
+} from "./requirement-audience-resolvers";
 import {
   emitRequirementAssignedNotifications,
   emitRequirementCancelledNotifications,
@@ -39,6 +43,7 @@ import type {
   CreateRequirementDraftInput,
   ListRequirementRecipientsFilter,
   ListRequirementsFilter,
+  RequirementDraftAudienceInput,
   RequirementDto,
   RequirementRecipientDto,
   RequirementServiceContext,
@@ -51,6 +56,10 @@ import {
 
 const REQUIREMENT_INCLUDE = {
   draftAudience: { select: { personId: true } },
+  draftAudienceTeams: { select: { teamId: true } },
+  draftAudienceOrgUnits: { select: { orgUnitId: true } },
+  draftAudienceRoles: { select: { roleId: true } },
+  draftAudienceTargetGroups: { select: { targetGroupId: true } },
 } as const;
 
 type RequirementRow = Prisma.RequirementGetPayload<{ include: typeof REQUIREMENT_INCLUDE }>;
@@ -71,6 +80,10 @@ function mapRequirement(row: RequirementRow): RequirementDto {
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     draftAudiencePersonIds: row.draftAudience.map((entry) => entry.personId),
+    draftAudienceTeamIds: row.draftAudienceTeams.map((entry) => entry.teamId),
+    draftAudienceOrgUnitIds: row.draftAudienceOrgUnits.map((entry) => entry.orgUnitId),
+    draftAudienceRoleIds: row.draftAudienceRoles.map((entry) => entry.roleId),
+    draftAudienceTargetGroupIds: row.draftAudienceTargetGroups.map((entry) => entry.targetGroupId),
   };
 }
 
@@ -131,6 +144,90 @@ async function assertSameTenantPersonIds(
   if (found.length !== personIds.length) {
     throw new RequirementTenantMismatchError("One or more persons are not in this tenant");
   }
+}
+
+function normalizeAudienceInput(input: RequirementDraftAudienceInput): {
+  personIds: string[];
+  teamIds: string[];
+  orgUnitIds: string[];
+  roleIds: string[];
+  targetGroupIds: string[];
+} {
+  return {
+    personIds: dedupePersonIds(input.personIds ?? []),
+    teamIds: dedupePersonIds(input.teamIds ?? []),
+    orgUnitIds: dedupePersonIds(input.orgUnitIds ?? []),
+    roleIds: dedupePersonIds(input.roleIds ?? []),
+    targetGroupIds: dedupePersonIds(input.targetGroupIds ?? []),
+  };
+}
+
+async function assertValidDraftAudienceSelectors(
+  tenantId: string,
+  selectors: ReturnType<typeof normalizeAudienceInput>,
+): Promise<void> {
+  await assertSameTenantPersonIds(tenantId, selectors.personIds);
+
+  try {
+    if (selectors.teamIds.length > 0) {
+      await resolveTeamAudiencePersonIds(tenantId, selectors.teamIds);
+    }
+    if (selectors.orgUnitIds.length > 0) {
+      await resolveOrgUnitAudiencePersonIds(tenantId, selectors.orgUnitIds);
+    }
+    if (selectors.roleIds.length > 0) {
+      await resolveRoleAudiencePersonIds(tenantId, selectors.roleIds);
+    }
+    if (selectors.targetGroupIds.length > 0) {
+      await resolveTargetGroupAudiencePersonIds(tenantId, selectors.targetGroupIds);
+    }
+  } catch {
+    throw new RequirementTenantMismatchError("One or more audience selectors are invalid for this tenant");
+  }
+}
+
+async function replaceRequirementDraftAudience(
+  tenantId: string,
+  requirementId: string,
+  selectors: ReturnType<typeof normalizeAudienceInput>,
+): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    await tx.requirementDraftAudiencePerson.deleteMany({ where: { tenantId, requirementId } });
+    await tx.requirementDraftAudienceTeam.deleteMany({ where: { tenantId, requirementId } });
+    await tx.requirementDraftAudienceOrgUnit.deleteMany({ where: { tenantId, requirementId } });
+    await tx.requirementDraftAudienceRole.deleteMany({ where: { tenantId, requirementId } });
+    await tx.requirementDraftAudienceTargetGroup.deleteMany({ where: { tenantId, requirementId } });
+
+    if (selectors.personIds.length > 0) {
+      await tx.requirementDraftAudiencePerson.createMany({
+        data: selectors.personIds.map((personId) => ({ tenantId, requirementId, personId })),
+      });
+    }
+    if (selectors.teamIds.length > 0) {
+      await tx.requirementDraftAudienceTeam.createMany({
+        data: selectors.teamIds.map((teamId) => ({ tenantId, requirementId, teamId })),
+      });
+    }
+    if (selectors.orgUnitIds.length > 0) {
+      await tx.requirementDraftAudienceOrgUnit.createMany({
+        data: selectors.orgUnitIds.map((orgUnitId) => ({ tenantId, requirementId, orgUnitId })),
+      });
+    }
+    if (selectors.roleIds.length > 0) {
+      await tx.requirementDraftAudienceRole.createMany({
+        data: selectors.roleIds.map((roleId) => ({ tenantId, requirementId, roleId })),
+      });
+    }
+    if (selectors.targetGroupIds.length > 0) {
+      await tx.requirementDraftAudienceTargetGroup.createMany({
+        data: selectors.targetGroupIds.map((targetGroupId) => ({
+          tenantId,
+          requirementId,
+          targetGroupId,
+        })),
+      });
+    }
+  });
 }
 
 async function loadRequirementOrThrow(
@@ -217,6 +314,14 @@ export async function setRequirementDraftAudience(
   requirementId: string,
   personIds: readonly string[],
 ): Promise<RequirementDto> {
+  return setRequirementDraftAudienceSelectors(ctx, requirementId, { personIds });
+}
+
+export async function setRequirementDraftAudienceSelectors(
+  ctx: RequirementServiceContext,
+  requirementId: string,
+  input: RequirementDraftAudienceInput,
+): Promise<RequirementDto> {
   const existing = await loadRequirementOrThrow(ctx.tenantId, requirementId);
   if (!canManageRequirement(ctx, authRecord(existing))) {
     throw new RequirementForbiddenError();
@@ -225,23 +330,9 @@ export async function setRequirementDraftAudience(
     throw new RequirementValidationError("Audience is frozen unless requirement is DRAFT");
   }
 
-  const uniquePersonIds = dedupePersonIds(personIds);
-  await assertSameTenantPersonIds(ctx.tenantId, uniquePersonIds);
-
-  await prisma.$transaction(async (tx) => {
-    await tx.requirementDraftAudiencePerson.deleteMany({
-      where: { tenantId: ctx.tenantId, requirementId },
-    });
-    if (uniquePersonIds.length > 0) {
-      await tx.requirementDraftAudiencePerson.createMany({
-        data: uniquePersonIds.map((personId) => ({
-          tenantId: ctx.tenantId,
-          requirementId,
-          personId,
-        })),
-      });
-    }
-  });
+  const selectors = normalizeAudienceInput(input);
+  await assertValidDraftAudienceSelectors(ctx.tenantId, selectors);
+  await replaceRequirementDraftAudience(ctx.tenantId, requirementId, selectors);
 
   return mapRequirement(await loadRequirementOrThrow(ctx.tenantId, requirementId));
 }
@@ -268,7 +359,7 @@ export async function activateRequirement(
     throw new RequirementValidationError("Unsupported response mode");
   }
 
-  const audiencePersonIds = resolveRequirementAudiencePersonIdsFromDraftRows(existing.draftAudience);
+  const audiencePersonIds = await resolveRequirementAudiencePersonIds(ctx.tenantId, requirementId);
   if (audiencePersonIds.length === 0) {
     throw new RequirementValidationError("Audience must not be empty");
   }
@@ -325,6 +416,18 @@ export async function activateRequirement(
     }
 
     await tx.requirementDraftAudiencePerson.deleteMany({
+      where: { tenantId: ctx.tenantId, requirementId },
+    });
+    await tx.requirementDraftAudienceTeam.deleteMany({
+      where: { tenantId: ctx.tenantId, requirementId },
+    });
+    await tx.requirementDraftAudienceOrgUnit.deleteMany({
+      where: { tenantId: ctx.tenantId, requirementId },
+    });
+    await tx.requirementDraftAudienceRole.deleteMany({
+      where: { tenantId: ctx.tenantId, requirementId },
+    });
+    await tx.requirementDraftAudienceTargetGroup.deleteMany({
       where: { tenantId: ctx.tenantId, requirementId },
     });
 

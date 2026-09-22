@@ -58,6 +58,18 @@ export async function cleanupRequirementFixture(ids: {
     await prisma.requirementDraftAudiencePerson.deleteMany({
       where: { requirementId: { in: ids.requirementIds } },
     });
+    await prisma.requirementDraftAudienceTeam.deleteMany({
+      where: { requirementId: { in: ids.requirementIds } },
+    });
+    await prisma.requirementDraftAudienceOrgUnit.deleteMany({
+      where: { requirementId: { in: ids.requirementIds } },
+    });
+    await prisma.requirementDraftAudienceRole.deleteMany({
+      where: { requirementId: { in: ids.requirementIds } },
+    });
+    await prisma.requirementDraftAudienceTargetGroup.deleteMany({
+      where: { requirementId: { in: ids.requirementIds } },
+    });
     await prisma.requirement.deleteMany({ where: { id: { in: ids.requirementIds } } });
   }
   if (ids.personIds?.length) {

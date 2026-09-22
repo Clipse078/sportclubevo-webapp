@@ -24,6 +24,10 @@ import {
 
 const REQUIREMENT_INCLUDE = {
   draftAudience: { select: { personId: true } },
+  draftAudienceTeams: { select: { teamId: true } },
+  draftAudienceOrgUnits: { select: { orgUnitId: true } },
+  draftAudienceRoles: { select: { roleId: true } },
+  draftAudienceTargetGroups: { select: { targetGroupId: true } },
   createdBy: { select: { id: true, firstName: true, lastName: true } },
 } as const;
 
@@ -73,6 +77,10 @@ function mapRequirement(row: RequirementRow): RequirementDto {
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     draftAudiencePersonIds: row.draftAudience.map((a) => a.personId),
+    draftAudienceTeamIds: row.draftAudienceTeams?.map((a) => a.teamId) ?? [],
+    draftAudienceOrgUnitIds: row.draftAudienceOrgUnits?.map((a) => a.orgUnitId) ?? [],
+    draftAudienceRoleIds: row.draftAudienceRoles?.map((a) => a.roleId) ?? [],
+    draftAudienceTargetGroupIds: row.draftAudienceTargetGroups?.map((a) => a.targetGroupId) ?? [],
   };
 }
 
