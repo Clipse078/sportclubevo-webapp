@@ -22,6 +22,9 @@ import {
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { computeRequirementAggregate } from "./requirement-aggregate";
 import {
+  resolveRequirementAudiencePersonIdsFromDraftRows,
+} from "./requirement-audience";
+import {
   emitRequirementAssignedNotifications,
   emitRequirementCancelledNotifications,
 } from "@/lib/notifications/requirement-producer";
@@ -265,7 +268,7 @@ export async function activateRequirement(
     throw new RequirementValidationError("Unsupported response mode");
   }
 
-  const audiencePersonIds = dedupePersonIds(existing.draftAudience.map((a) => a.personId));
+  const audiencePersonIds = resolveRequirementAudiencePersonIdsFromDraftRows(existing.draftAudience);
   if (audiencePersonIds.length === 0) {
     throw new RequirementValidationError("Audience must not be empty");
   }

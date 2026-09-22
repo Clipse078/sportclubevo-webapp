@@ -4,6 +4,7 @@
 
 import { prisma } from "@/lib/db/prisma";
 import { getAuthorizedPersonIdsForUser } from "@/lib/participation/authorization";
+import { openAcknowledgeableRequirementRecipientForPersons } from "@/lib/requirements/requirement-eligibility";
 
 export type RequirementObligationCandidate = {
   recipientId: string;
@@ -45,13 +46,7 @@ export async function loadRequirementObligationCandidates(
     prisma.requirementRecipient.findMany({
       where: {
         tenantId,
-        subjectPersonId: { in: [...personIds] },
-        removedAt: null,
-        resolutionStatus: "OPEN",
-        requirement: {
-          status: "ACTIVE",
-          responseMode: "ACKNOWLEDGE",
-        },
+        ...openAcknowledgeableRequirementRecipientForPersons(personIds),
       },
       select: {
         id: true,
@@ -102,13 +97,7 @@ export async function countOpenRequirementObligationsForUser(
   return prisma.requirementRecipient.count({
     where: {
       tenantId,
-      subjectPersonId: { in: [...personIds] },
-      removedAt: null,
-      resolutionStatus: "OPEN",
-      requirement: {
-        status: "ACTIVE",
-        responseMode: "ACKNOWLEDGE",
-      },
+      ...openAcknowledgeableRequirementRecipientForPersons(personIds),
     },
   });
 }

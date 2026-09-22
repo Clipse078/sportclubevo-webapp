@@ -10,6 +10,7 @@
 import { prisma } from "@/lib/db/prisma";
 import type { ParticipationResponseSource } from "@prisma/client";
 import { ParticipationUnauthorizedError } from "./errors";
+import { collectUserIdsAuthorizedToRespondForSubjectPerson } from "./subject-responder-users";
 
 export type ParticipationActorContext = {
   source: ParticipationResponseSource;
@@ -103,12 +104,5 @@ export async function getUserIdsAuthorizedToRespondForPerson(
 
   if (!person) return [];
 
-  const userIds = new Set<string>();
-  if (person.userId) userIds.add(person.userId);
-  for (const link of person.guardianRelationshipsAsChild) {
-    if (link.guardianPerson.userId) {
-      userIds.add(link.guardianPerson.userId);
-    }
-  }
-  return [...userIds];
+  return collectUserIdsAuthorizedToRespondForSubjectPerson(person);
 }

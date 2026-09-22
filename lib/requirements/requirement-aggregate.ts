@@ -39,19 +39,4 @@ export async function computeRequirementAggregate(
   };
 }
 
-export function isRequirementRecipientOverdue(input: {
-  requirementStatus: "DRAFT" | "ACTIVE" | "CLOSED" | "CANCELLED";
-  dueAt: Date | null;
-  recipientResolutionStatus: "OPEN" | "RESOLVED";
-  recipientRemovedAt: Date | null;
-  now?: Date;
-}): boolean {
-  const now = input.now ?? new Date();
-  return (
-    input.requirementStatus === "ACTIVE" &&
-    input.recipientResolutionStatus === "OPEN" &&
-    input.recipientRemovedAt === null &&
-    input.dueAt !== null &&
-    input.dueAt.getTime() < now.getTime()
-  );
-}
+export { isRequirementRecipientOverdue } from "./requirement-deadlines";

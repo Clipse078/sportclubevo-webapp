@@ -523,7 +523,7 @@ describe("AUFGABEN-06G3 — static safety", () => {
       /getAuthorizedPersonIdsForUser/,
     );
     expect(read("lib/personal-actions/sources/requirement-obligations.ts")).toMatch(
-      /subjectPersonId: \{ in:/,
+      /openAcknowledgeableRequirementRecipientForPersons/,
     );
   });
 });
