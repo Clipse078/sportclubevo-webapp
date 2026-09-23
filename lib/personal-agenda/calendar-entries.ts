@@ -1,10 +1,20 @@
 import type { EventType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import {
+  isTeamPersonallyRelevant,
+  meetingParticipantContextLabel,
+  resolveTeamEventContextLabel,
+  type PersonalContext,
+} from "@/lib/dashboard/personal-context";
+import {
   buildEventProjectionId,
   buildMeetingProjectionId,
   type PersonalCalendarItem,
 } from "./types";
+import {
+  canIncludeEventInPersonalProjection,
+  type PersonalEventProjectionActor,
+} from "./event-projection-access";
 
 function getEventTypeLabel(type: EventType): string {
   switch (type) {
@@ -40,7 +50,8 @@ function buildPersonalEventTitle(input: {
 export type LoadPersonalCalendarEntryProjectionsArgs = {
   tenantId: string;
   userId: string | null | undefined;
-  teamIds: string[];
+  personalContext: PersonalContext;
+  actor: PersonalEventProjectionActor;
   rangeStart: Date;
   rangeEnd: Date;
 };
@@ -48,26 +59,31 @@ export type LoadPersonalCalendarEntryProjectionsArgs = {
 export async function loadPersonalCalendarEntryProjections(
   args: LoadPersonalCalendarEntryProjectionsArgs,
 ): Promise<PersonalCalendarItem[]> {
-  const hasTeamScope = args.teamIds.length > 0;
+  const teamIds = args.personalContext.teams.map((t) => t.teamId);
+  const hasTeamScope = teamIds.length > 0;
   const hasMeetingScope = Boolean(args.userId);
 
   if (!hasTeamScope && !hasMeetingScope) {
     return [];
   }
 
-  const [teamEvents, participantMeetings] = await Promise.all([
+  const [teamEventCandidates, participantMeetings] = await Promise.all([
     hasTeamScope
       ? prisma.event.findMany({
           where: {
             tenantId: args.tenantId,
-            teamId: { in: args.teamIds },
+            teamId: { in: teamIds },
             startAt: { gte: args.rangeStart, lte: args.rangeEnd },
           },
           orderBy: [{ startAt: "asc" }, { title: "asc" }],
           select: {
             id: true,
-            title: true,
+            tenantId: true,
+            teamId: true,
             type: true,
+            status: true,
+            reviewStage: true,
+            title: true,
             startAt: true,
             endAt: true,
             allDay: true,
@@ -95,9 +111,20 @@ export async function loadPersonalCalendarEntryProjections(
       : Promise.resolve([]),
   ]);
 
-  const items: PersonalCalendarItem[] = [];
+  const authorizedEvents = teamEventCandidates.filter((event) => {
+    if (!event.teamId || !isTeamPersonallyRelevant(args.personalContext, event.teamId)) {
+      return false;
+    }
+    return canIncludeEventInPersonalProjection(args.actor, event);
+  });
 
-  for (const event of teamEvents) {
+  const items: PersonalCalendarItem[] = [];
+  const seenEventIds = new Set<string>();
+
+  for (const event of authorizedEvents) {
+    if (seenEventIds.has(event.id)) continue;
+    seenEventIds.add(event.id);
+
     const typeLabel = getEventTypeLabel(event.type);
     const title = buildPersonalEventTitle({
       type: event.type,
@@ -105,6 +132,8 @@ export async function loadPersonalCalendarEntryProjections(
       opponentName: event.opponentName,
       teamName: event.team?.name ?? null,
     });
+    const contextLabel = resolveTeamEventContextLabel(args.personalContext, event.teamId);
+
     items.push({
       id: buildEventProjectionId(event.id),
       sourceType: "TEAM_EVENT",
@@ -117,9 +146,12 @@ export async function loadPersonalCalendarEntryProjections(
       eventType: event.type,
       subtitle:
         event.type !== "MATCH" && event.team?.name ? event.team.name : undefined,
+      contextLabel,
       ariaLabel: `${typeLabel}: ${title}`,
     });
   }
+
+  const meetingLabel = meetingParticipantContextLabel().label;
 
   for (const meeting of participantMeetings) {
     items.push({
@@ -131,6 +163,7 @@ export async function loadPersonalCalendarEntryProjections(
       href: `/vereinsleitung/meetings/${meeting.slug}`,
       typeLabel: "Meeting",
       eventType: "MEETING",
+      contextLabel: meetingLabel,
       ariaLabel: `Meeting: ${meeting.title}`,
     });
   }

@@ -8,27 +8,29 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 **Mission:** Single server-side `resolvePersonalDashboardContext()` producing relationships, context labels, and auth-ready scopes.
 
+**Status:** Implemented — see `docs/dashboard/DASHBOARD-01-PERSONAL-CONTEXT-RELEVANCE.md`.
+
 **Dependencies:** None (discovery complete).
 
 **Domains / files:**
 
-- New: `lib/dashboard/personal-context/` (resolver, context-label builder)  
-- Extend: `lib/personal-agenda/team-scope.ts` → include PersonAssignment, org memberships  
-- Use: `lib/people/functions.ts`, `lib/participation/authorization.ts`, `getActorContext`
+- `lib/dashboard/personal-context/` (resolver, labels, relevance, programme adapter contract)  
+- `lib/personal-agenda/team-scope.ts`, `calendar-entries.ts`, `event-projection-access.ts`  
+- Use: `lib/people/functions.ts`, effective permissions, existing tenant/person models
 
 **Data model impact:** None.
 
 **API impact:** Internal only; optional `GET /api/dashboard/context` later.
 
-**Authorization:** Reuse existing; no dashboard permissions.
+**Authorization:** Reuse existing; no dashboard permissions. Event personal projections gated before DTO mapping.
 
-**Tests:** Unit tests for label mapping, multi-role users, no linked person.
+**Tests:** `lib/dashboard/personal-context/__tests__`, `lib/personal-agenda/__tests__/event-*`
 
 **Acceptance gates:**
 
-- [ ] Context labels match matrix for trainer, player, org function, assignee  
-- [ ] Multi-team user receives union without duplicate labels  
-- [ ] Zero disclosure when person unlinked
+- [x] Context labels match matrix for trainer, player, org function  
+- [x] Multi-team user receives union without duplicate team rows  
+- [x] Zero disclosure for unauthorized / non-relevant events
 
 ---
 

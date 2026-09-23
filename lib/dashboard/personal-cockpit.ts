@@ -54,6 +54,7 @@ export async function loadPersonalAgendaItems(args: {
     now: args.now,
     mode: "dashboard",
     tasksViewAuthorized,
+    permissionKeys,
     includeOverdueTasks: true,
   });
 
