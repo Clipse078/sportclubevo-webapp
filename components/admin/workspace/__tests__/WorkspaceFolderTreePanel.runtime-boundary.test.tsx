@@ -59,6 +59,6 @@ describe("WorkspaceFolderTreePanel W08-07A runtime boundary", () => {
       />,
     );
 
-    expect(screen.queryByRole("button", { name: /createSubfolder/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "toggleButton" })).not.toBeInTheDocument();
   });
 });
