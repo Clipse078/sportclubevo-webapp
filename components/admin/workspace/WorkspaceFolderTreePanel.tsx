@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { FolderClosed, FolderOpen } from "lucide-react";
 
 import { moveWorkspaceFolderAction } from "@/app/(admin)/dashboard/workspace/actions";
+import { CreateSubfolderForm } from "@/components/admin/workspace/CreateSubfolderForm";
 import type { WorkspaceFolderDto } from "@/lib/workspace/dto";
 import {
   readInternalDragPayload,
@@ -17,7 +18,6 @@ type WorkspaceFolderTreePanelProps = {
   folders: WorkspaceFolderDto[];
   selectedFolderId: string | null;
   canManage: boolean;
-  createSubfolderSlot?: (folderId: string, isSelected: boolean) => React.ReactNode;
 };
 
 type FolderTreeProps = {
@@ -31,7 +31,6 @@ type FolderTreeProps = {
   onDragEnd: () => void;
   onDragOverFolder: (folderId: string | null) => void;
   onDropOnFolder: (folderId: string | null) => void;
-  createSubfolderSlot?: (folderId: string, isSelected: boolean) => React.ReactNode;
 };
 
 function FolderTree({
@@ -45,7 +44,6 @@ function FolderTree({
   onDragEnd,
   onDragOverFolder,
   onDropOnFolder,
-  createSubfolderSlot,
 }: FolderTreeProps) {
   return (
     <ul className={depth === 0 ? "space-y-px" : "mt-px space-y-px"}>
@@ -119,7 +117,11 @@ function FolderTree({
               </Link>
             </div>
 
-            {createSubfolderSlot?.(folder.id, isSelected)}
+            {canManage && isSelected ? (
+              <div className="mt-px pr-2 pl-6">
+                <CreateSubfolderForm parentId={folder.id} />
+              </div>
+            ) : null}
 
             {hasChildren ? (
               <FolderTree
@@ -133,7 +135,6 @@ function FolderTree({
                 onDragEnd={onDragEnd}
                 onDragOverFolder={onDragOverFolder}
                 onDropOnFolder={onDropOnFolder}
-                createSubfolderSlot={createSubfolderSlot}
               />
             ) : null}
           </li>
@@ -147,7 +148,6 @@ export function WorkspaceFolderTreePanel({
   folders,
   selectedFolderId,
   canManage,
-  createSubfolderSlot,
 }: WorkspaceFolderTreePanelProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -238,7 +238,6 @@ export function WorkspaceFolderTreePanel({
         }}
         onDragOverFolder={setDropTargetId}
         onDropOnFolder={handleDropOnFolder}
-        createSubfolderSlot={createSubfolderSlot}
       />
     </div>
   );
