@@ -95,7 +95,7 @@ Cancelled/postponed/completed events remain visible when authorized (`ARCHIVED` 
 | Consumer | Integration |
 |----------|-------------|
 | Meine Agenda / cockpit | `loadPersonalAgenda` → shared adapters |
-| Personal Kalender | `loadPersonalAgenda` calendar mode + `isPersonalProgrammeCalendarItem` filter |
+| Personal Kalender (month) | `loadPersonalProgramme()` + `resolvePersonalProgrammeMonthGridRange()`; tasks via `loadTaskDeadlineProjections()` when filtered |
 | Command center | unchanged entry via `loadPersonalAgendaItems` |
 
 **Heute im Verein** widget retained; Mein Programm supersedes its *personal* dashboard role in DASHBOARD-06.

@@ -42,5 +42,30 @@
       "whoHasAccessHeading": "Qui a accès ?",
       "directGrantsHeading": "Direct sur cette ressource"
     }
+  },
+  "PersonalDashboard": {
+    "calendar": {
+      "title": "Mon calendrier",
+      "today": "Aujourd'hui",
+      "previousMonth": "Mois précédent",
+      "nextMonth": "Mois suivant",
+      "selected": "sélectionné",
+      "ariaMonthGrid": "Grille mensuelle du calendrier personnel",
+      "selectedDayPanel": "Rendez-vous du jour sélectionné",
+      "emptyDay": "Aucun rendez-vous personnel",
+      "dayAriaOneActivity": "1 rendez-vous personnel",
+      "dayAriaActivities": "{count} rendez-vous personnels",
+      "statusCancelled": "Annulé",
+      "statusPostponed": "Reporté",
+      "selectedDayTasks": "Tâches du jour sélectionné",
+      "tasksHeading": "Tâches",
+      "weekdayMon": "Lu",
+      "weekdayTue": "Ma",
+      "weekdayWed": "Me",
+      "weekdayThu": "Je",
+      "weekdayFri": "Ve",
+      "weekdaySat": "Sa",
+      "weekdaySun": "Di"
+    }
   }
 }

@@ -63,18 +63,20 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 **Mission:** Extract shared month calendar primitive; embed in dashboard; share dataset with programme.
 
+**Status:** Implemented — see `docs/dashboard/DASHBOARD-03-PERSONAL-CALENDAR.md`.
+
 **Dependencies:** DASHBOARD-02.
 
-**Files:** Extract from `SpieleManagementMonthCalendar.tsx` + `PersonalKalenderMonthView.tsx` → `components/ui/calendar/MonthActivityGrid.tsx`; dashboard embed.
+**Files:** `components/ui/calendar/MonthActivityGrid.tsx`, `PersonalProgrammeMonthCalendar.tsx`, `lib/calendar/month-grid.ts`; refactored Matchcenter + Personal Kalender views.
 
 **Data model:** None.
 
-**Tests:** Dot rendering, selected day filter, a11y.
+**Tests:** Dot rendering, selected day filter, a11y, timezone grid range, Matchcenter structural regression.
 
 **Acceptance:**
 
-- [ ] Single query feeds programme + calendar  
-- [ ] Mobile collapsible calendar
+- [x] Single programme dataset feeds calendar dots + selected day (tasks optional on full Kalender page)  
+- [x] Reusable calendar component ready for DASHBOARD-06 composition (mobile collapse deferred to DASHBOARD-06)
 
 ---
 
