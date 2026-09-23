@@ -116,6 +116,16 @@ function readSchema(): string {
   return readFileSync(SCHEMA_PATH, "utf8");
 }
 
+function extractPrismaModelBlock(schema: string, modelName: string): string {
+  const marker = `model ${modelName}`;
+  const start = schema.indexOf(marker);
+  if (start === -1) {
+    return "";
+  }
+  const nextModel = schema.indexOf("\nmodel ", start + marker.length);
+  return nextModel === -1 ? schema.slice(start) : schema.slice(start, nextModel);
+}
+
 function deletionClient() {
   return {
     taskDocumentReference: prismaMocks.taskDocumentReference,
@@ -572,7 +582,7 @@ describe("WORKSPACE-07 sentinels", () => {
     const migration = readMigration();
     expect(migration.includes("RequirementRecipient")).toBe(false);
     const schema = readSchema();
-    const recipientBlock = schema.slice(schema.indexOf("model RequirementRecipient"));
+    const recipientBlock = extractPrismaModelBlock(schema, "RequirementRecipient");
     expect(recipientBlock.includes("workspaceDocumentVersionId")).toBe(false);
     expect(recipientBlock).toMatch(/subjectPersonId/);
   });

@@ -130,7 +130,9 @@ export async function GET(
         error.code === "DOCUMENT_NOT_FOUND" ||
         error.code === "BLOB_NOT_FOUND"
           ? 404
-          : 400;
+          : error.code === "CONTENT_DELIVERY_BLOCKED"
+            ? 403
+            : 400;
 
       return NextResponse.json(
         {

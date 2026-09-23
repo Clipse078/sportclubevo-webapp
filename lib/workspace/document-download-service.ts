@@ -3,6 +3,11 @@
   WorkspaceDocumentVersionAccessError,
 } from "@/lib/workspace/document-version-access-service";
 import {
+  assertWorkspaceVersionSafeForDelivery,
+  WorkspaceContentDeliveryBlockedError,
+} from "@/lib/workspace/malware-scan/content-delivery-gate";
+import { prisma } from "@/lib/db/prisma";
+import {
   workspaceStorageProvider,
 } from "@/lib/workspace/upload-storage";
 import type {
@@ -13,7 +18,8 @@ export type WorkspaceDocumentDownloadServiceErrorCode =
   | "INVALID_INPUT"
   | "DOCUMENT_NOT_FOUND"
   | "BLOB_NOT_FOUND"
-  | "STORAGE_FAILURE";
+  | "STORAGE_FAILURE"
+  | "CONTENT_DELIVERY_BLOCKED";
 
 export class WorkspaceDocumentDownloadServiceError extends Error {
   readonly code: WorkspaceDocumentDownloadServiceErrorCode;
@@ -111,6 +117,24 @@ export async function downloadWorkspaceDocument(
       "DOCUMENT_NOT_FOUND",
       "Dokument nicht gefunden.",
     );
+  }
+
+  try {
+    await assertWorkspaceVersionSafeForDelivery(prisma, {
+      tenantId,
+      workspaceDocumentVersionId: document.versionId,
+      documentId: document.documentId,
+      operation: "DOWNLOAD",
+      actorUserId,
+    });
+  } catch (error) {
+    if (error instanceof WorkspaceContentDeliveryBlockedError) {
+      throw new WorkspaceDocumentDownloadServiceError(
+        "CONTENT_DELIVERY_BLOCKED",
+        "Dateiinhalt ist derzeit nicht verfügbar.",
+      );
+    }
+    throw error;
   }
 
   const storageProvider =

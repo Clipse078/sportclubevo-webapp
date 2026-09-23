@@ -11,6 +11,7 @@ import {
   assertUserSuppliedChangeNoteAllowed,
   formatRestoreProvenanceChangeNote,
 } from "@/lib/workspace/version/version-domain";
+import { createPendingWorkspaceVersionScanRecord } from "@/lib/workspace/malware-scan/version-scan-write";
 import {
   workspaceStorageProvider,
 } from "@/lib/workspace/upload-storage";
@@ -272,6 +273,14 @@ export async function appendWorkspaceDocumentVersion(
           changeNote,
           createdByUserId: actorUserId,
         },
+      });
+
+      await createPendingWorkspaceVersionScanRecord(transaction, {
+        tenantId,
+        workspaceDocumentVersionId: versionId,
+        documentId,
+        actorUserId,
+        source: restoredFromVersionId ? "restore" : "upload",
       });
 
       const completedDocument =

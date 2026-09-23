@@ -15,6 +15,9 @@ const mocks = vi.hoisted(() => ({
     workspaceDocument: {
       update: vi.fn(),
     },
+    workspaceDocumentVersionScan: {
+      create: vi.fn(),
+    },
   },
   writeAuditRecord: vi.fn(),
   storageDownload: vi.fn(),

@@ -25,6 +25,11 @@ import {
   WorkspaceDocumentVersionAccessError,
 } from "@/lib/workspace/document-version-access-service";
 import { isWorkspaceInlinePreviewSupported } from "@/lib/workspace/storage/preview-policy";
+import {
+  assertWorkspaceVersionSafeForDelivery,
+  WorkspaceContentDeliveryBlockedError,
+} from "@/lib/workspace/malware-scan/content-delivery-gate";
+import { prisma } from "@/lib/db/prisma";
 import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
 import { resolveWorkspaceVersionIdQuery } from "@/lib/workspace/version/version-query";
 
@@ -121,6 +126,24 @@ export async function GET(
         { error: "Dokument nicht gefunden." },
         { status: 404 },
       );
+    }
+
+    try {
+      await assertWorkspaceVersionSafeForDelivery(prisma, {
+        tenantId: tenant.id,
+        workspaceDocumentVersionId: document.versionId,
+        documentId: document.documentId,
+        operation: "PREVIEW",
+        actorUserId: access.actorUserId,
+      });
+    } catch (error) {
+      if (error instanceof WorkspaceContentDeliveryBlockedError) {
+        return NextResponse.json(
+          { error: "Vorschau ist derzeit nicht verfügbar." },
+          { status: 403 },
+        );
+      }
+      throw error;
     }
 
     if (!isWorkspaceInlinePreviewSupported(document.mimeType)) {

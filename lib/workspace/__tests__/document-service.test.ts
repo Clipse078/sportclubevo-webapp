@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   workspaceAccessGrantCreateMany: vi.fn(),
   personFindFirst: vi.fn(),
   auditLogCreate: vi.fn(),
+  workspaceDocumentVersionScanCreate: vi.fn(),
   transaction: vi.fn(),
 }));
 
@@ -117,6 +118,9 @@ describe("createWorkspaceDocumentWithInitialVersion", () => {
             createMany: typeof mocks.workspaceAccessGrantCreateMany;
           };
           auditLog: { create: typeof mocks.auditLogCreate };
+          workspaceDocumentVersionScan: {
+            create: typeof mocks.workspaceDocumentVersionScanCreate;
+          };
         }) => Promise<unknown>,
       ) =>
         callback({
@@ -131,8 +135,14 @@ describe("createWorkspaceDocumentWithInitialVersion", () => {
             createMany: mocks.workspaceAccessGrantCreateMany,
           },
           auditLog: { create: mocks.auditLogCreate },
+          workspaceDocumentVersionScan: {
+            create: mocks.workspaceDocumentVersionScanCreate,
+          },
         }),
     );
+
+    mocks.workspaceDocumentVersionScanCreate.mockResolvedValue({ id: "scan-1" });
+    mocks.auditLogCreate.mockResolvedValue({ id: "audit-1" });
   });
 
   it("creates a tenant-scoped document and initial version transactionally", async () => {

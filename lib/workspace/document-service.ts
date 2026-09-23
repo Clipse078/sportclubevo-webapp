@@ -11,6 +11,7 @@ import {
 } from "@/lib/workspace/access/policy-persistence";
 import { WorkspaceAuditAction } from "@/lib/workspace/audit/workspace-audit-actions";
 import { writeWorkspaceGovernanceAudit } from "@/lib/workspace/audit/workspace-audit-write";
+import { createPendingWorkspaceVersionScanRecord } from "@/lib/workspace/malware-scan/version-scan-write";
 import type {
   CreateWorkspaceDocumentInput,
   GetWorkspaceDocumentForDownloadInput,
@@ -207,6 +208,14 @@ export async function createWorkspaceDocumentWithInitialVersion(
       select: {
         id: true,
       },
+    });
+
+    await createPendingWorkspaceVersionScanRecord(transaction, {
+      tenantId,
+      workspaceDocumentVersionId: version.id,
+      documentId: document.id,
+      actorUserId,
+      source: "upload",
     });
 
     const completedDocument = await transaction.workspaceDocument.update({
