@@ -1,6 +1,12 @@
 -- AUFGABEN-05 — task deadline reminders (additive, nullable).
+-- NotificationType may not exist yet on empty-database replay (MIGRATION-ORDER-01);
+-- TASK_REMINDER is created in aufgaben_04n_notification_foundation when replayed fresh.
 
-ALTER TYPE "NotificationType" ADD VALUE 'TASK_REMINDER';
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'NotificationType') THEN
+    ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'TASK_REMINDER';
+  END IF;
+END $$;
 
 ALTER TABLE "Task" ADD COLUMN "reminder1At" TIMESTAMP(3),
 ADD COLUMN "reminder2At" TIMESTAMP(3),

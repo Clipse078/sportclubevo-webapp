@@ -1,16 +1,20 @@
 -- AUFGABEN-04N — SCE notification center & delivery foundation
 
-CREATE TYPE "NotificationCategory" AS ENUM ('TASK');
+CREATE TYPE "NotificationCategory" AS ENUM ('TASK', 'PARTICIPATION');
 
 CREATE TYPE "NotificationType" AS ENUM (
   'TASK_ASSIGNED',
   'SUBTASK_ASSIGNED',
   'TASK_DUE_SOON',
   'TASK_OVERDUE',
-  'TASK_DEADLINE_CHANGED'
+  'TASK_DEADLINE_CHANGED',
+  'TASK_REMINDER',
+  'PARTICIPATION_REMINDER',
+  'PARTICIPATION_OVERDUE',
+  'TASK_MENTION'
 );
 
-CREATE TYPE "NotificationEntityType" AS ENUM ('TASK');
+CREATE TYPE "NotificationEntityType" AS ENUM ('TASK', 'TRAINING_SESSION', 'EVENT');
 
 CREATE TYPE "NotificationChannel" AS ENUM ('IN_APP', 'EMAIL');
 

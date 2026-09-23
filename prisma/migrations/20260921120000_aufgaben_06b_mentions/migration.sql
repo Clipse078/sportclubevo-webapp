@@ -1,6 +1,10 @@
 -- AUFGABEN-06B — Task comment @mentions + TASK_MENTION notifications (additive).
 
-ALTER TYPE "NotificationType" ADD VALUE 'TASK_MENTION';
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'NotificationType') THEN
+    ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'TASK_MENTION';
+  END IF;
+END $$;
 
 CREATE TABLE "TaskCommentMention" (
     "id" TEXT NOT NULL,
