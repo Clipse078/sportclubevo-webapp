@@ -5,7 +5,6 @@
 import { WorkspaceResourceType } from "@prisma/client";
 
 import {
-  buildChainAfterMove,
   assertForeignParentRejected,
   validateMoveDoesNotWidenEffectiveAccess,
   WorkspaceMoveValidationError,
