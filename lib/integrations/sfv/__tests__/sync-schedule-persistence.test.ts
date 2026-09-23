@@ -24,6 +24,8 @@
  *   C6. websiteVisible defaults to true for away match (PUB-02).
  *   C7. infoboardVisible defaults to true for home match (PUB-02).
  *   C8. infoboardVisible defaults to false for away match (PUB-02).
+ *   C9. wochenplanVisible defaults to true for home match (HOTFIX-WOCHENPLAN-01).
+ *   C10. wochenplanVisible defaults to false for away match (HOTFIX-WOCHENPLAN-01).
  *
  * Update path:
  *   U1. Updated home match writes homeAway = "HOME".
@@ -63,6 +65,10 @@ vi.mock("@/lib/db/prisma", () => ({
       findMany: (...args: unknown[]) => mockTombstoneFindMany(...args),
     },
   },
+}));
+
+vi.mock("@/lib/participation/participation-request-config-service", () => ({
+  assertEventStartCompatibleWithParticipationDue: vi.fn().mockResolvedValue(undefined),
 }));
 
 // ── Import under test ─────────────────────────────────────────────────────────
@@ -308,6 +314,36 @@ describe("createMatchWithMapping — homeAway", () => {
     );
     const createData = mockEventCreate.mock.calls[0][0].data;
     expect(createData.infoboardVisible).toBe(true);
+  });
+
+  it("C9: wochenplanVisible defaults to true for home match (HOTFIX-WOCHENPLAN-01)", async () => {
+    await createMatchWithMapping(
+      makeEntry(),
+      makeContext(),
+      "season-1",
+      "team-1",
+      "FC Opponent B",
+      true,
+      "team-1",
+      null,
+    );
+    const createData = mockEventCreate.mock.calls[0][0].data;
+    expect(createData.wochenplanVisible).toBe(true);
+  });
+
+  it("C10: wochenplanVisible defaults to false for away match (HOTFIX-WOCHENPLAN-01)", async () => {
+    await createMatchWithMapping(
+      makeEntry(),
+      makeContext(),
+      "season-1",
+      null,
+      "FC Allschwil",
+      false,
+      null,
+      "team-1",
+    );
+    const createData = mockEventCreate.mock.calls[0][0].data;
+    expect(createData.wochenplanVisible).toBe(false);
   });
 
   it("C8: infoboardVisible defaults to false for away match (PUB-02)", async () => {
