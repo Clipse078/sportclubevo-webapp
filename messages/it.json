@@ -44,6 +44,43 @@
     }
   },
   "PersonalDashboard": {
+    "quickAccess": {
+      "title": "Accesso rapido",
+      "customize": "Personalizza",
+      "sectionAria": "Accesso rapido personale",
+      "customizeTitle": "Personalizza accesso rapido",
+      "customizeDescription": "Scegli fino a {max} scorciatoie per la dashboard.",
+      "pinnedHeading": "Fissati",
+      "pinnedEmpty": "Nessuna scorciatoia fissata.",
+      "addHeading": "Aggiungi scorciatoia",
+      "addEmpty": "Tutte le scorciatoie disponibili sono già fissate.",
+      "kindNavigate": "Navigazione",
+      "kindCreate": "Crea",
+      "moveUp": "Sposta su",
+      "moveDown": "Sposta giù",
+      "remove": "Rimuovi {label}",
+      "save": "Salva",
+      "cancel": "Annulla",
+      "reset": "Ripristina predefiniti",
+      "saveError": "Impossibile salvare le impostazioni.",
+      "entries": {
+        "navigation_wochenplanner": "Piano settimanale",
+        "navigation_aufgaben": "Compiti",
+        "navigation_matchcenter": "Partite",
+        "navigation_tournamentcenter": "Tornei",
+        "navigation_veranstaltungen": "Eventi",
+        "navigation_workspace": "Documenti",
+        "navigation_personen": "Membri",
+        "navigation_anmeldungen": "Iscrizioni",
+        "navigation_registrierungen": "Iscrizioni",
+        "action_create_training": "Allenamento",
+        "action_create_match": "Partita",
+        "action_create_tournament": "Torneo",
+        "action_create_event": "Evento",
+        "action_create_news": "News",
+        "action_create_person": "Persona"
+      }
+    },
     "calendar": {
       "title": "Il mio calendario",
       "today": "Oggi",

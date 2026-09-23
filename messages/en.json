@@ -44,6 +44,43 @@
     }
   },
   "PersonalDashboard": {
+    "quickAccess": {
+      "title": "Quick access",
+      "customize": "Customize",
+      "sectionAria": "Personal quick access",
+      "customizeTitle": "Customize quick access",
+      "customizeDescription": "Choose up to {max} shortcuts for your dashboard.",
+      "pinnedHeading": "Pinned",
+      "pinnedEmpty": "No shortcuts pinned yet.",
+      "addHeading": "Add shortcut",
+      "addEmpty": "All available shortcuts are already pinned.",
+      "kindNavigate": "Navigation",
+      "kindCreate": "Create",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "remove": "Remove {label}",
+      "save": "Save",
+      "cancel": "Cancel",
+      "reset": "Restore defaults",
+      "saveError": "Could not save settings.",
+      "entries": {
+        "navigation_wochenplanner": "Weekly plan",
+        "navigation_aufgaben": "Tasks",
+        "navigation_matchcenter": "Matches",
+        "navigation_tournamentcenter": "Tournaments",
+        "navigation_veranstaltungen": "Events",
+        "navigation_workspace": "Documents",
+        "navigation_personen": "Members",
+        "navigation_anmeldungen": "Registrations",
+        "navigation_registrierungen": "Registrations",
+        "action_create_training": "Training",
+        "action_create_match": "Match",
+        "action_create_tournament": "Tournament",
+        "action_create_event": "Event",
+        "action_create_news": "News",
+        "action_create_person": "Person"
+      }
+    },
     "calendar": {
       "title": "My calendar",
       "today": "Today",

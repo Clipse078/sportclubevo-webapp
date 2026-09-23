@@ -84,18 +84,20 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 **Mission:** Unified catalog from nav + create actions; pin/reorder; persistence.
 
+**Status:** Implemented — see `docs/dashboard/DASHBOARD-04-QUICK-ACCESS.md`.
+
 **Dependencies:** DASHBOARD-01 (for default scoring).
 
-**Schema:** `UserDashboardPreference` or equivalent (per user per tenant).
+**Schema:** `UserDashboardQuickAccessPreference` (per user per tenant).
 
-**Files:** `lib/dashboard/quick-access/`, migration, settings UI “Anpassen”.
+**Files:** `lib/dashboard/quick-access/`, migration, `PersonalQuickAccess` / `QuickAccessCustomizer`, `/api/dashboard/quick-access`.
 
 **Tests:** Permission change removes pin; tenant switch loads correct prefs.
 
 **Acceptance:**
 
-- [ ] 8 pin max; cross-device persistence  
-- [ ] No permission escalation via pins
+- [x] 8 pin max; cross-device persistence  
+- [x] No permission escalation via pins
 
 ---
 

@@ -467,6 +467,43 @@
     }
   },
   "PersonalDashboard": {
+    "quickAccess": {
+      "title": "Schnellzugriff",
+      "customize": "Anpassen",
+      "sectionAria": "Persönlicher Schnellzugriff",
+      "customizeTitle": "Schnellzugriff anpassen",
+      "customizeDescription": "Wähle bis zu {max} Shortcuts für dein Dashboard.",
+      "pinnedHeading": "Angeheftet",
+      "pinnedEmpty": "Noch keine Shortcuts angeheftet.",
+      "addHeading": "Shortcut hinzufügen",
+      "addEmpty": "Alle verfügbaren Shortcuts sind bereits angeheftet.",
+      "kindNavigate": "Navigation",
+      "kindCreate": "Erstellen",
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten",
+      "remove": "{label} entfernen",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "reset": "Standard wiederherstellen",
+      "saveError": "Einstellungen konnten nicht gespeichert werden.",
+      "entries": {
+        "navigation_wochenplanner": "Wochenplan",
+        "navigation_aufgaben": "Aufgaben",
+        "navigation_matchcenter": "Spiele",
+        "navigation_tournamentcenter": "Turniere",
+        "navigation_veranstaltungen": "Veranstaltungen",
+        "navigation_workspace": "Dokumente",
+        "navigation_personen": "Mitglieder",
+        "navigation_anmeldungen": "Anmeldungen",
+        "navigation_registrierungen": "Anmeldungen",
+        "action_create_training": "Training",
+        "action_create_match": "Spiel",
+        "action_create_tournament": "Turnier",
+        "action_create_event": "Veranstaltung",
+        "action_create_news": "News",
+        "action_create_person": "Person"
+      }
+    },
     "calendar": {
       "title": "Mein Kalender",
       "today": "Heute",

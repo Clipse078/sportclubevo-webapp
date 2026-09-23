@@ -44,6 +44,43 @@
     }
   },
   "PersonalDashboard": {
+    "quickAccess": {
+      "title": "Accès rapide",
+      "customize": "Personnaliser",
+      "sectionAria": "Accès rapide personnel",
+      "customizeTitle": "Personnaliser l'accès rapide",
+      "customizeDescription": "Choisissez jusqu'à {max} raccourcis pour votre tableau de bord.",
+      "pinnedHeading": "Épinglés",
+      "pinnedEmpty": "Aucun raccourci épinglé.",
+      "addHeading": "Ajouter un raccourci",
+      "addEmpty": "Tous les raccourcis disponibles sont déjà épinglés.",
+      "kindNavigate": "Navigation",
+      "kindCreate": "Créer",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "remove": "Retirer {label}",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "reset": "Rétablir les valeurs par défaut",
+      "saveError": "Impossible d'enregistrer les paramètres.",
+      "entries": {
+        "navigation_wochenplanner": "Plan hebdomadaire",
+        "navigation_aufgaben": "Tâches",
+        "navigation_matchcenter": "Matchs",
+        "navigation_tournamentcenter": "Tournois",
+        "navigation_veranstaltungen": "Événements",
+        "navigation_workspace": "Documents",
+        "navigation_personen": "Membres",
+        "navigation_anmeldungen": "Inscriptions",
+        "navigation_registrierungen": "Inscriptions",
+        "action_create_training": "Entraînement",
+        "action_create_match": "Match",
+        "action_create_tournament": "Tournoi",
+        "action_create_event": "Événement",
+        "action_create_news": "Actualités",
+        "action_create_person": "Personne"
+      }
+    },
     "calendar": {
       "title": "Mon calendrier",
       "today": "Aujourd'hui",
