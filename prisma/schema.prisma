@@ -693,6 +693,25 @@ enum WorkspaceDocumentVersionStatus {
   SUPERSEDED
 }
 
+/// WORKSPACE-08-02 — explicit break-glass scope (Workspace domain only).
+enum WorkspaceBreakGlassScopeType {
+  DOCUMENT
+  FOLDER_SUBTREE
+}
+
+/// WORKSPACE-08-03 — governance hold scope (not tenant-wide).
+enum WorkspaceGovernanceHoldScopeType {
+  DOCUMENT
+  FOLDER_SUBTREE
+}
+
+enum WorkspaceBreakGlassSessionStatus {
+  ACTIVE
+  ENDED
+  REVOKED
+  EXPIRED
+}
+
 enum WorkspaceAccessSubjectType {
   /// Tenant-wide organisation / CLUB boundary (not public internet).
   ORGANISATION
@@ -823,6 +842,13 @@ model Tenant {
   workspaceAccessGrants     WorkspaceAccessGrant[]
   workspaceFavorites          WorkspaceFavorite[]
   workspaceRecentAccess     WorkspaceRecentAccess[]
+  workspaceBreakGlassSessions WorkspaceBreakGlassSession[]
+  workspaceTrashRetentionPolicy WorkspaceTrashRetentionPolicy?
+  workspaceGovernanceHolds      WorkspaceGovernanceHold[]
+  workspaceDocumentVersionScans WorkspaceDocumentVersionScan[]
+  workspaceMalwareScanEnforcementPolicy WorkspaceMalwareScanEnforcementPolicy?
+  workspaceBackgroundJobs           WorkspaceBackgroundJob[]
+  workspaceSubtreeOperations        WorkspaceSubtreeOperation[]
 
   // SFV Integration — Slice: Tenant-Scoped SFV Configuration
   // One config per tenant (@@unique on tenantId). Null when not configured.
@@ -1006,6 +1032,10 @@ model User {
   createdWorkspaceDocumentVersions WorkspaceDocumentVersion[] @relation("WorkspaceDocumentVersionCreatedBy")
   workspaceFavorites               WorkspaceFavorite[]        @relation("WorkspaceFavoriteUser")
   workspaceRecentAccess            WorkspaceRecentAccess[]    @relation("WorkspaceRecentAccessUser")
+  workspaceBreakGlassSessions      WorkspaceBreakGlassSession[] @relation("WorkspaceBreakGlassActor")
+  workspaceBreakGlassSessionsRevoked WorkspaceBreakGlassSession[] @relation("WorkspaceBreakGlassRevokedBy")
+  workspaceGovernanceHoldsCreated    WorkspaceGovernanceHold[]    @relation("WorkspaceGovernanceHoldCreatedBy")
+  workspaceGovernanceHoldsReleased   WorkspaceGovernanceHold[]    @relation("WorkspaceGovernanceHoldReleasedBy")
   createdCommunicationAttachments  CommunicationAttachment[]  @relation("CommunicationAttachmentCreatedBy")
   // PERSON-UX-07: person-bound documents uploaded by this user
   uploadedPersonDocuments          PersonDocument[]           @relation("PersonDocumentUploadedBy")
@@ -1675,6 +1705,9 @@ model Person {
   requirementDraftAudienceEntries RequirementDraftAudiencePerson[] @relation("RequirementDraftAudiencePerson")
   requirementRecipientObligations RequirementRecipient[]           @relation("RequirementRecipientSubject")
   requirementResponseActorEntries RequirementRecipient[]           @relation("RequirementResponseActorPerson")
+  workspaceBreakGlassSessions     WorkspaceBreakGlassSession[]     @relation("WorkspaceBreakGlassActorPerson")
+  workspaceGovernanceHoldsCreated  WorkspaceGovernanceHold[]       @relation("WorkspaceGovernanceHoldCreatedByPerson")
+  workspaceGovernanceHoldsReleased WorkspaceGovernanceHold[]      @relation("WorkspaceGovernanceHoldReleasedByPerson")
 
   @@index([lastName, firstName])
   @@index([email])
@@ -2298,6 +2331,9 @@ model AuditLog {
   // RPERM-02: tenant scope for audit log filtering
   tenantId String?
 
+  // WORKSPACE-08-01: durable version identity for governance audit queries
+  workspaceDocumentVersionId String?
+
   actorUser User?   @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
   tenant    Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
@@ -2306,6 +2342,9 @@ model AuditLog {
   @@index([createdAt])
   @@index([tenantId, createdAt])
   @@index([tenantId, moduleKey, entityType, entityId, createdAt])
+  @@index([tenantId, action, createdAt])
+  @@index([tenantId, moduleKey, createdAt])
+  @@index([tenantId, workspaceDocumentVersionId, createdAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -4337,6 +4376,8 @@ model WorkspaceFolder {
   @@index([tenantId, trashedAt])
   @@index([createdByUserId])
   @@index([updatedByUserId])
+  workspaceBreakGlassSessions WorkspaceBreakGlassSession[] @relation("WorkspaceBreakGlassFolder")
+  workspaceGovernanceHolds    WorkspaceGovernanceHold[]    @relation("WorkspaceGovernanceHoldFolder")
 }
 
 // ---------------------------------------------------------------------------
@@ -4388,6 +4429,252 @@ model WorkspaceDocument {
   @@index([tenantId, trashedAt])
   @@index([createdByUserId])
   @@index([updatedByUserId])
+  workspaceBreakGlassSessions WorkspaceBreakGlassSession[] @relation("WorkspaceBreakGlassDocument")
+  workspaceGovernanceHolds    WorkspaceGovernanceHold[]    @relation("WorkspaceGovernanceHoldDocument")
+}
+
+// ---------------------------------------------------------------------------
+// WorkspaceBreakGlassSession — WORKSPACE-08-02 explicit exceptional access
+// ---------------------------------------------------------------------------
+
+model WorkspaceBreakGlassSession {
+  id String @id @default(cuid())
+
+  tenantId String
+  actorUserId String
+  actorPersonId String?
+
+  scopeType WorkspaceBreakGlassScopeType
+  workspaceDocumentId String?
+  workspaceFolderId String?
+
+  reason String
+
+  expiresAt DateTime
+  endedAt DateTime?
+  revokedAt DateTime?
+  revokedByUserId String?
+
+  status WorkspaceBreakGlassSessionStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  actorUser User @relation("WorkspaceBreakGlassActor", fields: [actorUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  actorPerson Person? @relation("WorkspaceBreakGlassActorPerson", fields: [actorPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  document WorkspaceDocument? @relation("WorkspaceBreakGlassDocument", fields: [workspaceDocumentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  folder WorkspaceFolder? @relation("WorkspaceBreakGlassFolder", fields: [workspaceFolderId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  revokedByUser User? @relation("WorkspaceBreakGlassRevokedBy", fields: [revokedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([tenantId, actorUserId, status])
+  @@index([tenantId, status, expiresAt])
+  @@index([tenantId, expiresAt])
+  @@index([workspaceDocumentId])
+  @@index([workspaceFolderId])
+}
+
+// ---------------------------------------------------------------------------
+// WORKSPACE-08-04 — version-scoped malware scan + content-delivery enforcement
+// ---------------------------------------------------------------------------
+
+enum WorkspaceDocumentVersionScanState {
+  NOT_SCANNED
+  PENDING
+  SCANNING
+  CLEAN
+  INFECTED
+  SCAN_FAILED
+  BLOCKED
+}
+
+enum WorkspaceMalwareScanContentDeliveryEnforcement {
+  LEGACY_PERMISSIVE
+  ENFORCED_CLEAN_ONLY
+}
+
+model WorkspaceDocumentVersionScan {
+  id                       String @id @default(cuid())
+  tenantId                 String
+  workspaceDocumentVersionId String @unique
+
+  state            WorkspaceDocumentVersionScanState @default(NOT_SCANNED)
+  providerId       String?
+  attemptCount     Int      @default(0)
+  lastErrorClass   String?
+  resultMetadataJson Json?
+
+  requestedAt        DateTime?
+  scanningStartedAt  DateTime?
+  completedAt        DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant                   Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  workspaceDocumentVersion WorkspaceDocumentVersion @relation(fields: [workspaceDocumentVersionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([tenantId, state])
+  @@index([tenantId, updatedAt])
+}
+
+model WorkspaceMalwareScanEnforcementPolicy {
+  id       String @id @default(cuid())
+  tenantId String @unique
+
+  contentDeliveryEnforcement WorkspaceMalwareScanContentDeliveryEnforcement @default(LEGACY_PERMISSIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// WORKSPACE-08-05 — durable tenant-scoped workspace background jobs
+// ---------------------------------------------------------------------------
+
+enum WorkspaceBackgroundJobStatus {
+  PENDING
+  RUNNING
+  RETRY
+  SUCCEEDED
+  DEAD
+}
+
+enum WorkspaceBackgroundJobType {
+  MALWARE_SCAN_VERSION
+  DOCUMENT_PURGE_FINALIZE
+  SUBTREE_OPERATION_BATCH
+}
+
+// ---------------------------------------------------------------------------
+// WORKSPACE-08-07 — bounded async subtree destructive operations
+// ---------------------------------------------------------------------------
+
+enum WorkspaceSubtreeOperationType {
+  FOLDER_PERMANENT_DELETE
+  FOLDER_TRASH
+}
+
+enum WorkspaceSubtreeOperationStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  PARTIALLY_BLOCKED
+  FAILED
+}
+
+model WorkspaceSubtreeOperation {
+  id       String @id @default(cuid())
+  tenantId String
+
+  rootFolderId String
+  type         WorkspaceSubtreeOperationType
+  status       WorkspaceSubtreeOperationStatus @default(PENDING)
+
+  requestedByUserId String
+
+  totalEstimated  Int?
+  processedCount  Int @default(0)
+  blockedCount    Int @default(0)
+  failedCount     Int @default(0)
+  lastErrorCode   String?
+
+  startedAt   DateTime?
+  completedAt DateTime?
+  failedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([tenantId, status])
+  @@index([tenantId, rootFolderId, type])
+  @@index([createdAt, status])
+}
+
+model WorkspaceBackgroundJob {
+  id       String @id @default(cuid())
+  tenantId String
+
+  type   WorkspaceBackgroundJobType
+  status WorkspaceBackgroundJobStatus @default(PENDING)
+
+  payloadJson Json
+
+  deduplicationKey String?
+  correlationId    String?
+
+  attemptCount Int @default(0)
+  maxAttempts  Int @default(5)
+
+  availableAt    DateTime  @default(now())
+  claimedAt      DateTime?
+  leaseExpiresAt DateTime?
+  completedAt    DateTime?
+  failedAt       DateTime?
+
+  lastErrorCode String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([status, availableAt])
+  @@index([tenantId, status, availableAt])
+  @@index([tenantId, type, status])
+  @@index([leaseExpiresAt])
+  @@index([tenantId, deduplicationKey])
+}
+
+// ---------------------------------------------------------------------------
+// WORKSPACE-08-03 — tenant trash retention + governance holds
+// ---------------------------------------------------------------------------
+
+model WorkspaceTrashRetentionPolicy {
+  id                 String   @id @default(cuid())
+  tenantId           String   @unique
+  trashRetentionDays Int
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model WorkspaceGovernanceHold {
+  id       String @id @default(cuid())
+  tenantId String
+
+  scopeType WorkspaceGovernanceHoldScopeType
+  documentId String?
+  folderId   String?
+
+  reason String
+  metadataJson Json?
+
+  createdAt         DateTime @default(now())
+  createdByUserId   String
+  createdByPersonId String?
+
+  releasedAt         DateTime?
+  releasedByUserId   String?
+  releasedByPersonId String?
+  releaseReason      String?
+
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  document        WorkspaceDocument? @relation("WorkspaceGovernanceHoldDocument", fields: [documentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  folder          WorkspaceFolder?   @relation("WorkspaceGovernanceHoldFolder", fields: [folderId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdByUser   User               @relation("WorkspaceGovernanceHoldCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  releasedByUser  User?              @relation("WorkspaceGovernanceHoldReleasedBy", fields: [releasedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdByPerson Person?            @relation("WorkspaceGovernanceHoldCreatedByPerson", fields: [createdByPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  releasedByPerson Person?           @relation("WorkspaceGovernanceHoldReleasedByPerson", fields: [releasedByPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([tenantId, documentId, releasedAt])
+  @@index([tenantId, folderId, releasedAt])
+  @@index([tenantId, createdAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -4409,6 +4696,8 @@ model WorkspaceDocumentVersion {
 
   storageKey String
   storageUrl String?
+  /// WORKSPACE-08-06 — durable provider identity for mixed-provider historical access.
+  storageProvider String @default("vercel-blob")
   checksum   String?
   changeNote String?
 
@@ -4424,11 +4713,13 @@ model WorkspaceDocumentVersion {
   requirementDocumentVersionReferences RequirementWorkspaceDocumentVersionReference[] @relation("RequirementWorkspaceDocumentVersionReferences")
 
   createdByUser User? @relation("WorkspaceDocumentVersionCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  malwareScan   WorkspaceDocumentVersionScan?
 
   @@unique([documentId, versionNumber])
   @@index([tenantId])
   @@index([tenantId, documentId])
   @@index([tenantId, status])
+  @@index([tenantId, storageProvider, storageKey])
   @@index([createdByUserId])
   @@index([createdAt])
 }

@@ -90,7 +90,7 @@ describe("archiveWorkspaceDocument", () => {
         tenantId: "tenant-1",
         actorUserId: "user-1",
         entityId: "document-1",
-        action: "PRIVATE_DOCUMENT_ARCHIVED",
+        action: "WORKSPACE_DOCUMENT_ARCHIVED",
       }),
     });
 

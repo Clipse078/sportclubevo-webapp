@@ -15,6 +15,9 @@ const mocks = vi.hoisted(() => ({
     workspaceDocument: {
       update: vi.fn(),
     },
+    workspaceDocumentVersionScan: {
+      create: vi.fn(),
+    },
   },
   writeAuditRecord: vi.fn(),
   storageDownload: vi.fn(),
@@ -36,16 +39,21 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 
-vi.mock("@/lib/audit/audit-record", () => ({
-  writeAuditRecord: mocks.writeAuditRecord,
+vi.mock("@/lib/workspace/audit/workspace-audit-write", () => ({
+  writeWorkspaceGovernanceAudit: mocks.writeAuditRecord,
 }));
 
-vi.mock("@/lib/workspace/upload-storage", () => ({
-  workspaceStorageProvider: {
+vi.mock("@/lib/workspace/storage/workspace-storage-provider-registry", () => ({
+  getConfiguredWorkspaceUploadStorageProvider: vi.fn(() => ({
     download: mocks.storageDownload,
     upload: mocks.storageUpload,
     delete: mocks.storageDelete,
-  },
+  })),
+  getWorkspaceStorageProvider: vi.fn(() => ({
+    download: mocks.storageDownload,
+    upload: mocks.storageUpload,
+    delete: mocks.storageDelete,
+  })),
 }));
 
 import {
@@ -134,6 +142,7 @@ describe("document-version-write-service", () => {
       mimeType: "application/pdf",
       sizeBytes: 4,
       storageKey: "old-key",
+      storageProvider: "vercel-blob",
       checksum: "abc",
       versionNumber: 1,
     });

@@ -1,4 +1,7 @@
-import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
+import {
+  VercelBlobWorkspaceStorage,
+  workspaceStorageProvider,
+} from "@/lib/workspace/upload-storage";
 import { sanitizeWorkspaceFilename } from "@/lib/workspace/upload-types";
 
 export type BillingCommunicationStorageUploadResult = {
@@ -74,12 +77,14 @@ export class BillingCommunicationAttachmentStorageError extends Error {
 export class WorkspaceBlobBillingCommunicationStorage
   implements BillingCommunicationAttachmentStorage
 {
+  private readonly vercelAdapter = new VercelBlobWorkspaceStorage();
+
   async upload(input: {
     storageKey: string;
     contentType: string;
     buffer: Uint8Array;
   }): Promise<BillingCommunicationStorageUploadResult> {
-    return workspaceStorageProvider.uploadImmutable(input);
+    return this.vercelAdapter.uploadImmutable(input);
   }
 
   async download(input: {

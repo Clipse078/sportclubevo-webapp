@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   workspaceAccessGrantCreateMany: vi.fn(),
   personFindFirst: vi.fn(),
   auditLogCreate: vi.fn(),
+  workspaceDocumentVersionScanCreate: vi.fn(),
   transaction: vi.fn(),
 }));
 
@@ -74,6 +75,7 @@ const createdDocument = {
     sizeBytes: 2048,
     storageKey: "workspace/tenant-1/document-1/version-1.pdf",
     storageUrl: null,
+    storageProvider: "vercel-blob",
     checksum: "abc123",
     changeNote: "Initial version",
     createdByUserId: "user-1",
@@ -117,6 +119,9 @@ describe("createWorkspaceDocumentWithInitialVersion", () => {
             createMany: typeof mocks.workspaceAccessGrantCreateMany;
           };
           auditLog: { create: typeof mocks.auditLogCreate };
+          workspaceDocumentVersionScan: {
+            create: typeof mocks.workspaceDocumentVersionScanCreate;
+          };
         }) => Promise<unknown>,
       ) =>
         callback({
@@ -131,8 +136,14 @@ describe("createWorkspaceDocumentWithInitialVersion", () => {
             createMany: mocks.workspaceAccessGrantCreateMany,
           },
           auditLog: { create: mocks.auditLogCreate },
+          workspaceDocumentVersionScan: {
+            create: mocks.workspaceDocumentVersionScanCreate,
+          },
         }),
     );
+
+    mocks.workspaceDocumentVersionScanCreate.mockResolvedValue({ id: "scan-1" });
+    mocks.auditLogCreate.mockResolvedValue({ id: "audit-1" });
   });
 
   it("creates a tenant-scoped document and initial version transactionally", async () => {
@@ -171,13 +182,17 @@ describe("createWorkspaceDocumentWithInitialVersion", () => {
         tenantId: "tenant-1",
         actorUserId: "user-1",
         entityId: "document-1",
-        action: "PRIVATE_DOCUMENT_UPLOADED",
+        action: "WORKSPACE_DOCUMENT_VERSION_CREATED",
+        workspaceDocumentVersionId: "version-1",
         afterJson: {
-          folderId: "folder-1",
           versionId: "version-1",
           mimeType: "application/pdf",
           sizeBytes: 2048,
         },
+        metadataJson: expect.objectContaining({
+          folderId: "folder-1",
+          outcome: "SUCCESS",
+        }),
       }),
     });
     const auditPayload = JSON.stringify(mocks.auditLogCreate.mock.calls[0]);
@@ -212,6 +227,7 @@ describe("createWorkspaceDocumentWithInitialVersion", () => {
         sizeBytes: 2048,
         storageKey: "workspace/tenant-1/document-1/version-1.pdf",
         storageUrl: null,
+        storageProvider: "vercel-blob",
         checksum: "abc123",
         changeNote: "Initial version",
         createdByUserId: "user-1",

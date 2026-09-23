@@ -18,7 +18,6 @@ import {
 import { getTranslations } from "next-intl/server";
 
 import { CreateRootFolderDialog } from "@/components/admin/workspace/CreateRootFolderDialog";
-import { CreateSubfolderForm } from "@/components/admin/workspace/CreateSubfolderForm";
 import { RenameFolderForm } from "@/components/admin/workspace/RenameFolderForm";
 import { MoveFolderForm } from "@/components/admin/workspace/MoveFolderForm";
 import { ArchiveFolderButton } from "@/app/(admin)/dashboard/workspace/ArchiveFolderButton";
@@ -251,13 +250,6 @@ export default async function WorkspacePage({
                 folders={folders}
                 selectedFolderId={selectedFolder?.id ?? null}
                 canManage={canManage}
-                createSubfolderSlot={(folderId, isSelected) =>
-                  canManage && isSelected ? (
-                    <div className="mt-px pr-2 pl-6">
-                      <CreateSubfolderForm parentId={folderId} />
-                    </div>
-                  ) : null
-                }
               />
             ) : (
               <div className="flex-1 overflow-y-auto px-2 py-2">

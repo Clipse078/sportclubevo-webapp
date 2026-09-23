@@ -87,7 +87,8 @@
       "cancelButton": "Abbrechen",
       "confirmButton": "Endgültig löschen",
       "loadingImpact": "Wird geprüft …",
-      "errorGeneric": "Der Ordner konnte nicht gelöscht werden."
+      "errorGeneric": "Der Ordner konnte nicht gelöscht werden.",
+      "asyncScheduled": "Die Löschung wurde geplant und wird im Hintergrund verarbeitet. Der Ordner bleibt sichtbar, bis die Verarbeitung abgeschlossen ist."
     },
 
     "archivedFolders": {

@@ -1,11 +1,19 @@
 -- AUFGABEN-05-NOTIFY-DEADLINE — participation RSVP deadlines + reminders (additive, nullable)
 
--- AlterEnum
-ALTER TYPE "NotificationCategory" ADD VALUE 'PARTICIPATION';
-ALTER TYPE "NotificationType" ADD VALUE 'PARTICIPATION_REMINDER';
-ALTER TYPE "NotificationType" ADD VALUE 'PARTICIPATION_OVERDUE';
-ALTER TYPE "NotificationEntityType" ADD VALUE 'TRAINING_SESSION';
-ALTER TYPE "NotificationEntityType" ADD VALUE 'EVENT';
+-- AlterEnum (conditional for empty-database replay before notification foundation exists)
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'NotificationCategory') THEN
+    ALTER TYPE "NotificationCategory" ADD VALUE IF NOT EXISTS 'PARTICIPATION';
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'NotificationType') THEN
+    ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'PARTICIPATION_REMINDER';
+    ALTER TYPE "NotificationType" ADD VALUE IF NOT EXISTS 'PARTICIPATION_OVERDUE';
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'NotificationEntityType') THEN
+    ALTER TYPE "NotificationEntityType" ADD VALUE IF NOT EXISTS 'TRAINING_SESSION';
+    ALTER TYPE "NotificationEntityType" ADD VALUE IF NOT EXISTS 'EVENT';
+  END IF;
+END $$;
 
 -- AlterTable Event
 ALTER TABLE "Event" ADD COLUMN "participationResponseDueAt" TIMESTAMP(3),

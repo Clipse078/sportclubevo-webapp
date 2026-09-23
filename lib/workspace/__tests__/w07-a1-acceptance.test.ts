@@ -188,17 +188,21 @@ describe("WORKSPACE-07-A1 acceptance sentinels", () => {
 
   it("W07-A1-10 Task create-ref vs delete lock contract verified", () => {
     const linkSrc = readSrc("lib/tasks/task-document-reference-service.ts");
-    const deleteSrc = readSrc("lib/workspace/document-delete-service.ts");
+    const purgeSrc = readSrc(
+      "lib/workspace/governance/workspace-document-purge-service.ts",
+    );
     expect(linkSrc).toMatch(/FOR UPDATE/);
-    expect(deleteSrc).toMatch(/FOR UPDATE/);
-    expect(deleteSrc).toMatch(/getWorkspaceDocumentDeletionBlockers/);
+    expect(purgeSrc).toMatch(/FOR UPDATE/);
+    expect(purgeSrc).toMatch(/getWorkspaceDocumentDeletionBlockers|evaluateWorkspaceDocumentPurgeEligibility/);
   });
 
   it("W07-A1-11 Requirement create-ref vs delete lock contract verified", () => {
     const linkSrc = readSrc("lib/requirements/requirement-document-reference-service.ts");
-    const deleteSrc = readSrc("lib/workspace/document-delete-service.ts");
+    const purgeSrc = readSrc(
+      "lib/workspace/governance/workspace-document-purge-service.ts",
+    );
     expect(linkSrc).toMatch(/FOR UPDATE/);
-    expect(deleteSrc).toMatch(/FOR UPDATE/);
+    expect(purgeSrc).toMatch(/FOR UPDATE/);
   });
 
   it("W07-A1-12 folder subtree delete cannot bypass exact Task reference", () => {

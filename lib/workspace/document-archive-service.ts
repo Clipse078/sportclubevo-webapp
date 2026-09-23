@@ -1,7 +1,8 @@
 ﻿import { WorkspaceDocumentStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
-import { writeAuditRecord } from "@/lib/audit/audit-record";
+import { WorkspaceAuditAction } from "@/lib/workspace/audit/workspace-audit-actions";
+import { writeWorkspaceGovernanceAudit } from "@/lib/workspace/audit/workspace-audit-write";
 
 export type WorkspaceDocumentArchiveServiceErrorCode =
   | "INVALID_INPUT"
@@ -143,13 +144,13 @@ export async function archiveWorkspaceDocument(
         "Archived document did not return the required archive metadata.",
       );
     }
-    await writeAuditRecord(tx, {
+    await writeWorkspaceGovernanceAudit(tx, {
       tenantId,
       actorUserId,
-      moduleKey: "workspace",
       entityType: "WorkspaceDocument",
       entityId: document.id,
-      action: "PRIVATE_DOCUMENT_ARCHIVED",
+      documentId: document.id,
+      action: WorkspaceAuditAction.DOCUMENT_ARCHIVED,
       beforeJson: { status: existingDocument.status },
       afterJson: { status: document.status },
     });

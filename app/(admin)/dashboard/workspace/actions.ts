@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requirePermission } from "@/lib/permissions/require-permission";
-import { logAction } from "@/lib/audit/log-action";
+import { WorkspaceAuditAction } from "@/lib/workspace/audit/workspace-audit-actions";
+import { writeWorkspaceGovernanceAudit } from "@/lib/workspace/audit/workspace-audit-write";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { resolveWorkspaceActor } from "@/lib/workspace/access/actor-context";
 import { evaluateWorkspaceFolderMove } from "@/lib/workspace/access/folder-move-authorization";
@@ -14,6 +15,7 @@ import { assertWorkspaceFolderDestructiveSubtreeManage } from "@/lib/workspace/a
 import { assertWorkspaceFolderEdit } from "@/lib/workspace/workspace-resource-guards";
 import {
   deleteWorkspaceFolderPermanently,
+  requestWorkspaceFolderPermanentDelete,
   getWorkspaceFolderDeletionImpact,
   WorkspaceFolderDeleteServiceError,
 } from "@/lib/workspace/folder-delete-service";
@@ -441,16 +443,31 @@ export async function renameWorkspaceFolderAction(
       };
     }
 
-    const updated = await prisma.workspaceFolder.updateMany({
-      where: {
-        id: folder.id,
-        tenantId,
-        archivedAt: null,
-      },
-      data: {
-        name,
-        updatedByUserId: userId,
-      },
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.workspaceFolder.updateMany({
+        where: {
+          id: folder.id,
+          tenantId,
+          archivedAt: null,
+        },
+        data: {
+          name,
+          updatedByUserId: userId,
+        },
+      });
+      if (result.count === 1) {
+        await writeWorkspaceGovernanceAudit(tx, {
+          tenantId,
+          actorUserId: userId,
+          entityType: "WorkspaceFolder",
+          entityId: folder.id,
+          folderId: folder.id,
+          action: WorkspaceAuditAction.FOLDER_RENAMED,
+          beforeJson: { name: folder.name },
+          afterJson: { name },
+        });
+      }
+      return result;
     });
 
     if (updated.count !== 1) {
@@ -952,16 +969,31 @@ export async function moveWorkspaceFolderAction(
       };
     }
 
-    const moved = await prisma.workspaceFolder.updateMany({
-      where: {
-        id: folder.id,
-        tenantId,
-        archivedAt: null,
-      },
-      data: {
-        parentId: newParentId,
-        updatedByUserId: userId,
-      },
+    const moved = await prisma.$transaction(async (tx) => {
+      const result = await tx.workspaceFolder.updateMany({
+        where: {
+          id: folder.id,
+          tenantId,
+          archivedAt: null,
+        },
+        data: {
+          parentId: newParentId,
+          updatedByUserId: userId,
+        },
+      });
+      if (result.count === 1) {
+        await writeWorkspaceGovernanceAudit(tx, {
+          tenantId,
+          actorUserId: userId,
+          entityType: "WorkspaceFolder",
+          entityId: folder.id,
+          folderId: folder.id,
+          action: WorkspaceAuditAction.FOLDER_MOVED,
+          beforeJson: { parentId: folder.parentId },
+          afterJson: { parentId: newParentId },
+        });
+      }
+      return result;
     });
 
     if (moved.count !== 1) {
@@ -972,16 +1004,6 @@ export async function moveWorkspaceFolderAction(
       };
     }
 
-    await logAction({
-      tenantId,
-      actorUserId: userId,
-      moduleKey: "workspace",
-      entityType: "WorkspaceFolder",
-      entityId: folder.id,
-      action: "PRIVATE_DOCUMENT_CONTAINER_MOVED",
-      beforeJson: { parentId: folder.parentId },
-      afterJson: { parentId: newParentId },
-    });
     revalidatePath("/dashboard/workspace");
     return { ok: true, data: undefined };
   } catch (error) {
@@ -1102,9 +1124,17 @@ export async function getWorkspaceFolderDeletionImpactAction(
  * Permanently deletes a WorkspaceFolder and its entire descendant subtree.
  * Requires WORKSPACE_DELETE permission and MANAGE on every affected resource.
  */
+export type WorkspaceFolderPermanentDeleteActionData =
+  | { mode: "SYNC" }
+  | {
+      mode: "ASYNC";
+      operationId: string;
+      status: string;
+    };
+
 export async function deleteWorkspaceFolderPermanentlyAction(
   formData: FormData,
-): Promise<WorkspaceFolderActionResult<void>> {
+): Promise<WorkspaceFolderActionResult<WorkspaceFolderPermanentDeleteActionData>> {
   let session;
 
   try {
@@ -1165,18 +1195,26 @@ export async function deleteWorkspaceFolderPermanentlyAction(
       throw error;
     }
 
-    await deleteWorkspaceFolderPermanently(tenantId, folderId);
-    await logAction({
+    const outcome = await requestWorkspaceFolderPermanentDelete({
       tenantId,
+      folderId,
       actorUserId: userId,
-      moduleKey: "workspace",
-      entityType: "WorkspaceFolder",
-      entityId: folderId,
-      action: "PRIVATE_DOCUMENT_CONTAINER_DELETED",
     });
 
     revalidatePath("/dashboard/workspace");
-    return { ok: true, data: undefined };
+
+    if (outcome.mode === "ASYNC") {
+      return {
+        ok: true,
+        data: {
+          mode: "ASYNC" as const,
+          operationId: outcome.operationId,
+          status: outcome.status,
+        },
+      };
+    }
+
+    return { ok: true, data: { mode: "SYNC" as const } };
   } catch (error) {
     if (error instanceof WorkspaceFolderDeleteServiceError) {
       if (error.code === "FOLDER_NOT_FOUND") {

@@ -11,65 +11,100 @@ import {
   WorkspaceAuthorizationError,
   type WorkspaceActorContext,
 } from "@/lib/workspace/access/workspace-authorization";
+import { recordWorkspaceAccessDeniedAudit } from "@/lib/workspace/audit/workspace-audit-denied";
+import type { CanonicalResourceLevel } from "@/lib/workspace/access/resource-level";
+
+function assertWithDeniedAudit(
+  actor: WorkspaceActorContext,
+  required: CanonicalResourceLevel,
+  resource:
+    | { resourceType: typeof WorkspaceResourceType.FOLDER; folderId: string }
+    | { resourceType: typeof WorkspaceResourceType.DOCUMENT; documentId: string },
+  operation: "VIEW" | "EDIT" | "MANAGE" | "DOWNLOAD" | "PREVIEW" | "MUTATION",
+): void {
+  try {
+    assertWorkspaceAccess(actor, required, resource);
+  } catch (error) {
+    if (error instanceof WorkspaceAuthorizationError) {
+      void recordWorkspaceAccessDeniedAudit({
+        actor,
+        required,
+        resource,
+        operation,
+      });
+    }
+    throw error;
+  }
+}
 
 export function assertWorkspaceDocumentView(
   actor: WorkspaceActorContext,
   documentId: string,
 ): void {
-  assertWorkspaceAccess(actor, "VIEW", {
+  assertWithDeniedAudit(actor, "VIEW", {
     resourceType: WorkspaceResourceType.DOCUMENT,
     documentId,
-  });
+  }, "VIEW");
+}
+
+export function assertWorkspaceDocumentDownload(
+  actor: WorkspaceActorContext,
+  documentId: string,
+): void {
+  assertWithDeniedAudit(actor, "VIEW", {
+    resourceType: WorkspaceResourceType.DOCUMENT,
+    documentId,
+  }, "DOWNLOAD");
 }
 
 export function assertWorkspaceDocumentEdit(
   actor: WorkspaceActorContext,
   documentId: string,
 ): void {
-  assertWorkspaceAccess(actor, "EDIT", {
+  assertWithDeniedAudit(actor, "EDIT", {
     resourceType: WorkspaceResourceType.DOCUMENT,
     documentId,
-  });
+  }, "MUTATION");
 }
 
 export function assertWorkspaceDocumentManage(
   actor: WorkspaceActorContext,
   documentId: string,
 ): void {
-  assertWorkspaceAccess(actor, "MANAGE", {
+  assertWithDeniedAudit(actor, "MANAGE", {
     resourceType: WorkspaceResourceType.DOCUMENT,
     documentId,
-  });
+  }, "MUTATION");
 }
 
 export function assertWorkspaceFolderView(
   actor: WorkspaceActorContext,
   folderId: string,
 ): void {
-  assertWorkspaceAccess(actor, "VIEW", {
+  assertWithDeniedAudit(actor, "VIEW", {
     resourceType: WorkspaceResourceType.FOLDER,
     folderId,
-  });
+  }, "VIEW");
 }
 
 export function assertWorkspaceFolderEdit(
   actor: WorkspaceActorContext,
   folderId: string,
 ): void {
-  assertWorkspaceAccess(actor, "EDIT", {
+  assertWithDeniedAudit(actor, "EDIT", {
     resourceType: WorkspaceResourceType.FOLDER,
     folderId,
-  });
+  }, "MUTATION");
 }
 
 export function assertWorkspaceFolderManage(
   actor: WorkspaceActorContext,
   folderId: string,
 ): void {
-  assertWorkspaceAccess(actor, "MANAGE", {
+  assertWithDeniedAudit(actor, "MANAGE", {
     resourceType: WorkspaceResourceType.FOLDER,
     folderId,
-  });
+  }, "MUTATION");
 }
 
 export function canViewWorkspaceDocument(

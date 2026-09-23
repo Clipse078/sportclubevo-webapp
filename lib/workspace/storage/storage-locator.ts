@@ -5,6 +5,11 @@
  * passed to the storage provider. References here are never treated as proof of access.
  */
 
+import {
+  normalizeWorkspaceStorageProviderId,
+  type WorkspaceStorageProviderId,
+} from "@/lib/workspace/storage/provider-identity";
+
 export const WORKSPACE_STORAGE_ROOT = "workspace";
 
 export const PRIVATE_STORAGE_PREFIXES = [
@@ -73,18 +78,19 @@ export function normalizeWorkspaceStorageReference(
 }
 
 export type WorkspaceStoredObjectLocator = {
-  provider: "vercel-blob";
+  provider: WorkspaceStorageProviderId;
   objectKey: string;
   legacy: boolean;
 };
 
 export function toWorkspaceStoredObjectLocator(
   storageKey: string,
+  storageProvider?: string | null,
 ): WorkspaceStoredObjectLocator {
   const objectKey = normalizeWorkspaceStorageReference(storageKey);
 
   return {
-    provider: "vercel-blob",
+    provider: normalizeWorkspaceStorageProviderId(storageProvider),
     objectKey,
     legacy: isLegacyWorkspaceStorageKey(objectKey),
   };

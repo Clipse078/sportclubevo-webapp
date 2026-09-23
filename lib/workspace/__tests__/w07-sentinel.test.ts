@@ -48,10 +48,24 @@ vi.mock("@/lib/db/prisma", () => ({
     workspaceDocument: {
       findFirst: (...args: unknown[]) => prismaMocks.workspaceDocument.findFirst(...args),
       findMany: (...args: unknown[]) => prismaMocks.workspaceDocument.findMany(...args),
+      delete: (...args: unknown[]) => prismaMocks.workspaceDocumentDelete(...args),
+    },
+    workspaceTrashRetentionPolicy: {
+      findUnique: vi.fn().mockResolvedValue(null),
+    },
+    workspaceGovernanceHold: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    workspaceFolder: {
+      findFirst: vi.fn().mockResolvedValue(null),
+    },
+    workspaceBreakGlassSession: {
+      deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
     },
     workspaceDocumentVersion: {
       findFirst: (...args: unknown[]) => prismaMocks.workspaceDocumentVersion.findFirst(...args),
       findMany: (...args: unknown[]) => prismaMocks.workspaceDocumentVersion.findMany(...args),
+      count: vi.fn().mockResolvedValue(0),
     },
     taskDocumentReference: {
       findMany: (...args: unknown[]) => prismaMocks.taskDocumentReference.findMany(...args),
@@ -79,9 +93,13 @@ vi.mock("@/lib/workspace/upload-storage", () => ({
   workspaceStorageProvider: { delete: prismaMocks.storageDelete },
 }));
 
-vi.mock("@/lib/audit/audit-record", () => ({
-  writeAuditRecord: vi.fn(),
-}));
+vi.mock("@/lib/audit/audit-record", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/audit/audit-record")>();
+  return {
+    ...actual,
+    writeAuditRecord: vi.fn(),
+  };
+});
 
 vi.mock("@/lib/requirements/requirement-authorization", () => ({
   canManageRequirement: vi.fn().mockReturnValue(true),
@@ -96,6 +114,16 @@ function readMigration(): string {
 
 function readSchema(): string {
   return readFileSync(SCHEMA_PATH, "utf8");
+}
+
+function extractPrismaModelBlock(schema: string, modelName: string): string {
+  const marker = `model ${modelName}`;
+  const start = schema.indexOf(marker);
+  if (start === -1) {
+    return "";
+  }
+  const nextModel = schema.indexOf("\nmodel ", start + marker.length);
+  return nextModel === -1 ? schema.slice(start) : schema.slice(start, nextModel);
 }
 
 function deletionClient() {
@@ -132,6 +160,7 @@ describe("WORKSPACE-07 sentinels", () => {
           findFirst: prismaMocks.workspaceDocumentFindFirstDelete,
           delete: prismaMocks.workspaceDocumentDelete,
         },
+        auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
       }),
     );
   });
@@ -322,12 +351,22 @@ describe("WORKSPACE-07 sentinels", () => {
   });
 
   it("W07-20 permanent delete service delegates to central deletion registry", () => {
-    const src = readFileSync(
+    const deleteSrc = readFileSync(
       join(process.cwd(), "lib/workspace/document-delete-service.ts"),
       "utf8",
     );
-    expect(src).toMatch(/getWorkspaceDocumentDeletionBlockers/);
-    expect(src).toMatch(/canPermanentlyDeleteWorkspaceDocument/);
+    const purgeSrc = readFileSync(
+      join(process.cwd(), "lib/workspace/governance/workspace-document-purge-service.ts"),
+      "utf8",
+    );
+    const eligibilitySrc = readFileSync(
+      join(process.cwd(), "lib/workspace/governance/purge-eligibility.ts"),
+      "utf8",
+    );
+    expect(deleteSrc).toMatch(/getWorkspaceDocumentDeletionBlockers/);
+    expect(deleteSrc).toMatch(/purgeWorkspaceDocumentPermanently/);
+    expect(eligibilitySrc).toMatch(/canPermanentlyDeleteWorkspaceDocument/);
+    expect(purgeSrc).toMatch(/evaluateWorkspaceDocumentPurgeEligibility/);
   });
 
   it("W07-21 task document link transaction locks parent document FOR UPDATE", () => {
@@ -543,7 +582,7 @@ describe("WORKSPACE-07 sentinels", () => {
     const migration = readMigration();
     expect(migration.includes("RequirementRecipient")).toBe(false);
     const schema = readSchema();
-    const recipientBlock = schema.slice(schema.indexOf("model RequirementRecipient"));
+    const recipientBlock = extractPrismaModelBlock(schema, "RequirementRecipient");
     expect(recipientBlock.includes("workspaceDocumentVersionId")).toBe(false);
     expect(recipientBlock).toMatch(/subjectPersonId/);
   });
@@ -638,14 +677,46 @@ describe("WORKSPACE-07 sentinels", () => {
   });
 
   it("W07-43 permanent delete rejects requirement exact-version reference blockers", async () => {
-    prismaMocks.requirementWorkspaceDocumentVersionReference.findMany.mockResolvedValueOnce([
+    prismaMocks.requirementWorkspaceDocumentVersionReference.findMany.mockResolvedValue([
       { id: "req-ref" },
     ]);
-    prismaMocks.workspaceDocumentFindFirstDelete.mockResolvedValueOnce({
+    prismaMocks.workspaceDocument.findFirst.mockImplementation(async (args: { select?: Record<string, boolean> }) => {
+      if (args?.select?.name) {
+        return { name: "Doc" };
+      }
+      return {
+        id: "doc-1",
+        status: WorkspaceDocumentStatus.TRASHED,
+        archivedAt: null,
+        trashedAt: new Date("2020-01-01T00:00:00.000Z"),
+        folderId: null,
+      };
+    });
+    prismaMocks.workspaceDocumentFindFirstDelete.mockResolvedValue({
       id: "doc-1",
-      name: "Doc",
       versions: [{ storageKey: "k1" }],
     });
+    prismaMocks.transaction.mockImplementation(async (cb: (tx: unknown) => unknown) =>
+      cb({
+        $executeRaw: prismaMocks.executeRaw,
+        taskDocumentReference: {
+          findMany: (...args: unknown[]) => prismaMocks.taskDocumentReference.findMany(...args),
+        },
+        requirementWorkspaceDocumentVersionReference: {
+          findMany: (...args: unknown[]) =>
+            prismaMocks.requirementWorkspaceDocumentVersionReference.findMany(...args),
+        },
+        workspaceDocument: {
+          findFirst: prismaMocks.workspaceDocumentFindFirstDelete,
+          delete: prismaMocks.workspaceDocumentDelete,
+        },
+        workspaceTrashRetentionPolicy: { findUnique: vi.fn().mockResolvedValue(null) },
+        workspaceGovernanceHold: { findMany: vi.fn().mockResolvedValue([]) },
+        workspaceFolder: { findFirst: vi.fn().mockResolvedValue(null) },
+        workspaceBreakGlassSession: { deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
+        auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
+      }),
+    );
 
     const { deleteWorkspaceDocumentPermanently } = await import(
       "@/lib/workspace/document-delete-service"

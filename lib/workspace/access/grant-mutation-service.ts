@@ -8,6 +8,11 @@ import {
 } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
+import { WorkspaceAuditAction } from "@/lib/workspace/audit/workspace-audit-actions";
+import {
+  workspaceEntityTypeForResource,
+  writeWorkspaceGovernanceAudit,
+} from "@/lib/workspace/audit/workspace-audit-write";
 import {
   buildDocumentAccessChain,
   buildFolderAccessChain,
@@ -27,6 +32,7 @@ import {
   WorkspaceAuthorizationError,
   type WorkspaceActorContext,
 } from "@/lib/workspace/access/workspace-authorization";
+import { recordWorkspaceAccessDeniedAudit } from "@/lib/workspace/audit/workspace-audit-denied";
 import type { WorkspaceGrantFields } from "@/lib/workspace/access/types";
 
 export class WorkspaceGrantMutationError extends Error {
@@ -178,6 +184,12 @@ export async function mutateWorkspaceAccessGrants(input: {
     assertWorkspaceAccess(input.actor, "MANAGE", input.resource);
   } catch (error) {
     if (error instanceof WorkspaceAuthorizationError) {
+      void recordWorkspaceAccessDeniedAudit({
+        actor: input.actor,
+        required: "MANAGE",
+        resource: input.resource,
+        operation: "MUTATION",
+      });
       throw new WorkspaceGrantMutationError(error.message);
     }
     throw error;
@@ -245,6 +257,47 @@ export async function mutateWorkspaceAccessGrants(input: {
     replaceGrants: grantsToPersist,
   });
 
+  const existingGrants = folderId
+    ? await prisma.workspaceAccessGrant.findMany({
+        where: { tenantId, folderId },
+        select: {
+          subjectType: true,
+          accessLevel: true,
+          personId: true,
+          orgUnitId: true,
+          teamId: true,
+          roleFunctionKey: true,
+        },
+      })
+    : documentId
+      ? await prisma.workspaceAccessGrant.findMany({
+          where: { tenantId, documentId },
+          select: {
+            subjectType: true,
+            accessLevel: true,
+            personId: true,
+            orgUnitId: true,
+            teamId: true,
+            roleFunctionKey: true,
+          },
+        })
+      : [];
+
+  const previousMode =
+    input.resource.resourceType === WorkspaceResourceType.FOLDER
+      ? (
+          await prisma.workspaceFolder.findFirst({
+            where: { id: folderId!, tenantId },
+            select: { accessInheritanceMode: true },
+          })
+        )?.accessInheritanceMode
+      : (
+          await prisma.workspaceDocument.findFirst({
+            where: { id: documentId!, tenantId },
+            select: { accessInheritanceMode: true },
+          })
+        )?.accessInheritanceMode;
+
   await prisma.$transaction(async (tx) => {
     if (folderId) {
       await tx.workspaceFolder.update({
@@ -286,6 +339,27 @@ export async function mutateWorkspaceAccessGrants(input: {
         })),
       });
     }
+
+    const entityId = folderId ?? documentId!;
+    await writeWorkspaceGovernanceAudit(tx, {
+      tenantId,
+      actorUserId: input.actor.identity.userId,
+      entityType: workspaceEntityTypeForResource(input.resource.resourceType),
+      entityId,
+      folderId: folderId ?? undefined,
+      documentId: documentId ?? undefined,
+      action: WorkspaceAuditAction.ACCESS_POLICY_CHANGED,
+      beforeJson: {
+        accessInheritanceMode: previousMode,
+        grantCount: existingGrants.length,
+        grants: existingGrants,
+      },
+      afterJson: {
+        accessInheritanceMode: targetMode,
+        grantCount: grantsToPersist.length,
+        grants: grantsToPersist,
+      },
+    });
   });
 }
 

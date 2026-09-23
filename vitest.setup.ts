@@ -13,6 +13,21 @@ vi.mock("@/auth", () => ({
   handlers: {},
 }));
 
+vi.mock("@/lib/workspace/background-jobs/job-enqueue", () => ({
+  enqueueWorkspaceBackgroundJob: vi.fn(async () => ({
+    id: "mock-workspace-background-job",
+    created: true,
+  })),
+  enqueueMalwareScanVersionJob: vi.fn(async () => ({
+    id: "mock-workspace-background-job",
+    created: true,
+  })),
+  enqueueDocumentPurgeFinalizeJob: vi.fn(async () => ({
+    id: "mock-workspace-background-job",
+    created: true,
+  })),
+}));
+
 // When TEST_DATABASE_URL is explicitly configured and passes the guard, wire it
 // into DATABASE_URL before any test module imports `@/lib/db/prisma`.
 applyConfiguredTestDatabaseUrlToProcessEnv();

@@ -7,10 +7,8 @@ import { NextResponse } from "next/server";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getTenantFromSession } from "@/lib/tenants/queries";
 import { WorkspaceAuthorizationError } from "@/lib/workspace/access/workspace-authorization";
-import {
-  assertWorkspaceDocumentEdit,
-  assertWorkspaceDocumentView,
-} from "@/lib/workspace/workspace-resource-guards";
+import { assertWorkspaceDocumentEdit } from "@/lib/workspace/workspace-resource-guards";
+import { assertWorkspaceDocumentReadWithOptionalBreakGlass } from "@/lib/workspace/governance/workspace-governance-read-authorization";
 import { requireWorkspaceApiActor } from "@/lib/workspace/workspace-api-actor";
 import {
   getDocumentVersions,
@@ -20,7 +18,10 @@ import {
   appendWorkspaceDocumentVersion,
   WorkspaceDocumentVersionWriteError,
 } from "@/lib/workspace/document-version-write-service";
-import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
+import {
+  getConfiguredWorkspaceUploadStorageProvider,
+  getConfiguredWorkspaceUploadStorageProviderId,
+} from "@/lib/workspace/upload-storage";
 import { validateWorkspaceUploadFile } from "@/lib/workspace/upload-types";
 import {
   TeamDocumentValidationError,
@@ -73,7 +74,12 @@ export async function GET(
   const { documentId } = await params;
 
   try {
-    assertWorkspaceDocumentView(access.actor, documentId);
+    await assertWorkspaceDocumentReadWithOptionalBreakGlass({
+      actor: access.actor,
+      documentId,
+      operation: "VERSION_HISTORY",
+      breakGlass: "allowed",
+    });
   } catch (error) {
     if (error instanceof WorkspaceAuthorizationError) {
       return NextResponse.json(
@@ -257,7 +263,9 @@ export async function POST(
     throw error;
   }
 
-  const uploadResult = await workspaceStorageProvider.upload({
+  const uploadStorageProvider = getConfiguredWorkspaceUploadStorageProvider();
+
+  const uploadResult = await uploadStorageProvider.upload({
     tenantId: tenant.id,
     documentId,
     versionId,
@@ -287,13 +295,14 @@ export async function POST(
       sizeBytes: uploadResult.sizeBytes,
       storageKey: uploadResult.storageKey,
       storageUrl: uploadResult.storageUrl,
+      versionStorageProviderId: getConfiguredWorkspaceUploadStorageProviderId(),
       checksum: uploadResult.checksum,
       changeNote,
     });
 
     return NextResponse.json({ document }, { status: 201 });
   } catch (error) {
-    await workspaceStorageProvider.delete(uploadResult.storageKey);
+    await uploadStorageProvider.delete(uploadResult.storageKey);
 
     if (error instanceof WorkspaceDocumentVersionWriteError) {
       return NextResponse.json(

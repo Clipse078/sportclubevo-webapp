@@ -57,13 +57,30 @@ vi.mock("@/lib/db/prisma", () => ({
           findMany: (...args: unknown[]) =>
             mocks.requirementDocumentVersionReferenceFindMany(...args),
         },
+        auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
       }),
   },
 }));
 
-vi.mock("@/lib/workspace/upload-storage", () => ({
-  workspaceStorageProvider: {
-    delete: (...args: unknown[]) => mocks.storageDelete(...args),
+const purgeMocks = vi.hoisted(() => ({
+  purge: vi.fn(),
+  evaluate: vi.fn(),
+}));
+
+vi.mock("@/lib/workspace/governance/workspace-document-purge-service", () => ({
+  purgeWorkspaceDocumentPermanently: (...args: unknown[]) => purgeMocks.purge(...args),
+  WorkspaceDocumentPurgeError: class WorkspaceDocumentPurgeError extends Error {
+    code = "NOT_ELIGIBLE";
+    eligibility = undefined;
+  },
+}));
+
+vi.mock("@/lib/workspace/governance/purge-eligibility", () => ({
+  evaluateWorkspaceDocumentPurgeEligibility: (...args: unknown[]) =>
+    purgeMocks.evaluate(...args),
+  WorkspacePurgeEligibilityStatus: {
+    ELIGIBLE: "ELIGIBLE",
+    NOT_TRASHED: "NOT_TRASHED",
   },
 }));
 
@@ -93,6 +110,8 @@ beforeEach(() => {
   mocks.taskDocumentReferenceFindMany.mockResolvedValue([]);
   mocks.requirementDocumentVersionReferenceFindMany.mockResolvedValue([]);
   mocks.executeRaw.mockResolvedValue(undefined);
+  purgeMocks.purge.mockResolvedValue({ documentId: DOC_ID, versionCount: 2 });
+  purgeMocks.evaluate.mockResolvedValue({ eligible: true, status: "ELIGIBLE" });
 });
 
 describe("getWorkspaceDocumentDeletionImpact", () => {
@@ -105,7 +124,11 @@ describe("getWorkspaceDocumentDeletionImpact", () => {
 
     const result = await getWorkspaceDocumentDeletionImpact(TENANT_A, DOC_ID);
 
-    expect(result).toEqual({ versionCount: 3, referenceBlockers: [] });
+    expect(result).toEqual({
+      versionCount: 3,
+      referenceBlockers: [],
+      purgeEligibilityStatus: "ELIGIBLE",
+    });
   });
 
   it("2 — returns null when document does not exist", async () => {
@@ -130,19 +153,20 @@ describe("getWorkspaceDocumentDeletionImpact", () => {
 });
 
 describe("deleteWorkspaceDocumentPermanently", () => {
-  it("4 — happy path: DB deleted, storage cleaned up, correct result returned", async () => {
-    mocks.workspaceDocumentFindFirst.mockResolvedValueOnce(
-      makeDocumentWithVersions([
-        { id: "v1", storageKey: "workspace/tenant-a/doc/v1/file.pdf", storageUrl: "https://blob.example/file.pdf" },
-        { id: "v2", storageKey: "workspace/tenant-a/doc/v2/file.pdf", storageUrl: null },
-      ]),
-    );
+  it("4 — happy path: purge service invoked, correct result returned", async () => {
+    mocks.workspaceDocumentFindFirst.mockResolvedValueOnce({
+      name: "Test Document",
+    });
 
     const result = await deleteWorkspaceDocumentPermanently(TENANT_A, DOC_ID);
 
-    expect(mocks.workspaceDocumentDelete).toHaveBeenCalledWith({
-      where: { id: DOC_ID },
-    });
+    expect(purgeMocks.purge).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tenantId: TENANT_A,
+        documentId: DOC_ID,
+        requireTrashed: true,
+      }),
+    );
     expect(result.documentId).toBe(DOC_ID);
     expect(result.documentName).toBe("Test Document");
     expect(result.impact.versionCount).toBe(2);
@@ -157,8 +181,7 @@ describe("deleteWorkspaceDocumentPermanently", () => {
       code: "DOCUMENT_NOT_FOUND",
     });
 
-    expect(mocks.workspaceDocumentDelete).not.toHaveBeenCalled();
-    expect(mocks.storageDelete).not.toHaveBeenCalled();
+    expect(purgeMocks.purge).not.toHaveBeenCalled();
   });
 
   it("6 — throws DOCUMENT_NOT_FOUND when document missing in tenant scope", async () => {
@@ -170,45 +193,22 @@ describe("deleteWorkspaceDocumentPermanently", () => {
       code: "DOCUMENT_NOT_FOUND",
     });
 
-    expect(mocks.workspaceDocumentDelete).not.toHaveBeenCalled();
+    expect(purgeMocks.purge).not.toHaveBeenCalled();
   });
 
-  it("7 — storage delete uses owned keys and never persisted URLs", async () => {
-    mocks.workspaceDocumentFindFirst.mockResolvedValueOnce(
-      makeDocumentWithVersions([
-        { id: "v1", storageKey: "workspace/key1", storageUrl: "https://blob.example/url1" },
-        { id: "v2", storageKey: "workspace/key2", storageUrl: null },
-      ]),
-    );
+  it("7 — deletion impact includes purge eligibility status", async () => {
+    mocks.workspaceDocumentFindUnique.mockResolvedValueOnce({
+      id: DOC_ID,
+      tenantId: TENANT_A,
+      _count: { versions: 1 },
+    });
+    purgeMocks.evaluate.mockResolvedValueOnce({
+      eligible: false,
+      status: "RETENTION_NOT_EXPIRED",
+    });
 
-    await deleteWorkspaceDocumentPermanently(TENANT_A, DOC_ID);
-
-    expect(mocks.storageDelete).toHaveBeenCalledTimes(2);
-    expect(mocks.storageDelete).toHaveBeenNthCalledWith(1, "workspace/key1");
-    expect(mocks.storageDelete).toHaveBeenNthCalledWith(2, "workspace/key2");
-  });
-
-  it("8 — storage failure does not throw (best-effort cleanup; DB delete already committed)", async () => {
-    const storageUrl = "https://blob.example/private/url1";
-    const providerSecret = "provider-secret-bearing-error";
-    mocks.workspaceDocumentFindFirst.mockResolvedValueOnce(
-      makeDocumentWithVersions([
-        { id: "v1", storageKey: "workspace/key1", storageUrl },
-      ]),
-    );
-    mocks.storageDelete.mockRejectedValueOnce(
-      new Error(`${providerSecret}: Blob unreachable at ${storageUrl}`),
-    );
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-
-    // Should resolve without throwing
-    await expect(
-      deleteWorkspaceDocumentPermanently(TENANT_A, DOC_ID),
-    ).resolves.toBeDefined();
-    const serializedLogs = JSON.stringify(warn.mock.calls);
-    expect(serializedLogs).not.toContain(storageUrl);
-    expect(serializedLogs).not.toContain(providerSecret);
-    expect(serializedLogs).toContain(DOC_ID);
+    const impact = await getWorkspaceDocumentDeletionImpact(TENANT_A, DOC_ID);
+    expect(impact?.purgeEligibilityStatus).toBe("RETENTION_NOT_EXPIRED");
   });
 
   it("9 — throws INVALID_INPUT for blank tenantId", async () => {

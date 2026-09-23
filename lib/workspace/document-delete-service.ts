@@ -1,22 +1,31 @@
 /**
  * lib/workspace/document-delete-service.ts
  *
- * WORKSPACE-06 — reference-safe permanent hard-delete for WorkspaceDocument.
+ * WORKSPACE-06 + WORKSPACE-08-03 — reference-aware permanent delete routed through purge eligibility.
  */
 
 import { prisma } from "@/lib/db/prisma";
-import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
 import {
-  canPermanentlyDeleteWorkspaceDocument,
   getWorkspaceDocumentDeletionBlockers,
   WORKSPACE_DELETION_BLOCKED_CODE,
   type WorkspaceDeletionBlocker,
 } from "@/lib/workspace/deletion/deletion-blockers";
+import {
+  evaluateWorkspaceDocumentPurgeEligibility,
+  WorkspacePurgeEligibilityStatus,
+} from "@/lib/workspace/governance/purge-eligibility";
+import {
+  purgeWorkspaceDocumentPermanently,
+  WorkspaceDocumentPurgeError,
+} from "@/lib/workspace/governance/workspace-document-purge-service";
 
 export type WorkspaceDocumentDeleteServiceErrorCode =
   | "INVALID_INPUT"
   | "DOCUMENT_NOT_FOUND"
   | "TENANT_FORBIDDEN"
+  | "NOT_TRASHED"
+  | "RETENTION_NOT_EXPIRED"
+  | "ACTIVE_GOVERNANCE_HOLD"
   | typeof WORKSPACE_DELETION_BLOCKED_CODE;
 
 export class WorkspaceDocumentDeleteServiceError extends Error {
@@ -38,6 +47,7 @@ export class WorkspaceDocumentDeleteServiceError extends Error {
 export type DocumentDeletionImpact = {
   versionCount: number;
   referenceBlockers: WorkspaceDeletionBlocker[];
+  purgeEligibilityStatus?: string;
 };
 
 export type DeleteWorkspaceDocumentResult = {
@@ -57,6 +67,48 @@ function normalizeRequiredText(value: string, fieldName: string): string {
   }
 
   return normalized;
+}
+
+function mapPurgeError(
+  error: WorkspaceDocumentPurgeError,
+): WorkspaceDocumentDeleteServiceError {
+  const eligibility = error.eligibility;
+  if (eligibility && !eligibility.eligible) {
+    switch (eligibility.status) {
+      case WorkspacePurgeEligibilityStatus.NOT_TRASHED:
+        return new WorkspaceDocumentDeleteServiceError(
+          "NOT_TRASHED",
+          "Nur Papierkorb-Inhalte können endgültig gelöscht werden.",
+        );
+      case WorkspacePurgeEligibilityStatus.RETENTION_NOT_EXPIRED:
+        return new WorkspaceDocumentDeleteServiceError(
+          "RETENTION_NOT_EXPIRED",
+          "Die Aufbewahrungsfrist für Papierkorb-Inhalte ist noch nicht abgelaufen.",
+        );
+      case WorkspacePurgeEligibilityStatus.ACTIVE_GOVERNANCE_HOLD:
+        return new WorkspaceDocumentDeleteServiceError(
+          "ACTIVE_GOVERNANCE_HOLD",
+          "Ein aktiver Governance-Hold blockiert die endgültige Löschung.",
+        );
+      case WorkspacePurgeEligibilityStatus.BLOCKING_REFERENCE:
+        return new WorkspaceDocumentDeleteServiceError(
+          WORKSPACE_DELETION_BLOCKED_CODE,
+          "Das Dokument kann nicht endgültig gelöscht werden, solange durable Referenzen bestehen.",
+          eligibility.blockers,
+        );
+      default:
+        return new WorkspaceDocumentDeleteServiceError("NOT_TRASHED", error.message);
+    }
+  }
+
+  if (error.code === "DOCUMENT_NOT_FOUND") {
+    return new WorkspaceDocumentDeleteServiceError(
+      "DOCUMENT_NOT_FOUND",
+      error.message,
+    );
+  }
+
+  return new WorkspaceDocumentDeleteServiceError("NOT_TRASHED", error.message);
 }
 
 export async function getWorkspaceDocumentDeletionImpact(
@@ -85,87 +137,56 @@ export async function getWorkspaceDocumentDeletionImpact(
     cleanDocumentId,
   );
 
+  const eligibility = await evaluateWorkspaceDocumentPurgeEligibility(prisma, {
+    tenantId: cleanTenantId,
+    documentId: cleanDocumentId,
+  });
+
   return {
     versionCount: document._count.versions,
     referenceBlockers,
+    purgeEligibilityStatus: eligibility?.status,
   };
 }
 
 export async function deleteWorkspaceDocumentPermanently(
   tenantId: string,
   documentId: string,
+  actorUserId?: string | null,
 ): Promise<DeleteWorkspaceDocumentResult> {
   const cleanTenantId = normalizeRequiredText(tenantId, "tenantId");
   const cleanDocumentId = normalizeRequiredText(documentId, "documentId");
 
-  const storageReferences: string[] = [];
-  let documentName = "";
-  let versionCount = 0;
-
-  await prisma.$transaction(async (tx) => {
-    await tx.$executeRaw`
-      SELECT "id" FROM "WorkspaceDocument"
-      WHERE "id" = ${cleanDocumentId} AND "tenantId" = ${cleanTenantId}
-      FOR UPDATE
-    `;
-
-    const document = await tx.workspaceDocument.findFirst({
-      where: { id: cleanDocumentId, tenantId: cleanTenantId },
-      select: {
-        id: true,
-        name: true,
-        versions: {
-          select: { storageKey: true },
-        },
-      },
-    });
-
-    if (!document) {
-      throw new WorkspaceDocumentDeleteServiceError(
-        "DOCUMENT_NOT_FOUND",
-        "Dokument nicht gefunden.",
-      );
-    }
-
-    const deletionCheck = await canPermanentlyDeleteWorkspaceDocument(
-      tx,
-      cleanTenantId,
-      cleanDocumentId,
-    );
-
-    if (!deletionCheck.allowed) {
-      throw new WorkspaceDocumentDeleteServiceError(
-        WORKSPACE_DELETION_BLOCKED_CODE,
-        "Das Dokument kann nicht endgültig gelöscht werden, solange durable Referenzen bestehen.",
-        deletionCheck.blockers,
-      );
-    }
-
-    documentName = document.name;
-    versionCount = document.versions.length;
-    storageReferences.push(...document.versions.map((v) => v.storageKey));
-
-    await tx.workspaceDocument.delete({
-      where: { id: cleanDocumentId },
-    });
+  const document = await prisma.workspaceDocument.findFirst({
+    where: { id: cleanDocumentId, tenantId: cleanTenantId },
+    select: { name: true },
   });
 
-  for (const ref of storageReferences) {
-    try {
-      await workspaceStorageProvider.delete(ref);
-    } catch (err) {
-      console.warn("[workspace-document-delete] storage cleanup failed", {
-        operation: "delete",
-        documentId: cleanDocumentId,
-        errorCategory:
-          err instanceof Error && err.name ? err.name : "UnknownError",
-      });
-    }
+  if (!document) {
+    throw new WorkspaceDocumentDeleteServiceError(
+      "DOCUMENT_NOT_FOUND",
+      "Dokument nicht gefunden.",
+    );
   }
 
-  return {
-    documentId: cleanDocumentId,
-    documentName,
-    impact: { versionCount },
-  };
+  try {
+    const result = await purgeWorkspaceDocumentPermanently({
+      tenantId: cleanTenantId,
+      documentId: cleanDocumentId,
+      actorUserId: actorUserId ?? null,
+      source: "manual-permanent-delete",
+      requireTrashed: true,
+    });
+
+    return {
+      documentId: cleanDocumentId,
+      documentName: document.name,
+      impact: { versionCount: result.versionCount },
+    };
+  } catch (err) {
+    if (err instanceof WorkspaceDocumentPurgeError) {
+      throw mapPurgeError(err);
+    }
+    throw err;
+  }
 }

@@ -165,6 +165,7 @@ describe("DELETE /api/workspace/documents/[documentId]/permanent — ADMIN-DELET
     expect(mocks.deleteWorkspaceDocumentPermanently).toHaveBeenCalledWith(
       TENANT_A,
       DOC_ID,
+      "club-admin-1",
     );
   });
 
@@ -210,7 +211,7 @@ describe("DELETE /api/workspace/documents/[documentId]/permanent — ADMIN-DELET
   });
 
   // ── D: document actually disappears ──────────────────────────────────────
-  it("D — deleteWorkspaceDocumentPermanently is called with correct (tenantId, documentId)", async () => {
+  it("D — deleteWorkspaceDocumentPermanently is called with correct (tenantId, documentId, actorUserId)", async () => {
     mocks.hasTenantDeletionAuthority.mockResolvedValueOnce(true);
     mocks.deleteWorkspaceDocumentPermanently.mockResolvedValueOnce({
       documentId: DOC_ID,
@@ -223,6 +224,7 @@ describe("DELETE /api/workspace/documents/[documentId]/permanent — ADMIN-DELET
     expect(mocks.deleteWorkspaceDocumentPermanently).toHaveBeenCalledWith(
       TENANT_A,
       DOC_ID,
+      "user-01",
     );
   });
 
@@ -340,7 +342,11 @@ describe("DELETE /api/workspace/documents/[documentId]/permanent — ADMIN-DELET
     expect(mocks.hasTenantDeletionAuthority).toHaveBeenCalledWith(
       expect.objectContaining({ tenantId: TENANT_A }),
     );
-    expect(mocks.deleteWorkspaceDocumentPermanently).toHaveBeenCalledWith(TENANT_A, DOC_ID);
+    expect(mocks.deleteWorkspaceDocumentPermanently).toHaveBeenCalledWith(
+      TENANT_A,
+      DOC_ID,
+      "user-01",
+    );
   });
 
   // ── impact preview 404 when service returns null ──────────────────────────

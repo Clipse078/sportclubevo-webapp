@@ -18,14 +18,19 @@ import { NextResponse } from "next/server";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getTenantFromSession } from "@/lib/tenants/queries";
 import { WorkspaceAuthorizationError } from "@/lib/workspace/access/workspace-authorization";
-import { assertWorkspaceDocumentView } from "@/lib/workspace/workspace-resource-guards";
+import { assertWorkspaceDocumentReadWithOptionalBreakGlass } from "@/lib/workspace/governance/workspace-governance-read-authorization";
 import { requireWorkspaceApiActor } from "@/lib/workspace/workspace-api-actor";
 import {
   getWorkspaceDocumentVersionForDownload,
   WorkspaceDocumentVersionAccessError,
 } from "@/lib/workspace/document-version-access-service";
 import { isWorkspaceInlinePreviewSupported } from "@/lib/workspace/storage/preview-policy";
-import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
+import {
+  assertWorkspaceVersionSafeForDelivery,
+  WorkspaceContentDeliveryBlockedError,
+} from "@/lib/workspace/malware-scan/content-delivery-gate";
+import { prisma } from "@/lib/db/prisma";
+import { getWorkspaceStorageProvider } from "@/lib/workspace/upload-storage";
 import { resolveWorkspaceVersionIdQuery } from "@/lib/workspace/version/version-query";
 
 function safeFilename(raw: string): string {
@@ -80,7 +85,12 @@ export async function GET(
     versionQuery.mode === "historical" ? versionQuery.versionId : null;
 
   try {
-    assertWorkspaceDocumentView(access.actor, documentId);
+    await assertWorkspaceDocumentReadWithOptionalBreakGlass({
+      actor: access.actor,
+      documentId,
+      operation: "PREVIEW",
+      breakGlass: "allowed",
+    });
   } catch (error) {
     if (error instanceof WorkspaceAuthorizationError) {
       return NextResponse.json(
@@ -118,6 +128,24 @@ export async function GET(
       );
     }
 
+    try {
+      await assertWorkspaceVersionSafeForDelivery(prisma, {
+        tenantId: tenant.id,
+        workspaceDocumentVersionId: document.versionId,
+        documentId: document.documentId,
+        operation: "PREVIEW",
+        actorUserId: access.actorUserId,
+      });
+    } catch (error) {
+      if (error instanceof WorkspaceContentDeliveryBlockedError) {
+        return NextResponse.json(
+          { error: "Vorschau ist derzeit nicht verfügbar." },
+          { status: 403 },
+        );
+      }
+      throw error;
+    }
+
     if (!isWorkspaceInlinePreviewSupported(document.mimeType)) {
       const downloadUrl = versionId
         ? `/api/workspace/documents/${encodeURIComponent(documentId)}/download?versionId=${encodeURIComponent(versionId)}`
@@ -127,7 +155,11 @@ export async function GET(
       );
     }
 
-    const downloadResult = await workspaceStorageProvider.download({
+    const versionStorageProvider = getWorkspaceStorageProvider(
+      document.storageProvider,
+    );
+
+    const downloadResult = await versionStorageProvider.download({
       storageReference: document.storageKey,
       filename: document.filename,
       mimeType: document.mimeType,

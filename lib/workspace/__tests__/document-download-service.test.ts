@@ -22,6 +22,13 @@ vi.mock("@/lib/workspace/document-version-access-service", () => ({
   },
 }));
 
+vi.mock("@/lib/workspace/malware-scan/content-delivery-gate", () => ({
+  assertWorkspaceVersionSafeForDelivery: vi
+    .fn()
+    .mockResolvedValue({ scanState: "CLEAN" }),
+  WorkspaceContentDeliveryBlockedError: class WorkspaceContentDeliveryBlockedError extends Error {},
+}));
+
 import {
   downloadWorkspaceDocument,
   WorkspaceDocumentDownloadServiceError,

@@ -51,6 +51,11 @@ vi.mock("@/lib/db/prisma", () => ({
     requirementWorkspaceDocumentVersionReference:
       prismaMocks.requirementWorkspaceDocumentVersionReference,
     workspaceDocument: prismaMocks.workspaceDocument,
+    workspaceTrashRetentionPolicy: { findUnique: vi.fn().mockResolvedValue(null) },
+    workspaceGovernanceHold: { findMany: vi.fn().mockResolvedValue([]) },
+    workspaceFolder: { findFirst: vi.fn().mockResolvedValue(null) },
+    workspaceDocumentVersion: { count: vi.fn().mockResolvedValue(0) },
+    workspaceBreakGlassSession: { deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
     workspaceFavorite: { findMany: vi.fn().mockResolvedValue([]) },
     workspaceRecentAccess: { findMany: vi.fn().mockResolvedValue([]) },
     $transaction: prismaMocks.transaction,
@@ -59,6 +64,12 @@ vi.mock("@/lib/db/prisma", () => ({
 
 vi.mock("@/lib/workspace/access/actor-context", () => ({
   resolveWorkspaceActorFromSessionUser: vi.fn(),
+}));
+
+vi.mock("@/lib/workspace/storage/workspace-storage-provider-registry", () => ({
+  getWorkspaceStorageProvider: vi.fn(() => ({
+    delete: prismaMocks.storageDelete,
+  })),
 }));
 
 vi.mock("@/lib/workspace/upload-storage", () => ({
@@ -138,6 +149,11 @@ describe("WORKSPACE-06 sentinels", () => {
           delete: prismaMocks.workspaceDocument.delete,
           update: prismaMocks.workspaceDocument.update,
         },
+        workspaceTrashRetentionPolicy: { findUnique: vi.fn().mockResolvedValue(null) },
+        workspaceGovernanceHold: { findMany: vi.fn().mockResolvedValue([]) },
+        workspaceFolder: { findFirst: vi.fn().mockResolvedValue(null) },
+        workspaceBreakGlassSession: { deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
+        auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
       }),
     );
     prismaMocks.executeRaw.mockResolvedValue(undefined);
@@ -238,7 +254,7 @@ describe("WORKSPACE-06 sentinels", () => {
       "utf8",
     );
     expect(src).toMatch(/WORKSPACE_DELETION_BLOCKED_CODE/);
-    expect(src).toMatch(/canPermanentlyDeleteWorkspaceDocument/);
+    expect(src).toMatch(/purgeWorkspaceDocumentPermanently/);
   });
 
   it("W06-12 folder permanent delete cannot orphan documents (service deletes docs in subtree)", async () => {
@@ -246,16 +262,26 @@ describe("WORKSPACE-06 sentinels", () => {
       join(process.cwd(), "lib/workspace/folder-delete-service.ts"),
       "utf8",
     );
-    expect(src).toMatch(/workspaceDocument\.delete/);
+    expect(src).toMatch(/purgeWorkspaceDocumentPermanently/);
     expect(src).not.toMatch(/folderId:\s*null/);
   });
 
   it("W06-14 durable reference blocks permanent delete", async () => {
-    prismaMocks.taskDocumentReference.findMany.mockResolvedValueOnce([{ id: "ref-1" }]);
-    prismaMocks.workspaceDocument.findFirst.mockResolvedValueOnce({
-      id: "doc-1",
-      name: "Doc",
-      versions: [{ storageKey: "k1" }],
+    prismaMocks.taskDocumentReference.findMany.mockResolvedValue([{ id: "ref-1" }]);
+    prismaMocks.workspaceDocument.findFirst.mockImplementation(async (args: { select?: Record<string, boolean> }) => {
+      if (args?.select?.name) {
+        return { name: "Doc" };
+      }
+      if (args?.select?.versions) {
+        return { id: "doc-1", versions: [{ storageKey: "k1" }] };
+      }
+      return {
+        id: "doc-1",
+        status: WorkspaceDocumentStatus.TRASHED,
+        archivedAt: null,
+        trashedAt: new Date("2020-01-01T00:00:00.000Z"),
+        folderId: null,
+      };
     });
 
     const { deleteWorkspaceDocumentPermanently } = await import(
@@ -268,11 +294,21 @@ describe("WORKSPACE-06 sentinels", () => {
   });
 
   it("W06-15 durable reference is not cascade-deleted by blocked delete attempt", async () => {
-    prismaMocks.taskDocumentReference.findMany.mockResolvedValueOnce([{ id: "ref-1" }]);
-    prismaMocks.workspaceDocument.findFirst.mockResolvedValueOnce({
-      id: "doc-1",
-      name: "Doc",
-      versions: [{ storageKey: "k1" }],
+    prismaMocks.taskDocumentReference.findMany.mockResolvedValue([{ id: "ref-1" }]);
+    prismaMocks.workspaceDocument.findFirst.mockImplementation(async (args: { select?: Record<string, boolean> }) => {
+      if (args?.select?.name) {
+        return { name: "Doc" };
+      }
+      if (args?.select?.versions) {
+        return { id: "doc-1", versions: [{ storageKey: "k1" }] };
+      }
+      return {
+        id: "doc-1",
+        status: WorkspaceDocumentStatus.TRASHED,
+        archivedAt: null,
+        trashedAt: new Date("2020-01-01T00:00:00.000Z"),
+        folderId: null,
+      };
     });
 
     const { deleteWorkspaceDocumentPermanently } = await import(
@@ -479,39 +515,40 @@ describe("WORKSPACE-06 sentinels", () => {
   });
 
   it("W06-31 permanent delete storage cleanup targets only deleted resource keys", async () => {
-    prismaMocks.workspaceDocument.findFirst.mockResolvedValueOnce({
-      id: "doc-1",
-      name: "Doc",
-      versions: [{ storageKey: "only-this-key" }],
-    });
-    prismaMocks.workspaceDocument.delete.mockResolvedValueOnce({ id: "doc-1" });
-
-    const { deleteWorkspaceDocumentPermanently } = await import(
-      "@/lib/workspace/document-delete-service"
+    const { purgeWorkspaceVersionStorageKeys } = await import(
+      "@/lib/workspace/governance/workspace-purge-storage",
     );
-
-    await deleteWorkspaceDocumentPermanently(TENANT, "doc-1");
-
+    const result = await purgeWorkspaceVersionStorageKeys(
+      {
+        workspaceDocumentVersion: {
+          count: vi.fn().mockResolvedValue(0),
+        },
+      },
+      TENANT,
+      "doc-1",
+      [{ storageKey: "only-this-key", storageProvider: "vercel-blob" }],
+    );
+    expect(result.ok).toBe(true);
     expect(prismaMocks.storageDelete).toHaveBeenCalledWith("only-this-key");
   });
 
   it("W06-32 failed storage cleanup cannot restore deleted DB resource", async () => {
-    prismaMocks.workspaceDocument.findFirst.mockResolvedValueOnce({
-      id: "doc-1",
-      name: "Doc",
-      versions: [{ storageKey: "k1" }],
-    });
-    prismaMocks.workspaceDocument.delete.mockResolvedValueOnce({ id: "doc-1" });
-    prismaMocks.storageDelete.mockRejectedValueOnce(new Error("storage down"));
-
-    const { deleteWorkspaceDocumentPermanently } = await import(
-      "@/lib/workspace/document-delete-service"
+    const { purgeWorkspaceVersionStorageKeys } = await import(
+      "@/lib/workspace/governance/workspace-purge-storage",
     );
-
-    await expect(
-      deleteWorkspaceDocumentPermanently(TENANT, "doc-1"),
-    ).resolves.toBeDefined();
-    expect(prismaMocks.workspaceDocument.delete).toHaveBeenCalled();
+    prismaMocks.storageDelete.mockRejectedValueOnce(new Error("storage down"));
+    const result = await purgeWorkspaceVersionStorageKeys(
+      {
+        workspaceDocumentVersion: {
+          count: vi.fn().mockResolvedValue(0),
+        },
+      },
+      TENANT,
+      "doc-1",
+      [{ storageKey: "k1", storageProvider: "vercel-blob" }],
+    );
+    expect(result.ok).toBe(false);
+    expect(prismaMocks.workspaceDocument.delete).not.toHaveBeenCalled();
   });
 
   it("W06-33 no per-version delete endpoint exists", async () => {
@@ -535,7 +572,7 @@ describe("WORKSPACE-06 sentinels", () => {
   it("W06-34 no automatic purge scheduler in W06 scope", () => {
     const src = readFileSync(join(process.cwd(), "lib/workspace/folder-delete-service.ts"), "utf8");
     expect(src.includes("cron")).toBe(false);
-    expect(src.includes("purge")).toBe(false);
+    expect(src.includes("/api/cron")).toBe(false);
   });
 
   it("W06-35 lifecycle cannot enter contradictory state", () => {
@@ -559,10 +596,6 @@ describe("WORKSPACE-06 sentinels", () => {
   });
 
   it("W06-36 permanent-delete reference race is transactionally/DB protected", () => {
-    const deleteSrc = readFileSync(
-      join(process.cwd(), "lib/workspace/document-delete-service.ts"),
-      "utf8",
-    );
     const linkSrc = readFileSync(
       join(process.cwd(), "lib/tasks/task-document-reference-service.ts"),
       "utf8",
@@ -574,7 +607,11 @@ describe("WORKSPACE-06 sentinels", () => {
       ),
       "utf8",
     );
-    expect(deleteSrc).toMatch(/FOR UPDATE/);
+    const purgeSrc = readFileSync(
+      join(process.cwd(), "lib/workspace/governance/workspace-document-purge-service.ts"),
+      "utf8",
+    );
+    expect(purgeSrc).toMatch(/FOR UPDATE/);
     expect(linkSrc).toMatch(/FOR UPDATE/);
     expect(migration).toMatch(/TaskDocumentReference_documentId_fkey[\s\S]*ON DELETE RESTRICT/);
   });

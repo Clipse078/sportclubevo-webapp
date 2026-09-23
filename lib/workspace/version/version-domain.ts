@@ -19,6 +19,7 @@ export const WORKSPACE_IMMUTABLE_VERSION_IDENTITY_FIELDS = [
   "documentId",
   "versionNumber",
   "storageKey",
+  "storageProvider",
   "sizeBytes",
   "mimeType",
   "checksum",

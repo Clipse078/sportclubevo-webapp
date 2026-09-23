@@ -13,6 +13,7 @@ import {
 import { Pool } from "pg";
 import { PLATFORM_BRANDING } from "@/lib/tenant-runtime/branding";
 import { getTenantClubAdminRoleKey } from "@/lib/roles/tenant-role-keys";
+import { TENANT_CLUB_ADMIN_GOVERNANCE_EXCLUDED_KEYS } from "@/lib/permissions/workspace-governance-permission-reconciliation";
 import { assertOperationalMutationAllowed } from "@/lib/server/operational-database-guard";
 
 const connectionString = process.env.DATABASE_URL;
@@ -263,6 +264,10 @@ async function main() {
     // separate from workspace.manage. Follows the "<module>.delete" convention
     // established by TEAMS_DELETE (ADMIN-DELETE-01A).
     { key: "workspace.delete", name: "Permanently delete workspace content", module: PermissionModule.WORKSPACE, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    // WORKSPACE-08-01: governance audit read — grantable separately from workspace.manage
+    { key: "workspace.audit.view", name: "View workspace governance audit", module: PermissionModule.WORKSPACE, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "workspace.governance.manage", name: "Manage workspace governance operations", module: PermissionModule.WORKSPACE, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "workspace.break_glass", name: "Activate workspace break-glass exceptional access", module: PermissionModule.WORKSPACE, scope: PermissionScope.TENANT, grantableByAdmin: true },
   ] as const;
 
   for (const permission of permissions) {
@@ -456,6 +461,10 @@ async function main() {
   if (fcaTenantForRoles) {
     const tenantPermissionKeys = permissions
       .filter((permission) => permission.scope === PermissionScope.TENANT)
+      .filter(
+        (permission) =>
+          !TENANT_CLUB_ADMIN_GOVERNANCE_EXCLUDED_KEYS.has(permission.key),
+      )
       .map((permission) => permission.key);
 
     const tenantClubAdminRole = await prisma.role.upsert({

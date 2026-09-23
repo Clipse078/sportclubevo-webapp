@@ -190,6 +190,12 @@ export const PERMISSIONS = {
   // "<module>.delete" convention established by TEAMS_DELETE (ADMIN-DELETE-01A)
   // and extended through ADMIN-DELETE-02A/ADMIN-DELETE-SEASON-01.
   WORKSPACE_DELETE: "workspace.delete",
+  /** WORKSPACE-08-01 — governance audit read (explicit; not implied by manage). */
+  WORKSPACE_AUDIT_VIEW: "workspace.audit.view",
+  /** WORKSPACE-08-02 — governance operations (revoke break-glass; not content ACL). */
+  WORKSPACE_GOVERNANCE_MANAGE: "workspace.governance.manage",
+  /** WORKSPACE-08-02 — explicit exceptional Workspace read access (not manage). */
+  WORKSPACE_BREAK_GLASS: "workspace.break_glass",
 
   TRAININGS_VIEW: "trainings.view",
   TRAININGS_MANAGE: "trainings.manage",

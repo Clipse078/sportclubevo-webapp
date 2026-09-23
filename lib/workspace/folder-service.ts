@@ -1,6 +1,8 @@
 import { WorkspaceAccessInheritanceMode } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
+import { WorkspaceAuditAction } from "@/lib/workspace/audit/workspace-audit-actions";
+import { writeWorkspaceGovernanceAudit } from "@/lib/workspace/audit/workspace-audit-write";
 import {
   nestedResourceInheritPolicy,
   rootFolderPolicyCreateInput,
@@ -306,6 +308,17 @@ export async function createWorkspaceFolder(
         })),
       });
     }
+
+    await writeWorkspaceGovernanceAudit(transaction, {
+      tenantId,
+      actorUserId,
+      actorPersonId: creatorPerson?.id ?? null,
+      entityType: "WorkspaceFolder",
+      entityId: folder.id,
+      folderId: folder.id,
+      action: WorkspaceAuditAction.FOLDER_CREATED,
+      afterJson: { parentId, isRoot },
+    });
 
     return folder;
   });

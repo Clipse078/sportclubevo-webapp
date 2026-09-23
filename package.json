@@ -46,6 +46,7 @@
     "billing:qr-04b:generate": "tsx scripts/generate-billing-qr-04b-cross-bank-pack.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1138.0",
     "@floating-ui/react": "^0.27.20",
     "@hookform/resolvers": "^5.2.2",
     "@prisma/adapter-pg": "^7.7.0",
