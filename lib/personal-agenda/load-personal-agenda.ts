@@ -1,6 +1,10 @@
 import { getDayWindow, formatIsoDay } from "@/lib/planner/date-utils";
 import { addDaysUtc, startOfLocalDay } from "@/lib/tasks/management-deadline";
-import { resolvePersonalTeamIds } from "./team-scope";
+import {
+  getPersonallyRelevantTeamIds,
+  resolvePersonalContext,
+} from "@/lib/dashboard/personal-context";
+import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { loadPersonalCalendarEntryProjections } from "./calendar-entries";
 import { loadTaskDeadlineProjections } from "./task-projections";
 import { loadParticipationDeadlineProjections } from "./participation-projections";
@@ -20,6 +24,8 @@ export type LoadPersonalAgendaArgs = {
   rangeEnd?: Date;
   mode: "dashboard" | "calendar";
   tasksViewAuthorized: boolean;
+  /** Optional pre-resolved permission keys (avoids duplicate resolver calls). */
+  permissionKeys?: string[];
   /** Dashboard-only: include actionable overdue tasks before the today/tomorrow window. */
   includeOverdueTasks?: boolean;
   limit?: number;
@@ -43,10 +49,18 @@ export async function loadPersonalAgenda(
   args: LoadPersonalAgendaArgs,
 ): Promise<LoadPersonalAgendaResult> {
   const now = args.now ?? new Date();
-  const { teamIds, hasLinkedPerson } = await resolvePersonalTeamIds({
+
+  if (!args.userId) {
+    return { items: [], supported: false, teamIds: [], hasLinkedPerson: false };
+  }
+
+  const personalContext = await resolvePersonalContext({
     tenantId: args.tenantId,
     userId: args.userId,
   });
+
+  const teamIds = getPersonallyRelevantTeamIds(personalContext);
+  const { hasLinkedPerson } = personalContext;
 
   const hasMeetingScope = Boolean(args.userId);
   const hasTaskScope = args.tasksViewAuthorized && Boolean(args.userId);
@@ -54,9 +68,24 @@ export async function loadPersonalAgenda(
   const supported =
     hasLinkedPerson || hasMeetingScope || hasTaskScope || hasParticipationScope;
 
-  if (!supported || !args.userId) {
+  if (!supported || !personalContext.hasActiveTenantMembership) {
     return { items: [], supported, teamIds, hasLinkedPerson };
   }
+
+  let permissionKeys = args.permissionKeys;
+  if (!permissionKeys) {
+    const { platform, tenant } = await getRequestEffectivePermissions(
+      args.userId,
+      args.tenantId,
+    );
+    permissionKeys = [...platform, ...tenant];
+  }
+
+  const actor = {
+    userId: args.userId,
+    tenantId: args.tenantId,
+    permissionKeys,
+  };
 
   let rangeStart: Date;
   let rangeEnd: Date;
@@ -80,42 +109,43 @@ export async function loadPersonalAgenda(
 
   const [calendarEntries, windowTasks, overdueTasks, participationDeadlines] =
     await Promise.all([
-    loadPersonalCalendarEntryProjections({
-      tenantId: args.tenantId,
-      userId: args.userId,
-      teamIds,
-      rangeStart,
-      rangeEnd,
-    }),
-    loadTaskDeadlineProjections({
-      tenantId: args.tenantId,
-      userId: args.userId,
-      rangeStart,
-      rangeEnd,
-      tasksViewAuthorized: args.tasksViewAuthorized,
-    }),
-    overdueRangeEnd
-      ? loadTaskDeadlineProjections({
-          tenantId: args.tenantId,
-          userId: args.userId,
-          rangeStart: addDaysUtc(
-            startOfLocalDay(now, args.timeZone),
-            -DASHBOARD_OVERDUE_TASK_LOOKBACK_DAYS,
-          ),
-          rangeEnd: overdueRangeEnd,
-          tasksViewAuthorized: args.tasksViewAuthorized,
-        })
-      : Promise.resolve([]),
-    hasParticipationScope
-      ? loadParticipationDeadlineProjections({
-          tenantId: args.tenantId,
-          userId: args.userId,
-          rangeStart,
-          rangeEnd,
-          now,
-        })
-      : Promise.resolve([]),
-  ]);
+      loadPersonalCalendarEntryProjections({
+        tenantId: args.tenantId,
+        userId: args.userId,
+        personalContext,
+        actor,
+        rangeStart,
+        rangeEnd,
+      }),
+      loadTaskDeadlineProjections({
+        tenantId: args.tenantId,
+        userId: args.userId,
+        rangeStart,
+        rangeEnd,
+        tasksViewAuthorized: args.tasksViewAuthorized,
+      }),
+      overdueRangeEnd
+        ? loadTaskDeadlineProjections({
+            tenantId: args.tenantId,
+            userId: args.userId,
+            rangeStart: addDaysUtc(
+              startOfLocalDay(now, args.timeZone),
+              -DASHBOARD_OVERDUE_TASK_LOOKBACK_DAYS,
+            ),
+            rangeEnd: overdueRangeEnd,
+            tasksViewAuthorized: args.tasksViewAuthorized,
+          })
+        : Promise.resolve([]),
+      hasParticipationScope
+        ? loadParticipationDeadlineProjections({
+            tenantId: args.tenantId,
+            userId: args.userId,
+            rangeStart,
+            rangeEnd,
+            now,
+          })
+        : Promise.resolve([]),
+    ]);
 
   const overdueIds = new Set(overdueTasks.map((t) => t.id));
   const merged = sortItemsChronologically([

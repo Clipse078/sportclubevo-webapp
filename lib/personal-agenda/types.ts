@@ -19,6 +19,8 @@ export type PersonalCalendarItem = {
   taskStatus?: TaskStatus;
   /** Accessible label including source and title (not color-only). */
   ariaLabel: string;
+  /** Human-facing “why am I seeing this?” label (DASHBOARD-01). */
+  contextLabel?: string;
 };
 
 export function buildTaskProjectionId(taskId: string): string {
