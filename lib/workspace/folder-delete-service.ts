@@ -4,10 +4,18 @@
  * WORKSPACE-06 + WORKSPACE-08-03 — folder subtree permanent delete via purge eligibility.
  */
 
+import { WorkspaceSubtreeOperationType } from "@prisma/client";
+
 import { prisma } from "@/lib/db/prisma";
 import { WorkspaceAuditAction } from "@/lib/workspace/audit/workspace-audit-actions";
 import { writeWorkspaceGovernanceAudit } from "@/lib/workspace/audit/workspace-audit-write";
 import { collectWorkspaceFolderSubtreeIds } from "@/lib/workspace/folder-subtree";
+import {
+  createWorkspaceSubtreeOperation,
+  planWorkspaceSubtreeOperation,
+  shouldExecuteWorkspaceSubtreeAsync,
+} from "@/lib/workspace/subtree/workspace-subtree-operation-service";
+import type { WorkspaceSubtreeMutationMode } from "@/lib/workspace/subtree/subtree-operation-dto";
 import {
   getWorkspaceDocumentDeletionBlockers,
   WORKSPACE_DELETION_BLOCKED_CODE,
@@ -112,6 +120,45 @@ export async function getWorkspaceFolderDeletionImpact(
     descendantFolderCount: descendantIds.length,
     documentCount: documents.length,
     referenceBlockers,
+  };
+}
+
+export async function requestWorkspaceFolderPermanentDelete(input: {
+  tenantId: string;
+  folderId: string;
+  actorUserId: string;
+}): Promise<
+  | { mode: "SYNC"; result: DeleteWorkspaceFolderResult }
+  | Extract<WorkspaceSubtreeMutationMode, { mode: "ASYNC" }>
+> {
+  const count = await planWorkspaceSubtreeOperation({
+    tenantId: input.tenantId,
+    rootFolderId: input.folderId,
+  });
+
+  if (!shouldExecuteWorkspaceSubtreeAsync(count)) {
+    return {
+      mode: "SYNC",
+      result: await deleteWorkspaceFolderPermanently(
+        input.tenantId,
+        input.folderId,
+        input.actorUserId,
+      ),
+    };
+  }
+
+  const { operationId } = await createWorkspaceSubtreeOperation({
+    tenantId: input.tenantId,
+    rootFolderId: input.folderId,
+    type: WorkspaceSubtreeOperationType.FOLDER_PERMANENT_DELETE,
+    requestedByUserId: input.actorUserId,
+    totalEstimated: count.totalNodes,
+  });
+
+  return {
+    mode: "ASYNC",
+    operationId,
+    status: "PENDING",
   };
 }
 

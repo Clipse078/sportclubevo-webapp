@@ -12,6 +12,7 @@ import {
   assertWorkspaceBackgroundJobPayloadSafeForPersistence,
   buildDocumentPurgeFinalizeDeduplicationKey,
   buildMalwareScanVersionDeduplicationKey,
+  buildSubtreeOperationBatchDeduplicationKey,
   type ParsedWorkspaceBackgroundJobPayload,
 } from "@/lib/workspace/background-jobs/job-payload";
 
@@ -120,6 +121,31 @@ export async function enqueueMalwareScanVersionJob(
     deduplicationKey: buildMalwareScanVersionDeduplicationKey(
       input.workspaceDocumentVersionId,
     ),
+    actorUserId: input.actorUserId,
+    source: input.source,
+  });
+}
+
+export async function enqueueSubtreeOperationBatchJob(
+  client: JobWriter,
+  input: {
+    tenantId: string;
+    operationId: string;
+    actorUserId?: string | null;
+    source?: string;
+  },
+): Promise<{ id: string; created: boolean }> {
+  return enqueueWorkspaceBackgroundJob(client, {
+    tenantId: input.tenantId,
+    type: WorkspaceBackgroundJobType.SUBTREE_OPERATION_BATCH,
+    payload: {
+      v: 1,
+      operationId: input.operationId,
+    },
+    deduplicationKey: buildSubtreeOperationBatchDeduplicationKey(
+      input.operationId,
+    ),
+    correlationId: input.operationId,
     actorUserId: input.actorUserId,
     source: input.source,
   });

@@ -848,6 +848,7 @@ model Tenant {
   workspaceDocumentVersionScans WorkspaceDocumentVersionScan[]
   workspaceMalwareScanEnforcementPolicy WorkspaceMalwareScanEnforcementPolicy?
   workspaceBackgroundJobs           WorkspaceBackgroundJob[]
+  workspaceSubtreeOperations        WorkspaceSubtreeOperation[]
 
   // SFV Integration — Slice: Tenant-Scoped SFV Configuration
   // One config per tenant (@@unique on tenantId). Null when not configured.
@@ -4544,6 +4545,54 @@ enum WorkspaceBackgroundJobStatus {
 enum WorkspaceBackgroundJobType {
   MALWARE_SCAN_VERSION
   DOCUMENT_PURGE_FINALIZE
+  SUBTREE_OPERATION_BATCH
+}
+
+// ---------------------------------------------------------------------------
+// WORKSPACE-08-07 — bounded async subtree destructive operations
+// ---------------------------------------------------------------------------
+
+enum WorkspaceSubtreeOperationType {
+  FOLDER_PERMANENT_DELETE
+  FOLDER_TRASH
+}
+
+enum WorkspaceSubtreeOperationStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  PARTIALLY_BLOCKED
+  FAILED
+}
+
+model WorkspaceSubtreeOperation {
+  id       String @id @default(cuid())
+  tenantId String
+
+  rootFolderId String
+  type         WorkspaceSubtreeOperationType
+  status       WorkspaceSubtreeOperationStatus @default(PENDING)
+
+  requestedByUserId String
+
+  totalEstimated  Int?
+  processedCount  Int @default(0)
+  blockedCount    Int @default(0)
+  failedCount     Int @default(0)
+  lastErrorCode   String?
+
+  startedAt   DateTime?
+  completedAt DateTime?
+  failedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([tenantId, status])
+  @@index([tenantId, rootFolderId, type])
+  @@index([createdAt, status])
 }
 
 model WorkspaceBackgroundJob {

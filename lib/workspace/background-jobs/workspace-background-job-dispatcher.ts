@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 import { claimWorkspaceBackgroundJobs } from "@/lib/workspace/background-jobs/job-claim";
 import { executeDocumentPurgeFinalizeJob } from "@/lib/workspace/background-jobs/handlers/document-purge-finalize-handler";
 import { executeMalwareScanVersionJob } from "@/lib/workspace/background-jobs/handlers/malware-scan-version-handler";
+import { executeSubtreeOperationBatchJob } from "@/lib/workspace/background-jobs/handlers/subtree-operation-handler";
 import {
   markWorkspaceBackgroundJobRetry,
 } from "@/lib/workspace/background-jobs/job-outcome";
@@ -48,6 +49,8 @@ export async function dispatchWorkspaceBackgroundJobs(input?: {
         await executeMalwareScanVersionJob(job, { client });
       } else if (job.type === WorkspaceBackgroundJobType.DOCUMENT_PURGE_FINALIZE) {
         await executeDocumentPurgeFinalizeJob(job, { client });
+      } else if (job.type === WorkspaceBackgroundJobType.SUBTREE_OPERATION_BATCH) {
+        await executeSubtreeOperationBatchJob(job, { client });
       } else {
         await markWorkspaceBackgroundJobRetry(client, job, {
           errorCode: "UNSUPPORTED_JOB_TYPE",

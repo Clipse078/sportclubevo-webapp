@@ -26,11 +26,13 @@ export function DeleteFolderButton({
   const [loadingImpact, setLoadingImpact] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [scheduledMessage, setScheduledMessage] = useState<string | null>(null);
 
   function handleOpenDialog() {
     setDialogOpen(true);
     setImpact(null);
     setError(null);
+    setScheduledMessage(null);
     setLoadingImpact(true);
 
     const formData = new FormData();
@@ -51,6 +53,7 @@ export function DeleteFolderButton({
 
   function handleConfirm() {
     setError(null);
+    setScheduledMessage(null);
 
     const formData = new FormData();
     formData.set("folderId", folderId);
@@ -59,7 +62,16 @@ export function DeleteFolderButton({
       const result = await deleteWorkspaceFolderPermanentlyAction(formData);
 
       if (result.ok) {
-        setDialogOpen(false);
+        if (
+          result.data &&
+          typeof result.data === "object" &&
+          "mode" in result.data &&
+          result.data.mode === "ASYNC"
+        ) {
+          setScheduledMessage(t("asyncScheduled"));
+        } else {
+          setDialogOpen(false);
+        }
       } else {
         setError(result.message ?? t("errorGeneric"));
       }
@@ -132,6 +144,12 @@ export function DeleteFolderButton({
                 </li>
               ) : null}
             </ul>
+          ) : null}
+
+          {scheduledMessage ? (
+            <p role="status" className="text-xs text-[var(--text-2)]">
+              {scheduledMessage}
+            </p>
           ) : null}
 
           {error ? (

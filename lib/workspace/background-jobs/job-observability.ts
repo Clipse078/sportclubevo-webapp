@@ -2,6 +2,7 @@ import {
   WorkspaceBackgroundJobStatus,
   WorkspaceBackgroundJobType,
   WorkspaceDocumentVersionScanState,
+  WorkspaceSubtreeOperationStatus,
   type PrismaClient,
 } from "@prisma/client";
 
@@ -18,6 +19,11 @@ export type WorkspaceBackgroundJobQueueHealth = {
   scanInfected: number;
   purgeFinalizeBacklog: number;
   providerFailureJobs: number;
+  subtreeOperationsPending: number;
+  subtreeOperationsRunning: number;
+  subtreeOperationsBlocked: number;
+  subtreeOperationsFailed: number;
+  oldestSubtreeOperationPendingAt: string | null;
 };
 
 export async function getWorkspaceBackgroundJobQueueHealth(
@@ -26,6 +32,7 @@ export async function getWorkspaceBackgroundJobQueueHealth(
     PrismaClient,
     | "workspaceBackgroundJob"
     | "workspaceDocumentVersionScan"
+    | "workspaceSubtreeOperation"
   > = prisma,
 ): Promise<WorkspaceBackgroundJobQueueHealth> {
   const normalizedTenantId = tenantId.trim();
@@ -44,6 +51,11 @@ export async function getWorkspaceBackgroundJobQueueHealth(
     scanInfected,
     purgeFinalizeBacklog,
     providerFailureJobs,
+    subtreeOperationsPending,
+    subtreeOperationsRunning,
+    subtreeOperationsBlocked,
+    subtreeOperationsFailed,
+    oldestSubtreeOperationPending,
   ] = await Promise.all([
     client.workspaceBackgroundJob.count({
       where: { tenantId: normalizedTenantId, status: WorkspaceBackgroundJobStatus.PENDING },
@@ -110,6 +122,38 @@ export async function getWorkspaceBackgroundJobQueueHealth(
         },
       },
     }),
+    client.workspaceSubtreeOperation.count({
+      where: {
+        tenantId: normalizedTenantId,
+        status: WorkspaceSubtreeOperationStatus.PENDING,
+      },
+    }),
+    client.workspaceSubtreeOperation.count({
+      where: {
+        tenantId: normalizedTenantId,
+        status: WorkspaceSubtreeOperationStatus.RUNNING,
+      },
+    }),
+    client.workspaceSubtreeOperation.count({
+      where: {
+        tenantId: normalizedTenantId,
+        status: WorkspaceSubtreeOperationStatus.PARTIALLY_BLOCKED,
+      },
+    }),
+    client.workspaceSubtreeOperation.count({
+      where: {
+        tenantId: normalizedTenantId,
+        status: WorkspaceSubtreeOperationStatus.FAILED,
+      },
+    }),
+    client.workspaceSubtreeOperation.findFirst({
+      where: {
+        tenantId: normalizedTenantId,
+        status: WorkspaceSubtreeOperationStatus.PENDING,
+      },
+      orderBy: { createdAt: "asc" },
+      select: { createdAt: true },
+    }),
   ]);
 
   return {
@@ -123,5 +167,11 @@ export async function getWorkspaceBackgroundJobQueueHealth(
     scanInfected,
     purgeFinalizeBacklog,
     providerFailureJobs,
+    subtreeOperationsPending,
+    subtreeOperationsRunning,
+    subtreeOperationsBlocked,
+    subtreeOperationsFailed,
+    oldestSubtreeOperationPendingAt:
+      oldestSubtreeOperationPending?.createdAt.toISOString() ?? null,
   };
 }

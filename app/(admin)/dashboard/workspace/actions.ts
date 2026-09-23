@@ -15,6 +15,7 @@ import { assertWorkspaceFolderDestructiveSubtreeManage } from "@/lib/workspace/a
 import { assertWorkspaceFolderEdit } from "@/lib/workspace/workspace-resource-guards";
 import {
   deleteWorkspaceFolderPermanently,
+  requestWorkspaceFolderPermanentDelete,
   getWorkspaceFolderDeletionImpact,
   WorkspaceFolderDeleteServiceError,
 } from "@/lib/workspace/folder-delete-service";
@@ -1123,9 +1124,17 @@ export async function getWorkspaceFolderDeletionImpactAction(
  * Permanently deletes a WorkspaceFolder and its entire descendant subtree.
  * Requires WORKSPACE_DELETE permission and MANAGE on every affected resource.
  */
+export type WorkspaceFolderPermanentDeleteActionData =
+  | { mode: "SYNC" }
+  | {
+      mode: "ASYNC";
+      operationId: string;
+      status: string;
+    };
+
 export async function deleteWorkspaceFolderPermanentlyAction(
   formData: FormData,
-): Promise<WorkspaceFolderActionResult<void>> {
+): Promise<WorkspaceFolderActionResult<WorkspaceFolderPermanentDeleteActionData>> {
   let session;
 
   try {
@@ -1186,10 +1195,26 @@ export async function deleteWorkspaceFolderPermanentlyAction(
       throw error;
     }
 
-    await deleteWorkspaceFolderPermanently(tenantId, folderId, userId);
+    const outcome = await requestWorkspaceFolderPermanentDelete({
+      tenantId,
+      folderId,
+      actorUserId: userId,
+    });
 
     revalidatePath("/dashboard/workspace");
-    return { ok: true, data: undefined };
+
+    if (outcome.mode === "ASYNC") {
+      return {
+        ok: true,
+        data: {
+          mode: "ASYNC" as const,
+          operationId: outcome.operationId,
+          status: outcome.status,
+        },
+      };
+    }
+
+    return { ok: true, data: { mode: "SYNC" as const } };
   } catch (error) {
     if (error instanceof WorkspaceFolderDeleteServiceError) {
       if (error.code === "FOLDER_NOT_FOUND") {

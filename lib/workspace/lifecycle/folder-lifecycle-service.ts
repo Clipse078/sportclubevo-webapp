@@ -4,6 +4,13 @@ import { prisma } from "@/lib/db/prisma";
 import { WorkspaceAuditAction } from "@/lib/workspace/audit/workspace-audit-actions";
 import { writeWorkspaceGovernanceAudit } from "@/lib/workspace/audit/workspace-audit-write";
 import { collectWorkspaceFolderSubtreeIds } from "@/lib/workspace/folder-subtree";
+import { WorkspaceSubtreeOperationType } from "@prisma/client";
+import type { WorkspaceSubtreeMutationMode } from "@/lib/workspace/subtree/subtree-operation-dto";
+import {
+  createWorkspaceSubtreeOperation,
+  planWorkspaceSubtreeOperation,
+  shouldExecuteWorkspaceSubtreeAsync,
+} from "@/lib/workspace/subtree/workspace-subtree-operation-service";
 import {
   deriveWorkspaceFolderLifecycle,
   workspaceArchivedFolderWhere,
@@ -136,6 +143,43 @@ export async function restoreWorkspaceFolderFromArchive(input: {
       action: WorkspaceAuditAction.FOLDER_RESTORED_FROM_ARCHIVE,
     });
   });
+}
+
+export async function requestWorkspaceFolderTrash(input: {
+  tenantId: string;
+  actorUserId: string;
+  folderId: string;
+}): Promise<
+  | {
+      mode: "SYNC";
+      trashedFolderCount: number;
+      trashedDocumentCount: number;
+    }
+  | Extract<WorkspaceSubtreeMutationMode, { mode: "ASYNC" }>
+> {
+  const count = await planWorkspaceSubtreeOperation({
+    tenantId: input.tenantId,
+    rootFolderId: input.folderId,
+  });
+
+  if (!shouldExecuteWorkspaceSubtreeAsync(count)) {
+    const sync = await trashWorkspaceFolderSubtree(input);
+    return { mode: "SYNC", ...sync };
+  }
+
+  const { operationId } = await createWorkspaceSubtreeOperation({
+    tenantId: input.tenantId,
+    rootFolderId: input.folderId,
+    type: WorkspaceSubtreeOperationType.FOLDER_TRASH,
+    requestedByUserId: input.actorUserId,
+    totalEstimated: count.totalNodes,
+  });
+
+  return {
+    mode: "ASYNC",
+    operationId,
+    status: "PENDING",
+  };
 }
 
 export async function trashWorkspaceFolderSubtree(input: {
