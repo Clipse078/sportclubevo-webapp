@@ -87,3 +87,7 @@ export type {
   DashboardQuickActionStripProps,
   QuickActionStripItem,
 } from "./DashboardQuickActionStrip";
+
+export { PersonalQuickAccess } from "./PersonalQuickAccess";
+export type { PersonalQuickAccessItem } from "./PersonalQuickAccess";
+export { QuickAccessCustomizer } from "./QuickAccessCustomizer";

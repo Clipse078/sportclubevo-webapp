@@ -35,7 +35,11 @@ import {
   HeuteImVereinWidget,
   DashboardOperationalGrid,
   DashboardQuickActionStrip,
+  PersonalQuickAccess,
 } from "@/components/ui/dashboard";
+import { resolvePersonalQuickAccess } from "@/lib/dashboard/quick-access/resolve-quick-access";
+import { getQuickAccessLabel } from "@/lib/dashboard/quick-access/labels";
+import { QUICK_ACCESS_MAX_PINS } from "@/lib/dashboard/quick-access/constants";
 import type { DashboardMetricAccent } from "@/components/ui/dashboard";
 import { getCurrentSwissFootballSeason } from "@/lib/seasons/season-logic";
 import { formatTodayDate } from "@/lib/tenant-runtime/formatters";
@@ -139,6 +143,28 @@ export default async function ClubDashboardView() {
     session?.user?.permissionKeys ??
     []) as PermissionKey[];
 
+  const quickAccessBundle =
+    tenantId && session?.user?.id
+      ? await resolvePersonalQuickAccess({
+          tenantId,
+          userId: session.user.id,
+          permissionKeys,
+          locale: fmtCfg.locale,
+        })
+      : null;
+
+  const quickAccessItems = quickAccessBundle
+    ? quickAccessBundle.items
+    : [];
+  const quickAccessCustomizeCatalog = quickAccessBundle
+    ? quickAccessBundle.catalog.map((entry) => ({
+        key: entry.key,
+        kind: entry.kind === "CREATE_ACTION" ? ("create" as const) : ("navigate" as const),
+        label: getQuickAccessLabel(entry, fmtCfg.locale),
+        href: entry.href,
+      }))
+    : [];
+
   const quickActionDefs = getDashboardQuickActionDefs(permissionKeys);
   const cockpitQuickActions = quickActionDefs
     .filter((action): action is typeof action & { key: (typeof COCKPIT_QUICK_ACTION_KEYS)[number] } =>
@@ -224,6 +250,16 @@ export default async function ClubDashboardView() {
           className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-4 sm:px-5"
         />
       )}
+
+      {/* DASHBOARD-06: final placement directly under compact welcome */}
+      {quickAccessItems.length > 0 ? (
+        <PersonalQuickAccess
+          initialItems={quickAccessItems}
+          initialActiveKeys={quickAccessBundle?.activeKeys ?? []}
+          customizeCatalog={quickAccessCustomizeCatalog}
+          maxPins={QUICK_ACCESS_MAX_PINS}
+        />
+      ) : null}
 
       <DashboardOperationalGrid
         personalRow={
