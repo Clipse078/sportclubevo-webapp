@@ -901,6 +901,7 @@ model Tenant {
   notifications                      Notification[]
   notificationDeliveries             NotificationDelivery[]
   userNotificationPreferences        UserNotificationPreference[]
+  userDashboardQuickAccessPreferences UserDashboardQuickAccessPreference[]
   // TRAINING-PLANS-01: tenant-defined training plans and assignments
   trainingPlans                    TrainingPlan[]
   trainingPlanAssignments          TrainingPlanAssignment[]
@@ -1085,6 +1086,7 @@ model User {
   taskSeriesSubtaskAssigneeTemplates TaskSeriesSubtaskAssigneeTemplate[] @relation("TaskSeriesSubtaskAssigneeTemplateUser")
   notificationsReceived            Notification[]                    @relation("NotificationRecipient")
   notificationPreferences          UserNotificationPreference[]
+  dashboardQuickAccessPreferences  UserDashboardQuickAccessPreference[]
 
   @@index([isActive])
   @@index([tenantId])
@@ -3497,6 +3499,23 @@ model UserNotificationPreference {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([tenantId, userId, notificationType])
+  @@index([tenantId, userId])
+}
+
+/// DASHBOARD-04 — per-user, per-tenant ordered Schnellzugriff shortcut keys.
+model UserDashboardQuickAccessPreference {
+  id         String   @id @default(cuid())
+  tenantId   String
+  userId     String
+  /// Stable catalog keys (`navigation.*`, `action.*`) in user-defined order.
+  pinnedKeys String[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([tenantId, userId])
   @@index([tenantId, userId])
 }
 
