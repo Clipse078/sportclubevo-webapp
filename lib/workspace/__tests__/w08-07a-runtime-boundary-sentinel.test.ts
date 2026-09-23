@@ -37,4 +37,10 @@ describe("WORKSPACE-08-07A runtime boundary sentinels", () => {
     expect(page).toMatch(/folderManagementSlot=\{/);
     expect(page).not.toMatch(/folderManagementSlot=\{\s*\(/);
   });
+
+  it("W08-07A-05 document inspector slot is a ReactNode without function props", () => {
+    const page = read("app/(admin)/dashboard/workspace/page.tsx");
+    expect(page).toMatch(/documentInspectorSlot=\{/);
+    expect(page).not.toMatch(/documentInspectorSlot=\{\s*\(/);
+  });
 });

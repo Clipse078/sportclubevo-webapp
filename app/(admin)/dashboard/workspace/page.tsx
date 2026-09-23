@@ -39,7 +39,12 @@ import {
   getWorkspaceFolderTree,
 } from "@/lib/workspace/queries";
 import { listWorkspaceDocuments } from "@/lib/workspace/document-service";
-import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
+import { TaskContextType } from "@prisma/client";
+import { getTaskServiceContext } from "@/lib/tasks/server-context";
+import { loadContextualTaskCreateView } from "@/lib/tasks/load-contextual-task-create-view";
+import { resolveDocumentWorkflowCapabilities } from "@/lib/workspace/document-inspector/load-workspace-document-inspector";
+import WorkspaceDocumentInspectorServer from "@/components/admin/workspace/inspector/WorkspaceDocumentInspectorServer";
+import { WorkspaceDocumentInspectorSkeleton } from "@/components/admin/workspace/inspector/WorkspaceDocumentInspectorView";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { buildWorkspaceBreadcrumbs } from "@/lib/workspace/breadcrumbs";
 import {
@@ -196,14 +201,49 @@ export default async function WorkspacePage({
   const workspaceLocale = tenantContext?.locale ?? "de-CH";
   const workspaceTimeZone = tenantContext?.timezone ?? "Europe/Zurich";
 
-  const documentContextualTasksPanel =
-    initialSelectedDocumentId != null ? (
-      <ContextRelatedTasksPanel
-        contextType="DOCUMENT"
-        contextId={initialSelectedDocumentId}
-        locale={workspaceLocale}
-        timeZone={workspaceTimeZone}
-      />
+  const inspectorDocument =
+    initialSelectedDocumentId != null
+      ? documents.find((d) => d.id === initialSelectedDocumentId) ?? null
+      : null;
+
+  const documentWorkflowCapabilities = inspectorDocument
+    ? await resolveDocumentWorkflowCapabilities(inspectorDocument.id)
+    : { canCreateTask: false, canCreateRequirement: false };
+
+  let documentTaskCreateDialogProps = null;
+  if (inspectorDocument && documentWorkflowCapabilities.canCreateTask) {
+    const taskCtx = await getTaskServiceContext();
+    if (taskCtx) {
+      const createView = await loadContextualTaskCreateView(
+        taskCtx,
+        TaskContextType.DOCUMENT,
+        inspectorDocument.id,
+        workspaceLocale,
+        workspaceTimeZone,
+      );
+      if (createView?.canCreate) {
+        documentTaskCreateDialogProps = {
+          contextType: createView.contextType,
+          contextId: createView.contextId,
+          presentation: createView.presentation,
+          orgUnitOptions: createView.orgUnitOptions,
+          timeZone: createView.timeZone,
+          tenantWideVisibility: createView.tenantWideVisibility,
+        };
+      }
+    }
+  }
+
+  const documentInspectorSlot =
+    inspectorDocument != null ? (
+      <Suspense fallback={<WorkspaceDocumentInspectorSkeleton />}>
+        <WorkspaceDocumentInspectorServer
+          document={inspectorDocument}
+          folderName={selectedFolder?.name ?? ""}
+          locale={workspaceLocale}
+          timeZone={workspaceTimeZone}
+        />
+      </Suspense>
     ) : null;
 
   return (
@@ -234,7 +274,7 @@ export default async function WorkspacePage({
         </p>
       ) : null}
 
-      <div className="grid min-h-[620px] gap-4 lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)_minmax(0,300px)]">
+      <div className="grid min-h-[620px] gap-4 lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)_minmax(0,320px)]">
         {/* ── Left: folder tree ─────────────────────────────────────── */}
         <aside className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
           <div className="shrink-0 border-b border-[var(--border)] px-3 py-3">
@@ -290,7 +330,9 @@ export default async function WorkspacePage({
             canManageFolderAccess={canManageFolderAccess}
             canDelete={canDelete}
             lifecycleView={lifecycleView}
-            documentContextualTasksPanel={documentContextualTasksPanel}
+            documentInspectorSlot={documentInspectorSlot}
+            documentWorkflowCapabilities={documentWorkflowCapabilities}
+            documentTaskCreateDialogProps={documentTaskCreateDialogProps}
             folderManagementSlot={
               canManage ? (
                 <WorkspaceFolderInspectorManagement

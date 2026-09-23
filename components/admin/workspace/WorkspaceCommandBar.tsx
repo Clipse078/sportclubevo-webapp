@@ -13,6 +13,9 @@ import { useTranslations } from "next-intl";
 
 import type { WorkspaceDocumentListItemDto } from "@/lib/workspace/document-dto";
 import type { WorkspaceCommandContextState } from "@/lib/workspace/command/workspace-command-context";
+import type { DocumentInspectorWorkflowCapabilitiesDto } from "@/lib/workspace/document-inspector/document-inspector-dto";
+import type { ContextualTaskCreateDialogProps } from "@/components/admin/aufgaben/contextual/ContextualTaskCreateDialog";
+import ContextualTaskCreateTrigger from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTrigger";
 
 import { Button } from "@/components/ui/Button";
 import { WorkspaceFloatingContextMenu } from "./WorkspaceFloatingContextMenu";
@@ -27,12 +30,18 @@ type WorkspaceCommandBarProps = {
   context: WorkspaceCommandContextState;
   selectedDocument: WorkspaceDocumentListItemDto | null;
   onOpenVersionHistory?: () => void;
+  workflowCapabilities?: DocumentInspectorWorkflowCapabilitiesDto;
+  taskCreateDialogProps?: Omit<ContextualTaskCreateDialogProps, "open" | "onOpenChange"> | null;
+  onCreateRequirement?: () => void;
 };
 
 export function WorkspaceCommandBar({
   context,
   selectedDocument,
   onOpenVersionHistory,
+  workflowCapabilities = { canCreateTask: false, canCreateRequirement: false },
+  taskCreateDialogProps = null,
+  onCreateRequirement,
 }: WorkspaceCommandBarProps) {
   const t = useTranslations("Workspace.commandBar");
   const tActions = useTranslations("Workspace.actions");
@@ -108,6 +117,23 @@ export function WorkspaceCommandBar({
                 >
                   {tActions("versionHistory")}
                 </Button>
+              ) : null}
+              {workflowCapabilities.canCreateTask && taskCreateDialogProps ? (
+                <ContextualTaskCreateTrigger
+                  variant="toolbar"
+                  label="+ Aufgabe"
+                  {...taskCreateDialogProps}
+                />
+              ) : null}
+              {workflowCapabilities.canCreateRequirement && onCreateRequirement ? (
+                <button
+                  type="button"
+                  data-testid="workspace-command-create-requirement"
+                  onClick={onCreateRequirement}
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--border)]/80 px-3 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)]/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                >
+                  + Anforderung
+                </button>
               ) : null}
             </>
           ) : (

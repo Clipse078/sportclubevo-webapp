@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { isExternalFileDrag } from "@/lib/workspace/drag-transfer";
-import { CalendarClock, FolderClosed, FileText } from "lucide-react";
+import { CalendarClock, FolderClosed } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import type { WorkspaceDocumentListItemDto } from "@/lib/workspace/document-dto";
@@ -20,11 +20,14 @@ import { WorkspaceDocumentEmptyState } from "./WorkspaceDocumentEmptyState";
 import { WorkspaceUploadDropzone } from "./WorkspaceUploadDropzone";
 import { WorkspaceAccessManagementDialog } from "./WorkspaceAccessManagementDialog";
 import { WorkspaceAccessSummaryPanel } from "./WorkspaceAccessSummaryPanel";
-import { WorkspaceFilePreview } from "./WorkspaceFilePreview";
 import { WorkspaceCommandBar } from "./WorkspaceCommandBar";
 import { WorkspaceUploadProvider } from "./WorkspaceUploadContext";
 import { WorkspaceDocumentVersionHistoryDialog } from "./WorkspaceDocumentVersionHistoryDialog";
 import { WorkspaceUploadProgress } from "./WorkspaceUploadProgress";
+import { WorkspaceDocumentInspectorActionsProvider } from "./inspector/WorkspaceDocumentInspectorActionsContext";
+import type { DocumentInspectorWorkflowCapabilitiesDto } from "@/lib/workspace/document-inspector/document-inspector-dto";
+import type { ContextualTaskCreateDialogProps } from "@/components/admin/aufgaben/contextual/ContextualTaskCreateDialog";
+import { WorkspaceDocumentInspectorSkeleton } from "./inspector/WorkspaceDocumentInspectorView";
 
 type WorkspaceClientShellProps = {
   documents: WorkspaceDocumentListItemDto[];
@@ -42,7 +45,12 @@ type WorkspaceClientShellProps = {
   canDelete?: boolean;
   lifecycleView?: WorkspaceLifecycleView;
   folderManagementSlot?: React.ReactNode;
-  documentContextualTasksPanel?: React.ReactNode;
+  documentInspectorSlot?: React.ReactNode;
+  documentWorkflowCapabilities?: DocumentInspectorWorkflowCapabilitiesDto;
+  documentTaskCreateDialogProps?: Omit<
+    ContextualTaskCreateDialogProps,
+    "open" | "onOpenChange"
+  > | null;
 };
 
 function formatDate(value: string): string {
@@ -68,15 +76,22 @@ function WorkspaceClientShellInner({
   canDelete = false,
   lifecycleView = "active",
   folderManagementSlot,
-  documentContextualTasksPanel,
+  documentInspectorSlot,
+  documentWorkflowCapabilities = { canCreateTask: false, canCreateRequirement: false },
+  documentTaskCreateDialogProps = null,
 }: WorkspaceClientShellProps) {
   const t = useTranslations("Workspace");
   const router = useRouter();
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
     initialSelectedDocumentId,
   );
+
+  useEffect(() => {
+    setSelectedDocumentId(initialSelectedDocumentId ?? null);
+  }, [initialSelectedDocumentId]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
+  const [requirementCreateOpen, setRequirementCreateOpen] = useState(false);
   const [accessTarget, setAccessTarget] = useState<{
     resourceType: "FOLDER" | "DOCUMENT";
     resourceId: string;
@@ -162,6 +177,13 @@ function WorkspaceClientShellInner({
           context={commandContext}
           selectedDocument={selectedDocument}
           onOpenVersionHistory={() => setVersionHistoryOpen(true)}
+          workflowCapabilities={documentWorkflowCapabilities}
+          taskCreateDialogProps={documentTaskCreateDialogProps}
+          onCreateRequirement={
+            documentWorkflowCapabilities.canCreateRequirement
+              ? () => setRequirementCreateOpen(true)
+              : undefined
+          }
         />
 
         <div className="border-b border-[var(--border)] px-5 py-2 empty:hidden">
@@ -202,42 +224,37 @@ function WorkspaceClientShellInner({
         </div>
       </section>
 
-      <aside className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-        <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] px-5 py-3.5">
+      <aside className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] lg:min-w-[320px]">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {selectedDocument ? (
-            <FileText className="h-4 w-4 text-[var(--muted)]" aria-hidden="true" />
+            documentInspectorSlot ? (
+              <WorkspaceDocumentInspectorActionsProvider
+                value={{
+                  onOpenVersionHistory: () => setVersionHistoryOpen(true),
+                  onManageDocumentAccess: () =>
+                    setAccessTarget({
+                      resourceType: "DOCUMENT",
+                      resourceId: selectedDocument.id,
+                      resourceName: selectedDocument.name,
+                    }),
+                  requirementCreateOpen,
+                  setRequirementCreateOpen,
+                }}
+              >
+                {documentInspectorSlot}
+              </WorkspaceDocumentInspectorActionsProvider>
+            ) : (
+              <WorkspaceDocumentInspectorSkeleton />
+            )
           ) : (
-            <FolderClosed className="h-4 w-4 text-[var(--muted)]" aria-hidden="true" />
-          )}
-          <h2 className="text-sm font-semibold text-[var(--text)]">
-            {selectedDocument
-              ? t("preview.panelTitle")
-              : t("folderDetails.panelTitle")}
-          </h2>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          {selectedDocument ? (
-            <div className="space-y-4 px-5 py-5">
-              <WorkspaceFilePreview
-                document={selectedDocument}
-                folderName={folderName}
-              />
-              <WorkspaceAccessSummaryPanel
-                resourceType="DOCUMENT"
-                resourceId={selectedDocument.id}
-                canManageAccess={Boolean(selectedDocument.canManageAccess)}
-                onManageAccess={() =>
-                  setAccessTarget({
-                    resourceType: "DOCUMENT",
-                    resourceId: selectedDocument.id,
-                    resourceName: selectedDocument.name,
-                  })
-                }
-              />
-              {documentContextualTasksPanel}
+            <>
+            <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] px-5 py-3.5">
+              <FolderClosed className="h-4 w-4 text-[var(--muted)]" aria-hidden="true" />
+              <h2 className="text-sm font-semibold text-[var(--text)]">
+                {t("folderDetails.panelTitle")}
+              </h2>
             </div>
-          ) : (
+            <div className="flex-1 overflow-y-auto">
             <div className="space-y-4 px-5 py-5">
               <WorkspaceAccessSummaryPanel
                 resourceType="FOLDER"
@@ -295,6 +312,8 @@ function WorkspaceClientShellInner({
                 </div>
               </dl>
             </div>
+            </div>
+            </>
           )}
         </div>
       </aside>

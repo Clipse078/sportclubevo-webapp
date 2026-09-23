@@ -46,10 +46,9 @@ describe("WORKSPACE-09-01 command surface", () => {
     expect(mgmt).toMatch(/variant="subtle"/);
   });
 
-  it("W09-01-06 command bar source omits W09-02 deferred controls", () => {
+  it("W09-01-06 command bar avoids placeholder controls (W09-02 adds real gated actions)", () => {
     const bar = read("components/admin/workspace/WorkspaceCommandBar.tsx");
-    expect(bar).not.toMatch(/Aufgabe/);
-    expect(bar).not.toMatch(/Anforderung/);
+    expect(bar).toMatch(/workflowCapabilities\.canCreateTask/);
     expect(bar).not.toMatch(/DEMNAECHST|comingSoon/i);
     expect(bar).not.toMatch(/Sortieren|Ansicht/);
   });
