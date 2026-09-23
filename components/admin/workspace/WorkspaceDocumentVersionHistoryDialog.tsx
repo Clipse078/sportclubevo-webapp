@@ -12,9 +12,10 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { isWorkspaceInlinePreviewSupported } from "@/lib/workspace/storage/preview-policy";
+import { WORKSPACE_VERSION_UPLOADER_UNAVAILABLE } from "@/lib/workspace/version/version-uploader-public-dto";
 
 import {
-  formatWorkspaceDate,
+  formatWorkspaceDateTime,
   formatWorkspaceFileSize,
 } from "./workspace-document-formatters";
 import { WorkspaceVersionScanBadge } from "./WorkspaceVersionScanBadge";
@@ -24,8 +25,9 @@ type WorkspaceDocumentVersionHistoryItem = {
   id: string;
   versionNumber: number;
   createdAt: string;
-  createdByUserId: string | null;
-  createdByName: string | null;
+  uploader: {
+    displayName: string;
+  };
   filename: string;
   mimeType: string;
   sizeBytes: number;
@@ -248,106 +250,89 @@ export function WorkspaceDocumentVersionHistoryDialog({
         ) : null}
 
         {!loading && !error && versions.length > 0 ? (
-          <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
-            <table className="w-full min-w-[860px] border-collapse text-left text-sm">
-              <thead className="bg-[var(--surface-2)] text-xs uppercase tracking-wide text-[var(--muted)]">
-                <tr>
-                  <th className="px-4 py-3 font-medium">{t("versionHeader")}</th>
-                  <th className="px-4 py-3 font-medium">{t("createdHeader")}</th>
-                  <th className="px-4 py-3 font-medium">{t("createdByHeader")}</th>
-                  <th className="px-4 py-3 font-medium">{t("filenameHeader")}</th>
-                  <th className="px-4 py-3 font-medium">{t("sizeHeader")}</th>
-                  <th className="px-4 py-3 font-medium">{t("statusHeader")}</th>
-                  <th className="px-4 py-3 font-medium">{t("actionsHeader")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {versions.map((version) => (
-                  <tr
-                    key={version.id}
-                    className="border-t border-[var(--border)]"
-                  >
-                    <td className="whitespace-nowrap px-4 py-3 font-medium text-[var(--foreground)]">
+          <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">
+            {versions.map((version) => {
+              const uploaderLabel =
+                version.uploader.displayName.trim() ||
+                WORKSPACE_VERSION_UPLOADER_UNAVAILABLE;
+
+              return (
+                <li
+                  key={version.id}
+                  className="px-4 py-3"
+                  data-testid={`workspace-version-history-row-${version.versionNumber}`}
+                >
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="text-sm font-semibold text-[var(--text)]">
                       v{version.versionNumber}
-                      {version.restoredFromVersionId ? (
-                        <span className="mt-1 block text-xs font-normal text-[var(--muted)]">
-                          {t("restoredFromLabel")}
-                        </span>
-                      ) : null}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3">
-                      {formatWorkspaceDate(version.createdAt)}
-                    </td>
-                    <td className="max-w-48 truncate px-4 py-3">
-                      {version.createdByName ??
-                        version.createdByUserId ??
-                        t("unknownUser")}
-                    </td>
-                    <td
-                      className="max-w-72 truncate px-4 py-3 text-[var(--foreground)]"
-                      title={version.filename}
-                    >
-                      {version.filename}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3">
-                      {formatWorkspaceFileSize(version.sizeBytes)}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3">
-                      <div className="flex flex-col items-start gap-1">
-                        {version.isCurrent ? (
-                          <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
-                            {t("statusCurrent")}
-                          </span>
-                        ) : (
-                          <span className="text-[var(--text-2)]">
-                            {version.status === "SUPERSEDED"
-                              ? t("statusSuperseded")
-                              : version.status}
-                          </span>
-                        )}
-                        <WorkspaceVersionScanBadge scan={version.scan} compact />
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3">
-                      <div className="flex flex-wrap gap-2">
+                    </span>
+                    {version.isCurrent ? (
+                      <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
+                        {t("statusCurrent")}
+                      </span>
+                    ) : null}
+                    {version.restoredFromVersionId ? (
+                      <span className="text-xs text-[var(--muted)]">
+                        {t("restoredFromLabel")}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <p className="mt-1 text-sm text-[var(--text-2)]">
+                    {uploaderLabel}
+                    {" · "}
+                    {formatWorkspaceDateTime(version.createdAt)}
+                    {" · "}
+                    {formatWorkspaceFileSize(version.sizeBytes)}
+                  </p>
+
+                  <p
+                    className="mt-1 truncate text-xs text-[var(--muted)]"
+                    title={version.filename}
+                  >
+                    {version.filename}
+                  </p>
+
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <WorkspaceVersionScanBadge scan={version.scan} compact />
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => downloadVersion(version.id)}
+                      >
+                        {t("downloadVersion")}
+                      </Button>
+                      {isWorkspaceInlinePreviewSupported(
+                        version.mimeType,
+                      ) ? (
                         <Button
                           type="button"
                           variant="secondary"
                           size="sm"
-                          onClick={() => downloadVersion(version.id)}
+                          onClick={() => previewVersion(version.id)}
                         >
-                          {t("downloadVersion")}
+                          {t("previewVersion")}
                         </Button>
-                        {isWorkspaceInlinePreviewSupported(
-                          version.mimeType,
-                        ) ? (
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => previewVersion(version.id)}
-                          >
-                            {t("previewVersion")}
-                          </Button>
-                        ) : null}
-                        {canRestore && !version.isCurrent ? (
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            disabled={restoreBusyId === version.id}
-                            onClick={() => void restoreVersion(version.id)}
-                          >
-                            {t("restoreVersion")}
-                          </Button>
-                        ) : null}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      ) : null}
+                      {canRestore && !version.isCurrent ? (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          disabled={restoreBusyId === version.id}
+                          onClick={() => void restoreVersion(version.id)}
+                        >
+                          {t("restoreVersion")}
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         ) : null}
       </div>
     </Dialog>

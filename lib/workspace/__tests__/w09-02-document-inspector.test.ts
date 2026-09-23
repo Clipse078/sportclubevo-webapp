@@ -93,6 +93,7 @@ describe("WORKSPACE-09-02 document inspector", () => {
     const server = read("components/admin/workspace/inspector/WorkspaceDocumentInspectorServer.tsx");
     expect(server).not.toMatch(/"use client"/);
     expect(server).toMatch(/loadWorkspaceDocumentInspectorPayload/);
+    expect(server).toMatch(/tenantId/);
   });
 
   it("W09-02-08 folder inspector does not surface Aufgaben/Anforderungen tabs", () => {

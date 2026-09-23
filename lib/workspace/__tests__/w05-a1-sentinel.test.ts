@@ -41,6 +41,19 @@ const mocks = vi.hoisted(() => ({
   storageDelete: vi.fn(),
 }));
 
+vi.mock("@/lib/workspace/malware-scan/batch-version-scan-public-dto", () => ({
+  loadWorkspaceVersionScanPublicDtoMap: vi.fn().mockResolvedValue(new Map()),
+}));
+
+vi.mock(
+  "@/lib/workspace/version/resolve-workspace-version-uploader-display",
+  () => ({
+    resolveWorkspaceVersionUploaderDisplayNames: vi
+      .fn()
+      .mockResolvedValue(new Map()),
+  }),
+);
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     workspaceDocument: {

@@ -55,13 +55,21 @@ function doc(id: string): WorkspaceDocumentListItemDto {
   return {
     id,
     folderId: "folder-1",
-    title: id,
-    mimeType: "application/pdf",
-    sizeBytes: 1,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-01T00:00:00.000Z",
-    versionCount: 1,
-    latestVersionId: `${id}-v1`,
+    name: id,
+    status: "ACTIVE",
+    currentVersionId: `${id}-v1`,
+    createdByUserId: null,
+    updatedByUserId: null,
+    createdAt: new Date("2026-01-01T00:00:00.000Z"),
+    updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+    currentVersion: {
+      id: `${id}-v1`,
+      versionNumber: 1,
+      filename: `${id}.pdf`,
+      mimeType: "application/pdf",
+      sizeBytes: 1,
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+    },
   };
 }
 
@@ -82,10 +90,10 @@ describe("WorkspaceClientShell document URL sync", () => {
       <WorkspaceClientShell
         {...baseProps}
         initialSelectedDocumentId="doc-a"
-        documentContextualTasksPanel={<div data-testid="contextual-tasks">panel</div>}
+        documentInspectorSlot={<div data-testid="document-inspector">panel</div>}
       />,
     );
-    expect(screen.getByTestId("contextual-tasks")).toBeInTheDocument();
+    expect(screen.getByTestId("document-inspector")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("select-doc-b"));
     expect(routerPush).toHaveBeenCalledWith(
       "/dashboard/workspace?folder=folder-1&document=doc-b",
@@ -110,18 +118,17 @@ describe("WorkspaceClientShell document URL sync", () => {
     expect(routerPush).toHaveBeenLastCalledWith("/dashboard/workspace?folder=folder-1", {
       scroll: false,
     });
-    expect(screen.queryByTestId("contextual-tasks")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("document-inspector")).not.toBeInTheDocument();
   });
 
-  it("document not in current folder list does not render contextual panel slot", () => {
+  it("document not in current folder list does not render inspector slot", () => {
     render(
       <WorkspaceClientShell
         {...baseProps}
         initialSelectedDocumentId="doc-foreign"
-        documentContextualTasksPanel={<div data-testid="contextual-tasks">panel</div>}
+        documentInspectorSlot={<div data-testid="document-inspector">panel</div>}
       />,
     );
-    expect(screen.queryByTestId("contextual-tasks")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("file-preview")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("document-inspector")).not.toBeInTheDocument();
   });
 });

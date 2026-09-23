@@ -7,6 +7,7 @@ import type { RequirementStatus } from "@prisma/client";
 import type { ContextualTaskCreateViewDto } from "@/lib/tasks/load-contextual-task-create-view";
 import type { ContextualTaskCreateDialogProps } from "@/components/admin/aufgaben/contextual/ContextualTaskCreateDialog";
 import type { WorkspaceVersionScanPublicDto } from "@/lib/workspace/malware-scan/scan-dto";
+import type { WorkspaceVersionUploaderPublicDto } from "@/lib/workspace/version/version-uploader-public-dto";
 
 export type ContextualTaskCreateDialogSeedProps = Omit<
   ContextualTaskCreateDialogProps,
@@ -28,6 +29,7 @@ export type WorkspaceDocumentInspectorDocumentDto = {
     mimeType: string;
     sizeBytes: number;
     createdAt: string;
+    uploader: WorkspaceVersionUploaderPublicDto;
     scan?: WorkspaceVersionScanPublicDto;
   } | null;
   canManageAccess: boolean;

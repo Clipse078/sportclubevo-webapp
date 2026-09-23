@@ -12,6 +12,7 @@ import {
 
 const mocks = vi.hoisted(() => ({
   workspaceDocumentFindFirst: vi.fn(),
+  resolveWorkspaceVersionUploaderDisplayNames: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -20,6 +21,19 @@ vi.mock("@/lib/db/prisma", () => ({
       findFirst: mocks.workspaceDocumentFindFirst,
     },
   },
+}));
+
+vi.mock(
+  "@/lib/workspace/version/resolve-workspace-version-uploader-display",
+  () => ({
+    resolveWorkspaceVersionUploaderDisplayNames: (
+      ...args: unknown[]
+    ) => mocks.resolveWorkspaceVersionUploaderDisplayNames(...args),
+  }),
+);
+
+vi.mock("@/lib/workspace/malware-scan/batch-version-scan-public-dto", () => ({
+  loadWorkspaceVersionScanPublicDtoMap: vi.fn().mockResolvedValue(new Map()),
 }));
 
 import {
@@ -36,6 +50,12 @@ const input = {
 describe("getDocumentVersions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.resolveWorkspaceVersionUploaderDisplayNames.mockResolvedValue(
+      new Map([
+        ["user-3", "Michael Duijster"],
+        ["user-2", "Sandra Muster"],
+      ]),
+    );
   });
 
   it("returns all versions newest first and flags the current version", async () => {
@@ -137,7 +157,7 @@ describe("getDocumentVersions", () => {
         versionNumber: 3,
         createdAt: version3CreatedAt,
         createdByUserId: "user-3",
-        createdByName: null,
+        createdByName: "Michael Duijster",
         filename: "trainer-handbook-v3.pdf",
         mimeType: "application/pdf",
         sizeBytes: 3072,
@@ -151,7 +171,7 @@ describe("getDocumentVersions", () => {
         versionNumber: 2,
         createdAt: version2CreatedAt,
         createdByUserId: "user-2",
-        createdByName: null,
+        createdByName: "Sandra Muster",
         filename: "trainer-handbook-v2.pdf",
         mimeType: "application/pdf",
         sizeBytes: 2048,

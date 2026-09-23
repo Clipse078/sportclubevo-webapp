@@ -244,6 +244,7 @@ export default async function WorkspacePage({
     inspectorDocument != null ? (
       <Suspense fallback={<WorkspaceDocumentInspectorSkeleton />}>
         <WorkspaceDocumentInspectorServer
+          tenantId={tenantId}
           document={inspectorDocument}
           folderName={selectedFolder?.name ?? ""}
           locale={workspaceLocale}

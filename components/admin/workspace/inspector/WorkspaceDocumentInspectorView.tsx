@@ -7,7 +7,7 @@ import { useWorkspaceDocumentInspectorActions } from "./WorkspaceDocumentInspect
 
 import type { WorkspaceDocumentInspectorPayloadDto } from "@/lib/workspace/document-inspector/document-inspector-dto";
 import {
-  formatWorkspaceDate,
+  formatWorkspaceDateTime,
   formatWorkspaceFileSize,
 } from "@/components/admin/workspace/workspace-document-formatters";
 import {
@@ -186,12 +186,19 @@ export function WorkspaceDocumentInspectorView({ payload }: Props) {
               <DetailRow label="Typ" value={fileTypeInfo.category} />
               <DetailRow label="Größe" value={sizeLabel} />
               <DetailRow label="Ordner" value={payload.folderName || "—"} />
-              <DetailRow label="Geändert" value={formatWorkspaceDate(doc.updatedAt)} />
-              <DetailRow
-                label="Hochgeladen"
-                value={currentVersion ? formatWorkspaceDate(currentVersion.createdAt) : "—"}
-              />
               <DetailRow label="Aktuelle Version" value={versionLabel} />
+              <DetailRow
+                label="Hochgeladen von"
+                value={currentVersion?.uploader.displayName ?? "—"}
+              />
+              <DetailRow
+                label="Hochgeladen am"
+                value={
+                  currentVersion
+                    ? formatWorkspaceDateTime(currentVersion.createdAt)
+                    : "—"
+                }
+              />
               <div className="flex flex-col gap-1">
                 <dt className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
                   Sicherheitsprüfung

@@ -27,6 +27,15 @@ export function formatWorkspaceDate(
   }).format(new Date(value));
 }
 
+export function formatWorkspaceDateTime(
+  value: Date | string,
+): string {
+  return new Intl.DateTimeFormat("de-CH", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
 export function formatWorkspaceDateLong(
   value: Date | string,
 ): string {

@@ -4,6 +4,10 @@
 
 import { TaskContextType, TaskDocumentReferenceVersionBinding } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import {
+  resolveWorkspaceVersionUploaderDisplayNames,
+  toWorkspaceVersionUploaderPublicDto,
+} from "@/lib/workspace/version/resolve-workspace-version-uploader-display";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import { getRequirementServiceContext } from "@/lib/requirements/server-context";
 import { loadContextRelatedTasksPanel } from "@/lib/tasks/load-context-related-tasks-panel";
@@ -22,9 +26,47 @@ import type {
   WorkspaceDocumentInspectorPayloadDto,
 } from "./document-inspector-dto";
 
-function serializeDocument(
+async function serializeDocument(
   doc: WorkspaceDocumentListItemDto,
-): WorkspaceDocumentInspectorDocumentDto {
+  tenantId: string,
+): Promise<WorkspaceDocumentInspectorDocumentDto> {
+  let currentVersion: WorkspaceDocumentInspectorDocumentDto["currentVersion"] = null;
+
+  if (doc.currentVersion) {
+    const versionMeta = await prisma.workspaceDocumentVersion.findFirst({
+      where: {
+        id: doc.currentVersion.id,
+        tenantId,
+        documentId: doc.id,
+      },
+      select: {
+        createdByUserId: true,
+      },
+    });
+
+    const uploaderDisplayNames = await resolveWorkspaceVersionUploaderDisplayNames(
+      tenantId,
+      [versionMeta?.createdByUserId ?? ""],
+    );
+
+    currentVersion = {
+      id: doc.currentVersion.id,
+      versionNumber: doc.currentVersion.versionNumber,
+      filename: doc.currentVersion.filename,
+      mimeType: doc.currentVersion.mimeType,
+      sizeBytes: doc.currentVersion.sizeBytes,
+      createdAt:
+        doc.currentVersion.createdAt instanceof Date
+          ? doc.currentVersion.createdAt.toISOString()
+          : String(doc.currentVersion.createdAt),
+      uploader: toWorkspaceVersionUploaderPublicDto(
+        versionMeta?.createdByUserId,
+        uploaderDisplayNames,
+      ),
+      scan: doc.currentVersion.scan,
+    };
+  }
+
   return {
     id: doc.id,
     folderId: doc.folderId,
@@ -35,20 +77,7 @@ function serializeDocument(
       doc.createdAt instanceof Date ? doc.createdAt.toISOString() : String(doc.createdAt),
     updatedAt:
       doc.updatedAt instanceof Date ? doc.updatedAt.toISOString() : String(doc.updatedAt),
-    currentVersion: doc.currentVersion
-      ? {
-          id: doc.currentVersion.id,
-          versionNumber: doc.currentVersion.versionNumber,
-          filename: doc.currentVersion.filename,
-          mimeType: doc.currentVersion.mimeType,
-          sizeBytes: doc.currentVersion.sizeBytes,
-          createdAt:
-            doc.currentVersion.createdAt instanceof Date
-              ? doc.currentVersion.createdAt.toISOString()
-              : String(doc.currentVersion.createdAt),
-          scan: doc.currentVersion.scan,
-        }
-      : null,
+    currentVersion,
     canManageAccess: Boolean(doc.canManageAccess),
     canEditDocument: Boolean(doc.canEditDocument),
   };
@@ -260,20 +289,22 @@ export async function resolveDocumentWorkflowCapabilities(
 }
 
 export async function loadWorkspaceDocumentInspectorPayload(input: {
+  tenantId: string;
   document: WorkspaceDocumentListItemDto;
   folderName: string;
   locale: string;
   timeZone: string;
 }): Promise<WorkspaceDocumentInspectorPayloadDto> {
   const documentId = input.document.id;
-  const [tasks, requirements, capabilities] = await Promise.all([
+  const [tasks, requirements, capabilities, document] = await Promise.all([
     loadTasksSection(documentId, input.locale, input.timeZone),
     loadRequirementsSection(documentId),
     resolveDocumentWorkflowCapabilities(documentId),
+    serializeDocument(input.document, input.tenantId),
   ]);
 
   return {
-    document: serializeDocument(input.document),
+    document,
     folderName: input.folderName,
     locale: input.locale,
     timeZone: input.timeZone,

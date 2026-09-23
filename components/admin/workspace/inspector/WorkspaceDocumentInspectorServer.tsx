@@ -3,6 +3,7 @@ import type { WorkspaceDocumentListItemDto } from "@/lib/workspace/document-dto"
 import { WorkspaceDocumentInspectorView } from "./WorkspaceDocumentInspectorView";
 
 type Props = {
+  tenantId: string;
   document: WorkspaceDocumentListItemDto;
   folderName: string;
   locale: string;
@@ -10,12 +11,14 @@ type Props = {
 };
 
 export default async function WorkspaceDocumentInspectorServer({
+  tenantId,
   document,
   folderName,
   locale,
   timeZone,
 }: Props) {
   const payload = await loadWorkspaceDocumentInspectorPayload({
+    tenantId,
     document,
     folderName,
     locale,
