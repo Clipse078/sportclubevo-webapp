@@ -46,7 +46,15 @@ describe("WORKSPACE-09-01 command surface", () => {
     expect(mgmt).toMatch(/variant="subtle"/);
   });
 
-  it("W09-01-06 command context maps document selection to download primary", () => {
+  it("W09-01-06 command bar source omits W09-02 deferred controls", () => {
+    const bar = read("components/admin/workspace/WorkspaceCommandBar.tsx");
+    expect(bar).not.toMatch(/Aufgabe/);
+    expect(bar).not.toMatch(/Anforderung/);
+    expect(bar).not.toMatch(/DEMNAECHST|comingSoon/i);
+    expect(bar).not.toMatch(/Sortieren|Ansicht/);
+  });
+
+  it("W09-01-07 command context maps document selection to download primary", () => {
     const base = buildActiveFolderCommandContext({
       folderId: "f1",
       folderName: "Docs",
