@@ -14,7 +14,6 @@ import { parseWorkspaceBackgroundJobPayload } from "@/lib/workspace/background-j
 import { enqueueSubtreeOperationBatchJob } from "@/lib/workspace/background-jobs/job-enqueue";
 import {
   markWorkspaceBackgroundJobDead,
-  markWorkspaceBackgroundJobRetry,
   markWorkspaceBackgroundJobSucceeded,
 } from "@/lib/workspace/background-jobs/job-outcome";
 import { evaluateWorkspaceFolderPurgeEligibility } from "@/lib/workspace/governance/folder-purge-eligibility";
