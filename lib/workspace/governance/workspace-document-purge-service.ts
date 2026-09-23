@@ -11,6 +11,7 @@ import {
   WorkspacePurgeEligibilityStatus,
   type WorkspacePurgeEligibilityResult,
 } from "@/lib/workspace/governance/purge-eligibility";
+import { enqueueDocumentPurgeFinalizeJob } from "@/lib/workspace/background-jobs/job-enqueue";
 import { purgeWorkspaceVersionStorageKeys } from "@/lib/workspace/governance/workspace-purge-storage";
 
 export type WorkspaceDocumentPurgeErrorCode =
@@ -173,30 +174,62 @@ export async function purgeWorkspaceDocumentPermanently(input: {
     );
   }
 
-  await prisma.$transaction(async (tx) => {
-    await tx.workspaceBreakGlassSession.deleteMany({
-      where: { tenantId, workspaceDocumentId: documentId },
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.workspaceBreakGlassSession.deleteMany({
+        where: { tenantId, workspaceDocumentId: documentId },
+      });
+
+      await writeWorkspaceGovernanceAudit(tx, {
+        tenantId,
+        actorUserId: input.actorUserId ?? null,
+        entityType: "WorkspaceDocument",
+        entityId: documentId,
+        documentId,
+        action: WorkspaceAuditAction.PURGE_COMPLETED,
+        source: input.source ?? "purge",
+        afterJson: {
+          versionCount,
+          deletedStorageKeyCount: storageResult.deletedKeys.length,
+          skippedMissingStorageKeyCount: storageResult.skippedMissingKeys.length,
+        },
+      });
+
+      await tx.workspaceDocument.delete({
+        where: { id: documentId },
+      });
+    });
+  } catch (err) {
+    await prisma.$transaction(async (tx) => {
+      await enqueueDocumentPurgeFinalizeJob(tx, {
+        tenantId,
+        workspaceDocumentId: documentId,
+        storagePhaseCompleted: true,
+        actorUserId: input.actorUserId ?? null,
+        source: input.source ?? "purge-recovery",
+      });
+
+      await writeWorkspaceGovernanceAudit(tx, {
+        tenantId,
+        actorUserId: input.actorUserId ?? null,
+        entityType: "WorkspaceDocument",
+        entityId: documentId,
+        documentId,
+        action: WorkspaceAuditAction.PURGE_RETRY_SCHEDULED,
+        source: input.source ?? "purge-recovery",
+        afterJson: {
+          reason: "DB_DELETE_FAILED_AFTER_STORAGE",
+          message:
+            err instanceof Error ? err.message.slice(0, 200) : "unknown",
+        },
+      });
     });
 
-    await writeWorkspaceGovernanceAudit(tx, {
-      tenantId,
-      actorUserId: input.actorUserId ?? null,
-      entityType: "WorkspaceDocument",
-      entityId: documentId,
-      documentId,
-      action: WorkspaceAuditAction.PURGE_COMPLETED,
-      source: input.source ?? "purge",
-      afterJson: {
-        versionCount,
-        deletedStorageKeyCount: storageResult.deletedKeys.length,
-        skippedMissingStorageKeyCount: storageResult.skippedMissingKeys.length,
-      },
-    });
-
-    await tx.workspaceDocument.delete({
-      where: { id: documentId },
-    });
-  });
+    throw new WorkspaceDocumentPurgeError(
+      "NOT_ELIGIBLE",
+      "Document purge relational phase failed; durable recovery scheduled.",
+    );
+  }
 
   return { documentId, versionCount };
 }

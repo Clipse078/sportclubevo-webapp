@@ -847,6 +847,7 @@ model Tenant {
   workspaceGovernanceHolds      WorkspaceGovernanceHold[]
   workspaceDocumentVersionScans WorkspaceDocumentVersionScan[]
   workspaceMalwareScanEnforcementPolicy WorkspaceMalwareScanEnforcementPolicy?
+  workspaceBackgroundJobs           WorkspaceBackgroundJob[]
 
   // SFV Integration — Slice: Tenant-Scoped SFV Configuration
   // One config per tenant (@@unique on tenantId). Null when not configured.
@@ -4526,6 +4527,58 @@ model WorkspaceMalwareScanEnforcementPolicy {
   updatedAt DateTime @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// WORKSPACE-08-05 — durable tenant-scoped workspace background jobs
+// ---------------------------------------------------------------------------
+
+enum WorkspaceBackgroundJobStatus {
+  PENDING
+  RUNNING
+  RETRY
+  SUCCEEDED
+  DEAD
+}
+
+enum WorkspaceBackgroundJobType {
+  MALWARE_SCAN_VERSION
+  DOCUMENT_PURGE_FINALIZE
+}
+
+model WorkspaceBackgroundJob {
+  id       String @id @default(cuid())
+  tenantId String
+
+  type   WorkspaceBackgroundJobType
+  status WorkspaceBackgroundJobStatus @default(PENDING)
+
+  payloadJson Json
+
+  deduplicationKey String?
+  correlationId    String?
+
+  attemptCount Int @default(0)
+  maxAttempts  Int @default(5)
+
+  availableAt    DateTime  @default(now())
+  claimedAt      DateTime?
+  leaseExpiresAt DateTime?
+  completedAt    DateTime?
+  failedAt       DateTime?
+
+  lastErrorCode String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([status, availableAt])
+  @@index([tenantId, status, availableAt])
+  @@index([tenantId, type, status])
+  @@index([leaseExpiresAt])
+  @@index([tenantId, deduplicationKey])
 }
 
 // ---------------------------------------------------------------------------
