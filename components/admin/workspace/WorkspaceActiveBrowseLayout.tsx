@@ -36,14 +36,16 @@ export function WorkspaceActiveBrowseLayout({
     handleInspectorOpenChange(!inspectorOpen);
   }
 
+  const panelOpen = hasInspectorContext && inspectorOpen;
+
   return (
-    <WorkspaceLayoutProvider value={{ inspectorOpen, toggleInspector }}>
+    <WorkspaceLayoutProvider value={{ inspectorOpen: panelOpen, toggleInspector }}>
       <WorkspaceThreePaneLayout
         nav={nav}
         navDrawerTitle={navDrawerTitle}
         main={main}
         inspector={inspector}
-        inspectorOpen={hasInspectorContext && inspectorOpen}
+        inspectorOpen={panelOpen}
         onInspectorOpenChange={handleInspectorOpenChange}
       />
     </WorkspaceLayoutProvider>

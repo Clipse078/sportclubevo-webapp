@@ -6,8 +6,32 @@
       "description": "Sichere interne Dokumentenverwaltung für Ihre Organisation."
     },
 
+    "navigation": {
+      "workSection": "Arbeit",
+      "workSectionAria": "Tägliche Workspace-Navigation",
+      "recent": "Zuletzt verwendet",
+      "favorites": "Favoriten",
+      "foldersSection": "Ordner",
+      "maintenanceSection": "Verwaltung",
+      "maintenanceSectionAria": "Archiv und Papierkorb"
+    },
+
+    "viewOptions": {
+      "triggerLabel": "Ansicht",
+      "menuAriaLabel": "Listenansicht anpassen",
+      "densitySection": "Dichte",
+      "densityComfortable": "Liste",
+      "densityCompact": "Kompakt",
+      "columnsSection": "Spalten",
+      "columnModified": "Geändert",
+      "columnSize": "Grösse",
+      "columnVersion": "Version",
+      "columnUploadedBy": "Hochgeladen von"
+    },
+
     "folders": {
       "panelTitle": "Ordner",
+      "workspaceNavTitle": "Workspace",
       "noFoldersTitle": "Noch keine Ordner",
       "noFoldersDescription": "Ihr Verein kann eine eigene Ordnerstruktur erstellen.",
       "selectFolder": "Ordner auswählen",
@@ -98,6 +122,8 @@
     },
 
     "folderManagement": {
+      "folderActionsLabel": "Ordneraktionen",
+      "folderActionsAria": "Ordneraktionen anzeigen",
       "locationSection": "Speicherort",
       "destructiveSectionTitle": "Archivierung & Löschung",
       "destructiveSectionHint": "Selten genutzte Aktionen — bitte mit Vorsicht verwenden.",
@@ -208,6 +234,7 @@
       "modifiedHeader": "Geändert",
       "sizeHeader": "Grösse",
       "versionHeader": "Version",
+      "uploadedByHeader": "Hochgeladen von",
       "favoriteHeader": "Favorit",
       "actionsHeader": "Aktionen",
       "tableAriaLabel": "Dokumente"
@@ -267,6 +294,8 @@
       "loadError": "Berechtigungen konnten nicht geladen werden.",
       "saveError": "Berechtigungen konnten nicht gespeichert werden.",
       "saving": "Wird gespeichert …",
+      "whoHasAccessHeading": "Wer hat Zugriff?",
+      "directGrantsHeading": "Direkt auf dieser Ressource",
       "resourceSection": "Ressource",
       "effectiveSection": "Effektiver Zugriff",
       "actorAuthoritySection": "Ihre Berechtigung",
@@ -312,7 +341,29 @@
       "trashConfirm": "In Papierkorb verschieben? Das Dokument kann später wiederhergestellt werden.",
       "addFavorite": "Zu Favoriten",
       "removeFavorite": "Aus Favoriten entfernen",
+      "createTask": "Aufgabe erstellen",
+      "createRequirement": "Anforderung erstellen",
+      "actionFailed": "Aktion fehlgeschlagen.",
       "comingSoon": "Demnächst"
+    },
+
+    "inspector": {
+      "tabs": {
+        "preview": "Vorschau",
+        "details": "Details",
+        "versions": "Versionen",
+        "access": "Zugriff",
+        "tasks": "Aufgaben",
+        "tasksWithCount": "Aufgaben {count}",
+        "requirements": "Anforderungen",
+        "requirementsWithCount": "Anforderungen {count}"
+      }
+    },
+
+    "lifecycleBanner": {
+      "label": "Lebenszyklus: {state}",
+      "archived": "Archiviert",
+      "trashed": "Papierkorb"
     },
 
     "scan": {

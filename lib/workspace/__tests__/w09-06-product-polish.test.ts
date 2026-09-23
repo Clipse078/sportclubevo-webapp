@@ -17,7 +17,9 @@ describe("WORKSPACE-09-06 product polish", () => {
   it("W09-06-01 workspace page uses resizable three-pane layout shell", () => {
     const page = read("app/(admin)/dashboard/workspace/page.tsx");
     expect(page).toMatch(/resizableLayout/);
-    expect(page).toMatch(/WorkspaceDiscoveryTabs/);
+    expect(page).toMatch(/WorkspaceFolderNavPanel/);
+    const navPanel = read("components/admin/workspace/WorkspaceFolderNavPanel.tsx");
+    expect(navPanel).toMatch(/WorkspaceSidebarNavigation/);
     expect(page).toMatch(/WorkspaceCollaborationProvider/);
   });
 
@@ -30,7 +32,7 @@ describe("WORKSPACE-09-06 product polish", () => {
   it("W09-06-03 favorites toggle is exposed in document row/actions", () => {
     const row = read("components/admin/workspace/WorkspaceDocumentRow.tsx");
     const actions = read("components/admin/workspace/WorkspaceDocumentActions.tsx");
-    expect(row).toMatch(/WorkspaceFavoriteToggle/);
+    expect(row).toMatch(/WorkspaceDocumentActions/);
     expect(actions).toMatch(/toggleFavorite/);
   });
 

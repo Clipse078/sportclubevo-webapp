@@ -1,0 +1,46 @@
+{
+  "Workspace": {
+    "navigation": {
+      "workSection": "Lavoro",
+      "workSectionAria": "Navigazione quotidiana del workspace",
+      "recent": "Usati di recente",
+      "favorites": "Preferiti",
+      "foldersSection": "Cartelle",
+      "maintenanceSection": "Manutenzione",
+      "maintenanceSectionAria": "Archivio e cestino"
+    },
+    "viewOptions": {
+      "triggerLabel": "Vista",
+      "menuAriaLabel": "Personalizza elenco",
+      "densitySection": "Densità",
+      "densityComfortable": "Elenco",
+      "densityCompact": "Compatto",
+      "columnsSection": "Colonne",
+      "columnModified": "Modificato",
+      "columnSize": "Dimensione",
+      "columnVersion": "Versione",
+      "columnUploadedBy": "Caricato da"
+    },
+    "inspector": {
+      "tabs": {
+        "preview": "Anteprima",
+        "details": "Dettagli",
+        "versions": "Versioni",
+        "access": "Accesso",
+        "tasks": "Compiti",
+        "tasksWithCount": "Compiti {count}",
+        "requirements": "Requisiti",
+        "requirementsWithCount": "Requisiti {count}"
+      }
+    },
+    "actions": {
+      "createTask": "Crea compito",
+      "createRequirement": "Crea requisito",
+      "actionFailed": "Azione non riuscita."
+    },
+    "access": {
+      "whoHasAccessHeading": "Chi ha accesso?",
+      "directGrantsHeading": "Diretto su questa risorsa"
+    }
+  }
+}

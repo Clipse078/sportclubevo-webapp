@@ -13,9 +13,11 @@ const root = resolve(__dirname, "../../..");
 const read = (rel: string) => readFileSync(resolve(root, rel), "utf8");
 
 describe("WORKSPACE-09-01 command surface", () => {
-  it("W09-01-01 workspace page uses compact lifecycle navigation instead of discovery strip", () => {
+  it("W09-01-01 workspace page uses sidebar daily navigation instead of discovery strip", () => {
     const page = read("app/(admin)/dashboard/workspace/page.tsx");
-    expect(page).toMatch(/WorkspaceLifecycleNavigation/);
+    const navPanel = read("components/admin/workspace/WorkspaceFolderNavPanel.tsx");
+    expect(navPanel).toMatch(/WorkspaceSidebarNavigation/);
+    expect(page).not.toMatch(/WorkspaceQuickDiscoveryPanel/);
     expect(page).not.toMatch(/WorkspaceDiscoveryPanel/);
   });
 

@@ -276,11 +276,8 @@ export function WorkspaceAccessGrantEditor({
         <>
           <section aria-labelledby="workspace-grants-heading">
             <div className="flex items-center justify-between gap-2">
-              <h3
-                id="workspace-grants-heading"
-                className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
-              >
-                {t("grantsSection")}
+              <h3 id="workspace-grants-heading" className="text-sm font-semibold text-[var(--text)]">
+                {t("directGrantsHeading")}
               </h3>
             </div>
             <ul className="mt-2 space-y-2">
@@ -362,10 +359,7 @@ export function WorkspaceAccessGrantEditor({
             aria-labelledby="workspace-add-grant-heading"
             className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 p-3"
           >
-            <h3
-              id="workspace-add-grant-heading"
-              className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
-            >
+            <h3 id="workspace-add-grant-heading" className="text-sm font-semibold text-[var(--text)]">
               {t("addGrantButton")}
             </h3>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">

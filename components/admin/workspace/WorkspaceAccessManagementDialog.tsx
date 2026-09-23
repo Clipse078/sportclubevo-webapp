@@ -5,9 +5,13 @@ import { useTranslations } from "next-intl";
 import { WorkspaceAccessInheritanceMode } from "@prisma/client";
 
 import { Dialog } from "@/components/ui/Dialog";
-import type { WorkspaceAccessManagementViewModel } from "@/lib/workspace/access/access-management-dto";
+import type {
+  WorkspaceAccessManagementViewModel,
+  WorkspaceAccessSummaryViewModel,
+} from "@/lib/workspace/access/access-management-dto";
 
 import { WorkspaceAccessGrantEditor } from "./WorkspaceAccessGrantEditor";
+import { WorkspaceAccessEntryRow } from "./WorkspaceAccessEntryRow";
 
 type WorkspaceAccessManagementDialogProps = {
   open: boolean;
@@ -29,6 +33,8 @@ export function WorkspaceAccessManagementDialog({
   const t = useTranslations("Workspace.access");
   const [viewModel, setViewModel] =
     useState<WorkspaceAccessManagementViewModel | null>(null);
+  const [actorSummary, setActorSummary] =
+    useState<WorkspaceAccessSummaryViewModel | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,31 +45,49 @@ export function WorkspaceAccessManagementDialog({
       ? `/api/workspace/folders/${encodeURIComponent(resourceId)}/access`
       : `/api/workspace/documents/${encodeURIComponent(resourceId)}/access`;
 
+  const summaryBase =
+    resourceType === "FOLDER"
+      ? `/api/workspace/folders/${encodeURIComponent(resourceId)}/access-summary`
+      : `/api/workspace/documents/${encodeURIComponent(resourceId)}/access-summary`;
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     setManageAccessLost(false);
     try {
-      const res = await fetch(apiBase);
-      const data = (await res.json()) as {
+      const [accessRes, summaryRes] = await Promise.all([
+        fetch(apiBase),
+        fetch(summaryBase),
+      ]);
+      const data = (await accessRes.json()) as {
         accessManagement?: WorkspaceAccessManagementViewModel;
         error?: string;
       };
-      if (res.status === 403) {
+      if (accessRes.status === 403) {
         setManageAccessLost(true);
         throw new Error(data.error ?? t("loadError"));
       }
-      if (!res.ok) {
+      if (!accessRes.ok) {
         throw new Error(data.error ?? t("loadError"));
       }
       setViewModel(data.accessManagement ?? null);
+
+      if (summaryRes.ok) {
+        const summaryData = (await summaryRes.json()) as {
+          summary?: WorkspaceAccessSummaryViewModel;
+        };
+        setActorSummary(summaryData.summary ?? null);
+      } else {
+        setActorSummary(null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : t("loadError"));
       setViewModel(null);
+      setActorSummary(null);
     } finally {
       setLoading(false);
     }
-  }, [apiBase]);
+  }, [apiBase, summaryBase]);
 
   useEffect(() => {
     if (open) void load();
@@ -110,11 +134,7 @@ export function WorkspaceAccessManagementDialog({
       description={t("dialogDescription", { name: resourceName })}
       size="workspace"
       footer={
-        <button
-          type="button"
-          className="fca-button-secondary"
-          onClick={onClose}
-        >
+        <button type="button" className="fca-button-secondary" onClick={onClose}>
           {t("closeButton")}
         </button>
       }
@@ -135,54 +155,62 @@ export function WorkspaceAccessManagementDialog({
 
       {viewModel && !manageAccessLost ? (
         <div className="space-y-6">
-          <section>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-              {t("resourceSection")}
-            </h3>
-            <p className="mt-1 text-sm font-medium text-[var(--text)]">
-              {viewModel.resource.name}
-            </p>
-            <p className="mt-1 text-xs text-[var(--text-2)]">
-              {viewModel.policyModeLabel}
-            </p>
-            <p className="mt-1 text-xs text-[var(--muted)]">
-              {viewModel.inheritDescription}
-            </p>
-          </section>
+          {actorSummary?.actorAuthority ? (
+            <section className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/50 px-4 py-3">
+              <h3 className="text-xs font-semibold text-[var(--text-2)]">
+                {t("actorAuthoritySection")}
+              </h3>
+              <p className="mt-1 text-sm font-medium text-[var(--text)]">
+                {actorSummary.actorAuthority.effectiveLevelLabel}
+                {actorSummary.actorAuthority.sourceKind === "CLUB_ADMIN"
+                  ? ` · ${actorSummary.actorAuthority.sourceLabel}`
+                  : null}
+              </p>
+              {actorSummary.actorAuthority.configuredActorLevelLabel &&
+              actorSummary.actorAuthority.sourceKind === "CLUB_ADMIN" ? (
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  {t("configuredAccessSection")}:{" "}
+                  {actorSummary.actorAuthority.configuredActorLevelLabel}
+                </p>
+              ) : null}
+            </section>
+          ) : null}
 
-          <section>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-              {t("effectiveSection")}
+          <section aria-labelledby="workspace-who-has-access">
+            <h3
+              id="workspace-who-has-access"
+              className="text-sm font-semibold text-[var(--text)]"
+            >
+              {t("whoHasAccessHeading")}
             </h3>
-            <ul className="mt-2 space-y-2">
+            <ul className="mt-3 space-y-2">
               {viewModel.effectiveAccess.map((entry) => (
+                <WorkspaceAccessEntryRow
+                  key={`eff-${entry.audienceKey}-${entry.effectiveLevelLabel}`}
+                  entry={entry}
+                  multiplePathsLabel={(count) => t("multiplePaths", { count })}
+                  configuredLevelLabel={t("configuredLevelLabel")}
+                  effectiveLevelLabel={t("effectiveLevelLabel")}
+                  inheritedBadgeLabel={t("inheritedBadge")}
+                />
+              ))}
+              {viewModel.inheritedAccess.map((entry, index) => (
                 <li
-                  key={`${entry.audienceKey}-${entry.effectiveLevelLabel}`}
-                  className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+                  key={`inh-${entry.inheritedFromResourceId}-${index}`}
+                  className="rounded-lg border border-dashed border-[var(--border)] px-3 py-2 text-sm"
                 >
                   <p className="font-medium text-[var(--text)]">
-                    {entry.audienceLabel} · {entry.effectiveLevelLabel}
+                    {entry.audienceLabel} · {entry.levelLabel}
                   </p>
-                  <p className="text-xs text-[var(--text-2)]">{entry.whyLabel}</p>
-                  {entry.configuredLevelLabel ? (
-                    <p className="text-xs text-[var(--muted)]">
-                      {t("configuredLevelLabel")}: {entry.configuredLevelLabel} ·{" "}
-                      {t("effectiveLevelLabel")}: {entry.effectiveLevelLabel}
-                    </p>
-                  ) : null}
-                  {entry.ancestorCapLabel ? (
-                    <p className="text-xs text-[var(--muted)]">
-                      {entry.ancestorCapLabel}
-                    </p>
-                  ) : null}
-                  {entry.pathCount > 1 ? (
-                    <p className="text-xs text-[var(--muted)]">
-                      {t("multiplePaths", { count: entry.pathCount })}
-                    </p>
-                  ) : null}
+                  <p className="mt-0.5 text-xs text-[var(--text-2)]">
+                    {t("inheritedFrom", { name: entry.inheritedFromResourceName })}
+                  </p>
                 </li>
               ))}
             </ul>
+            {viewModel.inheritedAccess.length > 0 ? (
+              <p className="mt-2 text-xs text-[var(--muted)]">{t("inheritedReadOnlyHint")}</p>
+            ) : null}
           </section>
 
           {viewModel.canManage ? (
@@ -196,25 +224,6 @@ export function WorkspaceAccessManagementDialog({
                 void load();
               }}
             />
-          ) : null}
-
-          {viewModel.inheritedAccess.length > 0 ? (
-            <section>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                {t("inheritedSection")}
-              </h3>
-              <ul className="mt-2 space-y-1 text-sm text-[var(--text-2)]">
-                {viewModel.inheritedAccess.map((entry, index) => (
-                  <li key={`${entry.inheritedFromResourceId}-${index}`}>
-                    {entry.audienceLabel} · {entry.levelLabel} —{" "}
-                    {t("inheritedFrom", { name: entry.inheritedFromResourceName })}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-2 text-xs text-[var(--muted)]">
-                {t("inheritedReadOnlyHint")}
-              </p>
-            </section>
           ) : null}
 
           {viewModel.policyMode === WorkspaceAccessInheritanceMode.EXPLICIT ? (

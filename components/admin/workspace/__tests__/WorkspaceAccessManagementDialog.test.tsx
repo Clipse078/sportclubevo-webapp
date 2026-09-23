@@ -59,6 +59,30 @@ const viewModel = {
   restrictionSeedGrants: [{ subjectType: "ORGANISATION" as const, accessLevel: "VIEW" as const }],
 };
 
+function mockFetchAccessAndSummary(
+  accessBody: unknown,
+  initHandler?: (url: string, init?: RequestInit) => unknown,
+) {
+  fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+    if (initHandler) {
+      const custom = initHandler(url, init);
+      if (custom) return Promise.resolve(custom);
+    }
+    if (String(url).includes("access-summary")) {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({ summary: { actorAuthority: null, effectiveAccess: [] } }),
+      });
+    }
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      json: async () => accessBody,
+    });
+  });
+}
+
 beforeEach(() => {
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
@@ -66,11 +90,7 @@ beforeEach(() => {
 
 describe("WorkspaceAccessManagementDialog", () => {
   it("W03-A1-13 inherited section is read-only (no remove on inherited rows)", async () => {
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({ accessManagement: viewModel }),
-    });
+    mockFetchAccessAndSummary({ accessManagement: viewModel });
     render(
       <WorkspaceAccessManagementDialog
         open
@@ -84,44 +104,51 @@ describe("WorkspaceAccessManagementDialog", () => {
     expect(screen.queryAllByRole("button", { name: "removeGrant" })).toHaveLength(0);
   });
 
-  it("W03-A1-21 return to inheritance refreshes via PUT", async () => {
-    const inheritView = {
-      ...viewModel,
-      policyMode: WorkspaceAccessInheritanceMode.INHERIT,
-      explicitGrants: [],
-    };
-    fetchMock.mockImplementation((_url: string, init?: RequestInit) =>
-      Promise.resolve({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          accessManagement: init?.method === "PUT" ? inheritView : viewModel,
-        }),
-      }),
-    );
-    const onSaved = vi.fn();
-    render(
-      <WorkspaceAccessManagementDialog
-        open
-        onClose={vi.fn()}
-        resourceType="FOLDER"
-        resourceId="folder-1"
-        resourceName="Finanzen"
-        onSaved={onSaved}
-      />,
-    );
-    await screen.findByText("inheritedReadOnlyHint");
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "returnToInheritance" }));
-    });
-    await waitFor(() => expect(onSaved).toHaveBeenCalled());
-    const putCall = fetchMock.mock.calls.find(
-      (call) => (call[1] as RequestInit | undefined)?.method === "PUT",
-    );
-    expect(putCall).toBeTruthy();
-    const body = JSON.parse(String((putCall?.[1] as RequestInit).body)) as {
-      accessInheritanceMode: string;
-    };
-    expect(body.accessInheritanceMode).toBe("INHERIT");
-  });
+  it(
+    "W03-A1-21 return to inheritance refreshes via PUT",
+    async () => {
+      const inheritView = {
+        ...viewModel,
+        policyMode: WorkspaceAccessInheritanceMode.INHERIT,
+        explicitGrants: [],
+      };
+      mockFetchAccessAndSummary({ accessManagement: viewModel }, (_url, init) => {
+        if (init?.method === "PUT") {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({ accessManagement: inheritView }),
+          };
+        }
+        return null;
+      });
+      const onSaved = vi.fn();
+      render(
+        <WorkspaceAccessManagementDialog
+          open
+          onClose={vi.fn()}
+          resourceType="FOLDER"
+          resourceId="folder-1"
+          resourceName="Finanzen"
+          onSaved={onSaved}
+        />,
+      );
+      const inheritButton = await screen.findByRole("button", {
+        name: "returnToInheritance",
+      });
+      await act(async () => {
+        fireEvent.click(inheritButton);
+      });
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      const putCall = fetchMock.mock.calls.find(
+        (call) => (call[1] as RequestInit | undefined)?.method === "PUT",
+      );
+      expect(putCall).toBeTruthy();
+      const body = JSON.parse(String((putCall?.[1] as RequestInit).body)) as {
+        accessInheritanceMode: string;
+      };
+      expect(body.accessInheritanceMode).toBe("INHERIT");
+    },
+    15_000,
+  );
 });

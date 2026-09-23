@@ -17,10 +17,7 @@ import { getTranslations } from "next-intl/server";
 import { DeleteFolderButton } from "@/app/(admin)/dashboard/workspace/DeleteFolderButton";
 import { RestoreFolderButton } from "@/app/(admin)/dashboard/workspace/RestoreFolderButton";
 import { WorkspaceClientShell } from "@/components/admin/workspace/WorkspaceClientShell";
-import { WorkspaceFolderInspectorManagement } from "@/components/admin/workspace/WorkspaceFolderInspectorManagement";
-import { WorkspaceLifecycleNavigation } from "@/components/admin/workspace/WorkspaceLifecycleNavigation";
-import { WorkspaceQuickDiscoveryPanel } from "@/components/admin/workspace/WorkspaceQuickDiscoveryPanel";
-import { WorkspaceDiscoveryTabs } from "@/components/admin/workspace/WorkspaceDiscoveryTabs";
+import { WorkspaceFolderInspectorActions } from "@/components/admin/workspace/WorkspaceFolderInspectorActions";
 import { WorkspaceHubClient } from "@/components/admin/workspace/WorkspaceHubClient";
 import { WorkspaceCollaborationProvider } from "@/components/admin/workspace/WorkspaceCollaborationProvider";
 import { WorkspaceFolderNavPanel } from "@/components/admin/workspace/WorkspaceFolderNavPanel";
@@ -275,23 +272,15 @@ export default async function WorkspacePage({
       />
 
       <WorkspaceCollaborationProvider>
-      <div className="mb-3 flex flex-col gap-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <Suspense fallback={null}>
-            <WorkspaceLifecycleNavigation currentView={lifecycleView} />
-          </Suspense>
-          <WorkspaceQuickDiscoveryPanel />
-        </div>
-        {lifecycleView === "active" ? (
-          <Suspense fallback={null}>
-            <WorkspaceDiscoveryTabs />
-          </Suspense>
-        ) : null}
-      </div>
 
       {directLinkLifecycle && directLinkLifecycle !== "ACTIVE" ? (
         <p className="mb-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm text-[var(--text-2)]">
-          Lebenszyklus: {directLinkLifecycle === "ARCHIVED" ? "Archiviert" : "Papierkorb"}
+          {t("lifecycleBanner.label", {
+            state:
+              directLinkLifecycle === "ARCHIVED"
+                ? t("lifecycleBanner.archived")
+                : t("lifecycleBanner.trashed"),
+          })}
         </p>
       ) : null}
 
@@ -355,7 +344,7 @@ export default async function WorkspacePage({
             documentTaskCreateDialogProps={documentTaskCreateDialogProps}
             folderManagementSlot={
               canManage ? (
-                <WorkspaceFolderInspectorManagement
+                <WorkspaceFolderInspectorActions
                   folderId={selectedFolder.id}
                   folderName={selectedFolder.name}
                   currentParentId={selectedFolder.parentId ?? null}

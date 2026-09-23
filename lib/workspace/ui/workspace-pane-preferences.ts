@@ -66,10 +66,10 @@ export function persistWorkspaceInspectorWidth(width: number): void {
 }
 
 export function readStoredWorkspaceInspectorOpen(): boolean {
-  if (typeof window === "undefined") return true;
+  if (typeof window === "undefined") return false;
   const stored = localStorage.getItem(WORKSPACE_INSPECTOR_OPEN_STORAGE_KEY);
-  if (stored === "0") return false;
-  return true;
+  if (stored === "1") return true;
+  return false;
 }
 
 export function persistWorkspaceInspectorOpen(open: boolean): void {

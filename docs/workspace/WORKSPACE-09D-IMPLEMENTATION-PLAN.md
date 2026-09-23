@@ -15,6 +15,7 @@
 | **W09-04** | Access management + inheritance UX — **implemented (WORKSPACE-09-04-ACCESS-INHERITANCE-UX.md)** |
 | **W09-05** | Rename/move/lifecycle completeness + folder trash UI — **implemented** (see `WORKSPACE-09-05-RESOURCE-MANAGEMENT-LIFECYCLE.md`) |
 | **W09-06** | Responsive + a11y + loading/error/async + favorites + polish — **implemented (WORKSPACE-09-06-PRODUCT-POLISH-RESPONSIVE-A11Y.md)** |
+| **W09-06R1** | Dropbox-benchmark file interaction + daily nav + row actions + access UX presentation — **implemented (WORKSPACE-09-06R1-INTERACTION-QUALITY.md)** |
 | **W09-07** | Security regression + mobile DTO/API + acceptance |
 
 ---
@@ -123,7 +124,7 @@
 W09-01 ─┬─► W09-02 ─► W09-04
         ├─► W09-03
         └─► W09-05 (partial parallel after 01)
-W09-02 + W09-03 + W09-04 + W09-05 ─► W09-06 ─► W09-07
+W09-02 + W09-03 + W09-04 + W09-05 ─► W09-06 ─► W09-06R1 ─► W09-07
 ```
 
 ---

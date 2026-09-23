@@ -3,6 +3,7 @@
 import { useCallback, useId, useState } from "react";
 import Link from "next/link";
 import { FileText, History } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useWorkspaceDocumentInspectorActions } from "./WorkspaceDocumentInspectorActionsContext";
 
 import type { WorkspaceDocumentInspectorPayloadDto } from "@/lib/workspace/document-inspector/document-inspector-dto";
@@ -40,33 +41,23 @@ const TAB_ORDER: WorkspaceDocumentInspectorTab[] = [
   "requirements",
 ];
 
-const TAB_LABELS: Record<WorkspaceDocumentInspectorTab, string> = {
-  preview: "Vorschau",
-  details: "Details",
-  versions: "Versionen",
-  access: "Zugriff",
-  tasks: "Aufgaben",
-  requirements: "Anforderungen",
-};
-
 type Props = {
   payload: WorkspaceDocumentInspectorPayloadDto;
 };
 
-function formatTabLabel(
-  tab: WorkspaceDocumentInspectorTab,
-  payload: WorkspaceDocumentInspectorPayloadDto,
-): string {
-  if (tab === "tasks" && payload.tasks.visible && !payload.tasks.loadError) {
-    return `Aufgaben ${payload.tasks.count}`;
-  }
-  if (tab === "requirements" && payload.requirements.visible && !payload.requirements.loadError) {
-    return `Anforderungen ${payload.requirements.count}`;
-  }
-  return TAB_LABELS[tab];
-}
-
 export function WorkspaceDocumentInspectorView({ payload }: Props) {
+  const tTabs = useTranslations("Workspace.inspector.tabs");
+
+  function formatTabLabel(tab: WorkspaceDocumentInspectorTab): string {
+    if (tab === "tasks" && payload.tasks.visible && !payload.tasks.loadError) {
+      return tTabs("tasksWithCount", { count: payload.tasks.count });
+    }
+    if (tab === "requirements" && payload.requirements.visible && !payload.requirements.loadError) {
+      return tTabs("requirementsWithCount", { count: payload.requirements.count });
+    }
+    return tTabs(tab);
+  }
+
   const { openNewVersionFilePicker, isUploadingNewVersion } =
     useWorkspaceUploadContext();
   const {
@@ -155,7 +146,7 @@ export function WorkspaceDocumentInspectorView({ payload }: Props) {
                     : "text-[var(--text-2)] hover:bg-[var(--surface-2)]"
                 }`}
               >
-                {formatTabLabel(tab, payload)}
+                {formatTabLabel(tab)}
               </button>
             );
           })}

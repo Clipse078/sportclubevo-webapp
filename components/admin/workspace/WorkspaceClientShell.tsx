@@ -33,6 +33,7 @@ import { useWorkspaceRecentRecorder } from "./useWorkspaceCollaboration";
 import { WorkspaceFavoriteToggle } from "./WorkspaceFavoriteToggle";
 import { WorkspaceActiveBrowseLayout } from "./WorkspaceActiveBrowseLayout";
 import { WorkspaceInspectorToggleButton } from "./WorkspaceInspectorToggleButton";
+import { WorkspaceListViewOptions } from "./WorkspaceListViewOptions";
 
 export type WorkspaceClientShellPane = "all" | "main" | "inspector";
 
@@ -196,9 +197,13 @@ function WorkspaceClientShellInner({
         <div className="flex flex-wrap items-start justify-between gap-2 border-b border-[var(--border)] px-5 py-3">
           <div className="min-w-0">
             <WorkspaceBreadcrumbs path={folderPath} />
-            <p className="mt-1 text-xs text-[var(--muted)]">{countLabel}</p>
+            <h2 className="mt-1 truncate text-base font-semibold text-[var(--text)]">{folderName}</h2>
+            <p className="mt-0.5 text-xs text-[var(--muted)]">{countLabel}</p>
           </div>
-          {resizableLayout ? <WorkspaceInspectorToggleButton /> : null}
+          <div className="flex shrink-0 items-center gap-2">
+            {hasDocuments ? <WorkspaceListViewOptions /> : null}
+            {resizableLayout ? <WorkspaceInspectorToggleButton /> : null}
+          </div>
         </div>
 
         <WorkspaceCommandBar
@@ -244,6 +249,13 @@ function WorkspaceClientShellInner({
                 onSelectDocument={handleSelectDocument}
                 folders={folderTree}
                 currentFolderLabel={folderPath.map((p) => p.name).join(" / ") || folderName}
+                workflowCapabilities={documentWorkflowCapabilities}
+                taskCreateDialogProps={documentTaskCreateDialogProps}
+                onCreateRequirement={
+                  documentWorkflowCapabilities.canCreateRequirement
+                    ? () => setRequirementCreateOpen(true)
+                    : undefined
+                }
               />
             </div>
           ) : (
@@ -310,14 +322,12 @@ function WorkspaceClientShellInner({
                   <dt className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
                     {t("folderDetails.nameLabelTitle")}
                   </dt>
-                  {folderManagementSlot ? (
-                    <dd className="mt-2">{folderManagementSlot}</dd>
-                  ) : (
-                    <dd className="mt-1 text-sm font-medium text-[var(--text)]">
-                      {folderName}
-                    </dd>
-                  )}
+                  <dd className="mt-1 text-sm font-medium text-[var(--text)]">{folderName}</dd>
                 </div>
+
+                {folderManagementSlot ? (
+                  <div className="border-t border-[var(--border)] pt-3">{folderManagementSlot}</div>
+                ) : null}
 
                 <div>
                   <dt className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
