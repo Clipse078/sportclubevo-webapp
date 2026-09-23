@@ -3,8 +3,9 @@
 **Package:** WORKSPACE-08-08 Security / Regression / Release Acceptance  
 **Repository:** Clipse078/sportclubevo-webapp  
 **Branch:** `cursor/workspace-08-governance-scale-portability`  
-**PR:** #702 (draft, base `STAGE`, not merged)  
-**Feature HEAD:** `067b8f6a460cb8d5b170e8fcc06bf6305e18f8dc`  
+**PR:** #702 (merged to `STAGE`)  
+**Feature HEAD:** `94f8b2e5016e72edc57569f0edfedd23b41f6565`  
+**STAGE closure:** `docs/workspace/WORKSPACE-08-STAGE-CLOSURE.md`  
 **STAGE baseline:** `7987a9650f760085117a261709411bbd19905e44`  
 **W08D discovery head:** `215fb56897c078d1b85d22f3faaa4b1cf1741aee` (ancestor of feature branch)
 
