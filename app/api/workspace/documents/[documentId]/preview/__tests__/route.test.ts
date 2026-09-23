@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   requireWorkspaceApiActor: vi.fn(),
-  assertWorkspaceDocumentView: vi.fn(),
+  assertWorkspaceDocumentReadWithOptionalBreakGlass: vi.fn(),
   getTenantFromSession: vi.fn(),
   getDocument: vi.fn(),
   download: vi.fn(),
@@ -12,9 +12,9 @@ vi.mock("@/lib/workspace/workspace-api-actor", () => ({
   requireWorkspaceApiActor: mocks.requireWorkspaceApiActor,
 }));
 
-vi.mock("@/lib/workspace/workspace-resource-guards", () => ({
-  assertWorkspaceDocumentView: (...args: unknown[]) =>
-    mocks.assertWorkspaceDocumentView(...args),
+vi.mock("@/lib/workspace/governance/workspace-governance-read-authorization", () => ({
+  assertWorkspaceDocumentReadWithOptionalBreakGlass: (...args: unknown[]) =>
+    mocks.assertWorkspaceDocumentReadWithOptionalBreakGlass(...args),
 }));
 
 vi.mock("@/lib/tenants/queries", () => ({

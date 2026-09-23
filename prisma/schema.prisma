@@ -693,6 +693,19 @@ enum WorkspaceDocumentVersionStatus {
   SUPERSEDED
 }
 
+/// WORKSPACE-08-02 — explicit break-glass scope (Workspace domain only).
+enum WorkspaceBreakGlassScopeType {
+  DOCUMENT
+  FOLDER_SUBTREE
+}
+
+enum WorkspaceBreakGlassSessionStatus {
+  ACTIVE
+  ENDED
+  REVOKED
+  EXPIRED
+}
+
 enum WorkspaceAccessSubjectType {
   /// Tenant-wide organisation / CLUB boundary (not public internet).
   ORGANISATION
@@ -823,6 +836,7 @@ model Tenant {
   workspaceAccessGrants     WorkspaceAccessGrant[]
   workspaceFavorites          WorkspaceFavorite[]
   workspaceRecentAccess     WorkspaceRecentAccess[]
+  workspaceBreakGlassSessions WorkspaceBreakGlassSession[]
 
   // SFV Integration — Slice: Tenant-Scoped SFV Configuration
   // One config per tenant (@@unique on tenantId). Null when not configured.
@@ -1006,6 +1020,8 @@ model User {
   createdWorkspaceDocumentVersions WorkspaceDocumentVersion[] @relation("WorkspaceDocumentVersionCreatedBy")
   workspaceFavorites               WorkspaceFavorite[]        @relation("WorkspaceFavoriteUser")
   workspaceRecentAccess            WorkspaceRecentAccess[]    @relation("WorkspaceRecentAccessUser")
+  workspaceBreakGlassSessions      WorkspaceBreakGlassSession[] @relation("WorkspaceBreakGlassActor")
+  workspaceBreakGlassSessionsRevoked WorkspaceBreakGlassSession[] @relation("WorkspaceBreakGlassRevokedBy")
   createdCommunicationAttachments  CommunicationAttachment[]  @relation("CommunicationAttachmentCreatedBy")
   // PERSON-UX-07: person-bound documents uploaded by this user
   uploadedPersonDocuments          PersonDocument[]           @relation("PersonDocumentUploadedBy")
@@ -1675,6 +1691,7 @@ model Person {
   requirementDraftAudienceEntries RequirementDraftAudiencePerson[] @relation("RequirementDraftAudiencePerson")
   requirementRecipientObligations RequirementRecipient[]           @relation("RequirementRecipientSubject")
   requirementResponseActorEntries RequirementRecipient[]           @relation("RequirementResponseActorPerson")
+  workspaceBreakGlassSessions     WorkspaceBreakGlassSession[]     @relation("WorkspaceBreakGlassActorPerson")
 
   @@index([lastName, firstName])
   @@index([email])
@@ -4343,6 +4360,7 @@ model WorkspaceFolder {
   @@index([tenantId, trashedAt])
   @@index([createdByUserId])
   @@index([updatedByUserId])
+  workspaceBreakGlassSessions WorkspaceBreakGlassSession[] @relation("WorkspaceBreakGlassFolder")
 }
 
 // ---------------------------------------------------------------------------
@@ -4394,6 +4412,48 @@ model WorkspaceDocument {
   @@index([tenantId, trashedAt])
   @@index([createdByUserId])
   @@index([updatedByUserId])
+  workspaceBreakGlassSessions WorkspaceBreakGlassSession[] @relation("WorkspaceBreakGlassDocument")
+}
+
+// ---------------------------------------------------------------------------
+// WorkspaceBreakGlassSession — WORKSPACE-08-02 explicit exceptional access
+// ---------------------------------------------------------------------------
+
+model WorkspaceBreakGlassSession {
+  id String @id @default(cuid())
+
+  tenantId String
+  actorUserId String
+  actorPersonId String?
+
+  scopeType WorkspaceBreakGlassScopeType
+  workspaceDocumentId String?
+  workspaceFolderId String?
+
+  reason String
+
+  expiresAt DateTime
+  endedAt DateTime?
+  revokedAt DateTime?
+  revokedByUserId String?
+
+  status WorkspaceBreakGlassSessionStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  actorUser User @relation("WorkspaceBreakGlassActor", fields: [actorUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  actorPerson Person? @relation("WorkspaceBreakGlassActorPerson", fields: [actorPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  document WorkspaceDocument? @relation("WorkspaceBreakGlassDocument", fields: [workspaceDocumentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  folder WorkspaceFolder? @relation("WorkspaceBreakGlassFolder", fields: [workspaceFolderId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  revokedByUser User? @relation("WorkspaceBreakGlassRevokedBy", fields: [revokedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([tenantId, actorUserId, status])
+  @@index([tenantId, status, expiresAt])
+  @@index([tenantId, expiresAt])
+  @@index([workspaceDocumentId])
+  @@index([workspaceFolderId])
 }
 
 // ---------------------------------------------------------------------------

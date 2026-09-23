@@ -7,10 +7,8 @@ import { NextResponse } from "next/server";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getTenantFromSession } from "@/lib/tenants/queries";
 import { WorkspaceAuthorizationError } from "@/lib/workspace/access/workspace-authorization";
-import {
-  assertWorkspaceDocumentEdit,
-  assertWorkspaceDocumentView,
-} from "@/lib/workspace/workspace-resource-guards";
+import { assertWorkspaceDocumentEdit } from "@/lib/workspace/workspace-resource-guards";
+import { assertWorkspaceDocumentReadWithOptionalBreakGlass } from "@/lib/workspace/governance/workspace-governance-read-authorization";
 import { requireWorkspaceApiActor } from "@/lib/workspace/workspace-api-actor";
 import {
   getDocumentVersions,
@@ -73,7 +71,12 @@ export async function GET(
   const { documentId } = await params;
 
   try {
-    assertWorkspaceDocumentView(access.actor, documentId);
+    await assertWorkspaceDocumentReadWithOptionalBreakGlass({
+      actor: access.actor,
+      documentId,
+      operation: "VERSION_HISTORY",
+      breakGlass: "allowed",
+    });
   } catch (error) {
     if (error instanceof WorkspaceAuthorizationError) {
       return NextResponse.json(

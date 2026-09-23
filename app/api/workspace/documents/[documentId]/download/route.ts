@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getTenantFromSession } from "@/lib/tenants/queries";
 import { WorkspaceAuthorizationError } from "@/lib/workspace/access/workspace-authorization";
-import { assertWorkspaceDocumentDownload } from "@/lib/workspace/workspace-resource-guards";
+import { assertWorkspaceDocumentReadWithOptionalBreakGlass } from "@/lib/workspace/governance/workspace-governance-read-authorization";
 import { requireWorkspaceApiActor } from "@/lib/workspace/workspace-api-actor";
 import {
   downloadWorkspaceDocument,
@@ -73,7 +73,12 @@ export async function GET(
     versionQuery.mode === "historical" ? versionQuery.versionId : null;
 
   try {
-    assertWorkspaceDocumentDownload(access.actor, documentId);
+    await assertWorkspaceDocumentReadWithOptionalBreakGlass({
+      actor: access.actor,
+      documentId,
+      operation: "DOWNLOAD",
+      breakGlass: "allowed",
+    });
   } catch (error) {
     if (error instanceof WorkspaceAuthorizationError) {
       return NextResponse.json(

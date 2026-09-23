@@ -2,14 +2,17 @@
  * WORKSPACE-06 — lifecycle-aware direct link authorization (zero disclosure).
  */
 
-import { WorkspaceDocumentStatus, WorkspaceResourceType } from "@prisma/client";
+import { WorkspaceDocumentStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
 import { resolveWorkspaceActorFromSessionUser } from "@/lib/workspace/access/actor-context";
 import {
-  canWorkspaceView,
   hasWorkspaceTenantViewCapability,
 } from "@/lib/workspace/access/workspace-authorization";
+import {
+  authorizeWorkspaceDocumentRead,
+  authorizeWorkspaceFolderRead,
+} from "@/lib/workspace/governance/workspace-governance-read-authorization";
 import type { WorkspaceDocumentAccessContext } from "@/lib/workspace/document-access";
 import { deriveWorkspaceDocumentLifecycle } from "@/lib/workspace/lifecycle/lifecycle-domain";
 import { deriveWorkspaceFolderLifecycle } from "@/lib/workspace/lifecycle/lifecycle-domain";
@@ -53,12 +56,14 @@ export async function resolveWorkspaceDocumentDirectLinkAccess(
     permissionKeys: ctx.permissionKeys,
   });
 
-  const canView = canWorkspaceView(actor, {
-    resourceType: WorkspaceResourceType.DOCUMENT,
+  const auth = await authorizeWorkspaceDocumentRead({
+    actor,
     documentId: row.id,
+    operation: "VIEW",
+    breakGlass: "allowed",
   });
 
-  if (!canView) {
+  if (!auth.authorized) {
     return { allowed: false };
   }
 
@@ -133,12 +138,13 @@ export async function resolveWorkspaceFolderDirectLinkAccess(
     permissionKeys: ctx.permissionKeys,
   });
 
-  if (
-    !canWorkspaceView(actor, {
-      resourceType: WorkspaceResourceType.FOLDER,
-      folderId: row.id,
-    })
-  ) {
+  const folderAuth = await authorizeWorkspaceFolderRead({
+    actor,
+    folderId: row.id,
+    breakGlass: "allowed",
+  });
+
+  if (!folderAuth.authorized) {
     return { allowed: false };
   }
 
