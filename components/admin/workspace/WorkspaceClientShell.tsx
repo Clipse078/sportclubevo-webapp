@@ -260,6 +260,7 @@ function WorkspaceClientShellInner({
             <div className="flex-1 overflow-y-auto">
             <div className="space-y-4 px-5 py-5">
               <WorkspaceAccessSummaryPanel
+                key={folderId}
                 resourceType="FOLDER"
                 resourceId={folderId}
                 canManageAccess={canManageFolderAccess}

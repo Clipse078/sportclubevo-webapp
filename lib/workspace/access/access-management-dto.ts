@@ -45,9 +45,15 @@ export type WorkspaceEffectiveAccessEntryDto = {
   audienceKey: string;
   effectiveLevel: CanonicalResourceLevel;
   effectiveLevelLabel: string;
+  configuredLevel: CanonicalResourceLevel | null;
+  configuredLevelLabel: string | null;
   sourceLabel: string;
+  whyLabel: string;
   cappedByAncestor: boolean;
   ancestorCapLabel: string | null;
+  /** Number of canonical resolver paths contributing to this audience row (>1 = multiple paths). */
+  pathCount: number;
+  isInherited: boolean;
 };
 
 export type WorkspaceInheritedAccessEntryDto = {
@@ -81,15 +87,14 @@ export type WorkspaceAccessManagementViewModel = {
   restrictionSeedGrants: WorkspaceAccessGrantMutationFieldsDto[];
 };
 
-export type WorkspaceAccessSummaryEntryDto = {
-  audienceLabel: string;
-  levelLabel: string;
-};
-
 export type WorkspaceAccessSummaryViewModel = {
   resourceId: string;
   resourceType: WorkspaceResourceType;
-  entries: WorkspaceAccessSummaryEntryDto[];
+  policyMode: WorkspaceAccessPolicyModeDto;
+  policyModeHeadline: string;
+  inheritanceDescription: string;
+  parentName: string | null;
+  effectiveAccess: WorkspaceEffectiveAccessEntryDto[];
   moreCount: number;
 };
 

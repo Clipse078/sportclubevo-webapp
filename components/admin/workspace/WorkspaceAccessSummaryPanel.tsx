@@ -6,6 +6,8 @@ import { Shield } from "lucide-react";
 
 import type { WorkspaceAccessSummaryViewModel } from "@/lib/workspace/access/access-management-dto";
 
+import { WorkspaceAccessEntryRow } from "./WorkspaceAccessEntryRow";
+
 type WorkspaceAccessSummaryPanelProps = {
   resourceType: "FOLDER" | "DOCUMENT";
   resourceId: string;
@@ -27,7 +29,6 @@ export function WorkspaceAccessSummaryPanel({
 
   useEffect(() => {
     let cancelled = false;
-    setStatus("loading");
 
     const path =
       resourceType === "FOLDER"
@@ -56,43 +57,83 @@ export function WorkspaceAccessSummaryPanel({
 
   if (status === "loading") {
     return (
-      <p className="text-xs text-[var(--muted)]">{t("summaryLoading")}</p>
+      <p className="text-xs text-[var(--muted)]" role="status">
+        {t("summaryLoading")}
+      </p>
     );
   }
 
-  if (status === "error" || !summary || summary.entries.length === 0) {
-    return null;
+  if (status === "error" || !summary) {
+    return (
+      <p className="text-sm text-[var(--text-2)]" role="alert">
+        {t("summaryLoadError")}
+      </p>
+    );
   }
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
-      <div className="flex items-center gap-2">
-        <Shield className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden="true" />
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-          {t("summaryTitle")}
-        </h3>
+    <section
+      className="space-y-4"
+      aria-labelledby="workspace-access-summary-heading"
+      data-testid="workspace-access-summary"
+    >
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
+        <div className="flex items-center gap-2">
+          <Shield className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden="true" />
+          <h3
+            id="workspace-access-summary-heading"
+            className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
+          >
+            {t("summaryTitle")}
+          </h3>
+        </div>
+        <p className="mt-2 text-sm font-medium text-[var(--text)]">
+          {summary.policyModeHeadline}
+        </p>
+        <p className="mt-1 text-xs text-[var(--text-2)]">
+          {summary.inheritanceDescription}
+        </p>
       </div>
-      <ul className="mt-2 space-y-1 text-sm text-[var(--text-2)]">
-        {summary.entries.map((entry) => (
-          <li key={`${entry.audienceLabel}-${entry.levelLabel}`}>
-            {entry.audienceLabel} · {entry.levelLabel}
-          </li>
-        ))}
-        {summary.moreCount > 0 ? (
-          <li className="text-xs text-[var(--muted)]">
-            {t("summaryMore", { count: summary.moreCount })}
-          </li>
-        ) : null}
-      </ul>
+
+      <div>
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+          {t("effectiveSection")}
+        </h4>
+        {summary.effectiveAccess.length === 0 ? (
+          <p className="mt-2 text-sm text-[var(--text-2)]">{t("summaryEmpty")}</p>
+        ) : (
+          <ul className="mt-2 space-y-2" data-testid="workspace-access-effective-list">
+            {summary.effectiveAccess.map((entry) => (
+              <WorkspaceAccessEntryRow
+                key={`${entry.audienceKey}-${entry.effectiveLevel}`}
+                entry={entry}
+                multiplePathsLabel={(count) => t("multiplePaths", { count })}
+                configuredLevelLabel={t("configuredLevelLabel")}
+                effectiveLevelLabel={t("effectiveLevelLabel")}
+                inheritedBadgeLabel={t("inheritedBadge")}
+              />
+            ))}
+            {summary.moreCount > 0 ? (
+              <li className="text-xs text-[var(--muted)]">
+                {t("summaryMore", { count: summary.moreCount })}
+              </li>
+            ) : null}
+          </ul>
+        )}
+      </div>
+
       {canManageAccess && onManageAccess ? (
         <button
           type="button"
           onClick={onManageAccess}
-          className="mt-3 text-xs font-semibold text-[var(--blue)] hover:underline"
+          className="inline-flex items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold text-[var(--text)] hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+          data-testid="workspace-access-manage-button"
         >
           {t("manageButton")}
         </button>
+      ) : !canManageAccess ? (
+        <p className="text-xs text-[var(--muted)]">{t("restrictHint")}</p>
       ) : null}
-    </div>
+    </section>
   );
 }

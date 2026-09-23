@@ -163,12 +163,21 @@ export function WorkspaceAccessManagementDialog({
                   <p className="font-medium text-[var(--text)]">
                     {entry.audienceLabel} · {entry.effectiveLevelLabel}
                   </p>
-                  <p className="text-xs text-[var(--text-2)]">
-                    {entry.sourceLabel}
-                  </p>
+                  <p className="text-xs text-[var(--text-2)]">{entry.whyLabel}</p>
+                  {entry.configuredLevelLabel ? (
+                    <p className="text-xs text-[var(--muted)]">
+                      {t("configuredLevelLabel")}: {entry.configuredLevelLabel} ·{" "}
+                      {t("effectiveLevelLabel")}: {entry.effectiveLevelLabel}
+                    </p>
+                  ) : null}
                   {entry.ancestorCapLabel ? (
                     <p className="text-xs text-[var(--muted)]">
                       {entry.ancestorCapLabel}
+                    </p>
+                  ) : null}
+                  {entry.pathCount > 1 ? (
+                    <p className="text-xs text-[var(--muted)]">
+                      {t("multiplePaths", { count: entry.pathCount })}
                     </p>
                   ) : null}
                 </li>

@@ -257,6 +257,7 @@ export function WorkspaceDocumentInspectorView({ payload }: Props) {
             data-testid="workspace-document-inspector-panel-access"
           >
             <WorkspaceAccessSummaryPanel
+              key={doc.id}
               resourceType="DOCUMENT"
               resourceId={doc.id}
               canManageAccess={doc.canManageAccess}

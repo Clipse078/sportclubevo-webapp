@@ -476,7 +476,7 @@ describe("WORKSPACE-03 sentinels", () => {
       resource: { resourceType: WorkspaceResourceType.FOLDER, folderId: "root" },
       labels,
     });
-    expect(summary?.entries.length).toBeGreaterThan(0);
+    expect(summary?.effectiveAccess.length).toBeGreaterThan(0);
   });
 
   it("W03-40 zero disclosure — unreadable resource summary null", () => {
