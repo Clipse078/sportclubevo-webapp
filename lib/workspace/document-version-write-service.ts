@@ -3,7 +3,8 @@ import {
   WorkspaceDocumentVersionStatus,
 } from "@prisma/client";
 
-import { writeAuditRecord } from "@/lib/audit/audit-record";
+import { WorkspaceAuditAction } from "@/lib/workspace/audit/workspace-audit-actions";
+import { writeWorkspaceGovernanceAudit } from "@/lib/workspace/audit/workspace-audit-write";
 import { prisma } from "@/lib/db/prisma";
 import type { WorkspaceDocumentDto } from "@/lib/workspace/document-dto";
 import {
@@ -312,17 +313,17 @@ export async function appendWorkspaceDocumentVersion(
           },
         });
 
-      await writeAuditRecord(transaction, {
+      await writeWorkspaceGovernanceAudit(transaction, {
         tenantId,
         actorUserId,
-        moduleKey: "workspace",
         entityType: "WorkspaceDocumentVersion",
         entityId: versionId,
+        workspaceDocumentVersionId: versionId,
+        documentId,
         action: restoredFromVersionId
-          ? "WORKSPACE_DOCUMENT_VERSION_RESTORED"
-          : "WORKSPACE_DOCUMENT_VERSION_CREATED",
+          ? WorkspaceAuditAction.DOCUMENT_VERSION_RESTORED
+          : WorkspaceAuditAction.DOCUMENT_VERSION_CREATED,
         afterJson: {
-          documentId,
           versionNumber: nextVersionNumber,
           restoredFromVersionId,
           mimeType,

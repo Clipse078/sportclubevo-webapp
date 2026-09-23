@@ -5,6 +5,8 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
+import { WorkspaceAuditAction } from "@/lib/workspace/audit/workspace-audit-actions";
+import { writeWorkspaceGovernanceAudit } from "@/lib/workspace/audit/workspace-audit-write";
 import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
 import { collectWorkspaceFolderSubtreeIds } from "@/lib/workspace/folder-subtree";
 import {
@@ -110,6 +112,7 @@ export async function getWorkspaceFolderDeletionImpact(
 export async function deleteWorkspaceFolderPermanently(
   tenantId: string,
   folderId: string,
+  actorUserId?: string | null,
 ): Promise<DeleteWorkspaceFolderResult> {
   const cleanTenantId = normalizeRequiredText(tenantId, "tenantId");
   const cleanFolderId = normalizeRequiredText(folderId, "folderId");
@@ -172,6 +175,20 @@ export async function deleteWorkspaceFolderPermanently(
         doc.id,
       );
       if (!check.allowed) {
+        await writeWorkspaceGovernanceAudit(tx, {
+          tenantId: cleanTenantId,
+          actorUserId: actorUserId ?? null,
+          entityType: "WorkspaceFolder",
+          entityId: cleanFolderId,
+          folderId: cleanFolderId,
+          action: WorkspaceAuditAction.FOLDER_PERMANENT_DELETE_BLOCKED,
+          outcome: "DENIED",
+          reason: "RESOURCE_REFERENCED",
+          afterJson: {
+            blockerCount: check.blockers.length,
+            documentId: doc.id,
+          },
+        });
         throw new WorkspaceFolderDeleteServiceError(
           WORKSPACE_DELETION_BLOCKED_CODE,
           "Ordner kann nicht gelöscht werden: mindestens ein Dokument ist referenziert.",
@@ -185,6 +202,19 @@ export async function deleteWorkspaceFolderPermanently(
         where: { id: doc.id },
       });
     }
+
+    await writeWorkspaceGovernanceAudit(tx, {
+      tenantId: cleanTenantId,
+      actorUserId: actorUserId ?? null,
+      entityType: "WorkspaceFolder",
+      entityId: cleanFolderId,
+      folderId: cleanFolderId,
+      action: WorkspaceAuditAction.FOLDER_PERMANENTLY_DELETED,
+      afterJson: {
+        deletedFolderCount: subtreeIds.length,
+        documentCount,
+      },
+    });
 
     await tx.workspaceFolder.deleteMany({
       where: { tenantId: cleanTenantId, id: { in: subtreeIds } },

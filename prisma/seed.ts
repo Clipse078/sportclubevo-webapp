@@ -263,6 +263,8 @@ async function main() {
     // separate from workspace.manage. Follows the "<module>.delete" convention
     // established by TEAMS_DELETE (ADMIN-DELETE-01A).
     { key: "workspace.delete", name: "Permanently delete workspace content", module: PermissionModule.WORKSPACE, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    // WORKSPACE-08-01: governance audit read — grantable separately from workspace.manage
+    { key: "workspace.audit.view", name: "View workspace governance audit", module: PermissionModule.WORKSPACE, scope: PermissionScope.TENANT, grantableByAdmin: true },
   ] as const;
 
   for (const permission of permissions) {

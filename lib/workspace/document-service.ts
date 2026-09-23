@@ -9,7 +9,8 @@ import {
   nestedResourceInheritPolicy,
   rootDocumentPolicyCreateInput,
 } from "@/lib/workspace/access/policy-persistence";
-import { writeAuditRecord } from "@/lib/audit/audit-record";
+import { WorkspaceAuditAction } from "@/lib/workspace/audit/workspace-audit-actions";
+import { writeWorkspaceGovernanceAudit } from "@/lib/workspace/audit/workspace-audit-write";
 import type {
   CreateWorkspaceDocumentInput,
   GetWorkspaceDocumentForDownloadInput,
@@ -246,15 +247,16 @@ export async function createWorkspaceDocumentWithInitialVersion(
         },
       },
     });
-    await writeAuditRecord(transaction, {
+    await writeWorkspaceGovernanceAudit(transaction, {
       tenantId,
       actorUserId,
-      moduleKey: "workspace",
       entityType: "WorkspaceDocument",
       entityId: document.id,
-      action: "PRIVATE_DOCUMENT_UPLOADED",
+      action: WorkspaceAuditAction.DOCUMENT_VERSION_CREATED,
+      workspaceDocumentVersionId: version.id,
+      documentId: document.id,
+      folderId,
       afterJson: {
-        folderId,
         versionId: version.id,
         mimeType,
         sizeBytes,

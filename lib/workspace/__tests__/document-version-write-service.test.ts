@@ -36,8 +36,8 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 
-vi.mock("@/lib/audit/audit-record", () => ({
-  writeAuditRecord: mocks.writeAuditRecord,
+vi.mock("@/lib/workspace/audit/workspace-audit-write", () => ({
+  writeWorkspaceGovernanceAudit: mocks.writeAuditRecord,
 }));
 
 vi.mock("@/lib/workspace/upload-storage", () => ({

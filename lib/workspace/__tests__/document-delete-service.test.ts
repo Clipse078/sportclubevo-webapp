@@ -57,6 +57,7 @@ vi.mock("@/lib/db/prisma", () => ({
           findMany: (...args: unknown[]) =>
             mocks.requirementDocumentVersionReferenceFindMany(...args),
         },
+        auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
       }),
   },
 }));

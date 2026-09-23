@@ -79,9 +79,13 @@ vi.mock("@/lib/workspace/upload-storage", () => ({
   workspaceStorageProvider: { delete: prismaMocks.storageDelete },
 }));
 
-vi.mock("@/lib/audit/audit-record", () => ({
-  writeAuditRecord: vi.fn(),
-}));
+vi.mock("@/lib/audit/audit-record", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/audit/audit-record")>();
+  return {
+    ...actual,
+    writeAuditRecord: vi.fn(),
+  };
+});
 
 vi.mock("@/lib/requirements/requirement-authorization", () => ({
   canManageRequirement: vi.fn().mockReturnValue(true),
@@ -132,6 +136,7 @@ describe("WORKSPACE-07 sentinels", () => {
           findFirst: prismaMocks.workspaceDocumentFindFirstDelete,
           delete: prismaMocks.workspaceDocumentDelete,
         },
+        auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
       }),
     );
   });

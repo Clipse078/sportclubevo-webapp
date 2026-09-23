@@ -5,6 +5,8 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
+import { WorkspaceAuditAction } from "@/lib/workspace/audit/workspace-audit-actions";
+import { writeWorkspaceGovernanceAudit } from "@/lib/workspace/audit/workspace-audit-write";
 import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
 import {
   canPermanentlyDeleteWorkspaceDocument,
@@ -94,6 +96,7 @@ export async function getWorkspaceDocumentDeletionImpact(
 export async function deleteWorkspaceDocumentPermanently(
   tenantId: string,
   documentId: string,
+  actorUserId?: string | null,
 ): Promise<DeleteWorkspaceDocumentResult> {
   const cleanTenantId = normalizeRequiredText(tenantId, "tenantId");
   const cleanDocumentId = normalizeRequiredText(documentId, "documentId");
@@ -134,6 +137,20 @@ export async function deleteWorkspaceDocumentPermanently(
     );
 
     if (!deletionCheck.allowed) {
+      await writeWorkspaceGovernanceAudit(tx, {
+        tenantId: cleanTenantId,
+        actorUserId: actorUserId ?? null,
+        entityType: "WorkspaceDocument",
+        entityId: cleanDocumentId,
+        documentId: cleanDocumentId,
+        action: WorkspaceAuditAction.DOCUMENT_PERMANENT_DELETE_BLOCKED,
+        outcome: "DENIED",
+        reason: "RESOURCE_REFERENCED",
+        afterJson: {
+          blockerCount: deletionCheck.blockers.length,
+          blockerKinds: deletionCheck.blockers.map((b) => b.kind),
+        },
+      });
       throw new WorkspaceDocumentDeleteServiceError(
         WORKSPACE_DELETION_BLOCKED_CODE,
         "Das Dokument kann nicht endgültig gelöscht werden, solange durable Referenzen bestehen.",
@@ -144,6 +161,16 @@ export async function deleteWorkspaceDocumentPermanently(
     documentName = document.name;
     versionCount = document.versions.length;
     storageReferences.push(...document.versions.map((v) => v.storageKey));
+
+    await writeWorkspaceGovernanceAudit(tx, {
+      tenantId: cleanTenantId,
+      actorUserId: actorUserId ?? null,
+      entityType: "WorkspaceDocument",
+      entityId: cleanDocumentId,
+      documentId: cleanDocumentId,
+      action: WorkspaceAuditAction.DOCUMENT_PERMANENTLY_DELETED,
+      afterJson: { versionCount },
+    });
 
     await tx.workspaceDocument.delete({
       where: { id: cleanDocumentId },

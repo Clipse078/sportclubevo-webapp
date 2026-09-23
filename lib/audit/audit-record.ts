@@ -14,6 +14,7 @@ export type LogActionInput = {
   beforeJson?: unknown;
   afterJson?: unknown;
   metadataJson?: unknown;
+  workspaceDocumentVersionId?: string | null;
 };
 
 type AuditWriter = Pick<PrismaClient, "auditLog">;
@@ -75,6 +76,7 @@ export function buildAuditData(input: LogActionInput) {
     entityType: input.entityType,
     entityId: input.entityId,
     action: input.action,
+    workspaceDocumentVersionId: input.workspaceDocumentVersionId ?? null,
     beforeJson: sanitizeAuditValue(input.beforeJson) ?? undefined,
     afterJson: sanitizeAuditValue(input.afterJson) ?? undefined,
     metadataJson: {

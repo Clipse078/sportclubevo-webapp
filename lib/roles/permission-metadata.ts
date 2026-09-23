@@ -141,6 +141,7 @@ const PERMISSION_LABELS_DE: Record<string, string> = {
   "workspace.view": "Dokumente ansehen",
   "workspace.manage": "Dokumente verwalten",
   "workspace.delete": "Dokumente dauerhaft löschen",
+  "workspace.audit.view": "Workspace-Sicherheitsaudit einsehen",
 
   "users.view": "Benutzer ansehen",
   "users.invite": "Benutzer einladen",
@@ -251,6 +252,8 @@ const PERMISSION_DESCRIPTIONS_DE: Record<string, string> = {
   "workspace.view": "Dokumente und Ordner einsehen.",
   "workspace.manage": "Dokumente und Ordner erstellen, bearbeiten und verwalten.",
   "workspace.delete": "Dokumente und Ordner endgültig aus dem System entfernen.",
+  "workspace.audit.view":
+    "Governance- und Sicherheitsereignisse im Workspace einsehen (getrennt von Verwalten).",
 
   "users.view": "Benutzer und Zugänge einsehen.",
   "users.invite": "Neue Benutzer zum Verein einladen.",

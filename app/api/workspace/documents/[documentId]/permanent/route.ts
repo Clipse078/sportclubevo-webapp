@@ -41,7 +41,6 @@ import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
-import { logAction } from "@/lib/audit/log-action";
 import {
   deleteWorkspaceDocumentPermanently,
   getWorkspaceDocumentDeletionImpact,
@@ -158,17 +157,8 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     const result = await deleteWorkspaceDocumentPermanently(
       documentTenantId,
       documentId,
+      session.user.effectiveUserId ?? session.user.id ?? null,
     );
-
-    await logAction({
-      tenantId: documentTenantId,
-      actorUserId: session.user.effectiveUserId ?? session.user.id ?? null,
-      moduleKey: "workspace",
-      entityType: "WorkspaceDocument",
-      entityId: documentId,
-      action: "DELETE",
-      beforeJson: { id: documentId, impact: result.impact },
-    });
 
     revalidatePath("/dashboard/workspace");
 

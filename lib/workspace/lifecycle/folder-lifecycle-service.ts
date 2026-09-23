@@ -1,7 +1,8 @@
 import { WorkspaceDocumentStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
-import { writeAuditRecord } from "@/lib/audit/audit-record";
+import { WorkspaceAuditAction } from "@/lib/workspace/audit/workspace-audit-actions";
+import { writeWorkspaceGovernanceAudit } from "@/lib/workspace/audit/workspace-audit-write";
 import { collectWorkspaceFolderSubtreeIds } from "@/lib/workspace/folder-subtree";
 import {
   deriveWorkspaceFolderLifecycle,
@@ -72,9 +73,19 @@ export async function archiveWorkspaceFolder(input: {
     );
   }
 
-  await prisma.workspaceFolder.update({
-    where: { id: folderId },
-    data: { archivedAt: new Date(), updatedByUserId: input.actorUserId },
+  await prisma.$transaction(async (tx) => {
+    await tx.workspaceFolder.update({
+      where: { id: folderId },
+      data: { archivedAt: new Date(), updatedByUserId: input.actorUserId },
+    });
+    await writeWorkspaceGovernanceAudit(tx, {
+      tenantId,
+      actorUserId: input.actorUserId,
+      entityType: "WorkspaceFolder",
+      entityId: folderId,
+      folderId,
+      action: WorkspaceAuditAction.FOLDER_ARCHIVED,
+    });
   });
 }
 
@@ -111,9 +122,19 @@ export async function restoreWorkspaceFolderFromArchive(input: {
     }
   }
 
-  await prisma.workspaceFolder.update({
-    where: { id: folderId },
-    data: { archivedAt: null, updatedByUserId: input.actorUserId },
+  await prisma.$transaction(async (tx) => {
+    await tx.workspaceFolder.update({
+      where: { id: folderId },
+      data: { archivedAt: null, updatedByUserId: input.actorUserId },
+    });
+    await writeWorkspaceGovernanceAudit(tx, {
+      tenantId,
+      actorUserId: input.actorUserId,
+      entityType: "WorkspaceFolder",
+      entityId: folderId,
+      folderId,
+      action: WorkspaceAuditAction.FOLDER_RESTORED_FROM_ARCHIVE,
+    });
   });
 }
 
@@ -166,13 +187,13 @@ export async function trashWorkspaceFolderSubtree(input: {
       },
     });
 
-    await writeAuditRecord(tx, {
+    await writeWorkspaceGovernanceAudit(tx, {
       tenantId,
       actorUserId: input.actorUserId,
-      moduleKey: "workspace",
       entityType: "WorkspaceFolder",
       entityId: folderId,
-      action: "WORKSPACE_FOLDER_TRASHED",
+      folderId,
+      action: WorkspaceAuditAction.FOLDER_TRASHED,
       afterJson: { subtreeFolderCount: subtreeIds.length },
     });
 
@@ -239,6 +260,15 @@ export async function restoreWorkspaceFolderFromTrash(input: {
         trashedAt: null,
         updatedByUserId: input.actorUserId,
       },
+    });
+
+    await writeWorkspaceGovernanceAudit(tx, {
+      tenantId,
+      actorUserId: input.actorUserId,
+      entityType: "WorkspaceFolder",
+      entityId: folderId,
+      folderId,
+      action: WorkspaceAuditAction.FOLDER_RESTORED_FROM_TRASH,
     });
   });
 }

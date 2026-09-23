@@ -77,7 +77,7 @@ describe("restoreWorkspaceDocument", () => {
         tenantId: "tenant-1",
         actorUserId: "user-1",
         entityId: "document-1",
-        action: "PRIVATE_DOCUMENT_RESTORED",
+        action: "WORKSPACE_DOCUMENT_RESTORED_FROM_ARCHIVE",
       }),
     });
   });

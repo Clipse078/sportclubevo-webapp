@@ -171,13 +171,17 @@ describe("createWorkspaceDocumentWithInitialVersion", () => {
         tenantId: "tenant-1",
         actorUserId: "user-1",
         entityId: "document-1",
-        action: "PRIVATE_DOCUMENT_UPLOADED",
+        action: "WORKSPACE_DOCUMENT_VERSION_CREATED",
+        workspaceDocumentVersionId: "version-1",
         afterJson: {
-          folderId: "folder-1",
           versionId: "version-1",
           mimeType: "application/pdf",
           sizeBytes: 2048,
         },
+        metadataJson: expect.objectContaining({
+          folderId: "folder-1",
+          outcome: "SUCCESS",
+        }),
       }),
     });
     const auditPayload = JSON.stringify(mocks.auditLogCreate.mock.calls[0]);

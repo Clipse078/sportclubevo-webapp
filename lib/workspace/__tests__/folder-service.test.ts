@@ -75,6 +75,7 @@ describe("workspace folder service", () => {
         workspaceAccessGrant: {
           createMany: workspaceAccessGrantCreateManyMock,
         },
+        auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
       }),
     );
   });

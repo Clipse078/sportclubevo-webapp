@@ -138,6 +138,7 @@ describe("WORKSPACE-06 sentinels", () => {
           delete: prismaMocks.workspaceDocument.delete,
           update: prismaMocks.workspaceDocument.update,
         },
+        auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
       }),
     );
     prismaMocks.executeRaw.mockResolvedValue(undefined);

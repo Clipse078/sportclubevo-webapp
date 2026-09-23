@@ -1,7 +1,8 @@
 import { WorkspaceDocumentStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
-import { writeAuditRecord } from "@/lib/audit/audit-record";
+import { WorkspaceAuditAction } from "@/lib/workspace/audit/workspace-audit-actions";
+import { writeWorkspaceGovernanceAudit } from "@/lib/workspace/audit/workspace-audit-write";
 import { deriveWorkspaceDocumentLifecycle } from "@/lib/workspace/lifecycle/lifecycle-domain";
 
 export type WorkspaceDocumentTrashServiceErrorCode =
@@ -87,13 +88,13 @@ export async function trashWorkspaceDocument(input: {
       throw new Error("Trash update did not persist trashedAt.");
     }
 
-    await writeAuditRecord(tx, {
+    await writeWorkspaceGovernanceAudit(tx, {
       tenantId,
       actorUserId,
-      moduleKey: "workspace",
       entityType: "WorkspaceDocument",
       entityId: documentId,
-      action: "PRIVATE_DOCUMENT_TRASHED",
+      documentId,
+      action: WorkspaceAuditAction.DOCUMENT_TRASHED,
       beforeJson: { status: existing.status },
       afterJson: { status: WorkspaceDocumentStatus.TRASHED },
     });
@@ -174,13 +175,13 @@ export async function restoreWorkspaceDocumentFromTrash(input: {
       select: { id: true, status: true },
     });
 
-    await writeAuditRecord(tx, {
+    await writeWorkspaceGovernanceAudit(tx, {
       tenantId,
       actorUserId,
-      moduleKey: "workspace",
       entityType: "WorkspaceDocument",
       entityId: documentId,
-      action: "PRIVATE_DOCUMENT_RESTORED_FROM_TRASH",
+      documentId,
+      action: WorkspaceAuditAction.DOCUMENT_RESTORED_FROM_TRASH,
       beforeJson: { status: existing.status, restoreArchived },
       afterJson: { status: updated.status },
     });
