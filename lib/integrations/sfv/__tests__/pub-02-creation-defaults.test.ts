@@ -10,6 +10,8 @@
  *   C-PUB02-2. Away match → websiteVisible=true
  *   C-PUB02-3. Home match → infoboardVisible=true
  *   C-PUB02-4. Away match → infoboardVisible=false
+ *   C-PUB02-5. Home match → wochenplanVisible=true (HOTFIX-WOCHENPLAN-01)
+ *   C-PUB02-6. Away match → wochenplanVisible=false (HOTFIX-WOCHENPLAN-01)
  *
  * SFV resync preservation (U-PUB02):
  *   U-PUB02-1. Resync does NOT overwrite manually set websiteVisible=false
@@ -18,6 +20,7 @@
  *   U-PUB02-4. Resync does NOT overwrite pitchCode
  *   U-PUB02-5. Resync does NOT overwrite homeDressingRoomCode
  *   U-PUB02-6. Resync does NOT overwrite awayDressingRoomCode
+ *   U-PUB02-7. Resync does NOT overwrite manually set wochenplanVisible=false (home)
  *
  * Homepage feed policy (H-PUB02):
  *   H-PUB02-1. websiteVisible=true → match eligible for homepage
@@ -42,6 +45,10 @@ vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     $transaction: (fn: (tx: unknown) => Promise<unknown>) => mockTransaction(fn),
   },
+}));
+
+vi.mock("@/lib/participation/participation-request-config-service", () => ({
+  assertEventStartCompatibleWithParticipationDue: vi.fn().mockResolvedValue(undefined),
 }));
 
 const { createMatchWithMapping, updateMatchRecord } = await import(
@@ -170,6 +177,36 @@ describe("PUB-02 — SFV creation defaults", () => {
     expect(data.infoboardVisible).toBe(true);
   });
 
+  it("C-PUB02-5: home match → wochenplanVisible=true", async () => {
+    await createMatchWithMapping(
+      makeEntry(),
+      makeContext(),
+      "season-fca",
+      "team-fca",
+      "FC Opponent X",
+      true,
+      "team-fca",
+      null,
+    );
+    const data = mockEventCreate.mock.calls[0][0].data;
+    expect(data.wochenplanVisible).toBe(true);
+  });
+
+  it("C-PUB02-6: away match → wochenplanVisible=false", async () => {
+    await createMatchWithMapping(
+      makeEntry(),
+      makeContext(),
+      "season-fca",
+      null,
+      "FC Allschwil 1",
+      false,
+      null,
+      "team-fca",
+    );
+    const data = mockEventCreate.mock.calls[0][0].data;
+    expect(data.wochenplanVisible).toBe(false);
+  });
+
   it("C-PUB02-4: away match → infoboardVisible=false", async () => {
     await createMatchWithMapping(
       makeEntry(),
@@ -267,6 +304,22 @@ describe("PUB-02 — SFV resync preservation", () => {
     );
     const updateData = mockEventUpdate.mock.calls[0][0].data;
     expect(updateData).not.toHaveProperty("homeDressingRoomCode");
+  });
+
+  it("U-PUB02-7: resync does NOT overwrite wochenplanVisible", async () => {
+    await updateMatchRecord(
+      "mapping-1",
+      "event-1",
+      makeEntry(),
+      makeContext(),
+      "FC Opponent X",
+      "team-fca",
+      null,
+      "team-fca",
+      true,
+    );
+    const updateData = mockEventUpdate.mock.calls[0][0].data;
+    expect(updateData).not.toHaveProperty("wochenplanVisible");
   });
 
   it("U-PUB02-6: resync does NOT overwrite awayDressingRoomCode", async () => {

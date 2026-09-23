@@ -20,6 +20,7 @@ import {
 } from "@/lib/events/tenant-local-datetime";
 import { resolveTournamentTeamSeasonId } from "@/lib/tournaments/team-season-resolution";
 import { TournamentValidationError } from "@/lib/tournaments/errors";
+import { resolveMatchPublicationDefaultsForCreate } from "@/lib/publishing/policy/match-publication-defaults";
 
 const ALLOWED_TYPES = ["MATCH", "TOURNAMENT", "TRAINING", "OTHER"] as const;
 const ALLOWED_SOURCES = ["CLUBCORNER_FVNWS", "MANUAL", "CSV_EXCEL_IMPORT"] as const;
@@ -225,12 +226,12 @@ export async function POST(request: NextRequest) {
         ? null
         : String(body.recurrenceUntil).trim();
 
-    const websiteVisible =
+    let websiteVisible =
       body.websiteVisible === null || body.websiteVisible === undefined
         ? true
         : Boolean(body.websiteVisible);
 
-    const infoboardVisible =
+    let infoboardVisible =
       body.infoboardVisible === null || body.infoboardVisible === undefined
         ? false
         : Boolean(body.infoboardVisible);
@@ -240,7 +241,7 @@ export async function POST(request: NextRequest) {
         ? false
         : Boolean(body.homepageVisible);
 
-    const wochenplanVisible =
+    let wochenplanVisible =
       body.wochenplanVisible === null || body.wochenplanVisible === undefined
         ? false
         : Boolean(body.wochenplanVisible);
@@ -254,6 +255,19 @@ export async function POST(request: NextRequest) {
       body.teamPageVisible === null || body.teamPageVisible === undefined
         ? false
         : Boolean(body.teamPageVisible);
+
+    if (type === "MATCH") {
+      const matchPublicationDefaults = resolveMatchPublicationDefaultsForCreate(homeAway);
+      if (body.websiteVisible === null || body.websiteVisible === undefined) {
+        websiteVisible = matchPublicationDefaults.websiteVisible;
+      }
+      if (body.infoboardVisible === null || body.infoboardVisible === undefined) {
+        infoboardVisible = matchPublicationDefaults.infoboardVisible;
+      }
+      if (body.wochenplanVisible === null || body.wochenplanVisible === undefined) {
+        wochenplanVisible = matchPublicationDefaults.wochenplanVisible;
+      }
+    }
 
     if (!ALLOWED_TYPES.includes(type as (typeof ALLOWED_TYPES)[number])) {
       return NextResponse.json({ error: "Ungültiger Event-Typ." }, { status: 400 });

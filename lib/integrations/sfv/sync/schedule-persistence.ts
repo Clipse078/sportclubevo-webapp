@@ -33,6 +33,7 @@ import { assertEventStartCompatibleWithParticipationDue } from "@/lib/participat
 import { prisma } from "@/lib/db/prisma";
 import { classifyProviderMatchDisposition } from "@/lib/sporting-data/provider-state";
 import type { Prisma } from "@prisma/client";
+import { resolveMatchPublicationDefaultsFromIsHome } from "@/lib/publishing/policy/match-publication-defaults";
 import type { ClubScheduleEntry } from "../client";
 import type { SfvScheduleSyncContext } from "./schedule-types";
 import {
@@ -276,6 +277,8 @@ export async function createMatchWithMapping(
     };
   }
 
+  const matchPublicationDefaults = resolveMatchPublicationDefaultsFromIsHome(isHome);
+
   try {
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const event = await tx.event.create({
@@ -296,13 +299,9 @@ export async function createMatchWithMapping(
           externalSource: eventFields.externalSource,
           externalSourceId: eventFields.externalSourceId,
           lastSyncedAt: eventFields.lastSyncedAt,
-          // Publication defaults (PUB-02):
-          //   websiteVisible: all SFV-imported matches are visible on the website
-          //   infoboardVisible: home matches are infoboard-visible by default; away are not
-          //   All other visibility fields default to false (schema defaults).
-          websiteVisible: true,
-          infoboardVisible: isHome,
-          wochenplanVisible: false,
+          websiteVisible: matchPublicationDefaults.websiteVisible,
+          infoboardVisible: matchPublicationDefaults.infoboardVisible,
+          wochenplanVisible: matchPublicationDefaults.wochenplanVisible,
           homepageVisible: false,
           trainingsplanVisible: false,
           teamPageVisible: false,
