@@ -73,6 +73,20 @@ All reads/writes use authenticated active tenant + session user. Client-supplied
 
 `20260923210000_dashboard_04_quick_access_preference` — forward-only. **Not applied to STAGE in DASHBOARD-04.**
 
+### DASHBOARD-04A STAGE deployment record (2026-09-23)
+
+| Field | Value |
+|-------|-------|
+| Environment | STAGE |
+| Database host fragment | `ep-wispy-hall-aso93dy6` |
+| Database name | `neondb` |
+| Database fingerprint | `acd3b37682911890` |
+| Migration | `20260923210000_dashboard_04_quick_access_preference` |
+| Migration checksum (SHA-256 of `migration.sql`) | `388b348864d023c5eaabf33ac80a9a79c87303fffbdae1995f483163ceaa9ca4` |
+| Applied at (UTC) | `2026-09-23T21:31:46.312Z` |
+| Method | Canonical `APPLY_DATABASE_MIGRATIONS=true` → `scripts/deploy-migrations-if-enabled.ts` → `prisma migrate deploy` (exactly one pending migration) |
+| Runtime verification | `UserDashboardQuickAccessPreference.findUnique` succeeds on STAGE; controlled save/read/restore for FCA admin actor; no missing-table errors |
+
 ## DASHBOARD-06 handoff
 
 - Component ready for placement under compact welcome, above Mein Programm / Mein Kalender
