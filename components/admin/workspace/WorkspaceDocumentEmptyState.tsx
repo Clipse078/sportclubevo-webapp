@@ -1,126 +1,37 @@
 "use client";
 
-import {
-  useRef,
-  useState,
-  type ChangeEvent,
-  type DragEvent,
-} from "react";
 import { UploadCloud } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import {
-  WorkspaceUploadError,
-  uploadWorkspaceFile,
-} from "@/lib/workspace/upload-client";
+import { useWorkspaceUploadContext } from "./WorkspaceUploadContext";
 
 type WorkspaceEmptyStateProps = {
   isDragging?: boolean;
   canManage?: boolean;
-  /** When provided, this component handles file upload directly. */
-  folderId?: string;
-  onUploadComplete?: (documentId: string | null) => void;
 };
 
 export function WorkspaceDocumentEmptyState({
   isDragging = false,
   canManage = false,
-  folderId,
-  onUploadComplete,
 }: WorkspaceEmptyStateProps) {
   const t = useTranslations("Workspace");
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [localDragging, setLocalDragging] = useState(false);
+  const { canUpload, isUploading, openFilePicker, folderName } =
+    useWorkspaceUploadContext();
 
-  const isDrag = isDragging || localDragging;
-
-  function resolveErrorMessage(err: unknown): string {
-    const tu = t;
-    if (err instanceof WorkspaceUploadError) {
-      switch (err.code) {
-        case "WORKSPACE_UPLOAD_STORAGE_NOT_CONFIGURED":
-          return tu("upload.errorStorageNotConfigured");
-        case "WORKSPACE_FOLDER_NOT_FOUND":
-          return tu("upload.errorFolderNotFound");
-        case "WORKSPACE_UPLOAD_TOO_LARGE":
-          return tu("upload.errorTooLarge");
-        case "WORKSPACE_UPLOAD_INVALID_FILE":
-          return tu("upload.errorInvalidFile");
-        case "WORKSPACE_UPLOAD_CONFLICT":
-          return tu("upload.errorConflict");
-        case "WORKSPACE_UPLOAD_PERSISTENCE_FAILED":
-          return tu("upload.errorPersistenceFailed");
-        default:
-          return err.message;
-      }
-    }
-    if (err instanceof Error) return err.message;
-    return t("upload.errorGeneric");
-  }
-
-  async function uploadFile(file: File) {
-    if (!folderId || isUploading) return;
-
-    setIsUploading(true);
-    setError(null);
-
-    try {
-      const result = await uploadWorkspaceFile({ file, folderId });
-      setError(null);
-      onUploadComplete?.(result.document?.id ?? null);
-    } catch (uploadError) {
-      setError(resolveErrorMessage(uploadError));
-    } finally {
-      setIsUploading(false);
-      if (inputRef.current) inputRef.current.value = "";
-    }
-  }
-
-  function handleDragEnter(event: DragEvent<HTMLDivElement>) {
-    event.preventDefault();
-    if (canManage && folderId && !isUploading) setLocalDragging(true);
-  }
-
-  function handleDragOver(event: DragEvent<HTMLDivElement>) {
-    event.preventDefault();
-  }
-
-  function handleDragLeave(event: DragEvent<HTMLDivElement>) {
-    event.preventDefault();
-    if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
-    setLocalDragging(false);
-  }
-
-  async function handleDrop(event: DragEvent<HTMLDivElement>) {
-    event.preventDefault();
-    setLocalDragging(false);
-    const file = event.dataTransfer.files?.[0];
-    if (!file) return;
-    await uploadFile(file);
-  }
-
-  function openFilePicker() {
-    if (!isUploading) inputRef.current?.click();
-  }
+  const showUpload = canManage && canUpload;
 
   return (
     <div
       className={[
         "flex min-h-72 flex-col items-center justify-center px-6 py-12 text-center transition-colors duration-150",
-        isDrag ? "bg-[var(--blue-light)]" : "",
+        isDragging ? "bg-[var(--blue-light)]/40" : "",
       ].join(" ")}
-      onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={canManage && folderId ? handleDrop : undefined}
       aria-live="polite"
     >
       <div
         className={[
           "flex h-16 w-16 items-center justify-center rounded-2xl transition-colors duration-150",
-          isDrag ? "bg-[var(--blue)] text-white" : "bg-[var(--surface-2)] text-[var(--blue)]",
+          isDragging ? "bg-[var(--blue)] text-white" : "bg-[var(--surface-2)] text-[var(--blue)]",
         ].join(" ")}
       >
         {isUploading ? (
@@ -134,40 +45,22 @@ export function WorkspaceDocumentEmptyState({
         {isUploading ? t("upload.uploadingLabel") : t("emptyState.title")}
       </h2>
 
-      {canManage && !isUploading ? (
-        <p className="mt-2 max-w-xs text-sm leading-6 text-[var(--text-2)]">
-          {t("emptyState.description")}
-        </p>
-      ) : null}
-
-      {error ? (
-        <p role="alert" className="mt-2 text-xs text-[var(--sce-danger)]">
-          {error}
-        </p>
-      ) : null}
-
-      {canManage && folderId && !isUploading ? (
+      {showUpload && !isUploading ? (
         <>
+          <p className="mt-2 max-w-sm text-sm leading-6 text-[var(--text-2)]">
+            {t("emptyState.description")}
+          </p>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            {t("emptyState.dropHint", { folder: folderName })}
+          </p>
           <button
             type="button"
             onClick={openFilePicker}
-            className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[var(--blue)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-[var(--blue-hover)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+            className="mt-5 inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
           >
             <UploadCloud className="h-4 w-4" aria-hidden="true" />
-            {t("emptyState.uploadButton")}
+            {t("commandBar.uploadLabel")}
           </button>
-
-          <input
-            ref={inputRef}
-            type="file"
-            className="sr-only"
-            aria-hidden="true"
-            disabled={isUploading}
-            onChange={async (e: ChangeEvent<HTMLInputElement>) => {
-              const file = e.target.files?.[0];
-              if (file) await uploadFile(file);
-            }}
-          />
         </>
       ) : null}
     </div>

@@ -22,6 +22,7 @@ import {
   policyModeLabelDe,
 } from "@/lib/workspace/access/access-management-labels";
 import { audienceRefFromGrant, audienceKey } from "@/lib/workspace/access/audience";
+import { toCanonicalResourceLevel } from "@/lib/workspace/access/resource-level";
 import type { WorkspaceAccessGrantMutationFieldsDto } from "@/lib/workspace/access/access-management-dto";
 import type { ResourceAccessChain } from "@/lib/workspace/access/effective-access";
 import {
@@ -31,12 +32,22 @@ import {
 } from "@/lib/workspace/access/resource-graph";
 import { computeEffectiveAccessPaths } from "@/lib/workspace/access/effective-access";
 import { explainEffectiveAccessPath } from "@/lib/workspace/access/explanation";
+import {
+  buildAccessInheritanceCopy,
+  buildWhyAccessLabel,
+} from "@/lib/workspace/access/access-provenance-labels";
 import type { CanonicalResourceLevel } from "@/lib/workspace/access/resource-level";
-import type { AudienceRef, WorkspaceAccessGrantSnapshot } from "@/lib/workspace/access/types";
+import type {
+  AccessPathSegment,
+  AudienceRef,
+  WorkspaceAccessGrantSnapshot,
+} from "@/lib/workspace/access/types";
 import {
   assertWorkspaceAccess,
   canWorkspaceManage,
   canWorkspaceView,
+  getWorkspaceEffectiveAccessLevel,
+  getWorkspaceResourceAclEffectiveAccessLevel,
   WorkspaceAuthorizationError,
   type WorkspaceActorContext,
 } from "@/lib/workspace/access/workspace-authorization";
@@ -62,6 +73,122 @@ function explicitGrantsFromNode(
   return grants.filter(
     (g) => g.subjectType !== WorkspaceAccessSubjectType.ORGANISATION,
   );
+}
+
+function configuredLevelOnResourceForAudience(
+  chain: ResourceAccessChain,
+  audience: AudienceRef,
+): CanonicalResourceLevel | null {
+  if (chain.resource.accessInheritanceMode !== WorkspaceAccessInheritanceMode.EXPLICIT) {
+    return null;
+  }
+  for (const grant of chain.resource.grants) {
+    if (audienceKey(audienceRefFromGrant(grant)) === audienceKey(audience)) {
+      return toCanonicalResourceLevel(grant.accessLevel);
+    }
+  }
+  return null;
+}
+
+function configuredGrantLevelForSegment(
+  chain: ResourceAccessChain,
+  segment: AccessPathSegment,
+): CanonicalResourceLevel {
+  if (segment.source !== "explicit_grant") {
+    return segment.level;
+  }
+  const node =
+    segment.resourceId === chain.resource.id
+      ? chain.resource
+      : chain.ancestors.find((ancestor) => ancestor.id === segment.resourceId);
+  if (!node) {
+    return segment.level;
+  }
+  for (const grant of node.grants) {
+    if (audienceKey(audienceRefFromGrant(grant)) === audienceKey(segment.audience)) {
+      return toCanonicalResourceLevel(grant.accessLevel);
+    }
+  }
+  return segment.level;
+}
+
+function collectEffectiveAccessEntries(input: {
+  chain: ResourceAccessChain;
+  labels: AudienceLabelResolver;
+  folderNameById: ReadonlyMap<string, string>;
+  fallbackResourceName: string;
+  maxVisible?: number;
+}): WorkspaceEffectiveAccessEntryDto[] {
+  const paths = computeEffectiveAccessPaths(input.chain);
+  const pathCountByKey = new Map<string, number>();
+  for (const path of paths) {
+    const segment = path.segments.at(-1) ?? path.segments[0];
+    if (!segment) continue;
+    const key = `${audienceKey(segment.audience)}|${path.effectiveLevel}`;
+    pathCountByKey.set(key, (pathCountByKey.get(key) ?? 0) + 1);
+  }
+
+  const effectiveAccess: WorkspaceEffectiveAccessEntryDto[] = [];
+  const seen = new Set<string>();
+
+  for (const path of paths) {
+    const explanation = explainEffectiveAccessPath(path);
+    const primarySegment = path.segments.at(-1) ?? path.segments[0];
+    if (!primarySegment) continue;
+
+    const audience = primarySegment.audience;
+    const key = `${audienceKey(audience)}|${path.effectiveLevel}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    const resourceName =
+      input.folderNameById.get(primarySegment.resourceId) ??
+      input.fallbackResourceName;
+
+    const configuredLevel =
+      configuredLevelOnResourceForAudience(input.chain, audience) ??
+      configuredGrantLevelForSegment(input.chain, primarySegment);
+    const capped = configuredLevel !== path.effectiveLevel;
+
+    const { sourceLabel, cappedByAncestor, ancestorCapLabel } = buildSourceLabel({
+      explanationMode: explanation.mode,
+      segmentSource: primarySegment.source,
+      resourceName,
+      configuredLevel,
+      effectiveLevel: path.effectiveLevel,
+    });
+
+    const audienceLabel = input.labels.resolve(audience);
+    const inheritedFromName =
+      primarySegment.source === "inherited" ? resourceName : null;
+
+    effectiveAccess.push({
+      audienceKind: subjectTypeFromAudience(audience),
+      audienceLabel,
+      audienceKey: audienceKey(audience),
+      effectiveLevel: path.effectiveLevel,
+      effectiveLevelLabel: accessLevelLabelDe(path.effectiveLevel),
+      configuredLevel: capped ? configuredLevel : null,
+      configuredLevelLabel: capped ? accessLevelLabelDe(configuredLevel) : null,
+      sourceLabel,
+      whyLabel: buildWhyAccessLabel({
+        audience,
+        audienceLabel,
+        explanationMode: explanation.mode,
+        segmentSource: primarySegment.source,
+        inheritedFromResourceName: inheritedFromName,
+      }),
+      cappedByAncestor,
+      ancestorCapLabel,
+      pathCount: pathCountByKey.get(key) ?? 1,
+      isInherited: primarySegment.source === "inherited",
+    });
+  }
+
+  if (input.maxVisible !== undefined) {
+    return effectiveAccess.slice(0, input.maxVisible);
+  }
+  return effectiveAccess;
 }
 
 function buildSourceLabel(input: {
@@ -198,43 +325,12 @@ export function buildAccessManagementViewModel(input: {
       ? node.parentFolderId
       : input.resource.folderId;
 
-  const paths = computeEffectiveAccessPaths(chain);
-  const effectiveAccess: WorkspaceEffectiveAccessEntryDto[] = [];
-  const seen = new Set<string>();
-
-  for (const path of paths) {
-    const explanation = explainEffectiveAccessPath(path);
-    const primarySegment = path.segments.at(-1) ?? path.segments[0];
-    if (!primarySegment) continue;
-
-    const audience = primarySegment.audience;
-    const key = `${audienceKey(audience)}|${path.effectiveLevel}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-    const resourceName =
-      input.folderNameById.get(primarySegment.resourceId) ??
-      input.resource.name;
-
-    const { sourceLabel, cappedByAncestor, ancestorCapLabel } = buildSourceLabel({
-      explanationMode: explanation.mode,
-      segmentSource: primarySegment.source,
-      resourceName,
-      configuredLevel: primarySegment.level,
-      effectiveLevel: path.effectiveLevel,
-    });
-
-    effectiveAccess.push({
-      audienceKind: subjectTypeFromAudience(audience),
-      audienceLabel: input.labels.resolve(audience),
-      audienceKey: audienceKey(audience),
-      effectiveLevel: path.effectiveLevel,
-      effectiveLevelLabel: accessLevelLabelDe(path.effectiveLevel),
-      sourceLabel,
-      cappedByAncestor,
-      ancestorCapLabel,
-    });
-  }
+  const effectiveAccess = collectEffectiveAccessEntries({
+    chain,
+    labels: input.labels,
+    folderNameById: input.folderNameById,
+    fallbackResourceName: input.resource.name,
+  });
 
   const inheritedAccess: WorkspaceInheritedAccessEntryDto[] = [];
   if (node.accessInheritanceMode === WorkspaceAccessInheritanceMode.INHERIT && parentId) {
@@ -311,6 +407,7 @@ export function buildAccessSummaryViewModel(input: {
     | { resourceType: typeof WorkspaceResourceType.FOLDER; folderId: string }
     | { resourceType: typeof WorkspaceResourceType.DOCUMENT; documentId: string };
   labels: AudienceLabelResolver;
+  folderNameById?: ReadonlyMap<string, string>;
   maxVisible?: number;
 }): WorkspaceAccessSummaryViewModel | null {
   const resourceRef =
@@ -337,28 +434,67 @@ export function buildAccessSummaryViewModel(input: {
     return null;
   }
 
-  const paths = computeEffectiveAccessPaths(chain);
-  const maxVisible = input.maxVisible ?? 2;
-  const entries = paths.slice(0, maxVisible + 5).map((path) => {
-    const segment = path.segments.at(-1);
-    const audience = segment?.audience ?? ({ kind: "ORGANISATION" } as AudienceRef);
-    return {
-      audienceLabel: input.labels.resolve(audience),
-      levelLabel: accessLevelLabelDe(path.effectiveLevel),
-    };
+  const node = chain.resource;
+  const folderNameById = input.folderNameById ?? new Map<string, string>();
+  const parentName = node.parentFolderId
+    ? folderNameById.get(node.parentFolderId) ?? null
+    : null;
+
+  const maxVisible = input.maxVisible ?? 6;
+  const allEffective = collectEffectiveAccessEntries({
+    chain,
+    labels: input.labels,
+    folderNameById,
+    fallbackResourceName: folderNameById.get(node.id) ?? "Ressource",
   });
 
-  const unique: { audienceLabel: string; levelLabel: string }[] = [];
-  const seen = new Set<string>();
-  for (const entry of entries) {
-    const key = `${entry.audienceLabel}|${entry.levelLabel}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    unique.push(entry);
-  }
+  const visible = allEffective.slice(0, maxVisible);
+  const moreCount = Math.max(0, allEffective.length - visible.length);
 
-  const visible = unique.slice(0, maxVisible);
-  const moreCount = Math.max(0, unique.length - visible.length);
+  const inheritanceCopy = buildAccessInheritanceCopy({
+    policyMode: node.accessInheritanceMode,
+    resourceType: input.resource.resourceType,
+    parentName,
+  });
+
+  const actorEffectiveLevel = getWorkspaceEffectiveAccessLevel(
+    input.actor,
+    resourceRef,
+  );
+  const actorAclLevel = getWorkspaceResourceAclEffectiveAccessLevel(
+    input.actor,
+    resourceRef,
+  );
+
+  let actorAuthority: WorkspaceAccessSummaryViewModel["actorAuthority"] = null;
+  if (actorEffectiveLevel) {
+    if (
+      input.actor.isCanonicalTenantClubAdmin &&
+      actorEffectiveLevel === "MANAGE"
+    ) {
+      actorAuthority = {
+        effectiveLevel: "MANAGE",
+        effectiveLevelLabel: accessLevelLabelDe("MANAGE"),
+        sourceKind: "CLUB_ADMIN",
+        sourceLabel: "Club-Administrator",
+        configuredActorLevel: actorAclLevel,
+        configuredActorLevelLabel: actorAclLevel
+          ? accessLevelLabelDe(actorAclLevel)
+          : null,
+      };
+    } else {
+      actorAuthority = {
+        effectiveLevel: actorEffectiveLevel,
+        effectiveLevelLabel: accessLevelLabelDe(actorEffectiveLevel),
+        sourceKind: "ACL",
+        sourceLabel: "Berechtigungen",
+        configuredActorLevel: actorAclLevel,
+        configuredActorLevelLabel: actorAclLevel
+          ? accessLevelLabelDe(actorAclLevel)
+          : null,
+      };
+    }
+  }
 
   return {
     resourceId:
@@ -366,7 +502,12 @@ export function buildAccessSummaryViewModel(input: {
         ? input.resource.folderId
         : input.resource.documentId,
     resourceType: input.resource.resourceType,
-    entries: visible,
+    policyMode: node.accessInheritanceMode,
+    policyModeHeadline: inheritanceCopy.headline,
+    inheritanceDescription: inheritanceCopy.description,
+    parentName,
+    actorAuthority,
+    effectiveAccess: visible,
     moreCount,
   };
 }
@@ -374,7 +515,7 @@ export function buildAccessSummaryViewModel(input: {
 async function createAudienceLabelResolver(
   tenantId: string,
 ): Promise<AudienceLabelResolver> {
-  const [people, teams, orgUnits] = await Promise.all([
+  const [people, teams, orgUnits, tenant] = await Promise.all([
     prisma.person.findMany({
       where: { tenantId },
       select: { id: true, firstName: true, lastName: true },
@@ -386,6 +527,10 @@ async function createAudienceLabelResolver(
     prisma.orgUnit.findMany({
       where: { tenantId },
       select: { id: true, name: true },
+    }),
+    prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { name: true },
     }),
   ]);
 
@@ -399,7 +544,7 @@ async function createAudienceLabelResolver(
     resolve(audience: AudienceRef): string {
       switch (audience.kind) {
         case "ORGANISATION":
-          return "Organisation";
+          return tenant?.name?.trim() || "Organisation";
         case "ORG_UNIT":
           return orgUnitById.get(audience.orgUnitId) ?? "Organisationseinheit";
         case "TEAM":
@@ -495,11 +640,16 @@ export async function loadWorkspaceAccessSummaryViewModel(input: {
     | { resourceType: typeof WorkspaceResourceType.FOLDER; folderId: string }
     | { resourceType: typeof WorkspaceResourceType.DOCUMENT; documentId: string };
 }): Promise<WorkspaceAccessSummaryViewModel | null> {
-  const labels = await createAudienceLabelResolver(input.actor.identity.tenantId);
+  const tenantId = input.actor.identity.tenantId;
+  const [labels, folderNames] = await Promise.all([
+    createAudienceLabelResolver(tenantId),
+    folderNameMap(tenantId),
+  ]);
   return buildAccessSummaryViewModel({
     actor: input.actor,
     graph: input.actor.graph,
     resource: input.resource,
     labels,
+    folderNameById: folderNames,
   });
 }

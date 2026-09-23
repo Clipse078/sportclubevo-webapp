@@ -159,9 +159,14 @@ const INTEGRATIONS: IntegrationSpec[] = [
   },
   {
     label: "DOCUMENT",
-    files: ["app/(admin)/dashboard/workspace/page.tsx"],
+    files: [
+      "app/(admin)/dashboard/workspace/page.tsx",
+      "lib/workspace/document-inspector/load-workspace-document-inspector.ts",
+      "components/admin/workspace/inspector/WorkspaceDocumentInspectorView.tsx",
+      "components/admin/workspace/WorkspaceCommandBar.tsx",
+    ],
     contextType: "DOCUMENT",
-    contextIdPattern: /contextId=\{initialSelectedDocumentId\}/,
+    contextIdPattern: /TaskContextType\.DOCUMENT/,
   },
 ];
 
@@ -169,14 +174,22 @@ describe("AUFGABEN-06F2 entity integrations (R1–R17, R51–R54)", () => {
   for (const spec of INTEGRATIONS) {
     it(`${spec.label} wires shared panel and contextual create`, () => {
       const combined = spec.files.map((f) => read(f)).join("\n");
-      expect(combined).toMatch(/ContextRelatedTasksPanel/);
-      expect(
-        /ContextualTaskCreateTriggerServer|createTaskAction|ContextRelatedTasksPanel/.test(combined),
-      ).toBe(true);
-      expect(combined).toMatch(new RegExp(`contextType="${spec.contextType}"`));
+      if (spec.label === "DOCUMENT") {
+        expect(combined).toMatch(/WorkspaceDocumentInspectorServer/);
+        expect(combined).toMatch(/loadContextRelatedTasksPanel/);
+        expect(combined).toMatch(/ContextualTaskCreateTrigger/);
+      } else {
+        expect(combined).toMatch(/ContextRelatedTasksPanel/);
+        expect(
+          /ContextualTaskCreateTriggerServer|createTaskAction|ContextRelatedTasksPanel/.test(combined),
+        ).toBe(true);
+        expect(combined).toMatch(new RegExp(`contextType="${spec.contextType}"`));
+      }
       expect(combined).toMatch(spec.contextIdPattern);
-      expect(combined).not.toMatch(/prisma\.task\.findMany/);
-      expect(combined).not.toMatch(/prisma\.task\.count/);
+      if (spec.label !== "DOCUMENT") {
+        expect(combined).not.toMatch(/prisma\.task\.findMany/);
+        expect(combined).not.toMatch(/prisma\.task\.count/);
+      }
     });
   }
 
@@ -282,8 +295,8 @@ describe("AUFGABEN-06F2 DOCUMENT gate (R14–R15)", () => {
 
   it("R14/R15 document workspace uses canRead gate via shared loader", async () => {
     const workspacePage = read("app/(admin)/dashboard/workspace/page.tsx");
-    expect(workspacePage).toMatch(/canReadWorkspaceDocument/);
-    expect(workspacePage).toMatch(/ContextRelatedTasksPanel/);
+    expect(workspacePage).toMatch(/WorkspaceDocumentInspectorServer/);
+    expect(workspacePage).toMatch(/load-workspace-document-inspector/);
 
     const ctx = serviceCtx(USER, [PERMISSIONS.TASKS_VIEW]);
     prismaMocks.resolveEligibility.mockResolvedValue({
@@ -561,15 +574,16 @@ describe("AUFGABEN-06F2-A1 REGISTRATION routing (§19)", () => {
 
 describe("AUFGABEN-06F2-A1 DOCUMENT URL server gate (§17)", () => {
   it("folder tree links omit document param (no stale document on folder change)", () => {
+    const tree = read("components/admin/workspace/WorkspaceFolderTreePanel.tsx");
+    expect(tree).toMatch(/href=\{`\/dashboard\/workspace\?folder=\$\{encodeURIComponent\(folder\.id\)\}`\}/);
     const page = read("app/(admin)/dashboard/workspace/page.tsx");
-    expect(page).toMatch(/href=\{`\/dashboard\/workspace\?folder=\$\{encodeURIComponent\(folder\.id\)\}`\}/);
-    expect(page).toMatch(/canReadWorkspaceDocument/);
+    expect(page).toMatch(/resolveWorkspaceDocumentDirectLinkAccess/);
     expect(page).toMatch(/initialSelectedDocumentId != null/);
   });
 
   it("forbidden document fails closed before contextual panel", () => {
     const page = read("app/(admin)/dashboard/workspace/page.tsx");
-    expect(page).toMatch(/if \(!readable\) notFound\(\)/);
+    expect(page).toMatch(/if \(!linkAccess\.allowed\) notFound\(\)/);
   });
 });
 

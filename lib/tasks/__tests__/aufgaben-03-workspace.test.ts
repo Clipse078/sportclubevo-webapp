@@ -13,7 +13,10 @@ const mocks = vi.hoisted(() => ({
   taskFindMany: vi.fn(),
   taskSeriesFindFirst: vi.fn(),
   userFindFirst: vi.fn(),
+  userFindMany: vi.fn(),
+  tenantFindUnique: vi.fn(),
   tenantMembershipFindMany: vi.fn(),
+  personFindMany: vi.fn(),
   transaction: vi.fn(),
   auditCreate: vi.fn(),
 }));
@@ -43,14 +46,21 @@ vi.mock("@/lib/db/prisma", () => ({
     },
     taskAccessGrant: { findMany: vi.fn().mockResolvedValue([]) },
     taskSeries: { findFirst: mocks.taskSeriesFindFirst },
-    user: { findFirst: mocks.userFindFirst },
+    user: {
+      findFirst: mocks.userFindFirst,
+      findMany: mocks.userFindMany,
+    },
+    tenant: { findUnique: mocks.tenantFindUnique },
     tenantMembership: { findMany: mocks.tenantMembershipFindMany },
+    person: {
+      findFirst: vi.fn(),
+      findMany: mocks.personFindMany,
+    },
     event: { findFirst: vi.fn() },
     trainingSeries: { findFirst: vi.fn() },
     meeting: { findFirst: vi.fn() },
     registration: { findFirst: vi.fn() },
     team: { findFirst: vi.fn() },
-    person: { findFirst: vi.fn() },
     workspaceDocument: { findFirst: vi.fn() },
     $transaction: mocks.transaction,
     auditLog: { create: mocks.auditCreate },
@@ -194,6 +204,25 @@ describe("AUFGABEN-03 loadTaskWorkspace", () => {
     mocks.taskFindMany.mockReset();
     mocks.userFindFirst.mockReset();
     mocks.taskSeriesFindFirst.mockReset();
+    mocks.tenantFindUnique.mockResolvedValue({ name: "Test Club" });
+    mocks.personFindMany.mockResolvedValue([]);
+    mocks.userFindMany.mockResolvedValue([
+      {
+        id: USER_MANAGER,
+        firstName: "M",
+        lastName: "Manager",
+      },
+    ]);
+    mocks.tenantMembershipFindMany.mockResolvedValue([
+      {
+        user: {
+          id: USER_ASSIGNEE,
+          firstName: "Alex",
+          lastName: "Assignee",
+          isActive: true,
+        },
+      },
+    ]);
   });
 
   it("A — loads visible subtasks with progress for root tasks", async () => {

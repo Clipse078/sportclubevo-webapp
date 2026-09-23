@@ -2,6 +2,8 @@ import type {
   WorkspaceDocumentStatus,
   WorkspaceDocumentVersionStatus,
 } from "@prisma/client";
+import type { WorkspaceResourceAvailableActionsDto } from "@/lib/workspace/command/workspace-available-actions";
+import type { WorkspaceVersionScanPublicDto } from "@/lib/workspace/malware-scan/scan-dto";
 
 export type WorkspaceDocumentVersionDto = {
   id: string;
@@ -58,6 +60,8 @@ export type WorkspaceDocumentListVersionDto = {
   mimeType: string;
   sizeBytes: number;
   createdAt: Date;
+  /** W09-03 — user-facing scan / delivery availability (no secrets). */
+  scan?: WorkspaceVersionScanPublicDto;
 };
 
 export type WorkspaceDocumentListItemDto = {
@@ -75,6 +79,8 @@ export type WorkspaceDocumentListItemDto = {
   canManageAccess?: boolean;
   canUpload?: boolean;
   canEditDocument?: boolean;
+  /** W09-07 — canonical action contract (server authoritative for UX; mutations re-check). */
+  availableActions?: WorkspaceResourceAvailableActionsDto;
 };
 
 export type ListWorkspaceDocumentsInput = {
@@ -120,6 +126,7 @@ export type WorkspaceDocumentVersionHistoryItemDto = {
   status: WorkspaceDocumentVersionStatus;
   isCurrent: boolean;
   restoredFromVersionId: string | null;
+  scan?: WorkspaceVersionScanPublicDto;
 };
 
 /** Immutable acknowledgement reference target (WORKSPACE-05 readiness). */

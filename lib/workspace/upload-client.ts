@@ -64,3 +64,42 @@ export async function uploadWorkspaceFile({
 
   return result;
 }
+
+type UploadWorkspaceDocumentVersionInput = {
+  documentId: string;
+  file: File;
+  changeNote?: string | null;
+};
+
+export async function uploadWorkspaceDocumentVersion({
+  documentId,
+  file,
+  changeNote,
+}: UploadWorkspaceDocumentVersionInput): Promise<WorkspaceUploadResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  if (changeNote?.trim()) {
+    formData.append("changeNote", changeNote.trim());
+  }
+
+  const response = await fetch(
+    `/api/workspace/documents/${encodeURIComponent(documentId)}/versions`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
+
+  const result = await readUploadResponse(response);
+
+  if (!response.ok) {
+    throw new WorkspaceUploadError(
+      result.error ||
+        `Version upload failed with status ${response.status}.`,
+      result.code,
+    );
+  }
+
+  return result;
+}

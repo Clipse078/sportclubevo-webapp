@@ -26,7 +26,7 @@ describe("WORKSPACE-08-07A runtime boundary sentinels", () => {
 
   it("W08-07A-03 workspace page passes serializable capability flags only to tree panel", () => {
     const page = read("app/(admin)/dashboard/workspace/page.tsx");
-    const treeUsage = page.split("<WorkspaceFolderTreePanel")[1]?.split("/>")[0] ?? "";
+    const treeUsage = page.split("<WorkspaceFolderNavPanel")[1]?.split("/>")[0] ?? "";
     expect(treeUsage).toMatch(/canManage=\{canManage\}/);
     expect(treeUsage).toMatch(/selectedFolderId=/);
     expect(treeUsage).not.toMatch(/=\s*\([^)]*\)\s*=>/);
@@ -36,5 +36,11 @@ describe("WORKSPACE-08-07A runtime boundary sentinels", () => {
     const page = read("app/(admin)/dashboard/workspace/page.tsx");
     expect(page).toMatch(/folderManagementSlot=\{/);
     expect(page).not.toMatch(/folderManagementSlot=\{\s*\(/);
+  });
+
+  it("W08-07A-05 document inspector slot is a ReactNode without function props", () => {
+    const page = read("app/(admin)/dashboard/workspace/page.tsx");
+    expect(page).toMatch(/documentInspectorSlot=\{/);
+    expect(page).not.toMatch(/documentInspectorSlot=\{\s*\(/);
   });
 });

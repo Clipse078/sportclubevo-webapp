@@ -1,0 +1,46 @@
+{
+  "Workspace": {
+    "navigation": {
+      "workSection": "Travail",
+      "workSectionAria": "Navigation quotidienne de l'espace de travail",
+      "recent": "Récemment utilisés",
+      "favorites": "Favoris",
+      "foldersSection": "Dossiers",
+      "maintenanceSection": "Administration",
+      "maintenanceSectionAria": "Archives et corbeille"
+    },
+    "viewOptions": {
+      "triggerLabel": "Affichage",
+      "menuAriaLabel": "Personnaliser la liste",
+      "densitySection": "Densité",
+      "densityComfortable": "Liste",
+      "densityCompact": "Compact",
+      "columnsSection": "Colonnes",
+      "columnModified": "Modifié",
+      "columnSize": "Taille",
+      "columnVersion": "Version",
+      "columnUploadedBy": "Téléversé par"
+    },
+    "inspector": {
+      "tabs": {
+        "preview": "Aperçu",
+        "details": "Détails",
+        "versions": "Versions",
+        "access": "Accès",
+        "tasks": "Tâches",
+        "tasksWithCount": "Tâches {count}",
+        "requirements": "Exigences",
+        "requirementsWithCount": "Exigences {count}"
+      }
+    },
+    "actions": {
+      "createTask": "Créer une tâche",
+      "createRequirement": "Créer une exigence",
+      "actionFailed": "Action échouée."
+    },
+    "access": {
+      "whoHasAccessHeading": "Qui a accès ?",
+      "directGrantsHeading": "Direct sur cette ressource"
+    }
+  }
+}

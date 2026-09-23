@@ -116,6 +116,7 @@ function restrictedActor(): WorkspaceActorContext {
       folderGrants: new Map([[node.id, node.grants]]),
       documentGrants: new Map(),
     },
+    isCanonicalTenantClubAdmin: false,
   };
 }
 
@@ -500,9 +501,10 @@ describe("WORKSPACE-06 sentinels", () => {
     expect(items).toEqual([]);
   });
 
-  it("W06-28 admin/tenant manager does not bypass resource ACL", () => {
+  it("W06-28 technical workspace.manage alone does not bypass resource ACL", () => {
     const actor = restrictedActor();
     expect(actor.permissionKeys).toContain(PERMISSIONS.WORKSPACE_MANAGE);
+    expect(actor.isCanonicalTenantClubAdmin).toBe(false);
     expect(pureWorkspaceAclGrantsResourceAccess(actor)).toBe(false);
   });
 

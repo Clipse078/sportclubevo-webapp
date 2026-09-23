@@ -9,11 +9,13 @@ import { archiveWorkspaceFolderAction } from "@/app/(admin)/dashboard/workspace/
 type ArchiveFolderButtonProps = {
   folderId: string;
   folderName: string;
+  variant?: "prominent" | "subtle";
 };
 
 export function ArchiveFolderButton({
   folderId,
   folderName,
+  variant = "prominent",
 }: ArchiveFolderButtonProps) {
   const t = useTranslations("Workspace.archiveFolder");
   const [isPending, startTransition] = useTransition();
@@ -48,7 +50,11 @@ export function ArchiveFolderButton({
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className={
+            variant === "subtle"
+              ? "inline-flex w-full items-center justify-start gap-2 rounded-md px-1 py-1.5 text-xs font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-50"
+              : "inline-flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+          }
         >
           <Archive className="h-4 w-4" aria-hidden="true" />
           {isPending ? t("archivingLabel") : t("buttonLabel")}

@@ -20,7 +20,9 @@ export type PureAclEvaluationInput = {
 };
 
 /**
- * Returns false always — admin / manage permissions are evaluated separately from resource ACL.
+ * Returns false always — tenant capability keys (workspace.manage, etc.) are not
+ * resource ACL grants. Canonical tenant Club Admin MANAGE authority is applied
+ * separately in `getWorkspaceEffectiveAccessLevel` via `isCanonicalTenantClubAdmin`.
  */
 export function pureWorkspaceAclGrantsResourceAccess(
   input: PureAclEvaluationInput,

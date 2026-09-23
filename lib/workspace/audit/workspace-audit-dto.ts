@@ -39,6 +39,8 @@ export function workspaceAuditActionLabel(action: string): string {
     WORKSPACE_FOLDER_PERMANENTLY_DELETED: "Ordner endgültig gelöscht",
     WORKSPACE_DOCUMENT_VERSION_CREATED: "Dokumentversion hochgeladen",
     WORKSPACE_DOCUMENT_VERSION_RESTORED: "Dokumentversion wiederhergestellt",
+    WORKSPACE_DOCUMENT_RENAMED: "Dokument umbenannt",
+    WORKSPACE_DOCUMENT_MOVED: "Dokument verschoben",
     WORKSPACE_DOCUMENT_ARCHIVED: "Dokument archiviert",
     WORKSPACE_DOCUMENT_RESTORED_FROM_ARCHIVE: "Dokument aus Archiv wiederhergestellt",
     WORKSPACE_DOCUMENT_TRASHED: "Dokument in Papierkorb verschoben",

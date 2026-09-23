@@ -10,6 +10,7 @@ import { WorkspaceAuthorizationError } from "@/lib/workspace/access/workspace-au
 import { assertWorkspaceDocumentEdit } from "@/lib/workspace/workspace-resource-guards";
 import { assertWorkspaceDocumentReadWithOptionalBreakGlass } from "@/lib/workspace/governance/workspace-governance-read-authorization";
 import { requireWorkspaceApiActor } from "@/lib/workspace/workspace-api-actor";
+import { serializeWorkspaceDocumentVersionHistoryPublicItem } from "@/lib/workspace/document-version-history-public-dto";
 import {
   getDocumentVersions,
   WorkspaceDocumentVersionServiceError,
@@ -110,7 +111,7 @@ export async function GET(
 
     return NextResponse.json(
       {
-        versions,
+        versions: versions.map(serializeWorkspaceDocumentVersionHistoryPublicItem),
       },
       {
         status: 200,

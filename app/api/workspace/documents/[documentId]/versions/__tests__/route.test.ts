@@ -141,7 +141,7 @@ const versions = [
       "2026-07-18T12:00:00.000Z",
     ),
     createdByUserId: "user-2",
-    createdByName: null,
+    createdByName: "Michael Duijster",
     filename: "trainer-handbook-v2.pdf",
     mimeType: "application/pdf",
     sizeBytes: 2048,
@@ -318,19 +318,21 @@ describe(
         documentId: DOCUMENT_ID,
       });
 
-      expect(await response.json()).toEqual({
-        versions: [
-          {
-            ...versions[0],
-            createdAt:
-              "2026-07-18T12:00:00.000Z",
-          },
-          {
-            ...versions[1],
-            createdAt:
-              "2026-07-17T12:00:00.000Z",
-          },
-        ],
+      const body = await response.json();
+      expect(body.versions).toHaveLength(2);
+      expect(body.versions[0]).toMatchObject({
+        id: "version-2",
+        versionNumber: 2,
+        createdAt: "2026-07-18T12:00:00.000Z",
+        uploader: { displayName: "Michael Duijster" },
+        isCurrent: true,
+      });
+      expect(body.versions[0]).not.toHaveProperty("createdByUserId");
+      expect(body.versions[0]).not.toHaveProperty("createdByName");
+      expect(body.versions[0]).not.toHaveProperty("email");
+      expect(body.versions[1]).toMatchObject({
+        id: "version-1",
+        uploader: { displayName: "Nicht verfügbar" },
       });
     });
 

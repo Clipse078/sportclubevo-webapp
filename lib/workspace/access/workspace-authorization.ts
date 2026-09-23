@@ -39,6 +39,8 @@ export type WorkspaceActorContext = {
   membership: WorkspaceActorMembership;
   permissionKeys: readonly string[];
   graph: WorkspaceResourceGraph;
+  /** Dynamic tenant Club Admin (club_admin__{tenantKey}) — not a persisted Workspace ACL grant. */
+  isCanonicalTenantClubAdmin: boolean;
 };
 
 export function hasWorkspaceTenantViewCapability(
@@ -66,7 +68,19 @@ function maxLevel(
   return levels.reduce((best, cur) => (rank[cur] > rank[best] ? cur : best));
 }
 
-export function getWorkspaceEffectiveAccessLevel(
+function resolveResourceAccessChain(
+  actor: WorkspaceActorContext,
+  input:
+    | { resourceType: typeof WorkspaceResourceType.FOLDER; folderId: string }
+    | { resourceType: typeof WorkspaceResourceType.DOCUMENT; documentId: string },
+) {
+  return input.resourceType === WorkspaceResourceType.FOLDER
+    ? buildFolderAccessChain(actor.graph, input.folderId)
+    : buildDocumentAccessChain(actor.graph, input.documentId);
+}
+
+/** Effective level from Workspace ACL paths only (no Club Admin tenant override). */
+export function getWorkspaceResourceAclEffectiveAccessLevel(
   actor: WorkspaceActorContext,
   input:
     | { resourceType: typeof WorkspaceResourceType.FOLDER; folderId: string }
@@ -83,10 +97,7 @@ export function getWorkspaceEffectiveAccessLevel(
     return null;
   }
 
-  const chain =
-    input.resourceType === WorkspaceResourceType.FOLDER
-      ? buildFolderAccessChain(actor.graph, input.folderId)
-      : buildDocumentAccessChain(actor.graph, input.documentId);
+  const chain = resolveResourceAccessChain(actor, input);
 
   if (!chain) {
     return null;
@@ -114,6 +125,31 @@ export function getWorkspaceEffectiveAccessLevel(
   }
 
   return maxLevel(matched);
+}
+
+export function getWorkspaceEffectiveAccessLevel(
+  actor: WorkspaceActorContext,
+  input:
+    | { resourceType: typeof WorkspaceResourceType.FOLDER; folderId: string }
+    | { resourceType: typeof WorkspaceResourceType.DOCUMENT; documentId: string },
+): CanonicalResourceLevel | null {
+  if (
+    actor.identity.tenantId !== actor.membership.tenantId ||
+    actor.identity.tenantId !== actor.graph.tenantId
+  ) {
+    return null;
+  }
+
+  const chain = resolveResourceAccessChain(actor, input);
+  if (!chain) {
+    return null;
+  }
+
+  if (actor.isCanonicalTenantClubAdmin) {
+    return "MANAGE";
+  }
+
+  return getWorkspaceResourceAclEffectiveAccessLevel(actor, input);
 }
 
 export function canWorkspaceView(
@@ -227,15 +263,31 @@ export async function createWorkspaceActorContext(input: {
   personId: string | null;
   permissionKeys: readonly string[];
   graph?: WorkspaceResourceGraph;
+  isCanonicalTenantClubAdmin?: boolean;
 }): Promise<WorkspaceActorContext> {
   const { loadWorkspaceActorMembership } = await import(
     "@/lib/workspace/access/membership-resolution"
   );
+  const { prisma } = await import("@/lib/db/prisma");
+  const { isTenantClubAdmin } = await import("@/lib/roles/is-tenant-club-admin");
 
-  const [membership, graph] = await Promise.all([
+  const [membership, graph, tenant] = await Promise.all([
     loadWorkspaceActorMembership(input.tenantId, input.personId),
     input.graph ?? loadWorkspaceResourceGraph(input.tenantId),
+    prisma.tenant.findUnique({
+      where: { id: input.tenantId },
+      select: { key: true },
+    }),
   ]);
+
+  let isCanonicalTenantClubAdmin = input.isCanonicalTenantClubAdmin ?? false;
+  if (input.isCanonicalTenantClubAdmin === undefined && tenant?.key) {
+    isCanonicalTenantClubAdmin = await isTenantClubAdmin(
+      input.userId,
+      input.tenantId,
+      tenant.key,
+    );
+  }
 
   return {
     identity: {
@@ -246,6 +298,7 @@ export async function createWorkspaceActorContext(input: {
     membership,
     permissionKeys: input.permissionKeys,
     graph,
+    isCanonicalTenantClubAdmin,
   };
 }
 

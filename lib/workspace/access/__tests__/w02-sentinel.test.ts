@@ -97,6 +97,7 @@ function actorWithMembership(input: {
   roles?: { functionKey: string; orgUnitId: string; teamId?: string | null }[];
   permissionKeys?: string[];
   graph: WorkspaceResourceGraph;
+  isCanonicalTenantClubAdmin?: boolean;
 }): WorkspaceActorContext {
   return {
     identity: {
@@ -119,6 +120,7 @@ function actorWithMembership(input: {
     },
     permissionKeys: input.permissionKeys ?? [PERMISSIONS.WORKSPACE_VIEW],
     graph: input.graph,
+    isCanonicalTenantClubAdmin: input.isCanonicalTenantClubAdmin ?? false,
   };
 }
 

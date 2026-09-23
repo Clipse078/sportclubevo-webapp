@@ -1,0 +1,46 @@
+{
+  "Workspace": {
+    "navigation": {
+      "workSection": "Work",
+      "workSectionAria": "Daily workspace navigation",
+      "recent": "Recent",
+      "favorites": "Favorites",
+      "foldersSection": "Folders",
+      "maintenanceSection": "Maintenance",
+      "maintenanceSectionAria": "Archive and trash"
+    },
+    "viewOptions": {
+      "triggerLabel": "View",
+      "menuAriaLabel": "Adjust list view",
+      "densitySection": "Density",
+      "densityComfortable": "List",
+      "densityCompact": "Compact",
+      "columnsSection": "Columns",
+      "columnModified": "Modified",
+      "columnSize": "Size",
+      "columnVersion": "Version",
+      "columnUploadedBy": "Uploaded by"
+    },
+    "inspector": {
+      "tabs": {
+        "preview": "Preview",
+        "details": "Details",
+        "versions": "Versions",
+        "access": "Access",
+        "tasks": "Tasks",
+        "tasksWithCount": "Tasks {count}",
+        "requirements": "Requirements",
+        "requirementsWithCount": "Requirements {count}"
+      }
+    },
+    "actions": {
+      "createTask": "Create task",
+      "createRequirement": "Create requirement",
+      "actionFailed": "Action failed."
+    },
+    "access": {
+      "whoHasAccessHeading": "Who has access?",
+      "directGrantsHeading": "Direct on this resource"
+    }
+  }
+}

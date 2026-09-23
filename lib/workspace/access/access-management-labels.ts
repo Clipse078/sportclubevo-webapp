@@ -10,7 +10,7 @@ import type { AudienceRef } from "@/lib/workspace/access/types";
 export function accessLevelLabelDe(level: CanonicalResourceLevel): string {
   switch (level) {
     case "VIEW":
-      return "Lesen";
+      return "Ansehen";
     case "EDIT":
       return "Bearbeiten";
     case "MANAGE":

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import {
   resolveWorkspaceDocumentDirectLinkAccess,
@@ -11,20 +12,19 @@ import {
   canWorkspaceManage,
 } from "@/lib/workspace/access/workspace-authorization";
 import { WorkspaceResourceType } from "@prisma/client";
-import {
-  FolderClosed,
-  LockKeyhole,
-} from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
-import { CreateRootFolderDialog } from "@/components/admin/workspace/CreateRootFolderDialog";
-import { RenameFolderForm } from "@/components/admin/workspace/RenameFolderForm";
-import { MoveFolderForm } from "@/components/admin/workspace/MoveFolderForm";
-import { ArchiveFolderButton } from "@/app/(admin)/dashboard/workspace/ArchiveFolderButton";
 import { DeleteFolderButton } from "@/app/(admin)/dashboard/workspace/DeleteFolderButton";
 import { RestoreFolderButton } from "@/app/(admin)/dashboard/workspace/RestoreFolderButton";
 import { WorkspaceClientShell } from "@/components/admin/workspace/WorkspaceClientShell";
-import { WorkspaceFolderTreePanel } from "@/components/admin/workspace/WorkspaceFolderTreePanel";
+import { WorkspaceFolderInspectorActions } from "@/components/admin/workspace/WorkspaceFolderInspectorActions";
+import { WorkspaceHubClient } from "@/components/admin/workspace/WorkspaceHubClient";
+import { WorkspaceCollaborationProvider } from "@/components/admin/workspace/WorkspaceCollaborationProvider";
+import { WorkspaceFolderNavPanel } from "@/components/admin/workspace/WorkspaceFolderNavPanel";
+import { WorkspaceActiveBrowseLayout } from "@/components/admin/workspace/WorkspaceActiveBrowseLayout";
+import { WorkspaceNoFolderSelectedPanel } from "@/components/admin/workspace/WorkspaceNoFolderSelectedPanel";
+import { WorkspaceEmptyInspectorPanel } from "@/components/admin/workspace/WorkspaceEmptyInspectorPanel";
+import { WorkspaceLifecycleManagementPanel } from "@/components/admin/workspace/WorkspaceLifecycleManagementPanel";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -37,9 +37,15 @@ import {
   getWorkspaceFolderByIdIncludingLifecycle,
   getWorkspaceFolderTree,
 } from "@/lib/workspace/queries";
-import { WorkspaceDiscoveryPanel } from "@/components/admin/workspace/WorkspaceDiscoveryPanel";
 import { listWorkspaceDocuments } from "@/lib/workspace/document-service";
-import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
+import { enrichWorkspaceDocumentListWithCurrentVersionScan } from "@/lib/workspace/enrich-workspace-document-list-scan";
+import { enrichWorkspaceDocumentListWithAvailableActions } from "@/lib/workspace/command/enrich-document-list-available-actions";
+import { TaskContextType } from "@prisma/client";
+import { getTaskServiceContext } from "@/lib/tasks/server-context";
+import { loadContextualTaskCreateView } from "@/lib/tasks/load-contextual-task-create-view";
+import { resolveDocumentWorkflowCapabilities } from "@/lib/workspace/document-inspector/load-workspace-document-inspector";
+import WorkspaceDocumentInspectorServer from "@/components/admin/workspace/inspector/WorkspaceDocumentInspectorServer";
+import { WorkspaceDocumentInspectorSkeleton } from "@/components/admin/workspace/inspector/WorkspaceDocumentInspectorView";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { buildWorkspaceBreadcrumbs } from "@/lib/workspace/breadcrumbs";
 import {
@@ -54,6 +60,7 @@ type WorkspacePageProps = {
     document?: string;
     version?: string;
     view?: string;
+    hub?: string;
   }>;
 };
 
@@ -81,7 +88,14 @@ export default async function WorkspacePage({
   const folderParam = params.folder?.trim() || null;
   const documentParam = params.document?.trim() || null;
   const versionParam = params.version?.trim() || null;
-  const lifecycleView = params.view?.trim() || "active";
+  const hubParam = params.hub?.trim() || "browse";
+  const hubView =
+    hubParam === "favorites" || hubParam === "recent" ? hubParam : "browse";
+  const rawLifecycleView = params.view?.trim() || "active";
+  const lifecycleView =
+    rawLifecycleView === "archived" || rawLifecycleView === "trash"
+      ? rawLifecycleView
+      : "active";
   const canManage = hasPermission(session, PERMISSIONS.WORKSPACE_MANAGE);
   const canDelete = hasPermission(session, PERMISSIONS.WORKSPACE_DELETE);
 
@@ -158,7 +172,12 @@ export default async function WorkspacePage({
       })
     : [];
 
-  const documents = documentsRaw.map((doc) => ({
+  const documentsWithScan = await enrichWorkspaceDocumentListWithCurrentVersionScan(
+    tenantId,
+    documentsRaw,
+  );
+
+  const documentsWithAcl = documentsWithScan.map((doc) => ({
     ...doc,
     canManageAccess: canWorkspaceManage(workspaceActor, {
       resourceType: WorkspaceResourceType.DOCUMENT,
@@ -169,6 +188,28 @@ export default async function WorkspacePage({
       documentId: doc.id,
     }),
   }));
+
+  const selectedDocWorkflowCapabilities = initialSelectedDocumentId
+    ? await resolveDocumentWorkflowCapabilities(initialSelectedDocumentId)
+    : { canCreateTask: false, canCreateRequirement: false };
+
+  const workflowByDocumentId = new Map<
+    string,
+    { canCreateTask: boolean; canCreateRequirement: boolean }
+  >();
+  if (initialSelectedDocumentId) {
+    workflowByDocumentId.set(
+      initialSelectedDocumentId,
+      selectedDocWorkflowCapabilities,
+    );
+  }
+
+  const documents = enrichWorkspaceDocumentListWithAvailableActions({
+    actor: workspaceActor,
+    tenantCanDelete: canDelete,
+    documents: documentsWithAcl,
+    workflowByDocumentId,
+  });
 
   const canUploadSelectedFolder =
     selectedFolder != null &&
@@ -192,14 +233,49 @@ export default async function WorkspacePage({
   const workspaceLocale = tenantContext?.locale ?? "de-CH";
   const workspaceTimeZone = tenantContext?.timezone ?? "Europe/Zurich";
 
-  const documentContextualTasksPanel =
-    initialSelectedDocumentId != null ? (
-      <ContextRelatedTasksPanel
-        contextType="DOCUMENT"
-        contextId={initialSelectedDocumentId}
-        locale={workspaceLocale}
-        timeZone={workspaceTimeZone}
-      />
+  const inspectorDocument =
+    initialSelectedDocumentId != null
+      ? documents.find((d) => d.id === initialSelectedDocumentId) ?? null
+      : null;
+
+  const documentWorkflowCapabilities = selectedDocWorkflowCapabilities;
+
+  let documentTaskCreateDialogProps = null;
+  if (inspectorDocument && documentWorkflowCapabilities.canCreateTask) {
+    const taskCtx = await getTaskServiceContext();
+    if (taskCtx) {
+      const createView = await loadContextualTaskCreateView(
+        taskCtx,
+        TaskContextType.DOCUMENT,
+        inspectorDocument.id,
+        workspaceLocale,
+        workspaceTimeZone,
+      );
+      if (createView?.canCreate) {
+        documentTaskCreateDialogProps = {
+          contextType: createView.contextType,
+          contextId: createView.contextId,
+          presentation: createView.presentation,
+          orgUnitOptions: createView.orgUnitOptions,
+          timeZone: createView.timeZone,
+          tenantWideVisibility: createView.tenantWideVisibility,
+        };
+      }
+    }
+  }
+
+  const documentInspectorSlot =
+    inspectorDocument != null ? (
+      <Suspense fallback={<WorkspaceDocumentInspectorSkeleton />}>
+        <WorkspaceDocumentInspectorServer
+          tenantId={tenantId}
+          document={inspectorDocument}
+          folderName={selectedFolder?.name ?? ""}
+          locale={workspaceLocale}
+          timeZone={workspaceTimeZone}
+          tenantCanDelete={canDelete}
+        />
+      </Suspense>
     ) : null;
 
   return (
@@ -217,58 +293,59 @@ export default async function WorkspacePage({
         description={t("page.description")}
       />
 
-      <div className="mb-4">
-        <WorkspaceDiscoveryPanel />
-      </div>
+      <WorkspaceCollaborationProvider>
 
       {directLinkLifecycle && directLinkLifecycle !== "ACTIVE" ? (
         <p className="mb-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm text-[var(--text-2)]">
-          Lebenszyklus: {directLinkLifecycle === "ARCHIVED" ? "Archiviert" : "Papierkorb"}
+          {t("lifecycleBanner.label", {
+            state:
+              directLinkLifecycle === "ARCHIVED"
+                ? t("lifecycleBanner.archived")
+                : t("lifecycleBanner.trashed"),
+          })}
         </p>
       ) : null}
 
-      <div className="grid min-h-[620px] gap-4 lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)_minmax(0,300px)]">
-        {/* ── Left: folder tree ─────────────────────────────────────── */}
-        <aside className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-          <div className="shrink-0 border-b border-[var(--border)] px-3 py-3">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <FolderClosed className="h-4 w-4 text-[var(--muted)]" aria-hidden="true" />
-                <h2 className="text-sm font-semibold text-[var(--text)]">
-                  {t("folders.panelTitle")}
-                </h2>
-              </div>
+      {lifecycleView === "active" && hubView !== "browse" ? (
+        <WorkspaceHubClient tab={hubView} />
+      ) : null}
 
-              {canManage ? (
-                <CreateRootFolderDialog />
-              ) : null}
-            </div>
-          </div>
-
-          {folders.length > 0 ? (
-              <WorkspaceFolderTreePanel
+      {lifecycleView !== "active" ? (
+        <WorkspaceLifecycleManagementPanel
+          view={lifecycleView}
+          canDelete={canDelete}
+          folders={(lifecycleView === "archived" ? archivedFolders : trashedFolders).map(
+            (f) => ({
+              id: f.id,
+              name: f.name,
+              kind: "folder" as const,
+              archivedAt: f.archivedAt,
+              trashedAt:
+                "trashedAt" in f && typeof f.trashedAt === "string"
+                  ? f.trashedAt
+                  : null,
+            }),
+          )}
+          documents={(lifecycleView === "archived" ? archivedDocuments : trashedDocuments).map(
+            (d) => ({
+              id: d.id,
+              name: d.name,
+              kind: "document" as const,
+            }),
+          )}
+        />
+      ) : hubView === "browse" ? (
+        selectedFolder ? (
+          <WorkspaceClientShell
+            resizableLayout
+            navSlot={
+              <WorkspaceFolderNavPanel
                 folders={folders}
-                selectedFolderId={selectedFolder?.id ?? null}
+                selectedFolderId={selectedFolder.id}
                 canManage={canManage}
               />
-            ) : (
-              <div className="flex-1 overflow-y-auto px-2 py-2">
-                <div className="flex min-h-40 flex-col items-center justify-center px-4 py-8 text-center">
-                  <FolderClosed className="h-8 w-8 text-[var(--muted)]" aria-hidden="true" />
-                  <p className="mt-3 text-sm font-medium text-[var(--text)]">
-                    {t("folders.noFoldersTitle")}
-                  </p>
-                  <p className="mt-1 text-xs leading-5 text-[var(--text-2)]">
-                    {t("folders.noFoldersDescription")}
-                  </p>
-                </div>
-              </div>
-            )}
-        </aside>
-
-        {/* ── Centre + Right panels ─────────────────────────────────── */}
-        {selectedFolder ? (
-          <WorkspaceClientShell
+            }
+            navDrawerTitle={t("folders.panelTitle")}
             documents={documents}
             initialSelectedDocumentId={initialSelectedDocumentId}
             folderId={selectedFolder.id}
@@ -279,131 +356,50 @@ export default async function WorkspacePage({
             folderPath={folderPath}
             canManage={canManage}
             canUpload={canUploadSelectedFolder}
+            canCreateFolder={canUploadSelectedFolder}
             canManageFolderAccess={canManageFolderAccess}
             canDelete={canDelete}
-            documentContextualTasksPanel={documentContextualTasksPanel}
+            lifecycleView={lifecycleView}
+            folderTree={folders}
+            documentInspectorSlot={documentInspectorSlot}
+            documentWorkflowCapabilities={documentWorkflowCapabilities}
+            documentTaskCreateDialogProps={documentTaskCreateDialogProps}
             folderManagementSlot={
               canManage ? (
-                <div className="space-y-3">
-                  <RenameFolderForm
-                    folderId={selectedFolder.id}
-                    currentName={selectedFolder.name}
-                  />
-                  <div className="border-t border-[var(--border)] pt-3">
-                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-                      {t("folderDetails.locationLabel")}
-                    </p>
-                    <MoveFolderForm
-                      folderId={selectedFolder.id}
-                      currentParentId={selectedFolder.parentId ?? null}
-                      folders={folders}
-                    />
-                  </div>
-                  <div className="border-t border-[var(--border)] pt-3">
-                    <ArchiveFolderButton
-                      folderId={selectedFolder.id}
-                      folderName={selectedFolder.name}
-                    />
-                    <p className="mt-1.5 text-[11px] leading-4 text-[var(--muted)]">
-                      {t("folders.cannotArchiveNote")}
-                    </p>
-                  </div>
-                  {canDelete ? (
-                    <div className="border-t border-[var(--border)] pt-3">
-                      <DeleteFolderButton
-                        folderId={selectedFolder.id}
-                        folderName={selectedFolder.name}
-                      />
-                    </div>
-                  ) : null}
-                </div>
+                <WorkspaceFolderInspectorActions
+                  folderId={selectedFolder.id}
+                  folderName={selectedFolder.name}
+                  currentParentId={selectedFolder.parentId ?? null}
+                  folders={folders}
+                  canDelete={canDelete}
+                />
               ) : undefined
             }
           />
         ) : (
-          <>
-            <section className="flex min-h-[520px] flex-col items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-6 py-16">
-              <div className="w-full max-w-md text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--surface-2)]">
-                  <LockKeyhole className="h-7 w-7 text-[var(--blue)]" aria-hidden="true" />
-                </div>
-
-                <h2 className="mt-5 text-xl font-semibold text-[var(--text)]">
-                  {folders.length > 0
-                    ? t("folders.selectFolder")
-                    : t("folders.welcomeTitle")}
-                </h2>
-
-                <p className="mt-2 text-sm leading-6 text-[var(--text-2)]">
-                  {folders.length > 0
-                    ? t("folders.selectFolderDescription")
-                    : t("folders.welcomeDescription")}
-                </p>
-
-                {canManage && folders.length === 0 ? (
-                  <div className="mt-6">
-                    <CreateRootFolderDialog />
-                  </div>
-                ) : null}
-
-                {!canManage && folders.length === 0 ? (
-                  <p className="mt-5 text-xs leading-5 text-[var(--muted)]">
-                    {t("folders.noPermissionNote")}
-                  </p>
-                ) : null}
-              </div>
-            </section>
-
-            <aside className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-              <div className="border-b border-[var(--border)] px-5 py-3.5">
-                <h2 className="text-sm font-semibold text-[var(--text)]">
-                  {t("folderDetails.panelTitle")}
-                </h2>
-              </div>
-              <div className="flex flex-1 items-center justify-center px-5 py-8">
-                <p className="text-sm text-[var(--text-2)]">
-                  {t("folderDetails.noItemSelected")}
-                </p>
-              </div>
-            </aside>
-          </>
-        )}
-      </div>
-
-      {/* ── Archived folders ──────────────────────────────────────── */}
-      {lifecycleView === "archived" && (archivedFolders.length > 0 || archivedDocuments.length > 0) ? (
-        <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-          <h2 className="text-sm font-semibold">Archivierte Inhalte</h2>
-          <ul className="mt-3 space-y-2 text-sm">
-            {archivedFolders.map((f) => (
-              <li key={f.id}>{f.name}</li>
-            ))}
-            {archivedDocuments.map((d) => (
-              <li key={d.id}>
-                <a href={`/dashboard/workspace?document=${d.id}`}>{d.name}</a>
-              </li>
-            ))}
-          </ul>
-        </section>
+          <WorkspaceActiveBrowseLayout
+            nav={
+              <WorkspaceFolderNavPanel
+                folders={folders}
+                selectedFolderId={null}
+                canManage={canManage}
+              />
+            }
+            navDrawerTitle={t("folders.panelTitle")}
+            hasInspectorContext={false}
+            main={
+              <WorkspaceNoFolderSelectedPanel
+                hasFolders={folders.length > 0}
+                canManage={canManage}
+              />
+            }
+            inspector={<WorkspaceEmptyInspectorPanel />}
+          />
+        )
       ) : null}
+      </WorkspaceCollaborationProvider>
 
-      {lifecycleView === "trash" && (trashedFolders.length > 0 || trashedDocuments.length > 0) ? (
-        <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-          <h2 className="text-sm font-semibold">Papierkorb</h2>
-          <ul className="mt-3 space-y-2 text-sm">
-            {trashedFolders.map((f) => (
-              <li key={f.id}>{f.name}</li>
-            ))}
-            {trashedDocuments.map((d) => (
-              <li key={d.id}>
-                <a href={`/dashboard/workspace?document=${d.id}`}>{d.name}</a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {archivedFolders.length > 0 ? (
+      {lifecycleView === "active" && archivedFolders.length > 0 ? (
         <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
           <div className="border-b border-[var(--border)] px-5 py-4">
             <h2 className="text-sm font-semibold text-[var(--text)]">

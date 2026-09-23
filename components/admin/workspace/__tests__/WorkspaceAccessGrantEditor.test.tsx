@@ -57,10 +57,15 @@ function explicitViewModel(
         audienceLabel: "U17",
         audienceKey: "TEAM:team-1",
         effectiveLevel: "VIEW",
-        effectiveLevelLabel: "Lesen",
+        effectiveLevelLabel: "Ansehen",
+        configuredLevel: "MANAGE",
+        configuredLevelLabel: "Verwalten",
         sourceLabel: "Direkt",
+        whyLabel: "Über Team · U17",
         cappedByAncestor: true,
-        ancestorCapLabel: "Durch übergeordneten Ordner auf Lesen begrenzt",
+        ancestorCapLabel: "Durch übergeordneten Ordner auf Ansehen begrenzt",
+        pathCount: 1,
+        isInherited: false,
       },
     ],
     inheritedAccess: [],
@@ -230,7 +235,7 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
       />,
     );
     expect(
-      screen.getByText("Durch übergeordneten Ordner auf Lesen begrenzt"),
+      screen.getByText("Durch übergeordneten Ordner auf Ansehen begrenzt"),
     ).toBeInTheDocument();
   });
 
