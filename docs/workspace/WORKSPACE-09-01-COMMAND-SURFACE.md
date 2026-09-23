@@ -3,7 +3,7 @@
 **Implementation branch:** `cursor/workspace-09-product-completion-ux`  
 **Discovery ancestry:** W09D via `9017bdfd50ca85f62e136e2e9cab6a4d9985459f`  
 **STAGE base:** `704a7c4571524bd0fd2dc10df238110a23a3201b`  
-**W09-01A acceptance HEAD (pre-push):** `7ffc0e84f59ce1417a3e36b56a6092c17348e86f`  
+**W09-01A acceptance HEAD:** `89b85c110b3993a45fec82a7b16e7e5c7e3650d5` (includes baseline hardening commit on #704)  
 **PR:** #704 (OPEN, DRAFT, base STAGE, not merged)
 
 ## Implemented command model
