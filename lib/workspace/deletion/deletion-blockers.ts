@@ -2,6 +2,8 @@ import type { Prisma } from "@prisma/client";
 
 export type WorkspaceDeletionBlockerKind =
   | "TASK_DOCUMENT_REFERENCE"
+  | "TASK_DOCUMENT_REFERENCE_LEGACY"
+  | "REQUIREMENT_WORKSPACE_DOCUMENT_VERSION_REFERENCE"
   | "WORKSPACE_DOCUMENT_VERSION_REFERENCE";
 
 export type WorkspaceDeletionBlocker = {
@@ -14,7 +16,9 @@ export const WORKSPACE_DELETION_BLOCKED_CODE = "RESOURCE_REFERENCED" as const;
 
 type DeletionClient = Pick<
   Prisma.TransactionClient,
-  "taskDocumentReference" | "workspaceDocument"
+  | "taskDocumentReference"
+  | "requirementWorkspaceDocumentVersionReference"
+  | "workspaceDocument"
 >;
 
 /**
@@ -28,17 +32,56 @@ export async function getWorkspaceDocumentDeletionBlockers(
 ): Promise<WorkspaceDeletionBlocker[]> {
   const blockers: WorkspaceDeletionBlocker[] = [];
 
-  const taskRefs = await client.taskDocumentReference.findMany({
-    where: { tenantId, documentId },
+  const legacyTaskRefs = await client.taskDocumentReference.findMany({
+    where: {
+      tenantId,
+      documentId,
+      workspaceDocumentVersionId: null,
+    },
     select: { id: true },
   });
 
-  for (const ref of taskRefs) {
+  for (const ref of legacyTaskRefs) {
+    blockers.push({
+      kind: "TASK_DOCUMENT_REFERENCE_LEGACY",
+      referenceId: ref.id,
+      message:
+        "Das Dokument wird von mindestens einer Aufgabe referenziert (Legacy-Referenz).",
+    });
+  }
+
+  const exactTaskRefs = await client.taskDocumentReference.findMany({
+    where: {
+      tenantId,
+      workspaceDocumentVersionId: { not: null },
+      workspaceDocumentVersion: { documentId },
+    },
+    select: { id: true },
+  });
+
+  for (const ref of exactTaskRefs) {
     blockers.push({
       kind: "TASK_DOCUMENT_REFERENCE",
       referenceId: ref.id,
       message:
         "Das Dokument wird von mindestens einer Aufgabe referenziert.",
+    });
+  }
+
+  const requirementRefs = await client.requirementWorkspaceDocumentVersionReference.findMany({
+    where: {
+      tenantId,
+      workspaceDocumentVersion: { documentId },
+    },
+    select: { id: true },
+  });
+
+  for (const ref of requirementRefs) {
+    blockers.push({
+      kind: "REQUIREMENT_WORKSPACE_DOCUMENT_VERSION_REFERENCE",
+      referenceId: ref.id,
+      message:
+        "Das Dokument wird von mindestens einer Anforderung referenziert.",
     });
   }
 

@@ -33,6 +33,7 @@ import { getWorkspaceDocumentVersionForDownload } from "@/lib/workspace/document
 
 const prismaMocks = vi.hoisted(() => ({
   taskDocumentReference: { findMany: vi.fn() },
+  requirementWorkspaceDocumentVersionReference: { findMany: vi.fn() },
   workspaceDocument: {
     findUnique: vi.fn(),
     findFirst: vi.fn(),
@@ -47,6 +48,8 @@ const prismaMocks = vi.hoisted(() => ({
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     taskDocumentReference: prismaMocks.taskDocumentReference,
+    requirementWorkspaceDocumentVersionReference:
+      prismaMocks.requirementWorkspaceDocumentVersionReference,
     workspaceDocument: prismaMocks.workspaceDocument,
     workspaceFavorite: { findMany: vi.fn().mockResolvedValue([]) },
     workspaceRecentAccess: { findMany: vi.fn().mockResolvedValue([]) },
@@ -127,6 +130,8 @@ describe("WORKSPACE-06 sentinels", () => {
       cb({
         $executeRaw: prismaMocks.executeRaw,
         taskDocumentReference: prismaMocks.taskDocumentReference,
+        requirementWorkspaceDocumentVersionReference:
+          prismaMocks.requirementWorkspaceDocumentVersionReference,
         workspaceDocument: {
           findFirst: prismaMocks.workspaceDocument.findFirst,
           findUnique: prismaMocks.workspaceDocument.findUnique,
@@ -137,6 +142,7 @@ describe("WORKSPACE-06 sentinels", () => {
     );
     prismaMocks.executeRaw.mockResolvedValue(undefined);
     prismaMocks.taskDocumentReference.findMany.mockResolvedValue([]);
+    prismaMocks.requirementWorkspaceDocumentVersionReference.findMany.mockResolvedValue([]);
   });
 
   it("W06-01 unauthorized folder archive denied", () => {

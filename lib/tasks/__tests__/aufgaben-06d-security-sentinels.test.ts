@@ -71,7 +71,7 @@ describe("AUFGABEN-06D authorization matrix", () => {
 
   it("R21 task access never grants document access (static)", () => {
     const source = read("lib/tasks/task-document-reference-service.ts");
-    expect(source).toMatch(/assertWorkspaceDocumentLinkable/);
+    expect(source).toMatch(/resolveWorkspaceDocumentVersionForLink/);
     expect(source).not.toMatch(/canReadTask\([\s\S]*documentId/);
   });
 
@@ -96,23 +96,26 @@ describe("AUFGABEN-06D integration guards", () => {
 
   it("R31 reference service batches document presentation", () => {
     const source = read("lib/tasks/task-document-reference-service.ts");
-    expect(source).toMatch(/resolveWorkspaceDocumentPresentations/);
+    expect(source).toMatch(/resolveTaskDocumentReferencePresentations/);
     expect(source).not.toMatch(/for\s*\([^)]*reference[^)]*\)[\s\S]*canReadWorkspaceDocument/);
   });
 
   it("R43 restricted metadata absent from client row rendering", () => {
     const source = read("components/admin/aufgaben/TaskDocumentReferencesSection.tsx");
-    expect(source).toContain('presentation.access === "restricted"');
+    expect(source).toContain("presentation.accessible === false");
     expect(source).toContain("Dokument (kein Zugriff)");
     const restrictedBlock =
-      source.split('presentation.access === "restricted"')[1]?.split("return (")[1]?.split(");")[0] ?? "";
+      source.split("presentation.accessible === false")[1]?.split("return (")[1]?.split(");")[0] ?? "";
     expect(restrictedBlock).not.toMatch(/presentation\.title|href=/);
   });
 
   it("R25 audit stores documentId only", () => {
     const source = read("lib/tasks/task-document-reference-service.ts");
-    expect(source).toMatch(/afterJson: \{ documentId/);
-    expect(source).not.toMatch(/afterJson:[\s\S]*name/);
+    const linkedAudit =
+      source.split("action: \"TASK_DOCUMENT_LINKED\"")[1]?.split("});")[0] ?? "";
+    expect(linkedAudit).toMatch(/documentId:/);
+    expect(linkedAudit).toMatch(/workspaceDocumentVersionId:/);
+    expect(linkedAudit).not.toMatch(/filename|documentTitle|storageKey/);
   });
 
   it("R26 timeline uses generic document wording", () => {
@@ -135,7 +138,7 @@ describe("AUFGABEN-06D integration guards", () => {
 
   it("R40 workspace page honors ?document= with document-access seam", () => {
     const source = read("app/(admin)/dashboard/workspace/page.tsx");
-    expect(source).toContain("canReadWorkspaceDocument");
+    expect(source).toMatch(/canReadWorkspaceDocument|resolveWorkspaceDocumentDirectLinkAccess/);
     expect(source).toContain("documentParam");
   });
 
@@ -143,7 +146,7 @@ describe("AUFGABEN-06D integration guards", () => {
     const source = read("lib/tasks/task-document-reference-service.ts");
     const unlinkBlock = source.split("export async function unlinkTaskDocument")[1] ?? "";
     expect(unlinkBlock).toMatch(/taskDocumentReference\.deleteMany/);
-    expect(unlinkBlock).not.toMatch(/workspaceDocument|documentArchive|documentDelete/);
+    expect(unlinkBlock).not.toMatch(/workspaceDocument\.|documentArchive|documentDelete/);
   });
 
   it("R28 picker max limit exported", () => {
@@ -152,8 +155,10 @@ describe("AUFGABEN-06D integration guards", () => {
 
   it("R16 primary DOCUMENT duplicate rejected in service", () => {
     const source = read("lib/tasks/task-document-reference-service.ts");
+    const primaryContext = read("lib/tasks/task-primary-document-context.ts");
     expect(source).toMatch(/assertNotPrimaryDocumentDuplicate/);
-    expect(source).toMatch(/TaskContextType\.DOCUMENT/);
+    expect(source).toMatch(/isTaskPrimaryDocumentContext/);
+    expect(primaryContext).toMatch(/TaskContextType\.DOCUMENT/);
   });
 
   it("R45 DOCUMENT context picker uses document-access search", () => {

@@ -1,5 +1,5 @@
 /**
- * AUFGABEN-06D — task document reference service.
+ * AUFGABEN-06D / WORKSPACE-07 — task document reference service.
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,12 +11,13 @@ import { EMPTY_TASK_AUTH_SCOPE } from "../task-authorization";
 const mocks = vi.hoisted(() => ({
   taskFindFirst: vi.fn(),
   referenceFindMany: vi.fn(),
+  referenceFindFirst: vi.fn(),
   referenceCreateMany: vi.fn(),
   referenceDeleteMany: vi.fn(),
   transaction: vi.fn(),
   auditCreate: vi.fn(),
-  assertLinkable: vi.fn(),
-  resolvePresentations: vi.fn(),
+  resolveVersionForLink: vi.fn(),
+  resolveTaskPresentations: vi.fn(),
   searchDocuments: vi.fn(),
 }));
 
@@ -25,6 +26,7 @@ vi.mock("@/lib/db/prisma", () => ({
     task: { findFirst: mocks.taskFindFirst },
     taskDocumentReference: {
       findMany: mocks.referenceFindMany,
+      findFirst: mocks.referenceFindFirst,
       createMany: mocks.referenceCreateMany,
       deleteMany: mocks.referenceDeleteMany,
     },
@@ -33,9 +35,17 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 
+vi.mock("@/lib/workspace/reference/workspace-version-link-validation", () => ({
+  resolveWorkspaceDocumentVersionForLink: mocks.resolveVersionForLink,
+  listAuthorizedWorkspaceDocumentVersions: vi.fn(),
+  WorkspaceVersionLinkValidationError: class WorkspaceVersionLinkValidationError extends Error {},
+}));
+
+vi.mock("@/lib/workspace/reference/resolve-workspace-version-references", () => ({
+  resolveTaskDocumentReferencePresentations: mocks.resolveTaskPresentations,
+}));
+
 vi.mock("@/lib/workspace/document-access", () => ({
-  assertWorkspaceDocumentLinkable: mocks.assertLinkable,
-  resolveWorkspaceDocumentPresentations: mocks.resolvePresentations,
   searchWorkspaceDocumentsForTaskLink: mocks.searchDocuments,
   WORKSPACE_DOCUMENT_LINKABLE_ERROR: "Das Dokument ist nicht verfügbar oder kann nicht verknüpft werden.",
 }));
@@ -50,6 +60,7 @@ import {
 const TENANT = "tenant-a";
 const TASK = "task-1";
 const DOC = "doc-1";
+const VERSION = "ver-1";
 const CREATOR = "creator-1";
 const ASSIGNEE = "assignee-1";
 
@@ -92,21 +103,30 @@ describe("AUFGABEN-06D task-document-reference-service", () => {
       fn({
         taskDocumentReference: { createMany: mocks.referenceCreateMany },
         auditLog: { create: mocks.auditCreate },
+        $executeRaw: vi.fn(),
       }),
     );
     mocks.referenceCreateMany.mockResolvedValue({ count: 1 });
     mocks.referenceDeleteMany.mockResolvedValue({ count: 1 });
-    mocks.assertLinkable.mockResolvedValue(undefined);
-    mocks.resolvePresentations.mockResolvedValue(
+    mocks.resolveVersionForLink.mockResolvedValue({
+      tenantId: TENANT,
+      documentId: DOC,
+      workspaceDocumentVersionId: VERSION,
+      versionNumber: 1,
+    });
+    mocks.resolveTaskPresentations.mockResolvedValue(
       new Map([
         [
-          DOC,
+          "ref-1",
           {
-            access: "readable",
+            accessible: true,
+            referenceId: "ref-1",
             documentId: DOC,
-            title: "Budget",
-            folderBreadcrumb: null,
-            href: `/dashboard/workspace?document=${DOC}`,
+            versionId: VERSION,
+            versionNumber: 1,
+            documentTitle: "Budget",
+            documentLifecycle: "ACTIVE",
+            canonicalWorkspaceUrl: `/dashboard/workspace?document=${DOC}&version=${VERSION}`,
           },
         ],
       ]),
@@ -151,36 +171,42 @@ describe("AUFGABEN-06D task-document-reference-service", () => {
       linkTaskDocument(
         ctx(CREATOR, [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_CREATE]),
         TASK,
-        DOC,
+        { documentId: DOC },
       ),
     ).rejects.toThrow(TaskValidationError);
   });
 
   it("denies link when document is not linkable", async () => {
-    mocks.assertLinkable.mockRejectedValue(new Error("blocked"));
+    const { WorkspaceVersionLinkValidationError } = await import(
+      "@/lib/workspace/reference/workspace-version-link-validation"
+    );
+    mocks.resolveVersionForLink.mockRejectedValue(new WorkspaceVersionLinkValidationError("blocked"));
     await expect(
       linkTaskDocument(
         ctx(CREATOR, [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_CREATE, PERMISSIONS.WORKSPACE_VIEW]),
         TASK,
-        DOC,
+        { documentId: DOC },
       ),
     ).rejects.toThrow(TaskValidationError);
   });
 
   it("lists references with batched presentation resolution", async () => {
     mocks.referenceFindMany.mockResolvedValue([
-      { id: "ref-1", documentId: DOC, createdAt: new Date("2026-09-21T10:00:00.000Z") },
+      {
+        id: "ref-1",
+        documentId: null,
+        workspaceDocumentVersionId: VERSION,
+        versionBinding: "EXACT",
+        createdAt: new Date("2026-09-21T10:00:00.000Z"),
+      },
     ]);
     const rows = await listTaskDocumentReferences(
       ctx(ASSIGNEE, [PERMISSIONS.TASKS_VIEW, PERMISSIONS.WORKSPACE_VIEW]),
       TASK,
     );
     expect(rows).toHaveLength(1);
-    expect(mocks.resolvePresentations).toHaveBeenCalledWith(
-      expect.anything(),
-      [DOC],
-    );
-    expect(rows[0]?.presentation.access).toBe("readable");
+    expect(mocks.resolveTaskPresentations).toHaveBeenCalled();
+    expect(rows[0]?.presentation.accessible).toBe(true);
   });
 
   it("unlink requires metadata-edit authority", async () => {
@@ -194,7 +220,7 @@ describe("AUFGABEN-06D task-document-reference-service", () => {
     await linkTaskDocument(
       ctx(CREATOR, [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_CREATE, PERMISSIONS.WORKSPACE_VIEW]),
       TASK,
-      DOC,
+      { documentId: DOC },
     );
     expect(mocks.auditCreate).not.toHaveBeenCalled();
   });

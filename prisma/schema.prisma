@@ -871,6 +871,7 @@ model Tenant {
   requirementDraftAudienceRoles      RequirementDraftAudienceRole[]   @relation("TenantRequirementDraftAudienceRole")
   requirementDraftAudienceTargetGroups RequirementDraftAudienceTargetGroup[] @relation("TenantRequirementDraftAudienceTargetGroup")
   requirementRecipients              RequirementRecipient[]           @relation("TenantRequirementRecipients")
+  requirementDocumentVersionReferences RequirementWorkspaceDocumentVersionReference[] @relation("TenantRequirementDocumentVersionReferences")
   notifications                      Notification[]
   notificationDeliveries             NotificationDelivery[]
   userNotificationPreferences        UserNotificationPreference[]
@@ -1047,6 +1048,7 @@ model User {
   tasksAssignedBy TaskAssignee[] @relation("TaskAssignedByUser")
   tasksCreated    Task[]         @relation("TaskCreatedBy")
   requirementsCreated Requirement[] @relation("RequirementCreatedBy")
+  createdRequirementWorkspaceDocumentVersionReferences RequirementWorkspaceDocumentVersionReference[] @relation("RequirementWorkspaceDocumentVersionReferenceCreatedBy")
   requirementResponsesSubmitted RequirementRecipient[] @relation("RequirementRespondedByUser")
   taskSeriesCreated TaskSeries[] @relation("TaskSeriesCreatedBy")
   taskSeriesAssigneeTemplates TaskSeriesAssigneeTemplate[] @relation("TaskSeriesAssigneeTemplateUser")
@@ -3012,24 +3014,30 @@ model TaskFollower {
   @@index([tenantId, userId])
 }
 
-/// AUFGABEN-06D — supporting Workspace document links (distinct from DOCUMENT primary context).
+/// AUFGABEN-06D / WORKSPACE-07 — supporting Workspace document version links (distinct from DOCUMENT primary context).
 model TaskDocumentReference {
-  id              String   @id @default(cuid())
-  tenantId        String
-  taskId          String
-  documentId      String
-  createdByUserId String?
-  createdAt       DateTime @default(now())
+  id                       String                              @id @default(cuid())
+  tenantId                 String
+  taskId                   String
+  /// Legacy AUFGABEN-06D document-level pointer; null for new exact-version references.
+  documentId               String?
+  /// WORKSPACE-07 — immutable business reference target when set.
+  workspaceDocumentVersionId String?
+  versionBinding           TaskDocumentReferenceVersionBinding @default(EXACT)
+  createdByUserId          String?
+  createdAt                DateTime                            @default(now())
 
-  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  task      Task              @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  document  WorkspaceDocument @relation(fields: [documentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  createdBy User?             @relation("TaskDocumentReferenceCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  tenant                   Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  task                     Task                      @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  document                 WorkspaceDocument?        @relation(fields: [documentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  workspaceDocumentVersion WorkspaceDocumentVersion? @relation(fields: [workspaceDocumentVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy                User?                     @relation("TaskDocumentReferenceCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
-  @@unique([taskId, documentId])
+  @@unique([taskId, workspaceDocumentVersionId])
   @@index([tenantId])
   @@index([tenantId, taskId])
   @@index([tenantId, documentId])
+  @@index([tenantId, workspaceDocumentVersionId])
 }
 
 /// AUFGABEN-01B — recurrence definition (series), distinct from actionable Task occurrences.
@@ -3118,6 +3126,13 @@ model TaskSeriesAccessGrant {
   @@index([tenantId, seriesId])
   @@index([tenantId, orgUnitId])
   @@index([tenantId, userId])
+}
+
+/// WORKSPACE-07 — how a task document reference binds to workspace content.
+enum TaskDocumentReferenceVersionBinding {
+  EXACT
+  LEGACY_UNRESOLVED
+  LEGACY_SINGLE_VERSION
 }
 
 enum TaskAccessGrantSubjectType {
@@ -3226,7 +3241,8 @@ model Requirement {
   draftAudienceOrgUnits  RequirementDraftAudienceOrgUnit[] @relation("RequirementDraftAudienceOrgUnits")
   draftAudienceRoles     RequirementDraftAudienceRole[]   @relation("RequirementDraftAudienceRoles")
   draftAudienceTargetGroups RequirementDraftAudienceTargetGroup[] @relation("RequirementDraftAudienceTargetGroups")
-  recipients    RequirementRecipient[]           @relation("RequirementRecipients")
+  recipients               RequirementRecipient[]                           @relation("RequirementRecipients")
+  documentVersionReferences RequirementWorkspaceDocumentVersionReference[] @relation("RequirementDocumentVersionReferences")
 
   @@index([tenantId])
   @@index([tenantId, status])
@@ -3234,6 +3250,26 @@ model Requirement {
   @@index([tenantId, status, dueAt])
   @@index([tenantId, status, reminder1At])
   @@index([tenantId, status, reminder2At])
+}
+
+/// WORKSPACE-07 — Requirement ↔ immutable Workspace document version reference.
+model RequirementWorkspaceDocumentVersionReference {
+  id                         String   @id @default(cuid())
+  tenantId                   String
+  requirementId              String
+  workspaceDocumentVersionId String
+  createdByUserId            String?
+  createdAt                  DateTime @default(now())
+
+  tenant                   Tenant                   @relation("TenantRequirementDocumentVersionReferences", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  requirement              Requirement              @relation("RequirementDocumentVersionReferences", fields: [requirementId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  workspaceDocumentVersion WorkspaceDocumentVersion @relation("RequirementWorkspaceDocumentVersionReferences", fields: [workspaceDocumentVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy                User?                    @relation("RequirementWorkspaceDocumentVersionReferenceCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([requirementId, workspaceDocumentVersionId])
+  @@index([tenantId])
+  @@index([tenantId, requirementId])
+  @@index([tenantId, workspaceDocumentVersionId])
 }
 
 /// Explicit Person audience while Requirement remains DRAFT (relational, not JSON).
@@ -4384,6 +4420,8 @@ model WorkspaceDocumentVersion {
 
   currentForDocument               WorkspaceDocument?        @relation("WorkspaceDocumentCurrentVersion")
   communicationAttachmentSnapshots CommunicationAttachment[] @relation("CommunicationAttachmentSourceVersion")
+  taskDocumentReferences           TaskDocumentReference[]
+  requirementDocumentVersionReferences RequirementWorkspaceDocumentVersionReference[] @relation("RequirementWorkspaceDocumentVersionReferences")
 
   createdByUser User? @relation("WorkspaceDocumentVersionCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 

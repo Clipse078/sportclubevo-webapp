@@ -28,6 +28,8 @@ import {
   closeRequirementAction,
   updateRequirementDraftAction,
 } from "@/app/(admin)/dashboard/aufgaben/requirement-actions";
+import type { RequirementDocumentReferenceDto } from "@/lib/requirements/requirement-document-reference-service";
+import { RequirementDocumentReferencesSection } from "./RequirementDocumentReferencesSection";
 import { buildAufgabenBereichHref } from "@/lib/personal-actions/aufgaben-scope";
 
 type Props = {
@@ -47,6 +49,8 @@ type Props = {
   matrixPageCount: number;
   canManage: boolean;
   canViewMatrix: boolean;
+  documentReferences: RequirementDocumentReferenceDto[];
+  canLinkDocuments: boolean;
   creatorLabel: string | null;
   locale: string;
   timeZone: string;
@@ -76,6 +80,8 @@ export default function RequirementDetailWorkspace({
   matrixPageCount,
   canManage,
   canViewMatrix,
+  documentReferences,
+  canLinkDocuments,
   creatorLabel,
   locale,
   timeZone,
@@ -312,6 +318,11 @@ export default function RequirementDetailWorkspace({
             disabled={!canManage || pending}
             compact
           />
+          <RequirementDocumentReferencesSection
+            requirementId={requirement.id}
+            references={documentReferences}
+            canLink={canLinkDocuments}
+          />
           <div className="grid gap-4 md:grid-cols-2">
             <label className="block space-y-1">
               <span className="text-xs font-medium text-[var(--text-2)]">Fällig am</span>
@@ -370,6 +381,12 @@ export default function RequirementDetailWorkspace({
               <TaskDescriptionContent description={requirement.description} />
             </section>
           ) : null}
+
+          <RequirementDocumentReferencesSection
+            requirementId={requirement.id}
+            references={documentReferences}
+            canLink={canLinkDocuments}
+          />
 
           {aggregate ? (
             <section className="space-y-3" data-testid="requirement-progress-block">

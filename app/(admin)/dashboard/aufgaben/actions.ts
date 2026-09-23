@@ -73,8 +73,11 @@ import {
 } from "@/lib/tasks/task-follow-service";
 import {
   linkTaskDocument,
+  listWorkspaceDocumentVersionsForTaskReferenceLink,
   searchWorkspaceDocumentsForTaskReferenceLink,
   unlinkTaskDocument,
+  unlinkTaskDocumentReference,
+  type LinkTaskDocumentVersionInput,
   type TaskDocumentReferenceDto,
 } from "@/lib/tasks/task-document-reference-service";
 import type { WorkspaceDocumentPickerOption } from "@/lib/workspace/document-access";
@@ -1327,13 +1330,13 @@ export async function searchTaskDocumentLinkCandidatesAction(
 
 export async function linkTaskDocumentAction(
   taskId: string,
-  documentId: string,
+  input: LinkTaskDocumentVersionInput,
 ): Promise<TaskDocumentReferenceActionResult> {
   const ctx = await getTaskServiceContext();
   if (!ctx) return { ok: false, message: "Nicht angemeldet." };
 
   try {
-    await linkTaskDocument(ctx, taskId, documentId);
+    await linkTaskDocument(ctx, taskId, input);
     revalidateTaskPaths(taskId);
     return { ok: true };
   } catch (error) {
@@ -1341,6 +1344,44 @@ export async function linkTaskDocumentAction(
   }
 }
 
+export async function listTaskDocumentVersionsForLinkAction(
+  taskId: string,
+  documentId: string,
+): Promise<
+  | {
+      ok: true;
+      currentVersionId: string | null;
+      versions: { id: string; versionNumber: number; filename: string; createdAt: string }[];
+    }
+  | { ok: false; message: string }
+> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  const result = await listWorkspaceDocumentVersionsForTaskReferenceLink(ctx, taskId, documentId);
+  if (!result.ok) {
+    return { ok: false, message: "Versionen nicht verfügbar." };
+  }
+  return result;
+}
+
+export async function unlinkTaskDocumentReferenceAction(
+  taskId: string,
+  referenceId: string,
+): Promise<TaskDocumentReferenceActionResult> {
+  const ctx = await getTaskServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    await unlinkTaskDocumentReference(ctx, taskId, referenceId);
+    revalidateTaskPaths(taskId);
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: actionErrorMessage(error) };
+  }
+}
+
+/** @deprecated Legacy unlink by documentId for unresolved legacy rows. */
 export async function unlinkTaskDocumentAction(
   taskId: string,
   documentId: string,

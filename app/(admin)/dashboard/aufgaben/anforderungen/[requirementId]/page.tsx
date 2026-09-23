@@ -13,6 +13,8 @@ import {
 import { loadRequirementPersonOptionsByIds } from "@/lib/requirements/person-search";
 import { loadRequirementAudienceLabels } from "@/lib/requirements/audience-selector-search";
 import { RequirementForbiddenError } from "@/lib/requirements/errors";
+import { listRequirementDocumentReferences } from "@/lib/requirements/requirement-document-reference-service";
+import { RequirementStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -86,6 +88,12 @@ export default async function RequirementDetailPage({ params, searchParams }: Pr
   let matrixPage = 1;
   let matrixPageCount = 1;
 
+  const documentReferences = await listRequirementDocumentReferences(ctx, requirementId);
+  const canLinkDocuments =
+    detail.canManage &&
+    detail.requirement.status !== RequirementStatus.CLOSED &&
+    detail.requirement.status !== RequirementStatus.CANCELLED;
+
   if (detail.canViewMatrix && detail.requirement.status !== "DRAFT") {
     const matrixPageRaw = Number.parseInt(sp.mp ?? "1", 10);
     const matrix = await listRequirementRecipientMatrix(ctx, {
@@ -115,6 +123,8 @@ export default async function RequirementDetailPage({ params, searchParams }: Pr
         matrixPageCount={matrixPageCount}
         canManage={detail.canManage}
         canViewMatrix={detail.canViewMatrix}
+        documentReferences={documentReferences}
+        canLinkDocuments={canLinkDocuments}
         creatorLabel={detail.creatorLabel}
         locale={locale}
         timeZone={timeZone}

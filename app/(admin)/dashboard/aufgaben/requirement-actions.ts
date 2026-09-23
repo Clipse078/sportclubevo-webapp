@@ -29,6 +29,16 @@ import { parseRequirementDeadlineAndRemindersFromForm } from "@/lib/requirements
 import type { RequirementAudienceSelection } from "@/lib/requirements/types";
 import { requirementDetailHref } from "@/lib/requirements/management-navigation";
 import { parseIdListFromForm } from "@/lib/tasks/task-access-grants";
+import type { WorkspaceDocumentPickerOption } from "@/lib/workspace/document-access";
+import {
+  linkRequirementDocumentReference,
+  listRequirementDocumentReferences,
+  searchWorkspaceDocumentsForRequirementReferenceLink,
+  unlinkRequirementDocumentReference,
+  type LinkRequirementDocumentVersionInput,
+  type RequirementDocumentReferenceDto,
+} from "@/lib/requirements/requirement-document-reference-service";
+import { listAuthorizedWorkspaceDocumentVersions } from "@/lib/workspace/reference/workspace-version-link-validation";
 
 export type RequirementActionResult =
   | { ok: true; requirementId?: string }
@@ -294,3 +304,112 @@ export async function cancelRequirementAction(requirementId: string): Promise<Re
     return mapRequirementError(error);
   }
 }
+
+export type RequirementDocumentReferenceActionResult =
+  | { ok: true }
+  | { ok: false; message: string };
+
+export async function searchRequirementDocumentLinkCandidatesAction(
+  requirementId: string,
+  query: string,
+  limit?: number,
+): Promise<
+  | { ok: true; options: WorkspaceDocumentPickerOption[] }
+  | { ok: false; message: string }
+> {
+  const ctx = await getRequirementServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    const options = await searchWorkspaceDocumentsForRequirementReferenceLink(
+      ctx,
+      requirementId,
+      query,
+      limit,
+    );
+    return { ok: true, options };
+  } catch (error) {
+    const mapped = mapRequirementError(error);
+    return mapped.ok ? { ok: false, message: "Aktion fehlgeschlagen." } : mapped;
+  }
+}
+
+export async function listRequirementDocumentVersionsForLinkAction(
+  requirementId: string,
+  documentId: string,
+): Promise<
+  | {
+      ok: true;
+      currentVersionId: string | null;
+      versions: { id: string; versionNumber: number; filename: string; createdAt: string }[];
+    }
+  | { ok: false; message: string }
+> {
+  const ctx = await getRequirementServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    await searchWorkspaceDocumentsForRequirementReferenceLink(ctx, requirementId, "", 1);
+  } catch (error) {
+    const mapped = mapRequirementError(error);
+    return mapped.ok ? { ok: false, message: "Aktion fehlgeschlagen." } : mapped;
+  }
+
+  const result = await listAuthorizedWorkspaceDocumentVersions(ctx, documentId);
+  if (!result.ok) {
+    return { ok: false, message: "Versionen nicht verfügbar." };
+  }
+  return result;
+}
+
+export async function linkRequirementDocumentAction(
+  requirementId: string,
+  input: LinkRequirementDocumentVersionInput,
+): Promise<RequirementDocumentReferenceActionResult> {
+  const ctx = await getRequirementServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    await linkRequirementDocumentReference(ctx, requirementId, input);
+    revalidateRequirementPaths(requirementId);
+    return { ok: true };
+  } catch (error) {
+    return mapRequirementError(error);
+  }
+}
+
+export async function unlinkRequirementDocumentReferenceAction(
+  requirementId: string,
+  referenceId: string,
+): Promise<RequirementDocumentReferenceActionResult> {
+  const ctx = await getRequirementServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    await unlinkRequirementDocumentReference(ctx, requirementId, referenceId);
+    revalidateRequirementPaths(requirementId);
+    return { ok: true };
+  } catch (error) {
+    return mapRequirementError(error);
+  }
+}
+
+export async function loadRequirementDocumentReferencesAction(
+  requirementId: string,
+): Promise<
+  | { ok: true; references: RequirementDocumentReferenceDto[] }
+  | { ok: false; message: string }
+> {
+  const ctx = await getRequirementServiceContext();
+  if (!ctx) return { ok: false, message: "Nicht angemeldet." };
+
+  try {
+    const references = await listRequirementDocumentReferences(ctx, requirementId);
+    return { ok: true, references };
+  } catch (error) {
+    const mapped = mapRequirementError(error);
+    return mapped.ok ? { ok: false, message: "Aktion fehlgeschlagen." } : mapped;
+  }
+}
+
+export type { RequirementDocumentReferenceDto };
