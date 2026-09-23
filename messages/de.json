@@ -234,6 +234,8 @@
       "saving": "Wird gespeichert …",
       "resourceSection": "Ressource",
       "effectiveSection": "Effektiver Zugriff",
+      "actorAuthoritySection": "Ihre Berechtigung",
+      "configuredAccessSection": "Konfigurierter Zugriff",
       "explicitSection": "Direkte Regeln",
       "inheritedSection": "Geerbter Zugriff",
       "inheritedFrom": "Geerbt von «{name}»",

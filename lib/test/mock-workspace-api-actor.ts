@@ -105,6 +105,7 @@ export function createMockWorkspaceActorContext(input: {
     },
     permissionKeys: input.permissionKeys ?? [PERMISSIONS.WORKSPACE_VIEW],
     graph,
+    isCanonicalTenantClubAdmin: false,
   };
 }
 

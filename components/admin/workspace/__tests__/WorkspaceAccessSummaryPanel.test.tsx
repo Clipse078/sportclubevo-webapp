@@ -25,6 +25,7 @@ const summary = {
   inheritanceDescription: "Zugriff wird vom Ordner «Vereinsleitung» übernommen.",
   parentName: "Vereinsleitung",
   moreCount: 0,
+  actorAuthority: null,
   effectiveAccess: [
     {
       audienceKind: "TEAM" as const,

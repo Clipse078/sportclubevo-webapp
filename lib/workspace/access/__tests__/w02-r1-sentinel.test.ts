@@ -92,6 +92,7 @@ function actorWithGraph(input: {
       PERMISSIONS.WORKSPACE_MANAGE,
     ],
     graph: input.graph,
+    isCanonicalTenantClubAdmin: false,
   };
 }
 

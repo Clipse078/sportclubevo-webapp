@@ -87,6 +87,7 @@ function actor(input: {
       PERMISSIONS.WORKSPACE_MANAGE,
     ],
     graph: input.graph,
+    isCanonicalTenantClubAdmin: false,
   };
 }
 

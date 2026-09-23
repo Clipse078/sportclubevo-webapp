@@ -19,7 +19,7 @@ import { auth } from "@/auth";
 import { notFound, redirect } from "next/navigation";
 import type { Session } from "next-auth";
 import { prisma } from "@/lib/db/prisma";
-import { getTenantClubAdminRoleKey } from "@/lib/roles/tenant-role-keys";
+import { isTenantClubAdmin } from "@/lib/roles/is-tenant-club-admin";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { currentTeamSeasonWhere } from "@/lib/teams/current-season";
 
@@ -60,26 +60,7 @@ export async function isPlatformSuperAdmin(userId: string): Promise<boolean> {
   return count > 0;
 }
 
-export async function isTenantClubAdmin(
-  userId: string,
-  tenantId: string,
-  tenantKey: string,
-): Promise<boolean> {
-  const clubAdminRoleKey = getTenantClubAdminRoleKey(tenantKey);
-  const count = await prisma.userRole.count({
-    where: {
-      userId,
-      tenantId,
-      role: { key: clubAdminRoleKey },
-      user: {
-        tenantMemberships: {
-          some: { tenantId, isActive: true },
-        },
-      },
-    },
-  });
-  return count > 0;
-}
+export { isTenantClubAdmin } from "@/lib/roles/is-tenant-club-admin";
 
 export async function resolvePersonIdForUser(
   userId: string,

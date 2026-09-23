@@ -46,6 +46,8 @@ import {
   assertWorkspaceAccess,
   canWorkspaceManage,
   canWorkspaceView,
+  getWorkspaceEffectiveAccessLevel,
+  getWorkspaceResourceAclEffectiveAccessLevel,
   WorkspaceAuthorizationError,
   type WorkspaceActorContext,
 } from "@/lib/workspace/access/workspace-authorization";
@@ -455,6 +457,45 @@ export function buildAccessSummaryViewModel(input: {
     parentName,
   });
 
+  const actorEffectiveLevel = getWorkspaceEffectiveAccessLevel(
+    input.actor,
+    resourceRef,
+  );
+  const actorAclLevel = getWorkspaceResourceAclEffectiveAccessLevel(
+    input.actor,
+    resourceRef,
+  );
+
+  let actorAuthority: WorkspaceAccessSummaryViewModel["actorAuthority"] = null;
+  if (actorEffectiveLevel) {
+    if (
+      input.actor.isCanonicalTenantClubAdmin &&
+      actorEffectiveLevel === "MANAGE"
+    ) {
+      actorAuthority = {
+        effectiveLevel: "MANAGE",
+        effectiveLevelLabel: accessLevelLabelDe("MANAGE"),
+        sourceKind: "CLUB_ADMIN",
+        sourceLabel: "Club-Administrator",
+        configuredActorLevel: actorAclLevel,
+        configuredActorLevelLabel: actorAclLevel
+          ? accessLevelLabelDe(actorAclLevel)
+          : null,
+      };
+    } else {
+      actorAuthority = {
+        effectiveLevel: actorEffectiveLevel,
+        effectiveLevelLabel: accessLevelLabelDe(actorEffectiveLevel),
+        sourceKind: "ACL",
+        sourceLabel: "Berechtigungen",
+        configuredActorLevel: actorAclLevel,
+        configuredActorLevelLabel: actorAclLevel
+          ? accessLevelLabelDe(actorAclLevel)
+          : null,
+      };
+    }
+  }
+
   return {
     resourceId:
       input.resource.resourceType === WorkspaceResourceType.FOLDER
@@ -465,6 +506,7 @@ export function buildAccessSummaryViewModel(input: {
     policyModeHeadline: inheritanceCopy.headline,
     inheritanceDescription: inheritanceCopy.description,
     parentName,
+    actorAuthority,
     effectiveAccess: visible,
     moreCount,
   };

@@ -63,6 +63,7 @@ function actor(input: {
     },
     permissionKeys: [PERMISSIONS.WORKSPACE_VIEW, PERMISSIONS.WORKSPACE_MANAGE],
     graph: input.graph,
+    isCanonicalTenantClubAdmin: false,
   };
 }
 

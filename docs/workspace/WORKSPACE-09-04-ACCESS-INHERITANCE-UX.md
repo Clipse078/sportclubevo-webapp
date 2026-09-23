@@ -74,12 +74,32 @@ Multiple resolver paths: `pathCount > 1` → «Zugriff über N Wege».
 
 ---
 
+## Club Admin vs configured access (W09-04A)
+
+| Concept | Meaning |
+|---------|---------|
+| **Ihre Berechtigung** | Current actor authority from server (`getWorkspaceEffectiveAccessLevel`) |
+| **Konfigurierter Zugriff** | Resource ACL rows (Organisation / Org Unit / Team / Role / Person) — unchanged by Club Admin |
+
+Canonical **tenant Club Admin** (`club_admin__{tenantKey}` + active membership) receives **MANAGE** on all tenant-owned Workspace resources dynamically — no persisted Workspace ACL grant.
+
+Club Admin UI example when Organisation ACL is **Ansehen**:
+
+- Ihre Berechtigung: **Verwalten · Club-Administrator**
+- Konfigurierter Zugriff: Organisation · {club} · **Ansehen**
+
+Normal users remain fully ACL-driven (VIEW &lt; EDIT &lt; MANAGE). Creator is provenance only — no bypass.
+
+---
+
 ## Security invariants (preserved)
 
 - Zero disclosure: summary `null` → 404 for unauthorized actors.
-- No admin/creator bypass in UI or DTOs.
+- No client-side authority; DTOs reflect server authorization only.
 - No Person.id/email in client DTOs for display lists.
-- Restrictive inheritance + no descendant widening (W02/W03 algebra).
+- Restrictive inheritance + no descendant widening for **resource ACL** (W02/W03 algebra).
+- Club Admin MANAGE does **not** widen configured ACL rows or descendant inheritance for normal users.
+- Tenant isolation: Club Admin authority is scoped to the active tenant only.
 
 ---
 

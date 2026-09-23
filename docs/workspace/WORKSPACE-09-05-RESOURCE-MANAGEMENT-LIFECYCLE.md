@@ -48,11 +48,18 @@ Blocked when purge eligibility reports Task/Requirement references. UI shows saf
 
 Large folder trash uses W08 `requestWorkspaceFolderTrash` with user-facing “Ordner wird verschoben …” messaging — no job IDs in UI.
 
+## Authorization (W09-05R1)
+
+- **Normal users:** rename/move/archive/trash/permanent delete require resource ACL **EDIT** / **MANAGE** plus tenant `workspace.manage` where applicable.
+- **Canonical tenant Club Admin:** dynamic **MANAGE** on tenant Workspace resources (see W09-04A) — revalidates W09-05 operations without rewriting Organisation/Team/Person ACL rows.
+- **Not bypassed:** malware/content delivery blocks, immutable versions, reference-safe permanent delete, retention/governance holds, move cycle/widening rules for ACL semantics, cross-tenant isolation.
+- **Technical roles** with `workspace.manage` but **without** canonical Club Admin: no automatic resource MANAGE (same as pre-04A negative tests).
+
 ## Security
 
 - Zero-disclosure 404 on unauthorized edit/move/rename APIs.
 - No client-side `parentId` / lifecycle writes.
-- No creator/admin bypass beyond resource ACL + tenant caps.
+- No creator bypass; Club Admin override is tenant-scoped and dynamic (not a persisted ACL grant).
 
 ## Tests
 

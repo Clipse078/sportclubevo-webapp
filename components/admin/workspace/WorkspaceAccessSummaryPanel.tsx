@@ -95,9 +95,23 @@ export function WorkspaceAccessSummaryPanel({
         </p>
       </div>
 
+      {summary.actorAuthority ? (
+        <div data-testid="workspace-access-actor-authority">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+            {t("actorAuthoritySection")}
+          </h4>
+          <p className="mt-2 text-sm text-[var(--text)]">
+            {summary.actorAuthority.effectiveLevelLabel}
+            {summary.actorAuthority.sourceKind === "CLUB_ADMIN"
+              ? ` · ${summary.actorAuthority.sourceLabel}`
+              : null}
+          </p>
+        </div>
+      ) : null}
+
       <div>
         <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-          {t("effectiveSection")}
+          {t("configuredAccessSection")}
         </h4>
         {summary.effectiveAccess.length === 0 ? (
           <p className="mt-2 text-sm text-[var(--text-2)]">{t("summaryEmpty")}</p>

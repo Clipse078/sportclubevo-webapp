@@ -482,7 +482,7 @@ describe("WORKSPACE-01 W01 sentinels", () => {
     ).toBe(false);
   });
 
-  it("W01-28 club admin no pure ACL bypass", () => {
+  it("W01-28 club admin does not use pureWorkspaceAclGrantsResourceAccess (dynamic override elsewhere)", () => {
     expect(
       pureWorkspaceAclGrantsResourceAccess({
         permissionKeys: [],

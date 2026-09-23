@@ -87,6 +87,16 @@ export type WorkspaceAccessManagementViewModel = {
   restrictionSeedGrants: WorkspaceAccessGrantMutationFieldsDto[];
 };
 
+export type WorkspaceActorAuthoritySummaryDto = {
+  effectiveLevel: CanonicalResourceLevel;
+  effectiveLevelLabel: string;
+  sourceKind: "CLUB_ADMIN" | "ACL";
+  sourceLabel: string;
+  /** ACL-derived level for the actor when Club Admin override applies (configured vs authority). */
+  configuredActorLevel: CanonicalResourceLevel | null;
+  configuredActorLevelLabel: string | null;
+};
+
 export type WorkspaceAccessSummaryViewModel = {
   resourceId: string;
   resourceType: WorkspaceResourceType;
@@ -94,6 +104,7 @@ export type WorkspaceAccessSummaryViewModel = {
   policyModeHeadline: string;
   inheritanceDescription: string;
   parentName: string | null;
+  actorAuthority: WorkspaceActorAuthoritySummaryDto | null;
   effectiveAccess: WorkspaceEffectiveAccessEntryDto[];
   moreCount: number;
 };
