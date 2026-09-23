@@ -26,6 +26,7 @@ import { WorkspaceFolderTreePanel } from "@/components/admin/workspace/Workspace
 import { WorkspaceFolderInspectorManagement } from "@/components/admin/workspace/WorkspaceFolderInspectorManagement";
 import { WorkspaceLifecycleNavigation } from "@/components/admin/workspace/WorkspaceLifecycleNavigation";
 import { WorkspaceQuickDiscoveryPanel } from "@/components/admin/workspace/WorkspaceQuickDiscoveryPanel";
+import { WorkspaceLifecycleManagementPanel } from "@/components/admin/workspace/WorkspaceLifecycleManagementPanel";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -281,6 +282,31 @@ export default async function WorkspacePage({
         </p>
       ) : null}
 
+      {lifecycleView !== "active" ? (
+        <WorkspaceLifecycleManagementPanel
+          view={lifecycleView}
+          canDelete={canDelete}
+          folders={(lifecycleView === "archived" ? archivedFolders : trashedFolders).map(
+            (f) => ({
+              id: f.id,
+              name: f.name,
+              kind: "folder" as const,
+              archivedAt: f.archivedAt,
+              trashedAt:
+                "trashedAt" in f && typeof f.trashedAt === "string"
+                  ? f.trashedAt
+                  : null,
+            }),
+          )}
+          documents={(lifecycleView === "archived" ? archivedDocuments : trashedDocuments).map(
+            (d) => ({
+              id: d.id,
+              name: d.name,
+              kind: "document" as const,
+            }),
+          )}
+        />
+      ) : (
       <div className="grid min-h-[620px] gap-4 lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)_minmax(0,320px)]">
         {/* ── Left: folder tree ─────────────────────────────────────── */}
         <aside className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
@@ -337,6 +363,7 @@ export default async function WorkspacePage({
             canManageFolderAccess={canManageFolderAccess}
             canDelete={canDelete}
             lifecycleView={lifecycleView}
+            folderTree={folders}
             documentInspectorSlot={documentInspectorSlot}
             documentWorkflowCapabilities={documentWorkflowCapabilities}
             documentTaskCreateDialogProps={documentTaskCreateDialogProps}
@@ -401,41 +428,9 @@ export default async function WorkspacePage({
           </>
         )}
       </div>
+      )}
 
-      {/* ── Archived folders ──────────────────────────────────────── */}
-      {lifecycleView === "archived" && (archivedFolders.length > 0 || archivedDocuments.length > 0) ? (
-        <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-          <h2 className="text-sm font-semibold">Archivierte Inhalte</h2>
-          <ul className="mt-3 space-y-2 text-sm">
-            {archivedFolders.map((f) => (
-              <li key={f.id}>{f.name}</li>
-            ))}
-            {archivedDocuments.map((d) => (
-              <li key={d.id}>
-                <a href={`/dashboard/workspace?document=${d.id}`}>{d.name}</a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {lifecycleView === "trash" && (trashedFolders.length > 0 || trashedDocuments.length > 0) ? (
-        <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-          <h2 className="text-sm font-semibold">Papierkorb</h2>
-          <ul className="mt-3 space-y-2 text-sm">
-            {trashedFolders.map((f) => (
-              <li key={f.id}>{f.name}</li>
-            ))}
-            {trashedDocuments.map((d) => (
-              <li key={d.id}>
-                <a href={`/dashboard/workspace?document=${d.id}`}>{d.name}</a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {archivedFolders.length > 0 ? (
+      {lifecycleView === "active" && archivedFolders.length > 0 ? (
         <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
           <div className="border-b border-[var(--border)] px-5 py-4">
             <h2 className="text-sm font-semibold text-[var(--text)]">

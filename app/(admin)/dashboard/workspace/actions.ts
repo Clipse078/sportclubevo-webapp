@@ -23,6 +23,7 @@ import {
   archiveWorkspaceFolder,
   restoreWorkspaceFolderFromArchive,
   restoreWorkspaceFolderFromTrash,
+  requestWorkspaceFolderTrash,
   trashWorkspaceFolderSubtree,
   WorkspaceFolderLifecycleServiceError,
 } from "@/lib/workspace/lifecycle/folder-lifecycle-service";
@@ -1252,6 +1253,203 @@ export async function deleteWorkspaceFolderPermanentlyAction(
       ok: false,
       code: "WORKSPACE_FOLDER_DELETE_FAILED",
       message: "The folder could not be deleted. Please try again.",
+    };
+  }
+}
+
+export async function trashWorkspaceFolderAction(
+  formData: FormData,
+): Promise<
+  WorkspaceFolderActionResult<
+    | { mode: "SYNC"; trashedFolderCount: number; trashedDocumentCount: number }
+    | { mode: "ASYNC"; operationId: string; status: string }
+  >
+> {
+  let session;
+
+  try {
+    session = await requirePermission(PERMISSIONS.WORKSPACE_MANAGE);
+  } catch {
+    return {
+      ok: false,
+      code: "WORKSPACE_FORBIDDEN",
+      message: "You do not have permission to move folders to trash.",
+    };
+  }
+
+  const tenantId = session.user?.activeTenantId;
+  const userId = session.user?.id;
+
+  if (!tenantId || !userId) {
+    return {
+      ok: false,
+      code: "WORKSPACE_FORBIDDEN",
+      message: "Authenticated tenant and user are required.",
+    };
+  }
+
+  const folderId = normalizeFolderId(formData.get("folderId"));
+  if (!folderId) {
+    return {
+      ok: false,
+      code: "WORKSPACE_FOLDER_NOT_FOUND",
+      message: "Folder is required.",
+    };
+  }
+
+  try {
+    const actor = await resolveWorkspaceActorForSession(session);
+    if (!actor) {
+      return {
+        ok: false,
+        code: "WORKSPACE_FORBIDDEN",
+        message: "Authenticated tenant and user are required.",
+      };
+    }
+
+    try {
+      assertWorkspaceFolderEdit(actor, folderId);
+    } catch (error) {
+      if (error instanceof WorkspaceAuthorizationError) {
+        return {
+          ok: false,
+          code: "WORKSPACE_FOLDER_NOT_FOUND",
+          message: "Folder was not found.",
+        };
+      }
+      throw error;
+    }
+
+    const outcome = await requestWorkspaceFolderTrash({
+      tenantId,
+      actorUserId: userId,
+      folderId,
+    });
+
+    revalidatePath("/dashboard/workspace");
+
+    if (outcome.mode === "ASYNC") {
+      return {
+        ok: true,
+        data: {
+          mode: "ASYNC",
+          operationId: outcome.operationId,
+          status: outcome.status,
+        },
+      };
+    }
+
+    return {
+      ok: true,
+      data: {
+        mode: "SYNC",
+        trashedFolderCount: outcome.trashedFolderCount,
+        trashedDocumentCount: outcome.trashedDocumentCount,
+      },
+    };
+  } catch (error) {
+    if (error instanceof WorkspaceFolderLifecycleServiceError) {
+      return {
+        ok: false,
+        code: "WORKSPACE_FOLDER_NOT_FOUND",
+        message: error.message,
+      };
+    }
+
+    console.error("[workspace-actions] trashWorkspaceFolder failed", error);
+
+    return {
+      ok: false,
+      code: "WORKSPACE_FOLDER_ARCHIVE_FAILED",
+      message: "Der Ordner konnte nicht in den Papierkorb verschoben werden.",
+    };
+  }
+}
+
+export async function restoreWorkspaceFolderFromTrashAction(
+  formData: FormData,
+): Promise<WorkspaceFolderActionResult<void>> {
+  let session;
+
+  try {
+    session = await requirePermission(PERMISSIONS.WORKSPACE_MANAGE);
+  } catch {
+    return {
+      ok: false,
+      code: "WORKSPACE_FORBIDDEN",
+      message: "You do not have permission to restore folders.",
+    };
+  }
+
+  const tenantId = session.user?.activeTenantId;
+  const userId = session.user?.id;
+
+  if (!tenantId || !userId) {
+    return {
+      ok: false,
+      code: "WORKSPACE_FORBIDDEN",
+      message: "Authenticated tenant and user are required.",
+    };
+  }
+
+  const folderId = normalizeFolderId(formData.get("folderId"));
+  if (!folderId) {
+    return {
+      ok: false,
+      code: "WORKSPACE_FOLDER_NOT_FOUND",
+      message: "Folder is required.",
+    };
+  }
+
+  try {
+    const actor = await resolveWorkspaceActorForSession(session);
+    if (!actor) {
+      return {
+        ok: false,
+        code: "WORKSPACE_FORBIDDEN",
+        message: "Authenticated tenant and user are required.",
+      };
+    }
+
+    try {
+      assertWorkspaceFolderEdit(actor, folderId);
+    } catch (error) {
+      if (error instanceof WorkspaceAuthorizationError) {
+        return {
+          ok: false,
+          code: "WORKSPACE_FOLDER_NOT_FOUND",
+          message: "Folder was not found.",
+        };
+      }
+      throw error;
+    }
+
+    await restoreWorkspaceFolderFromTrash({
+      tenantId,
+      actorUserId: userId,
+      folderId,
+    });
+
+    revalidatePath("/dashboard/workspace");
+    return { ok: true, data: undefined };
+  } catch (error) {
+    if (error instanceof WorkspaceFolderLifecycleServiceError) {
+      return {
+        ok: false,
+        code: "WORKSPACE_FOLDER_RESTORE_FAILED",
+        message: error.message,
+      };
+    }
+
+    console.error(
+      "[workspace-actions] restoreWorkspaceFolderFromTrash failed",
+      error,
+    );
+
+    return {
+      ok: false,
+      code: "WORKSPACE_FOLDER_RESTORE_FAILED",
+      message: "The folder could not be restored. Please try again.",
     };
   }
 }

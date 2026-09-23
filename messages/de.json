@@ -96,6 +96,36 @@
       "errorGeneric": "Der Ordner konnte nicht verschoben werden."
     },
 
+    "renameDocument": {
+      "title": "Dokument umbenennen",
+      "description": "Der Dateiname in der Workspace-Liste wird geändert. Versionen und Verknüpfungen bleiben unverändert.",
+      "fieldLabel": "Name",
+      "submit": "Speichern",
+      "cancel": "Abbrechen",
+      "errorGeneric": "Das Dokument konnte nicht umbenannt werden."
+    },
+
+    "moveDocument": {
+      "title": "«{name}» verschieben",
+      "description": "Der effektive Zugriff kann sich durch die neue Ordnerposition ändern.",
+      "currentFolderLabel": "Aktueller Ordner",
+      "targetLabel": "Ziel",
+      "rootOption": "Workspace-Stammordner",
+      "submit": "Verschieben",
+      "cancel": "Abbrechen",
+      "accessReductionHint": "Hinweis: Durch das Verschieben können die effektiven Berechtigungen enger werden.",
+      "moveDeniedAccess": "Verschieben nicht möglich (Berechtigungen würden erweitert).",
+      "errorGeneric": "Das Dokument konnte nicht verschoben werden."
+    },
+
+    "trashFolder": {
+      "buttonLabel": "In Papierkorb",
+      "pendingLabel": "Wird verschoben …",
+      "confirmMessage": "«{name}» in den Papierkorb verschieben? Der Inhalt kann später wiederhergestellt werden.",
+      "asyncMessage": "Der Ordner wird im Hintergrund in den Papierkorb verschoben …",
+      "errorGeneric": "Der Ordner konnte nicht in den Papierkorb verschoben werden."
+    },
+
     "archiveFolder": {
       "buttonLabel": "Ordner archivieren",
       "archivingLabel": "Wird archiviert …",

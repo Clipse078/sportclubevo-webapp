@@ -13,21 +13,24 @@ import {
 } from "./workspace-document-formatters";
 import { WorkspaceVersionScanBadge } from "./WorkspaceVersionScanBadge";
 
+import type { WorkspaceFolderDto } from "@/lib/workspace/dto";
+
 type WorkspaceDocumentRowProps = {
   document: WorkspaceDocumentListItemDto;
   isSelected?: boolean;
   onSelect?: (id: string) => void;
-  /** ADMIN-DELETE-03A: resolved server-side from PERMISSIONS.WORKSPACE_DELETE. */
-  canDelete?: boolean;
   canManageAccess?: boolean;
+  folders?: WorkspaceFolderDto[];
+  currentFolderLabel?: string;
 };
 
 export function WorkspaceDocumentRow({
   document,
   isSelected = false,
   onSelect,
-  canDelete = false,
   canManageAccess = false,
+  folders = [],
+  currentFolderLabel = "",
 }: WorkspaceDocumentRowProps) {
   const ft = useTranslations("Workspace.fileTypes");
   const currentVersion = document.currentVersion;
@@ -129,9 +132,10 @@ export function WorkspaceDocumentRow({
         <WorkspaceDocumentActions
           document={document}
           onSelect={() => onSelect?.(document.id)}
-          canDelete={canDelete}
           canManageAccess={canManageAccess || document.canManageAccess}
           canEditDocument={document.canEditDocument}
+          folders={folders}
+          currentFolderLabel={currentFolderLabel}
         />
       </td>
     </tr>

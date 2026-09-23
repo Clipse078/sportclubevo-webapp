@@ -18,6 +18,7 @@ export * from "@/lib/workspace/access/membership-resolution";
 export * from "@/lib/workspace/access/move-validation";
 export * from "@/lib/workspace/access/move-impact";
 export * from "@/lib/workspace/access/folder-move-authorization";
+export * from "@/lib/workspace/access/document-move-authorization";
 export * from "@/lib/workspace/access/policy-persistence";
 export * from "@/lib/workspace/access/query-predicate";
 export * from "@/lib/workspace/access/resource-graph";

@@ -1,14 +1,19 @@
 "use client";
 
 import {
+  Archive,
   ChevronDown,
   Download,
   FileUp,
+  FolderInput,
   History,
   Link2,
   MoreHorizontal,
+  Pencil,
+  Trash2,
   Upload,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -26,6 +31,9 @@ import {
 } from "./CreateWorkspaceFolderDialog";
 import { useWorkspaceUploadContext } from "./WorkspaceUploadContext";
 import { buildWorkspaceInternalLink } from "@/lib/workspace/internal-links";
+import type { WorkspaceFolderDto } from "@/lib/workspace/dto";
+import { WorkspaceDocumentRenameDialog } from "./WorkspaceDocumentRenameDialog";
+import { WorkspaceDocumentMoveDialog } from "./WorkspaceDocumentMoveDialog";
 
 type WorkspaceCommandBarProps = {
   context: WorkspaceCommandContextState;
@@ -34,6 +42,8 @@ type WorkspaceCommandBarProps = {
   workflowCapabilities?: DocumentInspectorWorkflowCapabilitiesDto;
   taskCreateDialogProps?: Omit<ContextualTaskCreateDialogProps, "open" | "onOpenChange"> | null;
   onCreateRequirement?: () => void;
+  folderTree?: WorkspaceFolderDto[];
+  currentFolderLabel?: string;
 };
 
 export function WorkspaceCommandBar({
@@ -43,9 +53,12 @@ export function WorkspaceCommandBar({
   workflowCapabilities = { canCreateTask: false, canCreateRequirement: false },
   taskCreateDialogProps = null,
   onCreateRequirement,
+  folderTree = [],
+  currentFolderLabel = "",
 }: WorkspaceCommandBarProps) {
   const t = useTranslations("Workspace.commandBar");
   const tActions = useTranslations("Workspace.actions");
+  const router = useRouter();
   const {
     canUpload,
     isUploading,
@@ -57,6 +70,8 @@ export function WorkspaceCommandBar({
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
   const createTriggerRef = useRef<HTMLButtonElement>(null);
   const overflowTriggerRef = useRef<HTMLButtonElement>(null);
 
@@ -208,7 +223,7 @@ export function WorkspaceCommandBar({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          {documentSelected && context.capabilities.canCopyDocumentLink ? (
+          {documentSelected ? (
             <button
               ref={overflowTriggerRef}
               type="button"
@@ -228,15 +243,87 @@ export function WorkspaceCommandBar({
             anchorRef={overflowTriggerRef}
             ariaLabel={t("overflowAriaLabel")}
           >
-            <button
-              type="button"
-              role="menuitem"
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-2)] hover:bg-[var(--surface-2)]"
-              onClick={() => void copyDocumentLink()}
-            >
-              <Link2 className="h-4 w-4" aria-hidden="true" />
-              {t("copyLink")}
-            </button>
+            {context.capabilities.canEditDocument ? (
+              <>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+                  onClick={() => {
+                    setOverflowOpen(false);
+                    setRenameOpen(true);
+                  }}
+                >
+                  <Pencil className="h-4 w-4" aria-hidden="true" />
+                  {tActions("rename")}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+                  onClick={() => {
+                    setOverflowOpen(false);
+                    setMoveOpen(true);
+                  }}
+                >
+                  <FolderInput className="h-4 w-4" aria-hidden="true" />
+                  {tActions("move")}
+                </button>
+              </>
+            ) : null}
+            {context.capabilities.canCopyDocumentLink ? (
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+                onClick={() => void copyDocumentLink()}
+              >
+                <Link2 className="h-4 w-4" aria-hidden="true" />
+                {t("copyLink")}
+              </button>
+            ) : null}
+            {context.capabilities.canEditDocument ? (
+              <>
+                <div className="my-1 border-t border-[var(--border)]" role="separator" />
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+                  onClick={() => {
+                    setOverflowOpen(false);
+                    void fetch(
+                      `/api/workspace/documents/${encodeURIComponent(selectedDocument!.id)}/archive`,
+                      { method: "POST" },
+                    ).then(() => router.refresh());
+                  }}
+                >
+                  <Archive className="h-4 w-4" aria-hidden="true" />
+                  {tActions("archive")}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--sce-danger)] hover:bg-[var(--surface-2)]"
+                  onClick={() => {
+                    if (
+                      !window.confirm(
+                        "In Papierkorb verschieben? Das Dokument kann später wiederhergestellt werden.",
+                      )
+                    ) {
+                      return;
+                    }
+                    setOverflowOpen(false);
+                    void fetch(
+                      `/api/workspace/documents/${encodeURIComponent(selectedDocument!.id)}/trash`,
+                      { method: "POST" },
+                    ).then(() => router.refresh());
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  In Papierkorb
+                </button>
+              </>
+            ) : null}
           </WorkspaceFloatingContextMenu>
         </div>
       </div>
@@ -248,6 +335,26 @@ export function WorkspaceCommandBar({
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
       />
+
+      {selectedDocument && context.capabilities.canEditDocument ? (
+        <>
+          <WorkspaceDocumentRenameDialog
+            open={renameOpen}
+            onClose={() => setRenameOpen(false)}
+            documentId={selectedDocument.id}
+            currentName={selectedDocument.name}
+          />
+          <WorkspaceDocumentMoveDialog
+            open={moveOpen}
+            onClose={() => setMoveOpen(false)}
+            documentId={selectedDocument.id}
+            documentName={selectedDocument.name}
+            currentFolderId={selectedDocument.folderId}
+            currentFolderLabel={currentFolderLabel}
+            folders={folderTree}
+          />
+        </>
+      ) : null}
     </>
   );
 }

@@ -6,17 +6,23 @@ import {
   History,
   Link2,
   MoreHorizontal,
+  Pencil,
   Shield,
   Trash2,
+  FolderInput,
 } from "lucide-react";
 import { useRef, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import type { WorkspaceDocumentListItemDto } from "@/lib/workspace/document-dto";
+import type { WorkspaceFolderDto } from "@/lib/workspace/dto";
 
 import { WorkspaceAccessManagementDialog } from "./WorkspaceAccessManagementDialog";
 import { WorkspaceDocumentDeleteControl } from "./WorkspaceDocumentDeleteControl";
 import { WorkspaceDocumentVersionHistoryDialog } from "./WorkspaceDocumentVersionHistoryDialog";
+import { WorkspaceDocumentRenameDialog } from "./WorkspaceDocumentRenameDialog";
+import { WorkspaceDocumentMoveDialog } from "./WorkspaceDocumentMoveDialog";
 import { WorkspaceFloatingContextMenu } from "./WorkspaceFloatingContextMenu";
 import { buildWorkspaceInternalLink } from "@/lib/workspace/internal-links";
 
@@ -26,6 +32,10 @@ type WorkspaceDocumentActionsProps = {
   canDelete?: boolean;
   canManageAccess?: boolean;
   canEditDocument?: boolean;
+  /** Only true in Papierkorb lifecycle contexts. */
+  showPermanentDelete?: boolean;
+  folders?: WorkspaceFolderDto[];
+  currentFolderLabel?: string;
 };
 
 type ActionButtonProps = {
@@ -33,7 +43,6 @@ type ActionButtonProps = {
   label: string;
   onClick?: () => void;
   disabled?: boolean;
-  comingSoonLabel?: string;
   destructive?: boolean;
 };
 
@@ -42,7 +51,6 @@ function ActionButton({
   label,
   onClick,
   disabled = false,
-  comingSoonLabel,
   destructive = false,
 }: ActionButtonProps) {
   return (
@@ -63,14 +71,7 @@ function ActionButton({
       >
         {icon}
       </span>
-
       <span className="min-w-0 flex-1">{label}</span>
-
-      {disabled && comingSoonLabel ? (
-        <span className="whitespace-nowrap text-[10px] font-medium uppercase tracking-wide text-[var(--muted)]">
-          {comingSoonLabel}
-        </span>
-      ) : null}
     </button>
   );
 }
@@ -80,12 +81,18 @@ export function WorkspaceDocumentActions({
   canDelete = false,
   canManageAccess = false,
   canEditDocument = false,
+  showPermanentDelete = false,
+  folders = [],
+  currentFolderLabel = "",
 }: WorkspaceDocumentActionsProps) {
   const t = useTranslations("Workspace.actions");
   const tAccess = useTranslations("Workspace.access");
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
   const [accessOpen, setAccessOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   const hasDownload = Boolean(workspaceDocument.currentVersion);
@@ -118,21 +125,38 @@ export function WorkspaceDocumentActions({
   }
 
   async function trashDocument() {
+    if (
+      !window.confirm(
+        "In Papierkorb verschieben? Das Dokument kann später wiederhergestellt werden.",
+      )
+    ) {
+      return;
+    }
     setMenuOpen(false);
-    await fetch(
+    const res = await fetch(
       `/api/workspace/documents/${encodeURIComponent(workspaceDocument.id)}/trash`,
       { method: "POST" },
     );
-    window.location.reload();
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      window.alert(data?.error ?? "Aktion fehlgeschlagen.");
+      return;
+    }
+    router.refresh();
   }
 
   async function archiveDocument() {
     setMenuOpen(false);
-    await fetch(
+    const res = await fetch(
       `/api/workspace/documents/${encodeURIComponent(workspaceDocument.id)}/archive`,
       { method: "POST" },
     );
-    window.location.reload();
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      window.alert(data?.error ?? "Aktion fehlgeschlagen.");
+      return;
+    }
+    router.refresh();
   }
 
   function handleToggleMenu(event: React.MouseEvent) {
@@ -181,6 +205,27 @@ export function WorkspaceDocumentActions({
             </>
           ) : null}
 
+          {canEditDocument ? (
+            <>
+              <ActionButton
+                icon={<Pencil className="h-4 w-4" />}
+                label={t("rename")}
+                onClick={() => {
+                  setMenuOpen(false);
+                  setRenameOpen(true);
+                }}
+              />
+              <ActionButton
+                icon={<FolderInput className="h-4 w-4" />}
+                label={t("move")}
+                onClick={() => {
+                  setMenuOpen(false);
+                  setMoveOpen(true);
+                }}
+              />
+            </>
+          ) : null}
+
           <ActionButton
             icon={<History className="h-4 w-4" />}
             label={t("versionHistory")}
@@ -193,10 +238,9 @@ export function WorkspaceDocumentActions({
             onClick={() => void copyInternalLink()}
           />
 
-          <div className="my-1 border-t border-[var(--border)]" role="separator" />
-
           {canEditDocument ? (
             <>
+              <div className="my-1 border-t border-[var(--border)]" role="separator" />
               <ActionButton
                 icon={<Archive className="h-4 w-4" />}
                 label={t("archive")}
@@ -211,7 +255,7 @@ export function WorkspaceDocumentActions({
             </>
           ) : null}
 
-          {canDelete ? (
+          {showPermanentDelete && canDelete ? (
             <>
               <div className="my-1 border-t border-[var(--border)]" role="separator" />
               <WorkspaceDocumentDeleteControl
@@ -240,6 +284,26 @@ export function WorkspaceDocumentActions({
           resourceId={workspaceDocument.id}
           resourceName={workspaceDocument.name}
         />
+      ) : null}
+
+      {canEditDocument ? (
+        <>
+          <WorkspaceDocumentRenameDialog
+            open={renameOpen}
+            onClose={() => setRenameOpen(false)}
+            documentId={workspaceDocument.id}
+            currentName={workspaceDocument.name}
+          />
+          <WorkspaceDocumentMoveDialog
+            open={moveOpen}
+            onClose={() => setMoveOpen(false)}
+            documentId={workspaceDocument.id}
+            documentName={workspaceDocument.name}
+            currentFolderId={workspaceDocument.folderId}
+            currentFolderLabel={currentFolderLabel}
+            folders={folders}
+          />
+        </>
       ) : null}
     </>
   );

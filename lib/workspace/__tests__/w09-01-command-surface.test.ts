@@ -32,11 +32,11 @@ describe("WORKSPACE-09-01 command surface", () => {
     expect(provider).toMatch(/useWorkspaceUploadBatch/);
   });
 
-  it("W09-01-04 document row menu omits rename/move placeholders", () => {
+  it("W09-01-04 document row menu exposes rename/move without Demnächst placeholders", () => {
     const actions = read("components/admin/workspace/WorkspaceDocumentActions.tsx");
+    expect(actions).toMatch(/label={t\("rename"\)/);
+    expect(actions).toMatch(/label={t\("move"\)/);
     expect(actions).not.toMatch(/comingSoonLabel={t\("comingSoon"\)/);
-    expect(actions).not.toMatch(/label={t\("rename"\)/);
-    expect(actions).not.toMatch(/label={t\("move"\)/);
   });
 
   it("W09-01-05 active folder inspector uses subtle permanent delete", () => {

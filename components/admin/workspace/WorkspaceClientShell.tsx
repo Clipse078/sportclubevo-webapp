@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 
 import type { WorkspaceDocumentListItemDto } from "@/lib/workspace/document-dto";
 import type { BreadcrumbItem } from "@/lib/workspace/breadcrumbs";
+import type { WorkspaceFolderDto } from "@/lib/workspace/dto";
 import type { WorkspaceLifecycleView } from "@/lib/workspace/command/workspace-command-context";
 import {
   buildActiveFolderCommandContext,
@@ -51,6 +52,7 @@ type WorkspaceClientShellProps = {
     ContextualTaskCreateDialogProps,
     "open" | "onOpenChange"
   > | null;
+  folderTree?: WorkspaceFolderDto[];
 };
 
 function formatDate(value: string): string {
@@ -79,6 +81,7 @@ function WorkspaceClientShellInner({
   documentInspectorSlot,
   documentWorkflowCapabilities = { canCreateTask: false, canCreateRequirement: false },
   documentTaskCreateDialogProps = null,
+  folderTree = [],
 }: WorkspaceClientShellProps) {
   const t = useTranslations("Workspace");
   const router = useRouter();
@@ -187,6 +190,8 @@ function WorkspaceClientShellInner({
               ? () => setRequirementCreateOpen(true)
               : undefined
           }
+          folderTree={folderTree}
+          currentFolderLabel={folderPath.map((p) => p.name).join(" / ") || folderName}
         />
 
         <div className="border-b border-[var(--border)] px-5 py-2 empty:hidden">
@@ -215,7 +220,8 @@ function WorkspaceClientShellInner({
                 documents={documents}
                 selectedDocumentId={selectedDocumentId}
                 onSelectDocument={handleSelectDocument}
-                canDelete={canDelete}
+                folders={folderTree}
+                currentFolderLabel={folderPath.map((p) => p.name).join(" / ") || folderName}
               />
             </div>
           ) : (

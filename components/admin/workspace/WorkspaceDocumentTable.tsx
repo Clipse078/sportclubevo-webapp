@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import type { WorkspaceDocumentListItemDto } from "@/lib/workspace/document-dto";
+import type { WorkspaceFolderDto } from "@/lib/workspace/dto";
 
 import { WorkspaceDocumentRow } from "./WorkspaceDocumentRow";
 
@@ -10,15 +11,16 @@ type WorkspaceDocumentTableProps = {
   documents: WorkspaceDocumentListItemDto[];
   selectedDocumentId?: string | null;
   onSelectDocument?: (id: string) => void;
-  /** ADMIN-DELETE-03A: resolved server-side from PERMISSIONS.WORKSPACE_DELETE. */
-  canDelete?: boolean;
+  folders?: WorkspaceFolderDto[];
+  currentFolderLabel?: string;
 };
 
 export function WorkspaceDocumentTable({
   documents,
   selectedDocumentId,
   onSelectDocument,
-  canDelete = false,
+  folders = [],
+  currentFolderLabel = "",
 }: WorkspaceDocumentTableProps) {
   const t = useTranslations("Workspace.table");
 
@@ -57,7 +59,8 @@ export function WorkspaceDocumentTable({
               document={document}
               isSelected={selectedDocumentId === document.id}
               onSelect={onSelectDocument}
-              canDelete={canDelete}
+              folders={folders}
+              currentFolderLabel={currentFolderLabel}
             />
           ))}
         </tbody>
