@@ -24,7 +24,10 @@
 
     "createFolder": {
       "buttonLabel": "Ordner erstellen",
+      "menuItemLabel": "Ordner erstellen",
       "dialogTitle": "Ordner erstellen",
+      "dialogTitleSubfolder": "Unterordner erstellen",
+      "destinationContext": "Ziel: {destination}",
       "fieldLabel": "Ordnername",
       "fieldPlaceholder": "z.B. Finanzdokumente",
       "cancelButton": "Abbrechen",
@@ -32,6 +35,39 @@
       "submittingLabel": "Wird erstellt …",
       "errorConflict": "Ein Ordner mit diesem Namen existiert bereits. Bitte wählen Sie einen anderen Namen.",
       "errorGeneric": "Der Ordner konnte nicht erstellt werden."
+    },
+
+    "lifecycle": {
+      "navAriaLabel": "Workspace-Ansicht",
+      "active": "Aktiv",
+      "archived": "Archiviert",
+      "trash": "Papierkorb"
+    },
+
+    "discovery": {
+      "favoritesTitle": "Favoriten",
+      "recentTitle": "Zuletzt",
+      "folderLabel": "Ordner",
+      "documentLabel": "Dokument"
+    },
+
+    "commandBar": {
+      "toolbarAriaLabel": "Workspace-Aktionen",
+      "newMenu": "+ Neu",
+      "newMenuAriaLabel": "Neu erstellen",
+      "uploadLabel": "Hochladen",
+      "uploadingLabel": "Wird hochgeladen …",
+      "overflowAriaLabel": "Weitere Aktionen",
+      "copyLink": "Link kopieren",
+      "lifecycleReadOnlyHint": "Upload und Erstellung sind in dieser Ansicht nicht verfügbar.",
+      "noEditPermissionHint": "Keine Bearbeitungsberechtigung für diesen Ordner (Upload und Ordner erstellen erfordern Bearbeiten)."
+    },
+
+    "folderManagement": {
+      "locationSection": "Speicherort",
+      "destructiveSectionTitle": "Archivierung & Löschung",
+      "destructiveSectionHint": "Selten genutzte Aktionen — bitte mit Vorsicht verwenden.",
+      "archiveNote": "Ordner mit aktiven Unterordnern können nicht archiviert werden."
     },
 
     "createSubfolder": {
@@ -114,14 +150,24 @@
 
     "emptyState": {
       "title": "Dieser Ordner ist leer.",
-      "description": "Ziehen Sie Dateien hierher oder laden Sie Ihr erstes Dokument hoch.",
+      "description": "Ziehen Sie Dateien hierher oder nutzen Sie «Hochladen» in der Aktionsleiste.",
+      "dropHint": "Dateien nach «{folder}» ablegen oder Hochladen verwenden.",
       "uploadButton": "Datei hochladen"
     },
 
     "upload": {
       "buttonLabel": "Datei hochladen",
       "buttonLabelWithIcon": "+ Datei hochladen",
+      "fileInputAriaLabel": "Dateien zum Hochladen auswählen",
       "uploadingLabel": "Wird hochgeladen …",
+      "progressSingleUploading": "1 Datei wird hochgeladen",
+      "progressBatchUploading": "{total} Dateien werden hochgeladen",
+      "progressAllSuccess": "{count} Dateien erfolgreich hochgeladen",
+      "progressSingleFailed": "1 Datei konnte nicht hochgeladen werden",
+      "progressAllFailed": "{count} Dateien konnten nicht hochgeladen werden",
+      "progressPartial": "{completed} von {total} hochgeladen, {failed} fehlgeschlagen",
+      "progressCompletedCount": "{completed} von {total} hochgeladen",
+      "progressCurrentFile": "Aktuell: {name}",
       "dropzoneTitle": "Datei hier ablegen oder klicken",
       "dropzoneHint": "Eine Datei auf einmal, bis zu 100 MB.",
       "dropzoneHintMulti": "Mehrere Dateien möglich, bis zu 100 MB pro Datei.",

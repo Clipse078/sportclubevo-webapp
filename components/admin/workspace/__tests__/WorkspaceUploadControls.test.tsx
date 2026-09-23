@@ -203,7 +203,7 @@ describe("WorkspaceUploadControls – upload flow", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getAllByRole("alert").length).toBeGreaterThan(0);
+      expect(screen.getByRole("status").textContent).toBeTruthy();
     });
   });
 
@@ -221,7 +221,7 @@ describe("WorkspaceUploadControls – upload flow", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getAllByRole("alert").length).toBeGreaterThan(0);
+      expect(screen.getByRole("status").textContent).toBeTruthy();
     });
 
     expect(mocks.onUploadComplete).not.toHaveBeenCalled();
@@ -248,27 +248,21 @@ describe("WorkspaceUploadControls – upload flow", () => {
     });
 
     await waitFor(() => {
-      const alerts = screen
-        .getAllByRole("alert")
-        .map((el: HTMLElement) => el.textContent ?? "");
-
-      // The mocked t() returns the translation key, so we check for the key.
-      expect(
-        alerts.some((text) =>
-          text.includes("errorStorageNotConfigured"),
-        ),
-      ).toBe(true);
+      const statusText = screen.getByRole("status").textContent ?? "";
+      expect(statusText.includes("Workspace.upload.errorStorageNotConfigured")).toBe(
+        true,
+      );
     });
   });
 
-  it("W03-27 allows multi-file selection on expanded dropzone input", () => {
+  it("W09-01 allows multi-file selection on shared upload input", () => {
     renderControls();
 
     const fileInputs = document.querySelectorAll<HTMLInputElement>(
       'input[type="file"]',
     );
-    const dropzoneInput = fileInputs[fileInputs.length - 1];
-    expect(dropzoneInput?.multiple).toBe(true);
+    expect(fileInputs.length).toBeGreaterThan(0);
+    expect(fileInputs[0]?.multiple).toBe(true);
   });
 
   it("does not start a new upload while one is already in progress", async () => {

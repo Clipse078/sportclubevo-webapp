@@ -592,9 +592,8 @@ describe("CreateRootFolderDialog", () => {
       screen.getByRole("button", { name: /Workspace\.createFolder\.buttonLabel/i }),
     );
 
-    const form = document.querySelector(
-      "form#create-root-folder-form",
-    ) as HTMLFormElement;
+    const dialog = screen.getByRole("dialog");
+    const form = dialog.querySelector("form") as HTMLFormElement;
 
     expect(form).toBeTruthy();
     expect(form.noValidate).toBe(true);
@@ -628,11 +627,10 @@ describe("CreateRootFolderDialog", () => {
 
     // During pending: the submit button caption changes to "Creating…" and is disabled
     await waitFor(() => {
-      const submitButton = document.querySelector(
-        "button[type='submit'][form='create-root-folder-form']",
-      ) as HTMLButtonElement | null;
-      expect(submitButton).toBeTruthy();
-      expect(submitButton?.disabled).toBe(true);
+      const submitButton = screen.getByRole("button", {
+        name: /Workspace\.createFolder\.submittingLabel/i,
+      }) as HTMLButtonElement;
+      expect(submitButton.disabled).toBe(true);
     });
 
     resolveAction?.({ ok: true, data: { id: "folder-1" } });

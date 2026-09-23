@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import {
   resolveWorkspaceDocumentDirectLinkAccess,
@@ -18,13 +19,13 @@ import {
 import { getTranslations } from "next-intl/server";
 
 import { CreateRootFolderDialog } from "@/components/admin/workspace/CreateRootFolderDialog";
-import { RenameFolderForm } from "@/components/admin/workspace/RenameFolderForm";
-import { MoveFolderForm } from "@/components/admin/workspace/MoveFolderForm";
-import { ArchiveFolderButton } from "@/app/(admin)/dashboard/workspace/ArchiveFolderButton";
 import { DeleteFolderButton } from "@/app/(admin)/dashboard/workspace/DeleteFolderButton";
 import { RestoreFolderButton } from "@/app/(admin)/dashboard/workspace/RestoreFolderButton";
 import { WorkspaceClientShell } from "@/components/admin/workspace/WorkspaceClientShell";
 import { WorkspaceFolderTreePanel } from "@/components/admin/workspace/WorkspaceFolderTreePanel";
+import { WorkspaceFolderInspectorManagement } from "@/components/admin/workspace/WorkspaceFolderInspectorManagement";
+import { WorkspaceLifecycleNavigation } from "@/components/admin/workspace/WorkspaceLifecycleNavigation";
+import { WorkspaceQuickDiscoveryPanel } from "@/components/admin/workspace/WorkspaceQuickDiscoveryPanel";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -37,7 +38,6 @@ import {
   getWorkspaceFolderByIdIncludingLifecycle,
   getWorkspaceFolderTree,
 } from "@/lib/workspace/queries";
-import { WorkspaceDiscoveryPanel } from "@/components/admin/workspace/WorkspaceDiscoveryPanel";
 import { listWorkspaceDocuments } from "@/lib/workspace/document-service";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -81,7 +81,11 @@ export default async function WorkspacePage({
   const folderParam = params.folder?.trim() || null;
   const documentParam = params.document?.trim() || null;
   const versionParam = params.version?.trim() || null;
-  const lifecycleView = params.view?.trim() || "active";
+  const rawLifecycleView = params.view?.trim() || "active";
+  const lifecycleView =
+    rawLifecycleView === "archived" || rawLifecycleView === "trash"
+      ? rawLifecycleView
+      : "active";
   const canManage = hasPermission(session, PERMISSIONS.WORKSPACE_MANAGE);
   const canDelete = hasPermission(session, PERMISSIONS.WORKSPACE_DELETE);
 
@@ -217,8 +221,11 @@ export default async function WorkspacePage({
         description={t("page.description")}
       />
 
-      <div className="mb-4">
-        <WorkspaceDiscoveryPanel />
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <Suspense fallback={null}>
+          <WorkspaceLifecycleNavigation currentView={lifecycleView} />
+        </Suspense>
+        <WorkspaceQuickDiscoveryPanel />
       </div>
 
       {directLinkLifecycle && directLinkLifecycle !== "ACTIVE" ? (
@@ -279,44 +286,20 @@ export default async function WorkspacePage({
             folderPath={folderPath}
             canManage={canManage}
             canUpload={canUploadSelectedFolder}
+            canCreateFolder={canUploadSelectedFolder}
             canManageFolderAccess={canManageFolderAccess}
             canDelete={canDelete}
+            lifecycleView={lifecycleView}
             documentContextualTasksPanel={documentContextualTasksPanel}
             folderManagementSlot={
               canManage ? (
-                <div className="space-y-3">
-                  <RenameFolderForm
-                    folderId={selectedFolder.id}
-                    currentName={selectedFolder.name}
-                  />
-                  <div className="border-t border-[var(--border)] pt-3">
-                    <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-                      {t("folderDetails.locationLabel")}
-                    </p>
-                    <MoveFolderForm
-                      folderId={selectedFolder.id}
-                      currentParentId={selectedFolder.parentId ?? null}
-                      folders={folders}
-                    />
-                  </div>
-                  <div className="border-t border-[var(--border)] pt-3">
-                    <ArchiveFolderButton
-                      folderId={selectedFolder.id}
-                      folderName={selectedFolder.name}
-                    />
-                    <p className="mt-1.5 text-[11px] leading-4 text-[var(--muted)]">
-                      {t("folders.cannotArchiveNote")}
-                    </p>
-                  </div>
-                  {canDelete ? (
-                    <div className="border-t border-[var(--border)] pt-3">
-                      <DeleteFolderButton
-                        folderId={selectedFolder.id}
-                        folderName={selectedFolder.name}
-                      />
-                    </div>
-                  ) : null}
-                </div>
+                <WorkspaceFolderInspectorManagement
+                  folderId={selectedFolder.id}
+                  folderName={selectedFolder.name}
+                  currentParentId={selectedFolder.parentId ?? null}
+                  folders={folders}
+                  canDelete={canDelete}
+                />
               ) : undefined
             }
           />

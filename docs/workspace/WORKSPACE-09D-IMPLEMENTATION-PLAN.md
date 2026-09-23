@@ -9,7 +9,7 @@
 
 | Package | Theme |
 |---------|--------|
-| **W09-01** | Shell + command surface + upload/dnd + create folder + selection architecture |
+| **W09-01** | Shell + command surface + upload/dnd + create folder + selection architecture — **implemented (WORKSPACE-09-01-COMMAND-SURFACE.md)** |
 | **W09-02** | Document inspector + Tasks + Requirements |
 | **W09-03** | Versioning + new-version upload + preview + malware UX |
 | **W09-04** | Access management + inheritance UX |

@@ -3,11 +3,9 @@
 import {
   Archive,
   Download,
-  FolderInput,
   History,
   Link2,
   MoreHorizontal,
-  Pencil,
   Shield,
   Trash2,
 } from "lucide-react";
@@ -182,20 +180,6 @@ export function WorkspaceDocumentActions({
               <div className="my-1 border-t border-[var(--border)]" role="separator" />
             </>
           ) : null}
-
-          <ActionButton
-            icon={<Pencil className="h-4 w-4" />}
-            label={t("rename")}
-            disabled
-            comingSoonLabel={t("comingSoon")}
-          />
-
-          <ActionButton
-            icon={<FolderInput className="h-4 w-4" />}
-            label={t("move")}
-            disabled
-            comingSoonLabel={t("comingSoon")}
-          />
 
           <ActionButton
             icon={<History className="h-4 w-4" />}

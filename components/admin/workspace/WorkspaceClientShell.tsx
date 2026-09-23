@@ -1,22 +1,30 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useRef, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { isExternalFileDrag } from "@/lib/workspace/drag-transfer";
-import { CalendarClock, CheckCircle2, FolderClosed, FileText } from "lucide-react";
+import { CalendarClock, FolderClosed, FileText } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import type { WorkspaceDocumentListItemDto } from "@/lib/workspace/document-dto";
 import type { BreadcrumbItem } from "@/lib/workspace/breadcrumbs";
+import type { WorkspaceLifecycleView } from "@/lib/workspace/command/workspace-command-context";
+import {
+  buildActiveFolderCommandContext,
+  withDocumentSelection,
+} from "@/lib/workspace/command/workspace-command-context";
 
 import { WorkspaceBreadcrumbs } from "./WorkspaceBreadcrumbs";
 import { WorkspaceDocumentTable } from "./WorkspaceDocumentTable";
 import { WorkspaceDocumentEmptyState } from "./WorkspaceDocumentEmptyState";
-import { WorkspaceUploadButton } from "./WorkspaceUploadButton";
 import { WorkspaceUploadDropzone } from "./WorkspaceUploadDropzone";
 import { WorkspaceAccessManagementDialog } from "./WorkspaceAccessManagementDialog";
 import { WorkspaceAccessSummaryPanel } from "./WorkspaceAccessSummaryPanel";
 import { WorkspaceFilePreview } from "./WorkspaceFilePreview";
+import { WorkspaceCommandBar } from "./WorkspaceCommandBar";
+import { WorkspaceUploadProvider } from "./WorkspaceUploadContext";
+import { WorkspaceDocumentVersionHistoryDialog } from "./WorkspaceDocumentVersionHistoryDialog";
+import { WorkspaceUploadProgress } from "./WorkspaceUploadProgress";
 
 type WorkspaceClientShellProps = {
   documents: WorkspaceDocumentListItemDto[];
@@ -29,11 +37,11 @@ type WorkspaceClientShellProps = {
   folderPath: BreadcrumbItem[];
   canManage: boolean;
   canUpload?: boolean;
+  canCreateFolder?: boolean;
   canManageFolderAccess?: boolean;
-  /** ADMIN-DELETE-03A: resolved server-side from PERMISSIONS.WORKSPACE_DELETE. */
   canDelete?: boolean;
+  lifecycleView?: WorkspaceLifecycleView;
   folderManagementSlot?: React.ReactNode;
-  /** Server-rendered contextual tasks for the document selected via URL (?document=). */
   documentContextualTasksPanel?: React.ReactNode;
 };
 
@@ -44,7 +52,7 @@ function formatDate(value: string): string {
   }).format(new Date(value));
 }
 
-export function WorkspaceClientShell({
+function WorkspaceClientShellInner({
   documents,
   initialSelectedDocumentId = null,
   folderId,
@@ -55,8 +63,10 @@ export function WorkspaceClientShell({
   folderPath,
   canManage: _canManage,
   canUpload = false,
+  canCreateFolder = false,
   canManageFolderAccess = false,
   canDelete = false,
+  lifecycleView = "active",
   folderManagementSlot,
   documentContextualTasksPanel,
 }: WorkspaceClientShellProps) {
@@ -66,14 +76,54 @@ export function WorkspaceClientShell({
     initialSelectedDocumentId,
   );
   const [isDragOver, setIsDragOver] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
   const [accessTarget, setAccessTarget] = useState<{
     resourceType: "FOLDER" | "DOCUMENT";
     resourceId: string;
     resourceName: string;
   } | null>(null);
-  const dropzoneRef = useRef<HTMLDivElement>(null);
-  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const selectedDocument =
+    documents.find((d) => d.id === selectedDocumentId) ?? null;
+
+  const commandContext = useMemo(() => {
+    const base = buildActiveFolderCommandContext({
+      folderId,
+      folderName,
+      canUpload,
+      canCreateFolder,
+      canManageFolder: canManageFolderAccess,
+      canDelete,
+      lifecycleView,
+    });
+    if (!selectedDocument) return base;
+    return withDocumentSelection(base, {
+      id: selectedDocument.id,
+      hasCurrentVersion: Boolean(selectedDocument.currentVersion),
+      canEditDocument: Boolean(selectedDocument.canEditDocument),
+      canManageAccess: Boolean(selectedDocument.canManageAccess),
+    });
+  }, [
+    canCreateFolder,
+    canDelete,
+    canManageFolderAccess,
+    canUpload,
+    folderId,
+    folderName,
+    lifecycleView,
+    selectedDocument,
+  ]);
+
+  function handleSelectDocument(id: string) {
+    const nextId = selectedDocumentId === id ? null : id;
+    setSelectedDocumentId(nextId);
+    const params = new URLSearchParams();
+    params.set("folder", folderId);
+    if (nextId) {
+      params.set("document", nextId);
+    }
+    router.push(`/dashboard/workspace?${params.toString()}`, { scroll: false });
+  }
 
   const handleContentDragEnter = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
@@ -93,31 +143,6 @@ export function WorkspaceClientShell({
     [canUpload],
   );
 
-  const selectedDocument =
-    documents.find((d) => d.id === selectedDocumentId) ?? null;
-
-  function handleUploadComplete(documentId: string | null) {
-    if (documentId) setSelectedDocumentId(documentId);
-
-    // Show brief success indicator
-    if (successTimerRef.current) clearTimeout(successTimerRef.current);
-    setUploadSuccess(true);
-    successTimerRef.current = setTimeout(() => setUploadSuccess(false), 3000);
-
-    router.refresh();
-  }
-
-  function handleSelectDocument(id: string) {
-    const nextId = selectedDocumentId === id ? null : id;
-    setSelectedDocumentId(nextId);
-    const params = new URLSearchParams();
-    params.set("folder", folderId);
-    if (nextId) {
-      params.set("document", nextId);
-    }
-    router.push(`/dashboard/workspace?${params.toString()}`, { scroll: false });
-  }
-
   const docCount = documents.length;
   const hasDocuments = docCount > 0;
   const countLabel =
@@ -127,32 +152,22 @@ export function WorkspaceClientShell({
 
   return (
     <>
-      {/* ── Centre panel ──────────────────────────────────────────── */}
       <section className="flex min-h-[520px] flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-        {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-3">
-          <div className="min-w-0">
-            <WorkspaceBreadcrumbs path={folderPath} />
-            <div className="mt-1 flex items-center gap-2">
-              <p className="text-xs text-[var(--muted)]">{countLabel}</p>
-              {uploadSuccess ? (
-                <span className="flex items-center gap-1 text-xs font-medium text-[var(--sce-success)] transition-opacity duration-300">
-                  <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  {t("upload.successMessage")}
-                </span>
-              ) : null}
-            </div>
-          </div>
-
-          {canUpload ? (
-            <WorkspaceUploadButton
-              folderId={folderId}
-              onUploadComplete={handleUploadComplete}
-            />
-          ) : null}
+        <div className="border-b border-[var(--border)] px-5 py-3">
+          <WorkspaceBreadcrumbs path={folderPath} />
+          <p className="mt-1 text-xs text-[var(--muted)]">{countLabel}</p>
         </div>
 
-        {/* Content */}
+        <WorkspaceCommandBar
+          context={commandContext}
+          selectedDocument={selectedDocument}
+          onOpenVersionHistory={() => setVersionHistoryOpen(true)}
+        />
+
+        <div className="border-b border-[var(--border)] px-5 py-2 empty:hidden">
+          <WorkspaceUploadProgress />
+        </div>
+
         <div
           className="relative flex-1 overflow-y-auto overflow-x-hidden"
           onDragEnter={handleContentDragEnter}
@@ -160,17 +175,13 @@ export function WorkspaceClientShell({
         >
           {canUpload ? (
             <WorkspaceUploadDropzone
-              folderId={folderId}
               folderName={folderName}
-              disabled={!canUpload}
-              onUploadComplete={handleUploadComplete}
               onDragStateChange={setIsDragOver}
             />
           ) : null}
 
           {hasDocuments ? (
             <div
-              ref={dropzoneRef}
               className={`relative transition-colors duration-150 ${
                 isDragOver ? "bg-[var(--blue-light)]/30" : ""
               }`}
@@ -186,14 +197,11 @@ export function WorkspaceClientShell({
             <WorkspaceDocumentEmptyState
               isDragging={isDragOver}
               canManage={canUpload}
-              folderId={canUpload ? folderId : undefined}
-              onUploadComplete={canUpload ? handleUploadComplete : undefined}
             />
           )}
         </div>
       </section>
 
-      {/* ── Right panel ────────────────────────────────────────────── */}
       <aside className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
         <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] px-5 py-3.5">
           {selectedDocument ? (
@@ -291,6 +299,16 @@ export function WorkspaceClientShell({
         </div>
       </aside>
 
+      {selectedDocument ? (
+        <WorkspaceDocumentVersionHistoryDialog
+          documentId={selectedDocument.id}
+          documentName={selectedDocument.name}
+          open={versionHistoryOpen}
+          onClose={() => setVersionHistoryOpen(false)}
+          canRestore={Boolean(selectedDocument.canEditDocument)}
+        />
+      ) : null}
+
       {accessTarget ? (
         <WorkspaceAccessManagementDialog
           open
@@ -301,5 +319,31 @@ export function WorkspaceClientShell({
         />
       ) : null}
     </>
+  );
+}
+
+export function WorkspaceClientShell(props: WorkspaceClientShellProps) {
+  const { folderId, folderName, canUpload, initialSelectedDocumentId } = props;
+  const router = useRouter();
+
+  function handleUploadComplete(documentId: string | null) {
+    router.refresh();
+    if (documentId) {
+      const params = new URLSearchParams();
+      params.set("folder", folderId);
+      params.set("document", documentId);
+      router.push(`/dashboard/workspace?${params.toString()}`, { scroll: false });
+    }
+  }
+
+  return (
+    <WorkspaceUploadProvider
+      folderId={folderId}
+      folderName={folderName}
+      canUpload={Boolean(canUpload)}
+      onUploadComplete={handleUploadComplete}
+    >
+      <WorkspaceClientShellInner {...props} />
+    </WorkspaceUploadProvider>
   );
 }
