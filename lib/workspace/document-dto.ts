@@ -2,6 +2,7 @@ import type {
   WorkspaceDocumentStatus,
   WorkspaceDocumentVersionStatus,
 } from "@prisma/client";
+import type { WorkspaceResourceAvailableActionsDto } from "@/lib/workspace/command/workspace-available-actions";
 import type { WorkspaceVersionScanPublicDto } from "@/lib/workspace/malware-scan/scan-dto";
 
 export type WorkspaceDocumentVersionDto = {
@@ -78,6 +79,8 @@ export type WorkspaceDocumentListItemDto = {
   canManageAccess?: boolean;
   canUpload?: boolean;
   canEditDocument?: boolean;
+  /** W09-07 — canonical action contract (server authoritative for UX; mutations re-check). */
+  availableActions?: WorkspaceResourceAvailableActionsDto;
 };
 
 export type ListWorkspaceDocumentsInput = {

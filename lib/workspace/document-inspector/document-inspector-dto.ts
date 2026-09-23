@@ -8,6 +8,7 @@ import type { ContextualTaskCreateViewDto } from "@/lib/tasks/load-contextual-ta
 import type { ContextualTaskCreateDialogProps } from "@/components/admin/aufgaben/contextual/ContextualTaskCreateDialog";
 import type { WorkspaceVersionScanPublicDto } from "@/lib/workspace/malware-scan/scan-dto";
 import type { WorkspaceVersionUploaderPublicDto } from "@/lib/workspace/version/version-uploader-public-dto";
+import type { WorkspaceResourceAvailableActionsDto } from "@/lib/workspace/command/workspace-available-actions";
 
 export type ContextualTaskCreateDialogSeedProps = Omit<
   ContextualTaskCreateDialogProps,
@@ -34,6 +35,7 @@ export type WorkspaceDocumentInspectorDocumentDto = {
   } | null;
   canManageAccess: boolean;
   canEditDocument: boolean;
+  availableActions: WorkspaceResourceAvailableActionsDto;
 };
 
 export type DocumentInspectorTaskRowDto = {

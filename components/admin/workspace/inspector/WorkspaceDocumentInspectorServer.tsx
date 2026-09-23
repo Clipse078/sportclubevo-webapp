@@ -8,6 +8,7 @@ type Props = {
   folderName: string;
   locale: string;
   timeZone: string;
+  tenantCanDelete?: boolean;
 };
 
 export default async function WorkspaceDocumentInspectorServer({
@@ -16,6 +17,7 @@ export default async function WorkspaceDocumentInspectorServer({
   folderName,
   locale,
   timeZone,
+  tenantCanDelete = false,
 }: Props) {
   const payload = await loadWorkspaceDocumentInspectorPayload({
     tenantId,
@@ -23,6 +25,7 @@ export default async function WorkspaceDocumentInspectorServer({
     folderName,
     locale,
     timeZone,
+    tenantCanDelete,
   });
 
   return <WorkspaceDocumentInspectorView payload={payload} />;

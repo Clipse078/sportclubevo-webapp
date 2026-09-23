@@ -39,6 +39,7 @@ import {
 } from "@/lib/workspace/queries";
 import { listWorkspaceDocuments } from "@/lib/workspace/document-service";
 import { enrichWorkspaceDocumentListWithCurrentVersionScan } from "@/lib/workspace/enrich-workspace-document-list-scan";
+import { enrichWorkspaceDocumentListWithAvailableActions } from "@/lib/workspace/command/enrich-document-list-available-actions";
 import { TaskContextType } from "@prisma/client";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import { loadContextualTaskCreateView } from "@/lib/tasks/load-contextual-task-create-view";
@@ -176,7 +177,7 @@ export default async function WorkspacePage({
     documentsRaw,
   );
 
-  const documents = documentsWithScan.map((doc) => ({
+  const documentsWithAcl = documentsWithScan.map((doc) => ({
     ...doc,
     canManageAccess: canWorkspaceManage(workspaceActor, {
       resourceType: WorkspaceResourceType.DOCUMENT,
@@ -187,6 +188,28 @@ export default async function WorkspacePage({
       documentId: doc.id,
     }),
   }));
+
+  const selectedDocWorkflowCapabilities = initialSelectedDocumentId
+    ? await resolveDocumentWorkflowCapabilities(initialSelectedDocumentId)
+    : { canCreateTask: false, canCreateRequirement: false };
+
+  const workflowByDocumentId = new Map<
+    string,
+    { canCreateTask: boolean; canCreateRequirement: boolean }
+  >();
+  if (initialSelectedDocumentId) {
+    workflowByDocumentId.set(
+      initialSelectedDocumentId,
+      selectedDocWorkflowCapabilities,
+    );
+  }
+
+  const documents = enrichWorkspaceDocumentListWithAvailableActions({
+    actor: workspaceActor,
+    tenantCanDelete: canDelete,
+    documents: documentsWithAcl,
+    workflowByDocumentId,
+  });
 
   const canUploadSelectedFolder =
     selectedFolder != null &&
@@ -215,9 +238,7 @@ export default async function WorkspacePage({
       ? documents.find((d) => d.id === initialSelectedDocumentId) ?? null
       : null;
 
-  const documentWorkflowCapabilities = inspectorDocument
-    ? await resolveDocumentWorkflowCapabilities(inspectorDocument.id)
-    : { canCreateTask: false, canCreateRequirement: false };
+  const documentWorkflowCapabilities = selectedDocWorkflowCapabilities;
 
   let documentTaskCreateDialogProps = null;
   if (inspectorDocument && documentWorkflowCapabilities.canCreateTask) {
@@ -252,6 +273,7 @@ export default async function WorkspacePage({
           folderName={selectedFolder?.name ?? ""}
           locale={workspaceLocale}
           timeZone={workspaceTimeZone}
+          tenantCanDelete={canDelete}
         />
       </Suspense>
     ) : null;

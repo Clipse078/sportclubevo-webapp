@@ -18,6 +18,7 @@ import { canReadWorkspaceDocument } from "@/lib/workspace/document-access";
 import { resolveContextualTaskCreateEligibility } from "@/lib/tasks/contextual-task-eligibility";
 import { canCreateRequirement as canCreateRequirementPermission } from "@/lib/requirements/requirement-authorization";
 import type { WorkspaceDocumentListItemDto } from "@/lib/workspace/document-dto";
+import { computeWorkspaceDocumentAvailableActions } from "@/lib/workspace/command/workspace-available-actions";
 import type {
   DocumentInspectorRequirementsSectionDto,
   DocumentInspectorTasksSectionDto,
@@ -29,6 +30,9 @@ import type {
 async function serializeDocument(
   doc: WorkspaceDocumentListItemDto,
   tenantId: string,
+  workflow: DocumentInspectorWorkflowCapabilitiesDto,
+  tenantCanDelete: boolean,
+  actor?: import("@/lib/workspace/access/workspace-authorization").WorkspaceActorContext,
 ): Promise<WorkspaceDocumentInspectorDocumentDto> {
   let currentVersion: WorkspaceDocumentInspectorDocumentDto["currentVersion"] = null;
 
@@ -67,6 +71,44 @@ async function serializeDocument(
     };
   }
 
+  const scan = doc.currentVersion?.scan;
+  const contentAvailable = scan ? scan.contentAvailable : true;
+  const availableActions =
+    doc.availableActions ??
+    (actor
+      ? computeWorkspaceDocumentAvailableActions({
+          actor,
+          documentId: doc.id,
+          document: {
+            status: doc.status,
+            archivedAt: null,
+            trashedAt: null,
+            hasCurrentVersion: Boolean(doc.currentVersion),
+            mimeType: doc.currentVersion?.mimeType ?? null,
+            contentAvailable,
+          },
+          tenantCanDelete,
+          workflow,
+        })
+      : {
+          view: true,
+          preview: false,
+          download: Boolean(doc.currentVersion) && contentAvailable,
+          favorite: true,
+          rename: Boolean(doc.canEditDocument),
+          move: Boolean(doc.canEditDocument),
+          createFolder: false,
+          uploadDocument: false,
+          uploadVersion: Boolean(doc.canEditDocument) && Boolean(doc.currentVersion),
+          manageAccess: Boolean(doc.canManageAccess),
+          createTask: workflow.canCreateTask,
+          createRequirement: workflow.canCreateRequirement,
+          archive: Boolean(doc.canEditDocument),
+          trash: Boolean(doc.canEditDocument),
+          restore: false,
+          permanentDelete: false,
+        });
+
   return {
     id: doc.id,
     folderId: doc.folderId,
@@ -80,6 +122,7 @@ async function serializeDocument(
     currentVersion,
     canManageAccess: Boolean(doc.canManageAccess),
     canEditDocument: Boolean(doc.canEditDocument),
+    availableActions,
   };
 }
 
@@ -294,14 +337,22 @@ export async function loadWorkspaceDocumentInspectorPayload(input: {
   folderName: string;
   locale: string;
   timeZone: string;
+  tenantCanDelete?: boolean;
+  actor?: import("@/lib/workspace/access/workspace-authorization").WorkspaceActorContext;
 }): Promise<WorkspaceDocumentInspectorPayloadDto> {
   const documentId = input.document.id;
-  const [tasks, requirements, capabilities, document] = await Promise.all([
+  const [tasks, requirements, capabilities] = await Promise.all([
     loadTasksSection(documentId, input.locale, input.timeZone),
     loadRequirementsSection(documentId),
     resolveDocumentWorkflowCapabilities(documentId),
-    serializeDocument(input.document, input.tenantId),
   ]);
+  const document = await serializeDocument(
+    input.document,
+    input.tenantId,
+    capabilities,
+    input.tenantCanDelete ?? false,
+    input.actor,
+  );
 
   return {
     document,
