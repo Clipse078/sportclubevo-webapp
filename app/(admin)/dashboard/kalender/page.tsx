@@ -8,6 +8,7 @@ import {
   filterPersonalCalendarItemsBySource,
   loadPersonalAgenda,
 } from "@/lib/personal-agenda/load-personal-agenda";
+import { isPersonalProgrammeCalendarItem } from "@/lib/personal-agenda/programme-to-calendar";
 import {
   getPersonalKalenderVisibleRange,
   parseMonthParam,
@@ -55,7 +56,7 @@ export default async function PersonalKalenderPage({ searchParams }: PageProps) 
   if (urlState.quelle === "aufgaben") {
     items = filterPersonalCalendarItemsBySource(items, ["TASK"]);
   } else if (urlState.quelle === "termine") {
-    items = filterPersonalCalendarItemsBySource(items, ["TEAM_EVENT", "MEETING"]);
+    items = items.filter(isPersonalProgrammeCalendarItem);
   }
 
   return (

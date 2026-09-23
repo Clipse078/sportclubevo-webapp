@@ -1,5 +1,5 @@
 import type { PersonalContext } from "./types";
-import type { PersonalCalendarItem } from "@/lib/personal-agenda/types";
+import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
 
 /**
  * DASHBOARD-02 programme source adapter input contract.
@@ -16,7 +16,7 @@ export type PersonalProgrammeAdapterContext = {
 };
 
 export type PersonalProgrammeAdapterResult = {
-  items: PersonalCalendarItem[];
+  items: PersonalProgrammeItem[];
 };
 
 export type PersonalProgrammeSourceAdapter = (

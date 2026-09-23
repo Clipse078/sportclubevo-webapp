@@ -87,6 +87,10 @@ export function meetingParticipantContextLabel(): PersonalContextDescriptor {
   return { kind: "MEETING_PARTICIPANT", label: "Meeting · Teilnehmer" };
 }
 
+export function meetingOrganizerContextLabel(): PersonalContextDescriptor {
+  return { kind: "MEETING_ORGANIZER", label: "Meeting · Organisator" };
+}
+
 export function taskAssigneeContextLabel(): PersonalContextDescriptor {
   return { kind: "TASK_ASSIGNEE", label: "Dir zugewiesen" };
 }

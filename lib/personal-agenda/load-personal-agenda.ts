@@ -114,6 +114,7 @@ export async function loadPersonalAgenda(
         userId: args.userId,
         personalContext,
         actor,
+        timeZone: args.timeZone,
         rangeStart,
         rangeEnd,
       }),
