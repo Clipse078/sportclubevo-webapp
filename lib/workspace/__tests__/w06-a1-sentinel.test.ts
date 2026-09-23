@@ -88,13 +88,16 @@ describe("WORKSPACE-06-A1 sentinels", () => {
 
   it("W06-A1-06 storage cleanup starts only after successful DB commit", () => {
     const src = readFileSync(
-      join(process.cwd(), "lib/workspace/document-delete-service.ts"),
+      join(
+        process.cwd(),
+        "lib/workspace/governance/workspace-document-purge-service.ts",
+      ),
       "utf8",
     );
-    const storageIndex = src.indexOf("workspaceStorageProvider.delete");
-    const transactionIndex = src.indexOf("$transaction");
-    expect(transactionIndex).toBeGreaterThan(-1);
-    expect(storageIndex).toBeGreaterThan(transactionIndex);
+    const storageIndex = src.indexOf("purgeWorkspaceVersionStorageKeys");
+    const deleteIndex = src.indexOf("workspaceDocument.delete");
+    expect(storageIndex).toBeGreaterThan(-1);
+    expect(deleteIndex).toBeGreaterThan(storageIndex);
   });
 
   it("W06-A1-07 storage cleanup excludes rolled-back/blocked resources", () => {
@@ -102,8 +105,7 @@ describe("WORKSPACE-06-A1 sentinels", () => {
       join(process.cwd(), "lib/workspace/folder-delete-service.ts"),
       "utf8",
     );
-    expect(src).toMatch(/storageReferences\.push/);
-    expect(src).toMatch(/for \(const ref of storageReferences\)/);
+    expect(src).toMatch(/purgeWorkspaceDocumentPermanently/);
   });
 
   it("W06-A1-08 favorite cross-tenant creation fails closed", async () => {

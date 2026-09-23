@@ -1,25 +1,31 @@
 /**
  * lib/workspace/folder-delete-service.ts
  *
- * WORKSPACE-06 — permanent folder subtree delete without orphan documents.
+ * WORKSPACE-06 + WORKSPACE-08-03 — folder subtree permanent delete via purge eligibility.
  */
 
 import { prisma } from "@/lib/db/prisma";
 import { WorkspaceAuditAction } from "@/lib/workspace/audit/workspace-audit-actions";
 import { writeWorkspaceGovernanceAudit } from "@/lib/workspace/audit/workspace-audit-write";
-import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
 import { collectWorkspaceFolderSubtreeIds } from "@/lib/workspace/folder-subtree";
 import {
-  canPermanentlyDeleteWorkspaceDocument,
   getWorkspaceDocumentDeletionBlockers,
   WORKSPACE_DELETION_BLOCKED_CODE,
   type WorkspaceDeletionBlocker,
 } from "@/lib/workspace/deletion/deletion-blockers";
+import { evaluateWorkspaceFolderPurgeEligibility } from "@/lib/workspace/governance/folder-purge-eligibility";
+import {
+  purgeWorkspaceDocumentPermanently,
+  WorkspaceDocumentPurgeError,
+} from "@/lib/workspace/governance/workspace-document-purge-service";
 
 export type WorkspaceFolderDeleteServiceErrorCode =
   | "INVALID_INPUT"
   | "FOLDER_NOT_FOUND"
   | "TENANT_FORBIDDEN"
+  | "NOT_TRASHED"
+  | "RETENTION_NOT_EXPIRED"
+  | "ACTIVE_GOVERNANCE_HOLD"
   | typeof WORKSPACE_DELETION_BLOCKED_CODE;
 
 export class WorkspaceFolderDeleteServiceError extends Error {
@@ -136,13 +142,79 @@ export async function deleteWorkspaceFolderPermanently(
     );
   }
 
+  const folderEligibility = await evaluateWorkspaceFolderPurgeEligibility(
+    prisma,
+    { tenantId: cleanTenantId, folderId: cleanFolderId },
+  );
+
+  if (!folderEligibility) {
+    throw new WorkspaceFolderDeleteServiceError(
+      "FOLDER_NOT_FOUND",
+      "Ordner nicht gefunden.",
+    );
+  }
+
+  if (!folderEligibility.eligible) {
+    const code =
+      folderEligibility.status === "NOT_TRASHED"
+        ? "NOT_TRASHED"
+        : folderEligibility.status === "RETENTION_NOT_EXPIRED"
+          ? "RETENTION_NOT_EXPIRED"
+          : "ACTIVE_GOVERNANCE_HOLD";
+    throw new WorkspaceFolderDeleteServiceError(
+      code,
+      "Ordner kann derzeit nicht endgültig gelöscht werden.",
+    );
+  }
+
   const subtreeIds = await collectWorkspaceFolderSubtreeIds(
     cleanTenantId,
     cleanFolderId,
   );
 
-  const storageReferences: string[] = [];
-  let documentCount = 0;
+  const documents = await prisma.workspaceDocument.findMany({
+    where: { tenantId: cleanTenantId, folderId: { in: subtreeIds } },
+    select: { id: true },
+    orderBy: { id: "asc" },
+  });
+
+  for (const doc of documents) {
+    try {
+      await purgeWorkspaceDocumentPermanently({
+        tenantId: cleanTenantId,
+        documentId: doc.id,
+        actorUserId: actorUserId ?? null,
+        source: "folder-permanent-delete",
+        requireTrashed: true,
+      });
+    } catch (err) {
+      if (err instanceof WorkspaceDocumentPurgeError) {
+        await prisma.$transaction(async (tx) => {
+          await writeWorkspaceGovernanceAudit(tx, {
+            tenantId: cleanTenantId,
+            actorUserId: actorUserId ?? null,
+            entityType: "WorkspaceFolder",
+            entityId: cleanFolderId,
+            folderId: cleanFolderId,
+            action: WorkspaceAuditAction.FOLDER_PERMANENT_DELETE_BLOCKED,
+            outcome: "DENIED",
+            reason: err.eligibility?.status ?? err.code,
+            afterJson: { documentId: doc.id },
+          });
+        });
+        throw new WorkspaceFolderDeleteServiceError(
+          err.code === WORKSPACE_DELETION_BLOCKED_CODE
+            ? WORKSPACE_DELETION_BLOCKED_CODE
+            : "ACTIVE_GOVERNANCE_HOLD",
+          "Ordner kann nicht gelöscht werden: mindestens ein Dokument blockiert die Löschung.",
+          err.eligibility && "blockers" in err.eligibility
+            ? err.eligibility.blockers
+            : undefined,
+        );
+      }
+      throw err;
+    }
+  }
 
   await prisma.$transaction(async (tx) => {
     await tx.$executeRaw`
@@ -151,57 +223,12 @@ export async function deleteWorkspaceFolderPermanently(
       FOR UPDATE
     `;
 
-    const documents = await tx.workspaceDocument.findMany({
-      where: { tenantId: cleanTenantId, folderId: { in: subtreeIds } },
-      select: {
-        id: true,
-        versions: { select: { storageKey: true } },
+    await tx.workspaceBreakGlassSession.deleteMany({
+      where: {
+        tenantId: cleanTenantId,
+        workspaceFolderId: { in: subtreeIds },
       },
-      orderBy: { id: "asc" },
     });
-
-    documentCount = documents.length;
-
-    for (const doc of documents) {
-      await tx.$executeRaw`
-        SELECT "id" FROM "WorkspaceDocument"
-        WHERE "id" = ${doc.id} AND "tenantId" = ${cleanTenantId}
-        FOR UPDATE
-      `;
-
-      const check = await canPermanentlyDeleteWorkspaceDocument(
-        tx,
-        cleanTenantId,
-        doc.id,
-      );
-      if (!check.allowed) {
-        await writeWorkspaceGovernanceAudit(tx, {
-          tenantId: cleanTenantId,
-          actorUserId: actorUserId ?? null,
-          entityType: "WorkspaceFolder",
-          entityId: cleanFolderId,
-          folderId: cleanFolderId,
-          action: WorkspaceAuditAction.FOLDER_PERMANENT_DELETE_BLOCKED,
-          outcome: "DENIED",
-          reason: "RESOURCE_REFERENCED",
-          afterJson: {
-            blockerCount: check.blockers.length,
-            documentId: doc.id,
-          },
-        });
-        throw new WorkspaceFolderDeleteServiceError(
-          WORKSPACE_DELETION_BLOCKED_CODE,
-          "Ordner kann nicht gelöscht werden: mindestens ein Dokument ist referenziert.",
-          check.blockers,
-        );
-      }
-
-      storageReferences.push(...doc.versions.map((v) => v.storageKey));
-
-      await tx.workspaceDocument.delete({
-        where: { id: doc.id },
-      });
-    }
 
     await writeWorkspaceGovernanceAudit(tx, {
       tenantId: cleanTenantId,
@@ -212,7 +239,7 @@ export async function deleteWorkspaceFolderPermanently(
       action: WorkspaceAuditAction.FOLDER_PERMANENTLY_DELETED,
       afterJson: {
         deletedFolderCount: subtreeIds.length,
-        documentCount,
+        documentCount: documents.length,
       },
     });
 
@@ -221,25 +248,13 @@ export async function deleteWorkspaceFolderPermanently(
     });
   });
 
-  for (const ref of storageReferences) {
-    try {
-      await workspaceStorageProvider.delete(ref);
-    } catch (err) {
-      console.warn("[workspace-folder-delete] storage cleanup failed", {
-        folderId: cleanFolderId,
-        errorCategory:
-          err instanceof Error && err.name ? err.name : "UnknownError",
-      });
-    }
-  }
-
   return {
     folderId: cleanFolderId,
     folderName: folder.name,
     deletedFolderCount: subtreeIds.length,
     impact: {
       descendantFolderCount: subtreeIds.length - 1,
-      documentCount,
+      documentCount: documents.length,
     },
   };
 }

@@ -63,8 +63,14 @@ function mapDeleteServiceError(
       return 404;
     case "TENANT_FORBIDDEN":
       return 403;
+    case "NOT_TRASHED":
+    case "RETENTION_NOT_EXPIRED":
+    case "ACTIVE_GOVERNANCE_HOLD":
+      return 409;
     case WORKSPACE_DELETION_BLOCKED_CODE:
       return 409;
+    default:
+      return 500;
   }
 }
 

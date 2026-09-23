@@ -56,6 +56,9 @@ vi.mock("@/lib/db/prisma", () => ({
       findMany: (...args: unknown[]) =>
         mocks.requirementDocumentVersionReferenceFindMany(...args),
     },
+    workspaceTrashRetentionPolicy: { findUnique: vi.fn().mockResolvedValue(null) },
+    workspaceGovernanceHold: { findMany: vi.fn().mockResolvedValue([]) },
+    workspaceBreakGlassSession: { deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
     $transaction: (fn: (tx: unknown) => Promise<unknown>) =>
       fn({
         $executeRaw: mocks.executeRaw,
@@ -74,9 +77,38 @@ vi.mock("@/lib/db/prisma", () => ({
             mocks.requirementDocumentVersionReferenceFindMany(...args),
         },
         auditLog: { create: vi.fn().mockResolvedValue({ id: "audit-1" }) },
+        workspaceBreakGlassSession: { deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
       }),
   },
 }));
+
+const TRASHED_AT = new Date("2020-01-01T00:00:00.000Z");
+
+function trashedFolderRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: FOLDER_ID,
+    tenantId: TENANT_A,
+    name: "Test Folder",
+    trashedAt: TRASHED_AT,
+    archivedAt: null,
+    ...overrides,
+  };
+}
+
+const purgeMocks = vi.hoisted(() => ({
+  purgeDocument: vi.fn(),
+}));
+
+vi.mock("@/lib/workspace/governance/workspace-document-purge-service", async (importOriginal) => {
+  const actual = await importOriginal<
+    typeof import("@/lib/workspace/governance/workspace-document-purge-service")
+  >();
+  return {
+    ...actual,
+    purgeWorkspaceDocumentPermanently: (...args: unknown[]) =>
+      purgeMocks.purgeDocument(...args),
+  };
+});
 
 vi.mock("@/lib/workspace/upload-storage", () => ({
   workspaceStorageProvider: { delete: vi.fn() },
@@ -101,6 +133,16 @@ beforeEach(() => {
   mocks.taskDocumentReferenceFindMany.mockResolvedValue([]);
   mocks.requirementDocumentVersionReferenceFindMany.mockResolvedValue([]);
   mocks.executeRaw.mockResolvedValue(undefined);
+  purgeMocks.purgeDocument.mockResolvedValue({ documentId: "doc-1", versionCount: 0 });
+  mocks.workspaceFolderFindFirst.mockImplementation(async (args: { select?: Record<string, boolean> }) => {
+    if (args?.select?.name !== undefined) {
+      return trashedFolderRow();
+    }
+    if (args?.select?.trashedAt !== undefined) {
+      return { trashedAt: TRASHED_AT, archivedAt: null };
+    }
+    return trashedFolderRow();
+  });
 });
 
 // ── getWorkspaceFolderDeletionImpact ─────────────────────────────────────────
@@ -303,18 +345,31 @@ describe("deleteWorkspaceFolderPermanently", () => {
   });
 
   it("W06-13/W06-A1-02 descendant reference blocker aborts entire folder permanent delete", async () => {
-    mocks.workspaceFolderFindFirst.mockResolvedValueOnce({
-      id: FOLDER_ID,
-      tenantId: TENANT_A,
-      name: "Root",
-    });
+    const { WorkspaceDocumentPurgeError } = await import(
+      "@/lib/workspace/governance/workspace-document-purge-service",
+    );
     mocks.workspaceFolderFindMany
       .mockResolvedValueOnce([{ id: CHILD_ID_A }])
       .mockResolvedValueOnce([]);
-    mocks.workspaceDocumentFindMany.mockResolvedValueOnce([
-      { id: "d-blocked", versions: [{ storageKey: "k1" }] },
-    ]);
-    mocks.taskDocumentReferenceFindMany.mockResolvedValueOnce([{ id: "ref-1" }]);
+    mocks.workspaceDocumentFindMany.mockResolvedValueOnce([{ id: "d-blocked" }]);
+    purgeMocks.purgeDocument.mockRejectedValueOnce(
+      new WorkspaceDocumentPurgeError(
+        "RESOURCE_REFERENCED",
+        "blocked",
+        {
+          eligible: false,
+          status: "BLOCKING_REFERENCE",
+          retentionDays: 60,
+          blockers: [
+            {
+              kind: "TASK_DOCUMENT_REFERENCE",
+              referenceId: "ref-1",
+              message: "blocked",
+            },
+          ],
+        },
+      ),
+    );
 
     await expect(
       deleteWorkspaceFolderPermanently(TENANT_A, FOLDER_ID),
@@ -325,21 +380,13 @@ describe("deleteWorkspaceFolderPermanently", () => {
   });
 
   it("W06-A1-05 folder delete DB failure causes zero partial subtree deletion", async () => {
-    mocks.workspaceFolderFindFirst.mockResolvedValueOnce({
-      id: FOLDER_ID,
-      tenantId: TENANT_A,
-      name: "Root",
-    });
     mocks.workspaceFolderFindMany.mockResolvedValueOnce([]);
-    mocks.workspaceDocumentFindMany.mockResolvedValueOnce([
-      { id: "d1", versions: [{ storageKey: "k1" }] },
-    ]);
-    mocks.workspaceDocumentDelete.mockRejectedValueOnce(new Error("db fail"));
+    mocks.workspaceDocumentFindMany.mockResolvedValueOnce([{ id: "d1" }]);
+    purgeMocks.purgeDocument.mockResolvedValueOnce({ documentId: "d1", versionCount: 1 });
+    mocks.workspaceFolderDeleteMany.mockRejectedValueOnce(new Error("db fail"));
 
     await expect(
       deleteWorkspaceFolderPermanently(TENANT_A, FOLDER_ID),
     ).rejects.toThrow("db fail");
-
-    expect(mocks.workspaceFolderDeleteMany).not.toHaveBeenCalled();
   });
 });

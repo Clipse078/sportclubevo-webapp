@@ -699,6 +699,12 @@ enum WorkspaceBreakGlassScopeType {
   FOLDER_SUBTREE
 }
 
+/// WORKSPACE-08-03 — governance hold scope (not tenant-wide).
+enum WorkspaceGovernanceHoldScopeType {
+  DOCUMENT
+  FOLDER_SUBTREE
+}
+
 enum WorkspaceBreakGlassSessionStatus {
   ACTIVE
   ENDED
@@ -837,6 +843,8 @@ model Tenant {
   workspaceFavorites          WorkspaceFavorite[]
   workspaceRecentAccess     WorkspaceRecentAccess[]
   workspaceBreakGlassSessions WorkspaceBreakGlassSession[]
+  workspaceTrashRetentionPolicy WorkspaceTrashRetentionPolicy?
+  workspaceGovernanceHolds      WorkspaceGovernanceHold[]
 
   // SFV Integration — Slice: Tenant-Scoped SFV Configuration
   // One config per tenant (@@unique on tenantId). Null when not configured.
@@ -1022,6 +1030,8 @@ model User {
   workspaceRecentAccess            WorkspaceRecentAccess[]    @relation("WorkspaceRecentAccessUser")
   workspaceBreakGlassSessions      WorkspaceBreakGlassSession[] @relation("WorkspaceBreakGlassActor")
   workspaceBreakGlassSessionsRevoked WorkspaceBreakGlassSession[] @relation("WorkspaceBreakGlassRevokedBy")
+  workspaceGovernanceHoldsCreated    WorkspaceGovernanceHold[]    @relation("WorkspaceGovernanceHoldCreatedBy")
+  workspaceGovernanceHoldsReleased   WorkspaceGovernanceHold[]    @relation("WorkspaceGovernanceHoldReleasedBy")
   createdCommunicationAttachments  CommunicationAttachment[]  @relation("CommunicationAttachmentCreatedBy")
   // PERSON-UX-07: person-bound documents uploaded by this user
   uploadedPersonDocuments          PersonDocument[]           @relation("PersonDocumentUploadedBy")
@@ -1692,6 +1702,8 @@ model Person {
   requirementRecipientObligations RequirementRecipient[]           @relation("RequirementRecipientSubject")
   requirementResponseActorEntries RequirementRecipient[]           @relation("RequirementResponseActorPerson")
   workspaceBreakGlassSessions     WorkspaceBreakGlassSession[]     @relation("WorkspaceBreakGlassActorPerson")
+  workspaceGovernanceHoldsCreated  WorkspaceGovernanceHold[]       @relation("WorkspaceGovernanceHoldCreatedByPerson")
+  workspaceGovernanceHoldsReleased WorkspaceGovernanceHold[]      @relation("WorkspaceGovernanceHoldReleasedByPerson")
 
   @@index([lastName, firstName])
   @@index([email])
@@ -4361,6 +4373,7 @@ model WorkspaceFolder {
   @@index([createdByUserId])
   @@index([updatedByUserId])
   workspaceBreakGlassSessions WorkspaceBreakGlassSession[] @relation("WorkspaceBreakGlassFolder")
+  workspaceGovernanceHolds    WorkspaceGovernanceHold[]    @relation("WorkspaceGovernanceHoldFolder")
 }
 
 // ---------------------------------------------------------------------------
@@ -4413,6 +4426,7 @@ model WorkspaceDocument {
   @@index([createdByUserId])
   @@index([updatedByUserId])
   workspaceBreakGlassSessions WorkspaceBreakGlassSession[] @relation("WorkspaceBreakGlassDocument")
+  workspaceGovernanceHolds    WorkspaceGovernanceHold[]    @relation("WorkspaceGovernanceHoldDocument")
 }
 
 // ---------------------------------------------------------------------------
@@ -4454,6 +4468,53 @@ model WorkspaceBreakGlassSession {
   @@index([tenantId, expiresAt])
   @@index([workspaceDocumentId])
   @@index([workspaceFolderId])
+}
+
+// ---------------------------------------------------------------------------
+// WORKSPACE-08-03 — tenant trash retention + governance holds
+// ---------------------------------------------------------------------------
+
+model WorkspaceTrashRetentionPolicy {
+  id                 String   @id @default(cuid())
+  tenantId           String   @unique
+  trashRetentionDays Int
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model WorkspaceGovernanceHold {
+  id       String @id @default(cuid())
+  tenantId String
+
+  scopeType WorkspaceGovernanceHoldScopeType
+  documentId String?
+  folderId   String?
+
+  reason String
+  metadataJson Json?
+
+  createdAt         DateTime @default(now())
+  createdByUserId   String
+  createdByPersonId String?
+
+  releasedAt         DateTime?
+  releasedByUserId   String?
+  releasedByPersonId String?
+  releaseReason      String?
+
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  document        WorkspaceDocument? @relation("WorkspaceGovernanceHoldDocument", fields: [documentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  folder          WorkspaceFolder?   @relation("WorkspaceGovernanceHoldFolder", fields: [folderId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdByUser   User               @relation("WorkspaceGovernanceHoldCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  releasedByUser  User?              @relation("WorkspaceGovernanceHoldReleasedBy", fields: [releasedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdByPerson Person?            @relation("WorkspaceGovernanceHoldCreatedByPerson", fields: [createdByPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  releasedByPerson Person?           @relation("WorkspaceGovernanceHoldReleasedByPerson", fields: [releasedByPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([tenantId, documentId, releasedAt])
+  @@index([tenantId, folderId, releasedAt])
+  @@index([tenantId, createdAt])
 }
 
 // ---------------------------------------------------------------------------

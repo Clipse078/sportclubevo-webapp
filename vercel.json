@@ -35,6 +35,10 @@
     {
       "path": "/api/cron/requirement-notifications",
       "schedule": "45 * * * *"
+    },
+    {
+      "path": "/api/cron/workspace-trash-purge",
+      "schedule": "20 4 * * *"
     }
   ]
 }
