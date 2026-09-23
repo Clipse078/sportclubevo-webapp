@@ -68,6 +68,7 @@ vi.mock(
 
 import { GET } from "@/app/api/workspace/documents/[documentId]/versions/route";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { createMockWorkspaceApiActorSuccess } from "@/lib/test/mock-workspace-api-actor";
 import {
   WorkspaceDocumentVersionServiceError,
 } from "@/lib/workspace/document-version-service";
@@ -105,26 +106,13 @@ function mockAuthorizedSession(
     return;
   }
 
-  mocks.requireWorkspaceApiActor.mockResolvedValue({
-    ok: true,
-    status: 200,
-    error: null,
-    session: {
-      user: {
-        id: userId,
-        activeTenantId: tenantId,
-      },
-    },
-    tenantId,
-    actorUserId: userId,
-    actor: {
-      identity: {
-        tenantId,
-        userId,
-        personId: null,
-      },
-    },
-  });
+  mocks.requireWorkspaceApiActor.mockResolvedValue(
+    createMockWorkspaceApiActorSuccess({
+      tenantId,
+      userId,
+      viewableDocumentIds: [DOCUMENT_ID],
+    }),
+  );
 }
 
 

@@ -38,29 +38,26 @@ vi.mock("@/lib/workspace/upload-storage", () => ({
   },
 }));
 
+vi.mock("@/lib/workspace/malware-scan/content-delivery-gate", () => ({
+  assertWorkspaceVersionSafeForDelivery: vi.fn().mockResolvedValue({
+    scanState: "CLEAN",
+  }),
+  WorkspaceContentDeliveryBlockedError: class WorkspaceContentDeliveryBlockedError extends Error {},
+}));
+
+import { createMockWorkspaceApiActorSuccess } from "@/lib/test/mock-workspace-api-actor";
 import { GET } from "@/app/api/workspace/documents/[documentId]/preview/route";
 
 describe("Workspace private preview security", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireWorkspaceApiActor.mockResolvedValue({
-      ok: true,
-      session: {
-        user: {
-          id: "user-a",
-          activeTenantId: "tenant-a",
-        },
-      },
-      tenantId: "tenant-a",
-      actorUserId: "user-a",
-      actor: {
-        identity: {
-          tenantId: "tenant-a",
-          userId: "user-a",
-          personId: null,
-        },
-      },
-    });
+    mocks.requireWorkspaceApiActor.mockResolvedValue(
+      createMockWorkspaceApiActorSuccess({
+        tenantId: "tenant-a",
+        userId: "user-a",
+        viewableDocumentIds: ["document-a"],
+      }),
+    );
     mocks.getTenantFromSession.mockResolvedValue({
       id: "tenant-a",
       key: "tenant-a",
