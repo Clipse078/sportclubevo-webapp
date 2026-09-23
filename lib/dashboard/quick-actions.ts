@@ -12,7 +12,7 @@ export type DashboardQuickActionDef = {
   permissionKeys: PermissionKey[];
 };
 
-const QUICK_ACTION_CATALOG: DashboardQuickActionDef[] = [
+export const DASHBOARD_QUICK_ACTION_CATALOG: DashboardQuickActionDef[] = [
   {
     key: "news",
     href: "/dashboard/website/news/new",
@@ -101,7 +101,41 @@ export function getDashboardQuickActionDefs(
   permissionKeys: PermissionKey[],
   limit = 8,
 ): DashboardQuickActionDef[] {
-  return QUICK_ACTION_CATALOG.filter((action) =>
+  return DASHBOARD_QUICK_ACTION_CATALOG.filter((action) =>
     hasAccess(permissionKeys, action.permissionKeys),
   ).slice(0, limit);
 }
+
+/** Stable Schnellzugriff keys for creation shortcuts (subset of {@link DASHBOARD_QUICK_ACTION_CATALOG}). */
+export const QUICK_ACCESS_CREATE_ACTION_BINDINGS = [
+  {
+    stableKey: "action.create-training",
+    catalogKey: "training",
+    permissionKeys: [PERMISSIONS.EVENTS_MANAGE] as PermissionKey[],
+  },
+  {
+    stableKey: "action.create-match",
+    catalogKey: "match",
+    permissionKeys: [PERMISSIONS.EVENTS_MANAGE] as PermissionKey[],
+  },
+  {
+    stableKey: "action.create-tournament",
+    catalogKey: "tournament",
+    permissionKeys: [PERMISSIONS.EVENTS_MANAGE] as PermissionKey[],
+  },
+  {
+    stableKey: "action.create-event",
+    catalogKey: "veranstaltung",
+    permissionKeys: [PERMISSIONS.EVENTS_MANAGE] as PermissionKey[],
+  },
+  {
+    stableKey: "action.create-news",
+    catalogKey: "news",
+    permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE] as PermissionKey[],
+  },
+  {
+    stableKey: "action.create-person",
+    catalogKey: "person",
+    permissionKeys: [PERMISSIONS.PEOPLE_MANAGE] as PermissionKey[],
+  },
+] as const;
