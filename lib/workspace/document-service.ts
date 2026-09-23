@@ -21,6 +21,8 @@ import type {
   WorkspaceDocumentListItemDto,
 } from "@/lib/workspace/document-dto";
 import { assertUserSuppliedChangeNoteAllowed } from "@/lib/workspace/version/version-domain";
+import { normalizeWorkspaceStorageProviderId } from "@/lib/workspace/storage/provider-identity";
+import { getConfiguredWorkspaceUploadStorageProviderId } from "@/lib/workspace/storage/workspace-storage-config";
 
 export type WorkspaceDocumentServiceErrorCode =
   "INVALID_INPUT" | "FOLDER_NOT_FOUND" | "DUPLICATE_DOCUMENT_NAME";
@@ -85,6 +87,10 @@ export async function createWorkspaceDocumentWithInitialVersion(
 
   const folderId = normalizeOptionalText(input.folderId);
   const storageUrl = normalizeOptionalText(input.storageUrl);
+  const storageProviderId = normalizeWorkspaceStorageProviderId(
+    input.storageProvider ??
+      getConfiguredWorkspaceUploadStorageProviderId(),
+  );
   const checksum = normalizeOptionalText(input.checksum);
   const changeNote = normalizeOptionalText(input.changeNote);
 
@@ -201,6 +207,7 @@ export async function createWorkspaceDocumentWithInitialVersion(
         sizeBytes,
         storageKey,
         storageUrl,
+        storageProvider: storageProviderId,
         checksum,
         changeNote,
         createdByUserId: actorUserId,
@@ -248,6 +255,7 @@ export async function createWorkspaceDocumentWithInitialVersion(
             sizeBytes: true,
             storageKey: true,
             storageUrl: true,
+            storageProvider: true,
             checksum: true,
             changeNote: true,
             createdByUserId: true,
@@ -352,6 +360,7 @@ export async function getWorkspaceDocumentForDownload(
           mimeType: true,
           sizeBytes: true,
           storageKey: true,
+          storageProvider: true,
           checksum: true,
         },
       },
@@ -371,6 +380,7 @@ export async function getWorkspaceDocumentForDownload(
     mimeType: document.currentVersion.mimeType,
     sizeBytes: document.currentVersion.sizeBytes,
     storageKey: document.currentVersion.storageKey,
+    storageProvider: document.currentVersion.storageProvider,
     checksum: document.currentVersion.checksum,
   };
 }

@@ -95,6 +95,7 @@ export async function getWorkspaceDocumentVersionForDownload(
           mimeType: true,
           sizeBytes: true,
           storageKey: true,
+          storageProvider: true,
           checksum: true,
         },
       },
@@ -110,6 +111,7 @@ export async function getWorkspaceDocumentVersionForDownload(
               mimeType: true,
               sizeBytes: true,
               storageKey: true,
+              storageProvider: true,
               checksum: true,
             },
           }
@@ -145,6 +147,7 @@ export async function getWorkspaceDocumentVersionForDownload(
     mimeType: version.mimeType,
     sizeBytes: version.sizeBytes,
     storageKey: version.storageKey,
+    storageProvider: version.storageProvider,
     checksum: version.checksum,
   };
 }

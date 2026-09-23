@@ -12,9 +12,12 @@ import {
   formatRestoreProvenanceChangeNote,
 } from "@/lib/workspace/version/version-domain";
 import { createPendingWorkspaceVersionScanRecord } from "@/lib/workspace/malware-scan/version-scan-write";
+import { normalizeWorkspaceStorageProviderId } from "@/lib/workspace/storage/provider-identity";
+import { getConfiguredWorkspaceUploadStorageProviderId } from "@/lib/workspace/storage/workspace-storage-config";
 import {
-  workspaceStorageProvider,
-} from "@/lib/workspace/upload-storage";
+  getConfiguredWorkspaceUploadStorageProvider,
+  getWorkspaceStorageProvider,
+} from "@/lib/workspace/storage/workspace-storage-provider-registry";
 import type {
   AllowedWorkspaceMimeType,
   WorkspaceStorageProvider,
@@ -52,6 +55,7 @@ export type AppendWorkspaceDocumentVersionInput = {
   sizeBytes: number;
   storageKey: string;
   storageUrl?: string | null;
+  versionStorageProviderId?: string;
   checksum?: string | null;
   changeNote?: string | null;
   restoredFromVersionId?: string | null;
@@ -168,6 +172,7 @@ function mapDocumentWithCurrentVersion(
       sizeBytes: number;
       storageKey: string;
       storageUrl: string | null;
+      storageProvider: string;
       checksum: string | null;
       changeNote: string | null;
       createdByUserId: string | null;
@@ -202,6 +207,10 @@ export async function appendWorkspaceDocumentVersion(
 
   const storageUrl = normalizeOptionalText(input.storageUrl);
   const checksum = normalizeOptionalText(input.checksum);
+  const storageProviderId = normalizeWorkspaceStorageProviderId(
+    input.versionStorageProviderId ??
+      getConfiguredWorkspaceUploadStorageProviderId(),
+  );
   const restoredFromVersionId = normalizeOptionalText(
     input.restoredFromVersionId,
   );
@@ -269,6 +278,7 @@ export async function appendWorkspaceDocumentVersion(
           sizeBytes,
           storageKey,
           storageUrl,
+          storageProvider: storageProviderId,
           checksum,
           changeNote,
           createdByUserId: actorUserId,
@@ -313,6 +323,7 @@ export async function appendWorkspaceDocumentVersion(
                 sizeBytes: true,
                 storageKey: true,
                 storageUrl: true,
+                storageProvider: true,
                 checksum: true,
                 changeNote: true,
                 createdByUserId: true,
@@ -380,7 +391,7 @@ export async function restoreWorkspaceDocumentVersion(
   );
 
   const storageProvider =
-    input.storageProvider ?? workspaceStorageProvider;
+    input.storageProvider ?? getConfiguredWorkspaceUploadStorageProvider();
 
   const document = await prisma.workspaceDocument.findFirst({
     where: {
@@ -415,6 +426,7 @@ export async function restoreWorkspaceDocumentVersion(
         mimeType: true,
         sizeBytes: true,
         storageKey: true,
+        storageProvider: true,
         checksum: true,
         versionNumber: true,
       },
@@ -434,7 +446,11 @@ export async function restoreWorkspaceDocumentVersion(
     );
   }
 
-  const downloadResult = await storageProvider.download({
+  const sourceStorageProvider = getWorkspaceStorageProvider(
+    sourceVersion.storageProvider,
+  );
+
+  const downloadResult = await sourceStorageProvider.download({
     storageReference: sourceVersion.storageKey,
     filename: sourceVersion.filename,
     mimeType: sourceVersion.mimeType,
@@ -480,6 +496,7 @@ export async function restoreWorkspaceDocumentVersion(
       sizeBytes: uploadResult.sizeBytes,
       storageKey: uploadResult.storageKey,
       storageUrl: uploadResult.storageUrl,
+      versionStorageProviderId: getConfiguredWorkspaceUploadStorageProviderId(),
       checksum: uploadResult.checksum,
       changeNote: input.changeNote,
       restoredFromVersionId: sourceVersion.id,

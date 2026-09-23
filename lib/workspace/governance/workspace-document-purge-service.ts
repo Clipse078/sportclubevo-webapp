@@ -12,6 +12,10 @@ import {
   type WorkspacePurgeEligibilityResult,
 } from "@/lib/workspace/governance/purge-eligibility";
 import { enqueueDocumentPurgeFinalizeJob } from "@/lib/workspace/background-jobs/job-enqueue";
+import {
+  normalizeWorkspaceStorageProviderId,
+  type WorkspaceVersionStorageLocator,
+} from "@/lib/workspace/storage/provider-identity";
 import { purgeWorkspaceVersionStorageKeys } from "@/lib/workspace/governance/workspace-purge-storage";
 
 export type WorkspaceDocumentPurgeErrorCode =
@@ -118,7 +122,7 @@ export async function purgeWorkspaceDocumentPermanently(input: {
   }
 
   let versionCount = 0;
-  let storageKeys: string[] = [];
+  let storageLocators: WorkspaceVersionStorageLocator[] = [];
 
   await prisma.$transaction(async (tx) => {
     await tx.$executeRaw`
@@ -145,7 +149,7 @@ export async function purgeWorkspaceDocumentPermanently(input: {
       where: { id: documentId, tenantId },
       select: {
         id: true,
-        versions: { select: { storageKey: true } },
+        versions: { select: { storageKey: true, storageProvider: true } },
       },
     });
 
@@ -157,14 +161,17 @@ export async function purgeWorkspaceDocumentPermanently(input: {
     }
 
     versionCount = document.versions.length;
-    storageKeys = document.versions.map((v) => v.storageKey);
+    storageLocators = document.versions.map((v) => ({
+      storageKey: v.storageKey,
+      storageProvider: normalizeWorkspaceStorageProviderId(v.storageProvider),
+    }));
   });
 
   const storageResult = await purgeWorkspaceVersionStorageKeys(
     prisma,
     tenantId,
     documentId,
-    storageKeys,
+    storageLocators,
   );
 
   if (!storageResult.ok) {

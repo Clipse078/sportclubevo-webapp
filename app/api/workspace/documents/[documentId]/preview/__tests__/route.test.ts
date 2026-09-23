@@ -33,9 +33,9 @@ vi.mock("@/lib/workspace/document-version-access-service", () => ({
 }));
 
 vi.mock("@/lib/workspace/upload-storage", () => ({
-  workspaceStorageProvider: {
+  getWorkspaceStorageProvider: vi.fn(() => ({
     download: mocks.download,
-  },
+  })),
 }));
 
 vi.mock("@/lib/workspace/malware-scan/content-delivery-gate", () => ({
@@ -64,11 +64,14 @@ describe("Workspace private preview security", () => {
     });
     mocks.getDocument.mockResolvedValue({
       documentId: "document-a",
+      versionId: "version-a",
       filename: "private.png",
       mimeType: "image/png",
       sizeBytes: 3,
       storageKey:
         "workspace/tenant-a/document-a/v1/private.png",
+      storageProvider: "vercel-blob",
+      checksum: null,
     });
     mocks.download.mockResolvedValue({
       ok: true,

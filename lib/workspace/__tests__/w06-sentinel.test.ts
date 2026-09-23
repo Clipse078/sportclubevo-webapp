@@ -66,6 +66,12 @@ vi.mock("@/lib/workspace/access/actor-context", () => ({
   resolveWorkspaceActorFromSessionUser: vi.fn(),
 }));
 
+vi.mock("@/lib/workspace/storage/workspace-storage-provider-registry", () => ({
+  getWorkspaceStorageProvider: vi.fn(() => ({
+    delete: prismaMocks.storageDelete,
+  })),
+}));
+
 vi.mock("@/lib/workspace/upload-storage", () => ({
   workspaceStorageProvider: { delete: prismaMocks.storageDelete },
 }));
@@ -520,7 +526,7 @@ describe("WORKSPACE-06 sentinels", () => {
       },
       TENANT,
       "doc-1",
-      ["only-this-key"],
+      [{ storageKey: "only-this-key", storageProvider: "vercel-blob" }],
     );
     expect(result.ok).toBe(true);
     expect(prismaMocks.storageDelete).toHaveBeenCalledWith("only-this-key");
@@ -539,7 +545,7 @@ describe("WORKSPACE-06 sentinels", () => {
       },
       TENANT,
       "doc-1",
-      ["k1"],
+      [{ storageKey: "k1", storageProvider: "vercel-blob" }],
     );
     expect(result.ok).toBe(false);
     expect(prismaMocks.workspaceDocument.delete).not.toHaveBeenCalled();

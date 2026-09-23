@@ -8,8 +8,8 @@ import {
 } from "@/lib/workspace/malware-scan/content-delivery-gate";
 import { prisma } from "@/lib/db/prisma";
 import {
-  workspaceStorageProvider,
-} from "@/lib/workspace/upload-storage";
+  getWorkspaceStorageProvider,
+} from "@/lib/workspace/storage/workspace-storage-provider-registry";
 import type {
   WorkspaceStorageProvider,
 } from "@/lib/workspace/upload-types";
@@ -138,7 +138,8 @@ export async function downloadWorkspaceDocument(
   }
 
   const storageProvider =
-    input.storageProvider ?? workspaceStorageProvider;
+    input.storageProvider ??
+    getWorkspaceStorageProvider(document.storageProvider);
 
   const downloadResult = await storageProvider.download({
     storageReference: document.storageKey,

@@ -10,8 +10,10 @@ export type {
   WorkspaceStorageUploadResult,
 } from "@/lib/workspace/upload-types";
 
+import type { WorkspaceStorageProviderId } from "@/lib/workspace/storage/provider-identity";
+
 export type WorkspaceStoredObjectMetadata = {
-  provider: "vercel-blob";
+  provider: WorkspaceStorageProviderId;
   objectKey: string;
   sizeBytes: number;
   contentType: string;

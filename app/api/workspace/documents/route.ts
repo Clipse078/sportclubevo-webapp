@@ -37,7 +37,10 @@ import {
   WorkspaceDocumentServiceError,
 } from "@/lib/workspace/document-service";
 import type { WorkspaceDocumentDto } from "@/lib/workspace/document-dto";
-import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
+import {
+  getConfiguredWorkspaceUploadStorageProvider,
+  getConfiguredWorkspaceUploadStorageProviderId,
+} from "@/lib/workspace/upload-storage";
 import { validateWorkspaceUploadFile } from "@/lib/workspace/upload-types";
 import {
   TeamDocumentValidationError,
@@ -305,7 +308,9 @@ export async function POST(request: NextRequest) {
     throw error;
   }
 
-  const uploadResult = await workspaceStorageProvider.upload({
+  const uploadStorageProvider = getConfiguredWorkspaceUploadStorageProvider();
+
+  const uploadResult = await uploadStorageProvider.upload({
     tenantId: tenant.id,
     documentId,
     versionId,
@@ -339,6 +344,7 @@ export async function POST(request: NextRequest) {
         sizeBytes: uploadResult.sizeBytes,
         storageKey: uploadResult.storageKey,
         storageUrl: uploadResult.storageUrl,
+        storageProvider: getConfiguredWorkspaceUploadStorageProviderId(),
         checksum: uploadResult.checksum,
         changeNote,
         actorUserId,
@@ -353,7 +359,7 @@ export async function POST(request: NextRequest) {
       },
     );
   } catch (error) {
-    await workspaceStorageProvider.delete(
+    await uploadStorageProvider.delete(
       uploadResult.storageKey,
     );
 

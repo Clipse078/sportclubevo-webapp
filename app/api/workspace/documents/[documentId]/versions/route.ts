@@ -18,7 +18,10 @@ import {
   appendWorkspaceDocumentVersion,
   WorkspaceDocumentVersionWriteError,
 } from "@/lib/workspace/document-version-write-service";
-import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
+import {
+  getConfiguredWorkspaceUploadStorageProvider,
+  getConfiguredWorkspaceUploadStorageProviderId,
+} from "@/lib/workspace/upload-storage";
 import { validateWorkspaceUploadFile } from "@/lib/workspace/upload-types";
 import {
   TeamDocumentValidationError,
@@ -260,7 +263,9 @@ export async function POST(
     throw error;
   }
 
-  const uploadResult = await workspaceStorageProvider.upload({
+  const uploadStorageProvider = getConfiguredWorkspaceUploadStorageProvider();
+
+  const uploadResult = await uploadStorageProvider.upload({
     tenantId: tenant.id,
     documentId,
     versionId,
@@ -290,13 +295,14 @@ export async function POST(
       sizeBytes: uploadResult.sizeBytes,
       storageKey: uploadResult.storageKey,
       storageUrl: uploadResult.storageUrl,
+      versionStorageProviderId: getConfiguredWorkspaceUploadStorageProviderId(),
       checksum: uploadResult.checksum,
       changeNote,
     });
 
     return NextResponse.json({ document }, { status: 201 });
   } catch (error) {
-    await workspaceStorageProvider.delete(uploadResult.storageKey);
+    await uploadStorageProvider.delete(uploadResult.storageKey);
 
     if (error instanceof WorkspaceDocumentVersionWriteError) {
       return NextResponse.json(

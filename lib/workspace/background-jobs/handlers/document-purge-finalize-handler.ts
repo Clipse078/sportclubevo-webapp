@@ -15,6 +15,7 @@ import {
   markWorkspaceBackgroundJobSucceeded,
 } from "@/lib/workspace/background-jobs/job-outcome";
 import { evaluateWorkspaceDocumentPurgeEligibility } from "@/lib/workspace/governance/purge-eligibility";
+import { normalizeWorkspaceStorageProviderId } from "@/lib/workspace/storage/provider-identity";
 import { purgeWorkspaceVersionStorageKeys } from "@/lib/workspace/governance/workspace-purge-storage";
 
 export async function executeDocumentPurgeFinalizeJob(
@@ -84,7 +85,7 @@ export async function executeDocumentPurgeFinalizeJob(
     where: { id: documentId, tenantId: job.tenantId },
     select: {
       id: true,
-      versions: { select: { storageKey: true } },
+      versions: { select: { storageKey: true, storageProvider: true } },
     },
   });
 
@@ -93,14 +94,17 @@ export async function executeDocumentPurgeFinalizeJob(
     return;
   }
 
-  const storageKeys = document.versions.map((v) => v.storageKey);
+  const storageLocators = document.versions.map((v) => ({
+    storageKey: v.storageKey,
+    storageProvider: normalizeWorkspaceStorageProviderId(v.storageProvider),
+  }));
 
   if (!payload.storagePhaseCompleted) {
     const storageResult = await purgeWorkspaceVersionStorageKeys(
       client,
       job.tenantId,
       documentId,
-      storageKeys,
+      storageLocators,
     );
 
     if (!storageResult.ok) {
@@ -146,7 +150,7 @@ export async function executeDocumentPurgeFinalizeJob(
         action: WorkspaceAuditAction.PURGE_COMPLETED,
         source: systemMeta.source,
         afterJson: {
-          versionCount: storageKeys.length,
+          versionCount: storageLocators.length,
           recoveredViaBackgroundJob: true,
           jobId: job.id,
         },

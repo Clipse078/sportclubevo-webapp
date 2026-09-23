@@ -13,6 +13,7 @@ export type WorkspaceDocumentVersionDto = {
   sizeBytes: number;
   storageKey: string;
   storageUrl: string | null;
+  storageProvider: string;
   checksum: string | null;
   changeNote: string | null;
   createdByUserId: string | null;
@@ -45,6 +46,7 @@ export type CreateWorkspaceDocumentInput = {
   sizeBytes: number;
   storageKey: string;
   storageUrl?: string | null;
+  storageProvider?: string;
   checksum?: string | null;
   changeNote?: string | null;
   actorUserId: string;
@@ -96,6 +98,7 @@ export type WorkspaceDocumentDownloadDto = {
   mimeType: string;
   sizeBytes: number;
   storageKey: string;
+  storageProvider: string;
   checksum: string | null;
 };
 export type GetWorkspaceDocumentVersionsInput = {

@@ -30,7 +30,7 @@ import {
   WorkspaceContentDeliveryBlockedError,
 } from "@/lib/workspace/malware-scan/content-delivery-gate";
 import { prisma } from "@/lib/db/prisma";
-import { workspaceStorageProvider } from "@/lib/workspace/upload-storage";
+import { getWorkspaceStorageProvider } from "@/lib/workspace/upload-storage";
 import { resolveWorkspaceVersionIdQuery } from "@/lib/workspace/version/version-query";
 
 function safeFilename(raw: string): string {
@@ -155,7 +155,11 @@ export async function GET(
       );
     }
 
-    const downloadResult = await workspaceStorageProvider.download({
+    const versionStorageProvider = getWorkspaceStorageProvider(
+      document.storageProvider,
+    );
+
+    const downloadResult = await versionStorageProvider.download({
       storageReference: document.storageKey,
       filename: document.filename,
       mimeType: document.mimeType,

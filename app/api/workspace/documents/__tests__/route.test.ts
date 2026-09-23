@@ -50,6 +50,13 @@ vi.mock("@/lib/tenants/queries", () => ({
 }));
 
 vi.mock("@/lib/workspace/upload-storage", () => ({
+  getConfiguredWorkspaceUploadStorageProvider: vi.fn(() => ({
+    upload: mocks.upload,
+    delete: mocks.delete,
+  })),
+  getConfiguredWorkspaceUploadStorageProviderId: vi.fn(
+    () => "vercel-blob",
+  ),
   workspaceStorageProvider: {
     upload: mocks.upload,
     delete: mocks.delete,
@@ -795,6 +802,7 @@ describe("POST /api/workspace/documents", () => {
       sizeBytes: uploadedBlob.sizeBytes,
       storageKey: uploadedBlob.storageKey,
       storageUrl: uploadedBlob.storageUrl,
+      storageProvider: "vercel-blob",
       checksum: uploadedBlob.checksum,
       changeNote: "Initial upload",
       actorUserId: ACTOR_USER_ID,
@@ -850,6 +858,7 @@ describe("POST /api/workspace/documents", () => {
         actorUserId: ACTOR_USER_ID,
         storageKey: uploadedBlob.storageKey,
         storageUrl: uploadedBlob.storageUrl,
+        storageProvider: "vercel-blob",
         checksum: uploadedBlob.checksum,
       }),
     );

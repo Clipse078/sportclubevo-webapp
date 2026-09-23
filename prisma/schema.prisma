@@ -4647,6 +4647,8 @@ model WorkspaceDocumentVersion {
 
   storageKey String
   storageUrl String?
+  /// WORKSPACE-08-06 — durable provider identity for mixed-provider historical access.
+  storageProvider String @default("vercel-blob")
   checksum   String?
   changeNote String?
 
@@ -4668,6 +4670,7 @@ model WorkspaceDocumentVersion {
   @@index([tenantId])
   @@index([tenantId, documentId])
   @@index([tenantId, status])
+  @@index([tenantId, storageProvider, storageKey])
   @@index([createdByUserId])
   @@index([createdAt])
 }
