@@ -29,6 +29,7 @@ import {
 } from "./task-access";
 import { canManageTask, hasTaskPermission } from "./visibility";
 import type { TaskAuthorizationRecord } from "./task-authorization";
+import { isTaskPrimaryDocumentContext } from "./task-primary-document-context";
 import type { TaskServiceContext } from "./types";
 
 export type TaskDocumentReferenceDto = {
@@ -56,19 +57,12 @@ function assertCanEditTaskDocumentReferences(
   }
 }
 
-function isPrimaryDocumentContext(task: {
-  contextType: TaskContextType | null;
-  contextId: string | null;
-}): boolean {
-  return task.contextType === TaskContextType.DOCUMENT && Boolean(task.contextId);
-}
-
 function assertNotPrimaryDocumentDuplicate(
   task: { contextType: TaskContextType | null; contextId: string | null },
   documentId: string,
 ): void {
   if (
-    isPrimaryDocumentContext(task) &&
+    isTaskPrimaryDocumentContext(task) &&
     task.contextId?.trim() === documentId
   ) {
     throw new TaskValidationError(

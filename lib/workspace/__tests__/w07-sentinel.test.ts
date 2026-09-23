@@ -165,10 +165,12 @@ describe("WORKSPACE-07 sentinels", () => {
 
   it("W07-05 schema exposes exact-version binding enum values", () => {
     const schema = readSchema();
+    const migration = readMigration();
     expect(schema).toMatch(/enum TaskDocumentReferenceVersionBinding/);
     expect(schema).toMatch(/EXACT/);
     expect(schema).toMatch(/LEGACY_UNRESOLVED/);
     expect(schema).toMatch(/LEGACY_SINGLE_VERSION/);
+    expect(migration).toMatch(/TaskDocumentReference_version_binding_invariant/);
   });
 
   it("W07-06 schema enforces unique requirementId plus workspaceDocumentVersionId", () => {

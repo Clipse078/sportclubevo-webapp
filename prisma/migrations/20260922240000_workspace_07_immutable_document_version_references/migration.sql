@@ -88,3 +88,23 @@ ALTER TABLE "RequirementWorkspaceDocumentVersionReference"
 ALTER TABLE "RequirementWorkspaceDocumentVersionReference"
   ADD CONSTRAINT "RequirementWorkspaceDocumentVersionReference_createdByUserId_fkey"
   FOREIGN KEY ("createdByUserId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- WORKSPACE-07-A1 — transitional TaskDocumentReference binding invariants (defense in depth).
+ALTER TABLE "TaskDocumentReference"
+  ADD CONSTRAINT "TaskDocumentReference_version_binding_invariant" CHECK (
+    (
+      "versionBinding" = 'EXACT'::"TaskDocumentReferenceVersionBinding"
+      AND "workspaceDocumentVersionId" IS NOT NULL
+      AND "documentId" IS NULL
+    )
+    OR (
+      "versionBinding" = 'LEGACY_UNRESOLVED'::"TaskDocumentReferenceVersionBinding"
+      AND "documentId" IS NOT NULL
+      AND "workspaceDocumentVersionId" IS NULL
+    )
+    OR (
+      "versionBinding" = 'LEGACY_SINGLE_VERSION'::"TaskDocumentReferenceVersionBinding"
+      AND "documentId" IS NOT NULL
+      AND "workspaceDocumentVersionId" IS NOT NULL
+    )
+  );

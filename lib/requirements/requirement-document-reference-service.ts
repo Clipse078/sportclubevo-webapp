@@ -2,7 +2,6 @@
  * WORKSPACE-07 — Requirement ↔ WorkspaceDocumentVersion references.
  */
 
-import { RequirementStatus } from "@prisma/client";
 import { writeAuditRecord } from "@/lib/audit/audit-record";
 import { prisma } from "@/lib/db/prisma";
 import { WORKSPACE_DOCUMENT_LINKABLE_ERROR } from "@/lib/workspace/document-access";
@@ -12,6 +11,7 @@ import {
   resolveWorkspaceDocumentVersionForLink,
   WorkspaceVersionLinkValidationError,
 } from "@/lib/workspace/reference/workspace-version-link-validation";
+import { assertRequirementReferenceMutable } from "./requirement-document-reference-mutable";
 import { RequirementForbiddenError, RequirementValidationError } from "./errors";
 import { canManageRequirement, canReadRequirement } from "./requirement-authorization";
 import type { RequirementServiceContext } from "./types";
@@ -22,11 +22,7 @@ export type RequirementDocumentReferenceDto = {
   linkedAt: string;
 };
 
-function assertRequirementReferenceMutable(status: RequirementStatus): void {
-  if (status === "CLOSED" || status === "CANCELLED") {
-    throw new RequirementValidationError("Requirement is read-only");
-  }
-}
+export { assertRequirementReferenceMutable };
 
 async function loadRequirementForReferenceEdit(
   ctx: RequirementServiceContext,

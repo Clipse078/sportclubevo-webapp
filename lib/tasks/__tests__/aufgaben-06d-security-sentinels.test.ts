@@ -155,8 +155,10 @@ describe("AUFGABEN-06D integration guards", () => {
 
   it("R16 primary DOCUMENT duplicate rejected in service", () => {
     const source = read("lib/tasks/task-document-reference-service.ts");
+    const primaryContext = read("lib/tasks/task-primary-document-context.ts");
     expect(source).toMatch(/assertNotPrimaryDocumentDuplicate/);
-    expect(source).toMatch(/TaskContextType\.DOCUMENT/);
+    expect(source).toMatch(/isTaskPrimaryDocumentContext/);
+    expect(primaryContext).toMatch(/TaskContextType\.DOCUMENT/);
   });
 
   it("R45 DOCUMENT context picker uses document-access search", () => {
