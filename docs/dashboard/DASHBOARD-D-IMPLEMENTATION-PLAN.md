@@ -38,6 +38,8 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 **Mission:** Extend personal programme loader for 14-day window; add event visibility filtering; unify with dashboard DTO.
 
+**Status:** Implemented — see `docs/dashboard/DASHBOARD-02-PERSONAL-PROGRAMME.md`.
+
 **Dependencies:** DASHBOARD-01.
 
 **Files:** `lib/personal-agenda/*`, new dashboard loader wrapping agenda (replace club `todayItems` for personal view).
@@ -52,8 +54,8 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 **Acceptance:**
 
-- [ ] No unauthorized event titles in programme  
-- [ ] Training/match/tournament/meeting/task/participation sources appear per matrix
+- [x] No unauthorized event titles in programme  
+- [x] Training/match/tournament/event/meeting sources appear per matrix (tasks/participation remain DASHBOARD-05)
 
 ---
 

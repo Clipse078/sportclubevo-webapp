@@ -55,6 +55,7 @@ export type PersonalContextDescriptorKind =
   | "ORG_ASSIGNMENT"
   | "ORG_MEMBERSHIP"
   | "MEETING_PARTICIPANT"
+  | "MEETING_ORGANIZER"
   | "TASK_ASSIGNEE"
   | "GENERIC";
 

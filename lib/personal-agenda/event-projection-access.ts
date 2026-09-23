@@ -18,7 +18,8 @@ export type PersonalEventAuthorizationRow = {
 
 const VIEWABLE_REVIEW_STAGES = new Set<ReviewWorkflowStage>(["APPROVED", "PUBLISHED"]);
 
-const HIDDEN_EVENT_STATUSES = new Set(["CANCELLED", "ARCHIVED"]);
+/** Archived events are excluded; cancelled/postponed remain visible in personal programme. */
+const HIDDEN_EVENT_STATUSES = new Set(["ARCHIVED"]);
 
 function hasAnyPermission(actor: PersonalEventProjectionActor, keys: string[]): boolean {
   return keys.some((k) => actor.permissionKeys.includes(k));

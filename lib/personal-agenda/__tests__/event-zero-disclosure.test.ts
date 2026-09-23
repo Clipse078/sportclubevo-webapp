@@ -59,6 +59,9 @@ describe("DASHBOARD-01 — event zero disclosure", () => {
         endAt: null,
         allDay: false,
         opponentName: "Opponent FC",
+        homeAway: null,
+        location: null,
+        pitchCode: null,
         team: { name: "F2" },
       },
     ] as never);
@@ -68,6 +71,7 @@ describe("DASHBOARD-01 — event zero disclosure", () => {
       userId: "user-a",
       personalContext: buildContext(),
       actor,
+      timeZone: "Europe/Zurich",
       rangeStart: new Date("2026-10-01T00:00:00.000Z"),
       rangeEnd: new Date("2026-10-31T23:59:59.999Z"),
     });
@@ -93,6 +97,9 @@ describe("DASHBOARD-01 — event zero disclosure", () => {
         endAt: new Date("2026-10-01T19:30:00.000Z"),
         allDay: false,
         opponentName: null,
+        homeAway: null,
+        location: null,
+        pitchCode: null,
         team: { name: "F2" },
       },
     ] as never);
@@ -105,6 +112,7 @@ describe("DASHBOARD-01 — event zero disclosure", () => {
         ...actor,
         permissionKeys: [PERMISSIONS.TRAININGS_VIEW],
       },
+      timeZone: "Europe/Zurich",
       rangeStart: new Date("2026-10-01T00:00:00.000Z"),
       rangeEnd: new Date("2026-10-31T23:59:59.999Z"),
     });
@@ -112,6 +120,7 @@ describe("DASHBOARD-01 — event zero disclosure", () => {
     expect(items).toHaveLength(1);
     expect(items[0].title).toBe("Training Abend");
     expect(items[0].contextLabel).toBe("F2 · Trainer");
+    expect(items[0].sourceType).toBe("TRAINING");
   });
 
   it("returns no team events when user has no personal team relationship", async () => {
@@ -128,6 +137,9 @@ describe("DASHBOARD-01 — event zero disclosure", () => {
         endAt: null,
         allDay: false,
         opponentName: "Guest",
+        homeAway: null,
+        location: null,
+        pitchCode: null,
         team: { name: "U16" },
       },
     ] as never);
@@ -137,6 +149,7 @@ describe("DASHBOARD-01 — event zero disclosure", () => {
       userId: "user-admin",
       personalContext: buildContext({ teams: [], hasLinkedPerson: false, personId: null }),
       actor,
+      timeZone: "Europe/Zurich",
       rangeStart: new Date("2026-10-01T00:00:00.000Z"),
       rangeEnd: new Date("2026-10-31T23:59:59.999Z"),
     });

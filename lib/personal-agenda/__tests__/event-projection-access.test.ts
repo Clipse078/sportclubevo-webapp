@@ -45,6 +45,20 @@ describe("DASHBOARD-01 — event projection authorization", () => {
     ).toBe(true);
   });
 
+  it("includes cancelled events for programme presentation", () => {
+    const row = {
+      id: "e1",
+      tenantId: "tenant-a",
+      teamId: "team-1",
+      type: "TRAINING" as const,
+      status: "CANCELLED",
+      reviewStage: "APPROVED" as const,
+    };
+    expect(
+      canIncludeEventInPersonalProjection(actor([PERMISSIONS.TRAININGS_VIEW]), row),
+    ).toBe(true);
+  });
+
   it("blocks cross-tenant events", () => {
     const row = {
       id: "e1",
