@@ -14,7 +14,7 @@
 | **W09-03** | Versioning + new-version upload + preview + malware UX — **implemented (WORKSPACE-09-03-VERSION-PREVIEW-MALWARE.md)** |
 | **W09-04** | Access management + inheritance UX — **implemented (WORKSPACE-09-04-ACCESS-INHERITANCE-UX.md)** |
 | **W09-05** | Rename/move/lifecycle completeness + folder trash UI — **implemented** (see `WORKSPACE-09-05-RESOURCE-MANAGEMENT-LIFECYCLE.md`) |
-| **W09-06** | Responsive + a11y + loading/error/async + favorites + polish |
+| **W09-06** | Responsive + a11y + loading/error/async + favorites + polish — **implemented (WORKSPACE-09-06-PRODUCT-POLISH-RESPONSIVE-A11Y.md)** |
 | **W09-07** | Security regression + mobile DTO/API + acceptance |
 
 ---

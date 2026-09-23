@@ -202,6 +202,20 @@ export function WorkspaceCommandBar({
                         setCreateDialogOpen(true);
                       }}
                     />
+                    {canUpload ? (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+                        onClick={() => {
+                          setCreateMenuOpen(false);
+                          openFilePicker();
+                        }}
+                      >
+                        <Upload className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        {t("uploadMenuItem")}
+                      </button>
+                    ) : null}
                   </WorkspaceFloatingContextMenu>
                 </>
               ) : null}
@@ -305,11 +319,7 @@ export function WorkspaceCommandBar({
                   role="menuitem"
                   className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--sce-danger)] hover:bg-[var(--surface-2)]"
                   onClick={() => {
-                    if (
-                      !window.confirm(
-                        "In Papierkorb verschieben? Das Dokument kann später wiederhergestellt werden.",
-                      )
-                    ) {
+                    if (!window.confirm(tActions("trashConfirm"))) {
                       return;
                     }
                     setOverflowOpen(false);
@@ -320,7 +330,7 @@ export function WorkspaceCommandBar({
                   }}
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  In Papierkorb
+                  {tActions("trash")}
                 </button>
               </>
             ) : null}

@@ -12,20 +12,21 @@ import {
   canWorkspaceManage,
 } from "@/lib/workspace/access/workspace-authorization";
 import { WorkspaceResourceType } from "@prisma/client";
-import {
-  FolderClosed,
-  LockKeyhole,
-} from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
-import { CreateRootFolderDialog } from "@/components/admin/workspace/CreateRootFolderDialog";
 import { DeleteFolderButton } from "@/app/(admin)/dashboard/workspace/DeleteFolderButton";
 import { RestoreFolderButton } from "@/app/(admin)/dashboard/workspace/RestoreFolderButton";
 import { WorkspaceClientShell } from "@/components/admin/workspace/WorkspaceClientShell";
-import { WorkspaceFolderTreePanel } from "@/components/admin/workspace/WorkspaceFolderTreePanel";
 import { WorkspaceFolderInspectorManagement } from "@/components/admin/workspace/WorkspaceFolderInspectorManagement";
 import { WorkspaceLifecycleNavigation } from "@/components/admin/workspace/WorkspaceLifecycleNavigation";
 import { WorkspaceQuickDiscoveryPanel } from "@/components/admin/workspace/WorkspaceQuickDiscoveryPanel";
+import { WorkspaceDiscoveryTabs } from "@/components/admin/workspace/WorkspaceDiscoveryTabs";
+import { WorkspaceHubClient } from "@/components/admin/workspace/WorkspaceHubClient";
+import { WorkspaceCollaborationProvider } from "@/components/admin/workspace/WorkspaceCollaborationProvider";
+import { WorkspaceFolderNavPanel } from "@/components/admin/workspace/WorkspaceFolderNavPanel";
+import { WorkspaceActiveBrowseLayout } from "@/components/admin/workspace/WorkspaceActiveBrowseLayout";
+import { WorkspaceNoFolderSelectedPanel } from "@/components/admin/workspace/WorkspaceNoFolderSelectedPanel";
+import { WorkspaceEmptyInspectorPanel } from "@/components/admin/workspace/WorkspaceEmptyInspectorPanel";
 import { WorkspaceLifecycleManagementPanel } from "@/components/admin/workspace/WorkspaceLifecycleManagementPanel";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -61,6 +62,7 @@ type WorkspacePageProps = {
     document?: string;
     version?: string;
     view?: string;
+    hub?: string;
   }>;
 };
 
@@ -88,6 +90,9 @@ export default async function WorkspacePage({
   const folderParam = params.folder?.trim() || null;
   const documentParam = params.document?.trim() || null;
   const versionParam = params.version?.trim() || null;
+  const hubParam = params.hub?.trim() || "browse";
+  const hubView =
+    hubParam === "favorites" || hubParam === "recent" ? hubParam : "browse";
   const rawLifecycleView = params.view?.trim() || "active";
   const lifecycleView =
     rawLifecycleView === "archived" || rawLifecycleView === "trash"
@@ -269,17 +274,29 @@ export default async function WorkspacePage({
         description={t("page.description")}
       />
 
-      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <Suspense fallback={null}>
-          <WorkspaceLifecycleNavigation currentView={lifecycleView} />
-        </Suspense>
-        <WorkspaceQuickDiscoveryPanel />
+      <WorkspaceCollaborationProvider>
+      <div className="mb-3 flex flex-col gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <Suspense fallback={null}>
+            <WorkspaceLifecycleNavigation currentView={lifecycleView} />
+          </Suspense>
+          <WorkspaceQuickDiscoveryPanel />
+        </div>
+        {lifecycleView === "active" ? (
+          <Suspense fallback={null}>
+            <WorkspaceDiscoveryTabs />
+          </Suspense>
+        ) : null}
       </div>
 
       {directLinkLifecycle && directLinkLifecycle !== "ACTIVE" ? (
         <p className="mb-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm text-[var(--text-2)]">
           Lebenszyklus: {directLinkLifecycle === "ARCHIVED" ? "Archiviert" : "Papierkorb"}
         </p>
+      ) : null}
+
+      {lifecycleView === "active" && hubView !== "browse" ? (
+        <WorkspaceHubClient tab={hubView} />
       ) : null}
 
       {lifecycleView !== "active" ? (
@@ -306,49 +323,18 @@ export default async function WorkspacePage({
             }),
           )}
         />
-      ) : (
-      <div className="grid min-h-[620px] gap-4 lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)_minmax(0,320px)]">
-        {/* ── Left: folder tree ─────────────────────────────────────── */}
-        <aside className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-          <div className="shrink-0 border-b border-[var(--border)] px-3 py-3">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <FolderClosed className="h-4 w-4 text-[var(--muted)]" aria-hidden="true" />
-                <h2 className="text-sm font-semibold text-[var(--text)]">
-                  {t("folders.panelTitle")}
-                </h2>
-              </div>
-
-              {canManage ? (
-                <CreateRootFolderDialog />
-              ) : null}
-            </div>
-          </div>
-
-          {folders.length > 0 ? (
-              <WorkspaceFolderTreePanel
+      ) : hubView === "browse" ? (
+        selectedFolder ? (
+          <WorkspaceClientShell
+            resizableLayout
+            navSlot={
+              <WorkspaceFolderNavPanel
                 folders={folders}
-                selectedFolderId={selectedFolder?.id ?? null}
+                selectedFolderId={selectedFolder.id}
                 canManage={canManage}
               />
-            ) : (
-              <div className="flex-1 overflow-y-auto px-2 py-2">
-                <div className="flex min-h-40 flex-col items-center justify-center px-4 py-8 text-center">
-                  <FolderClosed className="h-8 w-8 text-[var(--muted)]" aria-hidden="true" />
-                  <p className="mt-3 text-sm font-medium text-[var(--text)]">
-                    {t("folders.noFoldersTitle")}
-                  </p>
-                  <p className="mt-1 text-xs leading-5 text-[var(--text-2)]">
-                    {t("folders.noFoldersDescription")}
-                  </p>
-                </div>
-              </div>
-            )}
-        </aside>
-
-        {/* ── Centre + Right panels ─────────────────────────────────── */}
-        {selectedFolder ? (
-          <WorkspaceClientShell
+            }
+            navDrawerTitle={t("folders.panelTitle")}
             documents={documents}
             initialSelectedDocumentId={initialSelectedDocumentId}
             folderId={selectedFolder.id}
@@ -380,55 +366,27 @@ export default async function WorkspacePage({
             }
           />
         ) : (
-          <>
-            <section className="flex min-h-[520px] flex-col items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-6 py-16">
-              <div className="w-full max-w-md text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--surface-2)]">
-                  <LockKeyhole className="h-7 w-7 text-[var(--blue)]" aria-hidden="true" />
-                </div>
-
-                <h2 className="mt-5 text-xl font-semibold text-[var(--text)]">
-                  {folders.length > 0
-                    ? t("folders.selectFolder")
-                    : t("folders.welcomeTitle")}
-                </h2>
-
-                <p className="mt-2 text-sm leading-6 text-[var(--text-2)]">
-                  {folders.length > 0
-                    ? t("folders.selectFolderDescription")
-                    : t("folders.welcomeDescription")}
-                </p>
-
-                {canManage && folders.length === 0 ? (
-                  <div className="mt-6">
-                    <CreateRootFolderDialog />
-                  </div>
-                ) : null}
-
-                {!canManage && folders.length === 0 ? (
-                  <p className="mt-5 text-xs leading-5 text-[var(--muted)]">
-                    {t("folders.noPermissionNote")}
-                  </p>
-                ) : null}
-              </div>
-            </section>
-
-            <aside className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-              <div className="border-b border-[var(--border)] px-5 py-3.5">
-                <h2 className="text-sm font-semibold text-[var(--text)]">
-                  {t("folderDetails.panelTitle")}
-                </h2>
-              </div>
-              <div className="flex flex-1 items-center justify-center px-5 py-8">
-                <p className="text-sm text-[var(--text-2)]">
-                  {t("folderDetails.noItemSelected")}
-                </p>
-              </div>
-            </aside>
-          </>
-        )}
-      </div>
-      )}
+          <WorkspaceActiveBrowseLayout
+            nav={
+              <WorkspaceFolderNavPanel
+                folders={folders}
+                selectedFolderId={null}
+                canManage={canManage}
+              />
+            }
+            navDrawerTitle={t("folders.panelTitle")}
+            hasInspectorContext={false}
+            main={
+              <WorkspaceNoFolderSelectedPanel
+                hasFolders={folders.length > 0}
+                canManage={canManage}
+              />
+            }
+            inspector={<WorkspaceEmptyInspectorPanel />}
+          />
+        )
+      ) : null}
+      </WorkspaceCollaborationProvider>
 
       {lifecycleView === "active" && archivedFolders.length > 0 ? (
         <section className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)]">

@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   Pencil,
   Shield,
+  Star,
   Trash2,
   FolderInput,
 } from "lucide-react";
@@ -25,6 +26,7 @@ import { WorkspaceDocumentRenameDialog } from "./WorkspaceDocumentRenameDialog";
 import { WorkspaceDocumentMoveDialog } from "./WorkspaceDocumentMoveDialog";
 import { WorkspaceFloatingContextMenu } from "./WorkspaceFloatingContextMenu";
 import { buildWorkspaceInternalLink } from "@/lib/workspace/internal-links";
+import { useOptionalWorkspaceFavoritesContext } from "./WorkspaceCollaborationProvider";
 
 type WorkspaceDocumentActionsProps = {
   document: WorkspaceDocumentListItemDto;
@@ -94,8 +96,10 @@ export function WorkspaceDocumentActions({
   const [renameOpen, setRenameOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const favoritesContext = useOptionalWorkspaceFavoritesContext();
 
   const hasDownload = Boolean(workspaceDocument.currentVersion);
+  const isFavorited = favoritesContext?.isFavorite("DOCUMENT", workspaceDocument.id) ?? false;
 
   function downloadDocument() {
     if (!hasDownload) return;
@@ -125,11 +129,7 @@ export function WorkspaceDocumentActions({
   }
 
   async function trashDocument() {
-    if (
-      !window.confirm(
-        "In Papierkorb verschieben? Das Dokument kann später wiederhergestellt werden.",
-      )
-    ) {
+    if (!window.confirm(t("trashConfirm"))) {
       return;
     }
     setMenuOpen(false);
@@ -191,6 +191,17 @@ export function WorkspaceDocumentActions({
             onClick={downloadDocument}
             disabled={!hasDownload}
           />
+
+          {favoritesContext ? (
+            <ActionButton
+              icon={<Star className={`h-4 w-4 ${isFavorited ? "fill-amber-500 text-amber-500" : ""}`} />}
+              label={isFavorited ? t("removeFavorite") : t("addFavorite")}
+              onClick={() => {
+                setMenuOpen(false);
+                void favoritesContext.toggleFavorite("DOCUMENT", workspaceDocument.id);
+              }}
+            />
+          ) : null}
 
           <div className="my-1 border-t border-[var(--border)]" role="separator" />
 

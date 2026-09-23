@@ -45,10 +45,43 @@
     },
 
     "discovery": {
+      "navAriaLabel": "Workspace-Schnellzugriff",
+      "browseTab": "Durchsuchen",
+      "favoritesTab": "Favoriten",
+      "recentTab": "Zuletzt verwendet",
       "favoritesTitle": "Favoriten",
       "recentTitle": "Zuletzt",
       "folderLabel": "Ordner",
-      "documentLabel": "Dokument"
+      "documentLabel": "Dokument",
+      "loading": "Wird geladen …",
+      "loadError": "Liste konnte nicht geladen werden.",
+      "favoritesEmptyTitle": "Noch keine Favoriten",
+      "favoritesEmptyDescription": "Markieren Sie Ordner oder Dokumente mit dem Stern, um sie hier schnell wiederzufinden.",
+      "recentEmptyTitle": "Noch keine kürzlichen Elemente",
+      "recentEmptyDescription": "Geöffnete Ordner und Dokumente erscheinen hier in der Reihenfolge Ihrer letzten Nutzung.",
+      "favoritesListHint": "Nur Ressourcen, auf die Sie Zugriff haben.",
+      "recentListHint": "Sortiert nach letzter Nutzung.",
+      "lifecycleArchived": "Archiviert",
+      "lifecycleTrashed": "Papierkorb"
+    },
+
+    "favorites": {
+      "add": "Zu Favoriten",
+      "remove": "Aus Favoriten entfernen"
+    },
+
+    "layout": {
+      "openNavDrawer": "Ordnernavigation öffnen",
+      "openInspector": "Detailbereich öffnen",
+      "closeInspector": "Detailbereich schliessen",
+      "openInspectorShort": "Details",
+      "closeInspectorShort": "Details ausblenden",
+      "foldersShort": "Ordner",
+      "detailsShort": "Details",
+      "inspectorSheetTitle": "Details",
+      "resizeNav": "Ordnerbereich vergrössern oder verkleinern",
+      "resizeInspector": "Detailbereich vergrössern oder verkleinern",
+      "resizeHandleValue": "Breite anpassbar"
     },
 
     "commandBar": {
@@ -56,6 +89,7 @@
       "newMenu": "+ Neu",
       "newMenuAriaLabel": "Neu erstellen",
       "uploadLabel": "Hochladen",
+      "uploadMenuItem": "Datei hochladen",
       "uploadingLabel": "Wird hochgeladen …",
       "overflowAriaLabel": "Weitere Aktionen",
       "copyLink": "Link kopieren",
@@ -174,6 +208,7 @@
       "modifiedHeader": "Geändert",
       "sizeHeader": "Grösse",
       "versionHeader": "Version",
+      "favoriteHeader": "Favorit",
       "actionsHeader": "Aktionen",
       "tableAriaLabel": "Dokumente"
     },
@@ -273,6 +308,10 @@
       "move": "Verschieben",
       "versionHistory": "Versionsverlauf",
       "archive": "Archivieren",
+      "trash": "In Papierkorb",
+      "trashConfirm": "In Papierkorb verschieben? Das Dokument kann später wiederhergestellt werden.",
+      "addFavorite": "Zu Favoriten",
+      "removeFavorite": "Aus Favoriten entfernen",
       "comingSoon": "Demnächst"
     },
 

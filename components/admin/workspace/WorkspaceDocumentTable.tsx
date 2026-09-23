@@ -46,7 +46,10 @@ export function WorkspaceDocumentTable({
             <th className="px-4 py-2.5">{t("modifiedHeader")}</th>
             <th className="px-4 py-2.5">{t("sizeHeader")}</th>
             <th className="px-4 py-2.5">{t("versionHeader")}</th>
-            <th className="py-2.5 pl-2 pr-4 text-right">
+            <th className="w-10 py-2.5 pl-2 pr-1 text-right">
+              <span className="sr-only">{t("favoriteHeader")}</span>
+            </th>
+            <th className="py-2.5 pl-1 pr-4 text-right">
               <span className="sr-only">{t("actionsHeader")}</span>
             </th>
           </tr>

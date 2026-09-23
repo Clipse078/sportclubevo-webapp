@@ -11,6 +11,7 @@ import {
 } from "@/lib/workspace/access/workspace-authorization";
 import { deriveWorkspaceDocumentLifecycle } from "@/lib/workspace/lifecycle/lifecycle-domain";
 import { deriveWorkspaceFolderLifecycle } from "@/lib/workspace/lifecycle/lifecycle-domain";
+import { loadCollaborationResourceDisplay } from "@/lib/workspace/collaboration/enrich-collaboration-list-item";
 
 const MAX_RECENT_ROWS = 50;
 const MAX_RECENT_RETURN = 20;
@@ -21,6 +22,8 @@ export type WorkspaceRecentListItem = {
   versionId: string | null;
   lifecycle: "ACTIVE" | "ARCHIVED" | "TRASHED";
   accessedAt: string;
+  name: string;
+  parentFolderName: string | null;
 };
 
 export async function recordWorkspaceRecentAccess(input: {
@@ -113,6 +116,12 @@ export async function listWorkspaceRecent(input: {
         select: { archivedAt: true, trashedAt: true },
       });
       if (!folder) continue;
+      const display = await loadCollaborationResourceDisplay({
+        tenantId: input.tenantId,
+        resourceType: "FOLDER",
+        resourceId: row.folderId,
+      });
+      if (!display) continue;
       seen.add(key);
       items.push({
         resourceType: "FOLDER",
@@ -120,6 +129,8 @@ export async function listWorkspaceRecent(input: {
         versionId: null,
         lifecycle: deriveWorkspaceFolderLifecycle(folder),
         accessedAt: row.accessedAt.toISOString(),
+        name: display.name,
+        parentFolderName: display.parentFolderName,
       });
     } else if (row.documentId) {
       const key = `D:${row.documentId}:${row.versionId ?? ""}`;
@@ -130,6 +141,12 @@ export async function listWorkspaceRecent(input: {
         select: { status: true, archivedAt: true, trashedAt: true },
       });
       if (!document) continue;
+      const display = await loadCollaborationResourceDisplay({
+        tenantId: input.tenantId,
+        resourceType: "DOCUMENT",
+        resourceId: row.documentId,
+      });
+      if (!display) continue;
       seen.add(key);
       items.push({
         resourceType: "DOCUMENT",
@@ -137,6 +154,8 @@ export async function listWorkspaceRecent(input: {
         versionId: row.versionId,
         lifecycle: deriveWorkspaceDocumentLifecycle(document),
         accessedAt: row.accessedAt.toISOString(),
+        name: display.name,
+        parentFolderName: display.parentFolderName,
       });
     }
 

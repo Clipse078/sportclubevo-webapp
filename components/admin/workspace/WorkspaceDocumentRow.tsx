@@ -12,6 +12,7 @@ import {
   formatWorkspaceFileSize,
 } from "./workspace-document-formatters";
 import { WorkspaceVersionScanBadge } from "./WorkspaceVersionScanBadge";
+import { WorkspaceFavoriteToggle } from "./WorkspaceFavoriteToggle";
 
 import type { WorkspaceFolderDto } from "@/lib/workspace/dto";
 
@@ -93,7 +94,7 @@ export function WorkspaceDocumentRow({
         <div className="min-w-0">
           <p
             className={[
-              "max-w-[min(100%,18rem)] truncate text-sm font-medium leading-snug transition-colors duration-100 sm:max-w-[min(100%,24rem)]",
+              "max-w-full truncate text-sm font-medium leading-snug transition-colors duration-100",
               isSelected ? "text-[var(--blue)]" : "text-[var(--text)] group-hover:text-[var(--blue)]",
             ].join(" ")}
             title={displayName.length > 36 ? displayName : undefined}
@@ -126,7 +127,14 @@ export function WorkspaceDocumentRow({
 
       {/* Actions */}
       <td
-        className="py-2.5 pl-2 pr-4 text-right"
+        className="py-2.5 pl-2 pr-1 text-right"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <WorkspaceFavoriteToggle resourceType="DOCUMENT" resourceId={document.id} />
+      </td>
+
+      <td
+        className="py-2.5 pl-1 pr-4 text-right"
         onClick={(e) => e.stopPropagation()}
       >
         <WorkspaceDocumentActions

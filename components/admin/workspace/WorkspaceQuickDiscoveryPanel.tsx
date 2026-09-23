@@ -8,6 +8,8 @@ type FavoriteItem = {
   resourceType: "FOLDER" | "DOCUMENT";
   resourceId: string;
   lifecycle: string;
+  name: string;
+  parentFolderName?: string | null;
 };
 
 type RecentItem = FavoriteItem & {
@@ -58,8 +60,14 @@ export function WorkspaceQuickDiscoveryPanel() {
           <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
             {favorites.slice(0, 5).map((item) => (
               <li key={`${item.resourceType}:${item.resourceId}`}>
-                <Link href={hrefFor(item)} className="hover:text-[var(--blue)] hover:underline">
-                  {item.resourceType === "FOLDER" ? t("folderLabel") : t("documentLabel")}
+                <Link
+                  href={hrefFor(item)}
+                  className="hover:text-[var(--blue)] hover:underline"
+                  title={item.name}
+                >
+                  <span className="max-w-[12rem] truncate inline-block align-bottom">
+                    {item.name}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -75,8 +83,14 @@ export function WorkspaceQuickDiscoveryPanel() {
           <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
             {recent.slice(0, 5).map((item) => (
               <li key={`${item.resourceType}:${item.resourceId}:${item.accessedAt}`}>
-                <Link href={hrefFor(item)} className="hover:text-[var(--blue)] hover:underline">
-                  {item.resourceType === "FOLDER" ? t("folderLabel") : t("documentLabel")}
+                <Link
+                  href={hrefFor(item)}
+                  className="hover:text-[var(--blue)] hover:underline"
+                  title={item.name}
+                >
+                  <span className="max-w-[12rem] truncate inline-block align-bottom">
+                    {item.name}
+                  </span>
                 </Link>
               </li>
             ))}

@@ -11,12 +11,15 @@ import {
 } from "@/lib/workspace/access/workspace-authorization";
 import { deriveWorkspaceDocumentLifecycle } from "@/lib/workspace/lifecycle/lifecycle-domain";
 import { deriveWorkspaceFolderLifecycle } from "@/lib/workspace/lifecycle/lifecycle-domain";
+import { loadCollaborationResourceDisplay } from "@/lib/workspace/collaboration/enrich-collaboration-list-item";
 
 export type WorkspaceFavoriteListItem = {
   resourceType: "FOLDER" | "DOCUMENT";
   resourceId: string;
   lifecycle: "ACTIVE" | "ARCHIVED" | "TRASHED";
   createdAt: string;
+  name: string;
+  parentFolderName: string | null;
 };
 
 export async function toggleWorkspaceFavorite(input: {
@@ -120,11 +123,19 @@ export async function listWorkspaceFavorites(input: {
         select: { archivedAt: true, trashedAt: true },
       });
       if (!folder) continue;
+      const display = await loadCollaborationResourceDisplay({
+        tenantId: input.tenantId,
+        resourceType: "FOLDER",
+        resourceId: row.folderId,
+      });
+      if (!display) continue;
       items.push({
         resourceType: "FOLDER",
         resourceId: row.folderId,
         lifecycle: deriveWorkspaceFolderLifecycle(folder),
         createdAt: row.createdAt.toISOString(),
+        name: display.name,
+        parentFolderName: display.parentFolderName,
       });
       continue;
     }
@@ -136,11 +147,19 @@ export async function listWorkspaceFavorites(input: {
         select: { status: true, archivedAt: true, trashedAt: true },
       });
       if (!document) continue;
+      const display = await loadCollaborationResourceDisplay({
+        tenantId: input.tenantId,
+        resourceType: "DOCUMENT",
+        resourceId: row.documentId,
+      });
+      if (!display) continue;
       items.push({
         resourceType: "DOCUMENT",
         resourceId: row.documentId,
         lifecycle: deriveWorkspaceDocumentLifecycle(document),
         createdAt: row.createdAt.toISOString(),
+        name: display.name,
+        parentFolderName: display.parentFolderName,
       });
     }
   }

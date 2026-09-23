@@ -29,6 +29,12 @@ import { WorkspaceDocumentInspectorActionsProvider } from "./inspector/Workspace
 import type { DocumentInspectorWorkflowCapabilitiesDto } from "@/lib/workspace/document-inspector/document-inspector-dto";
 import type { ContextualTaskCreateDialogProps } from "@/components/admin/aufgaben/contextual/ContextualTaskCreateDialog";
 import { WorkspaceDocumentInspectorSkeleton } from "./inspector/WorkspaceDocumentInspectorView";
+import { useWorkspaceRecentRecorder } from "./useWorkspaceCollaboration";
+import { WorkspaceFavoriteToggle } from "./WorkspaceFavoriteToggle";
+import { WorkspaceActiveBrowseLayout } from "./WorkspaceActiveBrowseLayout";
+import { WorkspaceInspectorToggleButton } from "./WorkspaceInspectorToggleButton";
+
+export type WorkspaceClientShellPane = "all" | "main" | "inspector";
 
 type WorkspaceClientShellProps = {
   documents: WorkspaceDocumentListItemDto[];
@@ -53,6 +59,11 @@ type WorkspaceClientShellProps = {
     "open" | "onOpenChange"
   > | null;
   folderTree?: WorkspaceFolderDto[];
+  pane?: WorkspaceClientShellPane;
+  /** When set with resizable layout, renders folder tree in the left pane. */
+  navSlot?: React.ReactNode;
+  navDrawerTitle?: string;
+  resizableLayout?: boolean;
 };
 
 function formatDate(value: string): string {
@@ -82,12 +93,21 @@ function WorkspaceClientShellInner({
   documentWorkflowCapabilities = { canCreateTask: false, canCreateRequirement: false },
   documentTaskCreateDialogProps = null,
   folderTree = [],
+  pane = "all",
+  navSlot,
+  navDrawerTitle,
+  resizableLayout = false,
 }: WorkspaceClientShellProps) {
   const t = useTranslations("Workspace");
   const router = useRouter();
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
     initialSelectedDocumentId,
   );
+
+  useWorkspaceRecentRecorder({
+    folderId: folderId,
+    documentId: selectedDocumentId,
+  });
 
   useEffect(() => {
     setSelectedDocumentId(initialSelectedDocumentId ?? null);
@@ -171,12 +191,14 @@ function WorkspaceClientShellInner({
       ? t("documents.countSingular")
       : t("documents.countPlural", { count: docCount });
 
-  return (
-    <>
+  const mainPanel = (
       <section className="flex min-h-[520px] flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-        <div className="border-b border-[var(--border)] px-5 py-3">
-          <WorkspaceBreadcrumbs path={folderPath} />
-          <p className="mt-1 text-xs text-[var(--muted)]">{countLabel}</p>
+        <div className="flex flex-wrap items-start justify-between gap-2 border-b border-[var(--border)] px-5 py-3">
+          <div className="min-w-0">
+            <WorkspaceBreadcrumbs path={folderPath} />
+            <p className="mt-1 text-xs text-[var(--muted)]">{countLabel}</p>
+          </div>
+          {resizableLayout ? <WorkspaceInspectorToggleButton /> : null}
         </div>
 
         <WorkspaceCommandBar
@@ -232,8 +254,10 @@ function WorkspaceClientShellInner({
           )}
         </div>
       </section>
+  );
 
-      <aside className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] lg:min-w-[320px]">
+  const inspectorPanel = (
+      <aside className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] lg:min-w-[280px]">
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {selectedDocument ? (
             documentInspectorSlot ? (
@@ -257,11 +281,14 @@ function WorkspaceClientShellInner({
             )
           ) : (
             <>
-            <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] px-5 py-3.5">
-              <FolderClosed className="h-4 w-4 text-[var(--muted)]" aria-hidden="true" />
-              <h2 className="text-sm font-semibold text-[var(--text)]">
-                {t("folderDetails.panelTitle")}
-              </h2>
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--border)] px-5 py-3.5">
+              <div className="flex min-w-0 items-center gap-2">
+                <FolderClosed className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden="true" />
+                <h2 className="truncate text-sm font-semibold text-[var(--text)]">
+                  {t("folderDetails.panelTitle")}
+                </h2>
+              </div>
+              <WorkspaceFavoriteToggle resourceType="FOLDER" resourceId={folderId} />
             </div>
             <div className="flex-1 overflow-y-auto">
             <div className="space-y-4 px-5 py-5">
@@ -327,6 +354,31 @@ function WorkspaceClientShellInner({
           )}
         </div>
       </aside>
+  );
+
+  const body =
+    pane === "inspector" ? (
+      inspectorPanel
+    ) : pane === "main" ? (
+      mainPanel
+    ) : resizableLayout && navSlot ? (
+      <WorkspaceActiveBrowseLayout
+        nav={navSlot}
+        navDrawerTitle={navDrawerTitle ?? t("folders.panelTitle")}
+        hasInspectorContext
+        main={mainPanel}
+        inspector={inspectorPanel}
+      />
+    ) : (
+      <>
+        {mainPanel}
+        {inspectorPanel}
+      </>
+    );
+
+  return (
+    <>
+      {body}
 
       {selectedDocument ? (
         <WorkspaceDocumentVersionHistoryDialog
