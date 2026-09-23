@@ -1,6 +1,7 @@
 # WORKSPACE-09D — World-class benchmark record
 
 **Baseline STAGE SHA:** `704a7c4571524bd0fd2dc10df238110a23a3201b`  
+**W09-07:** Grid/tiles view density remains **DEFER**; list + compact complete. See `WORKSPACE-09-07-MOBILE-READY-FINAL-ACCEPTANCE.md`.  
 **Sources:** Official help/design documentation (2025–2026), not pixel parity claims.
 
 | Product | Primary sources |

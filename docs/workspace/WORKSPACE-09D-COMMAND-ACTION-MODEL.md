@@ -194,6 +194,8 @@ type WorkspaceAvailableActionsDto = {
 
 Computed server-side from `canWorkspace*` + lifecycle + scan + deletion blockers.
 
+**W09-07 implemented:** `WorkspaceResourceAvailableActionsDto` in `lib/workspace/command/workspace-available-actions.ts` (canonical booleans) plus legacy tier mapping in `available-actions-stub.ts`. Embedded on SSR document list rows and inspector DTOs.
+
 ---
 
 ## 8. Result

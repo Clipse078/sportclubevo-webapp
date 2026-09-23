@@ -3,9 +3,11 @@
 **Baseline STAGE SHA:** `704a7c4571524bd0fd2dc10df238110a23a3201b`  
 **States:** `COMPLETE` | `PARTIAL` | `HIDDEN` | `MISSING` | `PLACEHOLDER` | `INTENTIONALLY_NO_UI`
 
+**W09-07 reconciliation (2026-09-23):** Core Workspace capabilities are **COMPLETE** or **INTENTIONAL_DEFERRED** (grid/tiles). No core PLACEHOLDER/MISSING remain for Document Workspace closure. See `WORKSPACE-09-07-MOBILE-READY-FINAL-ACCEPTANCE.md`.
+
 ---
 
-## Summary counts
+## Summary counts (pre-W09 discovery snapshot — see W09-07 doc for final)
 
 | State | Count |
 |-------|------:|

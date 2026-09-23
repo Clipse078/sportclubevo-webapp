@@ -16,7 +16,7 @@
 | **W09-05** | Rename/move/lifecycle completeness + folder trash UI — **implemented** (see `WORKSPACE-09-05-RESOURCE-MANAGEMENT-LIFECYCLE.md`) |
 | **W09-06** | Responsive + a11y + loading/error/async + favorites + polish — **implemented (WORKSPACE-09-06-PRODUCT-POLISH-RESPONSIVE-A11Y.md)** |
 | **W09-06R1** | Dropbox-benchmark file interaction + daily nav + row actions + access UX presentation — **implemented (WORKSPACE-09-06R1-INTERACTION-QUALITY.md)** |
-| **W09-07** | Security regression + mobile DTO/API + acceptance |
+| **W09-07** | Mobile-ready DTO/API + canonical available-actions + final acceptance — **implemented (`WORKSPACE-09-07-MOBILE-READY-FINAL-ACCEPTANCE.md`)** |
 
 ---
 
