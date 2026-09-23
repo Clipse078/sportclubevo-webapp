@@ -1,153 +1,120 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, ListChecks } from "lucide-react";
-import {
-  eachDayOfInterval,
-  endOfMonth,
-  endOfWeek,
-  format,
-  isSameDay,
-  isSameMonth,
-  startOfWeek,
-} from "date-fns";
-import { de } from "date-fns/locale";
-import { cn } from "@/lib/cn";
+import { ListChecks } from "lucide-react";
+import { matchDayKeyInTimezone } from "@/lib/matchcenter/management-view";
+import PersonalProgrammeMonthCalendar from "@/components/ui/calendar/PersonalProgrammeMonthCalendar";
+import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
 import type { PersonalCalendarItem } from "@/lib/personal-agenda/types";
+import { groupPersonalProgrammeItemsByDay } from "@/lib/personal-agenda/programme-day-key";
 
 type Props = {
   monthParam: string;
-  items: PersonalCalendarItem[];
+  timeZone: string;
+  programmeItems: PersonalProgrammeItem[];
+  taskItems?: PersonalCalendarItem[];
   previousMonthHref: string;
   nextMonthHref: string;
+  todayHref?: string;
 };
 
-function parseMonthParam(param: string): Date {
-  const [y, m] = param.split("-").map(Number);
-  return new Date(y, (m ?? 1) - 1, 1);
-}
-
-function dayKey(date: Date): string {
-  return format(date, "yyyy-MM-dd");
+function taskDayKey(item: PersonalCalendarItem, timeZone: string): string {
+  return matchDayKeyInTimezone(item.startAt, timeZone);
 }
 
 export default function PersonalKalenderMonthView({
   monthParam,
-  items,
+  timeZone,
+  programmeItems,
+  taskItems = [],
   previousMonthHref,
   nextMonthHref,
+  todayHref,
 }: Props) {
-  const monthStart = parseMonthParam(monthParam);
-  const monthEnd = endOfMonth(monthStart);
-  const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-  const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
-  const days = eachDayOfInterval({ start: gridStart, end: gridEnd });
-  const today = new Date();
-  const monthLabel = format(monthStart, "MMMM yyyy", { locale: de });
-  const weekdayLabels = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+  const t = useTranslations("PersonalDashboard.calendar");
+  const todayKey = matchDayKeyInTimezone(new Date(), timeZone);
+  const [selectedDayKey, setSelectedDayKey] = useState(todayKey);
 
-  const itemsByDay = new Map<string, PersonalCalendarItem[]>();
-  for (const item of items) {
-    const key = dayKey(item.startAt);
-    const list = itemsByDay.get(key) ?? [];
-    list.push(item);
-    itemsByDay.set(key, list);
-  }
+  const tasksByDay = useMemo(() => {
+    const map = new Map<string, PersonalCalendarItem[]>();
+    for (const task of taskItems) {
+      const key = taskDayKey(task, timeZone);
+      const list = map.get(key) ?? [];
+      list.push(task);
+      map.set(key, list);
+    }
+    return map;
+  }, [taskItems, timeZone]);
+
+  const programmeByDay = useMemo(
+    () => groupPersonalProgrammeItemsByDay(programmeItems, timeZone),
+    [programmeItems, timeZone],
+  );
+
+  const activityCountByDay = useMemo(() => {
+    const keys = new Set<string>([...programmeByDay.keys(), ...tasksByDay.keys()]);
+    const counts = new Map<string, number>();
+    for (const key of keys) {
+      counts.set(key, (programmeByDay.get(key)?.length ?? 0) + (tasksByDay.get(key)?.length ?? 0));
+    }
+    return counts;
+  }, [programmeByDay, tasksByDay]);
+
+  const selectedTasks = tasksByDay.get(selectedDayKey) ?? [];
 
   return (
-    <section
-      className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/80 p-3"
-      aria-label="Persönlicher Kalender"
-      data-testid="personal-kalender-month"
-    >
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold capitalize text-[var(--foreground)]">{monthLabel}</h2>
-        <div className="flex items-center gap-0.5">
-          <Link
-            href={previousMonthHref}
-            aria-label="Vorheriger Monat"
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-2)] hover:bg-[var(--surface-2)]"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Link>
-          <Link
-            href={nextMonthHref}
-            aria-label="Nächster Monat"
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-2)] hover:bg-[var(--surface-2)]"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </div>
+    <div data-testid="personal-kalender-month">
+      <PersonalProgrammeMonthCalendar
+        monthParam={monthParam}
+        timeZone={timeZone}
+        items={programmeItems}
+        activityCountByDay={activityCountByDay}
+        selectedDayKey={selectedDayKey}
+        onSelectedDayChange={setSelectedDayKey}
+        navigation={{
+          previousMonthHref,
+          nextMonthHref,
+          todayHref,
+        }}
+        todayDayKey={todayKey}
+        headingLevel="h2"
+      />
 
-      <div className="grid grid-cols-7 gap-0.5 text-center text-[0.625rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-        {weekdayLabels.map((label) => (
-          <span key={label} className="py-1">
-            {label}
-          </span>
-        ))}
-      </div>
-
-      <div className="mt-0.5 grid grid-cols-7 gap-0.5">
-        {days.map((day) => {
-          const key = dayKey(day);
-          const dayItems = (itemsByDay.get(key) ?? []).slice(0, 4);
-          const inMonth = isSameMonth(day, monthStart);
-          const isToday = isSameDay(day, today);
-
-          return (
-            <div
-              key={key}
-              className={cn(
-                "min-h-[4.5rem] rounded-md border border-transparent p-0.5 text-left",
-                inMonth ? "bg-[var(--background)]" : "bg-[var(--surface-2)]/40 opacity-60",
-                isToday && "ring-1 ring-[var(--primary)]/40",
-              )}
-            >
-              <span
-                className={cn(
-                  "mb-0.5 block text-[0.6875rem] font-semibold tabular-nums",
-                  isToday ? "text-[var(--primary)]" : "text-[var(--text-2)]",
+      {selectedTasks.length > 0 ? (
+        <section
+          className="mt-3"
+          aria-label={t("selectedDayTasks")}
+          data-testid="personal-kalender-selected-tasks"
+        >
+          <h3 className="mb-2 text-sm font-semibold text-[var(--foreground)]">{t("tasksHeading")}</h3>
+          <ul className="space-y-1">
+            {selectedTasks.map((task) => (
+              <li key={task.id}>
+                {task.href ? (
+                  <Link
+                    href={task.href}
+                    className="flex items-center gap-1 rounded-md px-1 py-0.5 text-[0.8125rem] text-[var(--foreground)] hover:bg-[var(--surface-2)]"
+                    aria-label={task.ariaLabel}
+                  >
+                    <ListChecks className="h-3.5 w-3.5 shrink-0 text-[var(--text-2)]" aria-hidden />
+                    <span className="truncate">{task.title}</span>
+                  </Link>
+                ) : (
+                  <span
+                    className="flex items-center gap-1 px-1 py-0.5 text-[0.8125rem]"
+                    aria-label={task.ariaLabel}
+                  >
+                    <ListChecks className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    {task.title}
+                  </span>
                 )}
-              >
-                {format(day, "d")}
-              </span>
-              <ul className="space-y-0.5">
-                {dayItems.map((item) => {
-                  const isTask = item.sourceType === "TASK";
-                  const inner = (
-                    <span className="flex min-w-0 items-center gap-0.5 truncate text-[0.625rem] leading-tight text-[var(--foreground)]">
-                      {isTask ? (
-                        <ListChecks className="h-2.5 w-2.5 shrink-0 text-[var(--text-2)]" aria-hidden />
-                      ) : null}
-                      <span className="truncate">{isTask ? item.title : item.title}</span>
-                    </span>
-                  );
-                  if (item.href) {
-                    return (
-                      <li key={item.id}>
-                        <Link
-                          href={item.href}
-                          className="block rounded px-0.5 py-px hover:bg-[var(--surface-2)]"
-                          aria-label={item.ariaLabel}
-                          title={item.title}
-                        >
-                          {inner}
-                        </Link>
-                      </li>
-                    );
-                  }
-                  return (
-                    <li key={item.id} className="px-0.5 py-px" aria-label={item.ariaLabel}>
-                      {inner}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          );
-        })}
-      </div>
-    </section>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+    </div>
   );
 }
