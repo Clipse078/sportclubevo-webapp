@@ -16,6 +16,8 @@ export type WorkspaceCommandCapabilities = {
   canDelete: boolean;
   /** Document selected — download allowed when a current version exists. */
   canDownloadDocument: boolean;
+  /** W09-03 — new version upload (document EDIT, active lifecycle). */
+  canUploadNewVersion: boolean;
   canEditDocument: boolean;
   canManageDocumentAccess: boolean;
   canCopyDocumentLink: boolean;
@@ -50,6 +52,7 @@ export function buildActiveFolderCommandContext(input: {
       canManageFolder: input.canManageFolder,
       canDelete: input.canDelete,
       canDownloadDocument: false,
+      canUploadNewVersion: false,
       canEditDocument: false,
       canManageDocumentAccess: false,
       canCopyDocumentLink: false,
@@ -65,14 +68,18 @@ export function withDocumentSelection(
     hasCurrentVersion: boolean;
     canEditDocument: boolean;
     canManageAccess: boolean;
+    contentDeliveryAvailable?: boolean;
   },
 ): WorkspaceCommandContextState {
+  const contentOk = document.contentDeliveryAvailable ?? true;
   return {
     ...base,
     selection: { kind: "DOCUMENT", documentId: document.id },
     capabilities: {
       ...base.capabilities,
-      canDownloadDocument: document.hasCurrentVersion,
+      canDownloadDocument: document.hasCurrentVersion && contentOk,
+      canUploadNewVersion:
+        document.canEditDocument && document.hasCurrentVersion,
       canEditDocument: document.canEditDocument,
       canManageDocumentAccess: document.canManageAccess,
       canCopyDocumentLink: true,

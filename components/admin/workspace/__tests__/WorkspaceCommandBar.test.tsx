@@ -23,7 +23,9 @@ vi.mock("@/components/admin/workspace/WorkspaceUploadContext", () => ({
   useWorkspaceUploadContext: () => ({
     canUpload: uploadMocks.canUpload,
     isUploading: uploadMocks.isUploading,
+    isUploadingNewVersion: false,
     openFilePicker: uploadMocks.openFilePicker,
+    openNewVersionFilePicker: vi.fn(),
   }),
 }));
 

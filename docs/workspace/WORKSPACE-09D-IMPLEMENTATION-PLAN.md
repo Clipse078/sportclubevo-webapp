@@ -11,7 +11,7 @@
 |---------|--------|
 | **W09-01** | Shell + command surface + upload/dnd + create folder + selection architecture — **implemented (WORKSPACE-09-01-COMMAND-SURFACE.md)** |
 | **W09-02** | Document inspector + Tasks + Requirements — **implemented (WORKSPACE-09-02-DOCUMENT-INSPECTOR-WORKFLOWS.md)** |
-| **W09-03** | Versioning + new-version upload + preview + malware UX |
+| **W09-03** | Versioning + new-version upload + preview + malware UX — **implemented (WORKSPACE-09-03-VERSION-PREVIEW-MALWARE.md)** |
 | **W09-04** | Access management + inheritance UX |
 | **W09-05** | Rename/move/lifecycle completeness + folder trash UI |
 | **W09-06** | Responsive + a11y + loading/error/async + favorites + polish |

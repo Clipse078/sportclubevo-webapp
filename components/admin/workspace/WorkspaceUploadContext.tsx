@@ -2,9 +2,11 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useMemo,
   useRef,
+  useState,
   type ReactNode,
 } from "react";
 import { useTranslations } from "next-intl";
@@ -14,7 +16,10 @@ import {
   useWorkspaceUploadBatch,
   type WorkspaceUploadBatchState,
 } from "@/lib/workspace/upload-orchestration";
-import { WorkspaceUploadError } from "@/lib/workspace/upload-client";
+import {
+  WorkspaceUploadError,
+  uploadWorkspaceDocumentVersion,
+} from "@/lib/workspace/upload-client";
 
 type WorkspaceUploadContextValue = {
   folderId: string;
@@ -22,9 +27,11 @@ type WorkspaceUploadContextValue = {
   canUpload: boolean;
   state: WorkspaceUploadBatchState;
   isUploading: boolean;
+  isUploadingNewVersion: boolean;
   uploadFiles: (files: File[]) => Promise<unknown>;
   resetBatchState: () => void;
   openFilePicker: () => void;
+  openNewVersionFilePicker: (documentId: string) => void;
   registerFileInput: (input: HTMLInputElement | null) => void;
 };
 
@@ -81,6 +88,9 @@ export function WorkspaceUploadProvider({
   }
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const newVersionInputRef = useRef<HTMLInputElement | null>(null);
+  const newVersionDocumentIdRef = useRef<string | null>(null);
+  const [isUploadingNewVersion, setIsUploadingNewVersion] = useState(false);
 
   const { state, isUploading, uploadFiles, resetBatchState } =
     useWorkspaceUploadBatch({
@@ -89,6 +99,24 @@ export function WorkspaceUploadProvider({
       onBatchComplete: onUploadComplete,
     });
 
+  const uploadNewVersion = useCallback(
+    async (documentId: string, file: File) => {
+      setIsUploadingNewVersion(true);
+      try {
+        await uploadWorkspaceDocumentVersion({ documentId, file });
+        onUploadComplete?.(documentId);
+      } catch (err) {
+        if (err instanceof WorkspaceUploadError) {
+          throw err;
+        }
+        throw new WorkspaceUploadError(resolveErrorMessage(err));
+      } finally {
+        setIsUploadingNewVersion(false);
+      }
+    },
+    [onUploadComplete, resolveErrorMessage],
+  );
+
   const value = useMemo<WorkspaceUploadContextValue>(
     () => ({
       folderId,
@@ -96,10 +124,18 @@ export function WorkspaceUploadProvider({
       canUpload,
       state: canUpload ? state : initialWorkspaceUploadBatchState,
       isUploading: canUpload && isUploading,
+      isUploadingNewVersion,
       uploadFiles: canUpload ? uploadFiles : async () => undefined,
       resetBatchState,
       openFilePicker: () => {
-        if (canUpload && !isUploading) fileInputRef.current?.click();
+        if (canUpload && !isUploading && !isUploadingNewVersion) {
+          fileInputRef.current?.click();
+        }
+      },
+      openNewVersionFilePicker: (documentId: string) => {
+        if (isUploading || isUploadingNewVersion) return;
+        newVersionDocumentIdRef.current = documentId;
+        newVersionInputRef.current?.click();
       },
       registerFileInput: (input) => {
         fileInputRef.current = input;
@@ -110,6 +146,7 @@ export function WorkspaceUploadProvider({
       folderId,
       folderName,
       isUploading,
+      isUploadingNewVersion,
       resetBatchState,
       state,
       uploadFiles,
@@ -128,7 +165,7 @@ export function WorkspaceUploadProvider({
           multiple
           className="sr-only"
           aria-label={t("fileInputAriaLabel")}
-          disabled={isUploading}
+          disabled={isUploading || isUploadingNewVersion}
           onChange={async (event) => {
             const list = event.target.files;
             if (!list?.length) return;
@@ -137,6 +174,27 @@ export function WorkspaceUploadProvider({
           }}
         />
       ) : null}
+      <input
+        ref={(el) => {
+          newVersionInputRef.current = el;
+        }}
+        type="file"
+        className="sr-only"
+        aria-label={t("newVersionFileInputAriaLabel")}
+        disabled={isUploading || isUploadingNewVersion}
+        onChange={async (event) => {
+          const file = event.target.files?.[0];
+          const documentId = newVersionDocumentIdRef.current;
+          event.target.value = "";
+          newVersionDocumentIdRef.current = null;
+          if (!file || !documentId) return;
+          try {
+            await uploadNewVersion(documentId, file);
+          } catch (err) {
+            console.error("[workspace] new version upload failed", err);
+          }
+        }}
+      />
     </WorkspaceUploadContext.Provider>
   );
 }

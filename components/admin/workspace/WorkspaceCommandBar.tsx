@@ -3,6 +3,7 @@
 import {
   ChevronDown,
   Download,
+  FileUp,
   History,
   Link2,
   MoreHorizontal,
@@ -45,7 +46,13 @@ export function WorkspaceCommandBar({
 }: WorkspaceCommandBarProps) {
   const t = useTranslations("Workspace.commandBar");
   const tActions = useTranslations("Workspace.actions");
-  const { canUpload, isUploading, openFilePicker } = useWorkspaceUploadContext();
+  const {
+    canUpload,
+    isUploading,
+    isUploadingNewVersion,
+    openFilePicker,
+    openNewVersionFilePicker,
+  } = useWorkspaceUploadContext();
 
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -106,6 +113,18 @@ export function WorkspaceCommandBar({
                   onClick={downloadSelected}
                 >
                   {tActions("download")}
+                </Button>
+              ) : null}
+              {context.capabilities.canUploadNewVersion ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  loading={isUploadingNewVersion}
+                  iconLeft={!isUploadingNewVersion ? <FileUp className="h-4 w-4" /> : undefined}
+                  onClick={() => openNewVersionFilePicker(selectedDocument!.id)}
+                  data-testid="workspace-command-new-version"
+                >
+                  {tActions("newVersion")}
                 </Button>
               ) : null}
               {context.capabilities.canOpenVersionHistory ? (

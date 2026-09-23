@@ -46,6 +46,7 @@ function serializeDocument(
             doc.currentVersion.createdAt instanceof Date
               ? doc.currentVersion.createdAt.toISOString()
               : String(doc.currentVersion.createdAt),
+          scan: doc.currentVersion.scan,
         }
       : null,
     canManageAccess: Boolean(doc.canManageAccess),

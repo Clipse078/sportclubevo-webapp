@@ -182,7 +182,8 @@
       "errorInvalidFile": "Dieser Dateityp wird nicht akzeptiert.",
       "errorConflict": "Diese Datei existiert bereits. Bitte benennen Sie die Datei um und versuchen Sie es erneut.",
       "errorPersistenceFailed": "Das Dokument konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
-      "errorGeneric": "Die Datei konnte nicht hochgeladen werden."
+      "errorGeneric": "Die Datei konnte nicht hochgeladen werden.",
+      "newVersionFileInputAriaLabel": "Neue Dokumentversion hochladen"
     },
 
     "access": {
@@ -231,11 +232,23 @@
     "actions": {
       "menuAriaLabel": "Aktionen für {name}",
       "download": "Herunterladen",
+      "newVersion": "Neue Version",
       "rename": "Umbenennen",
       "move": "Verschieben",
       "versionHistory": "Versionsverlauf",
       "archive": "Archivieren",
       "comingSoon": "Demnächst"
+    },
+
+    "scan": {
+      "beingChecked": "Wird geprüft",
+      "blocked": "Blockiert",
+      "checkFailed": "Prüfung fehlgeschlagen",
+      "notAvailable": "Nicht verfügbar",
+      "downloadBlockedHint": "Download ist blockiert, bis die Sicherheitsprüfung abgeschlossen ist oder das Ergebnis freigegeben wurde.",
+      "previewBlockedInfected": "Die Vorschau ist blockiert, weil die Datei als unsicher eingestuft wurde.",
+      "previewBlockedCheckFailed": "Die Vorschau ist vorübergehend nicht verfügbar (Sicherheitsprüfung fehlgeschlagen).",
+      "previewBlockedGeneric": "Die Vorschau ist derzeit nicht verfügbar."
     },
 
     "preview": {
@@ -254,7 +267,8 @@
       "metaFilename": "Dateiname",
       "metaFileType": "Dateityp",
       "metaName": "Name",
-      "metaCreated": "Erstellt"
+      "metaCreated": "Erstellt",
+      "expandPreview": "Vorschau vergrössern"
     },
 
     "folderDetails": {

@@ -17,6 +17,8 @@ import {
   formatWorkspaceDate,
   formatWorkspaceFileSize,
 } from "./workspace-document-formatters";
+import { WorkspaceVersionScanBadge } from "./WorkspaceVersionScanBadge";
+import type { WorkspaceVersionScanPublicDto } from "@/lib/workspace/malware-scan/scan-dto";
 
 type WorkspaceDocumentVersionHistoryItem = {
   id: string;
@@ -31,6 +33,7 @@ type WorkspaceDocumentVersionHistoryItem = {
   status: string;
   isCurrent: boolean;
   restoredFromVersionId?: string | null;
+  scan?: WorkspaceVersionScanPublicDto;
 };
 
 type WorkspaceDocumentVersionHistoryResponse = {
@@ -290,17 +293,20 @@ export function WorkspaceDocumentVersionHistoryDialog({
                       {formatWorkspaceFileSize(version.sizeBytes)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3">
-                      {version.isCurrent ? (
-                        <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
-                          {t("statusCurrent")}
-                        </span>
-                      ) : (
-                        <span className="text-[var(--text-2)]">
-                          {version.status === "SUPERSEDED"
-                            ? t("statusSuperseded")
-                            : version.status}
-                        </span>
-                      )}
+                      <div className="flex flex-col items-start gap-1">
+                        {version.isCurrent ? (
+                          <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
+                            {t("statusCurrent")}
+                          </span>
+                        ) : (
+                          <span className="text-[var(--text-2)]">
+                            {version.status === "SUPERSEDED"
+                              ? t("statusSuperseded")
+                              : version.status}
+                          </span>
+                        )}
+                        <WorkspaceVersionScanBadge scan={version.scan} compact />
+                      </div>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3">
                       <div className="flex flex-wrap gap-2">

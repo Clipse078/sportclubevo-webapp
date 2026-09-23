@@ -27,6 +27,10 @@ export function stubWorkspaceAvailableActions(
     }
     if (context.selection.kind === "DOCUMENT") {
       if (context.capabilities.canDownloadDocument) primary.push("download");
+      if (context.capabilities.canUploadNewVersion) primary.push("new_version");
+      if (context.capabilities.canOpenVersionHistory) {
+        secondary.push("version_history");
+      }
     }
   }
 

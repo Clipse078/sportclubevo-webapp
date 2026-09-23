@@ -112,11 +112,14 @@ function WorkspaceClientShellInner({
       lifecycleView,
     });
     if (!selectedDocument) return base;
+    const scan = selectedDocument.currentVersion?.scan;
+    const contentDeliveryAvailable = scan ? scan.contentAvailable : true;
     return withDocumentSelection(base, {
       id: selectedDocument.id,
       hasCurrentVersion: Boolean(selectedDocument.currentVersion),
       canEditDocument: Boolean(selectedDocument.canEditDocument),
       canManageAccess: Boolean(selectedDocument.canManageAccess),
+      contentDeliveryAvailable,
     });
   }, [
     canCreateFolder,

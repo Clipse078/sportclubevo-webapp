@@ -20,6 +20,8 @@ import { TASK_STATUS_LABELS } from "@/lib/tasks/management-labels";
 import { REQUIREMENT_STATUS_LABELS } from "@/lib/requirements/presentation";
 import { WorkspaceDocumentInspectorPreview } from "./WorkspaceDocumentInspectorPreview";
 import { WorkspaceDocumentRequirementCreateDialog } from "./WorkspaceDocumentRequirementCreateDialog";
+import { WorkspaceVersionScanBadge } from "@/components/admin/workspace/WorkspaceVersionScanBadge";
+import { useWorkspaceUploadContext } from "@/components/admin/workspace/WorkspaceUploadContext";
 
 export type WorkspaceDocumentInspectorTab =
   | "preview"
@@ -65,6 +67,8 @@ function formatTabLabel(
 }
 
 export function WorkspaceDocumentInspectorView({ payload }: Props) {
+  const { openNewVersionFilePicker, isUploadingNewVersion } =
+    useWorkspaceUploadContext();
   const {
     onManageDocumentAccess,
     onOpenVersionHistory,
@@ -103,9 +107,12 @@ export function WorkspaceDocumentInspectorView({ payload }: Props) {
             >
               {doc.name}
             </p>
-            <p className="mt-0.5 text-xs text-[var(--text-2)]">
-              {sizeLabel} · {versionLabel}
-              {payload.folderName ? ` · ${payload.folderName}` : null}
+            <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--text-2)]">
+              <span>
+                {sizeLabel} · {versionLabel}
+                {payload.folderName ? ` · ${payload.folderName}` : null}
+              </span>
+              <WorkspaceVersionScanBadge scan={currentVersion?.scan} compact />
             </p>
           </div>
         </div>
@@ -185,6 +192,14 @@ export function WorkspaceDocumentInspectorView({ payload }: Props) {
                 value={currentVersion ? formatWorkspaceDate(currentVersion.createdAt) : "—"}
               />
               <DetailRow label="Aktuelle Version" value={versionLabel} />
+              <div className="flex flex-col gap-1">
+                <dt className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  Sicherheitsprüfung
+                </dt>
+                <dd>
+                  <WorkspaceVersionScanBadge scan={currentVersion?.scan} />
+                </dd>
+              </div>
             </dl>
           </div>
         ) : null}
@@ -201,6 +216,18 @@ export function WorkspaceDocumentInspectorView({ payload }: Props) {
               Aktuelle Version:{" "}
               <span className="font-medium text-[var(--text)]">{versionLabel}</span>
             </p>
+            <WorkspaceVersionScanBadge scan={currentVersion?.scan} />
+            {doc.canEditDocument ? (
+              <button
+                type="button"
+                disabled={isUploadingNewVersion}
+                onClick={() => openNewVersionFilePicker(doc.id)}
+                className="inline-flex items-center gap-2 rounded-lg bg-[var(--blue)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] disabled:opacity-50"
+                data-testid="workspace-document-inspector-new-version"
+              >
+                {isUploadingNewVersion ? "Wird hochgeladen …" : "Neue Version hochladen"}
+              </button>
+            ) : null}
             {onOpenVersionHistory ? (
               <button
                 type="button"

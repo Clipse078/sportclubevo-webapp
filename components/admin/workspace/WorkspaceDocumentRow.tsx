@@ -11,6 +11,7 @@ import {
   formatWorkspaceDate,
   formatWorkspaceFileSize,
 } from "./workspace-document-formatters";
+import { WorkspaceVersionScanBadge } from "./WorkspaceVersionScanBadge";
 
 type WorkspaceDocumentRowProps = {
   document: WorkspaceDocumentListItemDto;
@@ -114,7 +115,10 @@ export function WorkspaceDocumentRow({
 
       {/* Version */}
       <td className="whitespace-nowrap px-4 py-2.5 text-xs tabular-nums text-[var(--muted)]">
-        {currentVersion ? `v${currentVersion.versionNumber}` : "—"}
+        <div className="flex flex-col items-start gap-1">
+          <span>{currentVersion ? `v${currentVersion.versionNumber}` : "—"}</span>
+          <WorkspaceVersionScanBadge scan={currentVersion?.scan} compact />
+        </div>
       </td>
 
       {/* Actions */}

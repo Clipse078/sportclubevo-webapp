@@ -39,6 +39,7 @@ import {
   getWorkspaceFolderTree,
 } from "@/lib/workspace/queries";
 import { listWorkspaceDocuments } from "@/lib/workspace/document-service";
+import { enrichWorkspaceDocumentListWithCurrentVersionScan } from "@/lib/workspace/enrich-workspace-document-list-scan";
 import { TaskContextType } from "@prisma/client";
 import { getTaskServiceContext } from "@/lib/tasks/server-context";
 import { loadContextualTaskCreateView } from "@/lib/tasks/load-contextual-task-create-view";
@@ -167,7 +168,12 @@ export default async function WorkspacePage({
       })
     : [];
 
-  const documents = documentsRaw.map((doc) => ({
+  const documentsWithScan = await enrichWorkspaceDocumentListWithCurrentVersionScan(
+    tenantId,
+    documentsRaw,
+  );
+
+  const documents = documentsWithScan.map((doc) => ({
     ...doc,
     canManageAccess: canWorkspaceManage(workspaceActor, {
       resourceType: WorkspaceResourceType.DOCUMENT,

@@ -5,6 +5,7 @@ import type {
   GetWorkspaceDocumentVersionsInput,
   WorkspaceDocumentVersionHistoryItemDto,
 } from "@/lib/workspace/document-dto";
+import { loadWorkspaceVersionScanPublicDtoMap } from "@/lib/workspace/malware-scan/batch-version-scan-public-dto";
 import {
   deriveWorkspaceVersionIsCurrent,
   parseRestoredFromVersionId,
@@ -109,6 +110,11 @@ export async function getDocumentVersions(
     return null;
   }
 
+  const scanMap = await loadWorkspaceVersionScanPublicDtoMap({
+    tenantId,
+    versionIds: document.versions.map((version) => version.id),
+  });
+
   return document.versions.map((version) => ({
     id: version.id,
     versionNumber: version.versionNumber,
@@ -127,5 +133,6 @@ export async function getDocumentVersions(
     restoredFromVersionId: parseRestoredFromVersionId(
       version.changeNote,
     ),
+    scan: scanMap.get(version.id),
   }));
 }
