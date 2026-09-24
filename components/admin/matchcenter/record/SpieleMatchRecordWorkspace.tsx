@@ -136,7 +136,18 @@ export default function SpieleMatchRecordWorkspace({
     teamPageVisible: match.visibility.teamPageVisible,
   });
 
+  const publicationSyncKey = [
+    match.id,
+    match.visibility.websiteVisible,
+    match.visibility.infoboardVisible,
+    match.visibility.homepageVisible,
+    match.visibility.wochenplanVisible,
+    match.visibility.teamPageVisible,
+  ].join(":");
+
   useEffect(() => {
+    // Resync draft publication state after server refresh (post-save) without remounting the workspace.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional server→client reconciliation
     setPublication({
       websiteVisible: match.visibility.websiteVisible,
       infoboardVisible: match.visibility.infoboardVisible,
@@ -144,14 +155,7 @@ export default function SpieleMatchRecordWorkspace({
       wochenplanVisible: match.visibility.wochenplanVisible,
       teamPageVisible: match.visibility.teamPageVisible,
     });
-  }, [
-    match.id,
-    match.visibility.homepageVisible,
-    match.visibility.infoboardVisible,
-    match.visibility.teamPageVisible,
-    match.visibility.websiteVisible,
-    match.visibility.wochenplanVisible,
-  ]);
+  }, [publicationSyncKey, match.visibility]);
 
   const lifecycleClassification = getMatchcenterLifecycleClassification(match);
   const statusLabel = getMatchcenterLifecycleLabel(lifecycleClassification);
