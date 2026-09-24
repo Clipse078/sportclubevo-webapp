@@ -35,8 +35,8 @@ import { TrainingSessionParticipantsPanel } from "@/components/admin/training/Tr
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
-import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
 import PlanningEditorZeitstandardLink from "@/components/admin/shared/planning-editor/PlanningEditorZeitstandardLink";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import TrainingRecordPublicationSection from "@/components/admin/training/record/TrainingRecordPublicationSection";
 import ContextRelatedRequirementsPanel from "@/components/admin/aufgaben/contextual/ContextRelatedRequirementsPanel";
 import { getTranslations as getPlanningTranslations } from "next-intl/server";
@@ -167,21 +167,6 @@ export default async function TrainingSessionEditPage({ params }: Props) {
           {t("inheritanceIntro")}
         </p>
 
-        {teamSeasonPublication ? (
-          <PlanningEditorControlBar testId="training-session-edit-control-bar">
-            <TrainingRecordPublicationSection
-              teamId={teamSeasonPublication.teamId}
-              teamSeasonId={trainingSession.teamSeasonId}
-              initialPublication={{
-                trainingWebsiteVisible: teamSeasonPublication.trainingWebsiteVisible,
-                infoboardVisible: teamSeasonPublication.infoboardVisible,
-              }}
-              canEditTeamPublication={canEditTeamPublication}
-              teamSettingsHref={`/dashboard/teams/${teamSeasonPublication.teamId}/settings`}
-            />
-          </PlanningEditorControlBar>
-        ) : null}
-
         <div
           className={PLANNING_EDITOR_PRIMARY_WORKSPACE_GRID_CLASS}
           data-testid="training-session-edit-workspace-grid"
@@ -207,8 +192,23 @@ export default async function TrainingSessionEditPage({ params }: Props) {
               />
           </PlanningEditorSection>
 
+          <div className={cn("space-y-3", PLANNING_EDITOR_SECONDARY_COLUMN_CLASS)}>
+            {teamSeasonPublication ? (
+              <PlanningPublicationPanel testId="training-session-edit-publication-panel">
+                <TrainingRecordPublicationSection
+                  teamId={teamSeasonPublication.teamId}
+                  teamSeasonId={trainingSession.teamSeasonId}
+                  initialPublication={{
+                    trainingWebsiteVisible: teamSeasonPublication.trainingWebsiteVisible,
+                    infoboardVisible: teamSeasonPublication.infoboardVisible,
+                  }}
+                  canEditTeamPublication={canEditTeamPublication}
+                  teamSettingsHref={`/dashboard/teams/${teamSeasonPublication.teamId}/settings`}
+                />
+              </PlanningPublicationPanel>
+            ) : null}
           <PlanningEditorSection
-            className={cn("space-y-2", PLANNING_EDITOR_SECONDARY_COLUMN_CLASS)}
+            className="space-y-2"
             ariaLabelledBy="training-session-edit-participation-heading"
             testId="training-session-edit-participation-panel"
           >
@@ -231,6 +231,7 @@ export default async function TrainingSessionEditPage({ params }: Props) {
                 }}
               />
           </PlanningEditorSection>
+          </div>
         </div>
 
         <PlanningEditorSection testId="training-session-edit-allocations-panel">

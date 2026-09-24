@@ -236,6 +236,7 @@
       "homeAway": { "home": "Casa", "away": "Trasferta" },
       "publication": {
         "heading": "Pubblicazione",
+        "intro": "Controlla dove viene pubblicata questa voce.",
         "homepageRequiresWebsite": "La homepage richiede la pubblicazione sul sito web.",
         "channels": {
           "website": {
@@ -278,7 +279,8 @@
       },
       "work": {
         "heading": "Compiti & requisiti",
-        "description": "Compiti e requisiti operativi collegati."
+        "description": "Compiti e requisiti operativi collegati.",
+        "createTask": "Compito"
       },
       "requirements": {
         "heading": "Requisiti",
@@ -348,7 +350,8 @@
         "timeStart": "Inizio",
         "timeEnd": "Fine",
         "allDay": "Tutto il giorno",
-        "allDaySummary": "Tutto il giorno"
+        "allDaySummary": "Tutto il giorno",
+        "teamSelectPlaceholder": "Seleziona squadra"
       },
       "errors": {
         "createFailed": "Impossibile creare l'evento.",

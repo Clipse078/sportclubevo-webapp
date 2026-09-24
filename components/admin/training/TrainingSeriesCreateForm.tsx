@@ -78,7 +78,8 @@ import {
   CompactDressingRoomResourceSelector,
   CompactPitchHallResourceSelector,
 } from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
-import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
+import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import PlanningEditorZeitstandardLink from "@/components/admin/shared/planning-editor/PlanningEditorZeitstandardLink";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import TrainingRecordPublicationSection from "@/components/admin/training/record/TrainingRecordPublicationSection";
@@ -564,18 +565,22 @@ export default function TrainingSeriesCreateForm({
         </div>
       )}
 
-      {selectedTeamSeason ? (
-        <PlanningEditorControlBar testId="training-create-control-bar">
-          <TrainingRecordPublicationSection
-            teamId={selectedTeamSeason.teamId}
-            teamSeasonId={selectedTeamSeason.id}
-            initialPublication={{ trainingWebsiteVisible: false, infoboardVisible: false }}
-            canEditTeamPublication={canEditTeamPublication}
-            teamSettingsHref={`/dashboard/teams/${selectedTeamSeason.teamId}/settings`}
-          />
-        </PlanningEditorControlBar>
-      ) : null}
-
+      <PlanningEditorOperationalWorkspace
+        testId="training-create-operational-workspace"
+        secondaryRail={
+          selectedTeamSeason ? (
+            <PlanningPublicationPanel testId="training-create-publication-panel">
+              <TrainingRecordPublicationSection
+                teamId={selectedTeamSeason.teamId}
+                teamSeasonId={selectedTeamSeason.id}
+                initialPublication={{ trainingWebsiteVisible: false, infoboardVisible: false }}
+                canEditTeamPublication={canEditTeamPublication}
+                teamSettingsHref={`/dashboard/teams/${selectedTeamSeason.teamId}/settings`}
+              />
+            </PlanningPublicationPanel>
+          ) : null
+        }
+        primary={
       <div className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
         <GuidedStep
           index={1}
@@ -815,6 +820,8 @@ export default function TrainingSeriesCreateForm({
         </div>
 
       </div>
+        }
+      />
 
       <PlanningEditorZeitstandardLink
         canManageFacilities={canManageFacilities}

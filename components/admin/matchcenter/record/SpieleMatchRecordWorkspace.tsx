@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ParticipationRequestConfigEditor } from "@/components/admin/participation/ParticipationRequestConfigEditor";
 import { Loader2, Lock, Radio } from "lucide-react";
@@ -51,6 +51,8 @@ import SpieleMatchRecordDeleteDialog from "./SpieleMatchRecordDeleteDialog";
 import SpieleMatchRecordReadinessPill from "./SpieleMatchRecordReadinessPill";
 import SpieleMatchRecordTechnicalDetails from "./SpieleMatchRecordTechnicalDetails";
 import { SPIELE_RECORD_WORKSPACE_SURFACE_CLASS } from "./spiele-record-layout";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
+import MatchPublicationToggles from "@/components/admin/matchcenter/MatchPublicationToggles";
 
 export type SpieleMatchRecordWorkspaceProps = {
   match: MatchcenterMatchDetail;
@@ -126,6 +128,30 @@ export default function SpieleMatchRecordWorkspace({
   const saveActionRef = useRef<(() => Promise<void>) | null>(null);
   const [saveUi, setSaveUi] = useState({ isDirty: false, saving: false });
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [publication, setPublication] = useState({
+    websiteVisible: match.visibility.websiteVisible,
+    infoboardVisible: match.visibility.infoboardVisible,
+    homepageVisible: match.visibility.homepageVisible,
+    wochenplanVisible: match.visibility.wochenplanVisible,
+    teamPageVisible: match.visibility.teamPageVisible,
+  });
+
+  useEffect(() => {
+    setPublication({
+      websiteVisible: match.visibility.websiteVisible,
+      infoboardVisible: match.visibility.infoboardVisible,
+      homepageVisible: match.visibility.homepageVisible,
+      wochenplanVisible: match.visibility.wochenplanVisible,
+      teamPageVisible: match.visibility.teamPageVisible,
+    });
+  }, [
+    match.id,
+    match.visibility.homepageVisible,
+    match.visibility.infoboardVisible,
+    match.visibility.teamPageVisible,
+    match.visibility.websiteVisible,
+    match.visibility.wochenplanVisible,
+  ]);
 
   const lifecycleClassification = getMatchcenterLifecycleClassification(match);
   const statusLabel = getMatchcenterLifecycleLabel(lifecycleClassification);
@@ -357,7 +383,17 @@ export default function SpieleMatchRecordWorkspace({
         header={header}
         testId="spiele-match-record-workspace"
         contextRail={
-          <div className="space-y-4">
+          <div className="space-y-4" data-testid="spiele-record-right-rail">
+            <PlanningPublicationPanel testId="spiele-record-publication-panel">
+              <MatchPublicationToggles
+                value={publication}
+                onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
+                disabled={!canManageMappings || saving}
+                disabledChannelKeys={isAway ? ["infoboardVisible"] : []}
+                testIdPrefix="spiele-record-publication"
+                showHeading={false}
+              />
+            </PlanningPublicationPanel>
             <SpieleMatchRecordContextRail
               statusLabel={railStatusLabel}
               assessment={assessment}
@@ -419,6 +455,11 @@ export default function SpieleMatchRecordWorkspace({
             currentWebsiteVisible={match.visibility.websiteVisible}
             currentInfoboardVisible={match.visibility.infoboardVisible}
             currentWochenplanVisible={match.visibility.wochenplanVisible}
+            currentHomepageVisible={match.visibility.homepageVisible}
+            currentTeamPageVisible={match.visibility.teamPageVisible}
+            publicationValues={publication}
+            onPublicationChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
+            suppressPublicationUI
             matchDateIso={matchDateIso}
             matchEndAtIso={matchEndAtIso}
             canManage={canManageMappings}

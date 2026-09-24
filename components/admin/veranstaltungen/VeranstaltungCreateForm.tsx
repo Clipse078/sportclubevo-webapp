@@ -6,7 +6,8 @@ import { useTranslations } from "next-intl";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import PlanningEditorActions from "@/components/admin/shared/planning-editor/PlanningEditorActions";
-import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
+import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
 import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
@@ -205,14 +206,20 @@ export default function VeranstaltungCreateForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3" data-testid="veranstaltung-create-form">
-      <PlanningEditorControlBar testId="veranstaltung-create-control-bar">
-        <VeranstaltungAusspielungFields
-          values={ausspielung}
-          onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
-          showHeading={false}
-        />
-      </PlanningEditorControlBar>
-
+      <PlanningEditorOperationalWorkspace
+        testId="veranstaltung-create-operational-workspace"
+        secondaryRail={
+          <PlanningPublicationPanel testId="veranstaltung-create-publication-panel">
+            <VeranstaltungAusspielungFields
+              values={ausspielung}
+              onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
+              showHeading={false}
+              testIdPrefix="veranstaltung-create-publication"
+            />
+          </PlanningPublicationPanel>
+        }
+        primary={
+          <>
       <PlanningEditorSection testId="veranstaltung-create-details-section" ariaLabelledBy="veranstaltung-create-details-heading">
         <div className="space-y-3">
           <PlanningEditorSectionHeading id="veranstaltung-create-details-heading" title={t("sections.details")} />
@@ -322,6 +329,9 @@ export default function VeranstaltungCreateForm() {
           </div>
         </div>
       </PlanningEditorSection>
+          </>
+        }
+      />
 
       <PlanningEditorParticipantsSection
         headingId="veranstaltung-create-participants-heading"

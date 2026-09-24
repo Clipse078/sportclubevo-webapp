@@ -13,7 +13,7 @@ import TournamentResourceAllocationEditor from "@/components/admin/tournamentcen
 import TournamentPublicationToggles, {
   type TournamentPublicationState,
 } from "@/components/admin/tournamentcenter/TournamentPublicationToggles";
-import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import TournamentStandardDurationHint from "@/components/admin/tournamentcenter/TournamentStandardDurationHint";
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
@@ -556,7 +556,16 @@ export default function TurniereTournamentRecordWorkspace({
         header={header}
         testId="turniere-tournament-record-workspace"
         contextRail={
-          <div className="space-y-4">
+          <div className="space-y-4" data-testid="turniere-record-right-rail">
+            <PlanningPublicationPanel testId="turniere-record-publication-panel">
+              <TournamentPublicationToggles
+                value={publication}
+                onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
+                disabled={!isEditable || saving}
+                testIdPrefix="turniere-record-publication"
+                showHeading={false}
+              />
+            </PlanningPublicationPanel>
             <TurniereTournamentRecordContextRail
               statusLabel={statusPresentation.label}
               assessment={assessment}
@@ -573,15 +582,6 @@ export default function TurniereTournamentRecordWorkspace({
           </div>
         }
       >
-        <PlanningEditorControlBar testId="turniere-record-control-bar">
-          <TournamentPublicationToggles
-            value={publication}
-            onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
-            disabled={!isEditable || saving}
-            showHeading={false}
-          />
-        </PlanningEditorControlBar>
-
         <div className={`${TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS} divide-y divide-[var(--border)]/80`}>
           <TurniereRecordSection title="Übersicht" testId="turniere-record-section-overview">
             <div className="grid gap-4 sm:grid-cols-2">

@@ -13,6 +13,9 @@
  *   - awayDressingRoomCode
  *   - websiteVisible
  *   - infoboardVisible
+ *   - homepageVisible
+ *   - wochenplanVisible
+ *   - teamPageVisible
  *
  * Permission: EVENTS_MANAGE
  * Tenant isolation: tenantId resolved from session, never from request body.
@@ -77,6 +80,9 @@ type PatchBody = {
   awayDressingRoomCode?: string | null;
   websiteVisible?: boolean;
   infoboardVisible?: boolean;
+  homepageVisible?: boolean;
+  wochenplanVisible?: boolean;
+  teamPageVisible?: boolean;
   dressingRoomOccupancyMode?: "DEFAULT" | "CUSTOM";
   dressingRoomBeforeMinutes?: number | null;
   dressingRoomAfterMinutes?: number | null;
@@ -92,6 +98,9 @@ const ALLOWED_STRING_KEYS = [
 const ALLOWED_BOOLEAN_KEYS = [
   "websiteVisible",
   "infoboardVisible",
+  "homepageVisible",
+  "wochenplanVisible",
+  "teamPageVisible",
 ] as const;
 
 export async function PATCH(req: NextRequest, { params }: RouteContext) {

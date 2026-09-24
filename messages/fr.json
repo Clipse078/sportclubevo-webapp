@@ -236,6 +236,7 @@
       "homeAway": { "home": "Domicile", "away": "Extérieur" },
       "publication": {
         "heading": "Publication",
+        "intro": "Contrôlez où cette entrée est publiée.",
         "homepageRequiresWebsite": "La page d'accueil nécessite la publication sur le site web.",
         "channels": {
           "website": {
@@ -278,7 +279,8 @@
       },
       "work": {
         "heading": "Tâches & exigences",
-        "description": "Tâches et exigences opérationnelles liées."
+        "description": "Tâches et exigences opérationnelles liées.",
+        "createTask": "Tâche"
       },
       "requirements": {
         "heading": "Exigences",
@@ -348,7 +350,8 @@
         "timeStart": "Début",
         "timeEnd": "Fin",
         "allDay": "Journée entière",
-        "allDaySummary": "Journée entière"
+        "allDaySummary": "Journée entière",
+        "teamSelectPlaceholder": "Sélectionner une équipe"
       },
       "errors": {
         "createFailed": "Impossible de créer l'événement.",

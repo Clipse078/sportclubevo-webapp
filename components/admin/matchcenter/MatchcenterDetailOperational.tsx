@@ -65,8 +65,9 @@ export type MatchcenterDetailOperationalProps = {
   currentWebsiteVisible: boolean;
   /** Current infoboard visibility */
   currentInfoboardVisible: boolean;
-  /** Read-only Wochenplan publication state (not PATCHable on matchcenter). */
   currentWochenplanVisible?: boolean;
+  currentHomepageVisible?: boolean;
+  currentTeamPageVisible?: boolean;
   /** ISO date string for infoboard preview link */
   matchDateIso: string;
   /**
@@ -113,6 +114,18 @@ export type MatchcenterDetailOperationalProps = {
   isOperationallyActionable?: boolean;
   layout?: "default" | "record";
   hideFooterActions?: boolean;
+  /** When true, publication toggles render outside this component (e.g. record right rail). */
+  suppressPublicationUI?: boolean;
+  publicationValues?: {
+    websiteVisible: boolean;
+    infoboardVisible: boolean;
+    homepageVisible: boolean;
+    wochenplanVisible: boolean;
+    teamPageVisible: boolean;
+  };
+  onPublicationChange?: (
+    patch: Partial<NonNullable<MatchcenterDetailOperationalProps["publicationValues"]>>,
+  ) => void;
   onActionsBinding?: (binding: MatchOperationalActionsBinding) => void;
   assessmentBase?: MatchcenterMatchSummary;
 };
@@ -249,8 +262,13 @@ export default function MatchcenterDetailOperational({
   dressingRoomFacilityGroups,
   isOperationallyActionable = true,
   currentWochenplanVisible = false,
+  currentHomepageVisible = false,
+  currentTeamPageVisible = false,
   layout = "default",
   hideFooterActions = false,
+  suppressPublicationUI = false,
+  publicationValues,
+  onPublicationChange,
   onActionsBinding,
   assessmentBase,
 }: MatchcenterDetailOperationalProps) {
@@ -313,10 +331,33 @@ export default function MatchcenterDetailOperational({
   const [awayDressingRoomCode, setAwayDressingRoomCode] = useState(
     currentAwayDressingRoomCode ?? "",
   );
-  const [websiteVisible, setWebsiteVisible] = useState(currentWebsiteVisible);
-  const [infoboardVisible, setInfoboardVisible] = useState(
-    currentInfoboardVisible,
-  );
+  const [internalPublication, setInternalPublication] = useState({
+    websiteVisible: currentWebsiteVisible,
+    infoboardVisible: currentInfoboardVisible,
+    homepageVisible: currentHomepageVisible,
+    wochenplanVisible: currentWochenplanVisible,
+    teamPageVisible: currentTeamPageVisible,
+  });
+
+  const publication = publicationValues ?? internalPublication;
+
+  function patchPublication(
+    patch: Partial<NonNullable<MatchcenterDetailOperationalProps["publicationValues"]>>,
+  ) {
+    if (publicationValues && onPublicationChange) {
+      onPublicationChange(patch);
+      return;
+    }
+    setInternalPublication((prev) => ({ ...prev, ...patch }));
+  }
+
+  const {
+    websiteVisible,
+    infoboardVisible,
+    homepageVisible,
+    wochenplanVisible,
+    teamPageVisible,
+  } = publication;
 
   // ── Save ───────────────────────────────────────────────────────────────────
   const [saving, setSaving] = useState(false);
@@ -326,7 +367,10 @@ export default function MatchcenterDetailOperational({
     (homeDressingRoomCode ?? "") !== (currentHomeDressingRoomCode ?? "") ||
     (awayDressingRoomCode ?? "") !== (currentAwayDressingRoomCode ?? "") ||
     websiteVisible !== currentWebsiteVisible ||
-    infoboardVisible !== currentInfoboardVisible;
+    infoboardVisible !== currentInfoboardVisible ||
+    homepageVisible !== currentHomepageVisible ||
+    wochenplanVisible !== currentWochenplanVisible ||
+    teamPageVisible !== currentTeamPageVisible;
 
   const handleSave = useCallback(async () => {
     setSaving(true);
@@ -342,6 +386,9 @@ export default function MatchcenterDetailOperational({
           awayDressingRoomCode: awayDressingRoomCode.trim() || null,
           websiteVisible,
           infoboardVisible,
+          homepageVisible,
+          wochenplanVisible,
+          teamPageVisible,
         }),
       });
 
@@ -371,17 +418,23 @@ export default function MatchcenterDetailOperational({
     awayDressingRoomCode,
     currentAwayDressingRoomCode,
     currentHomeDressingRoomCode,
+    currentHomepageVisible,
     currentInfoboardVisible,
     currentPitchCode,
+    currentTeamPageVisible,
     currentWebsiteVisible,
+    currentWochenplanVisible,
     homeDressingRoomCode,
+    homepageVisible,
     infoboardVisible,
     matchId,
     pitchCode,
     router,
     teamId,
+    teamPageVisible,
     toast,
     websiteVisible,
+    wochenplanVisible,
   ]);
 
   useEffect(() => {
@@ -516,7 +569,7 @@ export default function MatchcenterDetailOperational({
           type="button"
           role="switch"
           aria-checked={websiteVisible}
-          onClick={() => canManage && !saving && setWebsiteVisible((v) => !v)}
+          onClick={() => canManage && !saving && patchPublication({ websiteVisible: !websiteVisible })}
           disabled={!canManage || saving}
           data-testid="website-visible-toggle"
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 ${
@@ -565,7 +618,9 @@ export default function MatchcenterDetailOperational({
           type="button"
           role="switch"
           aria-checked={infoboardVisible}
-          onClick={() => canManage && !saving && !isAwayMatch && setInfoboardVisible((v) => !v)}
+          onClick={() =>
+            canManage && !saving && !isAwayMatch && patchPublication({ infoboardVisible: !infoboardVisible })
+          }
           disabled={!canManage || saving || isAwayMatch}
           data-testid="infoboard-visible-toggle"
           aria-label="Auf Infoboard anzeigen"
@@ -661,7 +716,8 @@ export default function MatchcenterDetailOperational({
 
   return (
     <div className={recordSurface ? undefined : "space-y-5"}>
-      {recordSurface ? publicationSection : null}
+      {recordSurface && !suppressPublicationUI ? publicationSection : null}
+      {!recordSurface ? publicationSection : null}
 
       {recordSurface && isHomeMatch ? (
         <TrainingRecordSection title="Matchvorbereitung" testId="spiele-record-section-preparation">
@@ -1050,8 +1106,6 @@ export default function MatchcenterDetailOperational({
           </>
         )
       ) : null}
-
-      {!recordSurface ? publicationSection : null}
 
       {!hideFooterActions ? footerActions : null}
     </div>

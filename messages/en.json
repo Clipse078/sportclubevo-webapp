@@ -236,6 +236,7 @@
       "homeAway": { "home": "Home", "away": "Away" },
       "publication": {
         "heading": "Publication",
+        "intro": "Control where this entry is published.",
         "homepageRequiresWebsite": "Homepage requires website publication to be enabled.",
         "channels": {
           "website": {
@@ -278,7 +279,8 @@
       },
       "work": {
         "heading": "Tasks & requirements",
-        "description": "Linked operational tasks and requirements."
+        "description": "Linked operational tasks and requirements.",
+        "createTask": "Task"
       },
       "requirements": {
         "heading": "Requirements",
@@ -348,7 +350,8 @@
         "timeStart": "Start",
         "timeEnd": "End",
         "allDay": "All day",
-        "allDaySummary": "All day"
+        "allDaySummary": "All day",
+        "teamSelectPlaceholder": "Select team"
       },
       "errors": {
         "createFailed": "Could not create the event.",

@@ -661,7 +661,8 @@
         "away": "Auswärts"
       },
       "publication": {
-        "heading": "Veröffentlichung",
+        "heading": "Publikation",
+        "intro": "Steuere, wo dieser Eintrag veröffentlicht wird.",
         "homepageRequiresWebsite": "Homepage erfordert aktive Website-Veröffentlichung.",
         "channels": {
           "website": {
@@ -704,7 +705,8 @@
       },
       "work": {
         "heading": "Aufgaben & Anforderungen",
-        "description": "Verknüpfte operative Aufgaben und Anforderungen."
+        "description": "Verknüpfte operative Aufgaben und Anforderungen.",
+        "createTask": "Aufgabe"
       },
       "requirements": {
         "heading": "Anforderungen",
@@ -774,7 +776,8 @@
         "timeStart": "Beginn",
         "timeEnd": "Ende",
         "allDay": "Ganztägig",
-        "allDaySummary": "Ganztägig"
+        "allDaySummary": "Ganztägig",
+        "teamSelectPlaceholder": "Team auswählen"
       },
       "errors": {
         "createFailed": "Veranstaltung konnte nicht erstellt werden.",

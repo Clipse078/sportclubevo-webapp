@@ -10,6 +10,7 @@ import { taskWorkspaceHref } from "@/lib/tasks/task-navigation";
 import type { TaskContextType } from "@prisma/client";
 import type { ContextualTaskCreateDialogProps } from "./ContextualTaskCreateDialog";
 import ContextualTaskCreateTrigger from "./ContextualTaskCreateTrigger";
+import { useTranslations } from "next-intl";
 
 type CreateProps = Omit<ContextualTaskCreateDialogProps, "open" | "onOpenChange">;
 
@@ -53,6 +54,8 @@ export default function ContextRelatedTasksPanelView({
   createDialogProps,
   locale,
 }: Props) {
+  const tWork = useTranslations("PlanningEditor.operational.work");
+
   return (
     <section
       className="space-y-3 rounded-xl border border-[var(--border)]/80 bg-[var(--surface)]/60 p-4"
@@ -65,7 +68,7 @@ export default function ContextRelatedTasksPanelView({
         {canCreate && createDialogProps ? (
           <ContextualTaskCreateTrigger
             variant="button"
-            label="+ Aufgabe"
+            label={tWork("createTask")}
             className="!min-h-8 !px-2.5 !py-1 text-xs"
             {...createDialogProps}
           />

@@ -58,6 +58,7 @@ export function WorkspaceCommandBar({
 }: WorkspaceCommandBarProps) {
   const t = useTranslations("Workspace.commandBar");
   const tActions = useTranslations("Workspace.actions");
+  const tWork = useTranslations("PlanningEditor.operational.work");
   const router = useRouter();
   const {
     canUpload,
@@ -155,7 +156,7 @@ export function WorkspaceCommandBar({
               {workflowCapabilities.canCreateTask && taskCreateDialogProps ? (
                 <ContextualTaskCreateTrigger
                   variant="toolbar"
-                  label="+ Aufgabe"
+                  label={tWork("createTask")}
                   {...taskCreateDialogProps}
                 />
               ) : null}

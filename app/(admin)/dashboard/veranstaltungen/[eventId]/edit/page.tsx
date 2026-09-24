@@ -51,6 +51,7 @@ export default async function VeranstaltungEditPage({ params }: Props) {
   const locale = tenantContext.locale ?? "de-CH";
   const timeZone = tenantContext.timezone ?? "Europe/Zurich";
   const t = await getTranslations("Veranstaltungen.editor.edit");
+  const tWork = await getTranslations("PlanningEditor.operational.work");
 
   const scheduleContext = [t("eyebrow"), event.season?.name].filter(Boolean).join(" · ");
 
@@ -79,7 +80,7 @@ export default async function VeranstaltungEditPage({ params }: Props) {
               contextType="CLUB_EVENT"
               contextId={event.id}
               variant="button"
-              label="+ Aufgabe"
+              label={tWork("createTask")}
               locale={locale}
               timeZone={timeZone}
             />

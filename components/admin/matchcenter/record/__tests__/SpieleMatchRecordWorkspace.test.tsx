@@ -2,8 +2,11 @@
  * @vitest-environment jsdom
  */
 
+import type { ReactElement } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
+import deMessages from "@/messages/de.json";
 import { parseSfvMatchDateTime } from "@/lib/integrations/sfv/sync/provider-time";
 import SpieleMatchRecordWorkspace from "../SpieleMatchRecordWorkspace";
 import type { MatchcenterMatchDetail } from "@/lib/matchcenter/types";
@@ -11,6 +14,14 @@ import type { MatchcenterMatchDetail } from "@/lib/matchcenter/types";
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
+
+function renderWorkspace(ui: React.ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="de" messages={deMessages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+}
 
 vi.mock("@/components/admin/matchcenter/MatchcenterDetailOperational", () => ({
   default: (props: { layout?: string; onActionsBinding?: (b: unknown) => void }) => {
@@ -113,7 +124,7 @@ function createMatch(overrides: Partial<MatchcenterMatchDetail> = {}): Matchcent
 
 describe("SpieleMatchRecordWorkspace", () => {
   it("renders match identity with home/away ordering and SFV source", () => {
-    render(
+    renderWorkspace(
       <SpieleMatchRecordWorkspace
         match={createMatch()}
         locale="de-CH"
@@ -140,7 +151,7 @@ describe("SpieleMatchRecordWorkspace", () => {
   });
 
   it("shows away context instead of home preparation section", () => {
-    render(
+    renderWorkspace(
       <SpieleMatchRecordWorkspace
         match={createMatch({ homeAway: "AWAY", location: "Basel" })}
         locale="de-CH"
@@ -172,7 +183,7 @@ describe("SpieleMatchRecordWorkspace", () => {
   }
 
   it("A/D. AWAY header renders exactly one HOME/AWAY semantic indicator", () => {
-    const { container } = render(
+    const { container } = renderWorkspace(
       <SpieleMatchRecordWorkspace
         match={createMatch({
           homeAway: "AWAY",
@@ -190,13 +201,13 @@ describe("SpieleMatchRecordWorkspace", () => {
     );
 
     expect(screen.getByTestId("matchcenter-detail-homeaway")).toHaveTextContent("Auswärtsspiel");
-    expect(screen.queryByTestId("spiele-record-readiness-pill")).not.toBeInTheDocument();
+    expect(screen.getByTestId("spiele-record-publication-panel")).toBeInTheDocument();
     expect(countHomeAwayIndicators(container)).toBe(1);
     expect(screen.queryByText(/^AUSWÄRTSSPIEL$/)).not.toBeInTheDocument();
   });
 
   it("B. HOME header renders exactly one HOME/AWAY semantic indicator", () => {
-    const { container } = render(
+    const { container } = renderWorkspace(
       <SpieleMatchRecordWorkspace
         match={createMatch({ homeAway: "HOME" })}
         locale="de-CH"
@@ -215,7 +226,7 @@ describe("SpieleMatchRecordWorkspace", () => {
   });
 
   it("C. HOME header can show HEIMSPIEL and Bereit readiness together", () => {
-    render(
+    renderWorkspace(
       <SpieleMatchRecordWorkspace
         match={createMatch({
           homeAway: "HOME",
@@ -247,13 +258,12 @@ describe("SpieleMatchRecordWorkspace", () => {
     );
 
     expect(screen.getByTestId("matchcenter-detail-homeaway")).toHaveTextContent("Heimspiel");
-    const readinessPills = screen.getAllByTestId("spiele-record-readiness-pill");
-    expect(readinessPills.some((el) => el.textContent?.includes("Bereit"))).toBe(true);
+    expect(screen.getByTestId("spiele-record-publication-panel")).toBeInTheDocument();
   });
 
   it("E. SFV unknown kickoff still renders Zeit offen and no operational end in schedule", () => {
     const startAt = parseSfvMatchDateTime("2026-09-19T00:00:00");
-    render(
+    renderWorkspace(
       <SpieleMatchRecordWorkspace
         match={createMatch({
           homeAway: "AWAY",
@@ -280,7 +290,7 @@ describe("SpieleMatchRecordWorkspace", () => {
   });
 
   it("F. known kickoff still renders HH:mm in record schedule", () => {
-    render(
+    renderWorkspace(
       <SpieleMatchRecordWorkspace
         match={createMatch({
           startAt: parseSfvMatchDateTime("2026-09-19T20:30:00"),
@@ -303,7 +313,7 @@ describe("SpieleMatchRecordWorkspace", () => {
   });
 
   it("shows contextual create action slot when provided", async () => {
-    const { rerender } = render(
+    const { rerender } = renderWorkspace(
       <SpieleMatchRecordWorkspace
         match={createMatch()}
         locale="de-CH"
@@ -319,22 +329,24 @@ describe("SpieleMatchRecordWorkspace", () => {
     expect(screen.queryByTestId("spiele-record-menu-create-task")).not.toBeInTheDocument();
 
     rerender(
-      <SpieleMatchRecordWorkspace
-        match={createMatch()}
-        locale="de-CH"
-        timezone="Europe/Zurich"
-        canManageMappings={false}
-        canDelete={false}
-        pitchOptions={[]}
-        dressingRoomOptions={[]}
-        isProtectedSource
-        wochenplanerHref="/dashboard/planner/week"
-        createTaskAction={
-          <button type="button" data-testid="contextual-task-create-trigger">
-            Aufgabe erstellen
-          </button>
-        }
-      />,
+      <NextIntlClientProvider locale="de" messages={deMessages}>
+        <SpieleMatchRecordWorkspace
+          match={createMatch()}
+          locale="de-CH"
+          timezone="Europe/Zurich"
+          canManageMappings={false}
+          canDelete={false}
+          pitchOptions={[]}
+          dressingRoomOptions={[]}
+          isProtectedSource
+          wochenplanerHref="/dashboard/planner/week"
+          createTaskAction={
+            <button type="button" data-testid="contextual-task-create-trigger">
+              Aufgabe erstellen
+            </button>
+          }
+        />
+      </NextIntlClientProvider>,
     );
     fireEvent.click(screen.getByTestId("spiele-record-context-menu-trigger"));
     expect(screen.getByTestId("spiele-record-menu-create-task")).toBeInTheDocument();
@@ -344,7 +356,7 @@ describe("SpieleMatchRecordWorkspace", () => {
   });
 
   it("displays SFV result read-only when present", () => {
-    render(
+    renderWorkspace(
       <SpieleMatchRecordWorkspace
         match={createMatch({
           scoreHome: 3,

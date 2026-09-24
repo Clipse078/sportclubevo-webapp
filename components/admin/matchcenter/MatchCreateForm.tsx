@@ -55,11 +55,11 @@
 
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
-import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
-import PlanningEditorPublicationControls from "@/components/admin/shared/planning-editor/PlanningEditorPublicationControls";
+import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
+import MatchPublicationToggles from "@/components/admin/matchcenter/MatchPublicationToggles";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
-import { MATCH_PUBLICATION_CHANNELS } from "@/lib/planning/planning-publication-channels";
 import { resolveMatchPublicationDefaultsForCreate } from "@/lib/publishing/policy/match-publication-defaults";
 import type { FocusEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
@@ -519,28 +519,32 @@ export default function MatchCreateForm({
         </div>
       )}
 
-      <PlanningEditorControlBar testId="match-create-control-bar">
-        <PlanningEditorPublicationControls
-          channels={MATCH_PUBLICATION_CHANNELS}
-          value={{
-            websiteVisible,
-            infoboardVisible,
-            homepageVisible,
-            wochenplanVisible,
-            teamPageVisible,
-          }}
-          onChange={(patch) => {
-            if (patch.websiteVisible !== undefined) setWebsiteVisible(patch.websiteVisible);
-            if (patch.infoboardVisible !== undefined) setInfoboardVisible(patch.infoboardVisible);
-            if (patch.homepageVisible !== undefined) setHomepageVisible(patch.homepageVisible);
-            if (patch.wochenplanVisible !== undefined) setWochenplanVisible(patch.wochenplanVisible);
-            if (patch.teamPageVisible !== undefined) setTeamPageVisible(patch.teamPageVisible);
-          }}
-          testIdPrefix="match-create-publication"
-          showHeading={false}
-        />
-      </PlanningEditorControlBar>
-
+      <PlanningEditorOperationalWorkspace
+        testId="match-create-operational-workspace"
+        secondaryRail={
+          <PlanningPublicationPanel testId="match-create-publication-panel">
+            <MatchPublicationToggles
+              value={{
+                websiteVisible,
+                infoboardVisible,
+                homepageVisible,
+                wochenplanVisible,
+                teamPageVisible,
+              }}
+              onChange={(patch) => {
+                if (patch.websiteVisible !== undefined) setWebsiteVisible(patch.websiteVisible);
+                if (patch.infoboardVisible !== undefined) setInfoboardVisible(patch.infoboardVisible);
+                if (patch.homepageVisible !== undefined) setHomepageVisible(patch.homepageVisible);
+                if (patch.wochenplanVisible !== undefined) setWochenplanVisible(patch.wochenplanVisible);
+                if (patch.teamPageVisible !== undefined) setTeamPageVisible(patch.teamPageVisible);
+              }}
+              disabledChannelKeys={homeAway === "AWAY" ? ["infoboardVisible"] : []}
+              testIdPrefix="match-create-publication"
+              showHeading={false}
+            />
+          </PlanningPublicationPanel>
+        }
+        primary={
       <div className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
         <GuidedStep
           index={1}
@@ -828,6 +832,8 @@ export default function MatchCreateForm({
           </div>
         </div>
       </div>
+        }
+      />
 
       {result && partialError ? (
         <div className="fca-status-box fca-status-box-warn text-sm" data-testid="match-create-partial-warning">

@@ -12,6 +12,7 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Pencil, ArrowLeft, Mail, Phone, Calendar } from "lucide-react";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -104,6 +105,7 @@ export default async function PersonDetailPage({ params }: PageProps) {
     : [];
 
   const fullName = person.displayName || `${person.firstName} ${person.lastName}`;
+  const tWork = await getTranslations("PlanningEditor.operational.work");
 
   // Resolve permissions
   const resolver = createEffectivePermissionResolver(prisma);
@@ -218,7 +220,7 @@ export default async function PersonDetailPage({ params }: PageProps) {
               contextType="PERSON"
               contextId={person.id}
               variant="button"
-              label="+ Aufgabe"
+              label={tWork("createTask")}
             />
             {canManage ? (
               <Link

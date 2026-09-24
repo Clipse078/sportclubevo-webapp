@@ -56,30 +56,26 @@ describe("PLANNING-UX-05 operational primitives", () => {
 
   it("training create exposes operational control bar and pre-persist work sections", () => {
     const form = read("components/admin/training/TrainingSeriesCreateForm.tsx");
-    expect(form).toContain("training-create-control-bar");
+    expect(form).toContain("training-create-publication-panel");
     expect(form).toContain("training-create-work-section");
     expect(form).toContain("PlanningEditorWorkSection");
   });
 
   it("training session edit exposes top control bar", () => {
     const page = read("app/(admin)/dashboard/training/sessions/[sessionId]/edit/page.tsx");
-    expect(page).toContain("training-session-edit-control-bar");
+    expect(page).toContain("training-session-edit-publication-panel");
   });
 
-  it("tournament create places publication in control bar near top", () => {
+  it("tournament create places publication in operational secondary rail (UX-06)", () => {
     const form = read("components/admin/tournamentcenter/TournamentCreateForm.tsx");
-    const controlIdx = form.indexOf("tournament-create-control-bar");
-    const resourcesIdx = form.indexOf("turniere-create-section-resources");
-    expect(controlIdx).toBeGreaterThan(-1);
-    expect(resourcesIdx).toBeGreaterThan(controlIdx);
+    expect(form).toContain("tournament-create-publication-panel");
+    expect(form).toContain("tournament-create-operational-workspace");
     expect(form).not.toContain("turniere-create-section-publication");
   });
 
-  it("match record operational renders publication before preparation/resources", () => {
-    const operational = read("components/admin/matchcenter/MatchcenterDetailOperational.tsx");
-    const pubIdx = operational.indexOf("spiele-record-section-publication");
-    const prepIdx = operational.indexOf("spiele-record-section-preparation");
-    expect(pubIdx).toBeGreaterThan(-1);
-    expect(prepIdx).toBeGreaterThan(pubIdx);
+  it("match record publication is owned by the record workspace right rail (UX-06)", () => {
+    const workspace = read("components/admin/matchcenter/record/SpieleMatchRecordWorkspace.tsx");
+    expect(workspace).toContain("spiele-record-publication-panel");
+    expect(workspace).toContain("suppressPublicationUI");
   });
 });

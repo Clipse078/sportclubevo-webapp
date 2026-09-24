@@ -21,12 +21,12 @@ export const PLANNING_EDITOR_PRIMARY_COLUMN_CLASS = "min-w-0 self-start lg:col-s
 
 export const PLANNING_EDITOR_SECONDARY_COLUMN_CLASS = "min-w-0 self-start lg:col-span-5 xl:col-span-4";
 
-/** Context rail (tasks, metadata) on ultra-wide viewports — matches Spiele/Turniere record contract. */
+/** Context rail (publication, status) — desktop/laptop right column; stacks on narrow viewports. */
 export const PLANNING_EDITOR_MAIN_RAIL_GRID =
-  "grid gap-6 min-[105rem]:grid-cols-[minmax(0,1fr)_minmax(16rem,24rem)]";
+  "grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(14rem,22rem)]";
 
 export const PLANNING_EDITOR_RAIL_ASIDE =
-  "min-w-0 space-y-4 min-[105rem]:sticky min-[105rem]:top-4 min-[105rem]:self-start";
+  "min-w-0 space-y-4 lg:sticky lg:top-4 lg:self-start";
 
 export const PLANNING_EDITOR_STICKY_FOOTER_RESERVE_CLASS = "pb-24";
 

@@ -40,7 +40,8 @@ import {
 import StaticOptionSearchablePicker from "@/components/admin/shared/StaticOptionSearchablePicker";
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
 import TournamentPublicationToggles from "@/components/admin/tournamentcenter/TournamentPublicationToggles";
-import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
+import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
 import PlanningEditorZeitstandardLink from "@/components/admin/shared/planning-editor/PlanningEditorZeitstandardLink";
@@ -719,21 +720,25 @@ export default function TournamentCreateForm({
         </div>
       )}
 
-      <PlanningEditorControlBar testId="tournament-create-control-bar">
-        <TournamentPublicationToggles
-          value={publication}
-          onChange={(patch) => {
-            if (patch.websiteVisible !== undefined) setWebsiteVisible(patch.websiteVisible);
-            if (patch.infoboardVisible !== undefined) setInfoboardVisible(patch.infoboardVisible);
-            if (patch.homepageVisible !== undefined) setHomepageVisible(patch.homepageVisible);
-            if (patch.wochenplanVisible !== undefined) setWochenplanVisible(patch.wochenplanVisible);
-            if (patch.teamPageVisible !== undefined) setTeamPageVisible(patch.teamPageVisible);
-          }}
-          testIdPrefix="tournament-create-publication"
-          showHeading={false}
-        />
-      </PlanningEditorControlBar>
-
+      <PlanningEditorOperationalWorkspace
+        testId="tournament-create-operational-workspace"
+        secondaryRail={
+          <PlanningPublicationPanel testId="tournament-create-publication-panel">
+            <TournamentPublicationToggles
+              value={publication}
+              onChange={(patch) => {
+                if (patch.websiteVisible !== undefined) setWebsiteVisible(patch.websiteVisible);
+                if (patch.infoboardVisible !== undefined) setInfoboardVisible(patch.infoboardVisible);
+                if (patch.homepageVisible !== undefined) setHomepageVisible(patch.homepageVisible);
+                if (patch.wochenplanVisible !== undefined) setWochenplanVisible(patch.wochenplanVisible);
+                if (patch.teamPageVisible !== undefined) setTeamPageVisible(patch.teamPageVisible);
+              }}
+              testIdPrefix="tournament-create-publication"
+              showHeading={false}
+            />
+          </PlanningPublicationPanel>
+        }
+        primary={
       <div className={`${TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS} divide-y divide-[var(--border)]/80`}>
       <TurniereRecordSection title="Grunddaten" testId="turniere-create-section-grunddaten">
         <div className="grid gap-3 sm:grid-cols-2">
@@ -1047,6 +1052,8 @@ export default function TournamentCreateForm({
       )}
 
       </div>
+        }
+      />
 
       <PlanningEditorWorkSection
         headingId="tournament-create-work-heading"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 type AudienceEntry = {
   id: string;
@@ -17,6 +18,7 @@ type Props = {
 };
 
 export default function ClubEventParticipationAudienceEditor({ eventId, disabled }: Props) {
+  const tf = useTranslations("Veranstaltungen.editor.fields");
   const [entries, setEntries] = useState<AudienceEntry[]>([]);
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [teamId, setTeamId] = useState("");
@@ -91,7 +93,7 @@ export default function ClubEventParticipationAudienceEditor({ eventId, disabled
             onChange={(e) => setTeamId(e.target.value)}
             data-testid="club-event-audience-team-select"
           >
-            <option value="">— Team wählen —</option>
+            <option value="">{tf("teamSelectPlaceholder")}</option>
             {teams.map((team) => (
               <option key={team.id} value={team.id}>
                 {team.name}
