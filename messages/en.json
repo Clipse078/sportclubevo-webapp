@@ -284,6 +284,8 @@
         "heading": "Requirements",
         "create": "+ Requirement",
         "gapDescription": "Requirements cannot yet be linked directly to planning events. Use the requirements center; typed references will follow in a later step.",
+        "emptyLinked": "No linked requirements visible to you yet.",
+        "unlink": "Unlink",
         "openCenter": "Open requirements center"
       },
       "collaboration": {

@@ -237,7 +237,20 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ series, generation }, { status: 201 });
+    const firstSession = await prisma.trainingSession.findFirst({
+      where: {
+        tenantId,
+        trainingSeriesId: created.id,
+        status: "SCHEDULED",
+      },
+      orderBy: { date: "asc" },
+      select: { id: true },
+    });
+
+    return NextResponse.json(
+      { series, generation, firstSessionId: firstSession?.id ?? null },
+      { status: 201 },
+    );
   } catch (err) {
     if (err instanceof TrainingSeriesValidationError) {
       return NextResponse.json({ error: err.message }, { status: 400 });

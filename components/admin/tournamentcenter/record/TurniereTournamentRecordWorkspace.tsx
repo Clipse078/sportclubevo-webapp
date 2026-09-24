@@ -148,6 +148,7 @@ export type TurniereTournamentRecordWorkspaceProps = {
   locale?: string;
   createTaskAction?: ReactNode;
   relatedTasksPanel?: ReactNode;
+  relatedRequirementsPanel?: ReactNode;
   collaborationSection?: ReactNode;
   participantsSection?: ReactNode;
 };
@@ -165,6 +166,7 @@ export default function TurniereTournamentRecordWorkspace({
   locale = "de-CH",
   createTaskAction,
   relatedTasksPanel,
+  relatedRequirementsPanel,
   collaborationSection,
   participantsSection,
 }: TurniereTournamentRecordWorkspaceProps) {
@@ -797,6 +799,7 @@ export default function TurniereTournamentRecordWorkspace({
           persisted
           locale={locale}
           tasksPanel={relatedTasksPanel}
+          requirementsPanel={relatedRequirementsPanel}
         />
 
         {collaborationSection}

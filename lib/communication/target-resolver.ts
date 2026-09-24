@@ -28,6 +28,7 @@ const SUPPORTED_TARGET_TYPES: CommunicationTargetType[] = [
   "TRAINING",
   "MATCH",
   "TOURNAMENT",
+  "CLUB_EVENT",
 ];
 
 export function isSupportedCommunicationTargetType(
@@ -130,12 +131,18 @@ export async function resolveCommunicationTargetForTenant(
     };
   }
 
-  if (input.targetType === "MATCH" || input.targetType === "TOURNAMENT") {
+  if (
+    input.targetType === "MATCH" ||
+    input.targetType === "TOURNAMENT" ||
+    input.targetType === "CLUB_EVENT"
+  ) {
+    const eventType =
+      input.targetType === "CLUB_EVENT" ? "OTHER" : input.targetType;
     const event = await prisma.event.findFirst({
       where: {
         id: targetId,
         tenantId,
-        type: input.targetType,
+        type: eventType,
       },
       select: { id: true, title: true },
     });

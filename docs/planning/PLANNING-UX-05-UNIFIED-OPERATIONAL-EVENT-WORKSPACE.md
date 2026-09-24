@@ -108,3 +108,58 @@ None. STAGE_WRITE=NO for new migrations.
 ## Tests
 
 `components/admin/shared/planning-editor/__tests__/planning-ux-05-operational.test.ts`
+
+---
+
+## PLANNING-UX-05R1 — Operational parity completion
+
+### Training create / edit
+
+- Series create (`TrainingSeriesCreateForm`): top `PlanningEditorControlBar` with team-scoped publication (domain-true), Zeitstandard link, participants/work/collaboration pre-persist sections, redirect to first session edit (or series edit fallback).
+- Session edit: `PlanningEditorControlBar` with `TrainingRecordPublicationSection` before editor body.
+
+### Canonical planning resource identity
+
+`PlanningResourceType` + `RequirementPlanningResourceReference` (tenant-scoped). Mapping aligned with Aufgaben `TaskContextType`:
+
+| PlanningResourceType | Resource id |
+|----------------------|-------------|
+| TRAINING | TrainingSeries.id |
+| MATCH / TOURNAMENT / CLUB_EVENT | Event.id (types MATCH / TOURNAMENT / OTHER) |
+
+Collaboration comments: `CommunicationTargetType` TRAINING → TrainingSession.id; MATCH / TOURNAMENT / CLUB_EVENT → Event.id.
+
+### Requirements
+
+`ContextRelatedRequirementsPanel` loads authorized links only; link/unlink via `lib/planning/requirement-planning-resource-service.ts` (does not delete Requirement on unlink).
+
+### Club event participants
+
+`EventParticipationAudienceEntry` (PERSON / TEAM / ORG_UNIT / ROLE) + `ParticipationResponse` with `eventKind=CLUB_EVENT`. Edit UI: audience editor + participation request config + `PlanningParticipantsList`.
+
+### Club event collaboration
+
+`CommunicationTargetType.CLUB_EVENT` + target resolver for `Event.type=OTHER`.
+
+### Create lifecycle
+
+After successful create: redirect to canonical edit workspace (training → session edit; Veranstaltung → event edit). Child capabilities use `PlanningEditorPrePersistNotice` until parent exists.
+
+### Schema / migration / DB safety
+
+Forward-only migration `20260924153000_planning_ux_05r1_operational_parity` committed only — **not applied to STAGE** (STAGE_WRITE=NO). Cloud agent DATABASE_URL points at Neon (`neondb`); migration SQL prepared, not executed in this run.
+
+### R1 tests
+
+`lib/planning/__tests__/planning-ux-05r1-operational.test.ts` (+ extended UX-05 operational tests).
+
+### Final parity matrix (R1)
+
+| Domain | Create top controls | Edit top controls | Requirements edit | Club participants edit | Club collaboration edit |
+|--------|--------------------|--------------------|-------------------|------------------------|-------------------------|
+| Training | YES (publication domain-true) | YES | YES | YES (session roster) | YES (session) |
+| Match | YES | YES | YES | YES | YES |
+| Tournament | YES | YES | YES | YES | YES |
+| Club event | YES | YES | YES | YES (when audience configured) | YES |
+
+Intentional N/A unchanged: Match/Club event Zeitstandard; Club event facility resources (text location).

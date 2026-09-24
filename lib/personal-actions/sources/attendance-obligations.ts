@@ -41,7 +41,7 @@ function horizonEnd(from: Date): Date {
 
 function responseLookupKey(input: {
   personId: string;
-  teamSeasonId: string;
+  teamSeasonId: string | null;
   eventKind: AttendanceEventKind;
   trainingSessionId: string | null;
   eventId: string | null;

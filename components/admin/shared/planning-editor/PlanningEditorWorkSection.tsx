@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import PlanningEditorSection from "./PlanningEditorSection";
 import PlanningEditorSectionHeading from "./PlanningEditorSectionHeading";
 import PlanningEditorPrePersistNotice from "./PlanningEditorPrePersistNotice";
-import ContextRelatedRequirementsPanelView from "@/components/admin/aufgaben/contextual/ContextRelatedRequirementsPanelView";
 
 type Props = {
   headingId: string;
@@ -13,7 +12,7 @@ type Props = {
   persisted: boolean;
   locale: string;
   tasksPanel: ReactNode | null;
-  requirementsGapDocumented?: boolean;
+  requirementsPanel?: ReactNode | null;
 };
 
 export default function PlanningEditorWorkSection({
@@ -22,7 +21,7 @@ export default function PlanningEditorWorkSection({
   persisted,
   locale,
   tasksPanel,
-  requirementsGapDocumented = true,
+  requirementsPanel = null,
 }: Props) {
   const t = useTranslations("PlanningEditor.operational.work");
 
@@ -41,9 +40,7 @@ export default function PlanningEditorWorkSection({
         ) : (
           <>
             {tasksPanel}
-            {requirementsGapDocumented ? (
-              <ContextRelatedRequirementsPanelView locale={locale} />
-            ) : null}
+            {requirementsPanel}
           </>
         )}
       </div>

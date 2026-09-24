@@ -6,6 +6,7 @@ export type PlanningParticipantRole =
   | "STAFF"
   | "TEAM"
   | "CLUB"
+  | "INVITEE"
   | "OTHER";
 
 export type PlanningParticipantRow = {
@@ -22,6 +23,6 @@ export type PlanningParticipantRow = {
 export type PlanningParticipantsPresentation = {
   people: PlanningParticipantRow[];
   teams?: PlanningParticipantRow[];
-  emptyStateKey?: "none" | "unsupported" | "noTeamSeason";
+  emptyStateKey?: "none" | "unsupported" | "noTeamSeason" | "noAudience" | "notFound";
   footnoteKey?: string;
 };

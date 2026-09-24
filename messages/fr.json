@@ -284,6 +284,8 @@
         "heading": "Exigences",
         "create": "+ Exigence",
         "gapDescription": "Les exigences ne peuvent pas encore être liées directement aux événements de planification.",
+        "emptyLinked": "Aucune exigence liée visible pour vous.",
+        "unlink": "Dissocier",
         "openCenter": "Ouvrir le centre des exigences"
       },
       "collaboration": {

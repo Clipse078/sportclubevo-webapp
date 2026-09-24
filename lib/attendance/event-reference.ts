@@ -61,6 +61,30 @@ export async function resolveAttendanceEventContext(
     throw new AttendanceTenantMismatchError("Team-Saison gehört nicht zu diesem Mandanten.");
   }
 
+  if (event.eventKind === "CLUB_EVENT") {
+    const calendarEvent = await prisma.event.findFirst({
+      where: {
+        id: event.eventId,
+        tenantId,
+        type: "OTHER",
+      },
+      select: { id: true, title: true, startAt: true },
+    });
+
+    if (!calendarEvent) {
+      throw new AttendanceEventNotFoundError("Veranstaltung nicht gefunden.");
+    }
+
+    return {
+      teamSeasonId,
+      eventKind: "CLUB_EVENT",
+      trainingSessionId: null,
+      eventId: calendarEvent.id,
+      title: calendarEvent.title,
+      date: calendarEvent.startAt,
+    };
+  }
+
   if (event.eventKind === "TRAINING") {
     const session = await prisma.trainingSession.findFirst({
       where: {
@@ -94,7 +118,7 @@ export async function resolveAttendanceEventContext(
     };
   }
 
-  const expectedType = EVENT_KIND_TO_EVENT_TYPE[event.eventKind];
+  const expectedType = EVENT_KIND_TO_EVENT_TYPE[event.eventKind as "MATCH" | "TOURNAMENT"];
   const teamSeasonConstraint =
     event.eventKind === "MATCH"
       ? { seasonId: teamSeason.seasonId }

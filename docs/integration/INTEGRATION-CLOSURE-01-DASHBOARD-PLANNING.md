@@ -130,3 +130,15 @@ Historical checksum drift elsewhere: document only; do not repair in this task.
 - **#706:** OPEN, target STAGE, head `59efcaf6` — do not merge in this closure.
 - **#707:** OPEN DRAFT, target STAGE, head `e01e762` (+ closure commits) — authoritative integration candidate.
 - **STAGE_DB_WRITE / PRODUCTION_DB_WRITE:** NO during this task.
+
+---
+
+## Addendum — PLANNING-INTEGRATION-P0R1 (product-level route verification)
+
+**Date:** 2026-09-24
+
+Product acceptance on the #707 preview showed that **technical** 05R2 completeness (components present in repo) did not guarantee **active routes** mounted the accepted Planning editor — notably `/dashboard/training/sessions/[id]/edit` (legacy light-card shell) and incomplete 05R1 sections on Veranstaltung edit.
+
+P0R1 reconciles #707 with the #706-only Training UX-03/R and PLANNING-UX-05R1 operational patches while **keeping** the protected personal dashboard and **05R2 compact resource selectors** on training/match/tournament create surfaces. See `docs/integration/PLANNING-INTEGRATION-P0R1-PRODUCT-RECONCILIATION.md`.
+
+**Do not merge #707 until P0R1 acceptance completes.** Saisonplaner `/dashboard/planner/edit/[id]` remains explicitly deferred (legacy form unchanged on #706 as well).

@@ -14,6 +14,14 @@ import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
 import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
 import PlanningParticipantsList from "@/components/admin/shared/planning-editor/PlanningParticipantsList";
+import ContextRelatedRequirementsPanel from "@/components/admin/aufgaben/contextual/ContextRelatedRequirementsPanel";
+import { ParticipationRequestConfigEditor } from "@/components/admin/participation/ParticipationRequestConfigEditor";
+import {
+  ensureClubEventParticipationResponses,
+  loadClubEventPlanningParticipants,
+} from "@/lib/planning/load-club-event-planning-participants";
+import { getClubEventParticipationFields } from "@/lib/events/club-event-participation-fields";
+import ClubEventParticipationAudienceEditor from "@/components/admin/veranstaltungen/ClubEventParticipationAudienceEditor";
 import { getTranslations } from "next-intl/server";
 
 type Props = { params: Promise<{ eventId: string }> };
@@ -32,6 +40,13 @@ export default async function VeranstaltungEditPage({ params }: Props) {
 
   const event = await getClubEvent(tenantContext.id, eventId);
   if (!event) notFound();
+
+  await ensureClubEventParticipationResponses(tenantContext.id, eventId);
+
+  const [participantsPresentation, participationFields] = await Promise.all([
+    loadClubEventPlanningParticipants(tenantContext.id, eventId),
+    getClubEventParticipationFields(tenantContext.id, eventId),
+  ]);
 
   const locale = tenantContext.locale ?? "de-CH";
   const timeZone = tenantContext.timezone ?? "Europe/Zurich";
@@ -86,10 +101,29 @@ export default async function VeranstaltungEditPage({ params }: Props) {
           testId="veranstaltung-edit-participants-section"
           persisted
         >
-          <PlanningParticipantsList people={[]} teams={[]} />
-          <p className="mt-2 text-xs text-[var(--muted)]" data-testid="veranstaltung-participants-gap">
-            Kein kanonisches Teilnehmermodell — ParticipationRequest/Response für Veranstaltungen folgt separat.
-          </p>
+          <ClubEventParticipationAudienceEditor eventId={event.id} disabled={!canManage} />
+          <ParticipationRequestConfigEditor
+            apiPath={`/api/events/${event.id}/participation-request`}
+            timeZone={timeZone}
+            disabled={!canManage}
+            layout="sessionEdit"
+            values={{
+              participationResponseDueAt:
+                participationFields?.participationResponseDueAt?.toISOString() ?? null,
+              participationReminder1At:
+                participationFields?.participationReminder1At?.toISOString() ?? null,
+              participationReminder2At:
+                participationFields?.participationReminder2At?.toISOString() ?? null,
+              participationReminder1PresetKey:
+                participationFields?.participationReminder1PresetKey ?? null,
+              participationReminder2PresetKey:
+                participationFields?.participationReminder2PresetKey ?? null,
+            }}
+          />
+          <PlanningParticipantsList
+            people={participantsPresentation.people}
+            teams={participantsPresentation.teams ?? []}
+          />
         </PlanningEditorParticipantsSection>
 
         <PlanningEditorWorkSection
@@ -98,6 +132,13 @@ export default async function VeranstaltungEditPage({ params }: Props) {
           persisted
           locale={locale}
           tasksPanel={tasksPanel}
+          requirementsPanel={
+            <ContextRelatedRequirementsPanel
+              resourceType="CLUB_EVENT"
+              resourceId={event.id}
+              locale={locale}
+            />
+          }
         />
 
         <PlanningEditorCollaborationSection
@@ -105,11 +146,12 @@ export default async function VeranstaltungEditPage({ params }: Props) {
           testId="veranstaltung-edit-collaboration-section"
           persisted
           tenantSlug={tenantContext.key}
+          targetType="CLUB_EVENT"
+          targetId={event.id}
           canEdit={canManage}
           currentUserId={session.user?.id ?? null}
           locale={locale}
           timezone={timeZone}
-          unsupportedReason="CLUB_EVENT_NOT_IN_COMM_SCHEMA"
         />
       </PlanningEditorShell>
     </ToastProvider>

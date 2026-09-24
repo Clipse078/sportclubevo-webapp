@@ -78,8 +78,10 @@ import {
   CompactDressingRoomResourceSelector,
   CompactPitchHallResourceSelector,
 } from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
+import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
 import PlanningEditorZeitstandardLink from "@/components/admin/shared/planning-editor/PlanningEditorZeitstandardLink";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
+import TrainingRecordPublicationSection from "@/components/admin/training/record/TrainingRecordPublicationSection";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
 import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
 import TeamSeasonSearchablePicker from "@/components/admin/shared/TeamSeasonSearchablePicker";
@@ -139,6 +141,7 @@ type TrainingSeriesCreateFormProps = {
   /** Resolved tenant/platform standard from Zeitstandards (Trainings). */
   defaultTrainingDurationMinutes: number;
   canManageFacilities?: boolean;
+  canEditTeamPublication?: boolean;
 };
 
 const WEEKDAY_LABELS: Record<Weekday, string> = {
@@ -265,6 +268,7 @@ export default function TrainingSeriesCreateForm({
   canValidateDirectly: _canValidateDirectlyReserved,
   defaultTrainingDurationMinutes,
   canManageFacilities = false,
+  canEditTeamPublication = false,
 }: TrainingSeriesCreateFormProps) {
   void _canValidateDirectlyReserved;
   const router = useRouter();
@@ -504,14 +508,23 @@ export default function TrainingSeriesCreateForm({
         }),
       });
       const data = (await res.json().catch(() => null)) as
-        | { series?: { id: string }; generation?: GenerationResult; error?: string }
+        | {
+            series?: { id: string };
+            generation?: GenerationResult;
+            firstSessionId?: string | null;
+            error?: string;
+          }
         | null;
       if (!res.ok || !data?.series) {
         throw new Error(data?.error ?? "Trainingsserie konnte nicht erstellt werden.");
       }
 
       setResult({ seriesId: data.series.id, generation: data.generation as GenerationResult });
-      router.push(`/dashboard/training?submitted=1`);
+      if (data.firstSessionId) {
+        router.push(`/dashboard/training/sessions/${data.firstSessionId}/edit`);
+      } else {
+        router.push(`/dashboard/training/series/${data.series.id}/edit`);
+      }
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Trainingsserie konnte nicht erstellt werden.");
@@ -550,6 +563,18 @@ export default function TrainingSeriesCreateForm({
           Bereit zum Erstellen
         </div>
       )}
+
+      {selectedTeamSeason ? (
+        <PlanningEditorControlBar testId="training-create-control-bar">
+          <TrainingRecordPublicationSection
+            teamId={selectedTeamSeason.teamId}
+            teamSeasonId={selectedTeamSeason.id}
+            initialPublication={{ trainingWebsiteVisible: false, infoboardVisible: false }}
+            canEditTeamPublication={canEditTeamPublication}
+            teamSettingsHref={`/dashboard/teams/${selectedTeamSeason.teamId}/settings`}
+          />
+        </PlanningEditorControlBar>
+      ) : null}
 
       <div className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
         <GuidedStep
