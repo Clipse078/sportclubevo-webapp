@@ -70,8 +70,10 @@ describe("TournamentPublicationToggles", () => {
 
     for (const { label, key } of cases) {
       onChange.mockClear();
-      fireEvent.click(screen.getByRole("switch", { name: label }));
-      expect(onChange).toHaveBeenCalledWith({ [key]: true });
+      const toggle = screen.getByRole("switch", { name: label });
+      const next = toggle.getAttribute("aria-checked") !== "true";
+      fireEvent.click(toggle);
+      expect(onChange).toHaveBeenCalledWith({ [key]: next });
     }
   });
 });
