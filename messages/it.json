@@ -172,6 +172,8 @@
   },
   "TrainingCenter": {
     "sessionEdit": {
+      "backNavTrainings": "Allenamenti",
+      "inheritanceIntro": "Questa sessione eredita per impostazione predefinita orario e risorse dalla serie. Le modifiche valgono solo per questo appuntamento.",
       "backToTrainings": "Torna agli allenamenti",
       "breadcrumbPlanning": "Pianificazione",
       "breadcrumbTrainings": "Allenamenti",

@@ -595,6 +595,8 @@
   },
   "TrainingCenter": {
     "sessionEdit": {
+      "backNavTrainings": "Trainings",
+      "inheritanceIntro": "Dieses Training übernimmt standardmässig Zeit und Ressourcen der Serie. Änderungen gelten nur für diesen Termin.",
       "backToTrainings": "Zurück zu Trainings",
       "breadcrumbPlanning": "Planung",
       "breadcrumbTrainings": "Trainings",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState, useTransition } from "react";
-import { Building2, GripVertical, Loader2, MapPin, RotateCcw, X } from "lucide-react";
+import { Building2, Loader2, RotateCcw, X } from "lucide-react";
 import type { TrainingAllocationDto, TrainingSessionAllocationDto } from "@/lib/training/types";
 import type { FacilityGroup, ResourceAvailabilityAnnotation } from "./FacilityResourceSelector";
 import { FacilityResourceSelector } from "./FacilityResourceSelector";
@@ -13,27 +13,12 @@ import {
   type TrainingAllocationGroupKey,
 } from "@/lib/training/allocation-groups";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 type Props = {
-  /** The single canonical TrainingSession occurrence these overrides belong to. */
   sessionId: string;
-  /** Current occurrence-level overrides loaded server-side. */
   initialAllocations: TrainingSessionAllocationDto[];
-  /** The parent TrainingSeries' allocations — shown as the inherited default per group. */
   seriesAllocations: TrainingAllocationDto[];
-  /** All non-archived resources grouped by facility for the selector. */
   facilityGroups: FacilityGroup[];
-  /** Whether the current user can manage (add/remove) overrides. */
   canManage: boolean;
-  /**
-   * RESOURCE-AVAILABILITY-UX-01 — the session's own EFFECTIVE start/end
-   * (ISO), used to show live Frei/Belegt availability for its resource
-   * selectors. This occurrence's own allocation is excluded server-side
-   * (excludeTrainingSessionId) so it is never flagged as a conflict with
-   * itself in edit mode.
-   */
   sessionStartAt: string;
   sessionEndAt: string;
 };
@@ -55,74 +40,12 @@ type AllocationLike = {
   notes: string | null;
 };
 
-// ── Row ───────────────────────────────────────────────────────────────────────
-
-function AllocationRow({
-  allocation,
-  onRemove,
-  canRemove,
-}: {
-  allocation: AllocationLike;
-  onRemove?: (id: string) => Promise<void>;
-  canRemove: boolean;
-}) {
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  const handleRemove = useCallback(() => {
-    if (!onRemove) return;
-    setError(null);
-    startTransition(async () => {
-      try {
-        await onRemove(allocation.id);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Fehler beim Entfernen");
-      }
-    });
-  }, [allocation.id, onRemove]);
-
-  return (
-    <li className="group flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/60 px-4 py-3">
-      <GripVertical size={16} className="shrink-0 text-gray-300" aria-hidden />
-
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-gray-900 truncate">{allocation.facilityResourceName}</span>
-          <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
-            {RESOURCE_TYPE_LABELS[allocation.facilityResourceType as FacilityResourceType] ??
-              allocation.facilityResourceType}
-          </span>
-        </div>
-        <div className="mt-0.5 flex items-center gap-1 text-xs text-gray-500">
-          <Building2 size={11} aria-hidden />
-          <span className="truncate">{allocation.facilityName}</span>
-          <span className="text-gray-300 mx-1">·</span>
-          <MapPin size={11} aria-hidden />
-          <span>{allocation.facilityResourceCode}</span>
-        </div>
-        {error && (
-          <p className="mt-1 text-xs text-red-500" role="alert">
-            {error}
-          </p>
-        )}
-      </div>
-
-      {canRemove && onRemove && (
-        <button
-          type="button"
-          onClick={handleRemove}
-          disabled={isPending}
-          aria-label={`Zuweisung von ${allocation.facilityResourceName} entfernen`}
-          className="shrink-0 rounded p-1 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 focus:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isPending ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
-        </button>
-      )}
-    </li>
-  );
+function formatAllocationSubtitle(allocation: AllocationLike): string {
+  const typeLabel =
+    RESOURCE_TYPE_LABELS[allocation.facilityResourceType as FacilityResourceType] ??
+    allocation.facilityResourceType;
+  return `${allocation.facilityName} · ${typeLabel}`;
 }
-
-// ── Group section ─────────────────────────────────────────────────────────────
 
 function GroupSection({
   groupKey,
@@ -134,6 +57,9 @@ function GroupSection({
   onUseSeriesDefault,
   canManage,
   availabilityByResourceId,
+  pickerOpen,
+  onOpenPicker,
+  onClosePicker,
 }: {
   groupKey: TrainingAllocationGroupKey;
   overrideRows: TrainingSessionAllocationDto[];
@@ -144,91 +70,188 @@ function GroupSection({
   onUseSeriesDefault: () => Promise<void>;
   canManage: boolean;
   availabilityByResourceId?: Map<string, ResourceAvailabilityAnnotation>;
+  pickerOpen: boolean;
+  onOpenPicker: () => void;
+  onClosePicker: () => void;
 }) {
   const isOverridden = overrideRows.length > 0;
   const rowsToShow: AllocationLike[] = isOverridden ? overrideRows : seriesRows;
   const label = TRAINING_ALLOCATION_GROUP_LABELS[groupKey];
   const testIdSuffix = groupKey.toLowerCase().replace(/_/g, "-");
   const [resetting, setResetting] = useState(false);
+  const [adding, setAdding] = useState(false);
 
   const handleUseSeriesDefault = useCallback(async () => {
     setResetting(true);
     try {
       await onUseSeriesDefault();
+      onClosePicker();
     } finally {
       setResetting(false);
     }
-  }, [onUseSeriesDefault]);
+  }, [onUseSeriesDefault, onClosePicker]);
+
+  const handleAdd = useCallback(
+    async (resourceId: string) => {
+      setAdding(true);
+      try {
+        await onAdd(resourceId);
+        onClosePicker();
+      } finally {
+        setAdding(false);
+      }
+    },
+    [onAdd, onClosePicker],
+  );
 
   return (
-    <div data-testid={`training-session-allocations-${testIdSuffix}`}>
-      <div className="mb-1.5 flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">{label}</p>
-        {isOverridden ? (
-          <span
-            className="inline-flex h-5 items-center rounded-full border border-blue-200 bg-blue-50 px-2 text-[0.65rem] font-semibold text-blue-700"
-            data-testid={`training-session-allocations-${testIdSuffix}-override-badge`}
-          >
-            Für dieses Training angepasst
-          </span>
-        ) : (
-          <span className="inline-flex h-5 items-center rounded-full border border-[var(--border)] bg-[var(--surface-3)] px-2 text-[0.65rem] font-medium text-[var(--text-2)]">
-            Serienstandard
-          </span>
-        )}
+    <div
+      className="border-b border-[var(--border)] py-3 last:border-b-0 last:pb-0 first:pt-0"
+      data-testid={`training-session-allocations-${testIdSuffix}`}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap">
+        <div className="min-w-0 flex-1 space-y-1">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">{label}</p>
+          {rowsToShow.length === 0 ? (
+            <p className="text-sm text-[var(--text-2)]">Keine Ressource zugewiesen.</p>
+          ) : (
+            rowsToShow.map((row) => (
+              <div key={row.id} className="min-w-0">
+                <p
+                  className="truncate text-sm font-medium text-[var(--foreground)]"
+                  data-testid={`training-session-allocation-name-${testIdSuffix}`}
+                >
+                  {row.facilityResourceName}
+                </p>
+                <p className="flex min-w-0 items-center gap-1 text-xs text-[var(--text-2)]">
+                  <Building2 size={11} className="shrink-0 opacity-70" aria-hidden />
+                  <span className="truncate">{formatAllocationSubtitle(row)}</span>
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          {isOverridden ? (
+            <span
+              className="inline-flex h-5 items-center rounded-full border border-[var(--blue)]/30 bg-[var(--blue)]/10 px-2 text-[0.65rem] font-medium text-[var(--blue)]"
+              data-testid={`training-session-allocations-${testIdSuffix}-override-badge`}
+            >
+              Abweichend
+            </span>
+          ) : (
+            <span
+              className="inline-flex h-5 items-center rounded-full border border-[var(--border)] bg-[var(--surface-3)] px-2 text-[0.65rem] font-medium text-[var(--text-2)]"
+              data-testid={`training-session-allocations-${testIdSuffix}-inherit-badge`}
+            >
+              Serienstandard
+            </span>
+          )}
+          {canManage && !pickerOpen ? (
+            <div className="flex flex-col items-end gap-1">
+              <button
+                type="button"
+                onClick={onOpenPicker}
+                data-testid={`training-session-allocations-${testIdSuffix}-change`}
+                className="inline-flex items-center rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-xs font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-3)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+              >
+                Ändern
+              </button>
+              {isOverridden ? (
+                <button
+                  type="button"
+                  onClick={handleUseSeriesDefault}
+                  disabled={resetting}
+                  data-testid={`training-session-allocations-${testIdSuffix}-use-default`}
+                  className="inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-[0.65rem] font-medium text-[var(--text-2)] transition hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {resetting ? <Loader2 size={11} className="animate-spin" /> : <RotateCcw size={11} />}
+                  Serienstandard wiederherstellen
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
       </div>
 
-      {rowsToShow.length === 0 ? (
-        <p className="rounded-lg border-2 border-dashed border-[var(--border)] py-4 text-center text-sm text-[var(--text-2)]">
-          Keine Ressource zugewiesen.
-        </p>
-      ) : (
-        <ul className="space-y-2">
-          {rowsToShow.map((row) => (
-            <AllocationRow key={row.id} allocation={row} onRemove={isOverridden ? onRemove : undefined} canRemove={isOverridden} />
-          ))}
-        </ul>
-      )}
-
-      {isOverridden && seriesRows.length > 0 ? (
-        <p
-          className="mt-2 text-xs text-gray-500"
-          data-testid={`training-session-allocations-${testIdSuffix}-series-default`}
+      {pickerOpen && canManage ? (
+        <div
+          className="mt-3 space-y-2 border-t border-[var(--border)] pt-3"
+          data-testid={`training-session-allocations-${testIdSuffix}-picker`}
         >
-          Serien-Standard: {seriesRows.map((row) => row.facilityResourceName).join(", ")}
-        </p>
-      ) : null}
+          {isOverridden ? (
+            <ul className="space-y-1">
+              {overrideRows.map((row) => (
+                <OverrideRemoveRow key={row.id} allocation={row} onRemove={onRemove} />
+              ))}
+            </ul>
+          ) : null}
 
-      {canManage && (
-        <div className="mt-2 space-y-2">
           <FacilityResourceSelector
             facilityGroups={facilityGroupsForAdd}
             allocatedResourceIds={new Set(rowsToShow.map((r) => r.facilityResourceId))}
-            onAdd={onAdd}
+            onAdd={handleAdd}
+            disabled={adding}
             testId={`training-session-allocation-add-${testIdSuffix}`}
             placeholder="Für dieses Training auswählen…"
             addButtonLabel="Für dieses Training zuweisen"
             availabilityByResourceId={availabilityByResourceId}
           />
-          {isOverridden && (
-            <button
-              type="button"
-              onClick={handleUseSeriesDefault}
-              disabled={resetting}
-              data-testid={`training-session-allocations-${testIdSuffix}-use-default`}
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {resetting ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />}
-              Serien-Standard verwenden
-            </button>
-          )}
+
+          <button
+            type="button"
+            onClick={onClosePicker}
+            data-testid={`training-session-allocations-${testIdSuffix}-picker-cancel`}
+            className="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
+          >
+            Abbrechen
+          </button>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
 
-// ── Main editor component ─────────────────────────────────────────────────────
+function OverrideRemoveRow({
+  allocation,
+  onRemove,
+}: {
+  allocation: AllocationLike;
+  onRemove: (id: string) => Promise<void>;
+}) {
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <li className="flex items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-[var(--surface-2)]/80 px-2 py-1.5 text-xs">
+      <span className="truncate text-[var(--foreground)]">{allocation.facilityResourceName}</span>
+      <button
+        type="button"
+        onClick={() => {
+          setError(null);
+          startTransition(async () => {
+            try {
+              await onRemove(allocation.id);
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Fehler beim Entfernen");
+            }
+          });
+        }}
+        disabled={isPending}
+        aria-label={`Zuweisung von ${allocation.facilityResourceName} entfernen`}
+        className="shrink-0 rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-3)] hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {isPending ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}
+      </button>
+      {error ? (
+        <p className="sr-only" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </li>
+  );
+}
 
 export function TrainingSessionAllocationEditor({
   sessionId,
@@ -240,12 +263,10 @@ export function TrainingSessionAllocationEditor({
   sessionEndAt,
 }: Props) {
   const [allocations, setAllocations] = useState<TrainingSessionAllocationDto[]>(initialAllocations);
+  const [openPickerGroup, setOpenPickerGroup] = useState<TrainingAllocationGroupKey | null>(null);
 
-  // RESOURCE-AVAILABILITY-UX-01 — this occurrence's own allocations are
-  // excluded server-side via excludeTrainingSessionId, so the session's
-  // pre-existing resource(s) never show up as "belegt durch sich selbst".
   const { pitchAvailability, dressingRoomAvailability } = useFacilityAvailability({
-    enabled: true,
+    enabled: openPickerGroup !== null,
     startAt: sessionStartAt,
     endAt: sessionEndAt,
     excludeTrainingSessionId: sessionId,
@@ -304,52 +325,31 @@ export function TrainingSessionAllocationEditor({
     [allocations, handleRemove],
   );
 
+  const sectionProps = (groupKey: TrainingAllocationGroupKey, availability?: Map<string, ResourceAvailabilityAnnotation>) => ({
+    groupKey,
+    overrideRows: overridesByGroup[groupKey],
+    seriesRows: seriesByGroup[groupKey],
+    facilityGroupsForAdd: facilityGroupsByGroup[groupKey],
+    onAdd: handleAdd,
+    onRemove: handleRemove,
+    onUseSeriesDefault: () => handleUseSeriesDefaultForGroup(groupKey),
+    canManage,
+    availabilityByResourceId: availability,
+    pickerOpen: openPickerGroup === groupKey,
+    onOpenPicker: () => setOpenPickerGroup(groupKey),
+    onClosePicker: () => setOpenPickerGroup((current) => (current === groupKey ? null : current)),
+  });
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-sm font-semibold tracking-tight text-[var(--foreground)]">Ressourcen für dieses Training</h2>
-        <p className="mt-1 text-xs text-[var(--text-2)]">
-          Standardmässig übernimmt dieses Training die Ressourcen seiner Trainingsserie. Weisen Sie hier eine
-          abweichende Ressource zu, wenn <span className="font-medium text-[var(--foreground)]">nur dieser Termin</span>{" "}
-          Spielfeld/Halle oder Garderobe wechseln muss — die Serie und alle anderen Termine bleiben unverändert.
-        </p>
+    <div className="space-y-3" data-testid="training-session-allocation-editor">
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 className="text-sm font-semibold tracking-tight text-[var(--foreground)]">Ressourcen</h2>
       </div>
 
-      <div className="space-y-5">
-        <GroupSection
-          groupKey="PITCH_HALL"
-          overrideRows={overridesByGroup.PITCH_HALL}
-          seriesRows={seriesByGroup.PITCH_HALL}
-          facilityGroupsForAdd={facilityGroupsByGroup.PITCH_HALL}
-          onAdd={handleAdd}
-          onRemove={handleRemove}
-          onUseSeriesDefault={() => handleUseSeriesDefaultForGroup("PITCH_HALL")}
-          canManage={canManage}
-          availabilityByResourceId={pitchAvailability}
-        />
-        <GroupSection
-          groupKey="DRESSING_ROOM"
-          overrideRows={overridesByGroup.DRESSING_ROOM}
-          seriesRows={seriesByGroup.DRESSING_ROOM}
-          facilityGroupsForAdd={facilityGroupsByGroup.DRESSING_ROOM}
-          onAdd={handleAdd}
-          onRemove={handleRemove}
-          onUseSeriesDefault={() => handleUseSeriesDefaultForGroup("DRESSING_ROOM")}
-          canManage={canManage}
-          availabilityByResourceId={dressingRoomAvailability}
-        />
-        {hasOtherResources && (
-          <GroupSection
-            groupKey="OTHER"
-            overrideRows={overridesByGroup.OTHER}
-            seriesRows={seriesByGroup.OTHER}
-            facilityGroupsForAdd={facilityGroupsByGroup.OTHER}
-            onAdd={handleAdd}
-            onRemove={handleRemove}
-            onUseSeriesDefault={() => handleUseSeriesDefaultForGroup("OTHER")}
-            canManage={canManage}
-          />
-        )}
+      <div className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 px-3">
+        <GroupSection {...sectionProps("PITCH_HALL", pitchAvailability)} />
+        <GroupSection {...sectionProps("DRESSING_ROOM", dressingRoomAvailability)} />
+        {hasOtherResources ? <GroupSection {...sectionProps("OTHER")} /> : null}
       </div>
     </div>
   );

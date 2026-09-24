@@ -1,7 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { getTranslations } from "next-intl/server";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -27,8 +24,8 @@ import {
   TRAINING_FORM_MAX_WIDTH_CLASS,
   TRAINING_FORM_WORKSPACE_SURFACE_CLASS,
 } from "@/components/admin/training/form/training-form-layout";
-import { PageBreadcrumbs } from "@/components/ui/page/PageBreadcrumbs";
 import { cn } from "@/lib/cn";
+import { getTranslations } from "next-intl/server";
 
 type Props = { params: Promise<{ sessionId: string }> };
 
@@ -125,27 +122,12 @@ export default async function TrainingSessionEditPage({ params }: Props) {
   return (
     <ToastProvider>
       <div
-        className={cn(TRAINING_FORM_MAX_WIDTH_CLASS, "min-w-0 space-y-5 pb-8")}
+        className={cn(TRAINING_FORM_MAX_WIDTH_CLASS, "min-w-0 space-y-3 pb-6")}
         data-testid="training-session-edit-page"
       >
-        <Link
-          href="/dashboard/training"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--text-2)] transition hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
-          data-testid="training-session-edit-back-link"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-          {t("backToTrainings")}
-        </Link>
-
-        <PageBreadcrumbs
-          items={[
-            { label: t("breadcrumbPlanning"), href: "/dashboard/training" },
-            { label: t("breadcrumbTrainings"), href: "/dashboard/training" },
-            { label: t("breadcrumbSingleSession") },
-          ]}
-        />
-
         <TrainingSessionEditHeader
+          backHref="/dashboard/training"
+          backLabel={t("backNavTrainings")}
           title={pageTitle}
           scheduleContext={scheduleContext}
           seriesEditHref={buildTrainingSeriesEditHref(trainingSession.trainingSeriesId)}
@@ -154,16 +136,23 @@ export default async function TrainingSessionEditPage({ params }: Props) {
           wochenplanerLabel={t("showInWeekPlanner")}
         />
 
+        <p className="text-xs leading-snug text-[var(--text-2)]" data-testid="training-session-edit-inheritance-intro">
+          {t("inheritanceIntro")}
+        </p>
+
         <div
-          className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-12 lg:gap-6"
+          className="grid min-w-0 grid-cols-1 items-start gap-3 lg:grid-cols-12 lg:gap-4"
           data-testid="training-session-edit-workspace-grid"
         >
           <section
-            className={cn(TRAINING_FORM_WORKSPACE_SURFACE_CLASS, "min-w-0 lg:col-span-7 xl:col-span-8")}
+            className={cn(
+              TRAINING_FORM_WORKSPACE_SURFACE_CLASS,
+              "min-w-0 self-start lg:col-span-7 xl:col-span-8",
+            )}
             aria-labelledby="training-session-edit-datetime-heading"
             data-testid="training-session-edit-datetime-panel"
           >
-            <div className="px-4 py-4 md:px-5 md:py-5">
+            <div className="px-3 py-3 md:px-4 md:py-3.5">
               <TrainingSessionEditForm
                 sessionId={trainingSession.id}
                 canManage={canManage}
@@ -182,11 +171,14 @@ export default async function TrainingSessionEditPage({ params }: Props) {
           </section>
 
           <section
-            className={cn(TRAINING_FORM_WORKSPACE_SURFACE_CLASS, "min-w-0 lg:col-span-5 xl:col-span-4")}
+            className={cn(
+              TRAINING_FORM_WORKSPACE_SURFACE_CLASS,
+              "min-w-0 self-start lg:col-span-5 xl:col-span-4",
+            )}
             aria-labelledby="training-session-edit-participation-heading"
             data-testid="training-session-edit-participation-panel"
           >
-            <div className="space-y-3 px-4 py-4 md:px-5 md:py-5">
+            <div className="space-y-2 px-3 py-3 md:px-4 md:py-3.5">
               <div className="space-y-0.5">
                 <h2
                   id="training-session-edit-participation-heading"
@@ -214,10 +206,10 @@ export default async function TrainingSessionEditPage({ params }: Props) {
         </div>
 
         <section
-          className={cn(TRAINING_FORM_WORKSPACE_SURFACE_CLASS, "min-w-0")}
+          className={cn(TRAINING_FORM_WORKSPACE_SURFACE_CLASS, "min-w-0 self-start")}
           data-testid="training-session-edit-allocations-panel"
         >
-          <div className="px-4 py-4 md:px-5 md:py-5">
+          <div className="px-3 py-3 md:px-4 md:py-3.5">
             <TrainingSessionAllocationEditor
               sessionId={trainingSession.id}
               initialAllocations={sessionAllocations}

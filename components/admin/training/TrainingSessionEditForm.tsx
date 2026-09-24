@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarClock, Loader2, RotateCcw, Save } from "lucide-react";
+import { Loader2, RotateCcw, Save } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import {
   TRAINING_FORM_COMPACT_TIME_INPUT_CLASS,
   TRAINING_FORM_TIME_FIELD_WIDTH_CLASS,
+  TRAINING_SESSION_EDIT_DATE_INPUT_CLASS,
+  TRAINING_SESSION_EDIT_DATETIME_GRID_CLASS,
 } from "@/components/admin/training/form/training-form-layout";
 import { cn } from "@/lib/cn";
 
@@ -15,11 +17,9 @@ type Props = {
   sessionId: string;
   canManage: boolean;
   isRescheduled: boolean;
-  /** Effective (currently displayed/used) values — reflect any existing override. */
   effectiveDate: string;
   effectiveStartTime: string;
   effectiveEndTime: string;
-  /** Canonical TrainingSeries-derived defaults, shown as reference. */
   originalDate: string;
   originalStartTime: string;
   originalEndTime: string;
@@ -28,13 +28,6 @@ type Props = {
   seriesStandardLine: string;
 };
 
-/**
- * TRAININGCENTER-02 — occurrence-level date/time editor for ONE canonical
- * TrainingSession. Submits the full effective schedule to
- * PATCH /api/training-sessions/[sessionId]/reschedule, which sets (or, when
- * it matches the series default exactly, clears) this occurrence's
- * override. The parent TrainingSeries recurrence is never touched.
- */
 export default function TrainingSessionEditForm({
   sessionId,
   canManage,
@@ -97,30 +90,21 @@ export default function TrainingSessionEditForm({
   }
 
   return (
-    <div className="space-y-5" data-testid="training-session-edit-form">
-      <div>
+    <div className="space-y-3" data-testid="training-session-edit-form">
+      <div className="space-y-0.5">
         <h2
           id="training-session-edit-datetime-heading"
-          className="flex items-center gap-2 text-sm font-semibold tracking-tight text-[var(--foreground)]"
+          className="text-sm font-semibold tracking-tight text-[var(--foreground)]"
         >
-          <CalendarClock size={16} className="text-[var(--muted)]" aria-hidden="true" />
           {t("dateTimeHeading")}
         </h2>
-        <p className="mt-1 text-xs text-[var(--text-2)]" data-testid="training-session-edit-series-standard">
-          {t("seriesStandard")}: {seriesStandardLine}
-        </p>
-        {isRescheduled && (
-          <p
-            className="mt-1 text-xs font-medium text-[var(--blue)]"
-            data-testid="training-session-edit-rescheduled-note"
-          >
-            {t("rescheduledNote")}
-          </p>
-        )}
       </div>
 
-      <div className="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
-        <label className="block min-w-0 space-y-1.5">
+      <div
+        className={TRAINING_SESSION_EDIT_DATETIME_GRID_CLASS}
+        data-testid="training-session-edit-datetime-fields"
+      >
+        <label className="block min-w-0 space-y-1">
           <span className="text-xs font-medium text-[var(--text-2)]">{t("fieldDate")}</span>
           <input
             type="date"
@@ -128,11 +112,11 @@ export default function TrainingSessionEditForm({
             onChange={(e) => setDate(e.target.value)}
             disabled={!canManage || saving}
             data-testid="training-session-edit-date"
-            className="fca-input h-9 w-full px-3 text-sm disabled:cursor-not-allowed"
+            className={TRAINING_SESSION_EDIT_DATE_INPUT_CLASS}
           />
         </label>
 
-        <label className={cn("block min-w-0 space-y-1.5", TRAINING_FORM_TIME_FIELD_WIDTH_CLASS)}>
+        <label className={cn("block min-w-0 space-y-1", TRAINING_FORM_TIME_FIELD_WIDTH_CLASS)}>
           <span className="text-xs font-medium text-[var(--text-2)]">{t("fieldStart")}</span>
           <input
             type="time"
@@ -140,11 +124,11 @@ export default function TrainingSessionEditForm({
             onChange={(e) => setStartTime(e.target.value)}
             disabled={!canManage || saving}
             data-testid="training-session-edit-start-time"
-            className={cn(TRAINING_FORM_COMPACT_TIME_INPUT_CLASS, "h-9 disabled:cursor-not-allowed")}
+            className={cn(TRAINING_FORM_COMPACT_TIME_INPUT_CLASS, "h-8 disabled:cursor-not-allowed")}
           />
         </label>
 
-        <label className={cn("block min-w-0 space-y-1.5", TRAINING_FORM_TIME_FIELD_WIDTH_CLASS)}>
+        <label className={cn("block min-w-0 space-y-1", TRAINING_FORM_TIME_FIELD_WIDTH_CLASS)}>
           <span className="text-xs font-medium text-[var(--text-2)]">{t("fieldEnd")}</span>
           <input
             type="time"
@@ -152,28 +136,42 @@ export default function TrainingSessionEditForm({
             onChange={(e) => setEndTime(e.target.value)}
             disabled={!canManage || saving}
             data-testid="training-session-edit-end-time"
-            className={cn(TRAINING_FORM_COMPACT_TIME_INPUT_CLASS, "h-9 disabled:cursor-not-allowed")}
+            className={cn(TRAINING_FORM_COMPACT_TIME_INPUT_CLASS, "h-8 disabled:cursor-not-allowed")}
           />
         </label>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-2)]">
+        <span data-testid="training-session-edit-series-standard">
+          <span className="text-[var(--muted)]">{t("seriesStandard")}:</span> {seriesStandardLine}
+        </span>
+        {isRescheduled ? (
+          <span
+            className="inline-flex h-5 items-center rounded-full border border-[var(--blue)]/30 bg-[var(--blue)]/10 px-2 text-[0.65rem] font-medium text-[var(--blue)]"
+            data-testid="training-session-edit-rescheduled-badge"
+          >
+            Abweichend
+          </span>
+        ) : null}
+      </div>
+
       {canManage && (
-        <div className="flex flex-wrap items-center gap-3 pt-1">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={handleSave}
             disabled={saving}
             data-testid="training-session-edit-save"
-            className="fca-button-primary"
+            className="fca-button-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-sm"
           >
             {saving ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                 {t("saving")}
               </>
             ) : (
               <>
-                <Save className="h-4 w-4" aria-hidden="true" />
+                <Save className="h-3.5 w-3.5" aria-hidden="true" />
                 {t("saveChanges")}
               </>
             )}
@@ -184,7 +182,7 @@ export default function TrainingSessionEditForm({
             onClick={handleUseSeriesDefault}
             disabled={saving}
             data-testid="training-session-edit-use-default"
-            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
             {t("useSeriesDefault")}

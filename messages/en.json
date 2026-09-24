@@ -172,6 +172,8 @@
   },
   "TrainingCenter": {
     "sessionEdit": {
+      "backNavTrainings": "Trainings",
+      "inheritanceIntro": "This session inherits time and resources from its series by default. Changes apply only to this occurrence.",
       "backToTrainings": "Back to trainings",
       "breadcrumbPlanning": "Planning",
       "breadcrumbTrainings": "Trainings",

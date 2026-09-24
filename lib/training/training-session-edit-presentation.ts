@@ -16,6 +16,19 @@ export function buildTrainingSessionEditPageTitle(
   return team.length > 0 ? `${team} Training` : "Training";
 }
 
+export function formatTrainingSessionEditCompactDate(
+  date: string,
+  locale: string,
+  timezone: string,
+): string {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: timezone,
+  }).format(new Date(`${date}T12:00:00.000Z`));
+}
+
 export function formatTrainingSessionEditScheduleContext(input: {
   teamName: string;
   date: string;
@@ -24,7 +37,7 @@ export function formatTrainingSessionEditScheduleContext(input: {
   locale: string;
   timezone: string;
 }): string {
-  const dateLabel = formatTrainingSessionEditLongDate(input.date, input.locale, input.timezone);
+  const dateLabel = formatTrainingSessionEditCompactDate(input.date, input.locale, input.timezone);
   const team = input.teamName.trim();
   const time = `${input.startTime}–${input.endTime}`;
   return team ? `${team} · ${dateLabel} · ${time}` : `${dateLabel} · ${time}`;

@@ -52,3 +52,18 @@
 - `lib/training/__tests__/training-session-edit-presentation.test.ts` — title/context formatting
 - `components/admin/training/__tests__/TrainingSessionEditPage.legacy-surfaces.test.ts` — SCE route contract
 - Existing TrainingCenter + dashboard deeplink sentinels (R1D/R1E) re-run in CI
+
+## TRAININGCENTER-UX-03R1 — Human visual acceptance remediation
+
+Human visual acceptance **failed** after UX-03: the page was dark but still read as a tall administration form (card stacking, low density, oversized controls).
+
+### Remediation focus
+
+- **Density / composition** — compressed header (single back line + one `h1`), tighter panel padding, `items-start` / `self-start` grid so the schedule column does not stretch beside a taller participation panel
+- **Date/time defect** — shared datetime grid + `min-w-[10.5rem]` date input so localized dates do not clip beside the calendar affordance
+- **Participation** — compact session-edit layout; secondary helper copy removed from the dense panel
+- **Resources** — progressive disclosure: compact current-allocation rows with quiet `Serienstandard` / `Abweichend` badges; picker/search only after **Ändern**; decorative drag handles removed
+- **Inheritance** — one section-level intro sentence; per-field/resource explanatory repetition removed
+- **Responsive** — lg+ side-by-side schedule + participation; stacked on narrow viewports; resource row wraps state/action below info when needed
+
+DASHBOARD-07R2 remains pending (human visual recheck required after this remediation).

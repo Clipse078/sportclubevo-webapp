@@ -23,7 +23,8 @@ describe("training-session-edit-presentation", () => {
     });
     expect(context).toContain("Junioren F2");
     expect(context).toContain("17:00–18:30");
-    expect(context).toMatch(/Montag|Monday/);
+    expect(context).toMatch(/Sep|sept|Sept/i);
+    expect(context).not.toMatch(/2026/);
   });
 
   it("pickTrainingSessionEditPresentation returns title and context", () => {

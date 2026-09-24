@@ -34,3 +34,10 @@ export const TRAINING_WEEKDAY_SCHEDULE_TIME_GRID_TRACK = "7rem";
 /** Full sm+ grid template for weekday schedule rows (static string for Tailwind). */
 export const TRAINING_WEEKDAY_SCHEDULE_GRID_CLASS =
   "sm:grid-cols-[minmax(0,1.2fr)_7rem_7rem_minmax(4.5rem,0.8fr)]";
+
+/** Single-session edit — date + start + end on one baseline without clipping localized dates. */
+export const TRAINING_SESSION_EDIT_DATETIME_GRID_CLASS =
+  "grid min-w-0 gap-3 sm:grid-cols-[minmax(10.5rem,1.35fr)_minmax(7.25rem,0.52fr)_minmax(7.25rem,0.52fr)] sm:items-end";
+
+export const TRAINING_SESSION_EDIT_DATE_INPUT_CLASS =
+  "fca-input h-8 w-full min-w-[10.5rem] px-2.5 text-sm tabular-nums disabled:cursor-not-allowed";

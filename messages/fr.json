@@ -172,6 +172,8 @@
   },
   "TrainingCenter": {
     "sessionEdit": {
+      "backNavTrainings": "Entraînements",
+      "inheritanceIntro": "Cette séance reprend par défaut l'heure et les ressources de la série. Les modifications ne valent que pour ce rendez-vous.",
       "backToTrainings": "Retour aux entraînements",
       "breadcrumbPlanning": "Planification",
       "breadcrumbTrainings": "Entraînements",

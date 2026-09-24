@@ -10,7 +10,7 @@
  * flagged as a conflict with itself.
  */
 
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TrainingSessionAllocationEditor } from "@/components/admin/training/TrainingSessionAllocationEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
@@ -81,15 +81,20 @@ describe("TrainingSessionAllocationEditor — RESOURCE-AVAILABILITY-UX-01 availa
       />,
     );
 
-    const select = await screen.findByTestId("training-session-allocation-add-pitch-hall-select");
+    fireEvent.click(screen.getByTestId("training-session-allocations-pitch-hall-change"));
+
+    const combobox = await screen.findByTestId("training-session-allocation-add-pitch-hall-select");
+    fireEvent.focus(combobox);
+    fireEvent.click(combobox);
+
+    const listbox = await screen.findByTestId("training-session-allocation-add-pitch-hall-listbox");
 
     await waitFor(() => {
-      const optionTexts = within(select).getAllByRole("option").map((o) => o.textContent);
-      expect(optionTexts.some((t) => t?.includes("Feld A ganz") && t?.includes("Frei"))).toBe(true);
+      const options = within(listbox).getAllByRole("option");
+      const labels = options.map((o) => o.textContent ?? "");
+      expect(labels.some((t) => t.includes("Feld A ganz") && t.includes("Frei"))).toBe(true);
       expect(
-        optionTexts.some(
-          (t) => t?.includes("Feld B halb West") && t?.includes("Belegt") && t?.includes("Match vs. FC Muttenz"),
-        ),
+        labels.some((t) => t.includes("Feld B halb West") && t.includes("Belegt") && t.includes("Match vs. FC Muttenz")),
       ).toBe(true);
     });
   });
@@ -108,6 +113,8 @@ describe("TrainingSessionAllocationEditor — RESOURCE-AVAILABILITY-UX-01 availa
         sessionEndAt="2026-09-01T17:00:00.000Z"
       />,
     );
+
+    fireEvent.click(screen.getByTestId("training-session-allocations-pitch-hall-change"));
 
     await waitFor(() => expect(availabilityCalls.length).toBeGreaterThan(0));
     expect(availabilityCalls.every((url) => url.includes("excludeTrainingSessionId=session-1"))).toBe(true);

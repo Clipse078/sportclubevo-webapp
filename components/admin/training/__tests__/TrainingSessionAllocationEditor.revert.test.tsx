@@ -140,8 +140,11 @@ describe("TrainingSessionAllocationEditor — Serien-Standard verwenden", () => 
       />,
     );
 
-    expect(screen.getByTestId("training-session-allocations-dressing-room-series-default")).toHaveTextContent(
-      "Serien-Standard: E3",
+    expect(screen.getByTestId("training-session-allocations-dressing-room-override-badge")).toHaveTextContent(
+      "Abweichend",
+    );
+    expect(screen.getByTestId("training-session-allocations-pitch-hall-override-badge")).toHaveTextContent(
+      "Abweichend",
     );
   });
 

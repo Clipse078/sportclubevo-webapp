@@ -31,7 +31,7 @@ export function ParticipationRequestDeadlineFields({
     <div
       className={
         isSessionEdit
-          ? "space-y-4"
+          ? "space-y-3"
           : "space-y-3 rounded-lg border border-[var(--border)] p-3"
       }
       data-testid="participation-request-deadline-fields"
@@ -41,11 +41,9 @@ export function ParticipationRequestDeadlineFields({
         <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Teilnahme</p>
       ) : null}
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {isSessionEdit ? (
-          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-            {t("responseDeadlineSection")}
-          </p>
+          <p className="text-xs font-medium text-[var(--foreground)]">{t("responseDeadlineSection")}</p>
         ) : null}
         <TaskDeadlineFields
           timeZone={timeZone}
@@ -54,9 +52,11 @@ export function ParticipationRequestDeadlineFields({
           dueDateName="participationResponseDueDate"
           dueTimeName="participationResponseDueTime"
         />
-        <p className="text-xs text-[var(--muted)]">
-          Bis wann Spieler bzw. Eltern ihre Teilnahme bestätigen sollen.
-        </p>
+        {!isSessionEdit ? (
+          <p className="text-xs text-[var(--muted)]">
+            Bis wann Spieler bzw. Eltern ihre Teilnahme bestätigen sollen.
+          </p>
+        ) : null}
       </div>
 
       <TaskReminderFields
