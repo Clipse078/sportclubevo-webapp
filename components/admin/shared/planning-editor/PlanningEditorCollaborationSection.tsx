@@ -18,7 +18,6 @@ type Props = {
   currentUserId: string | null;
   locale: string;
   timezone: string;
-  unsupportedReason?: "CLUB_EVENT_NOT_IN_COMM_SCHEMA";
 };
 
 export default function PlanningEditorCollaborationSection({
@@ -32,7 +31,6 @@ export default function PlanningEditorCollaborationSection({
   currentUserId,
   locale,
   timezone,
-  unsupportedReason,
 }: Props) {
   const t = useTranslations("PlanningEditor.operational.collaboration");
 
@@ -41,10 +39,6 @@ export default function PlanningEditorCollaborationSection({
       <PlanningEditorSectionHeading id={headingId} title={t("heading")} description={t("description")} />
       {!persisted ? (
         <PlanningEditorPrePersistNotice messageKey="collaboration" testId={`${testId}-pre-persist`} />
-      ) : unsupportedReason === "CLUB_EVENT_NOT_IN_COMM_SCHEMA" ? (
-        <p className="text-sm text-[var(--text-2)]" data-testid={`${testId}-unsupported`}>
-          {t("clubEventGap")}
-        </p>
       ) : targetType && targetId ? (
         <InternalCommentsPanel
           tenantSlug={tenantSlug}

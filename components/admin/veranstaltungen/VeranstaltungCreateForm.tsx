@@ -188,7 +188,13 @@ export default function VeranstaltungCreateForm() {
         return;
       }
 
-      router.push("/dashboard/veranstaltungen?submitted=1");
+      const created = data as { eventIds?: string[] } | null;
+      const firstEventId = created?.eventIds?.[0];
+      if (firstEventId) {
+        router.push(`/dashboard/veranstaltungen/${firstEventId}/edit`);
+      } else {
+        router.push("/dashboard/veranstaltungen?submitted=1");
+      }
       router.refresh();
     } finally {
       setSubmitting(false);

@@ -40,13 +40,30 @@ describe("PLANNING-UX-05 operational primitives", () => {
       targetType: "MATCH",
       targetId: "evt-1",
     });
-    expect(resolvePlanningCollaborationTarget("CLUB_EVENT", "evt-2").supported).toBe(false);
+    expect(resolvePlanningCollaborationTarget("CLUB_EVENT", "evt-2")).toEqual({
+      supported: true,
+      targetType: "CLUB_EVENT",
+      targetId: "evt-2",
+    });
   });
 
   it("communication target resolver supports planning event types", () => {
     expect(isSupportedCommunicationTargetType("MATCH")).toBe(true);
     expect(isSupportedCommunicationTargetType("TRAINING")).toBe(true);
     expect(isSupportedCommunicationTargetType("TOURNAMENT")).toBe(true);
+    expect(isSupportedCommunicationTargetType("CLUB_EVENT")).toBe(true);
+  });
+
+  it("training create exposes operational control bar and pre-persist work sections", () => {
+    const form = read("components/admin/training/TrainingSeriesCreateForm.tsx");
+    expect(form).toContain("training-create-control-bar");
+    expect(form).toContain("training-create-work-section");
+    expect(form).toContain("PlanningEditorWorkSection");
+  });
+
+  it("training session edit exposes top control bar", () => {
+    const page = read("app/(admin)/dashboard/training/sessions/[sessionId]/edit/page.tsx");
+    expect(page).toContain("training-session-edit-control-bar");
   });
 
   it("tournament create places publication in control bar near top", () => {

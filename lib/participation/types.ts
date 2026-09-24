@@ -34,7 +34,8 @@ export const PARTICIPATION_RESPONSE_SOURCES = [
 export type ParticipationEventRef =
   | { eventKind: "TRAINING"; trainingSessionId: string }
   | { eventKind: "MATCH"; eventId: string }
-  | { eventKind: "TOURNAMENT"; eventId: string };
+  | { eventKind: "TOURNAMENT"; eventId: string }
+  | { eventKind: "CLUB_EVENT"; eventId: string };
 
 export type ParticipationResponseInput = {
   personId: string;

@@ -710,6 +710,7 @@
         "heading": "Anforderungen",
         "create": "+ Anforderung",
         "gapDescription": "Anforderungen können noch nicht direkt an Planungsereignisse gebunden werden. Nutzen Sie das Anforderungen-Center; eine typisierte Referenz folgt in einem späteren Schritt.",
+        "emptyLinked": "Noch keine verknüpften Anforderungen, die Sie sehen dürfen.",
         "openCenter": "Anforderungen-Center öffnen"
       },
       "collaboration": {

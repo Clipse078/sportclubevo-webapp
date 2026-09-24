@@ -10,7 +10,7 @@ export type PlanningCollaborationTarget =
     }
   | {
       supported: false;
-      reason: "CLUB_EVENT_NOT_IN_COMM_SCHEMA" | "UNSUPPORTED_DOMAIN";
+      reason: "UNSUPPORTED_DOMAIN";
     };
 
 export function resolvePlanningCollaborationTarget(
@@ -30,7 +30,7 @@ export function resolvePlanningCollaborationTarget(
     case "TOURNAMENT":
       return { supported: true, targetType: "TOURNAMENT", targetId: id };
     case "CLUB_EVENT":
-      return { supported: false, reason: "CLUB_EVENT_NOT_IN_COMM_SCHEMA" };
+      return { supported: true, targetType: "CLUB_EVENT", targetId: id };
     default:
       return { supported: false, reason: "UNSUPPORTED_DOMAIN" };
   }

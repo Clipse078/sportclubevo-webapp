@@ -69,6 +69,7 @@ export type SpieleMatchRecordWorkspaceProps = {
   wochenplanerHref: string;
   createTaskAction?: ReactNode;
   relatedTasksPanel?: ReactNode;
+  relatedRequirementsPanel?: ReactNode;
   participantsSection?: ReactNode;
   collaborationSection?: ReactNode;
 };
@@ -117,6 +118,7 @@ export default function SpieleMatchRecordWorkspace({
   wochenplanerHref,
   createTaskAction,
   relatedTasksPanel,
+  relatedRequirementsPanel,
   participantsSection,
   collaborationSection,
 }: SpieleMatchRecordWorkspaceProps) {
@@ -543,6 +545,7 @@ export default function SpieleMatchRecordWorkspace({
           persisted
           locale={locale}
           tasksPanel={relatedTasksPanel}
+          requirementsPanel={relatedRequirementsPanel}
         />
 
         {collaborationSection}

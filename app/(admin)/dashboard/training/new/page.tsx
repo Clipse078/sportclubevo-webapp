@@ -25,6 +25,8 @@ export default async function NewTrainingSeriesPage() {
   if (!userId) notFound();
 
   const canValidateDirectly = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
+  const canManageFacilities = hasPermission(session, PERMISSIONS.FACILITIES_MANAGE);
+  const canEditTeamPublication = hasPermission(session, PERMISSIONS.TEAMS_MANAGE);
 
   const policy = createPlanningAuthorizationPolicy(prisma);
 
@@ -101,6 +103,8 @@ export default async function NewTrainingSeriesPage() {
         dressingRoomFacilityGroups={dressingRoomFacilityGroups}
         canValidateDirectly={canValidateDirectly}
         defaultTrainingDurationMinutes={defaultTrainingDurationMinutes}
+        canManageFacilities={canManageFacilities}
+        canEditTeamPublication={canEditTeamPublication}
       />
     </TrainingRecordWorkspaceShell>
   );

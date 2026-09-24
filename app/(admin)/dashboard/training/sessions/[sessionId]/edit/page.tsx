@@ -35,9 +35,13 @@ import { TrainingSessionParticipantsPanel } from "@/components/admin/training/Tr
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
+import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
 import PlanningEditorZeitstandardLink from "@/components/admin/shared/planning-editor/PlanningEditorZeitstandardLink";
+import TrainingRecordPublicationSection from "@/components/admin/training/record/TrainingRecordPublicationSection";
+import ContextRelatedRequirementsPanel from "@/components/admin/aufgaben/contextual/ContextRelatedRequirementsPanel";
 import { getTranslations as getPlanningTranslations } from "next-intl/server";
 import { hasPermission as checkPermission } from "@/lib/permissions/has-permission";
+import { prisma } from "@/lib/db/prisma";
 
 type Props = { params: Promise<{ sessionId: string }> };
 
@@ -101,11 +105,22 @@ export default async function TrainingSessionEditPage({ params }: Props) {
     timezone: trainingSession.timezone,
   });
 
-  const [seriesAllocations, sessionAllocations, facilities, participantRoster] = await Promise.all([
+  const canEditTeamPublication = checkPermission(session, PERMISSIONS.TEAMS_MANAGE);
+
+  const [seriesAllocations, sessionAllocations, facilities, participantRoster, teamSeasonPublication] =
+    await Promise.all([
     listAllocationsByTrainingSeries(tenantContext.id, trainingSession.trainingSeriesId),
     listAllocationsByTrainingSession(tenantContext.id, sessionId),
     getFacilitiesForTenant(tenantContext.id),
     getTrainingSessionParticipantRoster(tenantContext.id, sessionId),
+    prisma.teamSeason.findFirst({
+      where: { id: trainingSession.teamSeasonId, team: { tenantId: tenantContext.id } },
+      select: {
+        teamId: true,
+        trainingWebsiteVisible: true,
+        infoboardVisible: true,
+      },
+    }),
   ]);
 
   const facilityGroups: FacilityGroup[] = facilities
@@ -151,6 +166,21 @@ export default async function TrainingSessionEditPage({ params }: Props) {
         <p className="text-xs leading-snug text-[var(--text-2)]" data-testid="training-session-edit-inheritance-intro">
           {t("inheritanceIntro")}
         </p>
+
+        {teamSeasonPublication ? (
+          <PlanningEditorControlBar testId="training-session-edit-control-bar">
+            <TrainingRecordPublicationSection
+              teamId={teamSeasonPublication.teamId}
+              teamSeasonId={trainingSession.teamSeasonId}
+              initialPublication={{
+                trainingWebsiteVisible: teamSeasonPublication.trainingWebsiteVisible,
+                infoboardVisible: teamSeasonPublication.infoboardVisible,
+              }}
+              canEditTeamPublication={canEditTeamPublication}
+              teamSettingsHref={`/dashboard/teams/${teamSeasonPublication.teamId}/settings`}
+            />
+          </PlanningEditorControlBar>
+        ) : null}
 
         <div
           className={PLANNING_EDITOR_PRIMARY_WORKSPACE_GRID_CLASS}
@@ -240,6 +270,13 @@ export default async function TrainingSessionEditPage({ params }: Props) {
               contextId={trainingSession.trainingSeriesId}
               locale={locale}
               timeZone={timezone}
+            />
+          }
+          requirementsPanel={
+            <ContextRelatedRequirementsPanel
+              resourceType="TRAINING"
+              resourceId={trainingSession.trainingSeriesId}
+              locale={locale}
             />
           }
         />

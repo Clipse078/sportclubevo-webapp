@@ -284,6 +284,7 @@
         "heading": "Requisiti",
         "create": "+ Requisito",
         "gapDescription": "I requisiti non possono ancora essere collegati direttamente agli eventi di pianificazione.",
+        "emptyLinked": "Nessun requisito collegato visibile.",
         "openCenter": "Apri centro requisiti"
       },
       "collaboration": {

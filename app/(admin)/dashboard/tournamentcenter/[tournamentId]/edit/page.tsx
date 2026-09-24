@@ -11,6 +11,7 @@ import { ToastProvider } from "@/components/ui/ToastProvider";
 import { PageShell } from "@/components/ui/page";
 import TournamentEditForm from "@/components/admin/tournamentcenter/TournamentEditForm";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
+import ContextRelatedRequirementsPanel from "@/components/admin/aufgaben/contextual/ContextRelatedRequirementsPanel";
 import ContextualTaskCreateTriggerServer from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTriggerServer";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
@@ -134,6 +135,13 @@ export default async function TournamentEditPage({ params }: Props) {
               contextId={tournament.id}
               locale={locale}
               timeZone={timeZone}
+            />
+          }
+          relatedRequirementsPanel={
+            <ContextRelatedRequirementsPanel
+              resourceType="TOURNAMENT"
+              resourceId={tournament.id}
+              locale={locale}
             />
           }
           participantsSection={participantsSection}

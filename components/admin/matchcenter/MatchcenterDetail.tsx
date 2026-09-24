@@ -4,6 +4,7 @@ import type { FacilityGroup } from "@/components/admin/training/FacilityResource
 import { PageShell } from "@/components/ui/page/PageShell";
 import SpieleMatchRecordWorkspace from "@/components/admin/matchcenter/record/SpieleMatchRecordWorkspace";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
+import ContextRelatedRequirementsPanel from "@/components/admin/aufgaben/contextual/ContextRelatedRequirementsPanel";
 import ContextualTaskCreateTriggerServer from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTriggerServer";
 import { buildMatchWochenplanerHref } from "@/lib/matchcenter/wochenplaner-deep-links";
 
@@ -82,6 +83,13 @@ export default function MatchcenterDetail({
             contextId={match.id}
             locale={locale}
             timeZone={timezone}
+          />
+        }
+        relatedRequirementsPanel={
+          <ContextRelatedRequirementsPanel
+            resourceType="MATCH"
+            resourceId={match.id}
+            locale={locale}
           />
         }
         participantsSection={participantsSection}

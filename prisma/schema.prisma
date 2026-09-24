@@ -260,6 +260,7 @@ enum CommunicationTargetType {
   TRAINING
   MATCH
   TOURNAMENT
+  CLUB_EVENT
   DOCUMENT
   MEETING
   INITIATIVE
@@ -470,6 +471,23 @@ enum AttendanceEventKind {
   TRAINING
   MATCH
   TOURNAMENT
+  CLUB_EVENT
+}
+
+/// PLANNING-UX-05R1 — canonical planning resource identity for shared operational links.
+enum PlanningResourceType {
+  TRAINING
+  MATCH
+  TOURNAMENT
+  CLUB_EVENT
+}
+
+/// PLANNING-UX-05R1 — club event (Event.type=OTHER) participation audience selector kinds.
+enum EventParticipationAudienceKind {
+  PERSON
+  TEAM
+  ORG_UNIT
+  ROLE
 }
 
 // TEAM-COCKPIT-02B — canonical per-event attendance status.
@@ -898,6 +916,8 @@ model Tenant {
   requirementDraftAudienceTargetGroups RequirementDraftAudienceTargetGroup[] @relation("TenantRequirementDraftAudienceTargetGroup")
   requirementRecipients              RequirementRecipient[]           @relation("TenantRequirementRecipients")
   requirementDocumentVersionReferences RequirementWorkspaceDocumentVersionReference[] @relation("TenantRequirementDocumentVersionReferences")
+  requirementPlanningResourceReferences RequirementPlanningResourceReference[] @relation("TenantRequirementPlanningResourceReferences")
+  eventParticipationAudienceEntries EventParticipationAudienceEntry[] @relation("TenantEventParticipationAudienceEntries")
   notifications                      Notification[]
   notificationDeliveries             NotificationDelivery[]
   userNotificationPreferences        UserNotificationPreference[]
@@ -1080,6 +1100,8 @@ model User {
   tasksCreated    Task[]         @relation("TaskCreatedBy")
   requirementsCreated Requirement[] @relation("RequirementCreatedBy")
   createdRequirementWorkspaceDocumentVersionReferences RequirementWorkspaceDocumentVersionReference[] @relation("RequirementWorkspaceDocumentVersionReferenceCreatedBy")
+  createdRequirementPlanningResourceReferences RequirementPlanningResourceReference[] @relation("RequirementPlanningResourceReferenceCreatedBy")
+  createdEventParticipationAudienceEntries EventParticipationAudienceEntry[] @relation("EventParticipationAudienceEntryCreatedBy")
   requirementResponsesSubmitted RequirementRecipient[] @relation("RequirementRespondedByUser")
   taskSeriesCreated TaskSeries[] @relation("TaskSeriesCreatedBy")
   taskSeriesAssigneeTemplates TaskSeriesAssigneeTemplate[] @relation("TaskSeriesAssigneeTemplateUser")
@@ -1323,6 +1345,7 @@ model Role {
   workflowRules             RoleWorkflowRule[]
   workflowReviewAssignments RoleWorkflowReviewAssignment[] @relation("WorkflowReviewerRole")
   requirementDraftAudienceRoles RequirementDraftAudienceRole[] @relation("RequirementDraftAudienceRole")
+  eventParticipationAudienceEntries EventParticipationAudienceEntry[] @relation("EventParticipationAudienceRole")
 
   @@index([name])
   @@index([canAccessVereinsleitung])
@@ -1705,6 +1728,7 @@ model Person {
   // TEAM-COCKPIT-03A: pre-event participation responses for this Person
   participationResponses          ParticipationResponse[]  @relation("PersonParticipationResponses")
   requirementDraftAudienceEntries RequirementDraftAudiencePerson[] @relation("RequirementDraftAudiencePerson")
+  eventParticipationAudienceEntries EventParticipationAudienceEntry[] @relation("EventParticipationAudiencePerson")
   requirementRecipientObligations RequirementRecipient[]           @relation("RequirementRecipientSubject")
   requirementResponseActorEntries RequirementRecipient[]           @relation("RequirementResponseActorPerson")
   workspaceBreakGlassSessions     WorkspaceBreakGlassSession[]     @relation("WorkspaceBreakGlassActorPerson")
@@ -1902,6 +1926,7 @@ model Team {
   // PERSONS-02: PersonAssignment back-relation — persons assigned to this team.
   personAssignments        PersonAssignment[]      @relation("TeamPersonAssignments")
   requirementDraftAudienceTeams RequirementDraftAudienceTeam[] @relation("RequirementDraftAudienceTeam")
+  eventParticipationAudienceEntries EventParticipationAudienceEntry[] @relation("EventParticipationAudienceTeam")
   // TEAM-COCKPIT-PREMIUM-01J-A: team-bound private documents
   teamDocuments            TeamDocument[]          @relation("TeamDocuments")
   workspaceAccessGrants    WorkspaceAccessGrant[]  @relation("WorkspaceAccessGrantTeam")
@@ -2257,6 +2282,8 @@ model Event {
   attendanceRecords             AttendanceRecord[]             @relation("EventAttendanceRecords")
   // TEAM-COCKPIT-03A: per-player participation for match/tournament events
   participationResponses        ParticipationResponse[]        @relation("EventParticipationResponses")
+  // PLANNING-UX-05R1: configured participation audience for club events (type=OTHER)
+  participationAudienceEntries EventParticipationAudienceEntry[] @relation("EventParticipationAudienceEntries")
 
   @@index([seasonId, type])
   @@index([teamId, type])
@@ -2490,6 +2517,7 @@ model OrgUnit {
   // ORG-ACCESS-01: scoped role assignments targeting this OrgUnit
   userRoles          UserRole[]
   requirementDraftAudienceOrgUnits RequirementDraftAudienceOrgUnit[] @relation("RequirementDraftAudienceOrgUnit")
+  eventParticipationAudienceEntries EventParticipationAudienceEntry[] @relation("EventParticipationAudienceOrgUnit")
   // PERSONS-02: person assignment back-relation (dedicated model, not OrgUnitMembership)
   personAssignments  PersonAssignment[]  @relation("OrgUnitPersonAssignments")
   // REG-WAIT-01: waiting list entries scoped to this OrgUnit
@@ -3284,6 +3312,7 @@ model Requirement {
   draftAudienceTargetGroups RequirementDraftAudienceTargetGroup[] @relation("RequirementDraftAudienceTargetGroups")
   recipients               RequirementRecipient[]                           @relation("RequirementRecipients")
   documentVersionReferences RequirementWorkspaceDocumentVersionReference[] @relation("RequirementDocumentVersionReferences")
+  planningResourceReferences RequirementPlanningResourceReference[] @relation("RequirementPlanningResourceReferences")
 
   @@index([tenantId])
   @@index([tenantId, status])
@@ -3291,6 +3320,26 @@ model Requirement {
   @@index([tenantId, status, dueAt])
   @@index([tenantId, status, reminder1At])
   @@index([tenantId, status, reminder2At])
+}
+
+/// PLANNING-UX-05R1 — typed Requirement ↔ planning resource association (tenant-scoped).
+model RequirementPlanningResourceReference {
+  id              String               @id @default(cuid())
+  tenantId        String
+  requirementId   String
+  resourceType    PlanningResourceType
+  resourceId      String
+  createdByUserId String?
+  createdAt       DateTime             @default(now())
+
+  tenant      Tenant      @relation("TenantRequirementPlanningResourceReferences", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  requirement Requirement @relation("RequirementPlanningResourceReferences", fields: [requirementId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdBy   User?       @relation("RequirementPlanningResourceReferenceCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([requirementId, resourceType, resourceId])
+  @@index([tenantId])
+  @@index([tenantId, requirementId])
+  @@index([tenantId, resourceType, resourceId])
 }
 
 /// WORKSPACE-07 — Requirement ↔ immutable Workspace document version reference.
@@ -7864,6 +7913,37 @@ model AttendanceRecord {
 }
 
 // ---------------------------------------------------------------------------
+// PLANNING-UX-05R1 — EventParticipationAudienceEntry (club events / Event.type=OTHER)
+// ---------------------------------------------------------------------------
+model EventParticipationAudienceEntry {
+  id              String                         @id @default(cuid())
+  tenantId        String
+  eventId         String
+  kind            EventParticipationAudienceKind
+  personId        String?
+  teamId          String?
+  orgUnitId       String?
+  roleId          String?
+  createdByUserId String?
+  createdAt       DateTime                       @default(now())
+
+  tenant    Tenant  @relation("TenantEventParticipationAudienceEntries", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  event     Event   @relation("EventParticipationAudienceEntries", fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  person    Person? @relation("EventParticipationAudiencePerson", fields: [personId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  team      Team?   @relation("EventParticipationAudienceTeam", fields: [teamId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  orgUnit   OrgUnit? @relation("EventParticipationAudienceOrgUnit", fields: [orgUnitId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  role      Role?   @relation("EventParticipationAudienceRole", fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy User?   @relation("EventParticipationAudienceEntryCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([eventId, kind, personId])
+  @@unique([eventId, kind, teamId])
+  @@unique([eventId, kind, orgUnitId])
+  @@unique([eventId, kind, roleId])
+  @@index([tenantId])
+  @@index([tenantId, eventId])
+}
+
+// ---------------------------------------------------------------------------
 // TEAM-COCKPIT-03A — ParticipationResponse
 //
 // Canonical pre-event participation/RSVP response from players or parents.
@@ -7885,11 +7965,12 @@ model ParticipationResponse {
   id                String                       @id @default(cuid())
   tenantId          String
   personId          String
-  teamSeasonId      String
+  /// Roster context for TRAINING/MATCH/TOURNAMENT; optional for CLUB_EVENT without team roster.
+  teamSeasonId      String?
   eventKind         AttendanceEventKind
-  /// Set when eventKind = TRAINING. Null for MATCH/TOURNAMENT.
+  /// Set when eventKind = TRAINING. Null otherwise.
   trainingSessionId String?
-  /// Set when eventKind = MATCH | TOURNAMENT. Null for TRAINING.
+  /// Set when eventKind = MATCH | TOURNAMENT | CLUB_EVENT. Null for TRAINING.
   eventId           String?
   status            ParticipationResponseStatus  @default(OPEN)
   /// Optional reason or note (e.g. illness, late decision).
@@ -7905,7 +7986,7 @@ model ParticipationResponse {
 
   tenant          Tenant           @relation("TenantParticipationResponses", fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   person          Person           @relation("PersonParticipationResponses", fields: [personId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  teamSeason      TeamSeason       @relation("TeamSeasonParticipationResponses", fields: [teamSeasonId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  teamSeason      TeamSeason?      @relation("TeamSeasonParticipationResponses", fields: [teamSeasonId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   trainingSession TrainingSession? @relation("TrainingSessionParticipationResponses", fields: [trainingSessionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   event           Event?           @relation("EventParticipationResponses", fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   respondedByUser User?            @relation("ParticipationRespondedByUser", fields: [respondedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
