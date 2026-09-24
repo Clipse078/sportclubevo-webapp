@@ -42,5 +42,318 @@
       "whoHasAccessHeading": "Qui a accès ?",
       "directGrantsHeading": "Direct sur cette ressource"
     }
+  },
+  "PersonalDashboard": {
+    "welcome": {
+      "subtitle": "Votre aperçu personnel au club."
+    },
+    "programme": {
+      "title": "Mon programme",
+      "groupToday": "Aujourd'hui",
+      "groupTomorrow": "Demain",
+      "allDay": "Journée entière",
+      "statusCancelled": "Annulé",
+      "statusPostponed": "Reporté",
+      "emptyTitle": "Aucun événement dans les prochains jours",
+      "emptyDescription": "Les événements pertinents pour vous apparaîtront ici par ordre chronologique.",
+      "unsupported": "Liez votre compte à une personne ou utilisez les réunions pour voir votre programme personnel.",
+      "viewAll": "Tout afficher"
+    },
+    "secondary": {
+      "summary": "Actualités et activité",
+      "newsTitle": "Actualités",
+      "newsViewAll": "Toutes les actualités",
+      "activityTitle": "Activité récente",
+      "activityViewAll": "Toute l'activité",
+      "activityEmptyTitle": "Pas encore d'activité",
+      "activityEmptyDescription": "Actualités, inscriptions et mises à jour de planification apparaissent ici.",
+      "tagNews": "Actualités",
+      "tagRegistration": "Inscription",
+      "tagPlanning": "Planification",
+      "tagMeeting": "Réunion",
+      "newsByAuthor": "par {author}",
+      "newsArticle": "Article d'actualité",
+      "registrationTitle": "Nouvelle inscription : {firstName} {lastName}",
+      "registrationTrial": "Entraînement d'essai",
+      "registrationPlayer": "Inscription joueur",
+      "eventUpdated": "{title} mis à jour",
+      "eventTypeTraining": "Entraînement",
+      "eventTypeMatch": "Match",
+      "eventTypeTournament": "Tournoi",
+      "eventTypeOther": "Événement",
+      "eventTypeGeneric": "Rendez-vous",
+      "meetingActivity": "Réunion"
+    },
+    "quickAccess": {
+      "title": "Accès rapide",
+      "customize": "Personnaliser",
+      "sectionAria": "Accès rapide personnel",
+      "customizeTitle": "Personnaliser l'accès rapide",
+      "customizeDescription": "Choisissez jusqu'à {max} raccourcis pour votre tableau de bord.",
+      "pinnedHeading": "Épinglés",
+      "pinnedEmpty": "Aucun raccourci épinglé.",
+      "addHeading": "Ajouter un raccourci",
+      "addEmpty": "Tous les raccourcis disponibles sont déjà épinglés.",
+      "kindNavigate": "Navigation",
+      "kindCreate": "Créer",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "remove": "Retirer {label}",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "reset": "Rétablir les valeurs par défaut",
+      "saveError": "Impossible d'enregistrer les paramètres.",
+      "entries": {
+        "navigation_wochenplanner": "Plan hebdomadaire",
+        "navigation_aufgaben": "Tâches",
+        "navigation_matchcenter": "Matchs",
+        "navigation_tournamentcenter": "Tournois",
+        "navigation_veranstaltungen": "Événements",
+        "navigation_workspace": "Documents",
+        "navigation_personen": "Membres",
+        "navigation_anmeldungen": "Inscriptions",
+        "navigation_registrierungen": "Inscriptions",
+        "action_create_training": "Entraînement",
+        "action_create_match": "Match",
+        "action_create_tournament": "Tournoi",
+        "action_create_event": "Événement",
+        "action_create_news": "Actualités",
+        "action_create_person": "Personne"
+      }
+    },
+    "calendar": {
+      "title": "Mon calendrier",
+      "today": "Aujourd'hui",
+      "previousMonth": "Mois précédent",
+      "nextMonth": "Mois suivant",
+      "selected": "sélectionné",
+      "ariaMonthGrid": "Grille mensuelle du calendrier personnel",
+      "selectedDayPanel": "Rendez-vous du jour sélectionné",
+      "emptyDay": "Aucun rendez-vous ce jour-là.",
+      "dayAriaOneActivity": "1 rendez-vous personnel",
+      "dayAriaActivities": "{count} rendez-vous personnels",
+      "dayAriaOneActivityNamed": "1 rendez-vous : {title}",
+      "dayAriaActivitiesCount": "{count} rendez-vous",
+      "activityMultipleShort": "{count} rdv",
+      "statusCancelled": "Annulé",
+      "statusPostponed": "Reporté",
+      "selectedDayTasks": "Tâches du jour sélectionné",
+      "tasksHeading": "Tâches",
+      "weekdayMon": "Lu",
+      "weekdayTue": "Ma",
+      "weekdayWed": "Me",
+      "weekdayThu": "Je",
+      "weekdayFri": "Ve",
+      "weekdaySat": "Sa",
+      "weekdaySun": "Di"
+    },
+    "attention": {
+      "sectionTitle": "Nécessite mon attention",
+      "listAria": "Nécessite mon attention",
+      "emptyTitle": "Tout est en ordre",
+      "emptyDescription": "Rien qui vous soit personnellement assigné ne requiert votre attention.",
+      "viewAll": "Tout afficher",
+      "openInbox": "Ouvrir mes tâches",
+      "urgency": {
+        "overdue": "En retard",
+        "dueToday": "Échéance aujourd'hui"
+      },
+      "rowAria": "{title}",
+      "rowAriaWithStatus": "{title}. {status}"
+    },
+    "tasks": {
+      "title": "Mes tâches",
+      "viewAll": "Tout afficher",
+      "emptyTitle": "Tout est fait",
+      "emptyDescription": "Vous n'avez aucune tâche ouverte dans votre liste personnelle.",
+      "rowAria": "{title}",
+      "rowAriaWithMeta": "{title}. {meta}"
+    }
+  },
+  "TrainingCenter": {
+    "sessionEdit": {
+      "backNavTrainings": "Entraînements",
+      "inheritanceIntro": "Cette séance reprend par défaut l'heure et les ressources de la série. Les modifications ne valent que pour ce rendez-vous.",
+      "backToTrainings": "Retour aux entraînements",
+      "breadcrumbPlanning": "Planification",
+      "breadcrumbTrainings": "Entraînements",
+      "breadcrumbSingleSession": "Séance unique",
+      "toSeries": "Vers la série",
+      "showInWeekPlanner": "Afficher dans le planificateur hebdo",
+      "dateTimeHeading": "Date et heure",
+      "seriesStandard": "Standard de la série",
+      "rescheduledNote": "Cette séance a déjà été ajustée pour cette date.",
+      "fieldDate": "Date",
+      "fieldStart": "Début",
+      "fieldEnd": "Fin",
+      "saveChanges": "Enregistrer les modifications",
+      "saving": "Enregistrement…",
+      "useSeriesDefault": "Utiliser le standard de la série",
+      "participationHeading": "Participation",
+      "participationDescription": "Date limite de réponse et rappels pour cette séance.",
+      "responseDeadlineSection": "Date limite de réponse",
+      "remindersSection": "Rappels",
+      "validationTimesRequired": "Les heures de début et de fin sont requises.",
+      "validationStartBeforeEnd": "L'heure de début doit précéder l'heure de fin.",
+      "saveSuccess": "Entraînement mis à jour.",
+      "saveError": "Impossible d'enregistrer les modifications.",
+      "resourcesHeading": "Ressources",
+      "resourceChange": "Modifier",
+      "resourceRestoreSeriesDefault": "Rétablir le standard de la série",
+      "resourcePickerCancel": "Annuler",
+      "resourceUnassigned": "Aucune ressource assignée.",
+      "participantsHeading": "Participants",
+      "participantsCount": "{count} personnes",
+      "participantsEmpty": "Aucun participant pour cette équipe.",
+      "participantsTrainers": "Entraîneurs",
+      "participantsPlayers": "Joueurs",
+      "participantsTrainerRole": "Entraîneur",
+      "participantsShowAll": "Tout afficher ({count} joueurs)",
+      "participationStatus": {
+        "OPEN": "Ouvert",
+        "YES": "Présent",
+        "NO": "Absent",
+        "MAYBE": "Incertain"
+      }
+    }
+  },
+  "PlanningEditor": {
+    "common": {
+      "change": "Modifier",
+      "cancel": "Annuler"
+    },
+    "match": {
+      "create": {
+        "backNav": "Matchs",
+        "eyebrow": "Planifier un match",
+        "title": "Nouveau match",
+        "description": "Domicile/extérieur, adversaire, horaire et — pour les matchs à domicile — ressources dans un flux guidé."
+      }
+    },
+    "operational": {
+      "controlsHeading": "Contrôles & visibilité",
+      "zeitstandardLink": "Gérer les standards horaires",
+      "homeAway": { "home": "Domicile", "away": "Extérieur" },
+      "publication": {
+        "heading": "Publication",
+        "homepageRequiresWebsite": "La page d'accueil nécessite la publication sur le site web.",
+        "channels": {
+          "website": {
+            "label": "Site web",
+            "descriptionTournament": "Le tournoi est publié sur le site du club.",
+            "descriptionEvent": "L'événement est publié sur le site du club.",
+            "descriptionMatch": "Le match apparaît dans le calendrier du site."
+          },
+          "infoboard": {
+            "label": "Infoboard",
+            "descriptionTournament": "Le tournoi est affiché sur l'infoboard du club.",
+            "descriptionMatch": "Les matchs à domicile peuvent apparaître sur l'infoboard."
+          },
+          "homepage": {
+            "label": "Page d'accueil",
+            "descriptionTournament": "Mis en avant sur la page d'accueil (site web requis).",
+            "descriptionEvent": "Mis en avant sur la page d'accueil (site web requis).",
+            "descriptionMatch": "Mis en avant sur la page d'accueil (site web requis)."
+          },
+          "wochenplan": {
+            "label": "Semaine",
+            "descriptionTournament": "Le tournoi apparaît dans le plan hebdomadaire public.",
+            "descriptionEvent": "L'événement apparaît dans le plan hebdomadaire public.",
+            "descriptionMatch": "Le match apparaît dans le plan hebdomadaire public."
+          },
+          "teamPage": {
+            "label": "Page équipe",
+            "descriptionTournament": "Affiché sur la page de l'équipe principale.",
+            "descriptionMatch": "Affiché sur la page de l'équipe."
+          }
+        }
+      },
+      "participants": {
+        "heading": "Participants",
+        "description": "Personnes et équipes avec statut de participation.",
+        "teamsHeading": "Équipes",
+        "peopleHeading": "Personnes",
+        "showAll": "Tout afficher ({count})",
+        "empty": "Aucun participant enregistré."
+      },
+      "work": {
+        "heading": "Tâches & exigences",
+        "description": "Tâches et exigences opérationnelles liées."
+      },
+      "requirements": {
+        "heading": "Exigences",
+        "create": "+ Exigence",
+        "gapDescription": "Les exigences ne peuvent pas encore être liées directement aux événements de planification.",
+        "emptyLinked": "Aucune exigence liée visible pour vous.",
+        "unlink": "Dissocier",
+        "openCenter": "Ouvrir le centre des exigences"
+      },
+      "collaboration": {
+        "heading": "Collaboration",
+        "description": "Commentaires et @mentions pour cet événement.",
+        "clubEventGap": "Les commentaires pour les événements du club suivront lorsque CLUB_EVENT sera pris en charge.",
+        "unavailable": "Collaboration indisponible."
+      },
+      "prePersist": {
+        "generic": "Disponible après la création.",
+        "tasks": "Les tâches peuvent être liées après la création.",
+        "requirements": "Les exigences peuvent être liées après la création.",
+        "collaboration": "Après la création, vous pouvez ajouter des commentaires et @mentions."
+      }
+    }
+  },
+  "Veranstaltungen": {
+    "editor": {
+      "create": {
+        "backNav": "Événements",
+        "title": "Créer un événement",
+        "description": "Saisie manuelle d'occasions du club comme assemblée générale, réunion d'entraîneurs, événement sponsors, briefing bénévoles ou événements internes.",
+        "intro": "Définir horaire, lieu et visibilité pour cet événement du club.",
+        "submit": "Créer l'événement",
+        "submitting": "Création…"
+      },
+      "edit": {
+        "backNav": "Événements",
+        "eyebrow": "Modifier",
+        "description": "Modifications de cet événement. Les paramètres de visibilité affectent directement le site, la page d'accueil et l'infoboard.",
+        "readOnlyNotice": "Accès en lecture seule. La permission « events.manage » est requise pour modifier.",
+        "save": "Enregistrer les modifications",
+        "saving": "Enregistrement…"
+      },
+      "sections": {
+        "details": "Données de base",
+        "schedule": "Horaire",
+        "publication": "Diffusion"
+      },
+      "fields": {
+        "season": "Saison",
+        "seasonLoading": "Chargement des saisons…",
+        "seasonPlaceholder": "Veuillez choisir",
+        "seasonActiveSuffix": " (actuelle)",
+        "category": "Catégorie",
+        "categoryPlaceholder": "— libre —",
+        "title": "Titre",
+        "titlePlaceholder": "p. ex. Assemblée générale 2025",
+        "description": "Description",
+        "descriptionPlaceholder": "Description optionnelle de l'événement…",
+        "location": "Lieu",
+        "locationPlaceholder": "p. ex. Club-house",
+        "organizer": "Organisateur",
+        "organizerPlaceholder": "p. ex. Comité",
+        "remarks": "Remarques",
+        "remarksPlaceholder": "Notes internes",
+        "date": "Date",
+        "dateStart": "Début",
+        "dateEnd": "Fin",
+        "timeStart": "Début",
+        "timeEnd": "Fin",
+        "allDay": "Journée entière",
+        "allDaySummary": "Journée entière"
+      },
+      "errors": {
+        "createFailed": "Impossible de créer l'événement.",
+        "saveFailed": "Impossible d'enregistrer les modifications."
+      }
+    }
   }
 }

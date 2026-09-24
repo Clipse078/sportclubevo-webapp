@@ -38,7 +38,8 @@ export const ATTENDANCE_DENOMINATOR_STATUSES = [
 export type AttendanceEventRef =
   | { eventKind: "TRAINING"; trainingSessionId: string }
   | { eventKind: "MATCH"; eventId: string }
-  | { eventKind: "TOURNAMENT"; eventId: string };
+  | { eventKind: "TOURNAMENT"; eventId: string }
+  | { eventKind: "CLUB_EVENT"; eventId: string };
 
 export type AttendanceRecordInput = {
   personId: string;

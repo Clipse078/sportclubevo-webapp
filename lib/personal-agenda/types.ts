@@ -1,7 +1,16 @@
 import type { EventType, TaskStatus } from "@prisma/client";
+import type { PersonalProgrammePresentationStatus } from "./personal-programme-types";
 
-/** Normalized personal agenda / calendar projection sources (AUFGABEN-04A). */
-export type PersonalAgendaSourceType = "TEAM_EVENT" | "MEETING" | "TASK" | "PARTICIPATION";
+/** Normalized personal agenda / calendar projection sources (AUFGABEN-04A + DASHBOARD-02). */
+export type PersonalAgendaSourceType =
+  | "TRAINING"
+  | "MATCH"
+  | "TOURNAMENT"
+  | "EVENT"
+  | "TEAM_EVENT"
+  | "MEETING"
+  | "TASK"
+  | "PARTICIPATION";
 
 export type PersonalCalendarItem = {
   /** Stable cross-entity identity, e.g. `task:{id}`, `event:{id}`, `meeting:{id}`. */
@@ -19,6 +28,13 @@ export type PersonalCalendarItem = {
   taskStatus?: TaskStatus;
   /** Accessible label including source and title (not color-only). */
   ariaLabel: string;
+  /** Human-facing “why am I seeing this?” label (DASHBOARD-01). */
+  contextLabel?: string;
+  venue?: string;
+  presentationStatus?: PersonalProgrammePresentationStatus;
+  teamName?: string;
+  opponentName?: string;
+  homeAway?: string | null;
 };
 
 export function buildTaskProjectionId(taskId: string): string {

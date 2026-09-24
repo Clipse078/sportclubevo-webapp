@@ -2,7 +2,12 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import AdminSurfaceCard from "@/components/admin/shared/AdminSurfaceCard";
+import { useTranslations } from "next-intl";
+import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
+import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
+import PlanningEditorActions from "@/components/admin/shared/planning-editor/PlanningEditorActions";
+import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
+import { PLANNING_EDITOR_FORM_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import { clubEventScheduleFormFromPersisted } from "@/lib/events/club-event-scheduling";
 import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
 import VeranstaltungAusspielungFields, {
@@ -40,14 +45,18 @@ type VeranstaltungEditFormProps = {
     season: SeasonSummary | null;
   };
   timeZone?: string | null;
+  canManage?: boolean;
 };
 
-export default function VeranstaltungEditForm({ event, timeZone }: VeranstaltungEditFormProps) {
+export default function VeranstaltungEditForm({ event, timeZone, canManage = true }: VeranstaltungEditFormProps) {
   const router = useRouter();
+  const t = useTranslations("Veranstaltungen.editor");
+  const tf = useTranslations("Veranstaltungen.editor.fields");
+  const tc = useTranslations("PlanningEditor.common");
   const tz = resolveTenantEventTimezone(timeZone);
 
   const isArchived = event.status === "ARCHIVED";
-  const isReadonly = isArchived || event.source === "CLUBCORNER_FVNWS";
+  const isReadonly = isArchived || event.source === "CLUBCORNER_FVNWS" || !canManage;
 
   const initialSchedule = clubEventScheduleFormFromPersisted(
     {
@@ -88,8 +97,8 @@ export default function VeranstaltungEditForm({ event, timeZone }: Veranstaltung
     setSchedule((current) => {
       if (patch.allDay === true && !current.allDay) {
         rememberedTimes.current = {
-          startTime: current.startTime,
-          endTime: current.endTime,
+          startTime: current.startTime || "18:00",
+          endTime: current.endTime || "20:00",
         };
         return {
           ...current,
@@ -112,6 +121,7 @@ export default function VeranstaltungEditForm({ event, timeZone }: Veranstaltung
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (isReadonly) return;
+
     setSubmitting(true);
     setError(null);
 
@@ -138,7 +148,7 @@ export default function VeranstaltungEditForm({ event, timeZone }: Veranstaltung
 
       const data = (await res.json().catch(() => null)) as { error?: string } | null;
       if (!res.ok) {
-        setError(data?.error ?? "Speichern fehlgeschlagen.");
+        setError(data?.error ?? t("errors.saveFailed"));
         return;
       }
 
@@ -150,98 +160,105 @@ export default function VeranstaltungEditForm({ event, timeZone }: Veranstaltung
   }
 
   return (
-    <AdminSurfaceCard className="p-6">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {event.season ? (
-          <p className="text-sm text-[var(--muted)]">Saison: {event.season.name}</p>
-        ) : null}
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block space-y-2 md:col-span-2">
-            <span className="fca-label">Titel</span>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="fca-input"
-              required
-              disabled={isReadonly}
-            />
-          </label>
-
-          <VeranstaltungScheduleFields
-            values={schedule}
-            onChange={handleScheduleChange}
-            disabled={isReadonly}
-          />
-
-          <label className="block space-y-2 md:col-span-2">
-            <span className="fca-label">Beschreibung</span>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="fca-textarea min-h-[120px]"
-              disabled={isReadonly}
-            />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="fca-label">Ort</span>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="fca-input"
-              disabled={isReadonly}
-            />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="fca-label">Organisator</span>
-            <input
-              type="text"
-              value={organizerName}
-              onChange={(e) => setOrganizerName(e.target.value)}
-              className="fca-input"
-              disabled={isReadonly}
-            />
-          </label>
-
-          <label className="block space-y-2 md:col-span-2">
-            <span className="fca-label">Bemerkungen</span>
-            <input
-              type="text"
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
-              className="fca-input"
-              disabled={isReadonly}
-            />
-          </label>
-        </div>
-
+    <form onSubmit={handleSubmit} className="space-y-3" data-testid="veranstaltung-edit-form">
+      <PlanningEditorControlBar testId="veranstaltung-edit-control-bar">
         <VeranstaltungAusspielungFields
           values={ausspielung}
           onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
           disabled={isReadonly}
+          showHeading={false}
         />
+      </PlanningEditorControlBar>
 
-        {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
+      <PlanningEditorSection testId="veranstaltung-edit-details-section" ariaLabelledBy="veranstaltung-edit-details-heading">
+        <div className="space-y-3">
+          <PlanningEditorSectionHeading id="veranstaltung-edit-details-heading" title={t("sections.details")} />
+          {event.season ? (
+            <p className="text-xs text-[var(--text-2)]">
+              {tf("season")}: {event.season.name}
+            </p>
+          ) : null}
+          <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
+            <label className="block space-y-2 md:col-span-2">
+              <span className="fca-label">{tf("title")}</span>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="fca-input h-8 text-sm"
+                required
+                disabled={isReadonly}
+              />
+            </label>
 
-        {!isReadonly ? (
-          <div className="flex flex-wrap gap-3">
-            <button type="submit" disabled={submitting} className="fca-button-primary">
-              {submitting ? "Speichern..." : "Speichern"}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push("/dashboard/veranstaltungen")}
-              className="fca-button-secondary"
-            >
-              Abbrechen
-            </button>
+            <VeranstaltungScheduleFields
+              values={schedule}
+              onChange={handleScheduleChange}
+              disabled={isReadonly}
+            />
+
+            <label className="block space-y-2 md:col-span-2">
+              <span className="fca-label">{tf("description")}</span>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="fca-textarea min-h-[96px] text-sm"
+                disabled={isReadonly}
+              />
+            </label>
+
+            <label className="block space-y-2">
+              <span className="fca-label">{tf("location")}</span>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="fca-input h-8 text-sm"
+                disabled={isReadonly}
+              />
+            </label>
+
+            <label className="block space-y-2">
+              <span className="fca-label">{tf("organizer")}</span>
+              <input
+                type="text"
+                value={organizerName}
+                onChange={(e) => setOrganizerName(e.target.value)}
+                className="fca-input h-8 text-sm"
+                disabled={isReadonly}
+              />
+            </label>
+
+            <label className="block space-y-2 md:col-span-2">
+              <span className="fca-label">{tf("remarks")}</span>
+              <input
+                type="text"
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                className="fca-input h-8 text-sm"
+                disabled={isReadonly}
+              />
+            </label>
           </div>
-        ) : null}
-      </form>
-    </AdminSurfaceCard>
+        </div>
+      </PlanningEditorSection>
+
+      {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
+
+      {!isReadonly ? (
+        <PlanningEditorActions testId="veranstaltung-edit-actions">
+          <button type="submit" disabled={submitting} className="fca-button-primary" data-testid="veranstaltung-edit-save">
+            {submitting ? t("edit.saving") : t("edit.save")}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push("/dashboard/veranstaltungen")}
+            className="fca-button-secondary"
+          >
+            {tc("cancel")}
+          </button>
+        </PlanningEditorActions>
+      ) : null}
+    </form>
   );
 }

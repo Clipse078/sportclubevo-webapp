@@ -1,4 +1,3 @@
-import Link from "next/link";
 import MatchCreateForm from "@/components/admin/matchcenter/MatchCreateForm";
 import SpieleRecordWorkspaceShell from "@/components/admin/matchcenter/record/SpieleRecordWorkspaceShell";
 import { SPIELE_RECORD_WORKSPACE_SURFACE_CLASS } from "@/components/admin/matchcenter/record/spiele-record-layout";
@@ -8,6 +7,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 export default async function NewMatchCenterPage() {
   const session = await requireAnyPermission([
@@ -23,6 +23,7 @@ export default async function NewMatchCenterPage() {
     hasPermission(session, PERMISSIONS.EVENTS_PUBLISH_INFOBOARD);
 
   const facilities = await getFacilitiesForTenant(tenantId);
+  const t = await getTranslations("PlanningEditor.match.create");
 
   function facilityGroupsForTypes(types: readonly string[]): FacilityGroup[] {
     return facilities
@@ -50,29 +51,20 @@ export default async function NewMatchCenterPage() {
   const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
 
   const header = (
-    <div className="space-y-2 pt-1">
-      <p className="text-xs text-[var(--text-2)]">Spiel erstellen</p>
-      <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
-        Neues Spiel
-      </h1>
-      <p className="max-w-2xl text-sm text-[var(--text-2)]">
-        Heim/Auswärts, Gegner, Termin und — bei Heimspielen — Ressourcen in einem geführten Ablauf.
-      </p>
-      <Link
-        href="/dashboard/matchcenter"
-        className="fca-button-secondary inline-flex w-fit text-xs"
-      >
-        Abbrechen
-      </Link>
+    <div className="space-y-1 pt-1" data-testid="spiele-match-create-header">
+      <p className="text-xs text-[var(--text-2)]">{t("eyebrow")}</p>
+      <h1 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">{t("title")}</h1>
+      <p className="max-w-2xl text-sm text-[var(--text-2)]">{t("description")}</p>
     </div>
   );
 
   return (
     <SpieleRecordWorkspaceShell
       breadcrumbs={[
-        { label: "Spiele", href: "/dashboard/matchcenter" },
-        { label: "Neues Spiel" },
+        { label: t("backNav"), href: "/dashboard/matchcenter" },
+        { label: t("title") },
       ]}
+      backLabel={t("backNav")}
       header={header}
       testId="spiele-match-create-workspace"
     >

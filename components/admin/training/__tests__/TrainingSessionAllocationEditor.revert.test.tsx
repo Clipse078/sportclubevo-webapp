@@ -6,11 +6,21 @@
  * TRAININGCENTER-EDIT-01B — per-group Serien-Standard revert isolation.
  */
 
+import { NextIntlClientProvider } from "next-intl";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import deMessages from "@/messages/de.json";
 import { TrainingSessionAllocationEditor } from "@/components/admin/training/TrainingSessionAllocationEditor";
 import type { TrainingAllocationDto, TrainingSessionAllocationDto } from "@/lib/training/types";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+
+function renderWithIntl(ui: React.ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="de" messages={deMessages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+}
 
 const FACILITY_GROUPS: FacilityGroup[] = [
   {
@@ -128,7 +138,7 @@ describe("TrainingSessionAllocationEditor — Serien-Standard verwenden", () => 
   });
 
   it("shows series default alongside an occurrence override", () => {
-    render(
+    renderWithIntl(
       <TrainingSessionAllocationEditor
         sessionId="session-1"
         initialAllocations={initialAllocations}
@@ -140,13 +150,16 @@ describe("TrainingSessionAllocationEditor — Serien-Standard verwenden", () => 
       />,
     );
 
-    expect(screen.getByTestId("training-session-allocations-dressing-room-series-default")).toHaveTextContent(
-      "Serien-Standard: E3",
+    expect(screen.getByTestId("training-session-allocations-dressing-room-override-badge")).toHaveTextContent(
+      "Abweichend",
+    );
+    expect(screen.getByTestId("training-session-allocations-pitch-hall-override-badge")).toHaveTextContent(
+      "Abweichend",
     );
   });
 
   it("reverts only the dressing-room override and keeps pitch override intact", async () => {
-    render(
+    renderWithIntl(
       <TrainingSessionAllocationEditor
         sessionId="session-1"
         initialAllocations={initialAllocations}
@@ -169,7 +182,7 @@ describe("TrainingSessionAllocationEditor — Serien-Standard verwenden", () => 
   });
 
   it("reverts only the pitch override and keeps dressing-room override intact", async () => {
-    render(
+    renderWithIntl(
       <TrainingSessionAllocationEditor
         sessionId="session-1"
         initialAllocations={initialAllocations}

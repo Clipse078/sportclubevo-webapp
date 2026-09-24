@@ -18,21 +18,20 @@ describe("DASHBOARD-UX-01 — personal cockpit KPI strip", () => {
       personalScheduleCount: 3,
       personalTasksAvailable: true,
       personalTaskCount: 0,
-      attentionCount: 2,
-      openRegistrationCount: 4,
-      canSeeRegistrations: true,
+      personalAttentionAvailable: true,
+      personalAttentionCount: 2,
     });
 
     expect(strip.map((kpi) => kpi.label)).toEqual([
       "Meine Aufgaben",
       "Meine Termine",
-      "Benötigt Aufmerksamkeit",
-      "Offene Anmeldungen",
+      "Benötigt meine Aufmerksamkeit",
     ]);
     expect(strip.find((kpi) => kpi.key === "my-tasks")?.value).toBe("0");
     expect(strip.find((kpi) => kpi.key === "my-tasks")?.context).toBeUndefined();
     expect(strip.find((kpi) => kpi.key === "my-schedule")?.value).toBe("3");
     expect(strip.find((kpi) => kpi.key === "attention")?.value).toBe("2");
+    expect(strip.some((kpi) => kpi.key === "registrations")).toBe(false);
   });
 
   it("shows em dash for Meine Aufgaben when personal tasks are unauthorized", () => {
@@ -40,9 +39,8 @@ describe("DASHBOARD-UX-01 — personal cockpit KPI strip", () => {
       personalScheduleCount: 0,
       personalTasksAvailable: false,
       personalTaskCount: null,
-      attentionCount: 0,
-      openRegistrationCount: 0,
-      canSeeRegistrations: false,
+      personalAttentionAvailable: false,
+      personalAttentionCount: null,
     });
     expect(strip.find((kpi) => kpi.key === "my-tasks")?.value).toBe("—");
   });
@@ -52,9 +50,8 @@ describe("DASHBOARD-UX-01 — personal cockpit KPI strip", () => {
       personalScheduleCount: 0,
       personalTasksAvailable: false,
       personalTaskCount: null,
-      attentionCount: 0,
-      openRegistrationCount: 0,
-      canSeeRegistrations: false,
+      personalAttentionAvailable: false,
+      personalAttentionCount: null,
     });
     const serialized = JSON.stringify(strip);
     expect(serialized).not.toContain("Aufgabenmodell");

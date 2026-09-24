@@ -12,8 +12,40 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 
-vi.mock("@/lib/personal-agenda/team-scope", () => ({
-  resolvePersonalTeamIds: vi.fn().mockResolvedValue({ teamIds: ["team-1"], hasLinkedPerson: true }),
+vi.mock("@/lib/dashboard/personal-context", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/dashboard/personal-context")>();
+  return {
+    ...actual,
+    resolvePersonalContext: vi.fn().mockResolvedValue({
+      tenantId: "tenant-a",
+      userId: "user-a",
+      personId: "person-a",
+      hasLinkedPerson: true,
+      hasActiveTenantMembership: true,
+      teams: [
+        {
+          teamId: "team-1",
+          teamName: "Team 1",
+          kinds: ["TRAINER"],
+          assignmentFunctionKeys: [],
+          teamSeasonIds: ["ts-team-1"],
+        },
+      ],
+      orgUnits: [],
+      assignments: [],
+    }),
+  };
+});
+
+vi.mock("@/lib/permissions/request-effective-permissions", () => ({
+  getRequestEffectivePermissions: vi.fn().mockResolvedValue({
+    platform: [],
+    tenant: ["tasks.view", "events.view"],
+  }),
+}));
+
+vi.mock("@/lib/training/session-generation-service", () => ({
+  listTrainingSessions: vi.fn().mockResolvedValue([]),
 }));
 
 import { prisma } from "@/lib/db/prisma";

@@ -455,6 +455,8 @@ export interface GenerateTrainingSessionsResult {
 export interface ListTrainingSessionsFilter {
   trainingSeriesId?: string;
   teamSeasonId?: string;
+  /** Batch filter — preferred for personal programme / multi-team scopes. */
+  teamSeasonIds?: string[];
   status?: TrainingSessionStatus;
   /** Inclusive lower bound (calendar date). */
   dateFrom?: Date;

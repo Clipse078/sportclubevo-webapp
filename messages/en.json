@@ -42,5 +42,318 @@
       "whoHasAccessHeading": "Who has access?",
       "directGrantsHeading": "Direct on this resource"
     }
+  },
+  "PersonalDashboard": {
+    "welcome": {
+      "subtitle": "Your personal club overview."
+    },
+    "programme": {
+      "title": "My schedule",
+      "groupToday": "Today",
+      "groupTomorrow": "Tomorrow",
+      "allDay": "All day",
+      "statusCancelled": "Cancelled",
+      "statusPostponed": "Postponed",
+      "emptyTitle": "No events in the coming days",
+      "emptyDescription": "When personally relevant events are coming up, they appear here in chronological order.",
+      "unsupported": "Link your account to a person or use meetings to see your personal schedule.",
+      "viewAll": "View all"
+    },
+    "secondary": {
+      "summary": "News & activity",
+      "newsTitle": "Latest news",
+      "newsViewAll": "View all news",
+      "activityTitle": "Recent activity",
+      "activityViewAll": "View all activity",
+      "activityEmptyTitle": "No activity yet",
+      "activityEmptyDescription": "Recent news, registrations, and planning updates appear here.",
+      "tagNews": "News",
+      "tagRegistration": "Registration",
+      "tagPlanning": "Planning",
+      "tagMeeting": "Meeting",
+      "newsByAuthor": "by {author}",
+      "newsArticle": "News article",
+      "registrationTitle": "New registration: {firstName} {lastName}",
+      "registrationTrial": "Trial training",
+      "registrationPlayer": "Player registration",
+      "eventUpdated": "{title} updated",
+      "eventTypeTraining": "Training",
+      "eventTypeMatch": "Match",
+      "eventTypeTournament": "Tournament",
+      "eventTypeOther": "Event",
+      "eventTypeGeneric": "Appointment",
+      "meetingActivity": "Meeting"
+    },
+    "quickAccess": {
+      "title": "Quick access",
+      "customize": "Customize",
+      "sectionAria": "Personal quick access",
+      "customizeTitle": "Customize quick access",
+      "customizeDescription": "Choose up to {max} shortcuts for your dashboard.",
+      "pinnedHeading": "Pinned",
+      "pinnedEmpty": "No shortcuts pinned yet.",
+      "addHeading": "Add shortcut",
+      "addEmpty": "All available shortcuts are already pinned.",
+      "kindNavigate": "Navigation",
+      "kindCreate": "Create",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "remove": "Remove {label}",
+      "save": "Save",
+      "cancel": "Cancel",
+      "reset": "Restore defaults",
+      "saveError": "Could not save settings.",
+      "entries": {
+        "navigation_wochenplanner": "Weekly plan",
+        "navigation_aufgaben": "Tasks",
+        "navigation_matchcenter": "Matches",
+        "navigation_tournamentcenter": "Tournaments",
+        "navigation_veranstaltungen": "Events",
+        "navigation_workspace": "Documents",
+        "navigation_personen": "Members",
+        "navigation_anmeldungen": "Registrations",
+        "navigation_registrierungen": "Registrations",
+        "action_create_training": "Training",
+        "action_create_match": "Match",
+        "action_create_tournament": "Tournament",
+        "action_create_event": "Event",
+        "action_create_news": "News",
+        "action_create_person": "Person"
+      }
+    },
+    "calendar": {
+      "title": "My calendar",
+      "today": "Today",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "selected": "selected",
+      "ariaMonthGrid": "Personal calendar month grid",
+      "selectedDayPanel": "Appointments on selected day",
+      "emptyDay": "No events on this day.",
+      "dayAriaOneActivity": "1 personal appointment",
+      "dayAriaActivities": "{count} personal appointments",
+      "dayAriaOneActivityNamed": "1 appointment: {title}",
+      "dayAriaActivitiesCount": "{count} appointments",
+      "activityMultipleShort": "{count} appts",
+      "statusCancelled": "Cancelled",
+      "statusPostponed": "Postponed",
+      "selectedDayTasks": "Tasks on selected day",
+      "tasksHeading": "Tasks",
+      "weekdayMon": "Mon",
+      "weekdayTue": "Tue",
+      "weekdayWed": "Wed",
+      "weekdayThu": "Thu",
+      "weekdayFri": "Fri",
+      "weekdaySat": "Sat",
+      "weekdaySun": "Sun"
+    },
+    "attention": {
+      "sectionTitle": "Needs my attention",
+      "listAria": "Needs my attention",
+      "emptyTitle": "All clear",
+      "emptyDescription": "Nothing personally assigned needs your attention right now.",
+      "viewAll": "View all",
+      "openInbox": "Open my tasks",
+      "urgency": {
+        "overdue": "Overdue",
+        "dueToday": "Due today"
+      },
+      "rowAria": "{title}",
+      "rowAriaWithStatus": "{title}. {status}"
+    },
+    "tasks": {
+      "title": "My tasks",
+      "viewAll": "View all",
+      "emptyTitle": "All done",
+      "emptyDescription": "You have no open tasks in your personal list.",
+      "rowAria": "{title}",
+      "rowAriaWithMeta": "{title}. {meta}"
+    }
+  },
+  "TrainingCenter": {
+    "sessionEdit": {
+      "backNavTrainings": "Trainings",
+      "inheritanceIntro": "This session inherits time and resources from its series by default. Changes apply only to this occurrence.",
+      "backToTrainings": "Back to trainings",
+      "breadcrumbPlanning": "Planning",
+      "breadcrumbTrainings": "Trainings",
+      "breadcrumbSingleSession": "Single session",
+      "toSeries": "Go to series",
+      "showInWeekPlanner": "Show in week planner",
+      "dateTimeHeading": "Date & time",
+      "seriesStandard": "Series default",
+      "rescheduledNote": "This session was already adjusted for this date.",
+      "fieldDate": "Date",
+      "fieldStart": "Start",
+      "fieldEnd": "End",
+      "saveChanges": "Save changes",
+      "saving": "Saving…",
+      "useSeriesDefault": "Use series default",
+      "participationHeading": "Participation",
+      "participationDescription": "Response deadline and reminders for this session.",
+      "responseDeadlineSection": "Response deadline",
+      "remindersSection": "Reminders",
+      "validationTimesRequired": "Start and end times are required.",
+      "validationStartBeforeEnd": "Start time must be before end time.",
+      "saveSuccess": "Training updated.",
+      "saveError": "Could not save changes.",
+      "resourcesHeading": "Resources",
+      "resourceChange": "Change",
+      "resourceRestoreSeriesDefault": "Restore series default",
+      "resourcePickerCancel": "Cancel",
+      "resourceUnassigned": "No resource assigned.",
+      "participantsHeading": "Participants",
+      "participantsCount": "{count} people",
+      "participantsEmpty": "No participants for this team.",
+      "participantsTrainers": "Coaches",
+      "participantsPlayers": "Players",
+      "participantsTrainerRole": "Coach",
+      "participantsShowAll": "Show all ({count} players)",
+      "participationStatus": {
+        "OPEN": "Open",
+        "YES": "Attending",
+        "NO": "Absent",
+        "MAYBE": "Maybe"
+      }
+    }
+  },
+  "PlanningEditor": {
+    "common": {
+      "change": "Change",
+      "cancel": "Cancel"
+    },
+    "match": {
+      "create": {
+        "backNav": "Matches",
+        "eyebrow": "Plan match",
+        "title": "New match",
+        "description": "Home/away, opponent, schedule and — for home matches — resources in one guided flow."
+      }
+    },
+    "operational": {
+      "controlsHeading": "Controls & visibility",
+      "zeitstandardLink": "Manage time standards",
+      "homeAway": { "home": "Home", "away": "Away" },
+      "publication": {
+        "heading": "Publication",
+        "homepageRequiresWebsite": "Homepage requires website publication to be enabled.",
+        "channels": {
+          "website": {
+            "label": "Website",
+            "descriptionTournament": "The tournament is published on the club website.",
+            "descriptionEvent": "The event is published on the club website.",
+            "descriptionMatch": "The match appears in the website schedule."
+          },
+          "infoboard": {
+            "label": "Infoboard",
+            "descriptionTournament": "The tournament is shown on the club infoboard.",
+            "descriptionMatch": "Home matches may appear on the infoboard (away excluded)."
+          },
+          "homepage": {
+            "label": "Homepage",
+            "descriptionTournament": "Featured on the homepage (website must be enabled).",
+            "descriptionEvent": "Featured on the homepage (website must be enabled).",
+            "descriptionMatch": "Featured on the homepage (website must be enabled)."
+          },
+          "wochenplan": {
+            "label": "Week plan",
+            "descriptionTournament": "The tournament appears in the public week plan.",
+            "descriptionEvent": "The event appears in the public week plan.",
+            "descriptionMatch": "The match appears in the public week plan (home default)."
+          },
+          "teamPage": {
+            "label": "Team page",
+            "descriptionTournament": "Shown on the main team page (website must be enabled).",
+            "descriptionMatch": "Shown on the team page (website must be enabled)."
+          }
+        }
+      },
+      "participants": {
+        "heading": "Participants",
+        "description": "People and teams with participation status.",
+        "teamsHeading": "Teams",
+        "peopleHeading": "People",
+        "showAll": "Show all ({count})",
+        "empty": "No participants recorded."
+      },
+      "work": {
+        "heading": "Tasks & requirements",
+        "description": "Linked operational tasks and requirements."
+      },
+      "requirements": {
+        "heading": "Requirements",
+        "create": "+ Requirement",
+        "gapDescription": "Requirements cannot yet be linked directly to planning events. Use the requirements center; typed references will follow in a later step.",
+        "emptyLinked": "No linked requirements visible to you yet.",
+        "unlink": "Unlink",
+        "openCenter": "Open requirements center"
+      },
+      "collaboration": {
+        "heading": "Collaboration",
+        "description": "Comments and @mentions for this event.",
+        "clubEventGap": "Comments for club events will follow once CLUB_EVENT is supported as a communication target.",
+        "unavailable": "Collaboration is not available right now."
+      },
+      "prePersist": {
+        "generic": "This section becomes available after creation.",
+        "tasks": "Tasks can be linked only after the record exists.",
+        "requirements": "Requirements can be linked only after the record exists.",
+        "collaboration": "After creation you can add comments and @mentions."
+      }
+    }
+  },
+  "Veranstaltungen": {
+    "editor": {
+      "create": {
+        "backNav": "Club events",
+        "title": "Create club event",
+        "description": "Manual capture of club occasions such as general assembly, coaches meeting, sponsor event, volunteer briefing or internal events.",
+        "intro": "Set schedule, location and visibility for this club event.",
+        "submit": "Create event",
+        "submitting": "Creating…"
+      },
+      "edit": {
+        "backNav": "Club events",
+        "eyebrow": "Edit",
+        "description": "Changes to this event. Visibility settings affect website, homepage and infoboard directly.",
+        "readOnlyNotice": "You have read-only access. The “events.manage” permission is required to edit.",
+        "save": "Save changes",
+        "saving": "Saving…"
+      },
+      "sections": {
+        "details": "Core details",
+        "schedule": "Schedule",
+        "publication": "Publication"
+      },
+      "fields": {
+        "season": "Season",
+        "seasonLoading": "Loading seasons…",
+        "seasonPlaceholder": "Please select",
+        "seasonActiveSuffix": " (current)",
+        "category": "Category",
+        "categoryPlaceholder": "— choose freely —",
+        "title": "Title",
+        "titlePlaceholder": "e.g. General assembly 2025",
+        "description": "Description",
+        "descriptionPlaceholder": "Optional description of the event…",
+        "location": "Location / venue",
+        "locationPlaceholder": "e.g. Clubhouse",
+        "organizer": "Organizer",
+        "organizerPlaceholder": "e.g. Board",
+        "remarks": "Remarks",
+        "remarksPlaceholder": "Internal notes",
+        "date": "Date",
+        "dateStart": "Start",
+        "dateEnd": "End",
+        "timeStart": "Start",
+        "timeEnd": "End",
+        "allDay": "All day",
+        "allDaySummary": "All day"
+      },
+      "errors": {
+        "createFailed": "Could not create the event.",
+        "saveFailed": "Could not save changes."
+      }
+    }
   }
 }

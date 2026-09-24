@@ -31,6 +31,21 @@ export type { DashboardUpcomingListProps } from "./DashboardUpcomingList";
 export { DashboardWelcome } from "./DashboardWelcome";
 export type { DashboardWelcomeProps } from "./DashboardWelcome";
 
+export { DashboardCompactWelcome } from "./DashboardCompactWelcome";
+export type { DashboardCompactWelcomeProps } from "./DashboardCompactWelcome";
+
+export { PersonalIdentityHeader } from "./PersonalIdentityHeader";
+export type { PersonalIdentityHeaderProps } from "./PersonalIdentityHeader";
+
+export { PersonalProgrammeFeed } from "./PersonalProgrammeFeed";
+export type { PersonalProgrammeFeedProps } from "./PersonalProgrammeFeed";
+
+export { PersonalDashboardWorkspace } from "./PersonalDashboardWorkspace";
+export type { PersonalDashboardWorkspaceProps } from "./PersonalDashboardWorkspace";
+
+export { PersonalDashboardSecondary } from "./PersonalDashboardSecondary";
+export type { PersonalDashboardSecondaryProps } from "./PersonalDashboardSecondary";
+
 export { DashboardKpiCard } from "./DashboardKpiCard";
 export type { DashboardKpiCardProps, DashboardKpiAccent } from "./DashboardKpiCard";
 
@@ -73,6 +88,11 @@ export type { MeineAgendaWidgetProps } from "./MeineAgendaWidget";
 
 export { MeineAufgabenWidget } from "./MeineAufgabenWidget";
 
+export { PersonalAttention } from "./PersonalAttention";
+export type { PersonalAttentionProps } from "./PersonalAttention";
+
+export { PersonalTasksPreview } from "./PersonalTasksPreview";
+
 export { HeuteImVereinWidget } from "./HeuteImVereinWidget";
 export type { HeuteImVereinWidgetProps } from "./HeuteImVereinWidget";
 
@@ -87,3 +107,7 @@ export type {
   DashboardQuickActionStripProps,
   QuickActionStripItem,
 } from "./DashboardQuickActionStrip";
+
+export { PersonalQuickAccess } from "./PersonalQuickAccess";
+export type { PersonalQuickAccessItem } from "./PersonalQuickAccess";
+export { QuickAccessCustomizer } from "./QuickAccessCustomizer";

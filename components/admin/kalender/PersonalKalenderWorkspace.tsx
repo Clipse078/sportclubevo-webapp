@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import PersonalKalenderMonthView from "./PersonalKalenderMonthView";
+import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
 import type { PersonalCalendarItem } from "@/lib/personal-agenda/types";
 import type { PersonalKalenderUrlState } from "@/lib/personal-agenda/kalender-url";
 import { buildPersonalKalenderHref } from "@/lib/personal-agenda/kalender-url";
@@ -8,14 +9,24 @@ import { formatMonthParam, parseMonthParam } from "@/lib/personal-agenda/calenda
 import { cn } from "@/lib/cn";
 
 type Props = {
-  items: PersonalCalendarItem[];
+  programmeItems: PersonalProgrammeItem[];
+  taskItems: PersonalCalendarItem[];
+  timeZone: string;
   urlState: PersonalKalenderUrlState;
   supported: boolean;
+  todayHref?: string;
 };
 
 const BASE = "/dashboard/kalender";
 
-export default function PersonalKalenderWorkspace({ items, urlState, supported }: Props) {
+export default function PersonalKalenderWorkspace({
+  programmeItems,
+  taskItems,
+  timeZone,
+  urlState,
+  supported,
+  todayHref,
+}: Props) {
   const monthStart = parseMonthParam(urlState.month, new Date());
   const prevMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1);
   const nextMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1);
@@ -67,7 +78,9 @@ export default function PersonalKalenderWorkspace({ items, urlState, supported }
       ) : (
         <PersonalKalenderMonthView
           monthParam={urlState.month}
-          items={items}
+          timeZone={timeZone}
+          programmeItems={programmeItems}
+          taskItems={taskItems}
           previousMonthHref={buildPersonalKalenderHref(
             BASE,
             { month: formatMonthParam(prevMonth) },
@@ -78,6 +91,7 @@ export default function PersonalKalenderWorkspace({ items, urlState, supported }
             { month: formatMonthParam(nextMonth) },
             urlState,
           )}
+          todayHref={todayHref}
         />
       )}
     </div>

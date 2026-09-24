@@ -418,6 +418,7 @@ export async function listTrainingSessions(
   const rows = await findAllTrainingSessions(tenantId, {
     trainingSeriesId: filter.trainingSeriesId,
     teamSeasonId: filter.teamSeasonId,
+    teamSeasonIds: filter.teamSeasonIds,
     status: filter.status,
     dateFrom: filter.dateFrom ? normalizeListTrainingSessionDateBound(filter.dateFrom) : undefined,
     dateTo: filter.dateTo ? normalizeListTrainingSessionDateBound(filter.dateTo) : undefined,

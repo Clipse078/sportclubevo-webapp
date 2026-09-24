@@ -44,6 +44,8 @@ type Props = {
   values: ReminderValues;
   disabled?: boolean;
   namePrefix?: string;
+  /** Override the default section heading (e.g. i18n on session edit). */
+  sectionTitle?: string;
 };
 
 export function TaskReminderFields({
@@ -51,6 +53,7 @@ export function TaskReminderFields({
   values,
   disabled,
   namePrefix = "",
+  sectionTitle,
 }: Props) {
   const p = namePrefix;
   const [r1, setR1] = useState(() => presetValueForTask(values, 1));
@@ -61,7 +64,7 @@ export function TaskReminderFields({
   return (
     <div className="space-y-3" data-testid="task-reminder-fields">
       <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-        Erinnerungen
+        {sectionTitle ?? "Erinnerungen"}
       </p>
 
       <label className="block space-y-1">

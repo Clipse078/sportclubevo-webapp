@@ -18,7 +18,7 @@ import {
   type ParticipationResponseDeadlineSchedule,
 } from "./participation-response-deadline-schedule";
 
-const PARTICIPATION_EVENT_TYPES = new Set<EventType>(["MATCH", "TOURNAMENT"]);
+const PARTICIPATION_EVENT_TYPES = new Set<EventType>(["MATCH", "TOURNAMENT", "OTHER"]);
 
 export type ParticipationRequestConfigMutation = {
   participationResponseDueAt?: Date | null;
@@ -170,7 +170,7 @@ export async function updateEventParticipationRequestConfig(
 
   if (!PARTICIPATION_EVENT_TYPES.has(event.type)) {
     throw new ParticipationValidationError(
-      "Antwortfrist ist nur für Spiele und Turniere verfügbar.",
+      "Antwortfrist ist für diesen Event-Typ nicht verfügbar.",
     );
   }
 

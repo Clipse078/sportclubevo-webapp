@@ -11,8 +11,13 @@ import { ToastProvider } from "@/components/ui/ToastProvider";
 import { PageShell } from "@/components/ui/page";
 import TournamentEditForm from "@/components/admin/tournamentcenter/TournamentEditForm";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
+import ContextRelatedRequirementsPanel from "@/components/admin/aufgaben/contextual/ContextRelatedRequirementsPanel";
 import ContextualTaskCreateTriggerServer from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTriggerServer";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
+import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
+import PlanningParticipantsList from "@/components/admin/shared/planning-editor/PlanningParticipantsList";
+import { loadTournamentPlanningParticipants } from "@/lib/planning/load-tournament-planning-participants";
 
 type Props = { params: Promise<{ tournamentId: string }> };
 
@@ -70,6 +75,38 @@ export default async function TournamentEditPage({ params }: Props) {
   const pitchHallFacilityGroups = facilityGroupsForTypes(["FULL_PITCH", "HALF_PITCH"]);
   const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
 
+  const locale = tenantContext.locale ?? "de-CH";
+  const timeZone = tenantContext.timezone ?? "Europe/Zurich";
+  const participantPresentation = await loadTournamentPlanningParticipants(tenantContext.id, tournament);
+
+  const participantsSection = (
+    <PlanningEditorParticipantsSection
+      headingId="turniere-edit-participants-heading"
+      testId="turniere-edit-participants-section"
+      persisted
+    >
+      <PlanningParticipantsList
+        people={participantPresentation.people}
+        teams={participantPresentation.teams}
+      />
+    </PlanningEditorParticipantsSection>
+  );
+
+  const collaborationSection = (
+    <PlanningEditorCollaborationSection
+      headingId="turniere-edit-collaboration-heading"
+      testId="turniere-edit-collaboration-section"
+      persisted
+      tenantSlug={tenantContext.key}
+      targetType="TOURNAMENT"
+      targetId={tournament.id}
+      canEdit={canManage}
+      currentUserId={session.user?.id ?? null}
+      locale={locale}
+      timezone={timeZone}
+    />
+  );
+
   return (
     <PageShell fullWidth>
       <ToastProvider>
@@ -88,18 +125,27 @@ export default async function TournamentEditPage({ params }: Props) {
               contextType="TOURNAMENT"
               contextId={tournament.id}
               variant="menuItem"
-              locale={tenantContext.locale ?? "de-CH"}
-              timeZone={tenantContext.timezone ?? "Europe/Zurich"}
+              locale={locale}
+              timeZone={timeZone}
             />
           }
           relatedTasksPanel={
             <ContextRelatedTasksPanel
               contextType="TOURNAMENT"
               contextId={tournament.id}
-              locale={tenantContext.locale ?? "de-CH"}
-              timeZone={tenantContext.timezone ?? "Europe/Zurich"}
+              locale={locale}
+              timeZone={timeZone}
             />
           }
+          relatedRequirementsPanel={
+            <ContextRelatedRequirementsPanel
+              resourceType="TOURNAMENT"
+              resourceId={tournament.id}
+              locale={locale}
+            />
+          }
+          participantsSection={participantsSection}
+          collaborationSection={collaborationSection}
         />
       </ToastProvider>
     </PageShell>

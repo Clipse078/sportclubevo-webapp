@@ -28,6 +28,7 @@ export const PARTICIPATION_EVENT_KIND_LABELS: Record<AttendanceEventKind, string
   TRAINING: "Training",
   MATCH: "Spiel",
   TOURNAMENT: "Turnier",
+  CLUB_EVENT: "Veranstaltung",
 };
 
 export function getParticipationStatusLabel(status: ParticipationResponseStatus): string {

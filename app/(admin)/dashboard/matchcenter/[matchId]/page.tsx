@@ -9,6 +9,10 @@ import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import MatchcenterDetail from "@/components/admin/matchcenter/MatchcenterDetail";
 import { hasPermission } from "@/lib/permissions/has-permission";
+import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
+import PlanningParticipantsList from "@/components/admin/shared/planning-editor/PlanningParticipantsList";
+import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
+import { loadMatchPlanningParticipants } from "@/lib/planning/load-match-planning-participants";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import {
   getActiveResourceOptionsForTenant,
@@ -150,12 +154,45 @@ export default async function MatchcenterDetailPage({
     historicalNamesByCode,
   );
 
+  const locale = tenantContext.locale ?? "de-CH";
+  const timeZone = tenantContext.timezone ?? "Europe/Zurich";
+  const participantPresentation = await loadMatchPlanningParticipants(tenantContext.id, {
+    teamId: match.teamId,
+    seasonId: match.seasonId,
+    matchEventId: match.id,
+  });
+
+  const participantsSection = (
+    <PlanningEditorParticipantsSection
+      headingId="spiele-edit-participants-heading"
+      testId="spiele-edit-participants-section"
+      persisted
+    >
+      <PlanningParticipantsList people={participantPresentation.people} />
+    </PlanningEditorParticipantsSection>
+  );
+
+  const collaborationSection = (
+    <PlanningEditorCollaborationSection
+      headingId="spiele-edit-collaboration-heading"
+      testId="spiele-edit-collaboration-section"
+      persisted
+      tenantSlug={tenantContext.key}
+      targetType="MATCH"
+      targetId={match.id}
+      canEdit={canManageMappings}
+      currentUserId={session.user?.id ?? null}
+      locale={locale}
+      timezone={timeZone}
+    />
+  );
+
   return (
     <ToastProvider>
       <MatchcenterDetail
         match={match}
-        locale={tenantContext.locale ?? "de-CH"}
-        timezone={tenantContext.timezone ?? "Europe/Zurich"}
+        locale={locale}
+        timezone={timeZone}
         canManageMappings={canManageMappings}
         canDelete={canDelete}
         pitchOptions={pitchOptions}
@@ -166,6 +203,8 @@ export default async function MatchcenterDetailPage({
         canValidatePlanning={canValidatePlanning}
         isProtectedSource={isProtectedSource}
         tenantLogoUrl={tenantContext.logoUrl}
+        participantsSection={participantsSection}
+        collaborationSection={collaborationSection}
       />
     </ToastProvider>
   );

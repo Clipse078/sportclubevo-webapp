@@ -1,6 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, CalendarDays, Layers } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -10,14 +8,40 @@ import { TrainingSessionNotFoundError } from "@/lib/training/errors";
 import { listAllocationsByTrainingSeries } from "@/lib/training/training-allocation-service";
 import { listAllocationsByTrainingSession } from "@/lib/training/session-allocation-service";
 import { getFacilitiesForTenant } from "@/lib/facilities/queries";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import TrainingSessionEditForm from "@/components/admin/training/TrainingSessionEditForm";
+import TrainingSessionEditHeader from "@/components/admin/training/TrainingSessionEditHeader";
 import { ParticipationRequestConfigEditor } from "@/components/admin/participation/ParticipationRequestConfigEditor";
 import { TrainingSessionAllocationEditor } from "@/components/admin/training/TrainingSessionAllocationEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { buildTrainingSeriesEditHref } from "@/lib/training/series-cockpit";
 import { buildTrainingSessionWochenplanerHref } from "@/lib/training/wochenplaner-deep-links";
+import {
+  formatTrainingSessionEditSeriesStandardLine,
+  pickTrainingSessionEditPresentation,
+} from "@/lib/training/training-session-edit-presentation";
+import PlanningEditorShell from "@/components/admin/shared/planning-editor/PlanningEditorShell";
+import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
+import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
+import {
+  PLANNING_EDITOR_PRIMARY_COLUMN_CLASS,
+  PLANNING_EDITOR_PRIMARY_WORKSPACE_GRID_CLASS,
+  PLANNING_EDITOR_SECONDARY_COLUMN_CLASS,
+} from "@/components/admin/shared/planning-editor/planning-editor-layout";
+import { cn } from "@/lib/cn";
+import { getTranslations } from "next-intl/server";
+import { getTrainingSessionParticipantRoster } from "@/lib/training/training-session-participants";
+import { TrainingSessionParticipantsPanel } from "@/components/admin/training/TrainingSessionParticipantsPanel";
+import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
+import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
+import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
+import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
+import PlanningEditorZeitstandardLink from "@/components/admin/shared/planning-editor/PlanningEditorZeitstandardLink";
+import TrainingRecordPublicationSection from "@/components/admin/training/record/TrainingRecordPublicationSection";
+import ContextRelatedRequirementsPanel from "@/components/admin/aufgaben/contextual/ContextRelatedRequirementsPanel";
+import { getTranslations as getPlanningTranslations } from "next-intl/server";
+import { hasPermission as checkPermission } from "@/lib/permissions/has-permission";
+import { prisma } from "@/lib/db/prisma";
 
 type Props = { params: Promise<{ sessionId: string }> };
 
@@ -40,6 +64,8 @@ export default async function TrainingSessionEditPage({ params }: Props) {
   if (!tenantContext) notFound();
 
   const canManage = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
+  const canManageFacilities = checkPermission(session, PERMISSIONS.FACILITIES_MANAGE);
+  const tPlanning = await getPlanningTranslations("PlanningEditor.operational");
   const { sessionId } = await params;
 
   let trainingSession;
@@ -54,11 +80,47 @@ export default async function TrainingSessionEditPage({ params }: Props) {
 
   const locale = tenantContext.locale ?? "de-CH";
   const timezone = tenantContext.timezone ?? "Europe/Zurich";
+  const t = await getTranslations("TrainingCenter.sessionEdit");
 
-  const [seriesAllocations, sessionAllocations, facilities] = await Promise.all([
+  const effectiveStartTime = formatWallTime(trainingSession.startAt, trainingSession.timezone);
+  const effectiveEndTime = formatWallTime(trainingSession.endAt, trainingSession.timezone);
+  const originalStartTime = formatWallTime(trainingSession.originalStartAt, trainingSession.timezone);
+  const originalEndTime = formatWallTime(trainingSession.originalEndAt, trainingSession.timezone);
+
+  const { pageTitle, scheduleContext } = pickTrainingSessionEditPresentation({
+    teamName: trainingSession.teamName,
+    trainingSeriesTitle: trainingSession.trainingSeriesTitle,
+    date: trainingSession.date,
+    timezone: trainingSession.timezone,
+    locale,
+    startTime: effectiveStartTime,
+    endTime: effectiveEndTime,
+  });
+
+  const seriesStandardLine = formatTrainingSessionEditSeriesStandardLine({
+    originalDate: trainingSession.originalDate,
+    originalStartTime,
+    originalEndTime,
+    locale,
+    timezone: trainingSession.timezone,
+  });
+
+  const canEditTeamPublication = checkPermission(session, PERMISSIONS.TEAMS_MANAGE);
+
+  const [seriesAllocations, sessionAllocations, facilities, participantRoster, teamSeasonPublication] =
+    await Promise.all([
     listAllocationsByTrainingSeries(tenantContext.id, trainingSession.trainingSeriesId),
     listAllocationsByTrainingSession(tenantContext.id, sessionId),
     getFacilitiesForTenant(tenantContext.id),
+    getTrainingSessionParticipantRoster(tenantContext.id, sessionId),
+    prisma.teamSeason.findFirst({
+      where: { id: trainingSession.teamSeasonId, team: { tenantId: tenantContext.id } },
+      select: {
+        teamId: true,
+        trainingWebsiteVisible: true,
+        infoboardVisible: true,
+      },
+    }),
   ]);
 
   const facilityGroups: FacilityGroup[] = facilities
@@ -89,83 +151,149 @@ export default async function TrainingSessionEditPage({ params }: Props) {
 
   return (
     <ToastProvider>
-      <div className="max-w-[900px] space-y-6">
-        <Link
-          href="/dashboard/training"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--text-2)] transition hover:text-[var(--foreground)]"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Zurück zu Trainings
-        </Link>
+      <PlanningEditorShell testId="training-session-edit-page">
+        <TrainingSessionEditHeader
+          backHref="/dashboard/training"
+          backLabel={t("backNavTrainings")}
+          title={pageTitle}
+          scheduleContext={scheduleContext}
+          seriesEditHref={buildTrainingSeriesEditHref(trainingSession.trainingSeriesId)}
+          wochenplanerHref={wochenplanerHref}
+          toSeriesLabel={t("toSeries")}
+          wochenplanerLabel={t("showInWeekPlanner")}
+        />
 
-        <AdminSectionHeader
-          eyebrow="Einzeltraining bearbeiten"
-          title={`${trainingSession.teamName} · ${trainingSession.trainingSeriesTitle}`}
-          description={`Teil der Serie «${trainingSession.trainingSeriesTitle}». Änderungen gelten ausschliesslich für dieses eine Training.`}
-          actions={
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href={buildTrainingSeriesEditHref(trainingSession.trainingSeriesId)}
-                className="fca-button-secondary inline-flex items-center gap-1.5 text-sm"
-              >
-                <Layers className="h-3.5 w-3.5" />
-                Zur Serie
-              </Link>
-              <Link href={wochenplanerHref} className="fca-button-secondary inline-flex items-center gap-1.5 text-sm">
-                <CalendarDays className="h-3.5 w-3.5" />
-                Im Wochenplaner anzeigen
-              </Link>
-            </div>
+        <p className="text-xs leading-snug text-[var(--text-2)]" data-testid="training-session-edit-inheritance-intro">
+          {t("inheritanceIntro")}
+        </p>
+
+        {teamSeasonPublication ? (
+          <PlanningEditorControlBar testId="training-session-edit-control-bar">
+            <TrainingRecordPublicationSection
+              teamId={teamSeasonPublication.teamId}
+              teamSeasonId={trainingSession.teamSeasonId}
+              initialPublication={{
+                trainingWebsiteVisible: teamSeasonPublication.trainingWebsiteVisible,
+                infoboardVisible: teamSeasonPublication.infoboardVisible,
+              }}
+              canEditTeamPublication={canEditTeamPublication}
+              teamSettingsHref={`/dashboard/teams/${teamSeasonPublication.teamId}/settings`}
+            />
+          </PlanningEditorControlBar>
+        ) : null}
+
+        <div
+          className={PLANNING_EDITOR_PRIMARY_WORKSPACE_GRID_CLASS}
+          data-testid="training-session-edit-workspace-grid"
+        >
+          <PlanningEditorSection
+            className={PLANNING_EDITOR_PRIMARY_COLUMN_CLASS}
+            ariaLabelledBy="training-session-edit-datetime-heading"
+            testId="training-session-edit-datetime-panel"
+          >
+              <TrainingSessionEditForm
+                sessionId={trainingSession.id}
+                canManage={canManage}
+                isRescheduled={trainingSession.isRescheduled}
+                effectiveDate={trainingSession.date}
+                effectiveStartTime={effectiveStartTime}
+                effectiveEndTime={effectiveEndTime}
+                originalDate={trainingSession.originalDate}
+                originalStartTime={originalStartTime}
+                originalEndTime={originalEndTime}
+                timezone={trainingSession.timezone}
+                locale={locale}
+                seriesStandardLine={seriesStandardLine}
+              />
+          </PlanningEditorSection>
+
+          <PlanningEditorSection
+            className={cn("space-y-2", PLANNING_EDITOR_SECONDARY_COLUMN_CLASS)}
+            ariaLabelledBy="training-session-edit-participation-heading"
+            testId="training-session-edit-participation-panel"
+          >
+              <PlanningEditorSectionHeading
+                id="training-session-edit-participation-heading"
+                title={t("participationHeading")}
+                description={t("participationDescription")}
+              />
+              <ParticipationRequestConfigEditor
+                apiPath={`/api/training-sessions/${trainingSession.id}/participation-request`}
+                timeZone={timezone}
+                disabled={!canManage}
+                layout="sessionEdit"
+                values={{
+                  participationResponseDueAt: trainingSession.participationResponseDueAt,
+                  participationReminder1At: trainingSession.participationReminder1At,
+                  participationReminder2At: trainingSession.participationReminder2At,
+                  participationReminder1PresetKey: trainingSession.participationReminder1PresetKey,
+                  participationReminder2PresetKey: trainingSession.participationReminder2PresetKey,
+                }}
+              />
+          </PlanningEditorSection>
+        </div>
+
+        <PlanningEditorSection testId="training-session-edit-allocations-panel">
+            <TrainingSessionAllocationEditor
+              sessionId={trainingSession.id}
+              initialAllocations={sessionAllocations}
+              seriesAllocations={seriesAllocations}
+              facilityGroups={facilityGroups}
+              canManage={canManage}
+              sessionStartAt={trainingSession.startAt}
+              sessionEndAt={trainingSession.endAt}
+            />
+        </PlanningEditorSection>
+
+        <PlanningEditorSection
+          ariaLabelledBy="training-session-edit-participants-heading"
+          testId="training-session-edit-participants-panel"
+        >
+            <TrainingSessionParticipantsPanel participants={participantRoster.participants} />
+        </PlanningEditorSection>
+
+        <div className="px-0">
+          <PlanningEditorZeitstandardLink
+            canManageFacilities={canManageFacilities}
+            label={tPlanning("zeitstandardLink")}
+          />
+        </div>
+
+        <PlanningEditorWorkSection
+          headingId="training-session-edit-work-heading"
+          testId="training-session-edit-work-section"
+          persisted
+          locale={locale}
+          tasksPanel={
+            <ContextRelatedTasksPanel
+              contextType="TRAINING"
+              contextId={trainingSession.trainingSeriesId}
+              locale={locale}
+              timeZone={timezone}
+            />
+          }
+          requirementsPanel={
+            <ContextRelatedRequirementsPanel
+              resourceType="TRAINING"
+              resourceId={trainingSession.trainingSeriesId}
+              locale={locale}
+            />
           }
         />
 
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <TrainingSessionEditForm
-            sessionId={trainingSession.id}
-            canManage={canManage}
-            isRescheduled={trainingSession.isRescheduled}
-            effectiveDate={trainingSession.date}
-            effectiveStartTime={formatWallTime(trainingSession.startAt, trainingSession.timezone)}
-            effectiveEndTime={formatWallTime(trainingSession.endAt, trainingSession.timezone)}
-            originalDate={trainingSession.originalDate}
-            originalStartTime={formatWallTime(trainingSession.originalStartAt, trainingSession.timezone)}
-            originalEndTime={formatWallTime(trainingSession.originalEndAt, trainingSession.timezone)}
-            timezone={trainingSession.timezone}
-            locale={locale}
-          />
-        </div>
-
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-3 text-lg font-semibold text-gray-900">Teilnahme</h2>
-          <p className="mb-4 text-sm text-gray-500">
-            Antwortfrist für dieses einzelne Training (Serien-Standard bleibt unverändert).
-          </p>
-          <ParticipationRequestConfigEditor
-            apiPath={`/api/training-sessions/${trainingSession.id}/participation-request`}
-            timeZone={timezone}
-            disabled={!canManage}
-            values={{
-              participationResponseDueAt: trainingSession.participationResponseDueAt,
-              participationReminder1At: trainingSession.participationReminder1At,
-              participationReminder2At: trainingSession.participationReminder2At,
-              participationReminder1PresetKey: trainingSession.participationReminder1PresetKey,
-              participationReminder2PresetKey: trainingSession.participationReminder2PresetKey,
-            }}
-          />
-        </div>
-
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <TrainingSessionAllocationEditor
-            sessionId={trainingSession.id}
-            initialAllocations={sessionAllocations}
-            seriesAllocations={seriesAllocations}
-            facilityGroups={facilityGroups}
-            canManage={canManage}
-            sessionStartAt={trainingSession.startAt}
-            sessionEndAt={trainingSession.endAt}
-          />
-        </div>
-      </div>
+        <PlanningEditorCollaborationSection
+          headingId="training-session-edit-collaboration-heading"
+          testId="training-session-edit-collaboration-section"
+          persisted
+          tenantSlug={tenantContext.key}
+          targetType="TRAINING"
+          targetId={sessionId}
+          canEdit={canManage}
+          currentUserId={session.user?.id ?? null}
+          locale={locale}
+          timezone={timezone}
+        />
+      </PlanningEditorShell>
     </ToastProvider>
   );
 }
