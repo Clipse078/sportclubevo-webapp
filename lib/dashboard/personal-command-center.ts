@@ -3,7 +3,6 @@
  * Loads canonical personal surfaces only; no tenant-wide operational dashboard queries.
  */
 
-import type { EventType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
 import { formatDate } from "@/lib/tenant-runtime/formatters";
@@ -35,14 +34,9 @@ import {
   resolveNewsHeroImageUrl,
   type CommandCenterNewsItem,
 } from "@/lib/dashboard/command-center-presentation";
+import type { PersonalDashboardSecondaryActivity } from "@/lib/dashboard/secondary-activity-facts";
 
-export type PersonalDashboardSecondaryActivity = {
-  key: string;
-  title: string;
-  subtitle: string;
-  date: Date;
-  kind: "news" | "registration" | "event" | "meeting";
-};
+export type { PersonalDashboardSecondaryActivity };
 
 export type PersonalCommandCenterData = {
   calendarMonthParam: string;
@@ -91,21 +85,6 @@ function tenantEventWhere(tenantId: string) {
     tenantId,
     OR: [{ teamId: null }, { team: { tenantId } }],
   };
-}
-
-function getEventTypeLabel(type: EventType): string {
-  switch (type) {
-    case "TRAINING":
-      return "Training";
-    case "MATCH":
-      return "Spiel";
-    case "TOURNAMENT":
-      return "Turnier";
-    case "OTHER":
-      return "Veranstaltung";
-    default:
-      return "Termin";
-  }
 }
 
 async function loadSecondarySnapshot(args: {
@@ -207,21 +186,22 @@ async function loadSecondarySnapshot(args: {
     ...recentNews.map((item) => ({
       key: `news-${item.id}`,
       title: item.title,
-      subtitle: item.authorName ? `von ${item.authorName}` : "Newsartikel",
+      authorName: item.authorName,
       date: item.updatedAt,
       kind: "news" as const,
     })),
     ...recentRegistrations.map((item) => ({
       key: `reg-${item.id}`,
-      title: `Neue Anmeldung: ${item.firstName} ${item.lastName}`,
-      subtitle: item.type === "PROBETRAINING" ? "Probetraining" : "Spieleranmeldung",
+      firstName: item.firstName,
+      lastName: item.lastName,
+      registrationType: item.type,
       date: item.createdAt,
       kind: "registration" as const,
     })),
     ...recentEvents.map((item) => ({
       key: `event-${item.id}`,
-      title: `${item.title} aktualisiert`,
-      subtitle: getEventTypeLabel(item.type),
+      title: item.title,
+      eventType: item.type,
       date: item.updatedAt,
       kind: "event" as const,
     })),
@@ -230,6 +210,19 @@ async function loadSecondarySnapshot(args: {
     .slice(0, 4);
 
   return { newsItems, activitySources };
+}
+
+/** Fail-soft boundary: secondary club news/activity must not break the personal dashboard. */
+async function loadSecondarySnapshotSafe(args: Parameters<typeof loadSecondarySnapshot>[0]): Promise<{
+  newsItems: CommandCenterNewsItem[];
+  activitySources: PersonalDashboardSecondaryActivity[];
+}> {
+  try {
+    return await loadSecondarySnapshot(args);
+  } catch (error) {
+    console.error("[personal-dashboard] secondary snapshot failed", error);
+    return { newsItems: [], activitySources: [] };
+  }
 }
 
 export async function getPersonalCommandCenterData(args: {
@@ -294,7 +287,7 @@ export async function getPersonalCommandCenterData(args: {
           attention: emptyPersonalAttention,
           tasks: { authorized: false, count: null, preview: [] },
         }),
-    loadSecondarySnapshot({
+    loadSecondarySnapshotSafe({
       tenantId: args.tenantId,
       actor: args.actor,
       fmtCfg: args.fmtCfg,

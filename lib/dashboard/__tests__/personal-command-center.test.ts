@@ -22,4 +22,8 @@ describe("DASHBOARD-06 personal command center loader", () => {
     expect(loaderSource).toContain("mergeProgrammeRanges");
     expect(loaderSource).toContain("buildProgrammeFeedGroups");
   });
+
+  it("fail-soft isolates secondary news/activity from primary dashboard", () => {
+    expect(loaderSource).toContain("loadSecondarySnapshotSafe");
+  });
 });
