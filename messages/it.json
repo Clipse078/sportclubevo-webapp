@@ -69,7 +69,19 @@
       "tagNews": "Notizie",
       "tagRegistration": "Iscrizione",
       "tagPlanning": "Pianificazione",
-      "tagMeeting": "Riunione"
+      "tagMeeting": "Riunione",
+      "newsByAuthor": "di {author}",
+      "newsArticle": "Articolo di notizie",
+      "registrationTitle": "Nuova iscrizione: {firstName} {lastName}",
+      "registrationTrial": "Allenamento di prova",
+      "registrationPlayer": "Iscrizione giocatore",
+      "eventUpdated": "{title} aggiornato",
+      "eventTypeTraining": "Allenamento",
+      "eventTypeMatch": "Partita",
+      "eventTypeTournament": "Torneo",
+      "eventTypeOther": "Evento",
+      "eventTypeGeneric": "Appuntamento",
+      "meetingActivity": "Riunione"
     },
     "quickAccess": {
       "title": "Accesso rapido",

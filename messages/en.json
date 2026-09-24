@@ -69,7 +69,19 @@
       "tagNews": "News",
       "tagRegistration": "Registration",
       "tagPlanning": "Planning",
-      "tagMeeting": "Meeting"
+      "tagMeeting": "Meeting",
+      "newsByAuthor": "by {author}",
+      "newsArticle": "News article",
+      "registrationTitle": "New registration: {firstName} {lastName}",
+      "registrationTrial": "Trial training",
+      "registrationPlayer": "Player registration",
+      "eventUpdated": "{title} updated",
+      "eventTypeTraining": "Training",
+      "eventTypeMatch": "Match",
+      "eventTypeTournament": "Tournament",
+      "eventTypeOther": "Event",
+      "eventTypeGeneric": "Appointment",
+      "meetingActivity": "Meeting"
     },
     "quickAccess": {
       "title": "Quick access",

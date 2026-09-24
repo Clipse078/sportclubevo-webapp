@@ -25,6 +25,7 @@ import {
   PersonalDashboardSecondary,
 } from "@/components/ui/dashboard";
 import type { DashboardActivityItem } from "@/components/ui/dashboard";
+import { formatSecondaryActivityPresentation } from "@/lib/dashboard/secondary-activity-presentation";
 import { resolvePersonalQuickAccess } from "@/lib/dashboard/quick-access/resolve-quick-access";
 import { getQuickAccessLabel } from "@/lib/dashboard/quick-access/labels";
 import { QUICK_ACCESS_MAX_PINS } from "@/lib/dashboard/quick-access/constants";
@@ -147,11 +148,14 @@ export default async function ClubDashboardView({
   const activityItems: DashboardActivityItem[] =
     personal?.activitySources.map((entry) => {
       const meta = activityTagMap[entry.kind];
+      const presentation = formatSecondaryActivityPresentation(entry, (key, values) =>
+        tSecondary(key, values ?? {}),
+      );
       return {
         key: entry.key,
         icon: meta.icon,
-        title: entry.title,
-        subtitle: entry.subtitle,
+        title: presentation.title,
+        subtitle: presentation.subtitle,
         timestamp: formatDate(entry.date, fmtCfg),
         tag: meta.tag,
         tagVariant: meta.tagVariant,
