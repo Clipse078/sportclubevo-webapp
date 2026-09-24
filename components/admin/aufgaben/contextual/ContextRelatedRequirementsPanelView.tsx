@@ -18,6 +18,7 @@ type Props = {
   resourceId: string;
   requirements: LinkedRequirement[];
   canLink?: boolean;
+  canUnlink?: boolean;
 };
 
 export default function ContextRelatedRequirementsPanelView({
@@ -26,6 +27,7 @@ export default function ContextRelatedRequirementsPanelView({
   resourceId,
   requirements,
   canLink = false,
+  canUnlink = false,
 }: Props) {
   const t = useTranslations("PlanningEditor.operational.requirements");
 
@@ -57,14 +59,31 @@ export default function ContextRelatedRequirementsPanelView({
         <ul className="space-y-2" data-testid="context-related-requirements-list">
           {requirements.map((req) => (
             <li key={req.referenceId}>
-              <Link
-                href={req.href}
-                className="flex items-center justify-between gap-2 rounded-lg border border-[var(--border)]/60 px-3 py-2 text-sm hover:bg-[var(--surface-2)]"
-                data-testid={`context-related-requirement-${req.requirementId}`}
-              >
-                <span className="font-medium text-[var(--foreground)]">{req.title}</span>
-                <span className="text-xs text-[var(--text-2)]">{req.status}</span>
-              </Link>
+              <div className="flex items-center justify-between gap-2 rounded-lg border border-[var(--border)]/60 px-3 py-2 text-sm">
+                <Link
+                  href={req.href}
+                  className="min-w-0 flex-1 hover:underline"
+                  data-testid={`context-related-requirement-${req.requirementId}`}
+                >
+                  <span className="font-medium text-[var(--foreground)]">{req.title}</span>
+                  <span className="ml-2 text-xs text-[var(--text-2)]">{req.status}</span>
+                </Link>
+                {canUnlink ? (
+                  <button
+                    type="button"
+                    className="text-xs text-[var(--destructive)] hover:underline"
+                    data-testid={`context-related-requirement-unlink-${req.referenceId}`}
+                    onClick={async () => {
+                      await fetch(`/api/planning/requirement-links/${req.referenceId}`, {
+                        method: "DELETE",
+                      });
+                      window.location.reload();
+                    }}
+                  >
+                    {t("unlink")}
+                  </button>
+                ) : null}
+              </div>
             </li>
           ))}
         </ul>

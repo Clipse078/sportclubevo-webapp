@@ -27,6 +27,7 @@ export default async function ContextRelatedRequirementsPanel({
       resourceId={resourceId}
       requirements={panel.requirements}
       canLink={panel.canLink}
+      canUnlink={panel.canLink}
     />
   );
 }
