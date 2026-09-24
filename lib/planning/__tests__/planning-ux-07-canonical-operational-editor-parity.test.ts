@@ -33,10 +33,14 @@ describe("PLANNING-UX-07 canonical operational editor parity", () => {
     expect(form).toContain("PlanningEditorOperationalWorkspace");
     expect(form).toContain("planner-entry-publication-panel");
     const ops = read("components/admin/planner/PlannerTournamentOperationalSections.tsx");
+    const workspace = read("components/admin/planner/PlannerTournamentCanonicalWorkspace.tsx");
     expect(ops).toContain("planner-tournament-work-section");
     expect(ops).toContain("planner-tournament-collaboration-section");
     expect(ops).toContain('contextType="TOURNAMENT"');
-    expect(ops).toContain("participation-request");
+    expect(workspace).toContain("turniere-canonical-participants-section");
+    expect(workspace).toContain("TournamentResourceAllocationEditor");
+    const rail = read("components/admin/planner/PlannerTournamentOperationalRail.tsx");
+    expect(rail).toContain("participation-request");
   });
 
   it("veranstaltung edit composes operational sections inside PlanningEditorOperationalWorkspace", () => {

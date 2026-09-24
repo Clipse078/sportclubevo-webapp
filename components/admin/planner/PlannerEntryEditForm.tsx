@@ -83,6 +83,8 @@ type PlannerEntryEditFormProps = {
   canManage: boolean;
   /** Tournament (and future types): canonical operational blocks in the primary column. */
   operationalExtensions?: ReactNode;
+  /** Tournament participation / RSVP controls in the sticky rail. */
+  operationalRailExtensions?: ReactNode;
 };
 
 const SOURCE_LABELS: Record<EventSource, string> = {
@@ -124,6 +126,7 @@ export default function PlannerEntryEditForm({
   data,
   canManage,
   operationalExtensions,
+  operationalRailExtensions,
 }: PlannerEntryEditFormProps) {
   const router = useRouter();
   const defaults = data.defaults;
@@ -305,6 +308,8 @@ export default function PlannerEntryEditForm({
                   embedded
                 />
               </PlanningPublicationPanel>
+
+              {operationalRailExtensions}
 
               {canManage && !isExternallyOwned ? (
                 <div className="hidden lg:block">

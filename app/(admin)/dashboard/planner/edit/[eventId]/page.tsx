@@ -3,6 +3,7 @@ import PlannerEntryEditForm from "@/components/admin/planner/PlannerEntryEditFor
 import PlannerTournamentOperationalSections, {
   isPlannerTournamentOperationalType,
 } from "@/components/admin/planner/PlannerTournamentOperationalSections";
+import PlannerTournamentOperationalRail from "@/components/admin/planner/PlannerTournamentOperationalRail";
 import { getPlannerEditFormData } from "@/lib/planner/queries";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -60,7 +61,9 @@ export default async function PlannerEditPage({
   const locale = tenantContext.locale ?? "de-CH";
   const timeZone = tenantContext.timezone ?? "Europe/Zurich";
 
-  const operationalExtensions = isPlannerTournamentOperationalType(data.selectedType) ? (
+  const isPlannerTournament = isPlannerTournamentOperationalType(data.selectedType);
+
+  const operationalExtensions = isPlannerTournament ? (
     <PlannerTournamentOperationalSections
       tenantId={tenantContext.id}
       tenantSlug={tenantContext.key}
@@ -68,6 +71,16 @@ export default async function PlannerEditPage({
       canManage={canManage}
       currentUserId={session.user?.id ?? null}
       locale={locale}
+      timeZone={timeZone}
+      tenantLogoUrl={tenantContext.logoUrl}
+    />
+  ) : null;
+
+  const operationalRailExtensions = isPlannerTournament ? (
+    <PlannerTournamentOperationalRail
+      tenantId={tenantContext.id}
+      eventId={data.eventId!}
+      canManage={canManage}
       timeZone={timeZone}
     />
   ) : null;
@@ -82,6 +95,7 @@ export default async function PlannerEditPage({
       }}
       canManage={canManage}
       operationalExtensions={operationalExtensions}
+      operationalRailExtensions={operationalRailExtensions}
     />
   );
 }

@@ -1,17 +1,13 @@
-import Link from "next/link";
 import { EventType } from "@prisma/client";
 import { getTournament } from "@/lib/tournaments/tournament-service";
 import { TournamentNotFoundError } from "@/lib/tournaments/errors";
-import { ParticipationRequestConfigEditor } from "@/components/admin/participation/ParticipationRequestConfigEditor";
+import { getFacilitiesForTenant } from "@/lib/facilities/queries";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
-import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
-import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import ContextRelatedRequirementsPanel from "@/components/admin/aufgaben/contextual/ContextRelatedRequirementsPanel";
-import { loadTournamentPlanningParticipants } from "@/lib/planning/load-tournament-planning-participants";
-import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
-import PlanningParticipantsList from "@/components/admin/shared/planning-editor/PlanningParticipantsList";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import PlannerTournamentCanonicalWorkspace from "@/components/admin/planner/PlannerTournamentCanonicalWorkspace";
 
 type Props = {
   tenantId: string;
@@ -21,11 +17,37 @@ type Props = {
   currentUserId: string | null;
   locale: string;
   timeZone: string;
+  tenantLogoUrl?: string | null;
 };
+
+function facilityGroupsForTypes(
+  facilities: Awaited<ReturnType<typeof getFacilitiesForTenant>>,
+  types: readonly string[],
+): FacilityGroup[] {
+  return facilities
+    .filter((f) => f.status !== "ARCHIVED")
+    .map((f) => ({
+      facilityId: f.id,
+      facilityName: f.name,
+      facilityType: f.type as string,
+      resources: f.resources
+        .filter((r) => r.status !== "ARCHIVED" && types.includes(r.type))
+        .map((r) => ({
+          id: r.id,
+          name: r.name,
+          code: r.code,
+          type: r.type,
+          facilityId: f.id,
+          facilityName: f.name,
+          facilityType: f.type as string,
+        })),
+    }))
+    .filter((fg) => fg.resources.length > 0);
+}
 
 /**
  * Saisonplaner tournament edit uses the same canonical Event/Tournament id as Turniercenter.
- * Full resource editing remains in Turniercenter; operational sections reuse tournament contracts.
+ * Resource and participant editors reuse TournamentCenter contracts and persistence.
  */
 export default async function PlannerTournamentOperationalSections({
   tenantId,
@@ -35,6 +57,7 @@ export default async function PlannerTournamentOperationalSections({
   currentUserId,
   locale,
   timeZone,
+  tenantLogoUrl = null,
 }: Props) {
   let tournament;
   try {
@@ -44,64 +67,19 @@ export default async function PlannerTournamentOperationalSections({
     throw err;
   }
 
-  const participantPresentation = await loadTournamentPlanningParticipants(tenantId, tournament);
+  const facilities = await getFacilitiesForTenant(tenantId);
+  const pitchHallFacilityGroups = facilityGroupsForTypes(facilities, ["FULL_PITCH", "HALF_PITCH"]);
+  const dressingRoomFacilityGroups = facilityGroupsForTypes(facilities, ["DRESSING_ROOM"]);
 
   return (
     <div className="space-y-6" data-testid="planner-tournament-operational-sections">
-      <PlanningEditorSection
-        testId="planner-tournament-resources-bridge"
-        ariaLabelledBy="planner-tournament-resources-heading"
-      >
-        <PlanningEditorSectionHeading
-          id="planner-tournament-resources-heading"
-          title="Ressourcen"
-          description="Plätze, Hallen und Garderoben im Turniercenter verwalten."
-        />
-        <Link
-          href={`/dashboard/tournamentcenter/${eventId}/edit`}
-          className="inline-flex text-sm font-semibold text-[var(--sce-primary)] hover:underline"
-          data-testid="planner-tournament-open-turniercenter"
-        >
-          Im Turniercenter bearbeiten
-        </Link>
-      </PlanningEditorSection>
-
-      {tournament.status !== "CANCELLED" ? (
-        <PlanningEditorSection
-          testId="planner-tournament-participation-section"
-          ariaLabelledBy="planner-tournament-participation-heading"
-        >
-          <PlanningEditorSectionHeading
-            id="planner-tournament-participation-heading"
-            title="Teilnahme"
-            description="Fristen und Erinnerungen für die Teilnahmeabfrage."
-          />
-          <ParticipationRequestConfigEditor
-            apiPath={`/api/tournaments/${eventId}/participation-request`}
-            timeZone={timeZone}
-            disabled={!canManage}
-            layout="sessionEdit"
-            values={{
-              participationResponseDueAt: tournament.participationResponseDueAt,
-              participationReminder1At: tournament.participationReminder1At,
-              participationReminder2At: tournament.participationReminder2At,
-              participationReminder1PresetKey: tournament.participationReminder1PresetKey,
-              participationReminder2PresetKey: tournament.participationReminder2PresetKey,
-            }}
-          />
-        </PlanningEditorSection>
-      ) : null}
-
-      <PlanningEditorParticipantsSection
-        headingId="planner-tournament-participants-heading"
-        testId="planner-tournament-participants-section"
-        persisted
-      >
-        <PlanningParticipantsList
-          people={participantPresentation.people}
-          teams={participantPresentation.teams}
-        />
-      </PlanningEditorParticipantsSection>
+      <PlannerTournamentCanonicalWorkspace
+        tournament={tournament}
+        canManage={canManage}
+        pitchHallFacilityGroups={pitchHallFacilityGroups}
+        dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+        tenantLogoUrl={tenantLogoUrl}
+      />
 
       <PlanningEditorWorkSection
         headingId="planner-tournament-work-heading"
