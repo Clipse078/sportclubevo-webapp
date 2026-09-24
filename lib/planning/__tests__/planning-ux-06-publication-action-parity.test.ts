@@ -65,6 +65,7 @@ describe("PLANNING-UX-06 publication + action parity", () => {
     const editor = read("components/admin/veranstaltungen/ClubEventParticipationAudienceEditor.tsx");
     expect(editor).toContain("teamSelectPlaceholder");
     expect(editor).not.toContain("Team wählen");
+    expect(editor).not.toContain("h-8");
     expect(read("messages/de.json")).toContain("Team auswählen");
     expect(read("messages/en.json")).toContain("Select team");
   });

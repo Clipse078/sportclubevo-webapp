@@ -213,14 +213,16 @@ export default function MatchCreateForm({
   const [websiteVisible, setWebsiteVisible] = useState(initialMatchPublication.websiteVisible);
   const [infoboardVisible, setInfoboardVisible] = useState(initialMatchPublication.infoboardVisible);
   const [wochenplanVisible, setWochenplanVisible] = useState(initialMatchPublication.wochenplanVisible);
-  const [homepageVisible, setHomepageVisible] = useState(true);
-  const [teamPageVisible, setTeamPageVisible] = useState(true);
+  const [homepageVisible, setHomepageVisible] = useState(initialMatchPublication.homepageVisible);
+  const [teamPageVisible, setTeamPageVisible] = useState(initialMatchPublication.teamPageVisible);
 
   useEffect(() => {
     const defaults = resolveMatchPublicationDefaultsForCreate(homeAway);
     setWebsiteVisible(defaults.websiteVisible);
     setInfoboardVisible(defaults.infoboardVisible);
     setWochenplanVisible(defaults.wochenplanVisible);
+    setHomepageVisible(defaults.homepageVisible);
+    setTeamPageVisible(defaults.teamPageVisible);
   }, [homeAway]);
 
   // ── 3 · Ort ──────────────────────────────────────────────────────────

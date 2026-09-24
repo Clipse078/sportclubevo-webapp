@@ -83,11 +83,11 @@ export default function ClubEventParticipationAudienceEditor({ eventId, disabled
       <p className="text-xs text-[var(--text-2)]">
         Zielgruppe für Teilnahme/RSVP — Team, Org-Einheit, Rolle oder einzelne Person (kanonisches Event-Modell).
       </p>
-      <div className="flex flex-wrap items-end gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <label className="block min-w-[12rem] flex-1 space-y-1">
           <span className="fca-label text-xs">Team hinzufügen</span>
           <select
-            className="fca-select h-8 text-sm"
+            className="fca-select min-h-[2.375rem] py-2 text-sm leading-normal"
             value={teamId}
             disabled={disabled || pending}
             onChange={(e) => setTeamId(e.target.value)}
@@ -103,7 +103,7 @@ export default function ClubEventParticipationAudienceEditor({ eventId, disabled
         </label>
         <button
           type="button"
-          className="fca-button-secondary !min-h-8"
+          className="fca-button-secondary min-h-[2.375rem] self-end sm:self-auto"
           disabled={disabled || pending || !teamId}
           onClick={() => void addTeamAudience()}
           data-testid="club-event-audience-team-add"

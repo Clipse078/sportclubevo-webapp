@@ -6,7 +6,7 @@
 |------|--------|------|-----------|------------------|---------------|-----------|---------------|-------------|
 | Match (Spiele record) | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL |
 | Training session edit | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_DOMAIN_SPECIFIC (session allocations) | PRESENT_DOMAIN_SPECIFIC (TeamSeason) | PRESENT_CANONICAL (rail RSVP) | PRESENT_CANONICAL (series context) | PRESENT_CANONICAL (session target) | PRESENT_DOMAIN_SPECIFIC (series line) |
-| TournamentCenter | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL |
+| TournamentCenter | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL (pitch + per-team Garderoben in Turniercenter) | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL | PRESENT_CANONICAL |
 | Saisonplaner tournament | PRESENT_DOMAIN_SPECIFIC | PRESENT_DOMAIN_SPECIFIC | LEGACY_DUPLICATE → bridge link | LEGACY_DUPLICATE → `PlanningPublicationPanel` | **MISSING → restored** | **MISSING → restored** | **MISSING → restored** | NOT_APPLICABLE |
 | Veranstaltung | PRESENT_CANONICAL | PRESENT_CANONICAL | NOT_APPLICABLE | PRESENT_CANONICAL | PRESENT_CANONICAL (split primary/rail) | PRESENT_CANONICAL | PRESENT_CANONICAL | NOT_APPLICABLE |
 
@@ -48,8 +48,8 @@ Resources are no longer a full-width block below a detached two-column header.
 
 Both edit the **same canonical Event/Tournament id** (`Event.id` === `Tournament.id`).
 
-- **Turniercenter:** full operational editor (resources, participants editor, save lifecycle).
-- **Saisonplaner edit:** lightweight season-planner form + **wired operational sections** (participation config, participant list, tasks, requirements, collaboration). Resources: bridge link to Turniercenter (avoid competing resource editors).
+- **Turniercenter:** full operational editor (Spielfeld/Halle + per-team Garderoben under **Ressourcen**, canonical team **Teilnehmer** editor, save lifecycle).
+- **Saisonplaner edit:** lightweight season-planner form + **wired operational sections** (participation config, RSVP people list when applicable, tasks, requirements, collaboration). Facility allocation remains in Turniercenter only (bridge link — no competing resource editors).
 
 ## Saisonplaner operational wiring
 
@@ -73,11 +73,11 @@ No new fetches or gates; existing permissions for events, trainings, teams, task
 
 ## SFV protection
 
-No changes to SFV sync, HOME/AWAY defaults, or resync publication preservation.
+Resync continues to preserve explicit persisted publication flags. Create-default policy updates are documented in `PLANNING-UX-07R1-VISUAL-ACCEPTANCE-CORRECTIONS.md`.
 
 ## Deferred / not applicable
 
-- Saisonplaner tournament **resource allocation UI** remains in Turniercenter (bridge only).
+- Saisonplaner tournament **resource allocation UI** remains in Turniercenter only (bridge from Saisonplaner — not a second editor elsewhere).
 - Requirement “+ Anforderung” trigger parity unchanged from UX-06 deferral.
 
 ## Database

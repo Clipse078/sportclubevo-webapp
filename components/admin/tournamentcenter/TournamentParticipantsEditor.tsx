@@ -29,6 +29,9 @@ type Props = {
   dressingRoomFacilityGroups: FacilityGroup[];
   dressingRoomAvailability?: Map<string, ResourceAvailabilityAnnotation>;
   tenantLogoUrl?: string | null;
+  /** When true, dressing-room allocation UI lives in the Ressourcen section instead. */
+  hideDressingRoomAllocation?: boolean;
+  onParticipantsChange?: (participants: TournamentParticipantDto[]) => void;
 };
 
 function participantMainLabel(participant: TournamentParticipantDto): string {
@@ -67,8 +70,25 @@ export default function TournamentParticipantsEditor({
   dressingRoomFacilityGroups,
   dressingRoomAvailability,
   tenantLogoUrl = null,
+  hideDressingRoomAllocation = false,
+  onParticipantsChange,
 }: Props) {
   const [participants, setParticipants] = useState<TournamentParticipantDto[]>(initialParticipants);
+
+  const syncParticipants = useCallback(
+    (next: TournamentParticipantDto[] | ((prev: TournamentParticipantDto[]) => TournamentParticipantDto[])) => {
+      setParticipants((prev) => {
+        const resolved = typeof next === "function" ? next(prev) : next;
+        onParticipantsChange?.(resolved);
+        return resolved;
+      });
+    },
+    [onParticipantsChange],
+  );
+
+  useEffect(() => {
+    onParticipantsChange?.(initialParticipants);
+  }, [initialParticipants, onParticipantsChange]);
   const [error, setError] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
@@ -133,13 +153,13 @@ export default function TournamentParticipantsEditor({
           if (!res.ok || !data?.participant) {
             throw new Error(data?.error ?? "Teilnehmer konnte nicht hinzugefügt werden.");
           }
-          setParticipants((prev) => [...prev, data.participant as TournamentParticipantDto]);
+          syncParticipants((prev) => [...prev, data.participant as TournamentParticipantDto]);
         } catch (err) {
           setError(err instanceof Error ? err.message : "Teilnehmer konnte nicht hinzugefügt werden.");
         }
       });
     },
-    [tournamentId],
+    [tournamentId, syncParticipants],
   );
 
   const saveDisplayName = useCallback(
@@ -159,7 +179,7 @@ export default function TournamentParticipantsEditor({
             throw new Error(data?.error ?? "Anzeigename konnte nicht gespeichert werden.");
           }
           const updated = data.participant;
-          setParticipants((prev) => prev.map((p) => (p.id === participantId ? updated : p)));
+          syncParticipants((prev) => prev.map((p) => (p.id === participantId ? updated : p)));
           setDisplayNameEdits((prev) => {
             const next = { ...prev };
             delete next[participantId];
@@ -170,7 +190,7 @@ export default function TournamentParticipantsEditor({
         }
       });
     },
-    [tournamentId],
+    [tournamentId, syncParticipants],
   );
 
   const removeParticipant = useCallback(
@@ -185,13 +205,13 @@ export default function TournamentParticipantsEditor({
             const data = (await res.json().catch(() => null)) as { error?: string } | null;
             throw new Error(data?.error ?? "Teilnehmer konnte nicht entfernt werden.");
           }
-          setParticipants((prev) => prev.filter((p) => p.id !== participantId));
+          syncParticipants((prev) => prev.filter((p) => p.id !== participantId));
         } catch (err) {
           setError(err instanceof Error ? err.message : "Teilnehmer konnte nicht entfernt werden.");
         }
       });
     },
-    [tournamentId],
+    [tournamentId, syncParticipants],
   );
 
   const addDressingRoom = useCallback(
@@ -210,7 +230,7 @@ export default function TournamentParticipantsEditor({
       if (!res.ok || !data?.allocation) {
         throw new Error(data?.error ?? "Garderobe konnte nicht zugewiesen werden.");
       }
-      setParticipants((prev) =>
+      syncParticipants((prev) =>
         prev.map((p) =>
           p.id === participantId
             ? { ...p, dressingRoomAllocations: [...p.dressingRoomAllocations, data.allocation!] }
@@ -218,7 +238,7 @@ export default function TournamentParticipantsEditor({
         ),
       );
     },
-    [tournamentId],
+    [tournamentId, syncParticipants],
   );
 
   const removeDressingRoom = useCallback(
@@ -231,7 +251,7 @@ export default function TournamentParticipantsEditor({
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
         throw new Error(data?.error ?? "Garderobe konnte nicht entfernt werden.");
       }
-      setParticipants((prev) =>
+      syncParticipants((prev) =>
         prev.map((p) =>
           p.id === participantId
             ? {
@@ -242,7 +262,7 @@ export default function TournamentParticipantsEditor({
         ),
       );
     },
-    [tournamentId],
+    [tournamentId, syncParticipants],
   );
 
   const dressingBadge = (participant: TournamentParticipantDto) => {
@@ -278,8 +298,9 @@ export default function TournamentParticipantsEditor({
             const expanded = expandedIds.has(participant.id);
             const needsExpand =
               participant.kind === "EXTERNAL_CLUB" ||
-              (homeAway === "HOME" && canManage) ||
-              (homeAway === "HOME" && participant.dressingRoomAllocations.length > 0);
+              (!hideDressingRoomAllocation &&
+                homeAway === "HOME" &&
+                (canManage || participant.dressingRoomAllocations.length > 0));
             return (
               <li
                 key={participant.id}
@@ -316,7 +337,7 @@ export default function TournamentParticipantsEditor({
                     </p>
                   </div>
 
-                  {dressingBadge(participant)}
+                  {!hideDressingRoomAllocation ? dressingBadge(participant) : null}
 
                   {canManage && needsExpand && !expanded ? (
                     <button
@@ -370,7 +391,7 @@ export default function TournamentParticipantsEditor({
                       </label>
                     )}
 
-                    {homeAway === "HOME" && (
+                    {!hideDressingRoomAllocation && homeAway === "HOME" && (
                       <div className={cn(participant.kind === "EXTERNAL_CLUB" && "mt-2")}>
                         <p className="mb-1.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
                           <TournamentDressingRoomLabelIcon />
