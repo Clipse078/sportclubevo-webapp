@@ -120,7 +120,7 @@ export default async function ClubDashboardView({
 
   const timeLabelById: Record<string, string> = {};
   if (personal) {
-    for (const item of personal.programmeFeedItems) {
+    for (const item of personal.programmeItems) {
       timeLabelById[item.id] = item.allDay ? "" : formatTime(item.startsAt, fmtCfg);
     }
   }

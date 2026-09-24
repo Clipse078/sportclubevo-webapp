@@ -64,6 +64,7 @@ describe("DASHBOARD-07 — programme acceptance closure", () => {
       "lib/personal-agenda/__tests__/personal-programme.test.ts",
       "lib/personal-agenda/__tests__/event-zero-disclosure.test.ts",
       "lib/personal-agenda/__tests__/dashboard-07r1b-personal-calendar-relevance.test.ts",
+      "lib/personal-agenda/__tests__/dashboard-07r1e-programme-preview-day-agenda.test.tsx",
       "lib/dashboard/quick-access/__tests__/persistence-security.test.ts",
       "lib/dashboard/personal-attention/__tests__/load-dashboard-personal-work.test.ts",
       "components/admin/dashboard/__tests__/dashboard-06-composition.test.ts",

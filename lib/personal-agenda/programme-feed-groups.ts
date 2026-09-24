@@ -99,6 +99,30 @@ export function buildProgrammeFeedGroups(input: {
   });
 }
 
+/** Dashboard Mein Programm preview cap (presentation only; full universe stays loaded). */
+export const DASHBOARD_PROGRAMME_PREVIEW_ITEM_LIMIT = 3;
+
+/**
+ * Limits grouped feed rows to the first N upcoming items in canonical day order.
+ * Does not alter the underlying programme loader or calendar dataset.
+ */
+export function limitProgrammeFeedGroupsToPreview(
+  groups: ProgrammeFeedGroup[],
+  limit = DASHBOARD_PROGRAMME_PREVIEW_ITEM_LIMIT,
+): ProgrammeFeedGroup[] {
+  if (limit <= 0) return [];
+  let remaining = limit;
+  const preview: ProgrammeFeedGroup[] = [];
+  for (const group of groups) {
+    if (remaining <= 0) break;
+    const items = group.items.slice(0, remaining);
+    if (items.length === 0) continue;
+    remaining -= items.length;
+    preview.push({ ...group, items });
+  }
+  return preview;
+}
+
 export function defaultProgrammeFeedDayKeys(now: Date, timeZone: string): {
   todayKey: string;
   tomorrowKey: string;

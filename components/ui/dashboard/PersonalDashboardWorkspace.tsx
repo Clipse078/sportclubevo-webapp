@@ -2,8 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PersonalProgrammeMonthCalendar from "@/components/ui/calendar/PersonalProgrammeMonthCalendar";
-import type { ProgrammeFeedGroup } from "@/lib/personal-agenda/programme-feed-groups";
+import {
+  limitProgrammeFeedGroupsToPreview,
+  type ProgrammeFeedGroup,
+} from "@/lib/personal-agenda/programme-feed-groups";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
+import { buildPersonalKalenderHref } from "@/lib/personal-agenda/kalender-url";
 import { matchDayKeyInTimezone } from "@/lib/matchcenter/management-view";
 import { PersonalProgrammeFeed } from "./PersonalProgrammeFeed";
 import { cn } from "@/lib/cn";
@@ -24,8 +28,8 @@ export type PersonalDashboardWorkspaceProps = {
 };
 
 /**
- * Primary personal workspace: Mein Programm + Mein Kalender with selected-day highlight coordination.
- * Calendar selection scrolls/highlights matching programme day groups (no full-list filter).
+ * Primary personal workspace: Mein Programm preview (next 3 items) + Mein Kalender with selected-day agenda.
+ * Calendar selection highlights matching preview day groups when present.
  */
 export function PersonalDashboardWorkspace({
   groups,
@@ -43,6 +47,21 @@ export function PersonalDashboardWorkspace({
   );
   const [selectedDayKey, setSelectedDayKey] = useState(todayKey);
   const feedRef = useRef<HTMLDivElement>(null);
+
+  const previewGroups = useMemo(
+    () => limitProgrammeFeedGroupsToPreview(groups),
+    [groups],
+  );
+
+  const programmeViewAllHref = useMemo(
+    () =>
+      buildPersonalKalenderHref(
+        "/dashboard/kalender",
+        { month: monthParam, quelle: "termine" },
+        { month: monthParam, quelle: "alle" },
+      ),
+    [monthParam],
+  );
 
   const handleSelectedDayChange = useCallback((dayKey: string) => {
     setSelectedDayKey(dayKey);
@@ -65,10 +84,11 @@ export function PersonalDashboardWorkspace({
     >
       <div ref={feedRef} className="min-w-0 lg:col-span-7 xl:col-span-7 2xl:col-span-8">
         <PersonalProgrammeFeed
-          groups={groups}
+          groups={previewGroups}
           supported={programmeSupported}
           highlightedDayKey={selectedDayKey}
           timeLabelById={timeLabelById}
+          viewAllHref={programmeViewAllHref}
         />
       </div>
 
@@ -85,7 +105,8 @@ export function PersonalDashboardWorkspace({
           navigation={navigation}
           todayDayKey={todayKey}
           headingLevel="h2"
-          showSelectedDayPanel={false}
+          showSelectedDayPanel
+          timeLabelById={timeLabelById}
           className="lg:sticky lg:top-4"
         />
       </div>

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildProgrammeFeedGroups,
   filterProgrammeItemsToRange,
+  limitProgrammeFeedGroupsToPreview,
 } from "../programme-feed-groups";
 import { resolvePersonalProgrammeRange } from "../programme-range";
 import type { PersonalProgrammeItem } from "../personal-programme-types";
@@ -54,5 +55,23 @@ describe("programme feed groups", () => {
       range,
     );
     expect(filtered.map((row) => row.id)).toEqual(["in"]);
+  });
+
+  it("limits preview groups without dropping calendar universe", () => {
+    const timeZone = "Europe/Zurich";
+    const now = new Date("2026-09-24T10:00:00.000Z");
+    const groups = buildProgrammeFeedGroups({
+      items: [
+        item("1", new Date("2026-09-25T10:00:00.000Z")),
+        item("2", new Date("2026-09-26T10:00:00.000Z")),
+        item("3", new Date("2026-09-27T10:00:00.000Z")),
+        item("4", new Date("2026-09-28T10:00:00.000Z")),
+      ],
+      timeZone,
+      locale: "de-CH",
+      now,
+    });
+    const preview = limitProgrammeFeedGroupsToPreview(groups, 3);
+    expect(preview.flatMap((g) => g.items).map((row) => row.id).join(",")).toBe("1,2,3");
   });
 });

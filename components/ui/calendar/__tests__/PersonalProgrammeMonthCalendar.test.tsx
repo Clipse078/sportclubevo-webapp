@@ -29,7 +29,7 @@ vi.mock("next-intl", () => ({
       selected: "selected",
       ariaMonthGrid: "Calendar grid",
       selectedDayPanel: "Selected day",
-      emptyDay: "No personal appointments",
+      emptyDay: "No events on this day.",
       dayAriaOneActivity: "1 activity",
       dayAriaOneActivityNamed: "1 appointment: {title}",
       dayAriaActivitiesCount: "{count} appointments",
@@ -91,9 +91,9 @@ describe("PersonalProgrammeMonthCalendar", () => {
     const day = screen.getByTestId("personal-calendar-day-2026-09-27");
     expect(day.getAttribute("aria-label")).toContain("Blitzturnier");
     expect(day.textContent).toContain("Turnier");
-    const chip = screen.getByText("Turnier");
-    expect(chip.getAttribute("data-programme-palette")).toBe("tournament-orange");
-    expect(chip.getAttribute("data-programme-source")).toBe("TOURNAMENT");
+    const chip = day.querySelector("[data-programme-palette]");
+    expect(chip?.getAttribute("data-programme-palette")).toBe("tournament-orange");
+    expect(chip?.getAttribute("data-programme-source")).toBe("TOURNAMENT");
   });
 
   it("retains tournament semantics when Sep 27 is today", () => {
@@ -115,7 +115,10 @@ describe("PersonalProgrammeMonthCalendar", () => {
       />,
     );
 
-    expect(screen.getByText("Turnier").getAttribute("data-programme-palette")).toBe("tournament-orange");
+    const day = screen.getByTestId("personal-calendar-day-2026-09-27");
+    expect(day.querySelector("[data-programme-palette]")?.getAttribute("data-programme-palette")).toBe(
+      "tournament-orange",
+    );
   });
 
   it("shows bounded semantic markers for multiple source types", () => {
@@ -153,7 +156,10 @@ describe("PersonalProgrammeMonthCalendar", () => {
       />,
     );
 
-    expect(screen.getByText("Training").getAttribute("data-programme-palette")).toBe("training-blue");
+    const day = screen.getByTestId("personal-calendar-day-2026-09-23");
+    expect(day.querySelector("[data-programme-palette]")?.getAttribute("data-programme-palette")).toBe(
+      "training-blue",
+    );
   });
 
   it("shows activity dot day and selected-day entry from programme items", () => {
@@ -205,7 +211,7 @@ describe("PersonalProgrammeMonthCalendar", () => {
       />,
     );
 
-    expect(screen.getByText("No personal appointments")).toBeTruthy();
+    expect(screen.getByText("No events on this day.")).toBeTruthy();
   });
 
   it("does not render unauthorized programme rows that were never passed in", () => {

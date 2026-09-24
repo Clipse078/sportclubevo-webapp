@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { PersonalProgrammeAgendaRow } from "@/components/ui/dashboard/PersonalProgrammeAgendaRow";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { matchDayKeyInTimezone } from "@/lib/matchcenter/management-view";
@@ -33,6 +33,8 @@ export type PersonalProgrammeMonthCalendarProps = {
   className?: string;
   headingLevel?: "h2" | "h3";
   showSelectedDayPanel?: boolean;
+  /** Tenant-local time labels for selected-day agenda rows (same map as programme feed). */
+  timeLabelById?: Record<string, string>;
   /** Optional override for dot/aria counts (e.g. tasks on full Kalender page). Programme list still uses `items`. */
   activityCountByDay?: ReadonlyMap<string, number>;
 };
@@ -52,6 +54,7 @@ export default function PersonalProgrammeMonthCalendar({
   className,
   headingLevel = "h2",
   showSelectedDayPanel = true,
+  timeLabelById = {},
   activityCountByDay,
 }: PersonalProgrammeMonthCalendarProps) {
   const t = useTranslations("PersonalDashboard.calendar");
@@ -194,31 +197,13 @@ export default function PersonalProgrammeMonthCalendar({
           {selectedItems.length === 0 ? (
             <p className="text-sm text-[var(--text-2)]">{t("emptyDay")}</p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="divide-y divide-[color-mix(in_srgb,var(--border)_70%,transparent)] border-l border-[color-mix(in_srgb,var(--border)_55%,transparent)] pl-2">
               {selectedItems.map((item) => (
-                <li key={item.id}>
-                  <Link
-                    href={item.deepLink}
-                    className="block rounded-lg border border-[var(--border)] px-3 py-2 no-underline hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
-                    aria-label={item.ariaLabel}
-                  >
-                    <span className="block text-[0.8125rem] font-semibold text-[var(--foreground)]">
-                      {item.title}
-                    </span>
-                    {item.subtitle ? (
-                      <span className="block text-[0.75rem] text-[var(--text-2)]">{item.subtitle}</span>
-                    ) : null}
-                    {item.contextLabel ? (
-                      <span className="mt-0.5 block text-[0.6875rem] text-[var(--muted)]">
-                        {item.contextLabel}
-                      </span>
-                    ) : null}
-                    {item.status === "cancelled" || item.status === "postponed" ? (
-                      <span className="mt-1 inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-medium uppercase tracking-wide text-[var(--text-2)]">
-                        {item.status === "cancelled" ? t("statusCancelled") : t("statusPostponed")}
-                      </span>
-                    ) : null}
-                  </Link>
+                <li key={item.id} className="list-none">
+                  <PersonalProgrammeAgendaRow
+                    item={item}
+                    timeLabel={timeLabelById[item.id] ?? "—"}
+                  />
                 </li>
               ))}
             </ul>
