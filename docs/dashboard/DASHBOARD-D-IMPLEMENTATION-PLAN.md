@@ -142,15 +142,19 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 **Mission:** Security matrix, product completeness, mobile handoff notes.
 
+**Status:** Implemented — see `docs/dashboard/DASHBOARD-07-ACCEPTANCE-CLOSURE.md`.
+
 **Dependencies:** All prior.
 
 **Deliverables:** Security checklist, zero-disclosure tests, documentation update.
 
 **Acceptance:**
 
-- [ ] Cross-tenant tests  
-- [ ] Child/guardian participation-only exposure documented  
-- [ ] MOBILE-D handoff doc (privacy alignment, no scope creep)
+- [x] Cross-tenant tests  
+- [x] Child/guardian participation-only exposure documented (see DASHBOARD-07 closure doc + personal-actions suites)  
+- [x] MOBILE-D handoff doc (privacy alignment, no scope creep)
+
+**Programme:** **DASHBOARD PROGRAMME CLOSED — MOBILE READY** (PR #706 merge-ready pending CI after closure commit).
 
 ---
 
