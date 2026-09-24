@@ -16,6 +16,12 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),
 }));
 
+vi.mock("@/components/admin/shared/planning-editor/PlanningPublicationPanel", () => ({
+  default: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="planner-entry-publication-panel-mock">{children}</div>
+  ),
+}));
+
 const BASE_DATA = {
   seasons: [{ id: "s1", key: "2025-26", name: "Saison 2025/26", isActive: true }],
   teams: [{ id: "t1", name: "Junioren D-9", category: "Junioren" }],

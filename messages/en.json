@@ -237,6 +237,14 @@
       "publication": {
         "heading": "Publication",
         "intro": "Control where this entry is published.",
+        "trainingIntro": "These channels apply at team season level — not per training session.",
+        "teamSeasonScopeBadge": "Team season",
+        "manageTeamPublicationSettings": "Open team settings",
+        "infoboardEffectiveOn": "Shown on infoboard",
+        "infoboardEffectiveOff": "Hidden on infoboard",
+        "trainingWebsiteDescription": "Training times on the public team page (all sessions in this team season).",
+        "trainingInfoboardDescription": "Scheduled trainings on club screens while not cancelled.",
+        "trainingWebsitePermissionHint": "Website publication requires team management permission.",
         "homepageRequiresWebsite": "Homepage requires website publication to be enabled.",
         "channels": {
           "website": {

@@ -663,6 +663,14 @@
       "publication": {
         "heading": "Publikation",
         "intro": "Steuere, wo dieser Eintrag veröffentlicht wird.",
+        "trainingIntro": "Diese Kanäle gelten teamweit für die Saison — nicht pro Trainingseinheit.",
+        "teamSeasonScopeBadge": "Team-Saison",
+        "manageTeamPublicationSettings": "Team-Einstellungen öffnen",
+        "infoboardEffectiveOn": "Aktiv auf Infoboard",
+        "infoboardEffectiveOff": "Auf Infoboard ausgeblendet",
+        "trainingWebsiteDescription": "Trainingszeiten auf der öffentlichen Teamseite (gilt für alle Einheiten dieser Team-Saison).",
+        "trainingInfoboardDescription": "Geplante Trainings auf Vereinsbildschirmen, solange sie nicht abgesagt sind.",
+        "trainingWebsitePermissionHint": "Website-Ausgabe erfordert Berechtigung zur Team-Verwaltung.",
         "homepageRequiresWebsite": "Homepage erfordert aktive Website-Veröffentlichung.",
         "channels": {
           "website": {

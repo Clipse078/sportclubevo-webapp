@@ -237,6 +237,14 @@
       "publication": {
         "heading": "Publication",
         "intro": "Contrôlez où cette entrée est publiée.",
+        "trainingIntro": "Ces canaux s'appliquent au niveau de la saison d'équipe — pas par séance.",
+        "teamSeasonScopeBadge": "Saison d'équipe",
+        "manageTeamPublicationSettings": "Ouvrir les paramètres d'équipe",
+        "infoboardEffectiveOn": "Visible sur l'infoboard",
+        "infoboardEffectiveOff": "Masqué sur l'infoboard",
+        "trainingWebsiteDescription": "Horaires d'entraînement sur la page publique de l'équipe (toutes les séances de cette saison).",
+        "trainingInfoboardDescription": "Entraînements planifiés sur les écrans du club tant qu'ils ne sont pas annulés.",
+        "trainingWebsitePermissionHint": "La publication web nécessite la gestion d'équipe.",
         "homepageRequiresWebsite": "La page d'accueil nécessite la publication sur le site web.",
         "channels": {
           "website": {

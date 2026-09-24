@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
@@ -47,9 +47,19 @@ type VeranstaltungEditFormProps = {
   };
   timeZone?: string | null;
   canManage?: boolean;
+  /** Participation, tasks, collaboration — primary operational column. */
+  operationalPrimarySections?: ReactNode;
+  /** Compact participation / status controls for the right rail. */
+  operationalRailSections?: ReactNode;
 };
 
-export default function VeranstaltungEditForm({ event, timeZone, canManage = true }: VeranstaltungEditFormProps) {
+export default function VeranstaltungEditForm({
+  event,
+  timeZone,
+  canManage = true,
+  operationalPrimarySections,
+  operationalRailSections,
+}: VeranstaltungEditFormProps) {
   const router = useRouter();
   const t = useTranslations("Veranstaltungen.editor");
   const tf = useTranslations("Veranstaltungen.editor.fields");
@@ -165,17 +175,21 @@ export default function VeranstaltungEditForm({ event, timeZone, canManage = tru
       <PlanningEditorOperationalWorkspace
         testId="veranstaltung-edit-operational-workspace"
         secondaryRail={
-          <PlanningPublicationPanel testId="veranstaltung-edit-publication-panel">
-            <VeranstaltungAusspielungFields
-              values={ausspielung}
-              onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
-              disabled={isReadonly}
-              showHeading={false}
-              testIdPrefix="veranstaltung-edit-publication"
-            />
-          </PlanningPublicationPanel>
+          <>
+            <PlanningPublicationPanel testId="veranstaltung-edit-publication-panel">
+              <VeranstaltungAusspielungFields
+                values={ausspielung}
+                onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
+                disabled={isReadonly}
+                showHeading={false}
+                testIdPrefix="veranstaltung-edit-publication"
+              />
+            </PlanningPublicationPanel>
+            {operationalRailSections}
+          </>
         }
         primary={
+          <div className="space-y-3">
           <PlanningEditorSection testId="veranstaltung-edit-details-section" ariaLabelledBy="veranstaltung-edit-details-heading">
         <div className="space-y-3">
           <PlanningEditorSectionHeading id="veranstaltung-edit-details-heading" title={t("sections.details")} />
@@ -248,6 +262,8 @@ export default function VeranstaltungEditForm({ event, timeZone, canManage = tru
           </div>
         </div>
       </PlanningEditorSection>
+          {operationalPrimarySections}
+          </div>
         }
       />
 

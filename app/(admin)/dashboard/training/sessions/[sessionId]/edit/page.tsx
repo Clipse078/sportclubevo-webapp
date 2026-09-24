@@ -23,12 +23,7 @@ import {
 import PlanningEditorShell from "@/components/admin/shared/planning-editor/PlanningEditorShell";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
-import {
-  PLANNING_EDITOR_PRIMARY_COLUMN_CLASS,
-  PLANNING_EDITOR_PRIMARY_WORKSPACE_GRID_CLASS,
-  PLANNING_EDITOR_SECONDARY_COLUMN_CLASS,
-} from "@/components/admin/shared/planning-editor/planning-editor-layout";
-import { cn } from "@/lib/cn";
+import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
 import { getTranslations } from "next-intl/server";
 import { getTrainingSessionParticipantRoster } from "@/lib/training/training-session-participants";
 import { TrainingSessionParticipantsPanel } from "@/components/admin/training/TrainingSessionParticipantsPanel";
@@ -109,19 +104,19 @@ export default async function TrainingSessionEditPage({ params }: Props) {
 
   const [seriesAllocations, sessionAllocations, facilities, participantRoster, teamSeasonPublication] =
     await Promise.all([
-    listAllocationsByTrainingSeries(tenantContext.id, trainingSession.trainingSeriesId),
-    listAllocationsByTrainingSession(tenantContext.id, sessionId),
-    getFacilitiesForTenant(tenantContext.id),
-    getTrainingSessionParticipantRoster(tenantContext.id, sessionId),
-    prisma.teamSeason.findFirst({
-      where: { id: trainingSession.teamSeasonId, team: { tenantId: tenantContext.id } },
-      select: {
-        teamId: true,
-        trainingWebsiteVisible: true,
-        infoboardVisible: true,
-      },
-    }),
-  ]);
+      listAllocationsByTrainingSeries(tenantContext.id, trainingSession.trainingSeriesId),
+      listAllocationsByTrainingSession(tenantContext.id, sessionId),
+      getFacilitiesForTenant(tenantContext.id),
+      getTrainingSessionParticipantRoster(tenantContext.id, sessionId),
+      prisma.teamSeason.findFirst({
+        where: { id: trainingSession.teamSeasonId, team: { tenantId: tenantContext.id } },
+        select: {
+          teamId: true,
+          trainingWebsiteVisible: true,
+          infoboardVisible: true,
+        },
+      }),
+    ]);
 
   const facilityGroups: FacilityGroup[] = facilities
     .filter((f) => f.status !== "ARCHIVED")
@@ -167,132 +162,136 @@ export default async function TrainingSessionEditPage({ params }: Props) {
           {t("inheritanceIntro")}
         </p>
 
-        <div
-          className={PLANNING_EDITOR_PRIMARY_WORKSPACE_GRID_CLASS}
-          data-testid="training-session-edit-workspace-grid"
-        >
-          <PlanningEditorSection
-            className={PLANNING_EDITOR_PRIMARY_COLUMN_CLASS}
-            ariaLabelledBy="training-session-edit-datetime-heading"
-            testId="training-session-edit-datetime-panel"
-          >
-              <TrainingSessionEditForm
-                sessionId={trainingSession.id}
-                canManage={canManage}
-                isRescheduled={trainingSession.isRescheduled}
-                effectiveDate={trainingSession.date}
-                effectiveStartTime={effectiveStartTime}
-                effectiveEndTime={effectiveEndTime}
-                originalDate={trainingSession.originalDate}
-                originalStartTime={originalStartTime}
-                originalEndTime={originalEndTime}
-                timezone={trainingSession.timezone}
-                locale={locale}
-                seriesStandardLine={seriesStandardLine}
-              />
-          </PlanningEditorSection>
+        <PlanningEditorOperationalWorkspace
+          testId="training-session-edit-operational-workspace"
+          secondaryRail={
+            <>
+              {teamSeasonPublication ? (
+                <PlanningPublicationPanel
+                  testId="training-session-edit-publication-panel"
+                  showIntro={false}
+                >
+                  <TrainingRecordPublicationSection
+                    teamId={teamSeasonPublication.teamId}
+                    teamSeasonId={trainingSession.teamSeasonId}
+                    initialPublication={{
+                      trainingWebsiteVisible: teamSeasonPublication.trainingWebsiteVisible,
+                      infoboardVisible: teamSeasonPublication.infoboardVisible,
+                    }}
+                    canEditTeamPublication={canEditTeamPublication}
+                    teamSettingsHref={`/dashboard/teams/${teamSeasonPublication.teamId}/settings`}
+                  />
+                </PlanningPublicationPanel>
+              ) : null}
 
-          <div className={cn("space-y-3", PLANNING_EDITOR_SECONDARY_COLUMN_CLASS)}>
-            {teamSeasonPublication ? (
-              <PlanningPublicationPanel testId="training-session-edit-publication-panel">
-                <TrainingRecordPublicationSection
-                  teamId={teamSeasonPublication.teamId}
-                  teamSeasonId={trainingSession.teamSeasonId}
-                  initialPublication={{
-                    trainingWebsiteVisible: teamSeasonPublication.trainingWebsiteVisible,
-                    infoboardVisible: teamSeasonPublication.infoboardVisible,
-                  }}
-                  canEditTeamPublication={canEditTeamPublication}
-                  teamSettingsHref={`/dashboard/teams/${teamSeasonPublication.teamId}/settings`}
+              <PlanningEditorSection
+                className="space-y-2"
+                ariaLabelledBy="training-session-edit-participation-heading"
+                testId="training-session-edit-participation-panel"
+              >
+                <PlanningEditorSectionHeading
+                  id="training-session-edit-participation-heading"
+                  title={t("participationHeading")}
+                  description={t("participationDescription")}
                 />
-              </PlanningPublicationPanel>
-            ) : null}
-          <PlanningEditorSection
-            className="space-y-2"
-            ariaLabelledBy="training-session-edit-participation-heading"
-            testId="training-session-edit-participation-panel"
-          >
-              <PlanningEditorSectionHeading
-                id="training-session-edit-participation-heading"
-                title={t("participationHeading")}
-                description={t("participationDescription")}
-              />
-              <ParticipationRequestConfigEditor
-                apiPath={`/api/training-sessions/${trainingSession.id}/participation-request`}
-                timeZone={timezone}
-                disabled={!canManage}
-                layout="sessionEdit"
-                values={{
-                  participationResponseDueAt: trainingSession.participationResponseDueAt,
-                  participationReminder1At: trainingSession.participationReminder1At,
-                  participationReminder2At: trainingSession.participationReminder2At,
-                  participationReminder1PresetKey: trainingSession.participationReminder1PresetKey,
-                  participationReminder2PresetKey: trainingSession.participationReminder2PresetKey,
-                }}
-              />
-          </PlanningEditorSection>
-          </div>
-        </div>
-
-        <PlanningEditorSection testId="training-session-edit-allocations-panel">
-            <TrainingSessionAllocationEditor
-              sessionId={trainingSession.id}
-              initialAllocations={sessionAllocations}
-              seriesAllocations={seriesAllocations}
-              facilityGroups={facilityGroups}
-              canManage={canManage}
-              sessionStartAt={trainingSession.startAt}
-              sessionEndAt={trainingSession.endAt}
-            />
-        </PlanningEditorSection>
-
-        <PlanningEditorSection
-          ariaLabelledBy="training-session-edit-participants-heading"
-          testId="training-session-edit-participants-panel"
-        >
-            <TrainingSessionParticipantsPanel participants={participantRoster.participants} />
-        </PlanningEditorSection>
-
-        <div className="px-0">
-          <PlanningEditorZeitstandardLink
-            canManageFacilities={canManageFacilities}
-            label={tPlanning("zeitstandardLink")}
-          />
-        </div>
-
-        <PlanningEditorWorkSection
-          headingId="training-session-edit-work-heading"
-          testId="training-session-edit-work-section"
-          persisted
-          locale={locale}
-          tasksPanel={
-            <ContextRelatedTasksPanel
-              contextType="TRAINING"
-              contextId={trainingSession.trainingSeriesId}
-              locale={locale}
-              timeZone={timezone}
-            />
+                <ParticipationRequestConfigEditor
+                  apiPath={`/api/training-sessions/${trainingSession.id}/participation-request`}
+                  timeZone={timezone}
+                  disabled={!canManage}
+                  layout="sessionEdit"
+                  values={{
+                    participationResponseDueAt: trainingSession.participationResponseDueAt,
+                    participationReminder1At: trainingSession.participationReminder1At,
+                    participationReminder2At: trainingSession.participationReminder2At,
+                    participationReminder1PresetKey: trainingSession.participationReminder1PresetKey,
+                    participationReminder2PresetKey: trainingSession.participationReminder2PresetKey,
+                  }}
+                />
+              </PlanningEditorSection>
+            </>
           }
-          requirementsPanel={
-            <ContextRelatedRequirementsPanel
-              resourceType="TRAINING"
-              resourceId={trainingSession.trainingSeriesId}
-              locale={locale}
-            />
-          }
-        />
+          primary={
+            <div className="space-y-3">
+              <PlanningEditorSection
+                ariaLabelledBy="training-session-edit-datetime-heading"
+                testId="training-session-edit-datetime-panel"
+              >
+                <TrainingSessionEditForm
+                  sessionId={trainingSession.id}
+                  canManage={canManage}
+                  isRescheduled={trainingSession.isRescheduled}
+                  effectiveDate={trainingSession.date}
+                  effectiveStartTime={effectiveStartTime}
+                  effectiveEndTime={effectiveEndTime}
+                  originalDate={trainingSession.originalDate}
+                  originalStartTime={originalStartTime}
+                  originalEndTime={originalEndTime}
+                  timezone={trainingSession.timezone}
+                  locale={locale}
+                  seriesStandardLine={seriesStandardLine}
+                />
+              </PlanningEditorSection>
 
-        <PlanningEditorCollaborationSection
-          headingId="training-session-edit-collaboration-heading"
-          testId="training-session-edit-collaboration-section"
-          persisted
-          tenantSlug={tenantContext.key}
-          targetType="TRAINING"
-          targetId={sessionId}
-          canEdit={canManage}
-          currentUserId={session.user?.id ?? null}
-          locale={locale}
-          timezone={timezone}
+              <PlanningEditorSection testId="training-session-edit-allocations-panel">
+                <TrainingSessionAllocationEditor
+                  sessionId={trainingSession.id}
+                  initialAllocations={sessionAllocations}
+                  seriesAllocations={seriesAllocations}
+                  facilityGroups={facilityGroups}
+                  canManage={canManage}
+                  sessionStartAt={trainingSession.startAt}
+                  sessionEndAt={trainingSession.endAt}
+                />
+              </PlanningEditorSection>
+
+              <PlanningEditorSection
+                ariaLabelledBy="training-session-edit-participants-heading"
+                testId="training-session-edit-participants-panel"
+              >
+                <TrainingSessionParticipantsPanel participants={participantRoster.participants} />
+              </PlanningEditorSection>
+
+              <PlanningEditorZeitstandardLink
+                canManageFacilities={canManageFacilities}
+                label={tPlanning("zeitstandardLink")}
+              />
+
+              <PlanningEditorWorkSection
+                headingId="training-session-edit-work-heading"
+                testId="training-session-edit-work-section"
+                persisted
+                locale={locale}
+                tasksPanel={
+                  <ContextRelatedTasksPanel
+                    contextType="TRAINING"
+                    contextId={trainingSession.trainingSeriesId}
+                    locale={locale}
+                    timeZone={timezone}
+                  />
+                }
+                requirementsPanel={
+                  <ContextRelatedRequirementsPanel
+                    resourceType="TRAINING"
+                    resourceId={trainingSession.trainingSeriesId}
+                    locale={locale}
+                  />
+                }
+              />
+
+              <PlanningEditorCollaborationSection
+                headingId="training-session-edit-collaboration-heading"
+                testId="training-session-edit-collaboration-section"
+                persisted
+                tenantSlug={tenantContext.key}
+                targetType="TRAINING"
+                targetId={sessionId}
+                canEdit={canManage}
+                currentUserId={session.user?.id ?? null}
+                locale={locale}
+                timezone={timezone}
+              />
+            </div>
+          }
         />
       </PlanningEditorShell>
     </ToastProvider>

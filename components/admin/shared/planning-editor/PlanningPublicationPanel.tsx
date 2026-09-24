@@ -9,6 +9,8 @@ type Props = {
   testId?: string;
   className?: string;
   headingId?: string;
+  /** When false, only the heading is shown (domain body supplies scope copy). */
+  showIntro?: boolean;
 };
 
 /**
@@ -20,6 +22,7 @@ export default function PlanningPublicationPanel({
   testId = "planning-publication-panel",
   className,
   headingId = "planning-publication-panel-heading",
+  showIntro = true,
 }: Props) {
   const t = useTranslations("PlanningEditor.operational.publication");
 
@@ -36,7 +39,9 @@ export default function PlanningPublicationPanel({
         <h2 id={headingId} className="text-sm font-semibold text-[var(--foreground)]">
           {t("heading")}
         </h2>
-        <p className="mt-0.5 text-xs text-[var(--muted)]">{t("intro")}</p>
+        {showIntro ? (
+          <p className="mt-0.5 text-xs text-[var(--muted)]">{t("intro")}</p>
+        ) : null}
       </div>
       <div className="min-w-0 p-0">{children}</div>
     </section>

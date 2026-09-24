@@ -7,6 +7,8 @@ import { getClubEvent } from "@/lib/events/club-events-service";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import PlanningEditorShell from "@/components/admin/shared/planning-editor/PlanningEditorShell";
 import PlanningEditorHeader from "@/components/admin/shared/planning-editor/PlanningEditorHeader";
+import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
+import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import VeranstaltungEditForm from "@/components/admin/veranstaltungen/VeranstaltungEditForm";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import ContextualTaskCreateTriggerServer from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTriggerServer";
@@ -52,6 +54,7 @@ export default async function VeranstaltungEditPage({ params }: Props) {
   const timeZone = tenantContext.timezone ?? "Europe/Zurich";
   const t = await getTranslations("Veranstaltungen.editor.edit");
   const tWork = await getTranslations("PlanningEditor.operational.work");
+  const tParticipation = await getTranslations("TrainingCenter.sessionEdit");
 
   const scheduleContext = [t("eyebrow"), event.season?.name].filter(Boolean).join(" · ");
 
@@ -62,6 +65,82 @@ export default async function VeranstaltungEditPage({ params }: Props) {
       locale={locale}
       timeZone={timeZone}
     />
+  );
+
+  const operationalPrimarySections = (
+    <>
+      <PlanningEditorParticipantsSection
+        headingId="veranstaltung-edit-participants-heading"
+        testId="veranstaltung-edit-participants-section"
+        persisted
+      >
+        <ClubEventParticipationAudienceEditor eventId={event.id} disabled={!canManage} />
+        <PlanningParticipantsList
+          people={participantsPresentation.people}
+          teams={participantsPresentation.teams ?? []}
+        />
+      </PlanningEditorParticipantsSection>
+
+      <PlanningEditorWorkSection
+        headingId="veranstaltung-edit-work-heading"
+        testId="veranstaltung-edit-work-section"
+        persisted
+        locale={locale}
+        tasksPanel={tasksPanel}
+        requirementsPanel={
+          <ContextRelatedRequirementsPanel
+            resourceType="CLUB_EVENT"
+            resourceId={event.id}
+            locale={locale}
+          />
+        }
+      />
+
+      <PlanningEditorCollaborationSection
+        headingId="veranstaltung-edit-collaboration-heading"
+        testId="veranstaltung-edit-collaboration-section"
+        persisted
+        tenantSlug={tenantContext.key}
+        targetType="CLUB_EVENT"
+        targetId={event.id}
+        canEdit={canManage}
+        currentUserId={session.user?.id ?? null}
+        locale={locale}
+        timezone={timeZone}
+      />
+    </>
+  );
+
+  const operationalRailSections = (
+    <PlanningEditorSection
+      className="space-y-2"
+      ariaLabelledBy="veranstaltung-edit-participation-rail-heading"
+      testId="veranstaltung-edit-participation-rail"
+    >
+      <PlanningEditorSectionHeading
+        id="veranstaltung-edit-participation-rail-heading"
+        title={tParticipation("participationHeading")}
+        description={tParticipation("participationDescription")}
+      />
+      <ParticipationRequestConfigEditor
+        apiPath={`/api/events/${event.id}/participation-request`}
+        timeZone={timeZone}
+        disabled={!canManage}
+        layout="sessionEdit"
+        values={{
+          participationResponseDueAt:
+            participationFields?.participationResponseDueAt?.toISOString() ?? null,
+          participationReminder1At:
+            participationFields?.participationReminder1At?.toISOString() ?? null,
+          participationReminder2At:
+            participationFields?.participationReminder2At?.toISOString() ?? null,
+          participationReminder1PresetKey:
+            participationFields?.participationReminder1PresetKey ?? null,
+          participationReminder2PresetKey:
+            participationFields?.participationReminder2PresetKey ?? null,
+        }}
+      />
+    </PlanningEditorSection>
   );
 
   return (
@@ -95,64 +174,12 @@ export default async function VeranstaltungEditPage({ params }: Props) {
           </div>
         ) : null}
 
-        <VeranstaltungEditForm event={event} timeZone={tenantContext.timezone} canManage={canManage} />
-
-        <PlanningEditorParticipantsSection
-          headingId="veranstaltung-edit-participants-heading"
-          testId="veranstaltung-edit-participants-section"
-          persisted
-        >
-          <ClubEventParticipationAudienceEditor eventId={event.id} disabled={!canManage} />
-          <ParticipationRequestConfigEditor
-            apiPath={`/api/events/${event.id}/participation-request`}
-            timeZone={timeZone}
-            disabled={!canManage}
-            layout="sessionEdit"
-            values={{
-              participationResponseDueAt:
-                participationFields?.participationResponseDueAt?.toISOString() ?? null,
-              participationReminder1At:
-                participationFields?.participationReminder1At?.toISOString() ?? null,
-              participationReminder2At:
-                participationFields?.participationReminder2At?.toISOString() ?? null,
-              participationReminder1PresetKey:
-                participationFields?.participationReminder1PresetKey ?? null,
-              participationReminder2PresetKey:
-                participationFields?.participationReminder2PresetKey ?? null,
-            }}
-          />
-          <PlanningParticipantsList
-            people={participantsPresentation.people}
-            teams={participantsPresentation.teams ?? []}
-          />
-        </PlanningEditorParticipantsSection>
-
-        <PlanningEditorWorkSection
-          headingId="veranstaltung-edit-work-heading"
-          testId="veranstaltung-edit-work-section"
-          persisted
-          locale={locale}
-          tasksPanel={tasksPanel}
-          requirementsPanel={
-            <ContextRelatedRequirementsPanel
-              resourceType="CLUB_EVENT"
-              resourceId={event.id}
-              locale={locale}
-            />
-          }
-        />
-
-        <PlanningEditorCollaborationSection
-          headingId="veranstaltung-edit-collaboration-heading"
-          testId="veranstaltung-edit-collaboration-section"
-          persisted
-          tenantSlug={tenantContext.key}
-          targetType="CLUB_EVENT"
-          targetId={event.id}
-          canEdit={canManage}
-          currentUserId={session.user?.id ?? null}
-          locale={locale}
-          timezone={timeZone}
+        <VeranstaltungEditForm
+          event={event}
+          timeZone={tenantContext.timezone}
+          canManage={canManage}
+          operationalPrimarySections={operationalPrimarySections}
+          operationalRailSections={operationalRailSections}
         />
       </PlanningEditorShell>
     </ToastProvider>
