@@ -169,5 +169,32 @@
       "rowAria": "{title}",
       "rowAriaWithMeta": "{title}. {meta}"
     }
+  },
+  "TrainingCenter": {
+    "sessionEdit": {
+      "backToTrainings": "Back to trainings",
+      "breadcrumbPlanning": "Planning",
+      "breadcrumbTrainings": "Trainings",
+      "breadcrumbSingleSession": "Single session",
+      "toSeries": "Go to series",
+      "showInWeekPlanner": "Show in week planner",
+      "dateTimeHeading": "Date & time",
+      "seriesStandard": "Series default",
+      "rescheduledNote": "This session was already adjusted for this date.",
+      "fieldDate": "Date",
+      "fieldStart": "Start",
+      "fieldEnd": "End",
+      "saveChanges": "Save changes",
+      "saving": "Saving…",
+      "useSeriesDefault": "Use series default",
+      "participationHeading": "Participation",
+      "participationDescription": "Response deadline and reminders for this session.",
+      "responseDeadlineSection": "Response deadline",
+      "remindersSection": "Reminders",
+      "validationTimesRequired": "Start and end times are required.",
+      "validationStartBeforeEnd": "Start time must be before end time.",
+      "saveSuccess": "Training updated.",
+      "saveError": "Could not save changes."
+    }
   }
 }

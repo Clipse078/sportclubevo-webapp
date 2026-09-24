@@ -3,17 +3,64 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * SCE-RESPONSIVE-01E/01F — Class C legacy training session editor (pre-existing on STAGE).
- * Documents route classification only; does not lock legacy light-surface visuals as product contract.
+ * TRAININGCENTER-UX-03 — single-session edit route SCE composition contract.
  */
-describe("Training session edit route — Class C legacy classification", () => {
+describe("Training session edit route — SCE workspace", () => {
   const pagePath = join(
     process.cwd(),
     "app/(admin)/dashboard/training/sessions/[sessionId]/edit/page.tsx",
   );
 
-  it("remains on the dedicated legacy page shell (not shared training workspace components)", () => {
-    const source = readFileSync(pagePath, "utf8");
-    expect(source).not.toMatch(/TrainingManagementWorkspace|TrainingRecordWorkspace/);
+  const formPath = join(process.cwd(), "components/admin/training/TrainingSessionEditForm.tsx");
+
+  function readPage() {
+    return readFileSync(pagePath, "utf8");
+  }
+
+  it("uses responsive 12-column workspace with date/time and participation panels", () => {
+    const source = readPage();
+    expect(source).toContain("training-session-edit-workspace-grid");
+    expect(source).toContain("lg:grid-cols-12");
+    expect(source).toContain("training-session-edit-datetime-panel");
+    expect(source).toContain("training-session-edit-participation-panel");
+  });
+
+  it("does not use legacy white card shells on the route", () => {
+    const source = readPage();
+    expect(source).not.toMatch(/bg-white/);
+    expect(source).not.toMatch(/border-gray-200/);
+    expect(source).toContain("TRAINING_FORM_WORKSPACE_SURFACE_CLASS");
+  });
+
+  it("preserves authorization boundary and session loader", () => {
+    const source = readPage();
+    expect(source).toContain("requireAnyPermission");
+    expect(source).toContain("getTrainingSession");
+    expect(source).toContain("PERMISSIONS.TRAININGS_VIEW");
+    expect(source).toContain("PERMISSIONS.TRAININGS_MANAGE");
+  });
+
+  it("preserves contextual actions and form wiring", () => {
+    const source = readPage();
+    expect(source).toContain("TrainingSessionEditForm");
+    expect(source).toContain("ParticipationRequestConfigEditor");
+    expect(source).toContain("buildTrainingSeriesEditHref");
+    expect(source).toContain("buildTrainingSessionWochenplanerHref");
+    expect(source).toContain("training-session-edit-back-link");
+    expect(source).toContain("TrainingSessionEditHeader");
+  });
+
+  it("uses i18n for user-facing session edit copy", () => {
+    const source = readPage();
+    expect(source).toContain('getTranslations("TrainingCenter.sessionEdit")');
+  });
+
+  it("edit form keeps reschedule save contract and SCE form controls", () => {
+    const source = readFileSync(formPath, "utf8");
+    expect(source).toContain("/api/training-sessions/${sessionId}/reschedule");
+    expect(source).toContain("training-session-edit-save");
+    expect(source).toContain("training-session-edit-use-default");
+    expect(source).toContain("fca-input");
+    expect(source).not.toMatch(/border-gray-300/);
   });
 });

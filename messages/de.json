@@ -592,5 +592,32 @@
       "rowAria": "{title}",
       "rowAriaWithMeta": "{title}. {meta}"
     }
+  },
+  "TrainingCenter": {
+    "sessionEdit": {
+      "backToTrainings": "Zurück zu Trainings",
+      "breadcrumbPlanning": "Planung",
+      "breadcrumbTrainings": "Trainings",
+      "breadcrumbSingleSession": "Einzeltraining",
+      "toSeries": "Zur Serie",
+      "showInWeekPlanner": "Im Wochenplaner anzeigen",
+      "dateTimeHeading": "Datum & Zeit",
+      "seriesStandard": "Serienstandard",
+      "rescheduledNote": "Dieses Training wurde für diesen Termin bereits angepasst.",
+      "fieldDate": "Datum",
+      "fieldStart": "Beginn",
+      "fieldEnd": "Ende",
+      "saveChanges": "Änderungen speichern",
+      "saving": "Wird gespeichert…",
+      "useSeriesDefault": "Serien-Standard verwenden",
+      "participationHeading": "Teilnahme",
+      "participationDescription": "Antwortfrist und Erinnerungen für dieses Training.",
+      "responseDeadlineSection": "Antwortfrist",
+      "remindersSection": "Erinnerungen",
+      "validationTimesRequired": "Start- und Endzeit sind erforderlich.",
+      "validationStartBeforeEnd": "Die Startzeit muss vor der Endzeit liegen.",
+      "saveSuccess": "Training aktualisiert.",
+      "saveError": "Änderungen konnten nicht gespeichert werden."
+    }
   }
 }

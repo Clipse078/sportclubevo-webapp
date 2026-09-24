@@ -17,6 +17,8 @@ type Props = {
   timeZone: string;
   values: ParticipationRequestConfigValues;
   disabled?: boolean;
+  /** Flat panel layout for single-session edit (no nested card chrome). */
+  layout?: "default" | "sessionEdit";
   onSaved?: () => void;
   onError?: (message: string) => void;
 };
@@ -38,6 +40,7 @@ export function ParticipationRequestConfigEditor({
   timeZone,
   values,
   disabled,
+  layout = "default",
   onSaved,
   onError,
 }: Props) {
@@ -79,6 +82,7 @@ export function ParticipationRequestConfigEditor({
       <ParticipationRequestDeadlineFields
         timeZone={timeZone}
         disabled={disabled || pending}
+        layout={layout === "sessionEdit" ? "sessionEdit" : "default"}
         participationResponseDueAt={values.participationResponseDueAt}
         reminder1At={values.participationReminder1At}
         reminder2At={values.participationReminder2At}

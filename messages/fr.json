@@ -169,5 +169,32 @@
       "rowAria": "{title}",
       "rowAriaWithMeta": "{title}. {meta}"
     }
+  },
+  "TrainingCenter": {
+    "sessionEdit": {
+      "backToTrainings": "Retour aux entraînements",
+      "breadcrumbPlanning": "Planification",
+      "breadcrumbTrainings": "Entraînements",
+      "breadcrumbSingleSession": "Séance unique",
+      "toSeries": "Vers la série",
+      "showInWeekPlanner": "Afficher dans le planificateur hebdo",
+      "dateTimeHeading": "Date et heure",
+      "seriesStandard": "Standard de la série",
+      "rescheduledNote": "Cette séance a déjà été ajustée pour cette date.",
+      "fieldDate": "Date",
+      "fieldStart": "Début",
+      "fieldEnd": "Fin",
+      "saveChanges": "Enregistrer les modifications",
+      "saving": "Enregistrement…",
+      "useSeriesDefault": "Utiliser le standard de la série",
+      "participationHeading": "Participation",
+      "participationDescription": "Date limite de réponse et rappels pour cette séance.",
+      "responseDeadlineSection": "Date limite de réponse",
+      "remindersSection": "Rappels",
+      "validationTimesRequired": "Les heures de début et de fin sont requises.",
+      "validationStartBeforeEnd": "L'heure de début doit précéder l'heure de fin.",
+      "saveSuccess": "Entraînement mis à jour.",
+      "saveError": "Impossible d'enregistrer les modifications."
+    }
   }
 }

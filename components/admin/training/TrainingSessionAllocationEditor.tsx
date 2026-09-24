@@ -82,7 +82,7 @@ function AllocationRow({
   }, [allocation.id, onRemove]);
 
   return (
-    <li className="group flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+    <li className="group flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/60 px-4 py-3">
       <GripVertical size={16} className="shrink-0 text-gray-300" aria-hidden />
 
       <div className="min-w-0 flex-1">
@@ -172,14 +172,14 @@ function GroupSection({
             Für dieses Training angepasst
           </span>
         ) : (
-          <span className="inline-flex h-5 items-center rounded-full border border-gray-200 bg-gray-50 px-2 text-[0.65rem] font-medium text-gray-500">
+          <span className="inline-flex h-5 items-center rounded-full border border-[var(--border)] bg-[var(--surface-3)] px-2 text-[0.65rem] font-medium text-[var(--text-2)]">
             Serienstandard
           </span>
         )}
       </div>
 
       {rowsToShow.length === 0 ? (
-        <p className="rounded-lg border-2 border-dashed border-gray-200 py-4 text-center text-sm text-gray-500">
+        <p className="rounded-lg border-2 border-dashed border-[var(--border)] py-4 text-center text-sm text-[var(--text-2)]">
           Keine Ressource zugewiesen.
         </p>
       ) : (
@@ -216,7 +216,7 @@ function GroupSection({
               onClick={handleUseSeriesDefault}
               disabled={resetting}
               data-testid={`training-session-allocations-${testIdSuffix}-use-default`}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {resetting ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />}
               Serien-Standard verwenden
@@ -307,10 +307,10 @@ export function TrainingSessionAllocationEditor({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">Ressourcen für dieses Training</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-sm font-semibold tracking-tight text-[var(--foreground)]">Ressourcen für dieses Training</h2>
+        <p className="mt-1 text-xs text-[var(--text-2)]">
           Standardmässig übernimmt dieses Training die Ressourcen seiner Trainingsserie. Weisen Sie hier eine
-          abweichende Ressource zu, wenn <span className="font-medium text-gray-700">nur dieser Termin</span>{" "}
+          abweichende Ressource zu, wenn <span className="font-medium text-[var(--foreground)]">nur dieser Termin</span>{" "}
           Spielfeld/Halle oder Garderobe wechseln muss — die Serie und alle anderen Termine bleiben unverändert.
         </p>
       </div>
