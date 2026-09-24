@@ -62,7 +62,7 @@ export async function loadTeamEventProgrammeItems(
   ctx: PersonalProgrammeAdapterContext,
 ): Promise<PersonalProgrammeItem[]> {
   const { teamIds, teamSeasonIds } = buildPersonalTeamEventQueryScope(ctx.personal);
-  if (teamIds.length === 0) {
+  if (teamIds.length === 0 || teamSeasonIds.length === 0) {
     return [];
   }
 
@@ -72,20 +72,10 @@ export async function loadTeamEventProgrammeItems(
     permissionKeys: ctx.permissionKeys,
   };
 
-  const teamScopeWhere =
-    teamSeasonIds.length > 0
-      ? {
-          OR: [
-            { teamSeasonId: { in: teamSeasonIds } },
-            { teamSeasonId: null, teamId: { in: teamIds } },
-          ],
-        }
-      : { teamId: { in: teamIds } };
-
   const candidates = await prisma.event.findMany({
     where: {
       tenantId: ctx.personal.tenantId,
-      ...teamScopeWhere,
+      teamSeasonId: { in: teamSeasonIds },
       startAt: { gte: ctx.rangeStart, lte: ctx.rangeEnd },
     },
     orderBy: [{ startAt: "asc" }, { title: "asc" }],

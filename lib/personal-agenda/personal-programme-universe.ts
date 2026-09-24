@@ -1,6 +1,7 @@
 import type { PersonalContext } from "@/lib/dashboard/personal-context";
 import {
   getPersonallyRelevantTeamIds,
+  getPersonallyRelevantTeamSeasonIds,
   isPersonalTeamEventRowRelevant,
   type PersonalTeamEventRelevanceRow,
 } from "@/lib/dashboard/personal-context";
@@ -61,7 +62,7 @@ export function buildPersonalTeamEventQueryScope(context: PersonalContext): {
 } {
   return {
     teamIds: getPersonallyRelevantTeamIds(context),
-    teamSeasonIds: context.teams.flatMap((t) => t.teamSeasonIds),
+    teamSeasonIds: getPersonallyRelevantTeamSeasonIds(context),
   };
 }
 

@@ -9,6 +9,7 @@ vi.mock("@/lib/db/prisma", () => ({
     playerSquadMember: { findMany: vi.fn() },
     personAssignment: { findMany: vi.fn() },
     orgUnitMembership: { findMany: vi.fn() },
+    teamSeason: { findMany: vi.fn() },
   },
 }));
 
@@ -30,6 +31,7 @@ describe("DASHBOARD-01 — resolvePersonalContext", () => {
     vi.mocked(prisma.trainerTeamMember.findMany).mockResolvedValue([] as never);
     vi.mocked(prisma.playerSquadMember.findMany).mockResolvedValue([] as never);
     vi.mocked(prisma.personAssignment.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.teamSeason.findMany).mockResolvedValue([] as never);
   });
 
   it("returns empty relationships when user has no linked Person", async () => {
@@ -91,6 +93,7 @@ describe("DASHBOARD-01 — resolvePersonalContext", () => {
         id: "asg-1",
         orgUnitId: "ou-board",
         teamId: "team-f2",
+        seasonId: null,
         functionKey: "VIZEPRAESIDENT",
         orgUnit: { id: "ou-board", name: "Vorstand" },
         team: { id: "team-f2", name: "F2", shortName: "F2" },
@@ -101,6 +104,8 @@ describe("DASHBOARD-01 — resolvePersonalContext", () => {
 
     expect(ctx.assignments).toHaveLength(1);
     expect(ctx.teams[0].kinds).toContain("PERSON_ASSIGNMENT");
+    expect(ctx.teams[0].kinds).not.toContain("TRAINER");
+    expect(getPersonallyRelevantTeamIds(ctx)).toEqual([]);
     expect(ctx.orgUnits.some((o) => o.orgUnitId === "ou-board")).toBe(true);
     expect(prisma.personAssignment.findMany).toHaveBeenCalledWith(
       expect.objectContaining({

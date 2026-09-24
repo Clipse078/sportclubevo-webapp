@@ -186,7 +186,7 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 **Mission:** Restore personal calendar/programme parity — Mein Kalender projects only authorized personal `PersonalProgrammeItem[]` rows (no club-wide leak via admin/view permissions); teamSeason-aligned sporting scope at the programme adapter boundary.
 
-**Status:** Implemented on PR #706 — pending DASHBOARD-07R2 human visual acceptance.
+**Status:** Automated PASS / **human FAIL** on STAGE (Sep 2026 calendar). Superseded by DASHBOARD-07R1C.
 
 **Dependencies:** DASHBOARD-07R1A presentation contract.
 
@@ -194,11 +194,23 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 ---
 
+## DASHBOARD-07R1C — STAGE data forensics + personal calendar fix
+
+**Mission:** Read-only STAGE forensics for September calendar markers; prove root cause (PersonAssignment + null SFV `teamSeasonId` + empty personal season scope); fix at PersonalContext season resolution and relevance boundary.
+
+**Status:** Implemented on PR #706 — pending DASHBOARD-07R2 human visual acceptance (note: F2 tournaments on 06 / 12 Sep remain personal under team/season scope).
+
+**Dependencies:** DASHBOARD-07R1B.
+
+**Doc:** `docs/dashboard/DASHBOARD-07R1C-STAGE-PERSONAL-CALENDAR-FORENSICS.md`
+
+---
+
 ## DASHBOARD-07R2 — Final closure
 
 **Mission:** Authenticated human visual sign-off; programme closure; MOBILE-D handoff.
 
-**Status:** Pending DASHBOARD-07R1B engineering PASS + human visual acceptance.
+**Status:** Pending DASHBOARD-07R1C engineering PASS + human visual acceptance.
 
 ---
 
