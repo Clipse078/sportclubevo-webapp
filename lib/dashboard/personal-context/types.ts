@@ -13,6 +13,8 @@ export type PersonalTeamRelationship = {
   kinds: PersonalTeamRelationshipKind[];
   /** Active PersonAssignment function keys scoped to this team (organisational labels only). */
   assignmentFunctionKeys: string[];
+  /** Active trainer/player teamSeason rows that established this team relationship. */
+  teamSeasonIds: string[];
 };
 
 export type PersonalOrgUnitRelationshipSource = "USER_MEMBERSHIP" | "PERSON_MEMBERSHIP" | "PERSON_ASSIGNMENT";

@@ -53,6 +53,7 @@ function buildContext(overrides: Partial<PersonalContext> = {}): PersonalContext
         teamName: "Team Alpha",
         kinds: ["TRAINER"],
         assignmentFunctionKeys: [],
+        teamSeasonIds: ["ts-team-1"],
       },
     ],
     orgUnits: [],
@@ -159,6 +160,7 @@ describe("DASHBOARD-02 — personal programme", () => {
             teamName: "Team Alpha",
             kinds: ["TRAINER"],
             assignmentFunctionKeys: [],
+            teamSeasonIds: ["ts-team-1"],
           }],
         })),
       );

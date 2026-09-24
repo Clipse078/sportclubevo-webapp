@@ -1,9 +1,10 @@
 import type { EventType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import {
-  isTeamPersonallyRelevant,
+  isPersonalTeamEventRowRelevant,
   resolveTeamEventContextLabel,
 } from "@/lib/dashboard/personal-context";
+import { buildPersonalTeamEventQueryScope } from "../personal-programme-universe";
 import {
   canIncludeEventInPersonalProjection,
   type PersonalEventProjectionActor,
@@ -60,7 +61,7 @@ function resolveVenue(input: {
 export async function loadTeamEventProgrammeItems(
   ctx: PersonalProgrammeAdapterContext,
 ): Promise<PersonalProgrammeItem[]> {
-  const teamIds = ctx.personal.teams.map((t) => t.teamId);
+  const { teamIds, teamSeasonIds } = buildPersonalTeamEventQueryScope(ctx.personal);
   if (teamIds.length === 0) {
     return [];
   }
@@ -71,10 +72,20 @@ export async function loadTeamEventProgrammeItems(
     permissionKeys: ctx.permissionKeys,
   };
 
+  const teamScopeWhere =
+    teamSeasonIds.length > 0
+      ? {
+          OR: [
+            { teamSeasonId: { in: teamSeasonIds } },
+            { teamSeasonId: null, teamId: { in: teamIds } },
+          ],
+        }
+      : { teamId: { in: teamIds } };
+
   const candidates = await prisma.event.findMany({
     where: {
       tenantId: ctx.personal.tenantId,
-      teamId: { in: teamIds },
+      ...teamScopeWhere,
       startAt: { gte: ctx.rangeStart, lte: ctx.rangeEnd },
     },
     orderBy: [{ startAt: "asc" }, { title: "asc" }],
@@ -82,6 +93,7 @@ export async function loadTeamEventProgrammeItems(
       id: true,
       tenantId: true,
       teamId: true,
+      teamSeasonId: true,
       type: true,
       status: true,
       reviewStage: true,
@@ -101,7 +113,7 @@ export async function loadTeamEventProgrammeItems(
   const seen = new Set<string>();
 
   for (const event of candidates) {
-    if (!event.teamId || !isTeamPersonallyRelevant(ctx.personal, event.teamId)) {
+    if (!isPersonalTeamEventRowRelevant(ctx.personal, event)) {
       continue;
     }
     if (!canIncludeEventInPersonalProjection(actor, event)) {

@@ -305,6 +305,8 @@ export async function getPersonalCommandCenterData(args: {
 
   const tasks = personalWork.tasks;
 
+  // Mein Kalender and Mein Programm share this canonical PersonalProgrammeItem[] universe.
+  // The feed applies an additional forward window; calendar projects the same authorized set.
   return {
     calendarMonthParam: monthParam,
     calendarNavigation,

@@ -23,9 +23,9 @@
 
 **Automated programme status (historical):** DASHBOARD-07 automated acceptance **PASS** at `f2431d236f9f250678cd6cee36c789fb7d2a0c8c`.
 
-**Current status:** **REOPENED → DASHBOARD-07R1** (authenticated human visual acceptance). **Not closed.** **Mobile-D blocked** until DASHBOARD-07R2 final closure.
+**Current status:** **REOPENED → DASHBOARD-07R1 → DASHBOARD-07R1A → DASHBOARD-07R1B** (personal calendar relevance). **Not closed.** **Mobile-D blocked** until DASHBOARD-07R2 final closure.
 
-See `docs/dashboard/DASHBOARD-07R1-VISUAL-ACCEPTANCE-REMEDIATION.md`.
+See `docs/dashboard/DASHBOARD-07R1-VISUAL-ACCEPTANCE-REMEDIATION.md`, `docs/dashboard/DASHBOARD-07R1B-PERSONAL-CALENDAR-RELEVANCE.md`.
 
 ---
 
