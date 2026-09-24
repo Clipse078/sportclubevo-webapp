@@ -2,6 +2,16 @@
 
 Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves blockers.
 
+## Integration status (2026-09-24)
+
+| Target | Dashboard programme (D … 07R1E) | Notes |
+|--------|----------------------------------|--------|
+| `origin/STAGE` | **Not integrated** | Personal dashboard never merged to STAGE |
+| PR **#706** | **Integrated** (branch tip includes 07R1E + later planning commits) | Canonical engineering source |
+| PR **#707** (post P0 fix) | **Integrated** via cherry-pick `8f592373^..73d66e52` on top of `cf4fc108` | PLANNING-UX-05R2 + personal dashboard; see `docs/dashboard/DASHBOARD-P0-REGRESSION-2026-09-24.md` |
+
+Until #706 or #707 merges to STAGE, previews branched from STAGE alone will show the **legacy** club dashboard.
+
 ---
 
 ## DASHBOARD-01 — Personal context + relevance resolver
