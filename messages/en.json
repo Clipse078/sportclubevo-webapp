@@ -56,7 +56,8 @@
       "statusPostponed": "Postponed",
       "emptyTitle": "No events in the coming days",
       "emptyDescription": "When personally relevant events are coming up, they appear here in chronological order.",
-      "unsupported": "Link your account to a person or use meetings to see your personal schedule."
+      "unsupported": "Link your account to a person or use meetings to see your personal schedule.",
+      "viewAll": "View all"
     },
     "secondary": {
       "summary": "News & activity",
@@ -128,7 +129,7 @@
       "selected": "selected",
       "ariaMonthGrid": "Personal calendar month grid",
       "selectedDayPanel": "Appointments on selected day",
-      "emptyDay": "No personal appointments",
+      "emptyDay": "No events on this day.",
       "dayAriaOneActivity": "1 personal appointment",
       "dayAriaActivities": "{count} personal appointments",
       "dayAriaOneActivityNamed": "1 appointment: {title}",

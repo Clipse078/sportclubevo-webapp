@@ -479,7 +479,8 @@
       "statusPostponed": "Verschoben",
       "emptyTitle": "Keine Termine in den nächsten Tagen",
       "emptyDescription": "Sobald persönlich relevante Termine anstehen, erscheinen sie hier chronologisch.",
-      "unsupported": "Verknüpfe dein Konto mit einer Person oder nutze Meetings, um dein persönliches Programm zu sehen."
+      "unsupported": "Verknüpfe dein Konto mit einer Person oder nutze Meetings, um dein persönliches Programm zu sehen.",
+      "viewAll": "Alle anzeigen"
     },
     "secondary": {
       "summary": "News & Aktivitäten",
@@ -551,7 +552,7 @@
       "selected": "ausgewählt",
       "ariaMonthGrid": "Mein Kalender Monatsraster",
       "selectedDayPanel": "Termine am ausgewählten Tag",
-      "emptyDay": "Keine persönlichen Termine",
+      "emptyDay": "Keine Termine an diesem Tag.",
       "dayAriaOneActivity": "1 persönlicher Termin",
       "dayAriaActivities": "{count} persönliche Termine",
       "dayAriaOneActivityNamed": "1 Termin: {title}",

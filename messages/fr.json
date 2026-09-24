@@ -56,7 +56,8 @@
       "statusPostponed": "Reporté",
       "emptyTitle": "Aucun événement dans les prochains jours",
       "emptyDescription": "Les événements pertinents pour vous apparaîtront ici par ordre chronologique.",
-      "unsupported": "Liez votre compte à une personne ou utilisez les réunions pour voir votre programme personnel."
+      "unsupported": "Liez votre compte à une personne ou utilisez les réunions pour voir votre programme personnel.",
+      "viewAll": "Tout afficher"
     },
     "secondary": {
       "summary": "Actualités et activité",
@@ -128,7 +129,7 @@
       "selected": "sélectionné",
       "ariaMonthGrid": "Grille mensuelle du calendrier personnel",
       "selectedDayPanel": "Rendez-vous du jour sélectionné",
-      "emptyDay": "Aucun rendez-vous personnel",
+      "emptyDay": "Aucun rendez-vous ce jour-là.",
       "dayAriaOneActivity": "1 rendez-vous personnel",
       "dayAriaActivities": "{count} rendez-vous personnels",
       "dayAriaOneActivityNamed": "1 rendez-vous : {title}",

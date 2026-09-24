@@ -158,7 +158,7 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 **Human visual acceptance:** REOPENED — **DASHBOARD-07R1** (see `docs/dashboard/DASHBOARD-07R1-VISUAL-ACCEPTANCE-REMEDIATION.md`).
 
-**Roadmap:** DASHBOARD-07 → 07R1 → 07R1A → 07R1B → 07R1C → **07R1D** → 07R2 human acceptance → merge → **MOBILE-D**.
+**Roadmap:** DASHBOARD-07 → 07R1 → 07R1A → 07R1B → 07R1C → 07R1D → **07R1E** → 07R2 human acceptance → merge → **MOBILE-D**.
 
 **Next:** DASHBOARD-07R2 final closure → **MOBILE-D**.
 
@@ -220,11 +220,23 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 ---
 
+## DASHBOARD-07R1E — Programme preview + day agenda
+
+**Mission:** Cap Mein Programm dashboard preview to next 3 upcoming personal items; remove redundant relationship context from row presentation; add Alle anzeigen → full Kalender; enable selected-day agenda below calendar from the same programme universe (no second query).
+
+**Status:** Implemented on PR #706 — pending DASHBOARD-07R2 human visual acceptance.
+
+**Dependencies:** DASHBOARD-07R1D.
+
+**Doc:** `docs/dashboard/DASHBOARD-07R1E-PROGRAMME-PREVIEW-DAY-AGENDA.md`
+
+---
+
 ## DASHBOARD-07R2 — Final closure
 
 **Mission:** Authenticated human visual sign-off; programme closure; MOBILE-D handoff.
 
-**Status:** Pending DASHBOARD-07R1D engineering PASS + human visual acceptance.
+**Status:** Pending DASHBOARD-07R1E engineering PASS + human visual acceptance.
 
 ---
 
