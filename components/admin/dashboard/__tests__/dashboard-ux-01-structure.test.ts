@@ -16,8 +16,8 @@ describe("DASHBOARD-UX-01B — dashboard structure contract", () => {
   it("orders personal modules before club-wide Heute im Verein", () => {
     const heuteIndex = clubDashboardSource.indexOf("<HeuteImVereinWidget");
     const meineAgendaIndex = clubDashboardSource.indexOf("<MeineAgendaWidget");
-    const meineAufgabenIndex = clubDashboardSource.indexOf("<MeineAufgabenWidget");
-    const attentionIndex = clubDashboardSource.indexOf('title="Benötigt Aufmerksamkeit"');
+    const meineAufgabenIndex = clubDashboardSource.indexOf("<PersonalTasksPreview");
+    const attentionIndex = clubDashboardSource.indexOf("<PersonalAttention");
     const quickActionsIndex = clubDashboardSource.indexOf("Schnellaktionen");
     const newsIndex = clubDashboardSource.indexOf("Aktuelle News");
     const activityIndex = clubDashboardSource.indexOf("Letzte Aktivitäten");
@@ -52,7 +52,7 @@ describe("DASHBOARD-UX-01B — dashboard structure contract", () => {
   it("omits Meine Aufgaben widget when personal tasks are unauthorized", () => {
     expect(clubDashboardSource).toContain("commandCenter.personalTasksAvailable");
     expect(clubDashboardSource).toMatch(
-      /personalTasksAvailable\s*\?\s*\(\s*<MeineAufgabenWidget/s,
+      /personalTasksAvailable\s*\?\s*\(\s*<PersonalTasksPreview/s,
     );
   });
 });

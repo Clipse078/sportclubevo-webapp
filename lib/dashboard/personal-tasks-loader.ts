@@ -1,73 +1,41 @@
 /**
- * Dashboard personal Aufgaben — PersonalAction read model (AUFGABEN-05-UI).
+ * Dashboard personal Aufgaben — PersonalAction read model (AUFGABEN-05-UI, DASHBOARD-05).
  */
 
-import { loadPersonalActionsModuleCapabilities } from "@/lib/personal-actions/access";
 import {
-  countPersonalActions,
-  loadDashboardPersonalActions,
-} from "@/lib/personal-actions";
-import { mapPersonalActionsToPreviewItems } from "@/lib/personal-actions/presentation";
-import type { TenantFormatConfig } from "@/lib/tenant-runtime/formatters";
+  DASHBOARD_PERSONAL_TASK_PREVIEW_LIMIT,
+  loadDashboardPersonalWork,
+  type DashboardPersonalTaskPreviewItem,
+  type DashboardPersonalTasksSnapshot,
+} from "@/lib/dashboard/personal-attention";
 
-export const DASHBOARD_PERSONAL_TASK_PREVIEW_LIMIT = 5;
-
-export type DashboardPersonalTaskPreviewItem = {
-  id: string;
-  title: string;
-  subtitle: string | null;
-  metaLine: string | null;
-  href: string | null;
-  sourceLabel: string;
+export {
+  DASHBOARD_PERSONAL_TASK_PREVIEW_LIMIT,
+  type DashboardPersonalTaskPreviewItem,
 };
 
-export type DashboardPersonalTasksSnapshot = {
-  /** User may use Meine Aufgaben (task and/or participation domain). */
-  authorized: boolean;
-  /** Actionable personal count after stable-id deduplication; null when unauthorized. */
-  count: number | null;
-  preview: DashboardPersonalTaskPreviewItem[];
-};
+export type { DashboardPersonalTasksSnapshot };
 
 export async function loadDashboardPersonalTasks(args: {
   tenantId: string;
   userId: string;
-  fmtCfg?: TenantFormatConfig;
+  fmtCfg?: import("@/lib/tenant-runtime/formatters").TenantFormatConfig;
   locale?: string;
   timeZone?: string;
+  now?: Date;
 }): Promise<DashboardPersonalTasksSnapshot> {
-  const capabilities = await loadPersonalActionsModuleCapabilities({
-    tenantId: args.tenantId,
-    userId: args.userId,
-  });
+  const work = await loadDashboardPersonalWork(args);
+  return work.tasks;
+}
 
-  if (!capabilities.personalInbox) {
-    return { authorized: false, count: null, preview: [] };
-  }
-
-  const locale = args.locale ?? args.fmtCfg?.locale ?? "de-CH";
-  const timeZone = args.timeZone ?? args.fmtCfg?.timezone ?? "Europe/Zurich";
-  const fmtCfg: TenantFormatConfig = args.fmtCfg ?? {
-    locale,
-    timezone: timeZone,
-  };
-
-  const [counts, actions] = await Promise.all([
-    countPersonalActions({
-      tenantId: args.tenantId,
-      userId: args.userId,
-      permissionKeys: capabilities.permissionKeys,
-    }),
-    loadDashboardPersonalActions({
-      tenantId: args.tenantId,
-      userId: args.userId,
-      permissionKeys: capabilities.permissionKeys,
-    }),
-  ]);
-
-  return {
-    authorized: true,
-    count: counts.totalActionable,
-    preview: mapPersonalActionsToPreviewItems(actions, fmtCfg, locale, timeZone),
-  };
+export async function loadDashboardPersonalAttention(args: {
+  tenantId: string;
+  userId: string;
+  fmtCfg?: import("@/lib/tenant-runtime/formatters").TenantFormatConfig;
+  locale?: string;
+  timeZone?: string;
+  now?: Date;
+}) {
+  const work = await loadDashboardPersonalWork(args);
+  return work.attention;
 }

@@ -8,10 +8,7 @@
 import type { EventType } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { getDayWindow, formatIsoDay } from "@/lib/planner/date-utils";
-import {
-  getDashboardMeetingSummary,
-  getOperativeStrategicCounts,
-} from "@/lib/dashboard/strategic-summary";
+import { getDashboardMeetingSummary } from "@/lib/dashboard/strategic-summary";
 import type { ActorContext } from "@/lib/visibility/actor-context";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -54,10 +51,12 @@ import {
   resolvePersonalTeamIds,
   type PersonalAgendaItem,
 } from "@/lib/dashboard/personal-cockpit";
-import {
-  loadDashboardPersonalTasks,
-  type DashboardPersonalTaskPreviewItem,
-} from "@/lib/dashboard/personal-tasks-loader";
+import { loadDashboardPersonalWork } from "@/lib/dashboard/personal-attention";
+import type {
+  DashboardPersonalTaskPreviewItem,
+  PersonalAttentionItem,
+  PersonalAttentionSnapshot,
+} from "@/lib/dashboard/personal-attention";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -117,7 +116,9 @@ export type CommandCenterData = {
   kpis: CommandCenterKpi[];
   kpiStrip: CommandCenterKpi[];
   todayItems: TodayScheduleItem[];
+  /** @deprecated DASHBOARD-06 — legacy shape; sourced from personal attention. */
   attentionItems: AttentionItem[];
+  personalAttention: PersonalAttentionSnapshot;
   upcomingItems: UpcomingScheduleItem[];
   activitySources: ActivitySourceItem[];
   newsItems: CommandCenterNewsItem[];
@@ -324,6 +325,18 @@ export function buildAttentionItems(input: {
   return items;
 }
 
+function mapPersonalAttentionToLegacyAttentionItems(
+  items: PersonalAttentionItem[],
+): AttentionItem[] {
+  return items.map((item) => ({
+    key: item.id,
+    title: item.title,
+    subtitle: item.summary ?? item.presentationStatus ?? "",
+    href: item.deepLink,
+    urgent: item.urgent,
+  }));
+}
+
 // ── Data fetch ────────────────────────────────────────────────────────────────
 
 export async function getCommandCenterData(args: {
@@ -367,15 +380,12 @@ export async function getCommandCenterData(args: {
     activePersonCount,
     todayEventCount,
     openRegistrationCount,
-    newsInReviewCount,
-    scheduledNewsCount,
     todayEvents,
     upcomingEvents,
     recentNews,
     recentRegistrations,
     recentEvents,
     meetingSummary,
-    operativeCounts,
     todayMeetings,
     upcomingMeetings,
     dashboardNewsArticles,
@@ -396,12 +406,6 @@ export async function getCommandCenterData(args: {
       ? prisma.registration.count({
           where: { ...tWhere, status: { in: ["NEW", "REVIEWING"] } },
         })
-      : Promise.resolve(0),
-    canSeeNews
-      ? prisma.newsArticle.count({ where: { ...newsWhere, status: "IN_REVIEW" } })
-      : Promise.resolve(0),
-    canSeeNews
-      ? prisma.newsArticle.count({ where: { ...newsWhere, status: "SCHEDULED" } })
       : Promise.resolve(0),
 
     prisma.event.findMany({
@@ -483,7 +487,6 @@ export async function getCommandCenterData(args: {
     }),
 
     getDashboardMeetingSummary(args.actor, now),
-    getOperativeStrategicCounts(args.actor ?? { tenantId: args.tenantId, userId: "", permissionKeys: [] }, now),
 
     canSeeMeetings
       ? prisma.meeting.findMany({
@@ -798,15 +801,30 @@ export async function getCommandCenterData(args: {
     now,
   });
 
-  const attentionItems = buildAttentionItems({
-    newsInReviewCount,
-    openRegistrationCount,
-    scheduledNewsCount,
-    overdueActionCount: operativeCounts.overdueActionCount,
-    canSeeNews,
-    canSeeRegistrations,
-    canSeeMeetings,
-  });
+  const emptyPersonalAttention: PersonalAttentionSnapshot = {
+    authorized: false,
+    items: [],
+    totalCount: 0,
+    viewAllHref: null,
+  };
+
+  const personalWork = args.userId
+    ? await loadDashboardPersonalWork({
+        tenantId: args.tenantId,
+        userId: args.userId,
+        fmtCfg: args.fmtCfg,
+        locale: args.fmtCfg.locale ?? "de-CH",
+        timeZone: args.fmtCfg.timezone ?? "Europe/Zurich",
+        now,
+      })
+    : {
+        attention: emptyPersonalAttention,
+        tasks: { authorized: false, count: null, preview: [] },
+      };
+
+  const attentionItems = mapPersonalAttentionToLegacyAttentionItems(
+    personalWork.attention.items,
+  );
 
   const legacyKpis = buildCommandCenterKpis({
     teamCount,
@@ -816,15 +834,7 @@ export async function getCommandCenterData(args: {
     canSeeRegistrations,
   });
 
-  const personalTasksSnapshot = args.userId
-    ? await loadDashboardPersonalTasks({
-        tenantId: args.tenantId,
-        userId: args.userId,
-        fmtCfg: args.fmtCfg,
-        locale: args.fmtCfg.locale ?? "de-CH",
-        timeZone: args.fmtCfg.timezone ?? "Europe/Zurich",
-      })
-    : { authorized: false, count: null, preview: [] };
+  const personalTasksSnapshot = personalWork.tasks;
 
   const kpiStrip = buildPersonalCockpitKpiStrip({
     personalScheduleCount: personalAgenda.supported
@@ -832,9 +842,10 @@ export async function getCommandCenterData(args: {
       : null,
     personalTasksAvailable: personalTasksSnapshot.authorized,
     personalTaskCount: personalTasksSnapshot.count,
-    attentionCount: attentionItems.length,
-    openRegistrationCount,
-    canSeeRegistrations,
+    personalAttentionAvailable: personalWork.attention.authorized,
+    personalAttentionCount: personalWork.attention.authorized
+      ? personalWork.attention.totalCount
+      : null,
   });
 
   return {
@@ -842,6 +853,7 @@ export async function getCommandCenterData(args: {
     kpiStrip,
     todayItems,
     attentionItems,
+    personalAttention: personalWork.attention,
     upcomingItems,
     activitySources,
     newsItems,
