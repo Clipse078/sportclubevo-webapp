@@ -366,5 +366,25 @@
         "saveFailed": "Impossible d'enregistrer les modifications."
       }
     }
+  },
+  "PlanningResources": {
+    "free": "Libre",
+    "current": "Actuel",
+    "occupied": "Occupé",
+    "sharedWith": "Partagé avec {owners}",
+    "assign": "Assigner",
+    "change": "Modifier",
+    "unassignedDressingRoom": "Aucun vestiaire assigné",
+    "unassignedPitchHall": "Aucun terrain / salle assigné",
+    "pickerTitleDressingRoom": "Vestiaire pour {subject}",
+    "pickerTitlePitchHall": "Ressource pour {subject}",
+    "pickerCancel": "Annuler",
+    "globalOccupancyHeading": "Occupation",
+    "changeDressingRoomFor": "Modifier le vestiaire pour {subject}",
+    "assignDressingRoomFor": "Assigner un vestiaire pour {subject}",
+    "changePitchHallFor": "Modifier le terrain / la salle pour {subject}",
+    "assignPitchHallFor": "Assigner le terrain / la salle pour {subject}",
+    "matchHomeSide": "Domicile",
+    "matchAwaySide": "Visiteurs"
   }
 }

@@ -74,10 +74,7 @@ import {
   type FacilityGroup,
   type ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
-import {
-  CompactDressingRoomResourceSelector,
-  CompactPitchHallResourceSelector,
-} from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
+import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
 import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import PlanningEditorZeitstandardLink from "@/components/admin/shared/planning-editor/PlanningEditorZeitstandardLink";
@@ -775,7 +772,11 @@ export default function TrainingSeriesCreateForm({
             </div>
           </div>
           <div className="pl-[2.125rem]">
-            <CompactPitchHallResourceSelector
+            <PlanningSingleResourceAssignment
+              kind="pitch_hall"
+              subjectLabel="Spielfeld / Halle"
+              resourceName={resources[0]?.facilityResourceName ?? null}
+              unassignedLabel="Kein Spielfeld / keine Halle zugewiesen"
               facilityGroups={pitchHallFacilityGroups}
               selectedResourceIds={allocatedResourceIds}
               onSelect={addResourceDraft}
@@ -784,9 +785,7 @@ export default function TrainingSeriesCreateForm({
                 if (row) removeResourceDraft(row.localId);
               }}
               availabilityByResourceId={pitchAvailability}
-              layout="aggregated"
-              availableLabel="Freie Spielfelder & Hallen"
-              occupiedLabel="Belegte Spielfelder & Hallen"
+              canManage
               testId="training-create-resource"
             />
           </div>
@@ -802,7 +801,11 @@ export default function TrainingSeriesCreateForm({
             </div>
           </div>
           <div className="pl-[2.125rem]">
-            <CompactDressingRoomResourceSelector
+            <PlanningSingleResourceAssignment
+              kind="dressing_room"
+              subjectLabel="Garderobe"
+              resourceName={dressingRooms[0]?.facilityResourceName ?? null}
+              unassignedLabel="Keine Garderobe zugewiesen"
               facilityGroups={dressingRoomFacilityGroups}
               selectedResourceIds={allocatedDressingRoomIds}
               onSelect={addDressingRoomDraft}
@@ -811,9 +814,7 @@ export default function TrainingSeriesCreateForm({
                 if (row) removeDressingRoomDraft(row.localId);
               }}
               availabilityByResourceId={dressingRoomAvailability}
-              layout="aggregated"
-              availableLabel="Freie Garderoben"
-              occupiedLabel="Belegte Garderoben"
+              canManage
               testId="training-create-dressing-room"
             />
           </div>

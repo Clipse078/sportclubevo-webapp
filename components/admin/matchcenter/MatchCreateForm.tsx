@@ -68,10 +68,9 @@ import {
   type FacilityGroup,
   type ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
-import {
-  CompactDressingRoomResourceSelector,
-  CompactPitchHallResourceSelector,
-} from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
+import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import { PlanningMatchDressingRoomAssignments } from "@/components/admin/shared/planning/PlanningMatchDressingRoomAssignments";
+import { useTranslations } from "next-intl";
 import {
   orchestrateMatchCreation,
   type MatchCreationPlan,
@@ -195,6 +194,7 @@ export default function MatchCreateForm({
 }: MatchCreateFormProps) {
   const router = useRouter();
   const formId = useId();
+  const tResources = useTranslations("PlanningResources");
 
   // ── 1 · Team ─────────────────────────────────────────────────────────
   const [teamId, setTeamId] = useState("");
@@ -722,16 +722,17 @@ export default function MatchCreateForm({
                 </div>
               </div>
               <div className="pl-[2.125rem]">
-                <CompactPitchHallResourceSelector
+                <PlanningSingleResourceAssignment
+                  kind="pitch_hall"
+                  subjectLabel="Spielfeld / Halle"
+                  resourceName={pitchSlot?.facilityResourceName ?? null}
+                  unassignedLabel={tResources("unassignedPitchHall")}
                   facilityGroups={pitchHallFacilityGroups}
                   selectedResourceIds={pitchSlot ? new Set([pitchSlot.facilityResourceId]) : new Set()}
                   onSelect={addPitchSlot}
                   onDeselect={() => setPitchSlot(null)}
                   availabilityByResourceId={pitchAvailability}
-                  singleSelect
-                  layout="aggregated"
-                  availableLabel="Frei"
-                  occupiedLabel="Belegt"
+                  canManage
                   testId="match-create-pitch"
                 />
               </div>
@@ -749,26 +750,22 @@ export default function MatchCreateForm({
                   <h2 className="text-sm font-semibold text-[var(--foreground)]">Garderoben</h2>
                 </div>
               </div>
-              <div className="space-y-4 pl-[2.125rem]">
-                <CompactDressingRoomResourceSelector
+              <div className="pl-[2.125rem]">
+                <PlanningMatchDressingRoomAssignments
+                  homeLabel={tResources("matchHomeSide")}
+                  awayLabel={tResources("matchAwaySide")}
+                  homeCode={homeDressingRoomSlot?.facilityResourceId ?? null}
+                  awayCode={awayDressingRoomSlot?.facilityResourceId ?? null}
+                  homeDisplayName={selectedTeam?.name ?? "Heim"}
+                  awayDisplayName={getEffectiveOpponentDisplayName() || "Gast"}
+                  canManage
                   facilityGroups={dressingRoomFacilityGroups}
-                  selectedResourceIds={homeDressingRoomSlot ? new Set([homeDressingRoomSlot.facilityResourceId]) : new Set()}
-                  onSelect={addHomeDressingRoomSlot}
-                  onDeselect={() => setHomeDressingRoomSlot(null)}
-                  availabilityByResourceId={dressingRoomAvailability}
-                  label={`Heimkabine${selectedTeam ? ` (${selectedTeam.name})` : ""}`}
-                  singleSelect
-                  testId="match-create-home-dressing-room"
-                />
-                <CompactDressingRoomResourceSelector
-                  facilityGroups={dressingRoomFacilityGroups}
-                  selectedResourceIds={awayDressingRoomSlot ? new Set([awayDressingRoomSlot.facilityResourceId]) : new Set()}
-                  onSelect={addAwayDressingRoomSlot}
-                  onDeselect={() => setAwayDressingRoomSlot(null)}
-                  availabilityByResourceId={dressingRoomAvailability}
-                  label={`Gastkabine${getEffectiveOpponentDisplayName() ? ` (${getEffectiveOpponentDisplayName()})` : ""}`}
-                  singleSelect
-                  testId="match-create-away-dressing-room"
+                  dressingRoomAvailability={dressingRoomAvailability}
+                  onSelectHome={addHomeDressingRoomSlot}
+                  onSelectAway={addAwayDressingRoomSlot}
+                  onDeselectHome={() => setHomeDressingRoomSlot(null)}
+                  onDeselectAway={() => setAwayDressingRoomSlot(null)}
+                  testId="match-create-dressing-room"
                 />
               </div>
             </div>

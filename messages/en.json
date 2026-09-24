@@ -366,5 +366,25 @@
         "saveFailed": "Could not save changes."
       }
     }
+  },
+  "PlanningResources": {
+    "free": "Free",
+    "current": "Current",
+    "occupied": "Occupied",
+    "sharedWith": "Shared with {owners}",
+    "assign": "Assign",
+    "change": "Change",
+    "unassignedDressingRoom": "No dressing room assigned",
+    "unassignedPitchHall": "No pitch / hall assigned",
+    "pickerTitleDressingRoom": "Dressing room for {subject}",
+    "pickerTitlePitchHall": "Resource for {subject}",
+    "pickerCancel": "Cancel",
+    "globalOccupancyHeading": "Occupancy",
+    "changeDressingRoomFor": "Change dressing room for {subject}",
+    "assignDressingRoomFor": "Assign dressing room for {subject}",
+    "changePitchHallFor": "Change pitch / hall for {subject}",
+    "assignPitchHallFor": "Assign pitch / hall for {subject}",
+    "matchHomeSide": "Home",
+    "matchAwaySide": "Away"
   }
 }

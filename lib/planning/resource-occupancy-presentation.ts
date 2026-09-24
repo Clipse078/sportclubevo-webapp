@@ -148,6 +148,85 @@ export function buildTournamentParticipantDressingRoomAvailabilityByParticipant(
   return byParticipant;
 }
 
+export type MatchDressingRoomSide = "home" | "away";
+
+/**
+ * Merges in-event Heim/Gast dressing-room codes into availability for one side's picker.
+ * Resource IDs are facility codes on match surfaces.
+ */
+export function mergeMatchDressingRoomSideAvailability(
+  baseAvailability: Map<string, ResourceAvailabilityAnnotation> | undefined,
+  params: {
+    homeCode: string | null | undefined;
+    awayCode: string | null | undefined;
+    homeLabel: string;
+    awayLabel: string;
+    editingSide: MatchDressingRoomSide;
+  },
+): Map<string, ResourceAvailabilityAnnotation> {
+  const result = new Map(baseAvailability ?? []);
+  const { homeCode, awayCode, homeLabel, awayLabel, editingSide } = params;
+
+  const ownersByCode = new Map<string, Array<{ label: string; side: MatchDressingRoomSide }>>();
+  if (homeCode?.trim()) {
+    const list = ownersByCode.get(homeCode.trim()) ?? [];
+    list.push({ label: homeLabel, side: "home" });
+    ownersByCode.set(homeCode.trim(), list);
+  }
+  if (awayCode?.trim()) {
+    const list = ownersByCode.get(awayCode.trim()) ?? [];
+    list.push({ label: awayLabel, side: "away" });
+    ownersByCode.set(awayCode.trim(), list);
+  }
+
+  const editingLabel = editingSide === "home" ? homeLabel : awayLabel;
+  const resourceIds = new Set<string>([...result.keys(), ...ownersByCode.keys()]);
+
+  for (const resourceId of resourceIds) {
+    const owners = ownersByCode.get(resourceId) ?? [];
+    if (owners.length === 0) continue;
+
+    const base = result.get(resourceId);
+    const selfSelected = owners.some((o) => o.side === editingSide);
+    const otherOwners = owners.filter((o) => o.side !== editingSide);
+
+    if (otherOwners.length === 0 && selfSelected) {
+      result.set(resourceId, {
+        ...(base ?? { status: "FREE" }),
+        status: "OCCUPIED",
+        conflictLabel: editingLabel,
+        occupancyPresentation: "CURRENT",
+      });
+      continue;
+    }
+
+    if (selfSelected && otherOwners.length > 0) {
+      result.set(resourceId, {
+        ...mergeConflictAnnotations(
+          base,
+          owners.map((o) => o.label),
+        ),
+        occupancyPresentation: "SHARED",
+        sharingSubjectLabels: otherOwners.map((o) => o.label),
+        conflictLabel: joinOwnerLabels(owners.map((o) => o.label)),
+      });
+      continue;
+    }
+
+    if (otherOwners.length > 0) {
+      result.set(
+        resourceId,
+        mergeConflictAnnotations(
+          base,
+          otherOwners.map((o) => o.label),
+        ),
+      );
+    }
+  }
+
+  return result;
+}
+
 export function resolveResourceOccupancyPresentationKind(
   annotation: ResourceAvailabilityAnnotation | undefined,
   context: ResourceOccupancyDisplayContext = {},

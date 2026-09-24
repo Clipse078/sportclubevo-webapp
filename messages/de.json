@@ -792,5 +792,25 @@
         "saveFailed": "Änderungen konnten nicht gespeichert werden."
       }
     }
+  },
+  "PlanningResources": {
+    "free": "Frei",
+    "current": "Aktuell",
+    "occupied": "Belegt",
+    "sharedWith": "Geteilt mit {owners}",
+    "assign": "Zuweisen",
+    "change": "Ändern",
+    "unassignedDressingRoom": "Keine Garderobe zugewiesen",
+    "unassignedPitchHall": "Kein Spielfeld / keine Halle zugewiesen",
+    "pickerTitleDressingRoom": "Garderobe für {subject}",
+    "pickerTitlePitchHall": "Ressource für {subject}",
+    "pickerCancel": "Abbrechen",
+    "globalOccupancyHeading": "Belegung",
+    "changeDressingRoomFor": "Garderobe für {subject} ändern",
+    "assignDressingRoomFor": "Garderobe für {subject} zuweisen",
+    "changePitchHallFor": "Spielfeld / Halle für {subject} ändern",
+    "assignPitchHallFor": "Spielfeld / Halle für {subject} zuweisen",
+    "matchHomeSide": "Heim",
+    "matchAwaySide": "Gast"
   }
 }

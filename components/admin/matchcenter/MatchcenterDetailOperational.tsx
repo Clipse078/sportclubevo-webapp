@@ -30,10 +30,9 @@ import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import { formatAvailabilitySuffix } from "@/components/admin/training/FacilityResourceSelector";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { formatOperationalHistoryLabel } from "@/lib/matchcenter/operational-history";
-import {
-  CompactDressingRoomResourceSelector,
-  CompactPitchHallResourceSelector,
-} from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
+import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import { PlanningMatchDressingRoomAssignments } from "@/components/admin/shared/planning/PlanningMatchDressingRoomAssignments";
+import { useTranslations } from "next-intl";
 import TrainingRecordSection from "@/components/admin/training/record/TrainingRecordSection";
 import { assessMatchOperationalState } from "@/lib/matchcenter/operational-state";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
@@ -242,6 +241,15 @@ function facilityGroupsWithCodeAsId(groups: FacilityGroup[]): FacilityGroup[] {
   }));
 }
 
+function resourceLabelFromCode(groups: FacilityGroup[] | null | undefined, code: string): string {
+  if (!code.trim() || !groups) return code;
+  for (const fg of groups) {
+    const resource = fg.resources.find((r) => r.id === code);
+    if (resource) return resource.name;
+  }
+  return code;
+}
+
 export default function MatchcenterDetailOperational({
   matchId,
   homeAway,
@@ -274,6 +282,7 @@ export default function MatchcenterDetailOperational({
 }: MatchcenterDetailOperationalProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const tResources = useTranslations("PlanningResources");
 
   // PLANNING-RESOURCE-UX-01 — code-as-ID groups for the visual pickers.
   // Match events persist resource codes, so we transform groups to use `code`
@@ -330,6 +339,11 @@ export default function MatchcenterDetailOperational({
   );
   const [awayDressingRoomCode, setAwayDressingRoomCode] = useState(
     currentAwayDressingRoomCode ?? "",
+  );
+
+  const pitchResourceName = useMemo(
+    () => (pitchCode.trim() ? resourceLabelFromCode(pitchGroupsByCode, pitchCode) : null),
+    [pitchCode, pitchGroupsByCode],
   );
   const [internalPublication, setInternalPublication] = useState({
     websiteVisible: currentWebsiteVisible,
@@ -858,15 +872,18 @@ export default function MatchcenterDetailOperational({
                   Spielfeld / Halle
                 </p>
                 {useVisualPickers && pitchGroupsByCode ? (
-                  <CompactPitchHallResourceSelector
+                  <PlanningSingleResourceAssignment
+                    kind="pitch_hall"
+                    subjectLabel="Spielfeld / Halle"
+                    resourceName={pitchResourceName}
+                    unassignedLabel={tResources("unassignedPitchHall")}
                     facilityGroups={pitchGroupsByCode}
                     selectedResourceIds={pitchCode ? new Set([pitchCode]) : new Set()}
                     onSelect={(code) => setPitchCode(code)}
                     onDeselect={() => setPitchCode("")}
                     availabilityByResourceId={pitchAvailabilityByCode}
-                    disabled={!canManage || saving}
-                    singleSelect
-                    layout="aggregated"
+                    canManage={canManage}
+                    disabled={saving}
                     testId="pitch-assignment"
                   />
                 ) : (
@@ -898,34 +915,23 @@ export default function MatchcenterDetailOperational({
                   Garderoben
                 </p>
                 {useVisualPickers && dressingRoomGroupsByCode ? (
-                  <div className="space-y-4">
-                    <CompactDressingRoomResourceSelector
-                      facilityGroups={dressingRoomGroupsByCode}
-                      selectedResourceIds={
-                        homeDressingRoomCode ? new Set([homeDressingRoomCode]) : new Set()
-                      }
-                      onSelect={(code) => setHomeDressingRoomCode(code)}
-                      onDeselect={() => setHomeDressingRoomCode("")}
-                      availabilityByResourceId={dressingRoomAvailabilityByCode}
-                      disabled={!canManage || saving}
-                      label={`Heimkabine (${homeDisplayName})`}
-                      singleSelect
-                      testId="home-dressing-room"
-                    />
-                    <CompactDressingRoomResourceSelector
-                      facilityGroups={dressingRoomGroupsByCode}
-                      selectedResourceIds={
-                        awayDressingRoomCode ? new Set([awayDressingRoomCode]) : new Set()
-                      }
-                      onSelect={(code) => setAwayDressingRoomCode(code)}
-                      onDeselect={() => setAwayDressingRoomCode("")}
-                      availabilityByResourceId={dressingRoomAvailabilityByCode}
-                      disabled={!canManage || saving}
-                      label={`Gastkabine (${awayDisplayName})`}
-                      singleSelect
-                      testId="away-dressing-room"
-                    />
-                  </div>
+                  <PlanningMatchDressingRoomAssignments
+                    homeLabel={tResources("matchHomeSide")}
+                    awayLabel={tResources("matchAwaySide")}
+                    homeCode={homeDressingRoomCode}
+                    awayCode={awayDressingRoomCode}
+                    homeDisplayName={homeDisplayName}
+                    awayDisplayName={awayDisplayName}
+                    canManage={canManage}
+                    disabled={saving}
+                    facilityGroups={dressingRoomGroupsByCode}
+                    dressingRoomAvailability={dressingRoomAvailabilityByCode}
+                    onSelectHome={(code) => setHomeDressingRoomCode(code)}
+                    onSelectAway={(code) => setAwayDressingRoomCode(code)}
+                    onDeselectHome={() => setHomeDressingRoomCode("")}
+                    onDeselectAway={() => setAwayDressingRoomCode("")}
+                    testId="match-dressing-room"
+                  />
                 ) : (
                   <div className="space-y-4">
                     <label className="block space-y-2">
@@ -983,15 +989,18 @@ export default function MatchcenterDetailOperational({
           <>
             <SectionCard title="Sportanlage und Spielfeld" description="Spielfeldwahl für dieses Match">
               {useVisualPickers && pitchGroupsByCode ? (
-                <CompactPitchHallResourceSelector
+                <PlanningSingleResourceAssignment
+                  kind="pitch_hall"
+                  subjectLabel="Spielfeld / Halle"
+                  resourceName={pitchResourceName}
+                  unassignedLabel={tResources("unassignedPitchHall")}
                   facilityGroups={pitchGroupsByCode}
                   selectedResourceIds={pitchCode ? new Set([pitchCode]) : new Set()}
                   onSelect={(code) => setPitchCode(code)}
                   onDeselect={() => setPitchCode("")}
                   availabilityByResourceId={pitchAvailabilityByCode}
-                  disabled={!canManage || saving}
-                  singleSelect
-                  layout="aggregated"
+                  canManage={canManage}
+                  disabled={saving}
                   testId="pitch-assignment"
                 />
               ) : (
@@ -1026,34 +1035,23 @@ export default function MatchcenterDetailOperational({
               description="Garderobenzuteilung für Heim- und Gastteam"
             >
               {useVisualPickers && dressingRoomGroupsByCode ? (
-                <div className="space-y-4">
-                  <CompactDressingRoomResourceSelector
-                    facilityGroups={dressingRoomGroupsByCode}
-                    selectedResourceIds={
-                      homeDressingRoomCode ? new Set([homeDressingRoomCode]) : new Set()
-                    }
-                    onSelect={(code) => setHomeDressingRoomCode(code)}
-                    onDeselect={() => setHomeDressingRoomCode("")}
-                    availabilityByResourceId={dressingRoomAvailabilityByCode}
-                    disabled={!canManage || saving}
-                    label={`Heimkabine (${homeDisplayName})`}
-                    singleSelect
-                    testId="home-dressing-room"
-                  />
-                  <CompactDressingRoomResourceSelector
-                    facilityGroups={dressingRoomGroupsByCode}
-                    selectedResourceIds={
-                      awayDressingRoomCode ? new Set([awayDressingRoomCode]) : new Set()
-                    }
-                    onSelect={(code) => setAwayDressingRoomCode(code)}
-                    onDeselect={() => setAwayDressingRoomCode("")}
-                    availabilityByResourceId={dressingRoomAvailabilityByCode}
-                    disabled={!canManage || saving}
-                    label={`Gastkabine (${awayDisplayName})`}
-                    singleSelect
-                    testId="away-dressing-room"
-                  />
-                </div>
+                <PlanningMatchDressingRoomAssignments
+                  homeLabel={tResources("matchHomeSide")}
+                  awayLabel={tResources("matchAwaySide")}
+                  homeCode={homeDressingRoomCode}
+                  awayCode={awayDressingRoomCode}
+                  homeDisplayName={homeDisplayName}
+                  awayDisplayName={awayDisplayName}
+                  canManage={canManage}
+                  disabled={saving}
+                  facilityGroups={dressingRoomGroupsByCode}
+                  dressingRoomAvailability={dressingRoomAvailabilityByCode}
+                  onSelectHome={(code) => setHomeDressingRoomCode(code)}
+                  onSelectAway={(code) => setAwayDressingRoomCode(code)}
+                  onDeselectHome={() => setHomeDressingRoomCode("")}
+                  onDeselectAway={() => setAwayDressingRoomCode("")}
+                  testId="match-dressing-room"
+                />
               ) : (
                 <div className="space-y-4">
                   <label className="block space-y-2">

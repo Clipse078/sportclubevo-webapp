@@ -51,11 +51,8 @@ import {
   type FacilityGroup,
   type ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
-import {
-  CompactDressingRoomResourceSelector,
-  CompactPitchHallResourceSelector,
-} from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
-import { buildTournamentParticipantDressingRoomAvailabilityByParticipant } from "@/lib/planning/resource-occupancy-presentation";
+import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import { PlanningSubjectDressingRoomAssignments } from "@/components/admin/shared/planning/PlanningSubjectDressingRoomAssignments";
 import {
   orchestrateTournamentCreation,
   type TournamentCreationOrchestrationResult,
@@ -303,19 +300,6 @@ export default function TournamentCreateForm({
     [participants],
   );
 
-  const dressingRoomAvailabilityByParticipant = useMemo(
-    () =>
-      buildTournamentParticipantDressingRoomAvailabilityByParticipant(
-        dressingRoomAvailability,
-        participants.map((p) => ({
-          id: p.localId,
-          displayName: p.displayName,
-          dressingRoomAllocations: p.dressingRooms.map((d) => ({ facilityResourceId: d.facilityResourceId })),
-        })),
-      ),
-    [dressingRoomAvailability, participants],
-  );
-
   const availableTeams = teamOptions.filter((t) => !assignedTeamIds.has(t.id));
 
   const addTeamParticipant = useCallback((teamId: string) => {
@@ -408,7 +392,6 @@ export default function TournamentCreateForm({
           ? {
               ...p,
               dressingRooms: [
-                ...p.dressingRooms,
                 { facilityResourceId, facilityResourceName: display.name, facilityName: display.facilityName },
               ],
             }
@@ -1001,23 +984,6 @@ export default function TournamentCreateForm({
                           </label>
                         )}
 
-                        {homeAway === "HOME" && (
-                          <div className={cn(participant.kind === "EXTERNAL_CLUB" && "mt-2")}>
-                            <p className="mb-1.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-                              <TournamentDressingRoomLabelIcon />
-                              Garderobe
-                            </p>
-                            <CompactDressingRoomResourceSelector
-                              facilityGroups={dressingRoomFacilityGroups}
-                              selectedResourceIds={new Set(participant.dressingRooms.map((d) => d.facilityResourceId))}
-                              onSelect={(resourceId) => addDressingRoomDraft(participant.localId, resourceId)}
-                              onDeselect={(resourceId) => removeDressingRoomDraft(participant.localId, resourceId)}
-                              availabilityByResourceId={dressingRoomAvailabilityByParticipant.get(participant.localId)}
-                              layout="aggregated"
-                              testId={`tournament-create-participant-${participant.localId}-dressing-room`}
-                            />
-                          </div>
-                        )}
                       </div>
                     )}
                   </li>
@@ -1050,18 +1016,57 @@ export default function TournamentCreateForm({
 
       {homeAway === "HOME" && (
         <TurniereRecordSection title="Anlage & Ressourcen" testId="turniere-create-section-resources">
-          <CompactPitchHallResourceSelector
-            facilityGroups={pitchHallFacilityGroups}
-            selectedResourceIds={allocatedResourceIds}
-            onSelect={addResourceDraft}
-            onDeselect={(id) => {
-              const row = resources.find((r) => r.facilityResourceId === id);
-              if (row) removeResourceDraft(row.localId);
-            }}
-            availabilityByResourceId={pitchAvailability}
-            layout="aggregated"
-            testId="tournament-create-resource"
-          />
+          <div className="space-y-4">
+            <PlanningSingleResourceAssignment
+              kind="pitch_hall"
+              subjectLabel="Spielfeld / Halle"
+              resourceName={resources[0]?.facilityResourceName ?? null}
+              unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen."
+              facilityGroups={pitchHallFacilityGroups}
+              selectedResourceIds={allocatedResourceIds}
+              onSelect={addResourceDraft}
+              onDeselect={(id) => {
+                const row = resources.find((r) => r.facilityResourceId === id);
+                if (row) removeResourceDraft(row.localId);
+              }}
+              availabilityByResourceId={pitchAvailability}
+              canManage
+              testId="tournament-create-resource"
+            />
+
+            {participants.length > 0 ? (
+              <div className="space-y-2">
+                <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  <TournamentDressingRoomLabelIcon />
+                  Garderoben
+                </p>
+                <PlanningSubjectDressingRoomAssignments
+                  testId="tournament-create-dressing-room-assignments"
+                  subjects={participants.map((p) => ({
+                    id: p.localId,
+                    displayName: p.displayName,
+                    secondaryLabel: p.subLabel,
+                    crest: (
+                      <TournamentTeamLogo
+                        logoUrl={participantDraftLogo(p)}
+                        name={p.displayName}
+                        size="sm"
+                      />
+                    ),
+                    dressingRoomAllocations: p.dressingRooms.map((d) => ({
+                      facilityResourceId: d.facilityResourceId,
+                      facilityResourceName: d.facilityResourceName,
+                    })),
+                  }))}
+                  canManage
+                  facilityGroups={dressingRoomFacilityGroups}
+                  dressingRoomAvailability={dressingRoomAvailability}
+                  onSelectResource={(localId, resourceId) => addDressingRoomDraft(localId, resourceId)}
+                  onDeselectResource={(localId, resourceId) => removeDressingRoomDraft(localId, resourceId)}
+                />
+              </div>
+            ) : null}
+          </div>
         </TurniereRecordSection>
       )}
 

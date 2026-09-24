@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useTransition } from "react";
-import { buildTournamentParticipantDressingRoomAvailabilityByParticipant } from "@/lib/planning/resource-occupancy-presentation";
 import type { TournamentParticipantDto } from "@/lib/tournaments/types";
 import {
   type FacilityGroup,
   type ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
-import { CompactDressingRoomResourceSelector } from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
+import { TournamentTeamLogo } from "@/components/admin/tournamentcenter/tournament-semantic-icons";
+import { PlanningSubjectDressingRoomAssignments } from "@/components/admin/shared/planning/PlanningSubjectDressingRoomAssignments";
 
 type Props = {
   tournamentId: string;
@@ -30,17 +30,20 @@ export default function TournamentParticipantDressingRoomPanel({
 }: Props) {
   const [isPending, startTransition] = useTransition();
 
-  const dressingRoomAvailabilityByParticipant = useMemo(
+  const subjects = useMemo(
     () =>
-      buildTournamentParticipantDressingRoomAvailabilityByParticipant(
-        dressingRoomAvailability,
-        participants.map((p) => ({
-          id: p.id,
-          displayName: p.displayName,
-          dressingRoomAllocations: p.dressingRoomAllocations,
+      participants.map((p) => ({
+        id: p.id,
+        displayName: p.displayName,
+        crest: (
+          <TournamentTeamLogo logoUrl={p.logoUrl} name={p.displayName} size="sm" />
+        ),
+        dressingRoomAllocations: p.dressingRoomAllocations.map((a) => ({
+          facilityResourceId: a.facilityResourceId,
+          facilityResourceName: a.facilityResourceName,
         })),
-      ),
-    [dressingRoomAvailability, participants],
+      })),
+    [participants],
   );
 
   if (participants.length === 0) {
@@ -97,53 +100,55 @@ export default function TournamentParticipantDressingRoomPanel({
   }
 
   return (
-    <div className="space-y-4" data-testid="tournament-dressing-room-per-team-panel">
-      {participants.map((participant) => (
-        <div key={participant.id} className="space-y-2" data-testid={`tournament-dressing-room-team-${participant.id}`}>
-          <p className="text-sm font-medium text-[var(--foreground)]">{participant.displayName}</p>
-          {canManage ? (
-            <CompactDressingRoomResourceSelector
-              facilityGroups={dressingRoomFacilityGroups}
-              selectedResourceIds={
-                new Set(participant.dressingRoomAllocations.map((a) => a.facilityResourceId))
+    <PlanningSubjectDressingRoomAssignments
+      testId="tournament-dressing-room-per-team-panel"
+      subjects={subjects}
+      canManage={canManage}
+      facilityGroups={dressingRoomFacilityGroups}
+      dressingRoomAvailability={dressingRoomAvailability}
+      disabled={isPending}
+      showGlobalOverview
+      onSelectResource={(participantId, resourceId) => {
+        onError(null);
+        const participant = participants.find((p) => p.id === participantId);
+        const existing = participant?.dressingRoomAllocations ?? [];
+        return new Promise<void>((resolve, reject) => {
+          startTransition(async () => {
+            try {
+              for (const allocation of existing) {
+                if (allocation.facilityResourceId !== resourceId) {
+                  await removeDressingRoom(participantId, allocation.id);
+                }
               }
-              onSelect={(resourceId) => {
-                onError(null);
-                startTransition(async () => {
-                  try {
-                    await addDressingRoom(participant.id, resourceId);
-                  } catch (err) {
-                    onError(err instanceof Error ? err.message : "Garderobe konnte nicht zugewiesen werden.");
-                  }
-                });
-              }}
-              onDeselect={(resourceId) => {
-                const allocation = participant.dressingRoomAllocations.find(
-                  (a) => a.facilityResourceId === resourceId,
-                );
-                if (!allocation) return;
-                onError(null);
-                startTransition(async () => {
-                  try {
-                    await removeDressingRoom(participant.id, allocation.id);
-                  } catch (err) {
-                    onError(err instanceof Error ? err.message : "Garderobe konnte nicht entfernt werden.");
-                  }
-                });
-              }}
-              disabled={isPending}
-              availabilityByResourceId={dressingRoomAvailabilityByParticipant.get(participant.id)}
-              layout="aggregated"
-              testId={`tournament-resources-dressing-room-${participant.id}`}
-            />
-          ) : (
-            <p className="text-xs text-[var(--text-2)]">
-              {participant.dressingRoomAllocations.map((a) => a.facilityResourceName).join(", ") ||
-                "Keine Garderobe"}
-            </p>
-          )}
-        </div>
-      ))}
-    </div>
+              if (!existing.some((a) => a.facilityResourceId === resourceId)) {
+                await addDressingRoom(participantId, resourceId);
+              }
+              resolve();
+            } catch (err) {
+              onError(err instanceof Error ? err.message : "Garderobe konnte nicht zugewiesen werden.");
+              reject(err);
+            }
+          });
+        });
+      }}
+      onDeselectResource={(participantId, resourceId) => {
+        const allocation = participants
+          .find((p) => p.id === participantId)
+          ?.dressingRoomAllocations.find((a) => a.facilityResourceId === resourceId);
+        if (!allocation) return;
+        onError(null);
+        return new Promise<void>((resolve, reject) => {
+          startTransition(async () => {
+            try {
+              await removeDressingRoom(participantId, allocation.id);
+              resolve();
+            } catch (err) {
+              onError(err instanceof Error ? err.message : "Garderobe konnte nicht entfernt werden.");
+              reject(err);
+            }
+          });
+        });
+      }}
+    />
   );
 }

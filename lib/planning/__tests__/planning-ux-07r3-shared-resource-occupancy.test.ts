@@ -83,18 +83,19 @@ describe("PLANNING-UX-07R3 shared resource occupancy", () => {
 
   describe("architecture and performance", () => {
     it("uses shared resource-occupancy-presentation resolver module", () => {
-      const panel = read("components/admin/tournamentcenter/TournamentParticipantDressingRoomPanel.tsx");
-      expect(panel).toContain("buildTournamentParticipantDressingRoomAvailabilityByParticipant");
+      const assignments = read("components/admin/shared/planning/PlanningSubjectDressingRoomAssignments.tsx");
+      expect(assignments).toContain("buildTournamentParticipantDressingRoomAvailabilityByParticipant");
       const compact = read("components/admin/shared/planning/CompactOperationalResourceSelector.tsx");
       expect(compact).toContain("formatResourceOccupancyPrimaryLine");
     });
 
     it("does not introduce per-participant availability fetch loops in dressing-room panel", () => {
       const panel = read("components/admin/tournamentcenter/TournamentParticipantDressingRoomPanel.tsx");
-      expect(panel).toContain("buildTournamentParticipantDressingRoomAvailabilityByParticipant");
+      const assignments = read("components/admin/shared/planning/PlanningSubjectDressingRoomAssignments.tsx");
+      expect(assignments).toContain("buildTournamentParticipantDressingRoomAvailabilityByParticipant");
       expect(panel).not.toContain("useFacilityAvailability");
       expect(panel).not.toMatch(/participants\.map[\s\S]*\/api\/facilities\/availability/s);
-      expect(panel).toContain("useMemo");
+      expect(assignments).toContain("useMemo");
     });
 
     it("occupied resources remain selectable in compact operational selector", () => {

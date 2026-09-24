@@ -127,13 +127,18 @@ describe("PLANNING-INTEGRATION-P0R1 create/edit parity — shared planning primi
     );
   });
 
-  it("operational CRUD surfaces keep compact resource selectors (05R2), not PitchVisual", () => {
+  it("operational CRUD surfaces keep compact resource selectors (05R2 / 07R4), not PitchVisual", () => {
     for (const [label, source] of [
       ["matchCreate", paritySources.matchCreate],
       ["tournamentCreate", paritySources.tournamentCreate],
       ["trainingCreate", paritySources.trainingCreate],
     ] as const) {
-      expect(source, label).toContain("CompactOperationalResourceSelector");
+      const usesCompactPlanningResources =
+        source.includes("CompactOperationalResourceSelector") ||
+        source.includes("PlanningSingleResourceAssignment") ||
+        source.includes("PlanningSubjectDressingRoomAssignments") ||
+        source.includes("PlanningMatchDressingRoomAssignments");
+      expect(usesCompactPlanningResources, label).toBe(true);
       expect(source, label).not.toContain("PitchVisual");
     }
   });

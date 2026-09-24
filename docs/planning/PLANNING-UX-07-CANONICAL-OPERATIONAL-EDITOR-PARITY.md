@@ -83,6 +83,8 @@ Resync continues to preserve explicit persisted publication flags. Create-defaul
 
 Training, Match, and Tournament allocation surfaces share the **PLANNING-UX-07R3** occupancy presentation contract (`docs/planning/PLANNING-UX-07R3-SHARED-RESOURCE-OCCUPANCY.md`): owner labels instead of false `Frei`, shared dressing rooms remain selectable.
 
+**PLANNING-UX-07R4** (`docs/planning/PLANNING-UX-07R4-UNIFIED-RESOURCE-ASSIGNMENT-UX.md`) unifies **assignment vs availability** presentation: compact assignment rows per subject, one shared picker inventory (no repeated per-team `Verfügbar`/`Belegt` matrices).
+
 ## Database
 
 No schema or migration changes.

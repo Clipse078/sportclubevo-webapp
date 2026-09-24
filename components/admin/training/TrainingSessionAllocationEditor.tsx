@@ -8,7 +8,7 @@ import type { FacilityResourceType } from "@prisma/client";
 import { FacilityResourceIdentity } from "@/components/admin/shared/planning/FacilityResourceIdentity";
 import type { TrainingAllocationDto, TrainingSessionAllocationDto } from "@/lib/training/types";
 import type { FacilityGroup, ResourceAvailabilityAnnotation } from "./FacilityResourceSelector";
-import { FacilityResourceSelector } from "./FacilityResourceSelector";
+import { PlanningResourcePicker } from "@/components/admin/shared/planning/PlanningResourcePicker";
 import {
   groupAllocationsByAllocationGroup,
   splitFacilityGroupsByAllocationGroup,
@@ -202,25 +202,22 @@ function GroupSection({
             </ul>
           ) : null}
 
-          <FacilityResourceSelector
+          <PlanningResourcePicker
+            kind={groupKey === "DRESSING_ROOM" ? "dressing_room" : "pitch_hall"}
+            title={label}
             facilityGroups={facilityGroupsForAdd}
-            allocatedResourceIds={new Set(rowsToShow.map((r) => r.facilityResourceId))}
-            onAdd={handleAdd}
+            selectedResourceIds={new Set(rowsToShow.map((r) => r.facilityResourceId))}
+            onSelect={handleAdd}
+            onDeselect={async (resourceId) => {
+              const row = overrideRows.find((r) => r.facilityResourceId === resourceId);
+              if (row) await onRemove(row.id);
+            }}
+            availabilityByResourceId={availabilityByResourceId}
             disabled={adding}
             testId={`training-session-allocation-add-${testIdSuffix}`}
-            placeholder="Für dieses Training auswählen…"
-            addButtonLabel="Für dieses Training zuweisen"
-            availabilityByResourceId={availabilityByResourceId}
+            onCancel={onClosePicker}
+            cancelLabel={cancelLabel}
           />
-
-          <button
-            type="button"
-            onClick={onClosePicker}
-            data-testid={`training-session-allocations-${testIdSuffix}-picker-cancel`}
-            className="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
-          >
-            {cancelLabel}
-          </button>
         </div>
       ) : null}
     </div>
