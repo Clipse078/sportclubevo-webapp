@@ -124,15 +124,17 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 **Mission:** Implement UX blueprint — compact header, grid, responsive, empty states, i18n, demote secondary.
 
+**Status:** Implemented — see `docs/dashboard/DASHBOARD-06-PERSONAL-COMMAND-CENTER.md`.
+
 **Dependencies:** DASHBOARD-02…05.
 
-**Files:** `ClubDashboardView.tsx`, dashboard UI components, remove KPI strip + demote hero.
+**Files:** `ClubDashboardView.tsx`, `getPersonalCommandCenterData`, `PersonalDashboardWorkspace`, remove KPI strip + demote hero.
 
 **Acceptance:**
 
-- [ ] Visual hierarchy matches blueprint  
-- [ ] lg/xl breakpoints verified  
-- [ ] a11y audit on calendar + shortcuts
+- [x] Visual hierarchy matches blueprint  
+- [x] lg/xl breakpoints verified (structural grid tests)  
+- [x] a11y audit on calendar + shortcuts (composition landmarks/labels)
 
 ---
 
