@@ -44,6 +44,33 @@
     }
   },
   "PersonalDashboard": {
+    "welcome": {
+      "subtitle": "Votre aperçu personnel au club."
+    },
+    "programme": {
+      "title": "Mon programme",
+      "groupToday": "Aujourd'hui",
+      "groupTomorrow": "Demain",
+      "allDay": "Journée entière",
+      "statusCancelled": "Annulé",
+      "statusPostponed": "Reporté",
+      "emptyTitle": "Aucun événement dans les prochains jours",
+      "emptyDescription": "Les événements pertinents pour vous apparaîtront ici par ordre chronologique.",
+      "unsupported": "Liez votre compte à une personne ou utilisez les réunions pour voir votre programme personnel."
+    },
+    "secondary": {
+      "summary": "Actualités et activité",
+      "newsTitle": "Actualités",
+      "newsViewAll": "Toutes les actualités",
+      "activityTitle": "Activité récente",
+      "activityViewAll": "Toute l'activité",
+      "activityEmptyTitle": "Pas encore d'activité",
+      "activityEmptyDescription": "Actualités, inscriptions et mises à jour de planification apparaissent ici.",
+      "tagNews": "Actualités",
+      "tagRegistration": "Inscription",
+      "tagPlanning": "Planification",
+      "tagMeeting": "Réunion"
+    },
     "quickAccess": {
       "title": "Accès rapide",
       "customize": "Personnaliser",

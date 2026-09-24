@@ -44,6 +44,33 @@
     }
   },
   "PersonalDashboard": {
+    "welcome": {
+      "subtitle": "La tua panoramica personale nel club."
+    },
+    "programme": {
+      "title": "Il mio programma",
+      "groupToday": "Oggi",
+      "groupTomorrow": "Domani",
+      "allDay": "Tutto il giorno",
+      "statusCancelled": "Annullato",
+      "statusPostponed": "Rinviato",
+      "emptyTitle": "Nessun appuntamento nei prossimi giorni",
+      "emptyDescription": "Gli eventi personalmente rilevanti compariranno qui in ordine cronologico.",
+      "unsupported": "Collega il tuo account a una persona o usa le riunioni per vedere il programma personale."
+    },
+    "secondary": {
+      "summary": "Notizie e attività",
+      "newsTitle": "Notizie recenti",
+      "newsViewAll": "Tutte le notizie",
+      "activityTitle": "Attività recente",
+      "activityViewAll": "Tutta l'attività",
+      "activityEmptyTitle": "Nessuna attività",
+      "activityEmptyDescription": "Notizie, iscrizioni e aggiornamenti di pianificazione compaiono qui.",
+      "tagNews": "Notizie",
+      "tagRegistration": "Iscrizione",
+      "tagPlanning": "Pianificazione",
+      "tagMeeting": "Riunione"
+    },
     "quickAccess": {
       "title": "Accesso rapido",
       "customize": "Personalizza",

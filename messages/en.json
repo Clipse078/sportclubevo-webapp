@@ -44,6 +44,33 @@
     }
   },
   "PersonalDashboard": {
+    "welcome": {
+      "subtitle": "Your personal club overview."
+    },
+    "programme": {
+      "title": "My schedule",
+      "groupToday": "Today",
+      "groupTomorrow": "Tomorrow",
+      "allDay": "All day",
+      "statusCancelled": "Cancelled",
+      "statusPostponed": "Postponed",
+      "emptyTitle": "No events in the coming days",
+      "emptyDescription": "When personally relevant events are coming up, they appear here in chronological order.",
+      "unsupported": "Link your account to a person or use meetings to see your personal schedule."
+    },
+    "secondary": {
+      "summary": "News & activity",
+      "newsTitle": "Latest news",
+      "newsViewAll": "View all news",
+      "activityTitle": "Recent activity",
+      "activityViewAll": "View all activity",
+      "activityEmptyTitle": "No activity yet",
+      "activityEmptyDescription": "Recent news, registrations, and planning updates appear here.",
+      "tagNews": "News",
+      "tagRegistration": "Registration",
+      "tagPlanning": "Planning",
+      "tagMeeting": "Meeting"
+    },
     "quickAccess": {
       "title": "Quick access",
       "customize": "Customize",

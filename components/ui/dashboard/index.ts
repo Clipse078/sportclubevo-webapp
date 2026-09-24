@@ -31,6 +31,18 @@ export type { DashboardUpcomingListProps } from "./DashboardUpcomingList";
 export { DashboardWelcome } from "./DashboardWelcome";
 export type { DashboardWelcomeProps } from "./DashboardWelcome";
 
+export { DashboardCompactWelcome } from "./DashboardCompactWelcome";
+export type { DashboardCompactWelcomeProps } from "./DashboardCompactWelcome";
+
+export { PersonalProgrammeFeed } from "./PersonalProgrammeFeed";
+export type { PersonalProgrammeFeedProps } from "./PersonalProgrammeFeed";
+
+export { PersonalDashboardWorkspace } from "./PersonalDashboardWorkspace";
+export type { PersonalDashboardWorkspaceProps } from "./PersonalDashboardWorkspace";
+
+export { PersonalDashboardSecondary } from "./PersonalDashboardSecondary";
+export type { PersonalDashboardSecondaryProps } from "./PersonalDashboardSecondary";
+
 export { DashboardKpiCard } from "./DashboardKpiCard";
 export type { DashboardKpiCardProps, DashboardKpiAccent } from "./DashboardKpiCard";
 

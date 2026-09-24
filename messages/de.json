@@ -467,6 +467,33 @@
     }
   },
   "PersonalDashboard": {
+    "welcome": {
+      "subtitle": "Dein persönlicher Überblick im Verein."
+    },
+    "programme": {
+      "title": "Mein Programm",
+      "groupToday": "Heute",
+      "groupTomorrow": "Morgen",
+      "allDay": "Ganztägig",
+      "statusCancelled": "Abgesagt",
+      "statusPostponed": "Verschoben",
+      "emptyTitle": "Keine Termine in den nächsten Tagen",
+      "emptyDescription": "Sobald persönlich relevante Termine anstehen, erscheinen sie hier chronologisch.",
+      "unsupported": "Verknüpfe dein Konto mit einer Person oder nutze Meetings, um dein persönliches Programm zu sehen."
+    },
+    "secondary": {
+      "summary": "News & Aktivitäten",
+      "newsTitle": "Aktuelle News",
+      "newsViewAll": "Alle News anzeigen",
+      "activityTitle": "Letzte Aktivitäten",
+      "activityViewAll": "Alle Aktivitäten anzeigen",
+      "activityEmptyTitle": "Noch keine Aktivitäten",
+      "activityEmptyDescription": "Aktuelle News, Anmeldungen und Planungsänderungen erscheinen hier.",
+      "tagNews": "News",
+      "tagRegistration": "Anmeldung",
+      "tagPlanning": "Planung",
+      "tagMeeting": "Meeting"
+    },
     "quickAccess": {
       "title": "Schnellzugriff",
       "customize": "Anpassen",

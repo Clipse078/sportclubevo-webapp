@@ -3,7 +3,11 @@ import { auth } from "@/auth";
 import ClubDashboardView from "@/components/admin/dashboard/ClubDashboardView";
 import { resolveWorkspaceContextFromSessionUser } from "@/lib/workspace/workspace-context";
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  searchParams: Promise<{ monat?: string }>;
+};
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const session = await auth();
   const workspaceContext = resolveWorkspaceContextFromSessionUser(session?.user);
 
@@ -11,5 +15,7 @@ export default async function DashboardPage() {
     redirect("/dashboard/platform");
   }
 
-  return <ClubDashboardView />;
+  const params = await searchParams;
+
+  return <ClubDashboardView calendarMonthParam={params.monat ?? null} />;
 }
