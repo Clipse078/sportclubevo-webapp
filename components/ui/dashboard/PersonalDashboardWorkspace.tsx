@@ -58,12 +58,12 @@ export function PersonalDashboardWorkspace({
   return (
     <div
       className={cn(
-        "grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start lg:gap-5",
+        "grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start lg:gap-4 xl:gap-5",
         className,
       )}
       data-testid="personal-dashboard-workspace"
     >
-      <div ref={feedRef} className="min-w-0 lg:col-span-7 xl:col-span-7">
+      <div ref={feedRef} className="min-w-0 lg:col-span-7 xl:col-span-7 2xl:col-span-8">
         <PersonalProgrammeFeed
           groups={groups}
           supported={programmeSupported}
@@ -73,7 +73,7 @@ export function PersonalDashboardWorkspace({
       </div>
 
       <div
-        className="min-w-0 lg:col-span-5 xl:col-span-5"
+        className="min-w-0 lg:col-span-5 xl:col-span-5 2xl:col-span-4"
         data-testid="personal-dashboard-calendar-column"
       >
         <PersonalProgrammeMonthCalendar
@@ -86,7 +86,7 @@ export function PersonalDashboardWorkspace({
           todayDayKey={todayKey}
           headingLevel="h2"
           showSelectedDayPanel={false}
-          className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-3 sm:p-4"
+          className="lg:sticky lg:top-4"
         />
       </div>
     </div>

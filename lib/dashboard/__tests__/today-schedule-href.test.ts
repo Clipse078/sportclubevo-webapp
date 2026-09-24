@@ -68,14 +68,15 @@ describe("SCE-DASHBOARD-V3-02A — today schedule href resolution", () => {
       expect(source).not.toMatch(/resolveHref,/);
     });
 
-    it("resolves hrefs on the dashboard server page before rendering the client schedule", () => {
+    it("keeps personal dashboard on ClubDashboardView without legacy schedule callbacks", () => {
       const source = readFileSync(
         join(process.cwd(), "app/(admin)/dashboard/page.tsx"),
         "utf8",
       );
 
-      expect(source).toContain("withTodayItemHrefs");
+      expect(source).toContain("ClubDashboardView");
       expect(source).not.toMatch(/resolveHref=\{/);
+      expect(source).not.toContain("withTodayItemHrefs");
     });
   });
 });

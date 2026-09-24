@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CalendarDays } from "lucide-react";
 import type { ProgrammeFeedGroup } from "@/lib/personal-agenda/programme-feed-groups";
@@ -16,7 +17,7 @@ export type PersonalProgrammeFeedProps = {
   className?: string;
 };
 
-function ProgrammeRow({
+function ProgrammeTimelineRow({
   item,
   timeLabel,
   highlighted,
@@ -33,43 +34,66 @@ function ProgrammeRow({
         ? t("statusPostponed")
         : null;
 
+  const metaLine = [item.contextLabel, item.subtitle].filter(Boolean).join(" · ");
+
   const row = (
-    <>
-      <span className="w-[3.25rem] shrink-0 text-right font-mono text-[0.8125rem] font-semibold tabular-nums text-[var(--text-2)]">
+    <div
+      className={cn(
+        "grid grid-cols-[3.5rem_1rem_minmax(0,1fr)] items-start gap-x-2 py-2",
+        highlighted && "rounded-[var(--radius-md)] bg-[color-mix(in_srgb,var(--sce-primary)_8%,transparent)] px-1",
+      )}
+    >
+      <span className="pt-0.5 text-right font-mono text-[0.8125rem] font-semibold tabular-nums text-[var(--text-2)]">
         {item.allDay ? t("allDay") : timeLabel}
       </span>
-      <span className="w-[4.75rem] shrink-0 truncate text-[0.625rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
-        {item.typeLabel}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-[0.8125rem] font-medium text-[var(--foreground)]">
-          {item.title}
-        </span>
-        {(item.contextLabel || item.venue) && (
-          <span className="mt-0.5 block truncate text-[0.6875rem] text-[var(--text-2)]">
-            {[item.contextLabel, item.venue].filter(Boolean).join(" · ")}
-          </span>
+      <span
+        className={cn(
+          "mt-1.5 h-2 w-2 shrink-0 rounded-full",
+          item.sourceType === "TOURNAMENT"
+            ? "bg-[var(--sce-primary)]"
+            : item.sourceType === "MATCH"
+              ? "bg-[color-mix(in_srgb,var(--sce-info)_80%,var(--foreground)_20%)]"
+              : "bg-[var(--primary)]",
         )}
+        aria-hidden
+      />
+      <div className="min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="truncate text-[0.9375rem] font-semibold leading-snug text-[var(--foreground)]">
+              {item.title}
+            </p>
+            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+              {item.typeLabel}
+            </p>
+          </div>
+          {item.deepLink ? (
+            <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
+          ) : null}
+        </div>
+        {metaLine ? (
+          <p className="mt-0.5 truncate text-[0.75rem] text-[var(--text-2)]">{metaLine}</p>
+        ) : null}
+        {item.venue ? (
+          <p className="mt-0.5 truncate text-[0.6875rem] text-[var(--muted)]">{item.venue}</p>
+        ) : null}
         {statusLabel ? (
-          <span className="mt-0.5 inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-medium uppercase tracking-wide text-[var(--text-2)]">
+          <span className="mt-1 inline-block rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[0.625rem] font-medium uppercase tracking-wide text-[var(--text-2)]">
             {statusLabel}
           </span>
         ) : null}
-      </span>
-    </>
-  );
-
-  const className = cn(
-    "grid grid-cols-[3.25rem_4.75rem_minmax(0,1fr)] items-start gap-x-2 rounded-[var(--radius-md)] px-1 py-1.5 motion-safe:transition-colors",
-    highlighted && "bg-[color-mix(in_srgb,var(--sce-primary)_10%,transparent)] ring-1 ring-[color-mix(in_srgb,var(--sce-primary)_35%,transparent)]",
-    item.deepLink &&
-      "hover:bg-[color-mix(in_srgb,var(--surface-2)_55%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]",
+      </div>
+    </div>
   );
 
   if (item.deepLink) {
     return (
       <li key={item.id} data-programme-day-row={highlighted ? "highlighted" : undefined}>
-        <Link href={item.deepLink} className={cn(className, "no-underline")} aria-label={item.ariaLabel}>
+        <Link
+          href={item.deepLink}
+          className="block rounded-[var(--radius-md)] no-underline motion-safe:transition-colors motion-safe:hover:bg-[color-mix(in_srgb,var(--surface-2)_45%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+          aria-label={item.ariaLabel}
+        >
           {row}
         </Link>
       </li>
@@ -77,7 +101,7 @@ function ProgrammeRow({
   }
 
   return (
-    <li key={item.id} className={className} aria-label={item.ariaLabel}>
+    <li key={item.id} className="list-none" aria-label={item.ariaLabel}>
       {row}
     </li>
   );
@@ -120,7 +144,7 @@ export function PersonalProgrammeFeed({
           variant="compact"
         />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {groups.map((group) => {
             const label =
               group.labelKind === "today"
@@ -135,18 +159,18 @@ export function PersonalProgrammeFeed({
               <div
                 key={group.dayKey}
                 data-day-key={group.dayKey}
-                className={cn(highlighted && "scroll-mt-24")}
+                className={cn("scroll-mt-28", highlighted && "rounded-[var(--radius-md)] ring-1 ring-[color-mix(in_srgb,var(--sce-primary)_30%,transparent)]")}
               >
-                <p className="mb-1 text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
+                <p className="mb-1 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
                   {label}
                 </p>
-                <ol className="space-y-0">
+                <ol className="divide-y divide-[color-mix(in_srgb,var(--border)_70%,transparent)] border-l border-[color-mix(in_srgb,var(--border)_55%,transparent)] pl-2">
                   {group.items.map((item) => (
-                    <ProgrammeRow
+                    <ProgrammeTimelineRow
                       key={item.id}
                       item={item}
                       timeLabel={timeLabelById[item.id] ?? "—"}
-                      highlighted={highlightedDayKey === group.dayKey}
+                      highlighted={highlighted}
                     />
                   ))}
                 </ol>

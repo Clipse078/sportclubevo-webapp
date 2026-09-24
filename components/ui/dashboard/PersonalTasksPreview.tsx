@@ -18,8 +18,9 @@ export async function PersonalTasksPreview({ previewItems }: Props) {
       title={t("title")}
       icon={<ListChecks className="h-4 w-4" />}
       iconAccent="info"
-      variant="card"
-      bodyClassName="px-4 py-1.5 sm:px-5 sm:py-2"
+      variant={hasItems ? "card" : "flat"}
+      density={hasItems ? "default" : "compact"}
+      bodyClassName={hasItems ? "px-4 py-1.5 sm:px-5 sm:py-2" : "px-0 py-0"}
       actions={
         <Link
           href="/dashboard/aufgaben?bereich=meine"

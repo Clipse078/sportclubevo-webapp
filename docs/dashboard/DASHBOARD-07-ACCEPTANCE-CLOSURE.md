@@ -21,7 +21,11 @@
 | DASHBOARD-06 | Personal command-center composition | Accepted |
 | DASHBOARD-07 | Security matrix, closure gates, i18n residual, docs | Accepted |
 
-**Programme status:** **DASHBOARD PROGRAMME CLOSED — MOBILE READY**
+**Automated programme status (historical):** DASHBOARD-07 automated acceptance **PASS** at `f2431d236f9f250678cd6cee36c789fb7d2a0c8c`.
+
+**Current status:** **REOPENED → DASHBOARD-07R1** (authenticated human visual acceptance). **Not closed.** **Mobile-D blocked** until DASHBOARD-07R2 final closure.
+
+See `docs/dashboard/DASHBOARD-07R1-VISUAL-ACCEPTANCE-REMEDIATION.md`.
 
 ---
 
@@ -41,7 +45,7 @@
 
 ### UI composition order
 
-1. `DashboardCompactWelcome` (single `h1`)
+1. `PersonalIdentityHeader` (single `h1` via integrated greeting; DASHBOARD-07R1)
 2. `PersonalQuickAccess`
 3. `PersonalDashboardWorkspace` (Mein Programm + Mein Kalender, 7/5 grid at `lg`)
 4. Benötigt meine Aufmerksamkeit — `PersonalAttention`

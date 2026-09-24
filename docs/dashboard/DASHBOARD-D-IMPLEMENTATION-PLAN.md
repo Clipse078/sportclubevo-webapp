@@ -154,7 +154,29 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 - [x] Child/guardian participation-only exposure documented (see DASHBOARD-07 closure doc + personal-actions suites)  
 - [x] MOBILE-D handoff doc (privacy alignment, no scope creep)
 
-**Programme:** **DASHBOARD PROGRAMME CLOSED — MOBILE READY** (PR #706 merge-ready pending CI after closure commit).
+**Automated acceptance:** PASS at `f2431d236f9f250678cd6cee36c789fb7d2a0c8c`.
+
+**Human visual acceptance:** REOPENED — **DASHBOARD-07R1** (see `docs/dashboard/DASHBOARD-07R1-VISUAL-ACCEPTANCE-REMEDIATION.md`).
+
+**Next:** DASHBOARD-07R2 final closure → **MOBILE-D**.
+
+---
+
+## DASHBOARD-07R1 — Visual acceptance remediation
+
+**Mission:** Restore personal identity imagery, rebalance premium composition/density, fix Sep 27 calendar indicator defect, upgrade programme timeline + operational calendar markers.
+
+**Status:** In progress on PR #706 (draft during remediation).
+
+**Dependencies:** DASHBOARD-07 automated acceptance (historical PASS preserved).
+
+---
+
+## DASHBOARD-07R2 — Final closure
+
+**Mission:** Authenticated human visual sign-off; programme closure; MOBILE-D handoff.
+
+**Status:** Pending DASHBOARD-07R1 PASS.
 
 ---
 

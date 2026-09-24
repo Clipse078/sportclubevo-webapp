@@ -554,6 +554,9 @@
       "emptyDay": "Keine persönlichen Termine",
       "dayAriaOneActivity": "1 persönlicher Termin",
       "dayAriaActivities": "{count} persönliche Termine",
+      "dayAriaOneActivityNamed": "1 Termin: {title}",
+      "dayAriaActivitiesCount": "{count} Termine",
+      "activityMultipleShort": "{count} Termine",
       "statusCancelled": "Abgesagt",
       "statusPostponed": "Verschoben",
       "selectedDayTasks": "Aufgaben am ausgewählten Tag",
@@ -570,7 +573,7 @@
       "sectionTitle": "Benötigt meine Aufmerksamkeit",
       "listAria": "Benötigt meine Aufmerksamkeit",
       "emptyTitle": "Alles im grünen Bereich",
-      "emptyDescription": "Aktuell gibt es keine persönlichen Punkte, die deine Aufmerksamkeit brauchen.",
+      "emptyDescription": "Aktuell gibt es nichts, das deine Aufmerksamkeit benötigt.",
       "viewAll": "Alle anzeigen",
       "openInbox": "Meine Aufgaben öffnen",
       "urgency": {
