@@ -54,6 +54,13 @@
  */
 
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
+import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
+import PlanningEditorPublicationControls from "@/components/admin/shared/planning-editor/PlanningEditorPublicationControls";
+import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
+import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
+import { MATCH_PUBLICATION_CHANNELS } from "@/lib/planning/planning-publication-channels";
+import { resolveMatchPublicationDefaultsForCreate } from "@/lib/publishing/policy/match-publication-defaults";
 import type { FocusEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Check, Building2 } from "lucide-react";
@@ -61,8 +68,10 @@ import {
   type FacilityGroup,
   type ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
-import { VisualResourceAvailabilityPicker } from "@/components/admin/shared/planning/VisualResourceAvailabilityPicker";
-import { VisualDressingRoomPicker } from "@/components/admin/shared/planning/VisualDressingRoomPicker";
+import {
+  CompactDressingRoomResourceSelector,
+  CompactPitchHallResourceSelector,
+} from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
 import {
   orchestrateMatchCreation,
   type MatchCreationPlan,
@@ -199,6 +208,20 @@ export default function MatchCreateForm({
 
   // ── 2 · Heim / Auswärts ────────────────────────────────────────────────
   const [homeAway, setHomeAway] = useState<"HOME" | "AWAY">("HOME");
+
+  const initialMatchPublication = resolveMatchPublicationDefaultsForCreate("HOME");
+  const [websiteVisible, setWebsiteVisible] = useState(initialMatchPublication.websiteVisible);
+  const [infoboardVisible, setInfoboardVisible] = useState(initialMatchPublication.infoboardVisible);
+  const [wochenplanVisible, setWochenplanVisible] = useState(initialMatchPublication.wochenplanVisible);
+  const [homepageVisible, setHomepageVisible] = useState(true);
+  const [teamPageVisible, setTeamPageVisible] = useState(true);
+
+  useEffect(() => {
+    const defaults = resolveMatchPublicationDefaultsForCreate(homeAway);
+    setWebsiteVisible(defaults.websiteVisible);
+    setInfoboardVisible(defaults.infoboardVisible);
+    setWochenplanVisible(defaults.wochenplanVisible);
+  }, [homeAway]);
 
   // ── 3 · Ort ──────────────────────────────────────────────────────────
   const [location, setLocation] = useState("");
@@ -428,12 +451,12 @@ export default function MatchCreateForm({
               opponentName: opponentName.trim() || null,
               opponentExternalClubId: selectedExternalClub?.id ?? null,
               homeAway,
-              websiteVisible: true,
-              infoboardVisible: true,
-              homepageVisible: true,
-              wochenplanVisible: true,
+              websiteVisible,
+              infoboardVisible,
+              homepageVisible,
+              wochenplanVisible,
               trainingsplanVisible: false,
-              teamPageVisible: true,
+              teamPageVisible,
             }),
           });
           const data = (await res.json().catch(() => null)) as
@@ -496,6 +519,28 @@ export default function MatchCreateForm({
         </div>
       )}
 
+      <PlanningEditorControlBar testId="match-create-control-bar">
+        <PlanningEditorPublicationControls
+          channels={MATCH_PUBLICATION_CHANNELS}
+          value={{
+            websiteVisible,
+            infoboardVisible,
+            homepageVisible,
+            wochenplanVisible,
+            teamPageVisible,
+          }}
+          onChange={(patch) => {
+            if (patch.websiteVisible !== undefined) setWebsiteVisible(patch.websiteVisible);
+            if (patch.infoboardVisible !== undefined) setInfoboardVisible(patch.infoboardVisible);
+            if (patch.homepageVisible !== undefined) setHomepageVisible(patch.homepageVisible);
+            if (patch.wochenplanVisible !== undefined) setWochenplanVisible(patch.wochenplanVisible);
+            if (patch.teamPageVisible !== undefined) setTeamPageVisible(patch.teamPageVisible);
+          }}
+          testIdPrefix="match-create-publication"
+          showHeading={false}
+        />
+      </PlanningEditorControlBar>
+
       <div className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
         <GuidedStep
           index={1}
@@ -543,26 +588,11 @@ export default function MatchCreateForm({
           onExpand={() => setHomeAwayCollapsed(false)}
           onBlurCapture={(e) => handleStepBlur(e, homeAwayStepComplete, () => setHomeAwayCollapsed(true))}
         >
-          <div className="flex gap-1.5" role="radiogroup" aria-label="Heim / Auswärts">
-            <button
-              type="button"
-              onClick={() => setHomeAway("HOME")}
-              aria-pressed={homeAway === "HOME"}
-              data-testid="match-create-home-away-home"
-              className={homeAway === "HOME" ? "fca-button-primary text-xs" : "fca-button-secondary text-xs"}
-            >
-              Heim
-            </button>
-            <button
-              type="button"
-              onClick={() => setHomeAway("AWAY")}
-              aria-pressed={homeAway === "AWAY"}
-              data-testid="match-create-home-away-away"
-              className={homeAway === "AWAY" ? "fca-button-primary text-xs" : "fca-button-secondary text-xs"}
-            >
-              Auswärts
-            </button>
-          </div>
+          <HomeAwaySegmentedControl
+            value={homeAway}
+            onChange={setHomeAway}
+            testId="match-create-home-away"
+          />
 
           <div className="mt-3">
             <span className="fca-label">Ort</span>
@@ -683,17 +713,19 @@ export default function MatchCreateForm({
                 </span>
                 <div className="min-w-0 flex-1">
                   <h2 className="text-sm font-semibold text-[var(--foreground)]">Spielfeld / Halle</h2>
-                  <p className="text-xs text-[var(--text-2)]">Für Heimspiele — wähle den Platz direkt aus.</p>
                 </div>
               </div>
               <div className="pl-[2.125rem]">
-                <VisualResourceAvailabilityPicker
+                <CompactPitchHallResourceSelector
                   facilityGroups={pitchHallFacilityGroups}
                   selectedResourceIds={pitchSlot ? new Set([pitchSlot.facilityResourceId]) : new Set()}
                   onSelect={addPitchSlot}
                   onDeselect={() => setPitchSlot(null)}
                   availabilityByResourceId={pitchAvailability}
                   singleSelect
+                  layout="aggregated"
+                  availableLabel="Frei"
+                  occupiedLabel="Belegt"
                   testId="match-create-pitch"
                 />
               </div>
@@ -709,11 +741,10 @@ export default function MatchCreateForm({
                 </span>
                 <div className="min-w-0 flex-1">
                   <h2 className="text-sm font-semibold text-[var(--foreground)]">Garderoben</h2>
-                  <p className="text-xs text-[var(--text-2)]">Heim- und Gastkabine zuweisen.</p>
                 </div>
               </div>
               <div className="space-y-4 pl-[2.125rem]">
-                <VisualDressingRoomPicker
+                <CompactDressingRoomResourceSelector
                   facilityGroups={dressingRoomFacilityGroups}
                   selectedResourceIds={homeDressingRoomSlot ? new Set([homeDressingRoomSlot.facilityResourceId]) : new Set()}
                   onSelect={addHomeDressingRoomSlot}
@@ -723,7 +754,7 @@ export default function MatchCreateForm({
                   singleSelect
                   testId="match-create-home-dressing-room"
                 />
-                <VisualDressingRoomPicker
+                <CompactDressingRoomResourceSelector
                   facilityGroups={dressingRoomFacilityGroups}
                   selectedResourceIds={awayDressingRoomSlot ? new Set([awayDressingRoomSlot.facilityResourceId]) : new Set()}
                   onSelect={addAwayDressingRoomSlot}
@@ -845,6 +876,26 @@ export default function MatchCreateForm({
           Abbrechen
         </button>
       </div>
+
+      <PlanningEditorWorkSection
+        headingId="match-create-work-heading"
+        testId="match-create-work-section"
+        persisted={false}
+        locale="de-CH"
+        tasksPanel={null}
+      />
+
+      <PlanningEditorCollaborationSection
+        headingId="match-create-collaboration-heading"
+        testId="match-create-collaboration-section"
+        persisted={false}
+        tenantSlug=""
+        canEdit={false}
+        currentUserId={null}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+      />
+
       <p className="sr-only" id={`${formId}-hint`}>
         Team, Gegner und Termin sind erforderlich, um ein Match zu erstellen.
       </p>

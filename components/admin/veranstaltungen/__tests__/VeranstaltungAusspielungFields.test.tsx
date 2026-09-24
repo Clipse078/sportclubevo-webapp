@@ -4,7 +4,10 @@
 
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { NextIntlClientProvider } from "next-intl";
+import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
+import deMessages from "@/messages/de.json";
 import VeranstaltungCreateForm from "@/components/admin/veranstaltungen/VeranstaltungCreateForm";
 import VeranstaltungEditForm from "@/components/admin/veranstaltungen/VeranstaltungEditForm";
 import VeranstaltungAusspielungFields from "@/components/admin/veranstaltungen/VeranstaltungAusspielungFields";
@@ -13,9 +16,17 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
+function renderWithIntl(ui: ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="de" messages={deMessages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+}
+
 describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
   it("renders Website, Homepage, and Wochenplan as switches without Infoboard", () => {
-    render(
+    renderWithIntl(
       <VeranstaltungAusspielungFields
         values={{ websiteVisible: true, homepageVisible: false, wochenplanVisible: true }}
         onChange={vi.fn()}
@@ -37,7 +48,7 @@ describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
 
   it("disables Homepage when Website is OFF but preserves homepage preference in state", () => {
     const onChange = vi.fn();
-    render(
+    renderWithIntl(
       <VeranstaltungAusspielungFields
         values={{ websiteVisible: false, homepageVisible: true, wochenplanVisible: false }}
         onChange={onChange}
@@ -52,7 +63,7 @@ describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
   it("supports keyboard toggling on Website switch", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(
+    renderWithIntl(
       <VeranstaltungAusspielungFields
         values={{ websiteVisible: true, homepageVisible: false, wochenplanVisible: false }}
         onChange={onChange}
@@ -93,7 +104,7 @@ describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
       return { ok: true, json: async () => ({}) };
     });
 
-    render(<VeranstaltungCreateForm />);
+    renderWithIntl(<VeranstaltungCreateForm />);
     await screen.findByRole("option", { name: /2026\/27/ });
 
     fireEvent.change(screen.getByPlaceholderText(/Generalversammlung/), {
@@ -136,7 +147,7 @@ describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
       }),
     }) as typeof fetch;
 
-    render(<VeranstaltungCreateForm />);
+    renderWithIntl(<VeranstaltungCreateForm />);
     await screen.findByRole("option", { name: /2026\/27/ });
 
     fireEvent.click(screen.getByRole("switch", { name: "Wochenplan" }));
@@ -154,7 +165,7 @@ describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
   });
 
   it("edit form loads persisted Ausspielung values", () => {
-    render(
+    renderWithIntl(
       <VeranstaltungEditForm
         timeZone="Europe/Zurich"
         event={{

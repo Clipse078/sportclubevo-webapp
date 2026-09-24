@@ -4,7 +4,10 @@
 
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { NextIntlClientProvider } from "next-intl";
+import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
+import deMessages from "@/messages/de.json";
 import VeranstaltungCreateForm from "@/components/admin/veranstaltungen/VeranstaltungCreateForm";
 import VeranstaltungEditForm from "@/components/admin/veranstaltungen/VeranstaltungEditForm";
 import VeranstaltungScheduleFields, {
@@ -23,11 +26,19 @@ const baseValues: VeranstaltungScheduleFieldValues = {
   endTime: "20:00",
 };
 
+function renderWithIntl(ui: ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="de" messages={deMessages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+}
+
 function renderFields(
   values: VeranstaltungScheduleFieldValues = baseValues,
   onChange = vi.fn(),
 ) {
-  return render(
+  return renderWithIntl(
     <VeranstaltungScheduleFields values={values} onChange={onChange} />,
   );
 }
@@ -44,7 +55,7 @@ describe("VeranstaltungScheduleFields — Ganztägig switch (SCE-EVENTS-01B)", (
 
   it("shows Beginn/Ende time inputs when OFF and hides them when ON", () => {
     const onChange = vi.fn();
-    const { rerender } = render(
+    const { rerender } = renderWithIntl(
       <VeranstaltungScheduleFields values={baseValues} onChange={onChange} />,
     );
 
@@ -54,10 +65,12 @@ describe("VeranstaltungScheduleFields — Ganztägig switch (SCE-EVENTS-01B)", (
     expect(onChange).toHaveBeenCalledWith({ allDay: true });
 
     rerender(
-      <VeranstaltungScheduleFields
-        values={{ ...baseValues, allDay: true }}
-        onChange={onChange}
-      />,
+      <NextIntlClientProvider locale="de" messages={deMessages}>
+        <VeranstaltungScheduleFields
+          values={{ ...baseValues, allDay: true }}
+          onChange={onChange}
+        />
+      </NextIntlClientProvider>,
     );
 
     expect(document.querySelectorAll('input[type="time"]')).toHaveLength(0);
@@ -112,14 +125,14 @@ describe("VeranstaltungScheduleFields — Ganztägig switch (SCE-EVENTS-01B)", (
       }),
     }) as typeof fetch;
 
-    const { unmount: unmountCreate } = render(<VeranstaltungCreateForm />);
+    const { unmount: unmountCreate } = renderWithIntl(<VeranstaltungCreateForm />);
     expect(await screen.findByRole("switch", { name: "Ganztägig" })).toHaveAttribute(
       "aria-checked",
       "false",
     );
     unmountCreate();
 
-    render(
+    renderWithIntl(
       <VeranstaltungEditForm
         timeZone="Europe/Zurich"
         event={{

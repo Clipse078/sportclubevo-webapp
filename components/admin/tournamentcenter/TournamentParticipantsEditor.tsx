@@ -8,7 +8,7 @@ import {
 } from "@/components/admin/tournamentcenter/tournament-semantic-icons";
 import type { TournamentHomeAway, TournamentParticipantDto } from "@/lib/tournaments/types";
 import { type FacilityGroup, type ResourceAvailabilityAnnotation } from "@/components/admin/training/FacilityResourceSelector";
-import { VisualDressingRoomPicker } from "@/components/admin/shared/planning/VisualDressingRoomPicker";
+import { CompactDressingRoomResourceSelector } from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
 import { cn } from "@/lib/cn";
 import TournamentParticipantAddWorkflow from "./TournamentParticipantAddWorkflow";
 import type { ExternalClubPickerResult } from "./ExternalClubPicker";
@@ -378,7 +378,7 @@ export default function TournamentParticipantsEditor({
                         </p>
 
                         {canManage ? (
-                          <VisualDressingRoomPicker
+                          <CompactDressingRoomResourceSelector
                             facilityGroups={dressingRoomFacilityGroups}
                             selectedResourceIds={
                               new Set(participant.dressingRoomAllocations.map((a) => a.facilityResourceId))
@@ -413,7 +413,7 @@ export default function TournamentParticipantsEditor({
                             }}
                             disabled={isPending}
                             availabilityByResourceId={dressingRoomAvailability}
-                            compact
+                            layout="aggregated"
                             testId={`tournament-participant-${participant.id}-dressing-room`}
                           />
                         ) : (

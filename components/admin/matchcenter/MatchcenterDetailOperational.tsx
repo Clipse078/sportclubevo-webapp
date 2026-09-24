@@ -30,8 +30,10 @@ import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import { formatAvailabilitySuffix } from "@/components/admin/training/FacilityResourceSelector";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { formatOperationalHistoryLabel } from "@/lib/matchcenter/operational-history";
-import { VisualResourceAvailabilityPicker } from "@/components/admin/shared/planning/VisualResourceAvailabilityPicker";
-import { VisualDressingRoomPicker } from "@/components/admin/shared/planning/VisualDressingRoomPicker";
+import {
+  CompactDressingRoomResourceSelector,
+  CompactPitchHallResourceSelector,
+} from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
 import TrainingRecordSection from "@/components/admin/training/record/TrainingRecordSection";
 import { assessMatchOperationalState } from "@/lib/matchcenter/operational-state";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
@@ -647,8 +649,20 @@ export default function MatchcenterDetailOperational({
     </div>
   );
 
+  const publicationSection = recordSurface ? (
+    <TrainingRecordSection title="Veröffentlichung" testId="spiele-record-section-publication">
+      {publicationContent}
+    </TrainingRecordSection>
+  ) : (
+    <SectionCard title="Veröffentlichung" description="Ausgabekanäle für dieses Match">
+      {publicationContent}
+    </SectionCard>
+  );
+
   return (
     <div className={recordSurface ? undefined : "space-y-5"}>
+      {recordSurface ? publicationSection : null}
+
       {recordSurface && isHomeMatch ? (
         <TrainingRecordSection title="Matchvorbereitung" testId="spiele-record-section-preparation">
           <ul className="space-y-2" data-testid="spiele-record-preparation-checks">
@@ -788,7 +802,7 @@ export default function MatchcenterDetailOperational({
                   Spielfeld / Halle
                 </p>
                 {useVisualPickers && pitchGroupsByCode ? (
-                  <VisualResourceAvailabilityPicker
+                  <CompactPitchHallResourceSelector
                     facilityGroups={pitchGroupsByCode}
                     selectedResourceIds={pitchCode ? new Set([pitchCode]) : new Set()}
                     onSelect={(code) => setPitchCode(code)}
@@ -796,6 +810,7 @@ export default function MatchcenterDetailOperational({
                     availabilityByResourceId={pitchAvailabilityByCode}
                     disabled={!canManage || saving}
                     singleSelect
+                    layout="aggregated"
                     testId="pitch-assignment"
                   />
                 ) : (
@@ -828,7 +843,7 @@ export default function MatchcenterDetailOperational({
                 </p>
                 {useVisualPickers && dressingRoomGroupsByCode ? (
                   <div className="space-y-4">
-                    <VisualDressingRoomPicker
+                    <CompactDressingRoomResourceSelector
                       facilityGroups={dressingRoomGroupsByCode}
                       selectedResourceIds={
                         homeDressingRoomCode ? new Set([homeDressingRoomCode]) : new Set()
@@ -841,7 +856,7 @@ export default function MatchcenterDetailOperational({
                       singleSelect
                       testId="home-dressing-room"
                     />
-                    <VisualDressingRoomPicker
+                    <CompactDressingRoomResourceSelector
                       facilityGroups={dressingRoomGroupsByCode}
                       selectedResourceIds={
                         awayDressingRoomCode ? new Set([awayDressingRoomCode]) : new Set()
@@ -908,7 +923,7 @@ export default function MatchcenterDetailOperational({
           <>
             <SectionCard title="Sportanlage und Spielfeld" description="Spielfeldwahl für dieses Match">
               {useVisualPickers && pitchGroupsByCode ? (
-                <VisualResourceAvailabilityPicker
+                <CompactPitchHallResourceSelector
                   facilityGroups={pitchGroupsByCode}
                   selectedResourceIds={pitchCode ? new Set([pitchCode]) : new Set()}
                   onSelect={(code) => setPitchCode(code)}
@@ -916,6 +931,7 @@ export default function MatchcenterDetailOperational({
                   availabilityByResourceId={pitchAvailabilityByCode}
                   disabled={!canManage || saving}
                   singleSelect
+                  layout="aggregated"
                   testId="pitch-assignment"
                 />
               ) : (
@@ -951,7 +967,7 @@ export default function MatchcenterDetailOperational({
             >
               {useVisualPickers && dressingRoomGroupsByCode ? (
                 <div className="space-y-4">
-                  <VisualDressingRoomPicker
+                  <CompactDressingRoomResourceSelector
                     facilityGroups={dressingRoomGroupsByCode}
                     selectedResourceIds={
                       homeDressingRoomCode ? new Set([homeDressingRoomCode]) : new Set()
@@ -964,7 +980,7 @@ export default function MatchcenterDetailOperational({
                     singleSelect
                     testId="home-dressing-room"
                   />
-                  <VisualDressingRoomPicker
+                  <CompactDressingRoomResourceSelector
                     facilityGroups={dressingRoomGroupsByCode}
                     selectedResourceIds={
                       awayDressingRoomCode ? new Set([awayDressingRoomCode]) : new Set()
@@ -1035,16 +1051,7 @@ export default function MatchcenterDetailOperational({
         )
       ) : null}
 
-      {/* D6 — Publication */}
-      {recordSurface ? (
-        <TrainingRecordSection title="Veröffentlichung" testId="spiele-record-section-publication">
-          {publicationContent}
-        </TrainingRecordSection>
-      ) : (
-        <SectionCard title="Veröffentlichung" description="Ausgabekanäle für dieses Match">
-          {publicationContent}
-        </SectionCard>
-      )}
+      {!recordSurface ? publicationSection : null}
 
       {!hideFooterActions ? footerActions : null}
     </div>

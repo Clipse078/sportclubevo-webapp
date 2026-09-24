@@ -21,6 +21,8 @@ type MatchcenterDetailProps = {
   canValidatePlanning?: boolean;
   isProtectedSource?: boolean;
   tenantLogoUrl?: string | null;
+  participantsSection?: React.ReactNode;
+  collaborationSection?: React.ReactNode;
 };
 
 export default function MatchcenterDetail({
@@ -37,6 +39,8 @@ export default function MatchcenterDetail({
   canValidatePlanning = false,
   isProtectedSource = false,
   tenantLogoUrl = null,
+  participantsSection,
+  collaborationSection,
 }: MatchcenterDetailProps) {
   void canSubmitPlanning;
 
@@ -80,6 +84,8 @@ export default function MatchcenterDetail({
             timeZone={timezone}
           />
         }
+        participantsSection={participantsSection}
+        collaborationSection={collaborationSection}
       />
     </PageShell>
   );

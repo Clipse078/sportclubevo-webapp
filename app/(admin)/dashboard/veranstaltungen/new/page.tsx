@@ -1,29 +1,31 @@
-import Link from "next/link";
 import { requirePermission } from "@/lib/permissions/require-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
+import { ToastProvider } from "@/components/ui/ToastProvider";
+import PlanningEditorShell from "@/components/admin/shared/planning-editor/PlanningEditorShell";
+import PlanningEditorHeader from "@/components/admin/shared/planning-editor/PlanningEditorHeader";
 import VeranstaltungCreateForm from "@/components/admin/veranstaltungen/VeranstaltungCreateForm";
+import { getTranslations } from "next-intl/server";
 
 export default async function NewVeranstaltungPage() {
   await requirePermission(PERMISSIONS.EVENTS_MANAGE);
+  const t = await getTranslations("Veranstaltungen.editor.create");
 
   return (
-    <div className="max-w-[900px] space-y-8">
-      <AdminSectionHeader
-        eyebrow="Veranstaltungen"
-        title="Veranstaltung erstellen"
-        description="Manuelle Erfassung von Vereinsanlässen wie Generalversammlung, Trainersitzung, Sponsorenanlass, Helfereinsatz oder interne Veranstaltungen."
-        actions={
-          <Link
-            href="/dashboard/veranstaltungen"
-            className="fca-button-secondary"
-          >
-            Zurück zur Übersicht
-          </Link>
-        }
-      />
-
-      <VeranstaltungCreateForm />
-    </div>
+    <ToastProvider>
+      <PlanningEditorShell testId="veranstaltung-create-page">
+        <PlanningEditorHeader
+          backHref="/dashboard/veranstaltungen"
+          backLabel={t("backNav")}
+          title={t("title")}
+          scheduleContext={t("description")}
+          backLinkTestId="veranstaltung-create-back-link"
+          testId="veranstaltung-create-header"
+        />
+        <p className="text-xs leading-snug text-[var(--text-2)]" data-testid="veranstaltung-create-intro">
+          {t("intro")}
+        </p>
+        <VeranstaltungCreateForm />
+      </PlanningEditorShell>
+    </ToastProvider>
   );
 }

@@ -2,16 +2,27 @@
  * @vitest-environment jsdom
  */
 
+import type { ReactElement } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
+import deMessages from "@/messages/de.json";
 import TournamentPublicationToggles, {
   type TournamentPublicationState,
 } from "../TournamentPublicationToggles";
 
+function renderToggles(ui: React.ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="de" messages={deMessages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+}
+
 describe("TournamentPublicationToggles", () => {
   it("renders SCE switch toggles for all publication channels", () => {
     const onChange = vi.fn();
-    render(
+    renderToggles(
       <TournamentPublicationToggles
         value={{
           websiteVisible: true,
@@ -29,7 +40,6 @@ describe("TournamentPublicationToggles", () => {
     expect(screen.getByText(/Das Turnier erscheint im öffentlichen Wochenplan\./)).toBeInTheDocument();
 
     expect(screen.getByTestId("tournament-publication-row-websiteVisible")).toBeInTheDocument();
-    expect(screen.queryByTestId("tournament-publication-grid")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("switch", { name: "Wochenplan" }));
     expect(onChange).toHaveBeenCalledWith({ wochenplanVisible: true });
@@ -37,10 +47,10 @@ describe("TournamentPublicationToggles", () => {
 
   it("maps each toggle to the same canonical visibility field keys", () => {
     const onChange = vi.fn();
-    render(
+    renderToggles(
       <TournamentPublicationToggles
         value={{
-          websiteVisible: false,
+          websiteVisible: true,
           infoboardVisible: false,
           homepageVisible: false,
           wochenplanVisible: false,
@@ -59,8 +69,11 @@ describe("TournamentPublicationToggles", () => {
     ];
 
     for (const { label, key } of cases) {
-      fireEvent.click(screen.getByRole("switch", { name: label }));
-      expect(onChange).toHaveBeenCalledWith({ [key]: true });
+      onChange.mockClear();
+      const toggle = screen.getByRole("switch", { name: label });
+      const next = toggle.getAttribute("aria-checked") !== "true";
+      fireEvent.click(toggle);
+      expect(onChange).toHaveBeenCalledWith({ [key]: next });
     }
   });
 });

@@ -74,8 +74,14 @@ import {
   type FacilityGroup,
   type ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
-import { VisualResourceAvailabilityPicker } from "@/components/admin/shared/planning/VisualResourceAvailabilityPicker";
-import { VisualDressingRoomPicker } from "@/components/admin/shared/planning/VisualDressingRoomPicker";
+import {
+  CompactDressingRoomResourceSelector,
+  CompactPitchHallResourceSelector,
+} from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
+import PlanningEditorZeitstandardLink from "@/components/admin/shared/planning-editor/PlanningEditorZeitstandardLink";
+import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
+import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
+import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
 import TeamSeasonSearchablePicker from "@/components/admin/shared/TeamSeasonSearchablePicker";
 import { cn } from "@/lib/cn";
 import {
@@ -132,6 +138,7 @@ type TrainingSeriesCreateFormProps = {
   canValidateDirectly: boolean;
   /** Resolved tenant/platform standard from Zeitstandards (Trainings). */
   defaultTrainingDurationMinutes: number;
+  canManageFacilities?: boolean;
 };
 
 const WEEKDAY_LABELS: Record<Weekday, string> = {
@@ -257,6 +264,7 @@ export default function TrainingSeriesCreateForm({
   dressingRoomFacilityGroups,
   canValidateDirectly: _canValidateDirectlyReserved,
   defaultTrainingDurationMinutes,
+  canManageFacilities = false,
 }: TrainingSeriesCreateFormProps) {
   void _canValidateDirectlyReserved;
   const router = useRouter();
@@ -734,11 +742,10 @@ export default function TrainingSeriesCreateForm({
             </span>
             <div className="min-w-0 flex-1">
               <h2 className="text-sm font-semibold text-[var(--foreground)]">Spielfeld / Halle</h2>
-              <p className="text-xs text-[var(--text-2)]">Wähle den passenden Platz direkt aus.</p>
             </div>
           </div>
           <div className="pl-[2.125rem]">
-            <VisualResourceAvailabilityPicker
+            <CompactPitchHallResourceSelector
               facilityGroups={pitchHallFacilityGroups}
               selectedResourceIds={allocatedResourceIds}
               onSelect={addResourceDraft}
@@ -762,11 +769,10 @@ export default function TrainingSeriesCreateForm({
             </span>
             <div className="min-w-0 flex-1">
               <h2 className="text-sm font-semibold text-[var(--foreground)]">Garderobe</h2>
-              <p className="text-xs text-[var(--text-2)]">Garderobe für dieses Training zuweisen.</p>
             </div>
           </div>
           <div className="pl-[2.125rem]">
-            <VisualDressingRoomPicker
+            <CompactDressingRoomResourceSelector
               facilityGroups={dressingRoomFacilityGroups}
               selectedResourceIds={allocatedDressingRoomIds}
               onSelect={addDressingRoomDraft}
@@ -784,6 +790,36 @@ export default function TrainingSeriesCreateForm({
         </div>
 
       </div>
+
+      <PlanningEditorZeitstandardLink
+        canManageFacilities={canManageFacilities}
+        label="Zeitstandards (Trainingsdauer)"
+      />
+
+      <PlanningEditorParticipantsSection
+        headingId="training-create-participants-heading"
+        testId="training-create-participants-section"
+        persisted={false}
+      />
+
+      <PlanningEditorWorkSection
+        headingId="training-create-work-heading"
+        testId="training-create-work-section"
+        persisted={false}
+        locale="de-CH"
+        tasksPanel={null}
+      />
+
+      <PlanningEditorCollaborationSection
+        headingId="training-create-collaboration-heading"
+        testId="training-create-collaboration-section"
+        persisted={false}
+        tenantSlug=""
+        canEdit={false}
+        currentUserId={null}
+        locale="de-CH"
+        timezone={DEFAULT_TRAINING_SERIES_TIMEZONE}
+      />
 
       {result ? (
         <div className="fca-status-box fca-status-box-success text-sm" data-testid="training-create-success">

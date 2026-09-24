@@ -13,6 +13,8 @@ import TournamentResourceAllocationEditor from "@/components/admin/tournamentcen
 import TournamentPublicationToggles, {
   type TournamentPublicationState,
 } from "@/components/admin/tournamentcenter/TournamentPublicationToggles";
+import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
+import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import TournamentStandardDurationHint from "@/components/admin/tournamentcenter/TournamentStandardDurationHint";
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
 import TeamSearchablePicker from "@/components/admin/shared/TeamSearchablePicker";
@@ -146,6 +148,8 @@ export type TurniereTournamentRecordWorkspaceProps = {
   locale?: string;
   createTaskAction?: ReactNode;
   relatedTasksPanel?: ReactNode;
+  collaborationSection?: ReactNode;
+  participantsSection?: ReactNode;
 };
 
 export default function TurniereTournamentRecordWorkspace({
@@ -161,6 +165,8 @@ export default function TurniereTournamentRecordWorkspace({
   locale = "de-CH",
   createTaskAction,
   relatedTasksPanel,
+  collaborationSection,
+  participantsSection,
 }: TurniereTournamentRecordWorkspaceProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -562,10 +568,18 @@ export default function TurniereTournamentRecordWorkspace({
               wochenplanerHref={wochenplanerHref}
               showReadiness={shouldShowTurniereRecordReadinessPill(tournament.homeAway, assessment)}
             />
-            {relatedTasksPanel}
           </div>
         }
       >
+        <PlanningEditorControlBar testId="turniere-record-control-bar">
+          <TournamentPublicationToggles
+            value={publication}
+            onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
+            disabled={!isEditable || saving}
+            showHeading={false}
+          />
+        </PlanningEditorControlBar>
+
         <div className={`${TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS} divide-y divide-[var(--border)]/80`}>
           <TurniereRecordSection title="Übersicht" testId="turniere-record-section-overview">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -773,14 +787,19 @@ export default function TurniereTournamentRecordWorkspace({
             </TurniereRecordSection>
           ) : null}
 
-          <TurniereRecordSection title="Veröffentlichung" testId="turniere-record-section-publication">
-            <TournamentPublicationToggles
-              value={publication}
-              onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
-              disabled={!isEditable || saving}
-            />
-          </TurniereRecordSection>
         </div>
+
+        {participantsSection}
+
+        <PlanningEditorWorkSection
+          headingId="turniere-record-work-heading"
+          testId="turniere-record-work-section"
+          persisted
+          locale={locale}
+          tasksPanel={relatedTasksPanel}
+        />
+
+        {collaborationSection}
       </TurniereRecordWorkspaceShell>
 
       <TurniereTournamentRecordDeleteDialog
