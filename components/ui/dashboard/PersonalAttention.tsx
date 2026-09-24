@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   Bell,
   CalendarClock,
+  CheckCircle2,
   ChevronRight,
   ClipboardCheck,
   ListChecks,
@@ -131,9 +132,12 @@ export async function PersonalAttention({
   if (items.length === 0) {
     return (
       <DashboardEmptyState
-        className={cn("py-4", className)}
+        className={cn("min-h-0 py-2", className)}
+        icon={<CheckCircle2 className="h-4 w-4 text-[var(--sce-success)]" />}
         title={t("emptyTitle")}
         description={t("emptyDescription")}
+        variant="compact"
+        compactLayout="inline"
       />
     );
   }

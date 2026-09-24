@@ -34,6 +34,9 @@ export type { DashboardWelcomeProps } from "./DashboardWelcome";
 export { DashboardCompactWelcome } from "./DashboardCompactWelcome";
 export type { DashboardCompactWelcomeProps } from "./DashboardCompactWelcome";
 
+export { PersonalIdentityHeader } from "./PersonalIdentityHeader";
+export type { PersonalIdentityHeaderProps } from "./PersonalIdentityHeader";
+
 export { PersonalProgrammeFeed } from "./PersonalProgrammeFeed";
 export type { PersonalProgrammeFeedProps } from "./PersonalProgrammeFeed";
 

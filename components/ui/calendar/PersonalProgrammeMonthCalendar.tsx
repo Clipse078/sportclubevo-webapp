@@ -3,12 +3,12 @@
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { format, isSameMonth } from "date-fns";
+import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { matchDayKeyInTimezone } from "@/lib/matchcenter/management-view";
 import { formatMonthLabel, parseMonthParam } from "@/lib/matchcenter/month-range";
 import {
-  buildMonthGridDates,
+  buildMonthGridCells,
   parseMonthParamToGridDate,
 } from "@/lib/calendar/month-grid";
 import { groupPersonalProgrammeItemsByDay } from "@/lib/personal-agenda/programme-day-key";
@@ -95,23 +95,25 @@ export default function PersonalProgrammeMonthCalendar({
   );
 
   const gridDays: MonthActivityGridDay[] = useMemo(() => {
-    return buildMonthGridDates(monthParam).map((day) => {
-      const dayKey = matchDayKeyInTimezone(day, timeZone);
-      const programmeCount = itemsByDay.get(dayKey)?.length ?? 0;
+    return buildMonthGridCells(monthParam, timeZone).map((cell) => {
+      const { dayKey, dayNumber, inMonth } = cell;
+      const dayItems = itemsByDay.get(dayKey) ?? [];
+      const programmeCount = dayItems.length;
       const activityCount = activityCountByDay?.get(dayKey) ?? programmeCount;
       const isToday = dayKey === todayKey;
       const isSelected = dayKey === selectedDayKey;
-      const inMonth = isSameMonth(day, monthStart);
+      const primaryItem = sortPersonalProgrammeItems(dayItems)[0];
+      const dateRef = new Date(`${dayKey}T12:00:00.000Z`);
 
       const activityPart =
         activityCount === 0
           ? ""
-          : activityCount === 1
-            ? t("dayAriaOneActivity")
-            : t("dayAriaActivities", { count: activityCount });
+          : activityCount === 1 && primaryItem
+            ? t("dayAriaOneActivityNamed", { title: primaryItem.title })
+            : t("dayAriaActivitiesCount", { count: activityCount });
 
       const accessibleLabel = [
-        format(day, "d. MMMM yyyy", { locale: de }),
+        format(dateRef, "d. MMMM yyyy", { locale: de }),
         isToday ? t("today") : null,
         isSelected ? t("selected") : null,
         activityPart || null,
@@ -119,17 +121,34 @@ export default function PersonalProgrammeMonthCalendar({
         .filter(Boolean)
         .join(", ");
 
+      const activityPreviewLabel =
+        activityCount === 1 && primaryItem
+          ? primaryItem.typeLabel
+          : activityCount > 1
+            ? t("activityMultipleShort", { count: activityCount })
+            : undefined;
+
       return {
         dayKey,
-        dayNumber: format(day, "d"),
+        dayNumber,
         inMonth,
         isToday,
         activityCount,
         isSelected,
         accessibleLabel,
+        activityPreviewLabel,
+        primarySourceType: primaryItem?.sourceType,
       };
     });
-  }, [itemsByDay, monthParam, monthStart, selectedDayKey, t, timeZone, todayKey]);
+  }, [
+    activityCountByDay,
+    itemsByDay,
+    monthParam,
+    selectedDayKey,
+    t,
+    timeZone,
+    todayKey,
+  ]);
 
   const selectedItems = useMemo(() => {
     const dayItems = itemsByDay.get(selectedDayKey) ?? [];

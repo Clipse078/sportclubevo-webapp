@@ -16,14 +16,15 @@ import {
   type PersonalDashboardSecondaryActivity,
 } from "@/lib/dashboard/personal-command-center";
 import {
-  DashboardCompactWelcome,
   DashboardSection,
   PersonalAttention,
   PersonalTasksPreview,
   PersonalQuickAccess,
   PersonalDashboardWorkspace,
   PersonalDashboardSecondary,
+  PersonalIdentityHeader,
 } from "@/components/ui/dashboard";
+import { getUserDashboardHeroState } from "@/lib/dashboard/dashboard-hero-image";
 import type { DashboardActivityItem } from "@/components/ui/dashboard";
 import { formatSecondaryActivityPresentation } from "@/lib/dashboard/secondary-activity-presentation";
 import { resolvePersonalQuickAccess } from "@/lib/dashboard/quick-access/resolve-quick-access";
@@ -108,9 +109,14 @@ export default async function ClubDashboardView({
   const greeting = getPersonalizedGreeting(firstName);
   const displayName = firstName?.trim() || undefined;
 
-  const contextChips = [ctx?.name, activeSeason ? `Saison ${activeSeason}` : null, todayFormatted].filter(
-    Boolean,
-  ) as string[];
+  const heroState =
+    session?.user?.id ? await getUserDashboardHeroState(session.user.id) : null;
+  const identityBackgroundUrl = heroState?.imageUrl ?? null;
+  const tenantCrestUrl = ctx?.logoUrl ?? null;
+
+  const contextLine = [ctx?.name, activeSeason ? `Saison ${activeSeason}` : null, todayFormatted]
+    .filter(Boolean)
+    .join(" · ");
 
   const timeLabelById: Record<string, string> = {};
   if (personal) {
@@ -162,29 +168,22 @@ export default async function ClubDashboardView({
       };
     }) ?? [];
 
+  const showActionLayer =
+    personal?.personalAttention.authorized || personal?.personalTasksAvailable;
+
   return (
     <div
-      className="flex min-w-0 flex-col gap-3 lg:gap-3.5"
+      className="mx-auto flex w-full min-w-0 max-w-[1520px] flex-col gap-3 lg:gap-3.5"
       data-testid="personal-command-center"
     >
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 space-y-1">
-          <DashboardCompactWelcome greeting={greeting} highlightName={displayName} />
-          <p className="text-[0.8125rem] text-[var(--text-2)]">{tPersonal("welcome.subtitle")}</p>
-        </div>
-        {contextChips.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
-            {contextChips.map((chip) => (
-              <span
-                key={chip}
-                className="inline-flex items-center rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-[0.6875rem] font-medium text-[var(--text-2)]"
-              >
-                {chip}
-              </span>
-            ))}
-          </div>
-        ) : null}
-      </header>
+      <PersonalIdentityHeader
+        greeting={greeting}
+        highlightName={displayName}
+        subtitle={tPersonal("welcome.subtitle")}
+        contextLine={contextLine}
+        backgroundImageUrl={identityBackgroundUrl}
+        tenantCrestUrl={tenantCrestUrl}
+      />
 
       {quickAccessBundle ? (
         <PersonalQuickAccess
@@ -207,25 +206,33 @@ export default async function ClubDashboardView({
         />
       ) : null}
 
-      {personal?.personalAttention.authorized ? (
-        <DashboardSection
-          title={tPersonal("attention.sectionTitle")}
-          icon={<BellRing className="h-4 w-4" />}
-          iconAccent="warning"
-          variant="flat"
-          noPadding
-          bodyClassName="pt-0"
+      {showActionLayer ? (
+        <div
+          className="grid grid-cols-1 gap-3 md:grid-cols-2 md:items-start md:gap-4"
+          data-testid="personal-action-layer"
         >
-          <PersonalAttention
-            items={personal.personalAttention.items}
-            totalCount={personal.personalAttention.totalCount}
-            viewAllHref={personal.personalAttention.viewAllHref}
-          />
-        </DashboardSection>
-      ) : null}
+          {personal?.personalAttention.authorized ? (
+            <DashboardSection
+              title={tPersonal("attention.sectionTitle")}
+              icon={<BellRing className="h-4 w-4" />}
+              iconAccent="warning"
+              variant="flat"
+              density="compact"
+              noPadding
+              bodyClassName="pt-0"
+            >
+              <PersonalAttention
+                items={personal.personalAttention.items}
+                totalCount={personal.personalAttention.totalCount}
+                viewAllHref={personal.personalAttention.viewAllHref}
+              />
+            </DashboardSection>
+          ) : null}
 
-      {personal?.personalTasksAvailable ? (
-        <PersonalTasksPreview previewItems={personal.personalTaskPreview} />
+          {personal?.personalTasksAvailable ? (
+            <PersonalTasksPreview previewItems={personal.personalTaskPreview} />
+          ) : null}
+        </div>
       ) : null}
 
       {personal ? (

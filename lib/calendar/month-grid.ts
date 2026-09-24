@@ -33,8 +33,47 @@ export function buildMonthGridDates(monthParam: string): Date[] {
   return eachDayOfInterval({ start: gridStart, end: gridEnd });
 }
 
+/** UTC-noon anchor so grid day keys do not depend on the host/browser local timezone. */
+export function utcNoonFromCivilParts(year: number, month: number, day: number): Date {
+  return new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
+}
+
+export function tenantDayKeyFromCivilParts(
+  year: number,
+  month: number,
+  day: number,
+  timeZone: string,
+): string {
+  return matchDayKeyInTimezone(utcNoonFromCivilParts(year, month, day), timeZone);
+}
+
+export type MonthGridCell = {
+  dayKey: string;
+  dayNumber: string;
+  inMonth: boolean;
+};
+
+/**
+ * Month grid cells with tenant-local day keys independent of server/browser TZ.
+ * Civil Y-M-D comes from the Monday-first grid; keys are resolved in `timeZone`.
+ */
+export function buildMonthGridCells(monthParam: string, timeZone: string): MonthGridCell[] {
+  const parsed = parseMonthParam(monthParam);
+  const targetPrefix = parsed ? `${parsed.year}-${String(parsed.month).padStart(2, "0")}` : null;
+
+  return buildMonthGridDates(monthParam).map((day) => {
+    const year = day.getFullYear();
+    const month = day.getMonth() + 1;
+    const dayOfMonth = day.getDate();
+    const dayKey = tenantDayKeyFromCivilParts(year, month, dayOfMonth, timeZone);
+    const dayNumber = String(parseInt(dayKey.slice(8, 10), 10));
+    const inMonth = targetPrefix ? dayKey.startsWith(`${targetPrefix}-`) : true;
+    return { dayKey, dayNumber, inMonth };
+  });
+}
+
 export function buildMonthGridDayKeys(monthParam: string, timeZone: string): string[] {
-  return buildMonthGridDates(monthParam).map((day) => matchDayKeyInTimezone(day, timeZone));
+  return buildMonthGridCells(monthParam, timeZone).map((cell) => cell.dayKey);
 }
 
 export type PersonalProgrammeMonthGridRange = PersonalProgrammeRange & {

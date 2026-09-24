@@ -8,9 +8,18 @@ import PersonalProgrammeMonthCalendar from "../PersonalProgrammeMonthCalendar";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
 
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string, values?: { count?: number }) => {
+  useTranslations: () => (key: string, values?: { count?: number; title?: string }) => {
     if (key === "dayAriaActivities" && values?.count != null) {
       return `${values.count} activities`;
+    }
+    if (key === "dayAriaActivitiesCount" && values?.count != null) {
+      return `${values.count} appointments`;
+    }
+    if (key === "dayAriaOneActivityNamed" && values?.title) {
+      return `1 appointment: ${values.title}`;
+    }
+    if (key === "activityMultipleShort" && values?.count != null) {
+      return `${values.count} appts`;
     }
     const map: Record<string, string> = {
       title: "My calendar",
@@ -22,6 +31,9 @@ vi.mock("next-intl", () => ({
       selectedDayPanel: "Selected day",
       emptyDay: "No personal appointments",
       dayAriaOneActivity: "1 activity",
+      dayAriaOneActivityNamed: "1 appointment: {title}",
+      dayAriaActivitiesCount: "{count} appointments",
+      activityMultipleShort: "{count} appts",
       statusCancelled: "Cancelled",
       statusPostponed: "Postponed",
       weekdayMon: "Mo",
@@ -55,6 +67,31 @@ describe("PersonalProgrammeMonthCalendar", () => {
     nextMonthHref: "/next",
     todayHref: "/today",
   };
+
+  it("shows Sep 27 Blitzturnier activity on calendar grid (07R1 regression)", () => {
+    render(
+      <PersonalProgrammeMonthCalendar
+        monthParam="2026-09"
+        timeZone="Europe/Zurich"
+        items={[
+          buildItem({
+            id: "event:blitz",
+            sourceType: "TOURNAMENT",
+            startsAt: new Date("2026-09-27T07:30:00.000Z"),
+            title: "Blitzturnier",
+            typeLabel: "Turnier",
+          }),
+        ]}
+        selectedDayKey="2026-09-27"
+        navigation={navigation}
+        todayDayKey="2026-09-24"
+      />,
+    );
+
+    const day = screen.getByTestId("personal-calendar-day-2026-09-27");
+    expect(day.getAttribute("aria-label")).toContain("Blitzturnier");
+    expect(day.textContent).toContain("Turnier");
+  });
 
   it("shows activity dot day and selected-day entry from programme items", () => {
     render(
@@ -90,7 +127,7 @@ describe("PersonalProgrammeMonthCalendar", () => {
     );
 
     const dayButton = screen.getByTestId("personal-calendar-day-2026-09-23");
-    expect(dayButton.getAttribute("aria-label")).toContain("2 activities");
+    expect(dayButton.getAttribute("aria-label")).toMatch(/2 appointments|2 activities/);
   });
 
   it("shows empty selected day copy when no items", () => {

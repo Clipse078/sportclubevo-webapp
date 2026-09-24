@@ -13,8 +13,8 @@ const workspaceSource = readFileSync(
 );
 
 describe("DASHBOARD-06 — personal command center composition", () => {
-  it("uses compact welcome and personal command center loader", () => {
-    expect(clubDashboardSource).toContain("DashboardCompactWelcome");
+  it("uses personal identity header and personal command center loader", () => {
+    expect(clubDashboardSource).toContain("PersonalIdentityHeader");
     expect(clubDashboardSource).toContain("getPersonalCommandCenterData");
     expect(clubDashboardSource).not.toContain("DashboardHeroSection");
     expect(clubDashboardSource).not.toContain("DashboardMetricStrip");

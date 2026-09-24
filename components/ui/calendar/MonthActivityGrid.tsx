@@ -55,27 +55,50 @@ function NavControl({
   );
 }
 
-function ActivityDots({ count, variant }: { count: number; variant: "matchcenter" | "personal" }) {
+function ActivityDots({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-sky-400" aria-hidden="true" />
+  );
+}
+
+function PersonalActivityIndicator({
+  count,
+  previewLabel,
+  sourceType,
+}: {
+  count: number;
+  previewLabel?: string;
+  sourceType?: MonthActivityGridDay["primarySourceType"];
+}) {
   if (count <= 0) return null;
 
-  if (variant === "matchcenter") {
+  const accentClass =
+    sourceType === "TOURNAMENT"
+      ? "bg-[var(--sce-primary)]"
+      : sourceType === "MATCH"
+        ? "bg-[color-mix(in_srgb,var(--sce-info)_85%,var(--foreground)_15%)]"
+        : sourceType === "TRAINING"
+          ? "bg-[color-mix(in_srgb,var(--sce-success)_75%,var(--foreground)_25%)]"
+          : "bg-[var(--primary)]";
+
+  if (previewLabel && count === 1) {
     return (
-      <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-sky-400" aria-hidden="true" />
+      <span
+        className="mt-auto max-w-full truncate text-[0.5625rem] font-semibold leading-none text-[var(--text-2)]"
+        aria-hidden="true"
+      >
+        {previewLabel}
+      </span>
     );
   }
 
-  const visible = Math.min(count, 3);
   return (
-    <span className="absolute bottom-0.5 flex gap-px" aria-hidden="true">
-      {Array.from({ length: visible }, (_, index) => (
-        <span
-          key={index}
-          className={cn(
-            "rounded-full bg-[var(--primary)]",
-            count === 1 ? "h-1 w-1" : "h-0.5 w-0.5",
-          )}
-        />
-      ))}
+    <span className="mt-auto flex flex-col items-center gap-px" aria-hidden="true">
+      <span className={cn("h-0.5 w-5 rounded-full", accentClass)} />
+      {count > 1 ? (
+        <span className="text-[0.5rem] font-bold tabular-nums text-[var(--muted)]">+{count - 1}</span>
+      ) : null}
     </span>
   );
 }
@@ -103,22 +126,39 @@ function DayCell({
   );
 
   const personalClass = cn(
-    "relative flex min-h-9 min-w-9 items-center justify-center rounded-full text-xs tabular-nums sm:min-h-8 sm:min-w-8",
+    "relative flex min-h-[2.85rem] min-w-0 flex-col items-center justify-start rounded-lg px-0.5 pb-0.5 pt-0.5 text-xs tabular-nums sm:min-h-[2.65rem]",
     !day.inMonth && "text-[var(--muted)]/45",
     day.inMonth && "text-[var(--text-2)]",
-    day.isSelected && "bg-[var(--primary)] font-semibold text-white",
-    day.isToday && !day.isSelected && "ring-1 ring-[var(--primary)]/50",
+    day.activityCount > 0 &&
+      day.inMonth &&
+      !day.isSelected &&
+      "bg-[color-mix(in_srgb,var(--surface-2)_55%,transparent)]",
+    day.isSelected && "bg-[var(--primary)] font-semibold text-white shadow-sm",
+    day.isToday && !day.isSelected && "ring-1 ring-[var(--primary)]/55",
   );
 
   const cellClassName = variant === "matchcenter" ? matchcenterClass : personalClass;
-  const showDots = variant === "matchcenter" ? day.activityCount > 0 && !day.isToday : day.activityCount > 0;
+  const showMatchcenterDot =
+    variant === "matchcenter" ? day.activityCount > 0 && !day.isToday : false;
 
-  const inner = (
-    <>
-      <time dateTime={day.dayKey}>{day.dayNumber}</time>
-      {showDots ? <ActivityDots count={day.activityCount} variant={variant} /> : null}
-    </>
-  );
+  const inner =
+    variant === "personal" ? (
+      <>
+        <time dateTime={day.dayKey} className="leading-none">
+          {day.dayNumber}
+        </time>
+        <PersonalActivityIndicator
+          count={day.activityCount}
+          previewLabel={day.activityPreviewLabel}
+          sourceType={day.primarySourceType}
+        />
+      </>
+    ) : (
+      <>
+        <time dateTime={day.dayKey}>{day.dayNumber}</time>
+        {showMatchcenterDot ? <ActivityDots count={day.activityCount} /> : null}
+      </>
+    );
 
   if (selectable) {
     return (
