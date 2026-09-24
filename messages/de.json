@@ -619,7 +619,25 @@
       "validationTimesRequired": "Start- und Endzeit sind erforderlich.",
       "validationStartBeforeEnd": "Die Startzeit muss vor der Endzeit liegen.",
       "saveSuccess": "Training aktualisiert.",
-      "saveError": "Änderungen konnten nicht gespeichert werden."
+      "saveError": "Änderungen konnten nicht gespeichert werden.",
+      "resourcesHeading": "Ressourcen",
+      "resourceChange": "Ändern",
+      "resourceRestoreSeriesDefault": "Serienstandard wiederherstellen",
+      "resourcePickerCancel": "Abbrechen",
+      "resourceUnassigned": "Keine Ressource zugewiesen.",
+      "participantsHeading": "Teilnehmende",
+      "participantsCount": "{count} Personen",
+      "participantsEmpty": "Keine Teilnehmenden für dieses Team.",
+      "participantsTrainers": "Trainer",
+      "participantsPlayers": "Spieler",
+      "participantsTrainerRole": "Trainer",
+      "participantsShowAll": "Alle anzeigen ({count} Spieler)",
+      "participationStatus": {
+        "OPEN": "Offen",
+        "YES": "Dabei",
+        "NO": "Abwesend",
+        "MAYBE": "Unsicher"
+      }
     }
   }
 }

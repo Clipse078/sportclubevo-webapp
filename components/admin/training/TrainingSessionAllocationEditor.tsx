@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useState, useTransition } from "react";
-import { Building2, Loader2, RotateCcw, X } from "lucide-react";
+import { useCallback, useMemo, useState, useTransition } from "react";
+import { Loader2, Replace, RotateCcw, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+import type { FacilityResourceType } from "@prisma/client";
+import { FacilityResourceIdentity } from "@/components/admin/shared/planning/FacilityResourceIdentity";
 import type { TrainingAllocationDto, TrainingSessionAllocationDto } from "@/lib/training/types";
 import type { FacilityGroup, ResourceAvailabilityAnnotation } from "./FacilityResourceSelector";
 import { FacilityResourceSelector } from "./FacilityResourceSelector";
-import type { FacilityResourceType } from "@prisma/client";
 import {
   groupAllocationsByAllocationGroup,
   splitFacilityGroupsByAllocationGroup,
@@ -36,6 +38,7 @@ type AllocationLike = {
   facilityResourceName: string;
   facilityResourceCode: string;
   facilityResourceType: string;
+  facilityId: string;
   facilityName: string;
   notes: string | null;
 };
@@ -52,6 +55,7 @@ function GroupSection({
   overrideRows,
   seriesRows,
   facilityGroupsForAdd,
+  facilityTypeByFacilityId,
   onAdd,
   onRemove,
   onUseSeriesDefault,
@@ -60,11 +64,16 @@ function GroupSection({
   pickerOpen,
   onOpenPicker,
   onClosePicker,
+  changeLabel,
+  useSeriesDefaultLabel,
+  cancelLabel,
+  unassignedLabel,
 }: {
   groupKey: TrainingAllocationGroupKey;
   overrideRows: TrainingSessionAllocationDto[];
   seriesRows: TrainingAllocationDto[];
   facilityGroupsForAdd: FacilityGroup[];
+  facilityTypeByFacilityId: Map<string, string>;
   onAdd: (resourceId: string) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
   onUseSeriesDefault: () => Promise<void>;
@@ -73,6 +82,10 @@ function GroupSection({
   pickerOpen: boolean;
   onOpenPicker: () => void;
   onClosePicker: () => void;
+  changeLabel: string;
+  useSeriesDefaultLabel: string;
+  cancelLabel: string;
+  unassignedLabel: string;
 }) {
   const isOverridden = overrideRows.length > 0;
   const rowsToShow: AllocationLike[] = isOverridden ? overrideRows : seriesRows;
@@ -113,20 +126,22 @@ function GroupSection({
         <div className="min-w-0 flex-1 space-y-1">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">{label}</p>
           {rowsToShow.length === 0 ? (
-            <p className="text-sm text-[var(--text-2)]">Keine Ressource zugewiesen.</p>
+            <p className="text-sm text-[var(--text-2)]">{unassignedLabel}</p>
           ) : (
             rowsToShow.map((row) => (
-              <div key={row.id} className="min-w-0">
-                <p
-                  className="truncate text-sm font-medium text-[var(--foreground)]"
-                  data-testid={`training-session-allocation-name-${testIdSuffix}`}
-                >
-                  {row.facilityResourceName}
-                </p>
-                <p className="flex min-w-0 items-center gap-1 text-xs text-[var(--text-2)]">
-                  <Building2 size={11} className="shrink-0 opacity-70" aria-hidden />
-                  <span className="truncate">{formatAllocationSubtitle(row)}</span>
-                </p>
+              <div
+                key={row.id}
+                className="min-w-0"
+                data-testid={`training-session-allocation-name-${testIdSuffix}`}
+              >
+                <FacilityResourceIdentity
+                  name={row.facilityResourceName}
+                  resourceType={row.facilityResourceType as FacilityResourceType}
+                  facilityType={facilityTypeByFacilityId.get(row.facilityId)}
+                  subtitle={formatAllocationSubtitle(row)}
+                  compact
+                  semanticResourceColors
+                />
               </div>
             ))
           )}
@@ -154,9 +169,10 @@ function GroupSection({
                 type="button"
                 onClick={onOpenPicker}
                 data-testid={`training-session-allocations-${testIdSuffix}-change`}
-                className="inline-flex items-center rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-xs font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-3)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+                className="fca-button-secondary inline-flex min-h-8 items-center gap-1.5 px-2.5 py-1.5 text-xs"
               >
-                Ändern
+                <Replace size={14} aria-hidden />
+                {changeLabel}
               </button>
               {isOverridden ? (
                 <button
@@ -167,7 +183,7 @@ function GroupSection({
                   className="inline-flex items-center gap-1 rounded-md px-1 py-0.5 text-[0.65rem] font-medium text-[var(--text-2)] transition hover:text-[var(--foreground)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {resetting ? <Loader2 size={11} className="animate-spin" /> : <RotateCcw size={11} />}
-                  Serienstandard wiederherstellen
+                  {useSeriesDefaultLabel}
                 </button>
               ) : null}
             </div>
@@ -205,7 +221,7 @@ function GroupSection({
             data-testid={`training-session-allocations-${testIdSuffix}-picker-cancel`}
             className="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
           >
-            Abbrechen
+            {cancelLabel}
           </button>
         </div>
       ) : null}
@@ -262,8 +278,19 @@ export function TrainingSessionAllocationEditor({
   sessionStartAt,
   sessionEndAt,
 }: Props) {
+  const t = useTranslations("TrainingCenter.sessionEdit");
   const [allocations, setAllocations] = useState<TrainingSessionAllocationDto[]>(initialAllocations);
   const [openPickerGroup, setOpenPickerGroup] = useState<TrainingAllocationGroupKey | null>(null);
+
+  const facilityTypeByFacilityId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const group of facilityGroups) {
+      if (group.facilityType) {
+        map.set(group.facilityId, group.facilityType);
+      }
+    }
+    return map;
+  }, [facilityGroups]);
 
   const { pitchAvailability, dressingRoomAvailability } = useFacilityAvailability({
     enabled: openPickerGroup !== null,
@@ -330,6 +357,7 @@ export function TrainingSessionAllocationEditor({
     overrideRows: overridesByGroup[groupKey],
     seriesRows: seriesByGroup[groupKey],
     facilityGroupsForAdd: facilityGroupsByGroup[groupKey],
+    facilityTypeByFacilityId,
     onAdd: handleAdd,
     onRemove: handleRemove,
     onUseSeriesDefault: () => handleUseSeriesDefaultForGroup(groupKey),
@@ -338,12 +366,16 @@ export function TrainingSessionAllocationEditor({
     pickerOpen: openPickerGroup === groupKey,
     onOpenPicker: () => setOpenPickerGroup(groupKey),
     onClosePicker: () => setOpenPickerGroup((current) => (current === groupKey ? null : current)),
+    changeLabel: t("resourceChange"),
+    useSeriesDefaultLabel: t("resourceRestoreSeriesDefault"),
+    cancelLabel: t("resourcePickerCancel"),
+    unassignedLabel: t("resourceUnassigned"),
   });
 
   return (
     <div className="space-y-3" data-testid="training-session-allocation-editor">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold tracking-tight text-[var(--foreground)]">Ressourcen</h2>
+        <h2 className="text-sm font-semibold tracking-tight text-[var(--foreground)]">{t("resourcesHeading")}</h2>
       </div>
 
       <div className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 px-3">

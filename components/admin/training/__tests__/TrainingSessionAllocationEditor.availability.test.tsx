@@ -10,8 +10,10 @@
  * flagged as a conflict with itself.
  */
 
+import { NextIntlClientProvider } from "next-intl";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import deMessages from "@/messages/de.json";
 import { TrainingSessionAllocationEditor } from "@/components/admin/training/TrainingSessionAllocationEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 
@@ -26,6 +28,14 @@ const FACILITY_GROUPS: FacilityGroup[] = [
     ],
   },
 ];
+
+function renderWithIntl(ui: React.ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="de" messages={deMessages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+}
 
 function jsonResponse(data: unknown, status = 200): Response {
   return { ok: status >= 200 && status < 300, status, json: async () => data } as Response;
@@ -69,7 +79,7 @@ describe("TrainingSessionAllocationEditor — RESOURCE-AVAILABILITY-UX-01 availa
   it("renders live Frei/Belegt availability on the pitch/hall selector for this occurrence's own start/end", async () => {
     installFetchMock();
 
-    render(
+    renderWithIntl(
       <TrainingSessionAllocationEditor
         sessionId="session-1"
         initialAllocations={[]}
@@ -102,7 +112,7 @@ describe("TrainingSessionAllocationEditor — RESOURCE-AVAILABILITY-UX-01 availa
   it("requests availability with excludeTrainingSessionId set to this occurrence's own id (self-exclusion in edit mode)", async () => {
     const { availabilityCalls } = installFetchMock();
 
-    render(
+    renderWithIntl(
       <TrainingSessionAllocationEditor
         sessionId="session-1"
         initialAllocations={[]}

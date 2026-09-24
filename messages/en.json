@@ -196,7 +196,25 @@
       "validationTimesRequired": "Start and end times are required.",
       "validationStartBeforeEnd": "Start time must be before end time.",
       "saveSuccess": "Training updated.",
-      "saveError": "Could not save changes."
+      "saveError": "Could not save changes.",
+      "resourcesHeading": "Resources",
+      "resourceChange": "Change",
+      "resourceRestoreSeriesDefault": "Restore series default",
+      "resourcePickerCancel": "Cancel",
+      "resourceUnassigned": "No resource assigned.",
+      "participantsHeading": "Participants",
+      "participantsCount": "{count} people",
+      "participantsEmpty": "No participants for this team.",
+      "participantsTrainers": "Coaches",
+      "participantsPlayers": "Players",
+      "participantsTrainerRole": "Coach",
+      "participantsShowAll": "Show all ({count} players)",
+      "participationStatus": {
+        "OPEN": "Open",
+        "YES": "Attending",
+        "NO": "Absent",
+        "MAYBE": "Maybe"
+      }
     }
   }
 }

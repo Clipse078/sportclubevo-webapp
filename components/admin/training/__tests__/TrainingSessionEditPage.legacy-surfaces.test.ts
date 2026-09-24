@@ -26,6 +26,8 @@ describe("Training session edit route — SCE workspace", () => {
     expect(source).toContain("self-start");
     expect(source).toContain("training-session-edit-datetime-panel");
     expect(source).toContain("training-session-edit-participation-panel");
+    expect(source).toContain("training-session-edit-participants-panel");
+    expect(source).toContain("getTrainingSessionParticipantRoster");
   });
 
   it("does not use legacy white card shells on the route", () => {

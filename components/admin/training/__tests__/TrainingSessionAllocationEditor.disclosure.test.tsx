@@ -6,8 +6,10 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { NextIntlClientProvider } from "next-intl";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import deMessages from "@/messages/de.json";
 import { TrainingSessionAllocationEditor } from "@/components/admin/training/TrainingSessionAllocationEditor";
 import type { TrainingAllocationDto } from "@/lib/training/types";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
@@ -16,6 +18,7 @@ const FACILITY_GROUPS: FacilityGroup[] = [
   {
     facilityId: "facility-1",
     facilityName: "Kunstrasen 2",
+    facilityType: "PITCH",
     resources: [
       {
         id: "res-pitch-a",
@@ -24,10 +27,19 @@ const FACILITY_GROUPS: FacilityGroup[] = [
         type: "HALF_PITCH",
         facilityId: "facility-1",
         facilityName: "Kunstrasen 2",
+        facilityType: "PITCH",
       },
     ],
   },
 ];
+
+function renderEditor(ui: React.ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="de" messages={deMessages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+}
 
 const seriesAllocations: TrainingAllocationDto[] = [
   {
@@ -65,7 +77,7 @@ describe("TrainingSessionAllocationEditor — UX-03R1 disclosure", () => {
   });
 
   it("renders inherited allocation compactly with human display name and closed picker by default", () => {
-    render(
+    renderEditor(
       <TrainingSessionAllocationEditor
         sessionId="session-1"
         initialAllocations={[]}
@@ -88,7 +100,7 @@ describe("TrainingSessionAllocationEditor — UX-03R1 disclosure", () => {
   it("opens picker on Ändern and closes on cancel without mutation", async () => {
     const fetchMock = vi.mocked(global.fetch);
 
-    render(
+    renderEditor(
       <TrainingSessionAllocationEditor
         sessionId="session-1"
         initialAllocations={[]}

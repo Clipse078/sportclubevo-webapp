@@ -26,6 +26,8 @@ import {
 } from "@/components/admin/training/form/training-form-layout";
 import { cn } from "@/lib/cn";
 import { getTranslations } from "next-intl/server";
+import { getTrainingSessionParticipantRoster } from "@/lib/training/training-session-participants";
+import { TrainingSessionParticipantsPanel } from "@/components/admin/training/TrainingSessionParticipantsPanel";
 
 type Props = { params: Promise<{ sessionId: string }> };
 
@@ -87,10 +89,11 @@ export default async function TrainingSessionEditPage({ params }: Props) {
     timezone: trainingSession.timezone,
   });
 
-  const [seriesAllocations, sessionAllocations, facilities] = await Promise.all([
+  const [seriesAllocations, sessionAllocations, facilities, participantRoster] = await Promise.all([
     listAllocationsByTrainingSeries(tenantContext.id, trainingSession.trainingSeriesId),
     listAllocationsByTrainingSession(tenantContext.id, sessionId),
     getFacilitiesForTenant(tenantContext.id),
+    getTrainingSessionParticipantRoster(tenantContext.id, sessionId),
   ]);
 
   const facilityGroups: FacilityGroup[] = facilities
@@ -219,6 +222,16 @@ export default async function TrainingSessionEditPage({ params }: Props) {
               sessionStartAt={trainingSession.startAt}
               sessionEndAt={trainingSession.endAt}
             />
+          </div>
+        </section>
+
+        <section
+          className={cn(TRAINING_FORM_WORKSPACE_SURFACE_CLASS, "min-w-0 self-start")}
+          aria-labelledby="training-session-edit-participants-heading"
+          data-testid="training-session-edit-participants-panel"
+        >
+          <div className="px-3 py-3 md:px-4 md:py-3.5">
+            <TrainingSessionParticipantsPanel participants={participantRoster.participants} />
           </div>
         </section>
       </div>

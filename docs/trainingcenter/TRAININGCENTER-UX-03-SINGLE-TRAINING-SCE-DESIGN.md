@@ -67,3 +67,47 @@ Human visual acceptance **failed** after UX-03: the page was dark but still read
 - **Responsive** — lg+ side-by-side schedule + participation; stacked on narrow viewports; resource row wraps state/action below info when needed
 
 DASHBOARD-07R2 remains pending (human visual recheck required after this remediation).
+
+## TRAININGCENTER-UX-03R2 — Resource semantics + participant operational view
+
+### Resource icon semantics
+
+- Session allocation rows reuse `FacilityResourceIdentity` with `semanticResourceColors`.
+- Pitch / hall resources: canonical line pitch/hall glyph with **green** accent (`emerald` semantic tokens).
+- Dressing-room resources: canonical `DoorOpen` glyph with **blue** accent (`var(--blue)` tokens).
+- Color is an accent on the icon tile only; row text stays neutral for accessibility.
+
+### Ändern UX
+
+- Compact **SCE secondary** action (`fca-button-secondary`) with swap/edit icon and label **Ändern** (i18n).
+- Progressive disclosure unchanged: current resource visible → **Ändern** → picker → assign or **Abbrechen**.
+- `canManage=false` hides change/restore controls; allocation APIs unchanged.
+
+### Participant source
+
+- **Teilnehmende** panel on the single-training page (below **Ressourcen**).
+- `getTrainingSessionParticipantRoster(tenantId, trainingSessionId)`:
+  - resolves `teamSeasonId` from the canonical `TrainingSession`
+  - **Trainer**: active `TrainerTeamMember` rows for that team season
+  - **Spieler**: active squad memberships (`ACTIVE` / `INJURED` / `ABSENT`) for that team season
+  - **Participation status**: batched `ParticipationResponse` for `eventKind=TRAINING` + this session; status shown only when a response row exists (including stored `OPEN`)
+
+### Authorization
+
+- Same server gate as the page (`TRAININGS_VIEW` | `TRAININGS_MANAGE`).
+- Roster queries scoped by `tenantId`, session id, and the session’s `teamSeasonId`; `person.tenantId` enforced on membership reads.
+- No broad people-directory bypass; unrelated teams/tenants excluded by query shape.
+
+### Performance
+
+- One session lookup + three bounded parallel queries (trainers, squad, responses). No per-person participation queries.
+
+### Responsive behavior
+
+- Compact list rows (avatar/initials, name, optional status badge); player list capped with **Alle anzeigen** disclosure when >12 players.
+
+### Tests
+
+- `TrainingSessionAllocationEditor.semantics.test.tsx` — green pitch / blue dressing icons, secondary **Ändern**, disclosure regression
+- `training-session-participants.test.ts` — roster scope, status mapping, batched responses
+- `TrainingSessionParticipantsPanel.test.tsx` — presentation + disclosure

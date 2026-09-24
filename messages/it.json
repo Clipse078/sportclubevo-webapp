@@ -196,7 +196,25 @@
       "validationTimesRequired": "Orario di inizio e fine obbligatori.",
       "validationStartBeforeEnd": "L'orario di inizio deve precedere quello di fine.",
       "saveSuccess": "Allenamento aggiornato.",
-      "saveError": "Impossibile salvare le modifiche."
+      "saveError": "Impossibile salvare le modifiche.",
+      "resourcesHeading": "Risorse",
+      "resourceChange": "Modifica",
+      "resourceRestoreSeriesDefault": "Ripristina standard di serie",
+      "resourcePickerCancel": "Annulla",
+      "resourceUnassigned": "Nessuna risorsa assegnata.",
+      "participantsHeading": "Partecipanti",
+      "participantsCount": "{count} persone",
+      "participantsEmpty": "Nessun partecipante per questa squadra.",
+      "participantsTrainers": "Allenatori",
+      "participantsPlayers": "Giocatori",
+      "participantsTrainerRole": "Allenatore",
+      "participantsShowAll": "Mostra tutti ({count} giocatori)",
+      "participationStatus": {
+        "OPEN": "Aperto",
+        "YES": "Presente",
+        "NO": "Assente",
+        "MAYBE": "Incerto"
+      }
     }
   }
 }
