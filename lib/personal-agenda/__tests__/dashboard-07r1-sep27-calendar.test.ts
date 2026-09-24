@@ -5,6 +5,7 @@ import {
 } from "../programme-day-key";
 import type { PersonalProgrammeItem } from "../personal-programme-types";
 import { buildMonthGridCells } from "@/lib/calendar/month-grid";
+import { getProgrammeSourcePresentation } from "../programme-source-presentation";
 
 const TIME_ZONE = "Europe/Zurich";
 
@@ -49,5 +50,11 @@ describe("DASHBOARD-07R1 — Sep 27 2026 Blitzturnier calendar regression", () =
   it("D — calendar activity count is at least one for Sep 27", () => {
     const map = groupPersonalProgrammeItemsByDay([buildBlitzturnierItem()], TIME_ZONE);
     expect((map.get("2026-09-27") ?? []).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("E — Blitzturnier TOURNAMENT uses canonical SCE-orange presentation contract", () => {
+    const item = buildBlitzturnierItem();
+    expect(item.typeLabel).toBe("Turnier");
+    expect(getProgrammeSourcePresentation(item.sourceType).paletteKey).toBe("tournament-orange");
   });
 });

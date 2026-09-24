@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { getProgrammeSourcePresentation } from "@/lib/personal-agenda/programme-source-presentation";
 import type { MonthActivityGridDay, MonthActivityGridNavigation } from "./month-activity-grid-types";
+import { PersonalProgrammeActivityIndicator } from "./PersonalProgrammeActivityIndicator";
 
 export type MonthActivityGridProps = {
   monthLabel: string;
@@ -62,47 +64,6 @@ function ActivityDots({ count }: { count: number }) {
   );
 }
 
-function PersonalActivityIndicator({
-  count,
-  previewLabel,
-  sourceType,
-}: {
-  count: number;
-  previewLabel?: string;
-  sourceType?: MonthActivityGridDay["primarySourceType"];
-}) {
-  if (count <= 0) return null;
-
-  const accentClass =
-    sourceType === "TOURNAMENT"
-      ? "bg-[var(--sce-primary)]"
-      : sourceType === "MATCH"
-        ? "bg-[color-mix(in_srgb,var(--sce-info)_85%,var(--foreground)_15%)]"
-        : sourceType === "TRAINING"
-          ? "bg-[color-mix(in_srgb,var(--sce-success)_75%,var(--foreground)_25%)]"
-          : "bg-[var(--primary)]";
-
-  if (previewLabel && count === 1) {
-    return (
-      <span
-        className="mt-auto max-w-full truncate text-[0.5625rem] font-semibold leading-none text-[var(--text-2)]"
-        aria-hidden="true"
-      >
-        {previewLabel}
-      </span>
-    );
-  }
-
-  return (
-    <span className="mt-auto flex flex-col items-center gap-px" aria-hidden="true">
-      <span className={cn("h-0.5 w-5 rounded-full", accentClass)} />
-      {count > 1 ? (
-        <span className="text-[0.5rem] font-bold tabular-nums text-[var(--muted)]">+{count - 1}</span>
-      ) : null}
-    </span>
-  );
-}
-
 function DayCell({
   day,
   variant,
@@ -125,15 +86,18 @@ function DayCell({
     day.isToday && "bg-[var(--sce-primary)] font-semibold text-white",
   );
 
+  const primaryPresentation =
+    variant === "personal" && day.primarySourceType
+      ? getProgrammeSourcePresentation(day.primarySourceType)
+      : null;
+
   const personalClass = cn(
     "relative flex min-h-[2.85rem] min-w-0 flex-col items-center justify-start rounded-lg px-0.5 pb-0.5 pt-0.5 text-xs tabular-nums sm:min-h-[2.65rem]",
     !day.inMonth && "text-[var(--muted)]/45",
     day.inMonth && "text-[var(--text-2)]",
-    day.activityCount > 0 &&
-      day.inMonth &&
-      !day.isSelected &&
-      "bg-[color-mix(in_srgb,var(--surface-2)_55%,transparent)]",
-    day.isSelected && "bg-[var(--primary)] font-semibold text-white shadow-sm",
+    day.activityCount > 0 && day.inMonth && primaryPresentation?.dayTintClass,
+    day.isSelected &&
+      "bg-[color-mix(in_srgb,var(--primary)_14%,var(--surface))] font-semibold text-[var(--foreground)] shadow-sm ring-2 ring-[var(--primary)]",
     day.isToday && !day.isSelected && "ring-1 ring-[var(--primary)]/55",
   );
 
@@ -147,10 +111,13 @@ function DayCell({
         <time dateTime={day.dayKey} className="leading-none">
           {day.dayNumber}
         </time>
-        <PersonalActivityIndicator
+        <PersonalProgrammeActivityIndicator
           count={day.activityCount}
           previewLabel={day.activityPreviewLabel}
-          sourceType={day.primarySourceType}
+          primarySourceType={day.primarySourceType}
+          markerSourceTypes={day.activityMarkerSourceTypes}
+          overflowCount={day.activityMarkerOverflow}
+          isSelected={day.isSelected}
         />
       </>
     ) : (

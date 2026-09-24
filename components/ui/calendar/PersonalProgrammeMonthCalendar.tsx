@@ -13,6 +13,7 @@ import {
 } from "@/lib/calendar/month-grid";
 import { groupPersonalProgrammeItemsByDay } from "@/lib/personal-agenda/programme-day-key";
 import { sortPersonalProgrammeItems } from "@/lib/personal-agenda/programme-sort";
+import { buildPersonalProgrammeDayActivityMarkers } from "@/lib/personal-agenda/programme-source-presentation";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
 import { cn } from "@/lib/cn";
 import MonthActivityGrid from "./MonthActivityGrid";
@@ -128,6 +129,11 @@ export default function PersonalProgrammeMonthCalendar({
             ? t("activityMultipleShort", { count: activityCount })
             : undefined;
 
+      const { markerSourceTypes, overflowCount } = buildPersonalProgrammeDayActivityMarkers(
+        dayItems,
+        activityCount,
+      );
+
       return {
         dayKey,
         dayNumber,
@@ -138,6 +144,8 @@ export default function PersonalProgrammeMonthCalendar({
         accessibleLabel,
         activityPreviewLabel,
         primarySourceType: primaryItem?.sourceType,
+        activityMarkerSourceTypes: markerSourceTypes,
+        activityMarkerOverflow: overflowCount > 0 ? overflowCount : undefined,
       };
     });
   }, [

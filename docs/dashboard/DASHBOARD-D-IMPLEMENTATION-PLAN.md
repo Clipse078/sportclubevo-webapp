@@ -172,11 +172,21 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 ---
 
+## DASHBOARD-07R1A — Semantic calendar activity presentation
+
+**Mission:** Canonical source-type color coding for personal calendar cells and programme timeline markers (presentation-only); bounded multi-event markers; today/selected independence; matchcenter grid regression safety.
+
+**Status:** In progress on PR #706.
+
+**Dependencies:** DASHBOARD-07R1 calendar activity visibility fix.
+
+---
+
 ## DASHBOARD-07R2 — Final closure
 
 **Mission:** Authenticated human visual sign-off; programme closure; MOBILE-D handoff.
 
-**Status:** Pending DASHBOARD-07R1 PASS.
+**Status:** Pending DASHBOARD-07R1A PASS.
 
 ---
 

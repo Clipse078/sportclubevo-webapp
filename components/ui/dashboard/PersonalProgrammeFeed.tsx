@@ -7,6 +7,7 @@ import { CalendarDays } from "lucide-react";
 import type { ProgrammeFeedGroup } from "@/lib/personal-agenda/programme-feed-groups";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
 import { cn } from "@/lib/cn";
+import { getProgrammeSourcePresentation } from "@/lib/personal-agenda/programme-source-presentation";
 import { DashboardEmptyState } from "./DashboardEmptyState";
 
 export type PersonalProgrammeFeedProps = {
@@ -35,6 +36,7 @@ function ProgrammeTimelineRow({
         : null;
 
   const metaLine = [item.contextLabel, item.subtitle].filter(Boolean).join(" · ");
+  const markerPresentation = getProgrammeSourcePresentation(item.sourceType);
 
   const row = (
     <div
@@ -47,14 +49,9 @@ function ProgrammeTimelineRow({
         {item.allDay ? t("allDay") : timeLabel}
       </span>
       <span
-        className={cn(
-          "mt-1.5 h-2 w-2 shrink-0 rounded-full",
-          item.sourceType === "TOURNAMENT"
-            ? "bg-[var(--sce-primary)]"
-            : item.sourceType === "MATCH"
-              ? "bg-[color-mix(in_srgb,var(--sce-info)_80%,var(--foreground)_20%)]"
-              : "bg-[var(--primary)]",
-        )}
+        className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", markerPresentation.markerAccentClass)}
+        data-programme-palette={markerPresentation.paletteKey}
+        data-programme-source={item.sourceType}
         aria-hidden
       />
       <div className="min-w-0">
