@@ -226,14 +226,21 @@ function WorkspaceResourceBlock({
               Aktuelle Zuweisung entfernen
             </button>
           ) : null}
-          <FacilityResourceSelector
+          <PlanningResourcePicker
+            kind={kind === "pitch" ? "pitch_hall" : "dressing_room"}
+            title={title}
             facilityGroups={facilityGroups}
-            allocatedResourceIds={allocatedIds}
-            onAdd={async (id) => {
+            selectedResourceIds={allocatedIds}
+            onSelect={async (id) => {
               await onAdd(id);
               setEditing(false);
             }}
+            onDeselect={async (id) => {
+              const row = allocations.find((a) => a.facilityResourceId === id);
+              if (row) await onRemove(row.id);
+            }}
             testId={selectorTestId}
+            onCancel={() => setEditing(false)}
           />
         </div>
       ) : null}
