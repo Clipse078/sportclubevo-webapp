@@ -5,6 +5,7 @@ import { Loader2, X, MapPin, Building2, ChevronDown, LayoutGrid, DoorOpen } from
 import type { TrainingAllocationDto } from "@/lib/training/types";
 import type { FacilityGroup } from "./FacilityResourceSelector";
 import { FacilityResourceSelector } from "./FacilityResourceSelector";
+import { PlanningResourcePicker } from "@/components/admin/shared/planning/PlanningResourcePicker";
 import type { FacilityResourceType } from "@prisma/client";
 import { cn } from "@/lib/cn";
 import {
