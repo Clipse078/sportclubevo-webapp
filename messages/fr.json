@@ -229,6 +229,75 @@
         "title": "Nouveau match",
         "description": "Domicile/extérieur, adversaire, horaire et — pour les matchs à domicile — ressources dans un flux guidé."
       }
+    },
+    "operational": {
+      "controlsHeading": "Contrôles & visibilité",
+      "zeitstandardLink": "Gérer les standards horaires",
+      "homeAway": { "home": "Domicile", "away": "Extérieur" },
+      "publication": {
+        "heading": "Publication",
+        "homepageRequiresWebsite": "La page d'accueil nécessite la publication sur le site web.",
+        "channels": {
+          "website": {
+            "label": "Site web",
+            "descriptionTournament": "Le tournoi est publié sur le site du club.",
+            "descriptionEvent": "L'événement est publié sur le site du club.",
+            "descriptionMatch": "Le match apparaît dans le calendrier du site."
+          },
+          "infoboard": {
+            "label": "Infoboard",
+            "descriptionTournament": "Le tournoi est affiché sur l'infoboard du club.",
+            "descriptionMatch": "Les matchs à domicile peuvent apparaître sur l'infoboard."
+          },
+          "homepage": {
+            "label": "Page d'accueil",
+            "descriptionTournament": "Mis en avant sur la page d'accueil (site web requis).",
+            "descriptionEvent": "Mis en avant sur la page d'accueil (site web requis).",
+            "descriptionMatch": "Mis en avant sur la page d'accueil (site web requis)."
+          },
+          "wochenplan": {
+            "label": "Semaine",
+            "descriptionTournament": "Le tournoi apparaît dans le plan hebdomadaire public.",
+            "descriptionEvent": "L'événement apparaît dans le plan hebdomadaire public.",
+            "descriptionMatch": "Le match apparaît dans le plan hebdomadaire public."
+          },
+          "teamPage": {
+            "label": "Page équipe",
+            "descriptionTournament": "Affiché sur la page de l'équipe principale.",
+            "descriptionMatch": "Affiché sur la page de l'équipe."
+          }
+        }
+      },
+      "participants": {
+        "heading": "Participants",
+        "description": "Personnes et équipes avec statut de participation.",
+        "teamsHeading": "Équipes",
+        "peopleHeading": "Personnes",
+        "showAll": "Tout afficher ({count})",
+        "empty": "Aucun participant enregistré."
+      },
+      "work": {
+        "heading": "Tâches & exigences",
+        "description": "Tâches et exigences opérationnelles liées."
+      },
+      "requirements": {
+        "heading": "Exigences",
+        "create": "+ Exigence",
+        "gapDescription": "Les exigences ne peuvent pas encore être liées directement aux événements de planification.",
+        "openCenter": "Ouvrir le centre des exigences"
+      },
+      "collaboration": {
+        "heading": "Collaboration",
+        "description": "Commentaires et @mentions pour cet événement.",
+        "clubEventGap": "Les commentaires pour les événements du club suivront lorsque CLUB_EVENT sera pris en charge.",
+        "unavailable": "Collaboration indisponible."
+      },
+      "prePersist": {
+        "generic": "Disponible après la création.",
+        "tasks": "Les tâches peuvent être liées après la création.",
+        "requirements": "Les exigences peuvent être liées après la création.",
+        "collaboration": "Après la création, vous pouvez ajouter des commentaires et @mentions."
+      }
     }
   },
   "Veranstaltungen": {

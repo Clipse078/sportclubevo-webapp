@@ -229,6 +229,75 @@
         "title": "New match",
         "description": "Home/away, opponent, schedule and — for home matches — resources in one guided flow."
       }
+    },
+    "operational": {
+      "controlsHeading": "Controls & visibility",
+      "zeitstandardLink": "Manage time standards",
+      "homeAway": { "home": "Home", "away": "Away" },
+      "publication": {
+        "heading": "Publication",
+        "homepageRequiresWebsite": "Homepage requires website publication to be enabled.",
+        "channels": {
+          "website": {
+            "label": "Website",
+            "descriptionTournament": "The tournament is published on the club website.",
+            "descriptionEvent": "The event is published on the club website.",
+            "descriptionMatch": "The match appears in the website schedule."
+          },
+          "infoboard": {
+            "label": "Infoboard",
+            "descriptionTournament": "The tournament is shown on the club infoboard.",
+            "descriptionMatch": "Home matches may appear on the infoboard (away excluded)."
+          },
+          "homepage": {
+            "label": "Homepage",
+            "descriptionTournament": "Featured on the homepage (website must be enabled).",
+            "descriptionEvent": "Featured on the homepage (website must be enabled).",
+            "descriptionMatch": "Featured on the homepage (website must be enabled)."
+          },
+          "wochenplan": {
+            "label": "Week plan",
+            "descriptionTournament": "The tournament appears in the public week plan.",
+            "descriptionEvent": "The event appears in the public week plan.",
+            "descriptionMatch": "The match appears in the public week plan (home default)."
+          },
+          "teamPage": {
+            "label": "Team page",
+            "descriptionTournament": "Shown on the main team page (website must be enabled).",
+            "descriptionMatch": "Shown on the team page (website must be enabled)."
+          }
+        }
+      },
+      "participants": {
+        "heading": "Participants",
+        "description": "People and teams with participation status.",
+        "teamsHeading": "Teams",
+        "peopleHeading": "People",
+        "showAll": "Show all ({count})",
+        "empty": "No participants recorded."
+      },
+      "work": {
+        "heading": "Tasks & requirements",
+        "description": "Linked operational tasks and requirements."
+      },
+      "requirements": {
+        "heading": "Requirements",
+        "create": "+ Requirement",
+        "gapDescription": "Requirements cannot yet be linked directly to planning events. Use the requirements center; typed references will follow in a later step.",
+        "openCenter": "Open requirements center"
+      },
+      "collaboration": {
+        "heading": "Collaboration",
+        "description": "Comments and @mentions for this event.",
+        "clubEventGap": "Comments for club events will follow once CLUB_EVENT is supported as a communication target.",
+        "unavailable": "Collaboration is not available right now."
+      },
+      "prePersist": {
+        "generic": "This section becomes available after creation.",
+        "tasks": "Tasks can be linked only after the record exists.",
+        "requirements": "Requirements can be linked only after the record exists.",
+        "collaboration": "After creation you can add comments and @mentions."
+      }
     }
   },
   "Veranstaltungen": {

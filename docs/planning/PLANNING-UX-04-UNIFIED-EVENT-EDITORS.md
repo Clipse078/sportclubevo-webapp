@@ -123,3 +123,7 @@ Training copy remains under `TrainingCenter.sessionEdit`.
 ## Database
 
 No schema changes. No migrations.
+
+## Follow-up
+
+Operational workspace convergence (publication at top, shared Teilnehmer/Aufgaben/Zusammenarbeit): **[PLANNING-UX-05](./PLANNING-UX-05-UNIFIED-OPERATIONAL-EVENT-WORKSPACE.md)**.

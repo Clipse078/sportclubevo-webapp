@@ -27,6 +27,7 @@ import MatchEndTimeOperationalCallout from "@/components/admin/matchcenter/Match
 import PlanningWorkflowBadge from "@/components/admin/shared/PlanningWorkflowBadge";
 import PlanningWorkflowActionsClient from "@/components/admin/shared/PlanningWorkflowActionsClient";
 import TrainingRecordSection from "@/components/admin/training/record/TrainingRecordSection";
+import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
 import {
@@ -68,6 +69,8 @@ export type SpieleMatchRecordWorkspaceProps = {
   wochenplanerHref: string;
   createTaskAction?: ReactNode;
   relatedTasksPanel?: ReactNode;
+  participantsSection?: ReactNode;
+  collaborationSection?: ReactNode;
 };
 
 function RecordField({
@@ -114,6 +117,8 @@ export default function SpieleMatchRecordWorkspace({
   wochenplanerHref,
   createTaskAction,
   relatedTasksPanel,
+  participantsSection,
+  collaborationSection,
 }: SpieleMatchRecordWorkspaceProps) {
   const router = useRouter();
   const saveActionRef = useRef<(() => Promise<void>) | null>(null);
@@ -371,7 +376,6 @@ export default function SpieleMatchRecordWorkspace({
               lastChangedLabel={lastChangedLabel}
               wochenplanerHref={wochenplanerHref}
             />
-            {relatedTasksPanel}
           </div>
         }
       >
@@ -399,6 +403,34 @@ export default function SpieleMatchRecordWorkspace({
         ) : null}
 
         <div className={`${SPIELE_RECORD_WORKSPACE_SURFACE_CLASS} divide-y divide-[var(--border)]/80`}>
+          <MatchcenterDetailOperational
+            matchId={match.id}
+            homeAway={match.homeAway}
+            homeDisplayName={match.home.displayName}
+            awayDisplayName={match.away.displayName}
+            homeIsOwnTeam={match.home.isOwnTeam}
+            awayIsOwnTeam={match.away.isOwnTeam}
+            currentTeamId={match.teamId}
+            currentPitchCode={match.operational.pitchCode}
+            currentHomeDressingRoomCode={match.operational.homeDressingRoomCode}
+            currentAwayDressingRoomCode={match.operational.awayDressingRoomCode}
+            currentWebsiteVisible={match.visibility.websiteVisible}
+            currentInfoboardVisible={match.visibility.infoboardVisible}
+            currentWochenplanVisible={match.visibility.wochenplanVisible}
+            matchDateIso={matchDateIso}
+            matchEndAtIso={matchEndAtIso}
+            canManage={canManageMappings}
+            pitchOptions={pitchOptions}
+            dressingRoomOptions={dressingRoomOptions}
+            pitchHallFacilityGroups={pitchHallFacilityGroups}
+            dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+            isOperationallyActionable={operationallyActionable}
+            assessmentBase={match}
+            layout="record"
+            hideFooterActions
+            onActionsBinding={onActionsBinding}
+          />
+
           <TrainingRecordSection title="Übersicht" testId="spiele-record-section-overview">
             <dl className="grid gap-4 sm:grid-cols-2">
               <RecordField label="Heimteam" value={homeName} locked={isProtectedSource} testId="spiele-record-home" />
@@ -482,34 +514,6 @@ export default function SpieleMatchRecordWorkspace({
             </TrainingRecordSection>
           ) : null}
 
-          <MatchcenterDetailOperational
-            matchId={match.id}
-            homeAway={match.homeAway}
-            homeDisplayName={match.home.displayName}
-            awayDisplayName={match.away.displayName}
-            homeIsOwnTeam={match.home.isOwnTeam}
-            awayIsOwnTeam={match.away.isOwnTeam}
-            currentTeamId={match.teamId}
-            currentPitchCode={match.operational.pitchCode}
-            currentHomeDressingRoomCode={match.operational.homeDressingRoomCode}
-            currentAwayDressingRoomCode={match.operational.awayDressingRoomCode}
-            currentWebsiteVisible={match.visibility.websiteVisible}
-            currentInfoboardVisible={match.visibility.infoboardVisible}
-            currentWochenplanVisible={match.visibility.wochenplanVisible}
-            matchDateIso={matchDateIso}
-            matchEndAtIso={matchEndAtIso}
-            canManage={canManageMappings}
-            pitchOptions={pitchOptions}
-            dressingRoomOptions={dressingRoomOptions}
-            pitchHallFacilityGroups={pitchHallFacilityGroups}
-            dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-            isOperationallyActionable={operationallyActionable}
-            assessmentBase={match}
-            layout="record"
-            hideFooterActions
-            onActionsBinding={onActionsBinding}
-          />
-
           {result ||
           (match.scoreHome !== null && match.scoreAway !== null) ? (
             <TrainingRecordSection title="Resultat" testId="spiele-record-section-result">
@@ -530,6 +534,18 @@ export default function SpieleMatchRecordWorkspace({
             </TrainingRecordSection>
           ) : null}
         </div>
+
+        {participantsSection}
+
+        <PlanningEditorWorkSection
+          headingId="spiele-record-work-heading"
+          testId="spiele-record-work-section"
+          persisted
+          locale={locale}
+          tasksPanel={relatedTasksPanel}
+        />
+
+        {collaborationSection}
 
         <SpieleMatchRecordTechnicalDetails match={match} locale={locale} timezone={timezone} />
       </SpieleRecordWorkspaceShell>

@@ -40,6 +40,10 @@ import {
 import StaticOptionSearchablePicker from "@/components/admin/shared/StaticOptionSearchablePicker";
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
 import TournamentPublicationToggles from "@/components/admin/tournamentcenter/TournamentPublicationToggles";
+import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
+import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
+import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
+import PlanningEditorZeitstandardLink from "@/components/admin/shared/planning-editor/PlanningEditorZeitstandardLink";
 import TournamentParticipantAddWorkflow from "@/components/admin/tournamentcenter/TournamentParticipantAddWorkflow";
 import { cn } from "@/lib/cn";
 import {
@@ -713,6 +717,21 @@ export default function TournamentCreateForm({
         </div>
       )}
 
+      <PlanningEditorControlBar testId="tournament-create-control-bar">
+        <TournamentPublicationToggles
+          value={publication}
+          onChange={(patch) => {
+            if (patch.websiteVisible !== undefined) setWebsiteVisible(patch.websiteVisible);
+            if (patch.infoboardVisible !== undefined) setInfoboardVisible(patch.infoboardVisible);
+            if (patch.homepageVisible !== undefined) setHomepageVisible(patch.homepageVisible);
+            if (patch.wochenplanVisible !== undefined) setWochenplanVisible(patch.wochenplanVisible);
+            if (patch.teamPageVisible !== undefined) setTeamPageVisible(patch.teamPageVisible);
+          }}
+          testIdPrefix="tournament-create-publication"
+          showHeading={false}
+        />
+      </PlanningEditorControlBar>
+
       <div className={`${TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS} divide-y divide-[var(--border)]/80`}>
       <TurniereRecordSection title="Grunddaten" testId="turniere-create-section-grunddaten">
         <div className="grid gap-3 sm:grid-cols-2">
@@ -1024,20 +1043,26 @@ export default function TournamentCreateForm({
         </TurniereRecordSection>
       )}
 
-      <TurniereRecordSection title="Veröffentlichung" testId="turniere-create-section-publication">
-        <TournamentPublicationToggles
-          value={publication}
-          onChange={(patch) => {
-            if (patch.websiteVisible !== undefined) setWebsiteVisible(patch.websiteVisible);
-            if (patch.infoboardVisible !== undefined) setInfoboardVisible(patch.infoboardVisible);
-            if (patch.homepageVisible !== undefined) setHomepageVisible(patch.homepageVisible);
-            if (patch.wochenplanVisible !== undefined) setWochenplanVisible(patch.wochenplanVisible);
-            if (patch.teamPageVisible !== undefined) setTeamPageVisible(patch.teamPageVisible);
-          }}
-          testIdPrefix="tournament-create-publication"
-        />
-      </TurniereRecordSection>
       </div>
+
+      <PlanningEditorWorkSection
+        headingId="tournament-create-work-heading"
+        testId="tournament-create-work-section"
+        persisted={false}
+        locale="de-CH"
+        tasksPanel={null}
+      />
+
+      <PlanningEditorCollaborationSection
+        headingId="tournament-create-collaboration-heading"
+        testId="tournament-create-collaboration-section"
+        persisted={false}
+        tenantSlug=""
+        canEdit={false}
+        currentUserId={null}
+        locale="de-CH"
+        timezone="Europe/Zurich"
+      />
 
       <div className="fca-status-box fca-status-box-muted text-xs">
         Neue Turniere werden vor der Veröffentlichung geprüft, sofern kein Freigabe-Recht vorliegt. Teams, Ressourcen

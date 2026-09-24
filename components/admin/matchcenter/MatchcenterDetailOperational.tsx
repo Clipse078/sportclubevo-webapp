@@ -647,8 +647,20 @@ export default function MatchcenterDetailOperational({
     </div>
   );
 
+  const publicationSection = recordSurface ? (
+    <TrainingRecordSection title="Veröffentlichung" testId="spiele-record-section-publication">
+      {publicationContent}
+    </TrainingRecordSection>
+  ) : (
+    <SectionCard title="Veröffentlichung" description="Ausgabekanäle für dieses Match">
+      {publicationContent}
+    </SectionCard>
+  );
+
   return (
     <div className={recordSurface ? undefined : "space-y-5"}>
+      {recordSurface ? publicationSection : null}
+
       {recordSurface && isHomeMatch ? (
         <TrainingRecordSection title="Matchvorbereitung" testId="spiele-record-section-preparation">
           <ul className="space-y-2" data-testid="spiele-record-preparation-checks">
@@ -1035,16 +1047,7 @@ export default function MatchcenterDetailOperational({
         )
       ) : null}
 
-      {/* D6 — Publication */}
-      {recordSurface ? (
-        <TrainingRecordSection title="Veröffentlichung" testId="spiele-record-section-publication">
-          {publicationContent}
-        </TrainingRecordSection>
-      ) : (
-        <SectionCard title="Veröffentlichung" description="Ausgabekanäle für dieses Match">
-          {publicationContent}
-        </SectionCard>
-      )}
+      {!recordSurface ? publicationSection : null}
 
       {!hideFooterActions ? footerActions : null}
     </div>

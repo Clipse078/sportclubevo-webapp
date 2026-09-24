@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import PlanningEditorActions from "@/components/admin/shared/planning-editor/PlanningEditorActions";
+import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
 import { PLANNING_EDITOR_FORM_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import { clubEventScheduleFormFromPersisted } from "@/lib/events/club-event-scheduling";
 import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
@@ -160,6 +161,15 @@ export default function VeranstaltungEditForm({ event, timeZone, canManage = tru
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3" data-testid="veranstaltung-edit-form">
+      <PlanningEditorControlBar testId="veranstaltung-edit-control-bar">
+        <VeranstaltungAusspielungFields
+          values={ausspielung}
+          onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
+          disabled={isReadonly}
+          showHeading={false}
+        />
+      </PlanningEditorControlBar>
+
       <PlanningEditorSection testId="veranstaltung-edit-details-section" ariaLabelledBy="veranstaltung-edit-details-heading">
         <div className="space-y-3">
           <PlanningEditorSectionHeading id="veranstaltung-edit-details-heading" title={t("sections.details")} />
@@ -230,17 +240,6 @@ export default function VeranstaltungEditForm({ event, timeZone, canManage = tru
               />
             </label>
           </div>
-        </div>
-      </PlanningEditorSection>
-
-      <PlanningEditorSection testId="veranstaltung-edit-publication-section" ariaLabelledBy="veranstaltung-edit-publication-heading">
-        <div className="space-y-3">
-          <PlanningEditorSectionHeading id="veranstaltung-edit-publication-heading" title={t("sections.publication")} />
-          <VeranstaltungAusspielungFields
-            values={ausspielung}
-            onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
-            disabled={isReadonly}
-          />
         </div>
       </PlanningEditorSection>
 

@@ -25,6 +25,9 @@ export type ResolveCommunicationTargetInput = {
 const SUPPORTED_TARGET_TYPES: CommunicationTargetType[] = [
   "REGISTRATION",
   "WAITING_LIST_ENTRY",
+  "TRAINING",
+  "MATCH",
+  "TOURNAMENT",
 ];
 
 export function isSupportedCommunicationTargetType(
@@ -101,6 +104,53 @@ export async function resolveCommunicationTargetForTenant(
       targetType: input.targetType,
       targetId: entry.id,
       label: `${firstName} ${lastName} <${email}>`,
+    };
+  }
+
+  if (input.targetType === "TRAINING") {
+    const session = await prisma.trainingSession.findFirst({
+      where: { id: targetId, tenantId },
+      select: {
+        id: true,
+        trainingSeries: { select: { title: true } },
+      },
+    });
+
+    if (!session) {
+      throw new CommunicationServiceError(
+        "TARGET_NOT_FOUND",
+        "Trainingseinheit nicht gefunden oder gehört zu einem anderen Mandanten.",
+      );
+    }
+
+    return {
+      targetType: input.targetType,
+      targetId: session.id,
+      label: session.trainingSeries.title,
+    };
+  }
+
+  if (input.targetType === "MATCH" || input.targetType === "TOURNAMENT") {
+    const event = await prisma.event.findFirst({
+      where: {
+        id: targetId,
+        tenantId,
+        type: input.targetType,
+      },
+      select: { id: true, title: true },
+    });
+
+    if (!event) {
+      throw new CommunicationServiceError(
+        "TARGET_NOT_FOUND",
+        "Ereignis nicht gefunden oder gehört zu einem anderen Mandanten.",
+      );
+    }
+
+    return {
+      targetType: input.targetType,
+      targetId: event.id,
+      label: event.title,
     };
   }
 

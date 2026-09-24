@@ -26,7 +26,7 @@ function renderWithIntl(ui: ReactElement) {
 
 describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
   it("renders Website, Homepage, and Wochenplan as switches without Infoboard", () => {
-    render(
+    renderWithIntl(
       <VeranstaltungAusspielungFields
         values={{ websiteVisible: true, homepageVisible: false, wochenplanVisible: true }}
         onChange={vi.fn()}
@@ -48,7 +48,7 @@ describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
 
   it("disables Homepage when Website is OFF but preserves homepage preference in state", () => {
     const onChange = vi.fn();
-    render(
+    renderWithIntl(
       <VeranstaltungAusspielungFields
         values={{ websiteVisible: false, homepageVisible: true, wochenplanVisible: false }}
         onChange={onChange}
@@ -63,7 +63,7 @@ describe("VeranstaltungAusspielungFields — SCE-EVENTS-01B2", () => {
   it("supports keyboard toggling on Website switch", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(
+    renderWithIntl(
       <VeranstaltungAusspielungFields
         values={{ websiteVisible: true, homepageVisible: false, wochenplanVisible: false }}
         onChange={onChange}

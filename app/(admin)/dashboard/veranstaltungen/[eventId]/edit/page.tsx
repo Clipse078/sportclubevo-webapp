@@ -10,11 +10,10 @@ import PlanningEditorHeader from "@/components/admin/shared/planning-editor/Plan
 import VeranstaltungEditForm from "@/components/admin/veranstaltungen/VeranstaltungEditForm";
 import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
 import ContextualTaskCreateTriggerServer from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTriggerServer";
-import {
-  PLANNING_EDITOR_MAIN_RAIL_GRID,
-  PLANNING_EDITOR_RAIL_ASIDE,
-} from "@/components/admin/shared/planning-editor/planning-editor-layout";
-import { cn } from "@/lib/cn";
+import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
+import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
+import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
+import PlanningParticipantsList from "@/components/admin/shared/planning-editor/PlanningParticipantsList";
 import { getTranslations } from "next-intl/server";
 
 type Props = { params: Promise<{ eventId: string }> };
@@ -39,6 +38,15 @@ export default async function VeranstaltungEditPage({ params }: Props) {
   const t = await getTranslations("Veranstaltungen.editor.edit");
 
   const scheduleContext = [t("eyebrow"), event.season?.name].filter(Boolean).join(" · ");
+
+  const tasksPanel = (
+    <ContextRelatedTasksPanel
+      contextType="CLUB_EVENT"
+      contextId={event.id}
+      locale={locale}
+      timeZone={timeZone}
+    />
+  );
 
   return (
     <ToastProvider>
@@ -71,19 +79,38 @@ export default async function VeranstaltungEditPage({ params }: Props) {
           </div>
         ) : null}
 
-        <div className={cn(PLANNING_EDITOR_MAIN_RAIL_GRID)}>
-          <div className="min-w-0">
-            <VeranstaltungEditForm event={event} timeZone={tenantContext.timezone} canManage={canManage} />
-          </div>
-          <aside className={PLANNING_EDITOR_RAIL_ASIDE}>
-            <ContextRelatedTasksPanel
-              contextType="CLUB_EVENT"
-              contextId={event.id}
-              locale={locale}
-              timeZone={timeZone}
-            />
-          </aside>
-        </div>
+        <VeranstaltungEditForm event={event} timeZone={tenantContext.timezone} canManage={canManage} />
+
+        <PlanningEditorParticipantsSection
+          headingId="veranstaltung-edit-participants-heading"
+          testId="veranstaltung-edit-participants-section"
+          persisted
+        >
+          <PlanningParticipantsList people={[]} teams={[]} />
+          <p className="mt-2 text-xs text-[var(--muted)]" data-testid="veranstaltung-participants-gap">
+            Kein kanonisches Teilnehmermodell — ParticipationRequest/Response für Veranstaltungen folgt separat.
+          </p>
+        </PlanningEditorParticipantsSection>
+
+        <PlanningEditorWorkSection
+          headingId="veranstaltung-edit-work-heading"
+          testId="veranstaltung-edit-work-section"
+          persisted
+          locale={locale}
+          tasksPanel={tasksPanel}
+        />
+
+        <PlanningEditorCollaborationSection
+          headingId="veranstaltung-edit-collaboration-heading"
+          testId="veranstaltung-edit-collaboration-section"
+          persisted
+          tenantSlug={tenantContext.key}
+          canEdit={canManage}
+          currentUserId={session.user?.id ?? null}
+          locale={locale}
+          timezone={timeZone}
+          unsupportedReason="CLUB_EVENT_NOT_IN_COMM_SCHEMA"
+        />
       </PlanningEditorShell>
     </ToastProvider>
   );

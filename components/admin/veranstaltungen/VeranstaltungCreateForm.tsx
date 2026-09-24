@@ -6,6 +6,10 @@ import { useTranslations } from "next-intl";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import PlanningEditorActions from "@/components/admin/shared/planning-editor/PlanningEditorActions";
+import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
+import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
+import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
+import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
 import { PLANNING_EDITOR_FORM_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import VeranstaltungAusspielungFields, {
   type VeranstaltungAusspielungValues,
@@ -191,8 +195,18 @@ export default function VeranstaltungCreateForm() {
     }
   }
 
+  const locale = "de-CH";
+
   return (
     <form onSubmit={handleSubmit} className="space-y-3" data-testid="veranstaltung-create-form">
+      <PlanningEditorControlBar testId="veranstaltung-create-control-bar">
+        <VeranstaltungAusspielungFields
+          values={ausspielung}
+          onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
+          showHeading={false}
+        />
+      </PlanningEditorControlBar>
+
       <PlanningEditorSection testId="veranstaltung-create-details-section" ariaLabelledBy="veranstaltung-create-details-heading">
         <div className="space-y-3">
           <PlanningEditorSectionHeading id="veranstaltung-create-details-heading" title={t("sections.details")} />
@@ -303,15 +317,30 @@ export default function VeranstaltungCreateForm() {
         </div>
       </PlanningEditorSection>
 
-      <PlanningEditorSection testId="veranstaltung-create-publication-section" ariaLabelledBy="veranstaltung-create-publication-heading">
-        <div className="space-y-3">
-          <PlanningEditorSectionHeading id="veranstaltung-create-publication-heading" title={t("sections.publication")} />
-          <VeranstaltungAusspielungFields
-            values={ausspielung}
-            onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
-          />
-        </div>
-      </PlanningEditorSection>
+      <PlanningEditorParticipantsSection
+        headingId="veranstaltung-create-participants-heading"
+        testId="veranstaltung-create-participants-section"
+        persisted={false}
+      />
+
+      <PlanningEditorWorkSection
+        headingId="veranstaltung-create-work-heading"
+        testId="veranstaltung-create-work-section"
+        persisted={false}
+        locale={locale}
+        tasksPanel={null}
+      />
+
+      <PlanningEditorCollaborationSection
+        headingId="veranstaltung-create-collaboration-heading"
+        testId="veranstaltung-create-collaboration-section"
+        persisted={false}
+        tenantSlug=""
+        canEdit={false}
+        currentUserId={null}
+        locale={locale}
+        timezone="Europe/Zurich"
+      />
 
       {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
 

@@ -32,6 +32,12 @@ import { cn } from "@/lib/cn";
 import { getTranslations } from "next-intl/server";
 import { getTrainingSessionParticipantRoster } from "@/lib/training/training-session-participants";
 import { TrainingSessionParticipantsPanel } from "@/components/admin/training/TrainingSessionParticipantsPanel";
+import ContextRelatedTasksPanel from "@/components/admin/aufgaben/contextual/ContextRelatedTasksPanel";
+import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
+import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
+import PlanningEditorZeitstandardLink from "@/components/admin/shared/planning-editor/PlanningEditorZeitstandardLink";
+import { getTranslations as getPlanningTranslations } from "next-intl/server";
+import { hasPermission as checkPermission } from "@/lib/permissions/has-permission";
 
 type Props = { params: Promise<{ sessionId: string }> };
 
@@ -54,6 +60,8 @@ export default async function TrainingSessionEditPage({ params }: Props) {
   if (!tenantContext) notFound();
 
   const canManage = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
+  const canManageFacilities = checkPermission(session, PERMISSIONS.FACILITIES_MANAGE);
+  const tPlanning = await getPlanningTranslations("PlanningEditor.operational");
   const { sessionId } = await params;
 
   let trainingSession;
@@ -213,6 +221,41 @@ export default async function TrainingSessionEditPage({ params }: Props) {
         >
             <TrainingSessionParticipantsPanel participants={participantRoster.participants} />
         </PlanningEditorSection>
+
+        <div className="px-0">
+          <PlanningEditorZeitstandardLink
+            canManageFacilities={canManageFacilities}
+            label={tPlanning("zeitstandardLink")}
+          />
+        </div>
+
+        <PlanningEditorWorkSection
+          headingId="training-session-edit-work-heading"
+          testId="training-session-edit-work-section"
+          persisted
+          locale={locale}
+          tasksPanel={
+            <ContextRelatedTasksPanel
+              contextType="TRAINING"
+              contextId={trainingSession.trainingSeriesId}
+              locale={locale}
+              timeZone={timezone}
+            />
+          }
+        />
+
+        <PlanningEditorCollaborationSection
+          headingId="training-session-edit-collaboration-heading"
+          testId="training-session-edit-collaboration-section"
+          persisted
+          tenantSlug={tenantContext.key}
+          targetType="TRAINING"
+          targetId={sessionId}
+          canEdit={canManage}
+          currentUserId={session.user?.id ?? null}
+          locale={locale}
+          timezone={timezone}
+        />
       </PlanningEditorShell>
     </ToastProvider>
   );
