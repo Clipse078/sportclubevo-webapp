@@ -91,6 +91,69 @@ describe("PersonalProgrammeMonthCalendar", () => {
     const day = screen.getByTestId("personal-calendar-day-2026-09-27");
     expect(day.getAttribute("aria-label")).toContain("Blitzturnier");
     expect(day.textContent).toContain("Turnier");
+    const chip = screen.getByText("Turnier");
+    expect(chip.getAttribute("data-programme-palette")).toBe("tournament-orange");
+    expect(chip.getAttribute("data-programme-source")).toBe("TOURNAMENT");
+  });
+
+  it("retains tournament semantics when Sep 27 is today", () => {
+    render(
+      <PersonalProgrammeMonthCalendar
+        monthParam="2026-09"
+        timeZone="Europe/Zurich"
+        items={[
+          buildItem({
+            id: "event:blitz",
+            sourceType: "TOURNAMENT",
+            startsAt: new Date("2026-09-27T07:30:00.000Z"),
+            typeLabel: "Turnier",
+          }),
+        ]}
+        selectedDayKey="2026-09-20"
+        navigation={navigation}
+        todayDayKey="2026-09-27"
+      />,
+    );
+
+    expect(screen.getByText("Turnier").getAttribute("data-programme-palette")).toBe("tournament-orange");
+  });
+
+  it("shows bounded semantic markers for multiple source types", () => {
+    render(
+      <PersonalProgrammeMonthCalendar
+        monthParam="2026-09"
+        timeZone="Europe/Zurich"
+        items={[
+          buildItem({ id: "event:1", sourceType: "TRAINING", startsAt: new Date("2026-09-12T08:00:00.000Z") }),
+          buildItem({ id: "event:2", sourceType: "MATCH", startsAt: new Date("2026-09-12T09:00:00.000Z") }),
+          buildItem({ id: "event:3", sourceType: "TOURNAMENT", startsAt: new Date("2026-09-12T10:00:00.000Z") }),
+          buildItem({ id: "event:4", sourceType: "EVENT", startsAt: new Date("2026-09-12T11:00:00.000Z") }),
+        ]}
+        selectedDayKey="2026-09-12"
+        navigation={navigation}
+        todayDayKey="2026-09-20"
+      />,
+    );
+
+    const day = screen.getByTestId("personal-calendar-day-2026-09-12");
+    expect(day.querySelectorAll("[data-programme-palette]").length).toBe(3);
+    expect(day.textContent).toContain("+1");
+    expect(day.getAttribute("aria-label")).toMatch(/4 appointments|4 activities/);
+  });
+
+  it("maps training activity to blue semantic palette", () => {
+    render(
+      <PersonalProgrammeMonthCalendar
+        monthParam="2026-09"
+        timeZone="Europe/Zurich"
+        items={[buildItem({ typeLabel: "Training" })]}
+        selectedDayKey="2026-09-23"
+        navigation={navigation}
+        todayDayKey="2026-09-20"
+      />,
+    );
+
+    expect(screen.getByText("Training").getAttribute("data-programme-palette")).toBe("training-blue");
   });
 
   it("shows activity dot day and selected-day entry from programme items", () => {

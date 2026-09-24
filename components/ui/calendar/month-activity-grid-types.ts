@@ -13,6 +13,10 @@ export type MonthActivityGridDay = {
   /** Compact in-cell preview (authorized programme only). */
   activityPreviewLabel?: string;
   primarySourceType?: PersonalProgrammeSourceType;
+  /** Distinct programme source markers (personal calendar, max 3). */
+  activityMarkerSourceTypes?: readonly PersonalProgrammeSourceType[];
+  /** +N overflow beyond visible marker slots (authorized count preserved in aria). */
+  activityMarkerOverflow?: number;
 };
 
 export type MonthActivityGridNavigation = {

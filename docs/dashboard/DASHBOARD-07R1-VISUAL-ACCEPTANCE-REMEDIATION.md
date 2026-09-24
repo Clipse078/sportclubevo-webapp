@@ -78,6 +78,57 @@ Tests: `lib/personal-agenda/__tests__/dashboard-07r1-sep27-calendar.test.ts`, ca
 
 ---
 
+## DASHBOARD-07R1A — Semantic calendar activity presentation
+
+**Goal:** Keep the DASHBOARD-07R1 data path unchanged while making personal calendar days scannable via a **single canonical presentation map** for programme `sourceType` values. Color is supplementary; localized type labels (`Training`, `Spiel`, `Turnier`, …) remain in text and ARIA.
+
+### Canonical palette (presentation-only)
+
+| sourceType | Semantic color |
+|------------|----------------|
+| `TRAINING` | Blue (`--sce-info`) |
+| `MATCH` | Green (`--sce-success`) |
+| `TOURNAMENT` | SCE orange (`--sce-primary`) |
+| `EVENT` | Violet / purple |
+| `MEETING` | Cyan / teal |
+
+Helper: `getProgrammeSourcePresentation()` in `lib/personal-agenda/programme-source-presentation.ts` — returns marker/chip/tint class contracts and stable `paletteKey` tokens for tests. **No DB persistence**, not stored on `PersonalProgrammeItem`.
+
+### Multiple events on one day
+
+- Up to **three** distinct source-type markers (bars), in canonical programme sort order.
+- **`+N`** when the authorized activity count exceeds visible marker slots (duplicate types may consolidate visually; full count stays in `aria-label`).
+- No overflow clipping in the grid cell.
+
+### Today / selected / event type independence
+
+| State | Treatment |
+|-------|-------------|
+| **Today** | Subtle primary ring (unchanged intent). |
+| **Selected** | Strong selected ring + surface; **semantic chip/marker remains visible**. |
+| **Event type** | Tinted chip (single event) or semantic bars (multi). |
+
+### Shared `MonthActivityGrid` boundary
+
+- Generic grid stays generic: **matchcenter** variant unchanged (sky occupancy dot).
+- Personal semantics live in `PersonalProgrammeMonthCalendar` + `PersonalProgrammeActivityIndicator`.
+- Programme timeline (`PersonalProgrammeFeed`) reuses the **same** marker accent mapping (small dot only).
+
+### Sep 27 acceptance case (Europe/Zurich)
+
+| Field | Value |
+|-------|--------|
+| Local date | `2026-09-27` |
+| Local time | `09:30` |
+| sourceType | `TOURNAMENT` |
+| title | `Blitzturnier` |
+| In-cell label | `Turnier` (existing i18n type label) |
+| Presentation | `tournament-orange` palette on chip/marker |
+
+Tests: `programme-source-presentation.test.ts`, `PersonalProgrammeMonthCalendar.test.tsx`, `MonthActivityGrid.test.tsx`, `dashboard-07r1-sep27-calendar.test.ts`.
+
+---
+
 ## Security preservation
 
 No changes to personal relevance, permission ≠ relevance, zero disclosure, quick-access pinning semantics, or authorization boundaries. Calendar still receives authorized programme items only.
