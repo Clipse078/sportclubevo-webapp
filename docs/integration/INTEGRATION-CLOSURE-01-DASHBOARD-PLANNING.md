@@ -142,3 +142,20 @@ Product acceptance on the #707 preview showed that **technical** 05R2 completene
 P0R1 reconciles #707 with the #706-only Training UX-03/R and PLANNING-UX-05R1 operational patches while **keeping** the protected personal dashboard and **05R2 compact resource selectors** on training/match/tournament create surfaces. See `docs/integration/PLANNING-INTEGRATION-P0R1-PRODUCT-RECONCILIATION.md`.
 
 **Do not merge #707 until P0R1 acceptance completes.** Saisonplaner `/dashboard/planner/edit/[id]` remains explicitly deferred (legacy form unchanged on #706 as well).
+
+---
+
+## Addendum — INTEGRATION-FINAL-01 (2026-09-24)
+
+| Field | Value |
+|-------|--------|
+| #707 merge commit | `a4889fdde4fbd907c4ad9db63bdfad91b719bbdc` |
+| Resulting `STAGE` HEAD | `a4889fdde4fbd907c4ad9db63bdfad91b719bbdc` |
+| Source branch HEAD merged | `be999345a3826c99a2a4c2af4c0917c127bb66fb` |
+| #706 | CLOSED without merge (superseded by #707) |
+| 05R1 migration on STAGE | Applied (ledger checksum `f8d1dd8d…`; deploy post-merge: no-op) |
+| STAGE fingerprint | `acd3b37682911890` |
+| STAGE Vercel | SUCCESS on merge commit |
+| Production DB | Untouched |
+
+Full operator report: `docs/integration/INTEGRATION-FINAL-01.md`.

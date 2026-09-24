@@ -65,11 +65,17 @@ Root cause: #707 cherry-picked dashboard programme + consolidated 05R2 planning 
 |-------|--------|
 | Migration | `20260924153000_planning_ux_05r1_operational_parity` |
 | Repo SHA256 | `f8d1dd8d278a5d137471c316899524e2cc9ad914a97bc234227e48d24c5c7200` |
-| Applied in this task | **NO** |
-| STAGE write | **NO** |
+| Applied in this task | **NO** (P0R1); **YES on STAGE** before INTEGRATION-FINAL-01 merge gate (ledger `2026-09-24T15:48:53.330Z`) |
+| STAGE write (INTEGRATION-FINAL-01) | Guarded deploy post-merge: **no pending migrations** (idempotent) |
 | Production write | **NO** |
 
-Schema/SQL committed so a future controlled deploy can apply after acceptance; runtime on STAGE without migration will fail-soft for new tables until deploy.
+Schema/SQL committed; STAGE ledger + objects verified at INTEGRATION-FINAL-01. See `docs/integration/INTEGRATION-FINAL-01.md`.
+
+## INTEGRATION-FINAL-01 closure (2026-09-24)
+
+- #707 merged to `STAGE` at `a4889fdde4fbd907c4ad9db63bdfad91b719bbdc`.
+- #706 closed without merge.
+- Migration checksum on STAGE: `f8d1dd8d278a5d137471c316899524e2cc9ad914a97bc234227e48d24c5c7200`.
 
 ## Regression sentinels added
 
