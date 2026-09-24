@@ -1,13 +1,18 @@
-import type { PersonalContext } from "./types";
+import { isSportingPersonalTeamRelationship } from "./sporting-assignment";
+import type { PersonalContext, PersonalTeamRelationship } from "./types";
 
-/** Personal relevance only — never implies authorization to view resources. */
+function sportingTeamRelationships(context: PersonalContext): PersonalTeamRelationship[] {
+  return context.teams.filter(isSportingPersonalTeamRelationship);
+}
+
+/** Personal sporting team scope (trainer/player/sporting assignment) — not org-only assignment. */
 export function getPersonallyRelevantTeamIds(context: PersonalContext): string[] {
-  return context.teams.map((t) => t.teamId);
+  return sportingTeamRelationships(context).map((t) => t.teamId);
 }
 
 export function getPersonallyRelevantTeamSeasonIds(context: PersonalContext): string[] {
   const ids = new Set<string>();
-  for (const team of context.teams) {
+  for (const team of sportingTeamRelationships(context)) {
     for (const teamSeasonId of team.teamSeasonIds) {
       ids.add(teamSeasonId);
     }
@@ -28,15 +33,18 @@ export function isPersonalTeamEventRowRelevant(
   context: PersonalContext,
   event: PersonalTeamEventRelevanceRow,
 ): boolean {
-  if (!event.teamId || !isTeamPersonallyRelevant(context, event.teamId)) {
+  if (!event.teamId) {
+    return false;
+  }
+  const relationship = context.teams.find((t) => t.teamId === event.teamId);
+  if (!relationship || !isSportingPersonalTeamRelationship(relationship)) {
     return false;
   }
   if (!event.teamSeasonId) {
-    return true;
+    return false;
   }
-  const relationship = context.teams.find((t) => t.teamId === event.teamId);
-  if (!relationship?.teamSeasonIds.length) {
-    return true;
+  if (!relationship.teamSeasonIds.length) {
+    return false;
   }
   return relationship.teamSeasonIds.includes(event.teamSeasonId);
 }
@@ -46,7 +54,9 @@ export function isTeamPersonallyRelevant(
   teamId: string | null | undefined,
 ): boolean {
   if (!teamId) return false;
-  return context.teams.some((t) => t.teamId === teamId);
+  return context.teams.some(
+    (t) => t.teamId === teamId && isSportingPersonalTeamRelationship(t),
+  );
 }
 
 export function isOrgUnitPersonallyRelevant(

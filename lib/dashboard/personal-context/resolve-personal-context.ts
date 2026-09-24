@@ -1,5 +1,6 @@
 import { PersonAssignmentStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
+import { mergeSportingAssignmentTeamSeasonScopes } from "./assignment-team-season-scope";
 import type {
   PersonalAssignmentRelationship,
   PersonalContext,
@@ -176,6 +177,7 @@ export async function resolvePersonalContext(
             id: true,
             orgUnitId: true,
             teamId: true,
+            seasonId: true,
             functionKey: true,
             orgUnit: { select: { id: true, name: true } },
             team: { select: { id: true, name: true, shortName: true } },
@@ -278,6 +280,21 @@ export async function resolvePersonalContext(
       source: "PERSON_MEMBERSHIP",
     });
   }
+
+  const teamNameByTeamId = new Map<string, string>();
+  for (const row of assignmentRows) {
+    if (row.teamId) {
+      const teamName = row.team?.shortName?.trim() || row.team?.name || "Team";
+      teamNameByTeamId.set(row.teamId, teamName);
+    }
+  }
+
+  await mergeSportingAssignmentTeamSeasonScopes({
+    tenantId,
+    assignmentRows,
+    teamNameByTeamId,
+    mergeTeamRelationship: (input) => mergeTeamRelationship(teamMap, input),
+  });
 
   const teams = Array.from(teamMap.values()).sort((a, b) =>
     a.teamName.localeCompare(b.teamName),

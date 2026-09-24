@@ -65,7 +65,7 @@ function eventRow(input: {
     id: input.id,
     tenantId: "tenant-a",
     teamId: input.teamId,
-    teamSeasonId: input.teamSeasonId ?? TS_A,
+    teamSeasonId: input.teamSeasonId !== undefined ? input.teamSeasonId : TS_A,
     type: input.type ?? "MATCH",
     status: "SCHEDULED",
     reviewStage: "PUBLISHED",
@@ -94,6 +94,15 @@ describe("DASHBOARD-07R1B — personal calendar relevance", () => {
     const items = await loadTeamEventProgrammeItems(adapterCtx(buildContext()));
     expect(items).toHaveLength(1);
     expect(items[0].sourceType).toBe("MATCH");
+  });
+
+  it("B2 — TEAM A trainer + TEAM A match with null teamSeasonId → absent (SFV-style)", async () => {
+    vi.mocked(prisma.event.findMany).mockResolvedValue([
+      eventRow({ id: "m-null-ts", teamId: TEAM_A, teamSeasonId: null, type: "MATCH" }),
+    ] as never);
+
+    const items = await loadTeamEventProgrammeItems(adapterCtx(buildContext()));
+    expect(items).toEqual([]);
   });
 
   it("B — TEAM A trainer + TEAM B match → absent", async () => {
