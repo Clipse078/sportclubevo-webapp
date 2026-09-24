@@ -9,8 +9,11 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 | `origin/STAGE` | **Not integrated** | Personal dashboard never merged to STAGE |
 | PR **#706** | **Integrated** (branch tip includes 07R1E + later planning commits) | Canonical engineering source |
 | PR **#707** (post P0 fix) | **Integrated** via cherry-pick `8f592373^..73d66e52` on top of `cf4fc108` | PLANNING-UX-05R2 + personal dashboard; see `docs/dashboard/DASHBOARD-P0-REGRESSION-2026-09-24.md` |
+| `STAGE` database (D04) | **Migration applied** (read-only verify 2026-09-24) | `UserDashboardQuickAccessPreference` exists; see `docs/integration/INTEGRATION-CLOSURE-01-DASHBOARD-PLANNING.md` |
 
-Until #706 or #707 merges to STAGE, previews branched from STAGE alone will show the **legacy** club dashboard.
+Until **#707** merges to STAGE, **git** previews branched from STAGE alone still lack personal dashboard **code**. Previews on **#707** carry the restored personal dashboard. **Do not merge #706** after #707 without reconciliation (see integration closure doc).
+
+Integration base rule: `docs/integration/INTEGRATION-BASE-RULE.md`.
 
 ---
 
