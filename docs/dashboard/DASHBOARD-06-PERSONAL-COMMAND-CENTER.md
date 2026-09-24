@@ -83,6 +83,7 @@ Dashboard RSC path avoids ~17-query club `getCommandCenterData` bundle; personal
 
 ## DASHBOARD-07 handoff
 
-- Visual/product acceptance (user-led) and cross-viewport polish remain for DASHBOARD-07.
+- Engineering closure completed in `docs/dashboard/DASHBOARD-07-ACCEPTANCE-CLOSURE.md` (secondary activity i18n, fail-soft secondary loader, acceptance tests).
+- User-led visual polish across viewports remains optional product QA outside automated gates.
 - Architecture rebuild should **not** be required: canonical sections and loaders are in place.
 - Optional follow-ups: richer relative-time i18n for secondary activity timestamps; tablet calendar accordion if product prefers collapse over stack.
