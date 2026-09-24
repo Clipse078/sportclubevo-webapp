@@ -79,6 +79,10 @@ Resync continues to preserve explicit persisted publication flags. Create-defaul
 
 - Requirement “+ Anforderung” trigger parity unchanged from UX-06 deferral.
 
+## Resource occupancy (UX-07R3)
+
+Training, Match, and Tournament allocation surfaces share the **PLANNING-UX-07R3** occupancy presentation contract (`docs/planning/PLANNING-UX-07R3-SHARED-RESOURCE-OCCUPANCY.md`): owner labels instead of false `Frei`, shared dressing rooms remain selectable.
+
 ## Database
 
 No schema or migration changes.

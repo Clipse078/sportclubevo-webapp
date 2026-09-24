@@ -944,7 +944,9 @@ export default function MatchcenterDetailOperational({
                         {effectiveDressingRoomOptions.map((room) => (
                           <option key={room.code} value={room.code}>
                             {room.name}
-                            {formatAvailabilitySuffix(dressingRoomAvailabilityByCode.get(room.code))}
+                            {formatAvailabilitySuffix(dressingRoomAvailabilityByCode.get(room.code), {
+                              isSelected: room.code === homeDressingRoomCode,
+                            })}
                           </option>
                         ))}
                       </select>
@@ -965,7 +967,9 @@ export default function MatchcenterDetailOperational({
                         {effectiveDressingRoomOptions.map((room) => (
                           <option key={room.code} value={room.code}>
                             {room.name}
-                            {formatAvailabilitySuffix(dressingRoomAvailabilityByCode.get(room.code))}
+                            {formatAvailabilitySuffix(dressingRoomAvailabilityByCode.get(room.code), {
+                              isSelected: room.code === awayDressingRoomCode,
+                            })}
                           </option>
                         ))}
                       </select>

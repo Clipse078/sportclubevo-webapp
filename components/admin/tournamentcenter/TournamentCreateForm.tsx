@@ -55,6 +55,7 @@ import {
   CompactDressingRoomResourceSelector,
   CompactPitchHallResourceSelector,
 } from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
+import { buildTournamentParticipantDressingRoomAvailabilityByParticipant } from "@/lib/planning/resource-occupancy-presentation";
 import {
   orchestrateTournamentCreation,
   type TournamentCreationOrchestrationResult,
@@ -300,6 +301,19 @@ export default function TournamentCreateForm({
   const assignedTeamIds = useMemo(
     () => new Set(participants.map((p) => p.teamId).filter((id): id is string => !!id)),
     [participants],
+  );
+
+  const dressingRoomAvailabilityByParticipant = useMemo(
+    () =>
+      buildTournamentParticipantDressingRoomAvailabilityByParticipant(
+        dressingRoomAvailability,
+        participants.map((p) => ({
+          id: p.localId,
+          displayName: p.displayName,
+          dressingRoomAllocations: p.dressingRooms.map((d) => ({ facilityResourceId: d.facilityResourceId })),
+        })),
+      ),
+    [dressingRoomAvailability, participants],
   );
 
   const availableTeams = teamOptions.filter((t) => !assignedTeamIds.has(t.id));
@@ -998,7 +1012,7 @@ export default function TournamentCreateForm({
                               selectedResourceIds={new Set(participant.dressingRooms.map((d) => d.facilityResourceId))}
                               onSelect={(resourceId) => addDressingRoomDraft(participant.localId, resourceId)}
                               onDeselect={(resourceId) => removeDressingRoomDraft(participant.localId, resourceId)}
-                              availabilityByResourceId={dressingRoomAvailability}
+                              availabilityByResourceId={dressingRoomAvailabilityByParticipant.get(participant.localId)}
                               layout="aggregated"
                               testId={`tournament-create-participant-${participant.localId}-dressing-room`}
                             />

@@ -1,6 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
+import { useMemo, useTransition } from "react";
+import { buildTournamentParticipantDressingRoomAvailabilityByParticipant } from "@/lib/planning/resource-occupancy-presentation";
 import type { TournamentParticipantDto } from "@/lib/tournaments/types";
 import {
   type FacilityGroup,
@@ -28,6 +29,19 @@ export default function TournamentParticipantDressingRoomPanel({
   onError,
 }: Props) {
   const [isPending, startTransition] = useTransition();
+
+  const dressingRoomAvailabilityByParticipant = useMemo(
+    () =>
+      buildTournamentParticipantDressingRoomAvailabilityByParticipant(
+        dressingRoomAvailability,
+        participants.map((p) => ({
+          id: p.id,
+          displayName: p.displayName,
+          dressingRoomAllocations: p.dressingRoomAllocations,
+        })),
+      ),
+    [dressingRoomAvailability, participants],
+  );
 
   if (participants.length === 0) {
     return (
@@ -118,7 +132,7 @@ export default function TournamentParticipantDressingRoomPanel({
                 });
               }}
               disabled={isPending}
-              availabilityByResourceId={dressingRoomAvailability}
+              availabilityByResourceId={dressingRoomAvailabilityByParticipant.get(participant.id)}
               layout="aggregated"
               testId={`tournament-resources-dressing-room-${participant.id}`}
             />

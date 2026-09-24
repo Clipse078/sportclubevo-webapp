@@ -9,6 +9,7 @@ import {
 import type { TournamentHomeAway, TournamentParticipantDto } from "@/lib/tournaments/types";
 import { type FacilityGroup, type ResourceAvailabilityAnnotation } from "@/components/admin/training/FacilityResourceSelector";
 import { CompactDressingRoomResourceSelector } from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
+import { buildTournamentParticipantDressingRoomAvailabilityByParticipant } from "@/lib/planning/resource-occupancy-presentation";
 import { cn } from "@/lib/cn";
 import TournamentParticipantAddWorkflow from "./TournamentParticipantAddWorkflow";
 import type { ExternalClubPickerResult } from "./ExternalClubPicker";
@@ -124,6 +125,19 @@ export default function TournamentParticipantsEditor({
   const assignedTeamIds = useMemo(
     () => new Set(participants.map((p) => p.team?.id).filter((id): id is string => !!id)),
     [participants],
+  );
+
+  const dressingRoomAvailabilityByParticipant = useMemo(
+    () =>
+      buildTournamentParticipantDressingRoomAvailabilityByParticipant(
+        dressingRoomAvailability,
+        participants.map((p) => ({
+          id: p.id,
+          displayName: p.displayName,
+          dressingRoomAllocations: p.dressingRoomAllocations,
+        })),
+      ),
+    [dressingRoomAvailability, participants],
   );
 
   const availableTeams = teams.filter((t) => !assignedTeamIds.has(t.id));
@@ -433,7 +447,7 @@ export default function TournamentParticipantsEditor({
                               });
                             }}
                             disabled={isPending}
-                            availabilityByResourceId={dressingRoomAvailability}
+                            availabilityByResourceId={dressingRoomAvailabilityByParticipant.get(participant.id)}
                             layout="aggregated"
                             testId={`tournament-participant-${participant.id}-dressing-room`}
                           />

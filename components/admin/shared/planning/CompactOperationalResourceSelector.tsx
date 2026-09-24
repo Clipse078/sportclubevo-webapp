@@ -7,7 +7,7 @@
  * diagrams. Wochenplaner surfaces keep VisualResourceAvailabilityPicker.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Check } from "lucide-react";
 import type { FacilityResourceType } from "@prisma/client";
 import { cn } from "@/lib/cn";
@@ -22,6 +22,10 @@ import {
   RESOURCE_SEMANTIC_DRESSING_ICON_CLASS,
   RESOURCE_SEMANTIC_PITCH_ICON_CLASS,
 } from "@/components/admin/shared/planning/resource-card-selection-style";
+import {
+  formatResourceOccupancyPrimaryLine,
+  resolveResourceOccupancyPresentationKind,
+} from "@/lib/planning/resource-occupancy-presentation";
 
 export type CompactOperationalResourceKind = "pitch_hall" | "dressing_room";
 
@@ -75,15 +79,22 @@ function flattenResources(facilityGroups: FacilityGroup[]): FlatResource[] {
   return items;
 }
 
-function availabilityLine(annotation: ResourceAvailabilityAnnotation | undefined): string | null {
-  if (!annotation) return null;
-  if (annotation.status === "FREE") return "Frei";
-  const timeRange =
-    annotation.conflictStartAt && annotation.conflictEndAt
-      ? ` · ${formatClockTime(annotation.conflictStartAt)}–${formatClockTime(annotation.conflictEndAt)}`
-      : "";
-  const ctx = annotation.conflictLabel ? ` · ${annotation.conflictLabel}` : "";
-  return `Belegt${ctx}${timeRange}`;
+function availabilityLine(
+  annotation: ResourceAvailabilityAnnotation | undefined,
+  isSelected: boolean,
+): string | null {
+  const line = formatResourceOccupancyPrimaryLine(annotation, { isSelected });
+  if (!line) return null;
+  if (
+    annotation?.status === "OCCUPIED" &&
+    annotation.conflictStartAt &&
+    annotation.conflictEndAt &&
+    annotation.occupancyPresentation !== "CURRENT" &&
+    annotation.occupancyPresentation !== "SHARED"
+  ) {
+    return `${line} · ${formatClockTime(annotation.conflictStartAt)}–${formatClockTime(annotation.conflictEndAt)}`;
+  }
+  return line;
 }
 
 function ResourceChip({
@@ -107,12 +118,10 @@ function ResourceChip({
     ? RESOURCE_CARD_PITCH_SELECTED_CLASSES
     : RESOURCE_CARD_DRESSING_SELECTED_CLASSES;
   const iconAccent = isPitchKind ? RESOURCE_SEMANTIC_PITCH_ICON_CLASS : RESOURCE_SEMANTIC_DRESSING_ICON_CLASS;
-  const availLine = availabilityLine(resource.availability);
-  const isOccupied = resource.availability?.status === "OCCUPIED";
-
-  useEffect(() => {
-    if (isSelected) setPendingOccupiedConfirm(false);
-  }, [isSelected, resource.id]);
+  const availLine = availabilityLine(resource.availability, isSelected);
+  const presentationKind = resolveResourceOccupancyPresentationKind(resource.availability, { isSelected });
+  const isOccupied = presentationKind === "OCCUPIED";
+  const isShared = presentationKind === "SHARED";
 
   const handleClick = () => {
     if (disabled) return;
@@ -120,7 +129,7 @@ function ResourceChip({
       onToggle();
       return;
     }
-    if (isOccupied && !pendingOccupiedConfirm) {
+    if (isOccupied && !isShared && !pendingOccupiedConfirm) {
       setPendingOccupiedConfirm(true);
       return;
     }
@@ -164,7 +173,11 @@ function ResourceChip({
           <span
             className={cn(
               "mt-0.5 block text-xs",
-              isOccupied ? "text-amber-700/90" : "text-emerald-600/90",
+              isShared
+                ? "text-[var(--text-2)]"
+                : isOccupied
+                  ? "text-amber-700/90"
+                  : "text-emerald-600/90",
             )}
           >
             {availLine}
