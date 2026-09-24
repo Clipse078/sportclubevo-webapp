@@ -9,6 +9,10 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 
+vi.mock("@/lib/training/session-generation-service", () => ({
+  listTrainingSessions: vi.fn(),
+}));
+
 vi.mock("@/lib/dashboard/personal-context", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/dashboard/personal-context")>();
   return {
@@ -29,6 +33,7 @@ vi.mock("@/lib/meetings/queries", () => ({
 }));
 
 import { prisma } from "@/lib/db/prisma";
+import { listTrainingSessions } from "@/lib/training/session-generation-service";
 import { resolvePersonalContext } from "@/lib/dashboard/personal-context";
 import { canSeeMeeting } from "@/lib/meetings/queries";
 import { loadPersonalProgramme } from "../load-personal-programme";
@@ -76,94 +81,124 @@ describe("DASHBOARD-02 — personal programme", () => {
     vi.mocked(resolvePersonalContext).mockResolvedValue(buildContext());
     vi.mocked(prisma.meeting.findMany).mockResolvedValue([] as never);
     vi.mocked(canSeeMeeting).mockReturnValue(true);
+    vi.mocked(listTrainingSessions).mockResolvedValue([]);
   });
 
   describe("TRAINING", () => {
     it("includes related authorized training", async () => {
-      vi.mocked(prisma.event.findMany).mockResolvedValue([
+      vi.mocked(listTrainingSessions).mockResolvedValue([
         {
-          id: "evt-tr",
+          id: "sess-tr",
           tenantId: "tenant-a",
-          teamId: "team-1",
-          type: "TRAINING",
+          trainingSeriesId: "series-1",
+          trainingSeriesTitle: "Abendtraining",
+          teamSeasonId: "ts-team-1",
+          teamName: "Team Alpha",
+          date: "2026-10-02",
+          weekday: "FRIDAY",
+          startAt: "2026-10-02T16:00:00.000Z",
+          endAt: "2026-10-02T17:30:00.000Z",
+          timezone: "Europe/Zurich",
           status: "SCHEDULED",
-          reviewStage: "APPROVED",
-          title: "Abendtraining",
-          startAt: new Date("2026-10-02T16:00:00.000Z"),
-          endAt: new Date("2026-10-02T17:30:00.000Z"),
-          allDay: false,
-          opponentName: null,
-          homeAway: null,
-          location: "Halle",
-          pitchCode: "KR2",
-          team: { name: "Team Alpha" },
+          originalDate: "2026-10-02",
+          originalStartAt: "2026-10-02T16:00:00.000Z",
+          originalEndAt: "2026-10-02T17:30:00.000Z",
+          isRescheduled: false,
+          dressingRoomOccupancyMode: "DEFAULT",
+          dressingRoomBeforeMinutes: null,
+          dressingRoomAfterMinutes: null,
+          participationResponseDueAt: null,
+          participationReminder1At: null,
+          participationReminder2At: null,
+          participationReminder1PresetKey: null,
+          participationReminder2PresetKey: null,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
         },
-      ] as never);
+      ]);
 
-      const items = await loadTeamEventProgrammeItems(adapterCtx(buildContext()));
+      const { loadTrainingProgrammeItems } = await import("../adapters/training-programme-adapter");
+      const items = await loadTrainingProgrammeItems(adapterCtx(buildContext()));
       expect(items).toHaveLength(1);
       expect(items[0].sourceType).toBe("TRAINING");
-      expect(items[0].venue).toBe("KR2");
+      expect(items[0].title).toBe("Abendtraining");
     });
 
     it("excludes unrelated team training", async () => {
-      vi.mocked(prisma.event.findMany).mockResolvedValue([
+      vi.mocked(listTrainingSessions).mockResolvedValue([
         {
-          id: "evt-other",
+          id: "sess-other",
           tenantId: "tenant-a",
-          teamId: "team-other",
-          type: "TRAINING",
-          status: "SCHEDULED",
-          reviewStage: "APPROVED",
-          title: "Secret",
-          startAt: new Date("2026-10-02T16:00:00.000Z"),
+          trainingSeriesId: "series-x",
+          trainingSeriesTitle: "Secret",
+          teamSeasonId: "ts-other",
+          teamName: "Other",
+          date: "2026-10-02",
+          weekday: "FRIDAY",
+          startAt: "2026-10-02T16:00:00.000Z",
           endAt: null,
-          allDay: false,
-          opponentName: null,
-          homeAway: null,
-          location: null,
-          pitchCode: null,
-          team: { name: "Other" },
+          timezone: "Europe/Zurich",
+          status: "SCHEDULED",
+          originalDate: "2026-10-02",
+          originalStartAt: "2026-10-02T16:00:00.000Z",
+          originalEndAt: "2026-10-02T17:30:00.000Z",
+          isRescheduled: false,
+          dressingRoomOccupancyMode: "DEFAULT",
+          dressingRoomBeforeMinutes: null,
+          dressingRoomAfterMinutes: null,
+          participationResponseDueAt: null,
+          participationReminder1At: null,
+          participationReminder2At: null,
+          participationReminder1PresetKey: null,
+          participationReminder2PresetKey: null,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
         },
       ] as never);
 
-      const items = await loadTeamEventProgrammeItems(adapterCtx(buildContext()));
+      const { loadTrainingProgrammeItems } = await import("../adapters/training-programme-adapter");
+      const items = await loadTrainingProgrammeItems(adapterCtx(buildContext()));
       expect(items).toHaveLength(0);
       expect(JSON.stringify(items)).not.toContain("Secret");
     });
 
-    it("excludes inaccessible draft training (zero disclosure)", async () => {
-      vi.mocked(prisma.event.findMany).mockResolvedValue([
+    it("excludes training when actor lacks trainings.view (zero disclosure)", async () => {
+      vi.mocked(listTrainingSessions).mockResolvedValue([
         {
-          id: "evt-draft",
+          id: "sess-draft",
           tenantId: "tenant-a",
-          teamId: "team-1",
-          type: "TRAINING",
-          status: "SCHEDULED",
-          reviewStage: "DRAFT",
-          title: "Draft Training Title",
-          startAt: new Date("2026-10-02T16:00:00.000Z"),
+          trainingSeriesId: "series-1",
+          trainingSeriesTitle: "Draft Training Title",
+          teamSeasonId: "ts-team-1",
+          teamName: "Team Alpha",
+          date: "2026-10-02",
+          weekday: "FRIDAY",
+          startAt: "2026-10-02T16:00:00.000Z",
           endAt: null,
-          allDay: false,
-          opponentName: null,
-          homeAway: null,
-          location: null,
-          pitchCode: null,
-          team: { name: "Team Alpha" },
+          timezone: "Europe/Zurich",
+          status: "SCHEDULED",
+          originalDate: "2026-10-02",
+          originalStartAt: "2026-10-02T16:00:00.000Z",
+          originalEndAt: "2026-10-02T17:30:00.000Z",
+          isRescheduled: false,
+          dressingRoomOccupancyMode: "DEFAULT",
+          dressingRoomBeforeMinutes: null,
+          dressingRoomAfterMinutes: null,
+          participationResponseDueAt: null,
+          participationReminder1At: null,
+          participationReminder2At: null,
+          participationReminder1PresetKey: null,
+          participationReminder2PresetKey: null,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
         },
       ] as never);
 
-      const items = await loadTeamEventProgrammeItems(
-        adapterCtx(buildContext({
-          teams: [{
-            teamId: "team-1",
-            teamName: "Team Alpha",
-            kinds: ["TRAINER"],
-            assignmentFunctionKeys: [],
-            teamSeasonIds: ["ts-team-1"],
-          }],
-        })),
-      );
+      const { loadTrainingProgrammeItems } = await import("../adapters/training-programme-adapter");
+      const items = await loadTrainingProgrammeItems({
+        ...adapterCtx(buildContext()),
+        permissionKeys: [PERMISSIONS.MEETINGS_VIEW],
+      });
       expect(items).toHaveLength(0);
       expect(JSON.stringify(items)).not.toContain("Draft");
     });
@@ -176,6 +211,7 @@ describe("DASHBOARD-02 — personal programme", () => {
           id: "evt-m",
           tenantId: "tenant-a",
           teamId: "team-1",
+          teamSeasonId: "ts-team-1",
           type: "MATCH",
           status: "SCHEDULED",
           reviewStage: "PUBLISHED",
@@ -213,6 +249,7 @@ describe("DASHBOARD-02 — personal programme", () => {
           id: "evt-t",
           tenantId: "tenant-a",
           teamId: "team-1",
+          teamSeasonId: "ts-team-1",
           type: "TOURNAMENT",
           status: "SCHEDULED",
           reviewStage: "APPROVED",
@@ -240,6 +277,7 @@ describe("DASHBOARD-02 — personal programme", () => {
           id: "evt-v",
           tenantId: "tenant-a",
           teamId: "team-1",
+          teamSeasonId: "ts-team-1",
           type: "OTHER",
           status: "SCHEDULED",
           reviewStage: "APPROVED",

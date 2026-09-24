@@ -76,6 +76,7 @@ export async function loadTeamEventProgrammeItems(
     where: {
       tenantId: ctx.personal.tenantId,
       teamSeasonId: { in: teamSeasonIds },
+      type: { in: ["MATCH", "TOURNAMENT", "OTHER"] },
       startAt: { gte: ctx.rangeStart, lte: ctx.rangeEnd },
     },
     orderBy: [{ startAt: "asc" }, { title: "asc" }],

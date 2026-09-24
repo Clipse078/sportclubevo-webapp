@@ -29,6 +29,44 @@ export type PersonalTeamEventRelevanceRow = {
  * Sporting team events must match a personally relevant team.
  * When the row carries teamSeasonId, it must align with an active trainer/player season scope.
  */
+export type PersonalTrainingSessionRelevanceRow = {
+  teamSeasonId: string;
+};
+
+/**
+ * Canonical TrainingSession rows always carry teamSeasonId (TRAININGCENTER-02).
+ * Personal relevance aligns with the actor's active sporting TeamSeason scope.
+ */
+export function isPersonalTrainingSessionRowRelevant(
+  context: PersonalContext,
+  session: PersonalTrainingSessionRelevanceRow,
+): boolean {
+  if (!session.teamSeasonId) {
+    return false;
+  }
+  for (const team of sportingTeamRelationships(context)) {
+    if (!team.teamSeasonIds.length) {
+      continue;
+    }
+    if (team.teamSeasonIds.includes(session.teamSeasonId)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function resolvePersonalTeamIdForTeamSeason(
+  context: PersonalContext,
+  teamSeasonId: string,
+): string | undefined {
+  for (const team of sportingTeamRelationships(context)) {
+    if (team.teamSeasonIds.includes(teamSeasonId)) {
+      return team.teamId;
+    }
+  }
+  return undefined;
+}
+
 export function isPersonalTeamEventRowRelevant(
   context: PersonalContext,
   event: PersonalTeamEventRelevanceRow,

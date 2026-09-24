@@ -44,6 +44,10 @@ vi.mock("@/lib/permissions/request-effective-permissions", () => ({
   }),
 }));
 
+vi.mock("@/lib/training/session-generation-service", () => ({
+  listTrainingSessions: vi.fn().mockResolvedValue([]),
+}));
+
 import { prisma } from "@/lib/db/prisma";
 import { loadTaskDeadlineProjections } from "../task-projections";
 import { loadPersonalAgenda } from "../load-personal-agenda";
