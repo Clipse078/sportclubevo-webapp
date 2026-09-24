@@ -526,6 +526,28 @@
       "weekdayFri": "Fr",
       "weekdaySat": "Sa",
       "weekdaySun": "So"
+    },
+    "attention": {
+      "sectionTitle": "Benötigt meine Aufmerksamkeit",
+      "listAria": "Benötigt meine Aufmerksamkeit",
+      "emptyTitle": "Alles im grünen Bereich",
+      "emptyDescription": "Aktuell gibt es keine persönlichen Punkte, die deine Aufmerksamkeit brauchen.",
+      "viewAll": "Alle anzeigen",
+      "openInbox": "Meine Aufgaben öffnen",
+      "urgency": {
+        "overdue": "Überfällig",
+        "dueToday": "Heute fällig"
+      },
+      "rowAria": "{title}",
+      "rowAriaWithStatus": "{title}. {status}"
+    },
+    "tasks": {
+      "title": "Meine Aufgaben",
+      "viewAll": "Alle anzeigen",
+      "emptyTitle": "Alles erledigt",
+      "emptyDescription": "Aktuell gibt es keine offenen Aufgaben in deiner persönlichen Liste.",
+      "rowAria": "{title}",
+      "rowAriaWithMeta": "{title}. {meta}"
     }
   }
 }

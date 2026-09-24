@@ -28,10 +28,10 @@ import {
   DashboardActivityItem,
   DashboardSection,
   DashboardEmptyState,
-  DashboardAttentionList,
   DashboardNewsSection,
   MeineAgendaWidget,
-  MeineAufgabenWidget,
+  PersonalAttention,
+  PersonalTasksPreview,
   HeuteImVereinWidget,
   DashboardOperationalGrid,
   DashboardQuickActionStrip,
@@ -44,6 +44,7 @@ import type { DashboardMetricAccent } from "@/components/ui/dashboard";
 import { getCurrentSwissFootballSeason } from "@/lib/seasons/season-logic";
 import { formatTodayDate } from "@/lib/tenant-runtime/formatters";
 import type { PermissionKey } from "@/lib/permissions/permissions";
+import { getTranslations } from "next-intl/server";
 
 function timeAgo(date: Date): string {
   const diffMs = Date.now() - date.getTime();
@@ -91,6 +92,7 @@ const COCKPIT_QUICK_ACTION_LABELS: Record<
 };
 
 export default async function ClubDashboardView() {
+  const tPersonal = await getTranslations("PersonalDashboard");
   const session = await auth();
   const ctx = await getActiveTenant();
   const tenantId = ctx?.id;
@@ -127,6 +129,12 @@ export default async function ClubDashboardView() {
         kpiStrip: [],
         todayItems: [],
         attentionItems: [],
+        personalAttention: {
+          authorized: false,
+          items: [],
+          totalCount: 0,
+          viewAllHref: null,
+        },
         upcomingItems: [],
         activitySources: [],
         newsItems: [],
@@ -269,7 +277,7 @@ export default async function ClubDashboardView() {
               supported={commandCenter.personalAgendaSupported}
             />
             {commandCenter.personalTasksAvailable ? (
-              <MeineAufgabenWidget previewItems={commandCenter.personalTaskPreview} />
+              <PersonalTasksPreview previewItems={commandCenter.personalTaskPreview} />
             ) : null}
           </>
         }
@@ -281,17 +289,23 @@ export default async function ClubDashboardView() {
           />
         }
         clubAttention={
-          <DashboardSection
-            title="Benötigt Aufmerksamkeit"
-            icon={<BellRing className="h-4 w-4" />}
-            iconAccent="warning"
-            noPadding
-            variant="card"
-          >
-            <div className="px-4 py-0.5 sm:px-5">
-              <DashboardAttentionList items={commandCenter.attentionItems} />
-            </div>
-          </DashboardSection>
+          commandCenter.personalAttention.authorized ? (
+            <DashboardSection
+              title={tPersonal("attention.sectionTitle")}
+              icon={<BellRing className="h-4 w-4" />}
+              iconAccent="warning"
+              noPadding
+              variant="card"
+            >
+              <div className="px-4 py-0.5 sm:px-5">
+                <PersonalAttention
+                  items={commandCenter.personalAttention.items}
+                  totalCount={commandCenter.personalAttention.totalCount}
+                  viewAllHref={commandCenter.personalAttention.viewAllHref}
+                />
+              </div>
+            </DashboardSection>
+          ) : null
         }
         tertiary={
           <>

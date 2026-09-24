@@ -103,6 +103,28 @@
       "weekdayFri": "Ve",
       "weekdaySat": "Sa",
       "weekdaySun": "Do"
+    },
+    "attention": {
+      "sectionTitle": "Richiede la mia attenzione",
+      "listAria": "Richiede la mia attenzione",
+      "emptyTitle": "Tutto a posto",
+      "emptyDescription": "Nulla di personale richiede la tua attenzione in questo momento.",
+      "viewAll": "Mostra tutto",
+      "openInbox": "Apri i miei compiti",
+      "urgency": {
+        "overdue": "Scaduto",
+        "dueToday": "Scade oggi"
+      },
+      "rowAria": "{title}",
+      "rowAriaWithStatus": "{title}. {status}"
+    },
+    "tasks": {
+      "title": "I miei compiti",
+      "viewAll": "Mostra tutto",
+      "emptyTitle": "Tutto fatto",
+      "emptyDescription": "Non hai compiti aperti nella tua lista personale.",
+      "rowAria": "{title}",
+      "rowAriaWithMeta": "{title}. {meta}"
     }
   }
 }

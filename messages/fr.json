@@ -103,6 +103,28 @@
       "weekdayFri": "Ve",
       "weekdaySat": "Sa",
       "weekdaySun": "Di"
+    },
+    "attention": {
+      "sectionTitle": "Nécessite mon attention",
+      "listAria": "Nécessite mon attention",
+      "emptyTitle": "Tout est en ordre",
+      "emptyDescription": "Rien qui vous soit personnellement assigné ne requiert votre attention.",
+      "viewAll": "Tout afficher",
+      "openInbox": "Ouvrir mes tâches",
+      "urgency": {
+        "overdue": "En retard",
+        "dueToday": "Échéance aujourd'hui"
+      },
+      "rowAria": "{title}",
+      "rowAriaWithStatus": "{title}. {status}"
+    },
+    "tasks": {
+      "title": "Mes tâches",
+      "viewAll": "Tout afficher",
+      "emptyTitle": "Tout est fait",
+      "emptyDescription": "Vous n'avez aucune tâche ouverte dans votre liste personnelle.",
+      "rowAria": "{title}",
+      "rowAriaWithMeta": "{title}. {meta}"
     }
   }
 }

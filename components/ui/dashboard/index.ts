@@ -73,6 +73,11 @@ export type { MeineAgendaWidgetProps } from "./MeineAgendaWidget";
 
 export { MeineAufgabenWidget } from "./MeineAufgabenWidget";
 
+export { PersonalAttention } from "./PersonalAttention";
+export type { PersonalAttentionProps } from "./PersonalAttention";
+
+export { PersonalTasksPreview } from "./PersonalTasksPreview";
+
 export { HeuteImVereinWidget } from "./HeuteImVereinWidget";
 export type { HeuteImVereinWidgetProps } from "./HeuteImVereinWidget";
 

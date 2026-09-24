@@ -75,9 +75,8 @@ export function buildPersonalCockpitKpiStrip(input: {
   personalScheduleCount: number | null;
   personalTasksAvailable: boolean;
   personalTaskCount: number | null;
-  attentionCount: number;
-  openRegistrationCount: number;
-  canSeeRegistrations: boolean;
+  personalAttentionAvailable: boolean;
+  personalAttentionCount: number | null;
 }): CommandCenterKpi[] {
   const kpis: CommandCenterKpi[] = [
     {
@@ -103,18 +102,13 @@ export function buildPersonalCockpitKpiStrip(input: {
     },
     {
       key: "attention",
-      label: "Benötigt Aufmerksamkeit",
-      value: String(input.attentionCount),
+      label: "Benötigt meine Aufmerksamkeit",
+      value:
+        input.personalAttentionAvailable && input.personalAttentionCount !== null
+          ? String(input.personalAttentionCount)
+          : "—",
     },
   ];
-
-  if (input.canSeeRegistrations) {
-    kpis.push({
-      key: "registrations",
-      label: "Offene Anmeldungen",
-      value: String(input.openRegistrationCount),
-    });
-  }
 
   return kpis.slice(0, 4);
 }

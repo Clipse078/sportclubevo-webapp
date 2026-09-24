@@ -103,6 +103,28 @@
       "weekdayFri": "Fri",
       "weekdaySat": "Sat",
       "weekdaySun": "Sun"
+    },
+    "attention": {
+      "sectionTitle": "Needs my attention",
+      "listAria": "Needs my attention",
+      "emptyTitle": "All clear",
+      "emptyDescription": "Nothing personally assigned needs your attention right now.",
+      "viewAll": "View all",
+      "openInbox": "Open my tasks",
+      "urgency": {
+        "overdue": "Overdue",
+        "dueToday": "Due today"
+      },
+      "rowAria": "{title}",
+      "rowAriaWithStatus": "{title}. {status}"
+    },
+    "tasks": {
+      "title": "My tasks",
+      "viewAll": "View all",
+      "emptyTitle": "All done",
+      "emptyDescription": "You have no open tasks in your personal list.",
+      "rowAria": "{title}",
+      "rowAriaWithMeta": "{title}. {meta}"
     }
   }
 }

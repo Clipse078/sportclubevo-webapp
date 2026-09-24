@@ -109,12 +109,14 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 **Files:** `lib/dashboard/personal-attention/`, update `ClubDashboardView` data loading.
 
-**Schema:** Possibly registration assignee index if missing.
+**Schema:** No migration (deferred sources unchanged).
 
 **Acceptance:**
 
-- [ ] No tenant-wide registration/news counts without personal scope  
-- [ ] Attention items match actionable definition
+- [x] No tenant-wide registration/news counts without personal scope  
+- [x] Attention items match actionable definition
+
+**Doc:** `DASHBOARD-05-PERSONAL-ATTENTION-TASKS.md`
 
 ---
 
