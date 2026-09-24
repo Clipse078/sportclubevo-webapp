@@ -20,10 +20,14 @@ import {
   formatTrainingSessionEditSeriesStandardLine,
   pickTrainingSessionEditPresentation,
 } from "@/lib/training/training-session-edit-presentation";
+import PlanningEditorShell from "@/components/admin/shared/planning-editor/PlanningEditorShell";
+import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
+import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import {
-  TRAINING_FORM_MAX_WIDTH_CLASS,
-  TRAINING_FORM_WORKSPACE_SURFACE_CLASS,
-} from "@/components/admin/training/form/training-form-layout";
+  PLANNING_EDITOR_PRIMARY_COLUMN_CLASS,
+  PLANNING_EDITOR_PRIMARY_WORKSPACE_GRID_CLASS,
+  PLANNING_EDITOR_SECONDARY_COLUMN_CLASS,
+} from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import { cn } from "@/lib/cn";
 import { getTranslations } from "next-intl/server";
 import { getTrainingSessionParticipantRoster } from "@/lib/training/training-session-participants";
@@ -124,10 +128,7 @@ export default async function TrainingSessionEditPage({ params }: Props) {
 
   return (
     <ToastProvider>
-      <div
-        className={cn(TRAINING_FORM_MAX_WIDTH_CLASS, "min-w-0 space-y-3 pb-6")}
-        data-testid="training-session-edit-page"
-      >
+      <PlanningEditorShell testId="training-session-edit-page">
         <TrainingSessionEditHeader
           backHref="/dashboard/training"
           backLabel={t("backNavTrainings")}
@@ -144,18 +145,14 @@ export default async function TrainingSessionEditPage({ params }: Props) {
         </p>
 
         <div
-          className="grid min-w-0 grid-cols-1 items-start gap-3 lg:grid-cols-12 lg:gap-4"
+          className={PLANNING_EDITOR_PRIMARY_WORKSPACE_GRID_CLASS}
           data-testid="training-session-edit-workspace-grid"
         >
-          <section
-            className={cn(
-              TRAINING_FORM_WORKSPACE_SURFACE_CLASS,
-              "min-w-0 self-start lg:col-span-7 xl:col-span-8",
-            )}
-            aria-labelledby="training-session-edit-datetime-heading"
-            data-testid="training-session-edit-datetime-panel"
+          <PlanningEditorSection
+            className={PLANNING_EDITOR_PRIMARY_COLUMN_CLASS}
+            ariaLabelledBy="training-session-edit-datetime-heading"
+            testId="training-session-edit-datetime-panel"
           >
-            <div className="px-3 py-3 md:px-4 md:py-3.5">
               <TrainingSessionEditForm
                 sessionId={trainingSession.id}
                 canManage={canManage}
@@ -170,27 +167,18 @@ export default async function TrainingSessionEditPage({ params }: Props) {
                 locale={locale}
                 seriesStandardLine={seriesStandardLine}
               />
-            </div>
-          </section>
+          </PlanningEditorSection>
 
-          <section
-            className={cn(
-              TRAINING_FORM_WORKSPACE_SURFACE_CLASS,
-              "min-w-0 self-start lg:col-span-5 xl:col-span-4",
-            )}
-            aria-labelledby="training-session-edit-participation-heading"
-            data-testid="training-session-edit-participation-panel"
+          <PlanningEditorSection
+            className={cn("space-y-2", PLANNING_EDITOR_SECONDARY_COLUMN_CLASS)}
+            ariaLabelledBy="training-session-edit-participation-heading"
+            testId="training-session-edit-participation-panel"
           >
-            <div className="space-y-2 px-3 py-3 md:px-4 md:py-3.5">
-              <div className="space-y-0.5">
-                <h2
-                  id="training-session-edit-participation-heading"
-                  className="text-sm font-semibold tracking-tight text-[var(--foreground)]"
-                >
-                  {t("participationHeading")}
-                </h2>
-                <p className="text-xs text-[var(--text-2)]">{t("participationDescription")}</p>
-              </div>
+              <PlanningEditorSectionHeading
+                id="training-session-edit-participation-heading"
+                title={t("participationHeading")}
+                description={t("participationDescription")}
+              />
               <ParticipationRequestConfigEditor
                 apiPath={`/api/training-sessions/${trainingSession.id}/participation-request`}
                 timeZone={timezone}
@@ -204,15 +192,10 @@ export default async function TrainingSessionEditPage({ params }: Props) {
                   participationReminder2PresetKey: trainingSession.participationReminder2PresetKey,
                 }}
               />
-            </div>
-          </section>
+          </PlanningEditorSection>
         </div>
 
-        <section
-          className={cn(TRAINING_FORM_WORKSPACE_SURFACE_CLASS, "min-w-0 self-start")}
-          data-testid="training-session-edit-allocations-panel"
-        >
-          <div className="px-3 py-3 md:px-4 md:py-3.5">
+        <PlanningEditorSection testId="training-session-edit-allocations-panel">
             <TrainingSessionAllocationEditor
               sessionId={trainingSession.id}
               initialAllocations={sessionAllocations}
@@ -222,19 +205,15 @@ export default async function TrainingSessionEditPage({ params }: Props) {
               sessionStartAt={trainingSession.startAt}
               sessionEndAt={trainingSession.endAt}
             />
-          </div>
-        </section>
+        </PlanningEditorSection>
 
-        <section
-          className={cn(TRAINING_FORM_WORKSPACE_SURFACE_CLASS, "min-w-0 self-start")}
-          aria-labelledby="training-session-edit-participants-heading"
-          data-testid="training-session-edit-participants-panel"
+        <PlanningEditorSection
+          ariaLabelledBy="training-session-edit-participants-heading"
+          testId="training-session-edit-participants-panel"
         >
-          <div className="px-3 py-3 md:px-4 md:py-3.5">
             <TrainingSessionParticipantsPanel participants={participantRoster.participants} />
-          </div>
-        </section>
-      </div>
+        </PlanningEditorSection>
+      </PlanningEditorShell>
     </ToastProvider>
   );
 }

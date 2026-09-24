@@ -639,5 +639,73 @@
         "MAYBE": "Unsicher"
       }
     }
+  },
+  "PlanningEditor": {
+    "common": {
+      "change": "Ändern",
+      "cancel": "Abbrechen"
+    },
+    "match": {
+      "create": {
+        "backNav": "Spiele",
+        "eyebrow": "Spiel planen",
+        "title": "Neues Spiel",
+        "description": "Heim/Auswärts, Gegner, Termin und — bei Heimspielen — Ressourcen in einem geführten Ablauf."
+      }
+    }
+  },
+  "Veranstaltungen": {
+    "editor": {
+      "create": {
+        "backNav": "Veranstaltungen",
+        "title": "Veranstaltung erstellen",
+        "description": "Manuelle Erfassung von Vereinsanlässen wie Generalversammlung, Trainersitzung, Sponsorenanlass, Helfereinsatz oder interne Veranstaltungen.",
+        "intro": "Termin, Ort und Sichtbarkeit für diesen Vereinsanlass festlegen.",
+        "submit": "Veranstaltung erstellen",
+        "submitting": "Wird erstellt…"
+      },
+      "edit": {
+        "backNav": "Veranstaltungen",
+        "eyebrow": "Bearbeiten",
+        "description": "Änderungen an dieser Veranstaltung. Sichtbarkeits-Einstellungen wirken sich direkt auf Website, Homepage und Infoboard aus.",
+        "readOnlyNotice": "Du hast nur Lesezugriff. Zum Bearbeiten wird die Berechtigung „events.manage“ benötigt.",
+        "save": "Änderungen speichern",
+        "saving": "Wird gespeichert…"
+      },
+      "sections": {
+        "details": "Grunddaten",
+        "schedule": "Termin",
+        "publication": "Ausspielung"
+      },
+      "fields": {
+        "season": "Saison",
+        "seasonLoading": "Saisons laden…",
+        "seasonPlaceholder": "Bitte wählen",
+        "seasonActiveSuffix": " (aktuell)",
+        "category": "Kategorie",
+        "categoryPlaceholder": "— frei wählen —",
+        "title": "Titel",
+        "titlePlaceholder": "z. B. Generalversammlung 2025",
+        "description": "Beschreibung",
+        "descriptionPlaceholder": "Optionale Beschreibung der Veranstaltung…",
+        "location": "Ort / Venue",
+        "locationPlaceholder": "z. B. Clubhaus",
+        "organizer": "Organisator",
+        "organizerPlaceholder": "z. B. Vorstand",
+        "remarks": "Bemerkungen",
+        "remarksPlaceholder": "Interne Notizen",
+        "date": "Datum",
+        "dateStart": "Beginn",
+        "dateEnd": "Ende",
+        "timeStart": "Beginn",
+        "timeEnd": "Ende",
+        "allDay": "Ganztägig",
+        "allDaySummary": "Ganztägig"
+      },
+      "errors": {
+        "createFailed": "Veranstaltung konnte nicht erstellt werden.",
+        "saveFailed": "Änderungen konnten nicht gespeichert werden."
+      }
+    }
   }
 }

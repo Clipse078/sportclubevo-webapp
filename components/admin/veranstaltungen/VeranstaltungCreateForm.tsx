@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import AdminSurfaceCard from "@/components/admin/shared/AdminSurfaceCard";
+import { useTranslations } from "next-intl";
+import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
+import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
+import PlanningEditorActions from "@/components/admin/shared/planning-editor/PlanningEditorActions";
+import { PLANNING_EDITOR_FORM_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import VeranstaltungAusspielungFields, {
   type VeranstaltungAusspielungValues,
 } from "./VeranstaltungAusspielungFields";
@@ -40,6 +44,9 @@ const DEFAULT_TIMES = { startTime: "18:00", endTime: "20:00" };
 
 export default function VeranstaltungCreateForm() {
   const router = useRouter();
+  const t = useTranslations("Veranstaltungen.editor");
+  const tf = useTranslations("Veranstaltungen.editor.fields");
+  const tc = useTranslations("PlanningEditor.common");
 
   const [seasonId, setSeasonId] = useState("");
   const [title, setTitle] = useState("");
@@ -79,8 +86,7 @@ export default function VeranstaltungCreateForm() {
 
         if (!res.ok) {
           throw new Error(
-            (data as { error?: string } | null)?.error ??
-              "Saisons konnten nicht geladen werden.",
+            (data as { error?: string } | null)?.error ?? tf("seasonLoading"),
           );
         }
 
@@ -93,7 +99,7 @@ export default function VeranstaltungCreateForm() {
         setSeasonId(preferred?.id ?? "");
       } catch (err) {
         if (!active) return;
-        setError(err instanceof Error ? err.message : "Ein Fehler ist aufgetreten.");
+        setError(err instanceof Error ? err.message : t("errors.createFailed"));
       } finally {
         if (active) setLoadingSeasons(false);
       }
@@ -103,7 +109,7 @@ export default function VeranstaltungCreateForm() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [tf, t]);
 
   function handleCategoryChange(value: string) {
     setCategory(value);
@@ -174,7 +180,7 @@ export default function VeranstaltungCreateForm() {
       const data = (await res.json().catch(() => null)) as { error?: string } | null;
 
       if (!res.ok) {
-        setError(data?.error ?? "Veranstaltung konnte nicht erstellt werden.");
+        setError(data?.error ?? t("errors.createFailed"));
         return;
       }
 
@@ -186,130 +192,146 @@ export default function VeranstaltungCreateForm() {
   }
 
   return (
-    <AdminSurfaceCard className="p-6">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block space-y-2">
-            <span className="fca-label">Saison</span>
-            <select
-              value={seasonId}
-              onChange={(e) => setSeasonId(e.target.value)}
-              className="fca-select"
-              required
-              disabled={loadingSeasons}
-            >
-              <option value="">
-                {loadingSeasons ? "Saisons laden..." : "Bitte wählen"}
-              </option>
-              {seasonOptions.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                  {s.isActive ? " (aktuell)" : ""}
+    <form onSubmit={handleSubmit} className="space-y-3" data-testid="veranstaltung-create-form">
+      <PlanningEditorSection testId="veranstaltung-create-details-section" ariaLabelledBy="veranstaltung-create-details-heading">
+        <div className="space-y-3">
+          <PlanningEditorSectionHeading id="veranstaltung-create-details-heading" title={t("sections.details")} />
+          <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
+            <label className="block space-y-2">
+              <span className="fca-label">{tf("season")}</span>
+              <select
+                value={seasonId}
+                onChange={(e) => setSeasonId(e.target.value)}
+                className="fca-select h-8 text-sm"
+                required
+                disabled={loadingSeasons}
+              >
+                <option value="">
+                  {loadingSeasons ? tf("seasonLoading") : tf("seasonPlaceholder")}
                 </option>
-              ))}
-            </select>
-          </label>
+                {seasonOptions.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                    {s.isActive ? tf("seasonActiveSuffix") : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <label className="block space-y-2">
-            <span className="fca-label">Kategorie</span>
-            <select
-              value={category}
-              onChange={(e) => handleCategoryChange(e.target.value)}
-              className="fca-select"
-            >
-              <option value="">— frei wählen —</option>
-              {VERANSTALTUNG_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </label>
+            <label className="block space-y-2">
+              <span className="fca-label">{tf("category")}</span>
+              <select
+                value={category}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                className="fca-select h-8 text-sm"
+              >
+                <option value="">{tf("categoryPlaceholder")}</option>
+                {VERANSTALTUNG_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <label className="block space-y-2 md:col-span-2">
-            <span className="fca-label">
-              Titel <span className="text-rose-500">*</span>
-            </span>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="fca-input"
-              required
-              placeholder="z. B. Generalversammlung 2025"
-            />
-          </label>
+            <label className="block space-y-2 md:col-span-2">
+              <span className="fca-label">
+                {tf("title")} <span className="text-rose-500">*</span>
+              </span>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="fca-input h-8 text-sm"
+                required
+                placeholder={tf("titlePlaceholder")}
+              />
+            </label>
 
-          <VeranstaltungScheduleFields values={schedule} onChange={handleScheduleChange} />
+            <label className="block space-y-2 md:col-span-2">
+              <span className="fca-label">{tf("description")}</span>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="fca-textarea min-h-[96px] text-sm"
+                placeholder={tf("descriptionPlaceholder")}
+              />
+            </label>
 
-          <label className="block space-y-2 md:col-span-2">
-            <span className="fca-label">Beschreibung</span>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="fca-textarea min-h-[120px]"
-              placeholder="Optionale Beschreibung der Veranstaltung..."
-            />
-          </label>
+            <label className="block space-y-2">
+              <span className="fca-label">{tf("location")}</span>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="fca-input h-8 text-sm"
+                placeholder={tf("locationPlaceholder")}
+              />
+            </label>
 
-          <label className="block space-y-2">
-            <span className="fca-label">Ort / Venue</span>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="fca-input"
-              placeholder="z. B. Clubhaus"
-            />
-          </label>
+            <label className="block space-y-2">
+              <span className="fca-label">{tf("organizer")}</span>
+              <input
+                type="text"
+                value={organizerName}
+                onChange={(e) => setOrganizerName(e.target.value)}
+                className="fca-input h-8 text-sm"
+                placeholder={tf("organizerPlaceholder")}
+              />
+            </label>
 
-          <label className="block space-y-2">
-            <span className="fca-label">Organisator</span>
-            <input
-              type="text"
-              value={organizerName}
-              onChange={(e) => setOrganizerName(e.target.value)}
-              className="fca-input"
-              placeholder="z. B. Vorstand"
-            />
-          </label>
-
-          <label className="block space-y-2 md:col-span-2">
-            <span className="fca-label">Bemerkungen</span>
-            <input
-              type="text"
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
-              className="fca-input"
-              placeholder="Interne Notizen"
-            />
-          </label>
+            <label className="block space-y-2 md:col-span-2">
+              <span className="fca-label">{tf("remarks")}</span>
+              <input
+                type="text"
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                className="fca-input h-8 text-sm"
+                placeholder={tf("remarksPlaceholder")}
+              />
+            </label>
+          </div>
         </div>
+      </PlanningEditorSection>
 
-        <VeranstaltungAusspielungFields
-          values={ausspielung}
-          onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
-        />
-
-        {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
-
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="submit"
-            disabled={submitting || loadingSeasons || !seasonId || !schedule.startDate}
-            className="fca-button-primary"
-          >
-            {submitting ? "Wird erstellt..." : "Veranstaltung erstellen"}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/dashboard/veranstaltungen")}
-            className="fca-button-secondary"
-          >
-            Abbrechen
-          </button>
+      <PlanningEditorSection testId="veranstaltung-create-schedule-section" ariaLabelledBy="veranstaltung-create-schedule-heading">
+        <div className="space-y-3">
+          <PlanningEditorSectionHeading id="veranstaltung-create-schedule-heading" title={t("sections.schedule")} />
+          <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
+            <VeranstaltungScheduleFields values={schedule} onChange={handleScheduleChange} />
+          </div>
         </div>
-      </form>
-    </AdminSurfaceCard>
+      </PlanningEditorSection>
+
+      <PlanningEditorSection testId="veranstaltung-create-publication-section" ariaLabelledBy="veranstaltung-create-publication-heading">
+        <div className="space-y-3">
+          <PlanningEditorSectionHeading id="veranstaltung-create-publication-heading" title={t("sections.publication")} />
+          <VeranstaltungAusspielungFields
+            values={ausspielung}
+            onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
+          />
+        </div>
+      </PlanningEditorSection>
+
+      {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
+
+      <PlanningEditorActions testId="veranstaltung-create-actions">
+        <button
+          type="submit"
+          disabled={submitting || loadingSeasons || !seasonId || !schedule.startDate}
+          className="fca-button-primary"
+          data-testid="veranstaltung-create-submit"
+        >
+          {submitting ? t("create.submitting") : t("create.submit")}
+        </button>
+        <button
+          type="button"
+          onClick={() => router.push("/dashboard/veranstaltungen")}
+          className="fca-button-secondary"
+        >
+          {tc("cancel")}
+        </button>
+      </PlanningEditorActions>
+    </form>
   );
 }

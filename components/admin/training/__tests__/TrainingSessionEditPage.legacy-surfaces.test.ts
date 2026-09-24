@@ -21,9 +21,9 @@ describe("Training session edit route — SCE workspace", () => {
   it("uses responsive 12-column workspace with date/time and participation panels", () => {
     const source = readPage();
     expect(source).toContain("training-session-edit-workspace-grid");
-    expect(source).toContain("lg:grid-cols-12");
-    expect(source).toContain("items-start");
-    expect(source).toContain("self-start");
+    expect(source).toContain("PLANNING_EDITOR_PRIMARY_WORKSPACE_GRID_CLASS");
+    expect(source).toContain("PLANNING_EDITOR_PRIMARY_COLUMN_CLASS");
+    expect(source).toContain("PLANNING_EDITOR_SECONDARY_COLUMN_CLASS");
     expect(source).toContain("training-session-edit-datetime-panel");
     expect(source).toContain("training-session-edit-participation-panel");
     expect(source).toContain("training-session-edit-participants-panel");
@@ -34,7 +34,8 @@ describe("Training session edit route — SCE workspace", () => {
     const source = readPage();
     expect(source).not.toMatch(/bg-white/);
     expect(source).not.toMatch(/border-gray-200/);
-    expect(source).toContain("TRAINING_FORM_WORKSPACE_SURFACE_CLASS");
+    expect(source).toContain("PlanningEditorSection");
+    expect(source).toContain("PlanningEditorShell");
   });
 
   it("preserves authorization boundary and session loader", () => {
@@ -52,7 +53,7 @@ describe("Training session edit route — SCE workspace", () => {
     expect(page).toContain("backNavTrainings");
     expect(page).toContain("training-session-edit-inheritance-intro");
     expect(header).toContain("training-session-edit-back-link");
-    expect(header.match(/<h1/g)?.length).toBe(1);
+    expect(header).toContain("PlanningEditorHeader");
   });
 
   it("preserves contextual actions and form wiring", () => {

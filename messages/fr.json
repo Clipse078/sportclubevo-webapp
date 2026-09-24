@@ -216,5 +216,73 @@
         "MAYBE": "Incertain"
       }
     }
+  },
+  "PlanningEditor": {
+    "common": {
+      "change": "Modifier",
+      "cancel": "Annuler"
+    },
+    "match": {
+      "create": {
+        "backNav": "Matchs",
+        "eyebrow": "Planifier un match",
+        "title": "Nouveau match",
+        "description": "Domicile/extérieur, adversaire, horaire et — pour les matchs à domicile — ressources dans un flux guidé."
+      }
+    }
+  },
+  "Veranstaltungen": {
+    "editor": {
+      "create": {
+        "backNav": "Événements",
+        "title": "Créer un événement",
+        "description": "Saisie manuelle d'occasions du club comme assemblée générale, réunion d'entraîneurs, événement sponsors, briefing bénévoles ou événements internes.",
+        "intro": "Définir horaire, lieu et visibilité pour cet événement du club.",
+        "submit": "Créer l'événement",
+        "submitting": "Création…"
+      },
+      "edit": {
+        "backNav": "Événements",
+        "eyebrow": "Modifier",
+        "description": "Modifications de cet événement. Les paramètres de visibilité affectent directement le site, la page d'accueil et l'infoboard.",
+        "readOnlyNotice": "Accès en lecture seule. La permission « events.manage » est requise pour modifier.",
+        "save": "Enregistrer les modifications",
+        "saving": "Enregistrement…"
+      },
+      "sections": {
+        "details": "Données de base",
+        "schedule": "Horaire",
+        "publication": "Diffusion"
+      },
+      "fields": {
+        "season": "Saison",
+        "seasonLoading": "Chargement des saisons…",
+        "seasonPlaceholder": "Veuillez choisir",
+        "seasonActiveSuffix": " (actuelle)",
+        "category": "Catégorie",
+        "categoryPlaceholder": "— libre —",
+        "title": "Titre",
+        "titlePlaceholder": "p. ex. Assemblée générale 2025",
+        "description": "Description",
+        "descriptionPlaceholder": "Description optionnelle de l'événement…",
+        "location": "Lieu",
+        "locationPlaceholder": "p. ex. Club-house",
+        "organizer": "Organisateur",
+        "organizerPlaceholder": "p. ex. Comité",
+        "remarks": "Remarques",
+        "remarksPlaceholder": "Notes internes",
+        "date": "Date",
+        "dateStart": "Début",
+        "dateEnd": "Fin",
+        "timeStart": "Début",
+        "timeEnd": "Fin",
+        "allDay": "Journée entière",
+        "allDaySummary": "Journée entière"
+      },
+      "errors": {
+        "createFailed": "Impossible de créer l'événement.",
+        "saveFailed": "Impossible d'enregistrer les modifications."
+      }
+    }
   }
 }

@@ -216,5 +216,73 @@
         "MAYBE": "Maybe"
       }
     }
+  },
+  "PlanningEditor": {
+    "common": {
+      "change": "Change",
+      "cancel": "Cancel"
+    },
+    "match": {
+      "create": {
+        "backNav": "Matches",
+        "eyebrow": "Plan match",
+        "title": "New match",
+        "description": "Home/away, opponent, schedule and — for home matches — resources in one guided flow."
+      }
+    }
+  },
+  "Veranstaltungen": {
+    "editor": {
+      "create": {
+        "backNav": "Club events",
+        "title": "Create club event",
+        "description": "Manual capture of club occasions such as general assembly, coaches meeting, sponsor event, volunteer briefing or internal events.",
+        "intro": "Set schedule, location and visibility for this club event.",
+        "submit": "Create event",
+        "submitting": "Creating…"
+      },
+      "edit": {
+        "backNav": "Club events",
+        "eyebrow": "Edit",
+        "description": "Changes to this event. Visibility settings affect website, homepage and infoboard directly.",
+        "readOnlyNotice": "You have read-only access. The “events.manage” permission is required to edit.",
+        "save": "Save changes",
+        "saving": "Saving…"
+      },
+      "sections": {
+        "details": "Core details",
+        "schedule": "Schedule",
+        "publication": "Publication"
+      },
+      "fields": {
+        "season": "Season",
+        "seasonLoading": "Loading seasons…",
+        "seasonPlaceholder": "Please select",
+        "seasonActiveSuffix": " (current)",
+        "category": "Category",
+        "categoryPlaceholder": "— choose freely —",
+        "title": "Title",
+        "titlePlaceholder": "e.g. General assembly 2025",
+        "description": "Description",
+        "descriptionPlaceholder": "Optional description of the event…",
+        "location": "Location / venue",
+        "locationPlaceholder": "e.g. Clubhouse",
+        "organizer": "Organizer",
+        "organizerPlaceholder": "e.g. Board",
+        "remarks": "Remarks",
+        "remarksPlaceholder": "Internal notes",
+        "date": "Date",
+        "dateStart": "Start",
+        "dateEnd": "End",
+        "timeStart": "Start",
+        "timeEnd": "End",
+        "allDay": "All day",
+        "allDaySummary": "All day"
+      },
+      "errors": {
+        "createFailed": "Could not create the event.",
+        "saveFailed": "Could not save changes."
+      }
+    }
   }
 }

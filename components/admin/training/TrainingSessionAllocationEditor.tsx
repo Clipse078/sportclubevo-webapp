@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState, useTransition } from "react";
-import { Loader2, Replace, RotateCcw, X } from "lucide-react";
+import { Loader2, RotateCcw, X } from "lucide-react";
+import PlanningEditorProgressiveChangeButton from "@/components/admin/shared/planning-editor/PlanningEditorProgressiveChangeButton";
 import { useTranslations } from "next-intl";
 import type { FacilityResourceType } from "@prisma/client";
 import { FacilityResourceIdentity } from "@/components/admin/shared/planning/FacilityResourceIdentity";
@@ -165,15 +166,12 @@ function GroupSection({
           )}
           {canManage && !pickerOpen ? (
             <div className="flex flex-col items-end gap-1">
-              <button
-                type="button"
+              <PlanningEditorProgressiveChangeButton
+                label={changeLabel}
                 onClick={onOpenPicker}
-                data-testid={`training-session-allocations-${testIdSuffix}-change`}
-                className="fca-button-secondary inline-flex min-h-8 items-center gap-1.5 px-2.5 py-1.5 text-xs"
-              >
-                <Replace size={14} aria-hidden />
-                {changeLabel}
-              </button>
+                testId={`training-session-allocations-${testIdSuffix}-change`}
+                ariaExpanded={false}
+              />
               {isOverridden ? (
                 <button
                   type="button"
