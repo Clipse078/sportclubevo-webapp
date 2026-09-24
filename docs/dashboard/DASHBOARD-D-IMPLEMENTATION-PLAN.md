@@ -158,6 +158,8 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 **Human visual acceptance:** REOPENED — **DASHBOARD-07R1** (see `docs/dashboard/DASHBOARD-07R1-VISUAL-ACCEPTANCE-REMEDIATION.md`).
 
+**Roadmap:** DASHBOARD-07 → 07R1 → 07R1A → 07R1B → 07R1C → **07R1D** → 07R2 human acceptance → merge → **MOBILE-D**.
+
 **Next:** DASHBOARD-07R2 final closure → **MOBILE-D**.
 
 ---
@@ -206,11 +208,23 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 ---
 
+## DASHBOARD-07R1D — Personal trainings (canonical TrainingSession)
+
+**Mission:** Include personally relevant team trainings in the single `loadPersonalProgramme()` universe (Mein Programm + Mein Kalender); batched `listTrainingSessions` by personal `teamSeasonIds`; preserve R1C Event relevance; training-blue presentation.
+
+**Status:** Implemented on PR #706 — pending DASHBOARD-07R2 human visual acceptance.
+
+**Dependencies:** DASHBOARD-07R1C.
+
+**Doc:** `docs/dashboard/DASHBOARD-07R1D-PERSONAL-TRAININGS.md`
+
+---
+
 ## DASHBOARD-07R2 — Final closure
 
 **Mission:** Authenticated human visual sign-off; programme closure; MOBILE-D handoff.
 
-**Status:** Pending DASHBOARD-07R1C engineering PASS + human visual acceptance.
+**Status:** Pending DASHBOARD-07R1D engineering PASS + human visual acceptance.
 
 ---
 

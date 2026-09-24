@@ -5,6 +5,7 @@ import {
 import type { PersonalProgrammeAdapterContext } from "@/lib/dashboard/personal-context/programme-adapter-contract";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { loadTeamEventProgrammeItems } from "./adapters/team-event-programme-adapter";
+import { loadTrainingProgrammeItems } from "./adapters/training-programme-adapter";
 import { loadMeetingProgrammeItems } from "./adapters/meeting-programme-adapter";
 import {
   resolvePersonalProgrammeRange,
@@ -98,12 +99,15 @@ export async function loadPersonalProgramme(
     rangeEnd: range.rangeEnd,
   };
 
-  const [teamEvents, meetings] = await Promise.all([
+  const [teamEvents, trainings, meetings] = await Promise.all([
     loadTeamEventProgrammeItems(adapterCtx),
+    loadTrainingProgrammeItems(adapterCtx),
     loadMeetingProgrammeItems(adapterCtx),
   ]);
 
-  let items = sortPersonalProgrammeItems(dedupeProgrammeItems([...teamEvents, ...meetings]));
+  let items = sortPersonalProgrammeItems(
+    dedupeProgrammeItems([...teamEvents, ...trainings, ...meetings]),
+  );
 
   if (args.limit != null && args.limit > 0) {
     items = items.slice(0, args.limit);

@@ -65,5 +65,6 @@ export function eventTypeToProgrammeSourceType(type: EventType): PersonalProgram
 
 export function programmeResourceKey(sourceType: PersonalProgrammeSourceType, resourceId: string): string {
   if (sourceType === "MEETING") return `meeting:${resourceId}`;
+  if (sourceType === "TRAINING") return `training-session:${resourceId}`;
   return `event:${resourceId}`;
 }

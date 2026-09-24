@@ -588,14 +588,29 @@ export async function findAllTrainingSessions(
   opts: {
     trainingSeriesId?: string;
     teamSeasonId?: string;
+    teamSeasonIds?: string[];
     status?: TrainingSessionStatus;
     dateFrom?: Date;
     dateTo?: Date;
     includeInactive?: boolean;
   } = {},
 ): Promise<TrainingSessionRow[]> {
-  const { trainingSeriesId, teamSeasonId, status, dateFrom, dateTo, includeInactive = false } =
-    opts;
+  const {
+    trainingSeriesId,
+    teamSeasonId,
+    teamSeasonIds,
+    status,
+    dateFrom,
+    dateTo,
+    includeInactive = false,
+  } = opts;
+
+  const teamSeasonScope =
+    teamSeasonIds && teamSeasonIds.length > 0
+      ? { teamSeasonId: { in: teamSeasonIds } }
+      : teamSeasonId
+        ? { teamSeasonId }
+        : {};
 
   const dateRange = {
     ...(dateFrom ? { gte: dateFrom } : {}),
@@ -606,7 +621,7 @@ export async function findAllTrainingSessions(
     where: {
       tenantId,
       ...(trainingSeriesId ? { trainingSeriesId } : {}),
-      ...(teamSeasonId ? { teamSeasonId } : {}),
+      ...teamSeasonScope,
       ...(status
         ? { status }
         : !includeInactive

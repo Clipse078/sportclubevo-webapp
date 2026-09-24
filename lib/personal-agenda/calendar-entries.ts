@@ -1,6 +1,7 @@
 import type { PersonalContext } from "@/lib/dashboard/personal-context";
 import type { PersonalProgrammeAdapterContext } from "@/lib/dashboard/personal-context/programme-adapter-contract";
 import { loadTeamEventProgrammeItems } from "./adapters/team-event-programme-adapter";
+import { loadTrainingProgrammeItems } from "./adapters/training-programme-adapter";
 import { loadMeetingProgrammeItems } from "./adapters/meeting-programme-adapter";
 import { personalProgrammeItemsToCalendarItems } from "./programme-to-calendar";
 import type { PersonalCalendarItem } from "./types";
@@ -47,11 +48,14 @@ export async function loadPersonalCalendarEntryProjections(
     rangeEnd: args.rangeEnd,
   };
 
-  const [teamEvents, meetings] = await Promise.all([
+  const [teamEvents, trainings, meetings] = await Promise.all([
     hasTeamScope ? loadTeamEventProgrammeItems(adapterCtx) : Promise.resolve([]),
+    hasTeamScope ? loadTrainingProgrammeItems(adapterCtx) : Promise.resolve([]),
     hasMeetingScope ? loadMeetingProgrammeItems(adapterCtx) : Promise.resolve([]),
   ]);
 
-  const programmeItems = sortPersonalProgrammeItems(dedupeProgrammeItems([...teamEvents, ...meetings]));
+  const programmeItems = sortPersonalProgrammeItems(
+    dedupeProgrammeItems([...teamEvents, ...trainings, ...meetings]),
+  );
   return personalProgrammeItemsToCalendarItems(programmeItems);
 }

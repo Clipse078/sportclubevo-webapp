@@ -7,7 +7,12 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 
+vi.mock("@/lib/training/session-generation-service", () => ({
+  listTrainingSessions: vi.fn(),
+}));
+
 import { prisma } from "@/lib/db/prisma";
+import { listTrainingSessions } from "@/lib/training/session-generation-service";
 import { loadPersonalCalendarEntryProjections } from "../calendar-entries";
 import type { PersonalContext } from "@/lib/dashboard/personal-context";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -44,6 +49,7 @@ describe("DASHBOARD-01 — event zero disclosure", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(prisma.meeting.findMany).mockResolvedValue([] as never);
+    vi.mocked(listTrainingSessions).mockResolvedValue([]);
   });
 
   it("excludes unauthorized event metadata entirely from projections", async () => {
@@ -85,25 +91,36 @@ describe("DASHBOARD-01 — event zero disclosure", () => {
   });
 
   it("includes authorized relevant team events once", async () => {
-    vi.mocked(prisma.event.findMany).mockResolvedValue([
+    vi.mocked(listTrainingSessions).mockResolvedValue([
       {
-        id: "evt-1",
+        id: "sess-1",
         tenantId: "tenant-a",
-        teamId: "team-f2",
-        type: "TRAINING",
+        trainingSeriesId: "series-1",
+        trainingSeriesTitle: "Training Abend",
+        teamSeasonId: "ts-f2",
+        teamName: "F2",
+        date: "2026-10-01",
+        weekday: "THURSDAY",
+        startAt: "2026-10-01T18:00:00.000Z",
+        endAt: "2026-10-01T19:30:00.000Z",
+        timezone: "Europe/Zurich",
         status: "SCHEDULED",
-        reviewStage: "APPROVED",
-        title: "Training Abend",
-        startAt: new Date("2026-10-01T18:00:00.000Z"),
-        endAt: new Date("2026-10-01T19:30:00.000Z"),
-        allDay: false,
-        opponentName: null,
-        homeAway: null,
-        location: null,
-        pitchCode: null,
-        team: { name: "F2" },
+        originalDate: "2026-10-01",
+        originalStartAt: "2026-10-01T18:00:00.000Z",
+        originalEndAt: "2026-10-01T19:30:00.000Z",
+        isRescheduled: false,
+        dressingRoomOccupancyMode: "DEFAULT",
+        dressingRoomBeforeMinutes: null,
+        dressingRoomAfterMinutes: null,
+        participationResponseDueAt: null,
+        participationReminder1At: null,
+        participationReminder2At: null,
+        participationReminder1PresetKey: null,
+        participationReminder2PresetKey: null,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
       },
-    ] as never);
+    ]);
 
     const items = await loadPersonalCalendarEntryProjections({
       tenantId: "tenant-a",
