@@ -54,7 +54,9 @@ describe("PLANNING-UX-07R2 tournament participant and resource parity", () => {
       expect(planner).toContain(symbol);
       expect(center).toContain(symbol);
     }
-    expect(planner).toContain("/api/tournaments/");
+    const participantsEditor = read("components/admin/tournamentcenter/TournamentParticipantsEditor.tsx");
+    expect(participantsEditor).toContain("/api/tournaments/");
+    expect(planner).toContain("TournamentParticipantsEditor");
   });
 
   it("planner tournament participation config lives in the operational rail", () => {
