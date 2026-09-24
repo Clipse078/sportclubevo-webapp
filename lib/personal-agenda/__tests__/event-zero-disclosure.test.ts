@@ -25,6 +25,7 @@ function buildContext(overrides: Partial<PersonalContext> = {}): PersonalContext
         teamName: "F2",
         kinds: ["TRAINER"],
         assignmentFunctionKeys: [],
+        teamSeasonIds: ["ts-f2"],
       },
     ],
     orgUnits: [],

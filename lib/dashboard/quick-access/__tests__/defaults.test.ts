@@ -56,6 +56,7 @@ describe("DASHBOARD-04 — quick access defaults", () => {
           teamName: "F1",
           kinds: ["TRAINER"],
           assignmentFunctionKeys: [],
+          teamSeasonIds: [],
         },
       ],
       orgUnits: [],

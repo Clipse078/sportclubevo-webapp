@@ -60,6 +60,7 @@ describe("DASHBOARD-01 — resolvePersonalContext", () => {
     vi.mocked(prisma.trainerTeamMember.findMany).mockResolvedValue([
       {
         teamSeason: {
+          id: "ts-f2",
           teamId: "team-f2",
           team: { name: "F2", shortName: "F2" },
         },
@@ -68,6 +69,7 @@ describe("DASHBOARD-01 — resolvePersonalContext", () => {
     vi.mocked(prisma.playerSquadMember.findMany).mockResolvedValue([
       {
         teamSeason: {
+          id: "ts-f2",
           teamId: "team-f2",
           team: { name: "F2", shortName: "F2" },
         },
@@ -78,6 +80,7 @@ describe("DASHBOARD-01 — resolvePersonalContext", () => {
 
     expect(ctx.teams).toHaveLength(1);
     expect(ctx.teams[0].kinds.sort()).toEqual(["PLAYER", "TRAINER"]);
+    expect(ctx.teams[0].teamSeasonIds.sort()).toEqual(["ts-f2"]);
     expect(isTeamPersonallyRelevant(ctx, "team-f2")).toBe(true);
   });
 
@@ -127,6 +130,7 @@ describe("DASHBOARD-01 — context labels", () => {
       teamName: "F2",
       kinds: ["PERSON_ASSIGNMENT", "TRAINER"],
       assignmentFunctionKeys: ["VIZEPRAESIDENT"],
+      teamSeasonIds: [],
     });
     expect(label?.label).toBe("F2 · Trainer");
   });
@@ -137,6 +141,7 @@ describe("DASHBOARD-01 — context labels", () => {
       teamName: "F2",
       kinds: ["PERSON_ASSIGNMENT"],
       assignmentFunctionKeys: ["VIZEPRAESIDENT"],
+      teamSeasonIds: [],
     });
     expect(label?.label).toContain("Vizepräsident");
     expect(label?.label).not.toContain("VIZEPRAESIDENT");

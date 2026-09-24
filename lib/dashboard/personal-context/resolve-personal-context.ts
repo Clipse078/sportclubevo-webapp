@@ -20,6 +20,7 @@ function mergeTeamRelationship(
     teamName: string;
     kind: PersonalTeamRelationshipKind;
     functionKey?: string;
+    teamSeasonId?: string;
   },
 ): void {
   const existing = map.get(input.teamId);
@@ -29,6 +30,7 @@ function mergeTeamRelationship(
       teamName: input.teamName,
       kinds: [input.kind],
       assignmentFunctionKeys: input.functionKey ? [input.functionKey] : [],
+      teamSeasonIds: input.teamSeasonId ? [input.teamSeasonId] : [],
     });
     return;
   }
@@ -38,6 +40,9 @@ function mergeTeamRelationship(
   }
   if (input.functionKey && !existing.assignmentFunctionKeys.includes(input.functionKey)) {
     existing.assignmentFunctionKeys.push(input.functionKey);
+  }
+  if (input.teamSeasonId && !existing.teamSeasonIds.includes(input.teamSeasonId)) {
+    existing.teamSeasonIds.push(input.teamSeasonId);
   }
   if (!existing.teamName && input.teamName) {
     existing.teamName = input.teamName;
@@ -134,6 +139,7 @@ export async function resolvePersonalContext(
           select: {
             teamSeason: {
               select: {
+                id: true,
                 teamId: true,
                 team: { select: { name: true, shortName: true } },
               },
@@ -151,6 +157,7 @@ export async function resolvePersonalContext(
           select: {
             teamSeason: {
               select: {
+                id: true,
                 teamId: true,
                 team: { select: { name: true, shortName: true } },
               },
@@ -207,14 +214,24 @@ export async function resolvePersonalContext(
     const teamId = row.teamSeason.teamId;
     const team = row.teamSeason.team;
     const teamName = team?.shortName?.trim() || team?.name || "Team";
-    mergeTeamRelationship(teamMap, { teamId, teamName, kind: "TRAINER" });
+    mergeTeamRelationship(teamMap, {
+      teamId,
+      teamName,
+      kind: "TRAINER",
+      teamSeasonId: row.teamSeason.id,
+    });
   }
 
   for (const row of squadRows) {
     const teamId = row.teamSeason.teamId;
     const team = row.teamSeason.team;
     const teamName = team?.shortName?.trim() || team?.name || "Team";
-    mergeTeamRelationship(teamMap, { teamId, teamName, kind: "PLAYER" });
+    mergeTeamRelationship(teamMap, {
+      teamId,
+      teamName,
+      kind: "PLAYER",
+      teamSeasonId: row.teamSeason.id,
+    });
   }
 
   for (const row of assignmentRows) {

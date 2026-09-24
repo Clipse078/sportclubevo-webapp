@@ -28,6 +28,7 @@ vi.mock("@/lib/dashboard/personal-context", async (importOriginal) => {
           teamName: "Team 1",
           kinds: ["TRAINER"],
           assignmentFunctionKeys: [],
+          teamSeasonIds: ["ts-team-1"],
         },
       ],
       orgUnits: [],

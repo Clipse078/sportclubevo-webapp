@@ -182,11 +182,23 @@ Recommended sequence validated by discovery. Adjust only if DASHBOARD-01 proves 
 
 ---
 
+## DASHBOARD-07R1B — Personal calendar relevance
+
+**Mission:** Restore personal calendar/programme parity — Mein Kalender projects only authorized personal `PersonalProgrammeItem[]` rows (no club-wide leak via admin/view permissions); teamSeason-aligned sporting scope at the programme adapter boundary.
+
+**Status:** Implemented on PR #706 — pending DASHBOARD-07R2 human visual acceptance.
+
+**Dependencies:** DASHBOARD-07R1A presentation contract.
+
+**Doc:** `docs/dashboard/DASHBOARD-07R1B-PERSONAL-CALENDAR-RELEVANCE.md`
+
+---
+
 ## DASHBOARD-07R2 — Final closure
 
 **Mission:** Authenticated human visual sign-off; programme closure; MOBILE-D handoff.
 
-**Status:** Pending DASHBOARD-07R1A PASS.
+**Status:** Pending DASHBOARD-07R1B engineering PASS + human visual acceptance.
 
 ---
 
