@@ -183,9 +183,11 @@ export default function WeekPlannerWorkspace({
   function handleEdit(item: WeekplannerItem) {
     if (!canonicalEditing) return;
     const canEditThisItem =
-      item.type !== "VERANSTALTUNG" &&
-      ((item.type === "TRAINING" && canonicalEditing.canManageTrainings) ||
-        ((item.type === "MATCH" || item.type === "TOURNAMENT") && canonicalEditing.canManageEvents));
+      (item.type === "TRAINING" && canonicalEditing.canManageTrainings) ||
+      ((item.type === "MATCH" ||
+        item.type === "TOURNAMENT" ||
+        item.type === "VERANSTALTUNG") &&
+        canonicalEditing.canManageEvents);
     if (canEditThisItem) setEditingItem(item);
   }
 
@@ -200,17 +202,19 @@ export default function WeekPlannerWorkspace({
   }
 
   function canEditPlannerItem(item: WeekplannerItem): boolean {
-    if (item.type === "VERANSTALTUNG") return false;
-    if (activePlanId && overrideEditing) return true;
+    if (activePlanId && overrideEditing && item.type !== "VERANSTALTUNG") return true;
     if (!canonicalEditing) return false;
     return (
       (item.type === "TRAINING" && canonicalEditing.canManageTrainings) ||
-      ((item.type === "MATCH" || item.type === "TOURNAMENT") && canonicalEditing.canManageEvents)
+      ((item.type === "MATCH" ||
+        item.type === "TOURNAMENT" ||
+        item.type === "VERANSTALTUNG") &&
+        canonicalEditing.canManageEvents)
     );
   }
 
   function handleItemActivate(item: WeekplannerItem) {
-    if (item.type === "VERANSTALTUNG") {
+    if (item.type === "VERANSTALTUNG" && activePlanId && overrideEditing) {
       handleItemOpen(item);
       return;
     }

@@ -82,7 +82,7 @@ describe("SceModalOverlay architecture recovery SCE-RESPONSIVE-01I", () => {
 
   it("21 — transparent stack: no visual backdrop, blur, or inert styling", () => {
     const css = readGlobalsCss();
-    expect(css).toContain("--sce-modal-backdrop: transparent;");
+    expect(css).toContain("--sce-modal-backdrop: rgb(2 6 15 / 42%);");
 
     const interactionBlock =
       css.match(/\.sce-modal-overlay-interaction-layer[\s\S]*?\}/)?.[0] ??

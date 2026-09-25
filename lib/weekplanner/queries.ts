@@ -96,6 +96,8 @@ import {
   listMatchcenterMatches,
   type MatchcenterQueryDatabase,
 } from "@/lib/matchcenter/query-service";
+import { resolveClubIdentityLogoUrl } from "@/lib/matchcenter/club-identity";
+import { resolveMatchcenterCompactSideName } from "@/lib/matchcenter/team-display";
 import { listTournaments } from "@/lib/tournaments/tournament-service";
 import {
   createAdminServerTimer,
@@ -589,6 +591,7 @@ async function findWeekplannerHomeMatches(
   timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
   tenantPresets: TenantDressingRoomOccupancyPresets,
   tenantMatchPolicy: TenantMatchOperationalPolicyResolved,
+  tenantLogoUrl: string | null,
 ): Promise<WeekplannerMatchItem[]> {
   const database = prisma as unknown as MatchcenterQueryDatabase;
   const matches = await listMatchcenterMatches(database, {
@@ -655,6 +658,9 @@ async function findWeekplannerHomeMatches(
       dressingRoomAfterMinutes: null,
     };
 
+    const homeDisplayName = resolveMatchcenterCompactSideName(match.home);
+    const awayDisplayName = resolveMatchcenterCompactSideName(match.away);
+
     const base = {
       id: `match:${match.id}`,
       tenantId: match.tenantId,
@@ -665,8 +671,19 @@ async function findWeekplannerHomeMatches(
       canonicalEndAt: time.canonicalEndAt,
       timeOverridden: time.overridden,
       title: match.title,
-      teamNames: [match.home.displayName],
-      opponentName: match.away.displayName,
+      teamNames: [homeDisplayName],
+      opponentName: awayDisplayName,
+      eventSource: match.source.eventSource,
+      homeSide: {
+        displayName: homeDisplayName,
+        logoUrl: resolveClubIdentityLogoUrl(match.home, tenantLogoUrl),
+        isOwnTeam: match.home.isOwnTeam,
+      },
+      awaySide: {
+        displayName: awayDisplayName,
+        logoUrl: resolveClubIdentityLogoUrl(match.away, tenantLogoUrl),
+        isOwnTeam: match.away.isOwnTeam,
+      },
       homeAway: "HOME" as const,
       eventId: match.id,
       pitchAllocations: pitch.allocations,
@@ -937,7 +954,7 @@ export async function getWeekplannerWeek(
 ): Promise<WeekplannerWeek> {
   const perfTimer = isScePerfTimingEnabled() ? createAdminServerTimer("weekplanner/data") : null;
 
-  const [resourceByCode, overridesByKey, timeOverridesByKey, baselineMode, tenantPresets, tenantMatchPolicy] =
+  const [resourceByCode, overridesByKey, timeOverridesByKey, baselineMode, tenantPresets, tenantMatchPolicy, tenantRow] =
     await Promise.all([
       findFacilityResourceCodeMap(tenantId),
       findWeekplannerPlanOverrides(tenantId, planId),
@@ -945,7 +962,9 @@ export async function getWeekplannerWeek(
       resolveWeekplannerPlanBaselineMode(tenantId, planId),
       getTenantDressingRoomOccupancyPresetsCached(tenantId),
       getTenantMatchOperationalPolicyCached(tenantId),
+      prisma.tenant.findUnique({ where: { id: tenantId }, select: { logoUrl: true } }),
     ]);
+  const tenantLogoUrl = tenantRow?.logoUrl ?? null;
   perfTimer?.mark("prefetch-policy-allocations");
 
   const [trainingItems, matchItems, tournamentItems, veranstaltungItems] = await Promise.all([
@@ -965,6 +984,7 @@ export async function getWeekplannerWeek(
       timeOverridesByKey,
       tenantPresets,
       tenantMatchPolicy,
+      tenantLogoUrl,
     ),
     findWeekplannerHomeTournaments(
       tenantId,

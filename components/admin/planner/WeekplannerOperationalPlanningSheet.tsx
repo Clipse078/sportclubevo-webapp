@@ -12,6 +12,11 @@ import { AlertCircle, Check, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Sheet } from "@/components/ui/Sheet";
 import { WeekplannerPlanningResourceSection } from "@/components/admin/planner/WeekplannerPlanningResourceSection";
+import {
+  WeekplannerActivityIdentityCard,
+  WeekplannerSectionLabel,
+  WOCHENPLANNER_EDITOR_SHEET_TITLE,
+} from "@/components/admin/planner/WeekplannerActivityEditorShell";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import { computeResourceOccupancyWindow, isMeaningfulEventInterval } from "@/lib/facilities/resource-occupancy-window";
 import { isCanonicalAllocationGroupState } from "@/lib/weekplanner/plan-allocation-semantics";
@@ -94,9 +99,7 @@ function setsEqual<T>(a: Set<T>, b: Set<T>): boolean {
   return true;
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">{children}</p>;
-}
+const SectionLabel = WeekplannerSectionLabel;
 
 async function deleteAllocationOverrides(planId: string, rows: WeekplannerOverrideRow[]): Promise<void> {
   await Promise.all(
@@ -468,7 +471,7 @@ function TrainingOperationalEditor({
         )}
 
         <div className="space-y-2">
-          <SectionLabel>Zeit</SectionLabel>
+          <SectionLabel>Datum &amp; Uhrzeit</SectionLabel>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block space-y-1" htmlFor={`${formId}-start`}>
               <span className="fca-label">Beginn</span>
@@ -693,8 +696,8 @@ function MatchOperationalEditor({
     <Sheet
       open
       onClose={onClose}
-      title="Planung bearbeiten"
-      description={`${item.teamNames[0] ?? item.title} vs. ${item.opponentName ?? "TBD"}`}
+      title={WOCHENPLANNER_EDITOR_SHEET_TITLE}
+      description={`${item.homeSide?.displayName ?? item.teamNames[0] ?? item.title} vs. ${item.awaySide?.displayName ?? item.opponentName ?? "TBD"}`}
       footer={
         <>
           <button type="button" onClick={onClose} className="fca-button-secondary text-sm">
@@ -714,6 +717,9 @@ function MatchOperationalEditor({
       }
     >
       <div data-testid="weekplanner-operational-editor" className="space-y-6">
+        {"homeSide" in item && item.homeSide ? (
+          <WeekplannerActivityIdentityCard item={item} timezone={timezone} />
+        ) : null}
         {error && (
           <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
             <AlertCircle className="h-4 w-4 shrink-0" />
@@ -914,7 +920,7 @@ function TournamentOperationalEditor({
         )}
 
         <div className="space-y-2">
-          <SectionLabel>Zeit</SectionLabel>
+          <SectionLabel>Datum &amp; Uhrzeit</SectionLabel>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block space-y-1" htmlFor={`${formId}-start`}>
               <span className="fca-label">Beginn</span>

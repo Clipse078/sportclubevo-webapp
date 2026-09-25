@@ -35,6 +35,7 @@ const mocks = vi.hoisted(() => ({
   wochenplanPlanFindFirst: vi.fn(),
   tenantDressingRoomOccupancyPresetFindUnique: vi.fn(),
   tenantFindFirst: vi.fn(),
+  tenantFindUnique: vi.fn(),
   externalClubFindMany: vi.fn(),
 }));
 
@@ -54,7 +55,7 @@ vi.mock("@/lib/db/prisma", () => ({
     weekplannerPlan: { findFirst: mocks.weekplannerPlanFindFirst },
     wochenplanPlan: { findFirst: mocks.wochenplanPlanFindFirst },
     tenantDressingRoomOccupancyPreset: { findUnique: mocks.tenantDressingRoomOccupancyPresetFindUnique },
-    tenant: { findFirst: mocks.tenantFindFirst },
+    tenant: { findFirst: mocks.tenantFindFirst, findUnique: mocks.tenantFindUnique },
     externalClub: { findMany: mocks.externalClubFindMany },
   },
 }));
@@ -300,6 +301,7 @@ beforeEach(() => {
   mocks.wochenplanPlanFindFirst.mockResolvedValue(null);
   mocks.tenantDressingRoomOccupancyPresetFindUnique.mockResolvedValue(null);
   mocks.tenantFindFirst.mockResolvedValue({ name: "FC Allschwil", logoUrl: null });
+  mocks.tenantFindUnique.mockResolvedValue({ logoUrl: null });
   mocks.externalClubFindMany.mockResolvedValue([]);
 });
 
@@ -376,6 +378,9 @@ describe("getWeekplannerWeek — HOME Match", () => {
     if (item.type !== "MATCH") throw new Error("expected MATCH");
     expect(item.teamNames).toEqual(["FC Allschwil 1"]);
     expect(item.opponentName).toBe("Gegner FC");
+    expect(item.homeSide.displayName).toBe("FC Allschwil 1");
+    expect(item.awaySide.displayName).toBe("Gegner FC");
+    expect(item.eventSource).toBe("MANUAL");
     expect(item.homeAway).toBe("HOME");
     expect(item.pitchAllocations.map((r) => r.code)).toEqual([PITCH_RESOURCE.code]);
     expect(item.dressingRoomAllocations.map((r) => r.code)).toEqual([HOME_ROOM_RESOURCE.code]);

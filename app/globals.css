@@ -126,8 +126,8 @@
   );
   --sce-dialog-max-height: calc(100dvh - 2 * var(--sce-overlay-gutter-y));
   --sce-page-gutter: 1.25rem;
-  /* SCE-RESPONSIVE-01G — zero visible backdrop; hierarchy from dialog surface only */
-  --sce-modal-backdrop: transparent;
+  /* SCE modal scrim — dim + blur behind dialog/sheet panels (PLANNING-UX-07R8A) */
+  --sce-modal-backdrop: rgb(2 6 15 / 42%);
 
   /* Typography */
   --font-body:    var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
@@ -1086,6 +1086,8 @@ html[data-sidebar-collapsed="1"] {
   position: absolute;
   inset: 0;
   background: var(--sce-modal-backdrop);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   pointer-events: auto;
 }
 

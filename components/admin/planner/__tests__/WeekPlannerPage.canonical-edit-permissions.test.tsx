@@ -92,6 +92,9 @@ const MATCH_ITEM = {
   conflicts: [],
   eventId: "event-1",
   opponentName: "FC Test",
+  eventSource: "MANUAL",
+  homeSide: { displayName: "FC Allschwil 1", logoUrl: null, isOwnTeam: true },
+  awaySide: { displayName: "FC Test", logoUrl: null, isOwnTeam: false },
   ...WEEKPLANNER_DRESSING_OCCUPANCY_STUB,
 };
 

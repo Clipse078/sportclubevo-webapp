@@ -88,8 +88,8 @@ describe("SceModalOverlay sidebar preservation SCE-RESPONSIVE-01I", () => {
     expect(viewportBlock).toMatch(/bottom:\s*0/);
   });
 
-  it("F — zero-backdrop token remains transparent", () => {
-    expect(readGlobalsCss()).toContain("--sce-modal-backdrop: transparent;");
+  it("F — backdrop token uses canonical dim scrim", () => {
+    expect(readGlobalsCss()).toContain("--sce-modal-backdrop: rgb(2 6 15 / 42%);");
   });
 
   it("G — mobile shell zeroes effective sidebar width for overlay geometry", () => {

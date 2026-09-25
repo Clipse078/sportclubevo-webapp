@@ -45,7 +45,7 @@ describe("SCE dialog variants SCE-RESPONSIVE-01J", () => {
     expect(css).toContain("--sce-dialog-compact-max-width");
     expect(css).toContain("--sce-dialog-form-max-width");
     expect(css).toContain("--sce-dialog-workspace-desired-max: 72.5rem");
-    expect(css).toContain("--sce-modal-backdrop: transparent");
+    expect(css).toContain("--sce-modal-backdrop: rgb(2 6 15 / 42%)");
   });
 
   it("workspace width does not exceed compact/standard caps at laptop viewports", () => {
