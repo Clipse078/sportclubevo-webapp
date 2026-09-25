@@ -468,7 +468,10 @@
   },
   "PersonalDashboard": {
     "welcome": {
-      "subtitle": "Dein persönlicher Überblick im Verein."
+      "subtitle": "Dein persönlicher Überblick im Verein.",
+      "customize": "Dashboard anpassen",
+      "customizeTitle": "Dashboard anpassen",
+      "customizeDescription": "Passe dein persönliches Dashboard-Titelbild an."
     },
     "programme": {
       "title": "Mein Programm",
@@ -546,6 +549,7 @@
     },
     "calendar": {
       "title": "Mein Kalender",
+      "openCalendar": "Kalender öffnen",
       "today": "Heute",
       "previousMonth": "Vorheriger Monat",
       "nextMonth": "Nächster Monat",

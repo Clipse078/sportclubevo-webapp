@@ -13,18 +13,19 @@ const workspaceSource = readFileSync(
 );
 
 describe("DASHBOARD-06 — personal command center composition", () => {
-  it("uses personal identity header and personal command center loader", () => {
-    expect(clubDashboardSource).toContain("PersonalIdentityHeader");
+  it("uses personal cockpit greeting and personal command center loader", () => {
+    expect(clubDashboardSource).toContain("PersonalDashboardCockpitGreeting");
     expect(clubDashboardSource).toContain("getPersonalCommandCenterData");
     expect(clubDashboardSource).not.toContain("DashboardHeroSection");
     expect(clubDashboardSource).not.toContain("DashboardMetricStrip");
   });
 
-  it("orders Schnellzugriff before primary workspace", () => {
+  it("orders Schnellzugriff after primary cockpit workspace", () => {
     const quickAccessIndex = clubDashboardSource.indexOf("<PersonalQuickAccess");
     const workspaceIndex = clubDashboardSource.indexOf("<PersonalDashboardWorkspace");
     expect(quickAccessIndex).toBeGreaterThan(-1);
-    expect(workspaceIndex).toBeGreaterThan(quickAccessIndex);
+    expect(workspaceIndex).toBeGreaterThan(-1);
+    expect(quickAccessIndex).toBeGreaterThan(workspaceIndex);
   });
 
   it("includes programme, calendar, attention, and tasks surfaces", () => {
@@ -43,22 +44,20 @@ describe("DASHBOARD-06 — personal command center composition", () => {
 
   it("demotes secondary content into collapsible section", () => {
     expect(clubDashboardSource).toContain("<PersonalDashboardSecondary");
-    const attentionIndex = clubDashboardSource.indexOf("<PersonalAttention");
-    const tasksIndex = clubDashboardSource.indexOf("<PersonalTasksPreview");
+    const workspaceIndex = clubDashboardSource.indexOf("<PersonalDashboardWorkspace");
     const secondaryIndex = clubDashboardSource.indexOf("<PersonalDashboardSecondary");
-    expect(secondaryIndex).toBeGreaterThan(tasksIndex);
-    expect(secondaryIndex).toBeGreaterThan(attentionIndex);
+    expect(secondaryIndex).toBeGreaterThan(workspaceIndex);
   });
 
   it("coordinates calendar selection with programme feed", () => {
     expect(workspaceSource).toContain("onSelectedDayChange");
     expect(workspaceSource).toContain("showSelectedDayPanel");
-    expect(workspaceSource).toContain("limitProgrammeFeedGroupsToPreview");
+    expect(workspaceSource).toContain("DASHBOARD_COCKPIT_PROGRAMME_PREVIEW_ITEM_LIMIT");
     expect(workspaceSource).toContain("highlightedDayKey={selectedDayKey}");
   });
 
-  it("uses responsive programme-first grid on workspace", () => {
-    expect(workspaceSource).toContain("lg:col-span-7");
-    expect(workspaceSource).toContain("lg:col-span-5");
+  it("uses balanced 2×2 cockpit grid on workspace", () => {
+    expect(workspaceSource).toContain("DashboardCockpitGrid");
+    expect(workspaceSource).toContain("DashboardCockpitCard");
   });
 });

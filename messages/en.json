@@ -45,7 +45,10 @@
   },
   "PersonalDashboard": {
     "welcome": {
-      "subtitle": "Your personal club overview."
+      "subtitle": "Your personal club overview.",
+      "customize": "Customize dashboard",
+      "customizeTitle": "Customize dashboard",
+      "customizeDescription": "Adjust your personal dashboard cover image."
     },
     "programme": {
       "title": "My schedule",
@@ -123,6 +126,7 @@
     },
     "calendar": {
       "title": "My calendar",
+      "openCalendar": "Open calendar",
       "today": "Today",
       "previousMonth": "Previous month",
       "nextMonth": "Next month",

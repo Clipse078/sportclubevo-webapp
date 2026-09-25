@@ -37,6 +37,15 @@ export type { DashboardCompactWelcomeProps } from "./DashboardCompactWelcome";
 export { PersonalIdentityHeader } from "./PersonalIdentityHeader";
 export type { PersonalIdentityHeaderProps } from "./PersonalIdentityHeader";
 
+export { PersonalDashboardCockpitGreeting } from "./PersonalDashboardCockpitGreeting";
+export type { PersonalDashboardCockpitGreetingProps } from "./PersonalDashboardCockpitGreeting";
+
+export { DashboardCockpitGrid } from "./DashboardCockpitGrid";
+export type { DashboardCockpitGridProps } from "./DashboardCockpitGrid";
+
+export { DashboardCockpitCard } from "./DashboardCockpitCard";
+export type { DashboardCockpitCardProps } from "./DashboardCockpitCard";
+
 export { PersonalProgrammeFeed } from "./PersonalProgrammeFeed";
 export type { PersonalProgrammeFeedProps } from "./PersonalProgrammeFeed";
 
