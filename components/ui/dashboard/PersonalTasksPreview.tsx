@@ -57,8 +57,7 @@ export async function PersonalTasksPreview({ previewItems, embedded = false }: P
           icon={<ListChecks className="h-4 w-4" />}
           title={t("emptyTitle")}
           description={t("emptyDescription")}
-          variant="compact"
-          compactLayout="stacked"
+          variant="cockpit"
         />
       );
 

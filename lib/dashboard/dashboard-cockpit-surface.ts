@@ -12,4 +12,5 @@ export const dashboardCockpitSurfaceClassName = cn(
   "motion-safe:hover:shadow-[0_12px_44px_rgba(0,0,0,0.26),inset_0_1px_0_rgba(255,255,255,0.08)]",
 );
 
-export const DASHBOARD_COCKPIT_CARD_MIN_HEIGHT = "min-h-[17.5rem]";
+/** Row sizing is owned by {@link DashboardCockpitGrid}; cards stretch within grid tracks. */
+export const DASHBOARD_COCKPIT_CARD_MIN_HEIGHT = "min-h-0";

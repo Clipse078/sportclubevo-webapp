@@ -401,6 +401,8 @@
     "openDrawer": "Ouvrir la navigation",
     "closeDrawer": "Fermer la navigation",
     "drawerTitle": "Navigation",
+    "searchModulesPlaceholder": "Rechercher un module…",
+    "explorerBackToDomains": "Domaines",
     "domains": {
       "dashboard": "Tableau de bord",
       "planning": "Planification",

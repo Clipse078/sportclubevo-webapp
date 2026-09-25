@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  *
- * SCE-VISUAL-03R2 — global hamburger drawer interaction
+ * SCE-VISUAL-06 — application explorer interactions
  */
 
 import { render, screen } from "@testing-library/react";
@@ -11,7 +11,7 @@ import AppShellNavigation from "@/components/admin/layout/AppShellNavigation";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/dashboard",
+  usePathname: () => "/dashboard/planner/week",
   useSearchParams: () => new URLSearchParams(),
 }));
 
@@ -46,41 +46,10 @@ vi.mock("@/lib/nav/use-primary-nav-layout-tier", () => ({
   maxInlineDomainsForTier: () => 8,
 }));
 
-describe("AppShellNavigation global menu", () => {
+describe("AppShellNavigation application explorer", () => {
   const adminKeys = Object.values(PERMISSIONS);
 
-  it("opens and closes the permission-aware global navigation drawer", async () => {
-    const user = userEvent.setup();
-    render(
-      <AppShellNavigation
-        permissionKeys={adminKeys}
-        workspaceContext="club"
-        clubName="Test Club"
-        firstName="Test"
-        lastName="User"
-        email="test@example.com"
-      />,
-    );
-
-    const hamburger = screen.getByTestId("global-nav-hamburger");
-    expect(hamburger).toHaveAttribute("aria-expanded", "false");
-    expect(screen.queryByTestId("global-nav-drawer")).not.toBeInTheDocument();
-
-    await user.click(hamburger);
-    expect(hamburger).toHaveAttribute("aria-expanded", "true");
-    const drawer = screen.getByTestId("global-nav-drawer");
-    expect(drawer).toBeVisible();
-    expect(screen.getByTestId("global-nav-explorer-domain-rail")).toBeInTheDocument();
-    await user.click(screen.getByTestId("global-nav-explorer-domain-planning"));
-    const tree = screen.getByTestId("global-nav-drawer-tree");
-    expect(tree).toHaveTextContent("Wochenplaner");
-
-    await user.click(screen.getByTestId("global-nav-drawer-close"));
-    expect(screen.queryByTestId("global-nav-drawer")).not.toBeInTheDocument();
-    expect(hamburger).toHaveAttribute("aria-expanded", "false");
-  });
-
-  it("closes the drawer when the backdrop is clicked", async () => {
+  it("opens explorer with domain rail and planning modules for active route", async () => {
     const user = userEvent.setup();
     render(
       <AppShellNavigation
@@ -94,7 +63,50 @@ describe("AppShellNavigation global menu", () => {
     );
 
     await user.click(screen.getByTestId("global-nav-hamburger"));
-    expect(screen.getByTestId("global-nav-drawer")).toBeInTheDocument();
+    expect(screen.getByTestId("global-nav-drawer")).toBeVisible();
+    expect(screen.getByTestId("global-nav-explorer-domain-rail")).toBeInTheDocument();
+    expect(screen.getByTestId("global-nav-explorer-module-pane")).toBeInTheDocument();
+    expect(screen.getByTestId("global-nav-drawer-tree")).toHaveTextContent("Wochenplaner");
+  });
+
+  it("filters search results from permission-filtered model and closes on selection", async () => {
+    const user = userEvent.setup();
+    render(
+      <AppShellNavigation
+        permissionKeys={[PERMISSIONS.TRAININGS_VIEW, PERMISSIONS.EVENTS_VIEW]}
+        workspaceContext="club"
+        clubName="Test Club"
+        firstName="Test"
+        lastName="User"
+        email="test@example.com"
+      />,
+    );
+
+    await user.click(screen.getByTestId("global-nav-hamburger"));
+    const search = screen.getByTestId("global-nav-explorer-search-desktop");
+    await user.type(search, "Train");
+    expect(screen.getByTestId("global-nav-explorer-search-results")).toHaveTextContent("Trainings");
+    expect(screen.queryByText("Website")).not.toBeInTheDocument();
+  });
+
+  it("closes on Escape and backdrop", async () => {
+    const user = userEvent.setup();
+    render(
+      <AppShellNavigation
+        permissionKeys={adminKeys}
+        workspaceContext="club"
+        clubName="Test Club"
+        firstName="Test"
+        lastName="User"
+        email="test@example.com"
+      />,
+    );
+
+    await user.click(screen.getByTestId("global-nav-hamburger"));
+    await user.keyboard("{Escape}");
+    expect(screen.queryByTestId("global-nav-drawer")).not.toBeInTheDocument();
+
+    await user.click(screen.getByTestId("global-nav-hamburger"));
     await user.click(screen.getByTestId("global-nav-drawer-backdrop"));
     expect(screen.queryByTestId("global-nav-drawer")).not.toBeInTheDocument();
   });

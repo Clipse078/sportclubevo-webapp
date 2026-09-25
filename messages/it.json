@@ -401,6 +401,8 @@
     "openDrawer": "Apri navigazione",
     "closeDrawer": "Chiudi navigazione",
     "drawerTitle": "Navigazione",
+    "searchModulesPlaceholder": "Cerca modulo…",
+    "explorerBackToDomains": "Aree",
     "domains": {
       "dashboard": "Dashboard",
       "planning": "Pianificazione",

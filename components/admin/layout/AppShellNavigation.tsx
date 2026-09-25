@@ -101,6 +101,7 @@ function AppShellNavigationInner({
   const searchParams = useSearchParams();
   const selectedSeason = searchParams.get("season");
   const [globalNavDrawerOpen, setGlobalNavDrawerOpen] = useState(false);
+  const [globalNavExplorerResetKey, setGlobalNavExplorerResetKey] = useState(0);
   const [overflowOpen, setOverflowOpen] = useState(false);
   const globalNavDrawerId = useId();
   const layoutTier = usePrimaryNavLayoutTier();
@@ -178,6 +179,11 @@ function AppShellNavigationInner({
     },
     [active.activeDestinationKey, pathname],
   );
+
+  const openGlobalNavDrawer = useCallback(() => {
+    setGlobalNavExplorerResetKey((key) => key + 1);
+    setGlobalNavDrawerOpen(true);
+  }, []);
 
   const closeGlobalNavDrawer = useCallback(() => setGlobalNavDrawerOpen(false), []);
 
@@ -286,7 +292,9 @@ function AppShellNavigationInner({
               aria-expanded={globalNavDrawerOpen}
               aria-controls={globalNavDrawerId}
               data-testid="global-nav-hamburger"
-              onClick={() => setGlobalNavDrawerOpen((open) => !open)}
+              onClick={() =>
+                globalNavDrawerOpen ? closeGlobalNavDrawer() : openGlobalNavDrawer()
+              }
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -395,7 +403,7 @@ function AppShellNavigationInner({
           type="button"
           className="sce-mobile-bottom-nav-item"
           aria-label={t("moreNavAria")}
-          onClick={() => setGlobalNavDrawerOpen(true)}
+          onClick={openGlobalNavDrawer}
         >
           {t("more")}
         </button>
@@ -412,6 +420,9 @@ function AppShellNavigationInner({
         domainLabel={domainLabel}
         title={t("drawerTitle")}
         closeLabel={t("closeDrawer")}
+        searchPlaceholder={t("searchModulesPlaceholder")}
+        mobileBackLabel={t("explorerBackToDomains")}
+        resetKey={globalNavExplorerResetKey}
       />
     </>
   );

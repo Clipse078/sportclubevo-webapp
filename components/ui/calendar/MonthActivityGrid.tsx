@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { getProgrammeSourcePresentation } from "@/lib/personal-agenda/programme-source-presentation";
 import type { MonthActivityGridDay, MonthActivityGridNavigation } from "./month-activity-grid-types";
 import { PersonalProgrammeActivityIndicator } from "./PersonalProgrammeActivityIndicator";
 
@@ -86,16 +85,14 @@ function DayCell({
     day.isToday && "bg-[var(--sce-primary)] font-semibold text-white",
   );
 
-  const primaryPresentation =
-    variant === "personal" && day.primarySourceType
-      ? getProgrammeSourcePresentation(day.primarySourceType)
-      : null;
-
   const personalClass = cn(
-    "relative flex min-h-[2.85rem] min-w-0 flex-col items-center justify-start rounded-lg px-0.5 pb-0.5 pt-0.5 text-xs tabular-nums sm:min-h-[2.65rem]",
+    "relative flex min-h-[2.65rem] min-w-0 flex-col items-center justify-start rounded-lg px-0.5 pb-0.5 pt-0.5 text-xs tabular-nums sm:min-h-[2.5rem]",
     !day.inMonth && "text-[var(--muted)]/45",
     day.inMonth && "text-[var(--text-2)]",
-    day.activityCount > 0 && day.inMonth && primaryPresentation?.dayTintClass,
+    day.activityCount > 0 &&
+      day.inMonth &&
+      !day.isSelected &&
+      "bg-[color-mix(in_srgb,var(--surface-2)_55%,transparent)]",
     day.isSelected &&
       "bg-[color-mix(in_srgb,var(--primary)_14%,var(--surface))] font-semibold text-[var(--foreground)] shadow-sm ring-2 ring-[var(--primary)]",
     day.isToday && !day.isSelected && "ring-1 ring-[var(--primary)]/55",

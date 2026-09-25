@@ -132,12 +132,11 @@ export async function PersonalAttention({
   if (items.length === 0) {
     return (
       <DashboardEmptyState
-        className={cn("min-h-0 py-2", className)}
+        className={cn("min-h-0", className)}
         icon={<CheckCircle2 className="h-4 w-4 text-[var(--sce-success)]" />}
         title={t("emptyTitle")}
         description={t("emptyDescription")}
-        variant="compact"
-        compactLayout="inline"
+        variant="cockpit"
       />
     );
   }

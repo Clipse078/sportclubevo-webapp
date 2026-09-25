@@ -401,6 +401,8 @@
     "openDrawer": "Open navigation",
     "closeDrawer": "Close navigation",
     "drawerTitle": "Navigation",
+    "searchModulesPlaceholder": "Search modules…",
+    "explorerBackToDomains": "Areas",
     "domains": {
       "dashboard": "Dashboard",
       "planning": "Planning",

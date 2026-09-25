@@ -828,6 +828,8 @@
     "openDrawer": "Navigation öffnen",
     "closeDrawer": "Navigation schliessen",
     "drawerTitle": "Navigation",
+    "searchModulesPlaceholder": "Modul suchen…",
+    "explorerBackToDomains": "Bereiche",
     "domains": {
       "dashboard": "Dashboard",
       "planning": "Planung",

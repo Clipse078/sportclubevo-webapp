@@ -105,7 +105,7 @@ export function PersonalDashboardWorkspace({
         titleId="personal-programme-heading"
         icon={<CalendarDays className="h-4 w-4" />}
         iconAccent="primary"
-        orderClassName="order-1"
+        orderClassName="order-1 md:row-start-1"
         headerAction={
           programmeSupported ? (
             <Link
@@ -135,7 +135,7 @@ export function PersonalDashboardWorkspace({
         titleId="personal-calendar-heading"
         icon={<CalendarDays className="h-4 w-4" />}
         iconAccent="info"
-        orderClassName="order-2"
+        orderClassName="order-2 md:row-start-1"
         headerAction={
           <Link
             href={calendarOpenHref}
@@ -168,7 +168,7 @@ export function PersonalDashboardWorkspace({
           titleId="personal-attention-heading"
           icon={<BellRing className="h-4 w-4" />}
           iconAccent="warning"
-          orderClassName="order-3"
+          orderClassName="order-3 md:row-start-2"
           bodyClassName="overflow-y-auto"
         >
           {attentionSlot}
@@ -181,7 +181,7 @@ export function PersonalDashboardWorkspace({
           titleId="personal-tasks-heading"
           icon={<ListChecks className="h-4 w-4" />}
           iconAccent="info"
-          orderClassName="order-4"
+          orderClassName="order-4 md:row-start-2"
           headerAction={
             <Link
               href="/dashboard/aufgaben?bereich=meine"

@@ -40,13 +40,13 @@ export function PersonalQuickAccess({
   return (
     <section
       className={cn(
-        "border-y border-[color-mix(in_srgb,var(--border)_65%,transparent)] py-2.5 sm:py-3",
+        "border-y border-[color-mix(in_srgb,var(--border)_55%,transparent)] py-2 sm:py-2",
         className,
       )}
       aria-label={t("sectionAria")}
       data-testid="personal-quick-access"
     >
-      <div className="mb-2 flex items-center justify-between gap-2">
+      <div className="mb-1.5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span
             className="inline-flex h-6 w-6 items-center justify-center rounded-md text-[var(--sce-primary)]"
@@ -75,7 +75,7 @@ export function PersonalQuickAccess({
             <Link
               href={item.href}
               className={cn(
-                "inline-flex min-h-[2.5rem] items-center gap-1.5 rounded-[var(--radius-md)] border px-2.5 py-1.5 no-underline",
+                "inline-flex min-h-[2.25rem] items-center gap-1.5 rounded-[var(--radius-md)] border px-2 py-1 no-underline",
                 item.kind === "create"
                   ? "border-[color-mix(in_srgb,var(--sce-primary)_40%,var(--border))] bg-[color-mix(in_srgb,var(--sce-primary)_6%,var(--surface))]"
                   : "border-[var(--border)] bg-[var(--surface)]/80",
