@@ -25,7 +25,7 @@ export const SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS: Record<SceApprovedMasterIc
     ]),
   ) as Record<SceApprovedMasterIconName, string>;
 
-/** Baseline fingerprints — hero + organisation/work (04R1) + publishing/platform Batch 2 (05). */
+/** Baseline fingerprints — hero + org/work (04R1) + platform Batch 2 (05) + people ops Batch 3 (06). */
 export const SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS = {
   dashboard: "f72ca981769dfc233add2addcab754ccbc019d2b2c374cb58e6f38cd05faca6c" as const,
   "week-planner":
@@ -68,4 +68,23 @@ export const SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS = {
     "402a73c316b04893d831f6747b352cd60c0dbfae4187d6f4381d4b4dda959ff3" as const,
   settings: "3f6ffa40fb6bbac1c295c53d676b86122eb55548d4a9d83fa15a7de599d832fc" as const,
   website: "110c2cadf1d313873a6d06ae86b5f12a8f0d93dfac9f74148049e81db61f555e" as const,
+  absence: "d6f04a6fba18c2013c1ba98c7431d1c0445a1be1a9c46a5a168ef4ea845f6aeb" as const,
+  assignment: "d8c767e9ff9a002db9d77d7d8d1bb19cdc2f175fd2748575f4d6e19b87f1446c" as const,
+  availability: "168058f0ceaac26685c9a470386c729fd4e86b7c4d4592f0abff26c0b762c68e" as const,
+  "check-in": "2721f3da038f5272dda41a925031e4bb8408af75212e746b3dcf3663a35ba89e" as const,
+  coach: "cb6c33dcf52b7fee469c0028328746dd9a30b73e6cbb424c33cfcd077d4e86a9" as const,
+  "committee-board":
+    "d3ec618f2552e825251e0680facce65f5bf2bd9886307b61444c1ac6a2774531" as const,
+  contact: "db03da568e731efe8ac95becffb14b204fee1b50950248ebe1be0fdcab7a8b1f" as const,
+  facility: "9603af97a16f62eb668e15d206f891fe8722cb929061faf6123a1487c58f15fe" as const,
+  "guardian-parent":
+    "1f2e336e4e0c2ef57de279655d77e7bdfd8b9f10faed422df3c181b3c7c88c33" as const,
+  invitation: "7d186a188df96b41de0541900d5e4385eb4e8e681eeb28e91f76557b20ece1de" as const,
+  member: "9cd415dc4427de23deb1561b9df7940231f57fa69f82c61106fcdc7ba76ecf14" as const,
+  partner: "0c34d2b4184e1e553caa29661c3783db0ab821f806d5ef561ded90ade7e0284b" as const,
+  player: "63b922e20302125c522ff45d6f3cdc390b64c57e796b2df6a9121672c5d1232e" as const,
+  sponsor: "803873d8615457a4812fc6a15493d68f5a3e695815a9001894df7490b4cf99c1" as const,
+  "team-management":
+    "50e5f218bf793f08ac29d69ed1801723610ac79e6010194a1bed6e67aaf7f76c" as const,
+  volunteer: "f8261f1f750cefd86a7420fa7d27b6fe18508125785de682eaa587152e99b2f8" as const,
 } as const;

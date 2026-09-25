@@ -8,6 +8,7 @@ import {
 import type { SceIconSize } from "../SceIcon.types";
 import type {
   SceApprovedMasterIconName,
+  SceApprovedPeopleOperationsMasterIconName,
   SceApprovedPlatformMasterIconName,
 } from "../masters/approved-hero-meta";
 
@@ -29,6 +30,25 @@ const SPORT_MASTERS: SceApprovedMasterIconName[] = [
   "attendance",
   "pitch",
   "dressing-room",
+];
+
+const PEOPLE_OPERATIONS_MASTERS: SceApprovedPeopleOperationsMasterIconName[] = [
+  "player",
+  "coach",
+  "guardian-parent",
+  "member",
+  "contact",
+  "invitation",
+  "assignment",
+  "availability",
+  "absence",
+  "check-in",
+  "facility",
+  "team-management",
+  "committee-board",
+  "volunteer",
+  "sponsor",
+  "partner",
 ];
 
 const PUBLISHING_PLATFORM_MASTERS: SceApprovedPlatformMasterIconName[] = [
@@ -94,6 +114,22 @@ const MASTER_LABELS: Record<SceApprovedMasterIconName, string> = {
   "resource-allocation": "Resource Allocation",
   settings: "Settings",
   website: "Website",
+  absence: "Absence / Unavailable",
+  assignment: "Assignment / Zuweisung",
+  availability: "Availability / Available",
+  "check-in": "Check-in / Arrival",
+  coach: "Coach / Trainer",
+  "committee-board": "Committee / Board",
+  contact: "Contact / Kontakt",
+  facility: "Facility / Anlage",
+  "guardian-parent": "Guardian / Parent",
+  invitation: "Invitation / Einladung",
+  member: "Member / Mitglied",
+  partner: "Partner",
+  player: "Player / Spieler",
+  sponsor: "Sponsor / Sponsoring",
+  "team-management": "Team Management",
+  volunteer: "Volunteer / Helfer",
 };
 
 function SizeRow({
@@ -203,6 +239,12 @@ export function SceIconSpecimen() {
         title="Section 4 — Publishing & Platform"
         description="Publishing, public channels, platform administration, and planning governance masters (SCE-ICONS-05 Batch 2)."
         names={PUBLISHING_PLATFORM_MASTERS}
+      />
+
+      <MasterSection
+        title="Section 5 — People, Membership & Club Operations"
+        description="People identities, membership, participation, facilities, and club operations masters (SCE-ICONS-06 Batch 3)."
+        names={PEOPLE_OPERATIONS_MASTERS}
       />
 
       <section>

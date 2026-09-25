@@ -27,6 +27,29 @@ export const SCE_APPROVED_PLATFORM_MASTER_ICON_NAMES = [
 export type SceApprovedPlatformMasterIconName =
   (typeof SCE_APPROVED_PLATFORM_MASTER_ICON_NAMES)[number];
 
+/** SCE-ICONS-06 — people, membership & club operations approved masters (Batch 3). */
+export const SCE_APPROVED_PEOPLE_OPERATIONS_MASTER_ICON_NAMES = [
+  "absence",
+  "assignment",
+  "availability",
+  "check-in",
+  "coach",
+  "committee-board",
+  "contact",
+  "facility",
+  "guardian-parent",
+  "invitation",
+  "member",
+  "partner",
+  "player",
+  "sponsor",
+  "team-management",
+  "volunteer",
+] as const;
+
+export type SceApprovedPeopleOperationsMasterIconName =
+  (typeof SCE_APPROVED_PEOPLE_OPERATIONS_MASTER_ICON_NAMES)[number];
+
 export const SCE_APPROVED_MASTER_ICON_NAMES = [
   ...SCE_APPROVED_HERO_ICON_NAMES,
   "team",
@@ -47,6 +70,7 @@ export const SCE_APPROVED_MASTER_ICON_NAMES = [
   "events",
   "communication",
   ...SCE_APPROVED_PLATFORM_MASTER_ICON_NAMES,
+  ...SCE_APPROVED_PEOPLE_OPERATIONS_MASTER_ICON_NAMES,
 ] as const;
 
 export type SceApprovedMasterIconName = (typeof SCE_APPROVED_MASTER_ICON_NAMES)[number];
@@ -100,4 +124,20 @@ export const SCE_APPROVED_MASTER_ASSETS: Record<
   "resource-allocation": `${MASTER_DIR}/resource-allocation.svg`,
   settings: `${MASTER_DIR}/settings.svg`,
   website: `${MASTER_DIR}/website.svg`,
+  absence: `${MASTER_DIR}/absence.svg`,
+  assignment: `${MASTER_DIR}/assignment.svg`,
+  availability: `${MASTER_DIR}/availability.svg`,
+  "check-in": `${MASTER_DIR}/check-in.svg`,
+  coach: `${MASTER_DIR}/coach.svg`,
+  "committee-board": `${MASTER_DIR}/committee-board.svg`,
+  contact: `${MASTER_DIR}/contact.svg`,
+  facility: `${MASTER_DIR}/facility.svg`,
+  "guardian-parent": `${MASTER_DIR}/guardian-parent.svg`,
+  invitation: `${MASTER_DIR}/invitation.svg`,
+  member: `${MASTER_DIR}/member.svg`,
+  partner: `${MASTER_DIR}/partner.svg`,
+  player: `${MASTER_DIR}/player.svg`,
+  sponsor: `${MASTER_DIR}/sponsor.svg`,
+  "team-management": `${MASTER_DIR}/team-management.svg`,
+  volunteer: `${MASTER_DIR}/volunteer.svg`,
 };
