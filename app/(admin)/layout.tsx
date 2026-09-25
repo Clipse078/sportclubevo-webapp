@@ -11,7 +11,9 @@ import { generateTenantCssVars } from "@/lib/tenant-runtime/theme";
 import { getPersonProfileByUserIdCached } from "@/lib/server/request-cache";
 import { resolveAccountIdentityName } from "@/lib/people/identity";
 import { resolveWorkspaceContextFromSessionUser } from "@/lib/workspace/workspace-context";
+import { SCE_AUTHENTICATED_APP_SHELL_CLASS } from "@/lib/shell/sce-app-background";
 import { SCE_APP_MAIN_COLUMN } from "@/lib/shell/responsive-layout";
+import "./authenticated-shell.css";
 import { resolvePersonalParticipationNavCapability } from "@/lib/personal-actions/access";
 
 type AdminLayoutProps = {
@@ -63,7 +65,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div
-      className="flex min-h-screen bg-[var(--background)]"
+      className={`flex min-h-screen ${SCE_AUTHENTICATED_APP_SHELL_CLASS}`}
       style={tenantCssVars as React.CSSProperties}
       data-sce-modal-background
     >

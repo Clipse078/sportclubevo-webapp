@@ -1,0 +1,18 @@
+/**
+ * SCE-VISUAL-01 — authenticated application shell canvas only.
+ * Imported from app/(admin)/layout.tsx (not global body/html).
+ */
+[data-sce-modal-background].sce-authenticated-app-shell {
+  background-color: var(--sce-app-background);
+  background-image: var(--sce-app-background-image);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: scroll;
+}
+
+@media (min-width: 768px) {
+  [data-sce-modal-background].sce-authenticated-app-shell {
+    background-attachment: fixed;
+  }
+}

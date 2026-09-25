@@ -67,6 +67,12 @@
   --sidebar-bg:        #0c1222;
   --header-bg:         rgba(12, 18, 34, 0.92);
 
+  /* SCE-VISUAL-01 — authenticated application canvas (decorative image + fallbacks) */
+  --sce-app-background-image: url("/images/background/SCE_background.png");
+  --sce-app-background:       var(--background);
+  --sce-app-surface:          var(--surface);
+  --sce-app-surface-elevated: var(--surface-2);
+
   /* Spacing Scale (4px base) */
   --space-1:  4px;
   --space-2:  8px;
