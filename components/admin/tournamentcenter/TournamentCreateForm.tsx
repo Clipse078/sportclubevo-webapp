@@ -1017,8 +1017,13 @@ export default function TournamentCreateForm({
       {homeAway === "HOME" && (
         <TurniereRecordSection title="Anlage & Ressourcen" testId="turniere-create-section-resources">
           <div className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                Spielfeld / Halle
+              </p>
             <PlanningSingleResourceAssignment
               kind="pitch_hall"
+              showSubjectLabel={false}
               subjectLabel="Spielfeld / Halle"
               resourceName={resources[0]?.facilityResourceName ?? null}
               unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen."
@@ -1033,6 +1038,7 @@ export default function TournamentCreateForm({
               canManage
               testId="tournament-create-resource"
             />
+            </div>
 
             {participants.length > 0 ? (
               <div className="space-y-2">

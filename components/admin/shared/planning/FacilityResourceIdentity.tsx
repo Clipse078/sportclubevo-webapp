@@ -91,6 +91,52 @@ export function FacilityResourceGlyph({
   return <LayoutGrid className={cn("h-4 w-4 shrink-0 opacity-70", className)} aria-hidden={!title} />;
 }
 
+/** Compact semantic icon tile for assignment rows (Training, Match, Tournament, Veranstaltung). */
+export function PlanningResourceSemanticIconTile({
+  resourceType,
+  facilityType,
+  compact = false,
+  className,
+  testId = "planning-resource-semantic-icon-tile",
+  semanticColors = true,
+}: {
+  resourceType: FacilityResourceType;
+  facilityType?: string;
+  compact?: boolean;
+  className?: string;
+  testId?: string;
+  /** When false, use neutral tile styling (non-planning pickers). */
+  semanticColors?: boolean;
+}) {
+  const visualKind = resolveFacilityResourceVisualKind(resourceType, facilityType);
+  const isPitch = visualKind === "pitch" || visualKind === "hall";
+  const isDressing = visualKind === "dressing_room";
+
+  return (
+    <span
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-md border bg-[var(--surface-2)]",
+        compact ? "h-7 w-7" : "h-8 w-8",
+        semanticColors && isPitch && "border-emerald-500/30 text-emerald-400",
+        semanticColors && isDressing && "border-[var(--blue)]/30 text-[var(--blue)]",
+        (!semanticColors || (!isPitch && !isDressing)) && "border-[var(--border)] text-[var(--text-2)]",
+        className,
+      )}
+      data-testid={testId}
+    >
+      <FacilityResourceGlyph
+        resourceType={resourceType}
+        facilityType={facilityType}
+        className={cn(
+          "opacity-90",
+          semanticColors && isPitch && RESOURCE_SEMANTIC_PITCH_ICON_CLASS,
+          semanticColors && isDressing && RESOURCE_SEMANTIC_DRESSING_ICON_CLASS,
+        )}
+      />
+    </span>
+  );
+}
+
 export type FacilityResourceIdentityProps = {
   name: string;
   resourceType: FacilityResourceType;
@@ -117,34 +163,16 @@ export function FacilityResourceIdentity({
   className,
   semanticResourceColors = false,
 }: FacilityResourceIdentityProps) {
-  const visualKind = resolveFacilityResourceVisualKind(resourceType, facilityType);
-  const isPitch = visualKind === "pitch" || visualKind === "hall";
-  const isDressing = visualKind === "dressing_room";
-
   return (
     <div className={cn("flex min-w-0 items-start gap-2.5", className)}>
-      <span
-        className={cn(
-          "mt-0.5 flex items-center justify-center rounded-md border bg-[var(--surface-2)]",
-          compact ? "h-7 w-7" : "h-8 w-8",
-          semanticResourceColors && isPitch && "border-emerald-500/30 text-emerald-400",
-          semanticResourceColors && isDressing && "border-[var(--blue)]/30 text-[var(--blue)]",
-          !semanticResourceColors || (!isPitch && !isDressing)
-            ? "border-[var(--border)] text-[var(--text-2)]"
-            : null,
-        )}
-        data-testid={semanticResourceColors ? "facility-resource-semantic-icon-tile" : undefined}
-      >
-        <FacilityResourceGlyph
-          resourceType={resourceType}
-          facilityType={facilityType}
-          className={cn(
-            "opacity-90",
-            semanticResourceColors && isPitch && RESOURCE_SEMANTIC_PITCH_ICON_CLASS,
-            semanticResourceColors && isDressing && RESOURCE_SEMANTIC_DRESSING_ICON_CLASS,
-          )}
-        />
-      </span>
+      <PlanningResourceSemanticIconTile
+        resourceType={resourceType}
+        facilityType={facilityType}
+        compact={compact}
+        semanticColors={semanticResourceColors}
+        className="mt-0.5"
+        testId={semanticResourceColors ? "facility-resource-semantic-icon-tile" : "planning-resource-semantic-icon-tile"}
+      />
       <div className="min-w-0 flex-1">
         <p className={cn("truncate font-semibold text-[var(--foreground)]", compact ? "text-xs" : "text-sm")}>
           {name}

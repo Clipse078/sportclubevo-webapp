@@ -18,7 +18,10 @@ import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
 import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
-import { PLANNING_EDITOR_FORM_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
+import {
+  PLANNING_EDITOR_FORM_GRID_CLASS,
+  PLANNING_RESOURCE_SECTION_LABEL_CLASS,
+} from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import VeranstaltungAusspielungFields, {
   type VeranstaltungAusspielungValues,
 } from "./VeranstaltungAusspielungFields";
@@ -367,7 +370,7 @@ export default function VeranstaltungCreateForm({
               <select
                 value={seasonId}
                 onChange={(e) => setSeasonId(e.target.value)}
-                className="fca-select h-8 text-sm"
+                className="fca-select text-sm"
                 required
                 disabled={loadingSeasons}
               >
@@ -388,7 +391,7 @@ export default function VeranstaltungCreateForm({
               <select
                 value={category}
                 onChange={(e) => handleCategoryChange(e.target.value)}
-                className="fca-select h-8 text-sm"
+                className="fca-select text-sm"
               >
                 <option value="">{tf("categoryPlaceholder")}</option>
                 {VERANSTALTUNG_CATEGORIES.map((cat) => (
@@ -478,8 +481,11 @@ export default function VeranstaltungCreateForm({
             title={t("sections.resources")}
           />
           <div className="space-y-4">
+            <div className="space-y-2">
+              <p className={PLANNING_RESOURCE_SECTION_LABEL_CLASS}>Spielfeld / Halle</p>
             <PlanningSingleResourceAssignment
               kind="pitch_hall"
+              showSubjectLabel={false}
               subjectLabel="Spielfeld / Halle"
               resourceName={pitchDraft?.facilityResourceName ?? null}
               unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen."
@@ -491,8 +497,12 @@ export default function VeranstaltungCreateForm({
               canManage
               testId="veranstaltung-create-pitch-allocation"
             />
+            </div>
+            <div className="space-y-2">
+              <p className={PLANNING_RESOURCE_SECTION_LABEL_CLASS}>Garderobe</p>
             <PlanningSingleResourceAssignment
               kind="dressing_room"
+              showSubjectLabel={false}
               subjectLabel="Garderobe"
               resourceName={dressingDraft?.facilityResourceName ?? null}
               unassignedLabel="Noch keine Garderobe zugewiesen."
@@ -504,6 +514,7 @@ export default function VeranstaltungCreateForm({
               canManage
               testId="veranstaltung-create-dressing-allocation"
             />
+            </div>
             {showOtherSection ? (
               <details
                 className="group rounded-lg border border-[var(--border)] px-3 py-2"

@@ -775,6 +775,7 @@ export default function TrainingSeriesCreateForm({
           <div className="pl-[2.125rem]">
             <PlanningSingleResourceAssignment
               kind="pitch_hall"
+              showSubjectLabel={false}
               subjectLabel="Spielfeld / Halle"
               resourceName={resources[0]?.facilityResourceName ?? null}
               unassignedLabel="Kein Spielfeld / keine Halle zugewiesen"
@@ -804,6 +805,7 @@ export default function TrainingSeriesCreateForm({
           <div className="pl-[2.125rem]">
             <PlanningSingleResourceAssignment
               kind="dressing_room"
+              showSubjectLabel={false}
               subjectLabel="Garderobe"
               resourceName={dressingRooms[0]?.facilityResourceName ?? null}
               unassignedLabel="Keine Garderobe zugewiesen"

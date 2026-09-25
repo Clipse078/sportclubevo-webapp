@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { MapPin, ChevronDown, LayoutGrid, DoorOpen } from "lucide-react";
+import { MapPin, ChevronDown } from "lucide-react";
+import type { FacilityResourceType } from "@prisma/client";
+import { PlanningResourceSemanticIconTile } from "@/components/admin/shared/planning/FacilityResourceIdentity";
 import type { TrainingAllocationDto } from "@/lib/training/types";
 import type { FacilityGroup } from "./FacilityResourceSelector";
 import { PlanningResourcePicker } from "@/components/admin/shared/planning/PlanningResourcePicker";
-import type { FacilityResourceType } from "@prisma/client";
 import { cn } from "@/lib/cn";
 import {
   groupAllocationsByAllocationGroup,
@@ -71,10 +72,7 @@ function WorkspaceResourceBlock({
   const [editing, setEditing] = useState(false);
   const [pickerError, setPickerError] = useState<string | null>(null);
   const primary = allocations[0];
-  const iconClass =
-    kind === "pitch"
-      ? "text-emerald-400 bg-emerald-500/10 ring-emerald-500/25"
-      : "text-[var(--blue)] bg-[var(--blue)]/10 ring-[var(--blue)]/25";
+  const primaryResourceType = (primary?.facilityResourceType ?? (kind === "pitch" ? "FULL_PITCH" : "DRESSING_ROOM")) as FacilityResourceType;
 
   return (
     <div data-testid={testId} className="space-y-2">
@@ -82,12 +80,11 @@ function WorkspaceResourceBlock({
       {primary ? (
         <div className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/40 px-3 py-2.5">
           <div className="flex min-w-0 items-start gap-2.5">
-            <span
-              className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1", iconClass)}
-              aria-hidden="true"
-            >
-              {kind === "pitch" ? <LayoutGrid className="h-4 w-4" /> : <DoorOpen className="h-4 w-4" />}
-            </span>
+            <PlanningResourceSemanticIconTile
+              resourceType={primaryResourceType}
+              className="mt-0.5"
+              testId={`${testId}-semantic-icon`}
+            />
             <div className="min-w-0">
               <p className="truncate font-medium text-[var(--foreground)]">{primary.facilityResourceName}</p>
               <p className="text-xs text-[var(--muted)]">

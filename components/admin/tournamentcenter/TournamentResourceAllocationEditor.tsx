@@ -110,6 +110,7 @@ export default function TournamentResourceAllocationEditor({
     <div className="space-y-3" data-testid="tournament-resource-allocation-editor">
       <PlanningSingleResourceAssignment
         kind="pitch_hall"
+        showSubjectLabel={false}
         subjectLabel="Spielfeld / Halle"
         resourceName={primaryName}
         unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen."

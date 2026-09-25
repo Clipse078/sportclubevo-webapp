@@ -874,6 +874,7 @@ export default function MatchcenterDetailOperational({
                 {useVisualPickers && pitchGroupsByCode ? (
                   <PlanningSingleResourceAssignment
                     kind="pitch_hall"
+                    showSubjectLabel={false}
                     subjectLabel="Spielfeld / Halle"
                     resourceName={pitchResourceName}
                     unassignedLabel={tResources("unassignedPitchHall")}
@@ -991,6 +992,7 @@ export default function MatchcenterDetailOperational({
               {useVisualPickers && pitchGroupsByCode ? (
                 <PlanningSingleResourceAssignment
                   kind="pitch_hall"
+                  showSubjectLabel={false}
                   subjectLabel="Spielfeld / Halle"
                   resourceName={pitchResourceName}
                   unassignedLabel={tResources("unassignedPitchHall")}

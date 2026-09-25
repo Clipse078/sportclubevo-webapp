@@ -10,6 +10,8 @@ import { cn } from "@/lib/cn";
 export type PlanningResourceAssignmentProps = {
   subjectLeading?: ReactNode;
   subjectLabel: string;
+  /** When false, the row shows only resource state + action (section title carries resource type). */
+  showSubjectLabel?: boolean;
   subjectSecondary?: string | null;
   resourceLabel?: string | null;
   unassignedLabel: string;
@@ -25,6 +27,7 @@ export type PlanningResourceAssignmentProps = {
 export function PlanningResourceAssignment({
   subjectLeading,
   subjectLabel,
+  showSubjectLabel = true,
   subjectSecondary,
   resourceLabel,
   unassignedLabel,
@@ -44,19 +47,25 @@ export function PlanningResourceAssignment({
       data-testid={testId}
     >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:flex-nowrap">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          {subjectLeading ? <span className="shrink-0">{subjectLeading}</span> : null}
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-[var(--foreground)]">{subjectLabel}</p>
-            {subjectSecondary ? (
-              <p className="truncate text-xs text-[var(--muted)]">{subjectSecondary}</p>
-            ) : null}
+        {showSubjectLabel ? (
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            {subjectLeading ? <span className="shrink-0">{subjectLeading}</span> : null}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-[var(--foreground)]">{subjectLabel}</p>
+              {subjectSecondary ? (
+                <p className="truncate text-xs text-[var(--muted)]">{subjectSecondary}</p>
+              ) : null}
+            </div>
           </div>
-        </div>
+        ) : subjectLeading ? (
+          <span className="shrink-0">{subjectLeading}</span>
+        ) : (
+          <div className="min-w-0 flex-1" aria-hidden />
+        )}
 
         <p
           className={cn(
-            "shrink-0 text-sm tabular-nums",
+            showSubjectLabel ? "shrink-0 text-sm tabular-nums" : "min-w-0 flex-1 text-sm",
             assigned ? "font-medium text-[var(--foreground)]" : "text-[var(--text-2)]",
           )}
           data-testid={testId ? `${testId}-resource` : undefined}

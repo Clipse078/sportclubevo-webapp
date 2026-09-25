@@ -724,6 +724,7 @@ export default function MatchCreateForm({
               <div className="pl-[2.125rem]">
                 <PlanningSingleResourceAssignment
                   kind="pitch_hall"
+                  showSubjectLabel={false}
                   subjectLabel="Spielfeld / Halle"
                   resourceName={pitchSlot?.facilityResourceName ?? null}
                   unassignedLabel={tResources("unassignedPitchHall")}

@@ -10,6 +10,7 @@ import type { EventFacilityAllocationDto } from "@/lib/events/event-facility-all
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { ResourceAvailabilityAnnotation } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import { PLANNING_RESOURCE_SECTION_LABEL_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import { PlanningResourcePicker } from "@/components/admin/shared/planning/PlanningResourcePicker";
 
 type Props = {
@@ -214,8 +215,11 @@ export default function VeranstaltungFacilityAllocationEditor({
 
   return (
     <div className="space-y-4" data-testid="veranstaltung-facility-allocation-editor">
+      <div className="space-y-2">
+        <p className={PLANNING_RESOURCE_SECTION_LABEL_CLASS}>Spielfeld / Halle</p>
       <PlanningSingleResourceAssignment
         kind="pitch_hall"
+        showSubjectLabel={false}
         subjectLabel="Spielfeld / Halle"
         resourceName={pitchName}
         unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen."
@@ -228,9 +232,13 @@ export default function VeranstaltungFacilityAllocationEditor({
         disabled={isPending}
         testId="veranstaltung-pitch-allocation"
       />
+      </div>
 
+      <div className="space-y-2">
+        <p className={PLANNING_RESOURCE_SECTION_LABEL_CLASS}>Garderobe</p>
       <PlanningSingleResourceAssignment
         kind="dressing_room"
+        showSubjectLabel={false}
         subjectLabel="Garderobe"
         resourceName={dressingName}
         unassignedLabel="Noch keine Garderobe zugewiesen."
@@ -243,6 +251,7 @@ export default function VeranstaltungFacilityAllocationEditor({
         disabled={isPending}
         testId="veranstaltung-dressing-allocation"
       />
+      </div>
 
       {showOtherSection ? (
         <details

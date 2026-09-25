@@ -48,3 +48,7 @@ export const PLANNING_EDITOR_FIELD_GRID_CLASS = "grid min-w-0 gap-3 sm:grid-cols
 
 /** Two-column form fields inside a section. */
 export const PLANNING_EDITOR_FORM_GRID_CLASS = "grid min-w-0 gap-4 md:grid-cols-2";
+
+/** Subsection label inside a resources block (pitch, dressing room, etc.). */
+export const PLANNING_RESOURCE_SECTION_LABEL_CLASS =
+  "text-xs font-semibold uppercase tracking-wide text-[var(--muted)]";

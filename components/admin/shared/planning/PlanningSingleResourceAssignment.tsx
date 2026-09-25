@@ -18,6 +18,8 @@ import {
 export type PlanningSingleResourceAssignmentProps = {
   kind: PlanningResourcePickerProps["kind"];
   subjectLabel: string;
+  /** Hide duplicate resource-type label when a section heading already names the type. */
+  showSubjectLabel?: boolean;
   subjectSecondary?: string | null;
   subjectLeading?: ReactNode;
   resourceName?: string | null;
@@ -35,6 +37,7 @@ export type PlanningSingleResourceAssignmentProps = {
 export function PlanningSingleResourceAssignment({
   kind,
   subjectLabel,
+  showSubjectLabel = true,
   subjectSecondary,
   subjectLeading,
   resourceName,
@@ -69,6 +72,7 @@ export function PlanningSingleResourceAssignment({
       testId={testId}
       subjectLeading={subjectLeading}
       subjectLabel={subjectLabel}
+      showSubjectLabel={showSubjectLabel}
       subjectSecondary={subjectSecondary}
       resourceLabel={resourceName ?? null}
       unassignedLabel={unassignedLabel}
