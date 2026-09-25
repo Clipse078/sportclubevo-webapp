@@ -113,9 +113,36 @@ function GlobalNavExplorerPanel({
 
   const isSearchActive = searchQuery.trim().length > 0;
 
+  const searchField = (
+    <div
+      className="shrink-0 border-b border-[color-mix(in_srgb,var(--border)_65%,transparent)] px-3 py-2"
+      data-testid="global-nav-explorer-search-shell"
+    >
+      <label htmlFor={searchInputId} className="sr-only">
+        {searchPlaceholder}
+      </label>
+      <div className="relative">
+        <Search
+          className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]"
+          aria-hidden
+        />
+        <input
+          id={searchInputId}
+          type="search"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder={searchPlaceholder}
+          className="w-full rounded-lg border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_80%,transparent)] py-2 pl-9 pr-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+          data-testid="global-nav-explorer-search"
+          autoComplete="off"
+        />
+      </div>
+    </div>
+  );
+
   const domainRail = (
     <div
-      className="sce-app-explorer-domain-rail flex shrink-0 flex-col gap-0.5 border-[var(--border)] md:w-[9.5rem] md:border-r md:py-2 md:pr-1"
+      className="sce-app-explorer-domain-rail sce-app-explorer-scroll flex min-h-0 shrink-0 flex-col gap-0.5 overflow-y-auto border-[var(--border)] md:w-[9.5rem] md:border-r md:py-2 md:pr-1"
       role="tablist"
       aria-label={title}
       data-testid="global-nav-explorer-domain-rail"
@@ -147,7 +174,7 @@ function GlobalNavExplorerPanel({
 
   const modulePane = (
     <div
-      className="sce-app-explorer-module-pane min-h-0 flex-1 overflow-y-auto px-3 py-3 md:px-4"
+      className="sce-app-explorer-module-pane sce-app-explorer-scroll min-h-0 flex-1 overflow-y-auto px-3 py-3 md:px-4"
       data-testid="global-nav-explorer-module-pane"
     >
       {isSearchActive ? (
@@ -238,7 +265,7 @@ function GlobalNavExplorerPanel({
                     {hasChildren && isExpanded ? (
                       <ul
                         id={`${panelId}-module-${module.key}`}
-                        className="border-t border-[color-mix(in_srgb,var(--border)_65%,transparent)] px-1 py-1"
+                        className="space-y-0.5 border-t border-[color-mix(in_srgb,var(--border)_65%,transparent)] px-1 py-0.5"
                       >
                         {module.children.map((child) => {
                           const childActive = isNavigationChildActive(pathname, child);
@@ -247,7 +274,7 @@ function GlobalNavExplorerPanel({
                               <Link
                                 href={resolveHref(child.href)}
                                 className={cn(
-                                  "block rounded-md px-2 py-1.5 text-[0.8125rem] text-[var(--text-2)]",
+                                  "block rounded-md px-2 py-1.5 text-[0.8125rem] leading-snug text-[var(--text-2)]",
                                   "hover:bg-[color-mix(in_srgb,var(--surface-2)_90%,transparent)] hover:text-[var(--foreground)]",
                                   childActive &&
                                     "font-semibold text-[var(--sce-primary)] bg-[color-mix(in_srgb,var(--sce-primary)_10%,transparent)]",
@@ -274,7 +301,10 @@ function GlobalNavExplorerPanel({
 
   return (
     <>
-      <div className="flex shrink-0 items-center justify-between border-b border-[color-mix(in_srgb,var(--border)_70%,transparent)] px-4 py-3">
+      <div
+        className="flex shrink-0 items-center justify-between border-b border-[color-mix(in_srgb,var(--border)_70%,transparent)] px-4 py-3"
+        data-testid="global-nav-explorer-header"
+      >
         <div className="flex min-w-0 items-center gap-2">
           {mobilePane === "modules" ? (
             <button
@@ -299,59 +329,22 @@ function GlobalNavExplorerPanel({
         </button>
       </div>
 
-      <div className="shrink-0 border-b border-[color-mix(in_srgb,var(--border)_65%,transparent)] px-3 py-2 md:hidden">
-        <label htmlFor={searchInputId} className="sr-only">
-          {searchPlaceholder}
-        </label>
-        <div className="relative">
-          <Search
-            className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]"
-            aria-hidden
-          />
-          <input
-            id={searchInputId}
-            type="search"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder={searchPlaceholder}
-            className="w-full rounded-lg border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_80%,transparent)] py-2 pl-9 pr-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
-            data-testid="global-nav-explorer-search"
-            autoComplete="off"
-          />
-        </div>
-      </div>
+      {searchField}
 
-      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-        <div className={cn(mobilePane === "modules" && "hidden md:block")}>{domainRail}</div>
+      <div
+        className="flex min-h-0 flex-1 flex-col md:flex-row"
+        data-testid="global-nav-explorer-workspace"
+      >
+        <div className={cn("min-h-0 md:flex md:shrink-0", mobilePane === "modules" && "hidden md:flex")}>
+          {domainRail}
+        </div>
         <div
           className={cn(
-            "flex min-h-0 flex-1 flex-col",
+            "flex min-h-0 min-w-0 flex-1 flex-col",
             mobilePane === "domains" && "hidden md:flex",
           )}
         >
           {modulePane}
-        </div>
-      </div>
-
-      <div className="hidden shrink-0 border-t border-[color-mix(in_srgb,var(--border)_65%,transparent)] px-3 py-2.5 md:block">
-        <label htmlFor={`${searchInputId}-desktop`} className="sr-only">
-          {searchPlaceholder}
-        </label>
-        <div className="relative">
-          <Search
-            className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]"
-            aria-hidden
-          />
-          <input
-            id={`${searchInputId}-desktop`}
-            type="search"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder={searchPlaceholder}
-            className="w-full rounded-lg border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_80%,transparent)] py-2 pl-9 pr-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
-            data-testid="global-nav-explorer-search-desktop"
-            autoComplete="off"
-          />
         </div>
       </div>
     </>

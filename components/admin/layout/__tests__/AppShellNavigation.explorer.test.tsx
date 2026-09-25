@@ -83,7 +83,7 @@ describe("AppShellNavigation application explorer", () => {
     );
 
     await user.click(screen.getByTestId("global-nav-hamburger"));
-    const search = screen.getByTestId("global-nav-explorer-search-desktop");
+    const search = screen.getByTestId("global-nav-explorer-search");
     await user.type(search, "Train");
     expect(screen.getByTestId("global-nav-explorer-search-results")).toHaveTextContent("Trainings");
     expect(screen.queryByText("Website")).not.toBeInTheDocument();
