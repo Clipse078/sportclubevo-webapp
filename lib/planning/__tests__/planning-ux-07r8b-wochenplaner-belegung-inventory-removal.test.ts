@@ -84,7 +84,7 @@ describe("PLANNING-UX-07R8B Wochenplaner legacy Belegung inventory removal", () 
   describe("G — R8/R8A modal shell preserved", () => {
     it("activity editor shell and overlay contract unchanged", () => {
       expect(read("components/admin/planner/WeekplannerActivityEditorShell.tsx")).toContain(
-        "WeekplannerActivityEditorShell",
+        "WeekplannerActivityEditorSheet",
       );
       expect(read("components/ui/Sheet.tsx")).toContain("SceModalOverlay");
     });
