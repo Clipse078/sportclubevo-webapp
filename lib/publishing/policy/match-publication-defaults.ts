@@ -1,8 +1,9 @@
 /**
  * Canonical publication defaults for MATCH events at creation time.
  *
- * HOME matches at the tenant facility: website + Wochenplan + Infoboard on by default.
- * AWAY matches: website on; Wochenplan and Infoboard off by default.
+ * HOME matches at the tenant facility: all applicable publication channels on.
+ * AWAY matches: website, homepage, and team page on; Wochenplan and Infoboard
+ * remain off when the product model treats them as home-facility channels.
  *
  * SFV sync and manual/API creation should both use these helpers so defaults stay aligned.
  * Resync paths must not overwrite stored visibility flags (local administrator choice).
@@ -12,6 +13,8 @@ export type MatchPublicationDefaults = {
   websiteVisible: boolean;
   infoboardVisible: boolean;
   wochenplanVisible: boolean;
+  homepageVisible: boolean;
+  teamPageVisible: boolean;
 };
 
 /**
@@ -35,10 +38,21 @@ export function normalizeMatchHomeAway(
 export function resolveMatchPublicationDefaultsFromIsHome(
   isHome: boolean,
 ): MatchPublicationDefaults {
+  if (isHome) {
+    return {
+      websiteVisible: true,
+      infoboardVisible: true,
+      wochenplanVisible: true,
+      homepageVisible: true,
+      teamPageVisible: true,
+    };
+  }
   return {
     websiteVisible: true,
-    infoboardVisible: isHome,
-    wochenplanVisible: isHome,
+    infoboardVisible: false,
+    wochenplanVisible: false,
+    homepageVisible: true,
+    teamPageVisible: true,
   };
 }
 
@@ -60,5 +74,7 @@ export function resolveMatchPublicationDefaultsForCreate(
     websiteVisible: true,
     infoboardVisible: false,
     wochenplanVisible: false,
+    homepageVisible: true,
+    teamPageVisible: true,
   };
 }

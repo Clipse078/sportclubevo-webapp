@@ -936,6 +936,8 @@ model Tenant {
   tournamentParticipants           TournamentParticipant[]
   tournamentResourceAllocations    TournamentResourceAllocation[]
   tournamentParticipantAllocations TournamentParticipantAllocation[]
+  // PLANNING-UX-07R6: canonical FacilityResource allocations for club events.
+  eventFacilityAllocations         EventFacilityAllocation[]
   // WEEKPLANNER-01B: tenant-defined, week-scoped alternative planning
   // variants + their sparse resource-allocation overrides.
   weekplannerPlans                 WeekplannerPlan[]
@@ -2278,6 +2280,8 @@ model Event {
   // type — never populated or read outside the TournamentCenter domain.
   tournamentParticipants        TournamentParticipant[]
   tournamentResourceAllocations TournamentResourceAllocation[]
+  // PLANNING-UX-07R6 — Event.type=OTHER facility links (not MATCH/TOURNAMENT).
+  eventFacilityAllocations      EventFacilityAllocation[]
   // TEAM-COCKPIT-02B: per-player attendance for match/tournament events
   attendanceRecords             AttendanceRecord[]             @relation("EventAttendanceRecords")
   // TEAM-COCKPIT-03A: per-player participation for match/tournament events
@@ -3725,6 +3729,7 @@ model FacilityResource {
   // no parallel resource model.
   tournamentResourceAllocations    TournamentResourceAllocation[]
   tournamentParticipantAllocations TournamentParticipantAllocation[]
+  eventFacilityAllocations         EventFacilityAllocation[]
   // WEEKPLANNER-01B: alternative-plan Spielfeld/Halle + Garderobe
   // overrides — same canonical FacilityResource, no parallel resource model.
   weekplannerPlanAllocations       WeekplannerPlanAllocation[]
@@ -7205,6 +7210,31 @@ model TournamentParticipantAllocation {
   @@index([tournamentParticipantId])
   @@index([facilityResourceId])
   @@index([tenantId, tournamentParticipantId])
+}
+
+// PLANNING-UX-07R6 — canonical FacilityResource occupancy for club events
+// (Event.type=OTHER). Event.startAt/endAt remain authoritative for time.
+model EventFacilityAllocation {
+  id                 String  @id @default(cuid())
+  tenantId           String
+  eventId            String
+  facilityResourceId String
+  notes              String?
+  displayOrder       Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  event            Event            @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  facilityResource FacilityResource @relation(fields: [facilityResourceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([eventId, facilityResourceId])
+  @@index([tenantId])
+  @@index([eventId])
+  @@index([facilityResourceId])
+  @@index([tenantId, eventId])
+  @@index([tenantId, facilityResourceId])
 }
 
 // =============================================================================

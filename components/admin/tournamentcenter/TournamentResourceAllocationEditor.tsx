@@ -10,13 +10,10 @@ import { useCallback, useMemo, useState, useTransition } from "react";
 import { X } from "lucide-react";
 import type { TournamentResourceAllocationDto } from "@/lib/tournaments/types";
 import {
-  FacilityResourceSelector,
   type FacilityGroup,
   type ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
-import { FacilityResourceIdentity } from "@/components/admin/shared/planning/FacilityResourceIdentity";
-import type { FacilityResourceType } from "@prisma/client";
-
+import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
 type Props = {
   tournamentId: string;
   canManage: boolean;
@@ -24,31 +21,6 @@ type Props = {
   facilityGroups: FacilityGroup[];
   availabilityByResourceId?: Map<string, ResourceAvailabilityAnnotation>;
 };
-
-function lookupResourceMeta(
-  facilityGroups: FacilityGroup[],
-  resourceId: string,
-): { type: FacilityResourceType; facilityType?: string; typeLabel: string } {
-  for (const fg of facilityGroups) {
-    const resource = fg.resources.find((r) => r.id === resourceId);
-    if (resource) {
-      const typeLabel =
-        resource.type === "FULL_PITCH"
-          ? "Spielfeld"
-          : resource.type === "HALF_PITCH"
-            ? "Halbes Feld"
-            : fg.facilityType === "INDOOR_HALL"
-              ? "Halle"
-              : "Ressource";
-      return {
-        type: resource.type,
-        facilityType: resource.facilityType ?? fg.facilityType,
-        typeLabel,
-      };
-    }
-  }
-  return { type: "OTHER", typeLabel: "Ressource" };
-}
 
 export default function TournamentResourceAllocationEditor({
   tournamentId,
@@ -106,62 +78,77 @@ export default function TournamentResourceAllocationEditor({
     [tournamentId],
   );
 
+  const primaryName =
+    allocations.length === 0
+      ? null
+      : allocations.map((a) => a.facilityResourceName).join(", ");
+
+  const handleSelectPitch = useCallback(
+    async (facilityResourceId: string) => {
+      setError(null);
+      startTransition(async () => {
+        try {
+          await handleAdd(facilityResourceId);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Ressource konnte nicht zugewiesen werden.");
+        }
+      });
+    },
+    [handleAdd],
+  );
+
+  const handleDeselectPitch = useCallback(
+    (facilityResourceId: string) => {
+      const allocation = allocations.find((a) => a.facilityResourceId === facilityResourceId);
+      if (!allocation) return;
+      handleRemove(allocation.id);
+    },
+    [allocations, handleRemove],
+  );
+
   return (
     <div className="space-y-3" data-testid="tournament-resource-allocation-editor">
-      {allocations.length === 0 ? (
-        <p className="text-sm text-[var(--text-2)]">Noch kein Spielfeld / keine Halle zugewiesen.</p>
-      ) : (
-        <ul className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)]" data-testid="tournament-resource-allocation-list">
-          {allocations.map((allocation) => {
-            const meta = lookupResourceMeta(facilityGroups, allocation.facilityResourceId);
-            return (
-              <li
-                key={allocation.id}
-                className="flex items-center gap-2 bg-[var(--surface)] px-3 py-2"
-              >
-                <FacilityResourceIdentity
-                  name={allocation.facilityResourceName}
-                  resourceType={meta.type}
-                  facilityType={meta.facilityType}
-                  subtitle={`${meta.typeLabel} · ${allocation.facilityName}`}
-                  compact
-                  semanticResourceColors
-                  className="min-w-0 flex-1"
-                />
+      <PlanningSingleResourceAssignment
+        kind="pitch_hall"
+        showSubjectLabel={false}
+        subjectLabel="Spielfeld / Halle"
+        resourceName={primaryName}
+        unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen."
+        facilityGroups={facilityGroups}
+        selectedResourceIds={allocatedResourceIds}
+        onSelect={handleSelectPitch}
+        onDeselect={handleDeselectPitch}
+        availabilityByResourceId={availabilityByResourceId}
+        canManage={canManage}
+        disabled={isPending}
+        testId="tournament-resource-allocation"
+      />
 
-                {canManage && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(allocation.id)}
-                    disabled={isPending}
-                    aria-label={`${allocation.facilityResourceName} entfernen`}
-                    className="shrink-0 rounded p-1.5 text-[var(--muted)] transition hover:bg-rose-500/10 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </li>
-            );
-          })}
+      {allocations.length > 1 ? (
+        <ul className="space-y-1 text-xs text-[var(--text-2)]" data-testid="tournament-resource-allocation-list">
+          {allocations.map((allocation) => (
+            <li key={allocation.id} className="flex items-center justify-between gap-2">
+              <span>{allocation.facilityResourceName}</span>
+              {canManage ? (
+                <button
+                  type="button"
+                  onClick={() => handleRemove(allocation.id)}
+                  disabled={isPending}
+                  aria-label={`${allocation.facilityResourceName} entfernen`}
+                  className="shrink-0 rounded p-1 text-[var(--muted)] hover:text-rose-600 disabled:opacity-50"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              ) : null}
+            </li>
+          ))}
         </ul>
-      )}
+      ) : null}
 
       {error && (
         <p className="text-sm text-rose-600" role="alert">
           {error}
         </p>
-      )}
-
-      {canManage && (
-        <FacilityResourceSelector
-          facilityGroups={facilityGroups}
-          allocatedResourceIds={allocatedResourceIds}
-          onAdd={handleAdd}
-          placeholder="Spielfeld / Halle auswählen…"
-          addButtonLabel="Zuweisen"
-          availabilityByResourceId={availabilityByResourceId}
-          testId="tournament-resource-allocation-add"
-        />
       )}
     </div>
   );

@@ -1,16 +1,27 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { ChevronDown } from "lucide-react";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import { PlanningResourcePicker } from "@/components/admin/shared/planning/PlanningResourcePicker";
+import { TRAINING_ALLOCATION_GROUP_LABELS } from "@/lib/training/allocation-groups";
+import { parseClubEventScheduleInput } from "@/lib/events/club-event-scheduling";
+import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import PlanningEditorActions from "@/components/admin/shared/planning-editor/PlanningEditorActions";
-import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
+import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
 import PlanningEditorParticipantsSection from "@/components/admin/shared/planning-editor/PlanningEditorParticipantsSection";
-import { PLANNING_EDITOR_FORM_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
+import {
+  PLANNING_EDITOR_FORM_GRID_CLASS,
+  PLANNING_RESOURCE_SECTION_LABEL_CLASS,
+} from "@/components/admin/shared/planning-editor/planning-editor-layout";
 import VeranstaltungAusspielungFields, {
   type VeranstaltungAusspielungValues,
 } from "./VeranstaltungAusspielungFields";
@@ -46,7 +57,42 @@ const VERANSTALTUNG_CATEGORIES = [
 
 const DEFAULT_TIMES = { startTime: "18:00", endTime: "20:00" };
 
-export default function VeranstaltungCreateForm() {
+type ResourceDraftRow = {
+  localId: string;
+  facilityResourceId: string;
+  facilityResourceName: string;
+};
+
+type VeranstaltungCreateFormProps = {
+  pitchHallFacilityGroups: FacilityGroup[];
+  dressingRoomFacilityGroups: FacilityGroup[];
+  otherFacilityGroups?: FacilityGroup[];
+  timeZone?: string | null;
+};
+
+function resolveResourceDisplay(
+  facilityGroups: FacilityGroup[],
+  facilityResourceId: string,
+): string {
+  for (const group of facilityGroups) {
+    const resource = group.resources.find((r) => r.id === facilityResourceId);
+    if (resource) return resource.name;
+  }
+  return facilityResourceId;
+}
+
+let localIdCounter = 0;
+function nextLocalId(prefix: string): string {
+  localIdCounter += 1;
+  return `${prefix}-${localIdCounter}`;
+}
+
+export default function VeranstaltungCreateForm({
+  pitchHallFacilityGroups,
+  dressingRoomFacilityGroups,
+  otherFacilityGroups = [],
+  timeZone = "Europe/Zurich",
+}: VeranstaltungCreateFormProps) {
   const router = useRouter();
   const t = useTranslations("Veranstaltungen.editor");
   const tf = useTranslations("Veranstaltungen.editor.fields");
@@ -76,8 +122,93 @@ export default function VeranstaltungCreateForm() {
 
   const [seasonOptions, setSeasonOptions] = useState<SeasonItem[]>([]);
   const [loadingSeasons, setLoadingSeasons] = useState(true);
+  const [pitchDraft, setPitchDraft] = useState<ResourceDraftRow | null>(null);
+  const [dressingDraft, setDressingDraft] = useState<ResourceDraftRow | null>(null);
+  const [otherDrafts, setOtherDrafts] = useState<ResourceDraftRow[]>([]);
+  const [otherPickerOpen, setOtherPickerOpen] = useState(false);
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const scheduleInterval = useMemo(() => {
+    if (!schedule.startDate) return null;
+    try {
+      const parsed = parseClubEventScheduleInput(
+        {
+          allDay: schedule.allDay,
+          startDate: schedule.startDate,
+          endDate: schedule.endDate,
+          startTime: schedule.startTime,
+          endTime: schedule.endTime,
+        },
+        timeZone,
+      );
+      return {
+        startAt: parsed.startAt.toISOString(),
+        endAt: (parsed.endAt ?? parsed.startAt).toISOString(),
+      };
+    } catch {
+      return null;
+    }
+  }, [schedule, timeZone]);
+
+  const { pitchAvailability, dressingRoomAvailability } = useFacilityAvailability({
+    enabled: scheduleInterval != null,
+    startAt: scheduleInterval?.startAt ?? "",
+    endAt: scheduleInterval?.endAt,
+  });
+
+  const addPitchDraft = useCallback(
+    (facilityResourceId: string) => {
+      setPitchDraft({
+        localId: nextLocalId("pitch"),
+        facilityResourceId,
+        facilityResourceName: resolveResourceDisplay(pitchHallFacilityGroups, facilityResourceId),
+      });
+    },
+    [pitchHallFacilityGroups],
+  );
+
+  const addDressingDraft = useCallback(
+    (facilityResourceId: string) => {
+      setDressingDraft({
+        localId: nextLocalId("dressing"),
+        facilityResourceId,
+        facilityResourceName: resolveResourceDisplay(dressingRoomFacilityGroups, facilityResourceId),
+      });
+    },
+    [dressingRoomFacilityGroups],
+  );
+
+  const addOtherDraft = useCallback(
+    (facilityResourceId: string) => {
+      setOtherDrafts((prev) => {
+        if (prev.some((row) => row.facilityResourceId === facilityResourceId)) return prev;
+        return [
+          ...prev,
+          {
+            localId: nextLocalId("other"),
+            facilityResourceId,
+            facilityResourceName: resolveResourceDisplay(otherFacilityGroups, facilityResourceId),
+          },
+        ];
+      });
+    },
+    [otherFacilityGroups],
+  );
+
+  const removeOtherDraft = useCallback((facilityResourceId: string) => {
+    setOtherDrafts((prev) => prev.filter((row) => row.facilityResourceId !== facilityResourceId));
+  }, []);
+
+  const showOtherSection = otherFacilityGroups.length > 0 || otherDrafts.length > 0;
+  const selectedResourceIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (pitchDraft) ids.add(pitchDraft.facilityResourceId);
+    if (dressingDraft) ids.add(dressingDraft.facilityResourceId);
+    for (const row of otherDrafts) ids.add(row.facilityResourceId);
+    return ids;
+  }, [pitchDraft, dressingDraft, otherDrafts]);
 
   useEffect(() => {
     let active = true;
@@ -191,6 +322,17 @@ export default function VeranstaltungCreateForm() {
       const created = data as { eventIds?: string[] } | null;
       const firstEventId = created?.eventIds?.[0];
       if (firstEventId) {
+        for (const draft of [pitchDraft, dressingDraft, ...otherDrafts].filter(Boolean)) {
+          const allocRes = await fetch(`/api/events/${firstEventId}/facility-allocations`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ facilityResourceId: draft!.facilityResourceId }),
+          });
+          if (!allocRes.ok) {
+            const allocData = (await allocRes.json().catch(() => null)) as { error?: string } | null;
+            throw new Error(allocData?.error ?? t("errors.createFailed"));
+          }
+        }
         router.push(`/dashboard/veranstaltungen/${firstEventId}/edit`);
       } else {
         router.push("/dashboard/veranstaltungen?submitted=1");
@@ -205,14 +347,20 @@ export default function VeranstaltungCreateForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3" data-testid="veranstaltung-create-form">
-      <PlanningEditorControlBar testId="veranstaltung-create-control-bar">
-        <VeranstaltungAusspielungFields
-          values={ausspielung}
-          onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
-          showHeading={false}
-        />
-      </PlanningEditorControlBar>
-
+      <PlanningEditorOperationalWorkspace
+        testId="veranstaltung-create-operational-workspace"
+        secondaryRail={
+          <PlanningPublicationPanel testId="veranstaltung-create-publication-panel">
+            <VeranstaltungAusspielungFields
+              values={ausspielung}
+              onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
+              showHeading={false}
+              testIdPrefix="veranstaltung-create-publication"
+            />
+          </PlanningPublicationPanel>
+        }
+        primary={
+          <>
       <PlanningEditorSection testId="veranstaltung-create-details-section" ariaLabelledBy="veranstaltung-create-details-heading">
         <div className="space-y-3">
           <PlanningEditorSectionHeading id="veranstaltung-create-details-heading" title={t("sections.details")} />
@@ -222,7 +370,7 @@ export default function VeranstaltungCreateForm() {
               <select
                 value={seasonId}
                 onChange={(e) => setSeasonId(e.target.value)}
-                className="fca-select h-8 text-sm"
+                className="fca-select text-sm"
                 required
                 disabled={loadingSeasons}
               >
@@ -243,7 +391,7 @@ export default function VeranstaltungCreateForm() {
               <select
                 value={category}
                 onChange={(e) => handleCategoryChange(e.target.value)}
-                className="fca-select h-8 text-sm"
+                className="fca-select text-sm"
               >
                 <option value="">{tf("categoryPlaceholder")}</option>
                 {VERANSTALTUNG_CATEGORIES.map((cat) => (
@@ -322,6 +470,116 @@ export default function VeranstaltungCreateForm() {
           </div>
         </div>
       </PlanningEditorSection>
+
+      <PlanningEditorSection
+        testId="veranstaltung-create-resources-section"
+        ariaLabelledBy="veranstaltung-create-resources-heading"
+      >
+        <div className="space-y-3">
+          <PlanningEditorSectionHeading
+            id="veranstaltung-create-resources-heading"
+            title={t("sections.resources")}
+          />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p className={PLANNING_RESOURCE_SECTION_LABEL_CLASS}>Spielfeld / Halle</p>
+            <PlanningSingleResourceAssignment
+              kind="pitch_hall"
+              showSubjectLabel={false}
+              subjectLabel="Spielfeld / Halle"
+              resourceName={pitchDraft?.facilityResourceName ?? null}
+              unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen."
+              facilityGroups={pitchHallFacilityGroups}
+              selectedResourceIds={new Set(pitchDraft ? [pitchDraft.facilityResourceId] : [])}
+              onSelect={addPitchDraft}
+              onDeselect={() => setPitchDraft(null)}
+              availabilityByResourceId={pitchAvailability}
+              canManage
+              testId="veranstaltung-create-pitch-allocation"
+            />
+            </div>
+            <div className="space-y-2">
+              <p className={PLANNING_RESOURCE_SECTION_LABEL_CLASS}>Garderobe</p>
+            <PlanningSingleResourceAssignment
+              kind="dressing_room"
+              showSubjectLabel={false}
+              subjectLabel="Garderobe"
+              resourceName={dressingDraft?.facilityResourceName ?? null}
+              unassignedLabel="Noch keine Garderobe zugewiesen."
+              facilityGroups={dressingRoomFacilityGroups}
+              selectedResourceIds={new Set(dressingDraft ? [dressingDraft.facilityResourceId] : [])}
+              onSelect={addDressingDraft}
+              onDeselect={() => setDressingDraft(null)}
+              availabilityByResourceId={dressingRoomAvailability}
+              canManage
+              testId="veranstaltung-create-dressing-allocation"
+            />
+            </div>
+            {showOtherSection ? (
+              <details
+                className="group rounded-lg border border-[var(--border)] px-3 py-2"
+                data-testid="veranstaltung-create-other-allocation"
+                open={otherDrafts.length > 0}
+              >
+                <summary className="flex cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-[var(--text-2)]">
+                  <ChevronDown
+                    size={14}
+                    className="text-[var(--muted)] transition-transform group-open:rotate-180"
+                    aria-hidden
+                  />
+                  {TRAINING_ALLOCATION_GROUP_LABELS.OTHER}
+                </summary>
+                <div className="mt-3 space-y-2">
+                  {otherDrafts.length > 0 ? (
+                    <ul className="space-y-1 text-sm text-[var(--foreground)]">
+                      {otherDrafts.map((row) => (
+                        <li key={row.localId} className="flex justify-between gap-2">
+                          <span>{row.facilityResourceName}</span>
+                          <button
+                            type="button"
+                            className="text-xs text-[var(--sce-danger)]"
+                            onClick={() => removeOtherDraft(row.facilityResourceId)}
+                          >
+                            Entfernen
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {!otherPickerOpen ? (
+                    <button
+                      type="button"
+                      className="text-xs font-semibold text-[var(--sce-primary)] hover:underline"
+                      onClick={() => setOtherPickerOpen(true)}
+                      data-testid="veranstaltung-create-other-allocation-add"
+                    >
+                      {otherDrafts.length > 0
+                        ? "Weitere Ressource hinzufügen"
+                        : "Ressource zuweisen"}
+                    </button>
+                  ) : null}
+                  {otherPickerOpen ? (
+                    <PlanningResourcePicker
+                      kind="other"
+                      title={TRAINING_ALLOCATION_GROUP_LABELS.OTHER}
+                      facilityGroups={otherFacilityGroups}
+                      selectedResourceIds={selectedResourceIds}
+                      singleSelect={false}
+                      onSelect={addOtherDraft}
+                      onDeselect={removeOtherDraft}
+                      testId="veranstaltung-create-other-allocation-picker"
+                      onCancel={() => setOtherPickerOpen(false)}
+                    />
+                  ) : null}
+                </div>
+              </details>
+            ) : null}
+          </div>
+        </div>
+      </PlanningEditorSection>
+          </>
+        }
+      />
 
       <PlanningEditorParticipantsSection
         headingId="veranstaltung-create-participants-heading"

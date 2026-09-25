@@ -34,10 +34,14 @@
 
 import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@prisma/client";
+import {
+  loadTenantFacilityResourceForWrite,
+  validateAssignableFacilityResource,
+  validateFacilityResourceAllocationGroup,
+} from "@/lib/facilities/facility-resource-write-validation";
 import { getActiveWochenplanPlan } from "@/lib/wochenplan/plan-service";
 import { resolvePublicWeekplannerPlan } from "@/lib/wochenplan/public-plan-resolution";
 import type { WeekplannerActivityType, WeekplannerAllocationGroup } from "@prisma/client";
-import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
 import { zonedDateKey, WEEKPLANNER_DEFAULT_TIMEZONE } from "./date";
 import type {
   WeekplannerPlanDto,
@@ -643,31 +647,29 @@ export async function createWeekplannerPlanAllocation(
     await requireParticipantInTenant(tenantId, activityId, participantId);
   }
 
-  const resource = await prisma.facilityResource.findFirst({
-    where: { id: facilityResourceId, tenantId },
-    select: {
-      id: true,
-      type: true,
-      status: true,
-      facility: { select: { id: true, status: true } },
-    },
-  });
+  const resource = await loadTenantFacilityResourceForWrite(tenantId, facilityResourceId);
+  switch (validateAssignableFacilityResource(resource)) {
+    case "NOT_FOUND":
+      throw new WeekplannerPlanAllocationResourceNotFoundError(facilityResourceId);
+    case "ARCHIVED_RESOURCE":
+      throw new WeekplannerPlanAllocationArchivedResourceError(facilityResourceId);
+    case "ARCHIVED_FACILITY":
+      throw new WeekplannerPlanAllocationArchivedFacilityError(resource!.facility.id);
+    case null:
+      break;
+  }
   if (!resource) throw new WeekplannerPlanAllocationResourceNotFoundError(facilityResourceId);
-  if (resource.status === "ARCHIVED") {
-    throw new WeekplannerPlanAllocationArchivedResourceError(facilityResourceId);
-  }
-  if (resource.facility.status === "ARCHIVED") {
-    throw new WeekplannerPlanAllocationArchivedFacilityError(resource.facility.id);
-  }
 
-  const resourceGroup = classifyFacilityResourceType(resource.type);
-  if (
-    (allocationGroup === "PITCH_HALL" && resourceGroup !== "PITCH_HALL") ||
-    (allocationGroup === "DRESSING_ROOM" && resourceGroup !== "DRESSING_ROOM")
-  ) {
-    throw new WeekplannerPlanAllocationGroupMismatchError(
-      `FacilityResource "${facilityResourceId}" (type ${resource.type}) does not belong to allocation group ${allocationGroup}`,
-    );
+  switch (validateFacilityResourceAllocationGroup(resource, allocationGroup)) {
+    case "GROUP_MISMATCH":
+      throw new WeekplannerPlanAllocationGroupMismatchError(
+        `FacilityResource "${facilityResourceId}" (type ${resource.type}) does not belong to allocation group ${allocationGroup}`,
+      );
+    case "NOT_FOUND":
+    case "ARCHIVED_RESOURCE":
+    case "ARCHIVED_FACILITY":
+    case null:
+      break;
   }
 
   let order = displayOrder;

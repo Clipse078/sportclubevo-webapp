@@ -1,21 +1,29 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import PlanningEditorActions from "@/components/admin/shared/planning-editor/PlanningEditorActions";
-import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
+import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import { PLANNING_EDITOR_FORM_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
-import { clubEventScheduleFormFromPersisted } from "@/lib/events/club-event-scheduling";
+import {
+  clubEventScheduleFormFromPersisted,
+  parseClubEventScheduleInput,
+} from "@/lib/events/club-event-scheduling";
 import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
+import type { EventFacilityAllocationDto } from "@/lib/events/event-facility-allocation-types";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import VeranstaltungAusspielungFields, {
   type VeranstaltungAusspielungValues,
 } from "./VeranstaltungAusspielungFields";
 import VeranstaltungScheduleFields, {
   type VeranstaltungScheduleFieldValues,
 } from "./VeranstaltungScheduleFields";
+import VeranstaltungFacilityAllocationEditor from "./VeranstaltungFacilityAllocationEditor";
 
 type SeasonSummary = {
   id: string;
@@ -46,9 +54,27 @@ type VeranstaltungEditFormProps = {
   };
   timeZone?: string | null;
   canManage?: boolean;
+  /** Participation, tasks, collaboration — primary operational column. */
+  operationalPrimarySections?: ReactNode;
+  /** Compact participation / status controls for the right rail. */
+  operationalRailSections?: ReactNode;
+  pitchHallFacilityGroups?: FacilityGroup[];
+  dressingRoomFacilityGroups?: FacilityGroup[];
+  otherFacilityGroups?: FacilityGroup[];
+  initialFacilityAllocations?: EventFacilityAllocationDto[];
 };
 
-export default function VeranstaltungEditForm({ event, timeZone, canManage = true }: VeranstaltungEditFormProps) {
+export default function VeranstaltungEditForm({
+  event,
+  timeZone,
+  canManage = true,
+  operationalPrimarySections,
+  operationalRailSections,
+  pitchHallFacilityGroups = [],
+  dressingRoomFacilityGroups = [],
+  otherFacilityGroups = [],
+  initialFacilityAllocations = [],
+}: VeranstaltungEditFormProps) {
   const router = useRouter();
   const t = useTranslations("Veranstaltungen.editor");
   const tf = useTranslations("Veranstaltungen.editor.fields");
@@ -92,6 +118,35 @@ export default function VeranstaltungEditForm({ event, timeZone, canManage = tru
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const scheduleInterval = useMemo(() => {
+    if (!schedule.startDate) return null;
+    try {
+      const parsed = parseClubEventScheduleInput(
+        {
+          allDay: schedule.allDay,
+          startDate: schedule.startDate,
+          endDate: schedule.endDate,
+          startTime: schedule.startTime,
+          endTime: schedule.endTime,
+        },
+        tz,
+      );
+      return {
+        startAt: parsed.startAt.toISOString(),
+        endAt: (parsed.endAt ?? parsed.startAt).toISOString(),
+      };
+    } catch {
+      return null;
+    }
+  }, [schedule, tz]);
+
+  const { pitchAvailability, dressingRoomAvailability } = useFacilityAvailability({
+    enabled: !isReadonly && scheduleInterval != null,
+    startAt: scheduleInterval?.startAt ?? "",
+    endAt: scheduleInterval?.endAt,
+    excludeEventId: event.id,
+  });
 
   function handleScheduleChange(patch: Partial<VeranstaltungScheduleFieldValues>) {
     setSchedule((current) => {
@@ -161,16 +216,25 @@ export default function VeranstaltungEditForm({ event, timeZone, canManage = tru
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3" data-testid="veranstaltung-edit-form">
-      <PlanningEditorControlBar testId="veranstaltung-edit-control-bar">
-        <VeranstaltungAusspielungFields
-          values={ausspielung}
-          onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
-          disabled={isReadonly}
-          showHeading={false}
-        />
-      </PlanningEditorControlBar>
-
-      <PlanningEditorSection testId="veranstaltung-edit-details-section" ariaLabelledBy="veranstaltung-edit-details-heading">
+      <PlanningEditorOperationalWorkspace
+        testId="veranstaltung-edit-operational-workspace"
+        secondaryRail={
+          <>
+            <PlanningPublicationPanel testId="veranstaltung-edit-publication-panel">
+              <VeranstaltungAusspielungFields
+                values={ausspielung}
+                onChange={(patch) => setAusspielung((current) => ({ ...current, ...patch }))}
+                disabled={isReadonly}
+                showHeading={false}
+                testIdPrefix="veranstaltung-edit-publication"
+              />
+            </PlanningPublicationPanel>
+            {operationalRailSections}
+          </>
+        }
+        primary={
+          <div className="space-y-3">
+          <PlanningEditorSection testId="veranstaltung-edit-details-section" ariaLabelledBy="veranstaltung-edit-details-heading">
         <div className="space-y-3">
           <PlanningEditorSectionHeading id="veranstaltung-edit-details-heading" title={t("sections.details")} />
           {event.season ? (
@@ -242,6 +306,33 @@ export default function VeranstaltungEditForm({ event, timeZone, canManage = tru
           </div>
         </div>
       </PlanningEditorSection>
+
+      <PlanningEditorSection
+        testId="veranstaltung-edit-resources-section"
+        ariaLabelledBy="veranstaltung-edit-resources-heading"
+      >
+        <div className="space-y-3">
+          <PlanningEditorSectionHeading
+            id="veranstaltung-edit-resources-heading"
+            title={t("sections.resources")}
+          />
+          <VeranstaltungFacilityAllocationEditor
+            eventId={event.id}
+            canManage={!isReadonly}
+            initialAllocations={initialFacilityAllocations}
+            pitchHallFacilityGroups={pitchHallFacilityGroups}
+            dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+            otherFacilityGroups={otherFacilityGroups}
+            pitchAvailabilityByResourceId={pitchAvailability}
+            dressingRoomAvailabilityByResourceId={dressingRoomAvailability}
+          />
+        </div>
+      </PlanningEditorSection>
+
+          {operationalPrimarySections}
+          </div>
+        }
+      />
 
       {error ? <div className="fca-status-box fca-status-box-error">{error}</div> : null}
 

@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import type {
   PlanningPublicationChannelConfig,
+  PlanningPublicationChannelKey,
   PlanningPublicationValues,
 } from "@/lib/planning/planning-publication-channels";
 import { cn } from "@/lib/cn";
@@ -13,6 +14,8 @@ type Props = {
   value: PlanningPublicationValues;
   onChange: (patch: Partial<PlanningPublicationValues>) => void;
   disabled?: boolean;
+  /** Per-channel disable (e.g. infoboard on away matches) without hiding the row. */
+  disabledChannelKeys?: PlanningPublicationChannelKey[];
   testIdPrefix?: string;
   headingId?: string;
   /** Hide the built-in heading when embedded in PlanningEditorControlBar. */
@@ -24,11 +27,13 @@ export default function PlanningEditorPublicationControls({
   value,
   onChange,
   disabled = false,
+  disabledChannelKeys = [],
   testIdPrefix = "planning-publication",
   headingId = "planning-publication-heading",
   showHeading = true,
 }: Props) {
   const t = useTranslations("PlanningEditor.operational.publication");
+  const disabledChannels = new Set(disabledChannelKeys);
 
   return (
     <section
@@ -51,7 +56,9 @@ export default function PlanningEditorPublicationControls({
           const controlId = `${testIdPrefix}-${channel.key}`;
           const checked = value[channel.key] ?? false;
           const switchDisabled =
-            disabled || (channel.dependsOnWebsite ? !value.websiteVisible : false);
+            disabled ||
+            disabledChannels.has(channel.key) ||
+            (channel.dependsOnWebsite ? !value.websiteVisible : false);
           const ChannelIcon = channel.Icon;
 
           return (

@@ -30,10 +30,9 @@ import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import { formatAvailabilitySuffix } from "@/components/admin/training/FacilityResourceSelector";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { formatOperationalHistoryLabel } from "@/lib/matchcenter/operational-history";
-import {
-  CompactDressingRoomResourceSelector,
-  CompactPitchHallResourceSelector,
-} from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
+import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import { PlanningMatchDressingRoomAssignments } from "@/components/admin/shared/planning/PlanningMatchDressingRoomAssignments";
+import { useTranslations } from "next-intl";
 import TrainingRecordSection from "@/components/admin/training/record/TrainingRecordSection";
 import { assessMatchOperationalState } from "@/lib/matchcenter/operational-state";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
@@ -65,8 +64,9 @@ export type MatchcenterDetailOperationalProps = {
   currentWebsiteVisible: boolean;
   /** Current infoboard visibility */
   currentInfoboardVisible: boolean;
-  /** Read-only Wochenplan publication state (not PATCHable on matchcenter). */
   currentWochenplanVisible?: boolean;
+  currentHomepageVisible?: boolean;
+  currentTeamPageVisible?: boolean;
   /** ISO date string for infoboard preview link */
   matchDateIso: string;
   /**
@@ -113,6 +113,18 @@ export type MatchcenterDetailOperationalProps = {
   isOperationallyActionable?: boolean;
   layout?: "default" | "record";
   hideFooterActions?: boolean;
+  /** When true, publication toggles render outside this component (e.g. record right rail). */
+  suppressPublicationUI?: boolean;
+  publicationValues?: {
+    websiteVisible: boolean;
+    infoboardVisible: boolean;
+    homepageVisible: boolean;
+    wochenplanVisible: boolean;
+    teamPageVisible: boolean;
+  };
+  onPublicationChange?: (
+    patch: Partial<NonNullable<MatchcenterDetailOperationalProps["publicationValues"]>>,
+  ) => void;
   onActionsBinding?: (binding: MatchOperationalActionsBinding) => void;
   assessmentBase?: MatchcenterMatchSummary;
 };
@@ -229,6 +241,15 @@ function facilityGroupsWithCodeAsId(groups: FacilityGroup[]): FacilityGroup[] {
   }));
 }
 
+function resourceLabelFromCode(groups: FacilityGroup[] | null | undefined, code: string): string {
+  if (!code.trim() || !groups) return code;
+  for (const fg of groups) {
+    const resource = fg.resources.find((r) => r.id === code);
+    if (resource) return resource.name;
+  }
+  return code;
+}
+
 export default function MatchcenterDetailOperational({
   matchId,
   homeAway,
@@ -249,13 +270,19 @@ export default function MatchcenterDetailOperational({
   dressingRoomFacilityGroups,
   isOperationallyActionable = true,
   currentWochenplanVisible = false,
+  currentHomepageVisible = false,
+  currentTeamPageVisible = false,
   layout = "default",
   hideFooterActions = false,
+  suppressPublicationUI = false,
+  publicationValues,
+  onPublicationChange,
   onActionsBinding,
   assessmentBase,
 }: MatchcenterDetailOperationalProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const tResources = useTranslations("PlanningResources");
 
   // PLANNING-RESOURCE-UX-01 — code-as-ID groups for the visual pickers.
   // Match events persist resource codes, so we transform groups to use `code`
@@ -313,10 +340,38 @@ export default function MatchcenterDetailOperational({
   const [awayDressingRoomCode, setAwayDressingRoomCode] = useState(
     currentAwayDressingRoomCode ?? "",
   );
-  const [websiteVisible, setWebsiteVisible] = useState(currentWebsiteVisible);
-  const [infoboardVisible, setInfoboardVisible] = useState(
-    currentInfoboardVisible,
+
+  const pitchResourceName = useMemo(
+    () => (pitchCode.trim() ? resourceLabelFromCode(pitchGroupsByCode, pitchCode) : null),
+    [pitchCode, pitchGroupsByCode],
   );
+  const [internalPublication, setInternalPublication] = useState({
+    websiteVisible: currentWebsiteVisible,
+    infoboardVisible: currentInfoboardVisible,
+    homepageVisible: currentHomepageVisible,
+    wochenplanVisible: currentWochenplanVisible,
+    teamPageVisible: currentTeamPageVisible,
+  });
+
+  const publication = publicationValues ?? internalPublication;
+
+  function patchPublication(
+    patch: Partial<NonNullable<MatchcenterDetailOperationalProps["publicationValues"]>>,
+  ) {
+    if (publicationValues && onPublicationChange) {
+      onPublicationChange(patch);
+      return;
+    }
+    setInternalPublication((prev) => ({ ...prev, ...patch }));
+  }
+
+  const {
+    websiteVisible,
+    infoboardVisible,
+    homepageVisible,
+    wochenplanVisible,
+    teamPageVisible,
+  } = publication;
 
   // ── Save ───────────────────────────────────────────────────────────────────
   const [saving, setSaving] = useState(false);
@@ -326,7 +381,10 @@ export default function MatchcenterDetailOperational({
     (homeDressingRoomCode ?? "") !== (currentHomeDressingRoomCode ?? "") ||
     (awayDressingRoomCode ?? "") !== (currentAwayDressingRoomCode ?? "") ||
     websiteVisible !== currentWebsiteVisible ||
-    infoboardVisible !== currentInfoboardVisible;
+    infoboardVisible !== currentInfoboardVisible ||
+    homepageVisible !== currentHomepageVisible ||
+    wochenplanVisible !== currentWochenplanVisible ||
+    teamPageVisible !== currentTeamPageVisible;
 
   const handleSave = useCallback(async () => {
     setSaving(true);
@@ -342,6 +400,9 @@ export default function MatchcenterDetailOperational({
           awayDressingRoomCode: awayDressingRoomCode.trim() || null,
           websiteVisible,
           infoboardVisible,
+          homepageVisible,
+          wochenplanVisible,
+          teamPageVisible,
         }),
       });
 
@@ -371,17 +432,23 @@ export default function MatchcenterDetailOperational({
     awayDressingRoomCode,
     currentAwayDressingRoomCode,
     currentHomeDressingRoomCode,
+    currentHomepageVisible,
     currentInfoboardVisible,
     currentPitchCode,
+    currentTeamPageVisible,
     currentWebsiteVisible,
+    currentWochenplanVisible,
     homeDressingRoomCode,
+    homepageVisible,
     infoboardVisible,
     matchId,
     pitchCode,
     router,
     teamId,
+    teamPageVisible,
     toast,
     websiteVisible,
+    wochenplanVisible,
   ]);
 
   useEffect(() => {
@@ -516,7 +583,7 @@ export default function MatchcenterDetailOperational({
           type="button"
           role="switch"
           aria-checked={websiteVisible}
-          onClick={() => canManage && !saving && setWebsiteVisible((v) => !v)}
+          onClick={() => canManage && !saving && patchPublication({ websiteVisible: !websiteVisible })}
           disabled={!canManage || saving}
           data-testid="website-visible-toggle"
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 ${
@@ -565,7 +632,9 @@ export default function MatchcenterDetailOperational({
           type="button"
           role="switch"
           aria-checked={infoboardVisible}
-          onClick={() => canManage && !saving && !isAwayMatch && setInfoboardVisible((v) => !v)}
+          onClick={() =>
+            canManage && !saving && !isAwayMatch && patchPublication({ infoboardVisible: !infoboardVisible })
+          }
           disabled={!canManage || saving || isAwayMatch}
           data-testid="infoboard-visible-toggle"
           aria-label="Auf Infoboard anzeigen"
@@ -661,7 +730,8 @@ export default function MatchcenterDetailOperational({
 
   return (
     <div className={recordSurface ? undefined : "space-y-5"}>
-      {recordSurface ? publicationSection : null}
+      {recordSurface && !suppressPublicationUI ? publicationSection : null}
+      {!recordSurface ? publicationSection : null}
 
       {recordSurface && isHomeMatch ? (
         <TrainingRecordSection title="Matchvorbereitung" testId="spiele-record-section-preparation">
@@ -802,15 +872,19 @@ export default function MatchcenterDetailOperational({
                   Spielfeld / Halle
                 </p>
                 {useVisualPickers && pitchGroupsByCode ? (
-                  <CompactPitchHallResourceSelector
+                  <PlanningSingleResourceAssignment
+                    kind="pitch_hall"
+                    showSubjectLabel={false}
+                    subjectLabel="Spielfeld / Halle"
+                    resourceName={pitchResourceName}
+                    unassignedLabel={tResources("unassignedPitchHall")}
                     facilityGroups={pitchGroupsByCode}
                     selectedResourceIds={pitchCode ? new Set([pitchCode]) : new Set()}
                     onSelect={(code) => setPitchCode(code)}
                     onDeselect={() => setPitchCode("")}
                     availabilityByResourceId={pitchAvailabilityByCode}
-                    disabled={!canManage || saving}
-                    singleSelect
-                    layout="aggregated"
+                    canManage={canManage}
+                    disabled={saving}
                     testId="pitch-assignment"
                   />
                 ) : (
@@ -842,34 +916,23 @@ export default function MatchcenterDetailOperational({
                   Garderoben
                 </p>
                 {useVisualPickers && dressingRoomGroupsByCode ? (
-                  <div className="space-y-4">
-                    <CompactDressingRoomResourceSelector
-                      facilityGroups={dressingRoomGroupsByCode}
-                      selectedResourceIds={
-                        homeDressingRoomCode ? new Set([homeDressingRoomCode]) : new Set()
-                      }
-                      onSelect={(code) => setHomeDressingRoomCode(code)}
-                      onDeselect={() => setHomeDressingRoomCode("")}
-                      availabilityByResourceId={dressingRoomAvailabilityByCode}
-                      disabled={!canManage || saving}
-                      label={`Heimkabine (${homeDisplayName})`}
-                      singleSelect
-                      testId="home-dressing-room"
-                    />
-                    <CompactDressingRoomResourceSelector
-                      facilityGroups={dressingRoomGroupsByCode}
-                      selectedResourceIds={
-                        awayDressingRoomCode ? new Set([awayDressingRoomCode]) : new Set()
-                      }
-                      onSelect={(code) => setAwayDressingRoomCode(code)}
-                      onDeselect={() => setAwayDressingRoomCode("")}
-                      availabilityByResourceId={dressingRoomAvailabilityByCode}
-                      disabled={!canManage || saving}
-                      label={`Gastkabine (${awayDisplayName})`}
-                      singleSelect
-                      testId="away-dressing-room"
-                    />
-                  </div>
+                  <PlanningMatchDressingRoomAssignments
+                    homeLabel={tResources("matchHomeSide")}
+                    awayLabel={tResources("matchAwaySide")}
+                    homeCode={homeDressingRoomCode}
+                    awayCode={awayDressingRoomCode}
+                    homeDisplayName={homeDisplayName}
+                    awayDisplayName={awayDisplayName}
+                    canManage={canManage}
+                    disabled={saving}
+                    facilityGroups={dressingRoomGroupsByCode}
+                    dressingRoomAvailability={dressingRoomAvailabilityByCode}
+                    onSelectHome={(code) => setHomeDressingRoomCode(code)}
+                    onSelectAway={(code) => setAwayDressingRoomCode(code)}
+                    onDeselectHome={() => setHomeDressingRoomCode("")}
+                    onDeselectAway={() => setAwayDressingRoomCode("")}
+                    testId="match-dressing-room"
+                  />
                 ) : (
                   <div className="space-y-4">
                     <label className="block space-y-2">
@@ -888,7 +951,9 @@ export default function MatchcenterDetailOperational({
                         {effectiveDressingRoomOptions.map((room) => (
                           <option key={room.code} value={room.code}>
                             {room.name}
-                            {formatAvailabilitySuffix(dressingRoomAvailabilityByCode.get(room.code))}
+                            {formatAvailabilitySuffix(dressingRoomAvailabilityByCode.get(room.code), {
+                              isSelected: room.code === homeDressingRoomCode,
+                            })}
                           </option>
                         ))}
                       </select>
@@ -909,7 +974,9 @@ export default function MatchcenterDetailOperational({
                         {effectiveDressingRoomOptions.map((room) => (
                           <option key={room.code} value={room.code}>
                             {room.name}
-                            {formatAvailabilitySuffix(dressingRoomAvailabilityByCode.get(room.code))}
+                            {formatAvailabilitySuffix(dressingRoomAvailabilityByCode.get(room.code), {
+                              isSelected: room.code === awayDressingRoomCode,
+                            })}
                           </option>
                         ))}
                       </select>
@@ -923,15 +990,19 @@ export default function MatchcenterDetailOperational({
           <>
             <SectionCard title="Sportanlage und Spielfeld" description="Spielfeldwahl für dieses Match">
               {useVisualPickers && pitchGroupsByCode ? (
-                <CompactPitchHallResourceSelector
+                <PlanningSingleResourceAssignment
+                  kind="pitch_hall"
+                  showSubjectLabel={false}
+                  subjectLabel="Spielfeld / Halle"
+                  resourceName={pitchResourceName}
+                  unassignedLabel={tResources("unassignedPitchHall")}
                   facilityGroups={pitchGroupsByCode}
                   selectedResourceIds={pitchCode ? new Set([pitchCode]) : new Set()}
                   onSelect={(code) => setPitchCode(code)}
                   onDeselect={() => setPitchCode("")}
                   availabilityByResourceId={pitchAvailabilityByCode}
-                  disabled={!canManage || saving}
-                  singleSelect
-                  layout="aggregated"
+                  canManage={canManage}
+                  disabled={saving}
                   testId="pitch-assignment"
                 />
               ) : (
@@ -966,34 +1037,23 @@ export default function MatchcenterDetailOperational({
               description="Garderobenzuteilung für Heim- und Gastteam"
             >
               {useVisualPickers && dressingRoomGroupsByCode ? (
-                <div className="space-y-4">
-                  <CompactDressingRoomResourceSelector
-                    facilityGroups={dressingRoomGroupsByCode}
-                    selectedResourceIds={
-                      homeDressingRoomCode ? new Set([homeDressingRoomCode]) : new Set()
-                    }
-                    onSelect={(code) => setHomeDressingRoomCode(code)}
-                    onDeselect={() => setHomeDressingRoomCode("")}
-                    availabilityByResourceId={dressingRoomAvailabilityByCode}
-                    disabled={!canManage || saving}
-                    label={`Heimkabine (${homeDisplayName})`}
-                    singleSelect
-                    testId="home-dressing-room"
-                  />
-                  <CompactDressingRoomResourceSelector
-                    facilityGroups={dressingRoomGroupsByCode}
-                    selectedResourceIds={
-                      awayDressingRoomCode ? new Set([awayDressingRoomCode]) : new Set()
-                    }
-                    onSelect={(code) => setAwayDressingRoomCode(code)}
-                    onDeselect={() => setAwayDressingRoomCode("")}
-                    availabilityByResourceId={dressingRoomAvailabilityByCode}
-                    disabled={!canManage || saving}
-                    label={`Gastkabine (${awayDisplayName})`}
-                    singleSelect
-                    testId="away-dressing-room"
-                  />
-                </div>
+                <PlanningMatchDressingRoomAssignments
+                  homeLabel={tResources("matchHomeSide")}
+                  awayLabel={tResources("matchAwaySide")}
+                  homeCode={homeDressingRoomCode}
+                  awayCode={awayDressingRoomCode}
+                  homeDisplayName={homeDisplayName}
+                  awayDisplayName={awayDisplayName}
+                  canManage={canManage}
+                  disabled={saving}
+                  facilityGroups={dressingRoomGroupsByCode}
+                  dressingRoomAvailability={dressingRoomAvailabilityByCode}
+                  onSelectHome={(code) => setHomeDressingRoomCode(code)}
+                  onSelectAway={(code) => setAwayDressingRoomCode(code)}
+                  onDeselectHome={() => setHomeDressingRoomCode("")}
+                  onDeselectAway={() => setAwayDressingRoomCode("")}
+                  testId="match-dressing-room"
+                />
               ) : (
                 <div className="space-y-4">
                   <label className="block space-y-2">
@@ -1050,8 +1110,6 @@ export default function MatchcenterDetailOperational({
           </>
         )
       ) : null}
-
-      {!recordSurface ? publicationSection : null}
 
       {!hideFooterActions ? footerActions : null}
     </div>

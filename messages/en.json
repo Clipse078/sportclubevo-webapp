@@ -236,6 +236,15 @@
       "homeAway": { "home": "Home", "away": "Away" },
       "publication": {
         "heading": "Publication",
+        "intro": "Control where this entry is published.",
+        "trainingIntro": "These channels apply at team season level — not per training session.",
+        "teamSeasonScopeBadge": "Team season",
+        "manageTeamPublicationSettings": "Open team settings",
+        "infoboardEffectiveOn": "Shown on infoboard",
+        "infoboardEffectiveOff": "Hidden on infoboard",
+        "trainingWebsiteDescription": "Training times on the public team page (all sessions in this team season).",
+        "trainingInfoboardDescription": "Scheduled trainings on club screens while not cancelled.",
+        "trainingWebsitePermissionHint": "Website publication requires team management permission.",
         "homepageRequiresWebsite": "Homepage requires website publication to be enabled.",
         "channels": {
           "website": {
@@ -278,7 +287,8 @@
       },
       "work": {
         "heading": "Tasks & requirements",
-        "description": "Linked operational tasks and requirements."
+        "description": "Linked operational tasks and requirements.",
+        "createTask": "Task"
       },
       "requirements": {
         "heading": "Requirements",
@@ -348,12 +358,33 @@
         "timeStart": "Start",
         "timeEnd": "End",
         "allDay": "All day",
-        "allDaySummary": "All day"
+        "allDaySummary": "All day",
+        "teamSelectPlaceholder": "Select team"
       },
       "errors": {
         "createFailed": "Could not create the event.",
         "saveFailed": "Could not save changes."
       }
     }
+  },
+  "PlanningResources": {
+    "free": "Free",
+    "current": "Current",
+    "occupied": "Occupied",
+    "sharedWith": "Shared with {owners}",
+    "assign": "Assign",
+    "change": "Change",
+    "unassignedDressingRoom": "No dressing room assigned",
+    "unassignedPitchHall": "No pitch / hall assigned",
+    "pickerTitleDressingRoom": "Dressing room for {subject}",
+    "pickerTitlePitchHall": "Resource for {subject}",
+    "pickerCancel": "Cancel",
+    "globalOccupancyHeading": "Occupancy",
+    "changeDressingRoomFor": "Change dressing room for {subject}",
+    "assignDressingRoomFor": "Assign dressing room for {subject}",
+    "changePitchHallFor": "Change pitch / hall for {subject}",
+    "assignPitchHallFor": "Assign pitch / hall for {subject}",
+    "matchHomeSide": "Home",
+    "matchAwaySide": "Away"
   }
 }

@@ -18,14 +18,13 @@ describe("Training session edit route — SCE workspace", () => {
     return readFileSync(pagePath, "utf8");
   }
 
-  it("uses responsive 12-column workspace with date/time and participation panels", () => {
+  it("uses canonical operational workspace with primary resources and rail publication", () => {
     const source = readPage();
-    expect(source).toContain("training-session-edit-workspace-grid");
-    expect(source).toContain("PLANNING_EDITOR_PRIMARY_WORKSPACE_GRID_CLASS");
-    expect(source).toContain("PLANNING_EDITOR_PRIMARY_COLUMN_CLASS");
-    expect(source).toContain("PLANNING_EDITOR_SECONDARY_COLUMN_CLASS");
+    expect(source).toContain("PlanningEditorOperationalWorkspace");
+    expect(source).toContain("training-session-edit-operational-workspace");
     expect(source).toContain("training-session-edit-datetime-panel");
     expect(source).toContain("training-session-edit-participation-panel");
+    expect(source).toContain("training-session-edit-allocations-panel");
     expect(source).toContain("training-session-edit-participants-panel");
     expect(source).toContain("getTrainingSessionParticipantRoster");
   });

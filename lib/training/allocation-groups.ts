@@ -1,21 +1,20 @@
 /**
  * lib/training/allocation-groups.ts
  *
- * TRAININGCENTER-01B — UI-only classification of existing FacilityResource
- * types into the TrainingCenter allocation groups shown in the allocation
- * editor:
+ * TRAININGCENTER-01B — UI classification of FacilityResource types into
+ * allocation groups (PLANNING-UX-07R6R1: sport-agnostic grouping, football-
+ * friendly labels):
  *
- *   Spielfeld/Halle  (FULL_PITCH, HALF_PITCH)
- *   Garderobe        (DRESSING_ROOM)
- *   Weitere Ressourcen (everything else, e.g. OTHER)
+ *   PITCH_HALL ("Spielfeld / Halle") — primary playable surfaces
+ *       FULL_PITCH, HALF_PITCH (FCA today; not an engine assumption that
+ *       every tenant is a football club)
+ *   DRESSING_ROOM — changing rooms (generic across sports)
+ *   OTHER ("Weitere Ressourcen") — tenant-defined bookable resources
+ *       (courts, halls sections, meeting rooms, …) via FacilityResourceType.OTHER
  *
- * Deliberately reuses the existing FacilityResourceType enum verbatim — no
- * schema change, no new resource model, no change to allocation
- * persistence. This mirrors the exact split already used by
- * lib/training/training-allocation-service.ts (listAllocationSummaryByTenant)
- * and lib/training/operational-state.ts for the "pitch/hall assigned" /
- * "dressing room assigned" open-action checks, so the UI grouping and the
- * operational-state evaluation can never disagree.
+ * Deliberately reuses FacilityResourceType — no per-sport enum explosion.
+ * Canonical availability uses the same group keys; see
+ * lib/facilities/facility-resource-classification.ts.
  *
  * Pure, synchronous, no I/O.
  */

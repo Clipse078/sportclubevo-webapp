@@ -3,23 +3,19 @@
  *
  * components/admin/training/__tests__/TrainingAllocationEditor.test.tsx
  *
- * TRAININGCENTER-01B — regression tests for the split allocation UX:
- *   - Spielfeld/Halle zuweisen
- *   - Garderobe zuweisen
- *   - optional Weitere Ressourcen
- *
- * Verifies the primary allocation flows (pitch/hall, dressing room), the
- * optional "Weitere Ressourcen" visibility rule, grouped display of
- * existing allocations, and that backend guardrail errors (duplicate /
- * archived) surface to the user without touching persistence.
+ * TRAININGCENTER-01B / PLANNING-UX-07R4A — series allocation editor (canonical R4 picker).
  */
 
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { pickFacilityResource } from "@/components/admin/tournamentcenter/__tests__/tournament-form-test-helpers";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TrainingAllocationEditor } from "@/components/admin/training/TrainingAllocationEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { TrainingAllocationDto } from "@/lib/training/types";
+import {
+  openSeriesDressingPicker,
+  openSeriesPitchPicker,
+  pickOperationalResource,
+} from "@/components/admin/training/__tests__/training-allocation-test-helpers";
 
 function makeAllocation(overrides: Partial<TrainingAllocationDto> = {}): TrainingAllocationDto {
   return {
@@ -72,7 +68,7 @@ describe("TrainingAllocationEditor", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders dedicated Spielfeld/Halle and Garderobe selectors, without a Weitere Ressourcen section when there are no OTHER resources", () => {
+  it("renders R4 assignment rows for pitch and dressing without Weitere Ressourcen when no OTHER resources exist", () => {
     render(
       <TrainingAllocationEditor
         trainingSeriesId="series-1"
@@ -83,8 +79,9 @@ describe("TrainingAllocationEditor", () => {
       />,
     );
 
-    expect(screen.getByText("Spielfeld / Halle zuweisen")).toBeInTheDocument();
-    expect(screen.getByText("Garderobe zuweisen")).toBeInTheDocument();
+    expect(screen.getByText("Spielfeld / Halle")).toBeInTheDocument();
+    expect(screen.getByText("Garderobe")).toBeInTheDocument();
+    expect(screen.getAllByText("Zuweisen")).toHaveLength(2);
     expect(screen.queryByText("Weitere Ressourcen")).not.toBeInTheDocument();
   });
 
@@ -102,7 +99,7 @@ describe("TrainingAllocationEditor", () => {
     expect(screen.getByText("Weitere Ressourcen")).toBeInTheDocument();
   });
 
-  it("allocates a pitch/hall resource via the dedicated Spielfeld/Halle selector", async () => {
+  it("allocates a pitch/hall resource via PlanningResourcePicker", async () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(
       jsonResponse({ allocation: makeAllocation() }, 201),
     );
@@ -118,8 +115,8 @@ describe("TrainingAllocationEditor", () => {
       />,
     );
 
-    pickFacilityResource("training-allocation-add-pitch-hall", "res-pitch-a");
-    fireEvent.click(screen.getByTestId("training-allocation-add-pitch-hall-add-button"));
+    await openSeriesPitchPicker();
+    pickOperationalResource("training-allocation-add-pitch-hall", "res-pitch-a");
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(fetchMock).toHaveBeenCalledWith(
@@ -133,11 +130,11 @@ describe("TrainingAllocationEditor", () => {
     const pitchGroup = await screen.findByTestId("training-allocations-pitch-hall");
     expect(within(pitchGroup).getByText("Feld A ganz")).toBeInTheDocument();
 
-    // The dressing-room selector is unaffected by a pitch/hall allocation.
-    expect(screen.getByTestId("training-allocation-add-dressing-room-select")).toBeInTheDocument();
+    const dressingGroup = screen.getByTestId("training-allocations-dressing-room");
+    expect(within(dressingGroup).getByText("Nicht zugewiesen")).toBeInTheDocument();
   });
 
-  it("allocates a dressing room via the dedicated Garderobe selector", async () => {
+  it("allocates a dressing room via PlanningResourcePicker", async () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(
       jsonResponse(
         {
@@ -164,8 +161,8 @@ describe("TrainingAllocationEditor", () => {
       />,
     );
 
-    pickFacilityResource("training-allocation-add-dressing-room", "res-dressing-1");
-    fireEvent.click(screen.getByTestId("training-allocation-add-dressing-room-add-button"));
+    await openSeriesDressingPicker();
+    pickOperationalResource("training-allocation-add-dressing-room", "res-dressing-1");
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
@@ -173,7 +170,7 @@ describe("TrainingAllocationEditor", () => {
     expect(within(dressingGroup).getByText("Garderobe 1")).toBeInTheDocument();
   });
 
-  it("allocates an OTHER resource via the optional Weitere Ressourcen selector", async () => {
+  it("allocates an OTHER resource via the optional Weitere Ressourcen picker", async () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(
       jsonResponse(
         {
@@ -200,16 +197,17 @@ describe("TrainingAllocationEditor", () => {
       />,
     );
 
-    pickFacilityResource("training-allocation-add-other", "res-other-1");
-    fireEvent.click(screen.getByTestId("training-allocation-add-other-add-button"));
+    fireEvent.click(screen.getByTestId("training-allocations-other"));
+    fireEvent.click(screen.getByTestId("training-allocation-change-other"));
+    pickOperationalResource("training-allocation-add-other", "res-other-1");
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
 
     const otherGroup = await screen.findByTestId("training-allocations-other");
-    expect(within(otherGroup).getByText("Materialraum")).toBeInTheDocument();
+    expect(within(otherGroup).getAllByText("Materialraum").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("surfaces a duplicate-allocation guard error under the relevant selector without mutating local state", async () => {
+  it("surfaces a duplicate-allocation guard error under the relevant picker without mutating local state", async () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(
       jsonResponse({ error: "FacilityResource already allocated" }, 409),
     );
@@ -225,11 +223,12 @@ describe("TrainingAllocationEditor", () => {
       />,
     );
 
-    pickFacilityResource("training-allocation-add-pitch-hall", "res-pitch-a");
-    fireEvent.click(screen.getByTestId("training-allocation-add-pitch-hall-add-button"));
+    await openSeriesPitchPicker();
+    pickOperationalResource("training-allocation-add-pitch-hall", "res-pitch-a");
 
     expect(await screen.findByRole("alert")).toHaveTextContent("FacilityResource already allocated");
-    expect(screen.queryByTestId("training-allocations-pitch-hall")).not.toBeInTheDocument();
+    const pitchGroup = screen.getByTestId("training-allocations-pitch-hall");
+    expect(within(pitchGroup).getByText("Nicht zugewiesen")).toBeInTheDocument();
   });
 
   it("surfaces an archived-resource guard error without mutating local state", async () => {
@@ -248,11 +247,12 @@ describe("TrainingAllocationEditor", () => {
       />,
     );
 
-    pickFacilityResource("training-allocation-add-dressing-room", "res-dressing-1");
-    fireEvent.click(screen.getByTestId("training-allocation-add-dressing-room-add-button"));
+    await openSeriesDressingPicker();
+    pickOperationalResource("training-allocation-add-dressing-room", "res-dressing-1");
 
     expect(await screen.findByRole("alert")).toHaveTextContent("archived");
-    expect(screen.queryByTestId("training-allocations-dressing-room")).not.toBeInTheDocument();
+    const dressingGroup = screen.getByTestId("training-allocations-dressing-room");
+    expect(within(dressingGroup).getByText("Nicht zugewiesen")).toBeInTheDocument();
   });
 
   it("groups already-assigned resources visually by Spielfeld/Halle, Garderobe, and Weitere Ressourcen", () => {
@@ -290,7 +290,7 @@ describe("TrainingAllocationEditor", () => {
     expect(within(otherGroup).getByText("Materialraum")).toBeInTheDocument();
   });
 
-  it("hides the add-resource selectors entirely when the user cannot manage allocations", () => {
+  it("hides assign actions when the user cannot manage allocations", () => {
     render(
       <TrainingAllocationEditor
         trainingSeriesId="series-1"
@@ -301,11 +301,11 @@ describe("TrainingAllocationEditor", () => {
       />,
     );
 
-    expect(screen.queryByText("Spielfeld / Halle zuweisen")).not.toBeInTheDocument();
-    expect(screen.queryByText("Garderobe zuweisen")).not.toBeInTheDocument();
+    expect(screen.queryByText("Zuweisen")).not.toBeInTheDocument();
+    expect(screen.queryByText("Ändern")).not.toBeInTheDocument();
   });
 
-  it("shows a 'no resources configured' message for a group with zero resources of that type", () => {
+  it("shows a 'no resources configured' message for a group with zero resources of that type", async () => {
     const groupsWithoutDressingRoom: FacilityGroup[] = [
       {
         facilityId: "facility-1",
@@ -326,6 +326,7 @@ describe("TrainingAllocationEditor", () => {
       />,
     );
 
-    expect(screen.getByTestId("training-allocation-add-dressing-room-no-resources")).toBeInTheDocument();
+    await openSeriesDressingPicker();
+    expect(screen.getByTestId("training-allocation-add-dressing-room-empty")).toBeInTheDocument();
   });
 });

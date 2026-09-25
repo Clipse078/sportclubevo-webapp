@@ -79,18 +79,16 @@ export default async function TournamentEditPage({ params }: Props) {
   const timeZone = tenantContext.timezone ?? "Europe/Zurich";
   const participantPresentation = await loadTournamentPlanningParticipants(tenantContext.id, tournament);
 
-  const participantsSection = (
-    <PlanningEditorParticipantsSection
-      headingId="turniere-edit-participants-heading"
-      testId="turniere-edit-participants-section"
-      persisted
-    >
-      <PlanningParticipantsList
-        people={participantPresentation.people}
-        teams={participantPresentation.teams}
-      />
-    </PlanningEditorParticipantsSection>
-  );
+  const participantsSection =
+    participantPresentation.people.length > 0 ? (
+      <PlanningEditorParticipantsSection
+        headingId="turniere-edit-rsvp-participants-heading"
+        testId="turniere-edit-rsvp-participants-section"
+        persisted
+      >
+        <PlanningParticipantsList people={participantPresentation.people} teams={[]} />
+      </PlanningEditorParticipantsSection>
+    ) : null;
 
   const collaborationSection = (
     <PlanningEditorCollaborationSection

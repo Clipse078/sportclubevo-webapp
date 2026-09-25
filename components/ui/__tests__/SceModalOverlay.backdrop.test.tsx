@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  *
- * SCE-RESPONSIVE-01G — zero visible modal backdrop (transparent pointer-capture layer, no blur).
+ * SCE modal backdrop — dimmed scrim with backdrop blur (PLANNING-UX-07R8A).
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -37,9 +37,9 @@ describe("SceModalOverlay backdrop SCE-RESPONSIVE-01F", () => {
     expect(overlay.querySelectorAll(".sce-modal-overlay-backdrop")).toHaveLength(1);
   });
 
-  it("B — backdrop uses shared transparent semantic token", () => {
+  it("B — backdrop uses shared dimmed semantic token", () => {
     const css = readGlobalsCss();
-    expect(css).toContain("--sce-modal-backdrop: transparent;");
+    expect(css).toContain("--sce-modal-backdrop: rgb(2 6 15 / 42%);");
     expect(css).toMatch(
       /\.sce-modal-overlay-backdrop\s*\{[\s\S]*background:\s*var\(--sce-modal-backdrop\)/,
     );
@@ -64,12 +64,9 @@ describe("SceModalOverlay backdrop SCE-RESPONSIVE-01F", () => {
     expect(root.querySelector(".sce-modal-overlay-interaction-layer")).toBeTruthy();
   });
 
-  it("D — does not apply backdrop blur or filter on the scrim", () => {
+  it("D — applies canonical backdrop blur on the scrim", () => {
     const block = backdropBlock(readGlobalsCss());
-    expect(block).not.toMatch(/backdrop-filter/);
-    expect(block).not.toMatch(/filter:/);
-    expect(block).not.toMatch(/blur\(/);
-    expect(block).not.toMatch(/saturate\(/);
+    expect(block).toMatch(/backdrop-filter:\s*blur\(10px\)/);
   });
 
   it("E — data-sce-modal-background does not receive visual opacity or filter in CSS", () => {
@@ -109,11 +106,9 @@ describe("SceModalOverlay backdrop SCE-RESPONSIVE-01F", () => {
     expect(overlaySource).toContain("[data-sce-modal-background]");
   });
 
-  it("I — backdrop rejects visible dimming tokens", () => {
+  it("I — backdrop token stays within canonical dim range", () => {
     const css = readGlobalsCss();
-    expect(css).toContain("--sce-modal-backdrop: transparent;");
-    expect(css).not.toContain("rgb(2 6 15 / 12%)");
-    expect(css).not.toContain("rgb(2 6 15 / 55%)");
+    expect(css).toContain("--sce-modal-backdrop: rgb(2 6 15 / 42%);");
     expect(css).not.toMatch(/\.sce-modal-overlay-backdrop[\s\S]*rgb\(0 0 0 \/ 65%\)/);
   });
 });

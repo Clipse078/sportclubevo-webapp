@@ -661,7 +661,16 @@
         "away": "Auswärts"
       },
       "publication": {
-        "heading": "Veröffentlichung",
+        "heading": "Publikation",
+        "intro": "Steuere, wo dieser Eintrag veröffentlicht wird.",
+        "trainingIntro": "Diese Kanäle gelten teamweit für die Saison — nicht pro Trainingseinheit.",
+        "teamSeasonScopeBadge": "Team-Saison",
+        "manageTeamPublicationSettings": "Team-Einstellungen öffnen",
+        "infoboardEffectiveOn": "Aktiv auf Infoboard",
+        "infoboardEffectiveOff": "Auf Infoboard ausgeblendet",
+        "trainingWebsiteDescription": "Trainingszeiten auf der öffentlichen Teamseite (gilt für alle Einheiten dieser Team-Saison).",
+        "trainingInfoboardDescription": "Geplante Trainings auf Vereinsbildschirmen, solange sie nicht abgesagt sind.",
+        "trainingWebsitePermissionHint": "Website-Ausgabe erfordert Berechtigung zur Team-Verwaltung.",
         "homepageRequiresWebsite": "Homepage erfordert aktive Website-Veröffentlichung.",
         "channels": {
           "website": {
@@ -704,7 +713,8 @@
       },
       "work": {
         "heading": "Aufgaben & Anforderungen",
-        "description": "Verknüpfte operative Aufgaben und Anforderungen."
+        "description": "Verknüpfte operative Aufgaben und Anforderungen.",
+        "createTask": "Aufgabe"
       },
       "requirements": {
         "heading": "Anforderungen",
@@ -749,6 +759,7 @@
       "sections": {
         "details": "Grunddaten",
         "schedule": "Termin",
+        "resources": "Ressourcen",
         "publication": "Ausspielung"
       },
       "fields": {
@@ -774,12 +785,33 @@
         "timeStart": "Beginn",
         "timeEnd": "Ende",
         "allDay": "Ganztägig",
-        "allDaySummary": "Ganztägig"
+        "allDaySummary": "Ganztägig",
+        "teamSelectPlaceholder": "Team auswählen"
       },
       "errors": {
         "createFailed": "Veranstaltung konnte nicht erstellt werden.",
         "saveFailed": "Änderungen konnten nicht gespeichert werden."
       }
     }
+  },
+  "PlanningResources": {
+    "free": "Frei",
+    "current": "Aktuell",
+    "occupied": "Belegt",
+    "sharedWith": "Geteilt mit {owners}",
+    "assign": "Zuweisen",
+    "change": "Ändern",
+    "unassignedDressingRoom": "Keine Garderobe zugewiesen",
+    "unassignedPitchHall": "Kein Spielfeld / keine Halle zugewiesen",
+    "pickerTitleDressingRoom": "Garderobe für {subject}",
+    "pickerTitlePitchHall": "Ressource für {subject}",
+    "pickerCancel": "Abbrechen",
+    "globalOccupancyHeading": "Belegung",
+    "changeDressingRoomFor": "Garderobe für {subject} ändern",
+    "assignDressingRoomFor": "Garderobe für {subject} zuweisen",
+    "changePitchHallFor": "Spielfeld / Halle für {subject} ändern",
+    "assignPitchHallFor": "Spielfeld / Halle für {subject} zuweisen",
+    "matchHomeSide": "Heim",
+    "matchAwaySide": "Gast"
   }
 }

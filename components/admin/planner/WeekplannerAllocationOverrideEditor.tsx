@@ -36,7 +36,8 @@ import type {
   FacilityGroup,
   ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
-import { FacilityResourceSelector } from "@/components/admin/training/FacilityResourceSelector";
+import { PlanningResourceSemanticIconTile } from "@/components/admin/shared/planning/FacilityResourceIdentity";
+import { WeekplannerPlanningResourceSection } from "@/components/admin/planner/WeekplannerPlanningResourceSection";
 import type { WeekplannerActivityType, WeekplannerAllocationGroup } from "@/lib/weekplanner/plan-types";
 
 /** Shape of one row in GET /api/facilities/availability's `availability` array. */
@@ -108,10 +109,15 @@ export function WeekplannerAllocationOverrideEditor({
     // MATCH/TOURNAMENT activityId IS the canonical Event.id — excluding it
     // avoids the activity's own booking showing up as its own conflict.
     const excludeEventId = activityType !== "TRAINING" ? activityId : undefined;
+    const excludeTrainingSessionId = activityType === "TRAINING" ? activityId : undefined;
 
     async function loadAvailability() {
       const params = new URLSearchParams({ startAt, endAt, group: allocationGroup });
+      params.set("weekplannerPlanId", planId);
+      params.set("excludeWeekplannerActivityType", activityType);
+      params.set("excludeWeekplannerActivityId", activityId);
       if (excludeEventId) params.set("excludeEventId", excludeEventId);
+      if (excludeTrainingSessionId) params.set("excludeTrainingSessionId", excludeTrainingSessionId);
       try {
         const res = await fetch(`/api/facilities/availability?${params.toString()}`, { cache: "no-store" });
         const data = (await res.json().catch(() => null)) as { availability?: ResourceAvailabilityRow[] } | null;
@@ -126,7 +132,7 @@ export function WeekplannerAllocationOverrideEditor({
     return () => {
       active = false;
     };
-  }, [activityType, activityId, allocationGroup, startAt, endAt]);
+  }, [activityType, activityId, allocationGroup, startAt, endAt, planId]);
 
   const handleAdd = useCallback(
     async (facilityResourceId: string) => {
@@ -230,12 +236,25 @@ export function WeekplannerAllocationOverrideEditor({
         {rowsToShow.length === 0 ? (
           <li className="text-[11px] text-[var(--muted)]">Keine Ressource zugewiesen.</li>
         ) : (
-          rowsToShow.map((row) => (
+          rowsToShow.map((row) => {
+            const meta = facilityGroups
+              .flatMap((fg) => fg.resources.map((r) => ({ ...r, facilityType: r.facilityType ?? fg.facilityType })))
+              .find((r) => r.id === row.facilityResourceId);
+            return (
             <li
               key={row.id}
               className="flex items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-white px-2 py-1 text-[11px]"
             >
-              <span className="truncate text-[var(--foreground)]">{row.facilityResourceName}</span>
+              <span className="flex min-w-0 items-center gap-1.5">
+                {meta ? (
+                  <PlanningResourceSemanticIconTile
+                    resourceType={meta.type}
+                    facilityType={meta.facilityType}
+                    className="scale-75"
+                  />
+                ) : null}
+                <span className="truncate text-[var(--foreground)]">{row.facilityResourceName}</span>
+              </span>
               {isOverridden && (
                 <button
                   type="button"
@@ -257,7 +276,8 @@ export function WeekplannerAllocationOverrideEditor({
                 </button>
               )}
             </li>
-          ))
+          );
+          })
         )}
       </ul>
 
@@ -268,14 +288,29 @@ export function WeekplannerAllocationOverrideEditor({
       )}
 
       <div className="mt-2 space-y-1.5">
-        <FacilityResourceSelector
+        <WeekplannerPlanningResourceSection
+          kind={allocationGroup === "DRESSING_ROOM" ? "dressing_room" : "pitch_hall"}
           facilityGroups={facilityGroups}
-          allocatedResourceIds={new Set(rowsToShow.map((r) => r.facilityResourceId))}
-          onAdd={handleAdd}
-          placeholder="Für diesen Plan auswählen…"
-          addButtonLabel="Zuweisen"
+          selectedResourceIds={new Set(rowsToShow.map((r) => r.facilityResourceId))}
+          onSelect={(resourceId) => {
+            setError(null);
+            startTransition(async () => {
+              try {
+                await handleAdd(resourceId);
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "Fehler beim Zuweisen");
+              }
+            });
+          }}
+          onDeselect={() => {}}
           availabilityByResourceId={availabilityByResourceId}
+          disabled={isPending}
           testId={`weekplanner-override-${activityId}-${allocationGroup.toLowerCase()}${participantId ? `-${participantId}` : ""}`}
+          unassignedLabel={
+            allocationGroup === "DRESSING_ROOM"
+              ? "Keine Garderobe zugewiesen"
+              : "Noch kein Spielfeld / keine Halle zugewiesen"
+          }
         />
         {isOverridden && (
           <button

@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 
+import React from "react";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TurniereTournamentRecordWorkspace from "../TurniereTournamentRecordWorkspace";
@@ -13,8 +14,20 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
 vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: { success: vi.fn(), danger: vi.fn() } }),
+}));
+
+vi.mock("@/components/admin/participation/ParticipationRequestConfigEditor", () => ({
+  ParticipationRequestConfigEditor: () => null,
+}));
+
+vi.mock("@/components/admin/shared/planning-editor/PlanningEditorWorkSection", () => ({
+  default: () => <div data-testid="turniere-record-work-section-mock" />,
 }));
 
 const BASE_TOURNAMENT: TournamentDto = {
@@ -116,9 +129,10 @@ describe("TURNIERE-UX-02 record workspace", () => {
     expect(within(screen.getByTestId("turniere-record-organizer-club")).queryByAltText(/FC Allschwil/i)).toBeNull();
     expect(screen.getByTestId("turniere-record-section-overview")).toBeInTheDocument();
     expect(screen.getByTestId("turniere-record-section-schedule")).toBeInTheDocument();
-    expect(screen.getByTestId("turniere-record-section-participants")).toHaveTextContent("1 Team");
+    expect(screen.getByTestId("turniere-canonical-participants-section")).toHaveTextContent("1 Team");
     expect(screen.getByTestId("turniere-record-section-resources")).toHaveTextContent("KR3");
-    expect(screen.getByTestId("turniere-record-section-publication")).toBeInTheDocument();
+    expect(screen.getByTestId("tournament-dressing-room-per-team-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("turniere-record-publication-panel")).toBeInTheDocument();
     expect(screen.getByTestId("turniere-record-context-rail")).toBeInTheDocument();
   });
 

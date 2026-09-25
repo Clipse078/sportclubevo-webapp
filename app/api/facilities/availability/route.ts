@@ -9,7 +9,7 @@
  * Query params:
  *   startAt                    ISO datetime (required)
  *   endAt                      ISO datetime (optional — defaults to startAt)
- *   group                      "PITCH_HALL" | "DRESSING_ROOM" (required)
+ *   group                      "PITCH_HALL" | "DRESSING_ROOM" | "OTHER" (required)
  *   excludeEventId             string (optional — excludes bookings of this
  *                              Event, e.g. when editing a Match/Tournament
  *                              that already holds allocations)
@@ -30,7 +30,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getResourceAvailability, type AvailabilityResourceGroup } from "@/lib/facilities/availability-service";
 import type { WeekplannerActivityType } from "@/lib/weekplanner/plan-types";
 
-const VALID_GROUPS: readonly AvailabilityResourceGroup[] = ["PITCH_HALL", "DRESSING_ROOM"];
+const VALID_GROUPS: readonly AvailabilityResourceGroup[] = ["PITCH_HALL", "DRESSING_ROOM", "OTHER"];
 const ACTIVITY_TYPES: readonly WeekplannerActivityType[] = ["TRAINING", "MATCH", "TOURNAMENT"];
 
 function parseNonNegativeInt(raw: string | null, label: string): number | "invalid" {
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "endAt must be a valid date." }, { status: 400 });
   }
   if (!groupRaw || !VALID_GROUPS.includes(groupRaw as AvailabilityResourceGroup)) {
-    return NextResponse.json({ error: "group must be one of PITCH_HALL, DRESSING_ROOM." }, { status: 400 });
+    return NextResponse.json({ error: "group must be one of PITCH_HALL, DRESSING_ROOM, OTHER." }, { status: 400 });
   }
   if (occupancyBeforeRaw === "invalid") {
     return NextResponse.json({ error: "occupancyBeforeMinutes must be a non-negative integer." }, { status: 400 });

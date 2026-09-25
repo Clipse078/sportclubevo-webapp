@@ -2,6 +2,7 @@
 
 import { FacilityResourceSearchableSelector } from "@/components/admin/shared/FacilityResourceSearchableSelector";
 import type { FacilityResourceType } from "@prisma/client";
+import { formatResourceOccupancyPrimaryLine } from "@/lib/planning/resource-occupancy-presentation";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -51,6 +52,10 @@ export type ResourceAvailabilityAnnotation = {
   conflictEndAt?: string | null;
   /** Additional overlapping occupants when more than one booking conflicts. */
   conflicts?: ResourceAvailabilityConflict[];
+  /** PLANNING-UX-07R3 — presentation-only occupancy classification for cards/selects. */
+  occupancyPresentation?: "FREE" | "OCCUPIED" | "SHARED" | "CURRENT";
+  /** Other subjects sharing this resource (viewer excluded). */
+  sharingSubjectLabels?: string[];
 };
 
 type Props = {
@@ -90,14 +95,17 @@ function formatClockTime(iso: string): string {
  * legacy code-based selects) still render the exact same Frei/Belegt
  * wording, instead of inventing a second phrasing.
  */
-export function formatAvailabilitySuffix(annotation: ResourceAvailabilityAnnotation | undefined): string {
-  if (!annotation) return "";
-  if (annotation.status === "FREE") return " — Frei";
+export function formatAvailabilitySuffix(
+  annotation: ResourceAvailabilityAnnotation | undefined,
+  context?: { isSelected?: boolean },
+): string {
+  const line = formatResourceOccupancyPrimaryLine(annotation, context);
+  if (!line) return "";
   const timeRange =
-    annotation.conflictStartAt && annotation.conflictEndAt
+    annotation?.status === "OCCUPIED" && annotation.conflictStartAt && annotation.conflictEndAt
       ? ` · ${formatClockTime(annotation.conflictStartAt)}–${formatClockTime(annotation.conflictEndAt)}`
       : "";
-  return ` — Belegt${annotation.conflictLabel ? ` · ${annotation.conflictLabel}` : ""}${timeRange}`;
+  return ` — ${line}${timeRange}`;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────

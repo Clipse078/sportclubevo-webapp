@@ -135,10 +135,20 @@ export type WeekplannerTrainingItem = WeekplannerItemBase & {
   teamSeasonId: string;
 };
 
+export type WeekplannerMatchSideIdentity = {
+  displayName: string;
+  logoUrl: string | null;
+  isOwnTeam: boolean;
+};
+
 export type WeekplannerMatchItem = WeekplannerItemBase & {
   type: "MATCH";
   eventId: string;
   opponentName: string | null;
+  /** Canonical Event.source — drives SFV/manual schedule write rules in the editor. */
+  eventSource: string;
+  homeSide: WeekplannerMatchSideIdentity;
+  awaySide: WeekplannerMatchSideIdentity;
   /** Weekplanner only ever surfaces HOME matches — see queries.ts. */
   homeAway: "HOME";
   /**

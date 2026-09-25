@@ -25,6 +25,10 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock, refresh: refreshMock }),
 }));
 
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
 const PITCH_HALL_GROUPS: FacilityGroup[] = [
   {
     facilityId: "facility-1",
@@ -120,6 +124,22 @@ beforeEach(() => {
   refreshMock.mockClear();
 });
 
+describe("MatchCreateForm — Ort (PLANNING-UX-07R7B)", () => {
+  it("renders Ort free-text only — no legacy facility-name quick-choice chips", async () => {
+    installFetchMock();
+    render(
+      <MatchCreateForm
+        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
+        canValidateDirectly
+      />,
+    );
+
+    await waitFor(() => expect(screen.getByTestId("match-create-location")).toBeInTheDocument());
+    expect(document.querySelector('[data-testid^="match-create-location-quickpick-"]')).toBeNull();
+  });
+});
+
 describe("MatchCreateForm — guided-progress nudge", () => {
   it("lists missing items and shrinks as fields are filled", async () => {
     installFetchMock();
@@ -145,7 +165,7 @@ describe("MatchCreateForm — guided-progress nudge", () => {
       expect(screen.getByTestId("match-create-guided-progress")).toHaveTextContent("Spielfeld / Halle zuweisen"),
     );
 
-    fireEvent.click(screen.getByTestId("match-create-home-away-away"));
+    fireEvent.click(screen.getByTestId("match-create-home-away-option-away"));
     await waitFor(() =>
       expect(screen.getByTestId("match-create-guided-progress")).not.toHaveTextContent("Spielfeld / Halle zuweisen"),
     );
@@ -159,8 +179,11 @@ describe("MatchCreateForm — HOME/AWAY facility availability", () => {
 
     fireEvent.change(screen.getByTestId("match-create-start-at"), { target: { value: "2026-09-20T10:00" } });
 
+    await waitFor(() => expect(screen.getByTestId("match-create-pitch-action")).toBeInTheDocument());
+    fireEvent.click(screen.getByTestId("match-create-pitch-action"));
+
     await waitFor(() => {
-      expect(screen.getByText("Kunstrasen 2")).toBeInTheDocument();
+      expect(screen.getByTestId("match-create-pitch-picker-option-res-pitch-a")).toBeInTheDocument();
       expect(screen.getAllByText("Frei").length).toBeGreaterThan(0);
     });
   });
@@ -169,11 +192,11 @@ describe("MatchCreateForm — HOME/AWAY facility availability", () => {
     const { availabilityCalls } = installFetchMock();
     render(<MatchCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} canValidateDirectly />);
 
-    fireEvent.click(screen.getByTestId("match-create-home-away-away"));
+    fireEvent.click(screen.getByTestId("match-create-home-away-option-away"));
     fireEvent.change(screen.getByTestId("match-create-start-at"), { target: { value: "2026-09-20T10:00" } });
 
     expect(screen.queryByTestId("match-create-pitch")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("match-create-home-dressing-room")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("match-create-dressing-room")).not.toBeInTheDocument();
 
     await new Promise((resolve) => setTimeout(resolve, 10));
     expect(availabilityCalls).toHaveLength(0);
@@ -234,7 +257,7 @@ describe("MatchCreateForm — Gegner (Club Directory search)", () => {
     fireEvent.mouseDown(screen.getByTestId("match-create-opponent-club-search-option-club-telegraph"));
 
     fireEvent.change(screen.getByTestId("match-create-start-at"), { target: { value: "2026-09-20T10:00" } });
-    fireEvent.click(screen.getByTestId("match-create-home-away-away"));
+    fireEvent.click(screen.getByTestId("match-create-home-away-option-away"));
     fireEvent.click(screen.getByTestId("match-create-submit"));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/dashboard/matchcenter?submitted=1"));
@@ -263,7 +286,7 @@ describe("MatchCreateForm — Gegner (Club Directory search)", () => {
       target: { value: "FC Telegraph E1" },
     });
     fireEvent.change(screen.getByTestId("match-create-start-at"), { target: { value: "2026-09-20T10:00" } });
-    fireEvent.click(screen.getByTestId("match-create-home-away-away"));
+    fireEvent.click(screen.getByTestId("match-create-home-away-option-away"));
     fireEvent.click(screen.getByTestId("match-create-submit"));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/dashboard/matchcenter?submitted=1"));
@@ -320,8 +343,12 @@ describe("MatchCreateForm — submission lifecycle copy + orchestration", () => 
     fireEvent.change(screen.getByTestId("match-create-opponent-name"), { target: { value: "FC Concordia Basel" } });
     fireEvent.change(screen.getByTestId("match-create-start-at"), { target: { value: "2026-09-20T10:00" } });
 
-    await waitFor(() => expect(screen.getByTestId("match-create-pitch-card-res-pitch-a")).toBeInTheDocument());
-    fireEvent.click(screen.getByTestId("match-create-pitch-card-res-pitch-a"));
+    await waitFor(() => expect(screen.getByTestId("match-create-pitch-action")).toBeInTheDocument());
+    fireEvent.click(screen.getByTestId("match-create-pitch-action"));
+    await waitFor(() =>
+      expect(screen.getByTestId("match-create-pitch-picker-option-res-pitch-a")).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByTestId("match-create-pitch-picker-option-res-pitch-a"));
 
     fireEvent.click(screen.getByTestId("match-create-submit"));
 
@@ -341,7 +368,7 @@ describe("MatchCreateForm — submission lifecycle copy + orchestration", () => 
     const { patchCalls } = installFetchMock();
     render(<MatchCreateForm pitchHallFacilityGroups={PITCH_HALL_GROUPS} dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS} canValidateDirectly />);
 
-    fireEvent.click(screen.getByTestId("match-create-home-away-away"));
+    fireEvent.click(screen.getByTestId("match-create-home-away-option-away"));
 
     await waitFor(() => expect(screen.getByTestId("match-create-team-select")).not.toBeDisabled());
     fireEvent.change(screen.getByTestId("match-create-team-select"), { target: { value: "team-1" } });

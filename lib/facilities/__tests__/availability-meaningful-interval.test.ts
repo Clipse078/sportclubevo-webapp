@@ -11,6 +11,7 @@ vi.mock("@/lib/db/prisma", () => ({
     event: { findMany: vi.fn() },
     tournamentResourceAllocation: { findMany: vi.fn() },
     tournamentParticipantAllocation: { findMany: vi.fn() },
+    eventFacilityAllocation: { findMany: vi.fn().mockResolvedValue([]) },
     weekplannerPlanAllocation: { findMany: vi.fn() },
     weekplannerPlanActivityOverride: { findMany: vi.fn() },
     weekplannerPlan: { findFirst: vi.fn() },

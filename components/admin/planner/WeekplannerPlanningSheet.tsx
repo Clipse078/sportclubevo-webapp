@@ -15,19 +15,26 @@
  *
  * Architecture invariants:
  *   - All saves still go through the same canonical API endpoints.
- *   - Shared visual pickers (VisualResourceAvailabilityPicker,
- *     VisualDressingRoomPicker) are unchanged.
+ *   - Canonical PlanningResourcePicker via WeekplannerPlanningResourceSection.
  *   - No duplicate planning records; no new availability engine.
  */
 
-import { useId, useMemo, useState } from "react";
-import { AlertCircle, Check, Loader2, Shield, Dumbbell, Trophy, Calendar, Clock } from "lucide-react";
+import { useEffect, useId, useMemo, useState } from "react";
+import { AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/cn";
-import { Sheet } from "@/components/ui/Sheet";
-import { VisualResourceAvailabilityPicker } from "@/components/admin/shared/planning/VisualResourceAvailabilityPicker";
-import { VisualDressingRoomPicker } from "@/components/admin/shared/planning/VisualDressingRoomPicker";
+import { WeekplannerPlanningResourceSection } from "@/components/admin/planner/WeekplannerPlanningResourceSection";
+import {
+  WeekplannerActivityEditorSheet,
+  WeekplannerActivityIdentityCard,
+  WeekplannerDateTimeFields,
+  WeekplannerEditorError,
+  WeekplannerEditorFooter,
+  WeekplannerSectionLabel,
+  initialEditorDate,
+} from "@/components/admin/planner/WeekplannerActivityEditorShell";
+import { WeekplannerTournamentParticipantDressingSection } from "@/components/admin/planner/WeekplannerTournamentParticipantDressingSection";
+import VeranstaltungFacilityAllocationEditor from "@/components/admin/veranstaltungen/VeranstaltungFacilityAllocationEditor";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
@@ -41,6 +48,20 @@ import {
   MATCH_END_TIME_MISSING_COPY,
 } from "@/lib/match/match-operational-completeness";
 import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
+import {
+  isoToLocalDate,
+  isoToLocalTime,
+  localToUtcIso,
+  setsEqual,
+} from "@/lib/weekplanner/weekplanner-editor-time";
+import {
+  isMatchScheduleExternallyOwned,
+  saveManualMatchSchedule,
+  saveMatchOperationalEndOverride,
+  saveTournamentSchedule,
+} from "@/lib/weekplanner/weekplanner-match-schedule";
+import { parseClubEventScheduleFromApiBody } from "@/lib/events/club-event-api-scheduling";
+import type { EventFacilityAllocationDto } from "@/lib/events/event-facility-allocation-types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -55,179 +76,6 @@ type SheetProps = {
   onClose: () => void;
   onSaved: () => void;
 };
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function isoToLocalTime(iso: Date | string): string {
-  const d = typeof iso === "string" ? new Date(iso) : iso;
-  return d.toLocaleTimeString("de-CH", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Zurich" });
-}
-
-function isoToLocalDate(iso: Date | string, tz: string): string {
-  const d = typeof iso === "string" ? new Date(iso) : iso;
-  return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
-}
-
-function localToUtcIso(date: string, time: string, tz: string): string | null {
-  if (!date || !time) return null;
-  try {
-    const local = `${date}T${time}:00`;
-    const formatter = new Intl.DateTimeFormat("en-CA", {
-      timeZone: tz,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-    const parts = formatter.formatToParts(new Date(`${local}Z`));
-    const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "00";
-    const utcGuess = new Date(
-      `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}Z`,
-    );
-    const offset = new Date(local + "Z").getTime() - utcGuess.getTime();
-    return new Date(new Date(local + "Z").getTime() + offset).toISOString();
-  } catch {
-    return null;
-  }
-}
-
-function setsEqual<T>(a: Set<T>, b: Set<T>): boolean {
-  if (a.size !== b.size) return false;
-  for (const v of a) if (!b.has(v)) return false;
-  return true;
-}
-
-function formatLocalDate(iso: Date | string, tz: string): string {
-  const d = typeof iso === "string" ? new Date(iso) : iso;
-  return new Intl.DateTimeFormat("de-CH", {
-    timeZone: tz,
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(d);
-}
-
-// ── Shared section heading ────────────────────────────────────────────────────
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
-      {children}
-    </p>
-  );
-}
-
-function AvailabilitySectionSkeleton({ label }: { label: string }) {
-  return (
-    <div
-      className="animate-pulse space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3"
-      data-testid="weekplanner-availability-skeleton"
-      aria-busy="true"
-      aria-label={`${label} werden geladen`}
-    >
-      <div className="h-3 w-28 rounded bg-[var(--surface-2)]" />
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {[0, 1, 2].map((key) => (
-          <div key={key} className="h-[4.5rem] rounded-md bg-[var(--surface-2)]" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Editor context header ─────────────────────────────────────────────────────
-
-function EditorHeader({ item, timezone }: { item: WeekplannerItem; timezone: string }) {
-  const typeConfig = {
-    TRAINING: { icon: Dumbbell, label: "Training", badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-    MATCH: { icon: Shield, label: "Heimspiel", badgeClass: "border-blue-200 bg-blue-50 text-blue-700" },
-    TOURNAMENT: { icon: Trophy, label: "Turnier", badgeClass: "border-amber-200 bg-amber-50 text-amber-700" },
-    VERANSTALTUNG: { icon: Calendar, label: "Veranstaltung", badgeClass: "border-violet-200 bg-violet-50 text-violet-700" },
-  }[item.type];
-
-  const Icon = typeConfig.icon;
-  const dateLabel = formatLocalDate(item.canonicalStartAt, timezone);
-  const timeLabel = `${isoToLocalTime(item.canonicalStartAt)} – ${isoToLocalTime(item.canonicalEndAt)}`;
-  const title = item.type === "MATCH"
-    ? `${item.teamNames[0] ?? item.title} vs. ${item.opponentName ?? "TBD"}`
-    : item.title;
-
-  return (
-    <div className="mb-5 space-y-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
-      <div className="flex items-center gap-2">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold",
-            typeConfig.badgeClass,
-          )}
-        >
-          <Icon className="h-3.5 w-3.5" />
-          {typeConfig.label}
-        </span>
-      </div>
-      <p className="text-base font-semibold text-[var(--foreground)]">{title}</p>
-      {item.type === "TRAINING" && item.teamNames[0] && item.teamNames[0] !== item.title && (
-        <p className="text-sm text-[var(--text-2)]">{item.teamNames[0]}</p>
-      )}
-      <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--text-2)]">
-        <span className="inline-flex items-center gap-1.5">
-          <Calendar className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
-          {dateLabel}
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <Clock className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
-          {timeLabel}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-// ── Save / Cancel footer (lifted out so Sheet footer slot gets it) ─────────────
-
-type FooterProps = {
-  saving: boolean;
-  hasChanges: boolean;
-  canSave: boolean;
-  onSave: () => void;
-  onClose: () => void;
-};
-
-function EditorFooter({ saving, hasChanges, canSave, onSave, onClose }: FooterProps) {
-  return (
-    <>
-      <button
-        type="button"
-        onClick={onClose}
-        className="fca-button-secondary text-sm"
-      >
-        Abbrechen
-      </button>
-      <button
-        type="button"
-        onClick={onSave}
-        disabled={saving || !hasChanges || !canSave}
-        className="fca-button-primary text-sm"
-        data-testid="weekplanner-canonical-save"
-      >
-        {saving ? (
-          <>
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            Speichern…
-          </>
-        ) : (
-          <>
-            <Check className="h-3.5 w-3.5" />
-            Planung übernehmen
-          </>
-        )}
-      </button>
-    </>
-  );
-}
 
 // ── TrainingEditor ────────────────────────────────────────────────────────────
 
@@ -362,13 +210,11 @@ function TrainingEditorContent({
   }
 
   return (
-    <Sheet
-      open
-      onClose={onClose}
-      title="Planung bearbeiten"
+    <WeekplannerActivityEditorSheet
       description={item.title}
+      onClose={onClose}
       footer={
-        <EditorFooter
+        <WeekplannerEditorFooter
           saving={saving}
           hasChanges={hasChanges}
           canSave={timesValid}
@@ -378,59 +224,23 @@ function TrainingEditorContent({
       }
     >
       <div data-testid="weekplanner-canonical-editor" className="space-y-6">
-        <EditorHeader item={item} timezone={timezone} />
+        <WeekplannerActivityIdentityCard item={item} timezone={timezone} />
+        {error ? <WeekplannerEditorError message={error} /> : null}
 
-        {error && (
-          <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            {error}
-          </div>
-        )}
+        <WeekplannerDateTimeFields
+          formId={formId}
+          date={date}
+          startTime={startTime}
+          endTime={endTime}
+          onDateChange={setDate}
+          onStartChange={setStartTime}
+          onEndChange={setEndTime}
+        />
 
-        {/* Date + time */}
         <div className="space-y-2">
-          <SectionLabel>Datum & Uhrzeit</SectionLabel>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <label className="block space-y-1">
-              <span className="fca-label">Datum</span>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="fca-input"
-                id={`${formId}-date`}
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="fca-label">Beginn</span>
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="fca-input"
-                id={`${formId}-start`}
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="fca-label">Ende</span>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="fca-input"
-                id={`${formId}-end`}
-              />
-            </label>
-          </div>
-        </div>
-
-        {/* Pitch */}
-        <div className="space-y-2">
-          <SectionLabel>Spielfeld / Halle</SectionLabel>
-          {availabilityLoading && pitchAvailability.size === 0 ? (
-            <AvailabilitySectionSkeleton label="Verfügbarkeiten Spielfeld" />
-          ) : (
-          <VisualResourceAvailabilityPicker
+          <WeekplannerSectionLabel>Spielfeld / Halle</WeekplannerSectionLabel>
+          <WeekplannerPlanningResourceSection
+            kind="pitch_hall"
             facilityGroups={facilityGroupsByAllocationGroup.PITCH_HALL}
             selectedResourceIds={selectedPitchIds}
             onSelect={(id) => setSelectedPitchIds((prev) => new Set([...prev, id]))}
@@ -442,19 +252,16 @@ function TrainingEditorContent({
               })
             }
             availabilityByResourceId={pitchAvailability}
-            disabled={saving}
+            disabled={saving || availabilityLoading}
             testId="wochenplaner-canonical-pitch"
+            unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen"
           />
-          )}
         </div>
 
-        {/* Dressing room */}
         <div className="space-y-2">
-          <SectionLabel>Garderobe</SectionLabel>
-          {availabilityLoading && dressingRoomAvailability.size === 0 ? (
-            <AvailabilitySectionSkeleton label="Verfügbarkeiten Garderobe" />
-          ) : (
-          <VisualDressingRoomPicker
+          <WeekplannerSectionLabel>Garderobe</WeekplannerSectionLabel>
+          <WeekplannerPlanningResourceSection
+            kind="dressing_room"
             facilityGroups={facilityGroupsByAllocationGroup.DRESSING_ROOM}
             selectedResourceIds={selectedRoomIds}
             onSelect={(id) => setSelectedRoomIds((prev) => new Set([...prev, id]))}
@@ -466,10 +273,10 @@ function TrainingEditorContent({
               })
             }
             availabilityByResourceId={dressingRoomAvailability}
-            disabled={saving}
+            disabled={saving || availabilityLoading}
             testId="wochenplaner-canonical-room"
+            unassignedLabel="Keine Garderobe zugewiesen"
           />
-          )}
           {tenantDressingRoomOccupancyPresets && selectedRoomIds.size > 0 && (
             <DressingRoomOccupancyEditor
               item={item}
@@ -481,7 +288,7 @@ function TrainingEditorContent({
           )}
         </div>
       </div>
-    </Sheet>
+    </WeekplannerActivityEditorSheet>
   );
 }
 
@@ -503,19 +310,34 @@ function MatchEditorContent({
   onSaved: () => void;
 }) {
   const router = useRouter();
+  const formId = useId();
+  const scheduleExternallyOwned = isMatchScheduleExternallyOwned(item.eventSource);
 
+  const initDate = isoToLocalDate(item.canonicalStartAt, timezone);
+  const initStart = isoToLocalTime(item.canonicalStartAt, timezone);
+  const initEnd = isoToLocalTime(item.canonicalEndAt, timezone);
   const initPitchCode = item.canonicalPitchAllocations[0]?.code ?? "";
   const initHomeDressingCode = item.canonicalDressingRoomAllocations[0]?.code ?? "";
   const initAwayDressingCode = item.awayDressingRoomAllocations[0]?.code ?? "";
 
+  const [date, setDate] = useState(initDate);
+  const [startTime, setStartTime] = useState(initStart);
+  const [endTime, setEndTime] = useState(initEnd);
   const [pitchCode, setPitchCode] = useState(initPitchCode);
   const [homeDressingCode, setHomeDressingCode] = useState(initHomeDressingCode);
   const [awayDressingCode, setAwayDressingCode] = useState(initAwayDressingCode);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const startAt = useMemo(() => item.canonicalStartAt.toISOString(), [item.canonicalStartAt]);
-  const endAt = useMemo(() => item.canonicalEndAt.toISOString(), [item.canonicalEndAt]);
+  const startAt = useMemo(() => {
+    if (scheduleExternallyOwned) return item.canonicalStartAt.toISOString();
+    return localToUtcIso(date, startTime, timezone) ?? item.canonicalStartAt.toISOString();
+  }, [scheduleExternallyOwned, date, startTime, timezone, item.canonicalStartAt]);
+
+  const endAt = useMemo(() => {
+    if (!endTime) return item.canonicalEndAt.toISOString();
+    return localToUtcIso(date, endTime, timezone) ?? item.canonicalEndAt.toISOString();
+  }, [date, endTime, timezone, item.canonicalEndAt]);
 
   const { pitchAvailability: pitchAvByCode, dressingRoomAvailability: roomAvByCode } = useFacilityAvailability({
     enabled: true,
@@ -543,30 +365,56 @@ function MatchEditorContent({
     [facilityGroupsByAllocationGroup.DRESSING_ROOM],
   );
 
+  const timeChanged =
+    !scheduleExternallyOwned &&
+    (date !== initDate || startTime !== initStart || endTime !== initEnd);
+  const scheduleChanged =
+    scheduleExternallyOwned && endTime !== initEnd;
   const hasChanges =
+    timeChanged ||
+    scheduleChanged ||
     pitchCode !== initPitchCode ||
     homeDressingCode !== initHomeDressingCode ||
     awayDressingCode !== initAwayDressingCode;
 
+  const timesValid = !!startTime && !!endTime && startTime < endTime;
+
   async function handleSave() {
-    if (!hasChanges) return;
+    if (!hasChanges || !timesValid) return;
     setSaving(true);
     setError(null);
 
     try {
-      const body: Record<string, string | null> = {
-        pitchCode: pitchCode || null,
-        homeDressingRoomCode: homeDressingCode || null,
-        awayDressingRoomCode: awayDressingCode || null,
-      };
-      const res = await fetch(`/api/matchcenter/${item.eventId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error ?? "Speichern fehlgeschlagen.");
+      if (scheduleExternallyOwned && scheduleChanged) {
+        const endIso = localToUtcIso(date, endTime, timezone);
+        if (!endIso) throw new Error("Bitte eine gültige Endzeit angeben.");
+        await saveMatchOperationalEndOverride(item.eventId, endIso);
+      } else if (timeChanged) {
+        const startIso = localToUtcIso(date, startTime, timezone);
+        const endIso = localToUtcIso(date, endTime, timezone);
+        if (!startIso || !endIso) throw new Error("Bitte gültige Uhrzeiten angeben.");
+        await saveManualMatchSchedule(item.eventId, startIso, endIso);
+      }
+
+      const resourceChanged =
+        pitchCode !== initPitchCode ||
+        homeDressingCode !== initHomeDressingCode ||
+        awayDressingCode !== initAwayDressingCode;
+      if (resourceChanged) {
+        const body: Record<string, string | null> = {
+          pitchCode: pitchCode || null,
+          homeDressingRoomCode: homeDressingCode || null,
+          awayDressingRoomCode: awayDressingCode || null,
+        };
+        const res = await fetch(`/api/matchcenter/${item.eventId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const data = (await res.json().catch(() => null)) as { error?: string } | null;
+          throw new Error(data?.error ?? "Speichern fehlgeschlagen.");
+        }
       }
       router.refresh();
       onSaved();
@@ -576,26 +424,24 @@ function MatchEditorContent({
     }
   }
 
-  const matchTitle = `${item.teamNames[0] ?? item.title} vs. ${item.opponentName ?? "TBD"}`;
+  const matchTitle = `${item.homeSide.displayName} vs. ${item.awaySide.displayName}`;
 
   return (
-    <Sheet
-      open
-      onClose={onClose}
-      title="Spielfeld & Garderoben bearbeiten"
+    <WeekplannerActivityEditorSheet
       description={matchTitle}
+      onClose={onClose}
       footer={
-        <EditorFooter
+        <WeekplannerEditorFooter
           saving={saving}
           hasChanges={hasChanges}
-          canSave
+          canSave={timesValid}
           onSave={handleSave}
           onClose={onClose}
         />
       }
     >
       <div data-testid="weekplanner-canonical-editor" className="space-y-6">
-        <EditorHeader item={item} timezone={timezone} />
+        <WeekplannerActivityIdentityCard item={item} timezone={timezone} />
 
         {matchRequiresEndTimeAction({
           startAt: item.canonicalStartAt,
@@ -613,17 +459,30 @@ function MatchEditorContent({
           </div>
         ) : null}
 
-        {error && (
-          <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            {error}
-          </div>
-        )}
+        {error ? <WeekplannerEditorError message={error} /> : null}
 
-        {/* Pitch */}
+        <WeekplannerDateTimeFields
+          formId={formId}
+          date={date}
+          startTime={startTime}
+          endTime={endTime}
+          onDateChange={setDate}
+          onStartChange={setStartTime}
+          onEndChange={setEndTime}
+          dateReadOnly={scheduleExternallyOwned}
+          startReadOnly={scheduleExternallyOwned}
+          endTestId="weekplanner-match-canonical-end"
+        />
+        {scheduleExternallyOwned ? (
+          <p className="text-xs text-[var(--muted)]">
+            Anstoß und Datum werden vom Anbieter synchronisiert. Endzeit kann operativ angepasst werden.
+          </p>
+        ) : null}
+
         <div className="space-y-2">
-          <SectionLabel>Spielfeld / Halle</SectionLabel>
-          <VisualResourceAvailabilityPicker
+          <WeekplannerSectionLabel>Spielfeld / Halle</WeekplannerSectionLabel>
+          <WeekplannerPlanningResourceSection
+            kind="pitch_hall"
             facilityGroups={pitchGroupsByCode}
             selectedResourceIds={pitchCode ? new Set([pitchCode]) : new Set()}
             onSelect={(code) => setPitchCode(code)}
@@ -632,13 +491,14 @@ function MatchEditorContent({
             disabled={saving}
             singleSelect
             testId="wochenplaner-canonical-match-pitch"
+            unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen"
           />
         </div>
 
-        {/* Home dressing room */}
         <div className="space-y-2">
-          <SectionLabel>Heimkabine</SectionLabel>
-          <VisualDressingRoomPicker
+          <WeekplannerSectionLabel>Heimkabine</WeekplannerSectionLabel>
+          <WeekplannerPlanningResourceSection
+            kind="dressing_room"
             facilityGroups={roomGroupsByCode}
             selectedResourceIds={homeDressingCode ? new Set([homeDressingCode]) : new Set()}
             onSelect={(code) => setHomeDressingCode(code)}
@@ -647,13 +507,15 @@ function MatchEditorContent({
             disabled={saving}
             singleSelect
             testId="wochenplaner-canonical-match-home-room"
+            unassignedLabel="Keine Garderobe zugewiesen"
+            subjectLabel="Heim"
           />
         </div>
 
-        {/* Away dressing room */}
         <div className="space-y-2">
-          <SectionLabel>Gastkabine</SectionLabel>
-          <VisualDressingRoomPicker
+          <WeekplannerSectionLabel>Gastkabine</WeekplannerSectionLabel>
+          <WeekplannerPlanningResourceSection
+            kind="dressing_room"
             facilityGroups={roomGroupsByCode}
             selectedResourceIds={awayDressingCode ? new Set([awayDressingCode]) : new Set()}
             onSelect={(code) => setAwayDressingCode(code)}
@@ -662,6 +524,8 @@ function MatchEditorContent({
             disabled={saving}
             singleSelect
             testId="wochenplaner-canonical-match-away-room"
+            unassignedLabel="Keine Garderobe zugewiesen"
+            subjectLabel="Gast"
           />
         </div>
 
@@ -675,7 +539,7 @@ function MatchEditorContent({
           />
         )}
       </div>
-    </Sheet>
+    </WeekplannerActivityEditorSheet>
   );
 }
 
@@ -697,30 +561,50 @@ function TournamentEditorContent({
   onSaved: () => void;
 }) {
   const router = useRouter();
+  const formId = useId();
 
+  const initDate = initialEditorDate(item, timezone);
+  const initStart = isoToLocalTime(item.canonicalStartAt, timezone);
+  const initEnd = isoToLocalTime(item.canonicalEndAt, timezone);
   const initPitchIds = new Set(item.canonicalPitchAllocations.map((r) => r.facilityResourceId));
+  const [date, setDate] = useState(initDate);
+  const [startTime, setStartTime] = useState(initStart);
+  const [endTime, setEndTime] = useState(initEnd);
   const [selectedPitchIds, setSelectedPitchIds] = useState<Set<string>>(initPitchIds);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const startAt = useMemo(() => item.canonicalStartAt.toISOString(), [item.canonicalStartAt]);
-  const endAt = useMemo(() => item.canonicalEndAt.toISOString(), [item.canonicalEndAt]);
+  const startAt = useMemo(
+    () => localToUtcIso(date, startTime, timezone) ?? item.canonicalStartAt.toISOString(),
+    [date, startTime, timezone, item.canonicalStartAt],
+  );
+  const endAt = useMemo(
+    () => localToUtcIso(date, endTime, timezone) ?? item.canonicalEndAt.toISOString(),
+    [date, endTime, timezone, item.canonicalEndAt],
+  );
 
-  const { pitchAvailability } = useFacilityAvailability({
-    enabled: true,
+  const { pitchAvailability, dressingRoomAvailability } = useFacilityAvailability({
+    enabled: !!startAt,
     startAt,
     endAt,
     excludeEventId: item.eventId,
   });
 
-  const hasChanges = !setsEqual(selectedPitchIds, initPitchIds);
+  const timesValid = !!startTime && !!endTime && startTime < endTime;
+  const timeChanged = date !== initDate || startTime !== initStart || endTime !== initEnd;
+  const pitchChanged = !setsEqual(selectedPitchIds, initPitchIds);
+  const hasChanges = timeChanged || pitchChanged;
 
   async function handleSave() {
-    if (!hasChanges) return;
+    if (!hasChanges || !timesValid) return;
     setSaving(true);
     setError(null);
 
     try {
+      if (timeChanged) {
+        await saveTournamentSchedule(item.eventId, startAt, endAt);
+      }
+
       const toRemove = Array.from(initPitchIds).filter((id) => !selectedPitchIds.has(id));
       const toAdd = Array.from(selectedPitchIds).filter((id) => !initPitchIds.has(id));
 
@@ -758,35 +642,37 @@ function TournamentEditorContent({
   }
 
   return (
-    <Sheet
-      open
-      onClose={onClose}
-      title="Spielfeld bearbeiten"
+    <WeekplannerActivityEditorSheet
       description={item.title}
+      onClose={onClose}
       footer={
-        <EditorFooter
+        <WeekplannerEditorFooter
           saving={saving}
           hasChanges={hasChanges}
-          canSave
+          canSave={timesValid}
           onSave={handleSave}
           onClose={onClose}
         />
       }
     >
       <div data-testid="weekplanner-canonical-editor" className="space-y-6">
-        <EditorHeader item={item} timezone={timezone} />
+        <WeekplannerActivityIdentityCard item={item} timezone={timezone} />
+        {error ? <WeekplannerEditorError message={error} /> : null}
 
-        {error && (
-          <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            {error}
-          </div>
-        )}
+        <WeekplannerDateTimeFields
+          formId={formId}
+          date={date}
+          startTime={startTime}
+          endTime={endTime}
+          onDateChange={setDate}
+          onStartChange={setStartTime}
+          onEndChange={setEndTime}
+        />
 
-        {/* Pitch */}
         <div className="space-y-2">
-          <SectionLabel>Spielfeld / Halle</SectionLabel>
-          <VisualResourceAvailabilityPicker
+          <WeekplannerSectionLabel>Spielfeld / Halle</WeekplannerSectionLabel>
+          <WeekplannerPlanningResourceSection
+            kind="pitch_hall"
             facilityGroups={facilityGroupsByAllocationGroup.PITCH_HALL}
             selectedResourceIds={selectedPitchIds}
             onSelect={(id) => setSelectedPitchIds((prev) => new Set([...prev, id]))}
@@ -800,8 +686,16 @@ function TournamentEditorContent({
             availabilityByResourceId={pitchAvailability}
             disabled={saving}
             testId="wochenplaner-canonical-tournament-pitch"
+            unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen"
           />
         </div>
+
+        <WeekplannerTournamentParticipantDressingSection
+          tournamentId={item.eventId}
+          facilityGroups={facilityGroupsByAllocationGroup.DRESSING_ROOM}
+          dressingRoomAvailability={dressingRoomAvailability}
+          onMutation={() => router.refresh()}
+        />
 
         {tenantDressingRoomOccupancyPresets &&
           item.participantAllocations.some((p) => p.dressingRoomAllocations.length > 0) && (
@@ -814,7 +708,156 @@ function TournamentEditorContent({
             />
           )}
       </div>
-    </Sheet>
+    </WeekplannerActivityEditorSheet>
+  );
+}
+
+function VeranstaltungEditorContent({
+  item,
+  facilityGroupsByAllocationGroup,
+  timezone,
+  tenantDressingRoomOccupancyPresets,
+  onClose,
+  onSaved,
+}: {
+  item: Extract<WeekplannerItem, { type: "VERANSTALTUNG" }>;
+  facilityGroupsByAllocationGroup: { PITCH_HALL: FacilityGroup[]; DRESSING_ROOM: FacilityGroup[] };
+  timezone: string;
+  tenantDressingRoomOccupancyPresets?: TenantDressingRoomOccupancyPresets;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const router = useRouter();
+  const formId = useId();
+
+  const initDate = initialEditorDate(item, timezone);
+  const initStart = isoToLocalTime(item.canonicalStartAt, timezone);
+  const initEnd = isoToLocalTime(item.canonicalEndAt, timezone);
+  const [date, setDate] = useState(initDate);
+  const [startTime, setStartTime] = useState(initStart);
+  const [endTime, setEndTime] = useState(initEnd);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [allocations, setAllocations] = useState<EventFacilityAllocationDto[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/events/${item.eventId}/facility-allocations`)
+      .then(async (res) => {
+        const data = (await res.json().catch(() => null)) as {
+          allocations?: EventFacilityAllocationDto[];
+        } | null;
+        if (!cancelled) {
+          setAllocations(data?.allocations ?? []);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setAllocations([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [item.eventId]);
+
+  const startAt = useMemo(
+    () => localToUtcIso(date, startTime, timezone) ?? item.canonicalStartAt.toISOString(),
+    [date, startTime, timezone, item.canonicalStartAt],
+  );
+  const endAt = useMemo(
+    () => localToUtcIso(date, endTime, timezone) ?? item.canonicalEndAt.toISOString(),
+    [date, endTime, timezone, item.canonicalEndAt],
+  );
+
+  const { pitchAvailability, dressingRoomAvailability } = useFacilityAvailability({
+    enabled: !!startAt,
+    startAt,
+    endAt,
+    excludeEventId: item.eventId,
+  });
+
+  const timesValid = !!startTime && !!endTime && startTime < endTime;
+  const timeChanged = date !== initDate || startTime !== initStart || endTime !== initEnd;
+  const hasChanges = timeChanged;
+
+  async function handleSave() {
+    if (!hasChanges || !timesValid) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const schedule = parseClubEventScheduleFromApiBody(
+        {
+          allDay: item.allDay,
+          startDate: date,
+          startTime,
+          endDate: date,
+          endTime,
+        },
+        timezone,
+        { allDay: item.allDay, startAt: item.canonicalStartAt, endAt: item.canonicalEndAt },
+      );
+      const res = await fetch(`/api/events/${item.eventId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startAt: schedule.startAt.toISOString(),
+          endAt: schedule.endAt?.toISOString() ?? null,
+          allDay: schedule.allDay,
+        }),
+      });
+      const body = (await res.json().catch(() => null)) as { error?: string } | null;
+      if (!res.ok) throw new Error(body?.error ?? "Speichern fehlgeschlagen.");
+      router.refresh();
+      onSaved();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Speichern fehlgeschlagen.");
+      setSaving(false);
+    }
+  }
+
+  return (
+    <WeekplannerActivityEditorSheet
+      description={item.title}
+      onClose={onClose}
+      footer={
+        <WeekplannerEditorFooter
+          saving={saving}
+          hasChanges={hasChanges}
+          canSave={timesValid}
+          onSave={handleSave}
+          onClose={onClose}
+        />
+      }
+    >
+      <div data-testid="weekplanner-canonical-editor" className="space-y-6">
+        <WeekplannerActivityIdentityCard item={item} timezone={timezone} />
+        {error ? <WeekplannerEditorError message={error} /> : null}
+
+        <WeekplannerDateTimeFields
+          formId={formId}
+          date={date}
+          startTime={startTime}
+          endTime={endTime}
+          onDateChange={setDate}
+          onStartChange={setStartTime}
+          onEndChange={setEndTime}
+        />
+
+        {allocations ? (
+          <VeranstaltungFacilityAllocationEditor
+            eventId={item.eventId}
+            canManage
+            initialAllocations={allocations}
+            pitchHallFacilityGroups={facilityGroupsByAllocationGroup.PITCH_HALL}
+            dressingRoomFacilityGroups={facilityGroupsByAllocationGroup.DRESSING_ROOM}
+            pitchAvailabilityByResourceId={pitchAvailability}
+            dressingRoomAvailabilityByResourceId={dressingRoomAvailability}
+          />
+        ) : (
+          <p className="text-sm text-[var(--muted)]">Ressourcen werden geladen…</p>
+        )}
+
+      </div>
+    </WeekplannerActivityEditorSheet>
   );
 }
 
@@ -865,6 +908,19 @@ export function WeekplannerPlanningSheet({
   if (item.type === "TOURNAMENT") {
     return (
       <TournamentEditorContent
+        item={item}
+        facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
+        timezone={timezone}
+        tenantDressingRoomOccupancyPresets={tenantDressingRoomOccupancyPresets}
+        onClose={onClose}
+        onSaved={onSaved}
+      />
+    );
+  }
+
+  if (item.type === "VERANSTALTUNG") {
+    return (
+      <VeranstaltungEditorContent
         item={item}
         facilityGroupsByAllocationGroup={facilityGroupsByAllocationGroup}
         timezone={timezone}

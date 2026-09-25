@@ -302,9 +302,9 @@ export async function createMatchWithMapping(
           websiteVisible: matchPublicationDefaults.websiteVisible,
           infoboardVisible: matchPublicationDefaults.infoboardVisible,
           wochenplanVisible: matchPublicationDefaults.wochenplanVisible,
-          homepageVisible: false,
+          homepageVisible: matchPublicationDefaults.homepageVisible,
           trainingsplanVisible: false,
-          teamPageVisible: false,
+          teamPageVisible: matchPublicationDefaults.teamPageVisible,
         },
         select: { id: true },
       });

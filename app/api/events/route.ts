@@ -21,6 +21,7 @@ import {
 import { resolveTournamentTeamSeasonId } from "@/lib/tournaments/team-season-resolution";
 import { TournamentValidationError } from "@/lib/tournaments/errors";
 import { resolveMatchPublicationDefaultsForCreate } from "@/lib/publishing/policy/match-publication-defaults";
+import { resolveTournamentPublicationDefaultsForCreate } from "@/lib/publishing/policy/tournament-publication-defaults";
 
 const ALLOWED_TYPES = ["MATCH", "TOURNAMENT", "TRAINING", "OTHER"] as const;
 const ALLOWED_SOURCES = ["CLUBCORNER_FVNWS", "MANUAL", "CSV_EXCEL_IMPORT"] as const;
@@ -236,7 +237,7 @@ export async function POST(request: NextRequest) {
         ? false
         : Boolean(body.infoboardVisible);
 
-    const homepageVisible =
+    let homepageVisible =
       body.homepageVisible === null || body.homepageVisible === undefined
         ? false
         : Boolean(body.homepageVisible);
@@ -251,7 +252,7 @@ export async function POST(request: NextRequest) {
         ? false
         : Boolean(body.trainingsplanVisible);
 
-    const teamPageVisible =
+    let teamPageVisible =
       body.teamPageVisible === null || body.teamPageVisible === undefined
         ? false
         : Boolean(body.teamPageVisible);
@@ -266,6 +267,31 @@ export async function POST(request: NextRequest) {
       }
       if (body.wochenplanVisible === null || body.wochenplanVisible === undefined) {
         wochenplanVisible = matchPublicationDefaults.wochenplanVisible;
+      }
+      if (body.homepageVisible === null || body.homepageVisible === undefined) {
+        homepageVisible = matchPublicationDefaults.homepageVisible;
+      }
+      if (body.teamPageVisible === null || body.teamPageVisible === undefined) {
+        teamPageVisible = matchPublicationDefaults.teamPageVisible;
+      }
+    }
+
+    if (type === "TOURNAMENT") {
+      const tournamentPublicationDefaults = resolveTournamentPublicationDefaultsForCreate();
+      if (body.websiteVisible === null || body.websiteVisible === undefined) {
+        websiteVisible = tournamentPublicationDefaults.websiteVisible;
+      }
+      if (body.infoboardVisible === null || body.infoboardVisible === undefined) {
+        infoboardVisible = tournamentPublicationDefaults.infoboardVisible;
+      }
+      if (body.homepageVisible === null || body.homepageVisible === undefined) {
+        homepageVisible = tournamentPublicationDefaults.homepageVisible;
+      }
+      if (body.wochenplanVisible === null || body.wochenplanVisible === undefined) {
+        wochenplanVisible = tournamentPublicationDefaults.wochenplanVisible;
+      }
+      if (body.teamPageVisible === null || body.teamPageVisible === undefined) {
+        teamPageVisible = tournamentPublicationDefaults.teamPageVisible;
       }
     }
 

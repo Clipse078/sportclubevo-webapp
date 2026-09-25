@@ -236,6 +236,15 @@
       "homeAway": { "home": "Casa", "away": "Trasferta" },
       "publication": {
         "heading": "Pubblicazione",
+        "intro": "Controlla dove viene pubblicata questa voce.",
+        "trainingIntro": "Questi canali valgono a livello di stagione squadra — non per singola sessione.",
+        "teamSeasonScopeBadge": "Stagione squadra",
+        "manageTeamPublicationSettings": "Apri impostazioni squadra",
+        "infoboardEffectiveOn": "Visibile su infoboard",
+        "infoboardEffectiveOff": "Nascosto su infoboard",
+        "trainingWebsiteDescription": "Orari di allenamento sulla pagina pubblica della squadra (tutte le sessioni di questa stagione).",
+        "trainingInfoboardDescription": "Allenamenti pianificati sugli schermi del club finché non annullati.",
+        "trainingWebsitePermissionHint": "La pubblicazione web richiede permesso di gestione squadra.",
         "homepageRequiresWebsite": "La homepage richiede la pubblicazione sul sito web.",
         "channels": {
           "website": {
@@ -278,7 +287,8 @@
       },
       "work": {
         "heading": "Compiti & requisiti",
-        "description": "Compiti e requisiti operativi collegati."
+        "description": "Compiti e requisiti operativi collegati.",
+        "createTask": "Compito"
       },
       "requirements": {
         "heading": "Requisiti",
@@ -348,12 +358,33 @@
         "timeStart": "Inizio",
         "timeEnd": "Fine",
         "allDay": "Tutto il giorno",
-        "allDaySummary": "Tutto il giorno"
+        "allDaySummary": "Tutto il giorno",
+        "teamSelectPlaceholder": "Seleziona squadra"
       },
       "errors": {
         "createFailed": "Impossibile creare l'evento.",
         "saveFailed": "Impossibile salvare le modifiche."
       }
     }
+  },
+  "PlanningResources": {
+    "free": "Libero",
+    "current": "Attuale",
+    "occupied": "Occupato",
+    "sharedWith": "Condiviso con {owners}",
+    "assign": "Assegna",
+    "change": "Modifica",
+    "unassignedDressingRoom": "Nessuno spogliatoio assegnato",
+    "unassignedPitchHall": "Nessun campo / palestra assegnato",
+    "pickerTitleDressingRoom": "Spogliatoio per {subject}",
+    "pickerTitlePitchHall": "Risorsa per {subject}",
+    "pickerCancel": "Annulla",
+    "globalOccupancyHeading": "Occupazione",
+    "changeDressingRoomFor": "Modifica spogliatoio per {subject}",
+    "assignDressingRoomFor": "Assegna spogliatoio per {subject}",
+    "changePitchHallFor": "Modifica campo / palestra per {subject}",
+    "assignPitchHallFor": "Assegna campo / palestra per {subject}",
+    "matchHomeSide": "Casa",
+    "matchAwaySide": "Ospiti"
   }
 }

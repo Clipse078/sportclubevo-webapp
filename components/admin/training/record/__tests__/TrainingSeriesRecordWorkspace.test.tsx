@@ -12,6 +12,10 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), back: vi.fn() }),
 }));
 
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
 const defaultProps = {
   seriesId: "series-1",
   seriesStatus: "ACTIVE" as const,

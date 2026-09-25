@@ -47,6 +47,7 @@ type Props = {
 
 export function WorkspaceDocumentInspectorView({ payload }: Props) {
   const tTabs = useTranslations("Workspace.inspector.tabs");
+  const tWork = useTranslations("PlanningEditor.operational.work");
 
   function formatTabLabel(tab: WorkspaceDocumentInspectorTab): string {
     if (tab === "tasks" && payload.tasks.visible && !payload.tasks.loadError) {
@@ -278,7 +279,7 @@ export function WorkspaceDocumentInspectorView({ payload }: Props) {
                   {payload.tasks.canCreate && payload.tasks.createDialogProps ? (
                     <ContextualTaskCreateTrigger
                       variant="button"
-                      label="+ Aufgabe"
+                      label={tWork("createTask")}
                       className="!min-h-8 !px-2.5 !py-1 text-xs"
                       {...payload.tasks.createDialogProps}
                     />

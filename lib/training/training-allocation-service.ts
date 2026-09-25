@@ -22,6 +22,10 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
+import {
+  loadTenantFacilityResourceForWrite,
+  validateAssignableFacilityResource,
+} from "@/lib/facilities/facility-resource-write-validation";
 import { PUBLIC_CACHE_DOMAINS } from "@/lib/website/public-cache-tags";
 import { scheduleTenantPublicWebsiteCacheNotificationByTenantId } from "@/lib/website/public-cache-notification";
 import type {
@@ -139,31 +143,21 @@ export async function createTrainingAllocation(
   });
   if (!series) throw new TrainingSeriesNotFoundError(trainingSeriesId);
 
-  // Verify resource exists, including parent facility for archive checks
-  const resource = await prisma.facilityResource.findFirst({
-    where: { id: facilityResourceId, tenantId },
-    select: {
-      id: true,
-      tenantId: true,
-      status: true,
-      facility: { select: { id: true, status: true } },
-    },
-  });
+  const resource = await loadTenantFacilityResourceForWrite(tenantId, facilityResourceId);
+  switch (validateAssignableFacilityResource(resource)) {
+    case "NOT_FOUND":
+      throw new TrainingAllocationResourceNotFoundError(facilityResourceId);
+    case "ARCHIVED_RESOURCE":
+      throw new TrainingAllocationArchivedResourceError(facilityResourceId);
+    case "ARCHIVED_FACILITY":
+      throw new TrainingAllocationArchivedFacilityError(resource!.facility.id);
+    case null:
+      break;
+  }
   if (!resource) throw new TrainingAllocationResourceNotFoundError(facilityResourceId);
 
-  // Cross-tenant guard (belt-and-suspenders; tenantId scoping above makes this implicit)
   if (series.tenantId !== resource.tenantId) {
     throw new TrainingAllocationTenantMismatchError();
-  }
-
-  // Archived resources cannot receive new allocations
-  if (resource.status === "ARCHIVED") {
-    throw new TrainingAllocationArchivedResourceError(facilityResourceId);
-  }
-
-  // Archived parent facility — resources in archived facilities cannot receive new allocations
-  if (resource.facility.status === "ARCHIVED") {
-    throw new TrainingAllocationArchivedFacilityError(resource.facility.id);
   }
 
   // Determine next displayOrder when not supplied

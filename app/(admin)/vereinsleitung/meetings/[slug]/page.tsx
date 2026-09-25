@@ -15,6 +15,7 @@ import MeetingDeleteButton from "@/components/admin/meetings/MeetingDeleteButton
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
 import { PageShell } from "@/components/ui/page";
 import { DetailPagePattern } from "@/components/ui/patterns";
+import { getTranslations } from "next-intl/server";
 
 type MeetingDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -46,6 +47,7 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
   }
 
   const pageTitle = dbMeeting?.title ?? "Sitzung";
+  const tWork = await getTranslations("PlanningEditor.operational.work");
 
   return (
     <PageShell fullWidth>
@@ -69,7 +71,7 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
                 contextType="MEETING"
                 contextId={dbMeeting.id}
                 variant="button"
-                label="+ Aufgabe"
+                label={tWork("createTask")}
               />
             ) : null}
             {canDelete && dbMeeting ? (

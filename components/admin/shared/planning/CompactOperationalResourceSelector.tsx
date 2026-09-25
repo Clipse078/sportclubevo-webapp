@@ -4,10 +4,10 @@
  * PLANNING-UX-05R2 — compact operational resource selector (Training / Match /
  * Tournament create & record edit). Uses semantic green pitch/hall and blue
  * dressing-room glyphs (FacilityResourceIdentity) without large PitchVisual
- * diagrams. Wochenplaner surfaces keep VisualResourceAvailabilityPicker.
+ * diagrams. Wochenplaner uses the same compact selector via PlanningResourcePicker.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Check } from "lucide-react";
 import type { FacilityResourceType } from "@prisma/client";
 import { cn } from "@/lib/cn";
@@ -22,8 +22,12 @@ import {
   RESOURCE_SEMANTIC_DRESSING_ICON_CLASS,
   RESOURCE_SEMANTIC_PITCH_ICON_CLASS,
 } from "@/components/admin/shared/planning/resource-card-selection-style";
+import {
+  formatResourceOccupancyPrimaryLine,
+  resolveResourceOccupancyPresentationKind,
+} from "@/lib/planning/resource-occupancy-presentation";
 
-export type CompactOperationalResourceKind = "pitch_hall" | "dressing_room";
+export type CompactOperationalResourceKind = "pitch_hall" | "dressing_room" | "other";
 
 export type CompactOperationalResourceSelectorProps = {
   kind: CompactOperationalResourceKind;
@@ -40,6 +44,7 @@ export type CompactOperationalResourceSelectorProps = {
   layout?: "default" | "aggregated";
   availableLabel?: string;
   occupiedLabel?: string;
+  recommendedResourceIds?: Set<string>;
 };
 
 type FlatResource = {
@@ -75,15 +80,22 @@ function flattenResources(facilityGroups: FacilityGroup[]): FlatResource[] {
   return items;
 }
 
-function availabilityLine(annotation: ResourceAvailabilityAnnotation | undefined): string | null {
-  if (!annotation) return null;
-  if (annotation.status === "FREE") return "Frei";
-  const timeRange =
-    annotation.conflictStartAt && annotation.conflictEndAt
-      ? ` · ${formatClockTime(annotation.conflictStartAt)}–${formatClockTime(annotation.conflictEndAt)}`
-      : "";
-  const ctx = annotation.conflictLabel ? ` · ${annotation.conflictLabel}` : "";
-  return `Belegt${ctx}${timeRange}`;
+function availabilityLine(
+  annotation: ResourceAvailabilityAnnotation | undefined,
+  isSelected: boolean,
+): string | null {
+  const line = formatResourceOccupancyPrimaryLine(annotation, { isSelected });
+  if (!line) return null;
+  if (
+    annotation?.status === "OCCUPIED" &&
+    annotation.conflictStartAt &&
+    annotation.conflictEndAt &&
+    annotation.occupancyPresentation !== "CURRENT" &&
+    annotation.occupancyPresentation !== "SHARED"
+  ) {
+    return `${line} · ${formatClockTime(annotation.conflictStartAt)}–${formatClockTime(annotation.conflictEndAt)}`;
+  }
+  return line;
 }
 
 function ResourceChip({
@@ -93,6 +105,7 @@ function ResourceChip({
   disabled,
   onToggle,
   testId,
+  isRecommended,
 }: {
   resource: FlatResource;
   kind: CompactOperationalResourceKind;
@@ -100,19 +113,25 @@ function ResourceChip({
   disabled: boolean;
   onToggle: () => void;
   testId?: string;
+  isRecommended?: boolean;
 }) {
   const [pendingOccupiedConfirm, setPendingOccupiedConfirm] = useState(false);
   const isPitchKind = kind === "pitch_hall";
+  const isOtherKind = kind === "other";
   const selectedClasses = isPitchKind
     ? RESOURCE_CARD_PITCH_SELECTED_CLASSES
-    : RESOURCE_CARD_DRESSING_SELECTED_CLASSES;
-  const iconAccent = isPitchKind ? RESOURCE_SEMANTIC_PITCH_ICON_CLASS : RESOURCE_SEMANTIC_DRESSING_ICON_CLASS;
-  const availLine = availabilityLine(resource.availability);
-  const isOccupied = resource.availability?.status === "OCCUPIED";
-
-  useEffect(() => {
-    if (isSelected) setPendingOccupiedConfirm(false);
-  }, [isSelected, resource.id]);
+    : isOtherKind
+      ? "border-[var(--border)] bg-[var(--surface-2)] ring-[var(--border)]"
+      : RESOURCE_CARD_DRESSING_SELECTED_CLASSES;
+  const iconAccent = isPitchKind
+    ? RESOURCE_SEMANTIC_PITCH_ICON_CLASS
+    : isOtherKind
+      ? "text-[var(--muted)]"
+      : RESOURCE_SEMANTIC_DRESSING_ICON_CLASS;
+  const availLine = availabilityLine(resource.availability, isSelected);
+  const presentationKind = resolveResourceOccupancyPresentationKind(resource.availability, { isSelected });
+  const isOccupied = presentationKind === "OCCUPIED";
+  const isShared = presentationKind === "SHARED";
 
   const handleClick = () => {
     if (disabled) return;
@@ -120,7 +139,7 @@ function ResourceChip({
       onToggle();
       return;
     }
-    if (isOccupied && !pendingOccupiedConfirm) {
+    if (isOccupied && !isShared && !pendingOccupiedConfirm) {
       setPendingOccupiedConfirm(true);
       return;
     }
@@ -158,13 +177,24 @@ function ResourceChip({
         />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium text-[var(--foreground)]">{resource.name}</span>
+        <span className="flex flex-wrap items-center gap-1.5">
+          <span className="truncate text-sm font-medium text-[var(--foreground)]">{resource.name}</span>
+          {isRecommended ? (
+            <span className="shrink-0 rounded-full border border-emerald-200/80 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
+              Empfohlen
+            </span>
+          ) : null}
+        </span>
         <span className="block truncate text-xs text-[var(--muted)]">{resource.facilityName}</span>
         {availLine ? (
           <span
             className={cn(
               "mt-0.5 block text-xs",
-              isOccupied ? "text-amber-700/90" : "text-emerald-600/90",
+              isShared
+                ? "text-[var(--text-2)]"
+                : isOccupied
+                  ? "text-amber-700/90"
+                  : "text-emerald-600/90",
             )}
           >
             {availLine}
@@ -192,6 +222,7 @@ function ResourceGrid({
   onDeselect,
   singleSelect,
   testId,
+  recommendedResourceIds,
 }: {
   resources: FlatResource[];
   kind: CompactOperationalResourceKind;
@@ -201,6 +232,7 @@ function ResourceGrid({
   onDeselect: (id: string) => void;
   singleSelect: boolean;
   testId?: string;
+  recommendedResourceIds?: Set<string>;
 }) {
   const handleToggle = useCallback(
     (id: string) => {
@@ -235,6 +267,7 @@ function ResourceGrid({
             disabled={disabled}
             onToggle={() => handleToggle(resource.id)}
             testId={testId}
+            isRecommended={recommendedResourceIds?.has(resource.id)}
           />
         </li>
       ))}
@@ -257,14 +290,22 @@ export function CompactOperationalResourceSelector({
   layout = "default",
   availableLabel = "Verfügbar",
   occupiedLabel = "Belegt",
+  recommendedResourceIds,
 }: CompactOperationalResourceSelectorProps) {
   const flat = useMemo(() => {
     const base = flattenResources(facilityGroups);
-    return base.map((r) => ({
+    const mapped = base.map((r) => ({
       ...r,
       availability: availabilityByResourceId?.get(r.id),
     }));
-  }, [availabilityByResourceId, facilityGroups]);
+    if (!recommendedResourceIds?.size) return mapped;
+    return [...mapped].sort((a, b) => {
+      const aRec = recommendedResourceIds.has(a.id) ? 0 : 1;
+      const bRec = recommendedResourceIds.has(b.id) ? 0 : 1;
+      if (aRec !== bRec) return aRec - bRec;
+      return 0;
+    });
+  }, [availabilityByResourceId, facilityGroups, recommendedResourceIds]);
 
   if (flat.length === 0) {
     return (
@@ -285,6 +326,7 @@ export function CompactOperationalResourceSelector({
     onDeselect,
     singleSelect,
     testId,
+    recommendedResourceIds,
   };
 
   return (

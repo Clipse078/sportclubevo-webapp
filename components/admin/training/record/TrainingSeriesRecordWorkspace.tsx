@@ -11,6 +11,7 @@ import TrainingRecordWorkspaceShell from "@/components/admin/training/record/Tra
 import TrainingRecordSection from "@/components/admin/training/record/TrainingRecordSection";
 import TrainingRecordContextRail from "@/components/admin/training/record/TrainingRecordContextRail";
 import TrainingRecordPublicationSection from "@/components/admin/training/record/TrainingRecordPublicationSection";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import TrainingSeriesRecordContextMenu from "@/components/admin/training/record/TrainingSeriesRecordContextMenu";
 import TrainingRecordStatusBadge from "@/components/admin/training/record/TrainingRecordStatusBadge";
 import { buildTrainingRecordPrimaryTitle } from "@/lib/training/training-series-edit-presentation";
@@ -360,7 +361,23 @@ export default function TrainingSeriesRecordWorkspace({
       header={header}
       testId="training-series-edit-page"
       contextRail={
-        <div className="space-y-4">
+        <div className="space-y-4" data-testid="training-series-edit-right-rail">
+          <PlanningPublicationPanel testId="training-series-edit-publication-panel">
+            {selectedTeamSeason ? (
+              <TrainingRecordPublicationSection
+                teamId={selectedTeamSeason.teamId}
+                teamSeasonId={selectedTeamSeason.id}
+                initialPublication={{
+                  trainingWebsiteVisible: publication.trainingWebsiteVisible,
+                  infoboardVisible: publication.infoboardVisible,
+                }}
+                canEditTeamPublication={publication.canEditTeamPublication}
+                teamSettingsHref={teamSettingsHref}
+              />
+            ) : (
+              <p className="px-3 py-2 text-sm text-[var(--muted)] md:px-4">Mannschaft nicht verfügbar.</p>
+            )}
+          </PlanningPublicationPanel>
           <TrainingRecordContextRail
             status={seriesStatus}
             teamLabel={teamLabel}
@@ -497,23 +514,6 @@ export default function TrainingSeriesRecordWorkspace({
               {resourcesSection}
             </TrainingRecordSection>
           ) : null}
-
-          <TrainingRecordSection title="Veröffentlichung" testId="training-record-section-publication">
-            {selectedTeamSeason ? (
-              <TrainingRecordPublicationSection
-                teamId={selectedTeamSeason.teamId}
-                teamSeasonId={selectedTeamSeason.id}
-                initialPublication={{
-                  trainingWebsiteVisible: publication.trainingWebsiteVisible,
-                  infoboardVisible: publication.infoboardVisible,
-                }}
-                canEditTeamPublication={publication.canEditTeamPublication}
-                teamSettingsHref={teamSettingsHref}
-              />
-            ) : (
-              <p className="text-sm text-[var(--muted)]">Mannschaft nicht verfügbar.</p>
-            )}
-          </TrainingRecordSection>
 
           <TrainingRecordSection title="Trainer" testId="training-record-section-trainer">
             <div className="flex flex-wrap items-center justify-between gap-3">

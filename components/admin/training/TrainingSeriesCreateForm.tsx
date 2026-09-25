@@ -51,8 +51,9 @@
  *     either fully succeeds or fully fails — a resubmission after failure
  *     never risks a duplicate series, so no special partial-failure UI
  *     state is needed here. The standalone allocations page
- *     (TrainingAllocationEditor, for series that already exist) is
- *     untouched and still uses the per-resource endpoint directly.
+ *     (TrainingAllocationEditor, for series that already exist) still uses
+ *     the per-resource allocation endpoint; R4A migrated it to the canonical
+ *     PlanningResourcePicker UX (see PLANNING-UX-07R4A).
  *   - Availability is read from the EXISTING PLANNING-CREATION-UX-01A
  *     GET /api/facilities/availability endpoint for the initial occurrence
  *     only — no recurring-series-wide conflict analysis is introduced here.
@@ -74,11 +75,9 @@ import {
   type FacilityGroup,
   type ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
-import {
-  CompactDressingRoomResourceSelector,
-  CompactPitchHallResourceSelector,
-} from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
-import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
+import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import PlanningEditorZeitstandardLink from "@/components/admin/shared/planning-editor/PlanningEditorZeitstandardLink";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import TrainingRecordPublicationSection from "@/components/admin/training/record/TrainingRecordPublicationSection";
@@ -564,18 +563,22 @@ export default function TrainingSeriesCreateForm({
         </div>
       )}
 
-      {selectedTeamSeason ? (
-        <PlanningEditorControlBar testId="training-create-control-bar">
-          <TrainingRecordPublicationSection
-            teamId={selectedTeamSeason.teamId}
-            teamSeasonId={selectedTeamSeason.id}
-            initialPublication={{ trainingWebsiteVisible: false, infoboardVisible: false }}
-            canEditTeamPublication={canEditTeamPublication}
-            teamSettingsHref={`/dashboard/teams/${selectedTeamSeason.teamId}/settings`}
-          />
-        </PlanningEditorControlBar>
-      ) : null}
-
+      <PlanningEditorOperationalWorkspace
+        testId="training-create-operational-workspace"
+        secondaryRail={
+          selectedTeamSeason ? (
+            <PlanningPublicationPanel testId="training-create-publication-panel">
+              <TrainingRecordPublicationSection
+                teamId={selectedTeamSeason.teamId}
+                teamSeasonId={selectedTeamSeason.id}
+                initialPublication={{ trainingWebsiteVisible: false, infoboardVisible: false }}
+                canEditTeamPublication={canEditTeamPublication}
+                teamSettingsHref={`/dashboard/teams/${selectedTeamSeason.teamId}/settings`}
+              />
+            </PlanningPublicationPanel>
+          ) : null
+        }
+        primary={
       <div className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
         <GuidedStep
           index={1}
@@ -770,7 +773,12 @@ export default function TrainingSeriesCreateForm({
             </div>
           </div>
           <div className="pl-[2.125rem]">
-            <CompactPitchHallResourceSelector
+            <PlanningSingleResourceAssignment
+              kind="pitch_hall"
+              showSubjectLabel={false}
+              subjectLabel="Spielfeld / Halle"
+              resourceName={resources[0]?.facilityResourceName ?? null}
+              unassignedLabel="Kein Spielfeld / keine Halle zugewiesen"
               facilityGroups={pitchHallFacilityGroups}
               selectedResourceIds={allocatedResourceIds}
               onSelect={addResourceDraft}
@@ -779,9 +787,7 @@ export default function TrainingSeriesCreateForm({
                 if (row) removeResourceDraft(row.localId);
               }}
               availabilityByResourceId={pitchAvailability}
-              layout="aggregated"
-              availableLabel="Freie Spielfelder & Hallen"
-              occupiedLabel="Belegte Spielfelder & Hallen"
+              canManage
               testId="training-create-resource"
             />
           </div>
@@ -797,7 +803,12 @@ export default function TrainingSeriesCreateForm({
             </div>
           </div>
           <div className="pl-[2.125rem]">
-            <CompactDressingRoomResourceSelector
+            <PlanningSingleResourceAssignment
+              kind="dressing_room"
+              showSubjectLabel={false}
+              subjectLabel="Garderobe"
+              resourceName={dressingRooms[0]?.facilityResourceName ?? null}
+              unassignedLabel="Keine Garderobe zugewiesen"
               facilityGroups={dressingRoomFacilityGroups}
               selectedResourceIds={allocatedDressingRoomIds}
               onSelect={addDressingRoomDraft}
@@ -806,15 +817,15 @@ export default function TrainingSeriesCreateForm({
                 if (row) removeDressingRoomDraft(row.localId);
               }}
               availabilityByResourceId={dressingRoomAvailability}
-              layout="aggregated"
-              availableLabel="Freie Garderoben"
-              occupiedLabel="Belegte Garderoben"
+              canManage
               testId="training-create-dressing-room"
             />
           </div>
         </div>
 
       </div>
+        }
+      />
 
       <PlanningEditorZeitstandardLink
         canManageFacilities={canManageFacilities}

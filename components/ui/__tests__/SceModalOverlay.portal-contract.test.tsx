@@ -61,14 +61,11 @@ describe("SceModalOverlay portal contract SCE-RESPONSIVE-01G", () => {
     expect(viewportBlock).toMatch(/justify-content:\s*center/);
   });
 
-  it("D — zero visible backdrop token and no blur/filter scrim", () => {
+  it("D — canonical dimmed backdrop token with blur scrim", () => {
     const css = readGlobalsCss();
-    expect(css).toContain("--sce-modal-backdrop: transparent;");
+    expect(css).toContain("--sce-modal-backdrop: rgb(2 6 15 / 42%);");
     const block = css.match(/\.sce-modal-overlay-backdrop\s*\{[^}]+\}/)?.[0] ?? "";
-    expect(block).not.toMatch(/backdrop-filter/);
-    expect(block).not.toMatch(/filter:/);
-    expect(block).not.toMatch(/blur\(/);
-    expect(css).not.toMatch(/\.sce-modal-overlay-backdrop[\s\S]*rgb\(2 6 15 \/ 12%\)/);
+    expect(block).toMatch(/backdrop-filter:\s*blur\(10px\)/);
   });
 
   it("E — aggregate inspection dialog does not expand planner layout tree", () => {

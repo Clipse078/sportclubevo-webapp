@@ -13,6 +13,9 @@
  *   - awayDressingRoomCode
  *   - websiteVisible
  *   - infoboardVisible
+ *   - homepageVisible
+ *   - wochenplanVisible
+ *   - teamPageVisible
  *
  * Permission: EVENTS_MANAGE
  * Tenant isolation: tenantId resolved from session, never from request body.
@@ -67,16 +70,22 @@ import {
   deleteMatchPermanently,
   getMatchDeletionImpact,
 } from "@/lib/matchcenter/match-lifecycle-service";
+import { parseTenantLocalDateTimeInput, resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
 
 type RouteContext = { params: Promise<{ matchId: string }> };
 
 type PatchBody = {
   teamId?: string | null;
+  startAt?: string;
+  endAt?: string | null;
   pitchCode?: string | null;
   homeDressingRoomCode?: string | null;
   awayDressingRoomCode?: string | null;
   websiteVisible?: boolean;
   infoboardVisible?: boolean;
+  homepageVisible?: boolean;
+  wochenplanVisible?: boolean;
+  teamPageVisible?: boolean;
   dressingRoomOccupancyMode?: "DEFAULT" | "CUSTOM";
   dressingRoomBeforeMinutes?: number | null;
   dressingRoomAfterMinutes?: number | null;
@@ -92,6 +101,9 @@ const ALLOWED_STRING_KEYS = [
 const ALLOWED_BOOLEAN_KEYS = [
   "websiteVisible",
   "infoboardVisible",
+  "homepageVisible",
+  "wochenplanVisible",
+  "teamPageVisible",
 ] as const;
 
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
@@ -129,7 +141,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   // Load the event — include source, teamId, reviewStage for scope checks.
   const event = await prisma.event.findFirst({
     where: { id: matchId, tenantId, type: "MATCH" },
-    select: { id: true, source: true, teamId: true, reviewStage: true },
+    select: { id: true, source: true, teamId: true, reviewStage: true, startAt: true },
   });
 
   if (!event) {
@@ -157,8 +169,52 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     );
   }
 
+  const PROVIDER_PROTECTED_SOURCES = new Set(["SFV", "CLUBCORNER_FVNWS", "CSV_EXCEL_IMPORT"]);
+
+  if ("startAt" in body || "endAt" in body) {
+    if (PROVIDER_PROTECTED_SOURCES.has(event.source)) {
+      return NextResponse.json(
+        { error: "Terminänderungen sind für synchronisierte Spiele nicht zulässig." },
+        { status: 403 },
+      );
+    }
+  }
+
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { timezone: true },
+  });
+  const tenantTimeZone = resolveTenantEventTimezone(tenant?.timezone);
+
   // Build the data object from allowed locally-managed fields only
-  const data: Record<string, string | boolean | null> = {};
+  const data: Record<string, string | boolean | Date | null> = {};
+
+  if ("startAt" in body) {
+    if (typeof body.startAt !== "string" || !body.startAt.trim()) {
+      return NextResponse.json({ error: "startAt muss ein ISO-Datum sein." }, { status: 400 });
+    }
+    const parsed =
+      parseTenantLocalDateTimeInput(body.startAt, tenantTimeZone) ?? new Date(body.startAt);
+    if (Number.isNaN(parsed.getTime())) {
+      return NextResponse.json({ error: "startAt ist ungültig." }, { status: 400 });
+    }
+    data.startAt = parsed;
+  }
+
+  if ("endAt" in body) {
+    if (body.endAt === null || body.endAt === undefined || body.endAt === "") {
+      data.endAt = null;
+    } else if (typeof body.endAt === "string") {
+      const parsed =
+        parseTenantLocalDateTimeInput(body.endAt, tenantTimeZone) ?? new Date(body.endAt);
+      if (Number.isNaN(parsed.getTime())) {
+        return NextResponse.json({ error: "endAt ist ungültig." }, { status: 400 });
+      }
+      data.endAt = parsed;
+    } else {
+      return NextResponse.json({ error: "endAt muss ein String oder null sein." }, { status: 400 });
+    }
+  }
 
   for (const key of ALLOWED_STRING_KEYS) {
     if (key in body) {
@@ -257,6 +313,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   // Invalidate the admin Matchcenter pages so the next visit reflects the saved state.
   revalidatePath("/dashboard/matchcenter");
   revalidatePath(`/dashboard/matchcenter/${matchId}`);
+  revalidatePath("/dashboard/planner/week");
+  revalidatePath("/dashboard/wochenplan");
 
   return NextResponse.json(updated);
 }

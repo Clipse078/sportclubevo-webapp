@@ -14,8 +14,7 @@
  *
  *   1 · Team              — tenant Team (Event.teamId)
  *   2 · Heim / Auswärts    — Event.homeAway
- *   3 · Ort                — Event.location (editable; quick-pick from
- *                            tenant facilities for HOME)
+ *   3 · Ort                — Event.location (descriptive venue text only)
  *   4 · Gegner             — searchable Club-Directory ExternalClub picker
  *                            (same ExternalClubPicker as TournamentCenter)
  *                            that prefills the EXISTING editable
@@ -55,23 +54,22 @@
 
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
-import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
-import PlanningEditorPublicationControls from "@/components/admin/shared/planning-editor/PlanningEditorPublicationControls";
+import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
+import MatchPublicationToggles from "@/components/admin/matchcenter/MatchPublicationToggles";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
-import { MATCH_PUBLICATION_CHANNELS } from "@/lib/planning/planning-publication-channels";
 import { resolveMatchPublicationDefaultsForCreate } from "@/lib/publishing/policy/match-publication-defaults";
 import type { FocusEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Check, Building2 } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import {
   type FacilityGroup,
   type ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
-import {
-  CompactDressingRoomResourceSelector,
-  CompactPitchHallResourceSelector,
-} from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
+import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import { PlanningMatchDressingRoomAssignments } from "@/components/admin/shared/planning/PlanningMatchDressingRoomAssignments";
+import { useTranslations } from "next-intl";
 import {
   orchestrateMatchCreation,
   type MatchCreationPlan,
@@ -195,6 +193,7 @@ export default function MatchCreateForm({
 }: MatchCreateFormProps) {
   const router = useRouter();
   const formId = useId();
+  const tResources = useTranslations("PlanningResources");
 
   // ── 1 · Team ─────────────────────────────────────────────────────────
   const [teamId, setTeamId] = useState("");
@@ -213,14 +212,16 @@ export default function MatchCreateForm({
   const [websiteVisible, setWebsiteVisible] = useState(initialMatchPublication.websiteVisible);
   const [infoboardVisible, setInfoboardVisible] = useState(initialMatchPublication.infoboardVisible);
   const [wochenplanVisible, setWochenplanVisible] = useState(initialMatchPublication.wochenplanVisible);
-  const [homepageVisible, setHomepageVisible] = useState(true);
-  const [teamPageVisible, setTeamPageVisible] = useState(true);
+  const [homepageVisible, setHomepageVisible] = useState(initialMatchPublication.homepageVisible);
+  const [teamPageVisible, setTeamPageVisible] = useState(initialMatchPublication.teamPageVisible);
 
   useEffect(() => {
     const defaults = resolveMatchPublicationDefaultsForCreate(homeAway);
     setWebsiteVisible(defaults.websiteVisible);
     setInfoboardVisible(defaults.infoboardVisible);
     setWochenplanVisible(defaults.wochenplanVisible);
+    setHomepageVisible(defaults.homepageVisible);
+    setTeamPageVisible(defaults.teamPageVisible);
   }, [homeAway]);
 
   // ── 3 · Ort ──────────────────────────────────────────────────────────
@@ -314,14 +315,6 @@ export default function MatchCreateForm({
     }
     return override;
   }
-
-  // Quick-pick facility names for "Ort" — reuses the same tenant facility
-  // data already loaded for Spielfeld/Halle, no new lookup.
-  const facilityNameQuickPicks = useMemo(() => {
-    const names = new Set<string>();
-    for (const group of pitchHallFacilityGroups) names.add(group.facilityName);
-    return Array.from(names);
-  }, [pitchHallFacilityGroups]);
 
   // PLANNING-CREATION-UX-01C: HOME-only live Spielfeld/Halle + Garderobe
   // availability for the currently selected interval, reusing the EXISTING
@@ -519,28 +512,32 @@ export default function MatchCreateForm({
         </div>
       )}
 
-      <PlanningEditorControlBar testId="match-create-control-bar">
-        <PlanningEditorPublicationControls
-          channels={MATCH_PUBLICATION_CHANNELS}
-          value={{
-            websiteVisible,
-            infoboardVisible,
-            homepageVisible,
-            wochenplanVisible,
-            teamPageVisible,
-          }}
-          onChange={(patch) => {
-            if (patch.websiteVisible !== undefined) setWebsiteVisible(patch.websiteVisible);
-            if (patch.infoboardVisible !== undefined) setInfoboardVisible(patch.infoboardVisible);
-            if (patch.homepageVisible !== undefined) setHomepageVisible(patch.homepageVisible);
-            if (patch.wochenplanVisible !== undefined) setWochenplanVisible(patch.wochenplanVisible);
-            if (patch.teamPageVisible !== undefined) setTeamPageVisible(patch.teamPageVisible);
-          }}
-          testIdPrefix="match-create-publication"
-          showHeading={false}
-        />
-      </PlanningEditorControlBar>
-
+      <PlanningEditorOperationalWorkspace
+        testId="match-create-operational-workspace"
+        secondaryRail={
+          <PlanningPublicationPanel testId="match-create-publication-panel">
+            <MatchPublicationToggles
+              value={{
+                websiteVisible,
+                infoboardVisible,
+                homepageVisible,
+                wochenplanVisible,
+                teamPageVisible,
+              }}
+              onChange={(patch) => {
+                if (patch.websiteVisible !== undefined) setWebsiteVisible(patch.websiteVisible);
+                if (patch.infoboardVisible !== undefined) setInfoboardVisible(patch.infoboardVisible);
+                if (patch.homepageVisible !== undefined) setHomepageVisible(patch.homepageVisible);
+                if (patch.wochenplanVisible !== undefined) setWochenplanVisible(patch.wochenplanVisible);
+                if (patch.teamPageVisible !== undefined) setTeamPageVisible(patch.teamPageVisible);
+              }}
+              disabledChannelKeys={homeAway === "AWAY" ? ["infoboardVisible"] : []}
+              testIdPrefix="match-create-publication"
+              showHeading={false}
+            />
+          </PlanningPublicationPanel>
+        }
+        primary={
       <div className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
         <GuidedStep
           index={1}
@@ -604,22 +601,6 @@ export default function MatchCreateForm({
               placeholder="z. B. Sportanlage Brüel"
               data-testid="match-create-location"
             />
-            {homeAway === "HOME" && facilityNameQuickPicks.length > 0 ? (
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {facilityNameQuickPicks.map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => setLocation(name)}
-                    data-testid={`match-create-location-quickpick-${name}`}
-                    className="inline-flex items-center gap-1 rounded-full bg-[var(--surface-2)] px-2.5 py-1 text-xs text-[var(--text-2)] hover:bg-[var(--surface)]"
-                  >
-                    <Building2 className="h-3 w-3" aria-hidden />
-                    {name}
-                  </button>
-                ))}
-              </div>
-            ) : null}
           </div>
         </GuidedStep>
 
@@ -716,16 +697,18 @@ export default function MatchCreateForm({
                 </div>
               </div>
               <div className="pl-[2.125rem]">
-                <CompactPitchHallResourceSelector
+                <PlanningSingleResourceAssignment
+                  kind="pitch_hall"
+                  showSubjectLabel={false}
+                  subjectLabel="Spielfeld / Halle"
+                  resourceName={pitchSlot?.facilityResourceName ?? null}
+                  unassignedLabel={tResources("unassignedPitchHall")}
                   facilityGroups={pitchHallFacilityGroups}
                   selectedResourceIds={pitchSlot ? new Set([pitchSlot.facilityResourceId]) : new Set()}
                   onSelect={addPitchSlot}
                   onDeselect={() => setPitchSlot(null)}
                   availabilityByResourceId={pitchAvailability}
-                  singleSelect
-                  layout="aggregated"
-                  availableLabel="Frei"
-                  occupiedLabel="Belegt"
+                  canManage
                   testId="match-create-pitch"
                 />
               </div>
@@ -743,26 +726,22 @@ export default function MatchCreateForm({
                   <h2 className="text-sm font-semibold text-[var(--foreground)]">Garderoben</h2>
                 </div>
               </div>
-              <div className="space-y-4 pl-[2.125rem]">
-                <CompactDressingRoomResourceSelector
+              <div className="pl-[2.125rem]">
+                <PlanningMatchDressingRoomAssignments
+                  homeLabel={tResources("matchHomeSide")}
+                  awayLabel={tResources("matchAwaySide")}
+                  homeCode={homeDressingRoomSlot?.facilityResourceId ?? null}
+                  awayCode={awayDressingRoomSlot?.facilityResourceId ?? null}
+                  homeDisplayName={selectedTeam?.name ?? "Heim"}
+                  awayDisplayName={getEffectiveOpponentDisplayName() || "Gast"}
+                  canManage
                   facilityGroups={dressingRoomFacilityGroups}
-                  selectedResourceIds={homeDressingRoomSlot ? new Set([homeDressingRoomSlot.facilityResourceId]) : new Set()}
-                  onSelect={addHomeDressingRoomSlot}
-                  onDeselect={() => setHomeDressingRoomSlot(null)}
-                  availabilityByResourceId={dressingRoomAvailability}
-                  label={`Heimkabine${selectedTeam ? ` (${selectedTeam.name})` : ""}`}
-                  singleSelect
-                  testId="match-create-home-dressing-room"
-                />
-                <CompactDressingRoomResourceSelector
-                  facilityGroups={dressingRoomFacilityGroups}
-                  selectedResourceIds={awayDressingRoomSlot ? new Set([awayDressingRoomSlot.facilityResourceId]) : new Set()}
-                  onSelect={addAwayDressingRoomSlot}
-                  onDeselect={() => setAwayDressingRoomSlot(null)}
-                  availabilityByResourceId={dressingRoomAvailability}
-                  label={`Gastkabine${getEffectiveOpponentDisplayName() ? ` (${getEffectiveOpponentDisplayName()})` : ""}`}
-                  singleSelect
-                  testId="match-create-away-dressing-room"
+                  dressingRoomAvailability={dressingRoomAvailability}
+                  onSelectHome={addHomeDressingRoomSlot}
+                  onSelectAway={addAwayDressingRoomSlot}
+                  onDeselectHome={() => setHomeDressingRoomSlot(null)}
+                  onDeselectAway={() => setAwayDressingRoomSlot(null)}
+                  testId="match-create-dressing-room"
                 />
               </div>
             </div>
@@ -828,6 +807,8 @@ export default function MatchCreateForm({
           </div>
         </div>
       </div>
+        }
+      />
 
       {result && partialError ? (
         <div className="fca-status-box fca-status-box-warn text-sm" data-testid="match-create-partial-warning">

@@ -40,7 +40,8 @@ import {
 import StaticOptionSearchablePicker from "@/components/admin/shared/StaticOptionSearchablePicker";
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
 import TournamentPublicationToggles from "@/components/admin/tournamentcenter/TournamentPublicationToggles";
-import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
+import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import PlanningEditorCollaborationSection from "@/components/admin/shared/planning-editor/PlanningEditorCollaborationSection";
 import PlanningEditorZeitstandardLink from "@/components/admin/shared/planning-editor/PlanningEditorZeitstandardLink";
@@ -50,10 +51,8 @@ import {
   type FacilityGroup,
   type ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
-import {
-  CompactDressingRoomResourceSelector,
-  CompactPitchHallResourceSelector,
-} from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
+import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import { PlanningSubjectDressingRoomAssignments } from "@/components/admin/shared/planning/PlanningSubjectDressingRoomAssignments";
 import {
   orchestrateTournamentCreation,
   type TournamentCreationOrchestrationResult,
@@ -393,7 +392,6 @@ export default function TournamentCreateForm({
           ? {
               ...p,
               dressingRooms: [
-                ...p.dressingRooms,
                 { facilityResourceId, facilityResourceName: display.name, facilityName: display.facilityName },
               ],
             }
@@ -719,21 +717,25 @@ export default function TournamentCreateForm({
         </div>
       )}
 
-      <PlanningEditorControlBar testId="tournament-create-control-bar">
-        <TournamentPublicationToggles
-          value={publication}
-          onChange={(patch) => {
-            if (patch.websiteVisible !== undefined) setWebsiteVisible(patch.websiteVisible);
-            if (patch.infoboardVisible !== undefined) setInfoboardVisible(patch.infoboardVisible);
-            if (patch.homepageVisible !== undefined) setHomepageVisible(patch.homepageVisible);
-            if (patch.wochenplanVisible !== undefined) setWochenplanVisible(patch.wochenplanVisible);
-            if (patch.teamPageVisible !== undefined) setTeamPageVisible(patch.teamPageVisible);
-          }}
-          testIdPrefix="tournament-create-publication"
-          showHeading={false}
-        />
-      </PlanningEditorControlBar>
-
+      <PlanningEditorOperationalWorkspace
+        testId="tournament-create-operational-workspace"
+        secondaryRail={
+          <PlanningPublicationPanel testId="tournament-create-publication-panel">
+            <TournamentPublicationToggles
+              value={publication}
+              onChange={(patch) => {
+                if (patch.websiteVisible !== undefined) setWebsiteVisible(patch.websiteVisible);
+                if (patch.infoboardVisible !== undefined) setInfoboardVisible(patch.infoboardVisible);
+                if (patch.homepageVisible !== undefined) setHomepageVisible(patch.homepageVisible);
+                if (patch.wochenplanVisible !== undefined) setWochenplanVisible(patch.wochenplanVisible);
+                if (patch.teamPageVisible !== undefined) setTeamPageVisible(patch.teamPageVisible);
+              }}
+              testIdPrefix="tournament-create-publication"
+              showHeading={false}
+            />
+          </PlanningPublicationPanel>
+        }
+        primary={
       <div className={`${TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS} divide-y divide-[var(--border)]/80`}>
       <TurniereRecordSection title="Grunddaten" testId="turniere-create-section-grunddaten">
         <div className="grid gap-3 sm:grid-cols-2">
@@ -982,23 +984,6 @@ export default function TournamentCreateForm({
                           </label>
                         )}
 
-                        {homeAway === "HOME" && (
-                          <div className={cn(participant.kind === "EXTERNAL_CLUB" && "mt-2")}>
-                            <p className="mb-1.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-                              <TournamentDressingRoomLabelIcon />
-                              Garderobe
-                            </p>
-                            <CompactDressingRoomResourceSelector
-                              facilityGroups={dressingRoomFacilityGroups}
-                              selectedResourceIds={new Set(participant.dressingRooms.map((d) => d.facilityResourceId))}
-                              onSelect={(resourceId) => addDressingRoomDraft(participant.localId, resourceId)}
-                              onDeselect={(resourceId) => removeDressingRoomDraft(participant.localId, resourceId)}
-                              availabilityByResourceId={dressingRoomAvailability}
-                              layout="aggregated"
-                              testId={`tournament-create-participant-${participant.localId}-dressing-room`}
-                            />
-                          </div>
-                        )}
                       </div>
                     )}
                   </li>
@@ -1031,22 +1016,69 @@ export default function TournamentCreateForm({
 
       {homeAway === "HOME" && (
         <TurniereRecordSection title="Anlage & Ressourcen" testId="turniere-create-section-resources">
-          <CompactPitchHallResourceSelector
-            facilityGroups={pitchHallFacilityGroups}
-            selectedResourceIds={allocatedResourceIds}
-            onSelect={addResourceDraft}
-            onDeselect={(id) => {
-              const row = resources.find((r) => r.facilityResourceId === id);
-              if (row) removeResourceDraft(row.localId);
-            }}
-            availabilityByResourceId={pitchAvailability}
-            layout="aggregated"
-            testId="tournament-create-resource"
-          />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                Spielfeld / Halle
+              </p>
+            <PlanningSingleResourceAssignment
+              kind="pitch_hall"
+              showSubjectLabel={false}
+              subjectLabel="Spielfeld / Halle"
+              resourceName={resources[0]?.facilityResourceName ?? null}
+              unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen."
+              facilityGroups={pitchHallFacilityGroups}
+              selectedResourceIds={allocatedResourceIds}
+              onSelect={addResourceDraft}
+              onDeselect={(id) => {
+                const row = resources.find((r) => r.facilityResourceId === id);
+                if (row) removeResourceDraft(row.localId);
+              }}
+              availabilityByResourceId={pitchAvailability}
+              canManage
+              testId="tournament-create-resource"
+            />
+            </div>
+
+            {participants.length > 0 ? (
+              <div className="space-y-2">
+                <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  <TournamentDressingRoomLabelIcon />
+                  Garderoben
+                </p>
+                <PlanningSubjectDressingRoomAssignments
+                  testId="tournament-create-dressing-room-assignments"
+                  subjects={participants.map((p) => ({
+                    id: p.localId,
+                    displayName: p.displayName,
+                    secondaryLabel: p.subLabel,
+                    crest: (
+                      <TournamentTeamLogo
+                        logoUrl={participantDraftLogo(p)}
+                        name={p.displayName}
+                        size="sm"
+                      />
+                    ),
+                    dressingRoomAllocations: p.dressingRooms.map((d) => ({
+                      facilityResourceId: d.facilityResourceId,
+                      facilityResourceName: d.facilityResourceName,
+                    })),
+                  }))}
+                  canManage
+                  facilityGroups={dressingRoomFacilityGroups}
+                  dressingRoomAvailability={dressingRoomAvailability}
+                  onSelectResource={(localId, resourceId) => addDressingRoomDraft(localId, resourceId)}
+                  onDeselectResource={(localId, resourceId) => removeDressingRoomDraft(localId, resourceId)}
+                />
+              </div>
+            ) : null}
+          </div>
         </TurniereRecordSection>
       )}
 
       </div>
+        }
+      />
 
       <PlanningEditorWorkSection
         headingId="tournament-create-work-heading"

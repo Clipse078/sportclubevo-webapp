@@ -26,7 +26,10 @@ import type {
   MatchOperationalDurationSource,
   MatchOperationalEndSource,
 } from "@/lib/match/resolve-match-operational-interval";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 
 type PlannerEditFormData = {
   seasons: Array<{
@@ -78,6 +81,10 @@ type PlannerEditFormData = {
 type PlannerEntryEditFormProps = {
   data: PlannerEditFormData;
   canManage: boolean;
+  /** Tournament (and future types): canonical operational blocks in the primary column. */
+  operationalExtensions?: ReactNode;
+  /** Tournament participation / RSVP controls in the sticky rail. */
+  operationalRailExtensions?: ReactNode;
 };
 
 const SOURCE_LABELS: Record<EventSource, string> = {
@@ -118,6 +125,8 @@ function toOperationalEndLocalValue(iso: string): string {
 export default function PlannerEntryEditForm({
   data,
   canManage,
+  operationalExtensions,
+  operationalRailExtensions,
 }: PlannerEntryEditFormProps) {
   const router = useRouter();
   const defaults = data.defaults;
@@ -134,9 +143,7 @@ export default function PlannerEntryEditForm({
       ? toOperationalEndLocalValue(data.matchOperationalInterval.operationalEndAtIso)
       : "";
   });
-  const [operationalProvenance, setOperationalProvenance] = useState(
-    () => data.matchOperationalInterval,
-  );
+  const [operationalProvenance] = useState(() => data.matchOperationalInterval);
   const [operationalSaving, setOperationalSaving] = useState(false);
   const [operationalError, setOperationalError] = useState<string | null>(null);
   const [publication, setPublication] = useState<PlannerPublicationValues>({
@@ -273,11 +280,7 @@ export default function PlannerEntryEditForm({
         </div>
       </header>
 
-      <form
-        id="planner-entry-edit-form"
-        action={updatePlannerEntryAction}
-        className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:items-start"
-      >
+      <form id="planner-entry-edit-form" action={updatePlannerEntryAction} className="space-y-6">
         <input type="hidden" name="eventId" value={data.eventId} />
         <input type="hidden" name="seasonId" value={data.selectedSeasonId} />
         <input type="hidden" name="seasonKey" value={data.selectedSeasonKey} />
@@ -290,6 +293,35 @@ export default function PlannerEntryEditForm({
           ) : null,
         )}
 
+        <PlanningEditorOperationalWorkspace
+          testId="planner-entry-operational-workspace"
+          secondaryRail={
+            <>
+              <PlanningPublicationPanel testId="planner-entry-publication-panel">
+                <PlannerEntryPublicationFields
+                  rows={publicationRows}
+                  values={publication}
+                  onChange={(patch) =>
+                    setPublication((current) => ({ ...current, ...patch }))
+                  }
+                  disabled={isCoreReadonly}
+                  embedded
+                />
+              </PlanningPublicationPanel>
+
+              {operationalRailExtensions}
+
+              {canManage && !isExternallyOwned ? (
+                <div className="hidden lg:block">
+                  <PlannerEntryDeleteButton
+                    eventId={data.eventId}
+                    seasonKey={data.selectedSeasonKey}
+                  />
+                </div>
+              ) : null}
+            </>
+          }
+          primary={
         <div className="space-y-8">
           <section className="space-y-4" aria-labelledby="planner-section-spiel">
             <h2
@@ -591,6 +623,8 @@ export default function PlannerEntryEditForm({
             </div>
           </section>
 
+          {operationalExtensions}
+
           <div className="flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-5 lg:hidden">
             {canManage && !isExternallyOwned ? (
               <>
@@ -622,26 +656,8 @@ export default function PlannerEntryEditForm({
             )}
           </div>
         </div>
-
-        <aside className="space-y-4 lg:sticky lg:top-4">
-          <PlannerEntryPublicationFields
-            rows={publicationRows}
-            values={publication}
-            onChange={(patch) =>
-              setPublication((current) => ({ ...current, ...patch }))
-            }
-            disabled={isCoreReadonly}
-          />
-
-          {canManage && !isExternallyOwned ? (
-            <div className="hidden lg:block">
-              <PlannerEntryDeleteButton
-                eventId={data.eventId}
-                seasonKey={data.selectedSeasonKey}
-              />
-            </div>
-          ) : null}
-        </aside>
+          }
+        />
       </form>
     </div>
   );

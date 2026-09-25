@@ -8,7 +8,7 @@ import {
 } from "@/components/admin/tournamentcenter/tournament-semantic-icons";
 import type { TournamentHomeAway, TournamentParticipantDto } from "@/lib/tournaments/types";
 import { type FacilityGroup, type ResourceAvailabilityAnnotation } from "@/components/admin/training/FacilityResourceSelector";
-import { CompactDressingRoomResourceSelector } from "@/components/admin/shared/planning/CompactOperationalResourceSelector";
+import { PlanningSubjectDressingRoomAssignments } from "@/components/admin/shared/planning/PlanningSubjectDressingRoomAssignments";
 import { cn } from "@/lib/cn";
 import TournamentParticipantAddWorkflow from "./TournamentParticipantAddWorkflow";
 import type { ExternalClubPickerResult } from "./ExternalClubPicker";
@@ -29,6 +29,9 @@ type Props = {
   dressingRoomFacilityGroups: FacilityGroup[];
   dressingRoomAvailability?: Map<string, ResourceAvailabilityAnnotation>;
   tenantLogoUrl?: string | null;
+  /** When true, dressing-room allocation UI lives in the Ressourcen section instead. */
+  hideDressingRoomAllocation?: boolean;
+  onParticipantsChange?: (participants: TournamentParticipantDto[]) => void;
 };
 
 function participantMainLabel(participant: TournamentParticipantDto): string {
@@ -67,8 +70,25 @@ export default function TournamentParticipantsEditor({
   dressingRoomFacilityGroups,
   dressingRoomAvailability,
   tenantLogoUrl = null,
+  hideDressingRoomAllocation = false,
+  onParticipantsChange,
 }: Props) {
   const [participants, setParticipants] = useState<TournamentParticipantDto[]>(initialParticipants);
+
+  const syncParticipants = useCallback(
+    (next: TournamentParticipantDto[] | ((prev: TournamentParticipantDto[]) => TournamentParticipantDto[])) => {
+      setParticipants((prev) => {
+        const resolved = typeof next === "function" ? next(prev) : next;
+        onParticipantsChange?.(resolved);
+        return resolved;
+      });
+    },
+    [onParticipantsChange],
+  );
+
+  useEffect(() => {
+    onParticipantsChange?.(initialParticipants);
+  }, [initialParticipants, onParticipantsChange]);
   const [error, setError] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
@@ -133,13 +153,13 @@ export default function TournamentParticipantsEditor({
           if (!res.ok || !data?.participant) {
             throw new Error(data?.error ?? "Teilnehmer konnte nicht hinzugefügt werden.");
           }
-          setParticipants((prev) => [...prev, data.participant as TournamentParticipantDto]);
+          syncParticipants((prev) => [...prev, data.participant as TournamentParticipantDto]);
         } catch (err) {
           setError(err instanceof Error ? err.message : "Teilnehmer konnte nicht hinzugefügt werden.");
         }
       });
     },
-    [tournamentId],
+    [tournamentId, syncParticipants],
   );
 
   const saveDisplayName = useCallback(
@@ -159,7 +179,7 @@ export default function TournamentParticipantsEditor({
             throw new Error(data?.error ?? "Anzeigename konnte nicht gespeichert werden.");
           }
           const updated = data.participant;
-          setParticipants((prev) => prev.map((p) => (p.id === participantId ? updated : p)));
+          syncParticipants((prev) => prev.map((p) => (p.id === participantId ? updated : p)));
           setDisplayNameEdits((prev) => {
             const next = { ...prev };
             delete next[participantId];
@@ -170,7 +190,7 @@ export default function TournamentParticipantsEditor({
         }
       });
     },
-    [tournamentId],
+    [tournamentId, syncParticipants],
   );
 
   const removeParticipant = useCallback(
@@ -185,13 +205,13 @@ export default function TournamentParticipantsEditor({
             const data = (await res.json().catch(() => null)) as { error?: string } | null;
             throw new Error(data?.error ?? "Teilnehmer konnte nicht entfernt werden.");
           }
-          setParticipants((prev) => prev.filter((p) => p.id !== participantId));
+          syncParticipants((prev) => prev.filter((p) => p.id !== participantId));
         } catch (err) {
           setError(err instanceof Error ? err.message : "Teilnehmer konnte nicht entfernt werden.");
         }
       });
     },
-    [tournamentId],
+    [tournamentId, syncParticipants],
   );
 
   const addDressingRoom = useCallback(
@@ -210,7 +230,7 @@ export default function TournamentParticipantsEditor({
       if (!res.ok || !data?.allocation) {
         throw new Error(data?.error ?? "Garderobe konnte nicht zugewiesen werden.");
       }
-      setParticipants((prev) =>
+      syncParticipants((prev) =>
         prev.map((p) =>
           p.id === participantId
             ? { ...p, dressingRoomAllocations: [...p.dressingRoomAllocations, data.allocation!] }
@@ -218,7 +238,7 @@ export default function TournamentParticipantsEditor({
         ),
       );
     },
-    [tournamentId],
+    [tournamentId, syncParticipants],
   );
 
   const removeDressingRoom = useCallback(
@@ -231,7 +251,7 @@ export default function TournamentParticipantsEditor({
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
         throw new Error(data?.error ?? "Garderobe konnte nicht entfernt werden.");
       }
-      setParticipants((prev) =>
+      syncParticipants((prev) =>
         prev.map((p) =>
           p.id === participantId
             ? {
@@ -242,7 +262,7 @@ export default function TournamentParticipantsEditor({
         ),
       );
     },
-    [tournamentId],
+    [tournamentId, syncParticipants],
   );
 
   const dressingBadge = (participant: TournamentParticipantDto) => {
@@ -278,8 +298,9 @@ export default function TournamentParticipantsEditor({
             const expanded = expandedIds.has(participant.id);
             const needsExpand =
               participant.kind === "EXTERNAL_CLUB" ||
-              (homeAway === "HOME" && canManage) ||
-              (homeAway === "HOME" && participant.dressingRoomAllocations.length > 0);
+              (!hideDressingRoomAllocation &&
+                homeAway === "HOME" &&
+                (canManage || participant.dressingRoomAllocations.length > 0));
             return (
               <li
                 key={participant.id}
@@ -316,7 +337,7 @@ export default function TournamentParticipantsEditor({
                     </p>
                   </div>
 
-                  {dressingBadge(participant)}
+                  {!hideDressingRoomAllocation ? dressingBadge(participant) : null}
 
                   {canManage && needsExpand && !expanded ? (
                     <button
@@ -370,58 +391,84 @@ export default function TournamentParticipantsEditor({
                       </label>
                     )}
 
-                    {homeAway === "HOME" && (
+                    {!hideDressingRoomAllocation && homeAway === "HOME" && (
                       <div className={cn(participant.kind === "EXTERNAL_CLUB" && "mt-2")}>
                         <p className="mb-1.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
                           <TournamentDressingRoomLabelIcon />
                           Garderobe
                         </p>
 
-                        {canManage ? (
-                          <CompactDressingRoomResourceSelector
-                            facilityGroups={dressingRoomFacilityGroups}
-                            selectedResourceIds={
-                              new Set(participant.dressingRoomAllocations.map((a) => a.facilityResourceId))
-                            }
-                            onSelect={(resourceId) => {
-                              setError(null);
+                        <PlanningSubjectDressingRoomAssignments
+                          testId={`tournament-participant-${participant.id}-dressing-room`}
+                          subjects={[
+                            {
+                              id: participant.id,
+                              displayName: participant.displayName,
+                              crest: (
+                                <TournamentTeamLogo
+                                  logoUrl={participant.logoUrl}
+                                  name={participant.displayName}
+                                  size="sm"
+                                />
+                              ),
+                              dressingRoomAllocations: participant.dressingRoomAllocations.map((a) => ({
+                                facilityResourceId: a.facilityResourceId,
+                                facilityResourceName: a.facilityResourceName,
+                              })),
+                            },
+                          ]}
+                          canManage={canManage}
+                          facilityGroups={dressingRoomFacilityGroups}
+                          dressingRoomAvailability={dressingRoomAvailability}
+                          disabled={isPending}
+                          onSelectResource={(_subjectId, resourceId) => {
+                            setError(null);
+                            return new Promise<void>((resolve, reject) => {
                               startTransition(async () => {
                                 try {
-                                  await addDressingRoom(participant.id, resourceId);
+                                  for (const allocation of participant.dressingRoomAllocations) {
+                                    if (allocation.facilityResourceId !== resourceId) {
+                                      await removeDressingRoom(participant.id, allocation.id);
+                                    }
+                                  }
+                                  if (
+                                    !participant.dressingRoomAllocations.some(
+                                      (a) => a.facilityResourceId === resourceId,
+                                    )
+                                  ) {
+                                    await addDressingRoom(participant.id, resourceId);
+                                  }
+                                  resolve();
                                 } catch (err) {
                                   setError(
                                     err instanceof Error ? err.message : "Garderobe konnte nicht zugewiesen werden.",
                                   );
+                                  reject(err);
                                 }
                               });
-                            }}
-                            onDeselect={(resourceId) => {
-                              const allocation = participant.dressingRoomAllocations.find(
-                                (a) => a.facilityResourceId === resourceId,
-                              );
-                              if (!allocation) return;
-                              setError(null);
+                            });
+                          }}
+                          onDeselectResource={(_subjectId, resourceId) => {
+                            const allocation = participant.dressingRoomAllocations.find(
+                              (a) => a.facilityResourceId === resourceId,
+                            );
+                            if (!allocation) return;
+                            setError(null);
+                            return new Promise<void>((resolve, reject) => {
                               startTransition(async () => {
                                 try {
                                   await removeDressingRoom(participant.id, allocation.id);
+                                  resolve();
                                 } catch (err) {
                                   setError(
                                     err instanceof Error ? err.message : "Garderobe konnte nicht entfernt werden.",
                                   );
+                                  reject(err);
                                 }
                               });
-                            }}
-                            disabled={isPending}
-                            availabilityByResourceId={dressingRoomAvailability}
-                            layout="aggregated"
-                            testId={`tournament-participant-${participant.id}-dressing-room`}
-                          />
-                        ) : (
-                          <p className="text-xs text-[var(--text-2)]">
-                            {participant.dressingRoomAllocations.map((a) => a.facilityResourceName).join(", ") ||
-                              "Keine Garderobe"}
-                          </p>
-                        )}
+                            });
+                          }}
+                        />
                       </div>
                     )}
                   </div>

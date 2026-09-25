@@ -23,6 +23,11 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
+import {
+  loadTenantFacilityResourceForWrite,
+  validateAssignableFacilityResource,
+  validateFacilityResourceAllocationGroup,
+} from "@/lib/facilities/facility-resource-write-validation";
 import type {
   CreateTournamentResourceAllocationInput,
   TournamentResourceAllocationDto,
@@ -133,18 +138,18 @@ export async function addTournamentResourceAllocation(
 
   const { facilityResourceId, notes, displayOrder } = input;
 
-  const resource = await prisma.facilityResource.findFirst({
-    where: { id: facilityResourceId, tenantId },
-    select: { id: true, status: true, facility: { select: { id: true, status: true } } },
-  });
+  const resource = await loadTenantFacilityResourceForWrite(tenantId, facilityResourceId);
+  switch (validateAssignableFacilityResource(resource)) {
+    case "NOT_FOUND":
+      throw new TournamentResourceAllocationResourceNotFoundError(facilityResourceId);
+    case "ARCHIVED_RESOURCE":
+      throw new TournamentResourceAllocationArchivedResourceError(facilityResourceId);
+    case "ARCHIVED_FACILITY":
+      throw new TournamentResourceAllocationArchivedFacilityError(resource!.facility.id);
+    case null:
+      break;
+  }
   if (!resource) throw new TournamentResourceAllocationResourceNotFoundError(facilityResourceId);
-
-  if (resource.status === "ARCHIVED") {
-    throw new TournamentResourceAllocationArchivedResourceError(facilityResourceId);
-  }
-  if (resource.facility.status === "ARCHIVED") {
-    throw new TournamentResourceAllocationArchivedFacilityError(resource.facility.id);
-  }
 
   let order = displayOrder;
   if (order === undefined) {

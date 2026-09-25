@@ -6,14 +6,16 @@ import { Loader2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge, type BadgeVariant } from "@/components/ui/Badge";
 import { ClubLogo } from "@/components/admin/club-directory/ClubLogo";
-import type { TournamentDto } from "@/lib/tournaments/types";
+import type { TournamentDto, TournamentParticipantDto } from "@/lib/tournaments/types";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import TournamentParticipantsEditor from "@/components/admin/tournamentcenter/TournamentParticipantsEditor";
 import TournamentResourceAllocationEditor from "@/components/admin/tournamentcenter/TournamentResourceAllocationEditor";
+import TournamentParticipantDressingRoomPanel from "@/components/admin/tournamentcenter/TournamentParticipantDressingRoomPanel";
+import { TournamentDressingRoomLabelIcon } from "@/components/admin/tournamentcenter/tournament-semantic-icons";
 import TournamentPublicationToggles, {
   type TournamentPublicationState,
 } from "@/components/admin/tournamentcenter/TournamentPublicationToggles";
-import PlanningEditorControlBar from "@/components/admin/shared/planning-editor/PlanningEditorControlBar";
+import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import PlanningEditorWorkSection from "@/components/admin/shared/planning-editor/PlanningEditorWorkSection";
 import TournamentStandardDurationHint from "@/components/admin/tournamentcenter/TournamentStandardDurationHint";
 import { HomeAwaySegmentedControl } from "@/components/admin/shared/HomeAwaySegmentedControl";
@@ -229,6 +231,8 @@ export default function TurniereTournamentRecordWorkspace({
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteImpact, setDeleteImpact] = useState<DeletionImpact[] | null>(null);
+  const [participants, setParticipants] = useState<TournamentParticipantDto[]>(tournament.participants);
+  const [resourceAllocationError, setResourceAllocationError] = useState<string | null>(null);
 
   const isCancelled = tournament.status === "CANCELLED";
   const isEditable = canManage && tournament.status !== "ARCHIVED" && tournament.status !== "COMPLETED";
@@ -556,7 +560,16 @@ export default function TurniereTournamentRecordWorkspace({
         header={header}
         testId="turniere-tournament-record-workspace"
         contextRail={
-          <div className="space-y-4">
+          <div className="space-y-4" data-testid="turniere-record-right-rail">
+            <PlanningPublicationPanel testId="turniere-record-publication-panel">
+              <TournamentPublicationToggles
+                value={publication}
+                onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
+                disabled={!isEditable || saving}
+                testIdPrefix="turniere-record-publication"
+                showHeading={false}
+              />
+            </PlanningPublicationPanel>
             <TurniereTournamentRecordContextRail
               statusLabel={statusPresentation.label}
               assessment={assessment}
@@ -573,15 +586,7 @@ export default function TurniereTournamentRecordWorkspace({
           </div>
         }
       >
-        <PlanningEditorControlBar testId="turniere-record-control-bar">
-          <TournamentPublicationToggles
-            value={publication}
-            onChange={(patch) => setPublication((prev) => ({ ...prev, ...patch }))}
-            disabled={!isEditable || saving}
-            showHeading={false}
-          />
-        </PlanningEditorControlBar>
-
+        <div className="space-y-6">
         <div className={`${TURNIERE_RECORD_WORKSPACE_SURFACE_CLASS} divide-y divide-[var(--border)]/80`}>
           <TurniereRecordSection title="Übersicht" testId="turniere-record-section-overview">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -736,6 +741,70 @@ export default function TurniereTournamentRecordWorkspace({
             </div>
           </TurniereRecordSection>
 
+          {isTenantHostedTournament({ homeAway }) ? (
+            <TurniereRecordSection title="Ressourcen" testId="turniere-record-section-resources">
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                    Spielfeld / Halle
+                  </p>
+                  <TurniereTournamentRecordResourceSummary presentation={resourcePresentation} />
+                  <TournamentResourceAllocationEditor
+                    tournamentId={tournament.id}
+                    canManage={isEditable}
+                    initialAllocations={tournament.resourceAllocations}
+                    facilityGroups={pitchHallFacilityGroups}
+                    availabilityByResourceId={pitchAvailability}
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                    <TournamentDressingRoomLabelIcon />
+                    Garderoben
+                  </p>
+                  <TournamentParticipantDressingRoomPanel
+                    tournamentId={tournament.id}
+                    canManage={isEditable}
+                    participants={participants}
+                    dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+                    dressingRoomAvailability={dressingRoomAvailability}
+                    onParticipantsChange={setParticipants}
+                    onError={setResourceAllocationError}
+                  />
+                </div>
+
+                {resourceAllocationError ? (
+                  <p className="text-sm text-[var(--sce-danger)]" role="alert">
+                    {resourceAllocationError}
+                  </p>
+                ) : null}
+              </div>
+            </TurniereRecordSection>
+          ) : null}
+
+          <TurniereRecordSection
+            title="Teilnehmer"
+            description={
+              participants.length > 0
+                ? `${participants.length} ${participants.length === 1 ? "Team" : "Teams"}`
+                : undefined
+            }
+            testId="turniere-canonical-participants-section"
+          >
+            <TournamentParticipantsEditor
+              tournamentId={tournament.id}
+              canManage={isEditable}
+              homeAway={homeAway}
+              initialParticipants={tournament.participants}
+              dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+              dressingRoomAvailability={dressingRoomAvailability}
+              tenantLogoUrl={tenantLogoUrl}
+              hideDressingRoomAllocation={isTenantHostedTournament({ homeAway })}
+              onParticipantsChange={setParticipants}
+            />
+          </TurniereRecordSection>
+
           {tournament.status !== "CANCELLED" ? (
             <TurniereRecordSection title="Teilnahme" testId="turniere-record-section-participation">
               <ParticipationRequestConfigEditor
@@ -754,41 +823,6 @@ export default function TurniereTournamentRecordWorkspace({
             </TurniereRecordSection>
           ) : null}
 
-          <TurniereRecordSection
-            title="Teilnehmer"
-            description={
-              identity.participantCount > 0
-                ? `${identity.participantCount} ${identity.participantCount === 1 ? "Team" : "Teams"}`
-                : undefined
-            }
-            testId="turniere-record-section-participants"
-          >
-            <TournamentParticipantsEditor
-              tournamentId={tournament.id}
-              canManage={isEditable}
-              homeAway={homeAway}
-              initialParticipants={tournament.participants}
-              dressingRoomFacilityGroups={dressingRoomFacilityGroups}
-              dressingRoomAvailability={dressingRoomAvailability}
-              tenantLogoUrl={tenantLogoUrl}
-            />
-          </TurniereRecordSection>
-
-          {isTenantHostedTournament({ homeAway }) ? (
-            <TurniereRecordSection title="Ressourcen" testId="turniere-record-section-resources">
-              <div className="space-y-4">
-                <TurniereTournamentRecordResourceSummary presentation={resourcePresentation} />
-                <TournamentResourceAllocationEditor
-                  tournamentId={tournament.id}
-                  canManage={isEditable}
-                  initialAllocations={tournament.resourceAllocations}
-                  facilityGroups={pitchHallFacilityGroups}
-                  availabilityByResourceId={pitchAvailability}
-                />
-              </div>
-            </TurniereRecordSection>
-          ) : null}
-
         </div>
 
         {participantsSection}
@@ -803,6 +837,7 @@ export default function TurniereTournamentRecordWorkspace({
         />
 
         {collaborationSection}
+        </div>
       </TurniereRecordWorkspaceShell>
 
       <TurniereTournamentRecordDeleteDialog

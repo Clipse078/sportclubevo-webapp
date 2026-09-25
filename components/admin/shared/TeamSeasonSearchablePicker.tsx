@@ -227,7 +227,7 @@ export default function TeamSeasonSearchablePicker({
             onKeyDown={handleInputKeyDown}
             placeholder={placeholder}
             disabled={disabled || options.length === 0}
-            className="fca-input h-9 w-full pl-8 pr-8 text-sm"
+            className="fca-input fca-search-input fca-combobox-input h-9 w-full text-sm"
             data-testid={`${testId}-search`}
           />
           <ChevronDown

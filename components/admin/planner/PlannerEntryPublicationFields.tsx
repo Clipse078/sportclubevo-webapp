@@ -15,6 +15,8 @@ type PlannerEntryPublicationFieldsProps = {
   disabled?: boolean;
   /** Hidden inputs for server action (checkbox "on" semantics). */
   formFieldPrefix?: string;
+  /** When true, render rows only (inside PlanningPublicationPanel). */
+  embedded?: boolean;
 };
 
 function PublicationRow({
@@ -69,13 +71,66 @@ function PublicationRow({
   );
 }
 
+function PublicationRows({
+  rows,
+  values,
+  onChange,
+  disabled,
+  formFieldPrefix,
+}: Omit<PlannerEntryPublicationFieldsProps, "embedded">) {
+  return (
+    <>
+      {rows.map((row) => {
+        const switchDisabled =
+          Boolean(row.requiresWebsite) && !values.websiteVisible;
+        const checked = values[row.key];
+
+        return (
+          <div key={row.key}>
+            <PublicationRow
+              row={row}
+              checked={checked}
+              onChange={(next) => onChange({ [row.key]: next })}
+              disabled={disabled}
+              switchDisabled={switchDisabled}
+            />
+            {checked ? (
+              <input
+                type="hidden"
+                name={`${formFieldPrefix}${row.key}`}
+                value="on"
+                data-testid={`planner-publication-hidden-${row.key}`}
+              />
+            ) : null}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 export default function PlannerEntryPublicationFields({
   rows,
   values,
   onChange,
   disabled,
   formFieldPrefix = "",
+  embedded = false,
 }: PlannerEntryPublicationFieldsProps) {
+  if (embedded) {
+    return (
+      <div className="px-3 md:px-4" data-testid="planner-publication-section">
+        <PublicationRows
+          rows={rows}
+          values={values}
+          onChange={onChange}
+          disabled={disabled}
+          formFieldPrefix={formFieldPrefix}
+        />
+      </div>
+    );
+  }
+
   return (
     <section
       className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4"
@@ -94,32 +149,13 @@ export default function PlannerEntryPublicationFields({
         </p>
       </div>
 
-      {rows.map((row) => {
-        const switchDisabled =
-          Boolean(row.requiresWebsite) && !values.websiteVisible;
-        const checked = values[row.key];
-
-        return (
-          <div key={row.key}>
-            <PublicationRow
-              row={row}
-              checked={checked}
-              onChange={(next) => onChange({ [row.key]: next })}
-              disabled={disabled}
-              switchDisabled={switchDisabled}
-            />
-            {/* Server actions use checkbox "on" semantics via hidden input */}
-            {checked ? (
-              <input
-                type="hidden"
-                name={`${formFieldPrefix}${row.key}`}
-                value="on"
-                data-testid={`planner-publication-hidden-${row.key}`}
-              />
-            ) : null}
-          </div>
-        );
-      })}
+      <PublicationRows
+        rows={rows}
+        values={values}
+        onChange={onChange}
+        disabled={disabled}
+        formFieldPrefix={formFieldPrefix}
+      />
     </section>
   );
 }
