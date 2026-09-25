@@ -18,6 +18,14 @@ export const NAV_DESTINATION_SCE_ICON_BY_KEY = {
   communication: "communication",
   "admin-seasons": "season",
   "admin-roles": "roles-access",
+  planung: "planning",
+  website: "website",
+  "website-news": "news",
+  infoboard: "infoboard",
+  "website-publishing": "publish",
+  "website-settings": "settings",
+  "platform-commercial-billing-invoices": "billing-invoice",
+  finanzen: "billing-invoice",
 } as const satisfies Record<string, SceIconRegistryName>;
 
 export type NavDestinationSceIconKey = keyof typeof NAV_DESTINATION_SCE_ICON_BY_KEY;

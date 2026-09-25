@@ -5,6 +5,7 @@ import {
 } from "../SceIcon.types";
 import { SceIconSvg } from "../SceIconSvg";
 import { SCE_APPROVED_EXPANDED_MASTER_GLYPHS } from "./approved-expanded-master-glyphs";
+import { SCE_APPROVED_PLATFORM_MASTER_GLYPHS } from "./approved-platform-master-glyphs";
 import { SCE_APPROVED_HERO_VIEWBOX } from "./approved-hero-meta";
 
 type ApprovedHeroGlyphProps = SceIconGlyphProps;
@@ -112,6 +113,7 @@ export function isSceApprovedMasterGlyph(glyph: ComponentType<SceIconGlyphProps>
   const all = [
     ...SCE_APPROVED_HERO_GLYPHS,
     ...SCE_APPROVED_EXPANDED_MASTER_GLYPHS,
+    ...SCE_APPROVED_PLATFORM_MASTER_GLYPHS,
   ] as readonly ComponentType<SceIconGlyphProps>[];
   return all.includes(glyph);
 }

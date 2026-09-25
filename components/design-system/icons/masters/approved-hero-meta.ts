@@ -8,7 +8,25 @@ export const SCE_APPROVED_HERO_ICON_NAMES = [
 
 export type SceApprovedHeroIconName = (typeof SCE_APPROVED_HERO_ICON_NAMES)[number];
 
-/** Full SCE approved master library (core + sport/competition + organisation/work). */
+/** SCE-ICONS-05 — publishing & platform approved masters (Batch 2). */
+export const SCE_APPROVED_PLATFORM_MASTER_ICON_NAMES = [
+  "attention",
+  "audit",
+  "billing-invoice",
+  "conflict",
+  "infoboard",
+  "news",
+  "notifications",
+  "planning",
+  "publish",
+  "resource-allocation",
+  "settings",
+  "website",
+] as const;
+
+export type SceApprovedPlatformMasterIconName =
+  (typeof SCE_APPROVED_PLATFORM_MASTER_ICON_NAMES)[number];
+
 export const SCE_APPROVED_MASTER_ICON_NAMES = [
   ...SCE_APPROVED_HERO_ICON_NAMES,
   "team",
@@ -28,6 +46,7 @@ export const SCE_APPROVED_MASTER_ICON_NAMES = [
   "requirements",
   "events",
   "communication",
+  ...SCE_APPROVED_PLATFORM_MASTER_ICON_NAMES,
 ] as const;
 
 export type SceApprovedMasterIconName = (typeof SCE_APPROVED_MASTER_ICON_NAMES)[number];
@@ -69,4 +88,16 @@ export const SCE_APPROVED_MASTER_ASSETS: Record<
   requirements: `${MASTER_DIR}/requirements.svg`,
   events: `${MASTER_DIR}/events.svg`,
   communication: `${MASTER_DIR}/communication.svg`,
+  attention: `${MASTER_DIR}/attention.svg`,
+  audit: `${MASTER_DIR}/audit.svg`,
+  "billing-invoice": `${MASTER_DIR}/billing-invoice.svg`,
+  conflict: `${MASTER_DIR}/conflict.svg`,
+  infoboard: `${MASTER_DIR}/infoboard.svg`,
+  news: `${MASTER_DIR}/news.svg`,
+  notifications: `${MASTER_DIR}/notifications.svg`,
+  planning: `${MASTER_DIR}/planning.svg`,
+  publish: `${MASTER_DIR}/publish.svg`,
+  "resource-allocation": `${MASTER_DIR}/resource-allocation.svg`,
+  settings: `${MASTER_DIR}/settings.svg`,
+  website: `${MASTER_DIR}/website.svg`,
 };

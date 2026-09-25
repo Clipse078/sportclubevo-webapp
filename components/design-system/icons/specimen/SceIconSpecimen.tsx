@@ -6,7 +6,10 @@ import {
   type SceIconRegistryName,
 } from "../registry";
 import type { SceIconSize } from "../SceIcon.types";
-import type { SceApprovedMasterIconName } from "../masters/approved-hero-meta";
+import type {
+  SceApprovedMasterIconName,
+  SceApprovedPlatformMasterIconName,
+} from "../masters/approved-hero-meta";
 
 const HERO_SIZES: SceIconSize[] = [16, 20, 24, 32, 48];
 
@@ -26,6 +29,21 @@ const SPORT_MASTERS: SceApprovedMasterIconName[] = [
   "attendance",
   "pitch",
   "dressing-room",
+];
+
+const PUBLISHING_PLATFORM_MASTERS: SceApprovedPlatformMasterIconName[] = [
+  "news",
+  "notifications",
+  "website",
+  "infoboard",
+  "publish",
+  "planning",
+  "resource-allocation",
+  "conflict",
+  "attention",
+  "audit",
+  "settings",
+  "billing-invoice",
 ];
 
 const ORGANISATION_MASTERS: SceApprovedMasterIconName[] = [
@@ -64,6 +82,18 @@ const MASTER_LABELS: Record<SceApprovedMasterIconName, string> = {
   requirements: "Requirements / Anforderungen",
   events: "Events / Veranstaltungen",
   communication: "Communication",
+  attention: "Attention / Needs action",
+  audit: "Audit / Audit log",
+  "billing-invoice": "Billing / Invoice",
+  conflict: "Conflict",
+  infoboard: "Infoboard",
+  news: "News",
+  notifications: "Notifications",
+  planning: "Planning",
+  publish: "Publish",
+  "resource-allocation": "Resource Allocation",
+  settings: "Settings",
+  website: "Website",
 };
 
 function SizeRow({
@@ -145,7 +175,7 @@ export function SceIconSpecimen() {
       <header className="mb-8">
         <h1 className="text-xl font-semibold tracking-tight">SCE Icon System — Specimen</h1>
         <p className="mt-2 max-w-2xl text-sm text-[var(--text-2)]">
-          Internal development surface for SCE-ICONS-04. Approved masters render committed
+          Internal development surface for SCE icon approved masters. Approved masters render committed
           64×64 vector geometry via <code className="text-xs">SceIcon</code>; provisional registry
           entries remain listed for inventory review.
         </p>
@@ -167,6 +197,12 @@ export function SceIconSpecimen() {
         title="Section 3 — Organisation & Work"
         description="Organisation structure, people, access, club identity, and operational work surfaces."
         names={ORGANISATION_MASTERS}
+      />
+
+      <MasterSection
+        title="Section 4 — Publishing & Platform"
+        description="Publishing, public channels, platform administration, and planning governance masters (SCE-ICONS-05 Batch 2)."
+        names={PUBLISHING_PLATFORM_MASTERS}
       />
 
       <section>

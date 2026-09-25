@@ -25,7 +25,7 @@ export const SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS: Record<SceApprovedMasterIc
     ]),
   ) as Record<SceApprovedMasterIconName, string>;
 
-/** Baseline fingerprints — hero masters + authoritative handoff (SCE-ICONS-04R1). */
+/** Baseline fingerprints — hero + organisation/work (04R1) + publishing/platform Batch 2 (05). */
 export const SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS = {
   dashboard: "f72ca981769dfc233add2addcab754ccbc019d2b2c374cb58e6f38cd05faca6c" as const,
   "week-planner":
@@ -53,4 +53,19 @@ export const SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS = {
   events: "6e1c55b97d35af7e586010256f34dacbaf83f5eb111f3fede94fe162472e9841" as const,
   communication:
     "23be2484f7a80cf7221065b96d0ac3df7c7f9627f7cd1fe489a4f05395962582" as const,
+  attention: "9c575e13ad6797602e47034e29a39acdada196dac64a277f98f3a33647ad586e" as const,
+  audit: "15acdf9852ac5a1a43de0f4781ce880d71d33018226344993afe21a901af2ec0" as const,
+  "billing-invoice":
+    "1dda10e7e9569551953e36ee8062b2e1e26c1d0892028d59946d6781cfb3eb53" as const,
+  conflict: "00a74ef6df00b29f71e487d10d3416a115170d09fcddfdf4a414cd0699423493" as const,
+  infoboard: "7a5ee66eb81012ea34142ad9a5d16f535f4cd2c361d0b1226b78b21bb9d69a43" as const,
+  news: "091c0ed2a7262a1a3a82b88e0eedffb4e0fc85b595efd9480516d20dce6e349c" as const,
+  notifications:
+    "e9dc7266848f0d13645c89581ad5ebda7476f4f4a4b47953193f1a6aa52f0753" as const,
+  planning: "40e7815241843fe34712d4ea7e20c4b63e80428ea5407a66c2e0b540e6af8f80" as const,
+  publish: "491e22ece51de7f4aa9cf4a298bf20be80309e0bc5eb7bd512cd451f4ca591ff" as const,
+  "resource-allocation":
+    "402a73c316b04893d831f6747b352cd60c0dbfae4187d6f4381d4b4dda959ff3" as const,
+  settings: "3f6ffa40fb6bbac1c295c53d676b86122eb55548d4a9d83fa15a7de599d832fc" as const,
+  website: "110c2cadf1d313873a6d06ae86b5f12a8f0d93dfac9f74148049e81db61f555e" as const,
 } as const;
