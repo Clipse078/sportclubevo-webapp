@@ -11,8 +11,6 @@ import { buildTournamentParticipantDressingRoomAvailabilityByParticipant } from 
 import { PlanningResourceAssignment } from "@/components/admin/shared/planning/PlanningResourceAssignment";
 import { PlanningResourceAssignmentList } from "@/components/admin/shared/planning/PlanningResourceAssignmentList";
 import { PlanningResourcePicker } from "@/components/admin/shared/planning/PlanningResourcePicker";
-import { PlanningResourceGlobalOccupancyOverview } from "@/components/admin/shared/planning/PlanningResourceGlobalOccupancyOverview";
-
 export type PlanningDressingRoomSubject = {
   id: string;
   displayName: string;
@@ -32,7 +30,6 @@ export type PlanningSubjectDressingRoomAssignmentsProps = {
   /** When set, skips tournament participant merge (match side merge supplied externally). */
   availabilityBySubjectId?: Map<string, Map<string, ResourceAvailabilityAnnotation>>;
   disabled?: boolean;
-  showGlobalOverview?: boolean;
   onSelectResource: (subjectId: string, resourceId: string) => void | Promise<void>;
   onDeselectResource?: (subjectId: string, resourceId: string) => void | Promise<void>;
   testId?: string;
@@ -51,7 +48,6 @@ export function PlanningSubjectDressingRoomAssignments({
   dressingRoomAvailability,
   availabilityBySubjectId,
   disabled = false,
-  showGlobalOverview = false,
   onSelectResource,
   onDeselectResource,
   testId = "planning-dressing-room-assignments",
@@ -72,16 +68,6 @@ export function PlanningSubjectDressingRoomAssignments({
       })),
     );
   }, [availabilityBySubjectId, dressingRoomAvailability, subjects]);
-
-  const selectedByResourceId = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const subject of subjects) {
-      for (const a of subject.dressingRoomAllocations) {
-        map.set(a.facilityResourceId, subject.displayName);
-      }
-    }
-    return map;
-  }, [subjects]);
 
   if (subjects.length === 0) {
     return (
@@ -147,16 +133,6 @@ export function PlanningSubjectDressingRoomAssignments({
           );
         })}
       </PlanningResourceAssignmentList>
-
-      {showGlobalOverview ? (
-        <PlanningResourceGlobalOccupancyOverview
-          heading={t("globalOccupancyHeading")}
-          facilityGroups={facilityGroups}
-          availabilityByResourceId={dressingRoomAvailability}
-          selectedByResourceId={selectedByResourceId}
-          testId={`${testId}-global-occupancy`}
-        />
-      ) : null}
 
       {!canManage ? (
         <p className="sr-only">{t("unassignedDressingRoom")}</p>

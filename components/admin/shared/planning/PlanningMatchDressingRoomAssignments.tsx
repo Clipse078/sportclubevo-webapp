@@ -113,7 +113,6 @@ export function PlanningMatchDressingRoomAssignments({
       dressingRoomAvailability={dressingRoomAvailability}
       availabilityBySubjectId={availabilityBySubjectId}
       disabled={disabled}
-      showGlobalOverview={false}
       onSelectResource={(subjectId, resourceId) =>
         subjectId === "home" ? onSelectHome(resourceId) : onSelectAway(resourceId)
       }

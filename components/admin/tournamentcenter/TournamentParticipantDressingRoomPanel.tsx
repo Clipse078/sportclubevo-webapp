@@ -107,7 +107,6 @@ export default function TournamentParticipantDressingRoomPanel({
       facilityGroups={dressingRoomFacilityGroups}
       dressingRoomAvailability={dressingRoomAvailability}
       disabled={isPending}
-      showGlobalOverview
       onSelectResource={(participantId, resourceId) => {
         onError(null);
         const participant = participants.find((p) => p.id === participantId);
