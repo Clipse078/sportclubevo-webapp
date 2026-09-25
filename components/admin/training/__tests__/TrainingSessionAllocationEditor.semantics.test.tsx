@@ -166,7 +166,7 @@ describe("TrainingSessionAllocationEditor — UX-03R2 semantics", () => {
       "Kunstrasen 2 A",
     );
 
-    fireEvent.click(screen.getByTestId("training-session-allocations-pitch-hall-picker-cancel"));
+    fireEvent.click(screen.getByTestId("training-session-allocation-add-pitch-hall-cancel"));
     expect(screen.queryByTestId("training-session-allocations-pitch-hall-picker")).not.toBeInTheDocument();
   });
 

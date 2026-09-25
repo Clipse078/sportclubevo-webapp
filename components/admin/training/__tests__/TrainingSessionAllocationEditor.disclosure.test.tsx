@@ -115,7 +115,7 @@ describe("TrainingSessionAllocationEditor — UX-03R1 disclosure", () => {
     fireEvent.click(screen.getByTestId("training-session-allocations-pitch-hall-change"));
     expect(screen.getByTestId("training-session-allocations-pitch-hall-picker")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId("training-session-allocations-pitch-hall-picker-cancel"));
+    fireEvent.click(screen.getByTestId("training-session-allocation-add-pitch-hall-cancel"));
     await waitFor(() => {
       expect(screen.queryByTestId("training-session-allocations-pitch-hall-picker")).not.toBeInTheDocument();
     });
