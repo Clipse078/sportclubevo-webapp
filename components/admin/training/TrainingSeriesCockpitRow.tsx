@@ -10,6 +10,7 @@ import TrainingSeriesDeleteControl from "./TrainingSeriesDeleteControl";
 import PlanningWorkflowActionsClient from "@/components/admin/shared/PlanningWorkflowActionsClient";
 import PlanningWorkflowBadge from "@/components/admin/shared/PlanningWorkflowBadge";
 import { PopoverContent } from "@/components/ui/Popover";
+import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { cn } from "@/lib/cn";
 import {
   buildTrainingSeriesEditHref,
@@ -390,7 +391,10 @@ export default function TrainingSeriesCockpitRow({
       </div>
 
       <div className="min-w-0" data-testid={`training-series-cockpit-col-team-${row.rowKey}`}>
-        <p className="truncate text-sm font-semibold text-[var(--foreground)]">{row.title}</p>
+        <p className="flex min-w-0 items-center gap-1.5 truncate text-sm font-semibold text-[var(--foreground)]">
+          <ActivitySceIcon activityKind="TRAINING" size={16} />
+          <span className="truncate">{row.title}</span>
+        </p>
         <p className="truncate text-xs text-[var(--text-2)]">{row.teamDisplayName}</p>
       </div>
 

@@ -10,6 +10,7 @@ import {
   resolveTeamIdentityAccentClass,
   trainingManagementStatusPresentation,
 } from "@/lib/training/management-presentation";
+import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { cn } from "@/lib/cn";
 import { Users } from "lucide-react";
 
@@ -48,8 +49,9 @@ export default function TrainingSeriesManagementRow({
         <Users className="h-[1.125rem] w-[1.125rem]" />
       </span>
       <div className="min-w-0">
-        <p className="truncate text-[0.9375rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
-          {row.title}
+        <p className="flex min-w-0 items-center gap-1.5 truncate text-[0.9375rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">
+          <ActivitySceIcon activityKind="TRAINING" size={20} />
+          <span className="truncate">{row.title}</span>
         </p>
         <p className="truncate text-[0.8125rem] leading-snug text-[var(--text-2)]">{row.contextLabel}</p>
       </div>

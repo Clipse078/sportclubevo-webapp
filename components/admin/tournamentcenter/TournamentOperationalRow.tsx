@@ -12,6 +12,7 @@ import {
   formatTournamentTeamsLabel,
   getTournamentParticipatingTeams,
 } from "@/lib/tournaments/team-participation";
+import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { cn } from "@/lib/cn";
 
 const STATUS_VARIANTS: Record<string, BadgeVariant> = {
@@ -98,6 +99,7 @@ export default function TournamentOperationalRow({
 
       <div className="min-w-0 space-y-1.5">
         <div className="flex flex-wrap items-center gap-2">
+          <ActivitySceIcon activityKind="TOURNAMENT" size={16} />
           <h3 className="min-w-0 truncate text-sm font-semibold text-[var(--foreground)]">
             {tournament.title}
           </h3>

@@ -25,6 +25,8 @@ import {
   activityVisualStyle,
   PLANNING_HUB_CONFLICT_BLOCK_CLASS,
 } from "@/lib/planning-hub/activity-visual-style";
+import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
+import { getWeekplannerActivitySceIconName } from "@/lib/planning/activity-sce-icon";
 
 export type ActivityBlockVisualVariant = "default" | "ghost" | "preview" | "preview-warning";
 
@@ -110,6 +112,8 @@ export default function PlanningHubActivityBlock({
     ? schedulerTeamContextForBlockWidth(teamContextRaw, blockWidthPx)
     : null;
   const semantic = activityVisualStyle(item.type);
+  const activitySceIcon = getWeekplannerActivitySceIconName(item.type);
+  const activityIconSize = compact ? 12 : 16;
 
   const isGhost = visualVariant === "ghost";
   const isPreview = visualVariant === "preview" || visualVariant === "preview-warning";
@@ -220,11 +224,20 @@ export default function PlanningHubActivityBlock({
       >
         <div className="flex items-start gap-1">
           <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold text-[var(--foreground)]">
-              {primary}
-              {!compact && typeLabel && (
-                <span className="font-normal text-[var(--muted)]"> · {typeLabel}</span>
-              )}
+            <p className="flex min-w-0 items-center gap-1 font-semibold text-[var(--foreground)]">
+              {activitySceIcon ? (
+                <ActivitySceIcon
+                  activityKind={item.type}
+                  size={activityIconSize}
+                  className="shrink-0"
+                />
+              ) : null}
+              <span className="min-w-0 truncate">
+                {primary}
+                {!compact && typeLabel && (
+                  <span className="font-normal text-[var(--muted)]"> · {typeLabel}</span>
+                )}
+              </span>
             </p>
             {teamContext && (
               <p className="flex min-w-0 items-center gap-0.5 truncate text-[9px] leading-tight text-[var(--muted)]">

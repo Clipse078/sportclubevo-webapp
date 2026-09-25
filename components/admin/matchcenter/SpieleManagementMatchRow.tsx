@@ -23,6 +23,7 @@ import {
   SPIELE_MATCH_ROW_INTERMEDIATE_GRID,
   SPIELE_MATCH_ROW_WIDE_GRID,
 } from "./spiele-management-layout";
+import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -306,6 +307,7 @@ export default function SpieleManagementMatchRow({
           ) : null}
 
           <div className="flex min-w-0 items-center gap-1.5">
+            <ActivitySceIcon activityKind="MATCH" size={compact ? 16 : 20} className="shrink-0" />
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <ClubLogo
                 logoUrl={homeLogoUrl}

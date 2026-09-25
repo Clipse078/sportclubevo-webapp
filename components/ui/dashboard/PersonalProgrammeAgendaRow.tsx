@@ -4,7 +4,9 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { PersonalProgrammeItem } from "@/lib/personal-agenda/personal-programme-types";
+import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { getProgrammeSourcePresentation } from "@/lib/personal-agenda/programme-source-presentation";
+import { getProgrammeSourceActivitySceIconName } from "@/lib/planning/activity-sce-icon";
 import { cn } from "@/lib/cn";
 
 export type PersonalProgrammeAgendaRowProps = {
@@ -33,6 +35,7 @@ export function PersonalProgrammeAgendaRow({
         : null;
 
   const markerPresentation = getProgrammeSourcePresentation(item.sourceType);
+  const activitySceIconName = getProgrammeSourceActivitySceIconName(item.sourceType);
 
   const row = (
     <div
@@ -46,12 +49,20 @@ export function PersonalProgrammeAgendaRow({
       <span className="pt-0.5 text-right font-mono text-[0.8125rem] font-semibold tabular-nums text-[var(--text-2)]">
         {item.allDay ? t("allDay") : timeLabel}
       </span>
-      <span
-        className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", markerPresentation.markerAccentClass)}
-        data-programme-palette={markerPresentation.paletteKey}
-        data-programme-source={item.sourceType}
-        aria-hidden
-      />
+      {activitySceIconName ? (
+        <ActivitySceIcon
+          activityKind={item.sourceType}
+          size={16}
+          className="mt-0.5 self-start"
+        />
+      ) : (
+        <span
+          className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", markerPresentation.markerAccentClass)}
+          data-programme-palette={markerPresentation.paletteKey}
+          data-programme-source={item.sourceType}
+          aria-hidden
+        />
+      )}
       <div className="min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">

@@ -20,6 +20,7 @@ import {
   TURNIERE_ROW_INTERMEDIATE_GRID,
   TURNIERE_ROW_WIDE_GRID,
 } from "./turniere-management-layout";
+import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -139,6 +140,7 @@ export default function TurniereManagementRow({
 
       <div className="min-w-0 space-y-1 md:col-span-1 min-[105rem]:col-span-1">
         <div className="flex flex-wrap items-center gap-2">
+          <ActivitySceIcon activityKind="TOURNAMENT" size={compact ? 16 : 20} />
           <Link
             href={editHref}
             className="min-w-0 truncate text-sm font-semibold text-[var(--foreground)] hover:text-[var(--sce-primary)] min-[105rem]:text-base"
