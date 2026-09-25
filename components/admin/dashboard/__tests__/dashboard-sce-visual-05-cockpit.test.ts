@@ -17,6 +17,11 @@ const greetingSource = readFileSync(
   "utf8",
 );
 
+const compactWelcomeSource = readFileSync(
+  join(process.cwd(), "components/ui/dashboard/DashboardCompactWelcome.tsx"),
+  "utf8",
+);
+
 const customizeSource = readFileSync(
   join(process.cwd(), "components/ui/dashboard/PersonalDashboardCustomizeDialog.tsx"),
   "utf8",
@@ -54,6 +59,10 @@ describe("SCE-VISUAL-05 — personal dashboard cockpit", () => {
     expect(greetingSource).toContain('data-testid="personal-dashboard-greeting"');
     expect(clubDashboardSource).toContain("formatTodayDate");
     expect(clubDashboardSource).toContain("ctx?.name");
+  });
+
+  it("does not inject a trailing exclamation mark into the compact greeting", () => {
+    expect(compactWelcomeSource).not.toContain('after || "!"');
   });
 
   it("renders four canonical cockpit modules via workspace slots", () => {
