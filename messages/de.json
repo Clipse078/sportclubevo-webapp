@@ -468,7 +468,10 @@
   },
   "PersonalDashboard": {
     "welcome": {
-      "subtitle": "Dein persönlicher Überblick im Verein."
+      "subtitle": "Dein persönlicher Überblick im Verein.",
+      "customize": "Dashboard anpassen",
+      "customizeTitle": "Dashboard anpassen",
+      "customizeDescription": "Passe dein persönliches Dashboard-Titelbild an."
     },
     "programme": {
       "title": "Mein Programm",
@@ -546,6 +549,7 @@
     },
     "calendar": {
       "title": "Mein Kalender",
+      "openCalendar": "Kalender öffnen",
       "today": "Heute",
       "previousMonth": "Vorheriger Monat",
       "nextMonth": "Nächster Monat",
@@ -813,5 +817,29 @@
     "assignPitchHallFor": "Spielfeld / Halle für {subject} zuweisen",
     "matchHomeSide": "Heim",
     "matchAwaySide": "Gast"
+  },
+  "AppShell": {
+    "primaryNavAria": "Hauptnavigation",
+    "contextNavAria": "Kontextnavigation",
+    "moduleNavAria": "Modulnavigation",
+    "mobilePrimaryNavAria": "Mobile Hauptnavigation",
+    "more": "Mehr",
+    "moreNavAria": "Weitere Navigation",
+    "openDrawer": "Navigation öffnen",
+    "closeDrawer": "Navigation schliessen",
+    "drawerTitle": "Navigation",
+    "searchModulesPlaceholder": "Modul suchen…",
+    "explorerBackToDomains": "Bereiche",
+    "domains": {
+      "dashboard": "Dashboard",
+      "planning": "Planung",
+      "organisation": "Organisation",
+      "communication": "Kommunikation",
+      "club": "Club",
+      "platformOverview": "Platform",
+      "platformGovernance": "Governance",
+      "platformCommercial": "Commercial",
+      "platformOperations": "Operations"
+    }
   }
 }

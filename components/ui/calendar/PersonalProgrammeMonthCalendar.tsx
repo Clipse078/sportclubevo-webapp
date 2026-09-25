@@ -37,6 +37,7 @@ export type PersonalProgrammeMonthCalendarProps = {
   timeLabelById?: Record<string, string>;
   /** Optional override for dot/aria counts (e.g. tasks on full Kalender page). Programme list still uses `items`. */
   activityCountByDay?: ReadonlyMap<string, number>;
+  density?: "default" | "cockpit";
 };
 
 function defaultTodayKey(timeZone: string, now = new Date()): string {
@@ -56,6 +57,7 @@ export default function PersonalProgrammeMonthCalendar({
   showSelectedDayPanel = true,
   timeLabelById = {},
   activityCountByDay,
+  density = "default",
 }: PersonalProgrammeMonthCalendarProps) {
   const t = useTranslations("PersonalDashboard.calendar");
   const monthStart = parseMonthParamToGridDate(monthParam);
@@ -171,8 +173,13 @@ export default function PersonalProgrammeMonthCalendar({
     return format(ref, "EEEE, d. MMMM", { locale: de });
   }, [selectedDayKey]);
 
+  const isCockpit = density === "cockpit";
+
   return (
-    <div className={cn("space-y-3", className)} data-testid="personal-programme-month-calendar">
+    <div
+      className={cn(isCockpit ? "space-y-2" : "space-y-3", className)}
+      data-testid="personal-programme-month-calendar"
+    >
       <MonthActivityGrid
         monthLabel={monthLabel}
         weekdayLabels={weekdayLabels}
@@ -190,15 +197,26 @@ export default function PersonalProgrammeMonthCalendar({
       />
 
       {showSelectedDayPanel ? (
-        <section aria-label={t("selectedDayPanel")} data-testid="personal-programme-selected-day">
-          <h3 className="mb-2 text-sm font-semibold capitalize text-[var(--foreground)]">
+        <section
+          aria-label={t("selectedDayPanel")}
+          data-testid="personal-programme-selected-day"
+          className={cn(isCockpit && "max-h-[7.5rem] overflow-y-auto")}
+        >
+          <h3
+            className={cn(
+              "mb-1.5 font-semibold capitalize text-[var(--foreground)]",
+              isCockpit ? "text-xs" : "mb-2 text-sm",
+            )}
+          >
             {selectedHeading}
           </h3>
           {selectedItems.length === 0 ? (
-            <p className="text-sm text-[var(--text-2)]">{t("emptyDay")}</p>
+            <p className={cn("text-[var(--text-2)]", isCockpit ? "text-xs" : "text-sm")}>
+              {t("emptyDay")}
+            </p>
           ) : (
             <ul className="divide-y divide-[color-mix(in_srgb,var(--border)_70%,transparent)] border-l border-[color-mix(in_srgb,var(--border)_55%,transparent)] pl-2">
-              {selectedItems.map((item) => (
+              {selectedItems.slice(0, isCockpit ? 3 : undefined).map((item) => (
                 <li key={item.id} className="list-none">
                   <PersonalProgrammeAgendaRow
                     item={item}

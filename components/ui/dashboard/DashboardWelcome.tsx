@@ -25,7 +25,7 @@ function renderGreeting(greeting: string, highlightName?: string) {
     <>
       {before}
       <span className="text-[var(--sce-primary)]">{highlightName}</span>
-      {after || "!"}
+      {after}
     </>
   );
 }

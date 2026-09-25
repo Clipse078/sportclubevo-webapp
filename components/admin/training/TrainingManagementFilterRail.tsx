@@ -25,7 +25,7 @@ export default function TrainingManagementFilterRail({
 }: Props) {
   return (
     <section
-      className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/80 p-3 sm:col-span-2 min-[105rem]:col-span-1"
+      className="rounded-xl border border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] p-3 shadow-[var(--sce-surface-shadow)] sm:col-span-2 min-[105rem]:col-span-1"
       aria-label="Filter"
       data-testid="training-filter-rail"
     >

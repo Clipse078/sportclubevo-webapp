@@ -45,7 +45,10 @@
   },
   "PersonalDashboard": {
     "welcome": {
-      "subtitle": "Your personal club overview."
+      "subtitle": "Your personal club overview.",
+      "customize": "Customize dashboard",
+      "customizeTitle": "Customize dashboard",
+      "customizeDescription": "Adjust your personal dashboard cover image."
     },
     "programme": {
       "title": "My schedule",
@@ -123,6 +126,7 @@
     },
     "calendar": {
       "title": "My calendar",
+      "openCalendar": "Open calendar",
       "today": "Today",
       "previousMonth": "Previous month",
       "nextMonth": "Next month",
@@ -386,5 +390,29 @@
     "assignPitchHallFor": "Assign pitch / hall for {subject}",
     "matchHomeSide": "Home",
     "matchAwaySide": "Away"
+  },
+  "AppShell": {
+    "primaryNavAria": "Main navigation",
+    "contextNavAria": "Context navigation",
+    "moduleNavAria": "Module navigation",
+    "mobilePrimaryNavAria": "Mobile main navigation",
+    "more": "More",
+    "moreNavAria": "More navigation",
+    "openDrawer": "Open navigation",
+    "closeDrawer": "Close navigation",
+    "drawerTitle": "Navigation",
+    "searchModulesPlaceholder": "Search modules…",
+    "explorerBackToDomains": "Areas",
+    "domains": {
+      "dashboard": "Dashboard",
+      "planning": "Planning",
+      "organisation": "Organisation",
+      "communication": "Communication",
+      "club": "Club",
+      "platformOverview": "Platform",
+      "platformGovernance": "Governance",
+      "platformCommercial": "Commercial",
+      "platformOperations": "Operations"
+    }
   }
 }

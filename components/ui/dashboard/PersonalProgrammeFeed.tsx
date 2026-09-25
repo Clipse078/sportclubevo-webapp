@@ -14,6 +14,8 @@ export type PersonalProgrammeFeedProps = {
   highlightedDayKey?: string | null;
   timeLabelById: Record<string, string>;
   viewAllHref?: string;
+  /** When true, header/actions are omitted (cockpit card provides them). */
+  embedded?: boolean;
   className?: string;
 };
 
@@ -23,39 +25,13 @@ export function PersonalProgrammeFeed({
   highlightedDayKey,
   timeLabelById,
   viewAllHref,
+  embedded = false,
   className,
 }: PersonalProgrammeFeedProps) {
   const t = useTranslations("PersonalDashboard.programme");
 
-  return (
-    <section
-      aria-labelledby="personal-programme-heading"
-      className={cn("min-w-0", className)}
-      data-testid="personal-programme-feed"
-    >
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span
-            className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[var(--sce-primary)]"
-            aria-hidden
-          >
-            <CalendarDays className="h-4 w-4" />
-          </span>
-          <h2 id="personal-programme-heading" className="text-sm font-semibold tracking-tight">
-            {t("title")}
-          </h2>
-        </div>
-        {viewAllHref && supported ? (
-          <Link
-            href={viewAllHref}
-            className="sce-link-primary shrink-0 text-[0.8125rem] font-medium"
-            data-testid="personal-programme-view-all"
-          >
-            {t("viewAll")} →
-          </Link>
-        ) : null}
-      </div>
-
+  const body = (
+    <>
       {!supported ? (
         <p className="text-sm text-[var(--text-2)]">{t("unsupported")}</p>
       ) : groups.length === 0 ? (
@@ -106,6 +82,46 @@ export function PersonalProgrammeFeed({
           })}
         </div>
       )}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div className={cn("min-w-0", className)} data-testid="personal-programme-feed">
+        {body}
+      </div>
+    );
+  }
+
+  return (
+    <section
+      aria-labelledby="personal-programme-heading"
+      className={cn("min-w-0", className)}
+      data-testid="personal-programme-feed"
+    >
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <span
+            className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-md)] bg-[var(--surface-2)] text-[var(--sce-primary)]"
+            aria-hidden
+          >
+            <CalendarDays className="h-4 w-4" />
+          </span>
+          <h2 id="personal-programme-heading" className="text-sm font-semibold tracking-tight">
+            {t("title")}
+          </h2>
+        </div>
+        {viewAllHref && supported ? (
+          <Link
+            href={viewAllHref}
+            className="sce-link-primary shrink-0 text-[0.8125rem] font-medium"
+            data-testid="personal-programme-view-all"
+          >
+            {t("viewAll")} →
+          </Link>
+        ) : null}
+      </div>
+      {body}
     </section>
   );
 }

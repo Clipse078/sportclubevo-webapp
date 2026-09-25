@@ -29,6 +29,8 @@ type AdminSidebarProps = {
   navCapabilities?: NavCapabilityContext;
   collapsed?: boolean;
   onToggle?: () => void;
+  /** Drawer/mobile embedding — do not mutate document shell layout vars. */
+  embedded?: boolean;
 };
 
 const SEASON_CARRY_PREFIXES = [
@@ -80,6 +82,7 @@ export default function AdminSidebar({
   navCapabilities,
   collapsed,
   onToggle,
+  embedded = false,
 }: AdminSidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -105,7 +108,7 @@ export default function AdminSidebar({
   });
 
   useLayoutEffect(() => {
-    if (!collapsedHydrated) return;
+    if (embedded || !collapsedHydrated) return;
     const root = document.documentElement;
     if (isCollapsed) {
       root.dataset.sidebarCollapsed = "1";
@@ -116,7 +119,7 @@ export default function AdminSidebar({
       sidebarWidthPx,
       collapsed: isCollapsed,
     });
-  }, [isCollapsed, collapsedHydrated, sidebarWidthPx]);
+  }, [embedded, isCollapsed, collapsedHydrated, sidebarWidthPx]);
 
   const handleToggle = useCallback(() => {
     const next = !isCollapsed;

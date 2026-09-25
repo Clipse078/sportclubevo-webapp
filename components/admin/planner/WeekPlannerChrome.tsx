@@ -182,7 +182,7 @@ export default function WeekPlannerChrome({
         )}
 
         <div
-          className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/80 p-3 sm:ml-auto sm:min-w-[min(100%,20rem)]"
+          className="rounded-xl border border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] p-3 shadow-[var(--sce-surface-shadow)] sm:ml-auto sm:min-w-[min(100%,20rem)]"
           data-testid="planning-hub-filter-panel"
         >
           <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">

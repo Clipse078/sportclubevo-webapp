@@ -29,7 +29,7 @@ export default function PlanningHubAllDayLane({
 
   return (
     <div
-      className="grid border-b border-[var(--border)] bg-[var(--surface)]/95"
+      className="grid border-b border-[var(--border)] bg-[var(--sce-surface-dense)]"
       style={{
         gridTemplateColumns: `${timeGutterWidthPx}px repeat(7, minmax(${dayMinWidthPx}px, 1fr))`,
         minHeight: heightPx,

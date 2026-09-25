@@ -125,13 +125,13 @@ export default function PlanningHubResourceDayView({
         </p>
       ) : (
         <div
-          className="overflow-auto [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]"
+          className="overflow-auto rounded-md border border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)] [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]"
           data-planning-hub-resource-scroll
           data-sce-planner-scroll-root
         >
           <div className="min-w-[640px]">
             <div
-              className="sticky top-0 z-10 flex border-b border-[var(--border)] bg-[var(--surface)]"
+              className="sticky top-0 z-10 flex border-b border-[var(--border)] bg-[var(--sce-surface-dense)]"
               style={{ paddingLeft: RESOURCE_LABEL_WIDTH_PX }}
             >
               <div className="relative h-8 shrink-0" style={{ width: timelineWidthPx }}>
@@ -178,14 +178,14 @@ export default function PlanningHubResourceDayView({
                   data-planning-resource-id={row.resourceId}
                 >
                   <div
-                    className="sticky left-0 z-10 shrink-0 border-r border-[var(--border)] bg-[var(--surface)] px-3 py-2"
+                    className="sticky left-0 z-10 shrink-0 border-r border-[var(--border)] bg-[var(--sce-surface-dense)] px-3 py-2"
                     style={{ width: RESOURCE_LABEL_WIDTH_PX }}
                   >
                     <p className="text-xs font-semibold text-[var(--foreground)]">{row.name}</p>
                     <p className="text-[10px] text-[var(--muted)]">{row.facilityName}</p>
                   </div>
                   <div
-                    className="relative shrink-0"
+                    className="relative shrink-0 bg-[var(--sce-surface-dense)]"
                     style={{ width: timelineWidthPx, height: rowHeight }}
                   >
                     {halfHourMarks.map((minutes) => (

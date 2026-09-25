@@ -3,15 +3,18 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import type { ReactNode } from "react";
 import StageEnvironmentBanner from "@/components/admin/deployment/StageEnvironmentBanner";
-import AdminSidebar from "@/components/admin/layout/AdminSidebar";
-import AppTopNav from "@/components/admin/layout/AppTopNav";
+import AppShellNavigation from "@/components/admin/layout/AppShellNavigation";
 import StopImpersonationButton from "@/components/admin/layout/StopImpersonationButton";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { generateTenantCssVars } from "@/lib/tenant-runtime/theme";
 import { getPersonProfileByUserIdCached } from "@/lib/server/request-cache";
 import { resolveAccountIdentityName } from "@/lib/people/identity";
 import { resolveWorkspaceContextFromSessionUser } from "@/lib/workspace/workspace-context";
+import { SCE_AUTHENTICATED_APP_SHELL_CLASS } from "@/lib/shell/sce-app-background";
+import { SCE_APP_SHELL_GLOBAL_NAV_CLASS } from "@/lib/shell/sce-app-shell-nav";
 import { SCE_APP_MAIN_COLUMN } from "@/lib/shell/responsive-layout";
+import "./authenticated-shell.css";
+import "./global-app-navigation.css";
 import { resolvePersonalParticipationNavCapability } from "@/lib/personal-actions/access";
 
 type AdminLayoutProps = {
@@ -63,13 +66,12 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div
-      className="flex min-h-screen bg-[var(--background)]"
+      className={`flex min-h-screen flex-col ${SCE_AUTHENTICATED_APP_SHELL_CLASS} ${SCE_APP_SHELL_GLOBAL_NAV_CLASS}`}
       style={tenantCssVars as React.CSSProperties}
       data-sce-modal-background
     >
-      {/* Fixed sidebar */}
       <Suspense fallback={null}>
-        <AdminSidebar
+        <AppShellNavigation
           permissionKeys={session.user.permissionKeys}
           workspaceContext={workspaceContext}
           clubName={ctx?.name}
@@ -77,11 +79,14 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
           navCapabilities={{
             personalActionsModule: participationNavCapable,
           }}
+          firstName={shellIdentity.firstName}
+          lastName={shellIdentity.lastName}
+          email={session.user.email}
+          imageUrl={shellImageUrl}
         />
       </Suspense>
 
-      {/* Main content area — flex-1, no margin needed since sidebar is in flow */}
-      <div className={SCE_APP_MAIN_COLUMN}>
+      <div className={`${SCE_APP_MAIN_COLUMN} sce-app-main-with-mobile-nav`}>
         {/* Deployment environment banner */}
         <StageEnvironmentBanner />
 
@@ -104,14 +109,6 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
             </div>
           </div>
         ) : null}
-
-        {/* Sticky top navigation */}
-        <AppTopNav
-          firstName={shellIdentity.firstName}
-          lastName={shellIdentity.lastName}
-          email={session.user.email}
-          imageUrl={shellImageUrl}
-        />
 
         {/* Page content */}
         <main className="flex-1 px-5 py-6 lg:px-7 lg:py-7">

@@ -140,13 +140,13 @@ export default function PlanningHubCalendarView({
 
   return (
     <div
-      className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--surface)] [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]"
+      className="overflow-x-auto rounded-md border border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)] [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]"
       data-testid="planning-hub-calendar"
       data-sce-planner-calendar-scroll-root
     >
       <div ref={gridRef} className="min-w-[720px]">
         <div
-          className="sticky top-0 z-20 grid border-b border-[var(--border)] bg-[var(--surface)]"
+          className="sticky top-0 z-20 grid border-b border-[var(--border)] bg-[var(--sce-surface-dense)]"
           style={{
             gridTemplateColumns: `${TIME_GUTTER_WIDTH_PX}px repeat(7, minmax(${DAY_MIN_WIDTH_PX}px, 1fr))`,
           }}
@@ -198,7 +198,10 @@ export default function PlanningHubCalendarView({
             gridTemplateColumns: `${TIME_GUTTER_WIDTH_PX}px repeat(7, minmax(${DAY_MIN_WIDTH_PX}px, 1fr))`,
           }}
         >
-          <div className="relative border-r border-[var(--border)]" style={{ height: gridHeightPx }}>
+          <div
+            className="relative border-r border-[var(--border)] bg-[var(--sce-surface-dense)]"
+            style={{ height: gridHeightPx }}
+          >
             {hourMarks.map((minutes) => {
               const label = formatGridLabel(minutes);
               return (
@@ -244,8 +247,8 @@ export default function PlanningHubCalendarView({
               <div
                 key={day.dayKey}
                 className={cn(
-                  "relative border-l border-[var(--border)]",
-                  isToday && "bg-[var(--sce-primary-light)]/12",
+                  "relative border-l border-[var(--border)] bg-[var(--sce-surface-dense)]",
+                  isToday && "bg-[color-mix(in_srgb,var(--sce-surface-dense)_88%,var(--sce-primary-light)_12%)]",
                 )}
                 style={{ height: gridHeightPx }}
                 data-testid="planning-hub-calendar-day-column"

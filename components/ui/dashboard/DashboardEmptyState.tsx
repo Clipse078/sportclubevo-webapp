@@ -7,7 +7,7 @@ export type DashboardEmptyStateProps = {
   description?: string;
   action?: ReactNode;
   /** Compact layout for personal dashboard cards with no data. */
-  variant?: "default" | "compact";
+  variant?: "default" | "compact" | "cockpit";
   /**
    * With `variant="compact"`, `inline` places icon beside the title (personal cards).
    * Default stacked compact keeps centered icon + text (other dashboard sections).
@@ -28,16 +28,19 @@ export function DashboardEmptyState({
   compactLayout = "stacked",
   className,
 }: DashboardEmptyStateProps) {
-  const isCompact = variant === "compact";
-  const isInlineCompact = isCompact && compactLayout === "inline";
+  const isCockpit = variant === "cockpit";
+  const isCompact = variant === "compact" || isCockpit;
+  const isInlineCompact = isCompact && compactLayout === "inline" && !isCockpit;
 
   return (
     <div
       className={cn(
-        isInlineCompact
-          ? "flex flex-row items-center gap-2 py-0.5 text-left"
-          : "flex flex-col items-center gap-2.5 text-center",
-        !isInlineCompact && (isCompact ? "py-3 sm:py-3" : "py-7 sm:py-8"),
+        isCockpit
+          ? "flex flex-col items-start gap-2 pt-1 text-left sm:pt-2"
+          : isInlineCompact
+            ? "flex flex-row items-center gap-2 py-0.5 text-left"
+            : "flex flex-col items-center gap-2.5 text-center",
+        !isInlineCompact && !isCockpit && (isCompact ? "py-3 sm:py-3" : "py-7 sm:py-8"),
         className,
       )}
     >
@@ -45,7 +48,13 @@ export function DashboardEmptyState({
         <span
           className={cn(
             "flex shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)]",
-            isInlineCompact ? "h-8 w-8" : isCompact ? "h-9 w-9" : "h-11 w-11",
+            isCockpit
+              ? "h-9 w-9"
+              : isInlineCompact
+                ? "h-8 w-8"
+                : isCompact
+                  ? "h-9 w-9"
+                  : "h-11 w-11",
           )}
           aria-hidden="true"
         >
@@ -54,8 +63,9 @@ export function DashboardEmptyState({
       )}
       <div
         className={cn(
-          isInlineCompact && "min-w-0 flex-1",
-          !isInlineCompact && "flex flex-col items-center gap-1",
+          (isInlineCompact || isCockpit) && "min-w-0 flex-1",
+          !isInlineCompact && !isCockpit && "flex flex-col items-center gap-1",
+          isCockpit && "flex flex-col items-start gap-0.5",
         )}
       >
         <p
@@ -70,7 +80,11 @@ export function DashboardEmptyState({
           <p
             className={cn(
               "text-[0.8125rem] leading-relaxed text-[var(--muted)]",
-              isInlineCompact ? "mt-0.5" : "max-w-sm text-center",
+              isCockpit
+                ? "max-w-md text-left"
+                : isInlineCompact
+                  ? "mt-0.5"
+                  : "max-w-sm text-center",
             )}
           >
             {description}

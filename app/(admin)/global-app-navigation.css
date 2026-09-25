@@ -1,0 +1,158 @@
+/**
+ * SCE-VISUAL-03 — responsive global navigation (L1 app chrome).
+ * Kept separate from authenticated-shell.css so SCE-VISUAL-01 filter/opacity sentinels stay scoped.
+ */
+
+[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav {
+  --sidebar-width: 0px;
+  --sce-sidebar-effective-width: 0px;
+  --sce-mobile-bottom-nav-height: 3.75rem;
+}
+
+[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav .sce-global-app-header {
+  position: sticky;
+  top: 0;
+  z-index: 35;
+  background: var(--sce-app-chrome);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+[data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
+  .sce-global-app-header-row--primary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--topnav-height);
+  padding: 0 16px;
+}
+
+@media (min-width: 768px) {
+  [data-sce-modal-background].sce-authenticated-app-shell.sce-app-shell-global-nav
+    .sce-global-app-header-row--primary {
+    padding: 0 20px;
+  }
+}
+
+.sce-global-primary-nav-item {
+  display: inline-flex;
+  align-items: center;
+  height: 2.25rem;
+  padding: 0 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-2);
+  white-space: nowrap;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.sce-global-primary-nav-item:hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--surface-2) 80%, transparent);
+}
+
+.sce-global-primary-nav-item:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--sce-primary) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.sce-global-primary-nav-item--active {
+  color: var(--sce-primary);
+  border-bottom-color: var(--sce-primary);
+}
+
+.sce-global-primary-nav-track {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.sce-global-header-utilities {
+  flex-shrink: 0;
+}
+
+.sce-global-primary-nav-overflow {
+  flex-shrink: 0;
+}
+
+.sce-global-context-nav-item {
+  display: inline-flex;
+  align-items: center;
+  height: 2rem;
+  padding: 0 0.625rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-2);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.sce-global-context-nav-item--active {
+  color: var(--sce-primary);
+  background: color-mix(in srgb, var(--sce-primary) 12%, transparent);
+}
+
+[data-sce-mobile-bottom-nav].sce-mobile-bottom-nav {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 40;
+  display: none;
+  align-items: stretch;
+  justify-content: space-around;
+  height: var(--sce-mobile-bottom-nav-height);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  background: var(--sce-app-chrome);
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 767px) {
+  [data-sce-mobile-bottom-nav].sce-mobile-bottom-nav {
+    display: flex;
+  }
+}
+
+.sce-mobile-bottom-nav-item {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-2);
+  text-align: center;
+  background: transparent;
+  border: none;
+}
+
+.sce-mobile-bottom-nav-item--active {
+  color: var(--sce-primary);
+}
+
+.sce-app-main-with-mobile-nav {
+  padding-bottom: var(--sce-mobile-bottom-nav-height);
+}
+
+@media (min-width: 768px) {
+  .sce-app-main-with-mobile-nav {
+    padding-bottom: 0;
+  }
+}
+
+.sce-mobile-nav-drawer .sce-sidebar {
+  position: relative;
+  height: 100%;
+  width: 100% !important;
+  max-width: 100%;
+}

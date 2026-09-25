@@ -100,7 +100,7 @@ describe("AdminSidebar animated icons (SCE-DESIGN-04C)", () => {
     const dashboardLink = screen.getByRole("link", { name: /Dashboard/i });
     expect(dashboardLink).toHaveAttribute("href", "/dashboard");
 
-    const matchCenterLink = screen.getByRole("link", { name: /MatchCenter/i });
+    const matchCenterLink = screen.getByRole("link", { name: /Spiele/i });
     expect(matchCenterLink).toHaveAttribute("href", "/dashboard/matchcenter");
   });
 

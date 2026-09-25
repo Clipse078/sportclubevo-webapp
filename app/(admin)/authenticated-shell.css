@@ -1,0 +1,27 @@
+/**
+ * SCE-VISUAL-01 — authenticated application shell canvas only.
+ * Imported from app/(admin)/layout.tsx (not global body/html).
+ */
+[data-sce-modal-background].sce-authenticated-app-shell {
+  background-color: var(--sce-app-background);
+  background-image: var(--sce-app-background-image);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: scroll;
+}
+
+/* L1 — stable chrome; content uses semantic L3–L6 tokens from globals.css */
+[data-sce-modal-background].sce-authenticated-app-shell .sce-sidebar {
+  background: var(--sidebar-bg);
+}
+
+[data-sce-modal-background].sce-authenticated-app-shell .sce-topnav {
+  background: var(--sce-app-chrome);
+}
+
+@media (min-width: 768px) {
+  [data-sce-modal-background].sce-authenticated-app-shell {
+    background-attachment: fixed;
+  }
+}

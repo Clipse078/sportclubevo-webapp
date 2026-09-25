@@ -74,7 +74,7 @@ export function DashboardQuickActions({
             key={action.href}
             href={action.href}
             className={cn(
-              "group flex min-h-[4.5rem] items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3 no-underline sm:min-h-[5.25rem] sm:px-4",
+              "group flex min-h-[4.5rem] items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] px-3.5 py-3 no-underline sm:min-h-[5.25rem] sm:px-4",
               "motion-safe:transition-[background-color,border-color,box-shadow,transform] motion-safe:duration-150",
               "motion-safe:hover:-translate-y-px motion-safe:hover:border-[var(--border-strong)] motion-safe:hover:bg-[var(--surface-2)] motion-safe:hover:shadow-[var(--shadow-sm)]",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",

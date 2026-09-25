@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 
 const cardVariants = cva(
   [
-    "rounded-xl border bg-[var(--surface)] overflow-hidden",
+    "rounded-xl border bg-[var(--sce-surface-standard)] overflow-hidden",
     "transition-[box-shadow,border-color] duration-[120ms]",
   ],
   {

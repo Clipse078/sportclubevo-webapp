@@ -102,6 +102,9 @@ export function buildProgrammeFeedGroups(input: {
 /** Dashboard Mein Programm preview cap (presentation only; full universe stays loaded). */
 export const DASHBOARD_PROGRAMME_PREVIEW_ITEM_LIMIT = 3;
 
+/** SCE-VISUAL-05 cockpit card preview cap (presentation only). */
+export const DASHBOARD_COCKPIT_PROGRAMME_PREVIEW_ITEM_LIMIT = 5;
+
 /**
  * Limits grouped feed rows to the first N upcoming items in canonical day order.
  * Does not alter the underlying programme loader or calendar dataset.

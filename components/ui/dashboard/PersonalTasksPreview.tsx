@@ -7,31 +7,15 @@ import type { DashboardPersonalTaskPreviewItem } from "@/lib/dashboard/personal-
 
 type Props = {
   previewItems: DashboardPersonalTaskPreviewItem[];
+  embedded?: boolean;
 };
 
-export async function PersonalTasksPreview({ previewItems }: Props) {
+export async function PersonalTasksPreview({ previewItems, embedded = false }: Props) {
   const t = await getTranslations("PersonalDashboard.tasks");
   const hasItems = previewItems.length > 0;
 
-  return (
-    <DashboardSection
-      title={t("title")}
-      icon={<ListChecks className="h-4 w-4" />}
-      iconAccent="info"
-      variant={hasItems ? "card" : "flat"}
-      density={hasItems ? "default" : "compact"}
-      bodyClassName={hasItems ? "px-4 py-1.5 sm:px-5 sm:py-2" : "px-0 py-0"}
-      actions={
-        <Link
-          href="/dashboard/aufgaben?bereich=meine"
-          className="sce-link-primary text-[0.8125rem] font-medium"
-        >
-          {t("viewAll")} →
-        </Link>
-      }
-    >
-      {hasItems ? (
-        <ul className="divide-y divide-[var(--border)]">
+  const list = hasItems ? (
+        <ul className="divide-y divide-[color-mix(in_srgb,var(--border)_85%,transparent)]">
           {previewItems.map((item) => {
             const content = (
               <>
@@ -73,10 +57,32 @@ export async function PersonalTasksPreview({ previewItems }: Props) {
           icon={<ListChecks className="h-4 w-4" />}
           title={t("emptyTitle")}
           description={t("emptyDescription")}
-          variant="compact"
-          compactLayout="stacked"
+          variant="cockpit"
         />
-      )}
+      );
+
+  if (embedded) {
+    return <div data-testid="personal-tasks-preview">{list}</div>;
+  }
+
+  return (
+    <DashboardSection
+      title={t("title")}
+      icon={<ListChecks className="h-4 w-4" />}
+      iconAccent="info"
+      variant={hasItems ? "card" : "flat"}
+      density={hasItems ? "default" : "compact"}
+      bodyClassName={hasItems ? "px-4 py-1.5 sm:px-5 sm:py-2" : "px-0 py-0"}
+      actions={
+        <Link
+          href="/dashboard/aufgaben?bereich=meine"
+          className="sce-link-primary text-[0.8125rem] font-medium"
+        >
+          {t("viewAll")} →
+        </Link>
+      }
+    >
+      {list}
     </DashboardSection>
   );
 }

@@ -4,7 +4,7 @@
  * DASHBOARD-SHELL-UX-01 — tenant-first sidebar shell:
  *   - tenant identity (name) is rendered prominently in the header
  *   - SportClubEvo platform branding at footer (not "Powered by")
- *   - MatchCenter renders nested under Planung (not as a standalone item)
+ *   - Spiele renders nested under Planung (not as a standalone item)
  *   - permission-driven visibility is preserved
  *
  * DASHBOARD-V3-03E — two-level module navigation:
@@ -81,7 +81,7 @@ describe("AdminSidebar", () => {
     expect(screen.queryByText("it@fcallschwil.ch")).not.toBeInTheDocument();
   });
 
-  it("renders MatchCenter nested under Planung when Planung is expanded", () => {
+  it("renders Spiele nested under Planung when Planung is expanded", () => {
     pathnameState.value = "/dashboard/matchcenter";
 
     render(
@@ -92,7 +92,7 @@ describe("AdminSidebar", () => {
       />,
     );
 
-    const matchCenterLink = screen.getByRole("link", { name: /MatchCenter/i });
+    const matchCenterLink = screen.getByRole("link", { name: /Spiele/i });
     expect(matchCenterLink).toHaveAttribute("href", "/dashboard/matchcenter");
     expect(matchCenterLink.className).toContain("sce-nav-child");
 
@@ -100,9 +100,9 @@ describe("AdminSidebar", () => {
       .getAllByRole("link")
       .map((el) => el.textContent?.trim())
       .filter((t): t is string => !!t);
-    const trainingIdx = labels.indexOf("TrainingCenter");
-    const matchIdx = labels.indexOf("MatchCenter");
-    const tournamentIdx = labels.indexOf("TournamentCenter");
+    const trainingIdx = labels.indexOf("Trainings");
+    const matchIdx = labels.indexOf("Spiele");
+    const tournamentIdx = labels.indexOf("Turniere");
     expect(trainingIdx).toBeGreaterThan(-1);
     expect(trainingIdx).toBeLessThan(matchIdx);
     expect(matchIdx).toBeLessThan(tournamentIdx);
@@ -134,7 +134,7 @@ describe("AdminSidebar", () => {
       />,
     );
 
-    expect(screen.queryByRole("link", { name: "MatchCenter" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Spiele" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "CMS Übersicht" })).not.toBeInTheDocument();
   });
 
@@ -150,11 +150,11 @@ describe("AdminSidebar", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: /Planung ausklappen/i }));
-    expect(screen.getByRole("link", { name: "MatchCenter" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Spiele" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Website ausklappen/i }));
     expect(screen.getByRole("link", { name: "CMS Übersicht" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "MatchCenter" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Spiele" })).not.toBeInTheDocument();
   });
 
   it("uses accessible collapse control labels", () => {
@@ -242,7 +242,7 @@ describe("AdminSidebar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Navigation einklappen" }));
 
-    expect(screen.queryByRole("link", { name: "MatchCenter" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Spiele" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Planung" })).toBeInTheDocument();
   });
 
@@ -288,7 +288,7 @@ describe("AdminSidebar", () => {
       />,
     );
     expect(screen.getByRole("link", { name: "Administration" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "MatchCenter" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Spiele" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Organisation" })).not.toBeInTheDocument();
   });
 

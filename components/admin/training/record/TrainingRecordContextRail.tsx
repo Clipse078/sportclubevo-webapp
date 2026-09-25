@@ -24,7 +24,7 @@ export default function TrainingRecordContextRail({
 }: Props) {
   return (
     <div
-      className="space-y-4 rounded-xl border border-[var(--border)]/80 bg-[var(--surface)]/60 p-4 text-sm"
+      className="space-y-4 rounded-xl border border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] p-4 text-sm shadow-[var(--sce-surface-shadow)]"
       data-testid="training-record-context-rail"
     >
       <div className="space-y-2">

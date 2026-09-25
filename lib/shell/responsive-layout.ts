@@ -37,14 +37,14 @@ export const SCE_DIALOG_VARIANT_WORKSPACE =
 /** Workspace-scale dialog shell (PLANNING-UX-03D reference). */
 export const SCE_DIALOG_WORKSPACE_PANEL = [
   "relative z-10 flex w-full min-w-0 flex-col overflow-hidden rounded-2xl",
-  "border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xl)] outline-none",
+  "border border-[var(--sce-surface-border-elevated)] bg-[var(--sce-surface-elevated)] shadow-[var(--sce-surface-shadow-elevated)] outline-none",
   "max-h-[var(--sce-dialog-max-height)]",
   SCE_DIALOG_VARIANT_WORKSPACE,
 ].join(" ");
 
 /** Standard dialog panel widths — sized against content viewport via CSS vars. */
 export const SCE_DIALOG_PANEL_BASE =
-  "relative z-10 flex w-full min-w-0 max-w-full flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xl)] outline-none max-h-[var(--sce-dialog-max-height)]";
+  "relative z-10 flex w-full min-w-0 max-w-full flex-col rounded-2xl border border-[var(--sce-surface-border-elevated)] bg-[var(--sce-surface-elevated)] shadow-[var(--sce-surface-shadow-elevated)] outline-none max-h-[var(--sce-dialog-max-height)]";
 
 /** @deprecated Prefer {@link SCE_DIALOG_VARIANT_COMPACT} — kept for Dialog size="sm" mapping. */
 export const SCE_DIALOG_SIZE_SM = SCE_DIALOG_VARIANT_COMPACT;
@@ -69,7 +69,7 @@ export const SCE_DIALOG_WORKSPACE_DESIRED_MAX_PX = 1160;
 /** AUFGABEN-06G7 — wide task create/edit dialog (760–960px usable on desktop). */
 export const SCE_AUFGABEN_TASK_FORM_DIALOG_PANEL = [
   "relative z-10 flex w-full min-w-0 flex-col overflow-hidden rounded-xl",
-  "border border-[var(--border)] bg-[var(--surface)] shadow-xl outline-none",
+  "border border-[var(--sce-surface-border-elevated)] bg-[var(--sce-surface-elevated)] shadow-[var(--sce-surface-shadow-elevated)] outline-none",
   "max-h-[var(--sce-dialog-max-height)]",
   SCE_DIALOG_VARIANT_FORM,
 ].join(" ");
