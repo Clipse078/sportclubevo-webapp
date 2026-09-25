@@ -30,6 +30,10 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
+import {
+  loadTenantFacilityResourceForWrite,
+  validateAssignableFacilityResource,
+} from "@/lib/facilities/facility-resource-write-validation";
 import { PUBLIC_CACHE_DOMAINS } from "@/lib/website/public-cache-tags";
 import { scheduleTenantPublicWebsiteCacheNotificationByTenantId } from "@/lib/website/public-cache-notification";
 import type { TrainingSessionAllocationDto, CreateTrainingSessionAllocationInput } from "./types";
@@ -141,28 +145,21 @@ export async function createTrainingSessionAllocation(
   });
   if (!session) throw new TrainingSessionNotFoundError(trainingSessionId);
 
-  const resource = await prisma.facilityResource.findFirst({
-    where: { id: facilityResourceId, tenantId },
-    select: {
-      id: true,
-      tenantId: true,
-      status: true,
-      facility: { select: { id: true, status: true } },
-    },
-  });
+  const resource = await loadTenantFacilityResourceForWrite(tenantId, facilityResourceId);
+  switch (validateAssignableFacilityResource(resource)) {
+    case "NOT_FOUND":
+      throw new TrainingSessionAllocationResourceNotFoundError(facilityResourceId);
+    case "ARCHIVED_RESOURCE":
+      throw new TrainingSessionAllocationArchivedResourceError(facilityResourceId);
+    case "ARCHIVED_FACILITY":
+      throw new TrainingSessionAllocationArchivedFacilityError(resource!.facility.id);
+    case null:
+      break;
+  }
   if (!resource) throw new TrainingSessionAllocationResourceNotFoundError(facilityResourceId);
 
-  // Cross-tenant guard (belt-and-suspenders; tenantId scoping above makes this implicit)
   if (session.tenantId !== resource.tenantId) {
     throw new TrainingSessionAllocationTenantMismatchError();
-  }
-
-  if (resource.status === "ARCHIVED") {
-    throw new TrainingSessionAllocationArchivedResourceError(facilityResourceId);
-  }
-
-  if (resource.facility.status === "ARCHIVED") {
-    throw new TrainingSessionAllocationArchivedFacilityError(resource.facility.id);
   }
 
   let order = displayOrder;
