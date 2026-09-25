@@ -390,6 +390,7 @@
   "AppShell": {
     "primaryNavAria": "Navigation principale",
     "contextNavAria": "Navigation contextuelle",
+    "moduleNavAria": "Navigation du module",
     "mobilePrimaryNavAria": "Navigation mobile principale",
     "more": "Plus",
     "moreNavAria": "Plus de navigation",

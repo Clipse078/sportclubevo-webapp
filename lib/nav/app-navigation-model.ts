@@ -38,18 +38,70 @@ export type AppNavigationModel = {
   destinations: NavigationDestination[];
 };
 
+export type DomainSecondaryNavItem = {
+  key: string;
+  label: string;
+  href: string;
+  carrySeason?: boolean;
+  /** Promoted from a single hub destination (e.g. Planung → Wochenplaner…). */
+  fromHubPromotion?: boolean;
+};
+
 export type ActiveAppNavigation = {
   activeDomainId: AppNavigationDomainId | null;
   activeDomain: NavigationDomain | null;
   activeDestinationKey: string | null;
   activeDestination: NavigationDestination | null;
   activeChildKey: string | null;
+  /** Level-2 row: modules belonging to the active domain. */
+  domainSecondaryItems: DomainSecondaryNavItem[];
+  /** Level-3 row: module-local tabs for the active destination (when applicable). */
+  moduleLocalChildren: NavItemChild[];
+  /** @deprecated Use moduleLocalChildren */
   contextualChildren: NavItemChild[];
   /** @deprecated Use activeDomainId */
   activePrimaryKey: string | null;
   /** @deprecated Use activeDomain */
   activePrimary: AppNavigationPrimaryItem | null;
 };
+
+/** Domain with one top-level nav item whose children are the domain modules (Planung). */
+export function isSingleHubNavigationDomain(domain: NavigationDomain): boolean {
+  return (
+    domain.destinations.length === 1 &&
+    (domain.destinations[0]?.children?.length ?? 0) > 0
+  );
+}
+
+export function resolveDomainSecondaryNavItems(
+  domain: NavigationDomain | null,
+): DomainSecondaryNavItem[] {
+  if (!domain) return [];
+  if (isSingleHubNavigationDomain(domain)) {
+    const hub = domain.destinations[0]!;
+    return (hub.children ?? []).map((child) => ({
+      key: child.key,
+      label: child.label,
+      href: child.href,
+      fromHubPromotion: true,
+    }));
+  }
+  return domain.destinations.map((dest) => ({
+    key: dest.key,
+    label: dest.label,
+    href: dest.href,
+    carrySeason: dest.carrySeason,
+  }));
+}
+
+export function resolveModuleLocalNavItems(
+  domain: NavigationDomain | null,
+  activeDestination: NavigationDestination | null,
+): NavItemChild[] {
+  if (!domain || !activeDestination?.children?.length) return [];
+  if (isSingleHubNavigationDomain(domain)) return [];
+  return activeDestination.children;
+}
 
 export function getDomainNavPriority(domainId: AppNavigationDomainId): NavPresentationPriority {
   return NAVIGATION_DOMAIN_DEFINITIONS[domainId]?.priority ?? 3;
@@ -163,7 +215,8 @@ export function resolveActiveAppNavigation(
     }
   }
 
-  const contextualChildren = activeDestination?.children ?? [];
+  const domainSecondaryItems = resolveDomainSecondaryNavItems(activeDomain);
+  const moduleLocalChildren = resolveModuleLocalNavItems(activeDomain, activeDestination);
 
   const legacyPrimary = activeDomain ? domainToLegacyPrimary(activeDomain) : null;
 
@@ -173,9 +226,78 @@ export function resolveActiveAppNavigation(
     activeDestinationKey: activeDestination?.key ?? null,
     activeDestination,
     activeChildKey,
-    contextualChildren,
+    domainSecondaryItems,
+    moduleLocalChildren,
+    contextualChildren: moduleLocalChildren,
     activePrimaryKey: activeDomain?.id ?? null,
     activePrimary: legacyPrimary,
+  };
+}
+
+export type CanonicalNavLeaf = {
+  key: string;
+  label: string;
+  href: string;
+  parentKey: string | null;
+};
+
+/** Every permission-visible navigable href from canonical NAV_SECTIONS (AdminSidebar parity). */
+export function flattenVisibleCanonicalNavLeaves(sections: NavSection[]): CanonicalNavLeaf[] {
+  const leaves: CanonicalNavLeaf[] = [];
+  for (const section of sections) {
+    for (const item of section.items) {
+      leaves.push({ key: item.key, label: item.label, href: item.href, parentKey: null });
+      for (const child of item.children ?? []) {
+        leaves.push({
+          key: child.key,
+          label: child.label,
+          href: child.href,
+          parentKey: item.key,
+        });
+      }
+    }
+  }
+  return leaves;
+}
+
+function collectReachableKeysFromModel(model: AppNavigationModel): Set<string> {
+  const keys = new Set<string>();
+  for (const domain of model.domains) {
+    keys.add(domain.id);
+    for (const secondary of resolveDomainSecondaryNavItems(domain)) {
+      keys.add(secondary.key);
+    }
+    for (const dest of domain.destinations) {
+      keys.add(dest.key);
+      for (const child of dest.children ?? []) {
+        keys.add(child.key);
+      }
+    }
+  }
+  return keys;
+}
+
+export type NavigationCompletenessReport = {
+  canonicalVisibleDestinations: number;
+  reachableDestinations: number;
+  orphanedDestinations: string[];
+};
+
+/**
+ * Ensures every permission-visible canonical nav leaf remains reachable through the domain model
+ * (primary domains, domain secondary row, module-local children, or global menu tree).
+ */
+export function auditNavigationCompleteness(
+  sections: NavSection[],
+  model: AppNavigationModel,
+): NavigationCompletenessReport {
+  const leaves = flattenVisibleCanonicalNavLeaves(sections);
+  const reachable = collectReachableKeysFromModel(model);
+  const orphaned = leaves.filter((leaf) => !reachable.has(leaf.key)).map((leaf) => leaf.key);
+  return {
+    canonicalVisibleDestinations: leaves.length,
+    reachableDestinations: leaves.length - orphaned.length,
+    orphanedDestinations: orphaned,
   };
 }
 

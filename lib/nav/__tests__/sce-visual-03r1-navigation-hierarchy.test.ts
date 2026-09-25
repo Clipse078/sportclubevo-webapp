@@ -141,7 +141,8 @@ describe("SCE-VISUAL-03R1 navigation hierarchy", () => {
     const active = resolveActiveAppNavigation("/dashboard/planner/week", model);
     expect(active.activeDomainId).toBe("planning");
     expect(active.activeChildKey).toBe("wochenplanner");
-    expect(active.contextualChildren.map((c) => c.key)).toContain("wochenplanner");
+    expect(active.domainSecondaryItems.map((c) => c.key)).toContain("wochenplanner");
+    expect(active.moduleLocalChildren).toEqual([]);
   });
 
   it("still derives planning children from canonical nav-config", () => {

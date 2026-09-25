@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useMemo, useState } from "react";
+import { Suspense, useCallback, useId, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Menu, MoreHorizontal } from "lucide-react";
 import SidebarPlatformBrand from "@/components/admin/branding/SidebarPlatformBrand";
 import AdminPageActions from "@/components/admin/layout/AdminPageActions";
 import AccountMenu from "@/components/admin/layout/AccountMenu";
 import HeaderTenantIdentity from "@/components/admin/layout/HeaderTenantIdentity";
-import AdminSidebar from "@/components/admin/layout/AdminSidebar";
+import GlobalNavDrawer from "@/components/admin/layout/GlobalNavDrawer";
 import NotificationBell from "@/components/admin/notifications/NotificationBell";
 import {
   buildAppNavigationModelForUser,
@@ -19,6 +19,7 @@ import {
   resolveActiveAppNavigation,
   resolvePrimaryDomainPresentation,
   selectMobileBottomDomains,
+  type DomainSecondaryNavItem,
 } from "@/lib/nav/app-navigation-model";
 import type { AppNavigationDomainId, NavigationDomain } from "@/lib/nav/app-navigation-domains";
 import type { NavCapabilityContext } from "@/lib/nav/nav-config";
@@ -99,8 +100,9 @@ function AppShellNavigationInner({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const selectedSeason = searchParams.get("season");
-  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [globalNavDrawerOpen, setGlobalNavDrawerOpen] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
+  const globalNavDrawerId = useId();
   const layoutTier = usePrimaryNavLayoutTier();
   const t = useTranslations("AppShell");
 
@@ -168,6 +170,28 @@ function AppShellNavigationInner({
     },
     [active.activeDomainId, pathname],
   );
+
+  const isDomainSecondaryItemActive = useCallback(
+    (domain: NavigationDomain, item: DomainSecondaryNavItem) => {
+      if (item.fromHubPromotion) {
+        return isNavigationChildActive(pathname, {
+          key: item.key,
+          label: item.label,
+          href: item.href,
+        });
+      }
+      const destination = domain.destinations.find((dest) => dest.key === item.key);
+      if (!destination) return false;
+      if (active.activeDestinationKey === destination.key) return true;
+      return (
+        isNavigationHrefActive(pathname, destination.href) ||
+        (destination.children?.some((child) => isNavigationChildActive(pathname, child)) ?? false)
+      );
+    },
+    [active.activeDestinationKey, pathname],
+  );
+
+  const closeGlobalNavDrawer = useCallback(() => setGlobalNavDrawerOpen(false), []);
 
   return (
     <>
@@ -266,10 +290,15 @@ function AppShellNavigationInner({
           <div className="flex shrink-0 items-center gap-1 sce-global-header-utilities">
             <button
               type="button"
-              className="sce-icon-button md:hidden min-h-[2.75rem] min-w-[2.75rem]"
+              className={cn(
+                "sce-icon-button min-h-[2.75rem] min-w-[2.75rem]",
+                globalNavDrawerOpen && "sce-global-primary-nav-item--active",
+              )}
               aria-label={t("openDrawer")}
-              aria-expanded={mobileDrawerOpen}
-              onClick={() => setMobileDrawerOpen(true)}
+              aria-expanded={globalNavDrawerOpen}
+              aria-controls={globalNavDrawerId}
+              data-testid="global-nav-hamburger"
+              onClick={() => setGlobalNavDrawerOpen((open) => !open)}
             >
               <Menu className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -290,13 +319,43 @@ function AppShellNavigationInner({
           </div>
         </div>
 
-        {active.contextualChildren.length > 0 ? (
+        {active.activeDomain && active.domainSecondaryItems.length > 0 ? (
           <nav
             aria-label={t("contextNavAria")}
             className="sce-global-context-nav hidden md:block border-t border-[color-mix(in_srgb,var(--border)_55%,transparent)]"
+            data-testid="domain-secondary-nav"
           >
             <div className="sce-global-context-nav-track flex gap-1 overflow-x-auto px-4 py-1.5">
-              {active.contextualChildren.map((child) => {
+              {active.domainSecondaryItems.map((item) => {
+                const itemHref = resolveHref(item.href);
+                const isSecondaryActive = isDomainSecondaryItemActive(active.activeDomain!, item);
+                return (
+                  <Link
+                    key={item.key}
+                    href={itemHref}
+                    aria-current={isSecondaryActive ? "page" : undefined}
+                    data-nav-destination={item.key}
+                    className={cn(
+                      "sce-global-context-nav-item shrink-0",
+                      isSecondaryActive && "sce-global-context-nav-item--active",
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </nav>
+        ) : null}
+
+        {active.moduleLocalChildren.length > 0 ? (
+          <nav
+            aria-label={t("moduleNavAria")}
+            className="sce-global-module-nav hidden md:block border-t border-[color-mix(in_srgb,var(--border)_40%,transparent)]"
+            data-testid="module-local-nav"
+          >
+            <div className="sce-global-context-nav-track flex gap-1 overflow-x-auto px-4 py-1.5">
+              {active.moduleLocalChildren.map((child) => {
                 const childHref = resolveHref(child.href);
                 const isChildActive = isNavigationChildActive(pathname, child);
                 return (
@@ -305,7 +364,7 @@ function AppShellNavigationInner({
                     href={childHref}
                     aria-current={isChildActive ? "page" : undefined}
                     className={cn(
-                      "sce-global-context-nav-item shrink-0",
+                      "sce-global-context-nav-item shrink-0 text-[0.75rem]",
                       isChildActive && "sce-global-context-nav-item--active",
                     )}
                   >
@@ -348,47 +407,24 @@ function AppShellNavigationInner({
           type="button"
           className="sce-mobile-bottom-nav-item"
           aria-label={t("moreNavAria")}
-          onClick={() => setMobileDrawerOpen(true)}
+          onClick={() => setGlobalNavDrawerOpen(true)}
         >
           {t("more")}
         </button>
       </nav>
 
-      {mobileDrawerOpen ? (
-        <div
-          className="sce-mobile-nav-drawer-backdrop fixed inset-0 z-[60] bg-black/40 md:hidden"
-          role="presentation"
-          onClick={() => setMobileDrawerOpen(false)}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") setMobileDrawerOpen(false);
-          }}
-        >
-          <div
-            className="sce-mobile-nav-drawer absolute left-0 top-0 h-full w-[min(100%,320px)] shadow-xl"
-            role="dialog"
-            aria-modal="true"
-            aria-label={t("drawerTitle")}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <AdminSidebar
-              permissionKeys={permissionKeys}
-              workspaceContext={workspaceContext}
-              clubName={clubName}
-              logoUrl={logoUrl}
-              navCapabilities={navCapabilities}
-              embedded
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-3 sce-icon-button min-h-[2.75rem] min-w-[2.75rem] z-10"
-              aria-label={t("closeDrawer")}
-              onClick={() => setMobileDrawerOpen(false)}
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <GlobalNavDrawer
+        panelId={globalNavDrawerId}
+        open={globalNavDrawerOpen}
+        onClose={closeGlobalNavDrawer}
+        model={model}
+        active={active}
+        pathname={pathname}
+        resolveHref={resolveHref}
+        domainLabel={domainLabel}
+        title={t("drawerTitle")}
+        closeLabel={t("closeDrawer")}
+      />
     </>
   );
 }
