@@ -38,18 +38,15 @@ describe("DASHBOARD-07 — programme acceptance closure", () => {
   });
 
   it("preserves final information hierarchy in composition", () => {
-    const welcome = clubDashboardSource.indexOf("DashboardCompactWelcome");
-    const quick = clubDashboardSource.indexOf("<PersonalQuickAccess");
+    const greeting = clubDashboardSource.indexOf("<PersonalDashboardCockpitGreeting");
     const workspace = clubDashboardSource.indexOf("<PersonalDashboardWorkspace");
-    const attention = clubDashboardSource.indexOf("<PersonalAttention");
-    const tasks = clubDashboardSource.indexOf("<PersonalTasksPreview");
+    const quick = clubDashboardSource.indexOf("<PersonalQuickAccess");
     const secondary = clubDashboardSource.indexOf("<PersonalDashboardSecondary");
 
-    expect(welcome).toBeLessThan(quick);
-    expect(quick).toBeLessThan(workspace);
-    expect(workspace).toBeLessThan(attention);
-    expect(attention).toBeLessThan(tasks);
-    expect(tasks).toBeLessThan(secondary);
+    expect(greeting).toBeGreaterThan(-1);
+    expect(greeting).toBeLessThan(workspace);
+    expect(workspace).toBeLessThan(quick);
+    expect(quick).toBeLessThan(secondary);
   });
 
   it("has no FCA-specific dashboard runtime logic in lib/dashboard", () => {
