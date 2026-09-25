@@ -14,8 +14,7 @@
  *
  *   1 · Team              — tenant Team (Event.teamId)
  *   2 · Heim / Auswärts    — Event.homeAway
- *   3 · Ort                — Event.location (editable; quick-pick from
- *                            tenant facilities for HOME)
+ *   3 · Ort                — Event.location (descriptive venue text only)
  *   4 · Gegner             — searchable Club-Directory ExternalClub picker
  *                            (same ExternalClubPicker as TournamentCenter)
  *                            that prefills the EXISTING editable
@@ -63,7 +62,7 @@ import PlanningEditorCollaborationSection from "@/components/admin/shared/planni
 import { resolveMatchPublicationDefaultsForCreate } from "@/lib/publishing/policy/match-publication-defaults";
 import type { FocusEvent, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Check, Building2 } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import {
   type FacilityGroup,
   type ResourceAvailabilityAnnotation,
@@ -316,14 +315,6 @@ export default function MatchCreateForm({
     }
     return override;
   }
-
-  // Quick-pick facility names for "Ort" — reuses the same tenant facility
-  // data already loaded for Spielfeld/Halle, no new lookup.
-  const facilityNameQuickPicks = useMemo(() => {
-    const names = new Set<string>();
-    for (const group of pitchHallFacilityGroups) names.add(group.facilityName);
-    return Array.from(names);
-  }, [pitchHallFacilityGroups]);
 
   // PLANNING-CREATION-UX-01C: HOME-only live Spielfeld/Halle + Garderobe
   // availability for the currently selected interval, reusing the EXISTING
@@ -610,22 +601,6 @@ export default function MatchCreateForm({
               placeholder="z. B. Sportanlage Brüel"
               data-testid="match-create-location"
             />
-            {homeAway === "HOME" && facilityNameQuickPicks.length > 0 ? (
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {facilityNameQuickPicks.map((name) => (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => setLocation(name)}
-                    data-testid={`match-create-location-quickpick-${name}`}
-                    className="inline-flex items-center gap-1 rounded-full bg-[var(--surface-2)] px-2.5 py-1 text-xs text-[var(--text-2)] hover:bg-[var(--surface)]"
-                  >
-                    <Building2 className="h-3 w-3" aria-hidden />
-                    {name}
-                  </button>
-                ))}
-              </div>
-            ) : null}
           </div>
         </GuidedStep>
 

@@ -120,6 +120,22 @@ beforeEach(() => {
   refreshMock.mockClear();
 });
 
+describe("MatchCreateForm — Ort (PLANNING-UX-07R7B)", () => {
+  it("renders Ort free-text only — no legacy facility-name quick-choice chips", async () => {
+    installFetchMock();
+    render(
+      <MatchCreateForm
+        pitchHallFacilityGroups={PITCH_HALL_GROUPS}
+        dressingRoomFacilityGroups={DRESSING_ROOM_GROUPS}
+        canValidateDirectly
+      />,
+    );
+
+    await waitFor(() => expect(screen.getByTestId("match-create-location")).toBeInTheDocument());
+    expect(document.querySelector('[data-testid^="match-create-location-quickpick-"]')).toBeNull();
+  });
+});
+
 describe("MatchCreateForm — guided-progress nudge", () => {
   it("lists missing items and shrinks as fields are filled", async () => {
     installFetchMock();
