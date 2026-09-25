@@ -29,13 +29,17 @@ describe("SCE-PERF-01 Planning navigation contract", () => {
     }
   });
 
-  it("Planning sidebar implementation uses next/link (client navigation)", () => {
-    const sidebarSource = readFileSync(
-      join(process.cwd(), "components/admin/layout/AdminSidebar.tsx"),
-      "utf8",
-    );
-    expect(sidebarSource).toContain('import Link from "next/link"');
-    expect(sidebarSource).not.toMatch(/window\.location|location\.href|router\.refresh\(/);
+  it("Planning shell navigation uses next/link (client navigation)", () => {
+    for (const relativePath of [
+      "components/admin/layout/AdminSidebar.tsx",
+      "components/admin/layout/AppShellNavigation.tsx",
+    ]) {
+      const source = readFileSync(join(process.cwd(), relativePath), "utf8");
+      expect(source, relativePath).toContain('import Link from "next/link"');
+      expect(source, relativePath).not.toMatch(
+        /window\.location|location\.href|router\.refresh\(/,
+      );
+    }
   });
 
   it("admin server timing is disabled unless SCE_PERF_TIMING or PLANNER_PERF_TIMING is set", async () => {
