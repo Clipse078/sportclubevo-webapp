@@ -63,7 +63,7 @@ type Props = {
 };
 
 const LIST_HEADER =
-  "hidden md:grid md:grid-cols-[minmax(0,1.85fr)_minmax(7.5rem,0.9fr)_minmax(7.75rem,0.85fr)_minmax(0,1.15fr)_minmax(5.75rem,0.75fr)_3rem] md:gap-x-4 border-b border-[var(--border)]/60 bg-[var(--surface-2)]/25 px-4 py-2.5 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--muted)]";
+  "hidden md:grid md:grid-cols-[minmax(0,1.85fr)_minmax(7.5rem,0.9fr)_minmax(7.75rem,0.85fr)_minmax(0,1.15fr)_minmax(5.75rem,0.75fr)_3rem] md:gap-x-4 border-b border-[var(--border)]/60 bg-[color-mix(in_srgb,var(--sce-surface-dense)_92%,var(--surface-2)_8%)] px-4 py-2.5 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--muted)]";
 
 function hasActiveFilters(filters: Props["filters"]): boolean {
   return Boolean(filters.seriesSearch?.trim() || filters.seriesTeam || filters.seriesStatus);
@@ -201,7 +201,7 @@ export default function TrainingManagementWorkspace({
           </div>
 
           <div
-            className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]"
+            className="overflow-hidden rounded-xl border border-[var(--sce-surface-border)] bg-[var(--sce-surface-dense)]"
             data-testid="training-list"
           >
             <div className={LIST_HEADER}>

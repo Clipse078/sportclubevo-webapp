@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import type { SpieleStatusMetric } from "./SpieleManagementStatusStrip";
 import { cn } from "@/lib/cn";
+import { SCE_KPI_CARD_SURFACE } from "@/lib/shell/sce-surface-system";
 
 type Props = {
   metrics: SpieleStatusMetric[];
@@ -17,13 +18,6 @@ const ICONS: Record<string, typeof CalendarClock> = {
   offen: Clock3,
   bereit: CheckCircle2,
   resultate: Trophy,
-};
-
-const SURFACE: Record<string, string> = {
-  anstehend: "border-sky-500/25 bg-sky-950/40",
-  offen: "border-amber-500/25 bg-amber-950/30",
-  bereit: "border-emerald-500/25 bg-emerald-950/35",
-  resultate: "border-[var(--border)] bg-[var(--surface)]/80",
 };
 
 const ICON_TILE: Record<string, string> = {
@@ -65,7 +59,7 @@ export default function SpieleManagementKpiCards({ metrics }: Props) {
 
         const className = cn(
           "flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors",
-          SURFACE[metric.key] ?? SURFACE.anstehend,
+          SCE_KPI_CARD_SURFACE,
           metric.active && "ring-1 ring-[var(--sce-primary)]/50",
           metric.href && "hover:border-[var(--border-strong)]",
         );

@@ -100,9 +100,7 @@ export function DashboardSection({
     <section
       className={cn(
         isCard &&
-          "overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-xs)]",
-        isCard &&
-          "bg-[linear-gradient(180deg,var(--surface)_0%,color-mix(in_srgb,var(--surface)_97%,var(--surface-2))_100%)]",
+          "overflow-hidden rounded-[var(--radius-xl)] border border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] shadow-[var(--sce-surface-shadow)]",
         className,
       )}
     >

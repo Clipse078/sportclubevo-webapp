@@ -11,6 +11,15 @@
   background-attachment: scroll;
 }
 
+/* L1 — stable chrome; content uses semantic L3–L6 tokens from globals.css */
+[data-sce-modal-background].sce-authenticated-app-shell .sce-sidebar {
+  background: var(--sidebar-bg);
+}
+
+[data-sce-modal-background].sce-authenticated-app-shell .sce-topnav {
+  background: var(--sce-app-chrome);
+}
+
 @media (min-width: 768px) {
   [data-sce-modal-background].sce-authenticated-app-shell {
     background-attachment: fixed;

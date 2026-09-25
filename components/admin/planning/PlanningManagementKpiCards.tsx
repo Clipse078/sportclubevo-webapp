@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { SCE_KPI_CARD_SURFACE } from "@/lib/shell/sce-surface-system";
 
 export type PlanningKpiMetric = {
   key: string;
@@ -10,7 +11,8 @@ export type PlanningKpiMetric = {
   href?: string;
   active?: boolean;
   icon: LucideIcon;
-  surface: string;
+  /** @deprecated Decorative per-card surfaces — use iconTile for semantic accent only. */
+  surface?: string;
   iconTile: string;
   "data-testid"?: string;
 };
@@ -49,7 +51,7 @@ export default function PlanningManagementKpiCards({ metrics, testId = "planning
 
         const className = cn(
           "flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors",
-          metric.surface,
+          SCE_KPI_CARD_SURFACE,
           metric.active && "ring-1 ring-[var(--sce-primary)]/50",
           metric.href && "hover:border-[var(--border-strong)]",
         );

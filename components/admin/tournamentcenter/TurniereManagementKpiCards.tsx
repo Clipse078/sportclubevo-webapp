@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarClock, History, MapPin, Trophy } from "lucide-react";
 import type { TurniereManagementKpis } from "@/lib/tournaments/management-view";
 import { cn } from "@/lib/cn";
+import { SCE_KPI_CARD_SURFACE } from "@/lib/shell/sce-surface-system";
 
 type Metric = {
   key: string;
@@ -11,7 +12,6 @@ type Metric = {
   href?: string;
   active?: boolean;
   icon: typeof CalendarClock;
-  surface: string;
   iconTile: string;
   "data-testid"?: string;
 };
@@ -38,7 +38,6 @@ export default function TurniereManagementKpiCards({
       href: anstehendHref,
       active: scope === "UPCOMING",
       icon: CalendarClock,
-      surface: "border-sky-500/25 bg-sky-950/40",
       iconTile: "bg-sky-500/15 text-sky-400",
       "data-testid": "turniere-kpi-anstehend",
     },
@@ -50,7 +49,6 @@ export default function TurniereManagementKpiCards({
       href: vergangenHref,
       active: scope === "PAST",
       icon: History,
-      surface: "border-[var(--border)] bg-[var(--surface)]/80",
       iconTile: "bg-[var(--surface-2)] text-[var(--muted)]",
       "data-testid": "turniere-kpi-vergangen",
     },
@@ -60,7 +58,6 @@ export default function TurniereManagementKpiCards({
       value: kpis.total,
       hint: "alle Turniere",
       icon: Trophy,
-      surface: "border-emerald-500/25 bg-emerald-950/35",
       iconTile: "bg-emerald-500/15 text-emerald-400",
       "data-testid": "turniere-kpi-total",
     },
@@ -70,7 +67,6 @@ export default function TurniereManagementKpiCards({
       value: kpis.uniqueVenues,
       hint: "mit Standortangabe",
       icon: MapPin,
-      surface: "border-[var(--border)] bg-[var(--surface)]/80",
       iconTile: "bg-[var(--surface-2)] text-[var(--muted)]",
       "data-testid": "turniere-kpi-venues",
     },
@@ -102,7 +98,7 @@ export default function TurniereManagementKpiCards({
 
         const className = cn(
           "flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors",
-          metric.surface,
+          SCE_KPI_CARD_SURFACE,
           metric.active && "ring-1 ring-[var(--sce-primary)]/50",
           metric.href && "hover:border-[var(--border-strong)]",
         );

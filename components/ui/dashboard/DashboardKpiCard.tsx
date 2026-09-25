@@ -91,9 +91,8 @@ export function DashboardKpiCard({
               "backdrop-blur-[4px]",
             )
           : cn(
-              "rounded-[var(--radius-xl)] bg-[var(--surface)] px-4 py-3.5 sm:px-5 sm:py-4",
-              "bg-[linear-gradient(145deg,var(--surface)_0%,color-mix(in_srgb,var(--surface)_92%,var(--surface-2))_100%)]",
-              "shadow-[var(--shadow-xs)]",
+              "rounded-[var(--radius-xl)] bg-[var(--sce-surface-standard)] px-4 py-3.5 sm:px-5 sm:py-4",
+              "shadow-[var(--sce-surface-shadow)]",
             ),
         "border-[var(--border)]",
         "motion-safe:transition-[box-shadow,border-color] motion-safe:duration-150",

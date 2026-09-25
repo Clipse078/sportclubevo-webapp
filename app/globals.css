@@ -65,13 +65,30 @@
   /* Shell surfaces */
   --shell-bg:          #0a0f1e;
   --sidebar-bg:        #0c1222;
-  --header-bg:         rgba(12, 18, 34, 0.92);
+  --header-bg:         var(--sce-app-chrome);
 
   /* SCE-VISUAL-01 — authenticated application canvas (decorative image + fallbacks) */
   --sce-app-background-image: url("/images/background/SCE_background.png");
   --sce-app-background:       var(--background);
   --sce-app-surface:          var(--surface);
   --sce-app-surface-elevated: var(--surface-2);
+
+  /* SCE-VISUAL-02 — authenticated surface hierarchy (L1 chrome + L3–L6 content) */
+  --sce-app-chrome:             rgb(12 18 34 / 97%);
+  --sce-surface-subtle:         rgb(18 26 46 / 58%);
+  --sce-surface-standard:       rgb(18 26 46 / 88%);
+  --sce-surface-dense:          rgb(10 15 30 / 96%);
+  --sce-surface-elevated:       rgb(20 28 48 / 98%);
+
+  --sce-surface-border-subtle:  rgb(255 255 255 / 6%);
+  --sce-surface-border:         var(--border);
+  --sce-surface-border-elevated: var(--border-strong);
+
+  --sce-surface-shadow:         var(--shadow-xs);
+  --sce-surface-shadow-elevated: var(--shadow-lg);
+
+  --sce-surface-blur-subtle:    0px;
+  --sce-surface-blur:           4px;
 
   /* Spacing Scale (4px base) */
   --space-1:  4px;
@@ -400,10 +417,12 @@ button {
 .fca-card {
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid var(--sce-surface-border);
   border-radius: var(--radius-2xl);
-  background: var(--card);
-  box-shadow: var(--shadow-sm);
+  background: var(--sce-surface-standard);
+  box-shadow: var(--sce-surface-shadow);
+  -webkit-backdrop-filter: blur(var(--sce-surface-blur));
+  backdrop-filter: blur(var(--sce-surface-blur));
 }
 
 .fca-card::before {
@@ -418,10 +437,12 @@ button {
 .fca-section-card {
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid var(--sce-surface-border);
   border-radius: var(--radius-xl);
-  background: var(--surface);
-  box-shadow: var(--shadow-xs);
+  background: var(--sce-surface-standard);
+  box-shadow: var(--sce-surface-shadow);
+  -webkit-backdrop-filter: blur(var(--sce-surface-blur));
+  backdrop-filter: blur(var(--sce-surface-blur));
 }
 
 .fca-section-card::before {
@@ -435,10 +456,12 @@ button {
 
 /* New minimal surface card — no gradient bar, clean */
 .sce-card {
-  border: 1px solid var(--border);
+  border: 1px solid var(--sce-surface-border);
   border-radius: var(--radius-xl);
-  background: var(--card);
-  box-shadow: var(--shadow-xs);
+  background: var(--sce-surface-standard);
+  box-shadow: var(--sce-surface-shadow);
+  -webkit-backdrop-filter: blur(var(--sce-surface-blur));
+  backdrop-filter: blur(var(--sce-surface-blur));
   transition: box-shadow var(--transition-base), border-color var(--transition-base);
 }
 
@@ -451,16 +474,18 @@ button {
 .sce-integrated-list {
   overflow: hidden;
   border-radius: var(--radius-2xl);
-  border: 1px solid var(--border);
-  background: var(--card);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--sce-surface-border);
+  background: var(--sce-surface-dense);
+  box-shadow: var(--sce-surface-shadow);
 }
 
 .sce-kpi-card {
-  border: 1px solid var(--border);
+  border: 1px solid var(--sce-surface-border);
   border-radius: var(--radius-xl);
-  background: var(--surface);
-  box-shadow: var(--shadow-xs);
+  background: var(--sce-surface-standard);
+  box-shadow: var(--sce-surface-shadow);
+  -webkit-backdrop-filter: blur(var(--sce-surface-blur));
+  backdrop-filter: blur(var(--sce-surface-blur));
   padding: 20px 24px;
   transition: box-shadow var(--transition-base), border-color var(--transition-fast);
 }
@@ -477,9 +502,9 @@ button {
 .fca-select,
 .fca-textarea {
   width: 100%;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--sce-surface-border-elevated);
   border-radius: var(--radius-lg);
-  background: var(--surface);
+  background: var(--sce-surface-subtle);
   color: var(--foreground);
   font-size: 0.875rem;
   outline: none;
@@ -1932,10 +1957,12 @@ html[data-sidebar-collapsed="1"] {
   align-items: flex-start;
   gap: 12px;
   padding: 16px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--sce-surface-border);
   border-radius: var(--radius-xl);
-  background: var(--surface);
-  box-shadow: var(--shadow-xs);
+  background: var(--sce-surface-standard);
+  box-shadow: var(--sce-surface-shadow);
+  -webkit-backdrop-filter: blur(var(--sce-surface-blur));
+  backdrop-filter: blur(var(--sce-surface-blur));
   text-decoration: none;
   transition:
     box-shadow var(--transition-base),
@@ -1988,11 +2015,40 @@ html[data-sidebar-collapsed="1"] {
 
 /* Section card — Screen 3 style (rounded 16px, white, clean shadow) */
 .sce-section-card-v3 {
-  border: 1px solid var(--border);
+  border: 1px solid var(--sce-surface-border);
   border-radius: var(--radius-xl);
-  background: var(--surface);
-  box-shadow: var(--shadow-xs);
+  background: var(--sce-surface-standard);
+  box-shadow: var(--sce-surface-shadow);
+  -webkit-backdrop-filter: blur(var(--sce-surface-blur));
+  backdrop-filter: blur(var(--sce-surface-blur));
   overflow: hidden;
+}
+
+/* SCE-VISUAL-02 — semantic surface utility classes */
+.sce-surface-subtle {
+  background: var(--sce-surface-subtle);
+  border: 1px solid var(--sce-surface-border-subtle);
+}
+
+.sce-surface-standard {
+  background: var(--sce-surface-standard);
+  border: 1px solid var(--sce-surface-border);
+  box-shadow: var(--sce-surface-shadow);
+  -webkit-backdrop-filter: blur(var(--sce-surface-blur));
+  backdrop-filter: blur(var(--sce-surface-blur));
+}
+
+.sce-surface-dense {
+  background: var(--sce-surface-dense);
+  border: 1px solid var(--sce-surface-border);
+}
+
+.sce-surface-elevated {
+  background: var(--sce-surface-elevated);
+  border: 1px solid var(--sce-surface-border-elevated);
+  box-shadow: var(--sce-surface-shadow-elevated);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
 .sce-section-card-v3-header {
