@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CheckCircle2, MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 import type { MatchcenterOperationalAssessment } from "@/lib/matchcenter/operational-state";
 import { resolveClubIdentityLogoUrl } from "@/lib/matchcenter/club-identity";
@@ -228,6 +229,7 @@ export default function SpieleManagementMatchRow({
   isSelected = false,
   onToggleSelect,
 }: Props) {
+  const tMatch = useTranslations("PlanningEditor.match");
   const detailHref = `/dashboard/matchcenter/${match.id}`;
   const status = resolveSpieleStatusPresentation(match, assessment);
   const wochenplanerHref = buildMatchWochenplanerHref({
@@ -306,8 +308,20 @@ export default function SpieleManagementMatchRow({
             <p className="mb-1 line-clamp-1 text-[0.6875rem] text-[var(--muted)]">{contextLine}</p>
           ) : null}
 
-          <div className="flex min-w-0 items-center gap-1.5">
+          <div
+            className="mb-1 flex items-center gap-1.5"
+            data-testid={`matchcenter-activity-type-${match.id}`}
+          >
             <ActivitySceIcon activityKind="MATCH" size={compact ? 16 : 20} className="shrink-0" />
+            <span className="text-sm font-semibold text-[var(--foreground)]">
+              {tMatch("activityTypeLabel")}
+            </span>
+          </div>
+
+          <div
+            className="flex min-w-0 items-center gap-1.5"
+            data-testid={`matchcenter-team-matchup-${match.id}`}
+          >
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <ClubLogo
                 logoUrl={homeLogoUrl}

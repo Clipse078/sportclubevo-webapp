@@ -227,6 +227,7 @@
       "cancel": "Cancel"
     },
     "match": {
+      "activityTypeLabel": "Match",
       "create": {
         "backNav": "Matches",
         "eyebrow": "Plan match",

@@ -227,6 +227,7 @@
       "cancel": "Annulla"
     },
     "match": {
+      "activityTypeLabel": "Partita",
       "create": {
         "backNav": "Partite",
         "eyebrow": "Pianifica partita",

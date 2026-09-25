@@ -23,7 +23,12 @@ import { assessTournamentOperationalState } from "@/lib/tournaments/operational-
 import type { TrainingSessionManagementRow as TrainingSessionRow } from "@/lib/training/management-session-view";
 
 vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: (namespace?: string) => (key: string) => {
+    if (namespace === "PlanningEditor.match" && key === "activityTypeLabel") {
+      return "Spiel";
+    }
+    return key;
+  },
 }));
 
 vi.mock("next/link", () => ({
@@ -215,6 +220,12 @@ describe("SCE-ICONS-03 PersonalProgrammeFeed", () => {
       title: "Junioren F2 Training",
       typeLabel: "Training",
     });
+    const match = programmeItem({
+      id: "ma-1",
+      sourceType: "MATCH",
+      title: "Heimspiel",
+      typeLabel: "Spiel",
+    });
     const tournament = programmeItem({
       id: "to-1",
       sourceType: "TOURNAMENT",
@@ -226,11 +237,23 @@ describe("SCE-ICONS-03 PersonalProgrammeFeed", () => {
       <PersonalProgrammeAgendaRow item={training} timeLabel="18:00" />,
     );
     expectApprovedActivityIcon(trainingContainer, "TRAINING", "training");
+    expect(
+      trainingContainer.querySelector('[data-programme-palette="training-blue"]'),
+    ).toBeTruthy();
+
+    const { container: matchContainer } = render(
+      <PersonalProgrammeAgendaRow item={match} timeLabel="17:00" />,
+    );
+    expectApprovedActivityIcon(matchContainer, "MATCH", "match");
+    expect(matchContainer.querySelector('[data-programme-palette="match-green"]')).toBeTruthy();
 
     const { container: tournamentContainer } = render(
       <PersonalProgrammeAgendaRow item={tournament} timeLabel="10:00" />,
     );
     expectApprovedActivityIcon(tournamentContainer, "TOURNAMENT", "tournament");
+    expect(
+      tournamentContainer.querySelector('[data-programme-palette="tournament-orange"]'),
+    ).toBeTruthy();
 
     const feedSource = readRelative("components/ui/dashboard/PersonalProgrammeFeed.tsx");
     expect(feedSource).toContain("PersonalProgrammeAgendaRow");
@@ -319,6 +342,9 @@ describe("SCE-ICONS-03 MatchCenter records", () => {
       />,
     );
     expectApprovedActivityIcon(container, "MATCH", "match");
+    expect(screen.getByText("Spiel")).toBeInTheDocument();
+    expect(container.querySelector(`[data-testid="matchcenter-activity-type-${match.id}"]`)).toBeTruthy();
+    expect(container.querySelector(`[data-testid="matchcenter-team-matchup-${match.id}"]`)).toBeTruthy();
     expect(container.querySelectorAll("svg.lucide-shield").length).toBeGreaterThanOrEqual(2);
   });
 });

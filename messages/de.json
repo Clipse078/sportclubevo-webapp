@@ -650,6 +650,7 @@
       "cancel": "Abbrechen"
     },
     "match": {
+      "activityTypeLabel": "Spiel",
       "create": {
         "backNav": "Spiele",
         "eyebrow": "Spiel planen",

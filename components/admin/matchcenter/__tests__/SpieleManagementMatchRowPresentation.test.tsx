@@ -6,7 +6,16 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next-intl", () => ({
+  useTranslations: (namespace?: string) => (key: string) => {
+    if (namespace === "PlanningEditor.match" && key === "activityTypeLabel") {
+      return "Spiel";
+    }
+    return key;
+  },
+}));
 import SpieleManagementMatchRow from "@/components/admin/matchcenter/SpieleManagementMatchRow";
 import { assessMatchOperationalState } from "@/lib/matchcenter/operational-state";
 import type { MatchcenterMatchSummary, MatchcenterSide } from "@/lib/matchcenter/types";
