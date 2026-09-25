@@ -25,20 +25,11 @@ export function TeamApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="22" cy="22" r="6" stroke="var(--sce-icon-primary)" strokeWidth="3.5" />
-        <circle cx="42" cy="22" r="6" stroke="var(--sce-icon-primary)" strokeWidth="3.5" />
-        <circle cx="32" cy="16" r="6" stroke="var(--sce-icon-secondary)" strokeWidth="3.5" />
-        <path
-          d="M10 46c0-8 6-12 12-12M42 34c6 0 12 4 12 12"
-          stroke="var(--sce-icon-muted)"
-          strokeWidth="3"
-        />
-        <path
-          d="M22 34c5 0 10 4 10 12M32 28c6 0 10 4 10 10"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="3"
-        />
-        <path d="M28 40h8" stroke="var(--sce-icon-accent)" strokeWidth="3" />
+        <circle cx="32" cy="18" r="7" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <circle cx="15" cy="24" r="5" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
+        <circle cx="49" cy="24" r="5" stroke="var(--sce-icon-accent)" strokeWidth="4" />
+        <path d="M21 49c1-10 5-16 11-16s10 6 11 16" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <path d="M5 47c1-8 4-13 10-13M59 47c-1-8-4-13-10-13" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
       </g>
     </SceIconSvg>
   );
@@ -49,22 +40,10 @@ export function SeasonApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <rect
-          x="10"
-          y="14"
-          width="44"
-          height="42"
-          rx="6"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="4"
-        />
-        <path d="M10 26h44M22 8v12M42 8v12" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <path
-          d="M46 18a14 14 0 1 1-4-10"
-          stroke="var(--sce-icon-accent)"
-          strokeWidth="3.5"
-        />
-        <path d="M46 18l-6-2 2 6" stroke="var(--sce-icon-accent)" strokeWidth="3.5" />
+        <rect x="9" y="13" width="46" height="42" rx="6" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <path d="M9 25h46M20 8v10M44 8v10" stroke="var(--sce-icon-accent)" strokeWidth="4" />
+        <path d="M26 36a9 9 0 0 0 0 12" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
+        <path d="M38 36a9 9 0 0 1 0 12" stroke="var(--sce-icon-accent)" strokeWidth="4" />
       </g>
     </SceIconSvg>
   );
@@ -75,39 +54,10 @@ export function StandingsApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <path d="M8 52h48" stroke="var(--sce-icon-muted)" strokeWidth="3" />
-        <rect
-          x="12"
-          y="34"
-          width="12"
-          height="18"
-          rx="2"
-          stroke="var(--sce-icon-secondary)"
-          strokeWidth="3"
-        />
-        <rect
-          x="26"
-          y="22"
-          width="12"
-          height="30"
-          rx="2"
-          stroke="var(--sce-icon-accent)"
-          strokeWidth="3.5"
-        />
-        <rect
-          x="40"
-          y="40"
-          width="12"
-          height="12"
-          rx="2"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="3"
-        />
-        <path
-          d="M18 30V18M32 18v4M46 36v4"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="3"
-        />
+        <path d="M11 51V36h9v15" stroke="var(--sce-icon-secondary)" strokeWidth="5" />
+        <path d="M27 51V25h10v26" stroke="var(--sce-icon-primary)" strokeWidth="5" />
+        <path d="M44 51V32h9v19" stroke="var(--sce-icon-secondary)" strokeWidth="5" />
+        <path d="M32 9l2.3 4.7 5.2.8-3.8 3.7.9 5.2-4.6-2.5-4.6 2.5.9-5.2-3.8-3.7 5.2-.8z" fill="var(--sce-icon-accent)" stroke="var(--sce-icon-accent)" />
       </g>
     </SceIconSvg>
   );
@@ -118,31 +68,11 @@ export function ResultsApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <rect
-          x="8"
-          y="18"
-          width="20"
-          height="28"
-          rx="4"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="4"
-        />
-        <rect
-          x="36"
-          y="18"
-          width="20"
-          height="28"
-          rx="4"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="4"
-        />
-        <circle cx="32" cy="32" r="3" fill="var(--sce-icon-accent)" />
-        <path
-          d="M14 28h8M14 36h8M42 28h8M42 36h8"
-          stroke="var(--sce-icon-secondary)"
-          strokeWidth="3"
-        />
-        <path d="M32 46v6" stroke="var(--sce-icon-muted)" strokeWidth="3" />
+        <rect x="8" y="15" width="48" height="32" rx="5" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <path d="M18 28h10l-10 9h10" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
+        <path d="M35 29h1M35 37h1" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <path d="M43 28v9M40 28h3" stroke="var(--sce-icon-accent)" strokeWidth="4" />
+        <path d="M25 10h14M24 52h16" stroke="var(--sce-icon-accent)" strokeWidth="4" />
       </g>
     </SceIconSvg>
   );
@@ -153,23 +83,12 @@ export function AttendanceApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <rect
-          x="12"
-          y="10"
-          width="32"
-          height="44"
-          rx="5"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="4"
-        />
-        <path d="M20 20h16M20 30h10" stroke="var(--sce-icon-secondary)" strokeWidth="3" />
-        <path d="M44 38l6 6 12-14" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-        <circle cx="26" cy="44" r="5" stroke="var(--sce-icon-primary)" strokeWidth="3" />
-        <path
-          d="M20 54c0-6 4-9 6-9s6 3 6 9"
-          stroke="var(--sce-icon-muted)"
-          strokeWidth="3"
-        />
+        <circle cx="27" cy="18" r="7" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <circle cx="11" cy="24" r="5" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
+        <circle cx="44" cy="24" r="5" stroke="var(--sce-icon-accent)" strokeWidth="4" />
+        <path d="M16 49c1-10 5-16 11-16" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <circle cx="45" cy="44" r="10" stroke="var(--sce-icon-accent)" strokeWidth="4" />
+        <path d="M40 44l4 4 7-8" stroke="var(--sce-icon-primary)" strokeWidth="4" />
       </g>
     </SceIconSvg>
   );
@@ -180,36 +99,9 @@ export function PitchApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <rect
-          x="8"
-          y="12"
-          width="48"
-          height="40"
-          rx="4"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="4"
-        />
-        <path d="M8 32h48" stroke="var(--sce-icon-secondary)" strokeWidth="3" />
-        <circle cx="32" cy="32" r="8" stroke="var(--sce-icon-secondary)" strokeWidth="3" />
-        <rect
-          x="8"
-          y="22"
-          width="8"
-          height="20"
-          rx="1"
-          stroke="var(--sce-icon-muted)"
-          strokeWidth="2.5"
-        />
-        <rect
-          x="48"
-          y="22"
-          width="8"
-          height="20"
-          rx="1"
-          stroke="var(--sce-icon-muted)"
-          strokeWidth="2.5"
-        />
-        <path d="M32 12v4M32 48v4" stroke="var(--sce-icon-accent)" strokeWidth="3" />
+        <rect x="6" y="14" width="52" height="36" rx="3" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <path d="M32 14v36M6 22h9v20H6M58 22h-9v20h9" stroke="var(--sce-icon-secondary)" strokeWidth="3" />
+        <circle cx="32" cy="32" r="7" stroke="var(--sce-icon-accent)" strokeWidth="3" />
       </g>
     </SceIconSvg>
   );
@@ -220,27 +112,10 @@ export function DressingRoomApprovedMasterGlyph(props: ApprovedMasterGlyphProps)
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <rect
-          x="10"
-          y="8"
-          width="44"
-          height="48"
-          rx="5"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="4"
-        />
-        <path d="M32 8v48" stroke="var(--sce-icon-secondary)" strokeWidth="3" />
-        <circle cx="22" cy="32" r="3" stroke="var(--sce-icon-accent)" strokeWidth="3" />
-        <path
-          d="M16 18h12M16 46h12M40 18v28"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="3"
-        />
-        <path
-          d="M36 22h12M36 32h8M36 42h10"
-          stroke="var(--sce-icon-muted)"
-          strokeWidth="3"
-        />
+        <rect x="8" y="11" width="21" height="42" rx="3" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <rect x="35" y="11" width="21" height="42" rx="3" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <path d="M14 20h9M41 20h9" stroke="var(--sce-icon-accent)" strokeWidth="4" />
+        <path d="M14 29h9M41 29h9" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
       </g>
     </SceIconSvg>
   );
@@ -251,49 +126,11 @@ export function OrganisationApprovedMasterGlyph(props: ApprovedMasterGlyphProps)
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <rect
-          x="26"
-          y="8"
-          width="12"
-          height="12"
-          rx="3"
-          stroke="var(--sce-icon-accent)"
-          strokeWidth="3.5"
-        />
-        <path d="M32 20v8M16 28h32" stroke="var(--sce-icon-secondary)" strokeWidth="3.5" />
-        <path
-          d="M16 28v8M32 28v8M48 28v8"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="3.5"
-        />
-        <rect
-          x="8"
-          y="36"
-          width="16"
-          height="12"
-          rx="3"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="3"
-        />
-        <rect
-          x="24"
-          y="36"
-          width="16"
-          height="12"
-          rx="3"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="3"
-        />
-        <rect
-          x="40"
-          y="36"
-          width="16"
-          height="12"
-          rx="3"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="3"
-        />
-        <path d="M8 54h48" stroke="var(--sce-icon-muted)" strokeWidth="3" />
+        <rect x="23" y="7" width="18" height="12" rx="3" stroke="var(--sce-icon-accent)" strokeWidth="4" />
+        <rect x="5" y="43" width="16" height="12" rx="3" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
+        <rect x="24" y="43" width="16" height="12" rx="3" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <rect x="43" y="43" width="16" height="12" rx="3" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
+        <path d="M32 19v11M13 43V30h38v13M32 30v13" stroke="var(--sce-icon-primary)" strokeWidth="4" />
       </g>
     </SceIconSvg>
   );
@@ -304,39 +141,9 @@ export function OrgUnitApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <rect
-          x="20"
-          y="10"
-          width="24"
-          height="14"
-          rx="3"
-          stroke="var(--sce-icon-accent)"
-          strokeWidth="3.5"
-        />
-        <path
-          d="M32 24v10M32 34h-14M32 34h14"
-          stroke="var(--sce-icon-secondary)"
-          strokeWidth="3.5"
-        />
-        <rect
-          x="8"
-          y="34"
-          width="20"
-          height="16"
-          rx="3"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="3.5"
-        />
-        <rect
-          x="36"
-          y="34"
-          width="20"
-          height="16"
-          rx="3"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="3.5"
-        />
-        <path d="M18 50v4M46 50v4" stroke="var(--sce-icon-muted)" strokeWidth="3" />
+        <rect x="7" y="9" width="22" height="18" rx="4" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
+        <rect x="35" y="37" width="22" height="18" rx="4" stroke="var(--sce-icon-accent)" strokeWidth="4" />
+        <path d="M18 27v12h28v-2M46 37V25H29" stroke="var(--sce-icon-primary)" strokeWidth="4" />
       </g>
     </SceIconSvg>
   );
@@ -347,15 +154,10 @@ export function PeopleApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="24" cy="22" r="7" stroke="var(--sce-icon-primary)" strokeWidth="3.5" />
-        <circle cx="42" cy="26" r="6" stroke="var(--sce-icon-secondary)" strokeWidth="3" />
-        <path
-          d="M10 50c0-10 8-14 14-14s14 4 14 14"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="3.5"
-        />
-        <path d="M36 50c0-8 5-11 10-11" stroke="var(--sce-icon-muted)" strokeWidth="3" />
-        <path d="M24 36h4" stroke="var(--sce-icon-accent)" strokeWidth="3" />
+        <circle cx="32" cy="18" r="7" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <circle cx="14" cy="24" r="5" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
+        <circle cx="50" cy="24" r="5" stroke="var(--sce-icon-accent)" strokeWidth="4" />
+        <path d="M21 52c0-11 4-18 11-18s11 7 11 18M4 50c0-9 4-15 10-15M60 50c0-9-4-15-10-15" stroke="var(--sce-icon-primary)" strokeWidth="4" />
       </g>
     </SceIconSvg>
   );
@@ -366,24 +168,10 @@ export function RolesAccessApprovedMasterGlyph(props: ApprovedMasterGlyphProps) 
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <path
-          d="M32 10l14 6v12c0 10-6 16-14 20-8-4-14-10-14-20V16z"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="3.5"
-        />
-        <circle cx="32" cy="24" r="5" stroke="var(--sce-icon-accent)" strokeWidth="3" />
-        <path d="M32 29v5" stroke="var(--sce-icon-accent)" strokeWidth="3" />
-        <path
-          d="M44 38c4 4 8 10 8 16H12c0-6 4-12 8-16"
-          stroke="var(--sce-icon-secondary)"
-          strokeWidth="3"
-        />
-        <path
-          d="M46 46l10 10M52 46l-6 6"
-          stroke="var(--sce-icon-accent)"
-          strokeWidth="3.5"
-        />
-        <circle cx="52" cy="40" r="4" stroke="var(--sce-icon-primary)" strokeWidth="3" />
+        <circle cx="24" cy="20" r="8" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
+        <path d="M9 50c1-12 6-19 15-19 6 0 10 3 13 9" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <circle cx="45" cy="40" r="11" stroke="var(--sce-icon-accent)" strokeWidth="4" />
+        <path d="M45 34v12M39 40h12" stroke="var(--sce-icon-primary)" strokeWidth="4" />
       </g>
     </SceIconSvg>
   );
@@ -394,17 +182,9 @@ export function ClubApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <path
-          d="M32 8l18 8v14c0 12-8 20-18 26-10-6-18-14-18-26V16z"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="4"
-        />
-        <path
-          d="M32 16v32M22 26h20M24 36h16"
-          stroke="var(--sce-icon-secondary)"
-          strokeWidth="3"
-        />
-        <circle cx="32" cy="26" r="4" stroke="var(--sce-icon-accent)" strokeWidth="3" />
+        <path d="M32 6l20 7v15c0 14-8 24-20 30C20 52 12 42 12 28V13z" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <path d="M32 12v39" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
+        <path d="M20 21h24M22 37h20" stroke="var(--sce-icon-accent)" strokeWidth="3" />
       </g>
     </SceIconSvg>
   );
@@ -415,28 +195,9 @@ export function DocumentsApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <path
-          d="M18 12h22l8 8v34H18z"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="4"
-        />
-        <path d="M40 12v8h8" stroke="var(--sce-icon-secondary)" strokeWidth="3" />
-        <path
-          d="M24 28h20M24 36h16M24 44h12"
-          stroke="var(--sce-icon-secondary)"
-          strokeWidth="3"
-        />
-        <rect
-          x="10"
-          y="18"
-          width="26"
-          height="34"
-          rx="3"
-          stroke="var(--sce-icon-muted)"
-          strokeWidth="3"
-        />
-        <path d="M16 28h14M16 36h10" stroke="var(--sce-icon-muted)" strokeWidth="2.5" />
-        <circle cx="46" cy="46" r="6" stroke="var(--sce-icon-accent)" strokeWidth="3" />
+        <path d="M15 7h24l10 10v40H15z" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <path d="M39 7v12h10M23 29h18M23 38h18M23 47h12" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
+        <path d="M39 7l10 10" stroke="var(--sce-icon-accent)" strokeWidth="4" />
       </g>
     </SceIconSvg>
   );
@@ -447,29 +208,9 @@ export function TasksApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <rect
-          x="12"
-          y="10"
-          width="40"
-          height="44"
-          rx="5"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="4"
-        />
-        <path
-          d="M22 24l4 4 8-8M22 38l4 4 8-8M22 52h20"
-          stroke="var(--sce-icon-accent)"
-          strokeWidth="3.5"
-        />
-        <rect
-          x="38"
-          y="48"
-          width="10"
-          height="10"
-          rx="2"
-          stroke="var(--sce-icon-secondary)"
-          strokeWidth="3"
-        />
+        <rect x="10" y="8" width="44" height="48" rx="5" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <path d="M18 22l4 4 7-8M18 38l4 4 7-8" stroke="var(--sce-icon-accent)" strokeWidth="4" />
+        <path d="M34 22h12M34 38h12" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
       </g>
     </SceIconSvg>
   );
@@ -480,18 +221,10 @@ export function RequirementsApprovedMasterGlyph(props: ApprovedMasterGlyphProps)
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <path
-          d="M16 12h24l8 8v32H16z"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="4"
-        />
-        <path d="M40 12v8h8M12 22h32" stroke="var(--sce-icon-secondary)" strokeWidth="3" />
-        <path
-          d="M22 30h20M22 38h20M22 46h14"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="3"
-        />
-        <path d="M46 42l6 6 12-14" stroke="var(--sce-icon-accent)" strokeWidth="4" />
+        <path d="M13 8h38v48H13z" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <path d="M21 20h22M21 30h22M21 40h13" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
+        <circle cx="44" cy="44" r="9" stroke="var(--sce-icon-accent)" strokeWidth="4" />
+        <path d="M41 44l2 2 5-5" stroke="var(--sce-icon-primary)" strokeWidth="3" />
       </g>
     </SceIconSvg>
   );
@@ -502,18 +235,9 @@ export function EventsApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <rect
-          x="10"
-          y="14"
-          width="44"
-          height="42"
-          rx="6"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="4"
-        />
-        <path d="M10 26h44M22 8v12M42 8v12" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <path d="M32 32l4 8h-8z" stroke="var(--sce-icon-accent)" strokeWidth="3.5" />
-        <circle cx="32" cy="32" r="10" stroke="var(--sce-icon-secondary)" strokeWidth="3" />
+        <rect x="8" y="12" width="48" height="44" rx="5" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <path d="M8 25h48M19 7v11M45 7v11" stroke="var(--sce-icon-accent)" strokeWidth="4" />
+        <path d="M22 35h20M22 44h13" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
       </g>
     </SceIconSvg>
   );
@@ -524,23 +248,13 @@ export function CommunicationApprovedMasterGlyph(props: ApprovedMasterGlyphProps
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <path
-          d="M10 16h32a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H26l-8 8v-8H10a4 4 0 0 1-4-4V20a4 4 0 0 1 4-4z"
-          stroke="var(--sce-icon-primary)"
-          strokeWidth="3.5"
-        />
-        <path d="M24 24h16M24 32h10" stroke="var(--sce-icon-secondary)" strokeWidth="3" />
-        <path
-          d="M38 34h16a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H44l-6 6v-6H38a3 3 0 0 1-3-3V37a3 3 0 0 1 3-3z"
-          stroke="var(--sce-icon-accent)"
-          strokeWidth="3"
-        />
-        <path d="M44 42h8" stroke="var(--sce-icon-muted)" strokeWidth="2.5" />
+        <path d="M8 12h48v34H29L18 55v-9H8z" stroke="var(--sce-icon-primary)" strokeWidth="4" />
+        <path d="M18 24h28M18 34h19" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
+        <circle cx="49" cy="15" r="6" fill="var(--sce-icon-accent)" stroke="var(--sce-icon-accent)" strokeWidth="2" />
       </g>
     </SceIconSvg>
   );
 }
-
 export const SCE_APPROVED_EXPANDED_MASTER_GLYPHS = [
   TeamApprovedMasterGlyph,
   SeasonApprovedMasterGlyph,

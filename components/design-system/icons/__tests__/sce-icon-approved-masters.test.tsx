@@ -24,18 +24,24 @@ import { SCE_ICON_REGISTRY } from "../registry";
 const HERO_SIZES: SceIconSize[] = [16, 20, 24, 32, 48];
 
 function normalizeGeometryMarkup(fragment: string): string {
-  return fragment
+  let normalized = fragment
     .replace(/\sstyle="[^"]*"/gi, "")
+    .replace(/var\((--sce-icon-[a-z-]+),\s*[^)]+\)/gi, "var($1)")
     .replace(/stroke-width=/gi, "strokeWidth=")
     .replace(/stroke-linecap=/gi, "strokeLinecap=")
     .replace(/stroke-linejoin=/gi, "strokeLinejoin=")
     .replace(/<(\w+)([^>]*?)><\/\1>/g, "<$1$2/>")
     .replace(/<path d="([^"]+)"/gi, (_, d: string) => {
-      const normalized = d.replace(/\s+/g, " ").trim();
-      return `<path d="${normalized}"`;
+      const pathData = d.replace(/\s+/g, " ").trim();
+      return `<path d="${pathData}"`;
     })
     .replace(/\s+/g, " ")
     .trim();
+  normalized = normalized.replace(
+    /^<g strokeLinecap="round" strokeLinejoin="round">(.*)<\/g>$/i,
+    "$1",
+  );
+  return normalized.trim();
 }
 
 function serializeRenderedGeometry(container: HTMLElement): string {
@@ -142,13 +148,12 @@ describe("SCE approved master library", () => {
     expect(files.some((f) => /-light\.svg$/i.test(f))).toBe(false);
   });
 
-  it("preserves training and tournament geometry from SCE-ICONS-04 baseline", () => {
-    expect(SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS.training).toBe(
-      SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS.training,
-    );
-    expect(SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS.tournament).toBe(
-      SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS.tournament,
-    );
+  it("preserves approved master geometry baselines (SCE-ICONS-04R1 authoritative artwork)", () => {
+    for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
+      expect(SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS[name]).toBe(
+        SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS[name],
+      );
+    }
   });
 
   it("uses Open VS match master without football-specific markup", () => {
@@ -159,9 +164,13 @@ describe("SCE approved master library", () => {
     expect(matchSrc).not.toMatch(/<text[\s>]/i);
     expect(matchSrc).not.toMatch(/font-family/i);
     expect(matchSrc).not.toMatch(/M25 24l7-5 7 5/);
+    expect(matchSrc).toMatch(/M18 13A23 23 0 0 0 11 32/);
+    expect(matchSrc).toMatch(/M25 9a23 23 0 0 1 14 0/);
     expect(SCE_ICON_REGISTRY.match.name).toBe("match");
     const { container } = render(<SceIcon name="match" size={24} />);
-    expect(container.innerHTML).toContain("M26 26l4 12 4-12");
+    expect(container.innerHTML).toContain("M18 13A23 23 0 0 0 11 32");
+    expect(container.innerHTML).not.toContain("M26 26l4 12 4-12");
+    expect(container.innerHTML).not.toMatch(/<text[\s>]/i);
   });
 
   it("does not keep provisional hero glyphs in planning sources", () => {
