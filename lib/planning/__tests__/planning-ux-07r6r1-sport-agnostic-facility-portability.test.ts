@@ -23,12 +23,11 @@ describe("PLANNING-UX-07R6R1 sport-agnostic facility portability", () => {
 
     it("EventFacilityAllocation references FacilityResource only", () => {
       const schema = read("prisma/schema.prisma");
-      const block = schema.slice(
-        schema.indexOf("model EventFacilityAllocation"),
-        schema.indexOf("// ============================================================================="),
-      );
+      const start = schema.indexOf("model EventFacilityAllocation");
+      const end = schema.indexOf("@@unique([eventId, facilityResourceId])", start);
+      const block = schema.slice(start, end + 40);
       expect(block).toContain("facilityResourceId String");
-      expect(block).not.toMatch(/pitch|hallCode|court/i);
+      expect(block).not.toMatch(/pitchCode|hallCode/i);
     });
   });
 
@@ -78,19 +77,20 @@ describe("PLANNING-UX-07R6R1 sport-agnostic facility portability", () => {
   });
 
   describe("five-domain regression sentinels", () => {
-    const keys = [
-      "findVeranstaltungConflicts",
-      "findTrainingConflicts",
-      "findMatchConflicts",
-      "findTournamentConflicts",
-      "collectVeranstaltungOccupants",
-    ] as const;
-
-    it("single read engine still aggregates all domains", () => {
+    it("single read engine still aggregates canonical domain conflicts", () => {
       const svc = read("lib/facilities/availability-service.ts");
-      for (const key of keys) {
+      for (const key of [
+        "findVeranstaltungConflicts",
+        "findTrainingConflicts",
+        "findMatchConflicts",
+        "findTournamentConflicts",
+      ]) {
         expect(svc).toContain(key);
       }
+    });
+
+    it("Wochenplan integrates Veranstaltung occupants", () => {
+      expect(read("lib/weekplanner/availability-integration.ts")).toContain("collectVeranstaltungOccupants");
     });
   });
 

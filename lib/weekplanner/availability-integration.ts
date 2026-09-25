@@ -38,7 +38,10 @@ import {
 import type { TenantMatchOperationalPolicyResolved } from "@/lib/match/tenant-operational-policy-service";
 import { listTournaments } from "@/lib/tournaments/tournament-service";
 import { planOverrideKey } from "@/lib/weekplanner/plan-override-key";
-import type { AvailabilityResourceGroup } from "@/lib/facilities/availability-service";
+import type {
+  AvailabilityResourceGroup,
+  WeekplannerAvailabilityResourceGroup,
+} from "@/lib/facilities/availability-service";
 import {
   activityIdentityKey,
   collectActivitiesWithOverrides,
@@ -65,7 +68,7 @@ type ConflictWindow = {
   sourceType: "TRAINING" | "MATCH" | "TOURNAMENT" | "VERANSTALTUNG";
 };
 
-const GROUP_TO_PLANNER_GROUP: Record<AvailabilityResourceGroup, WeekplannerAllocationGroup> = {
+const GROUP_TO_PLANNER_GROUP: Record<WeekplannerAvailabilityResourceGroup, WeekplannerAllocationGroup> = {
   PITCH_HALL: "PITCH_HALL",
   DRESSING_ROOM: "DRESSING_ROOM",
 };
@@ -650,7 +653,7 @@ async function collectVeranstaltungOccupants(
 export async function findWeekplannerReplacedActivities(
   tenantId: string,
   weekplannerPlanId: string,
-  group: AvailabilityResourceGroup,
+  group: WeekplannerAvailabilityResourceGroup,
 ): Promise<Set<string>> {
   const [allocationRows, timeOverrideRows] = await Promise.all([
     prisma.weekplannerPlanAllocation.findMany({
@@ -686,7 +689,7 @@ export async function findWeekplannerPlanConflicts(
   tenantId: string,
   queryStartAt: Date,
   queryEndAt: Date,
-  group: AvailabilityResourceGroup,
+  group: WeekplannerAvailabilityResourceGroup,
   context: WeekplannerAvailabilityContext,
   resourceByCode: ReadonlyMap<string, WeekplannerResourceRef>,
 ): Promise<ConflictWindow[]> {

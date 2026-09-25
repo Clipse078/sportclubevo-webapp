@@ -60,6 +60,12 @@ import type { WeekplannerActivityType } from "@/lib/weekplanner/plan-types";
 /** Allocation groups served by getResourceAvailability (same engine per group). */
 export type AvailabilityResourceGroup = CanonicalAvailabilityGroup;
 
+/** Wochenplan overrides exist only for these groups (not OTHER). */
+export type WeekplannerAvailabilityResourceGroup = Extract<
+  AvailabilityResourceGroup,
+  "PITCH_HALL" | "DRESSING_ROOM"
+>;
+
 export type ResourceAvailabilityStatus = "FREE" | "OCCUPIED";
 
 export type ResourceAvailabilityConflictSource =
@@ -502,9 +508,12 @@ export async function getResourceAvailability(
   const startAt = queryWindow.effectiveStartAt;
   const endAt = queryWindow.effectiveEndAt;
 
+  const weekplannerGroup: WeekplannerAvailabilityResourceGroup | null =
+    group === "OTHER" ? null : group;
+
   const replacedActivities =
-    weekplannerPlanId != null
-      ? await findWeekplannerReplacedActivities(tenantId, weekplannerPlanId, group)
+    weekplannerPlanId != null && weekplannerGroup != null
+      ? await findWeekplannerReplacedActivities(tenantId, weekplannerPlanId, weekplannerGroup)
       : new Set<string>();
 
   const resources = await prisma.facilityResource.findMany({
@@ -544,7 +553,7 @@ export async function getResourceAvailability(
   );
   const resourceIds = resources.map((r) => r.id);
 
-  const useEffectivePlanOccupancy = weekplannerPlanId != null;
+  const useEffectivePlanOccupancy = weekplannerPlanId != null && weekplannerGroup != null;
   // When a weekplanner plan is in scope, effective occupancy (canonical baseline +
   // plan overrides, with replaced-activity de-duplication) is resolved entirely
   // by findWeekplannerPlanConflicts — not by skipping cross-domain truth.
@@ -563,8 +572,8 @@ export async function getResourceAvailability(
       useEffectivePlanOccupancy
         ? Promise.resolve([])
         : findVeranstaltungConflicts(tenantId, startAt, endAt, group, resourceIds, excludeEventId),
-      weekplannerPlanId
-        ? findWeekplannerPlanConflicts(tenantId, startAt, endAt, group, {
+      weekplannerPlanId && weekplannerGroup
+        ? findWeekplannerPlanConflicts(tenantId, startAt, endAt, weekplannerGroup, {
             weekplannerPlanId,
             excludeActivityType: excludeWeekplannerActivityType,
             excludeActivityId: excludeWeekplannerActivityId,
