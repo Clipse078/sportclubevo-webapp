@@ -3,8 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { ChevronDown } from "lucide-react";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import { PlanningResourcePicker } from "@/components/admin/shared/planning/PlanningResourcePicker";
+import { TRAINING_ALLOCATION_GROUP_LABELS } from "@/lib/training/allocation-groups";
 import { parseClubEventScheduleInput } from "@/lib/events/club-event-scheduling";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
@@ -60,6 +63,7 @@ type ResourceDraftRow = {
 type VeranstaltungCreateFormProps = {
   pitchHallFacilityGroups: FacilityGroup[];
   dressingRoomFacilityGroups: FacilityGroup[];
+  otherFacilityGroups?: FacilityGroup[];
   timeZone?: string | null;
 };
 
@@ -83,6 +87,7 @@ function nextLocalId(prefix: string): string {
 export default function VeranstaltungCreateForm({
   pitchHallFacilityGroups,
   dressingRoomFacilityGroups,
+  otherFacilityGroups = [],
   timeZone = "Europe/Zurich",
 }: VeranstaltungCreateFormProps) {
   const router = useRouter();
@@ -116,6 +121,8 @@ export default function VeranstaltungCreateForm({
   const [loadingSeasons, setLoadingSeasons] = useState(true);
   const [pitchDraft, setPitchDraft] = useState<ResourceDraftRow | null>(null);
   const [dressingDraft, setDressingDraft] = useState<ResourceDraftRow | null>(null);
+  const [otherDrafts, setOtherDrafts] = useState<ResourceDraftRow[]>([]);
+  const [otherPickerOpen, setOtherPickerOpen] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -169,6 +176,36 @@ export default function VeranstaltungCreateForm({
     },
     [dressingRoomFacilityGroups],
   );
+
+  const addOtherDraft = useCallback(
+    (facilityResourceId: string) => {
+      setOtherDrafts((prev) => {
+        if (prev.some((row) => row.facilityResourceId === facilityResourceId)) return prev;
+        return [
+          ...prev,
+          {
+            localId: nextLocalId("other"),
+            facilityResourceId,
+            facilityResourceName: resolveResourceDisplay(otherFacilityGroups, facilityResourceId),
+          },
+        ];
+      });
+    },
+    [otherFacilityGroups],
+  );
+
+  const removeOtherDraft = useCallback((facilityResourceId: string) => {
+    setOtherDrafts((prev) => prev.filter((row) => row.facilityResourceId !== facilityResourceId));
+  }, []);
+
+  const showOtherSection = otherFacilityGroups.length > 0 || otherDrafts.length > 0;
+  const selectedResourceIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (pitchDraft) ids.add(pitchDraft.facilityResourceId);
+    if (dressingDraft) ids.add(dressingDraft.facilityResourceId);
+    for (const row of otherDrafts) ids.add(row.facilityResourceId);
+    return ids;
+  }, [pitchDraft, dressingDraft, otherDrafts]);
 
   useEffect(() => {
     let active = true;
@@ -282,7 +319,7 @@ export default function VeranstaltungCreateForm({
       const created = data as { eventIds?: string[] } | null;
       const firstEventId = created?.eventIds?.[0];
       if (firstEventId) {
-        for (const draft of [pitchDraft, dressingDraft].filter(Boolean)) {
+        for (const draft of [pitchDraft, dressingDraft, ...otherDrafts].filter(Boolean)) {
           const allocRes = await fetch(`/api/events/${firstEventId}/facility-allocations`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -467,6 +504,65 @@ export default function VeranstaltungCreateForm({
               canManage
               testId="veranstaltung-create-dressing-allocation"
             />
+            {showOtherSection ? (
+              <details
+                className="group rounded-lg border border-[var(--border)] px-3 py-2"
+                data-testid="veranstaltung-create-other-allocation"
+                open={otherDrafts.length > 0}
+              >
+                <summary className="flex cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-[var(--text-2)]">
+                  <ChevronDown
+                    size={14}
+                    className="text-[var(--muted)] transition-transform group-open:rotate-180"
+                    aria-hidden
+                  />
+                  {TRAINING_ALLOCATION_GROUP_LABELS.OTHER}
+                </summary>
+                <div className="mt-3 space-y-2">
+                  {otherDrafts.length > 0 ? (
+                    <ul className="space-y-1 text-sm text-[var(--foreground)]">
+                      {otherDrafts.map((row) => (
+                        <li key={row.localId} className="flex justify-between gap-2">
+                          <span>{row.facilityResourceName}</span>
+                          <button
+                            type="button"
+                            className="text-xs text-[var(--sce-danger)]"
+                            onClick={() => removeOtherDraft(row.facilityResourceId)}
+                          >
+                            Entfernen
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {!otherPickerOpen ? (
+                    <button
+                      type="button"
+                      className="text-xs font-semibold text-[var(--sce-primary)] hover:underline"
+                      onClick={() => setOtherPickerOpen(true)}
+                      data-testid="veranstaltung-create-other-allocation-add"
+                    >
+                      {otherDrafts.length > 0
+                        ? "Weitere Ressource hinzufügen"
+                        : "Ressource zuweisen"}
+                    </button>
+                  ) : null}
+                  {otherPickerOpen ? (
+                    <PlanningResourcePicker
+                      kind="other"
+                      title={TRAINING_ALLOCATION_GROUP_LABELS.OTHER}
+                      facilityGroups={otherFacilityGroups}
+                      selectedResourceIds={selectedResourceIds}
+                      singleSelect={false}
+                      onSelect={addOtherDraft}
+                      onDeselect={removeOtherDraft}
+                      testId="veranstaltung-create-other-allocation-picker"
+                      onCancel={() => setOtherPickerOpen(false)}
+                    />
+                  ) : null}
+                </div>
+              </details>
+            ) : null}
           </div>
         </div>
       </PlanningEditorSection>

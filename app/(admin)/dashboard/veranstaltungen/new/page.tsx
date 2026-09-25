@@ -41,6 +41,7 @@ export default async function NewVeranstaltungPage() {
 
   const pitchHallFacilityGroups = facilityGroupsForTypes(["FULL_PITCH", "HALF_PITCH"]);
   const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
+  const otherFacilityGroups = facilityGroupsForTypes(["OTHER"]);
 
   const t = await getTranslations("Veranstaltungen.editor.create");
 
@@ -61,6 +62,7 @@ export default async function NewVeranstaltungPage() {
         <VeranstaltungCreateForm
           pitchHallFacilityGroups={pitchHallFacilityGroups}
           dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+          otherFacilityGroups={otherFacilityGroups}
           timeZone={tenantContext.timezone ?? "Europe/Zurich"}
         />
       </PlanningEditorShell>

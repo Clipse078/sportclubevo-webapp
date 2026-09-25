@@ -60,6 +60,7 @@ type VeranstaltungEditFormProps = {
   operationalRailSections?: ReactNode;
   pitchHallFacilityGroups?: FacilityGroup[];
   dressingRoomFacilityGroups?: FacilityGroup[];
+  otherFacilityGroups?: FacilityGroup[];
   initialFacilityAllocations?: EventFacilityAllocationDto[];
 };
 
@@ -71,6 +72,7 @@ export default function VeranstaltungEditForm({
   operationalRailSections,
   pitchHallFacilityGroups = [],
   dressingRoomFacilityGroups = [],
+  otherFacilityGroups = [],
   initialFacilityAllocations = [],
 }: VeranstaltungEditFormProps) {
   const router = useRouter();
@@ -320,6 +322,7 @@ export default function VeranstaltungEditForm({
             initialAllocations={initialFacilityAllocations}
             pitchHallFacilityGroups={pitchHallFacilityGroups}
             dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+            otherFacilityGroups={otherFacilityGroups}
             pitchAvailabilityByResourceId={pitchAvailability}
             dressingRoomAvailabilityByResourceId={dressingRoomAvailability}
           />

@@ -1,11 +1,16 @@
 "use client";
 
 import { useCallback, useMemo, useState, useTransition } from "react";
-import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
+import { ChevronDown } from "lucide-react";
+import {
+  classifyFacilityResourceType,
+  TRAINING_ALLOCATION_GROUP_LABELS,
+} from "@/lib/training/allocation-groups";
 import type { EventFacilityAllocationDto } from "@/lib/events/event-facility-allocation-types";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { ResourceAvailabilityAnnotation } from "@/components/admin/training/FacilityResourceSelector";
 import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import { PlanningResourcePicker } from "@/components/admin/shared/planning/PlanningResourcePicker";
 
 type Props = {
   eventId: string;
@@ -13,13 +18,14 @@ type Props = {
   initialAllocations: EventFacilityAllocationDto[];
   pitchHallFacilityGroups: FacilityGroup[];
   dressingRoomFacilityGroups: FacilityGroup[];
+  otherFacilityGroups?: FacilityGroup[];
   pitchAvailabilityByResourceId?: Map<string, ResourceAvailabilityAnnotation>;
   dressingRoomAvailabilityByResourceId?: Map<string, ResourceAvailabilityAnnotation>;
 };
 
 function allocationsForGroup(
   allocations: EventFacilityAllocationDto[],
-  group: "PITCH_HALL" | "DRESSING_ROOM",
+  group: "PITCH_HALL" | "DRESSING_ROOM" | "OTHER",
 ): EventFacilityAllocationDto[] {
   return allocations.filter(
     (a) => classifyFacilityResourceType(a.facilityResourceType as never) === group,
@@ -32,12 +38,15 @@ export default function VeranstaltungFacilityAllocationEditor({
   initialAllocations,
   pitchHallFacilityGroups,
   dressingRoomFacilityGroups,
+  otherFacilityGroups = [],
   pitchAvailabilityByResourceId,
   dressingRoomAvailabilityByResourceId,
 }: Props) {
   const [allocations, setAllocations] = useState(initialAllocations);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [otherPickerOpen, setOtherPickerOpen] = useState(false);
+  const [otherPickerError, setOtherPickerError] = useState<string | null>(null);
 
   const pitchAllocations = useMemo(
     () => allocationsForGroup(allocations, "PITCH_HALL"),
@@ -47,6 +56,12 @@ export default function VeranstaltungFacilityAllocationEditor({
     () => allocationsForGroup(allocations, "DRESSING_ROOM"),
     [allocations],
   );
+  const otherAllocations = useMemo(
+    () => allocationsForGroup(allocations, "OTHER"),
+    [allocations],
+  );
+  const showOtherSection =
+    otherFacilityGroups.length > 0 || otherAllocations.length > 0;
 
   const pitchSelectedIds = useMemo(
     () => new Set(pitchAllocations.map((a) => a.facilityResourceId)),
@@ -55,6 +70,32 @@ export default function VeranstaltungFacilityAllocationEditor({
   const dressingSelectedIds = useMemo(
     () => new Set(dressingAllocations.map((a) => a.facilityResourceId)),
     [dressingAllocations],
+  );
+  const otherSelectedIds = useMemo(
+    () => new Set(otherAllocations.map((a) => a.facilityResourceId)),
+    [otherAllocations],
+  );
+  const allSelectedIds = useMemo(
+    () => new Set(allocations.map((a) => a.facilityResourceId)),
+    [allocations],
+  );
+
+  const assignResource = useCallback(
+    async (facilityResourceId: string) => {
+      const res = await fetch(`/api/events/${eventId}/facility-allocations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ facilityResourceId }),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | { allocation?: EventFacilityAllocationDto; error?: string }
+        | null;
+      if (!res.ok || !data?.allocation) {
+        throw new Error(data?.error ?? "Ressource konnte nicht zugewiesen werden.");
+      }
+      setAllocations((prev) => [...prev, data.allocation!]);
+    },
+    [eventId],
   );
 
   const assignOrReplace = useCallback(
@@ -83,20 +124,9 @@ export default function VeranstaltungFacilityAllocationEditor({
         return;
       }
 
-      const res = await fetch(`/api/events/${eventId}/facility-allocations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ facilityResourceId }),
-      });
-      const data = (await res.json().catch(() => null)) as
-        | { allocation?: EventFacilityAllocationDto; error?: string }
-        | null;
-      if (!res.ok || !data?.allocation) {
-        throw new Error(data?.error ?? "Ressource konnte nicht zugewiesen werden.");
-      }
-      setAllocations((prev) => [...prev, data.allocation!]);
+      await assignResource(facilityResourceId);
     },
-    [allocations, eventId],
+    [allocations, assignResource, eventId],
   );
 
   const unassign = useCallback(
@@ -213,6 +243,122 @@ export default function VeranstaltungFacilityAllocationEditor({
         disabled={isPending}
         testId="veranstaltung-dressing-allocation"
       />
+
+      {showOtherSection ? (
+        <details
+          className="group rounded-lg border border-[var(--border)] px-3 py-2"
+          data-testid="veranstaltung-other-allocation"
+          open={otherAllocations.length > 0}
+        >
+          <summary className="flex cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-[var(--text-2)]">
+            <ChevronDown
+              size={14}
+              className="text-[var(--muted)] transition-transform group-open:rotate-180"
+              aria-hidden
+            />
+            {TRAINING_ALLOCATION_GROUP_LABELS.OTHER}
+          </summary>
+          <div className="mt-3 space-y-2">
+            {otherAllocations.length > 0 ? (
+              <ul className="space-y-1 text-sm text-[var(--foreground)]">
+                {otherAllocations.map((a) => (
+                  <li key={a.id} className="flex justify-between gap-2">
+                    <span>{a.facilityResourceName}</span>
+                    {canManage ? (
+                      <button
+                        type="button"
+                        className="text-xs text-[var(--sce-danger)]"
+                        disabled={isPending}
+                        onClick={() => {
+                          setError(null);
+                          startTransition(async () => {
+                            try {
+                              await unassign(a.id);
+                            } catch (err) {
+                              setError(err instanceof Error ? err.message : "Entfernen fehlgeschlagen.");
+                            }
+                          });
+                        }}
+                      >
+                        Entfernen
+                      </button>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {canManage ? (
+              <>
+                {!otherPickerOpen ? (
+                  <button
+                    type="button"
+                    className="text-xs font-semibold text-[var(--sce-primary)] hover:underline"
+                    disabled={isPending}
+                    onClick={() => {
+                      setOtherPickerError(null);
+                      setOtherPickerOpen(true);
+                    }}
+                    data-testid="veranstaltung-other-allocation-add"
+                  >
+                    {otherAllocations.length > 0
+                      ? "Weitere Ressource hinzufügen"
+                      : "Ressource zuweisen"}
+                  </button>
+                ) : null}
+                {otherPickerOpen ? (
+                  <div className="space-y-2">
+                    {otherPickerError ? (
+                      <p className="text-xs text-[var(--sce-danger)]" role="alert">
+                        {otherPickerError}
+                      </p>
+                    ) : null}
+                    <PlanningResourcePicker
+                      kind="other"
+                      title={TRAINING_ALLOCATION_GROUP_LABELS.OTHER}
+                      facilityGroups={otherFacilityGroups}
+                      selectedResourceIds={allSelectedIds}
+                      singleSelect={false}
+                      disabled={isPending}
+                      onSelect={(id) => {
+                        if (otherSelectedIds.has(id)) return;
+                        setOtherPickerError(null);
+                        startTransition(async () => {
+                          try {
+                            await assignResource(id);
+                          } catch (err) {
+                            setOtherPickerError(
+                              err instanceof Error ? err.message : "Zuweisung fehlgeschlagen.",
+                            );
+                          }
+                        });
+                      }}
+                      onDeselect={(id) => {
+                        const row = otherAllocations.find((a) => a.facilityResourceId === id);
+                        if (!row) return;
+                        setOtherPickerError(null);
+                        startTransition(async () => {
+                          try {
+                            await unassign(row.id);
+                          } catch (err) {
+                            setOtherPickerError(
+                              err instanceof Error ? err.message : "Entfernen fehlgeschlagen.",
+                            );
+                          }
+                        });
+                      }}
+                      testId="veranstaltung-other-allocation-picker"
+                      onCancel={() => {
+                        setOtherPickerError(null);
+                        setOtherPickerOpen(false);
+                      }}
+                    />
+                  </div>
+                ) : null}
+              </>
+            ) : null}
+          </div>
+        </details>
+      ) : null}
 
       {error ? (
         <p className="text-sm text-rose-600" role="alert">

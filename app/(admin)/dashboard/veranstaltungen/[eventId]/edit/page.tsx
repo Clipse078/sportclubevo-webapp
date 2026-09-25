@@ -80,6 +80,7 @@ export default async function VeranstaltungEditPage({ params }: Props) {
 
   const pitchHallFacilityGroups = facilityGroupsForTypes(["FULL_PITCH", "HALF_PITCH"]);
   const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
+  const otherFacilityGroups = facilityGroupsForTypes(["OTHER"]);
 
   const locale = tenantContext.locale ?? "de-CH";
   const timeZone = tenantContext.timezone ?? "Europe/Zurich";
@@ -213,6 +214,7 @@ export default async function VeranstaltungEditPage({ params }: Props) {
           operationalRailSections={operationalRailSections}
           pitchHallFacilityGroups={pitchHallFacilityGroups}
           dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+          otherFacilityGroups={otherFacilityGroups}
           initialFacilityAllocations={initialFacilityAllocations}
         />
       </PlanningEditorShell>

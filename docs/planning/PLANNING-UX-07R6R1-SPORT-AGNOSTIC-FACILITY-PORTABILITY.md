@@ -6,6 +6,7 @@ Related:
 
 - **R5** — `PLANNING-UX-07R5-CANONICAL-FACILITY-PLATFORM.md`
 - **R6** — `PLANNING-UX-07R6-VERANSTALTUNG-FACILITY-ALLOCATION.md`
+- **R6R2** — `PLANNING-UX-07R6R2-MULTITENANT-FACILITY-PLATFORM.md` (canonical multi-tenant self-service extension)
 
 ## 1. Current FacilityResource model
 
