@@ -1,8 +1,8 @@
-import { SCE_ICON_SIZES, type SceIconGlyphProps } from "../../SceIcon.types";
+import { resolveSceIconPixelSize, type SceIconGlyphProps } from "../../SceIcon.types";
 import { IconCircle, IconLine, IconPath, SceIconSvg } from "../../SceIconSvg";
 
 function px(size: SceIconGlyphProps["size"]) {
-  return SCE_ICON_SIZES[size ?? 24];
+  return resolveSceIconPixelSize(size);
 }
 
 export function MessageGlyph({ className, size = 24, title }: SceIconGlyphProps) {

@@ -15,20 +15,27 @@ export const SCE_ICON_STROKE_WIDTH = 1.75;
 
 type SceIconSvgProps = {
   size: number;
+  viewBox?: string;
   className?: string;
   title?: string;
   children: React.ReactNode;
 };
 
-/** Canonical 24×24 SVG frame for SCE production icons. */
-export function SceIconSvg({ size, className, title, children }: SceIconSvgProps) {
+/** SVG frame for SCE icons — default 24×24; approved masters supply their own viewBox. */
+export function SceIconSvg({
+  size,
+  viewBox = SCE_ICON_VIEWBOX,
+  className,
+  title,
+  children,
+}: SceIconSvgProps) {
   const decorative = !title;
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width={size}
       height={size}
-      viewBox={SCE_ICON_VIEWBOX}
+      viewBox={viewBox}
       fill="none"
       className={cn("sce-icon shrink-0 text-[var(--sce-icon-primary)]", className)}
       aria-hidden={decorative ? true : undefined}

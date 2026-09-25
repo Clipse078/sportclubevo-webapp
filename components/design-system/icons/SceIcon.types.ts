@@ -6,9 +6,21 @@ export const SCE_ICON_SIZES = {
   16: 16,
   20: 20,
   24: 24,
+  32: 32,
+  48: 48,
 } as const;
 
 export type SceIconSize = keyof typeof SCE_ICON_SIZES;
+
+export function resolveSceIconPixelSize(size: SceIconSize | number | undefined): number {
+  if (size === undefined) {
+    return SCE_ICON_SIZES[24];
+  }
+  if (typeof size === "number") {
+    return size;
+  }
+  return SCE_ICON_SIZES[size];
+}
 
 export const SCE_ICON_CATEGORIES = [
   "planning",
@@ -35,11 +47,13 @@ export const SCE_ICON_STATUSES = ["experimental", "stable", "deprecated"] as con
 export type SceIconStatus = (typeof SCE_ICON_STATUSES)[number];
 
 export type SceIconGlyphProps = {
-  /** Render size in CSS pixels (16, 20, or 24). */
-  size?: SceIconSize;
+  /** Render size in CSS pixels (16, 20, 24, 32, 48, or any positive number). */
+  size?: SceIconSize | number;
   className?: string;
   title?: string;
 };
+
+export type SceIconGeometrySource = "approved-master" | "provisional-glyph";
 
 export type SceIconRegistryEntry = {
   name: string;
@@ -51,11 +65,16 @@ export type SceIconRegistryEntry = {
   semanticType: SceIconSemanticType;
   status: SceIconStatus;
   Glyph: ComponentType<SceIconGlyphProps>;
+  /** Canonical design-master viewBox (defaults to 24×24 when omitted). */
+  viewBox?: string;
+  /** On-disk approved master artifact, when applicable. */
+  masterAssetPath?: string;
+  geometrySource?: SceIconGeometrySource;
 };
 
 export type SceIconProps = {
   name: import("./registry").SceIconRegistryName;
-  size?: SceIconSize;
+  size?: SceIconSize | number;
   className?: string;
   /** When set, icon is exposed to assistive tech with this title. Otherwise decorative (aria-hidden). */
   title?: string;

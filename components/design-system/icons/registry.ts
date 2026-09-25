@@ -17,15 +17,18 @@ import {
   RoleGlyph,
   TeamGlyph,
 } from "./glyphs/organisation";
+import { CalendarGlyph, EventGlyph } from "./glyphs/planning";
 import {
-  CalendarGlyph,
-  DashboardGlyph,
-  EventGlyph,
-  MatchGlyph,
-  TournamentGlyph,
-  TrainingGlyph,
-  WeekPlannerGlyph,
-} from "./glyphs/planning";
+  DashboardApprovedMasterGlyph,
+  MatchApprovedMasterGlyph,
+  TournamentApprovedMasterGlyph,
+  TrainingApprovedMasterGlyph,
+  WeekPlannerApprovedMasterGlyph,
+} from "./masters/approved-hero-glyphs";
+import {
+  SCE_APPROVED_HERO_MASTER_ASSETS,
+  SCE_APPROVED_HERO_VIEWBOX,
+} from "./masters/approved-hero-meta";
 
 function entry(
   config: Omit<SceIconRegistryEntry, "name"> & { name: string },
@@ -43,7 +46,10 @@ export const SCE_ICON_REGISTRY = {
     aliases: ["overview"],
     semanticType: "DOMAIN",
     status: "stable",
-    Glyph: DashboardGlyph,
+    Glyph: DashboardApprovedMasterGlyph,
+    viewBox: SCE_APPROVED_HERO_VIEWBOX,
+    masterAssetPath: SCE_APPROVED_HERO_MASTER_ASSETS.dashboard,
+    geometrySource: "approved-master",
   }),
   calendar: entry({
     name: "calendar",
@@ -65,7 +71,10 @@ export const SCE_ICON_REGISTRY = {
     aliases: ["wochenplaner", "weekPlanner"],
     semanticType: "DOMAIN",
     status: "stable",
-    Glyph: WeekPlannerGlyph,
+    Glyph: WeekPlannerApprovedMasterGlyph,
+    viewBox: SCE_APPROVED_HERO_VIEWBOX,
+    masterAssetPath: SCE_APPROVED_HERO_MASTER_ASSETS["week-planner"],
+    geometrySource: "approved-master",
   }),
   training: entry({
     name: "training",
@@ -76,7 +85,10 @@ export const SCE_ICON_REGISTRY = {
     aliases: ["trainingcenter"],
     semanticType: "DOMAIN",
     status: "stable",
-    Glyph: TrainingGlyph,
+    Glyph: TrainingApprovedMasterGlyph,
+    viewBox: SCE_APPROVED_HERO_VIEWBOX,
+    masterAssetPath: SCE_APPROVED_HERO_MASTER_ASSETS.training,
+    geometrySource: "approved-master",
   }),
   match: entry({
     name: "match",
@@ -87,7 +99,10 @@ export const SCE_ICON_REGISTRY = {
     aliases: ["spiele", "matchcenter"],
     semanticType: "DOMAIN",
     status: "stable",
-    Glyph: MatchGlyph,
+    Glyph: MatchApprovedMasterGlyph,
+    viewBox: SCE_APPROVED_HERO_VIEWBOX,
+    masterAssetPath: SCE_APPROVED_HERO_MASTER_ASSETS.match,
+    geometrySource: "approved-master",
   }),
   tournament: entry({
     name: "tournament",
@@ -98,7 +113,10 @@ export const SCE_ICON_REGISTRY = {
     aliases: ["turniere", "tournamentcenter"],
     semanticType: "DOMAIN",
     status: "stable",
-    Glyph: TournamentGlyph,
+    Glyph: TournamentApprovedMasterGlyph,
+    viewBox: SCE_APPROVED_HERO_VIEWBOX,
+    masterAssetPath: SCE_APPROVED_HERO_MASTER_ASSETS.tournament,
+    geometrySource: "approved-master",
   }),
   event: entry({
     name: "event",

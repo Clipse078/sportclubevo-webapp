@@ -138,6 +138,16 @@ describe("SCE-ICONS-01 theming tokens", () => {
       );
     }
   });
+
+  it("approved master React sources use semantic tokens", () => {
+    const masterGlyph = readFileSync(
+      join(process.cwd(), "components/design-system/icons/masters/approved-hero-glyphs.tsx"),
+      "utf8",
+    );
+    expect(masterGlyph).toContain("SceIconSvg");
+    expect(masterGlyph).toMatch(/var\(--sce-icon-/);
+    expect(masterGlyph).not.toMatch(/lucide-react/);
+  });
 });
 
 describe("SCE-ICONS-01 security & assets", () => {
@@ -179,6 +189,7 @@ describe("SCE-ICONS-01 governance", () => {
     );
     expect(doc).toContain("SCE-ICONS-04");
     expect(doc).toContain("does **not** enforce");
+    expect(doc).toMatch(/Approved SCE master artwork is authoritative/);
   });
 });
 
@@ -191,5 +202,17 @@ describe("SCE-ICONS-01 specimen", () => {
     expect(page).toContain("notFound");
     expect(page).toContain("isSceIconSpecimenAvailable");
     expect(page).toContain("SceIconSpecimen");
+  });
+
+  it("specimen surfaces approved hero masters at the top", () => {
+    const specimen = readFileSync(
+      join(
+        process.cwd(),
+        "components/design-system/icons/specimen/SceIconSpecimen.tsx",
+      ),
+      "utf8",
+    );
+    expect(specimen).toContain("SCE Hero Icons — Approved Masters");
+    expect(specimen).toMatch(/32.*48|48.*32/s);
   });
 });
