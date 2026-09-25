@@ -39,10 +39,14 @@ const ACTIVE_PLANNING_SURFACES: { domain: string; file: string; mustUse: string[
     mustUse: ["/api/facilities/availability"],
   },
   {
-    domain: "VERANSTALTUNG",
+    domain: "VERANSTALTUNG_CREATE",
     file: "components/admin/veranstaltungen/VeranstaltungCreateForm.tsx",
-    mustUse: ["VeranstaltungCreateForm"],
-    mustNotUse: ["PlanningResourcePicker", "useFacilityAvailability"],
+    mustUse: ["PlanningSingleResourceAssignment", "useFacilityAvailability"],
+  },
+  {
+    domain: "VERANSTALTUNG_EDIT",
+    file: "components/admin/veranstaltungen/VeranstaltungEditForm.tsx",
+    mustUse: ["VeranstaltungFacilityAllocationEditor", "useFacilityAvailability", "excludeEventId"],
   },
 ];
 
@@ -83,6 +87,7 @@ describe("PLANNING-UX-07R5 canonical facility platform", () => {
         "lib/tournaments/resource-allocation-service.ts",
         "lib/tournaments/participant-allocation-service.ts",
         "lib/weekplanner/plan-service.ts",
+        "lib/events/event-facility-allocation-service.ts",
       ]) {
         expect(read(file)).toContain("facility-resource-write-validation");
       }
@@ -106,13 +111,20 @@ describe("PLANNING-UX-07R5 canonical facility platform", () => {
     });
   });
 
-  describe("Veranstaltung gap (CASE C)", () => {
-    it("club events have no FacilityResource allocation persistence in schema services", () => {
-      const club = read("lib/events/club-events-service.ts");
-      expect(club).not.toContain("facilityResourceId");
-      expect(club).not.toContain("TrainingAllocation");
+  describe("Veranstaltung domain (R6)", () => {
+    it("club events use EventFacilityAllocation write service and canonical availability source", () => {
+      expect(read("lib/events/event-facility-allocation-service.ts")).toContain(
+        "assignEventFacilityResource",
+      );
       const svc = read("lib/facilities/availability-service.ts");
-      expect(svc).not.toContain("findClubEventConflicts");
+      expect(svc).toContain("findVeranstaltungConflicts");
+      expect(svc).toContain("EventFacilityAllocation");
+    });
+
+    it("domain write service imports shared facility resource validation", () => {
+      expect(read("lib/events/event-facility-allocation-service.ts")).toContain(
+        "facility-resource-write-validation",
+      );
     });
   });
 

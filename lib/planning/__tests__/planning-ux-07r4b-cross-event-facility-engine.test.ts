@@ -25,11 +25,12 @@ describe("PLANNING-UX-07R4B cross-event facility engine", () => {
       expect(hook).toContain("availability-service.ts");
     });
 
-    it("availability service aggregates training, match, and tournament in one Promise.all", () => {
+    it("availability service aggregates training, match, tournament, and veranstaltung in one Promise.all", () => {
       const svc = read("lib/facilities/availability-service.ts");
       expect(svc).toContain("findTrainingConflicts");
       expect(svc).toContain("findMatchConflicts");
       expect(svc).toContain("findTournamentConflicts");
+      expect(svc).toContain("findVeranstaltungConflicts");
       expect(svc).toMatch(/Promise\.all\(\[/);
     });
   });
@@ -96,11 +97,10 @@ describe("PLANNING-UX-07R4B cross-event facility engine", () => {
   });
 
   describe("club events / veranstaltungen", () => {
-    it("club events (Event type OTHER) have no canonical FacilityResource allocation model in availability engine", () => {
+    it("veranstaltungen participate via EventFacilityAllocation in the canonical engine", () => {
       const svc = read("lib/facilities/availability-service.ts");
-      expect(svc).not.toContain('type: "OTHER"');
-      const club = read("lib/events/club-events-service.ts");
-      expect(club).toContain('type: "OTHER"');
+      expect(svc).toContain("EventFacilityAllocation");
+      expect(svc).toContain("VERANSTALTUNG");
     });
   });
 

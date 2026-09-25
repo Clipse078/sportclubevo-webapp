@@ -21,6 +21,8 @@
  *   - Event(type=TOURNAMENT) via the canonical TournamentResourceAllocation
  *     (Spielfeld/Halle) and TournamentParticipantAllocation (per-participant
  *     Garderobe) — TOURNAMENTCENTER-01B.
+ *   - Event(type=OTHER) / Veranstaltungen via EventFacilityAllocation
+ *     (PLANNING-UX-07R6). MATCH legacy code fields are unchanged.
  *
  * Security invariants:
  *   - tenantId always comes from a trusted session context — never from input.
@@ -33,7 +35,10 @@ import { prisma } from "@/lib/db/prisma";
 import type { FacilityResourceType } from "@prisma/client";
 import { timeRangesOverlap } from "@/lib/facilities/allocation-rules";
 import { computeResourceOccupancyWindow, isMeaningfulEventInterval } from "@/lib/facilities/resource-occupancy-window";
-import { classifyFacilityResourceType, type TrainingAllocationGroupKey } from "@/lib/training/allocation-groups";
+import {
+  classifyFacilityResourceType,
+  type TrainingAllocationGroupKey,
+} from "@/lib/training/allocation-groups";
 import {
   findWeekplannerPlanConflicts,
   findWeekplannerReplacedActivities,
@@ -49,7 +54,11 @@ export type AvailabilityResourceGroup = Extract<TrainingAllocationGroupKey, "PIT
 
 export type ResourceAvailabilityStatus = "FREE" | "OCCUPIED";
 
-export type ResourceAvailabilityConflictSource = "TRAINING" | "MATCH" | "TOURNAMENT";
+export type ResourceAvailabilityConflictSource =
+  | "TRAINING"
+  | "MATCH"
+  | "TOURNAMENT"
+  | "VERANSTALTUNG";
 
 export type ResourceAvailabilityConflictDetail = {
   label: string;
@@ -359,6 +368,64 @@ async function findTournamentConflicts(
   return conflicts;
 }
 
+/**
+ * Resolves Veranstaltung (Event.type=OTHER) conflicts via EventFacilityAllocation.
+ * Event.startAt/endAt provide the occupancy window; excludeEventId removes the
+ * event currently being edited (same key as Match/Tournament self-exclusion).
+ */
+async function findVeranstaltungConflicts(
+  tenantId: string,
+  startAt: Date,
+  endAt: Date,
+  group: AvailabilityResourceGroup,
+  candidateResourceIds: string[],
+  excludeEventId: string | undefined,
+): Promise<ConflictWindow[]> {
+  if (candidateResourceIds.length === 0) return [];
+
+  const rows = await prisma.eventFacilityAllocation.findMany({
+    where: {
+      tenantId,
+      facilityResourceId: { in: candidateResourceIds },
+      event: {
+        type: "OTHER",
+        status: { not: "CANCELLED" },
+        id: excludeEventId ? { not: excludeEventId } : undefined,
+      },
+    },
+    select: {
+      facilityResourceId: true,
+      facilityResource: { select: { type: true } },
+      event: { select: { id: true, title: true, startAt: true, endAt: true } },
+    },
+  });
+
+  const conflicts: ConflictWindow[] = [];
+
+  for (const row of rows) {
+    if (excludeEventId && row.event.id === excludeEventId) continue;
+    if (classifyFacilityResourceType(row.facilityResource.type) !== group) continue;
+
+    const eventStart = row.event.startAt;
+    const eventEnd = row.event.endAt ?? row.event.startAt;
+    if (!isMeaningfulEventInterval(eventStart, eventEnd)) continue;
+
+    if (!timeRangesOverlap({ startA: startAt, endA: endAt, startB: eventStart, endB: eventEnd })) {
+      continue;
+    }
+
+    conflicts.push({
+      resourceId: row.facilityResourceId,
+      label: row.event.title,
+      startAt: eventStart,
+      endAt: eventEnd,
+      sourceType: "VERANSTALTUNG",
+    });
+  }
+
+  return conflicts;
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
@@ -475,30 +542,36 @@ export async function getResourceAvailability(
   // plan overrides, with replaced-activity de-duplication) is resolved entirely
   // by findWeekplannerPlanConflicts — not by skipping cross-domain truth.
 
-  const [trainingConflicts, matchConflicts, tournamentConflicts, weekplannerConflicts] = await Promise.all([
-    useEffectivePlanOccupancy
-      ? Promise.resolve([])
-      : findTrainingConflicts(tenantId, startAt, endAt, group, excludeTrainingSessionId, replacedActivities),
-    useEffectivePlanOccupancy
-      ? Promise.resolve([])
-      : findMatchConflicts(tenantId, startAt, endAt, group, resourcesByCode, excludeEventId, replacedActivities),
-    useEffectivePlanOccupancy
-      ? Promise.resolve([])
-      : findTournamentConflicts(tenantId, startAt, endAt, group, resourceIds, excludeEventId, replacedActivities),
-    weekplannerPlanId
-      ? findWeekplannerPlanConflicts(tenantId, startAt, endAt, group, {
-          weekplannerPlanId,
-          excludeActivityType: excludeWeekplannerActivityType,
-          excludeActivityId: excludeWeekplannerActivityId,
-        }, resourceRefsByCode)
-      : Promise.resolve([]),
-  ]);
+  const [trainingConflicts, matchConflicts, tournamentConflicts, veranstaltungConflicts, weekplannerConflicts] =
+    await Promise.all([
+      useEffectivePlanOccupancy
+        ? Promise.resolve([])
+        : findTrainingConflicts(tenantId, startAt, endAt, group, excludeTrainingSessionId, replacedActivities),
+      useEffectivePlanOccupancy
+        ? Promise.resolve([])
+        : findMatchConflicts(tenantId, startAt, endAt, group, resourcesByCode, excludeEventId, replacedActivities),
+      useEffectivePlanOccupancy
+        ? Promise.resolve([])
+        : findTournamentConflicts(tenantId, startAt, endAt, group, resourceIds, excludeEventId, replacedActivities),
+      useEffectivePlanOccupancy
+        ? Promise.resolve([])
+        : findVeranstaltungConflicts(tenantId, startAt, endAt, group, resourceIds, excludeEventId),
+      weekplannerPlanId
+        ? findWeekplannerPlanConflicts(tenantId, startAt, endAt, group, {
+            weekplannerPlanId,
+            excludeActivityType: excludeWeekplannerActivityType,
+            excludeActivityId: excludeWeekplannerActivityId,
+            excludeEventId,
+          }, resourceRefsByCode)
+        : Promise.resolve([]),
+    ]);
 
   const conflictsByResourceId = new Map<string, ConflictWindow[]>();
   for (const conflict of [
     ...trainingConflicts,
     ...matchConflicts,
     ...tournamentConflicts,
+    ...veranstaltungConflicts,
     ...weekplannerConflicts,
   ]) {
     const list = conflictsByResourceId.get(conflict.resourceId) ?? [];

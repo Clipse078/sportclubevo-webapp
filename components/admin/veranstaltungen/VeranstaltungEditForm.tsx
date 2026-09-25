@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
@@ -9,14 +9,21 @@ import PlanningEditorActions from "@/components/admin/shared/planning-editor/Pla
 import PlanningEditorOperationalWorkspace from "@/components/admin/shared/planning-editor/PlanningEditorOperationalWorkspace";
 import PlanningPublicationPanel from "@/components/admin/shared/planning-editor/PlanningPublicationPanel";
 import { PLANNING_EDITOR_FORM_GRID_CLASS } from "@/components/admin/shared/planning-editor/planning-editor-layout";
-import { clubEventScheduleFormFromPersisted } from "@/lib/events/club-event-scheduling";
+import {
+  clubEventScheduleFormFromPersisted,
+  parseClubEventScheduleInput,
+} from "@/lib/events/club-event-scheduling";
 import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
+import type { EventFacilityAllocationDto } from "@/lib/events/event-facility-allocation-types";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import VeranstaltungAusspielungFields, {
   type VeranstaltungAusspielungValues,
 } from "./VeranstaltungAusspielungFields";
 import VeranstaltungScheduleFields, {
   type VeranstaltungScheduleFieldValues,
 } from "./VeranstaltungScheduleFields";
+import VeranstaltungFacilityAllocationEditor from "./VeranstaltungFacilityAllocationEditor";
 
 type SeasonSummary = {
   id: string;
@@ -51,6 +58,9 @@ type VeranstaltungEditFormProps = {
   operationalPrimarySections?: ReactNode;
   /** Compact participation / status controls for the right rail. */
   operationalRailSections?: ReactNode;
+  pitchHallFacilityGroups?: FacilityGroup[];
+  dressingRoomFacilityGroups?: FacilityGroup[];
+  initialFacilityAllocations?: EventFacilityAllocationDto[];
 };
 
 export default function VeranstaltungEditForm({
@@ -59,6 +69,9 @@ export default function VeranstaltungEditForm({
   canManage = true,
   operationalPrimarySections,
   operationalRailSections,
+  pitchHallFacilityGroups = [],
+  dressingRoomFacilityGroups = [],
+  initialFacilityAllocations = [],
 }: VeranstaltungEditFormProps) {
   const router = useRouter();
   const t = useTranslations("Veranstaltungen.editor");
@@ -103,6 +116,35 @@ export default function VeranstaltungEditForm({
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const scheduleInterval = useMemo(() => {
+    if (!schedule.startDate) return null;
+    try {
+      const parsed = parseClubEventScheduleInput(
+        {
+          allDay: schedule.allDay,
+          startDate: schedule.startDate,
+          endDate: schedule.endDate,
+          startTime: schedule.startTime,
+          endTime: schedule.endTime,
+        },
+        tz,
+      );
+      return {
+        startAt: parsed.startAt.toISOString(),
+        endAt: (parsed.endAt ?? parsed.startAt).toISOString(),
+      };
+    } catch {
+      return null;
+    }
+  }, [schedule, tz]);
+
+  const { pitchAvailability, dressingRoomAvailability } = useFacilityAvailability({
+    enabled: !isReadonly && scheduleInterval != null,
+    startAt: scheduleInterval?.startAt ?? "",
+    endAt: scheduleInterval?.endAt,
+    excludeEventId: event.id,
+  });
 
   function handleScheduleChange(patch: Partial<VeranstaltungScheduleFieldValues>) {
     setSchedule((current) => {
@@ -262,6 +304,28 @@ export default function VeranstaltungEditForm({
           </div>
         </div>
       </PlanningEditorSection>
+
+      <PlanningEditorSection
+        testId="veranstaltung-edit-resources-section"
+        ariaLabelledBy="veranstaltung-edit-resources-heading"
+      >
+        <div className="space-y-3">
+          <PlanningEditorSectionHeading
+            id="veranstaltung-edit-resources-heading"
+            title={t("sections.resources")}
+          />
+          <VeranstaltungFacilityAllocationEditor
+            eventId={event.id}
+            canManage={!isReadonly}
+            initialAllocations={initialFacilityAllocations}
+            pitchHallFacilityGroups={pitchHallFacilityGroups}
+            dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+            pitchAvailabilityByResourceId={pitchAvailability}
+            dressingRoomAvailabilityByResourceId={dressingRoomAvailability}
+          />
+        </div>
+      </PlanningEditorSection>
+
           {operationalPrimarySections}
           </div>
         }

@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   eventFindMany: vi.fn(),
   tournamentResourceAllocationFindMany: vi.fn(),
   tournamentParticipantAllocationFindMany: vi.fn(),
+  eventFacilityAllocationFindMany: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -31,6 +32,7 @@ vi.mock("@/lib/db/prisma", () => ({
     event: { findMany: mocks.eventFindMany },
     tournamentResourceAllocation: { findMany: mocks.tournamentResourceAllocationFindMany },
     tournamentParticipantAllocation: { findMany: mocks.tournamentParticipantAllocationFindMany },
+    eventFacilityAllocation: { findMany: mocks.eventFacilityAllocationFindMany },
   },
 }));
 
@@ -52,6 +54,7 @@ beforeEach(() => {
   mocks.eventFindMany.mockResolvedValue([]);
   mocks.tournamentResourceAllocationFindMany.mockResolvedValue([]);
   mocks.tournamentParticipantAllocationFindMany.mockResolvedValue([]);
+  mocks.eventFacilityAllocationFindMany.mockResolvedValue([]);
 });
 
 describe("getResourceAvailability — free resource", () => {

@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   trainingAllocationFindMany: vi.fn(),
   trainingSessionAllocationFindMany: vi.fn(),
   eventFindMany: vi.fn(),
+  eventFacilityAllocationFindMany: vi.fn(),
   listMatchcenterMatches: vi.fn(),
   listTournaments: vi.fn(),
 }));
@@ -27,6 +28,7 @@ vi.mock("@/lib/db/prisma", () => ({
     trainingAllocation: { findMany: mocks.trainingAllocationFindMany },
     trainingSessionAllocation: { findMany: mocks.trainingSessionAllocationFindMany },
     event: { findMany: mocks.eventFindMany },
+    eventFacilityAllocation: { findMany: mocks.eventFacilityAllocationFindMany },
   },
 }));
 
@@ -91,6 +93,7 @@ beforeEach(() => {
   mocks.trainingSessionAllocationFindMany.mockResolvedValue([]);
   mocks.listMatchcenterMatches.mockResolvedValue([]);
   mocks.listTournaments.mockResolvedValue([]);
+  mocks.eventFacilityAllocationFindMany.mockResolvedValue([]);
 });
 
 describe("findWeekplannerReplacedActivities", () => {

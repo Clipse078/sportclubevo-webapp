@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
+import { PlanningSingleResourceAssignment } from "@/components/admin/shared/planning/PlanningSingleResourceAssignment";
+import { parseClubEventScheduleInput } from "@/lib/events/club-event-scheduling";
+import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import PlanningEditorSection from "@/components/admin/shared/planning-editor/PlanningEditorSection";
 import PlanningEditorSectionHeading from "@/components/admin/shared/planning-editor/PlanningEditorSectionHeading";
 import PlanningEditorActions from "@/components/admin/shared/planning-editor/PlanningEditorActions";
@@ -47,7 +51,40 @@ const VERANSTALTUNG_CATEGORIES = [
 
 const DEFAULT_TIMES = { startTime: "18:00", endTime: "20:00" };
 
-export default function VeranstaltungCreateForm() {
+type ResourceDraftRow = {
+  localId: string;
+  facilityResourceId: string;
+  facilityResourceName: string;
+};
+
+type VeranstaltungCreateFormProps = {
+  pitchHallFacilityGroups: FacilityGroup[];
+  dressingRoomFacilityGroups: FacilityGroup[];
+  timeZone?: string | null;
+};
+
+function resolveResourceDisplay(
+  facilityGroups: FacilityGroup[],
+  facilityResourceId: string,
+): string {
+  for (const group of facilityGroups) {
+    const resource = group.resources.find((r) => r.id === facilityResourceId);
+    if (resource) return resource.name;
+  }
+  return facilityResourceId;
+}
+
+let localIdCounter = 0;
+function nextLocalId(prefix: string): string {
+  localIdCounter += 1;
+  return `${prefix}-${localIdCounter}`;
+}
+
+export default function VeranstaltungCreateForm({
+  pitchHallFacilityGroups,
+  dressingRoomFacilityGroups,
+  timeZone = "Europe/Zurich",
+}: VeranstaltungCreateFormProps) {
   const router = useRouter();
   const t = useTranslations("Veranstaltungen.editor");
   const tf = useTranslations("Veranstaltungen.editor.fields");
@@ -77,8 +114,61 @@ export default function VeranstaltungCreateForm() {
 
   const [seasonOptions, setSeasonOptions] = useState<SeasonItem[]>([]);
   const [loadingSeasons, setLoadingSeasons] = useState(true);
+  const [pitchDraft, setPitchDraft] = useState<ResourceDraftRow | null>(null);
+  const [dressingDraft, setDressingDraft] = useState<ResourceDraftRow | null>(null);
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const scheduleInterval = useMemo(() => {
+    if (!schedule.startDate) return null;
+    try {
+      const parsed = parseClubEventScheduleInput(
+        {
+          allDay: schedule.allDay,
+          startDate: schedule.startDate,
+          endDate: schedule.endDate,
+          startTime: schedule.startTime,
+          endTime: schedule.endTime,
+        },
+        timeZone,
+      );
+      return {
+        startAt: parsed.startAt.toISOString(),
+        endAt: (parsed.endAt ?? parsed.startAt).toISOString(),
+      };
+    } catch {
+      return null;
+    }
+  }, [schedule, timeZone]);
+
+  const { pitchAvailability, dressingRoomAvailability } = useFacilityAvailability({
+    enabled: scheduleInterval != null,
+    startAt: scheduleInterval?.startAt ?? "",
+    endAt: scheduleInterval?.endAt,
+  });
+
+  const addPitchDraft = useCallback(
+    (facilityResourceId: string) => {
+      setPitchDraft({
+        localId: nextLocalId("pitch"),
+        facilityResourceId,
+        facilityResourceName: resolveResourceDisplay(pitchHallFacilityGroups, facilityResourceId),
+      });
+    },
+    [pitchHallFacilityGroups],
+  );
+
+  const addDressingDraft = useCallback(
+    (facilityResourceId: string) => {
+      setDressingDraft({
+        localId: nextLocalId("dressing"),
+        facilityResourceId,
+        facilityResourceName: resolveResourceDisplay(dressingRoomFacilityGroups, facilityResourceId),
+      });
+    },
+    [dressingRoomFacilityGroups],
+  );
 
   useEffect(() => {
     let active = true;
@@ -192,6 +282,17 @@ export default function VeranstaltungCreateForm() {
       const created = data as { eventIds?: string[] } | null;
       const firstEventId = created?.eventIds?.[0];
       if (firstEventId) {
+        for (const draft of [pitchDraft, dressingDraft].filter(Boolean)) {
+          const allocRes = await fetch(`/api/events/${firstEventId}/facility-allocations`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ facilityResourceId: draft!.facilityResourceId }),
+          });
+          if (!allocRes.ok) {
+            const allocData = (await allocRes.json().catch(() => null)) as { error?: string } | null;
+            throw new Error(allocData?.error ?? t("errors.createFailed"));
+          }
+        }
         router.push(`/dashboard/veranstaltungen/${firstEventId}/edit`);
       } else {
         router.push("/dashboard/veranstaltungen?submitted=1");
@@ -326,6 +427,46 @@ export default function VeranstaltungCreateForm() {
           <PlanningEditorSectionHeading id="veranstaltung-create-schedule-heading" title={t("sections.schedule")} />
           <div className={PLANNING_EDITOR_FORM_GRID_CLASS}>
             <VeranstaltungScheduleFields values={schedule} onChange={handleScheduleChange} />
+          </div>
+        </div>
+      </PlanningEditorSection>
+
+      <PlanningEditorSection
+        testId="veranstaltung-create-resources-section"
+        ariaLabelledBy="veranstaltung-create-resources-heading"
+      >
+        <div className="space-y-3">
+          <PlanningEditorSectionHeading
+            id="veranstaltung-create-resources-heading"
+            title={t("sections.resources")}
+          />
+          <div className="space-y-4">
+            <PlanningSingleResourceAssignment
+              kind="pitch_hall"
+              subjectLabel="Spielfeld / Halle"
+              resourceName={pitchDraft?.facilityResourceName ?? null}
+              unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen."
+              facilityGroups={pitchHallFacilityGroups}
+              selectedResourceIds={new Set(pitchDraft ? [pitchDraft.facilityResourceId] : [])}
+              onSelect={addPitchDraft}
+              onDeselect={() => setPitchDraft(null)}
+              availabilityByResourceId={pitchAvailability}
+              canManage
+              testId="veranstaltung-create-pitch-allocation"
+            />
+            <PlanningSingleResourceAssignment
+              kind="dressing_room"
+              subjectLabel="Garderobe"
+              resourceName={dressingDraft?.facilityResourceName ?? null}
+              unassignedLabel="Noch keine Garderobe zugewiesen."
+              facilityGroups={dressingRoomFacilityGroups}
+              selectedResourceIds={new Set(dressingDraft ? [dressingDraft.facilityResourceId] : [])}
+              onSelect={addDressingDraft}
+              onDeselect={() => setDressingDraft(null)}
+              availabilityByResourceId={dressingRoomAvailability}
+              canManage
+              testId="veranstaltung-create-dressing-allocation"
+            />
           </div>
         </div>
       </PlanningEditorSection>

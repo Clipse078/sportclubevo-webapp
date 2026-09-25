@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   eventFindMany: vi.fn(),
   tournamentResourceAllocationFindMany: vi.fn(),
   tournamentParticipantAllocationFindMany: vi.fn(),
+  eventFacilityAllocationFindMany: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -23,6 +24,7 @@ vi.mock("@/lib/db/prisma", () => ({
     event: { findMany: mocks.eventFindMany },
     tournamentResourceAllocation: { findMany: mocks.tournamentResourceAllocationFindMany },
     tournamentParticipantAllocation: { findMany: mocks.tournamentParticipantAllocationFindMany },
+    eventFacilityAllocation: { findMany: mocks.eventFacilityAllocationFindMany },
   },
 }));
 
@@ -68,6 +70,7 @@ beforeEach(() => {
   mocks.eventFindMany.mockResolvedValue([]);
   mocks.tournamentResourceAllocationFindMany.mockResolvedValue([]);
   mocks.tournamentParticipantAllocationFindMany.mockResolvedValue([]);
+  mocks.eventFacilityAllocationFindMany.mockResolvedValue([]);
 });
 
 describe("PLANNING-UX-07R4B — cross-event occupancy (canonical engine)", () => {
@@ -427,6 +430,72 @@ describe("PLANNING-UX-07R4B — time overlap and exclusion", () => {
     expect(result[0].status).toBe("OCCUPIED");
     expect(result[0].conflictSourceType).toBe("TRAINING");
     expect(result[0].conflictLabel).toContain("Externes Training");
+  });
+
+  it("MATCH window sees overlapping VERANSTALTUNG on pitch (MATCH_SEES_VERANSTALTUNG)", async () => {
+    mocks.facilityResourceFindMany.mockResolvedValue([PITCH]);
+    mocks.eventFacilityAllocationFindMany.mockResolvedValue([
+      {
+        facilityResourceId: "pitch-k2",
+        facilityResource: { type: "FULL_PITCH" },
+        event: {
+          id: "ver-1",
+          title: "Generalversammlung",
+          startAt: new Date("2026-09-26T16:00:00.000Z"),
+          endAt: new Date("2026-09-26T18:00:00.000Z"),
+        },
+      },
+    ]);
+
+    const result = await getResourceAvailability({
+      tenantId: TENANT,
+      startAt: "2026-09-26T16:30:00.000Z",
+      endAt: "2026-09-26T17:30:00.000Z",
+      group: "PITCH_HALL",
+    });
+
+    expect(result[0]).toMatchObject({
+      status: "OCCUPIED",
+      conflictSourceType: "VERANSTALTUNG",
+      conflictLabel: "Generalversammlung",
+    });
+  });
+
+  it("excludeEventId hides current Veranstaltung but not other events", async () => {
+    mocks.facilityResourceFindMany.mockResolvedValue([ROOM_E1]);
+    mocks.eventFacilityAllocationFindMany.mockResolvedValue([
+      {
+        facilityResourceId: "room-e1",
+        facilityResource: { type: "DRESSING_ROOM" },
+        event: {
+          id: "ver-a",
+          title: "Generalversammlung",
+          startAt: new Date("2026-09-26T16:00:00.000Z"),
+          endAt: new Date("2026-09-26T18:00:00.000Z"),
+        },
+      },
+      {
+        facilityResourceId: "room-e1",
+        facilityResource: { type: "DRESSING_ROOM" },
+        event: {
+          id: "ver-b",
+          title: "Sommerfest",
+          startAt: new Date("2026-09-26T16:00:00.000Z"),
+          endAt: new Date("2026-09-26T18:00:00.000Z"),
+        },
+      },
+    ]);
+
+    const result = await getResourceAvailability({
+      tenantId: TENANT,
+      startAt: "2026-09-26T16:30:00.000Z",
+      endAt: "2026-09-26T17:30:00.000Z",
+      group: "DRESSING_ROOM",
+      excludeEventId: "ver-a",
+    });
+
+    expect(result[0].status).toBe("OCCUPIED");
+    expect(result[0].conflictLabel).toBe("Sommerfest");
   });
 
   it("excludeTrainingSessionId removes only the edited training occurrence", async () => {

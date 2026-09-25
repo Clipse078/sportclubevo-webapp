@@ -839,6 +839,20 @@ async function findWeekplannerVeranstaltungen(
       pitchCode: true,
       homeDressingRoomCode: true,
       teamSeason: { select: { team: { select: { name: true } } } },
+      eventFacilityAllocations: {
+        select: {
+          facilityResource: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+              type: true,
+              facility: { select: { id: true, name: true } },
+            },
+          },
+        },
+        orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }],
+      },
     },
     orderBy: [{ startAt: "asc" }, { title: "asc" }],
   });
@@ -849,12 +863,25 @@ async function findWeekplannerVeranstaltungen(
       (event.allDay
         ? new Date(event.startAt.getTime() + 24 * 60 * 60_000)
         : new Date(event.startAt.getTime() + 60 * 60_000));
-    const pitchRef = event.pitchCode ? resourceByCode.get(event.pitchCode) : undefined;
-    const roomRef = event.homeDressingRoomCode
-      ? resourceByCode.get(event.homeDressingRoomCode)
-      : undefined;
-    const pitchAllocations = pitchRef ? [pitchRef] : [];
-    const dressingRoomAllocations = roomRef ? [roomRef] : [];
+    const pitchAllocations: WeekplannerResourceRef[] = [];
+    const dressingRoomAllocations: WeekplannerResourceRef[] = [];
+    for (const allocation of event.eventFacilityAllocations) {
+      const resource = allocation.facilityResource;
+      const ref = toResourceRef(resource);
+      if (resource.type === "DRESSING_ROOM") {
+        dressingRoomAllocations.push(ref);
+      } else if (resource.type === "FULL_PITCH" || resource.type === "HALF_PITCH") {
+        pitchAllocations.push(ref);
+      }
+    }
+    if (pitchAllocations.length === 0 && event.pitchCode) {
+      const pitchRef = resourceByCode.get(event.pitchCode);
+      if (pitchRef) pitchAllocations.push(pitchRef);
+    }
+    if (dressingRoomAllocations.length === 0 && event.homeDressingRoomCode) {
+      const roomRef = resourceByCode.get(event.homeDressingRoomCode);
+      if (roomRef) dressingRoomAllocations.push(roomRef);
+    }
     const teamNames = event.teamSeason?.team?.name ? [event.teamSeason.team.name] : [];
 
     return {

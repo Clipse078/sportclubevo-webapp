@@ -4,6 +4,9 @@ import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { getClubEvent } from "@/lib/events/club-events-service";
+import { listEventFacilityAllocations } from "@/lib/events/event-facility-allocation-service";
+import { getFacilitiesForTenant } from "@/lib/facilities/queries";
+import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import PlanningEditorShell from "@/components/admin/shared/planning-editor/PlanningEditorShell";
 import PlanningEditorHeader from "@/components/admin/shared/planning-editor/PlanningEditorHeader";
@@ -45,10 +48,38 @@ export default async function VeranstaltungEditPage({ params }: Props) {
 
   await ensureClubEventParticipationResponses(tenantContext.id, eventId);
 
-  const [participantsPresentation, participationFields] = await Promise.all([
+  const [participantsPresentation, participationFields, facilities, initialFacilityAllocations] =
+    await Promise.all([
     loadClubEventPlanningParticipants(tenantContext.id, eventId),
     getClubEventParticipationFields(tenantContext.id, eventId),
+    getFacilitiesForTenant(tenantContext.id),
+    listEventFacilityAllocations(tenantContext.id, eventId),
   ]);
+
+  function facilityGroupsForTypes(types: readonly string[]): FacilityGroup[] {
+    return facilities
+      .filter((f) => f.status !== "ARCHIVED")
+      .map((f) => ({
+        facilityId: f.id,
+        facilityName: f.name,
+        facilityType: f.type as string,
+        resources: f.resources
+          .filter((r) => r.status !== "ARCHIVED" && types.includes(r.type))
+          .map((r) => ({
+            id: r.id,
+            name: r.name,
+            code: r.code,
+            type: r.type,
+            facilityId: f.id,
+            facilityName: f.name,
+            facilityType: f.type as string,
+          })),
+      }))
+      .filter((fg) => fg.resources.length > 0);
+  }
+
+  const pitchHallFacilityGroups = facilityGroupsForTypes(["FULL_PITCH", "HALF_PITCH"]);
+  const dressingRoomFacilityGroups = facilityGroupsForTypes(["DRESSING_ROOM"]);
 
   const locale = tenantContext.locale ?? "de-CH";
   const timeZone = tenantContext.timezone ?? "Europe/Zurich";
@@ -180,6 +211,9 @@ export default async function VeranstaltungEditPage({ params }: Props) {
           canManage={canManage}
           operationalPrimarySections={operationalPrimarySections}
           operationalRailSections={operationalRailSections}
+          pitchHallFacilityGroups={pitchHallFacilityGroups}
+          dressingRoomFacilityGroups={dressingRoomFacilityGroups}
+          initialFacilityAllocations={initialFacilityAllocations}
         />
       </PlanningEditorShell>
     </ToastProvider>

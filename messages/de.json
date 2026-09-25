@@ -759,6 +759,7 @@
       "sections": {
         "details": "Grunddaten",
         "schedule": "Termin",
+        "resources": "Ressourcen",
         "publication": "Ausspielung"
       },
       "fields": {

@@ -5,13 +5,14 @@
 Prior slices:
 
 - **R4B** — verified cross-event **read** engine (`getResourceAvailability`).
-- **R5** — consolidates **write** validation, Wochenplan picker parity, lifecycle semantics, Veranstaltung gap analysis, and architecture sentinels — **without** replacing the read engine.
+- **R5** — consolidates **write** validation, Wochenplan picker parity, lifecycle semantics, and architecture sentinels — **without** replacing the read engine.
+- **R6** — closes the Veranstaltung gap via `EventFacilityAllocation` (see `PLANNING-UX-07R6-VERANSTALTUNG-FACILITY-ALLOCATION.md`) — **five domains complete**.
 
 ## Layer model
 
 | Layer | Responsibility | R5 status |
 |-------|----------------|-----------|
-| **A — Canonical persistence** | `TrainingAllocation`, `TrainingSessionAllocation`, Match `Event` codes, `TournamentResourceAllocation`, `TournamentParticipantAllocation`, `WeekplannerPlanAllocation` | Unchanged — no forced single table |
+| **A — Canonical persistence** | `TrainingAllocation`, `TrainingSessionAllocation`, Match `Event` codes, `TournamentResourceAllocation`, `TournamentParticipantAllocation`, `EventFacilityAllocation` (R6), `WeekplannerPlanAllocation` | No forced single table |
 | **B — Canonical facility engine** | `getResourceAvailability` + `timeRangesOverlap` | **Frozen** — do not duplicate |
 | **C — Shared planning UX** | `PlanningResourceAssignment*`, `PlanningResourcePicker`, `PlanningSingleResourceAssignment` | Wochenplan override editor migrated to picker |
 
@@ -24,6 +25,7 @@ GET /api/facilities/availability
        findTrainingConflicts,
        findMatchConflicts,
        findTournamentConflicts,
+       findVeranstaltungConflicts,
        findWeekplannerPlanConflicts? (when weekplannerPlanId set)
      ]
   → timeRangesOverlap / resourceOccupancyWindowsOverlap
@@ -42,7 +44,7 @@ Resource groups: `FULL_PITCH`, `HALF_PITCH`, `HALL` (via PITCH_HALL), `DRESSING_
 | **Training session** | session allocation API | `TrainingSessionAllocationEditor` | DELETE override row | `TrainingSessionAllocation` | `session-allocation-service` + shared validation |
 | **Match** | `MatchCreateForm` / match API | `MatchcenterDetailOperational` | clear codes / API | `Event.pitchCode`, `*DressingRoomCode` | matchcenter services (legacy codes → resource by code) |
 | **Tournament** | create + allocation APIs | Saisonplaner + TournamentCenter | DELETE allocation rows | `TournamentResourceAllocation`, `TournamentParticipantAllocation` | tournament *-allocation-service + shared validation |
-| **Veranstaltung** | club event API | edit form | — | `Event.type=OTHER` schedule only | **No facility write path** (see gap) |
+| **Veranstaltung** | create + allocation APIs | edit form + allocation editor | DELETE/PATCH allocation | `EventFacilityAllocation` (R6) | `event-facility-allocation-service` + shared validation |
 
 Shared write primitives (`lib/facilities/facility-resource-write-validation.ts`):
 
@@ -79,20 +81,9 @@ Series defaults without concrete interval: `useFacilityAvailability` disabled (`
 Match: Heim/Gast presentation via `PlanningMatchDressingRoomAssignments`; state from engine.  
 Tournament: participant CURRENT/SHARED merge in presentation layer only.
 
-## Veranstaltung — CASE C (remaining gap)
+## Veranstaltung — completed in R6
 
-**Forensic result:** `Event.type=OTHER` (club events) has schedule, publication, and participation in `lib/events/club-events-service.ts` but **no** canonical `FacilityResource` allocation table or match-style booking fields used by Veranstaltung flows.
-
-**Cannot safely integrate** into `getResourceAvailability` without new persistence (e.g. dedicated event resource allocation or sanctioned reuse of tournament/training models with clear semantics).
-
-**R5 recommendation (future migration):**
-
-- Add canonical `EventFacilityAllocation` (or extend club-event service to use an existing allocation table with `eventId` + `facilityResourceId` + tenant scope).
-- Wire create/edit UX with `PlanningResourcePicker`.
-- Add bounded `findClubEventConflicts` branch to `getResourceAvailability`.
-- Extend cross-domain matrix tests.
-
-**This package:** documentation + sentinel only — **no schema change, no migration.**
+R5 documented the gap; **R6** adds `EventFacilityAllocation`, write APIs, `findVeranstaltungConflicts`, Wochenplan collector integration, and shared create/edit resource UX. See **PLANNING-UX-07R6-VERANSTALTUNG-FACILITY-ALLOCATION.md**.
 
 ## Occupancy contract (UX-07R3)
 

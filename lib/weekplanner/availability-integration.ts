@@ -20,6 +20,7 @@ import {
   resourceOccupancyWindowsOverlap,
 } from "@/lib/facilities/resource-occupancy-window";
 import { timeRangesOverlap } from "@/lib/facilities/allocation-rules";
+import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
 import {
   resolveTrainingOccurrenceAllocations,
   type TrainingAllocationResourceRow,
@@ -52,6 +53,8 @@ export type WeekplannerAvailabilityContext = {
   weekplannerPlanId: string;
   excludeActivityType?: WeekplannerActivityType;
   excludeActivityId?: string;
+  /** Excludes Veranstaltung (Event.type=OTHER) self-occupancy when editing that event. */
+  excludeEventId?: string;
 };
 
 type ConflictWindow = {
@@ -59,7 +62,7 @@ type ConflictWindow = {
   label: string;
   startAt: Date;
   endAt: Date;
-  sourceType: "TRAINING" | "MATCH" | "TOURNAMENT";
+  sourceType: "TRAINING" | "MATCH" | "TOURNAMENT" | "VERANSTALTUNG";
 };
 
 const GROUP_TO_PLANNER_GROUP: Record<AvailabilityResourceGroup, WeekplannerAllocationGroup> = {
@@ -589,6 +592,57 @@ async function collectTournamentOccupants(
   }
 }
 
+async function collectVeranstaltungOccupants(
+  tenantId: string,
+  queryStartAt: Date,
+  queryEndAt: Date,
+  group: AvailabilityResourceGroup,
+  context: WeekplannerAvailabilityContext,
+  conflicts: ConflictWindow[],
+): Promise<void> {
+  const rows = await prisma.eventFacilityAllocation.findMany({
+    where: {
+      tenantId,
+      event: {
+        type: "OTHER",
+        status: { not: "CANCELLED" },
+        id: context.excludeEventId ? { not: context.excludeEventId } : undefined,
+      },
+    },
+    select: {
+      facilityResourceId: true,
+      facilityResource: { select: { type: true } },
+      event: { select: { id: true, title: true, startAt: true, endAt: true } },
+    },
+  });
+
+  for (const row of rows) {
+    if (classifyFacilityResourceType(row.facilityResource.type) !== group) continue;
+
+    const eventStart = row.event.startAt;
+    const eventEnd = row.event.endAt ?? row.event.startAt;
+    if (!isMeaningfulEventInterval(eventStart, eventEnd)) continue;
+    if (
+      !timeRangesOverlap({
+        startA: queryStartAt,
+        endA: queryEndAt,
+        startB: eventStart,
+        endB: eventEnd,
+      })
+    ) {
+      continue;
+    }
+
+    pushConflict(conflicts, {
+      resourceId: row.facilityResourceId,
+      label: row.event.title,
+      startAt: eventStart,
+      endAt: eventEnd,
+      sourceType: "VERANSTALTUNG",
+    });
+  }
+}
+
 /**
  * Activities whose canonical booking is replaced by overrides in the context plan
  * for this group — allocation overrides OR time overrides.
@@ -691,6 +745,7 @@ export async function findWeekplannerPlanConflicts(
       baselineMode,
       conflicts,
     ),
+    collectVeranstaltungOccupants(tenantId, queryStartAt, queryEndAt, group, context, conflicts),
   ]);
 
   return conflicts;

@@ -20,6 +20,7 @@
  *   TournamentResourceAllocation.facilityResourceId → non-nullable, onDelete: Cascade
  *   TournamentParticipantAllocation.facilityResourceId → non-nullable, onDelete: Cascade
  *   WeekplannerPlanAllocation.facilityResourceId → non-nullable, onDelete: Cascade
+ *   EventFacilityAllocation.facilityResourceId → non-nullable, onDelete: Cascade
  *
  *   All allocation rows cascade-delete automatically. The DB engine handles
  *   this — no explicit pre-delete cleanup is needed. The planning history
@@ -42,6 +43,7 @@ export type FacilityResourceDeletionImpact = {
   tournamentParticipantAllocations: number;
   /** Weekplanner plan allocation links cascade-deleted (WeekplannerPlan survives). */
   weekplannerPlanAllocations: number;
+  eventFacilityAllocations: number;
 };
 
 /**
@@ -64,6 +66,7 @@ export async function getFacilityResourceDeletionImpact(
           tournamentResourceAllocations: true,
           tournamentParticipantAllocations: true,
           weekplannerPlanAllocations: true,
+          eventFacilityAllocations: true,
         },
       },
     },
@@ -77,6 +80,7 @@ export async function getFacilityResourceDeletionImpact(
     tournamentResourceAllocations: resource._count.tournamentResourceAllocations,
     tournamentParticipantAllocations: resource._count.tournamentParticipantAllocations,
     weekplannerPlanAllocations: resource._count.weekplannerPlanAllocations,
+    eventFacilityAllocations: resource._count.eventFacilityAllocations,
   };
 }
 
@@ -114,6 +118,7 @@ export async function deleteFacilityResourcePermanently(
           tournamentResourceAllocations: true,
           tournamentParticipantAllocations: true,
           weekplannerPlanAllocations: true,
+          eventFacilityAllocations: true,
         },
       },
     },
@@ -127,6 +132,7 @@ export async function deleteFacilityResourcePermanently(
     tournamentResourceAllocations: resource._count.tournamentResourceAllocations,
     tournamentParticipantAllocations: resource._count.tournamentParticipantAllocations,
     weekplannerPlanAllocations: resource._count.weekplannerPlanAllocations,
+    eventFacilityAllocations: resource._count.eventFacilityAllocations,
   };
 
   // DB engine cascade-deletes allocation link rows automatically (onDelete: Cascade).
