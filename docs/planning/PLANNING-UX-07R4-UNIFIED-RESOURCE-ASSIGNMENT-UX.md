@@ -63,7 +63,7 @@ Normalized presentation only — **no** persistence model changes.
 
 See `PLANNING-UX-07R4A-TRAINING-LEGACY-CLOSURE.md` for forensics, migration proof, and deployment SHA.
 
-**Latest verified deployment (pre-R4A code push):** `08f32642f9fabc9782a7c466482424a214782bde` (Vercel Preview success).
+**Latest verified deployment (R4A):** `0617ed767e74135e5414422ad45f9544a7802bdb` (Vercel Preview success).
 
 ## Occupancy / sharing (UX-07R3 preserved)
 

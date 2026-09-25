@@ -20,7 +20,7 @@
 ## Deployment gate (pre-push baseline)
 
 - Feature HEAD at closure start: `08f32642f9fabc9782a7c466482424a214782bde` (Vercel Preview **success** verified via GitHub deployment `6647808844`).
-- Post-migration HEAD: recorded in PR #708 after push.
+- Post-migration HEAD: `0617ed767e74135e5414422ad45f9544a7802bdb` (Vercel Preview **success**, deployment `6654263396`).
 
 ## Active resource-assignment route matrix (R4A)
 
