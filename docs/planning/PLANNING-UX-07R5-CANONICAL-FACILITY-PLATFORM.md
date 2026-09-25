@@ -7,6 +7,7 @@ Prior slices:
 - **R4B** — verified cross-event **read** engine (`getResourceAvailability`).
 - **R5** — consolidates **write** validation, Wochenplan picker parity, lifecycle semantics, and architecture sentinels — **without** replacing the read engine.
 - **R6** — closes the Veranstaltung gap via `EventFacilityAllocation` (see `PLANNING-UX-07R6-VERANSTALTUNG-FACILITY-ALLOCATION.md`) — **five domains complete**.
+- **R6R1** — sport-agnostic portability hardening (classification + validation + `OTHER` availability group) — see `PLANNING-UX-07R6R1-SPORT-AGNOSTIC-FACILITY-PORTABILITY.md`.
 
 ## Layer model
 
@@ -32,8 +33,8 @@ GET /api/facilities/availability
   → normalized FREE | OCCUPIED + owner labels
 ```
 
-Resource groups: `FULL_PITCH`, `HALF_PITCH`, `HALL` (via PITCH_HALL), `DRESSING_ROOM`.  
-`FacilityResourceType.OTHER` is **intentionally outside** live planning availability groups.
+Availability query groups: `PITCH_HALL` (primary playable surfaces), `DRESSING_ROOM`, `OTHER` (generic bookable resources).  
+Enum values `FULL_PITCH` / `HALF_PITCH` are football-friendly **category labels**, not engine sport locks (R6R1).
 
 ## Write-path architecture
 

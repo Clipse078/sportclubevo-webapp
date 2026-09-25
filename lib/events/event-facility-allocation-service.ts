@@ -11,9 +11,8 @@ import { isMeaningfulEventInterval } from "@/lib/facilities/resource-occupancy-w
 import {
   loadTenantFacilityResourceForWrite,
   validateAssignableFacilityResource,
-  validateFacilityResourceAllocationGroup,
 } from "@/lib/facilities/facility-resource-write-validation";
-import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
+import { isGenericAllocatableFacilityResourceType } from "@/lib/facilities/facility-resource-classification";
 import { ClubEventNotFoundError } from "@/lib/events/club-events-service";
 import type {
   CreateEventFacilityAllocationInput,
@@ -24,7 +23,6 @@ import {
   EventFacilityAllocationArchivedFacilityError,
   EventFacilityAllocationArchivedResourceError,
   EventFacilityAllocationDuplicateError,
-  EventFacilityAllocationGroupMismatchError,
   EventFacilityAllocationInvalidEventTimeError,
   EventFacilityAllocationNotFoundError,
   EventFacilityAllocationResourceNotFoundError,
@@ -110,15 +108,8 @@ async function validateResourceForClubEvent(
   }
   if (!resource) throw new EventFacilityAllocationResourceNotFoundError(facilityResourceId);
 
-  const group = classifyFacilityResourceType(resource.type);
-  if (group === "OTHER") {
+  if (!isGenericAllocatableFacilityResourceType(resource.type)) {
     throw new EventFacilityAllocationUnsupportedResourceTypeError(resource.type);
-  }
-  const groupMismatch = validateFacilityResourceAllocationGroup(resource, group);
-  if (groupMismatch === "GROUP_MISMATCH") {
-    throw new EventFacilityAllocationGroupMismatchError(
-      `Resource type ${resource.type} does not match allocation group ${group}.`,
-    );
   }
 
   return resource;

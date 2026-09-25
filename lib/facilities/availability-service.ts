@@ -24,6 +24,10 @@
  *   - Event(type=OTHER) / Veranstaltungen via EventFacilityAllocation
  *     (PLANNING-UX-07R6). MATCH legacy code fields are unchanged.
  *
+ * PLANNING-UX-07R6R1 — availability is keyed by FacilityResource id + tenant +
+ * interval; group selects candidate types (PITCH_HALL / DRESSING_ROOM / OTHER)
+ * using the same conflict engine for every group — not a football-only algorithm.
+ *
  * Security invariants:
  *   - tenantId always comes from a trusted session context — never from input.
  *   - Every query below is scoped by tenantId.
@@ -40,6 +44,10 @@ import {
   type TrainingAllocationGroupKey,
 } from "@/lib/training/allocation-groups";
 import {
+  type CanonicalAvailabilityGroup,
+  facilityResourceTypesForAvailabilityGroup,
+} from "@/lib/facilities/facility-resource-classification";
+import {
   findWeekplannerPlanConflicts,
   findWeekplannerReplacedActivities,
   shouldExcludeCanonicalEvent,
@@ -49,8 +57,8 @@ import type { WeekplannerActivityType } from "@/lib/weekplanner/plan-types";
 
 // ── Public types ─────────────────────────────────────────────────────────────
 
-/** The two allocation groups this slice's guided-creation UIs care about. */
-export type AvailabilityResourceGroup = Extract<TrainingAllocationGroupKey, "PITCH_HALL" | "DRESSING_ROOM">;
+/** Allocation groups served by getResourceAvailability (same engine per group). */
+export type AvailabilityResourceGroup = CanonicalAvailabilityGroup;
 
 export type ResourceAvailabilityStatus = "FREE" | "OCCUPIED";
 
@@ -110,10 +118,9 @@ export type GetResourceAvailabilityInput = {
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
 
-const RESOURCE_TYPES_BY_GROUP: Record<AvailabilityResourceGroup, FacilityResourceType[]> = {
-  PITCH_HALL: ["FULL_PITCH", "HALF_PITCH"],
-  DRESSING_ROOM: ["DRESSING_ROOM"],
-};
+function resourceTypesForGroup(group: AvailabilityResourceGroup): FacilityResourceType[] {
+  return facilityResourceTypesForAvailabilityGroup(group);
+}
 
 type ConflictWindow = {
   resourceId: string;
@@ -457,7 +464,7 @@ export async function getResourceAvailability(
     const resources = await prisma.facilityResource.findMany({
       where: {
         tenantId,
-        type: { in: RESOURCE_TYPES_BY_GROUP[group] },
+        type: { in: resourceTypesForGroup(group) },
         status: { not: "ARCHIVED" },
         facility: { status: { not: "ARCHIVED" } },
       },
@@ -503,7 +510,7 @@ export async function getResourceAvailability(
   const resources = await prisma.facilityResource.findMany({
     where: {
       tenantId,
-      type: { in: RESOURCE_TYPES_BY_GROUP[group] },
+      type: { in: resourceTypesForGroup(group) },
       status: { not: "ARCHIVED" },
       facility: { status: { not: "ARCHIVED" } },
     },

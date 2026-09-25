@@ -34,8 +34,10 @@ Unique `[eventId, facilityResourceId]`. Indexes for tenant, event, and resource 
 
 API: `GET/POST /api/events/[eventId]/facility-allocations`, `DELETE/PATCH .../[allocationId]`.
 
-Shared validation: `lib/facilities/facility-resource-write-validation.ts` (tenant, archive, PITCH_HALL / DRESSING_ROOM groups).  
-Resource types in live availability: `FULL_PITCH`, `HALF_PITCH`, `DRESSING_ROOM` — not `OTHER`.
+Shared validation: `lib/facilities/facility-resource-write-validation.ts` (tenant, archive).  
+Veranstaltung accepts any known `FacilityResourceType` (including `OTHER` for generic bookable resources) — see **R6R1** (`PLANNING-UX-07R6R1-SPORT-AGNOSTIC-FACILITY-PORTABILITY.md`).
+
+Live availability groups: `PITCH_HALL` (`FULL_PITCH`, `HALF_PITCH`), `DRESSING_ROOM`, `OTHER` (`FacilityResourceType.OTHER`).
 
 Permissions: existing Veranstaltung `EVENTS_VIEW` / `EVENTS_MANAGE` — no facility bypass.
 

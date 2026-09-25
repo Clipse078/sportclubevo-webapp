@@ -135,6 +135,18 @@ describe("assignEventFacilityResource", () => {
       assignEventFacilityResource(TENANT, EVENT_ID, { facilityResourceId: "missing" }),
     ).rejects.toBeInstanceOf(EventFacilityAllocationResourceNotFoundError);
   });
+
+  it("accepts generic OTHER resources (sport-agnostic portability)", async () => {
+    vi.mocked(prisma.facilityResource.findFirst).mockResolvedValue(activeResource("OTHER") as never);
+    vi.mocked(prisma.eventFacilityAllocation.create).mockResolvedValue(
+      allocationRow("alloc-other", "fr-court-1") as never,
+    );
+
+    const dto = await assignEventFacilityResource(TENANT, EVENT_ID, {
+      facilityResourceId: "fr-court-1",
+    });
+    expect(dto.facilityResourceId).toBe("fr-court-1");
+  });
 });
 
 describe("unassignEventFacilityResource", () => {

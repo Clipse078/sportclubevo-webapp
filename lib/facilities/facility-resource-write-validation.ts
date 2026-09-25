@@ -1,8 +1,11 @@
 /**
- * PLANNING-UX-07R5 — shared facility resource write validation primitives.
+ * PLANNING-UX-07R5 / R6R1 — shared facility resource write validation primitives.
  *
  * Domain allocation services keep their own persistence and error types; they
  * must not diverge on tenant ownership, archive rules, or allocation-group fit.
+ *
+ * Veranstaltung (EventFacilityAllocation) uses assignability + known type only —
+ * it does not call validateFacilityResourceAllocationGroup (sport-agnostic ids).
  */
 
 import { prisma } from "@/lib/db/prisma";
