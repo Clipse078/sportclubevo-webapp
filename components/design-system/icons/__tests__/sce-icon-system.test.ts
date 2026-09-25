@@ -183,13 +183,13 @@ describe("SCE-ICONS-01 governance", () => {
 });
 
 describe("SCE-ICONS-01 specimen", () => {
-  it("dev specimen page is gated", () => {
+  it("dev specimen page delegates availability to the specimen gate", () => {
     const page = readFileSync(
       join(process.cwd(), "app/(admin)/dashboard/dev/sce-icons/page.tsx"),
       "utf8",
     );
     expect(page).toContain("notFound");
-    expect(page).toContain('NODE_ENV === "development"');
+    expect(page).toContain("isSceIconSpecimenAvailable");
     expect(page).toContain("SceIconSpecimen");
   });
 });

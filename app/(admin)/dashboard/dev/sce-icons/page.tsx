@@ -1,13 +1,10 @@
 import { notFound } from "next/navigation";
 
+import { isSceIconSpecimenAvailable } from "@/components/design-system/icons/sce-icon-specimen-gate";
 import { SceIconSpecimen } from "@/components/design-system/icons/specimen/SceIconSpecimen";
 
 export default function SceIconsDevSpecimenPage() {
-  const previewAllowed =
-    process.env.NODE_ENV === "development" ||
-    process.env.VERCEL_GIT_COMMIT_REF === "STAGE";
-
-  if (!previewAllowed) {
+  if (!isSceIconSpecimenAvailable()) {
     notFound();
   }
 
