@@ -813,5 +813,26 @@
     "assignPitchHallFor": "Spielfeld / Halle für {subject} zuweisen",
     "matchHomeSide": "Heim",
     "matchAwaySide": "Gast"
+  },
+  "AppShell": {
+    "primaryNavAria": "Hauptnavigation",
+    "contextNavAria": "Kontextnavigation",
+    "mobilePrimaryNavAria": "Mobile Hauptnavigation",
+    "more": "Mehr",
+    "moreNavAria": "Weitere Navigation",
+    "openDrawer": "Navigation öffnen",
+    "closeDrawer": "Navigation schliessen",
+    "drawerTitle": "Navigation",
+    "domains": {
+      "dashboard": "Dashboard",
+      "planning": "Planung",
+      "organisation": "Organisation",
+      "communication": "Kommunikation",
+      "club": "Club",
+      "platformOverview": "Platform",
+      "platformGovernance": "Governance",
+      "platformCommercial": "Commercial",
+      "platformOperations": "Operations"
+    }
   }
 }

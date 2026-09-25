@@ -386,5 +386,26 @@
     "assignPitchHallFor": "Assegna campo / palestra per {subject}",
     "matchHomeSide": "Casa",
     "matchAwaySide": "Ospiti"
+  },
+  "AppShell": {
+    "primaryNavAria": "Navigazione principale",
+    "contextNavAria": "Navigazione contestuale",
+    "mobilePrimaryNavAria": "Navigazione mobile principale",
+    "more": "Altro",
+    "moreNavAria": "Altra navigazione",
+    "openDrawer": "Apri navigazione",
+    "closeDrawer": "Chiudi navigazione",
+    "drawerTitle": "Navigazione",
+    "domains": {
+      "dashboard": "Dashboard",
+      "planning": "Pianificazione",
+      "organisation": "Organizzazione",
+      "communication": "Comunicazione",
+      "club": "Club",
+      "platformOverview": "Piattaforma",
+      "platformGovernance": "Governance",
+      "platformCommercial": "Commercial",
+      "platformOperations": "Operazioni"
+    }
   }
 }

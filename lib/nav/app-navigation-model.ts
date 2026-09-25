@@ -1,18 +1,28 @@
 /**
- * SCE-VISUAL-03 — canonical authenticated app navigation model.
+ * SCE-VISUAL-03 / SCE-VISUAL-03R1 — canonical authenticated app navigation model.
  *
- * One permission-filtered tree from {@link getVisibleNavSections} drives every
- * responsive presentation (desktop primary row, contextual row, overflow, mobile).
+ * Permission-filtered NAV_SECTIONS destinations are grouped into semantic domains
+ * for every responsive presentation (desktop primary row, contextual row, overflow, mobile).
  */
 
-import type { NavItem, NavItemChild, NavSection } from "@/lib/nav/nav-config";
+import type { NavItemChild } from "@/lib/nav/nav-config";
 import { getVisibleNavSections } from "@/lib/nav/nav-config";
 import type { NavCapabilityContext } from "@/lib/nav/nav-config";
+import {
+  buildNavigationDomainsFromSections,
+  type NavigationDestination,
+  type NavigationDomain,
+  type AppNavigationDomainId,
+  type NavPresentationPriority,
+  NAVIGATION_DOMAIN_DEFINITIONS,
+} from "@/lib/nav/app-navigation-domains";
+import type { NavSection } from "@/lib/nav/nav-config";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
 
-export type NavPresentationPriority = 1 | 2 | 3;
+export type { NavPresentationPriority };
 
+/** @deprecated Prefer {@link NavigationDomain} in new shell code. */
 export type AppNavigationPrimaryItem = {
   key: string;
   label: string;
@@ -23,68 +33,52 @@ export type AppNavigationPrimaryItem = {
 };
 
 export type AppNavigationModel = {
-  primaryItems: AppNavigationPrimaryItem[];
+  domains: NavigationDomain[];
+  /** Flattened destinations (permission-filtered); useful for route resolution tests. */
+  destinations: NavigationDestination[];
 };
 
 export type ActiveAppNavigation = {
-  activePrimaryKey: string | null;
-  activePrimary: AppNavigationPrimaryItem | null;
+  activeDomainId: AppNavigationDomainId | null;
+  activeDomain: NavigationDomain | null;
+  activeDestinationKey: string | null;
+  activeDestination: NavigationDestination | null;
   activeChildKey: string | null;
   contextualChildren: NavItemChild[];
+  /** @deprecated Use activeDomainId */
+  activePrimaryKey: string | null;
+  /** @deprecated Use activeDomain */
+  activePrimary: AppNavigationPrimaryItem | null;
 };
 
-const PRIMARY_NAV_PRIORITY: Record<string, NavPresentationPriority> = {
-  dashboard: 1,
-  "platform-dashboard": 1,
-  planung: 1,
-  aufgaben: 1,
-  organisation: 2,
-  mitglieder: 2,
-  anmeldungen: 2,
-  communication: 2,
-  workspace: 2,
-  teams: 2,
-  helfereinsaetze: 3,
-  website: 3,
-  infoboard: 3,
-  "trainer-staff": 3,
-  meetings: 3,
-  "club-entwicklung": 3,
-  material: 3,
-  finanzen: 3,
-  sponsoring: 3,
-  "formulare-freigaben": 3,
-  "vorfaelle-disziplin": 3,
-  administration: 3,
-  "platform-clubs": 2,
-  "platform-commercial": 2,
-  "platform-integrations": 3,
-  "platform-access": 2,
-  "platform-operations": 3,
-};
+export function getDomainNavPriority(domainId: AppNavigationDomainId): NavPresentationPriority {
+  return NAVIGATION_DOMAIN_DEFINITIONS[domainId]?.priority ?? 3;
+}
 
-const DEFAULT_PRIORITY: NavPresentationPriority = 3;
-
+/** @deprecated Use getDomainNavPriority */
 export function getPrimaryNavPriority(navItemKey: string): NavPresentationPriority {
-  return PRIMARY_NAV_PRIORITY[navItemKey] ?? DEFAULT_PRIORITY;
+  if (navItemKey === "dashboard" || navItemKey === "planung" || navItemKey === "platform-dashboard") {
+    return 1;
+  }
+  if (
+    navItemKey === "organisation" ||
+    navItemKey === "communication" ||
+    navItemKey === "platform-clubs" ||
+    navItemKey === "platform-access" ||
+    navItemKey === "platform-commercial"
+  ) {
+    return 2;
+  }
+  return 3;
 }
 
-export function buildAppNavigationModel(sections: NavSection[]): AppNavigationModel {
-  const primaryItems: AppNavigationPrimaryItem[] = sections.flatMap((section) =>
-    section.items.map((item) => mapNavItemToPrimary(item)),
-  );
-  return { primaryItems };
-}
-
-function mapNavItemToPrimary(item: NavItem): AppNavigationPrimaryItem {
-  return {
-    key: item.key,
-    label: item.label,
-    href: item.href,
-    priority: getPrimaryNavPriority(item.key),
-    children: item.children,
-    carrySeason: item.carrySeason,
-  };
+export function buildAppNavigationModel(
+  sections: NavSection[],
+  workspaceContext: WorkspaceContext = "club",
+): AppNavigationModel {
+  const domains = buildNavigationDomainsFromSections(sections, workspaceContext);
+  const destinations = domains.flatMap((d) => d.destinations);
+  return { domains, destinations };
 }
 
 export function buildAppNavigationModelForUser(
@@ -94,6 +88,7 @@ export function buildAppNavigationModelForUser(
 ): AppNavigationModel {
   return buildAppNavigationModel(
     getVisibleNavSections(permissionKeys, workspaceContext, capabilities),
+    workspaceContext,
   );
 }
 
@@ -103,79 +98,145 @@ export function isNavigationHrefActive(pathname: string, href: string): boolean 
   return pathname.startsWith(`${href}/`);
 }
 
-export function isNavigationChildActive(
-  pathname: string,
-  child: NavItemChild,
-): boolean {
+export function isNavigationChildActive(pathname: string, child: NavItemChild): boolean {
   if (child.matchExact) {
     return pathname === child.href;
   }
   return isNavigationHrefActive(pathname, child.href);
 }
 
+function domainToLegacyPrimary(domain: NavigationDomain): AppNavigationPrimaryItem {
+  const dest = domain.defaultDestination;
+  return {
+    key: domain.id,
+    label: domain.fallbackLabel,
+    href: dest.href,
+    priority: domain.priority,
+    children: dest.children,
+    carrySeason: dest.carrySeason,
+  };
+}
+
+function resolveActiveDestination(
+  pathname: string,
+  domain: NavigationDomain,
+): { destination: NavigationDestination; childKey: string | null } | null {
+  for (const destination of domain.destinations) {
+    if (isNavigationHrefActive(pathname, destination.href)) {
+      const child = destination.children?.find((c) => isNavigationChildActive(pathname, c));
+      return { destination, childKey: child?.key ?? null };
+    }
+    const child = destination.children?.find((c) => isNavigationChildActive(pathname, c));
+    if (child) {
+      return { destination, childKey: child.key };
+    }
+  }
+
+  const prefixMatch = domain.destinations
+    .filter(
+      (dest) =>
+        isNavigationHrefActive(pathname, dest.href) ||
+        dest.children?.some((c) => isNavigationChildActive(pathname, c)),
+    )
+    .sort((a, b) => b.href.length - a.href.length)[0];
+
+  if (!prefixMatch) return null;
+  const child = prefixMatch.children?.find((c) => isNavigationChildActive(pathname, c));
+  return { destination: prefixMatch, childKey: child?.key ?? null };
+}
+
 export function resolveActiveAppNavigation(
   pathname: string,
   model: AppNavigationModel,
 ): ActiveAppNavigation {
-  let activePrimary: AppNavigationPrimaryItem | null = null;
+  let activeDomain: NavigationDomain | null = null;
+  let activeDestination: NavigationDestination | null = null;
   let activeChildKey: string | null = null;
 
-  for (const primary of model.primaryItems) {
-    if (isNavigationHrefActive(pathname, primary.href)) {
-      activePrimary = primary;
-      const child = primary.children?.find((c) => isNavigationChildActive(pathname, c));
-      activeChildKey = child?.key ?? null;
-      break;
-    }
-    const child = primary.children?.find((c) => isNavigationChildActive(pathname, c));
-    if (child) {
-      activePrimary = primary;
-      activeChildKey = child.key;
+  for (const domain of model.domains) {
+    const match = resolveActiveDestination(pathname, domain);
+    if (match) {
+      activeDomain = domain;
+      activeDestination = match.destination;
+      activeChildKey = match.childKey;
       break;
     }
   }
 
-  if (!activePrimary) {
-    const prefixMatch = model.primaryItems
-      .filter(
-        (item) =>
-          pathname.startsWith(item.href) ||
-          item.children?.some((c) => pathname.startsWith(c.href)),
-      )
-      .sort((a, b) => b.href.length - a.href.length)[0];
-    if (prefixMatch) {
-      activePrimary = prefixMatch;
-      const child = prefixMatch.children?.find((c) => isNavigationChildActive(pathname, c));
-      activeChildKey = child?.key ?? null;
-    }
-  }
+  const contextualChildren = activeDestination?.children ?? [];
 
-  const contextualChildren = activePrimary?.children ?? [];
+  const legacyPrimary = activeDomain ? domainToLegacyPrimary(activeDomain) : null;
 
   return {
-    activePrimaryKey: activePrimary?.key ?? null,
-    activePrimary,
+    activeDomainId: activeDomain?.id ?? null,
+    activeDomain,
+    activeDestinationKey: activeDestination?.key ?? null,
+    activeDestination,
     activeChildKey,
     contextualChildren,
+    activePrimaryKey: activeDomain?.id ?? null,
+    activePrimary: legacyPrimary,
   };
 }
 
-/** Mobile bottom bar: highest-value primaries (same model, capped). */
-export function selectMobileBottomPrimaryItems(
-  model: AppNavigationModel,
-  activePrimaryKey: string | null,
-  maxItems = 3,
-): AppNavigationPrimaryItem[] {
-  const byPriority = [...model.primaryItems].sort(
-    (a, b) => a.priority - b.priority || a.label.localeCompare(b.label),
-  );
-  const picked: AppNavigationPrimaryItem[] = [];
-  for (const item of byPriority) {
-    if (picked.length >= maxItems) break;
-    picked.push(item);
+export type PrimaryDomainPresentation = {
+  inlineDomains: NavigationDomain[];
+  overflowDomains: NavigationDomain[];
+};
+
+/**
+ * Splits domains for the desktop primary row. Promotes the active domain into the inline set
+ * when it would otherwise only appear under Mehr.
+ */
+export function resolvePrimaryDomainPresentation(
+  domains: NavigationDomain[],
+  activeDomainId: AppNavigationDomainId | null,
+  maxInlineDomains: number,
+): PrimaryDomainPresentation {
+  if (domains.length <= maxInlineDomains) {
+    return { inlineDomains: domains, overflowDomains: [] };
   }
-  if (activePrimaryKey && !picked.some((p) => p.key === activePrimaryKey)) {
-    const active = model.primaryItems.find((p) => p.key === activePrimaryKey);
+
+  const sorted = [...domains].sort(
+    (a, b) => a.priority - b.priority || a.sortOrder - b.sortOrder,
+  );
+
+  let inline = sorted.slice(0, maxInlineDomains);
+  let overflow = sorted.slice(maxInlineDomains);
+
+  if (activeDomainId && overflow.some((d) => d.id === activeDomainId)) {
+    const active = overflow.find((d) => d.id === activeDomainId)!;
+    const demotable = [...inline]
+      .filter((d) => d.id !== activeDomainId)
+      .sort((a, b) => b.priority - a.priority || b.sortOrder - a.sortOrder)[0];
+    if (demotable) {
+      inline = inline.filter((d) => d.id !== demotable.id);
+      overflow = overflow.filter((d) => d.id !== activeDomainId);
+      inline.push(active);
+      overflow.push(demotable);
+      inline.sort((a, b) => a.sortOrder - b.sortOrder);
+      overflow.sort((a, b) => a.sortOrder - b.sortOrder);
+    }
+  }
+
+  return { inlineDomains: inline, overflowDomains: overflow };
+}
+
+export function selectMobileBottomDomains(
+  model: AppNavigationModel,
+  activeDomainId: AppNavigationDomainId | null,
+  maxItems = 3,
+): NavigationDomain[] {
+  const byPriority = [...model.domains].sort(
+    (a, b) => a.priority - b.priority || a.sortOrder - b.sortOrder,
+  );
+  const picked: NavigationDomain[] = [];
+  for (const domain of byPriority) {
+    if (picked.length >= maxItems) break;
+    picked.push(domain);
+  }
+  if (activeDomainId && !picked.some((d) => d.id === activeDomainId)) {
+    const active = model.domains.find((d) => d.id === activeDomainId);
     if (active && picked.length >= maxItems) {
       picked[picked.length - 1] = active;
     } else if (active) {
@@ -183,6 +244,17 @@ export function selectMobileBottomPrimaryItems(
     }
   }
   return picked.slice(0, maxItems);
+}
+
+/** @deprecated Use selectMobileBottomDomains */
+export function selectMobileBottomPrimaryItems(
+  model: AppNavigationModel,
+  activePrimaryKey: string | null,
+  maxItems = 3,
+): AppNavigationPrimaryItem[] {
+  return selectMobileBottomDomains(model, activePrimaryKey as AppNavigationDomainId | null, maxItems).map(
+    domainToLegacyPrimary,
+  );
 }
 
 export const SEASON_CARRY_PREFIXES = [

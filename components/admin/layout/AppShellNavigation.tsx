@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Menu, MoreHorizontal } from "lucide-react";
 import SidebarPlatformBrand from "@/components/admin/branding/SidebarPlatformBrand";
 import AdminPageActions from "@/components/admin/layout/AdminPageActions";
@@ -16,10 +17,15 @@ import {
   isNavigationChildActive,
   isNavigationHrefActive,
   resolveActiveAppNavigation,
-  selectMobileBottomPrimaryItems,
-  type AppNavigationPrimaryItem,
+  resolvePrimaryDomainPresentation,
+  selectMobileBottomDomains,
 } from "@/lib/nav/app-navigation-model";
+import type { AppNavigationDomainId, NavigationDomain } from "@/lib/nav/app-navigation-domains";
 import type { NavCapabilityContext } from "@/lib/nav/nav-config";
+import {
+  maxInlineDomainsForTier,
+  usePrimaryNavLayoutTier,
+} from "@/lib/nav/use-primary-nav-layout-tier";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import {
   SCE_GLOBAL_APP_HEADER_CLASS,
@@ -40,30 +46,41 @@ type AppShellNavigationProps = {
   imageUrl?: string | null;
 };
 
-function PrimaryNavLink({
-  item,
+const DOMAIN_MESSAGE_KEY: Record<AppNavigationDomainId, `domains.${string}`> = {
+  dashboard: "domains.dashboard",
+  planning: "domains.planning",
+  organisation: "domains.organisation",
+  communication: "domains.communication",
+  club: "domains.club",
+  "platform-overview": "domains.platformOverview",
+  "platform-governance": "domains.platformGovernance",
+  "platform-commercial": "domains.platformCommercial",
+  "platform-operations": "domains.platformOperations",
+};
+
+function DomainNavLink({
+  domain,
+  label,
   href,
   isActive,
-  className,
 }: {
-  item: AppNavigationPrimaryItem;
+  domain: NavigationDomain;
+  label: string;
   href: string;
   isActive: boolean;
-  className?: string;
 }) {
   return (
     <Link
       href={href}
       aria-current={isActive ? "page" : undefined}
-      data-nav-priority={item.priority}
-      data-nav-key={item.key}
+      data-nav-domain={domain.id}
+      data-nav-domain-priority={domain.priority}
       className={cn(
-        "sce-global-primary-nav-item shrink-0",
+        "sce-global-primary-nav-item sce-global-primary-nav-domain shrink-0",
         isActive && "sce-global-primary-nav-item--active",
-        className,
       )}
     >
-      {item.label}
+      {label}
     </Link>
   );
 }
@@ -84,6 +101,8 @@ function AppShellNavigationInner({
   const selectedSeason = searchParams.get("season");
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
+  const layoutTier = usePrimaryNavLayoutTier();
+  const t = useTranslations("AppShell");
 
   const isPlatformWorkspace = workspaceContext === "platform";
   const displayClubName = isPlatformWorkspace
@@ -110,12 +129,45 @@ function AppShellNavigationInner({
     [selectedSeason],
   );
 
-  const mobileBottomItems = useMemo(
-    () => selectMobileBottomPrimaryItems(model, active.activePrimaryKey, 3),
-    [model, active.activePrimaryKey],
+  const DOMAIN_MESSAGE_KEY: Record<AppNavigationDomainId, `domains.${string}`> = {
+    dashboard: "domains.dashboard",
+    planning: "domains.planning",
+    organisation: "domains.organisation",
+    communication: "domains.communication",
+    club: "domains.club",
+    "platform-overview": "domains.platformOverview",
+    "platform-governance": "domains.platformGovernance",
+    "platform-commercial": "domains.platformCommercial",
+    "platform-operations": "domains.platformOperations",
+  };
+
+  const domainLabel = useCallback(
+    (domain: NavigationDomain) => t(DOMAIN_MESSAGE_KEY[domain.id]),
+    [t],
   );
 
-  const overflowCandidates = model.primaryItems.filter((item) => item.priority >= 3);
+  const maxInline = maxInlineDomainsForTier(layoutTier);
+  const { inlineDomains, overflowDomains } = useMemo(
+    () => resolvePrimaryDomainPresentation(model.domains, active.activeDomainId, maxInline),
+    [model.domains, active.activeDomainId, maxInline],
+  );
+
+  const mobileBottomDomains = useMemo(
+    () => selectMobileBottomDomains(model, active.activeDomainId, 3),
+    [model, active.activeDomainId],
+  );
+
+  const isDomainActive = useCallback(
+    (domain: NavigationDomain) => {
+      if (active.activeDomainId === domain.id) return true;
+      return domain.destinations.some(
+        (dest) =>
+          isNavigationHrefActive(pathname, dest.href) ||
+          (dest.children?.some((c) => isNavigationChildActive(pathname, c)) ?? false),
+      );
+    },
+    [active.activeDomainId, pathname],
+  );
 
   return (
     <>
@@ -151,40 +203,41 @@ function AppShellNavigationInner({
           </div>
 
           <nav
-            aria-label="Hauptnavigation"
+            aria-label={t("primaryNavAria")}
             className="sce-global-primary-nav hidden md:flex min-w-0 flex-1 justify-center"
           >
             <div className="sce-global-primary-nav-track flex min-w-0 items-center gap-0.5">
-              {model.primaryItems.map((item) => {
-                const href = resolveHref(item.href);
-                const isActive =
-                  active.activePrimaryKey === item.key ||
-                  isNavigationHrefActive(pathname, item.href) ||
-                  (item.children?.some((c) => isNavigationChildActive(pathname, c)) ??
-                    false);
+              {inlineDomains.map((domain) => {
+                const dest = active.activeDomainId === domain.id && active.activeDestination
+                  ? active.activeDestination
+                  : domain.defaultDestination;
+                const href = resolveHref(dest.href);
                 return (
-                  <PrimaryNavLink
-                    key={item.key}
-                    item={item}
+                  <DomainNavLink
+                    key={domain.id}
+                    domain={domain}
+                    label={domainLabel(domain)}
                     href={href}
-                    isActive={isActive}
+                    isActive={isDomainActive(domain)}
                   />
                 );
               })}
 
-              {overflowCandidates.length > 0 ? (
-                <div className="relative sce-global-primary-nav-overflow xl:hidden">
+              {overflowDomains.length > 0 ? (
+                <div className="relative sce-global-primary-nav-overflow shrink-0">
                   <button
                     type="button"
                     className={cn(
                       "sce-global-primary-nav-item",
                       overflowOpen && "sce-global-primary-nav-item--active",
+                      overflowDomains.some((d) => d.id === active.activeDomainId) &&
+                        "sce-global-primary-nav-item--active",
                     )}
                     aria-expanded={overflowOpen}
                     aria-haspopup="menu"
                     onClick={() => setOverflowOpen((v) => !v)}
                   >
-                    Mehr
+                    {t("more")}
                     <MoreHorizontal className="ml-1 h-4 w-4 opacity-70" aria-hidden="true" />
                   </button>
                   {overflowOpen ? (
@@ -192,15 +245,15 @@ function AppShellNavigationInner({
                       role="menu"
                       className="sce-global-nav-overflow-panel absolute right-0 top-[calc(100%+4px)] z-50 min-w-[12rem] rounded-lg border border-[var(--border)] bg-[var(--sce-app-chrome)] py-1 shadow-lg"
                     >
-                      {overflowCandidates.map((item) => (
+                      {overflowDomains.map((domain) => (
                         <Link
-                          key={item.key}
+                          key={domain.id}
                           role="menuitem"
-                          href={resolveHref(item.href)}
+                          href={resolveHref(domain.defaultDestination.href)}
                           className="block px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-2)]"
                           onClick={() => setOverflowOpen(false)}
                         >
-                          {item.label}
+                          {domainLabel(domain)}
                         </Link>
                       ))}
                     </div>
@@ -210,11 +263,11 @@ function AppShellNavigationInner({
             </div>
           </nav>
 
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1 sce-global-header-utilities">
             <button
               type="button"
               className="sce-icon-button md:hidden min-h-[2.75rem] min-w-[2.75rem]"
-              aria-label="Navigation öffnen"
+              aria-label={t("openDrawer")}
               aria-expanded={mobileDrawerOpen}
               onClick={() => setMobileDrawerOpen(true)}
             >
@@ -239,7 +292,7 @@ function AppShellNavigationInner({
 
         {active.contextualChildren.length > 0 ? (
           <nav
-            aria-label="Kontextnavigation"
+            aria-label={t("contextNavAria")}
             className="sce-global-context-nav hidden md:block border-t border-[color-mix(in_srgb,var(--border)_55%,transparent)]"
           >
             <div className="sce-global-context-nav-track flex gap-1 overflow-x-auto px-4 py-1.5">
@@ -266,15 +319,20 @@ function AppShellNavigationInner({
       </header>
 
       <nav
-        aria-label="Mobile Hauptnavigation"
-        className={cn(SCE_MOBILE_BOTTOM_NAV_CLASS, "md:hidden")}
+        aria-label={t("mobilePrimaryNavAria")}
+        className={SCE_MOBILE_BOTTOM_NAV_CLASS}
+        data-sce-mobile-bottom-nav
       >
-        {mobileBottomItems.map((item) => {
-          const href = resolveHref(item.href);
-          const isActive = active.activePrimaryKey === item.key;
+        {mobileBottomDomains.map((domain) => {
+          const dest =
+            active.activeDomainId === domain.id && active.activeDestination
+              ? active.activeDestination
+              : domain.defaultDestination;
+          const href = resolveHref(dest.href);
+          const isActive = active.activeDomainId === domain.id;
           return (
             <Link
-              key={item.key}
+              key={domain.id}
               href={href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
@@ -282,17 +340,17 @@ function AppShellNavigationInner({
                 isActive && "sce-mobile-bottom-nav-item--active",
               )}
             >
-              {item.label}
+              {domainLabel(domain)}
             </Link>
           );
         })}
         <button
           type="button"
           className="sce-mobile-bottom-nav-item"
-          aria-label="Weitere Navigation"
+          aria-label={t("moreNavAria")}
           onClick={() => setMobileDrawerOpen(true)}
         >
-          Mehr
+          {t("more")}
         </button>
       </nav>
 
@@ -309,7 +367,7 @@ function AppShellNavigationInner({
             className="sce-mobile-nav-drawer absolute left-0 top-0 h-full w-[min(100%,320px)] shadow-xl"
             role="dialog"
             aria-modal="true"
-            aria-label="Navigation"
+            aria-label={t("drawerTitle")}
             onClick={(e) => e.stopPropagation()}
           >
             <AdminSidebar
@@ -323,7 +381,7 @@ function AppShellNavigationInner({
             <button
               type="button"
               className="absolute right-3 top-3 sce-icon-button min-h-[2.75rem] min-w-[2.75rem] z-10"
-              aria-label="Navigation schliessen"
+              aria-label={t("closeDrawer")}
               onClick={() => setMobileDrawerOpen(false)}
             >
               ×

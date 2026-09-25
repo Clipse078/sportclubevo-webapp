@@ -386,5 +386,26 @@
     "assignPitchHallFor": "Assigner le terrain / la salle pour {subject}",
     "matchHomeSide": "Domicile",
     "matchAwaySide": "Visiteurs"
+  },
+  "AppShell": {
+    "primaryNavAria": "Navigation principale",
+    "contextNavAria": "Navigation contextuelle",
+    "mobilePrimaryNavAria": "Navigation mobile principale",
+    "more": "Plus",
+    "moreNavAria": "Plus de navigation",
+    "openDrawer": "Ouvrir la navigation",
+    "closeDrawer": "Fermer la navigation",
+    "drawerTitle": "Navigation",
+    "domains": {
+      "dashboard": "Tableau de bord",
+      "planning": "Planification",
+      "organisation": "Organisation",
+      "communication": "Communication",
+      "club": "Club",
+      "platformOverview": "Plateforme",
+      "platformGovernance": "Gouvernance",
+      "platformCommercial": "Commercial",
+      "platformOperations": "Opérations"
+    }
   }
 }

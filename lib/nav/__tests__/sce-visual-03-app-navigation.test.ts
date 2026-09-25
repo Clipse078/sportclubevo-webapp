@@ -32,7 +32,8 @@ const CLUB_ADMIN_KEYS = Object.values(PERMISSIONS);
 describe("SCE-VISUAL-03 global app navigation", () => {
   it("uses one canonical navigation model for shell presentations", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
-    expect(model.primaryItems.length).toBeGreaterThan(5);
+    expect(model.domains.length).toBeGreaterThan(3);
+    expect(model.destinations.length).toBeGreaterThan(5);
 
     const shellNav = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shellNav).toContain("buildAppNavigationModelForUser");
@@ -60,7 +61,7 @@ describe("SCE-VISUAL-03 global app navigation", () => {
 
   it("preserves permission filtering via getVisibleNavSections", () => {
     const limited = buildAppNavigationModelForUser([PERMISSIONS.TASKS_VIEW], "club");
-    const keys = limited.primaryItems.map((i) => i.key);
+    const keys = limited.destinations.map((i) => i.key);
     expect(keys).toContain("aufgaben");
     expect(keys).not.toContain("website");
   });
@@ -80,29 +81,30 @@ describe("SCE-VISUAL-03 global app navigation", () => {
     ];
     for (const [pathname, primaryKey, childKey] of routes) {
       const active = resolveActiveAppNavigation(pathname, model);
-      expect(active.activePrimaryKey, pathname).toBe(primaryKey);
+      expect(active.activeDestinationKey, pathname).toBe(primaryKey);
       expect(active.activeChildKey, pathname).toBe(childKey);
     }
   });
 
   it("maps representative cross-module routes to parent domains", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
-    const samples: Array<[string, string]> = [
-      ["/dashboard", "dashboard"],
-      ["/dashboard/mitglieder", "mitglieder"],
-      ["/dashboard/registrations", "anmeldungen"],
-      ["/dashboard/aufgaben", "aufgaben"],
-      ["/dashboard/workspace", "workspace"],
-      ["/dashboard/website/pages", "website"],
-      ["/dashboard/infoboard/preview", "infoboard"],
-      ["/dashboard/trainer-staff", "trainer-staff"],
-      ["/vereinsleitung/meetings", "meetings"],
-      ["/vereinsleitung/finanzen", "finanzen"],
-      ["/dashboard/sponsoring", "sponsoring"],
+    const samples: Array<[string, string, string]> = [
+      ["/dashboard", "dashboard", "dashboard"],
+      ["/dashboard/mitglieder", "organisation", "mitglieder"],
+      ["/dashboard/registrations", "organisation", "anmeldungen"],
+      ["/dashboard/aufgaben", "communication", "aufgaben"],
+      ["/dashboard/workspace", "communication", "workspace"],
+      ["/dashboard/website/pages", "club", "website"],
+      ["/dashboard/infoboard/preview", "club", "infoboard"],
+      ["/dashboard/trainer-staff", "organisation", "trainer-staff"],
+      ["/vereinsleitung/meetings", "club", "meetings"],
+      ["/vereinsleitung/finanzen", "club", "finanzen"],
+      ["/dashboard/sponsoring", "club", "sponsoring"],
     ];
-    for (const [pathname, primaryKey] of samples) {
+    for (const [pathname, domainId, destinationKey] of samples) {
       const active = resolveActiveAppNavigation(pathname, model);
-      expect(active.activePrimaryKey, pathname).toBe(primaryKey);
+      expect(active.activeDomainId, pathname).toBe(domainId);
+      expect(active.activeDestinationKey, pathname).toBe(destinationKey);
     }
   });
 
@@ -118,10 +120,10 @@ describe("SCE-VISUAL-03 global app navigation", () => {
     expect(getPrimaryNavPriority("finanzen")).toBe(3);
     const shellNav = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shellNav).toContain("sce-global-primary-nav-overflow");
-    expect(shellNav).toContain("data-nav-priority");
+    expect(shellNav).toContain("data-nav-domain-priority");
     const navCss = readRelative("app/(admin)/global-app-navigation.css");
     expect(navCss).toContain("sce-mobile-bottom-nav");
-    expect(navCss).toContain('[data-nav-priority="3"]');
+    expect(navCss).toContain("data-sce-mobile-bottom-nav");
   });
 
   it("exposes aria-current on active navigation states", () => {
@@ -153,8 +155,9 @@ describe("SCE-VISUAL-03 global app navigation", () => {
   it("uses semantic nav landmarks in the global header", () => {
     const shellNav = readRelative("components/admin/layout/AppShellNavigation.tsx");
     expect(shellNav).toContain(SCE_GLOBAL_APP_HEADER_CLASS);
-    expect(shellNav).toContain('aria-label="Hauptnavigation"');
-    expect(shellNav).toContain('aria-label="Kontextnavigation"');
+    expect(shellNav).toContain('useTranslations("AppShell")');
+    expect(shellNav).toContain('t("primaryNavAria")');
+    expect(shellNav).toContain('t("contextNavAria")');
   });
 
   it("derives Planning children from canonical nav-config", () => {

@@ -386,5 +386,26 @@
     "assignPitchHallFor": "Assign pitch / hall for {subject}",
     "matchHomeSide": "Home",
     "matchAwaySide": "Away"
+  },
+  "AppShell": {
+    "primaryNavAria": "Main navigation",
+    "contextNavAria": "Context navigation",
+    "mobilePrimaryNavAria": "Mobile main navigation",
+    "more": "More",
+    "moreNavAria": "More navigation",
+    "openDrawer": "Open navigation",
+    "closeDrawer": "Close navigation",
+    "drawerTitle": "Navigation",
+    "domains": {
+      "dashboard": "Dashboard",
+      "planning": "Planning",
+      "organisation": "Organisation",
+      "communication": "Communication",
+      "club": "Club",
+      "platformOverview": "Platform",
+      "platformGovernance": "Governance",
+      "platformCommercial": "Commercial",
+      "platformOperations": "Operations"
+    }
   }
 }
