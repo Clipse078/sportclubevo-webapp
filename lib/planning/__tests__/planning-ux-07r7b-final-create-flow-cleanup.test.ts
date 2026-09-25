@@ -18,7 +18,7 @@ describe("PLANNING-UX-07R7B final create-flow UX cleanup", () => {
     it("training create still wires TeamSeasonSearchablePicker", () => {
       const create = read("components/admin/training/TrainingSeriesCreateForm.tsx");
       expect(create).toContain("TeamSeasonSearchablePicker");
-      expect(create).toContain("Team / Saison auswählen");
+      expect(create).toContain("training-create-team-season-select");
     });
   });
 

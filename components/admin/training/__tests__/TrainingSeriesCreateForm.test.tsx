@@ -23,6 +23,10 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
 const TEAM_SEASONS: TeamSeasonOption[] = [
   { id: "ts-1", teamId: "team-1", teamName: "E1", seasonName: "Saison 2025/2026" },
 ];
@@ -59,6 +63,12 @@ const CREATE_FORM_BASE_PROPS = {
 function selectTeamSeason(value = "ts-1") {
   fireEvent.click(screen.getByTestId("training-create-team-season-select-search"));
   fireEvent.click(screen.getByTestId(`training-create-team-season-select-option-${value}`));
+}
+
+async function openAssignmentPicker(testIdPrefix: string) {
+  await waitFor(() => expect(screen.getByTestId(`${testIdPrefix}-action`)).toBeInTheDocument());
+  fireEvent.click(screen.getByTestId(`${testIdPrefix}-action`));
+  await waitFor(() => expect(screen.getByTestId(`${testIdPrefix}-picker-panel`)).toBeInTheDocument());
 }
 
 function jsonResponse(data: unknown, status = 200): Response {
@@ -153,20 +163,17 @@ describe("TrainingSeriesCreateForm — live Spielfeld/Halle + Garderobe availabi
 
     fireEvent.change(screen.getByTestId("training-create-date"), { target: { value: "2026-09-22" } });
 
-    // PLANNING-RESOURCE-UX-01: visual picker replaces the dropdown.
-    // Verify that the availability fetch is triggered and the Frei/Belegt states
-    // are shown in the visual resource cards.
+    await openAssignmentPicker("training-create-resource");
+
     await waitFor(() => {
-      // "Frei" card for Kunstrasen 2 should appear
-      expect(screen.getByText("Kunstrasen 2")).toBeInTheDocument();
-      // Multiple "Frei" badges may appear (pitch + dressing rooms)
+      expect(screen.getByTestId("training-create-resource-picker-option-res-pitch-a")).toBeInTheDocument();
       expect(screen.getAllByText("Frei").length).toBeGreaterThan(0);
     });
 
-    // Belegt card for Kunstrasen 3 A should show the conflict label
     await waitFor(() => {
-      expect(screen.getByText("Kunstrasen 3 A")).toBeInTheDocument();
-      expect(screen.getAllByText("Belegt").length).toBeGreaterThan(0);
+      const occupiedPitch = screen.getByTestId("training-create-resource-picker-option-res-pitch-b");
+      expect(occupiedPitch).toBeInTheDocument();
+      expect(occupiedPitch).toHaveTextContent("Match E1");
     });
   });
 
@@ -337,9 +344,7 @@ describe("TrainingSeriesCreateForm — reversible resource selection (TRAINING-C
     fireEvent.change(screen.getByTestId("training-create-title"), { target: { value: "E1 Training" } });
     fireEvent.change(screen.getByTestId("training-create-date"), { target: { value: "2026-09-22" } });
 
-    await waitFor(() => {
-      expect(screen.getByTestId("training-create-resource-card-res-pitch-a")).toBeInTheDocument();
-    });
+    await openAssignmentPicker("training-create-resource");
 
     return mocks;
   }
@@ -347,11 +352,14 @@ describe("TrainingSeriesCreateForm — reversible resource selection (TRAINING-C
   it("selects and deselects a free pitch without mutating unrelated form state", async () => {
     await setupFormWithAvailability();
 
-    fireEvent.click(screen.getByTestId("training-create-resource-card-res-pitch-a"));
-    expect(screen.getByTestId("training-create-resource-selected-summary")).toHaveTextContent("Kunstrasen 2");
+    fireEvent.click(screen.getByTestId("training-create-resource-picker-option-res-pitch-a"));
+    expect(screen.getByTestId("training-create-resource-resource")).toHaveTextContent("Kunstrasen 2");
 
-    fireEvent.click(screen.getByTestId("training-create-resource-remove-res-pitch-a"));
-    expect(screen.queryByTestId("training-create-resource-selected-summary")).not.toBeInTheDocument();
+    await openAssignmentPicker("training-create-resource");
+    fireEvent.click(screen.getByTestId("training-create-resource-picker-option-res-pitch-a"));
+    expect(screen.getByTestId("training-create-resource-resource")).toHaveTextContent(
+      "Kein Spielfeld / keine Halle zugewiesen",
+    );
 
     expect(screen.getByTestId("training-create-title")).toHaveValue("E1 Training");
     expect(screen.getByTestId("training-create-date")).toHaveValue("2026-09-22");
@@ -361,23 +369,27 @@ describe("TrainingSeriesCreateForm — reversible resource selection (TRAINING-C
   it("selects an occupied pitch via override and deselects it again", async () => {
     await setupFormWithAvailability();
 
-    fireEvent.click(screen.getByTestId("training-create-resource-card-res-pitch-b"));
-    fireEvent.click(screen.getByTestId("training-create-resource-assign-anyway-res-pitch-b"));
-    expect(screen.getByTestId("training-create-resource-selected-summary")).toHaveTextContent("Kunstrasen 3 A");
-    expect(screen.getByTestId("training-create-resource-selected-summary")).toHaveTextContent("Mehrfachbelegung");
+    fireEvent.click(screen.getByTestId("training-create-resource-picker-option-res-pitch-b"));
+    fireEvent.click(screen.getByTestId("training-create-resource-picker-option-res-pitch-b"));
+    expect(screen.getByTestId("training-create-resource-resource")).toHaveTextContent("Kunstrasen 3 A");
 
-    fireEvent.click(screen.getByTestId("training-create-resource-remove-res-pitch-b"));
-    expect(screen.queryByTestId("training-create-resource-selected-summary")).not.toBeInTheDocument();
+    await openAssignmentPicker("training-create-resource");
+    fireEvent.click(screen.getByTestId("training-create-resource-picker-option-res-pitch-b"));
+    expect(screen.getByTestId("training-create-resource-resource")).toHaveTextContent(
+      "Kein Spielfeld / keine Halle zugewiesen",
+    );
   });
 
   it("selects and deselects a dressing room without persistence calls", async () => {
     const { fetchMock } = await setupFormWithAvailability();
 
-    fireEvent.click(screen.getByTestId("training-create-dressing-room-card-res-dressing-1"));
-    expect(screen.getByTestId("training-create-dressing-room-selected-summary")).toHaveTextContent("E1");
+    await openAssignmentPicker("training-create-dressing-room");
+    fireEvent.click(screen.getByTestId("training-create-dressing-room-picker-option-res-dressing-1"));
+    expect(screen.getByTestId("training-create-dressing-room-resource")).toHaveTextContent("E1");
 
-    fireEvent.click(screen.getByTestId("training-create-dressing-room-remove-res-dressing-1"));
-    expect(screen.queryByTestId("training-create-dressing-room-selected-summary")).not.toBeInTheDocument();
+    await openAssignmentPicker("training-create-dressing-room");
+    fireEvent.click(screen.getByTestId("training-create-dressing-room-picker-option-res-dressing-1"));
+    expect(screen.getByTestId("training-create-dressing-room-resource")).toHaveTextContent("Keine Garderobe zugewiesen");
 
     const createCalls = fetchMock.mock.calls.filter(([url]) => url === "/api/training-series");
     expect(createCalls).toHaveLength(0);
@@ -386,10 +398,13 @@ describe("TrainingSeriesCreateForm — reversible resource selection (TRAINING-C
   it("does not call the create API when selecting or deselecting resources", async () => {
     const { fetchMock } = await setupFormWithAvailability();
 
-    fireEvent.click(screen.getByTestId("training-create-resource-card-res-pitch-a"));
-    fireEvent.click(screen.getByTestId("training-create-resource-remove-res-pitch-a"));
-    fireEvent.click(screen.getByTestId("training-create-dressing-room-card-res-dressing-1"));
-    fireEvent.click(screen.getByTestId("training-create-dressing-room-remove-res-dressing-1"));
+    fireEvent.click(screen.getByTestId("training-create-resource-picker-option-res-pitch-a"));
+    await openAssignmentPicker("training-create-resource");
+    fireEvent.click(screen.getByTestId("training-create-resource-picker-option-res-pitch-a"));
+    await openAssignmentPicker("training-create-dressing-room");
+    fireEvent.click(screen.getByTestId("training-create-dressing-room-picker-option-res-dressing-1"));
+    await openAssignmentPicker("training-create-dressing-room");
+    fireEvent.click(screen.getByTestId("training-create-dressing-room-picker-option-res-dressing-1"));
 
     const createCalls = fetchMock.mock.calls.filter(([url]) => url === "/api/training-series");
     expect(createCalls).toHaveLength(0);
@@ -398,8 +413,9 @@ describe("TrainingSeriesCreateForm — reversible resource selection (TRAINING-C
   it("submits facilityResourceIds only on final create, not during selection", async () => {
     const { fetchMock } = await setupFormWithAvailability();
 
-    fireEvent.click(screen.getByTestId("training-create-resource-card-res-pitch-a"));
-    fireEvent.click(screen.getByTestId("training-create-dressing-room-card-res-dressing-1"));
+    fireEvent.click(screen.getByTestId("training-create-resource-picker-option-res-pitch-a"));
+    await openAssignmentPicker("training-create-dressing-room");
+    fireEvent.click(screen.getByTestId("training-create-dressing-room-picker-option-res-dressing-1"));
 
     await waitFor(() => expect(screen.getByTestId("training-create-submit")).not.toBeDisabled());
     fireEvent.click(screen.getByTestId("training-create-submit"));
