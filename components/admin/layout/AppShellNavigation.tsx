@@ -131,18 +131,6 @@ function AppShellNavigationInner({
     [selectedSeason],
   );
 
-  const DOMAIN_MESSAGE_KEY: Record<AppNavigationDomainId, `domains.${string}`> = {
-    dashboard: "domains.dashboard",
-    planning: "domains.planning",
-    organisation: "domains.organisation",
-    communication: "domains.communication",
-    club: "domains.club",
-    "platform-overview": "domains.platformOverview",
-    "platform-governance": "domains.platformGovernance",
-    "platform-commercial": "domains.platformCommercial",
-    "platform-operations": "domains.platformOperations",
-  };
-
   const domainLabel = useCallback(
     (domain: NavigationDomain) => t(DOMAIN_MESSAGE_KEY[domain.id]),
     [t],
