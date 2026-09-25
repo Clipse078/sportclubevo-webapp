@@ -12,10 +12,11 @@ import { isSceApprovedMasterGlyph } from "../masters/approved-hero-glyphs";
 import {
   fingerprintApprovedHeroMasterSvg,
   SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS,
+  SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS,
 } from "../masters/approved-hero-fingerprint";
 import {
-  SCE_APPROVED_HERO_ICON_NAMES,
-  SCE_APPROVED_HERO_MASTER_ASSETS,
+  SCE_APPROVED_MASTER_ASSETS,
+  SCE_APPROVED_MASTER_ICON_NAMES,
   SCE_APPROVED_HERO_VIEWBOX,
 } from "../masters/approved-hero-meta";
 import { SCE_ICON_REGISTRY } from "../registry";
@@ -54,30 +55,33 @@ function serializeMasterFileGeometry(relativePath: string): string {
   return normalizeGeometryMarkup(inner);
 }
 
-describe("SCE-ICONS-01R2 approved hero masters", () => {
+describe("SCE approved master library", () => {
   it("has committed master SVG artifacts on disk", () => {
-    for (const name of SCE_APPROVED_HERO_ICON_NAMES) {
-      const path = SCE_APPROVED_HERO_MASTER_ASSETS[name];
+    for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
+      const path = SCE_APPROVED_MASTER_ASSETS[name];
       expect(existsSync(join(process.cwd(), path))).toBe(true);
       const src = readFileSync(join(process.cwd(), path), "utf8");
+      expect(src).toMatch(/viewBox="0 0 64 64"/);
       expect(src).not.toMatch(/<script/i);
       expect(src).not.toMatch(/<image|xlink:href|href="http/i);
       expect(src).not.toMatch(/<foreignObject/i);
+      expect(src).not.toMatch(/<text[\s>]/i);
+      expect(src).not.toMatch(/font-family/i);
     }
   });
 
   it("maps registry entries to approved master sources", () => {
-    for (const name of SCE_APPROVED_HERO_ICON_NAMES) {
+    for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
       const entry = SCE_ICON_REGISTRY[name];
       expect(entry.geometrySource).toBe("approved-master");
-      expect(entry.masterAssetPath).toBe(SCE_APPROVED_HERO_MASTER_ASSETS[name]);
+      expect(entry.masterAssetPath).toBe(SCE_APPROVED_MASTER_ASSETS[name]);
       expect(entry.viewBox).toBe(SCE_APPROVED_HERO_VIEWBOX);
       expect(isSceApprovedMasterGlyph(entry.Glyph)).toBe(true);
     }
   });
 
   it("preserves master viewBox at runtime (not provisional 24×24)", () => {
-    for (const name of SCE_APPROVED_HERO_ICON_NAMES) {
+    for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
       const { container } = render(<SceIcon name={name} size={24} />);
       const svg = container.querySelector("svg");
       expect(svg).toHaveAttribute("viewBox", SCE_APPROVED_HERO_VIEWBOX);
@@ -86,8 +90,8 @@ describe("SCE-ICONS-01R2 approved hero masters", () => {
   });
 
   it("matches committed master geometry (fingerprint + DOM parity)", () => {
-    for (const name of SCE_APPROVED_HERO_ICON_NAMES) {
-      const asset = SCE_APPROVED_HERO_MASTER_ASSETS[name];
+    for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
+      const asset = SCE_APPROVED_MASTER_ASSETS[name];
       expect(fingerprintApprovedHeroMasterSvg(asset)).toBe(
         SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS[name],
       );
@@ -100,7 +104,7 @@ describe("SCE-ICONS-01R2 approved hero masters", () => {
   });
 
   it("uses same geometry for Original and Light (token-only theming)", () => {
-    for (const name of SCE_APPROVED_HERO_ICON_NAMES) {
+    for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
       const original = render(<SceIcon name={name} size={32} />);
       const light = render(
         <div className="sce-theme-light">
@@ -114,7 +118,7 @@ describe("SCE-ICONS-01R2 approved hero masters", () => {
   });
 
   it("renders hero specimen sizes without rasterization or remote assets", () => {
-    for (const name of SCE_APPROVED_HERO_ICON_NAMES) {
+    for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
       for (const size of HERO_SIZES) {
         const { container } = render(<SceIcon name={name} size={size} />);
         const svg = container.querySelector("svg");
@@ -136,6 +140,28 @@ describe("SCE-ICONS-01R2 approved hero masters", () => {
     const iconDir = join(process.cwd(), "public/images/icons");
     const files = readdirSync(iconDir);
     expect(files.some((f) => /-light\.svg$/i.test(f))).toBe(false);
+  });
+
+  it("preserves training and tournament geometry from SCE-ICONS-04 baseline", () => {
+    expect(SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS.training).toBe(
+      SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS.training,
+    );
+    expect(SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS.tournament).toBe(
+      SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS.tournament,
+    );
+  });
+
+  it("uses Open VS match master without football-specific markup", () => {
+    const matchSrc = readFileSync(
+      join(process.cwd(), SCE_APPROVED_MASTER_ASSETS.match),
+      "utf8",
+    );
+    expect(matchSrc).not.toMatch(/<text[\s>]/i);
+    expect(matchSrc).not.toMatch(/font-family/i);
+    expect(matchSrc).not.toMatch(/M25 24l7-5 7 5/);
+    expect(SCE_ICON_REGISTRY.match.name).toBe("match");
+    const { container } = render(<SceIcon name="match" size={24} />);
+    expect(container.innerHTML).toContain("M26 26l4 12 4-12");
   });
 
   it("does not keep provisional hero glyphs in planning sources", () => {

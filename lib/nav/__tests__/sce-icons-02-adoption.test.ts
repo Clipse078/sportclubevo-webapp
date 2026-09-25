@@ -30,7 +30,7 @@ function readRelative(relativePath: string): string {
 const CLUB_ADMIN_KEYS = Object.values(PERMISSIONS);
 
 describe("SCE-ICONS-02 nav destination SCE mapping", () => {
-  it("maps all five approved modules to registry entries with approved-master geometry", () => {
+  it("maps adopted nav destinations to registry entries with approved-master geometry", () => {
     for (const [navKey, iconName] of Object.entries(NAV_DESTINATION_SCE_ICON_BY_KEY)) {
       expect(getNavDestinationSceIconName(navKey)).toBe(iconName);
       expect(SCE_ICON_REGISTRY[iconName].geometrySource).toBe("approved-master");
@@ -43,7 +43,7 @@ describe("SCE-ICONS-02 nav destination SCE mapping", () => {
 
   it("resolves quick-access stable keys for planning modules", () => {
     expect(getQuickAccessSceIconName("navigation.trainingcenter")).toBe("training");
-    expect(getQuickAccessSceIconName("navigation.aufgaben")).toBeNull();
+    expect(getQuickAccessSceIconName("navigation.aufgaben")).toBe("tasks");
   });
 });
 

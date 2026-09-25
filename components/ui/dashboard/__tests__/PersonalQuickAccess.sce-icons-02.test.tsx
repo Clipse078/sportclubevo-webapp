@@ -41,7 +41,7 @@ describe("PersonalQuickAccess SCE-ICONS-02", () => {
 
     const aufgabenLink = screen.getByRole("link", { name: "Aufgaben" });
     expect(
-      aufgabenLink.querySelector("[data-sce-nav-destination-icon]"),
-    ).toBeNull();
+      aufgabenLink.querySelector('[data-sce-nav-destination-icon="tasks"]'),
+    ).toBeTruthy();
   });
 });

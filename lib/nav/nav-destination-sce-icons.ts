@@ -10,6 +10,14 @@ export const NAV_DESTINATION_SCE_ICON_BY_KEY = {
   trainingcenter: "training",
   matchcenter: "match",
   tournamentcenter: "tournament",
+  teams: "team",
+  "org-units": "org-unit",
+  personen: "people",
+  workspace: "documents",
+  aufgaben: "tasks",
+  communication: "communication",
+  "admin-seasons": "season",
+  "admin-roles": "roles-access",
 } as const satisfies Record<string, SceIconRegistryName>;
 
 export type NavDestinationSceIconKey = keyof typeof NAV_DESTINATION_SCE_ICON_BY_KEY;

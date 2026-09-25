@@ -3,24 +3,67 @@
 import { SceIcon } from "../SceIcon";
 import {
   SCE_ICON_REGISTRY,
-  SCE_ICON_REGISTRY_NAMES,
   type SceIconRegistryName,
 } from "../registry";
 import type { SceIconSize } from "../SceIcon.types";
-import {
-  SCE_APPROVED_HERO_ICON_NAMES,
-  type SceApprovedHeroIconName,
-} from "../masters/approved-hero-meta";
+import type { SceApprovedMasterIconName } from "../masters/approved-hero-meta";
 
-const LIBRARY_SIZES: SceIconSize[] = [16, 20, 24];
 const HERO_SIZES: SceIconSize[] = [16, 20, 24, 32, 48];
 
-const HERO_LABELS: Record<SceApprovedHeroIconName, string> = {
+const CORE_MASTERS: SceApprovedMasterIconName[] = [
+  "dashboard",
+  "week-planner",
+  "training",
+  "match",
+  "tournament",
+];
+
+const SPORT_MASTERS: SceApprovedMasterIconName[] = [
+  "team",
+  "season",
+  "standings",
+  "results",
+  "attendance",
+  "pitch",
+  "dressing-room",
+];
+
+const ORGANISATION_MASTERS: SceApprovedMasterIconName[] = [
+  "organisation",
+  "org-unit",
+  "people",
+  "roles-access",
+  "club",
+  "documents",
+  "tasks",
+  "requirements",
+  "events",
+  "communication",
+];
+
+const MASTER_LABELS: Record<SceApprovedMasterIconName, string> = {
   dashboard: "Dashboard",
   "week-planner": "Wochenplaner",
   training: "Training",
-  match: "Spiele",
+  match: "Spiele — Open VS",
   tournament: "Turniere",
+  team: "Team",
+  season: "Season / Saison",
+  standings: "Standings / Rangliste",
+  results: "Results / Resultate",
+  attendance: "Attendance / Aufgebot",
+  pitch: "Pitch / Spielfeld",
+  "dressing-room": "Dressing Room / Garderobe",
+  organisation: "Organisation",
+  "org-unit": "Org Unit",
+  people: "People / Personen",
+  "roles-access": "Roles & Access",
+  club: "Club",
+  documents: "Documents / Dokumente",
+  tasks: "Tasks / Aufgaben",
+  requirements: "Requirements / Anforderungen",
+  events: "Events / Veranstaltungen",
+  communication: "Communication",
 };
 
 function SizeRow({
@@ -28,7 +71,7 @@ function SizeRow({
   sizes,
   theme,
 }: {
-  name: SceApprovedHeroIconName;
+  name: SceApprovedMasterIconName;
   sizes: SceIconSize[];
   theme: "original" | "light";
 }) {
@@ -52,12 +95,12 @@ function SizeRow({
   );
 }
 
-function HeroIconCard({ name }: { name: SceApprovedHeroIconName }) {
+function MasterIconCard({ name }: { name: SceApprovedMasterIconName }) {
   const meta = SCE_ICON_REGISTRY[name];
   return (
     <article className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
       <header className="mb-4 border-b border-[var(--border)] pb-3">
-        <h3 className="text-base font-semibold text-[var(--foreground)]">{HERO_LABELS[name]}</h3>
+        <h3 className="text-base font-semibold text-[var(--foreground)]">{MASTER_LABELS[name]}</h3>
         <p className="mt-1 font-mono text-xs text-[var(--text-2)]">
           {name} · {meta.viewBox ?? "0 0 24 24"}
         </p>
@@ -70,65 +113,90 @@ function HeroIconCard({ name }: { name: SceApprovedHeroIconName }) {
   );
 }
 
-function SpecimenRow({ name }: { name: SceIconRegistryName }) {
-  const meta = SCE_ICON_REGISTRY[name];
+function MasterSection({
+  title,
+  description,
+  names,
+}: {
+  title: string;
+  description: string;
+  names: SceApprovedMasterIconName[];
+}) {
   return (
-    <tr className="border-b border-[var(--border)]">
-      <td className="py-3 pr-4 align-middle font-mono text-xs text-[var(--text-2)]">{name}</td>
-      <td className="py-3 pr-4 align-middle text-xs text-[var(--muted)]">{meta.category}</td>
-      {LIBRARY_SIZES.map((size) => (
-        <td key={size} className="py-3 px-3 align-middle text-center">
-          <SceIcon name={name} size={size} />
-        </td>
-      ))}
-      <td className="py-3 px-3 align-middle text-center sce-theme-light rounded-md bg-[#f1f5f9]">
-        <SceIcon name={name} size={20} />
-      </td>
-    </tr>
+    <section className="mb-12 rounded-xl border-2 border-[var(--accent)]/30 bg-[var(--surface)] p-6">
+      <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+      <p className="mt-2 max-w-3xl text-sm text-[var(--text-2)]">{description}</p>
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        {names.map((name) => (
+          <MasterIconCard key={name} name={name} />
+        ))}
+      </div>
+    </section>
   );
 }
 
 export function SceIconSpecimen() {
+  const provisionalNames = (Object.keys(SCE_ICON_REGISTRY) as SceIconRegistryName[]).filter(
+    (name) => SCE_ICON_REGISTRY[name].geometrySource !== "approved-master",
+  );
+
   return (
     <div className="mx-auto max-w-5xl p-6 text-[var(--foreground)]">
       <header className="mb-8">
         <h1 className="text-xl font-semibold tracking-tight">SCE Icon System — Specimen</h1>
         <p className="mt-2 max-w-2xl text-sm text-[var(--text-2)]">
-          Internal development surface for SCE-ICONS-01R2. Approved hero masters render from
-          committed design artwork; the full 25-icon registry remains below for inventory review.
+          Internal development surface for SCE-ICONS-04. Approved masters render committed
+          64×64 vector geometry via <code className="text-xs">SceIcon</code>; provisional registry
+          entries remain listed for inventory review.
         </p>
       </header>
 
-      <section className="mb-12 rounded-xl border-2 border-[var(--accent)]/30 bg-[var(--surface)] p-6">
-        <h2 className="text-lg font-semibold tracking-tight">SCE Hero Icons — Approved Masters</h2>
-        <p className="mt-2 max-w-3xl text-sm text-[var(--text-2)]">
-          Primary visual acceptance surface for Michael. Same 64×64 master geometry at every render
-          size; SCE Original and SCE Light differ only by semantic token values.
-        </p>
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          {SCE_APPROVED_HERO_ICON_NAMES.map((name) => (
-            <HeroIconCard key={name} name={name} />
-          ))}
-        </div>
-      </section>
+      <MasterSection
+        title="Section 1 — SCE Core (Approved Masters)"
+        description="Primary planning cockpit and activity masters, including Open VS for matches."
+        names={CORE_MASTERS}
+      />
+
+      <MasterSection
+        title="Section 2 — Sport & Competition"
+        description="Sport-neutral competition and resource masters for teams, seasons, standings, and facilities."
+        names={SPORT_MASTERS}
+      />
+
+      <MasterSection
+        title="Section 3 — Organisation & Work"
+        description="Organisation structure, people, access, club identity, and operational work surfaces."
+        names={ORGANISATION_MASTERS}
+      />
 
       <section>
-        <h2 className="mb-4 text-lg font-semibold tracking-tight">Full icon library (25)</h2>
+        <h2 className="mb-4 text-lg font-semibold tracking-tight">
+          Provisional registry entries ({provisionalNames.length})
+        </h2>
         <div className="overflow-x-auto rounded-lg border border-[var(--border)] bg-[var(--surface)]">
           <table className="w-full min-w-[640px] text-left">
             <thead>
               <tr className="border-b border-[var(--border)] text-[11px] uppercase tracking-wide text-[var(--muted)]">
                 <th className="py-2 pr-4 pl-4">Name</th>
                 <th className="py-2 pr-4">Category</th>
-                <th className="py-2 px-3 text-center">16px</th>
                 <th className="py-2 px-3 text-center">20px</th>
-                <th className="py-2 px-3 text-center">24px</th>
                 <th className="py-2 px-3 text-center">Light 20px</th>
               </tr>
             </thead>
             <tbody>
-              {SCE_ICON_REGISTRY_NAMES.map((name) => (
-                <SpecimenRow key={name} name={name} />
+              {provisionalNames.map((name) => (
+                <tr key={name} className="border-b border-[var(--border)]">
+                  <td className="py-3 pr-4 pl-4 font-mono text-xs text-[var(--text-2)]">{name}</td>
+                  <td className="py-3 pr-4 text-xs text-[var(--muted)]">
+                    {SCE_ICON_REGISTRY[name].category}
+                  </td>
+                  <td className="py-3 px-3 text-center">
+                    <SceIcon name={name} size={20} />
+                  </td>
+                  <td className="py-3 px-3 text-center sce-theme-light rounded-md bg-[#f1f5f9]">
+                    <SceIcon name={name} size={20} />
+                  </td>
+                </tr>
               ))}
             </tbody>
           </table>

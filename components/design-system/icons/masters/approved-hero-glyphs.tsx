@@ -4,6 +4,7 @@ import {
   type SceIconGlyphProps,
 } from "../SceIcon.types";
 import { SceIconSvg } from "../SceIconSvg";
+import { SCE_APPROVED_EXPANDED_MASTER_GLYPHS } from "./approved-expanded-master-glyphs";
 import { SCE_APPROVED_HERO_VIEWBOX } from "./approved-hero-meta";
 
 type ApprovedHeroGlyphProps = SceIconGlyphProps;
@@ -165,21 +166,28 @@ export function TrainingApprovedMasterGlyph(props: ApprovedHeroGlyphProps) {
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/match.svg`. */
+/** Geometry copied exactly from `public/images/icons/match.svg` (Open VS). */
 export function MatchApprovedMasterGlyph(props: ApprovedHeroGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)}>
       <g strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="32" cy="32" r="24" stroke="var(--sce-icon-primary)" strokeWidth="4" />
         <path
-          d="M25 24l7-5 7 5-3 9h-8zM25 24l-9-3M39 24l9-3M28 33l-7 9M36 33l7 9M21 42l-1 9M43 42l1 9"
+          d="M15 20a22 22 0 0 0 0 24"
           stroke="var(--sce-icon-primary)"
-          strokeWidth="3"
+          strokeWidth="4"
         />
         <path
-          d="M48 21c4 5 6 11 6 17M44 13c3 2 5 4 7 7"
-          stroke="var(--sce-icon-accent)"
+          d="M49 44a22 22 0 0 0 0-24"
+          stroke="var(--sce-icon-primary)"
           strokeWidth="4"
+        />
+        <circle cx="11" cy="32" r="5" stroke="var(--sce-icon-secondary)" strokeWidth="3" />
+        <circle cx="53" cy="32" r="5" stroke="var(--sce-icon-secondary)" strokeWidth="3" />
+        <path d="M26 26l4 12 4-12" stroke="var(--sce-icon-accent)" strokeWidth="3.5" />
+        <path
+          d="M36 26h8M36 38h8M40 26v12M36 32c4 0 4 6 0 6"
+          stroke="var(--sce-icon-accent)"
+          strokeWidth="3.5"
         />
       </g>
     </SceIconSvg>
@@ -244,7 +252,9 @@ export const SCE_APPROVED_HERO_GLYPHS = [
 ] as const;
 
 export function isSceApprovedMasterGlyph(glyph: ComponentType<SceIconGlyphProps>): boolean {
-  return (SCE_APPROVED_HERO_GLYPHS as readonly ComponentType<SceIconGlyphProps>[]).includes(
-    glyph,
-  );
+  const all = [
+    ...SCE_APPROVED_HERO_GLYPHS,
+    ...SCE_APPROVED_EXPANDED_MASTER_GLYPHS,
+  ] as readonly ComponentType<SceIconGlyphProps>[];
+  return all.includes(glyph);
 }

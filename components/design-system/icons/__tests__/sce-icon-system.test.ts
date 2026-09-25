@@ -96,11 +96,11 @@ describe("SCE-ICONS-01 registry", () => {
     }
   });
 
-  it("includes all 25 required production icons", () => {
+  it("includes legacy required icons and expanded SCE master registry entries", () => {
     for (const name of REQUIRED_ICONS) {
       expect(SCE_ICON_REGISTRY_NAMES).toContain(name);
     }
-    expect(SCE_ICON_REGISTRY_NAMES.length).toBe(25);
+    expect(SCE_ICON_REGISTRY_NAMES.length).toBeGreaterThanOrEqual(25);
   });
 });
 
@@ -204,7 +204,7 @@ describe("SCE-ICONS-01 specimen", () => {
     expect(page).toContain("SceIconSpecimen");
   });
 
-  it("specimen surfaces approved hero masters at the top", () => {
+  it("specimen surfaces approved master sections and hero sizes", () => {
     const specimen = readFileSync(
       join(
         process.cwd(),
@@ -212,7 +212,9 @@ describe("SCE-ICONS-01 specimen", () => {
       ),
       "utf8",
     );
-    expect(specimen).toContain("SCE Hero Icons — Approved Masters");
+    expect(specimen).toContain("Section 1 — SCE Core (Approved Masters)");
+    expect(specimen).toContain("Section 2 — Sport & Competition");
+    expect(specimen).toContain("Section 3 — Organisation & Work");
     expect(specimen).toMatch(/32.*48|48.*32/s);
   });
 });
