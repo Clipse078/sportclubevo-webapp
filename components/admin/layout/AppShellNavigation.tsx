@@ -33,6 +33,8 @@ import {
   SCE_MOBILE_BOTTOM_NAV_CLASS,
 } from "@/lib/shell/sce-app-shell-nav";
 import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
+import { NavDestinationSceIcon } from "@/components/nav/NavDestinationSceIcon";
+import { getNavDestinationSceIconName } from "@/lib/nav/nav-destination-sce-icons";
 import { cn } from "@/lib/cn";
 
 type AppShellNavigationProps = {
@@ -325,17 +327,23 @@ function AppShellNavigationInner({
               {active.domainSecondaryItems.map((item) => {
                 const itemHref = resolveHref(item.href);
                 const isSecondaryActive = isDomainSecondaryItemActive(active.activeDomain!, item);
+                const sceIcon = getNavDestinationSceIconName(item.key);
                 return (
                   <Link
                     key={item.key}
                     href={itemHref}
                     aria-current={isSecondaryActive ? "page" : undefined}
                     data-nav-destination={item.key}
+                    data-sce-nav-icon={sceIcon ?? undefined}
                     className={cn(
                       "sce-global-context-nav-item shrink-0",
+                      sceIcon && "inline-flex items-center gap-1.5",
                       isSecondaryActive && "sce-global-context-nav-item--active",
                     )}
                   >
+                    {sceIcon ? (
+                      <NavDestinationSceIcon navItemKey={item.key} size={20} active={isSecondaryActive} />
+                    ) : null}
                     {item.label}
                   </Link>
                 );

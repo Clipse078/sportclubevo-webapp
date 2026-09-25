@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
-import { ChevronLeft, LayoutGrid, Search } from "lucide-react";
+import { ChevronLeft, Search } from "lucide-react";
+import { NavDestinationSceIcon } from "@/components/nav/NavDestinationSceIcon";
 import type { AppNavigationModel, ActiveAppNavigation } from "@/lib/nav/app-navigation-model";
 import { isNavigationChildActive } from "@/lib/nav/app-navigation-model";
 import type { AppNavigationDomainId, NavigationDomain } from "@/lib/nav/app-navigation-domains";
@@ -10,6 +11,7 @@ import {
   buildExplorerSearchIndex,
   filterExplorerSearchIndex,
   resolveExplorerModulesForDomain,
+  resolveExplorerSearchHitNavKey,
 } from "@/lib/nav/app-navigation-explorer";
 import { cn } from "@/lib/cn";
 
@@ -187,16 +189,26 @@ function GlobalNavExplorerPanel({
                 <Link
                   href={resolveHref(hit.href)}
                   className={cn(
-                    "block rounded-lg px-2 py-2 hover:bg-[color-mix(in_srgb,var(--surface-2)_90%,transparent)]",
+                    "flex items-start gap-2 rounded-lg px-2 py-2 hover:bg-[color-mix(in_srgb,var(--surface-2)_90%,transparent)]",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]",
                   )}
                   onClick={handleNavigate}
                 >
-                  <span className="block text-sm font-semibold text-[var(--foreground)]">
-                    {hit.label}
-                  </span>
-                  <span className="block text-xs text-[var(--muted)]">
-                    {hit.moduleLabel ? `${hit.domainLabel} · ${hit.moduleLabel}` : hit.domainLabel}
+                  <NavDestinationSceIcon
+                    navItemKey={resolveExplorerSearchHitNavKey(hit) ?? ""}
+                    size={20}
+                    fallbackGenericModuleGlyph
+                    className="mt-0.5"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-[var(--foreground)]">
+                      {hit.label}
+                    </span>
+                    <span className="block text-xs text-[var(--muted)]">
+                      {hit.moduleLabel
+                        ? `${hit.domainLabel} · ${hit.moduleLabel}`
+                        : hit.domainLabel}
+                    </span>
                   </span>
                 </Link>
               </li>
@@ -236,12 +248,11 @@ function GlobalNavExplorerPanel({
                         aria-current={moduleActive && !hasChildren ? "page" : undefined}
                         onClick={handleNavigate}
                       >
-                        <LayoutGrid
-                          className={cn(
-                            "h-3.5 w-3.5 shrink-0",
-                            moduleActive ? "text-[var(--sce-primary)]" : "text-[var(--muted)]",
-                          )}
-                          aria-hidden
+                        <NavDestinationSceIcon
+                          navItemKey={module.key}
+                          size={20}
+                          active={moduleActive}
+                          fallbackGenericModuleGlyph
                         />
                         <span className="truncate">{module.label}</span>
                       </Link>

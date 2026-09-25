@@ -26,8 +26,18 @@ export type ExplorerSearchHit = {
   domainLabel: string;
   /** Module title when the hit is a child destination. */
   moduleLabel?: string;
+  /** Nav-config module key for SCE icon resolution (module + child hits). */
+  moduleNavKey?: string;
   kind: "domain" | "module" | "child";
 };
+
+/** Nav item key used to resolve approved SCE module icons in explorer search. */
+export function resolveExplorerSearchHitNavKey(hit: ExplorerSearchHit): string | null {
+  if (hit.kind === "domain") {
+    return hit.domainId === "dashboard" ? "dashboard" : null;
+  }
+  return hit.moduleNavKey ?? (hit.kind === "module" ? hit.key : null);
+}
 
 export function resolveExplorerModulesForDomain(domain: NavigationDomain): ExplorerModuleEntry[] {
   const secondary = resolveDomainSecondaryNavItems(domain);
@@ -77,6 +87,7 @@ export function buildExplorerSearchIndex(
         href: moduleEntry.href,
         domainId: domain.id,
         domainLabel: label,
+        moduleNavKey: moduleEntry.key,
         kind: "module",
       });
 
@@ -88,6 +99,7 @@ export function buildExplorerSearchIndex(
           domainId: domain.id,
           domainLabel: label,
           moduleLabel: moduleEntry.label,
+          moduleNavKey: moduleEntry.key,
           kind: "child",
         });
       }

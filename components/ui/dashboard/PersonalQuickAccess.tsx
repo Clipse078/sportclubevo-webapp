@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { useState } from "react";
 import { LayoutGrid, Plus } from "lucide-react";
+import { NavDestinationSceIcon } from "@/components/nav/NavDestinationSceIcon";
+import {
+  getQuickAccessNavItemKey,
+  getQuickAccessSceIconName,
+} from "@/lib/nav/nav-destination-sce-icons";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
@@ -70,7 +75,9 @@ export function PersonalQuickAccess({
       </div>
 
       <ul className="flex list-none flex-wrap gap-2">
-        {items.map((item) => (
+        {items.map((item) => {
+          const sceIconName = getQuickAccessSceIconName(item.key);
+          return (
           <li key={item.key}>
             <Link
               href={item.href}
@@ -88,11 +95,17 @@ export function PersonalQuickAccess({
                 <span className="text-[var(--sce-primary)]" aria-hidden>
                   <Plus className="h-3.5 w-3.5" />
                 </span>
+              ) : sceIconName ? (
+                <NavDestinationSceIcon
+                  navItemKey={getQuickAccessNavItemKey(item.key) ?? ""}
+                  size={24}
+                />
               ) : null}
               <span>{item.label}</span>
             </Link>
           </li>
-        ))}
+          );
+        })}
       </ul>
 
       <QuickAccessCustomizer
