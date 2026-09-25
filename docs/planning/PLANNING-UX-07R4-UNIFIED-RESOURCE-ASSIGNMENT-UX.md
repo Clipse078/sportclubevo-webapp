@@ -1,5 +1,7 @@
 # PLANNING-UX-07R4 — Unified resource assignment UX
 
+> **Canonical platform doc:** [PLANNING-UX-07R5-CANONICAL-FACILITY-PLATFORM.md](./PLANNING-UX-07R5-CANONICAL-FACILITY-PLATFORM.md)
+
 ## Problem (UX-07R3 follow-up)
 
 UX-07R3 corrected **occupancy semantics** (owner-visible occupied rooms, intentional sharing, occupied-but-selectable). Visual acceptance showed a **presentation** problem: tournament dressing-room UI repeated the **full** facility inventory under **every** participant (`Verfügbar` / `Belegt` blocks), which scales poorly and hides the operational questions planners actually ask.

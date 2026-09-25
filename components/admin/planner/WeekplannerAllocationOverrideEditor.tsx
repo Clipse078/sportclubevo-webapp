@@ -36,7 +36,7 @@ import type {
   FacilityGroup,
   ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
-import { FacilityResourceSelector } from "@/components/admin/training/FacilityResourceSelector";
+import { PlanningResourcePicker } from "@/components/admin/shared/planning/PlanningResourcePicker";
 import type { WeekplannerActivityType, WeekplannerAllocationGroup } from "@/lib/weekplanner/plan-types";
 
 /** Shape of one row in GET /api/facilities/availability's `availability` array. */
@@ -108,10 +108,15 @@ export function WeekplannerAllocationOverrideEditor({
     // MATCH/TOURNAMENT activityId IS the canonical Event.id — excluding it
     // avoids the activity's own booking showing up as its own conflict.
     const excludeEventId = activityType !== "TRAINING" ? activityId : undefined;
+    const excludeTrainingSessionId = activityType === "TRAINING" ? activityId : undefined;
 
     async function loadAvailability() {
       const params = new URLSearchParams({ startAt, endAt, group: allocationGroup });
+      params.set("weekplannerPlanId", planId);
+      params.set("excludeWeekplannerActivityType", activityType);
+      params.set("excludeWeekplannerActivityId", activityId);
       if (excludeEventId) params.set("excludeEventId", excludeEventId);
+      if (excludeTrainingSessionId) params.set("excludeTrainingSessionId", excludeTrainingSessionId);
       try {
         const res = await fetch(`/api/facilities/availability?${params.toString()}`, { cache: "no-store" });
         const data = (await res.json().catch(() => null)) as { availability?: ResourceAvailabilityRow[] } | null;
@@ -126,7 +131,7 @@ export function WeekplannerAllocationOverrideEditor({
     return () => {
       active = false;
     };
-  }, [activityType, activityId, allocationGroup, startAt, endAt]);
+  }, [activityType, activityId, allocationGroup, startAt, endAt, planId]);
 
   const handleAdd = useCallback(
     async (facilityResourceId: string) => {
@@ -268,13 +273,23 @@ export function WeekplannerAllocationOverrideEditor({
       )}
 
       <div className="mt-2 space-y-1.5">
-        <FacilityResourceSelector
+        <PlanningResourcePicker
+          kind={allocationGroup === "DRESSING_ROOM" ? "dressing_room" : "pitch_hall"}
+          title="Ressource für diesen Plan"
           facilityGroups={facilityGroups}
-          allocatedResourceIds={new Set(rowsToShow.map((r) => r.facilityResourceId))}
-          onAdd={handleAdd}
-          placeholder="Für diesen Plan auswählen…"
-          addButtonLabel="Zuweisen"
+          selectedResourceIds={new Set(rowsToShow.map((r) => r.facilityResourceId))}
+          onSelect={(resourceId) => {
+            setError(null);
+            startTransition(async () => {
+              try {
+                await handleAdd(resourceId);
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "Fehler beim Zuweisen");
+              }
+            });
+          }}
           availabilityByResourceId={availabilityByResourceId}
+          disabled={isPending}
           testId={`weekplanner-override-${activityId}-${allocationGroup.toLowerCase()}${participantId ? `-${participantId}` : ""}`}
         />
         {isOverridden && (

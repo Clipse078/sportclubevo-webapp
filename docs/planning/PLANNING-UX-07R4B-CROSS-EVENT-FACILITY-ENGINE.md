@@ -1,5 +1,7 @@
 # PLANNING-UX-07R4B — Cross-event facility availability engine
 
+> **Canonical platform doc:** [PLANNING-UX-07R5-CANONICAL-FACILITY-PLATFORM.md](./PLANNING-UX-07R5-CANONICAL-FACILITY-PLATFORM.md)
+
 ## Purpose
 
 Prove and preserve the **canonical, resource + time + tenant** occupancy contract used by the operational resource picker (`PlanningResourcePicker` → `CompactOperationalResourceSelector`). Occupancy must **not** be isolated by the entity type being edited (Match, Training, Tournament).

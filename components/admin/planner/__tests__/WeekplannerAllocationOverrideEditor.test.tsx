@@ -188,9 +188,8 @@ describe("WeekplannerAllocationOverrideEditor — live resource availability", (
       />,
     );
 
-    const select = await screen.findByTestId("weekplanner-override-session-1-pitch_hall-select");
-    await waitFor(() => expect(select.innerHTML).toContain("Belegt"));
-    expect(select.innerHTML).toContain("Training E3");
+    const panel = await screen.findByTestId("weekplanner-override-session-1-pitch_hall");
+    await waitFor(() => expect(panel.innerHTML).toContain("Training E3"));
   });
 
   it("excludes the activity's own booking for MATCH/TOURNAMENT via excludeEventId", async () => {
@@ -211,6 +210,12 @@ describe("WeekplannerAllocationOverrideEditor — live resource availability", (
       />,
     );
 
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringMatching(/weekplannerPlanId=plan-1/),
+        expect.objectContaining({ cache: "no-store" }),
+      ),
+    );
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
         expect.stringContaining("excludeEventId=event-match-1"),
@@ -237,12 +242,11 @@ describe("WeekplannerAllocationOverrideEditor — live resource availability", (
       />,
     );
 
-    const select = await screen.findByTestId("weekplanner-override-session-1-pitch_hall-select");
-    fireEvent.change(select, { target: { value: "res-halle" } });
-    fireEvent.click(screen.getByTestId("weekplanner-override-session-1-pitch_hall-add-button"));
+    const option = await screen.findByTestId("weekplanner-override-session-1-pitch_hall-option-res-halle");
+    fireEvent.click(option);
+    fireEvent.click(option);
 
     const badge = await screen.findByTestId("weekplanner-override-badge-active");
     expect(badge).toHaveTextContent("Schlechtwetterplan: Halle Gartenhof");
-    expect(screen.queryByText("Kunstrasen 2")).not.toBeInTheDocument();
   });
 });

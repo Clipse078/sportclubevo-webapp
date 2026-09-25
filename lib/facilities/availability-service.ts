@@ -471,6 +471,9 @@ export async function getResourceAvailability(
   const resourceIds = resources.map((r) => r.id);
 
   const useEffectivePlanOccupancy = weekplannerPlanId != null;
+  // When a weekplanner plan is in scope, effective occupancy (canonical baseline +
+  // plan overrides, with replaced-activity de-duplication) is resolved entirely
+  // by findWeekplannerPlanConflicts — not by skipping cross-domain truth.
 
   const [trainingConflicts, matchConflicts, tournamentConflicts, weekplannerConflicts] = await Promise.all([
     useEffectivePlanOccupancy

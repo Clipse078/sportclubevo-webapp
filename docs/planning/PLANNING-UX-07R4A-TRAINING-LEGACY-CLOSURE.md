@@ -1,5 +1,7 @@
 # PLANNING-UX-07R4A — Training legacy resource selector closure
 
+> **Canonical platform doc:** [PLANNING-UX-07R5-CANONICAL-FACILITY-PLATFORM.md](./PLANNING-UX-07R5-CANONICAL-FACILITY-PLATFORM.md)
+
 ## Forensics summary
 
 | Question | Answer |
