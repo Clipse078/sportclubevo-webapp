@@ -27,6 +27,8 @@ export type PlanningResourcePickerProps = {
   testId?: string;
   onCancel?: () => void;
   cancelLabel?: string;
+  /** Presentation metadata — sort first and show compact Empfohlen badge (single inventory). */
+  recommendedResourceIds?: Set<string>;
 };
 
 export function PlanningResourcePicker({
@@ -42,6 +44,7 @@ export function PlanningResourcePicker({
   testId,
   onCancel,
   cancelLabel = "Abbrechen",
+  recommendedResourceIds,
 }: PlanningResourcePickerProps) {
   return (
     <div
@@ -62,6 +65,7 @@ export function PlanningResourcePicker({
         disabled={disabled}
         layout="default"
         testId={testId}
+        recommendedResourceIds={recommendedResourceIds}
       />
       {onCancel ? (
         <button

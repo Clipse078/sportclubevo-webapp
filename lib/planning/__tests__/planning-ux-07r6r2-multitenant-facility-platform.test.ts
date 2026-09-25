@@ -204,7 +204,7 @@ describe("PLANNING-UX-07R6R2 multi-tenant facility platform", () => {
     it("WOCHENPLAN uses canonical availability and tenant facility queries", () => {
       expect(read("lib/weekplanner/availability-integration.ts")).toContain("collectVeranstaltungOccupants");
       expect(read("components/admin/planner/WeekplannerAllocationOverrideEditor.tsx")).toContain(
-        "PlanningResourcePicker",
+        "WeekplannerPlanningResourceSection",
       );
     });
 

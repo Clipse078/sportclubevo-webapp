@@ -36,7 +36,8 @@ import type {
   FacilityGroup,
   ResourceAvailabilityAnnotation,
 } from "@/components/admin/training/FacilityResourceSelector";
-import { PlanningResourcePicker } from "@/components/admin/shared/planning/PlanningResourcePicker";
+import { PlanningResourceSemanticIconTile } from "@/components/admin/shared/planning/FacilityResourceIdentity";
+import { WeekplannerPlanningResourceSection } from "@/components/admin/planner/WeekplannerPlanningResourceSection";
 import type { WeekplannerActivityType, WeekplannerAllocationGroup } from "@/lib/weekplanner/plan-types";
 
 /** Shape of one row in GET /api/facilities/availability's `availability` array. */
@@ -235,12 +236,25 @@ export function WeekplannerAllocationOverrideEditor({
         {rowsToShow.length === 0 ? (
           <li className="text-[11px] text-[var(--muted)]">Keine Ressource zugewiesen.</li>
         ) : (
-          rowsToShow.map((row) => (
+          rowsToShow.map((row) => {
+            const meta = facilityGroups
+              .flatMap((fg) => fg.resources.map((r) => ({ ...r, facilityType: r.facilityType ?? fg.facilityType })))
+              .find((r) => r.id === row.facilityResourceId);
+            return (
             <li
               key={row.id}
               className="flex items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-white px-2 py-1 text-[11px]"
             >
-              <span className="truncate text-[var(--foreground)]">{row.facilityResourceName}</span>
+              <span className="flex min-w-0 items-center gap-1.5">
+                {meta ? (
+                  <PlanningResourceSemanticIconTile
+                    resourceType={meta.type}
+                    facilityType={meta.facilityType}
+                    className="scale-75"
+                  />
+                ) : null}
+                <span className="truncate text-[var(--foreground)]">{row.facilityResourceName}</span>
+              </span>
               {isOverridden && (
                 <button
                   type="button"
@@ -262,7 +276,8 @@ export function WeekplannerAllocationOverrideEditor({
                 </button>
               )}
             </li>
-          ))
+          );
+          })
         )}
       </ul>
 
@@ -273,9 +288,8 @@ export function WeekplannerAllocationOverrideEditor({
       )}
 
       <div className="mt-2 space-y-1.5">
-        <PlanningResourcePicker
+        <WeekplannerPlanningResourceSection
           kind={allocationGroup === "DRESSING_ROOM" ? "dressing_room" : "pitch_hall"}
-          title="Ressource für diesen Plan"
           facilityGroups={facilityGroups}
           selectedResourceIds={new Set(rowsToShow.map((r) => r.facilityResourceId))}
           onSelect={(resourceId) => {
@@ -288,9 +302,15 @@ export function WeekplannerAllocationOverrideEditor({
               }
             });
           }}
+          onDeselect={() => {}}
           availabilityByResourceId={availabilityByResourceId}
           disabled={isPending}
           testId={`weekplanner-override-${activityId}-${allocationGroup.toLowerCase()}${participantId ? `-${participantId}` : ""}`}
+          unassignedLabel={
+            allocationGroup === "DRESSING_ROOM"
+              ? "Keine Garderobe zugewiesen"
+              : "Noch kein Spielfeld / keine Halle zugewiesen"
+          }
         />
         {isOverridden && (
           <button

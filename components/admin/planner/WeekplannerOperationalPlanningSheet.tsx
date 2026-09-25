@@ -11,8 +11,7 @@ import { useId, useMemo, useState } from "react";
 import { AlertCircle, Check, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Sheet } from "@/components/ui/Sheet";
-import { VisualResourceAvailabilityPicker } from "@/components/admin/shared/planning/VisualResourceAvailabilityPicker";
-import { VisualDressingRoomPicker } from "@/components/admin/shared/planning/VisualDressingRoomPicker";
+import { WeekplannerPlanningResourceSection } from "@/components/admin/planner/WeekplannerPlanningResourceSection";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import { computeResourceOccupancyWindow, isMeaningfulEventInterval } from "@/lib/facilities/resource-occupancy-window";
 import { isCanonicalAllocationGroupState } from "@/lib/weekplanner/plan-allocation-semantics";
@@ -495,8 +494,9 @@ function TrainingOperationalEditor({
         </div>
 
         <div className="space-y-2">
-          <SectionLabel>Ressourcen · Platz</SectionLabel>
-          <VisualResourceAvailabilityPicker
+          <SectionLabel>Spielfeld / Halle</SectionLabel>
+          <WeekplannerPlanningResourceSection
+            kind="pitch_hall"
             facilityGroups={facilityGroupsByAllocationGroup.PITCH_HALL}
             selectedResourceIds={selectedPitchIds}
             onSelect={(id) => setSelectedPitchIds((prev) => new Set([...prev, id]))}
@@ -509,14 +509,15 @@ function TrainingOperationalEditor({
             }
             availabilityByResourceId={pitchAvailability}
             disabled={saving}
-            compact
             testId="weekplanner-operational-pitch"
+            unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen"
           />
         </div>
 
         <div className="space-y-2">
           <SectionLabel>Garderobe</SectionLabel>
-          <VisualDressingRoomPicker
+          <WeekplannerPlanningResourceSection
+            kind="dressing_room"
             facilityGroups={facilityGroupsByAllocationGroup.DRESSING_ROOM}
             selectedResourceIds={selectedRoomIds}
             onSelect={(id) => setSelectedRoomIds((prev) => new Set([...prev, id]))}
@@ -529,8 +530,8 @@ function TrainingOperationalEditor({
             }
             availabilityByResourceId={dressingRoomAvailability}
             disabled={saving}
-            compact
             testId="weekplanner-operational-room"
+            unassignedLabel="Keine Garderobe zugewiesen"
           />
           {selectedRoomIds.size > 0 && (
             <DressingRoomOccupancyControls
@@ -745,8 +746,9 @@ function MatchOperationalEditor({
         </div>
 
         <div className="space-y-2">
-          <SectionLabel>Ressourcen · Platz</SectionLabel>
-          <VisualResourceAvailabilityPicker
+          <SectionLabel>Spielfeld / Halle</SectionLabel>
+          <WeekplannerPlanningResourceSection
+            kind="pitch_hall"
             facilityGroups={facilityGroupsByAllocationGroup.PITCH_HALL}
             selectedResourceIds={selectedPitchIds}
             onSelect={(id) => setSelectedPitchIds(new Set([id]))}
@@ -754,14 +756,15 @@ function MatchOperationalEditor({
             availabilityByResourceId={pitchAvailability}
             disabled={saving}
             singleSelect
-            compact
             testId="weekplanner-operational-match-pitch"
+            unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen"
           />
         </div>
 
         <div className="space-y-2">
           <SectionLabel>Garderobe · Heim</SectionLabel>
-          <VisualDressingRoomPicker
+          <WeekplannerPlanningResourceSection
+            kind="dressing_room"
             facilityGroups={facilityGroupsByAllocationGroup.DRESSING_ROOM}
             selectedResourceIds={selectedRoomIds}
             onSelect={(id) => setSelectedRoomIds(new Set([id]))}
@@ -769,8 +772,9 @@ function MatchOperationalEditor({
             availabilityByResourceId={dressingRoomAvailability}
             disabled={saving}
             singleSelect
-            compact
             testId="weekplanner-operational-match-room"
+            unassignedLabel="Keine Garderobe zugewiesen"
+            subjectLabel="Heim"
           />
           {selectedRoomIds.size > 0 && (
             <DressingRoomOccupancyControls
@@ -924,8 +928,9 @@ function TournamentOperationalEditor({
         </div>
 
         <div className="space-y-2">
-          <SectionLabel>Ressourcen · Platz</SectionLabel>
-          <VisualResourceAvailabilityPicker
+          <SectionLabel>Spielfeld / Halle</SectionLabel>
+          <WeekplannerPlanningResourceSection
+            kind="pitch_hall"
             facilityGroups={facilityGroupsByAllocationGroup.PITCH_HALL}
             selectedResourceIds={selectedPitchIds}
             onSelect={(id) => setSelectedPitchIds((prev) => new Set([...prev, id]))}
@@ -938,8 +943,8 @@ function TournamentOperationalEditor({
             }
             availabilityByResourceId={pitchAvailability}
             disabled={saving}
-            compact
             testId="weekplanner-operational-tournament-pitch"
+            unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen"
           />
         </div>
       </div>

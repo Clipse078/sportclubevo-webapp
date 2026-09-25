@@ -15,8 +15,7 @@
  *
  * Architecture invariants:
  *   - All saves still go through the same canonical API endpoints.
- *   - Shared visual pickers (VisualResourceAvailabilityPicker,
- *     VisualDressingRoomPicker) are unchanged.
+ *   - Canonical PlanningResourcePicker via WeekplannerPlanningResourceSection.
  *   - No duplicate planning records; no new availability engine.
  */
 
@@ -26,8 +25,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { Sheet } from "@/components/ui/Sheet";
-import { VisualResourceAvailabilityPicker } from "@/components/admin/shared/planning/VisualResourceAvailabilityPicker";
-import { VisualDressingRoomPicker } from "@/components/admin/shared/planning/VisualDressingRoomPicker";
+import { WeekplannerPlanningResourceSection } from "@/components/admin/planner/WeekplannerPlanningResourceSection";
 import { useFacilityAvailability } from "@/hooks/use-facility-availability";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
 import type { WeekplannerItem } from "@/lib/weekplanner/types";
@@ -117,24 +115,6 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
     <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
       {children}
     </p>
-  );
-}
-
-function AvailabilitySectionSkeleton({ label }: { label: string }) {
-  return (
-    <div
-      className="animate-pulse space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3"
-      data-testid="weekplanner-availability-skeleton"
-      aria-busy="true"
-      aria-label={`${label} werden geladen`}
-    >
-      <div className="h-3 w-28 rounded bg-[var(--surface-2)]" />
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {[0, 1, 2].map((key) => (
-          <div key={key} className="h-[4.5rem] rounded-md bg-[var(--surface-2)]" />
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -427,10 +407,8 @@ function TrainingEditorContent({
         {/* Pitch */}
         <div className="space-y-2">
           <SectionLabel>Spielfeld / Halle</SectionLabel>
-          {availabilityLoading && pitchAvailability.size === 0 ? (
-            <AvailabilitySectionSkeleton label="Verfügbarkeiten Spielfeld" />
-          ) : (
-          <VisualResourceAvailabilityPicker
+          <WeekplannerPlanningResourceSection
+            kind="pitch_hall"
             facilityGroups={facilityGroupsByAllocationGroup.PITCH_HALL}
             selectedResourceIds={selectedPitchIds}
             onSelect={(id) => setSelectedPitchIds((prev) => new Set([...prev, id]))}
@@ -442,19 +420,17 @@ function TrainingEditorContent({
               })
             }
             availabilityByResourceId={pitchAvailability}
-            disabled={saving}
+            disabled={saving || availabilityLoading}
             testId="wochenplaner-canonical-pitch"
+            unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen"
           />
-          )}
         </div>
 
         {/* Dressing room */}
         <div className="space-y-2">
           <SectionLabel>Garderobe</SectionLabel>
-          {availabilityLoading && dressingRoomAvailability.size === 0 ? (
-            <AvailabilitySectionSkeleton label="Verfügbarkeiten Garderobe" />
-          ) : (
-          <VisualDressingRoomPicker
+          <WeekplannerPlanningResourceSection
+            kind="dressing_room"
             facilityGroups={facilityGroupsByAllocationGroup.DRESSING_ROOM}
             selectedResourceIds={selectedRoomIds}
             onSelect={(id) => setSelectedRoomIds((prev) => new Set([...prev, id]))}
@@ -466,10 +442,10 @@ function TrainingEditorContent({
               })
             }
             availabilityByResourceId={dressingRoomAvailability}
-            disabled={saving}
+            disabled={saving || availabilityLoading}
             testId="wochenplaner-canonical-room"
+            unassignedLabel="Keine Garderobe zugewiesen"
           />
-          )}
           {tenantDressingRoomOccupancyPresets && selectedRoomIds.size > 0 && (
             <DressingRoomOccupancyEditor
               item={item}
@@ -623,7 +599,8 @@ function MatchEditorContent({
         {/* Pitch */}
         <div className="space-y-2">
           <SectionLabel>Spielfeld / Halle</SectionLabel>
-          <VisualResourceAvailabilityPicker
+          <WeekplannerPlanningResourceSection
+            kind="pitch_hall"
             facilityGroups={pitchGroupsByCode}
             selectedResourceIds={pitchCode ? new Set([pitchCode]) : new Set()}
             onSelect={(code) => setPitchCode(code)}
@@ -632,13 +609,15 @@ function MatchEditorContent({
             disabled={saving}
             singleSelect
             testId="wochenplaner-canonical-match-pitch"
+            unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen"
           />
         </div>
 
         {/* Home dressing room */}
         <div className="space-y-2">
           <SectionLabel>Heimkabine</SectionLabel>
-          <VisualDressingRoomPicker
+          <WeekplannerPlanningResourceSection
+            kind="dressing_room"
             facilityGroups={roomGroupsByCode}
             selectedResourceIds={homeDressingCode ? new Set([homeDressingCode]) : new Set()}
             onSelect={(code) => setHomeDressingCode(code)}
@@ -647,13 +626,16 @@ function MatchEditorContent({
             disabled={saving}
             singleSelect
             testId="wochenplaner-canonical-match-home-room"
+            unassignedLabel="Keine Garderobe zugewiesen"
+            subjectLabel="Heim"
           />
         </div>
 
         {/* Away dressing room */}
         <div className="space-y-2">
           <SectionLabel>Gastkabine</SectionLabel>
-          <VisualDressingRoomPicker
+          <WeekplannerPlanningResourceSection
+            kind="dressing_room"
             facilityGroups={roomGroupsByCode}
             selectedResourceIds={awayDressingCode ? new Set([awayDressingCode]) : new Set()}
             onSelect={(code) => setAwayDressingCode(code)}
@@ -662,6 +644,8 @@ function MatchEditorContent({
             disabled={saving}
             singleSelect
             testId="wochenplaner-canonical-match-away-room"
+            unassignedLabel="Keine Garderobe zugewiesen"
+            subjectLabel="Gast"
           />
         </div>
 
@@ -786,7 +770,8 @@ function TournamentEditorContent({
         {/* Pitch */}
         <div className="space-y-2">
           <SectionLabel>Spielfeld / Halle</SectionLabel>
-          <VisualResourceAvailabilityPicker
+          <WeekplannerPlanningResourceSection
+            kind="pitch_hall"
             facilityGroups={facilityGroupsByAllocationGroup.PITCH_HALL}
             selectedResourceIds={selectedPitchIds}
             onSelect={(id) => setSelectedPitchIds((prev) => new Set([...prev, id]))}
@@ -800,6 +785,7 @@ function TournamentEditorContent({
             availabilityByResourceId={pitchAvailability}
             disabled={saving}
             testId="wochenplaner-canonical-tournament-pitch"
+            unassignedLabel="Noch kein Spielfeld / keine Halle zugewiesen"
           />
         </div>
 

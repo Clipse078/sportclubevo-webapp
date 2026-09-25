@@ -4,7 +4,7 @@
  * PLANNING-UX-05R2 — compact operational resource selector (Training / Match /
  * Tournament create & record edit). Uses semantic green pitch/hall and blue
  * dressing-room glyphs (FacilityResourceIdentity) without large PitchVisual
- * diagrams. Wochenplaner surfaces keep VisualResourceAvailabilityPicker.
+ * diagrams. Wochenplaner uses the same compact selector via PlanningResourcePicker.
  */
 
 import { useCallback, useMemo, useState } from "react";
@@ -44,6 +44,7 @@ export type CompactOperationalResourceSelectorProps = {
   layout?: "default" | "aggregated";
   availableLabel?: string;
   occupiedLabel?: string;
+  recommendedResourceIds?: Set<string>;
 };
 
 type FlatResource = {
@@ -104,6 +105,7 @@ function ResourceChip({
   disabled,
   onToggle,
   testId,
+  isRecommended,
 }: {
   resource: FlatResource;
   kind: CompactOperationalResourceKind;
@@ -111,6 +113,7 @@ function ResourceChip({
   disabled: boolean;
   onToggle: () => void;
   testId?: string;
+  isRecommended?: boolean;
 }) {
   const [pendingOccupiedConfirm, setPendingOccupiedConfirm] = useState(false);
   const isPitchKind = kind === "pitch_hall";
@@ -174,7 +177,14 @@ function ResourceChip({
         />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium text-[var(--foreground)]">{resource.name}</span>
+        <span className="flex flex-wrap items-center gap-1.5">
+          <span className="truncate text-sm font-medium text-[var(--foreground)]">{resource.name}</span>
+          {isRecommended ? (
+            <span className="shrink-0 rounded-full border border-emerald-200/80 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
+              Empfohlen
+            </span>
+          ) : null}
+        </span>
         <span className="block truncate text-xs text-[var(--muted)]">{resource.facilityName}</span>
         {availLine ? (
           <span
@@ -212,6 +222,7 @@ function ResourceGrid({
   onDeselect,
   singleSelect,
   testId,
+  recommendedResourceIds,
 }: {
   resources: FlatResource[];
   kind: CompactOperationalResourceKind;
@@ -221,6 +232,7 @@ function ResourceGrid({
   onDeselect: (id: string) => void;
   singleSelect: boolean;
   testId?: string;
+  recommendedResourceIds?: Set<string>;
 }) {
   const handleToggle = useCallback(
     (id: string) => {
@@ -255,6 +267,7 @@ function ResourceGrid({
             disabled={disabled}
             onToggle={() => handleToggle(resource.id)}
             testId={testId}
+            isRecommended={recommendedResourceIds?.has(resource.id)}
           />
         </li>
       ))}
@@ -277,14 +290,22 @@ export function CompactOperationalResourceSelector({
   layout = "default",
   availableLabel = "Verfügbar",
   occupiedLabel = "Belegt",
+  recommendedResourceIds,
 }: CompactOperationalResourceSelectorProps) {
   const flat = useMemo(() => {
     const base = flattenResources(facilityGroups);
-    return base.map((r) => ({
+    const mapped = base.map((r) => ({
       ...r,
       availability: availabilityByResourceId?.get(r.id),
     }));
-  }, [availabilityByResourceId, facilityGroups]);
+    if (!recommendedResourceIds?.size) return mapped;
+    return [...mapped].sort((a, b) => {
+      const aRec = recommendedResourceIds.has(a.id) ? 0 : 1;
+      const bRec = recommendedResourceIds.has(b.id) ? 0 : 1;
+      if (aRec !== bRec) return aRec - bRec;
+      return 0;
+    });
+  }, [availabilityByResourceId, facilityGroups, recommendedResourceIds]);
 
   if (flat.length === 0) {
     return (
@@ -305,6 +326,7 @@ export function CompactOperationalResourceSelector({
     onDeselect,
     singleSelect,
     testId,
+    recommendedResourceIds,
   };
 
   return (

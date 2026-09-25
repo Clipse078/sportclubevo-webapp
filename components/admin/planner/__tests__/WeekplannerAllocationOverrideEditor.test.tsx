@@ -11,8 +11,11 @@
  *   - "Standardplan verwenden" removes every override row and reverts to fallback
  */
 
+import type { ReactElement } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import deMessages from "@/messages/de.json";
 import {
   WeekplannerAllocationOverrideEditor,
   type WeekplannerOverrideRow,
@@ -92,10 +95,18 @@ beforeEach(() => {
   vi.restoreAllMocks();
 });
 
+function renderWithIntl(ui: ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="de" messages={deMessages}>
+      {ui}
+    </NextIntlClientProvider>,
+  );
+}
+
 describe("WeekplannerAllocationOverrideEditor — Standardplan fallback", () => {
   it("names the Standardplan's actual resource in the fallback badge when no override exists", async () => {
     installFetchMock();
-    render(
+    renderWithIntl(
       <WeekplannerAllocationOverrideEditor
         planId="plan-1"
         planName="Schlechtwetterplan"
@@ -119,7 +130,7 @@ describe("WeekplannerAllocationOverrideEditor — Standardplan fallback", () => 
 describe("WeekplannerAllocationOverrideEditor — active override", () => {
   it("names the active plan + its resource in the override badge", async () => {
     installFetchMock();
-    render(
+    renderWithIntl(
       <WeekplannerAllocationOverrideEditor
         planId="plan-1"
         planName="Schlechtwetterplan"
@@ -141,7 +152,7 @@ describe("WeekplannerAllocationOverrideEditor — active override", () => {
 
   it("provides an obvious 'Standardplan verwenden' action that removes every override row", async () => {
     const { fetchMock } = installFetchMock();
-    render(
+    renderWithIntl(
       <WeekplannerAllocationOverrideEditor
         planId="plan-1"
         planName="Schlechtwetterplan"
@@ -172,7 +183,7 @@ describe("WeekplannerAllocationOverrideEditor — active override", () => {
 describe("WeekplannerAllocationOverrideEditor — live resource availability", () => {
   it("fetches and surfaces Frei/Belegt + conflict details for the activity's own time window", async () => {
     installFetchMock();
-    render(
+    renderWithIntl(
       <WeekplannerAllocationOverrideEditor
         planId="plan-1"
         planName="Schlechtwetterplan"
@@ -188,13 +199,15 @@ describe("WeekplannerAllocationOverrideEditor — live resource availability", (
       />,
     );
 
-    const panel = await screen.findByTestId("weekplanner-override-session-1-pitch_hall");
+    const action = await screen.findByTestId("weekplanner-override-session-1-pitch_hall-action");
+    fireEvent.click(action);
+    const panel = await screen.findByTestId("weekplanner-override-session-1-pitch_hall-picker-panel");
     await waitFor(() => expect(panel.innerHTML).toContain("Training E3"));
   });
 
   it("excludes the activity's own booking for MATCH/TOURNAMENT via excludeEventId", async () => {
     const { fetchMock } = installFetchMock();
-    render(
+    renderWithIntl(
       <WeekplannerAllocationOverrideEditor
         planId="plan-1"
         planName="Schlechtwetterplan"
@@ -226,7 +239,7 @@ describe("WeekplannerAllocationOverrideEditor — live resource availability", (
 
   it("adds an override via the annotated selector, replacing the Standardplan default for this group", async () => {
     installFetchMock();
-    render(
+    renderWithIntl(
       <WeekplannerAllocationOverrideEditor
         planId="plan-1"
         planName="Schlechtwetterplan"
@@ -242,7 +255,10 @@ describe("WeekplannerAllocationOverrideEditor — live resource availability", (
       />,
     );
 
-    const option = await screen.findByTestId("weekplanner-override-session-1-pitch_hall-option-res-halle");
+    fireEvent.click(await screen.findByTestId("weekplanner-override-session-1-pitch_hall-action"));
+    const option = await screen.findByTestId(
+      "weekplanner-override-session-1-pitch_hall-picker-option-res-halle",
+    );
     fireEvent.click(option);
     fireEvent.click(option);
 

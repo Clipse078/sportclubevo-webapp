@@ -10,7 +10,7 @@ const ACTIVE_PLANNING_SURFACES: { domain: string; file: string; mustUse: string[
   {
     domain: "WOCHENPLAN",
     file: "components/admin/planner/WeekplannerAllocationOverrideEditor.tsx",
-    mustUse: ["PlanningResourcePicker", "/api/facilities/availability", "weekplannerPlanId"],
+    mustUse: ["WeekplannerPlanningResourceSection", "/api/facilities/availability", "weekplannerPlanId"],
     mustNotUse: ["<FacilityResourceSelector"],
   },
   {
