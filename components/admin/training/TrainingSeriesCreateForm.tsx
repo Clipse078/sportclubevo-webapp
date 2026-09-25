@@ -51,8 +51,9 @@
  *     either fully succeeds or fully fails — a resubmission after failure
  *     never risks a duplicate series, so no special partial-failure UI
  *     state is needed here. The standalone allocations page
- *     (TrainingAllocationEditor, for series that already exist) is
- *     untouched and still uses the per-resource endpoint directly.
+ *     (TrainingAllocationEditor, for series that already exist) still uses
+ *     the per-resource allocation endpoint; R4A migrated it to the canonical
+ *     PlanningResourcePicker UX (see PLANNING-UX-07R4A).
  *   - Availability is read from the EXISTING PLANNING-CREATION-UX-01A
  *     GET /api/facilities/availability endpoint for the initial occurrence
  *     only — no recurring-series-wide conflict analysis is introduced here.

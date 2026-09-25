@@ -27,7 +27,7 @@ import {
   resolveResourceOccupancyPresentationKind,
 } from "@/lib/planning/resource-occupancy-presentation";
 
-export type CompactOperationalResourceKind = "pitch_hall" | "dressing_room";
+export type CompactOperationalResourceKind = "pitch_hall" | "dressing_room" | "other";
 
 export type CompactOperationalResourceSelectorProps = {
   kind: CompactOperationalResourceKind;
@@ -114,10 +114,17 @@ function ResourceChip({
 }) {
   const [pendingOccupiedConfirm, setPendingOccupiedConfirm] = useState(false);
   const isPitchKind = kind === "pitch_hall";
+  const isOtherKind = kind === "other";
   const selectedClasses = isPitchKind
     ? RESOURCE_CARD_PITCH_SELECTED_CLASSES
-    : RESOURCE_CARD_DRESSING_SELECTED_CLASSES;
-  const iconAccent = isPitchKind ? RESOURCE_SEMANTIC_PITCH_ICON_CLASS : RESOURCE_SEMANTIC_DRESSING_ICON_CLASS;
+    : isOtherKind
+      ? "border-[var(--border)] bg-[var(--surface-2)] ring-[var(--border)]"
+      : RESOURCE_CARD_DRESSING_SELECTED_CLASSES;
+  const iconAccent = isPitchKind
+    ? RESOURCE_SEMANTIC_PITCH_ICON_CLASS
+    : isOtherKind
+      ? "text-[var(--muted)]"
+      : RESOURCE_SEMANTIC_DRESSING_ICON_CLASS;
   const availLine = availabilityLine(resource.availability, isSelected);
   const presentationKind = resolveResourceOccupancyPresentationKind(resource.availability, { isSelected });
   const isOccupied = presentationKind === "OCCUPIED";

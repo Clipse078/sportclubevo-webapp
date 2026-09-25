@@ -97,6 +97,13 @@ describe("PLANNING-UX-07R4 unified resource assignment UX", () => {
       expect(edit).toContain("PlanningResourcePicker");
       expect(edit).toContain("useFacilityAvailability");
     });
+
+    it("training series allocation editor uses PlanningResourcePicker (not legacy FacilityResourceSelector)", () => {
+      const seriesEditor = read("components/admin/training/TrainingAllocationEditor.tsx");
+      expect(seriesEditor).toContain("PlanningResourcePicker");
+      expect(seriesEditor).not.toMatch(/import\s*\{\s*FacilityResourceSelector/);
+      expect(seriesEditor).not.toContain("<FacilityResourceSelector");
+    });
   });
 
   describe("documentation", () => {

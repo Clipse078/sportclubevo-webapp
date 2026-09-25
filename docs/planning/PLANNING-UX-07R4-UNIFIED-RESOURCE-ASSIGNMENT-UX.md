@@ -45,10 +45,25 @@ Normalized presentation only — **no** persistence model changes.
 - **Garderoben:** `PlanningMatchDressingRoomAssignments` with in-event Heim/Gast merge for picker context.
 - SFV / publication / code-based persistence unchanged.
 
-### Training (create + session edit)
+### Training (create + session edit + series defaults)
 
 - **Create:** `PlanningSingleResourceAssignment` for pitch and dressing room.
 - **Session edit:** assignment row + `PlanningResourcePicker` in `TrainingSessionAllocationEditor`; series/session inheritance preserved.
+- **Series defaults (R4A):** `TrainingAllocationEditor` on series record edit and `/training/series/[seriesId]/allocations` — compact current assignment, `Zuweisen` / `Ändern`, canonical `PlanningResourcePicker` (including OTHER via `kind="other"`). Legacy `FacilityResourceSelector` add flows removed from active routes.
+
+#### Active route matrix (resource assignment)
+
+| Domain | Route | CANONICAL_R4 |
+|--------|-------|--------------|
+| Training create | `/dashboard/training/new` | YES |
+| Training session edit | `/dashboard/training/sessions/[sessionId]/edit` | YES |
+| Training series defaults | `/dashboard/training/series/[seriesId]/edit`, `/dashboard/training/series/[seriesId]/allocations` | YES |
+| Match create / edit | `/dashboard/matchcenter/new`, `/dashboard/matchcenter/[matchId]` | YES |
+| Tournament create / Saisonplaner / TournamentCenter edit | `/dashboard/tournamentcenter/new`, planner tournament workspace, `/dashboard/tournamentcenter/[tournamentId]/edit` | YES |
+
+See `PLANNING-UX-07R4A-TRAINING-LEGACY-CLOSURE.md` for forensics, migration proof, and deployment SHA.
+
+**Latest verified deployment (pre-R4A code push):** `08f32642f9fabc9782a7c466482424a214782bde` (Vercel Preview success).
 
 ## Occupancy / sharing (UX-07R3 preserved)
 

@@ -5,7 +5,11 @@
  */
 
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { pickFacilityResource } from "@/components/admin/tournamentcenter/__tests__/tournament-form-test-helpers";
+import {
+  openSeriesDressingPicker,
+  openSeriesPitchPicker,
+  pickOperationalResource,
+} from "@/components/admin/training/__tests__/training-allocation-test-helpers";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TrainingAllocationEditor } from "@/components/admin/training/TrainingAllocationEditor";
 import type { FacilityGroup } from "@/components/admin/training/FacilityResourceSelector";
@@ -90,14 +94,6 @@ function renderSeriesEditResources(initialAllocations: TrainingAllocationDto[]) 
   );
 }
 
-async function openPitchEditor() {
-  fireEvent.click(screen.getByTestId("training-allocation-change-pitch-hall"));
-}
-
-async function openDressingEditor() {
-  fireEvent.click(screen.getByTestId("training-allocation-change-dressing-room"));
-}
-
 describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -165,7 +161,7 @@ describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
       }),
     ]);
 
-    await openPitchEditor();
+    await openSeriesPitchPicker();
     fireEvent.click(screen.getByRole("button", { name: /Aktuelle Zuweisung entfernen/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
@@ -174,8 +170,7 @@ describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
       expect.objectContaining({ method: "DELETE" }),
     );
 
-    pickFacilityResource("training-allocation-add-pitch-hall", "res-pitch-b");
-    fireEvent.click(screen.getByTestId("training-allocation-add-pitch-hall-add-button"));
+    pickOperationalResource("training-allocation-add-pitch-hall", "res-pitch-b");
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     expect(fetchMock).toHaveBeenLastCalledWith(
@@ -221,7 +216,7 @@ describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
       }),
     ]);
 
-    await openDressingEditor();
+    await openSeriesDressingPicker();
     fireEvent.click(screen.getByRole("button", { name: /Aktuelle Zuweisung entfernen/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
@@ -230,8 +225,7 @@ describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
       expect.objectContaining({ method: "DELETE" }),
     );
 
-    pickFacilityResource("training-allocation-add-dressing-room", "res-dressing-o4");
-    fireEvent.click(screen.getByTestId("training-allocation-add-dressing-room-add-button"));
+    pickOperationalResource("training-allocation-add-dressing-room", "res-dressing-o4");
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     expect(fetchMock).toHaveBeenLastCalledWith(
@@ -261,7 +255,7 @@ describe("TRAININGCENTER-EDIT-01F — series edit resources", () => {
       }),
     ]);
 
-    await openPitchEditor();
+    await openSeriesPitchPicker();
     fireEvent.click(screen.getByRole("button", { name: /Aktuelle Zuweisung entfernen/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
