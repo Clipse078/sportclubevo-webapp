@@ -1,0 +1,218 @@
+{
+  "$schema": "SCE-CALENDAR-UX-01-source-matrix/v1",
+  "generatedFromBranch": "STAGE",
+  "generatedFromSha": "d54ef75cc3dd36523acc57ae4a2ff0e93d912f42",
+  "routeAudited": "/dashboard/kalender",
+  "sources": [
+    {
+      "sourceType": "TRAINING",
+      "model": "TrainingSession",
+      "canonicalOwner": "lib/training/session-generation-service.ts (listTrainingSessions)",
+      "currentlyIncluded": true,
+      "personalRelevanceRule": "User has ACTIVE sporting team relationship (TRAINER or PLAYER) whose teamSeasonIds include session.teamSeasonId; isPersonalTrainingSessionRowRelevant",
+      "authorizationOwner": "lib/personal-agenda/training-projection-access.ts (canIncludeTrainingSessionInPersonalProjection)",
+      "dateFields": {
+        "primary": "startAt (effective via listTrainingSessions DTO: overrideStartAt ?? startAt)",
+        "end": "endAt (overrideEndAt ?? endAt)",
+        "dayBucket": "tenant-local day key from startsAt via personalProgrammeDayKey"
+      },
+      "semanticCalendarType": "TRAINING",
+      "canonicalDeepLink": "/dashboard/training/sessions/{trainingSessionId}/edit",
+      "targetIncluded": true,
+      "notes": "Legacy Event.type=TRAINING rows are excluded from team-event adapter; training calendar truth is TrainingSession only."
+    },
+    {
+      "sourceType": "MATCH",
+      "model": "Event",
+      "canonicalOwner": "lib/personal-agenda/adapters/team-event-programme-adapter.ts",
+      "currentlyIncluded": true,
+      "personalRelevanceRule": "Event.teamId matches sporting personal team AND event.teamSeasonId is in that team's active teamSeasonIds; isPersonalTeamEventRowRelevant",
+      "authorizationOwner": "lib/personal-agenda/event-projection-access.ts (canIncludeEventInPersonalProjection)",
+      "dateFields": {
+        "primary": "startAt",
+        "end": "endAt",
+        "allDay": "allDay",
+        "dayBucket": "tenant-local day key from startAt"
+      },
+      "semanticCalendarType": "MATCH",
+      "canonicalDeepLink": "/dashboard/planner/edit/{eventId}",
+      "targetIncluded": true,
+      "notes": "Title built as team – opponent for MATCH. Review stage gate unless manage permissions."
+    },
+    {
+      "sourceType": "TOURNAMENT",
+      "model": "Event",
+      "canonicalOwner": "lib/personal-agenda/adapters/team-event-programme-adapter.ts",
+      "currentlyIncluded": true,
+      "personalRelevanceRule": "Same as MATCH (sporting team + teamSeason scope)",
+      "authorizationOwner": "lib/personal-agenda/event-projection-access.ts",
+      "dateFields": {
+        "primary": "startAt",
+        "end": "endAt",
+        "allDay": "allDay",
+        "dayBucket": "tenant-local day key from startAt"
+      },
+      "semanticCalendarType": "TOURNAMENT",
+      "canonicalDeepLink": "/dashboard/planner/edit/{eventId}",
+      "targetIncluded": true,
+      "notes": "Multi-day tournaments may span days; current adapter emits one row per Event record (single startAt)."
+    },
+    {
+      "sourceType": "EVENT",
+      "model": "Event",
+      "canonicalOwner": "lib/personal-agenda/adapters/team-event-programme-adapter.ts",
+      "currentlyIncluded": true,
+      "personalRelevanceRule": "Event.type=OTHER with same sporting team + teamSeason relevance as MATCH",
+      "authorizationOwner": "lib/personal-agenda/event-projection-access.ts",
+      "dateFields": {
+        "primary": "startAt",
+        "end": "endAt",
+        "allDay": "allDay (iCal-style inclusive dates per schema comment)",
+        "dayBucket": "tenant-local day key from startAt"
+      },
+      "semanticCalendarType": "EVENT",
+      "canonicalDeepLink": "/dashboard/planner/edit/{eventId}",
+      "targetIncluded": true,
+      "notes": "Repository maps EventType OTHER → programme source EVENT / semantic Veranstaltung."
+    },
+    {
+      "sourceType": "MEETING",
+      "model": "Meeting",
+      "canonicalOwner": "lib/personal-agenda/adapters/meeting-programme-adapter.ts",
+      "currentlyIncluded": true,
+      "personalRelevanceRule": "User is MeetingParticipant OR createdByUserId; not org-wide visibility alone",
+      "authorizationOwner": "lib/personal-agenda/meeting-projection-access.ts + lib/meetings/queries.canSeeMeeting",
+      "dateFields": {
+        "primary": "meetingDate",
+        "end": null,
+        "dayBucket": "tenant-local day key from meetingDate"
+      },
+      "semanticCalendarType": "MEETING",
+      "canonicalDeepLink": "/vereinsleitung/meetings/{slug}",
+      "targetIncluded": true,
+      "notes": "Target UX may present as EVENT-like block; keep distinct sourceType for filters/deep links. Only status=PLANNED queried."
+    },
+    {
+      "sourceType": "TASK",
+      "model": "Task",
+      "canonicalOwner": "lib/personal-agenda/task-projections.ts",
+      "currentlyIncluded": true,
+      "personalRelevanceRule": "User is TaskAssignee (assignees.some userId); OPEN or IN_PROGRESS only; dueAt in range",
+      "authorizationOwner": "PERMISSIONS.TASKS_VIEW required to load any tasks; does NOT use tasks.view_all for calendar",
+      "dateFields": {
+        "primary": "dueAt",
+        "end": null,
+        "allDay": true,
+        "dayBucket": "tenant-local day key from dueAt"
+      },
+      "semanticCalendarType": "TASK",
+      "canonicalDeepLink": "/dashboard/aufgaben/{taskId}",
+      "targetIncluded": true,
+      "notes": "On /dashboard/kalender tasks affect activity counts but are listed only in selected-day tasks section, not month event blocks or programme selected-day panel."
+    },
+    {
+      "sourceType": "PARTICIPATION",
+      "model": "Participation obligation projection (attendance candidates)",
+      "canonicalOwner": "lib/personal-agenda/participation-projections.ts",
+      "currentlyIncluded": false,
+      "personalRelevanceRule": "Linked person; actionable RSVP deadlines from loadAttendanceObligationCandidates",
+      "authorizationOwner": "getAuthorizedPersonIdsForUser",
+      "dateFields": {
+        "primary": "participationResponseDueAt",
+        "end": null,
+        "dayBucket": "tenant-local day key from dueAt"
+      },
+      "semanticCalendarType": "TASK",
+      "canonicalDeepLink": "/dashboard/aufgaben?bereich=meine",
+      "targetIncluded": "unknown",
+      "notes": "Included in loadPersonalAgenda (dashboard Meine Agenda) but NOT wired on /dashboard/kalender page. UX-02 should decide explicit inclusion vs Aufgaben-only surfacing."
+    },
+    {
+      "sourceType": "LEGACY_EVENT_TRAINING",
+      "model": "Event",
+      "canonicalOwner": null,
+      "currentlyIncluded": false,
+      "personalRelevanceRule": null,
+      "authorizationOwner": null,
+      "dateFields": {
+        "primary": "startAt",
+        "end": "endAt"
+      },
+      "semanticCalendarType": null,
+      "canonicalDeepLink": "/dashboard/planner/edit/{eventId}",
+      "targetIncluded": false,
+      "notes": "team-event adapter explicitly queries type in MATCH, TOURNAMENT, OTHER only."
+    },
+    {
+      "sourceType": "MANUAL_CALENDAR_ITEM",
+      "model": null,
+      "canonicalOwner": null,
+      "currentlyIncluded": false,
+      "personalRelevanceRule": null,
+      "authorizationOwner": null,
+      "dateFields": null,
+      "semanticCalendarType": null,
+      "canonicalDeepLink": null,
+      "targetIncluded": false,
+      "notes": "No first-class personal calendar CRUD entity found in repository."
+    },
+    {
+      "sourceType": "FACILITY_BOOKING",
+      "model": null,
+      "canonicalOwner": "lib/training/planning-grid (resource occupancy, not personal agenda)",
+      "currentlyIncluded": false,
+      "personalRelevanceRule": null,
+      "authorizationOwner": null,
+      "dateFields": null,
+      "semanticCalendarType": null,
+      "canonicalDeepLink": null,
+      "targetIncluded": false,
+      "notes": "Planning hub concern; not aggregated into Mein Kalender."
+    },
+    {
+      "sourceType": "WORKSPACE_DEADLINE",
+      "model": null,
+      "canonicalOwner": null,
+      "currentlyIncluded": false,
+      "personalRelevanceRule": null,
+      "authorizationOwner": null,
+      "dateFields": null,
+      "semanticCalendarType": null,
+      "canonicalDeepLink": null,
+      "targetIncluded": false,
+      "notes": "No separate workspace deadline feed found for personal calendar."
+    },
+    {
+      "sourceType": "NOTIFICATION_REMINDER",
+      "model": null,
+      "canonicalOwner": null,
+      "currentlyIncluded": false,
+      "personalRelevanceRule": null,
+      "authorizationOwner": null,
+      "dateFields": null,
+      "semanticCalendarType": null,
+      "canonicalDeepLink": null,
+      "targetIncluded": false,
+      "notes": "Task/training reminder instants exist on models but are not calendar rows today."
+    },
+    {
+      "sourceType": "PUBLIC_WOCHENPLAN",
+      "model": "Event / TrainingSession (publication flags)",
+      "canonicalOwner": "lib/publishing/* (public feeds)",
+      "currentlyIncluded": false,
+      "personalRelevanceRule": "Publication visibility, not personal sporting scope",
+      "authorizationOwner": "Public/unauthenticated policies",
+      "dateFields": null,
+      "semanticCalendarType": null,
+      "canonicalDeepLink": null,
+      "targetIncluded": false,
+      "notes": "NOT_APPROPRIATE for personal calendar aggregation."
+    }
+  ],
+  "ux02Implementation": {
+    "canonicalMonthBundle": "lib/personal-agenda/load-personal-calendar-month-bundle.ts",
+    "normalizedItemModel": "lib/personal-agenda/normalized-calendar-item-types.ts",
+    "kalenderConsumer": "app/(admin)/dashboard/kalender/page.tsx",
+    "participationInBundle": false
+  }
+}
