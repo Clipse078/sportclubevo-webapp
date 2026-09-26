@@ -16,6 +16,7 @@ import {
   type NavPresentationPriority,
   NAVIGATION_DOMAIN_DEFINITIONS,
 } from "@/lib/nav/app-navigation-domains";
+import type { NavHeaderL2GroupDefinition } from "@/lib/nav/nav-ia-v2/target-ia-matrix";
 import type { NavSection } from "@/lib/nav/nav-config";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
@@ -45,6 +46,10 @@ export type DomainSecondaryNavItem = {
   carrySeason?: boolean;
   /** Promoted from a single hub destination (e.g. Planung → Wochenplaner…). */
   fromHubPromotion?: boolean;
+  /** V2 header L2 group (Club / Publishing contextual row). */
+  headerGroupId?: string;
+  /** Nav-config keys represented by this header row entry (active-state resolution). */
+  headerGroupNavKeys?: readonly string[];
 };
 
 export type ActiveAppNavigation = {
@@ -73,10 +78,177 @@ export function isSingleHubNavigationDomain(domain: NavigationDomain): boolean {
   );
 }
 
+function resolveNavKeyHrefInDomain(
+  domain: NavigationDomain,
+  navKey: string,
+): { href: string; carrySeason?: boolean; itemKey: string } | null {
+  const topLevel = domain.destinations.find((dest) => dest.key === navKey);
+  if (topLevel) {
+    return { href: topLevel.href, carrySeason: topLevel.carrySeason, itemKey: topLevel.key };
+  }
+  for (const dest of domain.destinations) {
+    const child = dest.children?.find((c) => c.key === navKey);
+    if (child) {
+      return { href: child.href, carrySeason: dest.carrySeason, itemKey: child.key };
+    }
+  }
+  return null;
+}
+
+function collectAuthorizedGroupNavKeys(
+  domain: NavigationDomain,
+  group: NavHeaderL2GroupDefinition,
+): string[] {
+  const keys = group.keys ?? [];
+  return keys.filter((key) => resolveNavKeyHrefInDomain(domain, key) !== null);
+}
+
+function resolveHeaderItemsFromL2Groups(domain: NavigationDomain): DomainSecondaryNavItem[] {
+  const groups = domain.l2GroupMetadata ?? [];
+  const items: DomainSecondaryNavItem[] = [];
+
+  for (const group of groups) {
+    if (group.headerVisible === false) continue;
+    const authorizedKeys = collectAuthorizedGroupNavKeys(domain, group);
+    if (authorizedKeys.length === 0) continue;
+
+    const representativeKey =
+      authorizedKeys.find((key) => domain.destinations.some((dest) => dest.key === key)) ??
+      authorizedKeys[0]!;
+    const resolved = resolveNavKeyHrefInDomain(domain, representativeKey);
+    if (!resolved) continue;
+
+    items.push({
+      key: resolved.itemKey,
+      label: group.label,
+      href: resolved.href,
+      carrySeason: resolved.carrySeason,
+      headerGroupId: group.id,
+      headerGroupNavKeys: authorizedKeys,
+    });
+  }
+
+  return items;
+}
+
+/** Permission-filtered header Row 2 items for the active domain (V2 contextual navigation). */
 export function resolveDomainSecondaryNavItems(
   domain: NavigationDomain | null,
 ): DomainSecondaryNavItem[] {
   if (!domain) return [];
+
+  if (domain.id === "dashboard") {
+    return [];
+  }
+
+  if (isSingleHubNavigationDomain(domain)) {
+    const hub = domain.destinations[0]!;
+    return (hub.children ?? []).map((child) => ({
+      key: child.key,
+      label: child.label,
+      href: child.href,
+      fromHubPromotion: true,
+    }));
+  }
+
+  if (domain.l2GroupMetadata?.length) {
+    return resolveHeaderItemsFromL2Groups(domain);
+  }
+
+  return domain.destinations
+    .filter((dest) => dest.visibility?.header !== false)
+    .map((dest) => ({
+      key: dest.key,
+      label: dest.label,
+      href: dest.href,
+      carrySeason: dest.carrySeason,
+    }));
+}
+
+export type ExplorerDomainModule = DomainSecondaryNavItem & {
+  children: NavItemChild[];
+  explorerGroupId?: string;
+  explorerGroupLabel?: string;
+};
+
+export type ExplorerDomainGroup = {
+  id: string;
+  label: string;
+  modules: ExplorerDomainModule[];
+};
+
+function resolveExplorerModuleForNavKey(
+  domain: NavigationDomain,
+  navKey: string,
+): ExplorerDomainModule | null {
+  const topLevel = domain.destinations.find((dest) => dest.key === navKey);
+  if (topLevel) {
+    return {
+      key: topLevel.key,
+      label: topLevel.label,
+      href: topLevel.href,
+      carrySeason: topLevel.carrySeason,
+      children: topLevel.children ?? [],
+    };
+  }
+
+  for (const dest of domain.destinations) {
+    const child = dest.children?.find((entry) => entry.key === navKey);
+    if (child) {
+      return {
+        key: dest.key,
+        label: dest.label,
+        href: dest.href,
+        carrySeason: dest.carrySeason,
+        children: dest.children ?? [],
+      };
+    }
+  }
+
+  return null;
+}
+
+/** L2-grouped explorer pane for Club / Publishing (includes header-hidden groups). */
+export function resolveExplorerDomainGroups(
+  domain: NavigationDomain | null,
+): ExplorerDomainGroup[] | null {
+  if (!domain?.l2GroupMetadata?.length) return null;
+
+  const groups: ExplorerDomainGroup[] = [];
+  for (const group of domain.l2GroupMetadata) {
+    const authorizedKeys = collectAuthorizedGroupNavKeys(domain, group);
+    if (authorizedKeys.length === 0) continue;
+
+    const seenModuleKeys = new Set<string>();
+    const modules: ExplorerDomainModule[] = [];
+    for (const navKey of authorizedKeys) {
+      const moduleEntry = resolveExplorerModuleForNavKey(domain, navKey);
+      if (!moduleEntry || seenModuleKeys.has(moduleEntry.key)) continue;
+      seenModuleKeys.add(moduleEntry.key);
+      modules.push({
+        ...moduleEntry,
+        explorerGroupId: group.id,
+        explorerGroupLabel: group.label,
+      });
+    }
+
+    if (modules.length > 0) {
+      groups.push({ id: group.id, label: group.label, modules });
+    }
+  }
+
+  return groups.length > 0 ? groups : null;
+}
+
+/** Full module list for App Explorer (unfiltered by header Row 2 subset). */
+export function resolveDomainExplorerModuleItems(
+  domain: NavigationDomain | null,
+): DomainSecondaryNavItem[] {
+  if (!domain) return [];
+  const grouped = resolveExplorerDomainGroups(domain);
+  if (grouped) {
+    return grouped.flatMap((group) => group.modules);
+  }
   if (isSingleHubNavigationDomain(domain)) {
     const hub = domain.destinations[0]!;
     return (hub.children ?? []).map((child) => ({
@@ -92,6 +264,222 @@ export function resolveDomainSecondaryNavItems(
     href: dest.href,
     carrySeason: dest.carrySeason,
   }));
+}
+
+export type SemanticNavigationDestinationRecord = {
+  domainId: AppNavigationDomainId;
+  domainLabel: string;
+  groupId: string | null;
+  groupLabel: string | null;
+  destinationKey: string;
+  label: string;
+  href: string;
+  iconKey: string | null;
+  headerVisible: boolean;
+  explorerVisible: boolean;
+  sortOrder: number;
+};
+
+/** Serializable destination metadata for non-JSX clients (mobile readiness). */
+export function buildSemanticNavigationDestinationCatalog(
+  model: AppNavigationModel,
+  domainLabel: (domain: NavigationDomain) => string,
+): SemanticNavigationDestinationRecord[] {
+  const records: SemanticNavigationDestinationRecord[] = [];
+  let sortOrder = 0;
+
+  for (const domain of model.domains) {
+    const label = domainLabel(domain);
+    const groups = resolveExplorerDomainGroups(domain);
+    if (groups) {
+      for (const group of groups) {
+        for (const moduleEntry of group.modules) {
+          records.push({
+            domainId: domain.id,
+            domainLabel: label,
+            groupId: group.id,
+            groupLabel: group.label,
+            destinationKey: moduleEntry.key,
+            label: moduleEntry.label,
+            href: moduleEntry.href,
+            iconKey: moduleEntry.key,
+            headerVisible: domain.l2GroupMetadata?.find((entry) => entry.id === group.id)?.headerVisible !== false,
+            explorerVisible: true,
+            sortOrder: sortOrder++,
+          });
+          for (const child of moduleEntry.children) {
+            records.push({
+              domainId: domain.id,
+              domainLabel: label,
+              groupId: group.id,
+              groupLabel: group.label,
+              destinationKey: child.key,
+              label: child.label,
+              href: child.href,
+              iconKey: child.key,
+              headerVisible: false,
+              explorerVisible: true,
+              sortOrder: sortOrder++,
+            });
+          }
+        }
+      }
+      continue;
+    }
+
+    for (const moduleEntry of resolveDomainExplorerModuleItems(domain)) {
+      const destination = domain.destinations.find((dest) => dest.key === moduleEntry.key);
+      records.push({
+        domainId: domain.id,
+        domainLabel: label,
+        groupId: null,
+        groupLabel: null,
+        destinationKey: moduleEntry.key,
+        label: moduleEntry.label,
+        href: moduleEntry.href,
+        iconKey: moduleEntry.key,
+        headerVisible: destination?.visibility?.header !== false,
+        explorerVisible: destination?.visibility?.explorer !== false,
+        sortOrder: sortOrder++,
+      });
+      for (const child of destination?.children ?? []) {
+        records.push({
+          domainId: domain.id,
+          domainLabel: label,
+          groupId: null,
+          groupLabel: null,
+          destinationKey: child.key,
+          label: child.label,
+          href: child.href,
+          iconKey: child.key,
+          headerVisible: false,
+          explorerVisible: true,
+          sortOrder: sortOrder++,
+        });
+      }
+    }
+  }
+
+  return records;
+}
+
+function scoreSecondaryNavItemMatch(
+  pathname: string,
+  domain: NavigationDomain,
+  item: DomainSecondaryNavItem,
+  activeDestinationKey: string | null,
+  activeChildKey: string | null,
+  order: number,
+): NavigationHrefMatchRank | null {
+  if (item.fromHubPromotion) {
+    return rankNavigationHrefMatch(pathname, item.href, false, order);
+  }
+
+  if (item.headerGroupNavKeys?.length) {
+    let best: NavigationHrefMatchRank | null = null;
+    for (const [keyOrder, navKey] of item.headerGroupNavKeys.entries()) {
+      const resolved = resolveNavKeyHrefInDomain(domain, navKey);
+      if (!resolved) continue;
+
+      let rank =
+        rankNavigationHrefMatch(pathname, resolved.href, false, order * 100 + keyOrder) ??
+        null;
+
+      if (navKey === activeDestinationKey || navKey === activeChildKey) {
+        const activeBoost: NavigationHrefMatchRank = {
+          exact: rank?.exact ?? pathname === resolved.href,
+          hrefLength: Math.max(rank?.hrefLength ?? resolved.href.length, resolved.href.length),
+          order: order * 100 + keyOrder,
+        };
+        rank = activeBoost;
+      }
+
+      if (rank && (!best || compareNavigationHrefMatchRank(rank, best) > 0)) {
+        best = rank;
+      }
+    }
+    return best;
+  }
+
+  const destination = domain.destinations.find((dest) => dest.key === item.key);
+  if (!destination) return null;
+
+  let best =
+    rankNavigationHrefMatch(pathname, destination.href, false, order) ??
+    (activeDestinationKey === destination.key
+      ? { exact: true, hrefLength: destination.href.length, order }
+      : null);
+
+  for (const [childOrder, child] of (destination.children ?? []).entries()) {
+    const childRank = rankNavigationHrefMatch(
+      pathname,
+      child.href,
+      child.matchExact,
+      order * 100 + childOrder,
+    );
+    if (childRank && (!best || compareNavigationHrefMatchRank(childRank, best) > 0)) {
+      best = childRank;
+    }
+  }
+
+  return best;
+}
+
+/** At most one Row-2 sibling should receive primary active styling for a pathname. */
+export function resolvePrimaryActiveSecondaryItemKey(
+  pathname: string,
+  domain: NavigationDomain,
+  items: readonly DomainSecondaryNavItem[],
+  activeDestinationKey: string | null,
+  activeChildKey: string | null,
+): string | null {
+  let winner: { key: string; rank: NavigationHrefMatchRank } | null = null;
+  for (const [order, item] of items.entries()) {
+    const rank = scoreSecondaryNavItemMatch(
+      pathname,
+      domain,
+      item,
+      activeDestinationKey,
+      activeChildKey,
+      order,
+    );
+    if (!rank) continue;
+    if (!winner || compareNavigationHrefMatchRank(rank, winner.rank) > 0) {
+      winner = { key: item.key, rank };
+    }
+  }
+  return winner?.key ?? null;
+}
+
+export function isDomainHeaderSecondaryItemActive(
+  pathname: string,
+  domain: NavigationDomain,
+  item: DomainSecondaryNavItem,
+  activeDestinationKey: string | null,
+  activeChildKey: string | null = null,
+  secondaryItems: readonly DomainSecondaryNavItem[] | null = null,
+): boolean {
+  const rowItems = secondaryItems ?? resolveDomainSecondaryNavItems(domain);
+  const winnerKey = resolvePrimaryActiveSecondaryItemKey(
+    pathname,
+    domain,
+    rowItems,
+    activeDestinationKey,
+    activeChildKey,
+  );
+  if (winnerKey) {
+    return item.key === winnerKey;
+  }
+
+  if (item.fromHubPromotion) {
+    return isNavigationChildActive(pathname, {
+      key: item.key,
+      label: item.label,
+      href: item.href,
+    });
+  }
+
+  return false;
 }
 
 export function resolveModuleLocalNavItems(
@@ -113,7 +501,6 @@ export function getPrimaryNavPriority(navItemKey: string): NavPresentationPriori
     return 1;
   }
   if (
-    navItemKey === "organisation" ||
     navItemKey === "communication" ||
     navItemKey === "platform-clubs" ||
     navItemKey === "platform-access" ||
@@ -150,6 +537,91 @@ export function isNavigationHrefActive(pathname: string, href: string): boolean 
   return pathname.startsWith(`${href}/`);
 }
 
+/** Relative strength of a pathname ↔ href match (higher wins among siblings). */
+export type NavigationHrefMatchRank = {
+  exact: boolean;
+  hrefLength: number;
+  /** Stable tie-break when href length and exactness tie (lower = preferred). */
+  order: number;
+};
+
+export function rankNavigationHrefMatch(
+  pathname: string,
+  href: string,
+  matchExact?: boolean,
+  order = 0,
+): NavigationHrefMatchRank | null {
+  if (matchExact) {
+    return pathname === href ? { exact: true, hrefLength: href.length, order } : null;
+  }
+  if (pathname === href) {
+    return { exact: true, hrefLength: href.length, order };
+  }
+  if (href === "/dashboard") return null;
+  if (pathname.startsWith(`${href}/`)) {
+    return { exact: false, hrefLength: href.length, order };
+  }
+  return null;
+}
+
+function compareNavigationHrefMatchRank(
+  a: NavigationHrefMatchRank,
+  b: NavigationHrefMatchRank,
+): number {
+  if (a.exact !== b.exact) return a.exact ? 1 : -1;
+  if (a.hrefLength !== b.hrefLength) return a.hrefLength - b.hrefLength;
+  return a.order - b.order;
+}
+
+function pickBestNavigationHrefMatch(
+  pathname: string,
+  candidates: ReadonlyArray<{ href: string; matchExact?: boolean; order: number; token: string }>,
+): string | null {
+  let best: { rank: NavigationHrefMatchRank; token: string } | null = null;
+  for (const candidate of candidates) {
+    const rank = rankNavigationHrefMatch(
+      pathname,
+      candidate.href,
+      candidate.matchExact,
+      candidate.order,
+    );
+    if (!rank) continue;
+    if (!best || compareNavigationHrefMatchRank(rank, best.rank) > 0) {
+      best = { rank, token: candidate.token };
+    }
+  }
+  return best?.token ?? null;
+}
+
+export function resolvePrimaryActiveModuleLocalChildKey(
+  pathname: string,
+  children: readonly NavItemChild[],
+  preferredChildKey: string | null = null,
+): string | null {
+  if (children.length === 0) return null;
+  const bestKey = pickBestNavigationHrefMatch(
+    pathname,
+    children.map((child, order) => ({
+      href: child.href,
+      matchExact: child.matchExact,
+      order,
+      token: child.key,
+    })),
+  );
+  if (bestKey) return bestKey;
+  return preferredChildKey;
+}
+
+export function isModuleLocalChildPrimaryActive(
+  pathname: string,
+  child: NavItemChild,
+  siblings: readonly NavItemChild[],
+  preferredChildKey: string | null = null,
+): boolean {
+  const winner = resolvePrimaryActiveModuleLocalChildKey(pathname, siblings, preferredChildKey);
+  return winner === child.key;
+}
+
 export function isNavigationChildActive(pathname: string, child: NavItemChild): boolean {
   if (child.matchExact) {
     return pathname === child.href;
@@ -173,28 +645,44 @@ function resolveActiveDestination(
   pathname: string,
   domain: NavigationDomain,
 ): { destination: NavigationDestination; childKey: string | null } | null {
-  for (const destination of domain.destinations) {
-    if (isNavigationHrefActive(pathname, destination.href)) {
-      const child = destination.children?.find((c) => isNavigationChildActive(pathname, c));
-      return { destination, childKey: child?.key ?? null };
+  type DestinationCandidate = {
+    destination: NavigationDestination;
+    rank: NavigationHrefMatchRank;
+    childKey: string | null;
+  };
+
+  const candidates: DestinationCandidate[] = [];
+
+  for (const [destOrder, destination] of domain.destinations.entries()) {
+    const destRank = rankNavigationHrefMatch(pathname, destination.href, false, destOrder);
+    const childKey = destination.children?.length
+      ? resolvePrimaryActiveModuleLocalChildKey(pathname, destination.children)
+      : null;
+
+    if (childKey) {
+      const child = destination.children!.find((c) => c.key === childKey)!;
+      const childRank = rankNavigationHrefMatch(
+        pathname,
+        child.href,
+        child.matchExact,
+        destOrder,
+      );
+      if (childRank) {
+        candidates.push({ destination, rank: childRank, childKey });
+        continue;
+      }
     }
-    const child = destination.children?.find((c) => isNavigationChildActive(pathname, c));
-    if (child) {
-      return { destination, childKey: child.key };
+
+    if (destRank) {
+      candidates.push({ destination, rank: destRank, childKey: null });
     }
   }
 
-  const prefixMatch = domain.destinations
-    .filter(
-      (dest) =>
-        isNavigationHrefActive(pathname, dest.href) ||
-        dest.children?.some((c) => isNavigationChildActive(pathname, c)),
-    )
-    .sort((a, b) => b.href.length - a.href.length)[0];
+  if (candidates.length === 0) return null;
 
-  if (!prefixMatch) return null;
-  const child = prefixMatch.children?.find((c) => isNavigationChildActive(pathname, c));
-  return { destination: prefixMatch, childKey: child?.key ?? null };
+  candidates.sort((a, b) => compareNavigationHrefMatchRank(b.rank, a.rank));
+  const best = candidates[0]!;
+  return { destination: best.destination, childKey: best.childKey };
 }
 
 export function resolveActiveAppNavigation(

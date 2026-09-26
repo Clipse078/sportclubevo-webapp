@@ -403,6 +403,8 @@
     "closeDrawer": "Chiudi navigazione",
     "drawerTitle": "Navigazione",
     "searchModulesPlaceholder": "Cerca modulo…",
+    "searchNoResults": "Nessun risultato",
+    "explorerEmptyDomain": "Nessuna destinazione autorizzata in quest'area",
     "explorerBackToDomains": "Aree",
     "domains": {
       "dashboard": "Dashboard",
@@ -410,6 +412,7 @@
       "organisation": "Organizzazione",
       "communication": "Comunicazione",
       "club": "Club",
+      "publishing": "Publishing",
       "platformOverview": "Piattaforma",
       "platformGovernance": "Governance",
       "platformCommercial": "Commercial",

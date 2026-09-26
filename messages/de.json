@@ -830,6 +830,8 @@
     "closeDrawer": "Navigation schliessen",
     "drawerTitle": "Navigation",
     "searchModulesPlaceholder": "Modul suchen…",
+    "searchNoResults": "Keine Treffer",
+    "explorerEmptyDomain": "Keine berechtigten Ziele in diesem Bereich",
     "explorerBackToDomains": "Bereiche",
     "domains": {
       "dashboard": "Dashboard",
@@ -837,6 +839,7 @@
       "organisation": "Organisation",
       "communication": "Kommunikation",
       "club": "Club",
+      "publishing": "Publizieren",
       "platformOverview": "Platform",
       "platformGovernance": "Governance",
       "platformCommercial": "Commercial",

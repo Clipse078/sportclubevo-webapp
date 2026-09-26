@@ -90,13 +90,13 @@ describe("SCE-VISUAL-03 global app navigation", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     const samples: Array<[string, string, string]> = [
       ["/dashboard", "dashboard", "dashboard"],
-      ["/dashboard/mitglieder", "organisation", "mitglieder"],
-      ["/dashboard/registrations", "organisation", "anmeldungen"],
+      ["/dashboard/mitglieder", "club", "mitglieder"],
+      ["/dashboard/registrations", "club", "anmeldungen"],
       ["/dashboard/aufgaben", "communication", "aufgaben"],
       ["/dashboard/workspace", "communication", "workspace"],
-      ["/dashboard/website/pages", "club", "website"],
-      ["/dashboard/infoboard/preview", "club", "infoboard"],
-      ["/dashboard/trainer-staff", "organisation", "trainer-staff"],
+      ["/dashboard/website/pages", "publishing", "website"],
+      ["/dashboard/infoboard/preview", "publishing", "infoboard"],
+      ["/dashboard/trainer-staff", "club", "trainer-staff"],
       ["/vereinsleitung/meetings", "club", "meetings"],
       ["/vereinsleitung/finanzen", "club", "finanzen"],
       ["/dashboard/sponsoring", "club", "sponsoring"],
