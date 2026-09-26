@@ -1,0 +1,1453 @@
+{
+  "programme": "SCE-NAV-IA-V2-01",
+  "generatedFrom": "lib/nav/nav-config.ts",
+  "clubAdminPermissionCount": 100,
+  "destinations": [
+    {
+      "key": "dashboard",
+      "route": "/dashboard",
+      "label": "Dashboard",
+      "labelV2": "Dashboard",
+      "icon": "dashboard",
+      "targetL1": "dashboard",
+      "targetL2": "Persönliche Übersicht",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "classification": "PRIMARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "planung",
+      "route": "/dashboard/planner/week",
+      "label": "Planung",
+      "labelV2": "Planung",
+      "icon": "planning",
+      "targetL1": "planung",
+      "targetL2": "Planung",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "trainings.view",
+        "trainings.manage",
+        "trainings.delete",
+        "events.view",
+        "events.manage"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Unverändert: operative Sport- und Terminplanung."
+    },
+    {
+      "key": "wochenplanner",
+      "route": "/dashboard/planner/week",
+      "label": "Wochenplaner",
+      "labelV2": "Wochenplaner",
+      "icon": "week-planner",
+      "targetL1": "planung",
+      "targetL2": "Sport & Termine",
+      "targetLocalGroup": "planung",
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "trainings.view",
+        "trainings.manage",
+        "events.view",
+        "events.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Unverändert: operative Sport- und Terminplanung."
+    },
+    {
+      "key": "trainingcenter",
+      "route": "/dashboard/training",
+      "label": "Trainings",
+      "labelV2": "Trainings",
+      "icon": "training",
+      "targetL1": "planung",
+      "targetL2": "Sport & Termine",
+      "targetLocalGroup": "planung",
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "trainings.view",
+        "trainings.manage",
+        "trainings.delete"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Unverändert: operative Sport- und Terminplanung."
+    },
+    {
+      "key": "matchcenter",
+      "route": "/dashboard/matchcenter",
+      "label": "Spiele",
+      "labelV2": "Spiele",
+      "icon": "match",
+      "targetL1": "planung",
+      "targetL2": "Sport & Termine",
+      "targetLocalGroup": "planung",
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "events.view",
+        "events.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Unverändert: operative Sport- und Terminplanung."
+    },
+    {
+      "key": "tournamentcenter",
+      "route": "/dashboard/tournamentcenter",
+      "label": "Turniere",
+      "labelV2": "Turniere",
+      "icon": "tournament",
+      "targetL1": "planung",
+      "targetL2": "Sport & Termine",
+      "targetLocalGroup": "planung",
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "events.view",
+        "events.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Unverändert: operative Sport- und Terminplanung."
+    },
+    {
+      "key": "veranstaltungen",
+      "route": "/dashboard/veranstaltungen",
+      "label": "Veranstaltungen",
+      "labelV2": "Veranstaltungen",
+      "icon": "events",
+      "targetL1": "planung",
+      "targetL2": "Sport & Termine",
+      "targetLocalGroup": "planung",
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "events.view",
+        "events.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Unverändert: operative Sport- und Terminplanung."
+    },
+    {
+      "key": "organisation",
+      "route": "/dashboard/org-units",
+      "label": "Organisation",
+      "labelV2": "Organisation",
+      "icon": "organisation",
+      "targetL1": "club",
+      "targetL2": "Organisation",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "org.view",
+        "org.manage",
+        "teams.view",
+        "teams.manage",
+        "competitions.view",
+        "competitions.manage",
+        "people.view",
+        "people.manage"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+    },
+    {
+      "key": "org-units",
+      "route": "/dashboard/org-units",
+      "label": "Organisationseinheiten",
+      "labelV2": "Organisationseinheiten",
+      "icon": "org-unit",
+      "targetL1": "club",
+      "targetL2": "Organisation",
+      "targetLocalGroup": "organisation",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "org.view",
+        "org.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+    },
+    {
+      "key": "target-groups",
+      "route": "/dashboard/target-groups",
+      "label": "Zielgruppen",
+      "labelV2": "Zielgruppen",
+      "icon": "target-group",
+      "targetL1": "club",
+      "targetL2": "Organisation",
+      "targetLocalGroup": "organisation",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "org.view",
+        "org.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+    },
+    {
+      "key": "teams",
+      "route": "/dashboard/teams",
+      "label": "Teams",
+      "labelV2": "Teams",
+      "icon": "team",
+      "targetL1": "club",
+      "targetL2": "People & Teams",
+      "targetLocalGroup": "organisation",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "teams.view",
+        "teams.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+    },
+    {
+      "key": "provider-mapping",
+      "route": "/dashboard/teams/provider-mapping",
+      "label": "Anbieter-Mapping",
+      "labelV2": "Anbieter-Mapping",
+      "icon": "integration",
+      "targetL1": "club",
+      "targetL2": "People & Teams",
+      "targetLocalGroup": "organisation",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "teams.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+    },
+    {
+      "key": "vereine",
+      "route": "/dashboard/vereine",
+      "label": "Vereine",
+      "labelV2": "Vereine",
+      "icon": "club",
+      "targetL1": "club",
+      "targetL2": "Organisation",
+      "targetLocalGroup": "organisation",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "org.view",
+        "org.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+    },
+    {
+      "key": "personen",
+      "route": "/dashboard/persons",
+      "label": "Personen",
+      "labelV2": "Personen",
+      "icon": "people",
+      "targetL1": "club",
+      "targetL2": "People & Teams",
+      "targetLocalGroup": "organisation",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "people.view",
+        "people.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+    },
+    {
+      "key": "competitions",
+      "route": "/dashboard/competitions",
+      "label": "Wettkämpfe",
+      "labelV2": "Wettkämpfe",
+      "icon": "competition",
+      "targetL1": "club",
+      "targetL2": "Organisation",
+      "targetLocalGroup": "organisation",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "competitions.view",
+        "competitions.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+    },
+    {
+      "key": "mitglieder",
+      "route": "/dashboard/mitglieder",
+      "label": "Mitglieder",
+      "labelV2": "Mitglieder",
+      "icon": "member",
+      "targetL1": "club",
+      "targetL2": "People & Teams",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "users.manage_memberships"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+    },
+    {
+      "key": "anmeldungen",
+      "route": "/dashboard/registrations",
+      "label": "Anmeldungen",
+      "labelV2": "Anmeldungen",
+      "icon": "invitation",
+      "targetL1": "club",
+      "targetL2": "Mitgliedschaft",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "registrations.view",
+        "registrations.edit"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+    },
+    {
+      "key": "registrierungen",
+      "route": "/dashboard/registrations",
+      "label": "Registrierungen",
+      "labelV2": "Registrierungen",
+      "icon": "invitation",
+      "targetL1": "club",
+      "targetL2": "Mitgliedschaft",
+      "targetLocalGroup": "anmeldungen",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "registrations.view",
+        "registrations.edit"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+    },
+    {
+      "key": "warteliste",
+      "route": "/dashboard/registrations/warteliste",
+      "label": "Warteliste",
+      "labelV2": "Warteliste",
+      "icon": "waiting-list",
+      "targetL1": "club",
+      "targetL2": "Mitgliedschaft",
+      "targetLocalGroup": "anmeldungen",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "registrations.view",
+        "registrations.edit"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+    },
+    {
+      "key": "archiv",
+      "route": "/dashboard/registrations/archiv",
+      "label": "Archiv",
+      "labelV2": "Archiv",
+      "icon": "archive",
+      "targetL1": "club",
+      "targetL2": "Mitgliedschaft",
+      "targetLocalGroup": "anmeldungen",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "registrations.view",
+        "registrations.edit"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+    },
+    {
+      "key": "aufgaben",
+      "route": "/dashboard/aufgaben",
+      "label": "Aufgaben",
+      "labelV2": "Aufgaben",
+      "icon": "tasks",
+      "targetL1": "kommunikation",
+      "targetL2": "Aufgaben & Koordination",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "tasks.view"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "helfereinsaetze",
+      "route": "/dashboard/helfereinsaetze",
+      "label": "Helfereinsätze",
+      "labelV2": "Helfereinsätze",
+      "icon": "volunteer",
+      "targetL1": "club",
+      "targetL2": "Club-Betrieb",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "users.manage_memberships"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+    },
+    {
+      "key": "communication",
+      "route": "/dashboard/communication",
+      "label": "Kommunikation",
+      "labelV2": "Kommunikation",
+      "icon": "communication",
+      "targetL1": "kommunikation",
+      "targetL2": "Nachrichten & Einstellungen",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "users.manage_memberships"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "communication-email-sender",
+      "route": "/dashboard/communication/email-sender",
+      "label": "E-Mail-Absender",
+      "labelV2": "E-Mail-Absender",
+      "icon": "communication",
+      "targetL1": "kommunikation",
+      "targetL2": "Nachrichten & Einstellungen",
+      "targetLocalGroup": "communication",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "users.manage_memberships"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "workspace",
+      "route": "/dashboard/workspace",
+      "label": "Dokumente",
+      "labelV2": "Dokumente",
+      "icon": "documents",
+      "targetL1": "kommunikation",
+      "targetL2": "Dokumente",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "workspace.view",
+        "workspace.manage"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "website",
+      "route": "/dashboard/website",
+      "label": "Website",
+      "labelV2": "Website",
+      "icon": "website",
+      "targetL1": "publishing",
+      "targetL2": "Übersicht",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "news.manage",
+        "website.manage"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+    },
+    {
+      "key": "website-overview",
+      "route": "/dashboard/website",
+      "label": "CMS Übersicht",
+      "labelV2": "Publishing-Übersicht",
+      "icon": "website",
+      "targetL1": "publishing",
+      "targetL2": "Übersicht",
+      "targetLocalGroup": "website",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "news.manage",
+        "website.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+    },
+    {
+      "key": "website-news",
+      "route": "/dashboard/website/news",
+      "label": "News",
+      "labelV2": "News",
+      "icon": "news",
+      "targetL1": "publishing",
+      "targetL2": "Inhalte",
+      "targetLocalGroup": "website",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "news.manage",
+        "website.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+    },
+    {
+      "key": "website-pages",
+      "route": "/dashboard/website/pages",
+      "label": "Seiten",
+      "labelV2": "Seiten",
+      "icon": "page",
+      "targetL1": "publishing",
+      "targetL2": "Inhalte",
+      "targetLocalGroup": "website",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "website.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+    },
+    {
+      "key": "website-homepage",
+      "route": "/dashboard/website/homepage",
+      "label": "Homepage Builder",
+      "labelV2": "Homepage Builder",
+      "icon": "website",
+      "targetL1": "publishing",
+      "targetL2": "Website",
+      "targetLocalGroup": "website",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "website.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+    },
+    {
+      "key": "website-navigation",
+      "route": "/dashboard/website/navigation",
+      "label": "Navigation",
+      "labelV2": "Navigation",
+      "icon": "website-navigation",
+      "targetL1": "publishing",
+      "targetL2": "Website",
+      "targetLocalGroup": "website",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "website.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+    },
+    {
+      "key": "website-blocks",
+      "route": "/dashboard/website/blocks",
+      "label": "Block-Bibliothek",
+      "labelV2": "Block-Bibliothek",
+      "icon": "block-library",
+      "targetL1": "publishing",
+      "targetL2": "Website",
+      "targetLocalGroup": "website",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "website.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+    },
+    {
+      "key": "website-media",
+      "route": "/dashboard/website/media",
+      "label": "Medien",
+      "labelV2": "Medien",
+      "icon": "media-library",
+      "targetL1": "publishing",
+      "targetL2": "Medien",
+      "targetLocalGroup": "website",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "news.manage",
+        "website.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+    },
+    {
+      "key": "website-editorial",
+      "route": "/dashboard/website/editorial",
+      "label": "Redaktion",
+      "labelV2": "Redaktion",
+      "icon": "news",
+      "targetL1": "publishing",
+      "targetL2": "Inhalte",
+      "targetLocalGroup": "website",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "website.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+    },
+    {
+      "key": "website-publishing",
+      "route": "/dashboard/website/publishing",
+      "label": "Veröffentlichungen",
+      "labelV2": "Veröffentlichungen",
+      "icon": "publish",
+      "targetL1": "publishing",
+      "targetL2": "Kanäle",
+      "targetLocalGroup": "website",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "news.manage",
+        "website.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+    },
+    {
+      "key": "website-components",
+      "route": "/dashboard/website/components",
+      "label": "Wiederverwendbare Inhalte",
+      "labelV2": "Wiederverwendbare Inhalte",
+      "icon": "form",
+      "targetL1": "publishing",
+      "targetL2": "Inhalte",
+      "targetLocalGroup": "website",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "website.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+    },
+    {
+      "key": "website-settings",
+      "route": "/dashboard/website/settings",
+      "label": "Einstellungen",
+      "labelV2": "Einstellungen",
+      "icon": "settings",
+      "targetL1": "publishing",
+      "targetL2": "Einstellungen",
+      "targetLocalGroup": "website",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "website.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+    },
+    {
+      "key": "infoboard",
+      "route": "/dashboard/infoboard",
+      "label": "Infoboard",
+      "labelV2": "Infoboard",
+      "icon": "infoboard",
+      "targetL1": "publishing",
+      "targetL2": "Kanäle",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "infoboard.manage",
+        "events.publish_infoboard"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+    },
+    {
+      "key": "infoboard-overview",
+      "route": "/dashboard/infoboard",
+      "label": "Übersicht",
+      "labelV2": "Übersicht",
+      "icon": "infoboard",
+      "targetL1": "publishing",
+      "targetL2": "Kanäle",
+      "targetLocalGroup": "infoboard",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "infoboard.manage",
+        "events.publish_infoboard"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+    },
+    {
+      "key": "infoboard-preview",
+      "route": "/dashboard/infoboard/preview",
+      "label": "Vorschau",
+      "labelV2": "Vorschau",
+      "icon": "infoboard",
+      "targetL1": "publishing",
+      "targetL2": "Kanäle",
+      "targetLocalGroup": "infoboard",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "infoboard.manage",
+        "events.publish_infoboard"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+    },
+    {
+      "key": "trainer-staff",
+      "route": "/dashboard/trainer-staff",
+      "label": "Trainer & Staff",
+      "labelV2": "Trainer & Mitarbeitende",
+      "icon": "coach",
+      "targetL1": "club",
+      "targetL2": "People & Teams",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "users.manage_memberships"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+    },
+    {
+      "key": "meetings",
+      "route": "/vereinsleitung/meetings",
+      "label": "Meetings",
+      "labelV2": "Sitzungen",
+      "icon": "committee-board",
+      "targetL1": "club",
+      "targetL2": "Club-Betrieb",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "club-entwicklung",
+      "route": "/vereinsleitung/club-entwicklung",
+      "label": "Club Entwicklung",
+      "labelV2": "Vereinsentwicklung",
+      "icon": "insight",
+      "targetL1": "club",
+      "targetL2": "Vereinsentwicklung",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "club-entwicklung-ziele",
+      "route": "/vereinsleitung/targets",
+      "label": "Ziele",
+      "labelV2": "Ziele",
+      "icon": null,
+      "targetL1": "club",
+      "targetL2": "Vereinsentwicklung",
+      "targetLocalGroup": "club-entwicklung",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "club-entwicklung-initiativen",
+      "route": "/vereinsleitung/initiativen",
+      "label": "Initiativen",
+      "labelV2": "Initiativen",
+      "icon": null,
+      "targetL1": "club",
+      "targetL2": "Vereinsentwicklung",
+      "targetLocalGroup": "club-entwicklung",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "club-entwicklung-prozesse",
+      "route": "/vereinsleitung/prozesse",
+      "label": "Prozesse & Aufgaben",
+      "labelV2": "Prozesse & Aufgaben",
+      "icon": "workflow",
+      "targetL1": "club",
+      "targetL2": "Vereinsentwicklung",
+      "targetLocalGroup": "club-entwicklung",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "material",
+      "route": "/vereinsleitung/material",
+      "label": "Material & Inventar",
+      "labelV2": "Material & Inventar",
+      "icon": "material-inventory",
+      "targetL1": "club",
+      "targetL2": "Club-Betrieb",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "finanzen",
+      "route": "/vereinsleitung/finanzen",
+      "label": "Finanzen",
+      "labelV2": "Finanzen",
+      "icon": "finance",
+      "targetL1": "club",
+      "targetL2": "Finanzen & Partnerschaften",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "sponsoring",
+      "route": "/dashboard/sponsoring",
+      "label": "Sponsoring",
+      "labelV2": "Sponsoring",
+      "icon": "sponsor",
+      "targetL1": "club",
+      "targetL2": "Finanzen & Partnerschaften",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "users.manage_memberships"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "formulare-freigaben",
+      "route": "/dashboard/formulare-freigaben",
+      "label": "Formulare & Freigaben",
+      "labelV2": "Formulare & Freigaben",
+      "icon": "form",
+      "targetL1": "club",
+      "targetL2": "Club-Betrieb",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "users.manage_memberships"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "vorfaelle-disziplin",
+      "route": "/dashboard/vorfaelle-disziplin",
+      "label": "Vorfälle & Disziplin",
+      "labelV2": "Vorfälle & Disziplin",
+      "icon": "discipline-incident",
+      "targetL1": "club",
+      "targetL2": "Club-Betrieb",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "users.manage_memberships"
+      ],
+      "classification": "SECONDARY_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "administration",
+      "route": "/dashboard/admin/branding",
+      "label": "Administration",
+      "labelV2": "Administration",
+      "icon": "settings",
+      "targetL1": "club",
+      "targetL2": "Administration",
+      "targetLocalGroup": null,
+      "visibility": {
+        "header": true,
+        "explorer": true,
+        "mobileEligible": true
+      },
+      "permissionKeys": [
+        "users.view",
+        "users.manage",
+        "seasons.view",
+        "seasons.manage",
+        "facilities.view",
+        "facilities.manage",
+        "tenants.view",
+        "tenants.manage",
+        "roles.view",
+        "roles.manage"
+      ],
+      "classification": "ADMIN_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "admin-tenant-roles",
+      "route": "/dashboard/administration/roles",
+      "label": "Rollen & Berechtigungen",
+      "labelV2": "Rollen & Berechtigungen",
+      "icon": "roles-access",
+      "targetL1": "club",
+      "targetL2": "Administration",
+      "targetLocalGroup": "administration",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "roles.view",
+        "roles.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "admin-seasons",
+      "route": "/dashboard/seasons",
+      "label": "Saisons",
+      "labelV2": "Saisons",
+      "icon": "season",
+      "targetL1": "club",
+      "targetL2": "Administration",
+      "targetLocalGroup": "administration",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "seasons.view",
+        "seasons.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "admin-facilities",
+      "route": "/dashboard/admin/facilities",
+      "label": "Anlagen & Ressourcen",
+      "labelV2": "Anlagen & Ressourcen",
+      "icon": "facility",
+      "targetL1": "club",
+      "targetL2": "Administration",
+      "targetLocalGroup": "administration",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "facilities.view",
+        "facilities.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "admin-branding",
+      "route": "/dashboard/admin/branding",
+      "label": "Darstellung",
+      "labelV2": "Darstellung",
+      "icon": "settings",
+      "targetL1": "club",
+      "targetL2": "Administration",
+      "targetLocalGroup": "administration",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "users.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "admin-people-access",
+      "route": "/dashboard/admin/people-access",
+      "label": "Personen & Zugänge",
+      "labelV2": "Personen & Zugänge",
+      "icon": "people",
+      "targetL1": "club",
+      "targetL2": "Administration",
+      "targetLocalGroup": "administration",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "users.view",
+        "users.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "admin-roles",
+      "route": "/dashboard/roles",
+      "label": "Rollen",
+      "labelV2": "Rollen",
+      "icon": "roles-access",
+      "targetL1": "club",
+      "targetL2": "Administration",
+      "targetLocalGroup": "administration",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "users.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "admin-tenants",
+      "route": "/dashboard/admin/tenants",
+      "label": "Tenants",
+      "labelV2": "Tenants",
+      "icon": "organisation",
+      "targetL1": "club",
+      "targetL2": "Administration",
+      "targetLocalGroup": "administration",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "tenants.view",
+        "tenants.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "admin-integrations",
+      "route": "/dashboard/admin/integrations",
+      "label": "Integrationen",
+      "labelV2": "Integrationen",
+      "icon": "integration",
+      "targetL1": "club",
+      "targetL2": "Administration",
+      "targetLocalGroup": "administration",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "tenants.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    }
+  ],
+  "publishingL2": [
+    {
+      "id": "uebersicht",
+      "label": "Übersicht",
+      "keys": [
+        "website",
+        "website-overview"
+      ]
+    },
+    {
+      "id": "inhalte",
+      "label": "Inhalte",
+      "keys": [
+        "website-news",
+        "website-pages",
+        "website-editorial",
+        "website-components"
+      ]
+    },
+    {
+      "id": "website",
+      "label": "Website",
+      "keys": [
+        "website-homepage",
+        "website-navigation",
+        "website-blocks"
+      ]
+    },
+    {
+      "id": "medien",
+      "label": "Medien",
+      "keys": [
+        "website-media"
+      ]
+    },
+    {
+      "id": "kanaele",
+      "label": "Kanäle",
+      "keys": [
+        "website-publishing",
+        "infoboard",
+        "infoboard-overview",
+        "infoboard-preview"
+      ]
+    },
+    {
+      "id": "einstellungen",
+      "label": "Einstellungen",
+      "keys": [
+        "website-settings"
+      ]
+    }
+  ],
+  "clubL2": [
+    {
+      "id": "organisation",
+      "label": "Organisation",
+      "headerVisible": true
+    },
+    {
+      "id": "people-teams",
+      "label": "People & Teams",
+      "headerVisible": true
+    },
+    {
+      "id": "mitgliedschaft",
+      "label": "Mitgliedschaft",
+      "headerVisible": true
+    },
+    {
+      "id": "vereinsentwicklung",
+      "label": "Vereinsentwicklung",
+      "headerVisible": true
+    },
+    {
+      "id": "club-betrieb",
+      "label": "Club-Betrieb",
+      "headerVisible": true
+    },
+    {
+      "id": "finanzen",
+      "label": "Finanzen & Partnerschaften",
+      "headerVisible": true
+    },
+    {
+      "id": "administration",
+      "label": "Administration",
+      "headerVisible": false
+    }
+  ],
+  "depthContract": {
+    "L1": "Verantwortungsdomäne (Dashboard, Planung, Kommunikation, Club, Publishing). Max. fünf sichtbare Club-L1-Domänen in Row 1.",
+    "L2": "Wesentliches Ziel / Verantwortungsbereich innerhalb der Domäne (z. B. Club → People & Teams). Erscheint in Header Row 2, wenn die Domäne aktiv ist.",
+    "L3": "Lokale Navigation innerhalb eines Moduls (Tabs, CMS-Unterseiten, Admin-Kindziele). Nur wenn der aktive Bereich echte lokale Struktur hat — keine globale dritte Zeile.",
+    "APP_EXPLORER": "Vollständige, berechtigungsgefilterte Entdeckung; gleiche L1-Taxonomie wie Header; tiefe/seltene Ziele ohne dauerhaften Header-Platz.",
+    "QUICK_ACCESS": "Persönliche Pins; ändert nie canonical parent/domain; Metadaten ausschliesslich aus nav-config / Ziel-Matrix; Berechtigungen bleiben aktiv.",
+    "DASHBOARD": "Persönliches Betriebs-Home (Programm, Kalender, Aufmerksamkeit, Aufgaben, Schnellzugriff) — kein Sammelbecken für Club-Module."
+  }
+}
