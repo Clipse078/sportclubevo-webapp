@@ -18,7 +18,6 @@ const BATCH_2_PUBLISHING_NAV: Array<[string, string]> = [
   ["website-publishing", "publish"],
   ["website-settings", "settings"],
   ["platform-commercial-billing-invoices", "billing-invoice"],
-  ["finanzen", "billing-invoice"],
 ];
 
 describe("SCE-ICONS-05 publishing & platform nav adoption", () => {

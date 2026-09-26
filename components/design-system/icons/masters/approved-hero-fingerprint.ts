@@ -25,7 +25,7 @@ export const SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS: Record<SceApprovedMasterIc
     ]),
   ) as Record<SceApprovedMasterIconName, string>;
 
-/** Baseline fingerprints — hero + org/work (04R1) + platform Batch 2 (05) + people ops Batch 3 (06). */
+/** Baseline fingerprints — hero + org/work (04R1) + platform Batch 2 (05) + people ops Batch 3 (06) + finance/commercial Batch 4 (07). */
 export const SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS = {
   dashboard: "f72ca981769dfc233add2addcab754ccbc019d2b2c374cb58e6f38cd05faca6c" as const,
   "week-planner":
@@ -87,4 +87,23 @@ export const SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS = {
   "team-management":
     "50e5f218bf793f08ac29d69ed1801723610ac79e6010194a1bed6e67aaf7f76c" as const,
   volunteer: "f8261f1f750cefd86a7420fa7d27b6fe18508125785de682eaa587152e99b2f8" as const,
+  booking: "3c082c8cca98318f197e4f21c7b3004ffb7433e795de9d3fff7e5ec27efd30ac" as const,
+  budget: "d98f681cb7cf0d320ddb75cdfb4172e775ac64941f6eda92f1972facb851c2b0" as const,
+  "business-club": "b6c9dc0647aeb24da70ba8e2fec7df63b1283dd678710ee535707c422ea45e1c" as const,
+  "commercial-account":
+    "a380fd4bcc45aeceda3fe5baf939db890199d156e494f056f17401734d0aa388" as const,
+  contract: "36312a81100465d1e350ffce823937fc6e1149f0f9c05b1083955eef2e63bfba" as const,
+  "cost-centre": "a7f5f311cb54b580a993dd7a3254a1297ee7a315f5b5d021bc78a5e44c052403" as const,
+  expense: "70bebd3e60444616e10fbcf24f775d3b47fefee7d4fc13c4ed213d0ee2d837f6" as const,
+  "facility-booking":
+    "3dfee10b21283ff31e6db18326b1bb1646d08f52172c5f1c45876e4d2b4807b7" as const,
+  finance: "a5091cad589ba38015417ca89a17f3f0787e4f9dc18c74b740aa9f34a288fd55" as const,
+  payment: "3e2ad880903ed39b7fd3cfbf76e71b71001aebd7dc8b6a8af8b7fcdc17e85e58" as const,
+  "qr-invoice": "ee6c1ffb44d407d7b4b87aea87a3b3a79d670d7e417e842ccbc18d416726679b" as const,
+  receipt: "ed3d76cc993c306c0c443cbc4402e47fc5cfbf2feb24133f5d326f0aaf7805d9" as const,
+  revenue: "0663bda25f896b942ca58fc7dce0092604311a6919e0d673c931fbfed94d2369" as const,
+  "sponsorship-management":
+    "85852faa5bf978f59aae9454c3613357eab06da7a87e0d891213e921426d625a" as const,
+  subscription: "8d318ef193a9b4ad38a598e2619276c5a7e8ba75a9feab26fe54d6d15021568d" as const,
+  transaction: "b602f8fcb77861953cb937ce82e17448b9c452731b21dd70861d6ddf05f560d2" as const,
 } as const;

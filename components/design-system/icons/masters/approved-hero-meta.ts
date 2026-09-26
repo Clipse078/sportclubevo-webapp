@@ -50,6 +50,29 @@ export const SCE_APPROVED_PEOPLE_OPERATIONS_MASTER_ICON_NAMES = [
 export type SceApprovedPeopleOperationsMasterIconName =
   (typeof SCE_APPROVED_PEOPLE_OPERATIONS_MASTER_ICON_NAMES)[number];
 
+/** SCE-ICONS-07 — finance, facilities booking & commercial operations approved masters (Batch 4). */
+export const SCE_APPROVED_FINANCE_COMMERCIAL_MASTER_ICON_NAMES = [
+  "booking",
+  "budget",
+  "business-club",
+  "commercial-account",
+  "contract",
+  "cost-centre",
+  "expense",
+  "facility-booking",
+  "finance",
+  "payment",
+  "qr-invoice",
+  "receipt",
+  "revenue",
+  "sponsorship-management",
+  "subscription",
+  "transaction",
+] as const;
+
+export type SceApprovedFinanceCommercialMasterIconName =
+  (typeof SCE_APPROVED_FINANCE_COMMERCIAL_MASTER_ICON_NAMES)[number];
+
 export const SCE_APPROVED_MASTER_ICON_NAMES = [
   ...SCE_APPROVED_HERO_ICON_NAMES,
   "team",
@@ -71,6 +94,7 @@ export const SCE_APPROVED_MASTER_ICON_NAMES = [
   "communication",
   ...SCE_APPROVED_PLATFORM_MASTER_ICON_NAMES,
   ...SCE_APPROVED_PEOPLE_OPERATIONS_MASTER_ICON_NAMES,
+  ...SCE_APPROVED_FINANCE_COMMERCIAL_MASTER_ICON_NAMES,
 ] as const;
 
 export type SceApprovedMasterIconName = (typeof SCE_APPROVED_MASTER_ICON_NAMES)[number];
@@ -140,4 +164,20 @@ export const SCE_APPROVED_MASTER_ASSETS: Record<
   sponsor: `${MASTER_DIR}/sponsor.svg`,
   "team-management": `${MASTER_DIR}/team-management.svg`,
   volunteer: `${MASTER_DIR}/volunteer.svg`,
+  booking: `${MASTER_DIR}/booking.svg`,
+  budget: `${MASTER_DIR}/budget.svg`,
+  "business-club": `${MASTER_DIR}/business-club.svg`,
+  "commercial-account": `${MASTER_DIR}/commercial-account.svg`,
+  contract: `${MASTER_DIR}/contract.svg`,
+  "cost-centre": `${MASTER_DIR}/cost-centre.svg`,
+  expense: `${MASTER_DIR}/expense.svg`,
+  "facility-booking": `${MASTER_DIR}/facility-booking.svg`,
+  finance: `${MASTER_DIR}/finance.svg`,
+  payment: `${MASTER_DIR}/payment.svg`,
+  "qr-invoice": `${MASTER_DIR}/qr-invoice.svg`,
+  receipt: `${MASTER_DIR}/receipt.svg`,
+  revenue: `${MASTER_DIR}/revenue.svg`,
+  "sponsorship-management": `${MASTER_DIR}/sponsorship-management.svg`,
+  subscription: `${MASTER_DIR}/subscription.svg`,
+  transaction: `${MASTER_DIR}/transaction.svg`,
 };

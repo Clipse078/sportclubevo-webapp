@@ -8,6 +8,7 @@ import {
 import type { SceIconSize } from "../SceIcon.types";
 import type {
   SceApprovedMasterIconName,
+  SceApprovedFinanceCommercialMasterIconName,
   SceApprovedPeopleOperationsMasterIconName,
   SceApprovedPlatformMasterIconName,
 } from "../masters/approved-hero-meta";
@@ -64,6 +65,25 @@ const PUBLISHING_PLATFORM_MASTERS: SceApprovedPlatformMasterIconName[] = [
   "audit",
   "settings",
   "billing-invoice",
+];
+
+const FINANCE_COMMERCIAL_MASTERS: SceApprovedFinanceCommercialMasterIconName[] = [
+  "booking",
+  "facility-booking",
+  "payment",
+  "transaction",
+  "finance",
+  "budget",
+  "expense",
+  "revenue",
+  "subscription",
+  "contract",
+  "sponsorship-management",
+  "business-club",
+  "receipt",
+  "qr-invoice",
+  "commercial-account",
+  "cost-centre",
 ];
 
 const ORGANISATION_MASTERS: SceApprovedMasterIconName[] = [
@@ -130,6 +150,22 @@ const MASTER_LABELS: Record<SceApprovedMasterIconName, string> = {
   sponsor: "Sponsor / Sponsoring",
   "team-management": "Team Management",
   volunteer: "Volunteer / Helfer",
+  booking: "Booking",
+  "facility-booking": "Facility Booking",
+  payment: "Payment",
+  transaction: "Transaction",
+  finance: "Finance",
+  budget: "Budget",
+  expense: "Expense",
+  revenue: "Revenue",
+  subscription: "Subscription",
+  contract: "Contract",
+  "sponsorship-management": "Sponsorship Management",
+  "business-club": "Business Club",
+  receipt: "Receipt",
+  "qr-invoice": "QR Invoice",
+  "commercial-account": "Commercial Account",
+  "cost-centre": "Cost Centre",
 };
 
 function SizeRow({
@@ -245,6 +281,12 @@ export function SceIconSpecimen() {
         title="Section 5 — People, Membership & Club Operations"
         description="People identities, membership, participation, facilities, and club operations masters (SCE-ICONS-06 Batch 3)."
         names={PEOPLE_OPERATIONS_MASTERS}
+      />
+
+      <MasterSection
+        title="Section 6 — Finance & Commercial Operations"
+        description="Facilities booking, finance, billing, commercial accounts, and commercial operations masters (SCE-ICONS-07 Batch 4)."
+        names={FINANCE_COMMERCIAL_MASTERS}
       />
 
       <section>
