@@ -11,8 +11,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trophy, RotateCcw, Edit2 } from "lucide-react";
-import { ArchiveSceIcon } from "@/components/icons/domain-sce-icon-components";
+import { RotateCcw, Edit2 } from "lucide-react";
+import { ArchiveSceIcon, CompetitionSceIcon } from "@/components/icons/domain-sce-icon-components";
 import type { CompetitionListItem } from "@/lib/competitions/dto";
 import { SectionCard } from "@/components/ui/page";
 import { Badge } from "@/components/ui/Badge";
@@ -131,7 +131,7 @@ export default function CompetitionsTable({ competitions, canManage = false, can
                 {/* Wettkampf */}
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <Trophy className="h-4 w-4 text-gray-400 shrink-0" />
+                    <CompetitionSceIcon className="h-4 w-4 text-gray-400 shrink-0" />
                     <div>
                       <div className="font-medium text-gray-900">
                         {competition.shortName ?? competition.officialName}

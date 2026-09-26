@@ -9,7 +9,7 @@
  * German UI. Responsive. Server Component with client-side interactions.
  */
 
-import { Trophy } from "lucide-react";
+import { CompetitionSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
@@ -122,7 +122,7 @@ export default async function CompetitionsPage({ searchParams }: CompetitionsPag
           </div>
         }
         isEmpty={competitions.length === 0}
-        emptyIcon={<Trophy className="h-10 w-10" />}
+        emptyIcon={<CompetitionSceIcon className="h-10 w-10" />}
         emptyHeading="Keine Wettkämpfe vorhanden"
         emptyDescription={
           filters.search

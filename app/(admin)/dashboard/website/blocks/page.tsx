@@ -13,10 +13,13 @@
  */
 
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
-import { IntegrationSceIcon, ResultsSceIcon } from "@/components/icons/domain-sce-icon-components";
+import {
+  BlockLibrarySceIcon,
+  IntegrationSceIcon,
+  ResultsSceIcon,
+} from "@/components/icons/domain-sce-icon-components";
 import Link from "next/link";
 import {
-  Blocks,
   LayoutTemplate,
   Newspaper,
   Calendar,
@@ -55,7 +58,7 @@ const BLOCK_ICON_MAP: Record<string, React.ReactNode> = {
   CalendarDays: <CalendarDays className="h-5 w-5" />,
   MousePointerClick: <MousePointerClick className="h-5 w-5" />,
   Award: <ResultsSceIcon className="h-5 w-5" />,
-  Blocks: <Blocks className="h-5 w-5" /> };
+  Blocks: <BlockLibrarySceIcon className="h-5 w-5" /> };
 
 // ---------------------------------------------------------------------------
 // Status helpers
@@ -105,7 +108,7 @@ const CATEGORY_COLOR: Record<
 
 function BlockCard({ block }: { block: BlockDefinition }) {
   const icon = BLOCK_ICON_MAP[block.icon] ?? (
-    <Blocks className="h-5 w-5" />
+    <BlockLibrarySceIcon className="h-5 w-5" />
   );
   const statusCfg = STATUS_CONFIG[block.status];
   const categoryCfg = CATEGORY_COLOR[block.category];
@@ -286,7 +289,7 @@ export default async function BlockLibraryPage() {
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
             style={{ background: "rgba(14,165,233,0.10)", color: "#0EA5E9" }}
           >
-            <Blocks className="h-5 w-5" />
+            <BlockLibrarySceIcon className="h-5 w-5" />
           </div>
           <div>
             <p className="text-sm font-semibold text-[var(--foreground)]">

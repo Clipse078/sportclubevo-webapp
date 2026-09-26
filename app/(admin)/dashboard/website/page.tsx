@@ -1,11 +1,15 @@
 import { notFound } from "next/navigation";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import {
+  BlockLibrarySceIcon,
+  HomepageBuilderSceIcon,
+  MediaLibrarySceIcon,
+  PageSceIcon,
+  WebsiteNavigationSceIcon,
+} from "@/components/icons/domain-sce-icon-components";
 import Link from "next/link";
 import {
   Newspaper,
-  FileText,
-  ImageIcon,
-  LayoutTemplate,
   Send,
   Globe,
   Settings,
@@ -14,8 +18,6 @@ import {
   Clock,
   PenLine,
   Plus,
-  Blocks,
-  Menu,
   Palette,
 } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -201,7 +203,7 @@ export default async function WebsiteCmsOverviewPage() {
               value={stats.pages.total}
               subLabel={`${stats.pages.published} veröffentlicht`}
               href={CMS_ROUTES.pages}
-              icon={<FileText className="h-5 w-5" />}
+              icon={<PageSceIcon className="h-5 w-5" />}
               iconBg="rgba(139,92,246,0.10)"
               iconColor="#8B5CF6"
             />
@@ -232,7 +234,7 @@ export default async function WebsiteCmsOverviewPage() {
               value={stats.media.total}
               subLabel="Assets in der Mediathek"
               href={CMS_ROUTES.media}
-              icon={<ImageIcon className="h-5 w-5" />}
+              icon={<MediaLibrarySceIcon className="h-5 w-5" />}
               iconBg="rgba(16,185,129,0.10)"
               iconColor="#10B981"
             />
@@ -262,7 +264,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             canManageWebsite && {
               href: CMS_ROUTES.pages,
-              icon: <FileText className="h-5 w-5" />,
+              icon: <PageSceIcon className="h-5 w-5" />,
               label: "Seiten",
               sub: `${stats.pages.total} Seiten`,
               color: "#8B5CF6",
@@ -270,7 +272,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             canManageWebsite && {
               href: CMS_ROUTES.homepage,
-              icon: <LayoutTemplate className="h-5 w-5" />,
+              icon: <HomepageBuilderSceIcon className="h-5 w-5" />,
               label: "Homepage",
               sub: "Sektionen verwalten",
               color: "#8B5CF6",
@@ -278,7 +280,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             canManageWebsite && {
               href: CMS_ROUTES.blocks,
-              icon: <Blocks className="h-5 w-5" />,
+              icon: <BlockLibrarySceIcon className="h-5 w-5" />,
               label: "Block-Bibliothek",
               sub: `${BLOCK_REGISTRY.length} Block-Typen`,
               color: "#0EA5E9",
@@ -286,7 +288,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             canManageWebsite && {
               href: CMS_ROUTES.navigation,
-              icon: <Menu className="h-5 w-5" />,
+              icon: <WebsiteNavigationSceIcon className="h-5 w-5" />,
               label: "Navigation",
               sub: "Menüstruktur verwalten",
               color: "#0EA5E9",
@@ -294,7 +296,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             (canManageNews || canManageWebsite) && {
               href: CMS_ROUTES.media,
-              icon: <ImageIcon className="h-5 w-5" />,
+              icon: <MediaLibrarySceIcon className="h-5 w-5" />,
               label: "Mediathek",
               sub: `${stats.media.total} Assets`,
               color: "#10B981",

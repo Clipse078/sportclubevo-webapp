@@ -5,9 +5,9 @@ import {
   CheckSquare,
   ClipboardList,
   Flag,
-  Target,
   TrendingUp,
 } from "lucide-react";
+import { GoalSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { Badge } from "@/components/ui/Badge";
 import { PageShell, PageHeader, PageBreadcrumbs } from "@/components/ui/page";
 import { DashboardKpiCard } from "@/components/ui/dashboard/DashboardKpiCard";
@@ -138,7 +138,7 @@ export default function ClubEntwicklungPage() {
           title="Ziele aktiv"
           value="4"
           accent="primary"
-          icon={<Target className="h-5 w-5" />}
+          icon={<GoalSceIcon className="h-5 w-5" />}
           description="Strategische Vereinsziele"
         />
         <DashboardKpiCard
@@ -158,7 +158,7 @@ export default function ClubEntwicklungPage() {
           <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface-2)] px-5 py-3.5">
             <div className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--sce-primary-light)]">
-                <Target className="h-4 w-4 text-[var(--sce-primary)]" />
+                <GoalSceIcon className="h-4 w-4 text-[var(--sce-primary)]" />
               </div>
               <div>
                 <p className="text-[0.7rem] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">Bereich A</p>
@@ -177,7 +177,7 @@ export default function ClubEntwicklungPage() {
                 className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3.5 py-2.5 text-sm transition hover:bg-[var(--surface-2)]"
               >
                 <div className="flex items-center gap-2">
-                  <Target className="h-3.5 w-3.5 text-[var(--muted)]" />
+                  <GoalSceIcon className="h-3.5 w-3.5 text-[var(--muted)]" />
                   <span className="font-medium text-[var(--foreground)]">Vereinsziele</span>
                 </div>
                 <ArrowRight className="h-3.5 w-3.5 text-[var(--muted)]" />

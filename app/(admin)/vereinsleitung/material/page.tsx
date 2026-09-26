@@ -8,7 +8,7 @@ import {
   Search,
   Wrench } from "lucide-react";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
-import { ArchiveSceIcon } from "@/components/icons/domain-sce-icon-components";
+import { ArchiveSceIcon, MaterialInventorySceIcon } from "@/components/icons/domain-sce-icon-components";
 import { Badge } from "@/components/ui/Badge";
 import { PageShell, PageHeader, PageBreadcrumbs, SectionCard } from "@/components/ui/page";
 import { DashboardKpiCard } from "@/components/ui/dashboard/DashboardKpiCard";
@@ -248,7 +248,7 @@ export default function MaterialPage() {
           title="Positionen"
           value={String(totalItems)}
           accent="default"
-          icon={<Package className="h-5 w-5" />}
+          icon={<MaterialInventorySceIcon className="h-5 w-5" />}
           description="Artikel im Inventar"
         />
         <DashboardKpiCard

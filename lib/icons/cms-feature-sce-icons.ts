@@ -6,7 +6,12 @@ import type { SceIconRegistryName } from "@/components/design-system/icons/regis
  */
 export const CMS_FEATURE_SCE_ICON_BY_KEY: Partial<Record<string, SceIconRegistryName>> = {
   news: "news",
-  homepage_builder: "website",
+  homepage_builder: "homepage-builder",
+  pages: "page",
+  page_builder: "page",
+  media: "media-library",
+  blocks: "block-library",
+  navigation: "website-navigation",
   publishing_queue: "publish",
   scheduled: "publish",
   preview: "publish",

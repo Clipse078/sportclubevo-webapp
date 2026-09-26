@@ -2,11 +2,10 @@
 import {
   CalendarDays,
   Plus,
-  Trophy,
   Upload,
   Volleyball } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { TrainingSceIcon } from "@/components/icons/domain-sce-icon-components";
+import { TournamentSceIcon, TrainingSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getAvailableTeamSeasons } from "@/lib/teams/queries";
 import { getEventsListData } from "@/lib/events/queries";
@@ -66,7 +65,7 @@ const EVENT_TYPES = [
     label: "Turniere",
     description:
       "Turnierdaten pro Team — PlayMore, Hallenturniere und interne Turniere. Wird auf Website, Wochenplan und Infoboard ausgespielt.",
-    icon: Trophy,
+    icon: TournamentSceIcon,
     iconColor: "text-amber-600",
     iconBg: "border-amber-200 bg-amber-50",
     sources: ["ClubCorner / fvnws", "Manuell", "CSV / Excel"],

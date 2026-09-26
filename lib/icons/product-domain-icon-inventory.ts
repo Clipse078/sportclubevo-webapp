@@ -71,19 +71,8 @@ const SKIP_DIR_NAMES = new Set([
 
 const SKIP_FILE_PREFIXES = ["components/design-system/icons/"];
 
-export const MISSING_BY_LUCIDE: Record<string, string> = {
-  Trophy: "competition",
-  FileText: "page",
-  ImageIcon: "media-library",
-  Blocks: "block-library",
-  Menu: "website-navigation-structure",
-  LayoutTemplate: "homepage-layout",
-  Target: "goal",
-  Lightbulb: "initiative",
-  Package: "material-inventory",
-  ShieldAlert: "discipline-incident",
-  Hourglass: "waiting-list",
-};
+/** Legacy inventory hints — resolved via context in {@link resolveLucideSemantic}. */
+export const MISSING_BY_LUCIDE: Record<string, string> = {};
 
 function walk(dir: string, out: string[] = []): string[] {
   if (!statSync(dir, { throwIfNoEntry: false })?.isDirectory()) return out;

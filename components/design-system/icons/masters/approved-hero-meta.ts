@@ -92,6 +92,25 @@ export const SCE_APPROVED_ANALYTICS_WORKFLOW_MASTER_ICON_NAMES = [
 export type SceApprovedAnalyticsWorkflowMasterIconName =
   (typeof SCE_APPROVED_ANALYTICS_WORKFLOW_MASTER_ICON_NAMES)[number];
 
+/** SCE-ICONS-12 / SCE-ICONS-13 — final semantic approved masters (Batch 6). */
+export const SCE_APPROVED_FINAL_SEMANTIC_MASTER_ICON_NAMES = [
+  "competition",
+  "page",
+  "media-library",
+  "block-library",
+  "website-navigation",
+  "homepage-builder",
+  "goal",
+  "initiative",
+  "material-inventory",
+  "discipline-incident",
+  "target-group",
+  "waiting-list",
+] as const;
+
+export type SceApprovedFinalSemanticMasterIconName =
+  (typeof SCE_APPROVED_FINAL_SEMANTIC_MASTER_ICON_NAMES)[number];
+
 export const SCE_APPROVED_MASTER_ICON_NAMES = [
   ...SCE_APPROVED_HERO_ICON_NAMES,
   "team",
@@ -115,6 +134,7 @@ export const SCE_APPROVED_MASTER_ICON_NAMES = [
   ...SCE_APPROVED_PEOPLE_OPERATIONS_MASTER_ICON_NAMES,
   ...SCE_APPROVED_FINANCE_COMMERCIAL_MASTER_ICON_NAMES,
   ...SCE_APPROVED_ANALYTICS_WORKFLOW_MASTER_ICON_NAMES,
+  ...SCE_APPROVED_FINAL_SEMANTIC_MASTER_ICON_NAMES,
 ] as const;
 
 export type SceApprovedMasterIconName = (typeof SCE_APPROVED_MASTER_ICON_NAMES)[number];
@@ -212,4 +232,16 @@ export const SCE_APPROVED_MASTER_ASSETS: Record<
   integration: `${MASTER_DIR}/integration.svg`,
   report: `${MASTER_DIR}/report.svg`,
   workflow: `${MASTER_DIR}/workflow.svg`,
+  competition: `${MASTER_DIR}/competition.svg`,
+  page: `${MASTER_DIR}/page.svg`,
+  "media-library": `${MASTER_DIR}/media-library.svg`,
+  "block-library": `${MASTER_DIR}/block-library.svg`,
+  "website-navigation": `${MASTER_DIR}/website-navigation.svg`,
+  "homepage-builder": `${MASTER_DIR}/homepage-builder.svg`,
+  goal: `${MASTER_DIR}/goal.svg`,
+  initiative: `${MASTER_DIR}/initiative.svg`,
+  "material-inventory": `${MASTER_DIR}/material-inventory.svg`,
+  "discipline-incident": `${MASTER_DIR}/discipline-incident.svg`,
+  "target-group": `${MASTER_DIR}/target-group.svg`,
+  "waiting-list": `${MASTER_DIR}/waiting-list.svg`,
 };

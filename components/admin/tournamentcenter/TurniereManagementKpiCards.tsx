@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FacilitySceIcon, HistorySceIcon } from "@/components/icons/domain-sce-icon-components";
-import { CalendarClock, MapPin, Trophy } from "lucide-react";
+import { CalendarClock, MapPin } from "lucide-react";
+import { TournamentSceIcon } from "@/components/icons/domain-sce-icon-components";
 import type { TurniereManagementKpis } from "@/lib/tournaments/management-view";
 import { cn } from "@/lib/cn";
 import { SCE_KPI_CARD_SURFACE } from "@/lib/shell/sce-surface-system";
@@ -55,7 +56,7 @@ export default function TurniereManagementKpiCards({
       label: "Total",
       value: kpis.total,
       hint: "alle Turniere",
-      icon: Trophy,
+      icon: TournamentSceIcon,
       iconTile: "bg-emerald-500/15 text-emerald-400",
       "data-testid": "turniere-kpi-total" },
     {

@@ -12,11 +12,11 @@ import { SCE_ICON_REGISTRY } from "@/components/design-system/icons/registry";
 import { SCE_APPROVED_MASTER_ICON_NAMES } from "@/components/design-system/icons/masters/approved-hero-meta";
 
 describe("SCE-ICONS-04 semantic mapping audit", () => {
-  it("records HIGH-confidence rows and defers MEDIUM/LOW", () => {
+  it("records HIGH-confidence rows with full adoption after SCE-ICONS-13", () => {
     const summary = summarizeSceSemanticMappingAudit();
     expect(summary.highConfidence).toBeGreaterThan(5);
-    expect(summary.lowConfidence + summary.mediumConfidence).toBeGreaterThan(0);
-    expect(summary.adoptedNow).toBe(summary.highConfidence);
+    expect(summary.deferred).toBe(0);
+    expect(summary.adoptedNow).toBe(summary.highConfidence + summary.mediumConfidence + summary.lowConfidence);
   });
 
   it("only adopts HIGH-confidence mappings in nav destination wiring", () => {

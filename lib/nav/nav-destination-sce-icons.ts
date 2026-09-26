@@ -70,6 +70,16 @@ export const NAV_DESTINATION_SCE_ICON_BY_KEY = {
   "platform-roles": "roles-access",
   "platform-operations": "audit",
   "platform-access": "roles-access",
+  competitions: "competition",
+  "target-groups": "target-group",
+  warteliste: "waiting-list",
+  material: "material-inventory",
+  "vorfaelle-disziplin": "discipline-incident",
+  "website-pages": "page",
+  "website-media": "media-library",
+  "website-blocks": "block-library",
+  "website-navigation": "website-navigation",
+  "website-homepage-builder": "homepage-builder",
 } as const satisfies Record<string, SceIconRegistryName>;
 
 export type NavDestinationSceIconKey = keyof typeof NAV_DESTINATION_SCE_ICON_BY_KEY;

@@ -1,6 +1,6 @@
 "use client";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
-import { TrainingSceIcon } from "@/components/icons/domain-sce-icon-components";
+import { CompetitionSceIcon, TrainingSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 import {
   Calendar,
@@ -11,7 +11,6 @@ import {
   Globe,
   Monitor,
   ChevronRight,
-  Trophy,
   MoreHorizontal,
   Smile } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -39,7 +38,7 @@ type Props = {
 };
 
 const PARTICIPATION_ICONS: Record<ParticipationType, React.ReactNode> = {
-  COMPETITION: <Trophy className="h-3.5 w-3.5" />,
+  COMPETITION: <CompetitionSceIcon className="h-3.5 w-3.5" />,
   TRAINING: <TrainingSceIcon className="h-3.5 w-3.5" />,
   DEVELOPMENT: <Star className="h-3.5 w-3.5" />,
   RECREATIONAL: <Smile className="h-3.5 w-3.5" />,
@@ -224,7 +223,7 @@ export default function WizardReview({
           {selectedCompetition ? (
             <>
               <ReviewRow
-                icon={<Trophy className="h-3.5 w-3.5" />}
+                icon={<CompetitionSceIcon className="h-3.5 w-3.5" />}
                 label="Wettkampf"
                 value={
                   selectedCompetition.shortName ??
@@ -248,7 +247,7 @@ export default function WizardReview({
             </>
           ) : (
             <ReviewRow
-              icon={<Trophy className="h-3.5 w-3.5 text-[var(--text-3)]" />}
+              icon={<CompetitionSceIcon className="h-3.5 w-3.5 text-[var(--text-3)]" />}
               label="Wettkampf"
               value={
                 <span className="text-amber-600">

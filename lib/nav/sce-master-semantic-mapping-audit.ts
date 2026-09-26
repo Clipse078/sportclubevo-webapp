@@ -207,9 +207,9 @@ export const SCE_MASTER_SEMANTIC_MAPPING_AUDIT: SceSemanticMappingAuditRow[] = [
   {
     destination: "competitions",
     currentIcon: "Lucide:Trophy",
-    proposedSceMaster: null,
-    confidence: "LOW",
-    adoptedNow: false,
+    proposedSceMaster: "competition",
+    confidence: "HIGH",
+    adoptedNow: true,
   },
   {
     destination: "mitglieder",

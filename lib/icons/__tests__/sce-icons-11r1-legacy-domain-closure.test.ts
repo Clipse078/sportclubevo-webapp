@@ -24,26 +24,26 @@ describe("SCE-ICONS-11R1 legacy domain closure", () => {
     60_000,
   );
 
-  it("clears LEGACY_MIX routes while preserving missing-master backlog", () => {
+  it("clears LEGACY_MIX routes and missing-master backlog after SCE-ICONS-13", () => {
     const report = runWebappIconCoverageAudit();
     const legacyMix = report.routeMatrix.filter((r) => r.consistency === "LEGACY_MIX");
     expect(legacyMix).toEqual([]);
-    expect(report.missingMasterBacklog.map((r) => r.concept).sort()).toEqual(
-      [...MISSING_SCE_SEMANTICS.map((r) => r.concept)].sort(),
-    );
+    expect(report.missingMasterBacklog).toEqual([]);
+    expect(MISSING_SCE_SEMANTICS).toEqual([]);
   });
 
   it("migrates veranstaltungen KPI past to canonical history master", () => {
     const { veranstaltungenDeepDive } = runWebappIconCoverageAudit();
     expect(veranstaltungenDeepDive.KPI_PAST.symbols).toContain("HistorySceIcon");
     expect(veranstaltungenDeepDive.KPI_PAST.classification).toContain("SCE_DOMAIN_APPROVED");
-    expect(veranstaltungenDeepDive.KPI_TOTAL.classification).toContain("SCE_DOMAIN_MISSING_MASTER");
+    expect(veranstaltungenDeepDive.KPI_TOTAL.classification).toContain("SCE_DOMAIN_APPROVED");
+    expect(veranstaltungenDeepDive.KPI_TOTAL.symbols).toContain("CompetitionSceIcon");
   });
 
-  it("keeps approved artwork frozen (78 masters, unchanged SVG count)", () => {
-    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(78);
+  it("keeps approved artwork frozen (90 masters including final semantic batch)", () => {
+    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(90);
     expect(readdirSync(join(process.cwd(), "public/images/icons")).filter((f) => f.endsWith(".svg")).length).toBe(
-      78,
+      90,
     );
     const fp = readFileSync(
       join(process.cwd(), "components/design-system/icons/masters/approved-hero-fingerprint.ts"),

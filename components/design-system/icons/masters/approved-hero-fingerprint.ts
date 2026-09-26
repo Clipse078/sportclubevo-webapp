@@ -25,7 +25,7 @@ export const SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS: Record<SceApprovedMasterIc
     ]),
   ) as Record<SceApprovedMasterIconName, string>;
 
-/** Baseline fingerprints — hero + org/work (04R1) + platform Batch 2 (05) + people ops Batch 3 (06) + finance/commercial Batch 4 (07) + analytics/workflow Batch 5 (08). */
+/** Baseline fingerprints — hero + org/work (04R1) + platform Batch 2 (05) + people ops Batch 3 (06) + finance/commercial Batch 4 (07) + analytics/workflow Batch 5 (08) + final semantics Batch 6 (12/13). */
 export const SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS = {
   dashboard: "f72ca981769dfc233add2addcab754ccbc019d2b2c374cb58e6f38cd05faca6c" as const,
   "week-planner":
@@ -118,4 +118,21 @@ export const SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS = {
   integration: "0e1fac9c4f0b3102550ab5604f54a84f7ca6bc95a0d272efd3bd84921e8aa719" as const,
   report: "d481b174eceac2a7c63e2ab3f0844a5d30d6aa3242829e2566eed2871d2493dd" as const,
   workflow: "2ce58d78e695498693443355e999dfd9d4cf68808b9f83e9f2652cfbb29c12a8" as const,
+  competition: "d797719cff99fd915b568ff43a9214ef0e44e7cabfbb82f393f528d7f4dbf35c" as const,
+  page: "fcb3a5434e8b228dc4ecc7cbc1f9257b3e147b1f44d595926bd1926c1774fa8b" as const,
+  "media-library":
+    "3dfef19285fe53f8d1f455467d73aa4519e33c78143c4253209f76610ebc3d1d" as const,
+  "block-library": "6ea8f7c83933fec9bd48d1b562161186c080ef78f809c38fc84a42c7879354f5" as const,
+  "website-navigation":
+    "80dfe58cac7e03b1665e6499e475129b9b27f7743cf3f11ce267eb3b90d64b8f" as const,
+  "homepage-builder":
+    "93c3c74b3335627713d7402c9914a624394cbbcd0c69f87584d79ffd3a37214d" as const,
+  goal: "0871ff089a656c2c73217e206b77fa78fd430c37079cc11721fc6ba3316af7a3" as const,
+  initiative: "1c43c58aebcd650398deb59dbe188112c99d3ed3d5e44904154909739ca3bc35" as const,
+  "material-inventory":
+    "589a09743a207fda56aba2633857e4c38d6553d6a6913cc3d5965ce8625017a2" as const,
+  "discipline-incident":
+    "844eb0785aa54a2bf17b6b71d164fc56a0367ff74175d55a59cbaaad9c5d1bba" as const,
+  "target-group": "2585f0ef8b541ff71543d61df1d9045a74145d55faf2c0ef3bc262bf20f61261" as const,
+  "waiting-list": "d463c6af54b22304bddfe77f3d8c86b97bea53a92c4bf47d422cb84538b5c916" as const,
 } as const;

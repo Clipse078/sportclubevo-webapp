@@ -250,6 +250,18 @@ const DOMAIN_SCE_COMPONENT_TO_MASTER: Record<string, string> = {
   ContactSceIcon: "contact",
   DashboardSceIcon: "dashboard",
   AttentionSceIcon: "attention",
+  CompetitionSceIcon: "competition",
+  PageSceIcon: "page",
+  MediaLibrarySceIcon: "media-library",
+  BlockLibrarySceIcon: "block-library",
+  WebsiteNavigationSceIcon: "website-navigation",
+  HomepageBuilderSceIcon: "homepage-builder",
+  GoalSceIcon: "goal",
+  InitiativeSceIcon: "initiative",
+  MaterialInventorySceIcon: "material-inventory",
+  DisciplineIncidentSceIcon: "discipline-incident",
+  TargetGroupSceIcon: "target-group",
+  WaitingListSceIcon: "waiting-list",
 };
 
 const ROUTE_DOMAIN_RULES: Array<[RegExp, string]> = [
@@ -780,7 +792,11 @@ function auditVeranstaltungen(all: IconOccurrenceRecord[]): VeranstaltungenZoneA
     CREATE_ACTION: zonePick((r) => /Plus|create|erstellen/i.test(r.jsxSnippet)),
     KPI_UPCOMING: zonePick((r) => r.file.includes("VeranstaltungenManagementWorkspace") && /CalendarClock|kpi-upcoming/i.test(r.jsxSnippet)),
     KPI_PAST: zonePick((r) => /HistorySceIcon|History|kpi-past/i.test(r.jsxSnippet)),
-    KPI_TOTAL: zonePick((r) => /Trophy|kpi-total/i.test(r.jsxSnippet)),
+    KPI_TOTAL: zonePick(
+      (r) =>
+        r.file.includes("VeranstaltungenManagementWorkspace") &&
+        /CompetitionSceIcon|veranstaltungen-kpi-total|Trophy/i.test(r.jsxSnippet),
+    ),
     KPI_LOCATIONS: zonePick((r) => /FacilitySceIcon|kpi-venues|MapPin/i.test(r.jsxSnippet)),
     SEARCH: zonePick((r) => /Search|toolbar/i.test(r.file + r.jsxSnippet)),
     EVENT_ROWS: zonePick((r) => r.file.includes("VeranstaltungListRow")),
@@ -793,7 +809,7 @@ function auditVeranstaltungen(all: IconOccurrenceRecord[]): VeranstaltungenZoneA
     legacyWithAvailableMaster: routeRows.filter((r) => r.legacyDespiteMaster).map((r) => `${r.symbol}→${r.sceMaster}`),
     utilityValid: routeRows.filter((r) => r.classification === "UTILITY_ACTION").map((r) => r.symbol),
     whyVisuallyMixed:
-      "Planning shell uses SCE events in nav while KPI tiles mix CalendarClock/History/Trophy Lucide metaphors, FacilitySceIcon for venues, utility Plus/Search/Filter elsewhere — branded, legacy-generic, and missing-master domain glyphs appear together.",
+      "Planning shell uses SCE events in nav; KPI tiles combine SCE competition/history/facility domain icons with utility CalendarClock/Plus/Search/filter chrome by design.",
   };
 
   return deepDive;

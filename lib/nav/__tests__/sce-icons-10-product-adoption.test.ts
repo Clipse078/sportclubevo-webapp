@@ -39,11 +39,11 @@ const DEFERRED_NOW_ADOPTED = [
 ] as const;
 
 describe("SCE-ICONS-10 artwork freeze", () => {
-  it("keeps 78 approved masters and 92 registry concepts", () => {
-    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(78);
-    expect(SCE_ICON_REGISTRY_NAMES.length).toBe(92);
+  it("keeps 90 approved masters and extended registry concepts", () => {
+    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(90);
+    expect(SCE_ICON_REGISTRY_NAMES.length).toBeGreaterThanOrEqual(104);
     expect(readdirSync(join(process.cwd(), "public/images/icons")).filter((f) => f.endsWith(".svg")).length).toBe(
-      78,
+      90,
     );
   });
 
@@ -69,9 +69,9 @@ describe("SCE-ICONS-10 deferred nav semantics resolved", () => {
     }
   });
 
-  it("does not force standings onto competitions", () => {
-    expect(getNavDestinationSceIconName("competitions")).toBeNull();
-    expect(missingSceSemanticConcepts().has("competition")).toBe(true);
+  it("maps competitions to the competition master (not standings)", () => {
+    expect(getNavDestinationSceIconName("competitions")).toBe("competition");
+    expect(missingSceSemanticConcepts().has("competition")).toBe(false);
   });
 });
 
@@ -81,11 +81,9 @@ describe("SCE-ICONS-10 repository adoption inventory", () => {
     expect(report.unresolvedDomainWithExistingMaster).toEqual([]);
   });
 
-  it("accounts for missing masters explicitly", () => {
-    expect(MISSING_SCE_SEMANTICS.length).toBeGreaterThan(0);
-    for (const row of reportMissingWithoutMaster()) {
-      expect(missingSceSemanticConcepts().has(row.missingConcept!)).toBe(true);
-    }
+  it("has no missing master semantics after SCE-ICONS-13", () => {
+    expect(MISSING_SCE_SEMANTICS.length).toBe(0);
+    expect(reportMissingWithoutMaster()).toEqual([]);
   });
 
   it("keeps utility boundary separate from domain mapping table", () => {

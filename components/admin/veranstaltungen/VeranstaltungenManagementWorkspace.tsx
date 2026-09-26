@@ -1,6 +1,10 @@
 import Link from "next/link";
-import { FacilitySceIcon, HistorySceIcon } from "@/components/icons/domain-sce-icon-components";
-import { CalendarClock, MapPin, Plus, Trophy } from "lucide-react";
+import {
+  CompetitionSceIcon,
+  FacilitySceIcon,
+  HistorySceIcon,
+} from "@/components/icons/domain-sce-icon-components";
+import { CalendarClock, MapPin, Plus } from "lucide-react";
 import type { ClubEvent } from "@/lib/events/club-events-service";
 import {
   formatMonthLabel,
@@ -225,7 +229,7 @@ export default function VeranstaltungenManagementWorkspace({
             label: "Total",
             value: kpis.total,
             hint: "ohne Archiv",
-            icon: Trophy,
+            icon: CompetitionSceIcon,
             surface: "border-emerald-500/25 bg-emerald-950/35",
             iconTile: "bg-emerald-500/15 text-emerald-400",
             "data-testid": "veranstaltungen-kpi-total" },

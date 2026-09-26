@@ -1,4 +1,4 @@
-import { ShieldAlert } from "lucide-react";
+import { DisciplineIncidentSceIcon } from "@/components/icons/domain-sce-icon-components";
 import type { FutureModuleCapability } from "@/components/admin/future-modules/FutureModuleShell";
 
 export const FUTURE_MODULE_PERMISSION_KEYS_NOTE =
@@ -183,12 +183,12 @@ export const VORFAELLE_DISZIPLIN_CAPABILITIES: FutureModuleCapability[] = [
   {
     title: "Vorfall erfassen",
     description: "Vorfälle strukturiert und diskret aufnehmen.",
-    icon: ShieldAlert,
+    icon: DisciplineIncidentSceIcon,
   },
   {
     title: "Fallübersicht",
     description: "Laufende und abgeschlossene Fälle mit klarer Zuständigkeit führen.",
-    icon: ShieldAlert,
+    icon: DisciplineIncidentSceIcon,
   },
   {
     title: "Massnahmen",

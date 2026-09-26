@@ -9,6 +9,7 @@ import { SCE_APPROVED_ANALYTICS_WORKFLOW_MASTER_GLYPHS } from "./approved-analyt
 import { SCE_APPROVED_FINANCE_COMMERCIAL_MASTER_GLYPHS } from "./approved-finance-commercial-master-glyphs";
 import { SCE_APPROVED_PEOPLE_OPERATIONS_MASTER_GLYPHS } from "./approved-people-operations-master-glyphs";
 import { SCE_APPROVED_PLATFORM_MASTER_GLYPHS } from "./approved-platform-master-glyphs";
+import { SCE_APPROVED_FINAL_SEMANTIC_MASTER_GLYPHS } from "./approved-final-semantic-master-glyphs";
 import { SCE_APPROVED_HERO_VIEWBOX } from "./approved-hero-meta";
 
 type ApprovedHeroGlyphProps = SceIconGlyphProps;
@@ -120,6 +121,7 @@ export function isSceApprovedMasterGlyph(glyph: ComponentType<SceIconGlyphProps>
     ...SCE_APPROVED_PEOPLE_OPERATIONS_MASTER_GLYPHS,
     ...SCE_APPROVED_FINANCE_COMMERCIAL_MASTER_GLYPHS,
     ...SCE_APPROVED_ANALYTICS_WORKFLOW_MASTER_GLYPHS,
+    ...SCE_APPROVED_FINAL_SEMANTIC_MASTER_GLYPHS,
   ] as readonly ComponentType<SceIconGlyphProps>[];
   return all.includes(glyph);
 }

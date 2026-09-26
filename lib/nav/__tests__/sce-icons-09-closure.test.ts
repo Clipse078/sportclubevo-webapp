@@ -46,7 +46,6 @@ const PROVISIONAL_DOMAIN_REGISTRY_NAMES = [
 const DEFERRED_SEMANTIC_DESTINATIONS = [
   "organisation",
   "veranstaltungen",
-  "competitions",
   "meetings",
   "vereine",
 ] as const;
@@ -57,10 +56,10 @@ function readRelative(relativePath: string): string {
 
 describe("SCE-ICONS-09 programme baseline", () => {
   it("keeps canonical approved master and registry totals", () => {
-    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(78);
-    expect(SCE_ICON_REGISTRY_NAMES.length).toBe(92);
+    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(90);
+    expect(SCE_ICON_REGISTRY_NAMES.length).toBeGreaterThanOrEqual(104);
     expect(readdirSync(join(process.cwd(), "public/images/icons")).filter((f) => f.endsWith(".svg")).length).toBe(
-      78,
+      90,
     );
   });
 
@@ -109,19 +108,15 @@ describe("SCE-ICONS-09 high-confidence adoption", () => {
     }
   });
 
-  it("defers only destinations without an exact approved master (SCE-ICONS-10)", () => {
+  it("adopts all semantic audit rows after SCE-ICONS-13 (zero deferred)", () => {
     const summary = summarizeSceSemanticMappingAudit();
-    expect(summary.deferred).toBeGreaterThan(0);
+    expect(summary.deferred).toBe(0);
     for (const destination of DEFERRED_SEMANTIC_DESTINATIONS) {
       const row = SCE_MASTER_SEMANTIC_MAPPING_AUDIT.find((r) => r.destination === destination);
-      if (destination === "competitions") {
-        expect(row?.adoptedNow).toBe(false);
-        expect(getNavDestinationSceIconName(destination)).toBeNull();
-        continue;
-      }
       expect(row?.adoptedNow).toBe(true);
       expect(getNavDestinationSceIconName(destination)).toBe(row?.proposedSceMaster);
     }
+    expect(getNavDestinationSceIconName("competitions")).toBe("competition");
   });
 
   it("routes adopted nav destinations only through central mapping keys", () => {

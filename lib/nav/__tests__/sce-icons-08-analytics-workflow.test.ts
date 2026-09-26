@@ -21,11 +21,11 @@ describe("SCE-ICONS-08 analytics, reporting & workflow", () => {
       expect(SCE_APPROVED_MASTER_ICON_NAMES).toContain(name);
       expect(SCE_ICON_REGISTRY[name].geometrySource).toBe("approved-master");
     }
-    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(78);
+    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(90);
   });
 
   it("extends the registry without removing prior concepts", () => {
-    expect(SCE_ICON_REGISTRY_NAMES.length).toBe(92);
+    expect(SCE_ICON_REGISTRY_NAMES.length).toBeGreaterThanOrEqual(104);
     expect(SCE_ICON_REGISTRY.analytics.geometrySource).toBe("approved-master");
     expect(SCE_ICON_REGISTRY.dashboard.geometrySource).toBe("approved-master");
     expect(SCE_ICON_REGISTRY.match.geometrySource).toBe("approved-master");

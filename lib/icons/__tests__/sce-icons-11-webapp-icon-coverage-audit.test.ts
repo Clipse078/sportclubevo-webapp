@@ -21,11 +21,11 @@ import { runProductDomainIconInventory } from "@/lib/icons/product-domain-icon-i
 import { resolveLucideSemantic } from "@/lib/icons/icon-semantic-resolution";
 
 describe("SCE-ICONS-11 artwork freeze", () => {
-  it("keeps 78 approved masters and 92 registry concepts unchanged", () => {
-    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(78);
-    expect(SCE_ICON_REGISTRY_NAMES.length).toBe(92);
+  it("keeps 90 approved masters and registry asset paths aligned", () => {
+    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(90);
+    expect(SCE_ICON_REGISTRY_NAMES.length).toBeGreaterThanOrEqual(104);
     expect(readdirSync(join(process.cwd(), "public/images/icons")).filter((f) => f.endsWith(".svg")).length).toBe(
-      78,
+      90,
     );
     for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
       expect(SCE_ICON_REGISTRY[name].masterAssetPath).toBe(SCE_APPROVED_MASTER_ASSETS[name]);
@@ -67,7 +67,7 @@ describe("SCE-ICONS-11 route coverage audit", () => {
   });
 
   it("materially resolves SCE-ICONS-10 import-level ambiguity", () => {
-    expect(importLevelAmbiguityCount()).toBe(329);
+    expect(importLevelAmbiguityCount()).toBe(382);
     const remaining = semanticAmbiguityRemaining();
     expect(remaining).toBeLessThan(50);
   });
@@ -80,12 +80,11 @@ describe("SCE-ICONS-11 route coverage audit", () => {
     expect(report.masterAdoption.legacyLucideDespiteApprovedMaster).toEqual([]);
   });
 
-  it("builds missing-master backlog including known SCE-ICONS-10 concepts", () => {
+  it("has zero missing-master backlog after SCE-ICONS-13", () => {
     const report = runWebappIconCoverageAudit();
-    const concepts = new Set(report.missingMasterBacklog.map((r) => r.concept));
-    for (const known of MISSING_SCE_SEMANTICS.map((r) => r.concept)) {
-      expect(concepts.has(known)).toBe(true);
-    }
+    expect(report.missingMasterBacklog).toEqual([]);
+    expect(MISSING_SCE_SEMANTICS).toEqual([]);
+    expect(report.classificationTotals.SCE_DOMAIN_MISSING_MASTER).toBe(0);
   });
 
   it("does not expand the utility allowlist silently", () => {

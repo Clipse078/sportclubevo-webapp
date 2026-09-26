@@ -15,7 +15,8 @@
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, PenLine, Blocks } from "lucide-react";
+import { ChevronLeft, PenLine } from "lucide-react";
+import { BlockLibrarySceIcon } from "@/components/icons/domain-sce-icon-components";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -60,7 +61,7 @@ export default async function PageBuilderPage({
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-2)] border border-[var(--border)]">
-            <Blocks className="h-5 w-5 text-[var(--text-2)]" />
+            <BlockLibrarySceIcon className="h-5 w-5 text-[var(--text-2)]" />
           </div>
           <div>
             <PageHeader

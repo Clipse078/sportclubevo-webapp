@@ -9,6 +9,7 @@ import type { SceIconSize } from "../SceIcon.types";
 import type {
   SceApprovedMasterIconName,
   SceApprovedAnalyticsWorkflowMasterIconName,
+  SceApprovedFinalSemanticMasterIconName,
   SceApprovedFinanceCommercialMasterIconName,
   SceApprovedPeopleOperationsMasterIconName,
   SceApprovedPlatformMasterIconName,
@@ -66,6 +67,21 @@ const PUBLISHING_PLATFORM_MASTERS: SceApprovedPlatformMasterIconName[] = [
   "audit",
   "settings",
   "billing-invoice",
+];
+
+const FINAL_SEMANTIC_MASTERS: SceApprovedFinalSemanticMasterIconName[] = [
+  "competition",
+  "page",
+  "media-library",
+  "block-library",
+  "website-navigation",
+  "homepage-builder",
+  "goal",
+  "initiative",
+  "material-inventory",
+  "discipline-incident",
+  "target-group",
+  "waiting-list",
 ];
 
 const ANALYTICS_WORKFLOW_MASTERS: SceApprovedAnalyticsWorkflowMasterIconName[] = [
@@ -194,6 +210,18 @@ const MASTER_LABELS: Record<SceApprovedMasterIconName, string> = {
   export: "Export",
   archive: "Archive",
   history: "History",
+  competition: "Competition / Wettkämpfe",
+  page: "Page / CMS Seite",
+  "media-library": "Media Library / Mediathek",
+  "block-library": "Block Library",
+  "website-navigation": "Website Navigation",
+  "homepage-builder": "Homepage Builder",
+  goal: "Goal / Ziele",
+  initiative: "Initiative / Initiativen",
+  "material-inventory": "Material & Inventory",
+  "discipline-incident": "Discipline Incident",
+  "target-group": "Target Group / Zielgruppen",
+  "waiting-list": "Waiting List / Warteliste",
 };
 
 function SizeRow({
@@ -319,8 +347,14 @@ export function SceIconSpecimen() {
 
       <MasterSection
         title="Section 7 — Analytics, Reporting & Workflow"
-        description="Analytics, reporting, workflow, automation, integration, and data lifecycle masters (SCE-ICONS-08 Batch 5 — final artwork expansion)."
+        description="Analytics, reporting, workflow, automation, integration, and data lifecycle masters (SCE-ICONS-08 Batch 5)."
         names={ANALYTICS_WORKFLOW_MASTERS}
+      />
+
+      <MasterSection
+        title="Section 8 — Final semantic masters"
+        description="SCE-ICONS-12 / SCE-ICONS-13 — last approved domain semantics (competition, CMS surfaces, club development, governance)."
+        names={FINAL_SEMANTIC_MASTERS}
       />
 
       <section>
