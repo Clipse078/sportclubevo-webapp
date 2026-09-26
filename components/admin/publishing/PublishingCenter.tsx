@@ -1,10 +1,10 @@
 "use client";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { AttentionSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import {
-  Inbox,
+import { 
   PenLine,
   RefreshCw,
   Send,
@@ -14,8 +14,7 @@ import {
   EyeOff,
   Archive,
   Newspaper,
-  FileText,
-} from "lucide-react";
+  FileText } from "lucide-react";
 import type {
   FilterContentType,
   FilterStatus,
@@ -23,14 +22,12 @@ import type {
   PublishableItem,
   PublishingOverviewResponse,
   PublishingStatus,
-  PublishingStatusCounts,
-} from "@/lib/publishing/types";
+  PublishingStatusCounts } from "@/lib/publishing/types";
 import {
   CONTENT_TYPE_LABEL,
   PUBLISHING_STATUS_BADGE_CLASS,
   PUBLISHING_STATUS_CARD,
-  PUBLISHING_STATUS_LABEL,
-} from "@/lib/publishing/types";
+  PUBLISHING_STATUS_LABEL } from "@/lib/publishing/types";
 import { SectionCard, EmptyState } from "@/components/ui/page";
 
 // ── Formatting ─────────────────────────────────────────────────────────────────
@@ -40,8 +37,7 @@ function fmtDate(iso: string | null): string {
   return new Intl.DateTimeFormat("de-CH", {
     day: "2-digit",
     month: "2-digit",
-    year: "numeric",
-  }).format(new Date(iso));
+    year: "numeric" }).format(new Date(iso));
 }
 
 // ── Status badge ───────────────────────────────────────────────────────────────
@@ -84,8 +80,7 @@ const STATUS_ORDER: PublishingStatus[] = [
 function StatusCards({
   counts,
   activeStatus,
-  onSelect,
-}: {
+  onSelect }: {
   counts: PublishingStatusCounts;
   activeStatus: FilterStatus;
   onSelect: (s: FilterStatus) => void;
@@ -134,8 +129,7 @@ function WorkflowActions({
   canManageNews,
   canManagePages,
   pending,
-  onAction,
-}: WorkflowActionProps) {
+  onAction }: WorkflowActionProps) {
   const canAct =
     (item.type === "news" && canManageNews) ||
     (item.type === "page" && canManagePages);
@@ -278,8 +272,7 @@ export default function PublishingCenter() {
         type: typeFilter,
         status: statusFilter,
         limit: "100",
-        offset: "0",
-      });
+        offset: "0" });
       const res = await fetch(`/api/publishing/overview?${params}`);
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json?.error ?? "Ladefehler");
@@ -309,8 +302,7 @@ export default function PublishingCenter() {
       const res = await fetch(`${endpoint}${qs}`, {
         method: "POST",
         headers: bodyData ? { "Content-Type": "application/json" } : undefined,
-        body: bodyData ? JSON.stringify(bodyData) : undefined,
-      });
+        body: bodyData ? JSON.stringify(bodyData) : undefined });
 
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -462,7 +454,7 @@ export default function PublishingCenter() {
           </div>
         ) : items.length === 0 ? (
           <EmptyState
-            icon={<Inbox className="h-10 w-10" />}
+            icon={<AttentionSceIcon className="h-10 w-10" />}
             heading="Keine Inhalte in dieser Ansicht"
             description="Passen Sie die Filter an oder erstellen Sie neuen Inhalt."
           />

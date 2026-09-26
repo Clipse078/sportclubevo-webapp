@@ -5,7 +5,8 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, Lock, MessageSquare, MoreHorizontal } from "lucide-react";
+import { Loader2, Lock, MoreHorizontal } from "lucide-react";
+import { CommunicationSceIcon } from "@/components/icons/domain-sce-icon-components";
 import type { CommunicationTargetType } from "@prisma/client";
 import { cn } from "@/lib/cn";
 import { formatDateTimeCompact } from "@/lib/tenant-runtime/formatters";
@@ -32,8 +33,7 @@ type CommentResponse = { comment?: EnrichedInternalComment };
 
 function CommentActionsMenu({
   onEdit,
-  onDelete,
-}: {
+  onDelete }: {
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -96,8 +96,7 @@ function CommentItem({
   locale,
   timezone,
   onEdit,
-  onDelete,
-}: {
+  onDelete }: {
   comment: EnrichedInternalComment;
   canEdit: boolean;
   currentUserId: string | null;
@@ -153,8 +152,7 @@ export function InternalCommentsPanel({
   currentUserId,
   locale = "de-CH",
   timezone = "Europe/Zurich",
-  enabled = true,
-}: Props) {
+  enabled = true }: Props) {
   const [threadId, setThreadId] = useState<string | null>(null);
   const [comments, setComments] = useState<EnrichedInternalComment[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -199,8 +197,7 @@ export function InternalCommentsPanel({
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ targetType, targetId }),
-          },
+            body: JSON.stringify({ targetType, targetId }) },
         );
         const postPayload = (await postRes.json()) as ThreadResponse & { error?: string };
         if (!postRes.ok) {
@@ -258,9 +255,7 @@ export function InternalCommentsPanel({
           ? undefined
           : JSON.stringify({
               body: payload?.body,
-              mentionedUserIds: payload?.mentionedUserIds ?? [],
-            }),
-    });
+              mentionedUserIds: payload?.mentionedUserIds ?? [] }) });
 
     const responsePayload = (await res.json()) as (CommentsResponse | CommentResponse) & {
       error?: string;
@@ -345,7 +340,7 @@ export function InternalCommentsPanel({
               </div>
             ) : (
               <div className="flex min-h-[120px] flex-col items-center justify-center text-center">
-                <MessageSquare className="mb-2 h-5 w-5 text-[var(--muted)]" aria-hidden />
+                <CommunicationSceIcon className="mb-2 h-5 w-5 text-[var(--muted)]" />
                 <p className="text-sm text-[var(--muted)]">Noch keine internen Kommentare.</p>
               </div>
             )}

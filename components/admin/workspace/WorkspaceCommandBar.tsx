@@ -1,7 +1,6 @@
 "use client";
 
-import {
-  Archive,
+import { 
   ChevronDown,
   Download,
   FileUp,
@@ -10,8 +9,7 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
-  Upload,
-} from "lucide-react";
+  Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -21,14 +19,14 @@ import type { WorkspaceCommandContextState } from "@/lib/workspace/command/works
 import type { DocumentInspectorWorkflowCapabilitiesDto } from "@/lib/workspace/document-inspector/document-inspector-dto";
 import type { ContextualTaskCreateDialogProps } from "@/components/admin/aufgaben/contextual/ContextualTaskCreateDialog";
 import ContextualTaskCreateTrigger from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTrigger";
+import { ArchiveSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { SceIcon } from "@/components/design-system/icons/SceIcon";
 
 import { Button } from "@/components/ui/Button";
 import { WorkspaceFloatingContextMenu } from "./WorkspaceFloatingContextMenu";
 import {
   CreateFolderMenuItem,
-  CreateWorkspaceFolderDialog,
-} from "./CreateWorkspaceFolderDialog";
+  CreateWorkspaceFolderDialog } from "./CreateWorkspaceFolderDialog";
 import { useWorkspaceUploadContext } from "./WorkspaceUploadContext";
 import { buildWorkspaceInternalLink } from "@/lib/workspace/internal-links";
 import type { WorkspaceFolderDto } from "@/lib/workspace/dto";
@@ -54,8 +52,7 @@ export function WorkspaceCommandBar({
   taskCreateDialogProps = null,
   onCreateRequirement,
   folderTree = [],
-  currentFolderLabel = "",
-}: WorkspaceCommandBarProps) {
+  currentFolderLabel = "" }: WorkspaceCommandBarProps) {
   const t = useTranslations("Workspace.commandBar");
   const tActions = useTranslations("Workspace.actions");
   const tWork = useTranslations("PlanningEditor.operational.work");
@@ -65,8 +62,7 @@ export function WorkspaceCommandBar({
     isUploading,
     isUploadingNewVersion,
     openFilePicker,
-    openNewVersionFilePicker,
-  } = useWorkspaceUploadContext();
+    openNewVersionFilePicker } = useWorkspaceUploadContext();
 
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -76,7 +72,7 @@ export function WorkspaceCommandBar({
   const createTriggerRef = useRef<HTMLButtonElement>(null);
   const overflowTriggerRef = useRef<HTMLButtonElement>(null);
 
-  const isArchivedOrTrash =
+  const isdOrTrash =
     context.lifecycleView === "archived" || context.lifecycleView === "trash";
 
   const documentSelected =
@@ -93,13 +89,12 @@ export function WorkspaceCommandBar({
     if (!selectedDocument) return;
     const path = buildWorkspaceInternalLink({
       type: "document",
-      documentId: selectedDocument.id,
-    });
+      documentId: selectedDocument.id });
     await navigator.clipboard.writeText(`${window.location.origin}${path}`);
     setOverflowOpen(false);
   }
 
-  if (isArchivedOrTrash) {
+  if (isdOrTrash) {
     return (
       <div
         className="flex flex-wrap items-center gap-2 border-b border-[var(--border)] px-5 py-2.5"
@@ -312,7 +307,7 @@ export function WorkspaceCommandBar({
                     ).then(() => router.refresh());
                   }}
                 >
-                  <Archive className="h-4 w-4" aria-hidden="true" />
+                  <ArchiveSceIcon className="h-4 w-4" />
                   {tActions("archive")}
                 </button>
                 <button

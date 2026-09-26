@@ -1,6 +1,21 @@
 "use client";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
-import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
+import {
+  ArchiveSceIcon,
+  CommunicationSceIcon,
+  DocumentsSceIcon,
+  FacilitySceIcon,
+  MemberSceIcon,
+  NewsSceIcon,
+  NotificationsSceIcon,
+  OrgUnitSceIcon,
+  PeopleSceIcon,
+  RequirementsSceIcon,
+  RolesAccessSceIcon,
+  SeasonSceIcon,
+  TasksSceIcon,
+  WebsiteSceIcon,
+} from "@/components/icons/domain-sce-icon-components";
 
 /**
  * components/admin/editorial/EditorialDashboard.tsx
@@ -38,9 +53,7 @@ import {
   Send,
   XCircle,
   Zap,
-  Archive,
-  Activity,
-} from "lucide-react";
+  Activity } from "lucide-react";
 import { SectionCard, EmptyState } from "@/components/ui/page";
 import { PUBLISHING_STATUS_BADGE_CLASS } from "@/lib/publishing/types";
 import type {
@@ -51,8 +64,7 @@ import type {
   EditorialScheduledItem,
   EditorialDraftItem,
   EditorialRecentItem,
-  EditorialActivityItem,
-} from "@/lib/cms/editorial/types";
+  EditorialActivityItem } from "@/lib/cms/editorial/types";
 import { EDITORIAL_ENTITY_LABEL } from "@/lib/cms/editorial/types";
 
 // ── Date formatting ───────────────────────────────────────────────────────────
@@ -62,8 +74,7 @@ function fmtDate(iso: string | null | undefined): string {
   return new Intl.DateTimeFormat("de-CH", {
     day: "2-digit",
     month: "2-digit",
-    year: "numeric",
-  }).format(new Date(iso));
+    year: "numeric" }).format(new Date(iso));
 }
 
 function fmtDateTime(iso: string | null | undefined): string {
@@ -73,8 +84,7 @@ function fmtDateTime(iso: string | null | undefined): string {
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
+    minute: "2-digit" }).format(new Date(iso));
 }
 
 function timeAgo(iso: string): string {
@@ -122,13 +132,11 @@ const WORKFLOW_BADGE_CLASS: Record<string, string> = {
   // Extend with section approval states not covered by publishing status
   APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
   CHANGES_REQUESTED: "bg-red-50 text-red-700 border-red-200",
-  NOT_REQUIRED: "bg-[var(--surface-2)] text-[var(--muted)] border-[var(--border)]",
-};
+  NOT_REQUIRED: "bg-[var(--surface-2)] text-[var(--muted)] border-[var(--border)]" };
 
 function WorkflowBadge({
   status,
-  label,
-}: {
+  label }: {
   status: string;
   label: string;
 }) {
@@ -205,8 +213,7 @@ function KpiCard({
   colorClass,
   bgClass,
   href,
-  warning,
-}: KpiCardProps) {
+  warning }: KpiCardProps) {
   const content = (
     <div
       className={`rounded-xl border p-4 transition-colors ${
@@ -237,8 +244,7 @@ function KpiCard({
 
 function ReviewQueueSection({
   items,
-  loading,
-}: {
+  loading }: {
   items: EditorialQueueItem[];
   loading: boolean;
 }) {
@@ -327,8 +333,7 @@ function ReviewQueueSection({
 
 function ScheduledSection({
   items,
-  loading,
-}: {
+  loading }: {
   items: EditorialScheduledItem[];
   loading: boolean;
 }) {
@@ -406,8 +411,7 @@ function ScheduledSection({
 
 function DraftSection({
   items,
-  loading,
-}: {
+  loading }: {
   items: EditorialDraftItem[];
   loading: boolean;
 }) {
@@ -506,8 +510,7 @@ function DraftSection({
 
 function CalendarSection({
   scheduled,
-  loading,
-}: {
+  loading }: {
   scheduled: EditorialScheduledItem[];
   loading: boolean;
 }) {
@@ -561,8 +564,7 @@ function CalendarSection({
 function CalendarGroup({
   label,
   items,
-  accent,
-}: {
+  accent }: {
   label: string;
   items: EditorialScheduledItem[];
   accent: "amber" | "blue" | "default";
@@ -570,8 +572,7 @@ function CalendarGroup({
   const accentClasses = {
     amber: "text-amber-700 bg-amber-50 border-amber-200",
     blue: "text-blue-700 bg-blue-50 border-blue-200",
-    default: "text-[var(--muted)] bg-[var(--surface-2)] border-[var(--border)]",
-  };
+    default: "text-[var(--muted)] bg-[var(--surface-2)] border-[var(--border)]" };
 
   return (
     <div>
@@ -610,8 +611,7 @@ function CalendarGroup({
 
 function HealthSection({
   data,
-  loading,
-}: {
+  loading }: {
   data: EditorialHealthData | null;
   loading: boolean;
 }) {
@@ -624,8 +624,7 @@ function HealthSection({
     page_no_sections: FileText,
     page_all_disabled: EyeOff,
     section_missing_label: AlertTriangle,
-    recently_restored: History,
-  };
+    recently_restored: History };
 
   const ISSUE_COLOR: Record<string, string> = {
     old_draft: "text-amber-600 bg-amber-50",
@@ -634,8 +633,7 @@ function HealthSection({
     page_no_sections: "text-blue-600 bg-blue-50",
     page_all_disabled: "text-slate-600 bg-slate-50",
     section_missing_label: "text-amber-600 bg-amber-50",
-    recently_restored: "text-violet-600 bg-violet-50",
-  };
+    recently_restored: "text-violet-600 bg-violet-50" };
 
   return (
     <SectionCard
@@ -734,15 +732,13 @@ const ACTION_ICON: Record<string, { icon: React.ElementType; cls: string }> = {
   PUBLISH: { icon: WebsiteSceIcon, cls: "bg-emerald-50 text-emerald-600" },
   UNPUBLISH: { icon: EyeOff, cls: "bg-amber-50 text-amber-600" },
   SCHEDULE: { icon: CalendarDays, cls: "bg-amber-50 text-amber-600" },
-  ARCHIVE: { icon: Archive, cls: "bg-[var(--surface-2)] text-[var(--muted)]" },
+  ARCHIVE: { icon: ArchiveSceIcon, cls: "bg-[var(--surface-2)] text-[var(--muted)]" },
   RESTORE: { icon: History, cls: "bg-violet-50 text-violet-600" },
-  UPDATE: { icon: FileEdit, cls: "bg-[var(--surface-2)] text-[var(--muted)]" },
-};
+  UPDATE: { icon: FileEdit, cls: "bg-[var(--surface-2)] text-[var(--muted)]" } };
 
 function ActivityFeedSection({
   items,
-  loading,
-}: {
+  loading }: {
   items: EditorialActivityItem[];
   loading: boolean;
 }) {
@@ -764,8 +760,7 @@ function ActivityFeedSection({
           {items.map((item, i) => {
             const actionMeta = ACTION_ICON[item.action] ?? {
               icon: Activity,
-              cls: "bg-[var(--surface-2)] text-[var(--muted)]",
-            };
+              cls: "bg-[var(--surface-2)] text-[var(--muted)]" };
             const Icon = actionMeta.icon;
 
             return (
@@ -816,8 +811,7 @@ function ActivityFeedSection({
 
 function RecentlyChangedSection({
   items,
-  loading,
-}: {
+  loading }: {
   items: EditorialRecentItem[];
   loading: boolean;
 }) {
@@ -1008,7 +1002,7 @@ export default function EditorialDashboard() {
           <KpiCard
             label="Archiviert"
             count={kpis.archived}
-            icon={Archive}
+            icon={ArchiveSceIcon}
             colorClass="text-[var(--muted)]"
             bgClass="bg-[var(--surface-2)]"
             href="/dashboard/website/publishing?status=ARCHIVED"

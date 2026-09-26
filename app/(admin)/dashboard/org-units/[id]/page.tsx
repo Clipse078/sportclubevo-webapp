@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OrgUnitSceIcon, WorkflowSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { redirect, notFound } from "next/navigation";
 import {
@@ -6,12 +7,9 @@ import {
   Building2,
   ChevronRight,
   Clock,
-  GitBranch,
-  Layers,
   Pencil,
   Shield,
-  Users,
-} from "lucide-react";
+  Users } from "lucide-react";
 import { auth } from "@/auth";
 import { getOrgUnitById } from "@/lib/org/queries";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -20,8 +18,7 @@ import { getActorContext } from "@/lib/visibility/get-actor-context";
 import { canAccessOrgUnit, canManageOrgUnit, canDeleteOrgUnit } from "@/lib/visibility/org-unit-access";
 import { getEligibleTenantMembers } from "@/lib/roles/tenant-queries";
 import {
-  getScopedAssignmentsForOrgUnit,
-} from "@/lib/roles/scoped-mutations";
+  getScopedAssignmentsForOrgUnit } from "@/lib/roles/scoped-mutations";
 import { getTenantClubAdminRoleKey } from "@/lib/roles/tenant-role-keys";
 import OrgMembershipManagementCard from "@/components/admin/org/OrgMembershipManagementCard";
 import OrgUnitSortControls from "@/components/admin/org/OrgUnitSortControls";
@@ -52,14 +49,12 @@ const TYPE_LABELS: Record<string, string> = {
   TEAM: "Mannschaft",
   COMMITTEE: "Ausschuss",
   PROJECT_GROUP: "Projektgruppe",
-  CUSTOM: "Benutzerdefiniert",
-};
+  CUSTOM: "Benutzerdefiniert" };
 
 const STATUS_LABELS: Record<string, string> = {
   ACTIVE: "Aktiv",
   INACTIVE: "Inaktiv",
-  ARCHIVED: "Archiviert",
-};
+  ARCHIVED: "Archiviert" };
 
 const CHILD_TYPE_COLORS: Record<string, string> = {
   CLUB: "bg-blue-50 border-blue-100",
@@ -69,8 +64,7 @@ const CHILD_TYPE_COLORS: Record<string, string> = {
   TEAM: "bg-emerald-50 border-emerald-100",
   COMMITTEE: "bg-amber-50 border-amber-100",
   PROJECT_GROUP: "bg-orange-50 border-orange-100",
-  CUSTOM: "bg-slate-50 border-slate-200",
-};
+  CUSTOM: "bg-slate-50 border-slate-200" };
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -103,12 +97,10 @@ export default async function OrgUnitDetailPage({ params }: PageProps) {
     getActiveTenant(),
     prisma.role.findMany({
       orderBy: { name: "asc" },
-      select: { id: true, key: true, name: true },
-    }),
+      select: { id: true, key: true, name: true } }),
     prisma.season.findMany({
       orderBy: { startDate: "desc" },
-      select: { id: true, name: true, key: true, isActive: true },
-    }),
+      select: { id: true, name: true, key: true, isActive: true } }),
   ]);
   if (!unit) notFound();
   // Tenant guard: null tenantId = pre-migration residue; allow (backwards-compat).
@@ -126,11 +118,9 @@ export default async function OrgUnitDetailPage({ params }: PageProps) {
               tenantId: tenant.id,
               isArchived: false,
               // Exclude the canonical Club Admin role (must remain tenant-wide only).
-              key: { not: getTenantClubAdminRoleKey(tenant.key) },
-            },
+              key: { not: getTenantClubAdminRoleKey(tenant.key) } },
             orderBy: { name: "asc" },
-            select: { id: true, key: true, name: true, isSystem: true },
-          }),
+            select: { id: true, key: true, name: true, isSystem: true } }),
         ])
       : [[], [], []];
 
@@ -139,8 +129,7 @@ export default async function OrgUnitDetailPage({ params }: PageProps) {
     ? await prisma.orgUnit.findMany({
         where: { tenantId: tenant.id, parentId: unit.parentId },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-        select: { id: true },
-      })
+        select: { id: true } })
     : [];
   const siblingPosition = siblings.findIndex((s) => s.id === id);
 
@@ -154,8 +143,7 @@ export default async function OrgUnitDetailPage({ params }: PageProps) {
           if (!p?.parentId) return null;
           return prisma.orgUnit.findUnique({
             where: { id: p.parentId },
-            select: { id: true, name: true },
-          });
+            select: { id: true, name: true } });
         });
       if (grandparent) ancestors.push(grandparent);
     }
@@ -183,8 +171,7 @@ export default async function OrgUnitDetailPage({ params }: PageProps) {
     date.toLocaleDateString("de-CH", {
       day: "2-digit",
       month: "long",
-      year: "numeric",
-    });
+      year: "numeric" });
 
   return (
     <PageShell fullWidth>
@@ -235,17 +222,15 @@ export default async function OrgUnitDetailPage({ params }: PageProps) {
                     label: "Key",
                     value: (
                       <code className="font-mono text-[0.8rem]">{unit.key}</code>
-                    ),
-                  },
+                    ) },
                   {
                     label: "Ebene",
                     value: (
                       <span className="flex items-center gap-1.5">
-                        <Layers className="h-3.5 w-3.5" />
+                        <OrgUnitSceIcon className="h-3.5 w-3.5" />
                         {unit.level}
                       </span>
-                    ),
-                  },
+                    ) },
                   {
                     label: "Übergeordnete Einheit",
                     value: unit.parent?.name,
@@ -253,19 +238,16 @@ export default async function OrgUnitDetailPage({ params }: PageProps) {
                       ? `/dashboard/org-units/${unit.parent.id}`
                       : undefined,
                     icon: <ProductDomainSceIcon name="org-unit" size={12} />,
-                    emptyText: "Haupteinheit",
-                  },
+                    emptyText: "Haupteinheit" },
                   {
                     label: "Mitglieder",
                     value: `${memberCount}`,
-                    icon: <ProductDomainSceIcon name="people" size={12} />,
-                  },
+                    icon: <ProductDomainSceIcon name="people" size={12} /> },
                   {
                     label: "Untereinheiten",
                     value: childCount > 0 ? `${childCount}` : null,
-                    icon: <GitBranch className="h-3.5 w-3.5" />,
-                    emptyText: "Keine",
-                  },
+                    icon: <WorkflowSceIcon className="h-3.5 w-3.5" />,
+                    emptyText: "Keine" },
                 ]}
                 columns={3}
               />

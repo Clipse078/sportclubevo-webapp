@@ -1,5 +1,6 @@
 "use client";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { CommunicationSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
@@ -19,14 +20,12 @@ import {
   HelpCircle,
   Mail,
   MapPin,
-  MessageSquare,
   PenLine,
   Phone,
   Smartphone,
   User,
   Users,
-  Volleyball,
-} from "lucide-react";
+  Volleyball } from "lucide-react";
 import type { ComponentType } from "react";
 import { cn } from "@/lib/cn";
 import { getRoutingSuggestion } from "@/lib/registrations/routing-suggestion";
@@ -34,24 +33,19 @@ import type { RegistrationDetail } from "@/lib/registrations/queries";
 import {
   formatDate,
   formatDateShort,
-  formatTime,
-} from "@/lib/tenant-runtime/formatters";
+  formatTime } from "@/lib/tenant-runtime/formatters";
 import {
   extractGenderFromPayload,
-  getGenderLabel,
-} from "@/lib/registrations/classification";
+  getGenderLabel } from "@/lib/registrations/classification";
 import {
   formatCompactAddressLines,
-  getRegistrationDetailFields,
-} from "@/lib/registrations/detail-view";
+  getRegistrationDetailFields } from "@/lib/registrations/detail-view";
 import {
   getRegistrationSourceInfo,
-  type RegistrationSourceKey,
-} from "@/lib/registrations/source";
+  type RegistrationSourceKey } from "@/lib/registrations/source";
 import {
   STATUS_LABELS as SHARED_STATUS_LABELS,
-  STATUS_BADGE_CLASS as SHARED_STATUS_BADGE_CLASS,
-} from "@/lib/registrations/status";
+  STATUS_BADGE_CLASS as SHARED_STATUS_BADGE_CLASS } from "@/lib/registrations/status";
 import type { AssignableUser, OrgUnitOption, TargetGroupOption, TeamSeasonOption } from "@/lib/registrations/workflow-types";
 import RegistrationWorkflowPanel from "./RegistrationWorkflowPanel";
 import { RegistrationWorkflowSteps } from "./RegistrationWorkflowSteps";
@@ -65,8 +59,7 @@ const SOURCE_ICON: Record<RegistrationSourceKey, ComponentType<{ className?: str
   MANUAL: PenLine,
   CSV_IMPORT: FileSpreadsheet,
   API: Code2,
-  OTHER: HelpCircle,
-};
+  OTHER: HelpCircle };
 
 const NOT_PROVIDED = "Nicht angegeben";
 
@@ -104,8 +97,7 @@ const TYPE_LABELS: Record<string, string> = {
   FREIWILLIGENMELDUNG: "Freiwilligenmeldung",
   SCHIEDSRICHTERANMELDUNG: "Schiedsrichteranmeldung",
   CAMP_ANMELDUNG: "Camp-Anmeldung",
-  VERANSTALTUNGSANMELDUNG: "Veranstaltungsanmeldung",
-};
+  VERANSTALTUNGSANMELDUNG: "Veranstaltungsanmeldung" };
 
 // REGISTRATION-01F — Goal 8: status metadata now lives in one shared module
 // (lib/registrations/status.ts).
@@ -136,8 +128,7 @@ function DataField({
   value,
   icon,
   href,
-  breakAll = false,
-}: {
+  breakAll = false }: {
   label: string;
   value: string | null | undefined;
   icon?: React.ReactNode;
@@ -192,8 +183,7 @@ function ConsentField({
   label,
   value,
   trueLabel,
-  falseLabel,
-}: {
+  falseLabel }: {
   label: string;
   value: boolean | null;
   trueLabel: string;
@@ -245,8 +235,7 @@ export default function RegistrationDetailCard({
   targetGroups = [],
   orgUnits = [],
   teamSeasons = [],
-  relatedTasksPanel,
-}: RegistrationDetailCardProps) {
+  relatedTasksPanel }: RegistrationDetailCardProps) {
   const [registration, setRegistration] = useState(initialRegistration);
 
   const cfg = { locale, timezone };
@@ -506,7 +495,7 @@ export default function RegistrationDetailCard({
           <div className="sce-detail-section">
             <div className="sce-detail-section-header">
               <div className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-[var(--muted)]" />
+                <CommunicationSceIcon className="h-4 w-4 text-[var(--muted)]" />
                 <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
                   Zusätzliche Angaben
                 </p>

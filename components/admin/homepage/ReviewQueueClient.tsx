@@ -13,6 +13,7 @@
  */
 
 import { useState, useCallback } from "react";
+import { CommunicationSceIcon } from "@/components/icons/domain-sce-icon-components";
 import {
   Clock,
   CheckCircle2,
@@ -21,16 +22,13 @@ import {
   RefreshCw,
   AlertCircle,
   UserCheck,
-  MessageSquare,
-  ExternalLink,
-} from "lucide-react";
+  ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { SectionCard, EmptyState } from "@/components/ui/page";
 import {
   APPROVAL_STATUS,
   APPROVAL_STATUS_LABELS,
-  type ApprovalStatus,
-} from "@/lib/homepage/approval-constants";
+  type ApprovalStatus } from "@/lib/homepage/approval-constants";
 import { CMS_ROUTES } from "@/lib/cms/routes";
 
 // ---------------------------------------------------------------------------
@@ -73,29 +71,23 @@ const STATUS_CONFIG: Record<ApprovalStatus, StatusCfg> = {
   NOT_REQUIRED: {
     icon: CheckCircle2,
     colorClass: "text-[var(--text-2)]",
-    bgClass: "bg-[var(--surface-2)]",
-  },
+    bgClass: "bg-[var(--surface-2)]" },
   DRAFT: {
     icon: FileEdit,
     colorClass: "text-amber-600",
-    bgClass: "bg-amber-50",
-  },
+    bgClass: "bg-amber-50" },
   IN_REVIEW: {
     icon: Clock,
     colorClass: "text-blue-600",
-    bgClass: "bg-blue-50",
-  },
+    bgClass: "bg-blue-50" },
   APPROVED: {
     icon: CheckCircle2,
     colorClass: "text-emerald-600",
-    bgClass: "bg-emerald-50",
-  },
+    bgClass: "bg-emerald-50" },
   CHANGES_REQUESTED: {
     icon: XCircle,
     colorClass: "text-red-600",
-    bgClass: "bg-red-50",
-  },
-};
+    bgClass: "bg-red-50" } };
 
 // ---------------------------------------------------------------------------
 // Props
@@ -113,8 +105,7 @@ type Props = {
 
 function ApprovalBadge({
   status,
-  labels,
-}: {
+  labels }: {
   status: ApprovalStatus;
   labels: Record<ApprovalStatus, string>;
 }) {
@@ -137,8 +128,7 @@ function ApprovalBadge({
 export function ReviewQueueClient({
   queue: initialQueue,
   recentlyApproved: initialApproved,
-  approvalStatusLabels,
-}: Props) {
+  approvalStatusLabels }: Props) {
   const [queue, setQueue] = useState(initialQueue);
   const [recentlyApproved, setRecentlyApproved] = useState(initialApproved);
   const [loading, setLoading] = useState(false);
@@ -175,8 +165,7 @@ export function ReviewQueueClient({
     setActionPending(`${id}-request-review`);
     try {
       const res = await fetch(`/api/homepage-sections/${id}/request-review`, {
-        method: "PATCH",
-      });
+        method: "PATCH" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         alert(data?.error ?? "Fehler bei der Überprüfungsanfrage");
@@ -210,8 +199,7 @@ export function ReviewQueueClient({
       const res = await fetch(`/api/homepage-sections/${id}/${action}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ note: noteText.trim() || null }),
-      });
+        body: JSON.stringify({ note: noteText.trim() || null }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setNoteError(data?.error ?? "Aktion fehlgeschlagen");
@@ -461,8 +449,7 @@ function Section({
   colorClass,
   bgClass,
   borderClass,
-  children,
-}: {
+  children }: {
   title: string;
   icon: React.ElementType;
   colorClass: string;
@@ -494,8 +481,7 @@ function QueueRow({
   showRequestReview,
   onApprove,
   onReject,
-  onRequestReview,
-}: {
+  onRequestReview }: {
   section: ReviewQueueItem;
   approvalStatusLabels: Record<ApprovalStatus, string>;
   actionPending: string | null;
@@ -542,7 +528,7 @@ function QueueRow({
           )}
           {section.approvalNote && (
             <span className="inline-flex items-center gap-1 text-[11px] text-[var(--text-2)]">
-              <MessageSquare className="h-3 w-3" />
+              <CommunicationSceIcon className="h-3 w-3" />
               {section.approvalNote.length > 80
                 ? `${section.approvalNote.slice(0, 80)}…`
                 : section.approvalNote}

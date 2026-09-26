@@ -1,17 +1,15 @@
 ﻿import Link from "next/link";
-import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
+import { CommunicationSceIcon, DocumentsSceIcon, FacilitySceIcon, MemberSceIcon, NewsSceIcon, NotificationsSceIcon, OrgUnitSceIcon, PeopleSceIcon, RequirementsSceIcon, RolesAccessSceIcon, SeasonSceIcon, TasksSceIcon, TrainingSceIcon, WebsiteSceIcon } from "@/components/icons/domain-sce-icon-components";
 import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
   DoorOpen,
-  Dumbbell,
   Info,
   MapPin,
   Calendar,
   Shield,
-  Trophy,
-} from "lucide-react";
+  Trophy } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { SectionCard } from "@/components/ui/page/SectionCard";
 import { EmptyState } from "@/components/ui/page/EmptyState";
@@ -19,15 +17,13 @@ import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import type { WeekplannerDay, WeekplannerItem, WeekplannerResourceRef } from "@/lib/weekplanner/types";
 import {
   weekplannerConflictBadgeTitle,
-  weekplannerConflictSummaryLine,
-} from "@/lib/weekplanner/conflict-presenters";
+  weekplannerConflictSummaryLine } from "@/lib/weekplanner/conflict-presenters";
 import { toWeekplannerPlanActivityType, type WeekplannerPlanDto } from "@/lib/weekplanner/plan-types";
 import { planOverrideKey } from "@/lib/weekplanner/plan-override-key";
 import { DayPlannerPlanSelect } from "./DayPlannerPlanSelect";
 import {
   WeekplannerAllocationOverrideEditor,
-  type WeekplannerOverrideRow,
-} from "./WeekplannerAllocationOverrideEditor";
+  type WeekplannerOverrideRow } from "./WeekplannerAllocationOverrideEditor";
 import { WeekplannerActivityTimeOverrideEditor } from "./WeekplannerActivityTimeOverrideEditor";
 import { WeekplannerActivityOverridePanel } from "./WeekplannerActivityOverridePanel";
 import { WeekplannerOverridePanelProvider } from "./WeekplannerOverridePanelContext";
@@ -77,12 +73,11 @@ type DayPlannerPageProps = {
   overrideEditing?: OverrideEditingContext;
 };
 
-const TYPE_META: Record<WeekplannerItem["type"], { label: string; badgeClass: string; icon: typeof Dumbbell }> = {
-  TRAINING: { label: "Training", badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700", icon: Dumbbell },
+const TYPE_META: Record<WeekplannerItem["type"], { label: string; badgeClass: string; icon: typeof TrainingSceIcon }> = {
+  TRAINING: { label: "Training", badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700", icon: TrainingSceIcon },
   MATCH: { label: "Match", badgeClass: "border-blue-200 bg-blue-50 text-blue-700", icon: RolesAccessSceIcon },
   TOURNAMENT: { label: "Turnier", badgeClass: "border-amber-200 bg-amber-50 text-amber-700", icon: Trophy },
-  VERANSTALTUNG: { label: "Veranstaltung", badgeClass: "border-violet-200 bg-violet-50 text-violet-700", icon: Calendar },
-};
+  VERANSTALTUNG: { label: "Veranstaltung", badgeClass: "border-violet-200 bg-violet-50 text-violet-700", icon: Calendar } };
 
 function dayHref(dayParam: string, planId?: string | null): string {
   const params = new URLSearchParams({ day: dayParam });
@@ -106,8 +101,7 @@ function formatDayHeading(dayKey: string, locale: string, timeZone: string): str
     day: "numeric",
     month: "long",
     year: "numeric",
-    timeZone,
-  }).format(new Date(`${dayKey}T12:00:00.000Z`));
+    timeZone }).format(new Date(`${dayKey}T12:00:00.000Z`));
 }
 
 function isToday(dayKey: string, todayParam: string): boolean {
@@ -132,16 +126,14 @@ function toStandardplanRows(
   return refs.map((ref) => ({
     facilityResourceId: ref.facilityResourceId,
     facilityResourceName: ref.name,
-    facilityResourceCode: ref.code,
-  }));
+    facilityResourceCode: ref.code }));
 }
 
 function ResourceChips({
   icon: Icon,
   refs,
   emptyLabel,
-  overridden,
-}: {
+  overridden }: {
   icon: typeof MapPin;
   refs: WeekplannerResourceRef[];
   emptyLabel?: string;
@@ -178,8 +170,7 @@ function ResourceChips({
 function ConflictBadge({
   item,
   locale,
-  timezone,
-}: {
+  timezone }: {
   item: WeekplannerItem;
   locale: string;
   timezone: string;
@@ -212,8 +203,7 @@ function OverrideIndicator({
   item,
   planName,
   locale,
-  timezone,
-}: {
+  timezone }: {
   item: WeekplannerItem;
   planName: string;
   locale: string;
@@ -234,8 +224,7 @@ function TimelineRow({
   locale,
   timezone,
   planName,
-  overrideEditing,
-}: {
+  overrideEditing }: {
   item: WeekplannerItem;
   locale: string;
   timezone: string;
@@ -409,8 +398,7 @@ export default function DayPlannerPage({
   plans = [],
   activePlanId = null,
   canManagePlans = false,
-  overrideEditing,
-}: DayPlannerPageProps) {
+  overrideEditing }: DayPlannerPageProps) {
   const conflictCount = day.items.filter((item) => item.conflicts.length > 0).length;
   const planName = activePlanId ? plans.find((p) => p.id === activePlanId)?.name ?? null : null;
   const today = isToday(day.dayKey, todayParam);
@@ -495,7 +483,7 @@ export default function DayPlannerPage({
 
       {day.items.length === 0 ? (
         <SectionCard noPadding>
-          <EmptyState icon={<Dumbbell className="h-8 w-8" />} heading="Keine Einträge" description="Für diesen Tag gibt es keine Trainings, Heimspiele oder Heimturniere." />
+          <EmptyState icon={<TrainingSceIcon className="h-8 w-8" />} heading="Keine Einträge" description="Für diesen Tag gibt es keine Trainings, Heimspiele oder Heimturniere." />
         </SectionCard>
       ) : (
         <SectionCard noPadding>

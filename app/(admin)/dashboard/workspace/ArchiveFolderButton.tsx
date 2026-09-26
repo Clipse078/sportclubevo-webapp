@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive } from "lucide-react";
+import { ArchiveSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 
@@ -56,7 +56,7 @@ export function ArchiveFolderButton({
               : "inline-flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
           }
         >
-          <Archive className="h-4 w-4" aria-hidden="true" />
+          <ArchiveSceIcon className="h-4 w-4" aria-hidden="true" />
           {isPending ? t("archivingLabel") : t("buttonLabel")}
         </button>
       </form>

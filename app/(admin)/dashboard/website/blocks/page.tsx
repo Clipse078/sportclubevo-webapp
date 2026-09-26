@@ -13,6 +13,7 @@
  */
 
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { IntegrationSceIcon, ResultsSceIcon } from "@/components/icons/domain-sce-icon-components";
 import Link from "next/link";
 import {
   Blocks,
@@ -22,14 +23,11 @@ import {
   Users,
   CalendarDays,
   MousePointerClick,
-  Award,
-  Database,
   SlidersHorizontal,
   ArrowLeft,
   CheckCircle2,
   Clock,
-  Wrench,
-} from "lucide-react";
+  Wrench } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { CMS_ROUTES } from "@/lib/cms/routes";
@@ -39,13 +37,11 @@ import {
   getBlocksByCategory,
   type BlockDefinition,
   type BlockCategory,
-  type BlockStatus,
-} from "@/lib/homepage/block-registry";
+  type BlockStatus } from "@/lib/homepage/block-registry";
 import {
   PageShell,
   PageBreadcrumbs,
-  PageHeader,
-} from "@/components/ui/page";
+  PageHeader } from "@/components/ui/page";
 
 // ---------------------------------------------------------------------------
 // Icon map (Lucide components keyed by registry icon name)
@@ -58,9 +54,8 @@ const BLOCK_ICON_MAP: Record<string, React.ReactNode> = {
   Users: <ProductDomainSceIcon name="people" size={20} />,
   CalendarDays: <CalendarDays className="h-5 w-5" />,
   MousePointerClick: <MousePointerClick className="h-5 w-5" />,
-  Award: <Award className="h-5 w-5" />,
-  Blocks: <Blocks className="h-5 w-5" />,
-};
+  Award: <ResultsSceIcon className="h-5 w-5" />,
+  Blocks: <Blocks className="h-5 w-5" /> };
 
 // ---------------------------------------------------------------------------
 // Status helpers
@@ -78,19 +73,15 @@ const STATUS_CONFIG: Record<
     label: "Verfügbar",
     badgeClass:
       "border-emerald-200 bg-emerald-50 text-emerald-700",
-    icon: <CheckCircle2 className="h-3 w-3" />,
-  },
+    icon: <CheckCircle2 className="h-3 w-3" /> },
   "foundation-ready": {
     label: "Foundation Ready",
     badgeClass: "border-blue-200 bg-blue-50 text-blue-700",
-    icon: <Wrench className="h-3 w-3" />,
-  },
+    icon: <Wrench className="h-3 w-3" /> },
   "coming-next": {
     label: "Kommt als nächstes",
     badgeClass: "border-amber-200 bg-amber-50 text-amber-700",
-    icon: <Clock className="h-3 w-3" />,
-  },
-};
+    icon: <Clock className="h-3 w-3" /> } };
 
 // ---------------------------------------------------------------------------
 // Category color accents
@@ -106,8 +97,7 @@ const CATEGORY_COLOR: Record<
   Club: { color: "#10B981", bg: "rgba(16,185,129,0.10)" },
   Sponsors: { color: "#F59E0B", bg: "rgba(245,158,11,0.10)" },
   Conversion: { color: "#EF4444", bg: "rgba(239,68,68,0.10)" },
-  Utility: { color: "#6B7280", bg: "rgba(107,114,128,0.10)" },
-};
+  Utility: { color: "#6B7280", bg: "rgba(107,114,128,0.10)" } };
 
 // ---------------------------------------------------------------------------
 // Block card sub-component
@@ -170,7 +160,7 @@ function BlockCard({ block }: { block: BlockDefinition }) {
             className="inline-flex items-center gap-1 rounded-md border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-700"
             title="Dieser Block lädt Daten automatisch aus der Datenbank"
           >
-            <Database className="h-2.5 w-2.5" />
+            <IntegrationSceIcon className="h-2.5 w-2.5" />
             Datenbankbasiert
           </span>
         ) : (
@@ -218,8 +208,7 @@ function BlockCard({ block }: { block: BlockDefinition }) {
 
 function CategorySection({
   category,
-  blocks,
-}: {
+  blocks }: {
   category: BlockCategory;
   blocks: BlockDefinition[];
 }) {
@@ -342,32 +331,27 @@ export default async function BlockLibraryPage() {
             label: "Gesamt",
             value: totalBlocks,
             color: "#111827",
-            bg: "rgba(17,24,39,0.05)",
-          },
+            bg: "rgba(17,24,39,0.05)" },
           {
             label: "Verfügbar",
             value: availableCount,
             color: "#10B981",
-            bg: "rgba(16,185,129,0.08)",
-          },
+            bg: "rgba(16,185,129,0.08)" },
           {
             label: "Foundation Ready",
             value: foundationReadyCount,
             color: "#3B82F6",
-            bg: "rgba(59,130,246,0.08)",
-          },
+            bg: "rgba(59,130,246,0.08)" },
           {
             label: "Kommt als nächstes",
             value: comingNextCount,
             color: "#F59E0B",
-            bg: "rgba(245,158,11,0.08)",
-          },
+            bg: "rgba(245,158,11,0.08)" },
           {
             label: "Datenbankbasiert",
             value: dataDrivenCount,
             color: "#0EA5E9",
-            bg: "rgba(14,165,233,0.08)",
-          },
+            bg: "rgba(14,165,233,0.08)" },
         ].map((stat) => (
           <div
             key={stat.label}

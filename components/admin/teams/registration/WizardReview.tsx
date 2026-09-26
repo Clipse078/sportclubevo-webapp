@@ -1,5 +1,6 @@
 "use client";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { TrainingSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 import {
   Calendar,
@@ -11,18 +12,15 @@ import {
   Monitor,
   ChevronRight,
   Trophy,
-  Dumbbell,
   MoreHorizontal,
-  Smile,
-} from "lucide-react";
+  Smile } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type {
   WizardFormData,
   EligibleSeason,
   EligibleOrgUnit,
   EligibleCompetition,
-  ParticipationType,
-} from "./types";
+  ParticipationType } from "./types";
 import {
   PARTICIPATION_TYPES,
   STEP_SEASON_ORG,
@@ -30,8 +28,7 @@ import {
   STEP_FEDERATION,
   STEP_PARTICIPATION,
   STEP_COMPETITION,
-  STEP_PUBLICATION,
-} from "./types";
+  STEP_PUBLICATION } from "./types";
 
 type Props = {
   form: WizardFormData;
@@ -43,11 +40,10 @@ type Props = {
 
 const PARTICIPATION_ICONS: Record<ParticipationType, React.ReactNode> = {
   COMPETITION: <Trophy className="h-3.5 w-3.5" />,
-  TRAINING: <Dumbbell className="h-3.5 w-3.5" />,
+  TRAINING: <TrainingSceIcon className="h-3.5 w-3.5" />,
   DEVELOPMENT: <Star className="h-3.5 w-3.5" />,
   RECREATIONAL: <Smile className="h-3.5 w-3.5" />,
-  OTHER: <MoreHorizontal className="h-3.5 w-3.5" />,
-};
+  OTHER: <MoreHorizontal className="h-3.5 w-3.5" /> };
 
 /**
  * WizardReview — Final review screen before submission.
@@ -62,8 +58,7 @@ export default function WizardReview({
   seasons,
   orgUnits,
   competitions,
-  onGoToStep,
-}: Props) {
+  onGoToStep }: Props) {
   const selectedSeason = seasons.find((s) => s.id === form.seasonId) ?? null;
   const selectedOrgUnits = form.orgUnitIds
     .map((id) => orgUnits.find((ou) => ou.id === id))
@@ -314,8 +309,7 @@ export default function WizardReview({
 function ReviewSection({
   title,
   children,
-  onEdit,
-}: {
+  onEdit }: {
   title: string;
   children: React.ReactNode;
   onEdit: () => void;
@@ -350,8 +344,7 @@ function ReviewSection({
 function ReviewRow({
   icon,
   label,
-  value,
-}: {
+  value }: {
   icon?: React.ReactNode;
   label: string;
   value: React.ReactNode;

@@ -21,36 +21,31 @@
  */
 
 import { notFound } from "next/navigation";
+import { ApprovalSceIcon } from "@/components/icons/domain-sce-icon-components";
 import Link from "next/link";
-import {
-  ClipboardCheck,
+import { 
   Clock,
   CheckCircle2,
   XCircle,
   FileEdit,
-  ArrowLeft,
-} from "lucide-react";
+  ArrowLeft } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { CMS_ROUTES } from "@/lib/cms/routes";
 import {
   listSectionsForReview,
   listRecentlyApprovedSections,
-  type HomepageSectionAdminItem,
-} from "@/lib/homepage/admin-queries";
+  type HomepageSectionAdminItem } from "@/lib/homepage/admin-queries";
 import {
   APPROVAL_STATUS,
-  APPROVAL_STATUS_LABELS,
-} from "@/lib/homepage/approval-constants";
+  APPROVAL_STATUS_LABELS } from "@/lib/homepage/approval-constants";
 import {
   PageShell,
   PageBreadcrumbs,
-  PageHeader,
-} from "@/components/ui/page";
+  PageHeader } from "@/components/ui/page";
 import {
   ReviewQueueClient,
-  type ReviewQueueItem,
-} from "@/components/admin/homepage/ReviewQueueClient";
+  type ReviewQueueItem } from "@/components/admin/homepage/ReviewQueueClient";
 
 // ---------------------------------------------------------------------------
 // Serialization helper — converts all Date fields to ISO strings so the
@@ -85,8 +80,7 @@ function toReviewItem(s: HomepageSectionAdminItem): ReviewQueueItem {
     approvedByUserId: s.approvedByUserId,
     rejectedByUserId: s.rejectedByUserId,
     createdAt: s.createdAt.toISOString(),
-    updatedAt: s.updatedAt.toISOString(),
-  };
+    updatedAt: s.updatedAt.toISOString() };
 }
 
 // ---------------------------------------------------------------------------
@@ -143,7 +137,7 @@ export default async function ReviewQueuePage() {
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
             style={{ background: "rgba(139,92,246,0.10)", color: "#8B5CF6" }}
           >
-            <ClipboardCheck className="h-5 w-5" />
+            <ApprovalSceIcon className="h-5 w-5" />
           </div>
           <div>
             <p className="text-sm font-semibold text-[var(--foreground)]">
@@ -229,8 +223,7 @@ function SummaryCard({
   count,
   icon: Icon,
   colorClass,
-  bgClass,
-}: {
+  bgClass }: {
   label: string;
   count: number;
   icon: React.ElementType;

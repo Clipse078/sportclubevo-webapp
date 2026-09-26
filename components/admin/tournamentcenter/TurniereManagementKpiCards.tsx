@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
-import { CalendarClock, History, MapPin, Trophy } from "lucide-react";
+import { FacilitySceIcon, HistorySceIcon } from "@/components/icons/domain-sce-icon-components";
+import { CalendarClock, MapPin, Trophy } from "lucide-react";
 import type { TurniereManagementKpis } from "@/lib/tournaments/management-view";
 import { cn } from "@/lib/cn";
 import { SCE_KPI_CARD_SURFACE } from "@/lib/shell/sce-surface-system";
@@ -28,8 +28,7 @@ export default function TurniereManagementKpiCards({
   kpis,
   anstehendHref,
   vergangenHref,
-  scope,
-}: Props) {
+  scope }: Props) {
   const metrics: Metric[] = [
     {
       key: "anstehend",
@@ -40,8 +39,7 @@ export default function TurniereManagementKpiCards({
       active: scope === "UPCOMING",
       icon: CalendarClock,
       iconTile: "bg-sky-500/15 text-sky-400",
-      "data-testid": "turniere-kpi-anstehend",
-    },
+      "data-testid": "turniere-kpi-anstehend" },
     {
       key: "vergangen",
       label: "Vergangen",
@@ -49,10 +47,9 @@ export default function TurniereManagementKpiCards({
       hint: "Archiv & abgeschlossen",
       href: vergangenHref,
       active: scope === "PAST",
-      icon: History,
+      icon: HistorySceIcon,
       iconTile: "bg-[var(--surface-2)] text-[var(--muted)]",
-      "data-testid": "turniere-kpi-vergangen",
-    },
+      "data-testid": "turniere-kpi-vergangen" },
     {
       key: "total",
       label: "Total",
@@ -60,8 +57,7 @@ export default function TurniereManagementKpiCards({
       hint: "alle Turniere",
       icon: Trophy,
       iconTile: "bg-emerald-500/15 text-emerald-400",
-      "data-testid": "turniere-kpi-total",
-    },
+      "data-testid": "turniere-kpi-total" },
     {
       key: "venues",
       label: "Verschiedene Orte",
@@ -69,8 +65,7 @@ export default function TurniereManagementKpiCards({
       hint: "mit Standortangabe",
       icon: FacilitySceIcon,
       iconTile: "bg-[var(--surface-2)] text-[var(--muted)]",
-      "data-testid": "turniere-kpi-venues",
-    },
+      "data-testid": "turniere-kpi-venues" },
   ];
 
   return (

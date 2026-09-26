@@ -1,7 +1,8 @@
 import BillingMetricTile from "@/components/admin/billing/shell/BillingMetricTile";
 import { formatBillingMoney } from "@/lib/billing/format-billing-money";
 import type { BillingOperationsSummaryMetrics } from "@/lib/billing/operations/billing-operations-types";
-import { AlertCircle, FileText, HandCoins } from "lucide-react";
+import { AlertCircle, FileText } from "lucide-react";
+import { SponsorSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 type Props = {
@@ -34,7 +35,7 @@ export default function BillingOperationsKpiStrip({ metrics }: Props) {
         label="Bezahlt diesen Monat"
         value={formatBillingMoney(chf.paidThisMonthMinor, chf.currency)}
         hint="Bestätigte Zahlungen"
-        icon={<HandCoins className="h-5 w-5" strokeWidth={1.75} />}
+        icon={<SponsorSceIcon className="h-5 w-5" />}
       />
     </div>
   );

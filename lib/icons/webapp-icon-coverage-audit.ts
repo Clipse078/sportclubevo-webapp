@@ -237,6 +237,19 @@ const DOMAIN_SCE_COMPONENT_TO_MASTER: Record<string, string> = {
   PublishSceIcon: "publish",
   RequirementsSceIcon: "requirements",
   InfoboardSceIcon: "infoboard",
+  ArchiveSceIcon: "archive",
+  TrainingSceIcon: "training",
+  WorkflowSceIcon: "workflow",
+  ReportSceIcon: "report",
+  PaymentSceIcon: "payment",
+  AnalyticsSceIcon: "analytics",
+  ApprovalSceIcon: "approval",
+  ExportSceIcon: "export",
+  HistorySceIcon: "history",
+  ResultsSceIcon: "results",
+  ContactSceIcon: "contact",
+  DashboardSceIcon: "dashboard",
+  AttentionSceIcon: "attention",
 };
 
 const ROUTE_DOMAIN_RULES: Array<[RegExp, string]> = [
@@ -766,7 +779,7 @@ function auditVeranstaltungen(all: IconOccurrenceRecord[]): VeranstaltungenZoneA
     PAGE_HEADER: zonePick((r) => r.file.includes("PlanningManagementPageHeader") || r.zone === "page-header"),
     CREATE_ACTION: zonePick((r) => /Plus|create|erstellen/i.test(r.jsxSnippet)),
     KPI_UPCOMING: zonePick((r) => r.file.includes("VeranstaltungenManagementWorkspace") && /CalendarClock|kpi-upcoming/i.test(r.jsxSnippet)),
-    KPI_PAST: zonePick((r) => /History|kpi-past/i.test(r.jsxSnippet)),
+    KPI_PAST: zonePick((r) => /HistorySceIcon|History|kpi-past/i.test(r.jsxSnippet)),
     KPI_TOTAL: zonePick((r) => /Trophy|kpi-total/i.test(r.jsxSnippet)),
     KPI_LOCATIONS: zonePick((r) => /FacilitySceIcon|kpi-venues|MapPin/i.test(r.jsxSnippet)),
     SEARCH: zonePick((r) => /Search|toolbar/i.test(r.file + r.jsxSnippet)),

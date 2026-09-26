@@ -1,13 +1,12 @@
 ﻿import Link from "next/link";
 import {
   CalendarDays,
-  Dumbbell,
   Plus,
   Trophy,
   Upload,
-  Volleyball,
-} from "lucide-react";
+  Volleyball } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
+import { TrainingSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getAvailableTeamSeasons } from "@/lib/teams/queries";
 import { getEventsListData } from "@/lib/events/queries";
@@ -61,8 +60,7 @@ const EVENT_TYPES = [
     iconBg: "border-blue-200 bg-blue-50",
     sources: ["ClubCorner / fvnws", "Manuell", "CSV / Excel"],
     createHref: "/dashboard/events/matches/new",
-    badgeClass: "border-blue-200 bg-blue-50 text-blue-700",
-  },
+    badgeClass: "border-blue-200 bg-blue-50 text-blue-700" },
   {
     key: "TOURNAMENT",
     label: "Turniere",
@@ -73,20 +71,18 @@ const EVENT_TYPES = [
     iconBg: "border-amber-200 bg-amber-50",
     sources: ["ClubCorner / fvnws", "Manuell", "CSV / Excel"],
     createHref: "/dashboard/events/tournaments/new",
-    badgeClass: "border-amber-200 bg-amber-50 text-amber-700",
-  },
+    badgeClass: "border-amber-200 bg-amber-50 text-amber-700" },
   {
     key: "TRAINING",
     label: "Trainings",
     description:
       "Trainingssessions werden zentral verwaltet und speisen Trainingsplan, Wochenplan, Teamseiten und Infoboard.",
-    icon: Dumbbell,
+    icon: TrainingSceIcon,
     iconColor: "text-emerald-600",
     iconBg: "border-emerald-200 bg-emerald-50",
     sources: ["Manuell", "CSV / Excel"],
     createHref: "/dashboard/events/trainings/new",
-    badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  },
+    badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700" },
   {
     key: "OTHER",
     label: "Weitere Events",
@@ -97,8 +93,7 @@ const EVENT_TYPES = [
     iconBg: "border-violet-200 bg-violet-50",
     sources: ["Manuell", "CSV / Excel"],
     createHref: "/dashboard/events/other/new",
-    badgeClass: "border-violet-200 bg-violet-50 text-violet-700",
-  },
+    badgeClass: "border-violet-200 bg-violet-50 text-violet-700" },
 ] as const;
 
 export default async function EventsPage({ searchParams }: EventsPageProps) {
@@ -145,8 +140,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     MATCH: matchCount,
     TOURNAMENT: tournamentCount,
     TRAINING: trainingCount,
-    OTHER: otherCount,
-  };
+    OTHER: otherCount };
 
   return (
     <div className="space-y-6">

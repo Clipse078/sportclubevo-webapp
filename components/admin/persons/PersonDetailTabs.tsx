@@ -1,5 +1,6 @@
 "use client";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { FinanceSceIcon, PaymentSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 /**
  * PERSON-UX-01 — Person Workspace tab shell.
@@ -48,12 +49,9 @@ import {
   Users2,
   UserCheck,
   Trophy,
-  CreditCard,
-  DollarSign,
   HeartPulse,
   FolderOpen,
-  KeyRound,
-} from "lucide-react";
+  KeyRound } from "lucide-react";
 import type { PersonAssignment, PersonDetail, PersonSquadMembership, PersonTrainerMembership, PersonMembershipRecord, PersonAssessmentRecord, PersonDocumentItem, TenantCriterion } from "@/lib/people/queries";
 import type { PersonAccessRole, PersonAccessLinkedUser } from "./PersonAccessRolesCard";
 import type { PersonDomainPermissions } from "@/lib/people/person-domain-auth";
@@ -158,8 +156,7 @@ export default function PersonDetailTabs({
   memberships = [],
   assessments = [],
   criteria = [],
-  documents = [],
-}: PersonDetailTabsProps) {
+  documents = [] }: PersonDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<Tab>("uebersicht");
 
   // ── Capacity resolution ────────────────────────────────────────────────────
@@ -215,60 +212,53 @@ export default function PersonDetailTabs({
       key: "organisation",
       label: "Organisation",
       icon: <ProductDomainSceIcon name="org-unit" size={12} />,
-      count: activeAssignmentCount,
-    },
+      count: activeAssignmentCount },
     {
       key: "spieler",
       label: "Spieler",
       icon: <ProductDomainSceIcon name="people" size={12} />,
       // PERSON-UX-07: tab driven by isPlayer capacity flag, not membership evidence.
       // Removing the flag hides the tab; historical data is preserved.
-      hidden: !showSpielerTab,
-    },
+      hidden: !showSpielerTab },
     {
       key: "trainer",
       label: "Trainer",
       icon: <UserCheck className="h-3.5 w-3.5" />,
       // PERSON-UX-07: tab driven by isTrainer capacity flag, not membership evidence.
-      hidden: !showTrainerTab,
-    },
+      hidden: !showTrainerTab },
     {
       key: "sport",
       label: "Sport & Entwicklung",
       icon: <Trophy className="h-3.5 w-3.5" />,
       // Cross-role season biography visible when any sporting capacity or evidence exists.
       hidden: !showSportTab,
-      count: activeSportingRoleCount > 0 ? activeSportingRoleCount : undefined,
-    },
+      count: activeSportingRoleCount > 0 ? activeSportingRoleCount : undefined },
     {
       key: "mitgliedschaft",
       label: "Mitgliedschaft",
-      icon: <CreditCard className="h-3.5 w-3.5" />,
+      icon: <PaymentSceIcon className="h-3.5 w-3.5" />,
       // PERSON-UX-04: No longer deferred — real implementation.
     },
     {
       key: "finanzen",
       label: "Finanzen",
-      icon: <DollarSign className="h-3.5 w-3.5" />,
+      icon: <FinanceSceIcon className="h-3.5 w-3.5" />,
       deferred: true,
       // Absent entirely when viewer lacks people.finance.view — no hint about existence.
-      hidden: !canViewFinance,
-    },
+      hidden: !canViewFinance },
     {
       key: "gesundheit",
       label: "Gesundheit",
       icon: <HeartPulse className="h-3.5 w-3.5" />,
       deferred: true,
       // Absent entirely when viewer lacks people.health.view — no hint about existence.
-      hidden: !canViewHealth,
-    },
+      hidden: !canViewHealth },
     {
       key: "dokumente",
       label: "Dokumente",
       icon: <ProductDomainSceIcon name="documents" size={12} />,
       // Absent entirely when viewer lacks people.private_documents.view — no hint about existence.
-      hidden: !canViewPrivateDocuments,
-    },
+      hidden: !canViewPrivateDocuments },
     { key: "zugang", label: "Zugang", icon: <KeyRound className="h-3.5 w-3.5" /> },
   ];
 
@@ -481,7 +471,7 @@ export default function PersonDetailTabs({
           >
             {safeActiveTab === "finanzen" ? (
               <PersonDomainPlaceholder
-                icon={<DollarSign className="h-6 w-6" />}
+                icon={<FinanceSceIcon className="h-6 w-6" />}
                 title="Finanzen"
                 description="Beitrags- und Rechnungsdaten folgen dem Pfad:
                   Person → Mitgliedschaft → Beitragspflicht → Rechnung → Zahlung.

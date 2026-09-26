@@ -1,5 +1,12 @@
 "use client";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import {
+  AnalyticsSceIcon,
+  ArchiveSceIcon,
+  CommunicationSceIcon,
+  ContactSceIcon,
+  SponsorSceIcon,
+} from "@/components/icons/domain-sce-icon-components";
 
 /**
  * ReusableComponentsLibrary
@@ -12,7 +19,7 @@ import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
  * - Publishing status badges
  * - Last modified + last editor
  * - Preview panel
- * - Archive / duplicate / version history
+ * -/ duplicate / version history
  * - Create new component
  */
 
@@ -24,16 +31,11 @@ import {
   RefreshCw,
   MoreHorizontal,
   Copy,
-  Archive,
   History,
   Eye,
   MousePointerClick,
-  Award,
-  ContactRound,
   CircleHelp,
   Quote,
-  BarChart3,
-  Megaphone,
   FileText,
   Filter,
   ChevronDown,
@@ -47,14 +49,12 @@ import {
   Users,
   CalendarDays,
   LayoutPanelLeft,
-  Blocks,
-} from "lucide-react";
+  Blocks } from "lucide-react";
 import type { ReusableComponentAdminItem } from "@/lib/reusable-components/types";
 import {
   REUSABLE_COMPONENT_TYPES,
   BLOCK_SECTION_TYPE_LABELS,
-  getTypeLabel,
-} from "@/lib/reusable-components/component-types";
+  getTypeLabel } from "@/lib/reusable-components/component-types";
 import { SECTION_PUBLISH_STATUS, SECTION_APPROVAL_STATUS_LABELS } from "@/lib/cms/section-publishing";
 import { CMS_ROUTES } from "@/lib/cms/routes";
 
@@ -63,12 +63,12 @@ import { CMS_ROUTES } from "@/lib/cms/routes";
 const TYPE_ICONS: Record<string, React.ReactNode> = {
   // Inline component types
   CTA:            <MousePointerClick className="h-4 w-4" />,
-  SPONSOR_BANNER: <Award className="h-4 w-4" />,
-  CONTACT_CARD:   <ContactRound className="h-4 w-4" />,
+  SPONSOR_BANNER: <SponsorSceIcon className="h-4 w-4" />,
+  CONTACT_CARD:   <ContactSceIcon className="h-4 w-4" />,
   FAQ:            <CircleHelp className="h-4 w-4" />,
   QUOTE:          <Quote className="h-4 w-4" />,
-  STATISTICS:     <BarChart3 className="h-4 w-4" />,
-  ANNOUNCEMENT:   <Megaphone className="h-4 w-4" />,
+  STATISTICS:     <AnalyticsSceIcon className="h-4 w-4" />,
+  ANNOUNCEMENT:   <CommunicationSceIcon className="h-4 w-4" />,
   RICH_TEXT:      <FileText className="h-4 w-4" />,
   // Block section types (saved from Homepage / Page Builder)
   hero:                   <LayoutTemplate className="h-4 w-4" />,
@@ -77,10 +77,9 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
   teamsTeaser:            <ProductDomainSceIcon name="people" size={16} />,
   weekplanTeaser:         <CalendarDays className="h-4 w-4" />,
   callToAction:           <MousePointerClick className="h-4 w-4" />,
-  sponsorsTeaser:         <Award className="h-4 w-4" />,
+  sponsorsTeaser:         <SponsorSceIcon className="h-4 w-4" />,
   splitContentCards:      <LayoutPanelLeft className="h-4 w-4" />,
-  customContentPlaceholder: <Blocks className="h-4 w-4" />,
-};
+  customContentPlaceholder: <Blocks className="h-4 w-4" /> };
 
 // ── Status badge ─────────────────────────────────────────────────────────────
 
@@ -108,8 +107,7 @@ function ApprovalBadge({ status }: { status: string }) {
     DRAFT:             "bg-gray-100 text-gray-600",
     IN_REVIEW:         "bg-blue-100 text-blue-700",
     APPROVED:          "bg-green-100 text-green-700",
-    CHANGES_REQUESTED: "bg-red-100 text-red-700",
-  };
+    CHANGES_REQUESTED: "bg-red-100 text-red-700" };
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${colours[status] ?? "bg-gray-100 text-gray-600"}`}>
       {label}
@@ -142,7 +140,7 @@ export default function ReusableComponentsLibrary() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [includeArchived, setIncludeArchived] = useState(false);
+  const [included, setIncluded] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [previewComponent, setPreviewComponent] = useState<ReusableComponentAdminItem | null>(null);
   const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});
@@ -159,7 +157,7 @@ export default function ReusableComponentsLibrary() {
       if (q) params.set("search", q);
       if (type) params.set("type", type);
       if (status) params.set("publishStatus", status);
-      if (archived) params.set("includeArchived", "true");
+      if (archived) params.set("included", "true");
 
       const res = await fetch(`/api/reusable-components?${params}`);
       if (!res.ok) throw new Error("Laden fehlgeschlagen.");
@@ -194,19 +192,19 @@ export default function ReusableComponentsLibrary() {
   }
 
   useEffect(() => {
-    load(search, typeFilter, statusFilter, includeArchived);
+    load(search, typeFilter, statusFilter, included);
     // search is intentionally excluded here — handled by the debounced effect below
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typeFilter, statusFilter, includeArchived, load]);
+  }, [typeFilter, statusFilter, included, load]);
 
   // Debounce search
   useEffect(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => {
-      load(search, typeFilter, statusFilter, includeArchived);
+      load(search, typeFilter, statusFilter, included);
     }, 300);
     return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
-  }, [search, typeFilter, statusFilter, includeArchived, load]);
+  }, [search, typeFilter, statusFilter, included, load]);
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
@@ -224,7 +222,7 @@ export default function ReusableComponentsLibrary() {
     if (!confirm("Komponente archivieren? Sie ist danach nicht mehr öffentlich sichtbar.")) return;
     const res = await fetch(`/api/reusable-components/${id}`, { method: "DELETE" });
     if (res.ok) {
-      load(search, typeFilter, statusFilter, includeArchived);
+      load(search, typeFilter, statusFilter, included);
     }
   }
 
@@ -246,7 +244,7 @@ export default function ReusableComponentsLibrary() {
             />
           </div>
           <button
-            onClick={() => load(search, typeFilter, statusFilter, includeArchived)}
+            onClick={() => load(search, typeFilter, statusFilter, included)}
             className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2 text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-2)]"
           >
             <RefreshCw className="h-4 w-4" />
@@ -290,11 +288,11 @@ export default function ReusableComponentsLibrary() {
             <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--muted)]" />
           </div>
 
-          {/* Archived toggle */}
+          {/*d toggle */}
           <button
-            onClick={() => setIncludeArchived((v) => !v)}
+            onClick={() => setIncluded((v) => !v)}
             className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm transition-colors ${
-              includeArchived
+              included
                 ? "border-[var(--tenant-primary)] bg-[var(--tenant-accent)] text-[var(--tenant-primary)]"
                 : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--foreground)]"
             }`}
@@ -379,7 +377,7 @@ export default function ReusableComponentsLibrary() {
                       )}
                       {c.archivedAt && (
                         <span className="inline-flex items-center gap-1 text-xs text-amber-600 font-medium">
-                          <Archive className="h-3 w-3" /> Archiviert
+                          <ArchiveSceIcon className="h-3 w-3" /> Archiviert
                         </span>
                       )}
                     </div>
@@ -473,12 +471,12 @@ export default function ReusableComponentsLibrary() {
                                 onClick={() => handleArchive(c.id)}
                                 className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
                               >
-                                <Archive className="h-4 w-4" />
+                                <ArchiveSceIcon className="h-4 w-4" />
                                 Archivieren
                               </button>
                             ) : (
                               <span className="flex items-center gap-2 px-3 py-2 text-sm text-[var(--muted)] cursor-default">
-                                <Archive className="h-4 w-4" />
+                                <ArchiveSceIcon className="h-4 w-4" />
                                 Bereits archiviert
                               </span>
                             )}

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Archive, CalendarClock, CheckCircle2, Plus } from "lucide-react";
+import { CalendarClock, CheckCircle2, Plus } from "lucide-react";
+import { ArchiveSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { Suspense } from "react";
 import { cn } from "@/lib/cn";
 import PlanningManagementPageHeader from "@/components/admin/planning/PlanningManagementPageHeader";
@@ -7,8 +8,7 @@ import PlanningManagementKpiCards from "@/components/admin/planning/PlanningMana
 import {
   PLANNING_WORKSPACE_MAIN_RAIL_GRID,
   PLANNING_WORKSPACE_RAIL_ASIDE,
-  PLANNING_WORKSPACE_RAIL_STACK,
-} from "@/components/admin/planning/planning-management-layout";
+  PLANNING_WORKSPACE_RAIL_STACK } from "@/components/admin/planning/planning-management-layout";
 import TrainingManagementToolbar from "./TrainingManagementToolbar";
 import TrainingManagementSortControl from "./TrainingManagementSortControl";
 import TrainingManagementPagination from "./TrainingManagementPagination";
@@ -86,8 +86,7 @@ export default function TrainingManagementWorkspace({
   archivedCount,
   teamHrefByValue,
   statusHrefByValue,
-  resetFiltersHref,
-}: Props) {
+  resetFiltersHref }: Props) {
   void _isCoordinator;
   void _locale;
 
@@ -115,7 +114,7 @@ export default function TrainingManagementWorkspace({
                 className="fca-button-secondary inline-flex items-center gap-1.5 text-sm"
                 data-testid="training-archive-toggle"
               >
-                <Archive className="h-4 w-4" aria-hidden="true" />
+                <ArchiveSceIcon className="h-4 w-4" />
                 {filters.archived ? "Archiv ausblenden" : `Archiv (${archivedCount})`}
               </Link>
             ) : null}
@@ -144,8 +143,7 @@ export default function TrainingManagementWorkspace({
             icon: CalendarClock,
             surface: "border-sky-500/25 bg-sky-950/40",
             iconTile: "bg-sky-500/15 text-sky-400",
-            "data-testid": "training-kpi-active",
-          },
+            "data-testid": "training-kpi-active" },
           {
             key: "inactive",
             label: "Inaktiv",
@@ -154,8 +152,7 @@ export default function TrainingManagementWorkspace({
             icon: CheckCircle2,
             surface: "border-amber-500/25 bg-amber-950/30",
             iconTile: "bg-amber-500/15 text-amber-400",
-            "data-testid": "training-kpi-inactive",
-          },
+            "data-testid": "training-kpi-inactive" },
           {
             key: "archived",
             label: "Archiv",
@@ -163,11 +160,10 @@ export default function TrainingManagementWorkspace({
             hint: "archivierte Serien",
             href: archiveToggleHref,
             active: Boolean(filters.archived),
-            icon: Archive,
+            icon: ArchiveSceIcon,
             surface: "border-[var(--border)] bg-[var(--surface)]/80",
             iconTile: "bg-[var(--surface-2)] text-[var(--muted)]",
-            "data-testid": "training-kpi-archived",
-          },
+            "data-testid": "training-kpi-archived" },
           {
             key: "total",
             label: "Total",
@@ -176,8 +172,7 @@ export default function TrainingManagementWorkspace({
             icon: CheckCircle2,
             surface: "border-emerald-500/25 bg-emerald-950/35",
             iconTile: "bg-emerald-500/15 text-emerald-400",
-            "data-testid": "training-kpi-total",
-          },
+            "data-testid": "training-kpi-total" },
         ]}
       />
 
@@ -240,8 +235,7 @@ export default function TrainingManagementWorkspace({
                     row={row}
                     wochenplanerHref={buildTrainingSeriesWochenplanerHref({
                       teamSeasonId: row.teamSeasonId,
-                      timezone,
-                    })}
+                      timezone })}
                     canManage={canManage}
                     canDelete={canDelete}
                   />

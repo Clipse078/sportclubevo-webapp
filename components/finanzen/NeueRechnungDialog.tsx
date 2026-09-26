@@ -1,22 +1,19 @@
 "use client";
 
 import type { ComponentType } from "react";
-import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
+import { CommunicationSceIcon, DocumentsSceIcon, FacilitySceIcon, MemberSceIcon, NewsSceIcon, NotificationsSceIcon, OrgUnitSceIcon, PaymentSceIcon, PeopleSceIcon, RequirementsSceIcon, RolesAccessSceIcon, SeasonSceIcon, TasksSceIcon, WebsiteSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 import {
   AlertCircle,
   Building2,
   Check,
   ChevronRight,
-  CreditCard,
   FileText,
-  Layers,
   Minus,
   Plus,
   User,
   Users,
-  X,
-} from "lucide-react";
+  X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -26,8 +23,7 @@ import {
   DEMO_RECIPIENTS,
   RECIPIENT_TYPE_OPTIONS,
   calcInvoiceTotals,
-  fmtCHF,
-} from "./rechnungen-data";
+  fmtCHF } from "./rechnungen-data";
 import { cn } from "@/lib/cn";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -61,15 +57,14 @@ const INITIAL_DRAFT: DraftInvoice = {
   dueDate: "",
   positions: [
     { id: "new-1", bezeichnung: "", menge: "1", einzelpreis: "", mwstPct: "" },
-  ],
-};
+  ] };
 
 const STEPS = [
   { num: 1, label: "Empfängertyp",    icon: PeopleSceIcon },
   { num: 2, label: "Empfänger",       icon: User  },
   { num: 3, label: "Rechnungsdaten",  icon: FileText },
-  { num: 4, label: "Positionen",      icon: Layers },
-  { num: 5, label: "Fälligkeit",      icon: CreditCard },
+  { num: 4, label: "Positionen",      icon: OrgUnitSceIcon },
+  { num: 5, label: "Fälligkeit",      icon: PaymentSceIcon },
   { num: 6, label: "Zusammenfassung", icon: Check },
 ] as const;
 
@@ -81,8 +76,7 @@ const RECIPIENT_TYPE_META: Record<
   "Sponsor":       { icon: OrgUnitSceIcon, description: "Externe Unternehmen mit Sponsoringvertrag"            },
   "Partner":       { icon: OrgUnitSceIcon, description: "Dienstleister und Kooperationspartner des Vereins"     },
   "Team / Gruppe": { icon: PeopleSceIcon,     description: "Mannschaften oder interne Gruppen"                    },
-  "Sonstige":      { icon: FileText,  description: "Alle übrigen Empfänger (Gemeinde, Verbände, etc.)"    },
-};
+  "Sonstige":      { icon: FileText,  description: "Alle übrigen Empfänger (Gemeinde, Verbände, etc.)"    } };
 
 function newPosition(): DraftPosition {
   return { id: `new-${Date.now()}`, bezeichnung: "", menge: "1", einzelpreis: "", mwstPct: "" };
@@ -94,8 +88,7 @@ function draftPositionToCalc(pos: DraftPosition): InvoicePosition {
     bezeichnung: pos.bezeichnung,
     menge: parseFloat(pos.menge) || 0,
     einzelpreis: parseFloat(pos.einzelpreis) || 0,
-    mwstPct: pos.mwstPct ? parseFloat(pos.mwstPct) : undefined,
-  };
+    mwstPct: pos.mwstPct ? parseFloat(pos.mwstPct) : undefined };
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -141,8 +134,7 @@ export function NeueRechnungDialog({ open, onClose }: Props) {
 
   function updatePosition(id: string, patch: Partial<DraftPosition>) {
     updateDraft({
-      positions: draft.positions.map((p) => (p.id === id ? { ...p, ...patch } : p)),
-    });
+      positions: draft.positions.map((p) => (p.id === id ? { ...p, ...patch } : p)) });
   }
 
   const canNext =

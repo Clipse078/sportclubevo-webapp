@@ -22,18 +22,16 @@
  */
 
 import Link from "next/link";
+import { DashboardSceIcon } from "@/components/icons/domain-sce-icon-components";
 import {
-  ArrowLeft,
-  LayoutDashboard,
-} from "lucide-react";
+  ArrowLeft } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { CMS_ROUTES } from "@/lib/cms/routes";
 import {
   PageShell,
   PageBreadcrumbs,
-  PageHeader,
-} from "@/components/ui/page";
+  PageHeader } from "@/components/ui/page";
 import EditorialDashboard from "@/components/admin/editorial/EditorialDashboard";
 
 export default async function EditorialCenterPage() {
@@ -68,7 +66,7 @@ export default async function EditorialCenterPage() {
             href={CMS_ROUTES.publishing}
             className="fca-button-secondary text-xs"
           >
-            <LayoutDashboard className="h-3.5 w-3.5" />
+            <DashboardSceIcon className="h-3.5 w-3.5" />
             Veröffentlichungen
           </Link>
         </div>

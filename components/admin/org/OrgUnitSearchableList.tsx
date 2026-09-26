@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Search, ChevronRight, GitBranch, Layers, Archive } from "lucide-react";
+import { Search, ChevronRight } from "lucide-react";
+import {
+  ArchiveSceIcon,
+  OrgUnitSceIcon,
+  WorkflowSceIcon,
+} from "@/components/icons/domain-sce-icon-components";
 import { OrgUnitTypeSceIcon } from "@/components/icons/OrgUnitTypeSceIcon";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import OrgUnitRestoreButton from "@/components/admin/org/OrgUnitRestoreButton";
@@ -85,7 +90,7 @@ function LevelIndent({ level }: { level: number }) {
           className={`block h-5 w-4 border-l ${i === level - 1 ? "border-[var(--border-strong)]" : "border-[var(--border)]"}`}
         />
       ))}
-      <GitBranch className="h-3 w-3 text-[var(--muted)]" />
+      <WorkflowSceIcon className="h-3 w-3 text-[var(--muted)]" />
     </div>
   );
 }
@@ -200,7 +205,7 @@ export default function OrgUnitSearchableList({
                 : "text-[var(--muted)] hover:text-[var(--foreground)]"
             }`}
           >
-            <Archive className="h-4 w-4" />
+            <ArchiveSceIcon className="h-4 w-4" />
             Archiviert
             <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[0.65rem] font-semibold text-amber-700">
               {totalArchived}
@@ -311,7 +316,7 @@ export default function OrgUnitSearchableList({
                       )}
                       {unit._count.children > 0 ? (
                         <span className="flex items-center gap-1 text-xs text-[var(--muted)]">
-                          <Layers className="h-3 w-3" />
+                          <OrgUnitSceIcon className="h-3 w-3" />
                           {unit._count.children} Untereinheit
                           {unit._count.children !== 1 ? "en" : ""}
                         </span>
@@ -345,7 +350,7 @@ export default function OrgUnitSearchableList({
           />
         ) : displayUnits.length === 0 ? (
           <EmptyState
-            icon={<Archive className="h-10 w-10" />}
+            icon={<ArchiveSceIcon className="h-10 w-10" />}
             heading="Keine archivierten Einheiten"
             description="Archivierte Einheiten werden hier angezeigt und können wiederhergestellt werden."
           />
@@ -368,7 +373,7 @@ export default function OrgUnitSearchableList({
                   <div className="flex items-center gap-3 px-5 py-3.5">
                     {/* Icon */}
                     <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface-2)]">
-                      <Archive className="h-4 w-4 text-[var(--muted)]" />
+                      <ArchiveSceIcon className="h-4 w-4 text-[var(--muted)]" />
                     </div>
 
                     {/* Name + meta */}

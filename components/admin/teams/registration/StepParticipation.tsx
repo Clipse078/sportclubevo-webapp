@@ -1,6 +1,7 @@
 "use client";
 
-import { Trophy, Dumbbell, Star, Smile, MoreHorizontal } from "lucide-react";
+import { Trophy, Star, Smile, MoreHorizontal } from "lucide-react";
+import { TrainingSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { cn } from "@/lib/cn";
 import type { ParticipationType, WizardFormData } from "./types";
 import { PARTICIPATION_TYPES } from "./types";
@@ -12,11 +13,10 @@ type Props = {
 
 const TYPE_ICONS: Record<ParticipationType, React.ReactNode> = {
   COMPETITION: <Trophy className="h-5 w-5" />,
-  TRAINING: <Dumbbell className="h-5 w-5" />,
+  TRAINING: <TrainingSceIcon className="h-5 w-5" />,
   DEVELOPMENT: <Star className="h-5 w-5" />,
   RECREATIONAL: <Smile className="h-5 w-5" />,
-  OTHER: <MoreHorizontal className="h-5 w-5" />,
-};
+  OTHER: <MoreHorizontal className="h-5 w-5" /> };
 
 /**
  * StepParticipation — Step 4 of the Team registration wizard (TEAM-CREATE-02).
@@ -29,8 +29,7 @@ const TYPE_ICONS: Record<ParticipationType, React.ReactNode> = {
  */
 export default function StepParticipation({
   participationType,
-  onParticipationTypeChange,
-}: Props) {
+  onParticipationTypeChange }: Props) {
   return (
     <div
       className="space-y-3"

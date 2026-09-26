@@ -21,7 +21,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil, CheckCircle2, XCircle, CircleDot, CreditCard } from "lucide-react";
+import { Plus, Pencil, CheckCircle2, XCircle, CircleDot } from "lucide-react";
+import { PaymentSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/page";
@@ -34,8 +35,7 @@ const MEMBERSHIP_TYPE_LABELS: Record<PersonMembershipType, string> = {
   ACTIVE_MEMBER: "Aktivmitglied",
   PASSIVE_MEMBER: "Passivmitglied",
   HONORARY_MEMBER: "Ehrenmitglied",
-  OTHER: "Sonstige",
-};
+  OTHER: "Sonstige" };
 
 const MEMBERSHIP_TYPE_OPTIONS = Object.entries(MEMBERSHIP_TYPE_LABELS).map(
   ([value, label]) => ({ value: value as PersonMembershipType, label }),
@@ -44,15 +44,13 @@ const MEMBERSHIP_TYPE_OPTIONS = Object.entries(MEMBERSHIP_TYPE_LABELS).map(
 const MEMBERSHIP_STATUS_LABELS: Record<PersonMembershipStatus, string> = {
   ACTIVE: "Aktiv",
   INACTIVE: "Inaktiv",
-  ENDED: "Beendet",
-};
+  ENDED: "Beendet" };
 
 function formatDate(date: Date | string): string {
   return new Date(date).toLocaleDateString("de-CH", {
     day: "2-digit",
     month: "long",
-    year: "numeric",
-  });
+    year: "numeric" });
 }
 
 // ── Status badge ──────────────────────────────────────────────────────────────
@@ -89,8 +87,7 @@ function MembershipRow({
   canManage,
   onEdit,
   onEnd,
-  isCurrent,
-}: {
+  isCurrent }: {
   membership: PersonMembershipRecord;
   canManage: boolean;
   onEdit: (m: PersonMembershipRecord) => void;
@@ -110,7 +107,7 @@ function MembershipRow({
           isCurrent ? "bg-[var(--sce-primary)] text-white" : "bg-[var(--surface-3)] text-[var(--muted)]"
         }`}
       >
-        <CreditCard className="h-4 w-4" />
+        <PaymentSceIcon className="h-4 w-4" />
       </div>
 
       <div className="min-w-0 flex-1">
@@ -180,8 +177,7 @@ function MembershipFormDialog({
   initialValues,
   onSubmit,
   submitting,
-  submitError,
-}: {
+  submitError }: {
   open: boolean;
   onClose: () => void;
   title: string;
@@ -310,8 +306,7 @@ function EndMembershipDialog({
   membership,
   onConfirm,
   submitting,
-  submitError,
-}: {
+  submitError }: {
   open: boolean;
   onClose: () => void;
   membership: PersonMembershipRecord | null;
@@ -389,14 +384,12 @@ const EMPTY_FORM: MembershipFormValues = {
   memberNumber: "",
   startsAt: new Date().toISOString().split("T")[0],
   endsAt: "",
-  notes: "",
-};
+  notes: "" };
 
 export default function PersonMembershipTab({
   personId,
   memberships: initialMemberships,
-  canManage,
-}: PersonMembershipTabProps) {
+  canManage }: PersonMembershipTabProps) {
   const router = useRouter();
   const [memberships, setMemberships] = useState<PersonMembershipRecord[]>(initialMemberships);
 
@@ -431,9 +424,7 @@ export default function PersonMembershipTab({
           memberNumber: values.memberNumber || null,
           startsAt: values.startsAt,
           endsAt: values.endsAt || null,
-          notes: values.notes || null,
-        }),
-      });
+          notes: values.notes || null }) });
       const data = await res.json();
       if (!res.ok) {
         setSubmitError(data.error ?? "Fehler beim Erstellen.");
@@ -470,9 +461,7 @@ export default function PersonMembershipTab({
             memberNumber: values.memberNumber || null,
             startsAt: values.startsAt,
             endsAt: values.endsAt || null,
-            notes: values.notes || null,
-          }),
-        },
+            notes: values.notes || null }) },
       );
       const data = await res.json();
       if (!res.ok) {
@@ -507,8 +496,7 @@ export default function PersonMembershipTab({
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "end", endsAt }),
-        },
+          body: JSON.stringify({ action: "end", endsAt }) },
       );
       const data = await res.json();
       if (!res.ok) {
@@ -550,8 +538,7 @@ export default function PersonMembershipTab({
         endsAt: editTarget.endsAt
           ? new Date(editTarget.endsAt).toISOString().split("T")[0]
           : "",
-        notes: editTarget.notes ?? "",
-      }
+        notes: editTarget.notes ?? "" }
     : EMPTY_FORM;
 
   return (
@@ -577,7 +564,7 @@ export default function PersonMembershipTab({
       {/* Empty state — no memberships at all */}
       {memberships.length === 0 ? (
         <EmptyState
-          icon={<CreditCard className="h-8 w-8" />}
+          icon={<PaymentSceIcon className="h-8 w-8" />}
           heading="Keine Mitgliedschaft"
           description={
             canManage

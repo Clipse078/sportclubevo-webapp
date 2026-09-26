@@ -1,6 +1,5 @@
-import { PeopleSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, SeasonSceIcon, WebsiteSceIcon, FacilitySceIcon, DocumentsSceIcon, NewsSceIcon, NotificationsSceIcon, TasksSceIcon } from "@/components/icons/domain-sce-icon-components";
-import {
-  BarChart3,
+import { AnalyticsSceIcon, CommunicationSceIcon, DocumentsSceIcon, FacilitySceIcon, NewsSceIcon, NotificationsSceIcon, OrgUnitSceIcon, PeopleSceIcon, RolesAccessSceIcon, SeasonSceIcon, TasksSceIcon, WebsiteSceIcon } from "@/components/icons/domain-sce-icon-components";
+import { 
   BellRing,
   Building2,
   ContactRound,
@@ -8,13 +7,11 @@ import {
   Globe,
   Images,
   Mail,
-  Megaphone,
   Monitor,
   PackageCheck,
   PanelsTopLeft,
   ShieldCheck,
-  Smartphone,
-} from "lucide-react";
+  Smartphone } from "lucide-react";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ModuleCapabilityCard } from "@/components/admin/future-modules/ModuleCapabilityCard";
 import { Badge } from "@/components/ui/Badge";
@@ -52,7 +49,7 @@ export default async function SponsoringPage() {
       />
 
       <div className="mb-6 flex items-start gap-3 rounded-xl border border-[var(--sce-warning-light)] bg-[var(--sce-warning-light)] px-4 py-3">
-        <Megaphone className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-warning)]" aria-hidden />
+        <CommunicationSceIcon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-warning)]" />
         <p className="text-xs leading-5 text-[var(--sce-warning)]">
           <span className="font-semibold">Demo-Ansicht · Noch nicht funktional.</span>{" "}
           Die Bereiche zeigen die geplante Produktarchitektur. Es werden keine Sponsor-, Vertrags- oder Kampagnendaten gespeichert.
@@ -91,7 +88,7 @@ export default async function SponsoringPage() {
         <ModuleCapabilityCard
           title="Kampagnen"
           description="Sponsor-Kampagnen über Website, Infoboard und Mobile planen."
-          icon={Megaphone}
+          icon={CommunicationSceIcon}
           status="Demnächst"
           details={["Zeitraum und Angebot", "Zielgruppe", "Assets und Kanäle", "Planung und Status"]}
         />
@@ -216,7 +213,7 @@ export default async function SponsoringPage() {
 
         <SectionCard title="Wirkungsnachweis" description="Messbare Leistung schafft einen belastbaren Kampagnenreport.">
           <div className="flex gap-3">
-            <BarChart3 className="h-5 w-5 shrink-0 text-[var(--sce-primary)]" aria-hidden />
+            <AnalyticsSceIcon className="h-5 w-5 shrink-0 text-[var(--sce-primary)]" />
             <p className="text-xs leading-5 text-[var(--text-2)]">
               Reichweite, Zustellung, Öffnungen, Klicks, Website- und Mobile-Impressionen, Infoboard-Ausspielungen und optionale Einlösungen.
             </p>

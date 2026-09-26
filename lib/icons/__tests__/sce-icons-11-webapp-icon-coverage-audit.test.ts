@@ -67,7 +67,7 @@ describe("SCE-ICONS-11 route coverage audit", () => {
   });
 
   it("materially resolves SCE-ICONS-10 import-level ambiguity", () => {
-    expect(importLevelAmbiguityCount()).toBe(391);
+    expect(importLevelAmbiguityCount()).toBe(329);
     const remaining = semanticAmbiguityRemaining();
     expect(remaining).toBeLessThan(50);
   });
@@ -77,7 +77,7 @@ describe("SCE-ICONS-11 route coverage audit", () => {
     expect(inventory.unresolvedDomainWithExistingMaster).toEqual([]);
     const report = runWebappIconCoverageAudit();
     expect(report.masterAdoption.unresolvedDomainWithExistingMaster).toEqual([]);
-    expect(report.masterAdoption.legacyLucideDespiteApprovedMaster.length).toBeGreaterThan(0);
+    expect(report.masterAdoption.legacyLucideDespiteApprovedMaster).toEqual([]);
   });
 
   it("builds missing-master backlog including known SCE-ICONS-10 concepts", () => {
