@@ -71,7 +71,7 @@ const SKIP_DIR_NAMES = new Set([
 
 const SKIP_FILE_PREFIXES = ["components/design-system/icons/"];
 
-const MISSING_BY_LUCIDE: Record<string, string> = {
+export const MISSING_BY_LUCIDE: Record<string, string> = {
   Trophy: "competition",
   FileText: "page",
   ImageIcon: "media-library",
