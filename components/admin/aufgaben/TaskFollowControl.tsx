@@ -1,7 +1,8 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState, useTransition } from "react";
-import { Bell, BellOff } from "lucide-react";
+import { BellOff } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { TaskFollowStateDto } from "@/lib/tasks/task-follow-service";
 import {
@@ -62,7 +63,7 @@ export function TaskFollowControl({ taskId, initialState }: Props) {
         {state.isFollowing ? (
           <BellOff className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         ) : (
-          <Bell className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <ProductDomainSceIcon name="notifications" size={12} className="h-3.5 w-3.5 shrink-0" />
         )}
         {state.isFollowing ? "Nicht mehr folgen" : "Folgen"}
       </button>

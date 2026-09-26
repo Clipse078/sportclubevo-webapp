@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
@@ -161,7 +162,7 @@ export default function NewsArticleList({ canDelete = false }: NewsArticleListPr
         </div>
       ) : articles.length === 0 ? (
         <EmptyState
-          icon={<Newspaper className="h-10 w-10" />}
+          icon={<ProductDomainSceIcon name="news" size={48} />}
           heading="Keine Artikel vorhanden"
           description="Erstelle den ersten News-Artikel für deine Website."
           action={

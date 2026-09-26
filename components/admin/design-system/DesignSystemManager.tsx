@@ -10,6 +10,7 @@
  */
 
 import { useState, useCallback, useTransition } from "react";
+import { OrgUnitSceIcon } from "@/components/icons/domain-sce-icon-components";
 import {
   Palette,
   Type,
@@ -17,21 +18,18 @@ import {
   LayoutGrid,
   Move,
   Square,
-  Layers,
   PlayCircle,
   RotateCcw,
   Save,
   ChevronRight,
   Check,
-  AlertCircle,
-} from "lucide-react";
+  AlertCircle } from "lucide-react";
 import type {
   ResolvedDesignSystem,
   TenantDesignSystem,
   TypographyToken,
   ButtonTokenStyle,
-  CardTokenStyle,
-} from "@/lib/website/design-system-types";
+  CardTokenStyle } from "@/lib/website/design-system-types";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tab definitions
@@ -54,9 +52,9 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: "buttons", label: "Buttons", icon: <MousePointer2 className="h-3.5 w-3.5" /> },
   { key: "cards", label: "Cards", icon: <LayoutGrid className="h-3.5 w-3.5" /> },
   { key: "spacing", label: "Abstände", icon: <Move className="h-3.5 w-3.5" /> },
-  { key: "shadows", label: "Schatten", icon: <Layers className="h-3.5 w-3.5" /> },
+  { key: "shadows", label: "Schatten", icon: <OrgUnitSceIcon className="h-3.5 w-3.5" /> },
   { key: "radius", label: "Radius", icon: <Square className="h-3.5 w-3.5" /> },
-  { key: "sectionWidths", label: "Breiten", icon: <Layers className="h-3.5 w-3.5" /> },
+  { key: "sectionWidths", label: "Breiten", icon: <OrgUnitSceIcon className="h-3.5 w-3.5" /> },
   { key: "animations", label: "Animation", icon: <PlayCircle className="h-3.5 w-3.5" /> },
 ];
 
@@ -76,8 +74,7 @@ function TextInput({
   value,
   onChange,
   placeholder,
-  className = "",
-}: {
+  className = "" }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
@@ -98,8 +95,7 @@ function SelectInput({
   value,
   onChange,
   options,
-  label,
-}: {
+  label }: {
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
@@ -152,8 +148,7 @@ const TYPOGRAPHY_KEYS: { key: TypographyKey; label: string }[] = [
 function TypographyTokenEditor({
   label,
   token,
-  onChange,
-}: {
+  onChange }: {
   label: string;
   token: TypographyToken;
   onChange: (v: TypographyToken) => void;
@@ -171,8 +166,7 @@ function TypographyTokenEditor({
             style={{
               fontFamily: token.fontFamily,
               fontSize: Math.min(parseFloat(token.fontSize ?? "1") * 14, 20) + "px",
-              fontWeight: token.fontWeight,
-            }}
+              fontWeight: token.fontWeight }}
           >
             {label.split(" — ")[0]}
           </span>
@@ -218,8 +212,7 @@ function TypographyTokenEditor({
 
 function TypographyPanel({
   ds,
-  onChange,
-}: {
+  onChange }: {
   ds: ResolvedDesignSystem;
   onChange: (update: Partial<TenantDesignSystem>) => void;
 }) {
@@ -237,8 +230,7 @@ function TypographyPanel({
             lineHeight: ds.typography.h1.lineHeight,
             fontWeight: ds.typography.h1.fontWeight,
             letterSpacing: ds.typography.h1.letterSpacing,
-            color: ds.colors.primary,
-          }}
+            color: ds.colors.primary }}
           className="mb-1"
         >
           FC Allschwil
@@ -247,8 +239,7 @@ function TypographyPanel({
           style={{
             fontSize: ds.typography.h2.fontSize,
             lineHeight: ds.typography.h2.lineHeight,
-            fontWeight: ds.typography.h2.fontWeight,
-          }}
+            fontWeight: ds.typography.h2.fontWeight }}
           className="mb-1 text-gray-800"
         >
           Gemeinsam stark
@@ -257,8 +248,7 @@ function TypographyPanel({
           style={{
             fontSize: ds.typography.h3.fontSize,
             lineHeight: ds.typography.h3.lineHeight,
-            fontWeight: ds.typography.h3.fontWeight,
-          }}
+            fontWeight: ds.typography.h3.fontWeight }}
           className="mb-2 text-gray-700"
         >
           Die beste Mannschaft im Kanton
@@ -266,8 +256,7 @@ function TypographyPanel({
         <p
           style={{
             fontSize: ds.typography.body.fontSize,
-            lineHeight: ds.typography.body.lineHeight,
-          }}
+            lineHeight: ds.typography.body.lineHeight }}
           className="mb-1 text-gray-600 max-w-lg"
         >
           Wir sind ein Verein mit Leidenschaft für den Fussball und für unsere Gemeinschaft.
@@ -277,8 +266,7 @@ function TypographyPanel({
             fontSize: ds.typography.quote.fontSize,
             lineHeight: ds.typography.quote.lineHeight,
             fontWeight: ds.typography.quote.fontWeight,
-            borderLeftColor: ds.colors.primary,
-          }}
+            borderLeftColor: ds.colors.primary }}
           className="border-l-4 pl-4 italic text-gray-500 mt-3"
         >
           &bdquo;Sport verbindet Menschen.&ldquo;
@@ -313,8 +301,7 @@ const COLOR_TOKENS: { key: keyof ResolvedDesignSystem["colors"]; label: string; 
 
 function ColorsPanel({
   ds,
-  onChange,
-}: {
+  onChange }: {
   ds: ResolvedDesignSystem;
   onChange: (update: Partial<TenantDesignSystem>) => void;
 }) {
@@ -399,8 +386,7 @@ const BUTTON_VARIANTS: { key: ButtonVariantKey; label: string }[] = [
 function ButtonTokenEditor({
   label,
   token,
-  onChange,
-}: {
+  onChange }: {
   label: string;
   token: ButtonTokenStyle;
   onChange: (v: ButtonTokenStyle) => void;
@@ -424,8 +410,7 @@ function ButtonTokenEditor({
               fontSize: "11px",
               fontWeight: token.fontWeight ?? "600",
               display: "inline-block",
-              lineHeight: 1,
-            }}
+              lineHeight: 1 }}
           >
             {label}
           </span>
@@ -470,8 +455,7 @@ function ButtonTokenEditor({
 
 function ButtonsPanel({
   ds,
-  onChange,
-}: {
+  onChange }: {
   ds: ResolvedDesignSystem;
   onChange: (update: Partial<TenantDesignSystem>) => void;
 }) {
@@ -495,8 +479,7 @@ function ButtonsPanel({
                   padding: `${t.paddingY} ${t.paddingX}`,
                   fontWeight: t.fontWeight ?? "600",
                   fontSize: "13px",
-                  cursor: "default",
-                }}
+                  cursor: "default" }}
               >
                 {label}
               </button>
@@ -533,8 +516,7 @@ function CardTokenEditor({
   label,
   description,
   token,
-  onChange,
-}: {
+  onChange }: {
   label: string;
   description: string;
   token: CardTokenStyle;
@@ -558,8 +540,7 @@ function CardTokenEditor({
               padding: "4px 10px",
               fontSize: "11px",
               color: label === "Highlight" ? "#fff" : "#374151",
-              display: "inline-block",
-            }}
+              display: "inline-block" }}
           >
             {label}
           </span>
@@ -598,8 +579,7 @@ function CardTokenEditor({
 
 function CardsPanel({
   ds,
-  onChange,
-}: {
+  onChange }: {
   ds: ResolvedDesignSystem;
   onChange: (update: Partial<TenantDesignSystem>) => void;
 }) {
@@ -620,8 +600,7 @@ function CardsPanel({
                   border: t.border,
                   borderRadius: t.borderRadius,
                   boxShadow: t.shadow,
-                  padding: t.padding,
-                }}
+                  padding: t.padding }}
               >
                 <p
                   className="text-[12px] font-semibold"
@@ -666,8 +645,7 @@ const SPACING_KEYS: { key: keyof ResolvedDesignSystem["spacing"]; label: string;
 
 function SpacingPanel({
   ds,
-  onChange,
-}: {
+  onChange }: {
   ds: ResolvedDesignSystem;
   onChange: (update: Partial<TenantDesignSystem>) => void;
 }) {
@@ -690,8 +668,7 @@ function SpacingPanel({
                   minWidth: "4px",
                   minHeight: "4px",
                   maxWidth: "80px",
-                  maxHeight: "80px",
-                }}
+                  maxHeight: "80px" }}
               />
               <span className="text-[10px] text-[var(--muted)]">{label}</span>
               <span className="text-[9px] text-[var(--muted)]">{ds.spacing[key]}</span>
@@ -725,8 +702,7 @@ const SHADOW_KEYS: { key: keyof ResolvedDesignSystem["shadows"]; label: string }
 
 function ShadowsPanel({
   ds,
-  onChange,
-}: {
+  onChange }: {
   ds: ResolvedDesignSystem;
   onChange: (update: Partial<TenantDesignSystem>) => void;
 }) {
@@ -774,8 +750,7 @@ const RADIUS_KEYS: { key: keyof ResolvedDesignSystem["radius"]; label: string }[
 
 function RadiusPanel({
   ds,
-  onChange,
-}: {
+  onChange }: {
   ds: ResolvedDesignSystem;
   onChange: (update: Partial<TenantDesignSystem>) => void;
 }) {
@@ -792,8 +767,7 @@ function RadiusPanel({
                 style={{
                   borderRadius: ds.radius[key],
                   background: ds.colors.primary,
-                  opacity: 0.8,
-                }}
+                  opacity: 0.8 }}
                 className="h-10 w-16"
               />
               <span className="text-[10px] text-[var(--muted)]">{label}</span>
@@ -828,8 +802,7 @@ const WIDTH_KEYS: { key: keyof ResolvedDesignSystem["sectionWidths"]; label: str
 
 function SectionWidthsPanel({
   ds,
-  onChange,
-}: {
+  onChange }: {
   ds: ResolvedDesignSystem;
   onChange: (update: Partial<TenantDesignSystem>) => void;
 }) {
@@ -850,8 +823,7 @@ function SectionWidthsPanel({
                   height: "8px",
                   background: ds.colors.primary,
                   opacity: 0.6,
-                  borderRadius: "2px",
-                }}
+                  borderRadius: "2px" }}
               />
             </div>
           ))}
@@ -876,8 +848,7 @@ function SectionWidthsPanel({
 
 function AnimationsPanel({
   ds,
-  onChange,
-}: {
+  onChange }: {
   ds: ResolvedDesignSystem;
   onChange: (update: Partial<TenantDesignSystem>) => void;
 }) {
@@ -892,8 +863,7 @@ function AnimationsPanel({
         value={ds.animations.default}
         onChange={(v) =>
           onChange({
-            animations: { ...ds.animations, default: v as ResolvedDesignSystem["animations"]["default"] },
-          })
+            animations: { ...ds.animations, default: v as ResolvedDesignSystem["animations"]["default"] } })
         }
         options={[
           { value: "none", label: "Keine Animation" },
@@ -934,8 +904,7 @@ export default function DesignSystemManager({ initialDesignSystem, hasCustomConf
       ...(update.shadows ? { shadows: { ...prev.shadows, ...update.shadows } } : {}),
       ...(update.radius ? { radius: { ...prev.radius, ...update.radius } } : {}),
       ...(update.sectionWidths ? { sectionWidths: { ...prev.sectionWidths, ...update.sectionWidths } } : {}),
-      ...(update.animations ? { animations: { ...prev.animations, ...update.animations } } : {}),
-    }));
+      ...(update.animations ? { animations: { ...prev.animations, ...update.animations } } : {}) }));
     setIsDirty(true);
   }, []);
 
@@ -947,8 +916,7 @@ export default function DesignSystemManager({ initialDesignSystem, hasCustomConf
         const res = await fetch("/api/website-design-system", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(ds),
-        });
+          body: JSON.stringify(ds) });
         const data = await res.json();
         if (!res.ok || !data.ok) {
           throw new Error(data.error ?? "Speichern fehlgeschlagen.");

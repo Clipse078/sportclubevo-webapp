@@ -1,4 +1,5 @@
 import { Shield, UserCheck } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 type PersonRoleBadgeProps = {
   isPlayer?: boolean;
@@ -17,7 +18,7 @@ export default function PersonRoleBadge({
     <div className="flex flex-wrap items-center gap-1.5">
       {isPlayer ? (
         <span className="sce-role-badge sce-role-badge-player">
-          <Shield className="h-2.5 w-2.5" />
+          <ProductDomainSceIcon name="roles-access" size={20} />
           Spieler
         </span>
       ) : null}

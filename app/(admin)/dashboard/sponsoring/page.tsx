@@ -1,5 +1,5 @@
-import {
-  BarChart3,
+import { AnalyticsSceIcon, CommunicationSceIcon, DocumentsSceIcon, FacilitySceIcon, NewsSceIcon, NotificationsSceIcon, OrgUnitSceIcon, PeopleSceIcon, RolesAccessSceIcon, SeasonSceIcon, TasksSceIcon, WebsiteSceIcon } from "@/components/icons/domain-sce-icon-components";
+import { 
   BellRing,
   Building2,
   ContactRound,
@@ -7,13 +7,12 @@ import {
   Globe,
   Images,
   Mail,
-  Megaphone,
   Monitor,
   PackageCheck,
   PanelsTopLeft,
   ShieldCheck,
-  Smartphone,
-} from "lucide-react";
+  Smartphone } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ModuleCapabilityCard } from "@/components/admin/future-modules/ModuleCapabilityCard";
 import { Badge } from "@/components/ui/Badge";
 import { PageBreadcrumbs, PageHeader, PageShell, SectionCard } from "@/components/ui/page";
@@ -50,7 +49,7 @@ export default async function SponsoringPage() {
       />
 
       <div className="mb-6 flex items-start gap-3 rounded-xl border border-[var(--sce-warning-light)] bg-[var(--sce-warning-light)] px-4 py-3">
-        <Megaphone className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-warning)]" aria-hidden />
+        <CommunicationSceIcon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-warning)]" />
         <p className="text-xs leading-5 text-[var(--sce-warning)]">
           <span className="font-semibold">Demo-Ansicht · Noch nicht funktional.</span>{" "}
           Die Bereiche zeigen die geplante Produktarchitektur. Es werden keine Sponsor-, Vertrags- oder Kampagnendaten gespeichert.
@@ -61,7 +60,7 @@ export default async function SponsoringPage() {
         <ModuleCapabilityCard
           title="Sponsoren"
           description="Sponsoren und Partnerschaften im Überblick."
-          icon={Building2}
+          icon={OrgUnitSceIcon}
           status="Demnächst"
           details={["Organisation", "Status und Kategorie", "Verantwortung", "Wert und Beziehungshistorie"]}
         />
@@ -89,7 +88,7 @@ export default async function SponsoringPage() {
         <ModuleCapabilityCard
           title="Kampagnen"
           description="Sponsor-Kampagnen über Website, Infoboard und Mobile planen."
-          icon={Megaphone}
+          icon={CommunicationSceIcon}
           status="Demnächst"
           details={["Zeitraum und Angebot", "Zielgruppe", "Assets und Kanäle", "Planung und Status"]}
         />
@@ -205,7 +204,7 @@ export default async function SponsoringPage() {
 
         <SectionCard title="Governance & Privatsphäre" description="Kommerzielle Kommunikation bleibt von operativen Mitteilungen getrennt.">
           <div className="flex gap-3">
-            <ShieldCheck className="h-5 w-5 shrink-0 text-[var(--sce-primary)]" aria-hidden />
+            <ProductDomainSceIcon name="roles-access" size={20} className="h-5 w-5 shrink-0 text-[var(--sce-primary)]" />
             <p className="text-xs leading-5 text-[var(--text-2)]">
               Berechtigungen, Einwilligung oder Rechtsgrundlage, Opt-out, Kanaleignung, Alter, Frequenz und Kommunikationspräferenzen werden berücksichtigt.
             </p>
@@ -214,13 +213,13 @@ export default async function SponsoringPage() {
 
         <SectionCard title="Wirkungsnachweis" description="Messbare Leistung schafft einen belastbaren Kampagnenreport.">
           <div className="flex gap-3">
-            <BarChart3 className="h-5 w-5 shrink-0 text-[var(--sce-primary)]" aria-hidden />
+            <AnalyticsSceIcon className="h-5 w-5 shrink-0 text-[var(--sce-primary)]" />
             <p className="text-xs leading-5 text-[var(--text-2)]">
               Reichweite, Zustellung, Öffnungen, Klicks, Website- und Mobile-Impressionen, Infoboard-Ausspielungen und optionale Einlösungen.
             </p>
           </div>
           <div className="mt-3 flex items-center gap-2 text-[0.7rem] font-medium text-[var(--muted)]">
-            <Mail className="h-3.5 w-3.5" aria-hidden />
+            <ProductDomainSceIcon name="communication" size={12} className="h-3.5 w-3.5" />
             Kampagnenreport.pdf · später verfügbar
           </div>
         </SectionCard>

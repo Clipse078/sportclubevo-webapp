@@ -1,19 +1,4 @@
-import {
-  ArrowRightLeft,
-  BadgeCheck,
-  CalendarClock,
-  ClipboardCheck,
-  ClipboardList,
-  FileCheck2,
-  FileText,
-  HandHelping,
-  ListChecks,
-  ShieldAlert,
-  UserCheck,
-  UserPlus,
-  Users,
-  UsersRound,
-} from "lucide-react";
+import { DisciplineIncidentSceIcon } from "@/components/icons/domain-sce-icon-components";
 import type { FutureModuleCapability } from "@/components/admin/future-modules/FutureModuleShell";
 
 export const FUTURE_MODULE_PERMISSION_KEYS_NOTE =
@@ -23,32 +8,32 @@ export const MITGLIEDER_CAPABILITIES: FutureModuleCapability[] = [
   {
     title: "Interessenten & Probetraining",
     description: "Interessierte Personen und Probetraining-Anfragen strukturiert aufnehmen.",
-    icon: UserPlus,
+    sceIcon: "invitation",
   },
   {
     title: "Mitgliedsanträge",
     description: "Anträge erfassen, prüfen und in den Freigabeprozess überführen.",
-    icon: ClipboardList,
+    sceIcon: "invitation",
   },
   {
     title: "Aktive Mitgliedschaften",
     description: "Laufende Mitgliedschaften und Status im Verein nachverfolgen.",
-    icon: UsersRound,
+    sceIcon: "member",
   },
   {
     title: "Team- & Vereinszuordnung",
     description: "Mitgliedschaften mit Teams und Vereinsstrukturen verknüpfen.",
-    icon: Users,
+    sceIcon: "team-management",
   },
   {
     title: "Austritte / Vereinswechsel",
     description: "Austritte und Wechsel sauber dokumentieren und abschliessen.",
-    icon: ArrowRightLeft,
+    sceIcon: "member",
   },
   {
     title: "Mitgliederdokumente",
     description: "Mitgliedschaftsbezogene Dokumente zentral verfügbar halten.",
-    icon: FileText,
+    sceIcon: "documents",
   },
 ];
 
@@ -56,42 +41,42 @@ export const AUFGABEN_CAPABILITIES: FutureModuleCapability[] = [
   {
     title: "Meine Aufgaben",
     description: "Persönliche Verantwortlichkeiten und offene Punkte im Überblick.",
-    icon: ListChecks,
+    sceIcon: "tasks",
   },
   {
     title: "Team-/Bereichsaufgaben",
     description: "Aufgaben nach Team, Funktion oder Bereich strukturieren.",
-    icon: Users,
+    sceIcon: "tasks",
   },
   {
     title: "Fälligkeiten",
     description: "Termine und Fristen für Verantwortliche sichtbar machen.",
-    icon: CalendarClock,
+    sceIcon: "tasks",
   },
   {
     title: "Verantwortliche",
     description: "Klare Zuordnung, wer eine Aufgabe bearbeitet oder freigibt.",
-    icon: UserCheck,
+    sceIcon: "assignment",
   },
   {
     title: "Aufgaben aus Anmeldungen",
     description: "Follow-ups aus Anmeldungsprozessen als Aufgaben weiterführen.",
-    icon: ClipboardList,
+    sceIcon: "requirements",
   },
   {
     title: "Aufgaben aus Planung",
     description: "Operative Punkte aus Training, Spielen und Veranstaltungen verbinden.",
-    icon: CalendarClock,
+    sceIcon: "planning",
   },
   {
     title: "Aufgaben aus Meetings",
     description: "Beschlüsse und Vereinbarungen aus Sitzungen in Aufgaben überführen.",
-    icon: ListChecks,
+    sceIcon: "committee-board",
   },
   {
     title: "Erledigte Aufgaben",
     description: "Abgeschlossene Aufgaben nachvollziehbar archivieren.",
-    icon: ClipboardCheck,
+    sceIcon: "archive",
   },
 ];
 
@@ -99,32 +84,32 @@ export const HELFEREINSAETZE_CAPABILITIES: FutureModuleCapability[] = [
   {
     title: "Einsatzplanung",
     description: "Helfereinsätze für Turniere, Events und Vereinsbetrieb planen.",
-    icon: CalendarClock,
+    sceIcon: "volunteer",
   },
   {
     title: "Helferschichten",
     description: "Schichten mit Zeiten, Rollen und Verantwortlichkeiten strukturieren.",
-    icon: Users,
+    sceIcon: "volunteer",
   },
   {
     title: "Offene Einsätze",
     description: "Noch nicht besetzte Einsätze für Freiwillige sichtbar machen.",
-    icon: HandHelping,
+    sceIcon: "volunteer",
   },
   {
     title: "Zu-/Absagen",
     description: "Zusagen und Absagen einfach erfassen und nachverfolgen.",
-    icon: UserCheck,
+    sceIcon: "volunteer",
   },
   {
     title: "Erinnerungen",
     description: "Freiwillige rechtzeitig an bevorstehende Einsätze erinnern.",
-    icon: CalendarClock,
+    sceIcon: "notifications",
   },
   {
     title: "Einsatzübersicht",
     description: "Alle Einsätze mit Status und Besetzung im Überblick halten.",
-    icon: ClipboardList,
+    sceIcon: "volunteer",
   },
 ];
 
@@ -132,32 +117,32 @@ export const TRAINER_STAFF_CAPABILITIES: FutureModuleCapability[] = [
   {
     title: "Trainerprofile",
     description: "Trainer- und Staffprofile mit Rollen und Kontext im Verein führen.",
-    icon: BadgeCheck,
+    sceIcon: "coach",
   },
   {
     title: "Qualifikationen & Lizenzen",
     description: "Nachweise und Qualifikationen strukturiert dokumentieren.",
-    icon: FileCheck2,
+    sceIcon: "documents",
   },
   {
     title: "Verfügbarkeit",
     description: "Verfügbarkeiten für Planung und Einsatzplanung berücksichtigen.",
-    icon: CalendarClock,
+    sceIcon: "availability",
   },
   {
     title: "Teamzuordnungen",
     description: "Trainer und Staff mit Teams und Funktionen verknüpfen.",
-    icon: Users,
+    sceIcon: "team-management",
   },
   {
     title: "Verträge / Vereinbarungen",
     description: "Vereinbarungen und Laufzeiten nachvollziehbar ablegen.",
-    icon: FileText,
+    sceIcon: "contract",
   },
   {
     title: "Ablaufende Nachweise",
     description: "Bald ablaufende Lizenzen und Nachweise frühzeitig erkennen.",
-    icon: ClipboardCheck,
+    sceIcon: "attention",
   },
 ];
 
@@ -165,32 +150,32 @@ export const FORMULARE_FREIGABEN_CAPABILITIES: FutureModuleCapability[] = [
   {
     title: "Formulare",
     description: "Anfragen, Anträge und Erklärungen zentral bereitstellen.",
-    icon: ClipboardList,
+    sceIcon: "form",
   },
   {
     title: "Freigaben",
     description: "Genehmigungen und Freigaben mit klaren Zuständigkeiten steuern.",
-    icon: FileCheck2,
+    sceIcon: "approval",
   },
   {
     title: "Einwilligungen",
     description: "Einwilligungen und Zustimmungen nachvollziehbar erfassen.",
-    icon: UserCheck,
+    sceIcon: "approval",
   },
   {
     title: "Unterschriften",
     description: "Unterschriftsprozesse vorbereiten — ohne Anspruch auf rechtsgültige E-Signatur.",
-    icon: ClipboardCheck,
+    sceIcon: "approval",
   },
   {
     title: "Anträge",
     description: "Eingereichte Anträge mit Status und Verantwortlichen verfolgen.",
-    icon: FileText,
+    sceIcon: "form",
   },
   {
     title: "Status & Verlauf",
     description: "Jeden Schritt von Einreichung bis Abschluss dokumentieren.",
-    icon: ListChecks,
+    sceIcon: "workflow",
   },
 ];
 
@@ -198,32 +183,32 @@ export const VORFAELLE_DISZIPLIN_CAPABILITIES: FutureModuleCapability[] = [
   {
     title: "Vorfall erfassen",
     description: "Vorfälle strukturiert und diskret aufnehmen.",
-    icon: ShieldAlert,
+    icon: DisciplineIncidentSceIcon,
   },
   {
     title: "Fallübersicht",
     description: "Laufende und abgeschlossene Fälle mit klarer Zuständigkeit führen.",
-    icon: ClipboardList,
+    icon: DisciplineIncidentSceIcon,
   },
   {
     title: "Massnahmen",
     description: "Vereinbarte Massnahmen und nächste Schritte festhalten.",
-    icon: FileCheck2,
+    sceIcon: "workflow",
   },
   {
     title: "Zuständigkeiten",
     description: "Verantwortliche Personen und Gremien transparent zuordnen.",
-    icon: UserCheck,
+    sceIcon: "roles-access",
   },
   {
     title: "Dokumentation",
     description: "Sachliche Dokumentation für interne Nachverfolgung sicherstellen.",
-    icon: FileText,
+    sceIcon: "documents",
   },
   {
     title: "Abschluss / Verlauf",
     description: "Fälle kontrolliert abschliessen und den Verlauf nachvollziehen.",
-    icon: ListChecks,
+    sceIcon: "history",
   },
 ];
 

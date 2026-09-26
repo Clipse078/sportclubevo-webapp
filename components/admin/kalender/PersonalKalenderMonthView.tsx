@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -98,7 +99,7 @@ export default function PersonalKalenderMonthView({
                     className="flex items-center gap-1 rounded-md px-1 py-0.5 text-[0.8125rem] text-[var(--foreground)] hover:bg-[var(--surface-2)]"
                     aria-label={task.ariaLabel}
                   >
-                    <ListChecks className="h-3.5 w-3.5 shrink-0 text-[var(--text-2)]" aria-hidden />
+                    <ProductDomainSceIcon name="tasks" size={12} className="h-3.5 w-3.5 shrink-0 text-[var(--text-2)]" />
                     <span className="truncate">{task.title}</span>
                   </Link>
                 ) : (
@@ -106,7 +107,7 @@ export default function PersonalKalenderMonthView({
                     className="flex items-center gap-1 px-1 py-0.5 text-[0.8125rem]"
                     aria-label={task.ariaLabel}
                   >
-                    <ListChecks className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    <ProductDomainSceIcon name="tasks" size={12} className="h-3.5 w-3.5 shrink-0" />
                     {task.title}
                   </span>
                 )}

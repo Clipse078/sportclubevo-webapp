@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, KeyRound, Shield, Layers } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { ArrowRight, KeyRound, Shield } from "lucide-react";
+import { OrgUnitSceIcon } from "@/components/icons/domain-sce-icon-components";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import { EmptyState } from "@/components/ui/page";
 import { KpiCard } from "@/components/admin/dashboard/KpiCard";
@@ -29,13 +31,11 @@ const MODULE_LABELS: Record<string, string> = {
   ORG: "Organisation",
   FACILITIES: "Anlagen",
   TRAININGS: "Trainingsplanung",
-  WORKSPACE: "Workspace",
-};
+  WORKSPACE: "Workspace" };
 
 function ModuleGroupCard({
   module,
-  permissions,
-}: {
+  permissions }: {
   module: string;
   permissions: Array<{
     id: string;
@@ -56,7 +56,7 @@ function ModuleGroupCard({
       <div className="sce-detail-section-header">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--blue-light)]">
-            <Layers className="h-4 w-4 text-[var(--blue)]" />
+            <OrgUnitSceIcon className="h-4 w-4 text-[var(--blue)]" />
           </div>
           <div>
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.10em] text-[var(--muted)]">
@@ -107,7 +107,7 @@ function ModuleGroupCard({
                       href={`/dashboard/roles/${role.id}`}
                       className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-0.5 text-[0.68rem] font-semibold text-[var(--text-2)] transition-colors hover:border-[var(--blue)] hover:bg-[var(--blue-light)] hover:text-[var(--blue)]"
                     >
-                      <Shield className="h-2.5 w-2.5" />
+                      <ProductDomainSceIcon name="roles-access" size={20} />
                       {role.name}
                     </Link>
                   ))
@@ -143,7 +143,7 @@ export default async function PermissionsPage() {
             href="/dashboard/roles"
             className="fca-button-secondary flex items-center gap-2"
           >
-            <Shield className="h-4 w-4" />
+            <ProductDomainSceIcon name="roles-access" size={16} />
             Rollen bearbeiten
           </Link>
         }
@@ -163,14 +163,14 @@ export default async function PermissionsPage() {
           value={String(totalModules)}
           subtext="Berechtigungsgruppen"
           trend="neutral"
-          icon={<Layers style={{ width: 18, height: 18 }} />}
+          icon={<OrgUnitSceIcon />}
         />
         <KpiCard
           label="Zugewiesen"
           value={String(mappedPermissions)}
           subtext="Rechte mit Rollenbindung"
           trend="neutral"
-          icon={<Shield style={{ width: 18, height: 18 }} />}
+          icon={<ProductDomainSceIcon name="roles-access" size={20} />}
         />
         <KpiCard
           label="Ohne Rolle"

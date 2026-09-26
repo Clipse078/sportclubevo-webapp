@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useMemo, useState, useCallback } from "react";
 import Link from "next/link";
@@ -325,7 +326,7 @@ export default function PersonDirectory({
       {/* List */}
       {persons.length === 0 ? (
         <EmptyState
-          icon={<Users className="h-10 w-10" />}
+          icon={<ProductDomainSceIcon name="people" size={48} />}
           heading="Noch keine Personen erfasst"
           description="Erfasse Spieler/innen, Trainer/innen, Funktionäre und weitere Personen und ordne sie direkt deiner Vereinsorganisation zu."
           action={
@@ -421,7 +422,7 @@ export default function PersonDirectory({
                           key={n}
                           className="inline-flex items-center gap-1 text-[10px] text-[var(--muted)]"
                         >
-                          <Building2 className="h-3 w-3" />
+                          <ProductDomainSceIcon name="org-unit" size={12} />
                           {n}
                         </span>
                       ))}

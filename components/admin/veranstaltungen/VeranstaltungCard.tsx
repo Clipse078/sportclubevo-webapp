@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -320,7 +321,7 @@ export default function VeranstaltungCard({
             <div className="sce-data-field">
               <p className="sce-data-label">Ort</p>
               <p className="sce-data-value mt-1 flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5 shrink-0 text-violet-600" />
+                <ProductDomainSceIcon name="facility" size={12} className="h-3.5 w-3.5 shrink-0 text-violet-600" />
                 {event.location}
               </p>
             </div>

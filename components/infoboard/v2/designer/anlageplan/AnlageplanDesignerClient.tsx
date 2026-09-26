@@ -1,4 +1,6 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { OrgUnitSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 /**
  * components/infoboard/v2/designer/anlageplan/AnlageplanDesignerClient.tsx
@@ -46,9 +48,7 @@ import {
   Settings,
   Megaphone,
   Map as MapIcon,
-  Layers,
-  CheckCircle,
-} from "lucide-react";
+  CheckCircle } from "lucide-react";
 import type { InboardRow } from "@/lib/infoboard/types";
 import type {
   AnlageplanConfig,
@@ -57,8 +57,7 @@ import type {
   MarkerElement,
   MarkerType,
   NormalizedRect,
-  AnlageplanResourceOption,
-} from "@/lib/infoboard/anlageplan-types";
+  AnlageplanResourceOption } from "@/lib/infoboard/anlageplan-types";
 import {
   parseAnlageplanJson,
   emptyAnlageplanConfig,
@@ -75,14 +74,12 @@ import {
   defaultBackgroundTransform,
   resolveBackgroundTransform,
   anlageplanResourceLabel,
-  type BackgroundTransform,
-} from "@/lib/infoboard/anlageplan-types";
+  type BackgroundTransform } from "@/lib/infoboard/anlageplan-types";
 import { HeaderWidgetPanel } from "@/components/infoboard/v2/designer/HeaderWidgetPanel";
 import { AnnouncementWidgetPanel } from "@/components/infoboard/v2/designer/AnnouncementWidgetPanel";
 import type {
   HeaderWidgetSettings,
-  AnnouncementWidgetSettings,
-} from "@/lib/infoboard/widget-types";
+  AnnouncementWidgetSettings } from "@/lib/infoboard/widget-types";
 
 // ── Marker palette — driven by canonical MARKER_ICONS ─────────────────────────
 
@@ -112,8 +109,7 @@ function toPixels(
     x: norm.x * cw,
     y: norm.y * ch,
     w: norm.width * cw,
-    h: norm.height * ch,
-  };
+    h: norm.height * ch };
 }
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -129,20 +125,17 @@ const SECTION_ORDER: DesignerSection[] = ["KOPFZEILE", "ANLAGEPLAN", "HINWEISLEI
 const SECTION_LABELS: Record<DesignerSection, string> = {
   KOPFZEILE: "Kopfzeile",
   ANLAGEPLAN: "Anlagenplan",
-  HINWEISLEISTE: "Hinweisleiste",
-};
+  HINWEISLEISTE: "Hinweisleiste" };
 
 const SECTION_DESCRIPTIONS: Record<DesignerSection, string> = {
   KOPFZEILE: "Untertitel, Uhrzeit, Datum, Wetter",
   ANLAGEPLAN: "Spielfelder, Marker, Hintergrundbild",
-  HINWEISLEISTE: "Laufschrift, Text, Farben",
-};
+  HINWEISLEISTE: "Laufschrift, Text, Farben" };
 
 const SECTION_ICON: Record<DesignerSection, ReactNode> = {
-  KOPFZEILE: <Settings className="h-4 w-4" aria-hidden="true" />,
+  KOPFZEILE: <ProductDomainSceIcon name="settings" size={16} className="h-4 w-4" />,
   ANLAGEPLAN: <MapIcon className="h-4 w-4" aria-hidden="true" />,
-  HINWEISLEISTE: <Megaphone className="h-4 w-4" aria-hidden="true" />,
-};
+  HINWEISLEISTE: <Megaphone className="h-4 w-4" aria-hidden="true" /> };
 
 // ── Props ──────────────────────────────────────────────────────────────────────
 
@@ -165,8 +158,7 @@ export function AnlageplanDesignerClient({
   board,
   onBoardChange,
   facilityOptions = [],
-  tenantName = "",
-}: Props) {
+  tenantName = "" }: Props) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState({ w: 800, h: 450 });
 
@@ -189,8 +181,7 @@ export function AnlageplanDesignerClient({
     subtitleText: board.headerSubtitleText,
     showTime: board.headerShowTime,
     showDate: board.headerShowDate,
-    showWeather: board.headerShowWeather,
-  }));
+    showWeather: board.headerShowWeather }));
   const [announcementEnabled, setAnnouncementEnabled] = useState<boolean>(
     board.announcementEnabled,
   );
@@ -198,8 +189,7 @@ export function AnlageplanDesignerClient({
     () => ({
       text: board.announcementText,
       bgColor: board.announcementBgColor,
-      textColor: board.announcementTextColor,
-    }),
+      textColor: board.announcementTextColor }),
   );
 
   // ── Active section (replaces right-panel tab; matches Screen 1 pattern) ────
@@ -263,16 +253,14 @@ export function AnlageplanDesignerClient({
       ...prev,
       elements: prev.elements.map((e) =>
         e.id === id ? ({ ...e, ...patch } as AnlageplanElement) : e,
-      ),
-    }));
+      ) }));
     setSaved(false);
   }
 
   function deleteElement(id: string) {
     setConfig((prev) => ({
       ...prev,
-      elements: prev.elements.filter((e) => e.id !== id),
-    }));
+      elements: prev.elements.filter((e) => e.id !== id) }));
     setSelectedId(null);
     setSaved(false);
   }
@@ -285,8 +273,7 @@ export function AnlageplanDesignerClient({
       resourceCode: null,
       label: null,
       zoneType,
-      showNextActivity: true,
-    };
+      showNextActivity: true };
     setConfig((prev) => ({ ...prev, elements: [...prev.elements, el] }));
     setSelectedId(el.id);
     setSaved(false);
@@ -299,8 +286,7 @@ export function AnlageplanDesignerClient({
       rect: type === "DU_BIST_HIER" ? defaultDuBistHierRect() : defaultMarkerRect(),
       markerType: type,
       label: MARKER_LABELS[type],
-      secondaryText: null,
-    };
+      secondaryText: null };
     setConfig((prev) => ({ ...prev, elements: [...prev.elements, el] }));
     setSelectedId(el.id);
     setSaved(false);
@@ -319,8 +305,7 @@ export function AnlageplanDesignerClient({
       startX: e.clientX,
       startY: e.clientY,
       origX: el.rect.x,
-      origY: el.rect.y,
-    };
+      origY: el.rect.y };
   }
 
   function onMouseDownResize(e: React.MouseEvent, id: string) {
@@ -332,8 +317,7 @@ export function AnlageplanDesignerClient({
       startX: e.clientX,
       startY: e.clientY,
       origW: el.rect.width,
-      origH: el.rect.height,
-    };
+      origH: el.rect.height };
   }
 
   const onMouseMove = useCallback(
@@ -353,8 +337,7 @@ export function AnlageplanDesignerClient({
           ...prev,
           elements: prev.elements.map((x) =>
             x.id === id ? { ...x, rect: { ...x.rect, x: nx, y: ny } } : x,
-          ),
-        }));
+          ) }));
         setSaved(false);
       } else if (resizing.current) {
         const { id, startX, startY, origW, origH } = resizing.current;
@@ -370,8 +353,7 @@ export function AnlageplanDesignerClient({
             x.id === id
               ? { ...x, rect: { ...x.rect, width: nw, height: nh } }
               : x,
-          ),
-        }));
+          ) }));
         setSaved(false);
       } else if (panning.current) {
         const { startX, startY, origOffsetX, origOffsetY } = panning.current;
@@ -380,8 +362,7 @@ export function AnlageplanDesignerClient({
         setBgTransform((prev) => ({
           ...prev,
           offsetX: origOffsetX + dx,
-          offsetY: origOffsetY + dy,
-        }));
+          offsetY: origOffsetY + dy }));
         setSaved(false);
       }
     },
@@ -434,9 +415,7 @@ export function AnlageplanDesignerClient({
             : null,
           announcementTextColor: announcementEnabled
             ? (announcementSettings.textColor ?? null)
-            : null,
-        }),
-      });
+            : null }) });
       if (!res.ok) {
         const d = (await res.json().catch(() => ({}))) as { error?: string };
         setSaveError(d.error ?? "Fehler beim Speichern.");
@@ -525,7 +504,7 @@ export function AnlageplanDesignerClient({
       >
         {/* Left side: label + status badges */}
         <div className="flex items-center gap-2 flex-wrap">
-          <Layers className="h-4 w-4 text-[var(--muted)]" aria-hidden="true" />
+          <OrgUnitSceIcon className="h-4 w-4 text-[var(--muted)]" />
           <span className="text-[0.8rem] font-medium text-[var(--text-2)]">
             Designer
           </span>
@@ -792,8 +771,7 @@ export function AnlageplanDesignerClient({
                   startX: e.clientX,
                   startY: e.clientY,
                   origOffsetX: bgTransform.offsetX,
-                  origOffsetY: bgTransform.offsetY,
-                };
+                  origOffsetY: bgTransform.offsetY };
               }
             }}
           >
@@ -812,8 +790,7 @@ export function AnlageplanDesignerClient({
                 position: "absolute",
                 inset: 0,
                 transform: `translate(${bgTransform.offsetX * 100}%, ${bgTransform.offsetY * 100}%) scale(${bgTransform.scale})`,
-                transformOrigin: "center center",
-              }}
+                transformOrigin: "center center" }}
             >
               {backgroundUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -862,8 +839,7 @@ export function AnlageplanDesignerClient({
                       alignItems: "center",
                       justifyContent: "center",
                       overflow: "hidden",
-                      userSelect: "none",
-                    }}
+                      userSelect: "none" }}
                     onMouseDown={(e) => onMouseDownElement(e, el.id)}
                   >
                     {isZone ? (
@@ -912,8 +888,7 @@ export function AnlageplanDesignerClient({
                           height: 12,
                           background: "#3b82f6",
                           borderRadius: 2,
-                          cursor: "se-resize",
-                        }}
+                          cursor: "se-resize" }}
                         onMouseDown={(e) => onMouseDownResize(e, el.id)}
                       />
                     )}
@@ -1058,8 +1033,7 @@ export function AnlageplanDesignerClient({
                           value={selectedElement.resourceCode ?? ""}
                           onChange={(e) =>
                             updateElement(selectedElement.id, {
-                              resourceCode: e.target.value || null,
-                            } as Partial<ResourceZoneElement>)
+                              resourceCode: e.target.value || null } as Partial<ResourceZoneElement>)
                           }
                           placeholder="z.B. KR2, KR2-A"
                           className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-[0.78rem] text-[var(--foreground)] font-mono"
@@ -1074,8 +1048,7 @@ export function AnlageplanDesignerClient({
                         value={selectedElement.label ?? ""}
                         onChange={(e) =>
                           updateElement(selectedElement.id, {
-                            label: e.target.value || null,
-                          } as Partial<ResourceZoneElement>)
+                            label: e.target.value || null } as Partial<ResourceZoneElement>)
                         }
                         placeholder="z.B. Kunstrasen 2"
                         className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-[0.78rem] text-[var(--foreground)]"
@@ -1090,8 +1063,7 @@ export function AnlageplanDesignerClient({
                           checked={selectedElement.showNextActivity}
                           onChange={(e) =>
                             updateElement(selectedElement.id, {
-                              showNextActivity: e.target.checked,
-                            } as Partial<ResourceZoneElement>)
+                              showNextActivity: e.target.checked } as Partial<ResourceZoneElement>)
                           }
                           className="h-3.5 w-3.5"
                         />
@@ -1112,8 +1084,7 @@ export function AnlageplanDesignerClient({
                         value={selectedElement.label ?? ""}
                         onChange={(e) =>
                           updateElement(selectedElement.id, {
-                            label: e.target.value || null,
-                          } as Partial<MarkerElement>)
+                            label: e.target.value || null } as Partial<MarkerElement>)
                         }
                         className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-[0.78rem] text-[var(--foreground)]"
                       />
@@ -1126,8 +1097,7 @@ export function AnlageplanDesignerClient({
                         value={selectedElement.secondaryText ?? ""}
                         onChange={(e) =>
                           updateElement(selectedElement.id, {
-                            secondaryText: e.target.value || null,
-                          } as Partial<MarkerElement>)
+                            secondaryText: e.target.value || null } as Partial<MarkerElement>)
                         }
                         placeholder="Optional"
                         className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-[0.78rem] text-[var(--foreground)]"
@@ -1159,9 +1129,7 @@ export function AnlageplanDesignerClient({
                               updateElement(selectedElement.id, {
                                 rect: {
                                   ...selectedElement.rect,
-                                  [key]: Number(e.target.value),
-                                },
-                              })
+                                  [key]: Number(e.target.value) } })
                             }
                             className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[0.72rem] text-[var(--foreground)] font-mono"
                           />
@@ -1182,9 +1150,7 @@ export function AnlageplanDesignerClient({
                           updateElement(selectedElement.id, {
                             rect: {
                               ...selectedElement.rect,
-                              rotation: Number(e.target.value),
-                            },
-                          })
+                              rotation: Number(e.target.value) } })
                         }
                         className="w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[0.72rem] text-[var(--foreground)] font-mono"
                       />
@@ -1222,8 +1188,7 @@ export function AnlageplanDesignerClient({
 
 function PanelSection({
   label,
-  children,
-}: {
+  children }: {
   label: string;
   children: React.ReactNode;
 }) {
@@ -1257,8 +1222,7 @@ function ElementNavigator({
   elements,
   selectedId,
   facilityOptions,
-  onSelect,
-}: ElementNavigatorProps) {
+  onSelect }: ElementNavigatorProps) {
   const zones = elements.filter(isResourceZone);
   const markers = elements.filter(isMarker);
 

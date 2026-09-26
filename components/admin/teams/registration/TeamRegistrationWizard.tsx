@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ArrowLeft, ArrowRight, ClipboardCheck } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight } from "lucide-react";
+import { ApprovalSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { cn } from "@/lib/cn";
 import { Button, ValidationSummary } from "@/components/ui";
 import { PageBreadcrumbs, PageHeader } from "@/components/ui/page";
@@ -32,8 +33,7 @@ import {
   type ExistingTeam,
   type UnmappedFederationTeam,
   type WizardFormData,
-  type ParticipationType,
-} from "./types";
+  type ParticipationType } from "./types";
 import { normalizeTeamSlug } from "@/lib/teams/team-season-rules";
 
 // ---------------------------------------------------------------------------
@@ -160,8 +160,7 @@ export default function TeamRegistrationWizard() {
 
       try {
         const res = await fetch("/api/teams/register-eligible-data", {
-          cache: "no-store",
-        });
+          cache: "no-store" });
         const json = await res.json().catch(() => null);
 
         if (!res.ok || !json) {
@@ -264,8 +263,7 @@ export default function TeamRegistrationWizard() {
         federationExternalTeamId: null,
         federationExternalSeasonId: null,
         federationProviderTeamName: null,
-        federationProviderLeagueName: null,
-      }));
+        federationProviderLeagueName: null }));
     } else {
       setForm((prev) => ({
         ...prev,
@@ -273,8 +271,7 @@ export default function TeamRegistrationWizard() {
         federationExternalTeamId: team.externalTeamId,
         federationExternalSeasonId: team.externalSeasonId,
         federationProviderTeamName: team.providerTeamName,
-        federationProviderLeagueName: team.providerLeagueName,
-      }));
+        federationProviderLeagueName: team.providerLeagueName }));
     }
     setHasEdited(true);
   }
@@ -285,8 +282,7 @@ export default function TeamRegistrationWizard() {
       ...prev,
       participationType: value,
       // Clear competition selection when switching away from COMPETITION type
-      competitionId: value === "COMPETITION" ? prev.competitionId : null,
-    }));
+      competitionId: value === "COMPETITION" ? prev.competitionId : null }));
     setHasEdited(true);
     setStepErrors({});
   }
@@ -360,8 +356,7 @@ export default function TeamRegistrationWizard() {
           alternativeName: form.teamAlternativeName || undefined,
           genderGroup: form.teamGenderGroup || undefined,
           ageGroup: form.teamAgeGroup || undefined,
-          sortOrder: form.teamSortOrder,
-        },
+          sortOrder: form.teamSortOrder },
         participationType: form.participationType,
         competitionId: form.competitionId ?? undefined,
         federationMapping:
@@ -373,18 +368,15 @@ export default function TeamRegistrationWizard() {
                 externalTeamId: form.federationExternalTeamId,
                 externalSeasonId: form.federationExternalSeasonId,
                 providerTeamName: form.federationProviderTeamName,
-                providerLeagueName: form.federationProviderLeagueName,
-              }
+                providerLeagueName: form.federationProviderLeagueName }
             : undefined,
         websiteVisible: form.websiteVisible,
-        infoboardVisible: form.infoboardVisible,
-      };
+        infoboardVisible: form.infoboardVisible };
 
       const res = await fetch("/api/teams/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+        body: JSON.stringify(payload) });
 
       const data = await res.json().catch(() => null);
 
@@ -428,8 +420,7 @@ export default function TeamRegistrationWizard() {
     [STEP_COMPETITION]:
       "Weise dem Wettkampfteam einen Wettkampf zu. Die Auswahl kann nach der Registrierung geändert werden.",
     [STEP_PUBLICATION]:
-      "Lege fest, wo das Team nach der Registrierung sichtbar sein soll.",
-  };
+      "Lege fest, wo das Team nach der Registrierung sichtbar sein soll." };
 
   const currentStepDef = WIZARD_STEP_DEFS[currentStep];
 
@@ -627,7 +618,7 @@ export default function TeamRegistrationWizard() {
               variant="primary"
               iconLeft={
                 submitting ? undefined : (
-                  <ClipboardCheck className="h-4 w-4" />
+                  <ApprovalSceIcon className="h-4 w-4" />
                 )
               }
               loading={submitting}
@@ -670,8 +661,7 @@ export default function TeamRegistrationWizard() {
 
 function DiscardDialog({
   onKeep,
-  onDiscard,
-}: {
+  onDiscard }: {
   onKeep: () => void;
   onDiscard: () => void;
 }) {

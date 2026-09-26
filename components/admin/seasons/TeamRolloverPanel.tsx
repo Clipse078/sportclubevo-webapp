@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -158,7 +159,7 @@ export default function TeamRolloverPanel({ seasonId, seasonName }: TeamRollover
         onClick={openPanel}
         className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-white px-3 text-xs font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)]"
       >
-        <Users className="h-3.5 w-3.5" />
+        <ProductDomainSceIcon name="people" size={12} />
         Teams übernehmen
       </button>
     );

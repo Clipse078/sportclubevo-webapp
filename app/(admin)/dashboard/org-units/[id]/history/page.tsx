@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { redirect, notFound } from "next/navigation";
 import { ArrowLeft, ChevronRight, Clock, Users } from "lucide-react";
 import { auth } from "@/auth";
@@ -117,7 +118,7 @@ export default async function OrgUnitMembershipHistoryPage({ params, searchParam
           href={`/dashboard/org-units/${id}`}
           className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-[var(--muted)] transition hover:text-[var(--foreground)]"
         >
-          <Users className="h-4 w-4" />
+          <ProductDomainSceIcon name="people" size={16} />
           Aktive Mitglieder
         </Link>
         <span className="flex items-center gap-1.5 rounded-lg bg-[var(--surface-2)] px-4 py-2 text-sm font-semibold text-[var(--foreground)]">

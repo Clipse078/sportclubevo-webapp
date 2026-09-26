@@ -1,4 +1,5 @@
 ﻿"use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -131,7 +132,7 @@ export default function AdminPageActions() {
           type="button"
           className="inline-flex h-11 items-center gap-2 rounded-full bg-[#0b4aa2] px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-[1px] hover:bg-[#08357a]"
         >
-          <Users className="h-4 w-4" />
+          <ProductDomainSceIcon name="people" size={16} />
           Neues Team
         </button>
       </div>

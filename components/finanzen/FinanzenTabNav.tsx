@@ -2,22 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, FileText } from "lucide-react";
+import {  FileText } from "lucide-react";
+import { AnalyticsSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { cn } from "@/lib/cn";
 
 const TABS = [
   {
     label: "Übersicht",
     href: "/vereinsleitung/finanzen",
-    icon: BarChart3,
-    exact: true,
-  },
+    icon: AnalyticsSceIcon,
+    exact: true },
   {
     label: "Rechnungen",
     href: "/vereinsleitung/finanzen/rechnungen",
     icon: FileText,
-    exact: false,
-  },
+    exact: false },
 ] as const;
 
 export function FinanzenTabNav() {

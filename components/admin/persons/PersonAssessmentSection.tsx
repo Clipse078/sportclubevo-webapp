@@ -1,4 +1,6 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { AnalyticsSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 /**
  * PERSON-UX-05/06 — Entwicklungs-Bewertungen (Development Assessment) section.
@@ -26,9 +28,7 @@ import {
   Plus,
   ChevronDown,
   ChevronRight,
-  BarChart2,
-  Settings,
-} from "lucide-react";
+  Settings } from "lucide-react";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/page";
@@ -39,8 +39,7 @@ import {
   validateRawInput,
   normalizeRating,
   RATING_MODES,
-  type RatingMode,
-} from "@/lib/people/rating-modes";
+  type RatingMode } from "@/lib/people/rating-modes";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -48,8 +47,7 @@ function formatDate(date: Date | string): string {
   return new Date(date).toLocaleDateString("de-CH", {
     day: "2-digit",
     month: "short",
-    year: "numeric",
-  });
+    year: "numeric" });
 }
 
 function deriveOverall(ratings: Array<{ normalizedScore: number }>): number | null {
@@ -100,8 +98,7 @@ type BenchmarkEntry = {
 
 function BenchmarkDisplay({
   personScore,
-  benchmark,
-}: {
+  benchmark }: {
   personScore: number;
   benchmark: BenchmarkEntry;
 }) {
@@ -144,8 +141,7 @@ function BenchmarkDisplay({
 
 function RatingRow({
   rating,
-  benchmark,
-}: {
+  benchmark }: {
   rating: PersonAssessmentRecord["ratings"][number];
   benchmark?: BenchmarkEntry | null;
 }) {
@@ -183,8 +179,7 @@ function RatingRow({
 
 function GroupedRatings({
   ratings,
-  benchmarks,
-}: {
+  benchmarks }: {
   ratings: PersonAssessmentRecord["ratings"];
   benchmarks?: Record<string, BenchmarkEntry> | null;
 }) {
@@ -226,8 +221,7 @@ function AssessmentCard({
   isLatest,
   canManage,
   personId,
-  onEdit,
-}: {
+  onEdit }: {
   assessment: PersonAssessmentRecord;
   isLatest: boolean;
   canManage: boolean;
@@ -381,8 +375,7 @@ type RatingDraft = {
 function ModeRatingInput({
   criterion,
   rawValue,
-  onChange,
-}: {
+  onChange }: {
   criterion: TenantCriterion;
   rawValue: number;
   onChange: (v: number) => void;
@@ -509,8 +502,7 @@ function AssessmentForm({
   criteria,
   initialAssessment,
   onSuccess,
-  onCancel,
-}: {
+  onCancel }: {
   personId: string;
   criteria: TenantCriterion[];
   initialAssessment?: PersonAssessmentRecord;
@@ -536,15 +528,13 @@ function AssessmentForm({
         return {
           criterionId: r.criterionId,
           rawValue: validateRawInput(mode, rawValue) ? rawValue : defaultRawValueForMode(mode),
-          comment: r.comment ?? "",
-        };
+          comment: r.comment ?? "" };
       });
     }
     return criteria.map((c) => ({
       criterionId: c.id,
       rawValue: defaultRawValueForMode(c.ratingMode ?? RATING_MODES.SCORE_0_100),
-      comment: "",
-    }));
+      comment: "" }));
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -569,8 +559,7 @@ function AssessmentForm({
           criterionId: r.criterionId,
           rawValue: r.rawValue,
           normalizedScore: normalizeRating(mode, r.rawValue),
-          comment: r.comment || null,
-        };
+          comment: r.comment || null };
       });
 
       const body = isEdit
@@ -580,8 +569,7 @@ function AssessmentForm({
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+        body: JSON.stringify(body) });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setError((data as { error?: string }).error ?? "Unbekannter Fehler.");
@@ -732,8 +720,7 @@ export default function PersonAssessmentSection({
   assessments,
   criteria,
   canManage,
-  criteriaManagementUrl,
-}: PersonAssessmentSectionProps) {
+  criteriaManagementUrl }: PersonAssessmentSectionProps) {
   const router = useRouter();
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<PersonAssessmentRecord | null>(null);
@@ -752,7 +739,7 @@ export default function PersonAssessmentSection({
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <BarChart2 className="h-4 w-4 text-[var(--sce-primary)]" />
+          <AnalyticsSceIcon className="h-4 w-4 text-[var(--sce-primary)]" />
           <h3 className="text-[11px] font-semibold uppercase tracking-widest text-[var(--muted)]">
             Entwicklungs-Bewertungen
           </h3>
@@ -764,7 +751,7 @@ export default function PersonAssessmentSection({
               className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] text-[var(--muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
               title="Kriterien verwalten"
             >
-              <Settings className="h-3 w-3" />
+              <ProductDomainSceIcon name="settings" size={12} />
               Kriterien
             </a>
           ) : null}

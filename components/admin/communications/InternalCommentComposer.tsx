@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * COMM-01B — Multiline internal comment composer with @mention autocomplete.
@@ -269,7 +270,7 @@ export function InternalCommentComposer({
           disabled={!canSubmit}
           className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--tenant-primary)] px-3 py-1.5 text-xs font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : <Send className="h-3.5 w-3.5" aria-hidden />}
+          {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : <ProductDomainSceIcon name="publish" size={12} className="h-3.5 w-3.5" />}
           {submitLabel}
         </button>
       </div>

@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useId, useMemo, useState } from "react";
 import { AlertTriangle, Users } from "lucide-react";
@@ -167,10 +168,7 @@ export default function StepTeamIdentity({
           aria-live="polite"
         >
           <div className="flex items-center gap-3">
-            <Users
-              className="h-4 w-4 shrink-0 text-[var(--sce-primary)]"
-              aria-hidden="true"
-            />
+            <ProductDomainSceIcon name="people" size={16} className="h-4 w-4 shrink-0 text-[var(--sce-primary)]" />
             <div>
               <p className="text-sm font-semibold text-[var(--foreground)]">
                 Bestehendes Team wird wiederverwendet

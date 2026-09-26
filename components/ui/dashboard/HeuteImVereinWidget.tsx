@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays } from "lucide-react";
+import { SceIcon } from "@/components/design-system/icons/SceIcon";
 import { DASHBOARD_TODAY_PREVIEW_LIMIT } from "@/lib/dashboard/compact-schedule-presentation";
 import { DashboardSection } from "./DashboardSection";
 import { DashboardCompactScheduleList } from "./DashboardCompactScheduleList";
@@ -23,7 +23,7 @@ export function HeuteImVereinWidget({
     <DashboardSection
       title="Heute im Verein"
       description={dateLabel}
-      icon={<CalendarDays className="h-4 w-4" />}
+      icon={<SceIcon name="events" size={20} />}
       iconAccent="info"
       variant="card"
       bodyClassName="px-4 py-1.5 sm:px-5 sm:py-2"
@@ -40,7 +40,7 @@ export function HeuteImVereinWidget({
         emptyState={
           emptyState ?? (
             <DashboardEmptyState
-              icon={<CalendarDays className="h-5 w-5" />}
+              icon={<SceIcon name="events" size={20} />}
               title="Heute ist nichts geplant"
               description="Vereinstermine erscheinen hier in kompakter Form."
               variant="compact"

@@ -1,10 +1,10 @@
 ﻿import type { ReactNode } from "react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { ReportSceIcon } from "@/components/icons/domain-sce-icon-components";
 import {
   CalendarDays,
   Newspaper,
-  ScrollText,
-  Users,
-} from "lucide-react";
+  Users } from "lucide-react";
 import { auth } from "@/auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { getPersonalizedGreeting, resolveDashboardFirstName } from "@/lib/dashboard/greeting";
@@ -12,16 +12,14 @@ import { getPersonFirstNameByUserId } from "@/lib/people/queries";
 import { getActorContext } from "@/lib/visibility/get-actor-context";
 import {
   getPersonalCommandCenterData,
-  type PersonalDashboardSecondaryActivity,
-} from "@/lib/dashboard/personal-command-center";
+  type PersonalDashboardSecondaryActivity } from "@/lib/dashboard/personal-command-center";
 import {
   PersonalAttention,
   PersonalTasksPreview,
   PersonalQuickAccess,
   PersonalDashboardWorkspace,
   PersonalDashboardSecondary,
-  PersonalDashboardCockpitGreeting,
-} from "@/components/ui/dashboard";
+  PersonalDashboardCockpitGreeting } from "@/components/ui/dashboard";
 import { getUserDashboardHeroState } from "@/lib/dashboard/dashboard-hero-image";
 import type { HeroImageTransform } from "@/lib/dashboard/dashboard-hero-position";
 import type { DashboardActivityItem } from "@/components/ui/dashboard";
@@ -38,8 +36,7 @@ type ClubDashboardViewProps = {
 };
 
 export default async function ClubDashboardView({
-  calendarMonthParam = null,
-}: ClubDashboardViewProps) {
+  calendarMonthParam = null }: ClubDashboardViewProps) {
   const tSecondary = await getTranslations("PersonalDashboard.secondary");
   const session = await auth();
   const ctx = await getActiveTenant();
@@ -57,13 +54,11 @@ export default async function ClubDashboardView({
   const firstName = resolveDashboardFirstName({
     linkedPersonFirstName,
     sessionFirstName: session?.user?.firstName,
-    tenantName: ctx?.name,
-  });
+    tenantName: ctx?.name });
 
   const fmtCfg = {
     locale: ctx?.locale ?? "de-CH",
-    timezone: ctx?.timezone ?? undefined,
-  };
+    timezone: ctx?.timezone ?? undefined };
 
   const permissionKeys = (actor?.permissionKeys ??
     session?.user?.permissionKeys ??
@@ -77,8 +72,7 @@ export default async function ClubDashboardView({
           fmtCfg,
           userId: session?.user?.id ?? null,
           calendarMonthParam,
-          permissionKeys,
-        })
+          permissionKeys })
       : null;
 
   const quickAccessBundle =
@@ -87,8 +81,7 @@ export default async function ClubDashboardView({
           tenantId,
           userId: session.user.id,
           permissionKeys,
-          locale: fmtCfg.locale,
-        })
+          locale: fmtCfg.locale })
       : null;
 
   const quickAccessItems = quickAccessBundle ? quickAccessBundle.items : [];
@@ -97,8 +90,7 @@ export default async function ClubDashboardView({
         key: entry.key,
         kind: entry.kind === "CREATE_ACTION" ? ("create" as const) : ("navigate" as const),
         label: getQuickAccessLabel(entry, fmtCfg.locale),
-        href: entry.href,
-      }))
+        href: entry.href }))
     : [];
 
   const todayFormatted = formatTodayDate(fmtCfg);
@@ -112,8 +104,7 @@ export default async function ClubDashboardView({
     ? {
         zoom: heroState.zoom,
         positionX: heroState.positionX,
-        positionY: heroState.positionY,
-      }
+        positionY: heroState.positionY }
     : undefined;
 
   const contextLine = [todayFormatted, ctx?.name].filter(Boolean).join(" · ");
@@ -132,24 +123,19 @@ export default async function ClubDashboardView({
     news: {
       tag: tSecondary("tagNews"),
       tagVariant: "info",
-      icon: <Newspaper className="h-3.5 w-3.5" />,
-    },
+      icon: <ProductDomainSceIcon name="news" size={12} /> },
     registration: {
       tag: tSecondary("tagRegistration"),
       tagVariant: "warning",
-      icon: <Users className="h-3.5 w-3.5" />,
-    },
+      icon: <ProductDomainSceIcon name="people" size={12} /> },
     event: {
       tag: tSecondary("tagPlanning"),
       tagVariant: "success",
-      icon: <CalendarDays className="h-3.5 w-3.5" />,
-    },
+      icon: <CalendarDays className="h-3.5 w-3.5" /> },
     meeting: {
       tag: tSecondary("tagMeeting"),
       tagVariant: "primary",
-      icon: <ScrollText className="h-3.5 w-3.5" />,
-    },
-  };
+      icon: <ReportSceIcon className="h-3.5 w-3.5" /> } };
 
   const activityItems: DashboardActivityItem[] =
     personal?.activitySources.map((entry) => {
@@ -164,8 +150,7 @@ export default async function ClubDashboardView({
         subtitle: presentation.subtitle,
         timestamp: formatDate(entry.date, fmtCfg),
         tag: meta.tag,
-        tagVariant: meta.tagVariant,
-      };
+        tagVariant: meta.tagVariant };
     }) ?? [];
 
   const attentionSlot =

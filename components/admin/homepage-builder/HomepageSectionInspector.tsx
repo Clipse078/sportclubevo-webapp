@@ -1,4 +1,6 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { OrgUnitSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 /**
  * components/admin/homepage-builder/HomepageSectionInspector.tsx
@@ -35,26 +37,22 @@ import {
   GlobeLock,
   Eye,
   EyeOff,
-  Layers,
   Check,
   AlertCircle,
   Save,
-  Bookmark,
-} from "lucide-react";
+  Bookmark } from "lucide-react";
 import type { HomepageSectionAdminItem } from "@/lib/homepage/admin-queries";
 import { getBlockDefinition } from "@/lib/homepage/block-registry";
 import {
   APPROVAL_STATUS_LABELS,
-  type ApprovalStatus,
-} from "@/lib/homepage/approval-constants";
+  type ApprovalStatus } from "@/lib/homepage/approval-constants";
 import { Badge } from "@/components/ui/Badge";
 import { StatusIndicator } from "@/components/ui/StatusIndicator";
 import {
   CollapsibleSection,
   InspectorField,
   getBlockEditor,
-  UnsupportedBlockEditor,
-} from "./block-editors";
+  UnsupportedBlockEditor } from "./block-editors";
 
 // ---------------------------------------------------------------------------
 // Block icon map
@@ -69,8 +67,7 @@ const BLOCK_ICON_MAP: Record<string, React.ElementType> = {
   MousePointerClick,
   Award,
   LayoutPanelLeft,
-  Blocks,
-};
+  Blocks };
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -84,8 +81,7 @@ function formatDate(date: Date | string | null): string {
       month: "2-digit",
       year: "numeric",
       hour: "2-digit",
-      minute: "2-digit",
-    });
+      minute: "2-digit" });
   } catch {
     return "–";
   }
@@ -93,8 +89,7 @@ function formatDate(date: Date | string | null): string {
 
 function InspectorRow({
   label,
-  children,
-}: {
+  children }: {
   label: string;
   children: React.ReactNode;
 }) {
@@ -143,8 +138,7 @@ export function HomepageSectionInspector({
   onDraftChange,
   onSaveEdit,
   onSaveAsReusable,
-  externalDraftConfig,
-}: Props) {
+  externalDraftConfig }: Props) {
   // ── Local draft state ──────────────────────────────────────────────────
   const [draftLabel, setDraftLabel] = useState("");
   const [draftConfig, setDraftConfig] = useState<Record<string, unknown>>({});
@@ -193,7 +187,7 @@ export function HomepageSectionInspector({
           className="flex h-12 w-12 items-center justify-center rounded-xl"
           style={{ background: "var(--sce-accent)" }}
         >
-          <Layers className="h-6 w-6" style={{ color: "var(--sce-primary)" }} />
+          <OrgUnitSceIcon className="h-6 w-6" />
         </div>
         <div className="space-y-1">
           <p className="text-sm font-semibold text-[var(--foreground)]">
@@ -304,7 +298,7 @@ export function HomepageSectionInspector({
 
           {isPublished && (
             <Badge variant="info" size="sm">
-              <Globe className="h-2.5 w-2.5" />
+              <ProductDomainSceIcon name="website" size={20} />
               Veröffentlicht
             </Badge>
           )}

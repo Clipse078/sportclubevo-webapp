@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { PageSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { FileText, PenLine, Blocks, Plus, Eye, EyeOff, Trash2, RefreshCw, AlertTriangle } from "lucide-react";
 import WebsitePageStatusBadge from "@/components/admin/pages/WebsitePageStatusBadge";
 import type { PageStatus, WebsitePageAdminListItem } from "@/lib/pages/admin-queries";
@@ -161,7 +162,7 @@ export default function WebsitePageList({ canDelete = false }: WebsitePageListPr
         </div>
       ) : pages.length === 0 ? (
         <EmptyState
-          icon={<FileText className="h-10 w-10" />}
+          icon={<PageSceIcon className="h-10 w-10" />}
           heading="Keine Seiten vorhanden"
           description="Erstelle die erste statische Seite für deine Website."
           action={

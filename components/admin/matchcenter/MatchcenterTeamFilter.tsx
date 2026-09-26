@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useMemo, useRef, useState, type FocusEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -123,7 +124,7 @@ export default function MatchcenterTeamFilter({
         aria-label="Team filtern"
         data-testid="matchcenter-team-filter-trigger"
       >
-        <Users className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+        <ProductDomainSceIcon name="people" size={12} className="h-3.5 w-3.5 shrink-0 opacity-70" />
         <span className="max-w-[160px] truncate">{currentLabel}</span>
         <ChevronDown className="h-3 w-3 shrink-0 opacity-60" aria-hidden />
         {teamFilter ? (

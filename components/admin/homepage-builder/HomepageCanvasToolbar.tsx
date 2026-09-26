@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import {
   Pencil,
@@ -166,7 +167,7 @@ export function HomepageCanvasToolbar({
           }
           aria-disabled={!canPublish}
         >
-          <Globe className="h-3.5 w-3.5" />
+          <ProductDomainSceIcon name="website" size={12} />
         </button>
       )}
 

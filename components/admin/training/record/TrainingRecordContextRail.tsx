@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { CalendarRange, MapPin } from "lucide-react";
 import TrainingRecordStatusBadge from "./TrainingRecordStatusBadge";
 import type { TrainingSeriesStatus } from "@/lib/training/types";
@@ -49,7 +50,7 @@ export default function TrainingRecordContextRail({
       <div className="space-y-1">
         <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[var(--muted)]">Anlage</p>
         <p className="inline-flex items-center gap-1.5 text-[var(--text-2)]">
-          <MapPin className="h-3.5 w-3.5 shrink-0 text-emerald-400/90" aria-hidden />
+          <ProductDomainSceIcon name="facility" size={12} className="h-3.5 w-3.5 shrink-0 text-emerald-400/90" />
           {facilityLabel ?? "Nicht zugewiesen"}
         </p>
         {dressingRoomLabel ? (
@@ -69,7 +70,7 @@ export default function TrainingRecordContextRail({
         className="fca-button-secondary inline-flex w-full items-center justify-center gap-1.5 text-xs"
         data-testid="training-record-rail-wochenplaner"
       >
-        <CalendarRange className="h-3.5 w-3.5" aria-hidden />
+        <ProductDomainSceIcon name="season" size={12} className="h-3.5 w-3.5" />
         Im Wochenplaner anzeigen
       </Link>
     </div>

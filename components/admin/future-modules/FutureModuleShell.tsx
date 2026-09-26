@@ -1,4 +1,6 @@
 import type { LucideIcon } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import type { SceIconRegistryName } from "@/components/design-system/icons/registry";
 import { FutureCapabilityCard } from "@/components/admin/future-modules/FutureCapabilityCard";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -12,13 +14,15 @@ import {
 export type FutureModuleCapability = {
   title: string;
   description: string;
-  icon: LucideIcon;
+  sceIcon?: SceIconRegistryName;
+  icon?: LucideIcon;
 };
 
 type FutureModuleShellProps = {
   title: string;
   purpose: string;
-  icon: LucideIcon;
+  sceIcon?: SceIconRegistryName;
+  icon?: LucideIcon;
   capabilities: FutureModuleCapability[];
   breadcrumbs: BreadcrumbItem[];
   footerNote?: string;
@@ -28,7 +32,8 @@ type FutureModuleShellProps = {
 export function FutureModuleShell({
   title,
   purpose,
-  icon: ModuleIcon,
+  sceIcon,
+  icon: LegacyModuleIcon,
   capabilities,
   breadcrumbs,
   footerNote,
@@ -46,45 +51,33 @@ export function FutureModuleShell({
       />
 
       <div className="mb-6 flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
-        <ModuleIcon
-          className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-primary)]"
-          aria-hidden="true"
-        />
+        <span className="mt-0.5 shrink-0 text-[var(--sce-primary)]" aria-hidden="true">
+          {sceIcon ? (
+            <ProductDomainSceIcon name={sceIcon} size={16} />
+          ) : LegacyModuleIcon ? (
+            <LegacyModuleIcon className="h-4 w-4" />
+          ) : null}
+        </span>
         <p className="text-xs leading-5 text-[var(--text-2)]">
-          <span className="font-semibold text-[var(--foreground)]">
-            Modul in Vorbereitung.
-          </span>{" "}
-          Die Bereiche zeigen die geplante Produktarchitektur. Es werden keine operativen
-          Daten erfasst oder Workflows ausgeführt.
+          <span className="font-semibold text-[var(--foreground)]">Modul in Vorbereitung.</span>{" "}
+          Die Bereiche zeigen die geplante Produktarchitektur. Es werden keine operativen Daten
+          erfasst oder Workflows ausgeführt.
         </p>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-        {capabilities.map((capability) => (
-          <FutureCapabilityCard
-            key={capability.title}
-            title={capability.title}
-            description={capability.description}
-            icon={capability.icon}
-          />
-        ))}
-      </div>
-
-      {supplementaryContent ? <div className="mt-8">{supplementaryContent}</div> : null}
-
-      <SectionCard
-        title="Strukturelle Vorbereitung in SCE"
-        description={
-          footerNote ??
-          "Dieses Modul ist in der SCE-Plattformarchitektur vorbereitet. Operative Workflows werden schrittweise ergänzt, sobald die fachlichen Prozesse definiert sind."
-        }
-        className="mt-8"
-      >
-        <p className="text-sm leading-6 text-[var(--text-2)]">
-          Die gezeigten Fähigkeiten beschreiben den geplanten Arbeitsumfang. Es gibt keine
-          Datensätze, keine Aktionen und keine simulierten Ergebnisse.
-        </p>
+      <SectionCard title="Geplante Fähigkeiten" description="Produktarchitektur ohne operative Workflows.">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {capabilities.map((capability) => (
+            <FutureCapabilityCard key={capability.title} {...capability} />
+          ))}
+        </div>
       </SectionCard>
+
+      {supplementaryContent}
+
+      {footerNote ? (
+        <p className="mt-6 text-xs text-[var(--muted)]">{footerNote}</p>
+      ) : null}
     </PageShell>
   );
 }

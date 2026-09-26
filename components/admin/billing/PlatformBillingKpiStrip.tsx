@@ -1,4 +1,5 @@
 import { KpiCard } from "@/components/admin/dashboard/KpiCard";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { formatBillingMoneyMultiCurrency } from "@/lib/billing/format-billing-money";
 import type { PlatformBillingKpis } from "@/lib/billing/billing-kpi";
 import { CreditCard, Users, AlertCircle, Clock } from "lucide-react";
@@ -22,7 +23,7 @@ export default function PlatformBillingKpiStrip({ kpis }: PlatformBillingKpiStri
         value={String(kpis.activeCustomerCount)}
         subtext="Tenants mit aktivem Abo"
         accent="green"
-        icon={<Users className="h-5 w-5" />}
+        icon={<ProductDomainSceIcon name="people" size={20} />}
       />
       <KpiCard
         label="Offen"

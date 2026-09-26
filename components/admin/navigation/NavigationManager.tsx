@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import {
   useState,
@@ -1019,7 +1020,7 @@ export default function NavigationManager({ canDelete = false }: NavigationManag
       {/* Public API hint */}
       {data && (
         <div className="flex items-start gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-          <Globe className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" />
+          <ProductDomainSceIcon name="website" size={16} className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" />
           <p className="text-xs text-[var(--text-2)]">
             Sichtbare Navigationselemente sind abrufbar unter:{" "}
             <code className="rounded bg-[var(--surface-2)] px-1 py-0.5 font-mono text-[10px]">

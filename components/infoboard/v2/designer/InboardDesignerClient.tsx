@@ -1,4 +1,6 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { OrgUnitSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 /**
  * components/infoboard/v2/designer/InboardDesignerClient.tsx
@@ -32,8 +34,7 @@
  */
 
 import { useState, useCallback } from "react";
-import {
-  Layers,
+import { 
   Monitor,
   Megaphone,
   Calendar,
@@ -45,8 +46,7 @@ import {
   Pencil,
   Eye,
   RotateCcw,
-  AlertTriangle,
-} from "lucide-react";
+  AlertTriangle } from "lucide-react";
 
 import { InboardDesignerCanvas } from "./InboardDesignerCanvas";
 import type { DesignerMode } from "./InboardDesignerCanvas";
@@ -67,8 +67,7 @@ import {
   type WidgetType,
   type InboardLayout,
   type HeaderWidgetSettings,
-  type AnnouncementWidgetSettings,
-} from "@/lib/infoboard/widget-types";
+  type AnnouncementWidgetSettings } from "@/lib/infoboard/widget-types";
 import type { InboardRow } from "@/lib/infoboard/types";
 import { buildBoardConfig } from "@/lib/infoboard/board-config";
 
@@ -81,10 +80,9 @@ type InboardDesignerClientProps = {
 };
 
 const WIDGET_ICON: Record<WidgetType, React.ReactNode> = {
-  HEADER: <Monitor className="h-4 w-4" aria-hidden="true" />,
+  HEADER: <ProductDomainSceIcon name="infoboard" size={16} className="h-4 w-4" />,
   ACTIVITIES: <Calendar className="h-4 w-4" aria-hidden="true" />,
-  ANNOUNCEMENT: <Megaphone className="h-4 w-4" aria-hidden="true" />,
-};
+  ANNOUNCEMENT: <Megaphone className="h-4 w-4" aria-hidden="true" /> };
 
 const WIDGET_ORDER: WidgetType[] = ["HEADER", "ACTIVITIES", "ANNOUNCEMENT"];
 
@@ -93,8 +91,7 @@ const WIDGET_ORDER: WidgetType[] = ["HEADER", "ACTIVITIES", "ANNOUNCEMENT"];
 export function InboardDesignerClient({
   board,
   tenantName,
-  onBoardChange,
-}: InboardDesignerClientProps) {
+  onBoardChange }: InboardDesignerClientProps) {
   const [layout, setLayout] = useState<InboardLayout>(() =>
     parseLayoutJson(board.layoutJson, board),
   );
@@ -139,8 +136,7 @@ export function InboardDesignerClient({
               enabled: true,
               position: { col: defaultPos.col, row: defaultPos.row },
               width: defaultPos.width,
-              height: defaultPos.height,
-            }
+              height: defaultPos.height }
           : { enabled: true };
 
         return updateWidget(prev, type, updates);
@@ -196,8 +192,7 @@ export function InboardDesignerClient({
     subtitleText: headerSettings?.subtitleText,
     showTime: headerSettings?.showTime,
     showDate: headerSettings?.showDate,
-    showWeather: headerSettings?.showWeather,
-  };
+    showWeather: headerSettings?.showWeather };
 
   const previewAnnouncement =
     announcementWidget?.enabled
@@ -205,8 +200,7 @@ export function InboardDesignerClient({
           enabled: true,
           text: announcementSettings?.text ?? null,
           bgColor: announcementSettings?.bgColor ?? null,
-          textColor: announcementSettings?.textColor ?? null,
-        }
+          textColor: announcementSettings?.textColor ?? null }
       : null;
 
   // ── Save ──────────────────────────────────────────────────────────────────
@@ -243,15 +237,13 @@ export function InboardDesignerClient({
         : null,
       announcementTextColor: announcementEnabled
         ? (aSettings?.textColor ?? null)
-        : null,
-    };
+        : null };
 
     try {
       const res = await fetch(`/api/infoboards/${board.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+        body: JSON.stringify(payload) });
 
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as {
@@ -286,7 +278,7 @@ export function InboardDesignerClient({
       >
         {/* Left side: label + status badges */}
         <div className="flex items-center gap-2 flex-wrap">
-          <Layers className="h-4 w-4 text-[var(--muted)]" aria-hidden="true" />
+          <OrgUnitSceIcon className="h-4 w-4 text-[var(--muted)]" />
           <span className="text-[0.8rem] font-medium text-[var(--text-2)]">
             Designer
           </span>
@@ -609,8 +601,7 @@ export function InboardDesignerClient({
                     subtitleText: board.headerSubtitleText,
                     showTime: board.headerShowTime,
                     showDate: board.headerShowDate,
-                    showWeather: board.headerShowWeather,
-                  }
+                    showWeather: board.headerShowWeather }
                 }
                 tenantName={tenantName}
                 onChange={(settings) =>
@@ -636,8 +627,7 @@ export function InboardDesignerClient({
                     | undefined) ?? {
                     text: board.announcementText,
                     bgColor: board.announcementBgColor,
-                    textColor: board.announcementTextColor,
-                  }
+                    textColor: board.announcementTextColor }
                 }
                 onEnabledChange={(enabled) =>
                   setWidgetEnabled("ANNOUNCEMENT", enabled)

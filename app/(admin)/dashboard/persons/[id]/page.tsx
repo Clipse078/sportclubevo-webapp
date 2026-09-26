@@ -10,6 +10,7 @@
  * private document data. Those require dedicated permissions (introduced in later slices).
  */
 
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -280,7 +281,7 @@ export default async function PersonDetailPage({ params }: PageProps) {
                     href={`mailto:${person.email}`}
                     className="flex items-center gap-1.5 hover:text-[var(--sce-primary)]"
                   >
-                    <Mail className="h-3.5 w-3.5" />
+                    <ProductDomainSceIcon name="communication" size={12} />
                     {person.email}
                   </a>
                 ) : null}

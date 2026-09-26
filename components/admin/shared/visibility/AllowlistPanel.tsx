@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useEffect, useState } from "react";
 import { Building2, ShieldCheck, Loader2 } from "lucide-react";
@@ -81,7 +82,7 @@ export default function AllowlistPanel({
   return (
     <section className="rounded-[24px] border border-amber-200/80 bg-amber-50/50 p-5">
       <div className="mb-4 flex items-start gap-3">
-        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+        <ProductDomainSceIcon name="roles-access" size={16} className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
         <div>
           <p className="text-[13px] font-semibold text-amber-800">
             Eingeschränkte Sichtbarkeit — Zugriff konfigurieren
@@ -139,7 +140,7 @@ export default function AllowlistPanel({
 
           {totalSelected === 0 ? (
             <div className="flex items-center gap-2 rounded-[14px] border border-amber-200 bg-amber-50 px-3 py-2.5 text-[11px] text-amber-700">
-              <Building2 className="h-3.5 w-3.5 shrink-0" />
+              <ProductDomainSceIcon name="org-unit" size={12} className="h-3.5 w-3.5 shrink-0" />
               Bisher keine Zugriffsbeschränkungen konfiguriert — nur du als Ersteller siehst diesen
               Eintrag.
             </div>

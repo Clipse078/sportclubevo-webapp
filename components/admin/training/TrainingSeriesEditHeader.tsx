@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { CalendarRange } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -46,7 +47,7 @@ export default function TrainingSeriesEditHeader({
           className="fca-button-secondary inline-flex items-center gap-1.5 text-xs sm:text-sm"
           data-testid="training-series-edit-wochenplaner-link"
         >
-          <CalendarRange className="h-3.5 w-3.5" aria-hidden="true" />
+          <ProductDomainSceIcon name="season" size={12} className="h-3.5 w-3.5" />
           Im Wochenplaner anzeigen
         </Link>
       </div>

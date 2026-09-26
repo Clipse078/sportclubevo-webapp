@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import Link from "next/link";
 import { ClipboardList, Clock } from "lucide-react";
 import type { PendingApprovalItem, OverdueActionItem } from "@/lib/dashboard/governance-overview";
@@ -78,7 +79,7 @@ export default function GovernancePendingCard({ pendingApprovals, overdueActions
       <div className="mt-5 space-y-2.5">
         {pendingApprovals.length === 0 ? (
           <EmptyState
-            icon={<ClipboardList className="h-4 w-4" />}
+            icon={<ProductDomainSceIcon name="requirements" size={16} />}
             text="Keine ausstehenden Genehmigungen."
           />
         ) : (

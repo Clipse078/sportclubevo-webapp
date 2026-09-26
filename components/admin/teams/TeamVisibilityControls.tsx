@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -126,14 +127,14 @@ export default function TeamVisibilityControls({
       <div className="flex flex-wrap items-center gap-2">
         <VisibilityToggle
           label="Website"
-          icon={<Globe className="h-4 w-4" />}
+          icon={<ProductDomainSceIcon name="website" size={16} />}
           value={website}
           disabled={!canManage || busyField !== null}
           onChange={handleWebsiteChange}
         />
         <VisibilityToggle
           label="Infoboard"
-          icon={<Monitor className="h-4 w-4" />}
+          icon={<ProductDomainSceIcon name="infoboard" size={16} />}
           value={infoboard}
           disabled={!canManage || busyField !== null}
           onChange={handleInfoboardChange}

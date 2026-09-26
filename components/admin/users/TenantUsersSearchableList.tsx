@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -240,7 +241,7 @@ export default function TenantUsersSearchableList({
       {/* List */}
       {grandTotal === 0 ? (
         <EmptyState
-          icon={<Users className="h-10 w-10" />}
+          icon={<ProductDomainSceIcon name="people" size={48} />}
           heading="Noch keine Personen mit Zugang"
           description="Füge die erste Person hinzu, um Zugang zu SportClubEvo zu vergeben."
         />

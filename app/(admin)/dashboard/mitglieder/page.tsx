@@ -1,4 +1,3 @@
-import { UsersRound } from "lucide-react";
 import { FutureModuleShell } from "@/components/admin/future-modules/FutureModuleShell";
 import { SectionCard } from "@/components/ui/page";
 import {
@@ -17,7 +16,7 @@ export default async function MitgliederPage() {
     <FutureModuleShell
       title="Mitglieder"
       purpose="Den vollständigen Mitgliedschafts-Lebenszyklus verwalten — über reine Personenstammdaten hinaus."
-      icon={UsersRound}
+      sceIcon="member"
       capabilities={MITGLIEDER_CAPABILITIES}
       breadcrumbs={[
         { label: "Dashboard", href: "/dashboard" },

@@ -8,6 +8,7 @@ import {
   SlidersHorizontal,
   UsersRound,
 } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ModuleCapabilityCard } from "@/components/admin/future-modules/ModuleCapabilityCard";
 import { Badge } from "@/components/ui/Badge";
 import { PageBreadcrumbs, PageHeader, PageShell, SectionCard } from "@/components/ui/page";
@@ -49,7 +50,7 @@ export default async function CommunicationPage() {
       />
 
       <div className="mb-6 flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
-        <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-primary)]" aria-hidden />
+        <ProductDomainSceIcon name="communication" size={16} className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-primary)]" />
         <p className="text-xs leading-5 text-[var(--text-2)]">
           <span className="font-semibold text-[var(--foreground)]">
             E-Mail-Absender ist bereits verfügbar.

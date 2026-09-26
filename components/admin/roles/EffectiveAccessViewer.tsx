@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useMemo, useState } from "react";
 import { AlertTriangle, Check, Loader2, Search, ShieldCheck, User, X } from "lucide-react";
@@ -145,7 +146,7 @@ export default function EffectiveAccessViewer({ members }: Props) {
                         key={role.id}
                         className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1 text-[0.78rem] font-medium text-[var(--text-2)]"
                       >
-                        <ShieldCheck className="h-3 w-3" />
+                        <ProductDomainSceIcon name="roles-access" size={12} />
                         {role.name}
                         {role.isSystem && <ProtectedRoleBadge />}
                         {role.isArchived && (

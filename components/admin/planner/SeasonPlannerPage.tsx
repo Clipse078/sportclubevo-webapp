@@ -1,4 +1,5 @@
 ﻿import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import {
   CalendarDays,
   ClipboardList,
@@ -242,7 +243,7 @@ export default async function SeasonPlannerPage({
               href={dayHref}
               className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
-              <ClipboardList className="h-4 w-4" />
+              <ProductDomainSceIcon name="requirements" size={16} />
               Tagesplanner öffnen
             </Link>
           </div>

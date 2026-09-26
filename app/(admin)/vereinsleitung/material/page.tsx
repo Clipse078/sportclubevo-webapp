@@ -1,14 +1,14 @@
 import {
   AlertCircle,
-  Archive,
   CheckCircle,
   Clock,
   MapPin,
   Package,
   Plus,
   Search,
-  Wrench,
-} from "lucide-react";
+  Wrench } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { ArchiveSceIcon, MaterialInventorySceIcon } from "@/components/icons/domain-sce-icon-components";
 import { Badge } from "@/components/ui/Badge";
 import { PageShell, PageHeader, PageBreadcrumbs, SectionCard } from "@/components/ui/page";
 import { DashboardKpiCard } from "@/components/ui/dashboard/DashboardKpiCard";
@@ -33,11 +33,10 @@ type InventarItem = {
 
 const statusConfig: Record<ItemStatus, { variant: "success" | "info" | "warning" | "danger" | "default"; icon: typeof CheckCircle }> = {
   Verfügbar:          { variant: "success", icon: CheckCircle },
-  Ausgegeben:         { variant: "info",    icon: Archive },
+  Ausgegeben:         { variant: "info",    icon: ArchiveSceIcon },
   "Wartung fällig":  { variant: "warning", icon: Wrench },
   "Niedriger Bestand":{ variant: "warning", icon: AlertCircle },
-  Defekt:             { variant: "danger",  icon: AlertCircle },
-};
+  Defekt:             { variant: "danger",  icon: AlertCircle } };
 
 const INVENTORY: InventarItem[] = [
   {
@@ -50,8 +49,7 @@ const INVENTORY: InventarItem[] = [
     status: "Verfügbar",
     location: "Materialraum Im Brüel",
     responsible: "M. Keller",
-    lastCheck: "05. Aug 2026",
-  },
+    lastCheck: "05. Aug 2026" },
   {
     id: "i2",
     name: "Trainingsbälle (Grösse 4)",
@@ -63,8 +61,7 @@ const INVENTORY: InventarItem[] = [
     location: "Kunstrasen 2",
     responsible: "M. Keller",
     lastCheck: "01. Aug 2026",
-    assignedTo: "C-Junioren",
-  },
+    assignedTo: "C-Junioren" },
   {
     id: "i3",
     name: "Überziehleibchen (orange)",
@@ -75,8 +72,7 @@ const INVENTORY: InventarItem[] = [
     status: "Verfügbar",
     location: "Materialraum Im Brüel",
     responsible: "A. Müller",
-    lastCheck: "10. Aug 2026",
-  },
+    lastCheck: "10. Aug 2026" },
   {
     id: "i4",
     name: "Markierungshütchen",
@@ -87,8 +83,7 @@ const INVENTORY: InventarItem[] = [
     status: "Verfügbar",
     location: "Materialraum Im Brüel",
     responsible: "T. Bauer",
-    lastCheck: "10. Aug 2026",
-  },
+    lastCheck: "10. Aug 2026" },
   {
     id: "i5",
     name: "Mini-Tore (Set à 2)",
@@ -100,8 +95,7 @@ const INVENTORY: InventarItem[] = [
     location: "Kunstrasen 3",
     responsible: "T. Bauer",
     lastCheck: "08. Aug 2026",
-    assignedTo: "E-Junioren",
-  },
+    assignedTo: "E-Junioren" },
   {
     id: "i6",
     name: "Ballpumpen",
@@ -112,8 +106,7 @@ const INVENTORY: InventarItem[] = [
     status: "Verfügbar",
     location: "Materialraum Im Brüel",
     responsible: "M. Keller",
-    lastCheck: "03. Aug 2026",
-  },
+    lastCheck: "03. Aug 2026" },
   {
     id: "i7",
     name: "Erste-Hilfe-Koffer",
@@ -124,8 +117,7 @@ const INVENTORY: InventarItem[] = [
     status: "Wartung fällig",
     location: "Stadion",
     responsible: "P. Schneider",
-    lastCheck: "15. Jul 2026",
-  },
+    lastCheck: "15. Jul 2026" },
   {
     id: "i8",
     name: "Schlüssel Materialraum Im Brüel",
@@ -137,8 +129,7 @@ const INVENTORY: InventarItem[] = [
     location: "Materialraum Im Brüel",
     responsible: "P. Schneider",
     lastCheck: "01. Aug 2026",
-    assignedTo: "Vorstand + Trainer",
-  },
+    assignedTo: "Vorstand + Trainer" },
   {
     id: "i9",
     name: "Trainerjacken (FCA)",
@@ -150,8 +141,7 @@ const INVENTORY: InventarItem[] = [
     location: "Stadion",
     responsible: "A. Müller",
     lastCheck: "05. Aug 2026",
-    assignedTo: "Trainerteam",
-  },
+    assignedTo: "Trainerteam" },
   {
     id: "i10",
     name: "Tornetz (Full-size)",
@@ -162,8 +152,7 @@ const INVENTORY: InventarItem[] = [
     status: "Defekt",
     location: "Stadion",
     responsible: "M. Keller",
-    lastCheck: "12. Aug 2026",
-  },
+    lastCheck: "12. Aug 2026" },
   {
     id: "i11",
     name: "Event-Bestuhlung (Klappstuhl)",
@@ -174,8 +163,7 @@ const INVENTORY: InventarItem[] = [
     status: "Verfügbar",
     location: "Materialraum Im Brüel",
     responsible: "S. Weber",
-    lastCheck: "20. Jun 2026",
-  },
+    lastCheck: "20. Jun 2026" },
   {
     id: "i12",
     name: "Trainingsbälle (Grösse 3)",
@@ -186,19 +174,18 @@ const INVENTORY: InventarItem[] = [
     status: "Verfügbar",
     location: "Kunstrasen 2",
     responsible: "T. Bauer",
-    lastCheck: "08. Aug 2026",
-  },
+    lastCheck: "08. Aug 2026" },
 ];
 
 const CATEGORY_ICONS: Record<string, typeof Package> = {
   Bälle:              Package,
-  Kleidung:           Archive,
+  Kleidung:           ArchiveSceIcon,
   Trainingszubehör:   Package,
   Trainingsgeräte:    Package,
   Zubehör:            Package,
   Sicherheit:         AlertCircle,
   Schlüssel:          MapPin,
-  Turniermaterial:    Archive,
+  Turniermaterial:    ArchiveSceIcon,
 };
 
 function getCategoryIcon(cat: string) {
@@ -261,7 +248,7 @@ export default function MaterialPage() {
           title="Positionen"
           value={String(totalItems)}
           accent="default"
-          icon={<Package className="h-5 w-5" />}
+          icon={<MaterialInventorySceIcon className="h-5 w-5" />}
           description="Artikel im Inventar"
         />
         <DashboardKpiCard
@@ -275,7 +262,7 @@ export default function MaterialPage() {
           title="Ausgegeben"
           value={String(assignedOut)}
           accent="info"
-          icon={<Archive className="h-5 w-5" />}
+          icon={<ArchiveSceIcon className="h-5 w-5" />}
           description="An Teams / Personen"
         />
         <DashboardKpiCard
@@ -362,7 +349,7 @@ export default function MaterialPage() {
                     </td>
                     <td className="hidden px-4 py-3 xl:table-cell">
                       <span className="flex items-center gap-1 text-xs text-[var(--text-2)]">
-                        <MapPin className="h-3 w-3 shrink-0 text-[var(--muted)]" />
+                        <ProductDomainSceIcon name="facility" size={12} className="h-3 w-3 shrink-0 text-[var(--muted)]" />
                         {item.location}
                       </span>
                     </td>
@@ -437,7 +424,7 @@ export default function MaterialPage() {
             return (
               <div key={loc} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <MapPin className="h-3.5 w-3.5 text-[var(--muted)]" />
+                  <ProductDomainSceIcon name="facility" size={12} className="h-3.5 w-3.5 text-[var(--muted)]" />
                   <p className="text-xs font-semibold text-[var(--foreground)]">{loc}</p>
                 </div>
                 <p className="text-xl font-bold text-[var(--foreground)]">{items.length}</p>

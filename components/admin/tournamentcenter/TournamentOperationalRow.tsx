@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { CircleAlert, MapPin, CheckCircle2 } from "lucide-react";
 import type { TournamentDto } from "@/lib/tournaments/types";
 import type { TournamentOperationalAssessment } from "@/lib/tournaments/operational-state";
@@ -12,6 +13,7 @@ import {
   formatTournamentTeamsLabel,
   getTournamentParticipatingTeams,
 } from "@/lib/tournaments/team-participation";
+import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { cn } from "@/lib/cn";
 
 const STATUS_VARIANTS: Record<string, BadgeVariant> = {
@@ -98,6 +100,7 @@ export default function TournamentOperationalRow({
 
       <div className="min-w-0 space-y-1.5">
         <div className="flex flex-wrap items-center gap-2">
+          <ActivitySceIcon activityKind="TOURNAMENT" size={16} />
           <h3 className="min-w-0 truncate text-sm font-semibold text-[var(--foreground)]">
             {tournament.title}
           </h3>
@@ -133,7 +136,7 @@ export default function TournamentOperationalRow({
 
           {tournament.location ? (
             <span className="inline-flex min-w-0 items-center gap-1">
-              <MapPin className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+              <ProductDomainSceIcon name="facility" size={12} className="h-3 w-3 shrink-0 opacity-70" />
               <span className="truncate">{tournament.location}</span>
             </span>
           ) : null}

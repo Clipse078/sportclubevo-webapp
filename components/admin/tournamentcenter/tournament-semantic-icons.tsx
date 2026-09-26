@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import type { ReactNode } from "react";
 import {
@@ -45,7 +46,7 @@ const SECTION_VARIANTS: Record<
     iconClassName: "text-amber-400",
   },
   participants: {
-    icon: <UsersRound className="h-3.5 w-3.5" aria-hidden />,
+    icon: <ProductDomainSceIcon name="member" size={12} className="h-3.5 w-3.5" />,
     tileClassName: "border-[var(--blue)]/30 bg-[var(--blue)]/10",
     iconClassName: "text-[var(--blue)]",
   },
@@ -55,7 +56,7 @@ const SECTION_VARIANTS: Record<
     iconClassName: RESOURCE_SEMANTIC_PITCH_ICON_CLASS,
   },
   publication: {
-    icon: <Globe2 className="h-3.5 w-3.5" aria-hidden />,
+    icon: <ProductDomainSceIcon name="website" size={12} className="h-3.5 w-3.5" />,
     tileClassName: "border-[var(--border-strong)] bg-[var(--surface-2)]",
     iconClassName: "text-[var(--text-2)]",
   },
@@ -111,7 +112,7 @@ export function TournamentTeamLogo({
       aria-hidden
       data-testid="tournament-team-logo-fallback"
     >
-      <UsersRound className={iconClass} />
+      <ProductDomainSceIcon name="member" size={16} className={iconClass} />
     </div>
   );
 }

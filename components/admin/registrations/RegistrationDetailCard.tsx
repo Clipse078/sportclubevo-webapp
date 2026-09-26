@@ -1,4 +1,6 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { CommunicationSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
@@ -18,14 +20,12 @@ import {
   HelpCircle,
   Mail,
   MapPin,
-  MessageSquare,
   PenLine,
   Phone,
   Smartphone,
   User,
   Users,
-  Volleyball,
-} from "lucide-react";
+  Volleyball } from "lucide-react";
 import type { ComponentType } from "react";
 import { cn } from "@/lib/cn";
 import { getRoutingSuggestion } from "@/lib/registrations/routing-suggestion";
@@ -33,24 +33,19 @@ import type { RegistrationDetail } from "@/lib/registrations/queries";
 import {
   formatDate,
   formatDateShort,
-  formatTime,
-} from "@/lib/tenant-runtime/formatters";
+  formatTime } from "@/lib/tenant-runtime/formatters";
 import {
   extractGenderFromPayload,
-  getGenderLabel,
-} from "@/lib/registrations/classification";
+  getGenderLabel } from "@/lib/registrations/classification";
 import {
   formatCompactAddressLines,
-  getRegistrationDetailFields,
-} from "@/lib/registrations/detail-view";
+  getRegistrationDetailFields } from "@/lib/registrations/detail-view";
 import {
   getRegistrationSourceInfo,
-  type RegistrationSourceKey,
-} from "@/lib/registrations/source";
+  type RegistrationSourceKey } from "@/lib/registrations/source";
 import {
   STATUS_LABELS as SHARED_STATUS_LABELS,
-  STATUS_BADGE_CLASS as SHARED_STATUS_BADGE_CLASS,
-} from "@/lib/registrations/status";
+  STATUS_BADGE_CLASS as SHARED_STATUS_BADGE_CLASS } from "@/lib/registrations/status";
 import type { AssignableUser, OrgUnitOption, TargetGroupOption, TeamSeasonOption } from "@/lib/registrations/workflow-types";
 import RegistrationWorkflowPanel from "./RegistrationWorkflowPanel";
 import { RegistrationWorkflowSteps } from "./RegistrationWorkflowSteps";
@@ -64,8 +59,7 @@ const SOURCE_ICON: Record<RegistrationSourceKey, ComponentType<{ className?: str
   MANUAL: PenLine,
   CSV_IMPORT: FileSpreadsheet,
   API: Code2,
-  OTHER: HelpCircle,
-};
+  OTHER: HelpCircle };
 
 const NOT_PROVIDED = "Nicht angegeben";
 
@@ -103,8 +97,7 @@ const TYPE_LABELS: Record<string, string> = {
   FREIWILLIGENMELDUNG: "Freiwilligenmeldung",
   SCHIEDSRICHTERANMELDUNG: "Schiedsrichteranmeldung",
   CAMP_ANMELDUNG: "Camp-Anmeldung",
-  VERANSTALTUNGSANMELDUNG: "Veranstaltungsanmeldung",
-};
+  VERANSTALTUNGSANMELDUNG: "Veranstaltungsanmeldung" };
 
 // REGISTRATION-01F — Goal 8: status metadata now lives in one shared module
 // (lib/registrations/status.ts).
@@ -135,8 +128,7 @@ function DataField({
   value,
   icon,
   href,
-  breakAll = false,
-}: {
+  breakAll = false }: {
   label: string;
   value: string | null | undefined;
   icon?: React.ReactNode;
@@ -191,8 +183,7 @@ function ConsentField({
   label,
   value,
   trueLabel,
-  falseLabel,
-}: {
+  falseLabel }: {
   label: string;
   value: boolean | null;
   trueLabel: string;
@@ -244,8 +235,7 @@ export default function RegistrationDetailCard({
   targetGroups = [],
   orgUnits = [],
   teamSeasons = [],
-  relatedTasksPanel,
-}: RegistrationDetailCardProps) {
+  relatedTasksPanel }: RegistrationDetailCardProps) {
   const [registration, setRegistration] = useState(initialRegistration);
 
   const cfg = { locale, timezone };
@@ -302,7 +292,7 @@ export default function RegistrationDetailCard({
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--muted)]">
               <span className="flex items-center gap-1">
-                <Mail className="h-3 w-3" aria-hidden />
+                <ProductDomainSceIcon name="communication" size={12} className="h-3 w-3" />
                 {registration.email}
               </span>
               <span className="flex items-center gap-1">
@@ -317,12 +307,12 @@ export default function RegistrationDetailCard({
               ) : null}
               {registration.targetGroup ? (
                 <span className="flex items-center gap-1 text-emerald-700">
-                  <Users className="h-3 w-3" aria-hidden />
+                  <ProductDomainSceIcon name="people" size={12} className="h-3 w-3" />
                   {registration.targetGroup.name}
                 </span>
               ) : routingSuggestion ? (
                 <span className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3" aria-hidden />
+                  <ProductDomainSceIcon name="facility" size={12} className="h-3 w-3" />
                   {routingSuggestion}
                 </span>
               ) : null}
@@ -388,7 +378,7 @@ export default function RegistrationDetailCard({
                 <div className="sce-data-field">
                   <span className="sce-data-label">Routing-Vorschlag</span>
                   <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--blue)]">
-                    <MapPin className="h-3.5 w-3.5" />
+                    <ProductDomainSceIcon name="facility" size={12} />
                     {routingSuggestion}
                   </span>
                 </div>
@@ -403,7 +393,7 @@ export default function RegistrationDetailCard({
           <div className="sce-detail-section">
             <div className="sce-detail-section-header">
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-[var(--muted)]" />
+                <ProductDomainSceIcon name="facility" size={16} className="h-4 w-4 text-[var(--muted)]" />
                 <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
                   Adresse
                 </p>
@@ -428,7 +418,7 @@ export default function RegistrationDetailCard({
           <div className="sce-detail-section">
             <div className="sce-detail-section-header">
               <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-[var(--muted)]" />
+                <ProductDomainSceIcon name="communication" size={16} className="h-4 w-4 text-[var(--muted)]" />
                 <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
                   Kontakt
                 </p>
@@ -438,7 +428,7 @@ export default function RegistrationDetailCard({
               <DataField
                 label="E-Mail"
                 value={fields.contact.email}
-                icon={<Mail className="h-3.5 w-3.5" />}
+                icon={<ProductDomainSceIcon name="communication" size={12} />}
                 href={`mailto:${fields.contact.email}`}
                 breakAll
               />
@@ -467,7 +457,7 @@ export default function RegistrationDetailCard({
               <DataField
                 label="E-Mail"
                 value={fields.parent?.email ?? null}
-                icon={fields.parent?.email ? <Mail className="h-3.5 w-3.5" /> : undefined}
+                icon={fields.parent?.email ? <ProductDomainSceIcon name="communication" size={12} /> : undefined}
                 href={fields.parent?.email ? `mailto:${fields.parent.email}` : undefined}
                 breakAll
               />
@@ -505,7 +495,7 @@ export default function RegistrationDetailCard({
           <div className="sce-detail-section">
             <div className="sce-detail-section-header">
               <div className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-[var(--muted)]" />
+                <CommunicationSceIcon className="h-4 w-4 text-[var(--muted)]" />
                 <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
                   Zusätzliche Angaben
                 </p>
@@ -647,7 +637,7 @@ export default function RegistrationDetailCard({
               <div className="sce-data-field">
                 <span className="sce-data-label">Mandant</span>
                 <span className="sce-data-value flex items-center gap-1.5">
-                  <Building2 className="h-3.5 w-3.5 text-[var(--muted)]" />
+                  <ProductDomainSceIcon name="org-unit" size={12} className="h-3.5 w-3.5 text-[var(--muted)]" />
                   {registration.tenant.name}
                 </span>
               </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ListChecks } from "lucide-react";
 import { DashboardSection } from "./DashboardSection";
 import { DashboardEmptyState } from "./DashboardEmptyState";
@@ -22,7 +23,7 @@ export function MeineAufgabenWidget({ previewItems }: Props) {
   return (
     <DashboardSection
       title="Meine Aufgaben"
-      icon={<ListChecks className="h-4 w-4" />}
+      icon={<ProductDomainSceIcon name="tasks" size={16} />}
       iconAccent="info"
       variant="card"
       bodyClassName="px-4 py-1.5 sm:px-5 sm:py-2"
@@ -67,7 +68,7 @@ export function MeineAufgabenWidget({ previewItems }: Props) {
         </ul>
       ) : (
         <DashboardEmptyState
-          icon={<ListChecks className="h-4 w-4" />}
+          icon={<ProductDomainSceIcon name="tasks" size={16} />}
           title="Alles erledigt"
           description="Aktuell gibt es keine offenen Aufgaben oder Rückmeldungen."
           variant="compact"

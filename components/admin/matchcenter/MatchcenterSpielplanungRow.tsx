@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import {
   CalendarDays,
   CheckCircle2,
@@ -163,7 +164,7 @@ export default function MatchcenterSpielplanungRow({
 
           {match.location ? (
             <span className="inline-flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5" />
+              <ProductDomainSceIcon name="facility" size={12} />
               {match.location}
             </span>
           ) : null}

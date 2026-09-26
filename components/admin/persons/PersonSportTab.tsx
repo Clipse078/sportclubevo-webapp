@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * PERSON-UX-02 — Sport & Entwicklung tab.
@@ -158,7 +159,7 @@ function SeasonAccordion({ snapshot }: { snapshot: SeasonSnapshot }) {
         <div className="divide-y divide-[var(--border)] border-t border-[var(--border)]">
           {snapshot.squadEntries.map((sq) => (
             <div key={sq.id} className="flex items-start gap-3 px-4 py-3">
-              <Users2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-primary)]" />
+              <ProductDomainSceIcon name="people" size={16} className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-primary)]" />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium text-[var(--foreground)]">
@@ -207,7 +208,7 @@ function SeasonAccordion({ snapshot }: { snapshot: SeasonSnapshot }) {
 
           {snapshot.assignmentEntries.map((a) => (
             <div key={a.id} className="flex items-start gap-3 px-4 py-3">
-              <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" />
+              <ProductDomainSceIcon name="org-unit" size={16} className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium text-[var(--foreground)]">

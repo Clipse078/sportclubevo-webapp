@@ -1,7 +1,9 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import Link from "next/link";
 import { CheckCircle2, MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 import type { MatchcenterOperationalAssessment } from "@/lib/matchcenter/operational-state";
 import { resolveClubIdentityLogoUrl } from "@/lib/matchcenter/club-identity";
@@ -23,6 +25,7 @@ import {
   SPIELE_MATCH_ROW_INTERMEDIATE_GRID,
   SPIELE_MATCH_ROW_WIDE_GRID,
 } from "./spiele-management-layout";
+import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -227,6 +230,7 @@ export default function SpieleManagementMatchRow({
   isSelected = false,
   onToggleSelect,
 }: Props) {
+  const tMatch = useTranslations("PlanningEditor.match");
   const detailHref = `/dashboard/matchcenter/${match.id}`;
   const status = resolveSpieleStatusPresentation(match, assessment);
   const wochenplanerHref = buildMatchWochenplanerHref({
@@ -305,7 +309,20 @@ export default function SpieleManagementMatchRow({
             <p className="mb-1 line-clamp-1 text-[0.6875rem] text-[var(--muted)]">{contextLine}</p>
           ) : null}
 
-          <div className="flex min-w-0 items-center gap-1.5">
+          <div
+            className="mb-1 flex items-center gap-1.5"
+            data-testid={`matchcenter-activity-type-${match.id}`}
+          >
+            <ActivitySceIcon activityKind="MATCH" size={compact ? 16 : 20} className="shrink-0" />
+            <span className="text-sm font-semibold text-[var(--foreground)]">
+              {tMatch("activityTypeLabel")}
+            </span>
+          </div>
+
+          <div
+            className="flex min-w-0 items-center gap-1.5"
+            data-testid={`matchcenter-team-matchup-${match.id}`}
+          >
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <ClubLogo
                 logoUrl={homeLogoUrl}
@@ -353,7 +370,7 @@ export default function SpieleManagementMatchRow({
 
           {venueLine ? (
             <p className="mt-2 flex items-start gap-1 text-xs text-[var(--muted)] md:hidden min-[105rem]:flex">
-              <MapPin className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+              <ProductDomainSceIcon name="facility" size={12} className="mt-0.5 h-3 w-3 shrink-0" />
               <span className="line-clamp-2 break-words">{venueLine}</span>
             </p>
           ) : null}
@@ -380,7 +397,7 @@ export default function SpieleManagementMatchRow({
       >
         {venueLine ? (
           <p className="hidden items-start gap-1 text-xs text-[var(--muted)] md:flex min-[105rem]:hidden">
-            <MapPin className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+            <ProductDomainSceIcon name="facility" size={12} className="mt-0.5 h-3 w-3 shrink-0" />
             <span className="line-clamp-2 break-words">{venueLine}</span>
           </p>
         ) : null}

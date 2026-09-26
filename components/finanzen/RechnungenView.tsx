@@ -3,11 +3,11 @@
 import {
   AlertCircle,
   ChevronRight,
-  FileText,
   Plus,
   Search,
   X,
 } from "lucide-react";
+import { SceIcon } from "@/components/design-system/icons/SceIcon";
 import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -98,7 +98,7 @@ export function RechnungenView() {
           value={fmtCHF(summary.openTotal)}
           description={`${summary.openCount} Rechnung(en)`}
           accent="primary"
-          icon={<FileText className="h-5 w-5" />}
+          icon={<SceIcon name="billing-invoice" size={20} />}
         />
         <DashboardKpiCard
           title="Überfällig"
@@ -112,14 +112,14 @@ export function RechnungenView() {
           value={fmtCHF(summary.paidTotal)}
           description={`${summary.paidCount} Rechnung(en)`}
           accent="success"
-          icon={<FileText className="h-5 w-5" />}
+          icon={<SceIcon name="billing-invoice" size={20} />}
         />
         <DashboardKpiCard
           title="Entwürfe"
           value={String(summary.draftCount)}
           description="ausstehend"
           accent="warning"
-          icon={<FileText className="h-5 w-5" />}
+          icon={<SceIcon name="billing-invoice" size={20} />}
         />
       </div>
 
@@ -274,7 +274,7 @@ export function RechnungenView() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <FileText className="h-10 w-10 text-[var(--muted)] mb-3" />
+            <SceIcon name="billing-invoice" size={40} className="mb-3 text-[var(--muted)]" />
             <p className="text-sm font-medium text-[var(--foreground)]">Keine Rechnungen gefunden</p>
             <p className="text-xs text-[var(--muted)] mt-1">Passen Sie die Filter an oder erstellen Sie eine neue Rechnung.</p>
           </div>

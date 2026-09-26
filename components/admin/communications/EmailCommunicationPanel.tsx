@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * COMM-01C — Shared outbound email history and composer for registration-family drawers.
@@ -728,7 +729,7 @@ function EmailCommunicationPanelInner({
               </div>
             ) : (
               <div className="flex min-h-[120px] flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--border)] bg-[var(--surface-2)] px-4 text-center">
-                <Mail className="mb-2 h-5 w-5 text-[var(--muted)]" aria-hidden />
+                <ProductDomainSceIcon name="communication" size={20} className="mb-2 h-5 w-5 text-[var(--muted)]" />
                 <p className="text-sm font-semibold text-[var(--foreground)]">Noch keine E-Mails.</p>
                 <p className="mt-1 text-xs text-[var(--muted)]">
                   Die externe Kommunikation mit dieser Person erscheint hier.
@@ -912,7 +913,7 @@ function EmailCommunicationPanelInner({
                 }
                 className="fca-button-primary gap-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {sending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <ProductDomainSceIcon name="publish" size={16} className="h-4 w-4" />}
                 {sending ? "Wird gesendet…" : "Senden"}
               </button>
             </div>

@@ -2,14 +2,13 @@ import {
   AlertCircle,
   ArrowDownRight,
   ArrowUpRight,
-  BarChart3,
   Check,
   Clock,
-  CreditCard,
   TrendingDown,
   TrendingUp,
-  Wallet,
-} from "lucide-react";
+  Wallet } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { AnalyticsSceIcon, PaymentSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { Badge } from "@/components/ui/Badge";
 import { PageShell, PageHeader, PageBreadcrumbs, SectionCard } from "@/components/ui/page";
 import { DashboardKpiCard } from "@/components/ui/dashboard/DashboardKpiCard";
@@ -66,8 +65,7 @@ const statusConfig: Record<TransactionStatus, { variant: "success" | "warning" |
   Bezahlt: { variant: "success" },
   Offen:   { variant: "default" },
   Fällig:  { variant: "danger"  },
-  Geplant: { variant: "info" },
-};
+  Geplant: { variant: "info" } };
 
 function fmt(n: number) {
   return new Intl.NumberFormat("de-CH", { style: "currency", currency: "CHF", maximumFractionDigits: 0 }).format(n);
@@ -120,7 +118,7 @@ export default function FinanzenPage() {
             title="Demnächst verfügbar"
             className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm font-medium text-[var(--muted)] cursor-not-allowed"
           >
-            <BarChart3 className="h-4 w-4" />
+            <AnalyticsSceIcon className="h-4 w-4" />
             Bericht exportieren
             <Badge variant="warning" size="sm">Demnächst</Badge>
           </button>
@@ -144,7 +142,7 @@ export default function FinanzenPage() {
           title="Jahresbudget"
           value={fmt(totalBudgetedIncome)}
           accent="primary"
-          icon={<Wallet className="h-5 w-5" />}
+          icon={<ProductDomainSceIcon name="finance" size={20} />}
           description={`Einnahmen budgetiert ${new Date().getFullYear()}`}
         />
         <DashboardKpiCard
@@ -265,8 +263,7 @@ export default function FinanzenPage() {
                               className="h-full rounded-full"
                               style={{
                                 width: `${Math.min(pct, 100)}%`,
-                                background: isUnder ? "var(--sce-success)" : "var(--sce-danger)",
-                              }}
+                                background: isUnder ? "var(--sce-success)" : "var(--sce-danger)" }}
                             />
                           </div>
                         </div>
@@ -392,7 +389,7 @@ export default function FinanzenPage() {
                 </span>
               </div>
               <div className="flex items-center gap-1.5 pt-1">
-                <CreditCard className="h-3 w-3 text-[var(--muted)]" />
+                <PaymentSceIcon className="h-3 w-3 text-[var(--muted)]" />
                 <p className="text-[0.65rem] text-[var(--muted)]">Forecast-Daten sind Demo-only</p>
               </div>
             </div>

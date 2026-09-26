@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bell as BellIcon, CheckCheck } from "lucide-react";
+import { CheckCheck } from "lucide-react";
+import { SceIcon } from "@/components/design-system/icons/SceIcon";
 import { PopoverContent } from "@/components/ui/Popover";
 import { cn } from "@/lib/cn";
 import type { NotificationListItem } from "@/lib/notifications/read-service";
@@ -31,7 +32,7 @@ function formatRelativeTime(iso: string): string {
 }
 
 function NotificationIcon({ item }: { item: NotificationListItem }) {
-  const { Icon, className } = notificationListIcon({
+  const { sceIcon, className, utilityIcon: UtilityIcon } = notificationListIcon({
     category: item.category,
     type: item.type,
   });
@@ -42,7 +43,11 @@ function NotificationIcon({ item }: { item: NotificationListItem }) {
         className,
       )}
     >
-      <Icon className="h-4 w-4" aria-hidden="true" />
+      {UtilityIcon ? (
+        <UtilityIcon className="h-4 w-4" aria-hidden="true" />
+      ) : (
+        <SceIcon name={sceIcon} size={16} />
+      )}
       <span className="sr-only">{item.type}</span>
     </span>
   );
@@ -120,7 +125,7 @@ export default function NotificationBell() {
         aria-expanded={open}
         aria-haspopup="dialog"
       >
-        <BellIcon className="h-[1.05rem] w-[1.05rem]" aria-hidden="true" />
+        <SceIcon name="notifications" size={20} className="h-[1.05rem] w-[1.05rem]" />
         {badge}
       </button>
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { UserRound, Users } from "lucide-react";
 import { SectionCard } from "@/components/ui/page";
 
@@ -53,7 +54,7 @@ export default function TeamCompositionSummary({
           label="Spieler"
           value={playerCount}
           href={`${basePath}/kader`}
-          icon={<Users className="h-4 w-4" />}
+          icon={<ProductDomainSceIcon name="people" size={16} />}
         />
         <CountItem
           label="Trainer"

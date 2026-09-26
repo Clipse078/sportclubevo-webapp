@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -48,7 +49,7 @@ function AssignmentRow({
   return (
     <div className="group flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 transition hover:bg-[var(--surface-2)]">
       <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--sce-accent)] text-[var(--sce-primary)]">
-        {assignment.team ? <Users2 className="h-4 w-4" /> : <Building2 className="h-4 w-4" />}
+        {assignment.team ? <ProductDomainSceIcon name="people" size={16} /> : <ProductDomainSceIcon name="org-unit" size={16} />}
       </div>
 
       <div className="min-w-0 flex-1">
@@ -65,7 +66,7 @@ function AssignmentRow({
         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-[var(--muted)]">
           {assignment.team && assignment.orgUnit && (
             <span className="flex items-center gap-1">
-              <Building2 className="h-3 w-3" />
+              <ProductDomainSceIcon name="org-unit" size={12} />
               {assignment.orgUnit.name}
             </span>
           )}
@@ -281,7 +282,7 @@ export default function PersonAssignmentsTab({
       {/* Active assignments grouped by OrgUnit */}
       {activeAssignments.length === 0 ? (
         <EmptyState
-          icon={<Users2 className="h-8 w-8" />}
+          icon={<ProductDomainSceIcon name="people" size={20} />}
           heading="Noch keine Zuordnung"
           description="Ordne diese Person einer Organisationseinheit oder einem Team zu."
           action={

@@ -1,4 +1,3 @@
-import { BadgeCheck } from "lucide-react";
 import { FutureModuleShell } from "@/components/admin/future-modules/FutureModuleShell";
 import { TRAINER_STAFF_CAPABILITIES } from "@/lib/nav/future-modules";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -13,7 +12,7 @@ export default async function TrainerStaffPage() {
     <FutureModuleShell
       title="Trainer & Staff"
       purpose="Qualifikationen, Verantwortlichkeiten, Verfügbarkeit und den Staff-Lebenszykl im Verein verwalten."
-      icon={BadgeCheck}
+      sceIcon="coach"
       capabilities={TRAINER_STAFF_CAPABILITIES}
       breadcrumbs={[
         { label: "Dashboard", href: "/dashboard" },

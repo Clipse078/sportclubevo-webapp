@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import Link from "next/link";
 import { CalendarRange } from "lucide-react";
 import TurniereTournamentRecordReadinessPill from "./TurniereTournamentRecordReadinessPill";
@@ -90,7 +91,7 @@ export default function TurniereTournamentRecordContextRail({
         className="fca-button-secondary inline-flex w-full items-center justify-center gap-1.5 text-xs"
         data-testid="turniere-record-rail-wochenplaner"
       >
-        <CalendarRange className="h-3.5 w-3.5" aria-hidden />
+        <ProductDomainSceIcon name="season" size={12} className="h-3.5 w-3.5" />
         Im Wochenplaner anzeigen
       </Link>
     </div>

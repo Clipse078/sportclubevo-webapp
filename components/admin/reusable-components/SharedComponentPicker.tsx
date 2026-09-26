@@ -1,4 +1,6 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { AnalyticsSceIcon, CommunicationSceIcon, ContactSceIcon, DocumentsSceIcon, SponsorSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 /**
  * SharedComponentPicker — Reusable component picker dialog (CMS V2 Slice 12).
@@ -29,12 +31,8 @@ import {
   CheckCircle2,
   Clock,
   MousePointerClick,
-  Award,
-  ContactRound,
   CircleHelp,
   Quote,
-  BarChart3,
-  Megaphone,
   FileText,
   ChevronDown,
   RefreshCw,
@@ -44,38 +42,34 @@ import {
   Users,
   CalendarDays,
   LayoutPanelLeft,
-  Blocks,
-  Library,
-} from "lucide-react";
+  Blocks } from "lucide-react";
 import type { ReusableComponentAdminItem } from "@/lib/reusable-components/types";
 import {
   REUSABLE_COMPONENT_TYPES,
   BLOCK_SECTION_TYPE_LABELS,
-  getTypeLabel,
-} from "@/lib/reusable-components/component-types";
+  getTypeLabel } from "@/lib/reusable-components/component-types";
 import { SECTION_PUBLISH_STATUS } from "@/lib/cms/section-publishing";
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
   // Inline component types
   CTA:            <MousePointerClick className="h-4 w-4" />,
-  SPONSOR_BANNER: <Award className="h-4 w-4" />,
-  CONTACT_CARD:   <ContactRound className="h-4 w-4" />,
+  SPONSOR_BANNER: <SponsorSceIcon className="h-4 w-4" />,
+  CONTACT_CARD:   <ContactSceIcon className="h-4 w-4" />,
   FAQ:            <CircleHelp className="h-4 w-4" />,
   QUOTE:          <Quote className="h-4 w-4" />,
-  STATISTICS:     <BarChart3 className="h-4 w-4" />,
-  ANNOUNCEMENT:   <Megaphone className="h-4 w-4" />,
+  STATISTICS:     <AnalyticsSceIcon className="h-4 w-4" />,
+  ANNOUNCEMENT:   <CommunicationSceIcon className="h-4 w-4" />,
   RICH_TEXT:      <FileText className="h-4 w-4" />,
   // Block section types (saved from Homepage / Page Builder)
   hero:                   <LayoutTemplate className="h-4 w-4" />,
-  newsTeaser:             <Newspaper className="h-4 w-4" />,
+  newsTeaser:             <ProductDomainSceIcon name="news" size={16} />,
   eventsTeaser:           <Calendar className="h-4 w-4" />,
-  teamsTeaser:            <Users className="h-4 w-4" />,
+  teamsTeaser:            <ProductDomainSceIcon name="people" size={16} />,
   weekplanTeaser:         <CalendarDays className="h-4 w-4" />,
   callToAction:           <MousePointerClick className="h-4 w-4" />,
-  sponsorsTeaser:         <Award className="h-4 w-4" />,
+  sponsorsTeaser:         <SponsorSceIcon className="h-4 w-4" />,
   splitContentCards:      <LayoutPanelLeft className="h-4 w-4" />,
-  customContentPlaceholder: <Blocks className="h-4 w-4" />,
-};
+  customContentPlaceholder: <Blocks className="h-4 w-4" /> };
 
 type SharedComponentPickerProps = {
   open: boolean;
@@ -96,8 +90,7 @@ export default function SharedComponentPicker({
   filterType,
   title = "Wiederverwendbaren Inhalt auswählen",
   insertLabel = "Als Kopie einfügen",
-  publishedOnly = false,
-}: SharedComponentPickerProps) {
+  publishedOnly = false }: SharedComponentPickerProps) {
   const [components, setComponents] = useState<ReusableComponentAdminItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -237,7 +230,7 @@ export default function SharedComponentPicker({
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 text-xs text-[var(--tenant-primary)] hover:underline"
               >
-                <Library className="h-3 w-3" />
+                <DocumentsSceIcon className="h-3 w-3" />
                 Zur Bibliothek
               </a>
             </div>
@@ -319,7 +312,7 @@ export default function SharedComponentPicker({
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 text-xs text-[var(--tenant-primary)] hover:underline"
           >
-            <Library className="h-3.5 w-3.5" />
+            <DocumentsSceIcon className="h-3.5 w-3.5" />
             Bibliothek verwalten
           </a>
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { MapPin } from "lucide-react";
 import type { MatchcenterMatchSummary } from "@/lib/matchcenter/types";
 import { getMatchcenterResultLabel } from "@/lib/matchcenter/match-lifecycle";
@@ -122,7 +123,7 @@ export default function MatchcenterResultRow({
 
         {match.location ? (
           <span className="inline-flex items-center gap-1.5">
-            <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+            <ProductDomainSceIcon name="facility" size={12} className="h-3.5 w-3.5" />
             {match.location}
           </span>
         ) : null}

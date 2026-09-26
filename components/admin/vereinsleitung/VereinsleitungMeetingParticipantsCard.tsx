@@ -1,4 +1,5 @@
 ﻿import { Users } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import type { MeetingLiveData } from "@/lib/meetings/queries";
 
 type ParticipantShape = { id: string; name: string; role?: string | null; status: "INVITED" | "PRESENT" | "ABSENT" | "EXCUSED" };
@@ -28,7 +29,7 @@ export default function VereinsleitungMeetingParticipantsCard({ dbMeeting, parti
       <section className="rounded-[30px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-[#0b4aa2]" />
+            <ProductDomainSceIcon name="people" size={16} className="h-4 w-4 text-[#0b4aa2]" />
             <h3 className="text-[1.08rem] font-semibold text-slate-900">Teilnehmer</h3>
           </div>
           {participants && participants.length > 0 ? (
@@ -69,7 +70,7 @@ export default function VereinsleitungMeetingParticipantsCard({ dbMeeting, parti
     <section className="rounded-[30px] border border-slate-200/80 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-[#0b4aa2]" />
+          <ProductDomainSceIcon name="people" size={16} className="h-4 w-4 text-[#0b4aa2]" />
           <h3 className="text-[1.08rem] font-semibold text-slate-900">Teilnehmer</h3>
         </div>
         <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">4 / 5</span>

@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, CalendarDays, Flag, Layers3, Pencil, Trash2, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, CalendarDays, Flag, Pencil, Trash2, X } from "lucide-react";
+import { OrgUnitSceIcon } from "@/components/icons/domain-sce-icon-components";
 import ActivateSeasonButton from "@/components/admin/seasons/ActivateSeasonButton";
 import TeamRolloverPanel from "@/components/admin/seasons/TeamRolloverPanel";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { Dialog } from "@/components/ui/Dialog";
 import {
   deleteSeasonAction,
-  updateSeasonDetailsAction,
-} from "@/app/(admin)/dashboard/seasons/actions";
+  updateSeasonDetailsAction } from "@/app/(admin)/dashboard/seasons/actions";
 import type { SeasonCurrentStatus } from "@/lib/seasons/status";
 
 export type SeasonRowCardProps = {
@@ -79,8 +79,7 @@ export default function SeasonRowCard({
   trainingPlanCount,
   canManage,
   canDelete,
-  canRegisterTeams,
-}: SeasonRowCardProps) {
+  canRegisterTeams }: SeasonRowCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -185,7 +184,7 @@ export default function SeasonRowCard({
             <div className="sce-data-field">
               <p className="sce-data-label">Teams</p>
               <div className="mt-1.5 flex items-center gap-2">
-                <Layers3 className="h-3.5 w-3.5 shrink-0 text-[var(--blue)]" />
+                <OrgUnitSceIcon className="h-3.5 w-3.5 shrink-0 text-[var(--blue)]" />
                 <span className="sce-data-value">{teamSeasonCount}</span>
               </div>
             </div>
@@ -322,8 +321,7 @@ function ImpactRow({
   label,
   count,
   consequence,
-  destructive = false,
-}: {
+  destructive = false }: {
   label: string;
   count: number;
   consequence?: string;

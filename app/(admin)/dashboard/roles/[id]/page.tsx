@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
@@ -59,7 +60,7 @@ export default async function RoleDetailPage({ params }: PageProps) {
         <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-xl)] bg-[var(--blue-light)]">
-              <Shield className="h-6 w-6 text-[var(--blue)]" />
+              <ProductDomainSceIcon name="roles-access" size={24} className="h-6 w-6 text-[var(--blue)]" />
             </div>
             <div>
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[var(--red)] font-[var(--font-display)]">
@@ -157,7 +158,7 @@ export default async function RoleDetailPage({ params }: PageProps) {
           <div className="sce-detail-section">
             <div className="sce-detail-section-header">
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-[var(--muted)]" />
+                <ProductDomainSceIcon name="people" size={16} className="h-4 w-4 text-[var(--muted)]" />
                 <div>
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.10em] text-[var(--muted)]">
                     Zuweisung
@@ -174,7 +175,7 @@ export default async function RoleDetailPage({ params }: PageProps) {
             <div className="sce-detail-section-body">
               {role.users.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-8 text-center">
-                  <Users className="h-8 w-8 text-[var(--muted)]" />
+                  <ProductDomainSceIcon name="people" size={20} className="h-8 w-8 text-[var(--muted)]" />
                   <p className="text-sm font-medium text-[var(--text-2)]">
                     Keine Benutzer zugewiesen
                   </p>
@@ -248,7 +249,7 @@ export default async function RoleDetailPage({ params }: PageProps) {
           <div className="sce-detail-section">
             <div className="sce-detail-section-header">
               <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-[var(--muted)]" />
+                <ProductDomainSceIcon name="org-unit" size={16} className="h-4 w-4 text-[var(--muted)]" />
                 <div>
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.10em] text-[var(--muted)]">
                     Organisation
@@ -265,7 +266,7 @@ export default async function RoleDetailPage({ params }: PageProps) {
             <div className="sce-detail-section-body">
               {role.orgUnits.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-8 text-center">
-                  <Building2 className="h-8 w-8 text-[var(--muted)]" />
+                  <ProductDomainSceIcon name="org-unit" size={20} className="h-8 w-8 text-[var(--muted)]" />
                   <p className="text-sm font-medium text-[var(--text-2)]">
                     Keine Org-Einheiten
                   </p>
@@ -283,7 +284,7 @@ export default async function RoleDetailPage({ params }: PageProps) {
                     >
                       <div className="flex min-w-0 items-center gap-2.5">
                         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--surface-2)] group-hover:bg-[var(--surface-3)]">
-                          <Building2 className="h-3.5 w-3.5 text-[var(--muted)]" />
+                          <ProductDomainSceIcon name="org-unit" size={12} className="h-3.5 w-3.5 text-[var(--muted)]" />
                         </div>
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium text-[var(--foreground)]">

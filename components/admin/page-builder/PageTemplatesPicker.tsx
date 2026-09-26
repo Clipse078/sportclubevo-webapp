@@ -1,4 +1,6 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { OrgUnitSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 /**
  * components/admin/page-builder/PageTemplatesPicker.tsx
@@ -20,30 +22,26 @@ import {
   ClipboardList,
   HelpCircle,
   X,
-  Layers,
   CheckCircle2,
   AlertCircle,
-  RefreshCw,
-} from "lucide-react";
+  RefreshCw } from "lucide-react";
 import type { PageTemplate } from "@/lib/cms/page-templates";
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   FileText: <FileText className="h-5 w-5" />,
   Trophy: <Trophy className="h-5 w-5" />,
-  Users: <Users className="h-5 w-5" />,
+  Users: <ProductDomainSceIcon name="people" size={20} />,
   Award: <Award className="h-5 w-5" />,
   Calendar: <Calendar className="h-5 w-5" />,
-  ClipboardList: <ClipboardList className="h-5 w-5" />,
-  HelpCircle: <HelpCircle className="h-5 w-5" />,
-};
+  ClipboardList: <ProductDomainSceIcon name="requirements" size={20} />,
+  HelpCircle: <HelpCircle className="h-5 w-5" /> };
 
 const CATEGORY_LABELS: Record<string, string> = {
   content: "Inhalt",
   club: "Verein",
   conversion: "Konversion",
   event: "Veranstaltung",
-  other: "Sonstiges",
-};
+  other: "Sonstiges" };
 
 type Props = {
   open: boolean;
@@ -87,8 +85,7 @@ export default function PageTemplatesPicker({ open, pageId, onClose, onApplied }
       const res = await fetch(`/api/website-pages/${pageId}/apply-template`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ templateId: selectedId }),
-      });
+        body: JSON.stringify({ templateId: selectedId }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? "Fehler beim Anwenden der Vorlage");
       setSuccess(true);
@@ -123,7 +120,7 @@ export default function PageTemplatesPicker({ open, pageId, onClose, onApplied }
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
           <div className="flex items-center gap-2.5">
-            <Layers className="h-5 w-5 text-[var(--text-2)]" />
+            <OrgUnitSceIcon className="h-5 w-5 text-[var(--text-2)]" />
             <div>
               <h2 className="text-sm font-semibold text-[var(--foreground)]">Seitenvorlage anwenden</h2>
               <p className="text-[11px] text-[var(--muted)]">Starter-Blöcke werden zur Seite hinzugefügt (bestehende Sektionen bleiben erhalten).</p>
@@ -221,7 +218,7 @@ export default function PageTemplatesPicker({ open, pageId, onClose, onApplied }
                 </>
               ) : (
                 <>
-                  <Layers className="h-3.5 w-3.5" />
+                  <OrgUnitSceIcon className="h-3.5 w-3.5" />
                   Vorlage anwenden
                 </>
               )}

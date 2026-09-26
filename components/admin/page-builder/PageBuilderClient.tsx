@@ -1,4 +1,6 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { CommunicationSceIcon, DocumentsSceIcon, FacilitySceIcon, MemberSceIcon, NewsSceIcon, NotificationsSceIcon, OrgUnitSceIcon, PeopleSceIcon, RequirementsSceIcon, RolesAccessSceIcon, SeasonSceIcon, TasksSceIcon, WebsiteSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 /**
  * components/admin/page-builder/PageBuilderClient.tsx
@@ -40,8 +42,7 @@ import {
   useMemo,
   useRef,
   Fragment,
-  Suspense,
-} from "react";
+  Suspense } from "react";
 import {
   ChevronUp,
   ChevronDown,
@@ -69,12 +70,9 @@ import {
   AlertCircle,
   Save,
   LayoutPanelLeft,
-  Layers,
   List,
   LayoutGrid,
-  Library,
-  Bookmark,
-} from "lucide-react";
+  Bookmark } from "lucide-react";
 import dynamic from "next/dynamic";
 import { SectionCard, EmptyState } from "@/components/ui/page";
 import type { PageSectionAdminItem } from "@/lib/page-sections/admin-queries";
@@ -82,14 +80,12 @@ import type { HomepageSectionAdminItem } from "@/lib/homepage/admin-queries";
 import {
   BLOCK_REGISTRY,
   getBlockDefinition,
-  type BlockDefinition,
-} from "@/lib/homepage/block-registry";
+  type BlockDefinition } from "@/lib/homepage/block-registry";
 import { HOMEPAGE_SECTION_TYPE_KEYS } from "@/lib/homepage/section-types";
 import type { ContentRevisionItem } from "@/lib/cms/revision-engine";
 import {
   SECTION_PUBLISH_STATUS,
-  SECTION_APPROVAL_STATUS,
-} from "@/lib/cms/section-publishing";
+  SECTION_APPROVAL_STATUS } from "@/lib/cms/section-publishing";
 import PageTemplatesPicker from "@/components/admin/page-builder/PageTemplatesPicker";
 import type { SectionLayout } from "@/lib/cms/layout-types";
 import LayoutConfigPanel from "@/components/admin/cms/LayoutConfigPanel";
@@ -179,7 +175,7 @@ function PublishBadge({ status }: { status: string }) {
       }`}
     >
       {isPublished ? (
-        <Globe className="h-3 w-3" />
+        <ProductDomainSceIcon name="website" size={12} />
       ) : (
         <GlobeLock className="h-3 w-3" />
       )}
@@ -194,8 +190,7 @@ function ApprovalBadge({ status }: { status: string }) {
     DRAFT: { label: "Entwurf", colorClass: "bg-gray-100 text-gray-600" },
     IN_REVIEW: { label: "In Überprüfung", colorClass: "bg-blue-50 text-blue-700" },
     APPROVED: { label: "Freigegeben", colorClass: "bg-emerald-50 text-emerald-700" },
-    CHANGES_REQUESTED: { label: "Änderungen nötig", colorClass: "bg-rose-50 text-rose-700" },
-  };
+    CHANGES_REQUESTED: { label: "Änderungen nötig", colorClass: "bg-rose-50 text-rose-700" } };
   const cfg = config[status] ?? { label: status, colorClass: "bg-gray-100 text-gray-600" };
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${cfg.colorClass}`}>
@@ -450,7 +445,7 @@ function ConfigEditor({ section, onSave, onCancel, onChanged, autoSaveRef }: Con
               className="flex w-full items-center justify-between px-3 py-2.5 text-left"
             >
               <div className="flex items-center gap-2">
-                <Layers className="h-3.5 w-3.5 text-[var(--text-2)]" />
+                <OrgUnitSceIcon className="h-3.5 w-3.5 text-[var(--text-2)]" />
                 <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
                   Layout
                 </span>
@@ -504,8 +499,7 @@ const AVAILABLE_BLOCKS: BlockDefinition[] = BLOCK_REGISTRY.filter(
 function AddSectionPanel({
   pageId,
   onCreated,
-  onCancel,
-}: {
+  onCancel }: {
   pageId: string;
   onCreated: (section: PageSectionAdminItem) => void;
   onCancel: () => void;
@@ -526,9 +520,7 @@ function AddSectionPanel({
         body: JSON.stringify({
           type: selectedType,
           label: label.trim() || def?.displayName || selectedType,
-          config: def?.defaultConfig ?? {},
-        }),
-      });
+          config: def?.defaultConfig ?? {} }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? "Fehler beim Erstellen");
       onCreated(data.section);
@@ -595,10 +587,9 @@ function AddSectionPanel({
 type ViewportMode = "desktop" | "tablet" | "mobile";
 
 const VIEWPORT_CONFIG: Record<ViewportMode, { label: string; icon: React.ElementType; width: string }> = {
-  desktop: { label: "Desktop", icon: Monitor, width: "100%" },
+  desktop: { label: "Desktop", icon: WebsiteSceIcon, width: "100%" },
   tablet: { label: "Tablet", icon: Tablet, width: "768px" },
-  mobile: { label: "Mobile", icon: Smartphone, width: "375px" },
-};
+  mobile: { label: "Mobile", icon: Smartphone, width: "375px" } };
 
 type PreviewSection = {
   id: string;
@@ -616,8 +607,7 @@ function PreviewPanel({
   pageId,
   pageTitle,
   pageSlug,
-  onClose,
-}: {
+  onClose }: {
   pageId: string;
   pageTitle: string;
   pageSlug: string;
@@ -778,8 +768,7 @@ function RevisionHistoryPanel({
   pageId,
   section,
   onClose,
-  onRestored,
-}: {
+  onRestored }: {
   pageId: string;
   section: PageSectionAdminItem;
   onClose: () => void;
@@ -895,8 +884,7 @@ function WorkflowPanel({
   pageId,
   section,
   onUpdated,
-  onClose,
-}: {
+  onClose }: {
   pageId: string;
   section: PageSectionAdminItem;
   onUpdated: (section: PageSectionAdminItem) => void;
@@ -915,8 +903,7 @@ function WorkflowPanel({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(extra ?? {}),
-        },
+          body: JSON.stringify(extra ?? {}) },
       );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? "Fehler");
@@ -955,7 +942,7 @@ function WorkflowPanel({
             disabled={pending}
             className="fca-button-primary py-1.5 text-xs"
           >
-            <Globe className="h-3.5 w-3.5" />
+            <ProductDomainSceIcon name="website" size={12} />
             Veröffentlichen
           </button>
         )}
@@ -977,7 +964,7 @@ function WorkflowPanel({
             disabled={pending}
             className="fca-button-secondary py-1.5 text-xs"
           >
-            <Send className="h-3.5 w-3.5" />
+            <ProductDomainSceIcon name="publish" size={12} />
             Zur Überprüfung
           </button>
         )}
@@ -1093,13 +1080,13 @@ export default function PageBuilderClient({ pageId, pageTitle = "", pageSlug = "
   const [reorderPending, setReorderPending] = useState(false);
   const [reorderError, setReorderError] = useState<string | null>(null);
 
-  // ── Block Library state ────────────────────────────────────────────────────
+  // ── Blockstate ────────────────────────────────────────────────────
   const [saveAsReusableFor, setSaveAsReusableFor] = useState<{
     type: string;
     label: string;
     config: Record<string, unknown>;
   } | null>(null);
-  const [showLibraryPicker, setShowLibraryPicker] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
   // ── Unsaved changes warning ────────────────────────────────────────────────
   useEffect(() => {
@@ -1169,8 +1156,7 @@ export default function PageBuilderClient({ pageId, pageTitle = "", pageSlug = "
       const res = await fetch(`/api/website-pages/${pageId}/sections/${id}/move`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ direction }),
-      });
+        body: JSON.stringify({ direction }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { alert(data?.error ?? "Fehler"); return; }
       setSections(data.sections ?? []);
@@ -1239,8 +1225,7 @@ export default function PageBuilderClient({ pageId, pageTitle = "", pageSlug = "
       const res = await fetch(`/api/website-pages/${pageId}/sections/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label, config }),
-      });
+        body: JSON.stringify({ label, config }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? "Speichern fehlgeschlagen");
       setSections((prev) => prev.map((s) => (s.id === id ? data.section : s)));
@@ -1267,7 +1252,7 @@ export default function PageBuilderClient({ pageId, pageTitle = "", pageSlug = "
     });
   }
 
-  // ── Block Library actions ──────────────────────────────────────────────────
+  // ── Blockactions ──────────────────────────────────────────────────
 
   function handleOpenSaveAsReusable(sectionId: string) {
     const base = sections.find((s) => s.id === sectionId);
@@ -1276,11 +1261,10 @@ export default function PageBuilderClient({ pageId, pageTitle = "", pageSlug = "
     setSaveAsReusableFor({
       type: base.type,
       label: draft?.label ?? base.label,
-      config: (draft?.config ?? base.config) as Record<string, unknown>,
-    });
+      config: (draft?.config ?? base.config) as Record<string, unknown> });
   }
 
-  async function handleInsertFromLibrary(component: ReusableComponentAdminItem) {
+  async function handleInsertFrom(component: ReusableComponentAdminItem) {
     try {
       const res = await fetch(`/api/website-pages/${pageId}/sections`, {
         method: "POST",
@@ -1288,9 +1272,7 @@ export default function PageBuilderClient({ pageId, pageTitle = "", pageSlug = "
         body: JSON.stringify({
           type: component.type,
           label: component.title,
-          config: component.config,
-        }),
-      });
+          config: component.config }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         alert(data?.error ?? "Fehler beim Einfügen des Blocks.");
@@ -1324,8 +1306,7 @@ export default function PageBuilderClient({ pageId, pageTitle = "", pageSlug = "
       const res = await fetch(`/api/website-pages/${pageId}/sections/reorder`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderedIds }),
-      });
+        body: JSON.stringify({ orderedIds }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setSections(snapshot);
@@ -1405,8 +1386,7 @@ export default function PageBuilderClient({ pageId, pageTitle = "", pageSlug = "
       inspectorDraft?.id === sectionId ? inspectorDraft.label : section.label;
     handleInspectorDraftChange(sectionId, currentLabel, {
       ...currentConfig,
-      [field]: value,
-    });
+      [field]: value });
   }
 
   /**
@@ -1469,8 +1449,7 @@ export default function PageBuilderClient({ pageId, pageTitle = "", pageSlug = "
       const res = await fetch(`/api/website-pages/${pageId}/sections/reorder`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderedIds: reordered.map((s) => s.id) }),
-      });
+        body: JSON.stringify({ orderedIds: reordered.map((s) => s.id) }) });
       const data = await res.json().catch(() => ({}));
       if (res.ok) setSections(data.sections ?? reordered);
     } catch {
@@ -1543,9 +1522,9 @@ export default function PageBuilderClient({ pageId, pageTitle = "", pageSlug = "
 
       {/* Insert-from-library picker */}
       <SharedComponentPicker
-        open={showLibraryPicker}
-        onClose={() => setShowLibraryPicker(false)}
-        onSelect={handleInsertFromLibrary}
+        open={showPicker}
+        onClose={() => setShowPicker(false)}
+        onSelect={handleInsertFrom}
         title="Aus Bibliothek einfügen"
         insertLabel="Als Kopie einfügen"
       />
@@ -1589,12 +1568,12 @@ export default function PageBuilderClient({ pageId, pageTitle = "", pageSlug = "
 
             <button
               type="button"
-              onClick={() => setShowLibraryPicker(true)}
+              onClick={() => setShowPicker(true)}
               className="fca-button-secondary px-2.5"
               title="Block aus Bibliothek einfügen"
               aria-label="Block aus Bibliothek einfügen"
             >
-              <Library className="h-3.5 w-3.5" />
+              <DocumentsSceIcon className="h-3.5 w-3.5" />
               <span className="hidden sm:inline ml-1 text-xs">Bibliothek</span>
             </button>
             <button
@@ -1604,7 +1583,7 @@ export default function PageBuilderClient({ pageId, pageTitle = "", pageSlug = "
               title="Seitenvorlage anwenden"
               aria-label="Seitenvorlage anwenden"
             >
-              <Layers className="h-3.5 w-3.5" />
+              <OrgUnitSceIcon className="h-3.5 w-3.5" />
               <span className="hidden sm:inline ml-1 text-xs">Vorlage</span>
             </button>
             <button
@@ -1908,7 +1887,7 @@ export default function PageBuilderClient({ pageId, pageTitle = "", pageSlug = "
                             aria-label="Workflow-Aktionen"
                             aria-pressed={workflowId === section.id}
                           >
-                            <Globe className="h-3.5 w-3.5" />
+                            <ProductDomainSceIcon name="website" size={12} />
                           </button>
                           {/* Save as reusable */}
                           <button

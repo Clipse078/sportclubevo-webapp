@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * components/infoboard/v2/InboardDetailClient.tsx
@@ -486,7 +487,7 @@ export function InboardDetailClient({
         {/* ── ANZEIGE ────────────────────────────────────────────────────── */}
         {activeTab === "anzeige" && (
           <div className="space-y-4 max-w-[600px]" data-testid="tab-content-anzeige">
-            <InfoCard label="Darstellung" icon={<Monitor className="h-3.5 w-3.5" />}>
+            <InfoCard label="Darstellung" icon={<ProductDomainSceIcon name="infoboard" size={12} />}>
               <div className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>

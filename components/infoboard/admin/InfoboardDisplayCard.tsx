@@ -12,6 +12,7 @@
  *   - Disabled actions render as visually inert; no dead links.
  */
 
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import Link from "next/link";
 import { ExternalLink, Monitor } from "lucide-react";
 
@@ -78,7 +79,7 @@ export function InfoboardDisplayCard({
       <div className="sce-detail-section-header">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface-2)]">
-            <Monitor className="h-4 w-4 text-[var(--muted)]" />
+            <ProductDomainSceIcon name="infoboard" size={16} className="h-4 w-4 text-[var(--muted)]" />
           </div>
           <div className="min-w-0">
             <p className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">

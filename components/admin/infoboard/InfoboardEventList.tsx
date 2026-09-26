@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -108,7 +109,7 @@ export default function InfoboardEventList({ events: initial, canToggle, emptyLa
   if (events.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 py-12 text-center">
-        <Monitor className="h-10 w-10 text-[var(--muted)]" />
+        <ProductDomainSceIcon name="infoboard" size={48} className="h-10 w-10 text-[var(--muted)]" />
         <p className="text-sm text-[var(--muted)]">
           {emptyLabel ?? "Keine Events gefunden."}
         </p>

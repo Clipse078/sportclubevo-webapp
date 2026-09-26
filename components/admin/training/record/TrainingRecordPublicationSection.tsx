@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -88,7 +89,7 @@ export default function TrainingRecordPublicationSection({
       >
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <Globe className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
+            <ProductDomainSceIcon name="website" size={16} className="h-4 w-4 shrink-0 text-[var(--muted)]" />
             <span className="text-sm font-medium text-[var(--foreground)]">{t("channels.website.label")}</span>
             <PlanningPublicationInheritanceBadge testId="training-record-publication-website-badge" />
           </div>
@@ -113,7 +114,7 @@ export default function TrainingRecordPublicationSection({
         data-testid="training-record-publication-infoboard-row"
       >
         <div className="flex flex-wrap items-center gap-2">
-          <Monitor className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
+          <ProductDomainSceIcon name="infoboard" size={16} className="h-4 w-4 shrink-0 text-[var(--muted)]" />
           <span className="text-sm font-medium text-[var(--foreground)]">{t("channels.infoboard.label")}</span>
           <PlanningPublicationInheritanceBadge testId="training-record-publication-infoboard-badge" />
         </div>

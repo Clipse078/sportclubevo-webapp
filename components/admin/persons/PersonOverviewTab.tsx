@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { Building2, Users2, Calendar } from "lucide-react";
 import type { PersonAssignment } from "@/lib/people/queries";
@@ -24,9 +25,9 @@ function AssignmentCard({ assignment }: { assignment: PersonAssignment }) {
     <div className="flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
       <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--sce-accent)] text-[var(--sce-primary)]">
         {assignment.team ? (
-          <Users2 className="h-4 w-4" />
+          <ProductDomainSceIcon name="people" size={16} />
         ) : (
-          <Building2 className="h-4 w-4" />
+          <ProductDomainSceIcon name="org-unit" size={16} />
         )}
       </div>
       <div className="min-w-0 flex-1">
@@ -41,7 +42,7 @@ function AssignmentCard({ assignment }: { assignment: PersonAssignment }) {
         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-[var(--muted)]">
           {assignment.team && assignment.orgUnit && (
             <span className="flex items-center gap-1">
-              <Building2 className="h-3 w-3" />
+              <ProductDomainSceIcon name="org-unit" size={12} />
               {assignment.orgUnit.name}
             </span>
           )}
@@ -82,7 +83,7 @@ export default function PersonOverviewTab({ person }: PersonOverviewTabProps) {
 
         {activeAssignments.length === 0 ? (
           <EmptyState
-            icon={<Users2 className="h-8 w-8" />}
+            icon={<ProductDomainSceIcon name="people" size={20} />}
             heading="Noch keine Zuordnung"
             description="Ordne diese Person einer Organisationseinheit oder einem Team zu."
           />

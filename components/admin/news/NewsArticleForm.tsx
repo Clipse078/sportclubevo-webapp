@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
@@ -242,7 +243,7 @@ export default function NewsArticleForm({
                 type="button"
                 loading={isPending("submit")}
                 disabled={!!actionPending}
-                iconLeft={<Send className="h-4 w-4" />}
+                iconLeft={<ProductDomainSceIcon name="publish" size={16} />}
                 onClick={() => doAction("submit")}
               >
                 Zur Prüfung einreichen

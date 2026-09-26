@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { ClipboardCheck, UserRound } from "lucide-react";
+import {  UserRound } from "lucide-react";
+import { ApprovalSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { SectionCard } from "@/components/ui/page";
 import type { TeamAttendanceOverview } from "@/lib/attendance/types";
 import TeamAttendancePlayerDrawer from "./TeamAttendancePlayerDrawer";
@@ -18,8 +19,7 @@ export default function TeamAttendanceSection({
   teamId,
   teamSeasonId,
   initialOverview,
-  canManage,
-}: Props) {
+  canManage }: Props) {
   const [overview, setOverview] = useState(initialOverview);
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
   const [eventSheetOpen, setEventSheetOpen] = useState(false);
@@ -51,7 +51,7 @@ export default function TeamAttendanceSection({
               className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-2)]"
               data-testid="team-attendance-record-button"
             >
-              <ClipboardCheck className="h-3.5 w-3.5" />
+              <ApprovalSceIcon className="h-3.5 w-3.5" />
               Anwesenheit erfassen
             </button>
           ) : null

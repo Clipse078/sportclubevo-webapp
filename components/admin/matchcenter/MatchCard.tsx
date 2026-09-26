@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * MatchCard — MATCHCENTER-UX-03-C2
@@ -482,7 +483,7 @@ export function MatchCard({
 
               {match.location && (
                 <span className="inline-flex items-center gap-1">
-                  <MapPin className="h-3 w-3" aria-hidden="true" />
+                  <ProductDomainSceIcon name="facility" size={12} className="h-3 w-3" />
                   {match.location}
                 </span>
               )}
@@ -580,7 +581,7 @@ export function MatchCard({
               </time>
               {match.location && (
                 <span className="inline-flex items-center gap-0.5">
-                  <MapPin className="h-2.5 w-2.5" aria-hidden="true" />
+                  <ProductDomainSceIcon name="facility" size={20} className="h-2.5 w-2.5" />
                   {match.location}
                 </span>
               )}

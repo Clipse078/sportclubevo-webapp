@@ -1,6 +1,7 @@
 "use client";
 
-import { LayoutTemplate, Sparkles, GripVertical, Eye, Pencil } from "lucide-react";
+import { Sparkles, GripVertical, Eye, Pencil } from "lucide-react";
+import { HomepageBuilderSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 type Props = {
   onBootstrap?: () => void;
@@ -15,7 +16,7 @@ export function HomepageCanvasEmptyState({ onBootstrap, bootstrapping }: Props) 
         className="flex h-16 w-16 items-center justify-center rounded-2xl"
         style={{ background: "var(--sce-accent)" }}
       >
-        <LayoutTemplate className="h-8 w-8" style={{ color: "var(--sce-primary)" }} />
+        <HomepageBuilderSceIcon className="h-8 w-8" style={{ color: "var(--sce-primary)" }} />
       </div>
 
       {/* Heading + description */}

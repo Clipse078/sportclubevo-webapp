@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { Suspense } from "react";
 import { AlertCircle, CalendarClock, ListChecks, UserRound } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -203,7 +204,7 @@ export default function AufgabenManagementWorkspace({
             active:
               (tenantWideVisibility ? query.view === "ALLE" : query.view === "MEINE") &&
               !filtered,
-            icon: ListChecks,
+            icon: TasksSceIcon,
             surface: "border-sky-500/25 bg-sky-950/40",
             iconTile: "bg-sky-500/15 text-sky-400",
             "data-testid": "aufgaben-kpi-open",

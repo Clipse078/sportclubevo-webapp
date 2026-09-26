@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -43,7 +44,7 @@ export function PersonalDashboardSecondary({
         {newsItems.length > 0 ? (
           <section aria-labelledby="dashboard-secondary-news">
             <div className="mb-2 flex items-center gap-2">
-              <Newspaper className="h-4 w-4 text-[var(--sce-primary)]" aria-hidden />
+              <ProductDomainSceIcon name="news" size={16} className="h-4 w-4 text-[var(--sce-primary)]" />
               <h2 id="dashboard-secondary-news" className="text-sm font-semibold">
                 {t("newsTitle")}
               </h2>
@@ -71,7 +72,7 @@ export function PersonalDashboardSecondary({
             items={activityItems}
             emptyState={
               <DashboardEmptyState
-                icon={<Globe className="h-5 w-5" />}
+                icon={<ProductDomainSceIcon name="website" size={20} />}
                 title={t("activityEmptyTitle")}
                 description={t("activityEmptyDescription")}
                 variant="compact"

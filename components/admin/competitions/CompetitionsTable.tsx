@@ -11,7 +11,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trophy, Archive, RotateCcw, Edit2 } from "lucide-react";
+import { RotateCcw, Edit2 } from "lucide-react";
+import { ArchiveSceIcon, CompetitionSceIcon } from "@/components/icons/domain-sce-icon-components";
 import type { CompetitionListItem } from "@/lib/competitions/dto";
 import { SectionCard } from "@/components/ui/page";
 import { Badge } from "@/components/ui/Badge";
@@ -24,22 +25,19 @@ const COMPETITION_TYPE_LABELS: Record<string, string> = {
   LEAGUE: "Liga",
   CUP: "Cup",
   TOURNAMENT_SERIES: "Turnierserie",
-  OTHER: "Sonstige",
-};
+  OTHER: "Sonstige" };
 
 const GENDER_LABELS: Record<string, string> = {
   MALE: "Herren",
   FEMALE: "Frauen",
-  MIXED: "Mixed",
-};
+  MIXED: "Mixed" };
 
 function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("de-CH", {
     day: "2-digit",
     month: "2-digit",
-    year: "numeric",
-  });
+    year: "numeric" });
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -71,8 +69,7 @@ export default function CompetitionsTable({ competitions, canManage = false, can
       await fetch(`/api/competitions/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isArchived: false }),
-      });
+        body: JSON.stringify({ isArchived: false }) });
       router.refresh();
     } finally {
       setActionLoading(null);
@@ -134,7 +131,7 @@ export default function CompetitionsTable({ competitions, canManage = false, can
                 {/* Wettkampf */}
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <Trophy className="h-4 w-4 text-gray-400 shrink-0" />
+                    <CompetitionSceIcon className="h-4 w-4 text-gray-400 shrink-0" />
                     <div>
                       <div className="font-medium text-gray-900">
                         {competition.shortName ?? competition.officialName}
@@ -198,7 +195,7 @@ export default function CompetitionsTable({ competitions, canManage = false, can
                 <td className="px-4 py-3">
                   {competition.isArchived ? (
                     <div className="flex items-center gap-1 text-gray-400">
-                      <Archive className="h-3.5 w-3.5" />
+                      <ArchiveSceIcon className="h-3.5 w-3.5" />
                       <span className="text-xs">Archiviert</span>
                     </div>
                   ) : (
@@ -247,7 +244,7 @@ export default function CompetitionsTable({ competitions, canManage = false, can
                           onClick={() => handleArchive(competition.id)}
                           className="rounded p-1 text-gray-400 hover:bg-amber-50 hover:text-amber-600 transition-colors disabled:opacity-40"
                         >
-                          <Archive className="h-3.5 w-3.5" />
+                          <ArchiveSceIcon className="h-3.5 w-3.5" />
                         </button>
                       )}
                     </div>

@@ -1,4 +1,3 @@
-import { HandHelping } from "lucide-react";
 import { FutureModuleShell } from "@/components/admin/future-modules/FutureModuleShell";
 import { SectionCard } from "@/components/ui/page";
 import { HELFEREINSAETZE_CAPABILITIES } from "@/lib/nav/future-modules";
@@ -16,7 +15,7 @@ export default async function HelfereinsaetzePage() {
     <FutureModuleShell
       title="Helfereinsätze"
       purpose="Freiwillige Einsätze für Turniere, Events und den Vereinsbetrieb koordinieren."
-      icon={HandHelping}
+      sceIcon="volunteer"
       capabilities={HELFEREINSAETZE_CAPABILITIES}
       breadcrumbs={[
         { label: "Dashboard", href: "/dashboard" },

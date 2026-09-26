@@ -3,11 +3,9 @@
 import {
   AlertTriangle,
   GripVertical,
-  MapPinned,
-  ShieldHalf,
-  Shirt,
-} from "lucide-react";
+  ShieldHalf } from "lucide-react";
 import type { WochenplanBoardEvent } from "@/lib/wochenplan/types";
+import { FacilitySceIcon, TeamSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { cn } from "@/lib/cn";
 import Link from "next/link";
 
@@ -100,8 +98,7 @@ export default function WochenplanEventCard({
   hasRoomConflict = false,
   onOpenRooms,
   onDragStart,
-  onDragEnd,
-}: WochenplanEventCardProps) {
+  onDragEnd }: WochenplanEventCardProps) {
   const categoryClasses = getCategoryClasses(event.categoryKey);
   const hasConflict = hasPitchConflict || hasRoomConflict;
   const missingAllocations = getMissingAllocations(event);
@@ -131,12 +128,12 @@ export default function WochenplanEventCard({
         <div className="absolute right-2 top-2 flex items-center gap-1">
           {hasPitchConflict ? (
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-white/90 text-red-700 shadow-sm">
-              <MapPinned className="h-3.5 w-3.5" />
+              <FacilitySceIcon className="h-3.5 w-3.5" />
             </span>
           ) : null}
           {hasRoomConflict ? (
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-red-200 bg-white/90 text-red-700 shadow-sm">
-              <Shirt className="h-3.5 w-3.5" />
+              <TeamSceIcon className="h-3.5 w-3.5" />
             </span>
           ) : null}
         </div>
@@ -160,7 +157,7 @@ export default function WochenplanEventCard({
 
       <div className="mt-3 space-y-1.5 text-[11px] opacity-85">
         <div className="flex min-w-0 items-center gap-1.5">
-          <MapPinned className="h-3 w-3 shrink-0" />
+          <FacilitySceIcon className="h-3 w-3 shrink-0" />
           <span className="truncate">
             {event.pitchRowKey === "KUNSTRASEN_2"
               ? "KR 2"
@@ -178,7 +175,7 @@ export default function WochenplanEventCard({
         </div>
 
         <div className="flex min-w-0 items-center gap-1.5">
-          <Shirt className="h-3 w-3 shrink-0" />
+          <TeamSceIcon className="h-3 w-3 shrink-0" />
           <span className="truncate">
             {event.allocation.homeDressingRoomCode
               ? "Garderobe " + event.allocation.homeDressingRoomCode

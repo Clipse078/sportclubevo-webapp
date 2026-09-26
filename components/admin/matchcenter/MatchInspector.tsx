@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * MatchInspector — MATCHCENTER-UX-03-C1
@@ -281,7 +282,7 @@ export function MatchInspector({
 
             {match.location && (
               <div className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden="true" />
+                <ProductDomainSceIcon name="facility" size={16} className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" />
                 <span className="text-[var(--foreground)]">{match.location}</span>
               </div>
             )}
@@ -368,7 +369,7 @@ export function MatchInspector({
               Auswärtsspiel
             </h3>
             <div className="flex items-start gap-2 text-sm">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden="true" />
+              <ProductDomainSceIcon name="facility" size={16} className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted)]" />
               <span className="text-[var(--foreground)]">{match.location}</span>
             </div>
           </div>

@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * components/admin/registrations/WaitingListWorkspace.tsx
@@ -412,7 +413,7 @@ export function WaitingListWorkspace({
                 className="flex items-center gap-2 text-xl font-bold text-[var(--foreground)]"
                 style={{ fontFamily: "var(--font-display)" }}
               >
-                <ClipboardList className="h-5 w-5 text-[var(--tenant-primary)]" aria-hidden />
+                <ProductDomainSceIcon name="requirements" size={20} className="h-5 w-5 text-[var(--tenant-primary)]" />
                 Warteliste
               </h1>
               <p className="mt-0.5 text-sm text-[var(--muted)]">
@@ -543,7 +544,7 @@ export function WaitingListWorkspace({
             <div className="flex flex-col items-center justify-center gap-3 px-6 py-20 text-center">
               {entries.length === 0 ? (
                 <>
-                  <ClipboardList className="h-10 w-10 text-[var(--muted)]" aria-hidden />
+                  <ProductDomainSceIcon name="requirements" size={48} className="h-10 w-10 text-[var(--muted)]" />
                   <div>
                     <p className="font-semibold text-[var(--foreground)]">Warteliste ist leer</p>
                     <p className="mt-1 text-sm text-[var(--muted)]">

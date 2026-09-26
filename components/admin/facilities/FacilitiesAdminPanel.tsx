@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useRef, useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -501,7 +502,7 @@ function ResourceItem({
       data-testid="facility-resource-row"
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
+        <ProductDomainSceIcon name="facility" size={12} className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
         <div className="min-w-0">
           {editingName ? (
             <InlineEditForm
@@ -693,7 +694,7 @@ function FacilityCard({
           )}
         </button>
 
-        <Building2 className="h-4 w-4 shrink-0 text-[var(--blue)]" />
+        <ProductDomainSceIcon name="org-unit" size={16} className="h-4 w-4 shrink-0 text-[var(--blue)]" />
 
         <div className="min-w-0 flex-1">
           {editingName ? (
@@ -891,7 +892,7 @@ export default function FacilitiesAdminPanel({
       {/* Facility list */}
       {facilities.length === 0 ? (
         <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6 text-center">
-          <Building2 className="mx-auto h-8 w-8 text-[var(--muted)]" />
+          <ProductDomainSceIcon name="org-unit" size={20} className="mx-auto h-8 w-8 text-[var(--muted)]" />
           <p className="mt-3 text-sm font-medium text-[var(--foreground)]">
             Noch keine Anlagen konfiguriert
           </p>

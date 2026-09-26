@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Archive,
+import { 
   CalendarDays,
   ChevronLeft,
   ChevronRight,
   MoreHorizontal,
   Pencil,
-  Trash2,
-} from "lucide-react";
+  Trash2 } from "lucide-react";
+import { ArchiveSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import TrainingSeriesArchiveButton from "./TrainingSeriesArchiveButton";
 import TrainingSeriesDeleteControl from "./TrainingSeriesDeleteControl";
@@ -42,8 +41,7 @@ function MenuItem({
   onSelect,
   destructive = false,
   showChevron = false,
-  muted = false,
-}: {
+  muted = false }: {
   icon: ReactNode;
   iconClassName?: string;
   label: string;
@@ -113,11 +111,10 @@ export default function TrainingSeriesRowContextMenu({
   wochenplanerHref,
   seriesEntries,
   canManage,
-  canDelete,
-}: Props) {
+  canDelete }: Props) {
   const [open, setOpen] = useState(false);
   const [chooserPanel, setChooserPanel] = useState<ChooserPanel>(null);
-  const [archiveEntry, setArchiveEntry] = useState<TrainingSeriesManagementSeriesEntry | null>(null);
+  const [archiveEntry, setEntry] = useState<TrainingSeriesManagementSeriesEntry | null>(null);
   const [deleteEntry, setDeleteEntry] = useState<TrainingSeriesManagementSeriesEntry | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const editableEntries = seriesEntries.filter((entry) => entry.status !== "ARCHIVED");
@@ -130,7 +127,7 @@ export default function TrainingSeriesRowContextMenu({
   useEffect(() => {
     if (open) return;
     setChooserPanel(null);
-    setArchiveEntry(null);
+    setEntry(null);
     setDeleteEntry(null);
   }, [open]);
 
@@ -190,7 +187,7 @@ export default function TrainingSeriesRowContextMenu({
             <MenuDivider />
             {multiSeries ? (
               <MenuItem
-                icon={<Archive className="h-4 w-4" />}
+                icon={<ArchiveSceIcon className="h-4 w-4" />}
                 iconClassName="text-[var(--muted)]"
                 label="Archivieren"
                 muted
@@ -244,8 +241,7 @@ export default function TrainingSeriesRowContextMenu({
       edit: "Serie bearbeiten",
       resources: "Ressourcen verwalten",
       archive: "Archivieren",
-      delete: "Löschen",
-    };
+      delete: "Löschen" };
 
     const buildHref =
       panel === "resources"
@@ -266,12 +262,12 @@ export default function TrainingSeriesRowContextMenu({
               return (
                 <MenuItem
                   key={entry.seriesId}
-                  icon={<Archive className="h-4 w-4" />}
+                  icon={<ArchiveSceIcon className="h-4 w-4" />}
                   iconClassName="text-[var(--muted)]"
                   label={entry.actionLabel}
                   muted
                   onSelect={() => {
-                    setArchiveEntry(entry);
+                    setEntry(entry);
                     setChooserPanel(null);
                   }}
                 />
@@ -323,7 +319,7 @@ export default function TrainingSeriesRowContextMenu({
           <ChooserBackButton
             label="Archivieren"
             onBack={() => {
-              setArchiveEntry(null);
+              setEntry(null);
               setChooserPanel("archive");
             }}
           />

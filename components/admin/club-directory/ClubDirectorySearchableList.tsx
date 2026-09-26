@@ -1,9 +1,11 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, Search, Shield, Archive, Building2 } from "lucide-react";
+import { Loader2, Search, Shield, Building2 } from "lucide-react";
+import { ArchiveSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { EmptyState } from "@/components/ui/page";
 import { ClubDirectoryRow, type ClubDirectoryListItem } from "./ClubDirectoryRow";
 import { ClubDirectoryFilterBar, buildVereineHref } from "./ClubDirectoryFilterBar";
@@ -296,7 +298,7 @@ export default function ClubDirectorySearchableList({
                 : "text-[var(--muted)] hover:text-[var(--foreground)]"
             }`}
           >
-            <Building2 className="h-4 w-4" />
+            <ProductDomainSceIcon name="org-unit" size={16} />
             Aktiv
             <span className="ml-1 rounded-full bg-[var(--border)] px-1.5 py-0.5 text-[0.65rem] font-semibold tabular-nums text-[var(--muted)]">
               {activeTotal}
@@ -312,7 +314,7 @@ export default function ClubDirectorySearchableList({
                 : "text-[var(--muted)] hover:text-[var(--foreground)]"
             }`}
           >
-            <Archive className="h-4 w-4" />
+            <ArchiveSceIcon className="h-4 w-4" />
             Archiviert
             <span className="ml-1 rounded-full border border-amber-500/30 bg-amber-500/15 px-1.5 py-0.5 text-[0.65rem] font-semibold tabular-nums text-amber-200/90">
               {archivedTotal}
@@ -395,7 +397,7 @@ export default function ClubDirectorySearchableList({
 
       {!loading && clubs.length === 0 && !query.trim() && !filtersActive ? (
         <EmptyState
-          icon={showArchived ? <Archive className="h-10 w-10" /> : <Shield className="h-10 w-10" />}
+          icon={showArchived ? <ArchiveSceIcon className="h-10 w-10" /> : <ProductDomainSceIcon name="roles-access" size={48} />}
           heading={showArchived ? "Keine archivierten Vereine" : "Noch keine Vereine erfasst"}
           description={
             showArchived

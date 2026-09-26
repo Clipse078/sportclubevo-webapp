@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, Key, Settings2, Zap } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -193,7 +194,7 @@ export default async function TenantDetailPage({ params }: PageProps) {
       {/* Config section */}
       <div>
         <div className="mb-4 flex items-center gap-2">
-          <Settings2 className="h-4 w-4 text-[var(--muted)]" />
+          <ProductDomainSceIcon name="settings" size={16} className="h-4 w-4 text-[var(--muted)]" />
           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.10em] text-[var(--muted)]">
             Konfiguration
           </p>

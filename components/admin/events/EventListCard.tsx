@@ -1,4 +1,5 @@
 import { CalendarDays, MapPin, Swords, User } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 type EventListCardProps = {
   event: {
@@ -154,7 +155,7 @@ export default function EventListCard({ event }: EventListCardProps) {
             <div className="sce-data-field">
               <p className="sce-data-label">Ort</p>
               <p className="sce-data-value mt-1 flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--blue)]" />
+                <ProductDomainSceIcon name="facility" size={12} className="h-3.5 w-3.5 shrink-0 text-[var(--blue)]" />
                 {event.location}
               </p>
             </div>

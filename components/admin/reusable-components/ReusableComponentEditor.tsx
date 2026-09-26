@@ -1,4 +1,6 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { AnalyticsSceIcon, CommunicationSceIcon, ContactSceIcon, SponsorSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 /**
  * ReusableComponentEditor
@@ -31,20 +33,14 @@ import {
   AlertCircle,
   RefreshCw,
   MousePointerClick,
-  Award,
-  ContactRound,
   CircleHelp,
   Quote,
-  BarChart3,
-  Megaphone,
-  FileText,
-} from "lucide-react";
+  FileText } from "lucide-react";
 import type { ReusableComponentAdminItem } from "@/lib/reusable-components/types";
 import {
   REUSABLE_COMPONENT_TYPES,
   COMPONENT_TYPE_LABELS,
-  getDefaultConfig,
-} from "@/lib/reusable-components/component-types";
+  getDefaultConfig } from "@/lib/reusable-components/component-types";
 import type { ReusableComponentType } from "@/lib/reusable-components/component-types";
 import { SECTION_PUBLISH_STATUS } from "@/lib/cms/section-publishing";
 import CtaConfigForm from "./config-forms/CtaConfigForm";
@@ -60,22 +56,20 @@ import RichTextConfigForm from "./config-forms/RichTextConfigForm";
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
   CTA:            <MousePointerClick className="h-5 w-5" />,
-  SPONSOR_BANNER: <Award className="h-5 w-5" />,
-  CONTACT_CARD:   <ContactRound className="h-5 w-5" />,
+  SPONSOR_BANNER: <SponsorSceIcon className="h-5 w-5" />,
+  CONTACT_CARD:   <ContactSceIcon className="h-5 w-5" />,
   FAQ:            <CircleHelp className="h-5 w-5" />,
   QUOTE:          <Quote className="h-5 w-5" />,
-  STATISTICS:     <BarChart3 className="h-5 w-5" />,
-  ANNOUNCEMENT:   <Megaphone className="h-5 w-5" />,
-  RICH_TEXT:      <FileText className="h-5 w-5" />,
-};
+  STATISTICS:     <AnalyticsSceIcon className="h-5 w-5" />,
+  ANNOUNCEMENT:   <CommunicationSceIcon className="h-5 w-5" />,
+  RICH_TEXT:      <FileText className="h-5 w-5" /> };
 
 // ── Config form dispatcher ────────────────────────────────────────────────────
 
 function ConfigForm({
   type,
   config,
-  onChange,
-}: {
+  onChange }: {
   type: string;
   config: Record<string, unknown>;
   onChange: (config: Record<string, unknown>) => void;
@@ -127,8 +121,7 @@ type ReusableComponentEditorProps = {
 
 export default function ReusableComponentEditor({
   mode,
-  initialData,
-}: ReusableComponentEditorProps) {
+  initialData }: ReusableComponentEditorProps) {
   const router = useRouter();
 
   // Form state
@@ -222,8 +215,7 @@ export default function ReusableComponentEditor({
         const res = await fetch("/api/reusable-components", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: selectedType, title, slug: slug || undefined, description: description || undefined, config }),
-        });
+          body: JSON.stringify({ type: selectedType, title, slug: slug || undefined, description: description || undefined, config }) });
         if (!res.ok) {
           const data = await res.json();
           setSaveError(data.error ?? "Fehler beim Erstellen.");
@@ -237,8 +229,7 @@ export default function ReusableComponentEditor({
         const res = await fetch(`/api/reusable-components/${component.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, slug: slug || undefined, description: description || undefined, config }),
-        });
+          body: JSON.stringify({ title, slug: slug || undefined, description: description || undefined, config }) });
         if (!res.ok) {
           const data = await res.json();
           setSaveError(data.error ?? "Fehler beim Speichern.");
@@ -261,8 +252,7 @@ export default function ReusableComponentEditor({
     if (!component) return;
     setPublishing(true);
     const res = await fetch(`/api/reusable-components/${component.id}/publish`, {
-      method: "PATCH",
-    });
+      method: "PATCH" });
     if (res.ok) {
       const data = await res.json();
       setComponent(data.component);
@@ -274,8 +264,7 @@ export default function ReusableComponentEditor({
     if (!component) return;
     setPublishing(true);
     const res = await fetch(`/api/reusable-components/${component.id}/unpublish`, {
-      method: "PATCH",
-    });
+      method: "PATCH" });
     if (res.ok) {
       const data = await res.json();
       setComponent(data.component);
@@ -368,7 +357,7 @@ export default function ReusableComponentEditor({
                 className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
                 style={{ background: "var(--tenant-primary)" }}
               >
-                {publishing ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Globe className="h-3.5 w-3.5" />}
+                {publishing ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <ProductDomainSceIcon name="website" size={12} />}
                 Veröffentlichen
               </button>
             )
@@ -519,7 +508,7 @@ export default function ReusableComponentEditor({
                 </div>
                 {component.createdByUser && (
                   <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-[var(--muted)]" />
+                    <ProductDomainSceIcon name="people" size={16} className="h-4 w-4 text-[var(--muted)]" />
                     <span className="text-[var(--muted)]">Von:</span>
                     <span className="text-[var(--foreground)]">
                       {component.createdByUser.firstName} {component.createdByUser.lastName}
@@ -528,7 +517,7 @@ export default function ReusableComponentEditor({
                 )}
                 {component.publishedAt && (
                   <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-[var(--muted)]" />
+                    <ProductDomainSceIcon name="website" size={16} className="h-4 w-4 text-[var(--muted)]" />
                     <span className="text-[var(--muted)]">Veröffentlicht:</span>
                     <span className="text-[var(--foreground)]">
                       {new Date(component.publishedAt).toLocaleDateString("de-CH")}

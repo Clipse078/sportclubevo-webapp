@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * components/admin/planner/WeekplannerActivityOverridePanel.tsx
@@ -37,7 +38,7 @@ export function WeekplannerActivityOverridePanel({ activityKey, children }: Prop
         data-testid={`weekplanner-anpassen-toggle-${activityKey}`}
         className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-white px-2.5 py-1 text-[11px] font-semibold text-[var(--text-2)] transition hover:bg-[var(--surface-2)]"
       >
-        <Settings2 className="h-3 w-3" />
+        <ProductDomainSceIcon name="settings" size={12} />
         Anpassen
         <ChevronDown className={cn("h-3 w-3 transition-transform", isOpen && "rotate-180")} />
       </button>

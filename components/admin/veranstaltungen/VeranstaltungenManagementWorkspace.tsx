@@ -1,10 +1,14 @@
 import Link from "next/link";
-import { CalendarClock, History, MapPin, Plus, Trophy } from "lucide-react";
+import {
+  CompetitionSceIcon,
+  FacilitySceIcon,
+  HistorySceIcon,
+} from "@/components/icons/domain-sce-icon-components";
+import { CalendarClock, MapPin, Plus } from "lucide-react";
 import type { ClubEvent } from "@/lib/events/club-events-service";
 import {
   formatMonthLabel,
-  resolveMatchcenterMonthWindow,
-} from "@/lib/matchcenter/month-range";
+  resolveMatchcenterMonthWindow } from "@/lib/matchcenter/month-range";
 import { cn } from "@/lib/cn";
 import { EmptyState } from "@/components/ui/page/EmptyState";
 import PlanningManagementPageHeader from "@/components/admin/planning/PlanningManagementPageHeader";
@@ -12,8 +16,7 @@ import PlanningManagementKpiCards from "@/components/admin/planning/PlanningMana
 import {
   PLANNING_WORKSPACE_MAIN_RAIL_GRID,
   PLANNING_WORKSPACE_RAIL_ASIDE,
-  PLANNING_WORKSPACE_RAIL_STACK,
-} from "@/components/admin/planning/planning-management-layout";
+  PLANNING_WORKSPACE_RAIL_STACK } from "@/components/admin/planning/planning-management-layout";
 import SpieleManagementMonthCalendar from "@/components/admin/matchcenter/SpieleManagementMonthCalendar";
 import VeranstaltungenManagementToolbar from "./VeranstaltungenManagementToolbar";
 import VeranstaltungenManagementFilterRail from "./VeranstaltungenManagementFilterRail";
@@ -22,16 +25,14 @@ import VeranstaltungListRow from "./VeranstaltungListRow";
 import {
   buildVeranstaltungenHref,
   type VeranstaltungenPublicationFilter,
-  type VeranstaltungenReviewFilter,
-} from "@/lib/veranstaltungen/navigation";
+  type VeranstaltungenReviewFilter } from "@/lib/veranstaltungen/navigation";
 import {
   collectVeranstaltungenCalendarDayKeys,
   computeVeranstaltungenKpis,
   filterVeranstaltungenEvents,
   groupVeranstaltungenByMonth,
   listVeranstaltungenLocationOptions,
-  partitionVeranstaltungenByTab,
-} from "@/lib/veranstaltungen/management-view";
+  partitionVeranstaltungenByTab } from "@/lib/veranstaltungen/management-view";
 import type { VeranstaltungenTab } from "@/lib/veranstaltungen/navigation";
 
 export { normalizeVeranstaltungenTab } from "@/lib/veranstaltungen/navigation";
@@ -72,8 +73,7 @@ export default function VeranstaltungenManagementWorkspace({
   searchQuery = "",
   locationFilter = null,
   reviewFilter = "ALLE",
-  publicationFilter = "ALLE",
-}: Props) {
+  publicationFilter = "ALLE" }: Props) {
   const tz = timeZone ?? "Europe/Zurich";
   const now = new Date();
 
@@ -83,8 +83,7 @@ export default function VeranstaltungenManagementWorkspace({
 
   const calendarMonthWindow = resolveMatchcenterMonthWindow({
     monthParam: monthParam ?? calMonthParam ?? undefined,
-    timeZone: tz,
-  });
+    timeZone: tz });
 
   const urlState = {
     tab,
@@ -93,8 +92,7 @@ export default function VeranstaltungenManagementWorkspace({
     search: searchQuery,
     location: locationFilter,
     review: reviewFilter,
-    publication: publicationFilter,
-  };
+    publication: publicationFilter };
 
   const buildHref = (overrides: Partial<typeof urlState>) =>
     buildVeranstaltungenHref(basePath, { ...urlState, ...overrides });
@@ -108,8 +106,7 @@ export default function VeranstaltungenManagementWorkspace({
     publication: publicationFilter,
     monthFrom: listMonthWindow?.from,
     monthTo: listMonthWindow?.to,
-    timeZone: tz,
-  });
+    timeZone: tz });
   const groups = groupVeranstaltungenByMonth(filtered, tz);
   const calendarDayKeys = collectVeranstaltungenCalendarDayKeys(tabEvents, tz);
   const locationOptions = listVeranstaltungenLocationOptions(events);
@@ -124,8 +121,7 @@ export default function VeranstaltungenManagementWorkspace({
     review: "ALLE",
     publication: "ALLE",
     month: null,
-    cal: null,
-  });
+    cal: null });
 
   const calendarPreviousHref = monthParam
     ? buildHref({ month: calendarMonthWindow.previousParam })
@@ -137,21 +133,18 @@ export default function VeranstaltungenManagementWorkspace({
 
   const locationHrefByValue: Record<string, string> = {
     "": buildHref({ location: null }),
-    ...Object.fromEntries(locationOptions.map((loc) => [loc, buildHref({ location: loc })])),
-  };
+    ...Object.fromEntries(locationOptions.map((loc) => [loc, buildHref({ location: loc })])) };
 
   const reviewHrefByValue: Record<VeranstaltungenReviewFilter, string> = {
     ALLE: buildHref({ review: "ALLE" }),
     DRAFT: buildHref({ review: "DRAFT" }),
     APPROVED: buildHref({ review: "APPROVED" }),
-    PUBLISHED: buildHref({ review: "PUBLISHED" }),
-  };
+    PUBLISHED: buildHref({ review: "PUBLISHED" }) };
 
   const publicationHrefByValue: Record<VeranstaltungenPublicationFilter, string> = {
     ALLE: buildHref({ publication: "ALLE" }),
     PUBLIC: buildHref({ publication: "PUBLIC" }),
-    INTERNAL: buildHref({ publication: "INTERNAL" }),
-  };
+    INTERNAL: buildHref({ publication: "INTERNAL" }) };
 
   const filtersActive =
     Boolean(searchQuery.trim()) ||
@@ -219,8 +212,7 @@ export default function VeranstaltungenManagementWorkspace({
             icon: CalendarClock,
             surface: "border-sky-500/25 bg-sky-950/40",
             iconTile: "bg-sky-500/15 text-sky-400",
-            "data-testid": "veranstaltungen-kpi-upcoming",
-          },
+            "data-testid": "veranstaltungen-kpi-upcoming" },
           {
             key: "past",
             label: "Vergangen",
@@ -228,31 +220,28 @@ export default function VeranstaltungenManagementWorkspace({
             hint: "abgeschlossen",
             href: buildHref({ tab: "VERGANGEN" }),
             active: tab === "VERGANGEN",
-            icon: History,
+            icon: HistorySceIcon,
             surface: "border-[var(--border)] bg-[var(--surface)]/80",
             iconTile: "bg-[var(--surface-2)] text-[var(--muted)]",
-            "data-testid": "veranstaltungen-kpi-past",
-          },
+            "data-testid": "veranstaltungen-kpi-past" },
           {
             key: "total",
             label: "Total",
             value: kpis.total,
             hint: "ohne Archiv",
-            icon: Trophy,
+            icon: CompetitionSceIcon,
             surface: "border-emerald-500/25 bg-emerald-950/35",
             iconTile: "bg-emerald-500/15 text-emerald-400",
-            "data-testid": "veranstaltungen-kpi-total",
-          },
+            "data-testid": "veranstaltungen-kpi-total" },
           {
             key: "venues",
             label: "Veranstaltungsorte",
             value: kpis.uniqueVenues,
             hint: "mit Standortangabe",
-            icon: MapPin,
+            icon: FacilitySceIcon,
             surface: "border-[var(--border)] bg-[var(--surface)]/80",
             iconTile: "bg-[var(--surface-2)] text-[var(--muted)]",
-            "data-testid": "veranstaltungen-kpi-venues",
-          },
+            "data-testid": "veranstaltungen-kpi-venues" },
         ]}
       />
 
@@ -335,8 +324,7 @@ export default function VeranstaltungenManagementWorkspace({
             monthAllHref={buildHref({ month: null, cal: calendarMonthWindow.param })}
             monthCurrentHref={buildHref({
               month: calendarMonthWindow.param,
-              cal: null,
-            })}
+              cal: null })}
             locationFilter={locationFilter}
             locationOptions={locationOptions}
             reviewFilter={reviewFilter}

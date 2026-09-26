@@ -24,6 +24,7 @@ import {
   getPermissionSectionStatusLabel,
   getUnitAccentForSection,
 } from "@/lib/roles/permission-section-presentation";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { AnimatedNavIcon } from "@/components/ui/motion/AnimatedNavIcon";
 import { SwitchThumb } from "@/components/ui/SwitchToggle";
 import { cn } from "@/lib/cn";
@@ -421,7 +422,7 @@ function PermissionSection({
             color: accent.accent,
           }}
         >
-          <accent.icon className="h-4 w-4" aria-hidden="true" />
+          <ProductDomainSceIcon name={accent.sceIcon} size={16} />
         </span>
 
         <span className="min-w-0 flex-1">

@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * PERSON-UX-02 — Spieler tab (squad memberships by season).
@@ -114,7 +115,7 @@ function PlayerStatusBadge({ status }: { status: string }) {
 function PlayerEntry({ sq }: { sq: PersonSquadMembership }) {
   return (
     <div className="flex items-start gap-3 px-4 py-3">
-      <Users2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-primary)]" />
+      <ProductDomainSceIcon name="people" size={16} className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-primary)]" />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium text-[var(--foreground)]">
@@ -254,7 +255,7 @@ export default function PersonSpielerTab({
                 data-testid="spieler-incomplete-assignment"
               >
                 <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--sce-accent)] text-[var(--sce-primary)]">
-                  <Users2 className="h-4 w-4" />
+                  <ProductDomainSceIcon name="people" size={16} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -293,7 +294,7 @@ export default function PersonSpielerTab({
                 data-testid="spieler-incomplete-assignment"
               >
                 <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--sce-accent)] text-[var(--sce-primary)]">
-                  <Users2 className="h-4 w-4" />
+                  <ProductDomainSceIcon name="people" size={16} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">

@@ -1,4 +1,5 @@
 "use client";
+import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 import { useState, useRef, useCallback } from "react";
 import { AlertCircle, Loader2, CheckCircle2, Monitor, Tablet, Smartphone } from "lucide-react";
@@ -16,7 +17,7 @@ const VIEWPORT_CONFIG: Record<
   CanvasViewport,
   { label: string; icon: React.ElementType; maxWidth: string | null; ariaLabel: string }
 > = {
-  desktop: { label: "Desktop", icon: Monitor,    maxWidth: null,    ariaLabel: "Desktop-Breite" },
+  desktop: { label: "Desktop", icon: WebsiteSceIcon,    maxWidth: null,    ariaLabel: "Desktop-Breite" },
   tablet:  { label: "Tablet",  icon: Tablet,     maxWidth: "768px", ariaLabel: "Tablet-Breite (768 px)" },
   mobile:  { label: "Mobile",  icon: Smartphone, maxWidth: "375px", ariaLabel: "Mobil-Breite (375 px)" },
 };

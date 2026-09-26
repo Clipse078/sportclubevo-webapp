@@ -1,4 +1,6 @@
 ﻿import { CalendarDays, Clock3, MapPin, Users } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { PeopleSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, SeasonSceIcon, WebsiteSceIcon, FacilitySceIcon, DocumentsSceIcon, NewsSceIcon, NotificationsSceIcon, TasksSceIcon } from "@/components/icons/domain-sce-icon-components";
 import type { MeetingLiveData } from "@/lib/meetings/queries";
 
 type VereinsleitungMeetingInfoCardProps = {
@@ -73,14 +75,14 @@ export default function VereinsleitungMeetingInfoCard({
           />
 
           <InfoRow
-            icon={MapPin}
+            icon={FacilitySceIcon}
             label="Ort"
             value={dbMeeting.location ?? "Kein Ort erfasst"}
           />
 
           {dbMeeting.attendeeCount ? (
             <InfoRow
-              icon={Users}
+              icon={PeopleSceIcon}
               label="Teilnehmeranzahl"
               value={`${dbMeeting.attendeeCount} Personen`}
             />
@@ -100,10 +102,10 @@ export default function VereinsleitungMeetingInfoCard({
       <div className="mt-5 space-y-4">
         <InfoRow icon={CalendarDays} label="Datum" value="Dienstag, 16. April 2024" />
         <InfoRow icon={Clock3} label="Zeit" value="20:00 - 21:00 Uhr" />
-        <InfoRow icon={MapPin} label="Ort" value="Clubhaus, Sitzungszimmer 1" />
+        <InfoRow icon={FacilitySceIcon} label="Ort" value="Clubhaus, Sitzungszimmer 1" />
         <div className="flex items-start gap-3">
           <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0b4aa2]/10 text-[#0b4aa2]">
-            <Users className="h-4 w-4" />
+            <ProductDomainSceIcon name="people" size={16} />
           </div>
           <div>
             <p className="text-xs uppercase tracking-[0.12em] text-slate-400">

@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -79,7 +80,7 @@ export function WorkspaceAccessSummaryPanel({
     >
       <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
         <div className="flex items-center gap-2">
-          <Shield className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden="true" />
+          <ProductDomainSceIcon name="roles-access" size={12} className="h-3.5 w-3.5 text-[var(--muted)]" />
           <h3
             id="workspace-access-summary-heading"
             className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"

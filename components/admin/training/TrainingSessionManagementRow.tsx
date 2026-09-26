@@ -7,6 +7,7 @@ import { PopoverContent } from "@/components/ui/Popover";
 import TrainingSessionCancelButton from "./TrainingSessionCancelButton";
 import { buildTrainingSeriesEditHref } from "@/lib/training/series-cockpit";
 import type { TrainingSessionManagementRow as Row } from "@/lib/training/management-session-view";
+import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -61,7 +62,10 @@ export default function TrainingSessionManagementRow({
     <article className={GRID} data-testid={`training-session-row-${row.sessionId}`}>
       <p className="text-sm font-medium text-[var(--foreground)]">{formatShortDate(row.date, locale, timezone)}</p>
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-[var(--foreground)]">{row.teamName}</p>
+        <p className="flex min-w-0 items-center gap-1.5 truncate text-sm font-semibold text-[var(--foreground)]">
+          <ActivitySceIcon activityKind="TRAINING" size={16} />
+          <span className="truncate">{row.teamName}</span>
+        </p>
         <p className="truncate text-xs text-[var(--text-2)]">{row.contextLabel}</p>
         {row.displayStatus === "AUSNAHME" && row.exceptionReasons.length > 0 ? (
           <p className="text-[0.65rem] text-amber-700">{row.exceptionReasons.join(" · ")}</p>

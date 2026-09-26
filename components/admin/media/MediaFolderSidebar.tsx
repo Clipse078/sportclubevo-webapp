@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import {
@@ -69,7 +70,7 @@ export default function MediaFolderSidebar({
             : "text-[var(--foreground)] hover:bg-[var(--surface-2)]"
         }`}
       >
-        <FolderOpen className="h-4 w-4 flex-shrink-0" />
+        <ProductDomainSceIcon name="documents" size={16} className="h-4 w-4 flex-shrink-0" />
         <span className="truncate">Alle Medien</span>
       </button>
 
@@ -231,7 +232,7 @@ function FolderTreeNode({
             onClick={() => onSelectFolder(node.id)}
             className="flex flex-1 items-center gap-1.5 overflow-hidden py-1.5 text-sm"
           >
-            <FolderOpen className="h-3.5 w-3.5 flex-shrink-0" />
+            <ProductDomainSceIcon name="documents" size={12} className="h-3.5 w-3.5 flex-shrink-0" />
             <span className="truncate">{node.name}</span>
             {node._count && (
               <span className={`ml-auto text-[10px] ${isActive ? "text-white/70" : "text-[var(--muted)]"}`}>

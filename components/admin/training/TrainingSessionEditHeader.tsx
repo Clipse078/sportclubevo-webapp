@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { CalendarDays, Layers } from "lucide-react";
+import { CalendarDays } from "lucide-react";
+import { OrgUnitSceIcon } from "@/components/icons/domain-sce-icon-components";
 import type { ReactNode } from "react";
 import PlanningEditorHeader from "@/components/admin/shared/planning-editor/PlanningEditorHeader";
 
@@ -22,8 +23,7 @@ export default function TrainingSessionEditHeader({
   seriesEditHref,
   wochenplanerHref,
   toSeriesLabel,
-  wochenplanerLabel,
-}: Props) {
+  wochenplanerLabel }: Props) {
   const actions: ReactNode = (
     <>
       <Link
@@ -31,7 +31,7 @@ export default function TrainingSessionEditHeader({
         className="fca-button-secondary inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs"
         data-testid="training-session-edit-series-link"
       >
-        <Layers className="h-3.5 w-3.5" aria-hidden="true" />
+        <OrgUnitSceIcon className="h-3.5 w-3.5" />
         {toSeriesLabel}
       </Link>
       <Link

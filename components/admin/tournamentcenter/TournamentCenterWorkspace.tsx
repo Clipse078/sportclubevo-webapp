@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lightbulb, Plus, Trophy } from "lucide-react";
+import { Lightbulb, Plus } from "lucide-react";
+import { TournamentSceIcon } from "@/components/icons/domain-sce-icon-components";
 import type { TournamentDto, TournamentStatus } from "@/lib/tournaments/types";
 import {
   buildTournamentCenterHref,
@@ -378,7 +379,7 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
           {viewModel.emptyKind === "no_data" ? (
             <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
               <EmptyState
-                icon={<Trophy className="h-8 w-8" />}
+                icon={<TournamentSceIcon className="h-8 w-8" />}
                 heading="Noch keine Turniere"
                 description="Erstellen Sie das erste Turnier für Ihren Verein."
                 action={
@@ -394,7 +395,7 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
           ) : viewModel.emptyKind === "no_scope" ? (
             <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
               <EmptyState
-                icon={<Trophy className="h-8 w-8" />}
+                icon={<TournamentSceIcon className="h-8 w-8" />}
                 heading={
                   scope === "UPCOMING"
                     ? "Keine anstehenden Turniere"
@@ -415,7 +416,7 @@ export default function TournamentCenterWorkspace(props: TournamentCenterWorkspa
           ) : viewModel.emptyKind === "filtered" ? (
             <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
               <EmptyState
-                icon={<Trophy className="h-8 w-8" />}
+                icon={<TournamentSceIcon className="h-8 w-8" />}
                 heading="Keine Turniere entsprechen den Filtern"
                 description="Passen Sie Suche oder Filter an."
                 action={

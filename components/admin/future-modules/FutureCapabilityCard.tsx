@@ -1,18 +1,23 @@
 import type { LucideIcon } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import type { SceIconRegistryName } from "@/components/design-system/icons/registry";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
 
 type FutureCapabilityCardProps = {
   title: string;
   description: string;
-  icon: LucideIcon;
+  sceIcon?: SceIconRegistryName;
+  /** Only when no approved SCE master exists (see MISSING_SCE_SEMANTICS). */
+  icon?: LucideIcon;
   className?: string;
 };
 
 export function FutureCapabilityCard({
   title,
   description,
-  icon: Icon,
+  sceIcon,
+  icon: LegacyIcon,
   className,
 }: FutureCapabilityCardProps) {
   return (
@@ -28,11 +33,17 @@ export function FutureCapabilityCard({
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--surface)] text-[var(--muted)]"
             aria-hidden="true"
           >
-            <Icon className="h-4.5 w-4.5" />
+            {sceIcon ? (
+              <ProductDomainSceIcon name={sceIcon} size={20} />
+            ) : LegacyIcon ? (
+              <LegacyIcon className="h-4.5 w-4.5" />
+            ) : null}
           </span>
           <h2 className="text-sm font-semibold text-[var(--foreground)]">{title}</h2>
         </div>
-        <Badge variant="default" size="sm">In Vorbereitung</Badge>
+        <Badge variant="default" size="sm">
+          In Vorbereitung
+        </Badge>
       </div>
 
       <div className="flex flex-1 flex-col px-5 py-4">

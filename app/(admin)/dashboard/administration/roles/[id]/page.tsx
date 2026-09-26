@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Shield, Users, XCircle } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -54,7 +55,7 @@ export default async function TenantRoleDetailPage({ params }: PageProps) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-xl)] bg-[var(--blue-light)]">
-              <Shield className="h-6 w-6 text-[var(--blue)]" />
+              <ProductDomainSceIcon name="roles-access" size={24} className="h-6 w-6 text-[var(--blue)]" />
             </div>
             <div>
               <h3 className="text-2xl font-bold tracking-tight text-[var(--blue)]">{role.name}</h3>
@@ -113,7 +114,7 @@ export default async function TenantRoleDetailPage({ params }: PageProps) {
           <div className="sce-detail-section">
             <div className="sce-detail-section-header">
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-[var(--muted)]" />
+                <ProductDomainSceIcon name="people" size={16} className="h-4 w-4 text-[var(--muted)]" />
                 <p className="text-sm font-semibold text-[var(--foreground)]">Zugewiesene Benutzer</p>
               </div>
               <span className="shrink-0 rounded-full bg-[var(--surface-3)] px-2.5 py-1 text-[0.72rem] font-semibold tabular-nums text-[var(--text-2)]">

@@ -1,10 +1,15 @@
 import { notFound } from "next/navigation";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import {
+  BlockLibrarySceIcon,
+  HomepageBuilderSceIcon,
+  MediaLibrarySceIcon,
+  PageSceIcon,
+  WebsiteNavigationSceIcon,
+} from "@/components/icons/domain-sce-icon-components";
 import Link from "next/link";
 import {
   Newspaper,
-  FileText,
-  ImageIcon,
-  LayoutTemplate,
   Send,
   Globe,
   Settings,
@@ -13,8 +18,6 @@ import {
   Clock,
   PenLine,
   Plus,
-  Blocks,
-  Menu,
   Palette,
 } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -95,7 +98,7 @@ export default async function WebsiteCmsOverviewPage() {
         <PageActions>
           {canManageNews && (
             <Link href={CMS_ROUTES.newsNew} className="fca-button-secondary">
-              <Newspaper className="h-4 w-4" />
+              <ProductDomainSceIcon name="news" size={16} />
               Neue News
             </Link>
           )}
@@ -145,7 +148,7 @@ export default async function WebsiteCmsOverviewPage() {
           {stats.websiteEnabled ? (
             <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
           ) : (
-            <Globe className="h-4 w-4 shrink-0 text-[var(--muted)]" />
+            <ProductDomainSceIcon name="website" size={16} className="h-4 w-4 shrink-0 text-[var(--muted)]" />
           )}
           <p className="text-xs text-[var(--text-2)]">
             <span className="font-semibold">
@@ -177,7 +180,7 @@ export default async function WebsiteCmsOverviewPage() {
               value={stats.news.total}
               subLabel={`${stats.news.published} veröffentlicht`}
               href={CMS_ROUTES.news}
-              icon={<Newspaper className="h-5 w-5" />}
+              icon={<ProductDomainSceIcon name="news" size={20} />}
               iconBg="rgba(59,130,246,0.10)"
               iconColor="#3B82F6"
             />
@@ -200,7 +203,7 @@ export default async function WebsiteCmsOverviewPage() {
               value={stats.pages.total}
               subLabel={`${stats.pages.published} veröffentlicht`}
               href={CMS_ROUTES.pages}
-              icon={<FileText className="h-5 w-5" />}
+              icon={<PageSceIcon className="h-5 w-5" />}
               iconBg="rgba(139,92,246,0.10)"
               iconColor="#8B5CF6"
             />
@@ -231,7 +234,7 @@ export default async function WebsiteCmsOverviewPage() {
               value={stats.media.total}
               subLabel="Assets in der Mediathek"
               href={CMS_ROUTES.media}
-              icon={<ImageIcon className="h-5 w-5" />}
+              icon={<MediaLibrarySceIcon className="h-5 w-5" />}
               iconBg="rgba(16,185,129,0.10)"
               iconColor="#10B981"
             />
@@ -253,7 +256,7 @@ export default async function WebsiteCmsOverviewPage() {
           {[
             canManageNews && {
               href: CMS_ROUTES.news,
-              icon: <Newspaper className="h-5 w-5" />,
+              icon: <ProductDomainSceIcon name="news" size={20} />,
               label: "News",
               sub: `${stats.news.total} Artikel`,
               color: "#3B82F6",
@@ -261,7 +264,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             canManageWebsite && {
               href: CMS_ROUTES.pages,
-              icon: <FileText className="h-5 w-5" />,
+              icon: <PageSceIcon className="h-5 w-5" />,
               label: "Seiten",
               sub: `${stats.pages.total} Seiten`,
               color: "#8B5CF6",
@@ -269,7 +272,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             canManageWebsite && {
               href: CMS_ROUTES.homepage,
-              icon: <LayoutTemplate className="h-5 w-5" />,
+              icon: <HomepageBuilderSceIcon className="h-5 w-5" />,
               label: "Homepage",
               sub: "Sektionen verwalten",
               color: "#8B5CF6",
@@ -277,7 +280,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             canManageWebsite && {
               href: CMS_ROUTES.blocks,
-              icon: <Blocks className="h-5 w-5" />,
+              icon: <BlockLibrarySceIcon className="h-5 w-5" />,
               label: "Block-Bibliothek",
               sub: `${BLOCK_REGISTRY.length} Block-Typen`,
               color: "#0EA5E9",
@@ -285,7 +288,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             canManageWebsite && {
               href: CMS_ROUTES.navigation,
-              icon: <Menu className="h-5 w-5" />,
+              icon: <WebsiteNavigationSceIcon className="h-5 w-5" />,
               label: "Navigation",
               sub: "Menüstruktur verwalten",
               color: "#0EA5E9",
@@ -293,7 +296,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             (canManageNews || canManageWebsite) && {
               href: CMS_ROUTES.media,
-              icon: <ImageIcon className="h-5 w-5" />,
+              icon: <MediaLibrarySceIcon className="h-5 w-5" />,
               label: "Mediathek",
               sub: `${stats.media.total} Assets`,
               color: "#10B981",
@@ -301,7 +304,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             (canManageNews || canManageWebsite) && {
               href: CMS_ROUTES.publishing,
-              icon: <Send className="h-5 w-5" />,
+              icon: <ProductDomainSceIcon name="publish" size={20} />,
               label: "Publishing",
               sub:
                 stats.publishing.pendingReview > 0
@@ -312,7 +315,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             canManageWebsite && {
               href: CMS_ROUTES.settings,
-              icon: <Settings className="h-5 w-5" />,
+              icon: <ProductDomainSceIcon name="settings" size={20} />,
               label: "Einstellungen",
               sub: stats.approvedDataOnly ? "4-Augen aktiv" : "Standard",
               color: "#6B7280",
@@ -328,7 +331,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             {
               href: CMS_ROUTES.overview,
-              icon: <Globe className="h-5 w-5" />,
+              icon: <ProductDomainSceIcon name="website" size={20} />,
               label: "Übersicht",
               sub: "CMS Hub",
               color: "#111827",

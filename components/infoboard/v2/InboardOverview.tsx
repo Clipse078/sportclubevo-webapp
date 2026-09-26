@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * components/infoboard/v2/InboardOverview.tsx
@@ -126,7 +127,7 @@ export function InboardOverview({
       {/* Grid */}
       {boards.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-[var(--radius-2xl)] border border-dashed border-[var(--border)] bg-[var(--surface)] py-16">
-          <Monitor className="h-8 w-8 text-[var(--muted)] mb-3" />
+          <ProductDomainSceIcon name="infoboard" size={20} className="h-8 w-8 text-[var(--muted)] mb-3" />
           <p className="text-sm font-medium text-[var(--foreground)]">
             Noch keine Infoboards
           </p>

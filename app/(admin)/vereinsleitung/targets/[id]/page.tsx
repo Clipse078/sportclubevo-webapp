@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -132,7 +133,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
               ) : null}
               {target.requiresFourEyeReview ? (
                 <span className="inline-flex items-center gap-1 rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[10px] font-semibold text-violet-700">
-                  <ShieldCheck className="h-3 w-3" />
+                  <ProductDomainSceIcon name="roles-access" size={12} />
                   4-Augen
                 </span>
               ) : null}
@@ -246,7 +247,7 @@ export default async function TargetDetailPage({ params, searchParams }: PagePro
 
           <section className="rounded-[28px] border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
             <div className="mb-4 flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-slate-400" />
+              <ProductDomainSceIcon name="roles-access" size={16} className="h-4 w-4 text-slate-400" />
               <h3 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-slate-500">
                 Governance
               </h3>

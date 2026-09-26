@@ -3,7 +3,16 @@
  */
 
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next-intl", () => ({
+  useTranslations: (namespace?: string) => (key: string) => {
+    if (namespace === "PlanningEditor.match" && key === "activityTypeLabel") {
+      return "Spiel";
+    }
+    return key;
+  },
+}));
 import SpieleManagementMatchRow from "@/components/admin/matchcenter/SpieleManagementMatchRow";
 import { parseSfvMatchDateTime } from "@/lib/integrations/sfv/sync/provider-time";
 import { SCE_PLATFORM_DEFAULT_MATCH_DURATION_MINUTES } from "@/lib/match/defaults";

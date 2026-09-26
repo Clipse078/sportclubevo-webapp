@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import { Loader2, Mail, ShieldCheck } from "lucide-react";
@@ -113,7 +114,7 @@ export default function EmailSenderSettingsForm({ initialSettings }: Props) {
         <div className="grid gap-3 lg:grid-cols-2">
           <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
             <div className="flex items-center gap-2 text-[var(--muted)]">
-              <Mail className="h-4 w-4" aria-hidden />
+              <ProductDomainSceIcon name="communication" size={16} className="h-4 w-4" />
               <p className={labelClass}>Konfigurierter Absender</p>
             </div>
             {settings.displayName && settings.emailAddress ? (
@@ -134,7 +135,7 @@ export default function EmailSenderSettingsForm({ initialSettings }: Props) {
 
           <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
             <div className="flex items-center gap-2 text-[var(--muted)]">
-              <ShieldCheck className="h-4 w-4" aria-hidden />
+              <ProductDomainSceIcon name="roles-access" size={16} className="h-4 w-4" />
               <p className={labelClass}>Versandstatus</p>
             </div>
             <div className="mt-2">

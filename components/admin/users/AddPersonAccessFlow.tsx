@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -320,7 +321,7 @@ export default function AddPersonAccessFlow({
                         ))}
                       </select>
                       <div className="flex items-center gap-2">
-                        <Building2 className="h-3.5 w-3.5 text-[var(--muted)]" />
+                        <ProductDomainSceIcon name="org-unit" size={12} className="h-3.5 w-3.5 text-[var(--muted)]" />
                         <select
                           value={draft.scopeMode}
                           onChange={(e) => {
@@ -442,7 +443,7 @@ export default function AddPersonAccessFlow({
                   disabled={pending || !email.trim()}
                   className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--blue,#2563EB)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50 transition"
                 >
-                  <Mail className="h-3.5 w-3.5" />
+                  <ProductDomainSceIcon name="communication" size={12} />
                   {pending ? "Wird gesendet…" : "Einladung senden"}
                 </button>
               </div>

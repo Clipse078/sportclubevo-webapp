@@ -23,6 +23,7 @@
  * Target; aggregate on the Target detail page as a secondary progress signal.
  */
 
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import Link from "next/link";
 import { ChevronRight, Edit, Flag, Users } from "lucide-react";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
@@ -105,7 +106,7 @@ export default function VereinsleitungInitiativenList({
               <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-[var(--text-2)]">
                 {initiative.owner ? (
                   <span className="inline-flex items-center gap-1.5">
-                    <Users className="h-4 w-4" />
+                    <ProductDomainSceIcon name="people" size={16} />
                     {initiative.owner}
                   </span>
                 ) : null}

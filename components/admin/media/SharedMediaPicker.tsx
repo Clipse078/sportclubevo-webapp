@@ -1,4 +1,6 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { MediaLibrarySceIcon } from "@/components/icons/domain-sce-icon-components";
 
 /**
  * SharedMediaPicker — Reusable DAM asset picker dialog.
@@ -210,7 +212,7 @@ export default function SharedMediaPicker({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3.5">
           <div className="flex items-center gap-3">
-            <ImageIcon className="h-5 w-5 text-[var(--tenant-primary)]" />
+            <MediaLibrarySceIcon className="h-5 w-5 text-[var(--tenant-primary)]" />
             <span className="font-semibold text-[var(--foreground)]">{title}</span>
             {total > 0 && (
               <span className="rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-[11px] text-[var(--muted)]">
@@ -242,7 +244,7 @@ export default function SharedMediaPicker({
                   : "text-[var(--foreground)] hover:bg-[var(--surface-2)]"
               }`}
             >
-              <FolderOpen className="h-3.5 w-3.5" />
+              <ProductDomainSceIcon name="documents" size={12} />
               Alle Medien
             </button>
             {rootFolders.map((f) => (
@@ -337,7 +339,7 @@ export default function SharedMediaPicker({
                     onClick={() => setActiveFolderId(f.id)}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-xs hover:border-[var(--tenant-primary)] hover:bg-[var(--surface)]"
                   >
-                    <FolderOpen className="h-3.5 w-3.5 text-[var(--tenant-primary)]" />
+                    <ProductDomainSceIcon name="documents" size={12} className="h-3.5 w-3.5 text-[var(--tenant-primary)]" />
                     {f.name}
                   </button>
                 ))}
@@ -361,7 +363,7 @@ export default function SharedMediaPicker({
                 </div>
               ) : assets.length === 0 ? (
                 <div className="flex flex-col items-center gap-3 py-12 text-[var(--muted)]">
-                  <ImageIcon className="h-10 w-10 opacity-30" />
+                  <MediaLibrarySceIcon className="h-10 w-10 opacity-30" />
                   <p className="text-sm">Keine Medien gefunden.</p>
                 </div>
               ) : (
@@ -474,7 +476,7 @@ function FolderNode({
             : "text-[var(--foreground)] hover:bg-[var(--surface-2)]"
         }`}
       >
-        <FolderOpen className="h-3.5 w-3.5 flex-shrink-0" />
+        <ProductDomainSceIcon name="documents" size={12} className="h-3.5 w-3.5 flex-shrink-0" />
         <span className="truncate">{folder.name}</span>
       </button>
       {children.map((child) => (

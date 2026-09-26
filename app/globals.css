@@ -313,6 +313,21 @@
   --sce-sp-10: var(--space-10);
   --sce-sp-12: var(--space-12);
   --sce-sp-16: var(--space-16);
+
+  /* SCE-ICONS-01 — semantic icon roles (SCE Original / dark operational surfaces) */
+  --sce-icon-primary:   var(--foreground);
+  --sce-icon-secondary: var(--blue-mid);
+  --sce-icon-accent:    var(--orange);
+  --sce-icon-muted:     var(--muted);
+}
+
+/* SCE Light — same glyph geometry, appearance tokens only */
+.sce-theme-light,
+[data-sce-theme="light"] {
+  --sce-icon-primary:   #0f172a;
+  --sce-icon-secondary: var(--blue);
+  --sce-icon-accent:    var(--orange);
+  --sce-icon-muted:     #64748b;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

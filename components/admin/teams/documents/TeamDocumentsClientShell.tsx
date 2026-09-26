@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useRouter } from "next/navigation";
 import {
@@ -589,7 +590,7 @@ export default function TeamDocumentsClientShell({
               className="flex items-center gap-2 rounded-md bg-[var(--blue)] px-2 py-1.5 text-sm font-semibold text-white"
               data-testid="team-documents-nav-all"
             >
-              <FolderOpen className="h-3.5 w-3.5 shrink-0 text-white/80" aria-hidden="true" />
+              <ProductDomainSceIcon name="documents" size={12} className="h-3.5 w-3.5 shrink-0 text-white/80" />
               <span>Alle Dokumente</span>
             </div>
           </div>

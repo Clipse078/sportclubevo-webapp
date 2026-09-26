@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { ChevronRight, Globe, MapPin, Merge, Pencil, Plus, Users } from "lucide-react";
@@ -149,17 +150,17 @@ export default async function ClubDetailPage({ params }: Props) {
                       <p className="mt-0.5 text-sm text-[var(--muted)]">{club.shortName}</p>
                     ) : null}
                     <p className="mt-2 flex items-center gap-1.5 text-sm text-[var(--text-2)]">
-                      <Users className="h-4 w-4 text-[var(--muted)]" aria-hidden />
+                      <ProductDomainSceIcon name="people" size={16} className="h-4 w-4 text-[var(--muted)]" />
                       {club.teamCount} Team{club.teamCount === 1 ? "" : "s"}
                     </p>
                   </div>
                   <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                    <MetaRow label="Ort" value={locationDisplay} icon={<MapPin className="h-3.5 w-3.5" />} />
+                    <MetaRow label="Ort" value={locationDisplay} icon={<ProductDomainSceIcon name="facility" size={12} />} />
                     <MetaRow
                       label="Website"
                       value={websiteDisplay}
                       href={club.website?.trim() || undefined}
-                      icon={<Globe className="h-3.5 w-3.5" />}
+                      icon={<ProductDomainSceIcon name="website" size={12} />}
                     />
                     {primaryMapping ? (
                       <>

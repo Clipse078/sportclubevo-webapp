@@ -3,14 +3,13 @@ import {
   FileArchive,
   FileAudio,
   FileImage,
-  FileSpreadsheet,
   FileText,
   FileVideo,
   FolderClosed,
-  Presentation,
-} from "lucide-react";
+  Presentation } from "lucide-react";
 
 import type { WorkspaceFileCategory } from "@/lib/workspace/file-type-util";
+import { ExportSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 type WorkspaceFileIconSize = "sm" | "md" | "lg" | "xl";
 
@@ -24,8 +23,7 @@ const SIZE_CLASS: Record<WorkspaceFileIconSize, string> = {
   sm: "h-4 w-4",
   md: "h-5 w-5",
   lg: "h-7 w-7",
-  xl: "h-10 w-10",
-};
+  xl: "h-10 w-10" };
 
 const CATEGORY_COLOR: Record<WorkspaceFileCategory, string> = {
   pdf: "text-[#e2392a]",
@@ -37,13 +35,11 @@ const CATEGORY_COLOR: Record<WorkspaceFileCategory, string> = {
   audio: "text-[#ec4899]",
   archive: "text-[var(--muted)]",
   text: "text-[var(--text-2)]",
-  unknown: "text-[var(--muted)]",
-};
+  unknown: "text-[var(--muted)]" };
 
 function IconForCategory({
   category,
-  className,
-}: {
+  className }: {
   category: WorkspaceFileCategory;
   className: string;
 }) {
@@ -53,7 +49,7 @@ function IconForCategory({
     case "word":
       return <FileText className={className} />;
     case "excel":
-      return <FileSpreadsheet className={className} />;
+      return <ExportSceIcon />;
     case "powerpoint":
       return <Presentation className={className} />;
     case "image":
@@ -74,8 +70,7 @@ function IconForCategory({
 export function WorkspaceFileIcon({
   category,
   size = "md",
-  className,
-}: WorkspaceFileIconProps) {
+  className }: WorkspaceFileIconProps) {
   const sizeClass = SIZE_CLASS[size];
   const colorClass = CATEGORY_COLOR[category];
   const combined = [sizeClass, colorClass, className]
@@ -92,8 +87,7 @@ export function WorkspaceFileIcon({
 
 export function WorkspaceFolderIcon({
   size = "md",
-  className,
-}: {
+  className }: {
   size?: WorkspaceFileIconSize;
   className?: string;
 }) {

@@ -2,7 +2,7 @@
 
 import { useCallback, useId, useState } from "react";
 import Link from "next/link";
-import { FileText, History } from "lucide-react";
+import { FileText } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useWorkspaceDocumentInspectorActions } from "./WorkspaceDocumentInspectorActionsContext";
 
@@ -23,6 +23,7 @@ import { WorkspaceDocumentInspectorPreview } from "./WorkspaceDocumentInspectorP
 import { WorkspaceDocumentRequirementCreateDialog } from "./WorkspaceDocumentRequirementCreateDialog";
 import { WorkspaceVersionScanBadge } from "@/components/admin/workspace/WorkspaceVersionScanBadge";
 import { useWorkspaceUploadContext } from "@/components/admin/workspace/WorkspaceUploadContext";
+import { SceIcon } from "@/components/design-system/icons/SceIcon";
 
 export type WorkspaceDocumentInspectorTab =
   | "preview"
@@ -234,7 +235,7 @@ export function WorkspaceDocumentInspectorView({ payload }: Props) {
                 className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
                 data-testid="workspace-document-inspector-version-history"
               >
-                <History className="h-4 w-4" aria-hidden="true" />
+                <SceIcon name="history" size={16} className="h-4 w-4" />
                 Versionsverlauf öffnen
               </button>
             ) : null}

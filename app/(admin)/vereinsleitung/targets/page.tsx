@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Plus, Target, TrendingUp } from "lucide-react";
+import { Plus, TrendingUp } from "lucide-react";
+import { GoalSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getTargets } from "@/lib/targets/queries";
@@ -62,7 +63,7 @@ export default async function TargetsPage({ searchParams }: PageProps) {
 
       {targets.length === 0 ? (
         <section className="rounded-[30px] border border-slate-200/80 bg-white p-10 shadow-[0_10px_30px_rgba(15,23,42,0.04)] text-center">
-          <Target className="mx-auto mb-4 h-10 w-10 text-slate-300" />
+          <GoalSceIcon className="mx-auto mb-4 h-10 w-10 text-slate-300" />
           <h3 className="text-[1.05rem] font-semibold text-slate-900">
             Noch keine Ziele erfasst
           </h3>

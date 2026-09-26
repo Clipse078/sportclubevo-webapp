@@ -1,6 +1,7 @@
 "use client";
 
-import { Lightbulb, Shield } from "lucide-react";
+import { Lightbulb } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { SectionCard } from "@/components/ui/page/SectionCard";
 import { SwitchToggle } from "@/components/ui/SwitchToggle";
 import {
@@ -62,7 +63,7 @@ export default function RolePermissionPreviewPanel({
               <span
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--sce-primary)]/10 text-[var(--sce-primary)]"
               >
-                <Shield className="h-5 w-5" aria-hidden="true" />
+                <ProductDomainSceIcon name="roles-access" size={20} />
               </span>
 
               <div className="min-w-0 flex-1">
@@ -149,7 +150,7 @@ export default function RolePermissionPreviewPanel({
                         color: accent.accent,
                       }}
                     >
-                      <accent.icon className="h-3.5 w-3.5" aria-hidden="true" />
+                      <ProductDomainSceIcon name={accent.sceIcon} size={16} />
                     </span>
                     <span className="truncate text-xs font-medium text-[var(--foreground)]">
                       {section.label}

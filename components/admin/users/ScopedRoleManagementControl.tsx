@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * ScopedRoleManagementControl — USER-ADMIN-02
@@ -132,14 +133,14 @@ export default function ScopedRoleManagementControl({
               key={a.id}
               className="flex items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2.5"
             >
-              <Shield className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-[var(--muted)]" />
+              <ProductDomainSceIcon name="roles-access" size={12} className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-[var(--muted)]" />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-[var(--foreground)]">
                   {a.roleName}
                 </p>
                 <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                   <span className="inline-flex items-center gap-1 text-xs text-[var(--muted)]">
-                    <Building2 className="h-3 w-3" />
+                    <ProductDomainSceIcon name="org-unit" size={12} />
                     <Link
                       href={`/dashboard/org-units/${a.orgUnitId}`}
                       className="hover:underline hover:text-[var(--foreground)]"

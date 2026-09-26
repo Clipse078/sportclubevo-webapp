@@ -1,4 +1,5 @@
 import { Shield } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 type MatchTeamLogoProps = {
   /** Accessible label — the team's display name. */
@@ -69,7 +70,7 @@ export default function MatchTeamLogo({
 
   return (
     <span role="img" aria-label={label} title={label} className={containerClassName}>
-      <Shield className="h-3.5 w-3.5" />
+      <ProductDomainSceIcon name="roles-access" size={12} />
     </span>
   );
 }

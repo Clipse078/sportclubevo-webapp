@@ -227,6 +227,7 @@
       "cancel": "Annuler"
     },
     "match": {
+      "activityTypeLabel": "Match",
       "create": {
         "backNav": "Matchs",
         "eyebrow": "Planifier un match",
