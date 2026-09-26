@@ -208,5 +208,11 @@
       "targetIncluded": false,
       "notes": "NOT_APPROPRIATE for personal calendar aggregation."
     }
-  ]
+  ],
+  "ux02Implementation": {
+    "canonicalMonthBundle": "lib/personal-agenda/load-personal-calendar-month-bundle.ts",
+    "normalizedItemModel": "lib/personal-agenda/normalized-calendar-item-types.ts",
+    "kalenderConsumer": "app/(admin)/dashboard/kalender/page.tsx",
+    "participationInBundle": false
+  }
 }

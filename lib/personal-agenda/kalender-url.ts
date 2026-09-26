@@ -1,3 +1,5 @@
+import { resolveMatchcenterMonthWindow } from "@/lib/matchcenter/month-range";
+
 export type PersonalKalenderSourceFilter = "alle" | "termine" | "aufgaben";
 
 export type PersonalKalenderUrlState = {
@@ -8,12 +10,16 @@ export type PersonalKalenderUrlState = {
 export function parsePersonalKalenderUrlState(
   searchParams: Record<string, string | string[] | undefined>,
   now: Date,
+  timeZone?: string,
 ): PersonalKalenderUrlState {
   const monthRaw = searchParams.monat;
+  const defaultMonth = timeZone
+    ? resolveMatchcenterMonthWindow({ now, timeZone }).param
+    : `${now.getFullYear()}-${`${now.getMonth() + 1}`.padStart(2, "0")}`;
   const month =
     typeof monthRaw === "string" && /^\d{4}-\d{2}$/.test(monthRaw)
       ? monthRaw
-      : `${now.getFullYear()}-${`${now.getMonth() + 1}`.padStart(2, "0")}`;
+      : defaultMonth;
 
   const quelleRaw = searchParams.quelle;
   let quelle: PersonalKalenderSourceFilter = "alle";

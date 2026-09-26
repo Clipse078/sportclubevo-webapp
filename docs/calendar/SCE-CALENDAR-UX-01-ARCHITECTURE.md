@@ -523,4 +523,21 @@ No missing canonical route for included sources. PARTICIPATION link is generic (
 
 ---
 
-*End of SCE-CALENDAR-UX-01 architecture audit.*
+---
+
+## 17. UX-02 implementation notes (confirmed)
+
+| Artifact | Location |
+|----------|----------|
+| **Canonical month bundle** | `lib/personal-agenda/load-personal-calendar-month-bundle.ts` → `loadPersonalCalendarMonthBundle` |
+| **Normalized item model** | `lib/personal-agenda/normalized-calendar-item-types.ts` |
+| **Normalizers** | `lib/personal-agenda/normalize-calendar-item.ts` |
+| **Day bucketing** | `lib/personal-agenda/calendar-item-day-key.ts` (wraps `personalProgrammeDayKey`) |
+| **Kalender RSC consumer** | `app/(admin)/dashboard/kalender/page.tsx` delegates to the bundle |
+| **Default `monat`** | `parsePersonalKalenderUrlState(..., timeZone)` uses `resolveMatchcenterMonthWindow` |
+
+**Sources in UX-02:** TRAINING, MATCH, TOURNAMENT, EVENT, MEETING, TASK — **PARTICIPATION not added** (future seam only).
+
+**Duplication after UX-02:** `loadPersonalAgenda` / `calendar-entries.ts` remain for legacy agenda parity; kalender page no longer inline-orchestrates programme + tasks.
+
+*End of SCE-CALENDAR-UX-01 architecture audit (UX-02 addendum).*
