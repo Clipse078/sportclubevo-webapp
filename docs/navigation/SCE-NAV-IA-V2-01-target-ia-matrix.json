@@ -193,7 +193,7 @@
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "org-units",
@@ -216,7 +216,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "target-groups",
@@ -239,7 +239,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "teams",
@@ -262,7 +262,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "provider-mapping",
@@ -284,7 +284,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "vereine",
@@ -307,7 +307,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "personen",
@@ -330,7 +330,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "competitions",
@@ -353,7 +353,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "mitglieder",
@@ -375,7 +375,7 @@
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "anmeldungen",
@@ -398,7 +398,7 @@
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "registrierungen",
@@ -421,7 +421,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "warteliste",
@@ -444,7 +444,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "archiv",
@@ -467,7 +467,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "aufgaben",
@@ -511,7 +511,7 @@
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "communication",
@@ -601,7 +601,7 @@
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "website-overview",
@@ -624,7 +624,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "website-news",
@@ -647,7 +647,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "website-pages",
@@ -669,7 +669,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "website-homepage",
@@ -691,7 +691,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "website-navigation",
@@ -713,7 +713,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "website-blocks",
@@ -735,7 +735,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "website-media",
@@ -758,7 +758,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "website-editorial",
@@ -780,7 +780,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "website-publishing",
@@ -803,7 +803,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "website-components",
@@ -825,7 +825,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "website-settings",
@@ -847,7 +847,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "infoboard",
@@ -870,7 +870,7 @@
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "infoboard-overview",
@@ -893,7 +893,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "infoboard-preview",
@@ -916,7 +916,7 @@
       "classification": "LOCAL_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Website/Infoboard/Inhalte werden zur Publishing-L1-Domäne promoted."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "trainer-staff",
@@ -938,7 +938,7 @@
       "classification": "SECONDARY_DESTINATION",
       "workspace": "club",
       "routePreserved": true,
-      "migrationReason": "Organisation wird unter Club als Struktur-/Stammdatenbereich geführt."
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
       "key": "meetings",

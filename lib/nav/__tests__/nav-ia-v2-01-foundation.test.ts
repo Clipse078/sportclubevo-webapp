@@ -43,7 +43,7 @@ describe("SCE-NAV-IA-V2-01 foundation", () => {
   it("closes organisation → club migration with REVIEW = 0", () => {
     const inventory = buildCurrentInventoryForPermissions(CLUB_ADMIN_KEYS, "club");
     const migration = buildOrganisationMigrationRecords(inventory);
-    expect(migration.length).toBeGreaterThan(0);
+    expect(migration.length).toBe(15);
     const review = migration.filter((row) => row.disposition === "REVIEW");
     expect(review).toEqual([]);
     const toClub = migration.filter((row) => row.disposition === "MOVE_TO_CLUB");

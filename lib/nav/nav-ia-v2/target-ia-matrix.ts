@@ -6,6 +6,9 @@ import type { AppNavigationDomainId } from "@/lib/nav/app-navigation-domains";
 import type { NavIaV2TargetL1, TargetIaRecord, OrganisationMigrationRecord } from "@/lib/nav/nav-ia-v2/types";
 import { getNavDestinationSceIconName } from "@/lib/nav/nav-destination-sce-icons";
 
+/** Pre-V2-02 club L1 domain id (audit-only). */
+export type LegacyV1ClubNavigationDomainId = AppNavigationDomainId | "organisation";
+
 /** Proposed L1 domain icon (existing SCE V2 masters only). */
 export const TARGET_L1_SCE_ICONS: Record<NavIaV2TargetL1, string> = {
   dashboard: "dashboard",
@@ -116,9 +119,15 @@ const LABEL_V2_OVERRIDES: Record<string, string> = {
   "admin-facilities": "Anlagen & Ressourcen",
 };
 
-function resolveTargetL1(key: string, currentL1: AppNavigationDomainId | null): NavIaV2TargetL1 | AppNavigationDomainId {
+export function resolveNavKeyTargetL1(
+  key: string,
+  currentL1: LegacyV1ClubNavigationDomainId | AppNavigationDomainId | null = null,
+): NavIaV2TargetL1 | AppNavigationDomainId {
   if (key.startsWith("platform-")) {
-    return currentL1 ?? "platform-overview";
+    if (currentL1 && String(currentL1).startsWith("platform-")) {
+      return currentL1 as AppNavigationDomainId;
+    }
+    return "platform-overview";
   }
   if (DASHBOARD_KEYS.has(key)) return "dashboard";
   if (PLANUNG_KEYS.has(key)) return "planung";
@@ -179,7 +188,7 @@ function resolveTargetLocalGroup(key: string, parentKey: string | null): string 
   return null;
 }
 
-function resolveMigrationReason(key: string, currentL1: AppNavigationDomainId | null): string {
+function resolveMigrationReason(key: string, currentL1: LegacyV1ClubNavigationDomainId | null): string {
   if (currentL1 === "organisation") {
     if (PUBLISHING_KEYS.has(key)) {
       return "Publishing ist eigenständige Verantwortungsdomäne (Kanäle/Inhalte).";
@@ -202,7 +211,7 @@ export function buildTargetIaRecord(input: {
   key: string;
   label: string;
   route: string;
-  currentL1: AppNavigationDomainId | null;
+  currentL1: LegacyV1ClubNavigationDomainId | AppNavigationDomainId | null;
   parentKey: string | null;
   permissionKeys: import("@/lib/permissions/permissions").PermissionKey[] | undefined;
   classification: TargetIaRecord["classification"];
@@ -211,7 +220,7 @@ export function buildTargetIaRecord(input: {
   visibleInExplorer: boolean;
   mobileEligible: boolean;
 }): TargetIaRecord {
-  const targetL1 = resolveTargetL1(input.key, input.currentL1);
+  const targetL1 = resolveNavKeyTargetL1(input.key, input.currentL1);
   const targetL2 = resolveTargetL2(input.key);
   const icon = getNavDestinationSceIconName(input.key);
 
@@ -243,14 +252,23 @@ export function buildOrganisationMigrationRecords(
     label: string;
     route: string;
     currentL1: AppNavigationDomainId | null;
+    parentKey?: string | null;
   }>,
 ): OrganisationMigrationRecord[] {
-  const orgDomainKeys = inventory.filter((row) => row.currentL1 === "organisation");
+  const orgDomainKeys = inventory.filter((row) =>
+    wasLegacyOrganisationNavDestination({
+      key: row.key,
+      parentKey: row.parentKey ?? null,
+    }),
+  );
 
   return orgDomainKeys.map((row) => {
+    const legacyTopKey = row.parentKey ?? row.key;
+    const legacyCurrentL1 = resolveLegacyClubNavItemDomainId(legacyTopKey);
     const target = buildTargetIaRecord({
       ...row,
-      parentKey: null,
+      currentL1: legacyCurrentL1,
+      parentKey: row.parentKey ?? null,
       permissionKeys: undefined,
       classification: "SECONDARY_DESTINATION",
       workspace: "club",
@@ -326,3 +344,109 @@ export const CLUB_TARGET_L2_GROUPS = [
 
 export const ROUTES_REQUIRING_CHANGE: string[] = [];
 export const REDIRECTS_REQUIRED: string[] = [];
+
+/** V1 club L1 mapping retained for migration audit (SCE-NAV-IA-V2-01). */
+export const LEGACY_CLUB_NAV_ITEM_TO_DOMAIN: Record<string, LegacyV1ClubNavigationDomainId> = {
+  dashboard: "dashboard",
+  planung: "planning",
+  organisation: "organisation",
+  mitglieder: "organisation",
+  anmeldungen: "organisation",
+  helfereinsaetze: "organisation",
+  "trainer-staff": "organisation",
+  communication: "communication",
+  workspace: "communication",
+  aufgaben: "communication",
+  website: "club",
+  infoboard: "club",
+  meetings: "club",
+  "club-entwicklung": "club",
+  material: "club",
+  finanzen: "club",
+  sponsoring: "club",
+  "formulare-freigaben": "club",
+  "vorfaelle-disziplin": "club",
+  administration: "club",
+};
+
+export function resolveLegacyClubNavItemDomainId(
+  navItemKey: string,
+): LegacyV1ClubNavigationDomainId | null {
+  return LEGACY_CLUB_NAV_ITEM_TO_DOMAIN[navItemKey] ?? null;
+}
+
+export function mapNavIaV2TargetL1ToAppDomainId(
+  targetL1: NavIaV2TargetL1 | AppNavigationDomainId,
+): AppNavigationDomainId {
+  switch (targetL1) {
+    case "dashboard":
+      return "dashboard";
+    case "planung":
+      return "planning";
+    case "kommunikation":
+      return "communication";
+    case "club":
+      return "club";
+    case "publishing":
+      return "publishing";
+    default:
+      return targetL1 as AppNavigationDomainId;
+  }
+}
+
+export function resolveClubWorkspaceNavItemDomainId(navItemKey: string): AppNavigationDomainId | null {
+  const targetL1 = resolveNavKeyTargetL1(navItemKey, null);
+  if (typeof targetL1 === "string" && targetL1.startsWith("platform-")) {
+    return null;
+  }
+  return mapNavIaV2TargetL1ToAppDomainId(targetL1);
+}
+
+export function resolveTargetL2ForNavKey(key: string): string {
+  return resolveTargetL2(key);
+}
+
+export function resolveDestinationIaMetadata(key: string): {
+  targetL2: string;
+  visibility: TargetIaRecord["visibility"];
+} {
+  return {
+    targetL2: resolveTargetL2(key),
+    visibility: {
+      header: true,
+      explorer: true,
+      mobileEligible: true,
+    },
+  };
+}
+
+export function wasLegacyOrganisationNavDestination(input: {
+  key: string;
+  parentKey: string | null;
+}): boolean {
+  const topLevelKey = input.parentKey ?? input.key;
+  if (resolveLegacyClubNavItemDomainId(topLevelKey) === "organisation") {
+    return true;
+  }
+  if (input.parentKey === "organisation") {
+    return true;
+  }
+  return false;
+}
+
+/** Deterministic L1 default module keys (existing routes only). */
+export const CLUB_L1_DEFAULT_DESTINATION_KEYS: Record<NavIaV2TargetL1, string> = {
+  dashboard: "dashboard",
+  planung: "planung",
+  kommunikation: "communication",
+  club: "organisation",
+  publishing: "website",
+};
+
+export const CLUB_L1_SCE_ICON_BY_DOMAIN: Record<NavIaV2TargetL1, string> = {
+  dashboard: TARGET_L1_SCE_ICONS.dashboard,
+  planung: TARGET_L1_SCE_ICONS.planung,
+  kommunikation: TARGET_L1_SCE_ICONS.kommunikation,
+  club: TARGET_L1_SCE_ICONS.club,
+  publishing: TARGET_L1_SCE_ICONS.publishing,
+};

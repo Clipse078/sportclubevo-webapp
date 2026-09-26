@@ -46,11 +46,11 @@ describe("SCE-VISUAL-03R2 navigation completeness", () => {
     }
   });
 
-  it("uses domain destinations for Organisation secondary navigation, not module-local children", () => {
+  it("uses domain destinations for Club Organisation secondary navigation, not module-local children", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
-    const org = model.domains.find((d) => d.id === "organisation");
-    expect(org).toBeTruthy();
-    const secondary = resolveDomainSecondaryNavItems(org!);
+    const club = model.domains.find((d) => d.id === "club");
+    expect(club).toBeTruthy();
+    const secondary = resolveDomainSecondaryNavItems(club!);
     expect(secondary.map((item) => item.key)).toEqual(
       expect.arrayContaining(["organisation", "mitglieder", "anmeldungen", "trainer-staff"]),
     );
@@ -86,13 +86,13 @@ describe("SCE-VISUAL-03R2 navigation completeness", () => {
     expect(resolveModuleLocalNavItems(planning!, active.activeDestination)).toEqual([]);
   });
 
-  it("keeps Website CMS tabs module-local while Club destinations stay in the secondary row", () => {
+  it("keeps Website CMS tabs module-local while Publishing destinations stay in the secondary row", () => {
     const model = buildAppNavigationModelForUser(
       [PERMISSIONS.WEBSITE_MANAGE, PERMISSIONS.NEWS_MANAGE, PERMISSIONS.INFOBOARD_MANAGE],
       "club",
     );
-    const club = model.domains.find((d) => d.id === "club");
-    const secondary = resolveDomainSecondaryNavItems(club!);
+    const publishing = model.domains.find((d) => d.id === "publishing");
+    const secondary = resolveDomainSecondaryNavItems(publishing!);
     expect(secondary.map((item) => item.key)).toEqual(
       expect.arrayContaining(["website", "infoboard"]),
     );
@@ -100,6 +100,7 @@ describe("SCE-VISUAL-03R2 navigation completeness", () => {
 
     const active = resolveActiveAppNavigation("/dashboard/website/pages", model);
     expect(active.activeDestinationKey).toBe("website");
+    expect(active.activeDomainId).toBe("publishing");
     expect(active.domainSecondaryItems.map((item) => item.key)).toContain("website");
     expect(active.moduleLocalChildren.map((child) => child.key)).toContain("website-pages");
   });

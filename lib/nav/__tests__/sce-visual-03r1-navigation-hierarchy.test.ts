@@ -54,13 +54,14 @@ describe("SCE-VISUAL-03R1 navigation hierarchy", () => {
     );
   });
 
-  it("keeps Organisation members/registrations as domain destinations, not primary peers", () => {
+  it("keeps Organisation members/registrations as domain destinations under Club", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
-    const org = model.domains.find((d) => d.id === "organisation");
-    expect(org?.destinations.map((d) => d.key)).toEqual(
+    const club = model.domains.find((d) => d.id === "club");
+    expect(club?.destinations.map((d) => d.key)).toEqual(
       expect.arrayContaining(["organisation", "mitglieder", "anmeldungen"]),
     );
     expect(model.domains.map((d) => d.id)).not.toContain("mitglieder");
+    expect(model.domains.map((d) => d.id)).not.toContain("organisation");
   });
 
   it("drops destinations with no permission from the filtered model", () => {
@@ -129,8 +130,8 @@ describe("SCE-VISUAL-03R1 navigation hierarchy", () => {
 
   it("documents the club domain map", () => {
     expect(CLUB_DOMAIN_MAP_SUMMARY.planning).toEqual(["planung"]);
-    expect(CLUB_NAV_ITEM_TO_DOMAIN.mitglieder).toBe("organisation");
-    expect(CLUB_NAV_ITEM_TO_DOMAIN.website).toBe("club");
+    expect(CLUB_NAV_ITEM_TO_DOMAIN.mitglieder).toBe("club");
+    expect(CLUB_NAV_ITEM_TO_DOMAIN.website).toBe("publishing");
   });
 
   it("resolves planning contextual children for deep routes", () => {

@@ -52,9 +52,9 @@ type AppShellNavigationProps = {
 const DOMAIN_MESSAGE_KEY: Record<AppNavigationDomainId, `domains.${string}`> = {
   dashboard: "domains.dashboard",
   planning: "domains.planning",
-  organisation: "domains.organisation",
   communication: "domains.communication",
   club: "domains.club",
+  publishing: "domains.publishing",
   "platform-overview": "domains.platformOverview",
   "platform-governance": "domains.platformGovernance",
   "platform-commercial": "domains.platformCommercial",

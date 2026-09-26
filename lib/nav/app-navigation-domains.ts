@@ -1,24 +1,37 @@
 /**
- * SCE-VISUAL-03R1 — semantic navigation domains above canonical NAV_SECTIONS destinations.
+ * SCE-VISUAL-03R1 / SCE-NAV-IA-V2-02 — semantic navigation domains above canonical NAV_SECTIONS destinations.
  *
  * Route permissions and labels remain on {@link NavItem} entries in nav-config;
- * this file only defines grouping for shell presentation.
+ * this file defines grouping for shell presentation using the V2 target IA contract.
  */
 
 import type { NavItem, NavSection } from "@/lib/nav/nav-config";
+import {
+  CLUB_L1_DEFAULT_DESTINATION_KEYS,
+  CLUB_L1_SCE_ICON_BY_DOMAIN,
+  CLUB_TARGET_L2_GROUPS,
+  PUBLISHING_TARGET_L2_GROUPS,
+  resolveClubWorkspaceNavItemDomainId,
+  resolveDestinationIaMetadata,
+} from "@/lib/nav/nav-ia-v2/target-ia-matrix";
+import type { NavVisibilityContract } from "@/lib/nav/nav-ia-v2/types";
 
 export type NavPresentationPriority = 1 | 2 | 3;
 
-export type AppNavigationDomainId =
+export type ClubAppNavigationDomainId =
   | "dashboard"
   | "planning"
-  | "organisation"
   | "communication"
   | "club"
+  | "publishing";
+
+export type PlatformAppNavigationDomainId =
   | "platform-overview"
   | "platform-governance"
   | "platform-commercial"
   | "platform-operations";
+
+export type AppNavigationDomainId = ClubAppNavigationDomainId | PlatformAppNavigationDomainId;
 
 export type NavigationDestination = {
   /** Canonical nav-config item key. */
@@ -27,6 +40,9 @@ export type NavigationDestination = {
   href: string;
   carrySeason?: boolean;
   children?: NavItem["children"];
+  /** V2 canonical L2 responsibility group label. */
+  canonicalL2Group?: string;
+  visibility?: NavVisibilityContract;
 };
 
 export type NavigationDomain = {
@@ -36,8 +52,17 @@ export type NavigationDomain = {
   fallbackLabel: string;
   priority: NavPresentationPriority;
   sortOrder: number;
+  /** Existing SCE V2 master for L1 presentation. */
+  l1SceIconKey: string;
   defaultDestination: NavigationDestination;
   destinations: NavigationDestination[];
+  /** Explorer / header grouping metadata (visibility toggles are V2-03 inputs). */
+  l2GroupMetadata?: readonly {
+    id: string;
+    label: string;
+    headerVisible?: boolean;
+    keys?: readonly string[];
+  }[];
 };
 
 type DomainDefinition = {
@@ -45,82 +70,102 @@ type DomainDefinition = {
   fallbackLabel: string;
   priority: NavPresentationPriority;
   sortOrder: number;
+  l1SceIconKey: string;
+  defaultDestinationKey: string;
+  l2GroupMetadata?: NavigationDomain["l2GroupMetadata"];
 };
 
-export const NAVIGATION_DOMAIN_DEFINITIONS: Record<
-  AppNavigationDomainId,
-  DomainDefinition
-> = {
+export const NAVIGATION_DOMAIN_DEFINITIONS: Record<AppNavigationDomainId, DomainDefinition> = {
   dashboard: {
     labelKey: "AppShell.domains.dashboard",
     fallbackLabel: "Dashboard",
     priority: 1,
     sortOrder: 10,
+    l1SceIconKey: CLUB_L1_SCE_ICON_BY_DOMAIN.dashboard,
+    defaultDestinationKey: CLUB_L1_DEFAULT_DESTINATION_KEYS.dashboard,
   },
   planning: {
     labelKey: "AppShell.domains.planning",
     fallbackLabel: "Planung",
     priority: 1,
     sortOrder: 20,
-  },
-  organisation: {
-    labelKey: "AppShell.domains.organisation",
-    fallbackLabel: "Organisation",
-    priority: 1,
-    sortOrder: 30,
+    l1SceIconKey: CLUB_L1_SCE_ICON_BY_DOMAIN.planung,
+    defaultDestinationKey: CLUB_L1_DEFAULT_DESTINATION_KEYS.planung,
   },
   communication: {
     labelKey: "AppShell.domains.communication",
     fallbackLabel: "Kommunikation",
     priority: 2,
-    sortOrder: 40,
+    sortOrder: 30,
+    l1SceIconKey: CLUB_L1_SCE_ICON_BY_DOMAIN.kommunikation,
+    defaultDestinationKey: CLUB_L1_DEFAULT_DESTINATION_KEYS.kommunikation,
   },
   club: {
     labelKey: "AppShell.domains.club",
     fallbackLabel: "Club",
     priority: 3,
+    sortOrder: 40,
+    l1SceIconKey: CLUB_L1_SCE_ICON_BY_DOMAIN.club,
+    defaultDestinationKey: CLUB_L1_DEFAULT_DESTINATION_KEYS.club,
+    l2GroupMetadata: CLUB_TARGET_L2_GROUPS,
+  },
+  publishing: {
+    labelKey: "AppShell.domains.publishing",
+    fallbackLabel: "Publishing",
+    priority: 2,
     sortOrder: 50,
+    l1SceIconKey: CLUB_L1_SCE_ICON_BY_DOMAIN.publishing,
+    defaultDestinationKey: CLUB_L1_DEFAULT_DESTINATION_KEYS.publishing,
+    l2GroupMetadata: PUBLISHING_TARGET_L2_GROUPS,
   },
   "platform-overview": {
     labelKey: "AppShell.domains.platformOverview",
     fallbackLabel: "Platform",
     priority: 1,
     sortOrder: 10,
+    l1SceIconKey: "dashboard",
+    defaultDestinationKey: "platform-dashboard",
   },
   "platform-governance": {
     labelKey: "AppShell.domains.platformGovernance",
     fallbackLabel: "Governance",
     priority: 2,
     sortOrder: 20,
+    l1SceIconKey: "organisation",
+    defaultDestinationKey: "platform-clubs",
   },
   "platform-commercial": {
     labelKey: "AppShell.domains.platformCommercial",
     fallbackLabel: "Commercial",
     priority: 2,
     sortOrder: 30,
+    l1SceIconKey: "finance",
+    defaultDestinationKey: "platform-commercial",
   },
   "platform-operations": {
     labelKey: "AppShell.domains.platformOperations",
     fallbackLabel: "Operations",
     priority: 3,
     sortOrder: 40,
+    l1SceIconKey: "settings",
+    defaultDestinationKey: "platform-operations",
   },
 };
 
-/** Club workspace: former sidebar item key → domain id. */
+/** Club workspace: former sidebar item key → domain id (V2 canonical). */
 export const CLUB_NAV_ITEM_TO_DOMAIN: Record<string, AppNavigationDomainId> = {
   dashboard: "dashboard",
   planung: "planning",
-  organisation: "organisation",
-  mitglieder: "organisation",
-  anmeldungen: "organisation",
-  helfereinsaetze: "organisation",
-  "trainer-staff": "organisation",
+  organisation: "club",
+  mitglieder: "club",
+  anmeldungen: "club",
+  helfereinsaetze: "club",
+  "trainer-staff": "club",
   communication: "communication",
   workspace: "communication",
   aufgaben: "communication",
-  website: "club",
-  infoboard: "club",
+  website: "publishing",
+  infoboard: "publishing",
   meetings: "club",
   "club-entwicklung": "club",
   material: "club",
@@ -144,18 +189,32 @@ export function resolveNavItemDomainId(
   navItemKey: string,
   workspaceContext: "club" | "platform",
 ): AppNavigationDomainId | null {
-  const map = workspaceContext === "platform" ? PLATFORM_NAV_ITEM_TO_DOMAIN : CLUB_NAV_ITEM_TO_DOMAIN;
-  return map[navItemKey] ?? null;
+  if (workspaceContext === "platform") {
+    return PLATFORM_NAV_ITEM_TO_DOMAIN[navItemKey] ?? null;
+  }
+  return resolveClubWorkspaceNavItemDomainId(navItemKey);
 }
 
 function mapNavItemToDestination(item: NavItem): NavigationDestination {
+  const ia = resolveDestinationIaMetadata(item.key);
   return {
     key: item.key,
     label: item.label,
     href: item.href,
     carrySeason: item.carrySeason,
     children: item.children,
+    canonicalL2Group: ia.targetL2,
+    visibility: ia.visibility,
   };
+}
+
+function resolveDefaultDestination(
+  domainId: AppNavigationDomainId,
+  destinations: NavigationDestination[],
+): NavigationDestination {
+  const def = NAVIGATION_DOMAIN_DEFINITIONS[domainId];
+  const preferred = destinations.find((dest) => dest.key === def.defaultDestinationKey);
+  return preferred ?? destinations[0]!;
 }
 
 export function buildNavigationDomainsFromSections(
@@ -184,29 +243,27 @@ export function buildNavigationDomainsFromSections(
       fallbackLabel: def.fallbackLabel,
       priority: def.priority,
       sortOrder: def.sortOrder,
-      defaultDestination: destinations[0]!,
+      l1SceIconKey: def.l1SceIconKey,
+      defaultDestination: resolveDefaultDestination(id, destinations),
       destinations,
+      l2GroupMetadata: def.l2GroupMetadata,
     });
   }
 
   return domains.sort((a, b) => a.sortOrder - b.sortOrder || a.fallbackLabel.localeCompare(b.fallbackLabel));
 }
 
-/** Documented domain map for acceptance reporting (club workspace). */
+/** Documented domain map for acceptance reporting (club workspace, V2). */
 export const CLUB_DOMAIN_MAP_SUMMARY = {
   dashboard: ["dashboard"],
   planning: ["planung"],
-  organisation: [
+  communication: ["communication", "workspace", "aufgaben"],
+  club: [
     "organisation",
     "mitglieder",
     "anmeldungen",
     "helfereinsaetze",
     "trainer-staff",
-  ],
-  communication: ["communication", "workspace", "aufgaben"],
-  club: [
-    "website",
-    "infoboard",
     "meetings",
     "club-entwicklung",
     "material",
@@ -216,4 +273,13 @@ export const CLUB_DOMAIN_MAP_SUMMARY = {
     "vorfaelle-disziplin",
     "administration",
   ],
+  publishing: ["website", "infoboard"],
 } as const;
+
+export const CLUB_L1_DOMAIN_ORDER: readonly ClubAppNavigationDomainId[] = [
+  "dashboard",
+  "planning",
+  "communication",
+  "club",
+  "publishing",
+];

@@ -1,5 +1,5 @@
 /**
- * SCE-NAV-IA-V2-01 — navigation contracts (spec-only; not applied to runtime).
+ * SCE-NAV-IA-V2-01 — navigation contracts (V2-02 applies club L1 taxonomy via app-navigation-domains).
  */
 
 export const NAV_IA_V2_DEPTH_CONTRACT = {

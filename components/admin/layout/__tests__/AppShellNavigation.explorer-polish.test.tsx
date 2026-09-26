@@ -153,7 +153,7 @@ describe("SCE-VISUAL-06R1 application explorer polish", () => {
     const user = userEvent.setup();
     renderExplorerAdmin();
     await user.click(screen.getByTestId("global-nav-hamburger"));
-    await user.click(screen.getByTestId("global-nav-explorer-domain-organisation"));
+    await user.click(screen.getByTestId("global-nav-explorer-domain-club"));
 
     const expandButtons = within(screen.getByTestId("global-nav-drawer-tree")).queryAllByRole(
       "button",

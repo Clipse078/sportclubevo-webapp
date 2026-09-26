@@ -113,7 +113,6 @@ export function getPrimaryNavPriority(navItemKey: string): NavPresentationPriori
     return 1;
   }
   if (
-    navItemKey === "organisation" ||
     navItemKey === "communication" ||
     navItemKey === "platform-clubs" ||
     navItemKey === "platform-access" ||

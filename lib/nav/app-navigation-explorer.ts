@@ -24,6 +24,7 @@ export type ExplorerSearchHit = {
   href: string;
   domainId: AppNavigationDomainId;
   domainLabel: string;
+  domainL1SceIconKey?: string;
   /** Module title when the hit is a child destination. */
   moduleLabel?: string;
   /** Nav-config module key for SCE icon resolution (module + child hits). */
@@ -34,7 +35,7 @@ export type ExplorerSearchHit = {
 /** Nav item key used to resolve approved SCE module icons in explorer search. */
 export function resolveExplorerSearchHitNavKey(hit: ExplorerSearchHit): string | null {
   if (hit.kind === "domain") {
-    return hit.domainId === "dashboard" ? "dashboard" : null;
+    return hit.domainL1SceIconKey ?? (hit.domainId === "dashboard" ? "dashboard" : null);
   }
   return hit.moduleNavKey ?? (hit.kind === "module" ? hit.key : null);
 }
@@ -77,6 +78,7 @@ export function buildExplorerSearchIndex(
       href: domain.defaultDestination.href,
       domainId: domain.id,
       domainLabel: label,
+      domainL1SceIconKey: domain.l1SceIconKey,
       kind: "domain",
     });
 
