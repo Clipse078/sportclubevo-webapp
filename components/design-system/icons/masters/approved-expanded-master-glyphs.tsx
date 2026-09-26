@@ -20,241 +20,159 @@ function masterSvgProps({
   };
 }
 
-/** Geometry copied exactly from `public/images/icons/team.svg`. */
+/** Geometry copied exactly from `public/images/icons/team.svg` (V2 monochrome artwork). */
 export function TeamApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="32" cy="18" r="7" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <circle cx="15" cy="24" r="5" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-        <circle cx="49" cy="24" r="5" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-        <path d="M21 49c1-10 5-16 11-16s10 6 11 16" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <path d="M5 47c1-8 4-13 10-13M59 47c-1-8-4-13-10-13" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <circle cx="32" cy="20" r="8"/><circle cx="16" cy="27" r="6"/><circle cx="48" cy="27" r="6"/><path d="M19 52c1-10 6-16 13-16s12 6 13 16M7 51c1-8 4-13 10-13 3 0 5 1 7 3M57 51c-1-8-4-13-10-13-3 0-5 1-7 3"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/season.svg`. */
+/** Geometry copied exactly from `public/images/icons/season.svg` (V2 monochrome artwork). */
 export function SeasonApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <rect x="9" y="13" width="46" height="42" rx="6" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <path d="M9 25h46M20 8v10M44 8v10" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-        <path d="M26 36a9 9 0 0 0 0 12" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-        <path d="M38 36a9 9 0 0 1 0 12" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <circle cx="32" cy="32" r="22"/><path d="M32 10a22 22 0 0 1 20 13M52 23l-1-10M52 23l-10-2M32 54a22 22 0 0 1-20-13M12 41l1 10M12 41l10 2M32 21v12l8 6"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/standings.svg`. */
+/** Geometry copied exactly from `public/images/icons/standings.svg` (V2 monochrome artwork). */
 export function StandingsApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <path d="M11 51V36h9v15" stroke="var(--sce-icon-secondary)" strokeWidth="5" />
-        <path d="M27 51V25h10v26" stroke="var(--sce-icon-primary)" strokeWidth="5" />
-        <path d="M44 51V32h9v19" stroke="var(--sce-icon-secondary)" strokeWidth="5" />
-        <path d="M32 9l2.3 4.7 5.2.8-3.8 3.7.9 5.2-4.6-2.5-4.6 2.5.9-5.2-3.8-3.7 5.2-.8z" fill="var(--sce-icon-accent)" stroke="var(--sce-icon-accent)" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <path d="M10 54h44M14 54V34h10v20M27 54V22h10v32M40 54V12h10v42"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/results.svg`. */
+/** Geometry copied exactly from `public/images/icons/results.svg` (V2 monochrome artwork). */
 export function ResultsApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <rect x="8" y="15" width="48" height="32" rx="5" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <path d="M18 28h10l-10 9h10" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-        <path d="M35 29h1M35 37h1" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <path d="M43 28v9M40 28h3" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-        <path d="M25 10h14M24 52h16" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <path d="M11 13h42v38H11zM11 24h42M24 13v38M40 13v38"/><path d="M16 32h3M16 41h3M29 32h6M45 32h3M45 41h3"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/attendance.svg`. */
+/** Geometry copied exactly from `public/images/icons/attendance.svg` (V2 monochrome artwork). */
 export function AttendanceApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="27" cy="18" r="7" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <circle cx="11" cy="24" r="5" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-        <circle cx="44" cy="24" r="5" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-        <path d="M16 49c1-10 5-16 11-16" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <circle cx="45" cy="44" r="10" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-        <path d="M40 44l4 4 7-8" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <circle cx="25" cy="21" r="9"/><path d="M9 51c1-12 7-19 16-19 5 0 9 2 12 6M37 45l6 6 12-15"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/pitch.svg`. */
+/** Geometry copied exactly from `public/images/icons/pitch.svg` (V2 monochrome artwork). */
 export function PitchApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <rect x="6" y="14" width="52" height="36" rx="3" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <path d="M32 14v36M6 22h9v20H6M58 22h-9v20h9" stroke="var(--sce-icon-secondary)" strokeWidth="3" />
-        <circle cx="32" cy="32" r="7" stroke="var(--sce-icon-accent)" strokeWidth="3" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <rect x="7" y="11" width="50" height="42" rx="4"/><path d="M32 11v42"/><circle cx="32" cy="32" r="7"/><path d="M7 23h8v18H7M57 23h-8v18h8"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/dressing-room.svg`. */
+/** Geometry copied exactly from `public/images/icons/dressing-room.svg` (V2 monochrome artwork). */
 export function DressingRoomApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <rect x="8" y="11" width="21" height="42" rx="3" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <rect x="35" y="11" width="21" height="42" rx="3" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <path d="M14 20h9M41 20h9" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-        <path d="M14 29h9M41 29h9" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <rect x="10" y="9" width="44" height="46" rx="5"/><path d="M25 9v46M39 9v46M17 31h1M32 31h1M46 31h1"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/organisation.svg`. */
+/** Geometry copied exactly from `public/images/icons/organisation.svg` (V2 monochrome artwork). */
 export function OrganisationApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <rect x="23" y="7" width="18" height="12" rx="3" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-        <rect x="5" y="43" width="16" height="12" rx="3" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-        <rect x="24" y="43" width="16" height="12" rx="3" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <rect x="43" y="43" width="16" height="12" rx="3" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-        <path d="M32 19v11M13 43V30h38v13M32 30v13" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <rect x="24" y="8" width="16" height="12" rx="3"/><rect x="7" y="44" width="16" height="12" rx="3"/><rect x="24" y="44" width="16" height="12" rx="3"/><rect x="41" y="44" width="16" height="12" rx="3"/><path d="M32 20v12M15 44V32h34v12M32 32v12"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/org-unit.svg`. */
+/** Geometry copied exactly from `public/images/icons/org-unit.svg` (V2 monochrome artwork). */
 export function OrgUnitApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <rect x="7" y="9" width="22" height="18" rx="4" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-        <rect x="35" y="37" width="22" height="18" rx="4" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-        <path d="M18 27v12h28v-2M46 37V25H29" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <rect x="21" y="8" width="22" height="16" rx="4"/><rect x="8" y="42" width="20" height="14" rx="4"/><rect x="36" y="42" width="20" height="14" rx="4"/><path d="M32 24v9M18 42v-9h28v9"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/people.svg`. */
+/** Geometry copied exactly from `public/images/icons/people.svg` (V2 monochrome artwork). */
 export function PeopleApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="32" cy="18" r="7" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <circle cx="14" cy="24" r="5" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-        <circle cx="50" cy="24" r="5" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-        <path d="M21 52c0-11 4-18 11-18s11 7 11 18M4 50c0-9 4-15 10-15M60 50c0-9-4-15-10-15" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <circle cx="24" cy="21" r="9"/><circle cx="43" cy="25" r="7"/><path d="M7 52c1-13 7-20 17-20s16 7 17 20M38 37c2-2 4-3 7-3 7 0 11 6 12 17"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/roles-access.svg`. */
+/** Geometry copied exactly from `public/images/icons/roles-access.svg` (V2 monochrome artwork). */
 export function RolesAccessApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="24" cy="20" r="8" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-        <path d="M9 50c1-12 6-19 15-19 6 0 10 3 13 9" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <circle cx="45" cy="40" r="11" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-        <path d="M45 34v12M39 40h12" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <circle cx="25" cy="22" r="8"/><path d="M10 50c1-11 6-18 15-18 5 0 9 2 12 7"/><path d="M40 36h14v15H40zM43 36v-4a4 4 0 0 1 8 0v4"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/club.svg`. */
+/** Geometry copied exactly from `public/images/icons/club.svg` (V2 monochrome artwork). */
 export function ClubApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <path d="M32 6l20 7v15c0 14-8 24-20 30C20 52 12 42 12 28V13z" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <path d="M32 12v39" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-        <path d="M20 21h24M22 37h20" stroke="var(--sce-icon-accent)" strokeWidth="3" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <path d="M10 55h44M15 55V20l17-10 17 10v35M24 55V41h16v14M23 27h4M37 27h4"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/documents.svg`. */
+/** Geometry copied exactly from `public/images/icons/documents.svg` (V2 monochrome artwork). */
 export function DocumentsApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <path d="M15 7h24l10 10v40H15z" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <path d="M39 7v12h10M23 29h18M23 38h18M23 47h12" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-        <path d="M39 7l10 10" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <path d="M7 18h20l6 7h24v29H7Z"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/tasks.svg`. */
+/** Geometry copied exactly from `public/images/icons/tasks.svg` (V2 monochrome artwork). */
 export function TasksApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <rect x="10" y="8" width="44" height="48" rx="5" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <path d="M18 22l4 4 7-8M18 38l4 4 7-8" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-        <path d="M34 22h12M34 38h12" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <rect x="9" y="9" width="46" height="46" rx="7"/><path d="M18 23l4 4 7-8M18 38l4 4 7-8M34 23h12M34 38h12"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/requirements.svg`. */
+/** Geometry copied exactly from `public/images/icons/requirements.svg` (V2 monochrome artwork). */
 export function RequirementsApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <path d="M13 8h38v48H13z" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <path d="M21 20h22M21 30h22M21 40h13" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-        <circle cx="44" cy="44" r="9" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-        <path d="M41 44l2 2 5-5" stroke="var(--sce-icon-primary)" strokeWidth="3" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <rect x="11" y="9" width="42" height="46" rx="6"/><path d="M20 22h24M20 32h24M20 42h13"/><path d="M16 22h1M16 32h1M16 42h1"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/events.svg`. */
+/** Geometry copied exactly from `public/images/icons/events.svg` (V2 monochrome artwork). */
 export function EventsApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <rect x="8" y="12" width="48" height="44" rx="5" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <path d="M8 25h48M19 7v11M45 7v11" stroke="var(--sce-icon-accent)" strokeWidth="4" />
-        <path d="M22 35h20M22 44h13" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <rect x="9" y="12" width="46" height="43" rx="7"/><path d="M9 24h46M20 8v9M44 8v9"/>
     </SceIconSvg>
   );
 }
 
-/** Geometry copied exactly from `public/images/icons/communication.svg`. */
+/** Geometry copied exactly from `public/images/icons/communication.svg` (V2 monochrome artwork). */
 export function CommunicationApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
-    <SceIconSvg {...masterSvgProps(props)}>
-      <g strokeLinecap="round" strokeLinejoin="round">
-        <path d="M8 12h48v34H29L18 55v-9H8z" stroke="var(--sce-icon-primary)" strokeWidth="4" />
-        <path d="M18 24h28M18 34h19" stroke="var(--sce-icon-secondary)" strokeWidth="4" />
-        <circle cx="49" cy="15" r="6" fill="var(--sce-icon-accent)" stroke="var(--sce-icon-accent)" strokeWidth="2" />
-      </g>
+    <SceIconSvg {...masterSvgProps(props)} monochrome>
+      <path d="M9 12h46v32H28L17 53v-9H9V12Z"/><path d="M19 24h26M19 33h18"/>
     </SceIconSvg>
   );
 }
+
 export const SCE_APPROVED_EXPANDED_MASTER_GLYPHS = [
   TeamApprovedMasterGlyph,
   SeasonApprovedMasterGlyph,

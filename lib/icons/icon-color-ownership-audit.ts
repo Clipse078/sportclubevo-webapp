@@ -102,12 +102,26 @@ export function runIconColorOwnershipAudit(root = process.cwd()): IconColorOwner
     totals[k] = totals[k] ?? 0;
   }
 
-  const blockersForV2 = [
-    `All ${SCE_APPROVED_MASTER_ICON_NAMES.length} V1 approved masters embed MASTER_OWNED_COLOR via var(--sce-icon-*) React geometry and baked SVG style attributes.`,
-    "Approved master SVGs under public/images/icons/ ship inline --sce-icon-* hex defaults (not currentColor).",
-    "V2-02 must replace geometry with currentColor-compliant monochrome masters before removing token stroke roles.",
-    "Status/success/warning surfaces correctly use SEMANTIC_STATUS_COLOR — must remain outside domain master geometry.",
-  ];
+  const masterOwnedInMastersDir = records.filter(
+    (r) => r.file.startsWith("components/design-system/icons/masters/") && r.ownership === "MASTER_OWNED_COLOR",
+  );
+
+  const blockersForV2: string[] = [];
+  if (masterOwnedInMastersDir.length > 0) {
+    blockersForV2.push(
+      `${masterOwnedInMastersDir.length} approved master React sources still embed MASTER_OWNED_COLOR (var(--sce-icon-*) or hard-coded palette).`,
+    );
+  }
+  if ((totals.INHERITED_CURRENTCOLOR ?? 0) < SCE_APPROVED_MASTER_ICON_NAMES.length) {
+    blockersForV2.push(
+      "V2 domain masters should inherit color via currentColor across all 90 React geometry sources.",
+    );
+  }
+  if (blockersForV2.length === 0) {
+    blockersForV2.push(
+      "Domain master geometry uses currentColor — component/state owns foreground and semantic status colors.",
+    );
+  }
 
   return { records, totals, blockersForV2 };
 }

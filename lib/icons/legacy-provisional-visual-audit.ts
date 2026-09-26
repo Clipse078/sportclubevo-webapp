@@ -85,6 +85,15 @@ export function runLegacyProvisionalVisualAudit(root = process.cwd()): LegacyPro
           if (category === "INITIALS") {
             classification = classifyInitialsContext(snippet, rel);
           }
+          if (category === "INLINE_SVG") {
+            if (/chart|sparkline|progress|loader|spinner|qr|barcode/i.test(rel + snippet)) {
+              classification = "DECORATIVE";
+            } else if (/logo|crest|avatar|brand/i.test(rel)) {
+              classification = "CONTENT_IDENTITY";
+            } else {
+              classification = "DECORATIVE";
+            }
+          }
           if (category === "DOMAIN_DEBT" && /Building2|Network|Globe|Users|Newspaper|Landmark|FolderOpen/.test(line)) {
             classification = "DOMAIN_SUBSTITUTE";
           }

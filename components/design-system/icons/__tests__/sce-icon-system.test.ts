@@ -139,13 +139,14 @@ describe("SCE-ICONS-01 theming tokens", () => {
     }
   });
 
-  it("approved master React sources use semantic tokens", () => {
+  it("approved master React sources use V2 monochrome currentColor geometry", () => {
     const masterGlyph = readFileSync(
       join(process.cwd(), "components/design-system/icons/masters/approved-hero-glyphs.tsx"),
       "utf8",
     );
     expect(masterGlyph).toContain("SceIconSvg");
-    expect(masterGlyph).toMatch(/var\(--sce-icon-/);
+    expect(masterGlyph).toMatch(/monochrome/);
+    expect(masterGlyph).not.toMatch(/var\(--sce-icon-/);
     expect(masterGlyph).not.toMatch(/lucide-react/);
   });
 });

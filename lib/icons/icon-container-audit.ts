@@ -37,15 +37,15 @@ const CONTAINER_PATTERNS: Array<{
   {
     component: "DashboardSectionIcon",
     fileSuffix: "components/ui/dashboard/DashboardSection.tsx",
-    containerRe: /h-9 w-9/,
-    iconRe: /icon\?: ReactNode/,
+    containerRe: /h-8 w-8/,
+    iconRe: /22px|icon\?: ReactNode/,
     background: "accent palette bg via SECTION_ICON_ACCENTS",
   },
   {
     component: "DashboardKpiCardIcon",
     fileSuffix: "components/ui/dashboard/DashboardKpiCard.tsx",
-    containerRe: /h-10 w-10|h-11 w-11/,
-    iconRe: /icon\?: ReactNode/,
+    containerRe: /h-9 w-9|h-10 w-10/,
+    iconRe: /\[&_\.sce-icon\]:h-6/,
     background: "ACCENT_VARS iconBg",
   },
   {
@@ -65,9 +65,9 @@ const CONTAINER_PATTERNS: Array<{
   {
     component: "AdminSurfaceCard module tile",
     fileSuffix: "components/admin/dashboard/DashboardModuleCards.tsx",
-    containerRe: /p-5|rounded/,
-    iconRe: /(?!)/,
-    background: "module card — no icon slot",
+    containerRe: /h-10 w-10/,
+    iconRe: /NavDestinationSceIcon|size=\{24\}/,
+    background: "module card SCE icon slot",
   },
 ];
 
@@ -101,14 +101,14 @@ export function runIconContainerAudit(root = process.cwd()): IconContainerAuditR
     const src = readFileSync(file, "utf8");
     const rel = relative(root, file);
 
-    let containerSizePx: number | null = 36;
-    if (pattern.component === "DashboardKpiCardIcon") containerSizePx = 40;
-    if (pattern.component === "AdminSurfaceCard module tile") containerSizePx = null;
+    let containerSizePx: number | null = 32;
+    if (pattern.component === "DashboardKpiCardIcon") containerSizePx = 36;
+    if (pattern.component === "AdminSurfaceCard module tile") containerSizePx = 36;
 
-    let iconSizePx: number | null = 20;
+    let iconSizePx: number | null = 22;
+    if (pattern.component === "DashboardKpiCardIcon") iconSizePx = 24;
     if (src.includes("size={16}")) iconSizePx = 16;
-    if (src.includes("size={24}")) iconSizePx = 24;
-    if (pattern.component === "AdminSurfaceCard module tile") iconSizePx = null;
+    if (pattern.component === "AdminSurfaceCard module tile") iconSizePx = 24;
 
     const ratio =
       containerSizePx && iconSizePx ? Number((containerSizePx / iconSizePx).toFixed(2)) : null;
@@ -116,7 +116,10 @@ export function runIconContainerAudit(root = process.cwd()): IconContainerAuditR
     const flags: IconContainerAuditRow["flags"] = [];
     if (ratio && ratio >= 1.8) flags.push("ICON_TOO_SMALL_FOR_CONTAINER");
     if (ratio && ratio >= 1.6) flags.push("CONTAINER_VISUALLY_DOMINANT");
-    if (pattern.component === "AdminSurfaceCard module tile") {
+    if (
+      pattern.component === "AdminSurfaceCard module tile" &&
+      !src.includes("NavDestinationSceIcon")
+    ) {
       flags.push("INCONSISTENT_OPTICAL_SIZE");
     }
 

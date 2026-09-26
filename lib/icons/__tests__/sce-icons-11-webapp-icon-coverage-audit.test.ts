@@ -67,7 +67,7 @@ describe("SCE-ICONS-11 route coverage audit", () => {
   });
 
   it("materially resolves SCE-ICONS-10 import-level ambiguity", () => {
-    expect(importLevelAmbiguityCount()).toBe(382);
+    expect(importLevelAmbiguityCount()).toBe(381);
     const remaining = semanticAmbiguityRemaining();
     expect(remaining).toBeLessThan(50);
   });

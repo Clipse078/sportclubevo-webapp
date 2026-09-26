@@ -172,6 +172,6 @@ describe("SCE-ICONS-09 single source of truth", () => {
     }
     expect(specimen).toContain("SCE_SPECIMEN_OPTICAL_SIZES");
     expect(specimen).toContain("16, 18, 20, 24, 28, 32, 48, 64");
-    expect(specimen).toContain("MONOCHROME_PREVIEW_CLASS");
+    expect(specimen).toContain("V2_MONOCHROME_CLASS");
   });
 });

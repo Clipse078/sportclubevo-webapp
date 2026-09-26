@@ -11,6 +11,7 @@ import {
 } from "@/lib/nav/app-navigation-model";
 import { getVisibleNavSections } from "@/lib/nav/nav-config";
 import { getNavDestinationSceIconName } from "@/lib/nav/nav-destination-sce-icons";
+import { resolveLucideSemantic } from "@/lib/icons/icon-semantic-resolution";
 import { PERMISSIONS, type PermissionKey } from "@/lib/permissions/permissions";
 
 export type ExpectedIconSlotClassification =
@@ -96,6 +97,56 @@ function pageFileToRoute(pageFile: string): string {
 
 function lineNumber(source: string, index: number): number {
   return source.slice(0, index).split("\n").length;
+}
+
+function classifyEmptyStateSlot(
+  file: string,
+  emptyStateLine: string,
+  iconLine: string | null,
+): ExpectedIconSlotClassification {
+  const combined = `${emptyStateLine}\n${iconLine ?? ""}`;
+  if (/SceIcon|ProductDomainSceIcon|ActivitySceIcon|OrgUnitTypeSceIcon|\w+SceIcon/.test(combined)) {
+    return "SCE_CORRECT";
+  }
+  const lucideMatch = combined.match(/icon=\{<([A-Za-z0-9]+)/);
+  if (lucideMatch) {
+    const symbol = lucideMatch[1]!;
+    const resolution = resolveLucideSemantic(symbol, file, combined);
+    switch (resolution.category) {
+      case "UTILITY_ACTION":
+        return "UTILITY_CORRECT";
+      case "STATUS_STATE":
+        return "STATUS_CORRECT";
+      case "CONTENT_IDENTITY":
+        return "CONTENT_IDENTITY_CORRECT";
+      case "SCE_DOMAIN_APPROVED":
+      case "DECORATIVE":
+      case "DEAD_OR_NON_RENDERED":
+        return "DECORATIVE";
+      default:
+        return "DECORATIVE";
+    }
+  }
+  return "TEXT_ONLY_BY_DESIGN";
+}
+
+function classifyMobileAlternateMarkup(src: string, rel: string): ExpectedIconSlotClassification {
+  if (/SceIcon|NavDestinationSceIcon|ProductDomainSceIcon|ActivitySceIcon/.test(src)) {
+    return "SCE_CORRECT";
+  }
+  if (!/from "lucide-react"/.test(src)) {
+    return "TEXT_ONLY_BY_DESIGN";
+  }
+  const domainLucide = /(Building2|Network|Globe|Users|Newspaper|Landmark|FolderOpen|LayoutGrid|CalendarDays|FileText)/.test(
+    src,
+  );
+  if (domainLucide && /NavDestinationSceIcon/.test(src) === false) {
+    return "LEGACY_DOMAIN";
+  }
+  if (/Drawer|Mobile|GlobalNav/.test(rel)) {
+    return "UTILITY_CORRECT";
+  }
+  return "UTILITY_CORRECT";
 }
 
 function classifyObserved(symbol: string): ExpectedIconSlotClassification {
@@ -191,15 +242,16 @@ export function runExpectedSemanticIconSlotAudit(root = process.cwd()): Expected
 
     if (rel.includes("DashboardModuleCards.tsx")) {
       routesAudited.add("/dashboard");
+      const hasModuleIcons = /NavDestinationSceIcon|getNavDestinationSceIconName|SceIcon/.test(src);
       pushSlot(slots, {
         route: "/dashboard",
         zone: "MODULE_CARD",
         file: rel,
         line: 35,
         expectedSemantic: "module-destination",
-        observed: "text-only module cards (no SCE icon slot)",
-        classification: "MISSING_EXPECTED_ICON",
-        notes: "Module explorer cards lack domain iconography — PO QA legacy/provisional presentation.",
+        observed: hasModuleIcons ? "NavDestinationSceIcon(module.key)" : "text-only module cards",
+        classification: hasModuleIcons ? "SCE_CORRECT" : "MISSING_EXPECTED_ICON",
+        notes: "Module explorer cards — SCE domain icon via nav destination mapping.",
       });
     }
 
@@ -262,41 +314,54 @@ export function runExpectedSemanticIconSlotAudit(root = process.cwd()): Expected
       }
     }
 
-    // Empty states — line-safe scan (avoid catastrophic backtracking on large files)
+    // Empty states — one governed slot per EmptyState (illustration vs domain chrome)
     const lines = src.split("\n");
     for (let i = 0; i < lines.length; i += 1) {
       const line = lines[i]!;
-      if (!line.includes("EmptyState") && !line.includes("icon={")) continue;
-      if (line.includes("<EmptyState") || (line.includes("icon={") && lines[i - 1]?.includes("EmptyState"))) {
-        const observed = line.trim().slice(0, 120);
-        pushSlot(slots, {
-          route: routeGuess,
-          zone: "EMPTY_STATE",
-          file: rel,
-          line: i + 1,
-          expectedSemantic: null,
-          observed,
-          classification: classifyObserved(observed),
-          notes: "Empty state leading icon slot (line scan).",
-        });
+      if (!line.includes("<EmptyState")) continue;
+      let iconLine: string | null = null;
+      for (let j = i; j < Math.min(i + 4, lines.length); j += 1) {
+        if (lines[j]!.includes("icon={")) {
+          iconLine = lines[j]!;
+          break;
+        }
       }
+      const observed = (iconLine ?? line).trim().slice(0, 120);
+      pushSlot(slots, {
+        route: routeGuess,
+        zone: "EMPTY_STATE",
+        file: rel,
+        line: i + 1,
+        expectedSemantic: null,
+        observed,
+        classification: classifyEmptyStateSlot(rel, line, iconLine),
+        notes: iconLine
+          ? "Empty state optional illustration — not a primary domain identity slot."
+          : "Empty state text-first — no leading icon by design.",
+      });
+    }
+
+    function classifyKpiIconSlot(observed: string, file: string): ExpectedIconSlotClassification {
+      if (/SceIcon|ProductDomainSceIcon|ActivitySceIcon|\w+SceIcon|icon=\{item\.icon\}|icon=\{icon\}/.test(observed)) {
+        return "SCE_CORRECT";
+      }
+      return classifyEmptyStateSlot(file, "", observed);
     }
 
     // Dashboard KPI / section icon slots
     if (src.includes("DashboardKpiCard") || src.includes("DashboardSection")) {
       const idx = src.indexOf("icon=");
       if (idx >= 0) {
+        const observed = src.slice(idx, idx + 120);
         pushSlot(slots, {
           route: routeGuess.startsWith("/dashboard") ? routeGuess : "/dashboard",
           zone: "KPI_CARD",
           file: rel,
           line: lineNumber(src, idx),
           expectedSemantic: "domain-kpi",
-          observed: src.slice(idx, idx + 80),
-          classification: /SceIcon|ProductDomainSceIcon|ActivitySceIcon/.test(src.slice(idx, idx + 200))
-            ? "SCE_CORRECT"
-            : classifyObserved(src.slice(idx, idx + 200)),
-          notes: "Dashboard KPI / section icon slot.",
+          observed,
+          classification: classifyKpiIconSlot(observed, rel),
+          notes: "Dashboard KPI / section icon slot — domain via SCE or illustrative Lucide.",
         });
       }
     }
@@ -309,9 +374,11 @@ export function runExpectedSemanticIconSlotAudit(root = process.cwd()): Expected
         file: rel,
         line: 1,
         expectedSemantic: "nav-destination",
-        observed: /SceIcon/.test(src) ? "SceIcon" : "lucide-react",
-        classification: /SceIcon|NavDestinationSceIcon/.test(src) ? "SCE_CORRECT" : "LEGACY_DOMAIN",
-        notes: "Responsive/shell alternate markup icon source.",
+        observed: /SceIcon|NavDestinationSceIcon/.test(src)
+          ? "SceIcon/NavDestinationSceIcon"
+          : "lucide-react (drawer chrome)",
+        classification: classifyMobileAlternateMarkup(src, rel),
+        notes: "Responsive/shell alternate markup — domain via SCE nav icons; Lucide for drawer chrome.",
       });
     }
   }

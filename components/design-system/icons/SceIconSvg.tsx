@@ -18,6 +18,8 @@ type SceIconSvgProps = {
   viewBox?: string;
   className?: string;
   title?: string;
+  /** V2 approved masters — monochrome geometry inherits contextual color via currentColor. */
+  monochrome?: boolean;
   children: React.ReactNode;
 };
 
@@ -27,6 +29,7 @@ export function SceIconSvg({
   viewBox = SCE_ICON_VIEWBOX,
   className,
   title,
+  monochrome = false,
   children,
 }: SceIconSvgProps) {
   const decorative = !title;
@@ -37,7 +40,15 @@ export function SceIconSvg({
       height={size}
       viewBox={viewBox}
       fill="none"
-      className={cn("sce-icon shrink-0 text-[var(--sce-icon-primary)]", className)}
+      stroke={monochrome ? "currentColor" : undefined}
+      strokeWidth={monochrome ? 4 : undefined}
+      strokeLinecap={monochrome ? "round" : undefined}
+      strokeLinejoin={monochrome ? "round" : undefined}
+      className={cn(
+        "sce-icon shrink-0",
+        monochrome ? "text-current" : "text-[var(--sce-icon-primary)]",
+        className,
+      )}
       aria-hidden={decorative ? true : undefined}
       role={title ? "img" : undefined}
     >

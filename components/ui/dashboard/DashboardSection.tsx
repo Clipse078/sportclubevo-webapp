@@ -69,7 +69,7 @@ function DashboardSectionIcon({
 
   return (
     <span
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)]"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] [&_.sce-icon]:h-[22px] [&_.sce-icon]:w-[22px]"
       style={{ backgroundColor: palette.bg, color: palette.color }}
       aria-hidden="true"
     >

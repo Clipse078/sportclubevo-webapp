@@ -101,8 +101,8 @@ export function DashboardKpiCard({
     >
       <div
         className={cn(
-          "flex shrink-0 items-center justify-center rounded-[var(--radius-md)]",
-          isHero ? "h-[3.5rem] w-[3.5rem] sm:h-14 sm:w-14" : "h-10 w-10 sm:h-11 sm:w-11",
+          "flex shrink-0 items-center justify-center rounded-[var(--radius-md)] [&_.sce-icon]:h-6 [&_.sce-icon]:w-6",
+          isHero ? "h-10 w-10 sm:h-11 sm:w-11" : "h-9 w-9 sm:h-10 sm:w-10",
         )}
         style={{ background: vars.iconBg, color: vars.iconColor }}
         aria-hidden="true"

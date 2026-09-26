@@ -11,8 +11,8 @@ import {
   SCE_APPROVED_MASTER_ICON_NAMES,
 } from "@/components/design-system/icons/masters/approved-hero-meta";
 import {
-  SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS,
   SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS,
+  SCE_V2_AUTHORITATIVE_ARTWORK_FINGERPRINTS,
   fingerprintApprovedHeroMasterSvg,
 } from "@/components/design-system/icons/masters/approved-hero-fingerprint";
 import { SCE_ICON_REGISTRY } from "@/components/design-system/icons/registry";
@@ -43,17 +43,16 @@ describe("SCE-ICONS-13 final semantic masters", () => {
     }
   });
 
-  it("records stable fingerprints for final masters and preserves prior 78", () => {
+  it("records stable V2 authoritative fingerprints for final masters", () => {
     for (const name of FINAL_TWELVE) {
       expect(SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS[name]).toBe(
-        SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS[name],
+        SCE_V2_AUTHORITATIVE_ARTWORK_FINGERPRINTS[name],
       );
       expect(fingerprintApprovedHeroMasterSvg(SCE_APPROVED_MASTER_ASSETS[name])).toBe(
-        SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS[name],
+        SCE_V2_AUTHORITATIVE_ARTWORK_FINGERPRINTS[name],
       );
     }
-    const baselineKeys = Object.keys(SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS);
-    expect(baselineKeys.length).toBe(90);
+    expect(Object.keys(SCE_V2_AUTHORITATIVE_ARTWORK_FINGERPRINTS).length).toBe(90);
   });
 
   it("clears domain icon debt across the webapp audit", () => {

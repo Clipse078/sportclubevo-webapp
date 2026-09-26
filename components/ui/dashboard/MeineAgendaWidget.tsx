@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { SceIcon } from "@/components/design-system/icons/SceIcon";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
-import { CalendarDays, ListChecks } from "lucide-react";
+import { ListChecks } from "lucide-react";
 import {
   groupPersonalAgendaItems,
   type PersonalAgendaItem,
@@ -90,7 +91,7 @@ export function MeineAgendaWidget({ items, supported }: MeineAgendaWidgetProps) 
   return (
     <DashboardSection
       title="Meine Agenda"
-      icon={<CalendarDays className="h-4 w-4" />}
+      icon={<SceIcon name="week-planner" size={20} />}
       iconAccent="primary"
       variant="card"
       bodyClassName="px-4 py-1.5 sm:px-5 sm:py-2"
@@ -102,14 +103,14 @@ export function MeineAgendaWidget({ items, supported }: MeineAgendaWidgetProps) 
     >
       {!supported ? (
         <DashboardEmptyState
-          icon={<CalendarDays className="h-5 w-5" />}
+          icon={<SceIcon name="week-planner" size={20} />}
           title="Keine persönliche Zuordnung"
           description="Verknüpfe dein Benutzerkonto mit einer Person und Teamfunktion, oder nutze Aufgaben mit Fälligkeit."
           variant="compact"
         />
       ) : items.length === 0 ? (
         <DashboardEmptyState
-          icon={<CalendarDays className="h-4 w-4" />}
+          icon={<SceIcon name="week-planner" size={20} />}
           title="Keine anstehenden Termine oder Aufgaben"
           variant="compact"
           compactLayout="inline"

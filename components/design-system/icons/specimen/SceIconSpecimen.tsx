@@ -228,9 +228,19 @@ const MASTER_LABELS: Record<SceApprovedMasterIconName, string> = {
   "waiting-list": "Waiting List / Warteliste",
 };
 
-/** Design-system-only preview — maps master token strokes to currentColor without mutating V1 geometry. */
-const MONOCHROME_PREVIEW_CLASS =
-  "[--sce-icon-primary:currentColor] [--sce-icon-secondary:currentColor] [--sce-icon-accent:currentColor] [--sce-icon-muted:currentColor]";
+/** V2 canonical — domain masters inherit contextual color via currentColor (same geometry all tiers). */
+const V2_MONOCHROME_CLASS = "text-current";
+
+const STATE_PREVIEW = [
+  { id: "DEFAULT", className: "text-[var(--foreground)]" },
+  { id: "MUTED", className: "text-[var(--muted)]" },
+  { id: "ACTIVE", className: "text-[var(--sce-accent)]" },
+  { id: "SUCCESS", className: "text-[var(--sce-success)]" },
+  { id: "WARNING", className: "text-[var(--sce-warning)]" },
+  { id: "ERROR", className: "text-[var(--sce-danger)]" },
+  { id: "INFO", className: "text-[var(--sce-info)]" },
+  { id: "DISABLED", className: "text-[var(--muted)] opacity-50" },
+] as const;
 
 function SizeRow({
   name,
@@ -249,8 +259,8 @@ function SizeRow({
       : theme === "light"
         ? "sce-theme-light rounded-lg bg-[#f1f5f9] px-4 py-3"
         : theme === "monochrome-dark"
-          ? `rounded-lg bg-[#0b1524] px-4 py-3 text-[#e2e8f0] ${MONOCHROME_PREVIEW_CLASS}`
-          : `sce-theme-light rounded-lg bg-[#f1f5f9] px-4 py-3 text-[#0f172a] ${MONOCHROME_PREVIEW_CLASS}`;
+          ? `rounded-lg bg-[#0b1524] px-4 py-3 text-[#e2e8f0] ${V2_MONOCHROME_CLASS}`
+          : `sce-theme-light rounded-lg bg-[#f1f5f9] px-4 py-3 text-[#0f172a] ${V2_MONOCHROME_CLASS}`;
 
   const label =
     theme === "original"
@@ -367,11 +377,11 @@ export function SceIconSpecimen() {
       <header className="mb-8">
         <h1 className="text-xl font-semibold tracking-tight">SCE Icon System — Specimen</h1>
         <p className="mt-2 max-w-2xl text-sm text-[var(--text-2)]">
-          Internal development surface for SCE icon approved masters. V2 optical QA renders every
-          approved master at 16–64px on dark/light surfaces. Monochrome preview maps master token
-          strokes to <code className="text-xs">currentColor</code> without modifying V1 artwork (
+          Internal development surface for the <strong>V2 canonical</strong> SCE icon family — 90
+          approved monochrome masters at 16–64px on dark/light surfaces. Domain geometry uses{" "}
+          <code className="text-xs">currentColor</code>; surrounding UI owns state/emphasis (
           <code className="text-xs">components/design-system/icons/v2/SCE_ICON_V2_DESIGN_CONTRACT.md</code>
-          ).
+          ). V1 multicolour artwork remains historical baseline only.
         </p>
         <label className="mt-4 flex max-w-md cursor-pointer items-center gap-2 text-sm text-[var(--text-2)]">
           <input
@@ -443,6 +453,29 @@ export function SceIconSpecimen() {
         names={FINAL_SEMANTIC_MASTERS}
         showMonochromePreview={monochromePreview}
       />
+
+      <section className="mb-12 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
+        <h2 className="text-lg font-semibold tracking-tight">V2 state ownership (STATE_PREVIEW)</h2>
+        <p className="mt-2 max-w-3xl text-sm text-[var(--text-2)]">
+          Same master geometry across semantic UI states — color is never baked into domain masters.
+        </p>
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          {STATE_PREVIEW.map((state) => (
+            <div
+              key={state.id}
+              className={`flex flex-wrap items-center gap-4 rounded-lg border border-[var(--border)] px-4 py-3 ${state.className}`}
+            >
+              <span className="w-24 shrink-0 text-[11px] font-semibold uppercase tracking-wide">
+                {state.id}
+              </span>
+              <SceIcon name="dashboard" size={24} />
+              <SceIcon name="training" size={24} />
+              <SceIcon name="website" size={24} />
+              <SceIcon name="finance" size={24} />
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section>
         <h2 className="mb-4 text-lg font-semibold tracking-tight">

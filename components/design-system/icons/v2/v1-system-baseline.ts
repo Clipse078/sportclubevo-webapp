@@ -41,7 +41,9 @@ export function buildSceV1SystemBaseline(): {
       name,
       semantic: entry.purpose,
       sourceFile: SCE_APPROVED_MASTER_ASSETS[name],
+      /** Live SVG geometry (V2 after artwork handoff) — compare via V2 fingerprint guards. */
       currentFingerprint: SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS[name],
+      /** Immutable V1 historical baseline — never mutated when V2 artwork lands. */
       baselineFingerprint: SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS[name],
       geometrySource: "approved-master" as const,
       registryCategory: entry.category,

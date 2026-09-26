@@ -148,15 +148,16 @@ describe("SCE approved master library", () => {
     expect(files.some((f) => /-light\.svg$/i.test(f))).toBe(false);
   });
 
-  it("preserves approved master geometry baselines (SCE-ICONS-04R1 authoritative artwork)", () => {
+  it("preserves immutable V1 baselines while live geometry tracks V2 artwork", () => {
     for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
+      expect(SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS[name]).toMatch(/^[a-f0-9]{64}$/);
       expect(SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS[name]).toBe(
-        SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS[name],
+        fingerprintApprovedHeroMasterSvg(SCE_APPROVED_MASTER_ASSETS[name]),
       );
     }
   });
 
-  it("uses Open VS match master without football-specific markup", () => {
+  it("uses Open VS match master without football-specific markup (V2 monochrome)", () => {
     const matchSrc = readFileSync(
       join(process.cwd(), SCE_APPROVED_MASTER_ASSETS.match),
       "utf8",
@@ -164,12 +165,11 @@ describe("SCE approved master library", () => {
     expect(matchSrc).not.toMatch(/<text[\s>]/i);
     expect(matchSrc).not.toMatch(/font-family/i);
     expect(matchSrc).not.toMatch(/M25 24l7-5 7 5/);
-    expect(matchSrc).toMatch(/M18 13A23 23 0 0 0 11 32/);
-    expect(matchSrc).toMatch(/M25 9a23 23 0 0 1 14 0/);
+    expect(matchSrc).toMatch(/M22 15a18 18/);
+    expect(matchSrc).toMatch(/stroke="currentColor"/);
     expect(SCE_ICON_REGISTRY.match.name).toBe("match");
     const { container } = render(<SceIcon name="match" size={24} />);
-    expect(container.innerHTML).toContain("M18 13A23 23 0 0 0 11 32");
-    expect(container.innerHTML).not.toContain("M26 26l4 12 4-12");
+    expect(container.innerHTML).toContain("M22 15a18 18");
     expect(container.innerHTML).not.toMatch(/<text[\s>]/i);
   });
 
