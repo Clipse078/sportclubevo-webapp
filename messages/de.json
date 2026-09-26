@@ -572,7 +572,11 @@
       "weekdayThu": "Do",
       "weekdayFri": "Fr",
       "weekdaySat": "Sa",
-      "weekdaySun": "So"
+      "weekdaySun": "So",
+      "dayOverflowMore": "+{count} weitere",
+      "dayOverflowPanelAria": "Weitere Termine an diesem Tag",
+      "filterGroupAria": "Kalenderquellen filtern",
+      "dueShort": "Fällig"
     },
     "attention": {
       "sectionTitle": "Benötigt meine Aufmerksamkeit",

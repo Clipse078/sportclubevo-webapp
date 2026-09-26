@@ -8,6 +8,7 @@ import { resolveMatchcenterMonthWindow } from "@/lib/matchcenter/month-range";
 import { parsePersonalKalenderUrlState } from "@/lib/personal-agenda/kalender-url";
 import { buildPersonalKalenderHref } from "@/lib/personal-agenda/kalender-url";
 import { PageHeader, PageShell } from "@/components/ui/page";
+import { buildCalendarTimeLabelById } from "@/lib/personal-agenda/build-calendar-time-labels";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -45,13 +46,15 @@ export default async function PersonalKalenderPage({ searchParams }: PageProps) 
 
   const currentMonth = resolveMatchcenterMonthWindow({ now, timeZone }).param;
   const todayHref = buildPersonalKalenderHref(BASE, { month: currentMonth }, urlState);
+  const fmtCfg = { locale: tenantContext.locale ?? "de-CH", timezone: timeZone };
+  const timeLabelById = buildCalendarTimeLabelById(monthBundle.items, fmtCfg);
 
   return (
     <PageShell>
       <PageHeader title="Kalender" description="Persönliche Termine und Aufgaben-Fälligkeiten." />
       <PersonalKalenderWorkspace
-        programmeItems={monthBundle.programmeItems}
-        taskItems={monthBundle.taskItems}
+        itemsByDayKey={monthBundle.itemsByDayKey}
+        timeLabelById={timeLabelById}
         timeZone={timeZone}
         urlState={urlState}
         supported={monthBundle.supported}
