@@ -24,7 +24,7 @@ function masterSvgProps({
 export function BookingApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <rect x="9" y="12" width="46" height="43" rx="7"/><path d="M9 24h46M20 8v9M44 8v9"/>
+      <rect x="10" y="14" width="44" height="39" rx="5" stroke="currentColor" strokeWidth="4"/><path d="M10 25h44M20 10v9M44 10v9" stroke="currentColor" strokeWidth="4"/><path d="M22 39l6 6 14-15" stroke="currentColor" strokeWidth="4"/>
     </SceIconSvg>
   );
 }
@@ -33,7 +33,7 @@ export function BookingApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
 export function BudgetApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <circle cx="32" cy="32" r="23"/><path d="M40 22c-2-3-5-5-9-5-5 0-9 3-9 7 0 11 20 5 20 16 0 4-4 7-10 7-5 0-9-2-11-6M32 12v40"/>
+      <circle cx="32" cy="32" r="22" stroke="currentColor" strokeWidth="4"/><path d="M32 10v22h22" stroke="currentColor" strokeWidth="4"/><path d="M32 32L17 48" stroke="currentColor" strokeWidth="4"/>
     </SceIconSvg>
   );
 }
@@ -42,7 +42,7 @@ export function BudgetApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
 export function BusinessClubApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M10 55h44M15 55V20l17-10 17 10v35M24 55V41h16v14M23 27h4M37 27h4"/>
+      <path d="M10 52V21h44v31M18 21V12h28v9" stroke="currentColor" strokeWidth="4"/><path d="M21 31h8M35 31h8M21 40h8M35 40h8" stroke="currentColor" strokeWidth="3"/><path d="M28 52V44h8v8" stroke="currentColor" strokeWidth="4"/>
     </SceIconSvg>
   );
 }
@@ -51,7 +51,7 @@ export function BusinessClubApprovedMasterGlyph(props: ApprovedMasterGlyphProps)
 export function CommercialAccountApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M10 55h44M15 55V20l17-10 17 10v35M24 55V41h16v14M23 27h4M37 27h4"/>
+      <rect x="9" y="17" width="46" height="34" rx="6" stroke="currentColor" strokeWidth="4"/><circle cx="22" cy="31" r="6" stroke="currentColor" strokeWidth="3"/><path d="M15 44c1-6 3-9 7-9s6 3 7 9M36 29h11M36 37h11" stroke="currentColor" strokeWidth="3"/><path d="M42 45h6" stroke="currentColor" strokeWidth="4"/>
     </SceIconSvg>
   );
 }
@@ -60,7 +60,7 @@ export function CommercialAccountApprovedMasterGlyph(props: ApprovedMasterGlyphP
 export function ContractApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M16 8h23l11 11v37H16Z"/><path d="M39 8v12h11M23 31h20M23 40h20M23 49h13"/>
+      <path d="M15 8h27l8 8v40H15V8z" stroke="currentColor" strokeWidth="4"/><path d="M42 8v10h8M23 29h19M23 37h19M23 45h11" stroke="currentColor" strokeWidth="3"/><path d="M37 49l4 4 8-10" stroke="currentColor" strokeWidth="3"/>
     </SceIconSvg>
   );
 }
@@ -69,7 +69,7 @@ export function ContractApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
 export function CostCentreApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <circle cx="32" cy="32" r="23"/><path d="M40 22c-2-3-5-5-9-5-5 0-9 3-9 7 0 11 20 5 20 16 0 4-4 7-10 7-5 0-9-2-11-6M32 12v40"/>
+      <circle cx="32" cy="32" r="22" stroke="currentColor" strokeWidth="4"/><circle cx="32" cy="32" r="12" stroke="currentColor" strokeWidth="4"/><circle cx="32" cy="32" r="4" fill="currentColor" stroke="none"/><path d="M32 10v10M54 32H44M32 54V44M10 32h10" stroke="currentColor" strokeWidth="3"/>
     </SceIconSvg>
   );
 }
@@ -78,7 +78,7 @@ export function CostCentreApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
 export function ExpenseApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M32 10v38M20 36l12 12 12-12"/><path d="M12 54h40"/>
+      <path d="M12 18h40v34H12z" stroke="currentColor" strokeWidth="4"/><path d="M20 27h24M20 35h15" stroke="currentColor" strokeWidth="3"/><path d="M32 42v10M27 47l5 5 5-5" stroke="currentColor" strokeWidth="4"/>
     </SceIconSvg>
   );
 }
@@ -87,7 +87,7 @@ export function ExpenseApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
 export function FacilityBookingApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <rect x="9" y="12" width="46" height="43" rx="7"/><path d="M9 24h46M20 8v9M44 8v9"/><path d="M19 38l7 7 18-17"/>
+      <path d="M9 51V26l18-11 18 11v25M17 51V32h20v19" stroke="currentColor" strokeWidth="4"/><rect x="36" y="12" width="19" height="19" rx="4" stroke="currentColor" strokeWidth="4"/><path d="M40 21l4 4 7-9" stroke="currentColor" strokeWidth="3"/>
     </SceIconSvg>
   );
 }
@@ -96,7 +96,7 @@ export function FacilityBookingApprovedMasterGlyph(props: ApprovedMasterGlyphPro
 export function FinanceApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <circle cx="32" cy="32" r="23"/><path d="M40 22c-2-3-5-5-9-5-5 0-9 3-9 7 0 11 20 5 20 16 0 4-4 7-10 7-5 0-9-2-11-6M32 12v40"/>
+      <path d="M9 51h46M14 46V29M26 46V21M38 46V33M50 46V13" stroke="currentColor" strokeWidth="4"/><path d="M14 23l12-9 12 9 12-15" stroke="currentColor" strokeWidth="4"/>
     </SceIconSvg>
   );
 }
@@ -105,7 +105,7 @@ export function FinanceApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
 export function PaymentApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <rect x="8" y="16" width="48" height="34" rx="6"/><path d="M8 27h48M17 40h10"/>
+      <rect x="8" y="17" width="48" height="32" rx="6" stroke="currentColor" strokeWidth="4"/><path d="M8 27h48" stroke="currentColor" strokeWidth="4"/><path d="M17 39h11" stroke="currentColor" strokeWidth="4"/>
     </SceIconSvg>
   );
 }
@@ -114,7 +114,7 @@ export function PaymentApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
 export function QrInvoiceApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <rect x="9" y="9" width="16" height="16"/><rect x="39" y="9" width="16" height="16"/><rect x="9" y="39" width="16" height="16"/><path d="M36 36h7v7h-7zM48 36h7M36 49h7M48 48h7v7"/>
+      <path d="M11 8h31l10 10v38H11V8z" stroke="currentColor" strokeWidth="4"/><path d="M42 8v11h10" stroke="currentColor" strokeWidth="3"/><rect x="19" y="29" width="8" height="8" stroke="currentColor" strokeWidth="3"/><rect x="36" y="29" width="8" height="8" stroke="currentColor" strokeWidth="3"/><path d="M19 45h8v7M36 45h4v7h6" stroke="currentColor" strokeWidth="3"/>
     </SceIconSvg>
   );
 }
@@ -123,7 +123,7 @@ export function QrInvoiceApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
 export function ReceiptApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M16 8h32v48l-6-4-5 4-5-4-5 4-5-4-6 4Z"/><path d="M23 22h18M23 32h18M23 42h10"/>
+      <path d="M16 8h32v48l-5-4-5 4-6-4-6 4-5-4-5 4V8z" stroke="currentColor" strokeWidth="4"/><path d="M23 20h18M23 29h18M23 38h10" stroke="currentColor" strokeWidth="3"/><circle cx="40" cy="39" r="4" fill="currentColor" stroke="none"/>
     </SceIconSvg>
   );
 }
@@ -132,7 +132,7 @@ export function ReceiptApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
 export function RevenueApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M32 54V16M20 28l12-12 12 12"/><path d="M12 10h40"/>
+      <path d="M12 18h40v34H12z" stroke="currentColor" strokeWidth="4"/><path d="M20 27h24M20 35h15" stroke="currentColor" strokeWidth="3"/><path d="M32 52V42M27 47l5-5 5 5" stroke="currentColor" strokeWidth="4"/>
     </SceIconSvg>
   );
 }
@@ -141,7 +141,7 @@ export function RevenueApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
 export function SponsorshipManagementApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M10 32h12l7-7 7 7h18M10 42h44"/><circle cx="32" cy="18" r="7"/>
+      <path d="M11 20l9-8 12 8 12-8 9 8-5 30H16l-5-30z" stroke="currentColor" strokeWidth="4"/><circle cx="45" cy="44" r="9" stroke="currentColor" strokeWidth="3"/><path d="M45 40v8M41 44h8" stroke="currentColor" strokeWidth="3"/>
     </SceIconSvg>
   );
 }
@@ -150,7 +150,7 @@ export function SponsorshipManagementApprovedMasterGlyph(props: ApprovedMasterGl
 export function SubscriptionApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M16 18a20 20 0 0 1 33 4M48 12l1 10-10-1M48 46a20 20 0 0 1-33-4M16 52l-1-10 10 1"/>
+      <path d="M18 15h28l8 10-22 28L10 25l8-10z" stroke="currentColor" strokeWidth="4"/><path d="M10 25h44M24 15l8 38 8-38" stroke="currentColor" strokeWidth="3"/><circle cx="46" cy="19" r="4" fill="currentColor" stroke="none"/>
     </SceIconSvg>
   );
 }
@@ -159,7 +159,7 @@ export function SubscriptionApprovedMasterGlyph(props: ApprovedMasterGlyphProps)
 export function TransactionApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M10 22h38M40 14l8 8-8 8M54 42H16M24 34l-8 8 8 8"/>
+      <path d="M12 23h35M40 16l7 7-7 7" stroke="currentColor" strokeWidth="4"/><path d="M52 41H17M24 34l-7 7 7 7" stroke="currentColor" strokeWidth="4"/><circle cx="32" cy="32" r="5" stroke="currentColor" strokeWidth="3"/>
     </SceIconSvg>
   );
 }

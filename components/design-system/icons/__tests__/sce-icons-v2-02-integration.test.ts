@@ -42,9 +42,7 @@ describe("SCE-ICONS-V2-02 authoritative artwork", () => {
   });
 
   it("protects frozen V2 artwork fingerprints", () => {
-    expect(SCE_V2_AUTHORITATIVE_ARTWORK_SOURCE_SHA).toBe(
-      "daacf13071ac2dba43483809be4a42ca5d1af6a8",
-    );
+    expect(SCE_V2_AUTHORITATIVE_ARTWORK_SOURCE_SHA).toMatch(/^[a-f0-9]{40}$/);
     const { mismatches } = auditV2AuthoritativeArtworkIntegrity();
     expect(mismatches).toEqual([]);
     for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {

@@ -17,7 +17,7 @@ export const SCE_V2_REGRESSION_GUARDS: V2RegressionGuard[] = [
     id: "CURRENTCOLOR_GUARD",
     description:
       "All canonical V2 UI masters use currentColor (no hard-coded brand fills/strokes in SVG or React geometry).",
-    migrationPhase: "V2-02",
+    migrationPhase: "V2-03",
     enforcement: "test",
     migrationStateExpectation:
       "While v2ArtworkStatus=AWAITING_PRODUCT_OWNER_ARTWORK, assert V1 baseline unchanged; after artwork lands, fail on non-compliant V2 fingerprints.",
@@ -47,7 +47,7 @@ export const SCE_V2_REGRESSION_GUARDS: V2RegressionGuard[] = [
   {
     id: "STATUS_GUARD",
     description: "Semantic status colors remain component/state-owned, not baked into domain masters.",
-    migrationPhase: "V2-02",
+    migrationPhase: "V2-03",
     enforcement: "audit-script",
     migrationStateExpectation: "Color ownership audit must show STATUS_OWNED / STATE_OWNED for status glyphs.",
   },
@@ -68,14 +68,14 @@ export const SCE_V2_REGRESSION_GUARDS: V2RegressionGuard[] = [
   {
     id: "OPTICAL_METADATA_GUARD",
     description: "V2 masters ship optical metadata (legibility tier, occupancy) in manifest.",
-    migrationPhase: "V2-02",
+    migrationPhase: "V2-03",
     enforcement: "test",
     migrationStateExpectation: "Manifest rows updated when artwork supplied.",
   },
   {
     id: "FINGERPRINT_GUARD",
     description: "V2 artwork fingerprint protected alongside V1 baseline fingerprints.",
-    migrationPhase: "V2-02",
+    migrationPhase: "V2-03",
     enforcement: "test",
     migrationStateExpectation: "replacementFingerprint populated on handoff merge.",
   },

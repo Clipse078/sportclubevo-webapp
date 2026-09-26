@@ -165,11 +165,11 @@ describe("SCE approved master library", () => {
     expect(matchSrc).not.toMatch(/<text[\s>]/i);
     expect(matchSrc).not.toMatch(/font-family/i);
     expect(matchSrc).not.toMatch(/M25 24l7-5 7 5/);
-    expect(matchSrc).toMatch(/M22 15a18 18/);
+    expect(matchSrc).toMatch(/M18 13A23 23/);
     expect(matchSrc).toMatch(/stroke="currentColor"/);
     expect(SCE_ICON_REGISTRY.match.name).toBe("match");
     const { container } = render(<SceIcon name="match" size={24} />);
-    expect(container.innerHTML).toContain("M22 15a18 18");
+    expect(container.innerHTML).toContain("M18 13A23 23");
     expect(container.innerHTML).not.toMatch(/<text[\s>]/i);
   });
 

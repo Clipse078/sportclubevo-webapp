@@ -24,7 +24,7 @@ function masterSvgProps({
 export function CompetitionApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M20 10h24v11c0 11-5 18-12 18s-12-7-12-18V10Z"/><path d="M32 39v9M23 54h18M27 48h10"/>
+      <path d="M18 12h28v8c0 11-5 20-14 24-9-4-14-13-14-24v-8Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M18 17H9v5c0 8 5 13 12 14M46 17h9v5c0 8-5 13-12 14" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M32 44v8M24 56h16" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="32" cy="27" r="4" fill="currentColor"/>
     </SceIconSvg>
   );
 }
@@ -33,7 +33,7 @@ export function CompetitionApprovedMasterGlyph(props: ApprovedMasterGlyphProps) 
 export function PageApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M16 8h23l11 11v37H16Z"/><path d="M39 8v12h11M23 31h20M23 40h20M23 49h13"/>
+      <path d="M17 8h22l10 10v38H17V8Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M39 8v11h10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M24 29h17M24 37h17M24 45h10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M40 45h4" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
     </SceIconSvg>
   );
 }
@@ -42,7 +42,7 @@ export function PageApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
 export function MediaLibraryApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <rect x="8" y="11" width="48" height="42" rx="6"/><circle cx="22" cy="25" r="5"/><path d="M12 47l13-13 8 8 7-7 12 12"/>
+      <rect x="12" y="16" width="36" height="34" rx="3" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M18 16v-5h34v31h-4" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="39" cy="26" r="3" fill="currentColor"/><path d="m18 43 9-10 8 8 5-5 8 8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
     </SceIconSvg>
   );
 }
@@ -51,7 +51,7 @@ export function MediaLibraryApprovedMasterGlyph(props: ApprovedMasterGlyphProps)
 export function BlockLibraryApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <rect x="9" y="9" width="19" height="19" rx="3"/><rect x="36" y="9" width="19" height="19" rx="3"/><rect x="9" y="36" width="19" height="19" rx="3"/><rect x="36" y="36" width="19" height="19" rx="3"/>
+      <rect x="10" y="10" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><rect x="36" y="10" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><rect x="10" y="36" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><rect x="36" y="36" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M45 40v10M40 45h10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
     </SceIconSvg>
   );
 }
@@ -60,7 +60,7 @@ export function BlockLibraryApprovedMasterGlyph(props: ApprovedMasterGlyphProps)
 export function WebsiteNavigationApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M11 16h42M11 32h30M11 48h22"/><circle cx="50" cy="32" r="4"/><circle cx="42" cy="48" r="4"/>
+      <rect x="8" y="12" width="48" height="40" rx="5" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M8 23h48" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="15" cy="18" r="2" fill="currentColor"/><circle cx="22" cy="18" r="2" fill="currentColor"/><circle cx="29" cy="18" r="2" fill="currentColor"/><path d="m27 31 18 9-8 3-3 8-7-20Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
     </SceIconSvg>
   );
 }
@@ -69,7 +69,7 @@ export function WebsiteNavigationApprovedMasterGlyph(props: ApprovedMasterGlyphP
 export function HomepageBuilderApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <rect x="9" y="10" width="46" height="44" rx="6"/><path d="M9 22h46M20 32h24M20 42h15"/><path d="M16 16h1M23 16h1"/>
+      <rect x="7" y="11" width="50" height="42" rx="5" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M7 22h50" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="14" cy="17" r="2" fill="currentColor"/><circle cx="21" cy="17" r="2" fill="currentColor"/><circle cx="28" cy="17" r="2" fill="currentColor"/><rect x="14" y="29" width="12" height="17" rx="2" fill="currentColor"/><path d="M32 31h17M32 38h14" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M32 45h9" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
     </SceIconSvg>
   );
 }
@@ -78,7 +78,7 @@ export function HomepageBuilderApprovedMasterGlyph(props: ApprovedMasterGlyphPro
 export function GoalApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <circle cx="32" cy="32" r="23"/><circle cx="32" cy="32" r="14"/><circle cx="32" cy="32" r="5"/>
+      <circle cx="29" cy="33" r="20" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="29" cy="33" r="12" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="29" cy="33" r="4" fill="currentColor"/><path d="m29 33 18-18M42 12h9v9M47 15l5-5" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
     </SceIconSvg>
   );
 }
@@ -87,7 +87,7 @@ export function GoalApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
 export function InitiativeApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M20 28a12 12 0 1 1 24 0c0 6-4 9-7 13H27c-3-4-7-7-7-13Z"/><path d="M27 48h10M29 55h6M32 7v5M11 17l5 3M53 17l-5 3"/>
+      <path d="M22 30c0-8 5-14 12-14s12 6 12 14c0 5-3 8-6 11v6H28v-6c-3-3-6-6-6-11Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M28 52h12M30 47h8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M34 8V4M16 15l-3-3M52 15l3-3M13 31H8M55 31h5" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
     </SceIconSvg>
   );
 }
@@ -96,7 +96,7 @@ export function InitiativeApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
 export function MaterialInventoryApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M10 19l22-10 22 10-22 10Z"/><path d="M10 19v26l22 10 22-10V19M32 29v26"/>
+      <path d="M8 51h48M12 51V25l20-12 20 12v26" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M18 29h28" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><rect x="18" y="37" width="12" height="14" rx="1" fill="currentColor" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><rect x="34" y="33" width="12" height="18" rx="1" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M38 38h4" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
     </SceIconSvg>
   );
 }
@@ -105,7 +105,7 @@ export function MaterialInventoryApprovedMasterGlyph(props: ApprovedMasterGlyphP
 export function DisciplineIncidentApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M32 8l22 9v15c0 13-9 21-22 24-13-3-22-11-22-24V17Z"/><path d="M32 20v15M32 44h.1"/>
+      <path d="M32 7 50 15v14c0 12-7 21-18 28-11-7-18-16-18-28V15L32 7Z" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M32 20v15" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="32" cy="43" r="2.5" fill="currentColor"/>
     </SceIconSvg>
   );
 }
@@ -114,7 +114,7 @@ export function DisciplineIncidentApprovedMasterGlyph(props: ApprovedMasterGlyph
 export function TargetGroupApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <circle cx="32" cy="32" r="22"/><circle cx="32" cy="32" r="13"/><circle cx="32" cy="32" r="4"/><path d="M47 17l9-9M47 17h9v-9"/>
+      <circle cx="32" cy="35" r="8" fill="currentColor" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="17" cy="38" r="6" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="47" cy="38" r="6" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M20 54v-5c0-5 5-8 12-8s12 3 12 8v5M7 54v-4c0-4 4-7 10-7M57 54v-4c0-4-4-7-10-7" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="32" cy="13" r="5" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="32" cy="13" r="2" fill="currentColor"/>
     </SceIconSvg>
   );
 }
@@ -123,7 +123,7 @@ export function TargetGroupApprovedMasterGlyph(props: ApprovedMasterGlyphProps) 
 export function WaitingListApprovedMasterGlyph(props: ApprovedMasterGlyphProps) {
   return (
     <SceIconSvg {...masterSvgProps(props)} monochrome>
-      <path d="M12 14h26M12 26h26M12 38h20M12 50h14"/><circle cx="48" cy="42" r="9"/><path d="M48 37v6l4 2"/>
+      <path d="M12 31a20 20 0 1 1 37 10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M32 14v14l-9 7" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="34" cy="43" r="5" fill="currentColor" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="48" cy="45" r="4" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><path d="M25 57v-4c0-4 4-6 9-6s9 2 9 6v4M43 57v-3c0-3 2-5 5-5s6 2 6 5v3" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
     </SceIconSvg>
   );
 }

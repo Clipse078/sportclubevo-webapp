@@ -143,7 +143,7 @@ export const SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS = {
   "waiting-list": "d463c6af54b22304bddfe77f3d8c86b97bea53a92c4bf47d422cb84538b5c916" as const,
 } as const;
 
-/** Returns fingerprint mismatches against frozen V2 authoritative artwork (SCE-ICONS-V2-02). */
+/** Returns fingerprint mismatches against frozen V2 authoritative artwork (SCE-ICONS-V2-03). */
 export function auditV2AuthoritativeArtworkIntegrity(): {
   mismatches: SceApprovedMasterIconName[];
   sourceSha: typeof SCE_V2_AUTHORITATIVE_ARTWORK_SOURCE_SHA;

@@ -1,5 +1,5 @@
 SCE ICON SYSTEM V2 — COMPLETE 90 MASTER LIBRARY
-Authoritative artwork handoff
+Restored approved V1 geometry (monochrome currentColor)
 
 Contract
 - 90/90 semantic masters
@@ -7,12 +7,9 @@ Contract
 - monochrome
 - currentColor only
 - no baked blue/orange/white
-- stroke-width 4 with round caps/joins
 - vector only
 - primary optical target 20–24px
 - color belongs to surrounding UI state/context
 
-This package supersedes the earlier V2-02A Batch-1-only package.
-Install this package only; do not install the old Batch 1 separately.
-
-The five repository handoff batches are represented in full.
+Geometry source: approved V1 final snapshot 087dc2f75ddb1d806cb5d9ac1e7924a6c4c5fb1c
+Color model: V2 currentColor runtime architecture (SCE-ICONS-V2-03)
