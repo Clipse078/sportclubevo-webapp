@@ -68,7 +68,7 @@ describe("SCE-ICONS-V2-02 manifest & React geometry", () => {
       expect(row.v2ArtworkStatus).toBe("APPROVED");
       expect(row.currentColorReady).toBe(true);
       expect(row.replacementRequired).toBe(false);
-      expect(row.integrationStatus).toBe("GEOMETRY_LANDED");
+      expect(row.integrationStatus).toBe("COMPLETE");
     }
   });
 
