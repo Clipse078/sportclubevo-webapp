@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync, existsSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { SCE_APPROVED_MASTER_ICON_NAMES } from "@/components/design-system/icons/masters/approved-hero-meta";
-import { SCE_ICON_REGISTRY_NAMES } from "@/components/design-system/icons/registry";
+import { SCE_ICON_REGISTRY, SCE_ICON_REGISTRY_NAMES } from "@/components/design-system/icons/registry";
 import {
   auditNavigationCompleteness,
   buildAppNavigationModelForUser,
@@ -480,18 +480,29 @@ function scanFileIconsBase(relFile: string, root: string): Omit<IconOccurrenceRe
   let sm: RegExpExecArray | null;
   while ((sm = sceNameRe.exec(source))) {
     const master = sm[1];
+    const registryEntry = SCE_ICON_REGISTRY[master as keyof typeof SCE_ICON_REGISTRY];
     const approved = (SCE_APPROVED_MASTER_ICON_NAMES as readonly string[]).includes(master);
+    const glyphUtility = new Set(["search", "profile", "add", "edit", "close", "more"]);
+    const classification: WebappIconSemanticCategory = approved
+      ? "SCE_DOMAIN_APPROVED"
+      : registryEntry && glyphUtility.has(master)
+        ? "UTILITY_ACTION"
+        : registryEntry
+          ? "SCE_DOMAIN_APPROVED"
+          : "UNKNOWN_REQUIRES_REVIEW";
     records.push({
       id: `${relFile}:${lineNumber(source, sm.index)}:SceIcon:${seq++}`,
       file: relFile,
       line: lineNumber(source, sm.index),
       sourceKind: "sce-icon",
       symbol: master,
-      classification: approved ? "SCE_DOMAIN_APPROVED" : "UNKNOWN_REQUIRES_REVIEW",
-      sceMaster: approved ? master : null,
+      classification,
+      sceMaster: approved || registryEntry?.geometrySource === "approved-master" ? master : null,
       missingConcept: null,
       legacyDespiteMaster: false,
-      reason: approved ? "Approved SceIcon registry master" : "Unknown registry name",
+      reason: registryEntry
+        ? `SceIcon registry entry (${registryEntry.geometrySource})`
+        : "Unknown registry name",
       jsxSnippet: source.slice(Math.max(0, sm.index - 80), sm.index + 120),
       verification: "STATICALLY_VERIFIED",
     });
