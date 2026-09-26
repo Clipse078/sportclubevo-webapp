@@ -403,6 +403,8 @@
     "closeDrawer": "Fermer la navigation",
     "drawerTitle": "Navigation",
     "searchModulesPlaceholder": "Rechercher un module…",
+    "searchNoResults": "Aucun résultat",
+    "explorerEmptyDomain": "Aucune destination autorisée dans ce domaine",
     "explorerBackToDomains": "Domaines",
     "domains": {
       "dashboard": "Tableau de bord",

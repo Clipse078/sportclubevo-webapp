@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { ChevronLeft, Search } from "lucide-react";
 import { NavDestinationSceIcon } from "@/components/nav/NavDestinationSceIcon";
 import type { AppNavigationModel, ActiveAppNavigation } from "@/lib/nav/app-navigation-model";
@@ -10,8 +10,11 @@ import type { AppNavigationDomainId, NavigationDomain } from "@/lib/nav/app-navi
 import {
   buildExplorerSearchIndex,
   filterExplorerSearchIndex,
+  formatExplorerSearchHitContext,
+  resolveExplorerGroupsForDomain,
   resolveExplorerModulesForDomain,
   resolveExplorerSearchHitNavKey,
+  type ExplorerModuleEntry,
 } from "@/lib/nav/app-navigation-explorer";
 import { cn } from "@/lib/cn";
 
@@ -27,6 +30,8 @@ type GlobalNavDrawerProps = {
   title: string;
   closeLabel: string;
   searchPlaceholder: string;
+  searchNoResultsLabel: string;
+  explorerEmptyDomainLabel: string;
   mobileBackLabel: string;
   /** Bumped by the shell whenever the drawer opens to reset explorer UI state. */
   resetKey: number;
@@ -56,6 +61,108 @@ type ExplorerPanelProps = Omit<
   initialDomainId: AppNavigationDomainId | null;
 };
 
+type ExplorerModuleCardProps = {
+  panelId: string;
+  module: ExplorerModuleEntry;
+  pathname: string;
+  active: ActiveAppNavigation;
+  resolveHref: (href: string) => string;
+  expandedModuleKey: string | null;
+  setExpandedModuleKey: Dispatch<SetStateAction<string | null>>;
+  onNavigate: () => void;
+};
+
+function ExplorerModuleCard({
+  panelId,
+  module,
+  pathname,
+  active,
+  resolveHref,
+  expandedModuleKey,
+  setExpandedModuleKey,
+  onNavigate,
+}: ExplorerModuleCardProps) {
+  const moduleActive =
+    active.activeDestinationKey === module.key ||
+    module.children.some((child) => isNavigationChildActive(pathname, child));
+  const isExpanded = expandedModuleKey === module.key;
+  const hasChildren = module.children.length > 0;
+
+  return (
+    <li className="min-w-0 sm:col-span-1">
+      <div
+        className={cn(
+          "rounded-lg border border-[color-mix(in_srgb,var(--border)_70%,transparent)]",
+          moduleActive &&
+            "border-[color-mix(in_srgb,var(--sce-primary)_35%,var(--border))]",
+        )}
+      >
+        <div className="flex items-stretch">
+          <Link
+            href={resolveHref(module.href)}
+            className={cn(
+              "flex min-h-[2.75rem] min-w-0 flex-1 items-center gap-2 px-2.5 py-2 text-sm font-medium text-[var(--foreground)] no-underline",
+              "hover:bg-[color-mix(in_srgb,var(--surface-2)_85%,transparent)]",
+              moduleActive && "text-[var(--sce-primary)]",
+            )}
+            aria-current={moduleActive && !hasChildren ? "page" : undefined}
+            onClick={onNavigate}
+          >
+            <NavDestinationSceIcon
+              navItemKey={module.key}
+              size={20}
+              active={moduleActive}
+              fallbackGenericModuleGlyph
+            />
+            <span className="truncate">{module.label}</span>
+          </Link>
+          {hasChildren ? (
+            <button
+              type="button"
+              className="sce-icon-button min-h-[2.75rem] min-w-[2.75rem] shrink-0 text-[var(--muted)] hover:text-[var(--foreground)]"
+              aria-expanded={isExpanded}
+              aria-controls={`${panelId}-module-${module.key}`}
+              data-testid={`global-nav-explorer-expand-${module.key}`}
+              onClick={() =>
+                setExpandedModuleKey((current) => (current === module.key ? null : module.key))
+              }
+            >
+              ▾
+            </button>
+          ) : null}
+        </div>
+        {hasChildren && isExpanded ? (
+          <ul
+            id={`${panelId}-module-${module.key}`}
+            className="space-y-0.5 border-t border-[color-mix(in_srgb,var(--border)_65%,transparent)] px-1 py-0.5"
+          >
+            {module.children.map((child) => {
+              const childActive = isNavigationChildActive(pathname, child);
+              return (
+                <li key={child.key}>
+                  <Link
+                    href={resolveHref(child.href)}
+                    className={cn(
+                      "block min-h-[2.75rem] rounded-md px-2 py-1.5 text-[0.8125rem] leading-snug text-[var(--text-2)]",
+                      "hover:bg-[color-mix(in_srgb,var(--surface-2)_90%,transparent)] hover:text-[var(--foreground)]",
+                      childActive &&
+                        "bg-[color-mix(in_srgb,var(--sce-primary)_10%,transparent)] font-semibold text-[var(--sce-primary)]",
+                    )}
+                    aria-current={childActive ? "page" : undefined}
+                    onClick={onNavigate}
+                  >
+                    {child.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+      </div>
+    </li>
+  );
+}
+
 function GlobalNavExplorerPanel({
   panelId,
   onClose,
@@ -67,6 +174,8 @@ function GlobalNavExplorerPanel({
   title,
   closeLabel,
   searchPlaceholder,
+  searchNoResultsLabel,
+  explorerEmptyDomainLabel,
   mobileBackLabel,
   initialDomainId,
 }: ExplorerPanelProps) {
@@ -84,6 +193,11 @@ function GlobalNavExplorerPanel({
 
   const modules = useMemo(
     () => (selectedDomain ? resolveExplorerModulesForDomain(selectedDomain) : []),
+    [selectedDomain],
+  );
+
+  const moduleGroups = useMemo(
+    () => (selectedDomain ? resolveExplorerGroupsForDomain(selectedDomain) : null),
     [selectedDomain],
   );
 
@@ -182,7 +296,12 @@ function GlobalNavExplorerPanel({
       {isSearchActive ? (
         <ul className="space-y-1" data-testid="global-nav-explorer-search-results">
           {searchResults.length === 0 ? (
-            <li className="px-1 py-2 text-sm text-[var(--muted)]">—</li>
+            <li
+              className="px-1 py-2 text-sm text-[var(--muted)]"
+              data-testid="global-nav-explorer-search-empty"
+            >
+              {searchNoResultsLabel}
+            </li>
           ) : (
             searchResults.map((hit) => (
               <li key={`${hit.kind}:${hit.key}`}>
@@ -205,9 +324,7 @@ function GlobalNavExplorerPanel({
                       {hit.label}
                     </span>
                     <span className="block text-xs text-[var(--muted)]">
-                      {hit.moduleLabel
-                        ? `${hit.domainLabel} · ${hit.moduleLabel}`
-                        : hit.domainLabel}
+                      {formatExplorerSearchHitContext(hit)}
                     </span>
                   </span>
                 </Link>
@@ -220,91 +337,62 @@ function GlobalNavExplorerPanel({
           <p className="mb-2 px-0.5 text-[0.6875rem] font-bold uppercase tracking-wide text-[var(--muted)]">
             {domainLabel(selectedDomain)}
           </p>
-          <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2" data-testid="global-nav-drawer-tree">
-            {modules.map((module) => {
-              const moduleActive =
-                active.activeDestinationKey === module.key ||
-                module.children.some((child) => isNavigationChildActive(pathname, child));
-              const isExpanded = expandedModuleKey === module.key;
-              const hasChildren = module.children.length > 0;
-
-              return (
-                <li key={module.key} className="min-w-0 sm:col-span-1">
-                  <div
-                    className={cn(
-                      "rounded-lg border border-[color-mix(in_srgb,var(--border)_70%,transparent)]",
-                      moduleActive &&
-                        "border-[color-mix(in_srgb,var(--sce-primary)_35%,var(--border))]",
-                    )}
+          {modules.length === 0 ? (
+            <p
+              className="px-0.5 text-sm text-[var(--muted)]"
+              data-testid="global-nav-explorer-domain-empty"
+            >
+              {explorerEmptyDomainLabel}
+            </p>
+          ) : moduleGroups ? (
+            <div className="space-y-4" data-testid="global-nav-drawer-tree">
+              {moduleGroups.map((group) => (
+                <section
+                  key={group.id}
+                  aria-labelledby={`${panelId}-explorer-group-${group.id}`}
+                  data-testid={`global-nav-explorer-group-${group.id}`}
+                >
+                  <h3
+                    id={`${panelId}-explorer-group-${group.id}`}
+                    className="mb-1.5 px-0.5 text-[0.6875rem] font-bold uppercase tracking-wide text-[var(--muted)]"
                   >
-                    <div className="flex items-stretch">
-                      <Link
-                        href={resolveHref(module.href)}
-                        className={cn(
-                          "flex min-w-0 flex-1 items-center gap-2 px-2.5 py-2 text-sm font-medium text-[var(--foreground)] no-underline",
-                          "hover:bg-[color-mix(in_srgb,var(--surface-2)_85%,transparent)]",
-                          moduleActive && "text-[var(--sce-primary)]",
-                        )}
-                        aria-current={moduleActive && !hasChildren ? "page" : undefined}
-                        onClick={handleNavigate}
-                      >
-                        <NavDestinationSceIcon
-                          navItemKey={module.key}
-                          size={20}
-                          active={moduleActive}
-                          fallbackGenericModuleGlyph
-                        />
-                        <span className="truncate">{module.label}</span>
-                      </Link>
-                      {hasChildren ? (
-                        <button
-                          type="button"
-                          className="shrink-0 px-2 text-[var(--muted)] hover:text-[var(--foreground)]"
-                          aria-expanded={isExpanded}
-                          aria-controls={`${panelId}-module-${module.key}`}
-                          data-testid={`global-nav-explorer-expand-${module.key}`}
-                          onClick={() =>
-                            setExpandedModuleKey((current) =>
-                              current === module.key ? null : module.key,
-                            )
-                          }
-                        >
-                          ▾
-                        </button>
-                      ) : null}
-                    </div>
-                    {hasChildren && isExpanded ? (
-                      <ul
-                        id={`${panelId}-module-${module.key}`}
-                        className="space-y-0.5 border-t border-[color-mix(in_srgb,var(--border)_65%,transparent)] px-1 py-0.5"
-                      >
-                        {module.children.map((child) => {
-                          const childActive = isNavigationChildActive(pathname, child);
-                          return (
-                            <li key={child.key}>
-                              <Link
-                                href={resolveHref(child.href)}
-                                className={cn(
-                                  "block rounded-md px-2 py-1.5 text-[0.8125rem] leading-snug text-[var(--text-2)]",
-                                  "hover:bg-[color-mix(in_srgb,var(--surface-2)_90%,transparent)] hover:text-[var(--foreground)]",
-                                  childActive &&
-                                    "font-semibold text-[var(--sce-primary)] bg-[color-mix(in_srgb,var(--sce-primary)_10%,transparent)]",
-                                )}
-                                aria-current={childActive ? "page" : undefined}
-                                onClick={handleNavigate}
-                              >
-                                {child.label}
-                              </Link>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    ) : null}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                    {group.label}
+                  </h3>
+                  <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                    {group.modules.map((module) => (
+                      <ExplorerModuleCard
+                        key={module.key}
+                        panelId={panelId}
+                        module={module}
+                        pathname={pathname}
+                        active={active}
+                        resolveHref={resolveHref}
+                        expandedModuleKey={expandedModuleKey}
+                        setExpandedModuleKey={setExpandedModuleKey}
+                        onNavigate={handleNavigate}
+                      />
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          ) : (
+            <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2" data-testid="global-nav-drawer-tree">
+              {modules.map((module) => (
+                <ExplorerModuleCard
+                  key={module.key}
+                  panelId={panelId}
+                  module={module}
+                  pathname={pathname}
+                  active={active}
+                  resolveHref={resolveHref}
+                  expandedModuleKey={expandedModuleKey}
+                  setExpandedModuleKey={setExpandedModuleKey}
+                  onNavigate={handleNavigate}
+                />
+              ))}
+            </ul>
+          )}
         </>
       ) : null}
     </div>
@@ -374,6 +462,8 @@ export default function GlobalNavDrawer({
   title,
   closeLabel,
   searchPlaceholder,
+  searchNoResultsLabel,
+  explorerEmptyDomainLabel,
   mobileBackLabel,
   resetKey,
 }: GlobalNavDrawerProps) {
@@ -429,6 +519,8 @@ export default function GlobalNavDrawer({
           title={title}
           closeLabel={closeLabel}
           searchPlaceholder={searchPlaceholder}
+          searchNoResultsLabel={searchNoResultsLabel}
+          explorerEmptyDomainLabel={explorerEmptyDomainLabel}
           mobileBackLabel={mobileBackLabel}
           initialDomainId={initialDomainId}
         />

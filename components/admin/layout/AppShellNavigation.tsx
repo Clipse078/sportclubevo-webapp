@@ -431,6 +431,8 @@ function AppShellNavigationInner({
         title={t("drawerTitle")}
         closeLabel={t("closeDrawer")}
         searchPlaceholder={t("searchModulesPlaceholder")}
+        searchNoResultsLabel={t("searchNoResults")}
+        explorerEmptyDomainLabel={t("explorerEmptyDomain")}
         mobileBackLabel={t("explorerBackToDomains")}
         resetKey={globalNavExplorerResetKey}
       />

@@ -111,7 +111,7 @@ export const NAVIGATION_DOMAIN_DEFINITIONS: Record<AppNavigationDomainId, Domain
   },
   publishing: {
     labelKey: "AppShell.domains.publishing",
-    fallbackLabel: "Publishing",
+    fallbackLabel: "Publizieren",
     priority: 2,
     sortOrder: 50,
     l1SceIconKey: CLUB_L1_SCE_ICON_BY_DOMAIN.publishing,

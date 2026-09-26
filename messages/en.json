@@ -403,6 +403,8 @@
     "closeDrawer": "Close navigation",
     "drawerTitle": "Navigation",
     "searchModulesPlaceholder": "Search modules…",
+    "searchNoResults": "No results",
+    "explorerEmptyDomain": "No authorized destinations in this area",
     "explorerBackToDomains": "Areas",
     "domains": {
       "dashboard": "Dashboard",

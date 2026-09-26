@@ -165,11 +165,90 @@ export function resolveDomainSecondaryNavItems(
     }));
 }
 
+export type ExplorerDomainModule = DomainSecondaryNavItem & {
+  children: NavItemChild[];
+  explorerGroupId?: string;
+  explorerGroupLabel?: string;
+};
+
+export type ExplorerDomainGroup = {
+  id: string;
+  label: string;
+  modules: ExplorerDomainModule[];
+};
+
+function resolveExplorerModuleForNavKey(
+  domain: NavigationDomain,
+  navKey: string,
+): ExplorerDomainModule | null {
+  const topLevel = domain.destinations.find((dest) => dest.key === navKey);
+  if (topLevel) {
+    return {
+      key: topLevel.key,
+      label: topLevel.label,
+      href: topLevel.href,
+      carrySeason: topLevel.carrySeason,
+      children: topLevel.children ?? [],
+    };
+  }
+
+  for (const dest of domain.destinations) {
+    const child = dest.children?.find((entry) => entry.key === navKey);
+    if (child) {
+      return {
+        key: dest.key,
+        label: dest.label,
+        href: dest.href,
+        carrySeason: dest.carrySeason,
+        children: dest.children ?? [],
+      };
+    }
+  }
+
+  return null;
+}
+
+/** L2-grouped explorer pane for Club / Publishing (includes header-hidden groups). */
+export function resolveExplorerDomainGroups(
+  domain: NavigationDomain | null,
+): ExplorerDomainGroup[] | null {
+  if (!domain?.l2GroupMetadata?.length) return null;
+
+  const groups: ExplorerDomainGroup[] = [];
+  for (const group of domain.l2GroupMetadata) {
+    const authorizedKeys = collectAuthorizedGroupNavKeys(domain, group);
+    if (authorizedKeys.length === 0) continue;
+
+    const seenModuleKeys = new Set<string>();
+    const modules: ExplorerDomainModule[] = [];
+    for (const navKey of authorizedKeys) {
+      const moduleEntry = resolveExplorerModuleForNavKey(domain, navKey);
+      if (!moduleEntry || seenModuleKeys.has(moduleEntry.key)) continue;
+      seenModuleKeys.add(moduleEntry.key);
+      modules.push({
+        ...moduleEntry,
+        explorerGroupId: group.id,
+        explorerGroupLabel: group.label,
+      });
+    }
+
+    if (modules.length > 0) {
+      groups.push({ id: group.id, label: group.label, modules });
+    }
+  }
+
+  return groups.length > 0 ? groups : null;
+}
+
 /** Full module list for App Explorer (unfiltered by header Row 2 subset). */
 export function resolveDomainExplorerModuleItems(
   domain: NavigationDomain | null,
 ): DomainSecondaryNavItem[] {
   if (!domain) return [];
+  const grouped = resolveExplorerDomainGroups(domain);
+  if (grouped) {
+    return grouped.flatMap((group) => group.modules);
+  }
   if (isSingleHubNavigationDomain(domain)) {
     const hub = domain.destinations[0]!;
     return (hub.children ?? []).map((child) => ({
@@ -185,6 +264,103 @@ export function resolveDomainExplorerModuleItems(
     href: dest.href,
     carrySeason: dest.carrySeason,
   }));
+}
+
+export type SemanticNavigationDestinationRecord = {
+  domainId: AppNavigationDomainId;
+  domainLabel: string;
+  groupId: string | null;
+  groupLabel: string | null;
+  destinationKey: string;
+  label: string;
+  href: string;
+  iconKey: string | null;
+  headerVisible: boolean;
+  explorerVisible: boolean;
+  sortOrder: number;
+};
+
+/** Serializable destination metadata for non-JSX clients (mobile readiness). */
+export function buildSemanticNavigationDestinationCatalog(
+  model: AppNavigationModel,
+  domainLabel: (domain: NavigationDomain) => string,
+): SemanticNavigationDestinationRecord[] {
+  const records: SemanticNavigationDestinationRecord[] = [];
+  let sortOrder = 0;
+
+  for (const domain of model.domains) {
+    const label = domainLabel(domain);
+    const groups = resolveExplorerDomainGroups(domain);
+    if (groups) {
+      for (const group of groups) {
+        for (const moduleEntry of group.modules) {
+          records.push({
+            domainId: domain.id,
+            domainLabel: label,
+            groupId: group.id,
+            groupLabel: group.label,
+            destinationKey: moduleEntry.key,
+            label: moduleEntry.label,
+            href: moduleEntry.href,
+            iconKey: moduleEntry.key,
+            headerVisible: domain.l2GroupMetadata?.find((entry) => entry.id === group.id)?.headerVisible !== false,
+            explorerVisible: true,
+            sortOrder: sortOrder++,
+          });
+          for (const child of moduleEntry.children) {
+            records.push({
+              domainId: domain.id,
+              domainLabel: label,
+              groupId: group.id,
+              groupLabel: group.label,
+              destinationKey: child.key,
+              label: child.label,
+              href: child.href,
+              iconKey: child.key,
+              headerVisible: false,
+              explorerVisible: true,
+              sortOrder: sortOrder++,
+            });
+          }
+        }
+      }
+      continue;
+    }
+
+    for (const moduleEntry of resolveDomainExplorerModuleItems(domain)) {
+      const destination = domain.destinations.find((dest) => dest.key === moduleEntry.key);
+      records.push({
+        domainId: domain.id,
+        domainLabel: label,
+        groupId: null,
+        groupLabel: null,
+        destinationKey: moduleEntry.key,
+        label: moduleEntry.label,
+        href: moduleEntry.href,
+        iconKey: moduleEntry.key,
+        headerVisible: destination?.visibility?.header !== false,
+        explorerVisible: destination?.visibility?.explorer !== false,
+        sortOrder: sortOrder++,
+      });
+      for (const child of destination?.children ?? []) {
+        records.push({
+          domainId: domain.id,
+          domainLabel: label,
+          groupId: null,
+          groupLabel: null,
+          destinationKey: child.key,
+          label: child.label,
+          href: child.href,
+          iconKey: child.key,
+          headerVisible: false,
+          explorerVisible: true,
+          sortOrder: sortOrder++,
+        });
+      }
+    }
+  }
+
+  return records;
 }
 
 function scoreSecondaryNavItemMatch(
