@@ -18,7 +18,11 @@ Same master geometry powers **SCE Original** and **SCE Light**. Semantic colors 
 
 SCE-ICONS-01 does **not** enforce this globally. Existing Lucide, Heroicons, react-icons, Font Awesome, and inline SVG usage continues to work until controlled migration (SCE-ICONS-04) and enforcement (SCE-ICONS-05). Third-party icon libraries are transitional legacy; the SCE registry remains the application abstraction.
 
-SCE-ICONS-09 (technical closure): **78** approved masters, **92** registry concepts, high-confidence nav adoption via `lib/nav/nav-destination-sce-icons.ts`, and automated regression in `lib/nav/__tests__/sce-icons-09-closure.test.ts`. Approved master SVGs under `public/images/icons/` remain immutable without explicit design approval.
+SCE-ICONS-09 (technical closure): **90** approved masters, **104** registry concepts, high-confidence nav adoption via `lib/nav/nav-destination-sce-icons.ts`, and automated regression in `lib/nav/__tests__/sce-icons-09-closure.test.ts`. Approved master SVGs under `public/images/icons/` remain immutable without explicit design approval.
+
+## V2 monochrome migration (SCE-ICONS-V2-01+)
+
+Product-owner visual acceptance moved everyday UI iconography to **SCE Icon System V2** (monochrome, `currentColor`, optical QA at 20–24px). V1 remains a frozen baseline (`components/design-system/icons/v2/v1-system-baseline.ts`). The V2 design contract, optical audit, migration manifest, and artwork handoff batches live under `components/design-system/icons/v2/`. Replacement SVGs arrive via product-owner handoff — not ad-hoc agent redraws.
 
 ## Registry
 

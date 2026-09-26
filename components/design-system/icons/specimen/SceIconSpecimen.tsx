@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { SceIcon } from "../SceIcon";
 import {
   SCE_ICON_REGISTRY,
@@ -15,7 +16,10 @@ import type {
   SceApprovedPlatformMasterIconName,
 } from "../masters/approved-hero-meta";
 
-const HERO_SIZES: SceIconSize[] = [16, 20, 24, 32, 48];
+/** Production optical QA sizes (SCE-ICONS-V2-01). */
+export const SCE_SPECIMEN_OPTICAL_SIZES = [16, 18, 20, 24, 28, 32, 48, 64] as const;
+
+const HERO_SIZES: readonly (SceIconSize | number)[] = SCE_SPECIMEN_OPTICAL_SIZES;
 
 const CORE_MASTERS: SceApprovedMasterIconName[] = [
   "dashboard",
@@ -224,24 +228,44 @@ const MASTER_LABELS: Record<SceApprovedMasterIconName, string> = {
   "waiting-list": "Waiting List / Warteliste",
 };
 
+/** Design-system-only preview — maps master token strokes to currentColor without mutating V1 geometry. */
+const MONOCHROME_PREVIEW_CLASS =
+  "[--sce-icon-primary:currentColor] [--sce-icon-secondary:currentColor] [--sce-icon-accent:currentColor] [--sce-icon-muted:currentColor]";
+
 function SizeRow({
   name,
   sizes,
   theme,
+  monochromePreview,
 }: {
   name: SceApprovedMasterIconName;
-  sizes: SceIconSize[];
-  theme: "original" | "light";
+  sizes: readonly (SceIconSize | number)[];
+  theme: "original" | "light" | "monochrome-dark" | "monochrome-light";
+  monochromePreview?: boolean;
 }) {
   const surface =
     theme === "original"
       ? "rounded-lg bg-[#0b1524] px-4 py-3"
-      : "sce-theme-light rounded-lg bg-[#f1f5f9] px-4 py-3";
+      : theme === "light"
+        ? "sce-theme-light rounded-lg bg-[#f1f5f9] px-4 py-3"
+        : theme === "monochrome-dark"
+          ? `rounded-lg bg-[#0b1524] px-4 py-3 text-[#e2e8f0] ${MONOCHROME_PREVIEW_CLASS}`
+          : `sce-theme-light rounded-lg bg-[#f1f5f9] px-4 py-3 text-[#0f172a] ${MONOCHROME_PREVIEW_CLASS}`;
+
+  const label =
+    theme === "original"
+      ? "SCE Original"
+      : theme === "light"
+        ? "SCE Light"
+        : theme === "monochrome-dark"
+          ? "Monochrome — dark"
+          : "Monochrome — light";
 
   return (
     <div className={`flex flex-wrap items-center gap-4 ${surface}`}>
-      <span className="w-28 shrink-0 text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
-        {theme === "original" ? "SCE Original" : "SCE Light"}
+      <span className="w-32 shrink-0 text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
+        {label}
+        {monochromePreview ? " (preview)" : ""}
       </span>
       {sizes.map((size) => (
         <div key={size} className="flex flex-col items-center gap-1">
@@ -253,7 +277,13 @@ function SizeRow({
   );
 }
 
-function MasterIconCard({ name }: { name: SceApprovedMasterIconName }) {
+function MasterIconCard({
+  name,
+  showMonochromePreview,
+}: {
+  name: SceApprovedMasterIconName;
+  showMonochromePreview: boolean;
+}) {
   const meta = SCE_ICON_REGISTRY[name];
   return (
     <article className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
@@ -266,6 +296,22 @@ function MasterIconCard({ name }: { name: SceApprovedMasterIconName }) {
       <div className="space-y-3">
         <SizeRow name={name} sizes={HERO_SIZES} theme="original" />
         <SizeRow name={name} sizes={HERO_SIZES} theme="light" />
+        {showMonochromePreview ? (
+          <>
+            <SizeRow
+              name={name}
+              sizes={HERO_SIZES}
+              theme="monochrome-dark"
+              monochromePreview
+            />
+            <SizeRow
+              name={name}
+              sizes={HERO_SIZES}
+              theme="monochrome-light"
+              monochromePreview
+            />
+          </>
+        ) : null}
       </div>
     </article>
   );
@@ -275,10 +321,12 @@ function MasterSection({
   title,
   description,
   names,
+  showMonochromePreview,
 }: {
   title: string;
   description: string;
   names: SceApprovedMasterIconName[];
+  showMonochromePreview: boolean;
 }) {
   return (
     <section className="mb-12 rounded-xl border-2 border-[var(--accent)]/30 bg-[var(--surface)] p-6">
@@ -286,7 +334,11 @@ function MasterSection({
       <p className="mt-2 max-w-3xl text-sm text-[var(--text-2)]">{description}</p>
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         {names.map((name) => (
-          <MasterIconCard key={name} name={name} />
+          <MasterIconCard
+            key={name}
+            name={name}
+            showMonochromePreview={showMonochromePreview}
+          />
         ))}
       </div>
     </section>
@@ -294,18 +346,45 @@ function MasterSection({
 }
 
 export function SceIconSpecimen() {
+  const [monochromePreview, setMonochromePreview] = useState(true);
   const provisionalNames = (Object.keys(SCE_ICON_REGISTRY) as SceIconRegistryName[]).filter(
     (name) => SCE_ICON_REGISTRY[name].geometrySource !== "approved-master",
   );
+
+  const allApprovedMasters: SceApprovedMasterIconName[] = [
+    ...CORE_MASTERS,
+    ...SPORT_MASTERS,
+    ...ORGANISATION_MASTERS,
+    ...PUBLISHING_PLATFORM_MASTERS,
+    ...PEOPLE_OPERATIONS_MASTERS,
+    ...FINANCE_COMMERCIAL_MASTERS,
+    ...ANALYTICS_WORKFLOW_MASTERS,
+    ...FINAL_SEMANTIC_MASTERS,
+  ];
 
   return (
     <div className="mx-auto max-w-5xl p-6 text-[var(--foreground)]">
       <header className="mb-8">
         <h1 className="text-xl font-semibold tracking-tight">SCE Icon System — Specimen</h1>
         <p className="mt-2 max-w-2xl text-sm text-[var(--text-2)]">
-          Internal development surface for SCE icon approved masters. Approved masters render committed
-          64×64 vector geometry via <code className="text-xs">SceIcon</code>; provisional registry
-          entries remain listed for inventory review.
+          Internal development surface for SCE icon approved masters. V2 optical QA renders every
+          approved master at 16–64px on dark/light surfaces. Monochrome preview maps master token
+          strokes to <code className="text-xs">currentColor</code> without modifying V1 artwork (
+          <code className="text-xs">components/design-system/icons/v2/SCE_ICON_V2_DESIGN_CONTRACT.md</code>
+          ).
+        </p>
+        <label className="mt-4 flex max-w-md cursor-pointer items-center gap-2 text-sm text-[var(--text-2)]">
+          <input
+            type="checkbox"
+            checked={monochromePreview}
+            onChange={(e) => setMonochromePreview(e.target.checked)}
+            className="h-4 w-4 rounded border-[var(--border)]"
+          />
+          Monochrome preview mode (silhouette assessment)
+        </label>
+        <p className="mt-2 text-xs text-[var(--muted)]">
+          {allApprovedMasters.length} approved masters · sizes{" "}
+          {SCE_SPECIMEN_OPTICAL_SIZES.join(", ")}px
         </p>
       </header>
 
@@ -313,48 +392,56 @@ export function SceIconSpecimen() {
         title="Section 1 — SCE Core (Approved Masters)"
         description="Primary planning cockpit and activity masters, including Open VS for matches."
         names={CORE_MASTERS}
+        showMonochromePreview={monochromePreview}
       />
 
       <MasterSection
         title="Section 2 — Sport & Competition"
         description="Sport-neutral competition and resource masters for teams, seasons, standings, and facilities."
         names={SPORT_MASTERS}
+        showMonochromePreview={monochromePreview}
       />
 
       <MasterSection
         title="Section 3 — Organisation & Work"
         description="Organisation structure, people, access, club identity, and operational work surfaces."
         names={ORGANISATION_MASTERS}
+        showMonochromePreview={monochromePreview}
       />
 
       <MasterSection
         title="Section 4 — Publishing & Platform"
         description="Publishing, public channels, platform administration, and planning governance masters (SCE-ICONS-05 Batch 2)."
         names={PUBLISHING_PLATFORM_MASTERS}
+        showMonochromePreview={monochromePreview}
       />
 
       <MasterSection
         title="Section 5 — People, Membership & Club Operations"
         description="People identities, membership, participation, facilities, and club operations masters (SCE-ICONS-06 Batch 3)."
         names={PEOPLE_OPERATIONS_MASTERS}
+        showMonochromePreview={monochromePreview}
       />
 
       <MasterSection
         title="Section 6 — Finance & Commercial Operations"
         description="Facilities booking, finance, billing, commercial accounts, and commercial operations masters (SCE-ICONS-07 Batch 4)."
         names={FINANCE_COMMERCIAL_MASTERS}
+        showMonochromePreview={monochromePreview}
       />
 
       <MasterSection
         title="Section 7 — Analytics, Reporting & Workflow"
         description="Analytics, reporting, workflow, automation, integration, and data lifecycle masters (SCE-ICONS-08 Batch 5)."
         names={ANALYTICS_WORKFLOW_MASTERS}
+        showMonochromePreview={monochromePreview}
       />
 
       <MasterSection
         title="Section 8 — Final semantic masters"
         description="SCE-ICONS-12 / SCE-ICONS-13 — last approved domain semantics (competition, CMS surfaces, club development, governance)."
         names={FINAL_SEMANTIC_MASTERS}
+        showMonochromePreview={monochromePreview}
       />
 
       <section>
