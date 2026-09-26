@@ -15,8 +15,7 @@ import {
   buildAppNavigationModelForUser,
   buildNavigationHref,
   isDomainHeaderSecondaryItemActive,
-  isNavigationChildActive,
-  isNavigationHrefActive,
+  isModuleLocalChildPrimaryActive,
   resolveActiveAppNavigation,
   resolvePrimaryDomainPresentation,
   selectMobileBottomDomains,
@@ -158,15 +157,8 @@ function AppShellNavigationInner({
   );
 
   const isDomainActive = useCallback(
-    (domain: NavigationDomain) => {
-      if (active.activeDomainId === domain.id) return true;
-      return domain.destinations.some(
-        (dest) =>
-          isNavigationHrefActive(pathname, dest.href) ||
-          (dest.children?.some((c) => isNavigationChildActive(pathname, c)) ?? false),
-      );
-    },
-    [active.activeDomainId, pathname],
+    (domain: NavigationDomain) => active.activeDomainId === domain.id,
+    [active.activeDomainId],
   );
 
   const isDomainSecondaryItemActive = useCallback(
@@ -176,8 +168,15 @@ function AppShellNavigationInner({
         domain,
         item,
         active.activeDestinationKey,
+        active.activeChildKey,
+        active.domainSecondaryItems,
       ),
-    [active.activeDestinationKey, pathname],
+    [
+      active.activeChildKey,
+      active.activeDestinationKey,
+      active.domainSecondaryItems,
+      pathname,
+    ],
   );
 
   const openGlobalNavDrawer = useCallback(() => {
@@ -359,7 +358,12 @@ function AppShellNavigationInner({
             <div className="sce-global-context-nav-track flex gap-1 overflow-x-auto px-4 py-1.5">
               {active.moduleLocalChildren.map((child) => {
                 const childHref = resolveHref(child.href);
-                const isChildActive = isNavigationChildActive(pathname, child);
+                const isChildActive = isModuleLocalChildPrimaryActive(
+                  pathname,
+                  child,
+                  active.moduleLocalChildren,
+                  active.activeChildKey,
+                );
                 return (
                   <Link
                     key={child.key}

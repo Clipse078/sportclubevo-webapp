@@ -110,6 +110,8 @@ describe("SCE-NAV-IA-V2-03 header experience", () => {
         club,
         orgHeaderItem!,
         orgUnitsActive.activeDestinationKey,
+        orgUnitsActive.activeChildKey,
+        orgUnitsActive.domainSecondaryItems,
       ),
     ).toBe(true);
   });

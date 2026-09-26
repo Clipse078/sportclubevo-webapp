@@ -187,12 +187,114 @@ export function resolveDomainExplorerModuleItems(
   }));
 }
 
+function scoreSecondaryNavItemMatch(
+  pathname: string,
+  domain: NavigationDomain,
+  item: DomainSecondaryNavItem,
+  activeDestinationKey: string | null,
+  activeChildKey: string | null,
+  order: number,
+): NavigationHrefMatchRank | null {
+  if (item.fromHubPromotion) {
+    return rankNavigationHrefMatch(pathname, item.href, false, order);
+  }
+
+  if (item.headerGroupNavKeys?.length) {
+    let best: NavigationHrefMatchRank | null = null;
+    for (const [keyOrder, navKey] of item.headerGroupNavKeys.entries()) {
+      const resolved = resolveNavKeyHrefInDomain(domain, navKey);
+      if (!resolved) continue;
+
+      let rank =
+        rankNavigationHrefMatch(pathname, resolved.href, false, order * 100 + keyOrder) ??
+        null;
+
+      if (navKey === activeDestinationKey || navKey === activeChildKey) {
+        const activeBoost: NavigationHrefMatchRank = {
+          exact: rank?.exact ?? pathname === resolved.href,
+          hrefLength: Math.max(rank?.hrefLength ?? resolved.href.length, resolved.href.length),
+          order: order * 100 + keyOrder,
+        };
+        rank = activeBoost;
+      }
+
+      if (rank && (!best || compareNavigationHrefMatchRank(rank, best) > 0)) {
+        best = rank;
+      }
+    }
+    return best;
+  }
+
+  const destination = domain.destinations.find((dest) => dest.key === item.key);
+  if (!destination) return null;
+
+  let best =
+    rankNavigationHrefMatch(pathname, destination.href, false, order) ??
+    (activeDestinationKey === destination.key
+      ? { exact: true, hrefLength: destination.href.length, order }
+      : null);
+
+  for (const [childOrder, child] of (destination.children ?? []).entries()) {
+    const childRank = rankNavigationHrefMatch(
+      pathname,
+      child.href,
+      child.matchExact,
+      order * 100 + childOrder,
+    );
+    if (childRank && (!best || compareNavigationHrefMatchRank(childRank, best) > 0)) {
+      best = childRank;
+    }
+  }
+
+  return best;
+}
+
+/** At most one Row-2 sibling should receive primary active styling for a pathname. */
+export function resolvePrimaryActiveSecondaryItemKey(
+  pathname: string,
+  domain: NavigationDomain,
+  items: readonly DomainSecondaryNavItem[],
+  activeDestinationKey: string | null,
+  activeChildKey: string | null,
+): string | null {
+  let winner: { key: string; rank: NavigationHrefMatchRank } | null = null;
+  for (const [order, item] of items.entries()) {
+    const rank = scoreSecondaryNavItemMatch(
+      pathname,
+      domain,
+      item,
+      activeDestinationKey,
+      activeChildKey,
+      order,
+    );
+    if (!rank) continue;
+    if (!winner || compareNavigationHrefMatchRank(rank, winner.rank) > 0) {
+      winner = { key: item.key, rank };
+    }
+  }
+  return winner?.key ?? null;
+}
+
 export function isDomainHeaderSecondaryItemActive(
   pathname: string,
   domain: NavigationDomain,
   item: DomainSecondaryNavItem,
   activeDestinationKey: string | null,
+  activeChildKey: string | null = null,
+  secondaryItems: readonly DomainSecondaryNavItem[] | null = null,
 ): boolean {
+  const rowItems = secondaryItems ?? resolveDomainSecondaryNavItems(domain);
+  const winnerKey = resolvePrimaryActiveSecondaryItemKey(
+    pathname,
+    domain,
+    rowItems,
+    activeDestinationKey,
+    activeChildKey,
+  );
+  if (winnerKey) {
+    return item.key === winnerKey;
+  }
+
   if (item.fromHubPromotion) {
     return isNavigationChildActive(pathname, {
       key: item.key,
@@ -201,22 +303,7 @@ export function isDomainHeaderSecondaryItemActive(
     });
   }
 
-  if (item.headerGroupNavKeys?.length) {
-    return item.headerGroupNavKeys.some((navKey) => {
-      const resolved = resolveNavKeyHrefInDomain(domain, navKey);
-      if (!resolved) return false;
-      if (navKey === activeDestinationKey) return true;
-      return isNavigationHrefActive(pathname, resolved.href);
-    });
-  }
-
-  const destination = domain.destinations.find((dest) => dest.key === item.key);
-  if (!destination) return false;
-  if (activeDestinationKey === destination.key) return true;
-  return (
-    isNavigationHrefActive(pathname, destination.href) ||
-    (destination.children?.some((child) => isNavigationChildActive(pathname, child)) ?? false)
-  );
+  return false;
 }
 
 export function resolveModuleLocalNavItems(
@@ -274,6 +361,91 @@ export function isNavigationHrefActive(pathname: string, href: string): boolean 
   return pathname.startsWith(`${href}/`);
 }
 
+/** Relative strength of a pathname ↔ href match (higher wins among siblings). */
+export type NavigationHrefMatchRank = {
+  exact: boolean;
+  hrefLength: number;
+  /** Stable tie-break when href length and exactness tie (lower = preferred). */
+  order: number;
+};
+
+export function rankNavigationHrefMatch(
+  pathname: string,
+  href: string,
+  matchExact?: boolean,
+  order = 0,
+): NavigationHrefMatchRank | null {
+  if (matchExact) {
+    return pathname === href ? { exact: true, hrefLength: href.length, order } : null;
+  }
+  if (pathname === href) {
+    return { exact: true, hrefLength: href.length, order };
+  }
+  if (href === "/dashboard") return null;
+  if (pathname.startsWith(`${href}/`)) {
+    return { exact: false, hrefLength: href.length, order };
+  }
+  return null;
+}
+
+function compareNavigationHrefMatchRank(
+  a: NavigationHrefMatchRank,
+  b: NavigationHrefMatchRank,
+): number {
+  if (a.exact !== b.exact) return a.exact ? 1 : -1;
+  if (a.hrefLength !== b.hrefLength) return a.hrefLength - b.hrefLength;
+  return a.order - b.order;
+}
+
+function pickBestNavigationHrefMatch(
+  pathname: string,
+  candidates: ReadonlyArray<{ href: string; matchExact?: boolean; order: number; token: string }>,
+): string | null {
+  let best: { rank: NavigationHrefMatchRank; token: string } | null = null;
+  for (const candidate of candidates) {
+    const rank = rankNavigationHrefMatch(
+      pathname,
+      candidate.href,
+      candidate.matchExact,
+      candidate.order,
+    );
+    if (!rank) continue;
+    if (!best || compareNavigationHrefMatchRank(rank, best.rank) > 0) {
+      best = { rank, token: candidate.token };
+    }
+  }
+  return best?.token ?? null;
+}
+
+export function resolvePrimaryActiveModuleLocalChildKey(
+  pathname: string,
+  children: readonly NavItemChild[],
+  preferredChildKey: string | null = null,
+): string | null {
+  if (children.length === 0) return null;
+  const bestKey = pickBestNavigationHrefMatch(
+    pathname,
+    children.map((child, order) => ({
+      href: child.href,
+      matchExact: child.matchExact,
+      order,
+      token: child.key,
+    })),
+  );
+  if (bestKey) return bestKey;
+  return preferredChildKey;
+}
+
+export function isModuleLocalChildPrimaryActive(
+  pathname: string,
+  child: NavItemChild,
+  siblings: readonly NavItemChild[],
+  preferredChildKey: string | null = null,
+): boolean {
+  const winner = resolvePrimaryActiveModuleLocalChildKey(pathname, siblings, preferredChildKey);
+  return winner === child.key;
+}
+
 export function isNavigationChildActive(pathname: string, child: NavItemChild): boolean {
   if (child.matchExact) {
     return pathname === child.href;
@@ -297,28 +469,44 @@ function resolveActiveDestination(
   pathname: string,
   domain: NavigationDomain,
 ): { destination: NavigationDestination; childKey: string | null } | null {
-  for (const destination of domain.destinations) {
-    if (isNavigationHrefActive(pathname, destination.href)) {
-      const child = destination.children?.find((c) => isNavigationChildActive(pathname, c));
-      return { destination, childKey: child?.key ?? null };
+  type DestinationCandidate = {
+    destination: NavigationDestination;
+    rank: NavigationHrefMatchRank;
+    childKey: string | null;
+  };
+
+  const candidates: DestinationCandidate[] = [];
+
+  for (const [destOrder, destination] of domain.destinations.entries()) {
+    const destRank = rankNavigationHrefMatch(pathname, destination.href, false, destOrder);
+    const childKey = destination.children?.length
+      ? resolvePrimaryActiveModuleLocalChildKey(pathname, destination.children)
+      : null;
+
+    if (childKey) {
+      const child = destination.children!.find((c) => c.key === childKey)!;
+      const childRank = rankNavigationHrefMatch(
+        pathname,
+        child.href,
+        child.matchExact,
+        destOrder,
+      );
+      if (childRank) {
+        candidates.push({ destination, rank: childRank, childKey });
+        continue;
+      }
     }
-    const child = destination.children?.find((c) => isNavigationChildActive(pathname, c));
-    if (child) {
-      return { destination, childKey: child.key };
+
+    if (destRank) {
+      candidates.push({ destination, rank: destRank, childKey: null });
     }
   }
 
-  const prefixMatch = domain.destinations
-    .filter(
-      (dest) =>
-        isNavigationHrefActive(pathname, dest.href) ||
-        dest.children?.some((c) => isNavigationChildActive(pathname, c)),
-    )
-    .sort((a, b) => b.href.length - a.href.length)[0];
+  if (candidates.length === 0) return null;
 
-  if (!prefixMatch) return null;
-  const child = prefixMatch.children?.find((c) => isNavigationChildActive(pathname, c));
-  return { destination: prefixMatch, childKey: child?.key ?? null };
+  candidates.sort((a, b) => compareNavigationHrefMatchRank(b.rank, a.rank));
+  const best = candidates[0]!;
+  return { destination: best.destination, childKey: best.childKey };
 }
 
 export function resolveActiveAppNavigation(
