@@ -535,6 +535,18 @@ function scanFileIcons(
   return scanFileIconsBase(relFile, root).map((row) => ({ ...row, route, zone }));
 }
 
+function dedupeIconOccurrences(records: IconOccurrenceRecord[]): IconOccurrenceRecord[] {
+  const seen = new Set<string>();
+  const out: IconOccurrenceRecord[] = [];
+  for (const row of records) {
+    const key = `${row.file}:${row.line}:${row.symbol}:${row.sourceKind}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(row);
+  }
+  return out;
+}
+
 function countByCategory(records: IconOccurrenceRecord[]): Record<WebappIconSemanticCategory, number> {
   const base: Record<WebappIconSemanticCategory, number> = {
     SCE_DOMAIN_APPROVED: 0,
@@ -632,13 +644,13 @@ function buildMissingMasterBacklog(all: IconOccurrenceRecord[]): MissingMasterBa
   return [...byConcept.values()].sort((a, b) => a.concept.localeCompare(b.concept));
 }
 
-function buildMasterAdoption(all: IconOccurrenceRecord[]): MasterAdoptionReport {
+function buildMasterAdoption(all: IconOccurrenceRecord[], root = process.cwd()): MasterAdoptionReport {
   const usedMasters = new Set<string>();
   for (const r of all) {
     if (r.classification === "SCE_DOMAIN_APPROVED" && r.sceMaster) usedMasters.add(r.sceMaster);
   }
 
-  const importUnresolved = runProductDomainIconInventory().unresolvedDomainWithExistingMaster.map((r) => ({
+  const importUnresolved = runProductDomainIconInventory(root).unresolvedDomainWithExistingMaster.map((r) => ({
     file: r.file,
     line: r.line,
     symbol: r.symbol,
@@ -646,7 +658,7 @@ function buildMasterAdoption(all: IconOccurrenceRecord[]): MasterAdoptionReport 
     route: "import-scan",
   }));
 
-  const legacyRenderEvidence = all
+  const legacyRenderEvidence = dedupeIconOccurrences(all)
     .filter((r) => r.legacyDespiteMaster && r.sceMaster)
     .map((r) => ({
       file: r.file,
@@ -872,8 +884,7 @@ export function runWebappIconCoverageAudit(root = process.cwd()): WebappIconCove
     domainMisclassifiedAsUtility: [...QUESTIONABLE_UTILITY_ALLOWLIST],
   };
 
-  const legacyDomain = allOccurrences.filter((r) => r.legacyDespiteMaster);
-  const inlineSvgCount = allOccurrences.filter((r) => r.sourceKind === "inline-svg").length;
+  const dedupedOccurrences = dedupeIconOccurrences(allOccurrences);
 
   return {
     routeInventory: {
@@ -885,7 +896,7 @@ export function runWebappIconCoverageAudit(root = process.cwd()): WebappIconCove
       modulesAudited: routeMatrix.length,
       shellModuleIncluded: true,
     },
-    classificationTotals: countByCategory(allOccurrences),
+    classificationTotals: countByCategory(dedupedOccurrences),
     ambiguity: {
       beforeImportLevel: ambiguousBefore,
       afterSemantic: remainingUnknown.length,
@@ -894,12 +905,13 @@ export function runWebappIconCoverageAudit(root = process.cwd()): WebappIconCove
     },
     routeMatrix: routeMatrix.sort((a, b) => a.route.localeCompare(b.route)),
     veranstaltungenDeepDive: auditVeranstaltungen(allOccurrences),
-    masterAdoption: buildMasterAdoption(allOccurrences),
-    missingMasterBacklog: buildMissingMasterBacklog(allOccurrences),
+    masterAdoption: buildMasterAdoption(dedupedOccurrences),
+    missingMasterBacklog: buildMissingMasterBacklog(dedupedOccurrences),
     legacyDomainReport: {
-      legacyWithAvailableMaster: legacyDomain.length,
-      legacyWithoutMaster: allOccurrences.filter((r) => r.classification === "SCE_DOMAIN_MISSING_MASTER").length,
-      rawDomainSvg: inlineSvgCount,
+      legacyWithAvailableMaster: dedupedOccurrences.filter((r) => r.legacyDespiteMaster).length,
+      legacyWithoutMaster: dedupedOccurrences.filter((r) => r.classification === "SCE_DOMAIN_MISSING_MASTER")
+        .length,
+      rawDomainSvg: dedupedOccurrences.filter((r) => r.sourceKind === "inline-svg").length,
       oldSceImplementations: 0,
       duplicateGeometry: 0,
     },
@@ -910,7 +922,7 @@ export function runWebappIconCoverageAudit(root = process.cwd()): WebappIconCove
       mobileLegacyDomain: mobileOccurrences.filter((r) => r.legacyDespiteMaster).length,
       mobileMissingMaster: mobileOccurrences.filter((r) => r.classification === "SCE_DOMAIN_MISSING_MASTER").length,
     },
-    accessibility: auditAccessibility(allOccurrences),
+    accessibility: auditAccessibility(dedupedOccurrences),
     iconSourceInventory: summarizeIconSources(root),
     navCompleteness: navReport,
     globalShellOccurrences: allOccurrences.filter((r) => r.route === "__global_shell__"),
