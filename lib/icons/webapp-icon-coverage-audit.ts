@@ -82,6 +82,7 @@ export type WebappIconCoverageAuditReport = {
     nestedRoutes: number;
     dynamicRouteFamilies: number;
     modulesAudited: number;
+    shellModuleIncluded: boolean;
   };
   classificationTotals: Record<WebappIconSemanticCategory, number>;
   ambiguity: {
