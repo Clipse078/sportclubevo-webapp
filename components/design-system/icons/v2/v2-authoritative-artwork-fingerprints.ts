@@ -2,14 +2,14 @@
  * Frozen V2 authoritative artwork fingerprints (SCE-ICONS-V2-03).
  * Geometry source: approved V1 final snapshot 087dc2f75ddb1d806cb5d9ac1e7924a6c4c5fb1c
  * Color model: V2 currentColor monochrome
- * Source commit: ebb8e06ba085c17244ca4cb9f6fc1f08bcf101e8
+ * Source commit: 69aea1f0b3ebcf4fdac5ba1a6fb1646fedb598c7
  * Do not edit — regenerate only via deliberate artwork approval.
  */
 
 import type { SceApprovedMasterIconName } from "../masters/approved-hero-meta";
 
 export const SCE_V2_AUTHORITATIVE_ARTWORK_SOURCE_SHA =
-  "ebb8e06ba085c17244ca4cb9f6fc1f08bcf101e8" as const;
+  "69aea1f0b3ebcf4fdac5ba1a6fb1646fedb598c7" as const;
 
 export const SCE_V2_AUTHORITATIVE_ARTWORK_FINGERPRINTS = {
   "absence": "763339e007de84500c5c55fb24bbdf08dadc7a6131bde5288f228b7c90da7263" as const,
