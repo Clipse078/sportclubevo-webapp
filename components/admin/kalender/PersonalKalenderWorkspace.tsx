@@ -11,6 +11,7 @@ type Props = {
   urlState: PersonalKalenderUrlState;
   supported: boolean;
   todayHref?: string;
+  tenantDisplayNames?: string[];
 };
 
 const BASE = "/dashboard/kalender";
@@ -22,6 +23,7 @@ export default function PersonalKalenderWorkspace({
   urlState,
   supported,
   todayHref,
+  tenantDisplayNames,
 }: Props) {
   const monthStart = parseMonthParam(urlState.month, new Date());
   const prevMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1);
@@ -67,6 +69,7 @@ export default function PersonalKalenderWorkspace({
         href: buildPersonalKalenderHref(BASE, { quelle: filter.key }, urlState),
         active: urlState.quelle === filter.key,
       }))}
+      tenantDisplayNames={tenantDisplayNames}
     />
   );
 }

@@ -59,6 +59,7 @@ export default async function PersonalKalenderPage({ searchParams }: PageProps) 
         urlState={urlState}
         supported={monthBundle.supported}
         todayHref={todayHref}
+        tenantDisplayNames={[tenantContext.name].filter(Boolean)}
       />
     </PageShell>
   );

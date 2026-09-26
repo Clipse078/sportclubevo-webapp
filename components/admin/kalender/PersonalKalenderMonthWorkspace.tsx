@@ -15,8 +15,12 @@ import { parseMonthParamToGridDate } from "@/lib/calendar/month-grid";
 import { sortNormalizedCalendarItems } from "@/lib/personal-agenda/calendar-item-sort";
 import type { NormalizedCalendarItem } from "@/lib/personal-agenda/normalized-calendar-item-types";
 import { cn } from "@/lib/cn";
+import { usePersonalCalendarDayVisibleBlockLimit } from "@/lib/personal-agenda/use-personal-calendar-day-visible-limit";
 
-export const PERSONAL_CALENDAR_DAY_VISIBLE_BLOCK_LIMIT = 3;
+export {
+  PERSONAL_CALENDAR_DAY_VISIBLE_BLOCK_LIMIT,
+  resolvePersonalCalendarDayVisibleBlockLimit,
+} from "@/lib/personal-agenda/personal-calendar-day-capacity";
 
 export type PersonalKalenderMonthNavigation = {
   previousMonthHref: string;
@@ -38,6 +42,7 @@ type Props = {
   timeLabelById: Record<string, string>;
   navigation: PersonalKalenderMonthNavigation;
   filterLinks: PersonalKalenderFilterLink[];
+  tenantDisplayNames?: string[];
 };
 
 function NavControl({
@@ -67,6 +72,7 @@ function DayOverflowPopover({
   dayKey,
   items,
   timeLabelById,
+  tenantDisplayNames,
   open,
   onOpenChange,
   anchorRef,
@@ -74,6 +80,7 @@ function DayOverflowPopover({
   dayKey: string;
   items: NormalizedCalendarItem[];
   timeLabelById: Record<string, string>;
+  tenantDisplayNames?: string[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   anchorRef: React.RefObject<HTMLButtonElement | null>;
@@ -98,7 +105,11 @@ function DayOverflowPopover({
       <ul className="space-y-1" aria-label={t("dayOverflowPanelAria")}>
         {items.map((item) => (
           <li key={item.id} className="list-none">
-            <PersonalCalendarEventBlock item={item} timeLabel={timeLabelById[item.id] ?? ""} />
+            <PersonalCalendarEventBlock
+              item={item}
+              timeLabel={timeLabelById[item.id] ?? ""}
+              tenantDisplayNames={tenantDisplayNames}
+            />
           </li>
         ))}
       </ul>
@@ -117,6 +128,8 @@ function DayCell({
   onSelect,
   overflowOpen,
   onOverflowOpenChange,
+  visibleBlockLimit,
+  tenantDisplayNames,
 }: {
   dayKey: string;
   dayNumber: string;
@@ -128,12 +141,14 @@ function DayCell({
   onSelect: (dayKey: string) => void;
   overflowOpen: boolean;
   onOverflowOpenChange: (open: boolean) => void;
+  visibleBlockLimit: number;
+  tenantDisplayNames?: string[];
 }) {
   const t = useTranslations("PersonalDashboard.calendar");
   const overflowRef = useRef<HTMLButtonElement>(null);
   const sorted = useMemo(() => sortNormalizedCalendarItems(items), [items]);
-  const visible = sorted.slice(0, PERSONAL_CALENDAR_DAY_VISIBLE_BLOCK_LIMIT);
-  const overflow = sorted.slice(PERSONAL_CALENDAR_DAY_VISIBLE_BLOCK_LIMIT);
+  const visible = sorted.slice(0, visibleBlockLimit);
+  const overflow = sorted.slice(visibleBlockLimit);
   const activitySummary =
     sorted.length === 0
       ? ""
@@ -172,10 +187,10 @@ function DayCell({
           "mb-1 flex w-full items-center justify-between rounded px-0.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--primary)]",
           isToday && "font-semibold text-[var(--primary)]",
           !inMonth && "text-[var(--muted)]",
-          inMonth && !isToday && "text-[var(--text-2)]",
+          inMonth && !isToday && "font-medium text-[var(--foreground)]",
         )}
       >
-        <time dateTime={dayKey} className="text-xs tabular-nums">
+        <time dateTime={dayKey} className="text-xs font-semibold tabular-nums">
           {dayNumber}
         </time>
         {isToday ? (
@@ -189,6 +204,7 @@ function DayCell({
             key={item.id}
             item={item}
             timeLabel={timeLabelById[item.id] ?? ""}
+            tenantDisplayNames={tenantDisplayNames}
           />
         ))}
         {overflow.length > 0 ? (
@@ -211,6 +227,7 @@ function DayCell({
               dayKey={dayKey}
               items={overflow}
               timeLabelById={timeLabelById}
+              tenantDisplayNames={tenantDisplayNames}
               open={overflowOpen}
               onOpenChange={onOverflowOpenChange}
               anchorRef={overflowRef}
@@ -229,6 +246,7 @@ export default function PersonalKalenderMonthWorkspace({
   timeLabelById,
   navigation,
   filterLinks,
+  tenantDisplayNames,
 }: Props) {
   const t = useTranslations("PersonalDashboard.calendar");
   const todayKey = matchDayKeyInTimezone(new Date(), timeZone);
@@ -260,6 +278,8 @@ export default function PersonalKalenderMonthWorkspace({
     () => buildMonthGridCells(monthParam, timeZone),
     [monthParam, timeZone],
   );
+  const weekRowCount = Math.ceil(gridCells.length / 7);
+  const visibleBlockLimit = usePersonalCalendarDayVisibleBlockLimit(weekRowCount);
 
   const handleSelectDay = useCallback((dayKey: string) => {
     setSelectedDayKey(dayKey);
@@ -331,7 +351,7 @@ export default function PersonalKalenderMonthWorkspace({
         </div>
       </div>
 
-      <div className="grid grid-cols-7 border-b border-[color-mix(in_srgb,var(--border)_65%,transparent)] text-center text-[0.625rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
+      <div className="grid grid-cols-7 border-b border-[color-mix(in_srgb,var(--border)_65%,transparent)] text-center text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--text-2)]">
         {weekdayLabels.map((label) => (
           <span key={label} className="border-r border-[color-mix(in_srgb,var(--border)_65%,transparent)] py-2 last:border-r-0">
             {label}
@@ -342,7 +362,8 @@ export default function PersonalKalenderMonthWorkspace({
       <div
         className="grid grid-cols-7"
         data-testid="personal-kalender-month-grid"
-        data-week-rows={Math.ceil(gridCells.length / 7)}
+        data-week-rows={weekRowCount}
+        data-visible-block-limit={visibleBlockLimit}
       >
         {gridCells.map((cell) => {
           const dayItems = itemsByDayKey[cell.dayKey] ?? [];
@@ -359,6 +380,8 @@ export default function PersonalKalenderMonthWorkspace({
               onSelect={handleSelectDay}
               overflowOpen={openOverflowDayKey === cell.dayKey}
               onOverflowOpenChange={(open) => setOpenOverflowDayKey(open ? cell.dayKey : null)}
+              visibleBlockLimit={visibleBlockLimit}
+              tenantDisplayNames={tenantDisplayNames}
             />
           );
         })}

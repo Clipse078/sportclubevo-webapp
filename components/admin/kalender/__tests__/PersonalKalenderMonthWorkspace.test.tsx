@@ -5,7 +5,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import PersonalKalenderMonthWorkspace, {
-  PERSONAL_CALENDAR_DAY_VISIBLE_BLOCK_LIMIT,
+  resolvePersonalCalendarDayVisibleBlockLimit,
 } from "../PersonalKalenderMonthWorkspace";
 import type { NormalizedCalendarItem } from "@/lib/personal-agenda/normalized-calendar-item-types";
 import { buildMonthGridCells } from "@/lib/calendar/month-grid";
@@ -157,7 +157,9 @@ describe("SCE-CALENDAR-UX-03 — PersonalKalenderMonthWorkspace", () => {
 
   it("renders semantic event blocks with deep links and overflow control", () => {
     const dayKey = "2026-09-23";
-    const items = Array.from({ length: PERSONAL_CALENDAR_DAY_VISIBLE_BLOCK_LIMIT + 2 }).map(
+    const weekRows = buildMonthGridCells("2026-09", "Europe/Zurich").length / 7;
+    const visibleLimit = resolvePersonalCalendarDayVisibleBlockLimit(weekRows);
+    const items = Array.from({ length: visibleLimit + 2 }).map(
       (_, index) =>
         normalized({
           id: `event:${index}`,
@@ -179,18 +181,35 @@ describe("SCE-CALENDAR-UX-03 — PersonalKalenderMonthWorkspace", () => {
       />,
     );
 
-    expect(screen.getAllByTestId(/^personal-calendar-event-/).length).toBe(
-      PERSONAL_CALENDAR_DAY_VISIBLE_BLOCK_LIMIT,
+    expect(screen.getByTestId("personal-kalender-month-grid")).toHaveAttribute(
+      "data-visible-block-limit",
+      String(visibleLimit),
     );
+    expect(screen.getAllByTestId(/^personal-calendar-event-/).length).toBe(visibleLimit);
     const overflow = screen.getByTestId(`personal-calendar-overflow-${dayKey}`);
     expect(overflow.textContent).toBe("+2 weitere");
     fireEvent.click(overflow);
-    expect(screen.getAllByTestId(/^personal-calendar-event-/).length).toBeGreaterThan(
-      PERSONAL_CALENDAR_DAY_VISIBLE_BLOCK_LIMIT,
-    );
+    expect(screen.getAllByTestId(/^personal-calendar-event-/).length).toBeGreaterThan(visibleLimit);
     expect(
       document.querySelector('a[href="/dashboard/training/sessions/0/edit"]'),
     ).not.toBeNull();
+  });
+
+  it("shows more than three visible blocks on desktop when week geometry allows", () => {
+    render(
+      <PersonalKalenderMonthWorkspace
+        monthParam="2026-09"
+        timeZone="Europe/Zurich"
+        itemsByDayKey={{}}
+        timeLabelById={{}}
+        navigation={navigation}
+        filterLinks={filterLinks}
+      />,
+    );
+    const limit = Number(
+      screen.getByTestId("personal-kalender-month-grid").getAttribute("data-visible-block-limit"),
+    );
+    expect(limit).toBeGreaterThan(3);
   });
 
   it("does not render a permanent selected-day detail region below the grid", () => {

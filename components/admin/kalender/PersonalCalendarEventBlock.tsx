@@ -13,17 +13,19 @@ export type PersonalCalendarEventBlockProps = {
   item: NormalizedCalendarItem;
   timeLabel: string;
   className?: string;
+  tenantDisplayNames?: string[];
 };
 
 export default function PersonalCalendarEventBlock({
   item,
   timeLabel,
   className,
+  tenantDisplayNames,
 }: PersonalCalendarEventBlockProps) {
   const tCalendar = useTranslations("PersonalDashboard.calendar");
   const tProgramme = useTranslations("PersonalDashboard.programme");
   const presentation = getCalendarItemPresentation(item.semanticType);
-  const lines = buildCalendarEventBlockLines(item);
+  const lines = buildCalendarEventBlockLines(item, { tenantDisplayNames });
 
   const statusLabel =
     item.status === "cancelled"
@@ -42,7 +44,7 @@ export default function PersonalCalendarEventBlock({
   const content = (
     <div
       className={cn(
-        "flex min-w-0 gap-1 rounded-md border px-1 py-0.5 text-left",
+        "flex min-w-0 gap-0.5 rounded-md border px-1.5 py-1 text-left",
         presentation.chipTintClass,
         presentation.chipBorderClass,
         muted && "opacity-70",
@@ -62,7 +64,7 @@ export default function PersonalCalendarEventBlock({
           </span>
           <span
             className={cn(
-              "min-w-0 truncate text-[0.6875rem] font-semibold leading-tight",
+              "min-w-0 truncate text-[0.6875rem] font-semibold leading-normal",
               presentation.chipTextClass,
               muted && "line-through decoration-[var(--muted)]",
             )}
@@ -71,7 +73,9 @@ export default function PersonalCalendarEventBlock({
           </span>
         </div>
         {lines.secondary ? (
-          <p className="truncate text-[0.625rem] leading-snug text-[var(--text-2)]">{lines.secondary}</p>
+          <p className="mt-0.5 truncate text-[0.625rem] leading-normal text-[var(--text-2)]">
+            {lines.secondary}
+          </p>
         ) : null}
         {statusLabel ? (
           <p className="text-[0.5625rem] font-medium uppercase tracking-wide text-[var(--muted)]">
@@ -81,11 +85,11 @@ export default function PersonalCalendarEventBlock({
       </div>
       <span className="mt-0.5 shrink-0 text-[var(--muted)]" aria-hidden>
         {item.semanticType === "TASK" || item.iconKey === "tasks" ? (
-          <ProductDomainSceIcon name="tasks" size={12} className="h-3 w-3" />
+          <ProductDomainSceIcon name="tasks" size={12} className="h-2.5 w-2.5" />
         ) : item.iconKey === "event" ? (
-          <ProductDomainSceIcon name="event" size={12} className="h-3 w-3" />
+          <ProductDomainSceIcon name="event" size={12} className="h-2.5 w-2.5" />
         ) : (
-          <ActivitySceIcon activityKind={item.semanticType} size={12} className="h-3 w-3" />
+          <ActivitySceIcon activityKind={item.semanticType} size={12} className="h-2.5 w-2.5" />
         )}
       </span>
     </div>
