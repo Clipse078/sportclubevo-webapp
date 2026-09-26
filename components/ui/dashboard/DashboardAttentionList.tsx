@@ -1,4 +1,6 @@
+import type { ComponentType } from "react";
 import Link from "next/link";
+import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
 import {
   Bell,
   CalendarClock,
@@ -17,15 +19,15 @@ export type DashboardAttentionListProps = {
 
 const ATTENTION_ICON_BY_KEY: Record<
   string,
-  { icon: typeof ClipboardList; accent: string; bg: string }
+  { icon: ComponentType<{ className?: string }>; accent: string; bg: string }
 > = {
   registrations: {
-    icon: ClipboardList,
+    icon: RequirementsSceIcon,
     accent: "var(--sce-warning)",
     bg: "var(--sce-warning-light)",
   },
   "news-review": {
-    icon: Newspaper,
+    icon: NewsSceIcon,
     accent: "var(--sce-info)",
     bg: "var(--sce-info-light)",
   },
@@ -35,7 +37,7 @@ const ATTENTION_ICON_BY_KEY: Record<
     bg: "var(--sce-primary-light)",
   },
   "overdue-actions": {
-    icon: Bell,
+    icon: NotificationsSceIcon,
     accent: "var(--sce-danger)",
     bg: "var(--sce-danger-light)",
   },
@@ -43,7 +45,7 @@ const ATTENTION_ICON_BY_KEY: Record<
 
 function AttentionRow({ item }: { item: AttentionItem }) {
   const iconConfig = ATTENTION_ICON_BY_KEY[item.key] ?? {
-    icon: Bell,
+    icon: NotificationsSceIcon,
     accent: "var(--sce-primary)",
     bg: "var(--sce-primary-light)",
   };

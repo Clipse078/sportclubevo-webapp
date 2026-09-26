@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -178,7 +179,7 @@ export default function PersonAccessRolesCard({
         <p className="text-xs font-medium text-[var(--muted)]">Verknüpftes Benutzerkonto</p>
         <div className="mt-0.5 flex items-center justify-between gap-2">
           <p className="flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)]">
-            <Mail className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
+            <ProductDomainSceIcon name="communication" size={12} className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" />
             {linkedUser.email}
           </p>
           {canAssign ? (

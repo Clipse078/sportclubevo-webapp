@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * components/admin/page-builder/PageTemplatesPicker.tsx
@@ -30,10 +31,10 @@ import type { PageTemplate } from "@/lib/cms/page-templates";
 const ICON_MAP: Record<string, React.ReactNode> = {
   FileText: <FileText className="h-5 w-5" />,
   Trophy: <Trophy className="h-5 w-5" />,
-  Users: <Users className="h-5 w-5" />,
+  Users: <ProductDomainSceIcon name="people" size={20} />,
   Award: <Award className="h-5 w-5" />,
   Calendar: <Calendar className="h-5 w-5" />,
-  ClipboardList: <ClipboardList className="h-5 w-5" />,
+  ClipboardList: <ProductDomainSceIcon name="requirements" size={20} />,
   HelpCircle: <HelpCircle className="h-5 w-5" />,
 };
 

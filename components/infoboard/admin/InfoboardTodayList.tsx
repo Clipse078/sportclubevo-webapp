@@ -19,6 +19,7 @@
  */
 
 import { CalendarDays, Dumbbell, Trophy, Volleyball, Monitor } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import type { Screen1AdminEventEntry } from "@/lib/publishing/infoboard/screen1-admin-summary";
 import type { TemporalBucket } from "@/lib/publishing/event-types";
 
@@ -166,7 +167,7 @@ export function InfoboardTodayList({ events }: InfoboardTodayListProps) {
   if (events.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 py-14 text-center">
-        <Monitor className="h-10 w-10 text-[var(--muted)]" />
+        <ProductDomainSceIcon name="infoboard" size={48} className="h-10 w-10 text-[var(--muted)]" />
         <p className="max-w-xs text-sm text-[var(--muted)]">
           Heute sind keine Trainings, Heimspiele oder Turniere für Display 1 geplant.
         </p>

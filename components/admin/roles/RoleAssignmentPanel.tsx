@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useMemo, useState } from "react";
 import { AlertTriangle, Check, Loader2, Search, ShieldCheck, User } from "lucide-react";
@@ -159,7 +160,7 @@ export default function RoleAssignmentPanel({ initialMembers, roles }: Props) {
       <div className="sce-detail-section">
         <div className="sce-detail-section-header">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-[var(--muted)]" />
+            <ProductDomainSceIcon name="roles-access" size={16} className="h-4 w-4 text-[var(--muted)]" />
             <p className="text-sm font-semibold text-[var(--foreground)]">
               {selectedMember ? `${selectedMember.firstName} ${selectedMember.lastName}` : "Kein Mitglied ausgewählt"}
             </p>

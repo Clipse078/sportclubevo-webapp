@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * SharedComponentPicker — Reusable component picker dialog (CMS V2 Slice 12).
@@ -67,9 +68,9 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
   RICH_TEXT:      <FileText className="h-4 w-4" />,
   // Block section types (saved from Homepage / Page Builder)
   hero:                   <LayoutTemplate className="h-4 w-4" />,
-  newsTeaser:             <Newspaper className="h-4 w-4" />,
+  newsTeaser:             <ProductDomainSceIcon name="news" size={16} />,
   eventsTeaser:           <Calendar className="h-4 w-4" />,
-  teamsTeaser:            <Users className="h-4 w-4" />,
+  teamsTeaser:            <ProductDomainSceIcon name="people" size={16} />,
   weekplanTeaser:         <CalendarDays className="h-4 w-4" />,
   callToAction:           <MousePointerClick className="h-4 w-4" />,
   sponsorsTeaser:         <Award className="h-4 w-4" />,

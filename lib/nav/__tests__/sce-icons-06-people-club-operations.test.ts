@@ -17,7 +17,7 @@ const BATCH_3_PEOPLE_NAV: Array<[string, string]> = [
   ["helfereinsaetze", "volunteer"],
   ["sponsoring", "sponsor"],
   ["admin-facilities", "facility"],
-  ["admin-people-access", "invitation"],
+  ["admin-people-access", "people"],
 ];
 
 describe("SCE-ICONS-06 people & club operations", () => {
@@ -61,10 +61,9 @@ describe("SCE-ICONS-06 people & club operations", () => {
     }
   });
 
-  it("defers committee-board where semantics are not exact", () => {
+  it("adopts committee-board for Vereinsleitung meetings (SCE-ICONS-10)", () => {
     const meetings = SCE_MASTER_SEMANTIC_MAPPING_AUDIT.find((r) => r.destination === "meetings");
-    expect(meetings?.confidence).toBe("MEDIUM");
-    expect(meetings?.adoptedNow).toBe(false);
-    expect(getNavDestinationSceIconName("meetings")).toBeNull();
+    expect(meetings?.adoptedNow).toBe(true);
+    expect(getNavDestinationSceIconName("meetings")).toBe("committee-board");
   });
 });

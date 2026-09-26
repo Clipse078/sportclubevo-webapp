@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ArrowRight, KeyRound, Shield, Layers } from "lucide-react";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import { EmptyState } from "@/components/ui/page";
@@ -107,7 +108,7 @@ function ModuleGroupCard({
                       href={`/dashboard/roles/${role.id}`}
                       className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-0.5 text-[0.68rem] font-semibold text-[var(--text-2)] transition-colors hover:border-[var(--blue)] hover:bg-[var(--blue-light)] hover:text-[var(--blue)]"
                     >
-                      <Shield className="h-2.5 w-2.5" />
+                      <ProductDomainSceIcon name="roles-access" size={20} />
                       {role.name}
                     </Link>
                   ))
@@ -143,7 +144,7 @@ export default async function PermissionsPage() {
             href="/dashboard/roles"
             className="fca-button-secondary flex items-center gap-2"
           >
-            <Shield className="h-4 w-4" />
+            <ProductDomainSceIcon name="roles-access" size={16} />
             Rollen bearbeiten
           </Link>
         }
@@ -170,7 +171,7 @@ export default async function PermissionsPage() {
           value={String(mappedPermissions)}
           subtext="Rechte mit Rollenbindung"
           trend="neutral"
-          icon={<Shield style={{ width: 18, height: 18 }} />}
+          icon={<ProductDomainSceIcon name="roles-access" size={20} />}
         />
         <KpiCard
           label="Ohne Rolle"

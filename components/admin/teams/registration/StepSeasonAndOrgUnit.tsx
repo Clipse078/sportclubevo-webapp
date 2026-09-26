@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import Link from "next/link";
 import { useId, useMemo, useState } from "react";
@@ -183,7 +184,7 @@ export default function StepSeasonAndOrgUnit({
           </div>
         ) : orgUnits.length === 0 ? (
           <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-5 py-6 text-center">
-            <Building2 className="mx-auto mb-2 h-7 w-7 text-[var(--text-3)]" aria-hidden="true" />
+            <ProductDomainSceIcon name="org-unit" size={20} className="mx-auto mb-2 h-7 w-7 text-[var(--text-3)]" />
             <p className="font-semibold text-[var(--foreground)]">
               Keine Organisationseinheiten verfügbar
             </p>

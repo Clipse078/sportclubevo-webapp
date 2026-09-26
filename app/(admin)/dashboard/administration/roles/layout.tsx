@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ShieldCheck } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
@@ -34,7 +35,7 @@ export default async function TenantRolesLayout({ children }: LayoutProps) {
         description="Mandanten-Rollen, Berechtigungsmatrix, Benutzerzuweisungen und effektiver Zugriff für diesen Mandanten."
         actions={
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-[var(--muted)]" />
+            <ProductDomainSceIcon name="roles-access" size={16} className="h-4 w-4 text-[var(--muted)]" />
             <span className="text-sm font-semibold text-[var(--foreground)]">
               {tenant?.name ?? "Aktiver Mandant"}
             </span>

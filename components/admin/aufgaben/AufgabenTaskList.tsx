@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
@@ -370,7 +371,7 @@ function TaskListRow({
               title={`${reminderCount} Erinnerung(en)`}
               data-testid={`aufgaben-reminder-count-${task.id}`}
             >
-              <Bell className="h-3 w-3" aria-hidden="true" />
+              <ProductDomainSceIcon name="notifications" size={12} className="h-3 w-3" />
               {reminderCount}
             </span>
           ) : null}

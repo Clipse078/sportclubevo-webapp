@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -296,7 +297,7 @@ export default function ClubDirectorySearchableList({
                 : "text-[var(--muted)] hover:text-[var(--foreground)]"
             }`}
           >
-            <Building2 className="h-4 w-4" />
+            <ProductDomainSceIcon name="org-unit" size={16} />
             Aktiv
             <span className="ml-1 rounded-full bg-[var(--border)] px-1.5 py-0.5 text-[0.65rem] font-semibold tabular-nums text-[var(--muted)]">
               {activeTotal}
@@ -395,7 +396,7 @@ export default function ClubDirectorySearchableList({
 
       {!loading && clubs.length === 0 && !query.trim() && !filtersActive ? (
         <EmptyState
-          icon={showArchived ? <Archive className="h-10 w-10" /> : <Shield className="h-10 w-10" />}
+          icon={showArchived ? <Archive className="h-10 w-10" /> : <ProductDomainSceIcon name="roles-access" size={48} />}
           heading={showArchived ? "Keine archivierten Vereine" : "Noch keine Vereine erfasst"}
           description={
             showArchived

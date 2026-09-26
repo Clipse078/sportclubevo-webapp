@@ -3,6 +3,7 @@
  * exists in the DB. Mirrors MeetingGovernanceBanner exactly.
  */
 
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ShieldCheck } from "lucide-react";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
 import InitiativeStageActions from "@/components/admin/initiatives/InitiativeStageActions";
@@ -34,7 +35,7 @@ export default function InitiativeGovernanceBanner({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 text-slate-500">
-            <ShieldCheck className="h-4 w-4" />
+            <ProductDomainSceIcon name="roles-access" size={16} />
             <span className="text-[12px] font-semibold uppercase tracking-[0.1em]">
               Governance
             </span>
@@ -44,7 +45,7 @@ export default function InitiativeGovernanceBanner({
 
           {initiative.requiresFourEyeReview ? (
             <span className="inline-flex items-center gap-1 rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-[10px] font-semibold text-violet-700">
-              <ShieldCheck className="h-3 w-3" />
+              <ProductDomainSceIcon name="roles-access" size={12} />
               4-Augen
             </span>
           ) : null}

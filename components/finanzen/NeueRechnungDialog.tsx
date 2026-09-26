@@ -1,5 +1,8 @@
 "use client";
 
+import type { ComponentType } from "react";
+import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
+
 import {
   AlertCircle,
   Building2,
@@ -62,7 +65,7 @@ const INITIAL_DRAFT: DraftInvoice = {
 };
 
 const STEPS = [
-  { num: 1, label: "Empfängertyp",    icon: Users },
+  { num: 1, label: "Empfängertyp",    icon: PeopleSceIcon },
   { num: 2, label: "Empfänger",       icon: User  },
   { num: 3, label: "Rechnungsdaten",  icon: FileText },
   { num: 4, label: "Positionen",      icon: Layers },
@@ -70,11 +73,14 @@ const STEPS = [
   { num: 6, label: "Zusammenfassung", icon: Check },
 ] as const;
 
-const RECIPIENT_TYPE_META: Record<RecipientType, { icon: typeof User; description: string }> = {
+const RECIPIENT_TYPE_META: Record<
+  RecipientType,
+  { icon: ComponentType<{ className?: string }>; description: string }
+> = {
   "Mitglied":      { icon: User,      description: "Einzelne Vereinsmitglieder, z. B. für Jahresbeiträge" },
-  "Sponsor":       { icon: Building2, description: "Externe Unternehmen mit Sponsoringvertrag"            },
-  "Partner":       { icon: Building2, description: "Dienstleister und Kooperationspartner des Vereins"     },
-  "Team / Gruppe": { icon: Users,     description: "Mannschaften oder interne Gruppen"                    },
+  "Sponsor":       { icon: OrgUnitSceIcon, description: "Externe Unternehmen mit Sponsoringvertrag"            },
+  "Partner":       { icon: OrgUnitSceIcon, description: "Dienstleister und Kooperationspartner des Vereins"     },
+  "Team / Gruppe": { icon: PeopleSceIcon,     description: "Mannschaften oder interne Gruppen"                    },
   "Sonstige":      { icon: FileText,  description: "Alle übrigen Empfänger (Gemeinde, Verbände, etc.)"    },
 };
 

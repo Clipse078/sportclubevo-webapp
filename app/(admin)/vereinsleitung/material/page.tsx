@@ -9,6 +9,7 @@ import {
   Search,
   Wrench,
 } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { Badge } from "@/components/ui/Badge";
 import { PageShell, PageHeader, PageBreadcrumbs, SectionCard } from "@/components/ui/page";
 import { DashboardKpiCard } from "@/components/ui/dashboard/DashboardKpiCard";
@@ -362,7 +363,7 @@ export default function MaterialPage() {
                     </td>
                     <td className="hidden px-4 py-3 xl:table-cell">
                       <span className="flex items-center gap-1 text-xs text-[var(--text-2)]">
-                        <MapPin className="h-3 w-3 shrink-0 text-[var(--muted)]" />
+                        <ProductDomainSceIcon name="facility" size={12} className="h-3 w-3 shrink-0 text-[var(--muted)]" />
                         {item.location}
                       </span>
                     </td>
@@ -437,7 +438,7 @@ export default function MaterialPage() {
             return (
               <div key={loc} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <MapPin className="h-3.5 w-3.5 text-[var(--muted)]" />
+                  <ProductDomainSceIcon name="facility" size={12} className="h-3.5 w-3.5 text-[var(--muted)]" />
                   <p className="text-xs font-semibold text-[var(--foreground)]">{loc}</p>
                 </div>
                 <p className="text-xl font-bold text-[var(--foreground)]">{items.length}</p>

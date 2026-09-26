@@ -1,4 +1,6 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { PeopleSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, SeasonSceIcon, WebsiteSceIcon, FacilitySceIcon, DocumentsSceIcon, NewsSceIcon, NotificationsSceIcon, TasksSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 import { useState, useEffect, type ComponentType } from "react";
 import {
@@ -597,7 +599,7 @@ export default function RegistrationDetailDrawer({
 
                 {/* Adresse */}
                 <div className="px-6 pt-4 pb-5 border-t border-[var(--border)]">
-                  <SectionLabel icon={MapPin}>Adresse</SectionLabel>
+                  <SectionLabel icon={FacilitySceIcon}>Adresse</SectionLabel>
                   {addressLines.length > 0 ? (
                     <address className="not-italic text-sm leading-relaxed text-[var(--foreground)] break-words">
                       {addressLines.map((line, i) => (
@@ -615,7 +617,7 @@ export default function RegistrationDetailDrawer({
                   <div className="grid gap-4 sm:grid-cols-2">
                     <DataRow label="E-Mail">
                       <a href={`mailto:${fields.contact.email}`} className="sce-link-primary flex items-center gap-1.5 text-sm break-all">
-                        <Mail className="h-3.5 w-3.5 flex-shrink-0" aria-hidden />
+                        <ProductDomainSceIcon name="communication" size={12} className="h-3.5 w-3.5 flex-shrink-0" />
                         {fields.contact.email}
                       </a>
                     </DataRow>
@@ -641,7 +643,7 @@ export default function RegistrationDetailDrawer({
                     {fields.parent?.email ? (
                       <DataRow label="E-Mail">
                         <a href={`mailto:${fields.parent.email}`} className="sce-link-primary flex items-center gap-1.5 text-sm break-all">
-                          <Mail className="h-3.5 w-3.5 flex-shrink-0" aria-hidden />
+                          <ProductDomainSceIcon name="communication" size={12} className="h-3.5 w-3.5 flex-shrink-0" />
                           {fields.parent.email}
                         </a>
                       </DataRow>
@@ -733,7 +735,7 @@ export default function RegistrationDetailDrawer({
                     <LabeledField label="Quelle" value={sourceInfo?.label ?? null} />
                     <DataRow label="Mandant">
                       <span className="sce-data-value flex items-center gap-1.5 text-sm">
-                        <Building2 className="h-3.5 w-3.5 text-[var(--muted)]" aria-hidden />
+                        <ProductDomainSceIcon name="org-unit" size={12} className="h-3.5 w-3.5 text-[var(--muted)]" />
                         {registration.tenant.name}
                       </span>
                     </DataRow>
@@ -845,7 +847,7 @@ export default function RegistrationDetailDrawer({
             href={`mailto:${registration.email}`}
             className="fca-button-secondary text-xs gap-1.5"
           >
-            <Mail className="h-3.5 w-3.5" aria-hidden />
+            <ProductDomainSceIcon name="communication" size={12} className="h-3.5 w-3.5" />
             Kontaktieren
           </a>
           <a

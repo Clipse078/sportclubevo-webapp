@@ -15,6 +15,7 @@
  * DB queries, and VereinsleitungMeetingDetail.tsx for the traceability TODOs.
  */
 
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import Link from "next/link";
 import { CalendarDays, ChevronRight, Edit, Users } from "lucide-react";
 import ReviewStageBadge from "@/components/admin/shared/ReviewStageBadge";
@@ -93,7 +94,7 @@ export default function VereinsleitungMeetingsList({
 
                 {meeting.attendeeCount ? (
                   <span className="inline-flex items-center gap-1.5">
-                    <Users className="h-4 w-4" />
+                    <ProductDomainSceIcon name="people" size={16} />
                     {meeting.attendeeCount} Teilnehmer
                   </span>
                 ) : null}

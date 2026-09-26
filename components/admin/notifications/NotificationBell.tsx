@@ -32,7 +32,7 @@ function formatRelativeTime(iso: string): string {
 }
 
 function NotificationIcon({ item }: { item: NotificationListItem }) {
-  const { Icon, className } = notificationListIcon({
+  const { sceIcon, className, utilityIcon: UtilityIcon } = notificationListIcon({
     category: item.category,
     type: item.type,
   });
@@ -43,7 +43,11 @@ function NotificationIcon({ item }: { item: NotificationListItem }) {
         className,
       )}
     >
-      <Icon className="h-4 w-4" aria-hidden="true" />
+      {UtilityIcon ? (
+        <UtilityIcon className="h-4 w-4" aria-hidden="true" />
+      ) : (
+        <SceIcon name={sceIcon} size={16} />
+      )}
       <span className="sr-only">{item.type}</span>
     </span>
   );

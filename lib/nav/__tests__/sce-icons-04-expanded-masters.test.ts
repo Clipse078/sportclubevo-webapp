@@ -15,7 +15,7 @@ describe("SCE-ICONS-04 semantic mapping audit", () => {
   it("records HIGH-confidence rows and defers MEDIUM/LOW", () => {
     const summary = summarizeSceSemanticMappingAudit();
     expect(summary.highConfidence).toBeGreaterThan(5);
-    expect(summary.mediumConfidence).toBeGreaterThan(0);
+    expect(summary.lowConfidence + summary.mediumConfidence).toBeGreaterThan(0);
     expect(summary.adoptedNow).toBe(summary.highConfidence);
   });
 
@@ -35,7 +35,7 @@ describe("SCE-ICONS-04 semantic mapping audit", () => {
   });
 
   it("keeps veranstaltungen on provisional icon policy", () => {
-    expect(getNavDestinationSceIconName("veranstaltungen")).toBeNull();
+    expect(getNavDestinationSceIconName("veranstaltungen")).toBe("events");
   });
 
   it("resolves quick access for newly adopted tasks mapping", () => {

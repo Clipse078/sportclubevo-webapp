@@ -3,6 +3,7 @@ import type { ComponentType } from "react";
 export const SCE_ICON_VIEWBOX = "0 0 24 24" as const;
 
 export const SCE_ICON_SIZES = {
+  12: 12,
   16: 16,
   20: 20,
   24: 24,

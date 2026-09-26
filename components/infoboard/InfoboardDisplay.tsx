@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -413,7 +414,7 @@ function ScheduleScreen({
 
                   {ev.location ? (
                     <span className="flex items-center gap-1">
-                      <MapPin className="h-2.5 w-2.5" />
+                      <ProductDomainSceIcon name="facility" size={20} />
                       {ev.location}
                     </span>
                   ) : null}

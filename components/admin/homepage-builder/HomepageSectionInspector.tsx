@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * components/admin/homepage-builder/HomepageSectionInspector.tsx
@@ -304,7 +305,7 @@ export function HomepageSectionInspector({
 
           {isPublished && (
             <Badge variant="info" size="sm">
-              <Globe className="h-2.5 w-2.5" />
+              <ProductDomainSceIcon name="website" size={20} />
               Veröffentlicht
             </Badge>
           )}

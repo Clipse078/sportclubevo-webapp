@@ -1,4 +1,6 @@
+import type { ComponentType } from "react";
 import Link from "next/link";
+import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
 import {
   Bell,
   CalendarClock,
@@ -21,10 +23,10 @@ export type PersonalAttentionProps = {
 
 const SOURCE_ICON: Record<
   string,
-  { icon: typeof ListChecks; accent: string; bg: string }
+  { icon: ComponentType<{ className?: string }>; accent: string; bg: string }
 > = {
   TASK: {
-    icon: ListChecks,
+    icon: TasksSceIcon,
     accent: "var(--sce-primary)",
     bg: "var(--sce-primary-light)",
   },
@@ -61,7 +63,7 @@ function AttentionRow({
   };
 }) {
   const iconConfig = SOURCE_ICON[item.sourceType] ?? {
-    icon: Bell,
+    icon: NotificationsSceIcon,
     accent: "var(--sce-primary)",
     bg: "var(--sce-primary-light)",
   };

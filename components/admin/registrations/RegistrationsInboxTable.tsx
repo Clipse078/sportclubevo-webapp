@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -276,7 +277,7 @@ export default function RegistrationsInboxTable({
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-3">
                     <span className="flex items-center gap-1 text-xs text-[var(--muted)]">
-                      <Mail className="h-3 w-3" />
+                      <ProductDomainSceIcon name="communication" size={12} />
                       {reg.email}
                     </span>
                     <span className="flex items-center gap-1 text-xs text-[var(--muted)]">

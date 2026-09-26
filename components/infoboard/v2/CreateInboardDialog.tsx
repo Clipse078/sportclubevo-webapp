@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * components/infoboard/v2/CreateInboardDialog.tsx
@@ -94,7 +95,7 @@ export function CreateInboardDialog({ open, onClose }: CreateInboardDialogProps)
       <div className="relative z-10 w-full max-w-md rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--surface)] shadow-2xl">
         <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
           <div className="flex items-center gap-3">
-            <Monitor className="h-4 w-4 text-[var(--muted)]" />
+            <ProductDomainSceIcon name="infoboard" size={16} className="h-4 w-4 text-[var(--muted)]" />
             <h2 className="text-base font-semibold text-[var(--foreground)]">
               Infoboard erstellen
             </h2>

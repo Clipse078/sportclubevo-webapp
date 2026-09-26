@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * Reusable Task description rich-text editor (TipTap). AUFGABEN-06F2-UX1.
@@ -152,7 +153,7 @@ function EditorToolbar({
         active={editor.isActive("taskList")}
         title="Checkliste"
       >
-        <ListChecks className="h-3.5 w-3.5" />
+        <ProductDomainSceIcon name="tasks" size={12} />
       </ToolbarButton>
     </div>
   );

@@ -109,13 +109,18 @@ describe("SCE-ICONS-09 high-confidence adoption", () => {
     }
   });
 
-  it("defers MEDIUM/LOW destinations without forcing nav mappings", () => {
+  it("defers only destinations without an exact approved master (SCE-ICONS-10)", () => {
     const summary = summarizeSceSemanticMappingAudit();
     expect(summary.deferred).toBeGreaterThan(0);
     for (const destination of DEFERRED_SEMANTIC_DESTINATIONS) {
       const row = SCE_MASTER_SEMANTIC_MAPPING_AUDIT.find((r) => r.destination === destination);
-      expect(row?.adoptedNow).toBe(false);
-      expect(getNavDestinationSceIconName(destination)).toBeNull();
+      if (destination === "competitions") {
+        expect(row?.adoptedNow).toBe(false);
+        expect(getNavDestinationSceIconName(destination)).toBeNull();
+        continue;
+      }
+      expect(row?.adoptedNow).toBe(true);
+      expect(getNavDestinationSceIconName(destination)).toBe(row?.proposedSceMaster);
     }
   });
 

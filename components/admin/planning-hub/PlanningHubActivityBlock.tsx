@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useRef, type CSSProperties, type PointerEvent } from "react";
 import { AlertTriangle, Users } from "lucide-react";
@@ -241,7 +242,7 @@ export default function PlanningHubActivityBlock({
             </p>
             {teamContext && (
               <p className="flex min-w-0 items-center gap-0.5 truncate text-[9px] leading-tight text-[var(--muted)]">
-                <Users className="h-2.5 w-2.5 shrink-0 opacity-70" aria-hidden />
+                <ProductDomainSceIcon name="people" size={20} className="h-2.5 w-2.5 shrink-0 opacity-70" />
                 <span className="truncate">{teamContext}</span>
               </p>
             )}

@@ -1,4 +1,5 @@
 "use client";
+import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 import {
   AlertCircle,
@@ -34,7 +35,7 @@ const MOCKED_ACTIONS = [
     onlyStatuses: ["Entwurf"],
   },
   {
-    icon: Mail,
+    icon: CommunicationSceIcon,
     label: "Als versendet markieren",
     description: "Status auf «Offen» setzen",
     onlyStatuses: ["Entwurf", "Offen"],

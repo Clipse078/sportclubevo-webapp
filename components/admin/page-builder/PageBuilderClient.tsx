@@ -1,4 +1,6 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 /**
  * components/admin/page-builder/PageBuilderClient.tsx
@@ -179,7 +181,7 @@ function PublishBadge({ status }: { status: string }) {
       }`}
     >
       {isPublished ? (
-        <Globe className="h-3 w-3" />
+        <ProductDomainSceIcon name="website" size={12} />
       ) : (
         <GlobeLock className="h-3 w-3" />
       )}
@@ -595,7 +597,7 @@ function AddSectionPanel({
 type ViewportMode = "desktop" | "tablet" | "mobile";
 
 const VIEWPORT_CONFIG: Record<ViewportMode, { label: string; icon: React.ElementType; width: string }> = {
-  desktop: { label: "Desktop", icon: Monitor, width: "100%" },
+  desktop: { label: "Desktop", icon: WebsiteSceIcon, width: "100%" },
   tablet: { label: "Tablet", icon: Tablet, width: "768px" },
   mobile: { label: "Mobile", icon: Smartphone, width: "375px" },
 };
@@ -955,7 +957,7 @@ function WorkflowPanel({
             disabled={pending}
             className="fca-button-primary py-1.5 text-xs"
           >
-            <Globe className="h-3.5 w-3.5" />
+            <ProductDomainSceIcon name="website" size={12} />
             Veröffentlichen
           </button>
         )}
@@ -977,7 +979,7 @@ function WorkflowPanel({
             disabled={pending}
             className="fca-button-secondary py-1.5 text-xs"
           >
-            <Send className="h-3.5 w-3.5" />
+            <ProductDomainSceIcon name="publish" size={12} />
             Zur Überprüfung
           </button>
         )}
@@ -1908,7 +1910,7 @@ export default function PageBuilderClient({ pageId, pageTitle = "", pageSlug = "
                             aria-label="Workflow-Aktionen"
                             aria-pressed={workflowId === section.id}
                           >
-                            <Globe className="h-3.5 w-3.5" />
+                            <ProductDomainSceIcon name="website" size={12} />
                           </button>
                           {/* Save as reusable */}
                           <button

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ChevronRight, Users } from "lucide-react";
 import { Badge } from "@/components/ui";
 import type { ClubDirectoryListItem } from "@/lib/club-directory/directory-view-filters";
@@ -33,7 +34,7 @@ export function ClubDirectoryRow({ club, showArchivedScope }: ClubDirectoryRowPr
       </div>
 
       <div className="flex items-center gap-1.5 text-xs text-[var(--muted)] sm:justify-end">
-        <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        <ProductDomainSceIcon name="people" size={12} className="h-3.5 w-3.5 shrink-0" />
         <span className="tabular-nums">
           {club.teamCount} Team{club.teamCount !== 1 ? "s" : ""}
         </span>

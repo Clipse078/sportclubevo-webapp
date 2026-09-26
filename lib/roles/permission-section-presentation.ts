@@ -3,14 +3,7 @@
  * Presentation only — does not affect authorization semantics.
  */
 
-import type { LucideIcon } from "lucide-react";
-import {
-  Building2,
-  Compass,
-  Globe2,
-  Settings2,
-  ShieldCheck,
-} from "lucide-react";
+import type { SceIconRegistryName } from "@/components/design-system/icons/registry";
 import type {
   PermissionPresentationSection,
   PermissionUnit,
@@ -30,7 +23,7 @@ export type PermissionSectionAccent = {
   key: PermissionSectionKey;
   label: PermissionSectionKey;
   description: string;
-  icon: LucideIcon;
+  sceIcon: SceIconRegistryName;
   /** Restrained accent for icons, dots, and tinted surfaces */
   accent: string;
   accentMuted: string;
@@ -43,7 +36,7 @@ export const PERMISSION_SECTION_ACCENTS: Record<PermissionSectionKey, Permission
     key: "Organisation",
     label: "Organisation",
     description: "Vereinsstruktur, Teams, Personen und sportliche Organisation.",
-    icon: Building2,
+    sceIcon: "organisation",
     accent: "rgb(99 130 246)",
     accentMuted: "color-mix(in srgb, rgb(99 130 246) 65%, var(--muted))",
     accentSurface: "color-mix(in srgb, rgb(99 130 246) 8%, var(--surface))",
@@ -53,7 +46,7 @@ export const PERMISSION_SECTION_ACCENTS: Record<PermissionSectionKey, Permission
     key: "Website",
     label: "Website",
     description: "Inhalte, News und Website-Verwaltung.",
-    icon: Globe2,
+    sceIcon: "website",
     accent: "rgb(52 211 153)",
     accentMuted: "color-mix(in srgb, rgb(52 211 153) 65%, var(--muted))",
     accentSurface: "color-mix(in srgb, rgb(52 211 153) 8%, var(--surface))",
@@ -63,7 +56,7 @@ export const PERMISSION_SECTION_ACCENTS: Record<PermissionSectionKey, Permission
     key: "Betrieb",
     label: "Betrieb",
     description: "Training, Spielbetrieb, Wochenplanung und operative Abläufe.",
-    icon: Compass,
+    sceIcon: "planning",
     accent: "rgb(167 139 250)",
     accentMuted: "color-mix(in srgb, rgb(167 139 250) 65%, var(--muted))",
     accentSurface: "color-mix(in srgb, rgb(167 139 250) 8%, var(--surface))",
@@ -73,7 +66,7 @@ export const PERMISSION_SECTION_ACCENTS: Record<PermissionSectionKey, Permission
     key: "Führung",
     label: "Führung",
     description: "Führungs- und Steuerungsbereiche des Vereins.",
-    icon: ShieldCheck,
+    sceIcon: "insight",
     accent: "rgb(251 191 36)",
     accentMuted: "color-mix(in srgb, rgb(251 191 36) 65%, var(--muted))",
     accentSurface: "color-mix(in srgb, rgb(251 191 36) 8%, var(--surface))",
@@ -83,7 +76,7 @@ export const PERMISSION_SECTION_ACCENTS: Record<PermissionSectionKey, Permission
     key: "System",
     label: "System",
     description: "Administration, Zugänge, Rollen und Systemeinstellungen.",
-    icon: Settings2,
+    sceIcon: "settings",
     accent: "rgb(148 163 184)",
     accentMuted: "color-mix(in srgb, rgb(148 163 184) 65%, var(--muted))",
     accentSurface: "color-mix(in srgb, rgb(148 163 184) 8%, var(--surface))",
@@ -99,7 +92,7 @@ export function getPermissionSectionAccent(
       key: "System",
       label: sectionLabel as PermissionSectionKey,
       description: "Zugriff auf diesen Bereich des Vereins.",
-      icon: Settings2,
+      sceIcon: "settings",
       accent: PERMISSION_SECTION_ACCENTS.System.accent,
       accentMuted: PERMISSION_SECTION_ACCENTS.System.accentMuted,
       accentSurface: PERMISSION_SECTION_ACCENTS.System.accentSurface,

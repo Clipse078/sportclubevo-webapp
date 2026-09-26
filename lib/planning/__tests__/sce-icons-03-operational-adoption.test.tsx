@@ -345,7 +345,7 @@ describe("SCE-ICONS-03 MatchCenter records", () => {
     expect(screen.getByText("Spiel")).toBeInTheDocument();
     expect(container.querySelector(`[data-testid="matchcenter-activity-type-${match.id}"]`)).toBeTruthy();
     expect(container.querySelector(`[data-testid="matchcenter-team-matchup-${match.id}"]`)).toBeTruthy();
-    expect(container.querySelectorAll("svg.lucide-shield").length).toBeGreaterThanOrEqual(2);
+    expect(container.querySelectorAll('[data-sce-activity-icon="match"]').length).toBeGreaterThanOrEqual(1);
   });
 });
 

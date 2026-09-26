@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * components/admin/tournamentcenter/TournamentCreateForm.tsx
@@ -882,7 +883,7 @@ export default function TournamentCreateForm({
         <div className="space-y-4">
           {participants.length === 0 ? (
             <div className="rounded-lg border-2 border-dashed border-[var(--border)] py-8 text-center">
-              <UsersRound className="mx-auto mb-2 h-6 w-6 text-[var(--muted)]" aria-hidden />
+              <ProductDomainSceIcon name="member" size={24} className="mx-auto mb-2 h-6 w-6 text-[var(--muted)]" />
               <p className="text-sm text-[var(--text-2)]">Noch keine Teams zugeordnet.</p>
             </div>
           ) : (

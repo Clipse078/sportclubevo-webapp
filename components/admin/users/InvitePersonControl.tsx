@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * InvitePersonControl — USER-ADMIN-02
@@ -146,7 +147,7 @@ export default function InvitePersonControl({ userId, canManage, pendingInvitati
             disabled={isPending}
             className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-white px-3 py-1.5 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)] disabled:opacity-50 transition"
           >
-            <Mail className="h-3.5 w-3.5" />
+            <ProductDomainSceIcon name="communication" size={12} />
             {isPending ? "Senden…" : "Einladung senden"}
           </button>
         </div>

@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import Link from "next/link";
 import { CheckCircle2, MapPin } from "lucide-react";
@@ -369,7 +370,7 @@ export default function SpieleManagementMatchRow({
 
           {venueLine ? (
             <p className="mt-2 flex items-start gap-1 text-xs text-[var(--muted)] md:hidden min-[105rem]:flex">
-              <MapPin className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+              <ProductDomainSceIcon name="facility" size={12} className="mt-0.5 h-3 w-3 shrink-0" />
               <span className="line-clamp-2 break-words">{venueLine}</span>
             </p>
           ) : null}
@@ -396,7 +397,7 @@ export default function SpieleManagementMatchRow({
       >
         {venueLine ? (
           <p className="hidden items-start gap-1 text-xs text-[var(--muted)] md:flex min-[105rem]:hidden">
-            <MapPin className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+            <ProductDomainSceIcon name="facility" size={12} className="mt-0.5 h-3 w-3 shrink-0" />
             <span className="line-clamp-2 break-words">{venueLine}</span>
           </p>
         ) : null}

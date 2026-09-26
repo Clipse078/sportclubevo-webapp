@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { AlertTriangle, CheckCircle2, Layers, MapPin, Pencil } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { TrainingSessionRowViewModel } from "@/lib/training/view-model";
@@ -122,7 +123,7 @@ export default function TrainingSessionRow({
           className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-white px-3 text-xs font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-2)]"
         >
           {assessment.status === "OPEN" ? (
-            <MapPin className="h-3.5 w-3.5 text-amber-600" />
+            <ProductDomainSceIcon name="facility" size={12} className="h-3.5 w-3.5 text-amber-600" />
           ) : (
             <Layers className="h-3.5 w-3.5 text-[var(--blue)]" />
           )}

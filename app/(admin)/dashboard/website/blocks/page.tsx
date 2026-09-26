@@ -12,6 +12,7 @@
  * future slices.
  */
 
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import Link from "next/link";
 import {
   Blocks,
@@ -52,9 +53,9 @@ import {
 
 const BLOCK_ICON_MAP: Record<string, React.ReactNode> = {
   LayoutTemplate: <LayoutTemplate className="h-5 w-5" />,
-  Newspaper: <Newspaper className="h-5 w-5" />,
+  Newspaper: <ProductDomainSceIcon name="news" size={20} />,
   Calendar: <Calendar className="h-5 w-5" />,
-  Users: <Users className="h-5 w-5" />,
+  Users: <ProductDomainSceIcon name="people" size={20} />,
   CalendarDays: <CalendarDays className="h-5 w-5" />,
   MousePointerClick: <MousePointerClick className="h-5 w-5" />,
   Award: <Award className="h-5 w-5" />,

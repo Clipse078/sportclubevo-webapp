@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import {
   useCallback,
@@ -663,7 +664,7 @@ export default function MatchcenterDetailOperational({
           data-testid="infoboard-preview-link"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--sce-primary)] hover:underline"
         >
-          <Monitor className="h-3.5 w-3.5" aria-hidden />
+          <ProductDomainSceIcon name="infoboard" size={12} className="h-3.5 w-3.5" />
           Infoboard-Vorschau öffnen
           <ExternalLink className="h-3 w-3 opacity-60" aria-hidden />
         </a>
@@ -703,7 +704,7 @@ export default function MatchcenterDetailOperational({
           data-testid="infoboard-preview-link"
           className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3.5 py-2 text-sm font-semibold text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
         >
-          <Monitor className="h-3.5 w-3.5" />
+          <ProductDomainSceIcon name="infoboard" size={12} />
           Infoboard-Vorschau öffnen
           <ExternalLink className="h-3 w-3 opacity-60" />
         </a>

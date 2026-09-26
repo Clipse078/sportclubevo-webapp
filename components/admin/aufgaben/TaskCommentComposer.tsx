@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Loader2, Send } from "lucide-react";
@@ -272,7 +273,7 @@ export function TaskCommentComposer({
           data-testid="task-comment-composer-submit"
         >
           {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : null}
-          <Send className="h-3.5 w-3.5" aria-hidden />
+          <ProductDomainSceIcon name="publish" size={12} className="h-3.5 w-3.5" />
           {submitLabel}
         </button>
       </div>

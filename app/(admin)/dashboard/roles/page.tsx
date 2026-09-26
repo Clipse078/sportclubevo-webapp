@@ -1,12 +1,6 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  Shield,
-  Users,
-  Building2,
-  KeyRound,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowRight, KeyRound } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import { KpiCard } from "@/components/admin/dashboard/KpiCard";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
@@ -47,28 +41,28 @@ export default async function RolesPage() {
           value={String(roles.length)}
           subtext="Definierte Systemrollen"
           trend="neutral"
-          icon={<Shield style={{ width: 18, height: 18 }} />}
+          icon={<ProductDomainSceIcon name="roles-access" size={20} />}
         />
         <KpiCard
           label="Rollen mit Benutzern"
           value={String(rolesWithUsers)}
           subtext="Aktiv vergeben"
           trend="neutral"
-          icon={<ShieldCheck style={{ width: 18, height: 18 }} />}
+          icon={<ProductDomainSceIcon name="roles-access" size={20} />}
         />
         <KpiCard
           label="Benutzerzuweisungen"
           value={String(totalUsers)}
           subtext="Rollenzuweisungen gesamt"
           trend="neutral"
-          icon={<Users style={{ width: 18, height: 18 }} />}
+          icon={<ProductDomainSceIcon name="people" size={20} />}
         />
         <KpiCard
           label="Berechtigungen"
           value={String(totalPermissions)}
           subtext="Rollenberechtigungen gesamt"
           trend="neutral"
-          icon={<KeyRound style={{ width: 18, height: 18 }} />}
+          icon={<ProductDomainSceIcon name="roles-access" size={20} />}
         />
       </div>
 
@@ -95,7 +89,7 @@ export default async function RolesPage() {
         {roles.length === 0 ? (
           <div className="sce-detail-section-body">
             <EmptyState
-              icon={<Shield className="h-10 w-10" />}
+              icon={<ProductDomainSceIcon name="roles-access" size={48} />}
               heading="Keine Rollen vorhanden"
               description="Rollen werden über das System-Setup konfiguriert und hier angezeigt."
             />
@@ -137,7 +131,7 @@ export default async function RolesPage() {
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--blue-light)]">
-                            <Shield className="h-4 w-4 text-[var(--blue)]" />
+                            <ProductDomainSceIcon name="roles-access" size={16} className="h-4 w-4 text-[var(--blue)]" />
                           </div>
                           <div>
                             <p className="font-semibold text-[var(--foreground)]">
@@ -162,7 +156,7 @@ export default async function RolesPage() {
                       </td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <Users className="h-3.5 w-3.5 text-[var(--muted)]" />
+                          <ProductDomainSceIcon name="people" size={12} className="h-3.5 w-3.5 text-[var(--muted)]" />
                           <span className="font-semibold tabular-nums text-[var(--foreground)]">
                             {role.userCount}
                           </span>
@@ -170,7 +164,7 @@ export default async function RolesPage() {
                       </td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <Building2 className="h-3.5 w-3.5 text-[var(--muted)]" />
+                          <ProductDomainSceIcon name="org-unit" size={12} className="h-3.5 w-3.5 text-[var(--muted)]" />
                           <span className="font-semibold tabular-nums text-[var(--foreground)]">
                             {role.orgUnitCount}
                           </span>
@@ -224,7 +218,7 @@ export default async function RolesPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--blue-light)]">
-                        <Shield className="h-4.5 w-4.5 text-[var(--blue)]" />
+                        <ProductDomainSceIcon name="roles-access" size={16} className="h-4.5 w-4.5 text-[var(--blue)]" />
                       </div>
                       <div>
                         <p className="font-semibold text-[var(--foreground)]">
@@ -246,14 +240,14 @@ export default async function RolesPage() {
 
                   <div className="flex flex-wrap items-center gap-3 text-[0.78rem] text-[var(--text-2)]">
                     <span className="flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5 text-[var(--muted)]" />
+                      <ProductDomainSceIcon name="people" size={12} className="h-3.5 w-3.5 text-[var(--muted)]" />
                       <strong className="font-semibold text-[var(--foreground)]">
                         {role.userCount}
                       </strong>{" "}
                       Benutzer
                     </span>
                     <span className="flex items-center gap-1">
-                      <Building2 className="h-3.5 w-3.5 text-[var(--muted)]" />
+                      <ProductDomainSceIcon name="org-unit" size={12} className="h-3.5 w-3.5 text-[var(--muted)]" />
                       <strong className="font-semibold text-[var(--foreground)]">
                         {role.orgUnitCount}
                       </strong>{" "}

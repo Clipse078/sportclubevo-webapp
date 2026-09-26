@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * MediaLibraryDAM — Premium Digital Asset Management UI.
@@ -412,7 +413,7 @@ export default function MediaLibraryDAM() {
               onClick={() => setActiveFolderId(null)}
               className="flex items-center gap-1 text-[var(--muted)] hover:text-[var(--foreground)]"
             >
-              <FolderOpen className="h-3.5 w-3.5" />
+              <ProductDomainSceIcon name="documents" size={12} />
               Alle Medien
             </button>
             {breadcrumb.map((crumb, i) => (

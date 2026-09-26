@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState, useMemo } from "react";
 import { Building2, ChevronDown, X } from "lucide-react";
@@ -70,7 +71,7 @@ export default function VisibleOrgUnitsSelect({
               key={unit.id}
               className="inline-flex items-center gap-1.5 rounded-full border border-[#0b4aa2]/20 bg-[#0b4aa2]/8 px-3 py-1 text-[12px] font-medium text-[#0b4aa2]"
             >
-              <Building2 className="h-3 w-3 shrink-0" />
+              <ProductDomainSceIcon name="org-unit" size={12} className="h-3 w-3 shrink-0" />
               {unit.name}
               <button
                 type="button"
@@ -120,7 +121,7 @@ export default function VisibleOrgUnitsSelect({
                       onClick={() => { addUnit(unit.id); setOpen(false); }}
                       className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50"
                     >
-                      <Building2 className="h-4 w-4 shrink-0 text-slate-400" />
+                      <ProductDomainSceIcon name="org-unit" size={16} className="h-4 w-4 shrink-0 text-slate-400" />
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-slate-900">{unit.name}</p>
                         <p className="truncate text-[10px] text-slate-500">

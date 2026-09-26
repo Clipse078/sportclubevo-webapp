@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * components/admin/homepage-builder/HomepageCanvasSection.tsx
@@ -330,7 +331,7 @@ export function HomepageCanvasSection({
 
           {isPublished ? (
             <Badge variant="info" size="sm">
-              <Globe className="h-2.5 w-2.5" />
+              <ProductDomainSceIcon name="website" size={20} />
               Pub
             </Badge>
           ) : isScheduled ? (

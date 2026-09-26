@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -142,7 +143,7 @@ export default function RoleDeleteButton({ roleId, roleName, roleKey }: RoleDele
           ) : blocker ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
               <div className="flex items-start gap-2">
-                <Shield className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                <ProductDomainSceIcon name="roles-access" size={16} className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
                 <div>
                   <p className="font-medium text-amber-800">Löschen nicht möglich</p>
                   <p className="mt-1 text-amber-700">{blocker.message}</p>
@@ -188,7 +189,7 @@ export default function RoleDeleteButton({ roleId, roleName, roleKey }: RoleDele
               {impact.activeUserCount > 0 ? (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
                   <div className="flex items-start gap-2">
-                    <Users className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                    <ProductDomainSceIcon name="people" size={16} className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
                     <p className="text-amber-800">
                       {impact.activeUserCount} aktive{impact.activeUserCount !== 1 ? " Benutzer haben" : "r Benutzer hat"} diese Rolle.
                       {" "}Weise ihnen eine andere Rolle zu, bevor du diese Rolle löschst.

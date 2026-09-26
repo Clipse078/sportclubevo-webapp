@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
@@ -179,7 +180,7 @@ export function PersonalDashboardWorkspace({
         <DashboardCockpitCard
           title={tTasks("title")}
           titleId="personal-tasks-heading"
-          icon={<ListChecks className="h-4 w-4" />}
+          icon={<ProductDomainSceIcon name="tasks" size={16} />}
           iconAccent="info"
           orderClassName="order-4 md:row-start-2"
           headerAction={

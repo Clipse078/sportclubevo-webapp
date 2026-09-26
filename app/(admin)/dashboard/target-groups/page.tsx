@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { notFound } from "next/navigation";
 import { Plus, Target, Users } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -43,7 +44,7 @@ export default async function TargetGroupsPage() {
       {targetGroups.length === 0 ? (
         <div className="sce-detail-section">
           <EmptyState
-            icon={<Users className="h-10 w-10" />}
+            icon={<ProductDomainSceIcon name="people" size={48} />}
             heading="Noch keine Zielgruppen"
             description="Zielgruppen definieren Mitgliedergruppen für Sichtbarkeit, Kommunikation und Workflow-Routing."
             action={

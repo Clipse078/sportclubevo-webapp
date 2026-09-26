@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { CircleAlert, MapPin, CheckCircle2 } from "lucide-react";
 import type { TournamentDto } from "@/lib/tournaments/types";
 import type { TournamentOperationalAssessment } from "@/lib/tournaments/operational-state";
@@ -135,7 +136,7 @@ export default function TournamentOperationalRow({
 
           {tournament.location ? (
             <span className="inline-flex min-w-0 items-center gap-1">
-              <MapPin className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+              <ProductDomainSceIcon name="facility" size={12} className="h-3 w-3 shrink-0 opacity-70" />
               <span className="truncate">{tournament.location}</span>
             </span>
           ) : null}

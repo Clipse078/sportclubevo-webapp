@@ -66,7 +66,8 @@ describe("AppShellNavigation SCE-ICONS-02", () => {
     expect(weekLink.querySelector('[data-sce-nav-destination-icon="week-planner"]')).toBeTruthy();
 
     const eventsLink = screen.getByRole("link", { name: /Veranstaltungen/i });
-    expect(eventsLink).not.toHaveAttribute("data-sce-nav-icon");
+    expect(eventsLink).toHaveAttribute("data-sce-nav-icon", "events");
+    expect(eventsLink.querySelector('[data-sce-nav-destination-icon="events"]')).toBeTruthy();
   });
 
   it("shows SCE module icons in explorer module pane and search results", async () => {

@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * ReusableComponentEditor
@@ -368,7 +369,7 @@ export default function ReusableComponentEditor({
                 className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
                 style={{ background: "var(--tenant-primary)" }}
               >
-                {publishing ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Globe className="h-3.5 w-3.5" />}
+                {publishing ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <ProductDomainSceIcon name="website" size={12} />}
                 Veröffentlichen
               </button>
             )
@@ -519,7 +520,7 @@ export default function ReusableComponentEditor({
                 </div>
                 {component.createdByUser && (
                   <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-[var(--muted)]" />
+                    <ProductDomainSceIcon name="people" size={16} className="h-4 w-4 text-[var(--muted)]" />
                     <span className="text-[var(--muted)]">Von:</span>
                     <span className="text-[var(--foreground)]">
                       {component.createdByUser.firstName} {component.createdByUser.lastName}
@@ -528,7 +529,7 @@ export default function ReusableComponentEditor({
                 )}
                 {component.publishedAt && (
                   <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-[var(--muted)]" />
+                    <ProductDomainSceIcon name="website" size={16} className="h-4 w-4 text-[var(--muted)]" />
                     <span className="text-[var(--muted)]">Veröffentlicht:</span>
                     <span className="text-[var(--foreground)]">
                       {new Date(component.publishedAt).toLocaleDateString("de-CH")}

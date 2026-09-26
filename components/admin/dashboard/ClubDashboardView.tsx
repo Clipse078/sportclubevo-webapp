@@ -1,4 +1,5 @@
 ﻿import type { ReactNode } from "react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import {
   CalendarDays,
   Newspaper,
@@ -132,12 +133,12 @@ export default async function ClubDashboardView({
     news: {
       tag: tSecondary("tagNews"),
       tagVariant: "info",
-      icon: <Newspaper className="h-3.5 w-3.5" />,
+      icon: <ProductDomainSceIcon name="news" size={12} />,
     },
     registration: {
       tag: tSecondary("tagRegistration"),
       tagVariant: "warning",
-      icon: <Users className="h-3.5 w-3.5" />,
+      icon: <ProductDomainSceIcon name="people" size={12} />,
     },
     event: {
       tag: tSecondary("tagPlanning"),

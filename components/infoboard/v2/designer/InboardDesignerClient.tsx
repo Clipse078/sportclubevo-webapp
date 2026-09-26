@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * components/infoboard/v2/designer/InboardDesignerClient.tsx
@@ -81,7 +82,7 @@ type InboardDesignerClientProps = {
 };
 
 const WIDGET_ICON: Record<WidgetType, React.ReactNode> = {
-  HEADER: <Monitor className="h-4 w-4" aria-hidden="true" />,
+  HEADER: <ProductDomainSceIcon name="infoboard" size={16} className="h-4 w-4" />,
   ACTIVITIES: <Calendar className="h-4 w-4" aria-hidden="true" />,
   ANNOUNCEMENT: <Megaphone className="h-4 w-4" aria-hidden="true" />,
 };

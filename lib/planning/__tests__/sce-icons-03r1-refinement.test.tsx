@@ -242,7 +242,6 @@ describe("SCE-ICONS-03R1 MatchCenter hierarchy", () => {
     expect(container.querySelector(`[data-testid="matchcenter-activity-type-${match.id}"]`)).toBeTruthy();
     expect(container.querySelector(`[data-testid="matchcenter-team-matchup-${match.id}"]`)).toBeTruthy();
     expect(container.querySelector('[data-sce-activity-icon="match"]')).toBeTruthy();
-    expect(container.querySelectorAll("svg.lucide-shield").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("VS")).toBeInTheDocument();
   });
 

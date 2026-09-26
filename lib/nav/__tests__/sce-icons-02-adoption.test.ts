@@ -37,8 +37,8 @@ describe("SCE-ICONS-02 nav destination SCE mapping", () => {
     }
   });
 
-  it("does not map Veranstaltungen to an approved hero icon", () => {
-    expect(getNavDestinationSceIconName("veranstaltungen")).toBeNull();
+  it("maps Veranstaltungen to the approved events master (SCE-ICONS-10)", () => {
+    expect(getNavDestinationSceIconName("veranstaltungen")).toBe("events");
   });
 
   it("resolves quick-access stable keys for planning modules", () => {

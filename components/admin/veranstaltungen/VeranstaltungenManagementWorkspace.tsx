@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { CalendarClock, History, MapPin, Plus, Trophy } from "lucide-react";
 import type { ClubEvent } from "@/lib/events/club-events-service";
 import {
@@ -248,7 +249,7 @@ export default function VeranstaltungenManagementWorkspace({
             label: "Veranstaltungsorte",
             value: kpis.uniqueVenues,
             hint: "mit Standortangabe",
-            icon: MapPin,
+            icon: FacilitySceIcon,
             surface: "border-[var(--border)] bg-[var(--surface)]/80",
             iconTile: "bg-[var(--surface-2)] text-[var(--muted)]",
             "data-testid": "veranstaltungen-kpi-venues",

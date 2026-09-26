@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { Badge } from "@/components/ui/Badge";
 import { PageShell, PageHeader, PageBreadcrumbs, SectionCard } from "@/components/ui/page";
 import { DashboardKpiCard } from "@/components/ui/dashboard/DashboardKpiCard";
@@ -144,7 +145,7 @@ export default function FinanzenPage() {
           title="Jahresbudget"
           value={fmt(totalBudgetedIncome)}
           accent="primary"
-          icon={<Wallet className="h-5 w-5" />}
+          icon={<ProductDomainSceIcon name="finance" size={20} />}
           description={`Einnahmen budgetiert ${new Date().getFullYear()}`}
         />
         <DashboardKpiCard

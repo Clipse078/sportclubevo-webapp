@@ -1,4 +1,5 @@
 "use client";
+import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 import { AlertCircle, Calendar, Check, Clock, Dumbbell, Loader2, Shield, Trophy } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -82,7 +83,7 @@ export function WeekplannerActivityIdentityCard({
 }) {
   const typeConfig = {
     TRAINING: { icon: Dumbbell, label: "Training", badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-    MATCH: { icon: Shield, label: "Heimspiel", badgeClass: "border-blue-200 bg-blue-50 text-blue-700" },
+    MATCH: { icon: RolesAccessSceIcon, label: "Heimspiel", badgeClass: "border-blue-200 bg-blue-50 text-blue-700" },
     TOURNAMENT: { icon: Trophy, label: "Turnier", badgeClass: "border-amber-200 bg-amber-50 text-amber-700" },
     VERANSTALTUNG: { icon: Calendar, label: "Veranstaltung", badgeClass: "border-violet-200 bg-violet-50 text-violet-700" },
   }[item.type];

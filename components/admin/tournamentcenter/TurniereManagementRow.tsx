@@ -20,6 +20,7 @@ import {
   TURNIERE_ROW_INTERMEDIATE_GRID,
   TURNIERE_ROW_WIDE_GRID,
 } from "./turniere-management-layout";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ActivitySceIcon } from "@/components/planning/ActivitySceIcon";
 import { cn } from "@/lib/cn";
 
@@ -160,13 +161,13 @@ export default function TurniereManagementRow({
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--text-2)]">
           {categoryLine ? (
             <span className="inline-flex items-center gap-1">
-              <Users className="h-3 w-3 shrink-0 opacity-70" aria-hidden="true" />
+              <ProductDomainSceIcon name="people" size={12} className="h-3 w-3 shrink-0 opacity-70" />
               <span>{categoryLine}</span>
             </span>
           ) : null}
           {tournament.location ? (
             <span className="inline-flex min-w-0 items-center gap-1">
-              <MapPin className="h-3 w-3 shrink-0 opacity-70" aria-hidden="true" />
+              <ProductDomainSceIcon name="facility" size={12} className="h-3 w-3 shrink-0 opacity-70" />
               <span className="truncate">{tournament.location}</span>
             </span>
           ) : null}
@@ -182,7 +183,7 @@ export default function TurniereManagementRow({
       <div className="flex flex-row flex-wrap items-center gap-2 md:col-span-2 md:justify-end min-[105rem]:col-span-1 min-[105rem]:flex-col min-[105rem]:items-end">
         <StatusPill label={status.label} tone={status.tone} />
         <span className="inline-flex items-center gap-1 text-[0.6875rem] text-[var(--text-2)]">
-          <Globe className="h-3 w-3 opacity-70" aria-hidden="true" />
+          <ProductDomainSceIcon name="website" size={12} className="h-3 w-3 opacity-70" />
           {publication.label}
         </span>
       </div>

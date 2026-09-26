@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { Newspaper } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { CommandCenterNewsItem } from "@/lib/dashboard/command-center-presentation";
@@ -32,7 +33,7 @@ function CompactNewsCard({ item }: { item: CommandCenterNewsItem }) {
         ) : (
           <div className="flex h-full min-h-[5.5rem] w-full items-center justify-center bg-[linear-gradient(145deg,var(--surface-2)_0%,color-mix(in_srgb,var(--background)_88%,var(--surface-2))_100%)]">
             <div className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] bg-[color-mix(in_srgb,var(--sce-primary)_12%,transparent)] text-[var(--sce-primary)]">
-              <Newspaper className="h-4 w-4" aria-hidden="true" />
+              <ProductDomainSceIcon name="news" size={16} className="h-4 w-4" />
             </div>
           </div>
         )}
@@ -79,7 +80,7 @@ function NewsCard({ item }: { item: CommandCenterNewsItem }) {
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[linear-gradient(145deg,var(--surface-2)_0%,color-mix(in_srgb,var(--background)_88%,var(--surface-2))_100%)] px-4 text-center">
             <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[color-mix(in_srgb,var(--sce-primary)_12%,transparent)] text-[var(--sce-primary)]">
-              <Newspaper className="h-5 w-5" aria-hidden="true" />
+              <ProductDomainSceIcon name="news" size={20} className="h-5 w-5" />
             </div>
             <p className="line-clamp-2 text-[0.75rem] font-semibold leading-snug text-[var(--foreground)]">
               {item.title}

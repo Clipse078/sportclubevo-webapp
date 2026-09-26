@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -153,7 +154,7 @@ export default function GlobalUserDeleteButton({
           ) : blocker ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
               <div className="flex items-start gap-2">
-                <Shield className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                <ProductDomainSceIcon name="roles-access" size={16} className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
                 <div>
                   <p className="font-medium text-amber-800">Löschen nicht möglich</p>
                   <p className="mt-1 text-amber-700">{blocker.message}</p>
@@ -213,7 +214,7 @@ export default function GlobalUserDeleteButton({
               {impact.isPlatformSuperAdmin ? (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
                   <div className="flex items-start gap-2">
-                    <Shield className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                    <ProductDomainSceIcon name="roles-access" size={16} className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
                     <p className="text-amber-800">
                       Achtung: Dieser Benutzer ist ein SCE Super Admin.
                     </p>

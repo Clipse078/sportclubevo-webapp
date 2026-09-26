@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState, useEffect } from "react";
 import {
@@ -467,7 +468,7 @@ export default function MediaAssetDetailDrawer({
               </div>
             ) : usages.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-8 text-center text-[var(--muted)]">
-                <MapPin className="h-6 w-6 opacity-30" />
+                <ProductDomainSceIcon name="facility" size={24} />
                 <p className="text-xs">Wird derzeit nirgends verwendet.</p>
               </div>
             ) : (

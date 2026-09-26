@@ -7,6 +7,7 @@ import {
   ListChecks,
   Plus,
 } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { Badge } from "@/components/ui/Badge";
 import { PageShell, PageHeader, PageBreadcrumbs, SectionCard } from "@/components/ui/page";
 import { DashboardKpiCard } from "@/components/ui/dashboard/DashboardKpiCard";
@@ -195,7 +196,7 @@ export default function ProzessePage() {
           title="Laufend"
           value={String(running)}
           accent="success"
-          icon={<ClipboardList className="h-5 w-5" />}
+          icon={<ProductDomainSceIcon name="requirements" size={20} />}
           description="Aktive Prozesse"
         />
         <DashboardKpiCard
@@ -216,7 +217,7 @@ export default function ProzessePage() {
           title="Vorlagen"
           value={String(DEMO_TEMPLATES.length)}
           accent="default"
-          icon={<ListChecks className="h-5 w-5" />}
+          icon={<ProductDomainSceIcon name="tasks" size={20} />}
           description="Prozessvorlagen verfügbar"
         />
       </div>
@@ -318,7 +319,7 @@ export default function ProzessePage() {
                   className="flex items-start gap-3 rounded-lg border border-[var(--border)] p-3"
                 >
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-2)]">
-                    <ListChecks className="h-4 w-4 text-[var(--muted)]" />
+                    <ProductDomainSceIcon name="tasks" size={16} className="h-4 w-4 text-[var(--muted)]" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold text-[var(--foreground)] leading-tight">{t.title}</p>

@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * PERSON-UX-05/06 — Entwicklungs-Bewertungen (Development Assessment) section.
@@ -764,7 +765,7 @@ export default function PersonAssessmentSection({
               className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] text-[var(--muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)]"
               title="Kriterien verwalten"
             >
-              <Settings className="h-3 w-3" />
+              <ProductDomainSceIcon name="settings" size={12} />
               Kriterien
             </a>
           ) : null}

@@ -1,4 +1,5 @@
 "use client";
+import { PeopleSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, SeasonSceIcon, WebsiteSceIcon, FacilitySceIcon, DocumentsSceIcon, NewsSceIcon, NotificationsSceIcon, TasksSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 /**
  * AccountPageClient — Mein Konto self-service UI (MEIN-KONTO-01 / ACCOUNT-01-C2)
@@ -696,7 +697,7 @@ export default function AccountPageClient({
           />
           {tenantName && (
             <ReadOnlyField
-              icon={Building2}
+              icon={OrgUnitSceIcon}
               label="Aktueller Verein"
               value={tenantName}
               hint="Aktiver Verein in dieser Sitzung."

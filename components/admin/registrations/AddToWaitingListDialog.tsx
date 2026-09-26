@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * components/admin/registrations/AddToWaitingListDialog.tsx
@@ -173,7 +174,7 @@ export function AddToWaitingListDialog({
             disabled={busy || scopeOptionsLoading}
             className="inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--tenant-primary)] bg-[var(--tenant-primary)] px-4 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
           >
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <ClipboardList className="h-4 w-4" aria-hidden />}
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <ProductDomainSceIcon name="requirements" size={16} className="h-4 w-4" />}
             Auf Warteliste setzen
           </button>
         </div>

@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
@@ -302,7 +303,7 @@ export default function RegistrationDetailCard({
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--muted)]">
               <span className="flex items-center gap-1">
-                <Mail className="h-3 w-3" aria-hidden />
+                <ProductDomainSceIcon name="communication" size={12} className="h-3 w-3" />
                 {registration.email}
               </span>
               <span className="flex items-center gap-1">
@@ -317,12 +318,12 @@ export default function RegistrationDetailCard({
               ) : null}
               {registration.targetGroup ? (
                 <span className="flex items-center gap-1 text-emerald-700">
-                  <Users className="h-3 w-3" aria-hidden />
+                  <ProductDomainSceIcon name="people" size={12} className="h-3 w-3" />
                   {registration.targetGroup.name}
                 </span>
               ) : routingSuggestion ? (
                 <span className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3" aria-hidden />
+                  <ProductDomainSceIcon name="facility" size={12} className="h-3 w-3" />
                   {routingSuggestion}
                 </span>
               ) : null}
@@ -388,7 +389,7 @@ export default function RegistrationDetailCard({
                 <div className="sce-data-field">
                   <span className="sce-data-label">Routing-Vorschlag</span>
                   <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--blue)]">
-                    <MapPin className="h-3.5 w-3.5" />
+                    <ProductDomainSceIcon name="facility" size={12} />
                     {routingSuggestion}
                   </span>
                 </div>
@@ -403,7 +404,7 @@ export default function RegistrationDetailCard({
           <div className="sce-detail-section">
             <div className="sce-detail-section-header">
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-[var(--muted)]" />
+                <ProductDomainSceIcon name="facility" size={16} className="h-4 w-4 text-[var(--muted)]" />
                 <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
                   Adresse
                 </p>
@@ -428,7 +429,7 @@ export default function RegistrationDetailCard({
           <div className="sce-detail-section">
             <div className="sce-detail-section-header">
               <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-[var(--muted)]" />
+                <ProductDomainSceIcon name="communication" size={16} className="h-4 w-4 text-[var(--muted)]" />
                 <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
                   Kontakt
                 </p>
@@ -438,7 +439,7 @@ export default function RegistrationDetailCard({
               <DataField
                 label="E-Mail"
                 value={fields.contact.email}
-                icon={<Mail className="h-3.5 w-3.5" />}
+                icon={<ProductDomainSceIcon name="communication" size={12} />}
                 href={`mailto:${fields.contact.email}`}
                 breakAll
               />
@@ -467,7 +468,7 @@ export default function RegistrationDetailCard({
               <DataField
                 label="E-Mail"
                 value={fields.parent?.email ?? null}
-                icon={fields.parent?.email ? <Mail className="h-3.5 w-3.5" /> : undefined}
+                icon={fields.parent?.email ? <ProductDomainSceIcon name="communication" size={12} /> : undefined}
                 href={fields.parent?.email ? `mailto:${fields.parent.email}` : undefined}
                 breakAll
               />
@@ -647,7 +648,7 @@ export default function RegistrationDetailCard({
               <div className="sce-data-field">
                 <span className="sce-data-label">Mandant</span>
                 <span className="sce-data-value flex items-center gap-1.5">
-                  <Building2 className="h-3.5 w-3.5 text-[var(--muted)]" />
+                  <ProductDomainSceIcon name="org-unit" size={12} className="h-3.5 w-3.5 text-[var(--muted)]" />
                   {registration.tenant.name}
                 </span>
               </div>

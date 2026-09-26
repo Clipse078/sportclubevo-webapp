@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import { Settings2 } from "lucide-react";
@@ -43,7 +44,7 @@ export function PersonalDashboardCustomizeDialog({
         )}
         data-testid="personal-dashboard-customize-trigger"
       >
-        <Settings2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        <ProductDomainSceIcon name="settings" size={12} className="h-3.5 w-3.5 shrink-0" />
         {t("customize")}
       </button>
 

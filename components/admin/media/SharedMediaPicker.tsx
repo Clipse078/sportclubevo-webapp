@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * SharedMediaPicker — Reusable DAM asset picker dialog.
@@ -242,7 +243,7 @@ export default function SharedMediaPicker({
                   : "text-[var(--foreground)] hover:bg-[var(--surface-2)]"
               }`}
             >
-              <FolderOpen className="h-3.5 w-3.5" />
+              <ProductDomainSceIcon name="documents" size={12} />
               Alle Medien
             </button>
             {rootFolders.map((f) => (
@@ -337,7 +338,7 @@ export default function SharedMediaPicker({
                     onClick={() => setActiveFolderId(f.id)}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 text-xs hover:border-[var(--tenant-primary)] hover:bg-[var(--surface)]"
                   >
-                    <FolderOpen className="h-3.5 w-3.5 text-[var(--tenant-primary)]" />
+                    <ProductDomainSceIcon name="documents" size={12} className="h-3.5 w-3.5 text-[var(--tenant-primary)]" />
                     {f.name}
                   </button>
                 ))}
@@ -474,7 +475,7 @@ function FolderNode({
             : "text-[var(--foreground)] hover:bg-[var(--surface-2)]"
         }`}
       >
-        <FolderOpen className="h-3.5 w-3.5 flex-shrink-0" />
+        <ProductDomainSceIcon name="documents" size={12} className="h-3.5 w-3.5 flex-shrink-0" />
         <span className="truncate">{folder.name}</span>
       </button>
       {children.map((child) => (

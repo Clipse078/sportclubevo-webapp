@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ListChecks } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { DashboardSection } from "./DashboardSection";
@@ -54,7 +55,7 @@ export async function PersonalTasksPreview({ previewItems, embedded = false }: P
         </ul>
       ) : (
         <DashboardEmptyState
-          icon={<ListChecks className="h-4 w-4" />}
+          icon={<ProductDomainSceIcon name="tasks" size={16} />}
           title={t("emptyTitle")}
           description={t("emptyDescription")}
           variant="cockpit"
@@ -68,7 +69,7 @@ export async function PersonalTasksPreview({ previewItems, embedded = false }: P
   return (
     <DashboardSection
       title={t("title")}
-      icon={<ListChecks className="h-4 w-4" />}
+      icon={<ProductDomainSceIcon name="tasks" size={16} />}
       iconAccent="info"
       variant={hasItems ? "card" : "flat"}
       density={hasItems ? "default" : "compact"}

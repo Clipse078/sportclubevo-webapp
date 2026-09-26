@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * PERSON-UX-10: PersonContactTab — Kontakt workspace.
@@ -670,7 +671,7 @@ function GuardianRow({
               href={`mailto:${g.email}`}
               className="flex items-center gap-1 truncate text-xs text-[var(--muted)] hover:text-[var(--sce-primary)] hover:underline"
             >
-              <Mail className="h-3 w-3" />
+              <ProductDomainSceIcon name="communication" size={12} />
               <span className="truncate">{g.email}</span>
             </a>
           )}
@@ -1073,7 +1074,7 @@ function EmergencyContactRow({
               href={`mailto:${contact.email}`}
               className="flex items-center gap-1 truncate text-xs text-[var(--muted)] hover:text-[var(--sce-primary)] hover:underline"
             >
-              <Mail className="h-3 w-3" />
+              <ProductDomainSceIcon name="communication" size={12} />
               <span className="truncate">{contact.email}</span>
             </a>
           )}
@@ -1159,7 +1160,7 @@ function LegacyGuardianBanner({
             href={`mailto:${person.guardianEmail}`}
             className="flex items-center gap-1.5 text-sm text-amber-700 hover:underline"
           >
-            <Mail className="h-3.5 w-3.5" />
+            <ProductDomainSceIcon name="communication" size={12} />
             {person.guardianEmail}
           </a>
         )}
@@ -1235,7 +1236,7 @@ function GuardiansSection({
       <div>
         <SectionHeader title="Eltern / Erziehungsberechtigte" />
         <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--muted)]">
-          <Shield className="h-4 w-4 flex-shrink-0" />
+          <ProductDomainSceIcon name="roles-access" size={16} className="h-4 w-4 flex-shrink-0" />
           Keine Zugriffsberechtigung für Kontaktbeziehungen.
         </div>
       </div>
@@ -1390,7 +1391,7 @@ function EmergencyContactsSection({
       <div>
         <SectionHeader title="Notfallkontakte" />
         <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--muted)]">
-          <Shield className="h-4 w-4 flex-shrink-0" />
+          <ProductDomainSceIcon name="roles-access" size={16} className="h-4 w-4 flex-shrink-0" />
           Keine Zugriffsberechtigung für Notfallkontakte.
         </div>
       </div>
@@ -1498,7 +1499,7 @@ export default function PersonContactTab({
       <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
         <div className="divide-y divide-[var(--border)] px-4">
           <ContactField
-            icon={<Mail className="h-4 w-4" />}
+            icon={<ProductDomainSceIcon name="communication" size={16} />}
             label="E-Mail"
             value={person.email}
             href={person.email ? `mailto:${person.email}` : undefined}
@@ -1527,14 +1528,14 @@ export default function PersonContactTab({
             <div className="divide-y divide-[var(--border)]">
               {person.street ? (
                 <ContactField
-                  icon={<MapPin className="h-4 w-4" />}
+                  icon={<ProductDomainSceIcon name="facility" size={16} />}
                   label="Strasse"
                   value={`${person.street}${person.houseNumber ? " " + person.houseNumber : ""}`}
                 />
               ) : null}
               {person.postalCode || person.city ? (
                 <ContactField
-                  icon={<MapPin className="h-4 w-4" />}
+                  icon={<ProductDomainSceIcon name="facility" size={16} />}
                   label="Ort"
                   value={[person.postalCode, person.city, person.country]
                     .filter(Boolean)

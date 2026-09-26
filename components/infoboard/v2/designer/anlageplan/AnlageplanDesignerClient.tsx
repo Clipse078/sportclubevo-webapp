@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * components/infoboard/v2/designer/anlageplan/AnlageplanDesignerClient.tsx
@@ -139,7 +140,7 @@ const SECTION_DESCRIPTIONS: Record<DesignerSection, string> = {
 };
 
 const SECTION_ICON: Record<DesignerSection, ReactNode> = {
-  KOPFZEILE: <Settings className="h-4 w-4" aria-hidden="true" />,
+  KOPFZEILE: <ProductDomainSceIcon name="settings" size={16} className="h-4 w-4" />,
   ANLAGEPLAN: <MapIcon className="h-4 w-4" aria-hidden="true" />,
   HINWEISLEISTE: <Megaphone className="h-4 w-4" aria-hidden="true" />,
 };

@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import { UserCircle, X } from "lucide-react";
@@ -98,7 +99,7 @@ export default function QuoteConfigForm({ config, onChange }: Props) {
             onClick={() => setPickerOpen(true)}
             className="flex w-full items-center gap-2 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2)] px-3 py-3 text-sm text-[var(--muted)] hover:border-[var(--tenant-primary)] hover:text-[var(--foreground)] transition-colors"
           >
-            <UserCircle className="h-4 w-4" />
+            <ProductDomainSceIcon name="people" size={16} />
             Autoren-Foto aus Mediathek auswählen
           </button>
         )}

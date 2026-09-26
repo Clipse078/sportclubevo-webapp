@@ -6,6 +6,7 @@ import {
   Users,
   UserRound,
 } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import type { TeamCockpitMetrics } from "@/lib/teams/team-cockpit-metrics";
 
 type Props = {
@@ -62,7 +63,7 @@ export default function TeamCockpitOverview({ metrics }: Props) {
         <OverviewItem
           label="Spieler"
           value={String(metrics.playerCount)}
-          icon={<Users className="h-4 w-4" />}
+          icon={<ProductDomainSceIcon name="people" size={16} />}
         />
         <OverviewItem
           label="Trainer"
@@ -85,13 +86,13 @@ export default function TeamCockpitOverview({ metrics }: Props) {
         <OverviewItem
           label="Kategorie"
           value={metrics.categoryLabel}
-          icon={<Shield className="h-4 w-4" />}
+          icon={<ProductDomainSceIcon name="roles-access" size={16} />}
           prominent={false}
         />
         <OverviewItem
           label="Organisationseinheit"
           value={metrics.orgUnitName ?? "Nicht verknüpft"}
-          icon={<Building2 className="h-4 w-4" />}
+          icon={<ProductDomainSceIcon name="org-unit" size={16} />}
           prominent={false}
         />
       </div>

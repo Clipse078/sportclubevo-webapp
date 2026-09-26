@@ -1,4 +1,5 @@
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
 import { TENANT_ROLES_ASSIGN } from "@/lib/roles/access";
 import { getEligibleTenantMembers, getTenantRolesOverview } from "@/lib/roles/tenant-queries";
@@ -20,7 +21,7 @@ export default async function TenantRoleAssignmentsPage() {
       <div className="sce-detail-section">
         <div className="sce-detail-section-body">
           <EmptyState
-            icon={<Users className="h-10 w-10" />}
+            icon={<ProductDomainSceIcon name="people" size={48} />}
             heading="Keine aktiven Mitglieder"
             description="Es gibt derzeit keine aktiven Mitgliedschaften in diesem Mandanten, denen eine Rolle zugewiesen werden könnte."
           />

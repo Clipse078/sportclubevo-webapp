@@ -1,4 +1,3 @@
-import { FileCheck2 } from "lucide-react";
 import { FutureModuleShell } from "@/components/admin/future-modules/FutureModuleShell";
 import { FORMULARE_FREIGABEN_CAPABILITIES } from "@/lib/nav/future-modules";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -13,7 +12,7 @@ export default async function FormulareFreigabenPage() {
     <FutureModuleShell
       title="Formulare & Freigaben"
       purpose="Anfragen, Freigaben, Erklärungen und Einwilligungsprozesse zentral bündeln."
-      icon={FileCheck2}
+      sceIcon="form"
       capabilities={FORMULARE_FREIGABEN_CAPABILITIES}
       breadcrumbs={[
         { label: "Dashboard", href: "/dashboard" },

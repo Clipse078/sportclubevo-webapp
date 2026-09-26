@@ -1,4 +1,6 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { PeopleSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, SeasonSceIcon, WebsiteSceIcon, FacilitySceIcon, DocumentsSceIcon, NewsSceIcon, NotificationsSceIcon, TasksSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 /**
  * components/admin/registrations/RegistrationWorkflowPanel.tsx
@@ -356,7 +358,7 @@ export default function RegistrationWorkflowPanel({
             href={`/tenant/${tenantSlug}/cockpit/registrations/warteliste`}
             className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-amber-300 bg-amber-50 text-xs font-semibold text-amber-800 hover:bg-amber-100"
           >
-            <ClipboardList className="h-3.5 w-3.5" aria-hidden />
+            <ProductDomainSceIcon name="requirements" size={12} className="h-3.5 w-3.5" />
             Auf Warteliste — öffnen
           </a>
         )}
@@ -463,7 +465,7 @@ export default function RegistrationWorkflowPanel({
               }
             />
             <QuickActionButton
-              icon={Users}
+              icon={PeopleSceIcon}
               label="Anders zuweisen"
               onClick={() => setShowElsewherePicker((v) => !v)}
               disabled={targetGroups.length === 0}

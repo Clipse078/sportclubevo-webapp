@@ -2,15 +2,9 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  Search,
-  Building2,
-  ChevronRight,
-  Users,
-  GitBranch,
-  Layers,
-  Archive,
-} from "lucide-react";
+import { Search, ChevronRight, GitBranch, Layers, Archive } from "lucide-react";
+import { OrgUnitTypeSceIcon } from "@/components/icons/OrgUnitTypeSceIcon";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import OrgUnitRestoreButton from "@/components/admin/org/OrgUnitRestoreButton";
 import { EmptyState } from "@/components/ui/page";
 
@@ -192,7 +186,7 @@ export default function OrgUnitSearchableList({
                 : "text-[var(--muted)] hover:text-[var(--foreground)]"
             }`}
           >
-            <Building2 className="h-4 w-4" />
+            <ProductDomainSceIcon name="org-unit" size={16} />
             Aktiv
             <span className="ml-1 rounded-full bg-[var(--border)] px-1.5 py-0.5 text-[0.65rem] font-semibold text-[var(--muted)]">
               {totalActive}
@@ -257,7 +251,7 @@ export default function OrgUnitSearchableList({
           />
         ) : displayUnits.length === 0 ? (
           <EmptyState
-            icon={<Building2 className="h-10 w-10" />}
+            icon={<ProductDomainSceIcon name="org-unit" size={48} />}
             heading="Noch keine Organisationseinheiten"
             description="Erstelle die erste Einheit, um die Organisationsstruktur aufzubauen."
             action={
@@ -290,7 +284,7 @@ export default function OrgUnitSearchableList({
 
                   {/* Icon */}
                   <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface-2)]">
-                    <Building2 className="h-4 w-4 text-[var(--blue)]" />
+                    <OrgUnitTypeSceIcon type={unit.type} size={16} className="text-[var(--blue)]" />
                   </div>
 
                   {/* Name + meta */}
@@ -307,7 +301,7 @@ export default function OrgUnitSearchableList({
                     <div className="mt-1 flex flex-wrap items-center gap-3">
                       {unit._count.memberships > 0 ? (
                         <span className="flex items-center gap-1 text-xs text-[var(--muted)]">
-                          <Users className="h-3 w-3" />
+                          <ProductDomainSceIcon name="people" size={12} />
                           {unit._count.memberships} Mitgl.
                         </span>
                       ) : (

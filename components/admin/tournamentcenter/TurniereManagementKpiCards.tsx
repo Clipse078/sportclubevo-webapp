@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { CalendarClock, History, MapPin, Trophy } from "lucide-react";
 import type { TurniereManagementKpis } from "@/lib/tournaments/management-view";
 import { cn } from "@/lib/cn";
@@ -66,7 +67,7 @@ export default function TurniereManagementKpiCards({
       label: "Verschiedene Orte",
       value: kpis.uniqueVenues,
       hint: "mit Standortangabe",
-      icon: MapPin,
+      icon: FacilitySceIcon,
       iconTile: "bg-[var(--surface-2)] text-[var(--muted)]",
       "data-testid": "turniere-kpi-venues",
     },

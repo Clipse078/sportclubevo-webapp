@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ArrowRight, KeyRound, Plus, Shield, Users } from "lucide-react";
 import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
 import { getTenantRolesOverview } from "@/lib/roles/tenant-queries";
@@ -35,7 +36,7 @@ export default async function TenantRolesOverviewPage() {
         <div className="sce-detail-section">
           <div className="sce-detail-section-body">
             <EmptyState
-              icon={<Shield className="h-10 w-10" />}
+              icon={<ProductDomainSceIcon name="roles-access" size={48} />}
               heading="Keine Rollen vorhanden"
               description="Erstelle die erste mandanten-eigene Rolle für diesen Verein."
             />
@@ -87,7 +88,7 @@ export default async function TenantRolesOverviewPage() {
                     </td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <Users className="h-3.5 w-3.5 text-[var(--muted)]" />
+                        <ProductDomainSceIcon name="people" size={12} className="h-3.5 w-3.5 text-[var(--muted)]" />
                         <span className="font-semibold tabular-nums text-[var(--foreground)]">
                           {role.userCount}
                         </span>
@@ -155,7 +156,7 @@ export default async function TenantRolesOverviewPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-[0.78rem] text-[var(--text-2)]">
                   <span className="flex items-center gap-1">
-                    <Users className="h-3.5 w-3.5 text-[var(--muted)]" />
+                    <ProductDomainSceIcon name="people" size={12} className="h-3.5 w-3.5 text-[var(--muted)]" />
                     <strong className="font-semibold text-[var(--foreground)]">{role.userCount}</strong> Benutzer
                   </span>
                   <span className="flex items-center gap-1">

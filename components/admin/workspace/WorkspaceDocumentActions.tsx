@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import {
   Archive,
@@ -273,7 +274,7 @@ export function WorkspaceDocumentActions({
 
       {canManageAccess ? (
         <ActionButton
-          icon={<Shield className="h-4 w-4" />}
+          icon={<ProductDomainSceIcon name="roles-access" size={16} />}
           label={tAccess("manageButton")}
           onClick={openAccessManagement}
         />

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ArrowLeft, Calendar, Flag, Users } from "lucide-react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -131,7 +132,7 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
                     {
                       label: "Verantwortlich",
                       value: dbInitiative.owner,
-                      icon: <Users className="h-3.5 w-3.5" />,
+                      icon: <ProductDomainSceIcon name="people" size={12} />,
                       emptyText: "Nicht erfasst",
                     },
                     {
@@ -158,7 +159,7 @@ export default async function InitiativeDetailPage({ params }: PageProps) {
                   <ReviewStageBadge stage={dbInitiative.reviewStage} />
                   {dbInitiative.requiresFourEyeReview ? (
                     <Badge variant="secondary" size="sm">
-                      <ShieldCheck className="h-3 w-3" />
+                      <ProductDomainSceIcon name="roles-access" size={12} />
                       4-Augen
                     </Badge>
                   ) : null}

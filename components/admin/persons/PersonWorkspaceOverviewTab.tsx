@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * PERSON-UX-01 — Person 360° Übersicht tab.
@@ -586,7 +587,7 @@ export default function PersonWorkspaceOverviewTab({
 
         {!hasSomething ? (
           <EmptyState
-            icon={<Users2 className="h-8 w-8" />}
+            icon={<ProductDomainSceIcon name="people" size={20} />}
             heading="Noch keine Zuordnung"
             description="Diese Person hat noch keine aktiven Profile oder Zuordnungen."
           />
@@ -603,7 +604,7 @@ export default function PersonWorkspaceOverviewTab({
                     {activeSquadMemberships.map((sm) => (
                       <CapacityAssignmentCard
                         key={sm.id}
-                        icon={<Users2 className="h-4 w-4" />}
+                        icon={<ProductDomainSceIcon name="people" size={16} />}
                         title={sm.teamSeason.team.name}
                         badge="Spieler/in"
                         meta={[
@@ -626,7 +627,7 @@ export default function PersonWorkspaceOverviewTab({
                     {incompletePlayerAssignments.map((a) => (
                       <IncompleteAssignmentCard
                         key={a.id}
-                        icon={<Users2 className="h-4 w-4" />}
+                        icon={<ProductDomainSceIcon name="people" size={16} />}
                         teamName={a.team!.name}
                         roleLabel={getPersonFunctionLabel(a.functionKey)}
                         teamId={a.team!.id}
@@ -648,7 +649,7 @@ export default function PersonWorkspaceOverviewTab({
                     {incompletePlayerAssignments.map((a) => (
                       <IncompleteAssignmentCard
                         key={a.id}
-                        icon={<Users2 className="h-4 w-4" />}
+                        icon={<ProductDomainSceIcon name="people" size={16} />}
                         teamName={a.team!.name}
                         roleLabel={getPersonFunctionLabel(a.functionKey)}
                         teamId={a.team!.id}
@@ -769,16 +770,16 @@ export default function PersonWorkspaceOverviewTab({
                       key={a.id}
                       icon={
                         a.team ? (
-                          <Users2 className="h-4 w-4" />
+                          <ProductDomainSceIcon name="people" size={16} />
                         ) : (
-                          <Building2 className="h-4 w-4" />
+                          <ProductDomainSceIcon name="org-unit" size={16} />
                         )
                       }
                       title={a.team?.name ?? a.orgUnit?.name ?? "—"}
                       badge={getPersonFunctionLabel(a.functionKey)}
                       meta={[
                         ...(a.team && a.orgUnit
-                          ? [{ icon: <Building2 className="h-3 w-3" />, text: a.orgUnit.name }]
+                          ? [{ icon: <ProductDomainSceIcon name="org-unit" size={12} />, text: a.orgUnit.name }]
                           : []),
                         ...(a.season
                           ? [{ icon: <Calendar className="h-3 w-3" />, text: a.season.name }]
@@ -813,7 +814,7 @@ export default function PersonWorkspaceOverviewTab({
             className="flex w-full items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-left transition hover:bg-[var(--surface-2)] disabled:cursor-default disabled:hover:bg-[var(--surface)]"
           >
             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--surface-2)] text-[var(--muted)]">
-              <FolderOpen className="h-4 w-4" />
+              <ProductDomainSceIcon name="documents" size={16} />
             </div>
             <div className="min-w-0 flex-1">
               <span className="text-sm font-medium text-[var(--foreground)]">
@@ -838,7 +839,7 @@ export default function PersonWorkspaceOverviewTab({
         <div className="flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
           <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--surface-2)] text-[var(--muted)]">
             {person.user ? (
-              <ShieldCheck className="h-4 w-4" />
+              <ProductDomainSceIcon name="roles-access" size={16} />
             ) : (
               <KeyRound className="h-4 w-4" />
             )}

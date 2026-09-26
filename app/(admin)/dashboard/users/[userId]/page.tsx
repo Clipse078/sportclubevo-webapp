@@ -1,4 +1,5 @@
 ﻿import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
@@ -150,7 +151,7 @@ export default async function UserDetailPage({
         {/* Quick-info strip */}
         <div className="relative z-10 mt-6 flex flex-wrap gap-6 border-t border-white/15 pt-4">
           <div className="flex items-center gap-2 text-sm text-white/80">
-            <Mail className="h-4 w-4 text-white/60" />
+            <ProductDomainSceIcon name="communication" size={16} className="h-4 w-4 text-white/60" />
             <span>{user.email}</span>
           </div>
           {user.lastLoginAt ? (
@@ -214,7 +215,7 @@ export default async function UserDetailPage({
           <div className="sce-detail-section">
             <div className="sce-detail-section-header">
               <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-[var(--muted)]" />
+                <ProductDomainSceIcon name="roles-access" size={16} className="h-4 w-4 text-[var(--muted)]" />
                 <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
                   Plattform-Rollen
                 </p>
@@ -240,7 +241,7 @@ export default async function UserDetailPage({
           <div className="sce-detail-section">
             <div className="sce-detail-section-header">
               <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-[var(--muted)]" />
+                <ProductDomainSceIcon name="roles-access" size={16} className="h-4 w-4 text-[var(--muted)]" />
                 <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
                   Mandanten-Rollen
                 </p>

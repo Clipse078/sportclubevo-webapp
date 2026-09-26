@@ -1,17 +1,21 @@
-import type { LucideIcon } from "lucide-react";
-import { AlertTriangle, Bell, ClipboardList } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import type { SceIconRegistryName } from "@/components/design-system/icons/registry";
 
 export function notificationListIcon(input: {
   category: string;
   type: string;
-}): { Icon: LucideIcon; className: string } {
+}): { sceIcon: SceIconRegistryName; className: string; utilityIcon?: typeof AlertTriangle } {
   if (input.category === "REQUIREMENT") {
     if (input.type === "REQUIREMENT_OVERDUE") {
-      return { Icon: AlertTriangle, className: "text-red-600 dark:text-red-400" };
+      return {
+        sceIcon: "requirements",
+        className: "text-red-600 dark:text-red-400",
+        utilityIcon: AlertTriangle,
+      };
     }
     if (input.type === "REQUIREMENT_REMINDER") {
-      return { Icon: Bell, className: "text-[var(--sce-primary)]" };
+      return { sceIcon: "notifications", className: "text-[var(--sce-primary)]" };
     }
   }
-  return { Icon: ClipboardList, className: "text-[var(--sce-primary)]" };
+  return { sceIcon: "requirements", className: "text-[var(--sce-primary)]" };
 }

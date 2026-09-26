@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import {
   Calendar,
@@ -93,7 +94,7 @@ export default function WizardReview({
         />
 
         <ReviewRow
-          icon={<Building2 className="h-3.5 w-3.5" />}
+          icon={<ProductDomainSceIcon name="org-unit" size={12} />}
           label="Organisationseinheiten"
           value={
             selectedOrgUnits.length > 0 ? (
@@ -270,7 +271,7 @@ export default function WizardReview({
         onEdit={() => onGoToStep(STEP_PUBLICATION)}
       >
         <ReviewRow
-          icon={<Globe className="h-3.5 w-3.5" />}
+          icon={<ProductDomainSceIcon name="website" size={12} />}
           label="Website"
           value={
             <span
@@ -286,7 +287,7 @@ export default function WizardReview({
           }
         />
         <ReviewRow
-          icon={<Monitor className="h-3.5 w-3.5" />}
+          icon={<ProductDomainSceIcon name="infoboard" size={12} />}
           label="Infoboard"
           value={
             <span

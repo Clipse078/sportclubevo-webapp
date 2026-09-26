@@ -1,9 +1,9 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { PeopleSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, SeasonSceIcon, WebsiteSceIcon, FacilitySceIcon, DocumentsSceIcon, NewsSceIcon, NotificationsSceIcon, TasksSceIcon } from "@/components/icons/domain-sce-icon-components";
 import { connection } from "next/server";
 import {
   ArrowRight,
-  Building2,
-  CalendarRange,
   ExternalLink,
   KeyRound,
   Plus,
@@ -242,7 +242,7 @@ export default async function AdminPage() {
           value={String(data.orgUnitCount)}
           subtext="Aktive Organisationseinheiten"
           trend="neutral"
-          icon={<Building2 style={{ width: 18, height: 18 }} />}
+          icon={<ProductDomainSceIcon name="org-unit" size={20} />}
         />
         <KpiCard
           label="Personen"
@@ -256,14 +256,14 @@ export default async function AdminPage() {
           value={String(data.teamCount)}
           subtext="Alle Saisons gesamt"
           trend="neutral"
-          icon={<Users style={{ width: 18, height: 18 }} />}
+          icon={<ProductDomainSceIcon name="people" size={20} />}
         />
         <KpiCard
           label="Benutzer"
           value={String(data.userCount)}
           subtext="Aktive Benutzerkonten"
           trend="neutral"
-          icon={<Shield style={{ width: 18, height: 18 }} />}
+          icon={<ProductDomainSceIcon name="roles-access" size={20} />}
         />
       </div>
 
@@ -295,7 +295,7 @@ export default async function AdminPage() {
             <div className="sce-detail-section-body">
               {data.allSeasons.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-6 text-center">
-                  <CalendarRange
+                  <SeasonSceIcon
                     className="text-[var(--muted)]"
                     style={{ width: 28, height: 28 }}
                   />
@@ -380,7 +380,7 @@ export default async function AdminPage() {
             <div className="sce-detail-section-body">
               {data.orgUnitCount === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-6 text-center">
-                  <Building2
+                  <OrgUnitSceIcon
                     className="text-[var(--muted)]"
                     style={{ width: 28, height: 28 }}
                   />
@@ -448,7 +448,7 @@ export default async function AdminPage() {
                 >
                   <div className="flex items-center gap-2">
                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--blue-light)]">
-                      <Shield className="h-3.5 w-3.5 text-[var(--blue)]" />
+                      <ProductDomainSceIcon name="roles-access" size={12} className="h-3.5 w-3.5 text-[var(--blue)]" />
                     </div>
                     <p className="text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
                       Rollen
@@ -578,12 +578,12 @@ export default async function AdminPage() {
             <div className="sce-detail-section-body space-y-2">
               <QuickActionButton
                 href="/dashboard/users/new"
-                icon={Shield}
+                icon={RolesAccessSceIcon}
                 label="Benutzer einladen"
               />
               <QuickActionButton
                 href="/dashboard/org-units/new"
-                icon={Building2}
+                icon={OrgUnitSceIcon}
                 label="Org-Einheit anlegen"
               />
               <QuickActionButton
@@ -593,12 +593,12 @@ export default async function AdminPage() {
               />
               <QuickActionButton
                 href="/dashboard/teams/new"
-                icon={Users}
+                icon={PeopleSceIcon}
                 label="Team erstellen"
               />
               <QuickActionButton
                 href="/dashboard/seasons"
-                icon={CalendarRange}
+                icon={SeasonSceIcon}
                 label="Saison einrichten"
               />
             </div>

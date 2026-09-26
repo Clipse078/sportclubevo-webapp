@@ -1,7 +1,8 @@
 import BillingMetricTile from "@/components/admin/billing/shell/BillingMetricTile";
 import { formatBillingMoney } from "@/lib/billing/format-billing-money";
 import type { BillingOperationsSummaryMetrics } from "@/lib/billing/operations/billing-operations-types";
-import { AlertCircle, FileText, HandCoins, Users } from "lucide-react";
+import { AlertCircle, FileText, HandCoins } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 type Props = {
   metrics: BillingOperationsSummaryMetrics;
@@ -15,7 +16,7 @@ export default function BillingOperationsKpiStrip({ metrics }: Props) {
         label="Aktive Kunden"
         value={String(metrics.activeCustomerCount)}
         hint={`${metrics.activeContractCount} aktive Verträge`}
-        icon={<Users className="h-5 w-5" strokeWidth={1.75} />}
+        icon={<ProductDomainSceIcon name="commercial-account" size={20} />}
       />
       <BillingMetricTile
         label="Offene Forderungen"

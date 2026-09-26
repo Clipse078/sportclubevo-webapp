@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState, type ReactNode } from "react";
 import { ListChecks, Plus } from "lucide-react";
@@ -69,7 +70,7 @@ export default function ContextualTaskCreateTrigger({
         onClick={openDialog}
         data-testid={sharedTestId}
       >
-        <ListChecks className="h-4 w-4" aria-hidden />
+        <ProductDomainSceIcon name="tasks" size={16} className="h-4 w-4" />
       </button>
     );
   } else {
@@ -84,7 +85,7 @@ export default function ContextualTaskCreateTrigger({
         onClick={openDialog}
         data-testid={sharedTestId}
       >
-        <ListChecks className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden />
+        <ProductDomainSceIcon name="tasks" size={16} className="h-4 w-4 shrink-0 text-emerald-400" />
         {label}
       </button>
     );

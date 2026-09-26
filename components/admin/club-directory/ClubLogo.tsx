@@ -1,4 +1,5 @@
 import { Shield } from "lucide-react";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { cn } from "@/lib/cn";
 
 type ClubLogoProps = {
@@ -84,7 +85,7 @@ export function ClubLogo({
       )}
       aria-hidden="true"
     >
-      <Shield className={iconSizeClass} />
+      <ProductDomainSceIcon name="roles-access" size={16} className={iconSizeClass} />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { redirect, notFound } from "next/navigation";
 import {
   ArrowLeft,
@@ -251,13 +252,13 @@ export default async function OrgUnitDetailPage({ params }: PageProps) {
                     href: unit.parent
                       ? `/dashboard/org-units/${unit.parent.id}`
                       : undefined,
-                    icon: <Building2 className="h-3.5 w-3.5" />,
+                    icon: <ProductDomainSceIcon name="org-unit" size={12} />,
                     emptyText: "Haupteinheit",
                   },
                   {
                     label: "Mitglieder",
                     value: `${memberCount}`,
-                    icon: <Users className="h-3.5 w-3.5" />,
+                    icon: <ProductDomainSceIcon name="people" size={12} />,
                   },
                   {
                     label: "Untereinheiten",
@@ -348,7 +349,7 @@ export default async function OrgUnitDetailPage({ params }: PageProps) {
         {/* Tab navigation */}
         <div className="flex items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1">
           <span className="flex items-center gap-1.5 rounded-lg bg-[var(--surface-2)] px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
-            <Users className="h-4 w-4" />
+            <ProductDomainSceIcon name="people" size={16} />
             Aktive Mitglieder
           </span>
           <Link
@@ -386,7 +387,7 @@ export default async function OrgUnitDetailPage({ params }: PageProps) {
                     <div
                       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border ${childBg}`}
                     >
-                      <Building2 className="h-4 w-4 text-[var(--text-2)]" />
+                      <ProductDomainSceIcon name="org-unit" size={16} className="h-4 w-4 text-[var(--text-2)]" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-[var(--foreground)]">
@@ -429,7 +430,7 @@ export default async function OrgUnitDetailPage({ params }: PageProps) {
                     className="group flex items-center gap-4 px-5 py-3.5 transition hover:bg-[var(--surface-2)]"
                   >
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-emerald-100 bg-emerald-50">
-                      <Shield className="h-4 w-4 text-emerald-600" />
+                      <ProductDomainSceIcon name="roles-access" size={16} className="h-4 w-4 text-emerald-600" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-[var(--foreground)]">

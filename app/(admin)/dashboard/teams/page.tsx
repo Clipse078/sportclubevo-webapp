@@ -1,4 +1,5 @@
 ﻿import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { Plus, Users } from "lucide-react";
 import TeamsOverviewGrid from "@/components/admin/teams/TeamsOverviewGrid";
 import SeasonContextSelector from "@/components/admin/shared/SeasonContextSelector";
@@ -81,7 +82,7 @@ export default async function TeamsPage({ searchParams }: TeamsPageProps) {
           </div>
         }
         isEmpty={teams.length === 0}
-        emptyIcon={<Users className="h-10 w-10" />}
+        emptyIcon={<ProductDomainSceIcon name="people" size={48} />}
         emptyHeading="Keine Teams vorhanden"
         emptyDescription={
           selectedSeason?.name

@@ -1,4 +1,5 @@
 ﻿import Link from "next/link";
+import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
 import {
   AlertTriangle,
   ChevronLeft,
@@ -78,7 +79,7 @@ type DayPlannerPageProps = {
 
 const TYPE_META: Record<WeekplannerItem["type"], { label: string; badgeClass: string; icon: typeof Dumbbell }> = {
   TRAINING: { label: "Training", badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-700", icon: Dumbbell },
-  MATCH: { label: "Match", badgeClass: "border-blue-200 bg-blue-50 text-blue-700", icon: Shield },
+  MATCH: { label: "Match", badgeClass: "border-blue-200 bg-blue-50 text-blue-700", icon: RolesAccessSceIcon },
   TOURNAMENT: { label: "Turnier", badgeClass: "border-amber-200 bg-amber-50 text-amber-700", icon: Trophy },
   VERANSTALTUNG: { label: "Veranstaltung", badgeClass: "border-violet-200 bg-violet-50 text-violet-700", icon: Calendar },
 };
@@ -312,7 +313,7 @@ function TimelineRow({
         )}
 
         <div className="mt-2 space-y-1">
-          <ResourceChips icon={MapPin} refs={item.pitchAllocations} emptyLabel="Kein Platz zugewiesen" overridden={item.pitchOverridden} />
+          <ResourceChips icon={FacilitySceIcon} refs={item.pitchAllocations} emptyLabel="Kein Platz zugewiesen" overridden={item.pitchOverridden} />
           {item.type !== "TOURNAMENT" && (
             <ResourceChips
               icon={DoorOpen}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { CalendarDays, ListChecks } from "lucide-react";
 import {
   groupPersonalAgendaItems,
@@ -42,7 +43,7 @@ function AgendaGroup({
               </span>
               <span className="flex w-[4.5rem] shrink-0 items-center gap-0.5 text-[0.625rem] font-bold uppercase tracking-[0.08em] text-[var(--text-2)]">
                 {isTask ? (
-                  <ListChecks className="h-3 w-3 shrink-0" aria-hidden />
+                  <ProductDomainSceIcon name="tasks" size={12} className="h-3 w-3 shrink-0" />
                 ) : null}
                 {item.typeLabel}
               </span>

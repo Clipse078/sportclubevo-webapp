@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { Fragment, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
@@ -630,7 +631,7 @@ export function HomepageSectionCard({
                   : "Veröffentlichen"
               }
             >
-              <Globe className="h-3.5 w-3.5" />
+              <ProductDomainSceIcon name="website" size={12} />
             </button>
           )}
 

@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -172,7 +173,7 @@ export default function MembershipAccessControl({
                 disabled={pending}
                 className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 transition"
               >
-                <ShieldCheck className="h-3.5 w-3.5" />
+                <ProductDomainSceIcon name="roles-access" size={12} />
                 {pending ? "Wiederherstellen…" : "Zugriff wiederherstellen"}
               </button>
             )}

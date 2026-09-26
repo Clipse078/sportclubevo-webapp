@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * PERSON-UX-01 — Person Workspace tab shell.
@@ -213,13 +214,13 @@ export default function PersonDetailTabs({
     {
       key: "organisation",
       label: "Organisation",
-      icon: <Building2 className="h-3.5 w-3.5" />,
+      icon: <ProductDomainSceIcon name="org-unit" size={12} />,
       count: activeAssignmentCount,
     },
     {
       key: "spieler",
       label: "Spieler",
-      icon: <Users2 className="h-3.5 w-3.5" />,
+      icon: <ProductDomainSceIcon name="people" size={12} />,
       // PERSON-UX-07: tab driven by isPlayer capacity flag, not membership evidence.
       // Removing the flag hides the tab; historical data is preserved.
       hidden: !showSpielerTab,
@@ -264,7 +265,7 @@ export default function PersonDetailTabs({
     {
       key: "dokumente",
       label: "Dokumente",
-      icon: <FolderOpen className="h-3.5 w-3.5" />,
+      icon: <ProductDomainSceIcon name="documents" size={12} />,
       // Absent entirely when viewer lacks people.private_documents.view — no hint about existence.
       hidden: !canViewPrivateDocuments,
     },

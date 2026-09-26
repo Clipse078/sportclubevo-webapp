@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -109,7 +110,7 @@ export default function TenantRoleAssignmentControl({
                 } text-[var(--foreground)]`}
               >
                 {role.isSystem ? (
-                  <Shield className="h-3 w-3 flex-shrink-0 text-[var(--muted)]" />
+                  <ProductDomainSceIcon name="roles-access" size={12} className="h-3 w-3 flex-shrink-0 text-[var(--muted)]" />
                 ) : null}
                 {role.name}
               </label>

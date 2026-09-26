@@ -1,4 +1,5 @@
 ﻿import Link from "next/link";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { CalendarDays, ChevronRight, Users } from "lucide-react";
 import type { MeetingListItem } from "@/lib/meetings/queries";
 
@@ -42,7 +43,7 @@ export default function VereinsleitungMeetingsCard({ meetings = [] }: Vereinslei
                   <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-500">
                     <CalendarDays className="h-3.5 w-3.5 shrink-0" />
                     {formatSwissDate(m.meetingDate)}
-                    {m.attendeeCount ? <><Users className="h-3.5 w-3.5 shrink-0 ml-1" />{m.attendeeCount}</> : null}
+                    {m.attendeeCount ? <><ProductDomainSceIcon name="people" size={12} className="h-3.5 w-3.5 shrink-0 ml-1" />{m.attendeeCount}</> : null}
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">

@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -202,7 +203,7 @@ export default function OrgMembershipManagementCard({
       {/* Header */}
       <div className="sce-detail-section-header">
         <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-[var(--muted)]" />
+          <ProductDomainSceIcon name="people" size={16} className="h-4 w-4 text-[var(--muted)]" />
           <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
             Mitglieder
           </p>
@@ -252,7 +253,7 @@ export default function OrgMembershipManagementCard({
       {initialMemberships.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--surface-2)]">
-            <Users className="h-5 w-5 text-[var(--muted)]" />
+            <ProductDomainSceIcon name="people" size={20} className="h-5 w-5 text-[var(--muted)]" />
           </div>
           <div>
             <p className="text-sm font-medium text-[var(--foreground)]">
@@ -382,7 +383,7 @@ export default function OrgMembershipManagementCard({
                     {/* Period */}
                     {period ? (
                       <span className="inline-flex items-center gap-1 text-[11px] text-[var(--muted)]">
-                        <CalendarRange className="h-3 w-3" />
+                        <ProductDomainSceIcon name="season" size={12} />
                         {period}
                       </span>
                     ) : null}

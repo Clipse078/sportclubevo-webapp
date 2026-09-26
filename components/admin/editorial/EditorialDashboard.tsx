@@ -1,4 +1,6 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 /**
  * components/admin/editorial/EditorialDashboard.tsx
@@ -93,8 +95,8 @@ function EntityIcon({ type }: { type: EditorialEntityType | string }) {
   const cls = "h-3.5 w-3.5 shrink-0";
   if (type === "HomepageSection") return <Home className={cls} />;
   if (type === "WebsitePageSection") return <FileText className={cls} />;
-  if (type === "WebsitePage") return <Globe className={cls} />;
-  if (type === "NewsArticle") return <Newspaper className={cls} />;
+  if (type === "WebsitePage") return <ProductDomainSceIcon name="website" size={16} className={cls} />;
+  if (type === "NewsArticle") return <ProductDomainSceIcon name="news" size={16} className={cls} />;
   return <FileEdit className={cls} />;
 }
 
@@ -729,7 +731,7 @@ const ACTION_ICON: Record<string, { icon: React.ElementType; cls: string }> = {
   APPROVE: { icon: CheckCircle2, cls: "bg-emerald-50 text-emerald-600" },
   REJECT: { icon: XCircle, cls: "bg-red-50 text-red-600" },
   REQUEST_CHANGES: { icon: XCircle, cls: "bg-red-50 text-red-600" },
-  PUBLISH: { icon: Globe, cls: "bg-emerald-50 text-emerald-600" },
+  PUBLISH: { icon: WebsiteSceIcon, cls: "bg-emerald-50 text-emerald-600" },
   UNPUBLISH: { icon: EyeOff, cls: "bg-amber-50 text-amber-600" },
   SCHEDULE: { icon: CalendarDays, cls: "bg-amber-50 text-amber-600" },
   ARCHIVE: { icon: Archive, cls: "bg-[var(--surface-2)] text-[var(--muted)]" },
@@ -998,7 +1000,7 @@ export default function EditorialDashboard() {
           <KpiCard
             label="Veröffentlicht"
             count={kpis.published}
-            icon={Globe}
+            icon={WebsiteSceIcon}
             colorClass="text-emerald-700"
             bgClass="bg-emerald-50"
             href="/dashboard/website/publishing?status=PUBLISHED"

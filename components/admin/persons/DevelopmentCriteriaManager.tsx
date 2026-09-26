@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 /**
  * PERSON-UX-06: Development criteria management UI.
@@ -476,7 +477,7 @@ export default function DevelopmentCriteriaManager({ initialCriteria }: Props) {
       {/* ── Toolbar ──────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-[var(--muted)]">
-          <Settings2 className="h-4 w-4" />
+          <ProductDomainSceIcon name="settings" size={16} />
           <span className="text-xs">
             {criteria.length} {criteria.length === 1 ? "Kriterium" : "Kriterien"}
             {" · "}
@@ -507,7 +508,7 @@ export default function DevelopmentCriteriaManager({ initialCriteria }: Props) {
       {/* ── List ─────────────────────────────────────────────────────────────── */}
       {criteria.length === 0 ? (
         <div className="rounded-xl border border-dashed border-[var(--border)] px-6 py-10 text-center">
-          <Settings2 className="mx-auto mb-3 h-8 w-8 text-[var(--muted)]" />
+          <ProductDomainSceIcon name="settings" size={20} className="mx-auto mb-3 h-8 w-8 text-[var(--muted)]" />
           <p className="text-sm font-medium text-[var(--foreground)]">Noch keine Kriterien</p>
           <p className="mt-1 text-xs text-[var(--muted)]">
             Fügen Sie das erste Bewertungs-Kriterium für Ihren Verein hinzu.

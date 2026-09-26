@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { Globe, Monitor } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -33,7 +34,7 @@ export default function StepPublication({
       </p>
 
       <ToggleRow
-        icon={<Globe className="h-4 w-4" />}
+        icon={<ProductDomainSceIcon name="website" size={16} />}
         label="Auf der Website anzeigen"
         description="Das Team kann auf der öffentlichen Vereinswebsite angezeigt werden."
         checked={websiteVisible}
@@ -42,7 +43,7 @@ export default function StepPublication({
       />
 
       <ToggleRow
-        icon={<Monitor className="h-4 w-4" />}
+        icon={<ProductDomainSceIcon name="infoboard" size={16} />}
         label="Auf dem Infoboard anzeigen"
         description="Das Team kann in relevanten Infoboard-Inhalten verwendet werden."
         checked={infoboardVisible}

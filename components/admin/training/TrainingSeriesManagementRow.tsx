@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import Link from "next/link";
 import TrainingSeriesRowContextMenu from "./TrainingSeriesRowContextMenu";
@@ -46,7 +47,7 @@ export default function TrainingSeriesManagementRow({
         )}
         aria-hidden="true"
       >
-        <Users className="h-[1.125rem] w-[1.125rem]" />
+        <ProductDomainSceIcon name="people" size={20} />
       </span>
       <div className="min-w-0">
         <p className="flex min-w-0 items-center gap-1.5 truncate text-[0.9375rem] font-semibold leading-tight tracking-tight text-[var(--foreground)]">

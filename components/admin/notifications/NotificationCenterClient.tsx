@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import type { NotificationListItem } from "@/lib/notifications/read-service";
+import { SceIcon } from "@/components/design-system/icons/SceIcon";
 import { notificationListIcon } from "@/lib/notifications/notification-presentation";
 import { Button } from "@/components/ui/Button";
 
@@ -92,7 +93,7 @@ export default function NotificationCenterClient({
       ) : (
         <ul className="divide-y divide-[var(--border)] rounded-lg border border-[var(--border)] bg-[var(--surface-1)]">
           {items.map((item) => {
-            const { Icon, className } = notificationListIcon({
+            const { sceIcon, className, utilityIcon: UtilityIcon } = notificationListIcon({
               category: item.category,
               type: item.type,
             });
@@ -105,7 +106,11 @@ export default function NotificationCenterClient({
                     className,
                   )}
                 >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
+                  {UtilityIcon ? (
+                    <UtilityIcon className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <SceIcon name={sceIcon} size={16} />
+                  )}
                 </span>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">

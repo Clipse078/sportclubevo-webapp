@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import { Shield } from "lucide-react";
@@ -88,7 +89,7 @@ export default function SportingTeamLogo({
         className,
       )}
     >
-      <Shield className={ICON_SIZE_CLASSES[size]} />
+      <ProductDomainSceIcon name="roles-access" size={16} className={ICON_SIZE_CLASSES[size]} />
     </span>
   );
 }

@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useMemo } from "react";
 import Link from "next/link";
@@ -284,12 +285,12 @@ export default function TeamsOverviewGrid({
                     <VisibilityIndicator
                       label="Web"
                       active={team.websiteVisible}
-                      icon={<Globe className="h-3 w-3" />}
+                      icon={<ProductDomainSceIcon name="website" size={12} />}
                     />
                     <VisibilityIndicator
                       label="Board"
                       active={team.infoboardVisible}
-                      icon={<Monitor className="h-3 w-3" />}
+                      icon={<ProductDomainSceIcon name="infoboard" size={12} />}
                     />
                     <ChevronRight className="h-4 w-4 text-[var(--muted)] transition group-hover:translate-x-0.5 group-hover:text-[var(--blue)]" />
                   </div>

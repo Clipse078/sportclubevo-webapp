@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { Fragment, useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
@@ -145,7 +146,7 @@ function PublishStatusBadge({
   if (isPublished) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
-        <Globe className="h-3 w-3" />
+        <ProductDomainSceIcon name="website" size={12} />
         Veröffentlicht
       </span>
     );
@@ -1321,7 +1322,7 @@ export default function HomepageSectionList() {
                                     : "Veröffentlichen"
                                 }
                               >
-                                <Globe className="h-3.5 w-3.5" />
+                                <ProductDomainSceIcon name="website" size={12} />
                               </button>
                             )}
 

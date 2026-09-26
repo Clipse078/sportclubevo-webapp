@@ -1,4 +1,6 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
+import { PeopleSceIcon, MemberSceIcon, RolesAccessSceIcon, OrgUnitSceIcon, WebsiteSceIcon, CommunicationSceIcon, SeasonSceIcon, FacilitySceIcon, NewsSceIcon, TasksSceIcon, NotificationsSceIcon, RequirementsSceIcon, DocumentsSceIcon } from "@/components/icons/domain-sce-icon-components";
 
 import { useState, useEffect, useCallback, Suspense, useMemo } from "react";
 import {
@@ -41,7 +43,7 @@ import type { ReusableComponentAdminItem } from "@/lib/reusable-components/types
 type ViewportMode = "desktop" | "tablet" | "mobile";
 
 const VIEWPORT_CONFIG: Record<ViewportMode, { label: string; icon: React.ElementType; maxWidth: string }> = {
-  desktop: { label: "Desktop", icon: Monitor, maxWidth: "100%" },
+  desktop: { label: "Desktop", icon: WebsiteSceIcon, maxWidth: "100%" },
   tablet: { label: "Tablet", icon: Tablet, maxWidth: "768px" },
   mobile: { label: "Mobile", icon: Smartphone, maxWidth: "375px" },
 };
@@ -87,7 +89,7 @@ function PublishBadgePreview({ status }: { status: string }) {
   if (status === "PUBLISHED") {
     return (
       <Badge variant="info" size="sm">
-        <Globe className="h-2.5 w-2.5" />
+        <ProductDomainSceIcon name="website" size={20} />
         Pub
       </Badge>
     );

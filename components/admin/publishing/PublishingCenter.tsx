@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
@@ -61,7 +62,7 @@ function TypeChip({ type }: { type: PublishableContentType }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--muted)]">
       {type === "news" ? (
-        <Newspaper className="h-2.5 w-2.5" />
+        <ProductDomainSceIcon name="news" size={20} />
       ) : (
         <FileText className="h-2.5 w-2.5" />
       )}
@@ -163,7 +164,7 @@ function WorkflowActions({
           className="sce-icon-button text-blue-600 hover:text-blue-800"
           title="Zur Prüfung einreichen"
         >
-          <Send className="h-3.5 w-3.5" />
+          <ProductDomainSceIcon name="publish" size={12} />
         </button>
       )}
 

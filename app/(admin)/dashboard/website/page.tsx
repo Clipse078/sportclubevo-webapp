@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import Link from "next/link";
 import {
   Newspaper,
@@ -95,7 +96,7 @@ export default async function WebsiteCmsOverviewPage() {
         <PageActions>
           {canManageNews && (
             <Link href={CMS_ROUTES.newsNew} className="fca-button-secondary">
-              <Newspaper className="h-4 w-4" />
+              <ProductDomainSceIcon name="news" size={16} />
               Neue News
             </Link>
           )}
@@ -145,7 +146,7 @@ export default async function WebsiteCmsOverviewPage() {
           {stats.websiteEnabled ? (
             <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
           ) : (
-            <Globe className="h-4 w-4 shrink-0 text-[var(--muted)]" />
+            <ProductDomainSceIcon name="website" size={16} className="h-4 w-4 shrink-0 text-[var(--muted)]" />
           )}
           <p className="text-xs text-[var(--text-2)]">
             <span className="font-semibold">
@@ -177,7 +178,7 @@ export default async function WebsiteCmsOverviewPage() {
               value={stats.news.total}
               subLabel={`${stats.news.published} veröffentlicht`}
               href={CMS_ROUTES.news}
-              icon={<Newspaper className="h-5 w-5" />}
+              icon={<ProductDomainSceIcon name="news" size={20} />}
               iconBg="rgba(59,130,246,0.10)"
               iconColor="#3B82F6"
             />
@@ -253,7 +254,7 @@ export default async function WebsiteCmsOverviewPage() {
           {[
             canManageNews && {
               href: CMS_ROUTES.news,
-              icon: <Newspaper className="h-5 w-5" />,
+              icon: <ProductDomainSceIcon name="news" size={20} />,
               label: "News",
               sub: `${stats.news.total} Artikel`,
               color: "#3B82F6",
@@ -301,7 +302,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             (canManageNews || canManageWebsite) && {
               href: CMS_ROUTES.publishing,
-              icon: <Send className="h-5 w-5" />,
+              icon: <ProductDomainSceIcon name="publish" size={20} />,
               label: "Publishing",
               sub:
                 stats.publishing.pendingReview > 0
@@ -312,7 +313,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             canManageWebsite && {
               href: CMS_ROUTES.settings,
-              icon: <Settings className="h-5 w-5" />,
+              icon: <ProductDomainSceIcon name="settings" size={20} />,
               label: "Einstellungen",
               sub: stats.approvedDataOnly ? "4-Augen aktiv" : "Standard",
               color: "#6B7280",
@@ -328,7 +329,7 @@ export default async function WebsiteCmsOverviewPage() {
             },
             {
               href: CMS_ROUTES.overview,
-              icon: <Globe className="h-5 w-5" />,
+              icon: <ProductDomainSceIcon name="website" size={20} />,
               label: "Übersicht",
               sub: "CMS Hub",
               color: "#111827",

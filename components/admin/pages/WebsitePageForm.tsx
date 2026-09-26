@@ -1,4 +1,5 @@
 "use client";
+import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -310,7 +311,7 @@ export default function WebsitePageForm({
               {isPending("submit") ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Send className="h-4 w-4" />
+                <ProductDomainSceIcon name="publish" size={16} />
               )}
               Zur Prüfung einreichen
             </button>
