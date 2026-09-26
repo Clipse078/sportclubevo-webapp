@@ -20,9 +20,12 @@ import { NAV_DESTINATION_SCE_ICON_BY_KEY } from "@/lib/nav/nav-destination-sce-i
 import {
   masterSvgGeometryEquivalent,
   normalizeMasterSvgGeometryMarkup,
+  SCE_V2_V1_GEOMETRY_OPTICAL_EXCEPTIONS,
+  isV1GeometryOpticalException,
 } from "@/lib/icons/v1-master-geometry-equivalence";
 
 const V1_FINAL_SNAPSHOT = "087dc2f75ddb1d806cb5d9ac1e7924a6c4c5fb1c";
+const V2_ARTWORK_BASELINE_SHA = "f51b7c7c17f4d09cf7e8c73f75e1b3a1ed18d860";
 const BRAND_HEX = /#(?:0b4aa2|f97316|fff|ffffff|062b52|f59a0b|2f8cff|ff7a1a)\b/i;
 const V1_COLOR_TOKEN = /var\(--sce-icon-/i;
 
@@ -47,16 +50,43 @@ describe("SCE-ICONS-V2-03 V1 geometry restoration", () => {
     expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(90);
   });
 
-  it("proves V1_GEOMETRY_EQUIVALENT = 90/90 (color/style ownership only)", () => {
+  it("proves V1_GEOMETRY_EQUIVALENT = 89/90 with one documented optical exception", () => {
     const mismatches: string[] = [];
+    const approvedExceptions: string[] = [];
     for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
       const v1 = readV1MasterSvg(name);
       const v2 = readFileSync(join(process.cwd(), SCE_APPROVED_MASTER_ASSETS[name]), "utf8");
-      if (!masterSvgGeometryEquivalent(v1, v2)) {
-        mismatches.push(name);
+      if (masterSvgGeometryEquivalent(v1, v2)) {
+        continue;
       }
+      if (isV1GeometryOpticalException(name)) {
+        approvedExceptions.push(name);
+        continue;
+      }
+      mismatches.push(name);
     }
     expect(mismatches).toEqual([]);
+    expect(approvedExceptions).toEqual(["settings"]);
+    expect(SCE_V2_V1_GEOMETRY_OPTICAL_EXCEPTIONS.settings).toBe(
+      "PRODUCT_OWNER_APPROVED_V2_OPTICAL_EXCEPTION",
+    );
+  });
+
+  it("keeps 89/90 SVG masters byte-identical to the pre-03R1 artwork baseline", () => {
+    const changed: string[] = [];
+    for (const name of SCE_APPROVED_MASTER_ICON_NAMES) {
+      if (name === "settings") continue;
+      const baseline = execFileSync(
+        "git",
+        ["show", `${V2_ARTWORK_BASELINE_SHA}:public/images/icons/${name}.svg`],
+        { encoding: "utf8", cwd: process.cwd() },
+      );
+      const current = readFileSync(join(process.cwd(), SCE_APPROVED_MASTER_ASSETS[name]), "utf8");
+      if (baseline !== current) {
+        changed.push(name);
+      }
+    }
+    expect(changed).toEqual([]);
   });
 
   it("restores high-visibility approved V1 concepts", () => {
@@ -128,7 +158,11 @@ describe("SCE-ICONS-V2-03 administration semantics", () => {
       join(process.cwd(), SCE_APPROVED_MASTER_ASSETS.settings),
       "utf8",
     );
-    expect(settingsSvg).toMatch(/circle|<path/i);
+    expect(settingsSvg).toContain('viewBox="0 0 64 64"');
+    expect(settingsSvg).toContain("currentColor");
+    expect(settingsSvg).toMatch(/L35\.95 9\.34/);
+    expect(settingsSvg).not.toMatch(/stroke-dasharray/);
+    expect(settingsSvg).not.toMatch(/M32 8v8/);
   });
 });
 

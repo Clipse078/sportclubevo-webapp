@@ -2,14 +2,14 @@
  * Frozen V2 authoritative artwork fingerprints (SCE-ICONS-V2-03).
  * Geometry source: approved V1 final snapshot 087dc2f75ddb1d806cb5d9ac1e7924a6c4c5fb1c
  * Color model: V2 currentColor monochrome
- * Source commit: 69aea1f0b3ebcf4fdac5ba1a6fb1646fedb598c7
+ * Source commit: 20e7458eb52528e2a27ffc852a968ea5763d97fc
  * Do not edit — regenerate only via deliberate artwork approval.
  */
 
 import type { SceApprovedMasterIconName } from "../masters/approved-hero-meta";
 
 export const SCE_V2_AUTHORITATIVE_ARTWORK_SOURCE_SHA =
-  "69aea1f0b3ebcf4fdac5ba1a6fb1646fedb598c7" as const;
+  "20e7458eb52528e2a27ffc852a968ea5763d97fc" as const;
 
 export const SCE_V2_AUTHORITATIVE_ARTWORK_FINGERPRINTS = {
   "absence": "763339e007de84500c5c55fb24bbdf08dadc7a6131bde5288f228b7c90da7263" as const,
@@ -84,7 +84,7 @@ export const SCE_V2_AUTHORITATIVE_ARTWORK_FINGERPRINTS = {
   "revenue": "a946e02874462b9d7b7a9ad9a75afe020de41ca8c1c0b0734fb930c8873eead9" as const,
   "roles-access": "1a1fa8fc77bb1caf87e1524c5e13848b5b6c75afe0abb172912d3d65a280daa6" as const,
   "season": "2f8092aa250a51cf9019f31adf711a9aec1b837f4c143a9b7086b31f24d7eb1c" as const,
-  "settings": "8b3f741ba17ca2690b56e6dc5cf75e6c8f7e9cc4665b56c7c0974bb5a5fb79d2" as const,
+  "settings": "09ca74cddd9d9f13b08506e8053a69e106da8ccc2ff0460b80d59264dc9a9503" as const,
   "sponsor": "9442b98fe1438d4e0ae30073e2a10cf883a4d1c1519002dcd0b8b05f36b76339" as const,
   "sponsorship-management": "45d714f8cc398c5d9e33463f355eaa8408baada0a666dd0bdac2fc6b0938b40c" as const,
   "standings": "1ddafbb98270bc00b3aacd7f3e1224c1e36dc835700d38a3b9c46aaabf4c04cc" as const,

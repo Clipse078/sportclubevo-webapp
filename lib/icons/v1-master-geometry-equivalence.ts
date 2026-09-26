@@ -2,6 +2,20 @@
  * SCE-ICONS-V2-03 — deterministic V1 geometry equivalence (color/style stripped).
  */
 
+/** Approved V2 optical revisions that intentionally diverge from V1 geometry (one master only). */
+export const SCE_V2_V1_GEOMETRY_OPTICAL_EXCEPTIONS = {
+  settings: "PRODUCT_OWNER_APPROVED_V2_OPTICAL_EXCEPTION",
+} as const satisfies Record<string, "PRODUCT_OWNER_APPROVED_V2_OPTICAL_EXCEPTION">;
+
+export type SceV2V1GeometryOpticalExceptionMaster =
+  keyof typeof SCE_V2_V1_GEOMETRY_OPTICAL_EXCEPTIONS;
+
+export function isV1GeometryOpticalException(
+  name: string,
+): name is SceV2V1GeometryOpticalExceptionMaster {
+  return Object.prototype.hasOwnProperty.call(SCE_V2_V1_GEOMETRY_OPTICAL_EXCEPTIONS, name);
+}
+
 /** Strip color ownership while preserving vector geometry markup. */
 export function normalizeMasterSvgGeometryMarkup(svg: string): string {
   let normalized = svg.trim();
