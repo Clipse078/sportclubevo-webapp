@@ -46,20 +46,21 @@ describe("SCE-VISUAL-03R2 navigation completeness", () => {
     }
   });
 
-  it("uses domain destinations for Club Organisation secondary navigation, not module-local children", () => {
+  it("uses compact Club L2 groups in header secondary navigation, not every destination", () => {
     const model = buildAppNavigationModelForUser(CLUB_ADMIN_KEYS, "club");
     const club = model.domains.find((d) => d.id === "club");
     expect(club).toBeTruthy();
     const secondary = resolveDomainSecondaryNavItems(club!);
-    expect(secondary.map((item) => item.key)).toEqual(
-      expect.arrayContaining(["organisation", "mitglieder", "anmeldungen", "trainer-staff"]),
+    expect(secondary.length).toBeGreaterThanOrEqual(4);
+    expect(secondary.length).toBeLessThanOrEqual(6);
+    expect(secondary.map((item) => item.label)).toEqual(
+      expect.arrayContaining(["Organisation", "People & Teams", "Mitgliedschaft"]),
     );
     expect(secondary.map((item) => item.key)).not.toContain("org-units");
+    expect(secondary.every((item) => item.headerGroupId)).toBe(true);
 
     const active = resolveActiveAppNavigation("/dashboard/org-units", model);
-    expect(active.domainSecondaryItems.map((item) => item.key)).toEqual(
-      expect.arrayContaining(["organisation", "mitglieder"]),
-    );
+    expect(active.domainSecondaryItems.map((item) => item.headerGroupId)).toContain("organisation");
     expect(active.moduleLocalChildren.map((child) => child.key)).toContain("org-units");
     expect(active.contextualChildren.map((child) => child.key)).toContain("org-units");
   });
@@ -86,22 +87,26 @@ describe("SCE-VISUAL-03R2 navigation completeness", () => {
     expect(resolveModuleLocalNavItems(planning!, active.activeDestination)).toEqual([]);
   });
 
-  it("keeps Website CMS tabs module-local while Publishing destinations stay in the secondary row", () => {
+  it("keeps Website CMS tabs module-local while Publishing header row uses major L2 groups", () => {
     const model = buildAppNavigationModelForUser(
       [PERMISSIONS.WEBSITE_MANAGE, PERMISSIONS.NEWS_MANAGE, PERMISSIONS.INFOBOARD_MANAGE],
       "club",
     );
     const publishing = model.domains.find((d) => d.id === "publishing");
     const secondary = resolveDomainSecondaryNavItems(publishing!);
-    expect(secondary.map((item) => item.key)).toEqual(
-      expect.arrayContaining(["website", "infoboard"]),
+    expect(secondary.length).toBeGreaterThanOrEqual(4);
+    expect(secondary.length).toBeLessThanOrEqual(6);
+    expect(secondary.map((item) => item.label)).toEqual(
+      expect.arrayContaining(["Übersicht", "Inhalte", "Kanäle"]),
     );
     expect(secondary.map((item) => item.key)).not.toContain("website-pages");
 
     const active = resolveActiveAppNavigation("/dashboard/website/pages", model);
     expect(active.activeDestinationKey).toBe("website");
     expect(active.activeDomainId).toBe("publishing");
-    expect(active.domainSecondaryItems.map((item) => item.key)).toContain("website");
+    expect(
+      active.domainSecondaryItems.some((item) => item.headerGroupId === "inhalte"),
+    ).toBe(true);
     expect(active.moduleLocalChildren.map((child) => child.key)).toContain("website-pages");
   });
 

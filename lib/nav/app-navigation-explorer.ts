@@ -6,8 +6,7 @@ import type { NavItemChild } from "@/lib/nav/nav-config";
 import type { AppNavigationDomainId, NavigationDomain } from "@/lib/nav/app-navigation-domains";
 import type { AppNavigationModel } from "@/lib/nav/app-navigation-model";
 import {
-  isSingleHubNavigationDomain,
-  resolveDomainSecondaryNavItems,
+  resolveDomainExplorerModuleItems,
 } from "@/lib/nav/app-navigation-model";
 
 export type ExplorerModuleEntry = {
@@ -41,16 +40,7 @@ export function resolveExplorerSearchHitNavKey(hit: ExplorerSearchHit): string |
 }
 
 export function resolveExplorerModulesForDomain(domain: NavigationDomain): ExplorerModuleEntry[] {
-  const secondary = resolveDomainSecondaryNavItems(domain);
-  if (isSingleHubNavigationDomain(domain)) {
-    return secondary.map((item) => ({
-      key: item.key,
-      label: item.label,
-      href: item.href,
-      carrySeason: item.carrySeason,
-      children: [],
-    }));
-  }
+  const secondary = resolveDomainExplorerModuleItems(domain);
 
   return secondary.map((item) => {
     const destination = domain.destinations.find((dest) => dest.key === item.key);

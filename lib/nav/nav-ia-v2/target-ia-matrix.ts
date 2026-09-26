@@ -302,45 +302,108 @@ export const PUBLISHING_TARGET_L2_GROUPS = [
   {
     id: "uebersicht",
     label: "Übersicht",
+    headerVisible: true,
     keys: ["website", "website-overview"],
   },
   {
     id: "inhalte",
     label: "Inhalte",
+    headerVisible: true,
     keys: ["website-news", "website-pages", "website-editorial", "website-components"],
   },
   {
     id: "website",
     label: "Website",
+    headerVisible: false,
     keys: ["website-homepage", "website-navigation", "website-blocks"],
   },
   {
     id: "medien",
     label: "Medien",
+    headerVisible: true,
     keys: ["website-media"],
   },
   {
     id: "kanaele",
     label: "Kanäle",
+    headerVisible: true,
     keys: ["website-publishing", "infoboard", "infoboard-overview", "infoboard-preview"],
   },
   {
     id: "einstellungen",
     label: "Einstellungen",
+    headerVisible: false,
     keys: ["website-settings"],
   },
 ] as const;
 
 /** Club L2 taxonomy (header-visible subset vs explorer-only deep admin). */
 export const CLUB_TARGET_L2_GROUPS = [
-  { id: "organisation", label: "Organisation", headerVisible: true },
-  { id: "people-teams", label: "People & Teams", headerVisible: true },
-  { id: "mitgliedschaft", label: "Mitgliedschaft", headerVisible: true },
-  { id: "vereinsentwicklung", label: "Vereinsentwicklung", headerVisible: true },
-  { id: "club-betrieb", label: "Club-Betrieb", headerVisible: true },
-  { id: "finanzen", label: "Finanzen & Partnerschaften", headerVisible: true },
-  { id: "administration", label: "Administration", headerVisible: false },
+  {
+    id: "organisation",
+    label: "Organisation",
+    headerVisible: true,
+    keys: ["organisation", "org-units", "target-groups", "vereine", "competitions"],
+  },
+  {
+    id: "people-teams",
+    label: "People & Teams",
+    headerVisible: true,
+    keys: ["mitglieder", "teams", "trainer-staff", "personen", "provider-mapping"],
+  },
+  {
+    id: "mitgliedschaft",
+    label: "Mitgliedschaft",
+    headerVisible: true,
+    keys: ["anmeldungen", "registrierungen", "warteliste", "archiv"],
+  },
+  {
+    id: "vereinsentwicklung",
+    label: "Vereinsentwicklung",
+    headerVisible: true,
+    keys: [
+      "club-entwicklung",
+      "club-entwicklung-ziele",
+      "club-entwicklung-initiativen",
+      "club-entwicklung-prozesse",
+    ],
+  },
+  {
+    id: "club-betrieb",
+    label: "Club-Betrieb",
+    headerVisible: true,
+    keys: ["meetings", "material", "helfereinsaetze", "formulare-freigaben", "vorfaelle-disziplin"],
+  },
+  {
+    id: "finanzen",
+    label: "Finanzen & Partnerschaften",
+    headerVisible: true,
+    keys: ["finanzen", "sponsoring"],
+  },
+  {
+    id: "administration",
+    label: "Administration",
+    headerVisible: false,
+    keys: [
+      "administration",
+      "admin-tenant-roles",
+      "admin-seasons",
+      "admin-facilities",
+      "admin-branding",
+      "admin-people-access",
+      "admin-roles",
+      "admin-tenants",
+      "admin-integrations",
+    ],
+  },
 ] as const;
+
+export type NavHeaderL2GroupDefinition = {
+  id: string;
+  label: string;
+  headerVisible?: boolean;
+  keys?: readonly string[];
+};
 
 export const ROUTES_REQUIRING_CHANGE: string[] = [];
 export const REDIRECTS_REQUIRED: string[] = [];

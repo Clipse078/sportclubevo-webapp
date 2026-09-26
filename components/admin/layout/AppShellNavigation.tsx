@@ -14,6 +14,7 @@ import NotificationBell from "@/components/admin/notifications/NotificationBell"
 import {
   buildAppNavigationModelForUser,
   buildNavigationHref,
+  isDomainHeaderSecondaryItemActive,
   isNavigationChildActive,
   isNavigationHrefActive,
   resolveActiveAppNavigation,
@@ -33,6 +34,8 @@ import {
   SCE_MOBILE_BOTTOM_NAV_CLASS,
 } from "@/lib/shell/sce-app-shell-nav";
 import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
+import { SceIcon } from "@/components/design-system/icons/SceIcon";
+import type { SceIconRegistryName } from "@/components/design-system/icons/registry";
 import { NavDestinationSceIcon } from "@/components/nav/NavDestinationSceIcon";
 import { getNavDestinationSceIconName } from "@/lib/nav/nav-destination-sce-icons";
 import { cn } from "@/lib/cn";
@@ -78,12 +81,16 @@ function DomainNavLink({
       aria-current={isActive ? "page" : undefined}
       data-nav-domain={domain.id}
       data-nav-domain-priority={domain.priority}
+      data-sce-nav-l1-icon={domain.l1SceIconKey}
       className={cn(
         "sce-global-primary-nav-item sce-global-primary-nav-domain shrink-0",
         isActive && "sce-global-primary-nav-item--active",
       )}
     >
-      {label}
+      <span className="sce-global-primary-nav-domain-icon" aria-hidden>
+        <SceIcon name={domain.l1SceIconKey as SceIconRegistryName} size={18} />
+      </span>
+      <span className="sce-global-primary-nav-domain-label">{label}</span>
     </Link>
   );
 }
@@ -163,22 +170,13 @@ function AppShellNavigationInner({
   );
 
   const isDomainSecondaryItemActive = useCallback(
-    (domain: NavigationDomain, item: DomainSecondaryNavItem) => {
-      if (item.fromHubPromotion) {
-        return isNavigationChildActive(pathname, {
-          key: item.key,
-          label: item.label,
-          href: item.href,
-        });
-      }
-      const destination = domain.destinations.find((dest) => dest.key === item.key);
-      if (!destination) return false;
-      if (active.activeDestinationKey === destination.key) return true;
-      return (
-        isNavigationHrefActive(pathname, destination.href) ||
-        (destination.children?.some((child) => isNavigationChildActive(pathname, child)) ?? false)
-      );
-    },
+    (domain: NavigationDomain, item: DomainSecondaryNavItem) =>
+      isDomainHeaderSecondaryItemActive(
+        pathname,
+        domain,
+        item,
+        active.activeDestinationKey,
+      ),
     [active.activeDestinationKey, pathname],
   );
 

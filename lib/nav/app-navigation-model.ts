@@ -16,6 +16,7 @@ import {
   type NavPresentationPriority,
   NAVIGATION_DOMAIN_DEFINITIONS,
 } from "@/lib/nav/app-navigation-domains";
+import type { NavHeaderL2GroupDefinition } from "@/lib/nav/nav-ia-v2/target-ia-matrix";
 import type { NavSection } from "@/lib/nav/nav-config";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
@@ -45,6 +46,10 @@ export type DomainSecondaryNavItem = {
   carrySeason?: boolean;
   /** Promoted from a single hub destination (e.g. Planung → Wochenplaner…). */
   fromHubPromotion?: boolean;
+  /** V2 header L2 group (Club / Publishing contextual row). */
+  headerGroupId?: string;
+  /** Nav-config keys represented by this header row entry (active-state resolution). */
+  headerGroupNavKeys?: readonly string[];
 };
 
 export type ActiveAppNavigation = {
@@ -73,7 +78,95 @@ export function isSingleHubNavigationDomain(domain: NavigationDomain): boolean {
   );
 }
 
+function resolveNavKeyHrefInDomain(
+  domain: NavigationDomain,
+  navKey: string,
+): { href: string; carrySeason?: boolean; itemKey: string } | null {
+  const topLevel = domain.destinations.find((dest) => dest.key === navKey);
+  if (topLevel) {
+    return { href: topLevel.href, carrySeason: topLevel.carrySeason, itemKey: topLevel.key };
+  }
+  for (const dest of domain.destinations) {
+    const child = dest.children?.find((c) => c.key === navKey);
+    if (child) {
+      return { href: child.href, carrySeason: dest.carrySeason, itemKey: child.key };
+    }
+  }
+  return null;
+}
+
+function collectAuthorizedGroupNavKeys(
+  domain: NavigationDomain,
+  group: NavHeaderL2GroupDefinition,
+): string[] {
+  const keys = group.keys ?? [];
+  return keys.filter((key) => resolveNavKeyHrefInDomain(domain, key) !== null);
+}
+
+function resolveHeaderItemsFromL2Groups(domain: NavigationDomain): DomainSecondaryNavItem[] {
+  const groups = domain.l2GroupMetadata ?? [];
+  const items: DomainSecondaryNavItem[] = [];
+
+  for (const group of groups) {
+    if (group.headerVisible === false) continue;
+    const authorizedKeys = collectAuthorizedGroupNavKeys(domain, group);
+    if (authorizedKeys.length === 0) continue;
+
+    const representativeKey =
+      authorizedKeys.find((key) => domain.destinations.some((dest) => dest.key === key)) ??
+      authorizedKeys[0]!;
+    const resolved = resolveNavKeyHrefInDomain(domain, representativeKey);
+    if (!resolved) continue;
+
+    items.push({
+      key: resolved.itemKey,
+      label: group.label,
+      href: resolved.href,
+      carrySeason: resolved.carrySeason,
+      headerGroupId: group.id,
+      headerGroupNavKeys: authorizedKeys,
+    });
+  }
+
+  return items;
+}
+
+/** Permission-filtered header Row 2 items for the active domain (V2 contextual navigation). */
 export function resolveDomainSecondaryNavItems(
+  domain: NavigationDomain | null,
+): DomainSecondaryNavItem[] {
+  if (!domain) return [];
+
+  if (domain.id === "dashboard") {
+    return [];
+  }
+
+  if (isSingleHubNavigationDomain(domain)) {
+    const hub = domain.destinations[0]!;
+    return (hub.children ?? []).map((child) => ({
+      key: child.key,
+      label: child.label,
+      href: child.href,
+      fromHubPromotion: true,
+    }));
+  }
+
+  if (domain.l2GroupMetadata?.length) {
+    return resolveHeaderItemsFromL2Groups(domain);
+  }
+
+  return domain.destinations
+    .filter((dest) => dest.visibility?.header !== false)
+    .map((dest) => ({
+      key: dest.key,
+      label: dest.label,
+      href: dest.href,
+      carrySeason: dest.carrySeason,
+    }));
+}
+
+/** Full module list for App Explorer (unfiltered by header Row 2 subset). */
+export function resolveDomainExplorerModuleItems(
   domain: NavigationDomain | null,
 ): DomainSecondaryNavItem[] {
   if (!domain) return [];
@@ -92,6 +185,38 @@ export function resolveDomainSecondaryNavItems(
     href: dest.href,
     carrySeason: dest.carrySeason,
   }));
+}
+
+export function isDomainHeaderSecondaryItemActive(
+  pathname: string,
+  domain: NavigationDomain,
+  item: DomainSecondaryNavItem,
+  activeDestinationKey: string | null,
+): boolean {
+  if (item.fromHubPromotion) {
+    return isNavigationChildActive(pathname, {
+      key: item.key,
+      label: item.label,
+      href: item.href,
+    });
+  }
+
+  if (item.headerGroupNavKeys?.length) {
+    return item.headerGroupNavKeys.some((navKey) => {
+      const resolved = resolveNavKeyHrefInDomain(domain, navKey);
+      if (!resolved) return false;
+      if (navKey === activeDestinationKey) return true;
+      return isNavigationHrefActive(pathname, resolved.href);
+    });
+  }
+
+  const destination = domain.destinations.find((dest) => dest.key === item.key);
+  if (!destination) return false;
+  if (activeDestinationKey === destination.key) return true;
+  return (
+    isNavigationHrefActive(pathname, destination.href) ||
+    (destination.children?.some((child) => isNavigationChildActive(pathname, child)) ?? false)
+  );
 }
 
 export function resolveModuleLocalNavItems(
