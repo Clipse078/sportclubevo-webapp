@@ -218,6 +218,7 @@ describe("SCE-ICONS-01 specimen", () => {
     expect(specimen).toContain("Section 4 — Publishing & Platform");
     expect(specimen).toContain("Section 5 — People, Membership & Club Operations");
     expect(specimen).toContain("Section 6 — Finance & Commercial Operations");
+    expect(specimen).toContain("Section 7 — Analytics, Reporting & Workflow");
     expect(specimen).toMatch(/32.*48|48.*32/s);
   });
 });

@@ -73,6 +73,25 @@ export const SCE_APPROVED_FINANCE_COMMERCIAL_MASTER_ICON_NAMES = [
 export type SceApprovedFinanceCommercialMasterIconName =
   (typeof SCE_APPROVED_FINANCE_COMMERCIAL_MASTER_ICON_NAMES)[number];
 
+/** SCE-ICONS-08 — analytics, reporting & workflow approved masters (Batch 5). */
+export const SCE_APPROVED_ANALYTICS_WORKFLOW_MASTER_ICON_NAMES = [
+  "analytics",
+  "approval",
+  "archive",
+  "automation",
+  "export",
+  "form",
+  "history",
+  "import",
+  "insight",
+  "integration",
+  "report",
+  "workflow",
+] as const;
+
+export type SceApprovedAnalyticsWorkflowMasterIconName =
+  (typeof SCE_APPROVED_ANALYTICS_WORKFLOW_MASTER_ICON_NAMES)[number];
+
 export const SCE_APPROVED_MASTER_ICON_NAMES = [
   ...SCE_APPROVED_HERO_ICON_NAMES,
   "team",
@@ -95,6 +114,7 @@ export const SCE_APPROVED_MASTER_ICON_NAMES = [
   ...SCE_APPROVED_PLATFORM_MASTER_ICON_NAMES,
   ...SCE_APPROVED_PEOPLE_OPERATIONS_MASTER_ICON_NAMES,
   ...SCE_APPROVED_FINANCE_COMMERCIAL_MASTER_ICON_NAMES,
+  ...SCE_APPROVED_ANALYTICS_WORKFLOW_MASTER_ICON_NAMES,
 ] as const;
 
 export type SceApprovedMasterIconName = (typeof SCE_APPROVED_MASTER_ICON_NAMES)[number];
@@ -180,4 +200,16 @@ export const SCE_APPROVED_MASTER_ASSETS: Record<
   "sponsorship-management": `${MASTER_DIR}/sponsorship-management.svg`,
   subscription: `${MASTER_DIR}/subscription.svg`,
   transaction: `${MASTER_DIR}/transaction.svg`,
+  analytics: `${MASTER_DIR}/analytics.svg`,
+  approval: `${MASTER_DIR}/approval.svg`,
+  archive: `${MASTER_DIR}/archive.svg`,
+  automation: `${MASTER_DIR}/automation.svg`,
+  export: `${MASTER_DIR}/export.svg`,
+  form: `${MASTER_DIR}/form.svg`,
+  history: `${MASTER_DIR}/history.svg`,
+  import: `${MASTER_DIR}/import.svg`,
+  insight: `${MASTER_DIR}/insight.svg`,
+  integration: `${MASTER_DIR}/integration.svg`,
+  report: `${MASTER_DIR}/report.svg`,
+  workflow: `${MASTER_DIR}/workflow.svg`,
 };

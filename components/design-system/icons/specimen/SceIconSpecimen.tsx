@@ -8,6 +8,7 @@ import {
 import type { SceIconSize } from "../SceIcon.types";
 import type {
   SceApprovedMasterIconName,
+  SceApprovedAnalyticsWorkflowMasterIconName,
   SceApprovedFinanceCommercialMasterIconName,
   SceApprovedPeopleOperationsMasterIconName,
   SceApprovedPlatformMasterIconName,
@@ -65,6 +66,21 @@ const PUBLISHING_PLATFORM_MASTERS: SceApprovedPlatformMasterIconName[] = [
   "audit",
   "settings",
   "billing-invoice",
+];
+
+const ANALYTICS_WORKFLOW_MASTERS: SceApprovedAnalyticsWorkflowMasterIconName[] = [
+  "analytics",
+  "report",
+  "insight",
+  "form",
+  "approval",
+  "workflow",
+  "automation",
+  "integration",
+  "import",
+  "export",
+  "archive",
+  "history",
 ];
 
 const FINANCE_COMMERCIAL_MASTERS: SceApprovedFinanceCommercialMasterIconName[] = [
@@ -166,6 +182,18 @@ const MASTER_LABELS: Record<SceApprovedMasterIconName, string> = {
   "qr-invoice": "QR Invoice",
   "commercial-account": "Commercial Account",
   "cost-centre": "Cost Centre",
+  analytics: "Analytics",
+  report: "Report",
+  insight: "Insight",
+  form: "Form",
+  approval: "Approval",
+  workflow: "Workflow",
+  automation: "Automation",
+  integration: "Integration",
+  import: "Import",
+  export: "Export",
+  archive: "Archive",
+  history: "History",
 };
 
 function SizeRow({
@@ -287,6 +315,12 @@ export function SceIconSpecimen() {
         title="Section 6 — Finance & Commercial Operations"
         description="Facilities booking, finance, billing, commercial accounts, and commercial operations masters (SCE-ICONS-07 Batch 4)."
         names={FINANCE_COMMERCIAL_MASTERS}
+      />
+
+      <MasterSection
+        title="Section 7 — Analytics, Reporting & Workflow"
+        description="Analytics, reporting, workflow, automation, integration, and data lifecycle masters (SCE-ICONS-08 Batch 5 — final artwork expansion)."
+        names={ANALYTICS_WORKFLOW_MASTERS}
       />
 
       <section>

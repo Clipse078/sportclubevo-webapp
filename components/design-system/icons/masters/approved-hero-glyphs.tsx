@@ -5,6 +5,7 @@ import {
 } from "../SceIcon.types";
 import { SceIconSvg } from "../SceIconSvg";
 import { SCE_APPROVED_EXPANDED_MASTER_GLYPHS } from "./approved-expanded-master-glyphs";
+import { SCE_APPROVED_ANALYTICS_WORKFLOW_MASTER_GLYPHS } from "./approved-analytics-workflow-master-glyphs";
 import { SCE_APPROVED_FINANCE_COMMERCIAL_MASTER_GLYPHS } from "./approved-finance-commercial-master-glyphs";
 import { SCE_APPROVED_PEOPLE_OPERATIONS_MASTER_GLYPHS } from "./approved-people-operations-master-glyphs";
 import { SCE_APPROVED_PLATFORM_MASTER_GLYPHS } from "./approved-platform-master-glyphs";
@@ -118,6 +119,7 @@ export function isSceApprovedMasterGlyph(glyph: ComponentType<SceIconGlyphProps>
     ...SCE_APPROVED_PLATFORM_MASTER_GLYPHS,
     ...SCE_APPROVED_PEOPLE_OPERATIONS_MASTER_GLYPHS,
     ...SCE_APPROVED_FINANCE_COMMERCIAL_MASTER_GLYPHS,
+    ...SCE_APPROVED_ANALYTICS_WORKFLOW_MASTER_GLYPHS,
   ] as readonly ComponentType<SceIconGlyphProps>[];
   return all.includes(glyph);
 }

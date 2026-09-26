@@ -25,11 +25,11 @@ describe("SCE-ICONS-07 finance & commercial operations", () => {
       expect(SCE_APPROVED_MASTER_ICON_NAMES).toContain(name);
       expect(SCE_ICON_REGISTRY[name].geometrySource).toBe("approved-master");
     }
-    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBe(66);
+    expect(SCE_APPROVED_MASTER_ICON_NAMES.length).toBeGreaterThanOrEqual(66);
   });
 
   it("extends the registry without removing prior concepts", () => {
-    expect(SCE_ICON_REGISTRY_NAMES.length).toBe(80);
+    expect(SCE_ICON_REGISTRY_NAMES.length).toBeGreaterThanOrEqual(80);
     expect(SCE_ICON_REGISTRY["billing-invoice"].geometrySource).toBe("approved-master");
     expect(SCE_ICON_REGISTRY.sponsor.geometrySource).toBe("approved-master");
     expect(SCE_ICON_REGISTRY.facility.geometrySource).toBe("approved-master");

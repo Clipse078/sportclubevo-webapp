@@ -6,7 +6,6 @@ import {
   Download,
   FileUp,
   FolderInput,
-  History,
   Link2,
   MoreHorizontal,
   Pencil,
@@ -22,6 +21,7 @@ import type { WorkspaceCommandContextState } from "@/lib/workspace/command/works
 import type { DocumentInspectorWorkflowCapabilitiesDto } from "@/lib/workspace/document-inspector/document-inspector-dto";
 import type { ContextualTaskCreateDialogProps } from "@/components/admin/aufgaben/contextual/ContextualTaskCreateDialog";
 import ContextualTaskCreateTrigger from "@/components/admin/aufgaben/contextual/ContextualTaskCreateTrigger";
+import { SceIcon } from "@/components/design-system/icons/SceIcon";
 
 import { Button } from "@/components/ui/Button";
 import { WorkspaceFloatingContextMenu } from "./WorkspaceFloatingContextMenu";
@@ -147,7 +147,7 @@ export function WorkspaceCommandBar({
                 <Button
                   type="button"
                   variant="secondary"
-                  iconLeft={<History className="h-4 w-4" />}
+                  iconLeft={<SceIcon name="history" size={16} className="h-4 w-4" />}
                   onClick={() => onOpenVersionHistory?.()}
                 >
                   {tActions("versionHistory")}

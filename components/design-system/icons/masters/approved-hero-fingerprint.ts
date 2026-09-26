@@ -25,7 +25,7 @@ export const SCE_APPROVED_HERO_GEOMETRY_FINGERPRINTS: Record<SceApprovedMasterIc
     ]),
   ) as Record<SceApprovedMasterIconName, string>;
 
-/** Baseline fingerprints — hero + org/work (04R1) + platform Batch 2 (05) + people ops Batch 3 (06) + finance/commercial Batch 4 (07). */
+/** Baseline fingerprints — hero + org/work (04R1) + platform Batch 2 (05) + people ops Batch 3 (06) + finance/commercial Batch 4 (07) + analytics/workflow Batch 5 (08). */
 export const SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS = {
   dashboard: "f72ca981769dfc233add2addcab754ccbc019d2b2c374cb58e6f38cd05faca6c" as const,
   "week-planner":
@@ -106,4 +106,16 @@ export const SCE_APPROVED_MASTER_BASELINE_FINGERPRINTS = {
     "85852faa5bf978f59aae9454c3613357eab06da7a87e0d891213e921426d625a" as const,
   subscription: "8d318ef193a9b4ad38a598e2619276c5a7e8ba75a9feab26fe54d6d15021568d" as const,
   transaction: "b602f8fcb77861953cb937ce82e17448b9c452731b21dd70861d6ddf05f560d2" as const,
+  analytics: "9119912142b820916729af9bd5e93820d05a3eea974436b626651b714953f22e" as const,
+  approval: "a3d81ca8bc7e95ec911fd745f26d03bd15b93da24729c76b2be888bd46ee1cad" as const,
+  archive: "04022eb4f449b444d5a2821ab865cd1cc2731da7f7cfc7f6327742d84798c845" as const,
+  automation: "b63c36b11f4d25d5472d909d57bdbaf059a915ca6d28af21949094075897794b" as const,
+  export: "0bcd6edbd1987d2764a19a60b7b883be5fe37a55454c32da00ea5a7510a523df" as const,
+  form: "ea8eace34ad3fe886600d5845ca6584806cd814d13ceb50ae4be5324224bc4c7" as const,
+  history: "bdf412cbfb0b658022829e8ace6981e84ea51a8dc1f39c023eb497e6498a4ad0" as const,
+  import: "f14e8d9b316f458cbbc12d4f5a68ee90385d26801fe748adc39d90338e8716ca" as const,
+  insight: "f493f2497becdca09acdae5341db68bc1d305ab68c04a78fae94981d952709c0" as const,
+  integration: "0e1fac9c4f0b3102550ab5604f54a84f7ca6bc95a0d272efd3bd84921e8aa719" as const,
+  report: "d481b174eceac2a7c63e2ab3f0844a5d30d6aa3242829e2566eed2871d2493dd" as const,
+  workflow: "2ce58d78e695498693443355e999dfd9d4cf68808b9f83e9f2652cfbb29c12a8" as const,
 } as const;

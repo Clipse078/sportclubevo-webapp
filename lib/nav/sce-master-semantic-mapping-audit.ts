@@ -261,6 +261,20 @@ export const SCE_MASTER_SEMANTIC_MAPPING_AUDIT: SceSemanticMappingAuditRow[] = [
     adoptedNow: true,
   },
   {
+    destination: "admin-integrations",
+    currentIcon: "Lucide:Plug",
+    proposedSceMaster: "integration",
+    confidence: "HIGH",
+    adoptedNow: true,
+  },
+  {
+    destination: "platform-integrations",
+    currentIcon: "Lucide:Plug",
+    proposedSceMaster: "integration",
+    confidence: "HIGH",
+    adoptedNow: true,
+  },
+  {
     destination: "meetings",
     currentIcon: "Lucide:Users",
     proposedSceMaster: "committee-board",

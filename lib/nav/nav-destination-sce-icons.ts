@@ -37,6 +37,8 @@ export const NAV_DESTINATION_SCE_ICON_BY_KEY = {
   sponsoring: "sponsor",
   "admin-facilities": "facility",
   "admin-people-access": "invitation",
+  "admin-integrations": "integration",
+  "platform-integrations": "integration",
 } as const satisfies Record<string, SceIconRegistryName>;
 
 export type NavDestinationSceIconKey = keyof typeof NAV_DESTINATION_SCE_ICON_BY_KEY;
