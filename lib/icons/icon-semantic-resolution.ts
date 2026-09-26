@@ -268,7 +268,12 @@ export function resolveLucideSemantic(
   file: string,
   jsxSnippet: string,
 ): IconSemanticResolution {
-  if (!jsxSnippet.includes(`<${symbol}`)) {
+  const renderedInJsx =
+    jsxSnippet.includes(`<${symbol}`) ||
+    new RegExp(`\\bicon:\\s*${symbol}\\b`).test(jsxSnippet) ||
+    new RegExp(`icon=\\{${symbol}\\}`).test(jsxSnippet);
+
+  if (!renderedInJsx && jsxSnippet.length < 4000) {
     return {
       category: "DEAD_OR_NON_RENDERED",
       sceMaster: null,
