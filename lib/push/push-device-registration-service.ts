@@ -87,6 +87,15 @@ export async function registerPushDevice(
       },
     });
 
+    await tx.pushDeviceRegistration.updateMany({
+      where: {
+        installationId,
+        userId: { not: input.userId },
+        status: RegistrationStatus.ACTIVE,
+      },
+      data: { status: RegistrationStatus.REVOKED },
+    });
+
     const saved = existing
       ? await tx.pushDeviceRegistration.update({
           where: { id: existing.id },
@@ -166,6 +175,32 @@ export async function revokePushDevice(input: {
   return true;
 }
 
+export async function revokePushDeviceForInstallation(input: {
+  userId: string;
+  installationId: string;
+}): Promise<boolean> {
+  const installationId = input.installationId.trim();
+  if (!installationId) return false;
+
+  const row = await prisma.pushDeviceRegistration.findUnique({
+    where: {
+      userId_installationId: {
+        userId: input.userId,
+        installationId,
+      },
+    },
+  });
+  if (!row) return false;
+  if (row.status === RegistrationStatus.REVOKED) return true;
+
+  await prisma.pushDeviceRegistration.update({
+    where: { id: row.id },
+    data: { status: RegistrationStatus.REVOKED },
+  });
+  return true;
+}
+
+/** Explicit security/account workflow — not used for ordinary logout. */
 export async function revokeAllPushDevicesForUser(userId: string): Promise<number> {
   const result = await prisma.pushDeviceRegistration.updateMany({
     where: { userId, status: RegistrationStatus.ACTIVE },

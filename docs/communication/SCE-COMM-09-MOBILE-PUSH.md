@@ -23,7 +23,8 @@
 |------|---------|
 | Client stack | Next.js 16 web application (React 19) |
 | Native mobile | **Not present** (no React Native, Expo, Capacitor) |
-| PWA / service worker | **Not present** in repository |
+| PWA / offline shell | **Not present** (no install UX, no cache-first app shell) |
+| Push service worker | **`public/sce-push-sw.js`** — dedicated push receiver only |
 | Existing push SDKs | **None** in `package.json` prior to COMM-09 |
 | Auth owner | Auth.js JWT session; `User` is global; tenant context via `TenantMembership` + active tenant |
 | Notification owner | `lib/notifications/*` + `Notification` / `NotificationDelivery` |
@@ -54,7 +55,8 @@ Model: `PushDeviceRegistration`
 - Stores serialized subscription JSON server-side only (`subscriptionJson`).
 - **Not** tenant-scoped; tenant safety enforced at **delivery** time via `TenantMembership` / active `Person` check.
 - Idempotent register/update (token rotation updates same installation row).
-- Revocation: per-device DELETE API; **logout revokes all active devices** for the session user.
+- Revocation: per-device DELETE API; **ordinary logout revokes only the current browser installation** (via `installationId` passed from the client). **`revokeAllPushDevicesForUser`** remains available for explicit security/account workflows, not default logout.
+- Account switch: registering on a shared browser **revokes other users’ active registrations** for the same `installationId`.
 
 Audit (no raw tokens): `DEVICE_REGISTERED`, `DEVICE_REVOKED` via `writeAuditRecord`.
 
@@ -166,9 +168,27 @@ Club/campaign packages reuse:
 
 ---
 
-## 12. Known limitations
+## 12. Client Web Push receiver (COMM-09R1)
 
-- No service worker shipped in COMM-09; browsers require caller-provided `PushSubscription` after explicit permission.
+| Flag | Status |
+|------|--------|
+| **SERVER_PUSH_FOUNDATION_READY** | `true` — registration API, delivery processor, VAPID provider adapter |
+| **CLIENT_PUSH_RECEIVER_READY** | `true` — dedicated service worker + browser subscription client |
+| **END_TO_END_WEB_PUSH_READY** | `true` when VAPID env is configured **and** the user completes the contextual enable flow (permission + subscription + `/api/push/devices`) |
+
+Client pieces:
+
+- Service worker: `public/sce-push-sw.js` (`push` → `showNotification`; `notificationclick` → focus/open canonical same-origin `href`)
+- Registration: `lib/push/client/push-registration-client.ts` (`PushManager`, VAPID public key from `/api/push/vapid-public-key`)
+- Permission UX seam: `lib/push/client/enable-web-push-action.ts` — **no automatic permission prompt on page load**
+- Logout: `SignOutForm` passes `installationId`, unsubscribes local `PushSubscription`, server revokes that installation only
+
+Requires browser support for Service Worker + Push API (standard desktop/Android Chrome/Firefox/Edge; iOS Safari only where Push API is available).
+
+## 13. Known limitations
+
+- No installable PWA / offline caching in COMM-09.
 - No iOS/Android native token path yet (`PushDevicePlatform` extensible).
-- No configurable privacy/consent UI (COMM-17).
+- No in-product “Push aktivieren” settings UI yet — seam only (`enableWebPushFromUserGesture`).
+- No configurable category privacy UI (COMM-17).
 - Web Push does not provide reliable device delivery confirmation.

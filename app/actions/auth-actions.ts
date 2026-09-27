@@ -9,12 +9,16 @@
  * shell UI in place after logout.
  */
 import { auth, signOut } from "@/auth";
-import { revokeAllPushDevicesForUser } from "@/lib/push/push-device-registration-service";
+import { revokePushDeviceForInstallation } from "@/lib/push/push-device-registration-service";
 
-export async function signOutAction() {
+export async function signOutAction(installationId?: string | null) {
   const session = await auth();
-  if (session?.user?.id) {
-    await revokeAllPushDevicesForUser(session.user.id);
+  const trimmedInstallationId = installationId?.trim();
+  if (session?.user?.id && trimmedInstallationId) {
+    await revokePushDeviceForInstallation({
+      userId: session.user.id,
+      installationId: trimmedInstallationId,
+    });
   }
   await signOut({ redirect: false, redirectTo: "/login" });
 }

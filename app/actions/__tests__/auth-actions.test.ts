@@ -14,8 +14,12 @@ vi.mock("@/auth", () => ({
   auth: mockAuth,
 }));
 
+const { mockRevokeInstallation } = vi.hoisted(() => ({
+  mockRevokeInstallation: vi.fn().mockResolvedValue(true),
+}));
+
 vi.mock("@/lib/push/push-device-registration-service", () => ({
-  revokeAllPushDevicesForUser: vi.fn().mockResolvedValue(0),
+  revokePushDeviceForInstallation: mockRevokeInstallation,
 }));
 
 describe("signOutAction", () => {
@@ -34,6 +38,18 @@ describe("signOutAction", () => {
     expect(mockSignOut).toHaveBeenCalledWith({
       redirect: false,
       redirectTo: "/login",
+    });
+    expect(mockRevokeInstallation).not.toHaveBeenCalled();
+  });
+
+  it("revokes only the current installation when installationId is provided", async () => {
+    const { signOutAction } = await import("../auth-actions");
+
+    await signOutAction("inst-browser-1");
+
+    expect(mockRevokeInstallation).toHaveBeenCalledWith({
+      userId: "user-1",
+      installationId: "inst-browser-1",
     });
   });
 });

@@ -9,6 +9,8 @@ import { PushProviderError } from "../push-provider";
 import {
   registerPushDevice,
   revokePushDevice,
+  revokePushDeviceForInstallation,
+  revokeAllPushDevicesForUser,
 } from "../push-device-registration-service";
 import { resolvePushTargetsForTenantRecipient } from "../push-target-resolution";
 import { buildPushPayloadFromNotification } from "../push-payload-builder";
@@ -118,6 +120,63 @@ describe("SCE-COMM-09 mobile push", () => {
       prismaMocks.pushDeviceRegistration.findFirst.mockResolvedValue(null);
       const ok = await revokePushDevice({ userId: "user-a", registrationId: "reg-b" });
       expect(ok).toBe(false);
+    });
+
+    it("revokes other users on same installation during account switch register", async () => {
+      prismaMocks.pushDeviceRegistration.findUnique.mockResolvedValue(null);
+      prismaMocks.pushDeviceRegistration.create.mockResolvedValue({
+        id: "reg-b",
+        userId: "user-b",
+        installationId: "inst-shared",
+        platform: PushDevicePlatform.WEB,
+        provider: "WEB_PUSH",
+        status: PushDeviceRegistrationStatus.ACTIVE,
+        lastSeenAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      await registerPushDevice({
+        userId: "user-b",
+        installationId: "inst-shared",
+        platform: PushDevicePlatform.WEB,
+        subscriptionJson: JSON.stringify({ endpoint: "https://push.example/b" }),
+      });
+
+      expect(prismaMocks.pushDeviceRegistration.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            installationId: "inst-shared",
+            userId: { not: "user-b" },
+          }),
+        }),
+      );
+    });
+
+    it("revokes current installation only on logout helper", async () => {
+      prismaMocks.pushDeviceRegistration.findUnique.mockResolvedValue({
+        id: "reg-1",
+        userId: "user-1",
+        installationId: "inst-1",
+        status: PushDeviceRegistrationStatus.ACTIVE,
+      });
+      prismaMocks.pushDeviceRegistration.update.mockResolvedValue({});
+
+      const ok = await revokePushDeviceForInstallation({
+        userId: "user-1",
+        installationId: "inst-1",
+      });
+      expect(ok).toBe(true);
+      expect(prismaMocks.pushDeviceRegistration.update).toHaveBeenCalledTimes(1);
+      expect(prismaMocks.pushDeviceRegistration.updateMany).not.toHaveBeenCalledWith(
+        expect.objectContaining({ where: { userId: "user-1", status: expect.anything() } }),
+      );
+    });
+
+    it("exposes revoke-all for explicit security workflows only", async () => {
+      prismaMocks.pushDeviceRegistration.updateMany.mockResolvedValue({ count: 2 });
+      const count = await revokeAllPushDevicesForUser("user-1");
+      expect(count).toBe(2);
     });
   });
 
