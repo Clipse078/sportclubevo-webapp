@@ -33,7 +33,9 @@ Club Communication reuses **PlatformCommunication**; it is not a separate commun
 
 **COMM-11 reuses COMM-09 Push through the canonical Notification pipeline and does not implement Push delivery itself.**
 
-**COMM-11 does not implement Campaign Composer or Email Delivery.**
+**COMM-11 does not implement Campaign Composer, Email Delivery, Sponsor Campaigns, or inbound Email/IMAP.**
+
+**COMM-15 (future) owns Communication Center / Inbox and inbound Email/IMAP connectors.**
 
 ---
 
@@ -117,6 +119,7 @@ Push eligibility follows COMM-09 mapping (ALERT → high priority hint).
 | COMM-12 Campaign Composer | Not implemented; composer primitives reusable |
 | COMM-13 Email Delivery | No outbound email; IN_APP (+ preference seam) only |
 | COMM-14 Sponsor | No sponsor fields or audiences |
+| COMM-15 Communication Center / Inbox | Not implemented; inbound IMAP/mailbox sync deferred |
 
 ---
 
