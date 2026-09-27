@@ -2,7 +2,7 @@
  * SCE-COMM-10 — canonical smart reminder dispatch (Communication + snapshots + notifications).
  */
 
-import type { PlatformCommunicationKind, Prisma } from "@prisma/client";
+import { Prisma, type PlatformCommunicationKind } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
@@ -32,6 +32,34 @@ export type SmartReminderDispatchResult =
   | { status: "published"; communicationId: string; recipientCount: number }
   | { status: "duplicate_execution"; communicationId: string };
 
+function isPrismaUniqueConstraintError(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    return true;
+  }
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: string }).code === "P2002"
+  );
+}
+
+async function findExecutionCommunicationId(input: {
+  tenantId: string;
+  executionIdentity: string;
+}): Promise<string | null> {
+  const existing = await prisma.communicationReminderExecution.findUnique({
+    where: {
+      tenantId_executionIdentity: {
+        tenantId: input.tenantId,
+        executionIdentity: input.executionIdentity,
+      },
+    },
+    select: { communicationId: true },
+  });
+  return existing?.communicationId ?? null;
+}
+
 export async function dispatchSmartReminderCommunication(
   input: SmartReminderDispatchInput,
 ): Promise<SmartReminderDispatchResult> {
@@ -42,17 +70,15 @@ export async function dispatchSmartReminderCommunication(
 
   const executionIdentity = input.executionIdentity?.trim() || null;
   if (executionIdentity) {
-    const existing = await prisma.communicationReminderExecution.findUnique({
-      where: {
-        tenantId_executionIdentity: {
-          tenantId: input.tenantId,
-          executionIdentity,
-        },
-      },
-      select: { communicationId: true },
+    const existingCommunicationId = await findExecutionCommunicationId({
+      tenantId: input.tenantId,
+      executionIdentity,
     });
-    if (existing) {
-      return { status: "duplicate_execution", communicationId: existing.communicationId };
+    if (existingCommunicationId) {
+      return {
+        status: "duplicate_execution",
+        communicationId: existingCommunicationId,
+      };
     }
   }
 
@@ -68,22 +94,55 @@ export async function dispatchSmartReminderCommunication(
     orchestrationMetaJson: input.orchestrationMeta as unknown as Prisma.InputJsonValue,
   });
 
-  const published = await publishTeamCommunication({
-    tenantId: input.tenantId,
-    teamId: input.teamId,
-    communicationId: draft.id,
-    senderUserId: input.senderUserId,
-    preservePreparedAudience: true,
-  });
-
   if (executionIdentity) {
-    await prisma.communicationReminderExecution.create({
-      data: {
-        tenantId: input.tenantId,
-        executionIdentity,
-        communicationId: draft.id,
-      },
+    try {
+      await prisma.communicationReminderExecution.create({
+        data: {
+          tenantId: input.tenantId,
+          executionIdentity,
+          communicationId: draft.id,
+        },
+      });
+    } catch (error) {
+      if (isPrismaUniqueConstraintError(error)) {
+        const winnerCommunicationId = await findExecutionCommunicationId({
+          tenantId: input.tenantId,
+          executionIdentity,
+        });
+        if (winnerCommunicationId) {
+          return {
+            status: "duplicate_execution",
+            communicationId: winnerCommunicationId,
+          };
+        }
+      }
+      throw error;
+    }
+  }
+
+  let published: { recipientCount: number };
+  try {
+    published = await publishTeamCommunication({
+      tenantId: input.tenantId,
+      teamId: input.teamId,
+      communicationId: draft.id,
+      senderUserId: input.senderUserId,
+      preservePreparedAudience: true,
     });
+  } catch (error) {
+    if (executionIdentity) {
+      await prisma.communicationReminderExecution
+        .delete({
+          where: {
+            tenantId_executionIdentity: {
+              tenantId: input.tenantId,
+              executionIdentity,
+            },
+          },
+        })
+        .catch(() => undefined);
+    }
+    throw error;
   }
 
   await recordSmartReminderAudit({

@@ -35,7 +35,22 @@ Eligibility source:
 - **Team roster events** (TRAINING / MATCH / TOURNAMENT): active `playerSquadMember` for the `teamSeasonId`.
 - **Club events (`CLUB_EVENT`)**: `EventParticipationAudienceEntry` via `resolveClubEventInviteePersonIds`.
 
-`MAYBE` is treated as a response (excluded from `NOT_RESPONDED`, not counted as accepted/declined).
+### Participation semantics (hard gate)
+
+| Status | Meaning in presets |
+|--------|-------------------|
+| `OPEN` | Implicit default when no `ParticipationResponse` row exists; sole member of `NOT_RESPONDED` |
+| `YES` | `ACCEPTED_ONLY` |
+| `NO` | `DECLINED_ONLY` |
+| `MAYBE` | Valid responded state; **not** folded into YES, NO, or OPEN |
+
+MAYBE preset flags (default unless Participation domain changes):
+
+- `MAYBE_IN_ACCEPTED`: **false**
+- `MAYBE_IN_DECLINED`: **false**
+- `MAYBE_IN_NO_RESPONSE`: **false**
+
+`ALL_INVITEES` still includes persons with `MAYBE`. There is no separate MAYBE preset in COMM-10.
 
 ## Guardian / safeguarding
 
@@ -54,12 +69,41 @@ No new `PlatformCommunicationKind.REMINDER` — reminders use `MESSAGE` / `ANNOU
 
 ### Manual vs scheduled
 
-- **Manual**: trainer/manager actions (UI + API) — distinct `manualActionKey` / no shared execution identity.
+- **Manual**: trainer/manager actions (UI + API) — distinct `manualActionKey` / no shared `executionIdentity`. Repeated manual sends are intentional separate Communications.
 - **Scheduled**: `CommunicationReminderSchedule` with UTC `executeAt`, stable `executionIdentity`, processed by `/api/cron/communication-reminders`. Duplicate job runs are suppressed via `CommunicationReminderExecution`.
 
-### Response-aware execution
+### Scheduled execution identity
 
-Scheduled/manual smart reminders resolve non-responders **at execution time**. Published communications store immutable snapshots even if attendance changes afterward.
+Stable key: `schedule:{scheduleId}:{executeAt.toISOString()}` (`buildReminderExecutionIdentity`).
+
+- Retries of the **same** due occurrence reuse this identity.
+- A future schedule occurrence gets a new `executeAt` → new identity.
+
+### Scheduler concurrency & retry
+
+Database contract:
+
+- `@@unique([tenantId, executionIdentity])` on `CommunicationReminderExecution` and `CommunicationReminderSchedule`.
+
+Runtime contract (`dispatchSmartReminderCommunication`):
+
+1. Fast-path read of existing execution row.
+2. Create Communication **draft**, then **insert execution row before publish** (atomic claim).
+3. Concurrent second worker hits `P2002` on insert → returns `duplicate_execution` without publishing.
+4. If publish fails after claim, execution row is deleted so the same scheduled occurrence can retry safely.
+5. After successful publish, retries return `duplicate_execution` (no second Communication / Notification / Push).
+
+Execution table stores orchestration idempotency only — not Event attendance, Poll responses, or Request claims.
+
+### Response-aware execution & snapshot immutability
+
+Scheduled/manual smart reminders resolve non-responders **at execution time** (e.g. T0 three `OPEN`, two respond before cron → only remaining `OPEN` recipients).
+
+After `publishTeamCommunication` with `preservePreparedAudience: true`, `PlatformCommunicationRecipientSnapshot` is historical truth; later RSVP changes do not rewrite past reminder recipients.
+
+### COMM-09 Push reuse
+
+Reminder orchestration publishes canonical Communications → Notifications → `NotificationDelivery` (COMM-09). No VAPID/web-push/device registration in COMM-10 services.
 
 ## Authorization
 
