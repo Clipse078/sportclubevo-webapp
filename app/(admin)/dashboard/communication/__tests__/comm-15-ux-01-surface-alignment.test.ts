@@ -17,6 +17,21 @@ describe("SCE-COMM-15-UX-01 — Communication Center surface alignment", () => {
     expect(SCE_DASHBOARD_MODULE_PAGE_SURFACE).toContain("var(--sce-surface-dense)");
   });
 
+  it("does not serialize mailbox credentials on the settings page loader", () => {
+    const page = readRelative("app/(admin)/dashboard/communication/inbox/settings/page.tsx");
+    const form = readRelative(
+      "components/admin/communication/inbox/CommunicationMailboxSettingsForm.tsx",
+    );
+    const apiRoute = readRelative("app/api/communication/inbox/mailboxes/route.ts");
+
+    expect(page).toContain("listCommunicationCenterMailboxes");
+    expect(page).not.toMatch(/credential(Encrypted)?/);
+    expect(form).toContain("hasCredential");
+    expect(form).not.toMatch(/value=\{[^}]*credential[^}]*mailbox/);
+    expect(apiRoute).toContain("listCommunicationCenterMailboxes");
+    expect(apiRoute).not.toMatch(/credentialEncrypted/);
+  });
+
   it("uses standard elevated panels in inbox workspace and settings form", () => {
     const workspace = readRelative(
       "components/admin/communication/inbox/CommunicationInboxWorkspace.tsx",
@@ -27,6 +42,8 @@ describe("SCE-COMM-15-UX-01 — Communication Center surface alignment", () => {
 
     expect(workspace).toContain("SCE_SURFACE_STANDARD_PANEL");
     expect(settings).toContain("SCE_SURFACE_STANDARD_PANEL");
+    expect(settings).toContain("mailbox-credential-visibility-toggle");
+    expect(settings).toContain('type={showCredential ? "text" : "password"}');
     expect(SCE_SURFACE_STANDARD_PANEL).toContain("var(--sce-surface-standard)");
 
     expect(workspace).not.toContain("--surface-1");
