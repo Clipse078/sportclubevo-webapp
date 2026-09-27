@@ -37,6 +37,7 @@ const baseMessage = {
   viewerAcknowledged: false,
   canAcknowledge: false,
   poll: null,
+  request: null,
 };
 
 describe("TeamChatView", () => {
