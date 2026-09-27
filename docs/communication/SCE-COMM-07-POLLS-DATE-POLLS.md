@@ -52,7 +52,7 @@ Aggregate counts are loaded on demand; timeline uses summaries to avoid N+1 resp
 1. Close poll
 2. Sender selects winning option (votes inform but do not auto-decide ties)
 3. **Termin erstellen** calls `createOtherEventFromDatePoll` (requires `EVENTS_MANAGE` independently of poll send permission)
-4. `createdEventId` persisted — repeat conversion returns the same event (idempotent)
+4. `createdEventId` persisted under a poll-row `FOR UPDATE` transaction — repeat or concurrent conversion returns the same event (idempotent)
 
 ## Notifications
 

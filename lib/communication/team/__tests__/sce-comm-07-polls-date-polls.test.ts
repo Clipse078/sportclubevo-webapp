@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   closeTeamPoll,
@@ -41,6 +43,7 @@ const mocks = vi.hoisted(() => ({
   createOtherEventFromDatePoll: vi.fn(),
   logAction: vi.fn(),
   $transaction: vi.fn(),
+  $queryRaw: vi.fn(),
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -51,6 +54,7 @@ vi.mock("@/lib/db/prisma", () => ({
     platformCommunicationPollResponse: mocks.platformCommunicationPollResponse,
     platformCommunicationRecipientSnapshot: mocks.platformCommunicationRecipientSnapshot,
     $transaction: mocks.$transaction,
+    $queryRaw: mocks.$queryRaw,
   },
 }));
 
@@ -72,8 +76,12 @@ describe("SCE-COMM-07 polls & date polls", () => {
     mocks.publishTeamCommunication.mockResolvedValue({ id: "comm-poll-1", recipientCount: 12 });
     mocks.logAction.mockResolvedValue(undefined);
     mocks.platformCommunicationPoll.create.mockResolvedValue({ id: "poll-1" });
+    mocks.$queryRaw.mockResolvedValue([
+      { createdEventId: null, selectedOptionId: "opt-win" },
+    ]);
     mocks.$transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
       fn({
+        $queryRaw: mocks.$queryRaw,
         platformCommunicationPoll: mocks.platformCommunicationPoll,
         platformCommunicationPollResponse: mocks.platformCommunicationPollResponse,
         platformCommunicationRecipientSnapshot: mocks.platformCommunicationRecipientSnapshot,
@@ -301,6 +309,14 @@ describe("SCE-COMM-07 polls & date polls", () => {
     });
     expect(second.created).toBe(false);
     expect(second.eventId).toBe("event-99");
+  });
+
+  it("locks poll row FOR UPDATE during event conversion (concurrent idempotency)", () => {
+    const src = readFileSync(
+      join(process.cwd(), "lib/communication/team/team-poll-communication-service.ts"),
+      "utf8",
+    );
+    expect(src).toMatch(/createEventFromDatePollCommunication[\s\S]*FOR UPDATE/);
   });
 
   it("exposes non-responder snapshot seam", async () => {

@@ -596,7 +596,7 @@ export async function createEventFromDatePollCommunication(input: {
     throw new TeamCommunicationValidationError("selected option has no start time");
   }
 
-  const eventId = await createOtherEventFromDatePoll({
+  const eventPayload = {
     tenantId: input.tenantId,
     teamId: input.teamId,
     actorUserId: input.actorUserId,
@@ -604,25 +604,60 @@ export async function createEventFromDatePollCommunication(input: {
     startAt: selected.startAt,
     endAt: selected.endAt,
     description: row.bodyText.trim() || null,
+  };
+
+  const result = await prisma.$transaction(async (tx) => {
+    const locked = await tx.$queryRaw<
+      Array<{ createdEventId: string | null; selectedOptionId: string | null }>
+    >`
+      SELECT "createdEventId", "selectedOptionId"
+      FROM "PlatformCommunicationPoll"
+      WHERE "id" = ${poll.id} AND "tenantId" = ${input.tenantId}
+      FOR UPDATE
+    `;
+    const state = locked[0];
+    if (!state) throw new TeamCommunicationNotFoundError();
+    if (state.createdEventId) {
+      return { eventId: state.createdEventId, created: false as const };
+    }
+
+    const selectedOptionId = state.selectedOptionId ?? poll.selectedOptionId;
+    const lockedSelected = poll.options.find((o) => o.id === selectedOptionId);
+    if (!lockedSelected?.startAt) {
+      throw new TeamCommunicationValidationError("selected option has no start time");
+    }
+
+    const eventId = await createOtherEventFromDatePoll(
+      {
+        ...eventPayload,
+        startAt: lockedSelected.startAt,
+        endAt: lockedSelected.endAt,
+      },
+      tx,
+    );
+
+    await tx.platformCommunicationPoll.update({
+      where: { id: poll.id },
+      data: { createdEventId: eventId },
+    });
+
+    return { eventId, created: true as const };
   });
 
-  await prisma.platformCommunicationPoll.update({
-    where: { id: poll.id },
-    data: { createdEventId: eventId },
-  });
+  if (result.created) {
+    await recordTeamPollAudit({
+      tenantId: input.tenantId,
+      actorUserId: input.actorUserId,
+      action: "DATE_POLL_EVENT_CREATED",
+      communicationId: row.id,
+      teamId: input.teamId,
+      kind: row.kind,
+      pollId: poll.id,
+      eventId: result.eventId,
+    });
+  }
 
-  await recordTeamPollAudit({
-    tenantId: input.tenantId,
-    actorUserId: input.actorUserId,
-    action: "DATE_POLL_EVENT_CREATED",
-    communicationId: row.id,
-    teamId: input.teamId,
-    kind: row.kind,
-    pollId: poll.id,
-    eventId,
-  });
-
-  return { eventId, created: true };
+  return result;
 }
 
 function canViewerSeeResults(input: {

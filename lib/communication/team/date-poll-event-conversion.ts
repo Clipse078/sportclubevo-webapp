@@ -1,7 +1,11 @@
 /**
  * SCE-COMM-07 — Create canonical OTHER Event from a Date Poll winning option.
+ *
+ * Canonical Event creation in this repository uses direct `prisma.event.create`
+ * (same contract as planner manual OTHER entries); poll conversion mirrors that shape.
  */
 
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
@@ -34,7 +38,7 @@ async function resolveActiveSeasonId(): Promise<string> {
   return fallback.id;
 }
 
-export async function createOtherEventFromDatePoll(input: {
+export type CreateOtherEventFromDatePollInput = {
   tenantId: string;
   teamId: string;
   actorUserId: string;
@@ -42,10 +46,17 @@ export async function createOtherEventFromDatePoll(input: {
   startAt: Date;
   endAt: Date | null;
   description: string | null;
-}): Promise<string> {
+};
+
+export async function createOtherEventFromDatePoll(
+  input: CreateOtherEventFromDatePollInput,
+  tx?: Prisma.TransactionClient,
+): Promise<string> {
   await assertCanCreateOtherEvent(input.actorUserId, input.tenantId);
 
-  const team = await prisma.team.findFirst({
+  const db = tx ?? prisma;
+
+  const team = await db.team.findFirst({
     where: { id: input.teamId, tenantId: input.tenantId },
     select: { id: true },
   });
@@ -64,7 +75,7 @@ export async function createOtherEventFromDatePoll(input: {
 
   const initialReviewStage = eventReviewDecision.allowsDirectExecution ? "APPROVED" : "SUBMITTED";
 
-  const created = await prisma.event.create({
+  const created = await db.event.create({
     data: {
       tenantId: input.tenantId,
       seasonId,
