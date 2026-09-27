@@ -319,6 +319,22 @@ enum PlatformCommunicationRecipientEngagement {
   RESPONDED
 }
 
+enum PlatformCommunicationPollMode {
+  SINGLE
+  MULTIPLE
+}
+
+enum PlatformCommunicationPollResultsVisibility {
+  AFTER_RESPONSE
+  AFTER_CLOSE
+  SENDER_ONLY
+}
+
+enum PlatformCommunicationPollLifecycle {
+  OPEN
+  CLOSED
+}
+
 enum CommunicationAttachmentSourceType {
   UPLOAD
   WORKSPACE_DOCUMENT_VERSION
@@ -459,6 +475,8 @@ enum NotificationType {
   TEAM_COMMUNICATION_PUBLISHED
   TEAM_ANNOUNCEMENT_PUBLISHED
   TEAM_ALERT_PUBLISHED
+  TEAM_POLL_PUBLISHED
+  TEAM_DATE_POLL_PUBLISHED
 }
 
 enum NotificationEntityType {
@@ -1031,6 +1049,9 @@ model Tenant {
   platformCommunicationReactions  PlatformCommunicationReaction[]
   platformCommunicationMentions   PlatformCommunicationMention[]
   platformCommunicationAttachments PlatformCommunicationAttachment[]
+  platformCommunicationPolls      PlatformCommunicationPoll[]
+  platformCommunicationPollOptions PlatformCommunicationPollOption[]
+  platformCommunicationPollResponses PlatformCommunicationPollResponse[]
   internalComments                InternalComment[]
   commentMentions                 CommentMention[]
   taskComments                    TaskComment[]
@@ -2340,6 +2361,7 @@ model Event {
   participationResponses        ParticipationResponse[]        @relation("EventParticipationResponses")
   // PLANNING-UX-05R1: configured participation audience for club events (type=OTHER)
   participationAudienceEntries EventParticipationAudienceEntry[] @relation("EventParticipationAudienceEntries")
+  platformCommunicationPollsCreated PlatformCommunicationPoll[] @relation("PollCreatedEvent")
 
   @@index([seasonId, type])
   @@index([teamId, type])
@@ -2936,6 +2958,7 @@ model PlatformCommunication {
   reactions    PlatformCommunicationReaction[]
   mentions     PlatformCommunicationMention[]
   attachmentLinks PlatformCommunicationAttachment[]
+  poll            PlatformCommunicationPoll?
 
   @@index([tenantId, conversationId, createdAt])
   @@index([tenantId, status, createdAt])
@@ -3025,12 +3048,88 @@ model PlatformCommunicationRecipientSnapshot {
   tenant        Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   communication PlatformCommunication @relation(fields: [communicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   subjectPerson Person                @relation("PlatformCommunicationSnapshotSubject", fields: [subjectPersonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  pollResponses PlatformCommunicationPollResponse[]
 
   @@index([tenantId, communicationId])
   @@index([tenantId, communicationId, engagement], map: "pc_recipient_snapshot_tenant_comm_engagement_idx")
   @@index([tenantId, subjectPersonId])
   @@index([tenantId, deliveryUserId])
   @@unique([communicationId, subjectPersonId, deliveryUserId, channel])
+}
+
+/// SCE-COMM-07 — structured poll configuration (1:1 with PlatformCommunication).
+model PlatformCommunicationPoll {
+  id              String @id @default(cuid())
+  tenantId        String
+  communicationId String @unique
+
+  mode              PlatformCommunicationPollMode              @default(SINGLE)
+  resultsVisibility PlatformCommunicationPollResultsVisibility @default(AFTER_CLOSE)
+  lifecycle         PlatformCommunicationPollLifecycle         @default(OPEN)
+  deadlineAt        DateTime?
+  closedAt          DateTime?
+  selectedOptionId  String?
+  createdEventId    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant        Tenant                            @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  communication PlatformCommunication             @relation(fields: [communicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  options       PlatformCommunicationPollOption[]
+  selectedOption PlatformCommunicationPollOption? @relation("PollSelectedOption", fields: [selectedOptionId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdEvent  Event?                            @relation("PollCreatedEvent", fields: [createdEventId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  responses     PlatformCommunicationPollResponse[]
+
+  @@index([tenantId, communicationId])
+  @@index([tenantId, lifecycle])
+  @@index([tenantId, createdEventId])
+  @@index([tenantId, selectedOptionId])
+}
+
+/// Poll option (text label and/or structured date/time for DATE_POLL).
+model PlatformCommunicationPollOption {
+  id       String @id @default(cuid())
+  tenantId String
+  pollId   String
+  sortOrder Int
+  label    String?
+  startAt  DateTime?
+  endAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant         Tenant                            @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  poll           PlatformCommunicationPoll         @relation(fields: [pollId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  responses      PlatformCommunicationPollResponse[]
+  selectedForPolls PlatformCommunicationPoll[]     @relation("PollSelectedOption")
+
+  @@unique([pollId, sortOrder])
+  @@index([tenantId, pollId, sortOrder])
+}
+
+/// Recipient-scoped poll selection (identity via dispatch snapshot).
+model PlatformCommunicationPollResponse {
+  id                  String @id @default(cuid())
+  tenantId            String
+  pollId              String
+  optionId            String
+  recipientSnapshotId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant            Tenant                                 @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  poll              PlatformCommunicationPoll              @relation(fields: [pollId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  option            PlatformCommunicationPollOption        @relation(fields: [optionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  recipientSnapshot PlatformCommunicationRecipientSnapshot @relation(fields: [recipientSnapshotId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([pollId, recipientSnapshotId, optionId])
+  @@index([tenantId, pollId])
+  @@index([tenantId, pollId, recipientSnapshotId])
+  @@index([tenantId, optionId])
+  @@index([recipientSnapshotId])
 }
 
 /// Immutable tenant-owned metadata for communication files. Binary content is

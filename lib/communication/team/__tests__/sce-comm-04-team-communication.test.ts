@@ -110,7 +110,8 @@ describe("SCE-COMM-04 team communication foundation", () => {
     expect(() => validateCommunicationKindSeam("MESSAGE")).not.toThrow();
     expect(() => validateCommunicationKindSeam("ANNOUNCEMENT")).not.toThrow();
     expect(() => validateCommunicationKindSeam("ALERT")).not.toThrow();
-    expect(() => validateCommunicationKindSeam("POLL")).toThrow();
+    expect(() => validateCommunicationKindSeam("POLL")).not.toThrow();
+    expect(() => validateCommunicationKindSeam("DATE_POLL")).not.toThrow();
   });
 
   it("enforces lifecycle transitions", () => {

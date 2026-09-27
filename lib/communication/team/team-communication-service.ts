@@ -75,7 +75,13 @@ function assertKindSupportedForFoundation(kind: string): PlatformCommunicationKi
   if (!isCommunicationKind(kind)) {
     throw new TeamCommunicationValidationError("invalid communication kind");
   }
-  if (kind === "MESSAGE" || kind === "ANNOUNCEMENT" || kind === "ALERT") {
+  if (
+    kind === "MESSAGE" ||
+    kind === "ANNOUNCEMENT" ||
+    kind === "ALERT" ||
+    kind === "POLL" ||
+    kind === "DATE_POLL"
+  ) {
     return kind;
   }
   throw new TeamCommunicationValidationError(`kind ${kind} is not enabled in COMM-04`);

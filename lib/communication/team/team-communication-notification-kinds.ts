@@ -8,6 +8,10 @@ export function notificationTypeForCommunicationKind(
       return "TEAM_ANNOUNCEMENT_PUBLISHED";
     case "ALERT":
       return "TEAM_ALERT_PUBLISHED";
+    case "POLL":
+      return "TEAM_POLL_PUBLISHED";
+    case "DATE_POLL":
+      return "TEAM_DATE_POLL_PUBLISHED";
     default:
       return "TEAM_COMMUNICATION_PUBLISHED";
   }
@@ -24,6 +28,10 @@ export function defaultNotificationTitleForKind(
       return "Team-Mitteilung";
     case "ALERT":
       return "Team-Alarm";
+    case "POLL":
+      return "Team-Umfrage";
+    case "DATE_POLL":
+      return "Team-Terminumfrage";
     default:
       return "Team-Nachricht";
   }

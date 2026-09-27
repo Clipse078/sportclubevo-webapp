@@ -5,6 +5,7 @@ import { Button } from "@/components/ui";
 import { TEAM_CHAT_REACTION_EMOJI, TEAM_CHAT_REACTION_KEYS } from "@/lib/communication/team/team-chat-reactions";
 import type { TeamChatMessageDto, TeamChatReplyPreviewDto } from "@/lib/communication/team/team-chat-service";
 import { TeamChatMessageBody } from "@/components/admin/teams/communication/TeamChatMessageBody";
+import { TeamPollTimelineCard } from "@/components/admin/teams/communication/TeamPollTimelineCard";
 
 type Props = {
   message: TeamChatMessageDto;
@@ -14,6 +15,10 @@ type Props = {
   onReply: (reply: TeamChatReplyPreviewDto) => void;
   onToggleReaction: (communicationId: string, reactionKey: string, active: boolean) => void;
   onAcknowledge: (communicationId: string) => void;
+  onSubmitPollResponse?: (communicationId: string, optionIds: string[]) => void;
+  onClosePoll?: (communicationId: string) => void;
+  onSelectDatePollWinner?: (communicationId: string, optionId: string) => void;
+  onCreateEventFromDatePoll?: (communicationId: string) => void;
   pending: boolean;
   senderLabel: string;
   formatTime: (iso: string | null, fallback: string) => string;
@@ -26,10 +31,47 @@ export function TeamCommunicationTimelineItem({
   onReply,
   onToggleReaction,
   onAcknowledge,
+  onSubmitPollResponse,
+  onClosePoll,
+  onSelectDatePollWinner,
+  onCreateEventFromDatePoll,
   pending,
   senderLabel,
   formatTime,
 }: Props) {
+  if (message.kind === "POLL" || message.kind === "DATE_POLL") {
+    return (
+      <TeamPollTimelineCard
+        message={message}
+        pending={pending}
+        onSubmitResponse={async (communicationId, optionIds) => {
+          onSubmitPollResponse?.(communicationId, optionIds);
+        }}
+        onClosePoll={
+          onClosePoll
+            ? async (communicationId) => {
+                onClosePoll(communicationId);
+              }
+            : undefined
+        }
+        onSelectWinner={
+          onSelectDatePollWinner
+            ? async (communicationId, optionId) => {
+                onSelectDatePollWinner(communicationId, optionId);
+              }
+            : undefined
+        }
+        onCreateEvent={
+          onCreateEventFromDatePoll
+            ? async (communicationId) => {
+                onCreateEventFromDatePoll(communicationId);
+              }
+            : undefined
+        }
+      />
+    );
+  }
+
   if (message.kind === "ANNOUNCEMENT" || message.kind === "ALERT") {
     const isAlert = message.kind === "ALERT";
     return (

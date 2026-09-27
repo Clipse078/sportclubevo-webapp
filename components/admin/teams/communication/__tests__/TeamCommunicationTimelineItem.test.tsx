@@ -22,6 +22,7 @@ const baseFormal: TeamChatMessageDto = {
   viewerEngagement: "READ",
   viewerAcknowledged: false,
   canAcknowledge: true,
+  poll: null,
 };
 
 describe("TeamCommunicationTimelineItem", () => {
@@ -76,5 +77,73 @@ describe("TeamCommunicationTimelineItem", () => {
 
     expect(screen.getByTestId("team-chat-message-comm-msg")).toBeInTheDocument();
     expect(screen.getByTestId("team-chat-message-reactions")).toBeInTheDocument();
+  });
+
+  it("renders poll card with voting controls", () => {
+    const pollMessage: TeamChatMessageDto = {
+      ...baseFormal,
+      id: "comm-poll",
+      kind: "POLL",
+      subject: "Turnier?",
+      acknowledgementRequired: false,
+      canAcknowledge: false,
+      poll: {
+        pollId: "poll-1",
+        kind: "POLL",
+        mode: "SINGLE",
+        resultsVisibility: "AFTER_CLOSE",
+        lifecycle: "OPEN",
+        deadlineAt: null,
+        closedAt: null,
+        isExpired: false,
+        isOpen: true,
+        canRespond: true,
+        canViewResults: false,
+        canManage: false,
+        canSelectWinner: false,
+        canCreateEvent: false,
+        selectedOptionId: null,
+        createdEventId: null,
+        viewerSelectedOptionIds: [],
+        options: [
+          {
+            id: "opt-1",
+            sortOrder: 0,
+            label: "Basel",
+            startAt: null,
+            endAt: null,
+            responseCount: 0,
+          },
+          {
+            id: "opt-2",
+            sortOrder: 1,
+            label: "Bern",
+            startAt: null,
+            endAt: null,
+            responseCount: 0,
+          },
+        ],
+        results: null,
+      },
+    };
+
+    render(
+      <TeamCommunicationTimelineItem
+        message={pollMessage}
+        teamId="team-1"
+        isOwn={false}
+        canSend={false}
+        pending={false}
+        senderLabel="Max Trainer"
+        formatTime={() => "01.01. 11:00"}
+        onReply={vi.fn()}
+        onToggleReaction={vi.fn()}
+        onAcknowledge={vi.fn()}
+        onSubmitPollResponse={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId("team-poll-card-comm-poll")).toBeInTheDocument();
+    expect(screen.getByTestId("team-poll-submit-response")).toBeInTheDocument();
   });
 });

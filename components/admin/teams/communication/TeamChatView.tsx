@@ -15,10 +15,16 @@ import {
   sendTeamAlertAction,
   sendTeamAnnouncementAction,
   sendTeamChatMessageAction,
+  sendTeamPollAction,
+  submitTeamPollResponseAction,
+  closeTeamPollAction,
+  selectDatePollWinnerAction,
+  createEventFromDatePollAction,
   toggleTeamChatReactionAction,
 } from "@/app/(admin)/dashboard/teams/[teamId]/kommunikation/actions";
+import { TeamPollComposer } from "@/components/admin/teams/communication/TeamPollComposer";
 
-type ComposerMode = "MESSAGE" | "ANNOUNCEMENT" | "ALERT";
+type ComposerMode = "MESSAGE" | "ANNOUNCEMENT" | "ALERT" | "POLL" | "DATE_POLL";
 
 type Props = {
   teamId: string;
@@ -100,7 +106,9 @@ export default function TeamChatView({
       <div className="flex flex-col gap-3 px-1 pb-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold text-[var(--foreground)]">Team-Kommunikation</h2>
-          <p className="text-sm text-[var(--text-2)]">Chat, Mitteilungen und Alarme im Team</p>
+          <p className="text-sm text-[var(--text-2)]">
+            Chat, Mitteilungen, Alarme und Umfragen im Team
+          </p>
         </div>
         {unreadCount > 0 ? (
           <span
@@ -124,6 +132,8 @@ export default function TeamChatView({
               ["MESSAGE", "Nachricht"],
               ["ANNOUNCEMENT", "Mitteilung"],
               ["ALERT", "Alarm"],
+              ["POLL", "Umfrage"],
+              ["DATE_POLL", "Terminumfrage"],
             ] as const
           ).map(([mode, label]) => (
             <Button
@@ -221,6 +231,38 @@ export default function TeamChatView({
                     if (result.ok) window.location.reload();
                   })
                 }
+                onSubmitPollResponse={(communicationId, optionIds) =>
+                  startTransition(async () => {
+                    const result = await submitTeamPollResponseAction(
+                      teamId,
+                      communicationId,
+                      optionIds,
+                    );
+                    if (result.ok) window.location.reload();
+                  })
+                }
+                onClosePoll={(communicationId) =>
+                  startTransition(async () => {
+                    const result = await closeTeamPollAction(teamId, communicationId);
+                    if (result.ok) window.location.reload();
+                  })
+                }
+                onSelectDatePollWinner={(communicationId, optionId) =>
+                  startTransition(async () => {
+                    const result = await selectDatePollWinnerAction(
+                      teamId,
+                      communicationId,
+                      optionId,
+                    );
+                    if (result.ok) window.location.reload();
+                  })
+                }
+                onCreateEventFromDatePoll={(communicationId) =>
+                  startTransition(async () => {
+                    const result = await createEventFromDatePollAction(teamId, communicationId);
+                    if (result.ok) window.location.reload();
+                  })
+                }
               />
             );
           })
@@ -253,6 +295,28 @@ export default function TeamChatView({
           mode="ALERT"
           onSent={() => void refreshAfterSend()}
           onSend={async (payload) => sendTeamAlertAction(teamId, payload)}
+        />
+      ) : null}
+
+      {canSend && composerMode === "POLL" ? (
+        <TeamPollComposer
+          teamId={teamId}
+          mode="POLL"
+          onSent={() => void refreshAfterSend()}
+          onSend={async (payload) =>
+            sendTeamPollAction(teamId, { ...payload, kind: "POLL" })
+          }
+        />
+      ) : null}
+
+      {canSend && composerMode === "DATE_POLL" ? (
+        <TeamPollComposer
+          teamId={teamId}
+          mode="DATE_POLL"
+          onSent={() => void refreshAfterSend()}
+          onSend={async (payload) =>
+            sendTeamPollAction(teamId, { ...payload, kind: "DATE_POLL" })
+          }
         />
       ) : null}
     </div>
