@@ -1,0 +1,126 @@
+{
+  "$schema": "SCE-COMM-01-source-matrix/v1",
+  "generatedFromBranch": "cursor/comm-01-canonical-architecture",
+  "generatedFromSha": "23c1ebab4546e39243abf18aa45676585ddb3c68",
+  "domains": [
+    {
+      "concern": "Person / User identity",
+      "canonicalOwner": "prisma Person + User; lib/people/*",
+      "communicationReuse": "Recipient resolution projects to Person; delivery expands to User",
+      "duplicateForbidden": true
+    },
+    {
+      "concern": "Membership (tenant, org unit, team squad)",
+      "canonicalOwner": "PersonMembership, PersonAssignment, OrgUnitMembership; lib/people/membership-service.ts",
+      "communicationReuse": "Structural audience selectors",
+      "duplicateForbidden": true
+    },
+    {
+      "concern": "Guardian / parent relationships",
+      "canonicalOwner": "GuardianRelationship; lib/people/guardian-service.ts",
+      "communicationReuse": "Safeguarding expansion seam; notification guardian precedent in lib/notifications/requirement-recipient-resolution.ts",
+      "duplicateForbidden": true
+    },
+    {
+      "concern": "Team",
+      "canonicalOwner": "prisma Team, TeamSeason; lib/teams/*",
+      "communicationReuse": "TEAM context + default team audience seam",
+      "duplicateForbidden": true
+    },
+    {
+      "concern": "OrgUnit",
+      "canonicalOwner": "prisma OrgUnit; lib/org/queries.ts",
+      "communicationReuse": "Structural orgUnitIds selectors",
+      "duplicateForbidden": true
+    },
+    {
+      "concern": "Role",
+      "canonicalOwner": "prisma Role, RolePermission; lib/permissions/*",
+      "communicationReuse": "roleIds / roleKeys selectors; sender authorization via effective permissions",
+      "duplicateForbidden": true
+    },
+    {
+      "concern": "People & Access / authorization",
+      "canonicalOwner": "lib/permissions/services/effective-permission-resolver.ts, require-* helpers",
+      "communicationReuse": "SenderCommunicationScope intersection at API boundaries",
+      "duplicateForbidden": true
+    },
+    {
+      "concern": "Tenant boundaries",
+      "canonicalOwner": "tenantId on all tenant-owned rows; lib/permissions/require-api-tenant-context.ts",
+      "communicationReuse": "Mandatory tenantId on comm payloads, audience resolution, snapshots",
+      "duplicateForbidden": true
+    },
+    {
+      "concern": "Saved Zielgruppe / TargetGroup",
+      "canonicalOwner": "prisma TargetGroup; lib/org/target-group-types.ts, target-group-resolver.ts",
+      "communicationReuse": "savedTargetGroupIds + dynamicRule (same ruleJson schema)",
+      "duplicateForbidden": true,
+      "notes": "TargetGroup is org-wide master data; Communication is primary consumer for campaigns and club sends."
+    },
+    {
+      "concern": "Requirement / Aufgaben audience selectors",
+      "canonicalOwner": "lib/requirements/requirement-audience*.ts",
+      "communicationReuse": "Same structural selector families (team, org unit, role, target group, explicit persons)",
+      "duplicateForbidden": true
+    },
+    {
+      "concern": "Workspace audience grants",
+      "canonicalOwner": "lib/workspace/access/audience*.ts",
+      "communicationReuse": "Pattern reference only — document access is not comm audience",
+      "duplicateForbidden": true
+    },
+    {
+      "concern": "Notifications",
+      "canonicalOwner": "prisma Notification, NotificationDelivery; lib/notifications/*",
+      "communicationReuse": "Communication generates notification signals; does not replace feed model",
+      "duplicateForbidden": false,
+      "notes": "Notification = attention/delivery signal; Communication = content/conversation/campaign."
+    },
+    {
+      "concern": "Notification preferences",
+      "canonicalOwner": "UserNotificationPreference; lib/notifications/preference-service.ts",
+      "communicationReuse": "COMM-17 extends with CommunicationPreferenceCategory seam",
+      "duplicateForbidden": false
+    },
+    {
+      "concern": "Calendar / Event / participation",
+      "canonicalOwner": "prisma Event, TrainingSession; lib/participation/*, lib/events/*",
+      "communicationReuse": "EVENT context; event audience presets filter participation — no duplicate RSVP tables",
+      "duplicateForbidden": true
+    },
+    {
+      "concern": "Workspace / documents",
+      "canonicalOwner": "lib/workspace/*; CommunicationAttachment + WorkspaceDocument links (COMM-01A)",
+      "communicationReuse": "Attachments via workspace-backed or lightweight message media",
+      "duplicateForbidden": true
+    },
+    {
+      "concern": "Audit",
+      "canonicalOwner": "lib/audit/log-action.ts; lib/communication/audit-integration.ts (registration email threads)",
+      "communicationReuse": "Summaries only — no full message bodies in AuditLog",
+      "duplicateForbidden": false
+    },
+    {
+      "concern": "Email delivery (operational threads)",
+      "canonicalOwner": "lib/communication/outbound-email-service.ts, providers/resend/*",
+      "communicationReuse": "Existing thread/email stack for registration; platform channel abstraction for future comm types",
+      "duplicateForbidden": false,
+      "notes": "Billing email is separate: lib/billing/billing-communication/*"
+    },
+    {
+      "concern": "Push / device tokens",
+      "canonicalOwner": null,
+      "communicationReuse": "COMM-09 seam; tokens belong to users/devices not teams/sponsors",
+      "duplicateForbidden": true,
+      "notes": "No canonical push token model found at COMM-01 baseline."
+    },
+    {
+      "concern": "Legacy parallel comm models",
+      "canonicalOwner": "CommunicationThread/Message (COMM-01A) — target-bound collaboration/email",
+      "communicationReuse": "Coexists; team chat/campaigns converge on platform model in COMM-04+",
+      "duplicateForbidden": false,
+      "notes": "Do not build sponsor-owned recipient lists or team-owned audience engines."
+    }
+  ]
+}
