@@ -148,6 +148,10 @@ export const PERMISSIONS = {
   COMMUNICATION_ZIELGRUPPEN_VIEW: "communication.zielgruppen.view",
   COMMUNICATION_ZIELGRUPPEN_MANAGE: "communication.zielgruppen.manage",
 
+  /** SCE-COMM-04 — team-scoped programme communication (view/send are separate). */
+  COMMUNICATION_TEAM_VIEW: "communication.team.view",
+  COMMUNICATION_TEAM_SEND: "communication.team.send",
+
   REGISTRATIONS_VIEW: "registrations.view",
   REGISTRATIONS_EDIT: "registrations.edit",
   // ADMIN-DELETE-03B: canonical permanent-deletion permission for

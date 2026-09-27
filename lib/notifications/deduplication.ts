@@ -149,9 +149,12 @@ export function buildParticipationOverdueDedupKey(input: {
 
 export function notificationTypeCategory(
   type: NotificationType,
-): "TASK" | "PARTICIPATION" | "REQUIREMENT" {
+): "TASK" | "PARTICIPATION" | "REQUIREMENT" | "COMMUNICATION" {
   if (type === "PARTICIPATION_REMINDER" || type === "PARTICIPATION_OVERDUE") {
     return "PARTICIPATION";
+  }
+  if (type === "TEAM_COMMUNICATION_PUBLISHED") {
+    return "COMMUNICATION";
   }
   if (
     type === "REQUIREMENT_ASSIGNED" ||

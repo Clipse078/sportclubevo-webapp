@@ -215,8 +215,14 @@ export async function resolveCommunicationRecipients(
 export async function resolveCommunicationRecipientsForDispatch(
   input: RecipientResolutionInput,
   communicationDispatchRef: string,
+  options?: {
+    structuralExclusionSelectors?: import("@/lib/communication/platform/audience/structural-targets").StructuralAudienceSelectors;
+  },
 ) {
-  const core = await resolveCommunicationRecipients({ ...input, mode: "DISPATCH" });
+  const core = await resolveCommunicationRecipients(
+    { ...input, mode: "DISPATCH" },
+    options,
+  );
   const pipeline = await runRecipientResolutionPipeline(
     {
       tenantId: input.tenantId,
