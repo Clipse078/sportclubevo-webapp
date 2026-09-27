@@ -304,11 +304,14 @@ enum PlatformCommunicationStatus {
 
 enum PlatformCommunicationContextKind {
   TEAM
+  ORGANISATION
+  ORG_UNIT
 }
 
 enum PlatformCommunicationConversationKind {
   TEAM_GENERAL
   TEAM_NAMED
+  ORG_GENERAL
 }
 
 enum PlatformCommunicationRecipientEngagement {
@@ -497,6 +500,9 @@ enum NotificationType {
   TEAM_POLL_PUBLISHED
   TEAM_DATE_POLL_PUBLISHED
   TEAM_REQUEST_PUBLISHED
+  CLUB_COMMUNICATION_PUBLISHED
+  CLUB_ANNOUNCEMENT_PUBLISHED
+  CLUB_ALERT_PUBLISHED
 }
 
 enum NotificationEntityType {

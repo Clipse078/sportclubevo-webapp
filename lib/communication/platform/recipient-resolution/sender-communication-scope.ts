@@ -88,6 +88,36 @@ export async function resolveSenderCommunicationScope(input: {
   });
 
   const canManageZielgruppen = tenant.includes(PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE);
+  const canSendClub = tenant.includes(PERMISSIONS.COMMUNICATION_CLUB_SEND);
+
+  const isOrganisationContext =
+    input.context.kind === "ORGANISATION" || input.context.kind === "ORG_UNIT";
+
+  if (isOrganisationContext) {
+    if (canSendClub) {
+      const all = await loadAllActiveTenantPersonIds(input.tenantId);
+      return {
+        scope: {
+          tenantId: input.tenantId,
+          senderUserId: input.senderUserId,
+          allowedSubjectPersonIds: all,
+        },
+        previewScopeLimited: false,
+      };
+    }
+    const membershipScoped = await loadSenderScopedPersonIdsFromMembership({
+      tenantId: input.tenantId,
+      senderUserId: input.senderUserId,
+    });
+    return {
+      scope: {
+        tenantId: input.tenantId,
+        senderUserId: input.senderUserId,
+        allowedSubjectPersonIds: membershipScoped,
+      },
+      previewScopeLimited: true,
+    };
+  }
 
   if (canManageZielgruppen) {
     const all = await loadAllActiveTenantPersonIds(input.tenantId);

@@ -223,6 +223,15 @@ describe("NAV_SECTIONS static structure", () => {
     ]);
     expect(communication?.children).toEqual([
       expect.objectContaining({
+        key: "communication-mitteilungen",
+        label: "Mitteilungen",
+        href: "/dashboard/communication/mitteilungen",
+        permissionKeys: [
+          PERMISSIONS.COMMUNICATION_CLUB_VIEW,
+          PERMISSIONS.COMMUNICATION_CLUB_SEND,
+        ],
+      }),
+      expect.objectContaining({
         key: "communication-zielgruppen",
         label: "Zielgruppen",
         href: "/dashboard/communication/zielgruppen",

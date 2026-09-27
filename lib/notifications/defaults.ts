@@ -28,6 +28,9 @@ const DEFAULTS: Record<NotificationType, NotificationChannelDefaults> = {
   TEAM_POLL_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
   TEAM_DATE_POLL_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
   TEAM_REQUEST_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
+  CLUB_COMMUNICATION_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
+  CLUB_ANNOUNCEMENT_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
+  CLUB_ALERT_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
 };
 
 export function getDefaultNotificationPreferences(): Record<

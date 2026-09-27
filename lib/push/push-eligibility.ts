@@ -8,6 +8,9 @@ export const PUSH_ELIGIBLE_NOTIFICATION_TYPES = new Set<NotificationType>([
   "TEAM_POLL_PUBLISHED",
   "TEAM_DATE_POLL_PUBLISHED",
   "TEAM_REQUEST_PUBLISHED",
+  "CLUB_COMMUNICATION_PUBLISHED",
+  "CLUB_ANNOUNCEMENT_PUBLISHED",
+  "CLUB_ALERT_PUBLISHED",
 ]);
 
 export function isNotificationTypePushEligible(type: NotificationType): boolean {

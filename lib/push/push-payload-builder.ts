@@ -32,7 +32,10 @@ export function buildPushPayloadFromNotification(input: {
   return {
     title: truncatePreview(input.title, 80),
     body: truncatePreview(input.body, PUSH_BODY_PREVIEW_MAX_LENGTH),
-    priority: input.type === "TEAM_ALERT_PUBLISHED" ? "high" : "normal",
+    priority:
+      input.type === "TEAM_ALERT_PUBLISHED" || input.type === "CLUB_ALERT_PUBLISHED"
+        ? "high"
+        : "normal",
     data: {
       href: input.href,
       tenantId: input.tenantId,

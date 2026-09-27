@@ -30,6 +30,9 @@ function getPageMeta(pathname: string): PageMeta {
   if (pathname.startsWith("/dashboard/trainers")) return { eyebrow: "Personen", title: "Trainer" };
   if (pathname.startsWith("/dashboard/users")) return { eyebrow: "Admin", title: "Benutzerverwaltung" };
   if (pathname.startsWith("/dashboard/org-units")) return { eyebrow: "Admin", title: "Org-Einheiten" };
+  if (pathname.startsWith("/dashboard/communication/mitteilungen")) {
+    return { eyebrow: "Kommunikation", title: "Mitteilungen" };
+  }
   if (
     pathname.startsWith("/dashboard/communication/zielgruppen") ||
     pathname.startsWith("/dashboard/target-groups")

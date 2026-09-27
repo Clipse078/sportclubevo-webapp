@@ -249,6 +249,17 @@ function getHeaderContent(pathname: string): HeaderContent {
   }
 
   if (
+    pathname === "/dashboard/communication/mitteilungen" ||
+    pathname.startsWith("/dashboard/communication/mitteilungen/")
+  ) {
+    return {
+      eyebrow: "Kommunikation",
+      title: "Mitteilungen",
+      description: "Organisationsweite Nachrichten, Mitteilungen und Alarme.",
+    };
+  }
+
+  if (
     pathname === "/dashboard/communication/zielgruppen" ||
     pathname.startsWith("/dashboard/communication/zielgruppen/") ||
     pathname === "/dashboard/target-groups" ||

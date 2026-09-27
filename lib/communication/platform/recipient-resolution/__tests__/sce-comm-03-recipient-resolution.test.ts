@@ -301,7 +301,7 @@ describe("SCE-COMM-03 recipient resolution", () => {
   it("applies channel eligibility reason codes", async () => {
     mocks.getEffectivePermissions.mockResolvedValue({
       platform: [],
-      tenant: ["communication.zielgruppen.manage"],
+      tenant: ["communication.club.send"],
     });
     mocks.person.findMany.mockImplementation(
       async (args: { where?: { id?: { in?: string[] }; tenantId?: string } }) => {

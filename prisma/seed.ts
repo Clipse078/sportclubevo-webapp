@@ -249,6 +249,27 @@ async function main() {
       scope: PermissionScope.TENANT,
       grantableByAdmin: true,
     },
+    {
+      key: "communication.club.view",
+      name: "View club communication",
+      module: PermissionModule.COMMUNICATION,
+      scope: PermissionScope.TENANT,
+      grantableByAdmin: true,
+    },
+    {
+      key: "communication.club.send",
+      name: "Send club communication",
+      module: PermissionModule.COMMUNICATION,
+      scope: PermissionScope.TENANT,
+      grantableByAdmin: true,
+    },
+    {
+      key: "communication.club.engagement_detail",
+      name: "View club communication recipient engagement detail",
+      module: PermissionModule.COMMUNICATION,
+      scope: PermissionScope.TENANT,
+      grantableByAdmin: true,
+    },
 
     { key: "registrations.view", name: "View registrations", module: PermissionModule.REGISTRATIONS, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "registrations.edit", name: "Edit registrations", module: PermissionModule.REGISTRATIONS, scope: PermissionScope.TENANT, grantableByAdmin: true },

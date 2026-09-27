@@ -408,6 +408,15 @@ export const NAV_SECTIONS: NavSection[] = [
         permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
         children: [
           {
+            key: "communication-mitteilungen",
+            label: "Mitteilungen",
+            href: "/dashboard/communication/mitteilungen",
+            permissionKeys: [
+              PERMISSIONS.COMMUNICATION_CLUB_VIEW,
+              PERMISSIONS.COMMUNICATION_CLUB_SEND,
+            ],
+          },
+          {
             key: "communication-zielgruppen",
             label: "Zielgruppen",
             href: "/dashboard/communication/zielgruppen",
