@@ -33,7 +33,9 @@ import { recordPlatformCommunicationAudit } from "@/lib/communication/team/platf
 import { emitTeamCommunicationPublishedNotifications } from "@/lib/communication/team/team-communication-notification-producer";
 import { resolvePersonIdForUser } from "@/lib/teams/team-document-auth";
 
-export const MAX_TEAM_COMMUNICATION_BODY_LENGTH = 8000;
+import { MAX_TEAM_COMMUNICATION_BODY_LENGTH } from "@/lib/communication/team/team-communication-constants";
+
+export { MAX_TEAM_COMMUNICATION_BODY_LENGTH };
 
 export type TeamCommunicationListItem = {
   id: string;
@@ -57,9 +59,11 @@ const COMMUNICATION_LIST_INCLUDE = {
   senderPerson: { select: { id: true, firstName: true, lastName: true } },
 } satisfies Prisma.PlatformCommunicationInclude;
 
-function sanitizeBodyText(body: string): string {
+function sanitizeBodyText(body: string, options?: { allowEmpty?: boolean }): string {
   const trimmed = body.replace(/\r\n/g, "\n").trim();
-  if (!trimmed) throw new TeamCommunicationValidationError("body is required");
+  if (!trimmed && !options?.allowEmpty) {
+    throw new TeamCommunicationValidationError("body is required");
+  }
   if (trimmed.length > MAX_TEAM_COMMUNICATION_BODY_LENGTH) {
     throw new TeamCommunicationValidationError("body exceeds maximum length");
   }
@@ -139,9 +143,13 @@ export async function createTeamCommunicationDraft(input: {
   bodyText: string;
   subject?: string | null;
   audiencePreset?: TeamAudiencePreset;
+  replyToCommunicationId?: string | null;
+  allowEmptyBody?: boolean;
 }): Promise<{ id: string }> {
   const kind = assertKindSupportedForFoundation(input.kind ?? "MESSAGE");
-  const bodyText = sanitizeBodyText(input.bodyText);
+  const bodyText = sanitizeBodyText(input.bodyText, {
+    allowEmpty: input.allowEmptyBody === true,
+  });
   const contextRef = createTeamCommunicationContext(input.teamId);
   const ctxErr = validateCommunicationContextRef(input.tenantId, contextRef);
   if (ctxErr) throw new TeamCommunicationValidationError(ctxErr);
@@ -168,6 +176,7 @@ export async function createTeamCommunicationDraft(input: {
       senderPersonId,
       subject: input.subject?.trim() || null,
       bodyText,
+      replyToCommunicationId: input.replyToCommunicationId?.trim() || null,
       audienceSpecJson: audience as unknown as Prisma.InputJsonValue,
       createdByUserId: input.senderUserId,
     },
@@ -282,6 +291,7 @@ export async function publishTeamCommunication(input: {
       title: row.subject?.trim() || "Team-Nachricht",
       bodyPreview: row.bodyText.slice(0, 240),
       deliveryUserIds: snapshotRows.map((s) => s.deliveryUserId),
+      excludeUserIds: [input.senderUserId],
     });
   });
 

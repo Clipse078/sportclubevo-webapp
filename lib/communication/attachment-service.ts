@@ -523,6 +523,119 @@ export async function attachToMessage(input: {
   return result;
 }
 
+export async function attachToPlatformCommunication(input: {
+  tenantId: string;
+  actorUserId: string;
+  communicationId: string;
+  attachmentId: string;
+  sortOrder: number;
+}) {
+  const tenantId = required(input.tenantId, "tenantId");
+  const actorUserId = required(input.actorUserId, "actorUserId");
+  if (!Number.isSafeInteger(input.sortOrder) || input.sortOrder < 0) {
+    throw new CommunicationAttachmentServiceError(
+      "INVALID_INPUT",
+      "sortOrder must be a non-negative safe integer.",
+    );
+  }
+  await requireTenantActor(tenantId, actorUserId);
+
+  const result = await prisma.$transaction(async (tx) => {
+    const [communication, attachment, existingLinks] = await Promise.all([
+      tx.platformCommunication.findFirst({
+        where: { id: required(input.communicationId, "communicationId"), tenantId },
+        select: { id: true },
+      }),
+      tx.communicationAttachment.findFirst({
+        where: {
+          id: required(input.attachmentId, "attachmentId"),
+          tenantId,
+          lifecycleStatus: "READY",
+          scanStatus: { notIn: ["QUARANTINED", "FAILED"] },
+        },
+        select: { id: true, sizeBytes: true },
+      }),
+      tx.platformCommunicationAttachment.findMany({
+        where: { tenantId, communicationId: input.communicationId.trim() },
+        select: {
+          id: true,
+          attachmentId: true,
+          sortOrder: true,
+          attachment: { select: { sizeBytes: true } },
+        },
+      }),
+    ]);
+    if (!communication) {
+      throw new CommunicationAttachmentServiceError(
+        "MESSAGE_NOT_FOUND",
+        "Kommunikation nicht gefunden.",
+      );
+    }
+    if (!attachment) {
+      throw new CommunicationAttachmentServiceError(
+        "ATTACHMENT_NOT_FOUND",
+        "Anhang nicht gefunden oder nicht verfügbar.",
+      );
+    }
+    const duplicate = existingLinks.find((link) => link.attachmentId === attachment.id);
+    if (duplicate) return duplicate;
+    if (existingLinks.some((link) => link.sortOrder === input.sortOrder)) {
+      throw new CommunicationAttachmentServiceError(
+        "ORDER_CONFLICT",
+        "Die Anhangsposition ist bereits belegt.",
+      );
+    }
+    validateCommunicationAttachmentSet([
+      ...existingLinks.map((link) => link.attachment),
+      attachment,
+    ]);
+    return tx.platformCommunicationAttachment.create({
+      data: {
+        tenantId,
+        communicationId: communication.id,
+        attachmentId: attachment.id,
+        sortOrder: input.sortOrder,
+      },
+    });
+  });
+
+  await logAction({
+    tenantId,
+    actorUserId,
+    moduleKey: "communication",
+    entityType: "PlatformCommunication",
+    entityId: input.communicationId.trim(),
+    action: "PLATFORM_COMMUNICATION_ATTACHMENT_LINKED",
+    afterJson: {
+      attachmentId: input.attachmentId.trim(),
+      sortOrder: input.sortOrder,
+    },
+  });
+  return result;
+}
+
+export async function attachSelectionToPlatformCommunication(input: {
+  tenantId: string;
+  actorUserId: string;
+  communicationId: string;
+  attachmentIds: string[];
+}) {
+  const attachmentIds = await validateOutboundAttachmentSelection(input);
+  const links = [];
+  for (const [sortOrder, attachmentId] of attachmentIds.entries()) {
+    links.push(
+      await attachToPlatformCommunication({
+        tenantId: input.tenantId,
+        actorUserId: input.actorUserId,
+        communicationId: input.communicationId,
+        attachmentId,
+        sortOrder,
+      }),
+    );
+  }
+  return links;
+}
+
 export async function cloneMessageAttachmentsForRetry(input: {
   tenantId: string;
   actorUserId: string;
