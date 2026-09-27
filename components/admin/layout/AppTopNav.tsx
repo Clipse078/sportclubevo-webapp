@@ -30,7 +30,12 @@ function getPageMeta(pathname: string): PageMeta {
   if (pathname.startsWith("/dashboard/trainers")) return { eyebrow: "Personen", title: "Trainer" };
   if (pathname.startsWith("/dashboard/users")) return { eyebrow: "Admin", title: "Benutzerverwaltung" };
   if (pathname.startsWith("/dashboard/org-units")) return { eyebrow: "Admin", title: "Org-Einheiten" };
-  if (pathname.startsWith("/dashboard/target-groups")) return { eyebrow: "Admin", title: "Zielgruppen" };
+  if (
+    pathname.startsWith("/dashboard/communication/zielgruppen") ||
+    pathname.startsWith("/dashboard/target-groups")
+  ) {
+    return { eyebrow: "Kommunikation", title: "Zielgruppen" };
+  }
   if (pathname.startsWith("/dashboard/admin/branding")) return { eyebrow: "Admin", title: "Darstellung" };
   if (pathname.startsWith("/vereinsleitung/meetings")) return { eyebrow: "Vereinsleitung", title: "Meetings" };
   if (pathname.startsWith("/vereinsleitung/initiativen")) return { eyebrow: "Vereinsleitung", title: "Initiativen" };

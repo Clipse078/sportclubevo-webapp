@@ -323,12 +323,6 @@ export const NAV_SECTIONS: NavSection[] = [
             permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
           },
           {
-            key: "target-groups",
-            label: "Zielgruppen",
-            href: "/dashboard/target-groups",
-            permissionKeys: [PERMISSIONS.ORG_VIEW, PERMISSIONS.ORG_MANAGE],
-          },
-          {
             key: "teams",
             label: "Teams",
             href: "/dashboard/teams",
@@ -413,6 +407,15 @@ export const NAV_SECTIONS: NavSection[] = [
         href: "/dashboard/communication",
         permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
         children: [
+          {
+            key: "communication-zielgruppen",
+            label: "Zielgruppen",
+            href: "/dashboard/communication/zielgruppen",
+            permissionKeys: [
+              PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW,
+              PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE,
+            ],
+          },
           {
             key: "communication-email-sender",
             label: "E-Mail-Absender",

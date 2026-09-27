@@ -221,6 +221,21 @@ async function main() {
     { key: "templates.view", name: "View templates", module: PermissionModule.TEMPLATES, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "templates.manage", name: "Manage templates", module: PermissionModule.TEMPLATES, scope: PermissionScope.TENANT, grantableByAdmin: true },
 
+    {
+      key: "communication.zielgruppen.view",
+      name: "View communication target groups (Zielgruppen)",
+      module: PermissionModule.COMMUNICATION,
+      scope: PermissionScope.TENANT,
+      grantableByAdmin: true,
+    },
+    {
+      key: "communication.zielgruppen.manage",
+      name: "Manage communication target groups (Zielgruppen)",
+      module: PermissionModule.COMMUNICATION,
+      scope: PermissionScope.TENANT,
+      grantableByAdmin: true,
+    },
+
     { key: "registrations.view", name: "View registrations", module: PermissionModule.REGISTRATIONS, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "registrations.edit", name: "Edit registrations", module: PermissionModule.REGISTRATIONS, scope: PermissionScope.TENANT, grantableByAdmin: true },
     // ADMIN-DELETE-03B: canonical permanent-deletion permission. Deliberately

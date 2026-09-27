@@ -265,11 +265,19 @@ function presentationForNavChild(child: NavItemChild): UnitPresentation {
 function presentationForChildGroup(children: NavItemChild[]): UnitPresentation {
   const keys = new Set(children.map((child) => child.key));
 
-  if (keys.has("org-units") && keys.has("target-groups") && keys.has("vereine")) {
+  if (keys.has("org-units") && keys.has("vereine")) {
     return {
       label: "Vereinsdaten",
-      description: "Organisationseinheiten, Zielgruppen und Vereinsstruktur",
+      description: "Organisationseinheiten und Vereinsstruktur",
       iconLabel: "Organisationseinheiten",
+    };
+  }
+
+  if (keys.has("communication-zielgruppen")) {
+    return {
+      label: "Zielgruppen",
+      description: "Organisationsweite Kommunikations-Zielgruppen verwalten",
+      iconLabel: "Kommunikation",
     };
   }
 

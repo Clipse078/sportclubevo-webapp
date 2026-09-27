@@ -144,6 +144,10 @@ export const PERMISSIONS = {
   TEMPLATES_VIEW: "templates.view",
   TEMPLATES_MANAGE: "templates.manage",
 
+  /** SCE-COMM-02 — organisation-wide Zielgruppen administration (not team trainers by default). */
+  COMMUNICATION_ZIELGRUPPEN_VIEW: "communication.zielgruppen.view",
+  COMMUNICATION_ZIELGRUPPEN_MANAGE: "communication.zielgruppen.manage",
+
   REGISTRATIONS_VIEW: "registrations.view",
   REGISTRATIONS_EDIT: "registrations.edit",
   // ADMIN-DELETE-03B: canonical permanent-deletion permission for

@@ -4,6 +4,13 @@ import { prisma } from "@/lib/db/prisma";
 import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getTenantFromSession } from "@/lib/tenants/queries";
+import {
+  getZielgruppeForManagement,
+  updateZielgruppe,
+  archiveZielgruppe,
+  ZielgruppeManagementError,
+} from "@/lib/communication/zielgruppen/management-service";
+import type { ZielgruppeEditorDefinition } from "@/lib/communication/zielgruppen/editor-model";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -17,35 +24,34 @@ async function requireTargetGroupForTenant(id: string, resolvedTenantId: string)
   return tg;
 }
 
+async function requireZielgruppenManageApi() {
+  return requireApiPermission(PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE);
+}
+
+async function requireZielgruppenViewApi() {
+  const manage = await requireApiPermission(PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE);
+  if (manage.ok) return manage;
+  const view = await requireApiPermission(PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW);
+  if (view.ok) return view;
+  return requireApiPermission(PERMISSIONS.ORG_VIEW);
+}
+
 export async function GET(_req: NextRequest, { params }: RouteContext) {
-  const access = await requireApiPermission(PERMISSIONS.ORG_MANAGE);
+  const access = await requireZielgruppenViewApi();
   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });
 
   const tenant = await getTenantFromSession(access.session.user?.activeTenantId);
   if (!tenant) return NextResponse.json({ error: "Standard-Tenant nicht gefunden." }, { status: 500 });
 
   const { id } = await params;
-  const guard = await requireTargetGroupForTenant(id, tenant.id);
-  if (!guard) return NextResponse.json({ error: "Zielgruppe nicht gefunden." }, { status: 404 });
+  const targetGroup = await getZielgruppeForManagement(tenant.id, id);
+  if (!targetGroup) return NextResponse.json({ error: "Zielgruppe nicht gefunden." }, { status: 404 });
 
-  const targetGroup = await prisma.targetGroup.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      key: true,
-      name: true,
-      description: true,
-      status: true,
-      ruleJson: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
   return NextResponse.json({ targetGroup });
 }
 
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
-  const access = await requireApiPermission(PERMISSIONS.ORG_MANAGE);
+  const access = await requireZielgruppenManageApi();
   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });
 
   const tenant = await getTenantFromSession(access.session.user?.activeTenantId);
@@ -56,48 +62,42 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   if (!guard) return NextResponse.json({ error: "Zielgruppe nicht gefunden." }, { status: 404 });
 
   const body = await req.json().catch(() => ({}));
-  const data: Prisma.TargetGroupUpdateInput = {};
-
-  if ("name" in body) {
-    const name = (body.name ?? "").trim();
-    if (!name) return NextResponse.json({ error: "Name darf nicht leer sein." }, { status: 400 });
-    data.name = name;
-  }
-  if ("description" in body) {
-    data.description = body.description?.trim() || null;
-  }
-  if ("status" in body) {
-    const validStatuses = Object.values(OrgUnitStatus);
-    if (validStatuses.includes(body.status)) {
-      data.status = body.status as OrgUnitStatus;
-    }
-  }
-  if ("ruleJson" in body) {
-    data.ruleJson = body.ruleJson ?? Prisma.DbNull;
-  }
-
-  if (Object.keys(data).length === 0) {
-    return NextResponse.json(
-      { error: "Keine gültigen Felder zum Aktualisieren angegeben." },
-      { status: 400 },
-    );
-  }
 
   try {
-    const updated = await prisma.targetGroup.update({
-      where: { id },
-      data,
-      select: { id: true, key: true, name: true, status: true, updatedAt: true },
+    const updated = await updateZielgruppe({
+      tenantId: tenant.id,
+      targetGroupId: id,
+      name: "name" in body ? body.name : undefined,
+      description: "description" in body ? body.description : undefined,
+      status:
+        "status" in body && Object.values(OrgUnitStatus).includes(body.status)
+          ? (body.status as OrgUnitStatus)
+          : undefined,
+      definition: body?.definition as ZielgruppeEditorDefinition | undefined,
     });
-    return NextResponse.json({ targetGroup: updated });
+    return NextResponse.json({
+      targetGroup: {
+        id: updated.id,
+        key: updated.key,
+        name: updated.name,
+        status: updated.status,
+        updatedAt: updated.updatedAt,
+      },
+    });
   } catch (e) {
+    if (e instanceof ZielgruppeManagementError) {
+      const statusCode =
+        e.code === "CONFLICT" ? 409 : e.code === "FORBIDDEN" ? 403 : e.code === "NOT_FOUND" ? 404 : 400;
+      return NextResponse.json({ error: e.message }, { status: statusCode });
+    }
     console.error(e);
     return NextResponse.json({ error: "Zielgruppe konnte nicht aktualisiert werden." }, { status: 500 });
   }
 }
 
+/** Soft-delete: archive (preserves historical references). */
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
-  const access = await requireApiPermission(PERMISSIONS.ORG_MANAGE);
+  const access = await requireZielgruppenManageApi();
   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });
 
   const tenant = await getTenantFromSession(access.session.user?.activeTenantId);
@@ -107,6 +107,13 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   const guard = await requireTargetGroupForTenant(id, tenant.id);
   if (!guard) return NextResponse.json({ error: "Zielgruppe nicht gefunden." }, { status: 404 });
 
-  await prisma.targetGroup.delete({ where: { id } });
-  return NextResponse.json({ message: "Zielgruppe entfernt." });
+  try {
+    await archiveZielgruppe(tenant.id, id);
+    return NextResponse.json({ message: "Zielgruppe archiviert." });
+  } catch (e) {
+    if (e instanceof ZielgruppeManagementError) {
+      return NextResponse.json({ error: e.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Archivierung fehlgeschlagen." }, { status: 500 });
+  }
 }

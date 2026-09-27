@@ -72,6 +72,7 @@ export const NAV_DESTINATION_SCE_ICON_BY_KEY = {
   "platform-access": "roles-access",
   competitions: "competition",
   "target-groups": "target-group",
+  "communication-zielgruppen": "target-group",
   warteliste: "waiting-list",
   material: "material-inventory",
   "vorfaelle-disziplin": "discipline-incident",

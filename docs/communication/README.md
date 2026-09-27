@@ -7,6 +7,7 @@ Canonical **Communication + Zielgruppen** architecture for team, club, event, an
 | [SCE-COMM-01-ARCHITECTURE.md](./SCE-COMM-01-ARCHITECTURE.md) | Programme architecture, domain model, seams, integrations |
 | [SCE-COMM-01-source-matrix.json](./SCE-COMM-01-source-matrix.json) | Machine-readable ownership / reuse matrix |
 | [SCE-COMM-01-ROADMAP.md](./SCE-COMM-01-ROADMAP.md) | Follow-up package sequence and dependencies |
+| [SCE-COMM-02-ZIELGRUPPEN-MANAGEMENT.md](./SCE-COMM-02-ZIELGRUPPEN-MANAGEMENT.md) | Zielgruppen management UX, persistence, permissions (COMM-02) |
 
 **Immutable programme statements (COMM-01):**
 

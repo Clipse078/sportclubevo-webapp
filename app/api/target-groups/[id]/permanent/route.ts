@@ -88,7 +88,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     beforeJson: { name: result.name, key: result.key, impact: result.impact },
   });
 
-  revalidatePath("/dashboard/target-groups");
+  revalidatePath("/dashboard/communication/zielgruppen");
 
   return NextResponse.json({
     message: "Zielgruppe wurde endgültig gelöscht.",
