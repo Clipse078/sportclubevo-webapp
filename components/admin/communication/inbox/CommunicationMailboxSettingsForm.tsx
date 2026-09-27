@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { CommunicationCenterImapSecurity } from "@prisma/client";
 import { Button } from "@/components/ui/Button";
+import { SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
+import { cn } from "@/lib/cn";
 
 type PublicMailbox = {
   id: string;
@@ -77,7 +79,7 @@ export default function CommunicationMailboxSettingsForm({ initialMailboxes }: P
 
   return (
     <div className="space-y-8">
-      <section className="rounded-xl border border-[var(--border)] p-4">
+      <section className={cn(SCE_SURFACE_STANDARD_PANEL, "p-4")}>
         <h2 className="text-sm font-semibold">Postfach hinzufügen</h2>
         <p className="mt-1 text-xs text-[var(--text-2)]">
           Zugangsdaten werden verschlüsselt gespeichert und nie erneut im Browser angezeigt.
@@ -129,7 +131,7 @@ export default function CommunicationMailboxSettingsForm({ initialMailboxes }: P
         </div>
       </section>
 
-      <section className="rounded-xl border border-[var(--border)] p-4">
+      <section className={cn(SCE_SURFACE_STANDARD_PANEL, "p-4")}>
         <h2 className="text-sm font-semibold">Konfigurierte Postfächer</h2>
         <ul className="mt-3 divide-y divide-[var(--border)]">
           {mailboxes.map((mailbox) => (

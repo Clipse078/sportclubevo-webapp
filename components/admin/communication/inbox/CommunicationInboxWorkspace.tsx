@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Inbox, Mail, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
+import { cn } from "@/lib/cn";
 
 type ConversationListItem = {
   id: string;
@@ -135,11 +137,17 @@ export default function CommunicationInboxWorkspace() {
         onChange={(event) => setSearch(event.target.value)}
         onBlur={() => void loadList()}
         placeholder="Suche (Betreff, Absender, Text)"
-        className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 text-sm"
+        className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
       />
 
       <div className="grid min-h-[520px] grid-cols-1 gap-4 lg:grid-cols-[minmax(240px,280px)_minmax(280px,360px)_1fr]">
-        <aside className={`rounded-xl border border-[var(--border)] p-3 ${mobilePane === "list" ? "block" : "hidden lg:block"}`}>
+        <aside
+          className={cn(
+            SCE_SURFACE_STANDARD_PANEL,
+            "p-3",
+            mobilePane === "list" ? "block" : "hidden lg:block",
+          )}
+        >
           <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-2)]">
             <Inbox className="h-4 w-4" />
             Filter
@@ -149,7 +157,12 @@ export default function CommunicationInboxWorkspace() {
           </p>
         </aside>
 
-        <section className={`rounded-xl border border-[var(--border)] ${mobilePane === "list" ? "block" : "hidden lg:block"}`}>
+        <section
+          className={cn(
+            SCE_SURFACE_STANDARD_PANEL,
+            mobilePane === "list" ? "block" : "hidden lg:block",
+          )}
+        >
           <div className="border-b border-[var(--border)] px-4 py-3 text-sm font-semibold">
             Konversationen {loading ? "…" : `(${conversations.length})`}
           </div>
@@ -188,7 +201,12 @@ export default function CommunicationInboxWorkspace() {
           </ul>
         </section>
 
-        <section className={`rounded-xl border border-[var(--border)] ${mobilePane === "detail" ? "block" : "hidden lg:block"}`}>
+        <section
+          className={cn(
+            SCE_SURFACE_STANDARD_PANEL,
+            mobilePane === "detail" ? "block" : "hidden lg:block",
+          )}
+        >
           {!selectedConversation || !detail ? (
             <div className="flex h-full min-h-[320px] flex-col items-center justify-center gap-2 p-6 text-center text-sm text-[var(--text-2)]">
               <Mail className="h-8 w-8 text-[var(--text-2)]" />
@@ -244,7 +262,7 @@ export default function CommunicationInboxWorkspace() {
                   onChange={(event) => setReplyText(event.target.value)}
                   rows={4}
                   placeholder="Antwort verfassen…"
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
                 />
                 <div className="mt-2 flex justify-end">
                   <Button type="button" onClick={() => void sendReply()} disabled={!replyText.trim()}>
