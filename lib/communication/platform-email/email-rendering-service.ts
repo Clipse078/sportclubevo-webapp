@@ -31,6 +31,8 @@ export function renderPlatformCommunicationEmail(
       ? buildNotificationAbsoluteHref(input.deepLinkPath)
       : null;
 
+  // COMM-17 seam: signed preference-management / List-Unsubscribe headers deferred
+  // until a cryptographically strong, tenant-scoped public token model exists.
   const textParts = [
     body,
     deepLink ? `\n\nIm SportClubEvo öffnen:\n${deepLink}` : "",

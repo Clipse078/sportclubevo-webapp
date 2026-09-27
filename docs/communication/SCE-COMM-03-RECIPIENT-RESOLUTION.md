@@ -19,7 +19,7 @@ Modes: `PREVIEW`, `DISPATCH`.
 2. **Sender scope** — `resolveSenderCommunicationScope()` intersects candidates with `allowedSubjectPersonIds` (fail-closed adapter over effective permissions).
 3. **Safeguarding / guardian** — `guardian-policy-seam.ts` + guardian relationship expansion port.
 4. **Recipient eligibility** — active tenant person, safeguarding outcome, preference seam, channel reachability.
-5. **Preferences seam** — deferred to COMM-17 (`DEFERRED_DEFAULT_ALLOW` until persistence exists).
+5. **Preferences** — COMM-17 evaluates category + channel per delivery identity (`EVALUATED`).
 6. **Channel eligibility** — `IN_APP`, `PUSH`, `EMAIL` reachability checks (no delivery).
 7. **Result + explanation** — typed reason codes, summary counts, audience fingerprint.
 

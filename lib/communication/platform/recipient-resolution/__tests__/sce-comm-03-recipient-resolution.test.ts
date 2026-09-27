@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => ({
   trainerTeamMember: { findMany: vi.fn() },
   guardianRelationship: { findMany: vi.fn() },
   getEffectivePermissions: vi.fn(),
+  userCommunicationPreference: { findMany: vi.fn() },
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -78,6 +79,7 @@ describe("SCE-COMM-03 recipient resolution", () => {
     });
     mocks.guardianRelationship.findMany.mockResolvedValue([]);
     mocks.trainerTeamMember.findMany.mockResolvedValue([]);
+    mocks.userCommunicationPreference.findMany.mockResolvedValue([]);
     mocks.orgUnitMembership.findMany.mockResolvedValue([]);
     mocks.tenantMembership.findMany.mockResolvedValue([]);
     mocks.userRole.findMany.mockResolvedValue([]);
@@ -331,6 +333,7 @@ describe("SCE-COMM-03 recipient resolution", () => {
           lastName: id,
           displayName: null,
           dateOfBirth: null,
+          guardianRelationshipsAsChild: [],
         }));
       },
     );
@@ -350,7 +353,7 @@ describe("SCE-COMM-03 recipient resolution", () => {
 
     expect(result.effectiveRecipientPersonIds).toEqual([]);
     expect(result.excludedRecipients[0]?.reasonCodes).toContain("CHANNEL_UNAVAILABLE");
-    expect(result.metadata.preferenceEvaluation).toBe("DEFERRED_DEFAULT_ALLOW");
+    expect(result.metadata.preferenceEvaluation).toBe("EVALUATED");
   });
 
   it("builds dispatch snapshot rows without persistence", () => {

@@ -20,6 +20,7 @@ import {
 import { markPushDeviceInvalid } from "@/lib/push/push-device-registration-service";
 import { resolvePushTargetsForTenantRecipient } from "@/lib/push/push-target-resolution";
 import { getEffectiveNotificationPreference } from "@/lib/notifications/preference-service";
+import { applyCommunicationPreferencesToNotificationDefaults } from "@/lib/communication/preferences/apply-notification-channel-preferences";
 
 export type ProcessPendingPushDeliveriesResult = {
   examined: number;
@@ -93,17 +94,23 @@ export async function processPendingPushNotificationDeliveries(
   const processedRecipients = new Set<string>();
 
   for (const delivery of candidates) {
-    const preferences = await getEffectiveNotificationPreference(
+    const storedPreferences = await getEffectiveNotificationPreference(
       delivery.tenantId,
       delivery.notification.recipientUserId,
       delivery.notification.type,
     );
+    const preferences = await applyCommunicationPreferencesToNotificationDefaults({
+      tenantId: delivery.tenantId,
+      recipientUserId: delivery.notification.recipientUserId,
+      notificationType: delivery.notification.type,
+      base: storedPreferences,
+    });
     if (!evaluatePushEnabledForNotificationType(delivery.notification.type, preferences)) {
       await prisma.notificationDelivery.update({
         where: { id: delivery.id },
         data: {
           status: NotificationDeliveryStatus.SKIPPED,
-          failureCode: "PUSH_NOT_ELIGIBLE",
+          failureCode: preferences.pushEnabled ? "PUSH_NOT_ELIGIBLE" : "PREFERENCE_EXPLICITLY_DISABLED",
         },
       });
       summary.skipped += 1;

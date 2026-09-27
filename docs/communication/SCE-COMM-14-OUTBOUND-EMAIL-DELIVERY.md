@@ -70,7 +70,7 @@ Historical snapshots are never rewritten when live sponsor master data changes.
 |-------|-------|
 | Inbound email / IMAP / mailbox sync | COMM-15 |
 | Reusable templates & scheduling | COMM-16 |
-| Full preferences & consent platform | COMM-17 |
+| Preferences & consent evaluator | COMM-17 (integrated at enqueue + processor) |
 | Delivery analytics (opens/clicks/dashboards) | COMM-19 |
 
 COMM-14 does **not** implement inbound email, template libraries, or analytics pixels.
