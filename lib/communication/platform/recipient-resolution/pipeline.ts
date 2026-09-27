@@ -31,11 +31,12 @@ export type GuardianExpansionPort = {
     subjectPersonIds: readonly string[];
     category: CommunicationPreferenceCategory;
     channel: CommunicationChannel;
-  }): Promise<
+  }  ): Promise<
     {
       subjectPersonId: string;
       deliveryUserIds: string[];
       viaGuardianSubstitution: boolean;
+      safeguardingMeta?: import("@/lib/communication/platform/safeguarding/resolve-safeguarding-delivery-targets").SafeguardingDeliveryTarget[];
     }[]
   >;
 };
@@ -46,6 +47,9 @@ export type RecipientSnapshotRow = {
   channel: CommunicationChannel;
   capturedAt: string;
   viaGuardianSubstitution: boolean;
+  safeguardingReasonCode?: string | null;
+  subjectMinorAtDispatch?: boolean | null;
+  guardianPersonId?: string | null;
 };
 
 export type RecipientResolutionPipelineInput = {
@@ -94,6 +98,25 @@ export async function runRecipientResolutionPipeline(
   const capturedAt = new Date().toISOString();
   const deliveryTargets: RecipientSnapshotRow[] = [];
   for (const row of expanded) {
+    const metaRows =
+      "safeguardingMeta" in row && Array.isArray(row.safeguardingMeta)
+        ? row.safeguardingMeta
+        : null;
+    if (metaRows && metaRows.length > 0) {
+      for (const meta of metaRows) {
+        deliveryTargets.push({
+          subjectPersonId: meta.subjectPersonId,
+          deliveryUserId: meta.deliveryUserId,
+          channel: input.channel,
+          capturedAt,
+          viaGuardianSubstitution: meta.viaGuardianSubstitution,
+          safeguardingReasonCode: meta.safeguardingReasonCode,
+          subjectMinorAtDispatch: meta.subjectMinorAtDispatch,
+          guardianPersonId: meta.guardianPersonId,
+        });
+      }
+      continue;
+    }
     for (const deliveryUserId of row.deliveryUserIds) {
       deliveryTargets.push({
         subjectPersonId: row.subjectPersonId,

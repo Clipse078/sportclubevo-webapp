@@ -35,6 +35,7 @@ type SnapshotShape = {
   sponsorContactId?: string | null;
   deliveryUserId: string | null;
   externalSnapshotJson: unknown;
+  viaGuardianSubstitution?: boolean;
 };
 
 function preferenceSkipReasonFromEvaluation(reason: string): RecipientEmailEligibilitySkipReason {
@@ -145,7 +146,11 @@ export async function resolveRecipientSnapshotEmailEligibility(input: {
     select: { email: true },
   });
   let email = normalizeEmailAddress(user?.email);
-  if (!email && input.snapshot.subjectPersonId) {
+  if (
+    !email &&
+    input.snapshot.subjectPersonId &&
+    !input.snapshot.viaGuardianSubstitution
+  ) {
     const person = await prisma.person.findFirst({
       where: { id: input.snapshot.subjectPersonId, tenantId: input.tenantId },
       select: { email: true },

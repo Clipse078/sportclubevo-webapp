@@ -11,6 +11,8 @@ import { prisma } from "@/lib/db/prisma";
 import type { ParticipationResponseSource } from "@prisma/client";
 import { ParticipationUnauthorizedError } from "./errors";
 import { collectUserIdsAuthorizedToRespondForSubjectPerson } from "./subject-responder-users";
+import { loadTenantCommunicationSafeguardingPolicy } from "@/lib/communication/platform/safeguarding/tenant-safeguarding-policy";
+import { isPersonMinorUnderTenantPolicy } from "@/lib/communication/platform/safeguarding/subject-age-policy";
 
 export type ParticipationActorContext = {
   source: ParticipationResponseSource;
@@ -46,6 +48,22 @@ export async function assertActorCanRespondForPerson(
     });
 
     if (guardianLink) {
+      const child = await prisma.person.findFirst({
+        where: { id: personId, tenantId },
+        select: { dateOfBirth: true, userId: true },
+      });
+      const policy = await loadTenantCommunicationSafeguardingPolicy(tenantId);
+      const isMinor =
+        child &&
+        policy.safeguardingEnabled &&
+        isPersonMinorUnderTenantPolicy({
+          dateOfBirth: child.dateOfBirth,
+          minorAgeThresholdYears: policy.minorAgeThresholdYears,
+          referenceDate: new Date(),
+        });
+      if (isMinor && !policy.guardianResponseAuthorityEnabled) {
+        throw new ParticipationUnauthorizedError();
+      }
       return { source: "PARENT", actorPersonId: actorPerson.id };
     }
   }

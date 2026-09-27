@@ -1,5 +1,5 @@
 /**
- * SCE-COMM-03 — Stage C: safeguarding + guardian expansion port implementation.
+ * SCE-COMM-03 / COMM-18 — safeguarding + guardian expansion port implementation.
  */
 
 import { prisma } from "@/lib/db/prisma";
@@ -9,7 +9,15 @@ import {
   evaluateSafeguardingCommunication,
   type TenantSafeguardingCommunicationPolicy,
 } from "@/lib/communication/platform/safeguarding/guardian-policy-seam";
-import { loadSubjectPersonNotificationContexts } from "@/lib/notifications/requirement-recipient-resolution";
+import {
+  defaultTenantCommunicationSafeguardingPolicy,
+  loadTenantCommunicationSafeguardingPolicy,
+  type TenantCommunicationSafeguardingPolicyConfig,
+} from "@/lib/communication/platform/safeguarding/tenant-safeguarding-policy";
+import { evaluateCommunicationSafeguarding } from "@/lib/communication/platform/safeguarding/evaluate-communication-safeguarding";
+import { resolveSafeguardingDeliveryTargets } from "@/lib/communication/platform/safeguarding/resolve-safeguarding-delivery-targets";
+import { loadGuardianRecipientsForSubjects } from "@/lib/communication/platform/safeguarding/load-guardian-recipients";
+import { isPersonMinorUnderTenantPolicy } from "@/lib/communication/platform/safeguarding/subject-age-policy";
 
 export const DEFAULT_TENANT_SAFEGUARDING_POLICY = (
   tenantId: string,
@@ -18,17 +26,12 @@ export const DEFAULT_TENANT_SAFEGUARDING_POLICY = (
   minorDirectMessaging: "BLOCK_TRAINER_TO_MINOR_DIRECT",
   guardianRecipient: "GUARDIAN_SUBSTITUTION",
   expandTeamOperationalToGuardians: true,
+  config: defaultTenantCommunicationSafeguardingPolicy(tenantId),
 });
-
-function subjectIsMinor(dateOfBirth: Date | null, now: Date): boolean {
-  if (!dateOfBirth) return false;
-  const ageMs = now.getTime() - dateOfBirth.getTime();
-  const ageYears = ageMs / (365.25 * 24 * 60 * 60 * 1000);
-  return ageYears < 18;
-}
 
 export function createGuardianExpansionPort(
   policy: TenantSafeguardingCommunicationPolicy = DEFAULT_TENANT_SAFEGUARDING_POLICY(""),
+  policyConfig?: TenantCommunicationSafeguardingPolicyConfig,
 ): GuardianExpansionPort {
   return {
     expandSubjectsToDeliveryTargets: async ({
@@ -38,8 +41,13 @@ export function createGuardianExpansionPort(
       channel,
     }) => {
       void category;
+      void channel;
       const effectivePolicy =
-        policy.tenantId === tenantId ? policy : DEFAULT_TENANT_SAFEGUARDING_POLICY(tenantId);
+        policyConfig ??
+        policy.config ??
+        (policy.tenantId === tenantId
+          ? defaultTenantCommunicationSafeguardingPolicy(tenantId)
+          : defaultTenantCommunicationSafeguardingPolicy(tenantId));
       const now = new Date();
 
       const persons = await prisma.person.findMany({
@@ -48,52 +56,37 @@ export function createGuardianExpansionPort(
           id: true,
           dateOfBirth: true,
           userId: true,
-          guardianRelationshipsAsChild: {
-            select: { guardianPersonId: true, isPrimary: true },
-          },
         },
       });
 
-      const notificationContexts = await loadSubjectPersonNotificationContexts(
+      const guardianMap = await loadGuardianRecipientsForSubjects({
         tenantId,
-        [...subjectPersonIds],
-      );
+        subjectPersonIds,
+      });
 
       return persons.map((person) => {
-        const isMinor = subjectIsMinor(person.dateOfBirth, now);
-        const safeguarding = evaluateSafeguardingCommunication({
+        const guardianRecipients = guardianMap.get(person.id) ?? [];
+        const evaluation = evaluateCommunicationSafeguarding({
           policy: effectivePolicy,
-          senderUserId: "",
-          subjectPersonId: person.id,
-          subjectIsMinor: isMinor,
-          channel: channel as CommunicationChannel,
+          subject: {
+            subjectPersonId: person.id,
+            dateOfBirth: person.dateOfBirth,
+            selfUserId: person.userId,
+            guardianRecipients,
+          },
+          context: { referenceDate: now },
         });
 
-        if (!safeguarding.allowed) {
-          return {
-            subjectPersonId: person.id,
-            deliveryUserIds: [],
-            viaGuardianSubstitution: false,
-          };
-        }
-
-        const ctx = notificationContexts.get(person.id);
-        const deliveryUserIds = new Set<string>();
-        if (ctx?.selfUserId) deliveryUserIds.add(ctx.selfUserId);
-        for (const guardianUserId of ctx?.guardianUserIds ?? []) {
-          deliveryUserIds.add(guardianUserId);
-        }
-
-        const viaGuardianSubstitution =
-          isMinor &&
-          effectivePolicy.expandTeamOperationalToGuardians &&
-          (ctx?.guardianUserIds.length ?? 0) > 0 &&
-          safeguarding.expandToGuardianPersonIds.length >= 0;
+        const deliveryTargets = resolveSafeguardingDeliveryTargets({
+          evaluation,
+          selfUserId: person.userId,
+        });
 
         return {
           subjectPersonId: person.id,
-          deliveryUserIds: [...deliveryUserIds],
-          viaGuardianSubstitution: Boolean(viaGuardianSubstitution),
+          deliveryUserIds: deliveryTargets.map((t) => t.deliveryUserId),
+          viaGuardianSubstitution: deliveryTargets.some((t) => t.viaGuardianSubstitution),
+          safeguardingMeta: deliveryTargets,
         };
       });
     },
@@ -108,7 +101,11 @@ export async function loadGuardianExpansionsForSubjects(input: {
 > {
   if (input.subjectPersonIds.length === 0) return [];
   const rows = await prisma.guardianRelationship.findMany({
-    where: { tenantId: input.tenantId, childPersonId: { in: [...input.subjectPersonIds] } },
+    where: {
+      tenantId: input.tenantId,
+      childPersonId: { in: [...input.subjectPersonIds] },
+      guardianPerson: { isActive: true },
+    },
     select: { childPersonId: true, guardianPersonId: true, isPrimary: true },
     orderBy: [{ childPersonId: "asc" }, { isPrimary: "desc" }],
   });
@@ -118,3 +115,26 @@ export async function loadGuardianExpansionsForSubjects(input: {
     policyReason: r.isPrimary ? "PRIMARY_GUARDIAN" : "GUARDIAN",
   }));
 }
+
+export async function createGuardianExpansionPortForTenant(
+  tenantId: string,
+): Promise<GuardianExpansionPort> {
+  const config = await loadTenantCommunicationSafeguardingPolicy(tenantId);
+  return createGuardianExpansionPort(DEFAULT_TENANT_SAFEGUARDING_POLICY(tenantId), config);
+}
+
+export function subjectIsMinorForTenant(input: {
+  dateOfBirth: Date | null;
+  policy: TenantCommunicationSafeguardingPolicyConfig;
+  referenceDate?: Date;
+}): boolean {
+  if (!input.policy.safeguardingEnabled) return false;
+  return isPersonMinorUnderTenantPolicy({
+    dateOfBirth: input.dateOfBirth,
+    minorAgeThresholdYears: input.policy.minorAgeThresholdYears,
+    referenceDate: input.referenceDate ?? new Date(),
+  });
+}
+
+/** @deprecated Prefer evaluateCommunicationSafeguarding — kept for tests importing legacy helper. */
+export { evaluateSafeguardingCommunication };

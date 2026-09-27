@@ -478,6 +478,14 @@ export async function sendTeamChatMessage(input: {
     teamId: input.teamId,
     personIds: mentionedPersonIds,
   });
+  const { assertTeamChatMentionSafeguarding } = await import(
+    "@/lib/communication/team/team-chat-safeguarding"
+  );
+  await assertTeamChatMentionSafeguarding({
+    tenantId: input.tenantId,
+    senderUserId: input.senderUserId,
+    mentionedPersonIds,
+  });
 
   const conversation = await getOrCreateTeamCommunicationConversation({
     tenantId: input.tenantId,
@@ -555,6 +563,13 @@ async function emitTeamChatMentionNotifications(input: {
     where: { tenantId: input.tenantId, id: { in: [...input.mentionedPersonIds] } },
     select: { id: true, userId: true, firstName: true, lastName: true },
   });
+  const { resolveTeamChatMentionDeliveryUserIds } = await import(
+    "@/lib/communication/team/team-chat-safeguarding"
+  );
+  const deliveryByPerson = await resolveTeamChatMentionDeliveryUserIds({
+    tenantId: input.tenantId,
+    mentionedPersonIds: input.mentionedPersonIds,
+  });
   const href = `/dashboard/teams/${input.teamId}/kommunikation?communicationId=${input.communicationId}`;
   const preferences = resolveEffectivePreference(
     NotificationType.TEAM_COMMUNICATION_PUBLISHED,
@@ -563,19 +578,23 @@ async function emitTeamChatMentionNotifications(input: {
 
   await prisma.$transaction(async (tx) => {
     for (const person of persons) {
-      if (!person.userId || person.userId === input.senderUserId) continue;
-      await createNotificationIdempotent(tx, {
-        tenantId: input.tenantId,
-        recipientUserId: person.userId,
-        type: NotificationType.TEAM_COMMUNICATION_PUBLISHED,
-        title: "Erwähnung in Team-Chat",
-        body: input.bodyPreview,
-        href,
-        entityType: NotificationEntityType.COMMUNICATION,
-        entityId: input.communicationId,
-        deduplicationKey: `team-comm-mention:${input.communicationId}:${person.userId}`,
-        preferences,
-      });
+      const deliveryUserIds =
+        deliveryByPerson.get(person.id) ?? (person.userId ? [person.userId] : []);
+      for (const recipientUserId of deliveryUserIds) {
+        if (!recipientUserId || recipientUserId === input.senderUserId) continue;
+        await createNotificationIdempotent(tx, {
+          tenantId: input.tenantId,
+          recipientUserId,
+          type: NotificationType.TEAM_COMMUNICATION_PUBLISHED,
+          title: "Erwähnung in Team-Chat",
+          body: input.bodyPreview,
+          href,
+          entityType: NotificationEntityType.COMMUNICATION,
+          entityId: input.communicationId,
+          deduplicationKey: `team-comm-mention:${input.communicationId}:${recipientUserId}:${person.id}`,
+          preferences,
+        });
+      }
     }
   });
 }

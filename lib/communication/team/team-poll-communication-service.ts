@@ -205,6 +205,7 @@ async function resolveEligibleSnapshotsForActor(input: {
     select: {
       id: true,
       subjectPersonId: true,
+      deliveryUserId: true,
       engagement: true,
       readAt: true,
       acknowledgedAt: true,
@@ -366,8 +367,37 @@ export async function submitTeamPollResponse(input: SubmitPollResponseInput): Pr
   });
   if (snapshots.length === 0) throw new TeamCommunicationForbiddenError();
 
+  const { selectCanonicalPollSnapshotsForActor } = await import(
+    "@/lib/communication/platform/safeguarding/poll-response-safeguarding"
+  );
+  const canonicalSnapshots = selectCanonicalPollSnapshotsForActor({
+    snapshots,
+    actorUserId: input.actorUserId,
+  });
+  if (canonicalSnapshots.length === 0) throw new TeamCommunicationForbiddenError();
+  const canonicalIds = new Set(canonicalSnapshots.map((s) => s.id));
+  const snapshotsToWrite = snapshots.filter((s) => canonicalIds.has(s.id));
+
   await prisma.$transaction(async (tx) => {
-    for (const snap of snapshots) {
+    for (const snap of snapshotsToWrite) {
+      if (snap.subjectPersonId) {
+        const conflicting = await tx.platformCommunicationPollResponse.findFirst({
+          where: {
+            pollId: poll.id,
+            recipientSnapshot: {
+              communicationId: row.id,
+              subjectPersonId: snap.subjectPersonId,
+              NOT: { id: snap.id },
+            },
+          },
+          select: { id: true },
+        });
+        if (conflicting) {
+          throw new TeamCommunicationValidationError(
+            "Für diese Person liegt bereits eine Antwort vor.",
+          );
+        }
+      }
       if (poll.mode === "SINGLE") {
         await tx.platformCommunicationPollResponse.deleteMany({
           where: { pollId: poll.id, recipientSnapshotId: snap.id },
@@ -396,8 +426,9 @@ export async function submitTeamPollResponse(input: SubmitPollResponseInput): Pr
             pollId: poll.id,
             optionId,
             recipientSnapshotId: snap.id,
+            actorUserId: input.actorUserId,
           },
-          update: {},
+          update: { actorUserId: input.actorUserId },
         });
       }
 

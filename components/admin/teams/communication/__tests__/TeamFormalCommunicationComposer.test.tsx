@@ -16,6 +16,7 @@ describe("TeamFormalCommunicationComposer", () => {
 
     expect(screen.getByTestId("team-formal-composer-announcement")).toBeInTheDocument();
     expect(screen.getByTestId("team-formal-audience-select")).toBeInTheDocument();
+    expect(screen.getByTestId("team-formal-safeguarding-notice")).toBeInTheDocument();
     expect(screen.getByTestId("team-formal-ack-toggle")).toBeInTheDocument();
   });
 

@@ -1,9 +1,18 @@
 /**
- * SCE-COMM-01 — youth / guardian safeguarding policy seam (tenant-configurable).
+ * SCE-COMM-01 / COMM-18 — youth / guardian safeguarding policy seam.
  *
- * Guardian relationships: lib/people/guardian-service.ts + GuardianRelationship model.
- * Notification guardian expansion precedent: lib/notifications/requirement-recipient-resolution.ts
+ * Legacy COMM-01 types remain; evaluation delegates to evaluateCommunicationSafeguarding.
  */
+
+import {
+  evaluateCommunicationSafeguarding,
+  type CommunicationSafeguardingEvaluation,
+} from "@/lib/communication/platform/safeguarding/evaluate-communication-safeguarding";
+import {
+  defaultTenantCommunicationSafeguardingPolicy,
+  type TenantCommunicationSafeguardingPolicyConfig,
+} from "@/lib/communication/platform/safeguarding/tenant-safeguarding-policy";
+import type { CommunicationChannel } from "@/lib/communication/platform/channels";
 
 export type MinorDirectMessagingPolicy =
   | "BLOCK_TRAINER_TO_MINOR_DIRECT"
@@ -16,12 +25,13 @@ export type GuardianRecipientPolicy =
   | "ALL_GUARDIANS"
   | "GUARDIAN_SUBSTITUTION";
 
+/** @deprecated Use TenantCommunicationSafeguardingPolicyConfig — kept for COMM-03 imports. */
 export type TenantSafeguardingCommunicationPolicy = {
   tenantId: string;
   minorDirectMessaging: MinorDirectMessagingPolicy;
   guardianRecipient: GuardianRecipientPolicy;
-  /** When true, trainer→team messages to minors expand to guardians per policy. */
   expandTeamOperationalToGuardians: boolean;
+  config?: TenantCommunicationSafeguardingPolicyConfig;
 };
 
 export type SafeguardingEvaluationInput = {
@@ -29,27 +39,71 @@ export type SafeguardingEvaluationInput = {
   senderUserId: string;
   subjectPersonId: string;
   subjectIsMinor: boolean;
-  channel: "IN_APP" | "PUSH" | "EMAIL";
+  channel: CommunicationChannel;
+  subjectDateOfBirth?: Date | null;
+  selfUserId?: string | null;
+  guardianRecipients?: import("@/lib/communication/platform/safeguarding/guardian-recipient-types").SafeguardingGuardianRecipient[];
 };
 
 export type SafeguardingEvaluationResult =
-  | { allowed: true; expandToGuardianPersonIds: string[] }
-  | { allowed: false; reason: "MINOR_DIRECT_MESSAGING_BLOCKED" | "CHANNEL_BLOCKED" };
+  | { allowed: true; expandToGuardianPersonIds: string[]; evaluation: CommunicationSafeguardingEvaluation }
+  | { allowed: false; reason: "MINOR_DIRECT_MESSAGING_BLOCKED" | "CHANNEL_BLOCKED" | "GUARDIAN_REQUIRED_UNAVAILABLE" };
 
-/**
- * Pure policy evaluation stub — persistence and age lookup in COMM-18.
- */
+function legacyPolicyToConfig(
+  policy: TenantSafeguardingCommunicationPolicy,
+): TenantCommunicationSafeguardingPolicyConfig {
+  if (policy.config) return policy.config;
+  const base = defaultTenantCommunicationSafeguardingPolicy(policy.tenantId);
+  if (policy.guardianRecipient === "PRIMARY_GUARDIAN") {
+    return { ...base, deliverToAllActiveGuardians: false };
+  }
+  if (policy.guardianRecipient === "SUBJECT_ONLY") {
+    return {
+      ...base,
+      guardianOnlyDeliveryRequired: false,
+      allowDirectMinorDelivery: true,
+      guardianVisibilityRequired: false,
+    };
+  }
+  return base;
+}
+
 export function evaluateSafeguardingCommunication(
   input: SafeguardingEvaluationInput,
 ): SafeguardingEvaluationResult {
-  if (
-    input.subjectIsMinor &&
-    input.policy.minorDirectMessaging === "BLOCK_TRAINER_TO_MINOR_DIRECT"
-  ) {
-    if (input.policy.guardianRecipient === "SUBJECT_ONLY") {
-      return { allowed: false, reason: "MINOR_DIRECT_MESSAGING_BLOCKED" };
-    }
-    return { allowed: true, expandToGuardianPersonIds: [] };
+  void input.channel;
+  void input.senderUserId;
+
+  const config = legacyPolicyToConfig(input.policy);
+  const evaluation = evaluateCommunicationSafeguarding({
+    policy: config,
+    subject: {
+      subjectPersonId: input.subjectPersonId,
+      dateOfBirth: input.subjectDateOfBirth ?? null,
+      subjectIsMinorOverride: input.subjectDateOfBirth ? undefined : input.subjectIsMinor,
+      selfUserId: input.selfUserId ?? null,
+      guardianRecipients: input.guardianRecipients ?? [],
+    },
+  });
+
+  if (!evaluation.deliveryPermitted) {
+    const reason =
+      evaluation.reason === "GUARDIAN_REQUIRED_UNAVAILABLE"
+        ? "GUARDIAN_REQUIRED_UNAVAILABLE"
+        : "MINOR_DIRECT_MESSAGING_BLOCKED";
+    return { allowed: false, reason };
   }
-  return { allowed: true, expandToGuardianPersonIds: [] };
+
+  return {
+    allowed: true,
+    expandToGuardianPersonIds: evaluation.guardianRecipients.map((g) => g.guardianPersonId),
+    evaluation,
+  };
 }
+
+export {
+  evaluateCommunicationSafeguarding,
+  type CommunicationSafeguardingEvaluation,
+  type TenantCommunicationSafeguardingPolicyConfig,
+  defaultTenantCommunicationSafeguardingPolicy,
+};
