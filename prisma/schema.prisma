@@ -435,6 +435,22 @@ enum CommunicationReminderScheduleStatus {
   CANCELLED
 }
 
+/// SCE-COMM-16 — reusable platform communication templates (distinct from governance CommunicationTemplate).
+enum PlatformCommunicationTemplateStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+/// SCE-COMM-16 — one-time scheduled publication of a PlatformCommunication instance.
+enum PlatformCommunicationPublicationScheduleStatus {
+  SCHEDULED
+  PROCESSING
+  PUBLISHED
+  FAILED
+  CANCELLED
+}
+
 enum CommunicationAttachmentSourceType {
   UPLOAD
   WORKSPACE_DOCUMENT_VERSION
@@ -1186,6 +1202,8 @@ model Tenant {
   platformCommunicationRequestClaims PlatformCommunicationRequestClaim[]
   communicationReminderExecutions CommunicationReminderExecution[]
   communicationReminderSchedules CommunicationReminderSchedule[]
+  platformCommunicationTemplates PlatformCommunicationTemplate[]
+  platformCommunicationPublicationSchedules PlatformCommunicationPublicationSchedule[]
   internalComments                InternalComment[]
   commentMentions                 CommentMention[]
   taskComments                    TaskComment[]
@@ -1294,6 +1312,9 @@ model User {
   createdCommunicationCenterContextLinks CommunicationCenterContextLink[] @relation("CommunicationCenterContextLinkCreatedBy")
   createdPlatformCommunications PlatformCommunication[] @relation("PlatformCommunicationCreatedBy")
   createdCommunicationReminderSchedules CommunicationReminderSchedule[] @relation("CommunicationReminderScheduleCreatedBy")
+  createdPlatformCommunicationTemplates PlatformCommunicationTemplate[] @relation("PlatformCommunicationTemplateCreatedBy")
+  createdPlatformCommunicationPublicationSchedules PlatformCommunicationPublicationSchedule[] @relation("PlatformCommunicationPublicationScheduleCreatedBy")
+  cancelledPlatformCommunicationPublicationSchedules PlatformCommunicationPublicationSchedule[] @relation("PlatformCommunicationPublicationScheduleCancelledBy")
   authoredInternalComments     InternalComment[]      @relation("InternalCommentAuthor")
   commentMentionsReceived      CommentMention[]       @relation("CommentMentionUser")
   authoredTaskComments         TaskComment[]          @relation("TaskCommentAuthor")
@@ -3094,12 +3115,18 @@ model PlatformCommunication {
   /// SCE-COMM-10 — reminder orchestration metadata (origin + source refs); not Event/Poll/Request state.
   orchestrationMetaJson Json?
 
+  /// SCE-COMM-16 — optional traceability when draft was created from a platform template.
+  sourcePlatformTemplateId      String?
+  sourcePlatformTemplateVersion DateTime?
+
   createdByUserId String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   tenant       Tenant                            @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   conversation PlatformCommunicationConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sourcePlatformTemplate PlatformCommunicationTemplate? @relation(fields: [sourcePlatformTemplateId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  publicationSchedule PlatformCommunicationPublicationSchedule?
   senderPerson Person?                           @relation("PlatformCommunicationSender", fields: [senderPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   createdByUser User?                            @relation("PlatformCommunicationCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   replyTo      PlatformCommunication?            @relation("PlatformCommunicationReplyThread", fields: [replyToCommunicationId], references: [id], onDelete: SetNull, onUpdate: Cascade)
@@ -3120,6 +3147,63 @@ model PlatformCommunication {
   @@index([senderPersonId])
   @@index([tenantId, replyToCommunicationId])
   @@index([tenantId, conversationId, publishedAt])
+  @@index([tenantId, sourcePlatformTemplateId])
+}
+
+/// SCE-COMM-16 — tenant-scoped reusable defaults for PlatformCommunication drafts.
+model PlatformCommunicationTemplate {
+  id          String @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  kind        PlatformCommunicationKind
+  status      PlatformCommunicationTemplateStatus @default(DRAFT)
+  internalName String?
+  subject     String?
+  bodyText    String
+  audienceSpecJson Json?
+  orchestrationMetaJson Json?
+  createdByUserId String?
+  archivedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant          Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdByUser   User?                   @relation("PlatformCommunicationTemplateCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  communications  PlatformCommunication[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, kind, status])
+  @@index([tenantId, createdAt])
+}
+
+/// SCE-COMM-16 — future publication intent for a single PlatformCommunication (not a parallel delivery engine).
+model PlatformCommunicationPublicationSchedule {
+  id              String @id @default(cuid())
+  tenantId        String
+  communicationId String @unique
+  scheduledAt     DateTime
+  timezone        String
+  status          PlatformCommunicationPublicationScheduleStatus @default(SCHEDULED)
+  claimedAt       DateTime?
+  leaseExpiresAt  DateTime?
+  executedAt      DateTime?
+  cancelledAt     DateTime?
+  cancelledByUserId String?
+  attemptCount    Int @default(0)
+  maxAttempts     Int @default(5)
+  lastFailureReason String?
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant        Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  communication PlatformCommunication @relation(fields: [communicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdByUser User?                 @relation("PlatformCommunicationPublicationScheduleCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  cancelledByUser User?               @relation("PlatformCommunicationPublicationScheduleCancelledBy", fields: [cancelledByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([tenantId, status, scheduledAt])
+  @@index([status, scheduledAt])
 }
 
 /// Lightweight team-chat reaction (bounded keys enforced in services).

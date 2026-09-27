@@ -7,6 +7,9 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { resolveCampaignAuthorization } from "@/lib/communication/campaign/campaign-authorization";
 import { listCampaigns } from "@/lib/communication/campaign/campaign-service";
+import { listUpcomingPublicationSchedules } from "@/lib/communication/scheduling/publication-schedule-service";
+import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
+import { SectionCard } from "@/components/ui/page";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +37,8 @@ export default async function CampaignListPage({ searchParams }: PageProps) {
   });
 
   const params = (await searchParams) ?? {};
+  const schedules = await listUpcomingPublicationSchedules({ tenantId: tenant.id });
+
   const items = await listCampaigns({
     tenantId: tenant.id,
     viewerUserId: session.user.id,
@@ -56,6 +61,25 @@ export default async function CampaignListPage({ searchParams }: PageProps) {
         title="Kampagnen"
         description="Organisationsweite Kampagnen — Zielgruppen werden bei Veröffentlichung aufgelöst; Empfänger bleiben historisch unveränderlich."
       />
+      {schedules.length > 0 ? (
+        <SectionCard title="Geplante Veröffentlichungen" className="mb-6">
+          <ul className="space-y-2 text-sm">
+            {schedules.map((s) => (
+              <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2">
+                <span>
+                  {s.kind} · {s.internalName ?? s.subject ?? s.communicationId} ·{" "}
+                  {new Date(s.scheduledAt).toLocaleString("de-CH", {
+                    timeZone: resolveTenantEventTimezone(tenant.timezone),
+                  })}{" "}
+                  ({resolveTenantEventTimezone(tenant.timezone)})
+                </span>
+                <span className="text-xs text-[var(--text-2)]">{s.status}</span>
+              </li>
+            ))}
+          </ul>
+        </SectionCard>
+      ) : null}
+
       {authz.canSend ? (
         <div className="mb-4 flex justify-end">
           <Link

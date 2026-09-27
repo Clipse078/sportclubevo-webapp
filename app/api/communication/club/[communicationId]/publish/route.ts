@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { publishClubCommunication } from "@/lib/communication/club/club-communication-service";
+import { consumeActivePublicationScheduleForImmediatePublish } from "@/lib/communication/scheduling/publication-schedule-service";
 import { requireClubCommunicationSend } from "@/lib/communication/club/club-communication-authorization";
 import { TeamCommunicationForbiddenError } from "@/lib/communication/team/team-communication-errors";
 
@@ -30,6 +31,12 @@ export async function POST(_request: Request, context: RouteContext) {
     }
     throw error;
   }
+
+  await consumeActivePublicationScheduleForImmediatePublish({
+    tenantId: tenant.id,
+    communicationId,
+    actorUserId: session.user.id,
+  });
 
   const result = await publishClubCommunication({
     tenantId: tenant.id,

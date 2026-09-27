@@ -12,9 +12,9 @@ export type CampaignChannelIntent = {
 };
 
 export type CampaignSchedulingIntent = {
-  /** COMM-16 owns reusable scheduling infrastructure. */
-  mode: "IMMEDIATE" | "SCHEDULED_NOT_IMPLEMENTED";
+  mode: "IMMEDIATE" | "SCHEDULED";
   scheduledAt?: string | null;
+  timezone?: string | null;
 };
 
 export type CampaignOrchestrationMeta = {
@@ -65,6 +65,17 @@ export function parseCampaignOrchestrationMeta(
     scheduling:
       record.scheduling && typeof record.scheduling === "object"
         ? (record.scheduling as CampaignOrchestrationMeta["scheduling"])
-        : { mode: "IMMEDIATE", scheduledAt: null },
+        : { mode: "IMMEDIATE", scheduledAt: null, timezone: null },
+  };
+}
+
+export function schedulingIntentFromPublicationSchedule(input: {
+  scheduledAt: Date;
+  timezone: string;
+}): CampaignSchedulingIntent {
+  return {
+    mode: "SCHEDULED",
+    scheduledAt: input.scheduledAt.toISOString(),
+    timezone: input.timezone,
   };
 }

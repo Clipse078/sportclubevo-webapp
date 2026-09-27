@@ -10,6 +10,8 @@ import { resolveCampaignAuthorization } from "@/lib/communication/campaign/campa
 import { getCampaignById } from "@/lib/communication/campaign/campaign-service";
 import { getCampaignEngagementSummary } from "@/lib/communication/campaign/campaign-engagement-service";
 import { prisma } from "@/lib/db/prisma";
+import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
+import { resolvePlatformTemplateAuthorization } from "@/lib/communication/templates/platform-template-authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +53,11 @@ export default async function CampaignDetailPage({ params }: PageProps) {
     : [];
 
   const editable = authz.canSend && (item.status === "DRAFT" || item.status === "READY");
+  const templateAuthz = await resolvePlatformTemplateAuthorization({
+    tenantId: tenant.id,
+    tenantKey: tenant.key,
+    userId: session.user.id,
+  });
 
   return (
     <PageShell>
@@ -89,6 +96,8 @@ export default async function CampaignDetailPage({ params }: PageProps) {
           initialInternalName={item.internalName}
           initialSubject={item.subject ?? ""}
           initialBody={item.bodyText}
+          tenantTimezone={resolveTenantEventTimezone(tenant.timezone)}
+          canSaveAsTemplate={templateAuthz.canManage}
         />
       ) : (
         <SectionCard title="Veröffentlichter Inhalt">

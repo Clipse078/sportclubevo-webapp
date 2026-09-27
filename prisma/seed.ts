@@ -299,6 +299,20 @@ async function main() {
       grantableByAdmin: true,
     },
     {
+      key: "communication.templates.view",
+      name: "View platform communication templates",
+      module: PermissionModule.COMMUNICATION,
+      scope: PermissionScope.TENANT,
+      grantableByAdmin: true,
+    },
+    {
+      key: "communication.templates.manage",
+      name: "Manage platform communication templates",
+      module: PermissionModule.COMMUNICATION,
+      scope: PermissionScope.TENANT,
+      grantableByAdmin: true,
+    },
+    {
       key: "sponsoring.view",
       name: "View sponsor and partner data for audience selection",
       module: PermissionModule.SPONSORING,

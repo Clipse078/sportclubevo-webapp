@@ -6,6 +6,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { prisma } from "@/lib/db/prisma";
 import { resolveSponsorAudienceAuthorization } from "@/lib/sponsoring/sponsor-authorization";
+import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +89,7 @@ export default async function NewCampaignPage({ searchParams }: PageProps) {
           sponsorOrganisationId?.trim() ? [sponsorOrganisationId.trim()] : []
         }
         initialSponsorContactIds={sponsorContactIds.map((id) => id.trim()).filter(Boolean)}
+        tenantTimezone={resolveTenantEventTimezone(tenant.timezone)}
       />
     </PageShell>
   );

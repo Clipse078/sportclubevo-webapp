@@ -166,6 +166,9 @@ export const PERMISSIONS = {
   COMMUNICATION_INBOX_MANAGE: "communication.inbox.manage",
   COMMUNICATION_INBOX_REPLY: "communication.inbox.reply",
   COMMUNICATION_INBOX_SETTINGS: "communication.inbox.settings",
+  /** SCE-COMM-16 — reusable platform communication templates. */
+  COMMUNICATION_TEMPLATES_VIEW: "communication.templates.view",
+  COMMUNICATION_TEMPLATES_MANAGE: "communication.templates.manage",
 
   REGISTRATIONS_VIEW: "registrations.view",
   REGISTRATIONS_EDIT: "registrations.edit",

@@ -1,17 +1,15 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
-import { publishCampaign } from "@/lib/communication/campaign/campaign-service";
-import { consumeActivePublicationScheduleForImmediatePublish } from "@/lib/communication/scheduling/publication-schedule-service";
-import { requireCampaignSend } from "@/lib/communication/campaign/campaign-authorization";
+import { createTemplateFromCommunication } from "@/lib/communication/templates/platform-template-service";
+import { requirePlatformTemplateManage } from "@/lib/communication/templates/platform-template-authorization";
 import {
   TeamCommunicationForbiddenError,
+  TeamCommunicationNotFoundError,
   TeamCommunicationValidationError,
 } from "@/lib/communication/team/team-communication-errors";
 
-type RouteContext = { params: Promise<{ campaignId: string }> };
-
-export async function POST(_request: Request, context: RouteContext) {
+export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -20,10 +18,9 @@ export async function POST(_request: Request, context: RouteContext) {
   if (!tenant) {
     return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
   }
-  const { campaignId } = await context.params;
 
   try {
-    await requireCampaignSend({
+    await requirePlatformTemplateManage({
       tenantId: tenant.id,
       tenantKey: tenant.key,
       userId: session.user.id,
@@ -35,21 +32,21 @@ export async function POST(_request: Request, context: RouteContext) {
     throw error;
   }
 
+  const body = await request.json();
   try {
-    await consumeActivePublicationScheduleForImmediatePublish({
+    const created = await createTemplateFromCommunication({
       tenantId: tenant.id,
-      communicationId: campaignId,
+      communicationId: body.communicationId,
       actorUserId: session.user.id,
+      name: body.name,
     });
-    const result = await publishCampaign({
-      tenantId: tenant.id,
-      campaignId,
-      senderUserId: session.user.id,
-    });
-    return NextResponse.json(result);
+    return NextResponse.json(created, { status: 201 });
   } catch (error) {
     if (error instanceof TeamCommunicationValidationError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    if (error instanceof TeamCommunicationNotFoundError) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     throw error;
   }
