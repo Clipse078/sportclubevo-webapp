@@ -25,6 +25,10 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/cron/communication-scheduler",
+      "schedule": "*/1 * * * *"
+    },
+    {
       "path": "/api/cron/task-series-occurrences",
       "schedule": "15 3 * * *"
     },

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import CommunicationScheduleFields from "@/components/admin/communication/scheduling/CommunicationScheduleFields";
 
 type TargetGroupOption = { id: string; name: string; status: string };
 
@@ -23,6 +24,8 @@ type Props = {
   initialSponsorMode?: "ALL_ACTIVE" | "SELECTED";
   initialSponsorOrganisationIds?: string[];
   initialSponsorContactIds?: string[];
+  tenantTimezone?: string;
+  canSaveAsTemplate?: boolean;
 };
 
 type AudienceMode = "WHOLE_ORG" | "TARGET_GROUPS" | "SPONSORS";
@@ -39,6 +42,8 @@ export default function CampaignComposer({
   initialSponsorMode = "ALL_ACTIVE",
   initialSponsorOrganisationIds = [],
   initialSponsorContactIds = [],
+  tenantTimezone = "Europe/Zurich",
+  canSaveAsTemplate = false,
 }: Props) {
   const router = useRouter();
   const [internalName, setInternalName] = useState(initialInternalName);
@@ -67,6 +72,8 @@ export default function CampaignComposer({
   const [emailReady, setEmailReady] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduledAtLocal, setScheduledAtLocal] = useState("");
 
   async function loadEmailReadiness() {
     try {
@@ -182,7 +189,29 @@ export default function CampaignComposer({
     return data.id as string;
   }
 
-  async function handleAction(mode: "draft" | "ready" | "publish") {
+  async function schedulePublication(communicationId: string) {
+    const res = await fetch(`/api/communication/schedules/${communicationId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scheduledAtLocal, timezone: tenantTimezone }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Planung fehlgeschlagen");
+  }
+
+  async function saveAsTemplate(communicationId: string) {
+    const name = window.prompt("Name der Vorlage", internalName || subject || "Kampagne");
+    if (!name?.trim()) return;
+    const res = await fetch("/api/communication/templates/from-communication", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ communicationId, name: name.trim() }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Vorlage konnte nicht gespeichert werden");
+  }
+
+  async function handleAction(mode: "draft" | "ready" | "publish" | "schedule") {
     setError(null);
     setBusy(true);
     try {
@@ -201,6 +230,9 @@ export default function CampaignComposer({
         const pubRes = await fetch(`/api/communication/campaign/${id}/publish`, { method: "POST" });
         const pubData = await pubRes.json();
         if (!pubRes.ok) throw new Error(pubData.error ?? "Veröffentlichung fehlgeschlagen");
+      }
+      if (mode === "schedule") {
+        await schedulePublication(id);
       }
       router.push(`/dashboard/communication/kampagnen/${id}`);
       router.refresh();
@@ -399,6 +431,14 @@ export default function CampaignComposer({
         ) : null}
       </fieldset>
 
+      <CommunicationScheduleFields
+        tenantTimezone={tenantTimezone}
+        scheduledAtLocal={scheduledAtLocal}
+        onScheduledAtLocalChange={setScheduledAtLocal}
+        scheduleEnabled={scheduleEnabled}
+        onScheduleEnabledChange={setScheduleEnabled}
+      />
+
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       <div className="flex flex-wrap gap-2">
@@ -418,14 +458,35 @@ export default function CampaignComposer({
         >
           Bereit markieren
         </button>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void handleAction("publish")}
-          className="rounded-lg bg-[var(--sce-primary)] px-4 py-2 text-sm font-semibold text-white"
-        >
-          Veröffentlichen
-        </button>
+        {scheduleEnabled ? (
+          <button
+            type="button"
+            disabled={busy || !scheduledAtLocal}
+            onClick={() => void handleAction("schedule")}
+            className="rounded-lg bg-[var(--sce-primary)] px-4 py-2 text-sm font-semibold text-white"
+          >
+            Planen
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void handleAction("publish")}
+            className="rounded-lg bg-[var(--sce-primary)] px-4 py-2 text-sm font-semibold text-white"
+          >
+            Jetzt veröffentlichen
+          </button>
+        )}
+        {canSaveAsTemplate && campaignId ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void saveAsTemplate(campaignId)}
+            className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm"
+          >
+            Als Vorlage speichern
+          </button>
+        ) : null}
       </div>
     </div>
   );

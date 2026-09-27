@@ -6,6 +6,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { requireClubCommunicationSend } from "@/lib/communication/club/club-communication-authorization";
 import { listZielgruppenForManagement } from "@/lib/communication/zielgruppen/management-service";
+import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,7 @@ export default async function NewClubMitteilungPage() {
             name: tg.name,
             status: tg.status,
           }))}
+          tenantTimezone={resolveTenantEventTimezone(tenant.timezone)}
         />
       </SectionCard>
     </PageShell>

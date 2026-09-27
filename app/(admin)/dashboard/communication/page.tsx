@@ -106,11 +106,13 @@ export default async function CommunicationPage() {
           details={["Organisation & Teams", "Rollen", "Explizite Personen", "Archiv"]}
         />
         <ModuleCapabilityCard
-          title="Versand"
-          description="Geplante und durchgeführte Versände nachvollziehen."
-          icon={Send}
-          status="Demnächst"
-          details={["Einzel- und Massenversand", "Planung", "Status", "Fehler und Wiederholung"]}
+          title="Vorlagen"
+          description="Wiederverwendbare Inhalte für Kampagnen und Vereinsmitteilungen — erzeugen normale Entwürfe."
+          icon={FileStack}
+          status="Verfügbar"
+          href="/dashboard/communication/vorlagen"
+          linkLabel="Vorlagen verwalten"
+          details={["Kampagne", "Mitteilung", "Alarm", "Zielgruppen-Defaults", "Planung (COMM-16)"]}
         />
         <ModuleCapabilityCard
           title="E-Mail-Absender"
@@ -162,16 +164,11 @@ export default async function CommunicationPage() {
 
         <div className="grid gap-5 md:grid-cols-2">
           <ModuleCapabilityCard
-            title="Vorlagen"
-            description="Vorlagen für E-Mails, Newsletter, Briefe, Rechnungen, Verträge und weitere Dokumente."
+            title="Dokumentvorlagen (Plattform)"
+            description="Separate Dokument- und Finanzvorlagen ausserhalb der Kommunikationsplattform."
             icon={FileStack}
             status="Demnächst"
-            details={[
-              "System-, Vereins- und persönliche Vorlagen",
-              "Fachliche Variablen",
-              "Versionierte Ergebnisse",
-              "Nicht auf E-Mail beschränkt",
-            ]}
+            details={["Briefe", "Rechnungen", "Verträge", "Nicht COMM-16"]}
           />
           <ModuleCapabilityCard
             title="Gestaltung / Erscheinungsbild"

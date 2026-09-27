@@ -2,16 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import CommunicationScheduleFields from "@/components/admin/communication/scheduling/CommunicationScheduleFields";
 
 type TargetGroupOption = { id: string; name: string; status: string };
 
 type Props = {
   targetGroups: TargetGroupOption[];
+  tenantTimezone?: string;
 };
 
 type AudienceMode = "WHOLE_ORG" | "TARGET_GROUPS" | "STRUCTURAL";
 
-export default function ClubCommunicationComposer({ targetGroups }: Props) {
+export default function ClubCommunicationComposer({
+  targetGroups,
+  tenantTimezone = "Europe/Zurich",
+}: Props) {
   const router = useRouter();
   const [kind, setKind] = useState<"MESSAGE" | "ANNOUNCEMENT" | "ALERT">("ANNOUNCEMENT");
   const [subject, setSubject] = useState("");
@@ -26,6 +31,8 @@ export default function ClubCommunicationComposer({ targetGroups }: Props) {
   } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduledAtLocal, setScheduledAtLocal] = useState("");
 
   function buildAudienceSpec() {
     if (audienceMode === "WHOLE_ORG") {
@@ -70,7 +77,7 @@ export default function ClubCommunicationComposer({ targetGroups }: Props) {
     }
   }
 
-  async function handleSend(publishMode: "draft" | "send") {
+  async function handleSend(publishMode: "draft" | "send" | "schedule") {
     setError(null);
     setBusy(true);
     try {
@@ -84,6 +91,26 @@ export default function ClubCommunicationComposer({ targetGroups }: Props) {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? "Entwurf konnte nicht gespeichert werden");
         router.push(`/dashboard/communication/mitteilungen/${data.id}`);
+        router.refresh();
+        return;
+      }
+
+      if (publishMode === "schedule") {
+        const draftRes = await fetch("/api/communication/club", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ kind, subject, bodyText, audienceSpec }),
+        });
+        const draftData = await draftRes.json();
+        if (!draftRes.ok) throw new Error(draftData.error ?? "Entwurf konnte nicht gespeichert werden");
+        const schedRes = await fetch(`/api/communication/schedules/${draftData.id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scheduledAtLocal, timezone: tenantTimezone }),
+        });
+        const schedData = await schedRes.json();
+        if (!schedRes.ok) throw new Error(schedData.error ?? "Planung fehlgeschlagen");
+        router.push(`/dashboard/communication/mitteilungen/${draftData.id}`);
         router.refresh();
         return;
       }
@@ -188,6 +215,14 @@ export default function ClubCommunicationComposer({ targetGroups }: Props) {
         ) : null}
       </fieldset>
 
+      <CommunicationScheduleFields
+        tenantTimezone={tenantTimezone}
+        scheduledAtLocal={scheduledAtLocal}
+        onScheduledAtLocalChange={setScheduledAtLocal}
+        scheduleEnabled={scheduleEnabled}
+        onScheduleEnabledChange={setScheduleEnabled}
+      />
+
       {preview ? (
         <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-2)]">
           <p>
@@ -218,14 +253,25 @@ export default function ClubCommunicationComposer({ targetGroups }: Props) {
         >
           Entwurf speichern
         </button>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => handleSend("send")}
-          className="rounded-lg bg-[var(--sce-primary)] px-4 py-2 text-sm font-semibold text-white"
-        >
-          Veröffentlichen
-        </button>
+        {scheduleEnabled ? (
+          <button
+            type="button"
+            disabled={busy || !scheduledAtLocal}
+            onClick={() => handleSend("schedule")}
+            className="rounded-lg bg-[var(--sce-primary)] px-4 py-2 text-sm font-semibold text-white"
+          >
+            Planen
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => handleSend("send")}
+            className="rounded-lg bg-[var(--sce-primary)] px-4 py-2 text-sm font-semibold text-white"
+          >
+            Jetzt veröffentlichen
+          </button>
+        )}
       </div>
     </div>
   );
