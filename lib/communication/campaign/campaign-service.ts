@@ -1,12 +1,9 @@
 /**
- * SCE-COMM-11 — Club communication application service (presentation-independent).
- *
- * Dynamic audiences resolve at publish time; draft save stores audience intent only.
+ * SCE-COMM-12 — Campaign composer service (PlatformCommunication kind CAMPAIGN).
  */
 
-import type { PlatformCommunicationKind, PlatformCommunicationStatus, Prisma } from "@prisma/client";
+import type { PlatformCommunicationStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { isCommunicationKind } from "@/lib/communication/platform/communication-kinds";
 import { validateCommunicationContextRef } from "@/lib/communication/platform/communication-context";
 import { validateCommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-validation";
 import { resolveCommunicationRecipientsForDispatch } from "@/lib/communication/platform/recipient-resolution/resolve-recipients";
@@ -30,30 +27,54 @@ import {
   TeamCommunicationValidationError,
 } from "@/lib/communication/team/team-communication-errors";
 import { recordPlatformCommunicationAudit } from "@/lib/communication/team/platform-communication-audit";
-import { emitClubCommunicationPublishedNotifications } from "@/lib/communication/club/club-communication-notification-producer";
 import { resolvePersonIdForUser } from "@/lib/teams/team-document-auth";
 import { MAX_TEAM_COMMUNICATION_BODY_LENGTH } from "@/lib/communication/team/team-communication-constants";
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
 import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
+import {
+  defaultCampaignOrchestrationMeta,
+  parseCampaignOrchestrationMeta,
+  type CampaignOrchestrationMeta,
+} from "@/lib/communication/campaign/campaign-orchestration-meta";
+import { emitCampaignPublishedNotifications } from "@/lib/communication/campaign/campaign-notification-producer";
 
-export type ClubCommunicationListItem = {
+export type CampaignListItem = {
   id: string;
-  kind: PlatformCommunicationKind;
-  status: string;
-  bodyText: string;
+  internalName: string;
+  status: PlatformCommunicationStatus;
   subject: string | null;
-  acknowledgementRequired: boolean;
-  publishedAt: string | null;
-  createdAt: string;
+  bodyText: string;
   audienceSummary: string;
-  senderPerson: { id: string; firstName: string; lastName: string } | null;
+  authorPerson: { id: string; firstName: string; lastName: string } | null;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
+  recipientCount: number | null;
 };
 
-const CLUB_KINDS = new Set<PlatformCommunicationKind>(["MESSAGE", "ANNOUNCEMENT", "ALERT"]);
+const CAMPAIGN_KIND = "CAMPAIGN" as const;
 
 const LIST_INCLUDE = {
   senderPerson: { select: { id: true, firstName: true, lastName: true } },
+  _count: { select: { recipientSnapshots: true } },
 } satisfies Prisma.PlatformCommunicationInclude;
+
+function sanitizeInternalName(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) throw new TeamCommunicationValidationError("internal campaign name is required");
+  if (trimmed.length > 160) {
+    throw new TeamCommunicationValidationError("internal campaign name exceeds maximum length");
+  }
+  return trimmed;
+}
+
+function sanitizeSubject(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? "";
+  if (trimmed.length > 240) {
+    throw new TeamCommunicationValidationError("title exceeds maximum length");
+  }
+  return trimmed || null;
+}
 
 function sanitizeBodyText(body: string): string {
   const trimmed = body.replace(/\r\n/g, "\n").trim();
@@ -64,19 +85,13 @@ function sanitizeBodyText(body: string): string {
   return trimmed;
 }
 
-function assertClubKind(kind: string): PlatformCommunicationKind {
-  if (!isCommunicationKind(kind)) {
-    throw new TeamCommunicationValidationError("invalid communication kind");
-  }
-  if (!CLUB_KINDS.has(kind as PlatformCommunicationKind)) {
-    throw new TeamCommunicationValidationError(`kind ${kind} is not enabled for club communication`);
-  }
-  return kind as PlatformCommunicationKind;
-}
-
-async function loadClubCommunicationRow(input: { tenantId: string; communicationId: string }) {
+async function loadCampaignRow(input: { tenantId: string; campaignId: string }) {
   const row = await prisma.platformCommunication.findFirst({
-    where: { id: input.communicationId, tenantId: input.tenantId },
+    where: {
+      id: input.campaignId,
+      tenantId: input.tenantId,
+      kind: CAMPAIGN_KIND,
+    },
     include: {
       conversation: { select: { contextKind: true, teamId: true } },
     },
@@ -105,31 +120,56 @@ async function validateAudienceTenantOwnership(
   }
 }
 
-export async function listClubCommunications(input: {
+function mapListRow(
+  row: Prisma.PlatformCommunicationGetPayload<{ include: typeof LIST_INCLUDE }>,
+): CampaignListItem {
+  const audience = row.audienceSpecJson as CommunicationAudienceSpec;
+  const internalName =
+    row.internalName?.trim() ||
+    row.subject?.trim() ||
+    row.bodyText.slice(0, 80).trim() ||
+    "Kampagne";
+  return {
+    id: row.id,
+    internalName,
+    status: row.status,
+    subject: row.subject,
+    bodyText: row.bodyText,
+    audienceSummary: summarizeClubAudienceSpec(audience),
+    authorPerson: row.senderPerson,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    publishedAt: row.publishedAt?.toISOString() ?? null,
+    recipientCount: row.status === "PUBLISHED" ? row._count.recipientSnapshots : null,
+  };
+}
+
+export async function listCampaigns(input: {
   tenantId: string;
   limit?: number;
   status?: string;
-  kind?: string;
   search?: string;
-  senderPersonId?: string;
   viewerUserId: string;
   viewerCanSend: boolean;
-}): Promise<ClubCommunicationListItem[]> {
+}): Promise<CampaignListItem[]> {
   const conversation = await getOrCreateOrganisationCommunicationConversation({
     tenantId: input.tenantId,
   });
 
   const limit = Math.min(Math.max(input.limit ?? 50, 1), 100);
   const statusFilter: PlatformCommunicationStatus | undefined =
-    input.status === "DRAFT" || input.status === "PUBLISHED" || input.status === "ARCHIVED"
+    input.status === "DRAFT" ||
+    input.status === "READY" ||
+    input.status === "PUBLISHED" ||
+    input.status === "ARCHIVED"
       ? input.status
       : undefined;
 
   const allowedStatuses: PlatformCommunicationStatus[] = input.viewerCanSend
     ? statusFilter
       ? [statusFilter]
-      : ["PUBLISHED", "DRAFT", "ARCHIVED"]
-    : statusFilter && statusFilter !== "DRAFT"
+      : ["PUBLISHED", "READY", "DRAFT", "ARCHIVED"]
+    : statusFilter && statusFilter !== "DRAFT" && statusFilter !== "READY"
       ? [statusFilter]
       : ["PUBLISHED", "ARCHIVED"];
 
@@ -137,52 +177,65 @@ export async function listClubCommunications(input: {
     where: {
       tenantId: input.tenantId,
       conversationId: conversation.id,
-      kind: input.kind ? assertClubKind(input.kind) : { not: "CAMPAIGN" },
+      kind: CAMPAIGN_KIND,
       status: { in: allowedStatuses },
-      ...(input.senderPersonId ? { senderPersonId: input.senderPersonId } : {}),
       ...(input.search?.trim()
         ? {
             OR: [
+              { internalName: { contains: input.search.trim(), mode: "insensitive" as const } },
               { subject: { contains: input.search.trim(), mode: "insensitive" as const } },
               { bodyText: { contains: input.search.trim(), mode: "insensitive" as const } },
             ],
           }
         : {}),
     },
-    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+    orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
     take: limit,
     include: LIST_INCLUDE,
   });
 
-  return rows.map((row) => {
-    const audience = row.audienceSpecJson as CommunicationAudienceSpec;
-    return {
-      id: row.id,
-      kind: row.kind,
-      status: row.status,
-      bodyText: row.bodyText,
-      subject: row.subject,
-      acknowledgementRequired: row.acknowledgementRequired,
-      publishedAt: row.publishedAt?.toISOString() ?? null,
-      createdAt: row.createdAt.toISOString(),
-      audienceSummary: summarizeClubAudienceSpec(audience),
-      senderPerson: row.senderPerson,
-    };
-  });
+  return rows.map(mapListRow);
 }
 
-export async function createClubCommunicationDraft(input: {
+export async function getCampaignById(input: {
+  tenantId: string;
+  campaignId: string;
+  viewerCanSend: boolean;
+}): Promise<(CampaignListItem & { audienceSpec: CommunicationAudienceSpec; orchestration: CampaignOrchestrationMeta }) | null> {
+  const row = await loadCampaignRow({ tenantId: input.tenantId, campaignId: input.campaignId });
+  if (!input.viewerCanSend && (row.status === "DRAFT" || row.status === "READY")) {
+    throw new TeamCommunicationForbiddenError();
+  }
+
+  const full = await prisma.platformCommunication.findFirst({
+    where: { id: row.id },
+    include: LIST_INCLUDE,
+  });
+  if (!full) return null;
+
+  const audience = full.audienceSpecJson as CommunicationAudienceSpec;
+  const orchestration =
+    parseCampaignOrchestrationMeta(full.orchestrationMetaJson) ?? defaultCampaignOrchestrationMeta();
+
+  return {
+    ...mapListRow(full),
+    audienceSpec: audience,
+    orchestration,
+  };
+}
+
+export async function createCampaignDraft(input: {
   tenantId: string;
   senderUserId: string;
-  kind?: string;
-  bodyText: string;
+  internalName: string;
   subject?: string | null;
+  bodyText: string;
   audienceSpec: CommunicationAudienceSpec;
   contextRef?: CommunicationContextRef;
-  acknowledgementRequired?: boolean;
 }): Promise<{ id: string }> {
-  const kind = assertClubKind(input.kind ?? "MESSAGE");
+  const internalName = sanitizeInternalName(input.internalName);
   const bodyText = sanitizeBodyText(input.bodyText);
+  const subject = sanitizeSubject(input.subject);
   const contextRef = input.contextRef ?? createOrganisationCommunicationContext(input.tenantId);
   const ctxErr = validateCommunicationContextRef(input.tenantId, contextRef);
   if (ctxErr) throw new TeamCommunicationValidationError(ctxErr);
@@ -200,14 +253,16 @@ export async function createClubCommunicationDraft(input: {
     data: {
       tenantId: input.tenantId,
       conversationId: conversation.id,
-      kind,
+      kind: CAMPAIGN_KIND,
       status: "DRAFT",
       contextRef: contextRef as unknown as Prisma.InputJsonValue,
       senderPersonId,
-      subject: input.subject?.trim() || null,
+      internalName,
+      subject,
       bodyText,
       audienceSpecJson: input.audienceSpec as unknown as Prisma.InputJsonValue,
-      acknowledgementRequired: input.acknowledgementRequired === true,
+      orchestrationMetaJson: defaultCampaignOrchestrationMeta() as unknown as Prisma.InputJsonValue,
+      acknowledgementRequired: false,
       createdByUserId: input.senderUserId,
     },
     select: { id: true, kind: true, status: true },
@@ -225,32 +280,27 @@ export async function createClubCommunicationDraft(input: {
   return { id: created.id };
 }
 
-export async function updateClubCommunicationDraft(input: {
+export async function updateCampaignDraft(input: {
   tenantId: string;
-  communicationId: string;
+  campaignId: string;
   actorUserId: string;
-  bodyText?: string;
+  internalName?: string;
   subject?: string | null;
+  bodyText?: string;
   audienceSpec?: CommunicationAudienceSpec;
-  acknowledgementRequired?: boolean;
 }): Promise<{ id: string }> {
-  const row = await loadClubCommunicationRow({
-    tenantId: input.tenantId,
-    communicationId: input.communicationId,
-  });
-  if (row.status !== "DRAFT") {
-    throw new TeamCommunicationValidationError("only drafts can be edited");
+  const row = await loadCampaignRow({ tenantId: input.tenantId, campaignId: input.campaignId });
+  if (row.status !== "DRAFT" && row.status !== "READY") {
+    throw new TeamCommunicationValidationError("only draft or ready campaigns can be edited");
   }
   if (row.createdByUserId && row.createdByUserId !== input.actorUserId) {
-    throw new TeamCommunicationForbiddenError("draft edit denied");
+    throw new TeamCommunicationForbiddenError("campaign edit denied");
   }
 
   const data: Prisma.PlatformCommunicationUpdateInput = {};
+  if (input.internalName !== undefined) data.internalName = sanitizeInternalName(input.internalName);
   if (input.bodyText !== undefined) data.bodyText = sanitizeBodyText(input.bodyText);
-  if (input.subject !== undefined) data.subject = input.subject?.trim() || null;
-  if (input.acknowledgementRequired !== undefined) {
-    data.acknowledgementRequired = input.acknowledgementRequired === true;
-  }
+  if (input.subject !== undefined) data.subject = sanitizeSubject(input.subject);
   if (input.audienceSpec) {
     const audienceErr = validateCommunicationAudienceSpec(input.audienceSpec);
     if (audienceErr) throw new TeamCommunicationValidationError(audienceErr);
@@ -272,15 +322,54 @@ export async function updateClubCommunicationDraft(input: {
   return { id: row.id };
 }
 
-export async function publishClubCommunication(input: {
+export async function markCampaignReady(input: {
   tenantId: string;
-  communicationId: string;
-  senderUserId: string;
-}): Promise<{ id: string; recipientCount: number }> {
-  const row = await loadClubCommunicationRow({
-    tenantId: input.tenantId,
-    communicationId: input.communicationId,
+  campaignId: string;
+  actorUserId: string;
+}): Promise<{ id: string; status: PlatformCommunicationStatus }> {
+  const row = await loadCampaignRow({ tenantId: input.tenantId, campaignId: input.campaignId });
+  if (!canTransitionCommunicationStatus(row.status, "READY")) {
+    throw new TeamCommunicationValidationError("invalid status transition");
+  }
+  if (row.status === "READY") return { id: row.id, status: row.status };
+
+  await prisma.platformCommunication.update({
+    where: { id: row.id },
+    data: { status: "READY" },
   });
+
+  await recordPlatformCommunicationAudit({
+    tenantId: input.tenantId,
+    actorUserId: input.actorUserId,
+    action: "COMMUNICATION_UPDATED",
+    communicationId: row.id,
+    kind: row.kind,
+    status: "READY",
+  });
+
+  return { id: row.id, status: "READY" };
+}
+
+export type PublishCampaignResult = {
+  id: string;
+  recipientCount: number;
+  alreadyPublished: boolean;
+};
+
+export async function publishCampaign(input: {
+  tenantId: string;
+  campaignId: string;
+  senderUserId: string;
+}): Promise<PublishCampaignResult> {
+  const row = await loadCampaignRow({ tenantId: input.tenantId, campaignId: input.campaignId });
+
+  if (row.status === "PUBLISHED") {
+    const recipientCount = await prisma.platformCommunicationRecipientSnapshot.count({
+      where: { tenantId: input.tenantId, communicationId: row.id },
+    });
+    return { id: row.id, recipientCount, alreadyPublished: true };
+  }
+
   if (!canTransitionCommunicationStatus(row.status, "PUBLISHED")) {
     throw new TeamCommunicationValidationError("invalid status transition");
   }
@@ -293,8 +382,6 @@ export async function publishClubCommunication(input: {
   }
 
   const contextRef = row.contextRef as CommunicationContextRef;
-  const category =
-    row.kind === "ALERT" ? "CLUB_OPERATIONAL" : row.kind === "ANNOUNCEMENT" ? "CLUB_INFORMATION" : "CLUB_OPERATIONAL";
 
   const dispatch = await resolveCommunicationRecipientsForDispatch(
     {
@@ -303,15 +390,15 @@ export async function publishClubCommunication(input: {
       audience,
       context: contextRef,
       channel: "IN_APP",
-      category,
+      category: "CLUB_INFORMATION",
       mode: "DISPATCH",
     },
-    input.communicationId,
+    input.campaignId,
   );
 
   const fingerprint = dispatch.core.metadata.audienceFingerprint;
   const snapshotRows = buildDispatchRecipientSnapshots({
-    communicationDispatchRef: input.communicationId,
+    communicationDispatchRef: input.campaignId,
     tenantId: input.tenantId,
     audienceFingerprint: fingerprint,
     channel: "IN_APP",
@@ -324,16 +411,34 @@ export async function publishClubCommunication(input: {
   }
 
   const publishedAt = new Date();
+  let published = false;
 
   await prisma.$transaction(async (tx) => {
-    await tx.platformCommunication.update({
-      where: { id: row.id },
+    const transition = await tx.platformCommunication.updateMany({
+      where: {
+        id: row.id,
+        tenantId: input.tenantId,
+        status: { in: ["DRAFT", "READY"] },
+      },
       data: {
         status: "PUBLISHED",
         publishedAt,
         audienceFingerprint: fingerprint,
       },
     });
+
+    if (transition.count === 0) {
+      const current = await tx.platformCommunication.findFirst({
+        where: { id: row.id, tenantId: input.tenantId },
+        select: { status: true },
+      });
+      if (current?.status === "PUBLISHED") {
+        return;
+      }
+      throw new TeamCommunicationValidationError("campaign publish transition failed");
+    }
+
+    published = true;
 
     await tx.platformCommunicationRecipientSnapshot.createMany({
       data: snapshotRows.map((snap) => ({
@@ -349,16 +454,23 @@ export async function publishClubCommunication(input: {
       skipDuplicates: true,
     });
 
-    await emitClubCommunicationPublishedNotifications(tx, {
+    await emitCampaignPublishedNotifications(tx, {
       tenantId: input.tenantId,
       communicationId: row.id,
-      kind: row.kind,
-      title: row.subject?.trim() || defaultTitleForKind(row.kind),
+      subject: row.subject,
+      internalName: row.internalName,
       bodyPreview: row.bodyText.slice(0, 240),
       deliveryUserIds: snapshotRows.map((s) => s.deliveryUserId),
       excludeUserIds: [input.senderUserId],
     });
   });
+
+  if (!published) {
+    const recipientCount = await prisma.platformCommunicationRecipientSnapshot.count({
+      where: { tenantId: input.tenantId, communicationId: row.id },
+    });
+    return { id: row.id, recipientCount, alreadyPublished: true };
+  }
 
   await recordPlatformCommunicationAudit({
     tenantId: input.tenantId,
@@ -369,27 +481,19 @@ export async function publishClubCommunication(input: {
     status: "PUBLISHED",
   });
 
-  return { id: row.id, recipientCount: snapshotRows.length };
+  return { id: row.id, recipientCount: snapshotRows.length, alreadyPublished: false };
 }
 
-function defaultTitleForKind(kind: PlatformCommunicationKind): string {
-  if (kind === "ANNOUNCEMENT") return "Vereins-Mitteilung";
-  if (kind === "ALERT") return "Vereins-Alarm";
-  return "Vereins-Nachricht";
-}
-
-export async function archiveClubCommunication(input: {
+export async function archiveCampaign(input: {
   tenantId: string;
-  communicationId: string;
+  campaignId: string;
   actorUserId: string;
 }): Promise<void> {
-  const row = await loadClubCommunicationRow({
-    tenantId: input.tenantId,
-    communicationId: input.communicationId,
-  });
+  const row = await loadCampaignRow({ tenantId: input.tenantId, campaignId: input.campaignId });
   if (!canTransitionCommunicationStatus(row.status, "ARCHIVED")) {
     throw new TeamCommunicationValidationError("invalid status transition");
   }
+  if (row.status === "ARCHIVED") return;
 
   await prisma.platformCommunication.update({
     where: { id: row.id },
@@ -404,38 +508,4 @@ export async function archiveClubCommunication(input: {
     kind: row.kind,
     status: "ARCHIVED",
   });
-}
-
-export async function getClubCommunicationById(input: {
-  tenantId: string;
-  communicationId: string;
-  viewerCanSend: boolean;
-}): Promise<ClubCommunicationListItem | null> {
-  const row = await loadClubCommunicationRow({
-    tenantId: input.tenantId,
-    communicationId: input.communicationId,
-  });
-  if (!input.viewerCanSend && row.status === "DRAFT") {
-    throw new TeamCommunicationForbiddenError();
-  }
-
-  const full = await prisma.platformCommunication.findFirst({
-    where: { id: row.id },
-    include: LIST_INCLUDE,
-  });
-  if (!full) return null;
-
-  const audience = full.audienceSpecJson as CommunicationAudienceSpec;
-  return {
-    id: full.id,
-    kind: full.kind,
-    status: full.status,
-    bodyText: full.bodyText,
-    subject: full.subject,
-    acknowledgementRequired: full.acknowledgementRequired,
-    publishedAt: full.publishedAt?.toISOString() ?? null,
-    createdAt: full.createdAt.toISOString(),
-    audienceSummary: summarizeClubAudienceSpec(audience),
-    senderPerson: full.senderPerson,
-  };
 }

@@ -1,7 +1,8 @@
 import type { PlatformCommunicationStatus } from "@prisma/client";
 
 const ALLOWED: Record<PlatformCommunicationStatus, readonly PlatformCommunicationStatus[]> = {
-  DRAFT: ["PUBLISHED", "ARCHIVED"],
+  DRAFT: ["READY", "PUBLISHED", "ARCHIVED"],
+  READY: ["DRAFT", "PUBLISHED", "ARCHIVED"],
   PUBLISHED: ["ARCHIVED"],
   ARCHIVED: [],
 };
@@ -16,9 +17,9 @@ export function canTransitionCommunicationStatus(
 
 /** Published communications keep audience snapshots immutable; body edits are COMM-05+. */
 export function communicationBodyMutable(status: PlatformCommunicationStatus): boolean {
-  return status === "DRAFT";
+  return status === "DRAFT" || status === "READY";
 }
 
 export function communicationAudienceMutable(status: PlatformCommunicationStatus): boolean {
-  return status === "DRAFT";
+  return status === "DRAFT" || status === "READY";
 }

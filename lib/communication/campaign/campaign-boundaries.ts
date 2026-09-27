@@ -1,0 +1,17 @@
+/**
+ * SCE-COMM-12 — explicit out-of-scope boundaries for tests and API contracts.
+ */
+
+export const CAMPAIGN_OUTBOUND_EMAIL = "EMAIL_NOT_IMPLEMENTED" as const;
+export const CAMPAIGN_SPONSOR_INTEGRATION = "SPONSOR_NOT_IMPLEMENTED" as const;
+export const CAMPAIGN_INBOUND_IMAP = "IMAP_NOT_IMPLEMENTED" as const;
+export const CAMPAIGN_TEMPLATES_PLATFORM = "TEMPLATES_NOT_IMPLEMENTED" as const;
+export const CAMPAIGN_SCHEDULING_PLATFORM = "SCHEDULING_NOT_IMPLEMENTED" as const;
+
+export const CAMPAIGN_BOUNDARY_FLAGS = {
+  outboundEmail: CAMPAIGN_OUTBOUND_EMAIL,
+  sponsor: CAMPAIGN_SPONSOR_INTEGRATION,
+  communicationCenterImap: CAMPAIGN_INBOUND_IMAP,
+  templates: CAMPAIGN_TEMPLATES_PLATFORM,
+  scheduling: CAMPAIGN_SCHEDULING_PLATFORM,
+} as const;

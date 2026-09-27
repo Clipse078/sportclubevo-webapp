@@ -159,7 +159,8 @@ export function notificationTypeCategory(
     type === "TEAM_ALERT_PUBLISHED" ||
     type === "CLUB_COMMUNICATION_PUBLISHED" ||
     type === "CLUB_ANNOUNCEMENT_PUBLISHED" ||
-    type === "CLUB_ALERT_PUBLISHED"
+    type === "CLUB_ALERT_PUBLISHED" ||
+    type === "CLUB_CAMPAIGN_PUBLISHED"
   ) {
     return "COMMUNICATION";
   }

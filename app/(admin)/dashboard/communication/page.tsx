@@ -70,6 +70,15 @@ export default async function CommunicationPage() {
           details={["Nachricht", "Mitteilung", "Alarm", "Zielgruppen", "Entwürfe"]}
         />
         <ModuleCapabilityCard
+          title="Kampagnen"
+          description="Organisationsweite Kampagnen mit Entwurf, Bereit-Status und Veröffentlichung über die kanonische Kommunikationsplattform."
+          icon={Send}
+          status="Verfügbar"
+          href="/dashboard/communication/kampagnen"
+          linkLabel="Kampagnen öffnen"
+          details={["Entwurf", "Bereit", "Zielgruppen", "Empfängervorschau", "Push (COMM-09)"]}
+        />
+        <ModuleCapabilityCard
           title="Neue Nachricht"
           description="Nachrichten an einzelne Personen oder zukünftige Zielgruppen senden."
           icon={PenLine}

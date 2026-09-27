@@ -298,6 +298,7 @@ enum PlatformCommunicationKind {
 
 enum PlatformCommunicationStatus {
   DRAFT
+  READY
   PUBLISHED
   ARCHIVED
 }
@@ -503,6 +504,7 @@ enum NotificationType {
   CLUB_COMMUNICATION_PUBLISHED
   CLUB_ANNOUNCEMENT_PUBLISHED
   CLUB_ALERT_PUBLISHED
+  CLUB_CAMPAIGN_PUBLISHED
 }
 
 enum NotificationEntityType {
@@ -2977,6 +2979,8 @@ model PlatformCommunication {
   contextRef Json
 
   senderPersonId String?
+  /// Internal campaign identification (COMM-12); distinct from recipient-facing subject.
+  internalName   String?
   subject        String?
   bodyText       String
 

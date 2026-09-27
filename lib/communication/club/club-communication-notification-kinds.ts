@@ -8,6 +8,8 @@ export function clubNotificationTypeForCommunicationKind(
       return "CLUB_ANNOUNCEMENT_PUBLISHED";
     case "ALERT":
       return "CLUB_ALERT_PUBLISHED";
+    case "CAMPAIGN":
+      return "CLUB_CAMPAIGN_PUBLISHED";
     default:
       return "CLUB_COMMUNICATION_PUBLISHED";
   }
