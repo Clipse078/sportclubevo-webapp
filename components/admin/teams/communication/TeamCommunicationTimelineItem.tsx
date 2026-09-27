@@ -6,6 +6,7 @@ import { TEAM_CHAT_REACTION_EMOJI, TEAM_CHAT_REACTION_KEYS } from "@/lib/communi
 import type { TeamChatMessageDto, TeamChatReplyPreviewDto } from "@/lib/communication/team/team-chat-service";
 import { TeamChatMessageBody } from "@/components/admin/teams/communication/TeamChatMessageBody";
 import { TeamPollTimelineCard } from "@/components/admin/teams/communication/TeamPollTimelineCard";
+import { TeamRequestTimelineCard } from "@/components/admin/teams/communication/TeamRequestTimelineCard";
 
 type Props = {
   message: TeamChatMessageDto;
@@ -19,6 +20,9 @@ type Props = {
   onClosePoll?: (communicationId: string) => void;
   onSelectDatePollWinner?: (communicationId: string, optionId: string) => void;
   onCreateEventFromDatePoll?: (communicationId: string) => void;
+  onClaimRequestSlot?: (communicationId: string, slotId: string) => void;
+  onUnclaimRequestSlot?: (communicationId: string, slotId: string) => void;
+  onCloseRequest?: (communicationId: string) => void;
   pending: boolean;
   senderLabel: string;
   formatTime: (iso: string | null, fallback: string) => string;
@@ -35,10 +39,35 @@ export function TeamCommunicationTimelineItem({
   onClosePoll,
   onSelectDatePollWinner,
   onCreateEventFromDatePoll,
+  onClaimRequestSlot,
+  onUnclaimRequestSlot,
+  onCloseRequest,
   pending,
   senderLabel,
   formatTime,
 }: Props) {
+  if (message.kind === "REQUEST") {
+    return (
+      <TeamRequestTimelineCard
+        message={message}
+        pending={pending}
+        onClaim={async (communicationId, slotId) => {
+          onClaimRequestSlot?.(communicationId, slotId);
+        }}
+        onUnclaim={async (communicationId, slotId) => {
+          onUnclaimRequestSlot?.(communicationId, slotId);
+        }}
+        onCloseRequest={
+          onCloseRequest
+            ? async (communicationId) => {
+                onCloseRequest(communicationId);
+              }
+            : undefined
+        }
+      />
+    );
+  }
+
   if (message.kind === "POLL" || message.kind === "DATE_POLL") {
     return (
       <TeamPollTimelineCard

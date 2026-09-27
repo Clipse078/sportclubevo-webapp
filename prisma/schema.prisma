@@ -335,6 +335,11 @@ enum PlatformCommunicationPollLifecycle {
   CLOSED
 }
 
+enum PlatformCommunicationRequestLifecycle {
+  OPEN
+  CLOSED
+}
+
 enum CommunicationAttachmentSourceType {
   UPLOAD
   WORKSPACE_DOCUMENT_VERSION
@@ -477,6 +482,7 @@ enum NotificationType {
   TEAM_ALERT_PUBLISHED
   TEAM_POLL_PUBLISHED
   TEAM_DATE_POLL_PUBLISHED
+  TEAM_REQUEST_PUBLISHED
 }
 
 enum NotificationEntityType {
@@ -1052,6 +1058,9 @@ model Tenant {
   platformCommunicationPolls      PlatformCommunicationPoll[]
   platformCommunicationPollOptions PlatformCommunicationPollOption[]
   platformCommunicationPollResponses PlatformCommunicationPollResponse[]
+  platformCommunicationRequests   PlatformCommunicationRequest[]
+  platformCommunicationRequestSlots PlatformCommunicationRequestSlot[]
+  platformCommunicationRequestClaims PlatformCommunicationRequestClaim[]
   internalComments                InternalComment[]
   commentMentions                 CommentMention[]
   taskComments                    TaskComment[]
@@ -2362,6 +2371,7 @@ model Event {
   // PLANNING-UX-05R1: configured participation audience for club events (type=OTHER)
   participationAudienceEntries EventParticipationAudienceEntry[] @relation("EventParticipationAudienceEntries")
   platformCommunicationPollsCreated PlatformCommunicationPoll[] @relation("PollCreatedEvent")
+  platformCommunicationRequestsLinked PlatformCommunicationRequest[] @relation("RequestLinkedEvent")
 
   @@index([seasonId, type])
   @@index([teamId, type])
@@ -2959,6 +2969,7 @@ model PlatformCommunication {
   mentions     PlatformCommunicationMention[]
   attachmentLinks PlatformCommunicationAttachment[]
   poll            PlatformCommunicationPoll?
+  request         PlatformCommunicationRequest?
 
   @@index([tenantId, conversationId, createdAt])
   @@index([tenantId, status, createdAt])
@@ -3049,6 +3060,7 @@ model PlatformCommunicationRecipientSnapshot {
   communication PlatformCommunication @relation(fields: [communicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   subjectPerson Person                @relation("PlatformCommunicationSnapshotSubject", fields: [subjectPersonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   pollResponses PlatformCommunicationPollResponse[]
+  requestClaims PlatformCommunicationRequestClaim[]
 
   @@index([tenantId, communicationId])
   @@index([tenantId, communicationId, engagement], map: "pc_recipient_snapshot_tenant_comm_engagement_idx")
@@ -3129,6 +3141,75 @@ model PlatformCommunicationPollResponse {
   @@index([tenantId, pollId])
   @@index([tenantId, pollId, recipientSnapshotId])
   @@index([tenantId, optionId])
+  @@index([recipientSnapshotId])
+}
+
+/// SCE-COMM-08 — structured team request / Helfereinsatz (1:1 with PlatformCommunication).
+model PlatformCommunicationRequest {
+  id              String @id @default(cuid())
+  tenantId        String
+  communicationId String @unique
+
+  lifecycle  PlatformCommunicationRequestLifecycle @default(OPEN)
+  deadlineAt DateTime?
+  closedAt   DateTime?
+  eventId    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant        Tenant                            @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  communication PlatformCommunication             @relation(fields: [communicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  event         Event?                            @relation("RequestLinkedEvent", fields: [eventId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  slots         PlatformCommunicationRequestSlot[]
+
+  @@index([tenantId, communicationId])
+  @@index([tenantId, lifecycle])
+  @@index([tenantId, eventId])
+}
+
+/// Volunteer / helper slot within a Request (simple requests use one slot).
+model PlatformCommunicationRequestSlot {
+  id        String @id @default(cuid())
+  tenantId  String
+  requestId String
+  sortOrder Int
+
+  label            String
+  description      String?
+  requiredCapacity Int      @default(1)
+  startAt          DateTime?
+  endAt            DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant  Tenant                         @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  request PlatformCommunicationRequest   @relation(fields: [requestId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  claims  PlatformCommunicationRequestClaim[]
+
+  @@unique([requestId, sortOrder])
+  @@index([tenantId, requestId, sortOrder])
+}
+
+/// Recipient-scoped slot claim (identity via dispatch snapshot).
+model PlatformCommunicationRequestClaim {
+  id                  String @id @default(cuid())
+  tenantId            String
+  slotId              String
+  recipientSnapshotId String
+  claimedAt           DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant            Tenant                                 @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  slot              PlatformCommunicationRequestSlot       @relation(fields: [slotId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  recipientSnapshot PlatformCommunicationRecipientSnapshot @relation(fields: [recipientSnapshotId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([slotId, recipientSnapshotId])
+  @@index([tenantId, slotId])
+  @@index([tenantId, slotId, recipientSnapshotId])
   @@index([recipientSnapshotId])
 }
 

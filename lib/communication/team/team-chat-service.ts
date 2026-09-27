@@ -35,6 +35,7 @@ import {
 } from "@/lib/communication/team/team-chat-reactions";
 import { assertTeamMentionPersonIdsAllowed } from "@/lib/communication/team/team-chat-mention-candidates";
 import { loadPollTimelineBatch } from "@/lib/communication/team/team-poll-communication-service";
+import { loadRequestTimelineBatch } from "@/lib/communication/team/team-request-communication-service";
 
 const READ_ENGAGEMENT: PlatformCommunicationRecipientEngagement[] = [
   "READ",
@@ -88,6 +89,7 @@ export type TeamChatMessageDto = {
   viewerAcknowledged: boolean;
   canAcknowledge: boolean;
   poll: import("@/lib/communication/team/team-poll-types").TeamPollTimelineDto | null;
+  request: import("@/lib/communication/team/team-request-types").TeamRequestTimelineDto | null;
 };
 
 export type TeamChatMessagePage = {
@@ -224,6 +226,10 @@ function mapMessageRow(
   unreadIds: Set<string>,
   viewerEngagementByCommunicationId: Map<string, PlatformCommunicationRecipientEngagement>,
   pollByCommunicationId: Map<string, import("@/lib/communication/team/team-poll-types").TeamPollTimelineDto>,
+  requestByCommunicationId: Map<
+    string,
+    import("@/lib/communication/team/team-request-types").TeamRequestTimelineDto
+  >,
 ): TeamChatMessageDto {
   const viewerEngagement = viewerEngagementByCommunicationId.get(row.id) ?? null;
   const viewerAcknowledged =
@@ -270,6 +276,7 @@ function mapMessageRow(
     viewerAcknowledged,
     canAcknowledge,
     poll: pollByCommunicationId.get(row.id) ?? null,
+    request: requestByCommunicationId.get(row.id) ?? null,
   };
 }
 
@@ -347,7 +354,9 @@ export async function listTeamChatMessages(input: {
 
   const viewerPersonId = await resolveViewerPersonId(input.viewerUserId, input.tenantId);
   const communicationIds = chronological.map((m) => m.id);
-  const [unreadIds, viewerEngagements, pollByCommunicationId] = await Promise.all([
+  const timelineItems = chronological.map((row) => ({ communicationId: row.id, kind: row.kind }));
+  const [unreadIds, viewerEngagements, pollByCommunicationId, requestByCommunicationId] =
+    await Promise.all([
     loadUnreadCommunicationIds({
       tenantId: input.tenantId,
       deliveryUserId: input.viewerUserId,
@@ -362,14 +371,27 @@ export async function listTeamChatMessages(input: {
     loadPollTimelineBatch({
       tenantId: input.tenantId,
       teamId: input.teamId,
-      items: chronological.map((row) => ({ communicationId: row.id, kind: row.kind })),
+      items: timelineItems,
+      viewerUserId: input.viewerUserId,
+      viewerCanSend: input.viewerCanSend === true,
+    }),
+    loadRequestTimelineBatch({
+      tenantId: input.tenantId,
+      teamId: input.teamId,
+      items: timelineItems,
       viewerUserId: input.viewerUserId,
       viewerCanSend: input.viewerCanSend === true,
     }),
   ]);
 
   const messages = chronological.map((row) => {
-    const dto = mapMessageRow(row, unreadIds, viewerEngagements, pollByCommunicationId);
+    const dto = mapMessageRow(
+      row,
+      unreadIds,
+      viewerEngagements,
+      pollByCommunicationId,
+      requestByCommunicationId,
+    );
     dto.reactions = mapReactionAggregates(row.reactions, viewerPersonId);
     dto.unreadForViewer = unreadIds.has(row.id);
     return dto;
@@ -398,14 +420,30 @@ export async function listTeamChatMessages(input: {
         include: MESSAGE_INCLUDE,
       });
       if (focusRow) {
-        const focusPollMap = await loadPollTimelineBatch({
-          tenantId: input.tenantId,
-          teamId: input.teamId,
-          items: [{ communicationId: focusRow.id, kind: focusRow.kind }],
-          viewerUserId: input.viewerUserId,
-          viewerCanSend: input.viewerCanSend === true,
-        });
-        const focusDto = mapMessageRow(focusRow, unreadIds, viewerEngagements, focusPollMap);
+        const focusItems = [{ communicationId: focusRow.id, kind: focusRow.kind }];
+        const [focusPollMap, focusRequestMap] = await Promise.all([
+          loadPollTimelineBatch({
+            tenantId: input.tenantId,
+            teamId: input.teamId,
+            items: focusItems,
+            viewerUserId: input.viewerUserId,
+            viewerCanSend: input.viewerCanSend === true,
+          }),
+          loadRequestTimelineBatch({
+            tenantId: input.tenantId,
+            teamId: input.teamId,
+            items: focusItems,
+            viewerUserId: input.viewerUserId,
+            viewerCanSend: input.viewerCanSend === true,
+          }),
+        ]);
+        const focusDto = mapMessageRow(
+          focusRow,
+          unreadIds,
+          viewerEngagements,
+          focusPollMap,
+          focusRequestMap,
+        );
         focusDto.reactions = mapReactionAggregates(focusRow.reactions, viewerPersonId);
         if (!messages.some((m) => m.id === focusDto.id)) {
           messages.push(focusDto);

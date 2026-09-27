@@ -23,6 +23,12 @@ import {
   sendTeamPollCommunication,
   submitTeamPollResponse,
 } from "@/lib/communication/team/team-poll-communication-service";
+import {
+  claimTeamRequestSlot,
+  closeTeamRequest,
+  sendTeamRequestCommunication,
+  unclaimTeamRequestSlot,
+} from "@/lib/communication/team/team-request-communication-service";
 import { TeamCommunicationForbiddenError } from "@/lib/communication/team/team-communication-errors";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
@@ -347,6 +353,126 @@ export async function selectDatePollWinnerAction(
     return {
       ok: false,
       message: error instanceof Error ? error.message : "Auswahl fehlgeschlagen.",
+    };
+  }
+}
+
+export async function sendTeamRequestAction(
+  teamId: string,
+  payload: {
+    title: string;
+    description: string;
+    slots: Array<{
+      label: string;
+      description?: string | null;
+      requiredCapacity?: number;
+      startAt?: string | null;
+      endAt?: string | null;
+    }>;
+    deadlineAt: string | null;
+    audiencePreset: string;
+    eventId: string | null;
+  },
+): Promise<ActionResult> {
+  try {
+    const access = await requireTeamCommunicationSendAccess(teamId);
+    await sendTeamRequestCommunication({
+      tenantId: access.tenantId,
+      teamId,
+      senderUserId: access.userId,
+      title: payload.title,
+      description: payload.description,
+      slots: payload.slots,
+      deadlineAt: payload.deadlineAt,
+      audiencePreset: payload.audiencePreset,
+      eventId: payload.eventId,
+    });
+    revalidatePath(`/dashboard/teams/${teamId}/kommunikation`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof TeamCommunicationForbiddenError) {
+      return { ok: false, message: "Keine Berechtigung zum Senden." };
+    }
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Senden fehlgeschlagen.",
+    };
+  }
+}
+
+export async function claimTeamRequestSlotAction(
+  teamId: string,
+  communicationId: string,
+  slotId: string,
+): Promise<ActionResult> {
+  try {
+    const access = await requireTeamCommunicationPageAccess(teamId);
+    await claimTeamRequestSlot({
+      tenantId: access.tenantId,
+      teamId,
+      communicationId,
+      slotId,
+      actorUserId: access.userId,
+    });
+    revalidatePath(`/dashboard/teams/${teamId}/kommunikation`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof TeamCommunicationForbiddenError) {
+      return { ok: false, message: "Keine Berechtigung." };
+    }
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Übernehmen fehlgeschlagen.",
+    };
+  }
+}
+
+export async function unclaimTeamRequestSlotAction(
+  teamId: string,
+  communicationId: string,
+  slotId: string,
+): Promise<ActionResult> {
+  try {
+    const access = await requireTeamCommunicationPageAccess(teamId);
+    await unclaimTeamRequestSlot({
+      tenantId: access.tenantId,
+      teamId,
+      communicationId,
+      slotId,
+      actorUserId: access.userId,
+    });
+    revalidatePath(`/dashboard/teams/${teamId}/kommunikation`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof TeamCommunicationForbiddenError) {
+      return { ok: false, message: "Keine Berechtigung." };
+    }
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Abmelden fehlgeschlagen.",
+    };
+  }
+}
+
+export async function closeTeamRequestAction(
+  teamId: string,
+  communicationId: string,
+): Promise<ActionResult> {
+  try {
+    const access = await requireTeamCommunicationSendAccess(teamId);
+    await closeTeamRequest({
+      tenantId: access.tenantId,
+      teamId,
+      communicationId,
+      actorUserId: access.userId,
+      viewerCanSend: access.canSend,
+    });
+    revalidatePath(`/dashboard/teams/${teamId}/kommunikation`);
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Schliessen fehlgeschlagen.",
     };
   }
 }

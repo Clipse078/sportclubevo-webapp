@@ -26,6 +26,7 @@ const DEFAULTS: Record<NotificationType, NotificationChannelDefaults> = {
   TEAM_ALERT_PUBLISHED: { inAppEnabled: true, emailEnabled: false },
   TEAM_POLL_PUBLISHED: { inAppEnabled: true, emailEnabled: false },
   TEAM_DATE_POLL_PUBLISHED: { inAppEnabled: true, emailEnabled: false },
+  TEAM_REQUEST_PUBLISHED: { inAppEnabled: true, emailEnabled: false },
 };
 
 export function getDefaultNotificationPreferences(): Record<

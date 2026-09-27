@@ -16,15 +16,20 @@ import {
   sendTeamAnnouncementAction,
   sendTeamChatMessageAction,
   sendTeamPollAction,
+  sendTeamRequestAction,
   submitTeamPollResponseAction,
+  claimTeamRequestSlotAction,
+  unclaimTeamRequestSlotAction,
+  closeTeamRequestAction,
   closeTeamPollAction,
   selectDatePollWinnerAction,
   createEventFromDatePollAction,
   toggleTeamChatReactionAction,
 } from "@/app/(admin)/dashboard/teams/[teamId]/kommunikation/actions";
 import { TeamPollComposer } from "@/components/admin/teams/communication/TeamPollComposer";
+import { TeamRequestComposer } from "@/components/admin/teams/communication/TeamRequestComposer";
 
-type ComposerMode = "MESSAGE" | "ANNOUNCEMENT" | "ALERT" | "POLL" | "DATE_POLL";
+type ComposerMode = "MESSAGE" | "ANNOUNCEMENT" | "ALERT" | "POLL" | "DATE_POLL" | "REQUEST";
 
 type Props = {
   teamId: string;
@@ -107,7 +112,7 @@ export default function TeamChatView({
         <div>
           <h2 className="text-lg font-semibold text-[var(--foreground)]">Team-Kommunikation</h2>
           <p className="text-sm text-[var(--text-2)]">
-            Chat, Mitteilungen, Alarme und Umfragen im Team
+            Chat, Mitteilungen, Alarme, Umfragen und Helfereinsätze im Team
           </p>
         </div>
         {unreadCount > 0 ? (
@@ -134,6 +139,7 @@ export default function TeamChatView({
               ["ALERT", "Alarm"],
               ["POLL", "Umfrage"],
               ["DATE_POLL", "Terminumfrage"],
+              ["REQUEST", "Helfereinsatz"],
             ] as const
           ).map(([mode, label]) => (
             <Button
@@ -263,6 +269,24 @@ export default function TeamChatView({
                     if (result.ok) window.location.reload();
                   })
                 }
+                onClaimRequestSlot={(communicationId, slotId) =>
+                  startTransition(async () => {
+                    const result = await claimTeamRequestSlotAction(teamId, communicationId, slotId);
+                    if (result.ok) window.location.reload();
+                  })
+                }
+                onUnclaimRequestSlot={(communicationId, slotId) =>
+                  startTransition(async () => {
+                    const result = await unclaimTeamRequestSlotAction(teamId, communicationId, slotId);
+                    if (result.ok) window.location.reload();
+                  })
+                }
+                onCloseRequest={(communicationId) =>
+                  startTransition(async () => {
+                    const result = await closeTeamRequestAction(teamId, communicationId);
+                    if (result.ok) window.location.reload();
+                  })
+                }
               />
             );
           })
@@ -317,6 +341,17 @@ export default function TeamChatView({
           onSend={async (payload) =>
             sendTeamPollAction(teamId, { ...payload, kind: "DATE_POLL" })
           }
+        />
+      ) : null}
+
+      {canSend && composerMode === "REQUEST" ? (
+        <TeamRequestComposer
+          teamId={teamId}
+          onSent={() => void refreshAfterSend()}
+          onSend={async (payload) => {
+            const result = await sendTeamRequestAction(teamId, payload);
+            return result.ok ? { ok: true } : { ok: false, message: result.message };
+          }}
         />
       ) : null}
     </div>

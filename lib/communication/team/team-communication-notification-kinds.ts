@@ -12,6 +12,8 @@ export function notificationTypeForCommunicationKind(
       return "TEAM_POLL_PUBLISHED";
     case "DATE_POLL":
       return "TEAM_DATE_POLL_PUBLISHED";
+    case "REQUEST":
+      return "TEAM_REQUEST_PUBLISHED";
     default:
       return "TEAM_COMMUNICATION_PUBLISHED";
   }
@@ -32,6 +34,8 @@ export function defaultNotificationTitleForKind(
       return "Team-Umfrage";
     case "DATE_POLL":
       return "Team-Terminumfrage";
+    case "REQUEST":
+      return "Team-Anfrage";
     default:
       return "Team-Nachricht";
   }

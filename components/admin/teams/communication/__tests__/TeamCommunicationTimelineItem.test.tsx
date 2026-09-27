@@ -23,6 +23,7 @@ const baseFormal: TeamChatMessageDto = {
   viewerAcknowledged: false,
   canAcknowledge: true,
   poll: null,
+  request: null,
 };
 
 describe("TeamCommunicationTimelineItem", () => {
@@ -145,5 +146,72 @@ describe("TeamCommunicationTimelineItem", () => {
 
     expect(screen.getByTestId("team-poll-card-comm-poll")).toBeInTheDocument();
     expect(screen.getByTestId("team-poll-submit-response")).toBeInTheDocument();
+  });
+
+  it("renders request card with claim action", () => {
+    const requestMessage: TeamChatMessageDto = {
+      ...baseFormal,
+      id: "comm-req",
+      kind: "REQUEST",
+      subject: "Helfer gesucht",
+      acknowledgementRequired: false,
+      canAcknowledge: false,
+      request: {
+        requestId: "req-1",
+        kind: "REQUEST",
+        lifecycle: "OPEN",
+        deadlineAt: null,
+        closedAt: null,
+        eventId: null,
+        isExpired: false,
+        isOpen: true,
+        canClaim: true,
+        canManage: false,
+        canViewClaimantDetail: false,
+        viewerClaimedSlotIds: [],
+        aggregate: {
+          totalRequired: 2,
+          totalClaimed: 0,
+          totalRemaining: 2,
+          fullSlotCount: 0,
+          openSlotCount: 1,
+          isFull: false,
+        },
+        slots: [
+          {
+            id: "slot-1",
+            sortOrder: 0,
+            label: "Grill",
+            description: null,
+            requiredCapacity: 2,
+            claimedCapacity: 0,
+            remainingCapacity: 2,
+            isFull: false,
+            startAt: null,
+            endAt: null,
+            viewerHasClaim: false,
+          },
+        ],
+      },
+    };
+
+    render(
+      <TeamCommunicationTimelineItem
+        message={requestMessage}
+        teamId="team-1"
+        isOwn={false}
+        canSend={false}
+        pending={false}
+        senderLabel="Max Trainer"
+        formatTime={() => "01.01. 11:00"}
+        onReply={vi.fn()}
+        onToggleReaction={vi.fn()}
+        onAcknowledge={vi.fn()}
+        onClaimRequestSlot={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId("team-request-card-comm-req")).toBeInTheDocument();
+    expect(screen.getByTestId("team-request-claim-slot-1")).toBeInTheDocument();
   });
 });
