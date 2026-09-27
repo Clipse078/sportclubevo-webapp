@@ -1,0 +1,30 @@
+import { PERMISSIONS, type PermissionKey } from "@/lib/permissions/permissions";
+import { TENANT_ADMINISTRATION_PERMISSIONS } from "@/lib/permissions/tenant-administration";
+
+export const INBOX_VIEW_PERMISSIONS: PermissionKey[] = [
+  PERMISSIONS.COMMUNICATION_INBOX_VIEW,
+  PERMISSIONS.COMMUNICATION_INBOX_MANAGE,
+  PERMISSIONS.COMMUNICATION_INBOX_REPLY,
+  PERMISSIONS.COMMUNICATION_INBOX_SETTINGS,
+  ...TENANT_ADMINISTRATION_PERMISSIONS,
+];
+
+export const INBOX_MANAGE_PERMISSIONS: PermissionKey[] = [
+  PERMISSIONS.COMMUNICATION_INBOX_MANAGE,
+  ...TENANT_ADMINISTRATION_PERMISSIONS,
+];
+
+export const INBOX_REPLY_PERMISSIONS: PermissionKey[] = [
+  PERMISSIONS.COMMUNICATION_INBOX_REPLY,
+  PERMISSIONS.COMMUNICATION_INBOX_MANAGE,
+  ...TENANT_ADMINISTRATION_PERMISSIONS,
+];
+
+export const INBOX_SETTINGS_PERMISSIONS: PermissionKey[] = [
+  PERMISSIONS.COMMUNICATION_INBOX_SETTINGS,
+  ...TENANT_ADMINISTRATION_PERMISSIONS,
+];
+
+export function tenantPermissionsIncludeInboxView(tenantPermissions: readonly string[]): boolean {
+  return INBOX_VIEW_PERMISSIONS.some((key) => tenantPermissions.includes(key));
+}

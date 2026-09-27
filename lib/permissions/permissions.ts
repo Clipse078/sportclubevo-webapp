@@ -161,6 +161,12 @@ export const PERMISSIONS = {
   SPONSORING_VIEW: "sponsoring.view",
   SPONSORING_MANAGE: "sponsoring.manage",
 
+  /** SCE-COMM-15 — Communication Center unified inbox. */
+  COMMUNICATION_INBOX_VIEW: "communication.inbox.view",
+  COMMUNICATION_INBOX_MANAGE: "communication.inbox.manage",
+  COMMUNICATION_INBOX_REPLY: "communication.inbox.reply",
+  COMMUNICATION_INBOX_SETTINGS: "communication.inbox.settings",
+
   REGISTRATIONS_VIEW: "registrations.view",
   REGISTRATIONS_EDIT: "registrations.edit",
   // ADMIN-DELETE-03B: canonical permanent-deletion permission for
