@@ -75,7 +75,7 @@ export default function TargetGroupDeleteButton({
       }
 
       setOpen(false);
-      router.push("/dashboard/target-groups");
+      router.push("/dashboard/communication/zielgruppen");
       router.refresh();
     } catch {
       setError("Netzwerkfehler. Bitte erneut versuchen.");

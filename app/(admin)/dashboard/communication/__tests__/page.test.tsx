@@ -20,10 +20,7 @@ describe("Kommunikation module landing page", () => {
   it("distinguishes the functional sender settings from future capabilities", async () => {
     render(await CommunicationPage());
 
-    expect(requirePermission).toHaveBeenCalledWith([
-      PERMISSIONS.USERS_MANAGE,
-      PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
-    ]);
+    expect(requirePermission).toHaveBeenCalledWith([PERMISSIONS.USERS_MANAGE_MEMBERSHIPS]);
     expect(screen.getByRole("heading", { level: 1, name: "Kommunikation" })).toBeInTheDocument();
     expect(screen.getByText("E-Mail-Absender ist bereits verfügbar.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Absender verwalten/ })).toHaveAttribute(
@@ -31,6 +28,10 @@ describe("Kommunikation module landing page", () => {
       "/dashboard/communication/email-sender",
     );
     expect(screen.getByRole("heading", { name: "Zielgruppen" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Zielgruppen verwalten/i })).toHaveAttribute(
+      "href",
+      "/dashboard/communication/zielgruppen",
+    );
     expect(screen.getByRole("heading", { name: "Vorlagen" })).toBeInTheDocument();
     expect(screen.getAllByText("Vorschau · Keine Datenspeicherung").length).toBeGreaterThan(0);
   });

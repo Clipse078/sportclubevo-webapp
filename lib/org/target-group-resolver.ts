@@ -25,6 +25,7 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
+import { extractResolverClauseFromRuleJson } from "@/lib/communication/zielgruppen/rule-document";
 import type {
   TargetGroupClause,
   ResolvedMembership,
@@ -71,8 +72,9 @@ export async function resolveTargetGroup(
 
   const memberMap = new Map<MemberKey, MemberEntry>();
 
-  if (group.ruleJson) {
-    await applyClause(group.ruleJson as TargetGroupClause, ctx, memberMap, "union");
+  const resolverClause = extractResolverClauseFromRuleJson(group.ruleJson);
+  if (resolverClause) {
+    await applyClause(resolverClause, ctx, memberMap, "union");
   }
 
   const members = Array.from(memberMap.values()).map(({ _key: _ignored, ...m }) => m);

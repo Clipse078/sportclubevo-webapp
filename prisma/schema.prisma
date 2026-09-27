@@ -72,6 +72,7 @@ enum PermissionModule {
   ROLES
   TASKS
   REQUIREMENTS
+  COMMUNICATION
 }
 
 // RPERM-02: Distinguishes platform-wide roles/permissions from tenant-scoped ones.

@@ -39,7 +39,6 @@ const PUBLISHING_KEYS = new Set([
 const CLUB_ORGANISATION_KEYS = new Set([
   "organisation",
   "org-units",
-  "target-groups",
   "vereine",
   "competitions",
 ]);
@@ -343,7 +342,7 @@ export const CLUB_TARGET_L2_GROUPS = [
     id: "organisation",
     label: "Organisation",
     headerVisible: true,
-    keys: ["organisation", "org-units", "target-groups", "vereine", "competitions"],
+    keys: ["organisation", "org-units", "vereine", "competitions"],
   },
   {
     id: "people-teams",

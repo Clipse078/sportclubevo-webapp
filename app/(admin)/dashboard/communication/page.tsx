@@ -76,10 +76,12 @@ export default async function CommunicationPage() {
         />
         <ModuleCapabilityCard
           title="Zielgruppen"
-          description="Empfänger flexibel nach Organisation, Funktion, Team und weiteren Kriterien zusammenstellen."
+          description="Organisationsweite Zielgruppen definieren und verwalten — strukturelle Kriterien ohne Empfänger-Vollzählung."
           icon={UsersRound}
-          status="Demnächst"
-          details={["Dynamisch", "Manuell", "Hybrid", "Empfängervorschau"]}
+          status="Verfügbar"
+          href="/dashboard/communication/zielgruppen"
+          linkLabel="Zielgruppen verwalten"
+          details={["Organisation & Teams", "Rollen", "Explizite Personen", "Archiv"]}
         />
         <ModuleCapabilityCard
           title="Versand"

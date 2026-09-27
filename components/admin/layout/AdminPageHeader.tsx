@@ -248,11 +248,16 @@ function getHeaderContent(pathname: string): HeaderContent {
     };
   }
 
-  if (pathname === "/dashboard/target-groups" || pathname.startsWith("/dashboard/target-groups/")) {
+  if (
+    pathname === "/dashboard/communication/zielgruppen" ||
+    pathname.startsWith("/dashboard/communication/zielgruppen/") ||
+    pathname === "/dashboard/target-groups" ||
+    pathname.startsWith("/dashboard/target-groups/")
+  ) {
     return {
-      eyebrow: "Organisation",
+      eyebrow: "Kommunikation",
       title: "Zielgruppen",
-      description: "Benannte, wiederverwendbare Gruppen für Sichtbarkeit, Kommunikation und Workflow-Routing.",
+      description: "Organisationsweite Empfängerdefinitionen — getrennt von Versandberechtigungen.",
     };
   }
 

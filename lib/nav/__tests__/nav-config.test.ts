@@ -182,7 +182,6 @@ describe("NAV_SECTIONS static structure", () => {
     const childKeys = organisation!.children?.map((c) => c.key) ?? [];
     expect(childKeys).toEqual([
       "org-units",
-      "target-groups",
       "teams",
       "provider-mapping",
       "vereine",
@@ -223,6 +222,15 @@ describe("NAV_SECTIONS static structure", () => {
       PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
     ]);
     expect(communication?.children).toEqual([
+      expect.objectContaining({
+        key: "communication-zielgruppen",
+        label: "Zielgruppen",
+        href: "/dashboard/communication/zielgruppen",
+        permissionKeys: [
+          PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW,
+          PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE,
+        ],
+      }),
       expect.objectContaining({
         key: "communication-email-sender",
         label: "E-Mail-Absender",

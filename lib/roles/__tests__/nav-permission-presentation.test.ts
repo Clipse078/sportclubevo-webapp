@@ -246,7 +246,7 @@ describe("nav-permission-presentation", () => {
       ?.units.find((unit) => unit.label === "Vereinsdaten");
 
     expect(vereinsdaten?.iconLabel).toBe("Organisationseinheiten");
-    expect(vereinsdaten?.description).toContain("Zielgruppen");
+    expect(vereinsdaten?.description).toContain("Organisationseinheiten");
 
     const anmeldungen = presentation.sections
       .find((section) => section.label === "Betrieb")
