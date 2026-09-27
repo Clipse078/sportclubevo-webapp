@@ -51,10 +51,27 @@ Disconnect stops future sync; historical conversations remain.
 
 ## Credential security
 
-- Passwords/app passwords encrypted at rest (`communication-secret-crypto.ts`)
-- Never returned to browser after storage
-- Never logged or stored in audit metadata
-- Connection test returns safe codes/messages only
+- Algorithm: **AES-256-GCM** (`lib/communication/inbox/communication-secret-crypto.ts`), payload format `v1:iv:tag:ciphertext`.
+- **Production:** `SCE_COMMUNICATION_ENCRYPTION_KEY` is required before the first mailbox credential is saved (32-byte base64 or 64-char hex). Missing, empty, or malformed keys **fail closed** (no plaintext fallback).
+- **Tests only:** when `NODE_ENV=test` and the key is unset, a fixed test key is used (`COMMUNICATION_SECRET_CRYPTO_TEST_KEY_BASE64`).
+- Passwords/app passwords encrypted at rest; **never** returned to the browser after storage (`hasCredential` only).
+- Never logged or stored in audit metadata (`inbox-audit.ts` strips forbidden fields).
+- **Key rotation:** changing `SCE_COMMUNICATION_ENCRYPTION_KEY` does **not** automatically re-encrypt existing rows. Operators must replace mailbox credentials (or run a controlled migration) after rotating the application key.
+- Credential replacement writes a new ciphertext; failed replacement does not clear an existing credential. Disconnect sets status `DISCONNECTED` (sync stops); ciphertext may remain for audit/reconnect but is not used while inactive.
+
+---
+
+## Production configuration contract
+
+| Requirement | When |
+|-------------|------|
+| `SCE_COMMUNICATION_ENCRYPTION_KEY` | Before saving the first mailbox credential |
+| `CRON_SECRET` | Before scheduled inbox sync runs in deployed environments |
+| Cron route | `GET /api/cron/communication-inbox-sync` with `Authorization: Bearer ${CRON_SECRET}` |
+
+Registered in `vercel.json` (`*/5 * * * *`, same cadence as billing inbound sync). Do not commit secret values.
+
+The application **must** build and start without any configured mailbox; empty inbox/settings states are valid.
 
 ---
 
@@ -64,8 +81,9 @@ Disconnect stops future sync; historical conversations remain.
 - Tracks `uidValidity`, `lastProcessedUid`
 - UIDVALIDITY change resets cursor (no duplicate replay across validity epochs)
 - Idempotent import keys: `(folderId, uidValidity, imapUid)` + tenant-scoped `Message-ID`
-- Cron batch processor isolates broken mailboxes
-- Sync lease prevents concurrent workers on same mailbox
+- **Cursor on failure:** if a message fails with a retryable ingest error, sync stops advancing the UID cursor beyond the last durably ingested UID so a later run can retry (e.g. UID 101 ok, 102 fails → cursor stays at 101).
+- Cron batch processor isolates broken mailboxes (one auth failure does not stop others)
+- Sync lease (`syncLeaseToken` / `syncLeaseExpiresAt`) prevents concurrent workers; stale leases expire and can be reclaimed
 
 Provider deletion sync is **not** implemented (import/history oriented).
 
@@ -75,14 +93,16 @@ Provider deletion sync is **not** implemented (import/history oriented).
 
 Parsed canonical fields: Message-ID, In-Reply-To, References, addresses, subject, plain text, sanitized HTML, attachment metadata.
 
-HTML is sanitized; remote images blocked by default (`data-blocked-remote-src`).
+HTML is sanitized via `html-sanitizer.ts` (tag stripping for `script`, `iframe`, `object`, `embed`, `form`, etc.; removal of event handlers and `javascript:` URLs; remote `<img src>` rewritten to `data-blocked-remote-src` so tracking pixels do not load automatically).
 
 ---
 
 ## Threading
 
 Primary: Message-ID / In-Reply-To / References.  
-Conservative subject fallback only when headers missing (stored as `subject-fallback:…` root id).
+Conservative subject fallback only when headers missing (stored as `subject-fallback:…` root id). Unrelated messages with the same subject are **not** merged when Message-ID headers exist.
+
+`Message-ID` is unique per tenant (`@@unique([tenantId, messageIdHeader])`); duplicates (e.g. Sent-folder re-import or broken senders) are treated as idempotent duplicates, not dropped silently without trace.
 
 Outbound replies captured in-thread; Sent-folder re-import dedupes on Message-ID.
 
@@ -117,9 +137,17 @@ Tenant-scoped match against `Person.email` and `SponsorContact.email`:
 
 Sender/mailbox mismatch fails closed (`SENDER_MAILBOX_MISMATCH`).
 
-Reply failures keep thread intact; retry via idempotency key.
+Reply failures keep thread intact (`FAILED` status, visible in UI); retry via stable idempotency key (no duplicate send on double-click/retry).
 
 Outbound reply attachments remain deferred (COMM-14 attachment transport scope).
+
+---
+
+## Inbound attachments
+
+- Metadata stored on `CommunicationAttachment` with `lifecycleStatus: STAGED`, `scanStatus: PENDING`, and a private `storageKey` seam.
+- Bytes are **not** uploaded to private blob storage in COMM-15; the inbox UI does not expose download actions.
+- Future work: persist to canonical private storage and gate download on `lifecycleStatus` + scan policy (malware scanning deferred).
 
 ---
 

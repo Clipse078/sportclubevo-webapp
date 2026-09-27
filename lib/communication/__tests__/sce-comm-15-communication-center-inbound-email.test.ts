@@ -9,8 +9,10 @@ import {
 } from "@prisma/client";
 import {
   COMMUNICATION_SECRET_CRYPTO_TEST_KEY_BASE64,
+  CommunicationSecretCryptoError,
   decryptCommunicationSecret,
   encryptCommunicationSecret,
+  resolveCommunicationEncryptionKey,
 } from "@/lib/communication/inbox/communication-secret-crypto";
 import { blockRemoteImages, sanitizeInboundEmailHtml } from "@/lib/communication/inbox/html-sanitizer";
 import {
@@ -149,6 +151,34 @@ describe("SCE-COMM-15 Communication Center inbound email", () => {
     const encrypted = encryptCommunicationSecret("app-password-secret");
     expect(encrypted).not.toContain("app-password-secret");
     expect(decryptCommunicationSecret(encrypted)).toBe("app-password-secret");
+  });
+
+  it("fails closed on production encryption key misconfiguration", () => {
+    const prodEnv = { ...process.env, NODE_ENV: "production", APP_ENV: "prod" };
+    delete prodEnv.SCE_COMMUNICATION_ENCRYPTION_KEY;
+    expect(() => resolveCommunicationEncryptionKey(prodEnv)).toThrow(CommunicationSecretCryptoError);
+    expect(() =>
+      encryptCommunicationSecret("secret", { ...prodEnv, SCE_COMMUNICATION_ENCRYPTION_KEY: "too-short" }),
+    ).toThrow(CommunicationSecretCryptoError);
+
+    const prodEnvWithKey = {
+      ...prodEnv,
+      SCE_COMMUNICATION_ENCRYPTION_KEY: COMMUNICATION_SECRET_CRYPTO_TEST_KEY_BASE64,
+    };
+    const encrypted = encryptCommunicationSecret("rotate-me", prodEnvWithKey);
+    expect(() =>
+      decryptCommunicationSecret(encrypted, {
+        ...prodEnvWithKey,
+        SCE_COMMUNICATION_ENCRYPTION_KEY:
+          "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=",
+      }),
+    ).toThrow(CommunicationSecretCryptoError);
+  });
+
+  it("allows test-only encryption key fallback in NODE_ENV=test", () => {
+    const testEnv = { ...process.env, NODE_ENV: "test" };
+    delete testEnv.SCE_COMMUNICATION_ENCRYPTION_KEY;
+    expect(() => resolveCommunicationEncryptionKey(testEnv)).not.toThrow();
   });
 
   it("returns public mailbox without credential field", async () => {
@@ -292,6 +322,62 @@ describe("SCE-COMM-15 Communication Center inbound email", () => {
       },
     });
     expect(byMessageId.kind).toBe("DUPLICATE");
+  });
+
+  it("does not advance sync cursor past a retryable ingest failure", async () => {
+    prismaMocks.communicationCenterMailbox.updateMany.mockResolvedValue({ count: 1 });
+    prismaMocks.communicationCenterMailboxFolder.findFirst.mockResolvedValue({
+      id: "folder-1",
+      uidValidity: 100n,
+      lastProcessedUid: 5n,
+    });
+    connectorMocks.fetchNewInboxMessages.mockResolvedValue({
+      uidValidity: 100,
+      highestUid: 7,
+      messages: [
+        { uid: 6, uidValidity: 100, providerMessageKey: "100:6", rawSource: Buffer.from("a") },
+        { uid: 7, uidValidity: 100, providerMessageKey: "100:7", rawSource: Buffer.from("b") },
+      ],
+    });
+    transportMocks.parseInboundCenterEmailSource
+      .mockResolvedValueOnce({
+        messageIdHeader: "<ok@example.com>",
+        inReplyTo: null,
+        references: [],
+        fromAddress: "sender@example.com",
+        fromDisplayName: null,
+        toAddresses: [],
+        ccAddresses: [],
+        subject: "Test",
+        bodyText: "Body",
+        bodyHtmlSanitized: null,
+        receivedAt: new Date(),
+        attachments: [],
+      })
+      .mockRejectedValueOnce(new Error("parse failed"));
+
+    prismaMocks.communicationCenterMessage.findFirst.mockResolvedValue(null);
+    prismaMocks.communicationCenterConversation.findFirst.mockResolvedValue(null);
+    prismaMocks.communicationCenterConversation.create.mockResolvedValue({ id: "conv-1" });
+    prismaMocks.communicationCenterConversation.update.mockResolvedValue({ id: "conv-1" });
+    prismaMocks.communicationCenterMessage.create.mockResolvedValue({ id: "msg-1" });
+    prismaMocks.person.findMany.mockResolvedValue([]);
+    prismaMocks.sponsorContact.findMany.mockResolvedValue([]);
+
+    await syncCommunicationCenterMailbox({
+      id: "mb-1",
+      tenantId: "tenant-a",
+      status: CommunicationCenterMailboxStatus.ACTIVE,
+      imapHost: "imap.example.com",
+      imapPort: 993,
+      imapSecurity: CommunicationCenterImapSecurity.TLS,
+      imapUsername: "it@example.com",
+      credentialEncrypted: encryptCommunicationSecret("secret"),
+    } as never);
+
+    expect(prismaMocks.communicationCenterMailboxFolder.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ lastProcessedUid: 6n }) }),
+    );
   });
 
   it("increments IMAP sync cursor and respects UID batching", async () => {
