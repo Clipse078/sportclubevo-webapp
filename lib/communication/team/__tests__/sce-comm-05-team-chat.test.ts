@@ -121,6 +121,8 @@ describe("SCE-COMM-05 team chat", () => {
       {
         id: "comm-2",
         bodyText: "Second",
+        subject: null,
+        acknowledgementRequired: false,
         kind: "MESSAGE",
         status: "PUBLISHED",
         publishedAt: new Date("2026-01-02T10:00:00Z"),
@@ -134,6 +136,8 @@ describe("SCE-COMM-05 team chat", () => {
       {
         id: "comm-1",
         bodyText: "First",
+        subject: null,
+        acknowledgementRequired: false,
         kind: "MESSAGE",
         status: "PUBLISHED",
         publishedAt: new Date("2026-01-01T10:00:00Z"),
@@ -287,7 +291,7 @@ describe("SCE-COMM-05 team chat", () => {
 
     expect(updated).toBe(1);
     expect(mocks.platformCommunicationRecipientSnapshot.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { engagement: "READ" } }),
+      expect.objectContaining({ data: expect.objectContaining({ engagement: "READ" }) }),
     );
   });
 });

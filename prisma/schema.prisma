@@ -457,6 +457,8 @@ enum NotificationType {
   REQUIREMENT_CHANGED
   REQUIREMENT_CANCELLED
   TEAM_COMMUNICATION_PUBLISHED
+  TEAM_ANNOUNCEMENT_PUBLISHED
+  TEAM_ALERT_PUBLISHED
 }
 
 enum NotificationEntityType {
@@ -2917,6 +2919,9 @@ model PlatformCommunication {
   audienceFingerprint String?
   publishedAt         DateTime?
 
+  /// When true, recipients may explicitly acknowledge (distinct from READ).
+  acknowledgementRequired Boolean @default(false)
+
   createdByUserId String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -3012,6 +3017,8 @@ model PlatformCommunicationRecipientSnapshot {
   resolvedAt              DateTime
 
   engagement PlatformCommunicationRecipientEngagement @default(PENDING)
+  readAt         DateTime?
+  acknowledgedAt DateTime?
 
   createdAt DateTime @default(now())
 
@@ -3020,6 +3027,7 @@ model PlatformCommunicationRecipientSnapshot {
   subjectPerson Person                @relation("PlatformCommunicationSnapshotSubject", fields: [subjectPersonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@index([tenantId, communicationId])
+  @@index([tenantId, communicationId, engagement], map: "pc_recipient_snapshot_tenant_comm_engagement_idx")
   @@index([tenantId, subjectPersonId])
   @@index([tenantId, deliveryUserId])
   @@unique([communicationId, subjectPersonId, deliveryUserId, channel])

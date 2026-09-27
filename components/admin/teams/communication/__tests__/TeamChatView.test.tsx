@@ -7,14 +7,19 @@ vi.mock("@/app/(admin)/dashboard/teams/[teamId]/kommunikation/actions", () => ({
   loadOlderTeamChatMessagesAction: vi.fn(),
   markTeamChatReadAction: vi.fn(async () => ({ ok: true })),
   sendTeamChatMessageAction: vi.fn(async () => ({ ok: true })),
+  sendTeamAnnouncementAction: vi.fn(async () => ({ ok: true })),
+  sendTeamAlertAction: vi.fn(async () => ({ ok: true })),
+  acknowledgeTeamCommunicationAction: vi.fn(async () => ({ ok: true })),
   toggleTeamChatReactionAction: vi.fn(async () => ({ ok: true })),
 }));
 
 const baseMessage = {
   id: "comm-1",
   bodyText: "Hallo Team",
+  subject: null,
   kind: "MESSAGE",
   status: "PUBLISHED",
+  acknowledgementRequired: false,
   publishedAt: "2026-01-01T10:00:00.000Z",
   createdAt: "2026-01-01T09:00:00.000Z",
   senderPerson: { id: "p1", firstName: "Max", lastName: "Trainer" },
@@ -23,6 +28,9 @@ const baseMessage = {
   mentions: [],
   attachments: [{ id: "a1", attachmentId: "a1", originalFilename: "plan.pdf", contentType: "application/pdf", sizeBytes: 100, sortOrder: 0 }],
   unreadForViewer: true,
+  viewerEngagement: "READ",
+  viewerAcknowledged: false,
+  canAcknowledge: false,
 };
 
 describe("TeamChatView", () => {
@@ -51,6 +59,7 @@ describe("TeamChatView", () => {
     expect(screen.getByTestId("team-chat-message-attachments")).toBeInTheDocument();
     expect(screen.getByTestId("team-chat-message-reactions")).toBeInTheDocument();
     expect(screen.getByTestId("team-chat-reply-button")).toBeInTheDocument();
+    expect(screen.getByTestId("team-communication-type-selector")).toBeInTheDocument();
   });
 
   it("shows empty state when no messages", () => {

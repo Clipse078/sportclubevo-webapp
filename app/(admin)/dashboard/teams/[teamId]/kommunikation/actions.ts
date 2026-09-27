@@ -12,6 +12,10 @@ import {
   requireTeamCommunicationPageAccess,
   requireTeamCommunicationSendAccess,
 } from "@/lib/communication/team/require-team-communication-access";
+import {
+  acknowledgeTeamCommunication,
+  sendTeamFormalCommunication,
+} from "@/lib/communication/team/team-formal-communication-service";
 import { TeamCommunicationForbiddenError } from "@/lib/communication/team/team-communication-errors";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
@@ -123,6 +127,103 @@ export async function toggleTeamChatReactionAction(
     return {
       ok: false,
       message: error instanceof Error ? error.message : "Reaktion fehlgeschlagen.",
+    };
+  }
+}
+
+export async function sendTeamAnnouncementAction(
+  teamId: string,
+  payload: {
+    subject: string;
+    bodyText: string;
+    audiencePreset: string;
+    acknowledgementRequired: boolean;
+    attachmentIds: string[];
+  },
+): Promise<ActionResult> {
+  try {
+    const access = await requireTeamCommunicationSendAccess(teamId);
+    await sendTeamFormalCommunication({
+      tenantId: access.tenantId,
+      teamId,
+      senderUserId: access.userId,
+      kind: "ANNOUNCEMENT",
+      subject: payload.subject,
+      bodyText: payload.bodyText,
+      audiencePreset: payload.audiencePreset,
+      acknowledgementRequired: payload.acknowledgementRequired,
+      attachmentIds: payload.attachmentIds,
+    });
+    revalidatePath(`/dashboard/teams/${teamId}/kommunikation`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof TeamCommunicationForbiddenError) {
+      return { ok: false, message: "Keine Berechtigung zum Senden." };
+    }
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Senden fehlgeschlagen.",
+    };
+  }
+}
+
+export async function sendTeamAlertAction(
+  teamId: string,
+  payload: {
+    subject: string;
+    bodyText: string;
+    audiencePreset: string;
+    acknowledgementRequired: boolean;
+    attachmentIds: string[];
+  },
+): Promise<ActionResult> {
+  try {
+    const access = await requireTeamCommunicationSendAccess(teamId);
+    await sendTeamFormalCommunication({
+      tenantId: access.tenantId,
+      teamId,
+      senderUserId: access.userId,
+      kind: "ALERT",
+      subject: payload.subject,
+      bodyText: payload.bodyText,
+      audiencePreset: payload.audiencePreset,
+      acknowledgementRequired: payload.acknowledgementRequired,
+      attachmentIds: payload.attachmentIds,
+    });
+    revalidatePath(`/dashboard/teams/${teamId}/kommunikation`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof TeamCommunicationForbiddenError) {
+      return { ok: false, message: "Keine Berechtigung zum Senden." };
+    }
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Senden fehlgeschlagen.",
+    };
+  }
+}
+
+export async function acknowledgeTeamCommunicationAction(
+  teamId: string,
+  communicationId: string,
+): Promise<ActionResult> {
+  try {
+    const access = await requireTeamCommunicationPageAccess(teamId);
+    await acknowledgeTeamCommunication({
+      tenantId: access.tenantId,
+      teamId,
+      communicationId,
+      actorUserId: access.userId,
+    });
+    revalidatePath(`/dashboard/teams/${teamId}/kommunikation`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof TeamCommunicationForbiddenError) {
+      return { ok: false, message: "Keine Berechtigung." };
+    }
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Bestätigung fehlgeschlagen.",
     };
   }
 }

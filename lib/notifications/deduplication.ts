@@ -153,7 +153,11 @@ export function notificationTypeCategory(
   if (type === "PARTICIPATION_REMINDER" || type === "PARTICIPATION_OVERDUE") {
     return "PARTICIPATION";
   }
-  if (type === "TEAM_COMMUNICATION_PUBLISHED") {
+  if (
+    type === "TEAM_COMMUNICATION_PUBLISHED" ||
+    type === "TEAM_ANNOUNCEMENT_PUBLISHED" ||
+    type === "TEAM_ALERT_PUBLISHED"
+  ) {
     return "COMMUNICATION";
   }
   if (

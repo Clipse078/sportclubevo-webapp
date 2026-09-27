@@ -4,6 +4,10 @@ import {
   listTeamChatMessages,
 } from "@/lib/communication/team/team-chat-service";
 import { requireTeamCommunicationPageAccess } from "@/lib/communication/team/require-team-communication-access";
+import {
+  canInspectTeamCommunicationEngagementDetail,
+  getTeamCommunicationEngagementSummary,
+} from "@/lib/communication/team/team-formal-communication-service";
 import { resolvePersonIdForUser } from "@/lib/teams/team-document-auth";
 
 type Props = {
@@ -31,6 +35,24 @@ export default async function TeamKommunikationPage({ params, searchParams }: Pr
     resolvePersonIdForUser(access.userId, access.tenantId).catch(() => null),
   ]);
 
+  let focusEngagementSummary = null;
+  if (communicationId?.trim()) {
+    const canInspect = await canInspectTeamCommunicationEngagementDetail({
+      tenantId: access.tenantId,
+      teamId,
+      communicationId: communicationId.trim(),
+      viewerUserId: access.userId,
+      viewerCanSend: access.canSend,
+    });
+    if (canInspect) {
+      focusEngagementSummary = await getTeamCommunicationEngagementSummary({
+        tenantId: access.tenantId,
+        teamId,
+        communicationId: communicationId.trim(),
+      });
+    }
+  }
+
   return (
     <TeamChatView
       teamId={teamId}
@@ -41,6 +63,7 @@ export default async function TeamKommunikationPage({ params, searchParams }: Pr
       viewerPersonId={viewerPersonId}
       focusCommunicationId={communicationId ?? null}
       initialUnreadCount={unreadCount}
+      focusEngagementSummary={focusEngagementSummary}
     />
   );
 }
