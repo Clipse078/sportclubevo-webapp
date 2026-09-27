@@ -9,6 +9,8 @@ import {
   searchRequirementAudienceTeams,
 } from "@/lib/requirements/audience-selector-search";
 import { searchRequirementAudiencePersons } from "@/lib/requirements/person-search";
+import type { ZielgruppeEditorDefinition } from "@/lib/communication/zielgruppen/editor-model";
+import { previewZielgruppeRecipients } from "@/lib/communication/zielgruppen/preview-service";
 
 type ActionResult<T> = { ok: true; data: T } | { ok: false; message: string };
 
@@ -55,6 +57,23 @@ export async function searchZielgruppeRolesAction(query: string): Promise<
     return { ok: true, data: rows.map((r) => ({ id: r.roleId, label: r.label })) };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : "Suche fehlgeschlagen." };
+  }
+}
+
+export async function previewZielgruppeRecipientsAction(input: {
+  definition: ZielgruppeEditorDefinition;
+  page?: number;
+}): Promise<
+  ActionResult<Awaited<ReturnType<typeof previewZielgruppeRecipients>>>
+> {
+  try {
+    const data = await previewZielgruppeRecipients({
+      definition: input.definition,
+      page: input.page,
+    });
+    return { ok: true, data };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : "Vorschau fehlgeschlagen." };
   }
 }
 

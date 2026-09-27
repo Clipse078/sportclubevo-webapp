@@ -7,6 +7,7 @@ import ZielgruppeSelectorChip from "@/components/admin/communication/zielgruppen
 import type { ZielgruppeEditorDefinition } from "@/lib/communication/zielgruppen/editor-model";
 import { EMPTY_ZIELGRUPPE_EDITOR_DEFINITION } from "@/lib/communication/zielgruppen/editor-model";
 import {
+  previewZielgruppeRecipientsAction,
   searchZielgruppeOrgUnitsAction,
   searchZielgruppePersonsAction,
   searchZielgruppeRolesAction,
@@ -28,7 +29,15 @@ type Props = {
   disabled?: boolean;
 };
 
-type SearchKind = "orgUnit" | "team" | "role" | "personInclude" | "personExclude";
+type SearchKind =
+  | "orgUnit"
+  | "team"
+  | "role"
+  | "personInclude"
+  | "personExclude"
+  | "excludeOrgUnit"
+  | "excludeTeam"
+  | "excludeRole";
 
 const SECTION_LABEL =
   "text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]";
@@ -62,11 +71,11 @@ function SearchAddButton({
       setLoading(true);
       setError(null);
       const searchFn =
-        kind === "orgUnit"
+        kind === "orgUnit" || kind === "excludeOrgUnit"
           ? searchZielgruppeOrgUnitsAction
-          : kind === "team"
+          : kind === "team" || kind === "excludeTeam"
             ? searchZielgruppeTeamsAction
-            : kind === "role"
+            : kind === "role" || kind === "excludeRole"
               ? searchZielgruppeRolesAction
               : searchZielgruppePersonsAction;
       const result = await searchFn(term);
@@ -155,6 +164,15 @@ export default function ZielgruppeDefinitionEditor({
     roles: {},
     persons: {},
   });
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewStats, setPreviewStats] = useState<{
+    candidates: number;
+    excluded: number;
+    effective: number;
+    scopeNotice: string | null;
+    recipients: Array<{ personId: string; displayName: string }>;
+  } | null>(null);
 
   const labels: KnownLabels = {
     orgUnits: { ...dynamicLabels.orgUnits, ...knownLabels?.orgUnits },
@@ -170,7 +188,14 @@ export default function ZielgruppeDefinitionEditor({
   function addId(
     field: keyof Pick<
       ZielgruppeEditorDefinition,
-      "orgUnitIds" | "teamIds" | "roleIds" | "includePersonIds" | "excludePersonIds"
+      | "orgUnitIds"
+      | "teamIds"
+      | "roleIds"
+      | "includePersonIds"
+      | "excludePersonIds"
+      | "excludeOrgUnitIds"
+      | "excludeTeamIds"
+      | "excludeRoleIds"
     >,
     id: string,
     labelKey: keyof KnownLabels,
@@ -187,7 +212,14 @@ export default function ZielgruppeDefinitionEditor({
   function removeId(
     field: keyof Pick<
       ZielgruppeEditorDefinition,
-      "orgUnitIds" | "teamIds" | "roleIds" | "includePersonIds" | "excludePersonIds"
+      | "orgUnitIds"
+      | "teamIds"
+      | "roleIds"
+      | "includePersonIds"
+      | "excludePersonIds"
+      | "excludeOrgUnitIds"
+      | "excludeTeamIds"
+      | "excludeRoleIds"
     >,
     id: string,
   ) {
@@ -196,11 +228,34 @@ export default function ZielgruppeDefinitionEditor({
 
   return (
     <div className="space-y-6">
-      <p className="text-xs leading-5 text-[var(--text-2)]">
-        Kriterien werden als{" "}
-        <span className="font-medium text-[var(--foreground)]">Vereinigung (ODER)</span>{" "}
-        ausgewertet. Ausgeschlossene Personen haben Vorrang vor Einschlüssen.
-      </p>
+      <section className="space-y-2">
+        <h3 className={SECTION_LABEL}>Kriterien kombinieren</h3>
+        <div className="flex flex-wrap gap-4 text-sm">
+          <label className="inline-flex cursor-pointer items-center gap-2">
+            <input
+              type="radio"
+              name="zielgruppe-composition"
+              checked={value.compositionMode === "UNION"}
+              disabled={disabled}
+              onChange={() => patch({ compositionMode: "UNION" })}
+            />
+            Mindestens eine Bedingung (ODER)
+          </label>
+          <label className="inline-flex cursor-pointer items-center gap-2">
+            <input
+              type="radio"
+              name="zielgruppe-composition"
+              checked={value.compositionMode === "INTERSECTION"}
+              disabled={disabled}
+              onChange={() => patch({ compositionMode: "INTERSECTION" })}
+            />
+            Alle folgenden Bedingungen (UND)
+          </label>
+        </div>
+        <p className="text-xs leading-5 text-[var(--text-2)]">
+          Ausgeschlossene Personen und Ausschluss-Kriterien haben Vorrang vor Einschlüssen.
+        </p>
+      </section>
 
       <section className="space-y-2">
         <h3 className={SECTION_LABEL}>Organisation</h3>
@@ -328,15 +383,116 @@ export default function ZielgruppeDefinitionEditor({
         />
       </section>
 
-      <section
-        className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2)] px-4 py-3"
-        aria-label="Empfänger Vorschau Platzhalter"
-      >
-        <p className="text-xs font-semibold text-[var(--foreground)]">Empfänger (geplant)</p>
-        <p className="mt-1 text-xs text-[var(--muted)]">
-          Autoritative Live-Empfängervorschau folgt in COMM-03. Hier werden später aufgelöste
-          Empfänger angezeigt.
+      <section className="space-y-2">
+        <h3 className={SECTION_LABEL}>Ausschliessen (NICHT)</h3>
+        <p className="text-[11px] text-[var(--muted)]">
+          Strukturelle Ausschlüsse entfernen passende Personen nach der Zieldefinition.
         </p>
+        <div className="flex flex-wrap gap-2">
+          {value.excludeOrgUnitIds.map((id) => (
+            <ZielgruppeSelectorChip
+              key={`ex-ou-${id}`}
+              label={labels.orgUnits[id] ?? id}
+              disabled={disabled}
+              onRemove={() => removeId("excludeOrgUnitIds", id)}
+            />
+          ))}
+          {value.excludeTeamIds.map((id) => (
+            <ZielgruppeSelectorChip
+              key={`ex-team-${id}`}
+              label={labels.teams[id] ?? id}
+              disabled={disabled}
+              onRemove={() => removeId("excludeTeamIds", id)}
+            />
+          ))}
+          {value.excludeRoleIds.map((id) => (
+            <ZielgruppeSelectorChip
+              key={`ex-role-${id}`}
+              label={labels.roles[id] ?? id}
+              disabled={disabled}
+              onRemove={() => removeId("excludeRoleIds", id)}
+            />
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <SearchAddButton
+            kind="excludeOrgUnit"
+            label="Einheit ausschliessen"
+            disabled={disabled}
+            onPick={(id, label) => addId("excludeOrgUnitIds", id, "orgUnits", label)}
+          />
+          <SearchAddButton
+            kind="excludeTeam"
+            label="Team ausschliessen"
+            disabled={disabled}
+            onPick={(id, label) => addId("excludeTeamIds", id, "teams", label)}
+          />
+          <SearchAddButton
+            kind="excludeRole"
+            label="Rolle ausschliessen"
+            disabled={disabled}
+            onPick={(id, label) => addId("excludeRoleIds", id, "roles", label)}
+          />
+        </div>
+      </section>
+
+      <section
+        className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3"
+        aria-label="Empfänger Vorschau"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs font-semibold text-[var(--foreground)]">Empfänger anzeigen</p>
+          <button
+            type="button"
+            className="rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium hover:bg-[var(--surface-1)]"
+            disabled={disabled || previewLoading}
+            onClick={async () => {
+              setPreviewLoading(true);
+              setPreviewError(null);
+              const result = await previewZielgruppeRecipientsAction({ definition: value });
+              setPreviewLoading(false);
+              if (!result.ok) {
+                setPreviewError(result.message);
+                setPreviewStats(null);
+                return;
+              }
+              setPreviewStats({
+                candidates: result.data.candidates,
+                excluded: result.data.excluded,
+                effective: result.data.effective,
+                scopeNotice: result.data.scopeNotice,
+                recipients: result.data.recipients,
+              });
+            }}
+          >
+            {previewLoading ? "Wird berechnet…" : "Empfänger anzeigen"}
+          </button>
+        </div>
+        {previewError ? <p className="mt-2 text-xs text-red-600">{previewError}</p> : null}
+        {previewStats ? (
+          <div className="mt-2 space-y-2 text-xs text-[var(--text-2)]">
+            <p>
+              Kandidaten: {previewStats.candidates} · Ausgeschlossen: {previewStats.excluded} ·
+              Empfänger: {previewStats.effective}
+            </p>
+            {previewStats.scopeNotice ? (
+              <p className="text-[var(--muted)]">{previewStats.scopeNotice}</p>
+            ) : null}
+            {previewStats.recipients.length > 0 ? (
+              <ul className="max-h-40 overflow-y-auto rounded border border-[var(--border)] bg-[var(--surface-1)] p-2">
+                {previewStats.recipients.map((r) => (
+                  <li key={r.personId}>{r.displayName}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-[var(--muted)]">Keine Empfänger im aktuellen Berechtigungsumfang.</p>
+            )}
+          </div>
+        ) : (
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            Live-Vorschau auf Basis der aktuellen Zieldefinition — kein historischer Versandstand.
+          </p>
+        )}
       </section>
     </div>
   );

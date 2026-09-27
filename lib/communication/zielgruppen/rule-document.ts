@@ -7,6 +7,7 @@
  */
 
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
+import type { StructuralAudienceSelectors } from "@/lib/communication/platform/audience/structural-targets";
 import type { TargetGroupClause } from "@/lib/org/target-group-types";
 import { validateRuleJson } from "@/lib/org/target-group-types";
 
@@ -17,12 +18,15 @@ export type ZielgruppeRuleDocumentV2 = {
   audience: CommunicationAudienceSpec;
   /** Union of structural + explicit includes — excludes omitted until COMM-03 resolver. */
   resolverClause: TargetGroupClause | null;
+  /** Structural NOT selectors (org unit / team / role) applied at COMM-03 resolution. */
+  structuralExclusion?: StructuralAudienceSelectors | null;
 };
 
 export type ParsedTargetGroupRule = {
   schemaVersion: 1 | 2 | null;
   audience: CommunicationAudienceSpec | null;
   resolverClause: TargetGroupClause | null;
+  structuralExclusion: StructuralAudienceSelectors | null;
 };
 
 export function isZielgruppeRuleDocumentV2(value: unknown): value is ZielgruppeRuleDocumentV2 {
@@ -33,7 +37,7 @@ export function isZielgruppeRuleDocumentV2(value: unknown): value is ZielgruppeR
 
 export function parseTargetGroupRuleJson(ruleJson: unknown): ParsedTargetGroupRule {
   if (ruleJson == null) {
-    return { schemaVersion: null, audience: null, resolverClause: null };
+    return { schemaVersion: null, audience: null, resolverClause: null, structuralExclusion: null };
   }
 
   if (isZielgruppeRuleDocumentV2(ruleJson)) {
@@ -41,6 +45,7 @@ export function parseTargetGroupRuleJson(ruleJson: unknown): ParsedTargetGroupRu
       schemaVersion: 2,
       audience: ruleJson.audience,
       resolverClause: ruleJson.resolverClause ?? null,
+      structuralExclusion: ruleJson.structuralExclusion ?? null,
     };
   }
 
@@ -50,20 +55,23 @@ export function parseTargetGroupRuleJson(ruleJson: unknown): ParsedTargetGroupRu
       schemaVersion: 1,
       audience: null,
       resolverClause: ruleJson as TargetGroupClause,
+      structuralExclusion: null,
     };
   }
 
-  return { schemaVersion: null, audience: null, resolverClause: null };
+  return { schemaVersion: null, audience: null, resolverClause: null, structuralExclusion: null };
 }
 
 export function buildZielgruppeRuleDocumentV2(input: {
   audience: CommunicationAudienceSpec;
   resolverClause: TargetGroupClause | null;
+  structuralExclusion?: StructuralAudienceSelectors | null;
 }): ZielgruppeRuleDocumentV2 {
   return {
     schemaVersion: ZIELGRUPPE_RULE_SCHEMA_VERSION,
     audience: input.audience,
     resolverClause: input.resolverClause,
+    structuralExclusion: input.structuralExclusion ?? null,
   };
 }
 
