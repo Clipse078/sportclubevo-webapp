@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { processTaskDeadlineNotifications } from "@/lib/notifications/deadline-processor";
 import { processPendingNotificationDeliveries } from "@/lib/notifications/delivery-processor";
+import { processPendingPushNotificationDeliveries } from "@/lib/push/push-delivery-processor";
 import { isExternalSideEffectConfigured } from "@/lib/server/external-side-effect-policy";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +31,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const deadlines = await processTaskDeadlineNotifications();
     const deliveries = await processPendingNotificationDeliveries();
-    const summary = { deadlines, deliveries };
+    const pushDeliveries = await processPendingPushNotificationDeliveries();
+    const summary = { deadlines, deliveries, pushDeliveries };
     console.info("[cron/task-notifications] completed", summary);
     return NextResponse.json(summary, { status: 200 });
   } catch (err) {

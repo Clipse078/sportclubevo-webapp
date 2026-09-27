@@ -3,30 +3,31 @@ import type { NotificationType } from "@prisma/client";
 export type NotificationChannelDefaults = {
   inAppEnabled: boolean;
   emailEnabled: boolean;
+  pushEnabled: boolean;
 };
 
 const DEFAULTS: Record<NotificationType, NotificationChannelDefaults> = {
-  TASK_ASSIGNED: { inAppEnabled: true, emailEnabled: true },
-  SUBTASK_ASSIGNED: { inAppEnabled: true, emailEnabled: true },
-  TASK_DUE_SOON: { inAppEnabled: true, emailEnabled: true },
-  TASK_OVERDUE: { inAppEnabled: true, emailEnabled: true },
-  TASK_DEADLINE_CHANGED: { inAppEnabled: true, emailEnabled: false },
-  TASK_REMINDER: { inAppEnabled: true, emailEnabled: true },
-  TASK_MENTION: { inAppEnabled: true, emailEnabled: true },
-  TASK_COMMENT: { inAppEnabled: true, emailEnabled: true },
-  PARTICIPATION_REMINDER: { inAppEnabled: true, emailEnabled: true },
-  PARTICIPATION_OVERDUE: { inAppEnabled: true, emailEnabled: true },
-  REQUIREMENT_ASSIGNED: { inAppEnabled: true, emailEnabled: true },
-  REQUIREMENT_REMINDER: { inAppEnabled: true, emailEnabled: true },
-  REQUIREMENT_OVERDUE: { inAppEnabled: true, emailEnabled: true },
-  REQUIREMENT_CHANGED: { inAppEnabled: true, emailEnabled: true },
-  REQUIREMENT_CANCELLED: { inAppEnabled: true, emailEnabled: true },
-  TEAM_COMMUNICATION_PUBLISHED: { inAppEnabled: true, emailEnabled: false },
-  TEAM_ANNOUNCEMENT_PUBLISHED: { inAppEnabled: true, emailEnabled: false },
-  TEAM_ALERT_PUBLISHED: { inAppEnabled: true, emailEnabled: false },
-  TEAM_POLL_PUBLISHED: { inAppEnabled: true, emailEnabled: false },
-  TEAM_DATE_POLL_PUBLISHED: { inAppEnabled: true, emailEnabled: false },
-  TEAM_REQUEST_PUBLISHED: { inAppEnabled: true, emailEnabled: false },
+  TASK_ASSIGNED: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  SUBTASK_ASSIGNED: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  TASK_DUE_SOON: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  TASK_OVERDUE: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  TASK_DEADLINE_CHANGED: { inAppEnabled: true, emailEnabled: false, pushEnabled: false },
+  TASK_REMINDER: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  TASK_MENTION: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  TASK_COMMENT: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  PARTICIPATION_REMINDER: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  PARTICIPATION_OVERDUE: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  REQUIREMENT_ASSIGNED: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  REQUIREMENT_REMINDER: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  REQUIREMENT_OVERDUE: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  REQUIREMENT_CHANGED: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  REQUIREMENT_CANCELLED: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
+  TEAM_COMMUNICATION_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
+  TEAM_ANNOUNCEMENT_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
+  TEAM_ALERT_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
+  TEAM_POLL_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
+  TEAM_DATE_POLL_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
+  TEAM_REQUEST_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
 };
 
 export function getDefaultNotificationPreferences(): Record<
@@ -45,5 +46,6 @@ export function resolveEffectivePreference(
   return {
     inAppEnabled: stored.inAppEnabled,
     emailEnabled: stored.emailEnabled,
+    pushEnabled: stored.pushEnabled,
   };
 }

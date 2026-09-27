@@ -182,7 +182,7 @@ describe("AUFGABEN-06C comment notifications", () => {
     });
     expect(
       resolveEffectivePreference("TASK_COMMENT", { inAppEnabled: true, emailEnabled: false }),
-    ).toEqual({ inAppEnabled: true, emailEnabled: false });
+    ).toEqual({ inAppEnabled: true, emailEnabled: false, pushEnabled: false });
   });
 
   it("F32 emit failure does not propagate", async () => {

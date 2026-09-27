@@ -496,6 +496,18 @@ enum NotificationEntityType {
 enum NotificationChannel {
   IN_APP
   EMAIL
+  PUSH
+}
+
+/// SCE-COMM-09 — user/device push registration (global per User, not tenant-owned).
+enum PushDevicePlatform {
+  WEB
+}
+
+enum PushDeviceRegistrationStatus {
+  ACTIVE
+  REVOKED
+  INVALID
 }
 
 enum NotificationDeliveryStatus {
@@ -984,6 +996,7 @@ model Tenant {
   eventParticipationAudienceEntries EventParticipationAudienceEntry[] @relation("TenantEventParticipationAudienceEntries")
   notifications                      Notification[]
   notificationDeliveries             NotificationDelivery[]
+  notificationPushDeliveryAttempts   NotificationPushDeliveryAttempt[]
   userNotificationPreferences        UserNotificationPreference[]
   userDashboardQuickAccessPreferences UserDashboardQuickAccessPreference[]
   // TRAINING-PLANS-01: tenant-defined training plans and assignments
@@ -1188,6 +1201,7 @@ model User {
   notificationsReceived            Notification[]                    @relation("NotificationRecipient")
   notificationPreferences          UserNotificationPreference[]
   dashboardQuickAccessPreferences  UserDashboardQuickAccessPreference[]
+  pushDeviceRegistrations          PushDeviceRegistration[]
 
   @@index([isActive])
   @@index([tenantId])
@@ -3061,6 +3075,7 @@ model PlatformCommunicationRecipientSnapshot {
   subjectPerson Person                @relation("PlatformCommunicationSnapshotSubject", fields: [subjectPersonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   pollResponses PlatformCommunicationPollResponse[]
   requestClaims PlatformCommunicationRequestClaim[]
+  pushDeliveryAttempts NotificationPushDeliveryAttempt[]
 
   @@index([tenantId, communicationId])
   @@index([tenantId, communicationId, engagement], map: "pc_recipient_snapshot_tenant_comm_engagement_idx")
@@ -3931,10 +3946,57 @@ model NotificationDelivery {
 
   tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  pushAttempts NotificationPushDeliveryAttempt[]
 
   @@unique([notificationId, channel])
   @@index([tenantId, status, channel, createdAt])
   @@index([notificationId])
+}
+
+/// SCE-COMM-09 — per-device push delivery attempt (idempotent per delivery + device).
+model NotificationPushDeliveryAttempt {
+  id                                     String                     @id @default(cuid())
+  tenantId                               String
+  notificationDeliveryId                 String
+  pushDeviceRegistrationId               String
+  platformCommunicationRecipientSnapshotId String?
+  status                                 NotificationDeliveryStatus @default(PENDING)
+  providerMessageId                      String?
+  failureCode                            String?
+  attemptCount                           Int                        @default(0)
+  lastAttemptAt                          DateTime?
+  createdAt                              DateTime                   @default(now())
+  updatedAt                              DateTime                   @updatedAt
+
+  tenant                 Tenant                                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  notificationDelivery   NotificationDelivery                  @relation(fields: [notificationDeliveryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  pushDeviceRegistration PushDeviceRegistration                @relation(fields: [pushDeviceRegistrationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  recipientSnapshot      PlatformCommunicationRecipientSnapshot? @relation(fields: [platformCommunicationRecipientSnapshotId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([notificationDeliveryId, pushDeviceRegistrationId])
+  @@index([tenantId, status, createdAt])
+  @@index([notificationDeliveryId])
+}
+
+/// SCE-COMM-09 — canonical user-owned push device registration (not team/sponsor/campaign scoped).
+model PushDeviceRegistration {
+  id               String                       @id @default(cuid())
+  userId           String
+  installationId   String
+  platform         PushDevicePlatform
+  provider         String                       @default("WEB_PUSH")
+  /// Serialized provider subscription payload — never expose via public APIs or logs.
+  subscriptionJson String                       @db.Text
+  status           PushDeviceRegistrationStatus @default(ACTIVE)
+  lastSeenAt       DateTime?
+  createdAt        DateTime                     @default(now())
+  updatedAt        DateTime                     @updatedAt
+
+  user         User                              @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  pushAttempts NotificationPushDeliveryAttempt[]
+
+  @@unique([userId, installationId])
+  @@index([userId, status])
 }
 
 /// AUFGABEN-04N — per-user, per-tenant notification channel preferences.
@@ -3945,6 +4007,7 @@ model UserNotificationPreference {
   notificationType NotificationType
   inAppEnabled     Boolean          @default(true)
   emailEnabled     Boolean          @default(true)
+  pushEnabled      Boolean          @default(true)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 

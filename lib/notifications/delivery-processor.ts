@@ -38,6 +38,12 @@ type DeliveryRow = Prisma.NotificationDeliveryGetPayload<{
 export async function processPendingNotificationDeliveries(
   batchSize = NOTIFICATION_EMAIL_DELIVERY_BATCH_SIZE,
 ): Promise<ProcessPendingDeliveriesResult> {
+  return processPendingEmailNotificationDeliveries(batchSize);
+}
+
+export async function processPendingEmailNotificationDeliveries(
+  batchSize = NOTIFICATION_EMAIL_DELIVERY_BATCH_SIZE,
+): Promise<ProcessPendingDeliveriesResult> {
   await recoverStaleProcessingDeliveries();
 
   const candidates = await prisma.notificationDelivery.findMany({

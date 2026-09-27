@@ -8,8 +8,17 @@
  * /login. This avoids soft RSC transitions that can leave stale authenticated
  * shell UI in place after logout.
  */
-import { signOut } from "@/auth";
+import { auth, signOut } from "@/auth";
+import { revokePushDeviceForInstallation } from "@/lib/push/push-device-registration-service";
 
-export async function signOutAction() {
+export async function signOutAction(installationId?: string | null) {
+  const session = await auth();
+  const trimmedInstallationId = installationId?.trim();
+  if (session?.user?.id && trimmedInstallationId) {
+    await revokePushDeviceForInstallation({
+      userId: session.user.id,
+      installationId: trimmedInstallationId,
+    });
+  }
   await signOut({ redirect: false, redirectTo: "/login" });
 }

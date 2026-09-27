@@ -11,6 +11,7 @@ export const EXTERNAL_SIDE_EFFECT_PROVIDERS = [
   "cron",
   "stripe",
   "billing-inbound-imap",
+  "web-push",
 ] as const;
 
 export type ExternalSideEffectProvider =
