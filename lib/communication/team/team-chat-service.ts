@@ -34,6 +34,7 @@ import {
   type TeamChatReactionKey,
 } from "@/lib/communication/team/team-chat-reactions";
 import { assertTeamMentionPersonIdsAllowed } from "@/lib/communication/team/team-chat-mention-candidates";
+import { loadPollTimelineBatch } from "@/lib/communication/team/team-poll-communication-service";
 
 const READ_ENGAGEMENT: PlatformCommunicationRecipientEngagement[] = [
   "READ",
@@ -86,6 +87,7 @@ export type TeamChatMessageDto = {
   viewerEngagement: string | null;
   viewerAcknowledged: boolean;
   canAcknowledge: boolean;
+  poll: import("@/lib/communication/team/team-poll-types").TeamPollTimelineDto | null;
 };
 
 export type TeamChatMessagePage = {
@@ -221,6 +223,7 @@ function mapMessageRow(
   row: Prisma.PlatformCommunicationGetPayload<{ include: typeof MESSAGE_INCLUDE }>,
   unreadIds: Set<string>,
   viewerEngagementByCommunicationId: Map<string, PlatformCommunicationRecipientEngagement>,
+  pollByCommunicationId: Map<string, import("@/lib/communication/team/team-poll-types").TeamPollTimelineDto>,
 ): TeamChatMessageDto {
   const viewerEngagement = viewerEngagementByCommunicationId.get(row.id) ?? null;
   const viewerAcknowledged =
@@ -266,6 +269,7 @@ function mapMessageRow(
     viewerEngagement,
     viewerAcknowledged,
     canAcknowledge,
+    poll: pollByCommunicationId.get(row.id) ?? null,
   };
 }
 
@@ -300,6 +304,7 @@ export async function listTeamChatMessages(input: {
   limit?: number;
   olderThanCursor?: string | null;
   focusCommunicationId?: string | null;
+  viewerCanSend?: boolean;
 }): Promise<TeamChatMessagePage> {
   const conversation = await getOrCreateTeamCommunicationConversation({
     tenantId: input.tenantId,
@@ -342,7 +347,7 @@ export async function listTeamChatMessages(input: {
 
   const viewerPersonId = await resolveViewerPersonId(input.viewerUserId, input.tenantId);
   const communicationIds = chronological.map((m) => m.id);
-  const [unreadIds, viewerEngagements] = await Promise.all([
+  const [unreadIds, viewerEngagements, pollByCommunicationId] = await Promise.all([
     loadUnreadCommunicationIds({
       tenantId: input.tenantId,
       deliveryUserId: input.viewerUserId,
@@ -354,10 +359,17 @@ export async function listTeamChatMessages(input: {
       deliveryUserId: input.viewerUserId,
       communicationIds,
     }),
+    loadPollTimelineBatch({
+      tenantId: input.tenantId,
+      teamId: input.teamId,
+      items: chronological.map((row) => ({ communicationId: row.id, kind: row.kind })),
+      viewerUserId: input.viewerUserId,
+      viewerCanSend: input.viewerCanSend === true,
+    }),
   ]);
 
   const messages = chronological.map((row) => {
-    const dto = mapMessageRow(row, unreadIds, viewerEngagements);
+    const dto = mapMessageRow(row, unreadIds, viewerEngagements, pollByCommunicationId);
     dto.reactions = mapReactionAggregates(row.reactions, viewerPersonId);
     dto.unreadForViewer = unreadIds.has(row.id);
     return dto;
@@ -386,7 +398,14 @@ export async function listTeamChatMessages(input: {
         include: MESSAGE_INCLUDE,
       });
       if (focusRow) {
-        const focusDto = mapMessageRow(focusRow, unreadIds, viewerEngagements);
+        const focusPollMap = await loadPollTimelineBatch({
+          tenantId: input.tenantId,
+          teamId: input.teamId,
+          items: [{ communicationId: focusRow.id, kind: focusRow.kind }],
+          viewerUserId: input.viewerUserId,
+          viewerCanSend: input.viewerCanSend === true,
+        });
+        const focusDto = mapMessageRow(focusRow, unreadIds, viewerEngagements, focusPollMap);
         focusDto.reactions = mapReactionAggregates(focusRow.reactions, viewerPersonId);
         if (!messages.some((m) => m.id === focusDto.id)) {
           messages.push(focusDto);

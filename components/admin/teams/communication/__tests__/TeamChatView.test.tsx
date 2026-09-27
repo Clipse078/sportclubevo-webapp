@@ -11,6 +11,11 @@ vi.mock("@/app/(admin)/dashboard/teams/[teamId]/kommunikation/actions", () => ({
   sendTeamAlertAction: vi.fn(async () => ({ ok: true })),
   acknowledgeTeamCommunicationAction: vi.fn(async () => ({ ok: true })),
   toggleTeamChatReactionAction: vi.fn(async () => ({ ok: true })),
+  sendTeamPollAction: vi.fn(async () => ({ ok: true })),
+  submitTeamPollResponseAction: vi.fn(async () => ({ ok: true })),
+  closeTeamPollAction: vi.fn(async () => ({ ok: true })),
+  selectDatePollWinnerAction: vi.fn(async () => ({ ok: true })),
+  createEventFromDatePollAction: vi.fn(async () => ({ ok: true })),
 }));
 
 const baseMessage = {
@@ -31,6 +36,7 @@ const baseMessage = {
   viewerEngagement: "READ",
   viewerAcknowledged: false,
   canAcknowledge: false,
+  poll: null,
 };
 
 describe("TeamChatView", () => {
@@ -60,6 +66,8 @@ describe("TeamChatView", () => {
     expect(screen.getByTestId("team-chat-message-reactions")).toBeInTheDocument();
     expect(screen.getByTestId("team-chat-reply-button")).toBeInTheDocument();
     expect(screen.getByTestId("team-communication-type-selector")).toBeInTheDocument();
+    expect(screen.getByTestId("team-comm-mode-poll")).toBeInTheDocument();
+    expect(screen.getByTestId("team-comm-mode-date_poll")).toBeInTheDocument();
   });
 
   it("shows empty state when no messages", () => {

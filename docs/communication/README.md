@@ -12,6 +12,7 @@ Canonical **Communication + Zielgruppen** architecture for team, club, event, an
 | [SCE-COMM-04-TEAM-COMMUNICATION-FOUNDATION.md](./SCE-COMM-04-TEAM-COMMUNICATION-FOUNDATION.md) | Team communication foundation, persistence, permissions (COMM-04) |
 | [SCE-COMM-05-TEAM-CHAT.md](./SCE-COMM-05-TEAM-CHAT.md) | Team chat UX, replies, reactions, read state, attachments (COMM-05) |
 | [SCE-COMM-06-ANNOUNCEMENTS-ALERTS.md](./SCE-COMM-06-ANNOUNCEMENTS-ALERTS.md) | Team announcements & alerts, acknowledgement, tracking (COMM-06) |
+| [SCE-COMM-07-POLLS-DATE-POLLS.md](./SCE-COMM-07-POLLS-DATE-POLLS.md) | Team polls & date polls, results, Date Poll → Event (COMM-07) |
 
 **Immutable programme statements (COMM-01):**
 

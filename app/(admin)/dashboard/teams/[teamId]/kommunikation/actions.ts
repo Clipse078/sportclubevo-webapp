@@ -16,6 +16,13 @@ import {
   acknowledgeTeamCommunication,
   sendTeamFormalCommunication,
 } from "@/lib/communication/team/team-formal-communication-service";
+import {
+  closeTeamPoll,
+  createEventFromDatePollCommunication,
+  selectDatePollWinner,
+  sendTeamPollCommunication,
+  submitTeamPollResponse,
+} from "@/lib/communication/team/team-poll-communication-service";
 import { TeamCommunicationForbiddenError } from "@/lib/communication/team/team-communication-errors";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
@@ -224,6 +231,148 @@ export async function acknowledgeTeamCommunicationAction(
     return {
       ok: false,
       message: error instanceof Error ? error.message : "Bestätigung fehlgeschlagen.",
+    };
+  }
+}
+
+export async function sendTeamPollAction(
+  teamId: string,
+  payload: {
+    kind: "POLL" | "DATE_POLL";
+    question: string;
+    description: string;
+    options: Array<{ label: string } | { startAt: string; endAt?: string | null }>;
+    mode: string;
+    deadlineAt: string | null;
+    resultsVisibility: string;
+    audiencePreset: string;
+  },
+): Promise<ActionResult> {
+  try {
+    const access = await requireTeamCommunicationSendAccess(teamId);
+    await sendTeamPollCommunication({
+      tenantId: access.tenantId,
+      teamId,
+      senderUserId: access.userId,
+      kind: payload.kind,
+      question: payload.question,
+      description: payload.description,
+      options: payload.options,
+      mode: payload.mode,
+      deadlineAt: payload.deadlineAt,
+      resultsVisibility: payload.resultsVisibility,
+      audiencePreset: payload.audiencePreset,
+    });
+    revalidatePath(`/dashboard/teams/${teamId}/kommunikation`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof TeamCommunicationForbiddenError) {
+      return { ok: false, message: "Keine Berechtigung zum Senden." };
+    }
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Senden fehlgeschlagen.",
+    };
+  }
+}
+
+export async function submitTeamPollResponseAction(
+  teamId: string,
+  communicationId: string,
+  optionIds: string[],
+): Promise<ActionResult> {
+  try {
+    const access = await requireTeamCommunicationPageAccess(teamId);
+    await submitTeamPollResponse({
+      tenantId: access.tenantId,
+      teamId,
+      communicationId,
+      actorUserId: access.userId,
+      optionIds,
+    });
+    revalidatePath(`/dashboard/teams/${teamId}/kommunikation`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof TeamCommunicationForbiddenError) {
+      return { ok: false, message: "Keine Berechtigung." };
+    }
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Antwort fehlgeschlagen.",
+    };
+  }
+}
+
+export async function closeTeamPollAction(
+  teamId: string,
+  communicationId: string,
+): Promise<ActionResult> {
+  try {
+    const access = await requireTeamCommunicationSendAccess(teamId);
+    await closeTeamPoll({
+      tenantId: access.tenantId,
+      teamId,
+      communicationId,
+      actorUserId: access.userId,
+      viewerCanSend: access.canSend,
+    });
+    revalidatePath(`/dashboard/teams/${teamId}/kommunikation`);
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Schliessen fehlgeschlagen.",
+    };
+  }
+}
+
+export async function selectDatePollWinnerAction(
+  teamId: string,
+  communicationId: string,
+  optionId: string,
+): Promise<ActionResult> {
+  try {
+    const access = await requireTeamCommunicationSendAccess(teamId);
+    await selectDatePollWinner({
+      tenantId: access.tenantId,
+      teamId,
+      communicationId,
+      optionId,
+      actorUserId: access.userId,
+      viewerCanSend: access.canSend,
+    });
+    revalidatePath(`/dashboard/teams/${teamId}/kommunikation`);
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Auswahl fehlgeschlagen.",
+    };
+  }
+}
+
+export async function createEventFromDatePollAction(
+  teamId: string,
+  communicationId: string,
+): Promise<ActionResult & { eventId?: string }> {
+  try {
+    const access = await requireTeamCommunicationSendAccess(teamId);
+    const result = await createEventFromDatePollCommunication({
+      tenantId: access.tenantId,
+      teamId,
+      communicationId,
+      actorUserId: access.userId,
+      viewerCanSend: access.canSend,
+    });
+    revalidatePath(`/dashboard/teams/${teamId}/kommunikation`);
+    return { ok: true, eventId: result.eventId };
+  } catch (error) {
+    if (error instanceof TeamCommunicationForbiddenError) {
+      return { ok: false, message: "Keine Berechtigung für Event-Erstellung." };
+    }
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Event-Erstellung fehlgeschlagen.",
     };
   }
 }

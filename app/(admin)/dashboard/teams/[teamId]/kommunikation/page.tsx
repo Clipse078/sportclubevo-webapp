@@ -25,6 +25,7 @@ export default async function TeamKommunikationPage({ params, searchParams }: Pr
       tenantId: access.tenantId,
       teamId,
       viewerUserId: access.userId,
+      viewerCanSend: access.canSend,
       focusCommunicationId: communicationId ?? null,
     }),
     getTeamChatUnreadCount({
