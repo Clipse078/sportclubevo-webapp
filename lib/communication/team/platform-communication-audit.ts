@@ -3,7 +3,8 @@ import { logAction } from "@/lib/audit/log-action";
 export type PlatformCommunicationAuditAction =
   | "COMMUNICATION_CREATED"
   | "COMMUNICATION_PUBLISHED"
-  | "COMMUNICATION_ARCHIVED";
+  | "COMMUNICATION_ARCHIVED"
+  | "COMMUNICATION_ACKNOWLEDGED";
 
 export async function recordPlatformCommunicationAudit(input: {
   tenantId: string;

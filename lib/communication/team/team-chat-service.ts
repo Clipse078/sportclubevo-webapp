@@ -71,8 +71,10 @@ export type TeamChatReactionAggregateDto = {
 export type TeamChatMessageDto = {
   id: string;
   bodyText: string;
+  subject: string | null;
   kind: string;
   status: string;
+  acknowledgementRequired: boolean;
   publishedAt: string | null;
   createdAt: string;
   senderPerson: { id: string; firstName: string; lastName: string } | null;
@@ -81,6 +83,9 @@ export type TeamChatMessageDto = {
   mentions: TeamChatMentionDto[];
   attachments: TeamChatAttachmentDto[];
   unreadForViewer: boolean;
+  viewerEngagement: string | null;
+  viewerAcknowledged: boolean;
+  canAcknowledge: boolean;
 };
 
 export type TeamChatMessagePage = {
@@ -215,12 +220,24 @@ async function loadUnreadCommunicationIds(input: {
 function mapMessageRow(
   row: Prisma.PlatformCommunicationGetPayload<{ include: typeof MESSAGE_INCLUDE }>,
   unreadIds: Set<string>,
+  viewerEngagementByCommunicationId: Map<string, PlatformCommunicationRecipientEngagement>,
 ): TeamChatMessageDto {
+  const viewerEngagement = viewerEngagementByCommunicationId.get(row.id) ?? null;
+  const viewerAcknowledged =
+    viewerEngagement === "ACKNOWLEDGED" || viewerEngagement === "RESPONDED";
+  const canAcknowledge =
+    row.acknowledgementRequired &&
+    row.status === "PUBLISHED" &&
+    viewerEngagement !== null &&
+    !viewerAcknowledged;
+
   return {
     id: row.id,
     bodyText: row.status === "ARCHIVED" ? "Nachricht archiviert." : row.bodyText,
+    subject: row.subject,
     kind: row.kind,
     status: row.status,
+    acknowledgementRequired: row.acknowledgementRequired,
     publishedAt: row.publishedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     senderPerson: row.senderPerson,
@@ -246,7 +263,34 @@ function mapMessageRow(
       sortOrder: link.sortOrder,
     })),
     unreadForViewer: unreadIds.has(row.id),
+    viewerEngagement,
+    viewerAcknowledged,
+    canAcknowledge,
   };
+}
+
+async function loadViewerEngagements(input: {
+  tenantId: string;
+  deliveryUserId: string;
+  communicationIds: readonly string[];
+}): Promise<Map<string, PlatformCommunicationRecipientEngagement>> {
+  if (input.communicationIds.length === 0) return new Map();
+  const rows = await prisma.platformCommunicationRecipientSnapshot.findMany({
+    where: {
+      tenantId: input.tenantId,
+      deliveryUserId: input.deliveryUserId,
+      communicationId: { in: [...input.communicationIds] },
+    },
+    select: { communicationId: true, engagement: true },
+  });
+  const map = new Map<string, PlatformCommunicationRecipientEngagement>();
+  for (const row of rows) {
+    const current = map.get(row.communicationId);
+    if (!current || row.engagement === "ACKNOWLEDGED" || row.engagement === "RESPONDED") {
+      map.set(row.communicationId, row.engagement);
+    }
+  }
+  return map;
 }
 
 export async function listTeamChatMessages(input: {
@@ -297,15 +341,23 @@ export async function listTeamChatMessages(input: {
   const chronological = [...pageRows].reverse();
 
   const viewerPersonId = await resolveViewerPersonId(input.viewerUserId, input.tenantId);
-  const unreadIds = await loadUnreadCommunicationIds({
-    tenantId: input.tenantId,
-    deliveryUserId: input.viewerUserId,
-    communicationIds: chronological.map((m) => m.id),
-    senderPersonId: viewerPersonId,
-  });
+  const communicationIds = chronological.map((m) => m.id);
+  const [unreadIds, viewerEngagements] = await Promise.all([
+    loadUnreadCommunicationIds({
+      tenantId: input.tenantId,
+      deliveryUserId: input.viewerUserId,
+      communicationIds,
+      senderPersonId: viewerPersonId,
+    }),
+    loadViewerEngagements({
+      tenantId: input.tenantId,
+      deliveryUserId: input.viewerUserId,
+      communicationIds,
+    }),
+  ]);
 
   const messages = chronological.map((row) => {
-    const dto = mapMessageRow(row, unreadIds);
+    const dto = mapMessageRow(row, unreadIds, viewerEngagements);
     dto.reactions = mapReactionAggregates(row.reactions, viewerPersonId);
     dto.unreadForViewer = unreadIds.has(row.id);
     return dto;
@@ -334,7 +386,7 @@ export async function listTeamChatMessages(input: {
         include: MESSAGE_INCLUDE,
       });
       if (focusRow) {
-        const focusDto = mapMessageRow(focusRow, unreadIds);
+        const focusDto = mapMessageRow(focusRow, unreadIds, viewerEngagements);
         focusDto.reactions = mapReactionAggregates(focusRow.reactions, viewerPersonId);
         if (!messages.some((m) => m.id === focusDto.id)) {
           messages.push(focusDto);
@@ -612,7 +664,7 @@ export async function markTeamChatConversationRead(input: {
     if (!canTransitionRecipientEngagement(from, "READ")) continue;
     await prisma.platformCommunicationRecipientSnapshot.update({
       where: { id: snap.id },
-      data: { engagement: "READ" },
+      data: { engagement: "READ", readAt: new Date() },
     });
     updated += 1;
   }

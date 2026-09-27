@@ -43,6 +43,7 @@ export type TeamCommunicationListItem = {
   status: string;
   bodyText: string;
   subject: string | null;
+  acknowledgementRequired: boolean;
   publishedAt: string | null;
   createdAt: string;
   senderPerson: { id: string; firstName: string; lastName: string } | null;
@@ -129,6 +130,7 @@ export async function listTeamCommunications(input: {
     status: row.status,
     bodyText: row.bodyText,
     subject: row.subject,
+    acknowledgementRequired: row.acknowledgementRequired,
     publishedAt: row.publishedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     senderPerson: row.senderPerson,
@@ -145,6 +147,7 @@ export async function createTeamCommunicationDraft(input: {
   audiencePreset?: TeamAudiencePreset;
   replyToCommunicationId?: string | null;
   allowEmptyBody?: boolean;
+  acknowledgementRequired?: boolean;
 }): Promise<{ id: string }> {
   const kind = assertKindSupportedForFoundation(input.kind ?? "MESSAGE");
   const bodyText = sanitizeBodyText(input.bodyText, {
@@ -178,6 +181,7 @@ export async function createTeamCommunicationDraft(input: {
       bodyText,
       replyToCommunicationId: input.replyToCommunicationId?.trim() || null,
       audienceSpecJson: audience as unknown as Prisma.InputJsonValue,
+      acknowledgementRequired: input.acknowledgementRequired === true,
       createdByUserId: input.senderUserId,
     },
     select: { id: true, kind: true, status: true },
@@ -288,6 +292,7 @@ export async function publishTeamCommunication(input: {
       tenantId: input.tenantId,
       communicationId: row.id,
       teamId: input.teamId,
+      kind: row.kind,
       title: row.subject?.trim() || "Team-Nachricht",
       bodyPreview: row.bodyText.slice(0, 240),
       deliveryUserIds: snapshotRows.map((s) => s.deliveryUserId),
@@ -353,6 +358,7 @@ export async function getTeamCommunicationById(input: {
     status: row.status,
     bodyText: row.bodyText,
     subject: row.subject,
+    acknowledgementRequired: row.acknowledgementRequired,
     publishedAt: row.publishedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     senderPerson: row.senderPerson,

@@ -22,6 +22,8 @@ const DEFAULTS: Record<NotificationType, NotificationChannelDefaults> = {
   REQUIREMENT_CHANGED: { inAppEnabled: true, emailEnabled: true },
   REQUIREMENT_CANCELLED: { inAppEnabled: true, emailEnabled: true },
   TEAM_COMMUNICATION_PUBLISHED: { inAppEnabled: true, emailEnabled: false },
+  TEAM_ANNOUNCEMENT_PUBLISHED: { inAppEnabled: true, emailEnabled: false },
+  TEAM_ALERT_PUBLISHED: { inAppEnabled: true, emailEnabled: false },
 };
 
 export function getDefaultNotificationPreferences(): Record<
