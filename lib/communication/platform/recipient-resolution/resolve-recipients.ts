@@ -12,7 +12,10 @@ import { validateCommunicationAudienceSpec } from "@/lib/communication/platform/
 import { intersectAudienceWithSenderScope } from "@/lib/communication/platform/authorization/communication-authorization";
 import type { CommunicationChannel } from "@/lib/communication/platform/channels";
 import { isCommunicationChannel } from "@/lib/communication/platform/channels";
-import { isCommunicationPreferenceCategory } from "@/lib/communication/platform/preference-categories";
+import {
+  DEFAULT_CATEGORY_CHANNEL_ELIGIBILITY,
+  isCommunicationPreferenceCategory,
+} from "@/lib/communication/platform/preference-categories";
 import { computeAudienceFingerprint } from "@/lib/communication/platform/recipient-resolution/audience-fingerprint";
 import { resolveAudienceCandidates } from "@/lib/communication/platform/recipient-resolution/audience-candidate-resolver";
 import {
@@ -30,12 +33,18 @@ import type {
   EffectiveRecipientResolutionResult,
   RecipientResolutionInput,
 } from "@/lib/communication/platform/recipient-resolution/types";
-import { evaluateSafeguardingCommunication } from "@/lib/communication/platform/safeguarding/guardian-policy-seam";
 import { DEFAULT_TENANT_SAFEGUARDING_POLICY } from "@/lib/communication/platform/recipient-resolution/guardian-expansion";
 import { prisma } from "@/lib/db/prisma";
 import { runRecipientResolutionPipeline } from "@/lib/communication/platform/recipient-resolution/pipeline";
 import { createAudienceCandidateResolutionPort } from "@/lib/communication/platform/recipient-resolution/audience-candidate-resolver";
-import { createGuardianExpansionPort } from "@/lib/communication/platform/recipient-resolution/guardian-expansion";
+import {
+  createGuardianExpansionPort,
+  createGuardianExpansionPortForTenant,
+} from "@/lib/communication/platform/recipient-resolution/guardian-expansion";
+import { loadTenantCommunicationSafeguardingPolicy } from "@/lib/communication/platform/safeguarding/tenant-safeguarding-policy";
+import { loadGuardianRecipientsForSubjects } from "@/lib/communication/platform/safeguarding/load-guardian-recipients";
+import { evaluateCommunicationSafeguarding } from "@/lib/communication/platform/safeguarding/evaluate-communication-safeguarding";
+import { resolveSafeguardingDeliveryTargets } from "@/lib/communication/platform/safeguarding/resolve-safeguarding-delivery-targets";
 
 export class RecipientResolutionValidationError extends Error {
   constructor(message: string) {
@@ -73,10 +82,22 @@ function mergeExclusion(
   map.set(personId, existing);
 }
 
-function subjectIsMinor(dateOfBirth: Date | null, now: Date): boolean {
-  if (!dateOfBirth) return false;
-  const ageYears = (now.getTime() - dateOfBirth.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-  return ageYears < 18;
+async function deliveryUserReachableForChannel(input: {
+  tenantId: string;
+  deliveryUserId: string;
+  channel: CommunicationChannel;
+  category: import("@/lib/communication/platform/preference-categories").CommunicationPreferenceCategory;
+}): Promise<boolean> {
+  const allowedChannels = DEFAULT_CATEGORY_CHANNEL_ELIGIBILITY[input.category];
+  if (!allowedChannels.includes(input.channel)) return false;
+  if (input.channel === "EMAIL") {
+    const user = await prisma.user.findFirst({
+      where: { id: input.deliveryUserId, tenantId: input.tenantId, isActive: true },
+      select: { email: true },
+    });
+    return Boolean(user?.email?.trim());
+  }
+  return true;
 }
 
 /**
@@ -140,12 +161,16 @@ export async function resolveCommunicationRecipients(
     channels: [input.channel],
   });
 
-  const policy = DEFAULT_TENANT_SAFEGUARDING_POLICY(input.tenantId);
+  const policyConfig = await loadTenantCommunicationSafeguardingPolicy(input.tenantId);
   const personRows = await prisma.person.findMany({
     where: { tenantId: input.tenantId, id: { in: scopedIds } },
-    select: { id: true, dateOfBirth: true },
+    select: { id: true, dateOfBirth: true, userId: true },
   });
-  const dobById = new Map(personRows.map((r) => [r.id, r.dateOfBirth]));
+  const personById = new Map(personRows.map((r) => [r.id, r]));
+  const guardianMap = await loadGuardianRecipientsForSubjects({
+    tenantId: input.tenantId,
+    subjectPersonIds: scopedIds,
+  });
   const now = new Date();
 
   const effectiveRecipientPersonIds: string[] = [];
@@ -156,46 +181,73 @@ export async function resolveCommunicationRecipients(
       continue;
     }
 
-    const safeguarding = evaluateSafeguardingCommunication({
-      policy,
-      senderUserId: input.senderActor.userId,
-      subjectPersonId: personId,
-      subjectIsMinor: subjectIsMinor(dobById.get(personId) ?? null, now),
-      channel: input.channel as CommunicationChannel,
+    const personRow = personById.get(personId);
+    const evaluation = evaluateCommunicationSafeguarding({
+      policy: policyConfig,
+      subject: {
+        subjectPersonId: personId,
+        dateOfBirth: personRow?.dateOfBirth ?? null,
+        selfUserId: personRow?.userId ?? profile.userId,
+        guardianRecipients: guardianMap.get(personId) ?? [],
+      },
+      context: { referenceDate: now },
     });
-    if (!safeguarding.allowed) {
+    const deliveryTargets = resolveSafeguardingDeliveryTargets({
+      evaluation,
+      selfUserId: personRow?.userId ?? profile.userId,
+    });
+    if (!evaluation.deliveryPermitted) {
       mergeExclusion(exclusionMap, personId, "SAFEGUARDING_POLICY");
       continue;
     }
 
-    const ctx = notificationContexts.get(personId);
-    const preferenceDeliveryUserId =
-      ctx?.selfUserId ??
-      ctx?.guardianUserIds?.[0] ??
-      profile?.userId ??
-      null;
-    if (preferenceDeliveryUserId) {
+    if (deliveryTargets.length === 0) {
+      if (
+        !isPersonEligibleForChannel({
+          profile,
+          channel: input.channel,
+          category: input.category,
+        })
+      ) {
+        mergeExclusion(exclusionMap, personId, "CHANNEL_UNAVAILABLE");
+        continue;
+      }
+      effectiveRecipientPersonIds.push(personId);
+      continue;
+    }
+
+    let deliverable = false;
+    for (const target of deliveryTargets) {
       const preference = await evaluateCommunicationPreferenceForDeliveryUser({
         tenantId: input.tenantId,
-        deliveryUserId: preferenceDeliveryUserId,
+        deliveryUserId: target.deliveryUserId,
         category: input.category,
         channel: input.channel,
         explicitMap: explicitPreferenceMap,
       });
-      if (!preference.allowed) {
-        mergeExclusion(exclusionMap, personId, "PREFERENCE_BLOCKED");
-        continue;
-      }
+      if (!preference.allowed) continue;
+      const reachable = await deliveryUserReachableForChannel({
+        tenantId: input.tenantId,
+        deliveryUserId: target.deliveryUserId,
+        channel: input.channel as CommunicationChannel,
+        category: input.category,
+      });
+      if (!reachable) continue;
+      deliverable = true;
+      break;
     }
 
-    if (
-      !isPersonEligibleForChannel({
+    if (!deliverable) {
+      const selfEligible = isPersonEligibleForChannel({
         profile,
         channel: input.channel,
         category: input.category,
-      })
-    ) {
-      mergeExclusion(exclusionMap, personId, "CHANNEL_UNAVAILABLE");
+      });
+      mergeExclusion(
+        exclusionMap,
+        personId,
+        selfEligible ? "PREFERENCE_BLOCKED" : "CHANNEL_UNAVAILABLE",
+      );
       continue;
     }
 
@@ -280,7 +332,7 @@ export async function resolveCommunicationRecipientsForDispatch(
     },
     {
       audience: createAudienceCandidateResolutionPort(),
-      guardians: createGuardianExpansionPort(DEFAULT_TENANT_SAFEGUARDING_POLICY(input.tenantId)),
+      guardians: await createGuardianExpansionPortForTenant(input.tenantId),
     },
   );
 

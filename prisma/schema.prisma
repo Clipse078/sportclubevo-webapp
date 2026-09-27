@@ -1177,6 +1177,7 @@ model Tenant {
   dressingRoomOccupancyPreset      TenantDressingRoomOccupancyPreset?
   /// SCE-OPS-01A — tenant-wide default Match duration when no meaningful end exists.
   matchOperationalPolicy           TenantMatchOperationalPolicy?
+  communicationSafeguardingPolicy TenantCommunicationSafeguardingPolicy?
 
   // RPERM-02
   tenantMemberships TenantMembership[]
@@ -3310,6 +3311,12 @@ model PlatformCommunicationRecipientSnapshot {
 
   audienceFingerprint     String
   viaGuardianSubstitution Boolean @default(false)
+  /// Frozen safeguarding decision code at dispatch (COMM-18).
+  safeguardingReasonCode  String?
+  /// Whether subject was a minor under tenant policy at dispatch (historical truth).
+  subjectMinorAtDispatch  Boolean?
+  /// Guardian Person involved in delivery when viaGuardianSubstitution (traceability).
+  guardianPersonId        String?
   resolvedAt              DateTime
 
   engagement PlatformCommunicationRecipientEngagement @default(PENDING)
@@ -3459,6 +3466,8 @@ model PlatformCommunicationPollResponse {
   pollId              String
   optionId            String
   recipientSnapshotId String
+  /// User who submitted the response (guardian acting for child when applicable).
+  actorUserId         String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -8513,6 +8522,24 @@ model TenantMatchOperationalPolicy {
   defaultTournamentDurationMinutes Int?
   createdAt                      DateTime @default(now())
   updatedAt                      DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+/// SCE-COMM-18 — tenant-configurable youth/guardian communication safeguarding policy.
+/// Product configuration only — not jurisdiction-specific legal advice.
+model TenantCommunicationSafeguardingPolicy {
+  id                              String   @id @default(cuid())
+  tenantId                        String   @unique
+  safeguardingEnabled             Boolean  @default(true)
+  minorAgeThresholdYears          Int      @default(18)
+  allowDirectMinorDelivery        Boolean  @default(false)
+  guardianVisibilityRequired      Boolean  @default(true)
+  guardianOnlyDeliveryRequired    Boolean  @default(true)
+  guardianResponseAuthorityEnabled Boolean @default(true)
+  deliverToAllActiveGuardians     Boolean  @default(true)
+  createdAt                       DateTime @default(now())
+  updatedAt                       DateTime @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }

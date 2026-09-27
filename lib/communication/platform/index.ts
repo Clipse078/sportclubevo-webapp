@@ -22,3 +22,6 @@ export * from "@/lib/communication/platform/seams/sponsor-communication-seam";
 export * from "@/lib/communication/platform/seams/event-communication-seam";
 export * from "@/lib/communication/platform/seams/integration-seams";
 export * from "@/lib/communication/platform/safeguarding/guardian-policy-seam";
+export * from "@/lib/communication/platform/safeguarding/evaluate-communication-safeguarding";
+export * from "@/lib/communication/platform/safeguarding/tenant-safeguarding-policy";
+export * from "@/lib/communication/platform/safeguarding/safeguarding-reason-codes";

@@ -1,5 +1,5 @@
 /**
- * SCE-COMM-03 — dispatch-time immutable recipient snapshot builder (persistence deferred).
+ * SCE-COMM-03 / COMM-18 — dispatch-time immutable recipient snapshot builder.
  */
 
 import type { CommunicationChannel } from "@/lib/communication/platform/channels";
@@ -22,12 +22,14 @@ export type DispatchRecipientSnapshotRow = {
   resolvedAt: string;
   audienceFingerprint: string;
   viaGuardianSubstitution: boolean;
+  safeguardingReasonCode: string | null;
+  subjectMinorAtDispatch: boolean | null;
+  guardianPersonId: string | null;
   resolvedFromAudience: true;
 };
 
 /**
- * Builds immutable snapshot rows for future communication persistence.
- * Does not write to the database in COMM-03.
+ * Builds immutable snapshot rows for communication persistence.
  */
 export function buildDispatchRecipientSnapshots(
   input: DispatchRecipientSnapshotInput,
@@ -40,6 +42,9 @@ export function buildDispatchRecipientSnapshots(
     resolvedAt: input.resolvedAt,
     audienceFingerprint: input.audienceFingerprint,
     viaGuardianSubstitution: row.viaGuardianSubstitution,
+    safeguardingReasonCode: row.safeguardingReasonCode ?? null,
+    subjectMinorAtDispatch: row.subjectMinorAtDispatch ?? null,
+    guardianPersonId: row.guardianPersonId ?? null,
     resolvedFromAudience: true as const,
   }));
 }

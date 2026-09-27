@@ -91,6 +91,15 @@ export function TeamFormalCommunicationComposer({
         />
       </div>
 
+      {(audiencePreset === "ALL" || audiencePreset === "PLAYERS") && (
+        <p
+          className="text-xs text-[var(--text-2)]"
+          data-testid="team-formal-safeguarding-notice"
+        >
+          Jugendschutz wird automatisch berücksichtigt.
+        </p>
+      )}
+
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <label className="flex items-center gap-2 text-sm">
           <span className="text-[var(--text-2)]">Zielgruppe</span>

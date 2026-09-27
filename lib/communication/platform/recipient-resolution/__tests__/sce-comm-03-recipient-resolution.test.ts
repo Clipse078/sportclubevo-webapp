@@ -29,6 +29,7 @@ const mocks = vi.hoisted(() => ({
   guardianRelationship: { findMany: vi.fn() },
   getEffectivePermissions: vi.fn(),
   userCommunicationPreference: { findMany: vi.fn() },
+  tenantCommunicationSafeguardingPolicy: { findUnique: vi.fn() },
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -41,10 +42,12 @@ vi.mock("@/lib/db/prisma", () => ({
     role: mocks.role,
     userRole: mocks.userRole,
     tenantMembership: mocks.tenantMembership,
-    user: mocks.user,
+    user: { ...mocks.user, findFirst: vi.fn() },
     targetGroup: mocks.targetGroup,
     trainerTeamMember: mocks.trainerTeamMember,
     guardianRelationship: mocks.guardianRelationship,
+    userCommunicationPreference: mocks.userCommunicationPreference,
+    tenantCommunicationSafeguardingPolicy: mocks.tenantCommunicationSafeguardingPolicy,
   },
 }));
 
@@ -78,6 +81,7 @@ describe("SCE-COMM-03 recipient resolution", () => {
       tenant: ["communication.zielgruppen.manage"],
     });
     mocks.guardianRelationship.findMany.mockResolvedValue([]);
+    mocks.tenantCommunicationSafeguardingPolicy.findUnique.mockResolvedValue(null);
     mocks.trainerTeamMember.findMany.mockResolvedValue([]);
     mocks.userCommunicationPreference.findMany.mockResolvedValue([]);
     mocks.orgUnitMembership.findMany.mockResolvedValue([]);
@@ -375,5 +379,6 @@ describe("SCE-COMM-03 recipient resolution", () => {
     });
     expect(snapshots[0]?.resolvedFromAudience).toBe(true);
     expect(snapshots[0]?.communicationDispatchRef).toBe("dispatch-1");
+    expect(snapshots[0]?.safeguardingReasonCode).toBeNull();
   });
 });

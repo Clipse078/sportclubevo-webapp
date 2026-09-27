@@ -55,7 +55,7 @@ All selector IDs are validated against the requesting tenant. Cross-tenant IDs r
 
 ## Safeguarding seam
 
-Policy interface in `safeguarding/guardian-policy-seam.ts`. Tenant policy persistence and administration UI remain **COMM-18**. COMM-03 evaluates supplied/default policy deterministically.
+Policy evaluation in `safeguarding/evaluate-communication-safeguarding.ts` with tenant persistence (`TenantCommunicationSafeguardingPolicy`, COMM-18). COMM-03 loads tenant policy and evaluates deterministically at resolution time.
 
 ## Reason codes
 
