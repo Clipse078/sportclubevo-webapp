@@ -417,6 +417,15 @@ export const NAV_SECTIONS: NavSection[] = [
             ],
           },
           {
+            key: "communication-kampagnen",
+            label: "Kampagnen",
+            href: "/dashboard/communication/kampagnen",
+            permissionKeys: [
+              PERMISSIONS.COMMUNICATION_CLUB_VIEW,
+              PERMISSIONS.COMMUNICATION_CLUB_SEND,
+            ],
+          },
+          {
             key: "communication-zielgruppen",
             label: "Zielgruppen",
             href: "/dashboard/communication/zielgruppen",

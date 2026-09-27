@@ -31,6 +31,7 @@ const DEFAULTS: Record<NotificationType, NotificationChannelDefaults> = {
   CLUB_COMMUNICATION_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
   CLUB_ANNOUNCEMENT_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
   CLUB_ALERT_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
+  CLUB_CAMPAIGN_PUBLISHED: { inAppEnabled: true, emailEnabled: false, pushEnabled: true },
 };
 
 export function getDefaultNotificationPreferences(): Record<
