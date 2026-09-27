@@ -23,6 +23,9 @@ type Props = {
   onClaimRequestSlot?: (communicationId: string, slotId: string) => void;
   onUnclaimRequestSlot?: (communicationId: string, slotId: string) => void;
   onCloseRequest?: (communicationId: string) => void;
+  onRemindPollNonResponders?: (communicationId: string) => void;
+  onRemindRequestNonResponders?: (communicationId: string) => void;
+  onRemindRequestOpenCapacity?: (communicationId: string) => void;
   pending: boolean;
   senderLabel: string;
   formatTime: (iso: string | null, fallback: string) => string;
@@ -42,6 +45,9 @@ export function TeamCommunicationTimelineItem({
   onClaimRequestSlot,
   onUnclaimRequestSlot,
   onCloseRequest,
+  onRemindPollNonResponders,
+  onRemindRequestNonResponders,
+  onRemindRequestOpenCapacity,
   pending,
   senderLabel,
   formatTime,
@@ -61,6 +67,20 @@ export function TeamCommunicationTimelineItem({
           onCloseRequest
             ? async (communicationId) => {
                 onCloseRequest(communicationId);
+              }
+            : undefined
+        }
+        onRemindNonResponders={
+          onRemindRequestNonResponders
+            ? async (communicationId) => {
+                onRemindRequestNonResponders(communicationId);
+              }
+            : undefined
+        }
+        onRemindOpenCapacity={
+          onRemindRequestOpenCapacity
+            ? async (communicationId) => {
+                onRemindRequestOpenCapacity(communicationId);
               }
             : undefined
         }
@@ -94,6 +114,13 @@ export function TeamCommunicationTimelineItem({
           onCreateEventFromDatePoll
             ? async (communicationId) => {
                 onCreateEventFromDatePoll(communicationId);
+              }
+            : undefined
+        }
+        onRemindNonResponders={
+          onRemindPollNonResponders
+            ? async (communicationId) => {
+                onRemindPollNonResponders(communicationId);
               }
             : undefined
         }

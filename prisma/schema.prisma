@@ -340,6 +340,20 @@ enum PlatformCommunicationRequestLifecycle {
   CLOSED
 }
 
+// SCE-COMM-10 — smart reminder orchestration origin (not a CommunicationKind).
+enum PlatformCommunicationReminderOrigin {
+  EVENT_NO_RESPONSE
+  POLL_NO_RESPONSE
+  REQUEST_NO_RESPONSE
+  REQUEST_OPEN_CAPACITY
+}
+
+enum CommunicationReminderScheduleStatus {
+  SCHEDULED
+  EXECUTED
+  CANCELLED
+}
+
 enum CommunicationAttachmentSourceType {
   UPLOAD
   WORKSPACE_DOCUMENT_VERSION
@@ -1074,6 +1088,8 @@ model Tenant {
   platformCommunicationRequests   PlatformCommunicationRequest[]
   platformCommunicationRequestSlots PlatformCommunicationRequestSlot[]
   platformCommunicationRequestClaims PlatformCommunicationRequestClaim[]
+  communicationReminderExecutions CommunicationReminderExecution[]
+  communicationReminderSchedules CommunicationReminderSchedule[]
   internalComments                InternalComment[]
   commentMentions                 CommentMention[]
   taskComments                    TaskComment[]
@@ -1176,6 +1192,7 @@ model User {
   createdCommunicationThreads  CommunicationThread[]  @relation("CommunicationThreadCreatedBy")
   createdCommunicationMessages CommunicationMessage[] @relation("CommunicationMessageCreatedBy")
   createdPlatformCommunications PlatformCommunication[] @relation("PlatformCommunicationCreatedBy")
+  createdCommunicationReminderSchedules CommunicationReminderSchedule[] @relation("CommunicationReminderScheduleCreatedBy")
   authoredInternalComments     InternalComment[]      @relation("InternalCommentAuthor")
   commentMentionsReceived      CommentMention[]       @relation("CommentMentionUser")
   authoredTaskComments         TaskComment[]          @relation("TaskCommentAuthor")
@@ -2027,6 +2044,7 @@ model Team {
   // TEAM-COCKPIT-PREMIUM-01J-A: team-bound private documents
   teamDocuments            TeamDocument[]          @relation("TeamDocuments")
   platformCommunicationConversations PlatformCommunicationConversation[]
+  communicationReminderSchedules CommunicationReminderSchedule[]
   workspaceAccessGrants    WorkspaceAccessGrant[]  @relation("WorkspaceAccessGrantTeam")
 
   @@unique([tenantId, slug])
@@ -2968,6 +2986,9 @@ model PlatformCommunication {
   /// When true, recipients may explicitly acknowledge (distinct from READ).
   acknowledgementRequired Boolean @default(false)
 
+  /// SCE-COMM-10 — reminder orchestration metadata (origin + source refs); not Event/Poll/Request state.
+  orchestrationMetaJson Json?
+
   createdByUserId String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -2984,6 +3005,7 @@ model PlatformCommunication {
   attachmentLinks PlatformCommunicationAttachment[]
   poll            PlatformCommunicationPoll?
   request         PlatformCommunicationRequest?
+  reminderExecution CommunicationReminderExecution?
 
   @@index([tenantId, conversationId, createdAt])
   @@index([tenantId, status, createdAt])
@@ -3226,6 +3248,48 @@ model PlatformCommunicationRequestClaim {
   @@index([tenantId, slotId])
   @@index([tenantId, slotId, recipientSnapshotId])
   @@index([recipientSnapshotId])
+}
+
+/// SCE-COMM-10 — idempotent scheduled reminder execution guard (distinct from manual resends).
+model CommunicationReminderExecution {
+  id                String @id @default(cuid())
+  tenantId          String
+  executionIdentity String
+  communicationId   String @unique
+  createdAt         DateTime @default(now())
+
+  tenant        Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  communication PlatformCommunication @relation(fields: [communicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([tenantId, executionIdentity])
+  @@index([tenantId, createdAt])
+}
+
+/// SCE-COMM-10 — minimal scheduled smart reminder contract (UTC executeAt).
+model CommunicationReminderSchedule {
+  id                  String @id @default(cuid())
+  tenantId            String
+  teamId              String
+  reminderOrigin      PlatformCommunicationReminderOrigin
+  /// Source reference JSON (event anchor, poll/request communicationId, etc.).
+  sourceReferenceJson Json
+  executeAt           DateTime
+  timezone            String
+  status              CommunicationReminderScheduleStatus @default(SCHEDULED)
+  executionIdentity   String
+  createdByUserId     String?
+  cancelledAt         DateTime?
+  executedAt          DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant        Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  team          Team   @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdByUser User?  @relation("CommunicationReminderScheduleCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([tenantId, executionIdentity])
+  @@index([tenantId, status, executeAt])
+  @@index([tenantId, teamId])
 }
 
 /// Immutable tenant-owned metadata for communication files. Binary content is

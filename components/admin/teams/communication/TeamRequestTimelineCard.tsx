@@ -11,6 +11,8 @@ type Props = {
   onClaim: (communicationId: string, slotId: string) => Promise<void>;
   onUnclaim: (communicationId: string, slotId: string) => Promise<void>;
   onCloseRequest?: (communicationId: string) => Promise<void>;
+  onRemindNonResponders?: (communicationId: string) => Promise<void>;
+  onRemindOpenCapacity?: (communicationId: string) => Promise<void>;
 };
 
 export function TeamRequestTimelineCard({
@@ -19,6 +21,8 @@ export function TeamRequestTimelineCard({
   onClaim,
   onUnclaim,
   onCloseRequest,
+  onRemindNonResponders,
+  onRemindOpenCapacity,
 }: Props) {
   const request = message.request;
   const [localPending, startTransition] = useTransition();
@@ -148,22 +152,66 @@ export function TeamRequestTimelineCard({
         })}
       </div>
 
-      {request.canManage && request.isOpen && onCloseRequest ? (
-        <div className="mt-3">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            disabled={busy}
-            data-testid="team-request-close-button"
-            onClick={() =>
-              startTransition(async () => {
-                await onCloseRequest(message.id);
-              })
-            }
-          >
-            Anfrage schliessen
-          </Button>
+      {request.canManage && request.isOpen ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {onRemindNonResponders ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={busy}
+              data-testid="team-request-remind-non-responders"
+              onClick={() =>
+                startTransition(async () => {
+                  setActionError(null);
+                  try {
+                    await onRemindNonResponders(message.id);
+                  } catch (e) {
+                    setActionError(e instanceof Error ? e.message : "Fehler");
+                  }
+                })
+              }
+            >
+              Nicht reagierte Personen erinnern
+            </Button>
+          ) : null}
+          {onRemindOpenCapacity && !request.aggregate.isFull ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={busy}
+              data-testid="team-request-remind-open-capacity"
+              onClick={() =>
+                startTransition(async () => {
+                  setActionError(null);
+                  try {
+                    await onRemindOpenCapacity(message.id);
+                  } catch (e) {
+                    setActionError(e instanceof Error ? e.message : "Fehler");
+                  }
+                })
+              }
+            >
+              Offene Plätze erinnern
+            </Button>
+          ) : null}
+          {onCloseRequest ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={busy}
+              data-testid="team-request-close-button"
+              onClick={() =>
+                startTransition(async () => {
+                  await onCloseRequest(message.id);
+                })
+              }
+            >
+              Anfrage schliessen
+            </Button>
+          ) : null}
         </div>
       ) : null}
 

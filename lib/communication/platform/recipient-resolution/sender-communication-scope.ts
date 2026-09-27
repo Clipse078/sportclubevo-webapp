@@ -12,6 +12,7 @@ import {
   resolveTeamAudiencePersonIds,
 } from "@/lib/requirements/requirement-audience-resolvers";
 import { sortPersonIds } from "@/lib/communication/platform/recipient-resolution/set-algebra";
+import { resolveTeamIdForEventContextRef } from "@/lib/communication/event/event-participation-anchor";
 
 async function loadAllActiveTenantPersonIds(tenantId: string): Promise<Set<string>> {
   const rows = await prisma.person.findMany({
@@ -110,6 +111,24 @@ export async function resolveSenderCommunicationScope(input: {
       },
       previewScopeLimited: true,
     };
+  }
+
+  if (input.context.kind === "EVENT") {
+    const teamId = await resolveTeamIdForEventContextRef({
+      tenantId: input.tenantId,
+      contextEventId: input.context.eventId,
+    });
+    if (teamId) {
+      const teamPersonIds = await resolveTeamAudiencePersonIds(input.tenantId, [teamId]);
+      return {
+        scope: {
+          tenantId: input.tenantId,
+          senderUserId: input.senderUserId,
+          allowedSubjectPersonIds: new Set(sortPersonIds(teamPersonIds)),
+        },
+        previewScopeLimited: true,
+      };
+    }
   }
 
   const membershipScoped = await loadSenderScopedPersonIdsFromMembership({

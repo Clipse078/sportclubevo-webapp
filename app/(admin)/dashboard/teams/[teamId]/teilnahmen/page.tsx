@@ -2,6 +2,8 @@ import TeamParticipationSection from "@/components/admin/teams/TeamParticipation
 import { requireTeamCockpitAccess } from "@/lib/teams/team-cockpit-layout";
 import { getUpcomingParticipationForTeam } from "@/lib/participation/queries";
 import { SectionCard } from "@/components/ui/page";
+import { auth } from "@/auth";
+import { resolveTeamCommunicationAuthorization } from "@/lib/communication/team/team-communication-authorization";
 
 type Props = {
   params: Promise<{ teamId: string }>;
@@ -9,7 +11,17 @@ type Props = {
 
 export default async function TeamTeilnahmenPage({ params }: Props) {
   const { teamId } = await params;
-  const { tenantId, team } = await requireTeamCockpitAccess(teamId);
+  const { tenantId, tenantKey, team } = await requireTeamCockpitAccess(teamId);
+  const session = await auth();
+  const commAuth =
+    session?.user?.id != null
+      ? await resolveTeamCommunicationAuthorization({
+          tenantId,
+          tenantKey,
+          userId: session.user.id,
+          teamId: team.id,
+        })
+      : null;
 
   const upcomingParticipation = team.currentTeamSeasonId
     ? await getUpcomingParticipationForTeam(
@@ -36,6 +48,7 @@ export default async function TeamTeilnahmenPage({ params }: Props) {
       teamId={team.id}
       teamSeasonId={upcomingParticipation.teamSeasonId}
       initialUpcoming={upcomingParticipation}
+      canSendEventCommunication={commAuth?.canSend === true}
     />
   );
 }

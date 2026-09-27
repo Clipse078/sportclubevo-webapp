@@ -9,11 +9,13 @@ import type {
   TeamUpcomingParticipation,
   UpcomingParticipationEvent,
 } from "@/lib/participation/types";
+import { EventCommunicationPanel } from "@/components/admin/teams/EventCommunicationPanel";
 
 type Props = {
   teamId: string;
   teamSeasonId: string;
   initialUpcoming: TeamUpcomingParticipation;
+  canSendEventCommunication?: boolean;
 };
 
 function eventKey(event: UpcomingParticipationEvent): string {
@@ -36,6 +38,7 @@ export default function TeamParticipationSection({
   teamId,
   teamSeasonId,
   initialUpcoming,
+  canSendEventCommunication = false,
 }: Props) {
   const upcoming = initialUpcoming;
   const [selectedEventKey, setSelectedEventKey] = useState<string | null>(
@@ -179,6 +182,13 @@ export default function TeamParticipationSection({
                     Kein Spielerkader für die aktuelle Saison vorhanden.
                   </p>
                 )}
+
+                <EventCommunicationPanel
+                  teamId={teamId}
+                  teamSeasonId={teamSeasonId}
+                  selectedEvent={selectedEvent}
+                  canSend={canSendEventCommunication}
+                />
               </div>
             ) : null}
           </div>
