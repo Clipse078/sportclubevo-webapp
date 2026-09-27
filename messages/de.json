@@ -576,7 +576,9 @@
       "dayOverflowMore": "+{count} weitere",
       "dayOverflowPanelAria": "Weitere Termine an diesem Tag",
       "filterGroupAria": "Kalenderquellen filtern",
-      "dueShort": "Fällig"
+      "dueShort": "Fällig",
+      "mobileEmptyDay": "Keine Termine oder Aufgaben an diesem Tag.",
+      "mobileSelectedDayAgendaAria": "Termine und Aufgaben am ausgewählten Tag"
     },
     "attention": {
       "sectionTitle": "Benötigt meine Aufmerksamkeit",

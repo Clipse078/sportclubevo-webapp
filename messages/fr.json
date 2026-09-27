@@ -149,7 +149,13 @@
       "weekdayThu": "Je",
       "weekdayFri": "Ve",
       "weekdaySat": "Sa",
-      "weekdaySun": "Di"
+      "weekdaySun": "Di",
+      "dayOverflowMore": "+{count} de plus",
+      "dayOverflowPanelAria": "Autres rendez-vous ce jour",
+      "filterGroupAria": "Filtrer les sources du calendrier",
+      "dueShort": "Échéance",
+      "mobileEmptyDay": "Aucun rendez-vous ni tâche ce jour-là.",
+      "mobileSelectedDayAgendaAria": "Rendez-vous et tâches du jour sélectionné"
     },
     "attention": {
       "sectionTitle": "Nécessite mon attention",

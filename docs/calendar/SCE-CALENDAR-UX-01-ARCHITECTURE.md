@@ -541,3 +541,20 @@ No missing canonical route for included sources. PARTICIPATION link is generic (
 **Duplication after UX-02:** `loadPersonalAgenda` / `calendar-entries.ts` remain for legacy agenda parity; kalender page no longer inline-orchestrates programme + tasks.
 
 *End of SCE-CALENDAR-UX-01 architecture audit (UX-02 addendum).*
+
+---
+
+## 18. Programme closure — UX-03 / UX-03R1 / UX-04 implementation
+
+| Concern | Owner / contract |
+|---------|------------------|
+| **Canonical feed** | `loadPersonalCalendarMonthBundle` → `NormalizedCalendarItem[]`, `itemsByDayKey`, bundle metadata |
+| **Desktop month workspace** | `PersonalKalenderMonthWorkspace` — seven-column Monday-first grid, stacked semantic blocks, viewport-aware capacity (`usePersonalCalendarDayVisibleBlockLimit`), explicit `+N weitere` overflow |
+| **Mobile web pattern** | Same workspace; `usePersonalCalendarLayoutMode` switches to **compact month + inline selected-day agenda** below the grid (`PersonalKalenderMobileDayAgenda`). No desktop event cards inside tiny cells. |
+| **Selected day default** | `resolvePersonalCalendarSelectedDayKey` — today when in-month, else first relevant day, else first in-month day (deterministic, no hydration lottery) |
+| **Accessibility** | Toolbar/filters as links with labels; day buttons with `aria-pressed`, `aria-current="date"` for today; event links use normalized `ariaLabel`; overflow popover is keyboard-operable; semantic type conveyed via text/icons, not color alone |
+| **Responsive engine** | `useSyncExternalStore` viewport owner shared by layout mode + day capacity; SSR snapshot width `1280` |
+| **Native Mobile reuse seam** | Reuse: personal relevance rules, `loadPersonalProgramme` / month bundle semantics, `NormalizedCalendarItem`, semantic types, canonical `deepLink`. Do **not** depend on React/Tailwind/DOM responsive helpers in native clients |
+| **Programme state** | CALENDAR-UX-01…UX-04 complete on feature branch; desktop PO acceptance frozen at UX-03R1 unless P0/P1 responsive/a11y defect |
+
+*End of SCE-CALENDAR-UX-01 architecture audit (UX-04 programme closure).*

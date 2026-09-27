@@ -149,7 +149,13 @@
       "weekdayThu": "Thu",
       "weekdayFri": "Fri",
       "weekdaySat": "Sat",
-      "weekdaySun": "Sun"
+      "weekdaySun": "Sun",
+      "dayOverflowMore": "+{count} more",
+      "dayOverflowPanelAria": "More events on this day",
+      "filterGroupAria": "Filter calendar sources",
+      "dueShort": "Due",
+      "mobileEmptyDay": "No events or tasks on this day.",
+      "mobileSelectedDayAgendaAria": "Events and tasks on the selected day"
     },
     "attention": {
       "sectionTitle": "Needs my attention",

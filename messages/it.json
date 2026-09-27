@@ -149,7 +149,13 @@
       "weekdayThu": "Gi",
       "weekdayFri": "Ve",
       "weekdaySat": "Sa",
-      "weekdaySun": "Do"
+      "weekdaySun": "Do",
+      "dayOverflowMore": "+{count} altri",
+      "dayOverflowPanelAria": "Altri appuntamenti in questo giorno",
+      "filterGroupAria": "Filtra le fonti del calendario",
+      "dueShort": "Scadenza",
+      "mobileEmptyDay": "Nessun appuntamento o compito in questo giorno.",
+      "mobileSelectedDayAgendaAria": "Appuntamenti e compiti del giorno selezionato"
     },
     "attention": {
       "sectionTitle": "Richiede la mia attenzione",
