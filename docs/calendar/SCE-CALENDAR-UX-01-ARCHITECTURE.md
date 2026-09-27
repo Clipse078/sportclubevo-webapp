@@ -556,5 +556,7 @@ No missing canonical route for included sources. PARTICIPATION link is generic (
 | **Responsive engine** | `useSyncExternalStore` viewport owner shared by layout mode + day capacity; SSR snapshot width `1280` |
 | **Native Mobile reuse seam** | Reuse: personal relevance rules, `loadPersonalProgramme` / month bundle semantics, `NormalizedCalendarItem`, semantic types, canonical `deepLink`. Do **not** depend on React/Tailwind/DOM responsive helpers in native clients |
 | **Programme state** | CALENDAR-UX-01…UX-04 complete on feature branch; desktop PO acceptance frozen at UX-03R1 unless P0/P1 responsive/a11y defect |
+| **Automated validation** | Vitest: UX-02 month bundle, UX-03/03R1 workspace, UX-04 responsive/a11y/mobile contracts; personal-agenda relevance and timezone regressions; lint on calendar scope; `APPLY_DATABASE_MIGRATIONS=false npm run build`; PR #712 CI/Vercel |
+| **MANUAL_TESTING_REQUIRED** | `false` — programme technical closure is automated-evidence only |
 
 *End of SCE-CALENDAR-UX-01 architecture audit (UX-04 programme closure).*
