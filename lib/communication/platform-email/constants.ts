@@ -1,0 +1,9 @@
+export const PLATFORM_EMAIL_LOG_PREFIX = "[platform-email]";
+
+export const PLATFORM_EMAIL_DELIVERY_BATCH_SIZE = 25;
+
+export const PLATFORM_EMAIL_MAX_ATTEMPTS = 3;
+
+export const PLATFORM_EMAIL_PROCESSING_LEASE_MS = 15 * 60 * 1000;
+
+export const PLATFORM_EMAIL_PROVIDER_RESEND = "RESEND";

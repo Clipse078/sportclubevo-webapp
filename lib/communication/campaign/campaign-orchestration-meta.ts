@@ -5,10 +5,10 @@
 export const CAMPAIGN_ORCHESTRATION_SCHEMA_VERSION = 1 as const;
 
 export type CampaignChannelIntent = {
-  inApp: true;
-  push: true;
-  /** COMM-13 owns outbound email delivery. */
-  email: "NOT_IMPLEMENTED";
+  inApp: boolean;
+  push: boolean;
+  /** SCE-COMM-14 outbound email channel intent. */
+  email: boolean;
 };
 
 export type CampaignSchedulingIntent = {
@@ -29,7 +29,7 @@ export function defaultCampaignOrchestrationMeta(): CampaignOrchestrationMeta {
     channels: {
       inApp: true,
       push: true,
-      email: "NOT_IMPLEMENTED",
+      email: true,
     },
     scheduling: {
       mode: "IMMEDIATE",
@@ -44,5 +44,27 @@ export function parseCampaignOrchestrationMeta(
   if (!value || typeof value !== "object") return null;
   const record = value as Record<string, unknown>;
   if (record.schemaVersion !== CAMPAIGN_ORCHESTRATION_SCHEMA_VERSION) return null;
-  return value as CampaignOrchestrationMeta;
+  const channels = record.channels;
+  if (!channels || typeof channels !== "object") return null;
+  const channelRecord = channels as Record<string, unknown>;
+  const emailRaw = channelRecord.email;
+  const email =
+    emailRaw === true ||
+    emailRaw === false
+      ? emailRaw
+      : emailRaw === "NOT_IMPLEMENTED"
+        ? false
+        : true;
+  return {
+    schemaVersion: CAMPAIGN_ORCHESTRATION_SCHEMA_VERSION,
+    channels: {
+      inApp: channelRecord.inApp === true,
+      push: channelRecord.push === true,
+      email,
+    },
+    scheduling:
+      record.scheduling && typeof record.scheduling === "object"
+        ? (record.scheduling as CampaignOrchestrationMeta["scheduling"])
+        : { mode: "IMMEDIATE", scheduledAt: null },
+  };
 }

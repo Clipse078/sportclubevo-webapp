@@ -91,6 +91,27 @@ vi.mock("@/lib/communication/campaign/campaign-notification-producer", () => ({
 
 vi.mock("@/lib/audit/log-action", () => ({ logAction: mocks.logAction }));
 
+vi.mock("@/lib/communication/platform-email/email-readiness-service", () => ({
+  evaluatePlatformEmailReadiness: vi.fn(async () => ({
+    ready: true,
+    senderConfigured: true,
+    transportConfigured: true,
+    fromAddressValid: true,
+    activeSource: "PLATFORM",
+    providerStatus: "VERIFIED",
+    platformFallbackActive: true,
+    reasons: [],
+  })),
+}));
+
+vi.mock("@/lib/communication/platform-email/platform-email-dispatch-service", () => ({
+  enqueuePlatformCommunicationEmailDeliveries: vi.fn(async () => ({
+    examined: 0,
+    queued: 0,
+    skipped: 0,
+  })),
+}));
+
 function mockCampaignRow(overrides: Record<string, unknown> = {}) {
   return {
     id: "camp-1",
@@ -163,7 +184,7 @@ describe("SCE-COMM-12 campaign composer", () => {
   });
 
   it("exposes explicit COMM-13/14/15/16 boundary flags", () => {
-    expect(CAMPAIGN_BOUNDARY_FLAGS.outboundEmail).toBe("EMAIL_NOT_IMPLEMENTED");
+    expect(CAMPAIGN_BOUNDARY_FLAGS.outboundEmail).toBe("EMAIL_IMPLEMENTED");
     expect(CAMPAIGN_BOUNDARY_FLAGS.sponsor).toBe("SPONSOR_AUDIENCE_INTEGRATED");
     expect(CAMPAIGN_BOUNDARY_FLAGS.communicationCenterImap).toBe("IMAP_NOT_IMPLEMENTED");
     expect(CAMPAIGN_BOUNDARY_FLAGS.templates).toBe("TEMPLATES_NOT_IMPLEMENTED");
@@ -370,9 +391,9 @@ describe("SCE-COMM-12 campaign composer", () => {
     );
   });
 
-  it("records channel intent with email not implemented", () => {
+  it("records channel intent with email enabled by default (COMM-14)", () => {
     const meta = defaultCampaignOrchestrationMeta();
-    expect(meta.channels.email).toBe("NOT_IMPLEMENTED");
+    expect(meta.channels.email).toBe(true);
     expect(parseCampaignOrchestrationMeta(meta)?.scheduling.mode).toBe("IMMEDIATE");
   });
 

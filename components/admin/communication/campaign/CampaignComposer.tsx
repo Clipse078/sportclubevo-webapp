@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type TargetGroupOption = { id: string; name: string; status: string };
@@ -63,8 +63,25 @@ export default function CampaignComposer({
       externalContactCount: number;
     } | null;
   } | null>(null);
+  const [emailChannelEnabled, setEmailChannelEnabled] = useState(true);
+  const [emailReady, setEmailReady] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function loadEmailReadiness() {
+    try {
+      const res = await fetch("/api/communication/email/readiness");
+      if (!res.ok) return;
+      const data = (await res.json()) as { readiness?: { ready?: boolean } };
+      setEmailReady(Boolean(data.readiness?.ready));
+    } catch {
+      setEmailReady(null);
+    }
+  }
+
+  useEffect(() => {
+    void loadEmailReadiness();
+  }, []);
 
   function buildAudienceSpec() {
     if (audienceMode === "WHOLE_ORG") {
@@ -129,7 +146,17 @@ export default function CampaignComposer({
       const res = await fetch(`/api/communication/campaign/${campaignId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ internalName, subject, bodyText, audienceSpec }),
+        body: JSON.stringify({
+          internalName,
+          subject,
+          bodyText,
+          audienceSpec,
+          orchestration: {
+            schemaVersion: 1,
+            channels: { inApp: true, push: true, email: emailChannelEnabled },
+            scheduling: { mode: "IMMEDIATE", scheduledAt: null },
+          },
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Entwurf konnte nicht gespeichert werden");
@@ -138,7 +165,17 @@ export default function CampaignComposer({
     const res = await fetch("/api/communication/campaign", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ internalName, subject, bodyText, audienceSpec }),
+      body: JSON.stringify({
+        internalName,
+        subject,
+        bodyText,
+        audienceSpec,
+        orchestration: {
+          schemaVersion: 1,
+          channels: { inApp: true, push: true, email: emailChannelEnabled },
+          scheduling: { mode: "IMMEDIATE", scheduledAt: null },
+        },
+      }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? "Entwurf konnte nicht gespeichert werden");
@@ -223,6 +260,30 @@ export default function CampaignComposer({
           onChange={(e) => setBodyText(e.target.value)}
         />
       </label>
+
+      <fieldset className="space-y-3 rounded-xl border border-[var(--border)] p-4">
+        <legend className="px-1 text-sm font-medium">Kanäle</legend>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked readOnly disabled />
+          In-App (Mitteilung)
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked readOnly disabled />
+          Push (COMM-09)
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={emailChannelEnabled}
+            onChange={(e) => setEmailChannelEnabled(e.target.checked)}
+          />
+          E-Mail
+        </label>
+        <p className="text-xs text-[var(--text-2)]">
+          E-Mail bereit:{" "}
+          {emailReady === null ? "…" : emailReady ? "Ja" : "Nein — Absender/Transport prüfen"}
+        </p>
+      </fieldset>
 
       <fieldset className="space-y-3 rounded-xl border border-[var(--border)] p-4">
         <legend className="px-1 text-sm font-medium">Zielgruppe</legend>

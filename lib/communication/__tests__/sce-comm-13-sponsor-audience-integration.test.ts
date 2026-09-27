@@ -10,6 +10,7 @@ import { resolveSponsorAudienceSelectors } from "@/lib/sponsoring/sponsor-audien
 import { assertTenantOwnedSponsorAudienceSelectors } from "@/lib/sponsoring/sponsor-audience-ownership";
 import { resolveSponsorAudienceAuthorization } from "@/lib/sponsoring/sponsor-authorization";
 import { CAMPAIGN_BOUNDARY_FLAGS } from "@/lib/communication/campaign/campaign-boundaries";
+import { EXTERNAL_EMAIL_DELIVERY_CANDIDATE } from "@/lib/communication/platform-email/delivery-capability";
 import { summarizeClubAudienceSpec } from "@/lib/communication/club/club-audience-summary";
 import { unionPersonIdSets } from "@/lib/communication/platform/audience/zielgruppe-validation";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -70,6 +71,27 @@ vi.mock("@/lib/communication/campaign/campaign-notification-producer", () => ({
 }));
 
 vi.mock("@/lib/audit/log-action", () => ({ logAction: mocks.logAction }));
+
+vi.mock("@/lib/communication/platform-email/email-readiness-service", () => ({
+  evaluatePlatformEmailReadiness: vi.fn(async () => ({
+    ready: true,
+    senderConfigured: true,
+    transportConfigured: true,
+    fromAddressValid: true,
+    activeSource: "PLATFORM",
+    providerStatus: "VERIFIED",
+    platformFallbackActive: true,
+    reasons: [],
+  })),
+}));
+
+vi.mock("@/lib/communication/platform-email/platform-email-dispatch-service", () => ({
+  enqueuePlatformCommunicationEmailDeliveries: vi.fn(async () => ({
+    examined: 0,
+    queued: 0,
+    skipped: 0,
+  })),
+}));
 
 describe("SCE-COMM-13 sponsor audience integration", () => {
   beforeEach(() => {
@@ -277,12 +299,16 @@ describe("SCE-COMM-13 sponsor audience integration", () => {
       audienceFingerprint: "fp",
       channel: "IN_APP",
       resolvedAt: new Date().toISOString(),
+      emailChannelEnabled: true,
+      emailTransportReady: true,
     });
 
     expect(rows).toHaveLength(1);
     expect(rows[0]?.recipientKind).toBe("EXTERNAL_SPONSOR_CONTACT");
     expect(rows[0]?.deliveryUserId).toBeNull();
-    expect(rows[0]?.externalSnapshotJson.deliveryCapability).toBe(CAMPAIGN_BOUNDARY_FLAGS.outboundEmail);
+    expect(rows[0]?.externalSnapshotJson.deliveryCapability).toBe(
+      EXTERNAL_EMAIL_DELIVERY_CANDIDATE,
+    );
   });
 
   it("publish includes external sponsor snapshots and notifies internal users only", async () => {
@@ -297,6 +323,7 @@ describe("SCE-COMM-13 sponsor audience integration", () => {
       contextRef: { kind: "ORGANISATION", tenantId: "tenant-a" },
       audienceSpecJson: audienceSpecFromSponsorContactIds(["c-ext"]),
       conversation: { contextKind: "ORGANISATION", teamId: null },
+      orchestrationMetaJson: null,
     });
 
     mocks.resolveCommunicationRecipientsForDispatch.mockResolvedValue({
@@ -340,8 +367,8 @@ describe("SCE-COMM-13 sponsor audience integration", () => {
     );
   });
 
-  it("exposes email boundary without implementing outbound email engine", () => {
-    expect(CAMPAIGN_BOUNDARY_FLAGS.outboundEmail).toBe("EMAIL_NOT_IMPLEMENTED");
+  it("exposes COMM-14 outbound email boundary flag", () => {
+    expect(CAMPAIGN_BOUNDARY_FLAGS.outboundEmail).toBe("EMAIL_IMPLEMENTED");
     expect(CAMPAIGN_BOUNDARY_FLAGS.sponsor).toBe("SPONSOR_AUDIENCE_INTEGRATED");
   });
 });

@@ -93,6 +93,27 @@ vi.mock("@/lib/communication/club/club-communication-notification-producer", () 
 
 vi.mock("@/lib/audit/log-action", () => ({ logAction: mocks.logAction }));
 
+vi.mock("@/lib/communication/platform-email/email-readiness-service", () => ({
+  evaluatePlatformEmailReadiness: vi.fn(async () => ({
+    ready: true,
+    senderConfigured: true,
+    transportConfigured: true,
+    fromAddressValid: true,
+    activeSource: "PLATFORM",
+    providerStatus: "VERIFIED",
+    platformFallbackActive: true,
+    reasons: [],
+  })),
+}));
+
+vi.mock("@/lib/communication/platform-email/platform-email-dispatch-service", () => ({
+  enqueuePlatformCommunicationEmailDeliveries: vi.fn(async () => ({
+    examined: 0,
+    queued: 0,
+    skipped: 0,
+  })),
+}));
+
 describe("SCE-COMM-11 club communication", () => {
   beforeEach(() => {
     vi.clearAllMocks();

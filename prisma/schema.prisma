@@ -330,6 +330,15 @@ enum PlatformCommunicationRecipientKind {
   EXTERNAL_SPONSOR_CONTACT
 }
 
+/// SCE-COMM-14 — outbound email transport state per immutable recipient snapshot.
+enum PlatformCommunicationEmailDeliveryStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+  SKIPPED
+}
+
 enum SponsorOrganisationStatus {
   ACTIVE
   INACTIVE
@@ -1031,6 +1040,7 @@ model Tenant {
   notifications                      Notification[]
   notificationDeliveries             NotificationDelivery[]
   notificationPushDeliveryAttempts   NotificationPushDeliveryAttempt[]
+  platformCommunicationEmailDeliveryAttempts PlatformCommunicationEmailDeliveryAttempt[]
   userNotificationPreferences        UserNotificationPreference[]
   userDashboardQuickAccessPreferences UserDashboardQuickAccessPreference[]
   // TRAINING-PLANS-01: tenant-defined training plans and assignments
@@ -3026,6 +3036,7 @@ model PlatformCommunication {
   replyTo      PlatformCommunication?            @relation("PlatformCommunicationReplyThread", fields: [replyToCommunicationId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   replies      PlatformCommunication[]           @relation("PlatformCommunicationReplyThread")
   recipientSnapshots PlatformCommunicationRecipientSnapshot[]
+  emailDeliveryAttempts PlatformCommunicationEmailDeliveryAttempt[]
   reactions    PlatformCommunicationReaction[]
   mentions     PlatformCommunicationMention[]
   attachmentLinks PlatformCommunicationAttachment[]
@@ -3130,6 +3141,7 @@ model PlatformCommunicationRecipientSnapshot {
   pollResponses PlatformCommunicationPollResponse[]
   requestClaims PlatformCommunicationRequestClaim[]
   pushDeliveryAttempts NotificationPushDeliveryAttempt[]
+  emailDeliveryAttempts PlatformCommunicationEmailDeliveryAttempt[]
 
   @@index([tenantId, communicationId])
   @@index([tenantId, communicationId, engagement], map: "pc_recipient_snapshot_tenant_comm_engagement_idx")
@@ -4136,6 +4148,33 @@ model NotificationPushDeliveryAttempt {
   @@unique([notificationDeliveryId, pushDeviceRegistrationId])
   @@index([tenantId, status, createdAt])
   @@index([notificationDeliveryId])
+}
+
+/// SCE-COMM-14 — one outbound email attempt per immutable platform communication recipient snapshot.
+model PlatformCommunicationEmailDeliveryAttempt {
+  id                                     String                                   @id @default(cuid())
+  tenantId                               String
+  communicationId                        String
+  platformCommunicationRecipientSnapshotId String
+  status                                 PlatformCommunicationEmailDeliveryStatus @default(PENDING)
+  attemptCount                           Int                                      @default(0)
+  lastAttemptAt                          DateTime?
+  sentAt                                 DateTime?
+  provider                               String?
+  providerMessageId                      String?
+  failureCode                            String?
+  idempotencyKey                         String
+  createdAt                              DateTime                                 @default(now())
+  updatedAt                              DateTime                                 @updatedAt
+
+  tenant            Tenant                                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  communication     PlatformCommunication                 @relation(fields: [communicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  recipientSnapshot PlatformCommunicationRecipientSnapshot @relation(fields: [platformCommunicationRecipientSnapshotId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([platformCommunicationRecipientSnapshotId])
+  @@unique([idempotencyKey])
+  @@index([tenantId, communicationId])
+  @@index([tenantId, status, createdAt])
 }
 
 /// SCE-COMM-09 — canonical user-owned push device registration (not team/sponsor/campaign scoped).

@@ -33,6 +33,9 @@ import {
 } from "@/lib/communication/team/team-communication-errors";
 import { recordPlatformCommunicationAudit } from "@/lib/communication/team/platform-communication-audit";
 import { emitClubCommunicationPublishedNotifications } from "@/lib/communication/club/club-communication-notification-producer";
+import { resolveCommunicationChannelIntent } from "@/lib/communication/platform-email/communication-channel-intent";
+import { evaluatePlatformEmailReadiness } from "@/lib/communication/platform-email/email-readiness-service";
+import { enqueuePlatformCommunicationEmailDeliveries } from "@/lib/communication/platform-email/platform-email-dispatch-service";
 import { resolvePersonIdForUser } from "@/lib/teams/team-document-auth";
 import { MAX_TEAM_COMMUNICATION_BODY_LENGTH } from "@/lib/communication/team/team-communication-constants";
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
@@ -315,6 +318,10 @@ export async function publishClubCommunication(input: {
   );
 
   const fingerprint = dispatch.core.metadata.audienceFingerprint;
+  const channelIntent = resolveCommunicationChannelIntent({
+    orchestrationMetaJson: row.orchestrationMetaJson,
+  });
+  const emailReadiness = await evaluatePlatformEmailReadiness(input.tenantId);
   const publishSnapshots = await buildCampaignPublishSnapshotCreateMany({
     tenantId: input.tenantId,
     communicationId: input.communicationId,
@@ -322,6 +329,8 @@ export async function publishClubCommunication(input: {
     audienceFingerprint: fingerprint,
     resolvedAt: dispatch.core.metadata.resolvedAt,
     deliveryTargets: dispatch.pipeline.deliveryTargets,
+    emailChannelEnabled: channelIntent.email,
+    emailTransportReady: emailReadiness.ready,
   });
 
   if (publishSnapshots.totalCount === 0) {
@@ -367,6 +376,22 @@ export async function publishClubCommunication(input: {
     kind: row.kind,
     status: "PUBLISHED",
   });
+
+  try {
+    await enqueuePlatformCommunicationEmailDeliveries({
+      tenantId: input.tenantId,
+      communicationId: row.id,
+      channelIntent,
+      category,
+      actorUserId: input.senderUserId,
+      communicationKind: row.kind,
+    });
+  } catch (error) {
+    console.error("[platform-email] enqueue after club publish failed", {
+      communicationId: row.id,
+      message: error instanceof Error ? error.message : "unknown",
+    });
+  }
 
   return { id: row.id, recipientCount: publishSnapshots.totalCount };
 }
