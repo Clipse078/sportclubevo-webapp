@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 import {
   parseTenantLocalDateTimeInputOrThrow,
   resolveTenantEventTimezone,
+  utcInstantToDateTimeLocalValue,
 } from "@/lib/events/tenant-local-datetime";
 import {
   schedulingIntentFromPublicationSchedule,
@@ -64,7 +65,14 @@ export function parseScheduleInstant(input: {
   timezone: string;
   now?: Date;
 }): Date {
-  const instant = parseTenantLocalDateTimeInputOrThrow(input.scheduledAtLocal, input.timezone);
+  const scheduledAtLocal = input.scheduledAtLocal.trim();
+  const instant = parseTenantLocalDateTimeInputOrThrow(scheduledAtLocal, input.timezone);
+  const roundTripLocal = utcInstantToDateTimeLocalValue(instant, input.timezone);
+  if (roundTripLocal !== scheduledAtLocal) {
+    throw new TeamCommunicationValidationError(
+      "scheduled local time does not exist in tenant timezone",
+    );
+  }
   const now = input.now ?? new Date();
   if (instant.getTime() <= now.getTime()) {
     throw new TeamCommunicationValidationError("scheduled time must be in the future");

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   parseTenantLocalDateTimeInput,
@@ -416,5 +418,297 @@ describe("SCE-COMM-16 scheduling", () => {
     });
     expect(mocks.publishCampaign).toHaveBeenCalled();
     expect(mocks.publishClubCommunication).toHaveBeenCalled();
+  });
+
+  it("blocks cancel and reschedule when schedule is not SCHEDULED", async () => {
+    mocks.platformCommunicationPublicationSchedule.findFirst.mockResolvedValue({
+      id: "sched-1",
+      tenantId: "tenant-a",
+      communicationId: "comm-1",
+      status: "PROCESSING",
+      timezone: "Europe/Zurich",
+    });
+
+    await expect(
+      cancelPlatformCommunicationPublicationSchedule({
+        tenantId: "tenant-a",
+        communicationId: "comm-1",
+        actorUserId: "user-1",
+      }),
+    ).rejects.toThrow(TeamCommunicationValidationError);
+
+    await expect(
+      reschedulePlatformCommunicationPublication({
+        tenantId: "tenant-a",
+        communicationId: "comm-1",
+        actorUserId: "user-1",
+        scheduledAtLocal: "2099-01-01T10:00",
+        now: new Date(),
+      }),
+    ).rejects.toThrow(TeamCommunicationValidationError);
+  });
+
+  it("publish-now vs scheduler: only one consumer wins active schedule cancellation", async () => {
+    let status: "SCHEDULED" | "CANCELLED" = "SCHEDULED";
+    mocks.platformCommunicationPublicationSchedule.findFirst.mockImplementation(async () =>
+      status === "SCHEDULED"
+        ? {
+            id: "sched-1",
+            tenantId: "tenant-a",
+            communicationId: "comm-1",
+            status: "SCHEDULED",
+          }
+        : null,
+    );
+    mocks.platformCommunicationPublicationSchedule.updateMany.mockImplementation(async () => {
+      if (status !== "SCHEDULED") return { count: 0 };
+      status = "CANCELLED";
+      return { count: 1 };
+    });
+
+    const results = await Promise.all([
+      consumeActivePublicationScheduleForImmediatePublish({
+        tenantId: "tenant-a",
+        communicationId: "comm-1",
+        actorUserId: "user-1",
+      }),
+      consumeActivePublicationScheduleForImmediatePublish({
+        tenantId: "tenant-a",
+        communicationId: "comm-1",
+        actorUserId: "user-1",
+      }),
+    ]);
+
+    expect(results.filter(Boolean)).toHaveLength(1);
+    expect(mocks.platformCommunicationPublicationSchedule.updateMany).toHaveBeenCalledTimes(2);
+  });
+
+  it("processor marks schedule PUBLISHED without republishing when communication already published", async () => {
+    const scheduleRow = {
+      id: "sched-1",
+      tenantId: "tenant-a",
+      communicationId: "comm-1",
+      scheduledAt: new Date(Date.now() - 1000),
+      timezone: "Europe/Zurich",
+      status: "PROCESSING" as const,
+      claimedAt: new Date(),
+      leaseExpiresAt: new Date(Date.now() + 60000),
+      executedAt: null,
+      cancelledAt: null,
+      cancelledByUserId: null,
+      attemptCount: 1,
+      maxAttempts: 5,
+      lastFailureReason: null,
+      createdByUserId: "user-1",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    mocks.$queryRaw.mockResolvedValue([scheduleRow]);
+    mocks.platformCommunication.findFirst.mockResolvedValue({
+      id: "comm-1",
+      kind: "CAMPAIGN",
+      status: "PUBLISHED",
+    });
+    mocks.platformCommunicationPublicationSchedule.update.mockResolvedValue({});
+
+    const summary = await processDuePlatformCommunicationPublicationSchedules();
+    expect(summary.published).toBe(1);
+    expect(mocks.publishCampaign).not.toHaveBeenCalled();
+    expect(mocks.platformCommunicationPublicationSchedule.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "PUBLISHED" }),
+      }),
+    );
+  });
+
+  it("processor retries transient failures by returning schedule to SCHEDULED until maxAttempts", async () => {
+    const scheduleRow = {
+      id: "sched-1",
+      tenantId: "tenant-a",
+      communicationId: "comm-1",
+      scheduledAt: new Date(Date.now() - 1000),
+      timezone: "Europe/Zurich",
+      status: "PROCESSING" as const,
+      claimedAt: new Date(),
+      leaseExpiresAt: new Date(Date.now() + 60000),
+      executedAt: null,
+      cancelledAt: null,
+      cancelledByUserId: null,
+      attemptCount: 2,
+      maxAttempts: 5,
+      lastFailureReason: null,
+      createdByUserId: "user-1",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    mocks.$queryRaw.mockResolvedValue([scheduleRow]);
+    mocks.platformCommunication.findFirst.mockResolvedValue({
+      id: "comm-1",
+      kind: "CAMPAIGN",
+      status: "READY",
+    });
+    mocks.publishCampaign.mockRejectedValue(new Error("transient"));
+    mocks.platformCommunicationPublicationSchedule.update.mockResolvedValue({});
+
+    const summary = await processDuePlatformCommunicationPublicationSchedules();
+    expect(summary.skipped).toBe(1);
+    expect(mocks.platformCommunicationPublicationSchedule.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: "SCHEDULED",
+          claimedAt: null,
+          leaseExpiresAt: null,
+        }),
+      }),
+    );
+  });
+
+  it("scheduling does not resolve audience at schedule time (execution-only COMM-03)", () => {
+    const scheduleService = readFileSync(
+      resolve(__dirname, "../scheduling/publication-schedule-service.ts"),
+      "utf8",
+    );
+    const processor = readFileSync(
+      resolve(__dirname, "../scheduling/publication-schedule-processor.ts"),
+      "utf8",
+    );
+    expect(scheduleService).not.toMatch(/resolveCommunicationRecipientsForDispatch/);
+    expect(processor).toMatch(/publishScheduledPlatformCommunication/);
+    expect(processor).not.toMatch(/resolveCommunicationRecipientsForDispatch/);
+  });
+
+  it("claim SQL uses FOR UPDATE SKIP LOCKED in a single updating statement", () => {
+    const claimSource = readFileSync(
+      resolve(__dirname, "../scheduling/publication-schedule-claim.ts"),
+      "utf8",
+    );
+    expect(claimSource).toMatch(/FOR UPDATE SKIP LOCKED/);
+    expect(claimSource).toMatch(/UPDATE "PlatformCommunicationPublicationSchedule"/);
+  });
+});
+
+describe("SCE-COMM-16 template draft independence", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.targetGroup.findMany.mockResolvedValue([{ id: "tg-1", status: "ACTIVE" }]);
+    mocks.orgUnit.count.mockResolvedValue(1);
+  });
+
+  it("template edits after draft creation do not mutate existing draft fields", async () => {
+    const templateUpdatedAt = new Date("2026-09-01T10:00:00.000Z");
+    const activeTemplate = {
+      id: "tpl-1",
+      tenantId: "tenant-a",
+      name: "Tpl",
+      kind: "CAMPAIGN" as const,
+      status: "ACTIVE" as const,
+      internalName: "Internal",
+      subject: "Original subject",
+      bodyText: "Original body",
+      audienceSpecJson: {
+        composition: "UNION" as const,
+        components: [{ savedTargetGroupIds: ["tg-1"] }],
+      },
+      orchestrationMetaJson: defaultOrchestration(),
+      updatedAt: templateUpdatedAt,
+    };
+    mocks.platformCommunicationTemplate.findFirst.mockResolvedValue({
+      ...activeTemplate,
+      subject: "Original subject",
+      bodyText: "Original body",
+      updatedAt: templateUpdatedAt,
+    });
+
+    mocks.createCampaignDraft.mockResolvedValue({ id: "comm-1" });
+    mocks.platformCommunication.update.mockResolvedValue({});
+
+    await createDraftFromPlatformTemplate({
+      tenantId: "tenant-a",
+      templateId: "tpl-1",
+      actorUserId: "user-1",
+    });
+
+    expect(mocks.createCampaignDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        subject: "Original subject",
+        bodyText: "Original body",
+      }),
+    );
+    expect(mocks.platformCommunication.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          sourcePlatformTemplateVersion: templateUpdatedAt,
+        }),
+      }),
+    );
+
+    mocks.platformCommunicationTemplate.update.mockResolvedValue({});
+    await updatePlatformCommunicationTemplate({
+      tenantId: "tenant-a",
+      templateId: "tpl-1",
+      actorUserId: "user-1",
+      subject: "Changed subject",
+      bodyText: "Changed body",
+    });
+
+    expect(mocks.platformCommunication.update).toHaveBeenCalledTimes(1);
+  });
+
+  it("archived templates cannot be used for new drafts", async () => {
+    mocks.platformCommunicationTemplate.findFirst.mockResolvedValue({
+      id: "tpl-1",
+      tenantId: "tenant-a",
+      status: "ARCHIVED",
+      kind: "CAMPAIGN",
+    });
+
+    await expect(
+      createDraftFromPlatformTemplate({
+        tenantId: "tenant-a",
+        templateId: "tpl-1",
+        actorUserId: "user-1",
+      }),
+    ).rejects.toThrow(TeamCommunicationValidationError);
+  });
+});
+
+function defaultOrchestration() {
+  return {
+    schemaVersion: 1,
+    channels: { inApp: true, push: true, email: true },
+    scheduling: { mode: "IMMEDIATE", scheduledAt: null },
+  };
+}
+
+describe("SCE-COMM-16 timezone / DST scheduling", () => {
+  it("uses tenant timezone helper rather than hardcoding Zurich in schedule parsing", () => {
+    const tz = resolveTenantEventTimezone("America/New_York");
+    const instant = parseTenantLocalDateTimeInput("2026-08-30T09:00", tz);
+    expect(instant?.toISOString()).toBe("2026-08-30T13:00:00.000Z");
+  });
+
+  it("DST spring-forward: rejects non-existent local wall times at schedule validation", () => {
+    expect(() =>
+      parseScheduleInstant({
+        scheduledAtLocal: "2026-03-29T02:30",
+        timezone: "Europe/Zurich",
+        now: new Date("2026-01-01T00:00:00.000Z"),
+      }),
+    ).toThrow(TeamCommunicationValidationError);
+  });
+
+  it("DST fall-back: ambiguous local wall times resolve deterministically", () => {
+    const tz = resolveTenantEventTimezone("Europe/Zurich");
+    const first = parseTenantLocalDateTimeInput("2026-10-25T02:30", tz);
+    const second = parseTenantLocalDateTimeInput("2026-10-25T02:30", tz);
+    expect(first?.toISOString()).toBe("2026-10-25T01:30:00.000Z");
+    expect(second?.toISOString()).toBe(first?.toISOString());
+  });
+
+  it("normal local time round-trips across DST end in Europe/Zurich", () => {
+    const tz = resolveTenantEventTimezone("Europe/Zurich");
+    const instant = parseTenantLocalDateTimeInput("2026-10-26T08:00", tz);
+    expect(instant).not.toBeNull();
+    expect(utcInstantToDateTimeLocalValue(instant!, tz)).toBe("2026-10-26T08:00");
   });
 });
