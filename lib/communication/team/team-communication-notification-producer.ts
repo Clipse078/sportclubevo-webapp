@@ -12,6 +12,7 @@ export async function emitTeamCommunicationPublishedNotifications(
     title: string;
     bodyPreview: string;
     deliveryUserIds: readonly string[];
+    excludeUserIds?: readonly string[];
   },
 ): Promise<void> {
   const href = `/dashboard/teams/${input.teamId}/kommunikation?communicationId=${input.communicationId}`;
@@ -19,9 +20,11 @@ export async function emitTeamCommunicationPublishedNotifications(
     NotificationType.TEAM_COMMUNICATION_PUBLISHED,
     null,
   );
+  const excluded = new Set((input.excludeUserIds ?? []).filter(Boolean));
 
   for (const recipientUserId of [...new Set(input.deliveryUserIds)]) {
     if (!recipientUserId.trim()) continue;
+    if (excluded.has(recipientUserId)) continue;
     await createNotificationIdempotent(tx, {
       tenantId: input.tenantId,
       recipientUserId,

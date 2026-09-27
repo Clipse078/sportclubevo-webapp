@@ -1026,6 +1026,9 @@ model Tenant {
   platformCommunicationConversations PlatformCommunicationConversation[]
   platformCommunications          PlatformCommunication[]
   platformCommunicationRecipientSnapshots PlatformCommunicationRecipientSnapshot[]
+  platformCommunicationReactions  PlatformCommunicationReaction[]
+  platformCommunicationMentions   PlatformCommunicationMention[]
+  platformCommunicationAttachments PlatformCommunicationAttachment[]
   internalComments                InternalComment[]
   commentMentions                 CommentMention[]
   taskComments                    TaskComment[]
@@ -1780,6 +1783,8 @@ model Person {
   workspaceGovernanceHoldsReleased WorkspaceGovernanceHold[]      @relation("WorkspaceGovernanceHoldReleasedByPerson")
   sentPlatformCommunications       PlatformCommunication[]        @relation("PlatformCommunicationSender")
   platformCommunicationSnapshots   PlatformCommunicationRecipientSnapshot[] @relation("PlatformCommunicationSnapshotSubject")
+  platformCommunicationReactions   PlatformCommunicationReaction[] @relation("PlatformCommunicationReactionPerson")
+  platformCommunicationMentionsReceived PlatformCommunicationMention[] @relation("PlatformCommunicationMentionedPerson")
 
   @@index([lastName, firstName])
   @@index([email])
@@ -2903,6 +2908,9 @@ model PlatformCommunication {
   subject        String?
   bodyText       String
 
+  /// One-level reply anchor (COMM-05 team chat).
+  replyToCommunicationId String?
+
   /// CommunicationAudienceSpec at creation/publish preparation time.
   audienceSpecJson Json
 
@@ -2917,12 +2925,76 @@ model PlatformCommunication {
   conversation PlatformCommunicationConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   senderPerson Person?                           @relation("PlatformCommunicationSender", fields: [senderPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   createdByUser User?                            @relation("PlatformCommunicationCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  replyTo      PlatformCommunication?            @relation("PlatformCommunicationReplyThread", fields: [replyToCommunicationId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  replies      PlatformCommunication[]           @relation("PlatformCommunicationReplyThread")
   recipientSnapshots PlatformCommunicationRecipientSnapshot[]
+  reactions    PlatformCommunicationReaction[]
+  mentions     PlatformCommunicationMention[]
+  attachmentLinks PlatformCommunicationAttachment[]
 
   @@index([tenantId, conversationId, createdAt])
   @@index([tenantId, status, createdAt])
   @@index([tenantId, kind])
   @@index([senderPersonId])
+  @@index([tenantId, replyToCommunicationId])
+  @@index([tenantId, conversationId, publishedAt])
+}
+
+/// Lightweight team-chat reaction (bounded keys enforced in services).
+model PlatformCommunicationReaction {
+  id              String @id @default(cuid())
+  tenantId        String
+  communicationId String
+  personId        String
+  reactionKey     String
+
+  createdAt DateTime @default(now())
+
+  tenant        Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  communication PlatformCommunication @relation(fields: [communicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  person        Person                @relation("PlatformCommunicationReactionPerson", fields: [personId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([communicationId, personId, reactionKey])
+  @@index([tenantId, communicationId])
+  @@index([tenantId, personId])
+}
+
+/// Canonical @mention targets for a platform communication.
+model PlatformCommunicationMention {
+  id                 String @id @default(cuid())
+  tenantId           String
+  communicationId    String
+  mentionedPersonId  String
+
+  createdAt DateTime @default(now())
+
+  tenant        Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  communication PlatformCommunication @relation(fields: [communicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  mentionedPerson Person              @relation("PlatformCommunicationMentionedPerson", fields: [mentionedPersonId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([communicationId, mentionedPersonId])
+  @@index([tenantId, communicationId])
+  @@index([tenantId, mentionedPersonId])
+}
+
+/// Ordered attachment association for programme communications.
+model PlatformCommunicationAttachment {
+  id              String @id @default(cuid())
+  tenantId        String
+  communicationId String
+  attachmentId    String
+  sortOrder       Int
+
+  createdAt DateTime @default(now())
+
+  tenant        Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  communication PlatformCommunication   @relation(fields: [communicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  attachment    CommunicationAttachment @relation(fields: [attachmentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([communicationId, attachmentId])
+  @@unique([communicationId, sortOrder])
+  @@index([tenantId, communicationId, sortOrder])
+  @@index([tenantId, attachmentId])
 }
 
 /// Dispatch-time immutable recipient truth (never recomputed from live membership).
@@ -2981,6 +3053,7 @@ model CommunicationAttachment {
   sourceDocument        WorkspaceDocument?               @relation("CommunicationAttachmentSourceDocument", fields: [sourceDocumentId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   sourceDocumentVersion WorkspaceDocumentVersion?        @relation("CommunicationAttachmentSourceVersion", fields: [sourceDocumentVersionId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   messageLinks          CommunicationMessageAttachment[]
+  platformCommunicationLinks PlatformCommunicationAttachment[]
 
   @@index([tenantId])
   @@index([tenantId, createdAt])

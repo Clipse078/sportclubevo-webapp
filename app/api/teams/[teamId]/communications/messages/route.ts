@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
-import { listTeamCommunications } from "@/lib/communication/team/team-communication-service";
-import { sendTeamChatMessage } from "@/lib/communication/team/team-chat-service";
+import {
+  listTeamChatMessages,
+  sendTeamChatMessage,
+} from "@/lib/communication/team/team-chat-service";
 import {
   requireTeamCommunicationSend,
   requireTeamCommunicationView,
@@ -11,7 +13,7 @@ import { TeamCommunicationForbiddenError } from "@/lib/communication/team/team-c
 
 type RouteContext = { params: Promise<{ teamId: string }> };
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -21,6 +23,11 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
   }
   const { teamId } = await context.params;
+  const url = new URL(request.url);
+  const olderThanCursor = url.searchParams.get("olderThanCursor");
+  const focusCommunicationId = url.searchParams.get("communicationId");
+  const limitRaw = url.searchParams.get("limit");
+  const limit = limitRaw ? Number(limitRaw) : undefined;
 
   try {
     await requireTeamCommunicationView({
@@ -36,8 +43,15 @@ export async function GET(_request: Request, context: RouteContext) {
     throw error;
   }
 
-  const items = await listTeamCommunications({ tenantId: tenant.id, teamId });
-  return NextResponse.json({ items });
+  const page = await listTeamChatMessages({
+    tenantId: tenant.id,
+    teamId,
+    viewerUserId: session.user.id,
+    olderThanCursor,
+    focusCommunicationId,
+    limit,
+  });
+  return NextResponse.json(page);
 }
 
 export async function POST(request: Request, context: RouteContext) {
@@ -67,20 +81,12 @@ export async function POST(request: Request, context: RouteContext) {
 
   const body = (await request.json()) as {
     bodyText?: string;
-    publish?: boolean;
     replyToCommunicationId?: string | null;
     mentionedPersonIds?: string[];
     attachmentIds?: string[];
   };
 
-  if (body.publish === false) {
-    return NextResponse.json(
-      { error: "Draft-only create is deprecated; use chat send pipeline." },
-      { status: 400 },
-    );
-  }
-
-  const published = await sendTeamChatMessage({
+  const result = await sendTeamChatMessage({
     tenantId: tenant.id,
     teamId,
     senderUserId: session.user.id,
@@ -89,5 +95,6 @@ export async function POST(request: Request, context: RouteContext) {
     mentionedPersonIds: body.mentionedPersonIds,
     attachmentIds: body.attachmentIds,
   });
-  return NextResponse.json({ id: published.id, published: true, recipientCount: published.recipientCount });
+
+  return NextResponse.json(result);
 }
