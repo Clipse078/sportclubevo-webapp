@@ -9,6 +9,7 @@ Canonical **Communication + Zielgruppen** architecture for team, club, event, an
 | [SCE-COMM-01-ROADMAP.md](./SCE-COMM-01-ROADMAP.md) | Follow-up package sequence and dependencies |
 | [SCE-COMM-02-ZIELGRUPPEN-MANAGEMENT.md](./SCE-COMM-02-ZIELGRUPPEN-MANAGEMENT.md) | Zielgruppen management UX, persistence, permissions (COMM-02) |
 | [SCE-COMM-03-RECIPIENT-RESOLUTION.md](./SCE-COMM-03-RECIPIENT-RESOLUTION.md) | Dynamic audience & recipient resolution engine (COMM-03) |
+| [SCE-COMM-04-TEAM-COMMUNICATION-FOUNDATION.md](./SCE-COMM-04-TEAM-COMMUNICATION-FOUNDATION.md) | Team communication foundation, persistence, permissions (COMM-04) |
 
 **Immutable programme statements (COMM-01):**
 

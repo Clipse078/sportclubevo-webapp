@@ -21,6 +21,7 @@ const DEFAULTS: Record<NotificationType, NotificationChannelDefaults> = {
   REQUIREMENT_OVERDUE: { inAppEnabled: true, emailEnabled: true },
   REQUIREMENT_CHANGED: { inAppEnabled: true, emailEnabled: true },
   REQUIREMENT_CANCELLED: { inAppEnabled: true, emailEnabled: true },
+  TEAM_COMMUNICATION_PUBLISHED: { inAppEnabled: true, emailEnabled: false },
 };
 
 export function getDefaultNotificationPreferences(): Record<

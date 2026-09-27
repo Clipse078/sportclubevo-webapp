@@ -12,6 +12,9 @@ export function teamCommunicationContext(teamId: string): CommunicationContextRe
   return { kind: "TEAM", teamId: teamId.trim() };
 }
 
+/** Alias for service-layer entry points (COMM-04). */
+export const createTeamCommunicationContext = teamCommunicationContext;
+
 /** Default audience for trainer "Nachricht an Team" — no manual Zielgruppe pick required. */
 export function defaultTeamOperationalAudience(teamId: string): CommunicationAudienceSpec {
   const component: ZielgruppeAudienceComponent = {

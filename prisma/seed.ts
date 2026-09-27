@@ -235,6 +235,20 @@ async function main() {
       scope: PermissionScope.TENANT,
       grantableByAdmin: true,
     },
+    {
+      key: "communication.team.view",
+      name: "View team communication",
+      module: PermissionModule.COMMUNICATION,
+      scope: PermissionScope.TENANT,
+      grantableByAdmin: true,
+    },
+    {
+      key: "communication.team.send",
+      name: "Send team communication",
+      module: PermissionModule.COMMUNICATION,
+      scope: PermissionScope.TENANT,
+      grantableByAdmin: true,
+    },
 
     { key: "registrations.view", name: "View registrations", module: PermissionModule.REGISTRATIONS, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "registrations.edit", name: "Edit registrations", module: PermissionModule.REGISTRATIONS, scope: PermissionScope.TENANT, grantableByAdmin: true },

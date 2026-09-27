@@ -285,6 +285,40 @@ enum CommunicationMessageStatus {
   RECEIVED
 }
 
+// SCE-COMM-04 — canonical programme-level communication (team chat foundation).
+enum PlatformCommunicationKind {
+  MESSAGE
+  ANNOUNCEMENT
+  ALERT
+  POLL
+  DATE_POLL
+  REQUEST
+  CAMPAIGN
+}
+
+enum PlatformCommunicationStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PlatformCommunicationContextKind {
+  TEAM
+}
+
+enum PlatformCommunicationConversationKind {
+  TEAM_GENERAL
+  TEAM_NAMED
+}
+
+enum PlatformCommunicationRecipientEngagement {
+  PENDING
+  DELIVERED
+  READ
+  ACKNOWLEDGED
+  RESPONDED
+}
+
 enum CommunicationAttachmentSourceType {
   UPLOAD
   WORKSPACE_DOCUMENT_VERSION
@@ -403,6 +437,7 @@ enum NotificationCategory {
   TASK
   PARTICIPATION
   REQUIREMENT
+  COMMUNICATION
 }
 
 enum NotificationType {
@@ -421,6 +456,7 @@ enum NotificationType {
   REQUIREMENT_OVERDUE
   REQUIREMENT_CHANGED
   REQUIREMENT_CANCELLED
+  TEAM_COMMUNICATION_PUBLISHED
 }
 
 enum NotificationEntityType {
@@ -428,6 +464,7 @@ enum NotificationEntityType {
   TRAINING_SESSION
   EVENT
   REQUIREMENT
+  COMMUNICATION
 }
 
 enum NotificationChannel {
@@ -986,6 +1023,9 @@ model Tenant {
   communicationMessages           CommunicationMessage[]
   communicationAttachments        CommunicationAttachment[]
   communicationMessageAttachments CommunicationMessageAttachment[]
+  platformCommunicationConversations PlatformCommunicationConversation[]
+  platformCommunications          PlatformCommunication[]
+  platformCommunicationRecipientSnapshots PlatformCommunicationRecipientSnapshot[]
   internalComments                InternalComment[]
   commentMentions                 CommentMention[]
   taskComments                    TaskComment[]
@@ -1087,6 +1127,7 @@ model User {
   // COMM-01A: communication foundation back-relations
   createdCommunicationThreads  CommunicationThread[]  @relation("CommunicationThreadCreatedBy")
   createdCommunicationMessages CommunicationMessage[] @relation("CommunicationMessageCreatedBy")
+  createdPlatformCommunications PlatformCommunication[] @relation("PlatformCommunicationCreatedBy")
   authoredInternalComments     InternalComment[]      @relation("InternalCommentAuthor")
   commentMentionsReceived      CommentMention[]       @relation("CommentMentionUser")
   authoredTaskComments         TaskComment[]          @relation("TaskCommentAuthor")
@@ -1737,6 +1778,8 @@ model Person {
   workspaceBreakGlassSessions     WorkspaceBreakGlassSession[]     @relation("WorkspaceBreakGlassActorPerson")
   workspaceGovernanceHoldsCreated  WorkspaceGovernanceHold[]       @relation("WorkspaceGovernanceHoldCreatedByPerson")
   workspaceGovernanceHoldsReleased WorkspaceGovernanceHold[]      @relation("WorkspaceGovernanceHoldReleasedByPerson")
+  sentPlatformCommunications       PlatformCommunication[]        @relation("PlatformCommunicationSender")
+  platformCommunicationSnapshots   PlatformCommunicationRecipientSnapshot[] @relation("PlatformCommunicationSnapshotSubject")
 
   @@index([lastName, firstName])
   @@index([email])
@@ -1932,6 +1975,7 @@ model Team {
   eventParticipationAudienceEntries EventParticipationAudienceEntry[] @relation("EventParticipationAudienceTeam")
   // TEAM-COCKPIT-PREMIUM-01J-A: team-bound private documents
   teamDocuments            TeamDocument[]          @relation("TeamDocuments")
+  platformCommunicationConversations PlatformCommunicationConversation[]
   workspaceAccessGrants    WorkspaceAccessGrant[]  @relation("WorkspaceAccessGrantTeam")
 
   @@unique([tenantId, slug])
@@ -2813,6 +2857,100 @@ model CommunicationMessage {
   @@index([tenantId, retryOfMessageId])
   @@index([provider, providerMessageId])
   @@index([provider, providerEventId])
+}
+
+// ---------------------------------------------------------------------------
+// SCE-COMM-04 — Programme-level Communication (distinct from COMM-01A email threads)
+// ---------------------------------------------------------------------------
+
+/// Stable conversation anchor for team (and future) programme communication.
+/// Team chat uses Team.id — not TeamSeason — for continuity across seasons.
+model PlatformCommunicationConversation {
+  id       String @id @default(cuid())
+  tenantId String
+
+  contextKind        PlatformCommunicationContextKind
+  teamId             String?
+  conversationKind   PlatformCommunicationConversationKind @default(TEAM_GENERAL)
+  /// Empty string for unnamed/general threads (Prisma-safe uniqueness).
+  namedThreadSlug    String                              @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant          Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  team            Team?                  @relation(fields: [teamId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  communications  PlatformCommunication[]
+
+  @@unique([tenantId, contextKind, teamId, conversationKind, namedThreadSlug])
+  @@index([tenantId, teamId])
+  @@index([tenantId, createdAt])
+}
+
+/// Canonical communication aggregate (content + lifecycle + audience intent).
+model PlatformCommunication {
+  id             String @id @default(cuid())
+  tenantId       String
+  conversationId String
+
+  kind   PlatformCommunicationKind
+  status PlatformCommunicationStatus @default(DRAFT)
+
+  /// CommunicationContextRef JSON (shape validated in services).
+  contextRef Json
+
+  senderPersonId String?
+  subject        String?
+  bodyText       String
+
+  /// CommunicationAudienceSpec at creation/publish preparation time.
+  audienceSpecJson Json
+
+  audienceFingerprint String?
+  publishedAt         DateTime?
+
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant       Tenant                            @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  conversation PlatformCommunicationConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  senderPerson Person?                           @relation("PlatformCommunicationSender", fields: [senderPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdByUser User?                            @relation("PlatformCommunicationCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  recipientSnapshots PlatformCommunicationRecipientSnapshot[]
+
+  @@index([tenantId, conversationId, createdAt])
+  @@index([tenantId, status, createdAt])
+  @@index([tenantId, kind])
+  @@index([senderPersonId])
+}
+
+/// Dispatch-time immutable recipient truth (never recomputed from live membership).
+model PlatformCommunicationRecipientSnapshot {
+  id              String @id @default(cuid())
+  tenantId        String
+  communicationId String
+
+  subjectPersonId String
+  deliveryUserId  String
+  channel         String
+
+  audienceFingerprint     String
+  viaGuardianSubstitution Boolean @default(false)
+  resolvedAt              DateTime
+
+  engagement PlatformCommunicationRecipientEngagement @default(PENDING)
+
+  createdAt DateTime @default(now())
+
+  tenant        Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  communication PlatformCommunication @relation(fields: [communicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  subjectPerson Person                @relation("PlatformCommunicationSnapshotSubject", fields: [subjectPersonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([tenantId, communicationId])
+  @@index([tenantId, subjectPersonId])
+  @@index([tenantId, deliveryUserId])
+  @@unique([communicationId, subjectPersonId, deliveryUserId, channel])
 }
 
 /// Immutable tenant-owned metadata for communication files. Binary content is
