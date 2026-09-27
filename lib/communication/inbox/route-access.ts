@@ -1,0 +1,3 @@
+import { INBOX_SETTINGS_PERMISSIONS, INBOX_VIEW_PERMISSIONS } from "@/lib/communication/inbox/authorization";
+
+export { INBOX_VIEW_PERMISSIONS, INBOX_SETTINGS_PERMISSIONS };

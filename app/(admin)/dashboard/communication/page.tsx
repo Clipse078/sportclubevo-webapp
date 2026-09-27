@@ -1,5 +1,6 @@
 import {
   FileStack,
+  Inbox,
   Mail,
   Palette,
   PenLine,
@@ -13,6 +14,7 @@ import { ModuleCapabilityCard } from "@/components/admin/future-modules/ModuleCa
 import { Badge } from "@/components/ui/Badge";
 import { PageBreadcrumbs, PageHeader, PageShell, SectionCard } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
+import { INBOX_VIEW_PERMISSIONS } from "@/lib/communication/inbox/route-access";
 import { TENANT_ADMINISTRATION_PERMISSIONS } from "@/lib/permissions/tenant-administration";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +33,7 @@ const audienceFoundations = [
 ];
 
 export default async function CommunicationPage() {
-  await requireAnyPermission(TENANT_ADMINISTRATION_PERMISSIONS);
+  await requireAnyPermission([...TENANT_ADMINISTRATION_PERMISSIONS, ...INBOX_VIEW_PERMISSIONS]);
 
   return (
     <PageShell>
@@ -53,13 +55,22 @@ export default async function CommunicationPage() {
         <ProductDomainSceIcon name="communication" size={16} className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-primary)]" />
         <p className="text-xs leading-5 text-[var(--text-2)]">
           <span className="font-semibold text-[var(--foreground)]">
-            E-Mail-Absender ist bereits verfügbar.
+            Kommunikationscenter, Mitteilungen, Kampagnen, Zielgruppen und E-Mail-Absender sind verfügbar.
           </span>{" "}
-          Alle weiteren Bereiche zeigen die geplante Produktausrichtung und speichern noch keine Daten.
+          Weitere Bereiche zeigen die geplante Produktausrichtung.
         </p>
       </div>
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <ModuleCapabilityCard
+          title="Kommunikationscenter"
+          description="Nachrichten, E-Mails und offene Kommunikation zentral bearbeiten — inklusive inbound E-Mail/IMAP."
+          icon={Inbox}
+          status="Verfügbar"
+          href="/dashboard/communication/inbox"
+          linkLabel="Kommunikationscenter öffnen"
+          details={["Unified Inbox", "IMAP", "Zuweisung", "Antworten (COMM-14)"]}
+        />
         <ModuleCapabilityCard
           title="Mitteilungen"
           description="Organisationsweite Nachrichten, Mitteilungen und Alarme an Zielgruppen oder den ganzen Verein."

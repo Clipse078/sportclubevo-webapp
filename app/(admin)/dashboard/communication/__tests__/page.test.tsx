@@ -9,7 +9,8 @@ vi.mock("@/lib/permissions/require-any-permission", () => ({
 }));
 
 import CommunicationPage from "../page";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { INBOX_VIEW_PERMISSIONS } from "@/lib/communication/inbox/route-access";
+import { TENANT_ADMINISTRATION_PERMISSIONS } from "@/lib/permissions/tenant-administration";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -20,9 +21,16 @@ describe("Kommunikation module landing page", () => {
   it("distinguishes the functional sender settings from future capabilities", async () => {
     render(await CommunicationPage());
 
-    expect(requirePermission).toHaveBeenCalledWith([PERMISSIONS.USERS_MANAGE_MEMBERSHIPS]);
+    expect(requirePermission).toHaveBeenCalledWith([
+      ...TENANT_ADMINISTRATION_PERMISSIONS,
+      ...INBOX_VIEW_PERMISSIONS,
+    ]);
     expect(screen.getByRole("heading", { level: 1, name: "Kommunikation" })).toBeInTheDocument();
-    expect(screen.getByText("E-Mail-Absender ist bereits verfügbar.")).toBeInTheDocument();
+    expect(screen.getByText(/Kommunikationscenter, Mitteilungen, Kampagnen/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Kommunikationscenter öffnen/i })).toHaveAttribute(
+      "href",
+      "/dashboard/communication/inbox",
+    );
     expect(screen.getByRole("link", { name: /Absender verwalten/ })).toHaveAttribute(
       "href",
       "/dashboard/communication/email-sender",
@@ -33,7 +41,7 @@ describe("Kommunikation module landing page", () => {
       "/dashboard/communication/zielgruppen",
     );
     expect(screen.getByRole("heading", { name: "Vorlagen" })).toBeInTheDocument();
-    expect(screen.getAllByText("Vorschau · Keine Datenspeicherung").length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: "Kommunikationscenter" })).toBeInTheDocument();
   });
 
   it("checks authorization before rendering the module shell", async () => {

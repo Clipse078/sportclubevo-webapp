@@ -339,6 +339,62 @@ enum PlatformCommunicationEmailDeliveryStatus {
   SKIPPED
 }
 
+/// SCE-COMM-15 — Communication Center inbound connector types.
+enum CommunicationCenterConnectorType {
+  IMAP
+}
+
+enum CommunicationCenterMailboxStatus {
+  ACTIVE
+  DISABLED
+  DISCONNECTED
+}
+
+enum CommunicationCenterImapSecurity {
+  TLS
+  STARTTLS
+  NONE
+}
+
+enum CommunicationCenterConversationStatus {
+  OPEN
+  RESOLVED
+}
+
+enum CommunicationCenterChannel {
+  EMAIL
+  SCE
+}
+
+enum CommunicationCenterMessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum CommunicationCenterMessageStatus {
+  RECEIVED
+  DRAFT
+  SENDING
+  SENT
+  FAILED
+}
+
+enum CommunicationCenterContactMatchStatus {
+  UNMATCHED
+  MATCHED
+  AMBIGUOUS
+}
+
+enum CommunicationCenterContextKind {
+  PERSON
+  TEAM
+  ORG_UNIT
+  SPONSOR_CONTACT
+  SPONSOR_ORGANISATION
+  EVENT
+  PLATFORM_COMMUNICATION
+}
+
 enum SponsorOrganisationStatus {
   ACTIVE
   INACTIVE
@@ -1041,6 +1097,13 @@ model Tenant {
   notificationDeliveries             NotificationDelivery[]
   notificationPushDeliveryAttempts   NotificationPushDeliveryAttempt[]
   platformCommunicationEmailDeliveryAttempts PlatformCommunicationEmailDeliveryAttempt[]
+  communicationCenterMailboxes               CommunicationCenterMailbox[]
+  communicationCenterMailboxFolders          CommunicationCenterMailboxFolder[]
+  communicationCenterConversations           CommunicationCenterConversation[]
+  communicationCenterMessages                CommunicationCenterMessage[]
+  communicationCenterMessageAttachments      CommunicationCenterMessageAttachment[]
+  communicationCenterConversationReadStates  CommunicationCenterConversationReadState[]
+  communicationCenterContextLinks            CommunicationCenterContextLink[]
   userNotificationPreferences        UserNotificationPreference[]
   userDashboardQuickAccessPreferences UserDashboardQuickAccessPreference[]
   // TRAINING-PLANS-01: tenant-defined training plans and assignments
@@ -1224,6 +1287,11 @@ model User {
   // COMM-01A: communication foundation back-relations
   createdCommunicationThreads  CommunicationThread[]  @relation("CommunicationThreadCreatedBy")
   createdCommunicationMessages CommunicationMessage[] @relation("CommunicationMessageCreatedBy")
+  assignedCommunicationCenterConversations CommunicationCenterConversation[] @relation("CommunicationCenterConversationAssignedTo")
+  assignedCommunicationCenterConversationsBy CommunicationCenterConversation[] @relation("CommunicationCenterConversationAssignedBy")
+  communicationCenterConversationReadStates CommunicationCenterConversationReadState[] @relation("CommunicationCenterConversationReadStateUser")
+  createdCommunicationCenterMessages CommunicationCenterMessage[] @relation("CommunicationCenterMessageCreatedBy")
+  createdCommunicationCenterContextLinks CommunicationCenterContextLink[] @relation("CommunicationCenterContextLinkCreatedBy")
   createdPlatformCommunications PlatformCommunication[] @relation("PlatformCommunicationCreatedBy")
   createdCommunicationReminderSchedules CommunicationReminderSchedule[] @relation("CommunicationReminderScheduleCreatedBy")
   authoredInternalComments     InternalComment[]      @relation("InternalCommentAuthor")
@@ -1882,6 +1950,7 @@ model Person {
   platformCommunicationReactions   PlatformCommunicationReaction[] @relation("PlatformCommunicationReactionPerson")
   platformCommunicationMentionsReceived PlatformCommunicationMention[] @relation("PlatformCommunicationMentionedPerson")
   sponsorContactsLinked                 SponsorContact[]               @relation("SponsorContactPerson")
+  communicationCenterConversations      CommunicationCenterConversation[]
 
   @@index([lastName, firstName])
   @@index([email])
@@ -3037,6 +3106,7 @@ model PlatformCommunication {
   replies      PlatformCommunication[]           @relation("PlatformCommunicationReplyThread")
   recipientSnapshots PlatformCommunicationRecipientSnapshot[]
   emailDeliveryAttempts PlatformCommunicationEmailDeliveryAttempt[]
+  communicationCenterConversations CommunicationCenterConversation[]
   reactions    PlatformCommunicationReaction[]
   mentions     PlatformCommunicationMention[]
   attachmentLinks PlatformCommunicationAttachment[]
@@ -3209,6 +3279,7 @@ model SponsorContact {
   sponsorOrganisation SponsorOrganisation @relation(fields: [sponsorOrganisationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   person              Person?             @relation("SponsorContactPerson", fields: [personId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   communicationSnapshots PlatformCommunicationRecipientSnapshot[]
+  communicationCenterConversations CommunicationCenterConversation[]
 
   @@index([tenantId, sponsorOrganisationId, isActive])
   @@index([tenantId, personId])
@@ -3429,6 +3500,7 @@ model CommunicationAttachment {
   sourceDocumentVersion WorkspaceDocumentVersion?        @relation("CommunicationAttachmentSourceVersion", fields: [sourceDocumentVersionId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   messageLinks          CommunicationMessageAttachment[]
   platformCommunicationLinks PlatformCommunicationAttachment[]
+  communicationCenterMessageLinks CommunicationCenterMessageAttachment[]
 
   @@index([tenantId])
   @@index([tenantId, createdAt])
@@ -4175,6 +4247,218 @@ model PlatformCommunicationEmailDeliveryAttempt {
   @@unique([idempotencyKey])
   @@index([tenantId, communicationId])
   @@index([tenantId, status, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// SCE-COMM-15 — Communication Center (unified inbox; Email/IMAP is a connector)
+// ---------------------------------------------------------------------------
+
+model CommunicationCenterMailbox {
+  id           String                            @id @default(cuid())
+  tenantId     String
+  displayName  String
+  emailAddress String
+  connectorType CommunicationCenterConnectorType @default(IMAP)
+  status       CommunicationCenterMailboxStatus  @default(ACTIVE)
+
+  imapHost     String?
+  imapPort     Int?
+  imapSecurity CommunicationCenterImapSecurity?
+  imapUsername String?
+  /// AES-GCM encrypted credential — never returned to clients or audit logs.
+  credentialEncrypted  String?
+  credentialKeyVersion Int?
+
+  lastSyncAttemptAt   DateTime?
+  lastSyncSuccessAt   DateTime?
+  lastSyncErrorCode   String?
+  lastSyncErrorMessage String?
+  syncLeaseToken      String?
+  syncLeaseExpiresAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant        Tenant                             @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  folders       CommunicationCenterMailboxFolder[]
+  conversations CommunicationCenterConversation[]
+  messages      CommunicationCenterMessage[]
+
+  @@unique([tenantId, emailAddress])
+  @@index([tenantId, status])
+}
+
+model CommunicationCenterMailboxFolder {
+  id           String @id @default(cuid())
+  tenantId     String
+  mailboxId    String
+  providerPath String
+
+  uidValidity      BigInt?
+  lastProcessedUid BigInt?
+  lastSyncAt       DateTime?
+  lastSyncStatus   String?
+  lastError        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  mailbox  CommunicationCenterMailbox @relation(fields: [mailboxId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  messages CommunicationCenterMessage[]
+
+  @@unique([mailboxId, providerPath])
+  @@index([tenantId, mailboxId])
+}
+
+model CommunicationCenterConversation {
+  id       String @id @default(cuid())
+  tenantId String
+  mailboxId String?
+
+  channel CommunicationCenterChannel             @default(EMAIL)
+  status  CommunicationCenterConversationStatus @default(OPEN)
+
+  subject             String?
+  threadRootMessageId String?
+  previewText         String?
+  lastMessageAt       DateTime @default(now())
+
+  assignedToUserId String?
+  assignedByUserId String?
+  assignedAt       DateTime?
+
+  contactMatchStatus      CommunicationCenterContactMatchStatus @default(UNMATCHED)
+  matchedPersonId         String?
+  matchedSponsorContactId String?
+  platformCommunicationId String?
+
+  searchText String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant                Tenant                         @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  mailbox               CommunicationCenterMailbox?    @relation(fields: [mailboxId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  assignedToUser        User?                          @relation("CommunicationCenterConversationAssignedTo", fields: [assignedToUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  assignedByUser        User?                          @relation("CommunicationCenterConversationAssignedBy", fields: [assignedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  matchedPerson         Person?                        @relation(fields: [matchedPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  matchedSponsorContact SponsorContact?                @relation(fields: [matchedSponsorContactId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  platformCommunication PlatformCommunication?         @relation(fields: [platformCommunicationId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  messages     CommunicationCenterMessage[]
+  readStates   CommunicationCenterConversationReadState[]
+  contextLinks CommunicationCenterContextLink[]
+
+  @@unique([tenantId, threadRootMessageId])
+  @@index([tenantId, lastMessageAt])
+  @@index([tenantId, status, lastMessageAt])
+  @@index([tenantId, assignedToUserId])
+  @@index([tenantId, mailboxId])
+}
+
+model CommunicationCenterMessage {
+  id             String @id @default(cuid())
+  tenantId       String
+  conversationId String
+  mailboxId      String?
+  folderId       String?
+
+  direction CommunicationCenterMessageDirection @default(INBOUND)
+  status    CommunicationCenterMessageStatus    @default(RECEIVED)
+
+  imapUid            BigInt?
+  uidValidity        BigInt?
+  providerMessageKey String?
+
+  messageIdHeader String?
+  inReplyTo       String?
+  references      Json?
+
+  fromAddress     String?
+  fromDisplayName String?
+  toAddresses     Json?
+  ccAddresses     Json?
+  subject         String?
+  bodyText        String?
+  bodyHtmlSanitized String?
+  remoteImagesBlocked Boolean @default(true)
+
+  receivedAt DateTime?
+  sentAt     DateTime?
+
+  outboundIdempotencyKey String?
+  providerMessageId      String?
+  deliveryError          String?
+
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant       Tenant                            @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  conversation CommunicationCenterConversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  mailbox      CommunicationCenterMailbox?       @relation(fields: [mailboxId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  folder       CommunicationCenterMailboxFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdByUser User?                            @relation("CommunicationCenterMessageCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  attachmentLinks CommunicationCenterMessageAttachment[]
+
+  @@unique([folderId, uidValidity, imapUid])
+  @@unique([tenantId, messageIdHeader])
+  @@unique([tenantId, outboundIdempotencyKey])
+  @@index([tenantId, conversationId, createdAt])
+  @@index([tenantId, providerMessageKey])
+}
+
+model CommunicationCenterMessageAttachment {
+  id           String @id @default(cuid())
+  tenantId     String
+  messageId    String
+  attachmentId String
+  sortOrder    Int
+  createdAt    DateTime @default(now())
+
+  tenant     Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  message    CommunicationCenterMessage @relation(fields: [messageId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  attachment CommunicationAttachment  @relation(fields: [attachmentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([messageId, attachmentId])
+  @@unique([messageId, sortOrder])
+  @@index([tenantId, messageId])
+}
+
+model CommunicationCenterConversationReadState {
+  id             String @id @default(cuid())
+  tenantId       String
+  conversationId String
+  userId         String
+  readAt         DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant       Tenant                          @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  conversation CommunicationCenterConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user         User                            @relation("CommunicationCenterConversationReadStateUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([tenantId, userId])
+}
+
+model CommunicationCenterContextLink {
+  id             String @id @default(cuid())
+  tenantId       String
+  conversationId String
+  contextKind    CommunicationCenterContextKind
+  contextId      String
+  createdByUserId String?
+  createdAt      DateTime @default(now())
+
+  tenant       Tenant                          @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  conversation CommunicationCenterConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdByUser User?                          @relation("CommunicationCenterContextLinkCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([conversationId, contextKind, contextId])
+  @@index([tenantId, conversationId])
 }
 
 /// SCE-COMM-09 — canonical user-owned push device registration (not team/sponsor/campaign scoped).
