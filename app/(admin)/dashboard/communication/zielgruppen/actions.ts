@@ -1,8 +1,8 @@
 "use server";
 
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
+import { ZIELGRUPPEN_VIEW_ROUTE_PERMISSIONS } from "@/lib/communication/zielgruppen/route-access";
 import {
   searchRequirementAudienceOrgUnits,
   searchRequirementAudienceRoles,
@@ -15,10 +15,7 @@ import { previewZielgruppeRecipients } from "@/lib/communication/zielgruppen/pre
 type ActionResult<T> = { ok: true; data: T } | { ok: false; message: string };
 
 async function requireZielgruppenView() {
-  await requireAnyPermission([
-    PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW,
-    PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE,
-  ]);
+  await requireAnyPermission(ZIELGRUPPEN_VIEW_ROUTE_PERMISSIONS);
   const tenant = await getActiveTenant();
   if (!tenant) throw new Error("Tenant nicht gefunden.");
   return tenant;

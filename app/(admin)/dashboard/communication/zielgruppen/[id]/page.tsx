@@ -9,10 +9,15 @@ import TargetGroupDeleteButton from "@/components/admin/org/TargetGroupDeleteBut
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
+import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { prisma } from "@/lib/db/prisma";
 import { getZielgruppeForManagement } from "@/lib/communication/zielgruppen/management-service";
 import { loadZielgruppeDefinitionLabels } from "@/lib/communication/zielgruppen/load-definition-labels";
+import {
+  tenantPermissionsIncludeZielgruppenManage,
+  ZIELGRUPPEN_VIEW_ROUTE_PERMISSIONS,
+} from "@/lib/communication/zielgruppen/route-access";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -23,10 +28,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default async function CommunicationZielgruppeDetailPage({ params }: PageProps) {
-  const session = await requireAnyPermission([
-    PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW,
-    PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE,
-  ]);
+  const session = await requireAnyPermission(ZIELGRUPPEN_VIEW_ROUTE_PERMISSIONS);
   const { id } = await params;
   const tenant = await getActiveTenant();
   if (!tenant) notFound();
@@ -34,19 +36,17 @@ export default async function CommunicationZielgruppeDetailPage({ params }: Page
   const tg = await getZielgruppeForManagement(tenant.id, id);
   if (!tg) notFound();
 
+  const { tenant: tenantPermissions } = await getRequestEffectivePermissions(
+    session.user.id,
+    tenant.id,
+  );
   const resolver = createEffectivePermissionResolver(prisma);
-  const [canManage, canDelete] = await Promise.all([
-    resolver.hasPermission({
-      userId: session.user.id,
-      tenantId: tenant.id,
-      permission: PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE,
-    }),
-    resolver.hasTenantDeletionAuthority({
-      userId: session.user.id,
-      permission: PERMISSIONS.ORG_DELETE,
-      tenantId: tenant.id,
-    }),
-  ]);
+  const canManage = tenantPermissionsIncludeZielgruppenManage(tenantPermissions);
+  const canDelete = await resolver.hasTenantDeletionAuthority({
+    userId: session.user.id,
+    permission: PERMISSIONS.ORG_DELETE,
+    tenantId: tenant.id,
+  });
 
   const knownLabels = await loadZielgruppeDefinitionLabels(tenant.id, tg.definition);
 
