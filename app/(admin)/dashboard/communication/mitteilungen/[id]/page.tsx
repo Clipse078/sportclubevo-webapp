@@ -7,7 +7,12 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { resolveClubCommunicationAuthorization } from "@/lib/communication/club/club-communication-authorization";
 import { getClubCommunicationById } from "@/lib/communication/club/club-communication-service";
-import { getClubCommunicationEngagementSummary } from "@/lib/communication/club/club-formal-communication-service";
+import {
+  getCommunicationDeliveryAnalytics,
+  listCommunicationDeliveryDetail,
+} from "@/lib/communication/analytics/communication-delivery-analytics-service";
+import CommunicationDeliveryAnalyticsPanel from "@/components/admin/communication/analytics/CommunicationDeliveryAnalyticsPanel";
+import CommunicationDeliveryDetailTable from "@/components/admin/communication/analytics/CommunicationDeliveryDetailTable";
 
 export const dynamic = "force-dynamic";
 
@@ -35,11 +40,17 @@ export default async function ClubMitteilungDetailPage({ params }: PageProps) {
   });
   if (!item) notFound();
 
-  const engagement =
-    item.status === "PUBLISHED"
-      ? await getClubCommunicationEngagementSummary({
+  const analytics = await getCommunicationDeliveryAnalytics({
+    tenantId: tenant.id,
+    communicationId: id,
+  });
+
+  const deliveryDetail =
+    item.status === "PUBLISHED" && authz.canViewEngagementDetail
+      ? await listCommunicationDeliveryDetail({
           tenantId: tenant.id,
           communicationId: id,
+          limit: 50,
         })
       : null;
 
@@ -77,29 +88,11 @@ export default async function ClubMitteilungDetailPage({ params }: PageProps) {
         <p className="whitespace-pre-wrap text-sm text-[var(--foreground)]">{item.bodyText}</p>
       </SectionCard>
 
-      {engagement ? (
-        <SectionCard title="Engagement" className="mt-6">
-          <dl className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
-            <div>
-              <dt className="text-[var(--text-2)]">Empfänger</dt>
-              <dd className="text-lg font-semibold">{engagement.recipientCount}</dd>
-            </div>
-            <div>
-              <dt className="text-[var(--text-2)]">Gelesen</dt>
-              <dd className="text-lg font-semibold">{engagement.readCount}</dd>
-            </div>
-            <div>
-              <dt className="text-[var(--text-2)]">Ungelesen</dt>
-              <dd className="text-lg font-semibold">{engagement.unreadCount}</dd>
-            </div>
-            {engagement.acknowledgementRequired ? (
-              <div>
-                <dt className="text-[var(--text-2)]">Bestätigt</dt>
-                <dd className="text-lg font-semibold">{engagement.acknowledgedCount}</dd>
-              </div>
-            ) : null}
-          </dl>
-        </SectionCard>
+      {analytics ? (
+        <CommunicationDeliveryAnalyticsPanel analytics={analytics} />
+      ) : null}
+      {deliveryDetail ? (
+        <CommunicationDeliveryDetailTable rows={deliveryDetail.items} />
       ) : null}
     </PageShell>
   );

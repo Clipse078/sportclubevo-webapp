@@ -25,3 +25,4 @@ export * from "@/lib/communication/platform/safeguarding/guardian-policy-seam";
 export * from "@/lib/communication/platform/safeguarding/evaluate-communication-safeguarding";
 export * from "@/lib/communication/platform/safeguarding/tenant-safeguarding-policy";
 export * from "@/lib/communication/platform/safeguarding/safeguarding-reason-codes";
+export * from "@/lib/communication/analytics/analytics-semantics";
