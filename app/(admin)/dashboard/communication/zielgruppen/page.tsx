@@ -8,11 +8,13 @@ import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import ZielgruppenListToolbar from "@/components/admin/communication/zielgruppen/ZielgruppenListToolbar";
 import { EmptyState } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
-import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
-import { prisma } from "@/lib/db/prisma";
+import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { listZielgruppenForManagement } from "@/lib/communication/zielgruppen/management-service";
+import {
+  tenantPermissionsIncludeZielgruppenManage,
+  ZIELGRUPPEN_VIEW_ROUTE_PERMISSIONS,
+} from "@/lib/communication/zielgruppen/route-access";
 
 export const dynamic = "force-dynamic";
 
@@ -32,10 +34,7 @@ type PageProps = {
 };
 
 export default async function CommunicationZielgruppenPage({ searchParams }: PageProps) {
-  const session = await requireAnyPermission([
-    PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW,
-    PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE,
-  ]);
+  const session = await requireAnyPermission(ZIELGRUPPEN_VIEW_ROUTE_PERMISSIONS);
   const tenant = await getActiveTenant();
   if (!tenant) notFound();
 
@@ -44,12 +43,11 @@ export default async function CommunicationZielgruppenPage({ searchParams }: Pag
   const statusFilter =
     statusParam === "archived" ? "ARCHIVED" : statusParam === "all" ? "ALL" : "ACTIVE";
 
-  const resolver = createEffectivePermissionResolver(prisma);
-  const canManage = await resolver.hasPermission({
-    userId: session.user.id,
-    tenantId: tenant.id,
-    permission: PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE,
-  });
+  const { tenant: tenantPermissions } = await getRequestEffectivePermissions(
+    session.user.id,
+    tenant.id,
+  );
+  const canManage = tenantPermissionsIncludeZielgruppenManage(tenantPermissions);
 
   const rows = await listZielgruppenForManagement({
     tenantId: tenant.id,
