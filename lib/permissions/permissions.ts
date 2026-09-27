@@ -152,6 +152,11 @@ export const PERMISSIONS = {
   COMMUNICATION_TEAM_VIEW: "communication.team.view",
   COMMUNICATION_TEAM_SEND: "communication.team.send",
 
+  /** SCE-COMM-11 — organisation/club-level programme communication. */
+  COMMUNICATION_CLUB_VIEW: "communication.club.view",
+  COMMUNICATION_CLUB_SEND: "communication.club.send",
+  COMMUNICATION_CLUB_ENGAGEMENT_DETAIL: "communication.club.engagement_detail",
+
   REGISTRATIONS_VIEW: "registrations.view",
   REGISTRATIONS_EDIT: "registrations.edit",
   // ADMIN-DELETE-03B: canonical permanent-deletion permission for

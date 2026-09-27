@@ -2,6 +2,7 @@ import { logAction } from "@/lib/audit/log-action";
 
 export type PlatformCommunicationAuditAction =
   | "COMMUNICATION_CREATED"
+  | "COMMUNICATION_UPDATED"
   | "COMMUNICATION_PUBLISHED"
   | "COMMUNICATION_ARCHIVED"
   | "COMMUNICATION_ACKNOWLEDGED";

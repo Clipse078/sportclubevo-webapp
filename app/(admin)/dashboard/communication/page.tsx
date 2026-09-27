@@ -61,11 +61,13 @@ export default async function CommunicationPage() {
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         <ModuleCapabilityCard
-          title="Nachrichten"
-          description="E-Mail-Kommunikation und Kommunikationsverlauf zentral verwalten."
+          title="Mitteilungen"
+          description="Organisationsweite Nachrichten, Mitteilungen und Alarme an Zielgruppen oder den ganzen Verein."
           icon={Mail}
-          status="In Arbeit"
-          details={["Kommunikationsverlauf", "Anhänge", "Mehrere Kanäle"]}
+          status="Verfügbar"
+          href="/dashboard/communication/mitteilungen"
+          linkLabel="Mitteilungen öffnen"
+          details={["Nachricht", "Mitteilung", "Alarm", "Zielgruppen", "Entwürfe"]}
         />
         <ModuleCapabilityCard
           title="Neue Nachricht"
