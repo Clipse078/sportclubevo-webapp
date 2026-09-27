@@ -4,18 +4,25 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockSignOut } = vi.hoisted(() => ({
+const { mockSignOut, mockAuth } = vi.hoisted(() => ({
   mockSignOut: vi.fn(),
+  mockAuth: vi.fn(),
 }));
 
 vi.mock("@/auth", () => ({
   signOut: mockSignOut,
+  auth: mockAuth,
+}));
+
+vi.mock("@/lib/push/push-device-registration-service", () => ({
+  revokeAllPushDevicesForUser: vi.fn().mockResolvedValue(0),
 }));
 
 describe("signOutAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSignOut.mockResolvedValue(undefined);
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
   });
 
   it("invalidates the session via Auth.js without server redirect", async () => {

@@ -10,6 +10,7 @@ export type NotificationPreferenceDto = {
   notificationType: NotificationType;
   inAppEnabled: boolean;
   emailEnabled: boolean;
+  pushEnabled: boolean;
 };
 
 export async function listNotificationPreferencesForUser(
@@ -29,6 +30,7 @@ export async function listNotificationPreferencesForUser(
         ? {
             inAppEnabled: byType.get(notificationType)!.inAppEnabled,
             emailEnabled: byType.get(notificationType)!.emailEnabled,
+            pushEnabled: byType.get(notificationType)!.pushEnabled,
           }
         : null,
     );
@@ -36,6 +38,7 @@ export async function listNotificationPreferencesForUser(
       notificationType,
       inAppEnabled: effective.inAppEnabled,
       emailEnabled: effective.emailEnabled,
+      pushEnabled: effective.pushEnabled,
     };
   });
 }
@@ -52,7 +55,13 @@ export async function getEffectiveNotificationPreference(
   });
   return resolveEffectivePreference(
     type,
-    row ? { inAppEnabled: row.inAppEnabled, emailEnabled: row.emailEnabled } : null,
+    row
+      ? {
+          inAppEnabled: row.inAppEnabled,
+          emailEnabled: row.emailEnabled,
+          pushEnabled: row.pushEnabled,
+        }
+      : null,
   );
 }
 
@@ -90,6 +99,7 @@ export async function upsertNotificationPreference(
     notificationType: row.notificationType,
     inAppEnabled: row.inAppEnabled,
     emailEnabled: row.emailEnabled,
+    pushEnabled: row.pushEnabled,
   };
 }
 
@@ -112,7 +122,13 @@ export async function loadEffectivePreferencesForUsers(
       userId,
       resolveEffectivePreference(
         type,
-        row ? { inAppEnabled: row.inAppEnabled, emailEnabled: row.emailEnabled } : null,
+        row
+          ? {
+              inAppEnabled: row.inAppEnabled,
+              emailEnabled: row.emailEnabled,
+              pushEnabled: row.pushEnabled,
+            }
+          : null,
       ),
     );
   }

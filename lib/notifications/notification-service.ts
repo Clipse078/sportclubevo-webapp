@@ -11,6 +11,8 @@ import {
 import { NOTIFICATION_LOG_PREFIX } from "./constants";
 import type { NotificationChannelDefaults } from "./defaults";
 import { notificationTypeCategory } from "./deduplication";
+import { evaluatePushEnabledForNotificationType } from "@/lib/push/push-preference-seam";
+import { PUSH_PROVIDER_WEB_PUSH } from "@/lib/push/constants";
 
 export type CreateNotificationInput = {
   tenantId: string;
@@ -34,6 +36,7 @@ async function createDeliveries(
   input: {
     tenantId: string;
     notificationId: string;
+    notificationType: NotificationType;
     preferences: NotificationChannelDefaults;
   },
 ): Promise<void> {
@@ -78,6 +81,29 @@ async function createDeliveries(
     });
   }
 
+  const pushEnabled = evaluatePushEnabledForNotificationType(
+    input.notificationType,
+    input.preferences,
+  );
+  if (pushEnabled) {
+    rows.push({
+      tenantId: input.tenantId,
+      notificationId: input.notificationId,
+      channel: NotificationChannel.PUSH,
+      status: NotificationDeliveryStatus.PENDING,
+      provider: PUSH_PROVIDER_WEB_PUSH,
+    });
+  } else {
+    rows.push({
+      tenantId: input.tenantId,
+      notificationId: input.notificationId,
+      channel: NotificationChannel.PUSH,
+      status: NotificationDeliveryStatus.SKIPPED,
+      provider: PUSH_PROVIDER_WEB_PUSH,
+      failureCode: "PREFERENCE_DISABLED",
+    });
+  }
+
   await tx.notificationDelivery.createMany({ data: rows, skipDuplicates: true });
 }
 
@@ -85,7 +111,11 @@ export async function createNotificationIdempotent(
   tx: Prisma.TransactionClient,
   input: CreateNotificationInput,
 ): Promise<CreateNotificationResult | null> {
-  if (!input.preferences.inAppEnabled && !input.preferences.emailEnabled) {
+  if (
+    !input.preferences.inAppEnabled &&
+    !input.preferences.emailEnabled &&
+    !evaluatePushEnabledForNotificationType(input.type, input.preferences)
+  ) {
     return null;
   }
 
@@ -110,6 +140,7 @@ export async function createNotificationIdempotent(
     await createDeliveries(tx, {
       tenantId: input.tenantId,
       notificationId: created.id,
+      notificationType: input.type,
       preferences: input.preferences,
     });
 

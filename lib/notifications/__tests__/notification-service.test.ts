@@ -38,7 +38,7 @@ describe("createNotificationIdempotent", () => {
       body: "Body",
       href: "/dashboard/aufgaben/t1",
       deduplicationKey: "key-1",
-      preferences: { inAppEnabled: true, emailEnabled: true },
+      preferences: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
     });
 
     expect(result?.kind).toBe("CREATED");
@@ -51,6 +51,10 @@ describe("createNotificationIdempotent", () => {
         expect.objectContaining({
           channel: NotificationChannel.EMAIL,
           status: NotificationDeliveryStatus.PENDING,
+        }),
+        expect.objectContaining({
+          channel: NotificationChannel.PUSH,
+          status: NotificationDeliveryStatus.SKIPPED,
         }),
       ]),
       skipDuplicates: true,
@@ -85,7 +89,7 @@ describe("createNotificationIdempotent", () => {
       body: "Body",
       href: "/dashboard/aufgaben?bereich=meine",
       deduplicationKey: "participation-reminder:dup",
-      preferences: { inAppEnabled: true, emailEnabled: true },
+      preferences: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
     });
 
     expect(result?.kind).toBe("DEDUPLICATED");
@@ -120,7 +124,7 @@ describe("createNotificationIdempotent", () => {
       body: "Body",
       href: "/dashboard/aufgaben?bereich=meine",
       deduplicationKey: "participation-reminder:race",
-      preferences: { inAppEnabled: true, emailEnabled: true },
+      preferences: { inAppEnabled: true, emailEnabled: true, pushEnabled: false },
     };
 
     const results = await Promise.all([

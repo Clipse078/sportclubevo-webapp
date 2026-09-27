@@ -76,7 +76,7 @@ describe("AUFGABEN-06B mention notifications", () => {
     ).toEqual({ inAppEnabled: false, emailEnabled: true });
     expect(
       resolveEffectivePreference("TASK_MENTION", { inAppEnabled: true, emailEnabled: false }),
-    ).toEqual({ inAppEnabled: true, emailEnabled: false });
+    ).toEqual({ inAppEnabled: true, emailEnabled: false, pushEnabled: false });
   });
 
   it("M17/M29 one notification per commentId+userId (dedup key)", async () => {
