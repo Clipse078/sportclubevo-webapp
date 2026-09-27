@@ -270,6 +270,20 @@ async function main() {
       scope: PermissionScope.TENANT,
       grantableByAdmin: true,
     },
+    {
+      key: "sponsoring.view",
+      name: "View sponsor and partner data for audience selection",
+      module: PermissionModule.SPONSORING,
+      scope: PermissionScope.TENANT,
+      grantableByAdmin: true,
+    },
+    {
+      key: "sponsoring.manage",
+      name: "Manage sponsors and partner organisations",
+      module: PermissionModule.SPONSORING,
+      scope: PermissionScope.TENANT,
+      grantableByAdmin: true,
+    },
 
     { key: "registrations.view", name: "View registrations", module: PermissionModule.REGISTRATIONS, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "registrations.edit", name: "Edit registrations", module: PermissionModule.REGISTRATIONS, scope: PermissionScope.TENANT, grantableByAdmin: true },

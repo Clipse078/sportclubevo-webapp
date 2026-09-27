@@ -30,6 +30,19 @@ export function summarizeClubAudienceSpec(audience: CommunicationAudienceSpec): 
     if ((component.explicit?.includePersonIds?.length ?? 0) > 0) {
       parts.push(`${component.explicit!.includePersonIds!.length} Person(en)`);
     }
+    if (component.sponsor?.allActiveSponsors) {
+      parts.push("Alle aktiven Sponsoren");
+    } else if (component.sponsor) {
+      if ((component.sponsor.sponsorOrganisationIds?.length ?? 0) > 0) {
+        parts.push(`${component.sponsor.sponsorOrganisationIds!.length} Sponsor-Organisation(en)`);
+      }
+      if ((component.sponsor.sponsorContactIds?.length ?? 0) > 0) {
+        parts.push(`${component.sponsor.sponsorContactIds!.length} Sponsor-Kontakt(e)`);
+      }
+      if ((component.sponsor.sponsorCategoryIds?.length ?? 0) > 0) {
+        parts.push(`${component.sponsor.sponsorCategoryIds!.length} Sponsor-Kategorie(n)`);
+      }
+    }
   }
   if (parts.length === 0) return "Zielgruppe";
   if (audience.composition === "INTERSECTION") {

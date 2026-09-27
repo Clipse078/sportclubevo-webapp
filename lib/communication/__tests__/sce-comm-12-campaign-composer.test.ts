@@ -164,7 +164,7 @@ describe("SCE-COMM-12 campaign composer", () => {
 
   it("exposes explicit COMM-13/14/15/16 boundary flags", () => {
     expect(CAMPAIGN_BOUNDARY_FLAGS.outboundEmail).toBe("EMAIL_NOT_IMPLEMENTED");
-    expect(CAMPAIGN_BOUNDARY_FLAGS.sponsor).toBe("SPONSOR_NOT_IMPLEMENTED");
+    expect(CAMPAIGN_BOUNDARY_FLAGS.sponsor).toBe("SPONSOR_AUDIENCE_INTEGRATED");
     expect(CAMPAIGN_BOUNDARY_FLAGS.communicationCenterImap).toBe("IMAP_NOT_IMPLEMENTED");
     expect(CAMPAIGN_BOUNDARY_FLAGS.templates).toBe("TEMPLATES_NOT_IMPLEMENTED");
     expect(CAMPAIGN_BOUNDARY_FLAGS.scheduling).toBe("SCHEDULING_NOT_IMPLEMENTED");

@@ -157,6 +157,10 @@ export const PERMISSIONS = {
   COMMUNICATION_CLUB_SEND: "communication.club.send",
   COMMUNICATION_CLUB_ENGAGEMENT_DETAIL: "communication.club.engagement_detail",
 
+  /** SCE-COMM-13 — Sponsor-domain read/select for communication audiences (not send). */
+  SPONSORING_VIEW: "sponsoring.view",
+  SPONSORING_MANAGE: "sponsoring.manage",
+
   REGISTRATIONS_VIEW: "registrations.view",
   REGISTRATIONS_EDIT: "registrations.edit",
   // ADMIN-DELETE-03B: canonical permanent-deletion permission for

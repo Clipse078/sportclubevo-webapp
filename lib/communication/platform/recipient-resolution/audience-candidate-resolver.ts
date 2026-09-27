@@ -26,6 +26,8 @@ import {
   resolveStructuralAudiencePersonIds,
   resolveStructuralExclusionPersonIds,
 } from "@/lib/communication/platform/recipient-resolution/structural-resolution";
+import { resolveSponsorAudienceSelectors } from "@/lib/sponsoring/sponsor-audience-resolution";
+import { sponsorSelectorsAreEmpty } from "@/lib/sponsoring/sponsor-audience-selectors";
 import type { RecipientExclusionReasonCode } from "@/lib/communication/platform/recipient-resolution/reason-codes";
 
 export const MAX_SAVED_TARGET_GROUP_NESTING_DEPTH = 10;
@@ -209,6 +211,26 @@ async function resolveComponentPersonIds(
 
   for (const savedId of component.savedTargetGroupIds ?? []) {
     partialSets.push(await resolveSavedTargetGroupPersonIds(savedId, ctx));
+  }
+
+  if (component.sponsor && !sponsorSelectorsAreEmpty(component.sponsor)) {
+    const sponsorResolved = await resolveSponsorAudienceSelectors({
+      tenantId: ctx.tenantId,
+      selectors: component.sponsor,
+    });
+    if (sponsorResolved.linkedPersonIds.length > 0) {
+      const { active, inactiveOrForeign } = await resolveExplicitPersonIds(
+        ctx.tenantId,
+        sponsorResolved.linkedPersonIds,
+      );
+      for (const id of inactiveOrForeign) {
+        ctx.trace.excludedRecipients.push({
+          personId: id,
+          reasonCodes: ["CROSS_TENANT"],
+        });
+      }
+      partialSets.push(active);
+    }
   }
 
   let merged =
