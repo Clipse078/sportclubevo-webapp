@@ -14,6 +14,8 @@ export async function buildCampaignPublishSnapshotCreateMany(input: {
   audienceFingerprint: string;
   resolvedAt: string;
   deliveryTargets: RecipientSnapshotRow[];
+  emailChannelEnabled: boolean;
+  emailTransportReady: boolean;
 }) {
   const internalRows = buildDispatchRecipientSnapshots({
     communicationDispatchRef: input.communicationId,
@@ -30,6 +32,8 @@ export async function buildCampaignPublishSnapshotCreateMany(input: {
     audienceFingerprint: input.audienceFingerprint,
     channel: "IN_APP",
     resolvedAt: input.resolvedAt,
+    emailChannelEnabled: input.emailChannelEnabled,
+    emailTransportReady: input.emailTransportReady,
   });
 
   return {

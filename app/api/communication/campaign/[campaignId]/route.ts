@@ -14,6 +14,7 @@ import {
   TeamCommunicationValidationError,
 } from "@/lib/communication/team/team-communication-errors";
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
+import type { CampaignOrchestrationMeta } from "@/lib/communication/campaign/campaign-orchestration-meta";
 
 type RouteContext = { params: Promise<{ campaignId: string }> };
 
@@ -80,6 +81,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     subject?: string | null;
     bodyText?: string;
     audienceSpec?: CommunicationAudienceSpec;
+    orchestration?: CampaignOrchestrationMeta;
   };
 
   try {
@@ -91,6 +93,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       subject: body.subject,
       bodyText: body.bodyText,
       audienceSpec: body.audienceSpec,
+      orchestration: body.orchestration,
     });
     return NextResponse.json(result);
   } catch (error) {

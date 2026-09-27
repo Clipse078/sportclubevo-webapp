@@ -6,8 +6,12 @@ import { prisma } from "@/lib/db/prisma";
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
 import { resolveSponsorAudienceSelectors } from "@/lib/sponsoring/sponsor-audience-resolution";
 import { sponsorSelectorsAreEmpty } from "@/lib/sponsoring/sponsor-audience-selectors";
-import { CAMPAIGN_OUTBOUND_EMAIL } from "@/lib/communication/campaign/campaign-boundaries";
 import type { PlatformCommunicationRecipientKind } from "@prisma/client";
+import {
+  EXTERNAL_IN_APP_UNAVAILABLE,
+  resolveExternalEmailDeliveryCapability,
+  type ExternalSnapshotDeliveryCapability,
+} from "@/lib/communication/platform-email/delivery-capability";
 
 export type SponsorExternalSnapshotRow = {
   recipientKind: PlatformCommunicationRecipientKind;
@@ -19,7 +23,7 @@ export type SponsorExternalSnapshotRow = {
     displayName: string;
     organisationName: string;
     email: string | null;
-    deliveryCapability: typeof CAMPAIGN_OUTBOUND_EMAIL | "IN_APP_UNAVAILABLE";
+    deliveryCapability: ExternalSnapshotDeliveryCapability;
   };
 };
 
@@ -29,6 +33,8 @@ export async function collectSponsorExternalSnapshotRows(input: {
   audienceFingerprint: string;
   channel: string;
   resolvedAt: string;
+  emailChannelEnabled: boolean;
+  emailTransportReady: boolean;
 }): Promise<SponsorExternalSnapshotRow[]> {
   void input.audienceFingerprint;
   void input.resolvedAt;
@@ -63,7 +69,7 @@ export async function collectSponsorExternalSnapshotRows(input: {
             displayName: `${contact.firstName} ${contact.lastName}`.trim(),
             organisationName: contact.sponsorOrganisationName,
             email: contact.email,
-            deliveryCapability: "IN_APP_UNAVAILABLE",
+            deliveryCapability: EXTERNAL_IN_APP_UNAVAILABLE,
           },
         });
         continue;
@@ -79,7 +85,11 @@ export async function collectSponsorExternalSnapshotRows(input: {
           displayName: `${contact.firstName} ${contact.lastName}`.trim(),
           organisationName: contact.sponsorOrganisationName,
           email: contact.email,
-          deliveryCapability: CAMPAIGN_OUTBOUND_EMAIL,
+          deliveryCapability: resolveExternalEmailDeliveryCapability({
+            emailChannelEnabled: input.emailChannelEnabled,
+            transportReady: input.emailTransportReady,
+            email: contact.email,
+          }),
         },
       });
     }

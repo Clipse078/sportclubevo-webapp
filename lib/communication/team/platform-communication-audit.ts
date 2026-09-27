@@ -5,7 +5,8 @@ export type PlatformCommunicationAuditAction =
   | "COMMUNICATION_UPDATED"
   | "COMMUNICATION_PUBLISHED"
   | "COMMUNICATION_ARCHIVED"
-  | "COMMUNICATION_ACKNOWLEDGED";
+  | "COMMUNICATION_ACKNOWLEDGED"
+  | "COMMUNICATION_EMAIL_ENQUEUED";
 
 export async function recordPlatformCommunicationAudit(input: {
   tenantId: string;
@@ -15,6 +16,7 @@ export async function recordPlatformCommunicationAudit(input: {
   teamId?: string;
   kind?: string;
   status?: string;
+  metadata?: Record<string, unknown>;
 }): Promise<void> {
   await logAction({
     tenantId: input.tenantId,
@@ -28,6 +30,7 @@ export async function recordPlatformCommunicationAudit(input: {
       teamId: input.teamId,
       kind: input.kind,
       status: input.status,
+      ...(input.metadata ?? {}),
     },
   });
 }
