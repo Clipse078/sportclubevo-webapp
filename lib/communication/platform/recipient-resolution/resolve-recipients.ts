@@ -20,7 +20,9 @@ import {
   loadPersonChannelProfiles,
 } from "@/lib/communication/platform/recipient-resolution/channel-eligibility";
 import { loadGuardianExpansionsForSubjects } from "@/lib/communication/platform/recipient-resolution/guardian-expansion";
-import { evaluateCommunicationPreferenceSeam } from "@/lib/communication/platform/recipient-resolution/preference-seam";
+import { evaluateCommunicationPreferenceForDeliveryUser } from "@/lib/communication/platform/recipient-resolution/preference-seam";
+import { loadExplicitUserPreferenceMap } from "@/lib/communication/preferences/communication-preference-service";
+import { loadSubjectPersonNotificationContexts } from "@/lib/notifications/requirement-recipient-resolution";
 import type { RecipientExclusionReasonCode } from "@/lib/communication/platform/recipient-resolution/reason-codes";
 import { resolveSenderCommunicationScope } from "@/lib/communication/platform/recipient-resolution/sender-communication-scope";
 import { sortPersonIds } from "@/lib/communication/platform/recipient-resolution/set-algebra";
@@ -119,9 +121,23 @@ export async function resolveCommunicationRecipients(
   }
 
   const profiles = await loadPersonChannelProfiles(input.tenantId, scopedIds);
-  const preference = evaluateCommunicationPreferenceSeam({
-    category: input.category,
-    channel: input.channel,
+  const notificationContexts = await loadSubjectPersonNotificationContexts(
+    input.tenantId,
+    scopedIds,
+  );
+  const deliveryUserIdsForPrefs = new Set<string>();
+  for (const personId of scopedIds) {
+    const ctx = notificationContexts.get(personId);
+    if (ctx?.selfUserId) deliveryUserIdsForPrefs.add(ctx.selfUserId);
+    for (const guardianUserId of ctx?.guardianUserIds ?? []) {
+      deliveryUserIdsForPrefs.add(guardianUserId);
+    }
+  }
+  const explicitPreferenceMap = await loadExplicitUserPreferenceMap({
+    tenantId: input.tenantId,
+    userIds: [...deliveryUserIdsForPrefs],
+    categories: [input.category],
+    channels: [input.channel],
   });
 
   const policy = DEFAULT_TENANT_SAFEGUARDING_POLICY(input.tenantId);
@@ -152,9 +168,24 @@ export async function resolveCommunicationRecipients(
       continue;
     }
 
-    if (!preference.allowed) {
-      mergeExclusion(exclusionMap, personId, "PREFERENCE_BLOCKED");
-      continue;
+    const ctx = notificationContexts.get(personId);
+    const preferenceDeliveryUserId =
+      ctx?.selfUserId ??
+      ctx?.guardianUserIds?.[0] ??
+      profile?.userId ??
+      null;
+    if (preferenceDeliveryUserId) {
+      const preference = await evaluateCommunicationPreferenceForDeliveryUser({
+        tenantId: input.tenantId,
+        deliveryUserId: preferenceDeliveryUserId,
+        category: input.category,
+        channel: input.channel,
+        explicitMap: explicitPreferenceMap,
+      });
+      if (!preference.allowed) {
+        mergeExclusion(exclusionMap, personId, "PREFERENCE_BLOCKED");
+        continue;
+      }
     }
 
     if (
@@ -202,7 +233,7 @@ export async function resolveCommunicationRecipients(
       context: input.context,
       channel: input.channel,
       mode: input.mode,
-      preferenceEvaluation: preference.mode,
+      preferenceEvaluation: "EVALUATED",
       senderScopeLimitedPreview: senderScopeResult.previewScopeLimited,
     },
     inclusionReasonsByPersonId: Object.fromEntries(

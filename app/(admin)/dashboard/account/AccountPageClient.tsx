@@ -43,7 +43,9 @@ import { PageHeader } from "@/components/ui/page";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import NotificationPreferencesSection from "@/components/admin/notifications/NotificationPreferencesSection";
+import CommunicationPreferencesSection from "@/components/admin/communication/preferences/CommunicationPreferencesSection";
 import type { NotificationPreferenceDto } from "@/lib/notifications/preference-service";
+import type { CommunicationPreferenceSettingDto } from "@/lib/communication/preferences/communication-preference-service";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -67,6 +69,7 @@ type AccountPageClientProps = {
   linkedPerson: LinkedPerson | null;
   tenantName: string | null;
   notificationPreferences: NotificationPreferenceDto[];
+  communicationPreferences: CommunicationPreferenceSettingDto[];
 };
 
 // ── Feedback banner ───────────────────────────────────────────────────────────
@@ -414,6 +417,7 @@ export default function AccountPageClient({
   linkedPerson,
   tenantName,
   notificationPreferences,
+  communicationPreferences,
 }: AccountPageClientProps) {
   const router = useRouter();
 
@@ -705,6 +709,8 @@ export default function AccountPageClient({
           )}
         </div>
       </Card>
+
+      <CommunicationPreferencesSection initialPreferences={communicationPreferences} />
 
       <NotificationPreferencesSection initialPreferences={notificationPreferences} />
 

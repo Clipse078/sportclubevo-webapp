@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { NotificationEntityType } from "@prisma/client";
 import { createNotificationIdempotent } from "@/lib/notifications/notification-service";
 import { resolveEffectivePreference } from "@/lib/notifications/defaults";
+import { applyCommunicationPreferencesToNotificationDefaults } from "@/lib/communication/preferences/apply-notification-channel-preferences";
 import {
   campaignDeepLinkPath,
   campaignNotificationType,
@@ -22,13 +23,19 @@ export async function emitCampaignPublishedNotifications(
 ): Promise<void> {
   const href = campaignDeepLinkPath(input.communicationId);
   const notificationType = campaignNotificationType();
-  const preferences = resolveEffectivePreference(notificationType, null);
+  const basePreferences = resolveEffectivePreference(notificationType, null);
   const excluded = new Set((input.excludeUserIds ?? []).filter(Boolean));
   const title = defaultCampaignNotificationTitle(input.subject, input.internalName);
 
   for (const recipientUserId of [...new Set(input.deliveryUserIds)]) {
     if (!recipientUserId.trim()) continue;
     if (excluded.has(recipientUserId)) continue;
+    const preferences = await applyCommunicationPreferencesToNotificationDefaults({
+      tenantId: input.tenantId,
+      recipientUserId,
+      notificationType,
+      base: basePreferences,
+    });
     await createNotificationIdempotent(tx, {
       tenantId: input.tenantId,
       recipientUserId,

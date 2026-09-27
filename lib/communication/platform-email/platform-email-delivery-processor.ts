@@ -12,6 +12,7 @@ import {
 import { renderPlatformCommunicationEmail } from "@/lib/communication/platform-email/email-rendering-service";
 import { resolveRecipientSnapshotEmailEligibility } from "@/lib/communication/platform-email/recipient-email-eligibility";
 import { resolveCommunicationChannelIntent } from "@/lib/communication/platform-email/communication-channel-intent";
+import { resolvePublicationCommunicationPreferenceCategory } from "@/lib/communication/preferences/publication-category";
 
 export type ProcessPlatformEmailDeliveriesResult = {
   examined: number;
@@ -24,7 +25,15 @@ export type ProcessPlatformEmailDeliveriesResult = {
 type AttemptRow = Prisma.PlatformCommunicationEmailDeliveryAttemptGetPayload<{
   include: {
     recipientSnapshot: true;
-    communication: { select: { subject: true; bodyText: true; kind: true; orchestrationMetaJson: true } };
+    communication: {
+      select: {
+        subject: true;
+        bodyText: true;
+        kind: true;
+        orchestrationMetaJson: true;
+        audienceSpecJson: true;
+      };
+    };
   };
 }>;
 
@@ -56,7 +65,13 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
     include: {
       recipientSnapshot: true,
       communication: {
-        select: { subject: true, bodyText: true, kind: true, orchestrationMetaJson: true },
+        select: {
+          subject: true,
+          bodyText: true,
+          kind: true,
+          orchestrationMetaJson: true,
+          audienceSpecJson: true,
+        },
       },
     },
   });
@@ -72,10 +87,16 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
       orchestrationMetaJson: attempt.communication.orchestrationMetaJson,
     });
 
+    const preferenceCategory = resolvePublicationCommunicationPreferenceCategory({
+      kind: attempt.communication.kind,
+      audienceSpecJson: attempt.communication.audienceSpecJson,
+    });
+
     const eligibility = await resolveRecipientSnapshotEmailEligibility({
       tenantId: attempt.tenantId,
       snapshot: attempt.recipientSnapshot,
       emailChannelEnabled: channelIntent.email,
+      category: preferenceCategory,
     });
 
     if (!eligibility.eligible || !eligibility.email) {

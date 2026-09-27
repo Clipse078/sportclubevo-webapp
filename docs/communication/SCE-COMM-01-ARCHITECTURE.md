@@ -111,7 +111,7 @@ Dispatch-time pipeline (`recipient-resolution/pipeline.ts`):
 1. **Resolve audience** → candidate subject `personIds` (TargetGroup + structural + explicit).
 2. **Intersect sender scope** → `allowedSubjectPersonIds` from People/Access (`communication-authorization.ts`).
 3. **Safeguarding** → minor/guardian policy (`safeguarding/guardian-policy-seam.ts`, data from `GuardianRelationship`).
-4. **Communication preferences / consent** → category + channel (`preference-categories.ts`, future COMM-17).
+4. **Communication preferences / consent** → category + channel (`preference-categories.ts`, COMM-17 `UserCommunicationPreference`).
 5. **Channel eligibility** → effective delivery targets (User ids).
 6. **Persist snapshot** → `RecipientSnapshotRow[]` for audit and “who actually received this send”.
 

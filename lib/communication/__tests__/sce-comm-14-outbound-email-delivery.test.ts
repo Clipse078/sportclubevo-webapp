@@ -23,6 +23,8 @@ const mocks = vi.hoisted(() => ({
   tenant: { findFirst: vi.fn() },
   user: { findFirst: vi.fn() },
   person: { findFirst: vi.fn() },
+  userCommunicationPreference: { findMany: vi.fn() },
+  sponsorContactCommunicationPreference: { findMany: vi.fn() },
   platformCommunicationRecipientSnapshot: { findMany: vi.fn() },
   platformCommunicationEmailDeliveryAttempt: {
     createMany: vi.fn(),
@@ -40,6 +42,8 @@ vi.mock("@/lib/db/prisma", () => ({
     tenant: mocks.tenant,
     user: mocks.user,
     person: mocks.person,
+    userCommunicationPreference: mocks.userCommunicationPreference,
+    sponsorContactCommunicationPreference: mocks.sponsorContactCommunicationPreference,
     platformCommunicationRecipientSnapshot: mocks.platformCommunicationRecipientSnapshot,
     platformCommunicationEmailDeliveryAttempt: mocks.platformCommunicationEmailDeliveryAttempt,
   },
@@ -68,6 +72,8 @@ vi.mock("@/lib/communication/team/platform-communication-audit", () => ({
 describe("SCE-COMM-14 outbound email delivery", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.userCommunicationPreference.findMany.mockResolvedValue([]);
+    mocks.sponsorContactCommunicationPreference.findMany.mockResolvedValue([]);
     process.env.APP_BASE_URL = "https://app.sportclubevo.test";
     mocks.evaluatePlatformEmailReadiness.mockResolvedValue({
       ready: true,

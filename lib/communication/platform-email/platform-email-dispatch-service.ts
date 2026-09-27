@@ -50,6 +50,7 @@ export async function enqueuePlatformCommunicationEmailDeliveries(input: {
       tenantId: true,
       recipientKind: true,
       subjectPersonId: true,
+      sponsorContactId: true,
       deliveryUserId: true,
       externalSnapshotJson: true,
     },

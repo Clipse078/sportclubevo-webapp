@@ -1,7 +1,10 @@
 import { prisma } from "@/lib/db/prisma";
 import type { PlatformCommunicationRecipientKind } from "@prisma/client";
-import { evaluateCommunicationPreferenceSeam } from "@/lib/communication/platform/recipient-resolution/preference-seam";
 import type { CommunicationPreferenceCategory } from "@/lib/communication/platform/preference-categories";
+import {
+  evaluateCommunicationDeliveryPreferenceForSponsorContact,
+  evaluateCommunicationDeliveryPreferenceForUser,
+} from "@/lib/communication/preferences/delivery-preference-resolver";
 import {
   EXTERNAL_EMAIL_DELIVERY_CANDIDATE,
   type ExternalSnapshotDeliveryCapability,
@@ -11,6 +14,8 @@ import { isEligibleEmailAddress, normalizeEmailAddress } from "@/lib/communicati
 export type RecipientEmailEligibilitySkipReason =
   | "EMAIL_CHANNEL_DISABLED"
   | "PREFERENCE_SEAM_BLOCKED"
+  | "PREFERENCE_EXPLICITLY_DISABLED"
+  | "CONSENT_REQUIRED"
   | "MISSING_EMAIL"
   | "INVALID_EMAIL"
   | "EXTERNAL_NOT_CANDIDATE"
@@ -27,9 +32,16 @@ type SnapshotShape = {
   tenantId: string;
   recipientKind: PlatformCommunicationRecipientKind;
   subjectPersonId: string | null;
+  sponsorContactId?: string | null;
   deliveryUserId: string | null;
   externalSnapshotJson: unknown;
 };
+
+function preferenceSkipReasonFromEvaluation(reason: string): RecipientEmailEligibilitySkipReason {
+  if (reason === "CONSENT_REQUIRED") return "CONSENT_REQUIRED";
+  if (reason === "EXPLICITLY_DISABLED") return "PREFERENCE_EXPLICITLY_DISABLED";
+  return "PREFERENCE_SEAM_BLOCKED";
+}
 
 function externalCapability(
   json: unknown,
@@ -55,13 +67,10 @@ export async function resolveRecipientSnapshotEmailEligibility(input: {
     return { eligible: false, email: null, skipReason: "EMAIL_CHANNEL_DISABLED" };
   }
 
-  const preference = evaluateCommunicationPreferenceSeam({
-    category: input.category ?? "CLUB_INFORMATION",
-    channel: "EMAIL",
-  });
-  if (!preference.allowed) {
-    return { eligible: false, email: null, skipReason: "PREFERENCE_SEAM_BLOCKED" };
-  }
+  const emailCategory =
+    input.snapshot.recipientKind === "EXTERNAL_SPONSOR_CONTACT"
+      ? "SPONSOR_COMMERCIAL"
+      : (input.category ?? "CLUB_INFORMATION");
 
   if (input.snapshot.recipientKind === "INTERNAL_PERSON_NO_CHANNEL") {
     const personId = input.snapshot.subjectPersonId;
@@ -80,6 +89,22 @@ export async function resolveRecipientSnapshotEmailEligibility(input: {
   }
 
   if (input.snapshot.recipientKind === "EXTERNAL_SPONSOR_CONTACT") {
+    const sponsorContactId = input.snapshot.sponsorContactId?.trim();
+    if (sponsorContactId) {
+      const preference = await evaluateCommunicationDeliveryPreferenceForSponsorContact({
+        tenantId: input.tenantId,
+        sponsorContactId,
+        category: "SPONSOR_COMMERCIAL",
+        channel: "EMAIL",
+      });
+      if (!preference.allowed) {
+        return {
+          eligible: false,
+          email: null,
+          skipReason: preferenceSkipReasonFromEvaluation(preference.reason),
+        };
+      }
+    }
     const capability = externalCapability(input.snapshot.externalSnapshotJson);
     if (capability !== EXTERNAL_EMAIL_DELIVERY_CANDIDATE) {
       return { eligible: false, email: null, skipReason: "EXTERNAL_NOT_CANDIDATE" };
@@ -99,6 +124,20 @@ export async function resolveRecipientSnapshotEmailEligibility(input: {
   const deliveryUserId = input.snapshot.deliveryUserId?.trim();
   if (!deliveryUserId) {
     return { eligible: false, email: null, skipReason: "MISSING_EMAIL" };
+  }
+
+  const preference = await evaluateCommunicationDeliveryPreferenceForUser({
+    tenantId: input.tenantId,
+    userId: deliveryUserId,
+    category: emailCategory,
+    channel: "EMAIL",
+  });
+  if (!preference.allowed) {
+    return {
+      eligible: false,
+      email: null,
+      skipReason: preferenceSkipReasonFromEvaluation(preference.reason),
+    };
   }
 
   const user = await prisma.user.findFirst({
