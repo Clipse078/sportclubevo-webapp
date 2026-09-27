@@ -151,6 +151,9 @@ export async function createTeamCommunicationDraft(input: {
   bodyText: string;
   subject?: string | null;
   audiencePreset?: TeamAudiencePreset;
+  audienceSpec?: import("@/lib/communication/platform/audience/zielgruppe-definition").CommunicationAudienceSpec;
+  contextRef?: import("@/lib/communication/platform/communication-context").CommunicationContextRef;
+  orchestrationMetaJson?: import("@prisma/client").Prisma.InputJsonValue;
   replyToCommunicationId?: string | null;
   allowEmptyBody?: boolean;
   acknowledgementRequired?: boolean;
@@ -159,11 +162,12 @@ export async function createTeamCommunicationDraft(input: {
   const bodyText = sanitizeBodyText(input.bodyText, {
     allowEmpty: input.allowEmptyBody === true,
   });
-  const contextRef = createTeamCommunicationContext(input.teamId);
+  const contextRef = input.contextRef ?? createTeamCommunicationContext(input.teamId);
   const ctxErr = validateCommunicationContextRef(input.tenantId, contextRef);
   if (ctxErr) throw new TeamCommunicationValidationError(ctxErr);
 
-  const audience = teamAudienceSpecForPreset(input.teamId, input.audiencePreset ?? "ALL");
+  const audience =
+    input.audienceSpec ?? teamAudienceSpecForPreset(input.teamId, input.audiencePreset ?? "ALL");
   const audienceErr = validateCommunicationAudienceSpec(audience);
   if (audienceErr) throw new TeamCommunicationValidationError(audienceErr);
 
@@ -187,6 +191,7 @@ export async function createTeamCommunicationDraft(input: {
       bodyText,
       replyToCommunicationId: input.replyToCommunicationId?.trim() || null,
       audienceSpecJson: audience as unknown as Prisma.InputJsonValue,
+      orchestrationMetaJson: input.orchestrationMetaJson ?? undefined,
       acknowledgementRequired: input.acknowledgementRequired === true,
       createdByUserId: input.senderUserId,
     },
@@ -212,6 +217,8 @@ export async function publishTeamCommunication(input: {
   communicationId: string;
   senderUserId: string;
   audiencePreset?: TeamAudiencePreset;
+  /** SCE-COMM-10 — keep prepared explicit/event audiences on publish. */
+  preservePreparedAudience?: boolean;
 }): Promise<{ id: string; recipientCount: number }> {
   const row = await prisma.platformCommunication.findFirst({
     where: { id: input.communicationId, tenantId: input.tenantId },
@@ -228,7 +235,7 @@ export async function publishTeamCommunication(input: {
   }
 
   const preset = input.audiencePreset ?? "ALL";
-  if (communicationAudienceMutable(row.status)) {
+  if (communicationAudienceMutable(row.status) && input.preservePreparedAudience !== true) {
     const audience = teamAudienceSpecForPreset(input.teamId, preset);
     const audienceErr = validateCommunicationAudienceSpec(audience);
     if (audienceErr) throw new TeamCommunicationValidationError(audienceErr);
@@ -237,7 +244,10 @@ export async function publishTeamCommunication(input: {
 
   const audience = row.audienceSpecJson as import("@/lib/communication/platform/audience/zielgruppe-definition").CommunicationAudienceSpec;
   const contextRef = row.contextRef as import("@/lib/communication/platform/communication-context").CommunicationContextRef;
-  const exclusion = structuralExclusionForTeamAudiencePreset(input.teamId, preset);
+  const exclusion =
+    input.preservePreparedAudience === true
+      ? undefined
+      : structuralExclusionForTeamAudiencePreset(input.teamId, preset);
 
   const dispatch = await resolveCommunicationRecipientsForDispatch(
     {

@@ -29,6 +29,11 @@ import {
   sendTeamRequestCommunication,
   unclaimTeamRequestSlot,
 } from "@/lib/communication/team/team-request-communication-service";
+import { sendPollNonResponderSmartReminder } from "@/lib/communication/smart-reminders/poll-reminder-service";
+import {
+  sendRequestNonResponderSmartReminder,
+  sendRequestOpenCapacitySmartReminder,
+} from "@/lib/communication/smart-reminders/request-reminder-service";
 import { TeamCommunicationForbiddenError } from "@/lib/communication/team/team-communication-errors";
 
 type ActionResult = { ok: true } | { ok: false; message: string };
@@ -499,6 +504,84 @@ export async function createEventFromDatePollAction(
     return {
       ok: false,
       message: error instanceof Error ? error.message : "Event-Erstellung fehlgeschlagen.",
+    };
+  }
+}
+
+export async function remindPollNonRespondersAction(
+  teamId: string,
+  communicationId: string,
+): Promise<ActionResult> {
+  try {
+    const access = await requireTeamCommunicationSendAccess(teamId);
+    await sendPollNonResponderSmartReminder({
+      tenantId: access.tenantId,
+      teamId,
+      communicationId,
+      senderUserId: access.userId,
+      viewerCanSend: access.canSend,
+    });
+    revalidatePath(`/dashboard/teams/${teamId}/kommunikation`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof TeamCommunicationForbiddenError) {
+      return { ok: false, message: "Keine Berechtigung." };
+    }
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Erinnerung fehlgeschlagen.",
+    };
+  }
+}
+
+export async function remindRequestNonRespondersAction(
+  teamId: string,
+  communicationId: string,
+): Promise<ActionResult> {
+  try {
+    const access = await requireTeamCommunicationSendAccess(teamId);
+    await sendRequestNonResponderSmartReminder({
+      tenantId: access.tenantId,
+      teamId,
+      communicationId,
+      senderUserId: access.userId,
+      viewerCanSend: access.canSend,
+    });
+    revalidatePath(`/dashboard/teams/${teamId}/kommunikation`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof TeamCommunicationForbiddenError) {
+      return { ok: false, message: "Keine Berechtigung." };
+    }
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Erinnerung fehlgeschlagen.",
+    };
+  }
+}
+
+export async function remindRequestOpenCapacityAction(
+  teamId: string,
+  communicationId: string,
+): Promise<ActionResult> {
+  try {
+    const access = await requireTeamCommunicationSendAccess(teamId);
+    await sendRequestOpenCapacitySmartReminder({
+      tenantId: access.tenantId,
+      teamId,
+      communicationId,
+      senderUserId: access.userId,
+      viewerCanSend: access.canSend,
+    });
+    revalidatePath(`/dashboard/teams/${teamId}/kommunikation`);
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof TeamCommunicationForbiddenError) {
+      return { ok: false, message: "Keine Berechtigung." };
+    }
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Erinnerung fehlgeschlagen.",
     };
   }
 }

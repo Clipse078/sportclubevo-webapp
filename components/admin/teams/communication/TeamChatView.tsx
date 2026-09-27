@@ -25,6 +25,9 @@ import {
   selectDatePollWinnerAction,
   createEventFromDatePollAction,
   toggleTeamChatReactionAction,
+  remindPollNonRespondersAction,
+  remindRequestNonRespondersAction,
+  remindRequestOpenCapacityAction,
 } from "@/app/(admin)/dashboard/teams/[teamId]/kommunikation/actions";
 import { TeamPollComposer } from "@/components/admin/teams/communication/TeamPollComposer";
 import { TeamRequestComposer } from "@/components/admin/teams/communication/TeamRequestComposer";
@@ -284,6 +287,24 @@ export default function TeamChatView({
                 onCloseRequest={(communicationId) =>
                   startTransition(async () => {
                     const result = await closeTeamRequestAction(teamId, communicationId);
+                    if (result.ok) window.location.reload();
+                  })
+                }
+                onRemindPollNonResponders={(communicationId) =>
+                  startTransition(async () => {
+                    const result = await remindPollNonRespondersAction(teamId, communicationId);
+                    if (result.ok) window.location.reload();
+                  })
+                }
+                onRemindRequestNonResponders={(communicationId) =>
+                  startTransition(async () => {
+                    const result = await remindRequestNonRespondersAction(teamId, communicationId);
+                    if (result.ok) window.location.reload();
+                  })
+                }
+                onRemindRequestOpenCapacity={(communicationId) =>
+                  startTransition(async () => {
+                    const result = await remindRequestOpenCapacityAction(teamId, communicationId);
                     if (result.ok) window.location.reload();
                   })
                 }

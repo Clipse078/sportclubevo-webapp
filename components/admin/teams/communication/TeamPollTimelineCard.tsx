@@ -12,6 +12,7 @@ type Props = {
   onClosePoll?: (communicationId: string) => Promise<void>;
   onSelectWinner?: (communicationId: string, optionId: string) => Promise<void>;
   onCreateEvent?: (communicationId: string) => Promise<void>;
+  onRemindNonResponders?: (communicationId: string) => Promise<void>;
 };
 
 export function TeamPollTimelineCard({
@@ -21,6 +22,7 @@ export function TeamPollTimelineCard({
   onClosePoll,
   onSelectWinner,
   onCreateEvent,
+  onRemindNonResponders,
 }: Props) {
   const poll = message.poll;
   const [selection, setSelection] = useState<string[]>(poll?.viewerSelectedOptionIds ?? []);
@@ -143,7 +145,23 @@ export function TeamPollTimelineCard({
       ) : null}
 
       {poll.canManage && poll.isOpen ? (
-        <div className="mt-3">
+        <div className="mt-3 flex flex-wrap gap-2">
+          {poll.results && poll.results.notRespondedCount > 0 && onRemindNonResponders ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              data-testid="team-poll-remind-non-responders"
+              disabled={pending || localPending}
+              onClick={() =>
+                startTransition(async () => {
+                  await onRemindNonResponders(message.id);
+                })
+              }
+            >
+              Nicht abgestimmte Personen erinnern ({poll.results.notRespondedCount})
+            </Button>
+          ) : null}
           <Button
             type="button"
             size="sm"
