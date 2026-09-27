@@ -3,6 +3,7 @@
  */
 
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
+import type { StructuralAudienceSelectors } from "@/lib/communication/platform/audience/structural-targets";
 import type { TargetGroupClause } from "@/lib/org/target-group-types";
 import {
   buildZielgruppeRuleDocumentV2,
@@ -36,37 +37,82 @@ function leafClausesFromStructural(input: {
   return clauses;
 }
 
+export function buildStructuralExclusionFromEditor(
+  definition: ZielgruppeEditorDefinition,
+  excludeRoleKeys: string[],
+): StructuralAudienceSelectors | null {
+  const selectors: StructuralAudienceSelectors = {
+    orgUnitIds: definition.excludeOrgUnitIds.length ? [...definition.excludeOrgUnitIds] : undefined,
+    teamIds: definition.excludeTeamIds.length ? [...definition.excludeTeamIds] : undefined,
+    roleKeys: excludeRoleKeys.length ? [...excludeRoleKeys] : undefined,
+  };
+  const hasAny =
+    (selectors.orgUnitIds?.length ?? 0) > 0 ||
+    (selectors.teamIds?.length ?? 0) > 0 ||
+    (selectors.roleKeys?.length ?? 0) > 0;
+  return hasAny ? selectors : null;
+}
+
 export function buildResolverClauseFromEditor(input: {
   orgUnitIds: string[];
   teamIds: string[];
   roleKeys: string[];
   includePersonIds: string[];
   wholeOrganisation: boolean;
+  compositionMode: ZielgruppeEditorDefinition["compositionMode"];
 }): TargetGroupClause | null {
   if (input.wholeOrganisation) {
-    // Whole-organisation resolution is deferred to COMM-03; no person-id materialisation.
     return null;
   }
   const leaves = leafClausesFromStructural(input);
   if (leaves.length === 0) return null;
   if (leaves.length === 1) return leaves[0]!;
-  return { type: "union", clauses: leaves };
+  return {
+    type: input.compositionMode === "INTERSECTION" ? "intersection" : "union",
+    clauses: leaves,
+  };
 }
 
 export function editorDefinitionToAudienceSpec(
   definition: ZielgruppeEditorDefinition,
   roleKeys: string[],
 ): CommunicationAudienceSpec {
+  const leaves = leafClausesFromStructural({
+    orgUnitIds: definition.orgUnitIds,
+    teamIds: definition.teamIds,
+    roleKeys,
+    includePersonIds: [],
+  });
+
+  const usesIntersection =
+    definition.compositionMode === "INTERSECTION" &&
+    (leaves.length > 1 || (definition.wholeOrganisation && leaves.length === 1));
+
+  const dynamicRule: TargetGroupClause | null =
+    usesIntersection && leaves.length > 0
+      ? { type: "intersection", clauses: leaves }
+      : null;
+
+  const structuralOnlyUnion =
+    !usesIntersection &&
+    (definition.wholeOrganisation ||
+      definition.orgUnitIds.length > 0 ||
+      definition.teamIds.length > 0 ||
+      roleKeys.length > 0);
+
   return {
     composition: "UNION",
     components: [
       {
-        structural: {
-          wholeOrganisation: definition.wholeOrganisation || undefined,
-          orgUnitIds: definition.orgUnitIds.length ? [...definition.orgUnitIds] : undefined,
-          teamIds: definition.teamIds.length ? [...definition.teamIds] : undefined,
-          roleKeys: roleKeys.length ? [...roleKeys] : undefined,
-        },
+        structural: structuralOnlyUnion
+          ? {
+              wholeOrganisation: definition.wholeOrganisation || undefined,
+              orgUnitIds: !usesIntersection && definition.orgUnitIds.length ? [...definition.orgUnitIds] : undefined,
+              teamIds: !usesIntersection && definition.teamIds.length ? [...definition.teamIds] : undefined,
+              roleKeys: !usesIntersection && roleKeys.length ? [...roleKeys] : undefined,
+            }
+          : undefined,
+        dynamicRule,
         explicit:
           definition.includePersonIds.length || definition.excludePersonIds.length
             ? {
@@ -90,19 +136,48 @@ export function audienceSpecToEditorDefinition(
   if (!component) return { ...EMPTY_ZIELGRUPPE_EDITOR_DEFINITION };
 
   const structural = component.structural ?? {};
-  return {
+  const def: ZielgruppeEditorDefinition = {
+    compositionMode:
+      component.dynamicRule?.type === "intersection" ? "INTERSECTION" : "UNION",
     wholeOrganisation: structural.wholeOrganisation === true,
     orgUnitIds: [...(structural.orgUnitIds ?? [])],
     teamIds: [...(structural.teamIds ?? [])],
     roleIds: [...(structural.roleIds ?? [])],
     includePersonIds: [...(component.explicit?.includePersonIds ?? [])],
     excludePersonIds: [...(component.explicit?.excludePersonIds ?? [])],
+    excludeOrgUnitIds: [],
+    excludeTeamIds: [],
+    excludeRoleIds: [],
   };
+
+  if (component.dynamicRule?.type === "intersection") {
+    def.orgUnitIds = [];
+    def.teamIds = [];
+    def.roleIds = [];
+    for (const clause of component.dynamicRule.clauses) {
+      if (clause.type === "orgUnitIds") def.orgUnitIds.push(...clause.value);
+      if (clause.type === "teamIds") def.teamIds.push(...clause.value);
+      if (clause.type === "roleKeys") {
+        /* role keys restored via management-service role id lookup */
+      }
+    }
+  }
+
+  return def;
 }
 
 export function extractRoleKeysFromAudience(audience: CommunicationAudienceSpec): string[] {
-  const structural = audience.components[0]?.structural;
-  return [...(structural?.roleKeys ?? [])];
+  const component = audience.components[0];
+  const fromStructural = [...(component?.structural?.roleKeys ?? [])];
+  if (fromStructural.length > 0) return fromStructural;
+  if (component?.dynamicRule?.type === "intersection") {
+    const keys: string[] = [];
+    for (const clause of component.dynamicRule.clauses) {
+      if (clause.type === "roleKeys") keys.push(...clause.value);
+    }
+    return keys;
+  }
+  return [];
 }
 
 /** Infer editor state from legacy v1 union clause trees (best-effort). */
@@ -111,10 +186,12 @@ export function legacyClauseToEditorDefinition(clause: TargetGroupClause): Zielg
 
   function walk(node: TargetGroupClause) {
     if (node.type === "union") {
+      def.compositionMode = "UNION";
       for (const sub of node.clauses) walk(sub);
       return;
     }
     if (node.type === "intersection") {
+      def.compositionMode = "INTERSECTION";
       for (const sub of node.clauses) walk(sub);
       return;
     }
@@ -146,7 +223,12 @@ export function legacyClauseToEditorDefinition(clause: TargetGroupClause): Zielg
 export function ruleJsonToEditorDefinition(ruleJson: unknown): ZielgruppeEditorDefinition {
   const parsed = parseTargetGroupRuleJson(ruleJson);
   if (parsed.audience) {
-    return audienceSpecToEditorDefinition(parsed.audience);
+    const def = audienceSpecToEditorDefinition(parsed.audience);
+    if (parsed.structuralExclusion) {
+      def.excludeOrgUnitIds = [...(parsed.structuralExclusion.orgUnitIds ?? [])];
+      def.excludeTeamIds = [...(parsed.structuralExclusion.teamIds ?? [])];
+    }
+    return def;
   }
   if (parsed.resolverClause) {
     return legacyClauseToEditorDefinition(parsed.resolverClause);
@@ -157,6 +239,7 @@ export function ruleJsonToEditorDefinition(ruleJson: unknown): ZielgruppeEditorD
 export function buildRuleJsonFromEditor(input: {
   definition: ZielgruppeEditorDefinition;
   roleKeys: string[];
+  excludeRoleKeys?: string[];
 }): ZielgruppeRuleDocumentV2 {
   const audience = editorDefinitionToAudienceSpec(input.definition, input.roleKeys);
   const resolverClause = buildResolverClauseFromEditor({
@@ -165,6 +248,11 @@ export function buildRuleJsonFromEditor(input: {
     teamIds: input.definition.teamIds,
     roleKeys: input.roleKeys,
     includePersonIds: input.definition.includePersonIds,
+    compositionMode: input.definition.compositionMode,
   });
-  return buildZielgruppeRuleDocumentV2({ audience, resolverClause });
+  const structuralExclusion = buildStructuralExclusionFromEditor(
+    input.definition,
+    input.excludeRoleKeys ?? [],
+  );
+  return buildZielgruppeRuleDocumentV2({ audience, resolverClause, structuralExclusion });
 }

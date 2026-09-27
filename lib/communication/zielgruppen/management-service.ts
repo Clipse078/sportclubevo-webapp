@@ -84,7 +84,43 @@ async function assertTenantScopedSelectors(
     }
   }
 
-  const personIds = [...definition.includePersonIds, ...definition.excludePersonIds];
+  if (definition.excludeOrgUnitIds.length > 0) {
+    const rows = await prisma.orgUnit.findMany({
+      where: { id: { in: definition.excludeOrgUnitIds } },
+      select: { id: true, tenantId: true },
+    });
+    if (
+      rows.length !== definition.excludeOrgUnitIds.length ||
+      rows.some((r) => r.tenantId !== tenantId)
+    ) {
+      throw new ZielgruppeManagementError("Ungültige Ausschluss-Organisationseinheit.", "FORBIDDEN");
+    }
+  }
+
+  if (definition.excludeTeamIds.length > 0) {
+    const rows = await prisma.team.findMany({
+      where: { id: { in: definition.excludeTeamIds } },
+      select: { id: true, tenantId: true },
+    });
+    if (rows.length !== definition.excludeTeamIds.length || rows.some((r) => r.tenantId !== tenantId)) {
+      throw new ZielgruppeManagementError("Ungültiges Ausschluss-Team.", "FORBIDDEN");
+    }
+  }
+
+  if (definition.excludeRoleIds.length > 0) {
+    const rows = await prisma.role.findMany({
+      where: { id: { in: definition.excludeRoleIds }, tenantId, scope: "TENANT" },
+      select: { id: true },
+    });
+    if (rows.length !== definition.excludeRoleIds.length) {
+      throw new ZielgruppeManagementError("Ungültige Ausschluss-Rolle.", "FORBIDDEN");
+    }
+  }
+
+  const personIds = [
+    ...definition.includePersonIds,
+    ...definition.excludePersonIds,
+  ];
   if (personIds.length > 0) {
     const rows = await prisma.person.findMany({
       where: { id: { in: personIds } },
@@ -175,6 +211,15 @@ export async function getZielgruppeForManagement(tenantId: string, targetGroupId
     definition = { ...definition, roleIds: roles.map((r) => r.id) };
   }
 
+  const excludeRoleKeys = parsed.structuralExclusion?.roleKeys ?? [];
+  if (excludeRoleKeys.length > 0) {
+    const roles = await prisma.role.findMany({
+      where: { tenantId, key: { in: excludeRoleKeys } },
+      select: { id: true },
+    });
+    definition = { ...definition, excludeRoleIds: roles.map((r) => r.id) };
+  }
+
   return {
     ...row,
     definition,
@@ -217,9 +262,14 @@ export async function createZielgruppe(input: {
     throw new ZielgruppeManagementError(`Key „${key}" ist bereits vergeben.`, "CONFLICT");
   }
 
+  const excludeRoleKeys = await resolveRoleKeysForTenant(
+    input.tenantId,
+    input.definition.excludeRoleIds,
+  );
   const ruleJson = buildRuleJsonFromEditor({
     definition: input.definition,
     roleKeys,
+    excludeRoleKeys,
   });
 
   return prisma.targetGroup.create({
@@ -271,9 +321,14 @@ export async function updateZielgruppe(input: {
     const roleKeys = await resolveRoleKeysForTenant(input.tenantId, input.definition.roleIds);
     const defErr = validateZielgruppeEditorDefinition(input.definition, roleKeys);
     if (defErr) throw new ZielgruppeManagementError(defErr);
+    const excludeRoleKeys = await resolveRoleKeysForTenant(
+      input.tenantId,
+      input.definition.excludeRoleIds,
+    );
     data.ruleJson = buildRuleJsonFromEditor({
       definition: input.definition,
       roleKeys,
+      excludeRoleKeys,
     }) as unknown as Prisma.InputJsonValue;
   }
 

@@ -4,6 +4,7 @@ import {
   editorDefinitionToAudienceSpec,
   ruleJsonToEditorDefinition,
 } from "@/lib/communication/zielgruppen/rule-mapper";
+import { EMPTY_ZIELGRUPPE_EDITOR_DEFINITION } from "@/lib/communication/zielgruppen/editor-model";
 import { validateCommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-validation";
 import { extractResolverClauseFromRuleJson } from "@/lib/communication/zielgruppen/rule-document";
 import {
@@ -56,10 +57,9 @@ describe("SCE-COMM-02 Zielgruppen management", () => {
   it("maps editor definition to valid CommunicationAudienceSpec (COMM-01)", () => {
     const doc = buildRuleJsonFromEditor({
       definition: {
-        wholeOrganisation: false,
+        ...EMPTY_ZIELGRUPPE_EDITOR_DEFINITION,
         orgUnitIds: ["ou-1"],
         teamIds: ["team-1"],
-        roleIds: [],
         includePersonIds: ["p-1"],
         excludePersonIds: ["p-2"],
       },
@@ -72,12 +72,8 @@ describe("SCE-COMM-02 Zielgruppen management", () => {
   it("whole organisation stores structural intent without materialising persons", () => {
     const doc = buildRuleJsonFromEditor({
       definition: {
+        ...EMPTY_ZIELGRUPPE_EDITOR_DEFINITION,
         wholeOrganisation: true,
-        orgUnitIds: [],
-        teamIds: [],
-        roleIds: [],
-        includePersonIds: [],
-        excludePersonIds: [],
       },
       roleKeys: [],
     });
@@ -89,10 +85,8 @@ describe("SCE-COMM-02 Zielgruppen management", () => {
   it("rejects include/exclude overlap in validation", () => {
     const err = validateZielgruppeEditorDefinition(
       {
-        wholeOrganisation: false,
+        ...EMPTY_ZIELGRUPPE_EDITOR_DEFINITION,
         orgUnitIds: ["ou-1"],
-        teamIds: [],
-        roleIds: [],
         includePersonIds: ["p-1"],
         excludePersonIds: ["p-1"],
       },
@@ -103,12 +97,11 @@ describe("SCE-COMM-02 Zielgruppen management", () => {
 
   it("summarises structural counts without recipient totals", () => {
     const summary = summarizeZielgruppeDefinition({
-      wholeOrganisation: false,
+      ...EMPTY_ZIELGRUPPE_EDITOR_DEFINITION,
       orgUnitIds: ["a", "b", "c"],
       teamIds: ["t1"],
       roleIds: ["r1"],
       includePersonIds: ["p1", "p2"],
-      excludePersonIds: [],
     });
     expect(summary.parts.some((p) => p.includes("3 Organisationseinheiten"))).toBe(true);
     expect(summary.parts.some((p) => p.match(/^\d+ Empfänger/))).toBe(false);
@@ -121,12 +114,8 @@ describe("SCE-COMM-02 Zielgruppen management", () => {
         tenantId: "tenant-a",
         name: "Test",
         definition: {
-          wholeOrganisation: false,
+          ...EMPTY_ZIELGRUPPE_EDITOR_DEFINITION,
           orgUnitIds: ["ou-1"],
-          teamIds: [],
-          roleIds: [],
-          includePersonIds: [],
-          excludePersonIds: [],
         },
       }),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
@@ -144,12 +133,8 @@ describe("SCE-COMM-02 Zielgruppen management", () => {
       tenantId: "tenant-a",
       name: "Alle Trainer",
       definition: {
-        wholeOrganisation: false,
-        orgUnitIds: [],
-        teamIds: [],
+        ...EMPTY_ZIELGRUPPE_EDITOR_DEFINITION,
         roleIds: ["role-1"],
-        includePersonIds: [],
-        excludePersonIds: [],
       },
     });
 
@@ -196,12 +181,8 @@ describe("SCE-COMM-02 Zielgruppen management", () => {
   it("round-trips editor state through v2 rule json", () => {
     const spec = editorDefinitionToAudienceSpec(
       {
-        wholeOrganisation: false,
+        ...EMPTY_ZIELGRUPPE_EDITOR_DEFINITION,
         orgUnitIds: ["ou-1"],
-        teamIds: [],
-        roleIds: [],
-        includePersonIds: [],
-        excludePersonIds: [],
       },
       [],
     );
@@ -209,12 +190,8 @@ describe("SCE-COMM-02 Zielgruppen management", () => {
       definition: ruleJsonToEditorDefinition(
         buildRuleJsonFromEditor({
           definition: {
-            wholeOrganisation: false,
+            ...EMPTY_ZIELGRUPPE_EDITOR_DEFINITION,
             orgUnitIds: ["ou-1"],
-            teamIds: [],
-            roleIds: [],
-            includePersonIds: [],
-            excludePersonIds: [],
           },
           roleKeys: [],
         }),

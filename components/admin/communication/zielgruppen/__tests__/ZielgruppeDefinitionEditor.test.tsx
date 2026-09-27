@@ -6,6 +6,17 @@ import ZielgruppeDefinitionEditor from "@/components/admin/communication/zielgru
 import { EMPTY_ZIELGRUPPE_EDITOR_DEFINITION } from "@/lib/communication/zielgruppen/editor-model";
 
 vi.mock("@/app/(admin)/dashboard/communication/zielgruppen/actions", () => ({
+  previewZielgruppeRecipientsAction: vi.fn().mockResolvedValue({
+    ok: true,
+    data: {
+      candidates: 3,
+      excluded: 1,
+      effective: 2,
+      scopeNotice: null,
+      recipients: [{ personId: "p-1", displayName: "Person One" }],
+      hasMore: false,
+    },
+  }),
   searchZielgruppeOrgUnitsAction: vi.fn(),
   searchZielgruppeTeamsAction: vi.fn(),
   searchZielgruppeRolesAction: vi.fn(),
@@ -22,8 +33,9 @@ describe("ZielgruppeDefinitionEditor", () => {
     );
 
     expect(screen.getByLabelText(/Ganze Organisation/i)).toBeInTheDocument();
-    expect(screen.getByText(/Vereinigung \(ODER\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/Empfänger \(geplant\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Mindestens eine Bedingung/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Empfänger anzeigen/i })).toBeInTheDocument();
+    expect(screen.getByText(/Alle folgenden Bedingungen/i)).toBeInTheDocument();
   });
 
   it("toggles whole organisation checkbox", async () => {

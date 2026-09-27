@@ -5,7 +5,11 @@
  * (logical OR). Explicit excludes apply after union (COMM-01 explicit semantics).
  */
 
+export type ZielgruppeCompositionMode = "UNION" | "INTERSECTION";
+
 export type ZielgruppeEditorDefinition = {
+  /** How structural criteria combine: ODER (union) vs UND (intersection). */
+  compositionMode: ZielgruppeCompositionMode;
   wholeOrganisation: boolean;
   orgUnitIds: string[];
   teamIds: string[];
@@ -13,15 +17,23 @@ export type ZielgruppeEditorDefinition = {
   roleIds: string[];
   includePersonIds: string[];
   excludePersonIds: string[];
+  /** Structural NOT semantics — subtract matching persons after inclusion. */
+  excludeOrgUnitIds: string[];
+  excludeTeamIds: string[];
+  excludeRoleIds: string[];
 };
 
 export const EMPTY_ZIELGRUPPE_EDITOR_DEFINITION: ZielgruppeEditorDefinition = {
+  compositionMode: "UNION",
   wholeOrganisation: false,
   orgUnitIds: [],
   teamIds: [],
   roleIds: [],
   includePersonIds: [],
   excludePersonIds: [],
+  excludeOrgUnitIds: [],
+  excludeTeamIds: [],
+  excludeRoleIds: [],
 };
 
 export function zielgruppeDefinitionIsEmpty(definition: ZielgruppeEditorDefinition): boolean {
