@@ -572,6 +572,10 @@ export async function listRequestClaimantDetail(input: {
     where: {
       tenantId: input.tenantId,
       slot: { requestId: request.id },
+      recipientSnapshot: {
+        recipientKind: "INTERNAL_IN_APP",
+        subjectPersonId: { not: null },
+      },
     },
     orderBy: [{ claimedAt: "asc" }],
     select: {
@@ -594,9 +598,9 @@ export async function listRequestClaimantDetail(input: {
     claimId: claim.id,
     slotId: claim.slotId,
     recipientSnapshotId: claim.recipientSnapshotId,
-    subjectPersonId: claim.recipientSnapshot.subjectPersonId,
-    subjectName: `${claim.recipientSnapshot.subjectPerson.firstName} ${claim.recipientSnapshot.subjectPerson.lastName}`.trim(),
-    deliveryUserId: claim.recipientSnapshot.deliveryUserId,
+    subjectPersonId: claim.recipientSnapshot.subjectPersonId!,
+    subjectName: `${claim.recipientSnapshot.subjectPerson!.firstName} ${claim.recipientSnapshot.subjectPerson!.lastName}`.trim(),
+    deliveryUserId: claim.recipientSnapshot.deliveryUserId!,
     viaGuardianSubstitution: claim.recipientSnapshot.viaGuardianSubstitution,
     claimedAt: claim.claimedAt.toISOString(),
   }));

@@ -279,7 +279,12 @@ export async function listClubCommunicationRecipientEngagement(input: {
   });
 
   const rows = await prisma.platformCommunicationRecipientSnapshot.findMany({
-    where: { tenantId: input.tenantId, communicationId: input.communicationId },
+    where: {
+      tenantId: input.tenantId,
+      communicationId: input.communicationId,
+      recipientKind: "INTERNAL_IN_APP",
+      subjectPersonId: { not: null },
+    },
     orderBy: [{ engagement: "asc" }, { subjectPersonId: "asc" }],
     select: {
       id: true,
@@ -295,9 +300,9 @@ export async function listClubCommunicationRecipientEngagement(input: {
 
   return rows.map((row) => ({
     snapshotId: row.id,
-    subjectPersonId: row.subjectPersonId,
-    subjectName: `${row.subjectPerson.firstName} ${row.subjectPerson.lastName}`.trim(),
-    deliveryUserId: row.deliveryUserId,
+    subjectPersonId: row.subjectPersonId!,
+    subjectName: `${row.subjectPerson!.firstName} ${row.subjectPerson!.lastName}`.trim(),
+    deliveryUserId: row.deliveryUserId!,
     engagement: row.engagement,
     readAt: row.readAt?.toISOString() ?? null,
     acknowledgedAt: row.acknowledgedAt?.toISOString() ?? null,

@@ -10,7 +10,6 @@ import { isCommunicationKind } from "@/lib/communication/platform/communication-
 import { validateCommunicationContextRef } from "@/lib/communication/platform/communication-context";
 import { validateCommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-validation";
 import { resolveCommunicationRecipientsForDispatch } from "@/lib/communication/platform/recipient-resolution/resolve-recipients";
-import { buildDispatchRecipientSnapshots } from "@/lib/communication/platform/recipient-resolution/snapshot-builder";
 import {
   createOrganisationCommunicationContext,
   getOrCreateOrganisationCommunicationConversation,
@@ -19,6 +18,9 @@ import {
   assertTenantOwnedStructuralSelectors,
   assertTenantOwnedTargetGroupIds,
 } from "@/lib/communication/club/club-audience-spec";
+import { assertTenantOwnedSponsorAudienceSelectors } from "@/lib/sponsoring/sponsor-audience-ownership";
+import { sponsorSelectorsAreEmpty } from "@/lib/sponsoring/sponsor-audience-selectors";
+import { buildCampaignPublishSnapshotCreateMany } from "@/lib/communication/sponsor/publish-recipient-snapshot-data";
 import { summarizeClubAudienceSpec } from "@/lib/communication/club/club-audience-summary";
 import {
   canTransitionCommunicationStatus,
@@ -101,6 +103,9 @@ async function validateAudienceTenantOwnership(
     }
     if (component.structural) {
       await assertTenantOwnedStructuralSelectors({ tenantId, selectors: component.structural });
+    }
+    if (component.sponsor && !sponsorSelectorsAreEmpty(component.sponsor)) {
+      await assertTenantOwnedSponsorAudienceSelectors({ tenantId, selectors: component.sponsor });
     }
   }
 }
@@ -310,16 +315,16 @@ export async function publishClubCommunication(input: {
   );
 
   const fingerprint = dispatch.core.metadata.audienceFingerprint;
-  const snapshotRows = buildDispatchRecipientSnapshots({
-    communicationDispatchRef: input.communicationId,
+  const publishSnapshots = await buildCampaignPublishSnapshotCreateMany({
     tenantId: input.tenantId,
+    communicationId: input.communicationId,
+    audience,
     audienceFingerprint: fingerprint,
-    channel: "IN_APP",
     resolvedAt: dispatch.core.metadata.resolvedAt,
     deliveryTargets: dispatch.pipeline.deliveryTargets,
   });
 
-  if (snapshotRows.length === 0) {
+  if (publishSnapshots.totalCount === 0) {
     throw new TeamCommunicationValidationError("no eligible recipients for dispatch");
   }
 
@@ -336,15 +341,9 @@ export async function publishClubCommunication(input: {
     });
 
     await tx.platformCommunicationRecipientSnapshot.createMany({
-      data: snapshotRows.map((snap) => ({
-        tenantId: input.tenantId,
+      data: publishSnapshots.createManyData.map((snap) => ({
+        ...snap,
         communicationId: row.id,
-        subjectPersonId: snap.subjectPersonId,
-        deliveryUserId: snap.deliveryUserId,
-        channel: snap.channel,
-        audienceFingerprint: snap.audienceFingerprint,
-        viaGuardianSubstitution: snap.viaGuardianSubstitution,
-        resolvedAt: new Date(snap.resolvedAt),
       })),
       skipDuplicates: true,
     });
@@ -355,7 +354,7 @@ export async function publishClubCommunication(input: {
       kind: row.kind,
       title: row.subject?.trim() || defaultTitleForKind(row.kind),
       bodyPreview: row.bodyText.slice(0, 240),
-      deliveryUserIds: snapshotRows.map((s) => s.deliveryUserId),
+      deliveryUserIds: publishSnapshots.deliveryUserIds,
       excludeUserIds: [input.senderUserId],
     });
   });
@@ -369,7 +368,7 @@ export async function publishClubCommunication(input: {
     status: "PUBLISHED",
   });
 
-  return { id: row.id, recipientCount: snapshotRows.length };
+  return { id: row.id, recipientCount: publishSnapshots.totalCount };
 }
 
 function defaultTitleForKind(kind: PlatformCommunicationKind): string {

@@ -14,6 +14,10 @@ import type {
   CommunicationAudienceSpec,
   ZielgruppeAudienceComponent,
 } from "@/lib/communication/platform/audience/zielgruppe-definition";
+import {
+  sponsorSelectorsAreEmpty,
+  type SponsorAudienceSelectors,
+} from "@/lib/sponsoring/sponsor-audience-selectors";
 
 const MAX_COMPONENTS = 20;
 const MAX_IDS_PER_LIST = 500;
@@ -32,6 +36,15 @@ function validateIdList(field: string, ids: string[] | undefined): string | null
   return null;
 }
 
+function validateSponsorSelectors(selectors: SponsorAudienceSelectors | undefined): string | null {
+  if (!selectors || sponsorSelectorsAreEmpty(selectors)) return null;
+  const err =
+    validateIdList("sponsorOrganisationIds", selectors.sponsorOrganisationIds) ??
+    validateIdList("sponsorContactIds", selectors.sponsorContactIds) ??
+    validateIdList("sponsorCategoryIds", selectors.sponsorCategoryIds);
+  return err;
+}
+
 function validateStructural(selectors: StructuralAudienceSelectors | undefined): string | null {
   if (!selectors) return null;
   if (selectors.wholeOrganisation === true) return null;
@@ -48,6 +61,9 @@ function validateComponent(component: ZielgruppeAudienceComponent, index: number
 
   const structuralErr = validateStructural(component.structural);
   if (structuralErr) return `${prefix}: ${structuralErr}`;
+
+  const sponsorErr = validateSponsorSelectors(component.sponsor);
+  if (sponsorErr) return `${prefix}: ${sponsorErr}`;
 
   const savedErr = validateIdList("savedTargetGroupIds", component.savedTargetGroupIds);
   if (savedErr) return `${prefix}: ${savedErr}`;
@@ -76,8 +92,9 @@ function validateComponent(component: ZielgruppeAudienceComponent, index: number
   const hasSaved = (component.savedTargetGroupIds?.length ?? 0) > 0;
   const hasRule = component.dynamicRule != null;
   const hasExplicit = (component.explicit?.includePersonIds?.length ?? 0) > 0;
+  const hasSponsor = !sponsorSelectorsAreEmpty(component.sponsor);
 
-  if (!hasStructural && !hasSaved && !hasRule && !hasExplicit) {
+  if (!hasStructural && !hasSaved && !hasRule && !hasExplicit && !hasSponsor) {
     return `${prefix}: audience component must specify at least one selector`;
   }
 

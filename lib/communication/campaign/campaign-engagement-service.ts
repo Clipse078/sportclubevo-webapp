@@ -14,6 +14,8 @@ export type CampaignEngagementSummary = {
   readCount: number;
   acknowledgedCount: number;
   unreadCount: number;
+  internalInAppRecipientCount: number;
+  externalOrNonDeliverableCount: number;
 };
 
 async function loadPublishedCampaign(input: { tenantId: string; campaignId: string }) {
@@ -42,15 +44,24 @@ export async function getCampaignEngagementSummary(input: {
 }): Promise<CampaignEngagementSummary | null> {
   const row = await loadPublishedCampaign(input);
 
-  const grouped = await prisma.platformCommunicationRecipientSnapshot.groupBy({
-    by: ["engagement"],
-    where: { tenantId: input.tenantId, communicationId: row.id },
-    _count: { _all: true },
-  });
+  const [grouped, kindGrouped] = await Promise.all([
+    prisma.platformCommunicationRecipientSnapshot.groupBy({
+      by: ["engagement"],
+      where: { tenantId: input.tenantId, communicationId: row.id },
+      _count: { _all: true },
+    }),
+    prisma.platformCommunicationRecipientSnapshot.groupBy({
+      by: ["recipientKind"],
+      where: { tenantId: input.tenantId, communicationId: row.id },
+      _count: { _all: true },
+    }),
+  ]);
 
   let recipientCount = 0;
   let readCount = 0;
   let acknowledgedCount = 0;
+  let internalInAppRecipientCount = 0;
+  let externalOrNonDeliverableCount = 0;
 
   for (const entry of grouped) {
     const count = entry._count._all;
@@ -63,12 +74,23 @@ export async function getCampaignEngagementSummary(input: {
     }
   }
 
+  for (const entry of kindGrouped) {
+    const count = entry._count._all;
+    if (entry.recipientKind === "INTERNAL_IN_APP") {
+      internalInAppRecipientCount += count;
+    } else {
+      externalOrNonDeliverableCount += count;
+    }
+  }
+
   return {
     campaignId: row.id,
     recipientCount,
     readCount,
     acknowledgedCount,
-    unreadCount: Math.max(recipientCount - readCount, 0),
+    unreadCount: Math.max(internalInAppRecipientCount - readCount, 0),
+    internalInAppRecipientCount,
+    externalOrNonDeliverableCount,
   };
 }
 

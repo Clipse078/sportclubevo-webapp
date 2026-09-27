@@ -484,7 +484,12 @@ export async function listPollRecipientResponses(input: {
   const poll = row.poll!;
 
   const snapshots = await prisma.platformCommunicationRecipientSnapshot.findMany({
-    where: { tenantId: input.tenantId, communicationId: row.id },
+    where: {
+      tenantId: input.tenantId,
+      communicationId: row.id,
+      recipientKind: "INTERNAL_IN_APP",
+      subjectPersonId: { not: null },
+    },
     orderBy: [{ subjectPersonId: "asc" }],
     select: {
       id: true,
@@ -501,9 +506,9 @@ export async function listPollRecipientResponses(input: {
 
   return snapshots.map((snap) => ({
     snapshotId: snap.id,
-    subjectPersonId: snap.subjectPersonId,
-    subjectName: `${snap.subjectPerson.firstName} ${snap.subjectPerson.lastName}`.trim(),
-    deliveryUserId: snap.deliveryUserId,
+    subjectPersonId: snap.subjectPersonId!,
+    subjectName: `${snap.subjectPerson!.firstName} ${snap.subjectPerson!.lastName}`.trim(),
+    deliveryUserId: snap.deliveryUserId!,
     viaGuardianSubstitution: snap.viaGuardianSubstitution,
     optionIds: snap.pollResponses.map((r) => r.optionId),
     respondedAt:

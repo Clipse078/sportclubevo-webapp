@@ -73,6 +73,7 @@ enum PermissionModule {
   TASKS
   REQUIREMENTS
   COMMUNICATION
+  SPONSORING
 }
 
 // RPERM-02: Distinguishes platform-wide roles/permissions from tenant-scoped ones.
@@ -321,6 +322,17 @@ enum PlatformCommunicationRecipientEngagement {
   READ
   ACKNOWLEDGED
   RESPONDED
+}
+
+enum PlatformCommunicationRecipientKind {
+  INTERNAL_IN_APP
+  INTERNAL_PERSON_NO_CHANNEL
+  EXTERNAL_SPONSOR_CONTACT
+}
+
+enum SponsorOrganisationStatus {
+  ACTIVE
+  INACTIVE
 }
 
 enum PlatformCommunicationPollMode {
@@ -1087,6 +1099,9 @@ model Tenant {
   platformCommunicationConversations PlatformCommunicationConversation[]
   platformCommunications          PlatformCommunication[]
   platformCommunicationRecipientSnapshots PlatformCommunicationRecipientSnapshot[]
+  sponsorCategories                       SponsorCategory[]
+  sponsorOrganisations                    SponsorOrganisation[]
+  sponsorContacts                         SponsorContact[]
   platformCommunicationReactions  PlatformCommunicationReaction[]
   platformCommunicationMentions   PlatformCommunicationMention[]
   platformCommunicationAttachments PlatformCommunicationAttachment[]
@@ -1856,6 +1871,7 @@ model Person {
   platformCommunicationSnapshots   PlatformCommunicationRecipientSnapshot[] @relation("PlatformCommunicationSnapshotSubject")
   platformCommunicationReactions   PlatformCommunicationReaction[] @relation("PlatformCommunicationReactionPerson")
   platformCommunicationMentionsReceived PlatformCommunicationMention[] @relation("PlatformCommunicationMentionedPerson")
+  sponsorContactsLinked                 SponsorContact[]               @relation("SponsorContactPerson")
 
   @@index([lastName, firstName])
   @@index([email])
@@ -3088,9 +3104,14 @@ model PlatformCommunicationRecipientSnapshot {
   tenantId        String
   communicationId String
 
-  subjectPersonId String
-  deliveryUserId  String
+  recipientKind PlatformCommunicationRecipientKind @default(INTERNAL_IN_APP)
+  subjectPersonId String?
+  sponsorContactId String?
+  deliveryUserId  String?
   channel         String
+
+  /// Minimal frozen external contact metadata (no live Sponsor-domain mutation after publish).
+  externalSnapshotJson Json?
 
   audienceFingerprint     String
   viaGuardianSubstitution Boolean @default(false)
@@ -3104,7 +3125,8 @@ model PlatformCommunicationRecipientSnapshot {
 
   tenant        Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   communication PlatformCommunication @relation(fields: [communicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  subjectPerson Person                @relation("PlatformCommunicationSnapshotSubject", fields: [subjectPersonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  subjectPerson Person?               @relation("PlatformCommunicationSnapshotSubject", fields: [subjectPersonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  sponsorContact SponsorContact?      @relation(fields: [sponsorContactId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   pollResponses PlatformCommunicationPollResponse[]
   requestClaims PlatformCommunicationRequestClaim[]
   pushDeliveryAttempts NotificationPushDeliveryAttempt[]
@@ -3113,7 +3135,71 @@ model PlatformCommunicationRecipientSnapshot {
   @@index([tenantId, communicationId, engagement], map: "pc_recipient_snapshot_tenant_comm_engagement_idx")
   @@index([tenantId, subjectPersonId])
   @@index([tenantId, deliveryUserId])
+  @@index([tenantId, sponsorContactId])
   @@unique([communicationId, subjectPersonId, deliveryUserId, channel])
+  @@unique([communicationId, sponsorContactId])
+}
+
+// ---------------------------------------------------------------------------
+// Sponsoring domain (SCE-COMM-13 integration seam — Sponsor owns this data)
+// ---------------------------------------------------------------------------
+
+model SponsorCategory {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant         Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  organisations  SponsorOrganisation[]
+
+  @@index([tenantId, isActive])
+  @@unique([tenantId, name])
+}
+
+model SponsorOrganisation {
+  id         String                    @id @default(cuid())
+  tenantId   String
+  name       String
+  status     SponsorOrganisationStatus @default(ACTIVE)
+  categoryId String?
+  notes      String?
+  createdAt  DateTime                  @default(now())
+  updatedAt  DateTime                  @updatedAt
+
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  category SponsorCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  contacts SponsorContact[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, categoryId])
+  @@unique([tenantId, name])
+}
+
+/// Sponsor-owned contact. May optionally link to a tenant Person (internal) or remain external-only.
+model SponsorContact {
+  id                    String   @id @default(cuid())
+  tenantId              String
+  sponsorOrganisationId String
+  personId              String?
+  firstName             String
+  lastName              String
+  email                 String?
+  phone                 String?
+  isActive              Boolean  @default(true)
+  isPrimary             Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  tenant              Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sponsorOrganisation SponsorOrganisation @relation(fields: [sponsorOrganisationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  person              Person?             @relation("SponsorContactPerson", fields: [personId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  communicationSnapshots PlatformCommunicationRecipientSnapshot[]
+
+  @@index([tenantId, sponsorOrganisationId, isActive])
+  @@index([tenantId, personId])
 }
 
 /// SCE-COMM-07 — structured poll configuration (1:1 with PlatformCommunication).

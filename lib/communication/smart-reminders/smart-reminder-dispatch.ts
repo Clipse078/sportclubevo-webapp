@@ -171,7 +171,13 @@ export async function resolveSubjectPersonIdsFromSnapshotIds(input: {
     where: { tenantId: input.tenantId, id: { in: [...input.snapshotIds] } },
     select: { subjectPersonId: true },
   });
-  const ids = [...new Set(snapshots.map((s) => s.subjectPersonId))];
+  const ids = [
+    ...new Set(
+      snapshots
+        .map((s) => s.subjectPersonId)
+        .filter((id): id is string => typeof id === "string" && id.length > 0),
+    ),
+  ];
   ids.sort();
   return ids;
 }

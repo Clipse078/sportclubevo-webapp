@@ -12,8 +12,23 @@ export function sponsorCampaignContext(sponsorId: string): CommunicationContextR
 /** Campaign composer entry — context pre-selected, audience still canonical Zielgruppe engine. */
 export type SponsorCampaignComposerLaunch = {
   tenantId: string;
-  sponsorId: string;
+  /** SponsorOrganisation.id */
+  sponsorOrganisationId: string;
   communicationKind: Extract<CommunicationKind, "CAMPAIGN">;
+  /** Optional explicit SponsorContact.id preselection. */
+  sponsorContactIds?: readonly string[];
   /** Authorisation checked against sponsor + org communication permissions. */
   launchedByUserId: string;
 };
+
+export function sponsorCampaignComposerHref(input: {
+  sponsorOrganisationId: string;
+  sponsorContactIds?: readonly string[];
+}): string {
+  const params = new URLSearchParams();
+  params.set("sponsorOrganisationId", input.sponsorOrganisationId.trim());
+  for (const id of input.sponsorContactIds ?? []) {
+    if (id.trim()) params.append("sponsorContactId", id.trim());
+  }
+  return `/dashboard/communication/kampagnen/new?${params.toString()}`;
+}

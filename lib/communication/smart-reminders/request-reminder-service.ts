@@ -216,7 +216,13 @@ export async function sendRequestOpenCapacitySmartReminder(input: {
       where: { tenantId: input.tenantId, communicationId: input.communicationId },
       select: { subjectPersonId: true },
     });
-    personIds = [...new Set(allSnapshots.map((s) => s.subjectPersonId))].sort();
+    personIds = [
+      ...new Set(
+        allSnapshots
+          .map((s) => s.subjectPersonId)
+          .filter((id): id is string => typeof id === "string" && id.length > 0),
+      ),
+    ].sort();
   }
 
   const result = await dispatchSmartReminderCommunication({

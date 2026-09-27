@@ -8,6 +8,7 @@
 
 import type { TargetGroupClause } from "@/lib/org/target-group-types";
 import type { StructuralAudienceSelectors } from "@/lib/communication/platform/audience/structural-targets";
+import type { SponsorAudienceSelectors } from "@/lib/sponsoring/sponsor-audience-selectors";
 
 export const AUDIENCE_COMPOSITION_MODES = ["UNION", "INTERSECTION"] as const;
 
@@ -30,6 +31,8 @@ export type ZielgruppeAudienceComponent = {
   /** Inline dynamic rule (same schema as TargetGroup.ruleJson). */
   dynamicRule?: TargetGroupClause | null;
   explicit?: ExplicitPersonAudience;
+  /** Sponsor-domain audience selectors (COMM-13); resolved via Sponsor module, not copied. */
+  sponsor?: SponsorAudienceSelectors;
 };
 
 export type CommunicationAudienceSpec = {

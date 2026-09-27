@@ -11,6 +11,7 @@ import {
   parseCampaignOrchestrationMeta,
 } from "@/lib/communication/campaign/campaign-orchestration-meta";
 import { CAMPAIGN_BOUNDARY_FLAGS } from "@/lib/communication/campaign/campaign-boundaries";
+import { aggregateSponsorAudiencePreview } from "@/lib/communication/sponsor/sponsor-audience-preview";
 import {
   TeamCommunicationForbiddenError,
   TeamCommunicationNotFoundError,
@@ -22,7 +23,7 @@ export async function previewCampaignAudience(input: {
   audience: CommunicationAudienceSpec;
   includeRecipientDetail?: boolean;
 }) {
-  return previewClubCommunicationAudience({
+  const base = await previewClubCommunicationAudience({
     tenantId: input.tenantId,
     senderUserId: input.senderUserId,
     audience: input.audience,
@@ -30,6 +31,15 @@ export async function previewCampaignAudience(input: {
     category: "CLUB_INFORMATION",
     includeRecipientDetail: input.includeRecipientDetail,
   });
+  const sponsorAggregate = await aggregateSponsorAudiencePreview({
+    tenantId: input.tenantId,
+    audience: input.audience,
+  });
+  return {
+    ...base,
+    sponsorAudience: sponsorAggregate,
+    deliveryBoundaries: CAMPAIGN_BOUNDARY_FLAGS,
+  };
 }
 
 export async function previewCampaignContent(input: {
