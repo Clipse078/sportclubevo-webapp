@@ -17,6 +17,10 @@ Communication remains the owner of content, audience, immutable recipient snapsh
 
 Email transport is provider-neutral at the domain boundary (`sendOutboundEmail` → Resend adapter in `lib/email/mailer.ts`).
 
+**Provider separation (intentional):** Platform Communication outbound email uses **Resend** (API via `lib/email/mailer.ts`). Billing invoice delivery continues to use **`billing-email-transport.ts`** (Infomaniak SMTP when selected). These are separate transport paths; COMM-14 does not introduce a second Communication engine and does not change Billing transport.
+
+`SENT` on `PlatformCommunicationEmailDeliveryAttempt` means **provider/transport acceptance only** (SMTP/API handoff), not mailbox delivery, opens, or reads (COMM-19).
+
 ---
 
 ## Pipeline
