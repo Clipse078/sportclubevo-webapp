@@ -3,6 +3,8 @@
  * CSS variables are defined in app/globals.css; components consume var(--sce-surface-*).
  */
 
+import { cn } from "@/lib/cn";
+
 export const SCE_SURFACE_TOKEN_SUBTLE = "--sce-surface-subtle";
 export const SCE_SURFACE_TOKEN_STANDARD = "--sce-surface-standard";
 export const SCE_SURFACE_TOKEN_DENSE = "--sce-surface-dense";
@@ -26,6 +28,15 @@ export const SCE_SURFACE_STANDARD_PANEL =
 
 export const SCE_KPI_CARD_SURFACE =
   "border-[var(--sce-surface-border)] bg-[var(--sce-surface-standard)] shadow-[var(--sce-surface-shadow)]";
+
+/**
+ * Full dashboard module page canvas (L3) — opaque operational background that
+ * blocks the authenticated decorative shell artwork from showing through content.
+ */
+export const SCE_DASHBOARD_MODULE_PAGE_SURFACE = cn(
+  "min-h-full w-full rounded-[var(--radius-2xl)] border border-[var(--sce-surface-border)]",
+  "bg-[var(--sce-surface-dense)] shadow-[var(--sce-surface-shadow)]",
+);
 
 /** Files that must use the dense operational token inside planner grids. */
 export const SCE_PLANNER_DENSE_SURFACE_SOURCES = [

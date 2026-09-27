@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { CommunicationCenterImapSecurity } from "@prisma/client";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
+import { cn } from "@/lib/cn";
 
 type PublicMailbox = {
   id: string;
@@ -34,6 +37,7 @@ export default function CommunicationMailboxSettingsForm({ initialMailboxes }: P
     credential: "",
   });
   const [message, setMessage] = useState<string | null>(null);
+  const [showCredential, setShowCredential] = useState(false);
 
   async function refreshMailboxes() {
     const res = await fetch("/api/communication/inbox/mailboxes");
@@ -62,6 +66,7 @@ export default function CommunicationMailboxSettingsForm({ initialMailboxes }: P
       imapUsername: "",
       credential: "",
     });
+    setShowCredential(false);
     setMessage("Postfach gespeichert. Passwort wird nicht erneut angezeigt.");
     await refreshMailboxes();
   }
@@ -77,7 +82,7 @@ export default function CommunicationMailboxSettingsForm({ initialMailboxes }: P
 
   return (
     <div className="space-y-8">
-      <section className="rounded-xl border border-[var(--border)] p-4">
+      <section className={cn(SCE_SURFACE_STANDARD_PANEL, "p-4")}>
         <h2 className="text-sm font-semibold">Postfach hinzufügen</h2>
         <p className="mt-1 text-xs text-[var(--text-2)]">
           Zugangsdaten werden verschlüsselt gespeichert und nie erneut im Browser angezeigt.
@@ -111,15 +116,33 @@ export default function CommunicationMailboxSettingsForm({ initialMailboxes }: P
               }
             />
           </label>
-          <label className="text-xs font-medium text-[var(--text-2)]">
+          <label htmlFor="mailbox-credential" className="text-xs font-medium text-[var(--text-2)]">
             Passwort / App-Passwort
-            <input
-              type="password"
-              autoComplete="new-password"
-              className="mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
-              value={form.credential}
-              onChange={(event) => setForm((prev) => ({ ...prev, credential: event.target.value }))}
-            />
+            <div className="relative mt-1">
+              <input
+                id="mailbox-credential"
+                type={showCredential ? "text" : "password"}
+                autoComplete="new-password"
+                className="w-full rounded-lg border border-[var(--border)] px-3 py-2 pr-9 text-sm"
+                value={form.credential}
+                onChange={(event) => setForm((prev) => ({ ...prev, credential: event.target.value }))}
+                data-testid="mailbox-credential-input"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCredential((visible) => !visible)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--foreground)]"
+                aria-label={showCredential ? "Passwort verbergen" : "Passwort anzeigen"}
+                aria-pressed={showCredential}
+                data-testid="mailbox-credential-visibility-toggle"
+              >
+                {showCredential ? (
+                  <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />
+                ) : (
+                  <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+              </button>
+            </div>
           </label>
         </div>
         <div className="mt-4">
@@ -129,7 +152,7 @@ export default function CommunicationMailboxSettingsForm({ initialMailboxes }: P
         </div>
       </section>
 
-      <section className="rounded-xl border border-[var(--border)] p-4">
+      <section className={cn(SCE_SURFACE_STANDARD_PANEL, "p-4")}>
         <h2 className="text-sm font-semibold">Konfigurierte Postfächer</h2>
         <ul className="mt-3 divide-y divide-[var(--border)]">
           {mailboxes.map((mailbox) => (
