@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import CommunicationScheduleFields from "@/components/admin/communication/scheduling/CommunicationScheduleFields";
@@ -17,6 +18,8 @@ import type { CommunicationAudienceSpec } from "@/lib/communication/platform/aud
 
 type TargetGroupOption = { id: string; name: string; status: string };
 
+type TemplateOption = { id: string; name: string; kind: string };
+
 type Props = {
   targetGroups: TargetGroupOption[];
   tenantTimezone?: string;
@@ -26,6 +29,7 @@ type Props = {
   initialBody?: string;
   initialAudienceSpec?: CommunicationAudienceSpec;
   readOnly?: boolean;
+  templateOptions?: TemplateOption[];
 };
 
 function sectionHeading(id: string, title: string) {
@@ -45,6 +49,7 @@ export default function ClubCommunicationComposer({
   initialBody = "",
   initialAudienceSpec,
   readOnly = false,
+  templateOptions = [],
 }: Props) {
   const router = useRouter();
   const initialAudience = useMemo(
@@ -73,6 +78,7 @@ export default function ClubCommunicationComposer({
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduledAtLocal, setScheduledAtLocal] = useState("");
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
 
   useEffect(() => {
     async function loadEmailReadiness() {
@@ -110,6 +116,41 @@ export default function ClubCommunicationComposer({
       .filter(Boolean);
     return names.length > 0 ? names.join(", ") : `${selectedGroupIds.length} Zielgruppe(n)`;
   }, [audienceMode, preview?.audienceSummary, selectedGroupIds, targetGroups]);
+
+  const compatibleTemplates = templateOptions.filter((t) => t.kind === kind);
+
+  async function applyTemplate() {
+    if (!selectedTemplateId) return;
+    setError(null);
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/communication/templates/${selectedTemplateId}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Vorlage konnte nicht geladen werden");
+      const template = data.template as {
+        kind: string;
+        subject?: string | null;
+        bodyText: string;
+        audienceSpecJson?: CommunicationAudienceSpec;
+      };
+      if (template.kind !== kind) {
+        throw new Error("Diese Vorlage passt nicht zur gewählten Mitteilungs-Art.");
+      }
+      setSubject(template.subject?.trim() || "");
+      setBodyText(template.bodyText);
+      if (template.audienceSpecJson) {
+        const inferred = inferMitteilungAudienceEditorState(template.audienceSpecJson);
+        setAudienceMode(inferred.mode);
+        setSelectedGroupIds(inferred.selectedGroupIds);
+      }
+      setPreview(null);
+      setReviewConfirmed(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Vorlage konnte nicht übernommen werden");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function runPreview() {
     setError(null);
@@ -254,6 +295,42 @@ export default function ClubCommunicationComposer({
       <section aria-labelledby="mitteilung-inhalt-heading" className="space-y-4 rounded-xl border border-[var(--border)] p-4 md:p-6">
         {sectionHeading("mitteilung-inhalt-heading", "Inhalt")}
         <p className="text-sm text-[var(--text-2)]">Was möchten Sie mitteilen?</p>
+        {compatibleTemplates.length > 0 ? (
+          <div className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-4">
+            <label className="block text-sm">
+              <span className="mb-1 block font-medium text-[var(--foreground)]">Vorlage (optional)</span>
+              <select
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
+                value={selectedTemplateId}
+                onChange={(e) => setSelectedTemplateId(e.target.value)}
+                aria-label="Vorlage auswählen"
+              >
+                <option value="">Keine Vorlage</option>
+                {compatibleTemplates.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={!selectedTemplateId || busy}
+                onClick={() => void applyTemplate()}
+                className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--surface-1)]"
+              >
+                Vorlage übernehmen
+              </button>
+              <Link
+                href="/dashboard/communication/vorlagen"
+                className="rounded-lg px-3 py-1.5 text-sm text-[var(--sce-primary)] hover:underline"
+              >
+                Vorlagen verwalten
+              </Link>
+            </div>
+          </div>
+        ) : null}
         <div className="grid gap-4 md:grid-cols-3">
           <label className="block text-sm">
             <span className="mb-1 block font-medium text-[var(--foreground)]">Art</span>
