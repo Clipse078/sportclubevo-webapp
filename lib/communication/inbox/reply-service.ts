@@ -40,21 +40,30 @@ export async function replyToCommunicationCenterConversation(input: {
   includePersonalSignature?: boolean;
   attachmentIds?: readonly string[];
 }): Promise<ReplyToConversationResult> {
-  const { applyPersonalSignatureToOutboundBody } = await import(
+  const { applyPersonalSignatureToOutbound, personalSignatureFreezeJson } = await import(
     "@/lib/communication/personal-signature/personal-signature-service"
+  );
+  const { renderEmailBodyHtmlFromFreeze } = await import(
+    "@/lib/communication/personal-signature/signature-email-delivery"
+  );
+  const { loadSignatureCidMailAttachments } = await import(
+    "@/lib/communication/personal-signature/signature-email-delivery"
   );
   const attachmentIds = [...new Set((input.attachmentIds ?? []).filter(Boolean))];
   let bodyText = input.bodyText.trim();
   if (!bodyText && attachmentIds.length === 0) {
     throw new CommunicationCenterError("INVALID_INPUT", "Nachrichtentext ist erforderlich.");
   }
+  let signatureFreeze = null;
   try {
-    bodyText = await applyPersonalSignatureToOutboundBody({
+    const applied = await applyPersonalSignatureToOutbound({
       tenantId: input.tenantId,
       userId: input.actorUserId,
       messageBody: bodyText,
       includePersonalSignature: input.includePersonalSignature,
     });
+    bodyText = applied.bodyText;
+    signatureFreeze = applied.freeze;
   } catch (error) {
     if (error instanceof Error && error.message === "BODY_WITH_SIGNATURE_TOO_LONG") {
       throw new CommunicationCenterError("INVALID_INPUT", "Nachricht ist zu lang.");
@@ -219,7 +228,15 @@ export async function replyToCommunicationCenterConversation(input: {
       toAddresses: [lastInbound.fromAddress],
       subject,
       bodyText: bodyText || " ",
-      bodyHtmlSanitized: plainTextToSafeHtml(bodyText || " "),
+      bodyHtmlSanitized:
+        signatureFreeze != null
+          ? renderEmailBodyHtmlFromFreeze({
+              messageBodyText: signatureFreeze.messageBodyText,
+              signaturePlainText: signatureFreeze.plainTextFallback,
+              freeze: signatureFreeze,
+            })
+          : plainTextToSafeHtml(bodyText || " "),
+      personalSignatureFreezeJson: personalSignatureFreezeJson(signatureFreeze),
       outboundIdempotencyKey: input.idempotencyKey,
       createdByUserId: input.actorUserId,
     },
@@ -264,12 +281,36 @@ export async function replyToCommunicationCenterConversation(input: {
       }
     }
 
+    if (signatureFreeze) {
+      try {
+        const inline = await loadSignatureCidMailAttachments({
+          tenantId: input.tenantId,
+          freeze: signatureFreeze,
+        });
+        mailAttachments = [...(mailAttachments ?? []), ...inline];
+      } catch {
+        throw new CommunicationCenterError(
+          "ATTACHMENT_UNAVAILABLE",
+          "Signatur-Logo konnte nicht für den Versand geladen werden.",
+        );
+      }
+    }
+
+    const htmlBody =
+      signatureFreeze != null
+        ? renderEmailBodyHtmlFromFreeze({
+            messageBodyText: signatureFreeze.messageBodyText,
+            signaturePlainText: signatureFreeze.plainTextFallback,
+            freeze: signatureFreeze,
+          })
+        : plainTextToSafeHtml(bodyText || " ");
+
     const transport = await sendOutboundEmail({
       from: sender.formattedFrom,
       to: lastInbound.fromAddress,
       subject,
       text: bodyText || " ",
-      html: plainTextToSafeHtml(bodyText || " "),
+      html: htmlBody,
       idempotencyKey: input.idempotencyKey,
       attachments: mailAttachments,
     });

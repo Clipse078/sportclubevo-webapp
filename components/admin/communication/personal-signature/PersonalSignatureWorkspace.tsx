@@ -3,9 +3,16 @@
 import { useCallback, useMemo, useState } from "react";
 import { MAX_PERSONAL_SIGNATURE_LENGTH } from "@/lib/communication/personal-signature/personal-signature-constants";
 import { previewMessageWithPersonalSignature } from "@/lib/communication/personal-signature/personal-signature-compose";
+import type { PersonalSignatureContent } from "@/lib/communication/personal-signature/signature-content-types";
+import {
+  emptyPersonalSignatureContent,
+  signatureContentToPlainText,
+} from "@/lib/communication/personal-signature/signature-content";
+import { PersonalSignatureEditor } from "@/components/admin/communication/personal-signature/PersonalSignatureEditor";
 
 type Preference = {
   bodyText: string | null;
+  contentJson?: PersonalSignatureContent | null;
   useByDefault: boolean;
   hasStoredPreference: boolean;
 };
@@ -15,19 +22,22 @@ type Props = {
 };
 
 export default function PersonalSignatureWorkspace({ initialPreference }: Props) {
-  const [bodyText, setBodyText] = useState(initialPreference.bodyText ?? "");
+  const [contentJson, setContentJson] = useState<PersonalSignatureContent>(
+    initialPreference.contentJson ?? emptyPersonalSignatureContent(),
+  );
   const [useByDefault, setUseByDefault] = useState(initialPreference.useByDefault);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const bodyText = useMemo(() => signatureContentToPlainText(contentJson), [contentJson]);
+
   const preview = useMemo(
     () =>
-      previewMessageWithPersonalSignature(
-        "Ihre Nachricht erscheint hier.",
-        bodyText.trim() || null,
-      ),
-    [bodyText],
+      previewMessageWithPersonalSignature("Ihre Nachricht erscheint hier.", bodyText.trim() || null, {
+        contentJson: bodyText.trim() ? contentJson : null,
+      }),
+    [bodyText, contentJson],
   );
 
   const save = useCallback(async () => {
@@ -38,9 +48,9 @@ export default function PersonalSignatureWorkspace({ initialPreference }: Props)
       const res = await fetch("/api/communication/personal-signature", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bodyText, useByDefault }),
+        body: JSON.stringify({ contentJson, useByDefault }),
       });
-      const data = (await res.json()) as { message?: string; error?: string };
+      const data = (await res.json()) as { message?: string; error?: string; code?: string };
       if (!res.ok) {
         setError(data.message ?? data.error ?? "Speichern fehlgeschlagen.");
         return;
@@ -51,7 +61,7 @@ export default function PersonalSignatureWorkspace({ initialPreference }: Props)
     } finally {
       setBusy(false);
     }
-  }, [bodyText, useByDefault]);
+  }, [contentJson, useByDefault]);
 
   const remove = useCallback(async () => {
     setBusy(true);
@@ -63,7 +73,7 @@ export default function PersonalSignatureWorkspace({ initialPreference }: Props)
         setError("Signatur konnte nicht entfernt werden.");
         return;
       }
-      setBodyText("");
+      setContentJson(emptyPersonalSignatureContent());
       setUseByDefault(true);
       setStatus("Signatur entfernt.");
     } catch {
@@ -87,21 +97,17 @@ export default function PersonalSignatureWorkspace({ initialPreference }: Props)
         <label htmlFor="personal-signature-body" className="block text-sm font-medium">
           Signatur
         </label>
-        <textarea
-          id="personal-signature-body"
-          rows={8}
-          value={bodyText}
-          onChange={(event) => setBodyText(event.target.value)}
-          aria-describedby="personal-signature-length personal-signature-preview-heading"
-          aria-invalid={lengthInvalid}
-          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
-          placeholder={"Freundliche Grüsse\nMax Mustermann\nTrainer F2\nFC Allschwil"}
+        <PersonalSignatureEditor
+          inputId="personal-signature-body"
+          value={contentJson}
+          onChange={setContentJson}
+          disabled={busy}
         />
         <p
           id="personal-signature-length"
           className={`text-xs ${lengthInvalid ? "text-red-600" : "text-[var(--text-2)]"}`}
         >
-          {length} / {MAX_PERSONAL_SIGNATURE_LENGTH} Zeichen
+          {length} / {MAX_PERSONAL_SIGNATURE_LENGTH} Zeichen (Text)
         </p>
       </div>
 
@@ -123,7 +129,17 @@ export default function PersonalSignatureWorkspace({ initialPreference }: Props)
           Vorschau
         </h2>
         <p className="mt-3 whitespace-pre-wrap text-sm text-[var(--foreground)]">{preview.message}</p>
-        {preview.signature ? (
+        {preview.signatureHtml ? (
+          <>
+            <p className="mt-3 text-xs text-[var(--text-2)]" aria-hidden>
+              —
+            </p>
+            <div
+              className="mt-1 text-sm text-[var(--foreground)]"
+              dangerouslySetInnerHTML={{ __html: preview.signatureHtml }}
+            />
+          </>
+        ) : preview.signature ? (
           <>
             <p className="mt-3 text-xs text-[var(--text-2)]" aria-hidden>
               —

@@ -43,7 +43,11 @@ import { resolveEffectivePreference } from "@/lib/notifications/defaults";
 import { applyCommunicationPreferencesToNotificationDefaults } from "@/lib/communication/preferences/apply-notification-channel-preferences";
 import { formatPersonDisplayName } from "@/lib/communication/inbox/inbox-display";
 import { randomBytes } from "node:crypto";
-import { applyPersonalSignatureToOutboundBody } from "@/lib/communication/personal-signature/personal-signature-service";
+import {
+  applyPersonalSignatureToOutbound,
+  personalSignatureFreezeJson,
+} from "@/lib/communication/personal-signature/personal-signature-service";
+import { renderEmailBodyHtmlFromFreeze } from "@/lib/communication/personal-signature/signature-email-delivery";
 import {
   attachSelectionToPlatformCommunication,
   mirrorPlatformAttachmentsToCenterMessage,
@@ -161,6 +165,7 @@ async function sendDirectMessageToSingleRecipient(input: {
   recipientPersonId: string;
   subject: string | null;
   bodyText: string;
+  personalSignatureFreeze: import("@/lib/communication/personal-signature/personal-signature-freeze").PersonalSignatureFreezeSnapshot | null;
   repliesAllowed: boolean;
   orchestrationMetaJson: Prisma.InputJsonValue;
   attachmentIds: readonly string[];
@@ -193,6 +198,7 @@ async function sendDirectMessageToSingleRecipient(input: {
       acknowledgementRequired: false,
       repliesAllowed: input.repliesAllowed,
       orchestrationMetaJson: input.orchestrationMetaJson,
+      personalSignatureFreezeJson: personalSignatureFreezeJson(input.personalSignatureFreeze),
       createdByUserId: input.senderUserId,
     },
   });
@@ -260,6 +266,7 @@ async function sendDirectMessageToSingleRecipient(input: {
         ? emailSenderPublish.snapshotData.emailSenderAddressSnapshot
         : null,
     deliveryTargets: dispatch.pipeline.deliveryTargets,
+    personalSignatureFreeze: input.personalSignatureFreeze,
     at: dispatchAt,
   });
 
@@ -356,7 +363,15 @@ async function sendDirectMessageToSingleRecipient(input: {
         messageIdHeader: threadRootMessageId,
         subject: inboxSubject,
         bodyText: input.bodyText,
-        bodyHtmlSanitized: plainTextToSafeHtml(input.bodyText || " "),
+        bodyHtmlSanitized:
+          input.personalSignatureFreeze != null
+            ? renderEmailBodyHtmlFromFreeze({
+                messageBodyText: input.personalSignatureFreeze.messageBodyText,
+                signaturePlainText: input.personalSignatureFreeze.plainTextFallback,
+                freeze: input.personalSignatureFreeze,
+              })
+            : plainTextToSafeHtml(input.bodyText || " "),
+        personalSignatureFreezeJson: personalSignatureFreezeJson(input.personalSignatureFreeze),
         sentAt: publishedAt,
         createdByUserId: input.senderUserId,
       },
@@ -469,9 +484,9 @@ export async function sendDirectMessage(input: SendDirectMessageInput): Promise<
     });
   }
 
-  let bodyWithSignature: string;
+  let signatureApply;
   try {
-    bodyWithSignature = await applyPersonalSignatureToOutboundBody({
+    signatureApply = await applyPersonalSignatureToOutbound({
       tenantId: input.tenantId,
       userId: input.senderUserId,
       messageBody: input.bodyText,
@@ -484,7 +499,7 @@ export async function sendDirectMessage(input: SendDirectMessageInput): Promise<
     throw error;
   }
   const attachmentIds = [...new Set((input.attachmentIds ?? []).filter(Boolean))];
-  const bodyText = sanitizeBody(bodyWithSignature, attachmentIds.length > 0);
+  const bodyText = sanitizeBody(signatureApply.bodyText, attachmentIds.length > 0);
   const subject = sanitizeSubject(input.subject);
   const repliesAllowed = resolveRepliesAllowed(input.mode);
   const orchestrationMetaJson = buildOrchestrationMeta({
@@ -504,6 +519,7 @@ export async function sendDirectMessage(input: SendDirectMessageInput): Promise<
       recipientPersonId,
       subject,
       bodyText,
+      personalSignatureFreeze: signatureApply.freeze,
       repliesAllowed,
       orchestrationMetaJson,
       attachmentIds,

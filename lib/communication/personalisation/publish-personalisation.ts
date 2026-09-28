@@ -12,10 +12,13 @@ import {
 } from "@/lib/communication/personalisation/personalisation-engine";
 import { TeamCommunicationValidationError } from "@/lib/communication/team/team-communication-errors";
 import { loadRecipientPersonsBatch } from "@/lib/communication/personalisation/load-personalisation-context";
+import type { PersonalSignatureFreezeSnapshot } from "@/lib/communication/personal-signature/personal-signature-freeze";
+import { renderEmailBodyHtmlFromFreeze } from "@/lib/communication/personal-signature/signature-email-delivery";
 
 export type PersonalisedSnapshotExtras = {
   renderedSubject: string | null;
   renderedBodyText: string;
+  renderedBodyHtml?: string | null;
   personalisationDiagnosticsJson?: Record<string, unknown>;
 };
 
@@ -53,16 +56,47 @@ export async function renderPersonalisationForDeliveryTargets(input: {
   emailSenderDisplayName?: string | null;
   emailSenderAddress?: string | null;
   deliveryTargets: readonly RecipientSnapshotRow[];
+  personalSignatureFreeze?: PersonalSignatureFreezeSnapshot | null;
   at?: Date;
 }): Promise<Map<string, PersonalisedSnapshotExtras>> {
   const needsRender =
     templateContainsPersonalisationTokens(input.subject) ||
-    templateContainsPersonalisationTokens(input.bodyText);
+    templateContainsPersonalisationTokens(input.bodyText) ||
+    (input.personalSignatureFreeze != null &&
+      (templateContainsPersonalisationTokens(input.personalSignatureFreeze.messageBodyText) ||
+        templateContainsPersonalisationTokens(input.personalSignatureFreeze.plainTextFallback)));
   const keyFor = (row: RecipientSnapshotRow) =>
     `${row.subjectPersonId}:${row.deliveryUserId}:${row.channel}`;
 
+  const buildHtml = (
+    messageBodyText: string,
+    signaturePlain: string | null,
+  ): string | null => {
+    if (!input.personalSignatureFreeze) return null;
+    const html = renderEmailBodyHtmlFromFreeze({
+      messageBodyText,
+      signaturePlainText: signaturePlain,
+      freeze: input.personalSignatureFreeze,
+    });
+    return html;
+  };
+
   if (!needsRender) {
-    return new Map();
+    if (!input.personalSignatureFreeze) {
+      return new Map();
+    }
+    const out = new Map<string, PersonalisedSnapshotExtras>();
+    for (const target of input.deliveryTargets) {
+      out.set(keyFor(target), {
+        renderedSubject: input.subject,
+        renderedBodyText: input.bodyText,
+        renderedBodyHtml: buildHtml(
+          input.personalSignatureFreeze.messageBodyText,
+          input.personalSignatureFreeze.plainTextFallback,
+        ),
+      });
+    }
+    return out;
   }
 
   const guardianIds = input.deliveryTargets
@@ -105,9 +139,32 @@ export async function renderPersonalisationForDeliveryTargets(input: {
       );
     }
 
+    let messagePersonalised = input.personalSignatureFreeze?.messageBodyText ?? input.bodyText;
+    let signaturePersonalised = input.personalSignatureFreeze?.plainTextFallback ?? null;
+    if (input.personalSignatureFreeze) {
+      const messageRenderPart = await renderPersonalisationText({
+        template: input.personalSignatureFreeze.messageBodyText,
+        scope: built.scope,
+      });
+      const signatureRenderPart = await renderPersonalisationText({
+        template: input.personalSignatureFreeze.plainTextFallback,
+        scope: built.scope,
+      });
+      if (messageRenderPart.blocksSend || signatureRenderPart.blocksSend) {
+        throw new TeamCommunicationValidationError(
+          "Versand blockiert: fehlende oder mehrdeutige Personalisierungsfelder in der Signatur.",
+        );
+      }
+      messagePersonalised = messageRenderPart.text;
+      signaturePersonalised = signatureRenderPart.text;
+    }
+
     out.set(keyFor(target), {
       renderedSubject: subjectRender?.text ?? input.subject,
       renderedBodyText: bodyRender.text,
+      renderedBodyHtml: input.personalSignatureFreeze
+        ? buildHtml(messagePersonalised, signaturePersonalised)
+        : null,
       personalisationDiagnosticsJson: {
         subject: subjectRender?.diagnostics ?? [],
         body: bodyRender.diagnostics,

@@ -503,6 +503,7 @@ enum CommunicationAttachmentSourceType {
   WORKSPACE_DOCUMENT_VERSION
   GENERATED_DOCUMENT
   INBOUND
+  PERSONAL_SIGNATURE
 }
 
 enum CommunicationAttachmentLifecycleStatus {
@@ -3182,6 +3183,9 @@ model PlatformCommunication {
   emailSenderAddressSnapshot       String?
   emailSenderSource                PlatformCommunicationEmailSenderSource?
 
+  /// SCE-COMM-EVO-07 — frozen personal signature at publish/send (historical truth).
+  personalSignatureFreezeJson Json?
+
   /// SCE-COMM-16 — optional traceability when draft was created from a platform template.
   sourcePlatformTemplateId      String?
   sourcePlatformTemplateVersion DateTime?
@@ -3383,6 +3387,7 @@ model PlatformCommunicationRecipientSnapshot {
   /// SCE-COMM-EVO-06 — immutable personalised output at dispatch (never re-rendered).
   renderedSubject                 String?
   renderedBodyText                String?
+  renderedBodyHtml                String?
   personalisationDiagnosticsJson  Json?
 
   createdAt DateTime @default(now())
@@ -3687,6 +3692,7 @@ model CommunicationAttachment {
   messageLinks          CommunicationMessageAttachment[]
   platformCommunicationLinks PlatformCommunicationAttachment[]
   communicationCenterMessageLinks CommunicationCenterMessageAttachment[]
+  personalSignatureAssetLinks UserCommunicationPersonalSignatureAsset[]
 
   @@index([tenantId])
   @@index([tenantId, createdAt])
@@ -4576,6 +4582,8 @@ model CommunicationCenterMessage {
   subject         String?
   bodyText        String?
   bodyHtmlSanitized String?
+  /// SCE-COMM-EVO-07 — frozen personal signature for historical outbound replies.
+  personalSignatureFreezeJson Json?
   remoteImagesBlocked Boolean @default(true)
 
   receivedAt DateTime?
@@ -4787,21 +4795,44 @@ model UserCommunicationInboxWorkspacePref {
   @@index([tenantId, userId], map: "UserCommInboxWsPref_tenant_user_idx")
 }
 
-/// SCE-COMM-UX-08A — per-user, per-tenant personal communication signature (content only).
+/// SCE-COMM-UX-08A / EVO-07 — per-user, per-tenant personal communication signature.
 model UserCommunicationPersonalSignature {
-  id           String   @id @default(cuid())
-  tenantId     String
-  userId       String
-  bodyText     String?
-  useByDefault Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String   @id @default(cuid())
+  tenantId       String
+  userId         String
+  bodyText       String?
+  contentJson    Json?
+  contentVersion Int      @default(1)
+  useByDefault   Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  assets UserCommunicationPersonalSignatureAsset[]
 
   @@unique([tenantId, userId])
   @@index([tenantId, userId])
+}
+
+/// SCE-COMM-EVO-07 — signature logo references (immutable attachment rows, versioned via contentVersion).
+model UserCommunicationPersonalSignatureAsset {
+  id           String   @id @default(cuid())
+  tenantId     String
+  signatureId  String
+  attachmentId String
+  sortOrder    Int
+  altText      String
+  cidKey       String
+  createdAt    DateTime @default(now())
+
+  signature  UserCommunicationPersonalSignature @relation(fields: [signatureId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  attachment CommunicationAttachment            @relation(fields: [attachmentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([signatureId, attachmentId], map: "uc_ps_sig_asset_sig_att_uniq")
+  @@unique([signatureId, sortOrder], map: "uc_ps_sig_asset_sig_ord_uniq")
+  @@index([tenantId, signatureId], map: "uc_ps_sig_asset_tenant_sig_idx")
+  @@index([tenantId, attachmentId], map: "uc_ps_sig_asset_tenant_att_idx")
 }
 
 model MeetingParticipant {
