@@ -37,6 +37,10 @@
       "schedule": "*/1 * * * *"
     },
     {
+      "path": "/api/cron/communication-attachment-cleanup",
+      "schedule": "25 4 * * *"
+    },
+    {
       "path": "/api/cron/task-series-occurrences",
       "schedule": "15 3 * * *"
     },

@@ -24,6 +24,7 @@ import type {
 } from "@/components/admin/communication/inbox/inbox-workspace-types";
 import { CommunicationAttachmentPicker } from "@/components/admin/communication/attachments/CommunicationAttachmentPicker";
 import { CommunicationAttachmentList } from "@/components/admin/communication/attachments/CommunicationAttachmentList";
+import { inboxReplyHasSendableAttachment } from "@/lib/communication/inbox/inbox-reply-composer-contract";
 
 type CommunicationInboxConversationDetailProps = {
   selectedConversationId: string | null;
@@ -431,9 +432,7 @@ export function CommunicationInboxConversationDetailPane({
                   onClick={onSendReply}
                   disabled={
                     (!replyText.trim() &&
-                      !replyAttachments.some(
-                        (attachment) => attachment.status === "READY" && attachment.attachmentId,
-                      )) ||
+                      !inboxReplyHasSendableAttachment(replyAttachments)) ||
                     replySubmitting
                   }
                 >

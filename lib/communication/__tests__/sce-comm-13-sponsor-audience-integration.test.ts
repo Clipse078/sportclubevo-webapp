@@ -93,6 +93,16 @@ vi.mock("@/lib/communication/platform-email/platform-email-dispatch-service", ()
   })),
 }));
 
+vi.mock("@/lib/communication/sender-identity/prepare-email-sender-for-publish", () => ({
+  prepareEmailSenderForPublish: vi.fn(async () => ({
+    emailTransportReady: true,
+    snapshotData: {
+      emailSenderDisplayNameSnapshot: "Club",
+      emailSenderAddressSnapshot: "club@example.com",
+    },
+  })),
+}));
+
 describe("SCE-COMM-13 sponsor audience integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
