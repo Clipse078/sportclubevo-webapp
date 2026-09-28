@@ -308,12 +308,14 @@ enum PlatformCommunicationContextKind {
   TEAM
   ORGANISATION
   ORG_UNIT
+  DIRECT
 }
 
 enum PlatformCommunicationConversationKind {
   TEAM_GENERAL
   TEAM_NAMED
   ORG_GENERAL
+  DIRECT_THREAD
 }
 
 enum PlatformCommunicationRecipientEngagement {
@@ -1152,6 +1154,7 @@ model Tenant {
   communicationCenterMessages                CommunicationCenterMessage[]
   communicationCenterMessageAttachments      CommunicationCenterMessageAttachment[]
   communicationCenterConversationReadStates  CommunicationCenterConversationReadState[]
+  communicationCenterConversationParticipants CommunicationCenterConversationParticipant[]
   communicationCenterContextLinks            CommunicationCenterContextLink[]
   userNotificationPreferences        UserNotificationPreference[]
   userCommunicationPreferences       UserCommunicationPreference[]
@@ -1345,6 +1348,7 @@ model User {
   assignedCommunicationCenterConversations CommunicationCenterConversation[] @relation("CommunicationCenterConversationAssignedTo")
   assignedCommunicationCenterConversationsBy CommunicationCenterConversation[] @relation("CommunicationCenterConversationAssignedBy")
   communicationCenterConversationReadStates CommunicationCenterConversationReadState[] @relation("CommunicationCenterConversationReadStateUser")
+  communicationCenterConversationParticipants CommunicationCenterConversationParticipant[] @relation("CommunicationCenterConversationParticipantUser")
   createdCommunicationCenterMessages CommunicationCenterMessage[] @relation("CommunicationCenterMessageCreatedBy")
   createdCommunicationCenterContextLinks CommunicationCenterContextLink[] @relation("CommunicationCenterContextLinkCreatedBy")
   createdPlatformCommunications PlatformCommunication[] @relation("PlatformCommunicationCreatedBy")
@@ -3151,6 +3155,9 @@ model PlatformCommunication {
   /// When true, recipients may explicitly acknowledge (distinct from READ).
   acknowledgementRequired Boolean @default(false)
 
+  /// SCE-COMM-UX-04A — when false, direct replies are blocked at API/domain layer (Nur informieren).
+  repliesAllowed Boolean @default(true)
+
   /// SCE-COMM-10 — reminder orchestration metadata (origin + source refs); not Event/Poll/Request state.
   orchestrationMetaJson Json?
 
@@ -4468,6 +4475,9 @@ model CommunicationCenterConversation {
   matchedSponsorContactId String?
   platformCommunicationId String?
 
+  /// SCE-COMM-UX-04A — persisted reply lock for inbox rendering (mirrors root PlatformCommunication).
+  repliesAllowed Boolean @default(true)
+
   searchText String?
 
   createdAt DateTime @default(now())
@@ -4475,6 +4485,7 @@ model CommunicationCenterConversation {
 
   tenant                Tenant                         @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   mailbox               CommunicationCenterMailbox?    @relation(fields: [mailboxId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  participants          CommunicationCenterConversationParticipant[]
   assignedToUser        User?                          @relation("CommunicationCenterConversationAssignedTo", fields: [assignedToUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   assignedByUser        User?                          @relation("CommunicationCenterConversationAssignedBy", fields: [assignedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   matchedPerson         Person?                        @relation(fields: [matchedPersonId], references: [id], onDelete: SetNull, onUpdate: Cascade)
@@ -4561,6 +4572,22 @@ model CommunicationCenterMessageAttachment {
   @@unique([messageId, attachmentId])
   @@unique([messageId, sortOrder])
   @@index([tenantId, messageId])
+}
+
+/// SCE-COMM-UX-04A — per-user visibility for SCE (direct) inbox threads (not shared email mailbox).
+model CommunicationCenterConversationParticipant {
+  id             String @id @default(cuid())
+  tenantId       String
+  conversationId String
+  userId         String
+  createdAt      DateTime @default(now())
+
+  tenant       Tenant                          @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  conversation CommunicationCenterConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user         User                            @relation("CommunicationCenterConversationParticipantUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([tenantId, userId, conversationId], map: "cc_conv_part_tenant_user_idx")
 }
 
 model CommunicationCenterConversationReadState {

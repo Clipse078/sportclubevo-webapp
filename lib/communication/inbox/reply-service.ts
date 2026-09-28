@@ -12,6 +12,7 @@ import { normalizeEmailAddress, normalizeInternetMessageId } from "@/lib/communi
 import { buildReplyReferences } from "@/lib/communication/inbox/threading-service";
 import { recordCommunicationCenterAudit } from "@/lib/communication/inbox/inbox-audit";
 import { reactivateCommunicationCenterConversationToInboxOnReply } from "@/lib/communication/inbox/mailbox-organization-service";
+import { assertConversationAllowsReplies } from "@/lib/communication/direct/direct-message-service";
 
 export type ReplyToConversationResult = {
   messageId: string;
@@ -61,6 +62,29 @@ export async function replyToCommunicationCenterConversation(input: {
   });
   if (!conversation) {
     throw new CommunicationCenterError("NOT_FOUND", "Konversation nicht gefunden.");
+  }
+
+  const replyPolicy = await assertConversationAllowsReplies({
+    tenantId: input.tenantId,
+    conversationId: conversation.id,
+  });
+  if (!replyPolicy.repliesAllowed) {
+    throw new CommunicationCenterError(
+      "REPLIES_DISABLED",
+      "Antworten sind für diese Nachricht deaktiviert.",
+    );
+  }
+  if (replyPolicy.channel === "SCE") {
+    const { replyToSceDirectConversation } = await import(
+      "@/lib/communication/direct/direct-reply-service"
+    );
+    const sceResult = await replyToSceDirectConversation(input);
+    return {
+      messageId: sceResult.messageId,
+      status: sceResult.status,
+      providerMessageId: null,
+      deliveryError: null,
+    };
   }
 
   await reactivateCommunicationCenterConversationToInboxOnReply({

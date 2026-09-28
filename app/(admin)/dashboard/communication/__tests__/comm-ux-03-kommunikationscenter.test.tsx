@@ -121,6 +121,7 @@ const detailPropsBase = {
   onMarkUnread: () => undefined,
   showProcessingToolbar: true,
   replyDisabled: false,
+  repliesLockedInformOnly: false,
 };
 
 beforeEach(() => {

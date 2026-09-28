@@ -113,6 +113,7 @@ export async function ingestCommunicationCenterImapMessage(input: {
             lastMessageAt: parsed.receivedAt,
             searchText: buildSearchText(parsed),
             ...(reactivation ?? {}),
+            ...(conversation.repliesAllowed === false ? { repliesAllowed: false } : {}),
           },
         });
       }

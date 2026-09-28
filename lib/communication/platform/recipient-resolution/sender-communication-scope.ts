@@ -93,6 +93,43 @@ export async function resolveSenderCommunicationScope(input: {
   const isOrganisationContext =
     input.context.kind === "ORGANISATION" || input.context.kind === "ORG_UNIT";
 
+  if (input.context.kind === "DIRECT") {
+    const canSendTeam = tenant.includes(PERMISSIONS.COMMUNICATION_TEAM_SEND);
+    if (canSendClub) {
+      const all = await loadAllActiveTenantPersonIds(input.tenantId);
+      return {
+        scope: {
+          tenantId: input.tenantId,
+          senderUserId: input.senderUserId,
+          allowedSubjectPersonIds: all,
+        },
+        previewScopeLimited: false,
+      };
+    }
+    if (canSendTeam) {
+      const membershipScoped = await loadSenderScopedPersonIdsFromMembership({
+        tenantId: input.tenantId,
+        senderUserId: input.senderUserId,
+      });
+      return {
+        scope: {
+          tenantId: input.tenantId,
+          senderUserId: input.senderUserId,
+          allowedSubjectPersonIds: membershipScoped,
+        },
+        previewScopeLimited: true,
+      };
+    }
+    return {
+      scope: {
+        tenantId: input.tenantId,
+        senderUserId: input.senderUserId,
+        allowedSubjectPersonIds: new Set<string>(),
+      },
+      previewScopeLimited: true,
+    };
+  }
+
   if (isOrganisationContext) {
     if (canSendClub) {
       const all = await loadAllActiveTenantPersonIds(input.tenantId);

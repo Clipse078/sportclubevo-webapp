@@ -35,7 +35,8 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
     return NextResponse.json(result);
   } catch (error) {
     if (error instanceof CommunicationCenterError) {
-      const status = error.code === "FORBIDDEN" ? 403 : 400;
+      const status =
+        error.code === "FORBIDDEN" || error.code === "REPLIES_DISABLED" ? 403 : 400;
       return NextResponse.json({ error: error.message, code: error.code }, { status });
     }
     throw error;

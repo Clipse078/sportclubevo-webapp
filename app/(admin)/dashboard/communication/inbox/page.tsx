@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Settings2 } from "lucide-react";
+import { DIRECT_MESSAGE_SEND_ROUTE_PERMISSIONS } from "@/lib/communication/direct/route-access";
 import CommunicationInboxWorkspace from "@/components/admin/communication/inbox/CommunicationInboxWorkspace";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
 import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
@@ -33,6 +34,16 @@ export default async function CommunicationInboxPage() {
   const canSettings = tenantHasAnyPermission(tenantPermissions, INBOX_SETTINGS_PERMISSIONS);
   const canReply = tenantHasAnyPermission(tenantPermissions, INBOX_REPLY_PERMISSIONS);
   const canManage = tenantHasAnyPermission(tenantPermissions, INBOX_MANAGE_PERMISSIONS);
+  const canDirectSend = tenantHasAnyPermission(tenantPermissions, DIRECT_MESSAGE_SEND_ROUTE_PERMISSIONS);
+
+  const neueNachrichtAction = canDirectSend ? (
+    <Link
+      href="/dashboard/communication/inbox/new"
+      className="inline-flex items-center gap-2 rounded-lg bg-[var(--sce-primary)] px-4 py-2 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+    >
+      Neue Nachricht
+    </Link>
+  ) : undefined;
 
   const settingsAction = canSettings ? (
     <Link
@@ -54,7 +65,8 @@ export default async function CommunicationInboxPage() {
         ]}
         title="Kommunikationscenter"
         description="Nachrichten und Antworten zentral bearbeiten."
-        primaryAction={settingsAction}
+        primaryAction={neueNachrichtAction ?? settingsAction}
+        secondaryActions={neueNachrichtAction && settingsAction ? settingsAction : undefined}
       />
       <CommunicationContentSurface padded={false} className="overflow-hidden p-4 md:p-5">
         <CommunicationInboxWorkspace
