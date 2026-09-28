@@ -1,82 +1,117 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Inbox, Mail, Settings2 } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/Button";
-import { SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
-import { cn } from "@/lib/cn";
+import { CommunicationInboxConversationDetailPane } from "@/components/admin/communication/inbox/CommunicationInboxConversationDetail";
+import { CommunicationInboxConversationList } from "@/components/admin/communication/inbox/CommunicationInboxConversationList";
+import { CommunicationInboxToolbar } from "@/components/admin/communication/inbox/CommunicationInboxToolbar";
+import type {
+  CommunicationInboxCapabilities,
+  InboxConversationDetail,
+  InboxConversationListItem,
+  InboxQuickFilterId,
+} from "@/components/admin/communication/inbox/inbox-workspace-types";
 
-type ConversationListItem = {
-  id: string;
-  subject: string | null;
-  previewText: string | null;
-  status: string;
-  lastMessageAt: string;
-  assignedToUserId: string | null;
-  unread: boolean;
-};
+type CommunicationInboxWorkspaceProps = CommunicationInboxCapabilities;
 
-type ConversationDetail = {
-  id: string;
-  subject: string | null;
-  status: string;
-  messages: Array<{
-    id: string;
-    direction: string;
-    status: string;
-    fromAddress: string | null;
-    bodyText: string | null;
-    bodyHtmlSanitized: string | null;
-    sentAt: string | null;
-    receivedAt: string | null;
-    deliveryError: string | null;
-  }>;
-};
-
-const FILTERS = [
-  { id: "ALL", label: "Alle" },
-  { id: "UNREAD", label: "Ungelesen" },
-  { id: "ASSIGNED_TO_ME", label: "Mir zugewiesen" },
-  { id: "UNASSIGNED", label: "Nicht zugewiesen" },
-  { id: "EMAIL", label: "E-Mail" },
-] as const;
-
-export default function CommunicationInboxWorkspace() {
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("ALL");
+export default function CommunicationInboxWorkspace({
+  currentUserId,
+  canReply,
+  canManage,
+}: CommunicationInboxWorkspaceProps) {
+  const [filter, setFilter] = useState<InboxQuickFilterId>("ALL");
   const [search, setSearch] = useState("");
-  const [conversations, setConversations] = useState<ConversationListItem[]>([]);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [conversations, setConversations] = useState<InboxConversationListItem[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [detail, setDetail] = useState<ConversationDetail | null>(null);
+  const [detail, setDetail] = useState<InboxConversationDetail | null>(null);
   const [replyText, setReplyText] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loadingList, setLoadingList] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [replySubmitting, setReplySubmitting] = useState(false);
+  const [listError, setListError] = useState<string | null>(null);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [replyError, setReplyError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [mobilePane, setMobilePane] = useState<"list" | "detail">("list");
 
-  const loadList = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ filter });
-      if (search.trim()) params.set("search", search.trim());
-      const res = await fetch(`/api/communication/inbox/conversations?${params.toString()}`);
-      const data = (await res.json()) as { items?: ConversationListItem[] };
-      setConversations(data.items ?? []);
-    } finally {
-      setLoading(false);
-    }
-  }, [filter, search]);
+  useEffect(() => {
+    const handle = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => window.clearTimeout(handle);
+  }, [search]);
 
-  const loadDetail = useCallback(async (conversationId: string) => {
-    const res = await fetch(`/api/communication/inbox/conversations/${conversationId}`);
-    const data = (await res.json()) as { conversation?: ConversationDetail };
-    setDetail(data.conversation ?? null);
-    await fetch(`/api/communication/inbox/conversations/${conversationId}/read`, {
-      method: "POST",
-    });
-  }, []);
+  const loadList = useCallback(
+    async (mode: "replace" | "append" = "replace", cursor?: string | null) => {
+      if (mode === "append") {
+        setLoadingMore(true);
+      } else {
+        setLoadingList(true);
+      }
+      setListError(null);
+      try {
+        const params = new URLSearchParams({ filter });
+        if (debouncedSearch) params.set("search", debouncedSearch);
+        if (cursor) params.set("cursor", cursor);
+        const res = await fetch(`/api/communication/inbox/conversations?${params.toString()}`);
+        if (!res.ok) {
+          setListError("Konversationen konnten nicht geladen werden.");
+          if (mode === "replace") {
+            setConversations([]);
+            setNextCursor(null);
+          }
+          return;
+        }
+        const data = (await res.json()) as {
+          items?: InboxConversationListItem[];
+          nextCursor?: string | null;
+        };
+        const items = data.items ?? [];
+        setNextCursor(data.nextCursor ?? null);
+        setConversations((prev) => (mode === "append" ? [...prev, ...items] : items));
+      } catch {
+        setListError("Konversationen konnten nicht geladen werden.");
+      } finally {
+        setLoadingList(false);
+        setLoadingMore(false);
+      }
+    },
+    [filter, debouncedSearch],
+  );
 
   useEffect(() => {
-    void loadList();
+    void loadList("replace");
   }, [loadList]);
+
+  const loadDetail = useCallback(async (conversationId: string) => {
+    setLoadingDetail(true);
+    setDetailError(null);
+    setActionError(null);
+    setReplyError(null);
+    try {
+      const res = await fetch(`/api/communication/inbox/conversations/${conversationId}`);
+      if (!res.ok) {
+        setDetail(null);
+        setDetailError("Konversation konnte nicht geladen werden.");
+        return;
+      }
+      const data = (await res.json()) as { conversation?: InboxConversationDetail };
+      setDetail(data.conversation ?? null);
+      await fetch(`/api/communication/inbox/conversations/${conversationId}/read`, {
+        method: "POST",
+      });
+      setConversations((prev) =>
+        prev.map((item) =>
+          item.id === conversationId ? { ...item, unread: false } : item,
+        ),
+      );
+    } catch {
+      setDetail(null);
+      setDetailError("Konversation konnte nicht geladen werden.");
+    } finally {
+      setLoadingDetail(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!selectedId) {
@@ -87,192 +122,141 @@ export default function CommunicationInboxWorkspace() {
   }, [selectedId, loadDetail]);
 
   const selectedConversation = useMemo(
-    () => conversations.find((c) => c.id === selectedId) ?? null,
+    () => conversations.find((conversation) => conversation.id === selectedId) ?? null,
     [conversations, selectedId],
   );
 
-  async function sendReply() {
-    if (!selectedId || !replyText.trim()) return;
-    const idempotencyKey = `reply:${selectedId}:${Date.now()}`;
-    await fetch(`/api/communication/inbox/conversations/${selectedId}/reply`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bodyText: replyText, idempotencyKey }),
-    });
-    setReplyText("");
-    await loadDetail(selectedId);
-    await loadList();
+  const hasActiveFilters = filter !== "ALL" || debouncedSearch.length > 0;
+
+  const emptyVariant = useMemo(() => {
+    if (conversations.length > 0) return null;
+    if (debouncedSearch) return "search" as const;
+    if (filter !== "ALL") return "filter" as const;
+    return "none" as const;
+  }, [conversations.length, debouncedSearch, filter]);
+
+  function resetFilters() {
+    setFilter("ALL");
+    setSearch("");
   }
 
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-          {FILTERS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setFilter(item.id)}
-              className={`rounded-lg border px-3 py-1.5 text-xs font-medium ${
-                filter === item.id
-                  ? "border-[var(--sce-primary)] bg-[var(--surface-2)] text-[var(--foreground)]"
-                  : "border-[var(--border)] text-[var(--text-2)]"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-        <Link
-          href="/dashboard/communication/inbox/settings"
-          className="inline-flex items-center gap-2 text-xs font-medium text-[var(--sce-primary)]"
-        >
-          <Settings2 className="h-4 w-4" />
-          Postfach-Einstellungen
-        </Link>
-      </div>
+  async function sendReply() {
+    if (!selectedId || !replyText.trim() || !canReply) return;
+    setReplySubmitting(true);
+    setReplyError(null);
+    try {
+      const idempotencyKey = `reply:${selectedId}:${Date.now()}`;
+      const res = await fetch(`/api/communication/inbox/conversations/${selectedId}/reply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bodyText: replyText, idempotencyKey }),
+      });
+      if (!res.ok) {
+        setReplyError("Antwort konnte nicht gesendet werden.");
+        return;
+      }
+      setReplyText("");
+      await loadDetail(selectedId);
+      await loadList("replace");
+    } catch {
+      setReplyError("Antwort konnte nicht gesendet werden.");
+    } finally {
+      setReplySubmitting(false);
+    }
+  }
 
-      <input
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        onBlur={() => void loadList()}
-        placeholder="Suche (Betreff, Absender, Text)"
-        className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+  async function updateStatus(status: "OPEN" | "RESOLVED") {
+    if (!selectedId || !canManage) return;
+    setActionError(null);
+    const res = await fetch(`/api/communication/inbox/conversations/${selectedId}/status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) {
+      setActionError("Status konnte nicht aktualisiert werden.");
+      return;
+    }
+    await loadDetail(selectedId);
+    await loadList("replace");
+  }
+
+  async function updateAssignment(assignedToUserId: string | null) {
+    if (!selectedId || !canManage) return;
+    setActionError(null);
+    const res = await fetch(`/api/communication/inbox/conversations/${selectedId}/assign`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assignedToUserId }),
+    });
+    if (!res.ok) {
+      setActionError("Zuweisung konnte nicht aktualisiert werden.");
+      return;
+    }
+    await loadDetail(selectedId);
+    await loadList("replace");
+  }
+
+  const capabilities: CommunicationInboxCapabilities = {
+    currentUserId,
+    canReply,
+    canManage,
+    canSettings: false,
+  };
+
+  return (
+    <div
+      className="flex min-h-[min(720px,calc(100dvh-15rem))] max-h-[calc(100dvh-12rem)] flex-col gap-4"
+      data-communication-inbox-workspace
+    >
+      <CommunicationInboxToolbar
+        filter={filter}
+        onFilterChange={setFilter}
+        search={search}
+        onSearchChange={setSearch}
+        onResetFilters={resetFilters}
+        hasActiveFilters={hasActiveFilters}
       />
 
-      <div className="grid min-h-[520px] grid-cols-1 gap-4 lg:grid-cols-[minmax(240px,280px)_minmax(280px,360px)_1fr]">
-        <aside
-          className={cn(
-            SCE_SURFACE_STANDARD_PANEL,
-            "p-3",
-            mobilePane === "list" ? "block" : "hidden lg:block",
-          )}
-        >
-          <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-2)]">
-            <Inbox className="h-4 w-4" />
-            Filter
-          </div>
-          <p className="text-xs text-[var(--text-2)]">
-            Postfächer werden in den Einstellungen verwaltet.
-          </p>
-        </aside>
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)]">
+        <CommunicationInboxConversationList
+          conversations={conversations}
+          selectedId={selectedId}
+          currentUserId={currentUserId}
+          loading={loadingList}
+          listError={listError}
+          emptyVariant={emptyVariant ?? "none"}
+          onSelect={(conversationId) => {
+            setSelectedId(conversationId);
+            setMobilePane("detail");
+          }}
+          onResetFilters={resetFilters}
+          visible={mobilePane === "list"}
+          nextCursor={nextCursor}
+          onLoadMore={() => void loadList("append", nextCursor)}
+          loadingMore={loadingMore}
+        />
 
-        <section
-          className={cn(
-            SCE_SURFACE_STANDARD_PANEL,
-            mobilePane === "list" ? "block" : "hidden lg:block",
-          )}
-        >
-          <div className="border-b border-[var(--border)] px-4 py-3 text-sm font-semibold">
-            Konversationen {loading ? "…" : `(${conversations.length})`}
-          </div>
-          <ul className="max-h-[480px] divide-y divide-[var(--border)] overflow-y-auto">
-            {conversations.map((conversation) => (
-              <li key={conversation.id}>
-                <button
-                  type="button"
-                  className={`w-full px-4 py-3 text-left hover:bg-[var(--surface-2)] ${
-                    selectedId === conversation.id ? "bg-[var(--surface-2)]" : ""
-                  }`}
-                  onClick={() => {
-                    setSelectedId(conversation.id);
-                    setMobilePane("detail");
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    {conversation.unread ? (
-                      <span className="h-2 w-2 rounded-full bg-[var(--sce-primary)]" />
-                    ) : null}
-                    <span className="truncate text-sm font-medium">
-                      {conversation.subject ?? "(Kein Betreff)"}
-                    </span>
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-xs text-[var(--text-2)]">
-                    {conversation.previewText}
-                  </p>
-                </button>
-              </li>
-            ))}
-            {conversations.length === 0 ? (
-              <li className="px-4 py-8 text-center text-sm text-[var(--text-2)]">
-                Noch keine Konversationen importiert.
-              </li>
-            ) : null}
-          </ul>
-        </section>
-
-        <section
-          className={cn(
-            SCE_SURFACE_STANDARD_PANEL,
-            mobilePane === "detail" ? "block" : "hidden lg:block",
-          )}
-        >
-          {!selectedConversation || !detail ? (
-            <div className="flex h-full min-h-[320px] flex-col items-center justify-center gap-2 p-6 text-center text-sm text-[var(--text-2)]">
-              <Mail className="h-8 w-8 text-[var(--text-2)]" />
-              Wählen Sie eine Konversation aus der Liste.
-            </div>
-          ) : (
-            <div className="flex h-full flex-col">
-              <div className="border-b border-[var(--border)] px-4 py-3">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-semibold">{detail.subject ?? "(Kein Betreff)"}</h3>
-                  <button
-                    type="button"
-                    className="text-xs text-[var(--sce-primary)] lg:hidden"
-                    onClick={() => setMobilePane("list")}
-                  >
-                    Zurück
-                  </button>
-                </div>
-                <p className="mt-1 text-xs text-[var(--text-2)]">Status: {detail.status}</p>
-              </div>
-              <div className="flex-1 space-y-4 overflow-y-auto p-4">
-                {detail.messages.map((message) => (
-                  <article
-                    key={message.id}
-                    className={`rounded-lg border px-3 py-2 text-sm ${
-                      message.direction === "OUTBOUND"
-                        ? "border-[var(--sce-primary)]/30 bg-[var(--surface-2)]"
-                        : "border-[var(--border)]"
-                    }`}
-                  >
-                    <div className="text-xs text-[var(--text-2)]">
-                      {message.direction === "OUTBOUND" ? "Ausgehend" : "Eingehend"}
-                      {message.fromAddress ? ` · ${message.fromAddress}` : ""}
-                      {message.status === "FAILED" ? " · Fehlgeschlagen" : ""}
-                    </div>
-                    {message.bodyHtmlSanitized ? (
-                      <div
-                        className="prose prose-sm mt-2 max-w-none"
-                        dangerouslySetInnerHTML={{ __html: message.bodyHtmlSanitized }}
-                      />
-                    ) : (
-                      <p className="mt-2 whitespace-pre-wrap">{message.bodyText}</p>
-                    )}
-                    {message.deliveryError ? (
-                      <p className="mt-2 text-xs text-red-600">{message.deliveryError}</p>
-                    ) : null}
-                  </article>
-                ))}
-              </div>
-              <div className="border-t border-[var(--border)] p-4">
-                <textarea
-                  value={replyText}
-                  onChange={(event) => setReplyText(event.target.value)}
-                  rows={4}
-                  placeholder="Antwort verfassen…"
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
-                />
-                <div className="mt-2 flex justify-end">
-                  <Button type="button" onClick={() => void sendReply()} disabled={!replyText.trim()}>
-                    Antwort senden
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </section>
+        <CommunicationInboxConversationDetailPane
+          listItem={selectedConversation}
+          detail={detail}
+          capabilities={capabilities}
+          loading={loadingDetail}
+          detailError={detailError}
+          replyText={replyText}
+          onReplyTextChange={setReplyText}
+          onSendReply={() => void sendReply()}
+          replySubmitting={replySubmitting}
+          replyError={replyError}
+          actionError={actionError}
+          onBackToList={() => setMobilePane("list")}
+          onResolve={() => void updateStatus("RESOLVED")}
+          onReopen={() => void updateStatus("OPEN")}
+          onAssignToMe={() => void updateAssignment(currentUserId)}
+          onUnassign={() => void updateAssignment(null)}
+          visible={mobilePane === "detail"}
+          hasAnyConversations={conversations.length > 0}
+        />
       </div>
     </div>
   );

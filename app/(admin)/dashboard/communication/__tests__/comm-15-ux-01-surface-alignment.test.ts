@@ -33,20 +33,24 @@ describe("SCE-COMM-15-UX-01 — Communication Center surface alignment", () => {
   });
 
   it("uses standard elevated panels in inbox workspace and settings form", () => {
-    const workspace = readRelative(
-      "components/admin/communication/inbox/CommunicationInboxWorkspace.tsx",
+    const list = readRelative(
+      "components/admin/communication/inbox/CommunicationInboxConversationList.tsx",
+    );
+    const detail = readRelative(
+      "components/admin/communication/inbox/CommunicationInboxConversationDetail.tsx",
     );
     const settings = readRelative(
       "components/admin/communication/inbox/CommunicationMailboxSettingsForm.tsx",
     );
 
-    expect(workspace).toContain("SCE_SURFACE_STANDARD_PANEL");
+    expect(list).toContain("SCE_SURFACE_STANDARD_PANEL");
+    expect(detail).toContain("SCE_SURFACE_STANDARD_PANEL");
     expect(settings).toContain("SCE_SURFACE_STANDARD_PANEL");
     expect(settings).toContain("mailbox-credential-visibility-toggle");
     expect(settings).toContain('type={showCredential ? "text" : "password"}');
     expect(SCE_SURFACE_STANDARD_PANEL).toContain("var(--sce-surface-standard)");
 
-    expect(workspace).not.toContain("--surface-1");
+    expect(list).not.toContain("--surface-1");
     expect(settings).not.toMatch(/border border-\[var\(--border\)\] p-4/);
   });
 });

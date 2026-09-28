@@ -1,10 +1,16 @@
 import {
   CommunicationCenterConversationStatus,
+  CommunicationCenterMessageDirection,
   type Prisma,
 } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { CommunicationCenterError } from "@/lib/communication/inbox/errors";
 import { recordCommunicationCenterAudit } from "@/lib/communication/inbox/inbox-audit";
+import {
+  formatUserDisplayName,
+  resolveInboxParticipantEmail,
+  resolveInboxParticipantLabel,
+} from "@/lib/communication/inbox/inbox-display";
 
 export type InboxConversationFilter =
   | "ALL"
@@ -53,6 +59,21 @@ export async function listCommunicationCenterConversations(input: {
     take: limit + 1,
     include: {
       readStates: { where: { userId: input.userId }, take: 1 },
+      matchedPerson: {
+        select: { id: true, firstName: true, lastName: true, displayName: true },
+      },
+      matchedSponsorContact: {
+        select: { id: true, firstName: true, lastName: true },
+      },
+      assignedToUser: {
+        select: { id: true, firstName: true, lastName: true },
+      },
+      messages: {
+        where: { direction: CommunicationCenterMessageDirection.INBOUND },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { fromDisplayName: true, fromAddress: true },
+      },
     },
   });
 
@@ -61,18 +82,30 @@ export async function listCommunicationCenterConversations(input: {
   const nextCursor = hasMore ? items[items.length - 1]?.id ?? null : null;
 
   return {
-    items: items.map((row) => ({
-      id: row.id,
-      subject: row.subject,
-      previewText: row.previewText,
-      status: row.status,
-      lastMessageAt: row.lastMessageAt,
-      assignedToUserId: row.assignedToUserId,
-      contactMatchStatus: row.contactMatchStatus,
-      matchedPersonId: row.matchedPersonId,
-      matchedSponsorContactId: row.matchedSponsorContactId,
-      unread: !row.readStates[0]?.readAt,
-    })),
+    items: items.map((row) => {
+      const latestInbound = row.messages[0] ?? null;
+      return {
+        id: row.id,
+        subject: row.subject,
+        previewText: row.previewText,
+        status: row.status,
+        lastMessageAt: row.lastMessageAt,
+        assignedToUserId: row.assignedToUserId,
+        assignedToDisplayName: row.assignedToUser
+          ? formatUserDisplayName(row.assignedToUser)
+          : null,
+        contactMatchStatus: row.contactMatchStatus,
+        matchedPersonId: row.matchedPersonId,
+        matchedSponsorContactId: row.matchedSponsorContactId,
+        participantLabel: resolveInboxParticipantLabel({
+          matchedPerson: row.matchedPerson,
+          matchedSponsorContact: row.matchedSponsorContact,
+          latestInbound,
+        }),
+        participantEmail: resolveInboxParticipantEmail({ latestInbound }),
+        unread: !row.readStates[0]?.readAt,
+      };
+    }),
     nextCursor,
   };
 }
@@ -96,6 +129,15 @@ export async function getCommunicationCenterConversationDetail(input: {
       },
       contextLinks: true,
       readStates: { where: { userId: input.userId }, take: 1 },
+      matchedPerson: {
+        select: { id: true, firstName: true, lastName: true, displayName: true, email: true },
+      },
+      matchedSponsorContact: {
+        select: { id: true, firstName: true, lastName: true, email: true },
+      },
+      assignedToUser: {
+        select: { id: true, firstName: true, lastName: true },
+      },
     },
   });
   if (!conversation) {
