@@ -3380,6 +3380,11 @@ model PlatformCommunicationRecipientSnapshot {
   readAt         DateTime?
   acknowledgedAt DateTime?
 
+  /// SCE-COMM-EVO-06 — immutable personalised output at dispatch (never re-rendered).
+  renderedSubject                 String?
+  renderedBodyText                String?
+  personalisationDiagnosticsJson  Json?
+
   createdAt DateTime @default(now())
 
   tenant        Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)

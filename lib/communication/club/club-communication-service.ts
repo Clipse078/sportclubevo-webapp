@@ -43,6 +43,10 @@ import { enqueuePlatformCommunicationEmailDeliveries } from "@/lib/communication
 import { resolvePersonIdForUser } from "@/lib/teams/team-document-auth";
 import { MAX_TEAM_COMMUNICATION_BODY_LENGTH } from "@/lib/communication/team/team-communication-constants";
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
+import {
+  renderPersonalisationForDeliveryTargets,
+  validatePersonalisationBeforePublish,
+} from "@/lib/communication/personalisation/publish-personalisation";
 import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
 import {
   applyPersonalSignatureToOutboundBody,
@@ -379,6 +383,12 @@ export async function publishClubCommunication(input: {
   const category =
     row.kind === "ALERT" ? "CLUB_OPERATIONAL" : row.kind === "ANNOUNCEMENT" ? "CLUB_INFORMATION" : "CLUB_OPERATIONAL";
 
+  await validatePersonalisationBeforePublish({
+    subject: row.subject,
+    bodyText: row.bodyText,
+    contextRef,
+  });
+
   const dispatch = await resolveCommunicationRecipientsForDispatch(
     {
       tenantId: input.tenantId,
@@ -410,6 +420,28 @@ export async function publishClubCommunication(input: {
     }
     throw error;
   }
+
+  const dispatchAt = new Date();
+  const personalisationByTarget = await renderPersonalisationForDeliveryTargets({
+    tenantId: input.tenantId,
+    contextRef,
+    subject: row.subject,
+    bodyText: row.bodyText,
+    senderUserId: input.senderUserId,
+    communicationId: input.communicationId,
+    communicationKind: row.kind,
+    emailSenderDisplayName:
+      typeof emailSenderPublish.snapshotData.emailSenderDisplayNameSnapshot === "string"
+        ? emailSenderPublish.snapshotData.emailSenderDisplayNameSnapshot
+        : null,
+    emailSenderAddress:
+      typeof emailSenderPublish.snapshotData.emailSenderAddressSnapshot === "string"
+        ? emailSenderPublish.snapshotData.emailSenderAddressSnapshot
+        : null,
+    deliveryTargets: dispatch.pipeline.deliveryTargets,
+    at: dispatchAt,
+  });
+
   const publishSnapshots = await buildCampaignPublishSnapshotCreateMany({
     tenantId: input.tenantId,
     communicationId: input.communicationId,
@@ -419,13 +451,14 @@ export async function publishClubCommunication(input: {
     deliveryTargets: dispatch.pipeline.deliveryTargets,
     emailChannelEnabled: channelIntent.email,
     emailTransportReady: emailSenderPublish.emailTransportReady,
+    personalisationByTarget,
   });
 
   if (publishSnapshots.totalCount === 0) {
     throw new TeamCommunicationValidationError("no eligible recipients for dispatch");
   }
 
-  const publishedAt = new Date();
+  const publishedAt = dispatchAt;
 
   await prisma.$transaction(async (tx) => {
     await tx.platformCommunication.update({

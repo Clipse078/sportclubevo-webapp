@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { PLATFORM_COMMUNICATION_TEMPLATE_KINDS } from "@/lib/communication/templates/platform-template-constants";
@@ -20,6 +20,8 @@ import {
   defaultCampaignOrchestrationMeta,
   type CampaignOrchestrationMeta,
 } from "@/lib/communication/campaign/campaign-orchestration-meta";
+import { PersonalisationFieldInsert } from "@/components/admin/communication/personalisation/PersonalisationFieldInsert";
+import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
 
 type TargetGroupOption = { id: string; name: string; status: string };
 
@@ -49,6 +51,7 @@ type Props = {
   sponsorOrganisations?: SponsorOrgOption[];
   canManage?: boolean;
   startEditing?: boolean;
+  tenantId?: string;
 };
 
 const STEPS = [
@@ -82,8 +85,37 @@ export default function VorlageManagementForm({
   sponsorOrganisations = [],
   canManage = true,
   startEditing = true,
+  tenantId,
 }: Props) {
   const router = useRouter();
+  const subjectInputRef = useRef<HTMLInputElement>(null);
+  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const contextRef: CommunicationContextRef | null = tenantId
+    ? { kind: "ORGANISATION", tenantId }
+    : null;
+
+  function insertPersonalisationToken(
+    token: string,
+    target: "subject" | "body",
+  ) {
+    const el = target === "subject" ? subjectInputRef.current : bodyTextareaRef.current;
+    const value = target === "subject" ? subject : bodyText;
+    if (el) {
+      const start = el.selectionStart ?? value.length;
+      const end = el.selectionEnd ?? value.length;
+      const next = `${value.slice(0, start)}${token}${value.slice(end)}`;
+      if (target === "subject") setSubject(next);
+      else setBodyText(next);
+      requestAnimationFrame(() => {
+        el.focus();
+        const pos = start + token.length;
+        el.setSelectionRange(pos, pos);
+      });
+      return;
+    }
+    if (target === "subject") setSubject(`${subject}${token}`);
+    else setBodyText(`${bodyText}${token}`);
+  }
   const initialAudience = defaultValues?.audienceSpec ?? null;
   const isCampaignInitial = (defaultValues?.kind ?? "CAMPAIGN") === "CAMPAIGN";
   const campaignAudience = initialAudience
@@ -455,30 +487,48 @@ export default function VorlageManagementForm({
             </div>
           ) : null}
           <div>
-            <label className={labelClass} htmlFor="vl-subject">
-              Betreff
-            </label>
+            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+              <label className={labelClass} htmlFor="vl-subject">
+                Betreff
+              </label>
+              {contextRef && !readOnly ? (
+                <PersonalisationFieldInsert
+                  contextRef={contextRef}
+                  onInsert={(token) => insertPersonalisationToken(token, "subject")}
+                />
+              ) : null}
+            </div>
             <input
               id="vl-subject"
+              ref={subjectInputRef}
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               disabled={readOnly}
-              className="fca-input"
+              className="fca-input font-mono text-sm"
             />
           </div>
           <div>
-            <label className={labelClass} htmlFor="vl-body">
-              Nachricht *
-            </label>
+            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+              <label className={labelClass} htmlFor="vl-body">
+                Nachricht *
+              </label>
+              {contextRef && !readOnly ? (
+                <PersonalisationFieldInsert
+                  contextRef={contextRef}
+                  onInsert={(token) => insertPersonalisationToken(token, "body")}
+                />
+              ) : null}
+            </div>
             <textarea
               id="vl-body"
+              ref={bodyTextareaRef}
               value={bodyText}
               onChange={(e) => setBodyText(e.target.value)}
               rows={8}
               required
               disabled={readOnly}
-              className="fca-input resize-y min-h-[160px]"
+              className="fca-input min-h-[160px] resize-y font-mono text-sm"
               aria-invalid={Boolean(error && !bodyText.trim())}
             />
           </div>

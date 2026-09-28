@@ -255,9 +255,11 @@ describe("SCE-COMM-UX-04 Mitteilungen redesign", () => {
     render(
       <ClubCommunicationComposer
         targetGroups={[{ id: "tg-1", name: "Aktive Mitglieder", status: "ACTIVE" }]}
+        tenantId="tenant-test"
       />,
     );
     expect(screen.getByRole("heading", { level: 2, name: "Inhalt" })).toBeInTheDocument();
+    expect(screen.getAllByText("Feld einfügen").length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { level: 2, name: "Empfänger" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "Kanäle" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "Zeitpunkt" })).toBeInTheDocument();

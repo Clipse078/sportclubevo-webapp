@@ -5,11 +5,15 @@ import { CommunicationWorkspaceHeader } from "@/components/admin/communication/s
 import { PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { DIRECT_MESSAGE_SEND_ROUTE_PERMISSIONS } from "@/lib/communication/direct/route-access";
+import { getActiveTenant } from "@/lib/tenants/active-tenant";
+import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewDirectMessagePage() {
   await requireAnyPermission(DIRECT_MESSAGE_SEND_ROUTE_PERMISSIONS);
+  const tenant = await getActiveTenant();
+  if (!tenant) notFound();
 
   return (
     <PageShell>
@@ -32,7 +36,7 @@ export default async function NewDirectMessagePage() {
         }
       />
       <CommunicationContentSurface>
-        <DirectMessageComposer />
+        <DirectMessageComposer tenantId={tenant.id} />
       </CommunicationContentSurface>
     </PageShell>
   );

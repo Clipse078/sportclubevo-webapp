@@ -25,7 +25,20 @@ export type ProcessPlatformEmailDeliveriesResult = {
 
 type AttemptRow = Prisma.PlatformCommunicationEmailDeliveryAttemptGetPayload<{
   include: {
-    recipientSnapshot: true;
+    recipientSnapshot: {
+      select: {
+        id: true;
+        tenantId: true;
+        communicationId: true;
+        recipientKind: true;
+        subjectPersonId: true;
+        sponsorContactId: true;
+        deliveryUserId: true;
+        externalSnapshotJson: true;
+        renderedSubject: true;
+        renderedBodyText: true;
+      };
+    };
     communication: {
       select: {
         subject: true;
@@ -141,10 +154,15 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
         ? `/dashboard/communication/kampagnen/${attempt.communicationId}`
         : `/dashboard/communication/mitteilungen/${attempt.communicationId}`;
 
+    const effectiveSubject =
+      attempt.recipientSnapshot.renderedSubject ?? attempt.communication.subject;
+    const effectiveBodyText =
+      attempt.recipientSnapshot.renderedBodyText ?? attempt.communication.bodyText;
+
     const rendered = renderPlatformCommunicationEmail({
       tenantName: tenant.name,
-      subject: attempt.communication.subject,
-      bodyText: attempt.communication.bodyText,
+      subject: effectiveSubject,
+      bodyText: effectiveBodyText,
       includeDeepLink: attempt.recipientSnapshot.recipientKind !== "EXTERNAL_SPONSOR_CONTACT",
       deepLinkPath,
     });
