@@ -28,6 +28,10 @@ import {
 import { recordPlatformCommunicationAudit } from "@/lib/communication/team/platform-communication-audit";
 import { singleRecipientAudienceSpec } from "@/lib/communication/direct/direct-audience-spec";
 import { assertRecipientPersonIdsInSenderScope } from "@/lib/communication/direct/direct-message-authorization";
+import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
+import { validateCommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-validation";
+import { validateAudienceTenantOwnership } from "@/lib/communication/audience/validate-audience-tenant-ownership";
+import { resolveCommunicationRecipients } from "@/lib/communication/platform/recipient-resolution/resolve-recipients";
 import { plainTextToSafeHtml } from "@/lib/communication/outbound-email-service";
 import { createNotificationIdempotent } from "@/lib/notifications/notification-service";
 import { NotificationEntityType, NotificationType } from "@prisma/client";
@@ -46,7 +50,9 @@ export type DirectMessageMode = "MESSAGE" | "INFORM";
 export type SendDirectMessageInput = {
   tenantId: string;
   senderUserId: string;
-  recipientPersonIds: readonly string[];
+  /** Legacy explicit list — ignored when audienceSpec is provided. */
+  recipientPersonIds?: readonly string[];
+  audienceSpec?: CommunicationAudienceSpec;
   subject?: string | null;
   bodyText: string;
   mode: DirectMessageMode;
@@ -379,17 +385,57 @@ async function sendDirectMessageToSingleRecipient(input: {
   };
 }
 
-export async function sendDirectMessage(input: SendDirectMessageInput): Promise<SendDirectMessageResult> {
-  const recipientIds = [...new Set(input.recipientPersonIds.map((id) => id.trim()).filter(Boolean))];
-  if (recipientIds.length === 0) {
-    throw new TeamCommunicationValidationError("at least one recipient is required");
+async function resolveDirectMessageRecipientPersonIds(input: {
+  tenantId: string;
+  senderUserId: string;
+  audienceSpec: CommunicationAudienceSpec;
+}): Promise<string[]> {
+  const audienceErr = validateCommunicationAudienceSpec(input.audienceSpec);
+  if (audienceErr) {
+    throw new TeamCommunicationValidationError(audienceErr);
+  }
+  await validateAudienceTenantOwnership({
+    tenantId: input.tenantId,
+    audience: input.audienceSpec,
+  });
+
+  const resolution = await resolveCommunicationRecipients({
+    tenantId: input.tenantId,
+    senderActor: { userId: input.senderUserId },
+    audience: input.audienceSpec,
+    context: { kind: "DIRECT", tenantId: input.tenantId },
+    channel: "IN_APP",
+    category: "CLUB_OPERATIONAL",
+    mode: "DISPATCH",
+  });
+
+  if (resolution.effectiveRecipientPersonIds.length === 0) {
+    throw new TeamCommunicationValidationError("no eligible recipients for dispatch");
   }
 
-  await assertRecipientPersonIdsInSenderScope({
-    tenantId: input.tenantId,
-    senderUserId: input.senderUserId,
-    recipientPersonIds: recipientIds,
-  });
+  return resolution.effectiveRecipientPersonIds;
+}
+
+export async function sendDirectMessage(input: SendDirectMessageInput): Promise<SendDirectMessageResult> {
+  let recipientIds: string[];
+
+  if (input.audienceSpec) {
+    recipientIds = await resolveDirectMessageRecipientPersonIds({
+      tenantId: input.tenantId,
+      senderUserId: input.senderUserId,
+      audienceSpec: input.audienceSpec,
+    });
+  } else {
+    recipientIds = [...new Set((input.recipientPersonIds ?? []).map((id) => id.trim()).filter(Boolean))];
+    if (recipientIds.length === 0) {
+      throw new TeamCommunicationValidationError("at least one recipient is required");
+    }
+    await assertRecipientPersonIdsInSenderScope({
+      tenantId: input.tenantId,
+      senderUserId: input.senderUserId,
+      recipientPersonIds: recipientIds,
+    });
+  }
 
   let bodyWithSignature: string;
   try {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { PersonalSignatureComposerField } from "@/components/admin/communication/personal-signature/PersonalSignatureComposerField";
@@ -9,36 +9,30 @@ import { cn } from "@/lib/cn";
 import { CommunicationAttachmentPicker } from "@/components/admin/communication/attachments/CommunicationAttachmentPicker";
 import { useCommunicationAttachmentUpload } from "@/components/admin/communication/attachments/use-communication-attachment-upload";
 import { CommunicationSenderSelector } from "@/components/admin/communication/sender/CommunicationSenderSelector";
-
-type RecipientChip = {
-  personId: string;
-  displayName: string;
-  contextLabel: string;
-};
-
-type SearchResult = {
-  personId: string;
-  displayName: string;
-  teamLabels: string[];
-  orgUnitLabels: string[];
-};
+import CommunicationAudienceSelector, {
+  type CommunicationAudiencePreviewState,
+} from "@/components/admin/communication/audience/CommunicationAudienceSelector";
+import {
+  buildCommunicationAudienceSpec,
+  communicationAudienceSelectionIsEmpty,
+  emptyCommunicationAudienceSelection,
+  type CommunicationAudienceSelection,
+} from "@/lib/communication/audience/communication-audience-selection";
 
 type DirectMessageMode = "MESSAGE" | "INFORM";
 
 type Step = "recipients" | "content" | "options" | "review";
 
-function contextLabel(result: SearchResult): string {
-  const parts = [...result.teamLabels.slice(0, 2), ...result.orgUnitLabels.slice(0, 1)];
-  return parts.join(" · ") || "Person";
-}
-
 export default function DirectMessageComposer() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("recipients");
-  const [recipients, setRecipients] = useState<RecipientChip[]>([]);
-  const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
+  const [audienceSelection, setAudienceSelection] = useState<CommunicationAudienceSelection>(
+    emptyCommunicationAudienceSelection(),
+  );
+  const [audiencePreview, setAudiencePreview] = useState<CommunicationAudiencePreviewState | null>(
+    null,
+  );
+  const [largeAudienceConfirmed, setLargeAudienceConfirmed] = useState(false);
   const [subject, setSubject] = useState("");
   const [bodyText, setBodyText] = useState("");
   const [mode, setMode] = useState<DirectMessageMode>("MESSAGE");
@@ -46,7 +40,6 @@ export default function DirectMessageComposer() {
   const [emailSenderIdentityId, setEmailSenderIdentityId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeSearchIndex, setActiveSearchIndex] = useState(-1);
   const [signatureBody, setSignatureBody] = useState<string | null>(null);
   const [useSignature, setUseSignature] = useState(false);
   const {
@@ -86,53 +79,20 @@ export default function DirectMessageComposer() {
     [],
   );
 
-  useEffect(() => {
-    const q = search.trim();
-    if (q.length < 2) {
-      setSearchResults([]);
-      return;
-    }
-    const handle = window.setTimeout(async () => {
-      setSearchLoading(true);
-      try {
-        const res = await fetch(`/api/communication/direct/recipients?q=${encodeURIComponent(q)}`);
-        if (!res.ok) {
-          setSearchResults([]);
-          return;
-        }
-        const data = (await res.json()) as { recipients?: SearchResult[] };
-        setSearchResults(data.recipients ?? []);
-        setActiveSearchIndex(-1);
-      } finally {
-        setSearchLoading(false);
-      }
-    }, 250);
-    return () => window.clearTimeout(handle);
-  }, [search]);
-
-  const addRecipient = useCallback((result: SearchResult) => {
-    setRecipients((prev) => {
-      if (prev.some((r) => r.personId === result.personId)) return prev;
-      return [
-        ...prev,
-        {
-          personId: result.personId,
-          displayName: result.displayName,
-          contextLabel: contextLabel(result),
-        },
-      ];
-    });
-    setSearch("");
-    setSearchResults([]);
-  }, []);
-
-  function removeRecipient(personId: string) {
-    setRecipients((prev) => prev.filter((r) => r.personId !== personId));
-  }
-
   function validateStep(target: Step): string | null {
     if (target === "content" || target === "options" || target === "review") {
-      if (recipients.length === 0) return "Bitte mindestens einen Empfänger auswählen.";
+      if (communicationAudienceSelectionIsEmpty(audienceSelection)) {
+        return "Bitte mindestens einen Empfänger auswählen.";
+      }
+      if (
+        (audienceSelection.wholeOrganisation || (audiencePreview?.effective ?? 0) > 50) &&
+        !largeAudienceConfirmed
+      ) {
+        return "Bitte bestätigen Sie den Versand an eine große Empfängergruppe.";
+      }
+      if (audiencePreview && audiencePreview.effective === 0) {
+        return "Für diese Empfängerauswahl sind keine zustellbaren Personen verfügbar.";
+      }
     }
     if (target === "options" || target === "review") {
       if (!bodyText.trim() && readyAttachmentIds.length === 0) {
@@ -147,7 +107,7 @@ export default function DirectMessageComposer() {
     const validationError = validateStep(next);
     if (validationError) {
       setError(validationError);
-      if (recipients.length === 0) setStep("recipients");
+      if (communicationAudienceSelectionIsEmpty(audienceSelection)) setStep("recipients");
       else if (!bodyText.trim()) setStep("content");
       return;
     }
@@ -168,7 +128,7 @@ export default function DirectMessageComposer() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          recipientPersonIds: recipients.map((r) => r.personId),
+          audienceSpec: buildCommunicationAudienceSpec(audienceSelection),
           subject: subject.trim() || null,
           bodyText,
           mode: mode === "INFORM" ? "INFORM" : "MESSAGE",
@@ -193,20 +153,6 @@ export default function DirectMessageComposer() {
       setError("Senden fehlgeschlagen.");
     } finally {
       setBusy(false);
-    }
-  }
-
-  function onSearchKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (searchResults.length === 0) return;
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      setActiveSearchIndex((i) => Math.min(i + 1, searchResults.length - 1));
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault();
-      setActiveSearchIndex((i) => Math.max(i - 1, 0));
-    } else if (event.key === "Enter" && activeSearchIndex >= 0) {
-      event.preventDefault();
-      addRecipient(searchResults[activeSearchIndex]!);
     }
   }
 
@@ -242,72 +188,20 @@ export default function DirectMessageComposer() {
           <h2 id="dm-recipients-heading" className="text-base font-semibold">
             Empfänger
           </h2>
-          <label className="block text-sm font-medium" htmlFor="dm-recipient-search">
-            Person suchen
-          </label>
-          <input
-            id="dm-recipient-search"
-            type="search"
-            role="combobox"
-            aria-expanded={searchResults.length > 0}
-            aria-controls="dm-recipient-listbox"
-            aria-autocomplete="list"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={onSearchKeyDown}
-            placeholder="Name, Team oder E-Mail"
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+          <p className="text-sm text-[var(--text-2)]">
+            Jede zustellbare Person erhält eine private Nachricht. Andere Empfänger sehen einander
+            nicht.
+          </p>
+          <CommunicationAudienceSelector
+            context="DIRECT"
+            value={audienceSelection}
+            onChange={setAudienceSelection}
+            onPreviewChange={setAudiencePreview}
+            requireLargeAudienceConfirm
+            largeAudienceConfirmed={largeAudienceConfirmed}
+            onLargeAudienceConfirmedChange={setLargeAudienceConfirmed}
+            disabled={busy}
           />
-          {searchLoading ? (
-            <p className="text-xs text-[var(--text-2)]">Suche …</p>
-          ) : null}
-          {searchResults.length > 0 ? (
-            <ul
-              id="dm-recipient-listbox"
-              role="listbox"
-              className="max-h-48 overflow-y-auto rounded-lg border border-[var(--border)]"
-            >
-              {searchResults.map((result, index) => (
-                <li key={result.personId} role="option" aria-selected={index === activeSearchIndex}>
-                  <button
-                    type="button"
-                    className={cn(
-                      "flex w-full flex-col items-start px-3 py-2 text-left text-sm hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--sce-primary)]",
-                      index === activeSearchIndex && "bg-[var(--surface-2)]",
-                    )}
-                    onClick={() => addRecipient(result)}
-                  >
-                    <span className="font-medium">{result.displayName}</span>
-                    <span className="text-xs text-[var(--text-2)]">{contextLabel(result)}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {recipients.length > 0 ? (
-            <ul className="flex flex-wrap gap-2" aria-label="Ausgewählte Empfänger">
-              {recipients.map((recipient) => (
-                <li key={recipient.personId}>
-                  <span className="inline-flex items-center gap-2 rounded-full bg-[var(--surface-2)] px-3 py-1 text-sm">
-                    <span>
-                      {recipient.displayName}
-                      <span className="text-[var(--text-2)]"> · {recipient.contextLabel}</span>
-                    </span>
-                    <button
-                      type="button"
-                      className="text-[var(--text-2)] hover:text-[var(--foreground)]"
-                      aria-label={`${recipient.displayName} entfernen`}
-                      onClick={() => removeRecipient(recipient.personId)}
-                    >
-                      ×
-                    </button>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-[var(--text-2)]">Noch keine Empfänger ausgewählt.</p>
-          )}
           <div className="flex justify-end">
             <Button type="button" onClick={() => goToStep("content")}>
               Weiter
@@ -459,7 +353,15 @@ export default function DirectMessageComposer() {
           <dl className="space-y-3 text-sm">
             <div>
               <dt className="font-medium text-[var(--text-2)]">Empfänger</dt>
-              <dd>{recipients.map((r) => r.displayName).join(", ")}</dd>
+              <dd>
+                {audiencePreview?.audienceSummary ??
+                  "Ausgewählte Empfänger (Vorschau wird geladen …)"}
+                {audiencePreview ? (
+                  <span className="mt-1 block text-[var(--text-2)]">
+                    {audiencePreview.effective} zustellbare Personen
+                  </span>
+                ) : null}
+              </dd>
             </div>
             <div>
               <dt className="font-medium text-[var(--text-2)]">Modus</dt>
