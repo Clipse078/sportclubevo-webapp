@@ -25,6 +25,14 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/cron/platform-communication-email",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/communication-reminders",
+      "schedule": "*/1 * * * *"
+    },
+    {
       "path": "/api/cron/communication-scheduler",
       "schedule": "*/1 * * * *"
     },
