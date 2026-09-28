@@ -3,7 +3,8 @@
 **Branch:** `cursor/comm-release-01-containment-0cac`  
 **Parent stack:** PR #760 (`cursor/comm-evo-09-integrated-hardening`)  
 **STAGE before:** `443e0b76` (Merge PR #751)  
-**Release HEAD (pre-merge):** `f7ad0c0a` (EVO-09 stack + migration reconciliation)
+**STAGE after:** `1dbc82c1` (Merge PR #761)  
+**Release HEAD:** `b02805fc` (EVO-09 stack + migration reconciliation)
 
 ## Scope
 
@@ -71,6 +72,11 @@ No authenticated STAGE session credentials in the agent environment. **LIVE_INBO
 - Public unsubscribe tokens: deferred (COMM-17).
 - `attachment-storage.test.ts`: requires Vercel Blob workspace adapter in CI VM.
 
+## Deployment
+
+- **STAGE SHA:** `1dbc82c1`
+- **Vercel:** `sportclubevo-webapp-stage` — GitHub commit status **success** (deployment completed 2026-09-28T20:37Z UTC, see Vercel dashboard link on commit).
+
 ## Verdict
 
-**RELEASED_TO_STAGE_USER_ACCEPTANCE_REQUIRED** — code merge and migrations applied; automated gates green; live IMAP inbox detail acceptance requires user with STAGE login.
+**RELEASED_TO_STAGE_USER_ACCEPTANCE_REQUIRED** — code merge and migrations applied; automated gates green; Vercel STAGE deployment succeeded; live IMAP inbox detail acceptance requires user with STAGE login.
