@@ -20,11 +20,13 @@ import type {
 } from "@/components/admin/communication/inbox/inbox-workspace-types";
 
 type CommunicationInboxConversationDetailProps = {
+  selectedConversationId: string | null;
   listItem: InboxConversationListItem | null;
   detail: InboxConversationDetail | null;
   capabilities: CommunicationInboxCapabilities;
   loading: boolean;
   detailError: string | null;
+  onRetryDetail: () => void;
   replyText: string;
   onReplyTextChange: (value: string) => void;
   onSendReply: () => void;
@@ -69,11 +71,13 @@ function resolveDetailParticipant(
 }
 
 export function CommunicationInboxConversationDetailPane({
+  selectedConversationId,
   listItem,
   detail,
   capabilities,
   loading,
   detailError,
+  onRetryDetail,
   replyText,
   onReplyTextChange,
   onSendReply,
@@ -88,7 +92,17 @@ export function CommunicationInboxConversationDetailPane({
   visible,
   hasAnyConversations,
 }: CommunicationInboxConversationDetailProps) {
-  const showPlaceholder = !listItem || !detail;
+  const hasSelection = selectedConversationId != null;
+  const detailMatchesSelection =
+    detail != null && detail.id === selectedConversationId;
+  const showLoadedDetail = detailMatchesSelection && !loading;
+
+  const listPreviewLabel =
+    listItem?.participantLabel ??
+    (detailMatchesSelection ? resolveDetailParticipant(detail, listItem).label : null);
+  const listPreviewSubject =
+    listItem?.subject?.trim() ||
+    (detailMatchesSelection ? detail.subject?.trim() || "(Kein Betreff)" : null);
 
   return (
     <section
@@ -99,7 +113,7 @@ export function CommunicationInboxConversationDetailPane({
       )}
       aria-label="Konversationsdetail"
     >
-      {showPlaceholder ? (
+      {!hasSelection ? (
         <div className="flex flex-1 items-center justify-center px-6 py-10 text-center">
           {hasAnyConversations ? (
             <p className="text-sm text-[var(--text-2)]">Wählen Sie eine Konversation aus.</p>
@@ -108,6 +122,35 @@ export function CommunicationInboxConversationDetailPane({
               Sobald Konversationen vorhanden sind, öffnen Sie diese hier.
             </p>
           )}
+        </div>
+      ) : detailError && !detailMatchesSelection ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
+          <p className="text-sm text-red-600" role="alert">
+            {detailError}
+          </p>
+          <Button type="button" variant="secondary" onClick={onRetryDetail}>
+            Erneut versuchen
+          </Button>
+        </div>
+      ) : !showLoadedDetail ? (
+        <div className="flex flex-1 flex-col px-4 py-6">
+          <button
+            type="button"
+            className="mb-4 inline-flex items-center gap-1 self-start text-xs font-medium text-[var(--sce-primary)] lg:hidden"
+            onClick={onBackToList}
+          >
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
+            Konversationen
+          </button>
+          {listPreviewLabel ? (
+            <p className="text-sm font-semibold text-[var(--foreground)]">{listPreviewLabel}</p>
+          ) : null}
+          {listPreviewSubject ? (
+            <p className="mt-1 text-sm text-[var(--text-2)]">{listPreviewSubject}</p>
+          ) : null}
+          <p className="mt-6 text-sm text-[var(--text-2)]" aria-live="polite">
+            Konversation wird geladen …
+          </p>
         </div>
       ) : (
         <>
@@ -196,13 +239,20 @@ export function CommunicationInboxConversationDetailPane({
           </header>
 
           {loading ? (
-            <p className="px-4 py-6 text-sm text-[var(--text-2)]">Konversation wird geladen …</p>
+            <p className="px-4 py-2 text-sm text-[var(--text-2)]" aria-live="polite">
+              Konversation wird geladen …
+            </p>
           ) : null}
 
           {detailError ? (
-            <p className="px-4 py-6 text-sm text-red-600" role="alert">
-              {detailError}
-            </p>
+            <div className="flex items-center gap-3 px-4 py-3">
+              <p className="text-sm text-red-600" role="alert">
+                {detailError}
+              </p>
+              <Button type="button" variant="secondary" onClick={onRetryDetail}>
+                Erneut versuchen
+              </Button>
+            </div>
           ) : null}
 
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">

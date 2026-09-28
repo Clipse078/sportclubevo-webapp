@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CommunicationInboxConversationDetailPane } from "@/components/admin/communication/inbox/CommunicationInboxConversationDetail";
 import { CommunicationInboxConversationList } from "@/components/admin/communication/inbox/CommunicationInboxConversationList";
 import { CommunicationInboxToolbar } from "@/components/admin/communication/inbox/CommunicationInboxToolbar";
@@ -35,6 +35,8 @@ export default function CommunicationInboxWorkspace({
   const [replyError, setReplyError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [mobilePane, setMobilePane] = useState<"list" | "detail">("list");
+  const selectedConversationRef = useRef<string | null>(null);
+  selectedConversationRef.current = selectedId;
 
   useEffect(() => {
     const handle = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
@@ -90,34 +92,60 @@ export default function CommunicationInboxWorkspace({
     setReplyError(null);
     try {
       const res = await fetch(`/api/communication/inbox/conversations/${conversationId}`);
+      if (selectedConversationRef.current !== conversationId) {
+        return;
+      }
       if (!res.ok) {
         setDetail(null);
-        setDetailError("Konversation konnte nicht geladen werden.");
+        setDetailError("Die Konversation konnte nicht geladen werden.");
         return;
       }
       const data = (await res.json()) as { conversation?: InboxConversationDetail };
-      setDetail(data.conversation ?? null);
-      await fetch(`/api/communication/inbox/conversations/${conversationId}/read`, {
-        method: "POST",
-      });
-      setConversations((prev) =>
-        prev.map((item) =>
-          item.id === conversationId ? { ...item, unread: false } : item,
-        ),
-      );
+      if (selectedConversationRef.current !== conversationId) {
+        return;
+      }
+      const conversation = data.conversation ?? null;
+      if (!conversation) {
+        setDetail(null);
+        setDetailError("Die Konversation konnte nicht geladen werden.");
+        return;
+      }
+      setDetail(conversation);
+      try {
+        await fetch(`/api/communication/inbox/conversations/${conversationId}/read`, {
+          method: "POST",
+        });
+        if (selectedConversationRef.current === conversationId) {
+          setConversations((prev) =>
+            prev.map((item) =>
+              item.id === conversationId ? { ...item, unread: false } : item,
+            ),
+          );
+        }
+      } catch {
+        // Detail remains visible; read state sync is best-effort.
+      }
     } catch {
+      if (selectedConversationRef.current !== conversationId) {
+        return;
+      }
       setDetail(null);
-      setDetailError("Konversation konnte nicht geladen werden.");
+      setDetailError("Die Konversation konnte nicht geladen werden.");
     } finally {
-      setLoadingDetail(false);
+      if (selectedConversationRef.current === conversationId) {
+        setLoadingDetail(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     if (!selectedId) {
       setDetail(null);
+      setDetailError(null);
+      setLoadingDetail(false);
       return;
     }
+    setDetail(null);
     void loadDetail(selectedId);
   }, [selectedId, loadDetail]);
 
@@ -238,11 +266,17 @@ export default function CommunicationInboxWorkspace({
         />
 
         <CommunicationInboxConversationDetailPane
+          selectedConversationId={selectedId}
           listItem={selectedConversation}
           detail={detail}
           capabilities={capabilities}
           loading={loadingDetail}
           detailError={detailError}
+          onRetryDetail={() => {
+            if (selectedId) {
+              void loadDetail(selectedId);
+            }
+          }}
           replyText={replyText}
           onReplyTextChange={setReplyText}
           onSendReply={() => void sendReply()}
