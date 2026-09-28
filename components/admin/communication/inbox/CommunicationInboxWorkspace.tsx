@@ -28,6 +28,7 @@ export default function CommunicationInboxWorkspace({
   currentUserId,
   canReply,
   canManage,
+  canSettings,
 }: CommunicationInboxWorkspaceProps) {
   const [mailbox, setMailbox] = useState<InboxMailboxView>("INBOX");
   const [mailboxCounts, setMailboxCounts] = useState<Partial<Record<InboxMailboxView, number>>>(
@@ -398,8 +399,12 @@ export default function CommunicationInboxWorkspace({
     currentUserId,
     canReply,
     canManage,
-    canSettings: false,
+    canSettings,
   };
+
+  const mailboxConversationCount = mailboxCounts[mailbox];
+  const hasAnyConversationsInMailbox =
+    (typeof mailboxConversationCount === "number" ? mailboxConversationCount : conversations.length) > 0;
 
   const isTrashed =
     selectedConversation?.mailboxOrganization === "TRASHED" ||
@@ -533,7 +538,7 @@ export default function CommunicationInboxWorkspace({
           onMarkUnread={() => void postReadState("unread")}
           showProcessingToolbar={selectedIds.size === 0}
           visible
-          hasAnyConversations={conversations.length > 0}
+          hasAnyConversations={hasAnyConversationsInMailbox}
         />
         }
       />

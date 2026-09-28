@@ -31,16 +31,22 @@ export function CommunicationInboxViewControl({
 }: CommunicationInboxViewControlProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  function closeMenu() {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }
 
   useEffect(() => {
     if (!open) return;
     function onDocClick(event: MouseEvent) {
       if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
+        closeMenu();
       }
     }
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") closeMenu();
     }
     document.addEventListener("mousedown", onDocClick);
     document.addEventListener("keydown", onKey);
@@ -53,12 +59,13 @@ export function CommunicationInboxViewControl({
   return (
     <div className="relative shrink-0" ref={rootRef}>
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Ansicht und Dichte"
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border)] px-2.5 text-xs font-medium text-[var(--text-2)] transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border)] px-2.5 text-xs font-medium text-[var(--text-2)] motion-safe:transition motion-reduce:transition-none hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
         data-testid="communication-inbox-view-control"
       >
         <LayoutTemplate className="h-3.5 w-3.5" aria-hidden />
@@ -82,14 +89,14 @@ export function CommunicationInboxViewControl({
                   role="menuitemradio"
                   aria-checked={layout === item}
                   className={cn(
-                    "flex w-full rounded-md px-2 py-1.5 text-left text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]",
+                    "flex w-full rounded-md px-2 py-1.5 text-left text-xs font-medium motion-safe:transition motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]",
                     layout === item
                       ? "bg-[var(--surface-2)] text-[var(--foreground)]"
                       : "text-[var(--text-2)] hover:bg-[var(--surface-2)]/70",
                   )}
                   onClick={() => {
                     onLayoutChange(item, { resetSplit: item === layout });
-                    setOpen(false);
+                    closeMenu();
                   }}
                 >
                   {INBOX_WORKSPACE_LAYOUT_LABELS[item]}
@@ -109,14 +116,14 @@ export function CommunicationInboxViewControl({
                   role="menuitemradio"
                   aria-checked={density === item}
                   className={cn(
-                    "flex w-full rounded-md px-2 py-1.5 text-left text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]",
+                    "flex w-full rounded-md px-2 py-1.5 text-left text-xs font-medium motion-safe:transition motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]",
                     density === item
                       ? "bg-[var(--surface-2)] text-[var(--foreground)]"
                       : "text-[var(--text-2)] hover:bg-[var(--surface-2)]/70",
                   )}
                   onClick={() => {
                     onDensityChange(item);
-                    setOpen(false);
+                    closeMenu();
                   }}
                 >
                   {INBOX_WORKSPACE_DENSITY_LABELS[item]}
@@ -132,7 +139,7 @@ export function CommunicationInboxViewControl({
               className="flex w-full rounded-md px-2 py-1.5 text-left text-xs font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)]/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
               onClick={() => {
                 onResetDefaults();
-                setOpen(false);
+                closeMenu();
               }}
             >
               Auf Standard zurücksetzen

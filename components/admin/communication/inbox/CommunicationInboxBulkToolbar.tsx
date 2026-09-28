@@ -1,7 +1,5 @@
 "use client";
 
-import { MoreHorizontal } from "lucide-react";
-import { cn } from "@/lib/cn";
 import type { InboxMailboxView } from "@/lib/communication/inbox/inbox-mailbox-constants";
 
 type CommunicationInboxBulkToolbarProps = {
@@ -77,17 +75,6 @@ export function CommunicationInboxBulkToolbar({
             <BulkButton disabled={busy} onClick={onUnstar} label="Markierung entfernen" />
           </>
         ) : null}
-        <button
-          type="button"
-          disabled={busy}
-          aria-label="Weitere Aktionen"
-          className={cn(
-            "inline-flex h-7 w-7 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-2)]",
-            "hover:bg-[var(--surface)] disabled:opacity-60",
-          )}
-        >
-          <MoreHorizontal className="h-4 w-4" aria-hidden />
-        </button>
       </div>
     </div>
   );

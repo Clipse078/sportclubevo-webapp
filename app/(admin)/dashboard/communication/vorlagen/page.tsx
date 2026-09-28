@@ -114,8 +114,8 @@ export default async function CommunicationTemplatesPage(props: PageProps = {}) 
         ) : (
           <>
             <div className="mb-4 md:hidden">{primaryAction}</div>
-            <div className="hidden overflow-hidden rounded-lg border border-[var(--border)] md:block">
-              <table className="w-full text-left text-sm">
+            <div className="hidden overflow-x-auto rounded-lg border border-[var(--border)] md:block">
+              <table className="min-w-full text-left text-sm">
                 <thead className="border-b border-[var(--border)] bg-[var(--surface-2)] text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
                   <tr>
                     <th className="px-4 py-3" scope="col">

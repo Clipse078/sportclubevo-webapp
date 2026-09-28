@@ -370,7 +370,7 @@ export default function EmailSenderWorkspace({ initialModel }: Props) {
         </h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-[var(--text-2)]">
           <li>
-            Communication-E-Mails nutzen die zentrale Versandarchitektur (COMM-14) über den konfigurierten
+            Vereins-E-Mails aus Kommunikation nutzen die zentrale Versandarchitektur über den konfigurierten
             Versanddienst — nicht das separate Rechnungs-/Billing-SMTP.
           </li>
           <li>

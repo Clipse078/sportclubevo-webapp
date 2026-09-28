@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -131,6 +132,12 @@ export function CommunicationInboxConversationDetailPane({
   const detailMatchesSelection =
     detail != null && detail.id === selectedConversationId;
   const showLoadedDetail = detailMatchesSelection && !loading;
+  const detailFocusRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (!showLoadedDetail || !visible) return;
+    detailFocusRef.current?.focus();
+  }, [showLoadedDetail, visible, selectedConversationId]);
 
   const listPreviewLabel =
     listItem?.participantLabel ??
@@ -214,9 +221,13 @@ export function CommunicationInboxConversationDetailPane({
                     {resolveDetailParticipant(detail, listItem).email}
                   </p>
                 ) : null}
-                <p className="mt-2 text-sm text-[var(--foreground)]">
+                <h2
+                  ref={detailFocusRef}
+                  tabIndex={-1}
+                  className="mt-2 text-sm font-semibold text-[var(--foreground)] outline-none"
+                >
                   {detail.subject?.trim() || "(Kein Betreff)"}
-                </p>
+                </h2>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--text-2)]">
                   <span>
                     {INBOX_CONVERSATION_STATUS_LABEL[detail.status] ?? detail.status}
@@ -296,24 +307,7 @@ export function CommunicationInboxConversationDetailPane({
             />
           ) : null}
 
-          {loading ? (
-            <p className="px-4 py-2 text-sm text-[var(--text-2)]" aria-live="polite">
-              Konversation wird geladen …
-            </p>
-          ) : null}
-
-          {detailError ? (
-            <div className="flex items-center gap-3 px-4 py-3">
-              <p className="text-sm text-red-600" role="alert">
-                {detailError}
-              </p>
-              <Button type="button" variant="secondary" onClick={onRetryDetail}>
-                Erneut versuchen
-              </Button>
-            </div>
-          ) : null}
-
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden p-4">
             {detail.messages.map((message) => {
               const outbound = message.direction === "OUTBOUND";
               const timestamp = message.sentAt ?? message.receivedAt;
@@ -342,7 +336,7 @@ export function CommunicationInboxConversationDetailPane({
                   ) : null}
                   {message.bodyHtmlSanitized ? (
                     <div
-                      className="prose prose-sm mt-2 max-w-none text-[var(--foreground)]"
+                      className="prose prose-sm mt-2 max-w-none break-words text-[var(--foreground)] [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto"
                       dangerouslySetInnerHTML={{ __html: message.bodyHtmlSanitized }}
                     />
                   ) : (

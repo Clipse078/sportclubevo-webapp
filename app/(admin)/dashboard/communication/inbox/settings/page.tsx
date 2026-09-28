@@ -1,6 +1,7 @@
 import CommunicationMailboxSettingsForm from "@/components/admin/communication/inbox/CommunicationMailboxSettingsForm";
-import { Badge } from "@/components/ui/Badge";
-import { PageBreadcrumbs, PageHeader, PageShell } from "@/components/ui/page";
+import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
+import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { PageShell } from "@/components/ui/page";
 import { listCommunicationCenterMailboxes } from "@/lib/communication/inbox/mailbox-service";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { INBOX_SETTINGS_PERMISSIONS } from "@/lib/communication/inbox/route-access";
@@ -18,26 +19,24 @@ export default async function CommunicationInboxSettingsPage() {
 
   return (
     <PageShell>
-      <PageBreadcrumbs
-        items={[
+      <CommunicationWorkspaceHeader
+        breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
           { label: "Kommunikationscenter", href: "/dashboard/communication/inbox" },
           { label: "Postfach-Einstellungen" },
         ]}
-      />
-      <PageHeader
-        eyebrow="Kommunikationscenter"
         title="Postfach-Einstellungen"
         description="Inbound E-Mail/IMAP-Postfächer pro Verein konfigurieren."
-        badge={<Badge variant="success">Verfügbar</Badge>}
       />
-      <CommunicationMailboxSettingsForm
-        initialMailboxes={mailboxes.map((mailbox) => ({
-          ...mailbox,
-          lastSyncSuccessAt: mailbox.lastSyncSuccessAt?.toISOString() ?? null,
-        }))}
-      />
+      <CommunicationContentSurface>
+        <CommunicationMailboxSettingsForm
+          initialMailboxes={mailboxes.map((mailbox) => ({
+            ...mailbox,
+            lastSyncSuccessAt: mailbox.lastSyncSuccessAt?.toISOString() ?? null,
+          }))}
+        />
+      </CommunicationContentSurface>
     </PageShell>
   );
 }

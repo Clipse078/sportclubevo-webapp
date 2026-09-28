@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { TemplateUsageSummary } from "@/lib/communication/templates/template-usage-references";
+import { platformCommunicationUsageStatusLabel } from "@/lib/communication/usage-reference-display";
 
 type Props = {
   usage: TemplateUsageSummary;
@@ -29,7 +30,9 @@ export default function VorlageUsagePanel({ usage }: Props) {
                 <Link href={ref.href} className="font-medium text-[var(--sce-primary)] hover:underline">
                   {ref.label}
                 </Link>
-                <span className="mt-1 block text-xs text-[var(--text-2)]">Status: {ref.status}</span>
+                <span className="mt-1 block text-xs text-[var(--text-2)]">
+                  Status: {platformCommunicationUsageStatusLabel(ref.kind, ref.status)}
+                </span>
               </li>
             ))}
           </ul>

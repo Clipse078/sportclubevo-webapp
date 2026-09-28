@@ -182,7 +182,7 @@ export function buildEmailSenderReplyToPresentation(input: {
     communicationCenterLinkLabel: "Kommunikationscenter-Einstellungen",
     communicationCenterHref: "/dashboard/communication/inbox/settings",
     broadcastNote:
-      "Mitteilungen und Kampagnen (COMM-14) setzen kein separates Reply-To. Empfänger antworten in der Regel direkt an die angezeigte Absenderadresse.",
+      "Mitteilungen und Kampagnen setzen kein separates Reply-To. Empfänger antworten in der Regel direkt an die angezeigte Absenderadresse.",
     informOnlyNote:
       "Bei «Nur informieren» sind Antworten in SportClubEvo deaktiviert. Empfänger können dennoch eine neue E-Mail an die sichtbare Adresse senden.",
   };

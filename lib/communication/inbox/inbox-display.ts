@@ -74,6 +74,16 @@ export const INBOX_CONVERSATION_STATUS_LABEL: Record<string, string> = {
   RESOLVED: "Erledigt",
 };
 
+export const INBOX_MAILBOX_STATUS_LABEL: Record<string, string> = {
+  ACTIVE: "Aktiv",
+  DISCONNECTED: "Getrennt",
+  ERROR: "Fehler",
+};
+
+export function inboxMailboxStatusLabel(status: string): string {
+  return INBOX_MAILBOX_STATUS_LABEL[status] ?? status;
+}
+
 export const INBOX_CONTEXT_KIND_LABEL: Record<string, string> = {
   PERSON: "Person",
   TEAM: "Team",

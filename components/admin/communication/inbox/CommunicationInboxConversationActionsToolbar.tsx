@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { MoreHorizontal, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { InboxMailboxView } from "@/lib/communication/inbox/inbox-mailbox-constants";
 
@@ -71,14 +71,6 @@ export function CommunicationInboxConversationActionsToolbar({
         onClick={unread ? onMarkRead : onMarkUnread}
         label={unread ? "Als gelesen markieren" : "Als ungelesen markieren"}
       />
-      <button
-        type="button"
-        disabled={busy}
-        aria-label="Weitere Aktionen"
-        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)] disabled:opacity-60"
-      >
-        <MoreHorizontal className="h-4 w-4" aria-hidden />
-      </button>
     </div>
   );
 }
