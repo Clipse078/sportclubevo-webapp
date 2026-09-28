@@ -388,6 +388,12 @@ enum CommunicationCenterConversationStatus {
   RESOLVED
 }
 
+enum CommunicationCenterMailboxOrganization {
+  INBOX
+  ARCHIVED
+  TRASHED
+}
+
 enum CommunicationCenterChannel {
   EMAIL
   SCE
@@ -4443,6 +4449,9 @@ model CommunicationCenterConversation {
   channel CommunicationCenterChannel             @default(EMAIL)
   status  CommunicationCenterConversationStatus @default(OPEN)
 
+  mailboxOrganization            CommunicationCenterMailboxOrganization @default(INBOX)
+  mailboxOrganizationBeforeTrash CommunicationCenterMailboxOrganization?
+
   subject             String?
   threadRootMessageId String?
   previewText         String?
@@ -4479,6 +4488,7 @@ model CommunicationCenterConversation {
   @@index([tenantId, status, lastMessageAt])
   @@index([tenantId, assignedToUserId])
   @@index([tenantId, mailboxId])
+  @@index([tenantId, mailboxOrganization, lastMessageAt], map: "cc_conv_tenant_mbox_org_last_idx")
 }
 
 model CommunicationCenterMessage {
@@ -4557,6 +4567,7 @@ model CommunicationCenterConversationReadState {
   conversationId String
   userId         String
   readAt         DateTime?
+  starredAt      DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -4566,6 +4577,7 @@ model CommunicationCenterConversationReadState {
 
   @@unique([conversationId, userId])
   @@index([tenantId, userId])
+  @@index([tenantId, userId, starredAt], map: "cc_conv_read_user_star_idx")
 }
 
 model CommunicationCenterContextLink {

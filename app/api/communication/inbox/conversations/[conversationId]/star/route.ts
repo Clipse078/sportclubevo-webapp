@@ -3,8 +3,7 @@ import { auth } from "@/auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { INBOX_VIEW_PERMISSIONS } from "@/lib/communication/inbox/route-access";
-import { markCommunicationCenterConversationRead } from "@/lib/communication/inbox/conversation-service";
-import { markCommunicationCenterConversationUnread } from "@/lib/communication/inbox/user-conversation-state-service";
+import { setCommunicationCenterConversationStarred } from "@/lib/communication/inbox/user-conversation-state-service";
 import { CommunicationCenterError } from "@/lib/communication/inbox/errors";
 
 export const dynamic = "force-dynamic";
@@ -19,33 +18,26 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
   if (!tenant || !userId) {
     return NextResponse.json({ error: "Nicht autorisiert." }, { status: 401 });
   }
-  const { conversationId } = await params;
 
-  let markAs: "read" | "unread" = "read";
+  let starred = true;
   try {
-    const body = (await request.json()) as { markAs?: unknown };
-    if (body.markAs === "unread") {
-      markAs = "unread";
+    const body = (await request.json()) as { starred?: unknown };
+    if (typeof body.starred === "boolean") {
+      starred = body.starred;
     }
   } catch {
-    // Default: mark read (COMM-UX-03R2 open behavior).
+    // Default starred=true when body omitted.
   }
 
+  const { conversationId } = await params;
   try {
-    if (markAs === "unread") {
-      await markCommunicationCenterConversationUnread({
-        tenantId: tenant.id,
-        conversationId,
-        userId,
-      });
-    } else {
-      await markCommunicationCenterConversationRead({
-        tenantId: tenant.id,
-        conversationId,
-        userId,
-      });
-    }
-    return NextResponse.json({ ok: true, markAs });
+    await setCommunicationCenterConversationStarred({
+      tenantId: tenant.id,
+      conversationId,
+      userId,
+      starred,
+    });
+    return NextResponse.json({ ok: true, starred });
   } catch (error) {
     if (error instanceof CommunicationCenterError) {
       return NextResponse.json({ error: error.message, code: error.code }, { status: 404 });

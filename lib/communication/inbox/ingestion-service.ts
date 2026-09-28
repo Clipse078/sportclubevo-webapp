@@ -13,6 +13,7 @@ import { COMMUNICATION_CENTER_MAX_ATTACHMENT_BYTES } from "@/lib/communication/i
 import { createHash } from "node:crypto";
 import { CommunicationAttachmentSourceType } from "@prisma/client";
 import { normalizeInternetMessageId } from "@/lib/communication/inbox/message-id";
+import { buildInboundMailboxReactivationUpdate } from "@/lib/communication/inbox/mailbox-organization-service";
 
 export type IngestInboundMessageResult =
   | { kind: "INGESTED"; conversationId: string; messageId: string }
@@ -104,12 +105,14 @@ export async function ingestCommunicationCenterImapMessage(input: {
           },
         });
       } else {
+        const reactivation = buildInboundMailboxReactivationUpdate(conversation.mailboxOrganization);
         conversation = await tx.communicationCenterConversation.update({
           where: { id: conversation.id },
           data: {
             previewText: parsed.bodyText.slice(0, 280),
             lastMessageAt: parsed.receivedAt,
             searchText: buildSearchText(parsed),
+            ...(reactivation ?? {}),
           },
         });
       }

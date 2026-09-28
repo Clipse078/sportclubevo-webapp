@@ -1,3 +1,5 @@
+import type { InboxMailboxView } from "@/lib/communication/inbox/inbox-mailbox-constants";
+
 export type InboxConversationListItem = {
   id: string;
   subject: string | null;
@@ -9,6 +11,8 @@ export type InboxConversationListItem = {
   participantLabel: string;
   participantEmail: string | null;
   unread: boolean;
+  starred: boolean;
+  mailboxOrganization: string;
   matchedPersonId?: string | null;
 };
 
@@ -35,6 +39,7 @@ export type InboxConversationDetail = {
   id: string;
   subject: string | null;
   status: string;
+  mailboxOrganization: string;
   assignedToUserId: string | null;
   matchedPerson?: {
     id: string;
@@ -64,6 +69,13 @@ export type CommunicationInboxCapabilities = {
   canManage: boolean;
   canSettings: boolean;
 };
+
+export const INBOX_MAILBOX_NAV_ITEMS: { id: InboxMailboxView; label: string }[] = [
+  { id: "INBOX", label: "Posteingang" },
+  { id: "STARRED", label: "Markiert" },
+  { id: "ARCHIVE", label: "Archiv" },
+  { id: "TRASH", label: "Papierkorb" },
+];
 
 export const INBOX_QUICK_FILTERS = [
   { id: "ALL", label: "Alle" },

@@ -28,6 +28,8 @@ const conversationA = {
   participantLabel: "Google Security",
   participantEmail: "security@google.com",
   unread: true,
+  starred: false,
+  mailboxOrganization: "INBOX",
 };
 
 const conversationB = {
@@ -41,6 +43,8 @@ const conversationB = {
   participantLabel: "Trainer Team",
   participantEmail: "trainer@example.com",
   unread: false,
+  starred: false,
+  mailboxOrganization: "INBOX",
 };
 
 function detailFor(
@@ -50,6 +54,7 @@ function detailFor(
   id: string;
   subject: string | null;
   status: string;
+  mailboxOrganization: string;
   assignedToUserId: string | null;
   messages: Array<{
     id: string;
@@ -67,6 +72,7 @@ function detailFor(
     id: item.id,
     subject: item.subject,
     status: item.status,
+    mailboxOrganization: item.mailboxOrganization,
     assignedToUserId: item.assignedToUserId,
     messages: [
       {
@@ -96,6 +102,10 @@ function installInboxFetch(options?: {
   mocks.fetch.mockImplementation(async (input: RequestInfo, init?: RequestInit) => {
     const url = requestUrl(input);
     const method = init?.method ?? "GET";
+
+    if (url.includes("counts=1") && method === "GET") {
+      return new Response(JSON.stringify({ counts: {} }), { status: 200 });
+    }
 
     if (url.includes("/conversations?") && method === "GET") {
       return new Response(
@@ -365,8 +375,19 @@ describe("SCE-COMM-UX-03R2 reading pane selection defect", () => {
           ],
         }}
         capabilities={{ currentUserId: "user-1", canReply: false, canManage: false, canSettings: false }}
+        mailbox="INBOX"
         loading={false}
         detailError={null}
+        actionBusy={false}
+        onToggleStar={() => undefined}
+        onArchive={() => undefined}
+        onRestoreToInbox={() => undefined}
+        onTrash={() => undefined}
+        onRestoreFromTrash={() => undefined}
+        onMarkRead={() => undefined}
+        onMarkUnread={() => undefined}
+        showProcessingToolbar
+        replyDisabled={false}
         replyText=""
         onReplyTextChange={() => undefined}
         onSendReply={() => undefined}

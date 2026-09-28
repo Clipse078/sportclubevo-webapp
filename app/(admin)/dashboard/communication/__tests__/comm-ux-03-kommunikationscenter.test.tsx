@@ -50,12 +50,15 @@ const sampleListItem = {
   participantLabel: "Maria Muster",
   participantEmail: "maria@example.com",
   unread: true,
+  starred: false,
+  mailboxOrganization: "INBOX",
 };
 
 const sampleDetail = {
   id: "conv-1",
   subject: "Anfrage Mitgliedschaft",
   status: "OPEN",
+  mailboxOrganization: "INBOX",
   assignedToUserId: "user-1",
   assignedToUser: { id: "user-1", firstName: "Club", lastName: "Admin" },
   messages: [
@@ -84,6 +87,40 @@ const sampleDetail = {
       deliveryError: null,
     },
   ],
+};
+
+const listPropsBase = {
+  mailbox: "INBOX" as const,
+  selectedIds: new Set<string>(),
+  canManage: true,
+  bulkBusy: false,
+  mailboxEmptyLabel: "Noch keine Konversationen",
+  onToggleSelected: () => undefined,
+  onToggleStar: () => undefined,
+  onSelectAll: () => undefined,
+  onBulkArchive: () => undefined,
+  onBulkRestoreToInbox: () => undefined,
+  onBulkTrash: () => undefined,
+  onBulkRestoreFromTrash: () => undefined,
+  onBulkMarkRead: () => undefined,
+  onBulkMarkUnread: () => undefined,
+  onBulkStar: () => undefined,
+  onBulkUnstar: () => undefined,
+  onClearSelection: () => undefined,
+};
+
+const detailPropsBase = {
+  mailbox: "INBOX" as const,
+  actionBusy: false,
+  onToggleStar: () => undefined,
+  onArchive: () => undefined,
+  onRestoreToInbox: () => undefined,
+  onTrash: () => undefined,
+  onRestoreFromTrash: () => undefined,
+  onMarkRead: () => undefined,
+  onMarkUnread: () => undefined,
+  showProcessingToolbar: true,
+  replyDisabled: false,
 };
 
 beforeEach(() => {
@@ -139,6 +176,9 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
   it("renders frequent filters and marks active filter", () => {
     render(
       <CommunicationInboxToolbar
+        mailbox="INBOX"
+        onMailboxChange={() => undefined}
+        mailboxCounts={{}}
         filter="UNREAD"
         onFilterChange={() => undefined}
         search=""
@@ -161,6 +201,7 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
   it("conversation row hierarchy, unread semantics, selection, assignment", () => {
     const { rerender } = render(
       <CommunicationInboxConversationList
+        {...listPropsBase}
         conversations={[sampleListItem]}
         selectedId={null}
         currentUserId="user-2"
@@ -184,6 +225,7 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
 
     rerender(
       <CommunicationInboxConversationList
+        {...listPropsBase}
         conversations={[sampleListItem]}
         selectedId="conv-1"
         currentUserId="user-2"
@@ -207,6 +249,7 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
   it("empty states: none, filter, search, none-selected", async () => {
     render(
       <CommunicationInboxConversationList
+        {...listPropsBase}
         conversations={[]}
         selectedId={null}
         currentUserId="user-1"
@@ -225,6 +268,7 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
 
     render(
       <CommunicationInboxConversationList
+        {...listPropsBase}
         conversations={[]}
         selectedId={null}
         currentUserId="user-1"
@@ -243,6 +287,9 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
 
     mocks.fetch.mockImplementation(async (input: RequestInfo) => {
       const url = String(input);
+      if (url.includes("counts=1")) {
+        return new Response(JSON.stringify({ counts: {} }), { status: 200 });
+      }
       if (url.includes("/conversations?")) {
         return new Response(JSON.stringify({ items: [sampleListItem], nextCursor: null }), {
           status: 200,
@@ -269,6 +316,9 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
   it("loads detail on selection and uses canonical reply path", async () => {
     mocks.fetch.mockImplementation(async (input: RequestInfo, init?: RequestInit) => {
       const url = requestUrl(input);
+      if (url.includes("counts=1")) {
+        return new Response(JSON.stringify({ counts: {} }), { status: 200 });
+      }
       if (url.includes("/conversations?")) {
         return new Response(JSON.stringify({ items: [sampleListItem], nextCursor: null }), {
           status: 200,
@@ -313,6 +363,7 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
     const onSendReply = vi.fn();
     render(
       <CommunicationInboxConversationDetailPane
+        {...detailPropsBase}
         selectedConversationId="conv-1"
         listItem={sampleListItem}
         detail={sampleDetail}
@@ -357,6 +408,7 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
   it("hides reply and manage affordances without permissions", () => {
     render(
       <CommunicationInboxConversationDetailPane
+        {...detailPropsBase}
         selectedConversationId="conv-1"
         listItem={sampleListItem}
         detail={sampleDetail}
@@ -393,6 +445,7 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
   it("resolve/reopen uses canonical OPEN and RESOLVED labels", () => {
     render(
       <CommunicationInboxConversationDetailPane
+        {...detailPropsBase}
         selectedConversationId="conv-1"
         listItem={sampleListItem}
         detail={{ ...sampleDetail, status: "RESOLVED" }}

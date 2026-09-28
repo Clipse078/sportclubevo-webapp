@@ -11,6 +11,7 @@ import { plainTextToSafeHtml } from "@/lib/communication/outbound-email-service"
 import { normalizeEmailAddress, normalizeInternetMessageId } from "@/lib/communication/inbox/message-id";
 import { buildReplyReferences } from "@/lib/communication/inbox/threading-service";
 import { recordCommunicationCenterAudit } from "@/lib/communication/inbox/inbox-audit";
+import { reactivateCommunicationCenterConversationToInboxOnReply } from "@/lib/communication/inbox/mailbox-organization-service";
 
 export type ReplyToConversationResult = {
   messageId: string;
@@ -61,6 +62,11 @@ export async function replyToCommunicationCenterConversation(input: {
   if (!conversation) {
     throw new CommunicationCenterError("NOT_FOUND", "Konversation nicht gefunden.");
   }
+
+  await reactivateCommunicationCenterConversationToInboxOnReply({
+    tenantId: input.tenantId,
+    conversationId: conversation.id,
+  });
 
   const lastInbound =
     [...conversation.messages].reverse().find(

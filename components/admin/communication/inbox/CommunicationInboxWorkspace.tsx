@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CommunicationInboxConversationDetailPane } from "@/components/admin/communication/inbox/CommunicationInboxConversationDetail";
 import { CommunicationInboxConversationList } from "@/components/admin/communication/inbox/CommunicationInboxConversationList";
 import { CommunicationInboxToolbar } from "@/components/admin/communication/inbox/CommunicationInboxToolbar";
+import type { InboxMailboxView } from "@/lib/communication/inbox/inbox-mailbox-constants";
 import type {
   CommunicationInboxCapabilities,
   InboxConversationDetail,
@@ -13,23 +14,37 @@ import type {
 
 type CommunicationInboxWorkspaceProps = CommunicationInboxCapabilities;
 
+const MAILBOX_EMPTY_LABELS: Record<InboxMailboxView, string> = {
+  INBOX: "Noch keine Konversationen",
+  STARRED: "Noch keine markierten Konversationen",
+  ARCHIVE: "Das Archiv ist leer",
+  TRASH: "Der Papierkorb ist leer",
+};
+
 export default function CommunicationInboxWorkspace({
   currentUserId,
   canReply,
   canManage,
 }: CommunicationInboxWorkspaceProps) {
+  const [mailbox, setMailbox] = useState<InboxMailboxView>("INBOX");
+  const [mailboxCounts, setMailboxCounts] = useState<Partial<Record<InboxMailboxView, number>>>(
+    {},
+  );
   const [filter, setFilter] = useState<InboxQuickFilterId>("ALL");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [conversations, setConversations] = useState<InboxConversationListItem[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [detail, setDetail] = useState<InboxConversationDetail | null>(null);
   const [replyText, setReplyText] = useState("");
   const [loadingList, setLoadingList] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [replySubmitting, setReplySubmitting] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [replyError, setReplyError] = useState<string | null>(null);
@@ -43,6 +58,17 @@ export default function CommunicationInboxWorkspace({
     return () => window.clearTimeout(handle);
   }, [search]);
 
+  const loadMailboxCounts = useCallback(async () => {
+    try {
+      const res = await fetch("/api/communication/inbox/conversations?counts=1");
+      if (!res.ok) return;
+      const data = (await res.json()) as { counts?: Partial<Record<InboxMailboxView, number>> };
+      if (data.counts) setMailboxCounts(data.counts);
+    } catch {
+      // Counts are optional.
+    }
+  }, []);
+
   const loadList = useCallback(
     async (mode: "replace" | "append" = "replace", cursor?: string | null) => {
       if (mode === "append") {
@@ -52,7 +78,7 @@ export default function CommunicationInboxWorkspace({
       }
       setListError(null);
       try {
-        const params = new URLSearchParams({ filter });
+        const params = new URLSearchParams({ filter, mailbox });
         if (debouncedSearch) params.set("search", debouncedSearch);
         if (cursor) params.set("cursor", cursor);
         const res = await fetch(`/api/communication/inbox/conversations?${params.toString()}`);
@@ -78,12 +104,14 @@ export default function CommunicationInboxWorkspace({
         setLoadingMore(false);
       }
     },
-    [filter, debouncedSearch],
+    [filter, debouncedSearch, mailbox],
   );
 
   useEffect(() => {
     void loadList("replace");
-  }, [loadList]);
+    void loadMailboxCounts();
+    setSelectedIds(new Set());
+  }, [loadList, loadMailboxCounts]);
 
   const loadDetail = useCallback(async (conversationId: string) => {
     setLoadingDetail(true);
@@ -160,12 +188,106 @@ export default function CommunicationInboxWorkspace({
     if (conversations.length > 0) return null;
     if (debouncedSearch) return "search" as const;
     if (filter !== "ALL") return "filter" as const;
+    if (mailbox !== "INBOX") return "mailbox" as const;
     return "none" as const;
-  }, [conversations.length, debouncedSearch, filter]);
+  }, [conversations.length, debouncedSearch, filter, mailbox]);
 
   function resetFilters() {
     setFilter("ALL");
     setSearch("");
+  }
+
+  async function refreshAfterMutation() {
+    await loadList("replace");
+    await loadMailboxCounts();
+    if (selectedId) {
+      await loadDetail(selectedId);
+    }
+  }
+
+  async function postBulk(action: string) {
+    if (selectedIds.size === 0) return;
+    setBulkBusy(true);
+    setActionError(null);
+    try {
+      const res = await fetch("/api/communication/inbox/conversations/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversationIds: [...selectedIds],
+          action,
+        }),
+      });
+      if (!res.ok) {
+        setActionError("Massenaktion fehlgeschlagen.");
+        return;
+      }
+      setSelectedIds(new Set());
+      await refreshAfterMutation();
+    } catch {
+      setActionError("Massenaktion fehlgeschlagen.");
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
+  async function postOrganization(action: string) {
+    if (!selectedId || !canManage) return;
+    setActionBusy(true);
+    setActionError(null);
+    try {
+      const res = await fetch(
+        `/api/communication/inbox/conversations/${selectedId}/organization`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action }),
+        },
+      );
+      if (!res.ok) {
+        setActionError("Aktion fehlgeschlagen.");
+        return;
+      }
+      await refreshAfterMutation();
+    } catch {
+      setActionError("Aktion fehlgeschlagen.");
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function postReadState(markAs: "read" | "unread") {
+    if (!selectedId) return;
+    setActionBusy(true);
+    try {
+      await fetch(`/api/communication/inbox/conversations/${selectedId}/read`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markAs }),
+      });
+      setConversations((prev) =>
+        prev.map((item) =>
+          item.id === selectedId ? { ...item, unread: markAs === "unread" } : item,
+        ),
+      );
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function toggleStar(conversationId: string, starred: boolean) {
+    await fetch(`/api/communication/inbox/conversations/${conversationId}/star`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ starred }),
+    });
+    setConversations((prev) =>
+      prev.map((item) => (item.id === conversationId ? { ...item, starred } : item)),
+    );
+    if (mailbox === "STARRED" && !starred) {
+      setConversations((prev) => prev.filter((item) => item.id !== conversationId));
+    }
+    void loadMailboxCounts();
   }
 
   async function sendReply() {
@@ -184,8 +306,7 @@ export default function CommunicationInboxWorkspace({
         return;
       }
       setReplyText("");
-      await loadDetail(selectedId);
-      await loadList("replace");
+      await refreshAfterMutation();
     } catch {
       setReplyError("Antwort konnte nicht gesendet werden.");
     } finally {
@@ -205,8 +326,7 @@ export default function CommunicationInboxWorkspace({
       setActionError("Status konnte nicht aktualisiert werden.");
       return;
     }
-    await loadDetail(selectedId);
-    await loadList("replace");
+    await refreshAfterMutation();
   }
 
   async function updateAssignment(assignedToUserId: string | null) {
@@ -221,8 +341,7 @@ export default function CommunicationInboxWorkspace({
       setActionError("Zuweisung konnte nicht aktualisiert werden.");
       return;
     }
-    await loadDetail(selectedId);
-    await loadList("replace");
+    await refreshAfterMutation();
   }
 
   const capabilities: CommunicationInboxCapabilities = {
@@ -232,12 +351,23 @@ export default function CommunicationInboxWorkspace({
     canSettings: false,
   };
 
+  const isTrashed =
+    selectedConversation?.mailboxOrganization === "TRASHED" ||
+    detail?.mailboxOrganization === "TRASHED";
+
   return (
     <div
       className="flex min-h-[min(720px,calc(100dvh-15rem))] max-h-[calc(100dvh-12rem)] flex-col gap-4"
       data-communication-inbox-workspace
     >
       <CommunicationInboxToolbar
+        mailbox={mailbox}
+        onMailboxChange={(next) => {
+          setMailbox(next);
+          setSelectedId(null);
+          setMobilePane("list");
+        }}
+        mailboxCounts={mailboxCounts}
         filter={filter}
         onFilterChange={setFilter}
         search={search}
@@ -248,17 +378,47 @@ export default function CommunicationInboxWorkspace({
 
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)]">
         <CommunicationInboxConversationList
+          mailbox={mailbox}
           conversations={conversations}
           selectedId={selectedId}
+          selectedIds={selectedIds}
           currentUserId={currentUserId}
+          canManage={canManage}
+          bulkBusy={bulkBusy}
           loading={loadingList}
           listError={listError}
           emptyVariant={emptyVariant ?? "none"}
+          mailboxEmptyLabel={MAILBOX_EMPTY_LABELS[mailbox]}
           onSelect={(conversationId) => {
             setSelectedId(conversationId);
             setMobilePane("detail");
           }}
+          onToggleSelected={(conversationId, checked) => {
+            setSelectedIds((prev) => {
+              const next = new Set(prev);
+              if (checked) next.add(conversationId);
+              else next.delete(conversationId);
+              return next;
+            });
+          }}
+          onToggleStar={(conversationId, starred) => void toggleStar(conversationId, starred)}
+          onSelectAll={(checked) => {
+            if (checked) {
+              setSelectedIds(new Set(conversations.map((c) => c.id)));
+            } else {
+              setSelectedIds(new Set());
+            }
+          }}
           onResetFilters={resetFilters}
+          onBulkArchive={() => void postBulk("ARCHIVE")}
+          onBulkRestoreToInbox={() => void postBulk("RESTORE_TO_INBOX")}
+          onBulkTrash={() => void postBulk("TRASH")}
+          onBulkRestoreFromTrash={() => void postBulk("RESTORE_FROM_TRASH")}
+          onBulkMarkRead={() => void postBulk("MARK_READ")}
+          onBulkMarkUnread={() => void postBulk("MARK_UNREAD")}
+          onBulkStar={() => void postBulk("STAR")}
+          onBulkUnstar={() => void postBulk("UNSTAR")}
+          onClearSelection={() => setSelectedIds(new Set())}
           visible={mobilePane === "list"}
           nextCursor={nextCursor}
           onLoadMore={() => void loadList("append", nextCursor)}
@@ -270,8 +430,10 @@ export default function CommunicationInboxWorkspace({
           listItem={selectedConversation}
           detail={detail}
           capabilities={capabilities}
+          mailbox={mailbox}
           loading={loadingDetail}
           detailError={detailError}
+          actionBusy={actionBusy}
           onRetryDetail={() => {
             if (selectedId) {
               void loadDetail(selectedId);
@@ -283,11 +445,23 @@ export default function CommunicationInboxWorkspace({
           replySubmitting={replySubmitting}
           replyError={replyError}
           actionError={actionError}
+          replyDisabled={isTrashed}
           onBackToList={() => setMobilePane("list")}
           onResolve={() => void updateStatus("RESOLVED")}
           onReopen={() => void updateStatus("OPEN")}
           onAssignToMe={() => void updateAssignment(currentUserId)}
           onUnassign={() => void updateAssignment(null)}
+          onToggleStar={() => {
+            if (!selectedId || !selectedConversation) return;
+            void toggleStar(selectedId, !selectedConversation.starred);
+          }}
+          onArchive={() => void postOrganization("ARCHIVE")}
+          onRestoreToInbox={() => void postOrganization("RESTORE_TO_INBOX")}
+          onTrash={() => void postOrganization("TRASH")}
+          onRestoreFromTrash={() => void postOrganization("RESTORE_FROM_TRASH")}
+          onMarkRead={() => void postReadState("read")}
+          onMarkUnread={() => void postReadState("unread")}
+          showProcessingToolbar={selectedIds.size === 0}
           visible={mobilePane === "detail"}
           hasAnyConversations={conversations.length > 0}
         />
