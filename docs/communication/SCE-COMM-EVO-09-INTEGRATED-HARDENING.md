@@ -122,9 +122,9 @@ Push delivery: existing notification crons (`task-notifications`, `participation
 
 - COMM programme migrations `20260927120000` … `20260927320000` (COMM-02–18 core).
 - UX/INBOX: `20260928120000`–`20260928160000`.
-- EVO: `20260928170000` (EVO-07 **and** EVO-08 share timestamp), `20260928180000` (EVO-06).
+- EVO: `20260928169000` (EVO-08 multi-sender), `20260928170000` (EVO-07 rich signature), `20260928180000` (EVO-06).
 
-**Duplicate timestamps:** `20260928170000` used for both EVO-07 rich signature and EVO-08 multi-sender — RELEASE-01 should confirm deploy order on remote `_prisma_migrations`.
+**Duplicate timestamps:** Resolved in RELEASE-01 — EVO-08 renamed to `20260928169000` so stack order (EVO-08 before EVO-07) is deterministic before first STAGE apply.
 
 **Identifier limit:** Automated scan in `sce-comm-evo-09-migration-identifiers.test.ts`. Multiple explicit names exceed 63 bytes; COMM-17 sponsor **unique** and **lookup** indexes truncate to the **same** 63-byte prefix → collision risk on fresh apply.
 

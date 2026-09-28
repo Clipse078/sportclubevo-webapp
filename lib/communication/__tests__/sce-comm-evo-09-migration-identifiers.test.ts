@@ -57,15 +57,7 @@ describe("SCE-COMM-EVO-09 communication migration identifiers", () => {
     }
 
     const duplicates = [...byTimestamp.entries()].filter(([, dirs]) => dirs.length > 1);
-    expect(duplicates).toEqual([
-      [
-        "20260928170000",
-        [
-          "20260928170000_sce_comm_evo_07_rich_personal_signature",
-          "20260928170000_sce_comm_evo_08_multi_sender_identities",
-        ],
-      ],
-    ]);
+    expect(duplicates).toEqual([]);
   });
 
   it("flags explicit identifiers longer than 63 bytes (COMM-17 sponsor unique is a known case)", () => {
@@ -90,13 +82,12 @@ describe("SCE-COMM-EVO-09 communication migration identifiers", () => {
       tooLong.some(
         (row) =>
           row.migration === "20260927310000_sce_comm_17_preferences_consent" &&
-          row.identifier ===
-            "SponsorContactCommunicationPreference_tenantId_sponsorContactId_category_channel_key",
+          row.identifier.startsWith("SponsorContactCommunicationPreference_"),
       ),
-    ).toBe(true);
+    ).toBe(false);
   });
 
-  it("detects COMM-17 sponsor unique vs lookup index truncation collision", () => {
+  it("COMM-17 sponsor indexes use short distinct names (RELEASE-01 collision fix)", () => {
     const sql = readFileSync(
       join(MIGRATIONS_DIR, "20260927310000_sce_comm_17_preferences_consent", "migration.sql"),
       "utf8",
@@ -112,15 +103,16 @@ describe("SCE-COMM-EVO-09 communication migration identifiers", () => {
     const sponsorIds = [
       ...new Set(
         identifiers.filter((id) =>
+          id.startsWith("SponsorCommPref_") ||
           id.startsWith("SponsorContactCommunicationPreference_tenantId_sponsorContactId"),
         ),
       ),
     ];
     expect(sponsorIds).toEqual([
-      "SponsorContactCommunicationPreference_tenantId_sponsorContactId_category_channel_key",
-      "SponsorContactCommunicationPreference_tenantId_sponsorContactId_idx",
+      "SponsorCommPref_tenant_sponsor_cat_chan_key",
+      "SponsorCommPref_tenant_sponsor_idx",
     ]);
     const sponsorTruncatedKeys = new Set(sponsorIds.map((id) => truncatePgIdentifier(id)));
-    expect(sponsorTruncatedKeys.size).toBe(1);
+    expect(sponsorTruncatedKeys.size).toBe(2);
   });
 });
