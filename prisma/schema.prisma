@@ -4659,8 +4659,8 @@ model SponsorContactCommunicationPreference {
   tenant         Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   sponsorContact SponsorContact @relation(fields: [sponsorContactId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  @@unique([tenantId, sponsorContactId, category, channel])
-  @@index([tenantId, sponsorContactId])
+  @@unique([tenantId, sponsorContactId, category, channel], map: "SponsorCommPref_tenant_sponsor_cat_chan_key")
+  @@index([tenantId, sponsorContactId], map: "SponsorCommPref_tenant_sponsor_idx")
 }
 
 /// DASHBOARD-04 — per-user, per-tenant ordered Schnellzugriff shortcut keys.
