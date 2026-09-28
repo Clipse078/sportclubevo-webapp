@@ -1,6 +1,9 @@
 /**
- * SCE-VISUAL-01 — canonical authenticated SportClubEvo application canvas.
+ * SCE-VISUAL-01 / SCE-UX-BG-01 — canonical authenticated SportClubEvo application canvas.
  * Single source for the public static asset path (served from /public).
+ *
+ * Precedence: explicit module/user/tenant artwork overrides (when present) → this default →
+ * `--sce-app-background` / `--background` CSS fallback.
  */
 export const SCE_AUTHENTICATED_APP_BACKGROUND_PATH =
   "/images/background/SCE_background.png";
