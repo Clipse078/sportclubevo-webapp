@@ -37,6 +37,7 @@ export async function POST(request: Request) {
     acknowledgementRequired?: boolean;
     attachmentIds?: string[];
     includePersonalSignature?: boolean;
+    emailSenderIdentityId?: string | null;
   };
 
   const result = await sendClubFormalCommunication({
@@ -51,6 +52,8 @@ export async function POST(request: Request) {
     },
     acknowledgementRequired: body.acknowledgementRequired,
     attachmentIds: body.attachmentIds,
+    emailSenderIdentityId:
+      typeof body.emailSenderIdentityId === "string" ? body.emailSenderIdentityId.trim() : null,
     includePersonalSignature:
       body.includePersonalSignature === true
         ? true
