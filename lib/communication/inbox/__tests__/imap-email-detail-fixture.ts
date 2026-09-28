@@ -7,6 +7,15 @@ import {
 } from "@prisma/client";
 import type { CommunicationCenterConversationDetailRecord } from "@/lib/communication/inbox/conversation-detail-client-dto";
 
+/** Long plain-text body for layout / scroll regression tests (SCE-COMM-HOTFIX-01). */
+export function buildLongImapPlainTextBody(paragraphCount = 48): string {
+  return Array.from(
+    { length: paragraphCount },
+    (_, index) =>
+      `Absatz ${index + 1}: Bitte prüfen Sie Ihr Konto und bestätigen Sie die Sicherheitseinstellungen für den Vereinszugang.`,
+  ).join("\n\n");
+}
+
 /** Representative Prisma graph for a real IMAP-synced EMAIL thread on STAGE. */
 export function buildRepresentativeImapEmailConversationDetailRecord(): CommunicationCenterConversationDetailRecord {
   const receivedAt = new Date("2026-09-28T09:15:00.000Z");

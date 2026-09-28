@@ -4,6 +4,7 @@ import { Mail, Star, UserRound } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatConversationTimestamp } from "@/lib/communication/inbox/inbox-display";
 import type { InboxMailboxView } from "@/lib/communication/inbox/inbox-mailbox-constants";
+import { INBOX_LIST_SCROLL_CLASS } from "@/lib/communication/inbox/inbox-workspace-layout-contract";
 import { SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
 import { CommunicationInboxBulkToolbar } from "@/components/admin/communication/inbox/CommunicationInboxBulkToolbar";
 import type { InboxWorkspaceDensity } from "@/lib/communication/inbox/inbox-workspace-preferences";
@@ -104,10 +105,11 @@ export function CommunicationInboxConversationList({
     <section
       className={cn(
         SCE_SURFACE_STANDARD_PANEL,
-        "flex min-h-0 flex-col overflow-hidden",
+        "flex h-full min-h-0 flex-col overflow-hidden",
         visible ? "flex" : "hidden lg:flex",
       )}
       aria-label="Konversationsliste"
+      data-inbox-list-pane
       data-inbox-density={density}
     >
       <div className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-4 py-3">
@@ -148,7 +150,11 @@ export function CommunicationInboxConversationList({
         </p>
       ) : null}
 
-      <nav className="min-h-0 flex-1 overflow-y-auto" aria-label="Konversationen">
+      <nav
+        className={INBOX_LIST_SCROLL_CLASS}
+        data-inbox-list-scroll
+        aria-label="Konversationen"
+      >
         <ul className="divide-y divide-[var(--border)]">
           {conversations.map((conversation) => {
             const selected = selectedId === conversation.id;

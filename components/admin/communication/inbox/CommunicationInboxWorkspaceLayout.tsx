@@ -12,6 +12,7 @@ import {
   resolveEffectiveListSplitPercent,
   type InboxWorkspaceLayout,
 } from "@/lib/communication/inbox/inbox-workspace-preferences";
+import { INBOX_PANE_SHELL_CLASS } from "@/lib/communication/inbox/inbox-workspace-layout-contract";
 
 type CommunicationInboxWorkspaceLayoutProps = {
   layout: InboxWorkspaceLayout;
@@ -138,7 +139,7 @@ export function CommunicationInboxWorkspaceLayout({
       data-master-detail={useMasterDetail ? "true" : "false"}
     >
       {showList ? (
-        <div className={verticalSplit || horizontalSplit ? "min-h-0 min-w-0" : ""}>{list}</div>
+        <div className={INBOX_PANE_SHELL_CLASS}>{list}</div>
       ) : null}
 
       {verticalSplit ? (
@@ -166,7 +167,7 @@ export function CommunicationInboxWorkspaceLayout({
       ) : null}
 
       {showDetail ? (
-        <div className={verticalSplit || horizontalSplit ? "min-h-0 min-w-0" : ""}>{detail}</div>
+        <div className={INBOX_PANE_SHELL_CLASS}>{detail}</div>
       ) : null}
     </div>
   );

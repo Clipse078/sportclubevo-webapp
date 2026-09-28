@@ -6,7 +6,12 @@ import { CommunicationInboxConversationList } from "@/components/admin/communica
 import { CommunicationInboxToolbar } from "@/components/admin/communication/inbox/CommunicationInboxToolbar";
 import { CommunicationInboxWorkspaceLayout } from "@/components/admin/communication/inbox/CommunicationInboxWorkspaceLayout";
 import { useCommunicationInboxWorkspacePreferences } from "@/components/admin/communication/inbox/useCommunicationInboxWorkspacePreferences";
+import {
+  INBOX_WORKSPACE_HEIGHT_CLASS,
+  INBOX_WORKSPACE_HEIGHT_MOBILE_OVERRIDE,
+} from "@/lib/communication/inbox/inbox-workspace-layout-contract";
 import { inboxLayoutIsMasterDetailOnDesktop } from "@/lib/communication/inbox/inbox-workspace-preferences";
+import { cn } from "@/lib/cn";
 import type { InboxMailboxView } from "@/lib/communication/inbox/inbox-mailbox-constants";
 import type {
   CommunicationInboxCapabilities,
@@ -429,7 +434,11 @@ export default function CommunicationInboxWorkspace({
 
   return (
     <div
-      className="flex min-h-[min(720px,calc(100dvh-15rem))] max-h-[calc(100dvh-12rem)] flex-col gap-4"
+      className={cn(
+        "flex flex-col gap-4",
+        INBOX_WORKSPACE_HEIGHT_CLASS,
+        INBOX_WORKSPACE_HEIGHT_MOBILE_OVERRIDE,
+      )}
       data-communication-inbox-workspace
     >
       <CommunicationInboxToolbar

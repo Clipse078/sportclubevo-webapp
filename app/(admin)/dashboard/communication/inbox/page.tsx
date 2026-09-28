@@ -56,7 +56,7 @@ export default async function CommunicationInboxPage() {
   ) : undefined;
 
   return (
-    <PageShell>
+    <PageShell className="flex min-h-0 flex-col gap-6 overflow-hidden lg:flex-1 lg:pb-6">
       <CommunicationWorkspaceHeader
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
@@ -68,7 +68,10 @@ export default async function CommunicationInboxPage() {
         primaryAction={neueNachrichtAction ?? settingsAction}
         secondaryActions={neueNachrichtAction && settingsAction ? settingsAction : undefined}
       />
-      <CommunicationContentSurface padded={false} className="overflow-hidden p-4 md:p-5">
+      <CommunicationContentSurface
+        padded={false}
+        className="flex min-h-0 flex-1 flex-col overflow-hidden p-4 md:p-5"
+      >
         <CommunicationInboxWorkspace
           currentUserId={session.user.id}
           canReply={canReply}
