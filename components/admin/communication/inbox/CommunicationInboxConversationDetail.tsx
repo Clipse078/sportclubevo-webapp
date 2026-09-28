@@ -13,6 +13,7 @@ import {
   INBOX_CONVERSATION_STATUS_LABEL,
   resolveInboxParticipantLabel,
 } from "@/lib/communication/inbox/inbox-display";
+import { INBOX_DETAIL_SCROLL_CLASS } from "@/lib/communication/inbox/inbox-workspace-layout-contract";
 import { SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
 import type { InboxMailboxView } from "@/lib/communication/inbox/inbox-mailbox-constants";
 import { CommunicationInboxConversationActionsToolbar } from "@/components/admin/communication/inbox/CommunicationInboxConversationActionsToolbar";
@@ -161,10 +162,11 @@ export function CommunicationInboxConversationDetailPane({
     <section
       className={cn(
         SCE_SURFACE_STANDARD_PANEL,
-        "flex min-h-0 flex-col overflow-hidden",
+        "flex h-full min-h-0 flex-col overflow-hidden",
         visible ? "flex" : "hidden lg:flex",
       )}
       aria-label="Konversationsdetail"
+      data-inbox-detail-pane
     >
       {!hasSelection ? (
         <div className="flex flex-1 items-center justify-center px-6 py-10 text-center">
@@ -318,7 +320,10 @@ export function CommunicationInboxConversationDetailPane({
             />
           ) : null}
 
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden p-4">
+          <div
+            className={cn(INBOX_DETAIL_SCROLL_CLASS, "space-y-3 p-4")}
+            data-inbox-detail-scroll
+          >
             {detail.messages.map((message) => {
               const outbound = message.direction === "OUTBOUND";
               const timestamp = message.sentAt ?? message.receivedAt;
@@ -377,75 +382,85 @@ export function CommunicationInboxConversationDetailPane({
                 </article>
               );
             })}
-          </div>
 
-          {repliesLockedInformOnly ? (
-            <div
-              className="shrink-0 border-t border-[var(--border)] bg-[var(--surface-2)]/50 px-4 py-4 text-sm text-[var(--text-2)]"
-              role="status"
-              aria-live="polite"
-            >
-              <p className="font-medium text-[var(--foreground)]">Nur zur Information</p>
-              <p>Antworten deaktiviert</p>
-            </div>
-          ) : null}
+            {repliesLockedInformOnly ? (
+              <div
+                className="border-t border-[var(--border)] bg-[var(--surface-2)]/50 py-4 text-sm text-[var(--text-2)]"
+                role="status"
+                aria-live="polite"
+                data-inbox-reply-section
+              >
+                <p className="font-medium text-[var(--foreground)]">Nur zur Information</p>
+                <p>Antworten deaktiviert</p>
+              </div>
+            ) : null}
 
-          {capabilities.canReply && !replyDisabled && !repliesLockedInformOnly ? (
-            <div className="shrink-0 border-t border-[var(--border)] p-4">
-              <label className="block text-xs font-medium text-[var(--text-2)]" htmlFor="inbox-reply">
-                Antwort
-              </label>
-              <textarea
-                id="inbox-reply"
-                value={replyText}
-                onChange={(event) => onReplyTextChange(event.target.value)}
-                rows={4}
-                placeholder="Antwort verfassen …"
-                className="mt-2 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
-              />
-              <div className="mt-3">
-                <PersonalSignatureComposerField
-                  checkboxId="inbox-reply-use-signature"
-                  enabled={replyUseSignature}
-                  onEnabledChange={onReplyUseSignatureChange}
-                  signatureBody={replySignatureBody}
-                  messageBody={replyText}
-                  showPreview
-                  previewHeadingId="inbox-reply-signature-preview"
+            {capabilities.canReply && !replyDisabled && !repliesLockedInformOnly ? (
+              <div
+                className="border-t border-[var(--border)] pt-4"
+                data-inbox-reply-section
+              >
+                <label className="block text-xs font-medium text-[var(--text-2)]" htmlFor="inbox-reply">
+                  Antwort
+                </label>
+                <textarea
+                  id="inbox-reply"
+                  value={replyText}
+                  onChange={(event) => onReplyTextChange(event.target.value)}
+                  rows={4}
+                  placeholder="Antwort verfassen …"
+                  className="mt-2 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                  data-inbox-reply-editor
                 />
+                <div className="mt-3" data-inbox-reply-signature>
+                  <PersonalSignatureComposerField
+                    checkboxId="inbox-reply-use-signature"
+                    enabled={replyUseSignature}
+                    onEnabledChange={onReplyUseSignatureChange}
+                    signatureBody={replySignatureBody}
+                    messageBody={replyText}
+                    showPreview
+                    previewHeadingId="inbox-reply-signature-preview"
+                  />
+                </div>
+                <div data-inbox-reply-attachments>
+                  <CommunicationAttachmentPicker
+                    disabled={replySubmitting}
+                    attachments={replyAttachments}
+                    error={replyAttachmentError}
+                    onAddFiles={onReplyAddAttachments}
+                    onRemove={onReplyRemoveAttachment}
+                  />
+                </div>
+                {replyError ? (
+                  <p className="mt-2 text-xs text-red-600" role="alert">
+                    {replyError}
+                  </p>
+                ) : null}
+                <div className="mt-2 flex justify-end" data-inbox-reply-send>
+                  <Button
+                    type="button"
+                    onClick={onSendReply}
+                    disabled={
+                      (!replyText.trim() &&
+                        !inboxReplyHasSendableAttachment(replyAttachments)) ||
+                      replySubmitting
+                    }
+                  >
+                    {replySubmitting ? "Senden …" : "Antwort senden"}
+                  </Button>
+                </div>
               </div>
-              <CommunicationAttachmentPicker
-                disabled={replySubmitting}
-                attachments={replyAttachments}
-                error={replyAttachmentError}
-                onAddFiles={onReplyAddAttachments}
-                onRemove={onReplyRemoveAttachment}
-              />
-              {replyError ? (
-                <p className="mt-2 text-xs text-red-600" role="alert">
-                  {replyError}
-                </p>
-              ) : null}
-              <div className="mt-2 flex justify-end">
-                <Button
-                  type="button"
-                  onClick={onSendReply}
-                  disabled={
-                    (!replyText.trim() &&
-                      !inboxReplyHasSendableAttachment(replyAttachments)) ||
-                    replySubmitting
-                  }
-                >
-                  {replySubmitting ? "Senden …" : "Antwort senden"}
-                </Button>
-              </div>
-            </div>
-          ) : null}
-          {replyDisabled && !repliesLockedInformOnly ? (
-            <p className="shrink-0 border-t border-[var(--border)] px-4 py-3 text-xs text-[var(--text-2)]">
-              Antworten ist im Papierkorb nicht verfügbar. Bitte zuerst wiederherstellen.
-            </p>
-          ) : null}
+            ) : null}
+            {replyDisabled && !repliesLockedInformOnly ? (
+              <p
+                className="border-t border-[var(--border)] py-3 text-xs text-[var(--text-2)]"
+                data-inbox-reply-section
+              >
+                Antworten ist im Papierkorb nicht verfügbar. Bitte zuerst wiederherstellen.
+              </p>
+            ) : null}
+          </div>
         </>
       )}
     </section>
