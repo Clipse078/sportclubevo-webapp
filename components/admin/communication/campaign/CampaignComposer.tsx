@@ -32,6 +32,8 @@ import {
 import { CommunicationAttachmentPicker } from "@/components/admin/communication/attachments/CommunicationAttachmentPicker";
 import { useCommunicationAttachmentUpload } from "@/components/admin/communication/attachments/use-communication-attachment-upload";
 import { CommunicationSenderSelector } from "@/components/admin/communication/sender/CommunicationSenderSelector";
+import { PersonalisationFieldInsert } from "@/components/admin/communication/personalisation/PersonalisationFieldInsert";
+import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
 
 type TargetGroupOption = { id: string; name: string; status: string };
 
@@ -61,6 +63,7 @@ type Props = {
   initialOrchestration?: CampaignOrchestrationMeta;
   tenantTimezone?: string;
   canSaveAsTemplate?: boolean;
+  tenantId?: string;
 };
 
 function sectionHeading(id: string, title: string) {
@@ -89,7 +92,11 @@ export default function CampaignComposer({
   initialOrchestration,
   tenantTimezone = "Europe/Zurich",
   canSaveAsTemplate = false,
+  tenantId,
 }: Props) {
+  const organisationContextRef: CommunicationContextRef | null = tenantId
+    ? { kind: "ORGANISATION", tenantId }
+    : null;
   const router = useRouter();
   const inferredAudience = useMemo(
     () =>
@@ -548,9 +555,20 @@ export default function CampaignComposer({
           </label>
         </div>
         <label className="block text-sm">
-          <span className="mb-1 block font-medium text-[var(--foreground)]">Nachricht</span>
+          <span className="mb-1 flex items-center justify-between gap-2 font-medium text-[var(--foreground)]">
+            Nachricht
+            {organisationContextRef ? (
+              <PersonalisationFieldInsert
+                contextRef={organisationContextRef}
+                onInsert={(token) => {
+                  setBodyText((prev) => `${prev}${token}`);
+                  invalidateReview();
+                }}
+              />
+            ) : null}
+          </span>
           <textarea
-            className="min-h-[160px] w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
+            className="min-h-[160px] w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 font-mono text-sm"
             value={bodyText}
             onChange={(e) => {
               setBodyText(e.target.value);

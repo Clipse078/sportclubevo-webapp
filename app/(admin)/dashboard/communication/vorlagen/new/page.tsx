@@ -70,6 +70,7 @@ export default async function NewPlatformTemplatePage() {
       <CommunicationContentSurface>
         <VorlageManagementForm
           mode="create"
+          tenantId={tenant.id}
           canManage
           targetGroups={targetGroups.map((tg) => ({
             id: tg.id,

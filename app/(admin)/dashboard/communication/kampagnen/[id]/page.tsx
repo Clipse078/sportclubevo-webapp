@@ -201,6 +201,7 @@ export default async function CampaignDetailPage({ params }: PageProps) {
           <div id="kampagne-bearbeiten">
           <SectionCard title="Kampagne bearbeiten">
             <CampaignComposer
+              tenantId={tenant.id}
               targetGroups={targetGroups.map((tg) => ({
                 id: tg.id,
                 name: tg.name,

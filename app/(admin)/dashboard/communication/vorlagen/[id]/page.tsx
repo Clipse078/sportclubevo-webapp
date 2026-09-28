@@ -138,6 +138,7 @@ export default async function VorlageDetailPage({ params, searchParams }: PagePr
           <VorlageManagementForm
             mode="edit"
             templateId={template.id}
+            tenantId={tenant.id}
             canManage={authz.canManage}
             startEditing
             targetGroups={targetGroups.map((tg) => ({
