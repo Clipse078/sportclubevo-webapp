@@ -1,37 +1,32 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  membership: vi.fn(),
-  attachment: vi.fn(),
+  authorize: vi.fn(),
   audit: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
-    tenantMembership: { findFirst: mocks.membership },
-    communicationAttachment: { findFirst: mocks.attachment },
-  },
+vi.mock("@/lib/communication/attachment-authorization", () => ({
+  authorizeCommunicationAttachmentAccess: mocks.authorize,
 }));
 vi.mock("@/lib/audit/log-action", () => ({ logAction: mocks.audit }));
 
-import {
-  downloadCommunicationAttachment,
-} from "@/lib/communication/attachment-download-service";
+import { downloadCommunicationAttachment } from "@/lib/communication/attachment-download-service";
 
 const record = {
   id: "attachment-a",
+  tenantId: "tenant-a",
   storageKey: "communication/tenant-a/attachment-a/file.pdf",
   sanitizedFilename: "file.pdf",
   contentType: "application/pdf",
   sizeBytes: 3,
   lifecycleStatus: "READY",
   scanStatus: "PENDING",
+  checksumSha256: "abc",
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.membership.mockResolvedValue({ id: "membership-a" });
-  mocks.attachment.mockResolvedValue(record);
+  mocks.authorize.mockResolvedValue(record);
   mocks.audit.mockResolvedValue(undefined);
 });
 
@@ -53,25 +48,19 @@ describe("communication attachment download service", () => {
       attachmentId: "attachment-a",
       storage,
     });
-    expect(mocks.attachment).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          tenantId: "tenant-a",
-          messageLinks: expect.any(Object),
-        }),
-      }),
-    );
+    expect(mocks.authorize).toHaveBeenCalled();
     expect(result).toEqual({
       stream,
       filename: "file.pdf",
       contentType: "application/pdf",
       sizeBytes: 3,
+      inline: false,
     });
     expect(result).not.toHaveProperty("storageKey");
   });
 
-  it("blocks unauthorized users and foreign-tenant attachments", async () => {
-    mocks.membership.mockResolvedValue(null);
+  it("blocks unauthorized users via authorization layer", async () => {
+    mocks.authorize.mockRejectedValue({ code: "FORBIDDEN" });
     await expect(
       downloadCommunicationAttachment({
         tenantId: "tenant-a",
@@ -79,16 +68,6 @@ describe("communication attachment download service", () => {
         attachmentId: "attachment-a",
       }),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
-
-    mocks.membership.mockResolvedValue({ id: "membership-a" });
-    mocks.attachment.mockResolvedValue(null);
-    await expect(
-      downloadCommunicationAttachment({
-        tenantId: "tenant-a",
-        actorUserId: "user-a",
-        attachmentId: "foreign",
-      }),
-    ).rejects.toMatchObject({ code: "ATTACHMENT_NOT_FOUND" });
   });
 
   it.each(["QUARANTINED", "FAILED"])(
@@ -99,7 +78,7 @@ describe("communication attachment download service", () => {
         download: vi.fn(),
         delete: vi.fn(),
       };
-      mocks.attachment.mockResolvedValue({ ...record, scanStatus });
+      mocks.authorize.mockResolvedValue({ ...record, scanStatus });
       await expect(
         downloadCommunicationAttachment({
           tenantId: "tenant-a",

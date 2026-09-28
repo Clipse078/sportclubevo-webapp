@@ -36,6 +36,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     body.channelIntent && typeof body.channelIntent === "object"
       ? (body.channelIntent as { inApp?: boolean; push?: boolean; email?: boolean })
       : undefined;
+  const attachmentIds = Array.isArray(body.attachmentIds)
+    ? body.attachmentIds.map(String)
+    : [];
 
   try {
     const result = await sendDirectMessage({
@@ -52,6 +55,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           : body.includePersonalSignature === false
             ? false
             : undefined,
+      attachmentIds,
     });
     return NextResponse.json(result);
   } catch (error) {

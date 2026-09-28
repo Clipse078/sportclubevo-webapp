@@ -22,6 +22,8 @@ export type InboxConversationMessageAttachment = {
   contentType: string;
   sizeBytes: number;
   downloadAvailable: boolean;
+  previewAvailable?: boolean;
+  unavailableReason?: string;
 };
 
 export type InboxConversationMessage = {

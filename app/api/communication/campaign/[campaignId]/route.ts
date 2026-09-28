@@ -82,6 +82,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     bodyText?: string;
     audienceSpec?: CommunicationAudienceSpec;
     orchestration?: CampaignOrchestrationMeta;
+    attachmentIds?: string[];
   };
 
   try {
@@ -94,6 +95,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       bodyText: body.bodyText,
       audienceSpec: body.audienceSpec,
       orchestration: body.orchestration,
+      attachmentIds: body.attachmentIds,
     });
     return NextResponse.json(result);
   } catch (error) {

@@ -75,6 +75,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     subject?: string | null;
     audienceSpec?: CommunicationAudienceSpec;
     acknowledgementRequired?: boolean;
+    attachmentIds?: string[];
   };
 
   const result = await updateClubCommunicationDraft({
@@ -85,6 +86,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     subject: body.subject,
     audienceSpec: body.audienceSpec,
     acknowledgementRequired: body.acknowledgementRequired,
+    attachmentIds: body.attachmentIds,
   });
 
   return NextResponse.json(result);

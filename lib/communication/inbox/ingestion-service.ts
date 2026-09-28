@@ -9,9 +9,11 @@ import { parseInboundCenterEmailSource } from "@/lib/communication/inbox/mail-pa
 import type { InboundFetchedMessage } from "@/lib/communication/inbox/connector/types";
 import { resolveThreadRootMessageId } from "@/lib/communication/inbox/threading-service";
 import { matchInboundSenderContact } from "@/lib/communication/inbox/contact-matching-service";
-import { COMMUNICATION_CENTER_MAX_ATTACHMENT_BYTES } from "@/lib/communication/inbox/constants";
-import { createHash } from "node:crypto";
-import { CommunicationAttachmentSourceType } from "@prisma/client";
+import {
+  inboundAttachmentRowData,
+  persistInboundCenterEmailAttachment,
+} from "@/lib/communication/inbound-attachment-persistence";
+import { CommunicationAttachmentValidationError } from "@/lib/communication/attachment-validation";
 import { normalizeInternetMessageId } from "@/lib/communication/inbox/message-id";
 import { buildInboundMailboxReactivationUpdate } from "@/lib/communication/inbox/mailbox-organization-service";
 
@@ -175,23 +177,30 @@ async function persistInboundAttachments(
 ): Promise<void> {
   let sortOrder = 0;
   for (const attachment of input.attachments) {
-    if (attachment.sizeBytes > COMMUNICATION_CENTER_MAX_ATTACHMENT_BYTES) continue;
-    if (attachment.sizeBytes === 0) continue;
+    let persisted;
+    try {
+      persisted = await persistInboundCenterEmailAttachment({
+        tenantId: input.tenantId,
+        messageId: input.messageId,
+        attachment,
+        sortOrder,
+      });
+    } catch (error) {
+      if (
+        error instanceof CommunicationAttachmentValidationError ||
+        (error instanceof Error && error.message === "ATTACHMENT_SKIPPED")
+      ) {
+        continue;
+      }
+      throw error;
+    }
 
-    const checksumSha256 = createHash("sha256").update(attachment.buffer).digest("hex");
     const attachmentRow = await tx.communicationAttachment.create({
-      data: {
+      data: inboundAttachmentRowData({
         tenantId: input.tenantId,
         originalFilename: attachment.filename,
-        sanitizedFilename: attachment.filename.replace(/[^\w.\-()+ ]/g, "_").slice(0, 180),
-        contentType: attachment.contentType,
-        sizeBytes: attachment.sizeBytes,
-        checksumSha256,
-        sourceType: CommunicationAttachmentSourceType.INBOUND,
-        storageKey: `communication-center/inbound/${input.tenantId}/${input.messageId}/${sortOrder}-${checksumSha256.slice(0, 12)}`,
-        lifecycleStatus: "STAGED",
-        scanStatus: "PENDING",
-      },
+        persisted,
+      }),
     });
 
     await tx.communicationCenterMessageAttachment.create({

@@ -71,6 +71,7 @@ export async function POST(request: Request) {
     subject?: string | null;
     bodyText?: string;
     audienceSpec?: CommunicationAudienceSpec;
+    attachmentIds?: string[];
   };
 
   const result = await createCampaignDraft({
@@ -79,6 +80,7 @@ export async function POST(request: Request) {
     internalName: body.internalName ?? "",
     subject: body.subject,
     bodyText: body.bodyText ?? "",
+    attachmentIds: body.attachmentIds,
     audienceSpec: body.audienceSpec ?? {
       composition: "UNION",
       components: [{ structural: { wholeOrganisation: true } }],

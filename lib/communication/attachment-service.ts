@@ -14,6 +14,10 @@ import {
   validateCommunicationAttachment,
   validateCommunicationAttachmentSet,
 } from "@/lib/communication/attachment-validation";
+import {
+  assertOutboundAttachmentOwnership,
+  type OutboundAttachmentOwnershipScope,
+} from "@/lib/communication/attachment-authorization";
 
 export type CommunicationAttachmentServiceErrorCode =
   | "INVALID_INPUT"
@@ -213,12 +217,20 @@ export async function validateOutboundAttachmentSelection(input: {
   tenantId: string;
   actorUserId: string;
   attachmentIds: string[];
+  ownershipScope?: OutboundAttachmentOwnershipScope;
 }) {
   const tenantId = required(input.tenantId, "tenantId");
   const actorUserId = required(input.actorUserId, "actorUserId");
   const attachmentIds = requireUniqueAttachmentIds(input.attachmentIds);
   await requireTenantActor(tenantId, actorUserId);
   if (attachmentIds.length === 0) return [];
+
+  await assertOutboundAttachmentOwnership({
+    tenantId,
+    actorUserId,
+    attachmentIds,
+    scope: input.ownershipScope,
+  });
 
   const attachments = await prisma.communicationAttachment.findMany({
     where: { tenantId, id: { in: attachmentIds } },
@@ -620,7 +632,10 @@ export async function attachSelectionToPlatformCommunication(input: {
   communicationId: string;
   attachmentIds: string[];
 }) {
-  const attachmentIds = await validateOutboundAttachmentSelection(input);
+  const attachmentIds = await validateOutboundAttachmentSelection({
+    ...input,
+    ownershipScope: { platformCommunicationId: input.communicationId },
+  });
   const links = [];
   for (const [sortOrder, attachmentId] of attachmentIds.entries()) {
     links.push(
@@ -634,6 +649,360 @@ export async function attachSelectionToPlatformCommunication(input: {
     );
   }
   return links;
+}
+
+export async function syncPlatformCommunicationAttachments(input: {
+  tenantId: string;
+  actorUserId: string;
+  communicationId: string;
+  attachmentIds: string[];
+}) {
+  const attachmentIds = await validateOutboundAttachmentSelection({
+    tenantId: input.tenantId,
+    actorUserId: input.actorUserId,
+    attachmentIds: input.attachmentIds,
+    ownershipScope: { platformCommunicationId: input.communicationId },
+  });
+
+  await prisma.$transaction(async (tx) => {
+    const communication = await tx.platformCommunication.findFirst({
+      where: {
+        id: required(input.communicationId, "communicationId"),
+        tenantId: input.tenantId,
+      },
+      select: { id: true, status: true },
+    });
+    if (!communication) {
+      throw new CommunicationAttachmentServiceError(
+        "MESSAGE_NOT_FOUND",
+        "Kommunikation nicht gefunden.",
+      );
+    }
+    if (communication.status !== "DRAFT" && communication.status !== "READY") {
+      throw new CommunicationAttachmentServiceError(
+        "ATTACHMENT_UNAVAILABLE",
+        "Anhänge können nur im Entwurf geändert werden.",
+      );
+    }
+
+    await tx.platformCommunicationAttachment.deleteMany({
+      where: {
+        tenantId: input.tenantId,
+        communicationId: communication.id,
+        ...(attachmentIds.length > 0
+          ? { attachmentId: { notIn: attachmentIds } }
+          : {}),
+      },
+    });
+
+    const existing = await tx.platformCommunicationAttachment.findMany({
+      where: { tenantId: input.tenantId, communicationId: communication.id },
+      select: { attachmentId: true, sortOrder: true },
+    });
+    const existingIds = new Set(existing.map((link) => link.attachmentId));
+
+    for (const [sortOrder, attachmentId] of attachmentIds.entries()) {
+      if (existingIds.has(attachmentId)) continue;
+      await tx.platformCommunicationAttachment.create({
+        data: {
+          tenantId: input.tenantId,
+          communicationId: communication.id,
+          attachmentId,
+          sortOrder,
+        },
+      });
+    }
+  });
+
+  return attachmentIds;
+}
+
+export async function attachToCommunicationCenterMessage(input: {
+  tenantId: string;
+  actorUserId: string;
+  messageId: string;
+  attachmentId: string;
+  sortOrder: number;
+}) {
+  const tenantId = required(input.tenantId, "tenantId");
+  const actorUserId = required(input.actorUserId, "actorUserId");
+  if (!Number.isSafeInteger(input.sortOrder) || input.sortOrder < 0) {
+    throw new CommunicationAttachmentServiceError(
+      "INVALID_INPUT",
+      "sortOrder must be a non-negative safe integer.",
+    );
+  }
+  await requireTenantActor(tenantId, actorUserId);
+
+  return prisma.$transaction(async (tx) => {
+    const [message, attachment, existingLinks] = await Promise.all([
+      tx.communicationCenterMessage.findFirst({
+        where: { id: required(input.messageId, "messageId"), tenantId },
+        select: { id: true },
+      }),
+      tx.communicationAttachment.findFirst({
+        where: {
+          id: required(input.attachmentId, "attachmentId"),
+          tenantId,
+          lifecycleStatus: "READY",
+          scanStatus: { notIn: ["QUARANTINED", "FAILED"] },
+        },
+        select: { id: true, sizeBytes: true },
+      }),
+      tx.communicationCenterMessageAttachment.findMany({
+        where: { tenantId, messageId: input.messageId.trim() },
+        select: {
+          attachmentId: true,
+          sortOrder: true,
+          attachment: { select: { sizeBytes: true } },
+        },
+      }),
+    ]);
+    if (!message) {
+      throw new CommunicationAttachmentServiceError(
+        "MESSAGE_NOT_FOUND",
+        "Nachricht nicht gefunden.",
+      );
+    }
+    if (!attachment) {
+      throw new CommunicationAttachmentServiceError(
+        "ATTACHMENT_NOT_FOUND",
+        "Anhang nicht gefunden oder nicht verfügbar.",
+      );
+    }
+    if (existingLinks.some((link) => link.attachmentId === attachment.id)) {
+      return existingLinks.find((link) => link.attachmentId === attachment.id)!;
+    }
+    if (existingLinks.some((link) => link.sortOrder === input.sortOrder)) {
+      throw new CommunicationAttachmentServiceError(
+        "ORDER_CONFLICT",
+        "Die Anhangsposition ist bereits belegt.",
+      );
+    }
+    validateCommunicationAttachmentSet([
+      ...existingLinks.map((link) => link.attachment),
+      attachment,
+    ]);
+    return tx.communicationCenterMessageAttachment.create({
+      data: {
+        tenantId,
+        messageId: message.id,
+        attachmentId: attachment.id,
+        sortOrder: input.sortOrder,
+      },
+    });
+  });
+}
+
+export async function mirrorPlatformAttachmentsToCenterMessage(input: {
+  tenantId: string;
+  actorUserId: string;
+  platformCommunicationId: string;
+  messageId: string;
+}) {
+  const tenantId = required(input.tenantId, "tenantId");
+  const actorUserId = required(input.actorUserId, "actorUserId");
+  await requireTenantActor(tenantId, actorUserId);
+
+  const platformLinks = await prisma.platformCommunicationAttachment.findMany({
+    where: {
+      tenantId,
+      communicationId: required(input.platformCommunicationId, "platformCommunicationId"),
+    },
+    select: { attachmentId: true, sortOrder: true },
+    orderBy: { sortOrder: "asc" },
+  });
+
+  for (const link of platformLinks) {
+    await attachToCommunicationCenterMessage({
+      tenantId,
+      actorUserId,
+      messageId: input.messageId,
+      attachmentId: link.attachmentId,
+      sortOrder: link.sortOrder,
+    });
+  }
+}
+
+export async function attachSelectionToCommunicationCenterMessage(input: {
+  tenantId: string;
+  actorUserId: string;
+  messageId: string;
+  attachmentIds: string[];
+}) {
+  const attachmentIds = await validateOutboundAttachmentSelection({
+    tenantId: input.tenantId,
+    actorUserId: input.actorUserId,
+    attachmentIds: input.attachmentIds,
+    ownershipScope: { centerMessageId: input.messageId },
+  });
+  const links = [];
+  for (const [sortOrder, attachmentId] of attachmentIds.entries()) {
+    links.push(
+      await attachToCommunicationCenterMessage({
+        tenantId: input.tenantId,
+        actorUserId: input.actorUserId,
+        messageId: input.messageId,
+        attachmentId,
+        sortOrder,
+      }),
+    );
+  }
+  return links;
+}
+
+export async function loadCommunicationCenterMessageAttachmentsForDelivery(input: {
+  tenantId: string;
+  messageId: string;
+  storage?: CommunicationAttachmentStorage;
+}): Promise<OutboundCommunicationAttachment[]> {
+  const tenantId = required(input.tenantId, "tenantId");
+  const messageId = required(input.messageId, "messageId");
+  const links = await prisma.communicationCenterMessageAttachment.findMany({
+    where: { tenantId, messageId },
+    select: {
+      attachmentId: true,
+      sortOrder: true,
+      attachment: {
+        select: {
+          storageKey: true,
+          sanitizedFilename: true,
+          contentType: true,
+          sizeBytes: true,
+          checksumSha256: true,
+          lifecycleStatus: true,
+          scanStatus: true,
+        },
+      },
+    },
+    orderBy: { sortOrder: "asc" },
+  });
+  validateCommunicationAttachmentSet(links.map((link) => link.attachment));
+  const storage = input.storage ?? communicationAttachmentStorage;
+  const result: OutboundCommunicationAttachment[] = [];
+
+  for (const link of links) {
+    const attachment = link.attachment;
+    if (
+      attachment.lifecycleStatus !== "READY" ||
+      attachment.scanStatus === "QUARANTINED" ||
+      attachment.scanStatus === "FAILED"
+    ) {
+      throw new CommunicationAttachmentServiceError(
+        "ATTACHMENT_UNAVAILABLE",
+        "Eine Datei steht nicht für den Versand bereit.",
+      );
+    }
+    try {
+      const stored = await storage.download({
+        storageKey: attachment.storageKey,
+        filename: attachment.sanitizedFilename,
+        contentType: attachment.contentType,
+      });
+      const bytes = await readStorageStream(
+        stored.stream,
+        MAX_COMMUNICATION_ATTACHMENT_SIZE_BYTES,
+      );
+      const checksum = createHash("sha256").update(bytes).digest("hex");
+      if (
+        bytes.byteLength !== attachment.sizeBytes ||
+        stored.sizeBytes !== attachment.sizeBytes ||
+        checksum !== attachment.checksumSha256
+      ) {
+        throw new Error("Stored attachment integrity mismatch.");
+      }
+      result.push({
+        attachmentId: link.attachmentId,
+        filename: attachment.sanitizedFilename,
+        contentType: attachment.contentType,
+        sizeBytes: attachment.sizeBytes,
+        content: Buffer.from(bytes),
+      });
+    } catch {
+      throw new CommunicationAttachmentServiceError(
+        "ATTACHMENT_UNAVAILABLE",
+        "Ein Anhang konnte nicht für den Versand geladen werden.",
+      );
+    }
+  }
+  return result;
+}
+
+export async function loadPlatformCommunicationAttachmentsForDelivery(input: {
+  tenantId: string;
+  communicationId: string;
+  storage?: CommunicationAttachmentStorage;
+}): Promise<OutboundCommunicationAttachment[]> {
+  const tenantId = required(input.tenantId, "tenantId");
+  const communicationId = required(input.communicationId, "communicationId");
+  const links = await prisma.platformCommunicationAttachment.findMany({
+    where: { tenantId, communicationId },
+    select: {
+      attachmentId: true,
+      sortOrder: true,
+      attachment: {
+        select: {
+          storageKey: true,
+          sanitizedFilename: true,
+          contentType: true,
+          sizeBytes: true,
+          checksumSha256: true,
+          lifecycleStatus: true,
+          scanStatus: true,
+        },
+      },
+    },
+    orderBy: { sortOrder: "asc" },
+  });
+  validateCommunicationAttachmentSet(links.map((link) => link.attachment));
+  const storage = input.storage ?? communicationAttachmentStorage;
+  const result: OutboundCommunicationAttachment[] = [];
+
+  for (const link of links) {
+    const attachment = link.attachment;
+    if (
+      attachment.lifecycleStatus !== "READY" ||
+      attachment.scanStatus === "QUARANTINED" ||
+      attachment.scanStatus === "FAILED"
+    ) {
+      throw new CommunicationAttachmentServiceError(
+        "ATTACHMENT_UNAVAILABLE",
+        "Eine Datei steht nicht für den Versand bereit.",
+      );
+    }
+    try {
+      const stored = await storage.download({
+        storageKey: attachment.storageKey,
+        filename: attachment.sanitizedFilename,
+        contentType: attachment.contentType,
+      });
+      const bytes = await readStorageStream(
+        stored.stream,
+        MAX_COMMUNICATION_ATTACHMENT_SIZE_BYTES,
+      );
+      const checksum = createHash("sha256").update(bytes).digest("hex");
+      if (
+        bytes.byteLength !== attachment.sizeBytes ||
+        stored.sizeBytes !== attachment.sizeBytes ||
+        checksum !== attachment.checksumSha256
+      ) {
+        throw new Error("Stored attachment integrity mismatch.");
+      }
+      result.push({
+        attachmentId: link.attachmentId,
+        filename: attachment.sanitizedFilename,
+        contentType: attachment.contentType,
+        sizeBytes: attachment.sizeBytes,
+        content: Buffer.from(bytes),
+      });
+    } catch {
+      throw new CommunicationAttachmentServiceError(
+        "ATTACHMENT_UNAVAILABLE",
+        "Ein Anhang konnte nicht für den Versand geladen werden.",
+      );
+    }
+  }
+  return result;
 }
 
 export async function cloneMessageAttachmentsForRetry(input: {

@@ -13,6 +13,7 @@ import { renderPlatformCommunicationEmail } from "@/lib/communication/platform-e
 import { resolveRecipientSnapshotEmailEligibility } from "@/lib/communication/platform-email/recipient-email-eligibility";
 import { resolveCommunicationChannelIntent } from "@/lib/communication/platform-email/communication-channel-intent";
 import { resolvePublicationCommunicationPreferenceCategory } from "@/lib/communication/preferences/publication-category";
+import { loadPlatformCommunicationAttachmentsForDelivery } from "@/lib/communication/attachment-service";
 
 export type ProcessPlatformEmailDeliveriesResult = {
   examined: number;
@@ -142,6 +143,36 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
 
     try {
       const sender = await resolveTenantEmailSender(attempt.tenantId);
+      let mailAttachments;
+      try {
+        const loaded = await loadPlatformCommunicationAttachmentsForDelivery({
+          tenantId: attempt.tenantId,
+          communicationId: attempt.communicationId,
+        });
+        mailAttachments =
+          loaded.length > 0
+            ? loaded.map((item) => ({
+                filename: item.filename,
+                content: item.content,
+                contentType: item.contentType,
+              }))
+            : undefined;
+      } catch (loadError) {
+        await prisma.platformCommunicationEmailDeliveryAttempt.update({
+          where: { id: attempt.id },
+          data: {
+            status: PlatformCommunicationEmailDeliveryStatus.FAILED,
+            failureCode: "ATTACHMENT_UNAVAILABLE",
+          },
+        });
+        summary.failed += 1;
+        console.warn(`${PLATFORM_EMAIL_LOG_PREFIX} attachment load failed`, {
+          attemptId: attempt.id,
+          message: loadError instanceof Error ? loadError.message : "unknown",
+        });
+        continue;
+      }
+
       const transport = await sendOutboundEmail({
         from: sender.formattedFrom,
         to: eligibility.email,
@@ -149,6 +180,7 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
         html: rendered.html,
         text: rendered.text,
         idempotencyKey: attempt.idempotencyKey,
+        attachments: mailAttachments,
       });
 
       await prisma.platformCommunicationEmailDeliveryAttempt.update({

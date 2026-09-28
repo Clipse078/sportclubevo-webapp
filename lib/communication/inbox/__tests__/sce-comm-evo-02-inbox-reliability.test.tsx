@@ -138,7 +138,8 @@ describe("SCE-COMM-EVO-02 inbox detail DTO", () => {
         filename: "file.pdf",
         contentType: "application/pdf",
         sizeBytes: 2048,
-        downloadAvailable: false,
+        downloadAvailable: true,
+        previewAvailable: true,
       },
     ]);
   });

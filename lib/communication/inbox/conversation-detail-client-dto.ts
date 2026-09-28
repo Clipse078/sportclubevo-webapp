@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { toPublicCommunicationAttachment } from "@/lib/communication/attachment-public-dto";
 
 /** Prisma graph loaded by `getCommunicationCenterConversationDetail`. */
 export type CommunicationCenterConversationDetailRecord =
@@ -30,8 +31,9 @@ export type CommunicationCenterConversationDetailClientMessageAttachment = {
   filename: string;
   contentType: string;
   sizeBytes: number;
-  /** Secure inbox download (EVO-04); metadata only until authorized route exists. */
   downloadAvailable: boolean;
+  previewAvailable: boolean;
+  unavailableReason?: string;
 };
 
 export type CommunicationCenterConversationDetailClientMessage = {
@@ -81,13 +83,26 @@ function mapMessageAttachment(
   link: CommunicationCenterConversationDetailRecord["messages"][number]["attachmentLinks"][number],
 ): CommunicationCenterConversationDetailClientMessageAttachment {
   const attachment = link.attachment;
-  return {
+  const legacyInboundPlaceholder = attachment.storageKey.startsWith(
+    "communication-center/inbound/",
+  );
+  const dto = toPublicCommunicationAttachment({
     id: attachment.id,
     filename: attachment.sanitizedFilename,
     contentType: attachment.contentType,
     sizeBytes: attachment.sizeBytes,
-    // Authorized center-message download route is EVO-04; metadata only until then.
-    downloadAvailable: false,
+    lifecycleStatus: attachment.lifecycleStatus,
+    scanStatus: attachment.scanStatus,
+    bytesAvailable: !legacyInboundPlaceholder,
+  });
+  return {
+    id: dto.id,
+    filename: dto.filename,
+    contentType: dto.contentType,
+    sizeBytes: dto.sizeBytes,
+    downloadAvailable: dto.downloadAvailable,
+    previewAvailable: dto.previewAvailable,
+    unavailableReason: dto.unavailableReason,
   };
 }
 

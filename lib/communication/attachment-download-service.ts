@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/db/prisma";
 import { logAction } from "@/lib/audit/log-action";
 import {
   communicationAttachmentStorage,
@@ -7,75 +6,21 @@ import {
 import {
   CommunicationAttachmentServiceError,
 } from "@/lib/communication/attachment-service";
+import { authorizeCommunicationAttachmentAccess } from "@/lib/communication/attachment-authorization";
+import { isCommunicationAttachmentPreviewSupported } from "@/lib/communication/attachment-preview-policy";
 
 export type DownloadCommunicationAttachmentResult = {
   stream: ReadableStream<Uint8Array>;
   filename: string;
   contentType: string;
   sizeBytes: number;
+  inline: boolean;
 };
 
-export async function downloadCommunicationAttachment(input: {
-  tenantId: string;
-  actorUserId: string;
-  attachmentId: string;
-  storage?: CommunicationAttachmentStorage;
-}): Promise<DownloadCommunicationAttachmentResult> {
-  const tenantId = input.tenantId.trim();
-  const actorUserId = input.actorUserId.trim();
-  const attachmentId = input.attachmentId.trim();
-  if (!tenantId || !actorUserId || !attachmentId) {
-    throw new CommunicationAttachmentServiceError(
-      "INVALID_INPUT",
-      "tenantId, actorUserId and attachmentId are required.",
-    );
-  }
-
-  const [membership, attachment] = await Promise.all([
-    prisma.tenantMembership.findFirst({
-      where: {
-        tenantId,
-        userId: actorUserId,
-        isActive: true,
-        tenant: { status: "ACTIVE" },
-        user: { isActive: true },
-      },
-      select: { id: true },
-    }),
-    prisma.communicationAttachment.findFirst({
-      where: {
-        id: attachmentId,
-        tenantId,
-        messageLinks: {
-          some: {
-            tenantId,
-            message: { tenantId, thread: { tenantId } },
-          },
-        },
-      },
-      select: {
-        id: true,
-        storageKey: true,
-        sanitizedFilename: true,
-        contentType: true,
-        sizeBytes: true,
-        lifecycleStatus: true,
-        scanStatus: true,
-      },
-    }),
-  ]);
-  if (!membership) {
-    throw new CommunicationAttachmentServiceError(
-      "FORBIDDEN",
-      "Der Benutzer gehört nicht zum aktiven Mandanten.",
-    );
-  }
-  if (!attachment) {
-    throw new CommunicationAttachmentServiceError(
-      "ATTACHMENT_NOT_FOUND",
-      "Anhang nicht gefunden.",
-    );
-  }
+function assertAttachmentDeliverable(attachment: {
+  lifecycleStatus: string;
+  scanStatus: string;
+}): void {
   if (
     attachment.lifecycleStatus !== "READY" ||
     attachment.scanStatus === "QUARANTINED" ||
@@ -84,6 +29,32 @@ export async function downloadCommunicationAttachment(input: {
     throw new CommunicationAttachmentServiceError(
       "ATTACHMENT_UNAVAILABLE",
       "Der Anhang ist nicht zum Download freigegeben.",
+    );
+  }
+}
+
+export async function downloadCommunicationAttachment(input: {
+  tenantId: string;
+  tenantKey?: string;
+  actorUserId: string;
+  attachmentId: string;
+  disposition?: "attachment" | "inline";
+  storage?: CommunicationAttachmentStorage;
+}): Promise<DownloadCommunicationAttachmentResult> {
+  const attachment = await authorizeCommunicationAttachmentAccess({
+    tenantId: input.tenantId,
+    tenantKey: input.tenantKey,
+    actorUserId: input.actorUserId,
+    attachmentId: input.attachmentId,
+  });
+
+  assertAttachmentDeliverable(attachment);
+
+  const inlineRequested = input.disposition === "inline";
+  if (inlineRequested && !isCommunicationAttachmentPreviewSupported(attachment.contentType)) {
+    throw new CommunicationAttachmentServiceError(
+      "INVALID_INPUT",
+      "Für diesen Dateityp ist keine Vorschau verfügbar.",
     );
   }
 
@@ -104,12 +75,14 @@ export async function downloadCommunicationAttachment(input: {
   }
 
   await logAction({
-    tenantId,
-    actorUserId,
-    moduleKey: "registrations",
+    tenantId: input.tenantId,
+    actorUserId: input.actorUserId,
+    moduleKey: "communication",
     entityType: "CommunicationAttachment",
     entityId: attachment.id,
-    action: "COMMUNICATION_ATTACHMENT_DOWNLOADED",
+    action: inlineRequested
+      ? "COMMUNICATION_ATTACHMENT_PREVIEWED"
+      : "COMMUNICATION_ATTACHMENT_DOWNLOADED",
     afterJson: {
       filename: attachment.sanitizedFilename,
       contentType: attachment.contentType,
@@ -122,5 +95,6 @@ export async function downloadCommunicationAttachment(input: {
     filename: attachment.sanitizedFilename,
     contentType: attachment.contentType,
     sizeBytes: attachment.sizeBytes,
+    inline: inlineRequested,
   };
 }

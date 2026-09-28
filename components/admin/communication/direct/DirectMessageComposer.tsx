@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { PersonalSignatureComposerField } from "@/components/admin/communication/personal-signature/PersonalSignatureComposerField";
 import { previewMessageWithPersonalSignature } from "@/lib/communication/personal-signature/personal-signature-compose";
 import { cn } from "@/lib/cn";
+import { CommunicationAttachmentPicker } from "@/components/admin/communication/attachments/CommunicationAttachmentPicker";
+import { useCommunicationAttachmentUpload } from "@/components/admin/communication/attachments/use-communication-attachment-upload";
 
 type RecipientChip = {
   personId: string;
@@ -45,6 +47,14 @@ export default function DirectMessageComposer() {
   const [activeSearchIndex, setActiveSearchIndex] = useState(-1);
   const [signatureBody, setSignatureBody] = useState<string | null>(null);
   const [useSignature, setUseSignature] = useState(false);
+  const {
+    attachments,
+    error: attachmentError,
+    addFiles,
+    removeAttachment,
+    readyAttachmentIds,
+    hasUnreadyAttachments,
+  } = useCommunicationAttachmentUpload();
 
   useEffect(() => {
     async function loadSignature() {
@@ -123,7 +133,10 @@ export default function DirectMessageComposer() {
       if (recipients.length === 0) return "Bitte mindestens einen Empfänger auswählen.";
     }
     if (target === "options" || target === "review") {
-      if (!bodyText.trim()) return "Bitte eine Nachricht eingeben.";
+      if (!bodyText.trim() && readyAttachmentIds.length === 0) {
+        return "Bitte eine Nachricht oder mindestens einen Anhang eingeben.";
+      }
+      if (hasUnreadyAttachments) return "Bitte warten Sie, bis alle Anhänge hochgeladen sind.";
     }
     return null;
   }
@@ -159,6 +172,7 @@ export default function DirectMessageComposer() {
           mode: mode === "INFORM" ? "INFORM" : "MESSAGE",
           channelIntent: channels,
           includePersonalSignature: useSignature,
+          attachmentIds: readyAttachmentIds,
         }),
       });
       const data = (await res.json()) as { error?: string; conversationIds?: string[] };
@@ -322,6 +336,13 @@ export default function DirectMessageComposer() {
             value={bodyText}
             onChange={(e) => setBodyText(e.target.value)}
             className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+          />
+          <CommunicationAttachmentPicker
+            disabled={busy}
+            attachments={attachments}
+            error={attachmentError}
+            onAddFiles={addFiles}
+            onRemove={removeAttachment}
           />
           <div className="flex justify-between gap-2">
             <Button type="button" variant="secondary" onClick={() => setStep("recipients")}>
