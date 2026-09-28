@@ -30,6 +30,7 @@ const mocks = vi.hoisted(() => ({
   resolveSenderCommunicationScope: vi.fn(),
   orgUnitMembership: { findMany: vi.fn() },
   trainerTeamMember: { findMany: vi.fn() },
+  userCommunicationPersonalSignature: { findUnique: vi.fn() },
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -41,6 +42,7 @@ vi.mock("@/lib/db/prisma", () => ({
     communicationCenterMessage: mocks.communicationCenterMessage,
     communicationCenterConversationParticipant: mocks.communicationCenterConversationParticipant,
     person: mocks.person,
+    userCommunicationPersonalSignature: mocks.userCommunicationPersonalSignature,
     $transaction: mocks.$transaction,
   },
 }));
@@ -113,6 +115,7 @@ describe("SCE-COMM-UX-04A direct message", () => {
     mocks.communicationCenterConversation.create.mockResolvedValue({ id: "inbox-conv-1" });
     mocks.communicationCenterMessage.create.mockResolvedValue({ id: "msg-1" });
     mocks.applyCommunicationPreferencesToNotificationDefaults.mockResolvedValue({});
+    mocks.userCommunicationPersonalSignature.findUnique.mockResolvedValue(null);
   });
 
   it("1-8 composer contracts: audience + context validation", () => {
