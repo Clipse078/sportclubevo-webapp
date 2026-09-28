@@ -31,6 +31,22 @@ Git ancestry on the base branch contains EVO-01 → EVO-08 commits (product comp
 
 ## Fixed defects (EVO-09)
 
+### Deployed STAGE — inbox conversation detail (IMAP EMAIL)
+
+| Field | Value |
+|-------|--------|
+| **DEPLOYED_STAGE_FAILURE** | **Reproduced in automated tests** (raw Prisma graph with `imapUid` / `uidValidity` BigInt → `JSON.stringify` throws → client shows *Die Konversation konnte nicht geladen werden.*) |
+| **DETAIL_HTTP_STATUS** | **500** when unmapped Prisma crosses HTTP boundary; **200** after DTO + serialization guard |
+| **SERVER_ERROR** | Pre-EVO-02 route returned raw Prisma (`NextResponse.json({ conversation })`); BigInt on EMAIL messages breaks serialization |
+| **CLIENT_ERROR** | Generic load failure for any non-OK / parse failure; **not** the primary defect for real IMAP mail |
+| **ROOT_CAUSE** | Missing JSON-safe API boundary for Communication Center detail (BigInt IMAP fields + internal attachment storage metadata) |
+| **REPLY_ATTACHMENTS_RELATION** | Separate client-only defect (see below); **not** the STAGE detail load blocker |
+| **BIGINT_SERIALIZATION** | **Fixed** — BigInt omitted at mapper; `serializeCommunicationCenterConversationDetailForApi()` fail-closes before response |
+| **DTO_CONTRACT** | `mapCommunicationCenterConversationDetailForClient()` + explicit serialize guard on GET route |
+| **FIX** | Hardened mapper (nullable attachments/storageKey, address coercion, invalid dates) + route uses `serializeCommunicationCenterConversationDetailForApi()` + structured 500 on serialization failure |
+| **REGRESSION_TEST** | `lib/communication/inbox/__tests__/sce-comm-evo-09-inbox-detail-deployed-stage.test.tsx`, fixture `imap-email-detail-fixture.ts` |
+| **RESULT** | **CLOSED in codebase** — STAGE must run a build containing EVO-02+EVO-09 detail path to verify live IMAP threads |
+
 ### Inbox `replyAttachments.some` TypeError
 
 - **Root cause:** `CommunicationInboxConversationDetailPane` requires `replyAttachments: ComposerAttachment[]` from `useCommunicationAttachmentUpload()`. Test fixtures and some isolated renders omitted the prop → runtime `undefined.some`.
@@ -52,7 +68,7 @@ Git ancestry on the base branch contains EVO-01 → EVO-08 commits (product comp
 
 | Suite | Result | Notes |
 |-------|--------|-------|
-| `lib/communication/**` + `app/.../communication/__tests__/**` | **637 pass**, 2 skipped | Full stack regression |
+| `lib/communication/**` + `app/.../communication/__tests__/**` | **643+ pass**, 2 skipped | Includes STAGE detail path suite (6 tests) |
 | `__tests__/vercel-cron-schedules.test.ts` | PASS | Includes attachment cleanup cron |
 | Billing communication tests | **39 pass** | Isolated from Communication transport |
 | `attachment-storage.test.ts` | **ENVIRONMENT_LIMITATION** | Requires Vercel Blob workspace adapter init |
@@ -171,4 +187,9 @@ Unchanged honest semantics: `scanStatus: PENDING` = validated upload, **not** ma
 
 **READY_FOR_RELEASE_01_WITH_EVIDENCE_GAPS**
 
-Codebase regression is green for Communication + Billing boundary; RELEASE-01 must execute COMM-17 remote reconciliation and optional disposable migration replay before production promotion.
+Inbox IMAP conversation detail is **fixed and regression-covered** in this branch (not a remaining code blocker). Evidence still required:
+
+1. **STAGE redeploy** confirming real IMAP threads open in the reading pane (build must include EVO-02 detail DTO + this EVO-09 hardening).
+2. COMM-17 remote reconciliation and disposable migration replay (see above).
+
+**Not classified `READY_FOR_RELEASE_01` until STAGE acceptance re-run passes after deploy.**

@@ -159,9 +159,9 @@ describe("SCE-COMM-EVO-02 inbox detail DTO", () => {
       join(process.cwd(), "app/api/communication/inbox/conversations/[conversationId]/route.ts"),
       "utf8",
     );
-    expect(routeSource).toContain("mapCommunicationCenterConversationDetailForClient");
+    expect(routeSource).toContain("serializeCommunicationCenterConversationDetailForApi");
     expect(routeSource.indexOf("getCommunicationCenterConversationDetail")).toBeLessThan(
-      routeSource.indexOf("mapCommunicationCenterConversationDetailForClient"),
+      routeSource.indexOf("serializeCommunicationCenterConversationDetailForApi"),
     );
   });
 });

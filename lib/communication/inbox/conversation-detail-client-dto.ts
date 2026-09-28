@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { toPublicCommunicationAttachment } from "@/lib/communication/attachment-public-dto";
+import { CommunicationCenterError } from "@/lib/communication/inbox/errors";
 
 /** Prisma graph loaded by `getCommunicationCenterConversationDetail`. */
 export type CommunicationCenterConversationDetailRecord =
@@ -70,22 +71,37 @@ export type CommunicationCenterConversationDetailClient = {
 
 function toIsoStringOrNull(value: Date | null | undefined): string | null {
   if (value == null) return null;
+  if (Number.isNaN(value.getTime())) return null;
   return value.toISOString();
 }
 
 function jsonAddressList(value: Prisma.JsonValue | null | undefined): string[] | null {
+  if (value == null) return null;
   if (!Array.isArray(value)) return null;
-  const addresses = value.filter((entry): entry is string => typeof entry === "string");
+  const addresses: string[] = [];
+  for (const entry of value) {
+    if (typeof entry === "string") {
+      const trimmed = entry.trim();
+      if (trimmed) addresses.push(trimmed);
+      continue;
+    }
+    if (entry && typeof entry === "object" && "address" in entry) {
+      const address = (entry as { address?: unknown }).address;
+      if (typeof address === "string" && address.trim()) {
+        addresses.push(address.trim());
+      }
+    }
+  }
   return addresses.length > 0 ? addresses : null;
 }
 
 function mapMessageAttachment(
   link: CommunicationCenterConversationDetailRecord["messages"][number]["attachmentLinks"][number],
-): CommunicationCenterConversationDetailClientMessageAttachment {
+): CommunicationCenterConversationDetailClientMessageAttachment | null {
   const attachment = link.attachment;
-  const legacyInboundPlaceholder = attachment.storageKey.startsWith(
-    "communication-center/inbound/",
-  );
+  if (!attachment) return null;
+  const storageKey = attachment.storageKey ?? "";
+  const legacyInboundPlaceholder = storageKey.startsWith("communication-center/inbound/");
   const dto = toPublicCommunicationAttachment({
     id: attachment.id,
     filename: attachment.sanitizedFilename,
@@ -106,6 +122,17 @@ function mapMessageAttachment(
   };
 }
 
+function mapMessageAttachments(
+  links: CommunicationCenterConversationDetailRecord["messages"][number]["attachmentLinks"],
+): CommunicationCenterConversationDetailClientMessageAttachment[] {
+  const attachments: CommunicationCenterConversationDetailClientMessageAttachment[] = [];
+  for (const link of links) {
+    const mapped = mapMessageAttachment(link);
+    if (mapped) attachments.push(mapped);
+  }
+  return attachments;
+}
+
 function mapMessage(
   message: CommunicationCenterConversationDetailRecord["messages"][number],
 ): CommunicationCenterConversationDetailClientMessage {
@@ -123,7 +150,7 @@ function mapMessage(
     sentAt: toIsoStringOrNull(message.sentAt),
     receivedAt: toIsoStringOrNull(message.receivedAt),
     deliveryError: message.deliveryError,
-    attachments: message.attachmentLinks.map(mapMessageAttachment),
+    attachments: mapMessageAttachments(message.attachmentLinks),
   };
 }
 
@@ -152,4 +179,23 @@ export function mapCommunicationCenterConversationDetailForClient(
     })),
     messages: conversation.messages.map(mapMessage),
   };
+}
+
+/**
+ * Maps and verifies the detail payload is JSON-serializable before it crosses the HTTP boundary.
+ * Raw Prisma graphs (BigInt IMAP fields, storage keys, etc.) must never be passed to NextResponse.json.
+ */
+export function serializeCommunicationCenterConversationDetailForApi(
+  conversation: CommunicationCenterConversationDetailRecord,
+): { conversation: CommunicationCenterConversationDetailClient } {
+  const clientConversation = mapCommunicationCenterConversationDetailForClient(conversation);
+  try {
+    JSON.stringify({ conversation: clientConversation });
+  } catch {
+    throw new CommunicationCenterError(
+      "DETAIL_SERIALIZATION_FAILED",
+      "Konversationsdetail konnte nicht serialisiert werden.",
+    );
+  }
+  return { conversation: clientConversation };
 }
