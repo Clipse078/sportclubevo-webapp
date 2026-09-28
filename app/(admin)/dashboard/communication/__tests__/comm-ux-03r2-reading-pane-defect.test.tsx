@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
 import CommunicationInboxWorkspace from "@/components/admin/communication/inbox/CommunicationInboxWorkspace";
 import { CommunicationInboxConversationDetailPane } from "@/components/admin/communication/inbox/CommunicationInboxConversationDetail";
 import { blockRemoteImages, sanitizeInboundEmailHtml } from "@/lib/communication/inbox/html-sanitizer";
+import { inboxReplyComposerTestDefaults } from "@/lib/communication/inbox/inbox-reply-composer-contract";
 
 function requestUrl(input: RequestInfo): string {
   if (typeof input === "string") return input;
@@ -427,6 +428,7 @@ describe("SCE-COMM-UX-03R2 reading pane selection defect", () => {
         onRetryDetail={() => undefined}
         visible
         hasAnyConversations
+        {...inboxReplyComposerTestDefaults}
       />,
     );
 

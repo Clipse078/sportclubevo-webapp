@@ -20,6 +20,7 @@ const EXPECTED_SCHEDULES: Record<string, string> = {
   "/api/cron/platform-communication-email": "*/5 * * * *",
   "/api/cron/communication-reminders": "*/1 * * * *",
   "/api/cron/communication-scheduler": "*/1 * * * *",
+  "/api/cron/communication-attachment-cleanup": "25 4 * * *",
   "/api/cron/task-series-occurrences": "15 3 * * *",
   "/api/cron/task-notifications": "0 * * * *",
   "/api/cron/participation-notifications": "30 * * * *",
