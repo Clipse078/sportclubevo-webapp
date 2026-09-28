@@ -16,12 +16,13 @@ import { prisma } from "@/lib/db/prisma";
 import { resolveCommunicationRecipientsForDispatch } from "@/lib/communication/platform/recipient-resolution/resolve-recipients";
 import { buildCampaignPublishSnapshotCreateMany } from "@/lib/communication/sponsor/publish-recipient-snapshot-data";
 import { resolveCommunicationChannelIntent } from "@/lib/communication/platform-email/communication-channel-intent";
-import { evaluatePlatformEmailReadiness } from "@/lib/communication/platform-email/email-readiness-service";
+import { EmailSenderResolutionError } from "@/lib/communication/sender-identity/sender-identity-resolution-service";
+import { prepareEmailSenderForPublish } from "@/lib/communication/sender-identity/prepare-email-sender-for-publish";
+import { withEmailSenderIdentityInOrchestration } from "@/lib/communication/sender-identity/communication-email-sender-intent";
 import { enqueuePlatformCommunicationEmailDeliveries } from "@/lib/communication/platform-email/platform-email-dispatch-service";
 import { resolvePersonIdForUser } from "@/lib/teams/team-document-auth";
 import { MAX_TEAM_COMMUNICATION_BODY_LENGTH } from "@/lib/communication/team/team-communication-constants";
 import {
-  TeamCommunicationForbiddenError,
   TeamCommunicationValidationError,
 } from "@/lib/communication/team/team-communication-errors";
 import { recordPlatformCommunicationAudit } from "@/lib/communication/team/platform-communication-audit";
@@ -52,6 +53,7 @@ export type SendDirectMessageInput = {
   channelIntent?: { inApp?: boolean; push?: boolean; email?: boolean };
   includePersonalSignature?: boolean;
   attachmentIds?: readonly string[];
+  emailSenderIdentityId?: string | null;
 };
 
 export type SendDirectMessageResult = {
@@ -83,15 +85,22 @@ function resolveRepliesAllowed(mode: DirectMessageMode): boolean {
   return mode === "MESSAGE";
 }
 
-function buildOrchestrationMeta(channelIntent: SendDirectMessageInput["channelIntent"]): Prisma.InputJsonValue {
-  return {
+function buildOrchestrationMeta(input: {
+  channelIntent: SendDirectMessageInput["channelIntent"];
+  emailSenderIdentityId?: string | null;
+}): Prisma.InputJsonValue {
+  const base = {
     channelIntent: {
-      inApp: channelIntent?.inApp !== false,
-      push: channelIntent?.push !== false,
-      email: channelIntent?.email === true,
+      inApp: input.channelIntent?.inApp !== false,
+      push: input.channelIntent?.push !== false,
+      email: input.channelIntent?.email === true,
     },
     directMessage: true,
-  } as Prisma.InputJsonValue;
+  };
+  return withEmailSenderIdentityInOrchestration(
+    base,
+    input.emailSenderIdentityId ?? null,
+  ) as Prisma.InputJsonValue;
 }
 
 function newDirectThreadSlug(): string {
@@ -204,7 +213,19 @@ async function sendDirectMessageToSingleRecipient(input: {
   const channelIntent = resolveCommunicationChannelIntent({
     orchestrationMetaJson: input.orchestrationMetaJson,
   });
-  const emailReadiness = await evaluatePlatformEmailReadiness(input.tenantId);
+  let emailSenderPublish;
+  try {
+    emailSenderPublish = await prepareEmailSenderForPublish({
+      tenantId: input.tenantId,
+      orchestrationMetaJson: input.orchestrationMetaJson,
+      emailChannelEnabled: channelIntent.email,
+    });
+  } catch (error) {
+    if (error instanceof EmailSenderResolutionError) {
+      throw new TeamCommunicationValidationError(error.message);
+    }
+    throw error;
+  }
   const publishSnapshots = await buildCampaignPublishSnapshotCreateMany({
     tenantId: input.tenantId,
     communicationId: communication.id,
@@ -213,7 +234,7 @@ async function sendDirectMessageToSingleRecipient(input: {
     resolvedAt: dispatch.core.metadata.resolvedAt,
     deliveryTargets: dispatch.pipeline.deliveryTargets,
     emailChannelEnabled: channelIntent.email,
-    emailTransportReady: emailReadiness.ready,
+    emailTransportReady: emailSenderPublish.emailTransportReady,
   });
 
   if (publishSnapshots.totalCount === 0) {
@@ -248,6 +269,7 @@ async function sendDirectMessageToSingleRecipient(input: {
         status: "PUBLISHED",
         publishedAt,
         audienceFingerprint: fingerprint,
+        ...emailSenderPublish.snapshotData,
       },
     });
 
@@ -387,7 +409,10 @@ export async function sendDirectMessage(input: SendDirectMessageInput): Promise<
   const bodyText = sanitizeBody(bodyWithSignature, attachmentIds.length > 0);
   const subject = sanitizeSubject(input.subject);
   const repliesAllowed = resolveRepliesAllowed(input.mode);
-  const orchestrationMetaJson = buildOrchestrationMeta(input.channelIntent);
+  const orchestrationMetaJson = buildOrchestrationMeta({
+    channelIntent: input.channelIntent,
+    emailSenderIdentityId: input.emailSenderIdentityId,
+  });
   const senderPersonId = await resolvePersonIdForUser(input.senderUserId, input.tenantId);
 
   const communicationIds: string[] = [];

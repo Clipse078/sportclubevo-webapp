@@ -341,6 +341,18 @@ enum PlatformCommunicationEmailDeliveryStatus {
   SKIPPED
 }
 
+/// SCE-COMM-EVO-08 — tenant-managed Communication email sender identity lifecycle.
+enum TenantCommunicationSenderIdentityStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+/// SCE-COMM-EVO-08 — frozen outbound From source at publish/send time.
+enum PlatformCommunicationEmailSenderSource {
+  TENANT
+  PLATFORM
+}
+
 /// SCE-COMM-17 — communication preference channel (distinct from NotificationChannel).
 enum CommunicationPreferenceChannel {
   IN_APP
@@ -1245,6 +1257,7 @@ model Tenant {
   communicationReminderSchedules CommunicationReminderSchedule[]
   platformCommunicationTemplates PlatformCommunicationTemplate[]
   platformCommunicationPublicationSchedules PlatformCommunicationPublicationSchedule[]
+  tenantCommunicationSenderIdentities TenantCommunicationSenderIdentity[]
   internalComments                InternalComment[]
   commentMentions                 CommentMention[]
   taskComments                    TaskComment[]
@@ -3163,6 +3176,12 @@ model PlatformCommunication {
   /// SCE-COMM-10 — reminder orchestration metadata (origin + source refs); not Event/Poll/Request state.
   orchestrationMetaJson Json?
 
+  /// SCE-COMM-EVO-08 — frozen outbound email sender at publish (historical truth).
+  emailSenderIdentityId            String?
+  emailSenderDisplayNameSnapshot   String?
+  emailSenderAddressSnapshot       String?
+  emailSenderSource                PlatformCommunicationEmailSenderSource?
+
   /// SCE-COMM-16 — optional traceability when draft was created from a platform template.
   sourcePlatformTemplateId      String?
   sourcePlatformTemplateVersion DateTime?
@@ -3196,6 +3215,27 @@ model PlatformCommunication {
   @@index([tenantId, replyToCommunicationId])
   @@index([tenantId, conversationId, publishedAt])
   @@index([tenantId, sourcePlatformTemplateId])
+  @@index([tenantId, emailSenderIdentityId])
+}
+
+/// SCE-COMM-EVO-08 — canonical tenant-scoped Communication email sender identities (1-N).
+model TenantCommunicationSenderIdentity {
+  id           String @id @default(cuid())
+  tenantId     String
+  displayName  String
+  emailAddress String
+  status       TenantCommunicationSenderIdentityStatus @default(ACTIVE)
+  isDefault    Boolean @default(false)
+  /// Authorization scope seam (TENANT_WIDE today; OrgUnit/Team/Role later).
+  scopeKind    String @default("TENANT_WIDE")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([tenantId, emailAddress], map: "tcsi_tenant_email_uq")
+  @@index([tenantId, status], map: "tcsi_tenant_status_idx")
+  @@index([tenantId, isDefault], map: "tcsi_tenant_default_idx")
 }
 
 /// SCE-COMM-16 — tenant-scoped reusable defaults for PlatformCommunication drafts.

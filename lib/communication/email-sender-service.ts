@@ -6,6 +6,13 @@ import {
   type SenderDomainAuthorization,
 } from "@/lib/email/mailer";
 import { assertTenantId } from "@/lib/communication/errors";
+import {
+  createTenantCommunicationSenderIdentity,
+  loadTenantDefaultSenderIdentity,
+  setDefaultTenantCommunicationSenderIdentity,
+  updateTenantCommunicationSenderIdentity,
+} from "@/lib/communication/sender-identity/tenant-communication-sender-identity-service";
+import { resolveEffectiveEmailSender } from "@/lib/communication/sender-identity/sender-identity-resolution-service";
 
 export const MAX_EMAIL_SENDER_DISPLAY_NAME_LENGTH = 120;
 export const MAX_EMAIL_SENDER_ADDRESS_LENGTH = 320;
@@ -24,6 +31,7 @@ export type TenantEmailSenderSettings = {
   activeSource: "TENANT" | "PLATFORM";
   activeFrom: string;
   platformFallbackActive: boolean;
+  defaultSenderIdentityId: string | null;
 };
 
 export type ResolvedTenantEmailSender = {
@@ -32,6 +40,7 @@ export type ResolvedTenantEmailSender = {
   formattedFrom: string;
   source: "TENANT" | "PLATFORM";
   providerStatus: EmailSenderProviderStatus;
+  senderIdentityId: string | null;
 };
 
 export class EmailSenderSettingsError extends Error {
@@ -43,14 +52,6 @@ export class EmailSenderSettingsError extends Error {
     super(message);
     this.name = "EmailSenderSettingsError";
   }
-}
-
-function requirePlatformFrom(): string {
-  const from = process.env.EMAIL_FROM?.trim();
-  if (!from) {
-    throw new Error("EMAIL_FROM is not configured.");
-  }
-  return from;
 }
 
 function parseFormattedFrom(from: string): { displayName: string; emailAddress: string } {
@@ -150,37 +151,47 @@ export async function getTenantEmailSenderSettings(
     throw new EmailSenderSettingsError("TENANT_NOT_FOUND", "Mandant nicht gefunden.");
   }
 
-  const displayName = tenant.emailSenderDisplayName?.trim() || null;
-  const emailAddress = tenant.emailSenderAddress?.trim().toLowerCase() || null;
-  const providerStatus: EmailSenderProviderStatus =
-    displayName && emailAddress
+  const defaultIdentity = await loadTenantDefaultSenderIdentity(tenantId);
+  const displayName =
+    defaultIdentity?.displayName ?? tenant.emailSenderDisplayName?.trim() ?? null;
+  const emailAddress =
+    defaultIdentity?.emailAddress ?? tenant.emailSenderAddress?.trim().toLowerCase() ?? null;
+
+  const providerStatus: EmailSenderProviderStatus = defaultIdentity
+    ? defaultIdentity.providerStatus
+    : displayName && emailAddress
       ? await getSenderDomainAuthorization(emailAddress)
       : "NOT_CONFIGURED";
-  const tenantUsable = !!displayName && !!emailAddress && providerStatus === "VERIFIED";
-  const platformFrom = requirePlatformFrom();
+
+  const effective = await resolveEffectiveEmailSender({ tenantId });
+  const tenantUsable = effective.source === "TENANT";
 
   return {
     displayName,
     emailAddress,
     providerStatus,
-    activeSource: tenantUsable ? "TENANT" : "PLATFORM",
-    activeFrom: tenantUsable
-      ? formatEmailSender(displayName, emailAddress)
-      : platformFrom,
+    activeSource: effective.source,
+    activeFrom: effective.formattedFrom,
     platformFallbackActive: !tenantUsable,
+    defaultSenderIdentityId: defaultIdentity?.id ?? null,
   };
 }
 
 export async function resolveTenantEmailSender(
   tenantId: string,
+  explicitSenderIdentityId?: string | null,
 ): Promise<ResolvedTenantEmailSender> {
-  const settings = await getTenantEmailSenderSettings(tenantId);
-  const active = parseFormattedFrom(settings.activeFrom);
+  const effective = await resolveEffectiveEmailSender({
+    tenantId,
+    explicitSenderIdentityId,
+  });
+  const active = parseFormattedFrom(effective.formattedFrom);
   return {
     ...active,
-    formattedFrom: settings.activeFrom,
-    source: settings.activeSource,
-    providerStatus: settings.providerStatus,
+    formattedFrom: effective.formattedFrom,
+    source: effective.source,
+    providerStatus: effective.providerStatus,
+    senderIdentityId: effective.identityId,
   };
 }
 
@@ -202,15 +213,23 @@ export async function updateTenantEmailSenderSettings(input: {
     throw new EmailSenderSettingsError("TENANT_NOT_FOUND", "Mandant nicht gefunden.");
   }
 
-  const updated = await prisma.tenant.updateMany({
-    where: { id: tenantId },
-    data: {
-      emailSenderDisplayName: values.displayName,
-      emailSenderAddress: values.emailAddress,
-    },
-  });
-  if (updated.count !== 1) {
-    throw new EmailSenderSettingsError("TENANT_NOT_FOUND", "Mandant nicht gefunden.");
+  const defaultIdentity = await loadTenantDefaultSenderIdentity(tenantId);
+  if (defaultIdentity) {
+    await updateTenantCommunicationSenderIdentity({
+      tenantId,
+      senderIdentityId: defaultIdentity.id,
+      actorUserId,
+      displayName: values.displayName,
+      emailAddress: values.emailAddress,
+    });
+  } else {
+    await createTenantCommunicationSenderIdentity({
+      tenantId,
+      actorUserId,
+      displayName: values.displayName,
+      emailAddress: values.emailAddress,
+      setAsDefault: true,
+    });
   }
 
   await logAction({
@@ -222,8 +241,17 @@ export async function updateTenantEmailSenderSettings(input: {
     action: "UPDATE",
     metadataJson: {
       changedFields: ["emailSenderDisplayName", "emailSenderAddress"],
+      via: "legacy-compat-endpoint",
     },
   });
 
   return getTenantEmailSenderSettings(tenantId);
+}
+
+export async function ensureDefaultSenderIdentityUpdated(input: {
+  tenantId: string;
+  actorUserId: string;
+  senderIdentityId: string;
+}): Promise<void> {
+  await setDefaultTenantCommunicationSenderIdentity(input);
 }

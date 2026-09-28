@@ -8,6 +8,7 @@ import { previewMessageWithPersonalSignature } from "@/lib/communication/persona
 import { cn } from "@/lib/cn";
 import { CommunicationAttachmentPicker } from "@/components/admin/communication/attachments/CommunicationAttachmentPicker";
 import { useCommunicationAttachmentUpload } from "@/components/admin/communication/attachments/use-communication-attachment-upload";
+import { CommunicationSenderSelector } from "@/components/admin/communication/sender/CommunicationSenderSelector";
 
 type RecipientChip = {
   personId: string;
@@ -42,6 +43,7 @@ export default function DirectMessageComposer() {
   const [bodyText, setBodyText] = useState("");
   const [mode, setMode] = useState<DirectMessageMode>("MESSAGE");
   const [channels, setChannels] = useState({ inApp: true, push: true, email: false });
+  const [emailSenderIdentityId, setEmailSenderIdentityId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeSearchIndex, setActiveSearchIndex] = useState(-1);
@@ -173,6 +175,7 @@ export default function DirectMessageComposer() {
           channelIntent: channels,
           includePersonalSignature: useSignature,
           attachmentIds: readyAttachmentIds,
+          emailSenderIdentityId,
         }),
       });
       const data = (await res.json()) as { error?: string; conversationIds?: string[] };
@@ -424,6 +427,12 @@ export default function DirectMessageComposer() {
               </label>
             </div>
           </fieldset>
+          <CommunicationSenderSelector
+            value={emailSenderIdentityId}
+            onChange={setEmailSenderIdentityId}
+            showOnlyWhenEmail
+            emailChannelEnabled={channels.email}
+          />
           <PersonalSignatureComposerField
             checkboxId="dm-use-signature"
             enabled={useSignature}

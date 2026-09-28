@@ -125,7 +125,32 @@ export async function replyToCommunicationCenterConversation(input: {
     throw new CommunicationCenterError("INVALID_STATE", "Kein Empfänger für Antwort gefunden.");
   }
 
-  const readiness = await evaluatePlatformEmailReadiness(input.tenantId);
+  const linkedCommunication = conversation.platformCommunicationId
+    ? await prisma.platformCommunication.findFirst({
+        where: {
+          id: conversation.platformCommunicationId,
+          tenantId: input.tenantId,
+        },
+        select: {
+          emailSenderIdentityId: true,
+          emailSenderDisplayNameSnapshot: true,
+          emailSenderAddressSnapshot: true,
+          emailSenderSource: true,
+          orchestrationMetaJson: true,
+        },
+      })
+    : null;
+
+  const explicitSenderId =
+    linkedCommunication?.emailSenderIdentityId ??
+    (linkedCommunication?.orchestrationMetaJson &&
+    typeof linkedCommunication.orchestrationMetaJson === "object"
+      ? (linkedCommunication.orchestrationMetaJson as Record<string, unknown>).emailSenderIdentityId
+      : null);
+
+  const readiness = await evaluatePlatformEmailReadiness(input.tenantId, {
+    senderIdentityId: typeof explicitSenderId === "string" ? explicitSenderId : null,
+  });
   if (!readiness.ready) {
     throw new CommunicationCenterError(
       "EMAIL_NOT_READY",
@@ -133,7 +158,27 @@ export async function replyToCommunicationCenterConversation(input: {
     );
   }
 
-  const sender = await resolveTenantEmailSender(input.tenantId);
+  const { resolveDeliveryEmailSender } = await import(
+    "@/lib/communication/sender-identity/delivery-email-sender-service"
+  );
+  const deliverySender = linkedCommunication
+    ? await resolveDeliveryEmailSender({
+        tenantId: input.tenantId,
+        emailSenderIdentityId: linkedCommunication.emailSenderIdentityId,
+        emailSenderDisplayNameSnapshot: linkedCommunication.emailSenderDisplayNameSnapshot,
+        emailSenderAddressSnapshot: linkedCommunication.emailSenderAddressSnapshot,
+        emailSenderSource: linkedCommunication.emailSenderSource,
+      })
+    : null;
+
+  const sender =
+    deliverySender?.ok === true
+      ? {
+          displayName: deliverySender.sender.displayName,
+          emailAddress: deliverySender.sender.emailAddress,
+          formattedFrom: deliverySender.sender.formattedFrom,
+        }
+      : await resolveTenantEmailSender(input.tenantId);
   const mailboxAddress = conversation.mailbox
     ? normalizeEmailAddress(conversation.mailbox.emailAddress)
     : null;

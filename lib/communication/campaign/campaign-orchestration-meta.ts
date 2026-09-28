@@ -21,6 +21,8 @@ export type CampaignOrchestrationMeta = {
   schemaVersion: typeof CAMPAIGN_ORCHESTRATION_SCHEMA_VERSION;
   channels: CampaignChannelIntent;
   scheduling: CampaignSchedulingIntent;
+  /** SCE-COMM-EVO-08 — optional explicit tenant sender identity for email channel. */
+  emailSenderIdentityId?: string | null;
 };
 
 export function defaultCampaignOrchestrationMeta(): CampaignOrchestrationMeta {
@@ -55,6 +57,11 @@ export function parseCampaignOrchestrationMeta(
       : emailRaw === "NOT_IMPLEMENTED"
         ? false
         : true;
+  const emailSenderIdentityId =
+    typeof record.emailSenderIdentityId === "string" && record.emailSenderIdentityId.trim()
+      ? record.emailSenderIdentityId.trim()
+      : undefined;
+
   return {
     schemaVersion: CAMPAIGN_ORCHESTRATION_SCHEMA_VERSION,
     channels: {
@@ -66,6 +73,7 @@ export function parseCampaignOrchestrationMeta(
       record.scheduling && typeof record.scheduling === "object"
         ? (record.scheduling as CampaignOrchestrationMeta["scheduling"])
         : { mode: "IMMEDIATE", scheduledAt: null, timezone: null },
+    ...(emailSenderIdentityId ? { emailSenderIdentityId } : {}),
   };
 }
 

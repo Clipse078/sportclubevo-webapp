@@ -21,6 +21,7 @@ import {
 } from "@/lib/communication/campaign/campaign-orchestration-meta";
 import { CommunicationAttachmentPicker } from "@/components/admin/communication/attachments/CommunicationAttachmentPicker";
 import { useCommunicationAttachmentUpload } from "@/components/admin/communication/attachments/use-communication-attachment-upload";
+import { CommunicationSenderSelector } from "@/components/admin/communication/sender/CommunicationSenderSelector";
 
 type TargetGroupOption = { id: string; name: string; status: string };
 
@@ -122,6 +123,9 @@ export default function CampaignComposer({
     } | null;
   } | null>(null);
   const [emailReady, setEmailReady] = useState<boolean | null>(null);
+  const [emailSenderIdentityId, setEmailSenderIdentityId] = useState<string | null>(
+    initialOrchestration?.emailSenderIdentityId ?? null,
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
@@ -197,6 +201,7 @@ export default function CampaignComposer({
         scheduledAt: scheduleEnabled ? scheduledAtLocal || null : null,
         timezone: scheduleEnabled ? tenantTimezone : null,
       },
+      ...(emailSenderIdentityId ? { emailSenderIdentityId } : {}),
     };
   }
 
@@ -736,6 +741,15 @@ export default function CampaignComposer({
             </label>
           </li>
         </ul>
+        <CommunicationSenderSelector
+          value={emailSenderIdentityId}
+          onChange={(next) => {
+            setEmailSenderIdentityId(next);
+            invalidateReview();
+          }}
+          showOnlyWhenEmail
+          emailChannelEnabled={emailChannelEnabled}
+        />
         <p className="text-xs text-[var(--text-2)]">
           E-Mail-Versand bereit:{" "}
           {emailReady === null ? "…" : emailReady ? "Ja" : "Nein"}

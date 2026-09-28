@@ -39,6 +39,8 @@ export async function POST(request: Request): Promise<NextResponse> {
   const attachmentIds = Array.isArray(body.attachmentIds)
     ? body.attachmentIds.map(String)
     : [];
+  const emailSenderIdentityId =
+    typeof body.emailSenderIdentityId === "string" ? body.emailSenderIdentityId.trim() : null;
 
   try {
     const result = await sendDirectMessage({
@@ -56,6 +58,7 @@ export async function POST(request: Request): Promise<NextResponse> {
             ? false
             : undefined,
       attachmentIds,
+      emailSenderIdentityId: emailSenderIdentityId || undefined,
     });
     return NextResponse.json(result);
   } catch (error) {
