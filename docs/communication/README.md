@@ -14,6 +14,9 @@ Canonical **Communication + Zielgruppen** architecture for team, club, event, an
 | [SCE-COMM-06-ANNOUNCEMENTS-ALERTS.md](./SCE-COMM-06-ANNOUNCEMENTS-ALERTS.md) | Team announcements & alerts, acknowledgement, tracking (COMM-06) |
 | [SCE-COMM-07-POLLS-DATE-POLLS.md](./SCE-COMM-07-POLLS-DATE-POLLS.md) | Team polls & date polls, results, Date Poll → Event (COMM-07) |
 | [SCE-COMM-08-REQUESTS-HELFEREINSAETZE.md](./SCE-COMM-08-REQUESTS-HELFEREINSAETZE.md) | Team requests & Helfereinsätze, slots, claims, capacity (COMM-08) |
+| [SCE-COMM-19-DELIVERY-ANALYTICS.md](./SCE-COMM-19-DELIVERY-ANALYTICS.md) | Delivery & engagement analytics (COMM-19) |
+| [SCE-COMM-20-OPERATIONS.md](./SCE-COMM-20-OPERATIONS.md) | Programme operations, crons, env names, security (COMM-20) |
+| [SCE-COMM-20-DEFERRED.md](./SCE-COMM-20-DEFERRED.md) | Confirmed deferred capabilities (COMM-20) |
 
 **Immutable programme statements (COMM-01):**
 
