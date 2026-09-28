@@ -8,7 +8,12 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { resolveCampaignAuthorization } from "@/lib/communication/campaign/campaign-authorization";
 import { getCampaignById } from "@/lib/communication/campaign/campaign-service";
-import { getCampaignEngagementSummary } from "@/lib/communication/campaign/campaign-engagement-service";
+import {
+  getCommunicationDeliveryAnalytics,
+  listCommunicationDeliveryDetail,
+} from "@/lib/communication/analytics/communication-delivery-analytics-service";
+import CommunicationDeliveryAnalyticsPanel from "@/components/admin/communication/analytics/CommunicationDeliveryAnalyticsPanel";
+import CommunicationDeliveryDetailTable from "@/components/admin/communication/analytics/CommunicationDeliveryDetailTable";
 import { prisma } from "@/lib/db/prisma";
 import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
 import { resolvePlatformTemplateAuthorization } from "@/lib/communication/templates/platform-template-authorization";
@@ -39,9 +44,18 @@ export default async function CampaignDetailPage({ params }: PageProps) {
   });
   if (!item) notFound();
 
-  const engagement =
-    item.status === "PUBLISHED"
-      ? await getCampaignEngagementSummary({ tenantId: tenant.id, campaignId: id })
+  const analytics = await getCommunicationDeliveryAnalytics({
+    tenantId: tenant.id,
+    communicationId: id,
+  });
+
+  const deliveryDetail =
+    item.status === "PUBLISHED" && authz.canViewEngagementDetail
+      ? await listCommunicationDeliveryDetail({
+          tenantId: tenant.id,
+          communicationId: id,
+          limit: 50,
+        })
       : null;
 
   const targetGroups = authz.canSend
@@ -105,27 +119,11 @@ export default async function CampaignDetailPage({ params }: PageProps) {
         </SectionCard>
       )}
 
-      {engagement ? (
-        <SectionCard title="Engagement" className="mt-6">
-          <dl className="grid gap-2 text-sm md:grid-cols-4">
-            <div>
-              <dt className="text-[var(--text-2)]">Empfänger</dt>
-              <dd className="font-semibold">{engagement.recipientCount}</dd>
-            </div>
-            <div>
-              <dt className="text-[var(--text-2)]">Gelesen</dt>
-              <dd className="font-semibold">{engagement.readCount}</dd>
-            </div>
-            <div>
-              <dt className="text-[var(--text-2)]">Ungelesen</dt>
-              <dd className="font-semibold">{engagement.unreadCount}</dd>
-            </div>
-            <div>
-              <dt className="text-[var(--text-2)]">Bestätigt</dt>
-              <dd className="font-semibold">{engagement.acknowledgedCount}</dd>
-            </div>
-          </dl>
-        </SectionCard>
+      {analytics ? (
+        <CommunicationDeliveryAnalyticsPanel analytics={analytics} />
+      ) : null}
+      {deliveryDetail ? (
+        <CommunicationDeliveryDetailTable rows={deliveryDetail.items} />
       ) : null}
     </PageShell>
   );
