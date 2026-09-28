@@ -1,11 +1,17 @@
 import { notFound } from "next/navigation";
-import { PageBreadcrumbs, PageHeader, PageShell } from "@/components/ui/page";
 import CampaignComposer from "@/components/admin/communication/campaign/CampaignComposer";
+import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
+import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { CLUB_COMMUNICATION_SEND_ROUTE_PERMISSIONS } from "@/lib/communication/club/route-access";
+import { requireCampaignSend } from "@/lib/communication/campaign/campaign-authorization";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
-import { prisma } from "@/lib/db/prisma";
+import { listZielgruppenForManagement } from "@/lib/communication/zielgruppen/management-service";
 import { resolveSponsorAudienceAuthorization } from "@/lib/sponsoring/sponsor-authorization";
+import { resolvePlatformTemplateAuthorization } from "@/lib/communication/templates/platform-template-authorization";
+import { listPlatformCommunicationTemplates } from "@/lib/communication/templates/platform-template-service";
+import { prisma } from "@/lib/db/prisma";
 import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +22,13 @@ export default async function NewCampaignPage({ searchParams }: PageProps) {
   const session = await requireAnyPermission(CLUB_COMMUNICATION_SEND_ROUTE_PERMISSIONS);
   const tenant = await getActiveTenant();
   if (!tenant) notFound();
+
+  await requireCampaignSend({
+    tenantId: tenant.id,
+    tenantKey: tenant.key,
+    userId: session.user.id,
+  });
+
   const params = await searchParams;
   const sponsorOrganisationId =
     typeof params.sponsorOrganisationId === "string" ? params.sponsorOrganisationId : undefined;
@@ -26,10 +39,9 @@ export default async function NewCampaignPage({ searchParams }: PageProps) {
       ? [sponsorContactIdsRaw]
       : [];
 
-  const targetGroups = await prisma.targetGroup.findMany({
-    where: { tenantId: tenant.id, status: "ACTIVE" },
-    select: { id: true, name: true, status: true },
-    orderBy: { name: "asc" },
+  const targetGroups = await listZielgruppenForManagement({
+    tenantId: tenant.id,
+    statusFilter: "ACTIVE",
   });
 
   const sponsorAuth = await resolveSponsorAudienceAuthorization({
@@ -55,42 +67,59 @@ export default async function NewCampaignPage({ searchParams }: PageProps) {
       })
     : [];
 
+  const templateAuthz = await resolvePlatformTemplateAuthorization({
+    tenantId: tenant.id,
+    tenantKey: tenant.key,
+    userId: session.user.id,
+  });
+
+  const templateOptions = templateAuthz.canView
+    ? (await listPlatformCommunicationTemplates({ tenantId: tenant.id }))
+        .filter((t) => t.kind === "CAMPAIGN" && (t.status === "ACTIVE" || t.status === "DRAFT"))
+        .map((t) => ({ id: t.id, name: t.name }))
+    : [];
+
   const hasSponsorPreselect = Boolean(sponsorOrganisationId?.trim());
 
   return (
     <PageShell>
-      <PageBreadcrumbs
-        items={[
+      <CommunicationWorkspaceHeader
+        breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
           { label: "Kampagnen", href: "/dashboard/communication/kampagnen" },
           { label: "Neu" },
         ]}
-      />
-      <PageHeader
-        eyebrow="Kommunikation"
         title="Neue Kampagne"
-        description="Interner Name und Empfänger-Betreff sind getrennt. Empfänger werden erst bei Veröffentlichung eingefroren."
+        description="Planen Sie organisationsweite Kommunikation — Empfänger werden bei Veröffentlichung aufgelöst und eingefroren."
       />
-      <CampaignComposer
-        targetGroups={targetGroups}
-        sponsorOrganisations={sponsorOrganisations.map((org) => ({
-          id: org.id,
-          name: org.name,
-          contacts: org.contacts.map((c) => ({
-            id: c.id,
-            displayName: `${c.firstName} ${c.lastName}`.trim(),
-            isPrimary: c.isPrimary,
-          })),
-        }))}
-        initialAudienceMode={hasSponsorPreselect ? "SPONSORS" : "WHOLE_ORG"}
-        initialSponsorMode={hasSponsorPreselect ? "SELECTED" : "ALL_ACTIVE"}
-        initialSponsorOrganisationIds={
-          sponsorOrganisationId?.trim() ? [sponsorOrganisationId.trim()] : []
-        }
-        initialSponsorContactIds={sponsorContactIds.map((id) => id.trim()).filter(Boolean)}
-        tenantTimezone={resolveTenantEventTimezone(tenant.timezone)}
-      />
+      <CommunicationContentSurface>
+        <CampaignComposer
+          targetGroups={targetGroups.map((tg) => ({
+            id: tg.id,
+            name: tg.name,
+            status: tg.status,
+          }))}
+          sponsorOrganisations={sponsorOrganisations.map((org) => ({
+            id: org.id,
+            name: org.name,
+            contacts: org.contacts.map((c) => ({
+              id: c.id,
+              displayName: `${c.firstName} ${c.lastName}`.trim(),
+              isPrimary: c.isPrimary,
+            })),
+          }))}
+          templateOptions={templateOptions}
+          canManageTemplates={templateAuthz.canManage}
+          initialAudienceMode={hasSponsorPreselect ? "SPONSORS" : "WHOLE_ORG"}
+          initialSponsorMode={hasSponsorPreselect ? "SELECTED" : "ALL_ACTIVE"}
+          initialSponsorOrganisationIds={
+            sponsorOrganisationId?.trim() ? [sponsorOrganisationId.trim()] : []
+          }
+          initialSponsorContactIds={sponsorContactIds.map((id) => id.trim()).filter(Boolean)}
+          tenantTimezone={resolveTenantEventTimezone(tenant.timezone)}
+        />
+      </CommunicationContentSurface>
     </PageShell>
   );
 }

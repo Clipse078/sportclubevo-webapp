@@ -79,3 +79,14 @@ export function schedulingIntentFromPublicationSchedule(input: {
     timezone: input.timezone,
   };
 }
+
+export function formatCampaignChannelSummary(
+  orchestration: CampaignOrchestrationMeta | null | undefined,
+): string {
+  if (!orchestration) return "In-App, Push, E-Mail";
+  const parts: string[] = [];
+  if (orchestration.channels.inApp) parts.push("In-App");
+  if (orchestration.channels.push) parts.push("Push");
+  if (orchestration.channels.email) parts.push("E-Mail");
+  return parts.length > 0 ? parts.join(", ") : "Kein Kanal";
+}

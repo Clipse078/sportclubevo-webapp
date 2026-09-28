@@ -38,6 +38,7 @@ const mocks = vi.hoisted(() => ({
     count: vi.fn(),
   },
   platformCommunicationRecipientSnapshot: { createMany: vi.fn(), count: vi.fn(), groupBy: vi.fn() },
+  platformCommunicationPublicationSchedule: { findMany: vi.fn(), findFirst: vi.fn() },
   targetGroup: { findMany: vi.fn() },
   orgUnit: { count: vi.fn() },
   team: { count: vi.fn() },
@@ -56,6 +57,7 @@ vi.mock("@/lib/db/prisma", () => ({
     platformCommunicationConversation: mocks.platformCommunicationConversation,
     platformCommunication: mocks.platformCommunication,
     platformCommunicationRecipientSnapshot: mocks.platformCommunicationRecipientSnapshot,
+    platformCommunicationPublicationSchedule: mocks.platformCommunicationPublicationSchedule,
     targetGroup: mocks.targetGroup,
     orgUnit: mocks.orgUnit,
     team: mocks.team,
@@ -169,6 +171,8 @@ describe("SCE-COMM-12 campaign composer", () => {
     mocks.team.count.mockResolvedValue(1);
     mocks.role.count.mockResolvedValue(1);
     mocks.logAction.mockResolvedValue(undefined);
+    mocks.platformCommunicationPublicationSchedule.findMany.mockResolvedValue([]);
+    mocks.platformCommunicationPublicationSchedule.findFirst.mockResolvedValue(null);
     mocks.getEffectivePermissions.mockResolvedValue({ platform: [], tenant: [] });
     mocks.userRole.count.mockResolvedValue(0);
     mocks.$transaction.mockImplementation(async (fn: (tx: unknown) => Promise<void>) =>

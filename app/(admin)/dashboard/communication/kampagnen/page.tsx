@@ -1,28 +1,28 @@
 import Link from "next/link";
-import { Send } from "lucide-react";
+import { Suspense } from "react";
+import { Megaphone } from "lucide-react";
 import { notFound } from "next/navigation";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
 import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
-import { EmptyState, PageShell, SectionCard } from "@/components/ui/page";
+import { KampagnenListToolbar } from "@/components/admin/communication/kampagnen/KampagnenListToolbar";
+import { EmptyState, PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { CLUB_COMMUNICATION_VIEW_ROUTE_PERMISSIONS } from "@/lib/communication/club/route-access";
 import { resolveCampaignAuthorization } from "@/lib/communication/campaign/campaign-authorization";
 import { listCampaigns } from "@/lib/communication/campaign/campaign-service";
-import { listUpcomingPublicationSchedules } from "@/lib/communication/scheduling/publication-schedule-service";
-import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
+import {
+  formatKampagnenCreator,
+  formatKampagnenListTimestamp,
+  kampagnenListTimeColumnLabel,
+  kampagnenListTitle,
+  resolveKampagnenDisplayStatus,
+} from "@/lib/communication/campaign/kampagnen-display";
 
 export const dynamic = "force-dynamic";
 
-const STATUS_LABEL: Record<string, string> = {
-  DRAFT: "Entwurf",
-  READY: "Bereit",
-  PUBLISHED: "Veröffentlicht",
-  ARCHIVED: "Archiviert",
-};
-
-type PageProps = { searchParams?: Promise<{ q?: string; status?: string }> };
+type PageProps = { searchParams?: Promise<{ q?: string; status?: string; mine?: string }> };
 
 export default async function CampaignListPage({ searchParams }: PageProps) {
   const session = await requireAnyPermission(CLUB_COMMUNICATION_VIEW_ROUTE_PERMISSIONS);
@@ -36,15 +36,24 @@ export default async function CampaignListPage({ searchParams }: PageProps) {
   });
 
   const params = (await searchParams) ?? {};
-  const schedules = await listUpcomingPublicationSchedules({ tenantId: tenant.id });
+  const statusParam = params.status?.trim() ?? "";
+  const scheduledOnly = statusParam === "scheduled";
+  const statusFilter =
+    statusParam && statusParam !== "scheduled" ? statusParam : undefined;
 
   const items = await listCampaigns({
     tenantId: tenant.id,
     viewerUserId: session.user.id,
     viewerCanSend: authz.canSend,
     search: params.q,
-    status: params.status,
+    status: statusFilter,
+    scheduledOnly,
+    createdByUserId: params.mine === "1" && authz.canSend ? session.user.id : undefined,
   });
+
+  const hasActiveFilters = Boolean(
+    params.q?.trim() || statusParam || params.mine === "1",
+  );
 
   const primaryAction = authz.canSend ? (
     <Link
@@ -55,6 +64,15 @@ export default async function CampaignListPage({ searchParams }: PageProps) {
     </Link>
   ) : undefined;
 
+  const timeColumnLabel =
+    items.some(
+      (item) => item.scheduleStatus === "SCHEDULED" || item.scheduleStatus === "PROCESSING",
+    )
+      ? "Zeitpunkt"
+      : items.some((item) => item.status === "PUBLISHED")
+        ? "Veröffentlicht"
+        : "Aktualisiert";
+
   return (
     <PageShell>
       <CommunicationWorkspaceHeader
@@ -64,93 +82,136 @@ export default async function CampaignListPage({ searchParams }: PageProps) {
           { label: "Kampagnen" },
         ]}
         title="Kampagnen"
-        description="Organisationsweite Kampagnen — Zielgruppen werden bei Veröffentlichung aufgelöst; Empfänger bleiben historisch unveränderlich."
+        description="Geplante organisationsweite Kommunikation an definierte Zielgruppen — mit Kanälen, Terminplanung und Auswertung nach Veröffentlichung."
         primaryAction={items.length > 0 ? primaryAction : undefined}
       />
 
-      {schedules.length > 0 ? (
-        <SectionCard title="Geplante Veröffentlichungen" className="mb-6">
-          <ul className="space-y-2 text-sm">
-            {schedules.map((s) => (
-              <li
-                key={s.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2"
-              >
-                <span>
-                  {s.kind} · {s.internalName ?? s.subject ?? s.communicationId} ·{" "}
-                  {new Date(s.scheduledAt).toLocaleString("de-CH", {
-                    timeZone: resolveTenantEventTimezone(tenant.timezone),
-                  })}{" "}
-                  ({resolveTenantEventTimezone(tenant.timezone)})
-                </span>
-                <span className="text-xs text-[var(--text-2)]">{s.status}</span>
-              </li>
-            ))}
-          </ul>
-        </SectionCard>
-      ) : null}
-
-      <CommunicationContentSurface padded={items.length === 0}>
+      <CommunicationContentSurface padded={items.length === 0 && !hasActiveFilters}>
         {items.length === 0 ? (
-          <EmptyState
-            icon={<Send className="h-8 w-8" aria-hidden />}
-            heading="Noch keine Kampagnen"
-            description="Planen und veröffentlichen Sie Ihre erste organisationsweite Kampagne."
-            action={primaryAction}
-          />
+          hasActiveFilters ? (
+            <div className="py-8 text-center text-sm">
+              <p className="font-medium text-[var(--foreground)]">Keine Kampagnen gefunden</p>
+              <p className="mt-2 text-[var(--text-2)]">
+                Passen Sie Suche oder Filter an oder{" "}
+                <Link href="/dashboard/communication/kampagnen" className="text-[var(--sce-primary)] hover:underline">
+                  Filter zurücksetzen
+                </Link>
+                .
+              </p>
+            </div>
+          ) : (
+            <EmptyState
+              icon={<Megaphone className="h-8 w-8" aria-hidden />}
+              heading="Noch keine Kampagnen"
+              description="Kampagnen erreichen breitere Zielgruppen über mehrere Kanäle — geplant oder sofort veröffentlicht."
+              action={primaryAction}
+            />
+          )
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-[var(--border)] text-sm">
-              <thead className="text-left text-xs uppercase tracking-wide text-[var(--text-2)]">
-                <tr>
-                  <th className="px-2 py-3 md:px-4">Status</th>
-                  <th className="px-2 py-3 md:px-4">Interner Name</th>
-                  <th className="hidden px-4 py-3 md:table-cell">Zielgruppe</th>
-                  <th className="hidden px-4 py-3 lg:table-cell">Autor</th>
-                  <th className="hidden px-4 py-3 lg:table-cell">Aktualisiert</th>
-                  <th className="hidden px-4 py-3 xl:table-cell">Veröffentlicht</th>
-                  <th className="hidden px-4 py-3 xl:table-cell">Empfänger</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--border)]">
-                {items.map((item) => (
-                  <tr key={item.id} className="hover:bg-[var(--surface-2)]/40">
-                    <td className="px-2 py-3 md:px-4">
-                      <AdminStatusPill
-                        label={STATUS_LABEL[item.status] ?? item.status}
-                        tone={item.status === "PUBLISHED" ? "success" : "muted"}
-                      />
-                    </td>
-                    <td className="px-2 py-3 md:px-4">
-                      <Link
-                        href={`/dashboard/communication/kampagnen/${item.id}`}
-                        className="font-medium text-[var(--sce-primary)] hover:underline"
-                      >
-                        {item.internalName}
-                      </Link>
-                    </td>
-                    <td className="hidden px-4 py-3 text-[var(--text-2)] md:table-cell">
-                      {item.audienceSummary}
-                    </td>
-                    <td className="hidden px-4 py-3 text-[var(--text-2)] lg:table-cell">
-                      {item.authorPerson
-                        ? `${item.authorPerson.firstName} ${item.authorPerson.lastName}`.trim()
-                        : "—"}
-                    </td>
-                    <td className="hidden px-4 py-3 text-[var(--text-2)] lg:table-cell">
-                      {new Date(item.updatedAt).toLocaleString("de-CH")}
-                    </td>
-                    <td className="hidden px-4 py-3 text-[var(--text-2)] xl:table-cell">
-                      {item.publishedAt ? new Date(item.publishedAt).toLocaleString("de-CH") : "—"}
-                    </td>
-                    <td className="hidden px-4 py-3 text-[var(--text-2)] xl:table-cell">
-                      {item.recipientCount ?? "—"}
-                    </td>
+          <>
+            <Suspense fallback={null}>
+              <KampagnenListToolbar canSend={authz.canSend} />
+            </Suspense>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="min-w-full divide-y divide-[var(--border)] text-sm">
+                <thead className="text-left text-xs uppercase tracking-wide text-[var(--text-2)]">
+                  <tr>
+                    <th className="px-4 py-3">Titel / Betreff</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="hidden px-4 py-3 lg:table-cell">Zielgruppe</th>
+                    <th className="hidden px-4 py-3 md:table-cell">Kanäle</th>
+                    <th className="hidden px-4 py-3 lg:table-cell">{timeColumnLabel}</th>
+                    <th className="hidden px-4 py-3 xl:table-cell">Erstellt von</th>
+                    <th className="hidden px-4 py-3 xl:table-cell">Ergebnis</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-[var(--border)]">
+                  {items.map((item) => {
+                    const displayStatus = resolveKampagnenDisplayStatus({
+                      status: item.status,
+                      scheduleStatus: item.scheduleStatus,
+                    });
+                    const title = kampagnenListTitle(item);
+                    return (
+                      <tr key={item.id} className="hover:bg-[var(--surface-2)]/40">
+                        <td className="px-4 py-3">
+                          <Link
+                            href={`/dashboard/communication/kampagnen/${item.id}`}
+                            className="font-medium text-[var(--sce-primary)] hover:underline"
+                          >
+                            {title}
+                          </Link>
+                          {item.internalName !== title ? (
+                            <p className="mt-0.5 text-xs text-[var(--text-2)]">{item.internalName}</p>
+                          ) : null}
+                        </td>
+                        <td className="px-4 py-3">
+                          <AdminStatusPill label={displayStatus.label} tone={displayStatus.tone} />
+                          {displayStatus.srHint ? (
+                            <span className="sr-only">{displayStatus.srHint}</span>
+                          ) : null}
+                        </td>
+                        <td className="hidden px-4 py-3 text-[var(--text-2)] lg:table-cell">
+                          {item.audienceSummary}
+                        </td>
+                        <td className="hidden px-4 py-3 text-[var(--text-2)] md:table-cell">
+                          {item.channelSummary}
+                        </td>
+                        <td className="hidden px-4 py-3 text-[var(--text-2)] lg:table-cell">
+                          <span className="sr-only">
+                            {kampagnenListTimeColumnLabel({
+                              status: item.status,
+                              scheduleStatus: item.scheduleStatus,
+                            })}
+                          </span>
+                          {formatKampagnenListTimestamp(item)}
+                        </td>
+                        <td className="hidden px-4 py-3 text-[var(--text-2)] xl:table-cell">
+                          {formatKampagnenCreator(item.authorPerson)}
+                        </td>
+                        <td className="hidden px-4 py-3 text-[var(--text-2)] xl:table-cell">
+                          {item.deliverySnapshotCount != null
+                            ? `${item.deliverySnapshotCount} Zustellungen`
+                            : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <ul className="divide-y divide-[var(--border)] md:hidden">
+              {items.map((item) => {
+                const displayStatus = resolveKampagnenDisplayStatus({
+                  status: item.status,
+                  scheduleStatus: item.scheduleStatus,
+                });
+                const title = kampagnenListTitle(item);
+                return (
+                  <li key={item.id} className="py-3">
+                    <Link
+                      href={`/dashboard/communication/kampagnen/${item.id}`}
+                      className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <span className="font-medium text-[var(--sce-primary)]">{title}</span>
+                          <p className="mt-1 text-xs text-[var(--text-2)]">
+                            {item.audienceSummary} · {item.channelSummary}
+                          </p>
+                          <p className="mt-1 text-xs text-[var(--text-2)]">
+                            {formatKampagnenCreator(item.authorPerson)} ·{" "}
+                            {formatKampagnenListTimestamp(item)}
+                          </p>
+                        </div>
+                        <AdminStatusPill label={displayStatus.label} tone={displayStatus.tone} />
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
         )}
       </CommunicationContentSurface>
     </PageShell>
