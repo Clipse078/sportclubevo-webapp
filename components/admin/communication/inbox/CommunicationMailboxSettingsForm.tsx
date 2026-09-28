@@ -6,6 +6,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
 import { cn } from "@/lib/cn";
+import { inboxMailboxStatusLabel } from "@/lib/communication/inbox/inbox-display";
 
 type PublicMailbox = {
   id: string;
@@ -162,7 +163,7 @@ export default function CommunicationMailboxSettingsForm({ initialMailboxes }: P
                   {mailbox.displayName} · {mailbox.emailAddress}
                 </p>
                 <p className="text-xs text-[var(--text-2)]">
-                  Status: {mailbox.status}
+                  Status: {inboxMailboxStatusLabel(mailbox.status)}
                   {mailbox.hasCredential ? " · Zugangsdaten hinterlegt" : " · Keine Zugangsdaten"}
                 </p>
                 {mailbox.lastSyncErrorMessage ? (

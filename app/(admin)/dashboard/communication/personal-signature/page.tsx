@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PageShell } from "@/components/ui/page";
+import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
 import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
 import PersonalSignatureWorkspace from "@/components/admin/communication/personal-signature/PersonalSignatureWorkspace";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
@@ -40,7 +41,9 @@ export default async function PersonalSignaturePage() {
           </Link>
         }
       />
-      <PersonalSignatureWorkspace initialPreference={preference} />
+      <CommunicationContentSurface>
+        <PersonalSignatureWorkspace initialPreference={preference} />
+      </CommunicationContentSurface>
     </PageShell>
   );
 }

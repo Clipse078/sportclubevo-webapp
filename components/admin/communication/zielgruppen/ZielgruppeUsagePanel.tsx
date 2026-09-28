@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ZielgruppeUsageSummary } from "@/lib/communication/zielgruppen/usage-references";
+import { zielgruppeUsageStatusLabel } from "@/lib/communication/usage-reference-display";
 
 const KIND_LABELS: Record<string, string> = {
   CAMPAIGN: "Kampagne",
@@ -38,7 +39,9 @@ export default function ZielgruppeUsagePanel({ usage }: Props) {
               <span className="font-medium text-[var(--foreground)]">{ref.label}</span>
             )}
             {ref.statusHint ? (
-              <span className="text-xs text-[var(--muted)]">{ref.statusHint}</span>
+              <span className="text-xs text-[var(--muted)]">
+                {zielgruppeUsageStatusLabel(ref.kind, ref.statusHint)}
+              </span>
             ) : null}
           </li>
         ))}
