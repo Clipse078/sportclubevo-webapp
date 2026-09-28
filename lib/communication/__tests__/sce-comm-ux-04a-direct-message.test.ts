@@ -165,6 +165,36 @@ describe("SCE-COMM-UX-04A direct message", () => {
     expect(mocks.platformCommunication.create).toHaveBeenCalledTimes(2);
   });
 
+  it("7 platform=false inbox=true still rejects replies (canonical platform wins)", async () => {
+    mocks.communicationCenterConversation.findFirst.mockResolvedValue({
+      repliesAllowed: true,
+      channel: "SCE",
+      platformCommunicationId: "comm-1",
+    });
+    mocks.platformCommunication.findFirst.mockResolvedValue({
+      repliesAllowed: false,
+    });
+    const policy = await assertConversationAllowsReplies({
+      tenantId: "t1",
+      conversationId: "c1",
+    });
+    expect(policy.repliesAllowed).toBe(false);
+  });
+
+  it("8 platform=true inbox=false fail-safe rejects replies", async () => {
+    mocks.communicationCenterConversation.findFirst.mockResolvedValue({
+      repliesAllowed: false,
+      channel: "SCE",
+      platformCommunicationId: "comm-1",
+    });
+    const policy = await assertConversationAllowsReplies({
+      tenantId: "t1",
+      conversationId: "c1",
+    });
+    expect(policy.repliesAllowed).toBe(false);
+    expect(mocks.platformCommunication.findFirst).not.toHaveBeenCalled();
+  });
+
   it("14-17 locked conversation rejects reply API", async () => {
     mocks.communicationCenterConversation.findFirst.mockResolvedValue({
       repliesAllowed: false,
