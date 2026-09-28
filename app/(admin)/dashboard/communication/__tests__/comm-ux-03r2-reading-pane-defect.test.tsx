@@ -103,6 +103,20 @@ function installInboxFetch(options?: {
     const url = requestUrl(input);
     const method = init?.method ?? "GET";
 
+    if (url.includes("workspace-preferences")) {
+      return new Response(
+        JSON.stringify({
+          preference: {
+            layout: "STANDARD",
+            density: "STANDARD",
+            listSplitPercent: 38,
+            hasStoredPreference: false,
+          },
+        }),
+        { status: 200 },
+      );
+    }
+
     if (url.includes("counts=1") && method === "GET") {
       return new Response(JSON.stringify({ counts: {} }), { status: 200 });
     }
@@ -145,6 +159,13 @@ function installInboxFetch(options?: {
 beforeEach(() => {
   vi.clearAllMocks();
   global.fetch = mocks.fetch as unknown as typeof fetch;
+  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+    matches: query.includes("1024px") ? window.innerWidth >= 1024 : false,
+    media: query,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })) as unknown as typeof window.matchMedia;
   installInboxFetch();
 });
 
@@ -313,8 +334,11 @@ describe("SCE-COMM-UX-03R2 reading pane selection defect", () => {
 
     await user.click(screen.getByRole("button", { name: "Konversationen" }));
 
-    expect(listSection.className.split(/\s+/)).not.toContain("hidden");
-    expect(within(listSection).getByText("Sicherheitswarnung")).toBeInTheDocument();
+    await waitFor(() => {
+      const listAgain = screen.getByLabelText("Konversationsliste");
+      expect(listAgain.className.split(/\s+/)).not.toContain("hidden");
+      expect(within(listAgain).getByText("Sicherheitswarnung")).toBeInTheDocument();
+    });
   });
 
   it("filter and search requests still fire while preserving selection semantics", async () => {
