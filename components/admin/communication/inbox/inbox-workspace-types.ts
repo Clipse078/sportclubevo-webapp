@@ -39,6 +39,8 @@ export type InboxConversationDetail = {
   id: string;
   subject: string | null;
   status: string;
+  channel?: string;
+  repliesAllowed?: boolean;
   mailboxOrganization: string;
   assignedToUserId: string | null;
   matchedPerson?: {

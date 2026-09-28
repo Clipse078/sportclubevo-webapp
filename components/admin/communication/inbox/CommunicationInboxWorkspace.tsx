@@ -203,6 +203,11 @@ export default function CommunicationInboxWorkspace({
     [conversations, selectedId],
   );
 
+  const repliesLockedInformOnly = useMemo(() => {
+    if (!detail) return false;
+    return detail.repliesAllowed === false;
+  }, [detail]);
+
   const hasActiveFilters = filter !== "ALL" || debouncedSearch.length > 0;
 
   const emptyVariant = useMemo(() => {
@@ -481,7 +486,8 @@ export default function CommunicationInboxWorkspace({
           replySubmitting={replySubmitting}
           replyError={replyError}
           actionError={actionError}
-          replyDisabled={isTrashed}
+          replyDisabled={isTrashed || repliesLockedInformOnly}
+          repliesLockedInformOnly={repliesLockedInformOnly}
           onBackToList={() => setMobilePane("list")}
           showDesktopBackButton={inboxLayoutIsMasterDetailOnDesktop(workspacePreference.layout)}
           onResolve={() => void updateStatus("RESOLVED")}

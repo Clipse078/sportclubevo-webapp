@@ -12,6 +12,7 @@ export const COMMUNICATION_CONTEXT_KINDS = [
   "EVENT",
   "SPONSOR",
   "SYSTEM",
+  "DIRECT",
 ] as const;
 
 export type CommunicationContextKind = (typeof COMMUNICATION_CONTEXT_KINDS)[number];
@@ -22,7 +23,8 @@ export type CommunicationContextRef =
   | { kind: "TEAM"; teamId: string }
   | { kind: "EVENT"; eventId: string }
   | { kind: "SPONSOR"; sponsorId: string }
-  | { kind: "SYSTEM"; moduleKey: string };
+  | { kind: "SYSTEM"; moduleKey: string }
+  | { kind: "DIRECT"; tenantId: string };
 
 export type CommunicationContextValidationError =
   | "MISSING_TENANT"
@@ -60,6 +62,9 @@ export function validateCommunicationContextRef(
       if (!context.moduleKey.trim() || context.moduleKey.length > 64) {
         return "INVALID_MODULE_KEY";
       }
+      return null;
+    case "DIRECT":
+      if (context.tenantId.trim() !== trimmedTenant) return "MISSING_TENANT";
       return null;
     default: {
       const _exhaustive: never = context;

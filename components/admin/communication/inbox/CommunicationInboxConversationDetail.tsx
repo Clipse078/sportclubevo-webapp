@@ -40,6 +40,7 @@ type CommunicationInboxConversationDetailProps = {
   onMarkUnread: () => void;
   showProcessingToolbar: boolean;
   replyDisabled: boolean;
+  repliesLockedInformOnly: boolean;
   replyText: string;
   onReplyTextChange: (value: string) => void;
   onSendReply: () => void;
@@ -103,6 +104,7 @@ export function CommunicationInboxConversationDetailPane({
   onMarkUnread,
   showProcessingToolbar,
   replyDisabled,
+  repliesLockedInformOnly,
   replyText,
   onReplyTextChange,
   onSendReply,
@@ -349,7 +351,18 @@ export function CommunicationInboxConversationDetailPane({
             })}
           </div>
 
-          {capabilities.canReply && !replyDisabled ? (
+          {repliesLockedInformOnly ? (
+            <div
+              className="shrink-0 border-t border-[var(--border)] bg-[var(--surface-2)]/50 px-4 py-4 text-sm text-[var(--text-2)]"
+              role="status"
+              aria-live="polite"
+            >
+              <p className="font-medium text-[var(--foreground)]">Nur zur Information</p>
+              <p>Antworten deaktiviert</p>
+            </div>
+          ) : null}
+
+          {capabilities.canReply && !replyDisabled && !repliesLockedInformOnly ? (
             <div className="shrink-0 border-t border-[var(--border)] p-4">
               <label className="block text-xs font-medium text-[var(--text-2)]" htmlFor="inbox-reply">
                 Antwort
@@ -378,7 +391,7 @@ export function CommunicationInboxConversationDetailPane({
               </div>
             </div>
           ) : null}
-          {replyDisabled ? (
+          {replyDisabled && !repliesLockedInformOnly ? (
             <p className="shrink-0 border-t border-[var(--border)] px-4 py-3 text-xs text-[var(--text-2)]">
               Antworten ist im Papierkorb nicht verfügbar. Bitte zuerst wiederherstellen.
             </p>

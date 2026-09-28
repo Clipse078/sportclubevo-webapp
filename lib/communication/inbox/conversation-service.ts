@@ -1,4 +1,5 @@
 import {
+  CommunicationCenterChannel,
   CommunicationCenterConversationStatus,
   CommunicationCenterMailboxOrganization,
   CommunicationCenterMessageDirection,
@@ -86,6 +87,13 @@ export async function listCommunicationCenterConversations(input: {
   const mailbox = input.mailbox ?? "INBOX";
   const where: Prisma.CommunicationCenterConversationWhereInput = {
     tenantId: input.tenantId,
+    OR: [
+      { channel: CommunicationCenterChannel.EMAIL },
+      {
+        channel: CommunicationCenterChannel.SCE,
+        participants: { some: { userId: input.userId } },
+      },
+    ],
   };
 
   applyMailboxViewFilter(where, mailbox);
@@ -187,7 +195,17 @@ export async function getCommunicationCenterConversationDetail(input: {
   userId: string;
 }) {
   const conversation = await prisma.communicationCenterConversation.findFirst({
-    where: { id: input.conversationId, tenantId: input.tenantId },
+    where: {
+      id: input.conversationId,
+      tenantId: input.tenantId,
+      OR: [
+        { channel: CommunicationCenterChannel.EMAIL },
+        {
+          channel: CommunicationCenterChannel.SCE,
+          participants: { some: { userId: input.userId } },
+        },
+      ],
+    },
     include: {
       messages: {
         orderBy: { createdAt: "asc" },

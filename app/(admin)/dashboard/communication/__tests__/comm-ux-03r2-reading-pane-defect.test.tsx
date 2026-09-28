@@ -412,6 +412,7 @@ describe("SCE-COMM-UX-03R2 reading pane selection defect", () => {
         onMarkUnread={() => undefined}
         showProcessingToolbar
         replyDisabled={false}
+        repliesLockedInformOnly={false}
         replyText=""
         onReplyTextChange={() => undefined}
         onSendReply={() => undefined}
