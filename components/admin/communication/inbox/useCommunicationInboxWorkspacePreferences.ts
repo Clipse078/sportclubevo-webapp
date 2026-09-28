@@ -32,6 +32,8 @@ export function useCommunicationInboxWorkspacePreferences(): UseCommunicationInb
   const preferenceRef = useRef(preference);
   preferenceRef.current = preference;
   const persistInFlightRef = useRef(false);
+  /** True after local cache or any user-driven preference change — blocks stale GET hydration. */
+  const userPreferenceTouchedRef = useRef(cached != null);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,6 +43,7 @@ export function useCommunicationInboxWorkspacePreferences(): UseCommunicationInb
         if (!res.ok) return;
         const data = (await res.json()) as { preference?: InboxWorkspacePreferenceSnapshot };
         if (cancelled || !data.preference) return;
+        if (userPreferenceTouchedRef.current) return;
         setPreference(data.preference);
         writeInboxWorkspacePrefCache(data.preference);
       } catch {
@@ -68,6 +71,7 @@ export function useCommunicationInboxWorkspacePreferences(): UseCommunicationInb
       setPersistError(null);
       const data = (await res.json()) as { preference?: InboxWorkspacePreferenceSnapshot };
       if (data.preference) {
+        userPreferenceTouchedRef.current = false;
         setPreference(data.preference);
         writeInboxWorkspacePrefCache(data.preference);
       }
@@ -80,15 +84,18 @@ export function useCommunicationInboxWorkspacePreferences(): UseCommunicationInb
 
   const setLayout = useCallback(
     (layout: InboxWorkspaceLayout, options?: { resetSplit?: boolean }) => {
-      const listSplitPercent = options?.resetSplit
-        ? defaultListSplitPercentForLayout(layout)
-        : preferenceRef.current.listSplitPercent;
+      const layoutChanged = layout !== preferenceRef.current.layout;
+      const listSplitPercent =
+        options?.resetSplit || layoutChanged
+          ? defaultListSplitPercentForLayout(layout)
+          : preferenceRef.current.listSplitPercent;
       const next: InboxWorkspacePreferenceSnapshot = {
         ...preferenceRef.current,
         layout,
         listSplitPercent,
         hasStoredPreference: true,
       };
+      userPreferenceTouchedRef.current = true;
       setPreference(next);
       writeInboxWorkspacePrefCache(next);
       void persist({ layout, listSplitPercent }, "PUT");
@@ -99,6 +106,7 @@ export function useCommunicationInboxWorkspacePreferences(): UseCommunicationInb
   const setDensity = useCallback(
     (density: InboxWorkspaceDensity) => {
       const next = { ...preferenceRef.current, density, hasStoredPreference: true };
+      userPreferenceTouchedRef.current = true;
       setPreference(next);
       writeInboxWorkspacePrefCache(next);
       void persist({ density }, "PUT");
@@ -110,10 +118,11 @@ export function useCommunicationInboxWorkspacePreferences(): UseCommunicationInb
     (listSplitPercent: number, options?: { persist?: boolean }) => {
       const clamped = clampListSplitPercent(Math.round(listSplitPercent));
       const next = { ...preferenceRef.current, listSplitPercent: clamped, hasStoredPreference: true };
+      userPreferenceTouchedRef.current = true;
       setPreference(next);
       writeInboxWorkspacePrefCache(next);
       if (options?.persist) {
-        void persist({ listSplitPercent }, "PUT");
+        void persist({ listSplitPercent: clamped }, "PUT");
       }
     },
     [persist],
@@ -125,6 +134,7 @@ export function useCommunicationInboxWorkspacePreferences(): UseCommunicationInb
 
   const resetToDefaults = useCallback(() => {
     const defaults = defaultInboxWorkspacePreference();
+    userPreferenceTouchedRef.current = true;
     setPreference(defaults);
     clearInboxWorkspacePrefCache();
     void persist({}, "DELETE");

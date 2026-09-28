@@ -4,6 +4,7 @@ import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { INBOX_VIEW_PERMISSIONS } from "@/lib/communication/inbox/route-access";
 import { getCommunicationCenterConversationDetail } from "@/lib/communication/inbox/conversation-service";
+import { mapCommunicationCenterConversationDetailForClient } from "@/lib/communication/inbox/conversation-detail-client-dto";
 import { CommunicationCenterError } from "@/lib/communication/inbox/errors";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +26,8 @@ export async function GET(_request: Request, { params }: Params): Promise<NextRe
       conversationId,
       userId,
     });
-    return NextResponse.json({ conversation });
+    const clientConversation = mapCommunicationCenterConversationDetailForClient(conversation);
+    return NextResponse.json({ conversation: clientConversation });
   } catch (error) {
     if (error instanceof CommunicationCenterError) {
       return NextResponse.json({ error: error.message, code: error.code }, { status: 404 });

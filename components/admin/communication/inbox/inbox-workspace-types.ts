@@ -16,17 +16,29 @@ export type InboxConversationListItem = {
   matchedPersonId?: string | null;
 };
 
+export type InboxConversationMessageAttachment = {
+  id: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  downloadAvailable: boolean;
+};
+
 export type InboxConversationMessage = {
   id: string;
   direction: string;
   status: string;
   fromAddress: string | null;
   fromDisplayName?: string | null;
+  toAddresses?: string[] | null;
+  ccAddresses?: string[] | null;
+  subject?: string | null;
   bodyText: string | null;
   bodyHtmlSanitized: string | null;
   sentAt: string | null;
   receivedAt: string | null;
   deliveryError: string | null;
+  attachments?: InboxConversationMessageAttachment[];
 };
 
 export type InboxContextLink = {

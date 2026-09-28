@@ -325,12 +325,25 @@ export function CommunicationInboxConversationDetailPane({
                   <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs text-[var(--text-2)]">
                     <span>
                       {outbound ? "Ausgehend" : "Eingehend"}
+                      {message.fromDisplayName?.trim()
+                        ? ` · ${message.fromDisplayName.trim()}`
+                        : ""}
                       {message.fromAddress ? ` · ${message.fromAddress}` : ""}
                     </span>
                     <time dateTime={timestamp ?? undefined}>
                       {formatMessageTimestamp(timestamp)}
                     </time>
                   </div>
+                  {message.toAddresses?.length ? (
+                    <p className="mt-1 text-xs text-[var(--text-2)]">
+                      An: {message.toAddresses.join(", ")}
+                    </p>
+                  ) : null}
+                  {message.subject?.trim() ? (
+                    <p className="mt-1 text-xs font-medium text-[var(--foreground)]">
+                      {message.subject.trim()}
+                    </p>
+                  ) : null}
                   {message.status === "FAILED" ? (
                     <p className="mt-1 text-xs font-medium text-red-600">Zustellung fehlgeschlagen</p>
                   ) : null}
@@ -346,6 +359,19 @@ export function CommunicationInboxConversationDetailPane({
                   )}
                   {message.deliveryError ? (
                     <p className="mt-2 text-xs text-red-600">{message.deliveryError}</p>
+                  ) : null}
+                  {message.attachments?.length ? (
+                    <ul className="mt-2 space-y-1 text-xs text-[var(--text-2)]" aria-label="Anhänge">
+                      {message.attachments.map((attachment) => (
+                        <li key={attachment.id}>
+                          {attachment.filename} ({Math.max(1, Math.round(attachment.sizeBytes / 1024))}{" "}
+                          KB)
+                          {!attachment.downloadAvailable ? (
+                            <span className="text-[var(--muted)]"> · Download folgt</span>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
                   ) : null}
                 </article>
               );
