@@ -51,13 +51,21 @@ export type ClubCommunicationListItem = {
   publishedAt: string | null;
   createdAt: string;
   audienceSummary: string;
-  senderPerson: { id: string; firstName: string; lastName: string } | null;
+  senderPerson: { id: string; firstName: string; lastName: string; displayName?: string | null } | null;
+  scheduleStatus?: string | null;
+  scheduledAt?: string | null;
+  deliverySnapshotCount?: number | null;
+};
+
+export type ClubCommunicationDetail = ClubCommunicationListItem & {
+  audienceSpec: CommunicationAudienceSpec;
 };
 
 const CLUB_KINDS = new Set<PlatformCommunicationKind>(["MESSAGE", "ANNOUNCEMENT", "ALERT"]);
 
 const LIST_INCLUDE = {
-  senderPerson: { select: { id: true, firstName: true, lastName: true } },
+  senderPerson: { select: { id: true, firstName: true, lastName: true, displayName: true } },
+  _count: { select: { recipientSnapshots: true } },
 } satisfies Prisma.PlatformCommunicationInclude;
 
 function sanitizeBodyText(body: string): string {
@@ -162,8 +170,25 @@ export async function listClubCommunications(input: {
     include: LIST_INCLUDE,
   });
 
+  const communicationIds = rows.map((row) => row.id);
+  const activeSchedules =
+    communicationIds.length > 0
+      ? await prisma.platformCommunicationPublicationSchedule.findMany({
+          where: {
+            tenantId: input.tenantId,
+            communicationId: { in: communicationIds },
+            status: { in: ["SCHEDULED", "PROCESSING"] },
+          },
+          select: { communicationId: true, status: true, scheduledAt: true },
+        })
+      : [];
+  const scheduleByCommunicationId = new Map(
+    activeSchedules.map((schedule) => [schedule.communicationId, schedule]),
+  );
+
   return rows.map((row) => {
     const audience = row.audienceSpecJson as CommunicationAudienceSpec;
+    const schedule = scheduleByCommunicationId.get(row.id);
     return {
       id: row.id,
       kind: row.kind,
@@ -175,6 +200,10 @@ export async function listClubCommunications(input: {
       createdAt: row.createdAt.toISOString(),
       audienceSummary: summarizeClubAudienceSpec(audience),
       senderPerson: row.senderPerson,
+      scheduleStatus: schedule?.status ?? null,
+      scheduledAt: schedule?.scheduledAt.toISOString() ?? null,
+      deliverySnapshotCount:
+        row.status === "PUBLISHED" ? row._count.recipientSnapshots : null,
     };
   });
 }
@@ -434,7 +463,7 @@ export async function getClubCommunicationById(input: {
   tenantId: string;
   communicationId: string;
   viewerCanSend: boolean;
-}): Promise<ClubCommunicationListItem | null> {
+}): Promise<ClubCommunicationDetail | null> {
   const row = await loadClubCommunicationRow({
     tenantId: input.tenantId,
     communicationId: input.communicationId,
@@ -450,6 +479,14 @@ export async function getClubCommunicationById(input: {
   if (!full) return null;
 
   const audience = full.audienceSpecJson as CommunicationAudienceSpec;
+  const schedule = await prisma.platformCommunicationPublicationSchedule.findFirst({
+    where: {
+      tenantId: input.tenantId,
+      communicationId: full.id,
+      status: { in: ["SCHEDULED", "PROCESSING"] },
+    },
+    select: { status: true, scheduledAt: true },
+  });
   return {
     id: full.id,
     kind: full.kind,
@@ -461,5 +498,10 @@ export async function getClubCommunicationById(input: {
     createdAt: full.createdAt.toISOString(),
     audienceSummary: summarizeClubAudienceSpec(audience),
     senderPerson: full.senderPerson,
+    scheduleStatus: schedule?.status ?? null,
+    scheduledAt: schedule?.scheduledAt.toISOString() ?? null,
+    deliverySnapshotCount:
+      full.status === "PUBLISHED" ? full._count.recipientSnapshots : null,
+    audienceSpec: audience,
   };
 }
