@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { PersonalSignatureComposerField } from "@/components/admin/communication/personal-signature/PersonalSignatureComposerField";
@@ -18,13 +18,39 @@ import {
   emptyCommunicationAudienceSelection,
   type CommunicationAudienceSelection,
 } from "@/lib/communication/audience/communication-audience-selection";
+import { PersonalisationFieldInsert } from "@/components/admin/communication/personalisation/PersonalisationFieldInsert";
+import { PersonalisationComposerPreview } from "@/components/admin/communication/personalisation/PersonalisationComposerPreview";
+import { insertPersonalisationAtSelection } from "@/lib/communication/personalisation/insert-personalisation-at-selection";
+import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
 
 type DirectMessageMode = "MESSAGE" | "INFORM";
 
 type Step = "recipients" | "content" | "options" | "review";
 
-export default function DirectMessageComposer() {
+type Props = {
+  tenantId: string;
+};
+
+export default function DirectMessageComposer({ tenantId }: Props) {
   const router = useRouter();
+  const subjectInputRef = useRef<HTMLInputElement>(null);
+  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const personalisationContextRef = useMemo(
+    (): CommunicationContextRef => ({ kind: "DIRECT", tenantId }),
+    [tenantId],
+  );
+
+  function insertPersonalisationToken(token: string, target: "subject" | "body") {
+    insertPersonalisationAtSelection({
+      element: target === "subject" ? subjectInputRef.current : bodyTextareaRef.current,
+      currentValue: target === "subject" ? subject : bodyText,
+      token,
+      onValueChange: (next) => {
+        if (target === "subject") setSubject(next);
+        else setBodyText(next);
+      },
+    });
+  }
   const [step, setStep] = useState<Step>("recipients");
   const [audienceSelection, setAudienceSelection] = useState<CommunicationAudienceSelection>(
     emptyCommunicationAudienceSelection(),
@@ -215,24 +241,40 @@ export default function DirectMessageComposer() {
           <h2 id="dm-content-heading" className="text-base font-semibold">
             Nachricht
           </h2>
-          <label className="block text-sm font-medium" htmlFor="dm-subject">
-            Betreff (optional)
-          </label>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label className="block text-sm font-medium" htmlFor="dm-subject">
+              Betreff (optional)
+            </label>
+            <PersonalisationFieldInsert
+              contextRef={personalisationContextRef}
+              disabled={busy}
+              onInsert={(token) => insertPersonalisationToken(token, "subject")}
+            />
+          </div>
           <input
             id="dm-subject"
+            ref={subjectInputRef}
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 font-mono text-sm"
           />
-          <label className="block text-sm font-medium" htmlFor="dm-body">
-            Nachricht
-          </label>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label className="block text-sm font-medium" htmlFor="dm-body">
+              Nachricht
+            </label>
+            <PersonalisationFieldInsert
+              contextRef={personalisationContextRef}
+              disabled={busy}
+              onInsert={(token) => insertPersonalisationToken(token, "body")}
+            />
+          </div>
           <textarea
             id="dm-body"
+            ref={bodyTextareaRef}
             rows={8}
             value={bodyText}
             onChange={(e) => setBodyText(e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+            className="w-full rounded-lg border border-[var(--border)] px-3 py-2 font-mono text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
           />
           <CommunicationAttachmentPicker
             disabled={busy}
@@ -406,6 +448,17 @@ export default function DirectMessageComposer() {
               </dd>
             </div>
           </dl>
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold">Personalisierungsvorschau</h3>
+            <PersonalisationComposerPreview
+              subject={subject}
+              bodyText={bodyText}
+              contextRef={personalisationContextRef}
+              audienceSelection={audienceSelection}
+              audienceContext="DIRECT"
+              communicationKind="DIRECT_MESSAGE"
+            />
+          </div>
           <div className="flex justify-between gap-2">
             <Button type="button" variant="secondary" onClick={() => setStep("options")}>
               Zurück

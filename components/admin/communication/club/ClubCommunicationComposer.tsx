@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import CommunicationScheduleFields from "@/components/admin/communication/scheduling/CommunicationScheduleFields";
 import {
@@ -26,6 +26,10 @@ import { previewMessageWithPersonalSignature } from "@/lib/communication/persona
 import { CommunicationAttachmentPicker } from "@/components/admin/communication/attachments/CommunicationAttachmentPicker";
 import { useCommunicationAttachmentUpload } from "@/components/admin/communication/attachments/use-communication-attachment-upload";
 import { CommunicationSenderSelector } from "@/components/admin/communication/sender/CommunicationSenderSelector";
+import { PersonalisationFieldInsert } from "@/components/admin/communication/personalisation/PersonalisationFieldInsert";
+import { PersonalisationComposerPreview } from "@/components/admin/communication/personalisation/PersonalisationComposerPreview";
+import { insertPersonalisationAtSelection } from "@/lib/communication/personalisation/insert-personalisation-at-selection";
+import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
 
 type TargetGroupOption = { id: string; name: string; status: string };
 
@@ -41,6 +45,8 @@ type Props = {
   initialAudienceSpec?: CommunicationAudienceSpec;
   readOnly?: boolean;
   templateOptions?: TemplateOption[];
+  tenantId?: string;
+  contextRef?: CommunicationContextRef;
 };
 
 function sectionHeading(id: string, title: string) {
@@ -61,8 +67,30 @@ export default function ClubCommunicationComposer({
   initialAudienceSpec,
   readOnly = false,
   templateOptions = [],
+  tenantId,
+  contextRef: contextRefProp,
 }: Props) {
   const router = useRouter();
+  const subjectInputRef = useRef<HTMLInputElement>(null);
+  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const personalisationContextRef = useMemo((): CommunicationContextRef | null => {
+    if (contextRefProp) return contextRefProp;
+    if (tenantId) return { kind: "ORGANISATION", tenantId };
+    return null;
+  }, [contextRefProp, tenantId]);
+
+  function insertPersonalisationToken(token: string, target: "subject" | "body") {
+    insertPersonalisationAtSelection({
+      element: target === "subject" ? subjectInputRef.current : bodyTextareaRef.current,
+      currentValue: target === "subject" ? subject : bodyText,
+      token,
+      onValueChange: (next) => {
+        if (target === "subject") setSubject(next);
+        else setBodyText(next);
+        setReviewConfirmed(false);
+      },
+    });
+  }
   const initialAudienceSelection = useMemo(
     () =>
       initialAudienceSpec
@@ -371,9 +399,19 @@ export default function ClubCommunicationComposer({
             </select>
           </label>
           <label className="block text-sm md:col-span-2">
-            <span className="mb-1 block font-medium text-[var(--foreground)]">Titel / Betreff</span>
+            <span className="mb-1 flex flex-wrap items-center justify-between gap-2 font-medium text-[var(--foreground)]">
+              Titel / Betreff
+              {personalisationContextRef ? (
+                <PersonalisationFieldInsert
+                  contextRef={personalisationContextRef}
+                  disabled={busy}
+                  onInsert={(token) => insertPersonalisationToken(token, "subject")}
+                />
+              ) : null}
+            </span>
             <input
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
+              ref={subjectInputRef}
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 font-mono text-sm"
               value={subject}
               onChange={(e) => {
                 setSubject(e.target.value);
@@ -384,9 +422,20 @@ export default function ClubCommunicationComposer({
           </label>
         </div>
         <label className="block text-sm">
-          <span className="mb-1 block font-medium text-[var(--foreground)]">Nachricht</span>
+          <span className="mb-1 flex flex-wrap items-center justify-between gap-2 font-medium text-[var(--foreground)]">
+            Nachricht
+            {personalisationContextRef ? (
+              <PersonalisationFieldInsert
+                contextRef={personalisationContextRef}
+                disabled={busy}
+                onInsert={(token) => insertPersonalisationToken(token, "body")}
+              />
+            ) : null}
+          </span>
           <textarea
-            className="min-h-[160px] w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
+            ref={bodyTextareaRef}
+            aria-label="Nachricht"
+            className="min-h-[160px] w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 font-mono text-sm"
             value={bodyText}
             onChange={(e) => {
               setBodyText(e.target.value);
@@ -541,6 +590,20 @@ export default function ClubCommunicationComposer({
           </div>
         </dl>
         <p className="text-xs text-[var(--text-2)]">{MITTEILUNG_PUBLISH_NOTICE}</p>
+        {personalisationContextRef ? (
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-[var(--foreground)]">Personalisierungsvorschau</h3>
+            <PersonalisationComposerPreview
+              subject={subject}
+              bodyText={bodyText}
+              contextRef={personalisationContextRef}
+              audienceSelection={audienceSelection}
+              audienceContext="ORGANISATION"
+              previewKind={kind}
+              communicationKind={kind}
+            />
+          </div>
+        ) : null}
         <label className="flex items-start gap-2 text-sm">
           <input
             type="checkbox"

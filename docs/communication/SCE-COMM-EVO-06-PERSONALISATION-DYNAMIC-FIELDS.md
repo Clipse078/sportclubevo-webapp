@@ -61,6 +61,48 @@ Scheduled communications (COMM-16) resolve at **execution**, not at schedule cre
 - `GET /api/communication/personalisation/fields?contextKind=…` — metadata only (no resolvers).
 - `POST /api/communication/personalisation/preview` — authorised preview + diagnostics.
 
+## Composer integration (EVO-06R1)
+
+Shared UI under `components/admin/communication/personalisation/`:
+
+| Component | Role |
+|-----------|------|
+| `PersonalisationFieldInsert` | **Feld einfügen** — registry-backed search, categories, availability hints, missing-value policy (Leer lassen / Ersatztext / Versand blockieren) |
+| `PersonalisationComposerPreview` | Loads bounded preview recipients via COMM-03 (`includeRecipientDetail`) then calls preview API |
+| `PersonalisationPreviewPanel` | **Vorschau als** recipient switch, rendered subject/body, context summary, diagnostics |
+
+Wired into:
+
+- **Mitteilungen** — `ClubCommunicationComposer` (subject + body, org or explicit `contextRef` / `tenantId`)
+- **Direct Message** — `DirectMessageComposer` (`DIRECT` context)
+- **Kampagne** — `CampaignComposer` (subject + body; preview for member audiences, not sponsor fan-out)
+- **Vorlagen / COMM-16** — `VorlageManagementForm`, `PlatformTemplateEditor`
+
+Insertion uses `insertPersonalisationAtSelection` at the active cursor when the control supports it.
+
+## Event & team context in pickers
+
+Field list comes from `GET /api/communication/personalisation/fields` with the communication’s **canonical** `CommunicationContextRef` (not inferred from audience team selectors).
+
+- **EVENT** — pass `contextKind=EVENT` + `eventId`; registry filters by `Event.type` (TRAINING / MATCH / TOURNAMENT).
+- **TEAM** — pass `contextKind=TEAM` + `teamId` for `context_team` and deterministic team fields.
+- Fields without matching context appear as **CONTEXT_REQUIRED** (insertable in templates; preview/dispatch resolve only with context).
+
+## Fallback & ambiguity UX
+
+- Missing-value policies are chosen in the field picker; users do not type `|policy=` / `|fallback=` manually except via advanced templates.
+- Preview and publish surface German diagnostics (`messageDe`) for **AMBIGUOUS**, **MISSING**, and **UNAVAILABLE** — e.g. multiple teams/pitches, missing match context — without silent first-match resolution.
+
+## Location / pitch acceptance (tests)
+
+Automated coverage in `lib/communication/__tests__/sce-comm-evo-06-personalisation.test.ts`:
+
+- HOME TRAINING — `training_location`, `training_pitch`
+- HOME MATCH — `match_location`, `match_pitch`
+- AWAY MATCH — away location, no false home pitch
+- HOME TOURNAMENT — `tournament_pitches` multi-pitch list
+- Guardian — `guardian_first_name` vs `child_first_name` on distinct identities
+
 ## Field catalogue
 
 Authoritative definitions: `COMMUNICATION_PERSONALISATION_FIELDS` in `field-registry.ts`.

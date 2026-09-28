@@ -135,6 +135,7 @@ export default async function ClubMitteilungDetailPage({ params }: PageProps) {
                 status: tg.status,
               }))}
               tenantTimezone={resolveTenantEventTimezone(tenant.timezone)}
+              tenantId={tenant.id}
               initialKind={item.kind as "MESSAGE" | "ANNOUNCEMENT" | "ALERT"}
               initialSubject={item.subject ?? ""}
               initialBody={item.bodyText}

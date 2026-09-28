@@ -68,6 +68,7 @@ export default async function NewClubMitteilungPage() {
           }))}
           tenantTimezone={resolveTenantEventTimezone(tenant.timezone)}
           templateOptions={templateOptions}
+          tenantId={tenant.id}
         />
       </CommunicationContentSurface>
     </PageShell>

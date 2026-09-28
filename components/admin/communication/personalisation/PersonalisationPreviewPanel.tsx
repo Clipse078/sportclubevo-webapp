@@ -50,12 +50,15 @@ export function PersonalisationPreviewPanel({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Vorschau fehlgeschlagen");
+      const mapDiagnostic = (d: { labelDe: string; messageDe?: string; outcome: string }) =>
+        d.messageDe ? `${d.labelDe}: ${d.messageDe}` : d.labelDe;
       const warnings = [
+        ...(data.subjectDiagnostics ?? [])
+          .filter((d: { outcome: string }) => d.outcome !== "RESOLVED")
+          .map(mapDiagnostic),
         ...(data.bodyDiagnostics ?? [])
           .filter((d: { outcome: string }) => d.outcome !== "RESOLVED")
-          .map((d: { labelDe: string; messageDe?: string }) =>
-            d.messageDe ? `${d.labelDe}: ${d.messageDe}` : d.labelDe,
-          ),
+          .map(mapDiagnostic),
       ];
       setResult({
         renderedSubject: data.renderedSubject,

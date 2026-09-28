@@ -14,6 +14,8 @@ import {
 } from "@/lib/communication/personalisation/personalisation-engine";
 import type { PersonalisationRenderScope } from "@/lib/communication/personalisation/resolve-field-values";
 import { resolveFieldAvailabilityForContext } from "@/lib/communication/personalisation/field-availability";
+import { buildPersonalisationToken } from "@/lib/communication/personalisation/build-personalisation-token";
+import type { LoadedPersonalisationEventContext } from "@/lib/communication/personalisation/load-personalisation-context";
 
 function baseScope(overrides?: Partial<PersonalisationRenderScope>): PersonalisationRenderScope {
   const person = {
@@ -186,5 +188,182 @@ describe("SCE-COMM-EVO-06 pitch ambiguity policy", () => {
     const list = getPersonalisationFieldDefinition("pitch_allocations")!;
     expect(single.defaultMissingPolicy).toBe("BLANK");
     expect(list.valueType).toBe("LIST");
+  });
+});
+
+describe("SCE-COMM-EVO-06 token builder (UX)", () => {
+  it("builds plain and fallback tokens without manual syntax", () => {
+    expect(
+      buildPersonalisationToken({
+        key: "first_name",
+        missingPolicy: "BLANK",
+        defaultMissingPolicy: "BLANK",
+      }),
+    ).toBe("<first_name>");
+    expect(
+      buildPersonalisationToken({
+        key: "first_name",
+        missingPolicy: "REPLACEMENT",
+        fallbackText: "Mitglied",
+        defaultMissingPolicy: "BLANK",
+      }),
+    ).toBe('<first_name|fallback="Mitglied">');
+    expect(
+      buildPersonalisationToken({
+        key: "first_name",
+        missingPolicy: "BLOCK_SEND",
+        defaultMissingPolicy: "BLANK",
+      }),
+    ).toBe("<first_name|policy=block>");
+  });
+});
+
+function eventScope(
+  event: LoadedPersonalisationEventContext,
+  contextRef: PersonalisationRenderScope["contextRef"],
+): PersonalisationRenderScope {
+  return baseScope({
+    contextRef,
+    context: {
+      ...baseScope().context,
+      contextRef,
+      event,
+    },
+  });
+}
+
+describe("SCE-COMM-EVO-06 location and pitch acceptance", () => {
+  const trainingEvent: LoadedPersonalisationEventContext = {
+    eventId: "ev-tr",
+    type: "TRAINING",
+    title: "Training",
+    location: "Sportanlage Heim",
+    startAt: new Date("2026-10-05T17:00:00.000Z"),
+    endAt: null,
+    meetingTime: null,
+    opponentName: null,
+    competitionLabel: null,
+    homeAway: "HOME",
+    pitchCode: "STADION",
+    homeDressingRoomCode: null,
+    awayDressingRoomCode: null,
+    participationResponseDueAt: null,
+    teamId: "team-1",
+    teamName: "F2",
+    teamShortName: null,
+    teamAgeGroup: null,
+    teamGender: null,
+    seasonId: null,
+    seasonName: null,
+    seasonStart: null,
+    seasonEnd: null,
+    tournamentPitchLabels: [],
+    tournamentDressingRoomLabels: [],
+  };
+
+  it("HOME TRAINING exposes location and pitch in render", async () => {
+    const ctx = { kind: "EVENT" as const, eventId: "ev-tr" };
+    expect(
+      resolveFieldAvailabilityForContext(
+        getPersonalisationFieldDefinition("training_location")!,
+        ctx,
+        "TRAINING",
+      ),
+    ).toBe("AVAILABLE");
+    const scope = eventScope(trainingEvent, ctx);
+    const body = await renderPersonalisationText({
+      template: "Ort: <training_location>, Platz: <training_pitch>",
+      scope,
+    });
+    expect(body.text).toContain("Sportanlage Heim");
+    expect(body.text).toContain("Stadion");
+  });
+
+  it("HOME MATCH resolves home pitch", async () => {
+    const matchEvent = { ...trainingEvent, eventId: "ev-m", type: "MATCH", homeAway: "HOME" };
+    const ctx = { kind: "EVENT" as const, eventId: "ev-m" };
+    const body = await renderPersonalisationText({
+      template: "<match_location> · <match_pitch>",
+      scope: eventScope(matchEvent, ctx),
+    });
+    expect(body.text).toContain("Sportanlage Heim");
+    expect(body.text).toContain("Stadion");
+  });
+
+  it("AWAY MATCH uses away location and omits home pitch", async () => {
+    const awayEvent = {
+      ...trainingEvent,
+      eventId: "ev-away",
+      type: "MATCH",
+      homeAway: "AWAY",
+      location: "Auswärtsarena",
+      pitchCode: "STADION",
+    };
+    const ctx = { kind: "EVENT" as const, eventId: "ev-away" };
+    const body = await renderPersonalisationText({
+      template: "<match_location>|<match_pitch>",
+      scope: eventScope(awayEvent, ctx),
+    });
+    expect(body.text).toContain("Auswärtsarena");
+    expect(body.text).toBe("Auswärtsarena|");
+  });
+
+  it("HOME TOURNAMENT lists multiple pitches", async () => {
+    const tournamentEvent = {
+      ...trainingEvent,
+      eventId: "ev-t",
+      type: "TOURNAMENT",
+      pitchCode: null,
+      tournamentPitchLabels: ["Platz A", "Platz B"],
+    };
+    const ctx = { kind: "EVENT" as const, eventId: "ev-t" };
+    expect(
+      resolveFieldAvailabilityForContext(
+        getPersonalisationFieldDefinition("tournament_pitches")!,
+        ctx,
+        "TOURNAMENT",
+      ),
+    ).toBe("AVAILABLE");
+    const body = await renderPersonalisationText({
+      template: "<tournament_pitches>",
+      scope: eventScope(tournamentEvent, ctx),
+    });
+    expect(body.text).toContain("Platz A");
+    expect(body.text).toContain("Platz B");
+  });
+});
+
+describe("SCE-COMM-EVO-06 guardian acceptance", () => {
+  it("renders guardian vs child first names from distinct identities", async () => {
+    const guardian = {
+      id: "g1",
+      firstName: "Maria",
+      lastName: "Muster",
+      displayName: null,
+      email: "m@example.com",
+      phone: null,
+      userId: "ug1",
+    };
+    const child = {
+      id: "c1",
+      firstName: "Leo",
+      lastName: "Muster",
+      displayName: null,
+      email: null,
+      phone: null,
+      userId: null,
+    };
+    const scope = baseScope({
+      deliveryPerson: guardian,
+      recipient: guardian,
+      subjectPerson: child,
+      guardianPerson: guardian,
+      viaGuardianSubstitution: true,
+    });
+    const result = await renderPersonalisationText({
+      template: "Hallo <guardian_first_name>, <child_first_name>",
+      scope,
+    });
+    expect(result.text).toBe("Hallo Maria, Leo");
   });
 });
