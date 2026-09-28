@@ -19,6 +19,7 @@ import {
   validateZielgruppeName,
 } from "@/lib/communication/zielgruppen/validation";
 import { summarizeZielgruppeDefinition } from "@/lib/communication/zielgruppen/summary";
+import { resolveZielgruppeRuleCharacter } from "@/lib/communication/zielgruppen/zielgruppen-display";
 
 export class ZielgruppeManagementError extends Error {
   constructor(
@@ -46,6 +47,7 @@ export type ZielgruppeListRow = {
   updatedAt: Date;
   summaryHeadline: string;
   summaryParts: string[];
+  ruleCharacterLabel: string;
 };
 
 async function resolveRoleKeysForTenant(tenantId: string, roleIds: string[]): Promise<string[]> {
@@ -171,6 +173,7 @@ export async function listZielgruppenForManagement(
   return rows.map((row) => {
     const definition = ruleJsonToEditorDefinition(row.ruleJson);
     const summary = summarizeZielgruppeDefinition(definition);
+    const ruleCharacter = resolveZielgruppeRuleCharacter(definition);
     return {
       id: row.id,
       key: row.key,
@@ -181,6 +184,7 @@ export async function listZielgruppenForManagement(
       updatedAt: row.updatedAt,
       summaryHeadline: summary.headline,
       summaryParts: summary.parts,
+      ruleCharacterLabel: ruleCharacter.label,
     };
   });
 }

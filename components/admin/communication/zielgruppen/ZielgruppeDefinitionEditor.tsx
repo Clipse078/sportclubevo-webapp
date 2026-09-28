@@ -7,12 +7,12 @@ import ZielgruppeSelectorChip from "@/components/admin/communication/zielgruppen
 import type { ZielgruppeEditorDefinition } from "@/lib/communication/zielgruppen/editor-model";
 import { EMPTY_ZIELGRUPPE_EDITOR_DEFINITION } from "@/lib/communication/zielgruppen/editor-model";
 import {
-  previewZielgruppeRecipientsAction,
   searchZielgruppeOrgUnitsAction,
   searchZielgruppePersonsAction,
   searchZielgruppeRolesAction,
   searchZielgruppeTeamsAction,
 } from "@/app/(admin)/dashboard/communication/zielgruppen/actions";
+import ZielgruppeHumanRulesPanel from "@/components/admin/communication/zielgruppen/ZielgruppeHumanRulesPanel";
 import { REQUIREMENT_PERSON_SEARCH_MIN_CHARS } from "@/lib/requirements/person-search-constants";
 
 type KnownLabels = {
@@ -164,16 +164,6 @@ export default function ZielgruppeDefinitionEditor({
     roles: {},
     persons: {},
   });
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewError, setPreviewError] = useState<string | null>(null);
-  const [previewStats, setPreviewStats] = useState<{
-    candidates: number;
-    excluded: number;
-    effective: number;
-    scopeNotice: string | null;
-    recipients: Array<{ personId: string; displayName: string }>;
-  } | null>(null);
-
   const labels: KnownLabels = {
     orgUnits: { ...dynamicLabels.orgUnits, ...knownLabels?.orgUnits },
     teams: { ...dynamicLabels.teams, ...knownLabels?.teams },
@@ -436,63 +426,11 @@ export default function ZielgruppeDefinitionEditor({
         </div>
       </section>
 
-      <section
-        className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3"
-        aria-label="Empfänger Vorschau"
-      >
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs font-semibold text-[var(--foreground)]">Empfänger anzeigen</p>
-          <button
-            type="button"
-            className="rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium hover:bg-[var(--surface-1)]"
-            disabled={disabled || previewLoading}
-            onClick={async () => {
-              setPreviewLoading(true);
-              setPreviewError(null);
-              const result = await previewZielgruppeRecipientsAction({ definition: value });
-              setPreviewLoading(false);
-              if (!result.ok) {
-                setPreviewError(result.message);
-                setPreviewStats(null);
-                return;
-              }
-              setPreviewStats({
-                candidates: result.data.candidates,
-                excluded: result.data.excluded,
-                effective: result.data.effective,
-                scopeNotice: result.data.scopeNotice,
-                recipients: result.data.recipients,
-              });
-            }}
-          >
-            {previewLoading ? "Wird berechnet…" : "Empfänger anzeigen"}
-          </button>
+      <section className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-1)] px-4 py-3">
+        <h3 className={SECTION_LABEL}>Regeln in Klartext</h3>
+        <div className="mt-2">
+          <ZielgruppeHumanRulesPanel definition={value} labels={labels} />
         </div>
-        {previewError ? <p className="mt-2 text-xs text-red-600">{previewError}</p> : null}
-        {previewStats ? (
-          <div className="mt-2 space-y-2 text-xs text-[var(--text-2)]">
-            <p>
-              Kandidaten: {previewStats.candidates} · Ausgeschlossen: {previewStats.excluded} ·
-              Empfänger: {previewStats.effective}
-            </p>
-            {previewStats.scopeNotice ? (
-              <p className="text-[var(--muted)]">{previewStats.scopeNotice}</p>
-            ) : null}
-            {previewStats.recipients.length > 0 ? (
-              <ul className="max-h-40 overflow-y-auto rounded border border-[var(--border)] bg-[var(--surface-1)] p-2">
-                {previewStats.recipients.map((r) => (
-                  <li key={r.personId}>{r.displayName}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-[var(--muted)]">Keine Empfänger im aktuellen Berechtigungsumfang.</p>
-            )}
-          </div>
-        ) : (
-          <p className="mt-1 text-xs text-[var(--muted)]">
-            Live-Vorschau auf Basis der aktuellen Zieldefinition — kein historischer Versandstand.
-          </p>
-        )}
       </section>
     </div>
   );

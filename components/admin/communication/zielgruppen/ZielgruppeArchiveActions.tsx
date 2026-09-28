@@ -18,6 +18,12 @@ export default function ZielgruppeArchiveActions({ targetGroupId, status, canMan
   if (!canManage) return null;
 
   async function setArchived(archived: boolean) {
+    if (archived) {
+      const ok = window.confirm(
+        "Zielgruppe archivieren? Sie kann weiterhin in historischen Kommunikationen referenziert sein, erscheint aber standardmässig nicht mehr in Auswahllisten.",
+      );
+      if (!ok) return;
+    }
     setLoading(true);
     setError(null);
     try {
