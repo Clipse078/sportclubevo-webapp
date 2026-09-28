@@ -67,7 +67,7 @@
   --sidebar-bg:        #0c1222;
   --header-bg:         var(--sce-app-chrome);
 
-  /* SCE-VISUAL-01 — authenticated application canvas (decorative image + fallbacks) */
+  /* SCE-VISUAL-01 / SCE-UX-BG-01 — authenticated canvas (path: lib/shell/sce-app-background.ts) */
   --sce-app-background-image: url("/images/background/SCE_background.png");
   --sce-app-background:       var(--background);
   --sce-app-surface:          var(--surface);
