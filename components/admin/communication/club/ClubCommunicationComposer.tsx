@@ -15,6 +15,8 @@ import {
   type MitteilungAudienceEditorMode,
 } from "@/lib/communication/club/mitteilungen-audience-editor";
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
+import { PersonalSignatureComposerField } from "@/components/admin/communication/personal-signature/PersonalSignatureComposerField";
+import { previewMessageWithPersonalSignature } from "@/lib/communication/personal-signature/personal-signature-compose";
 
 type TargetGroupOption = { id: string; name: string; status: string };
 
@@ -79,6 +81,26 @@ export default function ClubCommunicationComposer({
   const [scheduledAtLocal, setScheduledAtLocal] = useState("");
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [signatureBody, setSignatureBody] = useState<string | null>(null);
+  const [useSignature, setUseSignature] = useState(false);
+
+  useEffect(() => {
+    async function loadSignaturePreference() {
+      try {
+        const res = await fetch("/api/communication/personal-signature");
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          preference?: { bodyText?: string | null; useByDefault?: boolean };
+        };
+        const pref = data.preference;
+        setSignatureBody(pref?.bodyText?.trim() || null);
+        setUseSignature(Boolean(pref?.bodyText?.trim()) && pref?.useByDefault !== false);
+      } catch {
+        /* ignore */
+      }
+    }
+    void loadSignaturePreference();
+  }, []);
 
   useEffect(() => {
     async function loadEmailReadiness() {
@@ -240,6 +262,10 @@ export default function ClubCommunicationComposer({
         await persistDraft();
         const pubRes = await fetch(`/api/communication/club/${communicationId}/publish`, {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            includePersonalSignature: kind === "MESSAGE" ? useSignature : false,
+          }),
         });
         const pubData = await pubRes.json();
         if (!pubRes.ok) throw new Error(pubData.error ?? "Versand fehlgeschlagen");
@@ -251,7 +277,13 @@ export default function ClubCommunicationComposer({
       const res = await fetch("/api/communication/club/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, subject, bodyText, audienceSpec }),
+        body: JSON.stringify({
+          kind,
+          subject,
+          bodyText,
+          audienceSpec,
+          includePersonalSignature: kind === "MESSAGE" ? useSignature : false,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Versand fehlgeschlagen");
@@ -372,6 +404,18 @@ export default function ClubCommunicationComposer({
             required
           />
         </label>
+        {kind === "MESSAGE" ? (
+          <PersonalSignatureComposerField
+            checkboxId="mitteilung-use-signature"
+            enabled={useSignature}
+            onEnabledChange={(enabled) => {
+              setUseSignature(enabled);
+              setReviewConfirmed(false);
+            }}
+            signatureBody={signatureBody}
+            messageBody={bodyText}
+          />
+        ) : null}
       </section>
 
       <section aria-labelledby="mitteilung-empfaenger-heading" className="space-y-4 rounded-xl border border-[var(--border)] p-4 md:p-6">
@@ -510,7 +554,14 @@ export default function ClubCommunicationComposer({
           </div>
           <div className="md:col-span-2">
             <dt className="text-[var(--text-2)]">Nachricht</dt>
-            <dd className="whitespace-pre-wrap">{bodyText.trim() || "—"}</dd>
+            <dd className="whitespace-pre-wrap">
+              {kind === "MESSAGE"
+                ? previewMessageWithPersonalSignature(
+                    bodyText,
+                    useSignature ? signatureBody : null,
+                  ).combined.trim() || "—"
+                : bodyText.trim() || "—"}
+            </dd>
           </div>
           <div>
             <dt className="text-[var(--text-2)]">Empfänger</dt>

@@ -61,6 +61,8 @@ const prismaMocks = vi.hoisted(() => ({
   tenantMembership: { findFirst: vi.fn() },
   person: { findMany: vi.fn() },
   sponsorContact: { findMany: vi.fn() },
+  userCommunicationPersonalSignature: { findUnique: vi.fn() },
+  platformCommunication: { findFirst: vi.fn() },
   $transaction: vi.fn(),
 }));
 
@@ -137,6 +139,8 @@ describe("SCE-COMM-15 Communication Center inbound email", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.SCE_COMMUNICATION_ENCRYPTION_KEY = COMMUNICATION_SECRET_CRYPTO_TEST_KEY_BASE64;
+    prismaMocks.userCommunicationPersonalSignature.findUnique.mockResolvedValue(null);
+    prismaMocks.platformCommunication.findFirst.mockResolvedValue(null);
   });
 
   it("defines inbox permissions", () => {

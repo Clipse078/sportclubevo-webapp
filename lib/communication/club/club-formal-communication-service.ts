@@ -24,6 +24,10 @@ import { recordPlatformCommunicationAudit } from "@/lib/communication/team/platf
 import { resolvePersonIdForUser } from "@/lib/teams/team-document-auth";
 import { MAX_TEAM_COMMUNICATION_BODY_LENGTH } from "@/lib/communication/team/team-communication-constants";
 import { createOrganisationCommunicationContext } from "@/lib/communication/club/club-communication-context";
+import {
+  applyPersonalSignatureToOutboundBody,
+  personalSignatureSupportedForMitteilungKind,
+} from "@/lib/communication/personal-signature/personal-signature-service";
 
 export type ClubFormalCommunicationKind = Extract<CommunicationKind, "MESSAGE" | "ANNOUNCEMENT" | "ALERT">;
 
@@ -114,10 +118,24 @@ export async function sendClubFormalCommunication(input: {
   audienceSpec: CommunicationAudienceSpec;
   acknowledgementRequired?: boolean;
   attachmentIds?: readonly string[];
+  includePersonalSignature?: boolean;
 }): Promise<{ id: string; recipientCount: number }> {
   const kind = assertFormalKind(input.kind);
   const subject = sanitizeFormalSubject(kind, input.subject);
-  const bodyText = sanitizeFormalBody(input.bodyText);
+  let rawBody = input.bodyText;
+  if (personalSignatureSupportedForMitteilungKind(kind)) {
+    try {
+      rawBody = await applyPersonalSignatureToOutboundBody({
+        tenantId: input.tenantId,
+        userId: input.senderUserId,
+        messageBody: input.bodyText,
+        includePersonalSignature: input.includePersonalSignature,
+      });
+    } catch {
+      throw new TeamCommunicationValidationError("body exceeds maximum length");
+    }
+  }
+  const bodyText = sanitizeFormalBody(rawBody);
   const acknowledgementRequired = resolveClubAcknowledgementRequired(kind, input.acknowledgementRequired);
   const attachmentIds = [...new Set((input.attachmentIds ?? []).filter(Boolean))];
 

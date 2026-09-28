@@ -36,6 +36,7 @@ export async function POST(request: Request) {
     audienceSpec?: CommunicationAudienceSpec;
     acknowledgementRequired?: boolean;
     attachmentIds?: string[];
+    includePersonalSignature?: boolean;
   };
 
   const result = await sendClubFormalCommunication({
@@ -50,6 +51,12 @@ export async function POST(request: Request) {
     },
     acknowledgementRequired: body.acknowledgementRequired,
     attachmentIds: body.attachmentIds,
+    includePersonalSignature:
+      body.includePersonalSignature === true
+        ? true
+        : body.includePersonalSignature === false
+          ? false
+          : undefined,
   });
 
   return NextResponse.json(result);

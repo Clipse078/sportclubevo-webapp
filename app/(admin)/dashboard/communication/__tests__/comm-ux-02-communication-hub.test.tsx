@@ -28,6 +28,7 @@ const VALID_HUB_HREFS = [
   "/dashboard/communication/zielgruppen",
   "/dashboard/communication/vorlagen",
   "/dashboard/communication/email-sender",
+  "/dashboard/communication/personal-signature",
   "/dashboard/communication/mitteilungen/new",
   "/dashboard/communication/kampagnen/new",
 ] as const;
@@ -81,7 +82,7 @@ describe("SCE-COMM-UX-02 Communication Hub redesign", () => {
     expect(screen.queryByText(/IMAP/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Empfängervorschau/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Neue Nachricht/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Persönliche Signaturen/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Signatur verwalten" })).toBeInTheDocument();
     expect(screen.queryByText(/Demnächst/i)).not.toBeInTheDocument();
   });
 

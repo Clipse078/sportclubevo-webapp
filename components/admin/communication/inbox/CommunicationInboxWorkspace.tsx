@@ -42,6 +42,8 @@ export default function CommunicationInboxWorkspace({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [detail, setDetail] = useState<InboxConversationDetail | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [signatureBody, setSignatureBody] = useState<string | null>(null);
+  const [useReplySignature, setUseReplySignature] = useState(false);
   const [loadingList, setLoadingList] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -69,6 +71,24 @@ export default function CommunicationInboxWorkspace({
     const handle = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
     return () => window.clearTimeout(handle);
   }, [search]);
+
+  useEffect(() => {
+    async function loadSignaturePreference() {
+      try {
+        const res = await fetch("/api/communication/personal-signature");
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          preference?: { bodyText?: string | null; useByDefault?: boolean };
+        };
+        const pref = data.preference;
+        setSignatureBody(pref?.bodyText?.trim() || null);
+        setUseReplySignature(Boolean(pref?.bodyText?.trim()) && pref?.useByDefault !== false);
+      } catch {
+        /* ignore */
+      }
+    }
+    void loadSignaturePreference();
+  }, []);
 
   useEffect(() => {
     if (
@@ -325,7 +345,11 @@ export default function CommunicationInboxWorkspace({
       const res = await fetch(`/api/communication/inbox/conversations/${selectedId}/reply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bodyText: replyText, idempotencyKey }),
+        body: JSON.stringify({
+          bodyText: replyText,
+          idempotencyKey,
+          includePersonalSignature: useReplySignature,
+        }),
       });
       if (!res.ok) {
         setReplyError("Antwort konnte nicht gesendet werden.");
@@ -482,6 +506,9 @@ export default function CommunicationInboxWorkspace({
           }}
           replyText={replyText}
           onReplyTextChange={setReplyText}
+          replyUseSignature={useReplySignature}
+          onReplyUseSignatureChange={setUseReplySignature}
+          replySignatureBody={signatureBody}
           onSendReply={() => void sendReply()}
           replySubmitting={replySubmitting}
           replyError={replyError}

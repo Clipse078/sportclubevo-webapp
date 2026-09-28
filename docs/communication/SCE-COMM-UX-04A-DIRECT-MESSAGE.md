@@ -92,9 +92,9 @@ COMM-19 snapshot engagement applies to platform communications. No fabricated em
 
 ---
 
-## Signature seam (COMM-UX-08A)
+## Signature (COMM-UX-08A)
 
-No signature management in 04A. Outbound SCE messages use plain body text; signature injection remains a future seam on send/render.
+Personal signatures are managed at `/dashboard/communication/personal-signature`. The direct-message composer exposes **Meine Signatur verwenden**; the server embeds the signature into `PlatformCommunication.bodyText` at send time (frozen history).
 
 ---
 
