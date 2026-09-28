@@ -6,6 +6,7 @@ import { formatConversationTimestamp } from "@/lib/communication/inbox/inbox-dis
 import type { InboxMailboxView } from "@/lib/communication/inbox/inbox-mailbox-constants";
 import { SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
 import { CommunicationInboxBulkToolbar } from "@/components/admin/communication/inbox/CommunicationInboxBulkToolbar";
+import type { InboxWorkspaceDensity } from "@/lib/communication/inbox/inbox-workspace-preferences";
 import type { InboxConversationListItem } from "@/components/admin/communication/inbox/inbox-workspace-types";
 
 type CommunicationInboxConversationListProps = {
@@ -38,6 +39,7 @@ type CommunicationInboxConversationListProps = {
   nextCursor: string | null;
   onLoadMore: () => void;
   loadingMore: boolean;
+  density?: InboxWorkspaceDensity;
 };
 
 function assignmentHint(
@@ -86,7 +88,15 @@ export function CommunicationInboxConversationList({
   nextCursor,
   onLoadMore,
   loadingMore,
+  density = "STANDARD",
 }: CommunicationInboxConversationListProps) {
+  const densityRow =
+    density === "COMPACT" ? "py-2" : density === "SPACIOUS" ? "py-4" : "py-3";
+  const densityAvatar =
+    density === "COMPACT" ? "h-7 w-7" : density === "SPACIOUS" ? "h-9 w-9" : "h-8 w-8";
+  const densityPreviewClamp =
+    density === "COMPACT" ? "line-clamp-1" : density === "SPACIOUS" ? "line-clamp-3" : "line-clamp-2";
+
   const allSelected =
     conversations.length > 0 && conversations.every((c) => selectedIds.has(c.id));
 
@@ -98,6 +108,7 @@ export function CommunicationInboxConversationList({
         visible ? "flex" : "hidden lg:flex",
       )}
       aria-label="Konversationsliste"
+      data-inbox-density={density}
     >
       <div className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-4 py-3">
         <div className="flex items-center gap-2">
@@ -147,7 +158,8 @@ export function CommunicationInboxConversationList({
               <li key={conversation.id}>
                 <div
                   className={cn(
-                    "flex w-full items-start gap-2 px-2 py-3 transition-colors",
+                    "flex w-full items-start gap-2 px-2 transition-colors",
+                    densityRow,
                     selected
                       ? "border-l-2 border-l-[var(--sce-primary)] bg-[var(--surface-2)]"
                       : "border-l-2 border-l-transparent hover:bg-[var(--surface-2)]/70",
@@ -195,7 +207,10 @@ export function CommunicationInboxConversationList({
                   >
                     <div className="flex items-start gap-3">
                       <span
-                        className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--surface-2)] text-[var(--text-2)]"
+                        className={cn(
+                          "mt-0.5 flex shrink-0 items-center justify-center rounded-full bg-[var(--surface-2)] text-[var(--text-2)]",
+                          densityAvatar,
+                        )}
                         aria-hidden
                       >
                         <UserRound className="h-4 w-4" />
@@ -234,7 +249,12 @@ export function CommunicationInboxConversationList({
                           {conversation.subject?.trim() || "(Kein Betreff)"}
                         </p>
                         {conversation.previewText ? (
-                          <p className="mt-1 line-clamp-2 text-xs text-[var(--text-2)]">
+                          <p
+                            className={cn(
+                              "mt-1 text-xs text-[var(--text-2)]",
+                              densityPreviewClamp,
+                            )}
+                          >
                             {conversation.previewText}
                           </p>
                         ) : null}

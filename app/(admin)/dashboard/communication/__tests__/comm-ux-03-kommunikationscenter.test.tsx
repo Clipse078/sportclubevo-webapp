@@ -125,6 +125,13 @@ const detailPropsBase = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+    matches: query.includes("1024px") ? window.innerWidth >= 1024 : false,
+    media: query,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })) as unknown as typeof window.matchMedia;
   mocks.requireAnyPermission.mockResolvedValue({
     user: { id: "user-1", activeTenantId: TENANT_ID },
   });
@@ -138,9 +145,23 @@ beforeEach(() => {
     ],
   });
   global.fetch = mocks.fetch as unknown as typeof fetch;
-  mocks.fetch.mockResolvedValue(
-    new Response(JSON.stringify({ items: [], nextCursor: null }), { status: 200 }),
-  );
+  mocks.fetch.mockImplementation(async (input: RequestInfo) => {
+    const url = requestUrl(input);
+    if (url.includes("workspace-preferences")) {
+      return new Response(
+        JSON.stringify({
+          preference: {
+            layout: "STANDARD",
+            density: "STANDARD",
+            listSplitPercent: 38,
+            hasStoredPreference: false,
+          },
+        }),
+        { status: 200 },
+      );
+    }
+    return new Response(JSON.stringify({ items: [], nextCursor: null }), { status: 200 });
+  });
 });
 
 describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
@@ -185,6 +206,11 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
         onSearchChange={() => undefined}
         onResetFilters={() => undefined}
         hasActiveFilters
+        layout="STANDARD"
+        density="STANDARD"
+        onLayoutChange={() => undefined}
+        onDensityChange={() => undefined}
+        onResetViewDefaults={() => undefined}
       />,
     );
 

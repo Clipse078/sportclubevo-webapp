@@ -4,6 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CommunicationInboxConversationDetailPane } from "@/components/admin/communication/inbox/CommunicationInboxConversationDetail";
 import { CommunicationInboxConversationList } from "@/components/admin/communication/inbox/CommunicationInboxConversationList";
 import { CommunicationInboxToolbar } from "@/components/admin/communication/inbox/CommunicationInboxToolbar";
+import { CommunicationInboxWorkspaceLayout } from "@/components/admin/communication/inbox/CommunicationInboxWorkspaceLayout";
+import { useCommunicationInboxWorkspacePreferences } from "@/components/admin/communication/inbox/useCommunicationInboxWorkspacePreferences";
+import { inboxLayoutIsMasterDetailOnDesktop } from "@/lib/communication/inbox/inbox-workspace-preferences";
 import type { InboxMailboxView } from "@/lib/communication/inbox/inbox-mailbox-constants";
 import type {
   CommunicationInboxCapabilities,
@@ -50,6 +53,15 @@ export default function CommunicationInboxWorkspace({
   const [replyError, setReplyError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [mobilePane, setMobilePane] = useState<"list" | "detail">("list");
+  const {
+    preference: workspacePreference,
+    persistError: viewPersistError,
+    setLayout: setWorkspaceLayout,
+    setDensity: setWorkspaceDensity,
+    setListSplitPercent,
+    resetToDefaults: resetViewDefaults,
+    persistListSplitPercent,
+  } = useCommunicationInboxWorkspacePreferences();
   const selectedConversationRef = useRef<string | null>(null);
   selectedConversationRef.current = selectedId;
 
@@ -57,6 +69,15 @@ export default function CommunicationInboxWorkspace({
     const handle = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
     return () => window.clearTimeout(handle);
   }, [search]);
+
+  useEffect(() => {
+    if (
+      inboxLayoutIsMasterDetailOnDesktop(workspacePreference.layout) &&
+      selectedId != null
+    ) {
+      setMobilePane("detail");
+    }
+  }, [workspacePreference.layout, selectedId]);
 
   const loadMailboxCounts = useCallback(async () => {
     try {
@@ -374,9 +395,22 @@ export default function CommunicationInboxWorkspace({
         onSearchChange={setSearch}
         onResetFilters={resetFilters}
         hasActiveFilters={hasActiveFilters}
+        layout={workspacePreference.layout}
+        density={workspacePreference.density}
+        onLayoutChange={setWorkspaceLayout}
+        onDensityChange={setWorkspaceDensity}
+        onResetViewDefaults={resetViewDefaults}
+        viewPersistError={viewPersistError}
       />
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)]">
+      <CommunicationInboxWorkspaceLayout
+        layout={workspacePreference.layout}
+        listSplitPercent={workspacePreference.listSplitPercent}
+        onListSplitPercentChange={setListSplitPercent}
+        onSplitPersist={persistListSplitPercent}
+        mobilePane={mobilePane}
+        selectedId={selectedId}
+        list={
         <CommunicationInboxConversationList
           mailbox={mailbox}
           conversations={conversations}
@@ -419,12 +453,14 @@ export default function CommunicationInboxWorkspace({
           onBulkStar={() => void postBulk("STAR")}
           onBulkUnstar={() => void postBulk("UNSTAR")}
           onClearSelection={() => setSelectedIds(new Set())}
-          visible={mobilePane === "list"}
+          visible
+          density={workspacePreference.density}
           nextCursor={nextCursor}
           onLoadMore={() => void loadList("append", nextCursor)}
           loadingMore={loadingMore}
         />
-
+        }
+        detail={
         <CommunicationInboxConversationDetailPane
           selectedConversationId={selectedId}
           listItem={selectedConversation}
@@ -447,6 +483,7 @@ export default function CommunicationInboxWorkspace({
           actionError={actionError}
           replyDisabled={isTrashed}
           onBackToList={() => setMobilePane("list")}
+          showDesktopBackButton={inboxLayoutIsMasterDetailOnDesktop(workspacePreference.layout)}
           onResolve={() => void updateStatus("RESOLVED")}
           onReopen={() => void updateStatus("OPEN")}
           onAssignToMe={() => void updateAssignment(currentUserId)}
@@ -462,10 +499,11 @@ export default function CommunicationInboxWorkspace({
           onMarkRead={() => void postReadState("read")}
           onMarkUnread={() => void postReadState("unread")}
           showProcessingToolbar={selectedIds.size === 0}
-          visible={mobilePane === "detail"}
+          visible
           hasAnyConversations={conversations.length > 0}
         />
-      </div>
+        }
+      />
     </div>
   );
 }

@@ -2,7 +2,12 @@
 
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { CommunicationInboxViewControl } from "@/components/admin/communication/inbox/CommunicationInboxViewControl";
 import type { InboxMailboxView } from "@/lib/communication/inbox/inbox-mailbox-constants";
+import type {
+  InboxWorkspaceDensity,
+  InboxWorkspaceLayout,
+} from "@/lib/communication/inbox/inbox-workspace-preferences";
 import {
   INBOX_MAILBOX_NAV_ITEMS,
   INBOX_QUICK_FILTERS,
@@ -19,6 +24,12 @@ type CommunicationInboxToolbarProps = {
   onSearchChange: (value: string) => void;
   onResetFilters: () => void;
   hasActiveFilters: boolean;
+  layout: InboxWorkspaceLayout;
+  density: InboxWorkspaceDensity;
+  onLayoutChange: (layout: InboxWorkspaceLayout, options?: { resetSplit?: boolean }) => void;
+  onDensityChange: (density: InboxWorkspaceDensity) => void;
+  onResetViewDefaults: () => void;
+  viewPersistError?: string | null;
 };
 
 export function CommunicationInboxToolbar({
@@ -31,6 +42,12 @@ export function CommunicationInboxToolbar({
   onSearchChange,
   onResetFilters,
   hasActiveFilters,
+  layout,
+  density,
+  onLayoutChange,
+  onDensityChange,
+  onResetViewDefaults,
+  viewPersistError,
 }: CommunicationInboxToolbarProps) {
   return (
     <div className="flex flex-col gap-3 border-b border-[var(--border)] pb-4">
@@ -87,6 +104,7 @@ export function CommunicationInboxToolbar({
       </nav>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
         <label className="relative block min-w-0 flex-1">
           <span className="sr-only">Konversationen durchsuchen</span>
           <Search
@@ -101,6 +119,15 @@ export function CommunicationInboxToolbar({
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-9 pr-3 text-sm text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
           />
         </label>
+        <CommunicationInboxViewControl
+          layout={layout}
+          density={density}
+          onLayoutChange={onLayoutChange}
+          onDensityChange={onDensityChange}
+          onResetDefaults={onResetViewDefaults}
+          persistError={viewPersistError}
+        />
+        </div>
         {hasActiveFilters ? (
           <button
             type="button"

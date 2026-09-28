@@ -1157,6 +1157,7 @@ model Tenant {
   userCommunicationPreferences       UserCommunicationPreference[]
   sponsorContactCommunicationPreferences SponsorContactCommunicationPreference[]
   userDashboardQuickAccessPreferences UserDashboardQuickAccessPreference[]
+  userCommunicationInboxWorkspacePrefs UserCommunicationInboxWorkspacePref[]
   // TRAINING-PLANS-01: tenant-defined training plans and assignments
   trainingPlans                    TrainingPlan[]
   trainingPlanAssignments          TrainingPlanAssignment[]
@@ -1377,6 +1378,7 @@ model User {
   notificationPreferences          UserNotificationPreference[]
   communicationPreferences         UserCommunicationPreference[]
   dashboardQuickAccessPreferences  UserDashboardQuickAccessPreference[]
+  communicationInboxWorkspacePrefs UserCommunicationInboxWorkspacePref[]
   pushDeviceRegistrations          PushDeviceRegistration[]
 
   @@index([isActive])
@@ -4690,6 +4692,25 @@ model UserDashboardQuickAccessPreference {
 
   @@unique([tenantId, userId])
   @@index([tenantId, userId])
+}
+
+/// SCE-COMM-INBOX-02 — per-user Kommunikationscenter workspace layout (not mailbox-scoped).
+model UserCommunicationInboxWorkspacePref {
+  id               String   @id @default(cuid())
+  tenantId         String
+  userId           String
+  layout           String   @default("STANDARD")
+  density          String   @default("STANDARD")
+  /// List share in percent (column width or bottom row height).
+  listSplitPercent Int      @default(38)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([tenantId, userId], map: "UserCommInboxWsPref_tenant_user_key")
+  @@index([tenantId, userId], map: "UserCommInboxWsPref_tenant_user_idx")
 }
 
 model MeetingParticipant {

@@ -53,6 +53,7 @@ type CommunicationInboxConversationDetailProps = {
   onUnassign: () => void;
   visible: boolean;
   hasAnyConversations: boolean;
+  showDesktopBackButton?: boolean;
 };
 
 function resolveDetailParticipant(
@@ -115,6 +116,7 @@ export function CommunicationInboxConversationDetailPane({
   onUnassign,
   visible,
   hasAnyConversations,
+  showDesktopBackButton = false,
 }: CommunicationInboxConversationDetailProps) {
   const hasSelection = selectedConversationId != null;
   const detailMatchesSelection =
@@ -160,11 +162,14 @@ export function CommunicationInboxConversationDetailPane({
         <div className="flex flex-1 flex-col px-4 py-6">
           <button
             type="button"
-            className="mb-4 inline-flex items-center gap-1 self-start text-xs font-medium text-[var(--sce-primary)] lg:hidden"
+            className={cn(
+              "mb-4 inline-flex items-center gap-1 self-start text-xs font-medium text-[var(--sce-primary)]",
+              showDesktopBackButton ? "" : "lg:hidden",
+            )}
             onClick={onBackToList}
           >
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-            Konversationen
+            {showDesktopBackButton ? "Zurück zur Liste" : "Konversationen"}
           </button>
           {listPreviewLabel ? (
             <p className="text-sm font-semibold text-[var(--foreground)]">{listPreviewLabel}</p>
@@ -183,11 +188,14 @@ export function CommunicationInboxConversationDetailPane({
               <div className="min-w-0">
                 <button
                   type="button"
-                  className="mb-2 inline-flex items-center gap-1 text-xs font-medium text-[var(--sce-primary)] lg:hidden"
+                  className={cn(
+                    "mb-2 inline-flex items-center gap-1 text-xs font-medium text-[var(--sce-primary)]",
+                    showDesktopBackButton ? "" : "lg:hidden",
+                  )}
                   onClick={onBackToList}
                 >
                   <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-                  Konversationen
+                  {showDesktopBackButton ? "Zurück zur Liste" : "Konversationen"}
                 </button>
                 <p className="text-sm font-semibold text-[var(--foreground)]">
                   {resolveDetailParticipant(detail, listItem).label}
