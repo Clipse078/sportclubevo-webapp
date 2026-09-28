@@ -17,6 +17,8 @@ import {
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
 import { PersonalSignatureComposerField } from "@/components/admin/communication/personal-signature/PersonalSignatureComposerField";
 import { previewMessageWithPersonalSignature } from "@/lib/communication/personal-signature/personal-signature-compose";
+import { CommunicationAttachmentPicker } from "@/components/admin/communication/attachments/CommunicationAttachmentPicker";
+import { useCommunicationAttachmentUpload } from "@/components/admin/communication/attachments/use-communication-attachment-upload";
 
 type TargetGroupOption = { id: string; name: string; status: string };
 
@@ -83,6 +85,14 @@ export default function ClubCommunicationComposer({
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [signatureBody, setSignatureBody] = useState<string | null>(null);
   const [useSignature, setUseSignature] = useState(false);
+  const {
+    attachments,
+    error: attachmentError,
+    addFiles,
+    removeAttachment,
+    readyAttachmentIds,
+    hasUnreadyAttachments,
+  } = useCommunicationAttachmentUpload();
 
   useEffect(() => {
     async function loadSignaturePreference() {
@@ -205,7 +215,7 @@ export default function ClubCommunicationComposer({
       const res = await fetch(`/api/communication/club/${communicationId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject, bodyText, audienceSpec }),
+        body: JSON.stringify({ subject, bodyText, audienceSpec, attachmentIds: readyAttachmentIds }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Entwurf konnte nicht gespeichert werden");
@@ -214,8 +224,15 @@ export default function ClubCommunicationComposer({
     const res = await fetch("/api/communication/club", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kind, subject, bodyText, audienceSpec }),
-    });
+      body: JSON.stringify({
+        kind,
+        subject,
+        bodyText,
+        audienceSpec,
+          attachmentIds: readyAttachmentIds,
+          includePersonalSignature: kind === "MESSAGE" ? useSignature : false,
+        }),
+      });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? "Entwurf konnte nicht gespeichert werden");
     return data.id as string;
@@ -226,7 +243,12 @@ export default function ClubCommunicationComposer({
     setBusy(true);
     try {
       if (publishMode === "send" || publishMode === "schedule") {
-        if (!bodyText.trim()) throw new Error("Bitte geben Sie eine Nachricht ein.");
+        if (!bodyText.trim() && readyAttachmentIds.length === 0) {
+          throw new Error("Bitte geben Sie eine Nachricht oder mindestens einen Anhang ein.");
+        }
+        if (hasUnreadyAttachments) {
+          throw new Error("Bitte warten Sie, bis alle Anhänge hochgeladen sind.");
+        }
         if (audienceMode === "TARGET_GROUPS" && selectedGroupIds.length === 0) {
           throw new Error("Bitte wählen Sie mindestens eine Zielgruppe.");
         }
@@ -282,6 +304,7 @@ export default function ClubCommunicationComposer({
           subject,
           bodyText,
           audienceSpec,
+          attachmentIds: readyAttachmentIds,
           includePersonalSignature: kind === "MESSAGE" ? useSignature : false,
         }),
       });
@@ -401,9 +424,15 @@ export default function ClubCommunicationComposer({
               setBodyText(e.target.value);
               setReviewConfirmed(false);
             }}
-            required
           />
         </label>
+        <CommunicationAttachmentPicker
+          disabled={busy}
+          attachments={attachments}
+          error={attachmentError}
+          onAddFiles={addFiles}
+          onRemove={removeAttachment}
+        />
         {kind === "MESSAGE" ? (
           <PersonalSignatureComposerField
             checkboxId="mitteilung-use-signature"

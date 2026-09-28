@@ -35,6 +35,10 @@ import { applyCommunicationPreferencesToNotificationDefaults } from "@/lib/commu
 import { formatPersonDisplayName } from "@/lib/communication/inbox/inbox-display";
 import { randomBytes } from "node:crypto";
 import { applyPersonalSignatureToOutboundBody } from "@/lib/communication/personal-signature/personal-signature-service";
+import {
+  attachSelectionToPlatformCommunication,
+  mirrorPlatformAttachmentsToCenterMessage,
+} from "@/lib/communication/attachment-service";
 
 export type DirectMessageMode = "MESSAGE" | "INFORM";
 
@@ -47,6 +51,7 @@ export type SendDirectMessageInput = {
   mode: DirectMessageMode;
   channelIntent?: { inApp?: boolean; push?: boolean; email?: boolean };
   includePersonalSignature?: boolean;
+  attachmentIds?: readonly string[];
 };
 
 export type SendDirectMessageResult = {
@@ -55,9 +60,11 @@ export type SendDirectMessageResult = {
   recipientCount: number;
 };
 
-function sanitizeBody(body: string): string {
+function sanitizeBody(body: string, allowEmpty: boolean): string {
   const trimmed = body.replace(/\r\n/g, "\n").trim();
-  if (!trimmed) throw new TeamCommunicationValidationError("body is required");
+  if (!trimmed && !allowEmpty) {
+    throw new TeamCommunicationValidationError("body is required");
+  }
   if (trimmed.length > MAX_TEAM_COMMUNICATION_BODY_LENGTH) {
     throw new TeamCommunicationValidationError("body exceeds maximum length");
   }
@@ -137,6 +144,7 @@ async function sendDirectMessageToSingleRecipient(input: {
   bodyText: string;
   repliesAllowed: boolean;
   orchestrationMetaJson: Prisma.InputJsonValue;
+  attachmentIds: readonly string[];
 }): Promise<{ communicationId: string; conversationId: string; deliveryUserIds: string[] }> {
   const audience = singleRecipientAudienceSpec(input.recipientPersonId);
   const contextRef = { kind: "DIRECT" as const, tenantId: input.tenantId };
@@ -169,6 +177,15 @@ async function sendDirectMessageToSingleRecipient(input: {
       createdByUserId: input.senderUserId,
     },
   });
+
+  if (input.attachmentIds.length > 0) {
+    await attachSelectionToPlatformCommunication({
+      tenantId: input.tenantId,
+      actorUserId: input.senderUserId,
+      communicationId: communication.id,
+      attachmentIds: [...input.attachmentIds],
+    });
+  }
 
   const dispatch = await resolveCommunicationRecipientsForDispatch(
     {
@@ -222,6 +239,7 @@ async function sendDirectMessageToSingleRecipient(input: {
 
   const publishedAt = new Date();
   let conversationId = "";
+  let centerMessageId = "";
 
   await prisma.$transaction(async (tx) => {
     await tx.platformCommunication.update({
@@ -269,7 +287,7 @@ async function sendDirectMessageToSingleRecipient(input: {
     });
     conversationId = inboxConversation.id;
 
-    await tx.communicationCenterMessage.create({
+    const centerMessage = await tx.communicationCenterMessage.create({
       data: {
         tenantId: input.tenantId,
         conversationId: inboxConversation.id,
@@ -278,11 +296,12 @@ async function sendDirectMessageToSingleRecipient(input: {
         messageIdHeader: threadRootMessageId,
         subject: inboxSubject,
         bodyText: input.bodyText,
-        bodyHtmlSanitized: plainTextToSafeHtml(input.bodyText),
+        bodyHtmlSanitized: plainTextToSafeHtml(input.bodyText || " "),
         sentAt: publishedAt,
         createdByUserId: input.senderUserId,
       },
     });
+    centerMessageId = centerMessage.id;
 
     for (const deliveryUserId of publishSnapshots.deliveryUserIds) {
       await emitDirectInboxNotification(tx, {
@@ -296,6 +315,15 @@ async function sendDirectMessageToSingleRecipient(input: {
       });
     }
   });
+
+  if (centerMessageId && input.attachmentIds.length > 0) {
+    await mirrorPlatformAttachmentsToCenterMessage({
+      tenantId: input.tenantId,
+      actorUserId: input.senderUserId,
+      platformCommunicationId: communication.id,
+      messageId: centerMessageId,
+    });
+  }
 
   try {
     await enqueuePlatformCommunicationEmailDeliveries({
@@ -355,7 +383,8 @@ export async function sendDirectMessage(input: SendDirectMessageInput): Promise<
     }
     throw error;
   }
-  const bodyText = sanitizeBody(bodyWithSignature);
+  const attachmentIds = [...new Set((input.attachmentIds ?? []).filter(Boolean))];
+  const bodyText = sanitizeBody(bodyWithSignature, attachmentIds.length > 0);
   const subject = sanitizeSubject(input.subject);
   const repliesAllowed = resolveRepliesAllowed(input.mode);
   const orchestrationMetaJson = buildOrchestrationMeta(input.channelIntent);
@@ -374,6 +403,7 @@ export async function sendDirectMessage(input: SendDirectMessageInput): Promise<
       bodyText,
       repliesAllowed,
       orchestrationMetaJson,
+      attachmentIds,
     });
     communicationIds.push(result.communicationId);
     conversationIds.push(result.conversationId);

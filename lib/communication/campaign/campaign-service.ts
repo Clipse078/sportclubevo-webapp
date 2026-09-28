@@ -43,6 +43,7 @@ import { emitCampaignPublishedNotifications } from "@/lib/communication/campaign
 import { resolveCommunicationChannelIntent } from "@/lib/communication/platform-email/communication-channel-intent";
 import { evaluatePlatformEmailReadiness } from "@/lib/communication/platform-email/email-readiness-service";
 import { enqueuePlatformCommunicationEmailDeliveries } from "@/lib/communication/platform-email/platform-email-dispatch-service";
+import { syncPlatformCommunicationAttachments } from "@/lib/communication/attachment-service";
 
 export type CampaignListItem = {
   id: string;
@@ -290,6 +291,7 @@ export async function createCampaignDraft(input: {
   bodyText: string;
   audienceSpec: CommunicationAudienceSpec;
   contextRef?: CommunicationContextRef;
+  attachmentIds?: string[];
 }): Promise<{ id: string }> {
   const internalName = sanitizeInternalName(input.internalName);
   const bodyText = sanitizeBodyText(input.bodyText);
@@ -326,6 +328,15 @@ export async function createCampaignDraft(input: {
     select: { id: true, kind: true, status: true },
   });
 
+  if (input.attachmentIds && input.attachmentIds.length > 0) {
+    await syncPlatformCommunicationAttachments({
+      tenantId: input.tenantId,
+      actorUserId: input.senderUserId,
+      communicationId: created.id,
+      attachmentIds: [...input.attachmentIds],
+    });
+  }
+
   await recordPlatformCommunicationAudit({
     tenantId: input.tenantId,
     actorUserId: input.senderUserId,
@@ -347,6 +358,7 @@ export async function updateCampaignDraft(input: {
   bodyText?: string;
   audienceSpec?: CommunicationAudienceSpec;
   orchestration?: CampaignOrchestrationMeta;
+  attachmentIds?: string[];
 }): Promise<{ id: string }> {
   const row = await loadCampaignRow({ tenantId: input.tenantId, campaignId: input.campaignId });
   if (row.status !== "DRAFT" && row.status !== "READY") {
@@ -371,6 +383,15 @@ export async function updateCampaignDraft(input: {
   }
 
   await prisma.platformCommunication.update({ where: { id: row.id }, data });
+
+  if (input.attachmentIds !== undefined) {
+    await syncPlatformCommunicationAttachments({
+      tenantId: input.tenantId,
+      actorUserId: input.actorUserId,
+      communicationId: row.id,
+      attachmentIds: input.attachmentIds,
+    });
+  }
 
   await recordPlatformCommunicationAudit({
     tenantId: input.tenantId,

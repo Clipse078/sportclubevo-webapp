@@ -14,6 +14,7 @@ import type {
   InboxConversationListItem,
   InboxQuickFilterId,
 } from "@/components/admin/communication/inbox/inbox-workspace-types";
+import { useCommunicationAttachmentUpload } from "@/components/admin/communication/attachments/use-communication-attachment-upload";
 
 type CommunicationInboxWorkspaceProps = CommunicationInboxCapabilities;
 
@@ -55,6 +56,15 @@ export default function CommunicationInboxWorkspace({
   const [detailError, setDetailError] = useState<string | null>(null);
   const [replyError, setReplyError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const {
+    attachments: replyAttachments,
+    error: replyAttachmentError,
+    addFiles: addReplyAttachments,
+    removeAttachment: removeReplyAttachment,
+    readyAttachmentIds: replyAttachmentIds,
+    hasUnreadyAttachments: replyAttachmentsPending,
+    setAttachments: setReplyAttachments,
+  } = useCommunicationAttachmentUpload();
   const [mobilePane, setMobilePane] = useState<"list" | "detail">("list");
   const {
     preference: workspacePreference,
@@ -338,7 +348,12 @@ export default function CommunicationInboxWorkspace({
   }
 
   async function sendReply() {
-    if (!selectedId || !replyText.trim() || !canReply) return;
+    if (!selectedId || !canReply) return;
+    if (!replyText.trim() && replyAttachmentIds.length === 0) return;
+    if (replyAttachmentsPending) {
+      setReplyError("Bitte warten Sie, bis alle Anhänge hochgeladen sind.");
+      return;
+    }
     setReplySubmitting(true);
     setReplyError(null);
     try {
@@ -350,6 +365,7 @@ export default function CommunicationInboxWorkspace({
           bodyText: replyText,
           idempotencyKey,
           includePersonalSignature: useReplySignature,
+          attachmentIds: replyAttachmentIds,
         }),
       });
       if (!res.ok) {
@@ -357,6 +373,7 @@ export default function CommunicationInboxWorkspace({
         return;
       }
       setReplyText("");
+      setReplyAttachments([]);
       await refreshAfterMutation();
     } catch {
       setReplyError("Antwort konnte nicht gesendet werden.");
@@ -517,6 +534,10 @@ export default function CommunicationInboxWorkspace({
           onSendReply={() => void sendReply()}
           replySubmitting={replySubmitting}
           replyError={replyError}
+          replyAttachments={replyAttachments}
+          replyAttachmentError={replyAttachmentError}
+          onReplyAddAttachments={addReplyAttachments}
+          onReplyRemoveAttachment={removeReplyAttachment}
           actionError={actionError}
           replyDisabled={isTrashed || repliesLockedInformOnly}
           repliesLockedInformOnly={repliesLockedInformOnly}

@@ -239,7 +239,23 @@ describe("communication attachment domain service", () => {
   });
 
   it("allows validated PENDING and CLEAN selections while preserving client order", async () => {
-    mocks.attachmentFindMany.mockResolvedValue([
+    mocks.attachmentFindMany.mockResolvedValueOnce([
+      {
+        id: "clean",
+        createdByUserId: "user-a",
+        messageLinks: [],
+        communicationCenterMessageLinks: [],
+        platformCommunicationLinks: [],
+      },
+      {
+        id: "pending",
+        createdByUserId: "user-a",
+        messageLinks: [],
+        communicationCenterMessageLinks: [],
+        platformCommunicationLinks: [],
+      },
+    ]);
+    mocks.attachmentFindMany.mockResolvedValueOnce([
       {
         id: "clean",
         lifecycleStatus: "READY",
@@ -269,7 +285,16 @@ describe("communication attachment domain service", () => {
   it.each(["QUARANTINED", "FAILED"] as const)(
     "blocks %s attachments from outbound delivery",
     async (scanStatus) => {
-      mocks.attachmentFindMany.mockResolvedValue([
+      mocks.attachmentFindMany.mockResolvedValueOnce([
+        {
+          id: "blocked",
+          createdByUserId: "user-a",
+          messageLinks: [],
+          communicationCenterMessageLinks: [],
+          platformCommunicationLinks: [],
+        },
+      ]);
+      mocks.attachmentFindMany.mockResolvedValueOnce([
         {
           id: "blocked",
           lifecycleStatus: "READY",
@@ -312,6 +337,22 @@ describe("communication attachment domain service", () => {
       }),
     ).rejects.toMatchObject({ code: "ATTACHMENT_NOT_FOUND" });
 
+    mocks.attachmentFindMany.mockResolvedValueOnce([
+      {
+        id: "a",
+        createdByUserId: "user-a",
+        messageLinks: [],
+        communicationCenterMessageLinks: [],
+        platformCommunicationLinks: [],
+      },
+      {
+        id: "b",
+        createdByUserId: "user-a",
+        messageLinks: [],
+        communicationCenterMessageLinks: [],
+        platformCommunicationLinks: [],
+      },
+    ]);
     mocks.attachmentFindMany.mockResolvedValueOnce([
       {
         id: "a",

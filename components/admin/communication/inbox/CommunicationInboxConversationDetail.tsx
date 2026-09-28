@@ -22,6 +22,8 @@ import type {
   InboxConversationDetail,
   InboxConversationListItem,
 } from "@/components/admin/communication/inbox/inbox-workspace-types";
+import { CommunicationAttachmentPicker } from "@/components/admin/communication/attachments/CommunicationAttachmentPicker";
+import { CommunicationAttachmentList } from "@/components/admin/communication/attachments/CommunicationAttachmentList";
 
 type CommunicationInboxConversationDetailProps = {
   selectedConversationId: string | null;
@@ -51,6 +53,10 @@ type CommunicationInboxConversationDetailProps = {
   onSendReply: () => void;
   replySubmitting: boolean;
   replyError: string | null;
+  replyAttachments: import("@/components/admin/communications/EmailAttachmentComposer").ComposerAttachment[];
+  replyAttachmentError: string | null;
+  onReplyAddAttachments: (files: File[]) => void;
+  onReplyRemoveAttachment: (localId: string) => void;
   actionError: string | null;
   onBackToList: () => void;
   onResolve: () => void;
@@ -118,6 +124,10 @@ export function CommunicationInboxConversationDetailPane({
   onSendReply,
   replySubmitting,
   replyError,
+  replyAttachments,
+  replyAttachmentError,
+  onReplyAddAttachments,
+  onReplyRemoveAttachment,
   actionError,
   onBackToList,
   onResolve,
@@ -361,17 +371,7 @@ export function CommunicationInboxConversationDetailPane({
                     <p className="mt-2 text-xs text-red-600">{message.deliveryError}</p>
                   ) : null}
                   {message.attachments?.length ? (
-                    <ul className="mt-2 space-y-1 text-xs text-[var(--text-2)]" aria-label="Anhänge">
-                      {message.attachments.map((attachment) => (
-                        <li key={attachment.id}>
-                          {attachment.filename} ({Math.max(1, Math.round(attachment.sizeBytes / 1024))}{" "}
-                          KB)
-                          {!attachment.downloadAvailable ? (
-                            <span className="text-[var(--muted)]"> · Download folgt</span>
-                          ) : null}
-                        </li>
-                      ))}
-                    </ul>
+                    <CommunicationAttachmentList attachments={message.attachments} />
                   ) : null}
                 </article>
               );
@@ -413,6 +413,13 @@ export function CommunicationInboxConversationDetailPane({
                   previewHeadingId="inbox-reply-signature-preview"
                 />
               </div>
+              <CommunicationAttachmentPicker
+                disabled={replySubmitting}
+                attachments={replyAttachments}
+                error={replyAttachmentError}
+                onAddFiles={onReplyAddAttachments}
+                onRemove={onReplyRemoveAttachment}
+              />
               {replyError ? (
                 <p className="mt-2 text-xs text-red-600" role="alert">
                   {replyError}
@@ -422,7 +429,13 @@ export function CommunicationInboxConversationDetailPane({
                 <Button
                   type="button"
                   onClick={onSendReply}
-                  disabled={!replyText.trim() || replySubmitting}
+                  disabled={
+                    (!replyText.trim() &&
+                      !replyAttachments.some(
+                        (attachment) => attachment.status === "READY" && attachment.attachmentId,
+                      )) ||
+                    replySubmitting
+                  }
                 >
                   {replySubmitting ? "Senden …" : "Antwort senden"}
                 </Button>

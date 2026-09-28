@@ -19,6 +19,8 @@ import {
   formatCampaignChannelSummary,
   type CampaignOrchestrationMeta,
 } from "@/lib/communication/campaign/campaign-orchestration-meta";
+import { CommunicationAttachmentPicker } from "@/components/admin/communication/attachments/CommunicationAttachmentPicker";
+import { useCommunicationAttachmentUpload } from "@/components/admin/communication/attachments/use-communication-attachment-upload";
 
 type TargetGroupOption = { id: string; name: string; status: string };
 
@@ -126,6 +128,14 @@ export default function CampaignComposer({
   const [scheduledAtLocal, setScheduledAtLocal] = useState("");
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const {
+    attachments,
+    error: attachmentError,
+    addFiles,
+    removeAttachment,
+    readyAttachmentIds,
+    hasUnreadyAttachments,
+  } = useCommunicationAttachmentUpload();
 
   async function loadEmailReadiness() {
     try {
@@ -299,6 +309,7 @@ export default function CampaignComposer({
       bodyText,
       audienceSpec,
       orchestration,
+      attachmentIds: readyAttachmentIds,
     };
     if (campaignId) {
       const res = await fetch(`/api/communication/campaign/${campaignId}`, {
@@ -344,7 +355,12 @@ export default function CampaignComposer({
 
   function validateBeforePublish() {
     if (!internalName.trim()) throw new Error("Bitte geben Sie einen internen Kampagnennamen ein.");
-    if (!bodyText.trim()) throw new Error("Bitte geben Sie den Kampagneninhalt ein.");
+    if (!bodyText.trim() && readyAttachmentIds.length === 0) {
+      throw new Error("Bitte geben Sie den Kampagneninhalt oder mindestens einen Anhang ein.");
+    }
+    if (hasUnreadyAttachments) {
+      throw new Error("Bitte warten Sie, bis alle Anhänge hochgeladen sind.");
+    }
     if (audienceMode === "TARGET_GROUPS" && selectedGroupIds.length === 0) {
       throw new Error("Bitte wählen Sie mindestens eine Zielgruppe.");
     }
@@ -508,9 +524,15 @@ export default function CampaignComposer({
               setBodyText(e.target.value);
               invalidateReview();
             }}
-            required
           />
         </label>
+        <CommunicationAttachmentPicker
+          disabled={busy}
+          attachments={attachments}
+          error={attachmentError}
+          onAddFiles={addFiles}
+          onRemove={removeAttachment}
+        />
       </section>
 
       <section

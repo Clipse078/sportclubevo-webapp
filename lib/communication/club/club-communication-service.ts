@@ -22,6 +22,7 @@ import { assertTenantOwnedSponsorAudienceSelectors } from "@/lib/sponsoring/spon
 import { sponsorSelectorsAreEmpty } from "@/lib/sponsoring/sponsor-audience-selectors";
 import { buildCampaignPublishSnapshotCreateMany } from "@/lib/communication/sponsor/publish-recipient-snapshot-data";
 import { summarizeClubAudienceSpec } from "@/lib/communication/club/club-audience-summary";
+import { syncPlatformCommunicationAttachments } from "@/lib/communication/attachment-service";
 import {
   canTransitionCommunicationStatus,
   communicationAudienceMutable,
@@ -274,6 +275,7 @@ export async function updateClubCommunicationDraft(input: {
   subject?: string | null;
   audienceSpec?: CommunicationAudienceSpec;
   acknowledgementRequired?: boolean;
+  attachmentIds?: string[];
 }): Promise<{ id: string }> {
   const row = await loadClubCommunicationRow({
     tenantId: input.tenantId,
@@ -300,6 +302,15 @@ export async function updateClubCommunicationDraft(input: {
   }
 
   await prisma.platformCommunication.update({ where: { id: row.id }, data });
+
+  if (input.attachmentIds !== undefined) {
+    await syncPlatformCommunicationAttachments({
+      tenantId: input.tenantId,
+      actorUserId: input.actorUserId,
+      communicationId: row.id,
+      attachmentIds: input.attachmentIds,
+    });
+  }
 
   await recordPlatformCommunicationAudit({
     tenantId: input.tenantId,

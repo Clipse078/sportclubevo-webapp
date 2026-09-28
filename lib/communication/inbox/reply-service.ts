@@ -13,6 +13,11 @@ import { buildReplyReferences } from "@/lib/communication/inbox/threading-servic
 import { recordCommunicationCenterAudit } from "@/lib/communication/inbox/inbox-audit";
 import { reactivateCommunicationCenterConversationToInboxOnReply } from "@/lib/communication/inbox/mailbox-organization-service";
 import { assertConversationAllowsReplies } from "@/lib/communication/direct/direct-message-service";
+import {
+  attachSelectionToCommunicationCenterMessage,
+  loadCommunicationCenterMessageAttachmentsForDelivery,
+} from "@/lib/communication/attachment-service";
+import type { MailAttachment } from "@/lib/email/mailer";
 
 export type ReplyToConversationResult = {
   messageId: string;
@@ -33,12 +38,14 @@ export async function replyToCommunicationCenterConversation(input: {
   bodyText: string;
   idempotencyKey: string;
   includePersonalSignature?: boolean;
+  attachmentIds?: readonly string[];
 }): Promise<ReplyToConversationResult> {
   const { applyPersonalSignatureToOutboundBody } = await import(
     "@/lib/communication/personal-signature/personal-signature-service"
   );
+  const attachmentIds = [...new Set((input.attachmentIds ?? []).filter(Boolean))];
   let bodyText = input.bodyText.trim();
-  if (!bodyText) {
+  if (!bodyText && attachmentIds.length === 0) {
     throw new CommunicationCenterError("INVALID_INPUT", "Nachrichtentext ist erforderlich.");
   }
   try {
@@ -166,12 +173,21 @@ export async function replyToCommunicationCenterConversation(input: {
       fromDisplayName: sender.displayName,
       toAddresses: [lastInbound.fromAddress],
       subject,
-      bodyText,
-      bodyHtmlSanitized: plainTextToSafeHtml(bodyText),
+      bodyText: bodyText || " ",
+      bodyHtmlSanitized: plainTextToSafeHtml(bodyText || " "),
       outboundIdempotencyKey: input.idempotencyKey,
       createdByUserId: input.actorUserId,
     },
   });
+
+  if (attachmentIds.length > 0) {
+    await attachSelectionToCommunicationCenterMessage({
+      tenantId: input.tenantId,
+      actorUserId: input.actorUserId,
+      messageId: draft.id,
+      attachmentIds,
+    });
+  }
 
   await recordCommunicationCenterAudit({
     tenantId: input.tenantId,
@@ -183,13 +199,34 @@ export async function replyToCommunicationCenterConversation(input: {
   });
 
   try {
+    let mailAttachments: MailAttachment[] | undefined;
+    if (attachmentIds.length > 0) {
+      try {
+        const loaded = await loadCommunicationCenterMessageAttachmentsForDelivery({
+          tenantId: input.tenantId,
+          messageId: draft.id,
+        });
+        mailAttachments = loaded.map((item) => ({
+          filename: item.filename,
+          content: item.content,
+          contentType: item.contentType,
+        }));
+      } catch {
+        throw new CommunicationCenterError(
+          "ATTACHMENT_UNAVAILABLE",
+          "Ein Anhang konnte nicht für den Versand geladen werden.",
+        );
+      }
+    }
+
     const transport = await sendOutboundEmail({
       from: sender.formattedFrom,
       to: lastInbound.fromAddress,
       subject,
-      text: bodyText,
-      html: plainTextToSafeHtml(bodyText),
+      text: bodyText || " ",
+      html: plainTextToSafeHtml(bodyText || " "),
       idempotencyKey: input.idempotencyKey,
+      attachments: mailAttachments,
     });
 
     const sent = await prisma.communicationCenterMessage.update({
