@@ -2,14 +2,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-const requirePermission = vi.hoisted(() => vi.fn());
-const getRequestEffectivePermissions = vi.hoisted(() => vi.fn());
+const mocks = vi.hoisted(() => ({
+  requireAnyPermission: vi.fn(),
+  getRequestEffectivePermissions: vi.fn(),
+}));
 
 vi.mock("@/lib/permissions/require-any-permission", () => ({
-  requireAnyPermission: requirePermission,
+  requireAnyPermission: mocks.requireAnyPermission,
 }));
 vi.mock("@/lib/permissions/request-effective-permissions", () => ({
-  getRequestEffectivePermissions,
+  getRequestEffectivePermissions: mocks.getRequestEffectivePermissions,
 }));
 
 import CommunicationPage from "../page";
@@ -18,36 +20,30 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 beforeEach(() => {
   vi.clearAllMocks();
-  requirePermission.mockResolvedValue({
+  mocks.requireAnyPermission.mockResolvedValue({
     user: { id: "user-1", activeTenantId: "tenant-1" },
   });
-  getRequestEffectivePermissions.mockResolvedValue({
+  mocks.getRequestEffectivePermissions.mockResolvedValue({
     platform: [],
-    tenant: [
-      PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
-      PERMISSIONS.COMMUNICATION_INBOX_VIEW,
-    ],
+    tenant: [PERMISSIONS.USERS_MANAGE_MEMBERSHIPS],
   });
 });
 
 describe("Kommunikation module landing page", () => {
-  it("distinguishes the functional sender settings from future capabilities", async () => {
+  it("exposes operational hub destinations for authorized tenant admins", async () => {
     render(await CommunicationPage());
 
-    expect(requirePermission).toHaveBeenCalledWith(COMMUNICATION_HUB_ROUTE_PERMISSIONS);
+    expect(mocks.requireAnyPermission).toHaveBeenCalledWith(COMMUNICATION_HUB_ROUTE_PERMISSIONS);
     expect(screen.getByRole("heading", { level: 1, name: "Kommunikation" })).toBeInTheDocument();
-    expect(screen.getByText(/sind einsatzbereit/)).toBeInTheDocument();
-    expect(screen.queryByText(/Modul im Aufbau/i)).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Kommunikationscenter öffnen/i })).toHaveAttribute(
       "href",
       "/dashboard/communication/inbox",
     );
-    expect(screen.getByRole("link", { name: /Absender verwalten/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /E-Mail-Absender öffnen/i })).toHaveAttribute(
       "href",
       "/dashboard/communication/email-sender",
     );
-    expect(screen.getByRole("heading", { name: "Zielgruppen" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Zielgruppen verwalten/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Zielgruppen öffnen/i })).toHaveAttribute(
       "href",
       "/dashboard/communication/zielgruppen",
     );
@@ -56,7 +52,7 @@ describe("Kommunikation module landing page", () => {
   });
 
   it("checks authorization before rendering the module shell", async () => {
-    requirePermission.mockRejectedValue(new Error("Forbidden"));
+    mocks.requireAnyPermission.mockRejectedValue(new Error("Forbidden"));
     await expect(CommunicationPage()).rejects.toThrow("Forbidden");
   });
 });

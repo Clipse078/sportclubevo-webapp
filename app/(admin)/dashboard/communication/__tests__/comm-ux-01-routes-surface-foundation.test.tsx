@@ -161,7 +161,7 @@ describe("SCE-COMM-UX-01 route authorization alignment", () => {
       "href",
       "/dashboard/communication/kampagnen",
     );
-    expect(screen.getByRole("link", { name: /Vorlagen verwalten/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Vorlagen öffnen/i })).toHaveAttribute(
       "href",
       "/dashboard/communication/vorlagen",
     );
@@ -177,7 +177,7 @@ describe("SCE-COMM-UX-01 route authorization alignment", () => {
 
     expect(screen.queryByRole("link", { name: /Mitteilungen öffnen/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Kampagnen öffnen/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /Vorlagen verwalten/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Vorlagen öffnen/i })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Kommunikationscenter öffnen/i })).toBeInTheDocument();
   });
 });
