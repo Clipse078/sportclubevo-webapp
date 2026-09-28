@@ -2,7 +2,6 @@ import {
   FileStack,
   Inbox,
   Mail,
-  Palette,
   PenLine,
   Send,
   Signature,
@@ -11,29 +10,24 @@ import {
 } from "lucide-react";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { ModuleCapabilityCard } from "@/components/admin/future-modules/ModuleCapabilityCard";
-import { Badge } from "@/components/ui/Badge";
-import { PageBreadcrumbs, PageHeader, PageShell, SectionCard } from "@/components/ui/page";
+import { PageBreadcrumbs, PageHeader, PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { INBOX_VIEW_PERMISSIONS } from "@/lib/communication/inbox/route-access";
-import { TENANT_ADMINISTRATION_PERMISSIONS } from "@/lib/permissions/tenant-administration";
+import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
+import {
+  COMMUNICATION_HUB_ROUTE_PERMISSIONS,
+  resolveCommunicationHubCapabilityAccess,
+} from "@/lib/communication/hub-access";
 
 export const dynamic = "force-dynamic";
 
-const audienceFoundations = [
-  "Gesamter Verein",
-  "Organisationseinheiten",
-  "Teams und mehrere Teams",
-  "Einzelpersonen",
-  "Rollen und Funktionen",
-  "Trainer, Co-Trainer, Spieler und Eltern",
-  "Kombinationen und Ausschlüsse",
-  "Gespeicherte, dynamische und manuelle Zielgruppen",
-  "Deduplizierung",
-  "Empfängervorschau und Zustellbarkeit",
-];
-
 export default async function CommunicationPage() {
-  await requireAnyPermission([...TENANT_ADMINISTRATION_PERMISSIONS, ...INBOX_VIEW_PERMISSIONS]);
+  const session = await requireAnyPermission(COMMUNICATION_HUB_ROUTE_PERMISSIONS);
+  const effectiveTenantId = session.user.activeTenantId ?? undefined;
+  const { tenant: tenantPermissions } = await getRequestEffectivePermissions(
+    session.user.id,
+    effectiveTenantId,
+  );
+  const access = resolveCommunicationHubCapabilityAccess(tenantPermissions);
 
   return (
     <PageShell>
@@ -47,17 +41,21 @@ export default async function CommunicationPage() {
       <PageHeader
         eyebrow="Kommunikation"
         title="Kommunikation"
-        description="Nachrichten, Zielgruppen und Kommunikation zentral verwalten."
-        badge={<Badge variant="warning">Modul im Aufbau</Badge>}
+        description="Nachrichten, Zielgruppen, Kampagnen und Vorlagen zentral verwalten."
       />
 
       <div className="mb-6 flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
-        <ProductDomainSceIcon name="communication" size={16} className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-primary)]" />
+        <ProductDomainSceIcon
+          name="communication"
+          size={16}
+          className="mt-0.5 h-4 w-4 shrink-0 text-[var(--sce-primary)]"
+        />
         <p className="text-xs leading-5 text-[var(--text-2)]">
           <span className="font-semibold text-[var(--foreground)]">
-            Kommunikationscenter, Mitteilungen, Kampagnen, Zielgruppen und E-Mail-Absender sind verfügbar.
+            Kommunikationscenter, Mitteilungen, Kampagnen, Zielgruppen, Vorlagen und E-Mail-Absender
+            sind einsatzbereit.
           </span>{" "}
-          Weitere Bereiche zeigen die geplante Produktausrichtung.
+          Persönliche Signaturen und plattformweite Dokumentvorlagen folgen in späteren Ausbaustufen.
         </p>
       </div>
 
@@ -66,28 +64,28 @@ export default async function CommunicationPage() {
           title="Kommunikationscenter"
           description="Nachrichten, E-Mails und offene Kommunikation zentral bearbeiten — inklusive inbound E-Mail/IMAP."
           icon={Inbox}
-          status="Verfügbar"
-          href="/dashboard/communication/inbox"
-          linkLabel="Kommunikationscenter öffnen"
-          details={["Unified Inbox", "IMAP", "Zuweisung", "Antworten (COMM-14)"]}
+          status={access.inbox ? "Verfügbar" : "Demnächst"}
+          href={access.inbox ? "/dashboard/communication/inbox" : undefined}
+          linkLabel={access.inbox ? "Kommunikationscenter öffnen" : undefined}
+          details={["Unified Inbox", "IMAP", "Zuweisung", "Antworten"]}
         />
         <ModuleCapabilityCard
           title="Mitteilungen"
           description="Organisationsweite Nachrichten, Mitteilungen und Alarme an Zielgruppen oder den ganzen Verein."
           icon={Mail}
-          status="Verfügbar"
-          href="/dashboard/communication/mitteilungen"
-          linkLabel="Mitteilungen öffnen"
+          status={access.mitteilungen ? "Verfügbar" : "Demnächst"}
+          href={access.mitteilungen ? "/dashboard/communication/mitteilungen" : undefined}
+          linkLabel={access.mitteilungen ? "Mitteilungen öffnen" : undefined}
           details={["Nachricht", "Mitteilung", "Alarm", "Zielgruppen", "Entwürfe"]}
         />
         <ModuleCapabilityCard
           title="Kampagnen"
           description="Organisationsweite Kampagnen mit Entwurf, Bereit-Status und Veröffentlichung über die kanonische Kommunikationsplattform."
           icon={Send}
-          status="Verfügbar"
-          href="/dashboard/communication/kampagnen"
-          linkLabel="Kampagnen öffnen"
-          details={["Entwurf", "Bereit", "Zielgruppen", "Empfängervorschau", "Push (COMM-09)"]}
+          status={access.kampagnen ? "Verfügbar" : "Demnächst"}
+          href={access.kampagnen ? "/dashboard/communication/kampagnen" : undefined}
+          linkLabel={access.kampagnen ? "Kampagnen öffnen" : undefined}
+          details={["Entwurf", "Bereit", "Zielgruppen", "Empfängervorschau", "Push-Benachrichtigungen"]}
         />
         <ModuleCapabilityCard
           title="Neue Nachricht"
@@ -100,27 +98,27 @@ export default async function CommunicationPage() {
           title="Zielgruppen"
           description="Organisationsweite Zielgruppen definieren und verwalten — strukturelle Kriterien ohne Empfänger-Vollzählung."
           icon={UsersRound}
-          status="Verfügbar"
-          href="/dashboard/communication/zielgruppen"
-          linkLabel="Zielgruppen verwalten"
+          status={access.zielgruppen ? "Verfügbar" : "Demnächst"}
+          href={access.zielgruppen ? "/dashboard/communication/zielgruppen" : undefined}
+          linkLabel={access.zielgruppen ? "Zielgruppen verwalten" : undefined}
           details={["Organisation & Teams", "Rollen", "Explizite Personen", "Archiv"]}
         />
         <ModuleCapabilityCard
           title="Vorlagen"
           description="Wiederverwendbare Inhalte für Kampagnen und Vereinsmitteilungen — erzeugen normale Entwürfe."
           icon={FileStack}
-          status="Verfügbar"
-          href="/dashboard/communication/vorlagen"
-          linkLabel="Vorlagen verwalten"
-          details={["Kampagne", "Mitteilung", "Alarm", "Zielgruppen-Defaults", "Planung (COMM-16)"]}
+          status={access.vorlagen ? "Verfügbar" : "Demnächst"}
+          href={access.vorlagen ? "/dashboard/communication/vorlagen" : undefined}
+          linkLabel={access.vorlagen ? "Vorlagen verwalten" : undefined}
+          details={["Kampagne", "Mitteilung", "Alarm", "Zielgruppen-Defaults", "Planung"]}
         />
         <ModuleCapabilityCard
           title="E-Mail-Absender"
           description="Absendername und E-Mail-Adresse des Vereins verwalten."
           icon={SlidersHorizontal}
-          status="Verfügbar"
-          href="/dashboard/communication/email-sender"
-          linkLabel="Absender verwalten"
+          status={access.emailSender ? "Verfügbar" : "Demnächst"}
+          href={access.emailSender ? "/dashboard/communication/email-sender" : undefined}
+          linkLabel={access.emailSender ? "Absender verwalten" : undefined}
           details={["Tenant-spezifisch", "Sicherer Standardabsender", "Antwort-Zuordnung"]}
         />
         <ModuleCapabilityCard
@@ -130,59 +128,6 @@ export default async function CommunicationPage() {
           status="Demnächst"
           details={["Pro Benutzer und Verein", "Mehrere Signaturen", "Standard und Auswahl", "Historisch erhalten"]}
         />
-      </div>
-
-      <SectionCard
-        title="Zielgruppen — geplante Grundlage"
-        description="Der spätere Zielgruppen-Baukasten verbindet Organisationsstruktur, Funktionen und einzelne Personen, ohne heute eine Auswahl vorzutäuschen."
-        className="mt-8"
-      >
-        <div className="flex flex-wrap gap-2">
-          {audienceFoundations.map((foundation) => (
-            <span
-              key={foundation}
-              className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-xs font-medium text-[var(--text-2)]"
-            >
-              {foundation}
-            </span>
-          ))}
-        </div>
-      </SectionCard>
-
-      <div className="mt-8">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-base font-semibold text-[var(--foreground)]">
-              Gemeinsame Plattformbausteine
-            </h2>
-            <p className="mt-1 text-xs text-[var(--text-2)]">
-              Diese Fähigkeiten werden über Kommunikation hinaus für Dokumente und weitere Fachmodule geplant.
-            </p>
-          </div>
-          <Badge variant="default">Plattformweit geplant</Badge>
-        </div>
-
-        <div className="grid gap-5 md:grid-cols-2">
-          <ModuleCapabilityCard
-            title="Dokumentvorlagen (Plattform)"
-            description="Separate Dokument- und Finanzvorlagen ausserhalb der Kommunikationsplattform."
-            icon={FileStack}
-            status="Demnächst"
-            details={["Briefe", "Rechnungen", "Verträge", "Nicht COMM-16"]}
-          />
-          <ModuleCapabilityCard
-            title="Gestaltung / Erscheinungsbild"
-            description="Farben, Logos und Gestaltung für Kommunikation und Dokumente definieren."
-            icon={Palette}
-            status="Demnächst"
-            details={[
-              "Logo und Farbwelt",
-              "Sichere Typografie",
-              "Header und Footer",
-              "Briefe, Rechnungen und Dokumente",
-            ]}
-          />
-        </div>
       </div>
     </PageShell>
   );

@@ -3,7 +3,7 @@ import Link from "next/link";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { PageBreadcrumbs, PageHeader, PageShell, SectionCard } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { CLUB_COMMUNICATION_VIEW_ROUTE_PERMISSIONS } from "@/lib/communication/club/route-access";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { resolveClubCommunicationAuthorization } from "@/lib/communication/club/club-communication-authorization";
 import { getClubCommunicationById } from "@/lib/communication/club/club-communication-service";
@@ -19,10 +19,7 @@ export const dynamic = "force-dynamic";
 type PageProps = { params: Promise<{ id: string }> };
 
 export default async function ClubMitteilungDetailPage({ params }: PageProps) {
-  const session = await requireAnyPermission([
-    PERMISSIONS.COMMUNICATION_CLUB_VIEW,
-    PERMISSIONS.COMMUNICATION_CLUB_SEND,
-  ]);
+  const session = await requireAnyPermission(CLUB_COMMUNICATION_VIEW_ROUTE_PERMISSIONS);
   const tenant = await getActiveTenant();
   if (!tenant) notFound();
   const { id } = await params;

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import PlatformTemplateEditor from "@/components/admin/communication/templates/PlatformTemplateEditor";
 import { PageBreadcrumbs, PageHeader, PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { PLATFORM_TEMPLATE_MANAGE_ROUTE_PERMISSIONS } from "@/lib/communication/templates/route-access";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { getPlatformCommunicationTemplate } from "@/lib/communication/templates/platform-template-service";
 import { requirePlatformTemplateManage } from "@/lib/communication/templates/platform-template-authorization";
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 type PageProps = { params: Promise<{ id: string }> };
 
 export default async function EditPlatformTemplatePage({ params }: PageProps) {
-  const session = await requireAnyPermission([PERMISSIONS.COMMUNICATION_TEMPLATES_MANAGE]);
+  const session = await requireAnyPermission(PLATFORM_TEMPLATE_MANAGE_ROUTE_PERMISSIONS);
   const tenant = await getActiveTenant();
   if (!tenant) notFound();
   const { id } = await params;

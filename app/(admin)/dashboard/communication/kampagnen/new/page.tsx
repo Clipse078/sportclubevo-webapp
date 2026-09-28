@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { PageBreadcrumbs, PageHeader, PageShell } from "@/components/ui/page";
 import CampaignComposer from "@/components/admin/communication/campaign/CampaignComposer";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { CLUB_COMMUNICATION_SEND_ROUTE_PERMISSIONS } from "@/lib/communication/club/route-access";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { prisma } from "@/lib/db/prisma";
 import { resolveSponsorAudienceAuthorization } from "@/lib/sponsoring/sponsor-authorization";
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 type PageProps = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 export default async function NewCampaignPage({ searchParams }: PageProps) {
-  const session = await requireAnyPermission([PERMISSIONS.COMMUNICATION_CLUB_SEND]);
+  const session = await requireAnyPermission(CLUB_COMMUNICATION_SEND_ROUTE_PERMISSIONS);
   const tenant = await getActiveTenant();
   if (!tenant) notFound();
   const params = await searchParams;
