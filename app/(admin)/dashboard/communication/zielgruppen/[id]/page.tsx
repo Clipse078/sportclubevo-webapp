@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Target } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import ZielgruppeManagementForm from "@/components/admin/communication/zielgruppen/ZielgruppeManagementForm";
 import ZielgruppeArchiveActions from "@/components/admin/communication/zielgruppen/ZielgruppeArchiveActions";
 import ZielgruppeHumanRulesPanel from "@/components/admin/communication/zielgruppen/ZielgruppeHumanRulesPanel";
