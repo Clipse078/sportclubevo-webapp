@@ -4,7 +4,6 @@
 
 import { prisma } from "@/lib/db/prisma";
 import type { GuardianExpansionPort } from "@/lib/communication/platform/recipient-resolution/pipeline";
-import type { CommunicationChannel } from "@/lib/communication/platform/channels";
 import {
   evaluateSafeguardingCommunication,
   type TenantSafeguardingCommunicationPolicy,
