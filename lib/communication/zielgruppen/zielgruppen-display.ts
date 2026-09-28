@@ -14,6 +14,9 @@ export const ZIELGRUPPE_PREVIEW_DELIVERY_NOTICE =
 export const ZIELGRUPPE_MEMBERSHIP_NOT_CONSENT_NOTICE =
   "Zielgruppen-Mitgliedschaft ist nicht gleichbedeutend mit werblicher Zustimmung — Einwilligung wird beim Versand geprüft.";
 
+export const ZIELGRUPPE_DYNAMIC_MEMBERSHIP_NOTICE =
+  "Die Mitglieder dieser Zielgruppe werden beim Versand anhand der aktuellen Vereinsdaten ermittelt. Bereits versendete Kommunikation behält ihre historische Empfängerliste.";
+
 export function formatZielgruppenListTimestamp(updatedAt: Date | string): string {
   const date = typeof updatedAt === "string" ? new Date(updatedAt) : updatedAt;
   return date.toLocaleDateString("de-CH", {
@@ -35,7 +38,7 @@ export function resolveZielgruppeRuleCharacter(definition: ZielgruppeEditorDefin
   }
   if (definition.compositionMode === "INTERSECTION") {
     return {
-      label: "UND-Regeln",
+      label: "Alle Bedingungen",
       srHint: "Alle Bedingungen müssen zutreffen",
     };
   }
@@ -44,7 +47,7 @@ export function resolveZielgruppeRuleCharacter(definition: ZielgruppeEditorDefin
     return { label: "Noch offen", srHint: "Keine Zieldefinition" };
   }
   return {
-    label: "ODER-Regeln",
+    label: "Mindestens eine Bedingung",
     srHint: "Mindestens eine Bedingung",
   };
 }

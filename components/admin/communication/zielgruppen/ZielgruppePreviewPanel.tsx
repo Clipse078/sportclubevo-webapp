@@ -1,19 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ZielgruppeEditorDefinition } from "@/lib/communication/zielgruppen/editor-model";
 import { previewZielgruppeRecipientsAction } from "@/app/(admin)/dashboard/communication/zielgruppen/actions";
 import {
+  ZIELGRUPPE_DYNAMIC_MEMBERSHIP_NOTICE,
   ZIELGRUPPE_MEMBERSHIP_NOT_CONSENT_NOTICE,
   ZIELGRUPPE_PREVIEW_DELIVERY_NOTICE,
 } from "@/lib/communication/zielgruppen/zielgruppen-display";
+import { zielgruppeDefinitionIsEmpty } from "@/lib/communication/zielgruppen/editor-model";
 
 type Props = {
   definition: ZielgruppeEditorDefinition;
   disabled?: boolean;
+  /** When true, refresh preview automatically after definition changes (debounced). */
+  live?: boolean;
 };
 
-export default function ZielgruppePreviewPanel({ definition, disabled }: Props) {
+const PREVIEW_DEBOUNCE_MS = 450;
+
+export default function ZielgruppePreviewPanel({ definition, disabled, live = false }: Props) {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewStats, setPreviewStats] = useState<{
@@ -22,48 +28,75 @@ export default function ZielgruppePreviewPanel({ definition, disabled }: Props) 
     effective: number;
     scopeNotice: string | null;
     recipients: Array<{ personId: string; displayName: string }>;
+    hasMore: boolean;
   } | null>(null);
+  async function runPreview(forDefinition: ZielgruppeEditorDefinition) {
+    setPreviewLoading(true);
+    setPreviewError(null);
+    const result = await previewZielgruppeRecipientsAction({ definition: forDefinition });
+    setPreviewLoading(false);
+    if (!result.ok) {
+      setPreviewError(result.message);
+      setPreviewStats(null);
+      return;
+    }
+    setPreviewStats({
+      candidates: result.data.candidates,
+      excluded: result.data.excluded,
+      effective: result.data.effective,
+      scopeNotice: result.data.scopeNotice,
+      recipients: result.data.recipients,
+      hasMore: result.data.hasMore,
+    });
+  }
+
+  const definitionHasRules =
+    definition.wholeOrganisation || !zielgruppeDefinitionIsEmpty(definition);
+
+  useEffect(() => {
+    if (!live || !definitionHasRules) return undefined;
+    const handle = setTimeout(() => {
+      void runPreview(definition);
+    }, PREVIEW_DEBOUNCE_MS);
+    return () => clearTimeout(handle);
+  }, [live, definition, definitionHasRules]);
+
+  const remaining =
+    previewStats && previewStats.hasMore
+      ? Math.max(0, previewStats.effective - previewStats.recipients.length)
+      : 0;
 
   return (
     <section
-      className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-4"
-      aria-label="Empfänger Vorschau"
+      className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-4 lg:sticky lg:top-4"
+      aria-label="Live-Vorschau"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
-          <h3 className="text-sm font-semibold text-[var(--foreground)]">Empfänger-Vorschau</h3>
-          <p className="text-xs leading-5 text-[var(--text-2)]">{ZIELGRUPPE_PREVIEW_DELIVERY_NOTICE}</p>
-          <p className="text-[11px] leading-5 text-[var(--muted)]">
-            {ZIELGRUPPE_MEMBERSHIP_NOT_CONSENT_NOTICE}
-          </p>
-        </div>
+      <div className="space-y-1">
+        <h3 className="text-sm font-semibold text-[var(--foreground)]">Live-Vorschau</h3>
+        <p className="text-xs leading-5 text-[var(--text-2)]">{ZIELGRUPPE_PREVIEW_DELIVERY_NOTICE}</p>
+        <p className="text-[11px] leading-5 text-[var(--muted)]">
+          {ZIELGRUPPE_DYNAMIC_MEMBERSHIP_NOTICE}
+        </p>
+        <p className="text-[11px] leading-5 text-[var(--muted)]">
+          {ZIELGRUPPE_MEMBERSHIP_NOT_CONSENT_NOTICE}
+        </p>
+      </div>
+
+      {!live ? (
         <button
           type="button"
-          className="rounded-md border border-[var(--border)] bg-[var(--surface-1)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--surface-3)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--blue)]"
+          className="mt-3 rounded-md border border-[var(--border)] bg-[var(--surface-1)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--surface-3)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--blue)]"
           disabled={disabled || previewLoading}
           aria-busy={previewLoading}
-          onClick={async () => {
-            setPreviewLoading(true);
-            setPreviewError(null);
-            const result = await previewZielgruppeRecipientsAction({ definition });
-            setPreviewLoading(false);
-            if (!result.ok) {
-              setPreviewError(result.message);
-              setPreviewStats(null);
-              return;
-            }
-            setPreviewStats({
-              candidates: result.data.candidates,
-              excluded: result.data.excluded,
-              effective: result.data.effective,
-              scopeNotice: result.data.scopeNotice,
-              recipients: result.data.recipients,
-            });
-          }}
+          onClick={() => void runPreview(definition)}
         >
           {previewLoading ? "Wird berechnet…" : "Vorschau aktualisieren"}
         </button>
-      </div>
+      ) : (
+        <p className="mt-3 text-xs text-[var(--muted)]" aria-live="polite">
+          {previewLoading ? "Vorschau wird aktualisiert…" : "Vorschau folgt Ihren Regeln automatisch."}
+        </p>
+      )}
 
       {previewError ? (
         <p className="mt-3 text-xs text-red-600" role="alert">
@@ -72,35 +105,48 @@ export default function ZielgruppePreviewPanel({ definition, disabled }: Props) 
       ) : null}
 
       {previewStats ? (
-        <div
-          className="mt-3 space-y-2 text-xs text-[var(--text-2)]"
-          role="status"
-          aria-live="polite"
-        >
-          <p>
-            Kandidaten: {previewStats.candidates} · Ausgeschlossen: {previewStats.excluded} ·
-            Aufgelöst: {previewStats.effective}
+        <div className="mt-4 space-y-3" role="status" aria-live="polite">
+          <p className="text-lg font-semibold text-[var(--foreground)]">
+            Aktuell {previewStats.effective} Person{previewStats.effective === 1 ? "" : "en"}
           </p>
+          {previewStats.effective === 0 ? (
+            <p className="text-xs text-[var(--muted)]">
+              Diese Zielgruppe enthält aktuell keine Personen.
+            </p>
+          ) : null}
           {previewStats.scopeNotice ? (
-            <p className="text-[var(--muted)]">{previewStats.scopeNotice}</p>
+            <p className="text-xs text-[var(--muted)]">{previewStats.scopeNotice}</p>
           ) : null}
           {previewStats.recipients.length > 0 ? (
-            <ul className="max-h-48 overflow-y-auto rounded border border-[var(--border)] bg-[var(--surface-1)] p-2">
+            <ul className="max-h-56 overflow-y-auto rounded border border-[var(--border)] bg-[var(--surface-1)] p-2 text-sm">
               {previewStats.recipients.map((r) => (
-                <li key={r.personId}>{r.displayName}</li>
+                <li key={r.personId} className="py-0.5">
+                  {r.displayName}
+                </li>
               ))}
+              {remaining > 0 ? (
+                <li className="py-1 text-xs font-medium text-[var(--muted)]">
+                  +{remaining} weitere
+                </li>
+              ) : null}
             </ul>
-          ) : (
-            <p className="text-[var(--muted)]">
-              Keine Empfänger im aktuellen Berechtigungsumfang.
+          ) : previewStats.effective > 0 ? (
+            <p className="text-xs text-[var(--muted)]">
+              Anzahl sichtbar — Einzelnamen sind in Ihrem Berechtigungsumfang nicht auflistbar.
             </p>
-          )}
+          ) : null}
         </div>
-      ) : (
+      ) : !previewStats ? (
         <p className="mt-3 text-xs text-[var(--muted)]">
-          Vorschau wird erst nach Klick berechnet — nicht bei jeder Eingabe.
+          {live
+            ? definitionHasRules
+              ? previewLoading
+                ? "Vorschau wird aktualisiert…"
+                : "Vorschau folgt Ihren Regeln automatisch."
+              : "Definieren Sie Regeln, um die Vorschau zu sehen."
+            : "Vorschau wird erst nach Klick berechnet."}
         </p>
-      )}
+      ) : null}
     </section>
   );
 }

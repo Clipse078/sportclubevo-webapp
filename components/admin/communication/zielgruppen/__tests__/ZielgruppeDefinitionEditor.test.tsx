@@ -33,9 +33,10 @@ describe("ZielgruppeDefinitionEditor", () => {
     );
 
     expect(screen.getByLabelText(/Ganze Organisation/i)).toBeInTheDocument();
-    expect(screen.getByText(/Mindestens eine Bedingung/i)).toBeInTheDocument();
-    expect(screen.getByText(/Regeln in Klartext/i)).toBeInTheDocument();
-    expect(screen.getByText(/Alle folgenden Bedingungen/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Mindestens eine Bedingung/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Zusammenfassung/i)).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /Alle Bedingungen/i })).toBeInTheDocument();
+    expect(screen.getByText(/Wer gehört zu dieser Zielgruppe/i)).toBeInTheDocument();
   });
 
   it("toggles whole organisation checkbox", async () => {
