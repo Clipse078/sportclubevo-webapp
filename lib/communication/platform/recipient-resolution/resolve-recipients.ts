@@ -33,14 +33,10 @@ import type {
   EffectiveRecipientResolutionResult,
   RecipientResolutionInput,
 } from "@/lib/communication/platform/recipient-resolution/types";
-import { DEFAULT_TENANT_SAFEGUARDING_POLICY } from "@/lib/communication/platform/recipient-resolution/guardian-expansion";
 import { prisma } from "@/lib/db/prisma";
 import { runRecipientResolutionPipeline } from "@/lib/communication/platform/recipient-resolution/pipeline";
 import { createAudienceCandidateResolutionPort } from "@/lib/communication/platform/recipient-resolution/audience-candidate-resolver";
-import {
-  createGuardianExpansionPort,
-  createGuardianExpansionPortForTenant,
-} from "@/lib/communication/platform/recipient-resolution/guardian-expansion";
+import { createGuardianExpansionPortForTenant } from "@/lib/communication/platform/recipient-resolution/guardian-expansion";
 import { loadTenantCommunicationSafeguardingPolicy } from "@/lib/communication/platform/safeguarding/tenant-safeguarding-policy";
 import { loadGuardianRecipientsForSubjects } from "@/lib/communication/platform/safeguarding/load-guardian-recipients";
 import { evaluateCommunicationSafeguarding } from "@/lib/communication/platform/safeguarding/evaluate-communication-safeguarding";
