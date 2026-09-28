@@ -1,29 +1,26 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { Mail } from "lucide-react";
 import { notFound } from "next/navigation";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
 import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { MitteilungenListToolbar } from "@/components/admin/communication/mitteilungen/MitteilungenListToolbar";
 import { EmptyState, PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { CLUB_COMMUNICATION_VIEW_ROUTE_PERMISSIONS } from "@/lib/communication/club/route-access";
 import { resolveClubCommunicationAuthorization } from "@/lib/communication/club/club-communication-authorization";
 import { listClubCommunications } from "@/lib/communication/club/club-communication-service";
+import {
+  formatMitteilungCreator,
+  formatMitteilungListTimestamp,
+  mitteilungKindLabel,
+  mitteilungListTimeColumnLabel,
+  resolveMitteilungDisplayStatus,
+} from "@/lib/communication/club/mitteilungen-display";
 
 export const dynamic = "force-dynamic";
-
-const STATUS_LABEL: Record<string, string> = {
-  DRAFT: "Entwurf",
-  PUBLISHED: "Veröffentlicht",
-  ARCHIVED: "Archiviert",
-};
-
-const KIND_LABEL: Record<string, string> = {
-  MESSAGE: "Nachricht",
-  ANNOUNCEMENT: "Mitteilung",
-  ALERT: "Alarm",
-};
 
 type PageProps = { searchParams?: Promise<{ q?: string; status?: string; kind?: string }> };
 
@@ -57,6 +54,15 @@ export default async function ClubMitteilungenPage({ searchParams }: PageProps) 
     </Link>
   ) : undefined;
 
+  const timeColumnLabel =
+    items.some(
+      (item) => item.scheduleStatus === "SCHEDULED" || item.scheduleStatus === "PROCESSING",
+    )
+      ? "Zeitpunkt"
+      : items.some((item) => item.status === "PUBLISHED")
+        ? "Gesendet"
+        : "Erstellt";
+
   return (
     <PageShell>
       <CommunicationWorkspaceHeader
@@ -66,7 +72,7 @@ export default async function ClubMitteilungenPage({ searchParams }: PageProps) 
           { label: "Mitteilungen" },
         ]}
         title="Mitteilungen"
-        description="Organisationsweite Nachrichten, Mitteilungen und Alarme — Zielgruppen werden bei Veröffentlichung aufgelöst."
+        description="Operative Vereinsinformationen an definierte Zielgruppen — von der Vorbereitung bis zur Zustellung."
         primaryAction={items.length > 0 ? primaryAction : undefined}
       />
 
@@ -75,58 +81,110 @@ export default async function ClubMitteilungenPage({ searchParams }: PageProps) 
           <EmptyState
             icon={<Mail className="h-8 w-8" aria-hidden />}
             heading="Noch keine Mitteilungen"
-            description="Erstellen Sie die erste organisationsweite Mitteilung für Ihren Verein."
+            description="Mitteilungen informieren Ihren Verein gezielt — z. B. zu Training, Terminen oder organisatorischen Themen."
             action={primaryAction}
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-[var(--border)] text-sm">
-              <thead className="text-left text-xs uppercase tracking-wide text-[var(--text-2)]">
-                <tr>
-                  <th className="px-2 py-3 md:px-4">Status</th>
-                  <th className="px-2 py-3 md:px-4">Typ</th>
-                  <th className="px-2 py-3 md:px-4">Betreff / Inhalt</th>
-                  <th className="hidden px-4 py-3 md:table-cell">Zielgruppe</th>
-                  <th className="hidden px-4 py-3 lg:table-cell">Absender</th>
-                  <th className="hidden px-4 py-3 lg:table-cell">Veröffentlicht</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--border)]">
-                {items.map((item) => (
-                  <tr key={item.id} className="hover:bg-[var(--surface-2)]/40">
-                    <td className="px-2 py-3 md:px-4">
-                      <AdminStatusPill
-                        label={STATUS_LABEL[item.status] ?? item.status}
-                        tone={item.status === "PUBLISHED" ? "success" : "muted"}
-                      />
-                    </td>
-                    <td className="px-2 py-3 md:px-4">{KIND_LABEL[item.kind] ?? item.kind}</td>
-                    <td className="px-2 py-3 md:px-4">
-                      <Link
-                        href={`/dashboard/communication/mitteilungen/${item.id}`}
-                        className="font-medium text-[var(--sce-primary)] hover:underline"
-                      >
-                        {item.subject?.trim() || item.bodyText.slice(0, 80)}
-                      </Link>
-                    </td>
-                    <td className="hidden px-4 py-3 text-[var(--text-2)] md:table-cell">
-                      {item.audienceSummary}
-                    </td>
-                    <td className="hidden px-4 py-3 text-[var(--text-2)] lg:table-cell">
-                      {item.senderPerson
-                        ? `${item.senderPerson.firstName} ${item.senderPerson.lastName}`.trim()
-                        : "—"}
-                    </td>
-                    <td className="hidden px-4 py-3 text-[var(--text-2)] lg:table-cell">
-                      {item.publishedAt
-                        ? new Date(item.publishedAt).toLocaleString("de-CH")
-                        : "—"}
-                    </td>
+          <>
+            <Suspense fallback={null}>
+              <MitteilungenListToolbar canSend={authz.canSend} />
+            </Suspense>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="min-w-full divide-y divide-[var(--border)] text-sm">
+                <thead className="text-left text-xs uppercase tracking-wide text-[var(--text-2)]">
+                  <tr>
+                    <th className="px-4 py-3">Titel</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="hidden px-4 py-3 lg:table-cell">Zielgruppe</th>
+                    <th className="hidden px-4 py-3 xl:table-cell">Erstellt von</th>
+                    <th className="hidden px-4 py-3 lg:table-cell">{timeColumnLabel}</th>
+                    <th className="hidden px-4 py-3 xl:table-cell">Zustellung</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-[var(--border)]">
+                  {items.map((item) => {
+                    const displayStatus = resolveMitteilungDisplayStatus({
+                      status: item.status,
+                      scheduleStatus: item.scheduleStatus,
+                    });
+                    const kindLabel = mitteilungKindLabel(item.kind);
+                    return (
+                      <tr key={item.id} className="hover:bg-[var(--surface-2)]/40">
+                        <td className="px-4 py-3">
+                          <Link
+                            href={`/dashboard/communication/mitteilungen/${item.id}`}
+                            className="font-medium text-[var(--sce-primary)] hover:underline"
+                          >
+                            {item.subject?.trim() || item.bodyText.slice(0, 80)}
+                          </Link>
+                          {kindLabel ? (
+                            <p className="mt-0.5 text-xs text-[var(--text-2)]">{kindLabel}</p>
+                          ) : null}
+                        </td>
+                        <td className="px-4 py-3">
+                          <AdminStatusPill
+                            label={displayStatus.label}
+                            tone={displayStatus.tone}
+                          />
+                          {displayStatus.srHint ? (
+                            <span className="sr-only">{displayStatus.srHint}</span>
+                          ) : null}
+                        </td>
+                        <td className="hidden px-4 py-3 text-[var(--text-2)] lg:table-cell">
+                          {item.audienceSummary}
+                        </td>
+                        <td className="hidden px-4 py-3 text-[var(--text-2)] xl:table-cell">
+                          {formatMitteilungCreator(item.senderPerson)}
+                        </td>
+                        <td className="hidden px-4 py-3 text-[var(--text-2)] lg:table-cell">
+                          <span className="sr-only">
+                            {mitteilungListTimeColumnLabel({
+                              status: item.status,
+                              scheduleStatus: item.scheduleStatus,
+                            })}
+                          </span>
+                          {formatMitteilungListTimestamp(item)}
+                        </td>
+                        <td className="hidden px-4 py-3 text-[var(--text-2)] xl:table-cell">
+                          {item.deliverySnapshotCount != null
+                            ? `${item.deliverySnapshotCount} Zustellungen`
+                            : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <ul className="divide-y divide-[var(--border)] md:hidden">
+              {items.map((item) => {
+                const displayStatus = resolveMitteilungDisplayStatus({
+                  status: item.status,
+                  scheduleStatus: item.scheduleStatus,
+                });
+                return (
+                  <li key={item.id} className="py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <Link
+                          href={`/dashboard/communication/mitteilungen/${item.id}`}
+                          className="font-medium text-[var(--sce-primary)]"
+                        >
+                          {item.subject?.trim() || item.bodyText.slice(0, 80)}
+                        </Link>
+                        <p className="mt-1 text-xs text-[var(--text-2)]">{item.audienceSummary}</p>
+                        <p className="mt-1 text-xs text-[var(--text-2)]">
+                          {formatMitteilungCreator(item.senderPerson)} ·{" "}
+                          {formatMitteilungListTimestamp(item)}
+                        </p>
+                      </div>
+                      <AdminStatusPill label={displayStatus.label} tone={displayStatus.tone} />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
         )}
       </CommunicationContentSurface>
     </PageShell>

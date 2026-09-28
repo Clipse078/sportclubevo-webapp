@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import ClubCommunicationComposer from "@/components/admin/communication/club/ClubCommunicationComposer";
-import { PageBreadcrumbs, PageHeader, PageShell, SectionCard } from "@/components/ui/page";
+import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
+import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { PageShell } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { CLUB_COMMUNICATION_SEND_ROUTE_PERMISSIONS } from "@/lib/communication/club/route-access";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -28,20 +30,17 @@ export default async function NewClubMitteilungPage() {
 
   return (
     <PageShell>
-      <PageBreadcrumbs
-        items={[
+      <CommunicationWorkspaceHeader
+        breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
           { label: "Mitteilungen", href: "/dashboard/communication/mitteilungen" },
           { label: "Neu" },
         ]}
+        title="Neue Mitteilung"
+        description="Inhalt, Empfänger, Kanäle und Zeitpunkt in einem durchgängigen Ablauf."
       />
-      <PageHeader
-        eyebrow="Kommunikation"
-        title="Neue Vereinsmitteilung"
-        description="Empfänger werden erst bei Veröffentlichung aufgelöst und eingefroren."
-      />
-      <SectionCard title="Composer">
+      <CommunicationContentSurface>
         <ClubCommunicationComposer
           targetGroups={targetGroups.map((tg) => ({
             id: tg.id,
@@ -50,7 +49,7 @@ export default async function NewClubMitteilungPage() {
           }))}
           tenantTimezone={resolveTenantEventTimezone(tenant.timezone)}
         />
-      </SectionCard>
+      </CommunicationContentSurface>
     </PageShell>
   );
 }

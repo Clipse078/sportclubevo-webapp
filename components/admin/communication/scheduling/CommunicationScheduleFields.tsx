@@ -24,7 +24,7 @@ export default function CommunicationScheduleFields({
           checked={!scheduleEnabled}
           onChange={() => onScheduleEnabledChange(false)}
         />
-        Jetzt veröffentlichen
+        Jetzt senden
       </label>
       <label className="flex items-center gap-2 text-sm">
         <input

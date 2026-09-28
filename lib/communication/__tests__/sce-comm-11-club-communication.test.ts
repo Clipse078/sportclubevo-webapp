@@ -32,6 +32,7 @@ const mocks = vi.hoisted(() => ({
     update: vi.fn(),
   },
   platformCommunicationRecipientSnapshot: { createMany: vi.fn(), groupBy: vi.fn() },
+  platformCommunicationPublicationSchedule: { findMany: vi.fn(), findFirst: vi.fn() },
   targetGroup: { findMany: vi.fn() },
   orgUnit: { count: vi.fn() },
   team: { count: vi.fn() },
@@ -55,6 +56,7 @@ vi.mock("@/lib/db/prisma", () => ({
     platformCommunicationConversation: mocks.platformCommunicationConversation,
     platformCommunication: mocks.platformCommunication,
     platformCommunicationRecipientSnapshot: mocks.platformCommunicationRecipientSnapshot,
+    platformCommunicationPublicationSchedule: mocks.platformCommunicationPublicationSchedule,
     targetGroup: mocks.targetGroup,
     orgUnit: mocks.orgUnit,
     team: mocks.team,
@@ -131,6 +133,8 @@ describe("SCE-COMM-11 club communication", () => {
     mocks.logAction.mockResolvedValue(undefined);
     mocks.getEffectivePermissions.mockResolvedValue({ platform: [], tenant: [] });
     mocks.userRole.count.mockResolvedValue(0);
+    mocks.platformCommunicationPublicationSchedule.findMany.mockResolvedValue([]);
+    mocks.platformCommunicationPublicationSchedule.findFirst.mockResolvedValue(null);
     mocks.$transaction.mockImplementation(async (fn: (tx: unknown) => Promise<void>) =>
       fn({
         platformCommunication: mocks.platformCommunication,
@@ -328,8 +332,10 @@ describe("SCE-COMM-11 club communication", () => {
         createdAt: new Date("2026-01-01"),
         audienceSpecJson: wholeOrganisationAudienceSpec(),
         senderPerson: { id: "p1", firstName: "A", lastName: "Sender" },
+        _count: { recipientSnapshots: 12 },
       },
     ]);
+    mocks.platformCommunicationPublicationSchedule.findMany.mockResolvedValue([]);
 
     const items = await listClubCommunications({
       tenantId: "tenant-a",
@@ -337,6 +343,7 @@ describe("SCE-COMM-11 club communication", () => {
       viewerCanSend: true,
     });
     expect(items).toHaveLength(1);
+    expect(items[0]?.deliverySnapshotCount).toBe(12);
     expect(mocks.platformCommunicationRecipientSnapshot.createMany).not.toHaveBeenCalled();
   });
 
