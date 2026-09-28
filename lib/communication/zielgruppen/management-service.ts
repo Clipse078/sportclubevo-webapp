@@ -20,6 +20,8 @@ import {
 } from "@/lib/communication/zielgruppen/validation";
 import { summarizeZielgruppeDefinition } from "@/lib/communication/zielgruppen/summary";
 import { resolveZielgruppeRuleCharacter } from "@/lib/communication/zielgruppen/zielgruppen-display";
+import { summarizeZielgruppeEditorDefinition } from "@/lib/communication/audience/human-audience-summary";
+import { countZielgruppeUsageReferences } from "@/lib/communication/zielgruppen/usage-references";
 
 export class ZielgruppeManagementError extends Error {
   constructor(
@@ -48,6 +50,8 @@ export type ZielgruppeListRow = {
   summaryHeadline: string;
   summaryParts: string[];
   ruleCharacterLabel: string;
+  humanSummary: string;
+  usageReferenceCount: number;
 };
 
 async function resolveRoleKeysForTenant(tenantId: string, roleIds: string[]): Promise<string[]> {
@@ -170,23 +174,29 @@ export async function listZielgruppenForManagement(
     },
   });
 
-  return rows.map((row) => {
-    const definition = ruleJsonToEditorDefinition(row.ruleJson);
-    const summary = summarizeZielgruppeDefinition(definition);
-    const ruleCharacter = resolveZielgruppeRuleCharacter(definition);
-    return {
-      id: row.id,
-      key: row.key,
-      name: row.name,
-      description: row.description,
-      status: row.status,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-      summaryHeadline: summary.headline,
-      summaryParts: summary.parts,
-      ruleCharacterLabel: ruleCharacter.label,
-    };
-  });
+  const mapped = await Promise.all(
+    rows.map(async (row) => {
+      const definition = ruleJsonToEditorDefinition(row.ruleJson);
+      const summary = summarizeZielgruppeDefinition(definition);
+      const ruleCharacter = resolveZielgruppeRuleCharacter(definition);
+      const usageReferenceCount = await countZielgruppeUsageReferences(tenantId, row.id);
+      return {
+        id: row.id,
+        key: row.key,
+        name: row.name,
+        description: row.description,
+        status: row.status,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        summaryHeadline: summary.headline,
+        summaryParts: summary.parts,
+        ruleCharacterLabel: ruleCharacter.label,
+        humanSummary: summarizeZielgruppeEditorDefinition(definition),
+        usageReferenceCount,
+      };
+    }),
+  );
+  return mapped;
 }
 
 export async function getZielgruppeForManagement(tenantId: string, targetGroupId: string) {
@@ -354,6 +364,46 @@ export async function restoreZielgruppe(tenantId: string, targetGroupId: string)
   return updateZielgruppe({
     tenantId,
     targetGroupId,
+    status: OrgUnitStatus.ACTIVE,
+  });
+}
+
+async function deriveUniqueKey(tenantId: string, baseName: string): Promise<string> {
+  const slug = baseName
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  const candidate = slug || "zielgruppe";
+  let suffix = 0;
+  while (true) {
+    const key = suffix === 0 ? candidate : `${candidate}-${suffix}`;
+    const existing = await prisma.targetGroup.findFirst({
+      where: { tenantId, key },
+      select: { id: true },
+    });
+    if (!existing) return key;
+    suffix += 1;
+  }
+}
+
+export async function duplicateZielgruppe(input: {
+  tenantId: string;
+  sourceTargetGroupId: string;
+  name?: string;
+}) {
+  const source = await getZielgruppeForManagement(input.tenantId, input.sourceTargetGroupId);
+  if (!source) {
+    throw new ZielgruppeManagementError("Zielgruppe nicht gefunden.", "NOT_FOUND");
+  }
+  const name = (input.name ?? `Kopie von ${source.name}`).trim();
+  const key = await deriveUniqueKey(input.tenantId, name);
+  return createZielgruppe({
+    tenantId: input.tenantId,
+    name,
+    key,
+    description: source.description,
+    definition: source.definition,
     status: OrgUnitStatus.ACTIVE,
   });
 }

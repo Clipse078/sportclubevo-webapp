@@ -52,10 +52,10 @@ CREATE UNIQUE INDEX "UserCommunicationPreference_tenantId_userId_category_channe
 CREATE INDEX "UserCommunicationPreference_tenantId_userId_idx"
   ON "UserCommunicationPreference"("tenantId", "userId");
 
-CREATE UNIQUE INDEX "SponsorContactCommunicationPreference_tenantId_sponsorContactId_category_channel_key"
+CREATE UNIQUE INDEX "SponsorCommPref_tenant_sponsor_cat_chan_key"
   ON "SponsorContactCommunicationPreference"("tenantId", "sponsorContactId", "category", "channel");
 
-CREATE INDEX "SponsorContactCommunicationPreference_tenantId_sponsorContactId_idx"
+CREATE INDEX "SponsorCommPref_tenant_sponsor_idx"
   ON "SponsorContactCommunicationPreference"("tenantId", "sponsorContactId");
 
 ALTER TABLE "UserCommunicationPreference"

@@ -5,6 +5,7 @@ import { Target } from "lucide-react";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import ZielgruppenListToolbar from "@/components/admin/communication/zielgruppen/ZielgruppenListToolbar";
+import ZielgruppenOverviewRowActions from "@/components/admin/communication/zielgruppen/ZielgruppenOverviewRowActions";
 import { CommunicationContentSurface } from "@/components/admin/communication/shared/CommunicationContentSurface";
 import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
 import { EmptyState, PageShell } from "@/components/ui/page";
@@ -125,10 +126,13 @@ export default async function CommunicationZielgruppenPage({ searchParams }: Pag
                       Name
                     </th>
                     <th className="px-4 py-3" scope="col">
-                      Regeltyp
+                      Regeln
                     </th>
                     <th className="px-4 py-3" scope="col">
                       Zusammenfassung
+                    </th>
+                    <th className="px-4 py-3" scope="col">
+                      Verwendung
                     </th>
                     <th className="px-4 py-3" scope="col">
                       Status
@@ -136,6 +140,11 @@ export default async function CommunicationZielgruppenPage({ searchParams }: Pag
                     <th className="px-4 py-3" scope="col">
                       Geändert
                     </th>
+                    {canManage ? (
+                      <th className="px-4 py-3" scope="col">
+                        Aktionen
+                      </th>
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border)]">
@@ -155,11 +164,13 @@ export default async function CommunicationZielgruppenPage({ searchParams }: Pag
                         ) : null}
                       </td>
                       <td className="px-4 py-3 text-[var(--text-2)]">{tg.ruleCharacterLabel}</td>
-                      <td className="px-4 py-3 text-xs text-[var(--muted)]">
-                        {tg.summaryHeadline}
-                        {tg.summaryParts.length > 0 ? (
-                          <span className="block">{tg.summaryParts.join(" · ")}</span>
-                        ) : null}
+                      <td className="max-w-xs px-4 py-3 text-xs text-[var(--muted)]">
+                        <span className="line-clamp-2">{tg.humanSummary}</span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-[var(--text-2)]">
+                        {tg.usageReferenceCount > 0
+                          ? `In ${tg.usageReferenceCount} Kontext${tg.usageReferenceCount === 1 ? "" : "en"} verwendet`
+                          : "—"}
                       </td>
                       <td className="px-4 py-3">
                         <AdminStatusPill
@@ -170,6 +181,15 @@ export default async function CommunicationZielgruppenPage({ searchParams }: Pag
                       <td className="px-4 py-3 text-xs text-[var(--muted)]">
                         {formatZielgruppenListTimestamp(tg.updatedAt)}
                       </td>
+                      {canManage ? (
+                        <td className="px-4 py-3">
+                          <ZielgruppenOverviewRowActions
+                            targetGroupId={tg.id}
+                            name={tg.name}
+                            canManage={canManage}
+                          />
+                        </td>
+                      ) : null}
                     </tr>
                   ))}
                 </tbody>
@@ -201,7 +221,15 @@ export default async function CommunicationZielgruppenPage({ searchParams }: Pag
                           {tg.description}
                         </p>
                       ) : null}
-                      <p className="mt-1 text-[11px] text-[var(--muted)]">{tg.summaryHeadline}</p>
+                      <p className="mt-1 line-clamp-2 text-[11px] text-[var(--muted)]">
+                        {tg.humanSummary}
+                      </p>
+                      {tg.usageReferenceCount > 0 ? (
+                        <p className="mt-1 text-[10px] text-[var(--muted)]">
+                          In {tg.usageReferenceCount} Kontext
+                          {tg.usageReferenceCount === 1 ? "" : "en"} verwendet
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                   <p className="text-[11px] text-[var(--muted)]">

@@ -22,6 +22,7 @@ import { assertTenantOwnedSponsorAudienceSelectors } from "@/lib/sponsoring/spon
 import { sponsorSelectorsAreEmpty } from "@/lib/sponsoring/sponsor-audience-selectors";
 import { buildCampaignPublishSnapshotCreateMany } from "@/lib/communication/sponsor/publish-recipient-snapshot-data";
 import { summarizeClubAudienceSpec } from "@/lib/communication/club/club-audience-summary";
+import { syncPlatformCommunicationAttachments } from "@/lib/communication/attachment-service";
 import {
   canTransitionCommunicationStatus,
   communicationAudienceMutable,
@@ -34,16 +35,25 @@ import {
 import { recordPlatformCommunicationAudit } from "@/lib/communication/team/platform-communication-audit";
 import { emitClubCommunicationPublishedNotifications } from "@/lib/communication/club/club-communication-notification-producer";
 import { resolveCommunicationChannelIntent } from "@/lib/communication/platform-email/communication-channel-intent";
-import { evaluatePlatformEmailReadiness } from "@/lib/communication/platform-email/email-readiness-service";
+import { EmailSenderResolutionError } from "@/lib/communication/sender-identity/sender-identity-resolution-service";
+import { prepareEmailSenderForPublish } from "@/lib/communication/sender-identity/prepare-email-sender-for-publish";
+import { withEmailSenderIdentityInOrchestration } from "@/lib/communication/sender-identity/communication-email-sender-intent";
+import { defaultCampaignOrchestrationMeta } from "@/lib/communication/campaign/campaign-orchestration-meta";
 import { enqueuePlatformCommunicationEmailDeliveries } from "@/lib/communication/platform-email/platform-email-dispatch-service";
 import { resolvePersonIdForUser } from "@/lib/teams/team-document-auth";
 import { MAX_TEAM_COMMUNICATION_BODY_LENGTH } from "@/lib/communication/team/team-communication-constants";
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
+import {
+  renderPersonalisationForDeliveryTargets,
+  validatePersonalisationBeforePublish,
+} from "@/lib/communication/personalisation/publish-personalisation";
 import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
 import {
-  applyPersonalSignatureToOutboundBody,
+  applyPersonalSignatureToOutbound,
+  personalSignatureFreezeJson,
   personalSignatureSupportedForMitteilungKind,
 } from "@/lib/communication/personal-signature/personal-signature-service";
+import { parsePersonalSignatureFreezeJson } from "@/lib/communication/personal-signature/personal-signature-freeze";
 
 export type ClubCommunicationListItem = {
   id: string;
@@ -274,6 +284,7 @@ export async function updateClubCommunicationDraft(input: {
   subject?: string | null;
   audienceSpec?: CommunicationAudienceSpec;
   acknowledgementRequired?: boolean;
+  attachmentIds?: string[];
 }): Promise<{ id: string }> {
   const row = await loadClubCommunicationRow({
     tenantId: input.tenantId,
@@ -301,6 +312,15 @@ export async function updateClubCommunicationDraft(input: {
 
   await prisma.platformCommunication.update({ where: { id: row.id }, data });
 
+  if (input.attachmentIds !== undefined) {
+    await syncPlatformCommunicationAttachments({
+      tenantId: input.tenantId,
+      actorUserId: input.actorUserId,
+      communicationId: row.id,
+      attachmentIds: input.attachmentIds,
+    });
+  }
+
   await recordPlatformCommunicationAudit({
     tenantId: input.tenantId,
     actorUserId: input.actorUserId,
@@ -318,29 +338,43 @@ export async function publishClubCommunication(input: {
   communicationId: string;
   senderUserId: string;
   includePersonalSignature?: boolean;
+  emailSenderIdentityId?: string | null;
 }): Promise<{ id: string; recipientCount: number }> {
   const row = await loadClubCommunicationRow({
     tenantId: input.tenantId,
     communicationId: input.communicationId,
   });
+  const orchestrationMetaJson: Prisma.InputJsonValue | undefined = input.emailSenderIdentityId
+    ? (withEmailSenderIdentityInOrchestration(
+        row.orchestrationMetaJson ?? defaultCampaignOrchestrationMeta(),
+        input.emailSenderIdentityId,
+      ) as Prisma.InputJsonValue)
+    : undefined;
   if (!canTransitionCommunicationStatus(row.status, "PUBLISHED")) {
     throw new TeamCommunicationValidationError("invalid status transition");
   }
 
+  let personalSignatureFreeze = parsePersonalSignatureFreezeJson(row.personalSignatureFreezeJson);
   if (personalSignatureSupportedForMitteilungKind(row.kind)) {
     try {
-      const withSignature = await applyPersonalSignatureToOutboundBody({
+      const applied = await applyPersonalSignatureToOutbound({
         tenantId: input.tenantId,
         userId: input.senderUserId,
         messageBody: row.bodyText,
         includePersonalSignature: input.includePersonalSignature,
       });
-      if (withSignature !== row.bodyText) {
+      personalSignatureFreeze = applied.freeze;
+      if (applied.bodyText !== row.bodyText || applied.freeze) {
         await prisma.platformCommunication.update({
           where: { id: row.id },
-          data: { bodyText: sanitizeBodyText(withSignature) },
+          data: {
+            bodyText: sanitizeBodyText(applied.bodyText),
+            ...(applied.freeze
+              ? { personalSignatureFreezeJson: personalSignatureFreezeJson(applied.freeze) }
+              : {}),
+          },
         });
-        row.bodyText = withSignature;
+        row.bodyText = applied.bodyText;
       }
     } catch {
       throw new TeamCommunicationValidationError("body exceeds maximum length");
@@ -358,6 +392,12 @@ export async function publishClubCommunication(input: {
   const category =
     row.kind === "ALERT" ? "CLUB_OPERATIONAL" : row.kind === "ANNOUNCEMENT" ? "CLUB_INFORMATION" : "CLUB_OPERATIONAL";
 
+  await validatePersonalisationBeforePublish({
+    subject: row.subject,
+    bodyText: row.bodyText,
+    contextRef,
+  });
+
   const dispatch = await resolveCommunicationRecipientsForDispatch(
     {
       tenantId: input.tenantId,
@@ -372,10 +412,46 @@ export async function publishClubCommunication(input: {
   );
 
   const fingerprint = dispatch.core.metadata.audienceFingerprint;
+  const effectiveOrchestration = orchestrationMetaJson ?? row.orchestrationMetaJson;
   const channelIntent = resolveCommunicationChannelIntent({
-    orchestrationMetaJson: row.orchestrationMetaJson,
+    orchestrationMetaJson: effectiveOrchestration,
   });
-  const emailReadiness = await evaluatePlatformEmailReadiness(input.tenantId);
+  let emailSenderPublish;
+  try {
+    emailSenderPublish = await prepareEmailSenderForPublish({
+      tenantId: input.tenantId,
+      orchestrationMetaJson: effectiveOrchestration,
+      emailChannelEnabled: channelIntent.email,
+    });
+  } catch (error) {
+    if (error instanceof EmailSenderResolutionError) {
+      throw new TeamCommunicationValidationError(error.message);
+    }
+    throw error;
+  }
+
+  const dispatchAt = new Date();
+  const personalisationByTarget = await renderPersonalisationForDeliveryTargets({
+    tenantId: input.tenantId,
+    contextRef,
+    subject: row.subject,
+    bodyText: row.bodyText,
+    senderUserId: input.senderUserId,
+    communicationId: input.communicationId,
+    communicationKind: row.kind,
+    emailSenderDisplayName:
+      typeof emailSenderPublish.snapshotData.emailSenderDisplayNameSnapshot === "string"
+        ? emailSenderPublish.snapshotData.emailSenderDisplayNameSnapshot
+        : null,
+    emailSenderAddress:
+      typeof emailSenderPublish.snapshotData.emailSenderAddressSnapshot === "string"
+        ? emailSenderPublish.snapshotData.emailSenderAddressSnapshot
+        : null,
+    deliveryTargets: dispatch.pipeline.deliveryTargets,
+    personalSignatureFreeze,
+    at: dispatchAt,
+  });
+
   const publishSnapshots = await buildCampaignPublishSnapshotCreateMany({
     tenantId: input.tenantId,
     communicationId: input.communicationId,
@@ -384,14 +460,15 @@ export async function publishClubCommunication(input: {
     resolvedAt: dispatch.core.metadata.resolvedAt,
     deliveryTargets: dispatch.pipeline.deliveryTargets,
     emailChannelEnabled: channelIntent.email,
-    emailTransportReady: emailReadiness.ready,
+    emailTransportReady: emailSenderPublish.emailTransportReady,
+    personalisationByTarget,
   });
 
   if (publishSnapshots.totalCount === 0) {
     throw new TeamCommunicationValidationError("no eligible recipients for dispatch");
   }
 
-  const publishedAt = new Date();
+  const publishedAt = dispatchAt;
 
   await prisma.$transaction(async (tx) => {
     await tx.platformCommunication.update({
@@ -400,6 +477,8 @@ export async function publishClubCommunication(input: {
         status: "PUBLISHED",
         publishedAt,
         audienceFingerprint: fingerprint,
+        ...(orchestrationMetaJson !== undefined ? { orchestrationMetaJson } : {}),
+        ...emailSenderPublish.snapshotData,
       },
     });
 

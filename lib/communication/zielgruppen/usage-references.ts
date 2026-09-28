@@ -33,6 +33,15 @@ function audienceSpecReferencesTargetGroup(
   return false;
 }
 
+/** Bounded count for list/overview (same scan limits as summary). */
+export async function countZielgruppeUsageReferences(
+  tenantId: string,
+  targetGroupId: string,
+): Promise<number> {
+  const summary = await getZielgruppeUsageSummary(tenantId, targetGroupId);
+  return summary.references.length;
+}
+
 export async function getZielgruppeUsageSummary(
   tenantId: string,
   targetGroupId: string,

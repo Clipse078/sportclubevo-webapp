@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import CommunicationScheduleFields from "@/components/admin/communication/scheduling/CommunicationScheduleFields";
 import {
@@ -15,10 +15,27 @@ import {
   KAMPAGNE_SPONSOR_COMMERCIAL_NOTICE,
 } from "@/lib/communication/campaign/kampagnen-display";
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
+import CommunicationAudienceSelector, {
+  type CommunicationAudiencePreviewState,
+} from "@/components/admin/communication/audience/CommunicationAudienceSelector";
+import {
+  buildCommunicationAudienceSpec,
+  communicationAudienceSelectionIsEmpty,
+  emptyCommunicationAudienceSelection,
+  inferCommunicationAudienceSelection,
+  type CommunicationAudienceSelection,
+} from "@/lib/communication/audience/communication-audience-selection";
 import {
   formatCampaignChannelSummary,
   type CampaignOrchestrationMeta,
 } from "@/lib/communication/campaign/campaign-orchestration-meta";
+import { CommunicationAttachmentPicker } from "@/components/admin/communication/attachments/CommunicationAttachmentPicker";
+import { useCommunicationAttachmentUpload } from "@/components/admin/communication/attachments/use-communication-attachment-upload";
+import { CommunicationSenderSelector } from "@/components/admin/communication/sender/CommunicationSenderSelector";
+import { PersonalisationFieldInsert } from "@/components/admin/communication/personalisation/PersonalisationFieldInsert";
+import { PersonalisationComposerPreview } from "@/components/admin/communication/personalisation/PersonalisationComposerPreview";
+import { insertPersonalisationAtSelection } from "@/lib/communication/personalisation/insert-personalisation-at-selection";
+import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
 
 type TargetGroupOption = { id: string; name: string; status: string };
 
@@ -48,6 +65,7 @@ type Props = {
   initialOrchestration?: CampaignOrchestrationMeta;
   tenantTimezone?: string;
   canSaveAsTemplate?: boolean;
+  tenantId?: string;
 };
 
 function sectionHeading(id: string, title: string) {
@@ -59,7 +77,7 @@ function sectionHeading(id: string, title: string) {
 }
 
 export default function CampaignComposer({
-  targetGroups,
+  targetGroups: _targetGroups,
   sponsorOrganisations = [],
   templateOptions = [],
   canManageTemplates = false,
@@ -76,8 +94,27 @@ export default function CampaignComposer({
   initialOrchestration,
   tenantTimezone = "Europe/Zurich",
   canSaveAsTemplate = false,
+  tenantId,
 }: Props) {
+  const organisationContextRef: CommunicationContextRef | null = tenantId
+    ? { kind: "ORGANISATION", tenantId }
+    : null;
   const router = useRouter();
+  const subjectInputRef = useRef<HTMLInputElement>(null);
+  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  function insertPersonalisationToken(token: string, target: "subject" | "body") {
+    insertPersonalisationAtSelection({
+      element: target === "subject" ? subjectInputRef.current : bodyTextareaRef.current,
+      currentValue: target === "subject" ? subject : bodyText,
+      token,
+      onValueChange: (next) => {
+        if (target === "subject") setSubject(next);
+        else setBodyText(next);
+        invalidateReview();
+      },
+    });
+  }
   const inferredAudience = useMemo(
     () =>
       initialAudienceSpec
@@ -92,9 +129,22 @@ export default function CampaignComposer({
   const [audienceMode, setAudienceMode] = useState<KampagnenAudienceEditorMode>(
     inferredAudience?.mode ?? initialAudienceMode,
   );
-  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>(
-    inferredAudience?.selectedGroupIds ?? initialSelectedGroupIds,
+  const [audienceSelection, setAudienceSelection] = useState<CommunicationAudienceSelection>(() => {
+    if (initialAudienceSpec && inferredAudience?.mode !== "SPONSORS") {
+      return inferCommunicationAudienceSelection(initialAudienceSpec);
+    }
+    if (initialAudienceMode === "TARGET_GROUPS" && initialSelectedGroupIds.length > 0) {
+      return {
+        ...emptyCommunicationAudienceSelection(),
+        targetGroupIds: initialSelectedGroupIds,
+      };
+    }
+    return { ...emptyCommunicationAudienceSelection(), wholeOrganisation: true };
+  });
+  const [audiencePreview, setAudiencePreview] = useState<CommunicationAudiencePreviewState | null>(
+    null,
   );
+  const [largeAudienceConfirmed, setLargeAudienceConfirmed] = useState(false);
   const [sponsorMode, setSponsorMode] = useState<"ALL_ACTIVE" | "SELECTED">(
     inferredAudience?.sponsorMode ?? initialSponsorMode,
   );
@@ -109,7 +159,7 @@ export default function CampaignComposer({
   const [emailChannelEnabled, setEmailChannelEnabled] = useState(
     initialOrchestration?.channels.email ?? true,
   );
-  const [preview, setPreview] = useState<{
+  const [sponsorPreview, setSponsorPreview] = useState<{
     candidates: number;
     effective: number;
     excluded: number;
@@ -120,12 +170,23 @@ export default function CampaignComposer({
     } | null;
   } | null>(null);
   const [emailReady, setEmailReady] = useState<boolean | null>(null);
+  const [emailSenderIdentityId, setEmailSenderIdentityId] = useState<string | null>(
+    initialOrchestration?.emailSenderIdentityId ?? null,
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduledAtLocal, setScheduledAtLocal] = useState("");
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const {
+    attachments,
+    error: attachmentError,
+    addFiles,
+    removeAttachment,
+    readyAttachmentIds,
+    hasUnreadyAttachments,
+  } = useCommunicationAttachmentUpload();
 
   async function loadEmailReadiness() {
     try {
@@ -142,13 +203,41 @@ export default function CampaignComposer({
     void loadEmailReadiness();
   }, []);
 
-  function buildAudienceSpec(): CommunicationAudienceSpec {
-    if (audienceMode === "WHOLE_ORG") {
-      return {
-        composition: "UNION",
-        components: [{ structural: { wholeOrganisation: true } }],
-      };
+  useEffect(() => {
+    if (audienceMode !== "SPONSORS") {
+      setSponsorPreview(null);
+      return undefined;
     }
+    let cancelled = false;
+    const handle = window.setTimeout(async () => {
+      try {
+        const res = await fetch("/api/communication/campaign/preview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ audienceSpec: buildAudienceSpec() }),
+        });
+        const data = await res.json();
+        if (cancelled || !res.ok) return;
+        setSponsorPreview({
+          candidates: data.candidates,
+          effective: data.effective,
+          excluded: data.excluded,
+          scopeNotice: data.scopeNotice,
+          sponsorAudience: data.sponsorAudience,
+        });
+      } catch {
+        if (!cancelled) setSponsorPreview(null);
+      }
+    }, 400);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
+    // buildAudienceSpec reads sponsor + member selection from closure
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional debounced sponsor preview
+  }, [audienceMode, audienceSelection, sponsorMode, selectedSponsorOrgIds, selectedSponsorContactIds]);
+
+  function buildAudienceSpec(): CommunicationAudienceSpec {
     if (audienceMode === "SPONSORS") {
       if (sponsorMode === "ALL_ACTIVE") {
         return {
@@ -168,10 +257,7 @@ export default function CampaignComposer({
         ],
       };
     }
-    return {
-      composition: "UNION",
-      components: selectedGroupIds.map((id) => ({ savedTargetGroupIds: [id] })),
-    };
+    return buildCommunicationAudienceSpec(audienceSelection);
   }
 
   function buildOrchestration(): CampaignOrchestrationMeta {
@@ -187,11 +273,19 @@ export default function CampaignComposer({
         scheduledAt: scheduleEnabled ? scheduledAtLocal || null : null,
         timezone: scheduleEnabled ? tenantTimezone : null,
       },
+      ...(emailSenderIdentityId ? { emailSenderIdentityId } : {}),
     };
   }
 
   const audienceSummaryLabel = useMemo(() => {
-    if (audienceMode === "WHOLE_ORG") return "Gesamter Verein";
+    if (audienceMode !== "SPONSORS") {
+      if (audiencePreview?.audienceSummary) return audiencePreview.audienceSummary;
+      if (audienceSelection.wholeOrganisation) return "Gesamter Verein";
+      if (communicationAudienceSelectionIsEmpty(audienceSelection)) {
+        return "Keine Empfänger ausgewählt";
+      }
+      return "Empfängerauswahl";
+    }
     if (audienceMode === "SPONSORS") {
       if (sponsorMode === "ALL_ACTIVE") return "Alle aktiven Sponsoren / Partner";
       const orgNames = selectedSponsorOrgIds
@@ -199,18 +293,14 @@ export default function CampaignComposer({
         .filter(Boolean);
       return orgNames.length > 0 ? orgNames.join(", ") : "Ausgewählte Sponsoren";
     }
-    if (selectedGroupIds.length === 0) return "Keine Zielgruppe ausgewählt";
-    const names = selectedGroupIds
-      .map((id) => targetGroups.find((tg) => tg.id === id)?.name)
-      .filter(Boolean);
-    return names.length > 0 ? names.join(", ") : `${selectedGroupIds.length} Zielgruppe(n)`;
+    return "Empfängerauswahl";
   }, [
     audienceMode,
-    selectedGroupIds,
+    audiencePreview?.audienceSummary,
+    audienceSelection,
     selectedSponsorOrgIds,
     sponsorMode,
     sponsorOrganisations,
-    targetGroups,
   ]);
 
   const channelSummary = formatCampaignChannelSummary(buildOrchestration());
@@ -220,31 +310,6 @@ export default function CampaignComposer({
       ? `${scheduledAtLocal} (${tenantTimezone})`
       : "Bitte Datum und Uhrzeit wählen"
     : "Jetzt veröffentlichen";
-
-  async function runPreview() {
-    setError(null);
-    setBusy(true);
-    try {
-      const res = await fetch("/api/communication/campaign/preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ audienceSpec: buildAudienceSpec() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Empfängervorschau fehlgeschlagen");
-      setPreview({
-        candidates: data.candidates,
-        effective: data.effective,
-        excluded: data.excluded,
-        scopeNotice: data.scopeNotice,
-        sponsorAudience: data.sponsorAudience,
-      });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Empfängervorschau fehlgeschlagen");
-    } finally {
-      setBusy(false);
-    }
-  }
 
   async function applyTemplate() {
     if (!selectedTemplateId) return;
@@ -271,7 +336,9 @@ export default function CampaignComposer({
       if (template.audienceSpecJson) {
         const inferred = inferKampagnenAudienceEditorState(template.audienceSpecJson);
         setAudienceMode(inferred.mode);
-        setSelectedGroupIds(inferred.selectedGroupIds);
+        if (inferred.mode !== "SPONSORS") {
+          setAudienceSelection(inferCommunicationAudienceSelection(template.audienceSpecJson));
+        }
         setSponsorMode(inferred.sponsorMode);
         setSelectedSponsorOrgIds(inferred.sponsorOrganisationIds);
         setSelectedSponsorContactIds(inferred.sponsorContactIds);
@@ -281,7 +348,7 @@ export default function CampaignComposer({
         setPushEnabled(template.orchestrationMetaJson.channels.push);
         setEmailChannelEnabled(template.orchestrationMetaJson.channels.email);
       }
-      setPreview(null);
+      setSponsorPreview(null);
       setReviewConfirmed(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Vorlage konnte nicht übernommen werden");
@@ -299,6 +366,7 @@ export default function CampaignComposer({
       bodyText,
       audienceSpec,
       orchestration,
+      attachmentIds: readyAttachmentIds,
     };
     if (campaignId) {
       const res = await fetch(`/api/communication/campaign/${campaignId}`, {
@@ -344,9 +412,21 @@ export default function CampaignComposer({
 
   function validateBeforePublish() {
     if (!internalName.trim()) throw new Error("Bitte geben Sie einen internen Kampagnennamen ein.");
-    if (!bodyText.trim()) throw new Error("Bitte geben Sie den Kampagneninhalt ein.");
-    if (audienceMode === "TARGET_GROUPS" && selectedGroupIds.length === 0) {
-      throw new Error("Bitte wählen Sie mindestens eine Zielgruppe.");
+    if (!bodyText.trim() && readyAttachmentIds.length === 0) {
+      throw new Error("Bitte geben Sie den Kampagneninhalt oder mindestens einen Anhang ein.");
+    }
+    if (hasUnreadyAttachments) {
+      throw new Error("Bitte warten Sie, bis alle Anhänge hochgeladen sind.");
+    }
+    if (audienceMode !== "SPONSORS" && communicationAudienceSelectionIsEmpty(audienceSelection)) {
+      throw new Error("Bitte wählen Sie mindestens einen Empfänger.");
+    }
+    if (
+      audienceMode !== "SPONSORS" &&
+      (audienceSelection.wholeOrganisation || (audiencePreview?.effective ?? 0) > 50) &&
+      !largeAudienceConfirmed
+    ) {
+      throw new Error("Bitte bestätigen Sie den Versand an eine große Empfängergruppe.");
     }
     if (
       audienceMode === "SPONSORS" &&
@@ -399,16 +479,8 @@ export default function CampaignComposer({
     }
   }
 
-  function toggleGroup(id: string) {
-    setPreview(null);
-    setReviewConfirmed(false);
-    setSelectedGroupIds((prev) =>
-      prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id],
-    );
-  }
-
   function toggleSponsorOrg(id: string) {
-    setPreview(null);
+    setSponsorPreview(null);
     setReviewConfirmed(false);
     setSelectedSponsorOrgIds((prev) =>
       prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id],
@@ -416,7 +488,7 @@ export default function CampaignComposer({
   }
 
   function toggleSponsorContact(id: string) {
-    setPreview(null);
+    setSponsorPreview(null);
     setReviewConfirmed(false);
     setSelectedSponsorContactIds((prev) =>
       prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id],
@@ -487,9 +559,18 @@ export default function CampaignComposer({
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block font-medium text-[var(--foreground)]">Betreff (Empfänger)</span>
+            <span className="mb-1 flex flex-wrap items-center justify-between gap-2 font-medium text-[var(--foreground)]">
+              Betreff (Empfänger)
+              {organisationContextRef ? (
+                <PersonalisationFieldInsert
+                  contextRef={organisationContextRef}
+                  onInsert={(token) => insertPersonalisationToken(token, "subject")}
+                />
+              ) : null}
+            </span>
             <input
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
+              ref={subjectInputRef}
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 font-mono text-sm"
               value={subject}
               onChange={(e) => {
                 setSubject(e.target.value);
@@ -500,17 +581,32 @@ export default function CampaignComposer({
           </label>
         </div>
         <label className="block text-sm">
-          <span className="mb-1 block font-medium text-[var(--foreground)]">Nachricht</span>
+          <span className="mb-1 flex items-center justify-between gap-2 font-medium text-[var(--foreground)]">
+            Nachricht
+            {organisationContextRef ? (
+              <PersonalisationFieldInsert
+                contextRef={organisationContextRef}
+                onInsert={(token) => insertPersonalisationToken(token, "body")}
+              />
+            ) : null}
+          </span>
           <textarea
-            className="min-h-[160px] w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
+            ref={bodyTextareaRef}
+            className="min-h-[160px] w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 font-mono text-sm"
             value={bodyText}
             onChange={(e) => {
               setBodyText(e.target.value);
               invalidateReview();
             }}
-            required
           />
         </label>
+        <CommunicationAttachmentPicker
+          disabled={busy}
+          attachments={attachments}
+          error={attachmentError}
+          onAddFiles={addFiles}
+          onRemove={removeAttachment}
+        />
       </section>
 
       <section
@@ -525,27 +621,13 @@ export default function CampaignComposer({
             <input
               type="radio"
               name="audienceMode"
-              checked={audienceMode === "WHOLE_ORG"}
+              checked={audienceMode !== "SPONSORS"}
               onChange={() => {
                 setAudienceMode("WHOLE_ORG");
-                setPreview(null);
                 invalidateReview();
               }}
             />
-            Gesamter Verein
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="audienceMode"
-              checked={audienceMode === "TARGET_GROUPS"}
-              onChange={() => {
-                setAudienceMode("TARGET_GROUPS");
-                setPreview(null);
-                invalidateReview();
-              }}
-            />
-            Gespeicherte Zielgruppen
+            Mitglieder / Verein
           </label>
           {sponsorOrganisations.length > 0 ? (
             <label className="flex items-center gap-2 text-sm">
@@ -555,7 +637,6 @@ export default function CampaignComposer({
                 checked={audienceMode === "SPONSORS"}
                 onChange={() => {
                   setAudienceMode("SPONSORS");
-                  setPreview(null);
                   invalidateReview();
                 }}
               />
@@ -563,24 +644,20 @@ export default function CampaignComposer({
             </label>
           ) : null}
         </fieldset>
-        {audienceMode === "TARGET_GROUPS" ? (
-          <div className="flex flex-wrap gap-2">
-            {targetGroups.map((tg) => (
-              <button
-                key={tg.id}
-                type="button"
-                onClick={() => toggleGroup(tg.id)}
-                aria-pressed={selectedGroupIds.includes(tg.id)}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] ${
-                  selectedGroupIds.includes(tg.id)
-                    ? "border-[var(--sce-primary)] bg-[var(--sce-primary)]/10 text-[var(--sce-primary)]"
-                    : "border-[var(--border)] text-[var(--text-2)]"
-                }`}
-              >
-                {tg.name}
-              </button>
-            ))}
-          </div>
+        {audienceMode !== "SPONSORS" ? (
+          <CommunicationAudienceSelector
+            context="CAMPAIGN"
+            value={audienceSelection}
+            onChange={(next) => {
+              setAudienceSelection(next);
+              invalidateReview();
+            }}
+            onPreviewChange={setAudiencePreview}
+            requireLargeAudienceConfirm
+            largeAudienceConfirmed={largeAudienceConfirmed}
+            onLargeAudienceConfirmedChange={setLargeAudienceConfirmed}
+            disabled={busy}
+          />
         ) : null}
         {audienceMode === "SPONSORS" ? (
           <div className="space-y-3">
@@ -641,29 +718,19 @@ export default function CampaignComposer({
             ) : null}
           </div>
         ) : null}
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void runPreview()}
-            className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium"
-          >
-            Empfängervorschau
-          </button>
-          {preview ? (
-            <p className="text-sm text-[var(--text-2)]">
-              <strong>{preview.effective}</strong> Personen in der Zielgruppe
-              {preview.excluded > 0 ? ` (${preview.excluded} ausgeschlossen)` : ""}
-              {preview.sponsorAudience
-                ? ` · Sponsor-Kontakte: ${preview.sponsorAudience.sponsorContactCount}`
-                : ""}
-            </p>
-          ) : null}
-        </div>
+        {audienceMode === "SPONSORS" && sponsorPreview ? (
+          <p className="text-sm text-[var(--text-2)]">
+            <strong>{sponsorPreview.effective}</strong> Personen in der Zielgruppe
+            {sponsorPreview.excluded > 0 ? ` (${sponsorPreview.excluded} ausgeschlossen)` : ""}
+            {sponsorPreview.sponsorAudience
+              ? ` · Sponsor-Kontakte: ${sponsorPreview.sponsorAudience.sponsorContactCount}`
+              : ""}
+          </p>
+        ) : null}
         <p className="text-xs text-[var(--text-2)]">{KAMPAGNE_PREFERENCES_NOTICE}</p>
         <p className="text-xs text-[var(--text-2)]">{KAMPAGNE_SAFEGUARDING_NOTICE}</p>
-        {preview?.scopeNotice ? (
-          <p className="text-xs text-[var(--text-2)]">{preview.scopeNotice}</p>
+        {audienceMode === "SPONSORS" && sponsorPreview?.scopeNotice ? (
+          <p className="text-xs text-[var(--text-2)]">{sponsorPreview.scopeNotice}</p>
         ) : null}
       </section>
 
@@ -714,6 +781,15 @@ export default function CampaignComposer({
             </label>
           </li>
         </ul>
+        <CommunicationSenderSelector
+          value={emailSenderIdentityId}
+          onChange={(next) => {
+            setEmailSenderIdentityId(next);
+            invalidateReview();
+          }}
+          showOnlyWhenEmail
+          emailChannelEnabled={emailChannelEnabled}
+        />
         <p className="text-xs text-[var(--text-2)]">
           E-Mail-Versand bereit:{" "}
           {emailReady === null ? "…" : emailReady ? "Ja" : "Nein"}
@@ -779,7 +855,15 @@ export default function CampaignComposer({
           </div>
           <div>
             <dt className="text-[var(--text-2)]">Zielpersonen (Vorschau)</dt>
-            <dd>{preview ? `${preview.effective} Personen` : "Vorschau noch nicht geladen"}</dd>
+            <dd>
+              {audienceMode === "SPONSORS"
+                ? sponsorPreview
+                  ? `${sponsorPreview.effective} Personen`
+                  : "Empfängervorschau wird berechnet …"
+                : audiencePreview
+                  ? `${audiencePreview.effective} Personen`
+                  : "Empfängervorschau wird berechnet …"}
+            </dd>
           </div>
           <div>
             <dt className="text-[var(--text-2)]">Kanäle</dt>
@@ -797,6 +881,19 @@ export default function CampaignComposer({
           ) : null}
         </dl>
         <p className="text-xs text-[var(--text-2)]">{KAMPAGNE_PUBLISH_NOTICE}</p>
+        {organisationContextRef && audienceMode !== "SPONSORS" ? (
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-[var(--foreground)]">Personalisierungsvorschau</h3>
+            <PersonalisationComposerPreview
+              subject={subject}
+              bodyText={bodyText}
+              contextRef={organisationContextRef}
+              audienceSelection={audienceSelection}
+              audienceContext="CAMPAIGN"
+              communicationKind="CAMPAIGN"
+            />
+          </div>
+        ) : null}
         <label className="flex items-start gap-2 text-sm">
           <input
             type="checkbox"

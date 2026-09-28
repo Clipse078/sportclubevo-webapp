@@ -39,6 +39,7 @@ export async function POST(request: Request, context: RouteContext) {
   });
 
   let includePersonalSignature: boolean | undefined;
+  let emailSenderIdentityId: string | null | undefined;
   try {
     const body = (await request.json()) as Record<string, unknown>;
     includePersonalSignature =
@@ -47,8 +48,11 @@ export async function POST(request: Request, context: RouteContext) {
         : body.includePersonalSignature === false
           ? false
           : undefined;
+    emailSenderIdentityId =
+      typeof body.emailSenderIdentityId === "string" ? body.emailSenderIdentityId.trim() : null;
   } catch {
     includePersonalSignature = undefined;
+    emailSenderIdentityId = undefined;
   }
 
   const result = await publishClubCommunication({
@@ -56,6 +60,7 @@ export async function POST(request: Request, context: RouteContext) {
     communicationId,
     senderUserId: session.user.id,
     includePersonalSignature,
+    emailSenderIdentityId,
   });
 
   return NextResponse.json(result);

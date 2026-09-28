@@ -8,6 +8,7 @@ import { CommunicationContentSurface } from "@/components/admin/communication/sh
 import type { EmailSenderWorkspaceViewModel } from "@/lib/communication/email-sender-workspace";
 import type { EmailSenderReadinessChecklistItem } from "@/lib/communication/email-sender-display";
 import { useToast } from "@/hooks/use-toast";
+import { EmailSenderManagementPanel } from "@/components/admin/communication/email-sender/EmailSenderManagementPanel";
 
 type Props = {
   initialModel: EmailSenderWorkspaceViewModel;
@@ -243,12 +244,14 @@ export default function EmailSenderWorkspace({ initialModel }: Props) {
         </div>
       </section>
 
+      <EmailSenderManagementPanel />
+
       <section
         aria-labelledby="email-sender-config-heading"
         className="rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4 md:p-6"
       >
         <h2 id="email-sender-config-heading" className="text-base font-semibold text-[var(--foreground)]">
-          Absender konfigurieren
+          Standardabsender (Legacy-Kompatibilität)
         </h2>
         <p className="mt-1 text-sm text-[var(--text-2)]">
           Name und Adresse für Communication-E-Mails (Mitteilungen, Kampagnen, Direktnachrichten per E-Mail).

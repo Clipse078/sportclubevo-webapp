@@ -106,6 +106,13 @@ vi.mock("@/lib/communication/platform-email/email-readiness-service", () => ({
   })),
 }));
 
+vi.mock("@/lib/communication/sender-identity/prepare-email-sender-for-publish", () => ({
+  prepareEmailSenderForPublish: vi.fn(async () => ({
+    emailTransportReady: true,
+    snapshotData: {},
+  })),
+}));
+
 vi.mock("@/lib/communication/platform-email/platform-email-dispatch-service", () => ({
   enqueuePlatformCommunicationEmailDeliveries: vi.fn(async () => ({
     examined: 0,

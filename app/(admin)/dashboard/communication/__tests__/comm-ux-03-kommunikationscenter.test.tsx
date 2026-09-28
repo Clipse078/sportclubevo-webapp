@@ -23,6 +23,7 @@ import { CommunicationInboxConversationList } from "@/components/admin/communica
 import { CommunicationInboxToolbar } from "@/components/admin/communication/inbox/CommunicationInboxToolbar";
 import { CommunicationInboxConversationDetailPane } from "@/components/admin/communication/inbox/CommunicationInboxConversationDetail";
 import { INBOX_QUICK_FILTERS } from "@/components/admin/communication/inbox/inbox-workspace-types";
+import { inboxReplyComposerTestDefaults } from "@/lib/communication/inbox/inbox-reply-composer-contract";
 import { INBOX_VIEW_PERMISSIONS } from "@/lib/communication/inbox/route-access";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { blockRemoteImages, sanitizeInboundEmailHtml } from "@/lib/communication/inbox/html-sanitizer";
@@ -122,6 +123,7 @@ const detailPropsBase = {
   showProcessingToolbar: true,
   replyDisabled: false,
   repliesLockedInformOnly: false,
+  ...inboxReplyComposerTestDefaults,
 };
 
 beforeEach(() => {

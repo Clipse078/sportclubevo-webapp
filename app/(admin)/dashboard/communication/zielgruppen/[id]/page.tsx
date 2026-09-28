@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import ZielgruppeManagementForm from "@/components/admin/communication/zielgruppen/ZielgruppeManagementForm";
 import ZielgruppeArchiveActions from "@/components/admin/communication/zielgruppen/ZielgruppeArchiveActions";
+import ZielgruppeDuplicateButton from "@/components/admin/communication/zielgruppen/ZielgruppeDuplicateButton";
 import ZielgruppeHumanRulesPanel from "@/components/admin/communication/zielgruppen/ZielgruppeHumanRulesPanel";
 import ZielgruppePreviewPanel from "@/components/admin/communication/zielgruppen/ZielgruppePreviewPanel";
 import ZielgruppeUsagePanel from "@/components/admin/communication/zielgruppen/ZielgruppeUsagePanel";
@@ -94,6 +95,11 @@ export default async function CommunicationZielgruppeDetailPage({
       <CommunicationContentSurface>
         <div className="mb-6 flex flex-wrap items-center gap-2">
           <AdminStatusPill label={STATUS_LABELS[tg.status] ?? tg.status} tone="success" />
+          <ZielgruppeDuplicateButton
+            targetGroupId={tg.id}
+            sourceName={tg.name}
+            canManage={canManage}
+          />
           <ZielgruppeArchiveActions targetGroupId={tg.id} status={tg.status} canManage={canManage} />
           {canDelete ? (
             <TargetGroupDeleteButton
@@ -138,7 +144,7 @@ export default async function CommunicationZielgruppeDetailPage({
               <h2 className="text-sm font-semibold text-[var(--foreground)]">
                 Aktuelle Empfänger (Vorschau)
               </h2>
-              <ZielgruppePreviewPanel definition={tg.definition} disabled={false} />
+              <ZielgruppePreviewPanel definition={tg.definition} disabled={false} live />
             </section>
 
             <section className="sce-detail-section sce-detail-section-body space-y-3">

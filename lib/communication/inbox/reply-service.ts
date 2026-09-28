@@ -13,6 +13,11 @@ import { buildReplyReferences } from "@/lib/communication/inbox/threading-servic
 import { recordCommunicationCenterAudit } from "@/lib/communication/inbox/inbox-audit";
 import { reactivateCommunicationCenterConversationToInboxOnReply } from "@/lib/communication/inbox/mailbox-organization-service";
 import { assertConversationAllowsReplies } from "@/lib/communication/direct/direct-message-service";
+import {
+  attachSelectionToCommunicationCenterMessage,
+  loadCommunicationCenterMessageAttachmentsForDelivery,
+} from "@/lib/communication/attachment-service";
+import type { MailAttachment } from "@/lib/email/mailer";
 
 export type ReplyToConversationResult = {
   messageId: string;
@@ -33,21 +38,32 @@ export async function replyToCommunicationCenterConversation(input: {
   bodyText: string;
   idempotencyKey: string;
   includePersonalSignature?: boolean;
+  attachmentIds?: readonly string[];
 }): Promise<ReplyToConversationResult> {
-  const { applyPersonalSignatureToOutboundBody } = await import(
+  const { applyPersonalSignatureToOutbound, personalSignatureFreezeJson } = await import(
     "@/lib/communication/personal-signature/personal-signature-service"
   );
+  const { renderEmailBodyHtmlFromFreeze } = await import(
+    "@/lib/communication/personal-signature/signature-email-delivery"
+  );
+  const { loadSignatureCidMailAttachments } = await import(
+    "@/lib/communication/personal-signature/signature-email-delivery"
+  );
+  const attachmentIds = [...new Set((input.attachmentIds ?? []).filter(Boolean))];
   let bodyText = input.bodyText.trim();
-  if (!bodyText) {
+  if (!bodyText && attachmentIds.length === 0) {
     throw new CommunicationCenterError("INVALID_INPUT", "Nachrichtentext ist erforderlich.");
   }
+  let signatureFreeze = null;
   try {
-    bodyText = await applyPersonalSignatureToOutboundBody({
+    const applied = await applyPersonalSignatureToOutbound({
       tenantId: input.tenantId,
       userId: input.actorUserId,
       messageBody: bodyText,
       includePersonalSignature: input.includePersonalSignature,
     });
+    bodyText = applied.bodyText;
+    signatureFreeze = applied.freeze;
   } catch (error) {
     if (error instanceof Error && error.message === "BODY_WITH_SIGNATURE_TOO_LONG") {
       throw new CommunicationCenterError("INVALID_INPUT", "Nachricht ist zu lang.");
@@ -118,7 +134,32 @@ export async function replyToCommunicationCenterConversation(input: {
     throw new CommunicationCenterError("INVALID_STATE", "Kein Empfänger für Antwort gefunden.");
   }
 
-  const readiness = await evaluatePlatformEmailReadiness(input.tenantId);
+  const linkedCommunication = conversation.platformCommunicationId
+    ? await prisma.platformCommunication.findFirst({
+        where: {
+          id: conversation.platformCommunicationId,
+          tenantId: input.tenantId,
+        },
+        select: {
+          emailSenderIdentityId: true,
+          emailSenderDisplayNameSnapshot: true,
+          emailSenderAddressSnapshot: true,
+          emailSenderSource: true,
+          orchestrationMetaJson: true,
+        },
+      })
+    : null;
+
+  const explicitSenderId =
+    linkedCommunication?.emailSenderIdentityId ??
+    (linkedCommunication?.orchestrationMetaJson &&
+    typeof linkedCommunication.orchestrationMetaJson === "object"
+      ? (linkedCommunication.orchestrationMetaJson as Record<string, unknown>).emailSenderIdentityId
+      : null);
+
+  const readiness = await evaluatePlatformEmailReadiness(input.tenantId, {
+    senderIdentityId: typeof explicitSenderId === "string" ? explicitSenderId : null,
+  });
   if (!readiness.ready) {
     throw new CommunicationCenterError(
       "EMAIL_NOT_READY",
@@ -126,7 +167,27 @@ export async function replyToCommunicationCenterConversation(input: {
     );
   }
 
-  const sender = await resolveTenantEmailSender(input.tenantId);
+  const { resolveDeliveryEmailSender } = await import(
+    "@/lib/communication/sender-identity/delivery-email-sender-service"
+  );
+  const deliverySender = linkedCommunication
+    ? await resolveDeliveryEmailSender({
+        tenantId: input.tenantId,
+        emailSenderIdentityId: linkedCommunication.emailSenderIdentityId,
+        emailSenderDisplayNameSnapshot: linkedCommunication.emailSenderDisplayNameSnapshot,
+        emailSenderAddressSnapshot: linkedCommunication.emailSenderAddressSnapshot,
+        emailSenderSource: linkedCommunication.emailSenderSource,
+      })
+    : null;
+
+  const sender =
+    deliverySender?.ok === true
+      ? {
+          displayName: deliverySender.sender.displayName,
+          emailAddress: deliverySender.sender.emailAddress,
+          formattedFrom: deliverySender.sender.formattedFrom,
+        }
+      : await resolveTenantEmailSender(input.tenantId);
   const mailboxAddress = conversation.mailbox
     ? normalizeEmailAddress(conversation.mailbox.emailAddress)
     : null;
@@ -166,12 +227,29 @@ export async function replyToCommunicationCenterConversation(input: {
       fromDisplayName: sender.displayName,
       toAddresses: [lastInbound.fromAddress],
       subject,
-      bodyText,
-      bodyHtmlSanitized: plainTextToSafeHtml(bodyText),
+      bodyText: bodyText || " ",
+      bodyHtmlSanitized:
+        signatureFreeze != null
+          ? renderEmailBodyHtmlFromFreeze({
+              messageBodyText: signatureFreeze.messageBodyText,
+              signaturePlainText: signatureFreeze.plainTextFallback,
+              freeze: signatureFreeze,
+            })
+          : plainTextToSafeHtml(bodyText || " "),
+      personalSignatureFreezeJson: personalSignatureFreezeJson(signatureFreeze),
       outboundIdempotencyKey: input.idempotencyKey,
       createdByUserId: input.actorUserId,
     },
   });
+
+  if (attachmentIds.length > 0) {
+    await attachSelectionToCommunicationCenterMessage({
+      tenantId: input.tenantId,
+      actorUserId: input.actorUserId,
+      messageId: draft.id,
+      attachmentIds,
+    });
+  }
 
   await recordCommunicationCenterAudit({
     tenantId: input.tenantId,
@@ -183,13 +261,58 @@ export async function replyToCommunicationCenterConversation(input: {
   });
 
   try {
+    let mailAttachments: MailAttachment[] | undefined;
+    if (attachmentIds.length > 0) {
+      try {
+        const loaded = await loadCommunicationCenterMessageAttachmentsForDelivery({
+          tenantId: input.tenantId,
+          messageId: draft.id,
+        });
+        mailAttachments = loaded.map((item) => ({
+          filename: item.filename,
+          content: item.content,
+          contentType: item.contentType,
+        }));
+      } catch {
+        throw new CommunicationCenterError(
+          "ATTACHMENT_UNAVAILABLE",
+          "Ein Anhang konnte nicht für den Versand geladen werden.",
+        );
+      }
+    }
+
+    if (signatureFreeze) {
+      try {
+        const inline = await loadSignatureCidMailAttachments({
+          tenantId: input.tenantId,
+          freeze: signatureFreeze,
+        });
+        mailAttachments = [...(mailAttachments ?? []), ...inline];
+      } catch {
+        throw new CommunicationCenterError(
+          "ATTACHMENT_UNAVAILABLE",
+          "Signatur-Logo konnte nicht für den Versand geladen werden.",
+        );
+      }
+    }
+
+    const htmlBody =
+      signatureFreeze != null
+        ? renderEmailBodyHtmlFromFreeze({
+            messageBodyText: signatureFreeze.messageBodyText,
+            signaturePlainText: signatureFreeze.plainTextFallback,
+            freeze: signatureFreeze,
+          })
+        : plainTextToSafeHtml(bodyText || " ");
+
     const transport = await sendOutboundEmail({
       from: sender.formattedFrom,
       to: lastInbound.fromAddress,
       subject,
-      text: bodyText,
-      html: plainTextToSafeHtml(bodyText),
+      text: bodyText || " ",
+      html: htmlBody,
       idempotencyKey: input.idempotencyKey,
+      attachments: mailAttachments,
     });
 
     const sent = await prisma.communicationCenterMessage.update({

@@ -6,6 +6,16 @@ import { buildDispatchRecipientSnapshots } from "@/lib/communication/platform/re
 import type { RecipientSnapshotRow } from "@/lib/communication/platform/recipient-resolution/pipeline";
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
 import { collectSponsorExternalSnapshotRows } from "@/lib/communication/sponsor/sponsor-external-recipient-snapshots";
+import type { Prisma } from "@prisma/client";
+import type { PersonalisedSnapshotExtras } from "@/lib/communication/personalisation/publish-personalisation";
+
+function snapshotKey(row: {
+  subjectPersonId: string;
+  deliveryUserId: string;
+  channel: string;
+}): string {
+  return `${row.subjectPersonId}:${row.deliveryUserId}:${row.channel}`;
+}
 
 export async function buildCampaignPublishSnapshotCreateMany(input: {
   tenantId: string;
@@ -16,6 +26,7 @@ export async function buildCampaignPublishSnapshotCreateMany(input: {
   deliveryTargets: RecipientSnapshotRow[];
   emailChannelEnabled: boolean;
   emailTransportReady: boolean;
+  personalisationByTarget?: Map<string, PersonalisedSnapshotExtras>;
 }) {
   const internalRows = buildDispatchRecipientSnapshots({
     communicationDispatchRef: input.communicationId,
@@ -42,17 +53,35 @@ export async function buildCampaignPublishSnapshotCreateMany(input: {
     totalCount: internalRows.length + externalRows.length,
     deliveryUserIds: internalRows.map((s) => s.deliveryUserId).filter(Boolean),
     createManyData: [
-      ...internalRows.map((snap) => ({
-        tenantId: input.tenantId,
-        communicationId: input.communicationId,
-        recipientKind: "INTERNAL_IN_APP" as const,
-        subjectPersonId: snap.subjectPersonId,
-        deliveryUserId: snap.deliveryUserId,
-        channel: snap.channel,
-        audienceFingerprint: snap.audienceFingerprint,
-        viaGuardianSubstitution: snap.viaGuardianSubstitution,
-        resolvedAt: new Date(snap.resolvedAt),
-      })),
+      ...internalRows.map((snap) => {
+        const personalisation = input.personalisationByTarget?.get(
+          snapshotKey({
+            subjectPersonId: snap.subjectPersonId,
+            deliveryUserId: snap.deliveryUserId,
+            channel: snap.channel,
+          }),
+        );
+        return {
+          tenantId: input.tenantId,
+          communicationId: input.communicationId,
+          recipientKind: "INTERNAL_IN_APP" as const,
+          subjectPersonId: snap.subjectPersonId,
+          deliveryUserId: snap.deliveryUserId,
+          channel: snap.channel,
+          audienceFingerprint: snap.audienceFingerprint,
+          viaGuardianSubstitution: snap.viaGuardianSubstitution,
+          safeguardingReasonCode: snap.safeguardingReasonCode,
+          subjectMinorAtDispatch: snap.subjectMinorAtDispatch,
+          guardianPersonId: snap.guardianPersonId,
+          resolvedAt: new Date(snap.resolvedAt),
+          renderedSubject: personalisation?.renderedSubject ?? null,
+          renderedBodyText: personalisation?.renderedBodyText ?? null,
+          renderedBodyHtml: personalisation?.renderedBodyHtml ?? null,
+          personalisationDiagnosticsJson: personalisation?.personalisationDiagnosticsJson
+            ? (personalisation.personalisationDiagnosticsJson as Prisma.InputJsonValue)
+            : undefined,
+        };
+      }),
       ...externalRows.map((snap) => ({
         tenantId: input.tenantId,
         communicationId: input.communicationId,

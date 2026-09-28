@@ -41,8 +41,14 @@ import {
 import { formatCampaignChannelSummary } from "@/lib/communication/campaign/campaign-orchestration-meta";
 import { emitCampaignPublishedNotifications } from "@/lib/communication/campaign/campaign-notification-producer";
 import { resolveCommunicationChannelIntent } from "@/lib/communication/platform-email/communication-channel-intent";
-import { evaluatePlatformEmailReadiness } from "@/lib/communication/platform-email/email-readiness-service";
+import { EmailSenderResolutionError } from "@/lib/communication/sender-identity/sender-identity-resolution-service";
+import { prepareEmailSenderForPublish } from "@/lib/communication/sender-identity/prepare-email-sender-for-publish";
 import { enqueuePlatformCommunicationEmailDeliveries } from "@/lib/communication/platform-email/platform-email-dispatch-service";
+import { syncPlatformCommunicationAttachments } from "@/lib/communication/attachment-service";
+import {
+  renderPersonalisationForDeliveryTargets,
+  validatePersonalisationBeforePublish,
+} from "@/lib/communication/personalisation/publish-personalisation";
 
 export type CampaignListItem = {
   id: string;
@@ -290,6 +296,7 @@ export async function createCampaignDraft(input: {
   bodyText: string;
   audienceSpec: CommunicationAudienceSpec;
   contextRef?: CommunicationContextRef;
+  attachmentIds?: string[];
 }): Promise<{ id: string }> {
   const internalName = sanitizeInternalName(input.internalName);
   const bodyText = sanitizeBodyText(input.bodyText);
@@ -326,6 +333,15 @@ export async function createCampaignDraft(input: {
     select: { id: true, kind: true, status: true },
   });
 
+  if (input.attachmentIds && input.attachmentIds.length > 0) {
+    await syncPlatformCommunicationAttachments({
+      tenantId: input.tenantId,
+      actorUserId: input.senderUserId,
+      communicationId: created.id,
+      attachmentIds: [...input.attachmentIds],
+    });
+  }
+
   await recordPlatformCommunicationAudit({
     tenantId: input.tenantId,
     actorUserId: input.senderUserId,
@@ -347,6 +363,7 @@ export async function updateCampaignDraft(input: {
   bodyText?: string;
   audienceSpec?: CommunicationAudienceSpec;
   orchestration?: CampaignOrchestrationMeta;
+  attachmentIds?: string[];
 }): Promise<{ id: string }> {
   const row = await loadCampaignRow({ tenantId: input.tenantId, campaignId: input.campaignId });
   if (row.status !== "DRAFT" && row.status !== "READY") {
@@ -371,6 +388,15 @@ export async function updateCampaignDraft(input: {
   }
 
   await prisma.platformCommunication.update({ where: { id: row.id }, data });
+
+  if (input.attachmentIds !== undefined) {
+    await syncPlatformCommunicationAttachments({
+      tenantId: input.tenantId,
+      actorUserId: input.actorUserId,
+      communicationId: row.id,
+      attachmentIds: input.attachmentIds,
+    });
+  }
 
   await recordPlatformCommunicationAudit({
     tenantId: input.tenantId,
@@ -445,6 +471,12 @@ export async function publishCampaign(input: {
 
   const contextRef = row.contextRef as CommunicationContextRef;
 
+  await validatePersonalisationBeforePublish({
+    subject: row.subject,
+    bodyText: row.bodyText,
+    contextRef,
+  });
+
   const dispatch = await resolveCommunicationRecipientsForDispatch(
     {
       tenantId: input.tenantId,
@@ -462,7 +494,40 @@ export async function publishCampaign(input: {
   const channelIntent = resolveCommunicationChannelIntent({
     orchestrationMetaJson: row.orchestrationMetaJson,
   });
-  const emailReadiness = await evaluatePlatformEmailReadiness(input.tenantId);
+  let emailSenderPublish;
+  try {
+    emailSenderPublish = await prepareEmailSenderForPublish({
+      tenantId: input.tenantId,
+      orchestrationMetaJson: row.orchestrationMetaJson,
+      emailChannelEnabled: channelIntent.email,
+    });
+  } catch (error) {
+    if (error instanceof EmailSenderResolutionError) {
+      throw new TeamCommunicationValidationError(error.message);
+    }
+    throw error;
+  }
+  const dispatchAt = new Date();
+  const personalisationByTarget = await renderPersonalisationForDeliveryTargets({
+    tenantId: input.tenantId,
+    contextRef,
+    subject: row.subject,
+    bodyText: row.bodyText,
+    senderUserId: input.senderUserId,
+    communicationId: input.campaignId,
+    communicationKind: row.kind,
+    emailSenderDisplayName:
+      typeof emailSenderPublish.snapshotData.emailSenderDisplayNameSnapshot === "string"
+        ? emailSenderPublish.snapshotData.emailSenderDisplayNameSnapshot
+        : null,
+    emailSenderAddress:
+      typeof emailSenderPublish.snapshotData.emailSenderAddressSnapshot === "string"
+        ? emailSenderPublish.snapshotData.emailSenderAddressSnapshot
+        : null,
+    deliveryTargets: dispatch.pipeline.deliveryTargets,
+    at: dispatchAt,
+  });
+
   const publishSnapshots = await buildCampaignPublishSnapshotCreateMany({
     tenantId: input.tenantId,
     communicationId: input.campaignId,
@@ -471,14 +536,15 @@ export async function publishCampaign(input: {
     resolvedAt: dispatch.core.metadata.resolvedAt,
     deliveryTargets: dispatch.pipeline.deliveryTargets,
     emailChannelEnabled: channelIntent.email,
-    emailTransportReady: emailReadiness.ready,
+    emailTransportReady: emailSenderPublish.emailTransportReady,
+    personalisationByTarget,
   });
 
   if (publishSnapshots.totalCount === 0) {
     throw new TeamCommunicationValidationError("no eligible recipients for dispatch");
   }
 
-  const publishedAt = new Date();
+  const publishedAt = dispatchAt;
   let published = false;
 
   await prisma.$transaction(async (tx) => {
@@ -492,6 +558,7 @@ export async function publishCampaign(input: {
         status: "PUBLISHED",
         publishedAt,
         audienceFingerprint: fingerprint,
+        ...emailSenderPublish.snapshotData,
       },
     });
 

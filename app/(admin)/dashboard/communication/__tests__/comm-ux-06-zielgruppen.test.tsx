@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const mocks = vi.hoisted(() => ({
@@ -153,18 +153,19 @@ describe("SCE-COMM-UX-06 Zielgruppen", () => {
     expect(screen.queryByRole("link", { name: /Neue Zielgruppe/i })).not.toBeInTheDocument();
   });
 
-  it("create page opens wizard basics step", async () => {
+  it("create page opens basics section (EVO-05 single-page editor)", async () => {
     const page = await NewZielgruppePage();
     render(page);
     expect(screen.getByLabelText(/Name/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /1\. Grundlagen/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Grundlagen" })).toBeInTheDocument();
   });
 
-  it("wizard validates name before advancing", async () => {
-    const user = userEvent.setup();
+  it("validates name before save", async () => {
     render(<ZielgruppeManagementForm mode="create" />);
-    await user.click(screen.getByRole("button", { name: /Weiter/i }));
-    expect(screen.getByRole("alert")).toHaveTextContent(/Name ist erforderlich/i);
+    const form = screen.getByRole("button", { name: /Zielgruppe erstellen/i }).closest("form");
+    expect(form).toBeTruthy();
+    fireEvent.submit(form!);
+    expect(await screen.findByRole("alert")).toHaveTextContent(/Name ist erforderlich/i);
   });
 
   it("definition editor shows human-readable rules not json", () => {
@@ -178,7 +179,7 @@ describe("SCE-COMM-UX-06 Zielgruppen", () => {
         knownLabels={{ orgUnits: {}, teams: {}, roles: { "role-1": "Trainer" }, persons: {} }}
       />,
     );
-    expect(screen.getByText(/Rolle ist „Trainer"/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Rolle ist „Trainer"/).length).toBeGreaterThan(0);
     expect(screen.queryByText(/ruleJson/i)).not.toBeInTheDocument();
   });
 
@@ -226,7 +227,7 @@ describe("SCE-COMM-UX-06 Zielgruppen", () => {
     render(page);
     expect(screen.getByText(/Verwendet in/i)).toBeInTheDocument();
     expect(screen.getByText("Frühjahr")).toBeInTheDocument();
-    expect(screen.getByText(/Rolle ist „Trainer"/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Rolle ist „Trainer"/).length).toBeGreaterThan(0);
   });
 
   it("chip remove control has accessible name", () => {

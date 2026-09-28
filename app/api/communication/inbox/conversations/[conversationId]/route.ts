@@ -4,6 +4,7 @@ import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { INBOX_VIEW_PERMISSIONS } from "@/lib/communication/inbox/route-access";
 import { getCommunicationCenterConversationDetail } from "@/lib/communication/inbox/conversation-service";
+import { serializeCommunicationCenterConversationDetailForApi } from "@/lib/communication/inbox/conversation-detail-client-dto";
 import { CommunicationCenterError } from "@/lib/communication/inbox/errors";
 
 export const dynamic = "force-dynamic";
@@ -25,11 +26,22 @@ export async function GET(_request: Request, { params }: Params): Promise<NextRe
       conversationId,
       userId,
     });
-    return NextResponse.json({ conversation });
+    const payload = serializeCommunicationCenterConversationDetailForApi(conversation);
+    return NextResponse.json(payload);
   } catch (error) {
     if (error instanceof CommunicationCenterError) {
-      return NextResponse.json({ error: error.message, code: error.code }, { status: 404 });
+      const status =
+        error.code === "DETAIL_SERIALIZATION_FAILED"
+          ? 500
+          : error.code === "NOT_FOUND" || error.code === "FORBIDDEN"
+            ? 404
+            : 404;
+      return NextResponse.json({ error: error.message, code: error.code }, { status });
     }
-    throw error;
+    console.error("[communication/inbox/conversation-detail] unexpected error", error);
+    return NextResponse.json(
+      { error: "Die Konversation konnte nicht geladen werden.", code: "INTERNAL" },
+      { status: 500 },
+    );
   }
 }

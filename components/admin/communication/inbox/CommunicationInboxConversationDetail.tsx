@@ -22,6 +22,9 @@ import type {
   InboxConversationDetail,
   InboxConversationListItem,
 } from "@/components/admin/communication/inbox/inbox-workspace-types";
+import { CommunicationAttachmentPicker } from "@/components/admin/communication/attachments/CommunicationAttachmentPicker";
+import { CommunicationAttachmentList } from "@/components/admin/communication/attachments/CommunicationAttachmentList";
+import { inboxReplyHasSendableAttachment } from "@/lib/communication/inbox/inbox-reply-composer-contract";
 
 type CommunicationInboxConversationDetailProps = {
   selectedConversationId: string | null;
@@ -51,6 +54,10 @@ type CommunicationInboxConversationDetailProps = {
   onSendReply: () => void;
   replySubmitting: boolean;
   replyError: string | null;
+  replyAttachments: import("@/components/admin/communications/EmailAttachmentComposer").ComposerAttachment[];
+  replyAttachmentError: string | null;
+  onReplyAddAttachments: (files: File[]) => void;
+  onReplyRemoveAttachment: (localId: string) => void;
   actionError: string | null;
   onBackToList: () => void;
   onResolve: () => void;
@@ -118,6 +125,10 @@ export function CommunicationInboxConversationDetailPane({
   onSendReply,
   replySubmitting,
   replyError,
+  replyAttachments,
+  replyAttachmentError,
+  onReplyAddAttachments,
+  onReplyRemoveAttachment,
   actionError,
   onBackToList,
   onResolve,
@@ -325,12 +336,25 @@ export function CommunicationInboxConversationDetailPane({
                   <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs text-[var(--text-2)]">
                     <span>
                       {outbound ? "Ausgehend" : "Eingehend"}
+                      {message.fromDisplayName?.trim()
+                        ? ` · ${message.fromDisplayName.trim()}`
+                        : ""}
                       {message.fromAddress ? ` · ${message.fromAddress}` : ""}
                     </span>
                     <time dateTime={timestamp ?? undefined}>
                       {formatMessageTimestamp(timestamp)}
                     </time>
                   </div>
+                  {message.toAddresses?.length ? (
+                    <p className="mt-1 text-xs text-[var(--text-2)]">
+                      An: {message.toAddresses.join(", ")}
+                    </p>
+                  ) : null}
+                  {message.subject?.trim() ? (
+                    <p className="mt-1 text-xs font-medium text-[var(--foreground)]">
+                      {message.subject.trim()}
+                    </p>
+                  ) : null}
                   {message.status === "FAILED" ? (
                     <p className="mt-1 text-xs font-medium text-red-600">Zustellung fehlgeschlagen</p>
                   ) : null}
@@ -346,6 +370,9 @@ export function CommunicationInboxConversationDetailPane({
                   )}
                   {message.deliveryError ? (
                     <p className="mt-2 text-xs text-red-600">{message.deliveryError}</p>
+                  ) : null}
+                  {message.attachments?.length ? (
+                    <CommunicationAttachmentList attachments={message.attachments} />
                   ) : null}
                 </article>
               );
@@ -387,6 +414,13 @@ export function CommunicationInboxConversationDetailPane({
                   previewHeadingId="inbox-reply-signature-preview"
                 />
               </div>
+              <CommunicationAttachmentPicker
+                disabled={replySubmitting}
+                attachments={replyAttachments}
+                error={replyAttachmentError}
+                onAddFiles={onReplyAddAttachments}
+                onRemove={onReplyRemoveAttachment}
+              />
               {replyError ? (
                 <p className="mt-2 text-xs text-red-600" role="alert">
                   {replyError}
@@ -396,7 +430,11 @@ export function CommunicationInboxConversationDetailPane({
                 <Button
                   type="button"
                   onClick={onSendReply}
-                  disabled={!replyText.trim() || replySubmitting}
+                  disabled={
+                    (!replyText.trim() &&
+                      !inboxReplyHasSendableAttachment(replyAttachments)) ||
+                    replySubmitting
+                  }
                 >
                   {replySubmitting ? "Senden …" : "Antwort senden"}
                 </Button>

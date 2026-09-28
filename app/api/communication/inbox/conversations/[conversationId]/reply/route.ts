@@ -37,6 +37,9 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
           : body.includePersonalSignature === false
             ? false
             : undefined,
+      attachmentIds: Array.isArray(body.attachmentIds)
+        ? body.attachmentIds.map(String)
+        : [],
     });
     return NextResponse.json(result);
   } catch (error) {

@@ -95,6 +95,7 @@ export default async function NewCampaignPage({ searchParams }: PageProps) {
       />
       <CommunicationContentSurface>
         <CampaignComposer
+          tenantId={tenant.id}
           targetGroups={targetGroups.map((tg) => ({
             id: tg.id,
             name: tg.name,

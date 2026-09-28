@@ -15,18 +15,27 @@ import {
 import { prisma } from "@/lib/db/prisma";
 import { resolveCommunicationRecipientsForDispatch } from "@/lib/communication/platform/recipient-resolution/resolve-recipients";
 import { buildCampaignPublishSnapshotCreateMany } from "@/lib/communication/sponsor/publish-recipient-snapshot-data";
+import {
+  renderPersonalisationForDeliveryTargets,
+  validatePersonalisationBeforePublish,
+} from "@/lib/communication/personalisation/publish-personalisation";
 import { resolveCommunicationChannelIntent } from "@/lib/communication/platform-email/communication-channel-intent";
-import { evaluatePlatformEmailReadiness } from "@/lib/communication/platform-email/email-readiness-service";
+import { EmailSenderResolutionError } from "@/lib/communication/sender-identity/sender-identity-resolution-service";
+import { prepareEmailSenderForPublish } from "@/lib/communication/sender-identity/prepare-email-sender-for-publish";
+import { withEmailSenderIdentityInOrchestration } from "@/lib/communication/sender-identity/communication-email-sender-intent";
 import { enqueuePlatformCommunicationEmailDeliveries } from "@/lib/communication/platform-email/platform-email-dispatch-service";
 import { resolvePersonIdForUser } from "@/lib/teams/team-document-auth";
 import { MAX_TEAM_COMMUNICATION_BODY_LENGTH } from "@/lib/communication/team/team-communication-constants";
 import {
-  TeamCommunicationForbiddenError,
   TeamCommunicationValidationError,
 } from "@/lib/communication/team/team-communication-errors";
 import { recordPlatformCommunicationAudit } from "@/lib/communication/team/platform-communication-audit";
 import { singleRecipientAudienceSpec } from "@/lib/communication/direct/direct-audience-spec";
 import { assertRecipientPersonIdsInSenderScope } from "@/lib/communication/direct/direct-message-authorization";
+import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
+import { validateCommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-validation";
+import { validateAudienceTenantOwnership } from "@/lib/communication/audience/validate-audience-tenant-ownership";
+import { resolveCommunicationRecipients } from "@/lib/communication/platform/recipient-resolution/resolve-recipients";
 import { plainTextToSafeHtml } from "@/lib/communication/outbound-email-service";
 import { createNotificationIdempotent } from "@/lib/notifications/notification-service";
 import { NotificationEntityType, NotificationType } from "@prisma/client";
@@ -34,19 +43,31 @@ import { resolveEffectivePreference } from "@/lib/notifications/defaults";
 import { applyCommunicationPreferencesToNotificationDefaults } from "@/lib/communication/preferences/apply-notification-channel-preferences";
 import { formatPersonDisplayName } from "@/lib/communication/inbox/inbox-display";
 import { randomBytes } from "node:crypto";
-import { applyPersonalSignatureToOutboundBody } from "@/lib/communication/personal-signature/personal-signature-service";
+import {
+  applyPersonalSignatureToOutbound,
+  personalSignatureFreezeJson,
+} from "@/lib/communication/personal-signature/personal-signature-service";
+import { renderEmailBodyHtmlFromFreeze } from "@/lib/communication/personal-signature/signature-email-delivery";
+import {
+  attachSelectionToPlatformCommunication,
+  mirrorPlatformAttachmentsToCenterMessage,
+} from "@/lib/communication/attachment-service";
 
 export type DirectMessageMode = "MESSAGE" | "INFORM";
 
 export type SendDirectMessageInput = {
   tenantId: string;
   senderUserId: string;
-  recipientPersonIds: readonly string[];
+  /** Legacy explicit list — ignored when audienceSpec is provided. */
+  recipientPersonIds?: readonly string[];
+  audienceSpec?: CommunicationAudienceSpec;
   subject?: string | null;
   bodyText: string;
   mode: DirectMessageMode;
   channelIntent?: { inApp?: boolean; push?: boolean; email?: boolean };
   includePersonalSignature?: boolean;
+  attachmentIds?: readonly string[];
+  emailSenderIdentityId?: string | null;
 };
 
 export type SendDirectMessageResult = {
@@ -55,9 +76,11 @@ export type SendDirectMessageResult = {
   recipientCount: number;
 };
 
-function sanitizeBody(body: string): string {
+function sanitizeBody(body: string, allowEmpty: boolean): string {
   const trimmed = body.replace(/\r\n/g, "\n").trim();
-  if (!trimmed) throw new TeamCommunicationValidationError("body is required");
+  if (!trimmed && !allowEmpty) {
+    throw new TeamCommunicationValidationError("body is required");
+  }
   if (trimmed.length > MAX_TEAM_COMMUNICATION_BODY_LENGTH) {
     throw new TeamCommunicationValidationError("body exceeds maximum length");
   }
@@ -76,15 +99,22 @@ function resolveRepliesAllowed(mode: DirectMessageMode): boolean {
   return mode === "MESSAGE";
 }
 
-function buildOrchestrationMeta(channelIntent: SendDirectMessageInput["channelIntent"]): Prisma.InputJsonValue {
-  return {
+function buildOrchestrationMeta(input: {
+  channelIntent: SendDirectMessageInput["channelIntent"];
+  emailSenderIdentityId?: string | null;
+}): Prisma.InputJsonValue {
+  const base = {
     channelIntent: {
-      inApp: channelIntent?.inApp !== false,
-      push: channelIntent?.push !== false,
-      email: channelIntent?.email === true,
+      inApp: input.channelIntent?.inApp !== false,
+      push: input.channelIntent?.push !== false,
+      email: input.channelIntent?.email === true,
     },
     directMessage: true,
-  } as Prisma.InputJsonValue;
+  };
+  return withEmailSenderIdentityInOrchestration(
+    base,
+    input.emailSenderIdentityId ?? null,
+  ) as Prisma.InputJsonValue;
 }
 
 function newDirectThreadSlug(): string {
@@ -135,8 +165,10 @@ async function sendDirectMessageToSingleRecipient(input: {
   recipientPersonId: string;
   subject: string | null;
   bodyText: string;
+  personalSignatureFreeze: import("@/lib/communication/personal-signature/personal-signature-freeze").PersonalSignatureFreezeSnapshot | null;
   repliesAllowed: boolean;
   orchestrationMetaJson: Prisma.InputJsonValue;
+  attachmentIds: readonly string[];
 }): Promise<{ communicationId: string; conversationId: string; deliveryUserIds: string[] }> {
   const audience = singleRecipientAudienceSpec(input.recipientPersonId);
   const contextRef = { kind: "DIRECT" as const, tenantId: input.tenantId };
@@ -166,8 +198,24 @@ async function sendDirectMessageToSingleRecipient(input: {
       acknowledgementRequired: false,
       repliesAllowed: input.repliesAllowed,
       orchestrationMetaJson: input.orchestrationMetaJson,
+      personalSignatureFreezeJson: personalSignatureFreezeJson(input.personalSignatureFreeze),
       createdByUserId: input.senderUserId,
     },
+  });
+
+  if (input.attachmentIds.length > 0) {
+    await attachSelectionToPlatformCommunication({
+      tenantId: input.tenantId,
+      actorUserId: input.senderUserId,
+      communicationId: communication.id,
+      attachmentIds: [...input.attachmentIds],
+    });
+  }
+
+  await validatePersonalisationBeforePublish({
+    subject: input.subject,
+    bodyText: input.bodyText,
+    contextRef,
   });
 
   const dispatch = await resolveCommunicationRecipientsForDispatch(
@@ -187,7 +235,41 @@ async function sendDirectMessageToSingleRecipient(input: {
   const channelIntent = resolveCommunicationChannelIntent({
     orchestrationMetaJson: input.orchestrationMetaJson,
   });
-  const emailReadiness = await evaluatePlatformEmailReadiness(input.tenantId);
+  let emailSenderPublish;
+  try {
+    emailSenderPublish = await prepareEmailSenderForPublish({
+      tenantId: input.tenantId,
+      orchestrationMetaJson: input.orchestrationMetaJson,
+      emailChannelEnabled: channelIntent.email,
+    });
+  } catch (error) {
+    if (error instanceof EmailSenderResolutionError) {
+      throw new TeamCommunicationValidationError(error.message);
+    }
+    throw error;
+  }
+  const dispatchAt = new Date();
+  const personalisationByTarget = await renderPersonalisationForDeliveryTargets({
+    tenantId: input.tenantId,
+    contextRef,
+    subject: input.subject,
+    bodyText: input.bodyText,
+    senderUserId: input.senderUserId,
+    communicationId: communication.id,
+    communicationKind: "MESSAGE",
+    emailSenderDisplayName:
+      typeof emailSenderPublish.snapshotData.emailSenderDisplayNameSnapshot === "string"
+        ? emailSenderPublish.snapshotData.emailSenderDisplayNameSnapshot
+        : null,
+    emailSenderAddress:
+      typeof emailSenderPublish.snapshotData.emailSenderAddressSnapshot === "string"
+        ? emailSenderPublish.snapshotData.emailSenderAddressSnapshot
+        : null,
+    deliveryTargets: dispatch.pipeline.deliveryTargets,
+    personalSignatureFreeze: input.personalSignatureFreeze,
+    at: dispatchAt,
+  });
+
   const publishSnapshots = await buildCampaignPublishSnapshotCreateMany({
     tenantId: input.tenantId,
     communicationId: communication.id,
@@ -196,7 +278,8 @@ async function sendDirectMessageToSingleRecipient(input: {
     resolvedAt: dispatch.core.metadata.resolvedAt,
     deliveryTargets: dispatch.pipeline.deliveryTargets,
     emailChannelEnabled: channelIntent.email,
-    emailTransportReady: emailReadiness.ready,
+    emailTransportReady: emailSenderPublish.emailTransportReady,
+    personalisationByTarget,
   });
 
   if (publishSnapshots.totalCount === 0) {
@@ -220,8 +303,9 @@ async function sendDirectMessageToSingleRecipient(input: {
     input.subject?.trim() ||
     `Nachricht an ${formatPersonDisplayName(subjectPerson)}`;
 
-  const publishedAt = new Date();
+  const publishedAt = dispatchAt;
   let conversationId = "";
+  let centerMessageId = "";
 
   await prisma.$transaction(async (tx) => {
     await tx.platformCommunication.update({
@@ -230,6 +314,7 @@ async function sendDirectMessageToSingleRecipient(input: {
         status: "PUBLISHED",
         publishedAt,
         audienceFingerprint: fingerprint,
+        ...emailSenderPublish.snapshotData,
       },
     });
 
@@ -269,7 +354,7 @@ async function sendDirectMessageToSingleRecipient(input: {
     });
     conversationId = inboxConversation.id;
 
-    await tx.communicationCenterMessage.create({
+    const centerMessage = await tx.communicationCenterMessage.create({
       data: {
         tenantId: input.tenantId,
         conversationId: inboxConversation.id,
@@ -278,11 +363,20 @@ async function sendDirectMessageToSingleRecipient(input: {
         messageIdHeader: threadRootMessageId,
         subject: inboxSubject,
         bodyText: input.bodyText,
-        bodyHtmlSanitized: plainTextToSafeHtml(input.bodyText),
+        bodyHtmlSanitized:
+          input.personalSignatureFreeze != null
+            ? renderEmailBodyHtmlFromFreeze({
+                messageBodyText: input.personalSignatureFreeze.messageBodyText,
+                signaturePlainText: input.personalSignatureFreeze.plainTextFallback,
+                freeze: input.personalSignatureFreeze,
+              })
+            : plainTextToSafeHtml(input.bodyText || " "),
+        personalSignatureFreezeJson: personalSignatureFreezeJson(input.personalSignatureFreeze),
         sentAt: publishedAt,
         createdByUserId: input.senderUserId,
       },
     });
+    centerMessageId = centerMessage.id;
 
     for (const deliveryUserId of publishSnapshots.deliveryUserIds) {
       await emitDirectInboxNotification(tx, {
@@ -296,6 +390,15 @@ async function sendDirectMessageToSingleRecipient(input: {
       });
     }
   });
+
+  if (centerMessageId && input.attachmentIds.length > 0) {
+    await mirrorPlatformAttachmentsToCenterMessage({
+      tenantId: input.tenantId,
+      actorUserId: input.senderUserId,
+      platformCommunicationId: communication.id,
+      messageId: centerMessageId,
+    });
+  }
 
   try {
     await enqueuePlatformCommunicationEmailDeliveries({
@@ -329,21 +432,61 @@ async function sendDirectMessageToSingleRecipient(input: {
   };
 }
 
-export async function sendDirectMessage(input: SendDirectMessageInput): Promise<SendDirectMessageResult> {
-  const recipientIds = [...new Set(input.recipientPersonIds.map((id) => id.trim()).filter(Boolean))];
-  if (recipientIds.length === 0) {
-    throw new TeamCommunicationValidationError("at least one recipient is required");
+async function resolveDirectMessageRecipientPersonIds(input: {
+  tenantId: string;
+  senderUserId: string;
+  audienceSpec: CommunicationAudienceSpec;
+}): Promise<string[]> {
+  const audienceErr = validateCommunicationAudienceSpec(input.audienceSpec);
+  if (audienceErr) {
+    throw new TeamCommunicationValidationError(audienceErr);
   }
-
-  await assertRecipientPersonIdsInSenderScope({
+  await validateAudienceTenantOwnership({
     tenantId: input.tenantId,
-    senderUserId: input.senderUserId,
-    recipientPersonIds: recipientIds,
+    audience: input.audienceSpec,
   });
 
-  let bodyWithSignature: string;
+  const resolution = await resolveCommunicationRecipients({
+    tenantId: input.tenantId,
+    senderActor: { userId: input.senderUserId },
+    audience: input.audienceSpec,
+    context: { kind: "DIRECT", tenantId: input.tenantId },
+    channel: "IN_APP",
+    category: "CLUB_OPERATIONAL",
+    mode: "DISPATCH",
+  });
+
+  if (resolution.effectiveRecipientPersonIds.length === 0) {
+    throw new TeamCommunicationValidationError("no eligible recipients for dispatch");
+  }
+
+  return resolution.effectiveRecipientPersonIds;
+}
+
+export async function sendDirectMessage(input: SendDirectMessageInput): Promise<SendDirectMessageResult> {
+  let recipientIds: string[];
+
+  if (input.audienceSpec) {
+    recipientIds = await resolveDirectMessageRecipientPersonIds({
+      tenantId: input.tenantId,
+      senderUserId: input.senderUserId,
+      audienceSpec: input.audienceSpec,
+    });
+  } else {
+    recipientIds = [...new Set((input.recipientPersonIds ?? []).map((id) => id.trim()).filter(Boolean))];
+    if (recipientIds.length === 0) {
+      throw new TeamCommunicationValidationError("at least one recipient is required");
+    }
+    await assertRecipientPersonIdsInSenderScope({
+      tenantId: input.tenantId,
+      senderUserId: input.senderUserId,
+      recipientPersonIds: recipientIds,
+    });
+  }
+
+  let signatureApply;
   try {
-    bodyWithSignature = await applyPersonalSignatureToOutboundBody({
+    signatureApply = await applyPersonalSignatureToOutbound({
       tenantId: input.tenantId,
       userId: input.senderUserId,
       messageBody: input.bodyText,
@@ -355,10 +498,14 @@ export async function sendDirectMessage(input: SendDirectMessageInput): Promise<
     }
     throw error;
   }
-  const bodyText = sanitizeBody(bodyWithSignature);
+  const attachmentIds = [...new Set((input.attachmentIds ?? []).filter(Boolean))];
+  const bodyText = sanitizeBody(signatureApply.bodyText, attachmentIds.length > 0);
   const subject = sanitizeSubject(input.subject);
   const repliesAllowed = resolveRepliesAllowed(input.mode);
-  const orchestrationMetaJson = buildOrchestrationMeta(input.channelIntent);
+  const orchestrationMetaJson = buildOrchestrationMeta({
+    channelIntent: input.channelIntent,
+    emailSenderIdentityId: input.emailSenderIdentityId,
+  });
   const senderPersonId = await resolvePersonIdForUser(input.senderUserId, input.tenantId);
 
   const communicationIds: string[] = [];
@@ -372,8 +519,10 @@ export async function sendDirectMessage(input: SendDirectMessageInput): Promise<
       recipientPersonId,
       subject,
       bodyText,
+      personalSignatureFreeze: signatureApply.freeze,
       repliesAllowed,
       orchestrationMetaJson,
+      attachmentIds,
     });
     communicationIds.push(result.communicationId);
     conversationIds.push(result.conversationId);

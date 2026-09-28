@@ -1,6 +1,6 @@
 import { PlatformCommunicationEmailDeliveryStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { resolveTenantEmailSender } from "@/lib/communication/email-sender-service";
+import { resolveDeliveryEmailSender } from "@/lib/communication/sender-identity/delivery-email-sender-service";
 import { sendOutboundEmail, OutboundEmailTransportError } from "@/lib/email/outbound-email-transport";
 import {
   PLATFORM_EMAIL_DELIVERY_BATCH_SIZE,
@@ -13,6 +13,11 @@ import { renderPlatformCommunicationEmail } from "@/lib/communication/platform-e
 import { resolveRecipientSnapshotEmailEligibility } from "@/lib/communication/platform-email/recipient-email-eligibility";
 import { resolveCommunicationChannelIntent } from "@/lib/communication/platform-email/communication-channel-intent";
 import { resolvePublicationCommunicationPreferenceCategory } from "@/lib/communication/preferences/publication-category";
+import { loadPlatformCommunicationAttachmentsForDelivery } from "@/lib/communication/attachment-service";
+import { parsePersonalSignatureFreezeJson } from "@/lib/communication/personal-signature/personal-signature-freeze";
+import { loadSignatureCidMailAttachments } from "@/lib/communication/personal-signature/signature-email-delivery";
+import { renderEmailBodyHtmlFromFreeze } from "@/lib/communication/personal-signature/signature-email-delivery";
+import { splitPersonalisedBodyUsingFreeze } from "@/lib/communication/personal-signature/signature-email-delivery";
 
 export type ProcessPlatformEmailDeliveriesResult = {
   examined: number;
@@ -24,7 +29,21 @@ export type ProcessPlatformEmailDeliveriesResult = {
 
 type AttemptRow = Prisma.PlatformCommunicationEmailDeliveryAttemptGetPayload<{
   include: {
-    recipientSnapshot: true;
+    recipientSnapshot: {
+      select: {
+        id: true;
+        tenantId: true;
+        communicationId: true;
+        recipientKind: true;
+        subjectPersonId: true;
+        sponsorContactId: true;
+        deliveryUserId: true;
+        externalSnapshotJson: true;
+        renderedSubject: true;
+        renderedBodyText: true;
+        renderedBodyHtml: true;
+      };
+    };
     communication: {
       select: {
         subject: true;
@@ -32,6 +51,11 @@ type AttemptRow = Prisma.PlatformCommunicationEmailDeliveryAttemptGetPayload<{
         kind: true;
         orchestrationMetaJson: true;
         audienceSpecJson: true;
+        emailSenderIdentityId: true;
+        emailSenderDisplayNameSnapshot: true;
+        emailSenderAddressSnapshot: true;
+        emailSenderSource: true;
+        personalSignatureFreezeJson: true;
       };
     };
   };
@@ -71,6 +95,11 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
           kind: true,
           orchestrationMetaJson: true,
           audienceSpecJson: true,
+          emailSenderIdentityId: true,
+          emailSenderDisplayNameSnapshot: true,
+          emailSenderAddressSnapshot: true,
+          emailSenderSource: true,
+          personalSignatureFreezeJson: true,
         },
       },
     },
@@ -132,16 +161,104 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
         ? `/dashboard/communication/kampagnen/${attempt.communicationId}`
         : `/dashboard/communication/mitteilungen/${attempt.communicationId}`;
 
+    const effectiveSubject =
+      attempt.recipientSnapshot.renderedSubject ?? attempt.communication.subject;
+    const effectiveBodyText =
+      attempt.recipientSnapshot.renderedBodyText ?? attempt.communication.bodyText;
+    const signatureFreeze = parsePersonalSignatureFreezeJson(
+      attempt.communication.personalSignatureFreezeJson,
+    );
+    let bodyHtmlOverride = attempt.recipientSnapshot.renderedBodyHtml ?? null;
+    if (!bodyHtmlOverride && signatureFreeze) {
+      const split = splitPersonalisedBodyUsingFreeze(effectiveBodyText, signatureFreeze);
+      bodyHtmlOverride = renderEmailBodyHtmlFromFreeze({
+        messageBodyText: split.messageBody,
+        signaturePlainText: split.signaturePlain,
+        freeze: signatureFreeze,
+      });
+    }
+
     const rendered = renderPlatformCommunicationEmail({
       tenantName: tenant.name,
-      subject: attempt.communication.subject,
-      bodyText: attempt.communication.bodyText,
+      subject: effectiveSubject,
+      bodyText: effectiveBodyText,
+      bodyHtmlOverride,
       includeDeepLink: attempt.recipientSnapshot.recipientKind !== "EXTERNAL_SPONSOR_CONTACT",
       deepLinkPath,
     });
 
+    const deliverySender = await resolveDeliveryEmailSender({
+      tenantId: attempt.tenantId,
+      emailSenderIdentityId: attempt.communication.emailSenderIdentityId,
+      emailSenderDisplayNameSnapshot: attempt.communication.emailSenderDisplayNameSnapshot,
+      emailSenderAddressSnapshot: attempt.communication.emailSenderAddressSnapshot,
+      emailSenderSource: attempt.communication.emailSenderSource,
+    });
+    if (!deliverySender.ok) {
+      await prisma.platformCommunicationEmailDeliveryAttempt.update({
+        where: { id: attempt.id },
+        data: {
+          status: PlatformCommunicationEmailDeliveryStatus.FAILED,
+          failureCode: deliverySender.failureCode,
+        },
+      });
+      summary.failed += 1;
+      continue;
+    }
+
     try {
-      const sender = await resolveTenantEmailSender(attempt.tenantId);
+      const sender = deliverySender.sender;
+      let mailAttachments;
+      try {
+        const loaded = await loadPlatformCommunicationAttachmentsForDelivery({
+          tenantId: attempt.tenantId,
+          communicationId: attempt.communicationId,
+        });
+        mailAttachments = loaded.map((item) => ({
+          filename: item.filename,
+          content: item.content,
+          contentType: item.contentType,
+        }));
+      } catch (loadError) {
+        await prisma.platformCommunicationEmailDeliveryAttempt.update({
+          where: { id: attempt.id },
+          data: {
+            status: PlatformCommunicationEmailDeliveryStatus.FAILED,
+            failureCode: "ATTACHMENT_UNAVAILABLE",
+          },
+        });
+        summary.failed += 1;
+        console.warn(`${PLATFORM_EMAIL_LOG_PREFIX} attachment load failed`, {
+          attemptId: attempt.id,
+          message: loadError instanceof Error ? loadError.message : "unknown",
+        });
+        continue;
+      }
+
+      if (signatureFreeze) {
+        try {
+          const inline = await loadSignatureCidMailAttachments({
+            tenantId: attempt.tenantId,
+            freeze: signatureFreeze,
+          });
+          mailAttachments = [...(mailAttachments ?? []), ...inline];
+        } catch (loadError) {
+          await prisma.platformCommunicationEmailDeliveryAttempt.update({
+            where: { id: attempt.id },
+            data: {
+              status: PlatformCommunicationEmailDeliveryStatus.FAILED,
+              failureCode: "SIGNATURE_ASSET_UNAVAILABLE",
+            },
+          });
+          summary.failed += 1;
+          console.warn(`${PLATFORM_EMAIL_LOG_PREFIX} signature asset load failed`, {
+            attemptId: attempt.id,
+            message: loadError instanceof Error ? loadError.message : "unknown",
+          });
+          continue;
+        }
+      }
+
       const transport = await sendOutboundEmail({
         from: sender.formattedFrom,
         to: eligibility.email,
@@ -149,6 +266,7 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
         html: rendered.html,
         text: rendered.text,
         idempotencyKey: attempt.idempotencyKey,
+        attachments: mailAttachments?.length ? mailAttachments : undefined,
       });
 
       await prisma.platformCommunicationEmailDeliveryAttempt.update({

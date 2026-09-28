@@ -151,9 +151,53 @@ beforeEach(() => {
   });
   mocks.listCommunicationDeliveryDetail.mockResolvedValue({ items: [] });
   global.fetch = mocks.fetch as unknown as typeof fetch;
-  mocks.fetch.mockResolvedValue(
-    new Response(JSON.stringify({ readiness: { ready: true } }), { status: 200 }),
-  );
+  mocks.fetch.mockImplementation((url: RequestInfo | URL) => {
+    const href = String(url);
+    if (href.includes("/api/communication/email/senders/readiness")) {
+      return Promise.resolve(
+        new Response(JSON.stringify({ readiness: { ready: true }, senders: [] }), { status: 200 }),
+      );
+    }
+    if (href.includes("/api/communication/email/readiness")) {
+      return Promise.resolve(
+        new Response(JSON.stringify({ readiness: { ready: true } }), { status: 200 }),
+      );
+    }
+    if (href.includes("/api/communication/audience/capabilities")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            capabilities: {
+              wholeOrganisation: true,
+              orgUnits: true,
+              teams: true,
+              targetGroups: true,
+              roles: true,
+              persons: true,
+            },
+          }),
+          { status: 200 },
+        ),
+      );
+    }
+    if (href.includes("/api/communication/audience/preview")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            candidates: 42,
+            effective: 42,
+            excluded: 0,
+            scopeNotice: null,
+            audienceSummary: "Zielgruppe Aktive Mitglieder",
+            dynamicAudienceNotice: null,
+            guardianDeliveryCount: null,
+          }),
+          { status: 200 },
+        ),
+      );
+    }
+    return Promise.resolve(new Response("{}", { status: 200 }));
+  });
 });
 
 describe("SCE-COMM-UX-04 Mitteilungen redesign", () => {
@@ -211,9 +255,11 @@ describe("SCE-COMM-UX-04 Mitteilungen redesign", () => {
     render(
       <ClubCommunicationComposer
         targetGroups={[{ id: "tg-1", name: "Aktive Mitglieder", status: "ACTIVE" }]}
+        tenantId="tenant-test"
       />,
     );
     expect(screen.getByRole("heading", { level: 2, name: "Inhalt" })).toBeInTheDocument();
+    expect(screen.getAllByText("Feld einfügen").length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { level: 2, name: "Empfänger" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "Kanäle" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "Zeitpunkt" })).toBeInTheDocument();
@@ -226,36 +272,27 @@ describe("SCE-COMM-UX-04 Mitteilungen redesign", () => {
   });
 
   it("composer supports saved Zielgruppen and preview API", async () => {
-    mocks.fetch.mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          candidates: 50,
-          effective: 42,
-          excluded: 8,
-          scopeNotice: null,
-          audienceSummary: "1 Zielgruppe",
-        }),
-        { status: 200 },
-      ),
-    );
     render(
       <ClubCommunicationComposer
         targetGroups={[{ id: "tg-1", name: "Aktive Mitglieder", status: "ACTIVE" }]}
       />,
     );
-    fireEvent.click(screen.getByLabelText("Gespeicherte Zielgruppen"));
-    fireEvent.click(screen.getByRole("button", { name: "Aktive Mitglieder" }));
-    fireEvent.click(screen.getByRole("button", { name: "Empfängervorschau" }));
-    expect(mocks.fetch).toHaveBeenCalledWith(
-      "/api/communication/club/preview",
-      expect.objectContaining({ method: "POST" }),
-    );
+    await vi.waitFor(() => {
+      expect(mocks.fetch).toHaveBeenCalledWith(
+        "/api/communication/audience/preview",
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
   });
 
   it("requires review confirmation before send", async () => {
     render(
       <ClubCommunicationComposer
         targetGroups={[{ id: "tg-1", name: "Aktive Mitglieder", status: "ACTIVE" }]}
+        initialAudienceSpec={{
+          composition: "UNION",
+          components: [{ explicit: { includePersonIds: ["p-review"] } }],
+        }}
       />,
     );
     fireEvent.change(screen.getByLabelText("Nachricht"), { target: { value: "Hallo Verein" } });

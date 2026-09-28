@@ -149,7 +149,11 @@ export function CommunicationInboxViewControl({
       ) : null}
 
       {persistError ? (
-        <p className="sr-only" role="status">
+        <p
+          className="absolute right-0 top-full z-10 mt-1 max-w-[16rem] rounded-md border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[11px] text-[var(--text-2)] shadow-sm"
+          role="status"
+          aria-live="polite"
+        >
           {persistError}
         </p>
       ) : null}

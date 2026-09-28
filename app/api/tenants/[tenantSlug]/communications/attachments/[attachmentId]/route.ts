@@ -3,9 +3,7 @@ import { auth } from "@/auth";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
 import { requireApiTenantContextForSlug } from "@/lib/tenants/active-tenant";
-import {
-  downloadCommunicationAttachment,
-} from "@/lib/communication/attachment-download-service";
+import { downloadCommunicationAttachment } from "@/lib/communication/attachment-download-service";
 import {
   CommunicationAttachmentServiceError,
 } from "@/lib/communication/attachment-service";
@@ -96,6 +94,7 @@ export async function GET(_request: NextRequest, context: Context) {
   try {
     const result = await downloadCommunicationAttachment({
       tenantId: tenantResult.tenantId,
+      tenantKey: tenantSlug,
       actorUserId,
       attachmentId,
     });

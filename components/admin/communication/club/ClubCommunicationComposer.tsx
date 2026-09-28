@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import CommunicationScheduleFields from "@/components/admin/communication/scheduling/CommunicationScheduleFields";
 import {
@@ -10,13 +10,26 @@ import {
   MITTEILUNG_SAFEGUARDING_NOTICE,
   MITTEILUNG_KIND_LABEL,
 } from "@/lib/communication/club/mitteilungen-display";
-import {
-  inferMitteilungAudienceEditorState,
-  type MitteilungAudienceEditorMode,
-} from "@/lib/communication/club/mitteilungen-audience-editor";
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
+import CommunicationAudienceSelector, {
+  type CommunicationAudiencePreviewState,
+} from "@/components/admin/communication/audience/CommunicationAudienceSelector";
+import {
+  buildCommunicationAudienceSpec,
+  communicationAudienceSelectionIsEmpty,
+  emptyCommunicationAudienceSelection,
+  inferCommunicationAudienceSelection,
+  type CommunicationAudienceSelection,
+} from "@/lib/communication/audience/communication-audience-selection";
 import { PersonalSignatureComposerField } from "@/components/admin/communication/personal-signature/PersonalSignatureComposerField";
 import { previewMessageWithPersonalSignature } from "@/lib/communication/personal-signature/personal-signature-compose";
+import { CommunicationAttachmentPicker } from "@/components/admin/communication/attachments/CommunicationAttachmentPicker";
+import { useCommunicationAttachmentUpload } from "@/components/admin/communication/attachments/use-communication-attachment-upload";
+import { CommunicationSenderSelector } from "@/components/admin/communication/sender/CommunicationSenderSelector";
+import { PersonalisationFieldInsert } from "@/components/admin/communication/personalisation/PersonalisationFieldInsert";
+import { PersonalisationComposerPreview } from "@/components/admin/communication/personalisation/PersonalisationComposerPreview";
+import { insertPersonalisationAtSelection } from "@/lib/communication/personalisation/insert-personalisation-at-selection";
+import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
 
 type TargetGroupOption = { id: string; name: string; status: string };
 
@@ -32,6 +45,8 @@ type Props = {
   initialAudienceSpec?: CommunicationAudienceSpec;
   readOnly?: boolean;
   templateOptions?: TemplateOption[];
+  tenantId?: string;
+  contextRef?: CommunicationContextRef;
 };
 
 function sectionHeading(id: string, title: string) {
@@ -43,7 +58,7 @@ function sectionHeading(id: string, title: string) {
 }
 
 export default function ClubCommunicationComposer({
-  targetGroups,
+  targetGroups: _targetGroups,
   tenantTimezone = "Europe/Zurich",
   communicationId,
   initialKind = "ANNOUNCEMENT",
@@ -52,29 +67,49 @@ export default function ClubCommunicationComposer({
   initialAudienceSpec,
   readOnly = false,
   templateOptions = [],
+  tenantId,
+  contextRef: contextRefProp,
 }: Props) {
   const router = useRouter();
-  const initialAudience = useMemo(
+  const subjectInputRef = useRef<HTMLInputElement>(null);
+  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const personalisationContextRef = useMemo((): CommunicationContextRef | null => {
+    if (contextRefProp) return contextRefProp;
+    if (tenantId) return { kind: "ORGANISATION", tenantId };
+    return null;
+  }, [contextRefProp, tenantId]);
+
+  function insertPersonalisationToken(token: string, target: "subject" | "body") {
+    insertPersonalisationAtSelection({
+      element: target === "subject" ? subjectInputRef.current : bodyTextareaRef.current,
+      currentValue: target === "subject" ? subject : bodyText,
+      token,
+      onValueChange: (next) => {
+        if (target === "subject") setSubject(next);
+        else setBodyText(next);
+        setReviewConfirmed(false);
+      },
+    });
+  }
+  const initialAudienceSelection = useMemo(
     () =>
       initialAudienceSpec
-        ? inferMitteilungAudienceEditorState(initialAudienceSpec)
-        : { mode: "WHOLE_ORG" as MitteilungAudienceEditorMode, selectedGroupIds: [] as string[] },
+        ? inferCommunicationAudienceSelection(initialAudienceSpec)
+        : { ...emptyCommunicationAudienceSelection(), wholeOrganisation: true },
     [initialAudienceSpec],
   );
 
   const [kind, setKind] = useState<"MESSAGE" | "ANNOUNCEMENT" | "ALERT">(initialKind);
   const [subject, setSubject] = useState(initialSubject);
   const [bodyText, setBodyText] = useState(initialBody);
-  const [audienceMode, setAudienceMode] = useState<MitteilungAudienceEditorMode>(initialAudience.mode);
-  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>(initialAudience.selectedGroupIds);
-  const [preview, setPreview] = useState<{
-    candidates: number;
-    effective: number;
-    excluded: number;
-    scopeNotice: string | null;
-    audienceSummary: string;
-  } | null>(null);
+  const [audienceSelection, setAudienceSelection] =
+    useState<CommunicationAudienceSelection>(initialAudienceSelection);
+  const [audiencePreview, setAudiencePreview] = useState<CommunicationAudiencePreviewState | null>(
+    null,
+  );
+  const [largeAudienceConfirmed, setLargeAudienceConfirmed] = useState(false);
   const [emailReady, setEmailReady] = useState<boolean | null>(null);
+  const [emailSenderIdentityId, setEmailSenderIdentityId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
@@ -83,6 +118,14 @@ export default function ClubCommunicationComposer({
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [signatureBody, setSignatureBody] = useState<string | null>(null);
   const [useSignature, setUseSignature] = useState(false);
+  const {
+    attachments,
+    error: attachmentError,
+    addFiles,
+    removeAttachment,
+    readyAttachmentIds,
+    hasUnreadyAttachments,
+  } = useCommunicationAttachmentUpload();
 
   useEffect(() => {
     async function loadSignaturePreference() {
@@ -117,27 +160,17 @@ export default function ClubCommunicationComposer({
   }, []);
 
   function buildAudienceSpec(): CommunicationAudienceSpec {
-    if (audienceMode === "WHOLE_ORG") {
-      return {
-        composition: "UNION",
-        components: [{ structural: { wholeOrganisation: true } }],
-      };
-    }
-    return {
-      composition: "UNION",
-      components: selectedGroupIds.map((id) => ({ savedTargetGroupIds: [id] })),
-    };
+    return buildCommunicationAudienceSpec(audienceSelection);
   }
 
   const audienceSummaryLabel = useMemo(() => {
-    if (preview?.audienceSummary) return preview.audienceSummary;
-    if (audienceMode === "WHOLE_ORG") return "Ganzer Verein";
-    if (selectedGroupIds.length === 0) return "Keine Zielgruppe ausgewählt";
-    const names = selectedGroupIds
-      .map((id) => targetGroups.find((tg) => tg.id === id)?.name)
-      .filter(Boolean);
-    return names.length > 0 ? names.join(", ") : `${selectedGroupIds.length} Zielgruppe(n)`;
-  }, [audienceMode, preview?.audienceSummary, selectedGroupIds, targetGroups]);
+    if (audiencePreview?.audienceSummary) return audiencePreview.audienceSummary;
+    if (audienceSelection.wholeOrganisation) return "Gesamter Verein";
+    if (communicationAudienceSelectionIsEmpty(audienceSelection)) {
+      return "Keine Empfänger ausgewählt";
+    }
+    return "Empfängerauswahl";
+  }, [audiencePreview?.audienceSummary, audienceSelection]);
 
   const compatibleTemplates = templateOptions.filter((t) => t.kind === kind);
 
@@ -161,39 +194,12 @@ export default function ClubCommunicationComposer({
       setSubject(template.subject?.trim() || "");
       setBodyText(template.bodyText);
       if (template.audienceSpecJson) {
-        const inferred = inferMitteilungAudienceEditorState(template.audienceSpecJson);
-        setAudienceMode(inferred.mode);
-        setSelectedGroupIds(inferred.selectedGroupIds);
+        setAudienceSelection(inferCommunicationAudienceSelection(template.audienceSpecJson));
       }
-      setPreview(null);
+      setAudiencePreview(null);
       setReviewConfirmed(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Vorlage konnte nicht übernommen werden");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function runPreview() {
-    setError(null);
-    setBusy(true);
-    try {
-      const res = await fetch("/api/communication/club/preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, audienceSpec: buildAudienceSpec() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Empfängervorschau fehlgeschlagen");
-      setPreview({
-        candidates: data.candidates,
-        effective: data.effective,
-        excluded: data.excluded,
-        scopeNotice: data.scopeNotice,
-        audienceSummary: data.audienceSummary,
-      });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Empfängervorschau fehlgeschlagen");
     } finally {
       setBusy(false);
     }
@@ -205,7 +211,7 @@ export default function ClubCommunicationComposer({
       const res = await fetch(`/api/communication/club/${communicationId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject, bodyText, audienceSpec }),
+        body: JSON.stringify({ subject, bodyText, audienceSpec, attachmentIds: readyAttachmentIds }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Entwurf konnte nicht gespeichert werden");
@@ -214,8 +220,15 @@ export default function ClubCommunicationComposer({
     const res = await fetch("/api/communication/club", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kind, subject, bodyText, audienceSpec }),
-    });
+      body: JSON.stringify({
+        kind,
+        subject,
+        bodyText,
+        audienceSpec,
+          attachmentIds: readyAttachmentIds,
+          includePersonalSignature: kind === "MESSAGE" ? useSignature : false,
+        }),
+      });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? "Entwurf konnte nicht gespeichert werden");
     return data.id as string;
@@ -226,9 +239,20 @@ export default function ClubCommunicationComposer({
     setBusy(true);
     try {
       if (publishMode === "send" || publishMode === "schedule") {
-        if (!bodyText.trim()) throw new Error("Bitte geben Sie eine Nachricht ein.");
-        if (audienceMode === "TARGET_GROUPS" && selectedGroupIds.length === 0) {
-          throw new Error("Bitte wählen Sie mindestens eine Zielgruppe.");
+        if (!bodyText.trim() && readyAttachmentIds.length === 0) {
+          throw new Error("Bitte geben Sie eine Nachricht oder mindestens einen Anhang ein.");
+        }
+        if (hasUnreadyAttachments) {
+          throw new Error("Bitte warten Sie, bis alle Anhänge hochgeladen sind.");
+        }
+        if (communicationAudienceSelectionIsEmpty(audienceSelection)) {
+          throw new Error("Bitte wählen Sie mindestens einen Empfänger.");
+        }
+        if (
+          (audienceSelection.wholeOrganisation || (audiencePreview?.effective ?? 0) > 50) &&
+          !largeAudienceConfirmed
+        ) {
+          throw new Error("Bitte bestätigen Sie den Versand an eine große Empfängergruppe.");
         }
         if (!reviewConfirmed) {
           throw new Error("Bitte bestätigen Sie die Zusammenfassung vor dem Senden.");
@@ -265,6 +289,7 @@ export default function ClubCommunicationComposer({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             includePersonalSignature: kind === "MESSAGE" ? useSignature : false,
+            emailSenderIdentityId,
           }),
         });
         const pubData = await pubRes.json();
@@ -282,7 +307,9 @@ export default function ClubCommunicationComposer({
           subject,
           bodyText,
           audienceSpec,
+          attachmentIds: readyAttachmentIds,
           includePersonalSignature: kind === "MESSAGE" ? useSignature : false,
+          emailSenderIdentityId,
         }),
       });
       const data = await res.json();
@@ -294,14 +321,6 @@ export default function ClubCommunicationComposer({
     } finally {
       setBusy(false);
     }
-  }
-
-  function toggleGroup(id: string) {
-    setPreview(null);
-    setReviewConfirmed(false);
-    setSelectedGroupIds((prev) =>
-      prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id],
-    );
   }
 
   const timingSummary = scheduleEnabled
@@ -380,9 +399,19 @@ export default function ClubCommunicationComposer({
             </select>
           </label>
           <label className="block text-sm md:col-span-2">
-            <span className="mb-1 block font-medium text-[var(--foreground)]">Titel / Betreff</span>
+            <span className="mb-1 flex flex-wrap items-center justify-between gap-2 font-medium text-[var(--foreground)]">
+              Titel / Betreff
+              {personalisationContextRef ? (
+                <PersonalisationFieldInsert
+                  contextRef={personalisationContextRef}
+                  disabled={busy}
+                  onInsert={(token) => insertPersonalisationToken(token, "subject")}
+                />
+              ) : null}
+            </span>
             <input
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
+              ref={subjectInputRef}
+              className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 font-mono text-sm"
               value={subject}
               onChange={(e) => {
                 setSubject(e.target.value);
@@ -393,17 +422,34 @@ export default function ClubCommunicationComposer({
           </label>
         </div>
         <label className="block text-sm">
-          <span className="mb-1 block font-medium text-[var(--foreground)]">Nachricht</span>
+          <span className="mb-1 flex flex-wrap items-center justify-between gap-2 font-medium text-[var(--foreground)]">
+            Nachricht
+            {personalisationContextRef ? (
+              <PersonalisationFieldInsert
+                contextRef={personalisationContextRef}
+                disabled={busy}
+                onInsert={(token) => insertPersonalisationToken(token, "body")}
+              />
+            ) : null}
+          </span>
           <textarea
-            className="min-h-[160px] w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2"
+            ref={bodyTextareaRef}
+            aria-label="Nachricht"
+            className="min-h-[160px] w-full rounded-lg border border-[var(--border)] bg-[var(--surface-1)] px-3 py-2 font-mono text-sm"
             value={bodyText}
             onChange={(e) => {
               setBodyText(e.target.value);
               setReviewConfirmed(false);
             }}
-            required
           />
         </label>
+        <CommunicationAttachmentPicker
+          disabled={busy}
+          attachments={attachments}
+          error={attachmentError}
+          onAddFiles={addFiles}
+          onRemove={removeAttachment}
+        />
         {kind === "MESSAGE" ? (
           <PersonalSignatureComposerField
             checkboxId="mitteilung-use-signature"
@@ -421,78 +467,25 @@ export default function ClubCommunicationComposer({
       <section aria-labelledby="mitteilung-empfaenger-heading" className="space-y-4 rounded-xl border border-[var(--border)] p-4 md:p-6">
         {sectionHeading("mitteilung-empfaenger-heading", "Empfänger")}
         <p className="text-sm text-[var(--text-2)]">An wen soll die Mitteilung gehen?</p>
-        <fieldset className="space-y-3">
-          <legend className="sr-only">Zielgruppe wählen</legend>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="audienceMode"
-              checked={audienceMode === "WHOLE_ORG"}
-              onChange={() => {
-                setAudienceMode("WHOLE_ORG");
-                setPreview(null);
-                setReviewConfirmed(false);
-              }}
-            />
-            Ganzer Verein
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="audienceMode"
-              checked={audienceMode === "TARGET_GROUPS"}
-              onChange={() => {
-                setAudienceMode("TARGET_GROUPS");
-                setPreview(null);
-                setReviewConfirmed(false);
-              }}
-            />
-            Gespeicherte Zielgruppen
-          </label>
-        </fieldset>
-        {audienceMode === "TARGET_GROUPS" ? (
-          <div className="flex flex-wrap gap-2">
-            {targetGroups.map((tg) => (
-              <button
-                key={tg.id}
-                type="button"
-                onClick={() => toggleGroup(tg.id)}
-                aria-pressed={selectedGroupIds.includes(tg.id)}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] ${
-                  selectedGroupIds.includes(tg.id)
-                    ? "border-[var(--sce-primary)] bg-[var(--sce-primary)]/10 text-[var(--sce-primary)]"
-                    : "border-[var(--border)] text-[var(--text-2)]"
-                }`}
-              >
-                {tg.name}
-              </button>
-            ))}
-            {targetGroups.length === 0 ? (
-              <p className="text-xs text-[var(--text-2)]">Keine aktiven Zielgruppen vorhanden.</p>
-            ) : null}
-          </div>
-        ) : null}
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void runPreview()}
-            className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium"
-          >
-            Empfängervorschau
-          </button>
-          {preview ? (
-            <p className="text-sm text-[var(--text-2)]">
-              <strong>{preview.effective}</strong> Personen in der Zielgruppe
-              {preview.excluded > 0 ? ` (${preview.excluded} ausgeschlossen)` : ""}
-            </p>
-          ) : null}
-        </div>
+        <CommunicationAudienceSelector
+          context="ORGANISATION"
+          value={audienceSelection}
+          onChange={(next) => {
+            setAudienceSelection(next);
+            setReviewConfirmed(false);
+          }}
+          onPreviewChange={setAudiencePreview}
+          requireLargeAudienceConfirm
+          largeAudienceConfirmed={largeAudienceConfirmed}
+          onLargeAudienceConfirmedChange={(confirmed) => {
+            setLargeAudienceConfirmed(confirmed);
+            setReviewConfirmed(false);
+          }}
+          disabled={busy || readOnly}
+          previewKind={kind}
+        />
         <p className="text-xs text-[var(--text-2)]">{MITTEILUNG_PREFERENCES_NOTICE}</p>
         <p className="text-xs text-[var(--text-2)]">{MITTEILUNG_SAFEGUARDING_NOTICE}</p>
-        {preview?.scopeNotice ? (
-          <p className="text-xs text-[var(--text-2)]">{preview.scopeNotice}</p>
-        ) : null}
       </section>
 
       <section aria-labelledby="mitteilung-kanaele-heading" className="space-y-3 rounded-xl border border-[var(--border)] p-4 md:p-6">
@@ -516,6 +509,14 @@ export default function ClubCommunicationComposer({
           E-Mail-Versand bereit:{" "}
           {emailReady === null ? "…" : emailReady ? "Ja" : "Nein — Absender prüfen"}
         </p>
+        <CommunicationSenderSelector
+          value={emailSenderIdentityId}
+          onChange={(id) => {
+            setEmailSenderIdentityId(id);
+            setReviewConfirmed(false);
+          }}
+          emailChannelEnabled
+        />
       </section>
 
       <section aria-labelledby="mitteilung-zeitpunkt-heading" className="rounded-xl border border-[var(--border)] p-4 md:p-6">
@@ -569,11 +570,19 @@ export default function ClubCommunicationComposer({
           </div>
           <div>
             <dt className="text-[var(--text-2)]">Zielpersonen (Vorschau)</dt>
-            <dd>{preview ? `${preview.effective} Personen` : "Vorschau noch nicht geladen"}</dd>
+            <dd>
+              {audiencePreview
+                ? `${audiencePreview.effective} Personen`
+                : "Empfängervorschau wird berechnet …"}
+            </dd>
           </div>
           <div>
             <dt className="text-[var(--text-2)]">Kanäle</dt>
             <dd>In-App, Push, E-Mail (wenn bereit)</dd>
+          </div>
+          <div>
+            <dt className="text-[var(--text-2)]">Absender (E-Mail)</dt>
+            <dd>{emailSenderIdentityId ? "Ausgewählter Vereinsabsender" : "Standard / SportClubEvo-Fallback"}</dd>
           </div>
           <div>
             <dt className="text-[var(--text-2)]">Zeitpunkt</dt>
@@ -581,6 +590,20 @@ export default function ClubCommunicationComposer({
           </div>
         </dl>
         <p className="text-xs text-[var(--text-2)]">{MITTEILUNG_PUBLISH_NOTICE}</p>
+        {personalisationContextRef ? (
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-[var(--foreground)]">Personalisierungsvorschau</h3>
+            <PersonalisationComposerPreview
+              subject={subject}
+              bodyText={bodyText}
+              contextRef={personalisationContextRef}
+              audienceSelection={audienceSelection}
+              audienceContext="ORGANISATION"
+              previewKind={kind}
+              communicationKind={kind}
+            />
+          </div>
+        ) : null}
         <label className="flex items-start gap-2 text-sm">
           <input
             type="checkbox"

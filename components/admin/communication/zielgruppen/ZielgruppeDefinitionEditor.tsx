@@ -1,11 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { PopoverContent } from "@/components/ui/Popover";
-import ZielgruppeSelectorChip from "@/components/admin/communication/zielgruppen/ZielgruppeSelectorChip";
 import type { ZielgruppeEditorDefinition } from "@/lib/communication/zielgruppen/editor-model";
 import { EMPTY_ZIELGRUPPE_EDITOR_DEFINITION } from "@/lib/communication/zielgruppen/editor-model";
+import {
+  addExcludeRule,
+  addIncludeRule,
+  compositionModeHelp,
+  compositionModeLabel,
+  definitionToVisualRules,
+  removeExcludeRule,
+  removeIncludeRule,
+  ZIELGRUPPE_EXCLUDE_KIND_LABEL,
+  ZIELGRUPPE_INCLUDE_KIND_LABEL,
+  type ZielgruppeExcludeRuleKind,
+  type ZielgruppeIncludeRuleKind,
+} from "@/lib/communication/zielgruppen/visual-rules";
 import {
   searchZielgruppeOrgUnitsAction,
   searchZielgruppePersonsAction,
@@ -13,6 +25,8 @@ import {
   searchZielgruppeTeamsAction,
 } from "@/app/(admin)/dashboard/communication/zielgruppen/actions";
 import ZielgruppeHumanRulesPanel from "@/components/admin/communication/zielgruppen/ZielgruppeHumanRulesPanel";
+import { summarizeZielgruppeEditorDefinition } from "@/lib/communication/audience/human-audience-summary";
+import { ZIELGRUPPE_DYNAMIC_MEMBERSHIP_NOTICE } from "@/lib/communication/zielgruppen/zielgruppen-display";
 import { REQUIREMENT_PERSON_SEARCH_MIN_CHARS } from "@/lib/requirements/person-search-constants";
 
 type KnownLabels = {
@@ -30,28 +44,33 @@ type Props = {
 };
 
 type SearchKind =
-  | "orgUnit"
-  | "team"
-  | "role"
-  | "personInclude"
-  | "personExclude"
-  | "excludeOrgUnit"
-  | "excludeTeam"
-  | "excludeRole";
+  | ZielgruppeIncludeRuleKind
+  | ZielgruppeExcludeRuleKind;
 
 const SECTION_LABEL =
   "text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]";
 
-function SearchAddButton({
+function labelForId(
+  kind: SearchKind,
+  id: string,
+  labels: KnownLabels,
+): string {
+  if (kind === "orgUnit" || kind === "excludeOrgUnit") return labels.orgUnits[id] ?? "…";
+  if (kind === "team" || kind === "excludeTeam") return labels.teams[id] ?? "…";
+  if (kind === "role" || kind === "excludeRole") return labels.roles[id] ?? "…";
+  return labels.persons[id] ?? "…";
+}
+
+function RuleValueSearch({
   kind,
-  label,
   disabled,
   onPick,
+  triggerLabel,
 }: {
   kind: SearchKind;
-  label: string;
   disabled?: boolean;
   onPick: (id: string, displayLabel: string) => void;
+  triggerLabel: string;
 }) {
   const anchorRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -64,25 +83,26 @@ function SearchAddButton({
     if (!open) return undefined;
     const term = query.trim();
     if (term.length < REQUIREMENT_PERSON_SEARCH_MIN_CHARS) {
-      setOptions([]);
       return undefined;
     }
     const handle = setTimeout(async () => {
       setLoading(true);
       setError(null);
-      const searchFn =
-        kind === "orgUnit" || kind === "excludeOrgUnit"
-          ? searchZielgruppeOrgUnitsAction
-          : kind === "team" || kind === "excludeTeam"
-            ? searchZielgruppeTeamsAction
-            : kind === "role" || kind === "excludeRole"
-              ? searchZielgruppeRolesAction
-              : searchZielgruppePersonsAction;
+      const isPerson = kind === "person" || kind === "excludePerson";
+      const isOrg = kind === "orgUnit" || kind === "excludeOrgUnit";
+      const isTeam = kind === "team" || kind === "excludeTeam";
+      const searchFn = isOrg
+        ? searchZielgruppeOrgUnitsAction
+        : isTeam
+          ? searchZielgruppeTeamsAction
+          : kind === "role" || kind === "excludeRole"
+            ? searchZielgruppeRolesAction
+            : searchZielgruppePersonsAction;
       const result = await searchFn(term);
       if (!result.ok) {
         setError(result.message);
         setOptions([]);
-      } else if (kind === "personInclude" || kind === "personExclude") {
+      } else if (isPerson) {
         setOptions(
           (result.data as Array<{ personId: string; displayName: string }>).map((row) => ({
             id: row.personId,
@@ -98,18 +118,18 @@ function SearchAddButton({
   }, [kind, open, query]);
 
   return (
-    <div className="relative inline-block">
+    <div className="relative inline-block w-full sm:w-auto">
       <button
         ref={anchorRef}
         type="button"
         disabled={disabled}
-        className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2.5 py-1.5 text-xs font-medium hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--blue)]"
+        className="inline-flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-[var(--border-strong)] px-3 py-2 text-xs font-medium text-[var(--sce-primary)] hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--blue)] sm:w-auto"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         data-testid={`zielgruppe-add-${kind}`}
       >
         <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-        {label}
+        {triggerLabel}
       </button>
       <PopoverContent
         open={open}
@@ -119,14 +139,14 @@ function SearchAddButton({
         maxHeight={280}
         className="w-72 p-2"
         role="dialog"
-        aria-label={`${label} suchen`}
+        aria-label={`${triggerLabel} suchen`}
       >
         <input
           className="fca-input mb-2 w-full text-sm"
           placeholder="Suchen…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          aria-label={`${label} Suchbegriff`}
+          aria-label={`${triggerLabel} Suchbegriff`}
         />
         {error ? <p className="text-xs text-red-600">{error}</p> : null}
         {loading ? <p className="text-xs text-[var(--muted)]">Suche…</p> : null}
@@ -148,6 +168,47 @@ function SearchAddButton({
           ))}
         </ul>
       </PopoverContent>
+    </div>
+  );
+}
+
+function VisualRuleRow({
+  typeLabel,
+  valueLabel,
+  disabled,
+  onRemove,
+  testId,
+}: {
+  typeLabel: string;
+  valueLabel: string;
+  disabled?: boolean;
+  onRemove: () => void;
+  testId: string;
+}) {
+  return (
+    <div
+      className="flex flex-col gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)] p-3 sm:flex-row sm:items-center sm:gap-3"
+      data-testid={testId}
+    >
+      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+        <span className="text-xs font-medium text-[var(--muted)] sm:w-36">{typeLabel}</span>
+        <span className="hidden text-xs text-[var(--muted)] sm:inline" aria-hidden="true">
+          ist
+        </span>
+        <span className="rounded-md bg-[var(--surface-2)] px-2.5 py-1.5 text-sm font-medium text-[var(--foreground)]">
+          {valueLabel}
+        </span>
+      </div>
+      <button
+        type="button"
+        disabled={disabled}
+        className="inline-flex items-center justify-center gap-1 self-end rounded-md border border-[var(--border)] px-2 py-1.5 text-xs text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--blue)] sm:self-center"
+        onClick={onRemove}
+        aria-label={`${typeLabel} ${valueLabel} entfernen`}
+      >
+        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+        Entfernen
+      </button>
     </div>
   );
 }
@@ -175,80 +236,41 @@ export default function ZielgruppeDefinitionEditor({
     onChange({ ...value, ...partial });
   }
 
-  function addId(
-    field: keyof Pick<
-      ZielgruppeEditorDefinition,
-      | "orgUnitIds"
-      | "teamIds"
-      | "roleIds"
-      | "includePersonIds"
-      | "excludePersonIds"
-      | "excludeOrgUnitIds"
-      | "excludeTeamIds"
-      | "excludeRoleIds"
-    >,
-    id: string,
-    labelKey: keyof KnownLabels,
-    displayLabel: string,
-  ) {
-    if (value[field].includes(id)) return;
+  function rememberLabel(kind: SearchKind, id: string, displayLabel: string) {
+    const key =
+      kind === "orgUnit" || kind === "excludeOrgUnit"
+        ? "orgUnits"
+        : kind === "team" || kind === "excludeTeam"
+          ? "teams"
+          : kind === "role" || kind === "excludeRole"
+            ? "roles"
+            : "persons";
     setDynamicLabels((prev) => ({
       ...prev,
-      [labelKey]: { ...prev[labelKey], [id]: displayLabel },
+      [key]: { ...prev[key], [id]: displayLabel },
     }));
-    patch({ [field]: [...value[field], id] } as Partial<ZielgruppeEditorDefinition>);
   }
 
-  function removeId(
-    field: keyof Pick<
-      ZielgruppeEditorDefinition,
-      | "orgUnitIds"
-      | "teamIds"
-      | "roleIds"
-      | "includePersonIds"
-      | "excludePersonIds"
-      | "excludeOrgUnitIds"
-      | "excludeTeamIds"
-      | "excludeRoleIds"
-    >,
-    id: string,
-  ) {
-    patch({ [field]: value[field].filter((x) => x !== id) } as Partial<ZielgruppeEditorDefinition>);
-  }
+  const { includeRules, excludeRules } = definitionToVisualRules(value);
+  const liveSummary = summarizeZielgruppeEditorDefinition(value, labels);
 
   return (
-    <div className="space-y-6">
-      <section className="space-y-2">
-        <h3 className={SECTION_LABEL}>Kriterien kombinieren</h3>
-        <div className="flex flex-wrap gap-4 text-sm">
-          <label className="inline-flex cursor-pointer items-center gap-2">
-            <input
-              type="radio"
-              name="zielgruppe-composition"
-              checked={value.compositionMode === "UNION"}
-              disabled={disabled}
-              onChange={() => patch({ compositionMode: "UNION" })}
-            />
-            Mindestens eine Bedingung (ODER)
-          </label>
-          <label className="inline-flex cursor-pointer items-center gap-2">
-            <input
-              type="radio"
-              name="zielgruppe-composition"
-              checked={value.compositionMode === "INTERSECTION"}
-              disabled={disabled}
-              onChange={() => patch({ compositionMode: "INTERSECTION" })}
-            />
-            Alle folgenden Bedingungen (UND)
-          </label>
-        </div>
-        <p className="text-xs leading-5 text-[var(--text-2)]">
-          Ausgeschlossene Personen und Ausschluss-Kriterien haben Vorrang vor Einschlüssen.
-        </p>
+    <div className="space-y-8">
+      <section className="space-y-2" aria-labelledby="zg-question-heading">
+        <h3 id="zg-question-heading" className="text-base font-semibold text-[var(--foreground)]">
+          Wer gehört zu dieser Zielgruppe?
+        </h3>
+        <p className="text-xs leading-5 text-[var(--text-2)]">{ZIELGRUPPE_DYNAMIC_MEMBERSHIP_NOTICE}</p>
       </section>
 
-      <section className="space-y-2">
-        <h3 className={SECTION_LABEL}>Organisation</h3>
+      <section className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4">
+        <div>
+          <h4 className={SECTION_LABEL}>Einschliessen</h4>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            Personen, die mindestens eine oder alle Bedingungen erfüllen (siehe Kombination).
+          </p>
+        </div>
+
         <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-[var(--border)] p-3">
           <input
             type="checkbox"
@@ -256,179 +278,140 @@ export default function ZielgruppeDefinitionEditor({
             checked={value.wholeOrganisation}
             disabled={disabled}
             onChange={(e) => patch({ wholeOrganisation: e.target.checked })}
+            aria-describedby="zg-whole-org-hint"
           />
           <span>
             <span className="block text-sm font-medium text-[var(--foreground)]">
               Ganze Organisation
             </span>
-            <span className="mt-0.5 block text-xs text-[var(--muted)]">
-              Strukturelle Auswahl des Vereins — Empfänger werden zur Versandzeit dynamisch
-              ermittelt (keine Personenliste).
+            <span id="zg-whole-org-hint" className="mt-0.5 block text-xs text-[var(--muted)]">
+              Alle Personen im Verein (dynamisch zur Versandzeit).
             </span>
           </span>
         </label>
+
+        {!value.wholeOrganisation ? (
+          <>
+            <fieldset className="space-y-2">
+              <legend className="sr-only">Bedingungen kombinieren</legend>
+              <p className="text-xs font-medium text-[var(--foreground)]">Bedingungen kombinieren</p>
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-4">
+                <label className="inline-flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="zielgruppe-composition"
+                    checked={value.compositionMode === "INTERSECTION"}
+                    disabled={disabled}
+                    onChange={() => patch({ compositionMode: "INTERSECTION" })}
+                  />
+                  {compositionModeLabel("INTERSECTION")}
+                </label>
+                <label className="inline-flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="zielgruppe-composition"
+                    checked={value.compositionMode === "UNION"}
+                    disabled={disabled}
+                    onChange={() => patch({ compositionMode: "UNION" })}
+                  />
+                  {compositionModeLabel("UNION")}
+                </label>
+              </div>
+              <p className="text-xs text-[var(--muted)]" aria-live="polite">
+                {compositionModeHelp(value.compositionMode)}
+              </p>
+            </fieldset>
+
+            <div className="space-y-2">
+              {includeRules.map((rule) => (
+                <VisualRuleRow
+                  key={rule.id}
+                  testId={`zg-include-rule-${rule.id}`}
+                  typeLabel={ZIELGRUPPE_INCLUDE_KIND_LABEL[rule.kind]}
+                  valueLabel={labelForId(rule.kind, rule.valueId, labels)}
+                  disabled={disabled}
+                  onRemove={() => onChange(removeIncludeRule(value, rule.kind, rule.valueId))}
+                />
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["orgUnit", "Organisationseinheit"],
+                  ["team", "Team"],
+                  ["role", "Rolle"],
+                  ["person", "Person"],
+                ] as const
+              ).map(([kind, label]) => (
+                <RuleValueSearch
+                  key={kind}
+                  kind={kind}
+                  disabled={disabled}
+                  triggerLabel={label}
+                  onPick={(id, displayLabel) => {
+                    rememberLabel(kind, id, displayLabel);
+                    onChange(addIncludeRule(value, kind, id));
+                  }}
+                />
+              ))}
+            </div>
+          </>
+        ) : null}
       </section>
 
-      <section className="space-y-2">
-        <h3 className={SECTION_LABEL}>Organisationseinheiten</h3>
-        <div className="flex flex-wrap gap-2">
-          {value.orgUnitIds.map((id) => (
-            <ZielgruppeSelectorChip
-              key={id}
-              label={labels.orgUnits[id] ?? id}
+      <section className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4">
+        <div>
+          <h4 className={SECTION_LABEL}>Ausschliessen</h4>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            Diese Personen werden immer ausgeschlossen — auch wenn sie eine Einschluss-Bedingung
+            erfüllen.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          {excludeRules.map((rule) => (
+            <VisualRuleRow
+              key={rule.id}
+              testId={`zg-exclude-rule-${rule.id}`}
+              typeLabel={ZIELGRUPPE_EXCLUDE_KIND_LABEL[rule.kind]}
+              valueLabel={labelForId(rule.kind, rule.valueId, labels)}
               disabled={disabled}
-              onRemove={() => removeId("orgUnitIds", id)}
+              onRemove={() => onChange(removeExcludeRule(value, rule.kind, rule.valueId))}
             />
           ))}
         </div>
-        <SearchAddButton
-          kind="orgUnit"
-          label="Einheit hinzufügen"
-          disabled={disabled}
-          onPick={(id, label) => addId("orgUnitIds", id, "orgUnits", label)}
-        />
-      </section>
 
-      <section className="space-y-2">
-        <h3 className={SECTION_LABEL}>Teams</h3>
-        <p className="text-[11px] text-[var(--muted)]">
-          Gespeichert als Team-ID (nicht Saison) — aktive Kader und Trainer der laufenden Saison
-          werden bei der Auflösung berücksichtigt.
-        </p>
         <div className="flex flex-wrap gap-2">
-          {value.teamIds.map((id) => (
-            <ZielgruppeSelectorChip
-              key={id}
-              label={labels.teams[id] ?? id}
+          {(
+            [
+              ["excludeOrgUnit", "Organisationseinheit"],
+              ["excludeTeam", "Team"],
+              ["excludeRole", "Rolle"],
+              ["excludePerson", "Person"],
+            ] as const
+          ).map(([kind, label]) => (
+            <RuleValueSearch
+              key={kind}
+              kind={kind}
               disabled={disabled}
-              onRemove={() => removeId("teamIds", id)}
+              triggerLabel={label}
+              onPick={(id, displayLabel) => {
+                rememberLabel(kind, id, displayLabel);
+                onChange(addExcludeRule(value, kind, id));
+              }}
             />
           ))}
         </div>
-        <SearchAddButton
-          kind="team"
-          label="Team hinzufügen"
-          disabled={disabled}
-          onPick={(id, label) => addId("teamIds", id, "teams", label)}
-        />
       </section>
 
-      <section className="space-y-2">
-        <h3 className={SECTION_LABEL}>Rollen</h3>
-        <div className="flex flex-wrap gap-2">
-          {value.roleIds.map((id) => (
-            <ZielgruppeSelectorChip
-              key={id}
-              label={labels.roles[id] ?? id}
-              disabled={disabled}
-              onRemove={() => removeId("roleIds", id)}
-            />
-          ))}
-        </div>
-        <SearchAddButton
-          kind="role"
-          label="Rolle hinzufügen"
-          disabled={disabled}
-          onPick={(id, label) => addId("roleIds", id, "roles", label)}
-        />
-      </section>
-
-      <section className="space-y-2">
-        <h3 className={SECTION_LABEL}>Personen einschliessen</h3>
-        <div className="flex flex-wrap gap-2">
-          {value.includePersonIds.map((id) => (
-            <ZielgruppeSelectorChip
-              key={id}
-              label={labels.persons[id] ?? id}
-              disabled={disabled}
-              onRemove={() => removeId("includePersonIds", id)}
-            />
-          ))}
-        </div>
-        <SearchAddButton
-          kind="personInclude"
-          label="Person hinzufügen"
-          disabled={disabled}
-          onPick={(id, label) => addId("includePersonIds", id, "persons", label)}
-        />
-      </section>
-
-      <section className="space-y-2">
-        <h3 className={SECTION_LABEL}>Personen ausschliessen</h3>
-        <div className="flex flex-wrap gap-2">
-          {value.excludePersonIds.map((id) => (
-            <ZielgruppeSelectorChip
-              key={id}
-              label={labels.persons[id] ?? id}
-              disabled={disabled}
-              onRemove={() => removeId("excludePersonIds", id)}
-            />
-          ))}
-        </div>
-        <SearchAddButton
-          kind="personExclude"
-          label="Person ausschliessen"
-          disabled={disabled}
-          onPick={(id, label) => addId("excludePersonIds", id, "persons", label)}
-        />
-      </section>
-
-      <section className="space-y-2">
-        <h3 className={SECTION_LABEL}>Ausschliessen (NICHT)</h3>
-        <p className="text-[11px] text-[var(--muted)]">
-          Strukturelle Ausschlüsse entfernen passende Personen nach der Zieldefinition.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {value.excludeOrgUnitIds.map((id) => (
-            <ZielgruppeSelectorChip
-              key={`ex-ou-${id}`}
-              label={labels.orgUnits[id] ?? id}
-              disabled={disabled}
-              onRemove={() => removeId("excludeOrgUnitIds", id)}
-            />
-          ))}
-          {value.excludeTeamIds.map((id) => (
-            <ZielgruppeSelectorChip
-              key={`ex-team-${id}`}
-              label={labels.teams[id] ?? id}
-              disabled={disabled}
-              onRemove={() => removeId("excludeTeamIds", id)}
-            />
-          ))}
-          {value.excludeRoleIds.map((id) => (
-            <ZielgruppeSelectorChip
-              key={`ex-role-${id}`}
-              label={labels.roles[id] ?? id}
-              disabled={disabled}
-              onRemove={() => removeId("excludeRoleIds", id)}
-            />
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <SearchAddButton
-            kind="excludeOrgUnit"
-            label="Einheit ausschliessen"
-            disabled={disabled}
-            onPick={(id, label) => addId("excludeOrgUnitIds", id, "orgUnits", label)}
-          />
-          <SearchAddButton
-            kind="excludeTeam"
-            label="Team ausschliessen"
-            disabled={disabled}
-            onPick={(id, label) => addId("excludeTeamIds", id, "teams", label)}
-          />
-          <SearchAddButton
-            kind="excludeRole"
-            label="Rolle ausschliessen"
-            disabled={disabled}
-            onPick={(id, label) => addId("excludeRoleIds", id, "roles", label)}
-          />
-        </div>
-      </section>
-
-      <section className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-1)] px-4 py-3">
-        <h3 className={SECTION_LABEL}>Regeln in Klartext</h3>
-        <div className="mt-2">
+      <section
+        className="rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-2)] px-4 py-3"
+        aria-live="polite"
+      >
+        <h4 className={SECTION_LABEL}>Zusammenfassung</h4>
+        <p className="mt-2 text-sm font-medium text-[var(--foreground)]">{liveSummary}</p>
+        <div className="mt-3 border-t border-[var(--border)] pt-3">
           <ZielgruppeHumanRulesPanel definition={value} labels={labels} />
         </div>
       </section>
