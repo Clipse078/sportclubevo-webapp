@@ -1,8 +1,11 @@
 import {
   CommunicationCenterConversationStatus,
+  CommunicationCenterMailboxOrganization,
   CommunicationCenterMessageDirection,
   type Prisma,
 } from "@prisma/client";
+import type { InboxMailboxView } from "@/lib/communication/inbox/inbox-mailbox-constants";
+import { assertNotTrashedForSharedOperationalMutation } from "@/lib/communication/inbox/mailbox-organization-service";
 import { prisma } from "@/lib/db/prisma";
 import { CommunicationCenterError } from "@/lib/communication/inbox/errors";
 import { recordCommunicationCenterAudit } from "@/lib/communication/inbox/inbox-audit";
@@ -19,23 +22,89 @@ export type InboxConversationFilter =
   | "UNASSIGNED"
   | "EMAIL";
 
+function applyMailboxViewFilter(
+  where: Prisma.CommunicationCenterConversationWhereInput,
+  mailbox: InboxMailboxView,
+): void {
+  if (mailbox === "INBOX") {
+    where.mailboxOrganization = CommunicationCenterMailboxOrganization.INBOX;
+  } else if (mailbox === "ARCHIVE") {
+    where.mailboxOrganization = CommunicationCenterMailboxOrganization.ARCHIVED;
+  } else if (mailbox === "TRASH") {
+    where.mailboxOrganization = CommunicationCenterMailboxOrganization.TRASHED;
+  } else if (mailbox === "STARRED") {
+    where.mailboxOrganization = {
+      not: CommunicationCenterMailboxOrganization.TRASHED,
+    };
+  }
+}
+
+export async function listCommunicationCenterMailboxCounts(input: {
+  tenantId: string;
+  userId: string;
+}): Promise<Record<InboxMailboxView, number>> {
+  const [inbox, archive, trash, starred] = await Promise.all([
+    prisma.communicationCenterConversation.count({
+      where: {
+        tenantId: input.tenantId,
+        mailboxOrganization: CommunicationCenterMailboxOrganization.INBOX,
+      },
+    }),
+    prisma.communicationCenterConversation.count({
+      where: {
+        tenantId: input.tenantId,
+        mailboxOrganization: CommunicationCenterMailboxOrganization.ARCHIVED,
+      },
+    }),
+    prisma.communicationCenterConversation.count({
+      where: {
+        tenantId: input.tenantId,
+        mailboxOrganization: CommunicationCenterMailboxOrganization.TRASHED,
+      },
+    }),
+    prisma.communicationCenterConversation.count({
+      where: {
+        tenantId: input.tenantId,
+        mailboxOrganization: { not: CommunicationCenterMailboxOrganization.TRASHED },
+        readStates: { some: { userId: input.userId, starredAt: { not: null } } },
+      },
+    }),
+  ]);
+  return { INBOX: inbox, STARRED: starred, ARCHIVE: archive, TRASH: trash };
+}
+
 export async function listCommunicationCenterConversations(input: {
   tenantId: string;
   userId: string;
+  mailbox?: InboxMailboxView;
   filter: InboxConversationFilter;
   search?: string;
   cursor?: string;
   limit?: number;
 }) {
   const limit = Math.min(Math.max(input.limit ?? 30, 1), 100);
+  const mailbox = input.mailbox ?? "INBOX";
   const where: Prisma.CommunicationCenterConversationWhereInput = {
     tenantId: input.tenantId,
   };
 
+  applyMailboxViewFilter(where, mailbox);
+
+  const readStateAnd: Prisma.CommunicationCenterConversationWhereInput[] = [];
+  if (mailbox === "STARRED") {
+    readStateAnd.push({
+      readStates: { some: { userId: input.userId, starredAt: { not: null } } },
+    });
+  }
   if (input.filter === "UNREAD") {
-    where.readStates = {
-      none: { userId: input.userId, readAt: { not: null } },
-    };
+    readStateAnd.push({
+      readStates: { none: { userId: input.userId, readAt: { not: null } } },
+    });
+  }
+  if (readStateAnd.length === 1) {
+    Object.assign(where, readStateAnd[0]);
+  } else if (readStateAnd.length > 1) {
+    where.AND = [...(Array.isArray(where.AND) ? where.AND : []), ...readStateAnd];
   }
   if (input.filter === "ASSIGNED_TO_ME") {
     where.assignedToUserId = input.userId;
@@ -104,6 +173,8 @@ export async function listCommunicationCenterConversations(input: {
         }),
         participantEmail: resolveInboxParticipantEmail({ latestInbound }),
         unread: !row.readStates[0]?.readAt,
+        starred: Boolean(row.readStates[0]?.starredAt),
+        mailboxOrganization: row.mailboxOrganization,
       };
     }),
     nextCursor,
@@ -184,11 +255,12 @@ export async function assignCommunicationCenterConversation(input: {
 }): Promise<void> {
   const conversation = await prisma.communicationCenterConversation.findFirst({
     where: { id: input.conversationId, tenantId: input.tenantId },
-    select: { id: true },
+    select: { id: true, mailboxOrganization: true },
   });
   if (!conversation) {
     throw new CommunicationCenterError("NOT_FOUND", "Konversation nicht gefunden.");
   }
+  assertNotTrashedForSharedOperationalMutation(conversation.mailboxOrganization);
 
   if (input.assignedToUserId) {
     const assigneeMembership = await prisma.tenantMembership.findFirst({
@@ -227,11 +299,12 @@ export async function setCommunicationCenterConversationStatus(input: {
 }): Promise<void> {
   const conversation = await prisma.communicationCenterConversation.findFirst({
     where: { id: input.conversationId, tenantId: input.tenantId },
-    select: { id: true },
+    select: { id: true, mailboxOrganization: true },
   });
   if (!conversation) {
     throw new CommunicationCenterError("NOT_FOUND", "Konversation nicht gefunden.");
   }
+  assertNotTrashedForSharedOperationalMutation(conversation.mailboxOrganization);
 
   await prisma.communicationCenterConversation.update({
     where: { id: input.conversationId },

@@ -2,12 +2,17 @@
 
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/cn";
+import type { InboxMailboxView } from "@/lib/communication/inbox/inbox-mailbox-constants";
 import {
+  INBOX_MAILBOX_NAV_ITEMS,
   INBOX_QUICK_FILTERS,
   type InboxQuickFilterId,
 } from "@/components/admin/communication/inbox/inbox-workspace-types";
 
 type CommunicationInboxToolbarProps = {
+  mailbox: InboxMailboxView;
+  onMailboxChange: (mailbox: InboxMailboxView) => void;
+  mailboxCounts: Partial<Record<InboxMailboxView, number>>;
   filter: InboxQuickFilterId;
   onFilterChange: (filter: InboxQuickFilterId) => void;
   search: string;
@@ -17,6 +22,9 @@ type CommunicationInboxToolbarProps = {
 };
 
 export function CommunicationInboxToolbar({
+  mailbox,
+  onMailboxChange,
+  mailboxCounts,
   filter,
   onFilterChange,
   search,
@@ -26,6 +34,58 @@ export function CommunicationInboxToolbar({
 }: CommunicationInboxToolbarProps) {
   return (
     <div className="flex flex-col gap-3 border-b border-[var(--border)] pb-4">
+      <nav aria-label="Postfach">
+        <div className="flex flex-wrap gap-1 lg:hidden">
+          <label className="sr-only" htmlFor="inbox-mailbox-select">
+            Postfach
+          </label>
+          <select
+            id="inbox-mailbox-select"
+            value={mailbox}
+            onChange={(event) => onMailboxChange(event.target.value as InboxMailboxView)}
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+          >
+            {INBOX_MAILBOX_NAV_ITEMS.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+                {typeof mailboxCounts[item.id] === "number" ? ` (${mailboxCounts[item.id]})` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div
+          className="hidden flex-wrap gap-1 lg:flex"
+          role="tablist"
+          aria-label="Postfachansichten"
+        >
+          {INBOX_MAILBOX_NAV_ITEMS.map((item) => {
+            const active = mailbox === item.id;
+            const count = mailboxCounts[item.id];
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => onMailboxChange(item.id)}
+                className={cn(
+                  "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]",
+                  active
+                    ? "border-[var(--sce-primary)]/50 bg-[var(--surface-2)] text-[var(--foreground)]"
+                    : "border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface-2)]/60",
+                )}
+              >
+                {item.id === "STARRED" ? "⭐ " : ""}
+                {item.label}
+                {typeof count === "number" ? (
+                  <span className="ml-1 tabular-nums text-[var(--text-2)]">({count})</span>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <label className="relative block min-w-0 flex-1">
           <span className="sr-only">Konversationen durchsuchen</span>

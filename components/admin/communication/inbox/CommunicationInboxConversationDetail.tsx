@@ -13,6 +13,8 @@ import {
   resolveInboxParticipantLabel,
 } from "@/lib/communication/inbox/inbox-display";
 import { SCE_SURFACE_STANDARD_PANEL } from "@/lib/shell/sce-surface-system";
+import type { InboxMailboxView } from "@/lib/communication/inbox/inbox-mailbox-constants";
+import { CommunicationInboxConversationActionsToolbar } from "@/components/admin/communication/inbox/CommunicationInboxConversationActionsToolbar";
 import type {
   CommunicationInboxCapabilities,
   InboxConversationDetail,
@@ -24,9 +26,20 @@ type CommunicationInboxConversationDetailProps = {
   listItem: InboxConversationListItem | null;
   detail: InboxConversationDetail | null;
   capabilities: CommunicationInboxCapabilities;
+  mailbox: InboxMailboxView;
   loading: boolean;
   detailError: string | null;
+  actionBusy: boolean;
   onRetryDetail: () => void;
+  onToggleStar: () => void;
+  onArchive: () => void;
+  onRestoreToInbox: () => void;
+  onTrash: () => void;
+  onRestoreFromTrash: () => void;
+  onMarkRead: () => void;
+  onMarkUnread: () => void;
+  showProcessingToolbar: boolean;
+  replyDisabled: boolean;
   replyText: string;
   onReplyTextChange: (value: string) => void;
   onSendReply: () => void;
@@ -75,9 +88,20 @@ export function CommunicationInboxConversationDetailPane({
   listItem,
   detail,
   capabilities,
+  mailbox,
   loading,
   detailError,
+  actionBusy,
   onRetryDetail,
+  onToggleStar,
+  onArchive,
+  onRestoreToInbox,
+  onTrash,
+  onRestoreFromTrash,
+  onMarkRead,
+  onMarkUnread,
+  showProcessingToolbar,
+  replyDisabled,
   replyText,
   onReplyTextChange,
   onSendReply,
@@ -208,7 +232,7 @@ export function CommunicationInboxConversationDetailPane({
                   ))}
                 </div>
               </div>
-              {capabilities.canManage ? (
+              {capabilities.canManage && detail.mailboxOrganization !== "TRASHED" ? (
                 <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
                   {detail.status === "OPEN" ? (
                     <Button type="button" variant="secondary" onClick={onResolve}>
@@ -237,6 +261,23 @@ export function CommunicationInboxConversationDetailPane({
               </p>
             ) : null}
           </header>
+
+          {showProcessingToolbar ? (
+            <CommunicationInboxConversationActionsToolbar
+              mailbox={mailbox}
+              starred={listItem?.starred ?? false}
+              unread={listItem?.unread ?? false}
+              canManage={capabilities.canManage}
+              busy={actionBusy}
+              onToggleStar={onToggleStar}
+              onArchive={onArchive}
+              onRestoreToInbox={onRestoreToInbox}
+              onTrash={onTrash}
+              onRestoreFromTrash={onRestoreFromTrash}
+              onMarkRead={onMarkRead}
+              onMarkUnread={onMarkUnread}
+            />
+          ) : null}
 
           {loading ? (
             <p className="px-4 py-2 text-sm text-[var(--text-2)]" aria-live="polite">
@@ -300,7 +341,7 @@ export function CommunicationInboxConversationDetailPane({
             })}
           </div>
 
-          {capabilities.canReply ? (
+          {capabilities.canReply && !replyDisabled ? (
             <div className="shrink-0 border-t border-[var(--border)] p-4">
               <label className="block text-xs font-medium text-[var(--text-2)]" htmlFor="inbox-reply">
                 Antwort
@@ -328,6 +369,11 @@ export function CommunicationInboxConversationDetailPane({
                 </Button>
               </div>
             </div>
+          ) : null}
+          {replyDisabled ? (
+            <p className="shrink-0 border-t border-[var(--border)] px-4 py-3 text-xs text-[var(--text-2)]">
+              Antworten ist im Papierkorb nicht verfügbar. Bitte zuerst wiederherstellen.
+            </p>
           ) : null}
         </>
       )}
