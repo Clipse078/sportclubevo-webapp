@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => ({
   getCommunicationDeliveryAnalytics: vi.fn(),
   listCommunicationDeliveryDetail: vi.fn(),
   fetch: vi.fn(),
+  resolvePlatformTemplateAuthorization: vi.fn(),
+  listPlatformCommunicationTemplates: vi.fn(),
 }));
 
 vi.mock("@/lib/permissions/require-any-permission", () => ({
@@ -34,6 +36,20 @@ vi.mock("@/lib/communication/club/club-communication-authorization", () => ({
 vi.mock("@/lib/communication/zielgruppen/management-service", () => ({
   listZielgruppenForManagement: mocks.listZielgruppenForManagement,
 }));
+vi.mock("@/lib/communication/templates/platform-template-authorization", () => ({
+  resolvePlatformTemplateAuthorization: mocks.resolvePlatformTemplateAuthorization,
+}));
+vi.mock("@/lib/communication/templates/platform-template-service", () => ({
+  listPlatformCommunicationTemplates: mocks.listPlatformCommunicationTemplates,
+}));
+vi.mock("@/lib/sponsoring/sponsor-authorization", () => ({
+  resolveSponsorAudienceAuthorization: vi.fn().mockResolvedValue({ canViewSponsorData: false }),
+}));
+vi.mock("@/lib/communication/templates/template-management-service", () => ({
+  templateKindAllowedForMitteilungComposer: (kind: string) =>
+    kind === "ANNOUNCEMENT" || kind === "ALERT",
+}));
+vi.mock("@/lib/db/prisma", () => ({ prisma: {} }));
 vi.mock("@/lib/communication/analytics/communication-delivery-analytics-service", () => ({
   getCommunicationDeliveryAnalytics: mocks.getCommunicationDeliveryAnalytics,
   listCommunicationDeliveryDetail: mocks.listCommunicationDeliveryDetail,
@@ -103,6 +119,8 @@ beforeEach(() => {
   mocks.listZielgruppenForManagement.mockResolvedValue([
     { id: "tg-1", name: "Aktive Mitglieder", status: "ACTIVE" },
   ]);
+  mocks.resolvePlatformTemplateAuthorization.mockResolvedValue({ canView: true, canManage: false });
+  mocks.listPlatformCommunicationTemplates.mockResolvedValue([]);
   mocks.getClubCommunicationById.mockResolvedValue(sampleItem);
   mocks.getCommunicationDeliveryAnalytics.mockResolvedValue({
     publication: { deliveryAnalyticsApplicable: true, scheduleStatus: null, scheduledAt: null },

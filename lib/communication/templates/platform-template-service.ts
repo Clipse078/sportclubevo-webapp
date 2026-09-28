@@ -122,6 +122,10 @@ export async function getPlatformCommunicationTemplate(input: {
   templateId: string;
 }) {
   const row = await loadTemplateRow(input);
+  const audienceSpec = (row.audienceSpecJson ?? null) as CommunicationAudienceSpec | null;
+  const orchestration =
+    parseCampaignOrchestrationMeta(row.orchestrationMetaJson) ?? defaultCampaignOrchestrationMeta();
+
   return {
     id: row.id,
     name: row.name,
@@ -131,9 +135,11 @@ export async function getPlatformCommunicationTemplate(input: {
     internalName: row.internalName,
     subject: row.subject,
     bodyText: row.bodyText,
-    audienceSpec: (row.audienceSpecJson ?? null) as CommunicationAudienceSpec | null,
-    orchestration:
-      parseCampaignOrchestrationMeta(row.orchestrationMetaJson) ?? defaultCampaignOrchestrationMeta(),
+    audienceSpec,
+    orchestration,
+    /** API / composer compatibility aliases */
+    audienceSpecJson: audienceSpec,
+    orchestrationMetaJson: orchestration,
     updatedAt: row.updatedAt.toISOString(),
   };
 }

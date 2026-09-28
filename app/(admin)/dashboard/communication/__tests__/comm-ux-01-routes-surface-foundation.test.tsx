@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
   listClubCommunications: vi.fn(),
   listCampaigns: vi.fn(),
   listUpcomingPublicationSchedules: vi.fn(),
-  listPlatformCommunicationTemplates: vi.fn(),
+  listVorlagenForManagement: vi.fn(),
   resolveClubCommunicationAuthorization: vi.fn(),
   resolveCampaignAuthorization: vi.fn(),
   resolvePlatformTemplateAuthorization: vi.fn(),
@@ -29,6 +29,8 @@ vi.mock("@/auth", () => ({ auth: mocks.auth }));
 vi.mock("next/navigation", () => ({
   redirect: mocks.redirect,
   notFound: mocks.notFound,
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock("@/lib/permissions/request-effective-permissions", () => ({
   getRequestEffectivePermissions: mocks.getRequestEffectivePermissions,
@@ -45,8 +47,8 @@ vi.mock("@/lib/communication/campaign/campaign-service", () => ({
 vi.mock("@/lib/communication/scheduling/publication-schedule-service", () => ({
   listUpcomingPublicationSchedules: mocks.listUpcomingPublicationSchedules,
 }));
-vi.mock("@/lib/communication/templates/platform-template-service", () => ({
-  listPlatformCommunicationTemplates: mocks.listPlatformCommunicationTemplates,
+vi.mock("@/lib/communication/templates/template-management-service", () => ({
+  listVorlagenForManagement: mocks.listVorlagenForManagement,
 }));
 vi.mock("@/lib/communication/club/club-communication-authorization", () => ({
   resolveClubCommunicationAuthorization: mocks.resolveClubCommunicationAuthorization,
@@ -94,7 +96,7 @@ beforeEach(() => {
   mocks.listClubCommunications.mockResolvedValue([]);
   mocks.listCampaigns.mockResolvedValue([]);
   mocks.listUpcomingPublicationSchedules.mockResolvedValue([]);
-  mocks.listPlatformCommunicationTemplates.mockResolvedValue([]);
+  mocks.listVorlagenForManagement.mockResolvedValue([]);
   mocks.resolveClubCommunicationAuthorization.mockResolvedValue({ canSend: true });
   mocks.resolveCampaignAuthorization.mockResolvedValue({ canSend: true });
   mocks.resolvePlatformTemplateAuthorization.mockResolvedValue({ canManage: true, canView: true });
@@ -141,7 +143,7 @@ describe("SCE-COMM-UX-01 route authorization alignment", () => {
     expect(mocks.requireAnyPermission).toHaveBeenCalledWith(PLATFORM_TEMPLATE_VIEW_ROUTE_PERMISSIONS);
     expect(screen.getByRole("heading", { level: 1, name: "Vorlagen" })).toBeInTheDocument();
     expect(screen.getByText("Noch keine Vorlagen")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Neue Vorlage" })).toHaveAttribute(
+    expect(screen.getAllByRole("link", { name: "Neue Vorlage" })[0]).toHaveAttribute(
       "href",
       "/dashboard/communication/vorlagen/new",
     );

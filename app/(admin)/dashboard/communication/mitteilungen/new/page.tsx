@@ -8,6 +8,9 @@ import { CLUB_COMMUNICATION_SEND_ROUTE_PERMISSIONS } from "@/lib/communication/c
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { requireClubCommunicationSend } from "@/lib/communication/club/club-communication-authorization";
 import { listZielgruppenForManagement } from "@/lib/communication/zielgruppen/management-service";
+import { resolvePlatformTemplateAuthorization } from "@/lib/communication/templates/platform-template-authorization";
+import { listPlatformCommunicationTemplates } from "@/lib/communication/templates/platform-template-service";
+import { templateKindAllowedForMitteilungComposer } from "@/lib/communication/templates/template-management-service";
 import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +30,22 @@ export default async function NewClubMitteilungPage() {
     tenantId: tenant.id,
     statusFilter: "ACTIVE",
   });
+
+  const templateAuthz = await resolvePlatformTemplateAuthorization({
+    tenantId: tenant.id,
+    tenantKey: tenant.key,
+    userId: session.user.id,
+  });
+
+  const templateOptions = templateAuthz.canView
+    ? (await listPlatformCommunicationTemplates({ tenantId: tenant.id }))
+        .filter(
+          (t) =>
+            templateKindAllowedForMitteilungComposer(t.kind) &&
+            (t.status === "ACTIVE" || t.status === "DRAFT"),
+        )
+        .map((t) => ({ id: t.id, name: t.name, kind: t.kind }))
+    : [];
 
   return (
     <PageShell>
@@ -48,6 +67,7 @@ export default async function NewClubMitteilungPage() {
             status: tg.status,
           }))}
           tenantTimezone={resolveTenantEventTimezone(tenant.timezone)}
+          templateOptions={templateOptions}
         />
       </CommunicationContentSurface>
     </PageShell>
