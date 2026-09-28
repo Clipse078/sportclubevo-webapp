@@ -8,7 +8,7 @@ import { TeamCommunicationForbiddenError } from "@/lib/communication/team/team-c
 
 type RouteContext = { params: Promise<{ communicationId: string }> };
 
-export async function POST(_request: Request, context: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -38,10 +38,24 @@ export async function POST(_request: Request, context: RouteContext) {
     actorUserId: session.user.id,
   });
 
+  let includePersonalSignature: boolean | undefined;
+  try {
+    const body = (await request.json()) as Record<string, unknown>;
+    includePersonalSignature =
+      body.includePersonalSignature === true
+        ? true
+        : body.includePersonalSignature === false
+          ? false
+          : undefined;
+  } catch {
+    includePersonalSignature = undefined;
+  }
+
   const result = await publishClubCommunication({
     tenantId: tenant.id,
     communicationId,
     senderUserId: session.user.id,
+    includePersonalSignature,
   });
 
   return NextResponse.json(result);

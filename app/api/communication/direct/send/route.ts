@@ -46,6 +46,12 @@ export async function POST(request: Request): Promise<NextResponse> {
       bodyText: String(body.bodyText ?? ""),
       mode: parseMode(body.mode),
       channelIntent,
+      includePersonalSignature:
+        body.includePersonalSignature === true
+          ? true
+          : body.includePersonalSignature === false
+            ? false
+            : undefined,
     });
     return NextResponse.json(result);
   } catch (error) {

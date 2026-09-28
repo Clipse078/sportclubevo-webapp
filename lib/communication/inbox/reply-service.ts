@@ -32,10 +32,27 @@ export async function replyToCommunicationCenterConversation(input: {
   actorUserId: string;
   bodyText: string;
   idempotencyKey: string;
+  includePersonalSignature?: boolean;
 }): Promise<ReplyToConversationResult> {
-  const bodyText = input.bodyText.trim();
+  const { applyPersonalSignatureToOutboundBody } = await import(
+    "@/lib/communication/personal-signature/personal-signature-service"
+  );
+  let bodyText = input.bodyText.trim();
   if (!bodyText) {
     throw new CommunicationCenterError("INVALID_INPUT", "Nachrichtentext ist erforderlich.");
+  }
+  try {
+    bodyText = await applyPersonalSignatureToOutboundBody({
+      tenantId: input.tenantId,
+      userId: input.actorUserId,
+      messageBody: bodyText,
+      includePersonalSignature: input.includePersonalSignature,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "BODY_WITH_SIGNATURE_TOO_LONG") {
+      throw new CommunicationCenterError("INVALID_INPUT", "Nachricht ist zu lang.");
+    }
+    throw error;
   }
 
   const existing = await prisma.communicationCenterMessage.findFirst({
@@ -78,7 +95,7 @@ export async function replyToCommunicationCenterConversation(input: {
     const { replyToSceDirectConversation } = await import(
       "@/lib/communication/direct/direct-reply-service"
     );
-    const sceResult = await replyToSceDirectConversation(input);
+    const sceResult = await replyToSceDirectConversation({ ...input, bodyText });
     return {
       messageId: sceResult.messageId,
       status: sceResult.status,

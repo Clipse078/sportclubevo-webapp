@@ -40,6 +40,10 @@ import { resolvePersonIdForUser } from "@/lib/teams/team-document-auth";
 import { MAX_TEAM_COMMUNICATION_BODY_LENGTH } from "@/lib/communication/team/team-communication-constants";
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
 import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
+import {
+  applyPersonalSignatureToOutboundBody,
+  personalSignatureSupportedForMitteilungKind,
+} from "@/lib/communication/personal-signature/personal-signature-service";
 
 export type ClubCommunicationListItem = {
   id: string;
@@ -313,6 +317,7 @@ export async function publishClubCommunication(input: {
   tenantId: string;
   communicationId: string;
   senderUserId: string;
+  includePersonalSignature?: boolean;
 }): Promise<{ id: string; recipientCount: number }> {
   const row = await loadClubCommunicationRow({
     tenantId: input.tenantId,
@@ -320,6 +325,26 @@ export async function publishClubCommunication(input: {
   });
   if (!canTransitionCommunicationStatus(row.status, "PUBLISHED")) {
     throw new TeamCommunicationValidationError("invalid status transition");
+  }
+
+  if (personalSignatureSupportedForMitteilungKind(row.kind)) {
+    try {
+      const withSignature = await applyPersonalSignatureToOutboundBody({
+        tenantId: input.tenantId,
+        userId: input.senderUserId,
+        messageBody: row.bodyText,
+        includePersonalSignature: input.includePersonalSignature,
+      });
+      if (withSignature !== row.bodyText) {
+        await prisma.platformCommunication.update({
+          where: { id: row.id },
+          data: { bodyText: sanitizeBodyText(withSignature) },
+        });
+        row.bodyText = withSignature;
+      }
+    } catch {
+      throw new TeamCommunicationValidationError("body exceeds maximum length");
+    }
   }
 
   const audience = row.audienceSpecJson as CommunicationAudienceSpec;

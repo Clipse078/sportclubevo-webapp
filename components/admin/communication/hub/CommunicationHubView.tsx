@@ -1,6 +1,7 @@
 import {
   FileStack,
   Mail,
+  PenLine,
   Send,
   SlidersHorizontal,
   UsersRound,
@@ -89,17 +90,26 @@ export function CommunicationHubView({ access }: CommunicationHubViewProps) {
         </section>
       ) : null}
 
-      {access.emailSender ? (
+      {access.inbox || access.mitteilungenSend || access.emailSender ? (
         <section aria-labelledby="communication-hub-settings-heading" className="space-y-3">
           <HubSectionHeading id="communication-hub-settings-heading" title="Einstellungen" />
-          <div className="grid gap-3 md:grid-cols-2 lg:max-w-xl">
+          <div className="grid gap-3 md:grid-cols-2 lg:max-w-3xl">
             <CommunicationHubCapabilityLink
-              href="/dashboard/communication/email-sender"
-              title="E-Mail-Absender"
-              description="Absender für Vereins-E-Mails konfigurieren."
-              icon={SlidersHorizontal}
-              linkLabel="E-Mail-Absender öffnen"
+              href="/dashboard/communication/personal-signature"
+              title="Persönliche Signatur"
+              description="Eigene Signatur für Nachrichten und Antworten verwalten."
+              icon={PenLine}
+              linkLabel="Signatur verwalten"
             />
+            {access.emailSender ? (
+              <CommunicationHubCapabilityLink
+                href="/dashboard/communication/email-sender"
+                title="E-Mail-Absender"
+                description="Absender für Vereins-E-Mails konfigurieren."
+                icon={SlidersHorizontal}
+                linkLabel="E-Mail-Absender öffnen"
+              />
+            ) : null}
           </div>
         </section>
       ) : null}

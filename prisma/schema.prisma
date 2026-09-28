@@ -1161,6 +1161,7 @@ model Tenant {
   sponsorContactCommunicationPreferences SponsorContactCommunicationPreference[]
   userDashboardQuickAccessPreferences UserDashboardQuickAccessPreference[]
   userCommunicationInboxWorkspacePrefs UserCommunicationInboxWorkspacePref[]
+  userCommunicationPersonalSignatures UserCommunicationPersonalSignature[]
   // TRAINING-PLANS-01: tenant-defined training plans and assignments
   trainingPlans                    TrainingPlan[]
   trainingPlanAssignments          TrainingPlanAssignment[]
@@ -1383,6 +1384,7 @@ model User {
   communicationPreferences         UserCommunicationPreference[]
   dashboardQuickAccessPreferences  UserDashboardQuickAccessPreference[]
   communicationInboxWorkspacePrefs UserCommunicationInboxWorkspacePref[]
+  communicationPersonalSignatures  UserCommunicationPersonalSignature[]
   pushDeviceRegistrations          PushDeviceRegistration[]
 
   @@index([isActive])
@@ -4738,6 +4740,23 @@ model UserCommunicationInboxWorkspacePref {
 
   @@unique([tenantId, userId], map: "UserCommInboxWsPref_tenant_user_key")
   @@index([tenantId, userId], map: "UserCommInboxWsPref_tenant_user_idx")
+}
+
+/// SCE-COMM-UX-08A — per-user, per-tenant personal communication signature (content only).
+model UserCommunicationPersonalSignature {
+  id           String   @id @default(cuid())
+  tenantId     String
+  userId       String
+  bodyText     String?
+  useByDefault Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([tenantId, userId])
+  @@index([tenantId, userId])
 }
 
 model MeetingParticipant {

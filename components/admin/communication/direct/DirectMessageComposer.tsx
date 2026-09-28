@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { PersonalSignatureComposerField } from "@/components/admin/communication/personal-signature/PersonalSignatureComposerField";
+import { previewMessageWithPersonalSignature } from "@/lib/communication/personal-signature/personal-signature-compose";
 import { cn } from "@/lib/cn";
 
 type RecipientChip = {
@@ -41,6 +43,26 @@ export default function DirectMessageComposer() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeSearchIndex, setActiveSearchIndex] = useState(-1);
+  const [signatureBody, setSignatureBody] = useState<string | null>(null);
+  const [useSignature, setUseSignature] = useState(false);
+
+  useEffect(() => {
+    async function loadSignature() {
+      try {
+        const res = await fetch("/api/communication/personal-signature");
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          preference?: { bodyText?: string | null; useByDefault?: boolean };
+        };
+        const pref = data.preference;
+        setSignatureBody(pref?.bodyText?.trim() || null);
+        setUseSignature(Boolean(pref?.bodyText?.trim()) && pref?.useByDefault !== false);
+      } catch {
+        /* ignore */
+      }
+    }
+    void loadSignature();
+  }, []);
 
   const steps: { id: Step; label: string }[] = useMemo(
     () => [
@@ -136,6 +158,7 @@ export default function DirectMessageComposer() {
           bodyText,
           mode: mode === "INFORM" ? "INFORM" : "MESSAGE",
           channelIntent: channels,
+          includePersonalSignature: useSignature,
         }),
       });
       const data = (await res.json()) as { error?: string; conversationIds?: string[] };
@@ -380,6 +403,13 @@ export default function DirectMessageComposer() {
               </label>
             </div>
           </fieldset>
+          <PersonalSignatureComposerField
+            checkboxId="dm-use-signature"
+            enabled={useSignature}
+            onEnabledChange={setUseSignature}
+            signatureBody={signatureBody}
+            messageBody={bodyText}
+          />
           <div className="flex justify-between gap-2">
             <Button type="button" variant="secondary" onClick={() => setStep("content")}>
               Zurück
@@ -434,7 +464,14 @@ export default function DirectMessageComposer() {
             ) : null}
             <div>
               <dt className="font-medium text-[var(--text-2)]">Nachricht</dt>
-              <dd className="whitespace-pre-wrap">{bodyText}</dd>
+              <dd className="whitespace-pre-wrap">
+                {
+                  previewMessageWithPersonalSignature(
+                    bodyText,
+                    useSignature ? signatureBody : null,
+                  ).combined
+                }
+              </dd>
             </div>
           </dl>
           <div className="flex justify-between gap-2">

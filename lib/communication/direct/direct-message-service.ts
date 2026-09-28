@@ -34,6 +34,7 @@ import { resolveEffectivePreference } from "@/lib/notifications/defaults";
 import { applyCommunicationPreferencesToNotificationDefaults } from "@/lib/communication/preferences/apply-notification-channel-preferences";
 import { formatPersonDisplayName } from "@/lib/communication/inbox/inbox-display";
 import { randomBytes } from "node:crypto";
+import { applyPersonalSignatureToOutboundBody } from "@/lib/communication/personal-signature/personal-signature-service";
 
 export type DirectMessageMode = "MESSAGE" | "INFORM";
 
@@ -45,6 +46,7 @@ export type SendDirectMessageInput = {
   bodyText: string;
   mode: DirectMessageMode;
   channelIntent?: { inApp?: boolean; push?: boolean; email?: boolean };
+  includePersonalSignature?: boolean;
 };
 
 export type SendDirectMessageResult = {
@@ -339,7 +341,21 @@ export async function sendDirectMessage(input: SendDirectMessageInput): Promise<
     recipientPersonIds: recipientIds,
   });
 
-  const bodyText = sanitizeBody(input.bodyText);
+  let bodyWithSignature: string;
+  try {
+    bodyWithSignature = await applyPersonalSignatureToOutboundBody({
+      tenantId: input.tenantId,
+      userId: input.senderUserId,
+      messageBody: input.bodyText,
+      includePersonalSignature: input.includePersonalSignature,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "BODY_WITH_SIGNATURE_TOO_LONG") {
+      throw new TeamCommunicationValidationError("body exceeds maximum length");
+    }
+    throw error;
+  }
+  const bodyText = sanitizeBody(bodyWithSignature);
   const subject = sanitizeSubject(input.subject);
   const repliesAllowed = resolveRepliesAllowed(input.mode);
   const orchestrationMetaJson = buildOrchestrationMeta(input.channelIntent);

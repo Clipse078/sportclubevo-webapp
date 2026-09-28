@@ -31,6 +31,12 @@ export async function POST(request: Request, { params }: Params): Promise<NextRe
       actorUserId,
       bodyText: String(body.bodyText ?? ""),
       idempotencyKey,
+      includePersonalSignature:
+        body.includePersonalSignature === true
+          ? true
+          : body.includePersonalSignature === false
+            ? false
+            : undefined,
     });
     return NextResponse.json(result);
   } catch (error) {
