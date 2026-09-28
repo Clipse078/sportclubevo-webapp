@@ -22,7 +22,7 @@ export default function VorlageDetailActions({
 
   const usable = canUse && (status === "ACTIVE" || status === "DRAFT");
 
-  async function useTemplate() {
+  async function createDraftFromTemplate() {
     setBusy(true);
     setError(null);
     try {
@@ -63,7 +63,7 @@ export default function VorlageDetailActions({
           <button
             type="button"
             disabled={busy}
-            onClick={() => void useTemplate()}
+            onClick={() => void createDraftFromTemplate()}
             className="fca-button-primary"
           >
             Entwurf erstellen
