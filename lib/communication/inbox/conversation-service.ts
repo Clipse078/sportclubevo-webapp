@@ -15,6 +15,7 @@ import {
   resolveInboxParticipantEmail,
   resolveInboxParticipantLabel,
 } from "@/lib/communication/inbox/inbox-display";
+import type { CommunicationCenterConversationDetailRecord } from "@/lib/communication/inbox/conversation-detail-client-dto";
 
 export type InboxConversationFilter =
   | "ALL"
@@ -193,7 +194,7 @@ export async function getCommunicationCenterConversationDetail(input: {
   tenantId: string;
   conversationId: string;
   userId: string;
-}) {
+}): Promise<CommunicationCenterConversationDetailRecord> {
   const conversation = await prisma.communicationCenterConversation.findFirst({
     where: {
       id: input.conversationId,
