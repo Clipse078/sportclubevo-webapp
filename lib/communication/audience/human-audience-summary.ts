@@ -3,6 +3,11 @@
  */
 
 import type { CommunicationAudienceSelection } from "@/lib/communication/audience/communication-audience-selection";
+import type { ZielgruppeEditorDefinition } from "@/lib/communication/zielgruppen/editor-model";
+import {
+  buildHumanReadableZielgruppeRules,
+  type ZielgruppeRuleLabels,
+} from "@/lib/communication/zielgruppen/human-readable-rules";
 
 export type CommunicationAudienceLabelMaps = {
   orgUnits: Record<string, string>;
@@ -49,4 +54,41 @@ export function summarizeCommunicationAudienceSelection(input: {
   }
 
   return `Empfänger: ${fragments.slice(0, -1).join(", ")} oder ${fragments[fragments.length - 1]}.`;
+}
+
+/** Live Zielgruppe builder / list summary (EVO-05 — single source with human-readable-rules). */
+export function summarizeZielgruppeEditorDefinition(
+  definition: ZielgruppeEditorDefinition,
+  labels: ZielgruppeRuleLabels = {},
+): string {
+  const rules = buildHumanReadableZielgruppeRules(definition, labels);
+  if (rules.isEmpty) {
+    return "Noch keine Zieldefinition.";
+  }
+
+  if (definition.wholeOrganisation && rules.exclusionLines.length === 0) {
+    return "Alle Personen in der gesamten Organisation.";
+  }
+
+  const joiner =
+    definition.compositionMode === "INTERSECTION" && !definition.wholeOrganisation ? " und " : " oder ";
+
+  const inclusion = rules.inclusionLines.join(joiner);
+  if (!inclusion && rules.exclusionLines.length === 0) {
+    return "Noch keine Zieldefinition.";
+  }
+
+  if (rules.exclusionLines.length === 0) {
+    return inclusion.endsWith(".") ? inclusion : `${inclusion}.`;
+  }
+
+  const excl = rules.exclusionLines
+    .map((line) => line.replace(/ ist ausgeschlossen$/, ""))
+    .join(", ");
+
+  if (!inclusion) {
+    return `Ausgeschlossen: ${excl}.`;
+  }
+
+  return `${inclusion}, ausser ${excl}.`;
 }

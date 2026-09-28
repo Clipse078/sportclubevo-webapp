@@ -35,7 +35,7 @@ export function buildHumanReadableZielgruppeRules(
   labels: ZielgruppeRuleLabels = {},
 ): HumanReadableZielgruppeRules {
   const dynamicNotice =
-    "Die Empfänger werden beim Versand anhand der aktuellen Regeln ermittelt. Gespeicherte Versände behalten ihre historische Empfängerliste.";
+    "Die Mitglieder dieser Zielgruppe werden beim Versand anhand der aktuellen Vereinsdaten ermittelt. Bereits versendete Kommunikation behält ihre historische Empfängerliste.";
 
   if (definition.wholeOrganisation) {
     return {
@@ -49,8 +49,8 @@ export function buildHumanReadableZielgruppeRules(
 
   const compositionHint =
     definition.compositionMode === "INTERSECTION"
-      ? "Alle folgenden Bedingungen müssen zutreffen (UND)"
-      : "Mindestens eine Bedingung muss zutreffen (ODER)";
+      ? "Alle Bedingungen"
+      : "Mindestens eine Bedingung";
 
   const inclusionLines: string[] = [];
 

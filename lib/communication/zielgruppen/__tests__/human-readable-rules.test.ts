@@ -35,6 +35,6 @@ describe("human-readable Zielgruppe rules", () => {
       compositionMode: "INTERSECTION",
       orgUnitIds: ["ou-1"],
     });
-    expect(rules.compositionHint).toMatch(/UND/i);
+    expect(rules.compositionHint).toBe("Alle Bedingungen");
   });
 });
