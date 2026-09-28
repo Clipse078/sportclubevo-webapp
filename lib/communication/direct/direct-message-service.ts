@@ -15,6 +15,10 @@ import {
 import { prisma } from "@/lib/db/prisma";
 import { resolveCommunicationRecipientsForDispatch } from "@/lib/communication/platform/recipient-resolution/resolve-recipients";
 import { buildCampaignPublishSnapshotCreateMany } from "@/lib/communication/sponsor/publish-recipient-snapshot-data";
+import {
+  renderPersonalisationForDeliveryTargets,
+  validatePersonalisationBeforePublish,
+} from "@/lib/communication/personalisation/publish-personalisation";
 import { resolveCommunicationChannelIntent } from "@/lib/communication/platform-email/communication-channel-intent";
 import { EmailSenderResolutionError } from "@/lib/communication/sender-identity/sender-identity-resolution-service";
 import { prepareEmailSenderForPublish } from "@/lib/communication/sender-identity/prepare-email-sender-for-publish";
@@ -202,6 +206,12 @@ async function sendDirectMessageToSingleRecipient(input: {
     });
   }
 
+  await validatePersonalisationBeforePublish({
+    subject: input.subject,
+    bodyText: input.bodyText,
+    contextRef,
+  });
+
   const dispatch = await resolveCommunicationRecipientsForDispatch(
     {
       tenantId: input.tenantId,
@@ -232,6 +242,27 @@ async function sendDirectMessageToSingleRecipient(input: {
     }
     throw error;
   }
+  const dispatchAt = new Date();
+  const personalisationByTarget = await renderPersonalisationForDeliveryTargets({
+    tenantId: input.tenantId,
+    contextRef,
+    subject: input.subject,
+    bodyText: input.bodyText,
+    senderUserId: input.senderUserId,
+    communicationId: communication.id,
+    communicationKind: "MESSAGE",
+    emailSenderDisplayName:
+      typeof emailSenderPublish.snapshotData.emailSenderDisplayNameSnapshot === "string"
+        ? emailSenderPublish.snapshotData.emailSenderDisplayNameSnapshot
+        : null,
+    emailSenderAddress:
+      typeof emailSenderPublish.snapshotData.emailSenderAddressSnapshot === "string"
+        ? emailSenderPublish.snapshotData.emailSenderAddressSnapshot
+        : null,
+    deliveryTargets: dispatch.pipeline.deliveryTargets,
+    at: dispatchAt,
+  });
+
   const publishSnapshots = await buildCampaignPublishSnapshotCreateMany({
     tenantId: input.tenantId,
     communicationId: communication.id,
@@ -241,6 +272,7 @@ async function sendDirectMessageToSingleRecipient(input: {
     deliveryTargets: dispatch.pipeline.deliveryTargets,
     emailChannelEnabled: channelIntent.email,
     emailTransportReady: emailSenderPublish.emailTransportReady,
+    personalisationByTarget,
   });
 
   if (publishSnapshots.totalCount === 0) {
@@ -264,7 +296,7 @@ async function sendDirectMessageToSingleRecipient(input: {
     input.subject?.trim() ||
     `Nachricht an ${formatPersonDisplayName(subjectPerson)}`;
 
-  const publishedAt = new Date();
+  const publishedAt = dispatchAt;
   let conversationId = "";
   let centerMessageId = "";
 
