@@ -299,19 +299,21 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
     fireEvent.click(screen.getByRole("button", { name: /Maria Muster/i }));
 
     await waitFor(() => {
-      const detailGet = mocks.fetch.mock.calls.find(
-        ([url, init]) =>
-          requestUrl(url).includes("/conversations/conv-1") &&
-          (!init || init.method === undefined || init.method === "GET"),
-      );
-      expect(detailGet).toBeTruthy();
+      expect(screen.getByText("Guten Tag")).toBeInTheDocument();
     });
+    const detailGet = mocks.fetch.mock.calls.find(
+      ([url, init]) =>
+        requestUrl(url).includes("/conversations/conv-1") &&
+        (!init || init.method === undefined || init.method === "GET"),
+    );
+    expect(detailGet).toBeTruthy();
   });
 
   it("renders inbound/outbound timeline, manage, resolve/reopen, and reply composer", () => {
     const onSendReply = vi.fn();
     render(
       <CommunicationInboxConversationDetailPane
+        selectedConversationId="conv-1"
         listItem={sampleListItem}
         detail={sampleDetail}
         capabilities={{
@@ -322,6 +324,7 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
         }}
         loading={false}
         detailError={null}
+        onRetryDetail={() => undefined}
         replyText=""
         onReplyTextChange={() => undefined}
         onSendReply={onSendReply}
@@ -354,6 +357,7 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
   it("hides reply and manage affordances without permissions", () => {
     render(
       <CommunicationInboxConversationDetailPane
+        selectedConversationId="conv-1"
         listItem={sampleListItem}
         detail={sampleDetail}
         capabilities={{
@@ -364,6 +368,7 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
         }}
         loading={false}
         detailError={null}
+        onRetryDetail={() => undefined}
         replyText=""
         onReplyTextChange={() => undefined}
         onSendReply={() => undefined}
@@ -388,6 +393,7 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
   it("resolve/reopen uses canonical OPEN and RESOLVED labels", () => {
     render(
       <CommunicationInboxConversationDetailPane
+        selectedConversationId="conv-1"
         listItem={sampleListItem}
         detail={{ ...sampleDetail, status: "RESOLVED" }}
         capabilities={{
@@ -398,6 +404,7 @@ describe("SCE-COMM-UX-03 Kommunikationscenter redesign", () => {
         }}
         loading={false}
         detailError={null}
+        onRetryDetail={() => undefined}
         replyText=""
         onReplyTextChange={() => undefined}
         onSendReply={() => undefined}
