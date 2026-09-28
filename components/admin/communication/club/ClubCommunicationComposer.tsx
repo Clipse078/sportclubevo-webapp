@@ -10,11 +10,17 @@ import {
   MITTEILUNG_SAFEGUARDING_NOTICE,
   MITTEILUNG_KIND_LABEL,
 } from "@/lib/communication/club/mitteilungen-display";
-import {
-  inferMitteilungAudienceEditorState,
-  type MitteilungAudienceEditorMode,
-} from "@/lib/communication/club/mitteilungen-audience-editor";
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
+import CommunicationAudienceSelector, {
+  type CommunicationAudiencePreviewState,
+} from "@/components/admin/communication/audience/CommunicationAudienceSelector";
+import {
+  buildCommunicationAudienceSpec,
+  communicationAudienceSelectionIsEmpty,
+  emptyCommunicationAudienceSelection,
+  inferCommunicationAudienceSelection,
+  type CommunicationAudienceSelection,
+} from "@/lib/communication/audience/communication-audience-selection";
 import { PersonalSignatureComposerField } from "@/components/admin/communication/personal-signature/PersonalSignatureComposerField";
 import { previewMessageWithPersonalSignature } from "@/lib/communication/personal-signature/personal-signature-compose";
 import { CommunicationAttachmentPicker } from "@/components/admin/communication/attachments/CommunicationAttachmentPicker";
@@ -46,7 +52,7 @@ function sectionHeading(id: string, title: string) {
 }
 
 export default function ClubCommunicationComposer({
-  targetGroups,
+  targetGroups: _targetGroups,
   tenantTimezone = "Europe/Zurich",
   communicationId,
   initialKind = "ANNOUNCEMENT",
@@ -57,26 +63,23 @@ export default function ClubCommunicationComposer({
   templateOptions = [],
 }: Props) {
   const router = useRouter();
-  const initialAudience = useMemo(
+  const initialAudienceSelection = useMemo(
     () =>
       initialAudienceSpec
-        ? inferMitteilungAudienceEditorState(initialAudienceSpec)
-        : { mode: "WHOLE_ORG" as MitteilungAudienceEditorMode, selectedGroupIds: [] as string[] },
+        ? inferCommunicationAudienceSelection(initialAudienceSpec)
+        : { ...emptyCommunicationAudienceSelection(), wholeOrganisation: true },
     [initialAudienceSpec],
   );
 
   const [kind, setKind] = useState<"MESSAGE" | "ANNOUNCEMENT" | "ALERT">(initialKind);
   const [subject, setSubject] = useState(initialSubject);
   const [bodyText, setBodyText] = useState(initialBody);
-  const [audienceMode, setAudienceMode] = useState<MitteilungAudienceEditorMode>(initialAudience.mode);
-  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>(initialAudience.selectedGroupIds);
-  const [preview, setPreview] = useState<{
-    candidates: number;
-    effective: number;
-    excluded: number;
-    scopeNotice: string | null;
-    audienceSummary: string;
-  } | null>(null);
+  const [audienceSelection, setAudienceSelection] =
+    useState<CommunicationAudienceSelection>(initialAudienceSelection);
+  const [audiencePreview, setAudiencePreview] = useState<CommunicationAudiencePreviewState | null>(
+    null,
+  );
+  const [largeAudienceConfirmed, setLargeAudienceConfirmed] = useState(false);
   const [emailReady, setEmailReady] = useState<boolean | null>(null);
   const [emailSenderIdentityId, setEmailSenderIdentityId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -129,27 +132,17 @@ export default function ClubCommunicationComposer({
   }, []);
 
   function buildAudienceSpec(): CommunicationAudienceSpec {
-    if (audienceMode === "WHOLE_ORG") {
-      return {
-        composition: "UNION",
-        components: [{ structural: { wholeOrganisation: true } }],
-      };
-    }
-    return {
-      composition: "UNION",
-      components: selectedGroupIds.map((id) => ({ savedTargetGroupIds: [id] })),
-    };
+    return buildCommunicationAudienceSpec(audienceSelection);
   }
 
   const audienceSummaryLabel = useMemo(() => {
-    if (preview?.audienceSummary) return preview.audienceSummary;
-    if (audienceMode === "WHOLE_ORG") return "Ganzer Verein";
-    if (selectedGroupIds.length === 0) return "Keine Zielgruppe ausgewählt";
-    const names = selectedGroupIds
-      .map((id) => targetGroups.find((tg) => tg.id === id)?.name)
-      .filter(Boolean);
-    return names.length > 0 ? names.join(", ") : `${selectedGroupIds.length} Zielgruppe(n)`;
-  }, [audienceMode, preview?.audienceSummary, selectedGroupIds, targetGroups]);
+    if (audiencePreview?.audienceSummary) return audiencePreview.audienceSummary;
+    if (audienceSelection.wholeOrganisation) return "Gesamter Verein";
+    if (communicationAudienceSelectionIsEmpty(audienceSelection)) {
+      return "Keine Empfänger ausgewählt";
+    }
+    return "Empfängerauswahl";
+  }, [audiencePreview?.audienceSummary, audienceSelection]);
 
   const compatibleTemplates = templateOptions.filter((t) => t.kind === kind);
 
@@ -173,39 +166,12 @@ export default function ClubCommunicationComposer({
       setSubject(template.subject?.trim() || "");
       setBodyText(template.bodyText);
       if (template.audienceSpecJson) {
-        const inferred = inferMitteilungAudienceEditorState(template.audienceSpecJson);
-        setAudienceMode(inferred.mode);
-        setSelectedGroupIds(inferred.selectedGroupIds);
+        setAudienceSelection(inferCommunicationAudienceSelection(template.audienceSpecJson));
       }
-      setPreview(null);
+      setAudiencePreview(null);
       setReviewConfirmed(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Vorlage konnte nicht übernommen werden");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function runPreview() {
-    setError(null);
-    setBusy(true);
-    try {
-      const res = await fetch("/api/communication/club/preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, audienceSpec: buildAudienceSpec() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Empfängervorschau fehlgeschlagen");
-      setPreview({
-        candidates: data.candidates,
-        effective: data.effective,
-        excluded: data.excluded,
-        scopeNotice: data.scopeNotice,
-        audienceSummary: data.audienceSummary,
-      });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Empfängervorschau fehlgeschlagen");
     } finally {
       setBusy(false);
     }
@@ -251,8 +217,14 @@ export default function ClubCommunicationComposer({
         if (hasUnreadyAttachments) {
           throw new Error("Bitte warten Sie, bis alle Anhänge hochgeladen sind.");
         }
-        if (audienceMode === "TARGET_GROUPS" && selectedGroupIds.length === 0) {
-          throw new Error("Bitte wählen Sie mindestens eine Zielgruppe.");
+        if (communicationAudienceSelectionIsEmpty(audienceSelection)) {
+          throw new Error("Bitte wählen Sie mindestens einen Empfänger.");
+        }
+        if (
+          (audienceSelection.wholeOrganisation || (audiencePreview?.effective ?? 0) > 50) &&
+          !largeAudienceConfirmed
+        ) {
+          throw new Error("Bitte bestätigen Sie den Versand an eine große Empfängergruppe.");
         }
         if (!reviewConfirmed) {
           throw new Error("Bitte bestätigen Sie die Zusammenfassung vor dem Senden.");
@@ -321,14 +293,6 @@ export default function ClubCommunicationComposer({
     } finally {
       setBusy(false);
     }
-  }
-
-  function toggleGroup(id: string) {
-    setPreview(null);
-    setReviewConfirmed(false);
-    setSelectedGroupIds((prev) =>
-      prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id],
-    );
   }
 
   const timingSummary = scheduleEnabled
@@ -454,78 +418,25 @@ export default function ClubCommunicationComposer({
       <section aria-labelledby="mitteilung-empfaenger-heading" className="space-y-4 rounded-xl border border-[var(--border)] p-4 md:p-6">
         {sectionHeading("mitteilung-empfaenger-heading", "Empfänger")}
         <p className="text-sm text-[var(--text-2)]">An wen soll die Mitteilung gehen?</p>
-        <fieldset className="space-y-3">
-          <legend className="sr-only">Zielgruppe wählen</legend>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="audienceMode"
-              checked={audienceMode === "WHOLE_ORG"}
-              onChange={() => {
-                setAudienceMode("WHOLE_ORG");
-                setPreview(null);
-                setReviewConfirmed(false);
-              }}
-            />
-            Ganzer Verein
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="audienceMode"
-              checked={audienceMode === "TARGET_GROUPS"}
-              onChange={() => {
-                setAudienceMode("TARGET_GROUPS");
-                setPreview(null);
-                setReviewConfirmed(false);
-              }}
-            />
-            Gespeicherte Zielgruppen
-          </label>
-        </fieldset>
-        {audienceMode === "TARGET_GROUPS" ? (
-          <div className="flex flex-wrap gap-2">
-            {targetGroups.map((tg) => (
-              <button
-                key={tg.id}
-                type="button"
-                onClick={() => toggleGroup(tg.id)}
-                aria-pressed={selectedGroupIds.includes(tg.id)}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] ${
-                  selectedGroupIds.includes(tg.id)
-                    ? "border-[var(--sce-primary)] bg-[var(--sce-primary)]/10 text-[var(--sce-primary)]"
-                    : "border-[var(--border)] text-[var(--text-2)]"
-                }`}
-              >
-                {tg.name}
-              </button>
-            ))}
-            {targetGroups.length === 0 ? (
-              <p className="text-xs text-[var(--text-2)]">Keine aktiven Zielgruppen vorhanden.</p>
-            ) : null}
-          </div>
-        ) : null}
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void runPreview()}
-            className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium"
-          >
-            Empfängervorschau
-          </button>
-          {preview ? (
-            <p className="text-sm text-[var(--text-2)]">
-              <strong>{preview.effective}</strong> Personen in der Zielgruppe
-              {preview.excluded > 0 ? ` (${preview.excluded} ausgeschlossen)` : ""}
-            </p>
-          ) : null}
-        </div>
+        <CommunicationAudienceSelector
+          context="ORGANISATION"
+          value={audienceSelection}
+          onChange={(next) => {
+            setAudienceSelection(next);
+            setReviewConfirmed(false);
+          }}
+          onPreviewChange={setAudiencePreview}
+          requireLargeAudienceConfirm
+          largeAudienceConfirmed={largeAudienceConfirmed}
+          onLargeAudienceConfirmedChange={(confirmed) => {
+            setLargeAudienceConfirmed(confirmed);
+            setReviewConfirmed(false);
+          }}
+          disabled={busy || readOnly}
+          previewKind={kind}
+        />
         <p className="text-xs text-[var(--text-2)]">{MITTEILUNG_PREFERENCES_NOTICE}</p>
         <p className="text-xs text-[var(--text-2)]">{MITTEILUNG_SAFEGUARDING_NOTICE}</p>
-        {preview?.scopeNotice ? (
-          <p className="text-xs text-[var(--text-2)]">{preview.scopeNotice}</p>
-        ) : null}
       </section>
 
       <section aria-labelledby="mitteilung-kanaele-heading" className="space-y-3 rounded-xl border border-[var(--border)] p-4 md:p-6">
@@ -610,7 +521,11 @@ export default function ClubCommunicationComposer({
           </div>
           <div>
             <dt className="text-[var(--text-2)]">Zielpersonen (Vorschau)</dt>
-            <dd>{preview ? `${preview.effective} Personen` : "Vorschau noch nicht geladen"}</dd>
+            <dd>
+              {audiencePreview
+                ? `${audiencePreview.effective} Personen`
+                : "Empfängervorschau wird berechnet …"}
+            </dd>
           </div>
           <div>
             <dt className="text-[var(--text-2)]">Kanäle</dt>

@@ -1,21 +1,18 @@
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
+import { inferCommunicationAudienceSelection } from "@/lib/communication/audience/communication-audience-selection";
 
 export type MitteilungAudienceEditorMode = "WHOLE_ORG" | "TARGET_GROUPS";
 
+/** @deprecated Use inferCommunicationAudienceSelection — kept for legacy tests. */
 export function inferMitteilungAudienceEditorState(audience: CommunicationAudienceSpec): {
   mode: MitteilungAudienceEditorMode;
   selectedGroupIds: string[];
 } {
-  const groupIds = new Set<string>();
-  let wholeOrg = false;
-  for (const component of audience.components) {
-    if (component.structural?.wholeOrganisation) wholeOrg = true;
-    for (const id of component.savedTargetGroupIds ?? []) {
-      groupIds.add(id);
-    }
+  const selection = inferCommunicationAudienceSelection(audience);
+  if (selection.targetGroupIds.length > 0) {
+    return { mode: "TARGET_GROUPS", selectedGroupIds: selection.targetGroupIds };
   }
-  if (groupIds.size > 0) {
-    return { mode: "TARGET_GROUPS", selectedGroupIds: [...groupIds] };
-  }
-  return { mode: wholeOrg ? "WHOLE_ORG" : "WHOLE_ORG", selectedGroupIds: [] };
+  return { mode: selection.wholeOrganisation ? "WHOLE_ORG" : "WHOLE_ORG", selectedGroupIds: [] };
 }
+
+export { inferCommunicationAudienceSelection };

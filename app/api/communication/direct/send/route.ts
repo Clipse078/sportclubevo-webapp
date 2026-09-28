@@ -7,6 +7,7 @@ import {
   sendDirectMessage,
   type DirectMessageMode,
 } from "@/lib/communication/direct/direct-message-service";
+import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
 import {
   TeamCommunicationForbiddenError,
   TeamCommunicationValidationError,
@@ -29,6 +30,10 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   const body = (await request.json()) as Record<string, unknown>;
+  const audienceSpec =
+    body.audienceSpec && typeof body.audienceSpec === "object"
+      ? (body.audienceSpec as CommunicationAudienceSpec)
+      : undefined;
   const recipientPersonIds = Array.isArray(body.recipientPersonIds)
     ? body.recipientPersonIds.map(String)
     : [];
@@ -46,7 +51,8 @@ export async function POST(request: Request): Promise<NextResponse> {
     const result = await sendDirectMessage({
       tenantId: tenant.id,
       senderUserId: userId,
-      recipientPersonIds,
+      audienceSpec,
+      recipientPersonIds: audienceSpec ? undefined : recipientPersonIds,
       subject: body.subject != null ? String(body.subject) : null,
       bodyText: String(body.bodyText ?? ""),
       mode: parseMode(body.mode),
