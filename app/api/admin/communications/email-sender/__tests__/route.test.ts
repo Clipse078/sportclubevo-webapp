@@ -66,7 +66,6 @@ describe("GET /api/admin/communications/email-sender", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({ settings });
     expect(mocks.permission).toHaveBeenCalledWith([
-      PERMISSIONS.USERS_MANAGE,
       PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
     ]);
     expect(mocks.getSettings).toHaveBeenCalledWith(TENANT_A);

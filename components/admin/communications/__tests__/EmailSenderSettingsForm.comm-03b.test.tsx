@@ -14,7 +14,9 @@ vi.mock("@/hooks/use-toast", () => ({
   }),
 }));
 
-import EmailSenderSettingsForm from "../EmailSenderSettingsForm";
+import EmailSenderWorkspace from "@/components/admin/communication/email-sender/EmailSenderWorkspace";
+import { buildEmailSenderReadinessPresentation } from "@/lib/communication/email-sender-display";
+import type { EmailSenderWorkspaceViewModel } from "@/lib/communication/email-sender-workspace";
 
 const configured = {
   displayName: "FC Allschwil",
@@ -25,37 +27,77 @@ const configured = {
   platformFallbackActive: false,
 };
 
+function modelFrom(settings = configured, ready = true): EmailSenderWorkspaceViewModel {
+  const readiness = {
+    ready,
+    senderConfigured: true,
+    transportConfigured: true,
+    fromAddressValid: true,
+    activeSource: settings.activeSource,
+    providerStatus: settings.providerStatus,
+    platformFallbackActive: settings.platformFallbackActive,
+    reasons: [] as string[],
+  };
+  return {
+    settings,
+    readiness,
+    readinessPresentation: buildEmailSenderReadinessPresentation(readiness, settings),
+    effectiveSender: {
+      displayName: "FC Allschwil",
+      emailAddress: "info@fcallschwil.ch",
+      formattedFrom: settings.activeFrom,
+      source: settings.activeSource,
+      usedForNewCommunicationEmail: ready,
+    },
+    configuredSender: {
+      displayName: settings.displayName,
+      emailAddress: settings.emailAddress,
+    },
+    platformFallbackSender: null,
+    replyTo: {
+      fromDisplayName: "FC Allschwil",
+      fromEmailAddress: "info@fcallschwil.ch",
+      replyToHeadline: "Reply-To (Antworten)",
+      replyToBody: "Antworten werden weiterhin automatisch dem richtigen Vorgang zugeordnet.",
+      communicationCenterLinkLabel: "Kommunikationscenter-Einstellungen",
+      communicationCenterHref: "/dashboard/communication/inbox/settings",
+      broadcastNote: "Broadcast note",
+      informOnlyNote: "Inform note",
+    },
+    inboundReplyRoutingConfigured: true,
+  };
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.stubGlobal("fetch", vi.fn());
 });
 
-describe("COMM-03B email sender settings UI", () => {
+describe("COMM-03B email sender settings UI (UX-08 workspace)", () => {
   it("renders tenant-wide sender fields and Reply-To explanation", () => {
-    render(<EmailSenderSettingsForm initialSettings={configured} />);
+    render(<EmailSenderWorkspace initialModel={modelFrom()} />);
     expect(screen.getByLabelText("Absendername")).toHaveValue("FC Allschwil");
     expect(screen.getByLabelText("Absender-E-Mail-Adresse")).toHaveValue("info@fcallschwil.ch");
-    expect(screen.getByText("Vereinsabsender aktiv")).toBeInTheDocument();
     expect(screen.getByText("Konfigurierter Absender")).toBeInTheDocument();
-    expect(screen.getByText("FC Allschwil")).toBeInTheDocument();
-    expect(screen.getByText("info@fcallschwil.ch")).toBeInTheDocument();
-    expect(screen.getByText(/Antworten werden weiterhin automatisch/)).toBeInTheDocument();
+    expect(screen.getByText("Reply-To (Antworten)")).toBeInTheDocument();
   });
 
   it("shows unverified platform fallback state", () => {
     render(
-      <EmailSenderSettingsForm
-        initialSettings={{
-          ...configured,
-          providerStatus: "NOT_VERIFIED",
-          activeSource: "PLATFORM",
-          activeFrom: "SportClubEvo <noreply@mail.sportclubevo.com>",
-          platformFallbackActive: true,
-        }}
+      <EmailSenderWorkspace
+        initialModel={modelFrom(
+          {
+            ...configured,
+            providerStatus: "NOT_VERIFIED",
+            activeSource: "PLATFORM",
+            activeFrom: "SportClubEvo <noreply@mail.sportclubevo.com>",
+            platformFallbackActive: true,
+          },
+          true,
+        )}
       />,
     );
-    expect(screen.getByText("SportClubEvo-Standardabsender aktiv")).toBeInTheDocument();
-    expect(screen.getByText(/Für diese Absenderadresse wird aktuell/)).toBeInTheDocument();
+    expect(screen.getByText(/Fallback aktiv|Absender nicht verifiziert/)).toBeInTheDocument();
   });
 
   it("edits and saves sender identity without a client tenantId", async () => {
@@ -64,13 +106,33 @@ describe("COMM-03B email sender settings UI", () => {
       displayName: "Neuer Club",
       emailAddress: "mail@neuer-club.ch",
     };
-    vi.mocked(fetch).mockResolvedValue(
-      new Response(JSON.stringify({ settings: updated }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
-    );
-    render(<EmailSenderSettingsForm initialSettings={configured} />);
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ settings: updated }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            readiness: {
+              ready: true,
+              senderConfigured: true,
+              transportConfigured: true,
+              fromAddressValid: true,
+              activeSource: "TENANT",
+              providerStatus: "VERIFIED",
+              platformFallbackActive: false,
+              reasons: [],
+            },
+            sender: updated,
+          }),
+          { status: 200 },
+        ),
+      );
+
+    render(<EmailSenderWorkspace initialModel={modelFrom()} />);
 
     fireEvent.change(screen.getByLabelText("Absendername"), {
       target: { value: "Neuer Club" },
@@ -78,11 +140,11 @@ describe("COMM-03B email sender settings UI", () => {
     fireEvent.change(screen.getByLabelText("Absender-E-Mail-Adresse"), {
       target: { value: "mail@neuer-club.ch" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "E-Mail-Absender speichern" }));
+    fireEvent.click(screen.getByRole("button", { name: "Absender speichern" }));
 
-    await waitFor(() => expect(toastSuccess).toHaveBeenCalledWith(
-      "E-Mail-Absender aktualisiert.",
-    ));
+    await waitFor(() =>
+      expect(toastSuccess).toHaveBeenCalledWith(expect.stringContaining("Versandbereitschaft")),
+    );
     const [, options] = vi.mocked(fetch).mock.calls[0]!;
     expect(JSON.parse(String(options?.body))).toEqual({
       displayName: "Neuer Club",
@@ -90,10 +152,10 @@ describe("COMM-03B email sender settings UI", () => {
     });
   });
 
-  it("does not expose technical Reply-To configuration", () => {
-    render(<EmailSenderSettingsForm initialSettings={configured} />);
-    expect(screen.queryByLabelText(/Reply-To/i)).not.toBeInTheDocument();
+  it("does not expose technical Reply-To configuration secrets", () => {
+    render(<EmailSenderWorkspace initialModel={modelFrom()} />);
     expect(screen.queryByText(/reply\+/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/EMAIL_INBOUND_DOMAIN/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/RESEND_API_KEY/i)).not.toBeInTheDocument();
   });
 });

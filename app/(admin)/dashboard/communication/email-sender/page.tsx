@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
-import EmailSenderSettingsForm from "@/components/admin/communications/EmailSenderSettingsForm";
-import { Badge } from "@/components/ui/Badge";
-import { PageBreadcrumbs, PageHeader, PageShell } from "@/components/ui/page";
+import EmailSenderWorkspace from "@/components/admin/communication/email-sender/EmailSenderWorkspace";
+import { CommunicationWorkspaceHeader } from "@/components/admin/communication/shared/CommunicationWorkspaceHeader";
+import { PageShell } from "@/components/ui/page";
 import { ToastProvider } from "@/components/ui/ToastProvider";
-import { getTenantEmailSenderSettings } from "@/lib/communication/email-sender-service";
+import { EMAIL_SENDER_WORKSPACE_DESCRIPTION } from "@/lib/communication/email-sender-display";
+import { loadEmailSenderWorkspaceViewModel } from "@/lib/communication/email-sender-workspace";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { TENANT_ADMINISTRATION_PERMISSIONS } from "@/lib/permissions/tenant-administration";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
@@ -15,25 +16,21 @@ export default async function EmailSenderPage() {
   const tenant = await getActiveTenant();
   if (!tenant) notFound();
 
-  const settings = await getTenantEmailSenderSettings(tenant.id);
+  const model = await loadEmailSenderWorkspaceViewModel(tenant.id);
 
   return (
     <PageShell>
-      <PageBreadcrumbs
-        items={[
+      <CommunicationWorkspaceHeader
+        breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Kommunikation", href: "/dashboard/communication" },
           { label: "E-Mail-Absender" },
         ]}
-      />
-      <PageHeader
-        eyebrow="Kommunikation"
         title="E-Mail-Absender"
-        description="Wie erscheinen E-Mails, die Ihr Verein über SportClubEvo versendet?"
-        badge={<Badge variant="success">Verfügbar</Badge>}
+        description={EMAIL_SENDER_WORKSPACE_DESCRIPTION}
       />
       <ToastProvider>
-        <EmailSenderSettingsForm initialSettings={settings} />
+        <EmailSenderWorkspace initialModel={model} />
       </ToastProvider>
     </PageShell>
   );
