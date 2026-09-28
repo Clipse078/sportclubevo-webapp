@@ -11,8 +11,8 @@ function readRelative(relativePath: string): string {
 }
 
 describe("SCE-COMM-15-UX-01 — Communication Center surface alignment", () => {
-  it("shares canonical dense module page surface on inbox routes via layout", () => {
-    const layout = readRelative("app/(admin)/dashboard/communication/inbox/layout.tsx");
+  it("shares canonical dense module page surface on communication routes via layout", () => {
+    const layout = readRelative("app/(admin)/dashboard/communication/layout.tsx");
     expect(layout).toContain("SCE_DASHBOARD_MODULE_PAGE_SURFACE");
     expect(SCE_DASHBOARD_MODULE_PAGE_SURFACE).toContain("var(--sce-surface-dense)");
   });

@@ -4,7 +4,7 @@ import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import CampaignComposer from "@/components/admin/communication/campaign/CampaignComposer";
 import { PageBreadcrumbs, PageHeader, PageShell, SectionCard } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { CLUB_COMMUNICATION_VIEW_ROUTE_PERMISSIONS } from "@/lib/communication/club/route-access";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { resolveCampaignAuthorization } from "@/lib/communication/campaign/campaign-authorization";
 import { getCampaignById } from "@/lib/communication/campaign/campaign-service";
@@ -23,10 +23,7 @@ export const dynamic = "force-dynamic";
 type PageProps = { params: Promise<{ id: string }> };
 
 export default async function CampaignDetailPage({ params }: PageProps) {
-  const session = await requireAnyPermission([
-    PERMISSIONS.COMMUNICATION_CLUB_VIEW,
-    PERMISSIONS.COMMUNICATION_CLUB_SEND,
-  ]);
+  const session = await requireAnyPermission(CLUB_COMMUNICATION_VIEW_ROUTE_PERMISSIONS);
   const tenant = await getActiveTenant();
   if (!tenant) notFound();
   const { id } = await params;

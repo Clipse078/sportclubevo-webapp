@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import ClubCommunicationComposer from "@/components/admin/communication/club/ClubCommunicationComposer";
 import { PageBreadcrumbs, PageHeader, PageShell, SectionCard } from "@/components/ui/page";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { CLUB_COMMUNICATION_SEND_ROUTE_PERMISSIONS } from "@/lib/communication/club/route-access";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { requireClubCommunicationSend } from "@/lib/communication/club/club-communication-authorization";
 import { listZielgruppenForManagement } from "@/lib/communication/zielgruppen/management-service";
@@ -11,7 +11,7 @@ import { resolveTenantEventTimezone } from "@/lib/events/tenant-local-datetime";
 export const dynamic = "force-dynamic";
 
 export default async function NewClubMitteilungPage() {
-  const session = await requireAnyPermission([PERMISSIONS.COMMUNICATION_CLUB_SEND]);
+  const session = await requireAnyPermission(CLUB_COMMUNICATION_SEND_ROUTE_PERMISSIONS);
   const tenant = await getActiveTenant();
   if (!tenant) notFound();
 
