@@ -27,7 +27,7 @@ describe("SCE-UX-BG-01 — canonical default authenticated background", () => {
       "/images/background/SCE_background.png",
     );
     expect(SCE_AUTHENTICATED_APP_BACKGROUND_IMAGE).toBe(
-      'url("/images/background/SCE_background.png")',
+      'url("/images/background/SCE_background.png?v=2")',
     );
 
     const globalsCss = readRelative("app/globals.css");
