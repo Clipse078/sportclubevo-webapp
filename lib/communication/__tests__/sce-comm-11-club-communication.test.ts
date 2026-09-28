@@ -116,6 +116,13 @@ vi.mock("@/lib/communication/platform-email/platform-email-dispatch-service", ()
   })),
 }));
 
+vi.mock("@/lib/communication/sender-identity/prepare-email-sender-for-publish", () => ({
+  prepareEmailSenderForPublish: vi.fn(async () => ({
+    emailTransportReady: true,
+    snapshotData: {},
+  })),
+}));
+
 describe("SCE-COMM-11 club communication", () => {
   beforeEach(() => {
     vi.clearAllMocks();
