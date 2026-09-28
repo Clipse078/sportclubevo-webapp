@@ -6,9 +6,13 @@ import { Plus, Search } from "lucide-react";
 
 type Props = {
   canManage: boolean;
+  showCreateAction?: boolean;
 };
 
-export default function ZielgruppenListToolbar({ canManage }: Props) {
+export default function ZielgruppenListToolbar({
+  canManage,
+  showCreateAction = true,
+}: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const q = searchParams.get("q") ?? "";
@@ -35,7 +39,7 @@ export default function ZielgruppenListToolbar({ canManage }: Props) {
           <input
             type="search"
             defaultValue={q}
-            placeholder="Name, Beschreibung oder Key…"
+            placeholder="Name oder Beschreibung…"
             className="fca-input w-full pl-9"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -56,7 +60,7 @@ export default function ZielgruppenListToolbar({ canManage }: Props) {
           <option value="all">Alle</option>
         </select>
       </div>
-      {canManage ? (
+      {canManage && showCreateAction ? (
         <Link
           href="/dashboard/communication/zielgruppen/new"
           className="fca-button-primary inline-flex shrink-0 items-center justify-center gap-2"

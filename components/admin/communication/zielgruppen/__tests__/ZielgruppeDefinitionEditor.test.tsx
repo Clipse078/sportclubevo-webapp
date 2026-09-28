@@ -34,7 +34,7 @@ describe("ZielgruppeDefinitionEditor", () => {
 
     expect(screen.getByLabelText(/Ganze Organisation/i)).toBeInTheDocument();
     expect(screen.getByText(/Mindestens eine Bedingung/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Empfänger anzeigen/i })).toBeInTheDocument();
+    expect(screen.getByText(/Regeln in Klartext/i)).toBeInTheDocument();
     expect(screen.getByText(/Alle folgenden Bedingungen/i)).toBeInTheDocument();
   });
 
