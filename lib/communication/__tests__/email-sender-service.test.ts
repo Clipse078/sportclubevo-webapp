@@ -8,6 +8,12 @@ const mocks = vi.hoisted(() => ({
   }>(),
   tenantFindFirst: vi.fn(),
   tenantUpdateMany: vi.fn(),
+  senderIdentityFindFirst: vi.fn(),
+  senderIdentityCount: vi.fn(),
+  senderIdentityCreate: vi.fn(),
+  senderIdentityUpdate: vi.fn(),
+  senderIdentityUpdateMany: vi.fn(),
+  transaction: vi.fn(),
   providerAuthorization: vi.fn(),
   logAction: vi.fn(),
 }));
@@ -18,6 +24,14 @@ vi.mock("@/lib/db/prisma", () => ({
       findFirst: mocks.tenantFindFirst,
       updateMany: mocks.tenantUpdateMany,
     },
+    tenantCommunicationSenderIdentity: {
+      findFirst: mocks.senderIdentityFindFirst,
+      count: mocks.senderIdentityCount,
+      create: mocks.senderIdentityCreate,
+      update: mocks.senderIdentityUpdate,
+      updateMany: mocks.senderIdentityUpdateMany,
+    },
+    $transaction: mocks.transaction,
   },
 }));
 
@@ -66,6 +80,54 @@ beforeEach(() => {
       );
     },
   );
+  mocks.senderIdentityFindFirst.mockImplementation(async ({ where }: { where: { tenantId?: string; isDefault?: boolean; status?: string } }) => {
+    const tenantId = where.tenantId;
+    if (!tenantId) return null;
+    const tenant = mocks.tenants.get(tenantId);
+    if (!tenant?.emailSenderDisplayName || !tenant.emailSenderAddress) return null;
+    return {
+      id: `tcsi_legacy_${tenantId}`,
+      tenantId,
+      displayName: tenant.emailSenderDisplayName,
+      emailAddress: tenant.emailSenderAddress.toLowerCase(),
+      status: "ACTIVE",
+      isDefault: true,
+      scopeKind: "TENANT_WIDE",
+    };
+  });
+  mocks.senderIdentityCount.mockResolvedValue(1);
+  mocks.transaction.mockImplementation(async (cb: (tx: unknown) => unknown) =>
+    cb({
+      tenantCommunicationSenderIdentity: {
+        updateMany: mocks.senderIdentityUpdateMany,
+        create: mocks.senderIdentityCreate,
+        update: mocks.senderIdentityUpdate,
+      },
+      tenant: { updateMany: mocks.tenantUpdateMany },
+    }),
+  );
+  mocks.senderIdentityUpdate.mockImplementation(async ({ data }: { data: Record<string, string> }) => ({
+    id: "tcsi_legacy_tenant-a",
+    tenantId: TENANT_A,
+    displayName: data.displayName,
+    emailAddress: data.emailAddress,
+    status: "ACTIVE",
+    isDefault: true,
+    scopeKind: "TENANT_WIDE",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }));
+  mocks.senderIdentityCreate.mockResolvedValue({
+    id: "tcsi_new",
+    tenantId: TENANT_A,
+    displayName: "Neuer Club",
+    emailAddress: "mail@new-club.ch",
+    status: "ACTIVE",
+    isDefault: true,
+    scopeKind: "TENANT_WIDE",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
   mocks.tenantUpdateMany.mockImplementation(
     async ({ where, data }: {
       where: { id: string };
@@ -121,6 +183,7 @@ describe("COMM-03B tenant sender resolver", () => {
       formattedFrom: "FC Allschwil <info@fcallschwil.ch>",
       source: "TENANT",
       providerStatus: "VERIFIED",
+      senderIdentityId: "tcsi_legacy_tenant-a",
     });
   });
 
@@ -164,10 +227,14 @@ describe("COMM-03B tenant sender update", () => {
       emailAddress: " MAIL@NEW-CLUB.CH ",
     });
 
-    expect(mocks.tenants.get(TENANT_A)).toMatchObject({
-      emailSenderDisplayName: "Neuer Club",
-      emailSenderAddress: "mail@new-club.ch",
-    });
+    expect(mocks.senderIdentityUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          displayName: "Neuer Club",
+          emailAddress: "mail@new-club.ch",
+        }),
+      }),
+    );
     expect(mocks.tenants.get(TENANT_B)).toMatchObject({
       emailSenderDisplayName: null,
       emailSenderAddress: null,

@@ -35,7 +35,10 @@ import {
 import { recordPlatformCommunicationAudit } from "@/lib/communication/team/platform-communication-audit";
 import { emitClubCommunicationPublishedNotifications } from "@/lib/communication/club/club-communication-notification-producer";
 import { resolveCommunicationChannelIntent } from "@/lib/communication/platform-email/communication-channel-intent";
-import { evaluatePlatformEmailReadiness } from "@/lib/communication/platform-email/email-readiness-service";
+import { EmailSenderResolutionError } from "@/lib/communication/sender-identity/sender-identity-resolution-service";
+import { prepareEmailSenderForPublish } from "@/lib/communication/sender-identity/prepare-email-sender-for-publish";
+import { withEmailSenderIdentityInOrchestration } from "@/lib/communication/sender-identity/communication-email-sender-intent";
+import { defaultCampaignOrchestrationMeta } from "@/lib/communication/campaign/campaign-orchestration-meta";
 import { enqueuePlatformCommunicationEmailDeliveries } from "@/lib/communication/platform-email/platform-email-dispatch-service";
 import { resolvePersonIdForUser } from "@/lib/teams/team-document-auth";
 import { MAX_TEAM_COMMUNICATION_BODY_LENGTH } from "@/lib/communication/team/team-communication-constants";
@@ -329,11 +332,18 @@ export async function publishClubCommunication(input: {
   communicationId: string;
   senderUserId: string;
   includePersonalSignature?: boolean;
+  emailSenderIdentityId?: string | null;
 }): Promise<{ id: string; recipientCount: number }> {
   const row = await loadClubCommunicationRow({
     tenantId: input.tenantId,
     communicationId: input.communicationId,
   });
+  const orchestrationMetaJson: Prisma.InputJsonValue | undefined = input.emailSenderIdentityId
+    ? (withEmailSenderIdentityInOrchestration(
+        row.orchestrationMetaJson ?? defaultCampaignOrchestrationMeta(),
+        input.emailSenderIdentityId,
+      ) as Prisma.InputJsonValue)
+    : undefined;
   if (!canTransitionCommunicationStatus(row.status, "PUBLISHED")) {
     throw new TeamCommunicationValidationError("invalid status transition");
   }
@@ -383,10 +393,23 @@ export async function publishClubCommunication(input: {
   );
 
   const fingerprint = dispatch.core.metadata.audienceFingerprint;
+  const effectiveOrchestration = orchestrationMetaJson ?? row.orchestrationMetaJson;
   const channelIntent = resolveCommunicationChannelIntent({
-    orchestrationMetaJson: row.orchestrationMetaJson,
+    orchestrationMetaJson: effectiveOrchestration,
   });
-  const emailReadiness = await evaluatePlatformEmailReadiness(input.tenantId);
+  let emailSenderPublish;
+  try {
+    emailSenderPublish = await prepareEmailSenderForPublish({
+      tenantId: input.tenantId,
+      orchestrationMetaJson: effectiveOrchestration,
+      emailChannelEnabled: channelIntent.email,
+    });
+  } catch (error) {
+    if (error instanceof EmailSenderResolutionError) {
+      throw new TeamCommunicationValidationError(error.message);
+    }
+    throw error;
+  }
   const publishSnapshots = await buildCampaignPublishSnapshotCreateMany({
     tenantId: input.tenantId,
     communicationId: input.communicationId,
@@ -395,7 +418,7 @@ export async function publishClubCommunication(input: {
     resolvedAt: dispatch.core.metadata.resolvedAt,
     deliveryTargets: dispatch.pipeline.deliveryTargets,
     emailChannelEnabled: channelIntent.email,
-    emailTransportReady: emailReadiness.ready,
+    emailTransportReady: emailSenderPublish.emailTransportReady,
   });
 
   if (publishSnapshots.totalCount === 0) {
@@ -411,6 +434,8 @@ export async function publishClubCommunication(input: {
         status: "PUBLISHED",
         publishedAt,
         audienceFingerprint: fingerprint,
+        ...(orchestrationMetaJson !== undefined ? { orchestrationMetaJson } : {}),
+        ...emailSenderPublish.snapshotData,
       },
     });
 

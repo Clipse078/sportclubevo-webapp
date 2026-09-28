@@ -41,7 +41,8 @@ import {
 import { formatCampaignChannelSummary } from "@/lib/communication/campaign/campaign-orchestration-meta";
 import { emitCampaignPublishedNotifications } from "@/lib/communication/campaign/campaign-notification-producer";
 import { resolveCommunicationChannelIntent } from "@/lib/communication/platform-email/communication-channel-intent";
-import { evaluatePlatformEmailReadiness } from "@/lib/communication/platform-email/email-readiness-service";
+import { EmailSenderResolutionError } from "@/lib/communication/sender-identity/sender-identity-resolution-service";
+import { prepareEmailSenderForPublish } from "@/lib/communication/sender-identity/prepare-email-sender-for-publish";
 import { enqueuePlatformCommunicationEmailDeliveries } from "@/lib/communication/platform-email/platform-email-dispatch-service";
 import { syncPlatformCommunicationAttachments } from "@/lib/communication/attachment-service";
 
@@ -483,7 +484,19 @@ export async function publishCampaign(input: {
   const channelIntent = resolveCommunicationChannelIntent({
     orchestrationMetaJson: row.orchestrationMetaJson,
   });
-  const emailReadiness = await evaluatePlatformEmailReadiness(input.tenantId);
+  let emailSenderPublish;
+  try {
+    emailSenderPublish = await prepareEmailSenderForPublish({
+      tenantId: input.tenantId,
+      orchestrationMetaJson: row.orchestrationMetaJson,
+      emailChannelEnabled: channelIntent.email,
+    });
+  } catch (error) {
+    if (error instanceof EmailSenderResolutionError) {
+      throw new TeamCommunicationValidationError(error.message);
+    }
+    throw error;
+  }
   const publishSnapshots = await buildCampaignPublishSnapshotCreateMany({
     tenantId: input.tenantId,
     communicationId: input.campaignId,
@@ -492,7 +505,7 @@ export async function publishCampaign(input: {
     resolvedAt: dispatch.core.metadata.resolvedAt,
     deliveryTargets: dispatch.pipeline.deliveryTargets,
     emailChannelEnabled: channelIntent.email,
-    emailTransportReady: emailReadiness.ready,
+    emailTransportReady: emailSenderPublish.emailTransportReady,
   });
 
   if (publishSnapshots.totalCount === 0) {
@@ -513,6 +526,7 @@ export async function publishCampaign(input: {
         status: "PUBLISHED",
         publishedAt,
         audienceFingerprint: fingerprint,
+        ...emailSenderPublish.snapshotData,
       },
     });
 

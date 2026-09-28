@@ -34,6 +34,7 @@ const mocks = vi.hoisted(() => ({
   },
   evaluatePlatformEmailReadiness: vi.fn(),
   resolveTenantEmailSender: vi.fn(),
+  resolveDeliveryEmailSender: vi.fn(),
   sendOutboundEmail: vi.fn(),
 }));
 
@@ -57,6 +58,10 @@ vi.mock("@/lib/communication/email-sender-service", () => ({
   resolveTenantEmailSender: (...args: unknown[]) => mocks.resolveTenantEmailSender(...args),
 }));
 
+vi.mock("@/lib/communication/sender-identity/delivery-email-sender-service", () => ({
+  resolveDeliveryEmailSender: (...args: unknown[]) => mocks.resolveDeliveryEmailSender(...args),
+}));
+
 vi.mock("@/lib/email/outbound-email-transport", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/email/outbound-email-transport")>();
   return {
@@ -67,6 +72,10 @@ vi.mock("@/lib/email/outbound-email-transport", async (importOriginal) => {
 
 vi.mock("@/lib/communication/team/platform-communication-audit", () => ({
   recordPlatformCommunicationAudit: vi.fn(),
+}));
+
+vi.mock("@/lib/communication/attachment-service", () => ({
+  loadPlatformCommunicationAttachmentsForDelivery: vi.fn(async () => []),
 }));
 
 describe("SCE-COMM-14 outbound email delivery", () => {
@@ -84,6 +93,17 @@ describe("SCE-COMM-14 outbound email delivery", () => {
       providerStatus: "VERIFIED",
       platformFallbackActive: false,
       reasons: [],
+    });
+    mocks.resolveDeliveryEmailSender.mockResolvedValue({
+      ok: true,
+      sender: {
+        formattedFrom: "Club <club@example.com>",
+        emailAddress: "club@example.com",
+        displayName: "Club",
+        source: "TENANT",
+        identityId: null,
+        providerStatus: "VERIFIED",
+      },
     });
     mocks.resolveTenantEmailSender.mockResolvedValue({
       formattedFrom: "Club <club@example.com>",
@@ -269,6 +289,10 @@ describe("SCE-COMM-14 outbound email delivery", () => {
           bodyText: "Body",
           kind: "CAMPAIGN",
           orchestrationMetaJson: defaultCampaignOrchestrationMeta(),
+          emailSenderIdentityId: null,
+          emailSenderDisplayNameSnapshot: null,
+          emailSenderAddressSnapshot: null,
+          emailSenderSource: null,
         },
       },
     ]);
@@ -313,6 +337,10 @@ describe("SCE-COMM-14 outbound email delivery", () => {
           bodyText: "Body",
           kind: "CAMPAIGN",
           orchestrationMetaJson: defaultCampaignOrchestrationMeta(),
+          emailSenderIdentityId: null,
+          emailSenderDisplayNameSnapshot: null,
+          emailSenderAddressSnapshot: null,
+          emailSenderSource: null,
         },
       },
     ]);

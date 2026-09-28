@@ -1,6 +1,6 @@
 import { PlatformCommunicationEmailDeliveryStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { resolveTenantEmailSender } from "@/lib/communication/email-sender-service";
+import { resolveDeliveryEmailSender } from "@/lib/communication/sender-identity/delivery-email-sender-service";
 import { sendOutboundEmail, OutboundEmailTransportError } from "@/lib/email/outbound-email-transport";
 import {
   PLATFORM_EMAIL_DELIVERY_BATCH_SIZE,
@@ -33,6 +33,10 @@ type AttemptRow = Prisma.PlatformCommunicationEmailDeliveryAttemptGetPayload<{
         kind: true;
         orchestrationMetaJson: true;
         audienceSpecJson: true;
+        emailSenderIdentityId: true;
+        emailSenderDisplayNameSnapshot: true;
+        emailSenderAddressSnapshot: true;
+        emailSenderSource: true;
       };
     };
   };
@@ -72,6 +76,10 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
           kind: true,
           orchestrationMetaJson: true,
           audienceSpecJson: true,
+          emailSenderIdentityId: true,
+          emailSenderDisplayNameSnapshot: true,
+          emailSenderAddressSnapshot: true,
+          emailSenderSource: true,
         },
       },
     },
@@ -141,8 +149,27 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
       deepLinkPath,
     });
 
+    const deliverySender = await resolveDeliveryEmailSender({
+      tenantId: attempt.tenantId,
+      emailSenderIdentityId: attempt.communication.emailSenderIdentityId,
+      emailSenderDisplayNameSnapshot: attempt.communication.emailSenderDisplayNameSnapshot,
+      emailSenderAddressSnapshot: attempt.communication.emailSenderAddressSnapshot,
+      emailSenderSource: attempt.communication.emailSenderSource,
+    });
+    if (!deliverySender.ok) {
+      await prisma.platformCommunicationEmailDeliveryAttempt.update({
+        where: { id: attempt.id },
+        data: {
+          status: PlatformCommunicationEmailDeliveryStatus.FAILED,
+          failureCode: deliverySender.failureCode,
+        },
+      });
+      summary.failed += 1;
+      continue;
+    }
+
     try {
-      const sender = await resolveTenantEmailSender(attempt.tenantId);
+      const sender = deliverySender.sender;
       let mailAttachments;
       try {
         const loaded = await loadPlatformCommunicationAttachmentsForDelivery({

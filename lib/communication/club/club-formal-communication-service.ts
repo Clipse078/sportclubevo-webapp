@@ -119,6 +119,7 @@ export async function sendClubFormalCommunication(input: {
   acknowledgementRequired?: boolean;
   attachmentIds?: readonly string[];
   includePersonalSignature?: boolean;
+  emailSenderIdentityId?: string | null;
 }): Promise<{ id: string; recipientCount: number }> {
   const kind = assertFormalKind(input.kind);
   const subject = sanitizeFormalSubject(kind, input.subject);
@@ -163,6 +164,7 @@ export async function sendClubFormalCommunication(input: {
     tenantId: input.tenantId,
     communicationId: draft.id,
     senderUserId: input.senderUserId,
+    emailSenderIdentityId: input.emailSenderIdentityId,
   });
 }
 

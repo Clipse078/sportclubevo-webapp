@@ -19,6 +19,7 @@ import { PersonalSignatureComposerField } from "@/components/admin/communication
 import { previewMessageWithPersonalSignature } from "@/lib/communication/personal-signature/personal-signature-compose";
 import { CommunicationAttachmentPicker } from "@/components/admin/communication/attachments/CommunicationAttachmentPicker";
 import { useCommunicationAttachmentUpload } from "@/components/admin/communication/attachments/use-communication-attachment-upload";
+import { CommunicationSenderSelector } from "@/components/admin/communication/sender/CommunicationSenderSelector";
 
 type TargetGroupOption = { id: string; name: string; status: string };
 
@@ -77,6 +78,7 @@ export default function ClubCommunicationComposer({
     audienceSummary: string;
   } | null>(null);
   const [emailReady, setEmailReady] = useState<boolean | null>(null);
+  const [emailSenderIdentityId, setEmailSenderIdentityId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
@@ -287,6 +289,7 @@ export default function ClubCommunicationComposer({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             includePersonalSignature: kind === "MESSAGE" ? useSignature : false,
+            emailSenderIdentityId,
           }),
         });
         const pubData = await pubRes.json();
@@ -306,6 +309,7 @@ export default function ClubCommunicationComposer({
           audienceSpec,
           attachmentIds: readyAttachmentIds,
           includePersonalSignature: kind === "MESSAGE" ? useSignature : false,
+          emailSenderIdentityId,
         }),
       });
       const data = await res.json();
@@ -545,6 +549,14 @@ export default function ClubCommunicationComposer({
           E-Mail-Versand bereit:{" "}
           {emailReady === null ? "…" : emailReady ? "Ja" : "Nein — Absender prüfen"}
         </p>
+        <CommunicationSenderSelector
+          value={emailSenderIdentityId}
+          onChange={(id) => {
+            setEmailSenderIdentityId(id);
+            setReviewConfirmed(false);
+          }}
+          emailChannelEnabled
+        />
       </section>
 
       <section aria-labelledby="mitteilung-zeitpunkt-heading" className="rounded-xl border border-[var(--border)] p-4 md:p-6">
@@ -603,6 +615,10 @@ export default function ClubCommunicationComposer({
           <div>
             <dt className="text-[var(--text-2)]">Kanäle</dt>
             <dd>In-App, Push, E-Mail (wenn bereit)</dd>
+          </div>
+          <div>
+            <dt className="text-[var(--text-2)]">Absender (E-Mail)</dt>
+            <dd>{emailSenderIdentityId ? "Ausgewählter Vereinsabsender" : "Standard / SportClubEvo-Fallback"}</dd>
           </div>
           <div>
             <dt className="text-[var(--text-2)]">Zeitpunkt</dt>
