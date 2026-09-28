@@ -13,6 +13,8 @@ vi.mock("@/lib/tenants/active-tenant", () => ({
 vi.mock("@/lib/communication/personal-signature/personal-signature-service", () => ({
   loadPersonalSignaturePreference: vi.fn(async () => ({
     bodyText: null,
+    contentJson: null,
+    contentVersion: 1,
     useByDefault: true,
     hasStoredPreference: false,
   })),
@@ -25,7 +27,7 @@ describe("COMM-UX-08A personal signature settings route", () => {
   it("renders Persönliche Signatur workspace heading", async () => {
     render(await PersonalSignaturePage());
     expect(screen.getByRole("heading", { name: "Persönliche Signatur" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Signatur")).toBeInTheDocument();
+    expect(screen.getByLabelText("Signatur bearbeiten")).toBeInTheDocument();
   });
 
   it("registers hub link to personal signature settings", () => {

@@ -5,6 +5,8 @@ export type RenderPlatformCommunicationEmailInput = {
   tenantName: string;
   subject: string | null;
   bodyText: string;
+  /** When set (EVO-07 rich signature), replaces auto-generated body HTML. */
+  bodyHtmlOverride?: string | null;
   includeDeepLink: boolean;
   deepLinkPath?: string | null;
 };
@@ -39,8 +41,12 @@ export function renderPlatformCommunicationEmail(
     `\n\n— ${input.tenantName}`,
   ].filter(Boolean);
 
+  const bodyHtml =
+    input.bodyHtmlOverride?.trim() ||
+    plainTextToSafeHtml(body).replace("<p>", '<p style="margin:0 0 12px;font-family:sans-serif;">');
+
   const htmlParts = [
-    plainTextToSafeHtml(body).replace("<p>", '<p style="margin:0 0 12px;font-family:sans-serif;">'),
+    bodyHtml,
     deepLink
       ? `<p style="margin:16px 0 0;font-family:sans-serif;"><a href="${deepLink}">Im SportClubEvo öffnen</a></p>`
       : "",

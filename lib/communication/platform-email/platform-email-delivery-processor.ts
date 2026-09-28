@@ -14,6 +14,10 @@ import { resolveRecipientSnapshotEmailEligibility } from "@/lib/communication/pl
 import { resolveCommunicationChannelIntent } from "@/lib/communication/platform-email/communication-channel-intent";
 import { resolvePublicationCommunicationPreferenceCategory } from "@/lib/communication/preferences/publication-category";
 import { loadPlatformCommunicationAttachmentsForDelivery } from "@/lib/communication/attachment-service";
+import { parsePersonalSignatureFreezeJson } from "@/lib/communication/personal-signature/personal-signature-freeze";
+import { loadSignatureCidMailAttachments } from "@/lib/communication/personal-signature/signature-email-delivery";
+import { renderEmailBodyHtmlFromFreeze } from "@/lib/communication/personal-signature/signature-email-delivery";
+import { splitPersonalisedBodyUsingFreeze } from "@/lib/communication/personal-signature/signature-email-delivery";
 
 export type ProcessPlatformEmailDeliveriesResult = {
   examined: number;
@@ -37,6 +41,7 @@ type AttemptRow = Prisma.PlatformCommunicationEmailDeliveryAttemptGetPayload<{
         externalSnapshotJson: true;
         renderedSubject: true;
         renderedBodyText: true;
+        renderedBodyHtml: true;
       };
     };
     communication: {
@@ -50,6 +55,7 @@ type AttemptRow = Prisma.PlatformCommunicationEmailDeliveryAttemptGetPayload<{
         emailSenderDisplayNameSnapshot: true;
         emailSenderAddressSnapshot: true;
         emailSenderSource: true;
+        personalSignatureFreezeJson: true;
       };
     };
   };
@@ -93,6 +99,7 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
           emailSenderDisplayNameSnapshot: true,
           emailSenderAddressSnapshot: true,
           emailSenderSource: true,
+          personalSignatureFreezeJson: true,
         },
       },
     },
@@ -158,11 +165,24 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
       attempt.recipientSnapshot.renderedSubject ?? attempt.communication.subject;
     const effectiveBodyText =
       attempt.recipientSnapshot.renderedBodyText ?? attempt.communication.bodyText;
+    const signatureFreeze = parsePersonalSignatureFreezeJson(
+      attempt.communication.personalSignatureFreezeJson,
+    );
+    let bodyHtmlOverride = attempt.recipientSnapshot.renderedBodyHtml ?? null;
+    if (!bodyHtmlOverride && signatureFreeze) {
+      const split = splitPersonalisedBodyUsingFreeze(effectiveBodyText, signatureFreeze);
+      bodyHtmlOverride = renderEmailBodyHtmlFromFreeze({
+        messageBodyText: split.messageBody,
+        signaturePlainText: split.signaturePlain,
+        freeze: signatureFreeze,
+      });
+    }
 
     const rendered = renderPlatformCommunicationEmail({
       tenantName: tenant.name,
       subject: effectiveSubject,
       bodyText: effectiveBodyText,
+      bodyHtmlOverride,
       includeDeepLink: attempt.recipientSnapshot.recipientKind !== "EXTERNAL_SPONSOR_CONTACT",
       deepLinkPath,
     });
@@ -194,14 +214,11 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
           tenantId: attempt.tenantId,
           communicationId: attempt.communicationId,
         });
-        mailAttachments =
-          loaded.length > 0
-            ? loaded.map((item) => ({
-                filename: item.filename,
-                content: item.content,
-                contentType: item.contentType,
-              }))
-            : undefined;
+        mailAttachments = loaded.map((item) => ({
+          filename: item.filename,
+          content: item.content,
+          contentType: item.contentType,
+        }));
       } catch (loadError) {
         await prisma.platformCommunicationEmailDeliveryAttempt.update({
           where: { id: attempt.id },
@@ -218,6 +235,30 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
         continue;
       }
 
+      if (signatureFreeze) {
+        try {
+          const inline = await loadSignatureCidMailAttachments({
+            tenantId: attempt.tenantId,
+            freeze: signatureFreeze,
+          });
+          mailAttachments = [...(mailAttachments ?? []), ...inline];
+        } catch (loadError) {
+          await prisma.platformCommunicationEmailDeliveryAttempt.update({
+            where: { id: attempt.id },
+            data: {
+              status: PlatformCommunicationEmailDeliveryStatus.FAILED,
+              failureCode: "SIGNATURE_ASSET_UNAVAILABLE",
+            },
+          });
+          summary.failed += 1;
+          console.warn(`${PLATFORM_EMAIL_LOG_PREFIX} signature asset load failed`, {
+            attemptId: attempt.id,
+            message: loadError instanceof Error ? loadError.message : "unknown",
+          });
+          continue;
+        }
+      }
+
       const transport = await sendOutboundEmail({
         from: sender.formattedFrom,
         to: eligibility.email,
@@ -225,7 +266,7 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
         html: rendered.html,
         text: rendered.text,
         idempotencyKey: attempt.idempotencyKey,
-        attachments: mailAttachments,
+        attachments: mailAttachments?.length ? mailAttachments : undefined,
       });
 
       await prisma.platformCommunicationEmailDeliveryAttempt.update({

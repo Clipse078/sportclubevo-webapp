@@ -49,9 +49,11 @@ import {
 } from "@/lib/communication/personalisation/publish-personalisation";
 import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
 import {
-  applyPersonalSignatureToOutboundBody,
+  applyPersonalSignatureToOutbound,
+  personalSignatureFreezeJson,
   personalSignatureSupportedForMitteilungKind,
 } from "@/lib/communication/personal-signature/personal-signature-service";
+import { parsePersonalSignatureFreezeJson } from "@/lib/communication/personal-signature/personal-signature-freeze";
 
 export type ClubCommunicationListItem = {
   id: string;
@@ -352,20 +354,27 @@ export async function publishClubCommunication(input: {
     throw new TeamCommunicationValidationError("invalid status transition");
   }
 
+  let personalSignatureFreeze = parsePersonalSignatureFreezeJson(row.personalSignatureFreezeJson);
   if (personalSignatureSupportedForMitteilungKind(row.kind)) {
     try {
-      const withSignature = await applyPersonalSignatureToOutboundBody({
+      const applied = await applyPersonalSignatureToOutbound({
         tenantId: input.tenantId,
         userId: input.senderUserId,
         messageBody: row.bodyText,
         includePersonalSignature: input.includePersonalSignature,
       });
-      if (withSignature !== row.bodyText) {
+      personalSignatureFreeze = applied.freeze;
+      if (applied.bodyText !== row.bodyText || applied.freeze) {
         await prisma.platformCommunication.update({
           where: { id: row.id },
-          data: { bodyText: sanitizeBodyText(withSignature) },
+          data: {
+            bodyText: sanitizeBodyText(applied.bodyText),
+            ...(applied.freeze
+              ? { personalSignatureFreezeJson: personalSignatureFreezeJson(applied.freeze) }
+              : {}),
+          },
         });
-        row.bodyText = withSignature;
+        row.bodyText = applied.bodyText;
       }
     } catch {
       throw new TeamCommunicationValidationError("body exceeds maximum length");
@@ -439,6 +448,7 @@ export async function publishClubCommunication(input: {
         ? emailSenderPublish.snapshotData.emailSenderAddressSnapshot
         : null,
     deliveryTargets: dispatch.pipeline.deliveryTargets,
+    personalSignatureFreeze,
     at: dispatchAt,
   });
 

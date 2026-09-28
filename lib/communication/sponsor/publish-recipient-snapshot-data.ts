@@ -76,6 +76,7 @@ export async function buildCampaignPublishSnapshotCreateMany(input: {
           resolvedAt: new Date(snap.resolvedAt),
           renderedSubject: personalisation?.renderedSubject ?? null,
           renderedBodyText: personalisation?.renderedBodyText ?? null,
+          renderedBodyHtml: personalisation?.renderedBodyHtml ?? null,
           personalisationDiagnosticsJson: personalisation?.personalisationDiagnosticsJson
             ? (personalisation.personalisationDiagnosticsJson as Prisma.InputJsonValue)
             : undefined,

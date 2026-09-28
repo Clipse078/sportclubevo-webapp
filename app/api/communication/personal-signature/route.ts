@@ -49,6 +49,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
 
   const result = await savePersonalSignaturePreference(actor.tenantId, actor.userId, {
     bodyText: body.bodyText,
+    contentJson: body.contentJson,
     useByDefault: body.useByDefault,
   });
 

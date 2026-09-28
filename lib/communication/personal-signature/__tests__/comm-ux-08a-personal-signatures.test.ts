@@ -21,6 +21,10 @@ const prismaMock = vi.hoisted(() => ({
     upsert: vi.fn(),
     deleteMany: vi.fn(),
   },
+  userCommunicationPersonalSignatureAsset: {
+    deleteMany: vi.fn(),
+    createMany: vi.fn(),
+  },
 }));
 
 vi.mock("@/lib/db/prisma", () => ({ prisma: prismaMock }));
@@ -71,16 +75,20 @@ describe("SCE-COMM-UX-08A personal signatures", () => {
     expect(pref.bodyText).toBe("Mine");
     expect(prismaMock.userCommunicationPersonalSignature.findUnique).toHaveBeenCalledWith({
       where: { tenantId_userId: { tenantId: "t1", userId: "u1" } },
-      select: { bodyText: true, useByDefault: true },
+      select: expect.objectContaining({ bodyText: true, useByDefault: true }),
     });
   });
 
   it("save upserts only for acting user context", async () => {
     prismaMock.userCommunicationPersonalSignature.findUnique.mockResolvedValue(null);
     prismaMock.userCommunicationPersonalSignature.upsert.mockResolvedValue({
+      id: "sig1",
       bodyText: "Saved",
+      contentJson: null,
+      contentVersion: 1,
       useByDefault: false,
     });
+    prismaMock.userCommunicationPersonalSignatureAsset.deleteMany.mockResolvedValue({ count: 0 });
     const result = await savePersonalSignaturePreference("t1", "u1", {
       bodyText: "Saved",
       useByDefault: false,
