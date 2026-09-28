@@ -38,6 +38,7 @@ import {
   parseCampaignOrchestrationMeta,
   type CampaignOrchestrationMeta,
 } from "@/lib/communication/campaign/campaign-orchestration-meta";
+import { formatCampaignChannelSummary } from "@/lib/communication/campaign/campaign-orchestration-meta";
 import { emitCampaignPublishedNotifications } from "@/lib/communication/campaign/campaign-notification-producer";
 import { resolveCommunicationChannelIntent } from "@/lib/communication/platform-email/communication-channel-intent";
 import { evaluatePlatformEmailReadiness } from "@/lib/communication/platform-email/email-readiness-service";
@@ -55,6 +56,11 @@ export type CampaignListItem = {
   updatedAt: string;
   publishedAt: string | null;
   recipientCount: number | null;
+  deliverySnapshotCount: number | null;
+  scheduleStatus: string | null;
+  scheduledAt: string | null;
+  channelSummary: string;
+  createdByUserId: string | null;
 };
 
 const CAMPAIGN_KIND = "CAMPAIGN" as const;
@@ -130,13 +136,17 @@ async function validateAudienceTenantOwnership(
 
 function mapListRow(
   row: Prisma.PlatformCommunicationGetPayload<{ include: typeof LIST_INCLUDE }>,
+  schedule?: { status: string; scheduledAt: Date } | null,
 ): CampaignListItem {
   const audience = row.audienceSpecJson as CommunicationAudienceSpec;
+  const orchestration =
+    parseCampaignOrchestrationMeta(row.orchestrationMetaJson) ?? defaultCampaignOrchestrationMeta();
   const internalName =
     row.internalName?.trim() ||
     row.subject?.trim() ||
     row.bodyText.slice(0, 80).trim() ||
     "Kampagne";
+  const snapshotCount = row.status === "PUBLISHED" ? row._count.recipientSnapshots : null;
   return {
     id: row.id,
     internalName,
@@ -148,7 +158,12 @@ function mapListRow(
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     publishedAt: row.publishedAt?.toISOString() ?? null,
-    recipientCount: row.status === "PUBLISHED" ? row._count.recipientSnapshots : null,
+    recipientCount: snapshotCount,
+    deliverySnapshotCount: snapshotCount,
+    scheduleStatus: schedule?.status ?? null,
+    scheduledAt: schedule?.scheduledAt.toISOString() ?? null,
+    channelSummary: formatCampaignChannelSummary(orchestration),
+    createdByUserId: row.createdByUserId,
   };
 }
 
@@ -159,6 +174,8 @@ export async function listCampaigns(input: {
   search?: string;
   viewerUserId: string;
   viewerCanSend: boolean;
+  createdByUserId?: string;
+  scheduledOnly?: boolean;
 }): Promise<CampaignListItem[]> {
   const conversation = await getOrCreateOrganisationCommunicationConversation({
     tenantId: input.tenantId,
@@ -187,6 +204,7 @@ export async function listCampaigns(input: {
       conversationId: conversation.id,
       kind: CAMPAIGN_KIND,
       status: { in: allowedStatuses },
+      ...(input.createdByUserId ? { createdByUserId: input.createdByUserId } : {}),
       ...(input.search?.trim()
         ? {
             OR: [
@@ -202,7 +220,29 @@ export async function listCampaigns(input: {
     include: LIST_INCLUDE,
   });
 
-  return rows.map(mapListRow);
+  const communicationIds = rows.map((row) => row.id);
+  const activeSchedules =
+    communicationIds.length > 0
+      ? await prisma.platformCommunicationPublicationSchedule.findMany({
+          where: {
+            tenantId: input.tenantId,
+            communicationId: { in: communicationIds },
+            status: { in: ["SCHEDULED", "PROCESSING"] },
+          },
+          select: { communicationId: true, status: true, scheduledAt: true },
+        })
+      : [];
+  const scheduleByCommunicationId = new Map(
+    activeSchedules.map((schedule) => [schedule.communicationId, schedule]),
+  );
+
+  let mapped = rows.map((row) => mapListRow(row, scheduleByCommunicationId.get(row.id)));
+
+  if (input.scheduledOnly) {
+    mapped = mapped.filter((item) => item.scheduleStatus != null);
+  }
+
+  return mapped;
 }
 
 export async function getCampaignById(input: {
@@ -221,12 +261,22 @@ export async function getCampaignById(input: {
   });
   if (!full) return null;
 
+  const schedule = await prisma.platformCommunicationPublicationSchedule.findFirst({
+    where: {
+      tenantId: input.tenantId,
+      communicationId: full.id,
+      status: { in: ["SCHEDULED", "PROCESSING"] },
+    },
+    select: { status: true, scheduledAt: true },
+    orderBy: { scheduledAt: "asc" },
+  });
+
   const audience = full.audienceSpecJson as CommunicationAudienceSpec;
   const orchestration =
     parseCampaignOrchestrationMeta(full.orchestrationMetaJson) ?? defaultCampaignOrchestrationMeta();
 
   return {
-    ...mapListRow(full),
+    ...mapListRow(full, schedule),
     audienceSpec: audience,
     orchestration,
   };
