@@ -24,6 +24,7 @@ export default function PeopleAccessWizardDialog({
       title="Person hinzufügen"
       description="Person einladen, Rollen zuweisen und Zugriff prüfen."
       size="workspace"
+      bodyLayout="flex"
       footer={null}
     >
       <PeopleAccessWizard

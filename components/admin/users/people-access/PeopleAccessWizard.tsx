@@ -417,7 +417,7 @@ export default function PeopleAccessWizard({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <ol className="mb-4 flex flex-wrap items-center gap-2 px-1" aria-label="Assistent-Schritte">
+      <ol className="mb-4 flex shrink-0 flex-wrap items-center gap-2 px-1" aria-label="Assistent-Schritte">
         {STEPS.map((label, idx) => (
           <li key={label} className="flex items-center gap-2">
             <span
@@ -805,7 +805,7 @@ export default function PeopleAccessWizard({
         {error ? <p className="text-sm text-red-600" role="alert">{error}</p> : null}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
+      <div className="mt-4 flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
         <button type="button" onClick={step === 0 ? onCancel : () => setStep((s) => s - 1)} className="fca-button-secondary text-sm">
           {step === 0 ? "Abbrechen" : "Zurück"}
         </button>
