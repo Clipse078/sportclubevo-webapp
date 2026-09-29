@@ -3,6 +3,11 @@ import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getTenantUsersListData, getTenantPersonsWithoutUser } from "@/lib/users/queries";
+import { getTenantRolesOverview } from "@/lib/roles/tenant-queries";
+import { getOrgUnitsForTenant } from "@/lib/people/queries";
+import { getTenantClubAdminRoleKey } from "@/lib/roles/tenant-role-keys";
+import { getPrivilegedTenantRoleIds } from "@/lib/admin/people-access/privileged";
+import { prisma } from "@/lib/db/prisma";
 import AdminSectionHeader from "@/components/admin/shared/AdminSectionHeader";
 import TenantUsersSearchableList from "@/components/admin/users/TenantUsersSearchableList";
 
@@ -22,17 +27,41 @@ export default async function PeopleAccessPage() {
     hasPermission(session, PERMISSIONS.USERS_MANAGE);
   const canGlobalDelete = hasPermission(session, PERMISSIONS.USERS_DELETE);
 
-  const [users, personsWithoutUser] = await Promise.all([
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { key: true },
+  });
+  if (!tenant) notFound();
+
+  const [users, personsWithoutUser, roles, orgUnits, privilegedRoleIds] = await Promise.all([
     getTenantUsersListData(tenantId).catch(() => []),
     getTenantPersonsWithoutUser(tenantId).catch(() => []),
+    getTenantRolesOverview(tenantId).catch(() => []),
+    getOrgUnitsForTenant(tenantId).catch(() => []),
+    getPrivilegedTenantRoleIds(tenantId).catch(() => []),
   ]);
+
+  const wizardConfig = {
+    availableRoles: roles
+      .filter((r) => !r.isArchived)
+      .map((r) => ({
+        id: r.id,
+        name: r.name,
+        key: r.key,
+        isSystem: r.isSystem,
+        description: r.description,
+      })),
+    availableOrgUnits: orgUnits.map((u) => ({ id: u.id, name: u.name })),
+    clubAdminRoleKey: getTenantClubAdminRoleKey(tenant.key),
+    privilegedRoleIds,
+  };
 
   return (
     <div className="space-y-8">
       <AdminSectionHeader
         eyebrow="Administration"
         title="Personen & Zugänge"
-        description="Wer hat Zugang zu SportClubEvo — Rollen, Bereiche, Einladungen und Status auf einen Blick."
+        description="Personen einladen, Rollen zuweisen und Zugriffe verwalten."
       />
       <TenantUsersSearchableList
         initialUsers={users}
@@ -41,6 +70,7 @@ export default async function PeopleAccessPage() {
         canInvite={canInvite}
         canManage={canManage}
         canGlobalDelete={canGlobalDelete}
+        wizardConfig={wizardConfig}
       />
     </div>
   );
