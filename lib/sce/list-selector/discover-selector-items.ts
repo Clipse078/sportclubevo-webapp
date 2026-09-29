@@ -1,5 +1,4 @@
 import type {
-  SceSelectorItem,
   SceSelectorQueryInput,
   SceSelectorResultGroup,
   SceSelectorSourceType,
@@ -28,6 +27,7 @@ import {
   searchExternalContactSelectorItems,
 } from "@/lib/sce/list-selector/sources/external-contact-selector-source";
 import { withSceSelectorSourceTimeout } from "@/lib/sce/list-selector/source-query-timeout";
+import type { SceSelectorSourcePage } from "@/lib/sce/list-selector/source-pagination";
 
 function limitForType(category: SceSelectorCategoryId, type: SceSelectorSourceType, limitPerGroup?: number): number {
   if (limitPerGroup != null) return limitPerGroup;
@@ -41,7 +41,8 @@ async function querySourceType(
   type: SceSelectorSourceType,
   input: SceSelectorQueryInput,
   limit: number,
-): Promise<SceSelectorItem[]> {
+  cursor: string | null | undefined,
+): Promise<SceSelectorSourcePage> {
   const term = input.query.trim();
   const ctx = input.communicationContext;
 
@@ -54,19 +55,20 @@ async function querySourceType(
           communicationContext: ctx,
           query: term,
           limit,
+          cursor,
         });
       case "TEAM":
-        return searchTeamSelectorItems({ tenantId: input.tenantId, query: term, limit });
+        return searchTeamSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
       case "ORG_UNIT":
-        return searchOrgUnitSelectorItems({ tenantId: input.tenantId, query: term, limit });
+        return searchOrgUnitSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
       case "ROLE":
-        return searchRoleSelectorItems({ tenantId: input.tenantId, query: term, limit });
+        return searchRoleSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
       case "TARGET_GROUP":
-        return searchTargetGroupSelectorItems({ tenantId: input.tenantId, query: term, limit });
+        return searchTargetGroupSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
       case "EXTERNAL_CONTACT":
-        return searchExternalContactSelectorItems({ tenantId: input.tenantId, query: term, limit });
+        return searchExternalContactSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
       default:
-        return [];
+        return { items: [], hasMore: false, nextCursor: null };
     }
   }
 
@@ -77,19 +79,20 @@ async function querySourceType(
         actorUserId: input.actorUserId,
         communicationContext: ctx,
         limit,
+        cursor,
       });
     case "TEAM":
-      return browseTeamSelectorItems({ tenantId: input.tenantId, limit });
+      return browseTeamSelectorItems({ tenantId: input.tenantId, limit, cursor });
     case "ORG_UNIT":
-      return browseOrgUnitSelectorItems({ tenantId: input.tenantId, limit });
+      return browseOrgUnitSelectorItems({ tenantId: input.tenantId, limit, cursor });
     case "ROLE":
-      return browseRoleSelectorItems({ tenantId: input.tenantId, limit });
+      return browseRoleSelectorItems({ tenantId: input.tenantId, limit, cursor });
     case "TARGET_GROUP":
-      return browseTargetGroupSelectorItems({ tenantId: input.tenantId, limit });
+      return browseTargetGroupSelectorItems({ tenantId: input.tenantId, limit, cursor });
     case "EXTERNAL_CONTACT":
-      return browseExternalContactSelectorItems({ tenantId: input.tenantId, limit });
+      return browseExternalContactSelectorItems({ tenantId: input.tenantId, limit, cursor });
     default:
-      return [];
+      return { items: [], hasMore: false, nextCursor: null };
   }
 }
 
@@ -98,6 +101,38 @@ export type DiscoverSceSelectorItemsResult = {
   /** Set when at least one enabled source failed but others may have succeeded. */
   partialFailure?: boolean;
 };
+
+function resolveTypesToQuery(input: {
+  enabledTypes: readonly SceSelectorSourceType[];
+  category: SceSelectorCategoryId;
+  cursors?: Partial<Record<SceSelectorSourceType, string | null>>;
+}): SceSelectorSourceType[] {
+  const enabled = new Set(input.enabledTypes);
+  const categoryTypes = sceSelectorCategoryToTypes(input.category);
+  const continuationTypes =
+    input.cursors && Object.keys(input.cursors).length > 0
+      ? (Object.keys(input.cursors) as SceSelectorSourceType[]).filter((t) => enabled.has(t))
+      : null;
+
+  if (continuationTypes?.length) {
+    return continuationTypes.filter((t) =>
+      categoryTypes === "all" ? true : categoryTypes.includes(t),
+    );
+  }
+
+  return categoryTypes === "all"
+    ? (
+        [
+          "ORG_UNIT",
+          "TEAM",
+          "ROLE",
+          "PERSON",
+          "EXTERNAL_CONTACT",
+          "TARGET_GROUP",
+        ] as SceSelectorSourceType[]
+      ).filter((t) => enabled.has(t))
+    : categoryTypes.filter((t) => enabled.has(t));
+}
 
 export async function discoverSceSelectorItems(
   input: SceSelectorQueryInput & { category: SceSelectorCategoryId },
@@ -109,27 +144,18 @@ export async function discoverSceSelectorItems(
 export async function discoverSceSelectorItemsDetailed(
   input: SceSelectorQueryInput & { category: SceSelectorCategoryId },
 ): Promise<DiscoverSceSelectorItemsResult> {
-  const enabled = new Set(input.enabledTypes);
-  const categoryTypes = sceSelectorCategoryToTypes(input.category);
-  const typesToQuery: SceSelectorSourceType[] =
-    categoryTypes === "all"
-      ? (
-          [
-            "ORG_UNIT",
-            "TEAM",
-            "ROLE",
-            "PERSON",
-            "EXTERNAL_CONTACT",
-            "TARGET_GROUP",
-          ] as SceSelectorSourceType[]
-        ).filter((t) => enabled.has(t))
-      : categoryTypes.filter((t) => enabled.has(t));
+  const typesToQuery = resolveTypesToQuery({
+    enabledTypes: input.enabledTypes,
+    category: input.category,
+    cursors: input.cursors,
+  });
 
   const settled = await Promise.allSettled(
     typesToQuery.map(async (type) => {
       const limit = limitForType(input.category, type, input.limitPerGroup);
-      const items = await withSceSelectorSourceTimeout(type, querySourceType(type, input, limit));
-      return { type, items };
+      const cursor = input.cursors?.[type] ?? null;
+      const page = await withSceSelectorSourceTimeout(type, querySourceType(type, input, limit, cursor));
+      return { type, page };
     }),
   );
 
@@ -141,12 +167,14 @@ export async function discoverSceSelectorItemsDetailed(
       failures += 1;
       continue;
     }
-    const { type, items } = entry.value;
-    if (items.length === 0) continue;
+    const { type, page } = entry.value;
+    if (page.items.length === 0 && !page.hasMore) continue;
     groups.push({
       type,
       heading: sceSelectorPresentation(type).groupHeading,
-      items,
+      items: page.items,
+      hasMore: page.hasMore,
+      nextCursor: page.nextCursor,
     });
   }
 

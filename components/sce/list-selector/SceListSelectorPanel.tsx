@@ -198,6 +198,30 @@ export function SceListSelectorPanel({
     onOpenChange(false);
   }
 
+  function handleCategoryKeyDown(event: KeyboardEvent, tabs: typeof visibleTabs) {
+    const currentIndex = tabs.findIndex((tab) => {
+      const categoryId: SceSelectorCategoryId =
+        tab.id === "all" ? "all" : sceSelectorTypeToCategoryId(tab.type as SceSelectorSourceType);
+      return queryState.category === categoryId;
+    });
+    if (currentIndex < 0) return;
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      const next = tabs[(currentIndex + 1) % tabs.length];
+      if (!next) return;
+      const categoryId: SceSelectorCategoryId =
+        next.id === "all" ? "all" : sceSelectorTypeToCategoryId(next.type as SceSelectorSourceType);
+      queryState.setCategory(categoryId);
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      const prev = tabs[(currentIndex - 1 + tabs.length) % tabs.length];
+      if (!prev) return;
+      const categoryId: SceSelectorCategoryId =
+        prev.id === "all" ? "all" : sceSelectorTypeToCategoryId(prev.type as SceSelectorSourceType);
+      queryState.setCategory(categoryId);
+    }
+  }
+
   function handleListKeyDown(event: KeyboardEvent) {
     if (flatOptions.length === 0) return;
     if (event.key === "ArrowDown") {
@@ -264,6 +288,11 @@ export function SceListSelectorPanel({
           {queryState.query.trim().length >= 2
             ? `Keine Ergebnisse für „${queryState.query.trim()}“`
             : "Keine Einträge vorhanden."}
+        </p>
+      ) : null}
+      {queryState.loadingMore ? (
+        <p className="py-2 text-sm text-[var(--text-2)]" data-testid={`${testIdPrefix}-loading-more`}>
+          Weitere Einträge werden geladen …
         </p>
       ) : null}
       {!queryState.loading && !queryState.error
@@ -353,6 +382,19 @@ export function SceListSelectorPanel({
                   );
                 })}
               </ul>
+              {group.hasMore ? (
+                <div className="mt-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={disabled || queryState.loadingMore}
+                    data-testid={`${testIdPrefix}-load-more-${group.type}`}
+                    onClick={() => queryState.loadMore(group.type)}
+                  >
+                    Mehr anzeigen
+                  </Button>
+                </div>
+              ) : null}
             </div>
           ))
         : null}
@@ -424,6 +466,7 @@ export function SceListSelectorPanel({
           className="flex shrink-0 gap-1 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           role="tablist"
           aria-label="Kategorien"
+          onKeyDown={(event) => handleCategoryKeyDown(event, visibleTabs)}
         >
           {visibleTabs.map((tab) => {
             const categoryId: SceSelectorCategoryId =
@@ -457,8 +500,10 @@ export function SceListSelectorPanel({
         </p>
         <div
           ref={listRef}
-          className="min-h-[12rem] flex-1 overflow-y-auto pr-1"
+          className="min-h-[12rem] flex-1 overflow-y-auto pr-1 outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+          tabIndex={0}
           aria-live="polite"
+          aria-busy={queryState.loading || queryState.loadingMore}
           onKeyDown={handleListKeyDown}
         >
           {listContent}

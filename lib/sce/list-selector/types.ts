@@ -52,6 +52,8 @@ export function sceSelectorPickKey(type: SceSelectorSourceType, id: string): str
   return `${type}:${id}`;
 }
 
+export type SceSelectorGroupCursors = Partial<Record<SceSelectorSourceType, string | null>>;
+
 export type SceSelectorQueryInput = {
   tenantId: string;
   actorUserId: string;
@@ -59,6 +61,8 @@ export type SceSelectorQueryInput = {
   category: SceSelectorCategory;
   query: string;
   limitPerGroup?: number;
+  /** Per-source offset cursors for browse/search continuation. */
+  cursors?: SceSelectorGroupCursors;
   /** Communication-specific; ignored by generic club selectors. */
   communicationContext?: "DIRECT" | "ORGANISATION" | "TARGET_GROUP_MANAGEMENT";
 };

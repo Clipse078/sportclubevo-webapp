@@ -185,6 +185,55 @@ describe("useSceListSelectorQuery", () => {
     expect(result.current.loading).toBe(false);
   });
 
+  it("loadMore appends rows and passes continuation cursor", async () => {
+    const fetchResults = vi.fn(async (params: SceListSelectorFetchParams) => {
+      if (params.cursors?.TEAM) {
+        return {
+          groups: [
+            {
+              type: "TEAM" as const,
+              heading: "Teams",
+              items: [{ id: "t2", type: "TEAM" as const, label: "Team B" }],
+              hasMore: false,
+              nextCursor: null,
+            },
+          ],
+        };
+      }
+      return {
+        groups: [
+          {
+            type: "TEAM" as const,
+            heading: "Teams",
+            items: [{ id: "t1", type: "TEAM" as const, label: "Team A" }],
+            hasMore: true,
+            nextCursor: "1",
+          },
+        ],
+      };
+    });
+
+    const { result } = renderHook(() =>
+      useSceListSelectorQuery({
+        open: true,
+        enabledTypes: ["TEAM"],
+        fetchResults,
+      }),
+    );
+
+    await waitFor(() => expect(result.current.groups[0]?.items).toHaveLength(1));
+
+    await act(async () => {
+      result.current.loadMore("TEAM");
+    });
+
+    await waitFor(() => expect(result.current.groups[0]?.items).toHaveLength(2));
+    expect(fetchResults).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursors: { TEAM: "1" } }),
+    );
+    expect(result.current.loadingMore).toBe(false);
+  });
+
   it("rapid open/close/open settles without permanent loading", async () => {
     const fetchResults = vi.fn(
       (params: SceListSelectorFetchParams) =>

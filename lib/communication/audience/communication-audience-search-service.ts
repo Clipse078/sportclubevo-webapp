@@ -10,7 +10,7 @@ import {
   communicationCategoryToSelectorCategory,
   selectorTypeToCommunicationSearchKind,
 } from "@/lib/sce/list-selector/communication-bridge";
-import type { SceSelectorSourceType } from "@/lib/sce/list-selector/types";
+import type { SceSelectorGroupCursors, SceSelectorSourceType } from "@/lib/sce/list-selector/types";
 import type { CommunicationAudienceDiscoverContextParam } from "@/lib/sce/list-selector/selector-authorization-context";
 
 export type CommunicationAudienceDiscoverCategory =
@@ -26,6 +26,8 @@ export type CommunicationAudienceDiscoverGroup = {
   kind: CommunicationAudienceSearchKind;
   heading: string;
   options: Array<{ id: string; label: string; description?: string | null }>;
+  hasMore?: boolean;
+  nextCursor?: string | null;
 };
 
 export type CommunicationAudienceSearchKind =
@@ -115,6 +117,7 @@ export async function discoverCommunicationAudienceTargets(input: {
   category: CommunicationAudienceDiscoverCategory;
   enabledKinds: readonly CommunicationAudienceSearchKind[];
   limitPerGroup?: number;
+  cursors?: SceSelectorGroupCursors;
 }): Promise<CommunicationAudienceDiscoverGroup[]> {
   const enabledTypes = input.enabledKinds.map(
     (k) =>
@@ -135,6 +138,7 @@ export async function discoverCommunicationAudienceTargets(input: {
     category: communicationCategoryToSelectorCategory(input.category),
     query: input.query,
     limitPerGroup: input.limitPerGroup,
+    cursors: input.cursors,
     communicationContext: communicationContextKind(input.context, input.discoverContext),
   });
 
@@ -148,6 +152,8 @@ export async function discoverCommunicationAudienceTargets(input: {
         label: item.label,
         description: item.description,
       })),
+      hasMore: group.hasMore,
+      nextCursor: group.nextCursor,
     };
   });
 }

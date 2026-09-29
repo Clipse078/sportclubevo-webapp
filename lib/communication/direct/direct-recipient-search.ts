@@ -17,9 +17,13 @@ export async function searchDirectMessageRecipients(input: {
   tenantId: string;
   senderUserId: string;
   query: string;
+  limit?: number;
+  offset?: number;
 }): Promise<DirectMessageRecipientCandidate[]> {
   const q = input.query.trim();
   if (q.length < 2) return [];
+  const limit = Math.min(Math.max(input.limit ?? SEARCH_LIMIT, 1), 50);
+  const offset = Math.max(input.offset ?? 0, 0);
 
   const { scope } = await resolveSenderCommunicationScope({
     tenantId: input.tenantId,
@@ -42,7 +46,8 @@ export async function searchDirectMessageRecipients(input: {
         { email: { contains: q, mode: "insensitive" } },
       ],
     },
-    take: SEARCH_LIMIT,
+    skip: offset,
+    take: limit + 1,
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     select: {
       id: true,
@@ -80,8 +85,10 @@ export async function listDirectMessageRecipientsInScope(input: {
   tenantId: string;
   senderUserId: string;
   limit?: number;
+  offset?: number;
 }): Promise<DirectMessageRecipientCandidate[]> {
   const limit = Math.min(Math.max(input.limit ?? SEARCH_LIMIT, 1), 50);
+  const offset = Math.max(input.offset ?? 0, 0);
 
   const { scope } = await resolveSenderCommunicationScope({
     tenantId: input.tenantId,
@@ -98,7 +105,8 @@ export async function listDirectMessageRecipientsInScope(input: {
       isActive: true,
       id: { in: allowedIds },
     },
-    take: limit,
+    skip: offset,
+    take: limit + 1,
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     select: {
       id: true,

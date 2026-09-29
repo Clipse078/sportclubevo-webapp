@@ -25,11 +25,15 @@ export async function searchRequirementAudiencePersons(
   tenantId: string,
   query: string,
   limit = 20,
+  offset = 0,
 ): Promise<RequirementPersonOption[]> {
   const term = query.trim();
   if (term.length < REQUIREMENT_PERSON_SEARCH_MIN_CHARS) {
     return [];
   }
+
+  const safeLimit = Math.min(Math.max(limit, 1), 50);
+  const safeOffset = Math.max(offset, 0);
 
   const rows = await prisma.person.findMany({
     where: {
@@ -49,7 +53,8 @@ export async function searchRequirementAudiencePersons(
       email: true,
     },
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-    take: limit,
+    skip: safeOffset,
+    take: safeLimit + 1,
   });
 
   return rows.map((row) => ({

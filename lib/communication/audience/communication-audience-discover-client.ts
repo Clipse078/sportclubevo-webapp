@@ -48,8 +48,12 @@ export function communicationAudienceDiscoverFetch(input: {
     noAccess?: boolean;
     error?: string;
   }> => {
+    const cursorParam =
+      params.cursors && Object.keys(params.cursors).length > 0
+        ? `&cursors=${encodeURIComponent(JSON.stringify(params.cursors))}`
+        : "";
     const res = await fetchWithSceSelectorTimeout(
-      `/api/communication/audience/discover?context=${encodeURIComponent(input.context)}&category=${encodeURIComponent(selectorCategoryToCommunicationParam(params.category))}&q=${encodeURIComponent(params.query.trim())}&sources=${encodeURIComponent(sourcesParam)}`,
+      `/api/communication/audience/discover?context=${encodeURIComponent(input.context)}&category=${encodeURIComponent(selectorCategoryToCommunicationParam(params.category))}&q=${encodeURIComponent(params.query.trim())}&sources=${encodeURIComponent(sourcesParam)}${cursorParam}`,
       { signal: params.signal },
     );
     const data = (await res.json()) as {
@@ -57,6 +61,8 @@ export function communicationAudienceDiscoverFetch(input: {
         kind: CommunicationAudienceSearchKind;
         heading: string;
         options: Array<{ id: string; label: string; description?: string | null }>;
+        hasMore?: boolean;
+        nextCursor?: string | null;
       }>;
       noAccess?: boolean;
       error?: string;
@@ -78,6 +84,8 @@ export function communicationAudienceDiscoverFetch(input: {
           label: option.label,
           description: option.description,
         })),
+        hasMore: group.hasMore,
+        nextCursor: group.nextCursor,
       };
     });
     return { groups, noAccess: data.noAccess };

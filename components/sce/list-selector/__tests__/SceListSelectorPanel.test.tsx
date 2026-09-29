@@ -39,6 +39,7 @@ function mockFetch(
 
 describe("SceListSelectorPanel", () => {
   beforeEach(() => {
+    Element.prototype.scrollIntoView = vi.fn();
     window.matchMedia = vi.fn().mockImplementation((query: string) => ({
       matches: query.includes("min-width"),
       media: query,
@@ -120,6 +121,77 @@ describe("SceListSelectorPanel", () => {
     expect(input.className).toContain("fca-input");
     expect(input.className).toContain("fca-search-input");
     expect(input.className).not.toMatch(/\bpl-10\b/);
+  });
+
+  it("shows Mehr anzeigen and loads additional rows", async () => {
+    const user = userEvent.setup();
+    const fetchResults = vi.fn(async (params: SceListSelectorFetchParams) => {
+      if (params.cursors?.TEAM) {
+        return {
+          groups: [
+            {
+              type: "TEAM" as const,
+              heading: "Teams",
+              items: [{ id: "t2", type: "TEAM" as const, label: "F3 Junioren" }],
+              hasMore: false,
+              nextCursor: null,
+            },
+          ],
+        };
+      }
+      return {
+        groups: [
+          {
+            type: "TEAM" as const,
+            heading: "Teams",
+            items: [{ id: "t1", type: "TEAM" as const, label: "F2 Junioren" }],
+            hasMore: true,
+            nextCursor: "1",
+          },
+        ],
+      };
+    });
+
+    render(
+      <SceListSelectorPanel
+        open
+        onOpenChange={() => {}}
+        title="Auswahl"
+        enabledTypes={["TEAM"]}
+        fetchResults={fetchResults}
+      />,
+    );
+
+    await screen.findByTestId("sce-list-selector-option-TEAM-t1");
+    await user.click(screen.getByTestId("sce-list-selector-load-more-TEAM"));
+    await screen.findByTestId("sce-list-selector-option-TEAM-t2");
+    expect(fetchResults).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursors: { TEAM: "1" } }),
+    );
+  });
+
+  it("supports keyboard navigation and multi-select without closing", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    render(
+      <SceListSelectorPanel
+        open
+        onOpenChange={onOpenChange}
+        title="Auswahl"
+        enabledTypes={["ORG_UNIT", "TEAM"]}
+        mode="multiple"
+        fetchResults={mockFetch()}
+      />,
+    );
+
+    await screen.findByTestId("sce-list-selector-option-ORG_UNIT-ou1");
+    const listArea = document.querySelector('[data-testid="sce-list-selector-panel"] [tabindex="0"]');
+    expect(listArea).toBeTruthy();
+    await user.click(listArea as Element);
+    await user.keyboard("{End}");
+    await user.keyboard(" ");
+    expect(screen.getByTestId("sce-list-selector-pending-count")).toHaveTextContent("1 ausgewählt");
+    expect(onOpenChange).not.toHaveBeenCalled();
   });
 
   it("multi-select confirm emits picks", async () => {

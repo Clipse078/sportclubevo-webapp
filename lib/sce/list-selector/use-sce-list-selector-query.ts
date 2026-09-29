@@ -2,11 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SceSelectorCategoryId } from "@/lib/sce/list-selector/entity-presentation";
-import type { SceSelectorResultGroup, SceSelectorSourceType } from "@/lib/sce/list-selector/types";
+import type {
+  SceSelectorGroupCursors,
+  SceSelectorResultGroup,
+  SceSelectorSourceType,
+} from "@/lib/sce/list-selector/types";
 import {
   SCE_SELECTOR_MIN_SEARCH_LENGTH,
   SCE_SELECTOR_SEARCH_DEBOUNCE_MS,
 } from "@/lib/sce/list-selector/sources/constants";
+import { mergeSceSelectorResultGroups } from "@/lib/sce/list-selector/source-pagination";
 
 export type SceListSelectorQueryStatus = "idle" | "loading" | "success" | "empty" | "error";
 
@@ -17,10 +22,12 @@ export type SceListSelectorQueryState = {
   setCategory: (category: SceSelectorCategoryId) => void;
   groups: SceSelectorResultGroup[];
   loading: boolean;
+  loadingMore: boolean;
   status: SceListSelectorQueryStatus;
   error: string | null;
   noAccess: boolean;
   retry: () => void;
+  loadMore: (sourceType: SceSelectorSourceType) => void;
   resultCount: number;
   statusMessage: string | null;
 };
@@ -29,6 +36,7 @@ export type SceListSelectorFetchParams = {
   query: string;
   category: SceSelectorCategoryId;
   signal: AbortSignal;
+  cursors?: SceSelectorGroupCursors;
 };
 
 const LOAD_ERROR_MESSAGE = "Auswahl konnte nicht geladen werden.";
@@ -68,62 +76,107 @@ export function useSceListSelectorQuery(options: {
   const [category, setCategory] = useState<SceSelectorCategoryId>("all");
   const [groups, setGroups] = useState<SceSelectorResultGroup[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [noAccess, setNoAccess] = useState(false);
 
   const requestGeneration = useRef(0);
   const activeAbortRef = useRef<AbortController | null>(null);
 
-  const runFetch = useCallback(async (q: string, cat: SceSelectorCategoryId, generation: number) => {
-    const controller = new AbortController();
-    activeAbortRef.current = controller;
-    const { signal } = controller;
+  const runFetch = useCallback(
+    async (
+      q: string,
+      cat: SceSelectorCategoryId,
+      generation: number,
+      input: { cursors?: SceSelectorGroupCursors; append?: boolean },
+    ) => {
+      const isContinuation = Boolean(input.cursors && Object.keys(input.cursors).length > 0);
+      const controller = new AbortController();
+      activeAbortRef.current = controller;
+      const { signal } = controller;
 
-    setLoading(true);
-    setError(null);
-
-    try {
-      const result = await fetchResultsRef.current({ query: q, category: cat, signal });
-      if (generation !== requestGeneration.current) return;
-      if (signal.aborted) return;
-      setNoAccess(Boolean(result.noAccess));
-      setGroups(result.groups ?? []);
-      if (result.error) {
-        setError(result.error);
-      }
-    } catch (err) {
-      if (generation !== requestGeneration.current || signal.aborted) return;
-      setGroups([]);
-      if (err instanceof Error && err.name === "AbortError") {
+      if (isContinuation) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
         setError(null);
-        return;
       }
-      if (err instanceof Error && err.message === "SCE_SELECTOR_FETCH_TIMEOUT") {
+
+      try {
+        const result = await fetchResultsRef.current({
+          query: q,
+          category: cat,
+          signal,
+          cursors: input.cursors,
+        });
+        if (generation !== requestGeneration.current) return;
+        if (signal.aborted) return;
+        setNoAccess(Boolean(result.noAccess));
+        if (input.append) {
+          setGroups((prev) => mergeSceSelectorResultGroups(prev, result.groups ?? []));
+        } else {
+          setGroups(result.groups ?? []);
+        }
+        if (result.error) {
+          setError(result.error);
+        }
+      } catch (err) {
+        if (generation !== requestGeneration.current || signal.aborted) return;
+        if (!input.append) {
+          setGroups([]);
+        }
+        if (err instanceof Error && err.name === "AbortError") {
+          setError(null);
+          return;
+        }
+        if (err instanceof Error && err.message === "SCE_SELECTOR_FETCH_TIMEOUT") {
+          setError(LOAD_ERROR_MESSAGE);
+          return;
+        }
         setError(LOAD_ERROR_MESSAGE);
-        return;
-      }
-      setError(LOAD_ERROR_MESSAGE);
-    } finally {
-      if (generation === requestGeneration.current) {
-        setLoading(false);
-        if (activeAbortRef.current === controller) {
-          activeAbortRef.current = null;
+      } finally {
+        if (generation === requestGeneration.current) {
+          setLoading(false);
+          setLoadingMore(false);
+          if (activeAbortRef.current === controller) {
+            activeAbortRef.current = null;
+          }
         }
       }
-    }
-  }, []);
+    },
+    [],
+  );
 
-  const scheduleFetch = useCallback((q: string, cat: SceSelectorCategoryId) => {
-    activeAbortRef.current?.abort();
-    activeAbortRef.current = null;
-    requestGeneration.current += 1;
-    const generation = requestGeneration.current;
-    void runFetch(q, cat, generation);
-  }, [runFetch]);
+  const scheduleFetch = useCallback(
+    (q: string, cat: SceSelectorCategoryId) => {
+      activeAbortRef.current?.abort();
+      activeAbortRef.current = null;
+      requestGeneration.current += 1;
+      const generation = requestGeneration.current;
+      void runFetch(q, cat, generation, {});
+    },
+    [runFetch],
+  );
 
   const retry = useCallback(() => {
     scheduleFetch(query, category);
   }, [category, query, scheduleFetch]);
+
+  const loadMore = useCallback(
+    (sourceType: SceSelectorSourceType) => {
+      const group = groups.find((g) => g.type === sourceType);
+      if (!group?.hasMore || !group.nextCursor) return;
+      activeAbortRef.current?.abort();
+      activeAbortRef.current = null;
+      requestGeneration.current += 1;
+      const generation = requestGeneration.current;
+      void runFetch(query, category, generation, {
+        cursors: { [sourceType]: group.nextCursor },
+        append: true,
+      });
+    },
+    [category, groups, query, runFetch],
+  );
 
   useEffect(() => {
     if (!open) {
@@ -136,6 +189,7 @@ export function useSceListSelectorQuery(options: {
       setError(null);
       setNoAccess(false);
       setLoading(false);
+      setLoadingMore(false);
       onResetRef.current?.();
       return undefined;
     }
@@ -160,7 +214,9 @@ export function useSceListSelectorQuery(options: {
 
   let statusMessage: string | null = null;
   if (loading) {
-    statusMessage = query.trim().length >= SCE_SELECTOR_MIN_SEARCH_LENGTH ? "Suche wird geladen" : null;
+    statusMessage = query.trim().length >= SCE_SELECTOR_MIN_SEARCH_LENGTH ? "Suche wird geladen" : "Liste wird geladen";
+  } else if (loadingMore) {
+    statusMessage = "Weitere Einträge werden geladen";
   } else if (!error && !noAccess) {
     if (resultCount === 0) {
       statusMessage =
@@ -179,10 +235,12 @@ export function useSceListSelectorQuery(options: {
     setCategory,
     groups,
     loading,
+    loadingMore,
     status,
     error,
     noAccess,
     retry,
+    loadMore,
     resultCount,
     statusMessage,
   };

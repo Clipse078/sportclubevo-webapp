@@ -21,6 +21,7 @@ import {
   type CommunicationAudienceDiscoverContextParam,
 } from "@/lib/sce/list-selector/selector-authorization-context";
 import { sceSelectorDiscoverApiErrorBody } from "@/lib/sce/list-selector/selector-discover-api-errors";
+import type { SceSelectorGroupCursors, SceSelectorSourceType } from "@/lib/sce/list-selector/types";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +58,23 @@ function enabledKindsFromCapabilities(
   if (capabilities.targetGroups) kinds.push("targetGroup");
   if (capabilities.externalContacts) kinds.push("external");
   return kinds;
+}
+
+function parseGroupCursors(raw: string | null): SceSelectorGroupCursors | undefined {
+  if (!raw?.trim()) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as Record<string, string | null>;
+    if (!parsed || typeof parsed !== "object") return undefined;
+    const out: SceSelectorGroupCursors = {};
+    for (const [key, value] of Object.entries(parsed)) {
+      if (typeof value === "string" || value === null) {
+        out[key as SceSelectorSourceType] = value;
+      }
+    }
+    return Object.keys(out).length > 0 ? out : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function logDiscoverEvent(
@@ -112,6 +130,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const query = url.searchParams.get("q") ?? "";
   const category = parseCategory(url.searchParams.get("category"));
   const rawSources = url.searchParams.get("sources");
+  const cursors = parseGroupCursors(url.searchParams.get("cursors"));
 
   logDiscoverEvent(correlationId, {
     phase: "request_started",
@@ -203,6 +222,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       query,
       category,
       enabledKinds,
+      cursors,
     });
 
     const optionCount = groups.reduce((sum, g) => sum + g.options.length, 0);

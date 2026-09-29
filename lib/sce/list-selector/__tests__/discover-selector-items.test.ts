@@ -2,22 +2,30 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { discoverSceSelectorItems } from "@/lib/sce/list-selector/discover-selector-items";
 
 vi.mock("@/lib/sce/list-selector/sources/org-unit-selector-source", () => ({
-  browseOrgUnitSelectorItems: vi.fn(async () => [
-    { id: "ou1", type: "ORG_UNIT", label: "Vereinsleitung" },
-  ]),
-  searchOrgUnitSelectorItems: vi.fn(async () => []),
+  browseOrgUnitSelectorItems: vi.fn(async () => ({
+    items: [{ id: "ou1", type: "ORG_UNIT", label: "Vereinsleitung" }],
+    hasMore: false,
+    nextCursor: null,
+  })),
+  searchOrgUnitSelectorItems: vi.fn(async () => ({ items: [], hasMore: false, nextCursor: null })),
 }));
 
 vi.mock("@/lib/sce/list-selector/sources/team-selector-source", () => ({
-  browseTeamSelectorItems: vi.fn(async () => [
-    { id: "t1", type: "TEAM", label: "F2 Junioren" },
-  ]),
-  searchTeamSelectorItems: vi.fn(async () => []),
+  browseTeamSelectorItems: vi.fn(async () => ({
+    items: [{ id: "t1", type: "TEAM", label: "F2 Junioren" }],
+    hasMore: false,
+    nextCursor: null,
+  })),
+  searchTeamSelectorItems: vi.fn(async () => ({ items: [], hasMore: false, nextCursor: null })),
 }));
 
 vi.mock("@/lib/sce/list-selector/sources/role-selector-source", () => ({
-  browseRoleSelectorItems: vi.fn(async () => [{ id: "r1", type: "ROLE", label: "Trainer" }]),
-  searchRoleSelectorItems: vi.fn(async () => []),
+  browseRoleSelectorItems: vi.fn(async () => ({
+    items: [{ id: "r1", type: "ROLE", label: "Trainer" }],
+    hasMore: false,
+    nextCursor: null,
+  })),
+  searchRoleSelectorItems: vi.fn(async () => ({ items: [], hasMore: false, nextCursor: null })),
 }));
 
 vi.mock("@/lib/sce/list-selector/sources/person-selector-source", () => ({

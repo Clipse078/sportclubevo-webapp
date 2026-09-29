@@ -5,6 +5,11 @@ import {
   SCE_SELECTOR_DEFAULT_SEARCH_LIMIT,
   SCE_SELECTOR_MIN_SEARCH_LENGTH,
 } from "@/lib/sce/list-selector/sources/constants";
+import {
+  sceSelectorDecodeOffset,
+  sceSelectorPageFromFetched,
+  type SceSelectorSourcePage,
+} from "@/lib/sce/list-selector/source-pagination";
 
 function toItem(row: { id: string; name: string; key: string }): SceSelectorItem {
   return {
@@ -18,26 +23,33 @@ function toItem(row: { id: string; name: string; key: string }): SceSelectorItem
 export async function browseOrgUnitSelectorItems(input: {
   tenantId: string;
   limit?: number;
-}): Promise<SceSelectorItem[]> {
+  cursor?: string | null;
+}): Promise<SceSelectorSourcePage> {
   const limit = Math.min(Math.max(input.limit ?? SCE_SELECTOR_DEFAULT_BROWSE_LIMIT, 1), 50);
+  const offset = sceSelectorDecodeOffset(input.cursor);
   const rows = await prisma.orgUnit.findMany({
     where: { tenantId: input.tenantId },
     select: { id: true, name: true, key: true },
     orderBy: { name: "asc" },
-    take: limit,
+    skip: offset,
+    take: limit + 1,
   });
-  return rows.map(toItem);
+  return sceSelectorPageFromFetched(rows.map(toItem), limit, offset);
 }
 
 export async function searchOrgUnitSelectorItems(input: {
   tenantId: string;
   query: string;
   limit?: number;
-}): Promise<SceSelectorItem[]> {
+  cursor?: string | null;
+}): Promise<SceSelectorSourcePage> {
   const term = input.query.trim();
-  if (term.length < SCE_SELECTOR_MIN_SEARCH_LENGTH) return [];
+  if (term.length < SCE_SELECTOR_MIN_SEARCH_LENGTH) {
+    return { items: [], hasMore: false, nextCursor: null };
+  }
 
   const limit = Math.min(Math.max(input.limit ?? SCE_SELECTOR_DEFAULT_SEARCH_LIMIT, 1), 50);
+  const offset = sceSelectorDecodeOffset(input.cursor);
   const rows = await prisma.orgUnit.findMany({
     where: {
       tenantId: input.tenantId,
@@ -48,7 +60,8 @@ export async function searchOrgUnitSelectorItems(input: {
     },
     select: { id: true, name: true, key: true },
     orderBy: { name: "asc" },
-    take: limit,
+    skip: offset,
+    take: limit + 1,
   });
-  return rows.map(toItem);
+  return sceSelectorPageFromFetched(rows.map(toItem), limit, offset);
 }
