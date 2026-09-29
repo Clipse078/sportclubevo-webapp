@@ -351,8 +351,15 @@ export async function listTournaments(
   tenantId: string,
   filter: ListTournamentsFilter = {},
 ): Promise<TournamentDto[]> {
-  const [rows, tenantContext, logoResolutionContext] = await Promise.all([
-    findAllTournamentEvents(tenantId, { status: filter.status }),
+  const rows = await findAllTournamentEvents(tenantId, {
+    status: filter.status,
+    overlapsWindow: filter.overlapsWindow,
+  });
+  if (rows.length === 0) {
+    return [];
+  }
+
+  const [tenantContext, logoResolutionContext] = await Promise.all([
     loadTournamentTenantContext(tenantId),
     loadTournamentLogoResolutionContext(tenantId),
   ]);

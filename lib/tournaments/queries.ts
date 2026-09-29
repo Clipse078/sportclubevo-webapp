@@ -167,18 +167,38 @@ export function findTournamentEventById(tenantId: string, tournamentId: string) 
   });
 }
 
+export type TournamentEventsQueryFilter = {
+  status?: EventStatus[];
+  overlapsWindow?: { from: Date; to: Date };
+};
+
+function tournamentEventsWhere(
+  tenantId: string,
+  filter: TournamentEventsQueryFilter,
+): Prisma.EventWhereInput {
+  const { status, overlapsWindow } = filter;
+  return {
+    tenantId,
+    type: "TOURNAMENT",
+    ...(status && status.length > 0 ? { status: { in: status } } : {}),
+    ...(overlapsWindow
+      ? {
+          startAt: { lt: overlapsWindow.to },
+          OR: [
+            { endAt: { gt: overlapsWindow.from } },
+            { endAt: null, startAt: { gte: overlapsWindow.from } },
+          ],
+        }
+      : {}),
+  };
+}
+
 export function findAllTournamentEvents(
   tenantId: string,
-  filter: { status?: EventStatus[] } = {},
+  filter: TournamentEventsQueryFilter = {},
 ) {
   return prisma.event.findMany({
-    where: {
-      tenantId,
-      type: "TOURNAMENT",
-      ...(filter.status && filter.status.length > 0
-        ? { status: { in: filter.status } }
-        : {}),
-    },
+    where: tournamentEventsWhere(tenantId, filter),
     orderBy: [{ startAt: "asc" }, { id: "asc" }],
     select: tournamentEventSelect,
   });
