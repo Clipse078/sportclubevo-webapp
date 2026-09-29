@@ -989,8 +989,6 @@ export async function getWeekplannerWeek(
 ): Promise<WeekplannerWeek> {
   const perfTimer = isScePerfTimingEnabled() ? createAdminServerTimer("weekplanner/data") : null;
 
-  const trainingLoad = startWeekplannerTrainingSessionsLoad(tenantId, window.days);
-
   const [resourceByCode, overridesByKey, timeOverridesByKey, baselineMode, tenantPresets, tenantMatchPolicy, tenantRow] =
     await Promise.all([
       findFacilityResourceCodeMap(tenantId),
@@ -1005,7 +1003,13 @@ export async function getWeekplannerWeek(
   perfTimer?.mark("prefetch-policy-allocations");
 
   const [trainingItems, matchItems, tournamentItems, veranstaltungItems] = await Promise.all([
-    trainingLoad.complete(overridesByKey, timeOverridesByKey, tenantPresets),
+    findWeekplannerTrainingItems(
+      tenantId,
+      window.days,
+      overridesByKey,
+      timeOverridesByKey,
+      tenantPresets,
+    ),
     findWeekplannerHomeMatches(
       tenantId,
       window.from,
