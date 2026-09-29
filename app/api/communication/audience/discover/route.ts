@@ -1,23 +1,35 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
-import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { DIRECT_MESSAGE_SEND_ROUTE_PERMISSIONS } from "@/lib/communication/direct/route-access";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
 import {
   discoverCommunicationAudienceTargets,
   type CommunicationAudienceDiscoverCategory,
   type CommunicationAudienceSearchKind,
 } from "@/lib/communication/audience/communication-audience-search-service";
+import {
+  parseSelectorSourceTypesParam,
+  selectorTypeToCommunicationSearchKind,
+} from "@/lib/sce/list-selector/communication-bridge";
 import { resolveCommunicationAudienceCapabilities } from "@/lib/communication/audience/communication-audience-capabilities";
 import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
-import { TeamCommunicationForbiddenError } from "@/lib/communication/team/team-communication-errors";
 import { requireClubCommunicationSend } from "@/lib/communication/club/club-communication-authorization";
+import {
+  communicationDiscoverParamToAuthorizationContext,
+  parseCommunicationAudienceDiscoverContextParam,
+  routePermissionsForSelectorAuthorizationContext,
+  type CommunicationAudienceDiscoverContextParam,
+} from "@/lib/sce/list-selector/selector-authorization-context";
+import { sceSelectorDiscoverApiErrorBody } from "@/lib/sce/list-selector/selector-discover-api-errors";
+import type { SceSelectorGroupCursors, SceSelectorSourceType } from "@/lib/sce/list-selector/types";
 
 export const dynamic = "force-dynamic";
 
-function parseContext(value: unknown, tenantId: string): CommunicationContextRef {
-  if (value === "DIRECT") return { kind: "DIRECT", tenantId };
+function parseContextRef(
+  param: CommunicationAudienceDiscoverContextParam,
+  tenantId: string,
+): CommunicationContextRef {
+  if (param === "DIRECT") return { kind: "DIRECT", tenantId };
   return { kind: "ORGANISATION", tenantId };
 }
 
@@ -48,61 +60,195 @@ function enabledKindsFromCapabilities(
   return kinds;
 }
 
+function parseGroupCursors(raw: string | null): SceSelectorGroupCursors | undefined {
+  if (!raw?.trim()) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as Record<string, string | null>;
+    if (!parsed || typeof parsed !== "object") return undefined;
+    const out: SceSelectorGroupCursors = {};
+    for (const [key, value] of Object.entries(parsed)) {
+      if (typeof value === "string" || value === null) {
+        out[key as SceSelectorSourceType] = value;
+      }
+    }
+    return Object.keys(out).length > 0 ? out : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function logDiscoverEvent(
+  correlationId: string,
+  event: Record<string, string | number | boolean | null | undefined>,
+) {
+  console.info(
+    JSON.stringify({
+      scope: "communication.audience.discover",
+      correlationId,
+      ...event,
+    }),
+  );
+}
+
 export async function GET(request: Request): Promise<NextResponse> {
+  const startedAt = Date.now();
+  const correlationId =
+    request.headers.get("x-correlation-id")?.trim() ||
+    request.headers.get("x-request-id")?.trim() ||
+    `sce-discover-${startedAt}`;
+
   const session = await auth();
   const userId = session?.user?.id;
   const tenant = await getActiveTenant();
   if (!tenant || !userId) {
-    return NextResponse.json({ error: "Nicht autorisiert." }, { status: 401 });
+    logDiscoverEvent(correlationId, {
+      phase: "auth",
+      authenticated: false,
+      httpStatus: 401,
+      durationMs: Date.now() - startedAt,
+    });
+    return NextResponse.json(
+      { error: sceSelectorDiscoverApiErrorBody(401) },
+      { status: 401 },
+    );
   }
 
   const url = new URL(request.url);
-  const contextParam = url.searchParams.get("context") ?? "ORGANISATION";
-  const context = parseContext(contextParam, tenant.id);
+  const rawContextParam = url.searchParams.get("context");
+  const discoverContextParam =
+    rawContextParam == null || rawContextParam === ""
+      ? "ORGANISATION"
+      : parseCommunicationAudienceDiscoverContextParam(rawContextParam);
+  if (!discoverContextParam) {
+    return NextResponse.json(
+      { error: "Ungültiger Kontext.", groups: [] },
+      { status: 400 },
+    );
+  }
+
+  const context = parseContextRef(discoverContextParam, tenant.id);
   const query = url.searchParams.get("q") ?? "";
   const category = parseCategory(url.searchParams.get("category"));
+  const rawSources = url.searchParams.get("sources");
+  const cursors = parseGroupCursors(url.searchParams.get("cursors"));
 
-  try {
-    if (context.kind === "DIRECT") {
-      await requireAnyPermission(DIRECT_MESSAGE_SEND_ROUTE_PERMISSIONS);
-    } else if (contextParam === "CAMPAIGN") {
+  logDiscoverEvent(correlationId, {
+    phase: "request_started",
+    context: discoverContextParam,
+    category,
+    queryLength: query.length,
+    sources: rawSources,
+    tenantId: tenant.id,
+    authenticated: true,
+  });
+
+  const authContext = communicationDiscoverParamToAuthorizationContext(discoverContextParam);
+
+  if (discoverContextParam === "CAMPAIGN") {
+    try {
       await requireClubCommunicationSend({
         tenantId: tenant.id,
         tenantKey: tenant.key,
         userId,
       });
-    } else {
-      await requireAnyPermission([
-        PERMISSIONS.COMMUNICATION_CLUB_SEND,
-        PERMISSIONS.COMMUNICATION_CLUB_VIEW,
-      ]);
+    } catch {
+      logDiscoverEvent(correlationId, {
+        phase: "permissions",
+        permissionsResolved: false,
+        httpStatus: 403,
+        durationMs: Date.now() - startedAt,
+      });
+      return NextResponse.json(
+        { error: sceSelectorDiscoverApiErrorBody(403) },
+        { status: 403 },
+      );
     }
-  } catch (error) {
-    if (error instanceof TeamCommunicationForbiddenError) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  } else {
+    const access = await requireApiAnyPermission(
+      routePermissionsForSelectorAuthorizationContext(authContext),
+      tenant.id,
+    );
+    if (!access.ok) {
+      logDiscoverEvent(correlationId, {
+        phase: "permissions",
+        permissionsResolved: false,
+        httpStatus: access.status,
+        durationMs: Date.now() - startedAt,
+      });
+      return NextResponse.json(
+        { error: sceSelectorDiscoverApiErrorBody(access.status) },
+        { status: access.status },
+      );
     }
-    throw error;
   }
 
   const capabilities = await resolveCommunicationAudienceCapabilities({
     tenantId: tenant.id,
     userId,
     context,
+    discoverContext: discoverContextParam,
   });
 
-  const enabledKinds = enabledKindsFromCapabilities(capabilities);
+  let enabledKinds = enabledKindsFromCapabilities(capabilities);
+
+  const requestedSources = parseSelectorSourceTypesParam(rawSources);
+  if (requestedSources?.length) {
+    const allowed = new Set(enabledKinds);
+    enabledKinds = requestedSources
+      .map((t) => selectorTypeToCommunicationSearchKind(t))
+      .filter((k) => allowed.has(k));
+  }
+
   if (enabledKinds.length === 0) {
+    logDiscoverEvent(correlationId, {
+      phase: "response_completed",
+      permissionsResolved: true,
+      enabledKinds: 0,
+      groupCount: 0,
+      optionCount: 0,
+      noAccess: true,
+      httpStatus: 200,
+      durationMs: Date.now() - startedAt,
+    });
     return NextResponse.json({ groups: [], noAccess: true });
   }
 
-  const groups = await discoverCommunicationAudienceTargets({
-    tenantId: tenant.id,
-    senderUserId: userId,
-    context,
-    query,
-    category,
-    enabledKinds,
-  });
+  try {
+    const groups = await discoverCommunicationAudienceTargets({
+      tenantId: tenant.id,
+      senderUserId: userId,
+      context,
+      discoverContext: discoverContextParam,
+      query,
+      category,
+      enabledKinds,
+      cursors,
+    });
 
-  return NextResponse.json({ groups, noAccess: false });
+    const optionCount = groups.reduce((sum, g) => sum + g.options.length, 0);
+    logDiscoverEvent(correlationId, {
+      phase: "response_completed",
+      permissionsResolved: true,
+      enabledKinds: enabledKinds.join(","),
+      groupCount: groups.length,
+      optionCount,
+      noAccess: false,
+      httpStatus: 200,
+      durationMs: Date.now() - startedAt,
+    });
+
+    return NextResponse.json({ groups, noAccess: false });
+  } catch (error) {
+    logDiscoverEvent(correlationId, {
+      phase: "response_error",
+      permissionsResolved: true,
+      errorClass: error instanceof Error ? error.name : "Error",
+      httpStatus: 500,
+      durationMs: Date.now() - startedAt,
+    });
+    return NextResponse.json(
+      { error: sceSelectorDiscoverApiErrorBody(500), groups: [] },
+      { status: 500 },
+    );
+  }
 }

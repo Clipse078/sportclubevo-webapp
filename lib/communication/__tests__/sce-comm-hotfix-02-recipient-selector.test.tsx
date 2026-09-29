@@ -481,7 +481,7 @@ describe("SCE-COMM-HOTFIX-02 recipient selector", () => {
     expect(caps.wholeOrganisation).toBe(false);
   });
 
-  it("mobile selector uses dialog contract (no popover anchor dependency)", async () => {
+  it("selector uses sheet dialog on all viewports (no compact popover)", async () => {
     window.matchMedia = vi.fn().mockImplementation((query: string) => ({
       matches: false,
       media: query,
@@ -508,5 +508,7 @@ describe("SCE-COMM-HOTFIX-02 recipient selector", () => {
     );
     await user.click(screen.getByTestId("communication-audience-add-trigger"));
     expect(await screen.findByRole("dialog", { name: "Empfänger hinzufügen" })).toBeInTheDocument();
+    expect(screen.getByTestId("communication-audience-picker-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("sce-sheet-overlay")).toBeInTheDocument();
   });
 });

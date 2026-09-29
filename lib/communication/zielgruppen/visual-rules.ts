@@ -172,7 +172,13 @@ export function removeExcludeRule(
 }
 
 export function compositionModeLabel(mode: ZielgruppeEditorDefinition["compositionMode"]): string {
-  return mode === "INTERSECTION" ? "Alle Bedingungen" : "Mindestens eine Bedingung";
+  return mode === "INTERSECTION" ? "Alle Bedingungen" : "Mindestens eine";
+}
+
+export function compositionModeShortHint(
+  mode: ZielgruppeEditorDefinition["compositionMode"],
+): "UND" | "ODER" {
+  return mode === "INTERSECTION" ? "UND" : "ODER";
 }
 
 export function compositionModeHelp(mode: ZielgruppeEditorDefinition["compositionMode"]): string {

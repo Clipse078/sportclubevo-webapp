@@ -18,6 +18,7 @@ import {
   searchCommunicationExternalContacts,
 } from "@/lib/communication/external-contacts/external-contact-service";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { actionErrorMessage } from "@/lib/next/rethrow-framework-control-flow";
 
 type ActionResult<T> = { ok: true; data: T } | { ok: false; message: string };
 
@@ -36,7 +37,7 @@ export async function searchZielgruppeOrgUnitsAction(query: string): Promise<
     const rows = await searchRequirementAudienceOrgUnits(tenant.id, query);
     return { ok: true, data: rows.map((r) => ({ id: r.orgUnitId, label: r.label })) };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Suche fehlgeschlagen." };
+    return { ok: false, message: actionErrorMessage(e, "Suche fehlgeschlagen.") };
   }
 }
 
@@ -48,7 +49,7 @@ export async function searchZielgruppeTeamsAction(query: string): Promise<
     const rows = await searchRequirementAudienceTeams(tenant.id, query);
     return { ok: true, data: rows.map((r) => ({ id: r.teamId, label: r.label })) };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Suche fehlgeschlagen." };
+    return { ok: false, message: actionErrorMessage(e, "Suche fehlgeschlagen.") };
   }
 }
 
@@ -60,7 +61,7 @@ export async function searchZielgruppeRolesAction(query: string): Promise<
     const rows = await searchRequirementAudienceRoles(tenant.id, query);
     return { ok: true, data: rows.map((r) => ({ id: r.roleId, label: r.label })) };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Suche fehlgeschlagen." };
+    return { ok: false, message: actionErrorMessage(e, "Suche fehlgeschlagen.") };
   }
 }
 
@@ -77,7 +78,7 @@ export async function previewZielgruppeRecipientsAction(input: {
     });
     return { ok: true, data };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Vorschau fehlgeschlagen." };
+    return { ok: false, message: actionErrorMessage(e, "Vorschau fehlgeschlagen.") };
   }
 }
 
@@ -92,7 +93,7 @@ export async function searchZielgruppeExternalContactsAction(query: string): Pro
     });
     return { ok: true, data: rows };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Suche fehlgeschlagen." };
+    return { ok: false, message: actionErrorMessage(e, "Suche fehlgeschlagen.") };
   }
 }
 
@@ -105,7 +106,7 @@ export async function classifyZielgruppeBulkEmailsAction(raw: string): Promise<
     const rows = await classifyBulkEmailEntries({ tenantId: tenant.id, entries });
     return { ok: true, data: rows };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Klassifizierung fehlgeschlagen." };
+    return { ok: false, message: actionErrorMessage(e, "Klassifizierung fehlgeschlagen.") };
   }
 }
 
@@ -143,7 +144,7 @@ export async function persistZielgruppeBulkExternalContactsAction(input: {
 
     return { ok: true, data: { externalContactIds, personIds } };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Speichern fehlgeschlagen." };
+    return { ok: false, message: actionErrorMessage(e, "Speichern fehlgeschlagen.") };
   }
 }
 
@@ -164,6 +165,6 @@ export async function searchZielgruppePersonsAction(query: string): Promise<
       })),
     };
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Suche fehlgeschlagen." };
+    return { ok: false, message: actionErrorMessage(e, "Suche fehlgeschlagen.") };
   }
 }

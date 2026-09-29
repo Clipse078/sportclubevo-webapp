@@ -64,9 +64,11 @@ export async function searchCommunicationExternalContacts(input: {
   tenantId: string;
   query: string;
   limit?: number;
+  offset?: number;
 }) {
   const term = input.query.trim();
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 50);
+  const offset = Math.max(input.offset ?? 0, 0);
   const rows = await prisma.communicationExternalContact.findMany({
     where: {
       tenantId: input.tenantId,
@@ -83,7 +85,8 @@ export async function searchCommunicationExternalContacts(input: {
         : {}),
     },
     orderBy: { emailNormalized: "asc" },
-    take: limit,
+    skip: offset,
+    take: limit + 1,
     select: {
       id: true,
       emailNormalized: true,

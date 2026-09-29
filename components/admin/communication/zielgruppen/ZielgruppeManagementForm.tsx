@@ -4,7 +4,9 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import ZielgruppeDefinitionEditor from "@/components/admin/communication/zielgruppen/ZielgruppeDefinitionEditor";
-import ZielgruppePreviewPanel from "@/components/admin/communication/zielgruppen/ZielgruppePreviewPanel";
+import ZielgruppePreviewPanel, {
+  type PreviewStats,
+} from "@/components/admin/communication/zielgruppen/ZielgruppePreviewPanel";
 import type { ZielgruppeEditorDefinition } from "@/lib/communication/zielgruppen/editor-model";
 import { EMPTY_ZIELGRUPPE_EDITOR_DEFINITION } from "@/lib/communication/zielgruppen/editor-model";
 import { zielgruppeDefinitionIsEmpty } from "@/lib/communication/zielgruppen/editor-model";
@@ -35,9 +37,6 @@ const STATUS_OPTIONS = [
   { value: "ARCHIVED", label: "Archiviert" },
 ] as const;
 
-const labelClass =
-  "block text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)] mb-1.5";
-
 export default function ZielgruppeManagementForm({
   mode,
   targetGroupId,
@@ -55,6 +54,7 @@ export default function ZielgruppeManagementForm({
   const [definition, setDefinition] = useState<ZielgruppeEditorDefinition>(
     defaultValues?.definition ?? { ...EMPTY_ZIELGRUPPE_EDITOR_DEFINITION },
   );
+  const [previewStats, setPreviewStats] = useState<PreviewStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,6 +64,43 @@ export default function ZielgruppeManagementForm({
     () => knownLabels ?? { orgUnits: {}, teams: {}, roles: {}, persons: {} },
     [knownLabels],
   );
+
+  const compactFormula = useMemo(() => {
+    const parts: string[] = [];
+    if (definition.wholeOrganisation) {
+      parts.push("Ganze Organisation");
+    } else {
+      if (definition.orgUnitIds.length > 0) {
+        parts.push(
+          `${definition.orgUnitIds.length} Organisationseinheit${definition.orgUnitIds.length === 1 ? "" : "en"}`,
+        );
+      }
+      if (definition.teamIds.length > 0) {
+        parts.push(`${definition.teamIds.length} Team${definition.teamIds.length === 1 ? "" : "s"}`);
+      }
+      if (definition.roleIds.length > 0) {
+        parts.push(`${definition.roleIds.length} Rolle${definition.roleIds.length === 1 ? "" : "n"}`);
+      }
+    }
+    const direct =
+      definition.includePersonIds.length + definition.includeExternalContactIds.length;
+    if (direct > 0) {
+      parts.push(`+ ${direct} direkt hinzugefügt`);
+    }
+    const excluded =
+      definition.excludeOrgUnitIds.length +
+      definition.excludeTeamIds.length +
+      definition.excludeRoleIds.length +
+      definition.excludePersonIds.length +
+      definition.excludeExternalContactIds.length;
+    if (excluded > 0) {
+      parts.push(`− ${excluded} ausgeschlossen`);
+    }
+    if (parts.length === 0) return null;
+    const resolved =
+      previewStats != null ? `= ${previewStats.totalRecipients} aktuelle Empfänger` : null;
+    return { parts, resolved };
+  }, [definition, previewStats]);
 
   function derivedKeyFromName(v: string): string {
     return v
@@ -152,30 +189,50 @@ export default function ZielgruppeManagementForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="sce-form-card space-y-8">
-      <section className="space-y-5" aria-labelledby="zg-basics-heading">
-        <h2 id="zg-basics-heading" className="text-base font-semibold text-[var(--foreground)]">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {canManage ? (
+        <div className="hidden justify-end lg:flex">
+          <button
+            type="submit"
+            disabled={loading || readOnly}
+            className="fca-button-primary min-h-11"
+            data-testid="zielgruppe-save"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+            {loading ? "Speichern…" : "Zielgruppe speichern"}
+          </button>
+        </div>
+      ) : null}
+
+      <section
+        className="rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4 sm:p-5"
+        aria-labelledby="zg-basics-heading"
+      >
+        <h2 id="zg-basics-heading" className="sr-only">
           Grundlagen
         </h2>
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] md:items-end">
           <div>
-            <label className={labelClass} htmlFor="zg-name">
-              Name *
+            <label
+              className="mb-1.5 block text-sm font-medium text-[var(--foreground)]"
+              htmlFor="zg-name"
+            >
+              Name <span className="text-red-600">*</span>
             </label>
             <input
               id="zg-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="z.B. Alle Trainer der Junioren"
+              placeholder="z.B. Vereinsleitung & Trainer"
               required
               disabled={readOnly}
-              className="fca-input"
+              className="fca-input text-base"
             />
           </div>
           {mode === "edit" ? (
             <div>
-              <label className={labelClass} htmlFor="zg-status">
+              <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]" htmlFor="zg-status">
                 Status
               </label>
               <select
@@ -192,37 +249,73 @@ export default function ZielgruppeManagementForm({
                 ))}
               </select>
             </div>
-          ) : null}
+          ) : (
+            <div>
+              <label
+                className="mb-1.5 block text-sm font-medium text-[var(--muted)]"
+                htmlFor="zg-description"
+              >
+                Beschreibung <span className="font-normal">(optional)</span>
+              </label>
+              <input
+                id="zg-description"
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                disabled={readOnly}
+                placeholder="Kurz notieren, wofür die Gruppe gedacht ist"
+                className="fca-input"
+              />
+            </div>
+          )}
         </div>
-        <div>
-          <label className={labelClass} htmlFor="zg-description">
-            Beschreibung
-          </label>
-          <textarea
-            id="zg-description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={2}
-            disabled={readOnly}
-            placeholder="Kurz beschreiben, wofür diese Zielgruppe gedacht ist"
-            className="fca-input resize-none"
-          />
-        </div>
+        {mode === "edit" ? (
+          <div className="mt-4">
+            <label className="mb-1.5 block text-sm font-medium text-[var(--muted)]" htmlFor="zg-description-edit">
+              Beschreibung <span className="font-normal">(optional)</span>
+            </label>
+            <input
+              id="zg-description-edit"
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              disabled={readOnly}
+              className="fca-input"
+            />
+          </div>
+        ) : null}
       </section>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.42fr)] lg:items-start">
         <ZielgruppeDefinitionEditor
           value={definition}
           onChange={setDefinition}
           knownLabels={mergedLabels}
           disabled={readOnly}
         />
-        <ZielgruppePreviewPanel definition={definition} disabled={readOnly} live={!readOnly} />
+        <ZielgruppePreviewPanel
+          definition={definition}
+          disabled={readOnly}
+          live={!readOnly}
+          onStatsChange={setPreviewStats}
+        />
       </div>
+
+      {compactFormula ? (
+        <p
+          className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--text-2)]"
+          aria-live="polite"
+          data-testid="zielgruppe-compact-formula"
+        >
+          <span className="font-medium text-[var(--foreground)]">Zielgruppe: </span>
+          {compactFormula.parts.join(" · ")}
+          {compactFormula.resolved ? ` ${compactFormula.resolved}` : ""}
+        </p>
+      ) : null}
 
       {error ? (
         <div
-          className="rounded-[var(--radius-xl)] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700"
+          className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700"
           role="alert"
         >
           {error}
@@ -230,13 +323,16 @@ export default function ZielgruppeManagementForm({
       ) : null}
 
       <div className="flex flex-wrap justify-between gap-3 border-t border-[var(--border)] pt-4">
-        <button type="button" onClick={() => router.back()} className="fca-button-secondary">
+        <button type="button" onClick={() => router.back()} className="fca-button-secondary min-h-11">
           Abbrechen
         </button>
         {canManage ? (
-          <button type="submit" disabled={loading || readOnly} className="fca-button-primary">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-            {loading ? "Speichern…" : mode === "create" ? "Zielgruppe erstellen" : "Speichern"}
+          <button
+            type="submit"
+            disabled={loading || readOnly}
+            className="fca-button-primary min-h-11 lg:hidden"
+          >
+            {loading ? "Speichern…" : "Zielgruppe speichern"}
           </button>
         ) : null}
       </div>
