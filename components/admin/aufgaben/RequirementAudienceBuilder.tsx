@@ -326,16 +326,28 @@ export default function RequirementAudienceBuilder({
         {(composition?.conditions ?? []).length === 0 ? (
           <p className="text-xs text-[var(--muted)]">Noch keine Empfängerregeln.</p>
         ) : (
-          <ul className="space-y-2">
+          <ul className="space-y-1">
             {(composition?.conditions ?? []).map((row, index) => {
               const label = resolveLabel(row.term.type, row.term.id, labels, knownPersons);
               const count = structuralMeta[`${row.term.type}:${row.term.id}`]?.personCount;
+              const expansionHint =
+                typeof count === "number"
+                  ? count === 1
+                    ? "Erweiterung: 1 Person"
+                    : `Erweiterung: ${count} Personen`
+                  : row.term.type !== "PERSON"
+                    ? "Erweiterung: Personen"
+                    : null;
               return (
-                <li key={`${row.term.type}:${row.term.id}:${index}`} className="flex flex-wrap items-center gap-2">
+                <li key={`${row.term.type}:${row.term.id}:${index}`} className="space-y-1">
                   {index > 0 ? (
-                    <label className="inline-flex items-center gap-1 text-xs text-[var(--text-2)]">
+                    <div className="flex justify-center py-0.5">
+                      <label className="sr-only" htmlFor={`requirement-audience-connector-${index}`}>
+                        Verknüpfung zur vorherigen Bedingung
+                      </label>
                       <select
-                        className="rounded border border-[var(--border)] bg-[var(--surface-2)] px-1.5 py-0.5 text-xs"
+                        id={`requirement-audience-connector-${index}`}
+                        className="rounded border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-[var(--text-2)]"
                         value={row.connector ?? "OR"}
                         disabled={disabled}
                         onChange={(event) =>
@@ -349,36 +361,38 @@ export default function RequirementAudienceBuilder({
                         <option value="AND">UND</option>
                         <option value="OR">ODER</option>
                       </select>
-                    </label>
+                    </div>
                   ) : null}
-                  <span
-                    className="inline-flex max-w-full items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-2)]/60 py-1 pl-2 pr-1 text-xs"
-                    data-testid={`requirement-recipient-chip-${sceSelectorPickKey(row.term.type, row.term.id)}`}
-                  >
-                    <RecipientTypeIcon type={row.term.type} />
-                    <span className="min-w-0 truncate">
-                      <span className="font-medium text-[var(--foreground)]">{label}</span>
-                      <span className="mx-1 text-[var(--muted)]">·</span>
-                      <span className="text-[var(--text-2)]">
-                        {termKindLabel(row.term.type)}
-                        {typeof count === "number"
-                          ? ` · ${count === 1 ? "1 Person" : `${count} Personen`}`
-                          : row.term.type !== "PERSON"
-                            ? " · erweitert zu Personen"
-                            : ""}
+                  <div className="flex flex-wrap items-start gap-2">
+                    <span
+                      className="inline-flex max-w-full flex-col gap-0.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/60 py-1.5 pl-2 pr-1 text-xs"
+                      data-testid={`requirement-recipient-chip-${sceSelectorPickKey(row.term.type, row.term.id)}`}
+                    >
+                      <span className="inline-flex min-w-0 items-center gap-2">
+                        <RecipientTypeIcon type={row.term.type} />
+                        <span className="min-w-0 truncate font-medium text-[var(--foreground)]">
+                          {label}
+                        </span>
+                        <span className="text-[var(--muted)]">·</span>
+                        <span className="text-[var(--text-2)]">{termKindLabel(row.term.type)}</span>
+                        {!disabled ? (
+                          <button
+                            type="button"
+                            className="ml-auto rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-3)]"
+                            aria-label={`${label} entfernen`}
+                            onClick={() => removeCondition(index)}
+                          >
+                            <X className="h-3 w-3" aria-hidden="true" />
+                          </button>
+                        ) : null}
                       </span>
+                      {expansionHint ? (
+                        <span className="pl-5 text-[10px] leading-tight text-[var(--muted)]">
+                          {expansionHint}
+                        </span>
+                      ) : null}
                     </span>
-                    {!disabled ? (
-                      <button
-                        type="button"
-                        className="rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-3)]"
-                        aria-label={`${label} entfernen`}
-                        onClick={() => removeCondition(index)}
-                      >
-                        <X className="h-3 w-3" aria-hidden="true" />
-                      </button>
-                    ) : null}
-                  </span>
+                  </div>
                 </li>
               );
             })}
@@ -387,8 +401,8 @@ export default function RequirementAudienceBuilder({
 
         {!disabled ? (
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            <label className="inline-flex items-center gap-1 text-xs text-[var(--text-2)]">
-              Nächste Bedingung
+            <label className="inline-flex items-center gap-1 text-[10px] text-[var(--muted)]">
+              Verknüpfung für nächste Regel
               <select
                 className="rounded border border-[var(--border)] bg-[var(--surface-2)] px-1.5 py-0.5 text-xs"
                 value={nextConnector}
@@ -417,7 +431,7 @@ export default function RequirementAudienceBuilder({
       {(composition?.excludePersonIds.length ?? 0) > 0 || !disabled ? (
         <div className="space-y-2">
           <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-2)]">
-            Ausgeschlossen
+            AUSGESCHLOSSEN
           </h4>
           <div className="flex flex-wrap gap-2">
             {(composition?.excludePersonIds ?? []).map((personId) => (
@@ -455,46 +469,71 @@ export default function RequirementAudienceBuilder({
       ) : null}
 
       {hasAudiences ? (
-        <div className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/30 p-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p className="text-xs font-medium text-[var(--text-2)]">Ergebnis</p>
-              <p className="text-sm font-semibold text-[var(--foreground)]" data-testid="requirement-audience-preview">
-                {preview.loading
-                  ? "Empfänger werden berechnet…"
-                  : preview.error
-                    ? preview.error
-                    : preview.resolvedTotal === 0
-                      ? "Diese Auswahl enthält aktuell keine Personen."
-                      : `${preview.resolvedTotal} Personen`}
+        <div
+          className="space-y-3 rounded-lg border-2 border-[var(--primary)]/25 bg-[var(--surface-2)]/50 p-4 shadow-sm"
+          data-testid="requirement-audience-result-panel"
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-2)]">
+            Ergebnis
+          </p>
+          {preview.loading ? (
+            <p className="text-sm text-[var(--text-2)]">Empfänger werden berechnet…</p>
+          ) : preview.error ? (
+            <p className="text-sm text-[var(--destructive)]">{preview.error}</p>
+          ) : (
+            <>
+              <p
+                className="text-2xl font-bold tabular-nums text-[var(--foreground)]"
+                data-testid="requirement-audience-preview"
+              >
+                {preview.resolvedTotal}{" "}
+                {preview.resolvedTotal === 1 ? "Person" : "Personen"}
               </p>
-              {!preview.loading && !preview.error && preview.resolvedTotal > 0 ? (
-                <p className="text-xs text-[var(--text-2)]">
+              {preview.resolvedTotal === 0 ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-[var(--text-2)]">
+                    Diese Auswahl enthält aktuell keine Personen.
+                  </p>
+                  <p
+                    className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1.5 text-xs text-amber-900 dark:text-amber-100"
+                    data-testid="requirement-audience-zero-warning"
+                  >
+                    Mit dieser Kombination muss aktuell niemand bestätigen.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-[var(--text-2)]">
                   {preview.resolvedTotal === 1
                     ? "1 Person muss diese Anforderung individuell bestätigen."
                     : `${preview.resolvedTotal} Personen müssen diese Anforderung individuell bestätigen.`}
                 </p>
+              )}
+              {preview.resolvedTotal > 0 ? (
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-[var(--primary)]"
+                  onClick={() => setPreviewOpen((open) => !open)}
+                  data-testid="requirement-audience-preview-toggle"
+                >
+                  Personen anzeigen
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${previewOpen ? "rotate-180" : ""}`}
+                    aria-hidden="true"
+                  />
+                </button>
               ) : null}
-            </div>
-            {!preview.loading && !preview.error && preview.resolvedTotal > 0 ? (
-              <button
-                type="button"
-                className="inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)]"
-                onClick={() => setPreviewOpen((open) => !open)}
-                data-testid="requirement-audience-preview-toggle"
-              >
-                {preview.resolvedTotal} Personen anzeigen
-                <ChevronDown
-                  className={`h-3.5 w-3.5 transition-transform ${previewOpen ? "rotate-180" : ""}`}
-                  aria-hidden="true"
-                />
-              </button>
-            ) : null}
-          </div>
+            </>
+          )}
           {previewOpen && preview.persons.length > 0 ? (
-            <ul className="max-h-48 space-y-1 overflow-y-auto text-sm" data-testid="requirement-audience-preview-list">
+            <ul
+              className="max-h-48 space-y-1 overflow-y-auto border-t border-[var(--border)]/60 pt-2 text-sm"
+              data-testid="requirement-audience-preview-list"
+            >
               {preview.persons.map((person) => (
-                <li key={person.personId} className="flex justify-between gap-2 border-t border-[var(--border)]/60 pt-1">
+                <li
+                  key={person.personId}
+                  className="flex justify-between gap-2 border-t border-[var(--border)]/40 pt-1 first:border-t-0 first:pt-0"
+                >
                   <span>{person.displayName}</span>
                   {person.secondary ? (
                     <span className="truncate text-xs text-[var(--muted)]">{person.secondary}</span>

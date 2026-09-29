@@ -26,11 +26,24 @@ No parallel person/team/org/role/target-group pickers for Requirements.
 Stored in `Requirement.draftAudienceCompositionJson` (version 1):
 
 - **Conditions** — ordered list with connectors `AND` | `OR` between items.
-- **AND binds tighter than OR** — segments of consecutive `AND`-connected conditions are intersected; segments are unioned.
 - **Exclude** — explicit Person ids subtracted after union.
 - **Dedupe** — final Person id list is unique.
 
 Legacy flat relational draft rows (person/team/org/role/targetGroup ids) map to **OR-of-singletons** when no composition JSON is present.
+
+## AND/OR precedence
+
+- Consecutive **UND** conditions form one segment; person sets inside a segment are **intersected**.
+- **ODER** starts a new segment; segments are **unioned** (deduplicated).
+- Example: `Trainer UND Kinderfussball ODER Sportleitung` → `(Trainer ∩ Kinderfussball) ∪ Sportleitung`.
+- **Ausschluss** subtracts explicit Person ids after the union.
+
+## Preview UX (UAT1)
+
+- Structural chips show muted **Erweiterung** counts (input expansion hints).
+- **Ergebnis** shows the server-resolved final Person count after UND/ODER, dedupe, and Ausschluss.
+- Zero results show an explicit warning: nobody must confirm with the current combination.
+
 
 ## Relation to Communication / Zielgruppen
 

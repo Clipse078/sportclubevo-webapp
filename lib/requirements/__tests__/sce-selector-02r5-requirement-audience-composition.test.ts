@@ -85,6 +85,66 @@ describe("SCE-SELECTOR-02R5 requirement audience composition", () => {
     expect(role).toEqual(["p-role"]);
   });
 
+  it("C — Kinderfussball AND Club Admin intersects (not union)", async () => {
+    resolverMocks.resolveOrgUnitAudiencePersonIds.mockResolvedValue(["p1", "p2", "shared"]);
+    resolverMocks.resolveRoleAudiencePersonIds.mockResolvedValue(["shared", "admin-only"]);
+
+    const ids = await resolveRequirementAudiencePersonIdsFromComposition("tenant-a", {
+      version: 1,
+      conditions: [
+        { term: { type: "ORG_UNIT", id: "kinderfussball" } },
+        { connector: "AND", term: { type: "ROLE", id: "club-admin" } },
+      ],
+      excludePersonIds: [],
+    });
+    expect(ids).toEqual(["shared"]);
+  });
+
+  it("D — Kinderfussball OR Club Admin deduplicates union", async () => {
+    resolverMocks.resolveOrgUnitAudiencePersonIds.mockResolvedValue(["p1", "shared"]);
+    resolverMocks.resolveRoleAudiencePersonIds.mockResolvedValue(["shared", "p2"]);
+
+    const ids = await resolveRequirementAudiencePersonIdsFromComposition("tenant-a", {
+      version: 1,
+      conditions: [
+        { term: { type: "ORG_UNIT", id: "kinderfussball" } },
+        { connector: "OR", term: { type: "ROLE", id: "club-admin" } },
+      ],
+      excludePersonIds: [],
+    });
+    expect(ids.sort()).toEqual(["p1", "p2", "shared"].sort());
+  });
+
+  it("E — three-way AND intersects all expansions", async () => {
+    resolverMocks.resolveOrgUnitAudiencePersonIds.mockResolvedValue(["michael", "other"]);
+    resolverMocks.resolveRoleAudiencePersonIds.mockResolvedValue(["michael", "admin"]);
+
+    const ids = await resolveRequirementAudiencePersonIdsFromComposition("tenant-a", {
+      version: 1,
+      conditions: [
+        { term: { type: "ORG_UNIT", id: "kinderfussball" } },
+        { connector: "AND", term: { type: "ROLE", id: "club-admin" } },
+        { connector: "AND", term: { type: "PERSON", id: "michael" } },
+      ],
+      excludePersonIds: [],
+    });
+    expect(ids).toEqual(["michael"]);
+  });
+
+  it("H — duplicate paths yield person once (direct AND structural)", async () => {
+    resolverMocks.resolveOrgUnitAudiencePersonIds.mockResolvedValue(["michael", "other"]);
+
+    const ids = await resolveRequirementAudiencePersonIdsFromComposition("tenant-a", {
+      version: 1,
+      conditions: [
+        { term: { type: "PERSON", id: "michael" } },
+        { connector: "AND", term: { type: "ORG_UNIT", id: "kinderfussball" } },
+      ],
+      excludePersonIds: [],
+    });
+    expect(ids).toEqual(["michael"]);
+  });
+
   it("F — Trainer AND Kinderfussball intersects person sets", async () => {
     resolverMocks.resolveRoleAudiencePersonIds.mockResolvedValue(["p1", "p2", "shared"]);
     resolverMocks.resolveOrgUnitAudiencePersonIds.mockResolvedValue(["shared", "p3"]);
@@ -185,6 +245,16 @@ describe("SCE-SELECTOR-02R5 requirement audience composition", () => {
       targetGroups: [],
     });
     expect(legacyUnion.sort()).toEqual(ids.sort());
+  });
+
+  it("UAT1 — builder highlights final Ergebnis, zero warning, and person preview toggle", () => {
+    const builder = read("components/admin/aufgaben/RequirementAudienceBuilder.tsx");
+    expect(builder).toContain("requirement-audience-result-panel");
+    expect(builder).toContain("requirement-audience-zero-warning");
+    expect(builder).toContain("Mit dieser Kombination muss aktuell niemand bestätigen.");
+    expect(builder).toContain("Personen anzeigen");
+    expect(builder).toContain("AUSGESCHLOSSEN");
+    expect(builder).toContain("Erweiterung:");
   });
 
   it("P — requirement builder uses canonical SCE recipient selector (no parallel pickers)", () => {
