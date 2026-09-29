@@ -76,7 +76,7 @@ describe("AUFGABEN-06G7R1 contracts", () => {
     expect(queries).not.toContain("tenantMembership.findMany");
     const assigneeDisplay = read("lib/tasks/task-assignee-display.ts");
     expect(assigneeDisplay).toContain("TASK_LEGACY_ASSIGNEE_LABEL");
-    expect(read("lib/tasks/eligible-task-assignee-persons.ts")).toContain("userId: { not: null }");
+    expect(read("lib/people/person-user-identity.ts")).toContain("listEligiblePersonUserIdentitiesInTenant");
     expect(formatTaskResponsibleDisplayName({
       userFirstName: "Michael",
       userLastName: "Duijster",
@@ -85,10 +85,11 @@ describe("AUFGABEN-06G7R1 contracts", () => {
     })).toBe("Michael Duijster");
   });
 
-  it("C09 — requirement ROLE audience remains in audience builder", () => {
+  it("C09 — requirement audience uses unified SCE recipient selector with role source", () => {
     const builder = read("components/admin/aufgaben/RequirementAudienceBuilder.tsx");
-    expect(builder).toContain('kind="role"');
-    expect(builder).toContain("PopoverContent");
+    expect(builder).toContain("SceRecipientSelector");
+    expect(read("lib/sce/list-selector/selector-authorization-context.ts")).toContain("REQUIREMENT_AUDIENCE");
+    expect(read("lib/sce/list-selector/selector-authorization-context.ts")).toContain('"ROLE"');
   });
 
   it("C10–C13 — canonical semantic status presentation with icons", () => {
@@ -101,15 +102,12 @@ describe("AUFGABEN-06G7R1 contracts", () => {
     expect(read("components/admin/aufgaben/TaskStatusLabel.tsx")).toContain("taskStatusPresentation");
   });
 
-  it("C14–C18 — audience selectors use portalled popover", () => {
+  it("C14–C18 — requirement audience uses canonical list selector dialog", () => {
     const builder = read("components/admin/aufgaben/RequirementAudienceBuilder.tsx");
-    expect(builder).toContain("PopoverContent");
-    expect(read("components/ui/Popover.tsx")).toContain("FloatingPortal");
-    expect(builder).toContain("requirement-audience-add-${kind}");
-    expect(builder).toContain('kind="team"');
-    expect(builder).toContain('kind="orgUnit"');
-    expect(builder).toContain('kind="role"');
-    expect(builder).toContain('kind="targetGroup"');
+    expect(builder).toContain("SceRecipientSelector");
+    expect(builder).toContain("requirement-recipient-add");
+    expect(builder).toContain("previewRequirementDraftAudienceAction");
+    expect(read("components/sce/list-selector/SceListSelectorPanel.tsx")).toContain("Dialog");
   });
 
   it("C19–C22 — task creator is server-derived and immutable in update input", () => {
