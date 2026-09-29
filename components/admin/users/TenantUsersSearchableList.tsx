@@ -11,6 +11,7 @@ import UserRowActionsMenu from "@/components/admin/users/UserRowActionsMenu";
 import PeopleAccessWizardDialog from "@/components/admin/users/people-access/PeopleAccessWizardDialog";
 import PersonAccessDrawer from "@/components/admin/users/people-access/PersonAccessDrawer";
 import type { WizardRoleOption } from "@/components/admin/users/people-access/PeopleAccessWizard";
+import type { PermissionMatrixModuleGroup } from "@/components/admin/roles/NavAlignedPermissionEditor";
 import { groupRoleChipsForDisplay } from "@/lib/admin/people-access/role-display";
 import { userHasPrivilegedRole } from "@/lib/admin/people-access/privileged-utils";
 import type { TenantUserItem, TenantPersonWithoutUser } from "@/lib/users/queries";
@@ -18,6 +19,7 @@ import type { TenantUserItem, TenantPersonWithoutUser } from "@/lib/users/querie
 export type PeopleAccessWizardConfig = {
   availableRoles: WizardRoleOption[];
   availableOrgUnits: { id: string; name: string }[];
+  permissionModuleGroups: PermissionMatrixModuleGroup[];
   clubAdminRoleKey: string;
   privilegedRoleIds: string[];
 };
@@ -254,7 +256,7 @@ export default function TenantUsersSearchableList({
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="h-9 rounded-[var(--radius-md)] border border-[var(--border)] bg-white px-3 text-sm"
+          className="fca-input h-9 text-sm"
           aria-label="Status filtern"
         >
           <option value="all">Alle Status</option>
@@ -271,7 +273,7 @@ export default function TenantUsersSearchableList({
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="h-9 rounded-[var(--radius-md)] border border-[var(--border)] bg-white px-3 text-sm"
+            className="fca-input h-9 text-sm"
             aria-label="Funktion filtern"
           >
             <option value="all">Alle Funktionen</option>
@@ -286,7 +288,7 @@ export default function TenantUsersSearchableList({
           placeholder="Bereich filtern…"
           value={scopeQuery}
           onChange={(e) => setScopeQuery(e.target.value)}
-          className="h-9 min-w-[140px] rounded-[var(--radius-md)] border border-[var(--border)] bg-white px-3 text-sm"
+          className="fca-input h-9 min-w-[140px] text-sm"
           aria-label="Bereich filtern"
         />
 
@@ -335,7 +337,7 @@ export default function TenantUsersSearchableList({
           }
         />
       ) : (
-        <div className="overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-white shadow-[var(--shadow-sm)]">
+        <div className="overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)]">
           <div
             className={`hidden gap-3 border-b border-[var(--border)] bg-[var(--surface-2)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--muted)] md:grid ${gridCols}`}
           >
@@ -483,6 +485,7 @@ export default function TenantUsersSearchableList({
           onClose={() => setWizardOpen(false)}
           availableRoles={wizardConfig.availableRoles}
           availableOrgUnits={wizardConfig.availableOrgUnits}
+          permissionModuleGroups={wizardConfig.permissionModuleGroups}
           clubAdminRoleKey={wizardConfig.clubAdminRoleKey}
           privilegedRoleIds={wizardConfig.privilegedRoleIds}
           initialPersonId={wizardPersonId}
@@ -503,6 +506,7 @@ export default function TenantUsersSearchableList({
         canManage={canManage}
         canInvite={canInvite}
         privilegedRoleIds={privilegedRoleIds}
+        permissionModuleGroups={wizardConfig?.permissionModuleGroups ?? []}
         onEditAccess={(userId) => {
           setDrawerUser(null);
           router.push(`/dashboard/admin/users/${userId}`);

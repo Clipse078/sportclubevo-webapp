@@ -3,7 +3,7 @@ import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getTenantUsersListData, getTenantPersonsWithoutUser } from "@/lib/users/queries";
-import { getTenantRolesOverview } from "@/lib/roles/tenant-queries";
+import { getTenantPermissionCatalog, getTenantRolesOverview } from "@/lib/roles/tenant-queries";
 import { getOrgUnitsForTenant } from "@/lib/people/queries";
 import { getTenantClubAdminRoleKey } from "@/lib/roles/tenant-role-keys";
 import { getPrivilegedTenantRoleIds } from "@/lib/admin/people-access/privileged";
@@ -33,12 +33,14 @@ export default async function PeopleAccessPage() {
   });
   if (!tenant) notFound();
 
-  const [users, personsWithoutUser, roles, orgUnits, privilegedRoleIds] = await Promise.all([
+  const [users, personsWithoutUser, roles, orgUnits, privilegedRoleIds, permissionModuleGroups] =
+    await Promise.all([
     getTenantUsersListData(tenantId).catch(() => []),
     getTenantPersonsWithoutUser(tenantId).catch(() => []),
     getTenantRolesOverview(tenantId).catch(() => []),
     getOrgUnitsForTenant(tenantId).catch(() => []),
     getPrivilegedTenantRoleIds(tenantId).catch(() => []),
+    getTenantPermissionCatalog().catch(() => []),
   ]);
 
   const wizardConfig = {
@@ -54,6 +56,7 @@ export default async function PeopleAccessPage() {
     availableOrgUnits: orgUnits.map((u) => ({ id: u.id, name: u.name })),
     clubAdminRoleKey: getTenantClubAdminRoleKey(tenant.key),
     privilegedRoleIds,
+    permissionModuleGroups,
   };
 
   return (

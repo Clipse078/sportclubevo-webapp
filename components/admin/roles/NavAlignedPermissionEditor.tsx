@@ -40,6 +40,8 @@ type NavAlignedPermissionEditorProps = {
   lockedKeys?: Set<string>;
   onChange: (next: Set<string>) => void;
   disabled?: boolean;
+  /** When true, all permission sections start expanded (review / access preview). */
+  sectionsInitiallyExpanded?: boolean;
 };
 
 function countUnitAdvancedSelections(unit: PermissionUnit, selectedKeys: Set<string>) {
@@ -582,8 +584,11 @@ export default function NavAlignedPermissionEditor({
   lockedKeys = new Set(),
   onChange,
   disabled = false,
+  sectionsInitiallyExpanded = false,
 }: NavAlignedPermissionEditorProps) {
-  const [expandAll, setExpandAll] = useState<boolean | null>(null);
+  const [expandAll, setExpandAll] = useState<boolean | null>(
+    sectionsInitiallyExpanded ? true : null,
+  );
 
   const presentation = useMemo(
     () => buildNavPermissionPresentationFromModuleGroups(moduleGroups),

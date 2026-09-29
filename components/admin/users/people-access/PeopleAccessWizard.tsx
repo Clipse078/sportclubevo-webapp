@@ -4,12 +4,21 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Check, ChevronRight } from "lucide-react";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import EffectiveAccessSummary from "@/components/admin/users/EffectiveAccessSummary";
+import PeopleAccessPermissionPanel from "@/components/admin/users/people-access/PeopleAccessPermissionPanel";
+import type { PermissionMatrixModuleGroup } from "@/components/admin/roles/NavAlignedPermissionEditor";
 import type { EffectiveAccessModuleGroup } from "@/lib/roles/effective-access-summary";
+import {
+  dedupeAssignableRolesForWizard,
+  normalizeRoleIdsForAssignment,
+} from "@/lib/admin/people-access/wizard-assignable-roles";
 import {
   getRoleProductDescription,
   isClubAdminRoleKey,
 } from "@/lib/admin/people-access/role-product-copy";
-import { buildModuleAccessSummary } from "@/lib/admin/people-access/module-access-summary";
+import {
+  buildNavPermissionPresentationFromModuleGroups,
+  buildNavPermissionSummary,
+} from "@/lib/roles/nav-permission-presentation";
 
 export type WizardRoleOption = {
   id: string;
@@ -36,6 +45,7 @@ type LookupState =
 export type PeopleAccessWizardProps = {
   availableRoles: WizardRoleOption[];
   availableOrgUnits: WizardOrgUnitOption[];
+  permissionModuleGroups?: PermissionMatrixModuleGroup[];
   clubAdminRoleKey: string;
   privilegedRoleIds: string[];
   initialPersonId?: string;
@@ -51,6 +61,7 @@ const STEPS = ["Person", "Funktion & Bereich", "Zugriff", "Prüfen & Einladen"] 
 export default function PeopleAccessWizard({
   availableRoles,
   availableOrgUnits,
+  permissionModuleGroups = [],
   clubAdminRoleKey,
   privilegedRoleIds,
   initialPersonId = "",
@@ -70,14 +81,20 @@ export default function PeopleAccessWizard({
   const [scopedDrafts, setScopedDrafts] = useState<ScopedDraft[]>([]);
   const [privilegedConfirmed, setPrivilegedConfirmed] = useState(false);
   const [previewGroups, setPreviewGroups] = useState<EffectiveAccessModuleGroup[]>([]);
+  const [previewPermissionKeys, setPreviewPermissionKeys] = useState<string[]>([]);
+  const [previewRoleNamesByKey, setPreviewRoleNamesByKey] = useState<
+    Record<string, readonly string[]>
+  >({});
   const [previewLoading, setPreviewLoading] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const assignableRoles = useMemo(
-    () => availableRoles.filter((r) => r.key !== "super_admin" && r.key !== "platform_admin"),
-    [availableRoles],
-  );
+  const assignableRoles = useMemo(() => {
+    const filtered = availableRoles.filter(
+      (r) => r.key !== "super_admin" && r.key !== "platform_admin",
+    );
+    return dedupeAssignableRolesForWizard(filtered, clubAdminRoleKey);
+  }, [availableRoles, clubAdminRoleKey]);
 
   const scopedEligibleRoles = useMemo(
     () => assignableRoles.filter((r) => !isClubAdminRoleKey(r.key, clubAdminRoleKey)),
@@ -150,17 +167,38 @@ export default function PeopleAccessWizard({
 
   useEffect(() => {
     if (step !== 2 && step !== 3) return;
+    const normalizedIds = normalizeRoleIdsForAssignment(
+      selectedRoleIds,
+      availableRoles,
+      clubAdminRoleKey,
+    );
     setPreviewLoading(true);
     fetch("/api/tenant/effective-access/preview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roleIds: selectedRoleIds }),
+      body: JSON.stringify({ roleIds: normalizedIds }),
     })
       .then((res) => res.json())
-      .then((data) => setPreviewGroups(data.summary ?? []))
-      .catch(() => setPreviewGroups([]))
+      .then((data) => {
+        setPreviewGroups(data.summary ?? []);
+        setPreviewPermissionKeys(
+          Array.isArray(data.permissionKeys)
+            ? data.permissionKeys.filter((k: unknown) => typeof k === "string")
+            : [],
+        );
+        setPreviewRoleNamesByKey(
+          data.roleNamesByKey && typeof data.roleNamesByKey === "object"
+            ? data.roleNamesByKey
+            : {},
+        );
+      })
+      .catch(() => {
+        setPreviewGroups([]);
+        setPreviewPermissionKeys([]);
+        setPreviewRoleNamesByKey({});
+      })
       .finally(() => setPreviewLoading(false));
-  }, [step, selectedRoleIds]);
+  }, [step, selectedRoleIds, availableRoles, clubAdminRoleKey]);
 
   function toggleRole(roleId: string) {
     setPrivilegedConfirmed(false);
@@ -180,17 +218,31 @@ export default function PeopleAccessWizard({
     setError(null);
     setPending(true);
     try {
+      const normalizedRoleIds = normalizeRoleIdsForAssignment(
+        selectedRoleIds,
+        availableRoles,
+        clubAdminRoleKey,
+      );
       const body: Record<string, unknown> = {
         sendInvitation,
-        roleIds: selectedRoleIds,
-        scopedRoles: scopedDrafts,
+        roleIds: normalizedRoleIds,
+        scopedRoles: scopedDrafts.map((d) => ({
+          ...d,
+          roleId: normalizeRoleIdsForAssignment([d.roleId], availableRoles, clubAdminRoleKey)[0] ?? d.roleId,
+        })),
       };
 
       if (mode === "edit" && editUserId) {
         const res = await fetch(`/api/admin/users/${editUserId}/roles`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ roleIds: selectedRoleIds }),
+          body: JSON.stringify({
+            roleIds: normalizeRoleIdsForAssignment(
+              selectedRoleIds,
+              availableRoles,
+              clubAdminRoleKey,
+            ),
+          }),
         });
         if (!res.ok) {
           const data = await res.json();
@@ -230,12 +282,28 @@ export default function PeopleAccessWizard({
   const canAdvanceStep0 =
     mode === "edit" || linkedPersonId || (firstName.trim() && lastName.trim() && email.trim());
 
-  const moduleSummary = buildModuleAccessSummary(
-    previewGroups,
-    scopedDrafts[0]
-      ? availableOrgUnits.find((u) => u.id === scopedDrafts[0].orgUnitId)?.name
-      : undefined,
-  );
+  const primaryRoleLabel =
+    selectedRoles.length === 1
+      ? selectedRoles[0]?.name
+      : selectedRoles.length > 1
+        ? selectedRoles.map((r) => r.name).join(", ")
+        : undefined;
+
+  const scopeLabel = useMemo(() => {
+    if (selectedRoles.some((r) => isClubAdminRoleKey(r.key, clubAdminRoleKey))) {
+      return "Gesamter Verein";
+    }
+    if (scopedDrafts[0]) {
+      return availableOrgUnits.find((u) => u.id === scopedDrafts[0].orgUnitId)?.name;
+    }
+    return undefined;
+  }, [selectedRoles, scopedDrafts, availableOrgUnits, clubAdminRoleKey]);
+
+  const reviewNavSummary = useMemo(() => {
+    if (permissionModuleGroups.length === 0 || previewPermissionKeys.length === 0) return [];
+    const presentation = buildNavPermissionPresentationFromModuleGroups(permissionModuleGroups);
+    return buildNavPermissionSummary(presentation, new Set(previewPermissionKeys));
+  }, [permissionModuleGroups, previewPermissionKeys]);
 
   const existingAccessBlocksInvite =
     lookup.status === "found" && lookup.kind === "active_member" && mode === "invite";
@@ -334,14 +402,17 @@ export default function PeopleAccessWizard({
             ) : null}
 
             {existingAccessBlocksInvite ? (
-              <div className="rounded-[var(--radius-lg)] border border-amber-200 bg-amber-50 p-4" role="alert">
-                <p className="text-sm font-semibold text-amber-900">
+              <div
+                className="rounded-[var(--radius-lg)] border border-amber-500/40 bg-[var(--surface-2)] p-4"
+                role="alert"
+              >
+                <p className="text-sm font-semibold text-[var(--foreground)]">
                   Diese Person hat bereits Zugang zu SportClubEvo.
                 </p>
                 {lookup.pendingInvitation ? (
-                  <p className="mt-1 text-sm text-amber-800">Einladung ausstehend.</p>
+                  <p className="mt-1 text-sm text-[var(--muted)]">Einladung ausstehend.</p>
                 ) : null}
-                <p className="mt-2 text-xs text-amber-800">
+                <p className="mt-2 text-xs text-[var(--muted)]">
                   Schließe den Assistenten ab und öffne die Person in der Liste, um den Zugriff zu bearbeiten.
                 </p>
               </div>
@@ -394,14 +465,16 @@ export default function PeopleAccessWizard({
 
             {requiresPrivilegedConfirm ? (
               <div
-                className="rounded-[var(--radius-lg)] border border-amber-300 bg-amber-50 p-4"
+                className="rounded-[var(--radius-lg)] border border-amber-500/40 bg-[var(--surface-2)] p-4"
                 role="alert"
               >
                 <div className="flex gap-2">
-                  <AlertTriangle className="h-5 w-5 flex-shrink-0 text-amber-700" aria-hidden />
+                  <AlertTriangle className="h-5 w-5 flex-shrink-0 text-amber-500" aria-hidden />
                   <div>
-                    <p className="text-sm font-semibold text-amber-900">Vereinsweiter administrativer Zugriff</p>
-                    <p className="mt-1 text-sm text-amber-800">
+                    <p className="text-sm font-semibold text-[var(--foreground)]">
+                      Vereinsweiter administrativer Zugriff
+                    </p>
+                    <p className="mt-1 text-sm text-[var(--muted)]">
                       Diese Person kann Personen, Rollen, Zugänge und vereinsweite Einstellungen verwalten.
                     </p>
                     <label className="mt-3 flex items-center gap-2 text-sm">
@@ -485,30 +558,25 @@ export default function PeopleAccessWizard({
           <>
             <div>
               <h3 className="text-lg font-semibold">Zugriff</h3>
-              <p className="mt-1 text-sm text-[var(--muted)]">Effektiver Zugriff aus den gewählten Funktionen.</p>
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                Die gewählte Funktion gibt die empfohlenen Zugriffe vor. Du kannst einzelne Zugriffe hier
+                prüfen — Anpassungen erfolgen über die Funktion in Schritt 2, bis individuelle Overrides
+                verfügbar sind.
+              </p>
             </div>
-            <EffectiveAccessSummary groups={previewGroups} loading={previewLoading} />
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs text-[var(--muted)]">
-                    <th className="pb-2 pr-4">Modul</th>
-                    <th className="pb-2">Zugriff</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {moduleSummary.slice(0, 8).map((row) => (
-                    <tr key={row.moduleLabel} className="border-t border-[var(--border)]">
-                      <td className="py-2 pr-4">{row.moduleLabel}</td>
-                      <td className="py-2 text-[var(--muted)]">
-                        {row.level}
-                        {row.scopeHint ? ` · ${row.scopeHint}` : ""}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {previewLoading ? (
+              <p className="text-sm text-[var(--muted)]">Zugriffe werden berechnet…</p>
+            ) : permissionModuleGroups.length > 0 ? (
+              <PeopleAccessPermissionPanel
+                moduleGroups={permissionModuleGroups}
+                permissionKeys={previewPermissionKeys}
+                roleNamesByKey={previewRoleNamesByKey}
+                primaryRoleLabel={primaryRoleLabel}
+                scopeLabel={scopeLabel}
+              />
+            ) : (
+              <EffectiveAccessSummary groups={previewGroups} loading={previewLoading} />
+            )}
           </>
         ) : null}
 
@@ -548,6 +616,17 @@ export default function PeopleAccessWizard({
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Effektiver Zugriff</p>
                 <EffectiveAccessSummary groups={previewGroups} loading={previewLoading} compact />
+                {reviewNavSummary.length > 0 ? (
+                  <ul className="mt-3 space-y-1 text-xs text-[var(--muted)]">
+                    {reviewNavSummary.flatMap((section) =>
+                      section.items.map((item) => (
+                        <li key={`${section.label}-${item.label}-${item.access}`}>
+                          + {item.label}: {item.access}
+                        </li>
+                      )),
+                    )}
+                  </ul>
+                ) : null}
               </div>
             </div>
           </>

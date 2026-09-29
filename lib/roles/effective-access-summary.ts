@@ -145,3 +145,60 @@ export async function getEffectiveAccessSummaryForUser(
 
   return withAccess.sort((a, b) => moduleSortIndex(a.module) - moduleSortIndex(b.module));
 }
+
+export type EffectivePermissionKeyPreview = {
+  keys: readonly string[];
+  /** permission key → contributing role display names */
+  roleNamesByKey: Readonly<Record<string, readonly string[]>>;
+};
+
+/**
+ * Union of grantable tenant permission keys for a role-id set (wizard preview).
+ */
+export async function getEffectivePermissionKeysFromRoleIds(
+  tenantId: string,
+  roleIds: string[],
+): Promise<EffectivePermissionKeyPreview> {
+  const deduped = Array.from(new Set(roleIds));
+  if (deduped.length === 0) {
+    return { keys: [], roleNamesByKey: {} };
+  }
+
+  const roles = await prisma.role.findMany({
+    where: { id: { in: deduped }, scope: "TENANT", tenantId, isArchived: false },
+    select: {
+      name: true,
+      rolePermissions: {
+        select: {
+          permission: {
+            select: { key: true, grantableByAdmin: true, scope: true },
+          },
+        },
+      },
+    },
+  });
+
+  const keySet = new Set<string>();
+  const roleNamesByKey: Record<string, Set<string>> = {};
+
+  for (const role of roles) {
+    for (const rp of role.rolePermissions) {
+      const p = rp.permission;
+      if (p.scope !== "TENANT" || !p.grantableByAdmin) continue;
+      keySet.add(p.key);
+      const names = roleNamesByKey[p.key] ?? new Set<string>();
+      names.add(role.name);
+      roleNamesByKey[p.key] = names;
+    }
+  }
+
+  const sortedKeys = Array.from(keySet).sort((a, b) => a.localeCompare(b, "de"));
+  const roleNamesByKeyOut: Record<string, readonly string[]> = {};
+  for (const key of sortedKeys) {
+    roleNamesByKeyOut[key] = Array.from(roleNamesByKey[key] ?? []).sort((a, b) =>
+      a.localeCompare(b, "de"),
+    );
+  }
+
+  return { keys: sortedKeys, roleNamesByKey: roleNamesByKeyOut };
+}

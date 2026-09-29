@@ -6,6 +6,8 @@ import { Sheet } from "@/components/ui/Sheet";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import EffectiveAccessSummary from "@/components/admin/users/EffectiveAccessSummary";
+import PeopleAccessPermissionPanel from "@/components/admin/users/people-access/PeopleAccessPermissionPanel";
+import type { PermissionMatrixModuleGroup } from "@/components/admin/roles/NavAlignedPermissionEditor";
 import type { TenantUserItem } from "@/lib/users/queries";
 import { groupRoleChipsForDisplay } from "@/lib/admin/people-access/role-display";
 import type { EffectiveAccessModuleGroup } from "@/lib/roles/effective-access-summary";
@@ -20,6 +22,7 @@ type Props = {
   canManage: boolean;
   canInvite: boolean;
   privilegedRoleIds: string[];
+  permissionModuleGroups?: PermissionMatrixModuleGroup[];
   onEditAccess: (userId: string) => void;
 };
 
@@ -37,10 +40,13 @@ export default function PersonAccessDrawer({
   currentUserId,
   canManage,
   canInvite,
+  permissionModuleGroups = [],
   onEditAccess,
 }: Props) {
   const [tab, setTab] = useState<Tab>("overview");
   const [summaryGroups, setSummaryGroups] = useState<EffectiveAccessModuleGroup[]>([]);
+  const [permissionKeys, setPermissionKeys] = useState<string[]>([]);
+  const [roleNamesByKey, setRoleNamesByKey] = useState<Record<string, readonly string[]>>({});
   const [accessView, setAccessView] = useState<{
     assignedRoles: Array<{ name: string; key: string }>;
     platformRoles: Array<{ name: string; key: string }>;
@@ -62,8 +68,22 @@ export default function PersonAccessDrawer({
       body: JSON.stringify({ roleIds: user.roles.map((r) => r.id) }),
     })
       .then((r) => r.json())
-      .then((data) => setSummaryGroups(data.summary ?? []))
-      .catch(() => setSummaryGroups([]));
+      .then((data) => {
+        setSummaryGroups(data.summary ?? []);
+        setPermissionKeys(
+          Array.isArray(data.permissionKeys)
+            ? data.permissionKeys.filter((k: unknown) => typeof k === "string")
+            : [],
+        );
+        setRoleNamesByKey(
+          data.roleNamesByKey && typeof data.roleNamesByKey === "object" ? data.roleNamesByKey : {},
+        );
+      })
+      .catch(() => {
+        setSummaryGroups([]);
+        setPermissionKeys([]);
+        setRoleNamesByKey({});
+      });
   }, [open, user]);
 
   if (!user) return null;
@@ -184,8 +204,27 @@ export default function PersonAccessDrawer({
       {tab === "access" ? (
         <div className="space-y-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Effektiver Zugriff</p>
-            <EffectiveAccessSummary groups={summaryGroups} />
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+              Rollenbasierter Zugriff
+            </p>
+            {permissionModuleGroups.length > 0 ? (
+              <PeopleAccessPermissionPanel
+                moduleGroups={permissionModuleGroups}
+                permissionKeys={permissionKeys}
+                roleNamesByKey={roleNamesByKey}
+                primaryRoleLabel={roleChips.map((c) => c.name).join(", ") || undefined}
+                scopeLabel={
+                  scopeLabels.length > 0
+                    ? scopeLabels.join(" · ")
+                    : roleChips.length > 0
+                      ? "Gesamter Verein"
+                      : undefined
+                }
+                className="mt-2"
+              />
+            ) : (
+              <EffectiveAccessSummary groups={summaryGroups} />
+            )}
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">

@@ -29,6 +29,13 @@
 
 - **Cause**: legacy duplicate **Role** records (e.g. `club_admin__*` and `club_admin_*`) assigned concurrently.
 - **UX**: `groupRoleChipsForDisplay` merges same display name; drawer notes multiple assignments when `assignmentCount > 1`.
+- **Wizard**: `dedupeAssignableRolesForWizard` exposes a single Club Admin choice mapped to `club_admin__<tenantKey>`.
+
+### Per-user permission overrides (01R1 diagnosis)
+
+- Authorization is **role-only**: `UserRole → Role → RolePermission → Permission` via `EffectivePermissionResolver`.
+- There is **no** persisted `UserPermission` allow/deny model; toggles in step 3 are **read-only** (nav-aligned switches showing the role baseline).
+- Individual grant/revoke on top of roles requires an approved schema + resolver extension (not part of 01R1).
 
 ### Platform identities
 

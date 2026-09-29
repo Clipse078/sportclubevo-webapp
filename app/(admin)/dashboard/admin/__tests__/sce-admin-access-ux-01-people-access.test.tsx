@@ -84,6 +84,7 @@ describe("SCE-ADMIN-ACCESS-UX-01", () => {
         wizardConfig={{
           availableRoles: wizardRoles,
           availableOrgUnits: [{ id: "ou1", name: "F2" }],
+          permissionModuleGroups: [],
           clubAdminRoleKey: "club_admin__test",
           privilegedRoleIds: ["r-admin"],
         }}
@@ -238,6 +239,7 @@ describe("SCE-ADMIN-ACCESS-UX-01", () => {
         wizardConfig={{
           availableRoles: wizardRoles,
           availableOrgUnits: [],
+          permissionModuleGroups: [],
           clubAdminRoleKey: "club_admin__test",
           privilegedRoleIds: [],
         }}
