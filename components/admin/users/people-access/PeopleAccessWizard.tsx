@@ -4,7 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Check, ChevronRight } from "lucide-react";
 import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import EffectiveAccessSummary from "@/components/admin/users/EffectiveAccessSummary";
-import PeopleAccessPermissionPanel from "@/components/admin/users/people-access/PeopleAccessPermissionPanel";
+import PeopleAccessPermissionPanel, {
+  summarizeOverrideDraftForReview,
+} from "@/components/admin/users/people-access/PeopleAccessPermissionPanel";
+import type { PermissionOverrideEffect } from "@/lib/permissions/apply-permission-overrides";
 import type { PermissionMatrixModuleGroup } from "@/components/admin/roles/NavAlignedPermissionEditor";
 import type { EffectiveAccessModuleGroup } from "@/lib/roles/effective-access-summary";
 import {
@@ -94,6 +97,7 @@ export default function PeopleAccessWizard({
   >("neutral");
   const [emailFieldError, setEmailFieldError] = useState<string | null>(null);
   const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
+  const [overrideDraft, setOverrideDraft] = useState<Record<string, PermissionOverrideEffect>>({});
 
   const assignableRoles = useMemo(() => {
     const filtered = availableRoles.filter(
@@ -293,6 +297,10 @@ export default function PeopleAccessWizard({
           ...d,
           roleId: normalizeRoleIdsForAssignment([d.roleId], availableRoles, clubAdminRoleKey)[0] ?? d.roleId,
         })),
+        permissionOverrides: Object.entries(overrideDraft).map(([permissionKey, effect]) => ({
+          permissionKey,
+          effect,
+        })),
       };
 
       if (mode === "edit" && editUserId) {
@@ -382,6 +390,21 @@ export default function PeopleAccessWizard({
     }
     return undefined;
   }, [selectedRoles, scopedDrafts, availableOrgUnits, clubAdminRoleKey]);
+
+  const permissionNameByKey = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const group of permissionModuleGroups) {
+      for (const p of group.permissions) {
+        map[p.key] = p.name;
+      }
+    }
+    return map;
+  }, [permissionModuleGroups]);
+
+  const overrideReview = useMemo(
+    () => summarizeOverrideDraftForReview(overrideDraft, permissionNameByKey),
+    [overrideDraft, permissionNameByKey],
+  );
 
   const reviewNavSummary = useMemo(() => {
     if (permissionModuleGroups.length === 0 || previewPermissionKeys.length === 0) return [];
@@ -683,9 +706,7 @@ export default function PeopleAccessWizard({
             <div>
               <h3 className="text-lg font-semibold">Zugriff</h3>
               <p className="mt-1 text-sm text-[var(--muted)]">
-                Die gewählte Funktion gibt die empfohlenen Zugriffe vor. Du kannst einzelne Zugriffe hier
-                prüfen — Anpassungen erfolgen über die Funktion in Schritt 2, bis individuelle Overrides
-                verfügbar sind.
+                Funktion gibt den Standard vor. Passe nur Abweichungen individuell an.
               </p>
             </div>
             {previewLoading ? (
@@ -697,6 +718,10 @@ export default function PeopleAccessWizard({
                 roleNamesByKey={previewRoleNamesByKey}
                 primaryRoleLabel={primaryRoleLabel}
                 scopeLabel={scopeLabel}
+                interactive
+                overrideDraft={overrideDraft}
+                onOverrideDraftChange={setOverrideDraft}
+                onResetToRoleBaseline={() => setOverrideDraft({})}
               />
             ) : (
               <EffectiveAccessSummary groups={previewGroups} loading={previewLoading} />
@@ -737,6 +762,27 @@ export default function PeopleAccessWizard({
               ) : selectedRoles.some((r) => isClubAdminRoleKey(r.key, clubAdminRoleKey)) ? (
                 <p className="text-[var(--muted)]">Bereich: Gesamter Verein</p>
               ) : null}
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  Individuelle Anpassungen
+                </p>
+                {overrideReview.added.length === 0 && overrideReview.removed.length === 0 ? (
+                  <p className="mt-1 text-sm text-[var(--muted)]">Keine — Rollenstandard</p>
+                ) : (
+                  <ul className="mt-1 space-y-0.5 text-sm">
+                    {overrideReview.added.map((label) => (
+                      <li key={`add-${label}`} className="text-emerald-400">
+                        + {label}
+                      </li>
+                    ))}
+                    {overrideReview.removed.map((label) => (
+                      <li key={`rem-${label}`} className="text-amber-400">
+                        − {label}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Effektiver Zugriff</p>
                 <EffectiveAccessSummary groups={previewGroups} loading={previewLoading} compact />

@@ -44,6 +44,14 @@ type NavAlignedPermissionEditorProps = {
   sectionsInitiallyExpanded?: boolean;
   /** People & Access: progressive disclosure, no mass-revoke control. */
   peopleAccessMode?: boolean;
+  /** Role baseline keys for provenance helper copy (People & Access). */
+  roleBaselineKeys?: Set<string>;
+  /** Individual ALLOW/DENY overrides keyed by permission key. */
+  overrideByKey?: Readonly<Record<string, "ALLOW" | "DENY">>;
+  /** Role names contributing to baseline per permission key. */
+  roleNamesByKey?: Readonly<Record<string, readonly string[]>>;
+  /** Called before enabling a privileged permission switch. */
+  onConfirmPrivilegedEnable?: (permissionLabel: string) => boolean;
 };
 
 function countUnitAdvancedSelections(unit: PermissionUnit, selectedKeys: Set<string>) {
@@ -92,6 +100,26 @@ function PermissionUnitIcon({
   );
 }
 
+function provenanceHelper(
+  permissionKeys: readonly string[],
+  roleBaselineKeys: Set<string> | undefined,
+  overrideByKey: Readonly<Record<string, "ALLOW" | "DENY">> | undefined,
+  roleNamesByKey: Readonly<Record<string, readonly string[]>> | undefined,
+): string | null {
+  if (!roleBaselineKeys || permissionKeys.length === 0) return null;
+  const key = permissionKeys[0]!;
+  const baselineOn = permissionKeys.every((k) => roleBaselineKeys.has(k));
+  const override = overrideByKey?.[key] ?? null;
+  if (override === "DENY") return "Individuell entzogen";
+  if (override === "ALLOW") return "Individuell freigegeben";
+  if (baselineOn) {
+    const roles = roleNamesByKey?.[key];
+    if (roles?.length) return `Über Rolle: ${roles.join(", ")}`;
+    return "Über Rolle";
+  }
+  return "Nicht freigegeben";
+}
+
 function InlineControl({
   unit,
   control,
@@ -99,6 +127,10 @@ function InlineControl({
   lockedKeys,
   disabled,
   onChange,
+  roleBaselineKeys,
+  overrideByKey,
+  roleNamesByKey,
+  onConfirmPrivilegedEnable,
 }: {
   unit: PermissionUnit;
   control: StandardControl | undefined;
@@ -106,6 +138,10 @@ function InlineControl({
   lockedKeys: Set<string>;
   disabled: boolean;
   onChange: (next: Set<string>) => void;
+  roleBaselineKeys?: Set<string>;
+  overrideByKey?: Readonly<Record<string, "ALLOW" | "DENY">>;
+  roleNamesByKey?: Readonly<Record<string, readonly string[]>>;
+  onConfirmPrivilegedEnable?: (permissionLabel: string) => boolean;
 }) {
   if (!control) {
     return (
@@ -118,6 +154,33 @@ function InlineControl({
   const checked = isControlChecked(control, selectedKeys);
   const locked = control.permissionKeys.every((key) => lockedKeys.has(key));
   const id = `${unit.id}-${control.kind}`;
+  const helper = provenanceHelper(
+    control.permissionKeys,
+    roleBaselineKeys,
+    overrideByKey,
+    roleNamesByKey,
+  );
+  const privileged = control.permissionKeys.some(
+    (key) =>
+      unit.advancedPermissions.find((a) => a.key === key)?.dangerous ||
+      key.includes("users.") ||
+      key.includes("roles.") ||
+      key.includes("permissions"),
+  );
+
+  function handleToggle(nextChecked: boolean) {
+    if (!control) return;
+    if (
+      nextChecked &&
+      !checked &&
+      privileged &&
+      onConfirmPrivilegedEnable &&
+      !onConfirmPrivilegedEnable(`${unit.label}: ${control.label}`)
+    ) {
+      return;
+    }
+    onChange(toggleStandardControl(selectedKeys, control, nextChecked));
+  }
 
   return (
     <div className="flex flex-col items-center gap-1">
@@ -128,11 +191,14 @@ function InlineControl({
         id={id}
         checked={checked}
         disabled={disabled || locked}
-        onChange={(nextChecked) =>
-          onChange(toggleStandardControl(selectedKeys, control, nextChecked))
-        }
+        onChange={handleToggle}
         aria-label={`${unit.label}: ${control.label}`}
       />
+      {helper ? (
+        <span className="max-w-[7rem] text-center text-[0.58rem] leading-snug text-[var(--muted)]">
+          {helper}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -234,6 +300,10 @@ function PermissionUnitRow({
   lockedKeys,
   disabled,
   onChange,
+  roleBaselineKeys,
+  overrideByKey,
+  roleNamesByKey,
+  onConfirmPrivilegedEnable,
 }: {
   unit: PermissionUnit;
   sectionLabel: string;
@@ -241,6 +311,10 @@ function PermissionUnitRow({
   lockedKeys: Set<string>;
   disabled: boolean;
   onChange: (next: Set<string>) => void;
+  roleBaselineKeys?: Set<string>;
+  overrideByKey?: Readonly<Record<string, "ALLOW" | "DENY">>;
+  roleNamesByKey?: Readonly<Record<string, readonly string[]>>;
+  onConfirmPrivilegedEnable?: (permissionLabel: string) => boolean;
 }) {
   const viewControl = unit.standardControls.find((control) => control.kind === "view");
   const manageControl = unit.standardControls.find((control) => control.kind === "manage");
@@ -315,6 +389,10 @@ function PermissionUnitRow({
               lockedKeys={lockedKeys}
               disabled={disabled}
               onChange={onChange}
+              roleBaselineKeys={roleBaselineKeys}
+              overrideByKey={overrideByKey}
+              roleNamesByKey={roleNamesByKey}
+              onConfirmPrivilegedEnable={onConfirmPrivilegedEnable}
             />
           </div>
 
@@ -327,6 +405,10 @@ function PermissionUnitRow({
               lockedKeys={lockedKeys}
               disabled={disabled}
               onChange={onChange}
+              roleBaselineKeys={roleBaselineKeys}
+              overrideByKey={overrideByKey}
+              roleNamesByKey={roleNamesByKey}
+              onConfirmPrivilegedEnable={onConfirmPrivilegedEnable}
             />
           </div>
 
@@ -350,6 +432,10 @@ function PermissionUnitRow({
                 lockedKeys={lockedKeys}
                 disabled={disabled}
                 onChange={onChange}
+                roleBaselineKeys={roleBaselineKeys}
+                overrideByKey={overrideByKey}
+                roleNamesByKey={roleNamesByKey}
+                onConfirmPrivilegedEnable={onConfirmPrivilegedEnable}
               />
             </div>
             <div className="flex items-center justify-between gap-3">
@@ -361,6 +447,10 @@ function PermissionUnitRow({
                 lockedKeys={lockedKeys}
                 disabled={disabled}
                 onChange={onChange}
+                roleBaselineKeys={roleBaselineKeys}
+                overrideByKey={overrideByKey}
+                roleNamesByKey={roleNamesByKey}
+                onConfirmPrivilegedEnable={onConfirmPrivilegedEnable}
               />
             </div>
             <AdvancedRightsControl
@@ -387,21 +477,27 @@ function PermissionSection({
   lockedKeys,
   disabled,
   onChange,
-  defaultOpen,
-  forceOpen,
+  isOpen,
+  onToggle,
   peopleAccessMode = false,
+  roleBaselineKeys,
+  overrideByKey,
+  roleNamesByKey,
+  onConfirmPrivilegedEnable,
 }: {
   section: PermissionPresentationSection;
   selectedKeys: Set<string>;
   lockedKeys: Set<string>;
   disabled: boolean;
   onChange: (next: Set<string>) => void;
-  defaultOpen: boolean;
-  forceOpen?: boolean;
+  isOpen: boolean;
+  onToggle: () => void;
   peopleAccessMode?: boolean;
+  roleBaselineKeys?: Set<string>;
+  overrideByKey?: Readonly<Record<string, "ALLOW" | "DENY">>;
+  roleNamesByKey?: Readonly<Record<string, readonly string[]>>;
+  onConfirmPrivilegedEnable?: (permissionLabel: string) => boolean;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
-  const isOpen = forceOpen ?? open;
   const accent = getPermissionSectionAccent(section.label);
   const status = getPermissionSectionStatus(section, selectedKeys);
   const statusLabel = getPermissionSectionStatusLabel(status);
@@ -429,7 +525,7 @@ function PermissionSection({
     >
       <button
         type="button"
-        onClick={() => setOpen((current) => !current)}
+        onClick={onToggle}
         className="flex w-full items-center gap-3 px-4 py-3 text-left sm:px-5"
         aria-expanded={isOpen}
       >
@@ -516,6 +612,10 @@ function PermissionSection({
               lockedKeys={lockedKeys}
               disabled={disabled}
               onChange={onChange}
+              roleBaselineKeys={roleBaselineKeys}
+              overrideByKey={overrideByKey}
+              roleNamesByKey={roleNamesByKey}
+              onConfirmPrivilegedEnable={onConfirmPrivilegedEnable}
             />
           ))}
         </div>
@@ -602,15 +702,26 @@ export default function NavAlignedPermissionEditor({
   disabled = false,
   sectionsInitiallyExpanded = false,
   peopleAccessMode = false,
+  roleBaselineKeys,
+  overrideByKey,
+  roleNamesByKey,
+  onConfirmPrivilegedEnable,
 }: NavAlignedPermissionEditorProps) {
-  const [expandAll, setExpandAll] = useState<boolean | null>(
-    sectionsInitiallyExpanded ? true : null,
-  );
-
   const presentation = useMemo(
     () => buildNavPermissionPresentationFromModuleGroups(moduleGroups),
     [moduleGroups],
   );
+
+  const sectionKeys = useMemo(
+    () => presentation.sections.map((section) => section.key),
+    [presentation.sections],
+  );
+
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(() => {
+    if (peopleAccessMode || !sectionsInitiallyExpanded) return new Set();
+    const organisation = presentation.sections.find((s) => s.key === "Organisation");
+    return organisation ? new Set([organisation.key]) : new Set();
+  });
 
   if (presentation.sections.length === 0 && !presentation.supplementalUnit) {
     return (
@@ -623,7 +734,7 @@ export default function NavAlignedPermissionEditor({
   }
 
   function handleExpandAll() {
-    setExpandAll(true);
+    setExpandedSections(new Set(sectionKeys));
   }
 
   function handleClearAll() {
@@ -685,9 +796,20 @@ export default function NavAlignedPermissionEditor({
           lockedKeys={lockedKeys}
           disabled={disabled}
           onChange={onChange}
-          defaultOpen={peopleAccessMode ? false : section.label === "Organisation"}
-          forceOpen={expandAll === true ? true : undefined}
+          isOpen={expandedSections.has(section.key)}
+          onToggle={() =>
+            setExpandedSections((current) => {
+              const next = new Set(current);
+              if (next.has(section.key)) next.delete(section.key);
+              else next.add(section.key);
+              return next;
+            })
+          }
           peopleAccessMode={peopleAccessMode}
+          roleBaselineKeys={roleBaselineKeys}
+          overrideByKey={overrideByKey}
+          roleNamesByKey={roleNamesByKey}
+          onConfirmPrivilegedEnable={onConfirmPrivilegedEnable}
         />
       ))}
 

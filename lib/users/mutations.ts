@@ -6,6 +6,9 @@ import { logAction } from "@/lib/audit/log-action";
 import { hashResetToken } from "@/lib/auth/password-reset";
 import { hashPassword } from "@/lib/auth/password";
 import { setTenantUserRoles } from "@/lib/roles/mutations";
+import {
+  syncUserPermissionOverrides,
+} from "@/lib/admin/people-access/user-permission-overrides";
 import { assignScopedRoleToUser } from "@/lib/roles/scoped-mutations";
 import { assertTenantDelegationAllowed } from "@/lib/roles/delegation";
 import { isPlatformSuperAdmin } from "@/lib/security/platform-superadmin";
@@ -292,6 +295,7 @@ export type OnboardPersonOptions = {
   sendInvitation?: boolean;
   roleIds?: string[];
   scopedRoles?: OnboardScopedRoleInput[];
+  permissionOverrides?: Array<{ permissionKey: string; effect: "ALLOW" | "DENY" }>;
 };
 
 async function assertOnboardRoleDelegation(
@@ -314,7 +318,7 @@ export async function applyOnboardRoleAssignments(
   tenantId: string,
   userId: string,
   actorUserId: string,
-  options?: Pick<OnboardPersonOptions, "roleIds" | "scopedRoles">,
+  options?: Pick<OnboardPersonOptions, "roleIds" | "scopedRoles" | "permissionOverrides">,
 ): Promise<void> {
   const roleIds = options?.roleIds ?? [];
   const scopedRoles = options?.scopedRoles ?? [];
@@ -331,6 +335,15 @@ export async function applyOnboardRoleAssignments(
       orgUnitId: scoped.orgUnitId,
       scopeMode: scoped.scopeMode ?? "THIS_ORG_UNIT",
       actorUserId,
+    });
+  }
+
+  if (options?.permissionOverrides && options.permissionOverrides.length > 0) {
+    await syncUserPermissionOverrides({
+      tenantId,
+      userId,
+      actorUserId,
+      overrides: options.permissionOverrides,
     });
   }
 }

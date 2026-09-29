@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Sheet } from "@/components/ui/Sheet";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
@@ -11,6 +11,7 @@ import type { PermissionMatrixModuleGroup } from "@/components/admin/roles/NavAl
 import type { TenantUserItem } from "@/lib/users/queries";
 import { groupRoleChipsForDisplay } from "@/lib/admin/people-access/role-display";
 import type { EffectiveAccessModuleGroup } from "@/lib/roles/effective-access-summary";
+import type { PermissionOverrideEffect } from "@/lib/permissions/apply-permission-overrides";
 import {
   formatPeopleAccessDate,
   formatPeopleAccessDateTime,
@@ -51,6 +52,8 @@ export default function PersonAccessDrawer({
   const [summaryGroups, setSummaryGroups] = useState<EffectiveAccessModuleGroup[]>([]);
   const [permissionKeys, setPermissionKeys] = useState<string[]>([]);
   const [roleNamesByKey, setRoleNamesByKey] = useState<Record<string, readonly string[]>>({});
+  const [overrideDraft, setOverrideDraft] = useState<Record<string, PermissionOverrideEffect>>({});
+  const [overrideSaving, setOverrideSaving] = useState(false);
   const [accessView, setAccessView] = useState<{
     assignedRoles: Array<{ name: string; key: string }>;
     platformRoles: Array<{ name: string; key: string }>;
@@ -88,7 +91,57 @@ export default function PersonAccessDrawer({
         setPermissionKeys([]);
         setRoleNamesByKey({});
       });
+
+    fetch(`/api/admin/users/${encodeURIComponent(user.userId)}/permission-overrides`)
+      .then((r) => (r.ok ? r.json() : { overrides: [] }))
+      .then((data) => {
+        const record: Record<string, PermissionOverrideEffect> = {};
+        if (Array.isArray(data.overrides)) {
+          for (const row of data.overrides) {
+            if (
+              row &&
+              typeof row.permissionKey === "string" &&
+              (row.effect === "ALLOW" || row.effect === "DENY")
+            ) {
+              record[row.permissionKey] = row.effect;
+            }
+          }
+        }
+        setOverrideDraft(record);
+      })
+      .catch(() => setOverrideDraft({}));
   }, [open, user]);
+
+  const persistOverrides = useCallback(
+    async (next: Record<string, PermissionOverrideEffect>) => {
+      if (!user || !canManage) return;
+      setOverrideSaving(true);
+      try {
+        const res = await fetch(
+          `/api/admin/users/${encodeURIComponent(user.userId)}/permission-overrides`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              overrides: Object.entries(next).map(([permissionKey, effect]) => ({
+                permissionKey,
+                effect,
+              })),
+            }),
+          },
+        );
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          window.alert(data.error ?? "Speichern der Anpassungen fehlgeschlagen.");
+          return;
+        }
+        setOverrideDraft(next);
+      } finally {
+        setOverrideSaving(false);
+      }
+    },
+    [user, canManage],
+  );
 
   if (!user) return null;
 
@@ -210,20 +263,32 @@ export default function PersonAccessDrawer({
               Rollenbasierter Zugriff
             </p>
             {permissionModuleGroups.length > 0 ? (
-              <PeopleAccessPermissionPanel
-                moduleGroups={permissionModuleGroups}
-                permissionKeys={permissionKeys}
-                roleNamesByKey={roleNamesByKey}
-                primaryRoleLabel={roleChips.map((c) => c.name).join(", ") || undefined}
-                scopeLabel={
-                  scopeLabels.length > 0
-                    ? scopeLabels.join(" · ")
-                    : roleChips.length > 0
-                      ? "Gesamter Verein"
-                      : undefined
-                }
-                className="mt-2"
-              />
+              <>
+                <PeopleAccessPermissionPanel
+                  moduleGroups={permissionModuleGroups}
+                  permissionKeys={permissionKeys}
+                  roleNamesByKey={roleNamesByKey}
+                  primaryRoleLabel={roleChips.map((c) => c.name).join(", ") || undefined}
+                  scopeLabel={
+                    scopeLabels.length > 0
+                      ? scopeLabels.join(" · ")
+                      : roleChips.length > 0
+                        ? "Gesamter Verein"
+                        : undefined
+                  }
+                  className="mt-2"
+                  interactive={canManage && !user.isPlatformSystemIdentity}
+                  overrideDraft={overrideDraft}
+                  onOverrideDraftChange={(next) => {
+                    setOverrideDraft(next);
+                    void persistOverrides(next);
+                  }}
+                  onResetToRoleBaseline={() => void persistOverrides({})}
+                />
+                {overrideSaving ? (
+                  <p className="mt-2 text-xs text-[var(--muted)]">Anpassungen werden gespeichert…</p>
+                ) : null}
+              </>
             ) : (
               <EffectiveAccessSummary groups={summaryGroups} />
             )}

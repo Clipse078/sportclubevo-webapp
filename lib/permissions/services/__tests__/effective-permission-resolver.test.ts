@@ -89,6 +89,9 @@ function makeMockPrisma(overrides: MockPrismaOverrides = {}): PrismaClient {
       findUnique:
         overrides.tenantMembershipFindUnique ?? vi.fn().mockResolvedValue(null),
     },
+    userPermissionOverride: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
   } as unknown as PrismaClient;
 }
 

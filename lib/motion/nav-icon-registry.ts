@@ -41,6 +41,12 @@ const NAV_LABEL_TO_ICON_KEY: Record<string, NavIconKey> = {
   Einstellungen: "einstellungen",
   Planung: "planung",
   TrainingCenter: "trainingcenter",
+  Trainings: "trainingcenter",
+  Spiele: "matchcenter",
+  Turniere: "tournamentcenter",
+  Mitteilungen: "kommunikation",
+  Kampagnen: "kommunikation",
+  Admin: "administration",
   MatchCenter: "matchcenter",
   TournamentCenter: "tournamentcenter",
   Veranstaltungen: "veranstaltungen",
@@ -114,8 +120,12 @@ export const COPPER_FLOW_ICON_KEYS = new Set<NavIconKey>([
   "planung",
 ]);
 
+export function tryGetNavIconKey(label: string): NavIconKey | null {
+  return NAV_LABEL_TO_ICON_KEY[label] ?? null;
+}
+
 export function getNavIconKey(label: string): NavIconKey {
-  const key = NAV_LABEL_TO_ICON_KEY[label];
+  const key = tryGetNavIconKey(label);
   if (!key) {
     throw new Error(
       `[nav-icon-registry] Missing animated icon for sidebar label: "${label}"`,

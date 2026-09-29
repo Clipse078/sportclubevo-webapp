@@ -101,7 +101,7 @@ describe("SCE-ADMIN-ACCESS-UX-01R1", () => {
       />,
     );
     const status = screen.getByLabelText("Status filtern");
-    expect(status.className).toMatch(/fca-input/);
+    expect(status.className).toMatch(/fca-select/);
     const scope = screen.getByLabelText("Bereich filtern");
     expect(scope.className).toMatch(/fca-input/);
   });
@@ -137,7 +137,7 @@ describe("SCE-ADMIN-ACCESS-UX-01R1", () => {
         primaryRoleLabel="Trainer/in"
       />,
     );
-    expect(screen.getByText(/Zugriff aus Rolle/i)).toBeTruthy();
+    expect(screen.getByText(/Rollen-Zugriff/i)).toBeTruthy();
     expect(screen.getByText(/Module & Berechtigungen/i)).toBeTruthy();
     expect(container.querySelectorAll('input[type="checkbox"]').length).toBe(0);
   });
@@ -162,7 +162,7 @@ describe("SCE-ADMIN-ACCESS-UX-01R1", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: /Trainer/i }));
     fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
 
-    expect(await screen.findByText(/Zugriff aus Rolle/i)).toBeTruthy();
+    expect(await screen.findByText(/Rollen-Zugriff/i)).toBeTruthy();
     expect(screen.getByText(/Individuelle Anpassungen/i)).toBeTruthy();
   });
 

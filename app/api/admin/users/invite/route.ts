@@ -113,10 +113,27 @@ export async function POST(request: NextRequest) {
         })
     : undefined;
 
+  const permissionOverrides = Array.isArray(b.permissionOverrides)
+    ? b.permissionOverrides
+        .filter(
+          (item) =>
+            typeof item === "object" &&
+            item !== null &&
+            typeof (item as { permissionKey?: unknown }).permissionKey === "string" &&
+            ((item as { effect?: unknown }).effect === "ALLOW" ||
+              (item as { effect?: unknown }).effect === "DENY"),
+        )
+        .map((item) => {
+          const row = item as { permissionKey: string; effect: "ALLOW" | "DENY" };
+          return { permissionKey: row.permissionKey, effect: row.effect };
+        })
+    : undefined;
+
   const onboardOptions: OnboardPersonOptions = {
     sendInvitation,
     roleIds,
     scopedRoles,
+    permissionOverrides,
   };
 
   try {

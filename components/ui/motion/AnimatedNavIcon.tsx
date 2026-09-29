@@ -1,6 +1,6 @@
 "use client";
 
-import { getNavIconKey } from "@/lib/motion/nav-icon-registry";
+import { tryGetNavIconKey } from "@/lib/motion/nav-icon-registry";
 import { cn } from "@/lib/cn";
 import { getNavIconComponent } from "./nav-icons";
 
@@ -26,7 +26,7 @@ export function AnimatedNavIcon({
   variant = "parent",
   className,
 }: AnimatedNavIconProps) {
-  const iconKey = getNavIconKey(label);
+  const iconKey = tryGetNavIconKey(label) ?? "administration";
   const IconComponent = getNavIconComponent(iconKey);
 
   return (

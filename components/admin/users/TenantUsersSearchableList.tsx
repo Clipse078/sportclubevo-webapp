@@ -7,6 +7,7 @@ import { Search, UserPlus, UserX } from "lucide-react";
 import AdminAvatar from "@/components/admin/shared/AdminAvatar";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { EmptyState } from "@/components/ui/page/EmptyState";
+import SceToolbarSelect from "@/components/ui/SceToolbarSelect";
 import UserRowActionsMenu from "@/components/admin/users/UserRowActionsMenu";
 import PeopleAccessWizardDialog from "@/components/admin/users/people-access/PeopleAccessWizardDialog";
 import PersonAccessDrawer from "@/components/admin/users/people-access/PersonAccessDrawer";
@@ -247,10 +248,10 @@ export default function TenantUsersSearchableList({
           ) : null}
         </div>
 
-        <select
+        <SceToolbarSelect
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="fca-input h-9 w-full min-w-0 text-sm lg:w-auto"
+          className="lg:w-auto"
           aria-label="Status filtern"
         >
           <option value="all">Alle Status</option>
@@ -261,20 +262,20 @@ export default function TenantUsersSearchableList({
           {privilegedRoleIds.length > 0 ? (
             <option value="privileged">Privilegiert ({privilegedCount})</option>
           ) : null}
-        </select>
+        </SceToolbarSelect>
 
         {uniqueRoles.length > 0 ? (
-          <select
+          <SceToolbarSelect
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="fca-input h-9 w-full min-w-0 text-sm lg:w-auto"
+            className="lg:w-auto"
             aria-label="Funktion filtern"
           >
             <option value="all">Alle Funktionen</option>
             {uniqueRoles.map((r) => (
               <option key={r.id} value={r.id}>{r.name}</option>
             ))}
-          </select>
+          </SceToolbarSelect>
         ) : null}
 
         <input
