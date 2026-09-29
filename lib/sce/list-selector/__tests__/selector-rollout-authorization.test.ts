@@ -19,13 +19,9 @@ describe("SCE-SELECTOR-02 authorization contexts", () => {
     expect(perms).toContain(PERMISSIONS.TASKS_ASSIGN);
   });
 
-  it("REQUIREMENT_AUDIENCE exposes mixed audience entity sources", () => {
+  it("REQUIREMENT_AUDIENCE exposes PERSON only for current recipient UI", () => {
     expect(allowedSourceTypesForSelectorAuthorizationContext("REQUIREMENT_AUDIENCE")).toEqual([
       "PERSON",
-      "TEAM",
-      "ORG_UNIT",
-      "ROLE",
-      "TARGET_GROUP",
     ]);
   });
 

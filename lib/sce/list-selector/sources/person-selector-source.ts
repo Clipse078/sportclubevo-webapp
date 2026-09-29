@@ -10,9 +10,9 @@ import {
   SCE_SELECTOR_MIN_SEARCH_LENGTH,
 } from "@/lib/sce/list-selector/sources/constants";
 import {
-  browseRequirementAudiencePersons,
-  searchRequirementAudiencePersons,
-} from "@/lib/requirements/person-search";
+  browseDiscoverableTenantPersons,
+  searchDiscoverableTenantPersons,
+} from "@/lib/people/tenant-person-discovery";
 import {
   listEligibleTaskAssigneePersons,
   searchEligibleTaskAssigneePersons,
@@ -100,7 +100,7 @@ export async function browsePersonSelectorItems(input: {
     input.authorizationContext === "WORKSPACE_ACCESS" ||
     input.authorizationContext === "PEOPLE_ACCESS_ADMIN"
   ) {
-    const rows = await browseRequirementAudiencePersons(input.tenantId, limit, offset);
+    const rows = await browseDiscoverableTenantPersons(input.tenantId, limit, offset);
     return sceSelectorPageFromFetched(
       rows.map((row) =>
         toItem({
@@ -189,7 +189,7 @@ export async function searchPersonSelectorItems(input: {
     input.authorizationContext === "WORKSPACE_ACCESS" ||
     input.authorizationContext === "PEOPLE_ACCESS_ADMIN"
   ) {
-    const rows = await searchRequirementAudiencePersons(input.tenantId, term, limit, offset);
+    const rows = await searchDiscoverableTenantPersons(input.tenantId, term, limit, offset);
     return sceSelectorPageFromFetched(
       rows.map((row) =>
         toItem({
@@ -204,7 +204,7 @@ export async function searchPersonSelectorItems(input: {
   }
 
   if (input.communicationContext === "TARGET_GROUP_MANAGEMENT") {
-    const rows = await searchRequirementAudiencePersons(input.tenantId, term, limit, offset);
+    const rows = await searchDiscoverableTenantPersons(input.tenantId, term, limit, offset);
     return sceSelectorPageFromFetched(
       rows.map((row) =>
         toItem({

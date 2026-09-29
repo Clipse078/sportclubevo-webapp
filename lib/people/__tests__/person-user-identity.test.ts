@@ -32,27 +32,23 @@ describe("person-user-identity", () => {
     vi.clearAllMocks();
   });
 
-  it("lists eligible linked Person identities via active tenant membership", async () => {
-    mocks.tenantMembershipFindMany.mockResolvedValue([
+  it("lists task-assignable linked Person identities via person-first tenant query", async () => {
+    mocks.personFindMany.mockResolvedValue([
       {
+        id: "person-1",
+        tenantId: "tenant-a",
+        userId: "user-1",
+        firstName: "Michael",
+        lastName: "Duijster",
+        displayName: null,
+        email: "m@example.com",
+        isActive: true,
         user: {
-          person: {
-            id: "person-1",
-            tenantId: "tenant-a",
-            userId: "user-1",
-            firstName: "Michael",
-            lastName: "Duijster",
-            displayName: null,
-            email: "m@example.com",
-            isActive: true,
-            user: {
-              id: "user-1",
-              email: "m@example.com",
-              firstName: "Michael",
-              lastName: "Duijster",
-              isActive: true,
-            },
-          },
+          id: "user-1",
+          email: "m@example.com",
+          firstName: "Michael",
+          lastName: "Duijster",
+          isActive: true,
         },
       },
     ]);
@@ -64,6 +60,15 @@ describe("person-user-identity", () => {
       userId: "user-1",
       displayName: "Michael Duijster",
     });
+    expect(mocks.personFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          tenantId: "tenant-a",
+          isActive: true,
+          userId: { not: null },
+        }),
+      }),
+    );
   });
 
   it("excludes Person without active tenant membership", async () => {

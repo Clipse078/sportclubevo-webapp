@@ -238,8 +238,8 @@ export default function RequirementAudienceBuilder({
       <div>
         <h3 className="text-sm font-semibold text-[var(--foreground)]">Empfänger</h3>
         <p className="mt-0.5 text-xs text-[var(--text-2)]">
-          Mehrere Personen müssen individuell bestätigen. Teams, Organisation, Rollen und Zielgruppen
-          sind Auswahlhilfen — beim Aktivieren werden daraus einzelne Personen als Snapshot festgelegt.
+          Mehrere Personen müssen individuell bestätigen. Wähle die Personen, die die Anforderung
+          bestätigen sollen.
         </p>
       </div>
 

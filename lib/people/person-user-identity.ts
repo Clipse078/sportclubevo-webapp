@@ -112,49 +112,41 @@ export async function resolvePersonUserIdentityByUserId(
   return mapPersonRow(row);
 }
 
-export async function listEligiblePersonUserIdentitiesInTenant(
+/**
+ * TASK_ASSIGNMENT eligibility: active tenant Person with linked active User and active membership.
+ * Person-first query (aligned with People directory tenant scoping, not membership-first nesting).
+ */
+export async function listTaskAssignablePersonUserIdentitiesInTenant(
   tenantId: string,
 ): Promise<PersonUserIdentity[]> {
-  const memberships = await prisma.tenantMembership.findMany({
+  const rows = await prisma.person.findMany({
     where: {
       tenantId,
       isActive: true,
+      userId: { not: null },
       user: {
         isActive: true,
-        person: {
-          is: {
-            tenantId,
-            isActive: true,
-            userId: { not: null },
-          },
-        },
+        tenantMemberships: { some: { tenantId, isActive: true } },
       },
     },
-    select: {
-      user: {
-        select: {
-          person: {
-            select: personSelect,
-          },
-        },
-      },
-    },
+    select: personSelect,
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
   });
 
   const byUserId = new Map<string, PersonUserIdentity>();
-  for (const membership of memberships) {
-    const person = membership.user.person;
-    if (!person) continue;
-    const identity = mapPersonRow(person);
+  for (const row of rows) {
+    const identity = mapPersonRow(row);
     if (!identity || identity.tenantId !== tenantId) continue;
     byUserId.set(identity.userId, identity);
   }
 
-  return [...byUserId.values()].sort((a, b) => {
-    const last = a.lastName.localeCompare(b.lastName, "de");
-    if (last !== 0) return last;
-    return a.firstName.localeCompare(b.firstName, "de");
-  });
+  return [...byUserId.values()];
+}
+
+export async function listEligiblePersonUserIdentitiesInTenant(
+  tenantId: string,
+): Promise<PersonUserIdentity[]> {
+  return listTaskAssignablePersonUserIdentitiesInTenant(tenantId);
 }
 
 export async function searchEligiblePersonUserIdentitiesInTenant(
@@ -172,9 +164,7 @@ export async function searchEligiblePersonUserIdentitiesInTenant(
       userId: { not: null },
       user: {
         isActive: true,
-        tenantMemberships: {
-          some: { tenantId, isActive: true },
-        },
+        tenantMemberships: { some: { tenantId, isActive: true } },
       },
       OR: [
         { firstName: { contains: term, mode: "insensitive" } },

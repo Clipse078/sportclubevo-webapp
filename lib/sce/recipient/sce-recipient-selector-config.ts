@@ -13,12 +13,10 @@ export type SceRecipientSelectorProfile = {
 
 export const SCE_RECIPIENT_SELECTOR_REQUIREMENT: SceRecipientSelectorProfile = {
   authContext: "REQUIREMENT_AUDIENCE",
-  sourceTypes: allowedSourceTypesForSelectorAuthorizationContext("REQUIREMENT_AUDIENCE"),
-  searchPlaceholder:
-    "Personen, Teams, Organisation, Rollen oder Zielgruppen suchen …",
+  sourceTypes: ["PERSON"],
+  searchPlaceholder: "Personen suchen …",
   dialogTitle: "Empfänger auswählen",
-  dialogDescription:
-    "Wähle Personen oder strukturelle Quellen (Team, Organisation, Rolle, Zielgruppe). Strukturelle Auswahl erweitert sich beim Aktivieren zu einzelnen bestätigenden Personen.",
+  dialogDescription: "Wer soll die Anforderung bestätigen?",
   addButtonLabel: "Empfänger hinzufügen",
 };
 

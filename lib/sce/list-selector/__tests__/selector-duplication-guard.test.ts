@@ -58,4 +58,13 @@ describe("selector duplication guard", () => {
     expect(source).toContain("SceInlineSinglePersonPicker");
     expect(source).toContain('mode === "any" && !teamSeasonId');
   });
+
+  it("person selector source uses canonical tenant-person-discovery module", () => {
+    const source = readFileSync(
+      join(process.cwd(), "lib/sce/list-selector/sources/person-selector-source.ts"),
+      "utf8",
+    );
+    expect(source).toContain("browseDiscoverableTenantPersons");
+    expect(source).not.toContain("browseRequirementAudiencePersons");
+  });
 });

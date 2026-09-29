@@ -45,6 +45,7 @@ export type RequirementDraftAudienceInput = {
   targetGroupIds?: readonly string[];
 };
 
+/** UI selection for draft audiences. Structural ids remain supported for legacy drafts/activation. */
 export type RequirementAudienceSelection = {
   personIds: string[];
   teamIds: string[];
