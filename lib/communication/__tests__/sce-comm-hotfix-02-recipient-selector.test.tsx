@@ -157,6 +157,7 @@ describe("SCE-COMM-HOTFIX-02 recipient selector", () => {
         targetGroups: false,
         roles: false,
         persons: false,
+        externalContacts: false,
       },
     });
 
@@ -172,6 +173,7 @@ describe("SCE-COMM-HOTFIX-02 recipient selector", () => {
           targetGroups: false,
           roles: false,
           persons: false,
+          externalContacts: false,
         }}
       />,
     );
