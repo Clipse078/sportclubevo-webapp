@@ -74,6 +74,8 @@ const CLUB_OPERATIONS_KEYS = new Set([
   "vorfaelle-disziplin",
 ]);
 
+const CLUB_DOCUMENTS_KEYS = new Set(["workspace"]);
+
 const CLUB_COMMERCIAL_KEYS = new Set(["finanzen", "sponsoring"]);
 
 const CLUB_ADMIN_KEYS = new Set([
@@ -104,7 +106,6 @@ const KOMMUNIKATION_KEYS = new Set([
   "communication-kampagnen",
   "communication-zielgruppen",
   "communication-email-sender",
-  "workspace",
 ]);
 
 const DASHBOARD_KEYS = new Set(["dashboard"]);
@@ -144,6 +145,7 @@ export function resolveNavKeyTargetL1(
     CLUB_PEOPLE_KEYS.has(key) ||
     CLUB_MEMBERSHIP_KEYS.has(key) ||
     CLUB_DEVELOPMENT_KEYS.has(key) ||
+    CLUB_DOCUMENTS_KEYS.has(key) ||
     CLUB_OPERATIONS_KEYS.has(key) ||
     CLUB_COMMERCIAL_KEYS.has(key)
   ) {
@@ -159,7 +161,6 @@ function resolveTargetL2(key: string): string {
     return "Sport & Termine";
   }
   if (KOMMUNIKATION_KEYS.has(key)) {
-    if (key === "workspace") return "Dokumente";
     if (key.startsWith("communication")) return "Nachrichten & Einstellungen";
     return "Aufgaben & Koordination";
   }
@@ -180,6 +181,7 @@ function resolveTargetL2(key: string): string {
   if (CLUB_PEOPLE_KEYS.has(key)) return "People & Teams";
   if (CLUB_MEMBERSHIP_KEYS.has(key)) return "Mitgliedschaft";
   if (CLUB_DEVELOPMENT_KEYS.has(key)) return "Vereinsentwicklung";
+  if (CLUB_DOCUMENTS_KEYS.has(key)) return "Dokumente";
   if (CLUB_OPERATIONS_KEYS.has(key)) return "Club-Betrieb";
   if (CLUB_COMMERCIAL_KEYS.has(key)) return "Finanzen & Partnerschaften";
   if (CLUB_ADMIN_KEYS.has(key)) return "Administration";
@@ -378,6 +380,12 @@ export const CLUB_TARGET_L2_GROUPS = [
     label: "Club-Betrieb",
     headerVisible: true,
     keys: ["meetings", "material", "helfereinsaetze", "formulare-freigaben", "vorfaelle-disziplin"],
+  },
+  {
+    id: "dokumente",
+    label: "Dokumente",
+    headerVisible: true,
+    keys: ["workspace"],
   },
   {
     id: "finanzen",

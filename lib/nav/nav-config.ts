@@ -73,7 +73,8 @@ export type ModuleDefinition = {
 // Section labels are sr-only for assistive technology.
 //
 // Order: Dashboard · Planung · Organisation · Mitglieder · Anmeldungen ·
-// Aufgaben · Helfereinsätze · Kommunikation · Dokumente | Website · Infoboard |
+// Aufgaben · Helfereinsätze · Kommunikation | Website · Infoboard |
+// … · Dokumente (Club L1) · Formulare & Freigaben · … |
 // Trainer & Staff · Meetings · Club Entwicklung · Material · Finanzen · Sponsoring |
 // Formulare & Freigaben · Vorfälle & Disziplin | Administration
 
@@ -442,15 +443,6 @@ export const NAV_SECTIONS: NavSection[] = [
           },
         ],
       },
-      {
-        key: "workspace",
-        label: "Dokumente",
-        href: "/dashboard/workspace",
-        permissionKeys: [
-          PERMISSIONS.WORKSPACE_VIEW,
-          PERMISSIONS.WORKSPACE_MANAGE,
-        ],
-      },
     ],
   },
 
@@ -628,6 +620,15 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     sectionLabel: "Governance",
     items: [
+      {
+        key: "workspace",
+        label: "Dokumente",
+        href: "/dashboard/workspace",
+        permissionKeys: [
+          PERMISSIONS.WORKSPACE_VIEW,
+          PERMISSIONS.WORKSPACE_MANAGE,
+        ],
+      },
       {
         key: "formulare-freigaben",
         label: "Formulare & Freigaben",
