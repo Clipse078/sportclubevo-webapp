@@ -567,7 +567,7 @@ export default function CommunicationAudienceSelector({
                 data-testid="communication-audience-add-trigger"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
-                {singleAddTrigger ? "+ Empfänger hinzufügen" : "Empfänger hinzufügen"}
+                Empfänger hinzufügen
               </button>
               <CommunicationAudienceDiscoverPanel
                 open={discoverOpen}

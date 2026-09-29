@@ -478,7 +478,7 @@ export default function ZielgruppeDefinitionEditor({
         ) : null}
 
         <DiscoverAddButton
-          label="+ Auswahl hinzufügen"
+          label="Auswahl hinzufügen"
           disabled={disabled}
           features={includePickerFeatures}
           selection={zielgruppeIncludeAudienceSelection(value)}
@@ -535,7 +535,7 @@ export default function ZielgruppeDefinitionEditor({
             aria-haspopup="dialog"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
-            + Externen Kontakt hinzufügen
+            Externen Kontakt hinzufügen
           </button>
           <CommunicationAudienceDiscoverPanel
             open={externalPickerOpen}
@@ -628,7 +628,7 @@ export default function ZielgruppeDefinitionEditor({
         ) : null}
 
         <DiscoverAddButton
-          label="+ Ausschluss hinzufügen"
+          label="Ausschluss hinzufügen"
           disabled={disabled}
           features={EXCLUDE_FEATURES}
           selection={zielgruppeExcludeAudienceSelection(value)}
