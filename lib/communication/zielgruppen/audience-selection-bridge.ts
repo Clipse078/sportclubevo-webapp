@@ -49,3 +49,17 @@ export function zielgruppeDynamicIncludeAudienceSelection(
     roleIds: [...definition.roleIds],
   };
 }
+
+/** Unified include picker — structural criteria plus explicit persons (not external). */
+export function zielgruppeIncludeAudienceSelection(
+  definition: ZielgruppeEditorDefinition,
+): CommunicationAudienceSelection {
+  return {
+    ...emptyCommunicationAudienceSelection(),
+    orgUnitIds: [...definition.orgUnitIds],
+    teamIds: [...definition.teamIds],
+    roleIds: [...definition.roleIds],
+    personIds: [...definition.includePersonIds],
+  };
+}
+

@@ -58,6 +58,17 @@ const enabledAutomatic = {
   externalContacts: false,
 };
 
+/** Zielgruppen primary include picker (UXR3). */
+const enabledZielgruppeInclude = {
+  wholeOrganisation: false,
+  orgUnits: true,
+  teams: true,
+  roles: true,
+  targetGroups: false,
+  persons: true,
+  externalContacts: false,
+};
+
 const enabledDirect = {
   wholeOrganisation: false,
   orgUnits: false,
@@ -102,6 +113,32 @@ describe("CommunicationAudienceDiscoverPanel (UXR2)", () => {
     expect(await screen.findByTestId("communication-audience-option-orgUnit-ou1")).toBeInTheDocument();
     expect(screen.getByTestId("communication-audience-option-team-t1")).toBeInTheDocument();
     expect(screen.queryByText(/Empfänger werden geladen/i)).not.toBeInTheDocument();
+  });
+
+  it("shows Zielgruppen include categories including Personen without Externe", async () => {
+    mockDiscover([
+      {
+        kind: "person",
+        heading: "Personen",
+        options: [{ id: "p1", label: "Michael", description: null }],
+      },
+    ]);
+    render(
+      <CommunicationAudienceDiscoverPanel
+        open
+        onOpenChange={() => {}}
+        context="TARGET_GROUP_MANAGEMENT"
+        enabledFeatures={enabledZielgruppeInclude}
+        selection={emptyCommunicationAudienceSelection()}
+        onPick={vi.fn()}
+      />,
+    );
+
+    for (const id of ["all", "orgUnit", "team", "role", "person"] as const) {
+      expect(screen.getByTestId(`communication-audience-category-${id}`)).toBeInTheDocument();
+    }
+    expect(screen.queryByTestId("communication-audience-category-external")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("communication-audience-option-person-p1")).toBeInTheDocument();
   });
 
   it("shows automatic categories only (Alle, Organisation, Teams, Rollen)", async () => {
@@ -289,6 +326,29 @@ describe("CommunicationAudienceDiscoverPanel (UXR2)", () => {
     await waitFor(() =>
       expect(screen.queryByTestId("communication-audience-loading")).not.toBeInTheDocument(),
     );
+  });
+
+  it("passes person source for Zielgruppen include adapter", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({ groups: [], noAccess: false }), { status: 200 }),
+    );
+    global.fetch = fetchMock as typeof fetch;
+
+    render(
+      <CommunicationAudienceDiscoverPanel
+        open
+        onOpenChange={() => {}}
+        context="TARGET_GROUP_MANAGEMENT"
+        enabledFeatures={enabledZielgruppeInclude}
+        selection={emptyCommunicationAudienceSelection()}
+        onPick={vi.fn()}
+      />,
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const url = String(fetchMock.mock.calls[0]?.[0]);
+    expect(url).toContain("sources=orgUnit%2Cteam%2Crole%2Cperson");
+    expect(url).not.toContain("external");
   });
 
   it("passes enabled sources to discover API (feature adapter contract)", async () => {

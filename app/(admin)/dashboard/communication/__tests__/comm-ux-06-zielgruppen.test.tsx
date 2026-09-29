@@ -166,7 +166,7 @@ describe("SCE-COMM-UX-06 Zielgruppen", () => {
     render(page);
     expect(screen.getByLabelText(/Name/i)).toBeInTheDocument();
     expect(screen.getByTestId("zielgruppe-save")).toBeInTheDocument();
-    expect(screen.getByText(/Automatisch einschliessen/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Einschliessen$/i)).toBeInTheDocument();
   });
 
   it("validates name before save", async () => {

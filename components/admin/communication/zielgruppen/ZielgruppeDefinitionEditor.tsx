@@ -17,18 +17,17 @@ import {
   type ZielgruppeExcludeRuleKind,
   type ZielgruppeIncludeRuleKind,
 } from "@/lib/communication/zielgruppen/visual-rules";
+import { emptyCommunicationAudienceSelection } from "@/lib/communication/audience/communication-audience-selection";
 import {
-  mergeDirectAudienceSelectionIntoDefinition,
-  zielgruppeDirectAudienceSelection,
-  zielgruppeDynamicIncludeAudienceSelection,
   zielgruppeExcludeAudienceSelection,
+  zielgruppeIncludeAudienceSelection,
 } from "@/lib/communication/zielgruppen/audience-selection-bridge";
-import CommunicationAudienceSelector, {
+import {
   CommunicationAudienceDiscoverPanel,
   type CommunicationAudienceSelectorFeatures,
 } from "@/components/admin/communication/audience/CommunicationAudienceSelector";
-import ZielgruppeBulkEmailDialog from "@/components/admin/communication/zielgruppen/ZielgruppeBulkEmailDialog";
 import type { CommunicationAudienceDiscoverPick } from "@/components/admin/communication/audience/CommunicationAudienceSelector";
+import ZielgruppeBulkEmailDialog from "@/components/admin/communication/zielgruppen/ZielgruppeBulkEmailDialog";
 
 type KnownLabels = {
   orgUnits: Record<string, string>;
@@ -45,23 +44,33 @@ type Props = {
   disabled?: boolean;
 };
 
-const DYNAMIC_FEATURES: CommunicationAudienceSelectorFeatures = {
+const INCLUDE_FEATURES: CommunicationAudienceSelectorFeatures = {
   wholeOrganisation: false,
   orgUnits: true,
   teams: true,
   roles: true,
   targetGroups: false,
-  persons: false,
+  persons: true,
   externalContacts: false,
 };
 
-const DIRECT_FEATURES: CommunicationAudienceSelectorFeatures = {
+const INCLUDE_PERSON_ONLY_FEATURES: CommunicationAudienceSelectorFeatures = {
   wholeOrganisation: false,
   orgUnits: false,
   teams: false,
   roles: false,
   targetGroups: false,
   persons: true,
+  externalContacts: false,
+};
+
+const EXTERNAL_FEATURES: CommunicationAudienceSelectorFeatures = {
+  wholeOrganisation: false,
+  orgUnits: false,
+  teams: false,
+  roles: false,
+  targetGroups: false,
+  persons: false,
   externalContacts: true,
 };
 
@@ -89,6 +98,13 @@ function labelForId(
   return labels.persons[id] ?? "…";
 }
 
+function personInitials(displayName: string): string {
+  const parts = displayName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
+  return `${parts[0]!.charAt(0)}${parts[parts.length - 1]!.charAt(0)}`.toUpperCase();
+}
+
 function RuleKindIcon({ typeLabel }: { typeLabel: string }) {
   if (typeLabel.includes("Organisation")) return <Building2 className="h-5 w-5" aria-hidden="true" />;
   if (typeLabel === "Team") return <Users className="h-5 w-5" aria-hidden="true" />;
@@ -104,6 +120,7 @@ function VisualRuleRow({
   onRemove,
   testId,
   tone = "default",
+  avatarInitials,
 }: {
   typeLabel: string;
   valueLabel: string;
@@ -111,6 +128,7 @@ function VisualRuleRow({
   onRemove: () => void;
   testId: string;
   tone?: "default" | "exclude";
+  avatarInitials?: string;
 }) {
   return (
     <div
@@ -123,15 +141,19 @@ function VisualRuleRow({
     >
       <div className="flex min-w-0 flex-1 items-center gap-3 text-sm">
         <span
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xs font-semibold ${
             tone === "exclude"
               ? "bg-[var(--surface-3)] text-[var(--muted)]"
-              : "bg-[var(--sce-primary)]/10 text-[var(--sce-primary)]"
+              : avatarInitials
+                ? "bg-[var(--sce-primary)]/15 text-[var(--sce-primary)]"
+                : "bg-[var(--sce-primary)]/10 text-[var(--sce-primary)]"
           }`}
           aria-hidden="true"
         >
           {tone === "exclude" ? (
             <MinusCircle className="h-5 w-5" />
+          ) : avatarInitials ? (
+            avatarInitials
           ) : (
             <RuleKindIcon typeLabel={typeLabel} />
           )}
@@ -221,7 +243,7 @@ function DiscoverAddButton({
   label: string;
   disabled?: boolean;
   features: CommunicationAudienceSelectorFeatures;
-  selection: ReturnType<typeof zielgruppeDynamicIncludeAudienceSelection>;
+  selection: ReturnType<typeof zielgruppeIncludeAudienceSelection>;
   onConfirmBatch: (picks: CommunicationAudienceDiscoverPick[]) => void;
   dialogTitle: string;
   dialogDescription: string;
@@ -273,9 +295,29 @@ function DiscoverAddButton({
         onConfirmBatch={onConfirmBatch}
         dialogTitle={dialogTitle}
         dialogDescription={dialogDescription}
+        searchPlaceholder="Personen, Teams, Organisation oder Rollen suchen …"
       />
     </>
   );
+}
+
+function applyIncludePicks(
+  definition: ZielgruppeEditorDefinition,
+  picks: CommunicationAudienceDiscoverPick[],
+): ZielgruppeEditorDefinition {
+  let next = definition;
+  for (const pick of picks) {
+    if (pick.kind === "orgUnit") {
+      next = addIncludeRule(next, "orgUnit", pick.id);
+    } else if (pick.kind === "team") {
+      next = addIncludeRule(next, "team", pick.id);
+    } else if (pick.kind === "role") {
+      next = addIncludeRule(next, "role", pick.id);
+    } else if (pick.kind === "person") {
+      next = addIncludeRule(next, "person", pick.id);
+    }
+  }
+  return next;
 }
 
 export default function ZielgruppeDefinitionEditor({
@@ -285,6 +327,7 @@ export default function ZielgruppeDefinitionEditor({
   disabled,
 }: Props) {
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [externalPickerOpen, setExternalPickerOpen] = useState(false);
   const [dynamicLabels, setDynamicLabels] = useState<KnownLabels>({
     orgUnits: {},
     teams: {},
@@ -332,15 +375,26 @@ export default function ZielgruppeDefinitionEditor({
   const dynamicIncludeRules = includeRules.filter(
     (rule) => rule.kind === "orgUnit" || rule.kind === "team" || rule.kind === "role",
   );
+  const directPersonRules = includeRules.filter((rule) => rule.kind === "person");
+  const externalIncludeRules = includeRules.filter((rule) => rule.kind === "externalContact");
   const hasExclusions = excludeRules.length > 0;
+  const includePickerFeatures = value.wholeOrganisation ? INCLUDE_PERSON_ONLY_FEATURES : INCLUDE_FEATURES;
+
+  const externalSelection = useMemo(
+    () => ({
+      ...emptyCommunicationAudienceSelection(),
+      externalContactIds: [...value.includeExternalContactIds],
+    }),
+    [value.includeExternalContactIds],
+  );
 
   return (
     <div className="space-y-6" data-testid="zielgruppe-audience-builder">
       <section className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4 sm:p-5">
         <div>
-          <h3 className="text-base font-semibold text-[var(--foreground)]">Automatisch einschliessen</h3>
+          <h3 className="text-base font-semibold text-[var(--foreground)]">Einschliessen</h3>
           <p className="mt-1 text-sm text-[var(--text-2)]">
-            Mitglieder werden automatisch hinzugefügt, wenn sie diese Kriterien erfüllen.
+            Bestimme, wer zu dieser Zielgruppe gehört.
           </p>
         </div>
 
@@ -361,14 +415,14 @@ export default function ZielgruppeDefinitionEditor({
           </span>
         </label>
 
-        {!value.wholeOrganisation ? (
-          <>
+        {!value.wholeOrganisation && dynamicIncludeRules.length > 0 ? (
+          <div className="space-y-3" data-testid="zielgruppe-include-criteria">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Kriterien</p>
             <CompositionSegmentedControl
               value={value.compositionMode}
               disabled={disabled}
               onChange={(mode) => patch({ compositionMode: mode })}
             />
-
             <div className="space-y-3">
               {dynamicIncludeRules.map((rule, index) => (
                 <div key={rule.id} className="space-y-2">
@@ -390,59 +444,129 @@ export default function ZielgruppeDefinitionEditor({
                 </div>
               ))}
             </div>
-
-            <DiscoverAddButton
-              label="+ Bedingung hinzufügen"
-              disabled={disabled}
-              features={DYNAMIC_FEATURES}
-              selection={zielgruppeDynamicIncludeAudienceSelection(value)}
-              dialogTitle="Auswahl hinzufügen"
-              dialogDescription="Wähle Teams, Organisationseinheiten oder Rollen für diese Zielgruppe."
-              testId="zielgruppe-add-condition"
-              onConfirmBatch={(picks) => {
-                let next = value;
-                for (const pick of picks) {
-                  if (pick.kind === "orgUnit") {
-                    rememberLabel("orgUnit", pick.id, pick.label);
-                    next = addIncludeRule(next, "orgUnit", pick.id);
-                  } else if (pick.kind === "team") {
-                    rememberLabel("team", pick.id, pick.label);
-                    next = addIncludeRule(next, "team", pick.id);
-                  } else if (pick.kind === "role") {
-                    rememberLabel("role", pick.id, pick.label);
-                    next = addIncludeRule(next, "role", pick.id);
-                  }
-                }
-                onChange(next);
-              }}
-            />
-          </>
+          </div>
+        ) : !value.wholeOrganisation ? (
+          <CompositionSegmentedControl
+            value={value.compositionMode}
+            disabled={disabled}
+            onChange={(mode) => patch({ compositionMode: mode })}
+          />
         ) : null}
+
+        {directPersonRules.length > 0 ? (
+          <div className="space-y-3" data-testid="zielgruppe-include-direct-persons">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+              Direkt ausgewählt
+            </p>
+            <div className="space-y-2">
+              {directPersonRules.map((rule) => {
+                const name = labelForId(rule.kind, rule.valueId, labels);
+                return (
+                  <VisualRuleRow
+                    key={rule.id}
+                    testId={`zg-include-rule-${rule.id}`}
+                    typeLabel={ZIELGRUPPE_INCLUDE_KIND_LABEL[rule.kind]}
+                    valueLabel={name}
+                    avatarInitials={personInitials(name)}
+                    disabled={disabled}
+                    onRemove={() => onChange(removeIncludeRule(value, rule.kind, rule.valueId))}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
+        <DiscoverAddButton
+          label="+ Auswahl hinzufügen"
+          disabled={disabled}
+          features={includePickerFeatures}
+          selection={zielgruppeIncludeAudienceSelection(value)}
+          dialogTitle="Auswahl hinzufügen"
+          dialogDescription="Wähle Personen, Teams, Organisationseinheiten oder Rollen für diese Zielgruppe."
+          testId="zielgruppe-add-include"
+          onConfirmBatch={(picks) => {
+            let next = value;
+            for (const pick of picks) {
+              if (pick.kind === "orgUnit") rememberLabel("orgUnit", pick.id, pick.label);
+              else if (pick.kind === "team") rememberLabel("team", pick.id, pick.label);
+              else if (pick.kind === "role") rememberLabel("role", pick.id, pick.label);
+              else if (pick.kind === "person") rememberLabel("person", pick.id, pick.label);
+            }
+            next = applyIncludePicks(next, picks);
+            onChange(next);
+          }}
+        />
       </section>
 
-      <section className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4 sm:p-5">
+      <section
+        className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4 sm:p-5"
+        data-testid="zielgruppe-external-recipients"
+      >
         <div>
-          <h3 className="text-base font-semibold text-[var(--foreground)]">Direkt hinzufügen</h3>
+          <h3 className="text-base font-semibold text-[var(--foreground)]">Externe Empfänger</h3>
           <p className="mt-1 text-sm text-[var(--text-2)]">
-            Einzelne Empfänger werden unabhängig von den automatischen Regeln aufgenommen.
+            Füge Kontakte hinzu, die nicht als Person im Verein geführt werden.
           </p>
         </div>
 
-        <CommunicationAudienceSelector
-          value={zielgruppeDirectAudienceSelection(value)}
-          onChange={(selection) =>
-            onChange(mergeDirectAudienceSelectionIntoDefinition(value, selection))
-          }
-          context="TARGET_GROUP_MANAGEMENT"
-          features={DIRECT_FEATURES}
-          disabled={disabled}
-          compact
-          singleAddTrigger
-          batchDiscoverConfirm
-          discoverDialogTitle="Empfänger hinzufügen"
-          discoverDialogDescription="Füge einzelne Personen oder externe Kontakte direkt hinzu."
-          showInlinePreview={false}
-        />
+        {externalIncludeRules.length > 0 ? (
+          <div className="space-y-2">
+            {externalIncludeRules.map((rule) => (
+              <VisualRuleRow
+                key={rule.id}
+                testId={`zg-include-rule-${rule.id}`}
+                typeLabel={ZIELGRUPPE_INCLUDE_KIND_LABEL[rule.kind]}
+                valueLabel={labelForId(rule.kind, rule.valueId, labels)}
+                disabled={disabled}
+                onRemove={() => onChange(removeIncludeRule(value, rule.kind, rule.valueId))}
+              />
+            ))}
+          </div>
+        ) : null}
+
+        <>
+          <button
+            type="button"
+            disabled={disabled}
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-[var(--surface-1)] px-4 py-2.5 text-sm font-semibold text-[var(--sce-primary)] hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--blue)] sm:w-auto"
+            onClick={() => setExternalPickerOpen(true)}
+            data-testid="zielgruppe-add-external"
+            aria-haspopup="dialog"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            + Externen Kontakt hinzufügen
+          </button>
+          <CommunicationAudienceDiscoverPanel
+            open={externalPickerOpen}
+            onOpenChange={setExternalPickerOpen}
+            context="TARGET_GROUP_MANAGEMENT"
+            disabled={disabled}
+            enabledFeatures={{
+              wholeOrganisation: false,
+              orgUnits: false,
+              teams: false,
+              roles: false,
+              targetGroups: false,
+              persons: EXTERNAL_FEATURES.persons ?? false,
+              externalContacts: EXTERNAL_FEATURES.externalContacts ?? true,
+            }}
+            selection={externalSelection}
+            onPick={() => {}}
+            batchConfirm
+            onConfirmBatch={(picks) => {
+              let next = value;
+              for (const pick of picks) {
+                if (pick.kind !== "external") continue;
+                rememberLabel("externalContact", pick.id, pick.label);
+                next = addIncludeRule(next, "externalContact", pick.id);
+              }
+              onChange(next);
+            }}
+            dialogTitle="Externen Kontakt hinzufügen"
+            dialogDescription="Füge einen Kontakt hinzu, der nicht als Person im Verein geführt wird."
+          />
+        </>
 
         <div className="flex flex-wrap gap-2">
           <button
@@ -482,9 +606,7 @@ export default function ZielgruppeDefinitionEditor({
           <div>
             <h3 className="text-base font-semibold text-[var(--foreground)]">Ausschliessen</h3>
             <p className="mt-1 text-sm text-[var(--text-2)]">
-              {hasExclusions
-                ? "Diese Personen oder Gruppen werden immer ausgeschlossen."
-                : "Diese Personen oder Gruppen werden immer ausgeschlossen."}
+              Diese Personen oder Gruppen werden immer ausgeschlossen.
             </p>
           </div>
         </div>
