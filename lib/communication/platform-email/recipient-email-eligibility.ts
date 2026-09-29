@@ -33,6 +33,7 @@ type SnapshotShape = {
   recipientKind: PlatformCommunicationRecipientKind;
   subjectPersonId: string | null;
   sponsorContactId?: string | null;
+  communicationExternalContactId?: string | null;
   deliveryUserId: string | null;
   externalSnapshotJson: unknown;
   viaGuardianSubstitution?: boolean;
@@ -71,7 +72,9 @@ export async function resolveRecipientSnapshotEmailEligibility(input: {
   const emailCategory =
     input.snapshot.recipientKind === "EXTERNAL_SPONSOR_CONTACT"
       ? "SPONSOR_COMMERCIAL"
-      : (input.category ?? "CLUB_INFORMATION");
+      : input.snapshot.recipientKind === "EXTERNAL_COMMUNICATION_CONTACT"
+        ? (input.category ?? "CLUB_OPERATIONAL")
+        : (input.category ?? "CLUB_INFORMATION");
 
   if (input.snapshot.recipientKind === "INTERNAL_PERSON_NO_CHANNEL") {
     const personId = input.snapshot.subjectPersonId;
@@ -85,6 +88,26 @@ export async function resolveRecipientSnapshotEmailEligibility(input: {
     const email = normalizeEmailAddress(person?.email);
     if (!email) {
       return { eligible: false, email: null, skipReason: "MISSING_EMAIL" };
+    }
+    return { eligible: true, email, skipReason: null };
+  }
+
+  if (input.snapshot.recipientKind === "EXTERNAL_COMMUNICATION_CONTACT") {
+    const capability = externalCapability(input.snapshot.externalSnapshotJson);
+    if (capability !== EXTERNAL_EMAIL_DELIVERY_CANDIDATE) {
+      return { eligible: false, email: null, skipReason: "EXTERNAL_NOT_CANDIDATE" };
+    }
+    const rawEmail =
+      input.snapshot.externalSnapshotJson &&
+      typeof input.snapshot.externalSnapshotJson === "object"
+        ? (input.snapshot.externalSnapshotJson as { email?: unknown }).email
+        : null;
+    const email = normalizeEmailAddress(typeof rawEmail === "string" ? rawEmail : null);
+    if (!email) {
+      return { eligible: false, email: null, skipReason: "MISSING_EMAIL" };
+    }
+    if (!isEligibleEmailAddress(email)) {
+      return { eligible: false, email: null, skipReason: "INVALID_EMAIL" };
     }
     return { eligible: true, email, skipReason: null };
   }

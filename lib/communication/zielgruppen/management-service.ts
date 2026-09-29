@@ -127,6 +127,20 @@ async function assertTenantScopedSelectors(
     ...definition.includePersonIds,
     ...definition.excludePersonIds,
   ];
+  const externalIds = [
+    ...definition.includeExternalContactIds,
+    ...definition.excludeExternalContactIds,
+  ];
+  if (externalIds.length > 0) {
+    const rows = await prisma.communicationExternalContact.findMany({
+      where: { id: { in: externalIds } },
+      select: { id: true, tenantId: true },
+    });
+    if (rows.length !== externalIds.length || rows.some((r) => r.tenantId !== tenantId)) {
+      throw new ZielgruppeManagementError("Ungültige externe Kontakte.", "FORBIDDEN");
+    }
+  }
+
   if (personIds.length > 0) {
     const rows = await prisma.person.findMany({
       where: { id: { in: personIds } },

@@ -11,18 +11,25 @@ import {
   editorDefinitionToAudienceSpec,
 } from "@/lib/communication/zielgruppen/rule-mapper";
 import { resolveCommunicationRecipients } from "@/lib/communication/platform/recipient-resolution/resolve-recipients";
+import { resolveAudienceCandidates } from "@/lib/communication/platform/recipient-resolution/audience-candidate-resolver";
 import type { CommunicationChannel } from "@/lib/communication/platform/channels";
+import { buildZielgruppePreviewProvenance } from "@/lib/communication/zielgruppen/audience-provenance-service";
 import { prisma } from "@/lib/db/prisma";
 
 export type ZielgruppeRecipientPreviewRow = {
-  personId: string;
+  kind: "PERSON" | "EXTERNAL";
+  personId?: string;
+  externalContactId?: string;
   displayName: string;
+  email?: string | null;
+  includedPaths: Array<{ code: string; label: string }>;
 };
 
 export type ZielgruppeRecipientPreviewResult = {
   candidates: number;
   excluded: number;
   effective: number;
+  externalCount: number;
   scopeNotice: string | null;
   recipients: ZielgruppeRecipientPreviewRow[];
   hasMore: boolean;
@@ -57,51 +64,48 @@ export async function previewZielgruppeRecipients(input: {
   const structuralExclusion =
     buildStructuralExclusionFromEditor(input.definition, excludeRoleKeys) ?? undefined;
 
-  const resolution = await resolveCommunicationRecipients(
-    {
+  const [resolution, audienceCandidates] = await Promise.all([
+    resolveCommunicationRecipients(
+      {
+        tenantId: tenant.id,
+        senderActor: { userId: senderUserId },
+        audience,
+        context: { kind: "ORGANISATION", tenantId: tenant.id },
+        channel: input.channel ?? "IN_APP",
+        category: "CLUB_OPERATIONAL",
+        mode: "PREVIEW",
+      },
+      { structuralExclusionSelectors: structuralExclusion },
+    ),
+    resolveAudienceCandidates({
       tenantId: tenant.id,
-      senderActor: { userId: senderUserId },
       audience,
-      context: { kind: "ORGANISATION", tenantId: tenant.id },
-      channel: input.channel ?? "IN_APP",
-      category: "CLUB_OPERATIONAL",
-      mode: "PREVIEW",
-    },
-    { structuralExclusionSelectors: structuralExclusion },
-  );
+      structuralExclusionSelectors: structuralExclusion,
+    }),
+  ]);
+
+  const provenanceRows = await buildZielgruppePreviewProvenance({
+    tenantId: tenant.id,
+    definition: input.definition,
+    roleKeys,
+    senderUserId,
+    effectivePersonIds: resolution.effectiveRecipientPersonIds,
+    externalContactIds: audienceCandidates.candidateExternalContactIds,
+  });
 
   const page = Math.max(1, input.page ?? 1);
   const pageSize = Math.min(100, Math.max(1, input.pageSize ?? 25));
-  const slice = resolution.effectiveRecipientPersonIds.slice(
-    (page - 1) * pageSize,
-    page * pageSize,
-  );
-
-  const personRows =
-    slice.length > 0
-      ? await prisma.person.findMany({
-          where: { tenantId: tenant.id, id: { in: slice } },
-          select: { id: true, firstName: true, lastName: true, displayName: true },
-        })
-      : [];
-  const nameById = new Map(
-    personRows.map((p) => [
-      p.id,
-      p.displayName?.trim() || `${p.firstName} ${p.lastName}`.trim(),
-    ]),
-  );
+  const slice = provenanceRows.slice((page - 1) * pageSize, page * pageSize);
 
   return {
     candidates: resolution.summary.candidateCount,
     excluded: resolution.summary.excludedCount,
     effective: resolution.summary.effectiveCount,
+    externalCount: audienceCandidates.candidateExternalContactIds.length,
     scopeNotice: resolution.metadata.senderScopeLimitedPreview
       ? "Empfänger für deinen aktuellen Berechtigungsumfang"
       : null,
-    recipients: slice.map((personId) => ({
-      personId,
-      displayName: nameById.get(personId) ?? personId,
-    })),
-    hasMore: resolution.effectiveRecipientPersonIds.length > page * pageSize,
+    recipients: slice,
+    hasMore: provenanceRows.length > page * pageSize,
   };
 }

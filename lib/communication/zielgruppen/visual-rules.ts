@@ -4,9 +4,19 @@
 
 import type { ZielgruppeEditorDefinition } from "@/lib/communication/zielgruppen/editor-model";
 
-export type ZielgruppeIncludeRuleKind = "orgUnit" | "team" | "role" | "person";
+export type ZielgruppeIncludeRuleKind =
+  | "orgUnit"
+  | "team"
+  | "role"
+  | "person"
+  | "externalContact";
 
-export type ZielgruppeExcludeRuleKind = "excludeOrgUnit" | "excludeTeam" | "excludeRole" | "excludePerson";
+export type ZielgruppeExcludeRuleKind =
+  | "excludeOrgUnit"
+  | "excludeTeam"
+  | "excludeRole"
+  | "excludePerson"
+  | "excludeExternalContact";
 
 export type ZielgruppeVisualIncludeRule = {
   id: string;
@@ -25,6 +35,7 @@ export const ZIELGRUPPE_INCLUDE_KIND_LABEL: Record<ZielgruppeIncludeRuleKind, st
   team: "Team",
   role: "Rolle",
   person: "Person",
+  externalContact: "Extern",
 };
 
 export const ZIELGRUPPE_EXCLUDE_KIND_LABEL: Record<ZielgruppeExcludeRuleKind, string> = {
@@ -32,6 +43,7 @@ export const ZIELGRUPPE_EXCLUDE_KIND_LABEL: Record<ZielgruppeExcludeRuleKind, st
   excludeTeam: "Team",
   excludeRole: "Rolle",
   excludePerson: "Person",
+  excludeExternalContact: "Extern",
 };
 
 function stableRuleId(kind: string, valueId: string): string {
@@ -40,22 +52,28 @@ function stableRuleId(kind: string, valueId: string): string {
 
 const INCLUDE_FIELD: Record<
   ZielgruppeIncludeRuleKind,
-  "orgUnitIds" | "teamIds" | "roleIds" | "includePersonIds"
+  "orgUnitIds" | "teamIds" | "roleIds" | "includePersonIds" | "includeExternalContactIds"
 > = {
   orgUnit: "orgUnitIds",
   team: "teamIds",
   role: "roleIds",
   person: "includePersonIds",
+  externalContact: "includeExternalContactIds",
 };
 
 const EXCLUDE_FIELD: Record<
   ZielgruppeExcludeRuleKind,
-  "excludeOrgUnitIds" | "excludeTeamIds" | "excludeRoleIds" | "excludePersonIds"
+  | "excludeOrgUnitIds"
+  | "excludeTeamIds"
+  | "excludeRoleIds"
+  | "excludePersonIds"
+  | "excludeExternalContactIds"
 > = {
   excludeOrgUnit: "excludeOrgUnitIds",
   excludeTeam: "excludeTeamIds",
   excludeRole: "excludeRoleIds",
   excludePerson: "excludePersonIds",
+  excludeExternalContact: "excludeExternalContactIds",
 };
 
 export function definitionToVisualRules(definition: ZielgruppeEditorDefinition): {
@@ -74,6 +92,13 @@ export function definitionToVisualRules(definition: ZielgruppeEditorDefinition):
   }
   for (const valueId of definition.includePersonIds) {
     includeRules.push({ id: stableRuleId("person", valueId), kind: "person", valueId });
+  }
+  for (const valueId of definition.includeExternalContactIds) {
+    includeRules.push({
+      id: stableRuleId("externalContact", valueId),
+      kind: "externalContact",
+      valueId,
+    });
   }
 
   const excludeRules: ZielgruppeVisualExcludeRule[] = [];
@@ -94,6 +119,13 @@ export function definitionToVisualRules(definition: ZielgruppeEditorDefinition):
     excludeRules.push({
       id: stableRuleId("excludePerson", valueId),
       kind: "excludePerson",
+      valueId,
+    });
+  }
+  for (const valueId of definition.excludeExternalContactIds) {
+    excludeRules.push({
+      id: stableRuleId("excludeExternalContact", valueId),
+      kind: "excludeExternalContact",
       valueId,
     });
   }

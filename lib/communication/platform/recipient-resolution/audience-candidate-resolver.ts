@@ -29,6 +29,10 @@ import {
 import { resolveSponsorAudienceSelectors } from "@/lib/sponsoring/sponsor-audience-resolution";
 import { sponsorSelectorsAreEmpty } from "@/lib/sponsoring/sponsor-audience-selectors";
 import type { RecipientExclusionReasonCode } from "@/lib/communication/platform/recipient-resolution/reason-codes";
+import {
+  dedupeExternalContactsAgainstPersonEmails,
+  resolveExternalContactIdsFromAudience,
+} from "@/lib/communication/platform/recipient-resolution/external-contact-resolution";
 
 export const MAX_SAVED_TARGET_GROUP_NESTING_DEPTH = 10;
 
@@ -286,6 +290,7 @@ export async function resolveAudienceCandidates(input: {
   structuralExclusionSelectors?: import("@/lib/communication/platform/audience/structural-targets").StructuralAudienceSelectors;
 }): Promise<{
   candidatePersonIds: string[];
+  candidateExternalContactIds: string[];
   excludedRecipients: { personId: string; reasonCodes: RecipientExclusionReasonCode[] }[];
 }> {
   const trace: AudienceResolutionTrace = { excludedRecipients: [] };
@@ -311,8 +316,19 @@ export async function resolveAudienceCandidates(input: {
     candidates = differenceSortedSets(candidates, exclusionSet);
   }
 
+  let externalContactIds = await resolveExternalContactIdsFromAudience({
+    tenantId: input.tenantId,
+    audience: input.audience,
+  });
+  externalContactIds = await dedupeExternalContactsAgainstPersonEmails({
+    tenantId: input.tenantId,
+    personIds: candidates,
+    externalContactIds,
+  });
+
   return {
     candidatePersonIds: candidates,
+    candidateExternalContactIds: externalContactIds,
     excludedRecipients: trace.excludedRecipients,
   };
 }

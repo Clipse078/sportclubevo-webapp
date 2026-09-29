@@ -110,8 +110,16 @@ beforeEach(() => {
       candidates: 5,
       excluded: 0,
       effective: 5,
+      externalCount: 0,
       scopeNotice: null,
-      recipients: [{ personId: "p-1", displayName: "Max Muster" }],
+      recipients: [
+        {
+          kind: "PERSON",
+          personId: "p-1",
+          displayName: "Max Muster",
+          includedPaths: [{ code: "DIRECT_PERSON", label: "Direkt hinzugefügt" }],
+        },
+      ],
       hasMore: false,
     },
   });

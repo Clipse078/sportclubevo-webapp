@@ -12,6 +12,7 @@ export type CommunicationAudienceCapabilities = {
   targetGroups: boolean;
   roles: boolean;
   persons: boolean;
+  externalContacts: boolean;
 };
 
 export async function resolveCommunicationAudienceCapabilities(input: {
@@ -36,6 +37,7 @@ export async function resolveCommunicationAudienceCapabilities(input: {
         targetGroups: false,
         roles: false,
         persons: false,
+        externalContacts: false,
       };
     }
 
@@ -51,6 +53,7 @@ export async function resolveCommunicationAudienceCapabilities(input: {
       targetGroups: clubSend || tenantAdmin,
       roles: structuralSend,
       persons: structuralSend,
+      externalContacts: clubSend || tenantAdmin,
     };
   }
 
@@ -62,5 +65,6 @@ export async function resolveCommunicationAudienceCapabilities(input: {
     targetGroups: canSend,
     roles: canSend,
     persons: canSend,
+    externalContacts: canSend,
   };
 }
