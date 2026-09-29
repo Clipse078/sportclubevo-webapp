@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { useMemo, useState } from "react";
 import type { TaskAssigneeOption } from "@/lib/tasks/queries";
-import { ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS } from "@/lib/tasks/quick-create-assignee-search";
-import { searchQuickCreateAssigneesAction } from "@/app/(admin)/dashboard/aufgaben/actions";
+import {
+  SceChipMultiSelectorField,
+  type SceChipSelection,
+} from "@/components/sce/list-selector/SceChipMultiSelectorField";
+import type { SceSelectorPick } from "@/lib/sce/list-selector/types";
+import { sceSelectorPickKey } from "@/lib/sce/list-selector/types";
 
 type Props = {
   label: string;
@@ -15,12 +18,10 @@ type Props = {
   addButtonLabel?: string;
   testIdPrefix?: string;
   initialKnown?: TaskAssigneeOption[];
-  /** Selected users that cannot be removed (e.g. self on Meine Aufgaben quick create). */
   lockedUserIds?: string[];
   hideLabel?: boolean;
   omitHiddenField?: boolean;
   allowAdd?: boolean;
-  /** Associates hidden field with an external form (e.g. series workspace edit). */
   form?: string;
 };
 
@@ -43,39 +44,7 @@ export default function TaskPeopleMultiPicker({
   allowAdd = true,
   form,
 }: Props) {
-  const locked = new Set(lockedUserIds);
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const [addOpen, setAddOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<TaskAssigneeOption[]>([]);
   const [addedKnown, setAddedKnown] = useState<Record<string, TaskAssigneeOption>>({});
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!addOpen) return undefined;
-    clearTimeout(searchDebounceRef.current);
-    const term = search.trim();
-    if (term.length < ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS) {
-      return undefined;
-    }
-    searchDebounceRef.current = setTimeout(async () => {
-      setSearchLoading(true);
-      const result = await searchQuickCreateAssigneesAction(term);
-      if (!result.ok) {
-        setSearchError(result.message);
-        setSearchResults([]);
-      } else {
-        setSearchError(null);
-        setSearchResults(result.options.filter((o) => !selectedIds.includes(o.userId)));
-      }
-      setSearchLoading(false);
-    }, 300);
-    return () => clearTimeout(searchDebounceRef.current);
-  }, [addOpen, search, selectedIds]);
-
-  const searchReady = search.trim().length >= ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS;
-  const searchLoadingVisible = searchReady && searchLoading;
 
   const effectiveKnown = useMemo(() => {
     const map: Record<string, TaskAssigneeOption> = {};
@@ -85,110 +54,87 @@ export default function TaskPeopleMultiPicker({
     return { ...map, ...addedKnown };
   }, [initialKnown, addedKnown]);
 
-  const selectedPeople = selectedIds
-    .map((id) => effectiveKnown[id] ?? searchResults.find((p) => p.userId === id))
-    .filter(Boolean) as TaskAssigneeOption[];
-
-  function addPerson(userId: string, person?: TaskAssigneeOption) {
-    if (person) {
-      setAddedKnown((prev) => ({ ...prev, [userId]: person }));
+  const userIdToPersonId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const option of Object.values(effectiveKnown)) {
+      if (option.personId) map.set(option.userId, option.personId);
     }
-    if (!selectedIds.includes(userId)) {
-      onSelectedIdsChange([...selectedIds, userId]);
-    }
-    setAddOpen(false);
-    setSearch("");
-  }
+    return map;
+  }, [effectiveKnown]);
 
-  function removePerson(userId: string) {
-    onSelectedIdsChange(selectedIds.filter((id) => id !== userId));
-  }
+  const committedPickKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const userId of selectedIds) {
+      const personId = userIdToPersonId.get(userId);
+      if (personId) keys.add(sceSelectorPickKey("PERSON", personId));
+    }
+    return keys;
+  }, [selectedIds, userIdToPersonId]);
+
+  const selectedChips: SceChipSelection[] = selectedIds.map((id) => {
+    const person = effectiveKnown[id];
+    if (!person) return { id, label: id };
+    return {
+      id,
+      label: formatName(person.firstName, person.lastName, person.displayName),
+      description: person.email,
+    };
+  });
 
   return (
-    <div className="space-y-1" data-testid={testIdPrefix}>
-      {hideLabel ? null : (
-        <span className="text-xs font-medium text-[var(--text-2)]">{label}</span>
-      )}
-      {omitHiddenField ? null : (
-        <input type="hidden" name={fieldName} form={form} value={selectedIds.join(",")} />
-      )}
-      <div className="flex flex-wrap items-center gap-1.5">
-        {selectedPeople.map((person) => (
-          <span
-            key={person.userId}
-            className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-2)]/60 pl-2 pr-1 py-0.5 text-xs text-[var(--text-2)]"
-          >
-            {formatName(person.firstName, person.lastName, person.displayName)}
-            {locked.has(person.userId) ? null : (
-              <button
-                type="button"
-                className="rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-3)]"
-                aria-label={`${formatName(person.firstName, person.lastName, person.displayName)} entfernen`}
-                onClick={() => removePerson(person.userId)}
-                disabled={disabled}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            )}
-          </span>
-        ))}
-        {allowAdd ? (
-        <div className="relative">
-          <button
-            type="button"
-            className="inline-flex items-center gap-0.5 rounded-full border border-dashed border-[var(--border)] px-2 py-0.5 text-xs font-medium text-[var(--primary)] hover:bg-[var(--surface-2)]"
-            onClick={() => setAddOpen((v) => !v)}
-            disabled={disabled}
-            data-testid={`${testIdPrefix}-add`}
-          >
-            <Plus className="h-3 w-3" />
-            {addButtonLabel}
-          </button>
-          {addOpen ? (
-            <div className="absolute left-0 top-full z-20 mt-1 w-72 rounded-md border border-[var(--border)] bg-[var(--surface)] p-2 shadow-lg">
-              <input
-                type="search"
-                className="fca-input w-full text-sm"
-                placeholder="Name oder E-Mail …"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                data-testid={`${testIdPrefix}-search`}
-                disabled={disabled}
-              />
-              <div className="mt-1 max-h-40 overflow-y-auto">
-                {searchLoadingVisible ? (
-                  <p className="px-2 py-1.5 text-xs text-[var(--muted)]">Suche …</p>
-                ) : searchError ? (
-                  <p className="px-2 py-1.5 text-xs text-red-300">{searchError}</p>
-                ) : !searchReady ? (
-                  <p className="px-2 py-1.5 text-xs text-[var(--muted)]">
-                    Mindestens {ELIGIBLE_TASK_ASSIGNEE_SEARCH_MIN_CHARS} Zeichen
-                  </p>
-                ) : searchResults.length === 0 ? (
-                  <p className="px-2 py-1.5 text-xs text-[var(--muted)]">Keine Treffer</p>
-                ) : (
-                  searchResults.map((person) => (
-                    <button
-                      key={person.userId}
-                      type="button"
-                      className="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-[var(--surface-2)]"
-                      onClick={() => addPerson(person.userId, person)}
-                    >
-                      <span className="font-medium text-[var(--foreground)]">
-                        {formatName(person.firstName, person.lastName, person.displayName)}
-                      </span>
-                      {person.email ? (
-                        <span className="ml-1 text-xs text-[var(--muted)]">{person.email}</span>
-                      ) : null}
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
-          ) : null}
-        </div>
-        ) : null}
-      </div>
-    </div>
+    <SceChipMultiSelectorField
+      label={label}
+      hideLabel={hideLabel}
+      fieldName={fieldName}
+      form={form}
+      omitHiddenField={omitHiddenField}
+      selected={selectedChips}
+      selectedIds={selectedIds}
+      onSelectedIdsChange={onSelectedIdsChange}
+      onSelectionKnown={(entries, picks) => {
+        const next: Record<string, TaskAssigneeOption> = {};
+        entries.forEach((entry, index) => {
+          const pick = picks?.[index];
+          const userId =
+            typeof pick?.metadata?.linkedUserId === "string"
+              ? pick.metadata.linkedUserId
+              : entry.id;
+          const personId = pick?.id ?? userIdToPersonId.get(userId) ?? userId;
+          next[userId] = {
+            personId,
+            userId,
+            firstName: entry.label.split(" ")[0] ?? entry.label,
+            lastName: entry.label.split(" ").slice(1).join(" "),
+            email: entry.description ?? "",
+            displayName: entry.label,
+          };
+        });
+        setAddedKnown((prev) => ({ ...prev, ...next }));
+      }}
+      authContext="TASK_ASSIGNMENT"
+      sourceTypes={["PERSON"]}
+      committedPickKeys={committedPickKeys}
+      mapPickToId={(pick: SceSelectorPick) => {
+        const linked = pick.metadata?.linkedUserId;
+        return typeof linked === "string" ? linked : null;
+      }}
+      mapPickToChip={(pick) => {
+        const userId =
+          typeof pick.metadata?.linkedUserId === "string" ? pick.metadata.linkedUserId : pick.id;
+        return {
+          id: userId,
+          label: pick.label,
+          description: pick.description,
+        };
+      }}
+      disabled={disabled}
+      addButtonLabel={addButtonLabel}
+      dialogTitle="Person zuweisen"
+      dialogDescription="Wähle eine oder mehrere Personen mit Benutzerkonto."
+      testIdPrefix={testIdPrefix}
+      lockedIds={lockedUserIds}
+      allowAdd={allowAdd}
+      searchPlaceholder="Personen suchen …"
+    />
   );
 }

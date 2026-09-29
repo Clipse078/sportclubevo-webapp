@@ -16,7 +16,10 @@ const COMM_KIND_TO_SELECTOR: Record<CommunicationAudienceSearchKind, SceSelector
   external: "EXTERNAL_CONTACT",
 };
 
-const SELECTOR_TO_COMM_KIND: Record<SceSelectorSourceType, CommunicationAudienceSearchKind> = {
+const SELECTOR_TO_COMM_KIND: Record<
+  Exclude<SceSelectorSourceType, "USER">,
+  CommunicationAudienceSearchKind
+> = {
   PERSON: "person",
   TEAM: "team",
   ORG_UNIT: "orgUnit",
@@ -34,6 +37,9 @@ export function communicationSearchKindToSelectorType(
 export function selectorTypeToCommunicationSearchKind(
   type: SceSelectorSourceType,
 ): CommunicationAudienceSearchKind {
+  if (type === "USER") {
+    throw new Error("USER source is not valid for Communication audience discover");
+  }
   return SELECTOR_TO_COMM_KIND[type];
 }
 
@@ -60,6 +66,8 @@ const SELECTOR_SOURCE_PARAM_ALIASES: Record<string, SceSelectorSourceType> = {
   TARGET_GROUP: "TARGET_GROUP",
   external: "EXTERNAL_CONTACT",
   EXTERNAL_CONTACT: "EXTERNAL_CONTACT",
+  user: "USER",
+  USER: "USER",
 };
 
 export function parseSelectorSourceTypesParam(raw: string | null): SceSelectorSourceType[] | null {

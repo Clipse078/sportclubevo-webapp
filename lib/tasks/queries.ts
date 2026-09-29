@@ -5,6 +5,7 @@ import {
 import { splitTaskResponsibleDisplayName } from "./task-assignee-display";
 
 export type TaskAssigneeOption = {
+  personId?: string;
   userId: string;
   firstName: string;
   lastName: string;

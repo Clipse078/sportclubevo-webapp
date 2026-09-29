@@ -189,8 +189,16 @@ describe("SceListSelectorPanel", () => {
     expect(listArea).toBeTruthy();
     await user.click(listArea as Element);
     await user.keyboard("{End}");
+    await waitFor(() => {
+      const lastOption = document.querySelector('[data-sce-selector-option-index="1"]');
+      expect(lastOption?.className).toMatch(/surface-2/);
+    });
     await user.keyboard(" ");
-    expect(screen.getByTestId("sce-list-selector-pending-count")).toHaveTextContent("1 ausgewählt");
+    await waitFor(() =>
+      expect(screen.getByTestId("sce-list-selector-pending-count")).toHaveTextContent(
+        "1 ausgewählt",
+      ),
+    );
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 

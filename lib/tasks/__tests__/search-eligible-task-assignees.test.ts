@@ -3,44 +3,45 @@ import { ELIGIBLE_TASK_ASSIGNEE_SEARCH_LIMIT } from "../quick-create-assignee-se
 import { searchEligibleTaskAssignees } from "../queries";
 
 const mocks = vi.hoisted(() => ({
-  findMany: vi.fn(),
+  searchEligiblePersonUserIdentitiesInTenant: vi.fn(),
+  listEligiblePersonUserIdentitiesInTenant: vi.fn(),
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
-    tenantMembership: { findMany: mocks.findMany },
-  },
+vi.mock("@/lib/people/person-user-identity", () => ({
+  searchEligiblePersonUserIdentitiesInTenant: mocks.searchEligiblePersonUserIdentitiesInTenant,
+  listEligiblePersonUserIdentitiesInTenant: mocks.listEligiblePersonUserIdentitiesInTenant,
+  resolvePersonUserIdentityByUserId: vi.fn(),
 }));
 
 describe("searchEligibleTaskAssignees", () => {
   beforeEach(() => {
-    mocks.findMany.mockReset();
-    mocks.findMany.mockResolvedValue([]);
+    mocks.searchEligiblePersonUserIdentitiesInTenant.mockReset();
+    mocks.listEligiblePersonUserIdentitiesInTenant.mockReset();
+    mocks.searchEligiblePersonUserIdentitiesInTenant.mockResolvedValue([]);
+    mocks.listEligiblePersonUserIdentitiesInTenant.mockResolvedValue([]);
   });
 
-  it("returns empty for short search terms without querying full tenant", async () => {
+  it("returns empty for short search terms without querying", async () => {
     const rows = await searchEligibleTaskAssignees("tenant-1", "a");
     expect(rows).toEqual([]);
-    expect(mocks.findMany).not.toHaveBeenCalled();
+    expect(mocks.searchEligiblePersonUserIdentitiesInTenant).not.toHaveBeenCalled();
   });
 
-  it("applies tenant scope, active filters, and take limit", async () => {
+  it("delegates search to canonical person-user identity resolver", async () => {
     await searchEligibleTaskAssignees("tenant-1", "san", 10);
-    expect(mocks.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          tenantId: "tenant-1",
-          isActive: true,
-        }),
-        take: 10,
-      }),
+    expect(mocks.searchEligiblePersonUserIdentitiesInTenant).toHaveBeenCalledWith(
+      "tenant-1",
+      "san",
+      10,
     );
   });
 
   it("uses default bounded limit", async () => {
     await searchEligibleTaskAssignees("tenant-1", "michael");
-    expect(mocks.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ take: ELIGIBLE_TASK_ASSIGNEE_SEARCH_LIMIT }),
+    expect(mocks.searchEligiblePersonUserIdentitiesInTenant).toHaveBeenCalledWith(
+      "tenant-1",
+      "michael",
+      ELIGIBLE_TASK_ASSIGNEE_SEARCH_LIMIT,
     );
   });
 });

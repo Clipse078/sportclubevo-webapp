@@ -1,17 +1,9 @@
 /**
- * AUFGABEN-06G7 — server-side draft audience preview (canonical 06G6 resolver only).
+ * AUFGABEN-06G7 / SCE-SELECTOR-02R5 — server-side draft audience preview (authoritative Person resolution).
  */
 
-import {
-  resolveOrgUnitAudiencePersonIds,
-  resolveRoleAudiencePersonIds,
-  resolveTargetGroupAudiencePersonIds,
-  resolveTeamAudiencePersonIds,
-} from "./requirement-audience-resolvers";
-import {
-  resolveRequirementAudiencePersonIdsFromDraftRows,
-  resolveRequirementAudiencePersonIdsFromSnapshot,
-} from "./requirement-audience";
+import { prisma } from "@/lib/db/prisma";
+import { resolveRequirementAudiencePersonIdsFromAudienceInput } from "./requirement-audience";
 import type { RequirementDraftAudienceInput } from "./types";
 import { RequirementTenantMismatchError } from "./errors";
 
@@ -24,6 +16,16 @@ export type RequirementAudiencePreviewBreakdown = {
   resolvedTotal: number;
 };
 
+export type RequirementAudiencePreviewPersonRow = {
+  personId: string;
+  displayName: string;
+  secondary: string | null;
+};
+
+export type RequirementAudiencePreviewResult = RequirementAudiencePreviewBreakdown & {
+  persons: RequirementAudiencePreviewPersonRow[];
+};
+
 function dedupe(ids: readonly string[]): string[] {
   return [...new Set(ids.map((id) => id.trim()).filter(Boolean))];
 }
@@ -31,7 +33,8 @@ function dedupe(ids: readonly string[]): string[] {
 export async function previewRequirementDraftAudience(
   tenantId: string,
   input: RequirementDraftAudienceInput,
-): Promise<RequirementAudiencePreviewBreakdown> {
+  options?: { includePersonRows?: boolean; personRowLimit?: number },
+): Promise<RequirementAudiencePreviewResult> {
   const personIds = dedupe(input.personIds ?? []);
   const teamIds = dedupe(input.teamIds ?? []);
   const orgUnitIds = dedupe(input.orgUnitIds ?? []);
@@ -39,37 +42,49 @@ export async function previewRequirementDraftAudience(
   const targetGroupIds = dedupe(input.targetGroupIds ?? []);
 
   try {
-    const [teamPersonIds, orgUnitPersonIds, rolePersonIds, targetGroupPersonIds] =
-      await Promise.all([
-        teamIds.length ? resolveTeamAudiencePersonIds(tenantId, teamIds) : Promise.resolve([]),
-        orgUnitIds.length
-          ? resolveOrgUnitAudiencePersonIds(tenantId, orgUnitIds)
-          : Promise.resolve([]),
-        roleIds.length ? resolveRoleAudiencePersonIds(tenantId, roleIds) : Promise.resolve([]),
-        targetGroupIds.length
-          ? resolveTargetGroupAudiencePersonIds(tenantId, targetGroupIds)
-          : Promise.resolve([]),
-      ]);
+    const resolvedIds = await resolveRequirementAudiencePersonIdsFromAudienceInput(tenantId, input);
 
-    const explicitPersonIds = resolveRequirementAudiencePersonIdsFromDraftRows(
-      personIds.map((personId) => ({ personId })),
-    );
+    const includePersonRows = options?.includePersonRows === true;
+    const limit = Math.min(500, Math.max(1, options?.personRowLimit ?? 200));
+    const slice = includePersonRows ? resolvedIds.slice(0, limit) : [];
 
-    const resolvedTotal = await resolveRequirementAudiencePersonIdsFromSnapshot(tenantId, {
-      persons: personIds.map((personId) => ({ personId })),
-      teams: teamIds.map((teamId) => ({ teamId })),
-      orgUnits: orgUnitIds.map((orgUnitId) => ({ orgUnitId })),
-      roles: roleIds.map((roleId) => ({ roleId })),
-      targetGroups: targetGroupIds.map((targetGroupId) => ({ targetGroupId })),
-    });
+    const personRows =
+      slice.length > 0
+        ? await prisma.person.findMany({
+            where: { tenantId, id: { in: slice } },
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              displayName: true,
+              email: true,
+            },
+          })
+        : [];
+
+    const rowById = new Map(personRows.map((row) => [row.id, row]));
 
     return {
-      explicitPersonCount: explicitPersonIds.length,
-      teamPersonCount: teamPersonIds.length,
-      orgUnitPersonCount: orgUnitPersonIds.length,
-      rolePersonCount: rolePersonIds.length,
-      targetGroupPersonCount: targetGroupPersonIds.length,
-      resolvedTotal: resolvedTotal.length,
+      explicitPersonCount: personIds.length,
+      teamPersonCount: teamIds.length,
+      orgUnitPersonCount: orgUnitIds.length,
+      rolePersonCount: roleIds.length,
+      targetGroupPersonCount: targetGroupIds.length,
+      resolvedTotal: resolvedIds.length,
+      persons: includePersonRows
+        ? slice.map((personId) => {
+            const row = rowById.get(personId);
+            const displayName =
+              row?.displayName?.trim() ||
+              `${row?.firstName ?? ""} ${row?.lastName ?? ""}`.trim() ||
+              personId;
+            return {
+              personId,
+              displayName,
+              secondary: row?.email?.trim() || null,
+            };
+          })
+        : [],
     };
   } catch {
     throw new RequirementTenantMismatchError("One or more audience selectors are invalid for this tenant");

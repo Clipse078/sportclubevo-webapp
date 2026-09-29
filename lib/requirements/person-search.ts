@@ -1,24 +1,27 @@
+import type { RequirementPersonOption } from "./person-search-types";
+import {
+  browseDiscoverableTenantPersons,
+  searchDiscoverableTenantPersons,
+} from "@/lib/people/tenant-person-discovery";
 import { prisma } from "@/lib/db/prisma";
 
-export type RequirementPersonOption = {
-  personId: string;
-  firstName: string;
-  lastName: string;
-  displayName: string;
-  email: string | null;
-};
+export type { RequirementPersonOption } from "./person-search-types";
 
-import { REQUIREMENT_PERSON_SEARCH_MIN_CHARS } from "./person-search-constants";
+export { REQUIREMENT_PERSON_SEARCH_MIN_CHARS } from "./person-search-constants";
 
-export { REQUIREMENT_PERSON_SEARCH_MIN_CHARS };
-
-function formatDisplayName(row: {
-  firstName: string;
-  lastName: string;
-  displayName: string | null;
-}): string {
-  const fromParts = `${row.firstName} ${row.lastName}`.trim();
-  return row.displayName?.trim() || fromParts || "Unbenannt";
+export async function browseRequirementAudiencePersons(
+  tenantId: string,
+  limit = 20,
+  offset = 0,
+): Promise<RequirementPersonOption[]> {
+  const rows = await browseDiscoverableTenantPersons(tenantId, limit, offset);
+  return rows.map((row) => ({
+    personId: row.personId,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    displayName: row.displayName,
+    email: row.email,
+  }));
 }
 
 export async function searchRequirementAudiencePersons(
@@ -27,41 +30,12 @@ export async function searchRequirementAudiencePersons(
   limit = 20,
   offset = 0,
 ): Promise<RequirementPersonOption[]> {
-  const term = query.trim();
-  if (term.length < REQUIREMENT_PERSON_SEARCH_MIN_CHARS) {
-    return [];
-  }
-
-  const safeLimit = Math.min(Math.max(limit, 1), 50);
-  const safeOffset = Math.max(offset, 0);
-
-  const rows = await prisma.person.findMany({
-    where: {
-      tenantId,
-      OR: [
-        { firstName: { contains: term, mode: "insensitive" } },
-        { lastName: { contains: term, mode: "insensitive" } },
-        { displayName: { contains: term, mode: "insensitive" } },
-        { email: { contains: term, mode: "insensitive" } },
-      ],
-    },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      displayName: true,
-      email: true,
-    },
-    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-    skip: safeOffset,
-    take: safeLimit + 1,
-  });
-
+  const rows = await searchDiscoverableTenantPersons(tenantId, query, limit, offset);
   return rows.map((row) => ({
-    personId: row.id,
+    personId: row.personId,
     firstName: row.firstName,
     lastName: row.lastName,
-    displayName: formatDisplayName(row),
+    displayName: row.displayName,
     email: row.email,
   }));
 }
@@ -71,6 +45,16 @@ export async function loadRequirementPersonOptionsByIds(
   personIds: readonly string[],
 ): Promise<RequirementPersonOption[]> {
   if (personIds.length === 0) return [];
+
+  function formatDisplayName(row: {
+    firstName: string;
+    lastName: string;
+    displayName: string | null;
+  }): string {
+    const fromParts = `${row.firstName} ${row.lastName}`.trim();
+    return row.displayName?.trim() || fromParts || "Unbenannt";
+  }
+
   const rows = await prisma.person.findMany({
     where: { tenantId, id: { in: [...personIds] } },
     select: {

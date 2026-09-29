@@ -18,6 +18,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { Loader2, Search, X } from "lucide-react";
+import { SceInlineSinglePersonPicker } from "@/components/sce/list-selector/SceInlineSinglePersonPicker";
 
 export type PersonPickerResult = {
   id: string;
@@ -72,7 +73,7 @@ function PersonAvatar({ name }: { name: string }) {
   );
 }
 
-export function PeoplePicker({
+function PeoplePickerLegacySearch({
   mode = "any",
   teamSeasonId,
   excludeIds = [],
@@ -340,4 +341,45 @@ export function PeoplePicker({
       ) : null}
     </div>
   );
+}
+
+export function PeoplePicker(props: PeoplePickerProps) {
+  const { mode = "any", teamSeasonId, selected, onSelect, onClearSelected, placeholder, disabled, excludeIds } =
+    props;
+
+  if (mode === "any" && !teamSeasonId) {
+    return (
+      <SceInlineSinglePersonPicker
+        selected={
+          selected
+            ? {
+                id: selected.id,
+                label: getPersonLabel(selected),
+                description: selected.email ?? selected.phone,
+              }
+            : null
+        }
+        onSelect={(pick) => {
+          const parts = pick.label.trim().split(/\s+/);
+          onSelect({
+            id: pick.id,
+            firstName: parts[0] ?? "",
+            lastName: parts.slice(1).join(" "),
+            displayName: pick.label,
+            email: pick.description?.includes("@") ? pick.description : selected?.email ?? null,
+            phone: pick.description && !pick.description.includes("@") ? pick.description : selected?.phone ?? null,
+            isPlayer: selected?.isPlayer,
+            isTrainer: selected?.isTrainer,
+          });
+        }}
+        onClearSelected={onClearSelected}
+        placeholder={placeholder}
+        disabled={disabled}
+        excludeIds={excludeIds}
+        testIdPrefix="people-picker-sce"
+      />
+    );
+  }
+
+  return <PeoplePickerLegacySearch {...props} />;
 }

@@ -9,6 +9,7 @@ export const SCE_SELECTOR_ALL_CATEGORY_BROWSE_LIMITS: Partial<Record<string, num
   TEAM: 10,
   ROLE: 5,
   PERSON: 10,
+  USER: 10,
   EXTERNAL_CONTACT: 10,
   TARGET_GROUP: 10,
 };

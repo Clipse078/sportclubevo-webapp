@@ -4220,6 +4220,8 @@ model Requirement {
   reminder2PresetKey String?
   /// When true, UI/admin configured reminders; null presets/at = no reminder (not legacy due-soon window).
   remindersConfigured Boolean             @default(false)
+  /// SCE-SELECTOR-02R5 — optional AND/OR/exclude composition while DRAFT (legacy flat rows remain supported).
+  draftAudienceCompositionJson Json?
   activatedAt     DateTime?
   closedAt        DateTime?
   cancelledAt     DateTime?

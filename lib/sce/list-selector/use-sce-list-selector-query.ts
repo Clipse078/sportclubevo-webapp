@@ -141,6 +141,12 @@ export function useSceListSelectorQuery(options: {
           if (activeAbortRef.current === controller) {
             activeAbortRef.current = null;
           }
+        } else if (activeAbortRef.current === null && !signal.aborted) {
+          setLoading(false);
+          setLoadingMore(false);
+        } else if (signal.aborted && activeAbortRef.current === null) {
+          setLoading(false);
+          setLoadingMore(false);
         }
       }
     },
@@ -222,7 +228,7 @@ export function useSceListSelectorQuery(options: {
       statusMessage =
         query.trim().length >= SCE_SELECTOR_MIN_SEARCH_LENGTH
           ? `Keine Ergebnisse für „${query.trim()}“`
-          : "Keine Einträge vorhanden";
+          : "Keine passenden Einträge vorhanden.";
     } else {
       statusMessage = `${resultCount} Ergebnisse`;
     }

@@ -28,13 +28,13 @@ describe("AUFGABEN-06G7 UX contracts", () => {
     expect(label).toBe("Michael Duijster");
 
     const picker = read("components/admin/aufgaben/TaskPeopleMultiPicker.tsx");
-    expect(picker).toContain("searchQuickCreateAssigneesAction");
-    expect(picker).toContain("displayName");
+    expect(picker).toContain("SceChipMultiSelectorField");
+    expect(picker).toContain("PERSON");
   });
 
   it("U03 — ROLE_AUDIENCE role labels remain role names in audience builder", () => {
     const builder = read("components/admin/aufgaben/RequirementAudienceBuilder.tsx");
-    expect(builder).toContain('typeLabel="Rolle"');
+    expect(builder).toContain('"Rolle"');
     expect(builder).not.toContain("formatTaskResponsibleDisplayName");
   });
 
@@ -94,19 +94,17 @@ describe("AUFGABEN-06G7 UX contracts", () => {
     expect(html).not.toMatch(/<div class="task-description-task-item-text"><p>/);
   });
 
-  it("U10–U14 — requirement form exposes all audience selector types", () => {
+  it("U10–U14 — requirement form uses one canonical recipient selector", () => {
     const builder = read("components/admin/aufgaben/RequirementAudienceBuilder.tsx");
-    expect(builder).toContain("RequirementPersonMultiPicker");
-    expect(builder).toContain("requirement-audience-add-${kind}");
-    expect(builder).toContain('kind="team"');
-    expect(builder).toContain('kind="orgUnit"');
-    expect(builder).toContain('kind="role"');
-    expect(builder).toContain('kind="targetGroup"');
+    expect(builder).toContain("SceRecipientSelector");
+    expect(builder).toContain("Empfänger hinzufügen");
+    expect(builder).not.toContain("RequirementPersonMultiPicker");
+    expect(builder).not.toContain("requirement-audience-add-");
   });
 
   it("U15/U16 — mixed audiences call canonical preview API and dedupe explicit persons", () => {
     const previewModule = read("lib/requirements/requirement-audience-preview.ts");
-    expect(previewModule).toContain("resolveRequirementAudiencePersonIdsFromSnapshot");
+    expect(previewModule).toContain("resolveRequirementAudiencePersonIdsFromAudienceInput");
     expect(previewModule).not.toMatch(/from \"react\"/);
 
     expect(

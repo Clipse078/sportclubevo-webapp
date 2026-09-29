@@ -19,6 +19,10 @@ import {
 } from "@/lib/sce/list-selector/sources/org-unit-selector-source";
 import { browseRoleSelectorItems, searchRoleSelectorItems } from "@/lib/sce/list-selector/sources/role-selector-source";
 import {
+  browseWorkspaceRoleFunctionSelectorItems,
+  searchWorkspaceRoleFunctionSelectorItems,
+} from "@/lib/sce/list-selector/sources/workspace-role-function-selector-source";
+import {
   browseTargetGroupSelectorItems,
   searchTargetGroupSelectorItems,
 } from "@/lib/sce/list-selector/sources/target-group-selector-source";
@@ -26,6 +30,14 @@ import {
   browseExternalContactSelectorItems,
   searchExternalContactSelectorItems,
 } from "@/lib/sce/list-selector/sources/external-contact-selector-source";
+import {
+  browseUserSelectorItems,
+  searchUserSelectorItems,
+} from "@/lib/sce/list-selector/sources/user-selector-source";
+import {
+  browseTaskOrgUnitSelectorItems,
+  searchTaskOrgUnitSelectorItems,
+} from "@/lib/sce/list-selector/sources/task-org-unit-selector-source";
 import { withSceSelectorSourceTimeout } from "@/lib/sce/list-selector/source-query-timeout";
 import type { SceSelectorSourcePage } from "@/lib/sce/list-selector/source-pagination";
 
@@ -45,6 +57,7 @@ async function querySourceType(
 ): Promise<SceSelectorSourcePage> {
   const term = input.query.trim();
   const ctx = input.communicationContext;
+  const authContext = input.authorizationContext;
 
   if (term.length >= SCE_SELECTOR_MIN_SEARCH_LENGTH) {
     switch (type) {
@@ -53,18 +66,65 @@ async function querySourceType(
           tenantId: input.tenantId,
           actorUserId: input.actorUserId,
           communicationContext: ctx,
+          authorizationContext: authContext,
+          excludeUserIds: input.excludeUserIds,
           query: term,
           limit,
           cursor,
         });
+      case "USER":
+        return searchUserSelectorItems({
+          tenantId: input.tenantId,
+          actorUserId: input.actorUserId,
+          query: term,
+          limit,
+          cursor,
+          excludeUserIds: input.excludeUserIds,
+        });
       case "TEAM":
-        return searchTeamSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
+        return searchTeamSelectorItems({
+          tenantId: input.tenantId,
+          authorizationContext: authContext,
+          query: term,
+          limit,
+          cursor,
+        });
       case "ORG_UNIT":
-        return searchOrgUnitSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
+        if (authContext === "TASK_ASSIGNMENT") {
+          return searchTaskOrgUnitSelectorItems({
+            tenantId: input.tenantId,
+            actorUserId: input.actorUserId,
+            query: term,
+            limit,
+            cursor,
+          });
+        }
+        return searchOrgUnitSelectorItems({
+          tenantId: input.tenantId,
+          authorizationContext: authContext,
+          query: term,
+          limit,
+          cursor,
+        });
       case "ROLE":
-        return searchRoleSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
+        if (authContext === "WORKSPACE_ACCESS") {
+          return searchWorkspaceRoleFunctionSelectorItems({ query: term, limit, cursor });
+        }
+        return searchRoleSelectorItems({
+          tenantId: input.tenantId,
+          authorizationContext: authContext,
+          query: term,
+          limit,
+          cursor,
+        });
       case "TARGET_GROUP":
-        return searchTargetGroupSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
+        return searchTargetGroupSelectorItems({
+          tenantId: input.tenantId,
+          authorizationContext: authContext,
+          query: term,
+          limit,
+          cursor,
+        });
       case "EXTERNAL_CONTACT":
         return searchExternalContactSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
       default:
@@ -78,17 +138,58 @@ async function querySourceType(
         tenantId: input.tenantId,
         actorUserId: input.actorUserId,
         communicationContext: ctx,
+        authorizationContext: authContext,
+        excludeUserIds: input.excludeUserIds,
         limit,
         cursor,
       });
+    case "USER":
+      return browseUserSelectorItems({
+        tenantId: input.tenantId,
+        actorUserId: input.actorUserId,
+        limit,
+        cursor,
+        excludeUserIds: input.excludeUserIds,
+      });
     case "TEAM":
-      return browseTeamSelectorItems({ tenantId: input.tenantId, limit, cursor });
+      return browseTeamSelectorItems({
+        tenantId: input.tenantId,
+        authorizationContext: authContext,
+        limit,
+        cursor,
+      });
     case "ORG_UNIT":
-      return browseOrgUnitSelectorItems({ tenantId: input.tenantId, limit, cursor });
+      if (authContext === "TASK_ASSIGNMENT") {
+        return browseTaskOrgUnitSelectorItems({
+          tenantId: input.tenantId,
+          actorUserId: input.actorUserId,
+          limit,
+          cursor,
+        });
+      }
+      return browseOrgUnitSelectorItems({
+        tenantId: input.tenantId,
+        authorizationContext: authContext,
+        limit,
+        cursor,
+      });
     case "ROLE":
-      return browseRoleSelectorItems({ tenantId: input.tenantId, limit, cursor });
+      if (authContext === "WORKSPACE_ACCESS") {
+        return browseWorkspaceRoleFunctionSelectorItems({ limit, cursor });
+      }
+      return browseRoleSelectorItems({
+        tenantId: input.tenantId,
+        authorizationContext: authContext,
+        limit,
+        cursor,
+      });
     case "TARGET_GROUP":
-      return browseTargetGroupSelectorItems({ tenantId: input.tenantId, limit, cursor });
+      return browseTargetGroupSelectorItems({
+        tenantId: input.tenantId,
+        authorizationContext: authContext,
+        limit,
+        cursor,
+      });
     case "EXTERNAL_CONTACT":
       return browseExternalContactSelectorItems({ tenantId: input.tenantId, limit, cursor });
     default:
@@ -127,6 +228,7 @@ function resolveTypesToQuery(input: {
           "TEAM",
           "ROLE",
           "PERSON",
+          "USER",
           "EXTERNAL_CONTACT",
           "TARGET_GROUP",
         ] as SceSelectorSourceType[]

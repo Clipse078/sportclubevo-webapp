@@ -54,9 +54,91 @@ Stable key: `` `${type}:${id}` `` via `sceSelectorPickKey()`.
 
 ## Authorization
 
-Generic endpoint `/api/sce/selector/discover` requires auth + tenant only.
+Generic endpoint `/api/sce/selector/discover` requires auth, active tenant, and a **closed** `authContext` enum (see `SceSelectorAuthorizationContext`). Clients must never send permission keys.
 
 Communication uses `/api/communication/audience/discover` with capability checks + optional `sources=` filter aligned with feature adapters.
+
+### Authorization contexts (SCE-SELECTOR-02)
+
+| Context | Typical surfaces | Allowed sources |
+| --- | --- | --- |
+| `COMMUNICATION_SEND` | Club send, campaigns | Person, Team, OrgUnit, Role, TargetGroup, External |
+| `TARGET_GROUP_MANAGEMENT` | Zielgruppen builder | Person, Team, OrgUnit, Role, External (no TargetGroup) |
+| `TASK_ASSIGNMENT` | Aufgaben assignees / org visibility | User, OrgUnit (task-auth adapter) |
+| `REQUIREMENT_AUDIENCE` | Requirements audience rules → Person recipients | Person, Team, OrgUnit, Role, TargetGroup |
+| `WORKSPACE_ACCESS` | Workspace ACL grants | Person, Team, OrgUnit, Role |
+| `PEOPLE_ACCESS_ADMIN` | Admin people flows (future) | Person, Team, OrgUnit, Role |
+| `CLUB_REFERENCE` | Generic in-club person pick | Person |
+
+Entity source ≠ authorization context: the same `PERSON` source applies different filters depending on `authContext` / communication hints.
+
+## Source registry
+
+Implemented source types (`SceSelectorSourceType`):
+
+- `PERSON`, `USER`, `TEAM`, `ORG_UNIT`, `ROLE`, `TARGET_GROUP`, `EXTERNAL_CONTACT`
+
+Adapters:
+
+- `USER` — eligible task assignees (User IDs, Person-backed)
+- Task `ORG_UNIT` — `task-org-unit-selector-source` (visibility-aware org units)
+- Communication bridge — audience discover mapping (no `USER`)
+
+## Canonical usage
+
+### Generic client adapter
+
+`sceGenericDiscoverFetch({ authContext, sourceTypes })` → use with `SceListSelectorPanel` or wrappers:
+
+- `SceChipMultiSelectorField` — chip field + multi-select sheet
+- `SceInlineSinglePersonPicker` — single person (club reference)
+- `WorkspaceAccessAudienceScePicker` — workspace ACL
+
+### Do
+
+- Pass closed `authContext` values only
+- Map picks to domain IDs in the feature layer
+- Keep browse-first UX (empty query loads first page)
+
+### Don't
+
+- Add parallel `PersonPicker` / `TeamPicker` components (see duplication guard test)
+- Accept client-supplied permission keys
+- Collapse Person and User semantics (`USER` is explicit for assignees)
+
+## Entity presentation
+
+- Person/User rows: label + email secondary line
+- Team: name + shortName metadata
+- OrgUnit / Role: human-readable label; technical keys in `searchText` only
+- OrgUnit hierarchy (tasks): indentation via metadata level in task adapter
+
+## Single vs multi select
+
+Engine `mode`: `single` (immediate or dismiss-on-pick) vs `multiple` (pending map + „N übernehmen“ footer).
+
+## Browse / search behavior
+
+Min search length: 2 characters. Debounce: 250ms. Category tabs hidden when only one source type is enabled.
+
+## Pagination
+
+Per-group cursors via `cursors` JSON on discover APIs; UI load-more in `SceListSelectorPanel`.
+
+## Adapter pattern
+
+Feature UI → `fetchResults` closure → `/api/sce/selector/discover` or domain discover route → `discoverSceSelectorItems` → source modules.
+
+## Domain-specific exceptions
+
+See `docs/ux/sce-selector-inventory.md` for Workspace role function keys, FacilityResourceSearchableSelector, TeamSeason pickers, Probetraining, and tenant switching.
+
+## Migration guide
+
+1. Pick `authContext` + `sourceTypes`.
+2. Replace inline search popovers with `SceChipMultiSelectorField` or `SceListSelectorPanel`.
+3. Add/extend a source adapter only if multiple consumers need the same semantics.
+4. Record surface in the inventory doc.
 
 ## Error handling
 

@@ -21,6 +21,10 @@ import TaskDescriptionFormField from "./TaskDescriptionFormField";
 import TaskDescriptionContent from "./TaskDescriptionContent";
 import RequirementAudienceBuilder from "./RequirementAudienceBuilder";
 import { TaskReminderFields } from "./TaskReminderFields";
+import {
+  requirementAudienceSelectionFromDto,
+  requirementAudienceSelectionHasContent,
+} from "@/lib/requirements/requirement-audience-selection";
 import type { RequirementAudienceSelection } from "@/lib/requirements/types";
 import {
   activateRequirementAction,
@@ -90,13 +94,9 @@ export default function RequirementDetailWorkspace({
   const searchParams = useSearchParams();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [audience, setAudience] = useState<RequirementAudienceSelection>({
-    personIds: requirement.draftAudiencePersonIds,
-    teamIds: requirement.draftAudienceTeamIds,
-    orgUnitIds: requirement.draftAudienceOrgUnitIds,
-    roleIds: requirement.draftAudienceRoleIds,
-    targetGroupIds: requirement.draftAudienceTargetGroupIds,
-  });
+  const [audience, setAudience] = useState<RequirementAudienceSelection>(() =>
+    requirementAudienceSelectionFromDto(requirement),
+  );
   const audienceKnownLabelMaps = useMemo(
     () => ({
       teams: Object.fromEntries(audienceKnownLabels?.teams.map((t) => [t.teamId, t.label]) ?? []),
@@ -110,13 +110,7 @@ export default function RequirementDetailWorkspace({
     }),
     [audienceKnownLabels],
   );
-  const hasAnyAudience =
-    audience.personIds.length +
-      audience.teamIds.length +
-      audience.orgUnitIds.length +
-      audience.roleIds.length +
-      audience.targetGroupIds.length >
-    0;
+  const hasAnyAudience = requirementAudienceSelectionHasContent(audience);
   const [publishOpen, setPublishOpen] = useState(false);
   const [closeOpen, setCloseOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);

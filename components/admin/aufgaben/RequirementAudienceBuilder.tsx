@@ -1,20 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, X } from "lucide-react";
-import { PopoverContent } from "@/components/ui/Popover";
-import RequirementPersonMultiPicker from "./RequirementPersonMultiPicker";
+import { useEffect, useMemo, useState } from "react";
+import { Building2, ChevronDown, Plus, User, UserCircle2, Users, X } from "lucide-react";
 import type { RequirementPersonOption } from "@/lib/requirements/person-search";
-import {
-  previewRequirementDraftAudienceAction,
-  searchRequirementAudienceOrgUnitsAction,
-  searchRequirementAudienceRolesAction,
-  searchRequirementAudienceTargetGroupsAction,
-  searchRequirementAudienceTeamsAction,
-} from "@/app/(admin)/dashboard/aufgaben/requirement-actions";
-import { REQUIREMENT_PERSON_SEARCH_MIN_CHARS } from "@/lib/requirements/person-search-constants";
-
+import { previewRequirementDraftAudienceAction } from "@/app/(admin)/dashboard/aufgaben/requirement-actions";
 import type { RequirementAudienceSelection } from "@/lib/requirements/types";
+import {
+  normalizeRequirementAudienceSelection,
+  requirementAudienceSelectionHasContent,
+} from "@/lib/requirements/requirement-audience-selection";
+import type {
+  RequirementAudienceComposition,
+  RequirementAudienceConnector,
+  RequirementAudienceTermType,
+} from "@/lib/requirements/requirement-audience-composition-model";
+import { SceRecipientSelector } from "@/components/sce/recipient/SceRecipientSelector";
+import { SCE_RECIPIENT_SELECTOR_REQUIREMENT } from "@/lib/sce/recipient/sce-recipient-selector-config";
+import type { SceSelectorPick, SceSelectorSourceType } from "@/lib/sce/list-selector/types";
+import { sceSelectorPickKey } from "@/lib/sce/list-selector/types";
 
 export type { RequirementAudienceSelection };
 
@@ -25,6 +28,8 @@ type KnownLabels = {
   targetGroups: Record<string, string>;
 };
 
+type StructuralExpansionMeta = Record<string, { personCount?: number }>;
+
 type Props = {
   value: RequirementAudienceSelection;
   onChange: (value: RequirementAudienceSelection) => void;
@@ -33,162 +38,34 @@ type Props = {
   disabled?: boolean;
 };
 
-type SelectorKind = "team" | "orgUnit" | "role" | "targetGroup";
-
-const KIND_LABEL: Record<SelectorKind, string> = {
-  team: "Team",
-  orgUnit: "Organisationseinheit",
-  role: "Rolle",
-  targetGroup: "Zielgruppe",
-};
-
-function SelectorAddPanel({
-  kind,
-  disabled,
-  onPick,
-}: {
-  kind: SelectorKind;
-  disabled?: boolean;
-  onPick: (id: string, label: string) => void;
-}) {
-  const anchorRef = useRef<HTMLButtonElement>(null);
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [options, setOptions] = useState<Array<{ id: string; label: string }>>([]);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const term = query.trim();
-    if (term.length < REQUIREMENT_PERSON_SEARCH_MIN_CHARS) {
-      setOptions([]);
-      return undefined;
-    }
-    const handle = setTimeout(async () => {
-      setLoading(true);
-      setError(null);
-      const searchFn =
-        kind === "team"
-          ? searchRequirementAudienceTeamsAction
-          : kind === "orgUnit"
-            ? searchRequirementAudienceOrgUnitsAction
-            : kind === "role"
-              ? searchRequirementAudienceRolesAction
-              : searchRequirementAudienceTargetGroupsAction;
-      const result = await searchFn(term);
-      if (!result.ok) {
-        setError(result.message);
-        setOptions([]);
-      } else {
-        setOptions(
-          result.options.map((row) => ({
-            id:
-              "teamId" in row
-                ? row.teamId
-                : "orgUnitId" in row
-                  ? row.orgUnitId
-                  : "roleId" in row
-                    ? row.roleId
-                    : row.targetGroupId,
-            label: row.label,
-          })),
-        );
-      }
-      setLoading(false);
-    }, 250);
-    return () => clearTimeout(handle);
-  }, [kind, open, query]);
-
-  return (
-    <div className="relative inline-block">
-      <button
-        ref={anchorRef}
-        type="button"
-        disabled={disabled}
-        className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1 text-xs hover:bg-[var(--surface-2)]"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        data-testid={`requirement-audience-add-${kind}`}
-      >
-        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-        {KIND_LABEL[kind]}
-      </button>
-      <PopoverContent
-        open={open}
-        onOpenChange={setOpen}
-        anchorRef={anchorRef}
-        matchAnchorWidth={false}
-        maxHeight={280}
-        className="w-72 p-2"
-        role="dialog"
-      >
-        <input
-          className="fca-input mb-2 w-full text-sm"
-          placeholder="Suchen…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          data-testid={`requirement-audience-search-${kind}`}
-        />
-        {error ? <p className="text-xs text-red-500">{error}</p> : null}
-        {loading ? <p className="text-xs text-[var(--muted)]">Suche…</p> : null}
-        <ul className="max-h-52 overflow-y-auto">
-          {options.map((option) => (
-            <li key={option.id}>
-              <button
-                type="button"
-                className="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-[var(--surface-2)]"
-                onClick={() => {
-                  onPick(option.id, option.label);
-                  setOpen(false);
-                  setQuery("");
-                }}
-              >
-                {option.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </PopoverContent>
-    </div>
-  );
+function RecipientTypeIcon({ type }: { type: SceSelectorSourceType }) {
+  if (type === "ORG_UNIT") return <Building2 className="h-3.5 w-3.5" aria-hidden="true" />;
+  if (type === "TEAM" || type === "TARGET_GROUP") {
+    return <Users className="h-3.5 w-3.5" aria-hidden="true" />;
+  }
+  if (type === "ROLE") return <UserCircle2 className="h-3.5 w-3.5" aria-hidden="true" />;
+  return <User className="h-3.5 w-3.5" aria-hidden="true" />;
 }
 
-function TokenRow({
-  typeLabel,
-  valueLabel,
-  onRemove,
-  disabled,
-  testId,
-}: {
-  typeLabel: string;
-  valueLabel: string;
-  onRemove: () => void;
-  disabled?: boolean;
-  testId: string;
-}) {
-  return (
-    <div
-      className="flex items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1.5 text-sm"
-      data-testid={testId}
-    >
-      <div className="min-w-0">
-        <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-          {typeLabel}
-        </span>
-        <p className="truncate">{valueLabel}</p>
-      </div>
-      <button
-        type="button"
-        className="rounded p-1 text-[var(--muted)] hover:bg-[var(--surface)]"
-        aria-label={`${typeLabel} ${valueLabel} entfernen`}
-        disabled={disabled}
-        onClick={onRemove}
-      >
-        <X className="h-4 w-4" />
-      </button>
-    </div>
-  );
+function termKindLabel(type: RequirementAudienceTermType): string {
+  if (type === "ORG_UNIT") return "Organisation";
+  if (type === "TEAM") return "Team";
+  if (type === "ROLE") return "Rolle";
+  if (type === "TARGET_GROUP") return "Zielgruppe";
+  return "Person";
+}
+
+function resolveLabel(
+  type: RequirementAudienceTermType,
+  id: string,
+  labels: KnownLabels,
+  knownPersons: Record<string, RequirementPersonOption>,
+): string {
+  if (type === "PERSON") return knownPersons[id]?.displayName ?? id;
+  if (type === "TEAM") return labels.teams[id] ?? id;
+  if (type === "ORG_UNIT") return labels.orgUnits[id] ?? id;
+  if (type === "ROLE") return labels.roles[id] ?? id;
+  return labels.targetGroups[id] ?? id;
 }
 
 export default function RequirementAudienceBuilder({
@@ -201,43 +78,62 @@ export default function RequirementAudienceBuilder({
   const [labels, setLabels] = useState<KnownLabels>(
     knownLabels ?? { teams: {}, orgUnits: {}, roles: {}, targetGroups: {} },
   );
+  const [structuralMeta, setStructuralMeta] = useState<StructuralExpansionMeta>({});
+  const [includePickerOpen, setIncludePickerOpen] = useState(false);
+  const [excludePickerOpen, setExcludePickerOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [nextConnector, setNextConnector] = useState<RequirementAudienceConnector>("AND");
+  const [knownPersons, setKnownPersons] = useState<Record<string, RequirementPersonOption>>(() => {
+    const map: Record<string, RequirementPersonOption> = {};
+    for (const person of initialKnownPersons) {
+      map[person.personId] = person;
+    }
+    return map;
+  });
+
   const [preview, setPreview] = useState<{
     resolvedTotal: number;
+    persons: Array<{ personId: string; displayName: string; secondary: string | null }>;
     loading: boolean;
     error: string | null;
-  }>({ resolvedTotal: 0, loading: false, error: null });
+  }>({ resolvedTotal: 0, persons: [], loading: false, error: null });
+
+  const normalized = useMemo(() => normalizeRequirementAudienceSelection(value), [value]);
+  const composition = normalized.composition;
 
   useEffect(() => {
     if (knownLabels) setLabels(knownLabels);
   }, [knownLabels]);
 
-  const hasAudiences = useMemo(
-    () =>
-      value.personIds.length +
-        value.teamIds.length +
-        value.orgUnitIds.length +
-        value.roleIds.length +
-        value.targetGroupIds.length >
-      0,
-    [value],
-  );
+  useEffect(() => {
+    const map: Record<string, RequirementPersonOption> = {};
+    for (const person of initialKnownPersons) {
+      map[person.personId] = person;
+    }
+    setKnownPersons((prev) => ({ ...map, ...prev }));
+  }, [initialKnownPersons]);
+
+  const hasAudiences = requirementAudienceSelectionHasContent(normalized);
 
   useEffect(() => {
     if (!hasAudiences) {
-      setPreview({ resolvedTotal: 0, loading: false, error: null });
+      setPreview({ resolvedTotal: 0, persons: [], loading: false, error: null });
       return undefined;
     }
     let cancelled = false;
     const handle = setTimeout(async () => {
       setPreview((prev) => ({ ...prev, loading: true, error: null }));
-      const result = await previewRequirementDraftAudienceAction(value);
+      const result = await previewRequirementDraftAudienceAction(normalized, {
+        includePersonRows: previewOpen,
+      });
       if (cancelled) return;
       if (!result.ok) {
-        setPreview({ resolvedTotal: 0, loading: false, error: result.message });
+        setPreview({ resolvedTotal: 0, persons: [], loading: false, error: result.message });
         return;
       }
       setPreview({
         resolvedTotal: result.preview.resolvedTotal,
+        persons: result.preview.persons,
         loading: false,
         error: null,
       });
@@ -246,127 +142,444 @@ export default function RequirementAudienceBuilder({
       cancelled = true;
       clearTimeout(handle);
     };
-  }, [value, hasAudiences]);
+  }, [normalized, hasAudiences, previewOpen]);
 
-  function addToken(kind: SelectorKind, id: string, label: string) {
-    if (kind === "team" && !value.teamIds.includes(id)) {
-      setLabels((prev) => ({ ...prev, teams: { ...prev.teams, [id]: label } }));
-      onChange({ ...value, teamIds: [...value.teamIds, id] });
-    }
-    if (kind === "orgUnit" && !value.orgUnitIds.includes(id)) {
-      setLabels((prev) => ({ ...prev, orgUnits: { ...prev.orgUnits, [id]: label } }));
-      onChange({ ...value, orgUnitIds: [...value.orgUnitIds, id] });
-    }
-    if (kind === "role" && !value.roleIds.includes(id)) {
-      setLabels((prev) => ({ ...prev, roles: { ...prev.roles, [id]: label } }));
-      onChange({ ...value, roleIds: [...value.roleIds, id] });
-    }
-    if (kind === "targetGroup" && !value.targetGroupIds.includes(id)) {
-      setLabels((prev) => ({ ...prev, targetGroups: { ...prev.targetGroups, [id]: label } }));
-      onChange({ ...value, targetGroupIds: [...value.targetGroupIds, id] });
-    }
+  function patchComposition(nextComposition: RequirementAudienceComposition | null) {
+    onChange(
+      normalizeRequirementAudienceSelection({
+        ...value,
+        composition: nextComposition,
+      }),
+    );
   }
 
+  function applyIncludePicks(picks: SceSelectorPick[]) {
+    if (picks.length === 0) {
+      setIncludePickerOpen(false);
+      return;
+    }
+
+    const base =
+      composition ??
+      ({
+        version: 1,
+        conditions: [],
+        excludePersonIds: normalized.excludePersonIds,
+      } satisfies RequirementAudienceComposition);
+
+    const nextConditions = [...base.conditions];
+    const nextLabels = { ...labels };
+    const nextKnownPersons = { ...knownPersons };
+    const nextStructuralMeta = { ...structuralMeta };
+
+    for (const pick of picks) {
+      if (
+        pick.type !== "PERSON" &&
+        pick.type !== "TEAM" &&
+        pick.type !== "ORG_UNIT" &&
+        pick.type !== "ROLE" &&
+        pick.type !== "TARGET_GROUP"
+      ) {
+        continue;
+      }
+
+      nextConditions.push({
+        connector: nextConditions.length === 0 ? undefined : nextConnector,
+        term: { type: pick.type, id: pick.id },
+      });
+
+      if (pick.type === "PERSON") {
+        nextKnownPersons[pick.id] = {
+          personId: pick.id,
+          firstName: pick.label.split(" ")[0] ?? pick.label,
+          lastName: pick.label.split(" ").slice(1).join(" "),
+          displayName: pick.label,
+          email: pick.description ?? null,
+        };
+      }
+      if (pick.type === "TEAM") {
+        nextLabels.teams = { ...nextLabels.teams, [pick.id]: pick.label };
+        const count = pick.metadata?.expansionPersonCount;
+        if (typeof count === "number") {
+          nextStructuralMeta[`TEAM:${pick.id}`] = { personCount: count };
+        }
+      }
+      if (pick.type === "ORG_UNIT") {
+        nextLabels.orgUnits = { ...nextLabels.orgUnits, [pick.id]: pick.label };
+        const count = pick.metadata?.expansionPersonCount;
+        if (typeof count === "number") {
+          nextStructuralMeta[`ORG_UNIT:${pick.id}`] = { personCount: count };
+        }
+      }
+      if (pick.type === "ROLE") {
+        nextLabels.roles = { ...nextLabels.roles, [pick.id]: pick.label };
+        const count = pick.metadata?.expansionPersonCount;
+        if (typeof count === "number") {
+          nextStructuralMeta[`ROLE:${pick.id}`] = { personCount: count };
+        }
+      }
+      if (pick.type === "TARGET_GROUP") {
+        nextLabels.targetGroups = { ...nextLabels.targetGroups, [pick.id]: pick.label };
+        const count = pick.metadata?.expansionPersonCount;
+        if (typeof count === "number") {
+          nextStructuralMeta[`TARGET_GROUP:${pick.id}`] = { personCount: count };
+        }
+      }
+    }
+
+    setLabels(nextLabels);
+    setKnownPersons(nextKnownPersons);
+    setStructuralMeta(nextStructuralMeta);
+    patchComposition({ ...base, conditions: nextConditions });
+    setIncludePickerOpen(false);
+  }
+
+  function applyExcludePicks(picks: SceSelectorPick[]) {
+    const personIds = picks.filter((p) => p.type === "PERSON").map((p) => p.id);
+    if (personIds.length === 0) {
+      setExcludePickerOpen(false);
+      return;
+    }
+
+    const base =
+      composition ??
+      ({
+        version: 1,
+        conditions: [],
+        excludePersonIds: [],
+      } satisfies RequirementAudienceComposition);
+
+    const nextKnownPersons = { ...knownPersons };
+    for (const pick of picks) {
+      if (pick.type !== "PERSON") continue;
+      nextKnownPersons[pick.id] = {
+        personId: pick.id,
+        firstName: pick.label.split(" ")[0] ?? pick.label,
+        lastName: pick.label.split(" ").slice(1).join(" "),
+        displayName: pick.label,
+        email: pick.description ?? null,
+      };
+    }
+    setKnownPersons(nextKnownPersons);
+
+    patchComposition({
+      ...base,
+      excludePersonIds: [...new Set([...base.excludePersonIds, ...personIds])],
+    });
+    setExcludePickerOpen(false);
+  }
+
+  function removeCondition(index: number) {
+    if (!composition) return;
+    const next = composition.conditions.filter((_, i) => i !== index);
+    if (next.length > 0 && next[0]) {
+      next[0] = { ...next[0], connector: undefined };
+    }
+    patchComposition({ ...composition, conditions: next });
+  }
+
+  function setConditionConnector(index: number, connector: RequirementAudienceConnector) {
+    if (!composition || index === 0) return;
+    const next = composition.conditions.map((row, i) =>
+      i === index ? { ...row, connector } : row,
+    );
+    patchComposition({ ...composition, conditions: next });
+  }
+
+  function removeExclude(personId: string) {
+    if (!composition) return;
+    patchComposition({
+      ...composition,
+      excludePersonIds: composition.excludePersonIds.filter((id) => id !== personId),
+    });
+  }
+
+  const committedIncludeKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const row of composition?.conditions ?? []) {
+      keys.add(sceSelectorPickKey(row.term.type, row.term.id));
+    }
+    return keys;
+  }, [composition]);
+
+  const committedExcludeKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const id of composition?.excludePersonIds ?? []) {
+      keys.add(sceSelectorPickKey("PERSON", id));
+    }
+    return keys;
+  }, [composition]);
+
+  const compositionJson = composition ? JSON.stringify(composition) : "";
+
   return (
-    <section className="space-y-3" data-testid="requirement-audience-builder">
+    <section className="space-y-4" data-testid="requirement-audience-builder">
       <div>
         <h3 className="text-sm font-semibold text-[var(--foreground)]">Empfänger</h3>
         <p className="mt-0.5 text-xs text-[var(--text-2)]">
-          Empfänger werden beim Aktivieren als Snapshot festgelegt.
+          Wer soll die Anforderung bestätigen? Nur Personen bestätigen individuell — Teams,
+          Organisationen, Rollen und Zielgruppen legen fest, welche Personen gemeint sind.
         </p>
       </div>
 
-      <RequirementPersonMultiPicker
-        selectedIds={value.personIds}
-        onSelectedIdsChange={(personIds) => onChange({ ...value, personIds })}
-        disabled={disabled}
-        initialKnown={initialKnownPersons}
-      />
+      <div className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface-1)]/40 p-3">
+        {(composition?.conditions ?? []).length === 0 ? (
+          <p className="text-xs text-[var(--muted)]">Noch keine Empfängerregeln.</p>
+        ) : (
+          <ul className="space-y-1">
+            {(composition?.conditions ?? []).map((row, index) => {
+              const label = resolveLabel(row.term.type, row.term.id, labels, knownPersons);
+              const count = structuralMeta[`${row.term.type}:${row.term.id}`]?.personCount;
+              const expansionHint =
+                typeof count === "number"
+                  ? count === 1
+                    ? "Erweiterung: 1 Person"
+                    : `Erweiterung: ${count} Personen`
+                  : row.term.type !== "PERSON"
+                    ? "Erweiterung: Personen"
+                    : null;
+              return (
+                <li key={`${row.term.type}:${row.term.id}:${index}`} className="space-y-1">
+                  {index > 0 ? (
+                    <div className="flex justify-center py-0.5">
+                      <label className="sr-only" htmlFor={`requirement-audience-connector-${index}`}>
+                        Verknüpfung zur vorherigen Bedingung
+                      </label>
+                      <select
+                        id={`requirement-audience-connector-${index}`}
+                        className="rounded border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-[var(--text-2)]"
+                        value={row.connector ?? "OR"}
+                        disabled={disabled}
+                        onChange={(event) =>
+                          setConditionConnector(
+                            index,
+                            event.target.value === "AND" ? "AND" : "OR",
+                          )
+                        }
+                        data-testid={`requirement-audience-connector-${index}`}
+                      >
+                        <option value="AND">UND</option>
+                        <option value="OR">ODER</option>
+                      </select>
+                    </div>
+                  ) : null}
+                  <div className="flex flex-wrap items-start gap-2">
+                    <span
+                      className="inline-flex max-w-full flex-col gap-0.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)]/60 py-1.5 pl-2 pr-1 text-xs"
+                      data-testid={`requirement-recipient-chip-${sceSelectorPickKey(row.term.type, row.term.id)}`}
+                    >
+                      <span className="inline-flex min-w-0 items-center gap-2">
+                        <RecipientTypeIcon type={row.term.type} />
+                        <span className="min-w-0 truncate font-medium text-[var(--foreground)]">
+                          {label}
+                        </span>
+                        <span className="text-[var(--muted)]">·</span>
+                        <span className="text-[var(--text-2)]">{termKindLabel(row.term.type)}</span>
+                        {!disabled ? (
+                          <button
+                            type="button"
+                            className="ml-auto rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-3)]"
+                            aria-label={`${label} entfernen`}
+                            onClick={() => removeCondition(index)}
+                          >
+                            <X className="h-3 w-3" aria-hidden="true" />
+                          </button>
+                        ) : null}
+                      </span>
+                      {expansionHint ? (
+                        <span className="pl-5 text-[10px] leading-tight text-[var(--muted)]">
+                          {expansionHint}
+                        </span>
+                      ) : null}
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
 
-      <div className="flex flex-wrap gap-2">
-        <SelectorAddPanel kind="team" disabled={disabled} onPick={(id, label) => addToken("team", id, label)} />
-        <SelectorAddPanel
-          kind="orgUnit"
-          disabled={disabled}
-          onPick={(id, label) => addToken("orgUnit", id, label)}
-        />
-        <SelectorAddPanel kind="role" disabled={disabled} onPick={(id, label) => addToken("role", id, label)} />
-        <SelectorAddPanel
-          kind="targetGroup"
-          disabled={disabled}
-          onPick={(id, label) => addToken("targetGroup", id, label)}
-        />
+        {!disabled ? (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <label className="inline-flex items-center gap-1 text-[10px] text-[var(--muted)]">
+              Verknüpfung für nächste Regel
+              <select
+                className="rounded border border-[var(--border)] bg-[var(--surface-2)] px-1.5 py-0.5 text-xs"
+                value={nextConnector}
+                onChange={(event) =>
+                  setNextConnector(event.target.value === "OR" ? "OR" : "AND")
+                }
+                data-testid="requirement-audience-next-connector"
+              >
+                <option value="AND">UND</option>
+                <option value="OR">ODER</option>
+              </select>
+            </label>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--border)] px-2 py-1 text-xs font-medium text-[var(--primary)] hover:bg-[var(--surface-2)]"
+              onClick={() => setIncludePickerOpen(true)}
+              data-testid="requirement-recipient-add"
+            >
+              <Plus className="h-3 w-3" aria-hidden="true" />
+              Empfänger hinzufügen
+            </button>
+          </div>
+        ) : null}
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2">
-        {value.teamIds.map((id) => (
-          <TokenRow
-            key={`team-${id}`}
-            typeLabel="Team"
-            valueLabel={labels.teams[id] ?? id}
-            disabled={disabled}
-            testId={`requirement-audience-token-team-${id}`}
-            onRemove={() =>
-              onChange({ ...value, teamIds: value.teamIds.filter((entry) => entry !== id) })
-            }
-          />
-        ))}
-        {value.orgUnitIds.map((id) => (
-          <TokenRow
-            key={`org-${id}`}
-            typeLabel="Organisationseinheit"
-            valueLabel={labels.orgUnits[id] ?? id}
-            disabled={disabled}
-            testId={`requirement-audience-token-org-${id}`}
-            onRemove={() =>
-              onChange({ ...value, orgUnitIds: value.orgUnitIds.filter((entry) => entry !== id) })
-            }
-          />
-        ))}
-        {value.roleIds.map((id) => (
-          <TokenRow
-            key={`role-${id}`}
-            typeLabel="Rolle"
-            valueLabel={labels.roles[id] ?? id}
-            disabled={disabled}
-            testId={`requirement-audience-token-role-${id}`}
-            onRemove={() =>
-              onChange({ ...value, roleIds: value.roleIds.filter((entry) => entry !== id) })
-            }
-          />
-        ))}
-        {value.targetGroupIds.map((id) => (
-          <TokenRow
-            key={`tg-${id}`}
-            typeLabel="Zielgruppe"
-            valueLabel={labels.targetGroups[id] ?? id}
-            disabled={disabled}
-            testId={`requirement-audience-token-target-group-${id}`}
-            onRemove={() =>
-              onChange({
-                ...value,
-                targetGroupIds: value.targetGroupIds.filter((entry) => entry !== id),
-              })
-            }
-          />
-        ))}
-      </div>
-
-      {hasAudiences ? (
-        <p className="text-sm text-[var(--text-2)]" data-testid="requirement-audience-preview">
-          {preview.loading
-            ? "Empfänger werden berechnet…"
-            : preview.error
-              ? preview.error
-              : `${preview.resolvedTotal} Personen (dedupliziert)`}
-        </p>
+      {(composition?.excludePersonIds.length ?? 0) > 0 || !disabled ? (
+        <div className="space-y-2">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-2)]">
+            AUSGESCHLOSSEN
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {(composition?.excludePersonIds ?? []).map((personId) => (
+              <span
+                key={personId}
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-2)]/60 py-1 pl-2 pr-1 text-xs"
+              >
+                <User className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>{knownPersons[personId]?.displayName ?? personId}</span>
+                {!disabled ? (
+                  <button
+                    type="button"
+                    className="rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-3)]"
+                    aria-label="Ausschluss entfernen"
+                    onClick={() => removeExclude(personId)}
+                  >
+                    <X className="h-3 w-3" aria-hidden="true" />
+                  </button>
+                ) : null}
+              </span>
+            ))}
+            {!disabled ? (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--border)] px-2 py-1 text-xs font-medium text-[var(--primary)] hover:bg-[var(--surface-2)]"
+                onClick={() => setExcludePickerOpen(true)}
+                data-testid="requirement-audience-exclude-add"
+              >
+                <Plus className="h-3 w-3" aria-hidden="true" />
+                Ausschluss
+              </button>
+            ) : null}
+          </div>
+        </div>
       ) : null}
 
-      <input type="hidden" name="audiencePersonIds" value={value.personIds.join(",")} />
-      <input type="hidden" name="audienceTeamIds" value={value.teamIds.join(",")} />
-      <input type="hidden" name="audienceOrgUnitIds" value={value.orgUnitIds.join(",")} />
-      <input type="hidden" name="audienceRoleIds" value={value.roleIds.join(",")} />
-      <input type="hidden" name="audienceTargetGroupIds" value={value.targetGroupIds.join(",")} />
+      {hasAudiences ? (
+        <div
+          className="space-y-3 rounded-lg border-2 border-[var(--primary)]/25 bg-[var(--surface-2)]/50 p-4 shadow-sm"
+          data-testid="requirement-audience-result-panel"
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-2)]">
+            Ergebnis
+          </p>
+          {preview.loading ? (
+            <p className="text-sm text-[var(--text-2)]">Empfänger werden berechnet…</p>
+          ) : preview.error ? (
+            <p className="text-sm text-[var(--destructive)]">{preview.error}</p>
+          ) : (
+            <>
+              <p
+                className="text-2xl font-bold tabular-nums text-[var(--foreground)]"
+                data-testid="requirement-audience-preview"
+              >
+                {preview.resolvedTotal}{" "}
+                {preview.resolvedTotal === 1 ? "Person" : "Personen"}
+              </p>
+              {preview.resolvedTotal === 0 ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-[var(--text-2)]">
+                    Diese Auswahl enthält aktuell keine Personen.
+                  </p>
+                  <p
+                    className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1.5 text-xs text-amber-900 dark:text-amber-100"
+                    data-testid="requirement-audience-zero-warning"
+                  >
+                    Mit dieser Kombination muss aktuell niemand bestätigen.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-[var(--text-2)]">
+                  {preview.resolvedTotal === 1
+                    ? "1 Person muss diese Anforderung individuell bestätigen."
+                    : `${preview.resolvedTotal} Personen müssen diese Anforderung individuell bestätigen.`}
+                </p>
+              )}
+              {preview.resolvedTotal > 0 ? (
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-[var(--primary)]"
+                  onClick={() => setPreviewOpen((open) => !open)}
+                  data-testid="requirement-audience-preview-toggle"
+                >
+                  Personen anzeigen
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${previewOpen ? "rotate-180" : ""}`}
+                    aria-hidden="true"
+                  />
+                </button>
+              ) : null}
+            </>
+          )}
+          {previewOpen && preview.persons.length > 0 ? (
+            <ul
+              className="max-h-48 space-y-1 overflow-y-auto border-t border-[var(--border)]/60 pt-2 text-sm"
+              data-testid="requirement-audience-preview-list"
+            >
+              {preview.persons.map((person) => (
+                <li
+                  key={person.personId}
+                  className="flex justify-between gap-2 border-t border-[var(--border)]/40 pt-1 first:border-t-0 first:pt-0"
+                >
+                  <span>{person.displayName}</span>
+                  {person.secondary ? (
+                    <span className="truncate text-xs text-[var(--muted)]">{person.secondary}</span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+
+      <SceRecipientSelector
+        profile={SCE_RECIPIENT_SELECTOR_REQUIREMENT}
+        open={includePickerOpen}
+        onOpenChange={setIncludePickerOpen}
+        mode="multiple"
+        committedKeys={committedIncludeKeys}
+        onConfirm={applyIncludePicks}
+        disabled={disabled}
+        testIdPrefix="requirement-recipient-selector"
+      />
+
+      <SceRecipientSelector
+        profile={{
+          ...SCE_RECIPIENT_SELECTOR_REQUIREMENT,
+          sourceTypes: ["PERSON"],
+          dialogTitle: "Person ausschliessen",
+          dialogDescription: "Diese Person soll die Anforderung nicht erhalten.",
+          addButtonLabel: "Ausschluss hinzufügen",
+        }}
+        open={excludePickerOpen}
+        onOpenChange={setExcludePickerOpen}
+        mode="multiple"
+        committedKeys={committedExcludeKeys}
+        onConfirm={applyExcludePicks}
+        disabled={disabled}
+        testIdPrefix="requirement-exclude-selector"
+      />
+
+      <input type="hidden" name="audiencePersonIds" value={normalized.personIds.join(",")} />
+      <input type="hidden" name="audienceTeamIds" value={normalized.teamIds.join(",")} />
+      <input type="hidden" name="audienceOrgUnitIds" value={normalized.orgUnitIds.join(",")} />
+      <input type="hidden" name="audienceRoleIds" value={normalized.roleIds.join(",")} />
+      <input type="hidden" name="audienceTargetGroupIds" value={normalized.targetGroupIds.join(",")} />
+      <input type="hidden" name="audienceExcludePersonIds" value={normalized.excludePersonIds.join(",")} />
+      <input type="hidden" name="audienceCompositionJson" value={compositionJson} />
     </section>
   );
 }
