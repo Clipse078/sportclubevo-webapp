@@ -35,6 +35,8 @@ export type DialogProps = {
   footer?: ReactNode;
   /** Maximum width preset. @default "md" */
   size?: DialogSize;
+  /** When "flex", body does not scroll — child layout owns a single scroll region. */
+  bodyLayout?: "scroll" | "flex";
 };
 
 const sizeClass: Record<DialogSize, string> = {
@@ -80,6 +82,7 @@ export function Dialog({
   children,
   footer,
   size = "md",
+  bodyLayout = "scroll",
 }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -144,7 +147,16 @@ export function Dialog({
         </div>
 
         {/* Body */}
-        {children !== undefined && <div className={SCE_DIALOG_BODY}>{children}</div>}
+        {children !== undefined && (
+          <div
+            className={cn(
+              SCE_DIALOG_BODY,
+              bodyLayout === "flex" && "flex min-h-0 flex-1 flex-col overflow-hidden",
+            )}
+          >
+            {children}
+          </div>
+        )}
 
         {/* Footer */}
         {footer && <div className={SCE_DIALOG_FOOTER}>{footer}</div>}

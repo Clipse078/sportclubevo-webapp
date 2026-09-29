@@ -6,7 +6,9 @@
 
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import NavAlignedPermissionEditor from "@/components/admin/roles/NavAlignedPermissionEditor";
+import NavAlignedPermissionEditor, {
+  buildNavPermissionPresentationFromModuleGroups,
+} from "@/components/admin/roles/NavAlignedPermissionEditor";
 import PermissionMatrixFields from "@/components/admin/roles/PermissionMatrixFields";
 import type { PermissionMatrixModuleGroup } from "@/components/admin/roles/PermissionMatrixFields";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -97,15 +99,13 @@ describe("NavAlignedPermissionEditor — ACCESS-ONBOARDING-03E", () => {
   it("uses shared toggles for advanced binary permissions", () => {
     renderEditor();
 
-    const betriebToggle = screen.getByRole("button", { name: /Betrieb/i });
-    expect(betriebToggle).toHaveAttribute("aria-expanded", "false");
-
-    fireEvent.click(betriebToggle);
-
-    expect(betriebToggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: /Tagesbetrieb/i })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
     expect(screen.getByText("Spielbetrieb")).toBeTruthy();
 
-    const advancedSections = screen.getAllByText(/Erweiterte (Berechtigungen|Rechte)/);
+    const advancedSections = screen.getAllByRole("button", { name: /Erweiterte Rechte/i });
     fireEvent.click(advancedSections[0]!);
 
     const switches = document.querySelectorAll('[role="switch"]');
@@ -117,11 +117,11 @@ describe("NavAlignedPermissionEditor — ACCESS-ONBOARDING-03E", () => {
     const onChange = vi.fn();
     renderEditor([], onChange);
 
-    const teamsManageToggle = document.querySelector(
-      "#organisation-teams\\.manage\\|teams\\.view-manage",
-    );
-    expect(teamsManageToggle).toBeTruthy();
-    fireEvent.click(teamsManageToggle!);
+    const teamsManageToggle = screen.getAllByRole("switch", {
+      name: /Teams verwalten/i,
+      hidden: true,
+    })[0]!;
+    fireEvent.click(teamsManageToggle);
 
     expect(onChange).toHaveBeenCalled();
     const nextKeys = onChange.mock.calls.at(-1)?.[0] as Set<string>;
@@ -133,11 +133,11 @@ describe("NavAlignedPermissionEditor — ACCESS-ONBOARDING-03E", () => {
     const onChange = vi.fn();
     renderEditor([PERMISSIONS.TEAMS_VIEW, PERMISSIONS.TEAMS_MANAGE], onChange);
 
-    const teamsViewToggle = document.querySelector(
-      "#organisation-teams\\.manage\\|teams\\.view-view",
-    );
-    expect(teamsViewToggle).toBeTruthy();
-    fireEvent.click(teamsViewToggle!);
+    const teamsViewToggle = screen.getAllByRole("switch", {
+      name: /Teams ansehen/i,
+      hidden: true,
+    })[0]!;
+    fireEvent.click(teamsViewToggle);
 
     expect(onChange).toHaveBeenCalled();
     const nextKeys = onChange.mock.calls.at(-1)?.[0] as Set<string>;
@@ -145,39 +145,35 @@ describe("NavAlignedPermissionEditor — ACCESS-ONBOARDING-03E", () => {
     expect(nextKeys.has(PERMISSIONS.TEAMS_MANAGE)).toBe(false);
   });
 
-  it("preserves Spielbetrieb shared events permission grouping inside Betrieb", () => {
+  it("preserves Spielbetrieb shared events permission grouping inside Tagesbetrieb", () => {
     renderEditor();
 
-    expect(screen.queryByText("Spielbetrieb")).toBeNull();
-
-    const betriebToggle = screen.getByRole("button", { name: /Betrieb/i });
-    expect(betriebToggle).toHaveAttribute("aria-expanded", "false");
-
-    fireEvent.click(betriebToggle);
-
-    expect(betriebToggle).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByText("Spielbetrieb")).toBeTruthy();
     expect(screen.getByText(/MatchCenter · TournamentCenter · Veranstaltungen/)).toBeTruthy();
   });
 
-  it("expands Organisation by default and keeps other sections collapsed", () => {
+  it("expands Tagesbetrieb by default and keeps other sections collapsed", () => {
     renderEditor();
 
-    const organisationToggle = screen.getByRole("button", { name: /Organisation/i });
-    const websiteToggle = screen.getByRole("button", { name: /Website/i });
-    const betriebToggle = screen.getByRole("button", { name: /Betrieb/i });
+    const tagesbetriebToggle = screen.getByRole("button", { name: /Tagesbetrieb/i });
+    const websiteToggle = screen.getByRole("button", { name: /Öffentliche Kanäle/i });
 
-    expect(organisationToggle).toHaveAttribute("aria-expanded", "true");
+    expect(tagesbetriebToggle).toHaveAttribute("aria-expanded", "true");
     expect(websiteToggle).toHaveAttribute("aria-expanded", "false");
-    expect(betriebToggle).toHaveAttribute("aria-expanded", "false");
     expect(screen.getByText("Vereinsdaten")).toBeTruthy();
   });
 
   it("shows concise product labels instead of long technical joins", () => {
     renderEditor();
 
+    fireEvent.click(screen.getByRole("button", { name: /Alles einblenden/i }));
     expect(screen.getByText("Vereinsdaten")).toBeTruthy();
-    expect(screen.getByText("Mitglieder")).toBeTruthy();
+    const presentation = buildNavPermissionPresentationFromModuleGroups(moduleGroups);
+    expect(
+      presentation.sections
+        .flatMap((section) => section.units)
+        .some((unit) => unit.label === "Mitglieder"),
+    ).toBe(true);
     expect(
       screen.queryByText(/Organisationseinheiten · Zielgruppen · Vereine/),
     ).toBeNull();
@@ -200,18 +196,17 @@ describe("NavAlignedPermissionEditor — ACCESS-ONBOARDING-03E", () => {
   it("shows selected count on collapsed sections with active permissions", () => {
     renderEditor([PERMISSIONS.EVENTS_MANAGE]);
 
-    const betriebToggle = screen.getByRole("button", { name: /Betrieb/i });
-    expect(betriebToggle).toHaveAttribute("aria-expanded", "false");
-    expect(betriebToggle.textContent).toMatch(/Teilweise aktiv|Aktiv/);
+    const tagesbetriebToggle = screen.getByRole("button", { name: /Tagesbetrieb/i });
+    fireEvent.click(tagesbetriebToggle);
+    expect(tagesbetriebToggle).toHaveAttribute("aria-expanded", "false");
+    expect(tagesbetriebToggle.textContent).toMatch(/Teilweise aktiv|Aktiv/);
   });
 
   it("renders advanced permissions behind Erweiterte Rechte disclosure", () => {
     renderEditor();
 
-    fireEvent.click(screen.getByRole("button", { name: /Betrieb/i }));
-
-    const advancedDisclosure = screen.getAllByText("Erweiterte Rechte")[0]!;
-    expect(advancedDisclosure.closest("details")).toBeTruthy();
+    const advancedDisclosure = screen.getAllByRole("button", { name: /Erweiterte Rechte/i })[0]!;
+    expect(advancedDisclosure).toHaveAttribute("aria-expanded", "false");
   });
 
   it("renders supplemental permissions in a secondary disclosure", () => {
@@ -233,9 +228,6 @@ describe("NavAlignedPermissionEditor — ACCESS-ONBOARDING-03E", () => {
 
     expect(document.querySelectorAll('input[type="checkbox"]')).toHaveLength(0);
     expect(document.querySelectorAll('[role="switch"]').length).toBeGreaterThan(0);
-
-    const betriebToggle = screen.getByRole("button", { name: /Betrieb/i });
-    fireEvent.click(betriebToggle);
 
     expect(screen.getByText("Spielbetrieb")).toBeTruthy();
   });

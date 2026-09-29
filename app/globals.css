@@ -544,6 +544,24 @@ button {
   cursor: not-allowed;
 }
 
+.sce-toolbar-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: var(--sce-surface-subtle);
+  border-color: var(--sce-surface-border-elevated);
+}
+
+.sce-toolbar-select:focus {
+  border-color: color-mix(in srgb, var(--sce-primary) 55%, var(--border));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sce-primary) 16%, transparent);
+}
+
+.sce-toolbar-select option {
+  background-color: var(--surface);
+  color: var(--foreground);
+}
+
 /* SCE-OPS-01C — hide native number spinners on duration/minutes fields */
 .fca-minutes-input::-webkit-outer-spin-button,
 .fca-minutes-input::-webkit-inner-spin-button {

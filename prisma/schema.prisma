@@ -1207,6 +1207,7 @@ model Tenant {
   tenantMemberships TenantMembership[]
   roles             Role[]
   userRoles         UserRole[]
+  userPermissionOverrides UserPermissionOverride[]
   auditLogs         AuditLog[]
 
   // INFOBOARD-V2: unlimited tenant-managed Infoboard displays
@@ -1303,6 +1304,9 @@ model User {
   dashboardHeroImagePositionY Float?
 
   userRoles                     UserRole[]
+  userPermissionOverrides       UserPermissionOverride[]
+  createdUserPermissionOverrides UserPermissionOverride[] @relation("UserPermissionOverrideCreatedBy")
+  updatedUserPermissionOverrides UserPermissionOverride[] @relation("UserPermissionOverrideUpdatedBy")
   passwordResetTokens           PasswordResetToken[]
   tenantMemberships             TenantMembership[]
   auditLogs                     AuditLog[]           @relation("AuditActor")
@@ -1659,6 +1663,7 @@ model Permission {
   grantableByAdmin Boolean         @default(true)
 
   rolePermissions RolePermission[]
+  userPermissionOverrides UserPermissionOverride[]
 }
 
 model UserRole {
@@ -1702,6 +1707,35 @@ model RolePermission {
   permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([roleId, permissionId])
+  @@index([permissionId])
+}
+
+// SCE-ADMIN-ACCESS-UX-01R4 — tenant-wide individual permission exceptions (ALLOW/DENY).
+// Scoped org-unit overrides deferred until resolver semantics are extended.
+enum PermissionOverrideEffect {
+  ALLOW
+  DENY
+}
+
+model UserPermissionOverride {
+  id           String                   @id @default(cuid())
+  tenantId     String
+  userId       String
+  permissionId String
+  effect       PermissionOverrideEffect
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  createdByUserId String?
+  updatedByUserId String?
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdBy  User?      @relation("UserPermissionOverrideCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  updatedBy  User?      @relation("UserPermissionOverrideUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([tenantId, userId, permissionId])
+  @@index([tenantId, userId])
   @@index([permissionId])
 }
 

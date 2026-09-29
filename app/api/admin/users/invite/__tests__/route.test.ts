@@ -60,6 +60,17 @@ vi.mock("@/lib/email/templates/invitation", () => ({
   buildInvitationEmail: mockBuildInvitationEmail,
 }));
 
+const mockValidateInvitationEmailForServer = vi.fn();
+
+vi.mock("@/lib/admin/people-access/email-validation", () => ({
+  validateInvitationEmailForServer: (...args: unknown[]) =>
+    mockValidateInvitationEmailForServer(...args),
+}));
+
+vi.mock("@/lib/admin/people-access/email-dns", () => ({
+  resolveMxRecords: vi.fn(),
+}));
+
 const { POST } = await import("../route");
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -114,6 +125,12 @@ beforeEach(() => {
   mockPrismaUserFindUnique.mockResolvedValue({ email: "user@test.invalid", firstName: "Anna" });
   mockPrismaTenantFindUnique.mockResolvedValue({ name: "Test Club" });
   mockSendMail.mockResolvedValue(undefined);
+  mockValidateInvitationEmailForServer.mockImplementation(async (raw: string) => ({
+    ok: raw !== "abc",
+    normalized: typeof raw === "string" ? raw.trim().toLowerCase() : "",
+    code: raw === "abc" ? "INVALID_EMAIL_FORMAT" : "VALID",
+    message: raw === "abc" ? "Ungültige E-Mail." : undefined,
+  }));
 });
 
 afterEach(() => {
@@ -269,6 +286,14 @@ describe("POST /api/admin/users/invite — create person + invite", () => {
         scopedRoles: undefined,
       },
     );
+  });
+
+  it("CREATE-3b. returns 400 when email validation fails (API bypass)", async () => {
+    const res = await POST(
+      makeRequest({ firstName: "Anna", lastName: "Müller", email: "abc" }) as never,
+    );
+    expect(res.status).toBe(400);
+    expect(mockCreatePersonAndInvite).not.toHaveBeenCalled();
   });
 
   it("CREATE-3. returns 409 on email conflict", async () => {

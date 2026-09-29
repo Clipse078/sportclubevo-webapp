@@ -28,11 +28,17 @@ export async function getTenantUsersListData(tenantId: string) {
           isActive: true,
           lastLoginAt: true,
           userRoles: {
-            where: { tenantId },
+            where: {
+              OR: [
+                { tenantId },
+                { tenantId: null, role: { scope: "PLATFORM", tenantId: null } },
+              ],
+            },
             select: {
+              tenantId: true,
               orgUnitId: true,
               role: {
-                select: { id: true, name: true, key: true },
+                select: { id: true, name: true, key: true, scope: true },
               },
               orgUnit: {
                 select: { name: true },
@@ -67,6 +73,19 @@ export async function getTenantUsersListData(tenantId: string) {
     // receive a new tenant invitation (multi-tenant: same User, new tenant).
     const pendingInvitation = m.user.passwordResetTokens.length > 0;
 
+    const tenantUserRoles = m.user.userRoles.filter(
+      (ur) => ur.role.scope === "TENANT" && ur.tenantId === tenantId,
+    );
+    const platformRoles = m.user.userRoles
+      .filter((ur) => ur.role.scope === "PLATFORM")
+      .map((ur) => ({
+        id: ur.role.id,
+        name: ur.role.name,
+        key: ur.role.key,
+      }));
+
+    const tenantWideRoles = tenantUserRoles.filter((ur) => ur.orgUnitId === null);
+
     return {
       userId: m.user.id,
       firstName: m.user.firstName,
@@ -77,20 +96,22 @@ export async function getTenantUsersListData(tenantId: string) {
       membershipIsActive: m.isActive,
       joinedAt: m.joinedAt,
       lastLoginAt: m.user.lastLoginAt ?? null,
-      roles: m.user.userRoles
-        .filter((ur) => ur.orgUnitId === null)
-        .map((ur) => ({
-          id: ur.role.id,
-          name: ur.role.name,
-          key: ur.role.key,
-        })),
-      scopedRoles: m.user.userRoles
+      roles: tenantWideRoles.map((ur) => ({
+        id: ur.role.id,
+        name: ur.role.name,
+        key: ur.role.key,
+      })),
+      scopedRoles: tenantUserRoles
         .filter((ur) => ur.orgUnitId !== null)
         .map((ur) => ({
           id: ur.role.id,
           name: ur.role.name,
+          key: ur.role.key,
+          orgUnitId: ur.orgUnitId ?? "",
           orgUnitName: ur.orgUnit?.name ?? "",
         })),
+      platformRoles,
+      isPlatformSystemIdentity: platformRoles.length > 0,
       linkedPersonId: hasLinkedPerson ? (m.user.person as { id: string }).id : null,
       linkedPersonName: hasLinkedPerson
         ? `${(m.user.person as { firstName: string; lastName: string }).firstName} ${(m.user.person as { firstName: string; lastName: string }).lastName}`

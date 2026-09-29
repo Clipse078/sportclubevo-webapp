@@ -66,37 +66,36 @@ describe("nav-permission-presentation", () => {
     const presentation = buildNavPermissionPresentation(buildCatalog(TENANT_CATALOG_KEYS));
 
     expect(presentation.sections.map((section) => section.label)).toEqual(
-      expect.arrayContaining(["Organisation", "Website", "Betrieb", "System"]),
+      expect.arrayContaining(["Tagesbetrieb", "Öffentliche Kanäle", "System"]),
     );
 
-    const betrieb = presentation.sections.find((section) => section.label === "Betrieb");
-    expect(betrieb?.units.some((unit) => unit.label === "TrainingCenter")).toBe(true);
+    const betrieb = presentation.sections.find((section) => section.label === "Tagesbetrieb");
+    expect(betrieb?.units.some((unit) => unit.label === "Trainings")).toBe(true);
     expect(betrieb?.units.some((unit) => unit.label === "Spielbetrieb")).toBe(true);
-    expect(betrieb?.units.some((unit) => unit.label === "Wochenplanner" && unit.isDerived)).toBe(
+    expect(betrieb?.units.some((unit) => unit.label === "Wochenplaner" && unit.isDerived)).toBe(
       true,
     );
 
-    const organisation = presentation.sections.find((section) => section.label === "Organisation");
-    expect(organisation?.units.some((unit) => unit.label === "Vereinsdaten")).toBe(true);
-    expect(organisation?.units.some((unit) => unit.label === "Mitglieder")).toBe(true);
+    expect(betrieb?.units.some((unit) => unit.label === "Vereinsdaten")).toBe(true);
+    expect(betrieb?.units.some((unit) => unit.label === "Mitglieder")).toBe(true);
     expect(
-      organisation?.units.some((unit) =>
+      betrieb?.units.some((unit) =>
         unit.label.includes("Organisationseinheiten · Zielgruppen"),
       ),
     ).toBe(false);
 
-    const website = presentation.sections.find((section) => section.label === "Website");
+    const website = presentation.sections.find((section) => section.label === "Öffentliche Kanäle");
     expect(website?.units.some((unit) => unit.label === "News")).toBe(true);
     expect(website?.units.some((unit) => unit.label === "Website / CMS")).toBe(true);
   });
 
   it("groups shared events permissions into a single Spielbetrieb unit", () => {
     const presentation = buildNavPermissionPresentation(buildCatalog(TENANT_CATALOG_KEYS));
-    const betrieb = presentation.sections.find((section) => section.label === "Betrieb");
+    const betrieb = presentation.sections.find((section) => section.label === "Tagesbetrieb");
     const spielbetrieb = betrieb?.units.find((unit) => unit.label === "Spielbetrieb");
 
     expect(spielbetrieb?.childLabels).toEqual(
-      expect.arrayContaining(["MatchCenter", "TournamentCenter", "Veranstaltungen"]),
+      expect.arrayContaining(["Spiele", "Turniere", "Veranstaltungen"]),
     );
     expect(spielbetrieb?.standardControls).toHaveLength(2);
     expect(spielbetrieb?.standardControls.flatMap((control) => control.permissionKeys)).toEqual([
@@ -112,7 +111,7 @@ describe("nav-permission-presentation", () => {
       buildCatalog([...TENANT_CATALOG_KEYS, PERMISSIONS.TOURNAMENTS_DELETE]),
     );
     const spielbetrieb = presentation.sections
-      .find((section) => section.label === "Betrieb")
+      .find((section) => section.label === "Tagesbetrieb")
       ?.units.find((unit) => unit.label === "Spielbetrieb");
 
     expect(
@@ -153,14 +152,14 @@ describe("nav-permission-presentation", () => {
     const serialized = JSON.stringify(summary);
     expect(serialized).not.toContain("events.manage");
     expect(serialized).not.toContain("trainings.view");
-    expect(summary.some((section) => section.label === "Betrieb")).toBe(true);
+    expect(summary.some((section) => section.label === "Tagesbetrieb")).toBe(true);
     expect(
-      summary.find((section) => section.label === "Betrieb")?.modules,
-    ).toEqual(expect.arrayContaining(["TrainingCenter", "Spielbetrieb"]));
+      summary.find((section) => section.label === "Tagesbetrieb")?.modules,
+    ).toEqual(expect.arrayContaining(["Trainings", "Spielbetrieb"]));
     expect(
       summary
         .flatMap((section) => section.items)
-        .some((item) => item.label === "TrainingCenter" && item.access === "Ansehen"),
+        .some((item) => item.label === "Trainings" && item.access === "Ansehen"),
     ).toBe(true);
     expect(
       summary
@@ -177,7 +176,7 @@ describe("nav-permission-presentation", () => {
     expect(
       summary
         .flatMap((section) => section.items)
-        .some((item) => item.label === "Wochenplanner" && item.access === "verfügbar"),
+        .some((item) => item.label === "Wochenplaner" && item.access === "verfügbar"),
     ).toBe(true);
   });
 
@@ -242,14 +241,14 @@ describe("nav-permission-presentation", () => {
   it("assigns icon labels and concise descriptions to permission units", () => {
     const presentation = buildNavPermissionPresentation(buildCatalog(TENANT_CATALOG_KEYS));
     const vereinsdaten = presentation.sections
-      .find((section) => section.label === "Organisation")
+      .find((section) => section.label === "Tagesbetrieb")
       ?.units.find((unit) => unit.label === "Vereinsdaten");
 
     expect(vereinsdaten?.iconLabel).toBe("Organisationseinheiten");
     expect(vereinsdaten?.description).toContain("Organisationseinheiten");
 
     const anmeldungen = presentation.sections
-      .find((section) => section.label === "Betrieb")
+      .find((section) => section.label === "Tagesbetrieb")
       ?.units.find((unit) => unit.label === "Anmeldungen");
 
     expect(anmeldungen?.iconLabel).toBe("Anmeldungen");
@@ -260,7 +259,7 @@ describe("nav-permission-presentation", () => {
       buildCatalog([...TENANT_CATALOG_KEYS, PERMISSIONS.FUNCTIONS_MANAGE]),
     );
 
-    const organisation = presentation.sections.find((section) => section.label === "Organisation");
-    expect(organisation?.units.some((unit) => unit.label === "Funktionen")).toBe(true);
+    const tagesbetrieb = presentation.sections.find((section) => section.label === "Tagesbetrieb");
+    expect(tagesbetrieb?.units.some((unit) => unit.label === "Funktionen")).toBe(true);
   });
 });

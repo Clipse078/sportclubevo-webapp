@@ -211,6 +211,9 @@ function presentationForNavChild(child: NavItemChild): UnitPresentation {
   if (child.key === "personen") {
     return { label: "Mitglieder", description, iconLabel: "Personen" };
   }
+  if (child.key === TRAININGCENTER_KEY) {
+    return { label: "Trainings", description, iconLabel: "TrainingCenter" };
+  }
   if (child.key === "communication-email-sender") {
     return {
       label: "Kommunikation",
@@ -675,7 +678,7 @@ function prefixesForAdvancedAttachment(unit: PermissionUnit): string[] {
   if (unit.label === "Spielbetrieb") {
     return ["events.", "matches.", "tournaments."];
   }
-  if (unit.label === "TrainingCenter") {
+  if (unit.label === "Trainings" || unit.label === "TrainingCenter") {
     return ["trainings."];
   }
 
@@ -767,7 +770,9 @@ export function buildNavPermissionPresentation(
 
   // Funktionen belongs under Organisation when grantable.
   if (catalog.has(FUNCTIONS_MANAGE_KEY)) {
-    const organisation = sections.find((section) => section.label === "Organisation");
+    const organisation =
+      sections.find((section) => section.label === "Organisation") ??
+      sections.find((section) => section.label === "Tagesbetrieb");
     if (organisation) {
       const functionsUnit = createUnit(
         "organisation-functions",
@@ -870,7 +875,10 @@ function describeUnitAccess(unit: PermissionUnit, selectedKeys: Set<string>): Na
   const items: NavPermissionSummaryItem[] = [];
 
   if (unit.isDerived) {
-    if (unit.label === "Wochenplanner" && isWochenplannerAvailable(selectedKeys)) {
+    if (
+      (unit.label === "Wochenplaner" || unit.label === "Wochenplanner") &&
+      isWochenplannerAvailable(selectedKeys)
+    ) {
       items.push({ label: unit.label, access: "verfügbar" });
     }
     return items;

@@ -107,6 +107,10 @@
  */
 
 import type { PrismaClient } from "@prisma/client";
+import {
+  applyPermissionOverrides,
+  type PermissionOverrideRow,
+} from "@/lib/permissions/apply-permission-overrides";
 
 // ---------------------------------------------------------------------------
 // Public input/output types
@@ -394,6 +398,52 @@ async function resolveTenantPermissions(
   return keys;
 }
 
+/**
+ * Tenant-wide individual ALLOW/DENY overrides (SCE-ADMIN-ACCESS-UX-01R4).
+ * Org-unit scoped overrides are intentionally excluded until resolver semantics exist.
+ */
+async function loadTenantWidePermissionOverrides(
+  prisma: PrismaClient,
+  userId: string,
+  tenantId: string,
+): Promise<PermissionOverrideRow[]> {
+  const rows = await prisma.userPermissionOverride.findMany({
+    where: { tenantId, userId },
+    select: {
+      effect: true,
+      permission: {
+        select: {
+          key: true,
+          scope: true,
+          grantableByAdmin: true,
+        },
+      },
+    },
+  });
+
+  const overrides: PermissionOverrideRow[] = [];
+  for (const row of rows) {
+    const p = row.permission;
+    if (p.scope !== "TENANT" || !p.grantableByAdmin) continue;
+    overrides.push({
+      permissionKey: p.key,
+      effect: row.effect,
+    });
+  }
+  return overrides;
+}
+
+async function resolveEffectiveTenantPermissionKeys(
+  prisma: PrismaClient,
+  userId: string,
+  tenantId: string,
+): Promise<Set<string>> {
+  const roleBaseline = await resolveTenantPermissions(prisma, userId, tenantId);
+  const overrides = await loadTenantWidePermissionOverrides(prisma, userId, tenantId);
+  if (overrides.length === 0) return roleBaseline;
+  return applyPermissionOverrides(roleBaseline, overrides);
+}
+
 // ---------------------------------------------------------------------------
 // Resolver class
 // ---------------------------------------------------------------------------
@@ -424,7 +474,7 @@ export class EffectivePermissionResolver {
     if (!userId || !permission) return false;
 
     if (tenantId) {
-      const keys = await resolveTenantPermissions(this.prisma, userId, tenantId);
+      const keys = await resolveEffectiveTenantPermissionKeys(this.prisma, userId, tenantId);
       return keys.has(permission);
     }
 
@@ -443,7 +493,7 @@ export class EffectivePermissionResolver {
     if (!userId || permissions.length === 0) return false;
 
     if (tenantId) {
-      const keys = await resolveTenantPermissions(this.prisma, userId, tenantId);
+      const keys = await resolveEffectiveTenantPermissionKeys(this.prisma, userId, tenantId);
       return permissions.some((p) => keys.has(p));
     }
 
@@ -465,7 +515,7 @@ export class EffectivePermissionResolver {
     if (permissions.length === 0) return true;
 
     if (tenantId) {
-      const keys = await resolveTenantPermissions(this.prisma, userId, tenantId);
+      const keys = await resolveEffectiveTenantPermissionKeys(this.prisma, userId, tenantId);
       return permissions.every((p) => keys.has(p));
     }
 
@@ -546,7 +596,7 @@ export class EffectivePermissionResolver {
     }
 
     // Path 1: existing tenant-scoped grant — Club Admin / delegated user.
-    const tenantKeys = await resolveTenantPermissions(this.prisma, userId, tenantId);
+    const tenantKeys = await resolveEffectiveTenantPermissionKeys(this.prisma, userId, tenantId);
     if (tenantKeys.has(permission)) return true;
 
     // Path 2: platform SCE Super Admin cross-tenant authority. Deliberately
@@ -597,7 +647,7 @@ export class EffectivePermissionResolver {
       };
     }
 
-    const tenantKeys = await resolveTenantPermissions(this.prisma, userId, tenantId);
+    const tenantKeys = await resolveEffectiveTenantPermissionKeys(this.prisma, userId, tenantId);
 
     return {
       platform: [...platformKeys].sort(),

@@ -10,7 +10,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { getEffectiveAccessSummaryFromRoleIds } from "@/lib/roles/effective-access-summary";
+import {
+  getEffectiveAccessSummaryFromRoleIds,
+  getEffectivePermissionKeysFromRoleIds,
+} from "@/lib/roles/effective-access-summary";
 
 export async function POST(request: NextRequest) {
   const access = await requireApiAnyPermission([
@@ -39,6 +42,13 @@ export async function POST(request: NextRequest) {
     ? ((body as { roleIds: unknown[] }).roleIds.filter((id) => typeof id === "string") as string[])
     : [];
 
-  const summary = await getEffectiveAccessSummaryFromRoleIds(tenantId, roleIds);
-  return NextResponse.json({ summary });
+  const [summary, permissionPreview] = await Promise.all([
+    getEffectiveAccessSummaryFromRoleIds(tenantId, roleIds),
+    getEffectivePermissionKeysFromRoleIds(tenantId, roleIds),
+  ]);
+  return NextResponse.json({
+    summary,
+    permissionKeys: permissionPreview.keys,
+    roleNamesByKey: permissionPreview.roleNamesByKey,
+  });
 }
