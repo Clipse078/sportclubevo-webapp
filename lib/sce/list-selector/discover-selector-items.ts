@@ -82,7 +82,13 @@ async function querySourceType(
           excludeUserIds: input.excludeUserIds,
         });
       case "TEAM":
-        return searchTeamSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
+        return searchTeamSelectorItems({
+          tenantId: input.tenantId,
+          authorizationContext: authContext,
+          query: term,
+          limit,
+          cursor,
+        });
       case "ORG_UNIT":
         if (authContext === "TASK_ASSIGNMENT") {
           return searchTaskOrgUnitSelectorItems({
@@ -93,14 +99,32 @@ async function querySourceType(
             cursor,
           });
         }
-        return searchOrgUnitSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
+        return searchOrgUnitSelectorItems({
+          tenantId: input.tenantId,
+          authorizationContext: authContext,
+          query: term,
+          limit,
+          cursor,
+        });
       case "ROLE":
         if (authContext === "WORKSPACE_ACCESS") {
           return searchWorkspaceRoleFunctionSelectorItems({ query: term, limit, cursor });
         }
-        return searchRoleSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
+        return searchRoleSelectorItems({
+          tenantId: input.tenantId,
+          authorizationContext: authContext,
+          query: term,
+          limit,
+          cursor,
+        });
       case "TARGET_GROUP":
-        return searchTargetGroupSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
+        return searchTargetGroupSelectorItems({
+          tenantId: input.tenantId,
+          authorizationContext: authContext,
+          query: term,
+          limit,
+          cursor,
+        });
       case "EXTERNAL_CONTACT":
         return searchExternalContactSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
       default:
@@ -128,7 +152,12 @@ async function querySourceType(
         excludeUserIds: input.excludeUserIds,
       });
     case "TEAM":
-      return browseTeamSelectorItems({ tenantId: input.tenantId, limit, cursor });
+      return browseTeamSelectorItems({
+        tenantId: input.tenantId,
+        authorizationContext: authContext,
+        limit,
+        cursor,
+      });
     case "ORG_UNIT":
       if (authContext === "TASK_ASSIGNMENT") {
         return browseTaskOrgUnitSelectorItems({
@@ -138,14 +167,29 @@ async function querySourceType(
           cursor,
         });
       }
-      return browseOrgUnitSelectorItems({ tenantId: input.tenantId, limit, cursor });
+      return browseOrgUnitSelectorItems({
+        tenantId: input.tenantId,
+        authorizationContext: authContext,
+        limit,
+        cursor,
+      });
     case "ROLE":
       if (authContext === "WORKSPACE_ACCESS") {
         return browseWorkspaceRoleFunctionSelectorItems({ limit, cursor });
       }
-      return browseRoleSelectorItems({ tenantId: input.tenantId, limit, cursor });
+      return browseRoleSelectorItems({
+        tenantId: input.tenantId,
+        authorizationContext: authContext,
+        limit,
+        cursor,
+      });
     case "TARGET_GROUP":
-      return browseTargetGroupSelectorItems({ tenantId: input.tenantId, limit, cursor });
+      return browseTargetGroupSelectorItems({
+        tenantId: input.tenantId,
+        authorizationContext: authContext,
+        limit,
+        cursor,
+      });
     case "EXTERNAL_CONTACT":
       return browseExternalContactSelectorItems({ tenantId: input.tenantId, limit, cursor });
     default:

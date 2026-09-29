@@ -54,10 +54,7 @@ function taskAssigneePersonItems(input: {
 
   return loadRows.then((all) => {
     const filtered = all.filter(
-      (row) =>
-        row.personId &&
-        row.userId !== input.actorUserId &&
-        !exclude.has(row.userId),
+      (row) => row.personId && !exclude.has(row.userId),
     );
     const slice = filtered.slice(input.offset, input.offset + input.limit + 1);
     return sceSelectorPageFromFetched(
@@ -65,7 +62,7 @@ function taskAssigneePersonItems(input: {
         toItem({
           id: row.personId!,
           label: row.displayName,
-          description: row.email?.trim() || "Benutzerkonto vorhanden",
+          description: row.email?.trim() || null,
           linkedUserId: row.userId,
         }),
       ),

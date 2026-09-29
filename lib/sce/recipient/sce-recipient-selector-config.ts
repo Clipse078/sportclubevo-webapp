@@ -17,7 +17,8 @@ export const SCE_RECIPIENT_SELECTOR_REQUIREMENT: SceRecipientSelectorProfile = {
   searchPlaceholder:
     "Personen, Teams, Organisation, Rollen oder Zielgruppen suchen …",
   dialogTitle: "Empfänger auswählen",
-  dialogDescription: "Wer soll die Anforderung erhalten?",
+  dialogDescription:
+    "Wähle Personen oder strukturelle Quellen (Team, Organisation, Rolle, Zielgruppe). Strukturelle Auswahl erweitert sich beim Aktivieren zu einzelnen bestätigenden Personen.",
   addButtonLabel: "Empfänger hinzufügen",
 };
 

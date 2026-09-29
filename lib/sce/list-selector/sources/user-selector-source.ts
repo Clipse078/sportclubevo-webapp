@@ -39,9 +39,7 @@ export async function browseUserSelectorItems(input: {
   const exclude = new Set(input.excludeUserIds ?? []);
 
   const all = await listEligibleTaskAssigneePersons(input.tenantId);
-  const filtered = all.filter(
-    (row) => row.userId !== input.actorUserId && !exclude.has(row.userId),
-  );
+  const filtered = all.filter((row) => !exclude.has(row.userId));
   const slice = filtered.slice(offset, offset + limit + 1);
 
   return sceSelectorPageFromFetched(
@@ -75,9 +73,7 @@ export async function searchUserSelectorItems(input: {
   const exclude = new Set(input.excludeUserIds ?? []);
 
   const rows = await searchEligibleTaskAssigneePersons(input.tenantId, term, limit + offset + 5);
-  const filtered = rows.filter(
-    (row) => row.userId !== input.actorUserId && !exclude.has(row.userId),
-  );
+  const filtered = rows.filter((row) => !exclude.has(row.userId));
   const slice = filtered.slice(offset, offset + limit + 1);
 
   return sceSelectorPageFromFetched(

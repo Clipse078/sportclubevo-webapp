@@ -10,6 +10,17 @@ import {
   sceSelectorPageFromFetched,
   type SceSelectorSourcePage,
 } from "@/lib/sce/list-selector/source-pagination";
+import type { SceSelectorAuthorizationContext } from "@/lib/sce/list-selector/selector-authorization-context";
+import { enrichRequirementAudienceStructuralItems } from "@/lib/sce/list-selector/sources/requirement-audience-expansion-labels";
+
+async function maybeEnrichRequirementAudiencePage(
+  tenantId: string,
+  authorizationContext: SceSelectorAuthorizationContext | undefined,
+  page: SceSelectorSourcePage,
+): Promise<SceSelectorSourcePage> {
+  if (authorizationContext !== "REQUIREMENT_AUDIENCE") return page;
+  return { ...page, items: await enrichRequirementAudienceStructuralItems(tenantId, page.items) };
+}
 
 function toItem(row: { id: string; name: string; key: string }): SceSelectorItem {
   return {
@@ -23,6 +34,7 @@ function toItem(row: { id: string; name: string; key: string }): SceSelectorItem
 
 export async function browseOrgUnitSelectorItems(input: {
   tenantId: string;
+  authorizationContext?: SceSelectorAuthorizationContext;
   limit?: number;
   cursor?: string | null;
 }): Promise<SceSelectorSourcePage> {
@@ -35,11 +47,13 @@ export async function browseOrgUnitSelectorItems(input: {
     skip: offset,
     take: limit + 1,
   });
-  return sceSelectorPageFromFetched(rows.map(toItem), limit, offset);
+  const page = sceSelectorPageFromFetched(rows.map(toItem), limit, offset);
+  return maybeEnrichRequirementAudiencePage(input.tenantId, input.authorizationContext, page);
 }
 
 export async function searchOrgUnitSelectorItems(input: {
   tenantId: string;
+  authorizationContext?: SceSelectorAuthorizationContext;
   query: string;
   limit?: number;
   cursor?: string | null;
@@ -64,5 +78,6 @@ export async function searchOrgUnitSelectorItems(input: {
     skip: offset,
     take: limit + 1,
   });
-  return sceSelectorPageFromFetched(rows.map(toItem), limit, offset);
+  const page = sceSelectorPageFromFetched(rows.map(toItem), limit, offset);
+  return maybeEnrichRequirementAudiencePage(input.tenantId, input.authorizationContext, page);
 }

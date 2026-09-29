@@ -18,6 +18,8 @@ type KnownLabels = {
   targetGroups: Record<string, string>;
 };
 
+type StructuralExpansionMeta = Record<string, { personCount?: number }>;
+
 type Props = {
   value: RequirementAudienceSelection;
   onChange: (value: RequirementAudienceSelection) => void;
@@ -45,6 +47,7 @@ export default function RequirementAudienceBuilder({
   const [labels, setLabels] = useState<KnownLabels>(
     knownLabels ?? { teams: {}, orgUnits: {}, roles: {}, targetGroups: {} },
   );
+  const [structuralMeta, setStructuralMeta] = useState<StructuralExpansionMeta>({});
   const [pickerOpen, setPickerOpen] = useState(false);
   const [knownPersons, setKnownPersons] = useState<Record<string, RequirementPersonOption>>(() => {
     const map: Record<string, RequirementPersonOption> = {};
@@ -95,12 +98,21 @@ export default function RequirementAudienceBuilder({
         onRemove: () => onChange({ ...value, personIds: value.personIds.filter((x) => x !== id) }),
       });
     }
+    function structuralSecondary(type: SceSelectorSourceType, id: string, kindLabel: string): string {
+      const count = structuralMeta[`${type}:${id}`]?.personCount;
+      if (typeof count === "number") {
+        const personLabel = count === 1 ? "1 Person" : `${count} Personen`;
+        return `${kindLabel} · ${personLabel}`;
+      }
+      return `${kindLabel} · erweitert zu Personen`;
+    }
+
     for (const id of value.teamIds) {
       chips.push({
         key: sceSelectorPickKey("TEAM", id),
         type: "TEAM",
         label: labels.teams[id] ?? id,
-        secondary: "Team",
+        secondary: structuralSecondary("TEAM", id, "Team"),
         onRemove: () => onChange({ ...value, teamIds: value.teamIds.filter((x) => x !== id) }),
       });
     }
@@ -109,7 +121,7 @@ export default function RequirementAudienceBuilder({
         key: sceSelectorPickKey("ORG_UNIT", id),
         type: "ORG_UNIT",
         label: labels.orgUnits[id] ?? id,
-        secondary: "Organisationseinheit",
+        secondary: structuralSecondary("ORG_UNIT", id, "Organisation"),
         onRemove: () => onChange({ ...value, orgUnitIds: value.orgUnitIds.filter((x) => x !== id) }),
       });
     }
@@ -118,7 +130,7 @@ export default function RequirementAudienceBuilder({
         key: sceSelectorPickKey("ROLE", id),
         type: "ROLE",
         label: labels.roles[id] ?? id,
-        secondary: "Rolle",
+        secondary: structuralSecondary("ROLE", id, "Rolle"),
         onRemove: () => onChange({ ...value, roleIds: value.roleIds.filter((x) => x !== id) }),
       });
     }
@@ -127,13 +139,13 @@ export default function RequirementAudienceBuilder({
         key: sceSelectorPickKey("TARGET_GROUP", id),
         type: "TARGET_GROUP",
         label: labels.targetGroups[id] ?? id,
-        secondary: "Zielgruppe",
+        secondary: structuralSecondary("TARGET_GROUP", id, "Zielgruppe"),
         onRemove: () =>
           onChange({ ...value, targetGroupIds: value.targetGroupIds.filter((x) => x !== id) }),
       });
     }
     return chips;
-  }, [knownPersons, labels, onChange, value]);
+  }, [knownPersons, labels, onChange, structuralMeta, value]);
 
   const hasAudiences = recipientChips.length > 0;
 
@@ -167,6 +179,7 @@ export default function RequirementAudienceBuilder({
     let next = { ...value };
     const nextLabels = { ...labels };
     const nextKnownPersons = { ...knownPersons };
+    const nextStructuralMeta = { ...structuralMeta };
 
     for (const pick of picks) {
       if (pick.type === "PERSON" && !next.personIds.includes(pick.id)) {
@@ -182,23 +195,40 @@ export default function RequirementAudienceBuilder({
       if (pick.type === "TEAM" && !next.teamIds.includes(pick.id)) {
         next = { ...next, teamIds: [...next.teamIds, pick.id] };
         nextLabels.teams = { ...nextLabels.teams, [pick.id]: pick.label };
+        const count = pick.metadata?.expansionPersonCount;
+        if (typeof count === "number") {
+          nextStructuralMeta[`TEAM:${pick.id}`] = { personCount: count };
+        }
       }
       if (pick.type === "ORG_UNIT" && !next.orgUnitIds.includes(pick.id)) {
         next = { ...next, orgUnitIds: [...next.orgUnitIds, pick.id] };
         nextLabels.orgUnits = { ...nextLabels.orgUnits, [pick.id]: pick.label };
+        const count = pick.metadata?.expansionPersonCount;
+        if (typeof count === "number") {
+          nextStructuralMeta[`ORG_UNIT:${pick.id}`] = { personCount: count };
+        }
       }
       if (pick.type === "ROLE" && !next.roleIds.includes(pick.id)) {
         next = { ...next, roleIds: [...next.roleIds, pick.id] };
         nextLabels.roles = { ...nextLabels.roles, [pick.id]: pick.label };
+        const count = pick.metadata?.expansionPersonCount;
+        if (typeof count === "number") {
+          nextStructuralMeta[`ROLE:${pick.id}`] = { personCount: count };
+        }
       }
       if (pick.type === "TARGET_GROUP" && !next.targetGroupIds.includes(pick.id)) {
         next = { ...next, targetGroupIds: [...next.targetGroupIds, pick.id] };
         nextLabels.targetGroups = { ...nextLabels.targetGroups, [pick.id]: pick.label };
+        const count = pick.metadata?.expansionPersonCount;
+        if (typeof count === "number") {
+          nextStructuralMeta[`TARGET_GROUP:${pick.id}`] = { personCount: count };
+        }
       }
     }
 
     setLabels(nextLabels);
     setKnownPersons(nextKnownPersons);
+    setStructuralMeta(nextStructuralMeta);
     onChange(next);
     setPickerOpen(false);
   }
@@ -208,7 +238,8 @@ export default function RequirementAudienceBuilder({
       <div>
         <h3 className="text-sm font-semibold text-[var(--foreground)]">Empfänger</h3>
         <p className="mt-0.5 text-xs text-[var(--text-2)]">
-          Empfänger werden beim Aktivieren als Snapshot festgelegt.
+          Mehrere Personen müssen individuell bestätigen. Teams, Organisation, Rollen und Zielgruppen
+          sind Auswahlhilfen — beim Aktivieren werden daraus einzelne Personen als Snapshot festgelegt.
         </p>
       </div>
 
@@ -267,7 +298,7 @@ export default function RequirementAudienceBuilder({
             ? "Empfänger werden berechnet…"
             : preview.error
               ? preview.error
-              : `${preview.resolvedTotal} Personen (dedupliziert)`}
+              : `Empfänger: ${preview.resolvedTotal} Personen (dedupliziert, bestätigen individuell)`}
         </p>
       ) : null}
 
