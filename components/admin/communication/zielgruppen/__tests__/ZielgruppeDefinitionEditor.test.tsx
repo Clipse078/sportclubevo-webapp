@@ -6,25 +6,17 @@ import ZielgruppeDefinitionEditor from "@/components/admin/communication/zielgru
 import { EMPTY_ZIELGRUPPE_EDITOR_DEFINITION } from "@/lib/communication/zielgruppen/editor-model";
 
 vi.mock("@/app/(admin)/dashboard/communication/zielgruppen/actions", () => ({
-  previewZielgruppeRecipientsAction: vi.fn().mockResolvedValue({
-    ok: true,
-    data: {
-      candidates: 3,
-      excluded: 1,
-      effective: 2,
-      scopeNotice: null,
-      recipients: [{ personId: "p-1", displayName: "Person One" }],
-      hasMore: false,
-    },
-  }),
-  searchZielgruppeOrgUnitsAction: vi.fn(),
-  searchZielgruppeTeamsAction: vi.fn(),
-  searchZielgruppeRolesAction: vi.fn(),
-  searchZielgruppePersonsAction: vi.fn(),
+  classifyZielgruppeBulkEmailsAction: vi.fn(),
+  persistZielgruppeBulkExternalContactsAction: vi.fn(),
+}));
+
+vi.mock("@/components/admin/communication/audience/CommunicationAudienceSelector", () => ({
+  default: () => <div data-testid="communication-audience-selector-stub" />,
+  CommunicationAudienceDiscoverPanel: () => null,
 }));
 
 describe("ZielgruppeDefinitionEditor", () => {
-  it("renders whole-organisation control and union semantics hint", () => {
+  it("renders premium builder sections and composition control", () => {
     render(
       <ZielgruppeDefinitionEditor
         value={EMPTY_ZIELGRUPPE_EDITOR_DEFINITION}
@@ -32,11 +24,15 @@ describe("ZielgruppeDefinitionEditor", () => {
       />,
     );
 
+    expect(screen.getByText(/Automatisch einschliessen/i)).toBeInTheDocument();
+    expect(screen.getByText(/Direkt hinzufügen/i)).toBeInTheDocument();
+    expect(screen.getByText(/Ausschliessen/i)).toBeInTheDocument();
+    expect(screen.getByText(/Keine Ausschlüsse/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Ganze Organisation/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Mindestens eine Bedingung/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Zusammenfassung/i)).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: /Alle Bedingungen/i })).toBeInTheDocument();
-    expect(screen.getByText(/Wer gehört zu dieser Zielgruppe/i)).toBeInTheDocument();
+    expect(screen.getByTestId("zielgruppe-composition-union")).toBeInTheDocument();
+    expect(screen.getByTestId("zielgruppe-add-condition")).toBeInTheDocument();
+    expect(screen.getByTestId("communication-audience-selector-stub")).toBeInTheDocument();
+    expect(screen.queryByText(/Zusammenfassung/i)).not.toBeInTheDocument();
   });
 
   it("toggles whole organisation checkbox", async () => {

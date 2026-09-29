@@ -22,7 +22,7 @@ export default async function NewCommunicationZielgruppePage() {
           { label: "Neu" },
         ]}
         title="Neue Zielgruppe"
-        description="Grundlagen festlegen, Regeln verständlich aufbauen, Vorschau prüfen und speichern."
+        description="Bestimme, wer zu dieser Zielgruppe gehört."
       />
       <CommunicationContentSurface>
         <ZielgruppeManagementForm mode="create" />

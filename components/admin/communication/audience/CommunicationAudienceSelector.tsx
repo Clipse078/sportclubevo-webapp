@@ -42,6 +42,10 @@ type Props = {
   onLargeAudienceConfirmedChange?: (confirmed: boolean) => void;
   /** Mitteilungs-Art for preference category in preview (MESSAGE | ANNOUNCEMENT | ALERT). */
   previewKind?: string;
+  /** Hides composer heading/summary for embedded use (e.g. Zielgruppen builder). */
+  compact?: boolean;
+  /** Hides the wide search field trigger; keeps the primary add button. */
+  singleAddTrigger?: boolean;
 };
 
 export type CommunicationAudiencePreviewState = {
@@ -122,7 +126,7 @@ function useDesktopLayout(): boolean {
   return desktop;
 }
 
-function UnifiedAudienceDiscoverPanel({
+export function CommunicationAudienceDiscoverPanel({
   open,
   onOpenChange,
   context,
@@ -132,6 +136,8 @@ function UnifiedAudienceDiscoverPanel({
   onPick,
   anchorRef,
   useDialog,
+  dialogTitle = "Empfänger hinzufügen",
+  dialogDescription = "Personen, Teams, Rollen oder Zielgruppen auswählen.",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -142,6 +148,8 @@ function UnifiedAudienceDiscoverPanel({
   onPick: (kind: SelectorKind, id: string, label: string) => void;
   anchorRef: React.RefObject<HTMLButtonElement | null>;
   useDialog: boolean;
+  dialogTitle?: string;
+  dialogDescription?: string;
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<CommunicationAudienceDiscoverCategory>("all");
@@ -326,8 +334,8 @@ function UnifiedAudienceDiscoverPanel({
       <Dialog
         open={open}
         onClose={() => onOpenChange(false)}
-        title="Empfänger hinzufügen"
-        description="Personen, Teams, Rollen oder Zielgruppen auswählen."
+        title={dialogTitle}
+        description={dialogDescription}
         size="lg"
       >
         {panelBody}
@@ -344,7 +352,7 @@ function UnifiedAudienceDiscoverPanel({
       maxHeight={480}
       className="w-[min(100vw-2rem,28rem)] p-2"
       role="dialog"
-      aria-label="Empfänger hinzufügen"
+      aria-label={dialogTitle}
     >
       {panelBody}
     </PopoverContent>
@@ -363,6 +371,8 @@ export default function CommunicationAudienceSelector({
   largeAudienceConfirmed = false,
   onLargeAudienceConfirmedChange,
   previewKind,
+  compact = false,
+  singleAddTrigger = false,
 }: Props) {
   const [labels, setLabels] = useState<CommunicationAudienceLabelMaps>({
     orgUnits: {},
@@ -584,10 +594,12 @@ export default function CommunicationAudienceSelector({
 
   return (
     <section className="space-y-4" data-testid="communication-audience-selector">
-      <div>
-        <h3 className="text-sm font-semibold text-[var(--foreground)]">Empfänger</h3>
-        <p className="mt-1 text-xs text-[var(--text-2)]">{summary}</p>
-      </div>
+      {!compact ? (
+        <div>
+          <h3 className="text-sm font-semibold text-[var(--foreground)]">Empfänger</h3>
+          <p className="mt-1 text-xs text-[var(--text-2)]">{summary}</p>
+        </div>
+      ) : null}
 
       {enabledFeatures.wholeOrganisation ? (
         <label className="flex min-h-10 cursor-pointer items-start gap-3 rounded-lg border border-[var(--border)] p-3 text-sm">
@@ -616,30 +628,33 @@ export default function CommunicationAudienceSelector({
             </p>
           ) : (
             <div className="space-y-2">
+              {!singleAddTrigger ? (
+                <button
+                  ref={discoverAnchorRef}
+                  type="button"
+                  disabled={disabled || !selectorFeaturesAvailable}
+                  className="flex w-full min-h-11 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-left text-sm text-[var(--text-2)] hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                  onClick={openDiscover}
+                  data-testid="communication-audience-open-trigger"
+                  aria-expanded={discoverOpen}
+                  aria-haspopup="dialog"
+                >
+                  <Search className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden="true" />
+                  Personen, Teams oder Zielgruppen suchen
+                </button>
+              ) : null}
               <button
-                ref={discoverAnchorRef}
+                ref={singleAddTrigger ? discoverAnchorRef : undefined}
                 type="button"
                 disabled={disabled || !selectorFeaturesAvailable}
-                className="flex w-full min-h-11 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-left text-sm text-[var(--text-2)] hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
-                onClick={openDiscover}
-                data-testid="communication-audience-open-trigger"
-                aria-expanded={discoverOpen}
-                aria-haspopup="dialog"
-              >
-                <Search className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden="true" />
-                Personen, Teams oder Zielgruppen suchen
-              </button>
-              <button
-                type="button"
-                disabled={disabled || !selectorFeaturesAvailable}
-                className="inline-flex min-h-10 items-center gap-1 rounded-md border border-[var(--border)] px-3 py-2 text-sm font-medium hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-[var(--surface-1)] px-4 py-2.5 text-sm font-semibold text-[var(--sce-primary)] hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] sm:w-auto"
                 onClick={openDiscover}
                 data-testid="communication-audience-add-trigger"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
                 Empfänger hinzufügen
               </button>
-              <UnifiedAudienceDiscoverPanel
+              <CommunicationAudienceDiscoverPanel
                 open={discoverOpen}
                 onOpenChange={setDiscoverOpen}
                 context={context}
@@ -749,7 +764,7 @@ export default function CommunicationAudienceSelector({
         </>
       ) : null}
 
-      {!hasSelection ? (
+      {!compact && !hasSelection ? (
         <p className="text-sm text-[var(--text-2)]" data-testid="communication-audience-empty">
           Noch keine Empfänger ausgewählt.
         </p>

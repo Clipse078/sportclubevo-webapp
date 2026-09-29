@@ -161,16 +161,17 @@ describe("SCE-COMM-UX-06 Zielgruppen", () => {
     expect(screen.queryByRole("link", { name: /Neue Zielgruppe/i })).not.toBeInTheDocument();
   });
 
-  it("create page opens basics section (EVO-05 single-page editor)", async () => {
+  it("create page opens compact editor (UXR1 single-page builder)", async () => {
     const page = await NewZielgruppePage();
     render(page);
     expect(screen.getByLabelText(/Name/i)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Grundlagen" })).toBeInTheDocument();
+    expect(screen.getByTestId("zielgruppe-save")).toBeInTheDocument();
+    expect(screen.getByText(/Automatisch einschliessen/i)).toBeInTheDocument();
   });
 
   it("validates name before save", async () => {
     render(<ZielgruppeManagementForm mode="create" />);
-    const form = screen.getByRole("button", { name: /Zielgruppe erstellen/i }).closest("form");
+    const form = screen.getAllByRole("button", { name: /Zielgruppe speichern/i })[0]!.closest("form");
     expect(form).toBeTruthy();
     fireEvent.submit(form!);
     expect(await screen.findByRole("alert")).toHaveTextContent(/Name ist erforderlich/i);
@@ -187,7 +188,8 @@ describe("SCE-COMM-UX-06 Zielgruppen", () => {
         knownLabels={{ orgUnits: {}, teams: {}, roles: { "role-1": "Trainer" }, persons: {} }}
       />,
     );
-    expect(screen.getAllByText(/Rolle ist „Trainer"/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Trainer").length).toBeGreaterThan(0);
+    expect(screen.getByText("Rolle")).toBeInTheDocument();
     expect(screen.queryByText(/ruleJson/i)).not.toBeInTheDocument();
   });
 
@@ -201,6 +203,7 @@ describe("SCE-COMM-UX-06 Zielgruppen", () => {
         }}
       />,
     );
+    await user.click(screen.getByRole("button", { name: /Hinweise zur Vorschau/i }));
     expect(screen.getByText(ZIELGRUPPE_PREVIEW_DELIVERY_NOTICE)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Vorschau aktualisieren/i }));
     expect(mocks.previewZielgruppeRecipientsAction).toHaveBeenCalledTimes(1);
