@@ -74,9 +74,12 @@ export function SceChipMultiSelectorField({
       sceGenericDiscoverFetch({
         authContext,
         sourceTypes,
-        excludeUserIds: [...selectedIds, ...(excludeUserIds ?? [])],
+        // Already-selected ids are suppressed in the panel via committedPickKeys only.
+        // Do not pass persistence ids (e.g. assignee userIds) as excludeUserIds — that
+        // wrongly hides eligible Persons server-side (TASK_ASSIGNMENT / Person.id vs User.id).
+        excludeUserIds: excludeUserIds ?? [],
       }),
-    [authContext, excludeUserIds, selectedIds, sourceTypes],
+    [authContext, excludeUserIds, sourceTypes],
   );
 
   const committedKeys = useMemo(() => {

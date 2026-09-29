@@ -2,6 +2,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { listEligibleTaskAssignees } from "@/lib/tasks/queries";
 import { getPersonNameByUserId } from "@/lib/people/queries";
+import { resolvePersonUserIdentityByUserId } from "@/lib/people/person-user-identity";
 import { resolveAccountIdentityName } from "@/lib/people/identity";
 import { resolveQuickCreateCapabilities } from "@/lib/tasks/quick-create";
 import { loadTaskOrgUnitFilterOptions } from "@/lib/tasks/task-org-options";
@@ -163,6 +164,10 @@ export default async function AufgabenPage({ searchParams }: Props) {
     };
     const quickCreateCaps = resolveQuickCreateCapabilities(taskCtx);
     const linkedPerson = await getPersonNameByUserId(session.user.id);
+    const linkedPersonIdentity =
+      taskCtx != null
+        ? await resolvePersonUserIdentityByUserId(taskCtx.tenantId, session.user.id)
+        : null;
     const identity = resolveAccountIdentityName({
       linkedPerson,
       sessionFirstName: session.user.firstName,
@@ -188,6 +193,7 @@ export default async function AufgabenPage({ searchParams }: Props) {
             canOpenFullCreate: hasTaskPermission(taskCtx, PERMISSIONS.TASKS_CREATE),
             currentUser: {
               userId: session.user.id,
+              personId: linkedPersonIdentity?.personId,
               firstName: identity.firstName,
               lastName: identity.lastName,
             },

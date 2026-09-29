@@ -14,6 +14,7 @@ import { SCE_AUFGABEN_TASK_FORM_DIALOG_PANEL } from "@/lib/shell/responsive-layo
 
 export type QuickCreateCurrentUser = {
   userId: string;
+  personId?: string;
   firstName: string;
   lastName: string;
   displayName?: string;
@@ -44,6 +45,7 @@ export default function MeineAufgabenQuickCreateDialog({
   const initialKnown = useMemo<TaskAssigneeOption[]>(
     () => [
       {
+        personId: currentUser.personId,
         userId: currentUser.userId,
         firstName: currentUser.firstName,
         lastName: currentUser.lastName,
@@ -53,7 +55,13 @@ export default function MeineAufgabenQuickCreateDialog({
           `${currentUser.firstName} ${currentUser.lastName}`.trim(),
       },
     ],
-    [currentUser.firstName, currentUser.lastName, currentUser.userId],
+    [
+      currentUser.firstName,
+      currentUser.lastName,
+      currentUser.personId,
+      currentUser.userId,
+      currentUser.displayName,
+    ],
   );
 
   const lockedUserIds = useMemo(() => {
