@@ -40,6 +40,28 @@ describe("discoverSceSelectorItems", () => {
     vi.clearAllMocks();
   });
 
+  it("throws when every enabled source fails so the orchestrator cannot hang", async () => {
+    const { browseOrgUnitSelectorItems } = await import(
+      "@/lib/sce/list-selector/sources/org-unit-selector-source"
+    );
+    vi.mocked(browseOrgUnitSelectorItems).mockRejectedValueOnce(new Error("db down"));
+    const { browseTeamSelectorItems } = await import("@/lib/sce/list-selector/sources/team-selector-source");
+    vi.mocked(browseTeamSelectorItems).mockRejectedValueOnce(new Error("db down"));
+    const { browseRoleSelectorItems } = await import("@/lib/sce/list-selector/sources/role-selector-source");
+    vi.mocked(browseRoleSelectorItems).mockRejectedValueOnce(new Error("db down"));
+
+    await expect(
+      discoverSceSelectorItems({
+        tenantId: "tenant1",
+        actorUserId: "user1",
+        enabledTypes: ["ORG_UNIT", "TEAM", "ROLE"],
+        category: "all",
+        query: "",
+        communicationContext: "ORGANISATION",
+      }),
+    ).rejects.toThrow("SCE_SELECTOR_ALL_SOURCES_FAILED");
+  });
+
   it("returns browse groups for empty query without requiring search term", async () => {
     const groups = await discoverSceSelectorItems({
       tenantId: "tenant1",

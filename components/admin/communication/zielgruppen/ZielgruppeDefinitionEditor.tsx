@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Building2, MinusCircle, Plus, Trash2, User, UserCircle2, Users, Mail } from "lucide-react";
 import type { ZielgruppeEditorDefinition } from "@/lib/communication/zielgruppen/editor-model";
 import { EMPTY_ZIELGRUPPE_EDITOR_DEFINITION } from "@/lib/communication/zielgruppen/editor-model";
@@ -228,15 +228,25 @@ function DiscoverAddButton({
   testId: string;
 }) {
   const [open, setOpen] = useState(false);
-  const enabledFeatures = {
-    wholeOrganisation: false,
-    orgUnits: features.orgUnits ?? false,
-    teams: features.teams ?? false,
-    roles: features.roles ?? false,
-    targetGroups: features.targetGroups ?? false,
-    persons: features.persons ?? false,
-    externalContacts: features.externalContacts ?? false,
-  };
+  const enabledFeatures = useMemo(
+    () => ({
+      wholeOrganisation: false,
+      orgUnits: features.orgUnits ?? false,
+      teams: features.teams ?? false,
+      roles: features.roles ?? false,
+      targetGroups: features.targetGroups ?? false,
+      persons: features.persons ?? false,
+      externalContacts: features.externalContacts ?? false,
+    }),
+    [
+      features.externalContacts,
+      features.orgUnits,
+      features.persons,
+      features.roles,
+      features.targetGroups,
+      features.teams,
+    ],
+  );
 
   return (
     <>

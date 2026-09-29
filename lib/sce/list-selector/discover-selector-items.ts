@@ -27,6 +27,7 @@ import {
   browseExternalContactSelectorItems,
   searchExternalContactSelectorItems,
 } from "@/lib/sce/list-selector/sources/external-contact-selector-source";
+import { withSceSelectorSourceTimeout } from "@/lib/sce/list-selector/source-query-timeout";
 
 function limitForType(category: SceSelectorCategoryId, type: SceSelectorSourceType, limitPerGroup?: number): number {
   if (limitPerGroup != null) return limitPerGroup;
@@ -92,9 +93,22 @@ async function querySourceType(
   }
 }
 
+export type DiscoverSceSelectorItemsResult = {
+  groups: SceSelectorResultGroup[];
+  /** Set when at least one enabled source failed but others may have succeeded. */
+  partialFailure?: boolean;
+};
+
 export async function discoverSceSelectorItems(
   input: SceSelectorQueryInput & { category: SceSelectorCategoryId },
 ): Promise<SceSelectorResultGroup[]> {
+  const result = await discoverSceSelectorItemsDetailed(input);
+  return result.groups;
+}
+
+export async function discoverSceSelectorItemsDetailed(
+  input: SceSelectorQueryInput & { category: SceSelectorCategoryId },
+): Promise<DiscoverSceSelectorItemsResult> {
   const enabled = new Set(input.enabledTypes);
   const categoryTypes = sceSelectorCategoryToTypes(input.category);
   const typesToQuery: SceSelectorSourceType[] =
@@ -111,11 +125,23 @@ export async function discoverSceSelectorItems(
         ).filter((t) => enabled.has(t))
       : categoryTypes.filter((t) => enabled.has(t));
 
-  const groups: SceSelectorResultGroup[] = [];
+  const settled = await Promise.allSettled(
+    typesToQuery.map(async (type) => {
+      const limit = limitForType(input.category, type, input.limitPerGroup);
+      const items = await withSceSelectorSourceTimeout(type, querySourceType(type, input, limit));
+      return { type, items };
+    }),
+  );
 
-  for (const type of typesToQuery) {
-    const limit = limitForType(input.category, type, input.limitPerGroup);
-    const items = await querySourceType(type, input, limit);
+  const groups: SceSelectorResultGroup[] = [];
+  let failures = 0;
+
+  for (const entry of settled) {
+    if (entry.status === "rejected") {
+      failures += 1;
+      continue;
+    }
+    const { type, items } = entry.value;
     if (items.length === 0) continue;
     groups.push({
       type,
@@ -124,5 +150,12 @@ export async function discoverSceSelectorItems(
     });
   }
 
-  return groups;
+  if (failures > 0 && groups.length === 0 && typesToQuery.length > 0) {
+    throw new Error("SCE_SELECTOR_ALL_SOURCES_FAILED");
+  }
+
+  return {
+    groups,
+    partialFailure: failures > 0 && groups.length > 0,
+  };
 }

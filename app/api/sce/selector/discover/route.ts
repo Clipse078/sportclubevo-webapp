@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
+import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { discoverSceSelectorItems } from "@/lib/sce/list-selector/discover-selector-items";
 import { parseSelectorSourceTypesParam } from "@/lib/sce/list-selector/communication-bridge";
 import type { SceSelectorCategoryId } from "@/lib/sce/list-selector/entity-presentation";
-import { SCE_SELECTOR_SOURCE_TYPES, type SceSelectorSourceType } from "@/lib/sce/list-selector/types";
+import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -22,15 +23,10 @@ function parseCategory(value: string | null): SceSelectorCategoryId {
   return "all";
 }
 
-function parseEnabledTypes(raw: string | null): SceSelectorSourceType[] {
-  const parsed = parseSelectorSourceTypesParam(raw);
-  if (parsed?.length) return parsed;
-  return [...SCE_SELECTOR_SOURCE_TYPES];
-}
-
 /**
- * Generic SCE selector discover endpoint (tenant-scoped; authorization is caller's duty).
- * Communication uses `/api/communication/audience/discover` with stricter capability checks.
+ * Generic SCE selector discover — gated to communication-capable users only.
+ * Communication product flows should prefer `/api/communication/audience/discover`
+ * (capability + sender-scope aware).
  */
 export async function GET(request: Request): Promise<NextResponse> {
   const session = await auth();
@@ -40,13 +36,28 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Nicht autorisiert." }, { status: 401 });
   }
 
+  const access = await requireApiAnyPermission(
+    [
+      PERMISSIONS.COMMUNICATION_CLUB_SEND,
+      PERMISSIONS.COMMUNICATION_CLUB_VIEW,
+      PERMISSIONS.COMMUNICATION_TEAM_SEND,
+    ],
+    tenant.id,
+  );
+  if (!access.ok) {
+    return NextResponse.json({ error: access.error }, { status: access.status });
+  }
+
   const url = new URL(request.url);
   const query = url.searchParams.get("q") ?? "";
   const category = parseCategory(url.searchParams.get("category"));
-  const enabledTypes = parseEnabledTypes(url.searchParams.get("sources"));
+  const enabledTypes = parseSelectorSourceTypesParam(url.searchParams.get("sources"));
 
-  if (enabledTypes.length === 0) {
-    return NextResponse.json({ groups: [], noAccess: true });
+  if (!enabledTypes?.length) {
+    return NextResponse.json(
+      { error: "Ungültige oder fehlende sources.", groups: [] },
+      { status: 400 },
+    );
   }
 
   try {

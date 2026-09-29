@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
-import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
+import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
 import { DIRECT_MESSAGE_SEND_ROUTE_PERMISSIONS } from "@/lib/communication/direct/route-access";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
@@ -15,7 +15,6 @@ import {
 } from "@/lib/sce/list-selector/communication-bridge";
 import { resolveCommunicationAudienceCapabilities } from "@/lib/communication/audience/communication-audience-capabilities";
 import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
-import { TeamCommunicationForbiddenError } from "@/lib/communication/team/team-communication-errors";
 import { requireClubCommunicationSend } from "@/lib/communication/club/club-communication-authorization";
 
 export const dynamic = "force-dynamic";
@@ -52,11 +51,36 @@ function enabledKindsFromCapabilities(
   return kinds;
 }
 
+function logDiscoverEvent(
+  correlationId: string,
+  event: Record<string, string | number | boolean | null | undefined>,
+) {
+  console.info(
+    JSON.stringify({
+      scope: "communication.audience.discover",
+      correlationId,
+      ...event,
+    }),
+  );
+}
+
 export async function GET(request: Request): Promise<NextResponse> {
+  const startedAt = Date.now();
+  const correlationId =
+    request.headers.get("x-correlation-id")?.trim() ||
+    request.headers.get("x-request-id")?.trim() ||
+    `sce-discover-${startedAt}`;
+
   const session = await auth();
   const userId = session?.user?.id;
   const tenant = await getActiveTenant();
   if (!tenant || !userId) {
+    logDiscoverEvent(correlationId, {
+      phase: "auth",
+      authenticated: false,
+      httpStatus: 401,
+      durationMs: Date.now() - startedAt,
+    });
     return NextResponse.json({ error: "Nicht autorisiert." }, { status: 401 });
   }
 
@@ -65,27 +89,59 @@ export async function GET(request: Request): Promise<NextResponse> {
   const context = parseContext(contextParam, tenant.id);
   const query = url.searchParams.get("q") ?? "";
   const category = parseCategory(url.searchParams.get("category"));
+  const rawSources = url.searchParams.get("sources");
 
-  try {
-    if (context.kind === "DIRECT") {
-      await requireAnyPermission(DIRECT_MESSAGE_SEND_ROUTE_PERMISSIONS);
-    } else if (contextParam === "CAMPAIGN") {
+  logDiscoverEvent(correlationId, {
+    phase: "request_started",
+    context: contextParam,
+    category,
+    queryLength: query.length,
+    sources: rawSources,
+    tenantId: tenant.id,
+    authenticated: true,
+  });
+
+  if (context.kind === "DIRECT") {
+    const access = await requireApiAnyPermission(DIRECT_MESSAGE_SEND_ROUTE_PERMISSIONS, tenant.id);
+    if (!access.ok) {
+      logDiscoverEvent(correlationId, {
+        phase: "permissions",
+        permissionsResolved: false,
+        httpStatus: access.status,
+        durationMs: Date.now() - startedAt,
+      });
+      return NextResponse.json({ error: access.error }, { status: access.status });
+    }
+  } else if (contextParam === "CAMPAIGN") {
+    try {
       await requireClubCommunicationSend({
         tenantId: tenant.id,
         tenantKey: tenant.key,
         userId,
       });
-    } else {
-      await requireAnyPermission([
-        PERMISSIONS.COMMUNICATION_CLUB_SEND,
-        PERMISSIONS.COMMUNICATION_CLUB_VIEW,
-      ]);
-    }
-  } catch (error) {
-    if (error instanceof TeamCommunicationForbiddenError) {
+    } catch {
+      logDiscoverEvent(correlationId, {
+        phase: "permissions",
+        permissionsResolved: false,
+        httpStatus: 403,
+        durationMs: Date.now() - startedAt,
+      });
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    throw error;
+  } else {
+    const access = await requireApiAnyPermission(
+      [PERMISSIONS.COMMUNICATION_CLUB_SEND, PERMISSIONS.COMMUNICATION_CLUB_VIEW],
+      tenant.id,
+    );
+    if (!access.ok) {
+      logDiscoverEvent(correlationId, {
+        phase: "permissions",
+        permissionsResolved: false,
+        httpStatus: access.status,
+        durationMs: Date.now() - startedAt,
+      });
+      return NextResponse.json({ error: access.error }, { status: access.status });
+    }
   }
 
   const capabilities = await resolveCommunicationAudienceCapabilities({
@@ -96,7 +152,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   let enabledKinds = enabledKindsFromCapabilities(capabilities);
 
-  const requestedSources = parseSelectorSourceTypesParam(url.searchParams.get("sources"));
+  const requestedSources = parseSelectorSourceTypesParam(rawSources);
   if (requestedSources?.length) {
     const allowed = new Set(enabledKinds);
     enabledKinds = requestedSources
@@ -105,17 +161,53 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 
   if (enabledKinds.length === 0) {
+    logDiscoverEvent(correlationId, {
+      phase: "response_completed",
+      permissionsResolved: true,
+      enabledKinds: 0,
+      groupCount: 0,
+      optionCount: 0,
+      noAccess: true,
+      httpStatus: 200,
+      durationMs: Date.now() - startedAt,
+    });
     return NextResponse.json({ groups: [], noAccess: true });
   }
 
-  const groups = await discoverCommunicationAudienceTargets({
-    tenantId: tenant.id,
-    senderUserId: userId,
-    context,
-    query,
-    category,
-    enabledKinds,
-  });
+  try {
+    const groups = await discoverCommunicationAudienceTargets({
+      tenantId: tenant.id,
+      senderUserId: userId,
+      context,
+      query,
+      category,
+      enabledKinds,
+    });
 
-  return NextResponse.json({ groups, noAccess: false });
+    const optionCount = groups.reduce((sum, g) => sum + g.options.length, 0);
+    logDiscoverEvent(correlationId, {
+      phase: "response_completed",
+      permissionsResolved: true,
+      enabledKinds: enabledKinds.join(","),
+      groupCount: groups.length,
+      optionCount,
+      noAccess: false,
+      httpStatus: 200,
+      durationMs: Date.now() - startedAt,
+    });
+
+    return NextResponse.json({ groups, noAccess: false });
+  } catch (error) {
+    logDiscoverEvent(correlationId, {
+      phase: "response_error",
+      permissionsResolved: true,
+      errorClass: error instanceof Error ? error.name : "Error",
+      httpStatus: 500,
+      durationMs: Date.now() - startedAt,
+    });
+    return NextResponse.json(
+      { error: "Auswahl konnte nicht geladen werden.", groups: [] },
+      { status: 500 },
+    );
+  }
 }

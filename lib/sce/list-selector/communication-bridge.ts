@@ -47,17 +47,47 @@ export function communicationCategoryToSelectorCategory(
   return category;
 }
 
+const SELECTOR_SOURCE_PARAM_ALIASES: Record<string, SceSelectorSourceType> = {
+  person: "PERSON",
+  PERSON: "PERSON",
+  team: "TEAM",
+  TEAM: "TEAM",
+  orgUnit: "ORG_UNIT",
+  ORG_UNIT: "ORG_UNIT",
+  role: "ROLE",
+  ROLE: "ROLE",
+  targetGroup: "TARGET_GROUP",
+  TARGET_GROUP: "TARGET_GROUP",
+  external: "EXTERNAL_CONTACT",
+  EXTERNAL_CONTACT: "EXTERNAL_CONTACT",
+};
+
 export function parseSelectorSourceTypesParam(raw: string | null): SceSelectorSourceType[] | null {
   if (!raw?.trim()) return null;
-  const tokens = raw.split(",").map((t) => t.trim());
+  const tokens = raw.split(",").map((t) => t.trim()).filter(Boolean);
   const out: SceSelectorSourceType[] = [];
   for (const token of tokens) {
-    if (token === "person" || token === "PERSON") out.push("PERSON");
-    else if (token === "team" || token === "TEAM") out.push("TEAM");
-    else if (token === "orgUnit" || token === "ORG_UNIT") out.push("ORG_UNIT");
-    else if (token === "role" || token === "ROLE") out.push("ROLE");
-    else if (token === "targetGroup" || token === "TARGET_GROUP") out.push("TARGET_GROUP");
-    else if (token === "external" || token === "EXTERNAL_CONTACT") out.push("EXTERNAL_CONTACT");
+    const mapped = SELECTOR_SOURCE_PARAM_ALIASES[token];
+    if (mapped) out.push(mapped);
   }
   return out.length ? out : null;
+}
+
+export function parseSelectorSourceTypesParamStrict(raw: string | null): {
+  types: SceSelectorSourceType[] | null;
+  invalidTokens: string[];
+} {
+  if (!raw?.trim()) return { types: null, invalidTokens: [] };
+  const tokens = raw.split(",").map((t) => t.trim()).filter(Boolean);
+  const out: SceSelectorSourceType[] = [];
+  const invalidTokens: string[] = [];
+  for (const token of tokens) {
+    const mapped = SELECTOR_SOURCE_PARAM_ALIASES[token];
+    if (mapped) out.push(mapped);
+    else invalidTokens.push(token);
+  }
+  return {
+    types: out.length ? out : null,
+    invalidTokens,
+  };
 }

@@ -9,6 +9,7 @@ import {
 } from "@/lib/sce/list-selector/communication-bridge";
 import type { CommunicationAudienceSelectorContext } from "@/components/admin/communication/audience/CommunicationAudienceSelector";
 import type { CommunicationAudienceSelectorFeatures } from "@/components/admin/communication/audience/CommunicationAudienceSelector";
+import { fetchWithSceSelectorTimeout } from "@/lib/sce/list-selector/fetch-with-timeout";
 
 function featuresToSourceTypes(
   features: Required<CommunicationAudienceSelectorFeatures>,
@@ -46,7 +47,7 @@ export function communicationAudienceDiscoverFetch(input: {
     noAccess?: boolean;
     error?: string;
   }> => {
-    const res = await fetch(
+    const res = await fetchWithSceSelectorTimeout(
       `/api/communication/audience/discover?context=${encodeURIComponent(input.context)}&category=${encodeURIComponent(selectorCategoryToCommunicationParam(params.category))}&q=${encodeURIComponent(params.query.trim())}&sources=${encodeURIComponent(sourcesParam)}`,
       { signal: params.signal },
     );
