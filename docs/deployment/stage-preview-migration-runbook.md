@@ -5,8 +5,8 @@ PR Preview deployments for `sportclubevo-webapp-stage` intentionally use the
 `STAGE_DB_URL`). Preview builds **do not** apply migrations:
 
 - `APPLY_DATABASE_MIGRATIONS` must never be Preview-scoped.
-- `npm run build` runs `db:migrate:deploy-if-enabled`, which exits successfully
-  without migrating when the flag is not exactly `"true"`.
+- `npm run build` does **not** run `prisma migrate deploy` (no advisory-lock
+  coupling). Apply pending schema with the guarded runner in step 3 below.
 
 Therefore a PR that adds **required** schema must be followed by a **controlled
 STAGE migration** before manual Preview acceptance.
