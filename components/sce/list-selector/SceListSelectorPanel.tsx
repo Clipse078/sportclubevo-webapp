@@ -294,7 +294,7 @@ export function SceListSelectorPanel({
         >
           {queryState.query.trim().length >= 2
             ? `Keine Ergebnisse für „${queryState.query.trim()}“`
-            : "Keine Einträge vorhanden."}
+            : "Keine passenden Einträge vorhanden."}
         </p>
       ) : null}
       {queryState.loadingMore ? (

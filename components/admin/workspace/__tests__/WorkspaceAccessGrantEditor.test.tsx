@@ -16,6 +16,92 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
+vi.mock("@/components/sce/recipient/SceRecipientSelector", () => ({
+  SceRecipientSelector: ({
+    open,
+    onPick,
+  }: {
+    open: boolean;
+    onPick?: (pick: {
+      type: string;
+      id: string;
+      label: string;
+      metadata?: Record<string, unknown>;
+    }) => void;
+  }) =>
+    open ? (
+      <div data-testid="workspace-access-subject-selector-panel">
+        <button
+          type="button"
+          data-testid="workspace-access-subject-selector-pick-organisation"
+          onClick={() =>
+            onPick?.({
+              type: "ORG_UNIT",
+              id: "organisation",
+              label: "Organisation",
+              metadata: { workspaceSubjectType: "ORGANISATION" },
+            })
+          }
+        >
+          pick-organisation
+        </button>
+        <button
+          type="button"
+          data-testid="workspace-access-subject-selector-pick-org-unit"
+          onClick={() =>
+            onPick?.({
+              type: "ORG_UNIT",
+              id: "ou-1",
+              label: "Vereinsleitung",
+            })
+          }
+        >
+          pick-org-unit
+        </button>
+        <button
+          type="button"
+          data-testid="workspace-access-subject-selector-pick-team"
+          onClick={() =>
+            onPick?.({
+              type: "TEAM",
+              id: "team-1",
+              label: "F2",
+            })
+          }
+        >
+          pick-team
+        </button>
+        <button
+          type="button"
+          data-testid="workspace-access-subject-selector-pick-person"
+          onClick={() =>
+            onPick?.({
+              type: "PERSON",
+              id: "person-1",
+              label: "Michael Duijster",
+            })
+          }
+        >
+          pick-person
+        </button>
+        <button
+          type="button"
+          data-testid="workspace-access-subject-selector-pick-role"
+          onClick={() =>
+            onPick?.({
+              type: "ROLE",
+              id: "TRAINER",
+              label: "Trainer/in",
+              metadata: { roleFunctionKey: "TRAINER", workspaceRoleFunction: true },
+            })
+          }
+        >
+          pick-role
+        </button>
+      </div>
+    ) : null,
+}));
+
 import { WorkspaceAccessGrantEditor } from "@/components/admin/workspace/WorkspaceAccessGrantEditor";
 import type { WorkspaceAccessManagementViewModel } from "@/lib/workspace/access/access-management-dto";
 
@@ -94,7 +180,7 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
     expect(screen.getByRole("button", { name: "addGrantButton" })).toBeInTheDocument();
   });
 
-  it("W03-A1-02 Organisation audience type is available", () => {
+  it("W03-A1-02 Organisation can be chosen via canonical subject selector", () => {
     render(
       <WorkspaceAccessGrantEditor
         apiBase="/api/workspace/folders/folder-1/access"
@@ -102,9 +188,9 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
         onViewModelUpdated={vi.fn()}
       />,
     );
-    const select = screen.getByLabelText("audienceTypeField");
-    fireEvent.change(select, { target: { value: "ORGANISATION" } });
-    expect((select as HTMLSelectElement).value).toBe("ORGANISATION");
+    fireEvent.click(screen.getByTestId("workspace-access-subject-add"));
+    fireEvent.click(screen.getByTestId("workspace-access-subject-selector-pick-organisation"));
+    expect(screen.getByRole("button", { name: "searchButton" })).toBeInTheDocument();
   });
 
   it("W03-A1-08 EDIT level can be selected in add form", () => {
@@ -160,9 +246,8 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
         onViewModelUpdated={onUpdated}
       />,
     );
-    fireEvent.change(screen.getByLabelText("audienceTypeField"), {
-      target: { value: "ORGANISATION" },
-    });
+    fireEvent.click(screen.getByTestId("workspace-access-subject-add"));
+    fireEvent.click(screen.getByTestId("workspace-access-subject-selector-pick-organisation"));
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "addGrantButton" }));
     });
@@ -253,9 +338,8 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
         onViewModelUpdated={onUpdated}
       />,
     );
-    fireEvent.change(screen.getByLabelText("audienceTypeField"), {
-      target: { value: "ORGANISATION" },
-    });
+    fireEvent.click(screen.getByTestId("workspace-access-subject-add"));
+    fireEvent.click(screen.getByTestId("workspace-access-subject-selector-pick-organisation"));
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "addGrantButton" }));
     });
@@ -263,7 +347,7 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
     expect(onUpdated).not.toHaveBeenCalled();
   });
 
-  it("W03-A1-03 OrgUnit selection uses SCE list selector entry", async () => {
+  it("W03-A1-03 OrgUnit selection uses canonical SCE subject selector", () => {
     render(
       <WorkspaceAccessGrantEditor
         apiBase="/api/workspace/folders/folder-1/access"
@@ -271,13 +355,12 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
         onViewModelUpdated={vi.fn()}
       />,
     );
-    fireEvent.change(screen.getByLabelText("audienceTypeField"), {
-      target: { value: "ORG_UNIT" },
-    });
-    expect(screen.getByTestId("workspace-access-sce-picker-org_unit")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("workspace-access-subject-add"));
+    fireEvent.click(screen.getByTestId("workspace-access-subject-selector-pick-org-unit"));
+    expect(screen.getByText("Vereinsleitung")).toBeInTheDocument();
   });
 
-  it("W03-A1-04 Team selection uses SCE list selector entry", async () => {
+  it("W03-A1-04 Team selection uses canonical SCE subject selector", () => {
     render(
       <WorkspaceAccessGrantEditor
         apiBase="/api/workspace/folders/folder-1/access"
@@ -285,27 +368,12 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
         onViewModelUpdated={vi.fn()}
       />,
     );
-    fireEvent.change(screen.getByLabelText("audienceTypeField"), {
-      target: { value: "TEAM" },
-    });
-    expect(screen.getByTestId("workspace-access-sce-picker-team")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("workspace-access-subject-add"));
+    fireEvent.click(screen.getByTestId("workspace-access-subject-selector-pick-team"));
+    expect(screen.getByText("F2")).toBeInTheDocument();
   });
 
-  it("W03-A1-05 Role search uses audience API", async () => {
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        results: [
-          {
-            type: "ROLE",
-            id: "TRAINER",
-            label: "Trainer/in",
-            functionKey: "TRAINER",
-          },
-        ],
-      }),
-    });
+  it("W03-A1-05 Role function keys use workspace function semantics", () => {
     render(
       <WorkspaceAccessGrantEditor
         apiBase="/api/workspace/folders/folder-1/access"
@@ -313,17 +381,12 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
         onViewModelUpdated={vi.fn()}
       />,
     );
-    fireEvent.change(screen.getByLabelText("audienceTypeField"), {
-      target: { value: "ROLE" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "searchButton" }));
-    await waitFor(() =>
-      expect(screen.getByRole("option", { name: "Trainer/in" })).toBeInTheDocument(),
-    );
-    expect(String(fetchMock.mock.calls[0][0])).toContain("type=ROLE");
+    fireEvent.click(screen.getByTestId("workspace-access-subject-add"));
+    fireEvent.click(screen.getByTestId("workspace-access-subject-selector-pick-role"));
+    expect(screen.getByText("Trainer/in")).toBeInTheDocument();
   });
 
-  it("W03-A1-06 Person selection uses SCE list selector entry", async () => {
+  it("W03-A1-06 Person selection uses canonical SCE subject selector", () => {
     render(
       <WorkspaceAccessGrantEditor
         apiBase="/api/workspace/folders/folder-1/access"
@@ -331,20 +394,12 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
         onViewModelUpdated={vi.fn()}
       />,
     );
-    fireEvent.change(screen.getByLabelText("audienceTypeField"), {
-      target: { value: "PERSON" },
-    });
-    expect(screen.getByTestId("workspace-access-sce-picker-person")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("workspace-access-subject-add"));
+    fireEvent.click(screen.getByTestId("workspace-access-subject-selector-pick-person"));
+    expect(screen.getByText("Michael Duijster")).toBeInTheDocument();
   });
 
-  it("W03-A1-15 technical workspace RBAC keys are not in role search results", async () => {
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        results: [{ type: "ROLE", id: "TRAINER", label: "Trainer/in", functionKey: "TRAINER" }],
-      }),
-    });
+  it("W03-A1-15 technical workspace RBAC keys are not exposed as role labels", () => {
     render(
       <WorkspaceAccessGrantEditor
         apiBase="/api/workspace/folders/folder-1/access"
@@ -352,12 +407,7 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
         onViewModelUpdated={vi.fn()}
       />,
     );
-    fireEvent.change(screen.getByLabelText("audienceTypeField"), {
-      target: { value: "ROLE" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "searchButton" }));
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-    expect(screen.queryByRole("option", { name: "workspace.manage" })).toBeNull();
+    expect(screen.queryByText("workspace.manage")).toBeNull();
   });
 
   it("W03-A1-22 actor losing MANAGE triggers callback", async () => {
@@ -375,9 +425,8 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
         onManageAccessLost={onLost}
       />,
     );
-    fireEvent.change(screen.getByLabelText("audienceTypeField"), {
-      target: { value: "ORGANISATION" },
-    });
+    fireEvent.click(screen.getByTestId("workspace-access-subject-add"));
+    fireEvent.click(screen.getByTestId("workspace-access-subject-selector-pick-organisation"));
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "addGrantButton" }));
     });

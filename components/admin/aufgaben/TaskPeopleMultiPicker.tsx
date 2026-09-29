@@ -7,6 +7,7 @@ import {
   type SceChipSelection,
 } from "@/components/sce/list-selector/SceChipMultiSelectorField";
 import type { SceSelectorPick } from "@/lib/sce/list-selector/types";
+import { sceSelectorPickKey } from "@/lib/sce/list-selector/types";
 
 type Props = {
   label: string;
@@ -53,16 +54,32 @@ export default function TaskPeopleMultiPicker({
     return { ...map, ...addedKnown };
   }, [initialKnown, addedKnown]);
 
-  const selectedChips: SceChipSelection[] = selectedIds
-    .map((id) => {
-      const person = effectiveKnown[id];
-      if (!person) return { id, label: id };
-      return {
-        id,
-        label: formatName(person.firstName, person.lastName, person.displayName),
-        description: person.email,
-      };
-    });
+  const userIdToPersonId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const option of Object.values(effectiveKnown)) {
+      if (option.personId) map.set(option.userId, option.personId);
+    }
+    return map;
+  }, [effectiveKnown]);
+
+  const committedPickKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const userId of selectedIds) {
+      const personId = userIdToPersonId.get(userId);
+      if (personId) keys.add(sceSelectorPickKey("PERSON", personId));
+    }
+    return keys;
+  }, [selectedIds, userIdToPersonId]);
+
+  const selectedChips: SceChipSelection[] = selectedIds.map((id) => {
+    const person = effectiveKnown[id];
+    if (!person) return { id, label: id };
+    return {
+      id,
+      label: formatName(person.firstName, person.lastName, person.displayName),
+      description: person.email,
+    };
+  });
 
   return (
     <SceChipMultiSelectorField
@@ -74,27 +91,42 @@ export default function TaskPeopleMultiPicker({
       selected={selectedChips}
       selectedIds={selectedIds}
       onSelectedIdsChange={onSelectedIdsChange}
-      onSelectionKnown={(entries) => {
+      onSelectionKnown={(entries, picks) => {
         const next: Record<string, TaskAssigneeOption> = {};
-        for (const entry of entries) {
-          next[entry.id] = {
-            userId: entry.id,
+        entries.forEach((entry, index) => {
+          const pick = picks?.[index];
+          const userId =
+            typeof pick?.metadata?.linkedUserId === "string"
+              ? pick.metadata.linkedUserId
+              : entry.id;
+          const personId = pick?.id ?? userIdToPersonId.get(userId) ?? userId;
+          next[userId] = {
+            personId,
+            userId,
             firstName: entry.label.split(" ")[0] ?? entry.label,
             lastName: entry.label.split(" ").slice(1).join(" "),
             email: entry.description ?? "",
             displayName: entry.label,
           };
-        }
+        });
         setAddedKnown((prev) => ({ ...prev, ...next }));
       }}
       authContext="TASK_ASSIGNMENT"
-      sourceTypes={["USER"]}
-      mapPickToId={(pick: SceSelectorPick) => (pick.type === "USER" ? pick.id : null)}
-      mapPickToChip={(pick) => ({
-        id: pick.id,
-        label: pick.label,
-        description: pick.description,
-      })}
+      sourceTypes={["PERSON"]}
+      committedPickKeys={committedPickKeys}
+      mapPickToId={(pick: SceSelectorPick) => {
+        const linked = pick.metadata?.linkedUserId;
+        return typeof linked === "string" ? linked : null;
+      }}
+      mapPickToChip={(pick) => {
+        const userId =
+          typeof pick.metadata?.linkedUserId === "string" ? pick.metadata.linkedUserId : pick.id;
+        return {
+          id: userId,
+          label: pick.label,
+          description: pick.description,
+        };
+      }}
       disabled={disabled}
       addButtonLabel={addButtonLabel}
       dialogTitle="Person zuweisen"
@@ -102,6 +134,7 @@ export default function TaskPeopleMultiPicker({
       testIdPrefix={testIdPrefix}
       lockedIds={lockedUserIds}
       allowAdd={allowAdd}
+      searchPlaceholder="Personen suchen …"
     />
   );
 }

@@ -23,7 +23,7 @@ type Props = {
   selected: SceChipSelection[];
   selectedIds: string[];
   onSelectedIdsChange: (ids: string[]) => void;
-  onSelectionKnown?: (entries: SceChipSelection[]) => void;
+  onSelectionKnown?: (entries: SceChipSelection[], picks?: SceSelectorPick[]) => void;
   authContext: SceSelectorAuthorizationContext;
   sourceTypes: readonly SceSelectorSourceType[];
   mapPickToId: (pick: SceSelectorPick) => string | null;
@@ -36,6 +36,9 @@ type Props = {
   lockedIds?: readonly string[];
   allowAdd?: boolean;
   excludeUserIds?: readonly string[];
+  /** When ids in selectedIds differ from selector pick ids (e.g. task assignee userId vs personId). */
+  committedPickKeys?: ReadonlySet<string>;
+  searchPlaceholder?: string;
 };
 
 export function SceChipMultiSelectorField({
@@ -60,6 +63,8 @@ export function SceChipMultiSelectorField({
   lockedIds = [],
   allowAdd = true,
   excludeUserIds,
+  committedPickKeys,
+  searchPlaceholder,
 }: Props) {
   const [open, setOpen] = useState(false);
   const locked = useMemo(() => new Set(lockedIds), [lockedIds]);
@@ -75,9 +80,10 @@ export function SceChipMultiSelectorField({
   );
 
   const committedKeys = useMemo(() => {
+    if (committedPickKeys) return committedPickKeys;
     const type = sourceTypes[0] ?? "PERSON";
     return new Set(selectedIds.map((id) => sceSelectorPickKey(type, id)));
-  }, [selectedIds, sourceTypes]);
+  }, [committedPickKeys, selectedIds, sourceTypes]);
 
   function removeId(id: string) {
     onSelectedIdsChange(selectedIds.filter((x) => x !== id));
@@ -85,15 +91,17 @@ export function SceChipMultiSelectorField({
 
   function handleConfirm(picks: SceSelectorPick[]) {
     const nextKnown: SceChipSelection[] = [];
+    const appliedPicks: SceSelectorPick[] = [];
     const nextIds = [...selectedIds];
     for (const pick of picks) {
       const id = mapPickToId(pick);
       if (!id || nextIds.includes(id)) continue;
       nextIds.push(id);
       nextKnown.push(mapPickToChip(pick));
+      appliedPicks.push(pick);
     }
     if (nextKnown.length > 0) {
-      onSelectionKnown?.(nextKnown);
+      onSelectionKnown?.(nextKnown, appliedPicks);
     }
     onSelectedIdsChange(nextIds);
     setOpen(false);
@@ -152,7 +160,7 @@ export function SceChipMultiSelectorField({
         onConfirm={handleConfirm}
         disabled={disabled}
         testIdPrefix={testIdPrefix}
-        searchPlaceholder="Name oder E-Mail suchen …"
+        searchPlaceholder={searchPlaceholder ?? "Name oder E-Mail suchen …"}
       />
     </div>
   );

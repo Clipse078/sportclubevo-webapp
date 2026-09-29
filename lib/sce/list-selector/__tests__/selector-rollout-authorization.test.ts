@@ -10,18 +10,22 @@ import {
 } from "@/lib/sce/list-selector/selector-authorization-context";
 
 describe("SCE-SELECTOR-02 authorization contexts", () => {
-  it("TASK_ASSIGNMENT exposes USER and task-scoped ORG_UNIT only", () => {
+  it("TASK_ASSIGNMENT exposes eligible PERSON and task-scoped ORG_UNIT only", () => {
     expect(allowedSourceTypesForSelectorAuthorizationContext("TASK_ASSIGNMENT")).toEqual([
-      "USER",
+      "PERSON",
       "ORG_UNIT",
     ]);
     const perms = routePermissionsForSelectorAuthorizationContext("TASK_ASSIGNMENT");
     expect(perms).toContain(PERMISSIONS.TASKS_ASSIGN);
   });
 
-  it("REQUIREMENT_AUDIENCE exposes PERSON only", () => {
+  it("REQUIREMENT_AUDIENCE exposes mixed audience entity sources", () => {
     expect(allowedSourceTypesForSelectorAuthorizationContext("REQUIREMENT_AUDIENCE")).toEqual([
       "PERSON",
+      "TEAM",
+      "ORG_UNIT",
+      "ROLE",
+      "TARGET_GROUP",
     ]);
   });
 

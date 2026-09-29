@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   Building2,
+  Plus,
   Shield,
   User,
   Users,
@@ -31,19 +32,14 @@ import {
   upsertGrantRule,
 } from "@/lib/workspace/access/access-grant-editor-utils";
 import type { CanonicalResourceLevel } from "@/lib/workspace/access/resource-level";
-import { WorkspaceAccessAudienceScePicker } from "@/components/admin/workspace/WorkspaceAccessAudienceScePicker";
+import { SceRecipientSelector } from "@/components/sce/recipient/SceRecipientSelector";
+import { SCE_RECIPIENT_SELECTOR_WORKSPACE_ACCESS } from "@/lib/sce/recipient/sce-recipient-selector-config";
+import { decorateWorkspaceAccessDiscoverFetch } from "@/lib/workspace/access/workspace-access-sce-discover-client";
+import type { SceSelectorPick } from "@/lib/sce/list-selector/types";
 
 const ACCESS_LEVELS: CanonicalResourceLevel[] = ["VIEW", "EDIT", "MANAGE"];
 
-const AUDIENCE_TYPES = [
-  "ORGANISATION",
-  "ORG_UNIT",
-  "TEAM",
-  "ROLE",
-  "PERSON",
-] as const;
-
-type AudienceType = (typeof AUDIENCE_TYPES)[number];
+type AudienceType = WorkspaceAudienceSearchResult["type"];
 
 function audienceIcon(kind: AudienceType) {
   switch (kind) {
@@ -60,6 +56,57 @@ function audienceIcon(kind: AudienceType) {
     default:
       return User;
   }
+}
+
+function pickToAudienceSelection(
+  pick: SceSelectorPick,
+): { audienceType: AudienceType; selection: WorkspaceAudienceSearchResult | null } | null {
+  if (pick.metadata?.workspaceSubjectType === "ORGANISATION") {
+    return {
+      audienceType: "ORGANISATION",
+      selection: { type: "ORGANISATION", id: "organisation", label: pick.label },
+    };
+  }
+  if (pick.type === "ORG_UNIT") {
+    return {
+      audienceType: "ORG_UNIT",
+      selection: { type: "ORG_UNIT", id: pick.id, label: pick.label },
+    };
+  }
+  if (pick.type === "TEAM") {
+    return {
+      audienceType: "TEAM",
+      selection: { type: "TEAM", id: pick.id, label: pick.label },
+    };
+  }
+  if (pick.type === "PERSON") {
+    return {
+      audienceType: "PERSON",
+      selection: { type: "PERSON", id: pick.id, label: pick.label },
+    };
+  }
+  if (pick.type === "ROLE") {
+    const functionKey =
+      typeof pick.metadata?.roleFunctionKey === "string" ? pick.metadata.roleFunctionKey : pick.id;
+    return {
+      audienceType: "ROLE",
+      selection: {
+        type: "ROLE",
+        id: functionKey,
+        label: pick.label,
+        functionKey,
+      },
+    };
+  }
+  return null;
+}
+
+function subjectSecondaryLabel(type: AudienceType): string {
+  if (type === "ORGANISATION") return "Organisation";
+  if (type === "ORG_UNIT") return "Organisationseinheit";
+  if (type === "TEAM") return "Team";
+  if (type === "ROLE") return "Rolle/Funktion";
+  return "Person";
 }
 
 type WorkspaceAccessGrantEditorProps = {
@@ -84,13 +131,9 @@ export function WorkspaceAccessGrantEditor({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [addAudienceType, setAddAudienceType] = useState<AudienceType>("ORG_UNIT");
-  const [addAccessLevel, setAddAccessLevel] =
-    useState<CanonicalResourceLevel>("VIEW");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<WorkspaceAudienceSearchResult[]>(
-    [],
-  );
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [addAccessLevel, setAddAccessLevel] = useState<CanonicalResourceLevel>("VIEW");
+  const [pendingAudienceType, setPendingAudienceType] = useState<AudienceType | null>(null);
   const [selectedAudience, setSelectedAudience] =
     useState<WorkspaceAudienceSearchResult | null>(null);
   const [roleScopeOrgUnitId, setRoleScopeOrgUnitId] = useState<string | null>(null);
@@ -99,6 +142,15 @@ export function WorkspaceAccessGrantEditor({
   useEffect(() => {
     setDraftRules(grantRulesFromExplicitList(viewModel.explicitGrants));
   }, [viewModel]);
+
+  const organisationLabel = t("organisationLabel");
+
+  const fetchResultsDecorator = useCallback(
+    (
+      base: Parameters<typeof decorateWorkspaceAccessDiscoverFetch>[0],
+    ) => decorateWorkspaceAccessDiscoverFetch(base, organisationLabel),
+    [organisationLabel],
+  );
 
   const effectiveByAudienceKey = useMemo(() => {
     const map = new Map<string, (typeof viewModel.effectiveAccess)[number]>();
@@ -147,32 +199,8 @@ export function WorkspaceAccessGrantEditor({
         setSaving(false);
       }
     },
-    [apiBase, onManageAccessLost, onSaved, onViewModelUpdated],
+    [apiBase, onManageAccessLost, onSaved, onViewModelUpdated, t],
   );
-
-  async function searchAudiences() {
-    if (addAudienceType === "ORGANISATION") {
-      setSearchResults([
-        { type: "ORGANISATION", id: "organisation", label: t("organisationLabel") },
-      ]);
-      return;
-    }
-    const params = new URLSearchParams({
-      type: addAudienceType,
-      q: searchQuery,
-    });
-    const res = await fetch(`/api/workspace/access/audiences?${params.toString()}`);
-    const data = (await res.json()) as {
-      results?: WorkspaceAudienceSearchResult[];
-      error?: string;
-    };
-    if (!res.ok) {
-      setError(data.error ?? t("audienceSearchError"));
-      setSearchResults([]);
-      return;
-    }
-    setSearchResults(data.results ?? []);
-  }
 
   async function beginRestriction() {
     const seedRules: WorkspaceAccessGrantRuleDto[] =
@@ -195,12 +223,29 @@ export function WorkspaceAccessGrantEditor({
     });
   }
 
+  function handleSubjectPick(pick: SceSelectorPick) {
+    const mapped = pickToAudienceSelection(pick);
+    if (!mapped) return;
+    setPendingAudienceType(mapped.audienceType);
+    setSelectedAudience(mapped.selection);
+    setPickerOpen(false);
+  }
+
   async function addGrant() {
+    const audienceType = pendingAudienceType ?? selectedAudience?.type;
+    if (!audienceType) {
+      setError(t("audienceRequired"));
+      return;
+    }
     const fields = buildMutationFieldsFromAudienceSelection({
-      audienceType: addAudienceType,
+      audienceType,
       selection:
-        addAudienceType === "ORGANISATION"
-          ? { type: "ORGANISATION", id: "organisation", label: t("organisationLabel") }
+        audienceType === "ORGANISATION"
+          ? selectedAudience ?? {
+              type: "ORGANISATION",
+              id: "organisation",
+              label: organisationLabel,
+            }
           : selectedAudience,
       accessLevel: addAccessLevel,
       roleScopeOrgUnitId,
@@ -211,9 +256,9 @@ export function WorkspaceAccessGrantEditor({
       return;
     }
     const audienceLabel =
-      addAudienceType === "ORGANISATION"
-        ? t("organisationLabel")
-        : (selectedAudience?.label ?? audienceKindLabelDe(addAudienceType));
+      audienceType === "ORGANISATION"
+        ? organisationLabel
+        : (selectedAudience?.label ?? audienceKindLabelDe(audienceType));
     const nextRules = upsertGrantRule(draftRules, fields, {
       audienceLabel,
       accessLevelLabel: accessLevelLabelDe(addAccessLevel),
@@ -225,8 +270,9 @@ export function WorkspaceAccessGrantEditor({
       rules: nextRules,
     });
     setSelectedAudience(null);
-    setSearchQuery("");
-    setSearchResults([]);
+    setPendingAudienceType(null);
+    setRoleScopeOrgUnitId(null);
+    setRoleScopeTeamId(null);
   }
 
   async function changeLevel(rule: WorkspaceAccessGrantRuleDto, level: CanonicalResourceLevel) {
@@ -253,6 +299,9 @@ export function WorkspaceAccessGrantEditor({
   const editorEnabled =
     viewModel.policyMode === WorkspaceAccessInheritanceMode.EXPLICIT;
 
+  const pendingType = pendingAudienceType ?? selectedAudience?.type;
+  const PendingIcon = pendingType ? audienceIcon(pendingType) : User;
+
   return (
     <div className="space-y-4">
       {error ? (
@@ -276,11 +325,9 @@ export function WorkspaceAccessGrantEditor({
       ) : (
         <>
           <section aria-labelledby="workspace-grants-heading">
-            <div className="flex items-center justify-between gap-2">
-              <h3 id="workspace-grants-heading" className="text-sm font-semibold text-[var(--text)]">
-                {t("directGrantsHeading")}
-              </h3>
-            </div>
+            <h3 id="workspace-grants-heading" className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+              {t("directGrantsHeading")}
+            </h3>
             <ul className="mt-2 space-y-2">
               {draftRules.map((rule) => {
                 const Icon = audienceIcon(rule.audienceKind);
@@ -297,17 +344,16 @@ export function WorkspaceAccessGrantEditor({
                       <div className="min-w-0 flex-1">
                         <p className="flex items-center gap-2 font-medium text-[var(--text)]">
                           <Icon className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
-                          <span className="truncate">
-                            {audienceKindLabelDe(rule.audienceKind)} · {rule.audienceLabel}
-                          </span>
+                          <span className="truncate">{rule.audienceLabel}</span>
                         </p>
-                        <p className="mt-1 text-xs text-[var(--muted)]">
-                          {t("configuredLevelLabel")}: {rule.accessLevelLabel}
+                        <p className="mt-0.5 text-xs text-[var(--muted)]">
+                          {subjectSecondaryLabel(rule.audienceKind)} · {rule.accessLevelLabel}
                         </p>
                         {effective ? (
                           <p className="mt-1 text-xs text-[var(--text-2)]">
-                            {t("effectiveLevelLabel")}: {effective.effectiveLevelLabel} —{" "}
-                            {effective.sourceLabel}
+                            {effective.isInherited ? t("inheritedBadge") : t("directGrantsHeading")} ·{" "}
+                            {effective.effectiveLevelLabel}
+                            {effective.sourceLabel ? ` — ${effective.sourceLabel}` : ""}
                           </p>
                         ) : null}
                         {capped && effective?.ancestorCapLabel ? (
@@ -323,6 +369,7 @@ export function WorkspaceAccessGrantEditor({
                             className="fca-input mt-1 block min-w-[8.5rem] text-sm"
                             value={rule.accessLevel}
                             disabled={saving}
+                            aria-label={t("accessLevelField")}
                             onChange={(event) =>
                               void changeLevel(
                                 rule,
@@ -363,30 +410,50 @@ export function WorkspaceAccessGrantEditor({
             <h3 id="workspace-add-grant-heading" className="text-sm font-semibold text-[var(--text)]">
               {t("addGrantButton")}
             </h3>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <label className="text-xs font-medium text-[var(--text-2)]">
-                {t("audienceTypeField")}
-                <select
-                  className="fca-input mt-1 block w-full text-sm"
-                  value={addAudienceType}
-                  onChange={(event) => {
-                    setAddAudienceType(event.target.value as AudienceType);
-                    setSelectedAudience(null);
-                    setSearchResults([]);
-                  }}
-                >
-                  {AUDIENCE_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {audienceKindLabelDe(type)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-xs font-medium text-[var(--text-2)]">
+
+            <div className="mt-3 space-y-3">
+              <div>
+                <p className="text-xs font-medium text-[var(--text-2)]">{t("audienceSearchField")}</p>
+                {selectedAudience ? (
+                  <div className="mt-1 flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm">
+                    <PendingIcon className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">{selectedAudience.label}</p>
+                      <p className="text-xs text-[var(--muted)]">
+                        {pendingType ? subjectSecondaryLabel(pendingType) : null}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="text-xs text-[var(--primary)] hover:underline"
+                      onClick={() => {
+                        setSelectedAudience(null);
+                        setPendingAudienceType(null);
+                      }}
+                    >
+                      {t("searchButton")}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="fca-button-secondary mt-1 inline-flex items-center gap-1 text-sm"
+                    disabled={saving}
+                    onClick={() => setPickerOpen(true)}
+                    data-testid="workspace-access-subject-add"
+                  >
+                    <Plus className="h-3.5 w-3.5" aria-hidden />
+                    {SCE_RECIPIENT_SELECTOR_WORKSPACE_ACCESS.addButtonLabel}
+                  </button>
+                )}
+              </div>
+
+              <label className="block text-xs font-medium text-[var(--text-2)]">
                 {t("accessLevelField")}
                 <select
                   className="fca-input mt-1 block w-full text-sm"
                   value={addAccessLevel}
+                  aria-label={t("accessLevelField")}
                   onChange={(event) =>
                     setAddAccessLevel(event.target.value as CanonicalResourceLevel)
                   }
@@ -398,118 +465,69 @@ export function WorkspaceAccessGrantEditor({
                   ))}
                 </select>
               </label>
-            </div>
 
-            {addAudienceType === "PERSON" ||
-            addAudienceType === "TEAM" ||
-            addAudienceType === "ORG_UNIT" ? (
-              <div className="mt-3">
-                <WorkspaceAccessAudienceScePicker
-                  audienceKind={addAudienceType}
-                  selected={selectedAudience}
-                  onSelected={setSelectedAudience}
-                  disabled={saving}
-                />
-              </div>
-            ) : addAudienceType !== "ORGANISATION" ? (
-              <div className="mt-3 space-y-2">
-                <label className="text-xs font-medium text-[var(--text-2)]">
-                  {t("audienceSearchField")}
-                  <div className="mt-1 flex gap-2">
+              {pendingType === "ROLE" ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="text-xs font-medium text-[var(--text-2)]">
+                    {t("roleScopeOrgUnit")}
                     <input
                       type="search"
-                      className="fca-input min-w-0 flex-1 text-sm"
-                      value={searchQuery}
-                      onChange={(event) => setSearchQuery(event.target.value)}
-                      placeholder={t("audienceSearchPlaceholder")}
+                      className="fca-input mt-1 block w-full text-sm"
+                      placeholder={t("roleScopeOptional")}
+                      onBlur={async (event) => {
+                        const q = event.target.value.trim();
+                        if (!q) {
+                          setRoleScopeOrgUnitId(null);
+                          return;
+                        }
+                        const params = new URLSearchParams({ type: "ORG_UNIT", q });
+                        const res = await fetch(
+                          `/api/workspace/access/audiences?${params.toString()}`,
+                        );
+                        const data = (await res.json()) as {
+                          results?: WorkspaceAudienceSearchResult[];
+                        };
+                        setRoleScopeOrgUnitId(data.results?.[0]?.id ?? null);
+                      }}
                     />
-                    <button
-                      type="button"
-                      className="fca-button-secondary shrink-0 text-sm"
-                      onClick={() => void searchAudiences()}
-                    >
-                      {t("searchButton")}
-                    </button>
-                  </div>
-                </label>
-                {searchResults.length > 0 ? (
-                  <ul
-                    className="max-h-40 overflow-y-auto rounded-md border border-[var(--border)] bg-[var(--surface)]"
-                    role="listbox"
-                    aria-label={t("audienceSearchResults")}
-                  >
-                    {searchResults.map((result) => (
-                      <li key={`${result.type}-${result.id}`}>
-                        <button
-                          type="button"
-                          role="option"
-                          aria-selected={selectedAudience?.id === result.id}
-                          className={`block w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-2)] ${
-                            selectedAudience?.id === result.id
-                              ? "bg-[var(--surface-2)] font-medium"
-                              : ""
-                          }`}
-                          onClick={() => setSelectedAudience(result)}
-                        >
-                          {result.label}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            ) : null}
+                  </label>
+                  <label className="text-xs font-medium text-[var(--text-2)]">
+                    {t("roleScopeTeam")}
+                    <input
+                      type="search"
+                      className="fca-input mt-1 block w-full text-sm"
+                      placeholder={t("roleScopeOptional")}
+                      onBlur={async (event) => {
+                        const q = event.target.value.trim();
+                        if (!q) {
+                          setRoleScopeTeamId(null);
+                          return;
+                        }
+                        const params = new URLSearchParams({ type: "TEAM", q });
+                        const res = await fetch(
+                          `/api/workspace/access/audiences?${params.toString()}`,
+                        );
+                        const data = (await res.json()) as {
+                          results?: WorkspaceAudienceSearchResult[];
+                        };
+                        setRoleScopeTeamId(data.results?.[0]?.id ?? null);
+                      }}
+                    />
+                  </label>
+                </div>
+              ) : null}
+            </div>
 
-            {addAudienceType === "ROLE" ? (
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <label className="text-xs font-medium text-[var(--text-2)]">
-                  {t("roleScopeOrgUnit")}
-                  <input
-                    type="search"
-                    className="fca-input mt-1 block w-full text-sm"
-                    placeholder={t("roleScopeOptional")}
-                    onBlur={async (event) => {
-                      const q = event.target.value.trim();
-                      if (!q) {
-                        setRoleScopeOrgUnitId(null);
-                        return;
-                      }
-                      const params = new URLSearchParams({ type: "ORG_UNIT", q });
-                      const res = await fetch(
-                        `/api/workspace/access/audiences?${params.toString()}`,
-                      );
-                      const data = (await res.json()) as {
-                        results?: WorkspaceAudienceSearchResult[];
-                      };
-                      setRoleScopeOrgUnitId(data.results?.[0]?.id ?? null);
-                    }}
-                  />
-                </label>
-                <label className="text-xs font-medium text-[var(--text-2)]">
-                  {t("roleScopeTeam")}
-                  <input
-                    type="search"
-                    className="fca-input mt-1 block w-full text-sm"
-                    placeholder={t("roleScopeOptional")}
-                    onBlur={async (event) => {
-                      const q = event.target.value.trim();
-                      if (!q) {
-                        setRoleScopeTeamId(null);
-                        return;
-                      }
-                      const params = new URLSearchParams({ type: "TEAM", q });
-                      const res = await fetch(
-                        `/api/workspace/access/audiences?${params.toString()}`,
-                      );
-                      const data = (await res.json()) as {
-                        results?: WorkspaceAudienceSearchResult[];
-                      };
-                      setRoleScopeTeamId(data.results?.[0]?.id ?? null);
-                    }}
-                  />
-                </label>
-              </div>
-            ) : null}
+            <SceRecipientSelector
+              profile={SCE_RECIPIENT_SELECTOR_WORKSPACE_ACCESS}
+              open={pickerOpen}
+              onOpenChange={setPickerOpen}
+              mode="single"
+              onPick={handleSubjectPick}
+              disabled={saving}
+              testIdPrefix="workspace-access-subject-selector"
+              fetchResultsDecorator={fetchResultsDecorator}
+            />
 
             <button
               type="button"

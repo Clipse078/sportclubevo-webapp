@@ -1,21 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, X } from "lucide-react";
-import { PopoverContent } from "@/components/ui/Popover";
-import RequirementPersonMultiPicker from "./RequirementPersonMultiPicker";
+import { useEffect, useMemo, useState } from "react";
+import { Building2, Plus, User, UserCircle2, Users, X } from "lucide-react";
 import type { RequirementPersonOption } from "@/lib/requirements/person-search";
-import {
-  previewRequirementDraftAudienceAction,
-  searchRequirementAudienceOrgUnitsAction,
-  searchRequirementAudienceRolesAction,
-  searchRequirementAudienceTargetGroupsAction,
-  searchRequirementAudienceTeamsAction,
-} from "@/app/(admin)/dashboard/aufgaben/requirement-actions";
-import { REQUIREMENT_PERSON_SEARCH_MIN_CHARS } from "@/lib/requirements/person-search-constants";
-
+import { previewRequirementDraftAudienceAction } from "@/app/(admin)/dashboard/aufgaben/requirement-actions";
 import type { RequirementAudienceSelection } from "@/lib/requirements/types";
-
+import { SceRecipientSelector } from "@/components/sce/recipient/SceRecipientSelector";
+import { SCE_RECIPIENT_SELECTOR_REQUIREMENT } from "@/lib/sce/recipient/sce-recipient-selector-config";
+import type { SceSelectorPick, SceSelectorSourceType } from "@/lib/sce/list-selector/types";
+import { sceSelectorPickKey } from "@/lib/sce/list-selector/types";
 export type { RequirementAudienceSelection };
 
 type KnownLabels = {
@@ -33,162 +26,13 @@ type Props = {
   disabled?: boolean;
 };
 
-type SelectorKind = "team" | "orgUnit" | "role" | "targetGroup";
-
-const KIND_LABEL: Record<SelectorKind, string> = {
-  team: "Team",
-  orgUnit: "Organisationseinheit",
-  role: "Rolle",
-  targetGroup: "Zielgruppe",
-};
-
-function SelectorAddPanel({
-  kind,
-  disabled,
-  onPick,
-}: {
-  kind: SelectorKind;
-  disabled?: boolean;
-  onPick: (id: string, label: string) => void;
-}) {
-  const anchorRef = useRef<HTMLButtonElement>(null);
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [options, setOptions] = useState<Array<{ id: string; label: string }>>([]);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const term = query.trim();
-    if (term.length < REQUIREMENT_PERSON_SEARCH_MIN_CHARS) {
-      setOptions([]);
-      return undefined;
-    }
-    const handle = setTimeout(async () => {
-      setLoading(true);
-      setError(null);
-      const searchFn =
-        kind === "team"
-          ? searchRequirementAudienceTeamsAction
-          : kind === "orgUnit"
-            ? searchRequirementAudienceOrgUnitsAction
-            : kind === "role"
-              ? searchRequirementAudienceRolesAction
-              : searchRequirementAudienceTargetGroupsAction;
-      const result = await searchFn(term);
-      if (!result.ok) {
-        setError(result.message);
-        setOptions([]);
-      } else {
-        setOptions(
-          result.options.map((row) => ({
-            id:
-              "teamId" in row
-                ? row.teamId
-                : "orgUnitId" in row
-                  ? row.orgUnitId
-                  : "roleId" in row
-                    ? row.roleId
-                    : row.targetGroupId,
-            label: row.label,
-          })),
-        );
-      }
-      setLoading(false);
-    }, 250);
-    return () => clearTimeout(handle);
-  }, [kind, open, query]);
-
-  return (
-    <div className="relative inline-block">
-      <button
-        ref={anchorRef}
-        type="button"
-        disabled={disabled}
-        className="inline-flex items-center gap-1 rounded-md border border-[var(--border)] px-2 py-1 text-xs hover:bg-[var(--surface-2)]"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        data-testid={`requirement-audience-add-${kind}`}
-      >
-        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-        {KIND_LABEL[kind]}
-      </button>
-      <PopoverContent
-        open={open}
-        onOpenChange={setOpen}
-        anchorRef={anchorRef}
-        matchAnchorWidth={false}
-        maxHeight={280}
-        className="w-72 p-2"
-        role="dialog"
-      >
-        <input
-          className="fca-input mb-2 w-full text-sm"
-          placeholder="Suchen…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          data-testid={`requirement-audience-search-${kind}`}
-        />
-        {error ? <p className="text-xs text-red-500">{error}</p> : null}
-        {loading ? <p className="text-xs text-[var(--muted)]">Suche…</p> : null}
-        <ul className="max-h-52 overflow-y-auto">
-          {options.map((option) => (
-            <li key={option.id}>
-              <button
-                type="button"
-                className="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-[var(--surface-2)]"
-                onClick={() => {
-                  onPick(option.id, option.label);
-                  setOpen(false);
-                  setQuery("");
-                }}
-              >
-                {option.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </PopoverContent>
-    </div>
-  );
-}
-
-function TokenRow({
-  typeLabel,
-  valueLabel,
-  onRemove,
-  disabled,
-  testId,
-}: {
-  typeLabel: string;
-  valueLabel: string;
-  onRemove: () => void;
-  disabled?: boolean;
-  testId: string;
-}) {
-  return (
-    <div
-      className="flex items-center justify-between gap-2 rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1.5 text-sm"
-      data-testid={testId}
-    >
-      <div className="min-w-0">
-        <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-[var(--muted)]">
-          {typeLabel}
-        </span>
-        <p className="truncate">{valueLabel}</p>
-      </div>
-      <button
-        type="button"
-        className="rounded p-1 text-[var(--muted)] hover:bg-[var(--surface)]"
-        aria-label={`${typeLabel} ${valueLabel} entfernen`}
-        disabled={disabled}
-        onClick={onRemove}
-      >
-        <X className="h-4 w-4" />
-      </button>
-    </div>
-  );
+function RecipientTypeIcon({ type }: { type: SceSelectorSourceType }) {
+  if (type === "ORG_UNIT") return <Building2 className="h-3.5 w-3.5" aria-hidden="true" />;
+  if (type === "TEAM" || type === "TARGET_GROUP") {
+    return <Users className="h-3.5 w-3.5" aria-hidden="true" />;
+  }
+  if (type === "ROLE") return <UserCircle2 className="h-3.5 w-3.5" aria-hidden="true" />;
+  return <User className="h-3.5 w-3.5" aria-hidden="true" />;
 }
 
 export default function RequirementAudienceBuilder({
@@ -201,6 +45,15 @@ export default function RequirementAudienceBuilder({
   const [labels, setLabels] = useState<KnownLabels>(
     knownLabels ?? { teams: {}, orgUnits: {}, roles: {}, targetGroups: {} },
   );
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [knownPersons, setKnownPersons] = useState<Record<string, RequirementPersonOption>>(() => {
+    const map: Record<string, RequirementPersonOption> = {};
+    for (const person of initialKnownPersons) {
+      map[person.personId] = person;
+    }
+    return map;
+  });
+
   const [preview, setPreview] = useState<{
     resolvedTotal: number;
     loading: boolean;
@@ -211,16 +64,78 @@ export default function RequirementAudienceBuilder({
     if (knownLabels) setLabels(knownLabels);
   }, [knownLabels]);
 
-  const hasAudiences = useMemo(
-    () =>
-      value.personIds.length +
-        value.teamIds.length +
-        value.orgUnitIds.length +
-        value.roleIds.length +
-        value.targetGroupIds.length >
-      0,
-    [value],
-  );
+  useEffect(() => {
+    const map: Record<string, RequirementPersonOption> = {};
+    for (const person of initialKnownPersons) {
+      map[person.personId] = person;
+    }
+    setKnownPersons((prev) => ({ ...map, ...prev }));
+  }, [initialKnownPersons]);
+
+  const committedKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const id of value.personIds) keys.add(sceSelectorPickKey("PERSON", id));
+    for (const id of value.teamIds) keys.add(sceSelectorPickKey("TEAM", id));
+    for (const id of value.orgUnitIds) keys.add(sceSelectorPickKey("ORG_UNIT", id));
+    for (const id of value.roleIds) keys.add(sceSelectorPickKey("ROLE", id));
+    for (const id of value.targetGroupIds) keys.add(sceSelectorPickKey("TARGET_GROUP", id));
+    return keys;
+  }, [value]);
+
+  const recipientChips = useMemo(() => {
+    const chips: Array<{ key: string; type: SceSelectorSourceType; label: string; secondary: string; onRemove: () => void }> =
+      [];
+    for (const id of value.personIds) {
+      const known = knownPersons[id];
+      chips.push({
+        key: sceSelectorPickKey("PERSON", id),
+        type: "PERSON",
+        label: known?.displayName ?? id,
+        secondary: known?.email?.trim() || "Person",
+        onRemove: () => onChange({ ...value, personIds: value.personIds.filter((x) => x !== id) }),
+      });
+    }
+    for (const id of value.teamIds) {
+      chips.push({
+        key: sceSelectorPickKey("TEAM", id),
+        type: "TEAM",
+        label: labels.teams[id] ?? id,
+        secondary: "Team",
+        onRemove: () => onChange({ ...value, teamIds: value.teamIds.filter((x) => x !== id) }),
+      });
+    }
+    for (const id of value.orgUnitIds) {
+      chips.push({
+        key: sceSelectorPickKey("ORG_UNIT", id),
+        type: "ORG_UNIT",
+        label: labels.orgUnits[id] ?? id,
+        secondary: "Organisationseinheit",
+        onRemove: () => onChange({ ...value, orgUnitIds: value.orgUnitIds.filter((x) => x !== id) }),
+      });
+    }
+    for (const id of value.roleIds) {
+      chips.push({
+        key: sceSelectorPickKey("ROLE", id),
+        type: "ROLE",
+        label: labels.roles[id] ?? id,
+        secondary: "Rolle",
+        onRemove: () => onChange({ ...value, roleIds: value.roleIds.filter((x) => x !== id) }),
+      });
+    }
+    for (const id of value.targetGroupIds) {
+      chips.push({
+        key: sceSelectorPickKey("TARGET_GROUP", id),
+        type: "TARGET_GROUP",
+        label: labels.targetGroups[id] ?? id,
+        secondary: "Zielgruppe",
+        onRemove: () =>
+          onChange({ ...value, targetGroupIds: value.targetGroupIds.filter((x) => x !== id) }),
+      });
+    }
+    return chips;
+  }, [knownPersons, labels, onChange, value]);
+
+  const hasAudiences = recipientChips.length > 0;
 
   useEffect(() => {
     if (!hasAudiences) {
@@ -248,23 +163,44 @@ export default function RequirementAudienceBuilder({
     };
   }, [value, hasAudiences]);
 
-  function addToken(kind: SelectorKind, id: string, label: string) {
-    if (kind === "team" && !value.teamIds.includes(id)) {
-      setLabels((prev) => ({ ...prev, teams: { ...prev.teams, [id]: label } }));
-      onChange({ ...value, teamIds: [...value.teamIds, id] });
+  function applyPicks(picks: SceSelectorPick[]) {
+    let next = { ...value };
+    const nextLabels = { ...labels };
+    const nextKnownPersons = { ...knownPersons };
+
+    for (const pick of picks) {
+      if (pick.type === "PERSON" && !next.personIds.includes(pick.id)) {
+        next = { ...next, personIds: [...next.personIds, pick.id] };
+        nextKnownPersons[pick.id] = {
+          personId: pick.id,
+          firstName: pick.label.split(" ")[0] ?? pick.label,
+          lastName: pick.label.split(" ").slice(1).join(" "),
+          displayName: pick.label,
+          email: pick.description ?? null,
+        };
+      }
+      if (pick.type === "TEAM" && !next.teamIds.includes(pick.id)) {
+        next = { ...next, teamIds: [...next.teamIds, pick.id] };
+        nextLabels.teams = { ...nextLabels.teams, [pick.id]: pick.label };
+      }
+      if (pick.type === "ORG_UNIT" && !next.orgUnitIds.includes(pick.id)) {
+        next = { ...next, orgUnitIds: [...next.orgUnitIds, pick.id] };
+        nextLabels.orgUnits = { ...nextLabels.orgUnits, [pick.id]: pick.label };
+      }
+      if (pick.type === "ROLE" && !next.roleIds.includes(pick.id)) {
+        next = { ...next, roleIds: [...next.roleIds, pick.id] };
+        nextLabels.roles = { ...nextLabels.roles, [pick.id]: pick.label };
+      }
+      if (pick.type === "TARGET_GROUP" && !next.targetGroupIds.includes(pick.id)) {
+        next = { ...next, targetGroupIds: [...next.targetGroupIds, pick.id] };
+        nextLabels.targetGroups = { ...nextLabels.targetGroups, [pick.id]: pick.label };
+      }
     }
-    if (kind === "orgUnit" && !value.orgUnitIds.includes(id)) {
-      setLabels((prev) => ({ ...prev, orgUnits: { ...prev.orgUnits, [id]: label } }));
-      onChange({ ...value, orgUnitIds: [...value.orgUnitIds, id] });
-    }
-    if (kind === "role" && !value.roleIds.includes(id)) {
-      setLabels((prev) => ({ ...prev, roles: { ...prev.roles, [id]: label } }));
-      onChange({ ...value, roleIds: [...value.roleIds, id] });
-    }
-    if (kind === "targetGroup" && !value.targetGroupIds.includes(id)) {
-      setLabels((prev) => ({ ...prev, targetGroups: { ...prev.targetGroups, [id]: label } }));
-      onChange({ ...value, targetGroupIds: [...value.targetGroupIds, id] });
-    }
+
+    setLabels(nextLabels);
+    setKnownPersons(nextKnownPersons);
+    onChange(next);
+    setPickerOpen(false);
   }
 
   return (
@@ -276,81 +212,54 @@ export default function RequirementAudienceBuilder({
         </p>
       </div>
 
-      <RequirementPersonMultiPicker
-        selectedIds={value.personIds}
-        onSelectedIdsChange={(personIds) => onChange({ ...value, personIds })}
+      <div className="flex flex-wrap items-center gap-2">
+        {recipientChips.map((chip) => (
+          <span
+            key={chip.key}
+            className="inline-flex max-w-full items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-2)]/60 py-1 pl-2 pr-1 text-xs"
+            data-testid={`requirement-recipient-chip-${chip.key}`}
+          >
+            <RecipientTypeIcon type={chip.type} />
+            <span className="min-w-0 truncate">
+              <span className="font-medium text-[var(--foreground)]">{chip.label}</span>
+              <span className="mx-1 text-[var(--muted)]">·</span>
+              <span className="text-[var(--text-2)]">{chip.secondary}</span>
+            </span>
+            {!disabled ? (
+              <button
+                type="button"
+                className="rounded p-0.5 text-[var(--muted)] hover:bg-[var(--surface-3)]"
+                aria-label={`${chip.label} entfernen`}
+                onClick={chip.onRemove}
+              >
+                <X className="h-3 w-3" aria-hidden="true" />
+              </button>
+            ) : null}
+          </span>
+        ))}
+        {!disabled ? (
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--border)] px-2 py-1 text-xs font-medium text-[var(--primary)] hover:bg-[var(--surface-2)]"
+            onClick={() => setPickerOpen(true)}
+            data-testid="requirement-recipient-add"
+          >
+            <Plus className="h-3 w-3" aria-hidden="true" />
+            Empfänger hinzufügen
+          </button>
+        ) : null}
+      </div>
+
+      <SceRecipientSelector
+        profile={SCE_RECIPIENT_SELECTOR_REQUIREMENT}
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        mode="multiple"
+        committedKeys={committedKeys}
+        onConfirm={applyPicks}
         disabled={disabled}
-        initialKnown={initialKnownPersons}
+        testIdPrefix="requirement-recipient-selector"
       />
-
-      <div className="flex flex-wrap gap-2">
-        <SelectorAddPanel kind="team" disabled={disabled} onPick={(id, label) => addToken("team", id, label)} />
-        <SelectorAddPanel
-          kind="orgUnit"
-          disabled={disabled}
-          onPick={(id, label) => addToken("orgUnit", id, label)}
-        />
-        <SelectorAddPanel kind="role" disabled={disabled} onPick={(id, label) => addToken("role", id, label)} />
-        <SelectorAddPanel
-          kind="targetGroup"
-          disabled={disabled}
-          onPick={(id, label) => addToken("targetGroup", id, label)}
-        />
-      </div>
-
-      <div className="grid gap-2 sm:grid-cols-2">
-        {value.teamIds.map((id) => (
-          <TokenRow
-            key={`team-${id}`}
-            typeLabel="Team"
-            valueLabel={labels.teams[id] ?? id}
-            disabled={disabled}
-            testId={`requirement-audience-token-team-${id}`}
-            onRemove={() =>
-              onChange({ ...value, teamIds: value.teamIds.filter((entry) => entry !== id) })
-            }
-          />
-        ))}
-        {value.orgUnitIds.map((id) => (
-          <TokenRow
-            key={`org-${id}`}
-            typeLabel="Organisationseinheit"
-            valueLabel={labels.orgUnits[id] ?? id}
-            disabled={disabled}
-            testId={`requirement-audience-token-org-${id}`}
-            onRemove={() =>
-              onChange({ ...value, orgUnitIds: value.orgUnitIds.filter((entry) => entry !== id) })
-            }
-          />
-        ))}
-        {value.roleIds.map((id) => (
-          <TokenRow
-            key={`role-${id}`}
-            typeLabel="Rolle"
-            valueLabel={labels.roles[id] ?? id}
-            disabled={disabled}
-            testId={`requirement-audience-token-role-${id}`}
-            onRemove={() =>
-              onChange({ ...value, roleIds: value.roleIds.filter((entry) => entry !== id) })
-            }
-          />
-        ))}
-        {value.targetGroupIds.map((id) => (
-          <TokenRow
-            key={`tg-${id}`}
-            typeLabel="Zielgruppe"
-            valueLabel={labels.targetGroups[id] ?? id}
-            disabled={disabled}
-            testId={`requirement-audience-token-target-group-${id}`}
-            onRemove={() =>
-              onChange({
-                ...value,
-                targetGroupIds: value.targetGroupIds.filter((entry) => entry !== id),
-              })
-            }
-          />
-        ))}
-      </div>
 
       {hasAudiences ? (
         <p className="text-sm text-[var(--text-2)]" data-testid="requirement-audience-preview">

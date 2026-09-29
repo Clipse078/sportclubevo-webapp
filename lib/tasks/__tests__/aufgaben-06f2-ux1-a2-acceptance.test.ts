@@ -46,6 +46,8 @@ describe("AUFGABEN-06F2-UX1-A2 acceptance", () => {
     const picker = read("components/admin/aufgaben/TaskPeopleMultiPicker.tsx");
     expect(picker).toContain("SceChipMultiSelectorField");
     expect(picker).toContain("TASK_ASSIGNMENT");
+    expect(picker).toContain("PERSON");
+    expect(picker).toContain("linkedUserId");
   });
 
   it("P1–P4 canonical priority visual tokens", () => {

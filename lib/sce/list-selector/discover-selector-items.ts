@@ -19,6 +19,10 @@ import {
 } from "@/lib/sce/list-selector/sources/org-unit-selector-source";
 import { browseRoleSelectorItems, searchRoleSelectorItems } from "@/lib/sce/list-selector/sources/role-selector-source";
 import {
+  browseWorkspaceRoleFunctionSelectorItems,
+  searchWorkspaceRoleFunctionSelectorItems,
+} from "@/lib/sce/list-selector/sources/workspace-role-function-selector-source";
+import {
   browseTargetGroupSelectorItems,
   searchTargetGroupSelectorItems,
 } from "@/lib/sce/list-selector/sources/target-group-selector-source";
@@ -63,6 +67,7 @@ async function querySourceType(
           actorUserId: input.actorUserId,
           communicationContext: ctx,
           authorizationContext: authContext,
+          excludeUserIds: input.excludeUserIds,
           query: term,
           limit,
           cursor,
@@ -90,6 +95,9 @@ async function querySourceType(
         }
         return searchOrgUnitSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
       case "ROLE":
+        if (authContext === "WORKSPACE_ACCESS") {
+          return searchWorkspaceRoleFunctionSelectorItems({ query: term, limit, cursor });
+        }
         return searchRoleSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
       case "TARGET_GROUP":
         return searchTargetGroupSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
@@ -107,6 +115,7 @@ async function querySourceType(
         actorUserId: input.actorUserId,
         communicationContext: ctx,
         authorizationContext: authContext,
+        excludeUserIds: input.excludeUserIds,
         limit,
         cursor,
       });
@@ -131,6 +140,9 @@ async function querySourceType(
       }
       return browseOrgUnitSelectorItems({ tenantId: input.tenantId, limit, cursor });
     case "ROLE":
+      if (authContext === "WORKSPACE_ACCESS") {
+        return browseWorkspaceRoleFunctionSelectorItems({ limit, cursor });
+      }
       return browseRoleSelectorItems({ tenantId: input.tenantId, limit, cursor });
     case "TARGET_GROUP":
       return browseTargetGroupSelectorItems({ tenantId: input.tenantId, limit, cursor });

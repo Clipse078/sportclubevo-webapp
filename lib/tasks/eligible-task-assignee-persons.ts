@@ -19,6 +19,7 @@ function formatPersonDisplayName(row: {
 }
 
 function mapPersonRow(row: {
+  id: string;
   userId: string | null;
   firstName: string;
   lastName: string;
@@ -34,6 +35,7 @@ function mapPersonRow(row: {
   if (!row.userId || !row.user) return null;
   const displayName = formatPersonDisplayName(row);
   return {
+    personId: row.id,
     userId: row.userId,
     firstName: row.firstName,
     lastName: row.lastName,
@@ -43,6 +45,7 @@ function mapPersonRow(row: {
 }
 
 const personAssigneeSelect = {
+  id: true,
   userId: true,
   firstName: true,
   lastName: true,
