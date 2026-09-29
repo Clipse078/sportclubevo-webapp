@@ -1,7 +1,8 @@
 /**
- * SCE-SELECTOR-01R1 — communication audience discover route contract
+ * SCE-SELECTOR-01R2 — communication audience discover authorization recovery
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
@@ -26,7 +27,7 @@ vi.mock("@/lib/communication/audience/communication-audience-search-service", ()
 import { GET } from "../route";
 import { SCE_SELECTOR_DISCOVER_ERROR_FORBIDDEN } from "@/lib/sce/list-selector/selector-discover-api-errors";
 
-describe("GET /api/communication/audience/discover", () => {
+describe("GET /api/communication/audience/discover (R2 authorization)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.auth.mockResolvedValue({ user: { id: "user-1" } });
@@ -47,49 +48,43 @@ describe("GET /api/communication/audience/discover", () => {
       externalContacts: false,
     });
     mocks.discoverCommunicationAudienceTargets.mockResolvedValue([
-      {
-        kind: "orgUnit",
-        heading: "Organisation",
-        options: [{ id: "ou1", label: "OU" }],
-      },
-      {
-        kind: "team",
-        heading: "Teams",
-        options: [{ id: "t1", label: "Team" }],
-      },
-      {
-        kind: "role",
-        heading: "Rollen",
-        options: [{ id: "r1", label: "Role" }],
-      },
+      { kind: "orgUnit", heading: "Organisation", options: [{ id: "ou1", label: "OU" }] },
     ]);
   });
 
-  it("returns browse groups for empty query with sources=orgUnit,team,role", async () => {
+  it("Zielgruppen manager browse integration — TARGET_GROUP_MANAGEMENT returns 200", async () => {
     const req = new Request(
-      "http://local/api/communication/audience/discover?context=ORGANISATION&category=all&q=&sources=orgUnit,team,role",
+      "http://local/api/communication/audience/discover?context=TARGET_GROUP_MANAGEMENT&category=all&q=&sources=orgUnit,team,role",
     );
     const res = await GET(req);
     expect(res.status).toBe(200);
-    const body = (await res.json()) as {
-      groups: Array<{ kind: string; options: unknown[] }>;
-      noAccess: boolean;
-    };
-    expect(body.noAccess).toBe(false);
-    expect(body.groups.map((g) => g.kind)).toEqual(["orgUnit", "team", "role"]);
-    expect(
-      body.groups.reduce((sum, g) => sum + g.options.length, 0),
-    ).toBeGreaterThanOrEqual(3);
+    expect(mocks.requireApiAnyPermission).toHaveBeenCalledWith(
+      expect.arrayContaining([PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_MANAGE]),
+      "tenant-1",
+    );
+    expect(mocks.resolveCommunicationAudienceCapabilities).toHaveBeenCalledWith(
+      expect.objectContaining({ discoverContext: "TARGET_GROUP_MANAGEMENT" }),
+    );
     expect(mocks.discoverCommunicationAudienceTargets).toHaveBeenCalledWith(
       expect.objectContaining({
-        query: "",
-        category: "all",
+        discoverContext: "TARGET_GROUP_MANAGEMENT",
         enabledKinds: ["orgUnit", "team", "role"],
       }),
     );
   });
 
-  it("returns 403 JSON for unauthorized API callers (no NEXT_REDIRECT)", async () => {
+  it("organisation composer still requires communication club permissions", async () => {
+    const req = new Request(
+      "http://local/api/communication/audience/discover?context=ORGANISATION&category=all&q=&sources=orgUnit",
+    );
+    await GET(req);
+    expect(mocks.requireApiAnyPermission).toHaveBeenCalledWith(
+      expect.arrayContaining([PERMISSIONS.COMMUNICATION_CLUB_SEND]),
+      "tenant-1",
+    );
+  });
+
+  it("returns German 403 body (not raw Forbidden)", async () => {
     mocks.requireApiAnyPermission.mockResolvedValue({
       ok: false,
       status: 403,
@@ -97,11 +92,21 @@ describe("GET /api/communication/audience/discover", () => {
       session: { user: { id: "user-1" } },
     });
     const req = new Request(
-      "http://local/api/communication/audience/discover?context=ORGANISATION&category=all&q=&sources=orgUnit,team,role",
+      "http://local/api/communication/audience/discover?context=TARGET_GROUP_MANAGEMENT&category=all&q=&sources=orgUnit",
     );
     const res = await GET(req);
     expect(res.status).toBe(403);
     const body = (await res.json()) as { error: string };
     expect(body.error).toBe(SCE_SELECTOR_DISCOVER_ERROR_FORBIDDEN);
+    expect(body.error).not.toBe("Forbidden");
+  });
+
+  it("returns 400 for invalid context", async () => {
+    const res = await GET(
+      new Request(
+        "http://local/api/communication/audience/discover?context=NOT_A_CONTEXT&category=all&q=",
+      ),
+    );
+    expect(res.status).toBe(400);
   });
 });

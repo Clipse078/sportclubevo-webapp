@@ -9,6 +9,7 @@ import {
   SCE_SELECTOR_DEFAULT_SEARCH_LIMIT,
   SCE_SELECTOR_MIN_SEARCH_LENGTH,
 } from "@/lib/sce/list-selector/sources/constants";
+import { searchRequirementAudiencePersons } from "@/lib/requirements/person-search";
 
 function toItem(row: {
   id: string;
@@ -26,7 +27,7 @@ function toItem(row: {
 export async function browsePersonSelectorItems(input: {
   tenantId: string;
   actorUserId: string;
-  communicationContext?: "DIRECT" | "ORGANISATION";
+  communicationContext?: "DIRECT" | "ORGANISATION" | "TARGET_GROUP_MANAGEMENT";
   limit?: number;
 }): Promise<SceSelectorItem[]> {
   const limit = Math.min(Math.max(input.limit ?? SCE_SELECTOR_DEFAULT_BROWSE_LIMIT, 1), 50);
@@ -64,7 +65,7 @@ export async function browsePersonSelectorItems(input: {
 export async function searchPersonSelectorItems(input: {
   tenantId: string;
   actorUserId: string;
-  communicationContext?: "DIRECT" | "ORGANISATION";
+  communicationContext?: "DIRECT" | "ORGANISATION" | "TARGET_GROUP_MANAGEMENT";
   query: string;
   limit?: number;
 }): Promise<SceSelectorItem[]> {
@@ -72,6 +73,18 @@ export async function searchPersonSelectorItems(input: {
   if (term.length < SCE_SELECTOR_MIN_SEARCH_LENGTH) return [];
 
   const limit = Math.min(Math.max(input.limit ?? SCE_SELECTOR_DEFAULT_SEARCH_LIMIT, 1), 50);
+
+  if (input.communicationContext === "TARGET_GROUP_MANAGEMENT") {
+    const rows = await searchRequirementAudiencePersons(input.tenantId, term, limit);
+    return rows.map((row) =>
+      toItem({
+        id: row.personId,
+        label: row.displayName,
+        description: row.email,
+      }),
+    );
+  }
+
   const rows = await searchDirectMessageRecipients({
     tenantId: input.tenantId,
     senderUserId: input.actorUserId,

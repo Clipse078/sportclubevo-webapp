@@ -4,6 +4,8 @@ import { createEffectivePermissionResolver } from "@/lib/permissions/services/ef
 import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
 import { TENANT_ADMINISTRATION_PERMISSIONS } from "@/lib/permissions/tenant-administration";
 import { tenantPermissionsIncludeDirectMessageSend } from "@/lib/communication/direct/route-access";
+import { tenantPermissionsIncludeZielgruppenManage } from "@/lib/communication/zielgruppen/route-access";
+import type { CommunicationAudienceDiscoverContextParam } from "@/lib/sce/list-selector/selector-authorization-context";
 
 export type CommunicationAudienceCapabilities = {
   wholeOrganisation: boolean;
@@ -19,6 +21,7 @@ export async function resolveCommunicationAudienceCapabilities(input: {
   tenantId: string;
   userId: string;
   context: CommunicationContextRef;
+  discoverContext?: CommunicationAudienceDiscoverContextParam;
 }): Promise<CommunicationAudienceCapabilities> {
   const resolver = createEffectivePermissionResolver(prisma);
   const { tenant } = await resolver.getEffectivePermissions({
@@ -54,6 +57,21 @@ export async function resolveCommunicationAudienceCapabilities(input: {
       roles: structuralSend,
       persons: structuralSend,
       externalContacts: clubSend || tenantAdmin,
+    };
+  }
+
+  if (input.discoverContext === "TARGET_GROUP_MANAGEMENT") {
+    const canManage =
+      tenantPermissionsIncludeZielgruppenManage(tenant) ||
+      TENANT_ADMINISTRATION_PERMISSIONS.some((key) => has(key));
+    return {
+      wholeOrganisation: false,
+      orgUnits: canManage,
+      teams: canManage,
+      targetGroups: false,
+      roles: canManage,
+      persons: canManage,
+      externalContacts: canManage,
     };
   }
 

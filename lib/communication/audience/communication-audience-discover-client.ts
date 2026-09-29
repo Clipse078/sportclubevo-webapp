@@ -10,6 +10,7 @@ import {
 import type { CommunicationAudienceSelectorContext } from "@/components/admin/communication/audience/CommunicationAudienceSelector";
 import type { CommunicationAudienceSelectorFeatures } from "@/components/admin/communication/audience/CommunicationAudienceSelector";
 import { fetchWithSceSelectorTimeout } from "@/lib/sce/list-selector/fetch-with-timeout";
+import { sceSelectorDiscoverErrorForHttpStatus } from "@/lib/sce/list-selector/selector-discover-api-errors";
 
 function featuresToSourceTypes(
   features: Required<CommunicationAudienceSelectorFeatures>,
@@ -63,7 +64,7 @@ export function communicationAudienceDiscoverFetch(input: {
     if (!res.ok) {
       return {
         groups: [],
-        error: data.error ?? "Auswahl konnte nicht geladen werden.",
+        error: sceSelectorDiscoverErrorForHttpStatus(res.status, data.error),
       };
     }
     const groups: SceSelectorResultGroup[] = (data.groups ?? []).map((group) => {

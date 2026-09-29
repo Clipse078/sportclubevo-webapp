@@ -60,5 +60,5 @@ export type SceSelectorQueryInput = {
   query: string;
   limitPerGroup?: number;
   /** Communication-specific; ignored by generic club selectors. */
-  communicationContext?: "DIRECT" | "ORGANISATION";
+  communicationContext?: "DIRECT" | "ORGANISATION" | "TARGET_GROUP_MANAGEMENT";
 };

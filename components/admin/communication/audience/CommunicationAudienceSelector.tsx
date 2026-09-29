@@ -22,7 +22,11 @@ import type { SceSelectorSourceType } from "@/lib/sce/list-selector/types";
 import { sceSelectorPickKey } from "@/lib/sce/list-selector/types";
 import type { SceSelectorCategoryId } from "@/lib/sce/list-selector/entity-presentation";
 
-export type CommunicationAudienceSelectorContext = "DIRECT" | "ORGANISATION" | "CAMPAIGN";
+export type CommunicationAudienceSelectorContext =
+  | "DIRECT"
+  | "ORGANISATION"
+  | "CAMPAIGN"
+  | "TARGET_GROUP_MANAGEMENT";
 
 export type CommunicationAudienceSelectorFeatures = {
   wholeOrganisation?: boolean;

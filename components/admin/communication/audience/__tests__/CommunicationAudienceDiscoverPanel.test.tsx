@@ -331,6 +331,31 @@ describe("CommunicationAudienceDiscoverPanel (UXR2)", () => {
     expect(input.className).toContain("fca-search-input");
   });
 
+  it("shows German 403 copy instead of raw Forbidden", async () => {
+    global.fetch = vi.fn(async (url: RequestInfo | URL) => {
+      if (String(url).includes("/api/communication/audience/discover")) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
+      }
+      return new Response("{}", { status: 200 });
+    }) as typeof fetch;
+
+    render(
+      <CommunicationAudienceDiscoverPanel
+        open
+        onOpenChange={() => {}}
+        context="TARGET_GROUP_MANAGEMENT"
+        enabledFeatures={enabledAutomatic}
+        selection={emptyCommunicationAudienceSelection()}
+        onPick={vi.fn()}
+      />,
+    );
+
+    expect(
+      await screen.findByText("Du hast keine Berechtigung, diese Auswahl zu sehen."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Forbidden")).not.toBeInTheDocument();
+  });
+
   it("desktop uses sheet dialog semantics (not compact popover)", async () => {
     mockDiscover();
     render(

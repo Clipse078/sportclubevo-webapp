@@ -11,6 +11,7 @@ import {
   selectorTypeToCommunicationSearchKind,
 } from "@/lib/sce/list-selector/communication-bridge";
 import type { SceSelectorSourceType } from "@/lib/sce/list-selector/types";
+import type { CommunicationAudienceDiscoverContextParam } from "@/lib/sce/list-selector/selector-authorization-context";
 
 export type CommunicationAudienceDiscoverCategory =
   | "all"
@@ -46,7 +47,9 @@ const GROUP_HEADING: Record<CommunicationAudienceSearchKind, string> = {
 
 function communicationContextKind(
   context: CommunicationContextRef,
-): "DIRECT" | "ORGANISATION" {
+  discoverContext?: CommunicationAudienceDiscoverContextParam,
+): "DIRECT" | "ORGANISATION" | "TARGET_GROUP_MANAGEMENT" {
+  if (discoverContext === "TARGET_GROUP_MANAGEMENT") return "TARGET_GROUP_MANAGEMENT";
   return context.kind === "DIRECT" ? "DIRECT" : "ORGANISATION";
 }
 
@@ -54,6 +57,7 @@ export async function searchCommunicationAudienceTargets(input: {
   tenantId: string;
   senderUserId: string;
   context: CommunicationContextRef;
+  discoverContext?: CommunicationAudienceDiscoverContextParam;
   kind: CommunicationAudienceSearchKind;
   query: string;
   limit?: number;
@@ -89,7 +93,7 @@ export async function searchCommunicationAudienceTargets(input: {
     category,
     query: input.query,
     limitPerGroup: input.limit,
-    communicationContext: communicationContextKind(input.context),
+    communicationContext: communicationContextKind(input.context, input.discoverContext),
   });
 
   const group = groups.find((g) => g.type === selectorType);
@@ -106,6 +110,7 @@ export async function discoverCommunicationAudienceTargets(input: {
   tenantId: string;
   senderUserId: string;
   context: CommunicationContextRef;
+  discoverContext?: CommunicationAudienceDiscoverContextParam;
   query: string;
   category: CommunicationAudienceDiscoverCategory;
   enabledKinds: readonly CommunicationAudienceSearchKind[];
@@ -130,7 +135,7 @@ export async function discoverCommunicationAudienceTargets(input: {
     category: communicationCategoryToSelectorCategory(input.category),
     query: input.query,
     limitPerGroup: input.limitPerGroup,
-    communicationContext: communicationContextKind(input.context),
+    communicationContext: communicationContextKind(input.context, input.discoverContext),
   });
 
   return selectorGroups.map((group) => {

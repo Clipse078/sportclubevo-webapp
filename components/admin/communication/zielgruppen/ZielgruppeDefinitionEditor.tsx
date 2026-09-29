@@ -264,7 +264,7 @@ function DiscoverAddButton({
       <CommunicationAudienceDiscoverPanel
         open={open}
         onOpenChange={setOpen}
-        context="ORGANISATION"
+        context="TARGET_GROUP_MANAGEMENT"
         disabled={disabled}
         enabledFeatures={enabledFeatures}
         selection={selection}
@@ -433,7 +433,7 @@ export default function ZielgruppeDefinitionEditor({
           onChange={(selection) =>
             onChange(mergeDirectAudienceSelectionIntoDefinition(value, selection))
           }
-          context="ORGANISATION"
+          context="TARGET_GROUP_MANAGEMENT"
           features={DIRECT_FEATURES}
           disabled={disabled}
           compact
