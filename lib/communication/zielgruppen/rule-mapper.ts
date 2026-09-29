@@ -124,6 +124,18 @@ export function editorDefinitionToAudienceSpec(
                   : undefined,
               }
             : undefined,
+        external:
+          definition.includeExternalContactIds.length ||
+          definition.excludeExternalContactIds.length
+            ? {
+                includeExternalContactIds: definition.includeExternalContactIds.length
+                  ? [...definition.includeExternalContactIds]
+                  : undefined,
+                excludeExternalContactIds: definition.excludeExternalContactIds.length
+                  ? [...definition.excludeExternalContactIds]
+                  : undefined,
+              }
+            : undefined,
       },
     ],
   };
@@ -144,7 +156,9 @@ export function audienceSpecToEditorDefinition(
     teamIds: [...(structural.teamIds ?? [])],
     roleIds: [...(structural.roleIds ?? [])],
     includePersonIds: [...(component.explicit?.includePersonIds ?? [])],
+    includeExternalContactIds: [...(component.external?.includeExternalContactIds ?? [])],
     excludePersonIds: [...(component.explicit?.excludePersonIds ?? [])],
+    excludeExternalContactIds: [...(component.external?.excludeExternalContactIds ?? [])],
     excludeOrgUnitIds: [],
     excludeTeamIds: [],
     excludeRoleIds: [],

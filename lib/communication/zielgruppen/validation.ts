@@ -40,6 +40,13 @@ export function validateZielgruppeEditorDefinition(
     return "Eine Person kann nicht gleichzeitig eingeschlossen und ausgeschlossen werden.";
   }
 
+  const externalOverlap = definition.includeExternalContactIds.filter((id) =>
+    definition.excludeExternalContactIds.includes(id),
+  );
+  if (externalOverlap.length > 0) {
+    return "Ein externer Kontakt kann nicht gleichzeitig eingeschlossen und ausgeschlossen werden.";
+  }
+
   const audience = editorDefinitionToAudienceSpec(definition, roleKeys);
   return validateCommunicationAudienceSpec(audience);
 }

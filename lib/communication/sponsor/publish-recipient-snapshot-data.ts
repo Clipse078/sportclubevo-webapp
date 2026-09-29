@@ -6,6 +6,7 @@ import { buildDispatchRecipientSnapshots } from "@/lib/communication/platform/re
 import type { RecipientSnapshotRow } from "@/lib/communication/platform/recipient-resolution/pipeline";
 import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
 import { collectSponsorExternalSnapshotRows } from "@/lib/communication/sponsor/sponsor-external-recipient-snapshots";
+import { collectCommunicationExternalSnapshotRows } from "@/lib/communication/platform/recipient-resolution/communication-external-recipient-snapshots";
 import type { Prisma } from "@prisma/client";
 import type { PersonalisedSnapshotExtras } from "@/lib/communication/personalisation/publish-personalisation";
 
@@ -27,6 +28,7 @@ export async function buildCampaignPublishSnapshotCreateMany(input: {
   emailChannelEnabled: boolean;
   emailTransportReady: boolean;
   personalisationByTarget?: Map<string, PersonalisedSnapshotExtras>;
+  structuralExclusionSelectors?: import("@/lib/communication/platform/audience/structural-targets").StructuralAudienceSelectors;
 }) {
   const internalRows = buildDispatchRecipientSnapshots({
     communicationDispatchRef: input.communicationId,
@@ -37,7 +39,7 @@ export async function buildCampaignPublishSnapshotCreateMany(input: {
     deliveryTargets: input.deliveryTargets,
   });
 
-  const externalRows = await collectSponsorExternalSnapshotRows({
+  const sponsorExternalRows = await collectSponsorExternalSnapshotRows({
     tenantId: input.tenantId,
     audience: input.audience,
     audienceFingerprint: input.audienceFingerprint,
@@ -46,6 +48,17 @@ export async function buildCampaignPublishSnapshotCreateMany(input: {
     emailChannelEnabled: input.emailChannelEnabled,
     emailTransportReady: input.emailTransportReady,
   });
+
+  const communicationExternalRows = await collectCommunicationExternalSnapshotRows({
+    tenantId: input.tenantId,
+    audience: input.audience,
+    channel: "IN_APP",
+    emailChannelEnabled: input.emailChannelEnabled,
+    emailTransportReady: input.emailTransportReady,
+    structuralExclusionSelectors: input.structuralExclusionSelectors,
+  });
+
+  const externalRows = [...sponsorExternalRows, ...communicationExternalRows];
 
   return {
     internalCount: internalRows.length,
@@ -86,7 +99,9 @@ export async function buildCampaignPublishSnapshotCreateMany(input: {
         tenantId: input.tenantId,
         communicationId: input.communicationId,
         recipientKind: snap.recipientKind,
-        sponsorContactId: snap.sponsorContactId,
+        sponsorContactId: "sponsorContactId" in snap ? snap.sponsorContactId : null,
+        communicationExternalContactId:
+          "communicationExternalContactId" in snap ? snap.communicationExternalContactId : null,
         subjectPersonId: snap.subjectPersonId,
         deliveryUserId: snap.deliveryUserId,
         channel: snap.channel,

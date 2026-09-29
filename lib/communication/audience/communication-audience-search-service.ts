@@ -8,6 +8,7 @@ import {
   searchDirectMessageRecipients,
 } from "@/lib/communication/direct/direct-recipient-search";
 import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
+import { searchCommunicationExternalContacts } from "@/lib/communication/external-contacts/external-contact-service";
 
 const DEFAULT_LIMIT = 20;
 const MIN_QUERY_LENGTH = 2;
@@ -19,7 +20,8 @@ export type CommunicationAudienceDiscoverCategory =
   | "team"
   | "orgUnit"
   | "role"
-  | "targetGroup";
+  | "targetGroup"
+  | "external";
 
 export type CommunicationAudienceDiscoverGroup = {
   kind: CommunicationAudienceSearchKind;
@@ -32,7 +34,8 @@ export type CommunicationAudienceSearchKind =
   | "team"
   | "orgUnit"
   | "role"
-  | "targetGroup";
+  | "targetGroup"
+  | "external";
 
 function normalizeTerm(query: string): string {
   return query.trim();
@@ -68,6 +71,14 @@ export async function searchCommunicationAudienceTargets(input: {
       label: row.displayName,
       description: [...row.teamLabels, ...row.orgUnitLabels].join(" · ") || null,
     }));
+  }
+
+  if (input.kind === "external") {
+    return searchCommunicationExternalContacts({
+      tenantId: input.tenantId,
+      query: term,
+      limit,
+    });
   }
 
   if (input.kind === "team") {
@@ -157,14 +168,16 @@ const GROUP_HEADING: Record<CommunicationAudienceSearchKind, string> = {
   orgUnit: "Organisation",
   role: "Rollen",
   targetGroup: "Zielgruppen",
+  external: "Externe",
 };
 
 function kindsForCategory(
   category: CommunicationAudienceDiscoverCategory,
 ): CommunicationAudienceSearchKind[] {
   if (category === "all") {
-    return ["person", "team", "orgUnit", "role", "targetGroup"];
+    return ["person", "team", "orgUnit", "role", "targetGroup", "external"];
   }
+  if (category === "external") return ["external"];
   return [category];
 }
 
@@ -229,6 +242,14 @@ async function browseCommunicationAudienceTargets(input: {
       label: row.name,
       description: row.key,
     }));
+  }
+
+  if (input.kind === "external") {
+    return searchCommunicationExternalContacts({
+      tenantId: input.tenantId,
+      query: "",
+      limit,
+    });
   }
 
   if (input.kind === "role") {

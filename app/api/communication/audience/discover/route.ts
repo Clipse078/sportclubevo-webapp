@@ -27,7 +27,8 @@ function parseCategory(value: string | null): CommunicationAudienceDiscoverCateg
     value === "team" ||
     value === "orgUnit" ||
     value === "role" ||
-    value === "targetGroup"
+    value === "targetGroup" ||
+    value === "external"
   ) {
     return value;
   }
@@ -43,6 +44,7 @@ function enabledKindsFromCapabilities(
   if (capabilities.orgUnits) kinds.push("orgUnit");
   if (capabilities.roles) kinds.push("role");
   if (capabilities.targetGroups) kinds.push("targetGroup");
+  if (capabilities.externalContacts) kinds.push("external");
   return kinds;
 }
 

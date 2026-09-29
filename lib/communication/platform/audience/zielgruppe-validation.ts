@@ -87,14 +87,35 @@ function validateComponent(component: ZielgruppeAudienceComponent, index: number
     }
   }
 
+  if (component.external) {
+    const includeErr = validateIdList(
+      "includeExternalContactIds",
+      component.external.includeExternalContactIds,
+    );
+    if (includeErr) return `${prefix}: external.${includeErr}`;
+    const excludeErr = validateIdList(
+      "excludeExternalContactIds",
+      component.external.excludeExternalContactIds,
+    );
+    if (excludeErr) return `${prefix}: external.${excludeErr}`;
+
+    const include = new Set(component.external.includeExternalContactIds ?? []);
+    for (const excluded of component.external.excludeExternalContactIds ?? []) {
+      if (include.has(excluded)) {
+        return `${prefix}: external contact cannot appear in both include and exclude lists`;
+      }
+    }
+  }
+
   const hasStructural =
     component.structural && !structuralSelectorsAreEmpty(component.structural);
   const hasSaved = (component.savedTargetGroupIds?.length ?? 0) > 0;
   const hasRule = component.dynamicRule != null;
   const hasExplicit = (component.explicit?.includePersonIds?.length ?? 0) > 0;
+  const hasExternal = (component.external?.includeExternalContactIds?.length ?? 0) > 0;
   const hasSponsor = !sponsorSelectorsAreEmpty(component.sponsor);
 
-  if (!hasStructural && !hasSaved && !hasRule && !hasExplicit && !hasSponsor) {
+  if (!hasStructural && !hasSaved && !hasRule && !hasExplicit && !hasExternal && !hasSponsor) {
     return `${prefix}: audience component must specify at least one selector`;
   }
 

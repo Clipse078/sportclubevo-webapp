@@ -14,7 +14,9 @@ export type CommunicationAudienceSelection = {
   roleIds: string[];
   targetGroupIds: string[];
   personIds: string[];
+  externalContactIds: string[];
   excludePersonIds: string[];
+  excludeExternalContactIds: string[];
 };
 
 export function emptyCommunicationAudienceSelection(): CommunicationAudienceSelection {
@@ -25,7 +27,9 @@ export function emptyCommunicationAudienceSelection(): CommunicationAudienceSele
     roleIds: [],
     targetGroupIds: [],
     personIds: [],
+    externalContactIds: [],
     excludePersonIds: [],
+    excludeExternalContactIds: [],
   };
 }
 
@@ -42,7 +46,8 @@ export function communicationAudienceSelectionIsEmpty(
     selection.teamIds.length === 0 &&
     selection.roleIds.length === 0 &&
     selection.targetGroupIds.length === 0 &&
-    selection.personIds.length === 0
+    selection.personIds.length === 0 &&
+    selection.externalContactIds.length === 0
   );
 }
 
@@ -85,13 +90,29 @@ export function buildCommunicationAudienceSpec(
     components.push({ savedTargetGroupIds: [id] });
   }
 
-  if (selection.personIds.length > 0) {
+  if (selection.personIds.length > 0 || selection.excludePersonIds.length > 0) {
     components.push({
       explicit: {
-        includePersonIds: dedupeIds(selection.personIds),
+        includePersonIds: selection.personIds.length
+          ? dedupeIds(selection.personIds)
+          : undefined,
         excludePersonIds:
           selection.excludePersonIds.length > 0
             ? dedupeIds(selection.excludePersonIds)
+            : undefined,
+      },
+    });
+  }
+
+  if (selection.externalContactIds.length > 0 || selection.excludeExternalContactIds.length > 0) {
+    components.push({
+      external: {
+        includeExternalContactIds: selection.externalContactIds.length
+          ? dedupeIds(selection.externalContactIds)
+          : undefined,
+        excludeExternalContactIds:
+          selection.excludeExternalContactIds.length > 0
+            ? dedupeIds(selection.excludeExternalContactIds)
             : undefined,
       },
     });
@@ -134,6 +155,12 @@ export function inferCommunicationAudienceSelection(
     if (component.explicit?.excludePersonIds?.length) {
       selection.excludePersonIds.push(...component.explicit.excludePersonIds);
     }
+    if (component.external?.includeExternalContactIds?.length) {
+      selection.externalContactIds.push(...component.external.includeExternalContactIds);
+    }
+    if (component.external?.excludeExternalContactIds?.length) {
+      selection.excludeExternalContactIds.push(...component.external.excludeExternalContactIds);
+    }
   }
 
   selection.orgUnitIds = dedupeIds(selection.orgUnitIds);
@@ -141,7 +168,9 @@ export function inferCommunicationAudienceSelection(
   selection.roleIds = dedupeIds(selection.roleIds);
   selection.targetGroupIds = dedupeIds(selection.targetGroupIds);
   selection.personIds = dedupeIds(selection.personIds);
+  selection.externalContactIds = dedupeIds(selection.externalContactIds);
   selection.excludePersonIds = dedupeIds(selection.excludePersonIds);
+  selection.excludeExternalContactIds = dedupeIds(selection.excludeExternalContactIds);
 
   if (selection.wholeOrganisation) {
     return {
@@ -151,7 +180,9 @@ export function inferCommunicationAudienceSelection(
       roleIds: [],
       targetGroupIds: [],
       personIds: [],
+      externalContactIds: [],
       excludePersonIds: [],
+      excludeExternalContactIds: [],
     };
   }
 

@@ -256,4 +256,118 @@ describe("SCE-COMM-17 preferences & consent", () => {
     });
     expect(mocks.sponsorContactCommunicationPreference.upsert).toHaveBeenCalled();
   });
+
+  describe("SCE-ZIELGRUPPEN-02 external communication contacts", () => {
+    it("does not treat Zielgruppe external membership as USER marketing consent", () => {
+      const sponsor = evaluateCommunicationDeliveryPreference({
+        category: "SPONSOR_COMMERCIAL",
+        channel: "EMAIL",
+        identity: { kind: "USER", tenantId: "t1", userId: "u1" },
+      });
+      expect(sponsor.allowed).toBe(false);
+      expect(sponsor.reason).toBe("CONSENT_REQUIRED");
+      expect(mocks.userCommunicationPreference.findMany).not.toHaveBeenCalled();
+    });
+
+    it("external communication contact eligibility does not read user preference records", async () => {
+      mocks.userCommunicationPreference.findMany.mockResolvedValue([
+        { category: "CLUB_INFORMATION", channel: "EMAIL", explicitState: "DISABLED" },
+      ]);
+      const result = await resolveRecipientSnapshotEmailEligibility({
+        tenantId: "t1",
+        emailChannelEnabled: true,
+        category: "CLUB_INFORMATION",
+        snapshot: {
+          tenantId: "t1",
+          recipientKind: "EXTERNAL_COMMUNICATION_CONTACT",
+          subjectPersonId: null,
+          deliveryUserId: null,
+          externalSnapshotJson: {
+            email: "external.parent@example.com",
+            deliveryCapability: "EMAIL_DELIVERY_CANDIDATE",
+          },
+        },
+      });
+      expect(result.eligible).toBe(true);
+      expect(mocks.userCommunicationPreference.findMany).not.toHaveBeenCalled();
+      expect(mocks.user.findFirst).not.toHaveBeenCalled();
+    });
+
+    it("blocks external communication email when channel disabled (suppression)", async () => {
+      const result = await resolveRecipientSnapshotEmailEligibility({
+        tenantId: "t1",
+        emailChannelEnabled: false,
+        category: "CLUB_OPERATIONAL",
+        snapshot: {
+          tenantId: "t1",
+          recipientKind: "EXTERNAL_COMMUNICATION_CONTACT",
+          subjectPersonId: null,
+          deliveryUserId: null,
+          externalSnapshotJson: {
+            email: "external.parent@example.com",
+            deliveryCapability: "EMAIL_DELIVERY_CANDIDATE",
+          },
+        },
+      });
+      expect(result.eligible).toBe(false);
+      expect(result.skipReason).toBe("EMAIL_CHANNEL_DISABLED");
+    });
+
+    it("does not infer sponsor commercial consent from external snapshot kind alone", async () => {
+      mocks.sponsorContactCommunicationPreference.findMany.mockResolvedValue([]);
+      const result = await resolveRecipientSnapshotEmailEligibility({
+        tenantId: "t1",
+        emailChannelEnabled: true,
+        category: "SPONSOR_COMMERCIAL",
+        snapshot: {
+          tenantId: "t1",
+          recipientKind: "EXTERNAL_COMMUNICATION_CONTACT",
+          subjectPersonId: null,
+          deliveryUserId: null,
+          externalSnapshotJson: {
+            email: "external.parent@example.com",
+            deliveryCapability: "EMAIL_DELIVERY_CANDIDATE",
+          },
+        },
+      });
+      expect(result.eligible).toBe(true);
+      expect(mocks.sponsorContactCommunicationPreference.findMany).not.toHaveBeenCalled();
+    });
+
+    it("mixed sponsor+external audience is not sponsor-commercial-only (no consent category inference)", () => {
+      const category = resolvePublicationCommunicationPreferenceCategory({
+        kind: "CAMPAIGN",
+        audienceSpecJson: {
+          composition: "UNION",
+          components: [
+            {
+              sponsor: { allActiveSponsors: true },
+              external: { includeExternalContactIds: ["ext-1"] },
+            },
+          ],
+        },
+      });
+      expect(category).toBe("CLUB_INFORMATION");
+    });
+
+    it("rejects tenant-mismatched external snapshot at eligibility seam", async () => {
+      const result = await resolveRecipientSnapshotEmailEligibility({
+        tenantId: "t1",
+        emailChannelEnabled: true,
+        category: "CLUB_OPERATIONAL",
+        snapshot: {
+          tenantId: "other-tenant",
+          recipientKind: "EXTERNAL_COMMUNICATION_CONTACT",
+          subjectPersonId: null,
+          deliveryUserId: null,
+          externalSnapshotJson: {
+            email: "external.parent@example.com",
+            deliveryCapability: "EMAIL_DELIVERY_CANDIDATE",
+          },
+        },
+      });
+      expect(result.eligible).toBe(false);
+      expect(result.skipReason).toBe("TENANT_MISMATCH");
+    });
+  });
 });

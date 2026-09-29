@@ -19,11 +19,13 @@ import {
   type ZielgruppeIncludeRuleKind,
 } from "@/lib/communication/zielgruppen/visual-rules";
 import {
+  searchZielgruppeExternalContactsAction,
   searchZielgruppeOrgUnitsAction,
   searchZielgruppePersonsAction,
   searchZielgruppeRolesAction,
   searchZielgruppeTeamsAction,
 } from "@/app/(admin)/dashboard/communication/zielgruppen/actions";
+import ZielgruppeBulkEmailDialog from "@/components/admin/communication/zielgruppen/ZielgruppeBulkEmailDialog";
 import ZielgruppeHumanRulesPanel from "@/components/admin/communication/zielgruppen/ZielgruppeHumanRulesPanel";
 import { summarizeZielgruppeEditorDefinition } from "@/lib/communication/audience/human-audience-summary";
 import { ZIELGRUPPE_DYNAMIC_MEMBERSHIP_NOTICE } from "@/lib/communication/zielgruppen/zielgruppen-display";
@@ -34,6 +36,7 @@ type KnownLabels = {
   teams: Record<string, string>;
   roles: Record<string, string>;
   persons: Record<string, string>;
+  externalContacts?: Record<string, string>;
 };
 
 type Props = {
@@ -58,6 +61,9 @@ function labelForId(
   if (kind === "orgUnit" || kind === "excludeOrgUnit") return labels.orgUnits[id] ?? "…";
   if (kind === "team" || kind === "excludeTeam") return labels.teams[id] ?? "…";
   if (kind === "role" || kind === "excludeRole") return labels.roles[id] ?? "…";
+  if (kind === "externalContact" || kind === "excludeExternalContact") {
+    return labels.externalContacts?.[id] ?? labels.persons[id] ?? "…";
+  }
   return labels.persons[id] ?? "…";
 }
 
@@ -89,6 +95,7 @@ function RuleValueSearch({
       setLoading(true);
       setError(null);
       const isPerson = kind === "person" || kind === "excludePerson";
+      const isExternal = kind === "externalContact" || kind === "excludeExternalContact";
       const isOrg = kind === "orgUnit" || kind === "excludeOrgUnit";
       const isTeam = kind === "team" || kind === "excludeTeam";
       const searchFn = isOrg
@@ -97,7 +104,9 @@ function RuleValueSearch({
           ? searchZielgruppeTeamsAction
           : kind === "role" || kind === "excludeRole"
             ? searchZielgruppeRolesAction
-            : searchZielgruppePersonsAction;
+            : isExternal
+              ? searchZielgruppeExternalContactsAction
+              : searchZielgruppePersonsAction;
       const result = await searchFn(term);
       if (!result.ok) {
         setError(result.message);
@@ -108,6 +117,15 @@ function RuleValueSearch({
             id: row.personId,
             label: row.displayName,
           })),
+        );
+      } else if (isExternal) {
+        setOptions(
+          (result.data as Array<{ id: string; label: string; description?: string | null }>).map(
+            (row) => ({
+              id: row.id,
+              label: row.description ? `${row.label} (${row.description})` : row.label,
+            }),
+          ),
         );
       } else {
         setOptions(result.data as Array<{ id: string; label: string }>);
@@ -219,17 +237,23 @@ export default function ZielgruppeDefinitionEditor({
   knownLabels,
   disabled,
 }: Props) {
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [dynamicLabels, setDynamicLabels] = useState<KnownLabels>({
     orgUnits: {},
     teams: {},
     roles: {},
     persons: {},
+    externalContacts: {},
   });
   const labels: KnownLabels = {
     orgUnits: { ...dynamicLabels.orgUnits, ...knownLabels?.orgUnits },
     teams: { ...dynamicLabels.teams, ...knownLabels?.teams },
     roles: { ...dynamicLabels.roles, ...knownLabels?.roles },
     persons: { ...dynamicLabels.persons, ...knownLabels?.persons },
+    externalContacts: {
+      ...dynamicLabels.externalContacts,
+      ...(knownLabels?.externalContacts ?? {}),
+    },
   };
 
   function patch(partial: Partial<ZielgruppeEditorDefinition>) {
@@ -244,7 +268,9 @@ export default function ZielgruppeDefinitionEditor({
           ? "teams"
           : kind === "role" || kind === "excludeRole"
             ? "roles"
-            : "persons";
+            : kind === "externalContact" || kind === "excludeExternalContact"
+              ? "externalContacts"
+              : "persons";
     setDynamicLabels((prev) => ({
       ...prev,
       [key]: { ...prev[key], [id]: displayLabel },
@@ -252,6 +278,12 @@ export default function ZielgruppeDefinitionEditor({
   }
 
   const { includeRules, excludeRules } = definitionToVisualRules(value);
+  const dynamicIncludeRules = includeRules.filter(
+    (rule) => rule.kind === "orgUnit" || rule.kind === "team" || rule.kind === "role",
+  );
+  const directIncludeRules = includeRules.filter(
+    (rule) => rule.kind === "person" || rule.kind === "externalContact",
+  );
   const liveSummary = summarizeZielgruppeEditorDefinition(value, labels);
 
   return (
@@ -265,9 +297,10 @@ export default function ZielgruppeDefinitionEditor({
 
       <section className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4">
         <div>
-          <h4 className={SECTION_LABEL}>Einschliessen</h4>
+          <h4 className={SECTION_LABEL}>Dynamisch einschliessen</h4>
           <p className="mt-1 text-xs text-[var(--muted)]">
-            Personen, die mindestens eine oder alle Bedingungen erfüllen (siehe Kombination).
+            Organisation, Teams und Rollen bleiben strukturell — neue Mitglieder werden automatisch
+            einbezogen.
           </p>
         </div>
 
@@ -323,7 +356,7 @@ export default function ZielgruppeDefinitionEditor({
             </fieldset>
 
             <div className="space-y-2">
-              {includeRules.map((rule) => (
+              {dynamicIncludeRules.map((rule) => (
                 <VisualRuleRow
                   key={rule.id}
                   testId={`zg-include-rule-${rule.id}`}
@@ -341,7 +374,6 @@ export default function ZielgruppeDefinitionEditor({
                   ["orgUnit", "Organisationseinheit"],
                   ["team", "Team"],
                   ["role", "Rolle"],
-                  ["person", "Person"],
                 ] as const
               ).map(([kind, label]) => (
                 <RuleValueSearch
@@ -358,6 +390,71 @@ export default function ZielgruppeDefinitionEditor({
             </div>
           </>
         ) : null}
+      </section>
+
+      <section className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4">
+        <div>
+          <h4 className={SECTION_LABEL}>Direkt hinzufügen</h4>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            Einzelne Personen oder externe Kontakte unabhängig von Struktur-Regeln.
+          </p>
+        </div>
+        <div className="space-y-2">
+          {directIncludeRules.map((rule) => (
+            <VisualRuleRow
+              key={rule.id}
+              testId={`zg-direct-rule-${rule.id}`}
+              typeLabel={ZIELGRUPPE_INCLUDE_KIND_LABEL[rule.kind]}
+              valueLabel={labelForId(rule.kind, rule.valueId, labels)}
+              disabled={disabled}
+              onRemove={() => onChange(removeIncludeRule(value, rule.kind, rule.valueId))}
+            />
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <RuleValueSearch
+            kind="person"
+            disabled={disabled}
+            triggerLabel="Person"
+            onPick={(id, displayLabel) => {
+              rememberLabel("person", id, displayLabel);
+              onChange(addIncludeRule(value, "person", id));
+            }}
+          />
+          <RuleValueSearch
+            kind="externalContact"
+            disabled={disabled}
+            triggerLabel="Extern"
+            onPick={(id, displayLabel) => {
+              rememberLabel("externalContact", id, displayLabel);
+              onChange(addIncludeRule(value, "externalContact", id));
+            }}
+          />
+          <button
+            type="button"
+            disabled={disabled}
+            className="inline-flex items-center justify-center gap-1 rounded-md border border-dashed border-[var(--border-strong)] px-3 py-2 text-xs font-medium text-[var(--sce-primary)] hover:bg-[var(--surface-2)]"
+            onClick={() => setBulkOpen(true)}
+            data-testid="zielgruppe-bulk-email-open"
+          >
+            Mehrere E-Mail-Adressen hinzufügen
+          </button>
+        </div>
+        <ZielgruppeBulkEmailDialog
+          open={bulkOpen}
+          onOpenChange={setBulkOpen}
+          disabled={disabled}
+          onApplied={({ externalContactIds, personIds }) => {
+            let next = value;
+            for (const personId of personIds) {
+              next = addIncludeRule(next, "person", personId);
+            }
+            for (const externalContactId of externalContactIds) {
+              next = addIncludeRule(next, "externalContact", externalContactId);
+            }
+            onChange(next);
+          }}
+        />
       </section>
 
       <section className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4">
@@ -389,6 +486,7 @@ export default function ZielgruppeDefinitionEditor({
               ["excludeTeam", "Team"],
               ["excludeRole", "Rolle"],
               ["excludePerson", "Person"],
+              ["excludeExternalContact", "Extern"],
             ] as const
           ).map(([kind, label]) => (
             <RuleValueSearch

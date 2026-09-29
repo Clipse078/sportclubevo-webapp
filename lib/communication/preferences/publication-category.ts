@@ -19,6 +19,12 @@ function audienceIsSponsorCommercialOnly(audience: CommunicationAudienceSpec): b
     if (component.dynamicRule) {
       return false;
     }
+    if (
+      component.external?.includeExternalContactIds?.length ||
+      component.external?.excludeExternalContactIds?.length
+    ) {
+      return false;
+    }
     if (component.sponsor && !sponsorSelectorsAreEmpty(component.sponsor)) {
       hasSponsor = true;
     }

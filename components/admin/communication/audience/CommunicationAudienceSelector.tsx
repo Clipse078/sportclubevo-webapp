@@ -26,6 +26,7 @@ export type CommunicationAudienceSelectorFeatures = {
   targetGroups?: boolean;
   roles?: boolean;
   persons?: boolean;
+  externalContacts?: boolean;
 };
 
 type Props = {
@@ -53,7 +54,7 @@ export type CommunicationAudiencePreviewState = {
   guardianDeliveryCount: number | null;
 };
 
-type SelectorKind = "team" | "orgUnit" | "role" | "targetGroup" | "person";
+type SelectorKind = "team" | "orgUnit" | "role" | "targetGroup" | "person" | "external";
 
 type DiscoverGroup = {
   kind: SelectorKind;
@@ -68,6 +69,7 @@ const CATEGORY_TABS: { id: CommunicationAudienceDiscoverCategory; label: string 
   { id: "orgUnit", label: "Organisation" },
   { id: "role", label: "Rollen" },
   { id: "targetGroup", label: "Zielgruppen" },
+  { id: "external", label: "Externe" },
 ];
 
 function TokenChip({
@@ -158,6 +160,7 @@ function UnifiedAudienceDiscoverPanel({
         if (tab.id === "orgUnit") return enabledFeatures.orgUnits;
         if (tab.id === "role") return enabledFeatures.roles;
         if (tab.id === "targetGroup") return enabledFeatures.targetGroups;
+        if (tab.id === "external") return enabledFeatures.externalContacts;
         return false;
       }),
     [enabledFeatures],
@@ -209,6 +212,7 @@ function UnifiedAudienceDiscoverPanel({
     if (kind === "team") return selection.teamIds.includes(id);
     if (kind === "orgUnit") return selection.orgUnitIds.includes(id);
     if (kind === "role") return selection.roleIds.includes(id);
+    if (kind === "external") return selection.externalContactIds.includes(id);
     return selection.targetGroupIds.includes(id);
   }
 
@@ -389,6 +393,8 @@ export default function CommunicationAudienceSelector({
       targetGroups: features?.targetGroups ?? capabilities?.targetGroups ?? true,
       roles: features?.roles ?? capabilities?.roles ?? true,
       persons: features?.persons ?? capabilities?.persons ?? true,
+      externalContacts:
+        features?.externalContacts ?? capabilities?.externalContacts ?? true,
     }),
     [capabilities, features],
   );
@@ -396,6 +402,7 @@ export default function CommunicationAudienceSelector({
   const selectorFeaturesAvailable = useMemo(
     () =>
       enabledFeatures.persons ||
+      enabledFeatures.externalContacts ||
       enabledFeatures.teams ||
       enabledFeatures.orgUnits ||
       enabledFeatures.roles ||
@@ -413,7 +420,9 @@ export default function CommunicationAudienceSelector({
           `/api/communication/audience/capabilities?context=${encodeURIComponent(context)}`,
         );
         if (!res.ok) return;
-        const data = (await res.json()) as { capabilities?: CommunicationAudienceSelectorFeatures };
+        const data = (await res.json()) as {
+          capabilities?: CommunicationAudienceSelectorFeatures & { externalContacts?: boolean };
+        };
         setCapabilities(data.capabilities ?? null);
       } catch {
         /* ignore */
@@ -441,6 +450,7 @@ export default function CommunicationAudienceSelector({
     value.roleIds.length +
     value.targetGroupIds.length +
     value.personIds.length +
+    value.externalContactIds.length +
     (value.wholeOrganisation ? 1 : 0);
 
   useEffect(() => {
@@ -537,9 +547,19 @@ export default function CommunicationAudienceSelector({
     onChange({ ...value, personIds: [...value.personIds, id] });
   }
 
+  function addExternalContact(id: string, label: string) {
+    if (value.wholeOrganisation || value.externalContactIds.includes(id)) return;
+    registerLabel("persons", id, label);
+    onChange({ ...value, externalContactIds: [...value.externalContactIds, id] });
+  }
+
   function handleDiscoverPick(kind: SelectorKind, id: string, label: string) {
     if (kind === "person") {
       addPerson(id, label);
+      return;
+    }
+    if (kind === "external") {
+      addExternalContact(id, label);
       return;
     }
     if (kind === "team") {
@@ -699,6 +719,21 @@ export default function CommunicationAudienceSelector({
                     testId={`communication-audience-token-person-${id}`}
                     onRemove={() =>
                       onChange({ ...value, personIds: value.personIds.filter((x) => x !== id) })
+                    }
+                  />
+                ))}
+                {value.externalContactIds.map((id) => (
+                  <TokenChip
+                    key={`external-${id}`}
+                    typeLabel="Extern"
+                    valueLabel={labels.persons[id] ?? id}
+                    disabled={disabled}
+                    testId={`communication-audience-token-external-${id}`}
+                    onRemove={() =>
+                      onChange({
+                        ...value,
+                        externalContactIds: value.externalContactIds.filter((x) => x !== id),
+                      })
                     }
                   />
                 ))}

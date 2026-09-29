@@ -20,6 +20,12 @@ export type ExplicitPersonAudience = {
   excludePersonIds?: string[];
 };
 
+/** Explicit include/exclude external communication contacts (tenant-scoped ids). */
+export type ExplicitExternalContactAudience = {
+  includeExternalContactIds?: string[];
+  excludeExternalContactIds?: string[];
+};
+
 /**
  * One audience component. Multiple components compose via CommunicationAudienceSpec.
  */
@@ -31,6 +37,7 @@ export type ZielgruppeAudienceComponent = {
   /** Inline dynamic rule (same schema as TargetGroup.ruleJson). */
   dynamicRule?: TargetGroupClause | null;
   explicit?: ExplicitPersonAudience;
+  external?: ExplicitExternalContactAudience;
   /** Sponsor-domain audience selectors (COMM-13); resolved via Sponsor module, not copied. */
   sponsor?: SponsorAudienceSelectors;
 };

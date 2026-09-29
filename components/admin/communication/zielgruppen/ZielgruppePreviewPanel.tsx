@@ -26,8 +26,16 @@ export default function ZielgruppePreviewPanel({ definition, disabled, live = fa
     candidates: number;
     excluded: number;
     effective: number;
+    externalCount: number;
     scopeNotice: string | null;
-    recipients: Array<{ personId: string; displayName: string }>;
+    recipients: Array<{
+      kind: "PERSON" | "EXTERNAL";
+      personId?: string;
+      externalContactId?: string;
+      displayName: string;
+      email?: string | null;
+      includedPaths: Array<{ code: string; label: string }>;
+    }>;
     hasMore: boolean;
   } | null>(null);
   async function runPreview(forDefinition: ZielgruppeEditorDefinition) {
@@ -44,6 +52,7 @@ export default function ZielgruppePreviewPanel({ definition, disabled, live = fa
       candidates: result.data.candidates,
       excluded: result.data.excluded,
       effective: result.data.effective,
+      externalCount: result.data.externalCount,
       scopeNotice: result.data.scopeNotice,
       recipients: result.data.recipients,
       hasMore: result.data.hasMore,
@@ -63,7 +72,10 @@ export default function ZielgruppePreviewPanel({ definition, disabled, live = fa
 
   const remaining =
     previewStats && previewStats.hasMore
-      ? Math.max(0, previewStats.effective - previewStats.recipients.length)
+      ? Math.max(
+          0,
+          previewStats.effective + previewStats.externalCount - previewStats.recipients.length,
+        )
       : 0;
 
   return (
@@ -107,11 +119,11 @@ export default function ZielgruppePreviewPanel({ definition, disabled, live = fa
       {previewStats ? (
         <div className="mt-4 space-y-3" role="status" aria-live="polite">
           <p className="text-lg font-semibold text-[var(--foreground)]">
-            Aktuell {previewStats.effective} Person{previewStats.effective === 1 ? "" : "en"}
+            Aktuell {previewStats.effective + previewStats.externalCount} Empfänger
           </p>
-          {previewStats.effective === 0 ? (
+          {previewStats.effective + previewStats.externalCount === 0 ? (
             <p className="text-xs text-[var(--muted)]">
-              Diese Zielgruppe enthält aktuell keine Personen.
+              Diese Zielgruppe enthält aktuell keine Empfänger.
             </p>
           ) : null}
           {previewStats.scopeNotice ? (
@@ -120,8 +132,20 @@ export default function ZielgruppePreviewPanel({ definition, disabled, live = fa
           {previewStats.recipients.length > 0 ? (
             <ul className="max-h-56 overflow-y-auto rounded border border-[var(--border)] bg-[var(--surface-1)] p-2 text-sm">
               {previewStats.recipients.map((r) => (
-                <li key={r.personId} className="py-0.5">
-                  {r.displayName}
+                <li
+                  key={r.personId ?? r.externalContactId ?? r.displayName}
+                  className="border-b border-[var(--border)] py-2 last:border-b-0"
+                >
+                  <div className="font-medium">{r.displayName}</div>
+                  {r.email ? (
+                    <div className="text-xs text-[var(--muted)]">{r.email}</div>
+                  ) : null}
+                  {(r.includedPaths?.length ?? 0) > 0 ? (
+                    <div className="mt-1 text-xs text-[var(--text-2)]">
+                      Enthalten über:{" "}
+                      {r.includedPaths?.map((path) => path.label).join(" · ")}
+                    </div>
+                  ) : null}
                 </li>
               ))}
               {remaining > 0 ? (

@@ -183,7 +183,9 @@ export async function processPendingPlatformCommunicationEmailDeliveries(
       subject: effectiveSubject,
       bodyText: effectiveBodyText,
       bodyHtmlOverride,
-      includeDeepLink: attempt.recipientSnapshot.recipientKind !== "EXTERNAL_SPONSOR_CONTACT",
+      includeDeepLink:
+        attempt.recipientSnapshot.recipientKind !== "EXTERNAL_SPONSOR_CONTACT" &&
+        attempt.recipientSnapshot.recipientKind !== "EXTERNAL_COMMUNICATION_CONTACT",
       deepLinkPath,
     });
 

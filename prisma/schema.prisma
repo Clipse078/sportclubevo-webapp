@@ -330,6 +330,12 @@ enum PlatformCommunicationRecipientKind {
   INTERNAL_IN_APP
   INTERNAL_PERSON_NO_CHANNEL
   EXTERNAL_SPONSOR_CONTACT
+  EXTERNAL_COMMUNICATION_CONTACT
+}
+
+enum CommunicationExternalContactStatus {
+  ACTIVE
+  ARCHIVED
 }
 
 /// SCE-COMM-14 — outbound email transport state per immutable recipient snapshot.
@@ -1243,6 +1249,7 @@ model Tenant {
   platformCommunicationConversations PlatformCommunicationConversation[]
   platformCommunications          PlatformCommunication[]
   platformCommunicationRecipientSnapshots PlatformCommunicationRecipientSnapshot[]
+  communicationExternalContacts           CommunicationExternalContact[]
   sponsorCategories                       SponsorCategory[]
   sponsorOrganisations                    SponsorOrganisation[]
   sponsorContacts                         SponsorContact[]
@@ -1371,6 +1378,7 @@ model User {
   createdCommunicationCenterMessages CommunicationCenterMessage[] @relation("CommunicationCenterMessageCreatedBy")
   createdCommunicationCenterContextLinks CommunicationCenterContextLink[] @relation("CommunicationCenterContextLinkCreatedBy")
   createdPlatformCommunications PlatformCommunication[] @relation("PlatformCommunicationCreatedBy")
+  createdCommunicationExternalContacts CommunicationExternalContact[] @relation("CommunicationExternalContactCreatedBy")
   createdCommunicationReminderSchedules CommunicationReminderSchedule[] @relation("CommunicationReminderScheduleCreatedBy")
   createdPlatformCommunicationTemplates PlatformCommunicationTemplate[] @relation("PlatformCommunicationTemplateCreatedBy")
   createdPlatformCommunicationPublicationSchedules PlatformCommunicationPublicationSchedule[] @relation("PlatformCommunicationPublicationScheduleCreatedBy")
@@ -3398,6 +3406,7 @@ model PlatformCommunicationRecipientSnapshot {
   recipientKind PlatformCommunicationRecipientKind @default(INTERNAL_IN_APP)
   subjectPersonId String?
   sponsorContactId String?
+  communicationExternalContactId String?
   deliveryUserId  String?
   channel         String
 
@@ -3430,6 +3439,7 @@ model PlatformCommunicationRecipientSnapshot {
   communication PlatformCommunication @relation(fields: [communicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   subjectPerson Person?               @relation("PlatformCommunicationSnapshotSubject", fields: [subjectPersonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   sponsorContact SponsorContact?      @relation(fields: [sponsorContactId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  communicationExternalContact CommunicationExternalContact? @relation(fields: [communicationExternalContactId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   pollResponses PlatformCommunicationPollResponse[]
   requestClaims PlatformCommunicationRequestClaim[]
   pushDeliveryAttempts NotificationPushDeliveryAttempt[]
@@ -3440,8 +3450,33 @@ model PlatformCommunicationRecipientSnapshot {
   @@index([tenantId, subjectPersonId])
   @@index([tenantId, deliveryUserId])
   @@index([tenantId, sponsorContactId])
+  @@index([tenantId, communicationExternalContactId], map: "pc_recipient_snapshot_tenant_comm_ext_idx")
   @@unique([communicationId, subjectPersonId, deliveryUserId, channel])
   @@unique([communicationId, sponsorContactId])
+  @@unique([communicationId, communicationExternalContactId])
+}
+
+/// SCE-ZIELGRUPPEN-02 — tenant-scoped external communication recipients (not Users/Persons).
+model CommunicationExternalContact {
+  id              String @id @default(cuid())
+  tenantId        String
+  emailNormalized String
+  firstName       String?
+  lastName        String?
+  displayName     String?
+  sourceKey       String?
+  sourceMetaJson  Json?
+  status          CommunicationExternalContactStatus @default(ACTIVE)
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant        Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdByUser User?  @relation("CommunicationExternalContactCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  communicationSnapshots PlatformCommunicationRecipientSnapshot[]
+
+  @@unique([tenantId, emailNormalized], map: "cec_tenant_email_uq")
+  @@index([tenantId, status], map: "cec_tenant_status_idx")
 }
 
 // ---------------------------------------------------------------------------

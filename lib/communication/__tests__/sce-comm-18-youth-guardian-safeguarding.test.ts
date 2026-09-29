@@ -633,6 +633,57 @@ function targetsGuardianUser() {
   })[0]?.deliveryUserId;
 }
 
+describe("SCE-ZIELGRUPPEN-02 external communication contacts", () => {
+  it("does not treat arbitrary external email as a guardian recipient", () => {
+    const evaluation = evaluateCommunicationSafeguarding({
+      policy: policy(),
+      subject: {
+        subjectPersonId: "child",
+        dateOfBirth: minorDob(),
+        selfUserId: "u-child",
+        guardianRecipients: [],
+      },
+    });
+    expect(evaluation.deliveryPermitted).toBe(false);
+    expect(evaluation.reason).toBe("GUARDIAN_REQUIRED_UNAVAILABLE");
+  });
+
+  it("external communication contact snapshots carry no guardian substitution", async () => {
+    const result = await resolveRecipientSnapshotEmailEligibility({
+      tenantId: "tenant-a",
+      emailChannelEnabled: true,
+      category: "CLUB_OPERATIONAL",
+      snapshot: {
+        tenantId: "tenant-a",
+        recipientKind: "EXTERNAL_COMMUNICATION_CONTACT",
+        subjectPersonId: null,
+        deliveryUserId: null,
+        viaGuardianSubstitution: false,
+        externalSnapshotJson: {
+          email: "parent@example.com",
+          deliveryCapability: "EMAIL_DELIVERY_CANDIDATE",
+        },
+      },
+    });
+    expect(result.eligible).toBe(true);
+    expect(result.email).toBe("parent@example.com");
+  });
+
+  it("identity collision: canonical Person safeguarding path unchanged when external email duplicates Person", () => {
+    const evaluation = evaluateCommunicationSafeguarding({
+      policy: policy({ allowDirectMinorDelivery: false, guardianOnlyDeliveryRequired: true }),
+      subject: {
+        subjectPersonId: "child-person",
+        dateOfBirth: minorDob(),
+        selfUserId: "u-child",
+        guardianRecipients: [guardianA],
+      },
+    });
+    expect(evaluation.deliveryPermitted).toBe(true);
+    expect(evaluation.reason).toBe("MINOR_GUARDIAN_ONLY_DELIVERY");
+  });
+});
+
 function rowMinorFlag() {
   return buildDispatchRecipientSnapshots({
     communicationDispatchRef: "c1",

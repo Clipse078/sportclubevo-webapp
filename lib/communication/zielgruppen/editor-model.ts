@@ -16,7 +16,9 @@ export type ZielgruppeEditorDefinition = {
   /** Tenant Role.id values — persisted as roleKeys in ruleJson. */
   roleIds: string[];
   includePersonIds: string[];
+  includeExternalContactIds: string[];
   excludePersonIds: string[];
+  excludeExternalContactIds: string[];
   /** Structural NOT semantics — subtract matching persons after inclusion. */
   excludeOrgUnitIds: string[];
   excludeTeamIds: string[];
@@ -30,7 +32,9 @@ export const EMPTY_ZIELGRUPPE_EDITOR_DEFINITION: ZielgruppeEditorDefinition = {
   teamIds: [],
   roleIds: [],
   includePersonIds: [],
+  includeExternalContactIds: [],
   excludePersonIds: [],
+  excludeExternalContactIds: [],
   excludeOrgUnitIds: [],
   excludeTeamIds: [],
   excludeRoleIds: [],
@@ -42,6 +46,7 @@ export function zielgruppeDefinitionIsEmpty(definition: ZielgruppeEditorDefiniti
     definition.orgUnitIds.length === 0 &&
     definition.teamIds.length === 0 &&
     definition.roleIds.length === 0 &&
-    definition.includePersonIds.length === 0
+    definition.includePersonIds.length === 0 &&
+    definition.includeExternalContactIds.length === 0
   );
 }
