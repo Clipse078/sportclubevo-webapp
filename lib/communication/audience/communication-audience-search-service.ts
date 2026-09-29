@@ -6,6 +6,7 @@
 import { prisma } from "@/lib/db/prisma";
 import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
 import { discoverSceSelectorItems } from "@/lib/sce/list-selector/discover-selector-items";
+import { formatTenantRoleDisplayLabel } from "@/lib/roles/tenant-role-display";
 import {
   communicationCategoryToSelectorCategory,
   selectorTypeToCommunicationSearchKind,
@@ -188,7 +189,7 @@ export async function loadCommunicationAudienceLabels(input: {
     input.roleIds.length
       ? prisma.role.findMany({
           where: { tenantId: input.tenantId, id: { in: [...input.roleIds] }, scope: "TENANT" },
-          select: { id: true, name: true },
+          select: { id: true, name: true, isArchived: true },
         })
       : Promise.resolve([]),
     input.targetGroupIds.length
@@ -208,7 +209,9 @@ export async function loadCommunicationAudienceLabels(input: {
   return {
     orgUnits: Object.fromEntries(orgUnits.map((r) => [r.id, r.name])),
     teams: Object.fromEntries(teams.map((r) => [r.id, r.shortName?.trim() || r.name])),
-    roles: Object.fromEntries(roles.map((r) => [r.id, r.name])),
+    roles: Object.fromEntries(
+      roles.map((r) => [r.id, formatTenantRoleDisplayLabel(r.name, r.isArchived)]),
+    ),
     targetGroups: Object.fromEntries(targetGroups.map((r) => [r.id, r.name])),
     persons: Object.fromEntries(
       persons.map((r) => [
