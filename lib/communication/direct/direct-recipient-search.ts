@@ -75,3 +75,59 @@ export async function searchDirectMessageRecipients(input: {
     orgUnitLabels: person.orgUnitMemberships.map((m) => m.orgUnit.name).filter(Boolean),
   }));
 }
+
+export async function listDirectMessageRecipientsInScope(input: {
+  tenantId: string;
+  senderUserId: string;
+  limit?: number;
+}): Promise<DirectMessageRecipientCandidate[]> {
+  const limit = Math.min(Math.max(input.limit ?? SEARCH_LIMIT, 1), 50);
+
+  const { scope } = await resolveSenderCommunicationScope({
+    tenantId: input.tenantId,
+    senderUserId: input.senderUserId,
+    context: { kind: "DIRECT", tenantId: input.tenantId },
+  });
+
+  const allowedIds = [...scope.allowedSubjectPersonIds];
+  if (allowedIds.length === 0) return [];
+
+  const persons = await prisma.person.findMany({
+    where: {
+      tenantId: input.tenantId,
+      isActive: true,
+      id: { in: allowedIds },
+    },
+    take: limit,
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    select: {
+      id: true,
+      userId: true,
+      firstName: true,
+      lastName: true,
+      displayName: true,
+      email: true,
+      trainerTeamMembers: {
+        where: { status: "ACTIVE", teamSeason: { status: "ACTIVE" } },
+        take: 3,
+        select: { teamSeason: { select: { team: { select: { name: true } } } } },
+      },
+      orgUnitMemberships: {
+        where: { status: "ACTIVE" },
+        take: 3,
+        select: { orgUnit: { select: { name: true } } },
+      },
+    },
+  });
+
+  return persons.map((person) => ({
+    personId: person.id,
+    userId: person.userId,
+    displayName: formatPersonDisplayName(person),
+    email: person.email,
+    teamLabels: person.trainerTeamMembers
+      .map((m) => m.teamSeason.team.name)
+      .filter(Boolean),
+    orgUnitLabels: person.orgUnitMemberships.map((m) => m.orgUnit.name).filter(Boolean),
+  }));
+}
