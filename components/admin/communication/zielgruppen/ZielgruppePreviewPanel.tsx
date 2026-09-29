@@ -203,7 +203,7 @@ export default function ZielgruppePreviewPanel({
 
         {state === "empty-def" ? (
           <p className="text-sm text-[var(--muted)]">
-            Füge Regeln oder Empfänger hinzu, um die Vorschau zu sehen.
+            Füge eine Auswahl hinzu, um die Zielgruppe zu sehen.
           </p>
         ) : null}
 

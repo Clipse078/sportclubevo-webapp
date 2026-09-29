@@ -190,11 +190,8 @@ export default function ZielgruppeManagementForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-1 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--background)]/95 px-1 py-3 backdrop-blur-sm">
-        <p className="text-sm text-[var(--text-2)]">
-          Bestimme, wer zu dieser Zielgruppe gehört.
-        </p>
-        {canManage ? (
+      {canManage ? (
+        <div className="hidden justify-end lg:flex">
           <button
             type="submit"
             disabled={loading || readOnly}
@@ -204,8 +201,8 @@ export default function ZielgruppeManagementForm({
             {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
             {loading ? "Speichern…" : "Zielgruppe speichern"}
           </button>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
       <section
         className="rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4 sm:p-5"

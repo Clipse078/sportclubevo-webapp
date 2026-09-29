@@ -1,14 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { MinusCircle, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Building2, MinusCircle, Plus, Trash2, User, UserCircle2, Users, Mail } from "lucide-react";
 import type { ZielgruppeEditorDefinition } from "@/lib/communication/zielgruppen/editor-model";
 import { EMPTY_ZIELGRUPPE_EDITOR_DEFINITION } from "@/lib/communication/zielgruppen/editor-model";
 import {
   addExcludeRule,
   addIncludeRule,
   compositionModeHelp,
-  compositionModeLabel,
   compositionModeShortHint,
   definitionToVisualRules,
   removeExcludeRule,
@@ -29,7 +28,7 @@ import CommunicationAudienceSelector, {
   type CommunicationAudienceSelectorFeatures,
 } from "@/components/admin/communication/audience/CommunicationAudienceSelector";
 import ZielgruppeBulkEmailDialog from "@/components/admin/communication/zielgruppen/ZielgruppeBulkEmailDialog";
-import { useDesktopLayout } from "@/lib/ui/use-desktop-layout";
+import type { CommunicationAudienceDiscoverPick } from "@/components/admin/communication/audience/CommunicationAudienceSelector";
 
 type KnownLabels = {
   orgUnits: Record<string, string>;
@@ -90,6 +89,14 @@ function labelForId(
   return labels.persons[id] ?? "…";
 }
 
+function RuleKindIcon({ typeLabel }: { typeLabel: string }) {
+  if (typeLabel.includes("Organisation")) return <Building2 className="h-5 w-5" aria-hidden="true" />;
+  if (typeLabel === "Team") return <Users className="h-5 w-5" aria-hidden="true" />;
+  if (typeLabel === "Rolle") return <UserCircle2 className="h-5 w-5" aria-hidden="true" />;
+  if (typeLabel.includes("Extern")) return <Mail className="h-5 w-5" aria-hidden="true" />;
+  return <User className="h-5 w-5" aria-hidden="true" />;
+}
+
 function VisualRuleRow({
   typeLabel,
   valueLabel,
@@ -109,22 +116,30 @@ function VisualRuleRow({
     <div
       className={`flex flex-col gap-2 rounded-xl border p-3 sm:flex-row sm:items-center sm:gap-3 ${
         tone === "exclude"
-          ? "border-rose-200/80 bg-rose-50/40 dark:border-rose-900/40 dark:bg-rose-950/20"
+          ? "border-[var(--border)] bg-[var(--surface-2)]/80"
           : "border-[var(--border)] bg-[var(--surface-1)]"
       }`}
       data-testid={testId}
     >
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-        {tone === "exclude" ? (
-          <MinusCircle className="h-4 w-4 shrink-0 text-rose-600" aria-hidden="true" />
-        ) : null}
-        <span className="font-medium text-[var(--muted)]">{typeLabel}</span>
-        <span className="text-[var(--muted)]" aria-hidden="true">
-          ist
+      <div className="flex min-w-0 flex-1 items-center gap-3 text-sm">
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+            tone === "exclude"
+              ? "bg-[var(--surface-3)] text-[var(--muted)]"
+              : "bg-[var(--sce-primary)]/10 text-[var(--sce-primary)]"
+          }`}
+          aria-hidden="true"
+        >
+          {tone === "exclude" ? (
+            <MinusCircle className="h-5 w-5" />
+          ) : (
+            <RuleKindIcon typeLabel={typeLabel} />
+          )}
         </span>
-        <span className="rounded-md bg-[var(--surface-2)] px-2.5 py-1 font-medium text-[var(--foreground)]">
-          {valueLabel}
-        </span>
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-[var(--muted)]">{typeLabel}</p>
+          <p className="truncate font-semibold text-[var(--foreground)]">{valueLabel}</p>
+        </div>
       </div>
       <button
         type="button"
@@ -151,15 +166,16 @@ function CompositionSegmentedControl({
 }) {
   return (
     <div className="space-y-2">
+      <p className="text-sm font-medium text-[var(--foreground)]">Eine Person muss …</p>
       <div
-        className="inline-flex w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-1 sm:w-auto"
+        className="inline-flex w-full flex-col gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-1 sm:w-auto sm:flex-row"
         role="group"
-        aria-label="Bedingungen kombinieren"
+        aria-label="Kriterienlogik"
       >
         {(
           [
-            ["INTERSECTION", "Alle Bedingungen", "UND"],
-            ["UNION", "Mindestens eine", "ODER"],
+            ["INTERSECTION", "alle Kriterien erfüllen", "UND"],
+            ["UNION", "mindestens ein Kriterium erfüllen", "ODER"],
           ] as const
         ).map(([mode, label, hint]) => {
           const selected = value === mode;
@@ -169,7 +185,7 @@ function CompositionSegmentedControl({
               type="button"
               disabled={disabled}
               aria-pressed={selected}
-              className={`min-h-10 flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--blue)] sm:flex-none sm:px-4 ${
+              className={`min-h-10 flex-1 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--blue)] sm:px-4 ${
                 selected
                   ? "bg-[var(--sce-primary)] text-white shadow-sm"
                   : "text-[var(--foreground)] hover:bg-[var(--surface-1)]"
@@ -178,7 +194,9 @@ function CompositionSegmentedControl({
               data-testid={`zielgruppe-composition-${mode.toLowerCase()}`}
             >
               {label}
-              <span className="ml-1.5 text-xs font-normal opacity-80">({hint})</span>
+              <span className="mt-0.5 block text-xs font-normal opacity-80 sm:mt-0 sm:inline sm:ml-1">
+                · {hint}
+              </span>
             </button>
           );
         })}
@@ -195,7 +213,7 @@ function DiscoverAddButton({
   disabled,
   features,
   selection,
-  onPick,
+  onConfirmBatch,
   dialogTitle,
   dialogDescription,
   testId,
@@ -204,18 +222,12 @@ function DiscoverAddButton({
   disabled?: boolean;
   features: CommunicationAudienceSelectorFeatures;
   selection: ReturnType<typeof zielgruppeDynamicIncludeAudienceSelection>;
-  onPick: (
-    kind: "team" | "orgUnit" | "role" | "person" | "external" | "targetGroup",
-    id: string,
-    label: string,
-  ) => void;
+  onConfirmBatch: (picks: CommunicationAudienceDiscoverPick[]) => void;
   dialogTitle: string;
   dialogDescription: string;
   testId: string;
 }) {
-  const anchorRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
-  const useDialog = !useDesktopLayout();
   const enabledFeatures = {
     wholeOrganisation: false,
     orgUnits: features.orgUnits ?? false,
@@ -229,12 +241,12 @@ function DiscoverAddButton({
   return (
     <>
       <button
-        ref={anchorRef}
         type="button"
         disabled={disabled}
-        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-[var(--sce-primary)] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--blue)] sm:w-auto"
+        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-[var(--surface-1)] px-4 py-2.5 text-sm font-semibold text-[var(--sce-primary)] hover:bg-[var(--surface-2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--blue)] sm:w-auto"
         onClick={() => setOpen(true)}
         data-testid={testId}
+        aria-haspopup="dialog"
       >
         <Plus className="h-4 w-4" aria-hidden="true" />
         {label}
@@ -246,9 +258,9 @@ function DiscoverAddButton({
         disabled={disabled}
         enabledFeatures={enabledFeatures}
         selection={selection}
-        onPick={onPick}
-        anchorRef={anchorRef}
-        useDialog={useDialog}
+        onPick={() => {}}
+        batchConfirm
+        onConfirmBatch={onConfirmBatch}
         dialogTitle={dialogTitle}
         dialogDescription={dialogDescription}
       />
@@ -318,7 +330,7 @@ export default function ZielgruppeDefinitionEditor({
         <div>
           <h3 className="text-base font-semibold text-[var(--foreground)]">Automatisch einschliessen</h3>
           <p className="mt-1 text-sm text-[var(--text-2)]">
-            Mitglieder werden automatisch anhand dieser Regeln hinzugefügt.
+            Mitglieder werden automatisch hinzugefügt, wenn sie diese Kriterien erfüllen.
           </p>
         </div>
 
@@ -334,7 +346,7 @@ export default function ZielgruppeDefinitionEditor({
           <span className="min-w-0">
             <span className="block text-sm font-semibold text-[var(--foreground)]">Ganze Organisation</span>
             <span id="zg-whole-org-hint" className="mt-0.5 block text-xs text-[var(--muted)]">
-              Alle Personen im Verein — dynamisch zur Versandzeit.
+              Alle aktuellen Vereinsmitglieder werden dynamisch berücksichtigt.
             </span>
           </span>
         </label>
@@ -352,7 +364,7 @@ export default function ZielgruppeDefinitionEditor({
                 <div key={rule.id} className="space-y-2">
                   {index > 0 ? (
                     <p
-                      className="text-center text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"
+                      className="py-1 text-center text-xs font-medium text-[var(--muted)]"
                       aria-hidden="true"
                     >
                       {compositionModeShortHint(value.compositionMode)}
@@ -370,24 +382,28 @@ export default function ZielgruppeDefinitionEditor({
             </div>
 
             <DiscoverAddButton
-              label="Bedingung hinzufügen"
+              label="+ Bedingung hinzufügen"
               disabled={disabled}
               features={DYNAMIC_FEATURES}
               selection={zielgruppeDynamicIncludeAudienceSelection(value)}
-              dialogTitle="Bedingung hinzufügen"
-              dialogDescription="Organisationseinheit, Team oder Rolle wählen."
+              dialogTitle="Auswahl hinzufügen"
+              dialogDescription="Wähle Teams, Organisationseinheiten oder Rollen für diese Zielgruppe."
               testId="zielgruppe-add-condition"
-              onPick={(kind, id, displayLabel) => {
-                if (kind === "orgUnit") {
-                  rememberLabel("orgUnit", id, displayLabel);
-                  onChange(addIncludeRule(value, "orgUnit", id));
-                } else if (kind === "team") {
-                  rememberLabel("team", id, displayLabel);
-                  onChange(addIncludeRule(value, "team", id));
-                } else if (kind === "role") {
-                  rememberLabel("role", id, displayLabel);
-                  onChange(addIncludeRule(value, "role", id));
+              onConfirmBatch={(picks) => {
+                let next = value;
+                for (const pick of picks) {
+                  if (pick.kind === "orgUnit") {
+                    rememberLabel("orgUnit", pick.id, pick.label);
+                    next = addIncludeRule(next, "orgUnit", pick.id);
+                  } else if (pick.kind === "team") {
+                    rememberLabel("team", pick.id, pick.label);
+                    next = addIncludeRule(next, "team", pick.id);
+                  } else if (pick.kind === "role") {
+                    rememberLabel("role", pick.id, pick.label);
+                    next = addIncludeRule(next, "role", pick.id);
+                  }
                 }
+                onChange(next);
               }}
             />
           </>
@@ -397,7 +413,9 @@ export default function ZielgruppeDefinitionEditor({
       <section className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface-1)] p-4 sm:p-5">
         <div>
           <h3 className="text-base font-semibold text-[var(--foreground)]">Direkt hinzufügen</h3>
-          <p className="mt-1 text-sm text-[var(--text-2)]">Einzelne Empfänger zusätzlich aufnehmen.</p>
+          <p className="mt-1 text-sm text-[var(--text-2)]">
+            Einzelne Empfänger werden unabhängig von den automatischen Regeln aufgenommen.
+          </p>
         </div>
 
         <CommunicationAudienceSelector
@@ -410,6 +428,9 @@ export default function ZielgruppeDefinitionEditor({
           disabled={disabled}
           compact
           singleAddTrigger
+          batchDiscoverConfirm
+          discoverDialogTitle="Empfänger hinzufügen"
+          discoverDialogDescription="Füge einzelne Personen oder externe Kontakte direkt hinzu."
           showInlinePreview={false}
         />
 
@@ -450,13 +471,11 @@ export default function ZielgruppeDefinitionEditor({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h3 className="text-base font-semibold text-[var(--foreground)]">Ausschliessen</h3>
-            {!hasExclusions ? (
-              <p className="mt-1 text-sm text-[var(--muted)]">Keine Ausschlüsse</p>
-            ) : (
-              <p className="mt-1 text-sm text-[var(--text-2)]">
-                Immer ausgeschlossen — auch bei erfüllten Einschluss-Regeln.
-              </p>
-            )}
+            <p className="mt-1 text-sm text-[var(--text-2)]">
+              {hasExclusions
+                ? "Diese Personen oder Gruppen werden immer ausgeschlossen."
+                : "Diese Personen oder Gruppen werden immer ausgeschlossen."}
+            </p>
           </div>
         </div>
 
@@ -477,30 +496,34 @@ export default function ZielgruppeDefinitionEditor({
         ) : null}
 
         <DiscoverAddButton
-          label="Ausschluss hinzufügen"
+          label="+ Ausschluss hinzufügen"
           disabled={disabled}
           features={EXCLUDE_FEATURES}
           selection={zielgruppeExcludeAudienceSelection(value)}
           dialogTitle="Ausschluss hinzufügen"
-          dialogDescription="Personen oder Strukturen dauerhaft von dieser Zielgruppe ausschliessen."
+          dialogDescription="Wähle Personen oder Gruppen, die nicht zu dieser Zielgruppe gehören sollen."
           testId="zielgruppe-add-exclusion"
-          onPick={(kind, id, displayLabel) => {
-            if (kind === "orgUnit") {
-              rememberLabel("excludeOrgUnit", id, displayLabel);
-              onChange(addExcludeRule(value, "excludeOrgUnit", id));
-            } else if (kind === "team") {
-              rememberLabel("excludeTeam", id, displayLabel);
-              onChange(addExcludeRule(value, "excludeTeam", id));
-            } else if (kind === "role") {
-              rememberLabel("excludeRole", id, displayLabel);
-              onChange(addExcludeRule(value, "excludeRole", id));
-            } else if (kind === "person") {
-              rememberLabel("excludePerson", id, displayLabel);
-              onChange(addExcludeRule(value, "excludePerson", id));
-            } else if (kind === "external") {
-              rememberLabel("excludeExternalContact", id, displayLabel);
-              onChange(addExcludeRule(value, "excludeExternalContact", id));
+          onConfirmBatch={(picks) => {
+            let next = value;
+            for (const pick of picks) {
+              if (pick.kind === "orgUnit") {
+                rememberLabel("excludeOrgUnit", pick.id, pick.label);
+                next = addExcludeRule(next, "excludeOrgUnit", pick.id);
+              } else if (pick.kind === "team") {
+                rememberLabel("excludeTeam", pick.id, pick.label);
+                next = addExcludeRule(next, "excludeTeam", pick.id);
+              } else if (pick.kind === "role") {
+                rememberLabel("excludeRole", pick.id, pick.label);
+                next = addExcludeRule(next, "excludeRole", pick.id);
+              } else if (pick.kind === "person") {
+                rememberLabel("excludePerson", pick.id, pick.label);
+                next = addExcludeRule(next, "excludePerson", pick.id);
+              } else if (pick.kind === "external") {
+                rememberLabel("excludeExternalContact", pick.id, pick.label);
+                next = addExcludeRule(next, "excludeExternalContact", pick.id);
+              }
             }
+            onChange(next);
           }}
         />
       </section>

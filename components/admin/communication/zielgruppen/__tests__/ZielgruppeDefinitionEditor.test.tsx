@@ -27,7 +27,7 @@ describe("ZielgruppeDefinitionEditor", () => {
     expect(screen.getByText(/Automatisch einschliessen/i)).toBeInTheDocument();
     expect(screen.getByText(/Direkt hinzufügen/i)).toBeInTheDocument();
     expect(screen.getByText(/Ausschliessen/i)).toBeInTheDocument();
-    expect(screen.getByText(/Keine Ausschlüsse/i)).toBeInTheDocument();
+    expect(screen.getByText(/immer ausgeschlossen/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Ganze Organisation/i)).toBeInTheDocument();
     expect(screen.getByTestId("zielgruppe-composition-union")).toBeInTheDocument();
     expect(screen.getByTestId("zielgruppe-add-condition")).toBeInTheDocument();
