@@ -3,11 +3,29 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
-import { searchDirectMessageRecipients } from "@/lib/communication/direct/direct-recipient-search";
+import {
+  listDirectMessageRecipientsInScope,
+  searchDirectMessageRecipients,
+} from "@/lib/communication/direct/direct-recipient-search";
 import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
 
 const DEFAULT_LIMIT = 20;
 const MIN_QUERY_LENGTH = 2;
+const BROWSE_LIMIT = 12;
+
+export type CommunicationAudienceDiscoverCategory =
+  | "all"
+  | "person"
+  | "team"
+  | "orgUnit"
+  | "role"
+  | "targetGroup";
+
+export type CommunicationAudienceDiscoverGroup = {
+  kind: CommunicationAudienceSearchKind;
+  heading: string;
+  options: Array<{ id: string; label: string; description?: string | null }>;
+};
 
 export type CommunicationAudienceSearchKind =
   | "person"
@@ -131,6 +149,165 @@ export async function searchCommunicationAudienceTargets(input: {
     label: row.name,
     description: row.description?.trim() || null,
   }));
+}
+
+const GROUP_HEADING: Record<CommunicationAudienceSearchKind, string> = {
+  person: "Personen",
+  team: "Teams",
+  orgUnit: "Organisation",
+  role: "Rollen",
+  targetGroup: "Zielgruppen",
+};
+
+function kindsForCategory(
+  category: CommunicationAudienceDiscoverCategory,
+): CommunicationAudienceSearchKind[] {
+  if (category === "all") {
+    return ["person", "team", "orgUnit", "role", "targetGroup"];
+  }
+  return [category];
+}
+
+async function browseCommunicationAudienceTargets(input: {
+  tenantId: string;
+  senderUserId: string;
+  context: CommunicationContextRef;
+  kind: CommunicationAudienceSearchKind;
+  limit?: number;
+}): Promise<Array<{ id: string; label: string; description?: string | null }>> {
+  const limit = Math.min(Math.max(input.limit ?? BROWSE_LIMIT, 1), 50);
+
+  if (input.kind === "person") {
+    if (input.context.kind !== "DIRECT") {
+      const rows = await prisma.person.findMany({
+        where: { tenantId: input.tenantId, isActive: true },
+        select: { id: true, firstName: true, lastName: true, displayName: true, email: true },
+        orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+        take: limit,
+      });
+      return rows.map((row) => ({
+        id: row.id,
+        label: row.displayName?.trim() || `${row.firstName} ${row.lastName}`.trim(),
+        description: row.email?.trim() || null,
+      }));
+    }
+    const rows = await listDirectMessageRecipientsInScope({
+      tenantId: input.tenantId,
+      senderUserId: input.senderUserId,
+      limit,
+    });
+    return rows.map((row) => ({
+      id: row.personId,
+      label: row.displayName,
+      description: [...row.teamLabels, ...row.orgUnitLabels].join(" · ") || row.email,
+    }));
+  }
+
+  if (input.kind === "team") {
+    const rows = await prisma.team.findMany({
+      where: { tenantId: input.tenantId },
+      select: { id: true, name: true, shortName: true },
+      orderBy: { name: "asc" },
+      take: limit,
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      label: row.name,
+      description: row.shortName?.trim() || null,
+    }));
+  }
+
+  if (input.kind === "orgUnit") {
+    const rows = await prisma.orgUnit.findMany({
+      where: { tenantId: input.tenantId },
+      select: { id: true, name: true, key: true },
+      orderBy: { name: "asc" },
+      take: limit,
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      label: row.name,
+      description: row.key,
+    }));
+  }
+
+  if (input.kind === "role") {
+    const rows = await prisma.role.findMany({
+      where: { tenantId: input.tenantId, scope: "TENANT" },
+      select: { id: true, name: true, key: true },
+      orderBy: { name: "asc" },
+      take: limit,
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      label: row.name,
+      description: row.key,
+    }));
+  }
+
+  const targetGroups = await prisma.targetGroup.findMany({
+    where: {
+      tenantId: input.tenantId,
+      status: { not: "ARCHIVED" },
+    },
+    select: { id: true, name: true, description: true },
+    orderBy: { name: "asc" },
+    take: limit,
+  });
+
+  return targetGroups.map((row) => ({
+    id: row.id,
+    label: row.name,
+    description: row.description?.trim() || null,
+  }));
+}
+
+export async function discoverCommunicationAudienceTargets(input: {
+  tenantId: string;
+  senderUserId: string;
+  context: CommunicationContextRef;
+  query: string;
+  category: CommunicationAudienceDiscoverCategory;
+  enabledKinds: readonly CommunicationAudienceSearchKind[];
+  limitPerGroup?: number;
+}): Promise<CommunicationAudienceDiscoverGroup[]> {
+  const term = normalizeTerm(input.query);
+  const kinds = kindsForCategory(input.category).filter((kind) =>
+    input.enabledKinds.includes(kind),
+  );
+  const limit = Math.min(Math.max(input.limitPerGroup ?? BROWSE_LIMIT, 1), 50);
+
+  const groups: CommunicationAudienceDiscoverGroup[] = [];
+
+  for (const kind of kinds) {
+    const options =
+      term.length >= MIN_QUERY_LENGTH
+        ? await searchCommunicationAudienceTargets({
+            tenantId: input.tenantId,
+            senderUserId: input.senderUserId,
+            context: input.context,
+            kind,
+            query: term,
+            limit,
+          })
+        : await browseCommunicationAudienceTargets({
+            tenantId: input.tenantId,
+            senderUserId: input.senderUserId,
+            context: input.context,
+            kind,
+            limit,
+          });
+
+    if (options.length > 0) {
+      groups.push({
+        kind,
+        heading: GROUP_HEADING[kind],
+        options,
+      });
+    }
+  }
+
+  return groups;
 }
 
 export async function loadCommunicationAudienceLabels(input: {

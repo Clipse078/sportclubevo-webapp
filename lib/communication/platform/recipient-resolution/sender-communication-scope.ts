@@ -5,6 +5,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { TENANT_ADMINISTRATION_PERMISSIONS } from "@/lib/permissions/tenant-administration";
 import type { SenderCommunicationScope } from "@/lib/communication/platform/authorization/communication-authorization";
 import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
 import {
@@ -95,7 +96,8 @@ export async function resolveSenderCommunicationScope(input: {
 
   if (input.context.kind === "DIRECT") {
     const canSendTeam = tenant.includes(PERMISSIONS.COMMUNICATION_TEAM_SEND);
-    if (canSendClub) {
+    const tenantAdmin = TENANT_ADMINISTRATION_PERMISSIONS.some((key) => tenant.includes(key));
+    if (canSendClub || tenantAdmin) {
       const all = await loadAllActiveTenantPersonIds(input.tenantId);
       return {
         scope: {

@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { PopoverContent } from "@/components/ui/Popover";
+import { Dialog } from "@/components/ui/Dialog";
+import { Button } from "@/components/ui/Button";
 import type { CommunicationAudienceSelection } from "@/lib/communication/audience/communication-audience-selection";
 import {
   buildCommunicationAudienceSpec,
@@ -13,6 +15,7 @@ import {
   summarizeCommunicationAudienceSelection,
   type CommunicationAudienceLabelMaps,
 } from "@/lib/communication/audience/human-audience-summary";
+import type { CommunicationAudienceDiscoverCategory } from "@/lib/communication/audience/communication-audience-search-service";
 
 export type CommunicationAudienceSelectorContext = "DIRECT" | "ORGANISATION" | "CAMPAIGN";
 
@@ -52,132 +55,20 @@ export type CommunicationAudiencePreviewState = {
 
 type SelectorKind = "team" | "orgUnit" | "role" | "targetGroup" | "person";
 
-const KIND_LABEL: Record<Exclude<SelectorKind, "person">, string> = {
-  team: "Team",
-  orgUnit: "Organisationseinheit",
-  role: "Rolle",
-  targetGroup: "Zielgruppe",
+type DiscoverGroup = {
+  kind: SelectorKind;
+  heading: string;
+  options: Array<{ id: string; label: string; description?: string | null }>;
 };
 
-const MIN_SEARCH = 2;
-
-function SelectorAddPanel({
-  kind,
-  context,
-  disabled,
-  onPick,
-}: {
-  kind: Exclude<SelectorKind, "person">;
-  context: CommunicationAudienceSelectorContext;
-  disabled?: boolean;
-  onPick: (id: string, label: string) => void;
-}) {
-  const anchorRef = useRef<HTMLButtonElement>(null);
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [options, setOptions] = useState<Array<{ id: string; label: string; description?: string | null }>>(
-    [],
-  );
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const term = query.trim();
-    if (term.length < MIN_SEARCH) {
-      setOptions([]);
-      return undefined;
-    }
-    const handle = window.setTimeout(async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(
-          `/api/communication/audience/search?context=${encodeURIComponent(context)}&kind=${kind}&q=${encodeURIComponent(term)}`,
-        );
-        const data = (await res.json()) as { options?: typeof options; error?: string };
-        if (!res.ok) {
-          setError(data.error ?? "Suche fehlgeschlagen");
-          setOptions([]);
-        } else {
-          setOptions(data.options ?? []);
-        }
-      } catch {
-        setError("Suche fehlgeschlagen");
-        setOptions([]);
-      } finally {
-        setLoading(false);
-      }
-    }, 250);
-    return () => window.clearTimeout(handle);
-  }, [context, kind, open, query]);
-
-  return (
-    <div className="relative inline-block">
-      <button
-        ref={anchorRef}
-        type="button"
-        disabled={disabled}
-        className="inline-flex min-h-10 items-center gap-1 rounded-md border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        data-testid={`communication-audience-add-${kind}`}
-      >
-        <Plus className="h-4 w-4" aria-hidden="true" />
-        {KIND_LABEL[kind]}
-      </button>
-      <PopoverContent
-        open={open}
-        onOpenChange={setOpen}
-        anchorRef={anchorRef}
-        matchAnchorWidth={false}
-        maxHeight={320}
-        className="w-[min(100vw-2rem,20rem)] p-2"
-        role="dialog"
-        aria-label={`${KIND_LABEL[kind]} suchen`}
-      >
-        <input
-          className="fca-input mb-2 w-full text-sm"
-          placeholder="Suchen…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          data-testid={`communication-audience-search-${kind}`}
-          aria-label={`${KIND_LABEL[kind]} suchen`}
-        />
-        {error ? (
-          <p className="text-xs text-red-600" role="alert">
-            {error}
-          </p>
-        ) : null}
-        {loading ? (
-          <p className="text-xs text-[var(--muted)]" aria-live="polite">
-            Suche…
-          </p>
-        ) : null}
-        <ul className="max-h-52 overflow-y-auto" role="listbox">
-          {options.map((option) => (
-            <li key={option.id}>
-              <button
-                type="button"
-                className="block w-full rounded px-2 py-2 text-left text-sm hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--sce-primary)]"
-                onClick={() => {
-                  onPick(option.id, option.label);
-                  setOpen(false);
-                  setQuery("");
-                }}
-              >
-                <span className="font-medium">{option.label}</span>
-                {option.description ? (
-                  <span className="mt-0.5 block text-xs text-[var(--text-2)]">{option.description}</span>
-                ) : null}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </PopoverContent>
-    </div>
-  );
-}
+const CATEGORY_TABS: { id: CommunicationAudienceDiscoverCategory; label: string }[] = [
+  { id: "all", label: "Alle" },
+  { id: "person", label: "Personen" },
+  { id: "team", label: "Teams" },
+  { id: "orgUnit", label: "Organisation" },
+  { id: "role", label: "Rollen" },
+  { id: "targetGroup", label: "Zielgruppen" },
+];
 
 function TokenChip({
   typeLabel,
@@ -214,6 +105,248 @@ function TokenChip({
   );
 }
 
+function useDesktopLayout(): boolean {
+  const [desktop, setDesktop] = useState(true);
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return undefined;
+    const mq = window.matchMedia("(min-width: 768px)");
+    const update = () => setDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  return desktop;
+}
+
+function UnifiedAudienceDiscoverPanel({
+  open,
+  onOpenChange,
+  context,
+  disabled,
+  enabledFeatures,
+  selection,
+  onPick,
+  anchorRef,
+  useDialog,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  context: CommunicationAudienceSelectorContext;
+  disabled?: boolean;
+  enabledFeatures: Required<CommunicationAudienceSelectorFeatures>;
+  selection: CommunicationAudienceSelection;
+  onPick: (kind: SelectorKind, id: string, label: string) => void;
+  anchorRef: React.RefObject<HTMLButtonElement | null>;
+  useDialog: boolean;
+}) {
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<CommunicationAudienceDiscoverCategory>("all");
+  const [groups, setGroups] = useState<DiscoverGroup[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [noAccess, setNoAccess] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  const visibleTabs = useMemo(
+    () =>
+      CATEGORY_TABS.filter((tab) => {
+        if (tab.id === "all") return true;
+        if (tab.id === "person") return enabledFeatures.persons;
+        if (tab.id === "team") return enabledFeatures.teams;
+        if (tab.id === "orgUnit") return enabledFeatures.orgUnits;
+        if (tab.id === "role") return enabledFeatures.roles;
+        if (tab.id === "targetGroup") return enabledFeatures.targetGroups;
+        return false;
+      }),
+    [enabledFeatures],
+  );
+
+  const loadDiscover = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/communication/audience/discover?context=${encodeURIComponent(context)}&category=${encodeURIComponent(category)}&q=${encodeURIComponent(query.trim())}`,
+      );
+      const data = (await res.json()) as {
+        groups?: DiscoverGroup[];
+        noAccess?: boolean;
+        error?: string;
+      };
+      if (!res.ok) {
+        setGroups([]);
+        setError(data.error ?? "Empfänger konnten nicht geladen werden.");
+        return;
+      }
+      setNoAccess(Boolean(data.noAccess));
+      setGroups(data.groups ?? []);
+    } catch {
+      setGroups([]);
+      setError("Empfänger konnten nicht geladen werden.");
+    } finally {
+      setLoading(false);
+    }
+  }, [category, context, query]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const handle = window.setTimeout(() => {
+      void loadDiscover();
+    }, query.trim().length >= 2 ? 250 : 0);
+    return () => window.clearTimeout(handle);
+  }, [loadDiscover, open, query]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const handle = window.setTimeout(() => searchRef.current?.focus(), 50);
+    return () => window.clearTimeout(handle);
+  }, [open]);
+
+  function isSelected(kind: SelectorKind, id: string): boolean {
+    if (kind === "person") return selection.personIds.includes(id);
+    if (kind === "team") return selection.teamIds.includes(id);
+    if (kind === "orgUnit") return selection.orgUnitIds.includes(id);
+    if (kind === "role") return selection.roleIds.includes(id);
+    return selection.targetGroupIds.includes(id);
+  }
+
+  const panelBody = (
+    <div className="flex max-h-[min(70vh,28rem)] flex-col gap-3 p-1">
+      <input
+        ref={searchRef}
+        className="fca-input w-full text-sm"
+        placeholder="Personen, Teams, Rollen oder Zielgruppen suchen …"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        data-testid="communication-audience-unified-search"
+        aria-label="Empfänger suchen"
+        disabled={disabled}
+      />
+      <div className="flex flex-wrap gap-1" role="tablist" aria-label="Empfängerkategorien">
+        {visibleTabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={category === tab.id}
+            className={`rounded-full px-2.5 py-1 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] ${
+              category === tab.id
+                ? "bg-[var(--sce-primary)] text-white"
+                : "bg-[var(--surface-2)] text-[var(--text-2)]"
+            }`}
+            onClick={() => setCategory(tab.id)}
+            data-testid={`communication-audience-category-${tab.id}`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto" aria-live="polite">
+        {loading ? (
+          <p className="text-sm text-[var(--text-2)]" data-testid="communication-audience-loading">
+            Empfänger werden geladen …
+          </p>
+        ) : null}
+        {error ? (
+          <div className="space-y-2">
+            <p className="text-sm text-red-600" role="alert" data-testid="communication-audience-error">
+              {error}
+            </p>
+            <Button type="button" variant="secondary" onClick={() => void loadDiscover()}>
+              Erneut versuchen
+            </Button>
+          </div>
+        ) : null}
+        {!loading && !error && noAccess ? (
+          <p className="text-sm text-[var(--text-2)]" data-testid="communication-audience-no-access">
+            Keine verfügbaren Empfänger.
+          </p>
+        ) : null}
+        {!loading && !error && !noAccess && groups.length === 0 ? (
+          <p className="text-sm text-[var(--text-2)]" data-testid="communication-audience-empty-search">
+            Keine passenden Empfänger gefunden.
+          </p>
+        ) : null}
+        {!loading && !error
+          ? groups.map((group) => (
+              <div key={group.kind} className="mb-3">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  {group.heading}
+                </p>
+                <ul role="listbox" aria-label={group.heading}>
+                  {group.options.map((option) => {
+                    const selected = isSelected(group.kind, option.id);
+                    return (
+                      <li key={`${group.kind}-${option.id}`}>
+                        <button
+                          type="button"
+                          role="option"
+                          aria-selected={selected}
+                          disabled={disabled || selected}
+                          className="block w-full rounded px-2 py-2 text-left text-sm hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--sce-primary)] disabled:opacity-60"
+                          data-testid={`communication-audience-option-${group.kind}-${option.id}`}
+                          onClick={() => onPick(group.kind, option.id, option.label)}
+                        >
+                          <span className="font-medium">{option.label}</span>
+                          {option.description ? (
+                            <span className="mt-0.5 block text-xs text-[var(--text-2)]">
+                              {option.description}
+                            </span>
+                          ) : null}
+                          {selected ? (
+                            <span className="mt-0.5 block text-xs text-[var(--muted)]">Bereits ausgewählt</span>
+                          ) : null}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))
+          : null}
+      </div>
+
+      <div className="flex justify-end border-t border-[var(--border)] pt-2">
+        <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+          Fertig
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (useDialog) {
+    return (
+      <Dialog
+        open={open}
+        onClose={() => onOpenChange(false)}
+        title="Empfänger hinzufügen"
+        description="Personen, Teams, Rollen oder Zielgruppen auswählen."
+        size="lg"
+      >
+        {panelBody}
+      </Dialog>
+    );
+  }
+
+  return (
+    <PopoverContent
+      open={open}
+      onOpenChange={onOpenChange}
+      anchorRef={anchorRef}
+      matchAnchorWidth
+      maxHeight={480}
+      className="w-[min(100vw-2rem,28rem)] p-2"
+      role="dialog"
+      aria-label="Empfänger hinzufügen"
+    >
+      {panelBody}
+    </PopoverContent>
+  );
+}
+
 export default function CommunicationAudienceSelector({
   value,
   onChange,
@@ -240,6 +373,13 @@ export default function CommunicationAudienceSelector({
   const [preview, setPreview] = useState<CommunicationAudiencePreviewState | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [recipientDetailOpen, setRecipientDetailOpen] = useState(false);
+  const [recipientDetail, setRecipientDetail] = useState<
+    { personId: string; displayName: string }[] | null
+  >(null);
+  const [discoverOpen, setDiscoverOpen] = useState(false);
+  const discoverAnchorRef = useRef<HTMLButtonElement>(null);
+  const useDialog = !useDesktopLayout();
 
   const enabledFeatures = useMemo(
     () => ({
@@ -253,7 +393,20 @@ export default function CommunicationAudienceSelector({
     [capabilities, features],
   );
 
+  const selectorFeaturesAvailable = useMemo(
+    () =>
+      enabledFeatures.persons ||
+      enabledFeatures.teams ||
+      enabledFeatures.orgUnits ||
+      enabledFeatures.roles ||
+      enabledFeatures.targetGroups,
+    [enabledFeatures],
+  );
+
+  const capabilitiesLoaded = capabilities !== null || features !== undefined;
+
   useEffect(() => {
+    if (features) return undefined;
     async function loadCapabilities() {
       try {
         const res = await fetch(
@@ -267,7 +420,7 @@ export default function CommunicationAudienceSelector({
       }
     }
     void loadCapabilities();
-  }, [context]);
+  }, [context, features]);
 
   const summary = useMemo(
     () => summarizeCommunicationAudienceSelection({ selection: value, labels }),
@@ -282,10 +435,18 @@ export default function CommunicationAudienceSelector({
   }, []);
 
   const hasSelection = !communicationAudienceSelectionIsEmpty(value);
+  const selectionCount =
+    value.orgUnitIds.length +
+    value.teamIds.length +
+    value.roleIds.length +
+    value.targetGroupIds.length +
+    value.personIds.length +
+    (value.wholeOrganisation ? 1 : 0);
 
   useEffect(() => {
     if (!hasSelection) {
       setPreview(null);
+      setRecipientDetail(null);
       onPreviewChange?.(null);
       return undefined;
     }
@@ -298,9 +459,17 @@ export default function CommunicationAudienceSelector({
         const res = await fetch("/api/communication/audience/preview", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ audienceSpec, context, kind: previewKind }),
+          body: JSON.stringify({
+            audienceSpec,
+            context,
+            kind: previewKind,
+            includeRecipientDetail: recipientDetailOpen,
+          }),
         });
-        const data = (await res.json()) as CommunicationAudiencePreviewState & { error?: string };
+        const data = (await res.json()) as CommunicationAudiencePreviewState & {
+          error?: string;
+          recipients?: { personId: string; displayName: string }[];
+        };
         if (cancelled) return;
         if (!res.ok) {
           setPreview(null);
@@ -318,6 +487,9 @@ export default function CommunicationAudienceSelector({
           };
           setPreview(next);
           onPreviewChange?.(next);
+          if (recipientDetailOpen && data.recipients) {
+            setRecipientDetail(data.recipients);
+          }
         }
       } catch {
         if (!cancelled) {
@@ -332,7 +504,7 @@ export default function CommunicationAudienceSelector({
       cancelled = true;
       window.clearTimeout(handle);
     };
-  }, [context, hasSelection, onPreviewChange, previewKind, value]);
+  }, [context, hasSelection, onPreviewChange, previewKind, recipientDetailOpen, value]);
 
   function setWholeOrganisation(enabled: boolean) {
     if (enabled) {
@@ -365,6 +537,31 @@ export default function CommunicationAudienceSelector({
     onChange({ ...value, personIds: [...value.personIds, id] });
   }
 
+  function handleDiscoverPick(kind: SelectorKind, id: string, label: string) {
+    if (kind === "person") {
+      addPerson(id, label);
+      return;
+    }
+    if (kind === "team") {
+      addStructural("teamIds", "teams", id, label);
+      return;
+    }
+    if (kind === "orgUnit") {
+      addStructural("orgUnitIds", "orgUnits", id, label);
+      return;
+    }
+    if (kind === "role") {
+      addStructural("roleIds", "roles", id, label);
+      return;
+    }
+    addStructural("targetGroupIds", "targetGroups", id, label);
+  }
+
+  function openDiscover() {
+    if (disabled || !selectorFeaturesAvailable) return;
+    setDiscoverOpen(true);
+  }
+
   return (
     <section className="space-y-4" data-testid="communication-audience-selector">
       <div>
@@ -393,120 +590,127 @@ export default function CommunicationAudienceSelector({
 
       {!value.wholeOrganisation ? (
         <>
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-              Organisation
+          {capabilitiesLoaded && !selectorFeaturesAvailable ? (
+            <p className="text-sm text-[var(--text-2)]" data-testid="communication-audience-no-access">
+              Keine verfügbaren Empfänger.
             </p>
-            <div className="flex flex-wrap gap-2">
-              {enabledFeatures.orgUnits ? (
-                <SelectorAddPanel
-                  kind="orgUnit"
-                  context={context}
-                  disabled={disabled}
-                  onPick={(id, label) => addStructural("orgUnitIds", "orgUnits", id, label)}
-                />
-              ) : null}
-              {enabledFeatures.teams ? (
-                <SelectorAddPanel
-                  kind="team"
-                  context={context}
-                  disabled={disabled}
-                  onPick={(id, label) => addStructural("teamIds", "teams", id, label)}
-                />
-              ) : null}
-              {enabledFeatures.targetGroups ? (
-                <SelectorAddPanel
-                  kind="targetGroup"
-                  context={context}
-                  disabled={disabled}
-                  onPick={(id, label) => addStructural("targetGroupIds", "targetGroups", id, label)}
-                />
-              ) : null}
-              {enabledFeatures.roles ? (
-                <SelectorAddPanel
-                  kind="role"
-                  context={context}
-                  disabled={disabled}
-                  onPick={(id, label) => addStructural("roleIds", "roles", id, label)}
-                />
+          ) : (
+            <div className="space-y-2">
+              <button
+                ref={discoverAnchorRef}
+                type="button"
+                disabled={disabled || !selectorFeaturesAvailable}
+                className="flex w-full min-h-11 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-left text-sm text-[var(--text-2)] hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                onClick={openDiscover}
+                data-testid="communication-audience-open-trigger"
+                aria-expanded={discoverOpen}
+                aria-haspopup="dialog"
+              >
+                <Search className="h-4 w-4 shrink-0 text-[var(--muted)]" aria-hidden="true" />
+                Personen, Teams oder Zielgruppen suchen
+              </button>
+              <button
+                type="button"
+                disabled={disabled || !selectorFeaturesAvailable}
+                className="inline-flex min-h-10 items-center gap-1 rounded-md border border-[var(--border)] px-3 py-2 text-sm font-medium hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                onClick={openDiscover}
+                data-testid="communication-audience-add-trigger"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Empfänger hinzufügen
+              </button>
+              <UnifiedAudienceDiscoverPanel
+                open={discoverOpen}
+                onOpenChange={setDiscoverOpen}
+                context={context}
+                disabled={disabled}
+                enabledFeatures={enabledFeatures}
+                selection={value}
+                onPick={handleDiscoverPick}
+                anchorRef={discoverAnchorRef}
+                useDialog={useDialog}
+              />
+            </div>
+          )}
+
+          {hasSelection ? (
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                Ausgewählt
+              </p>
+              <div className="flex flex-wrap gap-2" aria-label="Ausgewählte Empfänger">
+                {value.orgUnitIds.map((id) => (
+                  <TokenChip
+                    key={`org-${id}`}
+                    typeLabel="Organisationseinheit"
+                    valueLabel={labels.orgUnits[id] ?? id}
+                    disabled={disabled}
+                    testId={`communication-audience-token-org-${id}`}
+                    onRemove={() =>
+                      onChange({ ...value, orgUnitIds: value.orgUnitIds.filter((x) => x !== id) })
+                    }
+                  />
+                ))}
+                {value.teamIds.map((id) => (
+                  <TokenChip
+                    key={`team-${id}`}
+                    typeLabel="Team"
+                    valueLabel={labels.teams[id] ?? id}
+                    disabled={disabled}
+                    testId={`communication-audience-token-team-${id}`}
+                    onRemove={() =>
+                      onChange({ ...value, teamIds: value.teamIds.filter((x) => x !== id) })
+                    }
+                  />
+                ))}
+                {value.targetGroupIds.map((id) => (
+                  <TokenChip
+                    key={`tg-${id}`}
+                    typeLabel="Zielgruppe"
+                    valueLabel={labels.targetGroups[id] ?? id}
+                    disabled={disabled}
+                    testId={`communication-audience-token-target-group-${id}`}
+                    onRemove={() =>
+                      onChange({
+                        ...value,
+                        targetGroupIds: value.targetGroupIds.filter((x) => x !== id),
+                      })
+                    }
+                  />
+                ))}
+                {value.roleIds.map((id) => (
+                  <TokenChip
+                    key={`role-${id}`}
+                    typeLabel="Rolle"
+                    valueLabel={labels.roles[id] ?? id}
+                    disabled={disabled}
+                    testId={`communication-audience-token-role-${id}`}
+                    onRemove={() =>
+                      onChange({ ...value, roleIds: value.roleIds.filter((x) => x !== id) })
+                    }
+                  />
+                ))}
+                {value.personIds.map((id) => (
+                  <TokenChip
+                    key={`person-${id}`}
+                    typeLabel="Person"
+                    valueLabel={labels.persons[id] ?? id}
+                    disabled={disabled}
+                    testId={`communication-audience-token-person-${id}`}
+                    onRemove={() =>
+                      onChange({ ...value, personIds: value.personIds.filter((x) => x !== id) })
+                    }
+                  />
+                ))}
+              </div>
+              {selectionCount > 0 && preview ? (
+                <p className="mt-2 text-xs text-[var(--text-2)]" data-testid="communication-audience-selection-count">
+                  {selectionCount} Auswahl{selectionCount === 1 ? "" : "en"} · {preview.effective}{" "}
+                  aufgelöste Empfänger
+                </p>
               ) : null}
             </div>
-          </div>
-
-          {enabledFeatures.persons ? (
-            <PersonAddPanel
-              context={context}
-              disabled={disabled}
-              excludedIds={value.personIds}
-              onPick={addPerson}
-            />
           ) : null}
-
-          <div className="flex flex-wrap gap-2" aria-label="Ausgewählte Empfänger">
-            {value.orgUnitIds.map((id) => (
-              <TokenChip
-                key={`org-${id}`}
-                typeLabel="Organisationseinheit"
-                valueLabel={labels.orgUnits[id] ?? id}
-                disabled={disabled}
-                testId={`communication-audience-token-org-${id}`}
-                onRemove={() =>
-                  onChange({ ...value, orgUnitIds: value.orgUnitIds.filter((x) => x !== id) })
-                }
-              />
-            ))}
-            {value.teamIds.map((id) => (
-              <TokenChip
-                key={`team-${id}`}
-                typeLabel="Team"
-                valueLabel={labels.teams[id] ?? id}
-                disabled={disabled}
-                testId={`communication-audience-token-team-${id}`}
-                onRemove={() =>
-                  onChange({ ...value, teamIds: value.teamIds.filter((x) => x !== id) })
-                }
-              />
-            ))}
-            {value.targetGroupIds.map((id) => (
-              <TokenChip
-                key={`tg-${id}`}
-                typeLabel="Zielgruppe"
-                valueLabel={labels.targetGroups[id] ?? id}
-                disabled={disabled}
-                testId={`communication-audience-token-target-group-${id}`}
-                onRemove={() =>
-                  onChange({
-                    ...value,
-                    targetGroupIds: value.targetGroupIds.filter((x) => x !== id),
-                  })
-                }
-              />
-            ))}
-            {value.roleIds.map((id) => (
-              <TokenChip
-                key={`role-${id}`}
-                typeLabel="Rolle"
-                valueLabel={labels.roles[id] ?? id}
-                disabled={disabled}
-                testId={`communication-audience-token-role-${id}`}
-                onRemove={() =>
-                  onChange({ ...value, roleIds: value.roleIds.filter((x) => x !== id) })
-                }
-              />
-            ))}
-            {value.personIds.map((id) => (
-              <TokenChip
-                key={`person-${id}`}
-                typeLabel="Person"
-                valueLabel={labels.persons[id] ?? id}
-                disabled={disabled}
-                testId={`communication-audience-token-person-${id}`}
-                onRemove={() =>
-                  onChange({ ...value, personIds: value.personIds.filter((x) => x !== id) })
-                }
-              />
-            ))}
-          </div>
         </>
       ) : null}
 
@@ -545,6 +749,23 @@ export default function CommunicationAudienceSelector({
                   (aggregiert).
                 </p>
               ) : null}
+              {preview.effective > 0 ? (
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-[var(--sce-primary)] underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)]"
+                  data-testid="communication-audience-show-recipients"
+                  onClick={() => setRecipientDetailOpen((v) => !v)}
+                >
+                  {recipientDetailOpen ? "Empfänger ausblenden" : "Empfänger anzeigen"}
+                </button>
+              ) : null}
+              {recipientDetailOpen && recipientDetail && recipientDetail.length > 0 ? (
+                <ul className="mt-1 max-h-40 overflow-y-auto text-xs" data-testid="communication-audience-recipient-detail">
+                  {recipientDetail.map((r) => (
+                    <li key={r.personId}>{r.displayName}</li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -562,97 +783,7 @@ export default function CommunicationAudienceSelector({
           <span>Ich bestätige den Versand an eine sehr große Empfängergruppe.</span>
         </label>
       ) : null}
+
     </section>
-  );
-}
-
-function PersonAddPanel({
-  context,
-  disabled,
-  excludedIds,
-  onPick,
-}: {
-  context: CommunicationAudienceSelectorContext;
-  disabled?: boolean;
-  excludedIds: string[];
-  onPick: (id: string, label: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [options, setOptions] = useState<Array<{ id: string; label: string; description?: string | null }>>(
-    [],
-  );
-  const anchorRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const term = query.trim();
-    if (term.length < MIN_SEARCH) {
-      setOptions([]);
-      return undefined;
-    }
-    const handle = window.setTimeout(async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(
-          `/api/communication/audience/search?context=${encodeURIComponent(context)}&kind=person&q=${encodeURIComponent(term)}`,
-        );
-        const data = (await res.json()) as { options?: typeof options };
-        setOptions((data.options ?? []).filter((o) => !excludedIds.includes(o.id)));
-      } finally {
-        setLoading(false);
-      }
-    }, 250);
-    return () => window.clearTimeout(handle);
-  }, [context, excludedIds, open, query]);
-
-  return (
-    <div className="space-y-2">
-      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Personen</p>
-      <div className="relative inline-block">
-        <button
-          ref={anchorRef}
-          type="button"
-          disabled={disabled}
-          className="inline-flex min-h-10 items-center gap-1 rounded-md border border-[var(--border)] px-3 py-2 text-sm"
-          onClick={() => setOpen((v) => !v)}
-          data-testid="communication-audience-add-person"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Person
-        </button>
-        <PopoverContent open={open} onOpenChange={setOpen} anchorRef={anchorRef} className="w-[min(100vw-2rem,20rem)] p-2">
-          <input
-            className="fca-input mb-2 w-full text-sm"
-            placeholder="Name, Team oder E-Mail"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            data-testid="communication-audience-search-person"
-          />
-          {loading ? <p className="text-xs text-[var(--muted)]">Suche…</p> : null}
-          <ul className="max-h-52 overflow-y-auto">
-            {options.map((option) => (
-              <li key={option.id}>
-                <button
-                  type="button"
-                  className="block w-full px-2 py-2 text-left text-sm hover:bg-[var(--surface-2)]"
-                  onClick={() => {
-                    onPick(option.id, option.label);
-                    setOpen(false);
-                    setQuery("");
-                  }}
-                >
-                  {option.label}
-                  {option.description ? (
-                    <span className="block text-xs text-[var(--text-2)]">{option.description}</span>
-                  ) : null}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </PopoverContent>
-      </div>
-    </div>
   );
 }
