@@ -3,6 +3,10 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
+import {
+  formatTenantRoleDisplayLabel,
+  tenantRoleSelectorDiscoveryWhere,
+} from "@/lib/roles/tenant-role-display";
 import { REQUIREMENT_PERSON_SEARCH_MIN_CHARS } from "./person-search-constants";
 
 const DEFAULT_LIMIT = 20;
@@ -77,8 +81,7 @@ export async function searchRequirementAudienceRoles(
 
   const rows = await prisma.role.findMany({
     where: {
-      tenantId,
-      scope: "TENANT",
+      ...tenantRoleSelectorDiscoveryWhere(tenantId),
       OR: [{ name: { contains: term, mode: "insensitive" } }],
     },
     select: { id: true, name: true },
@@ -144,7 +147,7 @@ export async function loadRequirementAudienceLabels(input: {
     input.roleIds.length
       ? prisma.role.findMany({
           where: { tenantId: input.tenantId, id: { in: [...input.roleIds] }, scope: "TENANT" },
-          select: { id: true, name: true },
+          select: { id: true, name: true, isArchived: true },
         })
       : Promise.resolve([]),
     input.targetGroupIds.length
@@ -164,7 +167,10 @@ export async function loadRequirementAudienceLabels(input: {
       orgUnitId: row.id,
       label: row.name,
     })),
-    roles: roles.map((row) => ({ roleId: row.id, label: row.name })),
+    roles: roles.map((row) => ({
+      roleId: row.id,
+      label: formatTenantRoleDisplayLabel(row.name, row.isArchived),
+    })),
     targetGroups: targetGroups.map((row) => ({
       targetGroupId: row.id,
       label: row.name,

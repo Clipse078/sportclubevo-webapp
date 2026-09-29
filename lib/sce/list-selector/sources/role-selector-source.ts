@@ -12,6 +12,7 @@ import {
 } from "@/lib/sce/list-selector/source-pagination";
 import type { SceSelectorAuthorizationContext } from "@/lib/sce/list-selector/selector-authorization-context";
 import { enrichRequirementAudienceStructuralItems } from "@/lib/sce/list-selector/sources/requirement-audience-expansion-labels";
+import { tenantRoleSelectorDiscoveryWhere } from "@/lib/roles/tenant-role-display";
 
 async function maybeEnrichRequirementAudiencePage(
   tenantId: string,
@@ -41,7 +42,7 @@ export async function browseRoleSelectorItems(input: {
   const limit = Math.min(Math.max(input.limit ?? SCE_SELECTOR_DEFAULT_BROWSE_LIMIT, 1), 50);
   const offset = sceSelectorDecodeOffset(input.cursor);
   const rows = await prisma.role.findMany({
-    where: { tenantId: input.tenantId, scope: "TENANT" },
+    where: tenantRoleSelectorDiscoveryWhere(input.tenantId),
     select: { id: true, name: true, key: true },
     orderBy: { name: "asc" },
     skip: offset,
@@ -67,8 +68,7 @@ export async function searchRoleSelectorItems(input: {
   const offset = sceSelectorDecodeOffset(input.cursor);
   const rows = await prisma.role.findMany({
     where: {
-      tenantId: input.tenantId,
-      scope: "TENANT",
+      ...tenantRoleSelectorDiscoveryWhere(input.tenantId),
       name: { contains: term, mode: "insensitive" },
     },
     select: { id: true, name: true, key: true },
