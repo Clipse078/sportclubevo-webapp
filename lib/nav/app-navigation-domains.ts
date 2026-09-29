@@ -173,7 +173,7 @@ export const CLUB_NAV_ITEM_TO_DOMAIN: Record<string, AppNavigationDomainId> = {
   helfereinsaetze: "club",
   "trainer-staff": "club",
   communication: "communication",
-  workspace: "communication",
+  workspace: "club",
   aufgaben: "communication",
   website: "publishing",
   infoboard: "publishing",
@@ -268,7 +268,7 @@ export function buildNavigationDomainsFromSections(
 export const CLUB_DOMAIN_MAP_SUMMARY = {
   dashboard: ["dashboard"],
   planning: ["planung"],
-  communication: ["communication", "workspace", "aufgaben"],
+  communication: ["communication", "aufgaben"],
   club: [
     "organisation",
     "mitglieder",
@@ -282,6 +282,7 @@ export const CLUB_DOMAIN_MAP_SUMMARY = {
     "sponsoring",
     "formulare-freigaben",
     "vorfaelle-disziplin",
+    "workspace",
     "administration",
   ],
   publishing: ["website", "infoboard"],

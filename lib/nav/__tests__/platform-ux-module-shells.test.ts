@@ -20,7 +20,6 @@ const CANONICAL_FULL_ORDER = [
   "aufgaben",
   "helfereinsaetze",
   "communication",
-  "workspace",
   "website",
   "infoboard",
   "trainer-staff",
@@ -29,6 +28,7 @@ const CANONICAL_FULL_ORDER = [
   "material",
   "finanzen",
   "sponsoring",
+  "workspace",
   "formulare-freigaben",
   "vorfaelle-disziplin",
   "administration",
@@ -160,19 +160,18 @@ describe("PLATFORM-UX-01 — final sidebar order", () => {
     expect(labels).not.toContain("SYSTEM");
   });
 
-  it("places Dokumente before Website and Infoboard sections", () => {
+  it("places Dokumente in Governance (Club L1) rather than Tagesbetrieb/Kommunikation", () => {
     const tagesbetrieb = findSection("Tagesbetrieb");
-    const oeffentlich = findSection("Öffentliche Kanäle");
-    const dokumenteIdx = tagesbetrieb!.items.findIndex((i) => i.key === "workspace");
-    const websiteIdx = oeffentlich!.items.findIndex((i) => i.key === "website");
-    expect(dokumenteIdx).toBeGreaterThan(-1);
-    expect(websiteIdx).toBe(0);
+    const governance = findSection("Governance");
+    expect(tagesbetrieb!.items.some((i) => i.key === "workspace")).toBe(false);
+    expect(governance!.items.map((i) => i.key)[0]).toBe("workspace");
   });
 
   it("places governance modules before Administration", () => {
     const governance = findSection("Governance");
     const system = findSection("System");
     expect(governance!.items.map((i) => i.key)).toEqual([
+      "workspace",
       "formulare-freigaben",
       "vorfaelle-disziplin",
     ]);

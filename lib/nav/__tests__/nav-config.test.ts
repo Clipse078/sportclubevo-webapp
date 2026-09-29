@@ -214,7 +214,6 @@ describe("NAV_SECTIONS static structure", () => {
       "aufgaben",
       "helfereinsaetze",
       "communication",
-      "workspace",
     ]);
     expect(communication?.label).toBe("Kommunikation");
     expect(communication?.href).toBe("/dashboard/communication");

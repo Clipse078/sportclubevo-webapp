@@ -93,7 +93,7 @@ describe("SCE-VISUAL-03 global app navigation", () => {
       ["/dashboard/mitglieder", "club", "mitglieder"],
       ["/dashboard/registrations", "club", "anmeldungen"],
       ["/dashboard/aufgaben", "communication", "aufgaben"],
-      ["/dashboard/workspace", "communication", "workspace"],
+      ["/dashboard/workspace", "club", "workspace"],
       ["/dashboard/website/pages", "publishing", "website"],
       ["/dashboard/infoboard/preview", "publishing", "infoboard"],
       ["/dashboard/trainer-staff", "club", "trainer-staff"],
