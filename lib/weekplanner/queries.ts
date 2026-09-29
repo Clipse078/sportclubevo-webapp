@@ -388,25 +388,47 @@ function toWeekplannerResourceRefs(
   }));
 }
 
-async function findWeekplannerTrainingItems(
+type WeekplannerTrainingSessionsLoad = {
+  complete: (
+    overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
+    timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
+    tenantPresets: TenantDressingRoomOccupancyPresets,
+  ) => Promise<WeekplannerTrainingItem[]>;
+};
+
+/** Starts the week-bounded session read immediately so it can overlap prefetch I/O. */
+function startWeekplannerTrainingSessionsLoad(
   tenantId: string,
   days: readonly string[],
+): WeekplannerTrainingSessionsLoad {
+  if (days.length === 0) {
+    return { complete: async () => [] };
+  }
+
+  const dateFrom = new Date(`${days[0]}T00:00:00.000Z`);
+  const dateTo = new Date(`${days[days.length - 1]}T00:00:00.000Z`);
+  const sessionsPromise = listTrainingSessions(tenantId, { dateFrom, dateTo });
+
+  return {
+    complete: (overridesByKey, timeOverridesByKey, tenantPresets) =>
+      buildWeekplannerTrainingItemsFromSessions(
+        tenantId,
+        sessionsPromise,
+        overridesByKey,
+        timeOverridesByKey,
+        tenantPresets,
+      ),
+  };
+}
+
+async function buildWeekplannerTrainingItemsFromSessions(
+  tenantId: string,
+  sessionsPromise: Promise<Awaited<ReturnType<typeof listTrainingSessions>>>,
   overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
   timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
   tenantPresets: TenantDressingRoomOccupancyPresets,
 ): Promise<WeekplannerTrainingItem[]> {
-  if (days.length === 0) return [];
-
-  // TrainingSession.date is a pure calendar-date key (UTC-midnight
-  // convention — see the TrainingSession Prisma model doc comment), NOT a
-  // real timezone-zoned instant. The correct, DST-safe way to bound it is
-  // therefore to build UTC-midnight Dates directly from the already
-  // Europe/Zurich-resolved day keys — never by truncating a genuine zoned
-  // instant (which would silently shift the window by one calendar day).
-  const dateFrom = new Date(`${days[0]}T00:00:00.000Z`);
-  const dateTo = new Date(`${days[days.length - 1]}T00:00:00.000Z`);
-
-  const sessions = await listTrainingSessions(tenantId, { dateFrom, dateTo });
+  const sessions = await sessionsPromise;
   if (sessions.length === 0) return [];
 
   const seriesIds = [...new Set(sessions.map((session) => session.trainingSeriesId))];
@@ -534,6 +556,20 @@ async function findWeekplannerTrainingItems(
       },
     );
   });
+}
+
+async function findWeekplannerTrainingItems(
+  tenantId: string,
+  days: readonly string[],
+  overridesByKey: ReadonlyMap<string, WeekplannerResourceRef[]>,
+  timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
+  tenantPresets: TenantDressingRoomOccupancyPresets,
+): Promise<WeekplannerTrainingItem[]> {
+  return startWeekplannerTrainingSessionsLoad(tenantId, days).complete(
+    overridesByKey,
+    timeOverridesByKey,
+    tenantPresets,
+  );
 }
 
 // ── Event(type=MATCH) → WeekplannerMatchItem (HOME only) ────────────────────
@@ -719,15 +755,14 @@ async function findWeekplannerHomeTournaments(
   timeOverridesByKey: ReadonlyMap<string, TimeOverrideEntry>,
   tenantPresets: TenantDressingRoomOccupancyPresets,
 ): Promise<WeekplannerTournamentItem[]> {
-  const tournaments = await listTournaments(tenantId);
+  const tournaments = await listTournaments(tenantId, {
+    overlapsWindow: { from, to },
+  });
 
   const homeTournaments = tournaments.filter((tournament) => {
     if (tournament.homeAway !== "HOME") return false;
     if (isCancelled(tournament.status)) return false;
-
-    const startAt = new Date(tournament.startAt).getTime();
-    const endAt = tournament.endAt ? new Date(tournament.endAt).getTime() : startAt;
-    return startAt < to.getTime() && endAt >= from.getTime();
+    return true;
   });
 
   const occupancyByEventId = await loadEventDressingRoomOccupancyMap(

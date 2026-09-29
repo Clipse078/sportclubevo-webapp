@@ -192,6 +192,11 @@ export type TournamentDto = {
 export type ListTournamentsFilter = {
   /** When omitted, all statuses are returned. */
   status?: TournamentStatus[];
+  /**
+   * When set, only tournaments whose interval overlaps `[from, to)` are
+   * loaded (same boundary semantics as Weekplanner / Veranstaltung queries).
+   */
+  overlapsWindow?: { from: Date; to: Date };
 };
 
 /** Re-exported for convenience so callers don't need a direct @prisma/client import. */

@@ -351,11 +351,21 @@ export async function listTournaments(
   tenantId: string,
   filter: ListTournamentsFilter = {},
 ): Promise<TournamentDto[]> {
-  const [rows, tenantContext, logoResolutionContext] = await Promise.all([
-    findAllTournamentEvents(tenantId, { status: filter.status }),
+  const rowsPromise = findAllTournamentEvents(tenantId, {
+    status: filter.status,
+    overlapsWindow: filter.overlapsWindow,
+  });
+  const contextPromise = Promise.all([
     loadTournamentTenantContext(tenantId),
     loadTournamentLogoResolutionContext(tenantId),
   ]);
+
+  const rows = await rowsPromise;
+  if (rows.length === 0) {
+    return [];
+  }
+
+  const [tenantContext, logoResolutionContext] = await contextPromise;
 
   const organizerClubs = await resolveOrganizerClubsByName(
     tenantId,

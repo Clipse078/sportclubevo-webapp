@@ -44,7 +44,9 @@
     "deploy:check": "npm run db:generate && npm run lint && npm run build",
     "billing:qr-04a:generate": "tsx scripts/generate-billing-qr-04a-six-validation-pack.ts",
     "billing:qr-04b:generate": "tsx scripts/generate-billing-qr-04b-cross-bank-pack.ts",
-    "sce-icons:legacy-inventory": "tsx scripts/sce-icons-legacy-inventory.ts"
+    "sce-icons:legacy-inventory": "tsx scripts/sce-icons-legacy-inventory.ts",
+    "diag:sce-perf-02-bench": "tsx scripts/diagnostics/sce-perf-02-readonly-bench.ts",
+    "diag:sce-perf-02a-stage-probe": "tsx scripts/diagnostics/sce-perf-02a-stage-http-probe.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1138.0",
