@@ -1,18 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Building2,
-  Check,
-  Mail,
-  Plus,
-  Search,
-  User,
-  UserCircle2,
-  Users,
-  X,
-} from "lucide-react";
-import { Sheet } from "@/components/ui/Sheet";
+import { Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { CommunicationAudienceSelection } from "@/lib/communication/audience/communication-audience-selection";
 import {
@@ -24,7 +13,14 @@ import {
   summarizeCommunicationAudienceSelection,
   type CommunicationAudienceLabelMaps,
 } from "@/lib/communication/audience/human-audience-summary";
-import type { CommunicationAudienceDiscoverCategory } from "@/lib/communication/audience/communication-audience-search-service";
+import { SceListSelectorPanel } from "@/components/sce/list-selector/SceListSelectorPanel";
+import {
+  communicationAudienceDiscoverFetch,
+  communicationEnabledSourceTypes,
+} from "@/lib/communication/audience/communication-audience-discover-client";
+import type { SceSelectorSourceType } from "@/lib/sce/list-selector/types";
+import { sceSelectorPickKey } from "@/lib/sce/list-selector/types";
+import type { SceSelectorCategoryId } from "@/lib/sce/list-selector/entity-presentation";
 
 export type CommunicationAudienceSelectorContext = "DIRECT" | "ORGANISATION" | "CAMPAIGN";
 
@@ -73,52 +69,30 @@ export type CommunicationAudiencePreviewState = {
 
 type SelectorKind = "team" | "orgUnit" | "role" | "targetGroup" | "person" | "external";
 
-type DiscoverGroup = {
-  kind: SelectorKind;
-  heading: string;
-  options: Array<{ id: string; label: string; description?: string | null }>;
-};
-
-const CATEGORY_TABS: { id: CommunicationAudienceDiscoverCategory; label: string }[] = [
-  { id: "all", label: "Alle" },
-  { id: "orgUnit", label: "Organisation" },
-  { id: "team", label: "Teams" },
-  { id: "role", label: "Rollen" },
-  { id: "person", label: "Personen" },
-  { id: "external", label: "Externe" },
-  { id: "targetGroup", label: "Zielgruppen" },
-];
-
 export type CommunicationAudienceDiscoverPick = {
   kind: SelectorKind;
   id: string;
   label: string;
 };
 
-function discoverPickKey(kind: SelectorKind, id: string): string {
-  return `${kind}:${id}`;
+function sourceTypeToSelectorKind(type: SceSelectorSourceType): SelectorKind {
+  if (type === "ORG_UNIT") return "orgUnit";
+  if (type === "TEAM") return "team";
+  if (type === "ROLE") return "role";
+  if (type === "EXTERNAL_CONTACT") return "external";
+  if (type === "TARGET_GROUP") return "targetGroup";
+  return "person";
 }
 
-function DiscoverKindIcon({ kind }: { kind: SelectorKind }) {
-  if (kind === "orgUnit") return <Building2 className="h-5 w-5" aria-hidden="true" />;
-  if (kind === "team") return <Users className="h-5 w-5" aria-hidden="true" />;
-  if (kind === "role") return <UserCircle2 className="h-5 w-5" aria-hidden="true" />;
-  if (kind === "external") return <Mail className="h-5 w-5" aria-hidden="true" />;
-  if (kind === "targetGroup") return <Users className="h-5 w-5" aria-hidden="true" />;
-  return <User className="h-5 w-5" aria-hidden="true" />;
+function communicationCategoryTestId(category: SceSelectorCategoryId): string {
+  if (category === "org_unit") return "communication-audience-category-orgUnit";
+  if (category === "target_group") return "communication-audience-category-targetGroup";
+  if (category === "external_contact") return "communication-audience-category-external";
+  return `communication-audience-category-${category}`;
 }
 
-function DiscoverRowSkeleton() {
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-transparent px-3 py-3">
-      <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-[var(--surface-2)]" />
-      <div className="min-w-0 flex-1 space-y-2">
-        <div className="h-4 w-40 animate-pulse rounded bg-[var(--surface-2)]" />
-        <div className="h-3 w-56 animate-pulse rounded bg-[var(--surface-2)]" />
-      </div>
-      <div className="h-5 w-5 shrink-0 animate-pulse rounded bg-[var(--surface-2)]" />
-    </div>
-  );
+function communicationOptionTestId(type: SceSelectorSourceType, id: string): string {
+  return `communication-audience-option-${sourceTypeToSelectorKind(type)}-${id}`;
 }
 
 function TokenChip({
@@ -184,331 +158,65 @@ export function CommunicationAudienceDiscoverPanel({
   batchConfirm?: boolean;
   onConfirmBatch?: (picks: CommunicationAudienceDiscoverPick[]) => void;
 }) {
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<CommunicationAudienceDiscoverCategory>("all");
-  const [groups, setGroups] = useState<DiscoverGroup[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [noAccess, setNoAccess] = useState(false);
-  const [pending, setPending] = useState<Map<string, CommunicationAudienceDiscoverPick>>(() => new Map());
-  const searchRef = useRef<HTMLInputElement>(null);
-
-  const visibleTabs = useMemo(
-    () =>
-      CATEGORY_TABS.filter((tab) => {
-        if (tab.id === "all") return true;
-        if (tab.id === "person") return enabledFeatures.persons;
-        if (tab.id === "team") return enabledFeatures.teams;
-        if (tab.id === "orgUnit") return enabledFeatures.orgUnits;
-        if (tab.id === "role") return enabledFeatures.roles;
-        if (tab.id === "targetGroup") return enabledFeatures.targetGroups;
-        if (tab.id === "external") return enabledFeatures.externalContacts;
-        return false;
-      }),
-    [enabledFeatures],
+  const fetchResults = useMemo(
+    () => communicationAudienceDiscoverFetch({ context, enabledFeatures }),
+    [context, enabledFeatures],
   );
 
-  const loadDiscover = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(
-        `/api/communication/audience/discover?context=${encodeURIComponent(context)}&category=${encodeURIComponent(category)}&q=${encodeURIComponent(query.trim())}`,
-      );
-      const data = (await res.json()) as {
-        groups?: DiscoverGroup[];
-        noAccess?: boolean;
-        error?: string;
-      };
-      if (!res.ok) {
-        setGroups([]);
-        setError(data.error ?? "Empfänger konnten nicht geladen werden.");
-        return;
-      }
-      setNoAccess(Boolean(data.noAccess));
-      setGroups(data.groups ?? []);
-    } catch {
-      setGroups([]);
-      setError("Empfänger konnten nicht geladen werden.");
-    } finally {
-      setLoading(false);
+  const committedKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const id of selection.orgUnitIds) {
+      keys.add(sceSelectorPickKey("ORG_UNIT", id));
     }
-  }, [category, context, query]);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const handle = window.setTimeout(() => {
-      void loadDiscover();
-    }, query.trim().length >= 2 ? 250 : 0);
-    return () => window.clearTimeout(handle);
-  }, [loadDiscover, open, query]);
-
-  useEffect(() => {
-    if (!open) {
-      setQuery("");
-      setCategory("all");
-      setPending(new Map());
-      setError(null);
-      setGroups([]);
-      return undefined;
+    for (const id of selection.teamIds) {
+      keys.add(sceSelectorPickKey("TEAM", id));
     }
-    const handle = window.setTimeout(() => searchRef.current?.focus(), 50);
-    return () => window.clearTimeout(handle);
-  }, [open]);
-
-  function isCommitted(kind: SelectorKind, id: string): boolean {
-    if (kind === "person") return selection.personIds.includes(id);
-    if (kind === "team") return selection.teamIds.includes(id);
-    if (kind === "orgUnit") return selection.orgUnitIds.includes(id);
-    if (kind === "role") return selection.roleIds.includes(id);
-    if (kind === "external") return selection.externalContactIds.includes(id);
-    return selection.targetGroupIds.includes(id);
-  }
-
-  function isRowSelected(kind: SelectorKind, id: string): boolean {
-    const key = discoverPickKey(kind, id);
-    if (batchConfirm) return pending.has(key) || isCommitted(kind, id);
-    return isCommitted(kind, id);
-  }
-
-  function togglePending(kind: SelectorKind, id: string, label: string) {
-    const key = discoverPickKey(kind, id);
-    setPending((prev) => {
-      const next = new Map(prev);
-      if (next.has(key)) next.delete(key);
-      else next.set(key, { kind, id, label });
-      return next;
-    });
-  }
-
-  function handleRowActivate(kind: SelectorKind, id: string, label: string) {
-    if (disabled) return;
-    if (batchConfirm) {
-      if (isCommitted(kind, id)) return;
-      togglePending(kind, id, label);
-      return;
+    for (const id of selection.roleIds) {
+      keys.add(sceSelectorPickKey("ROLE", id));
     }
-    if (isCommitted(kind, id)) return;
-    onPick(kind, id, label);
-  }
-
-  const pendingCount = pending.size;
-
-  function handleConfirm() {
-    if (pendingCount === 0) return;
-    const picks = [...pending.values()];
-    if (onConfirmBatch) {
-      onConfirmBatch(picks);
-    } else {
-      for (const pick of picks) {
-        onPick(pick.kind, pick.id, pick.label);
-      }
+    for (const id of selection.personIds) {
+      keys.add(sceSelectorPickKey("PERSON", id));
     }
-    onOpenChange(false);
-  }
-
-  const listContent = (
-    <>
-      {loading ? (
-        <div
-          className="space-y-1 py-1"
-          aria-busy="true"
-          data-testid="communication-audience-loading"
-        >
-          {Array.from({ length: 6 }).map((_, i) => (
-            <DiscoverRowSkeleton key={i} />
-          ))}
-        </div>
-      ) : null}
-      {error ? (
-        <div className="space-y-3 py-2">
-          <p className="text-sm text-red-600" role="alert" data-testid="communication-audience-error">
-            {error}
-          </p>
-          <Button type="button" variant="secondary" onClick={() => void loadDiscover()}>
-            Erneut versuchen
-          </Button>
-        </div>
-      ) : null}
-      {!loading && !error && noAccess ? (
-        <p className="py-6 text-sm text-[var(--text-2)]" data-testid="communication-audience-no-access">
-          Keine verfügbaren Empfänger.
-        </p>
-      ) : null}
-      {!loading && !error && !noAccess && groups.length === 0 ? (
-        <p className="py-6 text-sm text-[var(--text-2)]" data-testid="communication-audience-empty-search">
-          Keine passenden Ergebnisse
-        </p>
-      ) : null}
-      {!loading && !error
-        ? groups.map((group) => {
-            return (
-              <div key={group.kind} className="mb-5 last:mb-0">
-                <p className="mb-2 border-b border-[var(--border)] pb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-                  {group.heading}
-                </p>
-                <ul role="listbox" aria-label={group.heading} className="space-y-1">
-                  {group.options.map((option) => {
-                    const committed = isCommitted(group.kind, option.id);
-                    const selected = isRowSelected(group.kind, option.id);
-                    const pendingActive =
-                      batchConfirm && pending.has(discoverPickKey(group.kind, option.id));
-                    const rowDisabled = disabled || (committed && !batchConfirm);
-                    const secondary =
-                      option.description?.trim() ||
-                      (group.kind === "orgUnit"
-                        ? "Organisationseinheit"
-                        : group.kind === "role"
-                          ? "Rolle"
-                          : group.kind === "external"
-                            ? "Externer Kontakt"
-                            : group.kind === "person"
-                              ? "Person"
-                              : null);
-                    return (
-                      <li key={`${group.kind}-${option.id}`}>
-                        <button
-                          type="button"
-                          role="option"
-                          aria-selected={selected}
-                          disabled={rowDisabled || (batchConfirm && committed)}
-                          className={`flex w-full min-h-12 items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] ${
-                            selected
-                              ? "border-[var(--sce-primary)]/40 bg-[var(--sce-primary)]/5"
-                              : "border-transparent hover:border-[var(--border)] hover:bg-[var(--surface-2)]"
-                          } disabled:cursor-not-allowed disabled:opacity-60`}
-                          data-testid={`communication-audience-option-${group.kind}-${option.id}`}
-                          onClick={() => handleRowActivate(group.kind, option.id, option.label)}
-                        >
-                          <span
-                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--surface-2)] text-[var(--sce-primary)]"
-                            aria-hidden="true"
-                          >
-                            <DiscoverKindIcon kind={group.kind} />
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate font-medium text-[var(--foreground)]">
-                              {option.label}
-                            </span>
-                            {secondary ? (
-                              <span className="mt-0.5 block truncate text-sm text-[var(--text-2)]">
-                                {secondary}
-                              </span>
-                            ) : null}
-                            {committed ? (
-                              <span className="mt-0.5 block text-xs text-[var(--muted)]">
-                                Bereits hinzugefügt
-                              </span>
-                            ) : null}
-                          </span>
-                          <span
-                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
-                              pendingActive || (!batchConfirm && committed)
-                                ? "border-[var(--sce-primary)] bg-[var(--sce-primary)] text-white"
-                                : selected
-                                  ? "border-[var(--sce-primary)] bg-[var(--sce-primary)] text-white"
-                                  : "border-[var(--border-strong)] bg-[var(--surface)]"
-                            }`}
-                            aria-hidden="true"
-                          >
-                            {selected ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : null}
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            );
-          })
-        : null}
-    </>
-  );
+    for (const id of selection.externalContactIds) {
+      keys.add(sceSelectorPickKey("EXTERNAL_CONTACT", id));
+    }
+    for (const id of selection.targetGroupIds) {
+      keys.add(sceSelectorPickKey("TARGET_GROUP", id));
+    }
+    return keys;
+  }, [selection]);
 
   return (
-    <Sheet
+    <SceListSelectorPanel
       open={open}
-      onClose={() => onOpenChange(false)}
+      onOpenChange={onOpenChange}
       title={dialogTitle}
       description={dialogDescription}
-      footer={
-        batchConfirm ? (
-          <div className="flex w-full flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-medium text-[var(--foreground)]" data-testid="communication-audience-pending-count">
-              {pendingCount} ausgewählt
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-                Abbrechen
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                disabled={pendingCount === 0 || disabled}
-                data-testid="communication-audience-confirm-picks"
-                onClick={handleConfirm}
-              >
-                {pendingCount === 1 ? "1 übernehmen" : `${pendingCount} übernehmen`}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex w-full justify-end">
-            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-              Schliessen
-            </Button>
-          </div>
+      searchPlaceholder={searchPlaceholder}
+      enabledTypes={communicationEnabledSourceTypes(enabledFeatures)}
+      mode={batchConfirm ? "multiple" : "single"}
+      committedKeys={committedKeys}
+      fetchResults={fetchResults}
+      disabled={disabled}
+      testIdPrefix="communication-audience"
+      panelTestId="communication-audience-picker-panel"
+      searchTestId="communication-audience-unified-search"
+      confirmTestId="communication-audience-confirm-picks"
+      emptyStateTestId="communication-audience-empty-search"
+      dismissOnSinglePick={false}
+      getCategoryTestId={communicationCategoryTestId}
+      getOptionTestId={communicationOptionTestId}
+      onPick={(pick) => onPick(sourceTypeToSelectorKind(pick.type), pick.id, pick.label)}
+      onConfirm={(picks) =>
+        onConfirmBatch?.(
+          picks.map((pick) => ({
+            kind: sourceTypeToSelectorKind(pick.type),
+            id: pick.id,
+            label: pick.label,
+          })),
         )
       }
-    >
-      <div
-        className="flex min-h-0 flex-1 flex-col gap-4"
-        data-testid="communication-audience-picker-panel"
-      >
-        <div className="relative shrink-0">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]"
-            aria-hidden="true"
-          />
-          <input
-            ref={searchRef}
-            className="fca-input w-full py-2.5 pl-10 text-base"
-            placeholder={searchPlaceholder}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            data-testid="communication-audience-unified-search"
-            aria-label="Empfänger suchen"
-            disabled={disabled}
-          />
-        </div>
-        <div
-          className="flex shrink-0 gap-1 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          role="tablist"
-          aria-label="Empfängerkategorien"
-        >
-          {visibleTabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={category === tab.id}
-              className={`shrink-0 rounded-full px-3.5 py-2 text-sm font-medium whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] ${
-                category === tab.id
-                  ? "bg-[var(--sce-primary)] text-white"
-                  : "bg-[var(--surface-2)] text-[var(--text-2)] hover:bg-[var(--surface-3)]"
-              }`}
-              onClick={() => setCategory(tab.id)}
-              data-testid={`communication-audience-category-${tab.id}`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-        <div className="min-h-[12rem] flex-1 overflow-y-auto pr-1" aria-live="polite">
-          {listContent}
-        </div>
-      </div>
-    </Sheet>
+    />
   );
 }
 

@@ -259,11 +259,11 @@ describe("CommunicationAudienceDiscoverPanel (UXR2)", () => {
   });
 
   it("renders skeleton loading state", async () => {
-    let resolveDiscover: (value: Response) => void = () => {};
+    const resolvers: Array<(value: Response) => void> = [];
     global.fetch = vi.fn(async (url: RequestInfo | URL) => {
       if (String(url).includes("/api/communication/audience/discover")) {
         return new Promise<Response>((resolve) => {
-          resolveDiscover = resolve;
+          resolvers.push(resolve);
         });
       }
       return new Response("{}", { status: 200 });
@@ -283,10 +283,52 @@ describe("CommunicationAudienceDiscoverPanel (UXR2)", () => {
     await waitFor(() =>
       expect(screen.getByTestId("communication-audience-loading")).toBeInTheDocument(),
     );
-    resolveDiscover(new Response(JSON.stringify({ groups: [], noAccess: false }), { status: 200 }));
+    for (const resolveDiscover of resolvers) {
+      resolveDiscover(new Response(JSON.stringify({ groups: [], noAccess: false }), { status: 200 }));
+    }
     await waitFor(() =>
       expect(screen.queryByTestId("communication-audience-loading")).not.toBeInTheDocument(),
     );
+  });
+
+  it("passes enabled sources to discover API (feature adapter contract)", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({ groups: [], noAccess: false }), { status: 200 }),
+    );
+    global.fetch = fetchMock as typeof fetch;
+
+    render(
+      <CommunicationAudienceDiscoverPanel
+        open
+        onOpenChange={() => {}}
+        context="ORGANISATION"
+        enabledFeatures={enabledAutomatic}
+        selection={emptyCommunicationAudienceSelection()}
+        onPick={vi.fn()}
+      />,
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const url = String(fetchMock.mock.calls[0]?.[0]);
+    expect(url).toContain("sources=orgUnit%2Cteam%2Crole");
+    expect(url).toContain("q=");
+  });
+
+  it("uses canonical search input padding (fca-search-input)", async () => {
+    mockDiscover();
+    render(
+      <CommunicationAudienceDiscoverPanel
+        open
+        onOpenChange={() => {}}
+        context="ORGANISATION"
+        enabledFeatures={enabledAutomatic}
+        selection={emptyCommunicationAudienceSelection()}
+        onPick={vi.fn()}
+      />,
+    );
+
+    const input = screen.getByTestId("communication-audience-unified-search");
+    expect(input.className).toContain("fca-search-input");
   });
 
   it("desktop uses sheet dialog semantics (not compact popover)", async () => {

@@ -1,18 +1,16 @@
 /**
  * SCE-COMM-EVO-03 — tenant-scoped audience selector search with sender scope enforcement.
+ * SCE-SELECTOR-01 — delegates browse/search to canonical SCE list selector sources.
  */
 
 import { prisma } from "@/lib/db/prisma";
-import {
-  listDirectMessageRecipientsInScope,
-  searchDirectMessageRecipients,
-} from "@/lib/communication/direct/direct-recipient-search";
 import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
-import { searchCommunicationExternalContacts } from "@/lib/communication/external-contacts/external-contact-service";
-
-const DEFAULT_LIMIT = 20;
-const MIN_QUERY_LENGTH = 2;
-const BROWSE_LIMIT = 12;
+import { discoverSceSelectorItems } from "@/lib/sce/list-selector/discover-selector-items";
+import {
+  communicationCategoryToSelectorCategory,
+  selectorTypeToCommunicationSearchKind,
+} from "@/lib/sce/list-selector/communication-bridge";
+import type { SceSelectorSourceType } from "@/lib/sce/list-selector/types";
 
 export type CommunicationAudienceDiscoverCategory =
   | "all"
@@ -37,8 +35,19 @@ export type CommunicationAudienceSearchKind =
   | "targetGroup"
   | "external";
 
-function normalizeTerm(query: string): string {
-  return query.trim();
+const GROUP_HEADING: Record<CommunicationAudienceSearchKind, string> = {
+  person: "Personen",
+  team: "Teams",
+  orgUnit: "Organisation",
+  role: "Rollen",
+  targetGroup: "Zielgruppen",
+  external: "Externe",
+};
+
+function communicationContextKind(
+  context: CommunicationContextRef,
+): "DIRECT" | "ORGANISATION" {
+  return context.kind === "DIRECT" ? "DIRECT" : "ORGANISATION";
 }
 
 export async function searchCommunicationAudienceTargets(input: {
@@ -55,232 +64,42 @@ export async function searchCommunicationAudienceTargets(input: {
     description?: string | null;
   }>
 > {
-  const term = normalizeTerm(input.query);
-  if (term.length < MIN_QUERY_LENGTH) return [];
+  const selectorType = {
+    person: "PERSON",
+    team: "TEAM",
+    orgUnit: "ORG_UNIT",
+    role: "ROLE",
+    targetGroup: "TARGET_GROUP",
+    external: "EXTERNAL_CONTACT",
+  }[input.kind] as SceSelectorSourceType;
 
-  const limit = Math.min(Math.max(input.limit ?? DEFAULT_LIMIT, 1), 50);
+  const category =
+    input.kind === "orgUnit"
+      ? "org_unit"
+      : input.kind === "targetGroup"
+        ? "target_group"
+        : input.kind === "external"
+          ? "external_contact"
+          : input.kind;
 
-  if (input.kind === "person") {
-    const rows = await searchDirectMessageRecipients({
-      tenantId: input.tenantId,
-      senderUserId: input.senderUserId,
-      query: term,
-    });
-    return rows.slice(0, limit).map((row) => ({
-      id: row.personId,
-      label: row.displayName,
-      description: [...row.teamLabels, ...row.orgUnitLabels].join(" · ") || null,
-    }));
-  }
-
-  if (input.kind === "external") {
-    return searchCommunicationExternalContacts({
-      tenantId: input.tenantId,
-      query: term,
-      limit,
-    });
-  }
-
-  if (input.kind === "team") {
-    const rows = await prisma.team.findMany({
-      where: {
-        tenantId: input.tenantId,
-        OR: [
-          { name: { contains: term, mode: "insensitive" } },
-          { shortName: { contains: term, mode: "insensitive" } },
-        ],
-      },
-      select: {
-        id: true,
-        name: true,
-        shortName: true,
-      },
-      orderBy: { name: "asc" },
-      take: limit,
-    });
-
-    return rows.map((row) => ({
-      id: row.id,
-      label: row.name,
-      description: row.shortName?.trim() || null,
-    }));
-  }
-
-  if (input.kind === "orgUnit") {
-    const rows = await prisma.orgUnit.findMany({
-      where: {
-        tenantId: input.tenantId,
-        OR: [
-          { name: { contains: term, mode: "insensitive" } },
-          { key: { contains: term, mode: "insensitive" } },
-        ],
-      },
-      select: { id: true, name: true, key: true },
-      orderBy: { name: "asc" },
-      take: limit,
-    });
-    return rows.map((row) => ({
-      id: row.id,
-      label: row.name,
-      description: row.key,
-    }));
-  }
-
-  if (input.kind === "role") {
-    const rows = await prisma.role.findMany({
-      where: {
-        tenantId: input.tenantId,
-        scope: "TENANT",
-        name: { contains: term, mode: "insensitive" },
-      },
-      select: { id: true, name: true, key: true },
-      orderBy: { name: "asc" },
-      take: limit,
-    });
-    return rows.map((row) => ({
-      id: row.id,
-      label: row.name,
-      description: row.key,
-    }));
-  }
-
-  const targetGroups = await prisma.targetGroup.findMany({
-    where: {
-      tenantId: input.tenantId,
-      status: { not: "ARCHIVED" },
-      name: { contains: term, mode: "insensitive" },
-    },
-    select: { id: true, name: true, description: true },
-    orderBy: { name: "asc" },
-    take: limit,
+  const groups = await discoverSceSelectorItems({
+    tenantId: input.tenantId,
+    actorUserId: input.senderUserId,
+    enabledTypes: [selectorType],
+    category,
+    query: input.query,
+    limitPerGroup: input.limit,
+    communicationContext: communicationContextKind(input.context),
   });
 
-  return targetGroups.map((row) => ({
-    id: row.id,
-    label: row.name,
-    description: row.description?.trim() || null,
-  }));
-}
-
-const GROUP_HEADING: Record<CommunicationAudienceSearchKind, string> = {
-  person: "Personen",
-  team: "Teams",
-  orgUnit: "Organisation",
-  role: "Rollen",
-  targetGroup: "Zielgruppen",
-  external: "Externe",
-};
-
-function kindsForCategory(
-  category: CommunicationAudienceDiscoverCategory,
-): CommunicationAudienceSearchKind[] {
-  if (category === "all") {
-    return ["person", "team", "orgUnit", "role", "targetGroup", "external"];
-  }
-  if (category === "external") return ["external"];
-  return [category];
-}
-
-async function browseCommunicationAudienceTargets(input: {
-  tenantId: string;
-  senderUserId: string;
-  context: CommunicationContextRef;
-  kind: CommunicationAudienceSearchKind;
-  limit?: number;
-}): Promise<Array<{ id: string; label: string; description?: string | null }>> {
-  const limit = Math.min(Math.max(input.limit ?? BROWSE_LIMIT, 1), 50);
-
-  if (input.kind === "person") {
-    if (input.context.kind !== "DIRECT") {
-      const rows = await prisma.person.findMany({
-        where: { tenantId: input.tenantId, isActive: true },
-        select: { id: true, firstName: true, lastName: true, displayName: true, email: true },
-        orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-        take: limit,
-      });
-      return rows.map((row) => ({
-        id: row.id,
-        label: row.displayName?.trim() || `${row.firstName} ${row.lastName}`.trim(),
-        description: row.email?.trim() || null,
-      }));
-    }
-    const rows = await listDirectMessageRecipientsInScope({
-      tenantId: input.tenantId,
-      senderUserId: input.senderUserId,
-      limit,
-    });
-    return rows.map((row) => ({
-      id: row.personId,
-      label: row.displayName,
-      description: [...row.teamLabels, ...row.orgUnitLabels].join(" · ") || row.email,
-    }));
-  }
-
-  if (input.kind === "team") {
-    const rows = await prisma.team.findMany({
-      where: { tenantId: input.tenantId },
-      select: { id: true, name: true, shortName: true },
-      orderBy: { name: "asc" },
-      take: limit,
-    });
-    return rows.map((row) => ({
-      id: row.id,
-      label: row.name,
-      description: row.shortName?.trim() || null,
-    }));
-  }
-
-  if (input.kind === "orgUnit") {
-    const rows = await prisma.orgUnit.findMany({
-      where: { tenantId: input.tenantId },
-      select: { id: true, name: true, key: true },
-      orderBy: { name: "asc" },
-      take: limit,
-    });
-    return rows.map((row) => ({
-      id: row.id,
-      label: row.name,
-      description: row.key,
-    }));
-  }
-
-  if (input.kind === "external") {
-    return searchCommunicationExternalContacts({
-      tenantId: input.tenantId,
-      query: "",
-      limit,
-    });
-  }
-
-  if (input.kind === "role") {
-    const rows = await prisma.role.findMany({
-      where: { tenantId: input.tenantId, scope: "TENANT" },
-      select: { id: true, name: true, key: true },
-      orderBy: { name: "asc" },
-      take: limit,
-    });
-    return rows.map((row) => ({
-      id: row.id,
-      label: row.name,
-      description: row.key,
-    }));
-  }
-
-  const targetGroups = await prisma.targetGroup.findMany({
-    where: {
-      tenantId: input.tenantId,
-      status: { not: "ARCHIVED" },
-    },
-    select: { id: true, name: true, description: true },
-    orderBy: { name: "asc" },
-    take: limit,
-  });
-
-  return targetGroups.map((row) => ({
-    id: row.id,
-    label: row.name,
-    description: row.description?.trim() || null,
-  }));
+  const group = groups.find((g) => g.type === selectorType);
+  return (
+    group?.items.map((item) => ({
+      id: item.id,
+      label: item.label,
+      description: item.description,
+    })) ?? []
+  );
 }
 
 export async function discoverCommunicationAudienceTargets(input: {
@@ -292,43 +111,40 @@ export async function discoverCommunicationAudienceTargets(input: {
   enabledKinds: readonly CommunicationAudienceSearchKind[];
   limitPerGroup?: number;
 }): Promise<CommunicationAudienceDiscoverGroup[]> {
-  const term = normalizeTerm(input.query);
-  const kinds = kindsForCategory(input.category).filter((kind) =>
-    input.enabledKinds.includes(kind),
+  const enabledTypes = input.enabledKinds.map(
+    (k) =>
+      ({
+        person: "PERSON",
+        team: "TEAM",
+        orgUnit: "ORG_UNIT",
+        role: "ROLE",
+        targetGroup: "TARGET_GROUP",
+        external: "EXTERNAL_CONTACT",
+      })[k] as SceSelectorSourceType,
   );
-  const limit = Math.min(Math.max(input.limitPerGroup ?? BROWSE_LIMIT, 1), 50);
 
-  const groups: CommunicationAudienceDiscoverGroup[] = [];
+  const selectorGroups = await discoverSceSelectorItems({
+    tenantId: input.tenantId,
+    actorUserId: input.senderUserId,
+    enabledTypes,
+    category: communicationCategoryToSelectorCategory(input.category),
+    query: input.query,
+    limitPerGroup: input.limitPerGroup,
+    communicationContext: communicationContextKind(input.context),
+  });
 
-  for (const kind of kinds) {
-    const options =
-      term.length >= MIN_QUERY_LENGTH
-        ? await searchCommunicationAudienceTargets({
-            tenantId: input.tenantId,
-            senderUserId: input.senderUserId,
-            context: input.context,
-            kind,
-            query: term,
-            limit,
-          })
-        : await browseCommunicationAudienceTargets({
-            tenantId: input.tenantId,
-            senderUserId: input.senderUserId,
-            context: input.context,
-            kind,
-            limit,
-          });
-
-    if (options.length > 0) {
-      groups.push({
-        kind,
-        heading: GROUP_HEADING[kind],
-        options,
-      });
-    }
-  }
-
-  return groups;
+  return selectorGroups.map((group) => {
+    const kind = selectorTypeToCommunicationSearchKind(group.type);
+    return {
+      kind,
+      heading: group.heading || GROUP_HEADING[kind],
+      options: group.items.map((item) => ({
+        id: item.id,
+        label: item.label,
+        description: item.description,
+      })),
+    };
+  });
 }
 
 export async function loadCommunicationAudienceLabels(input: {

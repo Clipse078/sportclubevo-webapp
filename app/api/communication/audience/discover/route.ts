@@ -9,6 +9,10 @@ import {
   type CommunicationAudienceDiscoverCategory,
   type CommunicationAudienceSearchKind,
 } from "@/lib/communication/audience/communication-audience-search-service";
+import {
+  parseSelectorSourceTypesParam,
+  selectorTypeToCommunicationSearchKind,
+} from "@/lib/sce/list-selector/communication-bridge";
 import { resolveCommunicationAudienceCapabilities } from "@/lib/communication/audience/communication-audience-capabilities";
 import type { CommunicationContextRef } from "@/lib/communication/platform/communication-context";
 import { TeamCommunicationForbiddenError } from "@/lib/communication/team/team-communication-errors";
@@ -90,7 +94,16 @@ export async function GET(request: Request): Promise<NextResponse> {
     context,
   });
 
-  const enabledKinds = enabledKindsFromCapabilities(capabilities);
+  let enabledKinds = enabledKindsFromCapabilities(capabilities);
+
+  const requestedSources = parseSelectorSourceTypesParam(url.searchParams.get("sources"));
+  if (requestedSources?.length) {
+    const allowed = new Set(enabledKinds);
+    enabledKinds = requestedSources
+      .map((t) => selectorTypeToCommunicationSearchKind(t))
+      .filter((k) => allowed.has(k));
+  }
+
   if (enabledKinds.length === 0) {
     return NextResponse.json({ groups: [], noAccess: true });
   }
