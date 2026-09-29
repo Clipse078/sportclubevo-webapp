@@ -649,23 +649,9 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       {
         key: "administration",
-        label: "Administration",
-        href: "/dashboard/admin/branding",
-        permissionKeys: [
-          PERMISSIONS.USERS_VIEW,
-          PERMISSIONS.USERS_MANAGE,
-          PERMISSIONS.SEASONS_VIEW,
-          PERMISSIONS.SEASONS_MANAGE,
-          PERMISSIONS.FACILITIES_VIEW,
-          PERMISSIONS.FACILITIES_MANAGE,
-          PERMISSIONS.TENANTS_VIEW,
-          PERMISSIONS.TENANTS_MANAGE,
-          // RPERM-05: tenant Club Admins reach the Administration section
-          // through the tenant Roles & Permissions module below — they hold
-          // none of the PLATFORM keys above.
-          PERMISSIONS.ROLES_VIEW,
-          PERMISSIONS.ROLES_MANAGE,
-        ],
+        label: "Admin",
+        href: "/dashboard/admin",
+        permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
         children: [
           {
             // RPERM-05: tenant-facing Roles & Permissions module. Gated by

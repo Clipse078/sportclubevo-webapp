@@ -16,6 +16,7 @@ export const TARGET_L1_SCE_ICONS: Record<NavIaV2TargetL1, string> = {
   kommunikation: "communication",
   club: "club",
   publishing: "publish",
+  admin: "settings",
 };
 
 const PUBLISHING_KEYS = new Set([
@@ -99,6 +100,9 @@ const PLANUNG_KEYS = new Set([
 const KOMMUNIKATION_KEYS = new Set([
   "aufgaben",
   "communication",
+  "communication-mitteilungen",
+  "communication-kampagnen",
+  "communication-zielgruppen",
   "communication-email-sender",
   "workspace",
 ]);
@@ -132,14 +136,16 @@ export function resolveNavKeyTargetL1(
   if (PLANUNG_KEYS.has(key)) return "planung";
   if (KOMMUNIKATION_KEYS.has(key)) return "kommunikation";
   if (PUBLISHING_KEYS.has(key)) return "publishing";
+  if (CLUB_ADMIN_KEYS.has(key)) {
+    return "admin";
+  }
   if (
     CLUB_ORGANISATION_KEYS.has(key) ||
     CLUB_PEOPLE_KEYS.has(key) ||
     CLUB_MEMBERSHIP_KEYS.has(key) ||
     CLUB_DEVELOPMENT_KEYS.has(key) ||
     CLUB_OPERATIONS_KEYS.has(key) ||
-    CLUB_COMMERCIAL_KEYS.has(key) ||
-    CLUB_ADMIN_KEYS.has(key)
+    CLUB_COMMERCIAL_KEYS.has(key)
   ) {
     return "club";
   }
@@ -379,10 +385,14 @@ export const CLUB_TARGET_L2_GROUPS = [
     headerVisible: true,
     keys: ["finanzen", "sponsoring"],
   },
+] as const;
+
+/** Admin L1 domain — tenant Club Admin modules (explorer + contextual row). */
+export const ADMIN_TARGET_L2_GROUPS = [
   {
     id: "administration",
     label: "Administration",
-    headerVisible: false,
+    headerVisible: true,
     keys: [
       "administration",
       "admin-tenant-roles",
@@ -391,8 +401,6 @@ export const CLUB_TARGET_L2_GROUPS = [
       "admin-branding",
       "admin-people-access",
       "admin-roles",
-      "admin-tenants",
-      "admin-integrations",
     ],
   },
 ] as const;
@@ -451,6 +459,8 @@ export function mapNavIaV2TargetL1ToAppDomainId(
       return "club";
     case "publishing":
       return "publishing";
+    case "admin":
+      return "admin";
     default:
       return targetL1 as AppNavigationDomainId;
   }
@@ -503,6 +513,7 @@ export const CLUB_L1_DEFAULT_DESTINATION_KEYS: Record<NavIaV2TargetL1, string> =
   kommunikation: "communication",
   club: "organisation",
   publishing: "website",
+  admin: "administration",
 };
 
 export const CLUB_L1_SCE_ICON_BY_DOMAIN: Record<NavIaV2TargetL1, string> = {
@@ -511,4 +522,5 @@ export const CLUB_L1_SCE_ICON_BY_DOMAIN: Record<NavIaV2TargetL1, string> = {
   kommunikation: TARGET_L1_SCE_ICONS.kommunikation,
   club: TARGET_L1_SCE_ICONS.club,
   publishing: TARGET_L1_SCE_ICONS.publishing,
+  admin: TARGET_L1_SCE_ICONS.admin,
 };

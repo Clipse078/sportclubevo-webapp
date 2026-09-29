@@ -9,6 +9,7 @@ import type { NavItem, NavSection } from "@/lib/nav/nav-config";
 import {
   CLUB_L1_DEFAULT_DESTINATION_KEYS,
   CLUB_L1_SCE_ICON_BY_DOMAIN,
+  ADMIN_TARGET_L2_GROUPS,
   CLUB_TARGET_L2_GROUPS,
   PUBLISHING_TARGET_L2_GROUPS,
   resolveClubWorkspaceNavItemDomainId,
@@ -23,7 +24,8 @@ export type ClubAppNavigationDomainId =
   | "planning"
   | "communication"
   | "club"
-  | "publishing";
+  | "publishing"
+  | "admin";
 
 export type PlatformAppNavigationDomainId =
   | "platform-overview"
@@ -118,6 +120,15 @@ export const NAVIGATION_DOMAIN_DEFINITIONS: Record<AppNavigationDomainId, Domain
     defaultDestinationKey: CLUB_L1_DEFAULT_DESTINATION_KEYS.publishing,
     l2GroupMetadata: PUBLISHING_TARGET_L2_GROUPS,
   },
+  admin: {
+    labelKey: "AppShell.domains.admin",
+    fallbackLabel: "Admin",
+    priority: 2,
+    sortOrder: 60,
+    l1SceIconKey: CLUB_L1_SCE_ICON_BY_DOMAIN.admin,
+    defaultDestinationKey: CLUB_L1_DEFAULT_DESTINATION_KEYS.admin,
+    l2GroupMetadata: ADMIN_TARGET_L2_GROUPS,
+  },
   "platform-overview": {
     labelKey: "AppShell.domains.platformOverview",
     fallbackLabel: "Platform",
@@ -173,7 +184,7 @@ export const CLUB_NAV_ITEM_TO_DOMAIN: Record<string, AppNavigationDomainId> = {
   sponsoring: "club",
   "formulare-freigaben": "club",
   "vorfaelle-disziplin": "club",
-  administration: "club",
+  administration: "admin",
 };
 
 export const PLATFORM_NAV_ITEM_TO_DOMAIN: Record<string, AppNavigationDomainId> = {
@@ -274,6 +285,7 @@ export const CLUB_DOMAIN_MAP_SUMMARY = {
     "administration",
   ],
   publishing: ["website", "infoboard"],
+  admin: ["administration"],
 } as const;
 
 export const CLUB_L1_DOMAIN_ORDER: readonly ClubAppNavigationDomainId[] = [
@@ -282,4 +294,5 @@ export const CLUB_L1_DOMAIN_ORDER: readonly ClubAppNavigationDomainId[] = [
   "communication",
   "club",
   "publishing",
+  "admin",
 ];

@@ -108,13 +108,13 @@ describe("PLATFORM-UX-01 — final sidebar order", () => {
       PERMISSIONS.TRAININGS_VIEW,
       PERMISSIONS.REGISTRATIONS_VIEW,
       PERMISSIONS.ROLES_VIEW,
+      PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
     ]);
 
     expect(keys).toContain("dashboard");
     expect(keys).toContain("planung");
     expect(keys).toContain("anmeldungen");
     expect(keys).toContain("administration");
-    expect(keys).not.toContain("mitglieder");
     expect(keys).not.toContain("website");
 
     const planungIdx = keys.indexOf("planung");
@@ -140,6 +140,7 @@ describe("PLATFORM-UX-01 — final sidebar order", () => {
       "sponsoring",
       "formulare-freigaben",
       "vorfaelle-disziplin",
+      "administration",
     ]);
   });
 
