@@ -21,6 +21,37 @@ function formatDisplayName(row: {
   return row.displayName?.trim() || fromParts || "Unbenannt";
 }
 
+export async function browseRequirementAudiencePersons(
+  tenantId: string,
+  limit = 20,
+  offset = 0,
+): Promise<RequirementPersonOption[]> {
+  const safeLimit = Math.min(Math.max(limit, 1), 50);
+  const safeOffset = Math.max(offset, 0);
+
+  const rows = await prisma.person.findMany({
+    where: { tenantId, isActive: true },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      displayName: true,
+      email: true,
+    },
+    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    skip: safeOffset,
+    take: safeLimit + 1,
+  });
+
+  return rows.map((row) => ({
+    personId: row.id,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    displayName: formatDisplayName(row),
+    email: row.email,
+  }));
+}
+
 export async function searchRequirementAudiencePersons(
   tenantId: string,
   query: string,

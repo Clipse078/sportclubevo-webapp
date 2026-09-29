@@ -263,14 +263,7 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
     expect(onUpdated).not.toHaveBeenCalled();
   });
 
-  it("W03-A1-03 OrgUnit search uses audience API", async () => {
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        results: [{ type: "ORG_UNIT", id: "ou-1", label: "Junioren" }],
-      }),
-    });
+  it("W03-A1-03 OrgUnit selection uses SCE list selector entry", async () => {
     render(
       <WorkspaceAccessGrantEditor
         apiBase="/api/workspace/folders/folder-1/access"
@@ -281,24 +274,10 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
     fireEvent.change(screen.getByLabelText("audienceTypeField"), {
       target: { value: "ORG_UNIT" },
     });
-    fireEvent.change(screen.getByPlaceholderText("audienceSearchPlaceholder"), {
-      target: { value: "Jun" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "searchButton" }));
-    await waitFor(() =>
-      expect(screen.getByRole("option", { name: "Junioren" })).toBeInTheDocument(),
-    );
-    expect(String(fetchMock.mock.calls[0][0])).toContain("type=ORG_UNIT");
+    expect(screen.getByTestId("workspace-access-sce-picker-org_unit")).toBeInTheDocument();
   });
 
-  it("W03-A1-04 Team search uses audience API", async () => {
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        results: [{ type: "TEAM", id: "team-2", label: "U17" }],
-      }),
-    });
+  it("W03-A1-04 Team selection uses SCE list selector entry", async () => {
     render(
       <WorkspaceAccessGrantEditor
         apiBase="/api/workspace/folders/folder-1/access"
@@ -309,11 +288,7 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
     fireEvent.change(screen.getByLabelText("audienceTypeField"), {
       target: { value: "TEAM" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "searchButton" }));
-    await waitFor(() =>
-      expect(screen.getByRole("option", { name: "U17" })).toBeInTheDocument(),
-    );
-    expect(String(fetchMock.mock.calls[0][0])).toContain("type=TEAM");
+    expect(screen.getByTestId("workspace-access-sce-picker-team")).toBeInTheDocument();
   });
 
   it("W03-A1-05 Role search uses audience API", async () => {
@@ -348,14 +323,7 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
     expect(String(fetchMock.mock.calls[0][0])).toContain("type=ROLE");
   });
 
-  it("W03-A1-06 Person search uses audience API", async () => {
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        results: [{ type: "PERSON", id: "p-1", label: "Max Muster" }],
-      }),
-    });
+  it("W03-A1-06 Person selection uses SCE list selector entry", async () => {
     render(
       <WorkspaceAccessGrantEditor
         apiBase="/api/workspace/folders/folder-1/access"
@@ -366,10 +334,7 @@ describe("WorkspaceAccessGrantEditor W03-A1", () => {
     fireEvent.change(screen.getByLabelText("audienceTypeField"), {
       target: { value: "PERSON" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "searchButton" }));
-    await waitFor(() =>
-      expect(screen.getByRole("option", { name: "Max Muster" })).toBeInTheDocument(),
-    );
+    expect(screen.getByTestId("workspace-access-sce-picker-person")).toBeInTheDocument();
   });
 
   it("W03-A1-15 technical workspace RBAC keys are not in role search results", async () => {

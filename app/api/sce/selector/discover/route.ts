@@ -12,12 +12,14 @@ import {
 } from "@/lib/sce/list-selector/selector-authorization-context";
 import { selectorAuthorizationContextToSourceContext } from "@/lib/sce/list-selector/selector-source-context";
 import { sceSelectorDiscoverApiErrorBody } from "@/lib/sce/list-selector/selector-discover-api-errors";
+import type { SceSelectorGroupCursors, SceSelectorSourceType } from "@/lib/sce/list-selector/types";
 
 export const dynamic = "force-dynamic";
 
 function parseCategory(value: string | null): SceSelectorCategoryId {
   if (
     value === "person" ||
+    value === "user" ||
     value === "team" ||
     value === "org_unit" ||
     value === "role" ||
@@ -27,6 +29,31 @@ function parseCategory(value: string | null): SceSelectorCategoryId {
     return value;
   }
   return "all";
+}
+
+function parseGroupCursors(raw: string | null): SceSelectorGroupCursors | undefined {
+  if (!raw?.trim()) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as Record<string, string | null>;
+    if (!parsed || typeof parsed !== "object") return undefined;
+    const out: SceSelectorGroupCursors = {};
+    for (const [key, value] of Object.entries(parsed)) {
+      if (typeof value === "string" || value === null) {
+        out[key as SceSelectorSourceType] = value;
+      }
+    }
+    return Object.keys(out).length > 0 ? out : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function parseExcludeUserIds(raw: string | null): string[] {
+  if (!raw?.trim()) return [];
+  return raw
+    .split(",")
+    .map((token) => token.trim())
+    .filter(Boolean);
 }
 
 /**
@@ -67,6 +94,8 @@ export async function GET(request: Request): Promise<NextResponse> {
   const query = url.searchParams.get("q") ?? "";
   const category = parseCategory(url.searchParams.get("category"));
   const requestedTypes = parseSelectorSourceTypesParam(url.searchParams.get("sources"));
+  const cursors = parseGroupCursors(url.searchParams.get("cursors"));
+  const excludeUserIds = parseExcludeUserIds(url.searchParams.get("excludeUserIds"));
 
   if (!requestedTypes?.length) {
     return NextResponse.json(
@@ -94,7 +123,10 @@ export async function GET(request: Request): Promise<NextResponse> {
       enabledTypes,
       category,
       query,
+      cursors,
+      excludeUserIds,
       communicationContext: selectorAuthorizationContextToSourceContext(authContextParam),
+      authorizationContext: authContextParam,
     });
     return NextResponse.json({ groups, noAccess: false });
   } catch {

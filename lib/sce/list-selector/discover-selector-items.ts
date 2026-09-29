@@ -26,6 +26,14 @@ import {
   browseExternalContactSelectorItems,
   searchExternalContactSelectorItems,
 } from "@/lib/sce/list-selector/sources/external-contact-selector-source";
+import {
+  browseUserSelectorItems,
+  searchUserSelectorItems,
+} from "@/lib/sce/list-selector/sources/user-selector-source";
+import {
+  browseTaskOrgUnitSelectorItems,
+  searchTaskOrgUnitSelectorItems,
+} from "@/lib/sce/list-selector/sources/task-org-unit-selector-source";
 import { withSceSelectorSourceTimeout } from "@/lib/sce/list-selector/source-query-timeout";
 import type { SceSelectorSourcePage } from "@/lib/sce/list-selector/source-pagination";
 
@@ -45,6 +53,7 @@ async function querySourceType(
 ): Promise<SceSelectorSourcePage> {
   const term = input.query.trim();
   const ctx = input.communicationContext;
+  const authContext = input.authorizationContext;
 
   if (term.length >= SCE_SELECTOR_MIN_SEARCH_LENGTH) {
     switch (type) {
@@ -53,13 +62,32 @@ async function querySourceType(
           tenantId: input.tenantId,
           actorUserId: input.actorUserId,
           communicationContext: ctx,
+          authorizationContext: authContext,
           query: term,
           limit,
           cursor,
         });
+      case "USER":
+        return searchUserSelectorItems({
+          tenantId: input.tenantId,
+          actorUserId: input.actorUserId,
+          query: term,
+          limit,
+          cursor,
+          excludeUserIds: input.excludeUserIds,
+        });
       case "TEAM":
         return searchTeamSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
       case "ORG_UNIT":
+        if (authContext === "TASK_ASSIGNMENT") {
+          return searchTaskOrgUnitSelectorItems({
+            tenantId: input.tenantId,
+            actorUserId: input.actorUserId,
+            query: term,
+            limit,
+            cursor,
+          });
+        }
         return searchOrgUnitSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
       case "ROLE":
         return searchRoleSelectorItems({ tenantId: input.tenantId, query: term, limit, cursor });
@@ -78,12 +106,29 @@ async function querySourceType(
         tenantId: input.tenantId,
         actorUserId: input.actorUserId,
         communicationContext: ctx,
+        authorizationContext: authContext,
         limit,
         cursor,
+      });
+    case "USER":
+      return browseUserSelectorItems({
+        tenantId: input.tenantId,
+        actorUserId: input.actorUserId,
+        limit,
+        cursor,
+        excludeUserIds: input.excludeUserIds,
       });
     case "TEAM":
       return browseTeamSelectorItems({ tenantId: input.tenantId, limit, cursor });
     case "ORG_UNIT":
+      if (authContext === "TASK_ASSIGNMENT") {
+        return browseTaskOrgUnitSelectorItems({
+          tenantId: input.tenantId,
+          actorUserId: input.actorUserId,
+          limit,
+          cursor,
+        });
+      }
       return browseOrgUnitSelectorItems({ tenantId: input.tenantId, limit, cursor });
     case "ROLE":
       return browseRoleSelectorItems({ tenantId: input.tenantId, limit, cursor });
@@ -127,6 +172,7 @@ function resolveTypesToQuery(input: {
           "TEAM",
           "ROLE",
           "PERSON",
+          "USER",
           "EXTERNAL_CONTACT",
           "TARGET_GROUP",
         ] as SceSelectorSourceType[]

@@ -16,7 +16,8 @@ function toItem(row: { id: string; name: string; key: string }): SceSelectorItem
     id: row.id,
     type: "ROLE",
     label: row.name,
-    description: row.key,
+    description: "Rolle",
+    searchText: row.key,
   };
 }
 

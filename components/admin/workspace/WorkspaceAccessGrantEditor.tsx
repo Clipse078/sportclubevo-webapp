@@ -31,6 +31,7 @@ import {
   upsertGrantRule,
 } from "@/lib/workspace/access/access-grant-editor-utils";
 import type { CanonicalResourceLevel } from "@/lib/workspace/access/resource-level";
+import { WorkspaceAccessAudienceScePicker } from "@/components/admin/workspace/WorkspaceAccessAudienceScePicker";
 
 const ACCESS_LEVELS: CanonicalResourceLevel[] = ["VIEW", "EDIT", "MANAGE"];
 
@@ -399,7 +400,18 @@ export function WorkspaceAccessGrantEditor({
               </label>
             </div>
 
-            {addAudienceType !== "ORGANISATION" ? (
+            {addAudienceType === "PERSON" ||
+            addAudienceType === "TEAM" ||
+            addAudienceType === "ORG_UNIT" ? (
+              <div className="mt-3">
+                <WorkspaceAccessAudienceScePicker
+                  audienceKind={addAudienceType}
+                  selected={selectedAudience}
+                  onSelected={setSelectedAudience}
+                  disabled={saving}
+                />
+              </div>
+            ) : addAudienceType !== "ORGANISATION" ? (
               <div className="mt-3 space-y-2">
                 <label className="text-xs font-medium text-[var(--text-2)]">
                   {t("audienceSearchField")}

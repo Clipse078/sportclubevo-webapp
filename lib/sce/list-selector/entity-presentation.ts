@@ -16,6 +16,11 @@ const PRESENTATION: Record<SceSelectorSourceType, SceSelectorEntityPresentation>
     groupHeading: "Personen",
     categoryTabLabel: "Personen",
   },
+  USER: {
+    typeLabel: "Benutzer",
+    groupHeading: "Benutzer",
+    categoryTabLabel: "Benutzer",
+  },
   TEAM: {
     typeLabel: "Team",
     groupHeading: "Teams",
@@ -57,6 +62,7 @@ export const SCE_SELECTOR_CATEGORY_TABS: {
   { id: "team", type: "TEAM", label: "Teams" },
   { id: "role", type: "ROLE", label: "Rollen" },
   { id: "person", type: "PERSON", label: "Personen" },
+  { id: "user", type: "USER", label: "Benutzer" },
   { id: "external_contact", type: "EXTERNAL_CONTACT", label: "Externe" },
   { id: "target_group", type: "TARGET_GROUP", label: "Zielgruppen" },
 ];
@@ -64,6 +70,7 @@ export const SCE_SELECTOR_CATEGORY_TABS: {
 export type SceSelectorCategoryId =
   | "all"
   | "person"
+  | "user"
   | "team"
   | "org_unit"
   | "role"
@@ -76,6 +83,7 @@ export function sceSelectorCategoryToTypes(
   if (category === "all") return "all";
   const map: Record<Exclude<SceSelectorCategoryId, "all">, SceSelectorSourceType> = {
     person: "PERSON",
+    user: "USER",
     team: "TEAM",
     org_unit: "ORG_UNIT",
     role: "ROLE",
@@ -88,6 +96,7 @@ export function sceSelectorCategoryToTypes(
 export function sceSelectorTypeToCategoryId(type: SceSelectorSourceType): SceSelectorCategoryId {
   const map: Record<SceSelectorSourceType, SceSelectorCategoryId> = {
     PERSON: "person",
+    USER: "user",
     TEAM: "team",
     ORG_UNIT: "org_unit",
     ROLE: "role",

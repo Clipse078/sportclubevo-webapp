@@ -28,8 +28,8 @@ describe("AUFGABEN-06G7 UX contracts", () => {
     expect(label).toBe("Michael Duijster");
 
     const picker = read("components/admin/aufgaben/TaskPeopleMultiPicker.tsx");
-    expect(picker).toContain("searchQuickCreateAssigneesAction");
-    expect(picker).toContain("displayName");
+    expect(picker).toContain("SceChipMultiSelectorField");
+    expect(picker).toContain("USER");
   });
 
   it("U03 — ROLE_AUDIENCE role labels remain role names in audience builder", () => {

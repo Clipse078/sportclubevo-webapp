@@ -37,6 +37,7 @@ function SelectorTypeIcon({ type }: { type: SceSelectorSourceType }) {
   }
   if (type === "ROLE") return <UserCircle2 className="h-5 w-5" aria-hidden="true" />;
   if (type === "EXTERNAL_CONTACT") return <Mail className="h-5 w-5" aria-hidden="true" />;
+  if (type === "USER") return <UserCircle2 className="h-5 w-5" aria-hidden="true" />;
   return <User className="h-5 w-5" aria-hidden="true" />;
 }
 
@@ -134,7 +135,13 @@ export function SceListSelectorPanel({
     queryState.groups.forEach((group, groupIndex) => {
       group.items.forEach((item, optionIndex) => {
         items.push({
-          pick: { type: item.type, id: item.id, label: item.label },
+          pick: {
+            type: item.type,
+            id: item.id,
+            label: item.label,
+            description: item.description,
+            metadata: item.metadata,
+          },
           groupIndex,
           optionIndex,
         });
