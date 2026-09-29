@@ -38,6 +38,7 @@ const mocks = vi.hoisted(() => ({
   team: { count: vi.fn() },
   role: { count: vi.fn() },
   person: { findFirst: vi.fn(), findMany: vi.fn() },
+  communicationExternalContact: { findMany: vi.fn() },
   orgUnitMembership: { findMany: vi.fn() },
   trainerTeamMember: { findMany: vi.fn() },
   $transaction: vi.fn(),
@@ -62,6 +63,7 @@ vi.mock("@/lib/db/prisma", () => ({
     team: mocks.team,
     role: mocks.role,
     person: mocks.person,
+    communicationExternalContact: mocks.communicationExternalContact,
     orgUnitMembership: mocks.orgUnitMembership,
     trainerTeamMember: mocks.trainerTeamMember,
     $transaction: mocks.$transaction,
@@ -133,6 +135,8 @@ describe("SCE-COMM-11 club communication", () => {
     });
     mocks.platformCommunicationConversation.create.mockResolvedValue({ id: "conv-org" });
     mocks.person.findFirst.mockResolvedValue({ id: "person-sender" });
+    mocks.person.findMany.mockResolvedValue([]);
+    mocks.communicationExternalContact.findMany.mockResolvedValue([]);
     mocks.targetGroup.findMany.mockResolvedValue([{ id: "tg-1", status: "ACTIVE" }]);
     mocks.orgUnit.count.mockResolvedValue(1);
     mocks.team.count.mockResolvedValue(1);

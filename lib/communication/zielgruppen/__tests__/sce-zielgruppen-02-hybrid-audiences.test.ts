@@ -167,4 +167,92 @@ describe("SCE-ZIELGRUPPEN-02 hybrid audiences", () => {
     expect(registry.list()).toEqual([]);
     expect(registry.get("probetraining")).toBeNull();
   });
+
+  describe("identity & deduplication (SCE-ZIELGRUPPEN-02R1)", () => {
+    it("person-only: external list empty when audience has no external includes", async () => {
+      mocks.communicationExternalContact.findMany.mockResolvedValue([]);
+      const result = await resolveAudienceCandidates({
+        tenantId: "tenant-a",
+        audience: {
+          composition: "UNION",
+          components: [{ explicit: { includePersonIds: ["person-only"] } }],
+        },
+      });
+      expect(result.candidatePersonIds).toEqual(["person-only"]);
+      expect(result.candidateExternalContactIds).toEqual([]);
+    });
+
+    it("external-only: resolves tenant-scoped active contacts", async () => {
+      mocks.communicationExternalContact.findMany.mockResolvedValue([{ id: "ext-only" }]);
+      mocks.person.findMany.mockResolvedValue([]);
+      const result = await resolveAudienceCandidates({
+        tenantId: "tenant-a",
+        audience: {
+          composition: "UNION",
+          components: [{ external: { includeExternalContactIds: ["ext-only"] } }],
+        },
+      });
+      expect(result.candidatePersonIds).toEqual([]);
+      expect(result.candidateExternalContactIds).toEqual(["ext-only"]);
+    });
+
+    it("person-external collision: canonical Person wins (external dropped)", async () => {
+      mocks.communicationExternalContact.findMany.mockResolvedValue([
+        { id: "ext-dup", emailNormalized: "shared@example.com" },
+      ]);
+      mocks.person.findMany.mockResolvedValue([
+        { id: "person-canonical", email: "shared@example.com", user: null },
+      ]);
+      const result = await resolveAudienceCandidates({
+        tenantId: "tenant-a",
+        audience: {
+          composition: "UNION",
+          components: [
+            {
+              explicit: { includePersonIds: ["person-canonical"] },
+              external: { includeExternalContactIds: ["ext-dup"] },
+            },
+          ],
+        },
+      });
+      expect(result.candidatePersonIds).toEqual(["person-canonical"]);
+      expect(result.candidateExternalContactIds).toEqual([]);
+    });
+
+    it("multiple external paths: union then exclude yields single external id", async () => {
+      mocks.communicationExternalContact.findMany.mockResolvedValue([{ id: "ext-a" }]);
+      mocks.person.findMany.mockResolvedValue([]);
+      const ids = await resolveExternalContactIdsFromAudience({
+        tenantId: "tenant-a",
+        audience: {
+          composition: "UNION",
+          components: [
+            { external: { includeExternalContactIds: ["ext-a", "ext-b"] } },
+            { external: { includeExternalContactIds: ["ext-a"] } },
+          ],
+        },
+      });
+      expect(ids).toEqual(["ext-a"]);
+    });
+
+    it("external exclusion wins over duplicate include paths", async () => {
+      mocks.communicationExternalContact.findMany.mockResolvedValue([{ id: "ext-a" }]);
+      mocks.person.findMany.mockResolvedValue([]);
+      const ids = await resolveExternalContactIdsFromAudience({
+        tenantId: "tenant-a",
+        audience: {
+          composition: "UNION",
+          components: [
+            {
+              external: {
+                includeExternalContactIds: ["ext-a", "ext-b"],
+                excludeExternalContactIds: ["ext-b"],
+              },
+            },
+          ],
+        },
+      });
+      expect(ids).toEqual(["ext-a"]);
+    });
+  });
 });
