@@ -4,6 +4,7 @@ import type {
   RequirementResponseValue,
   RequirementStatus,
 } from "@prisma/client";
+import type { RequirementAudienceComposition } from "./requirement-audience-composition-model";
 
 export type RequirementServiceContext = {
   tenantId: string;
@@ -35,6 +36,7 @@ export type RequirementDto = {
   draftAudienceOrgUnitIds: string[];
   draftAudienceRoleIds: string[];
   draftAudienceTargetGroupIds: string[];
+  draftAudienceComposition: RequirementAudienceComposition | null;
 };
 
 export type RequirementDraftAudienceInput = {
@@ -43,6 +45,8 @@ export type RequirementDraftAudienceInput = {
   orgUnitIds?: readonly string[];
   roleIds?: readonly string[];
   targetGroupIds?: readonly string[];
+  excludePersonIds?: readonly string[];
+  composition?: RequirementAudienceComposition | null;
 };
 
 /** UI selection for draft audiences. Structural ids remain supported for legacy drafts/activation. */
@@ -52,6 +56,8 @@ export type RequirementAudienceSelection = {
   orgUnitIds: string[];
   roleIds: string[];
   targetGroupIds: string[];
+  excludePersonIds: string[];
+  composition: RequirementAudienceComposition | null;
 };
 
 export type RequirementRecipientDto = {

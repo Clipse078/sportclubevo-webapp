@@ -23,6 +23,13 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { computeRequirementAggregate } from "./requirement-aggregate";
 import { resolveRequirementAudiencePersonIds } from "./requirement-audience";
 import {
+  flattenRequirementAudienceCompositionToLegacyInput,
+  legacyFlatInputToRequirementAudienceComposition,
+  parseRequirementAudienceCompositionJson,
+  requirementAudienceCompositionIsEmpty,
+  type RequirementAudienceComposition,
+} from "./requirement-audience-composition-model";
+import {
   resolveOrgUnitAudiencePersonIds,
   resolveRoleAudiencePersonIds,
   resolveTargetGroupAudiencePersonIds,
@@ -55,6 +62,7 @@ import {
 } from "./types";
 
 const REQUIREMENT_INCLUDE = {
+  draftAudienceCompositionJson: true,
   draftAudience: { select: { personId: true } },
   draftAudienceTeams: { select: { teamId: true } },
   draftAudienceOrgUnits: { select: { orgUnitId: true } },
@@ -89,6 +97,7 @@ function mapRequirement(row: RequirementRow): RequirementDto {
     draftAudienceOrgUnitIds: row.draftAudienceOrgUnits.map((entry) => entry.orgUnitId),
     draftAudienceRoleIds: row.draftAudienceRoles.map((entry) => entry.roleId),
     draftAudienceTargetGroupIds: row.draftAudienceTargetGroups.map((entry) => entry.targetGroupId),
+    draftAudienceComposition: parseRequirementAudienceCompositionJson(row.draftAudienceCompositionJson),
   };
 }
 
@@ -157,13 +166,27 @@ function normalizeAudienceInput(input: RequirementDraftAudienceInput): {
   orgUnitIds: string[];
   roleIds: string[];
   targetGroupIds: string[];
+  excludePersonIds: string[];
+  composition: RequirementAudienceComposition | null;
 } {
+  const composition =
+    input.composition && !requirementAudienceCompositionIsEmpty(input.composition)
+      ? input.composition
+      : legacyFlatInputToRequirementAudienceComposition(input);
+
+  const flattened = flattenRequirementAudienceCompositionToLegacyInput(composition);
+
   return {
-    personIds: dedupePersonIds(input.personIds ?? []),
-    teamIds: dedupePersonIds(input.teamIds ?? []),
-    orgUnitIds: dedupePersonIds(input.orgUnitIds ?? []),
-    roleIds: dedupePersonIds(input.roleIds ?? []),
-    targetGroupIds: dedupePersonIds(input.targetGroupIds ?? []),
+    personIds: dedupePersonIds(flattened.personIds ?? []),
+    teamIds: dedupePersonIds(flattened.teamIds ?? []),
+    orgUnitIds: dedupePersonIds(flattened.orgUnitIds ?? []),
+    roleIds: dedupePersonIds(flattened.roleIds ?? []),
+    targetGroupIds: dedupePersonIds(flattened.targetGroupIds ?? []),
+    excludePersonIds: dedupePersonIds([
+      ...(input.excludePersonIds ?? []),
+      ...(composition.excludePersonIds ?? []),
+    ]),
+    composition: requirementAudienceCompositionIsEmpty(composition) ? null : composition,
   };
 }
 
@@ -171,7 +194,10 @@ async function assertValidDraftAudienceSelectors(
   tenantId: string,
   selectors: ReturnType<typeof normalizeAudienceInput>,
 ): Promise<void> {
-  await assertSameTenantPersonIds(tenantId, selectors.personIds);
+  await assertSameTenantPersonIds(tenantId, [
+    ...selectors.personIds,
+    ...selectors.excludePersonIds,
+  ]);
 
   try {
     if (selectors.teamIds.length > 0) {
@@ -197,6 +223,13 @@ async function replaceRequirementDraftAudience(
   selectors: ReturnType<typeof normalizeAudienceInput>,
 ): Promise<void> {
   await prisma.$transaction(async (tx) => {
+    await tx.requirement.updateMany({
+      where: { id: requirementId, tenantId },
+      data: {
+        draftAudienceCompositionJson: selectors.composition ?? Prisma.JsonNull,
+      },
+    });
+
     await tx.requirementDraftAudiencePerson.deleteMany({ where: { tenantId, requirementId } });
     await tx.requirementDraftAudienceTeam.deleteMany({ where: { tenantId, requirementId } });
     await tx.requirementDraftAudienceOrgUnit.deleteMany({ where: { tenantId, requirementId } });
@@ -425,7 +458,11 @@ export async function activateRequirement(
 
     const updated = await tx.requirement.updateMany({
       where: { id: requirementId, tenantId: ctx.tenantId, status: "DRAFT" },
-      data: { status: "ACTIVE", activatedAt },
+      data: {
+        status: "ACTIVE",
+        activatedAt,
+        draftAudienceCompositionJson: Prisma.JsonNull,
+      },
     });
 
     if (updated.count !== 1) {

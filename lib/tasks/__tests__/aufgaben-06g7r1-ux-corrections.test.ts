@@ -107,7 +107,7 @@ describe("AUFGABEN-06G7R1 contracts", () => {
     expect(builder).toContain("SceRecipientSelector");
     expect(builder).toContain("requirement-recipient-add");
     expect(builder).toContain("previewRequirementDraftAudienceAction");
-    expect(read("components/sce/list-selector/SceListSelectorPanel.tsx")).toContain("Dialog");
+    expect(read("components/sce/list-selector/SceListSelectorPanel.tsx")).toContain("Sheet");
   });
 
   it("C19–C22 — task creator is server-derived and immutable in update input", () => {

@@ -13,8 +13,8 @@ export type SceRecipientSelectorProfile = {
 
 export const SCE_RECIPIENT_SELECTOR_REQUIREMENT: SceRecipientSelectorProfile = {
   authContext: "REQUIREMENT_AUDIENCE",
-  sourceTypes: ["PERSON"],
-  searchPlaceholder: "Personen suchen …",
+  sourceTypes: ["PERSON", "TEAM", "ORG_UNIT", "ROLE", "TARGET_GROUP"],
+  searchPlaceholder: "Personen, Teams, Organisation, Rollen oder Zielgruppen suchen …",
   dialogTitle: "Empfänger auswählen",
   dialogDescription: "Wer soll die Anforderung bestätigen?",
   addButtonLabel: "Empfänger hinzufügen",

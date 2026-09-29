@@ -37,12 +37,22 @@ describe("SCE-SELECTOR-02R3", () => {
     vi.clearAllMocks();
   });
 
-  it("REQUIREMENT_AUDIENCE server sources are PERSON only", () => {
+  it("REQUIREMENT_AUDIENCE server sources include structural expansion (02R5)", () => {
     expect(allowedSourceTypesForSelectorAuthorizationContext("REQUIREMENT_AUDIENCE")).toEqual([
       "PERSON",
+      "TEAM",
+      "ORG_UNIT",
+      "ROLE",
+      "TARGET_GROUP",
     ]);
-    expect(SCE_RECIPIENT_SELECTOR_REQUIREMENT.sourceTypes).toEqual(["PERSON"]);
-    expect(SCE_RECIPIENT_SELECTOR_REQUIREMENT.searchPlaceholder).toBe("Personen suchen …");
+    expect(SCE_RECIPIENT_SELECTOR_REQUIREMENT.sourceTypes).toEqual([
+      "PERSON",
+      "TEAM",
+      "ORG_UNIT",
+      "ROLE",
+      "TARGET_GROUP",
+    ]);
+    expect(SCE_RECIPIENT_SELECTOR_REQUIREMENT.searchPlaceholder).toContain("Personen");
     expect(SCE_RECIPIENT_SELECTOR_REQUIREMENT.dialogDescription).toBe(
       "Wer soll die Anforderung bestätigen?",
     );

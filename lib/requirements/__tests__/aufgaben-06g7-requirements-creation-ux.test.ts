@@ -104,7 +104,7 @@ describe("AUFGABEN-06G7 UX contracts", () => {
 
   it("U15/U16 — mixed audiences call canonical preview API and dedupe explicit persons", () => {
     const previewModule = read("lib/requirements/requirement-audience-preview.ts");
-    expect(previewModule).toContain("resolveRequirementAudiencePersonIdsFromSnapshot");
+    expect(previewModule).toContain("resolveRequirementAudiencePersonIdsFromAudienceInput");
     expect(previewModule).not.toMatch(/from \"react\"/);
 
     expect(

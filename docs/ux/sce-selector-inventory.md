@@ -41,7 +41,8 @@ Legacy shorthand (02): A≈CANONICAL*, B≈MIGRATE_LATER, C≈DOMAIN_SPECIFIC_VA
 ## R2 notes
 
 - Task assignee discovery uses canonical `person-user-identity` eligibility (Person.userId + active TenantMembership); UI selects Person, persistence stores User id via `linkedUserId` metadata.
-- Requirement structural picks (Team/Org/Role/TargetGroup) are expansion sources only; activation snapshot resolves to Person recipients (`requirement-audience.ts`).
+- Requirement structural picks (Team/Org/Role/TargetGroup) are **recipient rules**, not acknowledgement subjects. Draft composition (AND/OR/exclude) in `draftAudienceCompositionJson` resolves to deduplicated Person ids; activation freezes `RequirementRecipient` rows (`requirement-audience-composition.ts`).
+- Legacy flat draft rows (person/team/org/role/targetGroup ids) remain OR-union compatible when no composition JSON is stored.
 
 ## DATA HYGIENE observations
 

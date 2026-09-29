@@ -27,6 +27,10 @@ import {
 import { previewRequirementDraftAudience } from "@/lib/requirements/requirement-audience-preview";
 import { parseRequirementDeadlineAndRemindersFromForm } from "@/lib/requirements/requirement-reminder-form";
 import type { RequirementAudienceSelection } from "@/lib/requirements/types";
+import {
+  normalizeRequirementAudienceSelection,
+  parseRequirementAudienceCompositionFromForm,
+} from "@/lib/requirements/requirement-audience-selection";
 import { requirementDetailHref } from "@/lib/requirements/management-navigation";
 import { parseIdListFromForm } from "@/lib/tasks/task-access-grants";
 import type { WorkspaceDocumentPickerOption } from "@/lib/workspace/document-access";
@@ -74,14 +78,19 @@ function parseDueAtFromForm(formData: FormData): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-function parseAudienceSelectionFromForm(formData: FormData) {
-  return {
+function parseAudienceSelectionFromForm(formData: FormData): RequirementAudienceSelection {
+  const composition =
+    parseRequirementAudienceCompositionFromForm(formData.get("audienceCompositionJson")) ??
+    undefined;
+  return normalizeRequirementAudienceSelection({
     personIds: parseIdListFromForm(formData.get("audiencePersonIds")),
     teamIds: parseIdListFromForm(formData.get("audienceTeamIds")),
     orgUnitIds: parseIdListFromForm(formData.get("audienceOrgUnitIds")),
     roleIds: parseIdListFromForm(formData.get("audienceRoleIds")),
     targetGroupIds: parseIdListFromForm(formData.get("audienceTargetGroupIds")),
-  };
+    excludePersonIds: parseIdListFromForm(formData.get("audienceExcludePersonIds")),
+    composition: composition ?? null,
+  });
 }
 
 async function parseRequirementScheduleFields(
@@ -154,6 +163,7 @@ export async function searchRequirementAudienceTargetGroupsAction(query: string)
 
 export async function previewRequirementDraftAudienceAction(
   selection: RequirementAudienceSelection,
+  options?: { includePersonRows?: boolean },
 ): Promise<
   | { ok: true; preview: Awaited<ReturnType<typeof previewRequirementDraftAudience>> }
   | { ok: false; message: string }
@@ -164,7 +174,10 @@ export async function previewRequirementDraftAudienceAction(
     return { ok: false, message: "Keine Berechtigung für diese Aktion." };
   }
   try {
-    const preview = await previewRequirementDraftAudience(ctx.tenantId, selection);
+    const normalized = normalizeRequirementAudienceSelection(selection);
+    const preview = await previewRequirementDraftAudience(ctx.tenantId, normalized, {
+      includePersonRows: options?.includePersonRows === true,
+    });
     return { ok: true, preview };
   } catch (error) {
     if (error instanceof RequirementTenantMismatchError) {

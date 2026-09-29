@@ -31,8 +31,10 @@ import {
   formatTaskCreatorDisplayName,
   resolveTaskCreatorDisplayNamesByUserIds,
 } from "@/lib/tasks/task-creator-display";
+import { parseRequirementAudienceCompositionJson } from "./requirement-audience-composition-model";
 
 const REQUIREMENT_INCLUDE = {
+  draftAudienceCompositionJson: true,
   draftAudience: { select: { personId: true } },
   draftAudienceTeams: { select: { teamId: true } },
   draftAudienceOrgUnits: { select: { orgUnitId: true } },
@@ -100,6 +102,7 @@ function mapRequirement(row: RequirementRow): RequirementDto {
     draftAudienceOrgUnitIds: row.draftAudienceOrgUnits?.map((a) => a.orgUnitId) ?? [],
     draftAudienceRoleIds: row.draftAudienceRoles?.map((a) => a.roleId) ?? [],
     draftAudienceTargetGroupIds: row.draftAudienceTargetGroups?.map((a) => a.targetGroupId) ?? [],
+    draftAudienceComposition: parseRequirementAudienceCompositionJson(row.draftAudienceCompositionJson),
   };
 }
 

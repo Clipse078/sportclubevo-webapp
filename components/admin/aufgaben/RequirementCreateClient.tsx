@@ -7,6 +7,10 @@ import { ArrowLeft } from "lucide-react";
 import { SCE_DIALOG_WORKSPACE_PANEL } from "@/lib/shell/responsive-layout";
 import { buildAufgabenBereichHref } from "@/lib/personal-actions/aufgaben-scope";
 import { requirementDetailHref } from "@/lib/requirements/management-navigation";
+import {
+  emptyRequirementAudienceSelection,
+  normalizeRequirementAudienceSelection,
+} from "@/lib/requirements/requirement-audience-selection";
 import type { RequirementAudienceSelection } from "@/lib/requirements/types";
 import TaskDescriptionFormField from "./TaskDescriptionFormField";
 import RequirementAudienceBuilder from "./RequirementAudienceBuilder";
@@ -21,21 +25,23 @@ export default function RequirementCreateClient({ timeZone }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [audience, setAudience] = useState<RequirementAudienceSelection>({
-    personIds: [],
-    teamIds: [],
-    orgUnitIds: [],
-    roleIds: [],
-    targetGroupIds: [],
-  });
+  const [audience, setAudience] = useState<RequirementAudienceSelection>(
+    emptyRequirementAudienceSelection(),
+  );
 
   function onSubmit(formData: FormData) {
     setError(null);
-    formData.set("audiencePersonIds", audience.personIds.join(","));
-    formData.set("audienceTeamIds", audience.teamIds.join(","));
-    formData.set("audienceOrgUnitIds", audience.orgUnitIds.join(","));
-    formData.set("audienceRoleIds", audience.roleIds.join(","));
-    formData.set("audienceTargetGroupIds", audience.targetGroupIds.join(","));
+    const normalized = normalizeRequirementAudienceSelection(audience);
+    formData.set("audiencePersonIds", normalized.personIds.join(","));
+    formData.set("audienceTeamIds", normalized.teamIds.join(","));
+    formData.set("audienceOrgUnitIds", normalized.orgUnitIds.join(","));
+    formData.set("audienceRoleIds", normalized.roleIds.join(","));
+    formData.set("audienceTargetGroupIds", normalized.targetGroupIds.join(","));
+    formData.set("audienceExcludePersonIds", normalized.excludePersonIds.join(","));
+    formData.set(
+      "audienceCompositionJson",
+      normalized.composition ? JSON.stringify(normalized.composition) : "",
+    );
     startTransition(async () => {
       const result = await createRequirementDraftAction(formData);
       if (!result.ok) {

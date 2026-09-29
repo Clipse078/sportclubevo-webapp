@@ -45,7 +45,13 @@ const TARGET_GROUP_MANAGEMENT_SOURCES: readonly SceSelectorSourceType[] = [
 
 const TASK_ASSIGNMENT_SOURCES: readonly SceSelectorSourceType[] = ["PERSON", "ORG_UNIT"];
 
-const REQUIREMENT_AUDIENCE_SOURCES: readonly SceSelectorSourceType[] = ["PERSON"];
+const REQUIREMENT_AUDIENCE_SOURCES: readonly SceSelectorSourceType[] = [
+  "PERSON",
+  "TEAM",
+  "ORG_UNIT",
+  "ROLE",
+  "TARGET_GROUP",
+];
 
 const WORKSPACE_ACCESS_SOURCES: readonly SceSelectorSourceType[] = [
   "PERSON",

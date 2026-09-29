@@ -19,9 +19,13 @@ describe("SCE-SELECTOR-02 authorization contexts", () => {
     expect(perms).toContain(PERMISSIONS.TASKS_ASSIGN);
   });
 
-  it("REQUIREMENT_AUDIENCE exposes PERSON only for current recipient UI", () => {
+  it("REQUIREMENT_AUDIENCE exposes person + structural expansion sources (02R5)", () => {
     expect(allowedSourceTypesForSelectorAuthorizationContext("REQUIREMENT_AUDIENCE")).toEqual([
       "PERSON",
+      "TEAM",
+      "ORG_UNIT",
+      "ROLE",
+      "TARGET_GROUP",
     ]);
   });
 

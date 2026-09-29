@@ -159,12 +159,14 @@ function requirementRow(overrides: Record<string, unknown> = {}) {
     draftAudienceOrgUnits: [],
     draftAudienceRoles: [],
     draftAudienceTargetGroups: [],
+    draftAudienceCompositionJson: null,
     ...overrides,
   };
 }
 
 function audienceResolutionRow(overrides: Record<string, unknown> = {}) {
   return {
+    draftAudienceCompositionJson: null,
     draftAudience: [{ personId: PERSON_A }],
     draftAudienceTeams: [],
     draftAudienceOrgUnits: [],

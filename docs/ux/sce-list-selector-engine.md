@@ -65,7 +65,7 @@ Communication uses `/api/communication/audience/discover` with capability checks
 | `COMMUNICATION_SEND` | Club send, campaigns | Person, Team, OrgUnit, Role, TargetGroup, External |
 | `TARGET_GROUP_MANAGEMENT` | Zielgruppen builder | Person, Team, OrgUnit, Role, External (no TargetGroup) |
 | `TASK_ASSIGNMENT` | Aufgaben assignees / org visibility | User, OrgUnit (task-auth adapter) |
-| `REQUIREMENT_AUDIENCE` | Requirements person audience | Person |
+| `REQUIREMENT_AUDIENCE` | Requirements audience rules → Person recipients | Person, Team, OrgUnit, Role, TargetGroup |
 | `WORKSPACE_ACCESS` | Workspace ACL grants | Person, Team, OrgUnit, Role |
 | `PEOPLE_ACCESS_ADMIN` | Admin people flows (future) | Person, Team, OrgUnit, Role |
 | `CLUB_REFERENCE` | Generic in-club person pick | Person |

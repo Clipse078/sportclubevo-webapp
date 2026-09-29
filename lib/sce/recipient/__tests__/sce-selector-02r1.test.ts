@@ -24,9 +24,13 @@ describe("SCE-SELECTOR-02R1 contract matrix", () => {
     expect(perms).toContain(PERMISSIONS.TASKS_ASSIGN);
   });
 
-  it("REQUIREMENT_AUDIENCE exposes PERSON-only recipient selection (02R3)", () => {
+  it("REQUIREMENT_AUDIENCE exposes structural rule sources resolved to persons (02R5)", () => {
     expect(allowedSourceTypesForSelectorAuthorizationContext("REQUIREMENT_AUDIENCE")).toEqual([
       "PERSON",
+      "TEAM",
+      "ORG_UNIT",
+      "ROLE",
+      "TARGET_GROUP",
     ]);
   });
 
