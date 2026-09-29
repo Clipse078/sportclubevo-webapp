@@ -51,13 +51,7 @@ export default function PeopleAccessPermissionPanel({
     [presentation, selectedKeys],
   );
 
-  const provenanceSample = useMemo(() => {
-    const entries = Object.entries(roleNamesByKey);
-    if (entries.length === 0) return null;
-    const [key, roles] = entries[0] ?? [];
-    if (!key || !roles?.length) return null;
-    return roles.join(", ");
-  }, [roleNamesByKey]);
+  const overrideCount = 0;
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -75,20 +69,24 @@ export default function PeopleAccessPermissionPanel({
               <dd className="mt-0.5 font-medium">{scopeLabel}</dd>
             </div>
           ) : null}
-          <div className="sm:col-span-2">
-            <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Zugriffe</dt>
-            <dd className="mt-0.5">
-              {counts.granted} freigegeben · {counts.total - counts.granted} nicht freigegeben
-            </dd>
+          <div>
+            <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Zugriff aus Rolle</dt>
+            <dd className="mt-0.5">{counts.granted} freigegeben</dd>
+          </div>
+          <div>
+            <dt className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+              Individuelle Anpassungen
+            </dt>
+            <dd className="mt-0.5">{overrideCount}</dd>
           </div>
         </dl>
       )}
 
       {!interactive ? (
         <p className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-xs text-[var(--muted)]">
-          Die gewählte Funktion gibt die empfohlenen Zugriffe vor. Einzelne Berechtigungen pro Person
-          (Freigabe entziehen trotz Rolle) erfordern eine Backend-Erweiterung — hier siehst du den
-          effektiven Rollen-Stand. Passe bei Bedarf die Funktion in Schritt 2 an.
+          Die gewählte Funktion definiert den empfohlenen Zugriff. Fehlende Berechtigungen sind normal
+          (Least Privilege). Individuelle Freigaben oder Entzüge pro Person erfordern die
+          Backend-Erweiterung für Overrides — hier siehst du den effektiven Rollen-Stand.
         </p>
       ) : null}
 
@@ -97,29 +95,33 @@ export default function PeopleAccessPermissionPanel({
         selectedKeys={selectedKeys}
         onChange={() => {}}
         disabled={!interactive}
+        peopleAccessMode
+        sectionsInitiallyExpanded={false}
       />
 
-      {provenanceSample ? (
-        <p className="text-xs text-[var(--muted)]">
-          Herkunft: Berechtigungen stammen aus den gewählten Funktionen
-          {provenanceSample ? ` (z. B. „${provenanceSample}“)` : ""}.
-        </p>
+      {navSummary.length > 0 ? (
+        <ul className="space-y-1 text-xs text-[var(--muted)]" aria-label="Kurzüberblick nach Produktbereich">
+          {navSummary.map((section) => {
+            const itemsWithAccess = section.items.filter((i) => i.access !== "Kein Zugriff");
+            const summary =
+              itemsWithAccess.length === 0
+                ? "Kein Zugriff"
+                : itemsWithAccess.length === section.items.length
+                  ? "Vollständig"
+                  : `${itemsWithAccess.length} von ${section.items.length} freigegeben`;
+            return (
+              <li key={section.label}>
+                <span className="font-medium text-[var(--foreground)]">{section.label}</span>: {summary}
+              </li>
+            );
+          })}
+        </ul>
       ) : null}
 
-      {navSummary.length > 0 ? (
-        <details className="text-xs text-[var(--muted)]">
-          <summary className="cursor-pointer font-medium text-[var(--foreground)]">Kurzüberblick nach Bereich</summary>
-          <ul className="mt-2 space-y-1">
-            {navSummary.map((section) => (
-              <li key={section.label}>
-                <span className="font-medium">{section.label}:</span>{" "}
-                {section.items.length > 0
-                  ? section.items.map((i) => `${i.label} (${i.access})`).join("; ")
-                  : "Kein Zugriff"}
-              </li>
-            ))}
-          </ul>
-        </details>
+      {Object.keys(roleNamesByKey).length > 0 ? (
+        <p className="text-xs text-[var(--muted)]">
+          Berechtigungen stammen aus den zugewiesenen Funktionen (Rollen-Baseline).
+        </p>
       ) : null}
     </div>
   );

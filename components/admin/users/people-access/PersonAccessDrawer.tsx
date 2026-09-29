@@ -11,6 +11,10 @@ import type { PermissionMatrixModuleGroup } from "@/components/admin/roles/NavAl
 import type { TenantUserItem } from "@/lib/users/queries";
 import { groupRoleChipsForDisplay } from "@/lib/admin/people-access/role-display";
 import type { EffectiveAccessModuleGroup } from "@/lib/roles/effective-access-summary";
+import {
+  formatPeopleAccessDate,
+  formatPeopleAccessDateTime,
+} from "@/lib/admin/people-access/date-format";
 
 type Tab = "overview" | "functions" | "access" | "activity";
 
@@ -167,9 +171,7 @@ export default function PersonAccessDrawer({
           <AdminStatusPill label={status.label} tone={status.tone} />
           <p className="text-sm text-[var(--muted)]">
             Letzte Aktivität:{" "}
-            {user.lastLoginAt
-              ? user.lastLoginAt.toLocaleDateString("de-CH")
-              : "—"}
+            {formatPeopleAccessDate(user.lastLoginAt)}
           </p>
           {canInvite && user.pendingInvitation ? (
             <p className="text-sm text-amber-700">Einladung ausstehend — erneut senden oder widerrufen über das Aktionsmenü.</p>
@@ -259,13 +261,13 @@ export default function PersonAccessDrawer({
       {tab === "activity" ? (
         <ul className="space-y-2 text-sm text-[var(--muted)]">
           {user.lastLoginAt ? (
-            <li>Letzter Login: {user.lastLoginAt.toLocaleString("de-CH")}</li>
+            <li>Letzter Login: {formatPeopleAccessDateTime(user.lastLoginAt)}</li>
           ) : (
             <li>Kein Login registriert.</li>
           )}
           {user.pendingInvitation ? <li>Einladung ausstehend</li> : null}
           {user.joinedAt ? (
-            <li>Beitritt: {user.joinedAt.toLocaleDateString("de-CH")}</li>
+            <li>Beitritt: {formatPeopleAccessDate(user.joinedAt)}</li>
           ) : null}
           <li className="text-xs">Weitere Audit-Ereignisse folgen in einer späteren Governance-Erweiterung.</li>
         </ul>

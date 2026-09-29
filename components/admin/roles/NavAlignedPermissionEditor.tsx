@@ -42,6 +42,8 @@ type NavAlignedPermissionEditorProps = {
   disabled?: boolean;
   /** When true, all permission sections start expanded (review / access preview). */
   sectionsInitiallyExpanded?: boolean;
+  /** People & Access: progressive disclosure, no mass-revoke control. */
+  peopleAccessMode?: boolean;
 };
 
 function countUnitAdvancedSelections(unit: PermissionUnit, selectedKeys: Set<string>) {
@@ -387,6 +389,7 @@ function PermissionSection({
   onChange,
   defaultOpen,
   forceOpen,
+  peopleAccessMode = false,
 }: {
   section: PermissionPresentationSection;
   selectedKeys: Set<string>;
@@ -395,6 +398,7 @@ function PermissionSection({
   onChange: (next: Set<string>) => void;
   defaultOpen: boolean;
   forceOpen?: boolean;
+  peopleAccessMode?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const isOpen = forceOpen ?? open;
@@ -402,6 +406,18 @@ function PermissionSection({
   const status = getPermissionSectionStatus(section, selectedKeys);
   const statusLabel = getPermissionSectionStatusLabel(status);
   const moduleCount = countSectionModules(section);
+  const grantableInSection = section.units.flatMap((u) =>
+    u.standardControls.flatMap((c) => c.permissionKeys).concat(u.advancedPermissions.map((a) => a.key)),
+  );
+  const grantedInSection = grantableInSection.filter((k) => selectedKeys.has(k)).length;
+  const sectionGrantSummary =
+    peopleAccessMode && grantableInSection.length > 0
+      ? grantedInSection === 0
+        ? "Kein Zugriff"
+        : grantedInSection === grantableInSection.length
+          ? "Vollständig"
+          : `${grantedInSection} von ${grantableInSection.length} freigegeben`
+      : null;
 
   return (
     <section
@@ -432,7 +448,7 @@ function PermissionSection({
             {section.label}
           </span>
           <span className="mt-0.5 block text-xs text-[var(--muted)]">
-            {accent.description}
+            {peopleAccessMode && sectionGrantSummary ? sectionGrantSummary : accent.description}
           </span>
         </span>
 
@@ -585,6 +601,7 @@ export default function NavAlignedPermissionEditor({
   onChange,
   disabled = false,
   sectionsInitiallyExpanded = false,
+  peopleAccessMode = false,
 }: NavAlignedPermissionEditorProps) {
   const [expandAll, setExpandAll] = useState<boolean | null>(
     sectionsInitiallyExpanded ? true : null,
@@ -639,18 +656,24 @@ export default function NavAlignedPermissionEditor({
           <button
             type="button"
             onClick={handleExpandAll}
-            className="rounded-lg border border-[var(--border)] px-2.5 py-1 text-[0.68rem] font-medium text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)]"
+            className={
+              peopleAccessMode
+                ? "text-[0.68rem] font-medium text-[var(--muted)] underline-offset-2 hover:text-[var(--foreground)] hover:underline"
+                : "rounded-lg border border-[var(--border)] px-2.5 py-1 text-[0.68rem] font-medium text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)]"
+            }
           >
             Alles einblenden
           </button>
-          <button
-            type="button"
-            onClick={handleClearAll}
-            disabled={disabled}
-            className="rounded-lg border border-[var(--border)] px-2.5 py-1 text-[0.68rem] font-medium text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] disabled:opacity-50"
-          >
-            Alle deaktivieren
-          </button>
+          {!peopleAccessMode ? (
+            <button
+              type="button"
+              onClick={handleClearAll}
+              disabled={disabled}
+              className="rounded-lg border border-[var(--border)] px-2.5 py-1 text-[0.68rem] font-medium text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] disabled:opacity-50"
+            >
+              Alle deaktivieren
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -662,8 +685,9 @@ export default function NavAlignedPermissionEditor({
           lockedKeys={lockedKeys}
           disabled={disabled}
           onChange={onChange}
-          defaultOpen={section.label === "Organisation"}
+          defaultOpen={peopleAccessMode ? false : section.label === "Organisation"}
           forceOpen={expandAll === true ? true : undefined}
+          peopleAccessMode={peopleAccessMode}
         />
       ))}
 

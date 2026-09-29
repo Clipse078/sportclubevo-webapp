@@ -3,7 +3,7 @@
  * SCE-ADMIN-ACCESS-UX-01R1 — theme, duplicate roles, permission UX (read-only baseline)
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import TenantUsersSearchableList from "@/components/admin/users/TenantUsersSearchableList";
@@ -80,6 +80,12 @@ describe("SCE-ADMIN-ACCESS-UX-01R1", () => {
         if (url.includes("/api/admin/users/lookup")) {
           return { ok: true, json: async () => ({ result: { kind: "not_found" } }) } as Response;
         }
+        if (url.includes("/api/admin/users/validate-email")) {
+          return {
+            ok: true,
+            json: async () => ({ ok: true, code: "VALID", normalized: "a@fcallschwil.ch" }),
+          } as Response;
+        }
         return { ok: true, json: async () => ({}) } as Response;
       }),
     );
@@ -100,7 +106,7 @@ describe("SCE-ADMIN-ACCESS-UX-01R1", () => {
     expect(scope.className).toMatch(/fca-input/);
   });
 
-  it("wizard shows only one Club Admin role card when legacy duplicates exist", () => {
+  it("wizard shows only one Club Admin role card when legacy duplicates exist", async () => {
     render(
       <PeopleAccessWizard
         availableRoles={duplicateClubAdminRoles}
@@ -112,10 +118,11 @@ describe("SCE-ADMIN-ACCESS-UX-01R1", () => {
         onComplete={vi.fn()}
       />,
     );
-    fireEvent.change(screen.getByLabelText(/E-Mail-Adresse/i), { target: { value: "a@b.ch" } });
+    fireEvent.change(screen.getByLabelText(/E-Mail-Adresse/i), { target: { value: "person@fcallschwil.ch" } });
     fireEvent.change(screen.getByLabelText("Vorname"), { target: { value: "A" } });
     fireEvent.change(screen.getByLabelText("Nachname"), { target: { value: "B" } });
     fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+    await waitFor(() => expect(screen.getByText("Funktion & Bereich")).toBeTruthy());
 
     const clubAdminLabels = screen.getAllByText("Club Admin");
     expect(clubAdminLabels.length).toBe(1);
@@ -130,7 +137,7 @@ describe("SCE-ADMIN-ACCESS-UX-01R1", () => {
         primaryRoleLabel="Trainer/in"
       />,
     );
-    expect(screen.getByText(/freigegeben ·/i)).toBeTruthy();
+    expect(screen.getByText(/Zugriff aus Rolle/i)).toBeTruthy();
     expect(screen.getByText(/Module & Berechtigungen/i)).toBeTruthy();
     expect(container.querySelectorAll('input[type="checkbox"]').length).toBe(0);
   });
@@ -147,15 +154,16 @@ describe("SCE-ADMIN-ACCESS-UX-01R1", () => {
         onComplete={vi.fn()}
       />,
     );
-    fireEvent.change(screen.getByLabelText(/E-Mail-Adresse/i), { target: { value: "a@b.ch" } });
+    fireEvent.change(screen.getByLabelText(/E-Mail-Adresse/i), { target: { value: "person@fcallschwil.ch" } });
     fireEvent.change(screen.getByLabelText("Vorname"), { target: { value: "A" } });
     fireEvent.change(screen.getByLabelText("Nachname"), { target: { value: "B" } });
     fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+    await waitFor(() => expect(screen.getByRole("checkbox", { name: /Trainer/i })).toBeTruthy());
     fireEvent.click(screen.getByRole("checkbox", { name: /Trainer/i }));
     fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
 
-    expect(await screen.findByText(/freigegeben ·/i)).toBeTruthy();
-    expect(screen.getByText(/Backend-Erweiterung/i)).toBeTruthy();
+    expect(await screen.findByText(/Zugriff aus Rolle/i)).toBeTruthy();
+    expect(screen.getByText(/Individuelle Anpassungen/i)).toBeTruthy();
   });
 
   it("list table container uses surface token not hardcoded white", () => {

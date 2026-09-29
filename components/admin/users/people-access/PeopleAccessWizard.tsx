@@ -19,6 +19,7 @@ import {
   buildNavPermissionPresentationFromModuleGroups,
   buildNavPermissionSummary,
 } from "@/lib/roles/nav-permission-presentation";
+import { validateInvitationEmailSyntax } from "@/lib/admin/people-access/email-validation";
 
 export type WizardRoleOption = {
   id: string;
@@ -88,6 +89,11 @@ export default function PeopleAccessWizard({
   const [previewLoading, setPreviewLoading] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailFieldState, setEmailFieldState] = useState<
+    "neutral" | "checking" | "valid" | "invalid" | "warning"
+  >("neutral");
+  const [emailFieldError, setEmailFieldError] = useState<string | null>(null);
+  const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
 
   const assignableRoles = useMemo(() => {
     const filtered = availableRoles.filter(
@@ -108,9 +114,61 @@ export default function PeopleAccessWizard({
     return selectedRoleIds.some((id) => privileged.has(id));
   }, [selectedRoleIds, privilegedRoleIds]);
 
+  const applyClientEmailValidation = useCallback((value: string) => {
+    const result = validateInvitationEmailSyntax(value);
+    if (result.ok) {
+      setEmailFieldState("valid");
+      setEmailFieldError(null);
+      setEmailSuggestion(null);
+      return true;
+    }
+    setEmailFieldState(result.suggestion ? "warning" : "invalid");
+    setEmailFieldError(result.message ?? "Ungültige E-Mail-Adresse.");
+    setEmailSuggestion(result.suggestion ?? null);
+    return false;
+  }, []);
+
+  const validateEmailOnServer = useCallback(async (value: string) => {
+    setEmailFieldState("checking");
+    try {
+      const res = await fetch("/api/admin/users/validate-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: value }),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+        suggestion?: string;
+        normalized?: string;
+      };
+      if (data.ok) {
+        setEmailFieldState("valid");
+        setEmailFieldError(null);
+        setEmailSuggestion(null);
+        if (typeof data.normalized === "string" && data.normalized) {
+          setEmail(data.normalized);
+        }
+        return true;
+      }
+      setEmailFieldState(data.suggestion ? "warning" : "invalid");
+      setEmailFieldError(data.error ?? "Ungültige E-Mail-Adresse.");
+      setEmailSuggestion(data.suggestion ?? null);
+      return false;
+    } catch {
+      setEmailFieldState("invalid");
+      setEmailFieldError("Die E-Mail-Domain konnte gerade nicht geprüft werden. Bitte versuche es erneut.");
+      return false;
+    }
+  }, []);
+
   const runEmailLookup = useCallback(async (value: string) => {
     const trimmed = value.trim();
     if (!trimmed || mode === "edit") {
+      setLookup({ status: "idle" });
+      return;
+    }
+    if (!validateInvitationEmailSyntax(trimmed).ok) {
       setLookup({ status: "idle" });
       return;
     }
@@ -160,7 +218,12 @@ export default function PeopleAccessWizard({
 
   useEffect(() => {
     const t = setTimeout(() => {
-      if (email.trim().length >= 3) void runEmailLookup(email);
+      const trimmed = email.trim();
+      if (trimmed.length >= 3 && validateInvitationEmailSyntax(trimmed).ok) {
+        void runEmailLookup(trimmed);
+      } else {
+        setLookup({ status: "idle" });
+      }
     }, 400);
     return () => clearTimeout(t);
   }, [email, runEmailLookup]);
@@ -279,8 +342,29 @@ export default function PeopleAccessWizard({
     }
   }
 
+  const emailSyntaxReady =
+    Boolean(email.trim()) && validateInvitationEmailSyntax(email).ok;
+
   const canAdvanceStep0 =
-    mode === "edit" || linkedPersonId || (firstName.trim() && lastName.trim() && email.trim());
+    mode === "edit" ||
+    linkedPersonId ||
+    (firstName.trim() && lastName.trim() && emailSyntaxReady);
+
+  async function handleNextFromStep() {
+    if (step === 0 && mode === "invite" && !linkedPersonId) {
+      const clientOk = applyClientEmailValidation(email);
+      if (!clientOk) {
+        document.getElementById("wizard-email")?.focus();
+        return;
+      }
+      const serverOk = await validateEmailOnServer(email);
+      if (!serverOk) {
+        document.getElementById("wizard-email")?.focus();
+        return;
+      }
+    }
+    setStep((s) => s + 1);
+  }
 
   const primaryRoleLabel =
     selectedRoles.length === 1
@@ -355,10 +439,50 @@ export default function PeopleAccessWizard({
                   type="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailFieldState !== "neutral") {
+                      setEmailFieldState("neutral");
+                      setEmailFieldError(null);
+                      setEmailSuggestion(null);
+                    }
+                  }}
+                  onBlur={() => {
+                    if (email.trim()) applyClientEmailValidation(email);
+                  }}
                   className="fca-input w-full"
-                  autoComplete="off"
+                  autoComplete="email"
+                  spellCheck={false}
+                  aria-invalid={emailFieldState === "invalid" || emailFieldState === "warning"}
+                  aria-describedby={
+                    emailFieldError ? "wizard-email-error wizard-email-suggestion" : undefined
+                  }
                 />
+                {emailFieldState === "checking" ? (
+                  <p className="mt-1 text-xs text-[var(--muted)]">E-Mail wird geprüft…</p>
+                ) : null}
+                {emailFieldError ? (
+                  <p id="wizard-email-error" className="mt-1 text-xs text-red-600" role="alert">
+                    {emailFieldError}
+                  </p>
+                ) : null}
+                {emailSuggestion ? (
+                  <div id="wizard-email-suggestion" className="mt-2 text-xs text-[var(--muted)]">
+                    <p>Meintest du:</p>
+                    <button
+                      type="button"
+                      className="mt-1 font-medium text-[var(--blue,#2563EB)] underline"
+                      onClick={() => {
+                        setEmail(emailSuggestion);
+                        setEmailSuggestion(null);
+                        void validateEmailOnServer(emailSuggestion);
+                      }}
+                    >
+                      {emailSuggestion}
+                    </button>
+                    <span className="ml-1">?</span>
+                  </div>
+                ) : null}
               </div>
               <div>
                 <label htmlFor="wizard-firstName" className="mb-1 block text-xs font-medium">
@@ -642,10 +766,14 @@ export default function PeopleAccessWizard({
         {step < 3 ? (
           <button
             type="button"
-            onClick={() => setStep((s) => s + 1)}
+            onClick={() => void handleNextFromStep()}
             disabled={
               (step === 0 && !canAdvanceStep0) ||
               (step === 0 && existingAccessBlocksInvite) ||
+              (step === 0 &&
+                (emailFieldState === "checking" ||
+                  emailFieldState === "invalid" ||
+                  emailFieldState === "warning")) ||
               (step === 1 && requiresPrivilegedConfirm && !privilegedConfirmed)
             }
             className="fca-button-primary text-sm"

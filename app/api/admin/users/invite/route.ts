@@ -49,6 +49,8 @@ import {
   resolveSecurityLinkBaseUrl,
   SecurityLinkConfigurationError,
 } from "@/lib/server/security-link-url";
+import { validateInvitationEmailForServer } from "@/lib/admin/people-access/email-validation";
+import { resolveMxRecords } from "@/lib/admin/people-access/email-dns";
 
 export async function POST(request: NextRequest) {
   const access = await requireApiPermission(PERMISSIONS.USERS_INVITE);
@@ -151,19 +153,33 @@ export async function POST(request: NextRequest) {
       typeof b.lastName === "string" && b.lastName.trim() &&
       typeof b.email === "string" && b.email.trim()
     ) {
+      const emailValidation = await validateInvitationEmailForServer(b.email, resolveMxRecords);
+      if (!emailValidation.ok) {
+        const status =
+          emailValidation.code === "EMAIL_DOMAIN_CHECK_TEMPORARY_FAILURE" ? 503 : 400;
+        return NextResponse.json(
+          {
+            error: emailValidation.message ?? "Ungültige E-Mail-Adresse.",
+            code: emailValidation.code,
+            suggestion: emailValidation.suggestion,
+          },
+          { status },
+        );
+      }
+
       // Create Person + invite
       const result = await createPersonAndInvite(
         tenantId,
         {
           firstName: b.firstName.trim(),
           lastName: b.lastName.trim(),
-          email: b.email.trim(),
+          email: emailValidation.normalized,
         },
         actorUserId,
         onboardOptions,
       );
       userId = result.userId;
-      recipientEmail = b.email.trim();
+      recipientEmail = emailValidation.normalized;
       recipientFirstName = b.firstName.trim();
 
       if (result.rawToken) {

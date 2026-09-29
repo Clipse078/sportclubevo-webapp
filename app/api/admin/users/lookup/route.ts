@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireApiPermission } from "@/lib/permissions/require-api-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { lookupPersonByEmailInTenant } from "@/lib/admin/people-access/person-lookup";
+import { validateInvitationEmailSyntax } from "@/lib/admin/people-access/email-validation";
 
 export async function GET(request: NextRequest) {
   const access = await requireApiPermission(PERMISSIONS.USERS_INVITE);
@@ -26,6 +27,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "E-Mail ist erforderlich." }, { status: 400 });
   }
 
-  const result = await lookupPersonByEmailInTenant(tenantId, email);
+  const syntax = validateInvitationEmailSyntax(email);
+  if (!syntax.ok) {
+    return NextResponse.json(
+      {
+        error: syntax.message ?? "Ungültige E-Mail-Adresse.",
+        code: syntax.code,
+        suggestion: syntax.suggestion,
+      },
+      { status: 400 },
+    );
+  }
+
+  const result = await lookupPersonByEmailInTenant(tenantId, syntax.normalized);
   return NextResponse.json({ result });
 }

@@ -13,6 +13,7 @@ import PersonAccessDrawer from "@/components/admin/users/people-access/PersonAcc
 import type { WizardRoleOption } from "@/components/admin/users/people-access/PeopleAccessWizard";
 import type { PermissionMatrixModuleGroup } from "@/components/admin/roles/NavAlignedPermissionEditor";
 import { groupRoleChipsForDisplay } from "@/lib/admin/people-access/role-display";
+import { buildAccessColumnSummary } from "@/lib/admin/people-access/access-column-summary";
 import { userHasPrivilegedRole } from "@/lib/admin/people-access/privileged-utils";
 import type { TenantUserItem, TenantPersonWithoutUser } from "@/lib/users/queries";
 
@@ -74,13 +75,6 @@ function formatScopeSummary(user: TenantUserItem): string {
   }
   if (parts.length === 0) return "Kein Bereich zugewiesen";
   return parts.join(" · ");
-}
-
-function formatAccessSummary(user: TenantUserItem): string {
-  const fnCount = groupRoleChipsForDisplay(user.roles).length + (user.scopedRoles?.length ?? 0);
-  if (fnCount === 0) return "Kein Zugriff";
-  if (user.isPlatformSystemIdentity) return "System · Plattform";
-  return `${fnCount} Funktion${fnCount === 1 ? "" : "en"}`;
 }
 
 export default function TenantUsersSearchableList({
@@ -236,8 +230,8 @@ export default function TenantUsersSearchableList({
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="sce-page-search min-w-[200px] flex-1">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-[minmax(0,1fr)_auto_auto] lg:grid-cols-[minmax(12rem,1fr)_minmax(7.5rem,auto)_minmax(7.5rem,auto)_minmax(8rem,auto)_auto] lg:items-center">
+        <div className="sce-page-search min-w-0 sm:col-span-2 md:col-span-1 lg:col-span-1">
           <Search className="h-4 w-4 flex-shrink-0 text-[var(--muted)]" />
           <input
             type="text"
@@ -256,7 +250,7 @@ export default function TenantUsersSearchableList({
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="fca-input h-9 text-sm"
+          className="fca-input h-9 w-full min-w-0 text-sm lg:w-auto"
           aria-label="Status filtern"
         >
           <option value="all">Alle Status</option>
@@ -273,7 +267,7 @@ export default function TenantUsersSearchableList({
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="fca-input h-9 text-sm"
+            className="fca-input h-9 w-full min-w-0 text-sm lg:w-auto"
             aria-label="Funktion filtern"
           >
             <option value="all">Alle Funktionen</option>
@@ -285,10 +279,10 @@ export default function TenantUsersSearchableList({
 
         <input
           type="search"
-          placeholder="Bereich filtern…"
+          placeholder="Alle Bereiche"
           value={scopeQuery}
           onChange={(e) => setScopeQuery(e.target.value)}
-          className="fca-input h-9 min-w-[140px] text-sm"
+          className="fca-input h-9 w-full min-w-0 text-sm lg:w-auto"
           aria-label="Bereich filtern"
         />
 
@@ -296,9 +290,9 @@ export default function TenantUsersSearchableList({
           <button
             type="button"
             onClick={() => openWizardForPerson()}
-            className="inline-flex h-9 items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--blue,#2563EB)] px-3 text-sm font-medium text-white"
+            className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--blue,#2563EB)] px-3 text-sm font-medium text-white sm:col-span-2 md:col-span-3 lg:col-span-1 lg:w-auto lg:justify-start"
           >
-            <UserPlus className="h-4 w-4" />
+            <UserPlus className="h-4 w-4 shrink-0" />
             Person hinzufügen
           </button>
         ) : null}
@@ -414,7 +408,19 @@ export default function TenantUsersSearchableList({
                   {formatScopeSummary(user)}
                 </div>
 
-                <div className="relative z-[1] text-xs pointer-events-none">{formatAccessSummary(user)}</div>
+                <div className="relative z-[1] text-xs pointer-events-none">
+                  {(() => {
+                    const access = buildAccessColumnSummary(user);
+                    return (
+                      <span>
+                        <span className="block font-medium text-[var(--foreground)]">{access.primary}</span>
+                        {access.secondary ? (
+                          <span className="block text-[var(--muted)]">{access.secondary}</span>
+                        ) : null}
+                      </span>
+                    );
+                  })()}
+                </div>
 
                 <div className="relative z-[1] pointer-events-none">
                   <AdminStatusPill label={status.label} tone={status.tone} />

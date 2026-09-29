@@ -3,7 +3,7 @@
  * SCE-ADMIN-ACCESS-UX-01 — People & Access UX
  */
 
-import { render, screen, fireEvent, within } from "@testing-library/react";
+import { render, screen, fireEvent, within, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import TenantUsersSearchableList from "@/components/admin/users/TenantUsersSearchableList";
 import PeopleAccessWizard from "@/components/admin/users/people-access/PeopleAccessWizard";
@@ -68,6 +68,12 @@ describe("SCE-ADMIN-ACCESS-UX-01", () => {
         }
         if (url.includes("/api/admin/users/lookup")) {
           return { ok: true, json: async () => ({ result: { kind: "not_found" } }) } as Response;
+        }
+        if (url.includes("/api/admin/users/validate-email")) {
+          return {
+            ok: true,
+            json: async () => ({ ok: true, code: "VALID", normalized: "max@test.ch" }),
+          } as Response;
         }
         return { ok: true, json: async () => ({}) } as Response;
       }),
@@ -137,9 +143,9 @@ describe("SCE-ADMIN-ACCESS-UX-01", () => {
         canInvite={false}
       />,
     );
-    expect(screen.getByText("Funktion")).toBeTruthy();
-    expect(screen.getByText("Bereich")).toBeTruthy();
-    expect(screen.getByText(/F2/)).toBeTruthy();
+    expect(screen.getByText("Person")).toBeTruthy();
+    expect(screen.getByText("Zugriff")).toBeTruthy();
+    expect(screen.getAllByText(/F2/).length).toBeGreaterThan(0);
   });
 
   it("wizard requires email on step 1", () => {
@@ -169,13 +175,13 @@ describe("SCE-ADMIN-ACCESS-UX-01", () => {
       />,
     );
     fireEvent.change(screen.getByLabelText(/E-Mail-Adresse/i), {
-      target: { value: "new@test.ch" },
+      target: { value: "new@fcallschwil.ch" },
     });
     fireEvent.change(screen.getByLabelText("Vorname"), { target: { value: "Neu" } });
     fireEvent.change(screen.getByLabelText("Nachname"), { target: { value: "Person" } });
     fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
 
-    const adminCheckbox = screen.getByRole("checkbox", { name: /Club Admin/i });
+    const adminCheckbox = await waitFor(() => screen.getByRole("checkbox", { name: /Club Admin/i }));
     fireEvent.click(adminCheckbox);
     expect(screen.getByText(/Vereinsweiter administrativer Zugriff/i)).toBeTruthy();
     const next = screen.getByRole("button", { name: "Weiter" });
@@ -184,7 +190,7 @@ describe("SCE-ADMIN-ACCESS-UX-01", () => {
     expect((next as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it("excludes platform roles from assignable list in wizard", () => {
+  it("excludes platform roles from assignable list in wizard", async () => {
     render(
       <PeopleAccessWizard
         availableRoles={[
@@ -198,11 +204,11 @@ describe("SCE-ADMIN-ACCESS-UX-01", () => {
         onComplete={vi.fn()}
       />,
     );
-    fireEvent.change(screen.getByLabelText(/E-Mail-Adresse/i), { target: { value: "a@b.ch" } });
+    fireEvent.change(screen.getByLabelText(/E-Mail-Adresse/i), { target: { value: "person@fcallschwil.ch" } });
     fireEvent.change(screen.getByLabelText("Vorname"), { target: { value: "A" } });
     fireEvent.change(screen.getByLabelText("Nachname"), { target: { value: "B" } });
     fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
-    expect(screen.queryByRole("checkbox", { name: /Super Admin/i })).toBeNull();
+    await waitFor(() => expect(screen.queryByRole("checkbox", { name: /Super Admin/i })).toBeNull());
   });
 
   it("duplicate role chips grouped", () => {
@@ -259,6 +265,6 @@ describe("SCE-ADMIN-ACCESS-UX-01", () => {
         canInvite={false}
       />,
     );
-    expect(screen.getByText("Systemzugang")).toBeTruthy();
+    expect(screen.getAllByText("Systemzugang").length).toBeGreaterThan(0);
   });
 });
