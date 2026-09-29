@@ -57,6 +57,7 @@ const DOMAIN_MESSAGE_KEY: Record<AppNavigationDomainId, `domains.${string}`> = {
   communication: "domains.communication",
   club: "domains.club",
   publishing: "domains.publishing",
+  admin: "domains.admin",
   "platform-overview": "domains.platformOverview",
   "platform-governance": "domains.platformGovernance",
   "platform-commercial": "domains.platformCommercial",

@@ -12,7 +12,8 @@ export type NavIaV2TargetL1 =
   | "planung"
   | "kommunikation"
   | "club"
-  | "publishing";
+  | "publishing"
+  | "admin";
 
 /** Platform workspace keeps SCE-VISUAL-03 domain ids until a dedicated programme. */
 export type NavIaV2Workspace = "club" | "platform";

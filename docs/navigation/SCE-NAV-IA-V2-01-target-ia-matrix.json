@@ -1,7 +1,4 @@
 {
-  "programme": "SCE-NAV-IA-V2-01",
-  "generatedFrom": "lib/nav/nav-config.ts",
-  "clubAdminPermissionCount": 100,
   "destinations": [
     {
       "key": "dashboard",
@@ -201,29 +198,6 @@
       "label": "Organisationseinheiten",
       "labelV2": "Organisationseinheiten",
       "icon": "org-unit",
-      "targetL1": "club",
-      "targetL2": "Organisation",
-      "targetLocalGroup": "organisation",
-      "visibility": {
-        "header": false,
-        "explorer": true,
-        "mobileEligible": false
-      },
-      "permissionKeys": [
-        "org.view",
-        "org.manage"
-      ],
-      "classification": "LOCAL_DESTINATION",
-      "workspace": "club",
-      "routePreserved": true,
-      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
-    },
-    {
-      "key": "target-groups",
-      "route": "/dashboard/target-groups",
-      "label": "Zielgruppen",
-      "labelV2": "Zielgruppen",
-      "icon": "target-group",
       "targetL1": "club",
       "targetL2": "Organisation",
       "targetLocalGroup": "organisation",
@@ -536,6 +510,75 @@
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     },
     {
+      "key": "communication-mitteilungen",
+      "route": "/dashboard/communication/mitteilungen",
+      "label": "Mitteilungen",
+      "labelV2": "Mitteilungen",
+      "icon": null,
+      "targetL1": "kommunikation",
+      "targetL2": "Nachrichten & Einstellungen",
+      "targetLocalGroup": "communication",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "communication.club.view",
+        "communication.club.send"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "communication-kampagnen",
+      "route": "/dashboard/communication/kampagnen",
+      "label": "Kampagnen",
+      "labelV2": "Kampagnen",
+      "icon": null,
+      "targetL1": "kommunikation",
+      "targetL2": "Nachrichten & Einstellungen",
+      "targetLocalGroup": "communication",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "communication.club.view",
+        "communication.club.send"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
+      "key": "communication-zielgruppen",
+      "route": "/dashboard/communication/zielgruppen",
+      "label": "Zielgruppen",
+      "labelV2": "Zielgruppen",
+      "icon": "target-group",
+      "targetL1": "kommunikation",
+      "targetL2": "Nachrichten & Einstellungen",
+      "targetLocalGroup": "communication",
+      "visibility": {
+        "header": false,
+        "explorer": true,
+        "mobileEligible": false
+      },
+      "permissionKeys": [
+        "communication.zielgruppen.view",
+        "communication.zielgruppen.manage"
+      ],
+      "classification": "LOCAL_DESTINATION",
+      "workspace": "club",
+      "routePreserved": true,
+      "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
+    },
+    {
       "key": "communication-email-sender",
       "route": "/dashboard/communication/email-sender",
       "label": "E-Mail-Absender",
@@ -636,9 +679,9 @@
       "targetL2": "Inhalte",
       "targetLocalGroup": "website",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "news.manage",
@@ -747,9 +790,9 @@
       "targetL2": "Medien",
       "targetLocalGroup": "website",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "news.manage",
@@ -1141,11 +1184,11 @@
     },
     {
       "key": "administration",
-      "route": "/dashboard/admin/branding",
-      "label": "Administration",
-      "labelV2": "Administration",
+      "route": "/dashboard/admin",
+      "label": "Admin",
+      "labelV2": "Admin",
       "icon": "settings",
-      "targetL1": "club",
+      "targetL1": "admin",
       "targetL2": "Administration",
       "targetLocalGroup": null,
       "visibility": {
@@ -1154,16 +1197,7 @@
         "mobileEligible": true
       },
       "permissionKeys": [
-        "users.view",
-        "users.manage",
-        "seasons.view",
-        "seasons.manage",
-        "facilities.view",
-        "facilities.manage",
-        "tenants.view",
-        "tenants.manage",
-        "roles.view",
-        "roles.manage"
+        "users.manage_memberships"
       ],
       "classification": "ADMIN_DESTINATION",
       "workspace": "club",
@@ -1176,13 +1210,13 @@
       "label": "Rollen & Berechtigungen",
       "labelV2": "Rollen & Berechtigungen",
       "icon": "roles-access",
-      "targetL1": "club",
+      "targetL1": "admin",
       "targetL2": "Administration",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "roles.view",
@@ -1199,13 +1233,13 @@
       "label": "Saisons",
       "labelV2": "Saisons",
       "icon": "season",
-      "targetL1": "club",
+      "targetL1": "admin",
       "targetL2": "Administration",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "seasons.view",
@@ -1222,13 +1256,13 @@
       "label": "Anlagen & Ressourcen",
       "labelV2": "Anlagen & Ressourcen",
       "icon": "facility",
-      "targetL1": "club",
+      "targetL1": "admin",
       "targetL2": "Administration",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "facilities.view",
@@ -1245,13 +1279,13 @@
       "label": "Darstellung",
       "labelV2": "Darstellung",
       "icon": "settings",
-      "targetL1": "club",
+      "targetL1": "admin",
       "targetL2": "Administration",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "users.manage"
@@ -1267,13 +1301,13 @@
       "label": "Personen & Zugänge",
       "labelV2": "Personen & Zugänge",
       "icon": "people",
-      "targetL1": "club",
+      "targetL1": "admin",
       "targetL2": "Administration",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "users.view",
@@ -1290,13 +1324,13 @@
       "label": "Rollen",
       "labelV2": "Rollen",
       "icon": "roles-access",
-      "targetL1": "club",
+      "targetL1": "admin",
       "targetL2": "Administration",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "users.manage"
@@ -1312,13 +1346,13 @@
       "label": "Tenants",
       "labelV2": "Tenants",
       "icon": "organisation",
-      "targetL1": "club",
+      "targetL1": "admin",
       "targetL2": "Administration",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "tenants.view",
@@ -1335,13 +1369,13 @@
       "label": "Integrationen",
       "labelV2": "Integrationen",
       "icon": "integration",
-      "targetL1": "club",
+      "targetL1": "admin",
       "targetL2": "Administration",
       "targetLocalGroup": "administration",
       "visibility": {
-        "header": false,
+        "header": true,
         "explorer": true,
-        "mobileEligible": false
+        "mobileEligible": true
       },
       "permissionKeys": [
         "tenants.manage"
@@ -1351,103 +1385,5 @@
       "routePreserved": true,
       "migrationReason": "Semantische Zuordnung gemäss Verantwortungsdomäne V2."
     }
-  ],
-  "publishingL2": [
-    {
-      "id": "uebersicht",
-      "label": "Übersicht",
-      "keys": [
-        "website",
-        "website-overview"
-      ]
-    },
-    {
-      "id": "inhalte",
-      "label": "Inhalte",
-      "keys": [
-        "website-news",
-        "website-pages",
-        "website-editorial",
-        "website-components"
-      ]
-    },
-    {
-      "id": "website",
-      "label": "Website",
-      "keys": [
-        "website-homepage",
-        "website-navigation",
-        "website-blocks"
-      ]
-    },
-    {
-      "id": "medien",
-      "label": "Medien",
-      "keys": [
-        "website-media"
-      ]
-    },
-    {
-      "id": "kanaele",
-      "label": "Kanäle",
-      "keys": [
-        "website-publishing",
-        "infoboard",
-        "infoboard-overview",
-        "infoboard-preview"
-      ]
-    },
-    {
-      "id": "einstellungen",
-      "label": "Einstellungen",
-      "keys": [
-        "website-settings"
-      ]
-    }
-  ],
-  "clubL2": [
-    {
-      "id": "organisation",
-      "label": "Organisation",
-      "headerVisible": true
-    },
-    {
-      "id": "people-teams",
-      "label": "People & Teams",
-      "headerVisible": true
-    },
-    {
-      "id": "mitgliedschaft",
-      "label": "Mitgliedschaft",
-      "headerVisible": true
-    },
-    {
-      "id": "vereinsentwicklung",
-      "label": "Vereinsentwicklung",
-      "headerVisible": true
-    },
-    {
-      "id": "club-betrieb",
-      "label": "Club-Betrieb",
-      "headerVisible": true
-    },
-    {
-      "id": "finanzen",
-      "label": "Finanzen & Partnerschaften",
-      "headerVisible": true
-    },
-    {
-      "id": "administration",
-      "label": "Administration",
-      "headerVisible": false
-    }
-  ],
-  "depthContract": {
-    "L1": "Verantwortungsdomäne (Dashboard, Planung, Kommunikation, Club, Publishing). Max. fünf sichtbare Club-L1-Domänen in Row 1.",
-    "L2": "Wesentliches Ziel / Verantwortungsbereich innerhalb der Domäne (z. B. Club → People & Teams). Erscheint in Header Row 2, wenn die Domäne aktiv ist.",
-    "L3": "Lokale Navigation innerhalb eines Moduls (Tabs, CMS-Unterseiten, Admin-Kindziele). Nur wenn der aktive Bereich echte lokale Struktur hat — keine globale dritte Zeile.",
-    "APP_EXPLORER": "Vollständige, berechtigungsgefilterte Entdeckung; gleiche L1-Taxonomie wie Header; tiefe/seltene Ziele ohne dauerhaften Header-Platz.",
-    "QUICK_ACCESS": "Persönliche Pins; ändert nie canonical parent/domain; Metadaten ausschliesslich aus nav-config / Ziel-Matrix; Berechtigungen bleiben aktiv.",
-    "DASHBOARD": "Persönliches Betriebs-Home (Programm, Kalender, Aufmerksamkeit, Aufgaben, Schnellzugriff) — kein Sammelbecken für Club-Module."
-  }
+  ]
 }
