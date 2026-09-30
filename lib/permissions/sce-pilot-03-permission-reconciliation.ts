@@ -3,9 +3,11 @@
  * CLI: scripts/sync-sce-pilot-03-permissions.ts
  */
 
-import type { PermissionModule, PrismaClient } from "@prisma/client";
+import type { PermissionModule, PermissionScope, PrismaClient } from "@prisma/client";
+import { reconcilePlanningAllocationsPermissions } from "@/lib/permissions/planning-allocations-permission-reconciliation";
 
 const TRAINING_MODULE = "TRAININGS" as PermissionModule;
+const TENANT_SCOPE = "TENANT" as PermissionScope;
 const NEWS_MODULE = "NEWS" as PermissionModule;
 const WEBSITE_MODULE = "WEBSITE" as PermissionModule;
 const INFOBOARD_MODULE = "INFOBOARD" as PermissionModule;
@@ -33,6 +35,9 @@ export type PermissionSyncOutcome =
 
 export type Pilot03ReconciliationResult = {
   permissions: PermissionSyncOutcome[];
+  planningAllocationsRoleGrants: Awaited<
+    ReturnType<typeof reconcilePlanningAllocationsPermissions>
+  >;
 };
 
 export async function reconcileScePilot03Permissions(
@@ -57,11 +62,27 @@ export async function reconcileScePilot03Permissions(
     if (!dryRun) {
       await prisma.permission.upsert({
         where: { key: def.key },
-        update: { name: def.name, module: def.module },
-        create: { key: def.key, name: def.name, module: def.module },
+        update: {
+          name: def.name,
+          module: def.module,
+          scope: TENANT_SCOPE,
+          grantableByAdmin: true,
+        },
+        create: {
+          key: def.key,
+          name: def.name,
+          module: def.module,
+          scope: TENANT_SCOPE,
+          grantableByAdmin: true,
+        },
       });
     }
   }
 
-  return { permissions: permissionOutcomes };
+  const planningAllocationsRoleGrants = await reconcilePlanningAllocationsPermissions(
+    prisma,
+    dryRun,
+  );
+
+  return { permissions: permissionOutcomes, planningAllocationsRoleGrants };
 }

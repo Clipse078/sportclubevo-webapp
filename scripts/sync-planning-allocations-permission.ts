@@ -1,6 +1,6 @@
 /**
- * SCE-PILOT-03 — sync allocation + content view permission catalog rows.
- * Defaults to DRY RUN. APPLY_PERMISSION_SYNC=true to write (STAGE only guard).
+ * SCE — sync planning.allocations.* catalog + canonical Club Admin backfill.
+ * DRY RUN by default. APPLY_PERMISSION_SYNC=true to write (STAGE guard).
  */
 
 import { loadEnvConfig } from "@next/env";
@@ -10,7 +10,7 @@ loadEnvConfig(process.cwd());
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
-import { reconcileScePilot03Permissions } from "@/lib/permissions/sce-pilot-03-permission-reconciliation";
+import { reconcilePlanningAllocationsPermissions } from "@/lib/permissions/planning-allocations-permission-reconciliation";
 import { assertOperationalMutationAllowed } from "@/lib/server/operational-database-guard";
 
 const DRY_RUN = process.env.APPLY_PERMISSION_SYNC !== "true";
@@ -19,13 +19,13 @@ const connectionString =
   process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
 
 if (!connectionString) {
-  console.error("[sync-sce-pilot-03-permissions] DATABASE_URL is required.");
+  console.error("[sync-planning-allocations-permission] DATABASE_URL is required.");
   process.exit(1);
 }
 
 if (!DRY_RUN) {
   assertOperationalMutationAllowed({
-    operationId: "sync-sce-pilot-03-permissions",
+    operationId: "sync-planning-allocations-permission",
     databaseUrl: connectionString,
     explicitIntent: true,
     allowedRemoteEnvironments: ["stage"],
@@ -38,26 +38,21 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log(
-    `\n[sync-sce-pilot-03-permissions] Starting… (mode: ${DRY_RUN ? "DRY RUN" : "APPLY"})\n`,
+    `\n[sync-planning-allocations-permission] Starting… (mode: ${DRY_RUN ? "DRY RUN" : "APPLY"})\n`,
   );
 
-  const result = await reconcileScePilot03Permissions(prisma, DRY_RUN);
+  const result = await reconcilePlanningAllocationsPermissions(prisma, DRY_RUN);
 
   for (const outcome of result.permissions) {
     const marker = outcome.action === "created" ? "+" : outcome.action === "updated" ? "~" : "✓";
-    console.log(`  ${marker}  ${outcome.key} (${outcome.action})`);
+    console.log(`  ${marker}  permission ${outcome.key} (${outcome.action})`);
   }
 
-  const assignedClubAdmin = result.planningAllocationsRoleGrants.tenantClubAdminRoles.filter(
-    (row) => row.action === "assigned",
-  ).length;
-  console.log(
-    `\n  planning.allocations Club Admin grants (new assignments): ${assignedClubAdmin}`,
-  );
+  console.log(`\n  Tenant Club Admin roles processed: ${result.tenantClubAdminRoles.length / 2}`);
 
   if (DRY_RUN) {
     console.log(
-      "\nDRY RUN — no writes. Apply with APPLY_PERMISSION_SYNC=true npx tsx scripts/sync-sce-pilot-03-permissions.ts\n",
+      "\nDRY RUN — no writes. Apply with APPLY_PERMISSION_SYNC=true npx tsx scripts/sync-planning-allocations-permission.ts\n",
     );
   } else {
     console.log("\nDone. Re-login required for JWT permission refresh.\n");
@@ -66,7 +61,7 @@ async function main() {
 
 main()
   .catch((err) => {
-    console.error("[sync-sce-pilot-03-permissions] FAILED:", err);
+    console.error("[sync-planning-allocations-permission] FAILED:", err);
     process.exit(1);
   })
   .finally(async () => {
