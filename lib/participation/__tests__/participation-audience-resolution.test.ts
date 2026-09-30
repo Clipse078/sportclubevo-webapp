@@ -82,3 +82,101 @@ describe("participation-audience-resolution — NOT_RESPONDED / OPEN semantics",
     ).toEqual([]);
   });
 });
+
+function clubEventAnchor(): ResolvedEventParticipationAnchor {
+  return {
+    tenantId: "tenant-a",
+    teamId: "",
+    teamSeasonId: "",
+    title: "Helferabend",
+    startAt: new Date("2026-10-10T18:00:00.000Z"),
+    participationEvent: { eventKind: "CLUB_EVENT", eventId: "evt-club-1" },
+    contextEventId: "evt-club-1",
+    anchorRef: {
+      eventKind: "CLUB_EVENT",
+      eventId: "evt-club-1",
+      teamSeasonId: "",
+      contextEventId: "evt-club-1",
+    },
+  };
+}
+
+describe("participation-audience-resolution — CLUB_EVENT live structural population", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.resolveClubEventInviteePersonIds.mockResolvedValue(["p1", "p2", "p3"]);
+    mocks.participationResponse.findMany.mockResolvedValue([]);
+  });
+
+  it("ALL and NOT_RESPONDED use dynamically expanded invitee person ids", async () => {
+    mocks.participationResponse.findMany.mockResolvedValue([{ personId: "p1", status: "YES" }]);
+    expect(
+      await listParticipationSubjectPersonIds({
+        anchor: clubEventAnchor(),
+        preset: "ALL_INVITEES",
+      }),
+    ).toEqual(["p1", "p2", "p3"]);
+    expect(
+      await listParticipationSubjectPersonIds({
+        anchor: clubEventAnchor(),
+        preset: "NOT_RESPONDED",
+      }),
+    ).toEqual(["p2", "p3"]);
+    expect(mocks.resolveClubEventInviteePersonIds).toHaveBeenCalledWith("tenant-a", "evt-club-1");
+  });
+
+  it("new structural member p4 enters population as NOT_RESPONDED without a response row", async () => {
+    mocks.resolveClubEventInviteePersonIds.mockResolvedValue(["p1", "p2", "p3", "p4"]);
+    mocks.participationResponse.findMany.mockResolvedValue([{ personId: "p1", status: "YES" }]);
+    expect(
+      await listParticipationSubjectPersonIds({
+        anchor: clubEventAnchor(),
+        preset: "NOT_RESPONDED",
+      }),
+    ).toEqual(["p2", "p3", "p4"]);
+  });
+
+  it("person who leaves structural audience is excluded from ALL and preset filters", async () => {
+    mocks.resolveClubEventInviteePersonIds.mockResolvedValue(["p1", "p3"]);
+    mocks.participationResponse.findMany.mockResolvedValue([
+      { personId: "p1", status: "YES" },
+      { personId: "p2", status: "YES" },
+      { personId: "p3", status: "OPEN" },
+    ]);
+    expect(
+      await listParticipationSubjectPersonIds({
+        anchor: clubEventAnchor(),
+        preset: "ALL_INVITEES",
+      }),
+    ).toEqual(["p1", "p3"]);
+    expect(
+      await listParticipationSubjectPersonIds({
+        anchor: clubEventAnchor(),
+        preset: "ACCEPTED_ONLY",
+      }),
+    ).toEqual(["p1"]);
+    expect(
+      await listParticipationSubjectPersonIds({
+        anchor: clubEventAnchor(),
+        preset: "NOT_RESPONDED",
+      }),
+    ).toEqual(["p3"]);
+  });
+
+  it("orphan ParticipationResponse for non-invitee does not appear in ALL or corrupt YES counts", async () => {
+    mocks.resolveClubEventInviteePersonIds.mockResolvedValue(["p1", "p3"]);
+    mocks.participationResponse.findMany.mockResolvedValue([{ personId: "p2", status: "YES" }]);
+    expect(
+      await listParticipationSubjectPersonIds({
+        anchor: clubEventAnchor(),
+        preset: "ALL_INVITEES",
+      }),
+    ).toEqual(["p1", "p3"]);
+    expect(
+      await listParticipationSubjectPersonIds({
+        anchor: clubEventAnchor(),
+        preset: "ACCEPTED_ONLY",
+      }),
+    ).toEqual([]);
+  });
+});

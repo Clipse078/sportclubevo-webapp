@@ -10,11 +10,13 @@ import { getDomainAudienceSourceRegistry } from "@/lib/communication/platform/au
 import { ensureProbetrainingDomainAudienceRegistered } from "@/lib/registrations/domain-audience/register-probetraining-domain-audience";
 import { ensureSpielbetriebDomainAudienceRegistered } from "@/lib/spielbetrieb/domain-audience/register-spielbetrieb-domain-audience";
 import { ensureTrainingDomainAudienceRegistered } from "@/lib/training/domain-audience/register-training-domain-audience";
+import { ensureEventsDomainAudienceRegistered } from "@/lib/events/domain-audience/register-events-domain-audience";
 
 function ensureDomainAudienceSourcesRegistered(): void {
   ensureProbetrainingDomainAudienceRegistered();
   ensureSpielbetriebDomainAudienceRegistered();
   ensureTrainingDomainAudienceRegistered();
+  ensureEventsDomainAudienceRegistered();
 }
 
 export async function listAuthorizedDomainAudienceSources(

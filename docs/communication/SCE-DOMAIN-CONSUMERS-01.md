@@ -393,11 +393,12 @@ Recommended **package sequence** (not prompt order):
 - Attention: `participation-outstanding` + manual COMM-10 TRAINING remind
 - Shared core: `lib/participation/participation-audience-resolution.ts`
 
-**EVENTS-AUDIENCE-01**
+**EVENTS-AUDIENCE-01** — **Implemented** (see `docs/communication/SCE-EVENTS-AUDIENCE-01.md`)
 
-- Entity: `Event` OTHER + audience entries
-- Audiences: registered invitees by response status
-- Risk: must not use squad resolver for club events
+- Entity: `Event` OTHER + `EventParticipationAudienceEntry`
+- Audiences: live invitation population by response status (`events.teilnahme`)
+- Attention: `participation-outstanding` + manual remind (COMM-10 team path or COMM-11 club path)
+- Shared status core: `lib/participation/participation-audience-resolution.ts` (club branch only for population)
 
 **TASKS-AUDIENCE-01**
 
