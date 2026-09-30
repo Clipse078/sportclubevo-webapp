@@ -44,6 +44,14 @@ describe("tenant Club Admin delegatable permission contract", () => {
 
     expect(
       isTenantClubAdminDelegatablePermission({
+        key: PERMISSIONS.USERS_IMPERSONATE_TENANT,
+        scope: "TENANT",
+        grantableByAdmin: true,
+      }),
+    ).toBe(true);
+
+    expect(
+      isTenantClubAdminDelegatablePermission({
         key: "users.manage",
         scope: "PLATFORM",
         grantableByAdmin: false,

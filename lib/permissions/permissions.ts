@@ -2,6 +2,8 @@ export const PERMISSIONS = {
   USERS_VIEW: "users.view",
   USERS_MANAGE: "users.manage",
   USERS_IMPERSONATE: "users.impersonate",
+  /** TENANT — Club Admin may view the product as another member of the same club. */
+  USERS_IMPERSONATE_TENANT: "users.impersonate_tenant",
   USERS_INVITE: "users.invite",
   USERS_MANAGE_MEMBERSHIPS: "users.manage_memberships",
 

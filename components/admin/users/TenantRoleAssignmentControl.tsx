@@ -4,6 +4,7 @@ import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Shield } from "lucide-react";
+import { SwitchThumb } from "@/components/ui/SwitchToggle";
 
 type RoleOption = {
   id: string;
@@ -82,51 +83,56 @@ export default function TenantRoleAssignmentControl({
       <ul className="space-y-2">
         {availableRoles.map((role) => {
           const checked = selectedIds.has(role.id);
+          const switchId = `role-switch-${role.id}`;
           return (
-            <li key={role.id} className="flex items-center gap-3">
+            <li
+              key={role.id}
+              className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-2)]/70 px-3 py-2.5"
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                {role.isSystem ? (
+                  <ProductDomainSceIcon
+                    name="roles-access"
+                    size={12}
+                    className="h-3.5 w-3.5 flex-shrink-0 text-[var(--muted)]"
+                  />
+                ) : (
+                  <Shield className="h-3.5 w-3.5 flex-shrink-0 text-[var(--muted)]" />
+                )}
+                <label htmlFor={canManage ? switchId : undefined} className="text-sm font-medium text-[var(--foreground)]">
+                  {role.name}
+                </label>
+              </div>
               {canManage ? (
-                <input
-                  type="checkbox"
-                  id={`role-${role.id}`}
+                <SwitchThumb
+                  id={switchId}
                   checked={checked}
                   disabled={isPending}
-                  onChange={(e) => toggle(role.id, e.target.checked)}
-                  className="h-4 w-4 rounded border-[var(--border)] text-[var(--primary)] accent-[var(--primary)] disabled:opacity-50"
+                  onChange={(next) => toggle(role.id, next)}
+                  aria-label={`${role.name} ${checked ? "deaktivieren" : "aktivieren"}`}
                 />
               ) : (
                 <span
-                  aria-label={checked ? "Zugewiesen" : "Nicht zugewiesen"}
-                  className={`inline-block h-4 w-4 rounded border ${
-                    checked
-                      ? "border-[var(--primary)] bg-[var(--primary)]"
-                      : "border-[var(--border)] bg-white"
-                  }`}
-                />
+                  role="img"
+                  aria-label={checked ? "Aktiv" : "Inaktiv"}
+                  className={`text-xs font-semibold ${checked ? "text-[var(--sce-primary)]" : "text-[var(--muted)]"}`}
+                >
+                  {checked ? "Aktiv" : "Inaktiv"}
+                </span>
               )}
-              <label
-                htmlFor={canManage ? `role-${role.id}` : undefined}
-                className={`flex items-center gap-1.5 text-sm select-none ${
-                  canManage ? "cursor-pointer" : "cursor-default"
-                } text-[var(--foreground)]`}
-              >
-                {role.isSystem ? (
-                  <ProductDomainSceIcon name="roles-access" size={12} className="h-3 w-3 flex-shrink-0 text-[var(--muted)]" />
-                ) : null}
-                {role.name}
-              </label>
             </li>
           );
         })}
       </ul>
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="text-sm text-red-400">{error}</p> : null}
 
       {canManage ? (
         <button
           type="button"
           onClick={save}
           disabled={!isDirty || isPending}
-          className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--primary)] px-3.5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-40 transition"
+          className="fca-button-primary inline-flex items-center gap-1.5 disabled:opacity-40"
         >
           <Save className="h-3.5 w-3.5" />
           {isPending ? "Speichern…" : "Änderungen speichern"}
