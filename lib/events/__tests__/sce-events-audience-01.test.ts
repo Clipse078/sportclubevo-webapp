@@ -12,6 +12,7 @@ import {
   materializeDomainAudiencesInSpec,
 } from "@/lib/communication/platform/audience/domain-audience-expansion";
 import { DomainAudienceError } from "@/lib/communication/platform/audience/domain-audience-errors";
+import { TeamCommunicationNotFoundError } from "@/lib/communication/team/team-communication-errors";
 import { listEventParticipationSubjectPersonIds } from "@/lib/communication/event/event-participation-recipients";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { ensureEventsDomainAudienceRegistered } from "@/lib/events/domain-audience/register-events-domain-audience";
@@ -442,5 +443,129 @@ describe("SCE-EVENTS-AUDIENCE-01", () => {
         participationResponseDueAt: new Date("2026-08-30T00:00:00.000Z"),
       }),
     ).toBe(false);
+  });
+
+  it("TOCTOU — cancelled event does not send reminder", async () => {
+    mocks.event.findFirst.mockResolvedValue({
+      ...defaultEventRow(),
+      status: "CANCELLED",
+    });
+    mocks.participationResponse.findMany.mockResolvedValue([]);
+    await expect(
+      executeClubEventOutstandingParticipationReminder({
+        tenantId: TENANT,
+        userId: "user-1",
+        candidateId: candidateNotResponded(),
+        permissionKeys: new Set([
+          PERMISSIONS.EVENTS_MANAGE,
+          PERMISSIONS.COMMUNICATION_CLUB_SEND,
+        ]),
+        now: new Date("2026-10-01T12:00:00.000Z"),
+      }),
+    ).rejects.toBeInstanceOf(TeamCommunicationNotFoundError);
+    expect(mocks.createClubCommunicationDraft).not.toHaveBeenCalled();
+  });
+
+  it("TOCTOU — participation request disabled does not send reminder", async () => {
+    mocks.event.findFirst.mockResolvedValue({
+      ...defaultEventRow(),
+      participationResponseDueAt: null,
+    });
+    await expect(
+      executeClubEventOutstandingParticipationReminder({
+        tenantId: TENANT,
+        userId: "user-1",
+        candidateId: candidateNotResponded(),
+        permissionKeys: new Set([
+          PERMISSIONS.EVENTS_MANAGE,
+          PERMISSIONS.COMMUNICATION_CLUB_SEND,
+        ]),
+      }),
+    ).rejects.toBeInstanceOf(TeamCommunicationNotFoundError);
+  });
+
+  it("TOCTOU — structural population change uses live invitees at execution", async () => {
+    mocks.participationResponse.findMany.mockResolvedValue([]);
+    mocks.resolveClubEventInviteePersonIds.mockResolvedValue(["p1", "p2", "p3", "p4", "p5", "p6"]);
+    mocks.event.findMany.mockResolvedValue([defaultEventRow()]);
+    const ctx = {
+      tenantId: TENANT,
+      userId: "user-1",
+      permissionKeys: new Set([PERMISSIONS.EVENTS_VIEW]),
+      now: new Date("2026-10-01T12:00:00.000Z"),
+    };
+    expect((await evaluateClubEventParticipationOperationalAttention(ctx))[0]?.count).toBe(6);
+
+    mocks.participationResponse.findMany.mockResolvedValue([
+      { personId: "p1", status: "YES" },
+      { personId: "p2", status: "YES" },
+    ]);
+    mocks.resolveClubEventInviteePersonIds.mockResolvedValue(["p1", "p2", "p3", "p4"]);
+
+    await executeClubEventOutstandingParticipationReminder({
+      tenantId: TENANT,
+      userId: "user-1",
+      candidateId: candidateNotResponded(),
+      permissionKeys: new Set([
+        PERMISSIONS.EVENTS_MANAGE,
+        PERMISSIONS.COMMUNICATION_CLUB_SEND,
+      ]),
+    });
+
+    expect(mocks.createClubCommunicationDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audienceSpec: expect.objectContaining({
+          components: [
+            expect.objectContaining({
+              explicit: { includePersonIds: ["p3", "p4"] },
+            }),
+          ],
+        }),
+      }),
+    );
+  });
+
+  it("materialization fails closed when participation request inactive", async () => {
+    mocks.event.findFirst.mockResolvedValue({
+      ...defaultEventRow(),
+      participationResponseDueAt: null,
+    });
+    await expect(
+      materializeDomainAudiencesInSpec(
+        {
+          composition: "UNION",
+          components: [
+            {
+              domainAudience: {
+                sourceKey: EVENTS_TEILNAHME_REGISTRY_KEY,
+                candidateId: candidateNotResponded(),
+              },
+            },
+          ],
+        },
+        {
+          tenantId: TENANT,
+          senderUserId: "user-1",
+          discovery: {
+            tenantId: TENANT,
+            userId: "user-1",
+            permissionKeys: new Set([PERMISSIONS.EVENTS_VIEW]),
+          },
+        },
+      ),
+    ).rejects.toBeInstanceOf(DomainAudienceError);
+  });
+
+  it("events.view alone cannot send reminder (manage + club send required)", async () => {
+    mocks.participationResponse.findMany.mockResolvedValue([]);
+    await expect(
+      executeClubEventOutstandingParticipationReminder({
+        tenantId: TENANT,
+        userId: "user-1",
+        candidateId: candidateNotResponded(),
+        permissionKeys: new Set([PERMISSIONS.EVENTS_VIEW, PERMISSIONS.COMMUNICATION_CLUB_SEND]),
+      }),
+    ).rejects.toThrow();
+    expect(mocks.createClubCommunicationDraft).not.toHaveBeenCalled();
   });
 });
