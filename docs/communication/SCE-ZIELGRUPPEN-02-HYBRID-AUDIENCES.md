@@ -117,3 +117,94 @@ Probetraining integration (PROBETRAINING-COMM-01), DATA-HYGIENE-01, newsletters,
 ## Communication Studio compatibility
 
 Uses the same `CommunicationAudienceSpec` and publish snapshot pipeline; external recipients appear as additional snapshot rows alongside internal Person snapshots. No Studio-specific UI in this package.
+
+## Implementation record (STAGE)
+
+**Status:** Implemented on STAGE (core merge PR #766; follow-up UX in #767 / UXR3). This document is the canonical contract reference.
+
+### Selector types (canonical `CommunicationAudienceSpec`)
+
+| Selector | Spec field | Person resolution | External resolution |
+|----------|------------|-------------------|---------------------|
+| Whole organisation | `structural.wholeOrganisation` | COMM-03 structural | — |
+| Org unit | `structural.orgUnitIds` | COMM-03 structural (UNION within block) | — |
+| Team | `structural.teamIds` | COMM-03 structural | — |
+| Role (id) | `structural.roleIds` | COMM-03 structural | — |
+| Role (key) | `structural.roleKeys` | COMM-03 structural | — |
+| Saved Zielgruppe | `savedTargetGroupIds` | Expanded via COMM-02 `TargetGroup.ruleJson` | Inherited from nested spec |
+| Person include/exclude | `explicit.includePersonIds` / `excludePersonIds` | COMM-03 explicit | — |
+| External include/exclude | `external.includeExternalContactIds` / `excludeExternalContactIds` | — | `resolveExternalContactIdsFromAudience` |
+| Structural exclusion overlay | `structuralExclusion` on rule envelope | Persons only | — |
+
+Sponsor selectors remain on campaign/club composers (COMM-13), not inside saved Zielgruppe rules.
+
+### Saved vs ad-hoc audiences
+
+| Kind | Persistence | Resolution engine |
+|------|-------------|-------------------|
+| **Saved Zielgruppe** | `TargetGroup.ruleJson` v2 envelope | `editorDefinitionToAudienceSpec` → COMM-03 + external parallel path |
+| **Ad-hoc audience** | Composer `audienceSpecJson` only | Same `CommunicationAudienceSpec`; no duplicate resolver |
+
+Club communication, Mitteilungen, and campaigns reference saved groups via `savedTargetGroupIds` or embed structural/explicit selectors directly.
+
+### Resolution semantics
+
+- **Spec composition:** `composition: "UNION"` across components unless a consumer documents otherwise.
+- **Within one structural block:** org units, teams, and roles are UNIONed (`resolveStructuralAudiencePersonIds` mode `UNION`).
+- **Precedence (editor):** exclusion > direct include > dynamic include.
+- **Send-time persons:** `resolved audience ∩ sender scope ∩ eligibility ∩ safeguarding ∩ consent/channel` (COMM-03, COMM-17, COMM-18).
+- **Send-time externals:** tenant-scoped active contacts minus explicit external excludes minus email collision with resolved persons.
+
+### Deduplication
+
+- Person ids: sorted-set union/intersection in COMM-03; explicit excludes applied after structural expansion.
+- External ids: union across components, then exclude list; `dedupeExternalContactsAgainstPersonEmails` drops externals whose normalized email matches a resolved Person email (Person wins).
+- Publish snapshots: dedupe by `(communicationId, communicationExternalContactId)` for externals; internal snapshots unchanged.
+
+### Authorization
+
+| Action | Permission |
+|--------|------------|
+| View Zielgruppen / list | `communication.zielgruppen.view` |
+| Manage Zielgruppen (CRUD, bulk external create) | `communication.zielgruppen.manage` |
+| Recipient preview (Zielgruppe editor) | `communication.zielgruppen.view` **or** `communication.zielgruppen.manage` |
+| Send / use audience in club/campaign composer | `communication.club.send` (and existing team send where applicable) |
+
+Tenant Club Admin delegation uses the canonical delegatable permission contract (PR #778); no platform-wide bypass was added.
+
+### Tenant isolation
+
+- All structural, explicit, and external ids are validated against `tenantId` at resolution and persistence boundaries.
+- Cross-tenant selector references fail closed (COMM-03 / management-service validation).
+
+### Recipient preview
+
+- **Service:** `previewZielgruppeRecipients` (`preview-service.ts`) — COMM-03 `PREVIEW` mode plus `resolveAudienceCandidates` for external counts.
+- **Provenance:** `buildZielgruppePreviewProvenance` — German inclusion/exclusion path labels for UI chips.
+- **UI:** `ZielgruppePreviewPanel` debounced preview; shows effective count, external count, scope notice, bounded name sample.
+
+### Cross-module reuse
+
+| Consumer | Audience input | Hybrid + external |
+|----------|----------------|-------------------|
+| Zielgruppen management | Editor → `ruleJson` | Yes |
+| Club communication / Mitteilungen | `audienceSpecJson` | Yes (publish snapshots include externals) |
+| Campaign composer | `audienceSpecJson` | Yes (via `buildCampaignPublishSnapshotCreateMany`) |
+| Universal audience selector | `CommunicationAudienceSelector` | Yes (`external` category) |
+| Team chat / announcements | Team-scoped paths | Unchanged (not Zielgruppe-centric) |
+| Sponsor campaigns | COMM-13 sponsor selectors | Orthogonal to Zielgruppe externals |
+
+### Key implementation paths
+
+- Domain types: `lib/communication/platform/audience/zielgruppe-definition.ts`
+- External contacts: `lib/communication/external-contacts/*`
+- Candidate resolution: `lib/communication/platform/recipient-resolution/audience-candidate-resolver.ts`
+- External snapshots: `lib/communication/platform/recipient-resolution/communication-external-recipient-snapshots.ts`
+- Zielgruppen editor: `components/admin/communication/zielgruppen/*`
+- Future domain seam: `lib/communication/platform/audience/domain-audience-source.ts` (registry empty until DOMAIN-AUDIENCE-01)
+
+### Deferred work
+
+- DOMAIN-AUDIENCE-01 (`DomainAudienceSource` providers for Probetraining, events, …)
+- PROBETRAINING-COMM-01, DATA-HYGIENE-01, CSV import UI, Communication Studio UI
+- Production migration apply (STAGE-only deploy gates)
