@@ -386,11 +386,12 @@ Recommended **package sequence** (not prompt order):
 - Shared core: `lib/participation/participation-audience-resolution.ts`
 - Dependency: none (logic existed; refactored, not forked)
 
-**TRAINING-AUDIENCE-01**
+**TRAINING-AUDIENCE-01** — **Implemented** (see `docs/communication/SCE-TRAINING-AUDIENCE-01.md`)
 
-- Entity: `TrainingSession` + squad
-- Audiences: same presets as Spielbetrieb
-- Nudge: “Training morgen – X/Y Rückmeldungen fehlen”
+- Entity: `TrainingSession` + squad (per-occurrence, not series-wide)
+- Audiences: COMM-10 parity + MAYBE (`training.teilnahme`)
+- Attention: `participation-outstanding` + manual COMM-10 TRAINING remind
+- Shared core: `lib/participation/participation-audience-resolution.ts`
 
 **EVENTS-AUDIENCE-01**
 
