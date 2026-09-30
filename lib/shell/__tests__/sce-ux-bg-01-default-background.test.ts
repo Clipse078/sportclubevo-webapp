@@ -48,7 +48,7 @@ describe("SCE-UX-BG-01 — canonical default authenticated background", () => {
     );
     expect(shellCss).toContain("background-image: var(--sce-app-background-image)");
     expect(shellCss).toContain("background-size: cover");
-    expect(shellCss).toContain("background-position: center center");
+    expect(shellCss).toContain("background-position: center top");
     expect(shellCss).toContain("background-repeat: no-repeat");
     expect(shellCss).not.toMatch(/opacity|filter|gradient/);
   });

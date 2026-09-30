@@ -152,6 +152,7 @@ const PERMISSION_LABELS_DE: Record<string, string> = {
 
   "users.view": "Benutzer ansehen",
   "users.invite": "Benutzer einladen",
+  "users.impersonate_tenant": "Als Benutzer ansehen",
   "users.manage_memberships": "Mitgliedschaften verwalten",
 
   "roles.view": "Rollen ansehen",

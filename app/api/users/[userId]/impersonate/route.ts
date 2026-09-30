@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
 import { startImpersonationSession } from "@/auth";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
-import { requireApiPermission } from "@/lib/permissions/require-api-permission";
+import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
 import { logSecurityAction } from "@/lib/audit/log-action";
+import { assertCanImpersonateTenantMember } from "@/lib/admin/users/tenant-impersonation";
 
 type RouteContext = {
   params: Promise<{
@@ -12,7 +12,10 @@ type RouteContext = {
 };
 
 export async function POST(_: NextRequest, context: RouteContext) {
-  const access = await requireApiPermission(PERMISSIONS.USERS_IMPERSONATE);
+  const access = await requireApiAnyPermission([
+    PERMISSIONS.USERS_IMPERSONATE,
+    PERMISSIONS.USERS_IMPERSONATE_TENANT,
+  ]);
 
   if (!access.ok) {
     return NextResponse.json({ error: access.error }, { status: access.status });
@@ -40,41 +43,46 @@ export async function POST(_: NextRequest, context: RouteContext) {
     );
   }
 
-  if ((session.user.effectiveUserId ?? session.user.id) === userId) {
-    return NextResponse.json(
-      { error: "Dieser Benutzer ist bereits aktiv." },
-      { status: 400 }
-    );
-  }
+  const actorUserId = session.user.actorUserId ?? session.user.id;
 
-  const targetUser = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, isActive: true },
+  const gate = await assertCanImpersonateTenantMember({
+    actorUserId,
+    actorTenantId: session.user.activeTenantId,
+    targetUserId: userId,
   });
 
-  if (!targetUser || !targetUser.isActive) {
-    return NextResponse.json(
-      { error: "Benutzer nicht gefunden oder inaktiv." },
-      { status: 404 }
-    );
+  if (!gate.ok) {
+    if (gate.reasonCode && gate.reasonCode !== "SELF_TARGET") {
+      await logSecurityAction({
+        actorUserId,
+        tenantId: session.user.activeTenantId,
+        moduleKey: "security",
+        entityType: "User",
+        entityId: userId,
+        action: "IMPERSONATION_START_REJECTED",
+        outcome: "DENIED",
+        metadataJson: { reasonCode: gate.reasonCode },
+      });
+    }
+    return NextResponse.json({ error: gate.error }, { status: gate.status });
   }
 
-  const actorUserId = session.user.actorUserId ?? session.user.id;
   await logSecurityAction({
     actorUserId,
     tenantId: session.user.activeTenantId,
     moduleKey: "security",
     entityType: "User",
-    entityId: targetUser.id,
+    entityId: userId,
     action: "IMPERSONATION_START_REQUESTED",
-    metadataJson: { effectiveUserId: targetUser.id },
+    metadataJson: { effectiveUserId: userId },
   });
-  const updatedSession = await startImpersonationSession(actorUserId, targetUser.id);
+
+  const updatedSession = await startImpersonationSession(actorUserId, userId);
 
   if (
     !updatedSession?.user.isImpersonating ||
     updatedSession.user.actorUserId !== actorUserId ||
-    updatedSession.user.effectiveUserId !== targetUser.id
+    updatedSession.user.effectiveUserId !== userId
   ) {
     return NextResponse.json(
       { error: "Impersonation konnte nicht sicher hergestellt werden." },
@@ -87,15 +95,16 @@ export async function POST(_: NextRequest, context: RouteContext) {
     tenantId: updatedSession.user.activeTenantId,
     moduleKey: "users",
     entityType: "User",
-    entityId: targetUser.id,
+    entityId: userId,
     action: "impersonation_started",
     metadataJson: {
       actorUserId,
-      effectiveUserId: targetUser.id,
+      effectiveUserId: userId,
     },
   });
 
   return NextResponse.json({
     message: "Impersonation gestartet.",
+    redirectTo: "/dashboard",
   });
 }

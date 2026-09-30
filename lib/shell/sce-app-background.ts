@@ -24,5 +24,11 @@ export const SCE_APPROVED_AUTHENTICATED_APP_BACKGROUND_SHA256 =
 /** CSS `background-image` value for shell tokens (cache-busted). */
 export const SCE_AUTHENTICATED_APP_BACKGROUND_IMAGE = `url("${SCE_AUTHENTICATED_APP_BACKGROUND_URL}")`;
 
+/**
+ * Desktop canvas alignment for the approved artwork (coaching motifs stay below chrome).
+ * Imported by authenticated-shell.css — do not hardcode in multiple places.
+ */
+export const SCE_AUTHENTICATED_APP_BACKGROUND_POSITION = "center top";
+
 /** Root wrapper class applied only on the authenticated admin application shell. */
 export const SCE_AUTHENTICATED_APP_SHELL_CLASS = "sce-authenticated-app-shell";

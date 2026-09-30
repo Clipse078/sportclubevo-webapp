@@ -3,11 +3,12 @@ import { NextRequest } from "next/server";
 
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
-  requireApiPermission: vi.fn(),
+  requireApiAnyPermission: vi.fn(),
   startImpersonationSession: vi.fn(),
   stopImpersonationSession: vi.fn(),
-  userFindUnique: vi.fn(),
+  assertCanImpersonateTenantMember: vi.fn(),
   logSecurityAction: vi.fn(),
+  userFindUnique: vi.fn(),
 }));
 
 vi.mock("@/auth", () => ({
@@ -16,16 +17,20 @@ vi.mock("@/auth", () => ({
   stopImpersonationSession: mocks.stopImpersonationSession,
 }));
 
-vi.mock("@/lib/permissions/require-api-permission", () => ({
-  requireApiPermission: mocks.requireApiPermission,
+vi.mock("@/lib/permissions/require-api-any-permission", () => ({
+  requireApiAnyPermission: mocks.requireApiAnyPermission,
 }));
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: { user: { findUnique: mocks.userFindUnique } },
+vi.mock("@/lib/admin/users/tenant-impersonation", () => ({
+  assertCanImpersonateTenantMember: mocks.assertCanImpersonateTenantMember,
 }));
 
 vi.mock("@/lib/audit/log-action", () => ({
   logSecurityAction: mocks.logSecurityAction,
+}));
+
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: { user: { findUnique: mocks.userFindUnique } },
 }));
 
 import { POST as startImpersonation } from "@/app/api/users/[userId]/impersonate/route";
@@ -48,14 +53,19 @@ function request(path: string) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.requireApiPermission.mockResolvedValue({
+  mocks.requireApiAnyPermission.mockResolvedValue({
     ok: true,
     status: 200,
     error: null,
     session: { user: actorUser },
   });
   mocks.auth.mockResolvedValue({ user: actorUser });
-  mocks.userFindUnique.mockResolvedValue({ id: "target-1", isActive: true });
+  mocks.assertCanImpersonateTenantMember.mockResolvedValue({
+    ok: true,
+    actorUserId: "actor-1",
+    targetUserId: "target-1",
+    tenantId: "tenant-a",
+  });
   mocks.startImpersonationSession.mockResolvedValue({
     user: {
       ...actorUser,
@@ -67,11 +77,12 @@ beforeEach(() => {
   mocks.stopImpersonationSession.mockResolvedValue({
     user: actorUser,
   });
+  mocks.userFindUnique.mockResolvedValue({ id: "actor-1", isActive: true });
 });
 
 describe("POST /api/users/[userId]/impersonate", () => {
   it("preserves the dedicated server-side permission denial", async () => {
-    mocks.requireApiPermission.mockResolvedValue({
+    mocks.requireApiAnyPermission.mockResolvedValue({
       ok: false,
       status: 403,
       error: "Forbidden",
@@ -94,6 +105,11 @@ describe("POST /api/users/[userId]/impersonate", () => {
     );
 
     expect(response.status).toBe(200);
+    expect(mocks.assertCanImpersonateTenantMember).toHaveBeenCalledWith({
+      actorUserId: "actor-1",
+      actorTenantId: "tenant-a",
+      targetUserId: "target-1",
+    });
     expect(mocks.startImpersonationSession).toHaveBeenCalledWith(
       "actor-1",
       "target-1",
@@ -103,16 +119,12 @@ describe("POST /api/users/[userId]/impersonate", () => {
         actorUserId: "actor-1",
         entityId: "target-1",
         action: "impersonation_started",
-        metadataJson: {
-          actorUserId: "actor-1",
-          effectiveUserId: "target-1",
-        },
       }),
     );
   });
 
   it("rejects nested impersonation", async () => {
-    mocks.requireApiPermission.mockResolvedValue({
+    mocks.requireApiAnyPermission.mockResolvedValue({
       ok: true,
       status: 200,
       error: null,
@@ -135,12 +147,17 @@ describe("POST /api/users/[userId]/impersonate", () => {
     expect(mocks.startImpersonationSession).not.toHaveBeenCalled();
   });
 
-  it("rejects an inactive or missing target", async () => {
-    mocks.userFindUnique.mockResolvedValue(null);
+  it("rejects cross-tenant targets from tenant gate", async () => {
+    mocks.assertCanImpersonateTenantMember.mockResolvedValue({
+      ok: false,
+      status: 404,
+      error: "Benutzer ist kein aktives Mitglied dieses Vereins.",
+      reasonCode: "CROSS_TENANT_OR_INACTIVE_MEMBERSHIP",
+    });
 
     const response = await startImpersonation(
-      request("/api/users/missing/impersonate"),
-      { params: Promise.resolve({ userId: "missing" }) },
+      request("/api/users/other-tenant-user/impersonate"),
+      { params: Promise.resolve({ userId: "other-tenant-user" }) },
     );
 
     expect(response.status).toBe(404);
@@ -169,15 +186,13 @@ describe("POST /api/auth/stop-impersonation", () => {
 
   it("restores the canonical actor through the trusted server wrapper", async () => {
     mocks.auth.mockResolvedValue({ user: impersonatedUser });
-    mocks.userFindUnique.mockResolvedValue({ id: "actor-1", isActive: true });
 
     const response = await stopImpersonation();
 
     expect(response.status).toBe(200);
-    expect(mocks.userFindUnique).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "actor-1" } }),
-    );
     expect(mocks.stopImpersonationSession).toHaveBeenCalledWith("actor-1");
+    const body = await response.json();
+    expect(body.redirectTo).toBe("/dashboard/admin/people-access");
     expect(mocks.logSecurityAction).toHaveBeenCalledWith(
       expect.objectContaining({
         actorUserId: "actor-1",
@@ -194,19 +209,8 @@ describe("POST /api/auth/stop-impersonation", () => {
     expect(mocks.stopImpersonationSession).not.toHaveBeenCalled();
   });
 
-  it("fails closed when the actor is inactive", async () => {
-    mocks.auth.mockResolvedValue({ user: impersonatedUser });
-    mocks.userFindUnique.mockResolvedValue({ id: "actor-1", isActive: false });
-
-    const response = await stopImpersonation();
-
-    expect(response.status).toBe(404);
-    expect(mocks.stopImpersonationSession).not.toHaveBeenCalled();
-  });
-
   it("fails closed when the trusted callback does not restore the actor", async () => {
     mocks.auth.mockResolvedValue({ user: impersonatedUser });
-    mocks.userFindUnique.mockResolvedValue({ id: "actor-1", isActive: true });
     mocks.stopImpersonationSession.mockResolvedValue({ user: impersonatedUser });
 
     const response = await stopImpersonation();

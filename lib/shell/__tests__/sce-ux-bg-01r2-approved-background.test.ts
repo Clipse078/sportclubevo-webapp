@@ -8,6 +8,7 @@ import {
   SCE_AUTHENTICATED_APP_BACKGROUND_IMAGE,
   SCE_AUTHENTICATED_APP_BACKGROUND_PATH,
   SCE_AUTHENTICATED_APP_BACKGROUND_URL,
+  SCE_AUTHENTICATED_APP_BACKGROUND_POSITION,
 } from "@/lib/shell/sce-app-background";
 
 const LEGACY_AUTHENTICATED_APP_BACKGROUND_SHA256 =
@@ -69,7 +70,10 @@ describe("SCE-UX-BG-01R2 — approved background asset fingerprint and cache bus
     const shellCss = readRelative("app/(admin)/authenticated-shell.css");
     expect(shellCss).toContain("background-image: var(--sce-app-background-image)");
     expect(shellCss).toContain("background-size: cover");
-    expect(shellCss).toContain("background-position: center center");
+    expect(shellCss).toContain(`background-position: ${SCE_AUTHENTICATED_APP_BACKGROUND_POSITION}`);
+    expect(SCE_AUTHENTICATED_APP_BACKGROUND_PATH).toBe(
+      "/images/background/SCE_background.png",
+    );
     expect(shellCss).toContain("background-repeat: no-repeat");
     expect(shellCss).toContain("background-attachment: scroll");
     expect(shellCss).toMatch(/@media \(min-width: 768px\)[\s\S]*background-attachment: fixed/);

@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import type { ReactNode } from "react";
 import StageEnvironmentBanner from "@/components/admin/deployment/StageEnvironmentBanner";
 import AppShellNavigation from "@/components/admin/layout/AppShellNavigation";
-import StopImpersonationButton from "@/components/admin/layout/StopImpersonationButton";
+import ImpersonationBanner from "@/components/admin/layout/ImpersonationBanner";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { generateTenantCssVars } from "@/lib/tenant-runtime/theme";
 import { getPersonProfileByUserIdCached } from "@/lib/server/request-cache";
@@ -92,22 +92,12 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* Impersonation banner */}
         {session.user.isImpersonating ? (
-          <div className="border-b border-[var(--sce-warning-border)] bg-[var(--sce-warning-light)] backdrop-blur-sm">
-            <div className="px-5 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--sce-warning)]">
-                    Impersonation aktiv
-                  </p>
-                  <p className="mt-0.5 text-xs text-[var(--text-2)]">
-                    Eingeloggt als anderer Benutzer —{" "}
-                    Admin: {session.user.actorName ?? session.user.actorEmail ?? "Unbekannt"}
-                  </p>
-                </div>
-                <StopImpersonationButton />
-              </div>
-            </div>
-          </div>
+          <ImpersonationBanner
+            effectiveDisplayName={
+              `${shellIdentity.firstName} ${shellIdentity.lastName}`.trim() ||
+              session.user.email
+            }
+          />
         ) : null}
 
         {/* Page content */}

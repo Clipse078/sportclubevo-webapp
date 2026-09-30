@@ -19,10 +19,13 @@ export default function StopImpersonationButton() {
         throw new Error(data?.error ?? "Impersonation konnte nicht beendet werden.");
       }
 
-      window.location.href = "/dashboard/users";
+      window.location.href =
+        typeof data?.redirectTo === "string"
+          ? data.redirectTo
+          : "/dashboard/admin/people-access";
     } catch (error) {
       window.alert(
-        error instanceof Error ? error.message : "Ein Fehler ist aufgetreten."
+        error instanceof Error ? error.message : "Ein Fehler ist aufgetreten.",
       );
       setSubmitting(false);
     }
@@ -33,9 +36,9 @@ export default function StopImpersonationButton() {
       type="button"
       onClick={handleStop}
       disabled={submitting}
-      className="rounded-full border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
+      className="fca-button-secondary shrink-0 border-[var(--sce-warning-border)] text-[var(--sce-warning)] hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {submitting ? "Beende..." : "Zurueck zum Admin"}
+      {submitting ? "Beende…" : "Impersonation beenden"}
     </button>
   );
 }

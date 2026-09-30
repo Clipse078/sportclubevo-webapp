@@ -63,5 +63,6 @@ export async function POST() {
 
   return NextResponse.json({
     message: "Impersonation beendet.",
+    redirectTo: "/dashboard/admin/people-access",
   });
 }

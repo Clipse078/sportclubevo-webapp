@@ -3,7 +3,7 @@ import { ProductDomainSceIcon } from "@/components/icons/ProductDomainSceIcon";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ShieldOff, ShieldCheck, Trash2, User } from "lucide-react";
+import { AlertTriangle, ShieldOff, Trash2, User } from "lucide-react";
 import AdminStatusPill from "@/components/admin/shared/AdminStatusPill";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
@@ -14,6 +14,8 @@ type Props = {
   userEmail: string;
   membershipIsActive: boolean;
   userIsActive: boolean;
+  /** When true, do not present membership deactivation as "Zugriff gesperrt". */
+  pendingInvitation?: boolean;
   canManage: boolean;
   isSelf: boolean;
   linkedPersonName?: string | null;
@@ -26,6 +28,7 @@ export default function MembershipAccessControl({
   userEmail,
   membershipIsActive,
   userIsActive,
+  pendingInvitation = false,
   canManage,
   isSelf,
   linkedPersonName,
@@ -97,12 +100,14 @@ export default function MembershipAccessControl({
     <div className="space-y-4">
       {/* Current access status */}
       <div className="flex items-center gap-3">
-        {membershipIsActive ? (
+        {pendingInvitation ? (
+          <AdminStatusPill label="Einladung ausstehend" tone="warning" />
+        ) : membershipIsActive ? (
           <AdminStatusPill label="Zugriff aktiv" tone="success" />
         ) : (
           <AdminStatusPill label="Zugriff gesperrt" tone="muted" />
         )}
-        {!userIsActive ? (
+        {!pendingInvitation && !userIsActive ? (
           <AdminStatusPill label="Konto inaktiv" tone="warning" />
         ) : null}
       </div>
@@ -118,16 +123,20 @@ export default function MembershipAccessControl({
           <p className="text-sm text-[var(--muted)]">
             Eigenen Zugriff kann nicht gesperrt werden.
           </p>
+        ) : pendingInvitation ? (
+          <p className="text-sm text-[var(--muted)]">
+            Club-Zugriff wird nach Annahme der Einladung wirksam.
+          </p>
         ) : (
           <div className="space-y-3">
             {membershipIsActive ? (
               <>
                 {showConfirm ? (
-                  <div className="rounded-[var(--radius-lg)] border border-red-200 bg-red-50 p-4 space-y-3">
-                    <p className="text-sm font-medium text-red-800">
+                  <div className="rounded-[var(--radius-lg)] border border-red-500/30 bg-red-950/30 p-4 space-y-3">
+                    <p className="text-sm font-medium text-red-200">
                       Zugriff wirklich sperren?
                     </p>
-                    <p className="text-sm text-red-700">
+                    <p className="text-sm text-red-300/90">
                       Der Benutzer kann sich nicht mehr anmelden. Rollen und Mitgliedschaft
                       bleiben erhalten und der Zugriff kann jederzeit wiederhergestellt werden.
                     </p>
@@ -148,7 +157,7 @@ export default function MembershipAccessControl({
                         type="button"
                         onClick={() => setShowConfirm(false)}
                         disabled={pending}
-                        className="inline-flex items-center rounded-[var(--radius-md)] border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--surface-2)] disabled:opacity-50 transition"
+                        className="fca-button-secondary inline-flex items-center disabled:opacity-50"
                       >
                         Abbrechen
                       </button>
@@ -159,7 +168,7 @@ export default function MembershipAccessControl({
                     type="button"
                     onClick={() => setShowConfirm(true)}
                     disabled={pending}
-                    className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50 transition"
+                    className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-red-500/40 bg-red-950/20 px-4 py-2 text-sm font-semibold text-red-300 hover:bg-red-950/40 disabled:opacity-50 transition"
                   >
                     <ShieldOff className="h-3.5 w-3.5" />
                     Zugriff sperren
@@ -171,7 +180,7 @@ export default function MembershipAccessControl({
                 type="button"
                 onClick={() => doToggle(true)}
                 disabled={pending}
-                className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 transition"
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-emerald-500/35 bg-emerald-950/25 px-4 py-2 text-sm font-semibold text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-50 transition"
               >
                 <ProductDomainSceIcon name="roles-access" size={12} />
                 {pending ? "Wiederherstellen…" : "Zugriff wiederherstellen"}
