@@ -165,11 +165,17 @@ const PERMISSION_DESCRIPTIONS_DE: Record<string, string> = {
   "org.manage": "Vereinsdaten bearbeiten und Organisationseinheiten verwalten.",
   "org.delete": "Organisationseinträge endgültig aus dem System entfernen.",
 
+  "website.view":
+    "Veröffentlichte Website-Inhalte und Publizieren-Übersicht lesen — ohne CMS-Bearbeitung.",
   "website.manage": "Website-Inhalte, Seiten und Navigation bearbeiten.",
   "website.delete": "Website-Inhalte endgültig aus dem System entfernen.",
 
   "trainings.view": "Trainingsplanung und Zuteilungen einsehen.",
   "trainings.manage": "Trainingsplanung erstellen, bearbeiten und zuweisen.",
+  "planning.allocations.view":
+    "Wochenplan, Konflikte und Verfügbarkeit einsehen — ohne Trainings- oder Event-Verwaltung.",
+  "planning.allocations.manage":
+    "Platz- und Garderoben-Zuteilungen im Wochenplaner bearbeiten — ohne wochenplan.manage oder Event-Manage.",
   "trainings.delete": "Trainingsplanung endgültig aus dem System entfernen.",
 
   "events.view": "Events, Matches und Veranstaltungen einsehen.",
@@ -223,9 +229,11 @@ const PERMISSION_DESCRIPTIONS_DE: Record<string, string> = {
   "registrations.edit": "Anmeldungen bearbeiten und verwalten.",
   "registrations.delete": "Anmeldungen endgültig aus dem System entfernen.",
 
+  "news.view": "Veröffentlichte News-Artikel lesen — ohne Redaktions- oder Publish-Rechte.",
   "news.manage": "News-Artikel erstellen, bearbeiten und veröffentlichen.",
   "news.delete": "News-Artikel endgültig aus dem System entfernen.",
 
+  "infoboard.view": "Infoboard-Vorschau (veröffentlichte Inhalte) — ohne Infoboard-Verwaltung.",
   "infoboard.manage": "Infoboard-Inhalte erstellen und bearbeiten.",
   "infoboard.delete": "Infoboards endgültig aus dem System entfernen.",
 

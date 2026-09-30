@@ -37,6 +37,8 @@ const TENANT_CATALOG_KEYS = [
   PERMISSIONS.WEBSITE_MANAGE,
   PERMISSIONS.TRAININGS_VIEW,
   PERMISSIONS.TRAININGS_MANAGE,
+  PERMISSIONS.PLANNING_ALLOCATIONS_VIEW,
+  PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE,
   PERMISSIONS.TRAININGS_DELETE,
   PERMISSIONS.EVENTS_VIEW,
   PERMISSIONS.EVENTS_MANAGE,
@@ -59,6 +61,9 @@ const TENANT_CATALOG_KEYS = [
   PERMISSIONS.FACILITIES_MANAGE,
   PERMISSIONS.WOCHENPLAN_MANAGE,
   PERMISSIONS.FIXTURES_VIEW,
+  PERMISSIONS.NEWS_VIEW,
+  PERMISSIONS.WEBSITE_VIEW,
+  PERMISSIONS.INFOBOARD_VIEW,
 ];
 
 describe("nav-permission-presentation", () => {
@@ -72,9 +77,7 @@ describe("nav-permission-presentation", () => {
     const betrieb = presentation.sections.find((section) => section.label === "Tagesbetrieb");
     expect(betrieb?.units.some((unit) => unit.label === "Trainings")).toBe(true);
     expect(betrieb?.units.some((unit) => unit.label === "Spielbetrieb")).toBe(true);
-    expect(betrieb?.units.some((unit) => unit.label === "Wochenplaner" && unit.isDerived)).toBe(
-      true,
-    );
+    expect(betrieb?.units.some((unit) => unit.label === "Wochenplaner")).toBe(true);
 
     expect(betrieb?.units.some((unit) => unit.label === "Vereinsdaten")).toBe(true);
     expect(betrieb?.units.some((unit) => unit.label === "Mitglieder")).toBe(true);
@@ -168,15 +171,19 @@ describe("nav-permission-presentation", () => {
     ).toBe(true);
   });
 
-  it("marks Wochenplanner as verfügbar when derived access exists", () => {
+  it("shows Wochenplaner in summary for allocation-only or legacy training/event view", () => {
     const presentation = buildNavPermissionPresentation(buildCatalog(TENANT_CATALOG_KEYS));
-    const summary = buildNavPermissionSummary(presentation, new Set([PERMISSIONS.EVENTS_VIEW]));
 
     expect(isWochenplannerAvailable(new Set([PERMISSIONS.EVENTS_VIEW]))).toBe(true);
+
+    const allocationSummary = buildNavPermissionSummary(
+      presentation,
+      new Set([PERMISSIONS.PLANNING_ALLOCATIONS_VIEW]),
+    );
     expect(
-      summary
+      allocationSummary
         .flatMap((section) => section.items)
-        .some((item) => item.label === "Wochenplaner" && item.access === "verfügbar"),
+        .some((item) => item.label === "Wochenplaner" && item.access === "Ansehen"),
     ).toBe(true);
   });
 
