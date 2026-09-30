@@ -64,6 +64,16 @@ export const AUTH_SECURITY_MESSAGES = {
     "Ungültiger oder abgelaufener Link. Bitte fordere einen neuen an.",
   invalidInvitationLink:
     "Einladungslink ist ungültig, abgelaufen oder bereits verwendet.",
+  invitationExpired:
+    "Diese Einladung ist abgelaufen. Bitte wende dich an deinen Club-Administrator für eine neue Einladung.",
+  invitationAlreadyUsed:
+    "Diese Einladung wurde bereits verwendet. Bitte melde dich an oder fordere eine neue Einladung an.",
+  accountAlreadyActivated:
+    "Dein Zugang ist bereits aktiv. Bitte melde dich mit deinen Zugangsdaten an.",
+  invitationInvalid:
+    "Dieser Einladungslink ist ungültig. Bitte wende dich an deinen Club-Administrator.",
+  activationTechnicalFailure:
+    "Ein Fehler ist aufgetreten. Bitte versuche es erneut.",
   forgotPasswordSuccess:
     "Falls ein Konto mit dieser E-Mail-Adresse existiert, haben wir dir einen Link zum Zurücksetzen des Passworts gesendet.",
   forgotPasswordRateLimited:

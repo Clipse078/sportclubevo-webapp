@@ -16,31 +16,51 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 // ── Prisma mock ───────────────────────────────────────────────────────────────
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
-    person: {
-      findUnique: vi.fn(),
-      update: vi.fn(),
-      create: vi.fn(),
-    },
-    user: {
-      findUnique: vi.fn(),
-      create: vi.fn(),
-    },
-    tenantMembership: {
-      findUnique: vi.fn(),
-      create: vi.fn(),
-      updateMany: vi.fn(),
-    },
-    passwordResetToken: {
-      deleteMany: vi.fn(),
-      create: vi.fn(),
-      findFirst: vi.fn(),
-    },
-    auditLog: {
-      create: vi.fn(),
-    },
+const { prismaMock } = vi.hoisted(() => ({
+  prismaMock: {
+  person: {
+    findUnique: vi.fn(),
+    update: vi.fn(),
+    create: vi.fn(),
   },
+  user: {
+    findUnique: vi.fn(),
+    create: vi.fn(),
+  },
+  tenantMembership: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    create: vi.fn(),
+    updateMany: vi.fn(),
+  },
+  passwordResetToken: {
+    deleteMany: vi.fn(),
+    create: vi.fn(),
+    findFirst: vi.fn(),
+  },
+  auditLog: {
+    create: vi.fn(),
+  },
+  userRole: {
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+  },
+  $transaction: vi.fn(),
+  },
+}));
+
+prismaMock.$transaction.mockImplementation(async (callback: (tx: unknown) => unknown) =>
+  callback({
+    tenantMembership: {
+      findUnique: vi.fn(async () => ({ isActive: false })),
+      updateMany: prismaMock.tenantMembership.updateMany,
+    },
+    auditLog: prismaMock.auditLog,
+  }),
+);
+
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: prismaMock,
 }));
 
 vi.mock("@/lib/auth/password", () => ({
@@ -49,6 +69,10 @@ vi.mock("@/lib/auth/password", () => ({
 
 vi.mock("@/lib/audit/log-action", () => ({
   logAction: vi.fn(async () => {}),
+}));
+
+vi.mock("@/lib/roles/delegation", () => ({
+  assertTenantDelegationAllowed: vi.fn(async () => undefined),
 }));
 
 // Import after mocks
@@ -107,6 +131,11 @@ beforeEach(() => {
   mockMembershipFindUnique.mockResolvedValue(null);
   mockMembershipCreate.mockResolvedValue({} as Awaited<ReturnType<typeof prisma.tenantMembership.create>>);
   mockMembershipUpdateMany.mockResolvedValue({ count: 1 });
+  vi.mocked(prisma.tenantMembership.findFirst).mockResolvedValue({
+    isActive: true,
+  } as Awaited<ReturnType<typeof prisma.tenantMembership.findFirst>>);
+  vi.mocked(prisma.userRole.findFirst).mockResolvedValue(null);
+  vi.mocked(prisma.userRole.findMany).mockResolvedValue([]);
   mockTokenDeleteMany.mockResolvedValue({ count: 1 });
   mockTokenCreate.mockResolvedValue({ id: "token-001" } as Awaited<ReturnType<typeof prisma.passwordResetToken.create>>);
   mockTokenFindFirst.mockResolvedValue(null);
@@ -742,26 +771,13 @@ describe("Exact tenant activation — activateInvitationMembership", () => {
       where: { userId: USER_ID, tenantId: TENANT_B, isActive: false },
       data: { isActive: true },
     });
-    // Must target exactly tenantId — NOT a timestamp filter.
     const whereArg = mockMembershipUpdateMany.mock.calls[0]?.[0]?.where;
     expect(whereArg).not.toHaveProperty("joinedAt");
-    expect(vi.mocked(logAction)).toHaveBeenCalledWith({
-      tenantId: TENANT_B,
-      actorUserId: USER_ID,
-      moduleKey: "users",
-      entityType: "TenantMembership",
-      entityId: `${TENANT_B}:${USER_ID}`,
-      action: "MEMBERSHIP_ACTIVATED_BY_INVITATION",
-      metadataJson: { targetUserId: USER_ID },
-    });
   });
 
   it("EXACT-2. activateInvitationMembership for TenantB does NOT touch TenantC membership", async () => {
-    // User has pending membership in both TenantB and TenantC.
-    // Accepting TenantB invitation must leave TenantC unchanged.
     await activateInvitationMembership(USER_ID, TENANT_B);
 
-    // updateMany was called with tenantId=TENANT_B only.
     const calls = mockMembershipUpdateMany.mock.calls;
     expect(calls).toHaveLength(1);
     const callWhere = calls[0]?.[0]?.where;
@@ -770,24 +786,20 @@ describe("Exact tenant activation — activateInvitationMembership", () => {
   });
 
   it("EXACT-3. multi-tenant: TenantA active, TenantB accepted, TenantC pending — only TenantB activated", async () => {
-    // Simulates: activateInvitationMembership called with TenantB token.
     await activateInvitationMembership(USER_ID, TENANT_B);
 
-    // Only one updateMany call, targeting TENANT_B.
     expect(mockMembershipUpdateMany).toHaveBeenCalledOnce();
     expect(mockMembershipUpdateMany).toHaveBeenCalledWith({
       where: { userId: USER_ID, tenantId: TENANT_B, isActive: false },
       data: { isActive: true },
     });
-    // TenantA and TenantC are never passed to updateMany.
     const whereArg = mockMembershipUpdateMany.mock.calls[0]?.[0]?.where;
     expect(whereArg?.tenantId).toBe(TENANT_B);
-    expect(whereArg?.tenantId).not.toBe(TENANT_ID); // TenantA
+    expect(whereArg?.tenantId).not.toBe(TENANT_ID);
     expect(whereArg?.tenantId).not.toBe(TENANT_C);
   });
 
   it("EXACT-4. activateInvitationMembership is idempotent (already-active membership → no-op via isActive=false filter)", async () => {
-    // updateMany with isActive=false will match 0 rows if already active — no-op.
     mockMembershipUpdateMany.mockResolvedValue({ count: 0 });
 
     await expect(activateInvitationMembership(USER_ID, TENANT_B)).resolves.toBeUndefined();

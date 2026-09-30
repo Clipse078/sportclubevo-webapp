@@ -9,7 +9,7 @@ import { cn } from "@/lib/cn";
 const MIN_PASSWORD_LENGTH = 12;
 
 type TokenValidation =
-  | { valid: false }
+  | { valid: false; issue?: string; message?: string }
   | { valid: true; isInvitation: false }
   | {
       valid: true;
@@ -138,7 +138,9 @@ export default function ResetPasswordForm() {
               </div>
             )}
 
-            {validation?.valid === false && <InvalidTokenState />}
+            {validation?.valid === false && (
+              <InvalidTokenState message={validation.message} />
+            )}
 
             {validation?.valid === true &&
               validation.isInvitation &&
@@ -301,7 +303,7 @@ function ExistingUserInvitationState({
 
 // ── Invalid token ─────────────────────────────────────────────────────────────
 
-function InvalidTokenState() {
+function InvalidTokenState({ message }: { message?: string }) {
   return (
     <div className="text-center">
       <div
@@ -320,8 +322,8 @@ function InvalidTokenState() {
       </h2>
 
       <p className="mb-6 text-[0.875rem] leading-relaxed" style={{ color: "#6B7280" }}>
-        Dieser Link ist ungültig, bereits verwendet oder abgelaufen.
-        Bitte kontaktiere deinen Club-Administrator für eine neue Einladung.
+        {message ??
+          "Dieser Link ist ungültig, bereits verwendet oder abgelaufen. Bitte kontaktiere deinen Club-Administrator für eine neue Einladung."}
       </p>
 
       <Link

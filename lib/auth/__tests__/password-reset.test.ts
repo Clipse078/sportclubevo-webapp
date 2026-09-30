@@ -88,6 +88,11 @@ function makeMockPrisma(overrides: {
         passwordResetToken,
         user,
         auditLog,
+        tenantMembership: {
+          findUnique: vi.fn(() => ({ isActive: false })),
+          updateMany: vi.fn(() => ({ count: 0 })),
+        },
+        $executeRawUnsafe: vi.fn(() => Promise.resolve()),
         $queryRawUnsafe: vi.fn(() => []),
       }),
     );
@@ -389,6 +394,7 @@ describe("consumePasswordResetToken", () => {
     const userUpdate = vi.fn();
     const currentRecord = () => makeValidToken({ usedAt });
     const tx = {
+      $executeRawUnsafe: vi.fn(() => Promise.resolve()),
       $queryRawUnsafe: vi.fn(() => []),
       passwordResetToken: {
         findUnique: vi.fn(() => currentRecord()),
