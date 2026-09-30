@@ -12,6 +12,7 @@ import { DomainAudienceError } from "@/lib/communication/platform/audience/domai
 import { getDomainAudienceSourceRegistry } from "@/lib/communication/platform/audience/domain-audience-registry";
 import type { DomainAudienceDiscoveryContext } from "@/lib/communication/platform/audience/domain-audience-source";
 import { isDomainAudienceSourceAuthorized } from "@/lib/communication/platform/audience/domain-audience-discovery";
+import { ensureProbetrainingDomainAudienceRegistered } from "@/lib/registrations/domain-audience/register-probetraining-domain-audience";
 
 export type DomainAudienceMaterializationContext = {
   tenantId: string;
@@ -32,6 +33,7 @@ async function materializeComponent(
     throw new DomainAudienceError("INVALID_REFERENCE", "Domain audience reference is malformed.");
   }
 
+  ensureProbetrainingDomainAudienceRegistered();
   const registry = getDomainAudienceSourceRegistry();
   const source = registry.get(ref.sourceKey);
   if (!source) {
@@ -105,6 +107,7 @@ export function domainAudienceProvenanceLabel(input: {
   reference: DomainAudienceReference;
   fallbackSourceLabel?: string;
 }): string {
+  ensureProbetrainingDomainAudienceRegistered();
   const registry = getDomainAudienceSourceRegistry();
   const source = registry.get(input.reference.sourceKey);
   if (source) {

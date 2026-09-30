@@ -43,7 +43,7 @@ German **label** / **description** fields are for UI and provenance only.
 
 Domain packages call `registerDomainAudienceSource()` at module startup (same pattern as provider-mapping adapters). Duplicate keys throw. Tests use `_clearDomainAudienceRegistryForTests()`.
 
-Production STAGE ships with **zero** registered domain sources until domain packages land.
+Production STAGE registers domain sources lazily when discovery/materialization runs (first consumer: **SCE-PROBETRAINING-COMM-01** — `probetraining.anmeldungen`).
 
 ## Authorization & tenant isolation
 
@@ -95,14 +95,9 @@ Audiences are **never silently broadened** when a domain source is missing or un
 
 **Deferred in DOMAIN-AUDIENCE-01.** The registry and discovery APIs are ready for a future EVO-03 category; no composer UI changes in this package.
 
-## PROBETRAINING-COMM-01 integration seam (not implemented)
+## PROBETRAINING-COMM-01 (implemented)
 
-Expected first consumer workflow:
-
-1. Probetraining module registers sources, e.g. `probetraining.open-registrations`, with Probetraining-specific permissions.
-2. Composer or Zielgruppe editor searches via `searchCandidates()` (future UI) and persists `DomainAudienceReference`.
-3. Communication publish/preview materializes to explicit/structural components; COMM-03 resolves persons; COMM-17/18 apply unchanged.
-4. **No** new recipient engine in Probetraining.
+First consumer: `probetraining.anmeldungen` — see `docs/communication/SCE-PROBETRAINING-COMM-01.md`.
 
 ## Explicitly deferred
 
