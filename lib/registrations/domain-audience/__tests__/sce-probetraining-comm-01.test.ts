@@ -143,6 +143,23 @@ const materializationCtx = {
   discovery: discoveryCtx,
 };
 
+const submittedAtFixture = new Date("2026-01-01T12:00:00.000Z");
+
+function mockProbetrainingRegistration(
+  overrides: Record<string, unknown> & { id: string; tenantId: string },
+) {
+  return {
+    phone: null,
+    message: null,
+    source: "WEB",
+    submittedAt: submittedAtFixture,
+    birthDate: null,
+    payloadJson: {},
+    person: null,
+    ...overrides,
+  };
+}
+
 describe("SCE-PROBETRAINING-COMM-01", () => {
   beforeEach(() => {
     _clearDomainAudienceRegistryForTests();
@@ -215,7 +232,7 @@ describe("SCE-PROBETRAINING-COMM-01", () => {
   it("materializes linked persons and external contacts for unlinked adults", async () => {
     ensureProbetrainingDomainAudienceRegistered();
     mocks.registration.findMany.mockResolvedValue([
-      {
+      mockProbetrainingRegistration({
         id: "reg-1",
         tenantId: "tenant-a",
         personId: "person-linked",
@@ -223,11 +240,8 @@ describe("SCE-PROBETRAINING-COMM-01", () => {
         lastName: "Muster",
         email: "lara@example.com",
         birthYear: 1990,
-        birthDate: null,
-        payloadJson: {},
-        person: null,
-      },
-      {
+      }),
+      mockProbetrainingRegistration({
         id: "reg-2",
         tenantId: "tenant-a",
         personId: null,
@@ -235,10 +249,7 @@ describe("SCE-PROBETRAINING-COMM-01", () => {
         lastName: "Erwachsen",
         email: "max@example.com",
         birthYear: 1985,
-        birthDate: null,
-        payloadJson: {},
-        person: null,
-      },
+      }),
     ]);
 
     const materialized = await materializeDomainAudiencesInSpec(
@@ -262,12 +273,34 @@ describe("SCE-PROBETRAINING-COMM-01", () => {
     ]);
   });
 
+  it("omits unlinked minors without usable guardian email (no raw child email)", async () => {
+    await expect(
+      materializeProbetrainingRegistrationsToAudienceComponent({
+        tenantId: "tenant-a",
+        senderUserId: "user-coord",
+        registrations: [
+          mockProbetrainingRegistration({
+            id: "reg-minor-no-guardian",
+            tenantId: "tenant-a",
+            personId: null,
+            firstName: "Kind",
+            lastName: "Allein",
+            email: "child@example.com",
+            birthYear: new Date().getFullYear() - 10,
+            payloadJson: {},
+          }),
+        ],
+      }),
+    ).rejects.toThrow(/Keine adressierbaren Empfänger/);
+    expect(mocks.communicationExternalContact.create).not.toHaveBeenCalled();
+  });
+
   it("uses guardian email for unlinked minors and skips raw child email", async () => {
     const component = await materializeProbetrainingRegistrationsToAudienceComponent({
       tenantId: "tenant-a",
       senderUserId: "user-coord",
       registrations: [
-        {
+        mockProbetrainingRegistration({
           id: "reg-minor",
           tenantId: "tenant-a",
           personId: null,
@@ -275,7 +308,6 @@ describe("SCE-PROBETRAINING-COMM-01", () => {
           lastName: "Muster",
           email: "kind@example.com",
           birthYear: new Date().getFullYear() - 10,
-          birthDate: null,
           payloadJson: {
             parentOrGuardian: {
               firstName: "Sandra",
@@ -283,8 +315,7 @@ describe("SCE-PROBETRAINING-COMM-01", () => {
               email: "sandra@example.com",
             },
           },
-          person: null,
-        },
+        }),
       ],
     });
     expect(component.explicit).toBeUndefined();
@@ -345,7 +376,7 @@ describe("SCE-PROBETRAINING-COMM-01", () => {
   it("scopes registration queries to tenant and PROBETRAINING type", async () => {
     ensureProbetrainingDomainAudienceRegistered();
     mocks.registration.findMany.mockResolvedValue([
-      {
+      mockProbetrainingRegistration({
         id: "reg-scope",
         tenantId: "tenant-a",
         personId: null,
@@ -353,10 +384,7 @@ describe("SCE-PROBETRAINING-COMM-01", () => {
         lastName: "Test",
         email: "scope@example.com",
         birthYear: 1990,
-        birthDate: null,
-        payloadJson: {},
-        person: null,
-      },
+      }),
     ]);
     await materializeDomainAudiencesInSpec(
       {
@@ -422,7 +450,7 @@ describe("SCE-PROBETRAINING-COMM-01", () => {
   it("integrates with COMM-03 hybrid UNION (person + probetraining + external dedupe)", async () => {
     ensureProbetrainingDomainAudienceRegistered();
     mocks.registration.findMany.mockResolvedValue([
-      {
+      mockProbetrainingRegistration({
         id: "reg-1",
         tenantId: "tenant-a",
         personId: "person-shared",
@@ -430,10 +458,7 @@ describe("SCE-PROBETRAINING-COMM-01", () => {
         lastName: "B",
         email: "shared@example.com",
         birthYear: 1990,
-        birthDate: null,
-        payloadJson: {},
-        person: null,
-      },
+      }),
     ]);
     mocks.communicationExternalContact.findMany.mockResolvedValue([{ id: "ext-dup", emailNormalized: "shared@example.com" }]);
     mocks.person.findMany.mockImplementation(async (args: { where?: { id?: { in?: string[] }; email?: { in?: string[] } } }) => {
@@ -476,7 +501,7 @@ describe("SCE-PROBETRAINING-COMM-01", () => {
   it("routes linked minors through Person ids for COMM-03/COMM-18 (not raw registration email)", async () => {
     ensureProbetrainingDomainAudienceRegistered();
     mocks.registration.findMany.mockResolvedValue([
-      {
+      mockProbetrainingRegistration({
         id: "reg-minor-linked",
         tenantId: "tenant-a",
         personId: "person-minor",
@@ -484,10 +509,8 @@ describe("SCE-PROBETRAINING-COMM-01", () => {
         lastName: "Linked",
         email: "kind@example.com",
         birthYear: new Date().getFullYear() - 10,
-        birthDate: null,
-        payloadJson: {},
         person: { dateOfBirth: new Date("2015-01-01") },
-      },
+      }),
     ]);
 
     const candidates = await resolveAudienceCandidates({
