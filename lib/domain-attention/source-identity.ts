@@ -3,6 +3,10 @@
  *
  * PersonalAction ids cover recipient obligations; this format covers aggregate
  * operator attention (e.g. outstanding participation responses on an event).
+ *
+ * **Tenant scope:** `tenantId` is intentionally **not** encoded in the id string.
+ * Attention ids are only meaningful together with tenant-scoped queries and server
+ * authorization — never use an id alone as a global authorization key or cross-tenant handle.
  */
 
 const ATTENTION_ID_PREFIX = "domain-attn";

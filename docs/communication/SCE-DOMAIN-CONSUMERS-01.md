@@ -86,7 +86,7 @@ Future `REGISTRATION_ACTION` / `DOCUMENT_ACTION` are reserved in types only.
 
 Types only—**no registry implementation**, **no DB migration**:
 
-- `lib/domain-attention/types.ts` — `DomainOperationalAttentionItem`, actions, optional `DomainAudienceReferenceSnapshot`
+- `lib/domain-attention/types.ts` — `DomainOperationalAttentionItem`, actions, optional `DeferredDomainAudienceReference` (selector only — resolved live at execute)
 - `lib/domain-attention/source-identity.ts` — stable `domain-attn:{domain}:{kind}:{entityType}:{entityId}` ids
 
 Future domain packages implement `DomainOperationalAttentionSource` and register in a later package (not DOMAIN-CONSUMERS-01).
@@ -125,7 +125,15 @@ When the user invokes **Erinnerung senden** (or any COMMUNICATION_SEND action):
 6. **COMM-17/COMM-18** preferences + safeguarding
 7. Send/dispatch (e.g. `dispatchSmartReminderCommunication`)
 
-If a parent responds between display and click, recipients must reflect **current** OPEN rows only (e.g. 2 not 3).
+**Flagship TOCTOU (Spielteilnahme):**
+
+| Time | State |
+|------|--------|
+| 10:00 | 3 outstanding `ParticipationResponse` rows (`NOT_RESPONDED` / OPEN) — dashboard may show count **3** |
+| 11:00 | One family responds — canonical state now **2** outstanding |
+| 11:05 | Trainer clicks **Erinnerung senden** |
+
+Expected at 11:05: re-read domain state → `DomainAudienceSource` resolves **2** current subjects → COMM-03/17/18 → send only to those two. The stale display count **3** is never send authority.
 
 **Never** persist dashboard counts or preview recipient lists as send authority.
 
@@ -133,10 +141,16 @@ If a parent responds between display and click, recipients must reflect **curren
 
 | Scenario | Behavior |
 |----------|----------|
-| Count drops to zero before action | Action succeeds with 0 recipients or validation error—domain defines UX |
-| User loses permission between display and action | Fail closed (403 / SOURCE_UNAUTHORIZED) |
+| A. Count drops to zero before action | No-op or validation error with 0 recipients — domain defines UX; **no stale send** |
+| B. Event deleted/cancelled | Fail closed or no-op after re-read; do not materialize audience for missing context |
+| C. User loses permission between display and action | Fail closed (403 / SOURCE_UNAUTHORIZED) |
+| D. Audience source unavailable / misconfigured | Fail closed at materialization (registry/source errors) |
+| E. Deadline changes | Use **current** deadline for display on next read; send path uses current response rows only |
+| F. Tenant/context mismatch | Reject — attention id + `tenantId` + entity lookup must align; never cross-tenant materialize |
 | Duplicate action double-click | Smart reminder `executionIdentity` dedupes scheduled sends where configured |
 | Stale saved Zielgruppe | Materialization re-queries domain; unauthorized → fail closed |
+
+**Execution not implemented in DOMAIN-CONSUMERS-01** — subsequent domain packages (SPIELBETRIEB-AUDIENCE-01, DOMAIN-OPERATIONAL-ATTENTION-01) implement server-side execute paths against this contract.
 
 Reference implementation today: **SCE-COMM-10** `listEventParticipationSubjectPersonIds()` re-queries squad + responses at send time; **PROBETRAINING-COMM-01** re-queries registrations at materialization.
 
@@ -148,7 +162,7 @@ The same domain state must back:
 
 | Surface | Example |
 |---------|---------|
-| A. Domain page | Match/Aufgebot → “2 Rückmeldungen ausstehend” + Erinnerung |
+| A. Domain page | Spielteilnahme (MATCH/TOURNAMENT) → “2 Rückmeldungen ausstehend” + Erinnerung |
 | B. Personal dashboard | Only **PersonalAction** rows for **my** missing RSVP |
 | C. Operator dashboard (future) | Aggregated `DomainOperationalAttentionItem` for teams user coordinates |
 | D. Communication composer | Domain category → `DomainAudienceSource` candidate |
@@ -186,14 +200,24 @@ Automatic reminders must **not** be embedded in audience providers; they call th
 
 ## Authorization
 
-| Gate | Rule |
-|------|------|
-| **Discovery** | Domain permissions for audience sources; operational attention sources declare `requiredPermissions` |
-| **Display** | Tenant isolation; filter by user teams/org assignments where domain supports it |
-| **Action** | Re-check permissions on execute |
-| **Send** | Communication send + domain view permissions (see DOMAIN-AUDIENCE-01) |
-| **Audience** | `registrations.view`, `teams.*`, `billing.*`, `sponsoring.view`, etc.—never infer from `communication.send` alone |
+Five distinct gates — **no UI-provided permission list is sufficient on its own**; execution always re-checks server-side.
+
+| Gate | Purpose | Rule |
+|------|---------|------|
+| **Discovery auth** | Can this user see that a domain audience category / attention source exists? | Domain permissions on sources; operational sources declare `requiredPermissions` for discovery |
+| **Display auth** | Can this user see a specific attention row or count? | Tenant isolation + team/org scope where the domain supports it |
+| **Action auth** | Can this user invoke `actionKey`? | Re-check `requiredPermissions` (and domain-specific rules) on **execute** |
+| **Domain audience auth** | Can this user resolve/materialize this `sourceKey` + `candidateId`? | Domain view permissions (`teams.*`, `registrations.view`, …) — **not** implied by send alone |
+| **Comm send auth** | Can this user dispatch communication? | Communication send permissions + safeguarding — **does not** grant protected domain state access |
+
+| Cross-cutting | Rule |
+|---------------|------|
 | **Tenant** | All queries scoped by `tenantId`; cross-tenant references rejected |
+| **Role/team scope** | Team-scoped domains filter by assignments the user holds at execute time |
+| **Send-only insufficient** | `communication.send` alone must not unlock billing/sponsor/participation admin reads |
+| **Domain permission ≠ send** | Holding domain view does not automatically allow COMMUNICATION_SEND |
+
+`requiredPermissions` on `DomainOperationalAttentionAction` is **metadata for server enforcement**, not a client-side allow list.
 
 Participation: `lib/participation/authorization.ts` (self + guardian). Finance: strict billing roles. Sponsor: `sponsoring.view`.
 
@@ -308,7 +332,7 @@ Product language “Aufgebot” maps to **squad-scoped participation**, not a se
 
 **NUDGE_IMPLEMENTABLE_NOW:** Yes (operational attention item + action pointing at live domain audience / existing remind API).
 
-**MISSING for product-perfect “8 selected players”:** Explicit match-day selection / Aufgebot subset entity—future Spielbetrieb domain package if product requires subset beyond squad.
+**MISSING (future gap — MATCH-SPECIFIC AUFGEBOT / SELECTION):** Explicit match-day subset (season squad → selected for event → participation → guardians → final match squad). Until a canonical selection entity exists, use **Spielteilnahme / Teilnahmeanfrage / Rückmeldung zur Teilnahme / Rückmeldung ausstehend** — not “selected players for this match”.
 
 ---
 
@@ -345,7 +369,7 @@ Recommended **package sequence** (not prompt order):
 | 1 | **SPIELBETRIEB-AUDIENCE-01** | Strongest data + flagship Aufgebot; COMM-10 to migrate; proves attention+nudge |
 | 2 | **TRAINING-AUDIENCE-01** | Same participation engine; high FCA daily value |
 | 3 | **EVENTS-AUDIENCE-01** (club Veranstaltung) | Separate invitee model; needed before generic “events” composer |
-| 4 | **DOMAIN-OPERATIONAL-ATTENTION-01** (registry) | Aggregate `DomainOperationalAttentionSource` for dashboard/mobile |
+| 4 | **DOMAIN-OPERATIONAL-ATTENTION-01** (registry) | Aggregate `DomainOperationalAttentionSource` for dashboard/mobile — **after** Spielbetrieb/Training/Events prove per-domain attention in production |
 | 5 | **SPONSOR-AUDIENCE-01** | Wrap COMM-13 selectors as DomainAudience for composer parity |
 | 6 | **FINANCE-AUDIENCE-01** | Strict auth + privacy; after comm patterns proven |
 | 7 | **TASKS-AUDIENCE-01** | Only if comms needs dynamic task-state groups |
@@ -358,7 +382,8 @@ Recommended **package sequence** (not prompt order):
 - Entity: `ParticipationResponse` + `PlayerSquadMember` anchor
 - First audiences: `not-responded`, `accepted`, `declined`, `all-invitees` (parity with COMM-10)
 - Permissions: team comm send + team view
-- Attention: `participation-outstanding` with `COMMUNICATION_SEND` → domain audience candidate per event
+- Attention: `participation-outstanding` with `COMMUNICATION_SEND` → `DeferredDomainAudienceReference` per event (live materialize)
+- **Preferred:** prove operational attention + manual Erinnerung in Spielbetrieb **before** building a generic multi-domain aggregator registry
 - Dependency: none (logic exists)
 - Risk: duplicating COMM-10—must refactor shared core, not fork
 

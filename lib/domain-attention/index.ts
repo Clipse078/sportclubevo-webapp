@@ -10,6 +10,7 @@ export {
 } from "./source-identity";
 
 export type {
+  DeferredDomainAudienceReference,
   DomainAudienceReferenceSnapshot,
   DomainOperationalAttentionAction,
   DomainOperationalAttentionActionExecutionKind,

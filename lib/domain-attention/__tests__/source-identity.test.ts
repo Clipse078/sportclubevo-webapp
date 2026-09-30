@@ -37,6 +37,34 @@ describe("SCE-DOMAIN-CONSUMERS-01 — domain operational attention identity", ()
     expect(parseDomainOperationalAttentionId("domain-attn:a:b:c")).toBeNull();
   });
 
+  it("produces distinct ids when domain or context differs (tenant is scoped separately)", () => {
+    const base = {
+      attentionKind: "participation-outstanding",
+      contextEntityType: "event",
+      contextEntityId: "evt-1",
+    };
+    const spiel = buildDomainOperationalAttentionId({ domainKey: "spielbetrieb", ...base });
+    const training = buildDomainOperationalAttentionId({ domainKey: "training", ...base });
+    const otherEvent = buildDomainOperationalAttentionId({
+      domainKey: "spielbetrieb",
+      ...base,
+      contextEntityId: "evt-2",
+    });
+    expect(spiel).not.toBe(training);
+    expect(spiel).not.toBe(otherEvent);
+    expect(buildDomainOperationalAttentionId({ domainKey: "spielbetrieb", ...base })).toBe(spiel);
+  });
+
+  it("does not embed tenantId — ids require tenant-scoped evaluation context", () => {
+    const id = buildDomainOperationalAttentionId({
+      domainKey: "spielbetrieb",
+      attentionKind: "participation-outstanding",
+      contextEntityType: "event",
+      contextEntityId: "evt-1",
+    });
+    expect(id.includes("tenant")).toBe(false);
+  });
+
   it("does not collide with PersonalAction participation ids", () => {
     const domainId = buildDomainOperationalAttentionAttentionLikeId();
     expect(domainId.startsWith("domain-attn:")).toBe(true);

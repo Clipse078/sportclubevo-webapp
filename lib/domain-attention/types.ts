@@ -7,12 +7,21 @@
 
 import type { PermissionKey } from "@/lib/permissions/permissions";
 
-/** Mirrors persisted DomainAudienceReference without importing communication types. */
-export type DomainAudienceReferenceSnapshot = {
+/**
+ * Audience selector captured on an attention action — **not** a recipient snapshot.
+ * At COMMUNICATION_SEND execution, re-authorize and materialize live
+ * `DomainAudienceReference` in zielgruppe-definition (COMM-03 → COMM-17 → COMM-18).
+ *
+ * Must not contain person ids, emails, or resolved recipient lists.
+ */
+export type DeferredDomainAudienceReference = {
   sourceKey: string;
   candidateId: string;
   displayLabel?: string | null;
 };
+
+/** @deprecated Use {@link DeferredDomainAudienceReference}. Misleading “snapshot” name removed in closure. */
+export type DomainAudienceReferenceSnapshot = DeferredDomainAudienceReference;
 
 export type DomainOperationalAttentionActionExecutionKind =
   | "COMMUNICATION_SEND"
@@ -29,7 +38,7 @@ export type DomainOperationalAttentionAction = {
   executionKind: DomainOperationalAttentionActionExecutionKind;
   requiredPermissions: PermissionKey[];
   /** When COMMUNICATION_SEND, audience is materialized at execute time from domain state. */
-  domainAudience?: DomainAudienceReferenceSnapshot;
+  domainAudience?: DeferredDomainAudienceReference;
   /** Deep link or in-app route for NAVIGATE / context. */
   href?: string | null;
 };
@@ -52,7 +61,7 @@ export type DomainOperationalAttentionItem = {
   dueAt: string | null;
   deepLink: string;
   actions: DomainOperationalAttentionAction[];
-  optionalDomainAudience?: DomainAudienceReferenceSnapshot;
+  optionalDomainAudience?: DeferredDomainAudienceReference;
 };
 
 export type DomainOperationalAttentionEvaluationContext = {
