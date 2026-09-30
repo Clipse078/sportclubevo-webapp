@@ -30,9 +30,22 @@ import {
   acquirePlatformSuperAdminMutationLock,
   platformSuperAdminAssignmentWhere,
 } from "@/lib/security/platform-superadmin";
+import { activateInvitationMembershipInTransaction } from "@/lib/users/invitation-activation";
 
 export const TOKEN_EXPIRY_MS = 60 * 60 * 1000; // 60 minutes
 export const TOKEN_BYTES = 32; // 256 bits of entropy
+
+/** Internal signal to roll back an interactive transaction without surfacing as 500. */
+class TransactionAborted extends Error {
+  constructor() {
+    super("TRANSACTION_ABORTED");
+    this.name = "TransactionAborted";
+  }
+}
+
+function abortTransaction(): never {
+  throw new TransactionAborted();
+}
 
 /**
  * Hash a raw reset token with SHA-256 for storage.
@@ -88,6 +101,25 @@ export type ValidatedToken = {
   invitationTenantId: string | null;
 };
 
+/** Safe, non-enumerating invitation/reset token presentation for public UI. */
+export type PasswordResetTokenIssue =
+  | "invalid"
+  | "expired"
+  | "consumed"
+  | "account_inactive"
+  | "membership_already_active"
+  | "cross_tenant_mismatch";
+
+export type PasswordResetTokenPresentation =
+  | { valid: false; issue: PasswordResetTokenIssue; isInvitation: boolean }
+  | {
+      valid: true;
+      isInvitation: boolean;
+      isExistingUser: boolean;
+      invitationTenantId: string | null;
+      userId: string;
+    };
+
 /**
  * Validate a raw reset token presented by the user.
  *
@@ -98,6 +130,84 @@ export type ValidatedToken = {
  * Does NOT consume the token; call consumePasswordResetToken after
  * collecting the new password.
  */
+export async function inspectPasswordResetToken(
+  prisma: PrismaClient,
+  rawToken: string,
+): Promise<PasswordResetTokenPresentation> {
+  if (!rawToken) return { valid: false, issue: "invalid", isInvitation: false };
+
+  const tokenHash = hashResetToken(rawToken);
+  const record = await prisma.passwordResetToken.findUnique({
+    where: { tokenHash },
+    include: {
+      user: {
+        select: {
+          id: true,
+          isActive: true,
+          lastLoginAt: true,
+          passwordChangedAt: true,
+          userRoles: {
+            where: platformSuperAdminAssignmentWhere,
+            select: { id: true },
+            take: 1,
+          },
+        },
+      },
+    },
+  });
+
+  if (!record) return { valid: false, issue: "invalid", isInvitation: false };
+  if (record.usedAt !== null) {
+    return { valid: false, issue: "consumed", isInvitation: record.isInvitation };
+  }
+  if (record.expiresAt < new Date()) {
+    return { valid: false, issue: "expired", isInvitation: record.isInvitation };
+  }
+  if (!record.user.isActive) {
+    return { valid: false, issue: "account_inactive", isInvitation: record.isInvitation };
+  }
+  if (record.user.userRoles.length > 0) {
+    return { valid: false, issue: "invalid", isInvitation: record.isInvitation };
+  }
+
+  if (record.isInvitation && record.invitationTenantId) {
+    const membership = await prisma.tenantMembership.findUnique({
+      where: {
+        tenantId_userId: {
+          tenantId: record.invitationTenantId,
+          userId: record.user.id,
+        },
+      },
+      select: { isActive: true },
+    });
+    if (!membership) {
+      return {
+        valid: false,
+        issue: "cross_tenant_mismatch",
+        isInvitation: true,
+      };
+    }
+    const onboardingComplete =
+      membership.isActive &&
+      (record.user.lastLoginAt !== null || record.user.passwordChangedAt !== null);
+    if (onboardingComplete) {
+      return {
+        valid: false,
+        issue: "membership_already_active",
+        isInvitation: true,
+      };
+    }
+  }
+
+  return {
+    valid: true,
+    isInvitation: record.isInvitation,
+    isExistingUser: record.user.lastLoginAt !== null,
+    invitationTenantId: record.invitationTenantId ?? null,
+    userId: record.user.id,
+  };
+}
+
 export async function validatePasswordResetToken(
   prisma: PrismaClient,
   rawToken: string,
@@ -174,7 +284,8 @@ export async function consumePasswordResetToken(
   const newPasswordHash = await hashPassword(newPassword);
   const tokenHash = hashResetToken(rawToken);
 
-  return prisma.$transaction(async (tx) => {
+  try {
+    return await prisma.$transaction(async (tx) => {
     await acquirePlatformSuperAdminMutationLock(tx);
     const current = await tx.passwordResetToken.findUnique({
       where: { tokenHash },
@@ -202,7 +313,20 @@ export async function consumePasswordResetToken(
       !current.user.isActive ||
       current.user.userRoles.length > 0
     ) {
-      return null;
+      abortTransaction();
+    }
+
+    if (current.isInvitation && current.invitationTenantId) {
+      const membership = await tx.tenantMembership.findUnique({
+        where: {
+          tenantId_userId: {
+            tenantId: current.invitationTenantId,
+            userId: current.user.id,
+          },
+        },
+        select: { isActive: true },
+      });
+      if (!membership) abortTransaction();
     }
 
     const claimed = await tx.passwordResetToken.updateMany({
@@ -214,7 +338,7 @@ export async function consumePasswordResetToken(
       },
       data: { usedAt: now },
     });
-    if (claimed.count !== 1) return null;
+    if (claimed.count !== 1) abortTransaction();
 
     await tx.user.update({
       where: { id: current.user.id },
@@ -223,6 +347,15 @@ export async function consumePasswordResetToken(
         passwordChangedAt: now,
       },
     });
+
+    if (current.isInvitation && current.invitationTenantId) {
+      await activateInvitationMembershipInTransaction(
+        tx,
+        current.user.id,
+        current.invitationTenantId,
+      );
+    }
+
     await tx.passwordResetToken.deleteMany({
       where: {
         userId: current.user.id,
@@ -252,7 +385,11 @@ export async function consumePasswordResetToken(
       isExistingUser: current.user.lastLoginAt !== null,
       invitationTenantId: current.invitationTenantId ?? null,
     };
-  });
+    });
+  } catch (error) {
+    if (error instanceof TransactionAborted) return null;
+    throw error;
+  }
 }
 
 /**
@@ -267,7 +404,8 @@ export async function consumeExistingUserInvitationToken(
   if (!rawToken) return null;
   const tokenHash = hashResetToken(rawToken);
 
-  return prisma.$transaction(async (tx) => {
+  try {
+    return await prisma.$transaction(async (tx) => {
     await acquirePlatformSuperAdminMutationLock(tx);
     const current = await tx.passwordResetToken.findUnique({
       where: { tokenHash },
@@ -297,7 +435,20 @@ export async function consumeExistingUserInvitationToken(
       !current.user.isActive ||
       current.user.userRoles.length > 0
     ) {
-      return null;
+      abortTransaction();
+    }
+
+    if (current.invitationTenantId) {
+      const membership = await tx.tenantMembership.findUnique({
+        where: {
+          tenantId_userId: {
+            tenantId: current.invitationTenantId,
+            userId: current.user.id,
+          },
+        },
+        select: { isActive: true },
+      });
+      if (!membership) abortTransaction();
     }
 
     const claimed = await tx.passwordResetToken.updateMany({
@@ -309,7 +460,15 @@ export async function consumeExistingUserInvitationToken(
       },
       data: { usedAt: now },
     });
-    if (claimed.count !== 1) return null;
+    if (claimed.count !== 1) abortTransaction();
+
+    if (current.invitationTenantId) {
+      await activateInvitationMembershipInTransaction(
+        tx,
+        current.user.id,
+        current.invitationTenantId,
+      );
+    }
 
     return {
       tokenId: current.id,
@@ -319,5 +478,9 @@ export async function consumeExistingUserInvitationToken(
       isExistingUser: true,
       invitationTenantId: current.invitationTenantId ?? null,
     };
-  });
+    });
+  } catch (error) {
+    if (error instanceof TransactionAborted) return null;
+    throw error;
+  }
 }

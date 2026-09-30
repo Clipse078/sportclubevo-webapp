@@ -6,28 +6,27 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { AUTH_SECURITY_MESSAGES } from "@/lib/security/abuse-policy";
 
-const mockValidatePasswordResetToken = vi.fn();
+const mockInspectPasswordResetToken = vi.fn();
 const mockConsumePasswordResetToken = vi.fn();
-const mockActivateInvitationMembership = vi.fn();
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {},
 }));
 
 vi.mock("@/lib/auth/password-reset", () => ({
-  validatePasswordResetToken: mockValidatePasswordResetToken,
+  inspectPasswordResetToken: mockInspectPasswordResetToken,
   consumePasswordResetToken: mockConsumePasswordResetToken,
-}));
-
-vi.mock("@/lib/users/mutations", () => ({
-  activateInvitationMembership: mockActivateInvitationMembership,
 }));
 
 const { POST } = await import("../route");
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockValidatePasswordResetToken.mockResolvedValue(null);
+  mockInspectPasswordResetToken.mockResolvedValue({
+    valid: false,
+    issue: "invalid",
+    isInvitation: false,
+  });
   mockConsumePasswordResetToken.mockResolvedValue(null);
 });
 

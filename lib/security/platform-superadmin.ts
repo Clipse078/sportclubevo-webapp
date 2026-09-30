@@ -6,7 +6,7 @@ export const PLATFORM_SUPERADMIN_ROLE_KEY = "super_admin";
 // can change whether a usable platform Superadmin exists.
 const PLATFORM_SUPERADMIN_LOCK_ID = 1_397_816_321;
 
-type LockClient = Pick<Prisma.TransactionClient, "$queryRawUnsafe">;
+type LockClient = Pick<Prisma.TransactionClient, "$executeRawUnsafe">;
 type PlatformAuthorityClient = Pick<PrismaClient, "userRole">;
 
 export const platformSuperAdminAssignmentWhere = {
@@ -28,7 +28,9 @@ export async function acquirePlatformSuperAdminMutationLock(
   tx: LockClient,
 ): Promise<void> {
   // Fixed SQL and a fixed integer only; no user-controlled input is interpolated.
-  await tx.$queryRawUnsafe(
+  // pg_advisory_xact_lock returns void — use executeRaw (not queryRaw) so the
+  // Prisma pg driver adapter does not fail deserializing an unsupported column.
+  await tx.$executeRawUnsafe(
     "SELECT pg_advisory_xact_lock($1)",
     PLATFORM_SUPERADMIN_LOCK_ID,
   );

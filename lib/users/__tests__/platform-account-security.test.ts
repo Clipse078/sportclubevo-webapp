@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
   userUpdate: vi.fn(),
   userRoleCount: vi.fn(),
   auditLogCreate: vi.fn(),
-  queryRaw: vi.fn(),
+  executeRaw: vi.fn(),
   transaction: vi.fn(),
 }));
 
@@ -42,7 +42,7 @@ function installTransaction() {
   mocks.transaction.mockImplementation(
     async (callback: (tx: unknown) => Promise<unknown>) =>
       callback({
-        $queryRawUnsafe: mocks.queryRaw,
+        $executeRawUnsafe: mocks.executeRaw,
         user: {
           findUnique: mocks.userFindUnique,
           update: mocks.userUpdate,
@@ -56,7 +56,7 @@ function installTransaction() {
 beforeEach(() => {
   vi.clearAllMocks();
   installTransaction();
-  mocks.queryRaw.mockResolvedValue([{ pg_advisory_xact_lock: null }]);
+  mocks.executeRaw.mockResolvedValue(undefined);
   mocks.auditLogCreate.mockResolvedValue({});
 });
 
@@ -79,7 +79,7 @@ describe("platform account lifecycle safety", () => {
     });
 
     expect(mocks.userUpdate).not.toHaveBeenCalled();
-    expect(mocks.queryRaw).toHaveBeenCalledOnce();
+    expect(mocks.executeRaw).toHaveBeenCalledOnce();
   });
 
   it("allows disabling one Superadmin when another remains and revokes sessions", async () => {
@@ -163,7 +163,7 @@ describe("platform account lifecycle safety", () => {
       <T>(callback: (tx: unknown) => Promise<T>): Promise<T> => {
         const run = queue.then(() =>
           callback({
-            $queryRawUnsafe: mocks.queryRaw,
+            $executeRawUnsafe: mocks.executeRaw,
             user: {
               findUnique: vi.fn(({ where }) =>
                 target(where.id, active.get(where.id)),

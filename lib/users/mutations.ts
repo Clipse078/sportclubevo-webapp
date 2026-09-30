@@ -14,6 +14,8 @@ import { assertTenantDelegationAllowed } from "@/lib/roles/delegation";
 import { isPlatformSuperAdmin } from "@/lib/security/platform-superadmin";
 import { INVITATION_RESEND_COOLDOWN_MS } from "@/lib/security/abuse-policy";
 
+export { activateInvitationMembership } from "@/lib/users/invitation-activation";
+
 // ── Error types ───────────────────────────────────────────────────────────────
 
 export type MembershipToggleErrorCode =
@@ -779,44 +781,6 @@ export async function revokeTenantInvitation(
 }
 
 // ── Private helpers ───────────────────────────────────────────────────────────
-
-// ── Invitation acceptance: activate exact tenant membership ──────────────────
-
-/**
- * Activate exactly the TenantMembership for `userId` in `tenantId`.
- *
- * Called by both acceptance paths after the invitation token is consumed:
- *   - New User: POST /api/auth/reset-password (password setup)
- *   - Existing User: POST /api/auth/invitation/accept
- *
- * Uses the `invitationTenantId` stored on the token to target the exact
- * membership row — no timestamp heuristics, no collateral activation.
- *
- * Multi-tenant safety:
- *   - Only the membership for `tenantId` is updated; other tenants unaffected.
- *   - If the membership is already active (e.g. admin activated it manually),
- *     updateMany is a no-op (idempotent).
- */
-export async function activateInvitationMembership(
-  userId: string,
-  tenantId: string,
-): Promise<void> {
-  const activated = await prisma.tenantMembership.updateMany({
-    where: { userId, tenantId, isActive: false },
-    data: { isActive: true },
-  });
-  if (activated.count > 0) {
-    await logAction({
-      tenantId,
-      actorUserId: userId,
-      moduleKey: "users",
-      entityType: "TenantMembership",
-      entityId: `${tenantId}:${userId}`,
-      action: "MEMBERSHIP_ACTIVATED_BY_INVITATION",
-      metadataJson: { targetUserId: userId },
-    });
-  }
-}
 
 /**
  * Create a fresh invitation token for `userId` issued on behalf of `tenantId`.

@@ -21,11 +21,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import {
   consumePasswordResetToken,
-  validatePasswordResetToken,
+  inspectPasswordResetToken,
 } from "@/lib/auth/password-reset";
-import { activateInvitationMembership } from "@/lib/users/mutations";
+import { passwordResetTokenIssueMessage } from "@/lib/auth/invitation-token-messages";
 import { getClientIp } from "@/lib/security/client-ip";
-import { checkApplicationRateLimit } from "@/lib/security/abuse-policy";
+import {
+  AUTH_SECURITY_MESSAGES,
+  checkApplicationRateLimit,
+} from "@/lib/security/abuse-policy";
 import { createRateLimitResponse } from "@/lib/security/rate-limit-response";
 import { logSecurityEvent } from "@/lib/security/security-events";
 
@@ -53,7 +56,7 @@ export async function POST(req: NextRequest) {
 
   if (!token) {
     return NextResponse.json(
-      { error: "Ungültiger oder abgelaufener Link. Bitte fordere einen neuen an." },
+      { error: AUTH_SECURITY_MESSAGES.invalidOrExpiredToken },
       { status: 400 },
     );
   }
@@ -72,37 +75,45 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const presentation = await inspectPasswordResetToken(prisma, token);
+  if (!presentation.valid) {
+    return NextResponse.json(
+      {
+        error: passwordResetTokenIssueMessage(
+          presentation.issue,
+          presentation.isInvitation,
+        ),
+      },
+      { status: 400 },
+    );
+  }
+
   let consumed: Awaited<ReturnType<typeof consumePasswordResetToken>> = null;
   try {
     consumed = await consumePasswordResetToken(prisma, token, newPassword);
   } catch (err) {
-    console.error(
-      "[reset-password] consumePasswordResetToken error",
-      err instanceof Error ? err.message : String(err),
-    );
+    console.error("[reset-password] consumePasswordResetToken error", {
+      surface: "resetPassword",
+      isInvitation: presentation.isInvitation,
+      userId: presentation.userId,
+      message: err instanceof Error ? err.message : String(err),
+    });
     return NextResponse.json(
-      { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
+      { error: AUTH_SECURITY_MESSAGES.activationTechnicalFailure },
       { status: 500 },
     );
   }
 
   if (!consumed) {
     return NextResponse.json(
-      { error: "Ungültiger oder abgelaufener Link. Bitte fordere einen neuen an." },
+      {
+        error: passwordResetTokenIssueMessage(
+          "invalid",
+          presentation.isInvitation,
+        ),
+      },
       { status: 400 },
     );
-  }
-
-  // Invitation acceptance: activate exactly the membership for the invitation's
-  // tenant now that the user has set their password.
-  // Non-fatal — password is already saved; activation failure can be retried.
-  if (consumed.isInvitation && consumed.invitationTenantId) {
-    await activateInvitationMembership(
-      consumed.userId,
-      consumed.invitationTenantId,
-    ).catch((err) => {
-      console.error("[reset-password] Failed to activate invitation membership:", err);
-    });
   }
 
   return NextResponse.json({ success: true });
@@ -117,42 +128,46 @@ export async function POST(req: NextRequest) {
  *
  * For invitation tokens, also returns contextual metadata so the client
  * can render invitation-specific UI (club name, existing-user guidance, etc.).
- *
- * Response schema:
- *   { valid: false }                    — invalid/expired/used token
- *   { valid: true, isInvitation: false } — standard password reset
- *   { valid: true, isInvitation: true, isExistingUser: boolean,
- *     tenantName: string | null, recipientFirstName: string | null }
  */
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token")?.trim() ?? "";
 
   if (!token) {
-    return NextResponse.json({ valid: false }, { status: 200 });
+    return NextResponse.json({ valid: false, issue: "invalid" as const }, { status: 200 });
   }
 
   try {
-    const validated = await validatePasswordResetToken(prisma, token);
-    if (!validated) {
-      return NextResponse.json({ valid: false }, { status: 200 });
+    const presentation = await inspectPasswordResetToken(prisma, token);
+    if (!presentation.valid) {
+      return NextResponse.json(
+        {
+          valid: false,
+          issue: presentation.issue,
+          message: passwordResetTokenIssueMessage(
+            presentation.issue,
+            presentation.isInvitation,
+          ),
+        },
+        { status: 200 },
+      );
     }
 
-    if (!validated.isInvitation) {
+    if (!presentation.isInvitation) {
       return NextResponse.json({ valid: true, isInvitation: false }, { status: 200 });
     }
 
-    // For invitation tokens, fetch tenant name (best-effort: use the single
-    // TenantMembership for newly created users, or null for multi-tenant users).
     let tenantName: string | null = null;
     let recipientFirstName: string | null = null;
 
     try {
       const user = await prisma.user.findUnique({
-        where: { id: validated.userId },
+        where: { id: presentation.userId },
         select: {
           firstName: true,
           tenantMemberships: {
-            orderBy: { joinedAt: "desc" },
+            where: presentation.invitationTenantId
+              ? { tenantId: presentation.invitationTenantId }
+              : undefined,
             take: 1,
             select: {
               tenant: { select: { name: true } },
@@ -172,17 +187,17 @@ export async function GET(req: NextRequest) {
       {
         valid: true,
         isInvitation: true,
-        isExistingUser: validated.isExistingUser,
+        isExistingUser: presentation.isExistingUser,
         tenantName,
         recipientFirstName,
       },
       { status: 200 },
     );
   } catch (err) {
-    console.error(
-      "[reset-password:validate]",
-      err instanceof Error ? err.message : String(err),
-    );
-    return NextResponse.json({ valid: false }, { status: 200 });
+    console.error("[reset-password:validate]", {
+      surface: "resetPasswordValidate",
+      message: err instanceof Error ? err.message : String(err),
+    });
+    return NextResponse.json({ valid: false, issue: "invalid" as const }, { status: 200 });
   }
 }

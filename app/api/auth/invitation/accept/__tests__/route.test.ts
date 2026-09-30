@@ -7,7 +7,6 @@ import { NextRequest } from "next/server";
 import { AUTH_SECURITY_MESSAGES } from "@/lib/security/abuse-policy";
 
 const mockConsumeExistingUserInvitationToken = vi.fn();
-const mockActivateInvitationMembership = vi.fn();
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {},
@@ -17,16 +16,11 @@ vi.mock("@/lib/auth/password-reset", () => ({
   consumeExistingUserInvitationToken: mockConsumeExistingUserInvitationToken,
 }));
 
-vi.mock("@/lib/users/mutations", () => ({
-  activateInvitationMembership: mockActivateInvitationMembership,
-}));
-
 const { POST } = await import("../route");
 
 beforeEach(() => {
   vi.clearAllMocks();
   mockConsumeExistingUserInvitationToken.mockResolvedValue(null);
-  mockActivateInvitationMembership.mockResolvedValue(undefined);
 });
 
 describe("POST /api/auth/invitation/accept", () => {
@@ -61,7 +55,6 @@ describe("POST /api/auth/invitation/accept", () => {
     const res = await POST(req);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ success: true });
-    expect(mockActivateInvitationMembership).toHaveBeenCalledWith("user-1", "tenant-1");
   });
 
   it("returns canonical 429 when rate limited", async () => {
