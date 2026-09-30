@@ -377,15 +377,14 @@ Recommended **package sequence** (not prompt order):
 
 ### Per-package notes (first audiences only)
 
-**SPIELBETRIEB-AUDIENCE-01**
+**SPIELBETRIEB-AUDIENCE-01** — **Implemented** (see `docs/communication/SCE-SPIELBETRIEB-AUDIENCE-01.md`)
 
 - Entity: `ParticipationResponse` + `PlayerSquadMember` anchor
-- First audiences: `not-responded`, `accepted`, `declined`, `all-invitees` (parity with COMM-10)
-- Permissions: team comm send + team view
-- Attention: `participation-outstanding` with `COMMUNICATION_SEND` → `DeferredDomainAudienceReference` per event (live materialize)
-- **Preferred:** prove operational attention + manual Erinnerung in Spielbetrieb **before** building a generic multi-domain aggregator registry
-- Dependency: none (logic exists)
-- Risk: duplicating COMM-10—must refactor shared core, not fork
+- First audiences: `not-responded`, `accepted`, `declined`, `maybe`, `all-invitees` (COMM-10 parity + MAYBE for domain composer)
+- Permissions: team comm view (discovery/materialize) + team comm send (Erinnerung)
+- Attention: `participation-outstanding` with `COMMUNICATION_SEND` → deferred `spielbetrieb.teilnahme` candidate per event
+- Shared core: `lib/participation/participation-audience-resolution.ts`
+- Dependency: none (logic existed; refactored, not forked)
 
 **TRAINING-AUDIENCE-01**
 

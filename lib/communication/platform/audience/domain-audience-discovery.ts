@@ -8,11 +8,17 @@ import type {
 } from "@/lib/communication/platform/audience/domain-audience-source";
 import { getDomainAudienceSourceRegistry } from "@/lib/communication/platform/audience/domain-audience-registry";
 import { ensureProbetrainingDomainAudienceRegistered } from "@/lib/registrations/domain-audience/register-probetraining-domain-audience";
+import { ensureSpielbetriebDomainAudienceRegistered } from "@/lib/spielbetrieb/domain-audience/register-spielbetrieb-domain-audience";
+
+function ensureDomainAudienceSourcesRegistered(): void {
+  ensureProbetrainingDomainAudienceRegistered();
+  ensureSpielbetriebDomainAudienceRegistered();
+}
 
 export async function listAuthorizedDomainAudienceSources(
   ctx: DomainAudienceDiscoveryContext,
 ): Promise<DomainAudienceSource[]> {
-  ensureProbetrainingDomainAudienceRegistered();
+  ensureDomainAudienceSourcesRegistered();
   const registry = getDomainAudienceSourceRegistry();
   const authorized: DomainAudienceSource[] = [];
   for (const source of registry.list()) {
@@ -40,7 +46,7 @@ export async function getAuthorizedDomainAudienceSource(
   ctx: DomainAudienceDiscoveryContext,
   sourceKey: string,
 ): Promise<DomainAudienceSource | null> {
-  ensureProbetrainingDomainAudienceRegistered();
+  ensureDomainAudienceSourcesRegistered();
   const source = getDomainAudienceSourceRegistry().get(sourceKey);
   if (!source) return null;
   if (!(await isDomainAudienceSourceAuthorized(source, ctx))) return null;
