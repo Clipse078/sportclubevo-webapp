@@ -75,6 +75,7 @@ export const spielbetriebParticipationOutstandingAttentionSource: DomainOperatio
           startAt: { gte: ctx.now },
           status: { in: ["SCHEDULED", "LIVE"] },
           teamSeasonId: { not: null },
+          participationResponseDueAt: { not: null },
         },
         select: {
           id: true,
@@ -84,6 +85,7 @@ export const spielbetriebParticipationOutstandingAttentionSource: DomainOperatio
           status: true,
           teamId: true,
           teamSeasonId: true,
+          participationResponseDueAt: true,
           team: { select: { name: true } },
         },
         orderBy: [{ startAt: "asc" }],
@@ -102,6 +104,7 @@ export const spielbetriebParticipationOutstandingAttentionSource: DomainOperatio
             status: event.status,
             startAt: event.startAt,
             now: ctx.now,
+            participationResponseDueAt: event.participationResponseDueAt,
           })
         ) {
           continue;

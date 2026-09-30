@@ -17,7 +17,7 @@ Display counts are **not** send authority. Actions re-read live `ParticipationRe
 | Events | `Event` with `type` MATCH / TOURNAMENT |
 | Invitee population | Active `PlayerSquadMember` for `teamSeasonId` (full season squad — **no match-specific Aufgebot entity**) |
 | Responses | `ParticipationResponse` (`OPEN`, `YES`, `NO`, `MAYBE`) |
-| Deadline | `Event.participationResponseDueAt` (optional) |
+| Deadline / activation | `Event.participationResponseDueAt` — **Teilnahmeanfrage is active only when this is set** (`isParticipationResponseRequested`) |
 | Guardians | `guardianRelationship` + COMM-18 via COMM-03 recipient resolution |
 | Existing comm | SCE-COMM-10 presets + `sendEventNoResponseSmartReminder` |
 
@@ -78,8 +78,8 @@ Saved `DomainAudienceReference` rows store `{ sourceKey, candidateId }` only. Ma
 |-------|-------|
 | Source | `spielbetriebParticipationOutstandingAttentionSource` |
 | Kind | `participation-outstanding` |
-| Relevance | Upcoming (`startAt >= now`), status `SCHEDULED` or `LIVE`, MATCH/TOURNAMENT |
-| Count | Live `NOT_RESPONDED` (OPEN) squad members |
+| Relevance | Active Teilnahmeanfrage (`participationResponseDueAt` set), upcoming (`startAt >= now`), status `SCHEDULED` or `LIVE`, MATCH/TOURNAMENT |
+| Count | Live `NOT_RESPONDED` squad members (see semantics below) |
 | Action | `Erinnerung senden` → `executeSpielbetriebOutstandingParticipationReminder()` |
 | Deferred audience | `spielbetrieb.teilnahme` + NOT_RESPONDED candidate for event |
 | Deep link | `/dashboard/teams/{teamId}/teilnahmen` |
@@ -87,12 +87,24 @@ Saved `DomainAudienceReference` rows store `{ sourceKey, candidateId }` only. Ma
 
 No generic attention registry/aggregator in this package (deferred to DOMAIN-OPERATIONAL-ATTENTION-01).
 
+### NOT_RESPONDED semantics (shared core)
+
+`NOT_RESPONDED` maps to filter `PENDING` → canonical status **`OPEN` only**.
+
+| Squad member state | In `NOT_RESPONDED`? |
+|--------------------|---------------------|
+| No `ParticipationResponse` row | **Yes** (implicit OPEN default) |
+| Row with status `OPEN` | **Yes** |
+| `YES` / `NO` / `MAYBE` | **No** |
+
+Operational attention and Spielbetrieb domain discovery only consider events with an **active** Teilnahmeanfrage (`participationResponseDueAt` not null). Preset resolution itself remains event-scoped; COMM-10 manual remind on team pages is unchanged.
+
 ## Manual reminder execution
 
 Reuses **`sendEventNoResponseSmartReminder`** (COMM-10) after:
 
 1. Re-auth view + send  
-2. Re-load event (actionable lifecycle)  
+2. Re-load event (actionable lifecycle + active Teilnahmeanfrage)  
 3. Re-count `NOT_RESPONDED` via shared core  
 4. Zero recipients → safe no-op (no stale send)
 

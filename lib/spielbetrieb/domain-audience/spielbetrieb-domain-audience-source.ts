@@ -57,6 +57,7 @@ export const spielbetriebTeilnahmeDomainAudienceSource: DomainAudienceSource = {
         startAt: { gte: now },
         status: { in: ["SCHEDULED", "LIVE"] },
         teamSeasonId: { not: null },
+        participationResponseDueAt: { not: null },
       },
       select: {
         id: true,
@@ -66,6 +67,7 @@ export const spielbetriebTeilnahmeDomainAudienceSource: DomainAudienceSource = {
         status: true,
         teamId: true,
         teamSeasonId: true,
+        participationResponseDueAt: true,
         team: { select: { name: true } },
       },
       orderBy: [{ startAt: "asc" }],
@@ -85,6 +87,7 @@ export const spielbetriebTeilnahmeDomainAudienceSource: DomainAudienceSource = {
           status: event.status,
           startAt: event.startAt,
           now,
+          participationResponseDueAt: event.participationResponseDueAt,
         })
       ) {
         continue;

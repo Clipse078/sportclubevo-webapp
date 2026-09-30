@@ -149,6 +149,7 @@ function setupEventAndSquad() {
     status: "SCHEDULED",
     type: "MATCH",
     teamId: TEAM,
+    participationResponseDueAt: new Date("2026-10-04T18:00:00.000Z"),
     team: { name: "F2" },
   });
   mocks.playerSquadMember.findMany.mockResolvedValue([
@@ -280,6 +281,31 @@ describe("SCE-SPIELBETRIEB-AUDIENCE-01", () => {
     expect(spec.components[0]?.explicit?.includePersonIds).toEqual(["p1", "p2", "p3"]);
   });
 
+  it("attention omitted when participation request is not active (no due date)", async () => {
+    mocks.event.findMany.mockResolvedValue([
+      {
+        id: EVENT,
+        title: "Sonntag",
+        startAt: new Date("2026-10-05T14:00:00.000Z"),
+        type: "MATCH",
+        status: "SCHEDULED",
+        teamId: TEAM,
+        teamSeasonId: TS,
+        participationResponseDueAt: null,
+        team: { name: "F2" },
+      },
+    ]);
+    mocks.participationResponse.findMany.mockResolvedValue([]);
+    const ctx = {
+      tenantId: TENANT,
+      userId: "user-1",
+      permissionKeys: new Set([PERMISSIONS.COMMUNICATION_TEAM_VIEW]),
+      now: new Date("2026-10-01T12:00:00.000Z"),
+    };
+    const items = await evaluateSpielbetriebParticipationOperationalAttention(ctx);
+    expect(items).toHaveLength(0);
+  });
+
   it("attention exists when outstanding > 0 and disappears at 0", async () => {
     mocks.event.findMany.mockResolvedValue([
       {
@@ -290,6 +316,7 @@ describe("SCE-SPIELBETRIEB-AUDIENCE-01", () => {
         status: "SCHEDULED",
         teamId: TEAM,
         teamSeasonId: TS,
+        participationResponseDueAt: new Date("2026-10-04T18:00:00.000Z"),
         team: { name: "F2" },
       },
     ]);
@@ -333,6 +360,7 @@ describe("SCE-SPIELBETRIEB-AUDIENCE-01", () => {
         status: "SCHEDULED",
         teamId: TEAM,
         teamSeasonId: TS,
+        participationResponseDueAt: new Date("2026-10-04T18:00:00.000Z"),
         team: { name: "F2" },
       },
     ]);
@@ -425,6 +453,7 @@ describe("SCE-SPIELBETRIEB-AUDIENCE-01", () => {
       status: "CANCELLED",
       type: "MATCH",
       teamId: TEAM,
+      participationResponseDueAt: new Date("2026-10-04T18:00:00.000Z"),
     });
     await expect(
       executeSpielbetriebOutstandingParticipationReminder({

@@ -7,7 +7,10 @@ import {
   assertSpielbetriebTeamCommunicationSend,
   assertSpielbetriebTeamCommunicationView,
 } from "@/lib/spielbetrieb/domain-audience/spielbetrieb-team-authorization";
-import { isSpielbetriebEventRelevantForParticipationAttention } from "@/lib/spielbetrieb/domain-audience/spielbetrieb-event-relevance";
+import {
+  isParticipationResponseRequested,
+  isSpielbetriebEventRelevantForParticipationAttention,
+} from "@/lib/spielbetrieb/domain-audience/spielbetrieb-event-relevance";
 import { sendEventNoResponseSmartReminder } from "@/lib/communication/event/event-communication-service";
 import { listParticipationSubjectPersonIds } from "@/lib/participation/participation-audience-resolution";
 import { resolveEventParticipationAnchor } from "@/lib/communication/event/event-participation-anchor";
@@ -56,10 +59,21 @@ export async function executeSpielbetriebOutstandingParticipationReminder(input:
       teamId: parsed.teamId,
       type: parsed.eventKind,
     },
-    select: { id: true, status: true, startAt: true, type: true },
+    select: {
+      id: true,
+      status: true,
+      startAt: true,
+      type: true,
+      participationResponseDueAt: true,
+    },
   });
   if (!event) {
     throw new TeamCommunicationNotFoundError("event not found");
+  }
+  if (
+    !isParticipationResponseRequested({ participationResponseDueAt: event.participationResponseDueAt })
+  ) {
+    throw new TeamCommunicationNotFoundError("participation request not active for event");
   }
   if (
     !isSpielbetriebEventRelevantForParticipationAttention({
@@ -67,6 +81,7 @@ export async function executeSpielbetriebOutstandingParticipationReminder(input:
       status: event.status,
       startAt: event.startAt,
       now,
+      participationResponseDueAt: event.participationResponseDueAt,
     })
   ) {
     throw new TeamCommunicationNotFoundError("event no longer actionable");

@@ -7,6 +7,7 @@ import { resolveEventParticipationAnchor } from "@/lib/communication/event/event
 import { eventAudienceSpecFromPersonIds } from "@/lib/communication/event/event-participation-recipients";
 import { listParticipationSubjectPersonIds } from "@/lib/participation/participation-audience-resolution";
 import {
+  isParticipationResponseRequested,
   isSpielbetriebEventRelevantForParticipationAttention,
   isSpielbetriebMatchOrTournament,
 } from "@/lib/spielbetrieb/domain-audience/spielbetrieb-event-relevance";
@@ -79,7 +80,14 @@ export async function materializeSpielbetriebParticipationAudienceComponent(inpu
       teamId: parsed.teamId,
       type: parsed.eventKind,
     },
-    select: { id: true, title: true, startAt: true, status: true, type: true },
+    select: {
+      id: true,
+      title: true,
+      startAt: true,
+      status: true,
+      type: true,
+      participationResponseDueAt: true,
+    },
   });
   if (!event) {
     throw new TeamCommunicationNotFoundError("event not found");
@@ -87,11 +95,17 @@ export async function materializeSpielbetriebParticipationAudienceComponent(inpu
 
   const now = input.now ?? new Date();
   if (
+    !isParticipationResponseRequested({ participationResponseDueAt: event.participationResponseDueAt })
+  ) {
+    throw new TeamCommunicationNotFoundError("participation request not active for event");
+  }
+  if (
     !isSpielbetriebEventRelevantForParticipationAttention({
       type: event.type,
       status: event.status,
       startAt: event.startAt,
       now,
+      participationResponseDueAt: event.participationResponseDueAt,
     })
   ) {
     throw new TeamCommunicationNotFoundError("event no longer actionable for Spielteilnahme audience");
