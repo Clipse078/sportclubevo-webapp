@@ -33,6 +33,13 @@ import {
   dedupeExternalContactsAgainstPersonEmails,
   resolveExternalContactIdsFromAudience,
 } from "@/lib/communication/platform/recipient-resolution/external-contact-resolution";
+import {
+  buildDomainAudienceMaterializationContext,
+  communicationAudienceSpecHasDomainReferences,
+  materializeDomainAudiencesInSpec,
+  type DomainAudienceMaterializationContext,
+} from "@/lib/communication/platform/audience/domain-audience-expansion";
+import { DomainAudienceError } from "@/lib/communication/platform/audience/domain-audience-errors";
 
 export const MAX_SAVED_TARGET_GROUP_NESTING_DEPTH = 10;
 
@@ -284,10 +291,28 @@ export async function resolveAudienceSpecPersonIds(
   return composed;
 }
 
+async function resolveAudienceForResolution(input: {
+  audience: CommunicationAudienceSpec;
+  domainMaterialization?: DomainAudienceMaterializationContext;
+}): Promise<CommunicationAudienceSpec> {
+  if (!communicationAudienceSpecHasDomainReferences(input.audience)) {
+    return input.audience;
+  }
+  if (!input.domainMaterialization) {
+    throw new DomainAudienceError(
+      "CANDIDATE_RESOLUTION_FAILED",
+      "Domain audience materialization requires senderUserId and authorization context.",
+    );
+  }
+  return materializeDomainAudiencesInSpec(input.audience, input.domainMaterialization);
+}
+
 export async function resolveAudienceCandidates(input: {
   tenantId: string;
   audience: CommunicationAudienceSpec;
   structuralExclusionSelectors?: import("@/lib/communication/platform/audience/structural-targets").StructuralAudienceSelectors;
+  senderUserId?: string;
+  domainMaterialization?: DomainAudienceMaterializationContext;
 }): Promise<{
   candidatePersonIds: string[];
   candidateExternalContactIds: string[];
@@ -301,7 +326,24 @@ export async function resolveAudienceCandidates(input: {
     trace,
   };
 
-  let candidates = await resolveAudienceSpecPersonIds(input.audience, ctx);
+  let materialization = input.domainMaterialization;
+  if (
+    communicationAudienceSpecHasDomainReferences(input.audience) &&
+    !materialization &&
+    input.senderUserId
+  ) {
+    materialization = await buildDomainAudienceMaterializationContext({
+      tenantId: input.tenantId,
+      senderUserId: input.senderUserId,
+    });
+  }
+
+  const audience = await resolveAudienceForResolution({
+    audience: input.audience,
+    domainMaterialization: materialization,
+  });
+
+  let candidates = await resolveAudienceSpecPersonIds(audience, ctx);
 
   if (input.structuralExclusionSelectors) {
     const exclusionSet = await resolveStructuralExclusionPersonIds({
@@ -318,7 +360,7 @@ export async function resolveAudienceCandidates(input: {
 
   let externalContactIds = await resolveExternalContactIdsFromAudience({
     tenantId: input.tenantId,
-    audience: input.audience,
+    audience,
   });
   externalContactIds = await dedupeExternalContactsAgainstPersonEmails({
     tenantId: input.tenantId,

@@ -12,8 +12,10 @@ import {
 } from "@/lib/communication/platform/audience/structural-targets";
 import type {
   CommunicationAudienceSpec,
+  DomainAudienceReference,
   ZielgruppeAudienceComponent,
 } from "@/lib/communication/platform/audience/zielgruppe-definition";
+import { domainAudienceReferenceIsEmpty } from "@/lib/communication/platform/audience/zielgruppe-definition";
 import {
   sponsorSelectorsAreEmpty,
   type SponsorAudienceSelectors,
@@ -56,8 +58,28 @@ function validateStructural(selectors: StructuralAudienceSelectors | undefined):
   return err;
 }
 
+function validateDomainAudienceReference(
+  ref: DomainAudienceReference | undefined,
+  prefix: string,
+): string | null {
+  if (!ref || domainAudienceReferenceIsEmpty(ref)) return null;
+  if (typeof ref.sourceKey !== "string" || !ref.sourceKey.includes(".")) {
+    return `${prefix}: domainAudience.sourceKey must be a stable composite key (domain.source)`;
+  }
+  if (typeof ref.candidateId !== "string" || !ref.candidateId.trim()) {
+    return `${prefix}: domainAudience.candidateId is required`;
+  }
+  if (ref.displayLabel != null && typeof ref.displayLabel !== "string") {
+    return `${prefix}: domainAudience.displayLabel must be a string when set`;
+  }
+  return null;
+}
+
 function validateComponent(component: ZielgruppeAudienceComponent, index: number): string | null {
   const prefix = `components[${index}]`;
+
+  const domainErr = validateDomainAudienceReference(component.domainAudience, prefix);
+  if (domainErr) return domainErr;
 
   const structuralErr = validateStructural(component.structural);
   if (structuralErr) return `${prefix}: ${structuralErr}`;
@@ -107,6 +129,7 @@ function validateComponent(component: ZielgruppeAudienceComponent, index: number
     }
   }
 
+  const hasDomain = !domainAudienceReferenceIsEmpty(component.domainAudience);
   const hasStructural =
     component.structural && !structuralSelectorsAreEmpty(component.structural);
   const hasSaved = (component.savedTargetGroupIds?.length ?? 0) > 0;
@@ -114,6 +137,15 @@ function validateComponent(component: ZielgruppeAudienceComponent, index: number
   const hasExplicit = (component.explicit?.includePersonIds?.length ?? 0) > 0;
   const hasExternal = (component.external?.includeExternalContactIds?.length ?? 0) > 0;
   const hasSponsor = !sponsorSelectorsAreEmpty(component.sponsor);
+
+  if (hasDomain) {
+    const otherSelectors =
+      hasStructural || hasSaved || hasRule || hasExplicit || hasExternal || hasSponsor;
+    if (otherSelectors) {
+      return `${prefix}: domainAudience cannot be combined with other selectors in the same component`;
+    }
+    return null;
+  }
 
   if (!hasStructural && !hasSaved && !hasRule && !hasExplicit && !hasExternal && !hasSponsor) {
     return `${prefix}: audience component must specify at least one selector`;

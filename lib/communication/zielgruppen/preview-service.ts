@@ -81,6 +81,7 @@ export async function previewZielgruppeRecipients(input: {
       tenantId: tenant.id,
       audience,
       structuralExclusionSelectors: structuralExclusion,
+      senderUserId,
     }),
   ]);
 

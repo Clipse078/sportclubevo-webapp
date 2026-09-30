@@ -114,6 +114,7 @@ export async function resolveCommunicationRecipients(
     tenantId: input.tenantId,
     audience: input.audience,
     structuralExclusionSelectors: options?.structuralExclusionSelectors,
+    senderUserId: input.senderActor.userId,
   });
   for (const row of audienceResult.excludedRecipients) {
     for (const code of row.reasonCodes) mergeExclusion(exclusionMap, row.personId, code);

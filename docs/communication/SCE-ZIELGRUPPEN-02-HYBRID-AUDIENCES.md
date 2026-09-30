@@ -106,9 +106,11 @@ Saved groups and composer specs remain **live**. Published communications store 
 
 Apply to STAGE via guarded `APPLY_DATABASE_MIGRATIONS=true npm run db:migrate:deploy-if-enabled` after release gates (see deployment runbook).
 
-## DomainAudienceSource seam (future)
+## Domain audience registry (DOMAIN-AUDIENCE-01)
 
-`lib/communication/platform/audience/domain-audience-source.ts` defines `DomainAudienceSource` registry contract for DOMAIN-AUDIENCE-01 (Probetraining, events, …). **Not implemented** in this package.
+Canonical registry and materialization: `docs/communication/SCE-DOMAIN-AUDIENCE-01.md`.
+
+Types: `lib/communication/platform/audience/domain-audience-source.ts`. Runtime registry: `domain-audience-registry.ts`. Domain modules register providers at startup; STAGE may ship with zero domain sources until domain packages land.
 
 ## Explicitly out of scope
 
@@ -201,10 +203,10 @@ Tenant Club Admin delegation uses the canonical delegatable permission contract 
 - Candidate resolution: `lib/communication/platform/recipient-resolution/audience-candidate-resolver.ts`
 - External snapshots: `lib/communication/platform/recipient-resolution/communication-external-recipient-snapshots.ts`
 - Zielgruppen editor: `components/admin/communication/zielgruppen/*`
-- Future domain seam: `lib/communication/platform/audience/domain-audience-source.ts` (registry empty until DOMAIN-AUDIENCE-01)
+- Domain audience registry: `lib/communication/platform/audience/domain-audience-registry.ts` (see SCE-DOMAIN-AUDIENCE-01)
 
 ### Deferred work
 
-- DOMAIN-AUDIENCE-01 (`DomainAudienceSource` providers for Probetraining, events, …)
+- Domain provider implementations (Probetraining, events, …) — registry infrastructure is on STAGE via DOMAIN-AUDIENCE-01
 - PROBETRAINING-COMM-01, DATA-HYGIENE-01, CSV import UI, Communication Studio UI
 - Production migration apply (STAGE-only deploy gates)
