@@ -25,10 +25,20 @@ export const SCE_APPROVED_AUTHENTICATED_APP_BACKGROUND_SHA256 =
 export const SCE_AUTHENTICATED_APP_BACKGROUND_IMAGE = `url("${SCE_AUTHENTICATED_APP_BACKGROUND_URL}")`;
 
 /**
- * Desktop canvas alignment for the approved artwork (coaching motifs stay below chrome).
- * Imported by authenticated-shell.css — do not hardcode in multiple places.
+ * Canvas alignment for the approved PNG composition (SCE-UX-BG-01R2).
+ *
+ * The artwork already includes calm space above the coaching/dashed motifs. Anchor the
+ * image at the top (`50% 0`) so `background-size: cover` crops excess from the bottom,
+ * never shifting decorative elements upward under the sticky app header. Do not add
+ * shell-level pixel offsets — the PNG is the source of truth.
+ *
+ * Wired via `--sce-app-background-position` in globals.css and authenticated-shell.css.
  */
 export const SCE_AUTHENTICATED_APP_BACKGROUND_POSITION = "center top";
+
+/** CSS custom property name for {@link SCE_AUTHENTICATED_APP_BACKGROUND_POSITION}. */
+export const SCE_AUTHENTICATED_APP_BACKGROUND_POSITION_VAR =
+  "--sce-app-background-position";
 
 /** Root wrapper class applied only on the authenticated admin application shell. */
 export const SCE_AUTHENTICATED_APP_SHELL_CLASS = "sce-authenticated-app-shell";

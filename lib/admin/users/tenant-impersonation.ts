@@ -35,11 +35,22 @@ export async function assertCanImpersonateTenantMember(input: {
     };
   }
 
+  const now = new Date();
+
   const targetUser = await prisma.user.findUnique({
     where: { id: targetUserId },
     select: {
       id: true,
       isActive: true,
+      passwordResetTokens: {
+        where: {
+          isInvitation: true,
+          usedAt: null,
+          expiresAt: { gt: now },
+        },
+        select: { id: true },
+        take: 1,
+      },
       userRoles: {
         where: { role: { scope: "PLATFORM" } },
         select: { role: { select: { key: true, scope: true } } },
@@ -53,6 +64,15 @@ export async function assertCanImpersonateTenantMember(input: {
       status: 404,
       error: "Benutzer nicht gefunden oder inaktiv.",
       reasonCode: "TARGET_INACTIVE",
+    };
+  }
+
+  if (targetUser.passwordResetTokens.length > 0) {
+    return {
+      ok: false,
+      status: 403,
+      error: "Einladung ausstehend — Impersonation ist erst nach Annahme möglich.",
+      reasonCode: "PENDING_INVITATION",
     };
   }
 

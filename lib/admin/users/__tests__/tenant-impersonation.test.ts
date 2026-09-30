@@ -23,6 +23,7 @@ describe("assertCanImpersonateTenantMember", () => {
     mocks.userFindUnique.mockResolvedValue({
       id: "target-1",
       isActive: true,
+      passwordResetTokens: [],
       userRoles: [],
     });
     mocks.tenantMembershipFindFirst.mockResolvedValue(null);
@@ -43,6 +44,7 @@ describe("assertCanImpersonateTenantMember", () => {
     mocks.userFindUnique.mockResolvedValue({
       id: "target-1",
       isActive: true,
+      passwordResetTokens: [],
       userRoles: [{ role: { key: "super_admin", scope: "PLATFORM" } }],
     });
 
@@ -58,10 +60,31 @@ describe("assertCanImpersonateTenantMember", () => {
     }
   });
 
+  it("rejects pending invitation targets", async () => {
+    mocks.userFindUnique.mockResolvedValue({
+      id: "target-1",
+      isActive: true,
+      passwordResetTokens: [{ id: "invite-token-1" }],
+      userRoles: [],
+    });
+
+    const result = await assertCanImpersonateTenantMember({
+      actorUserId: "actor-1",
+      actorTenantId: "tenant-a",
+      targetUserId: "target-1",
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.reasonCode).toBe("PENDING_INVITATION");
+    }
+  });
+
   it("allows same-tenant active member", async () => {
     mocks.userFindUnique.mockResolvedValue({
       id: "target-1",
       isActive: true,
+      passwordResetTokens: [],
       userRoles: [],
     });
     mocks.tenantMembershipFindFirst.mockResolvedValue({ id: "m-1" });

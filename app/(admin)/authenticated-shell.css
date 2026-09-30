@@ -5,7 +5,7 @@
 [data-sce-modal-background].sce-authenticated-app-shell {
   background-color: var(--sce-app-background);
   background-image: var(--sce-app-background-image);
-  background-position: center top;
+  background-position: var(--sce-app-background-position);
   background-repeat: no-repeat;
   background-size: cover;
   background-attachment: scroll;
