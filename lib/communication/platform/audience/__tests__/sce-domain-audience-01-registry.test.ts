@@ -15,6 +15,10 @@ import {
 } from "@/lib/communication/platform/audience/domain-audience-expansion";
 import { DomainAudienceError } from "@/lib/communication/platform/audience/domain-audience-errors";
 import { validateCommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-validation";
+import {
+  buildZielgruppeRuleDocumentV2,
+  parseTargetGroupRuleJson,
+} from "@/lib/communication/zielgruppen/rule-document";
 import { resolveAudienceCandidates } from "@/lib/communication/platform/recipient-resolution/audience-candidate-resolver";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 
@@ -260,5 +264,285 @@ describe("SCE-DOMAIN-AUDIENCE-01 registry", () => {
       },
     });
     expect(result.candidatePersonIds).toEqual(["person-a"]);
+  });
+});
+
+describe("SCE-DOMAIN-AUDIENCE-01 release closure gates", () => {
+  beforeEach(() => {
+    _clearDomainAudienceRegistryForTests();
+    vi.clearAllMocks();
+    mocks.communicationExternalContact.findMany.mockResolvedValue([]);
+    mocks.person.findMany.mockResolvedValue([]);
+  });
+
+  it("keeps legacy v1 ruleJson parsing unchanged (no domain envelope)", () => {
+    const legacy = { type: "personIds" as const, value: ["person-legacy"] };
+    const parsed = parseTargetGroupRuleJson(legacy);
+    expect(parsed.schemaVersion).toBe(1);
+    expect(parsed.audience).toBeNull();
+    expect(parsed.resolverClause).toEqual(legacy);
+  });
+
+  it("round-trips domain references in v2 ruleJson deterministically", () => {
+    const audience = {
+      composition: "UNION" as const,
+      components: [
+        {
+          domainAudience: {
+            sourceKey: "demo-module.demo-audience",
+            candidateId: "candidate-1",
+            displayLabel: "Anzeige nur",
+          },
+        },
+      ],
+    };
+    const doc = buildZielgruppeRuleDocumentV2({ audience, resolverClause: null });
+    const parsed = parseTargetGroupRuleJson(doc);
+    expect(parsed.schemaVersion).toBe(2);
+    expect(parsed.audience).toEqual(audience);
+  });
+
+  it("resolves mixed UNION audiences (structural + explicit + external + domain)", async () => {
+    registerDomainAudienceSource(makeMockSource());
+    mocks.communicationExternalContact.findMany.mockResolvedValue([{ id: "ext-1" }]);
+    mocks.person.findMany.mockImplementation(async (args: { where: { id?: { in: string[] } } }) => {
+      const ids = args.where.id?.in ?? [];
+      return ids.map((id) => ({
+        id,
+        tenantId: "tenant-a",
+        isActive: true,
+        email: null,
+        user: null,
+      }));
+    });
+
+    const result = await resolveAudienceCandidates({
+      tenantId: "tenant-a",
+      senderUserId: "user-a",
+      domainMaterialization: {
+        tenantId: "tenant-a",
+        senderUserId: "user-a",
+        discovery: {
+          tenantId: "tenant-a",
+          userId: "user-a",
+          permissionKeys: new Set([PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW]),
+        },
+      },
+      audience: {
+        composition: "UNION",
+        components: [
+          { structural: { teamIds: ["team-x"] } },
+          { explicit: { includePersonIds: ["person-explicit"] } },
+          { external: { includeExternalContactIds: ["ext-1"] } },
+          {
+            domainAudience: {
+              sourceKey: "demo-module.demo-audience",
+              candidateId: "candidate-1",
+            },
+          },
+        ],
+      },
+    });
+
+    expect(result.candidatePersonIds).toContain("person-domain");
+    expect(result.candidatePersonIds).toContain("person-explicit");
+    expect(result.candidateExternalContactIds).toEqual(["ext-1"]);
+  });
+
+  it("uses candidateId for identity — displayLabel does not change materialization", async () => {
+    registerDomainAudienceSource(makeMockSource());
+    const withLabel = await materializeDomainAudiencesInSpec(
+      {
+        composition: "UNION",
+        components: [
+          {
+            domainAudience: {
+              sourceKey: "demo-module.demo-audience",
+              candidateId: "candidate-1",
+              displayLabel: "Irrelevant Label",
+            },
+          },
+        ],
+      },
+      {
+        tenantId: "tenant-a",
+        senderUserId: "user-a",
+        discovery: {
+          tenantId: "tenant-a",
+          userId: "user-a",
+          permissionKeys: new Set([PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW]),
+        },
+      },
+    );
+    const withoutLabel = await materializeDomainAudiencesInSpec(
+      {
+        composition: "UNION",
+        components: [
+          {
+            domainAudience: {
+              sourceKey: "demo-module.demo-audience",
+              candidateId: "candidate-1",
+            },
+          },
+        ],
+      },
+      {
+        tenantId: "tenant-a",
+        senderUserId: "user-a",
+        discovery: {
+          tenantId: "tenant-a",
+          userId: "user-a",
+          permissionKeys: new Set([PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW]),
+        },
+      },
+    );
+    expect(withLabel).toEqual(withoutLabel);
+  });
+
+  it("fails closed on unauthorized materialization (lost domain permission after save)", async () => {
+    registerDomainAudienceSource(makeMockSource());
+    await expect(
+      materializeDomainAudiencesInSpec(
+        {
+          composition: "UNION",
+          components: [
+            {
+              domainAudience: {
+                sourceKey: "demo-module.demo-audience",
+                candidateId: "candidate-1",
+              },
+            },
+          ],
+        },
+        {
+          tenantId: "tenant-a",
+          senderUserId: "user-a",
+          discovery: {
+            tenantId: "tenant-a",
+            userId: "user-a",
+            permissionKeys: new Set([PERMISSIONS.COMMUNICATION_CLUB_SEND]),
+          },
+        },
+      ),
+    ).rejects.toMatchObject({ code: "SOURCE_UNAUTHORIZED" });
+  });
+
+  it("fails closed when provider resolution throws", async () => {
+    registerDomainAudienceSource(
+      makeMockSource({
+        resolveAudienceComponent: async () => {
+          throw new Error("provider datastore unavailable");
+        },
+      }),
+    );
+    await expect(
+      materializeDomainAudiencesInSpec(
+        {
+          composition: "UNION",
+          components: [
+            {
+              domainAudience: {
+                sourceKey: "demo-module.demo-audience",
+                candidateId: "candidate-1",
+              },
+            },
+          ],
+        },
+        {
+          tenantId: "tenant-a",
+          senderUserId: "user-a",
+          discovery: {
+            tenantId: "tenant-a",
+            userId: "user-a",
+            permissionKeys: new Set([PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW]),
+          },
+        },
+      ),
+    ).rejects.toMatchObject({ code: "CANDIDATE_RESOLUTION_FAILED" });
+  });
+
+  it("rejects malformed domain references (whitespace padding)", async () => {
+    registerDomainAudienceSource(makeMockSource());
+    await expect(
+      materializeDomainAudiencesInSpec(
+        {
+          composition: "UNION",
+          components: [
+            {
+              domainAudience: {
+                sourceKey: " demo-module.demo-audience",
+                candidateId: "candidate-1",
+              },
+            },
+          ],
+        },
+        {
+          tenantId: "tenant-a",
+          senderUserId: "user-a",
+          discovery: {
+            tenantId: "tenant-a",
+            userId: "user-a",
+            permissionKeys: new Set([PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW]),
+          },
+        },
+      ),
+    ).rejects.toMatchObject({ code: "INVALID_REFERENCE" });
+  });
+
+  it("passes tenantId into provider resolution (cross-tenant isolation seam)", async () => {
+    const resolveAudienceComponent = vi.fn(async (input: { tenantId: string; candidateId: string }) => ({
+      explicit: { includePersonIds: [input.tenantId === "tenant-a" ? "person-ok" : "person-leak"] },
+    }));
+    registerDomainAudienceSource(
+      makeMockSource({
+        resolveAudienceComponent,
+      }),
+    );
+    const materialized = await materializeDomainAudiencesInSpec(
+      {
+        composition: "UNION",
+        components: [
+          {
+            domainAudience: {
+              sourceKey: "demo-module.demo-audience",
+              candidateId: "candidate-1",
+            },
+          },
+        ],
+      },
+      {
+        tenantId: "tenant-a",
+        senderUserId: "user-a",
+        discovery: {
+          tenantId: "tenant-a",
+          userId: "user-a",
+          permissionKeys: new Set([PERMISSIONS.COMMUNICATION_ZIELGRUPPEN_VIEW]),
+        },
+      },
+    );
+    expect(resolveAudienceComponent).toHaveBeenCalledWith(
+      expect.objectContaining({ tenantId: "tenant-a", candidateId: "candidate-1" }),
+    );
+    expect(materialized.components[0]?.explicit?.includePersonIds).toEqual(["person-ok"]);
+  });
+
+  it("never broadens to whole organisation when domain materialization is missing", async () => {
+    registerDomainAudienceSource(makeMockSource());
+    await expect(
+      resolveAudienceCandidates({
+        tenantId: "tenant-a",
+        audience: {
+          composition: "UNION",
+          components: [
+            {
+              domainAudience: {
+                sourceKey: "demo-module.demo-audience",
+                candidateId: "candidate-1",
+              },
+            },
+          ],
+        },
+      }),
+    ).rejects.toBeInstanceOf(DomainAudienceError);
   });
 });
