@@ -51,6 +51,8 @@ const NAV_LABEL_TO_ICON_KEY: Record<string, NavIconKey> = {
   TournamentCenter: "tournamentcenter",
   Veranstaltungen: "veranstaltungen",
   Wochenplanner: "wochenplanner",
+  Wochenplaner: "wochenplanner",
+  Publizieren: "veroeffentlichungen",
   Dokumente: "dokumente",
   Anmeldungen: "anmeldungen",
   Registrierungen: "registrierungen",
