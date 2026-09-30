@@ -1,4 +1,12 @@
 import type { PersonalActionSourceType } from "@/lib/personal-actions/types";
+import type { DomainOperationalAttentionActionExecutionKind } from "@/lib/domain-attention/types";
+
+export type PersonalAttentionSourceType = PersonalActionSourceType | "DOMAIN_OPERATIONAL";
+
+export type PersonalAttentionOperationalAction = {
+  actionKey: string;
+  executionKind: DomainOperationalAttentionActionExecutionKind;
+};
 
 export type PersonalAttentionUrgency =
   | "overdue"
@@ -8,7 +16,9 @@ export type PersonalAttentionUrgency =
 
 export type PersonalAttentionItem = {
   id: string;
-  sourceType: PersonalActionSourceType;
+  sourceType: PersonalAttentionSourceType;
+  /** Set for DOMAIN_OPERATIONAL rows (presentation label). */
+  domainKey?: string | null;
   title: string;
   summary: string | null;
   dueAt: string | null;
@@ -16,6 +26,8 @@ export type PersonalAttentionItem = {
   contextLabel: string | null;
   deepLink: string;
   actionLabel: string | null;
+  /** Server-resolved COMMUNICATION_SEND / NAVIGATE metadata for dashboard CTA. */
+  operationalAction?: PersonalAttentionOperationalAction | null;
   /** Screen-reader friendly status (due/overdue), not color-only. */
   presentationStatus: string | null;
   urgent: boolean;
