@@ -7,10 +7,12 @@ import type {
   DomainAudienceSource,
 } from "@/lib/communication/platform/audience/domain-audience-source";
 import { getDomainAudienceSourceRegistry } from "@/lib/communication/platform/audience/domain-audience-registry";
+import { ensureProbetrainingDomainAudienceRegistered } from "@/lib/registrations/domain-audience/register-probetraining-domain-audience";
 
 export async function listAuthorizedDomainAudienceSources(
   ctx: DomainAudienceDiscoveryContext,
 ): Promise<DomainAudienceSource[]> {
+  ensureProbetrainingDomainAudienceRegistered();
   const registry = getDomainAudienceSourceRegistry();
   const authorized: DomainAudienceSource[] = [];
   for (const source of registry.list()) {
@@ -38,6 +40,7 @@ export async function getAuthorizedDomainAudienceSource(
   ctx: DomainAudienceDiscoveryContext,
   sourceKey: string,
 ): Promise<DomainAudienceSource | null> {
+  ensureProbetrainingDomainAudienceRegistered();
   const source = getDomainAudienceSourceRegistry().get(sourceKey);
   if (!source) return null;
   if (!(await isDomainAudienceSourceAuthorized(source, ctx))) return null;
