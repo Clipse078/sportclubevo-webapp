@@ -97,10 +97,19 @@ export class InvalidPermissionScopeError extends RoleDomainError {
 }
 
 export class DelegationForbiddenError extends RoleDomainError {
+  readonly missingPermissionKeys: readonly string[];
+
   constructor(
-    message = "Sie dürfen nur Berechtigungen und Rollen delegieren, die Sie selbst aktuell besitzen.",
+    message?: string,
+    missingPermissionKeys: readonly string[] = [],
   ) {
-    super("DELEGATION_FORBIDDEN", message, 403);
+    const resolvedMessage =
+      message ??
+      (missingPermissionKeys.length > 0
+        ? `Sie dürfen keine Berechtigungen delegieren, die Sie derzeit nicht besitzen. Fehlende Berechtigungen: ${[...missingPermissionKeys].sort((a, b) => a.localeCompare(b)).join(", ")}`
+        : "Sie dürfen nur Berechtigungen und Rollen delegieren, die Sie selbst aktuell besitzen.");
+    super("DELEGATION_FORBIDDEN", resolvedMessage, 403);
+    this.missingPermissionKeys = missingPermissionKeys;
   }
 }
 
@@ -126,7 +135,14 @@ export function toRoleApiErrorResponse(error: unknown): {
   body: { error: string; code?: RoleDomainErrorCode };
 } {
   if (error instanceof RoleDomainError) {
-    return { status: error.status, body: { error: error.message, code: error.code } };
+    const body: { error: string; code?: RoleDomainErrorCode; missingPermissionKeys?: string[] } = {
+      error: error.message,
+      code: error.code,
+    };
+    if (error instanceof DelegationForbiddenError && error.missingPermissionKeys.length > 0) {
+      body.missingPermissionKeys = [...error.missingPermissionKeys];
+    }
+    return { status: error.status, body };
   }
   const message = error instanceof Error ? error.message : "Unbekannter Fehler.";
   return { status: 500, body: { error: `Technischer Fehler: ${message}` } };

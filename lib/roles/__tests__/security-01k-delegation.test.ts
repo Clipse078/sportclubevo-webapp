@@ -72,7 +72,10 @@ describe("SECURITY-GO-LIVE-01K-A delegation boundary", () => {
         },
         db,
       ),
-    ).rejects.toBeInstanceOf(DelegationForbiddenError);
+    ).rejects.toMatchObject({
+      name: "RoleDomainError",
+      missingPermissionKeys: ["users.invite"],
+    });
   });
 
   it("rejects platform or otherwise non-grantable permissions", async () => {

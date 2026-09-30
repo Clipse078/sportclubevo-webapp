@@ -5,7 +5,7 @@ import {
   togglePermissionKey,
   type PermissionCatalogRow,
 } from "@/lib/roles/nav-permission-presentation";
-import { findMissingDelegatedPermissions } from "@/lib/roles/delegation";
+import { findMissingDelegatedPermissions } from "@/lib/roles/delegation-utils";
 
 function catalogRow(key: string, moduleName = "TRAININGS"): PermissionCatalogRow {
   return { id: key, key, name: key, module: moduleName };

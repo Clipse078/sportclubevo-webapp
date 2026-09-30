@@ -18,10 +18,12 @@ import {
   buildNavPermissionPresentationFromModuleGroups,
   buildNavPermissionSummary,
 } from "@/lib/roles/nav-permission-presentation";
+import { findMissingDelegatedPermissions } from "@/lib/roles/delegation-utils";
 import { isDangerousPermission } from "@/lib/roles/permission-metadata";
 
 type CreateTenantRoleFormProps = {
   moduleGroups: PermissionMatrixModuleGroup[];
+  actorDelegatablePermissionKeys: readonly string[];
 };
 
 const STEPS = [
@@ -34,7 +36,10 @@ const STEPS = [
  * Premium three-step tenant role creation flow. Posts to `POST /api/tenant/roles`
  * — scope and tenant id are always forced server-side.
  */
-export default function CreateTenantRoleForm({ moduleGroups }: CreateTenantRoleFormProps) {
+export default function CreateTenantRoleForm({
+  moduleGroups,
+  actorDelegatablePermissionKeys,
+}: CreateTenantRoleFormProps) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
@@ -55,6 +60,15 @@ export default function CreateTenantRoleForm({ moduleGroups }: CreateTenantRoleF
   );
 
   const dangerousCount = Array.from(selectedKeys).filter(isDangerousPermission).length;
+
+  const undelegatableSelectedKeys = useMemo(
+    () =>
+      findMissingDelegatedPermissions(
+        actorDelegatablePermissionKeys,
+        Array.from(selectedKeys),
+      ),
+    [actorDelegatablePermissionKeys, selectedKeys],
+  );
 
   async function handleSubmit() {
     setError(null);
@@ -166,6 +180,15 @@ export default function CreateTenantRoleForm({ moduleGroups }: CreateTenantRoleF
 
           {step === 1 && (
             <SectionCard title="Berechtigungen">
+              {undelegatableSelectedKeys.length > 0 ? (
+                <div className="mb-4 flex items-start gap-3 rounded-[var(--radius-xl)] border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                  <p className="text-[12px] font-medium text-amber-200">
+                    Sie besitzen folgende ausgewählte Berechtigungen derzeit nicht und können
+                    sie nicht delegieren: {undelegatableSelectedKeys.join(", ")}
+                  </p>
+                </div>
+              ) : null}
               <PermissionMatrixFields
                 moduleGroups={moduleGroups}
                 selectedKeys={selectedKeys}
@@ -232,6 +255,16 @@ export default function CreateTenantRoleForm({ moduleGroups }: CreateTenantRoleF
                   )}
                 </div>
 
+                {undelegatableSelectedKeys.length > 0 ? (
+                  <div className="flex items-start gap-3 rounded-[var(--radius-xl)] border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                    <p className="text-[12px] font-medium text-amber-200">
+                      Fehlende Berechtigungen für die Delegation:{" "}
+                      {undelegatableSelectedKeys.join(", ")}
+                    </p>
+                  </div>
+                ) : null}
+
                 {error ? (
                   <div className="flex items-start gap-3 rounded-[var(--radius-xl)] border border-rose-500/30 bg-rose-500/10 px-4 py-3">
                     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
@@ -251,7 +284,7 @@ export default function CreateTenantRoleForm({ moduleGroups }: CreateTenantRoleF
                   <button
                     type="button"
                     onClick={handleSubmit}
-                    disabled={submitting}
+                    disabled={submitting || undelegatableSelectedKeys.length > 0}
                     className="fca-button-primary disabled:opacity-50"
                   >
                     {submitting ? (
