@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS } from "@/lib/permissions/planning-allocation-permissions";
 import {
   getWeekplannerPlanAllocation,
   deleteWeekplannerPlanAllocation,
@@ -19,7 +19,7 @@ import {
   WeekplannerPlanArchivedError,
 } from "@/lib/weekplanner/plan-errors";
 
-const MANAGE_PERMISSIONS = [PERMISSIONS.TRAININGS_MANAGE, PERMISSIONS.EVENTS_MANAGE] as const;
+const MANAGE_PERMISSIONS = PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS;
 
 type Params = { params: Promise<{ planId: string; allocationId: string }> };
 

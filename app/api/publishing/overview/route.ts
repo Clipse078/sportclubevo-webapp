@@ -20,6 +20,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import {
+  NEWS_WRITE_PERMISSIONS,
+  PUBLISHING_READ_PERMISSIONS,
+  WEBSITE_WRITE_PERMISSIONS,
+} from "@/lib/permissions/content-view-permissions";
 import { getTenantContextFromSession } from "@/lib/tenants/context";
 import { getPublishingOverview } from "@/lib/publishing/publishing-queries";
 import type { FilterContentType, FilterStatus } from "@/lib/publishing/types";
@@ -41,12 +46,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const canManageNews = hasPermission(session, PERMISSIONS.NEWS_MANAGE);
-  const canManagePages = hasPermission(session, PERMISSIONS.WEBSITE_MANAGE);
-
-  if (!canManageNews && !canManagePages) {
+  const permKeys: string[] = session.user?.permissionKeys ?? [];
+  const canReadPublishing = PUBLISHING_READ_PERMISSIONS.some((key) => permKeys.includes(key));
+  if (!canReadPublishing) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+
+  const canManageNews =
+    NEWS_WRITE_PERMISSIONS.some((key) => permKeys.includes(key)) ||
+    hasPermission(session, PERMISSIONS.NEWS_MANAGE);
+  const canManagePages =
+    WEBSITE_WRITE_PERMISSIONS.some((key) => permKeys.includes(key)) ||
+    hasPermission(session, PERMISSIONS.WEBSITE_MANAGE);
+  const readOnlyPublishing = !canManageNews && !canManagePages;
 
   const tenantId = session.user?.activeTenantId;
   if (!tenantId) {
@@ -61,9 +73,12 @@ export async function GET(request: NextRequest) {
     : "ALL";
 
   const rawStatus = (searchParams.get("status") ?? "ALL").toUpperCase();
-  const statusFilter: FilterStatus = VALID_STATUSES.includes(rawStatus as FilterStatus)
+  let statusFilter: FilterStatus = VALID_STATUSES.includes(rawStatus as FilterStatus)
     ? (rawStatus as FilterStatus)
     : "ALL";
+  if (readOnlyPublishing) {
+    statusFilter = "PUBLISHED";
+  }
 
   const limit = Math.min(Math.max(Number(searchParams.get("limit") ?? "50"), 1), 200);
   const offset = Math.max(Number(searchParams.get("offset") ?? "0"), 0);
@@ -87,6 +102,7 @@ export async function GET(request: NextRequest) {
       approvedDataOnly: tenantCtx?.approvedDataOnly ?? false,
       canManageNews,
       canManagePages,
+      readOnly: readOnlyPublishing,
     },
   });
 }

@@ -9,19 +9,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { PLANNING_ALLOCATIONS_VIEW_PERMISSIONS } from "@/lib/permissions/planning-allocation-permissions";
 import { listWeekplannerPlans, createWeekplannerPlan } from "@/lib/weekplanner/plan-service";
 import {
   WeekplannerPlanValidationError,
   WeekplannerPlanNameConflictError,
 } from "@/lib/weekplanner/plan-errors";
 
-const VIEW_PERMISSIONS = [
-  PERMISSIONS.TRAININGS_VIEW,
-  PERMISSIONS.TRAININGS_MANAGE,
-  PERMISSIONS.EVENTS_VIEW,
-  PERMISSIONS.EVENTS_MANAGE,
-] as const;
-
+const VIEW_PERMISSIONS = PLANNING_ALLOCATIONS_VIEW_PERMISSIONS;
+/** Creating plans requires full planning manage — not allocation-only. */
 const MANAGE_PERMISSIONS = [PERMISSIONS.TRAININGS_MANAGE, PERMISSIONS.EVENTS_MANAGE] as const;
 
 export async function GET(request: NextRequest) {

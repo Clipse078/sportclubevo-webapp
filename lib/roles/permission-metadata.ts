@@ -47,11 +47,14 @@ const PERMISSION_LABELS_DE: Record<string, string> = {
   "org.manage": "Organisation verwalten",
   "org.delete": "Organisation dauerhaft löschen",
 
+  "website.view": "Website-Inhalte ansehen (read-only)",
   "website.manage": "Website verwalten",
   "website.delete": "Website dauerhaft löschen",
 
   "trainings.view": "Trainingsplanung ansehen",
   "trainings.manage": "Trainingsplanung verwalten",
+  "planning.allocations.view": "Wochenplan-Zuteilungen ansehen",
+  "planning.allocations.manage": "Wochenplan-Zuteilungen verwalten",
   "trainings.delete": "Trainingsplanung dauerhaft löschen",
 
   "events.view": "Events ansehen",
@@ -105,9 +108,11 @@ const PERMISSION_LABELS_DE: Record<string, string> = {
   "registrations.edit": "Anmeldungen bearbeiten",
   "registrations.delete": "Anmeldungen dauerhaft löschen",
 
+  "news.view": "Veröffentlichte News ansehen",
   "news.manage": "News verwalten",
   "news.delete": "News dauerhaft löschen",
 
+  "infoboard.view": "Infoboard-Vorschau ansehen",
   "infoboard.manage": "Infoboard verwalten",
   "infoboard.delete": "Infoboard dauerhaft löschen",
 

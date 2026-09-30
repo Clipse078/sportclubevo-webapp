@@ -28,7 +28,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { PLANNING_ALLOCATIONS_WRITE_PERMISSIONS } from "@/lib/permissions/planning-allocation-permissions";
 import { getActiveFacilityResourcesByCodesForTenant } from "@/lib/facilities/queries";
 import {
   getWochenplanPlan,
@@ -84,10 +84,7 @@ function validateNullableCode(
 }
 
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
-  const access = await requireApiAnyPermission([
-    PERMISSIONS.WOCHENPLAN_MANAGE,
-    PERMISSIONS.EVENTS_MANAGE,
-  ]);
+  const access = await requireApiAnyPermission([...PLANNING_ALLOCATIONS_WRITE_PERMISSIONS]);
   if (!access.ok) return NextResponse.json({ error: access.error }, { status: access.status });
 
   const actorTenantId = access.session?.user?.activeTenantId ?? null;

@@ -7,6 +7,17 @@
 
 import { PERMISSIONS, type PermissionKey } from "@/lib/permissions/permissions";
 import { TENANT_ADMINISTRATION_PERMISSIONS } from "@/lib/permissions/tenant-administration";
+import {
+  INFOBOARD_READ_PERMISSIONS,
+  NEWS_READ_PERMISSIONS,
+  PUBLISHING_READ_PERMISSIONS,
+  WEBSITE_READ_PERMISSIONS,
+} from "@/lib/permissions/content-view-permissions";
+import { PLANNING_ALLOCATIONS_VIEW_PERMISSIONS } from "@/lib/permissions/planning-allocation-permissions";
+import {
+  VEREINSLEITUNG_DEMO_PERMISSIONS,
+  VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
+} from "@/lib/nav/vereinsleitung-access";
 import type { WorkspaceContext } from "@/lib/workspace/workspace-context";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -233,18 +244,8 @@ export const NAV_SECTIONS: NavSection[] = [
         href: "/dashboard/planner/week",
         carrySeason: false,
         permissionKeys: [
-          PERMISSIONS.TRAININGS_VIEW,
-          PERMISSIONS.TRAININGS_MANAGE,
-          // ADMIN-DELETE-02A-C2: a caller whose only training authority is
-          // trainings.delete (see app/(admin)/dashboard/training/page.tsx,
-          // requireAnyPermission) must still be able to reach Planung ->
-          // TrainingCenter -> Serien verwalten to exercise permanent
-          // deletion of an archived TrainingSeries. Without this, the
-          // route-level guard already allowed access but the sidebar nav
-          // hid the only path to it.
+          ...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS,
           PERMISSIONS.TRAININGS_DELETE,
-          PERMISSIONS.EVENTS_VIEW,
-          PERMISSIONS.EVENTS_MANAGE,
         ],
         children: [
           {
@@ -252,12 +253,7 @@ export const NAV_SECTIONS: NavSection[] = [
             key: "wochenplanner",
             label: "Wochenplaner",
             href: "/dashboard/planner/week",
-            permissionKeys: [
-              PERMISSIONS.TRAININGS_VIEW,
-              PERMISSIONS.TRAININGS_MANAGE,
-              PERMISSIONS.EVENTS_VIEW,
-              PERMISSIONS.EVENTS_MANAGE,
-            ],
+            permissionKeys: [...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS],
           },
           {
             key: "trainingcenter",
@@ -406,7 +402,12 @@ export const NAV_SECTIONS: NavSection[] = [
         key: "communication",
         label: "Kommunikation",
         href: "/dashboard/communication",
-        permissionKeys: TENANT_ADMINISTRATION_PERMISSIONS,
+        permissionKeys: [
+          ...TENANT_ADMINISTRATION_PERMISSIONS,
+          PERMISSIONS.COMMUNICATION_CLUB_VIEW,
+          PERMISSIONS.COMMUNICATION_CLUB_SEND,
+          PERMISSIONS.COMMUNICATION_INBOX_VIEW,
+        ],
         children: [
           {
             key: "communication-mitteilungen",
@@ -454,7 +455,7 @@ export const NAV_SECTIONS: NavSection[] = [
         key: "website",
         label: "Website",
         href: "/dashboard/website",
-        permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
+        permissionKeys: [...WEBSITE_READ_PERMISSIONS, ...NEWS_READ_PERMISSIONS],
         children: [
           {
             key: "website-overview",
@@ -466,7 +467,7 @@ export const NAV_SECTIONS: NavSection[] = [
             key: "website-news",
             label: "News",
             href: "/dashboard/website/news",
-            permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
+            permissionKeys: [...NEWS_READ_PERMISSIONS],
           },
           {
             key: "website-pages",
@@ -506,9 +507,9 @@ export const NAV_SECTIONS: NavSection[] = [
           },
           {
             key: "website-publishing",
-            label: "Veröffentlichungen",
+            label: "Publizieren",
             href: "/dashboard/website/publishing",
-            permissionKeys: [PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE],
+            permissionKeys: [...PUBLISHING_READ_PERMISSIONS],
           },
           {
             key: "website-components",
@@ -528,25 +529,19 @@ export const NAV_SECTIONS: NavSection[] = [
         key: "infoboard",
         label: "Infoboard",
         href: "/dashboard/infoboard",
-        permissionKeys: [PERMISSIONS.INFOBOARD_MANAGE, PERMISSIONS.EVENTS_PUBLISH_INFOBOARD],
+        permissionKeys: [...INFOBOARD_READ_PERMISSIONS],
         children: [
           {
             key: "infoboard-overview",
             label: "Übersicht",
             href: "/dashboard/infoboard",
-            permissionKeys: [
-              PERMISSIONS.INFOBOARD_MANAGE,
-              PERMISSIONS.EVENTS_PUBLISH_INFOBOARD,
-            ],
+            permissionKeys: [PERMISSIONS.INFOBOARD_MANAGE, PERMISSIONS.EVENTS_PUBLISH_INFOBOARD],
           },
           {
             key: "infoboard-preview",
             label: "Vorschau",
             href: "/dashboard/infoboard/preview",
-            permissionKeys: [
-              PERMISSIONS.INFOBOARD_MANAGE,
-              PERMISSIONS.EVENTS_PUBLISH_INFOBOARD,
-            ],
+            permissionKeys: [...INFOBOARD_READ_PERMISSIONS],
           },
         ],
       },
@@ -568,30 +563,35 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Meetings",
         href: "/vereinsleitung/meetings",
         navContexts: ["club"],
+        permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
       },
       {
         key: "club-entwicklung",
         label: "Club Entwicklung",
         href: "/vereinsleitung/club-entwicklung",
         navContexts: ["club"],
+        permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
         children: [
           {
             key: "club-entwicklung-ziele",
             label: "Ziele",
             href: "/vereinsleitung/targets",
             navContexts: ["club"],
+            permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
           },
           {
             key: "club-entwicklung-initiativen",
             label: "Initiativen",
             href: "/vereinsleitung/initiativen",
             navContexts: ["club"],
+            permissionKeys: VEREINSLEITUNG_STRATEGIC_VIEW_PERMISSIONS,
           },
           {
             key: "club-entwicklung-prozesse",
             label: "Prozesse & Aufgaben",
             href: "/vereinsleitung/prozesse",
             navContexts: ["club"],
+            permissionKeys: VEREINSLEITUNG_DEMO_PERMISSIONS,
           },
         ],
       },
@@ -600,12 +600,14 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Material & Inventar",
         href: "/vereinsleitung/material",
         navContexts: ["club"],
+        permissionKeys: VEREINSLEITUNG_DEMO_PERMISSIONS,
       },
       {
         key: "finanzen",
         label: "Finanzen",
         href: "/vereinsleitung/finanzen",
         navContexts: ["club"],
+        permissionKeys: VEREINSLEITUNG_DEMO_PERMISSIONS,
       },
       {
         key: "sponsoring",
@@ -786,7 +788,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     label: "Infoboard",
     description: "Öffentliches Anzeigeboard für Events, Resultate und Spielplan.",
     href: "/dashboard/infoboard",
-    permissionKeys: [PERMISSIONS.INFOBOARD_MANAGE, PERMISSIONS.EVENTS_PUBLISH_INFOBOARD],
+    permissionKeys: [...INFOBOARD_READ_PERMISSIONS],
     carrySeason: false,
   },
 ];

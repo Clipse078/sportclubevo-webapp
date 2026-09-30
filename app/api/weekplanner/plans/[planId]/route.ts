@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { PLANNING_ALLOCATIONS_VIEW_PERMISSIONS } from "@/lib/permissions/planning-allocation-permissions";
 import {
   getWeekplannerPlan,
   renameWeekplannerPlan,
@@ -30,13 +31,8 @@ import {
   WeekplannerPlanDeleteUnsafeError,
 } from "@/lib/weekplanner/plan-errors";
 
-const VIEW_PERMISSIONS = [
-  PERMISSIONS.TRAININGS_VIEW,
-  PERMISSIONS.TRAININGS_MANAGE,
-  PERMISSIONS.EVENTS_VIEW,
-  PERMISSIONS.EVENTS_MANAGE,
-] as const;
-
+const VIEW_PERMISSIONS = PLANNING_ALLOCATIONS_VIEW_PERMISSIONS;
+/** Plan lifecycle (rename/archive) — not granted by planning.allocations.manage alone. */
 const MANAGE_PERMISSIONS = [PERMISSIONS.TRAININGS_MANAGE, PERMISSIONS.EVENTS_MANAGE] as const;
 
 type Params = { params: Promise<{ planId: string }> };

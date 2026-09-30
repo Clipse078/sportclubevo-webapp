@@ -183,12 +183,17 @@ async function main() {
     { key: "fixtures.publish_infoboard", name: "Publish fixtures to infoboard", module: PermissionModule.FIXTURES, scope: PermissionScope.TENANT, grantableByAdmin: true },
 
     { key: "wochenplan.manage", name: "Manage Wochenplan", module: PermissionModule.WOCHENPLAN, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "planning.allocations.view", name: "View planning allocations", module: PermissionModule.TRAININGS, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "planning.allocations.manage", name: "Manage planning allocations", module: PermissionModule.TRAININGS, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "news.view", name: "View published news", module: PermissionModule.NEWS, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "news.manage", name: "Manage news", module: PermissionModule.NEWS, scope: PermissionScope.TENANT, grantableByAdmin: true },
     // ADMIN-HARD-DELETE-UI-UPLIFT: permanent deletion of news articles.
     { key: "news.delete", name: "Permanently delete news articles", module: PermissionModule.NEWS, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "website.view", name: "View website content", module: PermissionModule.WEBSITE, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "website.manage", name: "Manage website content", module: PermissionModule.WEBSITE, scope: PermissionScope.TENANT, grantableByAdmin: true },
     // ADMIN-HARD-DELETE-UI-UPLIFT: permanent deletion of website content (pages, nav, media).
     { key: "website.delete", name: "Permanently delete website content", module: PermissionModule.WEBSITE, scope: PermissionScope.TENANT, grantableByAdmin: true },
+    { key: "infoboard.view", name: "View infoboard preview", module: PermissionModule.INFOBOARD, scope: PermissionScope.TENANT, grantableByAdmin: true },
     { key: "infoboard.manage", name: "Manage infoboard", module: PermissionModule.INFOBOARD, scope: PermissionScope.TENANT, grantableByAdmin: true },
     // ADMIN-HARD-DELETE-UI-UPLIFT: permanent deletion of Infoboard records.
     { key: "infoboard.delete", name: "Permanently delete infoboards", module: PermissionModule.INFOBOARD, scope: PermissionScope.TENANT, grantableByAdmin: true },

@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS } from "@/lib/permissions/planning-allocation-permissions";
 import {
   getTrainingSessionAllocation,
   deleteTrainingSessionAllocation,
@@ -19,7 +19,7 @@ import { TrainingSessionAllocationNotFoundError } from "@/lib/training/errors";
 type Params = { params: Promise<{ sessionId: string; allocationId: string }> };
 
 export async function DELETE(_request: NextRequest, { params }: Params) {
-  const auth = await requireApiAnyPermission([PERMISSIONS.TRAININGS_MANAGE]);
+  const auth = await requireApiAnyPermission([...PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS]);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const tenantId = auth.session.user?.activeTenantId;

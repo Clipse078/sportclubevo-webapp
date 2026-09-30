@@ -26,7 +26,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { PLANNING_ALLOCATIONS_VIEW_PERMISSIONS } from "@/lib/permissions/planning-allocation-permissions";
 import { getResourceAvailability, type AvailabilityResourceGroup } from "@/lib/facilities/availability-service";
 import type { WeekplannerActivityType } from "@/lib/weekplanner/plan-types";
 
@@ -41,12 +41,7 @@ function parseNonNegativeInt(raw: string | null, label: string): number | "inval
 }
 
 export async function GET(request: NextRequest) {
-  const access = await requireApiAnyPermission([
-    PERMISSIONS.EVENTS_VIEW,
-    PERMISSIONS.EVENTS_MANAGE,
-    PERMISSIONS.TRAININGS_VIEW,
-    PERMISSIONS.TRAININGS_MANAGE,
-  ]);
+  const access = await requireApiAnyPermission([...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS]);
   if (!access.ok) {
     return NextResponse.json({ error: access.error }, { status: access.status });
   }

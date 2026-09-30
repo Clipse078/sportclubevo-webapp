@@ -255,7 +255,11 @@ const STATUS_FILTERS: { label: string; value: FilterStatus }[] = [
   { label: "Archiviert", value: "ARCHIVED" },
 ];
 
-export default function PublishingCenter() {
+type PublishingCenterProps = {
+  readOnly?: boolean;
+};
+
+export default function PublishingCenter({ readOnly = false }: PublishingCenterProps) {
   const [data, setData] = useState<PublishingOverviewResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -287,6 +291,12 @@ export default function PublishingCenter() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (readOnly) {
+      setStatusFilter("PUBLISHED");
+    }
+  }, [readOnly]);
 
   async function handleAction(item: PublishableItem, action: string, notes?: string) {
     setActionPending(item.id);
@@ -481,9 +491,11 @@ export default function PublishingCenter() {
                   <th className="hidden lg:table-cell px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
                     Veröff. / Geplant
                   </th>
-                  <th className="px-4 py-2.5 text-right text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
-                    Aktionen
-                  </th>
+                  {!readOnly ? (
+                    <th className="px-4 py-2.5 text-right text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
+                      Aktionen
+                    </th>
+                  ) : null}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">
@@ -515,16 +527,18 @@ export default function PublishingCenter() {
                     <td className="hidden lg:table-cell px-4 py-3 text-[11px] text-[var(--muted)]">
                       {fmtDate(item.publishedAt ?? item.scheduledAt)}
                     </td>
-                    <td className="px-4 py-3">
-                      <WorkflowActions
-                        item={item}
-                        approvedDataOnly={context?.approvedDataOnly ?? false}
-                        canManageNews={context?.canManageNews ?? false}
-                        canManagePages={context?.canManagePages ?? false}
-                        pending={actionPending === item.id}
-                        onAction={handleAction}
-                      />
-                    </td>
+                    {!readOnly ? (
+                      <td className="px-4 py-3">
+                        <WorkflowActions
+                          item={item}
+                          approvedDataOnly={context?.approvedDataOnly ?? false}
+                          canManageNews={context?.canManageNews ?? false}
+                          canManagePages={context?.canManagePages ?? false}
+                          pending={actionPending === item.id}
+                          onAction={handleAction}
+                        />
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
               </tbody>

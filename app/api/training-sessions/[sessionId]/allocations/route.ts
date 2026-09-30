@@ -11,7 +11,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import {
+  PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS,
+  PLANNING_ALLOCATIONS_VIEW_PERMISSIONS,
+} from "@/lib/permissions/planning-allocation-permissions";
 import {
   createTrainingSessionAllocation,
   listAllocationsByTrainingSession,
@@ -27,10 +30,7 @@ import {
 type Params = { params: Promise<{ sessionId: string }> };
 
 export async function GET(_request: NextRequest, { params }: Params) {
-  const auth = await requireApiAnyPermission([
-    PERMISSIONS.TRAININGS_VIEW,
-    PERMISSIONS.TRAININGS_MANAGE,
-  ]);
+  const auth = await requireApiAnyPermission([...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS]);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const tenantId = auth.session.user?.activeTenantId;
@@ -50,7 +50,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
 }
 
 export async function POST(request: NextRequest, { params }: Params) {
-  const auth = await requireApiAnyPermission([PERMISSIONS.TRAININGS_MANAGE]);
+  const auth = await requireApiAnyPermission([...PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS]);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const tenantId = auth.session.user?.activeTenantId;

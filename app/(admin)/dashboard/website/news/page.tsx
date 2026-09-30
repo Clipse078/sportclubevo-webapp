@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { NEWS_READ_PERMISSIONS } from "@/lib/permissions/content-view-permissions";
+import { sessionCanWriteNews } from "@/lib/permissions/content-view-access";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { prisma } from "@/lib/db/prisma";
 import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
@@ -10,11 +12,14 @@ import { PageShell } from "@/components/ui/page";
 import { ListPagePattern } from "@/components/ui/patterns";
 
 export default async function NewsAdminPage() {
-  const session = await requireAnyPermission([PERMISSIONS.NEWS_MANAGE, PERMISSIONS.WEBSITE_MANAGE]);
+  const session = await requireAnyPermission([...NEWS_READ_PERMISSIONS]);
   const tenantId = await requireActiveTenantId();
+  const readOnly = !sessionCanWriteNews(session);
 
   const resolver = createEffectivePermissionResolver(prisma);
-  const canDelete = await resolver.hasTenantDeletionAuthority({
+  const canDelete = readOnly
+    ? false
+    : await resolver.hasTenantDeletionAuthority({
     userId: session.user.id,
     permission: PERMISSIONS.NEWS_DELETE,
     tenantId,
@@ -25,20 +30,26 @@ export default async function NewsAdminPage() {
       <ListPagePattern
         eyebrow="Website"
         title="News"
-        description="Newsartikel erstellen, prüfen, planen und veröffentlichen."
+        description={
+          readOnly
+            ? "Veröffentlichte Newsartikel einsehen (read-only)."
+            : "Newsartikel erstellen, prüfen, planen und veröffentlichen."
+        }
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
           { label: "Website" },
           { label: "News" },
         ]}
         headerActions={
-          <Link href="/dashboard/website/news/new" className="fca-button-primary">
-            <Plus className="h-4 w-4" />
-            Neue News erstellen
-          </Link>
+          readOnly ? undefined : (
+            <Link href="/dashboard/website/news/new" className="fca-button-primary">
+              <Plus className="h-4 w-4" />
+              Neue News erstellen
+            </Link>
+          )
         }
       >
-        <NewsArticleList canDelete={canDelete} />
+        <NewsArticleList canDelete={canDelete} readOnly={readOnly} />
       </ListPagePattern>
     </PageShell>
   );

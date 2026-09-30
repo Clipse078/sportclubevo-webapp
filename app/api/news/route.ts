@@ -7,8 +7,9 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireApiPermission } from "@/lib/permissions/require-api-permission";
+import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { NEWS_READ_PERMISSIONS, NEWS_WRITE_PERMISSIONS } from "@/lib/permissions/content-view-permissions";
 import {
   listNewsArticlesAdmin,
   countNewsArticlesAdmin,
@@ -29,7 +30,7 @@ const VALID_STATUSES: ArticleStatus[] = [
 // ── GET /api/news ─────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  const access = await requireApiPermission(PERMISSIONS.NEWS_MANAGE);
+  const access = await requireApiAnyPermission([...NEWS_READ_PERMISSIONS]);
   if (!access.ok) {
     return NextResponse.json({ error: access.error }, { status: access.status });
   }
@@ -39,11 +40,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Kein Mandant in der Sitzung." }, { status: 401 });
   }
 
+  const permKeys: string[] = access.session.user?.permissionKeys ?? [];
+  const canWrite = NEWS_WRITE_PERMISSIONS.some((key) => permKeys.includes(key));
+
   const { searchParams } = new URL(request.url);
   const rawStatus = searchParams.get("status")?.toUpperCase();
-  const status = VALID_STATUSES.includes(rawStatus as ArticleStatus)
+  let status = VALID_STATUSES.includes(rawStatus as ArticleStatus)
     ? (rawStatus as ArticleStatus)
     : undefined;
+  if (!canWrite) {
+    status = "PUBLISHED";
+  }
   const limit = Math.min(Number(searchParams.get("limit") ?? "50"), 200);
   const offset = Math.max(Number(searchParams.get("offset") ?? "0"), 0);
 
@@ -58,7 +65,7 @@ export async function GET(request: NextRequest) {
 // ── POST /api/news ────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const access = await requireApiPermission(PERMISSIONS.NEWS_MANAGE);
+  const access = await requireApiAnyPermission([...NEWS_WRITE_PERMISSIONS]);
   if (!access.ok) {
     return NextResponse.json({ error: access.error }, { status: access.status });
   }

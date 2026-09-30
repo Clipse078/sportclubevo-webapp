@@ -16,6 +16,10 @@ import { revalidatePath } from "next/cache";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
+  PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS,
+  PLANNING_ALLOCATIONS_VIEW_PERMISSIONS,
+} from "@/lib/permissions/planning-allocation-permissions";
+import {
   listTournamentResourceAllocations,
   addTournamentResourceAllocation,
 } from "@/lib/tournaments/resource-allocation-service";
@@ -30,7 +34,7 @@ import {
 type RouteContext = { params: Promise<{ tournamentId: string }> };
 
 export async function GET(_request: NextRequest, { params }: RouteContext) {
-  const access = await requireApiAnyPermission([PERMISSIONS.EVENTS_VIEW, PERMISSIONS.EVENTS_MANAGE]);
+  const access = await requireApiAnyPermission([...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS]);
   if (!access.ok) {
     return NextResponse.json({ error: access.error }, { status: access.status });
   }
@@ -54,7 +58,7 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
 }
 
 export async function POST(request: NextRequest, { params }: RouteContext) {
-  const access = await requireApiAnyPermission([PERMISSIONS.EVENTS_MANAGE]);
+  const access = await requireApiAnyPermission([...PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS]);
   if (!access.ok) {
     return NextResponse.json({ error: access.error }, { status: access.status });
   }

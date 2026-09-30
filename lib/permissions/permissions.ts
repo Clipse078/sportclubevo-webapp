@@ -102,15 +102,18 @@ export const PERMISSIONS = {
   FIXTURES_PUBLISH_INFOBOARD: "fixtures.publish_infoboard",
 
   WOCHENPLAN_MANAGE: "wochenplan.manage",
+  NEWS_VIEW: "news.view",
   NEWS_MANAGE: "news.manage",
   // ADMIN-HARD-DELETE-UI-UPLIFT: canonical permanent-deletion permission for News articles.
   // Deliberately separate from NEWS_MANAGE — create/edit/archive access must never imply
   // permanent deletion. Follows the "<module>.delete" convention.
   NEWS_DELETE: "news.delete",
+  WEBSITE_VIEW: "website.view",
   WEBSITE_MANAGE: "website.manage",
   // ADMIN-HARD-DELETE-UI-UPLIFT: canonical permanent-deletion permission for Website content
   // (pages, nav items, and media assets). Deliberately separate from WEBSITE_MANAGE.
   WEBSITE_DELETE: "website.delete",
+  INFOBOARD_VIEW: "infoboard.view",
   INFOBOARD_MANAGE: "infoboard.manage",
   // ADMIN-HARD-DELETE-UI-UPLIFT: canonical permanent-deletion permission for Infoboard records.
   // Deliberately separate from INFOBOARD_MANAGE. Follows the "<module>.delete" convention.
@@ -225,6 +228,10 @@ export const PERMISSIONS = {
 
   TRAININGS_VIEW: "trainings.view",
   TRAININGS_MANAGE: "trainings.manage",
+  /** SCE-PILOT-03 — Wochenplaner allocation read without TrainingCenter manage. */
+  PLANNING_ALLOCATIONS_VIEW: "planning.allocations.view",
+  /** SCE-PILOT-03 — pitch/dressing-room overrides without event/series manage. */
+  PLANNING_ALLOCATIONS_MANAGE: "planning.allocations.manage",
   // ADMIN-DELETE-02A: canonical permanent-deletion permission, following the
   // "<module>.delete" convention established by TEAMS_DELETE (ADMIN-DELETE-
   // 01A/01B). Deliberately separate from TRAININGS_MANAGE — archive/edit

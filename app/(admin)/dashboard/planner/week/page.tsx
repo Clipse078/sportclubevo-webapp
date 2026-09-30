@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { PLANNING_ALLOCATIONS_VIEW_PERMISSIONS } from "@/lib/permissions/planning-allocation-permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { resolveTrainingWeekWindow, TRAINING_DEFAULT_TIMEZONE } from "@/lib/training/date-range";
 import { listWeekplannerPlans } from "@/lib/weekplanner/plan-service";
@@ -40,12 +41,7 @@ export default async function PlannerWeekPageRoute({
 }: PlannerWeekPageProps) {
   const perfTimer = isPlannerPerfTimingEnabled() ? createPlannerServerTimer() : null;
 
-  const session = await requireAnyPermission([
-    PERMISSIONS.TRAININGS_VIEW,
-    PERMISSIONS.TRAININGS_MANAGE,
-    PERMISSIONS.EVENTS_VIEW,
-    PERMISSIONS.EVENTS_MANAGE,
-  ]);
+  const session = await requireAnyPermission([...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS]);
 
   perfTimer?.mark("auth-rbac");
 
@@ -55,9 +51,9 @@ export default async function PlannerWeekPageRoute({
 
   const canManageTrainings = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
   const canManageEvents = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
-  const canCreateTraining =
-    canManageTrainings || hasPermission(session, PERMISSIONS.TRAININGS_VIEW);
-  const canManagePlans = canManageTrainings || canManageEvents;
+  const canManageAllocations = hasPermission(session, PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE);
+  const canCreateTraining = canManageTrainings;
+  const canManagePlans = canManageTrainings || canManageEvents || canManageAllocations;
 
   const timezone = tenantContext.timezone ?? TRAINING_DEFAULT_TIMEZONE;
   const params = (await searchParams) ?? {};
