@@ -2,6 +2,7 @@
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { hasPermission } from "@/lib/permissions/has-permission";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { PLANNING_ALLOCATIONS_VIEW_PERMISSIONS } from "@/lib/permissions/planning-allocation-permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { resolveTrainingDayWindow, resolveTrainingWeekWindow, TRAINING_DEFAULT_TIMEZONE } from "@/lib/training/date-range";
 import { getWeekplannerDay } from "@/lib/weekplanner/queries";
@@ -39,18 +40,15 @@ type PlannerDayPageProps = {
  * that week's plans — the SAME plans Wochenplanner offers for that week.
  */
 export default async function PlannerDayPageRoute({ searchParams }: PlannerDayPageProps) {
-  const session = await requireAnyPermission([
-    PERMISSIONS.TRAININGS_VIEW,
-    PERMISSIONS.TRAININGS_MANAGE,
-    PERMISSIONS.EVENTS_VIEW,
-    PERMISSIONS.EVENTS_MANAGE,
-  ]);
+  const session = await requireAnyPermission([...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS]);
 
   const tenantContext = await getActiveTenant();
   if (!tenantContext) notFound();
 
   const canManagePlans =
-    hasPermission(session, PERMISSIONS.TRAININGS_MANAGE) || hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
+    hasPermission(session, PERMISSIONS.TRAININGS_MANAGE) ||
+    hasPermission(session, PERMISSIONS.EVENTS_MANAGE) ||
+    hasPermission(session, PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE);
 
   const timezone = tenantContext.timezone ?? TRAINING_DEFAULT_TIMEZONE;
   const params = (await searchParams) ?? {};

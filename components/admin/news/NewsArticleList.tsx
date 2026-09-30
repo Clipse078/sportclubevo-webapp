@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 
 type NewsArticleListProps = {
   canDelete?: boolean;
+  readOnly?: boolean;
 };
 
 type FilterStatus = "ALL" | ArticleStatus;
@@ -34,7 +35,7 @@ const FILTERS: { label: string; value: FilterStatus }[] = [
   { label: "Archiviert", value: "ARCHIVED" },
 ];
 
-export default function NewsArticleList({ canDelete = false }: NewsArticleListProps) {
+export default function NewsArticleList({ canDelete = false, readOnly = false }: NewsArticleListProps) {
   const [articles, setArticles] = useState<NewsArticleAdminListItem[]>([]);
   const [total, setTotal] = useState(0);
   const [filter, setFilter] = useState<FilterStatus>("ALL");
@@ -114,6 +115,7 @@ export default function NewsArticleList({ canDelete = false }: NewsArticleListPr
   return (
     <SectionCard noPadding>
       {/* Toolbar */}
+      {!readOnly ? (
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-3">
         <div className="inline-flex flex-wrap rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-0.5 text-xs font-medium">
           {FILTERS.map((f) => (
@@ -142,6 +144,7 @@ export default function NewsArticleList({ canDelete = false }: NewsArticleListPr
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
         </button>
       </div>
+      ) : null}
 
       {/* Error banner */}
       {error && (
@@ -166,10 +169,12 @@ export default function NewsArticleList({ canDelete = false }: NewsArticleListPr
           heading="Keine Artikel vorhanden"
           description="Erstelle den ersten News-Artikel für deine Website."
           action={
-            <Link href="/dashboard/website/news/new" className="fca-button-primary">
-              <Plus className="h-4 w-4" />
-              Ersten Artikel erstellen
-            </Link>
+            readOnly ? undefined : (
+              <Link href="/dashboard/website/news/new" className="fca-button-primary">
+                <Plus className="h-4 w-4" />
+                Ersten Artikel erstellen
+              </Link>
+            )
           }
         />
       ) : (
@@ -189,9 +194,11 @@ export default function NewsArticleList({ canDelete = false }: NewsArticleListPr
                 <th className="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
                   Geändert
                 </th>
-                <th className="px-4 py-2.5 text-right text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
-                  Aktionen
-                </th>
+                {!readOnly ? (
+                  <th className="px-4 py-2.5 text-right text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
+                    Aktionen
+                  </th>
+                ) : null}
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
@@ -217,6 +224,7 @@ export default function NewsArticleList({ canDelete = false }: NewsArticleListPr
                   <td className="px-4 py-3 text-[11px] text-[var(--muted)]">
                     {formatDate(article.updatedAt)}
                   </td>
+                  {!readOnly ? (
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
                       <Link
@@ -259,6 +267,7 @@ export default function NewsArticleList({ canDelete = false }: NewsArticleListPr
                       )}
                     </div>
                   </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>

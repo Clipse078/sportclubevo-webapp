@@ -5,7 +5,7 @@ import { buildBoardConfig } from "@/lib/infoboard/board-config";
 import { getInfoboardBySlug } from "@/lib/infoboard/queries";
 import { parseInfoboardPreviewMoment } from "@/lib/infoboard/preview-time";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { INFOBOARD_READ_PERMISSIONS } from "@/lib/permissions/content-view-permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 
 type PageProps = {
@@ -17,10 +17,7 @@ function first(value: string | string[] | undefined) {
 }
 
 export default async function InfoboardPreviewPage({ searchParams }: PageProps) {
-  await requireAnyPermission([
-    PERMISSIONS.INFOBOARD_MANAGE,
-    PERMISSIONS.EVENTS_PUBLISH_INFOBOARD,
-  ]);
+  await requireAnyPermission([...INFOBOARD_READ_PERMISSIONS]);
   const tenant = await getActiveTenant();
   if (!tenant?.timezone) notFound();
 

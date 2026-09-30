@@ -9,7 +9,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireApiAnyPermission } from "@/lib/permissions/require-api-any-permission";
-import { PERMISSIONS } from "@/lib/permissions/permissions";
+import {
+  PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS,
+  PLANNING_ALLOCATIONS_VIEW_PERMISSIONS,
+} from "@/lib/permissions/planning-allocation-permissions";
 import type { WeekplannerActivityType, WeekplannerAllocationGroup } from "@/lib/weekplanner/plan-types";
 import {
   listWeekplannerPlanAllocations,
@@ -28,14 +31,8 @@ import {
   WeekplannerPlanAllocationOccupancyValidationError,
 } from "@/lib/weekplanner/plan-errors";
 
-const VIEW_PERMISSIONS = [
-  PERMISSIONS.TRAININGS_VIEW,
-  PERMISSIONS.TRAININGS_MANAGE,
-  PERMISSIONS.EVENTS_VIEW,
-  PERMISSIONS.EVENTS_MANAGE,
-] as const;
-
-const MANAGE_PERMISSIONS = [PERMISSIONS.TRAININGS_MANAGE, PERMISSIONS.EVENTS_MANAGE] as const;
+const VIEW_PERMISSIONS = PLANNING_ALLOCATIONS_VIEW_PERMISSIONS;
+const MANAGE_PERMISSIONS = PLANNING_ALLOCATIONS_MANAGE_PERMISSIONS;
 
 const ACTIVITY_TYPES: readonly WeekplannerActivityType[] = ["TRAINING", "MATCH", "TOURNAMENT"];
 const ALLOCATION_GROUPS: readonly WeekplannerAllocationGroup[] = ["PITCH_HALL", "DRESSING_ROOM"];
