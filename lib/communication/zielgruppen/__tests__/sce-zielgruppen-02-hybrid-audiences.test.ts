@@ -12,7 +12,10 @@ import {
   resolveExternalContactIdsFromAudience,
 } from "@/lib/communication/platform/recipient-resolution/external-contact-resolution";
 import { resolveAudienceCandidates } from "@/lib/communication/platform/recipient-resolution/audience-candidate-resolver";
-import { createEmptyDomainAudienceSourceRegistry } from "@/lib/communication/platform/audience/domain-audience-source";
+import {
+  _clearDomainAudienceRegistryForTests,
+  getDomainAudienceSourceRegistry,
+} from "@/lib/communication/platform/audience/domain-audience-registry";
 
 const mocks = vi.hoisted(() => ({
   communicationExternalContact: {
@@ -57,6 +60,7 @@ vi.mock("@/lib/org/target-group-resolver", () => ({
 describe("SCE-ZIELGRUPPEN-02 hybrid audiences", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    _clearDomainAudienceRegistryForTests();
   });
 
   it("parses bulk email separators and dedupes", () => {
@@ -162,10 +166,10 @@ describe("SCE-ZIELGRUPPEN-02 hybrid audiences", () => {
     expect(result.candidateExternalContactIds).toEqual([]);
   });
 
-  it("exposes empty DomainAudienceSource registry seam (DOMAIN-AUDIENCE-01 not implemented)", () => {
-    const registry = createEmptyDomainAudienceSourceRegistry();
+  it("exposes domain audience registry without hard-coded domain providers", () => {
+    const registry = getDomainAudienceSourceRegistry();
     expect(registry.list()).toEqual([]);
-    expect(registry.get("probetraining")).toBeNull();
+    expect(registry.get("probetraining.open-registrations")).toBeNull();
   });
 
   describe("identity & deduplication (SCE-ZIELGRUPPEN-02R1)", () => {

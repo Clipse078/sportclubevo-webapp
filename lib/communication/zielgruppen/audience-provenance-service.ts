@@ -3,7 +3,6 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
-import type { CommunicationAudienceSpec } from "@/lib/communication/platform/audience/zielgruppe-definition";
 import type { ZielgruppeEditorDefinition } from "@/lib/communication/zielgruppen/editor-model";
 import {
   buildStructuralExclusionFromEditor,
@@ -11,6 +10,12 @@ import {
 } from "@/lib/communication/zielgruppen/rule-mapper";
 import { resolveStructuralAudiencePersonIds } from "@/lib/communication/platform/recipient-resolution/structural-resolution";
 import { resolveAudienceCandidates } from "@/lib/communication/platform/recipient-resolution/audience-candidate-resolver";
+import { domainAudienceReferenceIsEmpty } from "@/lib/communication/platform/audience/zielgruppe-definition";
+import {
+  buildDomainAudienceMaterializationContext,
+  domainAudienceProvenanceLabel,
+  materializeDomainAudiencesInSpec,
+} from "@/lib/communication/platform/audience/domain-audience-expansion";
 
 export type RecipientProvenancePath = {
   code:
@@ -20,6 +25,7 @@ export type RecipientProvenancePath = {
     | "ROLE"
     | "DIRECT_PERSON"
     | "DIRECT_EXTERNAL"
+    | "DOMAIN_AUDIENCE"
     | "EXCLUDED_PERSON"
     | "EXCLUDED_EXTERNAL";
   label: string;
@@ -124,6 +130,48 @@ export async function buildZielgruppePreviewProvenance(input: {
   for (const personId of input.definition.includePersonIds) {
     if (input.effectivePersonIds.includes(personId)) {
       addPath(personId, { code: "DIRECT_PERSON", label: "Direkt hinzugefügt" });
+    }
+  }
+
+  const domainComponents = audience.components.filter(
+    (component) =>
+      component.domainAudience && !domainAudienceReferenceIsEmpty(component.domainAudience),
+  );
+  if (domainComponents.length > 0) {
+    const materialization = await buildDomainAudienceMaterializationContext({
+      tenantId: input.tenantId,
+      senderUserId: input.senderUserId,
+    });
+    for (const component of domainComponents) {
+      const ref = component.domainAudience!;
+      const label = domainAudienceProvenanceLabel({
+        reference: ref,
+        fallbackSourceLabel: ref.displayLabel,
+      });
+      const expanded = await materializeDomainAudiencesInSpec(
+        { composition: "UNION", components: [component] },
+        materialization,
+      );
+      const expandedComponent = expanded.components[0];
+      if (!expandedComponent) continue;
+      const explicitIds = expandedComponent.explicit?.includePersonIds ?? [];
+      for (const personId of explicitIds) {
+        if (input.effectivePersonIds.includes(personId)) {
+          addPath(personId, { code: "DOMAIN_AUDIENCE", label });
+        }
+      }
+      if (expandedComponent.structural) {
+        const structuralIds = await resolveStructuralAudiencePersonIds({
+          tenantId: input.tenantId,
+          selectors: expandedComponent.structural,
+          mode: "UNION",
+        });
+        for (const personId of structuralIds) {
+          if (input.effectivePersonIds.includes(personId)) {
+            addPath(personId, { code: "DOMAIN_AUDIENCE", label });
+          }
+        }
+      }
     }
   }
 

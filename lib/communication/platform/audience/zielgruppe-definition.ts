@@ -27,10 +27,32 @@ export type ExplicitExternalContactAudience = {
 };
 
 /**
+ * Stable persisted reference to a domain-owned audience (SCE-DOMAIN-AUDIENCE-01).
+ * Identity is `{ sourceKey, candidateId }` — labels are display-only and not authoritative.
+ */
+export type DomainAudienceReference = {
+  /** Registry composite key `{domainKey}.{sourceKey}`. */
+  sourceKey: string;
+  /** Domain-scoped candidate id from {@link DomainAudienceSource.searchCandidates}. */
+  candidateId: string;
+  /** Optional frozen German label when source metadata is unavailable in UI. */
+  displayLabel?: string;
+};
+
+export function domainAudienceReferenceIsEmpty(
+  ref: DomainAudienceReference | undefined | null,
+): boolean {
+  if (!ref) return true;
+  return !ref.sourceKey?.trim() || !ref.candidateId?.trim();
+}
+
+/**
  * One audience component. Multiple components compose via CommunicationAudienceSpec.
  */
 export type ZielgruppeAudienceComponent = {
   label?: string;
+  /** Domain module audience — materialized via DOMAIN-AUDIENCE-01 registry before COMM-03. */
+  domainAudience?: DomainAudienceReference;
   structural?: StructuralAudienceSelectors;
   /** Saved TargetGroup.id references (tenant-scoped Zielgruppe definitions). */
   savedTargetGroupIds?: string[];
