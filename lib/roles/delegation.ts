@@ -1,7 +1,14 @@
 import type { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { DelegationForbiddenError } from "@/lib/roles/errors";
+import { findMissingDelegatedPermissions } from "@/lib/roles/delegation-utils";
 import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
+
+export {
+  findMissingDelegatedPermissions,
+  formatDelegationForbiddenMessage,
+  sortDelegationMissingPermissionKeys,
+} from "@/lib/roles/delegation-utils";
 
 export type TenantDelegationRequest = {
   tenantId: string;
@@ -9,16 +16,6 @@ export type TenantDelegationRequest = {
   permissionKeys?: readonly string[];
   roleIds?: readonly string[];
 };
-
-export function findMissingDelegatedPermissions(
-  actorPermissions: readonly string[],
-  delegatedPermissions: readonly string[],
-): string[] {
-  const allowed = new Set(actorPermissions);
-  return Array.from(new Set(delegatedPermissions)).filter(
-    (permission) => !allowed.has(permission),
-  );
-}
 
 /**
  * Canonical live delegation boundary for tenant role and invite mutations.
@@ -112,9 +109,11 @@ export async function assertTenantDelegationAllowed(
     ),
   ];
 
-  if (
-    findMissingDelegatedPermissions(effective.tenant, delegatedKeys).length > 0
-  ) {
-    throw new DelegationForbiddenError();
+  const missingPermissionKeys = findMissingDelegatedPermissions(
+    effective.tenant,
+    delegatedKeys,
+  );
+  if (missingPermissionKeys.length > 0) {
+    throw new DelegationForbiddenError(undefined, missingPermissionKeys);
   }
 }
