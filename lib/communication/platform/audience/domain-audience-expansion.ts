@@ -14,10 +14,12 @@ import type { DomainAudienceDiscoveryContext } from "@/lib/communication/platfor
 import { isDomainAudienceSourceAuthorized } from "@/lib/communication/platform/audience/domain-audience-discovery";
 import { ensureProbetrainingDomainAudienceRegistered } from "@/lib/registrations/domain-audience/register-probetraining-domain-audience";
 import { ensureSpielbetriebDomainAudienceRegistered } from "@/lib/spielbetrieb/domain-audience/register-spielbetrieb-domain-audience";
+import { ensureTrainingDomainAudienceRegistered } from "@/lib/training/domain-audience/register-training-domain-audience";
 
 function ensureDomainAudienceSourcesRegistered(): void {
   ensureProbetrainingDomainAudienceRegistered();
   ensureSpielbetriebDomainAudienceRegistered();
+  ensureTrainingDomainAudienceRegistered();
 }
 
 export type DomainAudienceMaterializationContext = {
