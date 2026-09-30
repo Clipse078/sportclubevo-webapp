@@ -12,6 +12,7 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
+import { createEffectivePermissionResolver } from "@/lib/permissions/services/effective-permission-resolver";
 import { isProtectedRole, lockedPermissionKeysForRole } from "@/lib/roles/protected";
 
 export type TenantRoleListItem = {
@@ -192,6 +193,18 @@ export type TenantPermissionModuleGroup = {
  * render a checkbox for them (defense in depth on top of the server-side
  * scope validation in `lib/roles/mutations.ts`).
  */
+/** Tenant-scoped permissions the actor currently holds (delegation upper bound). */
+export async function getActorDelegatableTenantPermissionKeys(
+  tenantId: string,
+  actorUserId: string,
+): Promise<string[]> {
+  const effective = await createEffectivePermissionResolver(prisma).getEffectivePermissions({
+    userId: actorUserId,
+    tenantId,
+  });
+  return [...effective.tenant].sort((a, b) => a.localeCompare(b));
+}
+
 export async function getTenantPermissionCatalog(): Promise<TenantPermissionModuleGroup[]> {
   const permissions = await prisma.permission.findMany({
     where: { scope: "TENANT", grantableByAdmin: true },

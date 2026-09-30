@@ -2,15 +2,21 @@ import Link from "next/link";
 import { requireAnyPermission } from "@/lib/permissions/require-any-permission";
 import { requireActiveTenantId } from "@/lib/tenants/active-tenant";
 import { TENANT_ROLES_MANAGE } from "@/lib/roles/access";
-import { getTenantPermissionCatalog } from "@/lib/roles/tenant-queries";
+import {
+  getActorDelegatableTenantPermissionKeys,
+  getTenantPermissionCatalog,
+} from "@/lib/roles/tenant-queries";
 import CreateTenantRoleForm from "@/components/admin/roles/CreateTenantRoleForm";
 import { PageBreadcrumbs, PageHeader } from "@/components/ui/page";
 
 export default async function NewTenantRolePage() {
   const tenantId = await requireActiveTenantId();
-  await requireAnyPermission(TENANT_ROLES_MANAGE, tenantId);
+  const session = await requireAnyPermission(TENANT_ROLES_MANAGE, tenantId);
 
-  const moduleGroups = await getTenantPermissionCatalog();
+  const [moduleGroups, actorDelegatablePermissionKeys] = await Promise.all([
+    getTenantPermissionCatalog(),
+    getActorDelegatableTenantPermissionKeys(tenantId, session.user.id),
+  ]);
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -43,7 +49,10 @@ export default async function NewTenantRolePage() {
         </Link>
       </div>
 
-      <CreateTenantRoleForm moduleGroups={moduleGroups} />
+      <CreateTenantRoleForm
+        moduleGroups={moduleGroups}
+        actorDelegatablePermissionKeys={actorDelegatablePermissionKeys}
+      />
     </div>
   );
 }
