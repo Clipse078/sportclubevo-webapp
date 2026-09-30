@@ -4,6 +4,7 @@ import {
   getVisibleNavSections,
 } from "@/lib/nav/nav-config";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { TENANT_ADMINISTRATION_PERMISSIONS } from "@/lib/permissions/tenant-administration";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -218,7 +219,10 @@ describe("NAV_SECTIONS static structure", () => {
     expect(communication?.label).toBe("Kommunikation");
     expect(communication?.href).toBe("/dashboard/communication");
     expect(communication?.permissionKeys).toEqual([
-      PERMISSIONS.USERS_MANAGE_MEMBERSHIPS,
+      ...TENANT_ADMINISTRATION_PERMISSIONS,
+      PERMISSIONS.COMMUNICATION_CLUB_VIEW,
+      PERMISSIONS.COMMUNICATION_CLUB_SEND,
+      PERMISSIONS.COMMUNICATION_INBOX_VIEW,
     ]);
     expect(communication?.children).toEqual([
       expect.objectContaining({
