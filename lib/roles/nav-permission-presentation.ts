@@ -120,7 +120,7 @@ function buildWebsiteUnits(
   const cmsChildren = children.filter((child) => WEBSITE_CMS_CHILD_KEYS.has(child.key));
 
   const newsKeys = collectChildPermissionKeys(newsChildren, catalog).filter(
-    (key) => key === PERMISSIONS.NEWS_MANAGE,
+    (key) => key === PERMISSIONS.NEWS_MANAGE || key === PERMISSIONS.NEWS_VIEW,
   );
   const mediaKeys = collectChildPermissionKeys(mediaChildren, catalog).filter(
     (key) => key === PERMISSIONS.WEBSITE_MANAGE,
@@ -135,12 +135,29 @@ function buildWebsiteUnits(
     newsKeys.length > 0 ? newsKeys : collectChildPermissionKeys(newsChildren, catalog),
     catalog,
     {
-      description: "News und Beiträge veröffentlichen",
+      description: "Veröffentlichte News lesen oder News redigieren",
       iconLabel: "News",
       parentLabel: parentItem.label,
     },
   );
   if (newsUnit) units.push(newsUnit);
+
+  const publishingChildren = children.filter((child) => child.key === "website-publishing");
+  const publishingKeys = collectChildPermissionKeys(publishingChildren, catalog).filter(
+    (key) => key === PERMISSIONS.WEBSITE_VIEW || key === PERMISSIONS.WEBSITE_MANAGE,
+  );
+  const publishingUnit = createUnit(
+    `${parentItem.key}-publishing`,
+    "Publizieren",
+    publishingKeys.length > 0 ? publishingKeys : collectChildPermissionKeys(publishingChildren, catalog),
+    catalog,
+    {
+      description: "Veröffentlichte Website-Inhalte und Publizieren-Übersicht (read-only)",
+      iconLabel: "Publizieren",
+      parentLabel: parentItem.label,
+    },
+  );
+  if (publishingUnit) units.push(publishingUnit);
 
   const websiteCmsKeys = Array.from(new Set([...cmsKeys, ...mediaKeys]));
   const websiteCmsUnit = createUnit(
@@ -188,7 +205,8 @@ const UNIT_DESCRIPTION_BY_NAV_KEY: Record<string, string> = {
   personen: "Personenstammdaten und Profile",
   competitions: "Ligen und Wettbewerbe",
   trainingcenter: "Trainingsplanung und Serien",
-  wochenplanner: "Aggregierter Wochenüberblick",
+  wochenplanner:
+    "Wochenplan, Platz- und Garderoben-Zuteilungen (ohne Trainings- oder Event-Verwaltung)",
   workspace: "Dokumente und Vereinsarbeitsbereich",
   sponsoring: "Sponsoring und Partnerschaften",
   "admin-tenant-roles": "Rollen und Berechtigungen im Verein",
@@ -213,6 +231,15 @@ function presentationForNavChild(child: NavItemChild): UnitPresentation {
   }
   if (child.key === TRAININGCENTER_KEY) {
     return { label: "Trainings", description, iconLabel: "TrainingCenter" };
+  }
+  if (child.key === WOCHENPLANNER_KEY) {
+    return {
+      label: "Wochenplaner",
+      description:
+        description ??
+        "Wochenplan lesen und Zuteilungen verwalten — unabhängig von TrainingCenter und Spielbetrieb",
+      iconLabel: "Wochenplaner",
+    };
   }
   if (child.key === "communication-email-sender") {
     return {
@@ -368,6 +395,7 @@ const MANAGE_REQUIRES_VIEW: Record<string, string> = {
   [PERMISSIONS.COMPETITIONS_MANAGE]: PERMISSIONS.COMPETITIONS_VIEW,
   [PERMISSIONS.EVENTS_MANAGE]: PERMISSIONS.EVENTS_VIEW,
   [PERMISSIONS.TRAININGS_MANAGE]: PERMISSIONS.TRAININGS_VIEW,
+  [PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE]: PERMISSIONS.PLANNING_ALLOCATIONS_VIEW,
   [PERMISSIONS.WORKSPACE_MANAGE]: PERMISSIONS.WORKSPACE_VIEW,
   [PERMISSIONS.SEASONS_MANAGE]: PERMISSIONS.SEASONS_VIEW,
   [PERMISSIONS.FACILITIES_MANAGE]: PERMISSIONS.FACILITIES_VIEW,
@@ -536,6 +564,29 @@ function groupChildrenUnits(
   catalog: Map<string, PermissionCatalogRow>,
 ): PermissionUnit[] {
   const units: PermissionUnit[] = [];
+
+  if (parentItem.key === "infoboard") {
+    const keys = new Set<string>();
+    for (const child of children) {
+      for (const key of filterGrantableKeys(child.permissionKeys, catalog)) {
+        keys.add(key);
+      }
+    }
+    const unit = createUnit(
+      `${parentItem.key}-combined`,
+      "Infoboard",
+      Array.from(keys),
+      catalog,
+      {
+        description: "Infoboard-Übersicht und Vorschau veröffentlichter Inhalte",
+        iconLabel: "Infoboard",
+        parentLabel: parentItem.label,
+      },
+    );
+    if (unit) units.push(unit);
+    return units;
+  }
+
   const spielbetriebChildren = children.filter((c) => SPIELBETRIEB_CHILD_KEYS.has(c.key));
   const regularChildren = children.filter(
     (c) => !SPIELBETRIEB_CHILD_KEYS.has(c.key) && c.key !== WOCHENPLANNER_KEY,
@@ -583,18 +634,26 @@ function groupChildrenUnits(
   const wochenplannerChild = children.find((c) => c.key === WOCHENPLANNER_KEY);
   if (wochenplannerChild) {
     const presentation = presentationForNavChild(wochenplannerChild);
-    units.push({
-      id: `${parentItem.key}-${WOCHENPLANNER_KEY}`,
-      label: presentation.label,
-      description: presentation.description,
-      iconLabel: presentation.iconLabel,
-      parentLabel: parentItem.label,
-      isDerived: true,
-      derivedNote:
-        "Verfügbar bei Zugriff auf TrainingCenter oder Spielbetrieb.",
-      standardControls: [],
-      advancedPermissions: [],
-    });
+    const wochenplanerGrantableKeys = filterGrantableKeys(
+      wochenplannerChild.permissionKeys,
+      catalog,
+    ).filter(
+      (key) =>
+        key === PERMISSIONS.PLANNING_ALLOCATIONS_VIEW ||
+        key === PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE,
+    );
+    const unit = createUnit(
+      `${parentItem.key}-${WOCHENPLANNER_KEY}`,
+      presentation.label,
+      wochenplanerGrantableKeys,
+      catalog,
+      {
+        description: presentation.description,
+        iconLabel: presentation.iconLabel,
+        parentLabel: parentItem.label,
+      },
+    );
+    if (unit) units.push(unit);
   }
 
   if (parentItem.key === "website") {
@@ -680,6 +739,9 @@ function prefixesForAdvancedAttachment(unit: PermissionUnit): string[] {
   }
   if (unit.label === "Trainings" || unit.label === "TrainingCenter") {
     return ["trainings."];
+  }
+  if (unit.label === "Wochenplaner") {
+    return ["planning."];
   }
 
   const prefixes = new Set<string>();
@@ -856,6 +918,8 @@ export function toggleStandardControl(
 
 export function isWochenplannerAvailable(selectedKeys: Set<string>): boolean {
   return (
+    selectedKeys.has(PERMISSIONS.PLANNING_ALLOCATIONS_VIEW) ||
+    selectedKeys.has(PERMISSIONS.PLANNING_ALLOCATIONS_MANAGE) ||
     selectedKeys.has(PERMISSIONS.TRAININGS_VIEW) ||
     selectedKeys.has(PERMISSIONS.TRAININGS_MANAGE) ||
     selectedKeys.has(PERMISSIONS.EVENTS_VIEW) ||
