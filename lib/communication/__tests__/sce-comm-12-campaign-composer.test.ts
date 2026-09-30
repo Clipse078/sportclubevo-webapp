@@ -44,6 +44,7 @@ const mocks = vi.hoisted(() => ({
   team: { count: vi.fn() },
   role: { count: vi.fn() },
   person: { findFirst: vi.fn(), findMany: vi.fn() },
+  communicationExternalContact: { findMany: vi.fn() },
   $transaction: vi.fn(),
   getEffectivePermissions: vi.fn(),
   userRole: { count: vi.fn() },
@@ -63,6 +64,7 @@ vi.mock("@/lib/db/prisma", () => ({
     team: mocks.team,
     role: mocks.role,
     person: mocks.person,
+    communicationExternalContact: mocks.communicationExternalContact,
     $transaction: mocks.$transaction,
     userRole: mocks.userRole,
   },
@@ -170,6 +172,8 @@ describe("SCE-COMM-12 campaign composer", () => {
       teamId: null,
     });
     mocks.person.findFirst.mockResolvedValue({ id: "person-sender" });
+    mocks.person.findMany.mockResolvedValue([]);
+    mocks.communicationExternalContact.findMany.mockResolvedValue([]);
     mocks.targetGroup.findMany.mockImplementation(async (args: { where?: { id?: { in?: string[] } } }) => {
       const ids = args?.where?.id?.in ?? [];
       return ids.map((id) => ({ id, status: "ACTIVE" as const }));
