@@ -13,7 +13,7 @@ import {
 import { Pool } from "pg";
 import { PLATFORM_BRANDING } from "@/lib/tenant-runtime/branding";
 import { getTenantClubAdminRoleKey } from "@/lib/roles/tenant-role-keys";
-import { TENANT_CLUB_ADMIN_GOVERNANCE_EXCLUDED_KEYS } from "@/lib/permissions/workspace-governance-permission-reconciliation";
+import { filterTenantClubAdminDelegatablePermissionKeys } from "@/lib/permissions/tenant-club-admin-permission-contract";
 import { assertOperationalMutationAllowed } from "@/lib/server/operational-database-guard";
 
 const connectionString = process.env.DATABASE_URL;
@@ -570,13 +570,8 @@ async function main() {
   });
 
   if (fcaTenantForRoles) {
-    const tenantPermissionKeys = permissions
-      .filter((permission) => permission.scope === PermissionScope.TENANT)
-      .filter(
-        (permission) =>
-          !TENANT_CLUB_ADMIN_GOVERNANCE_EXCLUDED_KEYS.has(permission.key),
-      )
-      .map((permission) => permission.key);
+    const tenantPermissionKeys =
+      filterTenantClubAdminDelegatablePermissionKeys(permissions);
 
     const tenantClubAdminRole = await prisma.role.upsert({
       where: { key: getTenantClubAdminRoleKey(fcaTenantForRoles.key) },
