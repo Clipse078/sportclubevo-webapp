@@ -2,8 +2,12 @@
 
 import Image from "next/image";
 import { signIn } from "next-auth/react";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { resolvePostLoginNavigationTargetFromWindow } from "@/lib/auth/post-login-navigation";
 import { cn } from "@/lib/cn";
+
+/** Re-enable login if hard navigation never completes (slow/failed dashboard load). */
+const POST_LOGIN_STALL_MS = 20_000;
 
 const CANONICAL_LOGO_SRC = "/images/branding/sportclubevo_logo_alt.png";
 const LOGO_ASPECT = 864 / 174;
@@ -32,26 +36,61 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const postLoginStallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (postLoginStallTimerRef.current) {
+        clearTimeout(postLoginStallTimerRef.current);
+      }
+    };
+  }, []);
+
+  function clearPostLoginStallTimer() {
+    if (postLoginStallTimerRef.current) {
+      clearTimeout(postLoginStallTimerRef.current);
+      postLoginStallTimerRef.current = null;
+    }
+  }
+
+  function armPostLoginStallTimer() {
+    clearPostLoginStallTimer();
+    postLoginStallTimerRef.current = setTimeout(() => {
+      setIsSubmitting(false);
+      setErrorMessage(
+        "Die Weiterleitung zum Dashboard dauert ungewöhnlich lange. Bitte Seite neu laden — wenn Sie bereits angemeldet sind, gelangen Sie so zum Dashboard.",
+      );
+    }, POST_LOGIN_STALL_MS);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
     setErrorMessage("");
+    armPostLoginStallTimer();
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-      callbackUrl: "/dashboard",
-    });
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+        callbackUrl: "/dashboard",
+      });
 
-    if (result?.error) {
-      setErrorMessage("Ungültige E-Mail oder Passwort. Bitte nochmals versuchen.");
+      if (result?.error) {
+        clearPostLoginStallTimer();
+        setErrorMessage("Ungültige E-Mail oder Passwort. Bitte nochmals versuchen.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const destination = resolvePostLoginNavigationTargetFromWindow(result?.url ?? null);
+      window.location.assign(destination);
+    } catch {
+      clearPostLoginStallTimer();
+      setErrorMessage("Anmeldung fehlgeschlagen. Bitte erneut versuchen.");
       setIsSubmitting(false);
-      return;
     }
-
-    window.location.href = "/dashboard";
   }
 
   return (
