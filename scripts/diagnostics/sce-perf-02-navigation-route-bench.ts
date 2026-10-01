@@ -96,15 +96,18 @@ async function main() {
   });
 
   const planningBench = async () => {
+    const runPlanningPath = async () => {
+      await getRequestEffectivePermissions(user.id, tenant.id);
+      await Promise.all([
+        listWochenplanPlans(tenant.id),
+        listWeekplannerPlans(tenant.id, ""),
+      ]);
+    };
     const firstStart = performance.now();
-    await getRequestEffectivePermissions(user.id, tenant.id);
-    await listWochenplanPlans(tenant.id);
-    await listWeekplannerPlans(tenant.id, "");
+    await runPlanningPath();
     const firstVisitMs = performance.now() - firstStart;
     const repeatStart = performance.now();
-    await getRequestEffectivePermissions(user.id, tenant.id);
-    await listWochenplanPlans(tenant.id);
-    await listWeekplannerPlans(tenant.id, "");
+    await runPlanningPath();
     const repeatVisitMs = performance.now() - repeatStart;
     return { firstVisitMs, repeatVisitMs };
   };

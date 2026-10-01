@@ -12,6 +12,8 @@ import { getTenantOperationalDurationPolicy as loadTenantOperationalDurationPoli
 import { getCurrentTenantContextById as loadCurrentTenantContextById } from "@/lib/tenants/context";
 import { getTeamsListData as loadTeamsListData } from "@/lib/teams/queries";
 import { getPersonProfileByUserId as loadPersonProfileByUserId } from "@/lib/people/queries";
+import { listWochenplanPlans as loadWochenplanPlans } from "@/lib/wochenplan/plan-service";
+import { listWeekplannerPlans as loadWeekplannerPlans } from "@/lib/weekplanner/plan-service";
 
 export const getFacilitiesForTenantCached = cache((tenantId: string) =>
   loadFacilitiesForTenant(tenantId),
@@ -41,4 +43,12 @@ export const getTeamsListDataCached = cache(
 
 export const getPersonProfileByUserIdCached = cache((userId: string) =>
   loadPersonProfileByUserId(userId),
+);
+
+export const listWochenplanPlansCached = cache((tenantId: string) =>
+  loadWochenplanPlans(tenantId),
+);
+
+export const listWeekplannerPlansCached = cache((tenantId: string, weekId: string) =>
+  loadWeekplannerPlans(tenantId, weekId),
 );

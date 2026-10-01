@@ -205,8 +205,10 @@ async function main() {
 
   const planningData = async () => {
     await getRequestEffectivePermissions(user.id, tenant.id);
-    await listWochenplanPlans(tenant.id);
-    await listWeekplannerPlans(tenant.id, "");
+    await Promise.all([
+      listWochenplanPlans(tenant.id),
+      listWeekplannerPlans(tenant.id, ""),
+    ]);
   };
 
   const communicationData = async () => {

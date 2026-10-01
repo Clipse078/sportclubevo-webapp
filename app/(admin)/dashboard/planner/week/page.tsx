@@ -6,8 +6,10 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { PLANNING_ALLOCATIONS_VIEW_PERMISSIONS } from "@/lib/permissions/planning-allocation-permissions";
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { resolveTrainingWeekWindow, TRAINING_DEFAULT_TIMEZONE } from "@/lib/training/date-range";
-import { listWeekplannerPlans } from "@/lib/weekplanner/plan-service";
-import { listWochenplanPlans } from "@/lib/wochenplan/plan-service";
+import {
+  listWeekplannerPlansCached,
+  listWochenplanPlansCached,
+} from "@/lib/server/request-cache";
 import { materializeLinkedWeekplannerPlan } from "@/lib/wochenplan/plan-materialization";
 import { formatWeekRangeLabel } from "@/lib/weekplanner/date";
 import PlannerWeekStreamingRoot from "@/components/admin/planner/PlannerWeekChromeBridge";
@@ -41,13 +43,13 @@ export default async function PlannerWeekPageRoute({
 }: PlannerWeekPageProps) {
   const perfTimer = isPlannerPerfTimingEnabled() ? createPlannerServerTimer() : null;
 
-  const session = await requireAnyPermission([...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS]);
-
-  perfTimer?.mark("auth-rbac");
-
-  const tenantContext = await getActiveTenant();
+  const [session, tenantContext] = await Promise.all([
+    requireAnyPermission([...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS]),
+    getActiveTenant(),
+  ]);
   if (!tenantContext) notFound();
-  perfTimer?.mark("tenant");
+
+  perfTimer?.mark("auth-rbac-tenant");
 
   const canManageTrainings = hasPermission(session, PERMISSIONS.TRAININGS_MANAGE);
   const canManageEvents = hasPermission(session, PERMISSIONS.EVENTS_MANAGE);
@@ -69,8 +71,8 @@ export default async function PlannerWeekPageRoute({
   const rangeLabel = formatWeekRangeLabel(weekWindow.days);
 
   const [wochenplanPlans, weekplannerPlans] = await Promise.all([
-    listWochenplanPlans(tenantContext.id),
-    listWeekplannerPlans(tenantContext.id, weekWindow.param),
+    listWochenplanPlansCached(tenantContext.id),
+    listWeekplannerPlansCached(tenantContext.id, weekWindow.param),
   ]);
   perfTimer?.mark("plans");
 
