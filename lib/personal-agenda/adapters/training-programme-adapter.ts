@@ -21,7 +21,6 @@ import {
   buildTrainingActivityPresentation,
 } from "@/lib/sporting-activity-presentation/builders";
 import { loadTrainingSessionFacilityHints } from "@/lib/sporting-activity-presentation/training-facility-batch";
-import { prisma } from "@/lib/db/prisma";
 
 function normalizeTrainingProgrammeStatus(
   status: string,
@@ -65,20 +64,13 @@ export async function loadTrainingProgrammeItems(
     dateTo,
   });
 
-  const [facilityHints, tenant] = await Promise.all([
-    loadTrainingSessionFacilityHints(
-      ctx.personal.tenantId,
-      sessions.map((session) => ({
-        id: session.id,
-        trainingSeriesId: session.trainingSeriesId,
-      })),
-    ),
-    prisma.tenant.findUnique({
-      where: { id: ctx.personal.tenantId },
-      select: { name: true },
-    }),
-  ]);
-  const tenantClubName = tenant?.name?.trim() || undefined;
+  const facilityHints = await loadTrainingSessionFacilityHints(
+    ctx.personal.tenantId,
+    sessions.map((session) => ({
+      id: session.id,
+      trainingSeriesId: session.trainingSeriesId,
+    })),
+  );
 
   const rangeStartMs = ctx.rangeStart.getTime();
   const rangeEndMs = ctx.rangeEnd.getTime();
@@ -126,14 +118,11 @@ export async function loadTrainingProgrammeItems(
       startAt: startsAt,
       endAt: endsAt,
       status,
-      clubContextName: tenantClubName,
       facilityName: facility?.facilityName,
       pitchResourceName: facility?.pitchResourceName,
     });
 
-    const presentationFields = applyPresentationToProgrammeFields(activityPresentation, {
-      tenantDisplayNames: tenantClubName ? [tenantClubName] : undefined,
-    });
+    const presentationFields = applyPresentationToProgrammeFields(activityPresentation);
 
     items.push({
       id: resourceKey,
@@ -142,7 +131,7 @@ export async function loadTrainingProgrammeItems(
       endsAt,
       allDay: false,
       title: presentationFields.title,
-      subtitle: teamName,
+      subtitle: presentationFields.subtitle,
       contextLabel,
       status,
       deepLink: `/dashboard/training/sessions/${session.id}/edit`,

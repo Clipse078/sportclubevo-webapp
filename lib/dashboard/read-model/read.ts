@@ -19,7 +19,10 @@ import {
 } from "@/lib/incident/sce-hotfix-login-01-trace";
 import { applyLiveAuthorizationToProjection } from "./apply-live-authorization";
 import { parsePersonalDashboardReadModelPayload } from "./payload-codec";
-import { PERSONAL_DASHBOARD_READ_MODEL_MAX_AGE_MS } from "./constants";
+import {
+  PERSONAL_DASHBOARD_READ_MODEL_MAX_AGE_MS,
+  PERSONAL_DASHBOARD_READ_MODEL_PAYLOAD_VERSION,
+} from "./constants";
 import { schedulePersonalDashboardReadModelRebuild } from "./invalidate";
 
 export type PersonalDashboardProjectionReadResult =
@@ -108,17 +111,22 @@ export async function readPersonalDashboardProjection(args: {
     }
 
     const projectionAgeMs = Date.now() - row.updatedAt.getTime();
-    const isStale = projectionAgeMs > PERSONAL_DASHBOARD_READ_MODEL_MAX_AGE_MS;
+    const payload = parsePersonalDashboardReadModelPayload(row.payloadJson);
+    if (!payload) {
+      return { status: "miss", reason: "invalid_payload" };
+    }
+
+    const needsPresentationRefresh =
+      payload.v < PERSONAL_DASHBOARD_READ_MODEL_PAYLOAD_VERSION ||
+      payload.programme.items.some((item) => !item.activityPresentation);
+
+    const isStale =
+      projectionAgeMs > PERSONAL_DASHBOARD_READ_MODEL_MAX_AGE_MS || needsPresentationRefresh;
     if (isStale) {
       void schedulePersonalDashboardReadModelRebuild({
         tenantId: args.tenantId,
         userId: args.userId,
       });
-    }
-
-    const payload = parsePersonalDashboardReadModelPayload(row.payloadJson);
-    if (!payload) {
-      return { status: "miss", reason: "invalid_payload" };
     }
 
     const now = args.now ?? new Date();

@@ -41,7 +41,6 @@ describe("PersonalProgrammeAgendaRow — SCE-ACTIVITY-UX-01R1", () => {
       teamName: "Junioren F2",
       startAt,
       endAt,
-      clubContextName: "FC Allschwil",
       facilityName: "Im Brüel",
       pitchResourceName: "KR2",
     });
@@ -55,9 +54,9 @@ describe("PersonalProgrammeAgendaRow — SCE-ACTIVITY-UX-01R1", () => {
 
     expect(screen.getByText("Junioren F2 Training")).toBeInTheDocument();
     expect(screen.queryByText("TRAINING")).not.toBeInTheDocument();
-    expect(screen.getByText(/FC Allschwil/)).toBeInTheDocument();
     expect(screen.getByText(/Im Brüel/)).toBeInTheDocument();
     expect(screen.getByText(/KR2/)).toBeInTheDocument();
+    expect(screen.queryByText(/FC Allschwil/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Junioren F2 ·/)).not.toBeInTheDocument();
   });
 

@@ -105,10 +105,6 @@ export function formatSportingActivityCompactAgendaLocationParts(
   const parts: string[] = [];
 
   if (identity.activityKind === "TRAINING") {
-    const host = meaningful(location.hostOrOrganiser);
-    if (host && !parts.some((line) => line.toLowerCase() === host.toLowerCase())) {
-      parts.push(host);
-    }
     push(meaningful(location.venueName), parts);
     push(meaningful(location.address), parts);
     push(meaningful(location.facilityResource), parts);

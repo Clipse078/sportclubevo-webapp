@@ -7,13 +7,14 @@ import { describe, expect, it } from "vitest";
 import {
   resolveTrainingOccurrenceAllocationGroup,
   resolveTrainingOccurrenceAllocations,
+  resolveTrainingOccurrencePrimaryPlayableAllocation,
   type TrainingAllocationResourceRow,
 } from "../effective-training-allocation-resolution";
 
 function resource(
   code: string,
   name: string,
-  type: "HALF_PITCH" | "DRESSING_ROOM",
+  type: "HALF_PITCH" | "DRESSING_ROOM" | "OTHER",
   displayOrder: number,
   createdAt?: Date,
   updatedAt?: Date,
@@ -232,5 +233,37 @@ describe("resolveTrainingOccurrenceAllocationGroup", () => {
 
     expect(resolved.pitch[0]?.facilityResource.code).toBe("KR3A");
     expect(resolved.dressingRoom[0]?.facilityResource.code).toBe("O4");
+  });
+
+  it("resolves OTHER playable resources with session override precedence", () => {
+    const seriesRows = [resource("HALL-A", "Halle A", "OTHER", 0)];
+    const sessionRows = [resource("HALL-B", "Halle 1", "OTHER", 0)];
+
+    const resolved = resolveTrainingOccurrenceAllocations({
+      seriesRows,
+      sessionOverrideRows: sessionRows,
+    });
+
+    expect(resolved.otherPlayable[0]?.facilityResource.code).toBe("HALL-B");
+    expect(
+      resolveTrainingOccurrencePrimaryPlayableAllocation({
+        seriesRows,
+        sessionOverrideRows: sessionRows,
+      })[0]?.facilityResource.code,
+    ).toBe("HALL-B");
+  });
+
+  it("primary playable prefers PITCH_HALL over OTHER series default", () => {
+    const seriesRows = [
+      resource("HALL", "Halle 1", "OTHER", 0),
+      resource("KR2", "KR2", "HALF_PITCH", 1),
+    ];
+
+    const primary = resolveTrainingOccurrencePrimaryPlayableAllocation({
+      seriesRows,
+      sessionOverrideRows: [],
+    });
+
+    expect(primary[0]?.facilityResource.code).toBe("KR2");
   });
 });

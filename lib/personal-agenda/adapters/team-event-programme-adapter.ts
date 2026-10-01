@@ -214,7 +214,7 @@ export async function loadTeamEventProgrammeItems(
       endsAt: event.endAt,
       allDay: event.allDay,
       title: presentationFields.title,
-      subtitle: event.type !== "MATCH" && teamName ? teamName : presentationFields.subtitle,
+      subtitle: presentationFields.subtitle,
       contextLabel,
       venue: presentationFields.venue,
       status,

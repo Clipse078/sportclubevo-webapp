@@ -4,8 +4,10 @@
  */
 
 import { prisma } from "@/lib/db/prisma";
-import { classifyFacilityResourceType } from "@/lib/training/allocation-groups";
-import { resolveTrainingOccurrenceAllocations } from "@/lib/training/effective-training-allocation-resolution";
+import {
+  resolveTrainingOccurrencePrimaryPlayableAllocation,
+  type TrainingAllocationResourceRow,
+} from "@/lib/training/effective-training-allocation-resolution";
 
 export type TrainingSessionFacilityHint = {
   facilityName: string | null;
@@ -18,17 +20,15 @@ type SessionRef = {
 };
 
 function pickPitchResourceName(
-  groups: ReturnType<typeof resolveTrainingOccurrenceAllocations>,
+  rows: readonly TrainingAllocationResourceRow[],
 ): string | null {
-  const pitch = groups.pitch[0]?.facilityResource;
+  const pitch = rows[0]?.facilityResource;
   if (!pitch) return null;
   return pitch.name?.trim() || pitch.code?.trim() || null;
 }
 
-function pickFacilityName(
-  groups: ReturnType<typeof resolveTrainingOccurrenceAllocations>,
-): string | null {
-  const resource = groups.pitch[0]?.facilityResource ?? groups.dressingRoom[0]?.facilityResource;
+function pickFacilityName(rows: readonly TrainingAllocationResourceRow[]): string | null {
+  const resource = rows[0]?.facilityResource;
   return resource?.facility.name?.trim() || null;
 }
 
@@ -79,56 +79,42 @@ export async function loadTrainingSessionFacilityHints(
     }),
   ]);
 
-  const sessionRowsBySessionId = new Map<string, typeof sessionAllocRows>();
+  const sessionRowsBySessionId = new Map<string, TrainingAllocationResourceRow[]>();
   for (const row of sessionAllocRows) {
+    const mapped: TrainingAllocationResourceRow = {
+      displayOrder: row.displayOrder,
+      createdAt: row.createdAt,
+      facilityResource: row.facilityResource,
+    };
     const bucket = sessionRowsBySessionId.get(row.trainingSessionId);
-    if (bucket) bucket.push(row);
-    else sessionRowsBySessionId.set(row.trainingSessionId, [row]);
+    if (bucket) bucket.push(mapped);
+    else sessionRowsBySessionId.set(row.trainingSessionId, [mapped]);
   }
 
-  const seriesRowsBySeriesId = new Map<string, typeof seriesAllocRows>();
+  const seriesRowsBySeriesId = new Map<string, TrainingAllocationResourceRow[]>();
   for (const row of seriesAllocRows) {
+    const mapped: TrainingAllocationResourceRow = {
+      displayOrder: row.displayOrder,
+      createdAt: row.createdAt,
+      facilityResource: row.facilityResource,
+    };
     const bucket = seriesRowsBySeriesId.get(row.trainingSeriesId);
-    if (bucket) bucket.push(row);
-    else seriesRowsBySeriesId.set(row.trainingSeriesId, [row]);
+    if (bucket) bucket.push(mapped);
+    else seriesRowsBySeriesId.set(row.trainingSeriesId, [mapped]);
   }
 
   for (const session of sessions) {
-    const sessionRows =
-      sessionRowsBySessionId.get(session.id)?.map((row) => ({
-        displayOrder: row.displayOrder,
-        createdAt: row.createdAt,
-        facilityResource: row.facilityResource,
-      })) ?? [];
+    const sessionRows = sessionRowsBySessionId.get(session.id) ?? [];
+    const seriesRows = seriesRowsBySeriesId.get(session.trainingSeriesId) ?? [];
 
-    const seriesRows =
-      seriesRowsBySeriesId.get(session.trainingSeriesId)?.map((row) => ({
-        displayOrder: row.displayOrder,
-        createdAt: row.createdAt,
-        facilityResource: row.facilityResource,
-      })) ?? [];
-
-    const pitchSession = sessionRows.filter(
-      (row) => classifyFacilityResourceType(row.facilityResource.type) === "PITCH_HALL",
-    );
-    const pitchSeries = seriesRows.filter(
-      (row) => classifyFacilityResourceType(row.facilityResource.type) === "PITCH_HALL",
-    );
-    const dressingSession = sessionRows.filter(
-      (row) => classifyFacilityResourceType(row.facilityResource.type) === "DRESSING_ROOM",
-    );
-    const dressingSeries = seriesRows.filter(
-      (row) => classifyFacilityResourceType(row.facilityResource.type) === "DRESSING_ROOM",
-    );
-
-    const groups = resolveTrainingOccurrenceAllocations({
-      seriesRows: [...pitchSeries, ...dressingSeries],
-      sessionOverrideRows: [...pitchSession, ...dressingSession],
+    const primaryPlayable = resolveTrainingOccurrencePrimaryPlayableAllocation({
+      seriesRows,
+      sessionOverrideRows: sessionRows,
     });
 
     result.set(session.id, {
-      facilityName: pickFacilityName(groups),
-      pitchResourceName: pickPitchResourceName(groups),
+      facilityName: pickFacilityName(primaryPlayable),
+      pitchResourceName: pickPitchResourceName(primaryPlayable),
     });
   }
 

@@ -1,6 +1,6 @@
 # SCE Canonical Sports Activity Presentation
 
-**Package:** SCE-ACTIVITY-UX-01 / SCE-ACTIVITY-UX-01R1 / SCE-ACTIVITY-UX-01R2  
+**Package:** SCE-ACTIVITY-UX-01 / R1 / R2 / R3  
 **Status:** Canonical presentation + compact visible contract (Dashboard programme, calendar foundation, training/match/tournament management semantics)
 
 ## Purpose
@@ -36,15 +36,14 @@ Programme rows embed an optional snapshot on `PersonalProgrammeItem.activityPres
 
 Structured fields: `mode`, `hostOrOrganiser`, `venueName`, `address`, `facilityResource`.
 
-### HOME (training, home matches)
+### HOME (training occurrence, home matches)
+
+For **training occurrence surfaces**, secondary location is **effective venue · effective resource** only. Do not repeat tenant club or SCE team on the compact secondary line.
 
 Display hierarchy when data exists:
 
-1. Venue / Sportanlage  
-2. Pitch / hall / room (only when explicitly allocated)  
-3. Address (when available)
-
-Host club is not repeated when it adds no information (tenant name suppression in formatters).
+1. Venue / Sportanlage (`Facility.name` from effective allocation)
+2. Pitch / hall / room (`FacilityResource.name` or `code` when allocated)
 
 ### AWAY (matches)
 
@@ -57,53 +56,83 @@ Absence of pitch is normal; never show “Platz unbekannt” or similar placehol
 
 ### NEUTRAL (tournaments)
 
-1. **Organiser** (`Event.organizerName`)  
+Organiser lives in `context.organiser` (`Event.organizerName`), not as a substitute for the participating SCE team.
+
+Compact secondary:
+
+1. **Organiser** when supplied  
 2. Venue  
 3. Address  
 4. Resource when supplied  
 
 Organiser and venue are separate concepts — do not merge into one label.
 
-## Participation boundary
+## Compact hierarchy principle (R2 + R3)
 
-Presentation may surface existing participation/RSVP state (e.g. pending response). This package does **not** introduce match squad (“Aufgebot”) models or player-pool semantics.
+**PRIMARY = identity / WHAT** — training title, match fixture, tournament title · participating SCE team (when not already in the title).
 
-## Compact hierarchy principle (R2)
+**SECONDARY = WHERE / contextual information not already communicated by PRIMARY** — effective training location, match away/home context + venue, tournament organiser + venue.
 
-**PRIMARY = identity / WHO / WHAT** — training title, match fixture, tournament title (plus SCE team on tournament primary when not already in the title).
+Do not repeat information merely because it exists in multiple canonical fields.
 
-**SECONDARY = schedule remainder + WHERE / contextual information not already communicated by PRIMARY.**
+Central deduplication lives in `lib/sporting-activity-presentation/compact-dedupe.ts` (`filterCompactMetadataPartsAgainstPrimary`). Compact formatters apply it deterministically (case/whitespace tolerant, no fuzzy guessing). Deduplication does not replace correct canonical field semantics.
 
-Do not repeat information merely because it exists in multiple canonical fields. Secondary metadata must answer **where / context**, not restate **who / what** already visible on the primary line.
-
-Central deduplication lives in `lib/sporting-activity-presentation/compact-dedupe.ts` (`filterCompactMetadataPartsAgainstPrimary`). Compact formatters apply it deterministically (case/whitespace tolerant, no fuzzy guessing).
-
-Illustrative FCA examples (tenant-neutral pattern):
+Illustrative examples (tenant-neutral pattern):
 
 | Kind | Primary | Secondary |
 |------|---------|-----------|
-| Training | `Junioren F2 Training` | `FC Allschwil · Im Brüel · Kunstrasen 2/3` (club context · venue · allocated resource) |
+| Training (occurrence) | `Junioren F2 Training` | `Im Brüel · KR2` |
 | Tournament | `PlayMore Turnier · Junioren F2` | `FC Arisdorf · Gemeindesportplatz` |
 | Away match | `BSC Old Boys – 1. Mannschaft` | `Auswärts · Schützenmatte, Basel` |
 
-## Minimum visible information contract (R1 + R2)
+## Training allocation model (occurrence programme)
+
+Training location on Dashboard → Mein Programm must represent the **effective allocation for the concrete occurrence/date**. A more specific session/effective allocation takes precedence over generic series/default allocation according to the canonical training allocation model in `lib/training/effective-training-allocation-resolution.ts`:
+
+| Tier | Source | Precedence |
+|------|--------|------------|
+| Occurrence override | `TrainingSessionAllocation` for this session | Wins per allocation group |
+| Series default | `TrainingAllocation` on `TrainingSeries` | Used when no override for that group |
+
+Within each tier and group (`PITCH_HALL`, `DRESSING_ROOM`, `OTHER`):
+
+- Session overrides: highest `displayOrder`, then newest `createdAt`
+- Series pitch/other defaults: lowest `displayOrder`, then oldest `createdAt`
+
+**Primary playable surface** for programme hints: resolve `PITCH_HALL` first; if none, resolve `OTHER` (e.g. indoor hall booked as `FacilityResourceType.OTHER`). Dressing rooms do not substitute for venue on programme rows.
+
+### Series/planning vs occurrence/personal programme
+
+- **Planning → Trainings (series/management view)** may show broader series allocation summaries and planning semantics.
+- **Dashboard → Mein Programm (occurrence view)** answers: “Where is **this** training on **this** date?” using the same allocation resolver, scoped to the session occurrence.
+
+## Tournament organiser vs participating team
+
+The participating SCE club/team and the organising/host club are **different concepts**.
+
+- Primary: tournament title · SCE team (when not redundant in title)
+- Secondary: `Event.organizerName` · venue · resource
+
+Compact secondary must use the actual organiser/host where available and **must not** substitute the current tenant or participating team as organiser.
+
+## Minimum visible information contract
 
 Compact helpers live in `lib/sporting-activity-presentation/compact.ts`:
 
 | Kind | Primary (`primaryText`) | Secondary metadata (agenda row, `omit-start` schedule) |
 |------|-------------------------|--------------------------------------------------------|
-| **TRAINING** | Training title | End time (start in time column) · club/host context · venue · pitch/hall when known |
-| **MATCH** | Home – Away fixture | Auswärts/Neutral when relevant · venue · address · resource only when supplied (never repeat fixture participants) |
-| **TOURNAMENT** | Title · SCE team | Organiser · venue · address · resource when supplied (never repeat SCE team) |
+| **TRAINING** | Training title | End time (optional) · effective venue · pitch/hall when known |
+| **MATCH** | Home – Away fixture | Auswärts/Neutral when relevant · venue · address · resource only when supplied |
+| **TOURNAMENT** | Title · SCE team | Organiser · venue · resource when supplied |
 
 Consumers must not reimplement these semantics — use `formatSportingActivityCompactPrimaryText`, `formatSportingActivityCompactAgendaSecondaryLine`, or `resolveSportingActivityCompactPresentation`.
 
-### Training facility field flow (FCA)
+### Training facility field flow
 
 Personal programme training rows resolve facility hints in `loadTrainingSessionFacilityHints`:
 
-- **Venue** — `FacilityResource.facility.name` from the effective pitch/hall allocation (session override, else series default).
-- **Resource** — pitch/hall `FacilityResource.name` or `code` when a PITCH_HALL allocation exists.
+- **Venue** — `FacilityResource.facility.name` from the effective primary playable allocation (session override, else series default).
+- **Resource** — `FacilityResource.name` or `code` when allocated.
 
 Do not substitute the resource label for the venue when a parent facility name is present in source data.
 
@@ -117,21 +146,6 @@ Do not substitute the resource label for the venue when a parent facility name i
 
 | Consumer | Status |
 |----------|--------|
-| Personal Dashboard — Mein Programm (`PersonalProgrammeAgendaRow`) | Migrated (R1 compact metadata) |
-| Personal calendar month blocks (`buildCalendarEventBlockLines`) | Migrated (concise primary; rich detail via selected-day agenda row) |
-| Personal programme adapters (training / team events) | Migrated |
-| Training management list (`TrainingSeriesManagementRow` facility cell) | Shared location semantics (venue + resource) |
-| Matchcenter Spiele list (`buildSpieleVenueLine`) | Shared compact secondary semantics (no opponent duplication; venue once per row) |
-| Tournamentcenter list (`resolveTournamentManagementMetadataLine`) | Shared organiser/venue semantics |
-| Club command center / Heute im Verein | Uses legacy `event-venue-presentation` (inventory) |
-| Wochenplaner | Not migrated |
-| Team upcoming matches | Inventory |
-| Infoboard / notifications / mobile | Not migrated |
-
-## Security / tenancy
-
-Adapters run after personal relevance and permission checks. Presentation helpers do not widen queries; batch loaders are scoped by `tenantId` and authorized session/team sets already enforced in programme adapters.
-
-## Mobile
-
-The native app should consume `SportingActivityPresentation` (or the same JSON snapshot on programme payloads) rather than re-interpret `Event.location` or legacy subtitle strings.
+| Personal Dashboard — Mein Programm (`PersonalProgrammeAgendaRow`) | Migrated (R1–R3 compact metadata) |
+| Personal calendar selected-day agenda | Uses same compact helpers |
+| Matchcenter / tournament management lists | Separate standard/detail formatters |

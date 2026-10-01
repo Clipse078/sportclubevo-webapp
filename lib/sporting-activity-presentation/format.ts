@@ -53,17 +53,16 @@ export function formatSportingActivityCompactContextLine(
   const kind = presentation.identity.activityKind;
 
   if (kind === "TRAINING") {
-    const parts: string[] = [];
-    if (presentation.location.hostOrOrganiser) {
-      parts.push(presentation.location.hostOrOrganiser);
-    }
     const locationLine = formatSportingActivityLocationSummary(presentation.location, options);
-    if (locationLine) parts.push(locationLine.replace(/\n/g, " · "));
+    if (!locationLine) return undefined;
     const primary = formatSportingActivityCompactPrimaryText(presentation);
     const filtered = filterCompactMetadataPartsAgainstPrimary(
       presentation,
       primary,
-      parts.flatMap((part) => part.split(" · ").map((segment) => segment.trim()).filter(Boolean)),
+      locationLine
+        .split("\n")
+        .map((segment) => segment.trim())
+        .filter(Boolean),
     );
     return filtered.length > 0 ? filtered.join(" · ") : undefined;
   }
@@ -80,11 +79,16 @@ export function formatSportingActivityCompactContextLine(
 
   if (kind === "TOURNAMENT") {
     const parts: string[] = [];
-    if (presentation.team?.name) parts.push(presentation.team.name);
     if (presentation.context?.organiser) parts.push(presentation.context.organiser);
     const locationLine = formatSportingActivityLocationSummary(presentation.location, options);
     if (locationLine) parts.push(locationLine.replace(/\n/g, " · "));
-    return parts.length > 0 ? parts.join(" · ") : undefined;
+    const primary = formatSportingActivityCompactPrimaryText(presentation);
+    const filtered = filterCompactMetadataPartsAgainstPrimary(
+      presentation,
+      primary,
+      parts.flatMap((part) => part.split(" · ").map((segment) => segment.trim()).filter(Boolean)),
+    );
+    return filtered.length > 0 ? filtered.join(" · ") : undefined;
   }
 
   return formatSportingActivityLocationSummary(presentation.location, options)?.replace(
@@ -113,11 +117,7 @@ export function formatSportingActivityStandardSecondaryLines(
     return filterStandardSecondaryLines(presentation, lines);
   }
   if (presentation.identity.activityKind === "TRAINING") {
-    const host = presentation.location.hostOrOrganiser?.trim();
-    const lines: string[] = [];
-    if (host) lines.push(host);
-    lines.push(...locationLines);
-    return filterStandardSecondaryLines(presentation, lines);
+    return filterStandardSecondaryLines(presentation, locationLines);
   }
   return filterStandardSecondaryLines(presentation, locationLines);
 }
