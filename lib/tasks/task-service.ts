@@ -9,6 +9,7 @@ import { TaskStatus as TaskStatusEnum, TaskVisibilityScope } from "@prisma/clien
 import { prisma } from "@/lib/db/prisma";
 import { writeAuditRecord } from "@/lib/audit/audit-record";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
+import { notifyPersonalDashboardDomainMutation } from "@/lib/dashboard/read-model/invalidate";
 import { validateTaskContext } from "./context-validation";
 import { normalizeTaskDescriptionInput } from "./task-description";
 import {
@@ -1133,6 +1134,15 @@ export async function completeTask(
 
     return row;
   });
+
+  const assigneeUserIds = existing.assignees.map((a) => a.userId);
+  void notifyPersonalDashboardDomainMutation({ tenantId: ctx.tenantId, userId: ctx.userId });
+  for (const assigneeUserId of assigneeUserIds) {
+    void notifyPersonalDashboardDomainMutation({
+      tenantId: ctx.tenantId,
+      userId: assigneeUserId,
+    });
+  }
 
   return mapTask(updated);
 }

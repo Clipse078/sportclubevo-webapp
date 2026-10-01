@@ -14,6 +14,7 @@ import {
 } from "./errors";
 import { PARTICIPATION_STATUSES } from "./types";
 import type { ParticipationResponseInput } from "./types";
+import { notifyPersonalDashboardDomainMutation } from "@/lib/dashboard/read-model/invalidate";
 
 function isParticipationStatus(value: string): value is ParticipationResponseStatus {
   return (PARTICIPATION_STATUSES as readonly string[]).includes(value);
@@ -76,6 +77,12 @@ async function applyParticipationResponseUpdate(
       note: ctx.note,
       responseSource: ctx.input.responseSource,
     },
+  });
+
+  void notifyPersonalDashboardDomainMutation({
+    tenantId: ctx.tenantId,
+    personId: ctx.input.personId,
+    userId: ctx.actorUserId ?? undefined,
   });
 
   return updated;
@@ -205,6 +212,12 @@ export async function respondToParticipation(
         eventId: eventContext.eventId,
         responseSource: input.responseSource,
       },
+    });
+
+    void notifyPersonalDashboardDomainMutation({
+      tenantId,
+      personId: input.personId,
+      userId: actorUserId ?? undefined,
     });
 
     return created;

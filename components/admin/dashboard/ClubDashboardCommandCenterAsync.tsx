@@ -73,6 +73,8 @@ export default async function ClubDashboardCommandCenterAsync({
     ),
   ]);
 
+  logSceHotfixLogin01Milestone("T2_USEFUL_CONTENT");
+  logSceHotfixLogin01Milestone("T3_COMPLETE");
   logSceHotfixLogin01Milestone("T5_FIRST_USEFUL");
   logSceHotfixLogin01Milestone("T10_INITIAL_CONTENT");
 

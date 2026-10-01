@@ -42,6 +42,14 @@ import {
   logSceHotfixLogin01StepFailed,
   sceHotfixLogin01TraceEnabled,
 } from "@/lib/incident/sce-hotfix-login-01-trace";
+import {
+  buildDegradedPersonalCommandCenterData,
+  personalDashboardLegacyAggregationAllowed,
+  personalDashboardReadModelEnabled,
+  readPersonalDashboardProjection,
+  schedulePersonalDashboardReadModelRebuild,
+} from "@/lib/dashboard/read-model";
+import { rebuildPersonalDashboardReadModel } from "@/lib/dashboard/read-model/rebuild";
 
 export type { PersonalDashboardSecondaryActivity };
 
@@ -232,7 +240,7 @@ async function loadSecondarySnapshotSafe(args: Parameters<typeof loadSecondarySn
   }
 }
 
-export async function getPersonalCommandCenterData(args: {
+async function loadPersonalCommandCenterViaLegacyAggregation(args: {
   tenantId: string;
   actor: StrategicActor | null;
   fmtCfg: TenantFormatConfig;
@@ -423,7 +431,99 @@ export async function getPersonalCommandCenterData(args: {
   };
 }
 
+export async function getPersonalCommandCenterData(args: {
+  tenantId: string;
+  actor: StrategicActor | null;
+  fmtCfg: TenantFormatConfig;
+  userId?: string | null;
+  now?: Date;
+  calendarMonthParam?: string | null;
+  permissionKeys?: PermissionKey[];
+}): Promise<PersonalCommandCenterData> {
+  const permissionKeys = (args.permissionKeys ??
+    args.actor?.permissionKeys ??
+    []) as PermissionKey[];
+
+  if (
+    personalDashboardReadModelEnabled() &&
+    args.userId &&
+    !personalDashboardLegacyAggregationAllowed()
+  ) {
+    const projectionRead = await readPersonalDashboardProjection({
+      tenantId: args.tenantId,
+      userId: args.userId,
+      permissionKeys,
+      fmtCfg: args.fmtCfg,
+      calendarMonthParam: args.calendarMonthParam,
+      now: args.now,
+    });
+
+    let core: PersonalCommandCenterData;
+    if (projectionRead.status === "hit" || projectionRead.status === "stale") {
+      core = projectionRead.data;
+    } else {
+      void schedulePersonalDashboardReadModelRebuild({
+        tenantId: args.tenantId,
+        userId: args.userId,
+      });
+      if (process.env.SCE_PERF_DASHBOARD_02_SYNC_REBUILD === "1") {
+        await rebuildPersonalDashboardReadModel({
+          tenantId: args.tenantId,
+          userId: args.userId,
+          fmtCfg: args.fmtCfg,
+          calendarMonthParam: args.calendarMonthParam,
+          now: args.now,
+        });
+        const retry = await readPersonalDashboardProjection({
+          tenantId: args.tenantId,
+          userId: args.userId,
+          permissionKeys,
+          fmtCfg: args.fmtCfg,
+          calendarMonthParam: args.calendarMonthParam,
+          now: args.now,
+        });
+        if (retry.status === "hit" || retry.status === "stale") {
+          core = retry.data;
+        } else {
+          core = buildDegradedPersonalCommandCenterData({
+            fmtCfg: args.fmtCfg,
+            calendarMonthParam: args.calendarMonthParam,
+            now: args.now,
+          });
+        }
+      } else {
+        core = buildDegradedPersonalCommandCenterData({
+          fmtCfg: args.fmtCfg,
+          calendarMonthParam: args.calendarMonthParam,
+          now: args.now,
+        });
+      }
+    }
+
+    const now = args.now ?? new Date();
+    const secondary = await loadSecondarySnapshotSafe({
+      tenantId: args.tenantId,
+      actor: args.actor,
+      fmtCfg: args.fmtCfg,
+      now,
+    });
+
+    return {
+      ...core,
+      newsItems: secondary.newsItems,
+      activitySources: secondary.activitySources,
+    };
+  }
+
+  return loadPersonalCommandCenterViaLegacyAggregation(args);
+}
+
 /** @internal test helper */
 export function personalCommandCenterUsesSingleProgrammeLoader(): true {
   return true;
+}
+
+/** @internal test helper — SCE-PERF-DASHBOARD-02 */
+export function personalCommandCenterUsesReadModelWarmPath(): boolean {
+  return personalDashboardReadModelEnabled() && !personalDashboardLegacyAggregationAllowed();
 }

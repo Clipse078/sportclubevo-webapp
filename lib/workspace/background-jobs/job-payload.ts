@@ -18,10 +18,16 @@ export type WorkspaceSubtreeOperationBatchJobPayload = {
   operationId: string;
 };
 
+export type PersonalDashboardRebuildJobPayload = {
+  v: 1;
+  userId: string;
+};
+
 export type WorkspaceBackgroundJobPayloadByType = {
   [WorkspaceBackgroundJobType.MALWARE_SCAN_VERSION]: WorkspaceMalwareScanVersionJobPayload;
   [WorkspaceBackgroundJobType.DOCUMENT_PURGE_FINALIZE]: WorkspaceDocumentPurgeFinalizeJobPayload;
   [WorkspaceBackgroundJobType.SUBTREE_OPERATION_BATCH]: WorkspaceSubtreeOperationBatchJobPayload;
+  [WorkspaceBackgroundJobType.PERSONAL_DASHBOARD_REBUILD]: PersonalDashboardRebuildJobPayload;
 };
 
 export type ParsedWorkspaceBackgroundJobPayload<
@@ -80,6 +86,13 @@ export function parseWorkspaceBackgroundJobPayload<T extends WorkspaceBackground
       }
       return { v: 1, operationId } as ParsedWorkspaceBackgroundJobPayload<T>;
     }
+    case WorkspaceBackgroundJobType.PERSONAL_DASHBOARD_REBUILD: {
+      const userId = requireNonEmptyId(raw.userId, "userId");
+      if (raw.v !== 1) {
+        throw new WorkspaceBackgroundJobPayloadError("unsupported payload version");
+      }
+      return { v: 1, userId } as ParsedWorkspaceBackgroundJobPayload<T>;
+    }
     case WorkspaceBackgroundJobType.DOCUMENT_PURGE_FINALIZE: {
       const workspaceDocumentId = requireNonEmptyId(
         raw.workspaceDocumentId,
@@ -124,6 +137,10 @@ export function buildSubtreeOperationBatchDeduplicationKey(
   operationId: string,
 ): string {
   return `SUBTREE_OPERATION_BATCH:${operationId}`;
+}
+
+export function buildPersonalDashboardRebuildDeduplicationKey(userId: string): string {
+  return `PERSONAL_DASHBOARD_REBUILD:${userId}`;
 }
 
 /** Payload must never carry storage locators, signed URLs, or secrets. */

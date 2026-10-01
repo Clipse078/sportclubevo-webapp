@@ -94,6 +94,7 @@ export default async function ClubDashboardView({
   const contextLine = [todayFormatted, ctx?.name].filter(Boolean).join(" · ");
 
   if (sceHotfixLogin01TraceEnabled()) {
+    logSceHotfixLogin01Milestone("T1_SHELL");
     logSceHotfixLogin01Milestone("T4_SHELL");
   }
 

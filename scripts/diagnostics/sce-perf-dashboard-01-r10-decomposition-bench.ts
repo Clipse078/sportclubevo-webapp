@@ -1,6 +1,7 @@
 /**
  * SCE-PERF-DASHBOARD-01 R10 — warm command-center benchmark + DB baseline + trace ledger.
  */
+import "./sce-perf-preload.mjs";
 import "dotenv/config";
 import { performance } from "node:perf_hooks";
 
