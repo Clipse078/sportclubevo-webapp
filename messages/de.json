@@ -585,6 +585,8 @@
       "listAria": "Benötigt meine Aufmerksamkeit",
       "emptyTitle": "Alles im grünen Bereich",
       "emptyDescription": "Aktuell gibt es nichts, das deine Aufmerksamkeit benötigt.",
+      "partialEmptyTitle": "Überblick unvollständig",
+      "partialEmptyDescription": "Ein Teil der operativen Hinweise konnte gerade nicht geladen werden. Bitte später erneut prüfen.",
       "viewAll": "Alle anzeigen",
       "openInbox": "Meine Aufgaben öffnen",
       "urgency": {

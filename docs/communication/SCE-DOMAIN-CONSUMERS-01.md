@@ -84,12 +84,12 @@ Future `REGISTRATION_ACTION` / `DOCUMENT_ACTION` are reserved in types only.
 
 ### Canonical contract (this package)
 
-Types only—**no registry implementation**, **no DB migration**:
+Types in DOMAIN-CONSUMERS-01; **registry + dashboard aggregation** in **SCE-DOMAIN-OPERATIONAL-ATTENTION-01** (no DB migration):
 
 - `lib/domain-attention/types.ts` — `DomainOperationalAttentionItem`, actions, optional `DeferredDomainAudienceReference` (selector only — resolved live at execute)
 - `lib/domain-attention/source-identity.ts` — stable `domain-attn:{domain}:{kind}:{entityType}:{entityId}` ids
 
-Future domain packages implement `DomainOperationalAttentionSource` and register in a later package (not DOMAIN-CONSUMERS-01).
+Production domain packages implement `DomainOperationalAttentionSource`; registration/aggregation: `lib/domain-attention/` + `ensureProductionOperationalAttentionSourcesRegistered()` (see `SCE-DOMAIN-OPERATIONAL-ATTENTION-01.md`).
 
 ### Attention item fields (operator)
 
@@ -229,7 +229,7 @@ Participation: `lib/participation/authorization.ts` (self + guardian). Finance: 
 
 Existing seam: `loadDashboardPersonalWork()` → `mapPersonalActionsToAttentionItems()`.
 
-Operational attention aggregation for trainers is **future work**; contract is JSON/API-friendly (`DomainOperationalAttentionItem`).
+Operational attention is aggregated via `loadDomainOperationalAttention()` → `loadDashboardPersonalWork()` → `PersonalAttentionItem` (see `SCE-DOMAIN-OPERATIONAL-ATTENTION-01.md`).
 
 ### Mobile
 
@@ -351,7 +351,7 @@ Product language “Aufgebot” maps to **squad-scoped participation**, not a se
 | Option | Choice |
 |--------|--------|
 | **Personal/member attention** | **A** — keep **PersonalAction** as canonical |
-| **Operator/domain attention** | **C (minimal)** — `lib/domain-attention` contract; registry deferred |
+| **Operator/domain attention** | **C (minimal)** — `lib/domain-attention` contract; registry + aggregator in DOMAIN-OPERATIONAL-ATTENTION-01 |
 | **Database** | **None** — derive from domain state |
 
 **Why not B only:** PersonalAction is intentionally **per-subject** (inbox semantics). Operator aggregates need a parallel read model without polluting PersonalAction.
@@ -369,7 +369,7 @@ Recommended **package sequence** (not prompt order):
 | 1 | **SPIELBETRIEB-AUDIENCE-01** | Strongest data + flagship Aufgebot; COMM-10 to migrate; proves attention+nudge |
 | 2 | **TRAINING-AUDIENCE-01** | Same participation engine; high FCA daily value |
 | 3 | **EVENTS-AUDIENCE-01** (club Veranstaltung) | Separate invitee model; needed before generic “events” composer |
-| 4 | **DOMAIN-OPERATIONAL-ATTENTION-01** (registry) | Aggregate `DomainOperationalAttentionSource` for dashboard/mobile — **after** Spielbetrieb/Training/Events prove per-domain attention in production |
+| 4 | **DOMAIN-OPERATIONAL-ATTENTION-01** (registry) | **Implemented** — aggregate production sources into Personal Command Center (see `SCE-DOMAIN-OPERATIONAL-ATTENTION-01.md`) |
 | 5 | **SPONSOR-AUDIENCE-01** | Wrap COMM-13 selectors as DomainAudience for composer parity |
 | 6 | **FINANCE-AUDIENCE-01** | Strict auth + privacy; after comm patterns proven |
 | 7 | **TASKS-AUDIENCE-01** | Only if comms needs dynamic task-state groups |
@@ -426,7 +426,7 @@ Recommended **package sequence** (not prompt order):
 | Spielerbörse domain missing | SPIELERBÖRSE-AUDIENCE blocked |
 | Aufgebot subset selection | Product mismatch vs squad-wide invite |
 | COMM-EVO-03 composer UI | Discovery UX for domain categories |
-| Operational attention registry | Dashboard trainer section still PersonalAction-only |
+| Operational attention registry | **Delivered** in DOMAIN-OPERATIONAL-ATTENTION-01 |
 
 ---
 

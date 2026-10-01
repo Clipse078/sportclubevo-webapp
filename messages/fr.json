@@ -162,6 +162,8 @@
       "listAria": "Nécessite mon attention",
       "emptyTitle": "Tout est en ordre",
       "emptyDescription": "Rien qui vous soit personnellement assigné ne requiert votre attention.",
+      "partialEmptyTitle": "Aperçu incomplet",
+      "partialEmptyDescription": "Une partie des indications opérationnelles n'a pas pu être chargée. Veuillez réessayer plus tard.",
       "viewAll": "Tout afficher",
       "openInbox": "Ouvrir mes tâches",
       "urgency": {

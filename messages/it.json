@@ -162,6 +162,8 @@
       "listAria": "Richiede la mia attenzione",
       "emptyTitle": "Tutto a posto",
       "emptyDescription": "Nulla di personale richiede la tua attenzione in questo momento.",
+      "partialEmptyTitle": "Panoramica incompleta",
+      "partialEmptyDescription": "Parte degli avvisi operativi non è stata caricata. Riprova più tardi.",
       "viewAll": "Mostra tutto",
       "openInbox": "Apri i miei compiti",
       "urgency": {

@@ -13,11 +13,13 @@ import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/cn";
 import { DashboardEmptyState } from "./DashboardEmptyState";
 import type { PersonalAttentionItem } from "@/lib/dashboard/personal-attention";
+import { PersonalAttentionOperationalActionButton } from "./PersonalAttentionOperationalActionButton";
 
 export type PersonalAttentionProps = {
   items: PersonalAttentionItem[];
   totalCount: number;
   viewAllHref: string | null;
+  operationalSourcesDegraded?: boolean;
   className?: string;
 };
 
@@ -39,6 +41,11 @@ const SOURCE_ICON: Record<
     icon: ClipboardCheck,
     accent: "var(--sce-info)",
     bg: "var(--sce-info-light)",
+  },
+  DOMAIN_OPERATIONAL: {
+    icon: CommunicationSceIcon,
+    accent: "var(--sce-warning)",
+    bg: "var(--sce-warning-light)",
   },
 };
 
@@ -72,54 +79,72 @@ function AttentionRow({
   const statusText = item.presentationStatus ?? item.summary;
   const ariaLabel = labels.rowAria(item.title, statusText);
 
-  return (
-    <Link
-      href={item.deepLink}
-      className={cn(
-        "group flex items-start gap-3 border-b border-[color-mix(in_srgb,var(--border)_85%,transparent)] py-3 no-underline last:border-b-0",
-        "motion-safe:transition-colors motion-safe:duration-150 motion-safe:hover:bg-[var(--surface-2)] -mx-1.5 rounded-md px-1.5",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
-      )}
-      aria-label={ariaLabel}
-    >
-      <span
-        className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)]"
-        style={{ backgroundColor: iconConfig.bg, color: iconConfig.accent }}
-        aria-hidden="true"
-      >
-        <Icon className="h-4 w-4" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-[0.8125rem] font-semibold leading-snug text-[var(--foreground)]">
-          {prefix ? (
-            <>
-              <span className="sr-only">{prefix}. </span>
-              <span aria-hidden="true">{prefix} · </span>
-              {item.title}
-            </>
-          ) : (
-            item.title
-          )}
-        </p>
-        {item.summary ? (
-          <p className="mt-0.5 text-[0.75rem] leading-relaxed text-[var(--muted)]">{item.summary}</p>
-        ) : null}
-        {item.presentationStatus ? (
-          <p className="mt-0.5 text-[0.75rem] font-medium leading-relaxed text-[var(--muted-foreground)]">
-            {item.presentationStatus}
-          </p>
-        ) : null}
-        {item.contextLabel ? (
-          <p className="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-[var(--muted)]">
-            {item.contextLabel}
-          </p>
-        ) : null}
-      </div>
-      <ChevronRight
-        className="mt-2 h-4 w-4 shrink-0 text-[var(--muted)] motion-safe:transition-colors motion-safe:duration-150 group-hover:text-[var(--sce-primary)]"
-        aria-hidden="true"
+  const operationalCta =
+    item.operationalAction && item.actionLabel ? (
+      <PersonalAttentionOperationalActionButton
+        attentionId={item.id}
+        actionKey={item.operationalAction.actionKey}
+        label={item.actionLabel}
       />
-    </Link>
+    ) : null;
+
+  return (
+    <div
+      className={cn(
+        "group flex items-start gap-3 border-b border-[color-mix(in_srgb,var(--border)_85%,transparent)] py-3 last:border-b-0",
+        "motion-safe:transition-colors motion-safe:duration-150 motion-safe:hover:bg-[var(--surface-2)] -mx-1.5 rounded-md px-1.5",
+      )}
+    >
+      <Link
+        href={item.deepLink}
+        className={cn(
+          "flex min-w-0 flex-1 items-start gap-3 no-underline",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sce-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] rounded-md",
+        )}
+        aria-label={ariaLabel}
+      >
+        <span
+          className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)]"
+          style={{ backgroundColor: iconConfig.bg, color: iconConfig.accent }}
+          aria-hidden="true"
+        >
+          <Icon className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[0.8125rem] font-semibold leading-snug text-[var(--foreground)]">
+            {prefix ? (
+              <>
+                <span className="sr-only">{prefix}. </span>
+                <span aria-hidden="true">{prefix} · </span>
+                {item.title}
+              </>
+            ) : (
+              item.title
+            )}
+          </p>
+          {item.summary ? (
+            <p className="mt-0.5 text-[0.75rem] leading-relaxed text-[var(--muted)]">{item.summary}</p>
+          ) : null}
+          {item.presentationStatus && item.sourceType !== "DOMAIN_OPERATIONAL" ? (
+            <p className="mt-0.5 text-[0.75rem] font-medium leading-relaxed text-[var(--muted-foreground)]">
+              {item.presentationStatus}
+            </p>
+          ) : null}
+          {item.contextLabel ? (
+            <p className="mt-0.5 text-[0.6875rem] uppercase tracking-wide text-[var(--muted)]">
+              {item.contextLabel}
+            </p>
+          ) : null}
+        </div>
+        {!operationalCta ? (
+          <ChevronRight
+            className="mt-2 h-4 w-4 shrink-0 text-[var(--muted)] motion-safe:transition-colors motion-safe:duration-150 group-hover:text-[var(--sce-primary)]"
+            aria-hidden="true"
+          />
+        ) : null}
+      </Link>
+      {operationalCta}
+    </div>
   );
 }
 
@@ -127,17 +152,25 @@ export async function PersonalAttention({
   items,
   totalCount,
   viewAllHref,
+  operationalSourcesDegraded = false,
   className,
 }: PersonalAttentionProps) {
   const t = await getTranslations("PersonalDashboard.attention");
 
   if (items.length === 0) {
+    const degraded = operationalSourcesDegraded;
     return (
       <DashboardEmptyState
         className={cn("min-h-0", className)}
-        icon={<CheckCircle2 className="h-4 w-4 text-[var(--sce-success)]" />}
-        title={t("emptyTitle")}
-        description={t("emptyDescription")}
+        icon={
+          degraded ? (
+            <Bell className="h-4 w-4 text-[var(--sce-warning)]" />
+          ) : (
+            <CheckCircle2 className="h-4 w-4 text-[var(--sce-success)]" />
+          )
+        }
+        title={degraded ? t("partialEmptyTitle") : t("emptyTitle")}
+        description={degraded ? t("partialEmptyDescription") : t("emptyDescription")}
         variant="cockpit"
       />
     );

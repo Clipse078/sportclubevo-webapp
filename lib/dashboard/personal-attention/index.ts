@@ -3,7 +3,9 @@ export type {
   DashboardPersonalTasksSnapshot,
   DashboardPersonalWorkSnapshot,
   PersonalAttentionItem,
+  PersonalAttentionOperationalAction,
   PersonalAttentionSnapshot,
+  PersonalAttentionSourceType,
   PersonalAttentionUrgency,
 } from "./types";
 
@@ -22,6 +24,17 @@ export {
   mapPersonalActionToAttentionItem,
   mapPersonalActionsToAttentionItems,
 } from "./map-attention-items";
+
+export {
+  mapDomainOperationalAttentionToPersonalItem,
+  mapDomainOperationalAttentionItems,
+} from "./map-domain-operational-attention";
+
+export {
+  comparePersonalAttentionItems,
+  sortPersonalAttentionItems,
+  dedupePersonalAttentionItemsById,
+} from "./sort-attention-items";
 
 export {
   DASHBOARD_PERSONAL_TASK_PREVIEW_LIMIT,
