@@ -13,6 +13,12 @@ import {
 } from "./programme-range";
 import { sortPersonalProgrammeItems } from "./programme-sort";
 import type { PersonalProgrammeItem } from "./personal-programme-types";
+import {
+  logSceHotfixLogin01Step,
+  logSceHotfixLogin01StepDone,
+  logSceHotfixLogin01StepFailed,
+  sceHotfixLogin01TraceEnabled,
+} from "@/lib/incident/sce-hotfix-login-01-trace";
 
 export type LoadPersonalProgrammeArgs = {
   tenantId: string;
@@ -65,10 +71,25 @@ export async function loadPersonalProgramme(
     };
   }
 
-  const personalContext = await resolvePersonalContext({
-    tenantId: args.tenantId,
-    userId: args.userId,
-  });
+  const trace = sceHotfixLogin01TraceEnabled();
+  if (trace) {
+    logSceHotfixLogin01Step("programme-personal-context");
+  }
+  let personalContext;
+  try {
+    personalContext = await resolvePersonalContext({
+      tenantId: args.tenantId,
+      userId: args.userId,
+    });
+    if (trace) {
+      logSceHotfixLogin01StepDone("programme-personal-context");
+    }
+  } catch (error) {
+    if (trace) {
+      logSceHotfixLogin01StepFailed("programme-personal-context", error);
+    }
+    throw error;
+  }
 
   const teamIds = getPersonallyRelevantTeamIds(personalContext);
   const { hasLinkedPerson } = personalContext;
@@ -99,15 +120,39 @@ export async function loadPersonalProgramme(
     rangeEnd: range.rangeEnd,
   };
 
+  const loadAdapter = async (step: string, loader: () => Promise<PersonalProgrammeItem[]>) => {
+    if (trace) {
+      logSceHotfixLogin01Step(step);
+    }
+    try {
+      const rows = await loader();
+      if (trace) {
+        logSceHotfixLogin01StepDone(step);
+      }
+      return rows;
+    } catch (error) {
+      if (trace) {
+        logSceHotfixLogin01StepFailed(step, error);
+      }
+      throw error;
+    }
+  };
+
   const [teamEvents, trainings, meetings] = await Promise.all([
-    loadTeamEventProgrammeItems(adapterCtx),
-    loadTrainingProgrammeItems(adapterCtx),
-    loadMeetingProgrammeItems(adapterCtx),
+    loadAdapter("programme-events", () => loadTeamEventProgrammeItems(adapterCtx)),
+    loadAdapter("programme-training", () => loadTrainingProgrammeItems(adapterCtx)),
+    loadAdapter("programme-meetings", () => loadMeetingProgrammeItems(adapterCtx)),
   ]);
 
+  if (trace) {
+    logSceHotfixLogin01Step("programme-merge");
+  }
   let items = sortPersonalProgrammeItems(
     dedupeProgrammeItems([...teamEvents, ...trainings, ...meetings]),
   );
+  if (trace) {
+    logSceHotfixLogin01StepDone("programme-merge");
+  }
 
   if (args.limit != null && args.limit > 0) {
     items = items.slice(0, args.limit);

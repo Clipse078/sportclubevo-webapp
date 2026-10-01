@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const read = (rel: string) => readFileSync(join(root, rel), "utf8");
 
-const clubDashboardSource = read("components/admin/dashboard/ClubDashboardView.tsx");
+const clubDashboardSource = read("components/admin/dashboard/ClubDashboardCommandCenterAsync.tsx");
+const clubDashboardShellSource = read("components/admin/dashboard/ClubDashboardView.tsx");
 const loaderSource = read("lib/dashboard/personal-command-center.ts");
 const pageSource = read("app/(admin)/dashboard/page.tsx");
 
@@ -19,6 +20,7 @@ describe("DASHBOARD-07 — programme acceptance closure", () => {
     expect(clubDashboardSource).toContain("getPersonalCommandCenterData");
     expect(clubDashboardSource).toContain("resolvePersonalQuickAccess");
     expect(clubDashboardSource).toContain("formatSecondaryActivityPresentation");
+    expect(clubDashboardShellSource).toContain("Suspense");
     expect(loaderSource).toContain("loadPersonalProgramme");
     expect(loaderSource).toContain("loadDashboardPersonalWork");
     expect(loaderSource).not.toContain("loadPersonalAgendaItems");

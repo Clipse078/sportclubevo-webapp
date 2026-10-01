@@ -1,6 +1,7 @@
 import { dedupePersonalActionsById, sortPersonalActions } from "./ordering";
 import { resolvePersonalActionSourceContext } from "./load-context";
 import { personalActionSources } from "./sources";
+import { getAuthorizedPersonIdsForUserInRequest } from "@/lib/participation/request-scoped-person-ids";
 import { taskPersonalActionSource } from "./sources/task-source";
 import { attendancePersonalActionSource } from "./sources/attendance-source";
 import { requirementPersonalActionSource } from "./sources/requirement-source";
@@ -41,24 +42,6 @@ export async function loadDashboardPersonalActions(
   });
 }
 
-function personalActionCountsFromChunks(input: {
-  taskActions: PersonalAction[];
-  attendanceActions: PersonalAction[];
-  requirementActions: PersonalAction[];
-}): PersonalActionCounts {
-  const uniqueAttendance = dedupePersonalActionsById(input.attendanceActions);
-  const uniqueRequirements = dedupePersonalActionsById(input.requirementActions);
-  const taskActionable = input.taskActions.length;
-  const attendanceActionable = uniqueAttendance.length;
-  const requirementActionable = uniqueRequirements.length;
-  return {
-    taskActionable,
-    attendanceActionable,
-    requirementActionable,
-    totalActionable: taskActionable + attendanceActionable + requirementActionable,
-  };
-}
-
 /**
  * Single batched pass over personal-action sources (dashboard hot path).
  * Avoids duplicate adapter/DB work from parallel count + load.
@@ -67,12 +50,23 @@ export async function loadPersonalActionsWithCounts(
   args: LoadPersonalActionsArgs,
 ): Promise<{ actions: PersonalAction[]; counts: PersonalActionCounts }> {
   const ctx = await resolvePersonalActionSourceContext(args);
+  const authorizedPersonIds = await getAuthorizedPersonIdsForUserInRequest(
+    ctx.tenantId,
+    ctx.userId,
+  );
+  const perSourceCap =
+    args.limit != null && args.limit > 0 ? args.limit : undefined;
+  const dashboardCtx = {
+    ...ctx,
+    authorizedPersonIds,
+    actionableItemCap: perSourceCap,
+  };
   const trace = sceHotfixLogin01TraceEnabled();
 
-  const loadSource = async (
+  const loadSource = async <T>(
     step: string,
-    loader: () => Promise<PersonalAction[]>,
-  ): Promise<PersonalAction[]> => {
+    loader: () => Promise<T>,
+  ): Promise<T> => {
     if (trace) {
       logSceHotfixLogin01Step(step);
     }
@@ -90,21 +84,46 @@ export async function loadPersonalActionsWithCounts(
     }
   };
 
-  const [taskActions, attendanceActions, requirementActions] = await Promise.all([
-    loadSource("personal-actions-tasks", () => taskPersonalActionSource.loadActionable(ctx)),
-    loadSource("personal-actions-attendance", () =>
-      attendancePersonalActionSource.loadActionable(ctx),
-    ),
-    loadSource("personal-actions-requirements", () =>
-      requirementPersonalActionSource.loadActionable(ctx),
-    ),
-  ]);
+  const [taskActions, taskActionable, attendanceActions, requirementActions] =
+    await Promise.all([
+      loadSource("personal-actions-tasks", () =>
+        taskPersonalActionSource.loadActionable(dashboardCtx),
+      ),
+      loadSource("personal-actions-tasks-count", () =>
+        taskPersonalActionSource.countActionable(dashboardCtx),
+      ),
+      loadSource("personal-actions-attendance", () =>
+        attendancePersonalActionSource.loadActionable(dashboardCtx),
+      ),
+      loadSource("personal-actions-requirements", () =>
+        requirementPersonalActionSource.loadActionable(dashboardCtx),
+      ),
+    ]);
 
-  const counts = personalActionCountsFromChunks({
-    taskActions,
-    attendanceActions,
-    requirementActions,
-  });
+  let attendanceActionable = dedupePersonalActionsById(
+    attendanceActions.filter((a) => a.sourceType === "ATTENDANCE_RESPONSE"),
+  ).length;
+  let requirementActionable = dedupePersonalActionsById(
+    requirementActions.filter((a) => a.sourceType === "REQUIREMENT"),
+  ).length;
+
+  if (perSourceCap == null) {
+    [attendanceActionable, requirementActionable] = await Promise.all([
+      loadSource("personal-actions-attendance-count", () =>
+        attendancePersonalActionSource.countActionable(dashboardCtx),
+      ),
+      loadSource("personal-actions-requirements-count", () =>
+        requirementPersonalActionSource.countActionable(dashboardCtx),
+      ),
+    ]);
+  }
+
+  const counts: PersonalActionCounts = {
+    taskActionable,
+    attendanceActionable,
+    requirementActionable,
+    totalActionable: taskActionable + attendanceActionable + requirementActionable,
+  };
 
   const merged = sortPersonalActions(
     dedupePersonalActionsById([...taskActions, ...attendanceActions, ...requirementActions]),

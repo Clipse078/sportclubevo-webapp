@@ -40,7 +40,12 @@ export const taskPersonalActionSource: PersonalActionSourceAdapter = {
       return [];
     }
 
-    const tasks = await listMyTasks(taskCtx, { openOnly: true });
+    const tasks = await listMyTasks(taskCtx, {
+      openOnly: true,
+      ...(ctx.actionableItemCap != null && ctx.actionableItemCap > 0
+        ? { limit: ctx.actionableItemCap }
+        : {}),
+    });
     return tasks.map(mapTaskToPersonalAction);
   },
 

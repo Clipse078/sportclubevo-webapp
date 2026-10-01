@@ -11,7 +11,11 @@ import type { ParticipationEventRef } from "@/lib/participation/types";
 import type { EventParticipationAnchorRef } from "@/lib/communication/event/orchestration-meta";
 import type { ResolvedEventParticipationAnchor } from "@/lib/communication/event/event-participation-anchor";
 import { sortPersonIds } from "@/lib/communication/platform/recipient-resolution/set-algebra";
-import { listParticipationSubjectPersonIds } from "@/lib/participation/participation-audience-resolution";
+import {
+  resolveOrgUnitAudiencePersonIds,
+  resolveRoleAudiencePersonIds,
+  resolveTeamAudiencePersonIds,
+} from "@/lib/requirements/requirement-audience-resolvers";
 
 function responseLookupKey(input: {
   eventKind: ParticipationEventRef["eventKind"];
@@ -113,6 +117,148 @@ export function buildResolvedEventParticipationAnchorFromKnown(input: {
   };
 }
 
+async function resolveClubEventInviteePersonIdsBatched(
+  tenantId: string,
+  eventIds: string[],
+): Promise<Map<string, string[]>> {
+  const byEvent = new Map<string, string[]>();
+  if (eventIds.length === 0) return byEvent;
+
+  const entries = await prisma.eventParticipationAudienceEntry.findMany({
+    where: { tenantId, eventId: { in: eventIds } },
+    select: {
+      eventId: true,
+      kind: true,
+      personId: true,
+      teamId: true,
+      orgUnitId: true,
+      roleId: true,
+    },
+  });
+
+  const directPersonIdsByEvent = new Map<string, Set<string>>();
+  const teamIds = new Set<string>();
+  const orgUnitIds = new Set<string>();
+  const roleIds = new Set<string>();
+  const teamIdsByEvent = new Map<string, Set<string>>();
+  const orgUnitIdsByEvent = new Map<string, Set<string>>();
+  const roleIdsByEvent = new Map<string, Set<string>>();
+
+  for (const eventId of eventIds) {
+    directPersonIdsByEvent.set(eventId, new Set());
+    teamIdsByEvent.set(eventId, new Set());
+    orgUnitIdsByEvent.set(eventId, new Set());
+    roleIdsByEvent.set(eventId, new Set());
+  }
+
+  for (const entry of entries) {
+    if (entry.kind === "PERSON" && entry.personId) {
+      directPersonIdsByEvent.get(entry.eventId)?.add(entry.personId);
+    }
+    if (entry.kind === "TEAM" && entry.teamId) {
+      teamIds.add(entry.teamId);
+      teamIdsByEvent.get(entry.eventId)?.add(entry.teamId);
+    }
+    if (entry.kind === "ORG_UNIT" && entry.orgUnitId) {
+      orgUnitIds.add(entry.orgUnitId);
+      orgUnitIdsByEvent.get(entry.eventId)?.add(entry.orgUnitId);
+    }
+    if (entry.kind === "ROLE" && entry.roleId) {
+      roleIds.add(entry.roleId);
+      roleIdsByEvent.get(entry.eventId)?.add(entry.roleId);
+    }
+  }
+
+  const personIdsByTeamId = new Map<string, string[]>();
+  const personIdsByOrgUnitId = new Map<string, string[]>();
+  const personIdsByRoleId = new Map<string, string[]>();
+
+  await Promise.all([
+    ...[...teamIds].map(async (teamId) => {
+      personIdsByTeamId.set(teamId, await resolveTeamAudiencePersonIds(tenantId, [teamId]));
+    }),
+    ...[...orgUnitIds].map(async (orgUnitId) => {
+      personIdsByOrgUnitId.set(
+        orgUnitId,
+        await resolveOrgUnitAudiencePersonIds(tenantId, [orgUnitId]),
+      );
+    }),
+    ...[...roleIds].map(async (roleId) => {
+      personIdsByRoleId.set(roleId, await resolveRoleAudiencePersonIds(tenantId, [roleId]));
+    }),
+  ]);
+
+  for (const eventId of eventIds) {
+    const merged = new Set<string>(directPersonIdsByEvent.get(eventId));
+    for (const teamId of teamIdsByEvent.get(eventId) ?? []) {
+      for (const personId of personIdsByTeamId.get(teamId) ?? []) {
+        merged.add(personId);
+      }
+    }
+    for (const orgUnitId of orgUnitIdsByEvent.get(eventId) ?? []) {
+      for (const personId of personIdsByOrgUnitId.get(orgUnitId) ?? []) {
+        merged.add(personId);
+      }
+    }
+    for (const roleId of roleIdsByEvent.get(eventId) ?? []) {
+      for (const personId of personIdsByRoleId.get(roleId) ?? []) {
+        merged.add(personId);
+      }
+    }
+    byEvent.set(eventId, sortPersonIds([...merged]));
+  }
+
+  return byEvent;
+}
+
+async function countNotRespondedClubEventAnchorsBatched(
+  clubAnchors: ResolvedEventParticipationAnchor[],
+  result: Map<string, number>,
+): Promise<void> {
+  const tenantId = clubAnchors[0]!.tenantId;
+  const eventIds = [
+    ...new Set(
+      clubAnchors.map((anchor) =>
+        anchor.participationEvent.eventKind === "CLUB_EVENT"
+          ? anchor.participationEvent.eventId
+          : anchor.contextEventId,
+      ),
+    ),
+  ];
+
+  const inviteesByEventId = await resolveClubEventInviteePersonIdsBatched(tenantId, eventIds);
+
+  const responses = await prisma.participationResponse.findMany({
+    where: {
+      tenantId,
+      eventKind: "CLUB_EVENT",
+      eventId: { in: eventIds },
+      teamSeasonId: null,
+    },
+    select: { eventId: true, personId: true, status: true },
+  });
+
+  const statusByEventPerson = new Map<string, ParticipationResponseStatus>();
+  for (const response of responses) {
+    if (!response.eventId) continue;
+    statusByEventPerson.set(`${response.eventId}:${response.personId}`, response.status);
+  }
+
+  for (const anchor of clubAnchors) {
+    const eventId =
+      anchor.participationEvent.eventKind === "CLUB_EVENT"
+        ? anchor.participationEvent.eventId
+        : anchor.contextEventId;
+    const eligible = inviteesByEventId.get(eventId) ?? [];
+    let openCount = 0;
+    for (const personId of eligible) {
+      const status = statusByEventPerson.get(`${eventId}:${personId}`) ?? "OPEN";
+      if (status === "OPEN") openCount += 1;
+    }
+    result.set(anchor.contextEventId, openCount);
+  }
+}
+
 /**
  * Returns NOT_RESPONDED (OPEN) participant counts keyed by anchor contextEventId.
  */
@@ -130,15 +276,7 @@ export async function countNotRespondedParticipantsByContextEventId(
   );
 
   if (clubAnchors.length > 0) {
-    await Promise.all(
-      clubAnchors.map(async (anchor) => {
-        const ids = await listParticipationSubjectPersonIds({
-          anchor,
-          preset: "NOT_RESPONDED",
-        });
-        result.set(anchor.contextEventId, ids.length);
-      }),
-    );
+    await countNotRespondedClubEventAnchorsBatched(clubAnchors, result);
   }
 
   if (teamAnchors.length === 0) return result;

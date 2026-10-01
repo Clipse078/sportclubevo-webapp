@@ -52,12 +52,25 @@ function responseLookupKey(input: {
   return `${input.personId}:${input.teamSeasonId}:${input.eventKind}:${input.eventId}`;
 }
 
+function sortAttendanceCandidatesByUrgency(
+  candidates: AttendanceObligationCandidate[],
+): AttendanceObligationCandidate[] {
+  return [...candidates].sort((a, b) => {
+    const dueA = a.participationResponseDueAt?.getTime() ?? a.eventStartAt.getTime();
+    const dueB = b.participationResponseDueAt?.getTime() ?? b.eventStartAt.getTime();
+    if (dueA !== dueB) return dueA - dueB;
+    return a.eventStartAt.getTime() - b.eventStartAt.getTime();
+  });
+}
+
 export async function loadAttendanceObligationCandidates(
   tenantId: string,
-  authorizedPersonIds: string[],
+  authorizedPersonIds: readonly string[],
   now: Date = new Date(),
+  actionableCap?: number,
 ): Promise<AttendanceObligationCandidate[]> {
-  if (authorizedPersonIds.length === 0) {
+  const personIds = [...authorizedPersonIds];
+  if (personIds.length === 0) {
     return [];
   }
 
@@ -65,7 +78,7 @@ export async function loadAttendanceObligationCandidates(
 
   const squadMemberships = await prisma.playerSquadMember.findMany({
     where: {
-      personId: { in: authorizedPersonIds },
+      personId: { in: personIds },
       teamSeason: {
         status: "ACTIVE",
         team: { tenantId },
@@ -178,7 +191,7 @@ export async function loadAttendanceObligationCandidates(
       : await prisma.participationResponse.findMany({
           where: {
             tenantId,
-            personId: { in: authorizedPersonIds },
+            personId: { in: personIds },
             teamSeasonId: { in: teamSeasonIds },
             OR: responseEventFilters,
           },
@@ -234,17 +247,23 @@ export async function loadAttendanceObligationCandidates(
     });
   }
 
+  const teamSeasonIdsByTeamSeasonPair = new Map<string, string[]>();
+  for (const [teamSeasonId, meta] of teamSeasonMeta.entries()) {
+    const pairKey = `${meta.teamId}:${meta.seasonId}`;
+    const bucket = teamSeasonIdsByTeamSeasonPair.get(pairKey) ?? [];
+    bucket.push(teamSeasonId);
+    teamSeasonIdsByTeamSeasonPair.set(pairKey, bucket);
+  }
+
   for (const calendarEvent of calendarEvents) {
     const pairKey = `${calendarEvent.teamId}:${calendarEvent.seasonId}`;
     if (!allowedSeasonTeamPairs.has(pairKey)) continue;
+    if (calendarEvent.type !== "MATCH" && calendarEvent.type !== "TOURNAMENT") continue;
 
-    for (const [teamSeasonId, meta] of teamSeasonMeta.entries()) {
-      if (meta.teamId !== calendarEvent.teamId || meta.seasonId !== calendarEvent.seasonId) {
-        continue;
-      }
+    const matchingTeamSeasonIds = teamSeasonIdsByTeamSeasonPair.get(pairKey) ?? [];
+    for (const teamSeasonId of matchingTeamSeasonIds) {
       const list = eventsByTeamSeason.get(teamSeasonId);
       if (!list) continue;
-      if (calendarEvent.type !== "MATCH" && calendarEvent.type !== "TOURNAMENT") continue;
       list.push({
         eventKind: calendarEvent.type,
         eventId: calendarEvent.id,
@@ -255,7 +274,12 @@ export async function loadAttendanceObligationCandidates(
     }
   }
 
-  const candidates: AttendanceObligationCandidate[] = [];
+  type PendingCandidate = Omit<AttendanceObligationCandidate, "responseId" | "responseStatus"> & {
+    responseId: string | null;
+    responseStatus: ParticipationResponseStatus;
+  };
+
+  const pending: PendingCandidate[] = [];
 
   for (const membership of squadMemberships) {
     const teamDisplayName =
@@ -278,7 +302,7 @@ export async function loadAttendanceObligationCandidates(
         continue;
       }
 
-      candidates.push({
+      pending.push({
         personId: membership.personId,
         personDisplayName,
         teamSeasonId: membership.teamSeasonId,
@@ -295,7 +319,10 @@ export async function loadAttendanceObligationCandidates(
     }
   }
 
-  return candidates;
+  if (actionableCap != null && actionableCap > 0) {
+    return sortAttendanceCandidatesByUrgency(pending).slice(0, actionableCap);
+  }
+  return pending;
 }
 
 export function filterActionableAttendanceCandidates(

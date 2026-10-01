@@ -62,17 +62,22 @@ export const attendancePersonalActionSource: PersonalActionSourceAdapter = {
   sourceType: "ATTENDANCE_RESPONSE",
 
   async loadActionable(ctx: PersonalActionSourceContext): Promise<PersonalAction[]> {
-    const personIds = await getAuthorizedPersonIdsForUser(ctx.tenantId, ctx.userId);
+    const personIds =
+      ctx.authorizedPersonIds ??
+      (await getAuthorizedPersonIdsForUser(ctx.tenantId, ctx.userId));
     const candidates = await loadAttendanceObligationCandidates(
       ctx.tenantId,
       personIds,
       ctx.now,
+      ctx.actionableItemCap,
     );
     return filterActionableAttendanceCandidates(candidates).map(mapCandidateToPersonalAction);
   },
 
   async countActionable(ctx: PersonalActionSourceContext): Promise<number> {
-    const personIds = await getAuthorizedPersonIdsForUser(ctx.tenantId, ctx.userId);
+    const personIds =
+      ctx.authorizedPersonIds ??
+      (await getAuthorizedPersonIdsForUser(ctx.tenantId, ctx.userId));
     const candidates = await loadAttendanceObligationCandidates(
       ctx.tenantId,
       personIds,

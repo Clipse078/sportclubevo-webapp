@@ -7,6 +7,11 @@ const clubDashboardSource = readFileSync(
   "utf8",
 );
 
+const clubDashboardDeferredSource = readFileSync(
+  join(process.cwd(), "components/admin/dashboard/ClubDashboardCommandCenterAsync.tsx"),
+  "utf8",
+);
+
 const workspaceSource = readFileSync(
   join(process.cwd(), "components/ui/dashboard/PersonalDashboardWorkspace.tsx"),
   "utf8",
@@ -15,23 +20,24 @@ const workspaceSource = readFileSync(
 describe("DASHBOARD-06 — personal command center composition", () => {
   it("uses personal cockpit greeting and personal command center loader", () => {
     expect(clubDashboardSource).toContain("PersonalDashboardCockpitGreeting");
-    expect(clubDashboardSource).toContain("getPersonalCommandCenterData");
+    expect(clubDashboardDeferredSource).toContain("getPersonalCommandCenterData");
+    expect(clubDashboardSource).toContain("Suspense");
     expect(clubDashboardSource).not.toContain("DashboardHeroSection");
     expect(clubDashboardSource).not.toContain("DashboardMetricStrip");
   });
 
   it("orders Schnellzugriff after primary cockpit workspace", () => {
-    const quickAccessIndex = clubDashboardSource.indexOf("<PersonalQuickAccess");
-    const workspaceIndex = clubDashboardSource.indexOf("<PersonalDashboardWorkspace");
+    const quickAccessIndex = clubDashboardDeferredSource.indexOf("<PersonalQuickAccess");
+    const workspaceIndex = clubDashboardDeferredSource.indexOf("<PersonalDashboardWorkspace");
     expect(quickAccessIndex).toBeGreaterThan(-1);
     expect(workspaceIndex).toBeGreaterThan(-1);
     expect(quickAccessIndex).toBeGreaterThan(workspaceIndex);
   });
 
   it("includes programme, calendar, attention, and tasks surfaces", () => {
-    expect(clubDashboardSource).toContain("<PersonalDashboardWorkspace");
-    expect(clubDashboardSource).toContain("<PersonalAttention");
-    expect(clubDashboardSource).toContain("<PersonalTasksPreview");
+    expect(clubDashboardDeferredSource).toContain("<PersonalDashboardWorkspace");
+    expect(clubDashboardDeferredSource).toContain("<PersonalAttention");
+    expect(clubDashboardDeferredSource).toContain("<PersonalTasksPreview");
   });
 
   it("removes legacy primary dashboard widgets", () => {
@@ -43,9 +49,9 @@ describe("DASHBOARD-06 — personal command center composition", () => {
   });
 
   it("demotes secondary content into collapsible section", () => {
-    expect(clubDashboardSource).toContain("<PersonalDashboardSecondary");
-    const workspaceIndex = clubDashboardSource.indexOf("<PersonalDashboardWorkspace");
-    const secondaryIndex = clubDashboardSource.indexOf("<PersonalDashboardSecondary");
+    expect(clubDashboardDeferredSource).toContain("<PersonalDashboardSecondary");
+    const workspaceIndex = clubDashboardDeferredSource.indexOf("<PersonalDashboardWorkspace");
+    const secondaryIndex = clubDashboardDeferredSource.indexOf("<PersonalDashboardSecondary");
     expect(secondaryIndex).toBeGreaterThan(workspaceIndex);
   });
 

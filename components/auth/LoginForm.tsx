@@ -84,8 +84,9 @@ export default function LoginForm() {
         callbackUrl: "/dashboard",
       });
 
+      clearPostLoginStallTimer();
+
       if (result?.error) {
-        clearPostLoginStallTimer();
         setErrorMessage("Ungültige E-Mail oder Passwort. Bitte nochmals versuchen.");
         setIsSubmitting(false);
         return;

@@ -32,6 +32,10 @@ vi.mock("@/lib/personal-actions/load-context", () => ({
   }),
 }));
 
+vi.mock("@/lib/participation/request-scoped-person-ids", () => ({
+  getAuthorizedPersonIdsForUserInRequest: vi.fn().mockResolvedValue(["p1"]),
+}));
+
 import { taskPersonalActionSource } from "@/lib/personal-actions/sources/task-source";
 import { attendancePersonalActionSource } from "@/lib/personal-actions/sources/attendance-source";
 import { requirementPersonalActionSource } from "@/lib/personal-actions/sources/requirement-source";
@@ -39,6 +43,10 @@ import { loadPersonalActionsWithCounts } from "../load-personal-actions";
 import { countPersonalActions } from "../count-personal-actions";
 
 describe("SCE-HOTFIX-LOGIN-01 — dashboard personal-actions performance structure", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("loadPersonalActionsWithCounts loads each adapter once in parallel", async () => {
     const result = await loadPersonalActionsWithCounts({
       tenantId: "t1",
@@ -52,6 +60,19 @@ describe("SCE-HOTFIX-LOGIN-01 — dashboard personal-actions performance structu
     expect(requirementPersonalActionSource.loadActionable).toHaveBeenCalledTimes(1);
     expect(result.counts.totalActionable).toBe(2);
     expect(result.actions).toHaveLength(2);
+  });
+
+  it("loadPersonalActionsWithCounts skips full attendance/requirement counts when limited", async () => {
+    await loadPersonalActionsWithCounts({
+      tenantId: "t1",
+      userId: "u1",
+      permissionKeys: [PERMISSIONS.TASKS_VIEW],
+      limit: 50,
+    });
+
+    expect(attendancePersonalActionSource.loadActionable).toHaveBeenCalledTimes(1);
+    expect(attendancePersonalActionSource.countActionable).not.toHaveBeenCalled();
+    expect(requirementPersonalActionSource.countActionable).not.toHaveBeenCalled();
   });
 
   it("countPersonalActions uses attendance countActionable (not full loadActionable)", () => {

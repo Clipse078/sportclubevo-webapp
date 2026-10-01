@@ -4,8 +4,6 @@ import ClubDashboardView from "@/components/admin/dashboard/ClubDashboardView";
 import { resolveWorkspaceContextFromSessionUser } from "@/lib/workspace/workspace-context";
 import {
   initSceHotfixLogin01DashboardTrace,
-  logSceHotfixLogin01Step,
-  logSceHotfixLogin01StepDone,
   runWithSceHotfixLogin01Trace,
   sceHotfixLogin01TraceEnabled,
 } from "@/lib/incident/sce-hotfix-login-01-trace";
@@ -18,13 +16,7 @@ export default async function DashboardPage({
   searchParams = Promise.resolve({}),
 }: DashboardPageProps = {}) {
   await initSceHotfixLogin01DashboardTrace();
-  if (sceHotfixLogin01TraceEnabled()) {
-    logSceHotfixLogin01Step("auth");
-  }
-  const session = await auth();
-  if (sceHotfixLogin01TraceEnabled()) {
-    logSceHotfixLogin01StepDone("auth");
-  }
+  const session = await runWithSceHotfixLogin01Trace("auth", () => auth());
   const workspaceContext = resolveWorkspaceContextFromSessionUser(session?.user);
 
   if (workspaceContext === "platform") {
@@ -35,5 +27,10 @@ export default async function DashboardPage({
     ? await runWithSceHotfixLogin01Trace("search-params", () => searchParams)
     : await searchParams;
 
-  return <ClubDashboardView calendarMonthParam={params.monat ?? null} />;
+  return (
+    <ClubDashboardView
+      authenticatedSession={session}
+      calendarMonthParam={params.monat ?? null}
+    />
+  );
 }
