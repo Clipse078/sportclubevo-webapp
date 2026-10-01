@@ -116,7 +116,7 @@ export async function loadAttendanceObligationCandidates(
   const teamIds = [...new Set(squadMemberships.map((m) => m.teamSeason.teamId))];
   const seasonIds = [...new Set(squadMemberships.map((m) => m.teamSeason.seasonId))];
 
-  const [trainingSessions, calendarEvents, responses] = await Promise.all([
+  const [trainingSessions, calendarEvents] = await Promise.all([
     prisma.trainingSession.findMany({
       where: {
         tenantId,
@@ -153,23 +153,45 @@ export async function loadAttendanceObligationCandidates(
       },
       orderBy: [{ startAt: "asc" }],
     }),
-    prisma.participationResponse.findMany({
-      where: {
-        tenantId,
-        personId: { in: authorizedPersonIds },
-        teamSeasonId: { in: teamSeasonIds },
-      },
-      select: {
-        id: true,
-        personId: true,
-        teamSeasonId: true,
-        eventKind: true,
-        trainingSessionId: true,
-        eventId: true,
-        status: true,
-      },
-    }),
   ]);
+
+  const trainingSessionIds = trainingSessions.map((session) => session.id);
+  const calendarEventIds = calendarEvents.map((event) => event.id);
+
+  const responseEventFilters: Array<Record<string, unknown>> = [];
+  if (trainingSessionIds.length > 0) {
+    responseEventFilters.push({
+      eventKind: "TRAINING" as const,
+      trainingSessionId: { in: trainingSessionIds },
+    });
+  }
+  if (calendarEventIds.length > 0) {
+    responseEventFilters.push({
+      eventKind: { in: ["MATCH", "TOURNAMENT"] as const },
+      eventId: { in: calendarEventIds },
+    });
+  }
+
+  const responses =
+    responseEventFilters.length === 0
+      ? []
+      : await prisma.participationResponse.findMany({
+          where: {
+            tenantId,
+            personId: { in: authorizedPersonIds },
+            teamSeasonId: { in: teamSeasonIds },
+            OR: responseEventFilters,
+          },
+          select: {
+            id: true,
+            personId: true,
+            teamSeasonId: true,
+            eventKind: true,
+            trainingSessionId: true,
+            eventId: true,
+            status: true,
+          },
+        });
 
   const responseByKey = new Map(
     responses.map((response) => [

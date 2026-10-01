@@ -264,6 +264,54 @@ describe("AUFGABEN-05 — batched attendance obligations", () => {
     );
   });
 
+  it("SCE-HOTFIX-LOGIN-01 — participation responses scoped to horizon events only", async () => {
+    vi.mocked(prisma.event.findMany).mockResolvedValue([
+      {
+        id: "match-1",
+        teamId: TEAM_ID,
+        seasonId: SEASON_ID,
+        type: "MATCH",
+        title: "Heimspiel",
+        startAt: new Date("2026-09-25T18:00:00.000Z"),
+        participationResponseDueAt: null,
+      },
+    ] as never);
+    vi.mocked(prisma.trainingSession.findMany).mockResolvedValue([
+      {
+        id: "training-1",
+        teamSeasonId: TS_ID,
+        startAt: new Date("2026-09-22T18:00:00.000Z"),
+        participationResponseDueAt: null,
+        trainingSeries: { title: "Training" },
+      },
+    ] as never);
+
+    await loadAttendanceObligationCandidates(TENANT, [PERSON_CHILD], NOW);
+
+    expect(prisma.participationResponse.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          tenantId: TENANT,
+          OR: expect.arrayContaining([
+            expect.objectContaining({
+              eventKind: "TRAINING",
+              trainingSessionId: { in: ["training-1"] },
+            }),
+            expect.objectContaining({
+              eventKind: { in: ["MATCH", "TOURNAMENT"] },
+              eventId: { in: ["match-1"] },
+            }),
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it("SCE-HOTFIX-LOGIN-01 — skips participation response query when no horizon events", async () => {
+    await loadAttendanceObligationCandidates(TENANT, [PERSON_CHILD], NOW);
+    expect(prisma.participationResponse.findMany).not.toHaveBeenCalled();
+  });
+
   it("M — unrelated authorized person without roster membership yields nothing", async () => {
     const rows = await loadAttendanceObligationCandidates(
       TENANT,

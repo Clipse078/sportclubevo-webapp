@@ -324,6 +324,7 @@ export async function getPersonalCommandCenterData(args: {
           locale,
           timeZone,
           now,
+          permissionKeys: args.permissionKeys ?? args.actor?.permissionKeys,
         });
       } catch (error) {
         if (trace) {

@@ -4,7 +4,7 @@
  */
 
 import { loadPersonalActionsModuleCapabilities } from "@/lib/personal-actions/access";
-import { countPersonalActions, loadPersonalActions } from "@/lib/personal-actions";
+import { loadPersonalActionsWithCounts } from "@/lib/personal-actions";
 import {
   filterPersonalActionsForInbox,
   mapPersonalActionsToPreviewItems,
@@ -48,6 +48,8 @@ export async function loadDashboardPersonalWork(args: {
   locale?: string;
   timeZone?: string;
   now?: Date;
+  /** Pre-resolved tenant/platform permission keys (avoids duplicate resolver work on dashboard SSR). */
+  permissionKeys?: readonly string[];
 }): Promise<DashboardPersonalWorkSnapshot> {
   const empty: DashboardPersonalWorkSnapshot = {
     attention: {
@@ -80,12 +82,25 @@ export async function loadDashboardPersonalWork(args: {
         userId: args.userId,
       });
 
-  const { platform, tenant } = sceHotfixLogin01TraceEnabled()
-    ? await runWithSceHotfixLogin01Trace("personal-work-permissions", () =>
-        getRequestEffectivePermissions(args.userId, args.tenantId),
-      )
-    : await getRequestEffectivePermissions(args.userId, args.tenantId);
-  const permissionKeys = new Set([...platform, ...tenant, ...capabilities.permissionKeys]);
+  let effectivePlatform: string[] = [];
+  let effectiveTenant: string[] = [];
+  if (args.permissionKeys?.length) {
+    effectivePlatform = [];
+    effectiveTenant = [...args.permissionKeys];
+  } else {
+    const resolved = sceHotfixLogin01TraceEnabled()
+      ? await runWithSceHotfixLogin01Trace("personal-work-permissions", () =>
+          getRequestEffectivePermissions(args.userId, args.tenantId),
+        )
+      : await getRequestEffectivePermissions(args.userId, args.tenantId);
+    effectivePlatform = [...resolved.platform];
+    effectiveTenant = [...resolved.tenant];
+  }
+  const permissionKeys = new Set([
+    ...effectivePlatform,
+    ...effectiveTenant,
+    ...capabilities.permissionKeys,
+  ]);
 
   const runOperationalAttention = () =>
     SKIP_OPERATIONAL_FOR_ISOLATION
@@ -123,22 +138,18 @@ export async function loadDashboardPersonalWork(args: {
       logSceHotfixLogin01Step("personal-actions");
     }
     try {
-      const [counts, aggregated] = await Promise.all([
-        countPersonalActions({
-          tenantId: args.tenantId,
-          userId: args.userId,
-          permissionKeys: capabilities.permissionKeys,
-          now,
-        }),
-        loadPersonalActions({
-          tenantId: args.tenantId,
-          userId: args.userId,
-          permissionKeys: capabilities.permissionKeys,
-          limit: DASHBOARD_PERSONAL_WORK_AGGREGATE_LIMIT,
-          now,
-        }),
-      ]);
-      return { counts, aggregated };
+      const mergedPermissionKeys = [
+        ...effectivePlatform,
+        ...effectiveTenant,
+        ...capabilities.permissionKeys,
+      ];
+      return await loadPersonalActionsWithCounts({
+        tenantId: args.tenantId,
+        userId: args.userId,
+        permissionKeys: mergedPermissionKeys,
+        limit: DASHBOARD_PERSONAL_WORK_AGGREGATE_LIMIT,
+        now,
+      });
     } finally {
       if (sceHotfixLogin01TraceEnabled()) {
         logSceHotfixLogin01StepDone("personal-actions");
@@ -150,7 +161,7 @@ export async function loadDashboardPersonalWork(args: {
     personalActionsPromise,
     runOperationalAttention(),
   ]);
-  const { counts, aggregated } = personalActions;
+  const { counts, actions: aggregated } = personalActions;
 
   const attentionCandidates = selectPersonalAttentionCandidates(aggregated, now);
   const attentionSorted = sortPersonalActions(attentionCandidates, now);

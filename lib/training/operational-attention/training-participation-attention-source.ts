@@ -74,6 +74,10 @@ export const trainingParticipationOutstandingAttentionSource: DomainOperationalA
           teamSeason: { teamId: { in: teamIds } },
           status: "SCHEDULED",
           participationResponseDueAt: { not: null },
+          OR: [
+            { overrideStartAt: { gte: ctx.now } },
+            { overrideStartAt: null, startAt: { gte: ctx.now } },
+          ],
         },
         select: {
           id: true,
