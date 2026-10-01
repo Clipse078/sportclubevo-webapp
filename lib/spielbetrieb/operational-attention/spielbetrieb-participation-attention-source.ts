@@ -63,6 +63,9 @@ export const spielbetriebParticipationOutstandingAttentionSource: DomainOperatio
     async evaluateAttention(
       ctx: DomainOperationalAttentionEvaluationContext,
     ): Promise<DomainOperationalAttentionItem[]> {
+      if (!ctx.permissionKeys.has(PERMISSIONS.COMMUNICATION_TEAM_VIEW)) {
+        return [];
+      }
       const teamIds = await listTeamIdsWithSpielbetriebAudienceView({
         tenantId: ctx.tenantId,
         userId: ctx.userId,
@@ -190,8 +193,5 @@ export const spielbetriebParticipationOutstandingAttentionSource: DomainOperatio
 export async function evaluateSpielbetriebParticipationOperationalAttention(
   ctx: DomainOperationalAttentionEvaluationContext,
 ): Promise<DomainOperationalAttentionItem[]> {
-  if (!(await spielbetriebParticipationOutstandingAttentionSource.canDiscover(ctx))) {
-    return [];
-  }
   return spielbetriebParticipationOutstandingAttentionSource.evaluateAttention(ctx);
 }

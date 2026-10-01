@@ -14,6 +14,8 @@ import { buildDispatchRecipientSnapshots } from "@/lib/communication/platform/re
 
 const mocks = vi.hoisted(() => ({
   team: { findFirst: vi.fn(), findMany: vi.fn() },
+  tenant: { findFirst: vi.fn() },
+  teamSeason: { findMany: vi.fn() },
   platformCommunicationConversation: { upsert: vi.fn(), findFirst: vi.fn() },
   platformCommunication: {
     create: vi.fn(),
@@ -26,7 +28,7 @@ const mocks = vi.hoisted(() => ({
   $transaction: vi.fn(),
   getEffectivePermissions: vi.fn(),
   trainerTeamMember: { findFirst: vi.fn(), findMany: vi.fn() },
-  playerSquadMember: { findFirst: vi.fn() },
+  playerSquadMember: { findFirst: vi.fn(), findMany: vi.fn() },
   userRole: { count: vi.fn() },
   logAction: vi.fn(),
   resolveCommunicationRecipientsForDispatch: vi.fn(),
@@ -36,6 +38,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     team: mocks.team,
+    tenant: mocks.tenant,
+    teamSeason: mocks.teamSeason,
     platformCommunicationConversation: mocks.platformCommunicationConversation,
     platformCommunication: mocks.platformCommunication,
     platformCommunicationRecipientSnapshot: mocks.platformCommunicationRecipientSnapshot,
@@ -51,6 +55,10 @@ vi.mock("@/lib/permissions/services/effective-permission-resolver", () => ({
   createEffectivePermissionResolver: () => ({
     getEffectivePermissions: mocks.getEffectivePermissions,
   }),
+}));
+
+vi.mock("@/lib/permissions/request-effective-permissions", () => ({
+  getRequestEffectivePermissions: (...args: unknown[]) => mocks.getEffectivePermissions(...args),
 }));
 
 vi.mock("@/lib/teams/team-document-auth", () => ({
@@ -79,6 +87,9 @@ describe("SCE-COMM-04 team communication foundation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.team.findFirst.mockResolvedValue({ id: "team-1" });
+    mocks.team.findMany.mockResolvedValue([{ id: "team-1" }]);
+    mocks.tenant.findFirst.mockResolvedValue({ key: "fc-test" });
+    mocks.teamSeason.findMany.mockResolvedValue([{ id: "ts-1", teamId: "team-1" }]);
     mocks.platformCommunicationConversation.upsert.mockResolvedValue({
       id: "conv-1",
       tenantId: "tenant-a",
@@ -223,13 +234,11 @@ describe("SCE-COMM-04 team communication foundation", () => {
   });
 
   it("authorization: trainer can send, unrelated user without allocation cannot", async () => {
-    const { resolvePersonCurrentTeamAllocation } = await import("@/lib/teams/team-document-auth");
+    const { resolvePersonIdForUser } = await import("@/lib/teams/team-document-auth");
 
-    vi.mocked(resolvePersonCurrentTeamAllocation).mockResolvedValueOnce({
-      isAllocated: true,
-      isPlayer: false,
-      isTrainer: true,
-    });
+    vi.mocked(resolvePersonIdForUser).mockResolvedValueOnce("person-trainer");
+    mocks.trainerTeamMember.findMany.mockResolvedValueOnce([{ teamSeasonId: "ts-1" }]);
+    mocks.playerSquadMember.findMany.mockResolvedValueOnce([]);
     const trainerAuth = await resolveTeamCommunicationAuthorization({
       tenantId: "tenant-a",
       tenantKey: "fc-test",
@@ -238,11 +247,9 @@ describe("SCE-COMM-04 team communication foundation", () => {
     });
     expect(trainerAuth?.canSend).toBe(true);
 
-    vi.mocked(resolvePersonCurrentTeamAllocation).mockResolvedValueOnce({
-      isAllocated: true,
-      isPlayer: true,
-      isTrainer: false,
-    });
+    vi.mocked(resolvePersonIdForUser).mockResolvedValueOnce("person-player");
+    mocks.trainerTeamMember.findMany.mockResolvedValueOnce([]);
+    mocks.playerSquadMember.findMany.mockResolvedValueOnce([{ teamSeasonId: "ts-1" }]);
     const playerAuth = await resolveTeamCommunicationAuthorization({
       tenantId: "tenant-a",
       tenantKey: "fc-test",

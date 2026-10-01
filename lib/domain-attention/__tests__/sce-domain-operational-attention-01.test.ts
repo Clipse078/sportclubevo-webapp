@@ -134,7 +134,13 @@ describe("SCE-DOMAIN-OPERATIONAL-ATTENTION-01 — aggregator", () => {
 
     _clearDomainOperationalAttentionRegistryForTests();
     registerDomainOperationalAttentionSource(
-      mockSource({ domainKey: "spielbetrieb", canDiscover: false, items: [makeItem({ domainKey: "spielbetrieb", entityId: "e1" })] }),
+      {
+        ...mockSource({
+          domainKey: "spielbetrieb",
+          items: [makeItem({ domainKey: "spielbetrieb", entityId: "e1" })],
+        }),
+        requiredPermissions: [PERMISSIONS.COMMUNICATION_TEAM_VIEW],
+      },
       "participation-outstanding",
     );
     expect(
@@ -158,7 +164,7 @@ describe("SCE-DOMAIN-OPERATIONAL-ATTENTION-01 — aggregator", () => {
     );
     const trainingSource: DomainOperationalAttentionSource = {
       domainKey: "training",
-      requiredPermissions: [],
+      requiredPermissions: [PERMISSIONS.COMMUNICATION_TEAM_VIEW],
       async canDiscover(ctx) {
         return ctx.permissionKeys.has(PERMISSIONS.COMMUNICATION_TEAM_VIEW);
       },
@@ -170,7 +176,7 @@ describe("SCE-DOMAIN-OPERATIONAL-ATTENTION-01 — aggregator", () => {
     registerDomainOperationalAttentionSource(trainingSource, "participation-outstanding");
     const eventsSource: DomainOperationalAttentionSource = {
       domainKey: "events",
-      requiredPermissions: [],
+      requiredPermissions: [PERMISSIONS.EVENTS_VIEW],
       async canDiscover(ctx) {
         return ctx.permissionKeys.has(PERMISSIONS.EVENTS_VIEW);
       },

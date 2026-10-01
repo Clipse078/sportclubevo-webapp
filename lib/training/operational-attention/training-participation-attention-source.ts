@@ -62,6 +62,9 @@ export const trainingParticipationOutstandingAttentionSource: DomainOperationalA
     async evaluateAttention(
       ctx: DomainOperationalAttentionEvaluationContext,
     ): Promise<DomainOperationalAttentionItem[]> {
+      if (!ctx.permissionKeys.has(PERMISSIONS.COMMUNICATION_TEAM_VIEW)) {
+        return [];
+      }
       const teamIds = await listTeamIdsWithTrainingAudienceView({
         tenantId: ctx.tenantId,
         userId: ctx.userId,
@@ -190,8 +193,5 @@ export const trainingParticipationOutstandingAttentionSource: DomainOperationalA
 export async function evaluateTrainingParticipationOperationalAttention(
   ctx: DomainOperationalAttentionEvaluationContext,
 ): Promise<DomainOperationalAttentionItem[]> {
-  if (!(await trainingParticipationOutstandingAttentionSource.canDiscover(ctx))) {
-    return [];
-  }
   return trainingParticipationOutstandingAttentionSource.evaluateAttention(ctx);
 }

@@ -68,8 +68,10 @@ export async function loadDomainOperationalAttention(
         logSceHotfixLogin01Step(traceStep);
       }
       try {
-        const canRun = await source.canDiscover(ctx);
-        if (!canRun) {
+        const hasRequiredPermissions = source.requiredPermissions.every((key) =>
+          ctx.permissionKeys.has(key),
+        );
+        if (!hasRequiredPermissions) {
           if (sceHotfixLogin01TraceEnabled()) {
             logSceHotfixLogin01StepDone(traceStep);
           }

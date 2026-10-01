@@ -4,6 +4,7 @@
 
 import { prisma } from "@/lib/db/prisma";
 import { resolveTeamCommunicationAuthorization } from "@/lib/communication/team/team-communication-authorization";
+import { listTeamIdsWithTeamCommunicationView } from "@/lib/communication/team/team-communication-authorization-scope";
 import { TeamCommunicationForbiddenError } from "@/lib/communication/team/team-communication-errors";
 
 export async function resolveTenantKey(tenantId: string): Promise<string> {
@@ -55,22 +56,5 @@ export async function listTeamIdsWithSpielbetriebAudienceView(input: {
   tenantId: string;
   userId: string;
 }): Promise<string[]> {
-  const tenantKey = await resolveTenantKey(input.tenantId);
-  const teams = await prisma.team.findMany({
-    where: { tenantId: input.tenantId },
-    select: { id: true },
-  });
-  const authorized: string[] = [];
-  for (const team of teams) {
-    const auth = await resolveTeamCommunicationAuthorization({
-      tenantId: input.tenantId,
-      tenantKey,
-      userId: input.userId,
-      teamId: team.id,
-    });
-    if (auth?.canView) {
-      authorized.push(team.id);
-    }
-  }
-  return authorized;
+  return listTeamIdsWithTeamCommunicationView(input);
 }
