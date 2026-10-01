@@ -38,6 +38,7 @@ import type { SceIconRegistryName } from "@/components/design-system/icons/regis
 import { NavDestinationSceIcon } from "@/components/nav/NavDestinationSceIcon";
 import { getNavDestinationSceIconName } from "@/lib/nav/nav-destination-sce-icons";
 import { cn } from "@/lib/cn";
+import { usePermissionAwareRoutePrefetch } from "@/lib/nav/use-permission-aware-route-prefetch";
 
 type AppShellNavigationProps = {
   permissionKeys: string[];
@@ -130,6 +131,12 @@ function AppShellNavigationInner({
       ),
     [permissionKeys, workspaceContext, navCapabilities],
   );
+
+  usePermissionAwareRoutePrefetch({
+    permissionKeys: permissionKeys as PermissionKey[],
+    workspaceContext,
+    navCapabilities,
+  });
 
   const active = useMemo(
     () => resolveActiveAppNavigation(pathname, model),

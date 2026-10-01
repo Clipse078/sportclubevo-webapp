@@ -11,6 +11,10 @@
 
 This document collects all features and modules that are explicitly deferred to after the first commercial release of SportClubEvo (v1.0). Nothing in this document is in scope for v1.0.
 
+### SCE-ERROR-UX-01 — Actionable Error Handling (captured 2026-10-01)
+
+Cross-cutting UX upgrade: replace generic-only "Interner Fehler." responses with safe, actionable copy when the application can determine cause (example: billing duplicate invoice for contract/period — cite existing invoice number and link when permitted). Must not expose stack traces, SQL, secrets, or private identifiers. Dedicated implementation package; not part of SCE-PERF-02.
+
 This list exists so that:
 
 1. Architectural decisions made during v1.0 development remain compatible with future needs.
