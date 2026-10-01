@@ -1,5 +1,4 @@
 import { resolvePersonalActionSourceContext } from "./load-context";
-import { dedupePersonalActionsById } from "./ordering";
 import type { LoadPersonalActionsArgs, PersonalActionCounts } from "./types";
 import { taskPersonalActionSource } from "./sources/task-source";
 import { attendancePersonalActionSource } from "./sources/attendance-source";
