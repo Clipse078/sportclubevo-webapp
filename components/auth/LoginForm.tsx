@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Image from "next/image";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { resolvePostLoginNavigationTargetFromWindow } from "@/lib/auth/post-login-navigation";
 import { cn } from "@/lib/cn";
@@ -36,6 +36,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [sessionLikelyEstablished, setSessionLikelyEstablished] = useState(false);
   const postLoginStallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -55,10 +56,15 @@ export default function LoginForm() {
 
   function armPostLoginStallTimer() {
     clearPostLoginStallTimer();
-    postLoginStallTimerRef.current = setTimeout(() => {
+    postLoginStallTimerRef.current = setTimeout(async () => {
+      const session = await getSession();
+      const hasSession = Boolean(session?.user);
+      setSessionLikelyEstablished(hasSession);
       setIsSubmitting(false);
       setErrorMessage(
-        "Die Weiterleitung zum Dashboard dauert ungewöhnlich lange. Bitte Seite neu laden — wenn Sie bereits angemeldet sind, gelangen Sie so zum Dashboard.",
+        hasSession
+          ? "Die Anmeldung war erfolgreich, aber das Dashboard antwortet nicht rechtzeitig. Öffnen Sie das Dashboard direkt oder laden Sie die Seite neu."
+          : "Die Weiterleitung zum Dashboard dauert ungewöhnlich lange. Bitte erneut versuchen oder die Seite neu laden.",
       );
     }, POST_LOGIN_STALL_MS);
   }
@@ -67,6 +73,7 @@ export default function LoginForm() {
     event.preventDefault();
     setIsSubmitting(true);
     setErrorMessage("");
+    setSessionLikelyEstablished(false);
     armPostLoginStallTimer();
 
     try {
@@ -207,16 +214,28 @@ export default function LoginForm() {
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className={cn(
-                  "sce-login-submit w-full",
-                  "disabled:cursor-not-allowed disabled:opacity-55",
-                )}
-              >
-                {isSubmitting ? "Anmeldung läuft…" : "Einloggen"}
-              </button>
+              {sessionLikelyEstablished ? (
+                <a
+                  href="/dashboard"
+                  className={cn(
+                    "sce-login-submit flex w-full items-center justify-center",
+                    "no-underline",
+                  )}
+                >
+                  Zum Dashboard
+                </a>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={cn(
+                    "sce-login-submit w-full",
+                    "disabled:cursor-not-allowed disabled:opacity-55",
+                  )}
+                >
+                  {isSubmitting ? "Anmeldung läuft…" : "Einloggen"}
+                </button>
+              )}
             </form>
           </div>
         </div>
