@@ -1,4 +1,5 @@
 import { PersonAssignmentStatus } from "@prisma/client";
+import { cache } from "react";
 import { prisma } from "@/lib/db/prisma";
 import { recordSceHotfixLogin01DuplicateProbe } from "@/lib/incident/sce-hotfix-login-01-trace";
 import { mergeSportingAssignmentTeamSeasonScopes } from "./assignment-team-season-scope";
@@ -83,7 +84,7 @@ function mergeOrgRelationship(
  * Resolves tenant-scoped personal relationships for dashboard relevance.
  * Does not evaluate resource visibility or permissions.
  */
-export async function resolvePersonalContext(
+async function resolvePersonalContextUncached(
   input: ResolvePersonalContextInput,
 ): Promise<PersonalContext> {
   recordSceHotfixLogin01DuplicateProbe("resolvePersonalContext");
@@ -316,6 +317,8 @@ export async function resolvePersonalContext(
     assignments,
   };
 }
+
+export const resolvePersonalContext = cache(resolvePersonalContextUncached);
 
 /** Backwards-compatible alias for implementation plan naming. */
 export const resolvePersonalDashboardContext = resolvePersonalContext;

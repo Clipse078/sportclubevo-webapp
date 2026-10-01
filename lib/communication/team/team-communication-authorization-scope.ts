@@ -15,7 +15,12 @@ import {
   type TeamDocumentAllocation,
 } from "@/lib/teams/team-document-auth";
 import { currentTeamSeasonWhere } from "@/lib/teams/current-season";
-import { recordSceHotfixLogin01DuplicateProbe } from "@/lib/incident/sce-hotfix-login-01-trace";
+import {
+  logSceHotfixLogin01Step,
+  logSceHotfixLogin01StepDone,
+  recordSceHotfixLogin01DuplicateProbe,
+  sceHotfixLogin01TraceEnabled,
+} from "@/lib/incident/sce-hotfix-login-01-trace";
 
 const ACTIVE_PLAYER_STATUSES = ["ACTIVE", "INJURED", "ABSENT"] as const;
 
@@ -136,6 +141,10 @@ async function buildTeamCommunicationAuthorizationScope(
   userId: string,
 ): Promise<TeamCommunicationAuthorizationScope> {
   recordSceHotfixLogin01DuplicateProbe("getTeamCommunicationAuthorizationScope");
+  const trace = sceHotfixLogin01TraceEnabled();
+  if (trace) {
+    logSceHotfixLogin01Step("authorization-scope");
+  }
 
   const [tenant, teams, effective, isSuperAdmin, personId] = await Promise.all([
     prisma.tenant.findFirst({
@@ -170,7 +179,7 @@ async function buildTeamCommunicationAuthorizationScope(
     allocationByTeamId = await loadAllocationByTeamId(tenantId, personId, allTeamIds);
   }
 
-  return {
+  const scope = {
     tenantId,
     tenantKey,
     userId,
@@ -179,6 +188,10 @@ async function buildTeamCommunicationAuthorizationScope(
     globalCanSend,
     allocationByTeamId,
   };
+  if (trace) {
+    logSceHotfixLogin01StepDone("authorization-scope");
+  }
+  return scope;
 }
 
 export const getTeamCommunicationAuthorizationScope = cache(buildTeamCommunicationAuthorizationScope);

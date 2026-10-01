@@ -312,6 +312,16 @@ describe("AUFGABEN-05 — batched attendance obligations", () => {
     expect(prisma.participationResponse.findMany).not.toHaveBeenCalled();
   });
 
+  it("SCE-PERF-DASHBOARD-01 — dashboard actionableCap bounds upcoming event/session DB fetch", async () => {
+    await loadAttendanceObligationCandidates(TENANT, [PERSON_CHILD], NOW, 50);
+    expect(prisma.trainingSession.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ take: 400 }),
+    );
+    expect(prisma.event.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ take: 400 }),
+    );
+  });
+
   it("M — unrelated authorized person without roster membership yields nothing", async () => {
     const rows = await loadAttendanceObligationCandidates(
       TENANT,

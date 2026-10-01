@@ -71,18 +71,6 @@ export async function loadDashboardPersonalWork(args: {
     timezone: timeZone,
   };
 
-  const capabilities = sceHotfixLogin01TraceEnabled()
-    ? await runWithSceHotfixLogin01Trace("personal-work-capabilities", () =>
-        loadPersonalActionsModuleCapabilities({
-          tenantId: args.tenantId,
-          userId: args.userId,
-        }),
-      )
-    : await loadPersonalActionsModuleCapabilities({
-        tenantId: args.tenantId,
-        userId: args.userId,
-      });
-
   let effectivePlatform: string[] = [];
   let effectiveTenant: string[] = [];
   if (args.permissionKeys?.length) {
@@ -97,24 +85,33 @@ export async function loadDashboardPersonalWork(args: {
     effectivePlatform = [...resolved.platform];
     effectiveTenant = [...resolved.tenant];
   }
-  const permissionKeys = new Set([
-    ...effectivePlatform,
-    ...effectiveTenant,
-    ...capabilities.permissionKeys,
-  ]);
 
-  const runOperationalAttention = () =>
-    SKIP_OPERATIONAL_FOR_ISOLATION
-      ? Promise.resolve({ items: [], failedSourceKeys: [] as string[] })
-      : loadDomainOperationalAttention({
+  const operationalPermissionKeys = new Set([...effectivePlatform, ...effectiveTenant]);
+  const operationalPromise = SKIP_OPERATIONAL_FOR_ISOLATION
+    ? Promise.resolve({ items: [], failedSourceKeys: [] as string[] })
+    : loadDomainOperationalAttention({
+        tenantId: args.tenantId,
+        actorUserId: args.userId,
+        permissionKeys: operationalPermissionKeys,
+        now,
+      });
+
+  const capabilities = sceHotfixLogin01TraceEnabled()
+    ? await runWithSceHotfixLogin01Trace("personal-work-capabilities", () =>
+        loadPersonalActionsModuleCapabilities({
           tenantId: args.tenantId,
-          actorUserId: args.userId,
-          permissionKeys,
-          now,
-        });
+          userId: args.userId,
+          permissionKeys: args.permissionKeys,
+        }),
+      )
+    : await loadPersonalActionsModuleCapabilities({
+        tenantId: args.tenantId,
+        userId: args.userId,
+        permissionKeys: args.permissionKeys,
+      });
 
   if (!capabilities.personalInbox) {
-    const operational = await runOperationalAttention();
+    const operational = await operationalPromise;
     const operationalItems = mapDomainOperationalAttentionItems(operational.items);
     const sortedOperational = sortPersonalAttentionItems(operationalItems);
 
@@ -160,12 +157,13 @@ export async function loadDashboardPersonalWork(args: {
 
   const [personalActions, operational] = await Promise.all([
     personalActionsPromise,
-    runOperationalAttention(),
+    operationalPromise,
   ]);
 
   if (sceHotfixLogin01TraceEnabled()) {
     logSceHotfixLogin01Milestone("T8_PERSONAL_ACTIONS");
     logSceHotfixLogin01Milestone("T9_OPERATIONAL_ATTENTION");
+    logSceHotfixLogin01Step("personal-work-attention-merge");
   }
   const { counts, actions: aggregated } = personalActions;
 
@@ -199,6 +197,10 @@ export async function loadDashboardPersonalWork(args: {
   );
 
   const viewAllHref = buildPersonalInboxFilterHref("all");
+
+  if (sceHotfixLogin01TraceEnabled()) {
+    logSceHotfixLogin01StepDone("personal-work-attention-merge");
+  }
 
   return {
     attention: {

@@ -8,6 +8,7 @@ import {
   recordSceHotfixLogin01FirstPrismaWaitMs,
   sceHotfixLogin01TraceEnabled,
 } from "@/lib/incident/sce-hotfix-login-01-trace";
+import { extendPrismaClientWithSceHotfixLogin01QueryTrace } from "./sce-hotfix-login-01-prisma-query-instrumentation";
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -42,9 +43,12 @@ function getPrismaClient(): PrismaClient {
       recordSceHotfixLogin01DbClientReadyMs(Date.now() - poolInitStartedMs);
     });
   }
-  const client = new PrismaClient({
+  let client: PrismaClient = new PrismaClient({
     adapter: new PrismaPg(pool),
   });
+  if (sceHotfixLogin01TraceEnabled()) {
+    client = extendPrismaClientWithSceHotfixLogin01QueryTrace(client);
+  }
   modulePrisma = client;
   globalForPrisma.prisma = client;
   globalForPrisma.prismaPool = pool;

@@ -69,6 +69,8 @@ export type DomainOperationalAttentionEvaluationContext = {
   userId: string;
   permissionKeys: ReadonlySet<string>;
   now: Date;
+  /** Request-scoped prefetch to avoid duplicate team communication authorization scope work. */
+  communicationTeamIds?: readonly string[];
 };
 
 export interface DomainOperationalAttentionSource {

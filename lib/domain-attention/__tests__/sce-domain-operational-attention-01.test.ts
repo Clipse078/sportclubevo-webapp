@@ -1,4 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/communication/team/team-communication-authorization-scope", () => ({
+  listTeamIdsWithTeamCommunicationView: vi.fn().mockResolvedValue(["team-a"]),
+  getTeamCommunicationAuthorizationScope: vi.fn(),
+}));
 import type {
   DomainOperationalAttentionEvaluationContext,
   DomainOperationalAttentionItem,

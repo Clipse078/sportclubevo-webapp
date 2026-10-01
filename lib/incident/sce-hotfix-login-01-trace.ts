@@ -10,6 +10,7 @@ import {
   createSceHotfixLogin01TraceStore,
   getSceHotfixLogin01TraceStore,
   sceHotfixLogin01TraceStorage,
+  type SceHotfixLogin01DbQueryRecord,
   type SceHotfixLogin01TraceStore,
 } from "@/lib/incident/sce-hotfix-login-01-trace-store";
 
@@ -122,12 +123,32 @@ export function logSceHotfixLogin01Step(step: string): void {
   console.info(`${PREFIX} cid=${store.correlationId} step=${step} elapsedMs=${atMs} phase=start`);
 }
 
+function recordWallClockSpan(
+  store: SceHotfixLogin01TraceStore,
+  step: string,
+  startedAt: number,
+  metrics?: Record<string, number | string | boolean>,
+): void {
+  const endMs = Date.now();
+  const startOffsetMs = startedAt - store.originMs;
+  const endOffsetMs = endMs - store.originMs;
+  const durationMs = endMs - startedAt;
+  store.stepDurationMs.set(step, durationMs);
+  store.wallClockSpans.push({
+    step,
+    startOffsetMs,
+    endOffsetMs,
+    durationMs,
+    metrics,
+  });
+}
+
 export function logSceHotfixLogin01StepDone(step: string): void {
   const store = requireStore();
   if (!store) return;
   const startedAt = store.stepStartedAtMs.get(step);
   if (startedAt != null) {
-    store.stepDurationMs.set(step, Date.now() - startedAt);
+    recordWallClockSpan(store, step, startedAt);
     store.stepStartedAtMs.delete(step);
   }
   const elapsedMs = Date.now() - store.originMs;
@@ -144,7 +165,7 @@ export function logSceHotfixLogin01StepFinished(
   const startedAt = store.stepStartedAtMs.get(step);
   const durationMs = startedAt != null ? Date.now() - startedAt : 0;
   if (startedAt != null) {
-    store.stepDurationMs.set(step, durationMs);
+    recordWallClockSpan(store, step, startedAt, metrics);
     store.stepStartedAtMs.delete(step);
   }
   const elapsedMs = Date.now() - store.originMs;
@@ -189,6 +210,28 @@ export function recordSceHotfixLogin01DbClientReadyMs(ms: number): void {
   console.info(
     `${PREFIX} cid=${store.correlationId} db=client-ready durationMs=${ms}`,
   );
+}
+
+export function recordSceHotfixLogin01DbQuery(input: {
+  model: string;
+  operation: string;
+  durationMs: number;
+  caller: string;
+  rowCount?: number;
+}): void {
+  const store = requireStore();
+  if (!store) return;
+  const signature = `${input.model}.${input.operation}`;
+  const record: SceHotfixLogin01DbQueryRecord = {
+    ...input,
+    signature,
+  };
+  store.dbQueries.push(record);
+  if (input.durationMs >= 50) {
+    console.info(
+      `${PREFIX} cid=${store.correlationId} db=query model=${input.model} operation=${input.operation} durationMs=${input.durationMs} caller=${input.caller}${input.rowCount != null ? ` rows=${input.rowCount}` : ""}`,
+    );
+  }
 }
 
 export function recordSceHotfixLogin01FirstPrismaWaitMs(ms: number): void {
@@ -302,6 +345,113 @@ function emitCriticalPathLedger(store: SceHotfixLogin01TraceStore, requestTotalM
         .join(" ")}`,
     );
   }
+
+  emitWallClockSpanLedger(store, requestTotalMs);
+  emitDbQueryLedger(store);
+}
+
+function emitWallClockSpanLedger(
+  store: SceHotfixLogin01TraceStore,
+  requestTotalMs: number,
+): void {
+  const topLevelSteps = [
+    "dashboard-context",
+    "programme",
+    "personal-work",
+    "operational-attention",
+    "quick-access",
+    "command-center-merge",
+    "command-center-total",
+    "command-center-data",
+  ];
+
+  const spanSummary = topLevelSteps
+    .map((step) => {
+      const span = store.wallClockSpans.findLast((s) => s.step === step);
+      if (!span) return null;
+      const metricPart =
+        span.metrics == null
+          ? ""
+          : ` ${Object.entries(span.metrics)
+              .map(([k, v]) => `${k}=${v}`)
+              .join(" ")}`;
+      return `${step}@${span.startOffsetMs}-${span.endOffsetMs}ms=${span.durationMs}${metricPart}`;
+    })
+    .filter(Boolean)
+    .join(" ");
+
+  const programmeLegs = store.wallClockSpans.filter((s) =>
+    s.step.startsWith("programme-"),
+  );
+  const personalLegs = store.wallClockSpans.filter((s) =>
+    s.step.startsWith("personal-actions"),
+  );
+
+  const parallelInnerMs = maxDuration(
+    store,
+    "programme",
+    "personal-work",
+    "secondary-snapshot",
+  );
+  const parallelPhaseSumMs =
+    readDuration(store, "programme") +
+    readDuration(store, "personal-work") +
+    readDuration(store, "secondary-snapshot");
+
+  console.info(
+    `${PREFIX} cid=${store.correlationId} ledger=wall-clock-spans requestTotalMs=${requestTotalMs} parallelPhaseSumMs=${parallelPhaseSumMs} parallelInnerMaxMs=${parallelInnerMs} ${spanSummary}`,
+  );
+
+  if (programmeLegs.length > 0) {
+    console.info(
+      `${PREFIX} cid=${store.correlationId} ledger=programme-legs ${programmeLegs
+        .map(
+          (s) =>
+            `${s.step}@${s.startOffsetMs}-${s.endOffsetMs}=${s.durationMs}${
+              s.metrics?.rowCount != null ? ` rowCount=${s.metrics.rowCount}` : ""
+            }`,
+        )
+        .join(" ")}`,
+    );
+  }
+
+  if (personalLegs.length > 0) {
+    console.info(
+      `${PREFIX} cid=${store.correlationId} ledger=personal-work-legs ${personalLegs
+        .map((s) => `${s.step}@${s.startOffsetMs}-${s.endOffsetMs}=${s.durationMs}`)
+        .join(" ")}`,
+    );
+  }
+}
+
+function emitDbQueryLedger(store: SceHotfixLogin01TraceStore): void {
+  if (store.dbQueries.length === 0) return;
+
+  const totalExecutionMs = store.dbQueries.reduce((sum, q) => sum + q.durationMs, 0);
+  const signatureCounts = new Map<string, number>();
+  for (const query of store.dbQueries) {
+    signatureCounts.set(query.signature, (signatureCounts.get(query.signature) ?? 0) + 1);
+  }
+
+  const duplicates = [...signatureCounts.entries()]
+    .filter(([, count]) => count > 1)
+    .map(([signature, count]) => `${signature}x${count}`)
+    .join(" ");
+
+  const slowest = [...store.dbQueries].sort((a, b) => b.durationMs - a.durationMs).slice(0, 10);
+
+  console.info(
+    `${PREFIX} cid=${store.correlationId} ledger=db totalCalls=${store.dbQueries.length} totalExecutionMs=${totalExecutionMs} uniqueSignatures=${signatureCounts.size} duplicates=${duplicates || "none"}`,
+  );
+
+  console.info(
+    `${PREFIX} cid=${store.correlationId} ledger=db-slowest ${slowest
+      .map(
+        (q) =>
+          `${q.signature}@${q.durationMs}ms caller=${q.caller}${q.rowCount != null ? ` rows=${q.rowCount}` : ""}`,
+      )
+      .join(" ")}`,
+  );
 }
 
 export function finishSceHotfixLogin01DashboardTrace(): void {
@@ -346,6 +496,8 @@ export function resetSceHotfixLogin01TraceForTests(): void {
   store.dbClientReadyMs = undefined;
   store.firstPrismaCallWaitMs = undefined;
   store.requestMetaLogged = false;
+  store.wallClockSpans.length = 0;
+  store.dbQueries.length = 0;
 }
 
 export function getSceHotfixLogin01TraceStateForTests(): {

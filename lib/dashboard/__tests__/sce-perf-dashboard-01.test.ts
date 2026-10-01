@@ -34,6 +34,22 @@ const authScope = readFileSync(
   "utf8",
 );
 const prismaClient = readFileSync(join(process.cwd(), "lib/db/prisma.ts"), "utf8");
+const attendanceObligations = readFileSync(
+  join(process.cwd(), "lib/personal-actions/sources/attendance-obligations.ts"),
+  "utf8",
+);
+const personalWorkLoader = readFileSync(
+  join(process.cwd(), "lib/dashboard/personal-attention/load-dashboard-personal-work.ts"),
+  "utf8",
+);
+const resolvePersonalContextSource = readFileSync(
+  join(process.cwd(), "lib/dashboard/personal-context/resolve-personal-context.ts"),
+  "utf8",
+);
+const loadOperationalAttentionSource = readFileSync(
+  join(process.cwd(), "lib/domain-attention/load-domain-operational-attention.ts"),
+  "utf8",
+);
 
 describe("SCE-PERF-DASHBOARD-01 structural regressions", () => {
   it("does not use per-team sequential resolveTeamCommunicationAuthorization loops for audience lists", () => {
@@ -65,7 +81,13 @@ describe("SCE-PERF-DASHBOARD-01 structural regressions", () => {
 
   it("DashboardContext resolves personal context once for command center", () => {
     expect(personalCommandCenter).toContain("resolveDashboardContext");
-    expect(personalCommandCenter).toContain("personalContext: dashboardContext?.personalContext");
+    expect(personalCommandCenter).toContain("dashboardContextPromise");
+    expect(resolvePersonalContextSource).toContain("cache(resolvePersonalContextUncached)");
+  });
+
+  it("operational attention prefetches team communication scope once per evaluation", () => {
+    expect(loadOperationalAttentionSource).toContain("communicationTeamIds");
+    expect(loadOperationalAttentionSource).toContain("listTeamIdsWithTeamCommunicationView");
   });
 
   it("DashboardContext uses request-scoped permission cache", () => {
@@ -83,5 +105,15 @@ describe("SCE-PERF-DASHBOARD-01 structural regressions", () => {
   it("reuses Prisma pool on globalThis in production", () => {
     expect(prismaClient).toContain("globalForPrisma.prisma = client");
     expect(prismaClient).not.toContain('process.env.NODE_ENV !== "production"');
+  });
+
+  it("dashboard attendance hot path applies bounded event/session fetch when capped", () => {
+    expect(attendanceObligations).toContain("resolveDashboardAttendanceEventFetchCap");
+    expect(attendanceObligations).toContain("dashboardEventFetchCap");
+  });
+
+  it("operational attention overlaps capabilities load on dashboard personal work", () => {
+    expect(personalWorkLoader).toContain("operationalPromise");
+    expect(personalWorkLoader).toContain("loadDomainOperationalAttention");
   });
 });

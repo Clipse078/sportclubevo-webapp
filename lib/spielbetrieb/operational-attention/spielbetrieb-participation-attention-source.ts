@@ -66,10 +66,13 @@ export const spielbetriebParticipationOutstandingAttentionSource: DomainOperatio
       if (!ctx.permissionKeys.has(PERMISSIONS.COMMUNICATION_TEAM_VIEW)) {
         return [];
       }
-      const teamIds = await listTeamIdsWithSpielbetriebAudienceView({
-        tenantId: ctx.tenantId,
-        userId: ctx.userId,
-      });
+      const teamIds = [
+        ...(ctx.communicationTeamIds ??
+          (await listTeamIdsWithSpielbetriebAudienceView({
+            tenantId: ctx.tenantId,
+            userId: ctx.userId,
+          }))),
+      ];
       if (teamIds.length === 0) return [];
 
       const events = await prisma.event.findMany({

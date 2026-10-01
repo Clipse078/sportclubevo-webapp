@@ -4,7 +4,10 @@
 
 import type { AttendanceEventKind, ParticipationResponseStatus } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { PERSONAL_ACTION_ATTENDANCE_HORIZON_DAYS } from "../config";
+import {
+  PERSONAL_ACTION_ATTENDANCE_HORIZON_DAYS,
+  resolveDashboardAttendanceEventFetchCap,
+} from "../config";
 
 export type AttendanceObligationCandidate = {
   personId: string;
@@ -129,6 +132,11 @@ export async function loadAttendanceObligationCandidates(
   const teamIds = [...new Set(squadMemberships.map((m) => m.teamSeason.teamId))];
   const seasonIds = [...new Set(squadMemberships.map((m) => m.teamSeason.seasonId))];
 
+  const dashboardEventFetchCap =
+    actionableCap != null && actionableCap > 0
+      ? resolveDashboardAttendanceEventFetchCap(actionableCap)
+      : undefined;
+
   const [trainingSessions, calendarEvents] = await Promise.all([
     prisma.trainingSession.findMany({
       where: {
@@ -145,6 +153,7 @@ export async function loadAttendanceObligationCandidates(
         trainingSeries: { select: { title: true } },
       },
       orderBy: [{ startAt: "asc" }],
+      ...(dashboardEventFetchCap != null ? { take: dashboardEventFetchCap } : {}),
     }),
     prisma.event.findMany({
       where: {
@@ -165,6 +174,7 @@ export async function loadAttendanceObligationCandidates(
         participationResponseDueAt: true,
       },
       orderBy: [{ startAt: "asc" }],
+      ...(dashboardEventFetchCap != null ? { take: dashboardEventFetchCap } : {}),
     }),
   ]);
 

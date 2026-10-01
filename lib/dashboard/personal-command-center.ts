@@ -278,12 +278,13 @@ export async function getPersonalCommandCenterData(args: {
 
   if (trace) {
     logSceHotfixLogin01StepDone("command-center-prep");
+    logSceHotfixLogin01Step("command-center-total");
     logSceHotfixLogin01Step("command-center");
   }
 
-  const dashboardContext =
+  const dashboardContextPromise =
     args.userId != null
-      ? await resolveDashboardContext({
+      ? resolveDashboardContext({
           tenantId: args.tenantId,
           userId: args.userId,
           actor: args.actor
@@ -295,12 +296,13 @@ export async function getPersonalCommandCenterData(args: {
               }
             : undefined,
         })
-      : null;
+      : Promise.resolve(null);
 
-  const resolvedPermissionKeys =
-    dashboardContext?.permissionKeys ?? args.permissionKeys ?? args.actor?.permissionKeys;
+  const bootstrapPermissionKeys =
+    args.permissionKeys ?? args.actor?.permissionKeys ?? undefined;
 
-  const [programme, personalWork, secondary] = await Promise.all([
+  const [dashboardContext, programme, personalWork, secondary] = await Promise.all([
+    dashboardContextPromise,
     (async () => {
       if (trace) {
         logSceHotfixLogin01Step("programme");
@@ -313,8 +315,8 @@ export async function getPersonalCommandCenterData(args: {
           now,
           from: queryRange.rangeStart,
           to: queryRange.rangeEnd,
-          permissionKeys: resolvedPermissionKeys,
-          personalContext: dashboardContext?.personalContext,
+          permissionKeys: bootstrapPermissionKeys,
+          personalContext: undefined,
         });
       } catch (error) {
         if (trace) {
@@ -345,7 +347,7 @@ export async function getPersonalCommandCenterData(args: {
           locale,
           timeZone,
           now,
-          permissionKeys: resolvedPermissionKeys,
+          permissionKeys: bootstrapPermissionKeys,
         });
       } catch (error) {
         if (trace) {
@@ -384,6 +386,7 @@ export async function getPersonalCommandCenterData(args: {
 
   if (trace) {
     logSceHotfixLogin01StepDone("command-center");
+    logSceHotfixLogin01Step("command-center-merge");
   }
 
   const programmeFeedItems = filterProgrammeItemsToRange(programme.items, feedRange);
@@ -393,6 +396,11 @@ export async function getPersonalCommandCenterData(args: {
     locale,
     now,
   });
+
+  if (trace) {
+    logSceHotfixLogin01StepDone("command-center-merge");
+    logSceHotfixLogin01StepDone("command-center-total");
+  }
 
   const tasks = personalWork.tasks;
 

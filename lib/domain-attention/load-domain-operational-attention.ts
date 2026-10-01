@@ -9,6 +9,8 @@ import type {
 import { ensureProductionOperationalAttentionSourcesRegistered } from "./register-production-operational-attention-sources";
 import { listRegisteredDomainOperationalAttentionSources } from "./operational-attention-registry";
 import { sortDomainOperationalAttentionItems } from "./sort-operational-attention-items";
+import { listTeamIdsWithTeamCommunicationView } from "@/lib/communication/team/team-communication-authorization-scope";
+import { PERMISSIONS } from "@/lib/permissions/permissions";
 import {
   logSceHotfixLogin01Step,
   logSceHotfixLogin01StepDone,
@@ -38,14 +40,28 @@ export async function loadDomainOperationalAttention(
 ): Promise<LoadDomainOperationalAttentionResult> {
   ensureProductionOperationalAttentionSourcesRegistered();
 
+  const permissionKeys = permissionKeySet(args.permissionKeys);
+  const sources = listRegisteredDomainOperationalAttentionSources();
+  const needsCommunicationTeamScope = sources.some(
+    (source) =>
+      source.requiredPermissions.includes(PERMISSIONS.COMMUNICATION_TEAM_VIEW) &&
+      source.requiredPermissions.every((key) => permissionKeys.has(key)),
+  );
+  const communicationTeamIds = needsCommunicationTeamScope
+    ? await listTeamIdsWithTeamCommunicationView({
+        tenantId: args.tenantId,
+        userId: args.actorUserId,
+      })
+    : undefined;
+
   const ctx: DomainOperationalAttentionEvaluationContext = {
     tenantId: args.tenantId,
     userId: args.actorUserId,
-    permissionKeys: permissionKeySet(args.permissionKeys),
+    permissionKeys,
     now: args.now ?? new Date(),
+    communicationTeamIds,
   };
 
-  const sources = listRegisteredDomainOperationalAttentionSources();
   const merged: DomainOperationalAttentionItem[] = [];
   const seenIds = new Set<string>();
   const failedSourceKeys: string[] = [];

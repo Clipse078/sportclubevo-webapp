@@ -65,10 +65,13 @@ export const trainingParticipationOutstandingAttentionSource: DomainOperationalA
       if (!ctx.permissionKeys.has(PERMISSIONS.COMMUNICATION_TEAM_VIEW)) {
         return [];
       }
-      const teamIds = await listTeamIdsWithTrainingAudienceView({
-        tenantId: ctx.tenantId,
-        userId: ctx.userId,
-      });
+      const teamIds = [
+        ...(ctx.communicationTeamIds ??
+          (await listTeamIdsWithTrainingAudienceView({
+            tenantId: ctx.tenantId,
+            userId: ctx.userId,
+          }))),
+      ];
       if (teamIds.length === 0) return [];
 
       const sessions = await prisma.trainingSession.findMany({
