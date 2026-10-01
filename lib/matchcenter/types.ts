@@ -156,6 +156,11 @@ export interface MatchcenterListInput {
   now?: Date;
   /** When omitted, platform fallback duration applies for operational resolution. */
   matchOperationalPolicy?: TenantMatchOperationalPolicyResolved;
+  /**
+   * SCE-PERF-02R4 — overlap policy I/O with the match Event read when the
+   * caller already has an in-flight policy promise (e.g. Weekplanner week load).
+   */
+  matchOperationalPolicyPromise?: Promise<TenantMatchOperationalPolicyResolved | undefined>;
 }
 
 export interface MatchcenterDetailInput {
