@@ -13,6 +13,7 @@ import type { HeroImageTransform } from "@/lib/dashboard/dashboard-hero-position
 import { formatTodayDate } from "@/lib/tenant-runtime/formatters";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import {
+  logSceHotfixLogin01Milestone,
   logSceHotfixLogin01Step,
   logSceHotfixLogin01StepDone,
   runWithSceHotfixLogin01Trace,
@@ -38,6 +39,7 @@ export default async function ClubDashboardView({
   const ctx = await getActiveTenant();
   if (sceHotfixLogin01TraceEnabled()) {
     logSceHotfixLogin01StepDone("tenant");
+    logSceHotfixLogin01Milestone("T2_TENANT");
   }
   const tenantId = ctx?.id;
 
@@ -45,6 +47,10 @@ export default async function ClubDashboardView({
     session?.user && tenantId
       ? await getActorContext(session.user, tenantId)
       : null;
+
+  if (sceHotfixLogin01TraceEnabled()) {
+    logSceHotfixLogin01Milestone("T3_ACTOR");
+  }
 
   const linkedPersonFirstName = session?.user?.id
     ? await runWithSceHotfixLogin01Trace("person-first-name", () =>
@@ -86,6 +92,10 @@ export default async function ClubDashboardView({
     : undefined;
 
   const contextLine = [todayFormatted, ctx?.name].filter(Boolean).join(" · ");
+
+  if (sceHotfixLogin01TraceEnabled()) {
+    logSceHotfixLogin01Milestone("T4_SHELL");
+  }
 
   return (
     <div

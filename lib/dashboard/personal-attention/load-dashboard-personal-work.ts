@@ -30,6 +30,7 @@ import {
 } from "./select-attention-candidates";
 import type { DashboardPersonalWorkSnapshot } from "./types";
 import {
+  logSceHotfixLogin01Milestone,
   logSceHotfixLogin01Step,
   logSceHotfixLogin01StepDone,
   runWithSceHotfixLogin01Trace,
@@ -161,6 +162,11 @@ export async function loadDashboardPersonalWork(args: {
     personalActionsPromise,
     runOperationalAttention(),
   ]);
+
+  if (sceHotfixLogin01TraceEnabled()) {
+    logSceHotfixLogin01Milestone("T8_PERSONAL_ACTIONS");
+    logSceHotfixLogin01Milestone("T9_OPERATIONAL_ATTENTION");
+  }
   const { counts, actions: aggregated } = personalActions;
 
   const attentionCandidates = selectPersonalAttentionCandidates(aggregated, now);

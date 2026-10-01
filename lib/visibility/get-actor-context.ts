@@ -39,6 +39,7 @@ import {
   logSceHotfixLogin01Step,
   logSceHotfixLogin01StepDone,
   logSceHotfixLogin01StepFailed,
+  recordSceHotfixLogin01DuplicateProbe,
   sceHotfixLogin01TraceEnabled,
 } from "@/lib/incident/sce-hotfix-login-01-trace";
 
@@ -58,6 +59,7 @@ type SessionUser = {
  * only as a backwards-compat fallback in single-tenant deployments.
  */
 export async function getActorContext(user: SessionUser, tenantId?: string) {
+  recordSceHotfixLogin01DuplicateProbe("getActorContext");
   const trace = sceHotfixLogin01TraceEnabled();
   if (trace) {
     logSceHotfixLogin01Step("actor-context");

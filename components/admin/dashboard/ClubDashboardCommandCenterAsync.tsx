@@ -24,8 +24,10 @@ import type { ActorContext } from "@/lib/visibility/actor-context";
 import { getTranslations } from "next-intl/server";
 import {
   finishSceHotfixLogin01DashboardTrace,
+  logSceHotfixLogin01Milestone,
   runWithSceHotfixLogin01Trace,
 } from "@/lib/incident/sce-hotfix-login-01-trace";
+import { SceHotfixLogin01DashboardClientMarks } from "@/components/admin/dashboard/SceHotfixLogin01DashboardClientMarks";
 
 type StrategicActor = Pick<ActorContext, "tenantId" | "userId" | "permissionKeys">;
 
@@ -46,7 +48,9 @@ export default async function ClubDashboardCommandCenterAsync({
   permissionKeys,
   calendarMonthParam = null,
 }: ClubDashboardCommandCenterAsyncProps) {
-  const tSecondary = await getTranslations("PersonalDashboard.secondary");
+  const tSecondary = await runWithSceHotfixLogin01Trace("command-center-i18n", () =>
+    getTranslations("PersonalDashboard.secondary"),
+  );
 
   const [personal, quickAccessBundle] = await Promise.all([
     runWithSceHotfixLogin01Trace("command-center-data", () =>
@@ -68,6 +72,13 @@ export default async function ClubDashboardCommandCenterAsync({
       }),
     ),
   ]);
+
+  logSceHotfixLogin01Milestone("T5_FIRST_USEFUL");
+  logSceHotfixLogin01Milestone("T6_PROGRAMME");
+  logSceHotfixLogin01Milestone("T7_CALENDAR");
+  logSceHotfixLogin01Milestone("T8_PERSONAL_ACTIONS");
+  logSceHotfixLogin01Milestone("T9_OPERATIONAL_ATTENTION");
+  logSceHotfixLogin01Milestone("T10_INITIAL_CONTENT");
 
   const timeLabelById: Record<string, string> = {};
   for (const item of personal.programmeItems) {
@@ -133,6 +144,7 @@ export default async function ClubDashboardCommandCenterAsync({
 
   return (
     <>
+      <SceHotfixLogin01DashboardClientMarks />
       <PersonalDashboardWorkspace
         groups={personal.programmeFeedGroups}
         programmeItems={personal.programmeItems}

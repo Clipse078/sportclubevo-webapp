@@ -32,7 +32,7 @@ describe("SCE-HOTFIX-LOGIN-01 R5 dashboard architecture", () => {
 
   it("dashboard personal-actions hot path caps task rows and skips heavy non-task counts", () => {
     expect(loadPersonalActions).toContain("actionableItemCap");
-    expect(loadPersonalActions).toContain("personal-actions-tasks-count");
+    expect(loadPersonalActions).toContain("personal-actions:tasks-count");
     expect(loadPersonalActions).toContain("perSourceCap == null");
   });
 

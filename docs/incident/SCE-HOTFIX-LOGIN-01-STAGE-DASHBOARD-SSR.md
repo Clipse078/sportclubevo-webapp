@@ -41,6 +41,14 @@ Checkpoints (R3 gap instrumentation):
 
 Find the first `phase=start` without a matching `phase=done` for the same `step` and `cid`.
 
+R7 additions:
+
+- Milestones: `T0_REQUEST` … `T11_STREAM_COMPLETE` (see `logSceHotfixLogin01Milestone`)
+- Per-step `durationMs=` on `:done` lines (programme adapters, personal-actions sub-steps)
+- End-of-request `ledger=wall-clock` / `ledger=breakdown` / `ledger=duplicateProbes`
+- Admin layout checkpoints: `layout-auth`, `layout-tenant`, `layout-participation-nav`
+- Client marks: `sce-hotfix-login-01:client-first-paint` (Performance API, no PII)
+
 Isolation (preview only): `SCE_HOTFIX_LOGIN_01_SKIP_OPERATIONAL=1` skips operational attention aggregation for A/B.
 
 ## Hydration change gate

@@ -14,9 +14,10 @@ import {
 import { sortPersonalProgrammeItems } from "./programme-sort";
 import type { PersonalProgrammeItem } from "./personal-programme-types";
 import {
-  logSceHotfixLogin01Step,
-  logSceHotfixLogin01StepDone,
   logSceHotfixLogin01StepFailed,
+  logSceHotfixLogin01StepFinished,
+  logSceHotfixLogin01Milestone,
+  markSceHotfixLogin01StepStart,
   sceHotfixLogin01TraceEnabled,
 } from "@/lib/incident/sce-hotfix-login-01-trace";
 
@@ -73,7 +74,7 @@ export async function loadPersonalProgramme(
 
   const trace = sceHotfixLogin01TraceEnabled();
   if (trace) {
-    logSceHotfixLogin01Step("programme-personal-context");
+    markSceHotfixLogin01StepStart("programme-personal-context");
   }
   let personalContext;
   try {
@@ -82,7 +83,7 @@ export async function loadPersonalProgramme(
       userId: args.userId,
     });
     if (trace) {
-      logSceHotfixLogin01StepDone("programme-personal-context");
+      logSceHotfixLogin01StepFinished("programme-personal-context");
     }
   } catch (error) {
     if (trace) {
@@ -122,12 +123,12 @@ export async function loadPersonalProgramme(
 
   const loadAdapter = async (step: string, loader: () => Promise<PersonalProgrammeItem[]>) => {
     if (trace) {
-      logSceHotfixLogin01Step(step);
+      markSceHotfixLogin01StepStart(step);
     }
     try {
       const rows = await loader();
       if (trace) {
-        logSceHotfixLogin01StepDone(step);
+        logSceHotfixLogin01StepFinished(step, { rowCount: rows.length });
       }
       return rows;
     } catch (error) {
@@ -145,13 +146,14 @@ export async function loadPersonalProgramme(
   ]);
 
   if (trace) {
-    logSceHotfixLogin01Step("programme-merge");
+    markSceHotfixLogin01StepStart("programme-merge");
   }
   let items = sortPersonalProgrammeItems(
     dedupeProgrammeItems([...teamEvents, ...trainings, ...meetings]),
   );
   if (trace) {
-    logSceHotfixLogin01StepDone("programme-merge");
+    logSceHotfixLogin01StepFinished("programme-merge", { rowCount: items.length });
+    logSceHotfixLogin01Milestone("T7_CALENDAR");
   }
 
   if (args.limit != null && args.limit > 0) {
