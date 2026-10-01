@@ -22,6 +22,16 @@ export {
 } from "./format";
 
 export {
+  formatSportingActivityCompactAgendaLocationParts,
+  formatSportingActivityCompactAgendaSecondaryLine,
+  formatSportingActivityCompactPrimaryText,
+  formatSportingActivityLocationModeCompactLabel,
+  resolveSportingActivityCompactPresentation,
+  type SportingActivityCompactFormatOptions,
+  type SportingActivityCompactPresentation,
+} from "./compact";
+
+export {
   applyPresentationToProgrammeFields,
   buildGenericSportingEventPresentation,
   buildMatchActivityPresentation,

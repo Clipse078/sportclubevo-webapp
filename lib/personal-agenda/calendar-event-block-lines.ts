@@ -1,4 +1,5 @@
 import type { NormalizedCalendarItem } from "./normalized-calendar-item-types";
+import { formatSportingActivityCompactPrimaryText } from "@/lib/sporting-activity-presentation/compact";
 import { formatSportingActivityStandardSecondaryLines } from "@/lib/sporting-activity-presentation/format";
 
 export type CalendarEventBlockLines = {
@@ -177,7 +178,10 @@ export function buildCalendarEventBlockLines(
       { tenantDisplayNames: options.tenantDisplayNames },
     );
     return {
-      primary: item.activityPresentation.identity.typeLabel || item.typeLabel,
+      primary:
+        formatSportingActivityCompactPrimaryText(item.activityPresentation) ||
+        item.activityPresentation.identity.typeLabel ||
+        item.typeLabel,
       secondary: joinParts(secondaryParts),
     };
   }

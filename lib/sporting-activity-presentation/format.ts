@@ -4,6 +4,10 @@ import type {
   SportingActivityPresentation,
   SportingActivityPresentationDensity,
 } from "./types";
+import {
+  formatSportingActivityCompactAgendaSecondaryLine,
+  formatSportingActivityCompactPrimaryText,
+} from "./compact";
 import { formatSportingActivityLocationLines, formatSportingActivityLocationSummary } from "./location";
 
 export type SportingActivityScheduleFormatInput = {
@@ -38,10 +42,7 @@ export function formatSportingActivityScheduleLine(
 export function formatSportingActivityCompactTitle(
   presentation: SportingActivityPresentation,
 ): string {
-  if (presentation.identity.activityKind === "MATCH" && presentation.participants?.fixtureLine) {
-    return presentation.participants.fixtureLine;
-  }
-  return presentation.identity.title;
+  return formatSportingActivityCompactPrimaryText(presentation);
 }
 
 export function formatSportingActivityCompactContextLine(
@@ -129,7 +130,11 @@ export function formatSportingActivityPresentation(
   if (density === "compact") {
     return {
       title: formatSportingActivityCompactTitle(presentation),
-      subtitle: formatSportingActivityCompactContextLine(presentation, options),
+      subtitle:
+        formatSportingActivityCompactAgendaSecondaryLine(presentation, {
+          tenantDisplayNames: options.tenantDisplayNames,
+          schedulePresentation: "full",
+        }) ?? formatSportingActivityCompactContextLine(presentation, options),
       locationLines,
       venueSummary,
     };

@@ -5,12 +5,24 @@ import { cn } from "@/lib/cn";
 
 type Props = {
   label: string | null;
+  venueName?: string | null;
+  resourceLabel?: string | null;
   extraCount?: number;
   className?: string;
 };
 
-export default function TrainingFacilityManagementCell({ label, extraCount = 0, className }: Props) {
-  if (!label) {
+export default function TrainingFacilityManagementCell({
+  label,
+  venueName = null,
+  resourceLabel = null,
+  extraCount = 0,
+  className,
+}: Props) {
+  const venue = venueName?.trim() || null;
+  const resource = resourceLabel?.trim() || null;
+  const displayLabel = label?.trim() || null;
+
+  if (!displayLabel && !venue && !resource) {
     return <span className={cn("text-sm text-[var(--muted)]", className)}>Nicht zugewiesen</span>;
   }
 
@@ -22,14 +34,23 @@ export default function TrainingFacilityManagementCell({ label, extraCount = 0, 
       >
         <SoccerPitchLineIcon className="h-[14px] w-[18px]" />
       </span>
-      <span className="min-w-0 truncate text-sm font-medium text-[var(--foreground)]">
-        {label}
+      <div className="min-w-0">
+        {venue && resource && venue.toLowerCase() !== resource.toLowerCase() ? (
+          <>
+            <p className="truncate text-sm font-medium text-[var(--foreground)]">{venue}</p>
+            <p className="truncate text-xs text-[var(--text-2)]">{resource}</p>
+          </>
+        ) : (
+          <span className="block min-w-0 truncate text-sm font-medium text-[var(--foreground)]">
+            {venue ?? resource ?? displayLabel}
+          </span>
+        )}
         {extraCount > 0 ? (
-          <span className="ml-1 text-xs font-normal text-[var(--muted)]" aria-label={`${extraCount} weitere Anlagen`}>
+          <span className="text-xs font-normal text-[var(--muted)]" aria-label={`${extraCount} weitere Anlagen`}>
             +{extraCount}
           </span>
         ) : null}
-      </span>
+      </div>
     </div>
   );
 }

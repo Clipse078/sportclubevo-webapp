@@ -1,7 +1,7 @@
 # SCE Canonical Sports Activity Presentation
 
-**Package:** SCE-ACTIVITY-UX-01  
-**Status:** Implemented (Dashboard programme + personal calendar first consumers)
+**Package:** SCE-ACTIVITY-UX-01 / SCE-ACTIVITY-UX-01R1  
+**Status:** Canonical presentation + compact visible contract (Dashboard programme, calendar foundation, training/match/tournament management semantics)
 
 ## Purpose
 
@@ -68,24 +68,38 @@ Organiser and venue are separate concepts — do not merge into one label.
 
 Presentation may surface existing participation/RSVP state (e.g. pending response). This package does **not** introduce match squad (“Aufgebot”) models or player-pool semantics.
 
+## Minimum visible information contract (R1)
+
+Compact helpers live in `lib/sporting-activity-presentation/compact.ts`:
+
+| Kind | Primary (`primaryText`) | Secondary metadata (agenda row, `omit-start` schedule) |
+|------|-------------------------|--------------------------------------------------------|
+| **TRAINING** | Training title | End time (start in time column) · venue · pitch/hall when known |
+| **MATCH** | Home – Away fixture | Auswärts/Neutral when relevant · venue · address · resource only when supplied |
+| **TOURNAMENT** | Title · SCE team | Organiser · venue · address · resource when supplied |
+
+Consumers must not reimplement these semantics — use `formatSportingActivityCompactPrimaryText`, `formatSportingActivityCompactAgendaSecondaryLine`, or `resolveSportingActivityCompactPresentation`.
+
 ## Progressive disclosure
 
-- **Compact** — dashboard programme rows, small calendar chips (`formatSportingActivityPresentation(..., "compact")`)  
-- **Standard** — calendar month blocks, programme lists  
+- **Compact** — dashboard programme rows (`PersonalProgrammeAgendaRow`), selected-day calendar agenda  
+- **Standard** — calendar month block secondary line (identity primary, no full metadata in month cells)  
 - **Detail** — dedicated activity views (future consumers)
 
 ## Consumer migration
 
 | Consumer | Status |
 |----------|--------|
-| Personal Dashboard — Mein Programm (`PersonalProgrammeAgendaRow`) | Migrated |
-| Personal calendar month blocks (`buildCalendarEventBlockLines`) | Migrated |
+| Personal Dashboard — Mein Programm (`PersonalProgrammeAgendaRow`) | Migrated (R1 compact metadata) |
+| Personal calendar month blocks (`buildCalendarEventBlockLines`) | Migrated (concise primary; rich detail via selected-day agenda row) |
 | Personal programme adapters (training / team events) | Migrated |
+| Training management list (`TrainingSeriesManagementRow` facility cell) | Shared location semantics (venue + resource) |
+| Matchcenter Spiele list (`buildSpieleVenueLine`) | Shared location semantics |
+| Tournamentcenter list (`resolveTournamentManagementMetadataLine`) | Shared organiser/venue semantics |
 | Club command center / Heute im Verein | Uses legacy `event-venue-presentation` (inventory) |
-| Wochenplaner | Inventory |
-| Matchcenter detail/list | Inventory |
+| Wochenplaner | Not migrated |
 | Team upcoming matches | Inventory |
-| Mobile app | Future — consume this contract |
+| Infoboard / notifications / mobile | Not migrated |
 
 ## Security / tenancy
 

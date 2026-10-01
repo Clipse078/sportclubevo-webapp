@@ -3,6 +3,11 @@
  * search, sort, date grouping, compact readiness, and status presentation.
  */
 
+import {
+  buildSportingActivityLocation,
+  formatSportingActivityLocationSummary,
+  normalizeSportingLocationMode,
+} from "@/lib/sporting-activity-presentation/location";
 import type { MatchcenterMatchSummary } from "./types";
 import {
   assessMatchOperationalState,
@@ -652,11 +657,33 @@ export function buildSpieleTeamContextLine(match: MatchcenterMatchSummary): stri
   return ownTeam ?? competition ?? null;
 }
 
-export function buildSpieleVenueLine(match: MatchcenterMatchSummary): string | null {
-  const location = match.location?.trim();
-  const pitch = match.operational.pitchCode?.trim();
-  if (location && pitch) return `${location} · ${pitch}`;
-  return location ?? pitch ?? null;
+function resolveOpponentSideLabel(match: MatchcenterMatchSummary): string | null {
+  const opponentSide = match.home.isOwnTeam
+    ? match.away
+    : match.away.isOwnTeam
+      ? match.home
+      : match.away;
+  return resolveMatchcenterCompactSideName(opponentSide)?.trim() || opponentSide.displayName?.trim() || null;
+}
+
+export function buildSpieleVenueLine(
+  match: MatchcenterMatchSummary,
+  options: { tenantClubName?: string; pitchLabel?: string | null } = {},
+): string | null {
+  const mode = normalizeSportingLocationMode(match.homeAway);
+  const pitch =
+    options.pitchLabel?.trim() || match.operational.pitchCode?.trim() || null;
+  const location = buildSportingActivityLocation({
+    mode,
+    hostOrOrganiser: mode === "AWAY" ? resolveOpponentSideLabel(match) : undefined,
+    venueName: match.location,
+    facilityResource: pitch,
+  });
+
+  const summary = formatSportingActivityLocationSummary(location, {
+    tenantDisplayNames: options.tenantClubName ? [options.tenantClubName] : undefined,
+  });
+  return summary ? summary.replace(/\n/g, " · ") : null;
 }
 
 export type SpieleManagementDerivationInput = {

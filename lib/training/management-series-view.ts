@@ -60,6 +60,8 @@ export type TrainingSeriesManagementRow = {
   timeDetailLines: string[] | null;
   sortStartTime: string;
   facilityLabel: string | null;
+  facilityVenueName: string | null;
+  facilityResourceLabel: string | null;
   facilityExtraCount: number;
   facilityLabels: string[];
   status: TrainingSeriesStatus;
@@ -88,6 +90,8 @@ type PerSeriesRow = {
   timeLines: string[] | null;
   sortStartTime: string;
   facilityLabel: string | null;
+  facilityVenueName: string | null;
+  facilityResourceLabel: string | null;
   facilityExtraCount: number;
   facilityLabels: string[];
   status: TrainingSeriesStatus;
@@ -141,6 +145,8 @@ function resolveSortStartTime(series: TrainingSeriesDto): string {
 
 function buildCompactFacilityPresentation(allocations: readonly TrainingAllocationDto[]): {
   label: string | null;
+  venueName: string | null;
+  resourceLabel: string | null;
   extraCount: number;
   labels: string[];
 } {
@@ -153,16 +159,39 @@ function buildCompactFacilityPresentation(allocations: readonly TrainingAllocati
     .filter((value) => value.length > 0);
   const unique = [...new Set(labels)];
 
+  const primaryPitch = pitches[0];
+  const venueName = primaryPitch?.facilityName?.trim() || null;
+
   if (unique.length === 0) {
     const display = resolveSeriesAllocationDisplay(allocations);
-    return { label: display.pitchName, extraCount: 0, labels: display.pitchName ? [display.pitchName] : [] };
+    return {
+      label: display.pitchName,
+      venueName,
+      resourceLabel: display.pitchName,
+      extraCount: 0,
+      labels: display.pitchName ? [display.pitchName] : [],
+    };
   }
 
   if (unique.length === 1) {
-    return { label: unique[0]!, extraCount: 0, labels: unique };
+    const resourceLabel = unique[0]!;
+    return {
+      label: venueName ?? resourceLabel,
+      venueName,
+      resourceLabel,
+      extraCount: 0,
+      labels: unique,
+    };
   }
 
-  return { label: unique[0]!, extraCount: unique.length - 1, labels: unique };
+  const resourceLabel = unique[0]!;
+  return {
+    label: venueName ?? resourceLabel,
+    venueName,
+    resourceLabel,
+    extraCount: unique.length - 1,
+    labels: unique,
+  };
 }
 
 function resolveSeriesActionLabel(series: TrainingSeriesDto): string {
@@ -290,11 +319,25 @@ function collectUniqueFacilityLabels(entries: readonly PerSeriesRow[]): string[]
 
 function aggregateTeamFacilityPresentation(
   entries: readonly PerSeriesRow[],
-): { label: string | null; extraCount: number } {
+): {
+  label: string | null;
+  venueName: string | null;
+  resourceLabel: string | null;
+  extraCount: number;
+} {
   const unique = collectUniqueFacilityLabels(entries);
-  if (unique.length === 0) return { label: null, extraCount: 0 };
-  if (unique.length === 1) return { label: unique[0]!, extraCount: 0 };
-  return { label: unique[0]!, extraCount: unique.length - 1 };
+  const primary =
+    entries.find((entry) => entry.facilityVenueName || entry.facilityResourceLabel) ?? entries[0];
+  const venueName = primary?.facilityVenueName ?? null;
+  const resourceLabel = primary?.facilityResourceLabel ?? null;
+
+  if (unique.length === 0) {
+    return { label: null, venueName, resourceLabel, extraCount: 0 };
+  }
+  if (unique.length === 1) {
+    return { label: venueName ?? unique[0]!, venueName, resourceLabel, extraCount: 0 };
+  }
+  return { label: venueName ?? unique[0]!, venueName, resourceLabel, extraCount: unique.length - 1 };
 }
 
 function buildPerSeriesManagementRows(input: {
@@ -326,6 +369,8 @@ function buildPerSeriesManagementRows(input: {
       timeLines: schedule.kind === "variable" ? schedule.timeLines : null,
       sortStartTime: resolveSortStartTime(series),
       facilityLabel: facility.label,
+      facilityVenueName: facility.venueName,
+      facilityResourceLabel: facility.resourceLabel,
       facilityExtraCount: facility.extraCount,
       facilityLabels: facility.labels,
       status: series.status,
@@ -401,6 +446,8 @@ export function groupPerSeriesRowsByTeam(input: {
       timeDetailLines: time.timeDetailLines,
       sortStartTime,
       facilityLabel: facility.label,
+      facilityVenueName: facility.venueName,
+      facilityResourceLabel: facility.resourceLabel,
       facilityExtraCount: facility.extraCount,
       facilityLabels: collectUniqueFacilityLabels(sortedEntries),
       status,

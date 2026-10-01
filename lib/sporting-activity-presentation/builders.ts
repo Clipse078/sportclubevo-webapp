@@ -95,10 +95,18 @@ export function buildMatchActivityPresentation(
       )
     : null;
 
-  const fixtureLine =
-    identity && (identity.home.displayName || identity.away.displayName)
-      ? `${identity.home.displayName ?? "—"} – ${identity.away.displayName ?? "—"}`
-      : input.title;
+  const ownTeam = meaningful(input.teamName);
+  const opponent = meaningful(input.opponentName);
+  let fixtureLine = input.title;
+  if (identity && (identity.home.displayName || identity.away.displayName)) {
+    fixtureLine = `${identity.home.displayName ?? "—"} – ${identity.away.displayName ?? "—"}`;
+  } else if (mode === "AWAY" && opponent && ownTeam) {
+    fixtureLine = `${opponent} – ${ownTeam}`;
+  } else if (mode === "HOME" && ownTeam && opponent) {
+    fixtureLine = `${ownTeam} – ${opponent}`;
+  } else if (ownTeam && opponent) {
+    fixtureLine = `${ownTeam} – ${opponent}`;
+  }
 
   const awayHost =
     mode === "AWAY"
@@ -164,7 +172,6 @@ export function buildTournamentActivityPresentation(
 
   const location = buildSportingActivityLocation({
     mode: "NEUTRAL",
-    hostOrOrganiser: organiser,
     venueName: input.location,
     facilityResource: pitch,
   });

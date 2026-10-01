@@ -18,6 +18,10 @@ import {
   formatSportingActivityLocationLines,
   formatSportingActivityLocationSummary,
 } from "../location";
+import {
+  formatSportingActivityCompactAgendaSecondaryLine,
+  formatSportingActivityCompactPrimaryText,
+} from "../compact";
 import { formatSportingActivityPresentation } from "../format";
 
 describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
@@ -138,7 +142,7 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
   });
 
   describe("TOURNAMENT", () => {
-    it("organiser + venue distinct lines", () => {
+    it("organiser in context; venue lines exclude organiser duplication", () => {
       const presentation = buildTournamentActivityPresentation({
         resourceKey: "event:t1",
         title: "Hallenturnier",
@@ -149,10 +153,8 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
         startAt,
       });
 
-      expect(formatSportingActivityLocationLines(presentation.location)).toEqual([
-        "FC Lausen 72",
-        "Sportanlage Bifang",
-      ]);
+      expect(presentation.context?.organiser).toBe("FC Lausen 72");
+      expect(formatSportingActivityLocationLines(presentation.location)).toEqual(["Sportanlage Bifang"]);
     });
 
     it("venue without resource", () => {
@@ -165,10 +167,137 @@ describe("SCE-ACTIVITY-UX-01 — sporting activity presentation", () => {
         startAt,
       });
 
-      expect(formatSportingActivityLocationLines(presentation.location)).toEqual([
-        "FC Lausen 72",
-        "Sportanlage Bifang",
-      ]);
+      expect(formatSportingActivityLocationLines(presentation.location)).toEqual(["Sportanlage Bifang"]);
+    });
+  });
+
+  describe("SCE-ACTIVITY-UX-01R1 compact agenda contract", () => {
+    const fmtCfg = { locale: "de-CH", timezone: "Europe/Zurich" };
+    const endAt = new Date("2026-10-10T09:30:00.000Z");
+
+    it("TRAINING — end time, venue, resource; no placeholder when resource absent", () => {
+      const withResource = buildTrainingActivityPresentation({
+        resourceKey: "training-session:10",
+        title: "Junioren F2 Training",
+        typeLabel: "Training",
+        teamName: "Junioren F2",
+        startAt,
+        endAt,
+        facilityName: "Im Brüel",
+        pitchResourceName: "KR2",
+      });
+
+      expect(formatSportingActivityCompactPrimaryText(withResource)).toBe("Junioren F2 Training");
+      expect(
+        formatSportingActivityCompactAgendaSecondaryLine(withResource, {
+          schedulePresentation: "omit-start",
+          fmtCfg,
+        }),
+      ).toMatch(/Im Brüel/);
+      expect(
+        formatSportingActivityCompactAgendaSecondaryLine(withResource, {
+          schedulePresentation: "omit-start",
+          fmtCfg,
+        }),
+      ).toMatch(/KR2/);
+
+      const withoutResource = buildTrainingActivityPresentation({
+        resourceKey: "training-session:11",
+        title: "Training",
+        typeLabel: "Training",
+        startAt,
+        endAt,
+        facilityName: "Im Brüel",
+      });
+
+      const secondary = formatSportingActivityCompactAgendaSecondaryLine(withoutResource, {
+        schedulePresentation: "omit-start",
+        fmtCfg,
+      });
+      expect(secondary).toMatch(/Im Brüel/);
+      expect(secondary).not.toMatch(/KR2|Platz|unbekannt/i);
+    });
+
+    it("MATCH — fixture primary; away venue without fabricated resource", () => {
+      const away = buildMatchActivityPresentation({
+        resourceKey: "event:m-away",
+        title: "Spiel",
+        typeLabel: "Spiel",
+        teamName: "1. Mannschaft",
+        opponentName: "BSC Old Boys",
+        homeAway: "AWAY",
+        location: "Schützenmatte, Basel",
+        startAt,
+        tenantClubName: "FC Allschwil",
+      });
+
+      expect(formatSportingActivityCompactPrimaryText(away)).toContain("BSC Old Boys");
+      const secondary = formatSportingActivityCompactAgendaSecondaryLine(away, {
+        schedulePresentation: "omit-start",
+      });
+      expect(secondary).toMatch(/Auswärts/);
+      expect(secondary).toMatch(/Schützenmatte, Basel/);
+      expect(secondary).not.toMatch(/Platz|KR|Feld/i);
+    });
+
+    it("MATCH — home resource when supplied", () => {
+      const home = buildMatchActivityPresentation({
+        resourceKey: "event:m-home",
+        title: "Spiel",
+        typeLabel: "Spiel",
+        teamName: "2. Mannschaft",
+        opponentName: "FC Bubendorf",
+        homeAway: "HOME",
+        location: "Im Brüel",
+        pitchCode: "kr3",
+        pitchLabel: "Kunstrasen 3",
+        startAt,
+        tenantClubName: "FC Allschwil",
+      });
+
+      const secondary = formatSportingActivityCompactAgendaSecondaryLine(home, {
+        schedulePresentation: "omit-start",
+      });
+      expect(secondary).toMatch(/Im Brüel/);
+      expect(secondary).toMatch(/Kunstrasen 3/);
+      expect(secondary).not.toMatch(/Auswärts/);
+    });
+
+    it("TOURNAMENT — team in primary; organiser and venue in secondary", () => {
+      const tournament = buildTournamentActivityPresentation({
+        resourceKey: "event:t-agenda",
+        title: "PlayMore Turnier",
+        typeLabel: "Turnier",
+        teamName: "Junioren F2",
+        organiserName: "FC Arisdorf",
+        location: "Gemeindesportplatz",
+        startAt,
+      });
+
+      expect(formatSportingActivityCompactPrimaryText(tournament)).toBe(
+        "PlayMore Turnier · Junioren F2",
+      );
+      const secondary = formatSportingActivityCompactAgendaSecondaryLine(tournament, {
+        schedulePresentation: "omit-start",
+      });
+      expect(secondary).toMatch(/FC Arisdorf/);
+      expect(secondary).toMatch(/Gemeindesportplatz/);
+    });
+
+    it("TOURNAMENT — organiser distinct from venue when names differ", () => {
+      const tournament = buildTournamentActivityPresentation({
+        resourceKey: "event:t-distinct",
+        title: "Cup",
+        typeLabel: "Turnier",
+        organiserName: "FC Lausen 72",
+        location: "Sportanlage Bifang",
+        startAt,
+      });
+
+      const secondary = formatSportingActivityCompactAgendaSecondaryLine(tournament, {
+        schedulePresentation: "omit-start",
+      });
+      expect(secondary).toBe("FC Lausen 72 · Sportanlage Bifang");
     });
   });
 

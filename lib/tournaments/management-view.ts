@@ -14,6 +14,8 @@ const TOURNAMENT_CATEGORY_LABELS: Record<string, string> = {
   SENIOREN: "Senioren",
   TRAININGSGRUPPE: "Trainingsgruppe",
 };
+import { formatSportingActivityCompactAgendaSecondaryLine } from "@/lib/sporting-activity-presentation/compact";
+import type { SportingActivityPresentation } from "@/lib/sporting-activity-presentation/types";
 import type { TournamentDto } from "./types";
 import type { TournamentOperationalAssessment } from "./operational-state";
 import { getTournamentParticipatingTeams } from "./team-participation";
@@ -179,6 +181,50 @@ export function resolveTournamentRowCrest(
     return { logoUrl: tenantLogoUrl.trim(), altName: organizerName };
   }
   return { logoUrl: null, altName: organizerName };
+}
+
+function buildTournamentManagementPresentationSnapshot(
+  tournament: TournamentDto,
+): SportingActivityPresentation {
+  const teamName =
+    tournament.team?.name?.trim() ||
+    getTournamentParticipatingTeams(tournament)[0]?.name?.trim() ||
+    undefined;
+  const allocation = tournament.resourceAllocations[0];
+  const organiser = tournament.organizerName?.trim() || undefined;
+  const resource =
+    allocation?.facilityResourceName?.trim() ||
+    allocation?.facilityResourceCode?.trim() ||
+    undefined;
+
+  return {
+    identity: {
+      resourceKey: `event:${tournament.id}`,
+      title: tournament.title,
+      typeLabel: "Turnier",
+      activityKind: "TOURNAMENT",
+    },
+    schedule: {
+      startAt: tournament.startAt,
+      endAt: tournament.endAt,
+    },
+    team: teamName ? { name: teamName } : undefined,
+    context: organiser ? { organiser } : undefined,
+    location: {
+      mode: "NEUTRAL",
+      venueName: tournament.location?.trim() || undefined,
+      facilityResource: resource,
+    },
+  };
+}
+
+export function resolveTournamentManagementMetadataLine(tournament: TournamentDto): string | null {
+  const presentation = buildTournamentManagementPresentationSnapshot(tournament);
+  return (
+    formatSportingActivityCompactAgendaSecondaryLine(presentation, {
+      schedulePresentation: "omit-start",
+    }) ?? null
+  );
 }
 
 export function resolveTournamentCategoryAgeLine(

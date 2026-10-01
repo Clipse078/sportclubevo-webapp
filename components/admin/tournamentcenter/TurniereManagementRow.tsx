@@ -8,6 +8,7 @@ import {
   buildTournamentWochenplanerHref,
   isTenantHostedTournament,
   resolveTournamentCategoryAgeLine,
+  resolveTournamentManagementMetadataLine,
   resolveTournamentOperationalLine,
   resolveTournamentPublicationPresentation,
   resolveTournamentRowCrest,
@@ -83,6 +84,7 @@ export default function TurniereManagementRow({
   );
   const crest = resolveTournamentRowCrest(tournament, tenantLogoUrl);
   const categoryLine = resolveTournamentCategoryAgeLine(tournament);
+  const metadataLine = resolveTournamentManagementMetadataLine(tournament);
   const operationalSegments = resolveTournamentOperationalLine(tournament, timezone, locale);
   const status = resolveTournamentStatusPresentation(tournament, assessment);
   const publication = resolveTournamentPublicationPresentation(tournament);
@@ -165,10 +167,10 @@ export default function TurniereManagementRow({
               <span>{categoryLine}</span>
             </span>
           ) : null}
-          {tournament.location ? (
+          {metadataLine ? (
             <span className="inline-flex min-w-0 items-center gap-1">
-              <ProductDomainSceIcon name="facility" size={12} className="h-3 w-3 shrink-0 opacity-70" />
-              <span className="truncate">{tournament.location}</span>
+              <MapPin className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+              <span className="truncate">{metadataLine}</span>
             </span>
           ) : null}
         </div>

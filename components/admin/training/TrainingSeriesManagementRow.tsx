@@ -93,6 +93,8 @@ export default function TrainingSeriesManagementRow({
 
       <TrainingFacilityManagementCell
         label={row.facilityLabel}
+        venueName={row.facilityVenueName}
+        resourceLabel={row.facilityResourceLabel}
         extraCount={row.facilityExtraCount}
         className="md:col-span-1"
       />
