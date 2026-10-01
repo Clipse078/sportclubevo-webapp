@@ -398,6 +398,53 @@ const sessionFullSelect = {
   },
 } as const;
 
+/** Weekplanner initial calendar — omits participation schedule fields not rendered on the grid. */
+const sessionWeekplannerSelect = {
+  id: true,
+  tenantId: true,
+  trainingSeriesId: true,
+  teamSeasonId: true,
+  date: true,
+  weekday: true,
+  startAt: true,
+  endAt: true,
+  overrideDate: true,
+  overrideStartAt: true,
+  overrideEndAt: true,
+  dressingRoomOccupancyMode: true,
+  dressingRoomBeforeMinutes: true,
+  dressingRoomAfterMinutes: true,
+  trainingSeries: sessionFullSelect.trainingSeries,
+} as const;
+
+export type TrainingSessionWeekplannerRow = {
+  id: string;
+  tenantId: string;
+  trainingSeriesId: string;
+  teamSeasonId: string;
+  date: Date;
+  weekday: string;
+  startAt: Date;
+  endAt: Date;
+  overrideDate: Date | null;
+  overrideStartAt: Date | null;
+  overrideEndAt: Date | null;
+  dressingRoomOccupancyMode: string;
+  dressingRoomBeforeMinutes: number | null;
+  dressingRoomAfterMinutes: number | null;
+  trainingSeries: {
+    title: string;
+    teamSeason: {
+      displayName: string;
+      team: {
+        name: string;
+        shortName: string | null;
+        alternativeName: string | null;
+      };
+    };
+  };
+};
+
 /**
  * Returns every TrainingSession row ever generated for `trainingSeriesId`,
  * regardless of date or the caller's current generation window.
@@ -639,4 +686,39 @@ export async function findAllTrainingSessions(
     select: sessionFullSelect,
     orderBy: [{ date: "asc" }, { startAt: "asc" }],
   }) as Promise<TrainingSessionRow[]>;
+}
+
+/**
+ * SCE-PERF-02R4 — same filters as findAllTrainingSessions with a slimmer
+ * select for Weekplanner's first calendar paint (no participation metadata).
+ */
+export async function findAllTrainingSessionsForWeekplanner(
+  tenantId: string,
+  opts: {
+    dateFrom?: Date;
+    dateTo?: Date;
+  } = {},
+): Promise<TrainingSessionWeekplannerRow[]> {
+  const { dateFrom, dateTo } = opts;
+  const dateRange = {
+    ...(dateFrom ? { gte: dateFrom } : {}),
+    ...(dateTo ? { lte: dateTo } : {}),
+  };
+
+  return prisma.trainingSession.findMany({
+    where: {
+      tenantId,
+      NOT: { status: "RECURRENCE_REMOVED" },
+      ...(dateFrom || dateTo
+        ? {
+            OR: [
+              { overrideDate: { not: null, ...dateRange } },
+              { overrideDate: null, date: dateRange },
+            ],
+          }
+        : {}),
+    },
+    select: sessionWeekplannerSelect,
+    orderBy: [{ date: "asc" }, { startAt: "asc" }],
+  }) as Promise<TrainingSessionWeekplannerRow[]>;
 }

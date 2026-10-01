@@ -3,10 +3,7 @@ import { PERMISSIONS } from "@/lib/permissions/permissions";
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
-    person: { findFirst: vi.fn() },
-    guardianRelationship: { count: vi.fn() },
-    playerSquadMember: { count: vi.fn() },
-    requirementRecipient: { count: vi.fn() },
+    $queryRaw: vi.fn(),
   },
 }));
 
@@ -20,15 +17,17 @@ import {
   resolvePersonalParticipationNavCapability,
 } from "../access";
 
+function mockParticipationCapable(capable: boolean) {
+  vi.mocked(prisma.$queryRaw).mockResolvedValue([{ capable }] as never);
+}
+
 describe("AUFGABEN-05-UI — personal actions access", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("A — parent-only participation capability without tasks.view", async () => {
-    vi.mocked(prisma.person.findFirst).mockResolvedValue({ id: "person-g" } as never);
-    vi.mocked(prisma.guardianRelationship.count).mockResolvedValue(2);
-    vi.mocked(prisma.playerSquadMember.count).mockResolvedValue(0);
+    mockParticipationCapable(true);
 
     const capable = await resolvePersonalParticipationNavCapability({
       tenantId: "tenant-a",
@@ -70,9 +69,7 @@ describe("AUFGABEN-05-UI — personal actions access", () => {
   });
 
   it("I — guardian capability remains when zero open obligations (nav question only)", async () => {
-    vi.mocked(prisma.person.findFirst).mockResolvedValue({ id: "person-g" } as never);
-    vi.mocked(prisma.guardianRelationship.count).mockResolvedValue(1);
-    vi.mocked(prisma.playerSquadMember.count).mockResolvedValue(0);
+    mockParticipationCapable(true);
 
     const capable = await resolvePersonalParticipationNavCapability({
       tenantId: "tenant-a",
@@ -82,9 +79,7 @@ describe("AUFGABEN-05-UI — personal actions access", () => {
   });
 
   it("N — cross-tenant guardian relationship does not grant tenant-a nav capability", async () => {
-    vi.mocked(prisma.person.findFirst).mockResolvedValue({ id: "person-a" } as never);
-    vi.mocked(prisma.guardianRelationship.count).mockResolvedValue(0);
-    vi.mocked(prisma.playerSquadMember.count).mockResolvedValue(0);
+    mockParticipationCapable(false);
 
     const capable = await resolvePersonalParticipationNavCapability({
       tenantId: "tenant-a",
@@ -94,9 +89,7 @@ describe("AUFGABEN-05-UI — personal actions access", () => {
   });
 
   it("O — cross-tenant squad membership does not grant tenant-a nav capability", async () => {
-    vi.mocked(prisma.person.findFirst).mockResolvedValue({ id: "person-a" } as never);
-    vi.mocked(prisma.guardianRelationship.count).mockResolvedValue(0);
-    vi.mocked(prisma.playerSquadMember.count).mockResolvedValue(0);
+    mockParticipationCapable(false);
 
     const capable = await resolvePersonalParticipationNavCapability({
       tenantId: "tenant-a",

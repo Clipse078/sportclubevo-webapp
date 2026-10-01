@@ -1,10 +1,9 @@
-import { getWeekplannerWeek } from "@/lib/weekplanner/queries";
 import { listWeekplannerPlanAllocations } from "@/lib/weekplanner/plan-service";
 import { planOverrideKey } from "@/lib/weekplanner/plan-override-key";
-import {
-  getFacilitiesForTenantCached,
-  getTenantDressingRoomOccupancyPresetsCached,
-} from "@/lib/server/request-cache";
+import { getFacilitiesForTenantCached } from "@/lib/server/request-cache";
+import { getWeekplannerWeekCached } from "@/lib/weekplanner/weekplanner-request-cache";
+import type { WeekplannerWeek } from "@/lib/weekplanner/types";
+import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
 import { buildFacilityGroupsByAllocationGroupFromFacilities } from "@/lib/planning-hub/facility-groups";
 import WeekPlannerWorkspace from "./WeekPlannerWorkspace";
 import PlannerWeekContentReveal from "./PlannerWeekContentReveal";
@@ -21,6 +20,10 @@ import {
 export type PlannerWeekDataSectionProps = {
   tenantId: string;
   weekWindow: TrainingWeekWindow;
+  weekDaysKey: string;
+  weekplannerPlanIdForWeek: string | null;
+  standardWeekLoad: Promise<WeekplannerWeek>;
+  dressingPresetsLoad: Promise<TenantDressingRoomOccupancyPresets> | null;
   locale: string;
   timezone: string;
   activePlan: WeekplannerPlanDto | null;
@@ -35,6 +38,10 @@ export type PlannerWeekDataSectionProps = {
 export default async function PlannerWeekDataSection({
   tenantId,
   weekWindow,
+  weekDaysKey,
+  weekplannerPlanIdForWeek,
+  standardWeekLoad,
+  dressingPresetsLoad,
   locale,
   timezone,
   activePlan,
@@ -47,27 +54,35 @@ export default async function PlannerWeekDataSection({
 }: PlannerWeekDataSectionProps) {
   const perfTimer = isPlannerPerfTimingEnabled() ? createPlannerServerTimer() : null;
 
-  const [week, dressingRoomOccupancyPresets, facilities] = await Promise.all([
-    getWeekplannerWeek(
-      tenantId,
-      {
-        from: weekWindow.from,
-        to: weekWindow.to,
-        days: weekWindow.days,
-        param: weekWindow.param,
-        previousParam: weekWindow.previousParam,
-        nextParam: weekWindow.nextParam,
-      },
-      activePlan?.id,
-    ),
-    getTenantDressingRoomOccupancyPresetsCached(tenantId),
-    getFacilitiesForTenantCached(tenantId),
-  ]);
-  perfTimer?.mark("week-aggregation-facilities");
+  const week =
+    weekplannerPlanIdForWeek === null
+      ? await standardWeekLoad
+      : await getWeekplannerWeekCached(
+          tenantId,
+          weekWindow.param,
+          weekDaysKey,
+          weekWindow.from.getTime(),
+          weekWindow.to.getTime(),
+          weekWindow.previousParam,
+          weekWindow.nextParam,
+          weekplannerPlanIdForWeek,
+        );
+  perfTimer?.mark("week-aggregation");
 
-  const facilityGroupsByAllocationGroup = needsEagerFacilityGroups
-    ? buildFacilityGroupsByAllocationGroupFromFacilities(facilities)
+  const dressingRoomOccupancyPresets = dressingPresetsLoad
+    ? await dressingPresetsLoad
+    : undefined;
+  perfTimer?.mark(dressingRoomOccupancyPresets ? "dressing-presets" : "dressing-presets-deferred");
+
+  const facilities = needsEagerFacilityGroups
+    ? await getFacilitiesForTenantCached(tenantId)
     : null;
+  perfTimer?.mark(facilities ? "facilities-eager" : "facilities-deferred");
+
+  const facilityGroupsByAllocationGroup =
+    needsEagerFacilityGroups && facilities
+      ? buildFacilityGroupsByAllocationGroupFromFacilities(facilities)
+      : null;
   perfTimer?.mark(
     facilityGroupsByAllocationGroup ? "facility-groups-eager" : "facility-groups-deferred",
   );

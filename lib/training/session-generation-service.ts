@@ -75,7 +75,9 @@ import {
   reactivateTrainingSessionSchedule,
   findTrainingSessionById,
   findAllTrainingSessions,
+  findAllTrainingSessionsForWeekplanner,
   type TrainingSessionRow,
+  type TrainingSessionWeekplannerRow,
 } from "./queries";
 import type {
   GenerateTrainingSessionsResult,
@@ -411,6 +413,60 @@ function normalizeListTrainingSessionDateBound(date: Date): Date {
  * normalizeListTrainingSessionDateBound above) — not timezone-aware window
  * instants from resolveTraining*Window().from/.to.
  */
+export type WeekplannerTrainingSessionListItem = {
+  id: string;
+  tenantId: string;
+  trainingSeriesId: string;
+  teamSeasonId: string;
+  trainingSeriesTitle: string;
+  teamName: string;
+  startAt: string;
+  endAt: string;
+  dressingRoomOccupancyMode: "DEFAULT" | "CUSTOM";
+  dressingRoomBeforeMinutes: number | null;
+  dressingRoomAfterMinutes: number | null;
+};
+
+function toWeekplannerListItem(row: TrainingSessionWeekplannerRow): WeekplannerTrainingSessionListItem {
+  const teamSeason = row.trainingSeries.teamSeason;
+  const effectiveStartAt = row.overrideStartAt ?? row.startAt;
+  const effectiveEndAt = row.overrideEndAt ?? row.endAt;
+
+  return {
+    id: row.id,
+    tenantId: row.tenantId,
+    trainingSeriesId: row.trainingSeriesId,
+    teamSeasonId: row.teamSeasonId,
+    trainingSeriesTitle: row.trainingSeries.title,
+    teamName:
+      resolveLongTeamName({
+        teamSeasonDisplayName: teamSeason.displayName,
+        teamName: teamSeason.team.name,
+        teamShortName: teamSeason.team.shortName,
+        teamAlternativeName: teamSeason.team.alternativeName,
+      }) ?? teamSeason.displayName,
+    startAt: effectiveStartAt.toISOString(),
+    endAt: effectiveEndAt.toISOString(),
+    dressingRoomOccupancyMode: row.dressingRoomOccupancyMode as "DEFAULT" | "CUSTOM",
+    dressingRoomBeforeMinutes: row.dressingRoomBeforeMinutes,
+    dressingRoomAfterMinutes: row.dressingRoomAfterMinutes,
+  };
+}
+
+/**
+ * SCE-PERF-02R4 — Weekplanner calendar read path (slimmer DB select).
+ */
+export async function listTrainingSessionsForWeekplanner(
+  tenantId: string,
+  filter: Pick<ListTrainingSessionsFilter, "dateFrom" | "dateTo"> = {},
+): Promise<WeekplannerTrainingSessionListItem[]> {
+  const rows = await findAllTrainingSessionsForWeekplanner(tenantId, {
+    dateFrom: filter.dateFrom ? normalizeListTrainingSessionDateBound(filter.dateFrom) : undefined,
+    dateTo: filter.dateTo ? normalizeListTrainingSessionDateBound(filter.dateTo) : undefined,
+  });
+  return rows.map(toWeekplannerListItem);
+}
+
 export async function listTrainingSessions(
   tenantId: string,
   filter: ListTrainingSessionsFilter = {},

@@ -1,10 +1,7 @@
-import { ClubDashboardCommandCenterSkeleton } from "@/components/admin/dashboard/ClubDashboardCommandCenterSkeleton";
+import { SceModuleRouteLoading } from "@/components/sce/route-loading/SceModuleRouteLoading";
+import { SCE_DASHBOARD_SEGMENT_LOADING_MODULE } from "@/lib/sce/route-module-loading";
 
-export default function DashboardLoading() {
-  return (
-    <div className="mx-auto flex w-full min-w-0 max-w-[1400px] flex-col gap-2.5 lg:gap-3">
-      <div className="h-28 animate-pulse rounded-2xl bg-[var(--surface-2)]" />
-      <ClubDashboardCommandCenterSkeleton />
-    </div>
-  );
+/** Fallback for `/dashboard/*` child routes without their own loading.tsx (SCE-PERF-02). */
+export default function DashboardSegmentLoading() {
+  return <SceModuleRouteLoading module={SCE_DASHBOARD_SEGMENT_LOADING_MODULE} />;
 }

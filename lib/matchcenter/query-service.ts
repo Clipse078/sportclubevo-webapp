@@ -629,28 +629,37 @@ export async function listMatchcenterMatches(
   );
   const window = resolveListWindow(input);
 
-  const events = await database.event.findMany({
-    where: {
-      tenantId,
-      type: "MATCH",
-      startAt: {
-        gte: window.from,
-        lte: window.to,
-      },
-    },
-    include: matchcenterRelations,
-    orderBy: [
-      {
-        startAt: "asc",
-      },
-      {
-        id: "asc",
-      },
-    ],
-    take: window.limit,
-  });
+  const policyPromise =
+    input.matchOperationalPolicy != null
+      ? Promise.resolve(input.matchOperationalPolicy)
+      : (input.matchOperationalPolicyPromise ??
+        Promise.resolve(input.matchOperationalPolicy));
 
-  return events.map((event) => toSummary(event, input.matchOperationalPolicy));
+  const [events, matchOperationalPolicy] = await Promise.all([
+    database.event.findMany({
+      where: {
+        tenantId,
+        type: "MATCH",
+        startAt: {
+          gte: window.from,
+          lte: window.to,
+        },
+      },
+      include: matchcenterRelations,
+      orderBy: [
+        {
+          startAt: "asc",
+        },
+        {
+          id: "asc",
+        },
+      ],
+      take: window.limit,
+    }),
+    policyPromise,
+  ]);
+
+  return events.map((event) => toSummary(event, matchOperationalPolicy));
 }
 
 export async function getMatchcenterMatchDetail(

@@ -4,6 +4,11 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const cacheMocks = vi.hoisted(() => ({
+  getTenantDressingRoomOccupancyPresetsCached: vi.fn(),
+  getTenantMatchOperationalPolicyCached: vi.fn(),
+}));
+
 const mocks = vi.hoisted(() => ({
   facilityResourceFindMany: vi.fn(),
   trainingSessionFindMany: vi.fn(),
@@ -20,6 +25,11 @@ const mocks = vi.hoisted(() => ({
   listTournaments: vi.fn(),
 }));
 
+vi.mock("@/lib/server/request-cache", () => ({
+  getTenantDressingRoomOccupancyPresetsCached: cacheMocks.getTenantDressingRoomOccupancyPresetsCached,
+  getTenantMatchOperationalPolicyCached: cacheMocks.getTenantMatchOperationalPolicyCached,
+}));
+
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     facilityResource: { findMany: mocks.facilityResourceFindMany },
@@ -33,6 +43,7 @@ vi.mock("@/lib/db/prisma", () => ({
     weekplannerPlanActivityOverride: { findMany: mocks.weekplannerPlanActivityOverrideFindMany },
     weekplannerPlan: { findFirst: mocks.weekplannerPlanFindFirst },
     wochenplanPlan: { findFirst: mocks.wochenplanPlanFindFirst },
+    eventFacilityAllocation: { findMany: vi.fn().mockResolvedValue([]) },
   },
 }));
 
@@ -60,6 +71,11 @@ const ROOM = {
 };
 
 function seedSharedOccupancyState() {
+  cacheMocks.getTenantDressingRoomOccupancyPresetsCached.mockResolvedValue(null);
+  cacheMocks.getTenantMatchOperationalPolicyCached.mockResolvedValue({
+    defaultMatchDurationMinutes: 120,
+    isClubConfigured: false,
+  });
   mocks.facilityResourceFindMany.mockResolvedValue([ROOM]);
   mocks.eventFindMany.mockResolvedValue([]);
   mocks.tournamentResourceAllocationFindMany.mockResolvedValue([]);

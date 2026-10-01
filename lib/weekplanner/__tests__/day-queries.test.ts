@@ -24,6 +24,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { resolveTrainingDayWindow } from "@/lib/training/date-range";
 
+const cacheMocks = vi.hoisted(() => ({
+  getTenantDressingRoomOccupancyPresetsCached: vi.fn(),
+  getTenantMatchOperationalPolicyCached: vi.fn(),
+}));
+
 const mocks = vi.hoisted(() => ({
   facilityResourceFindMany: vi.fn(),
   trainingAllocationFindMany: vi.fn(),
@@ -34,6 +39,18 @@ const mocks = vi.hoisted(() => ({
   weekplannerPlanActivityOverrideFindMany: vi.fn(),
   weekplannerPlanFindFirst: vi.fn(),
   wochenplanPlanFindFirst: vi.fn(),
+  tenantFindUnique: vi.fn(),
+  externalClubFindMany: vi.fn(),
+  listTournaments: vi.fn(),
+}));
+
+vi.mock("@/lib/tournaments/tournament-service", () => ({
+  listTournaments: mocks.listTournaments,
+}));
+
+vi.mock("@/lib/server/request-cache", () => ({
+  getTenantDressingRoomOccupancyPresetsCached: cacheMocks.getTenantDressingRoomOccupancyPresetsCached,
+  getTenantMatchOperationalPolicyCached: cacheMocks.getTenantMatchOperationalPolicyCached,
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -47,6 +64,8 @@ vi.mock("@/lib/db/prisma", () => ({
     weekplannerPlanActivityOverride: { findMany: mocks.weekplannerPlanActivityOverrideFindMany },
     weekplannerPlan: { findFirst: mocks.weekplannerPlanFindFirst },
     wochenplanPlan: { findFirst: mocks.wochenplanPlanFindFirst },
+    tenant: { findUnique: mocks.tenantFindUnique },
+    externalClub: { findMany: mocks.externalClubFindMany },
   },
 }));
 
@@ -223,9 +242,72 @@ function tournamentEventRow(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function tournamentDto(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "event-tournament-1",
+    tenantId: TENANT_A,
+    title: "FCA Sommerturnier",
+    description: null,
+    status: "SCHEDULED",
+    source: "MANUAL",
+    startAt: "2026-08-10T08:00:00.000Z",
+    endAt: "2026-08-10T16:00:00.000Z",
+    meetingTime: null,
+    location: "Im Brüel",
+    organizerName: "FC Allschwil",
+    organizerLogoUrl: null,
+    organizerExternalClubId: null,
+    competitionLabel: null,
+    resultLabel: null,
+    remarks: null,
+    season: { id: "season-1", key: "2026-2027", name: "2026/2027" },
+    team: null,
+    teamLogoUrl: null,
+    homeAway: "HOME",
+    participants: [],
+    resourceAllocations: [],
+    participationResponseDueAt: null,
+    participationReminder1At: null,
+    participationReminder2At: null,
+    participationReminder1PresetKey: null,
+    participationReminder2PresetKey: null,
+    visibility: {
+      websiteVisible: true,
+      infoboardVisible: false,
+      homepageVisible: false,
+      wochenplanVisible: true,
+      teamPageVisible: true,
+    },
+    reviewStage: "DRAFT",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function facilityResourceRow(resource: typeof PITCH_RESOURCE, type: "FULL_PITCH" | "DRESSING_ROOM", facilityId: string) {
+  return {
+    ...resource,
+    type,
+    facility: { id: facilityId, name: resource.facility.name },
+  };
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.facilityResourceFindMany.mockResolvedValue([PITCH_RESOURCE, HALLE_RESOURCE, HOME_ROOM_RESOURCE, AWAY_ROOM_RESOURCE]);
+  cacheMocks.getTenantDressingRoomOccupancyPresetsCached.mockResolvedValue(null);
+  cacheMocks.getTenantMatchOperationalPolicyCached.mockResolvedValue({
+    defaultMatchDurationMinutes: 120,
+    isClubConfigured: false,
+  });
+  mocks.tenantFindUnique.mockResolvedValue({ logoUrl: null });
+  mocks.externalClubFindMany.mockResolvedValue([]);
+  mocks.facilityResourceFindMany.mockResolvedValue([
+    facilityResourceRow(PITCH_RESOURCE, "FULL_PITCH", "facility-brueel"),
+    facilityResourceRow(HALLE_RESOURCE, "FULL_PITCH", "facility-brueel"),
+    facilityResourceRow(HOME_ROOM_RESOURCE, "DRESSING_ROOM", "facility-rooms"),
+    facilityResourceRow(AWAY_ROOM_RESOURCE, "DRESSING_ROOM", "facility-rooms"),
+  ]);
   mocks.trainingAllocationFindMany.mockResolvedValue([]);
   mocks.trainingSessionAllocationFindMany.mockResolvedValue([]);
   mocks.trainingSessionFindMany.mockResolvedValue([]);
@@ -234,6 +316,7 @@ beforeEach(() => {
   mocks.weekplannerPlanActivityOverrideFindMany.mockResolvedValue([]);
   mocks.weekplannerPlanFindFirst.mockResolvedValue({ wochenplanPlanId: null });
   mocks.wochenplanPlanFindFirst.mockResolvedValue(null);
+  mocks.listTournaments.mockResolvedValue([]);
 });
 
 describe("getWeekplannerDay — selected date filtering", () => {
@@ -271,9 +354,7 @@ describe("getWeekplannerDay — TRAINING / MATCH / TOURNAMENT appear", () => {
   });
 
   it("surfaces a HOME TOURNAMENT item", async () => {
-    mocks.eventFindMany.mockImplementation((args: { where?: { type?: string } }) =>
-      Promise.resolve(args.where?.type === "TOURNAMENT" ? [tournamentEventRow()] : []),
-    );
+    mocks.listTournaments.mockResolvedValue([tournamentDto()]);
     const day = await getWeekplannerDay(TENANT_A, DAY_WINDOW);
     expect(day.items.map((i) => i.type)).toEqual(["TOURNAMENT"]);
   });
@@ -284,9 +365,9 @@ describe("getWeekplannerDay — chronological ordering", () => {
     mocks.trainingSessionFindMany.mockResolvedValue([trainingSessionRow()]); // 16:00
     mocks.eventFindMany.mockImplementation((args: { where?: { type?: string } }) => {
       if (args.where?.type === "MATCH") return Promise.resolve([matchEventRow()]); // 18:00
-      if (args.where?.type === "TOURNAMENT") return Promise.resolve([tournamentEventRow()]); // 08:00
       return Promise.resolve([]);
     });
+    mocks.listTournaments.mockResolvedValue([tournamentDto()]); // 08:00
 
     const day = await getWeekplannerDay(TENANT_A, DAY_WINDOW);
     expect(day.items.map((i) => i.type)).toEqual(["TOURNAMENT", "TRAINING", "MATCH"]);
@@ -419,7 +500,15 @@ describe("getWeekplannerDay — resource conflict displayed", () => {
     const day = await getWeekplannerDay(TENANT_A, DAY_WINDOW);
     expect(day.items).toHaveLength(2);
     for (const item of day.items) {
-      expect(item.conflicts).toEqual([{ facilityResourceId: PITCH_RESOURCE.id, facilityResourceName: PITCH_RESOURCE.name }]);
+      expect(item.conflicts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            facilityResourceId: PITCH_RESOURCE.id,
+            facilityResourceName: PITCH_RESOURCE.name,
+            resourceKind: "PITCH_HALL",
+          }),
+        ]),
+      );
     }
   });
 });

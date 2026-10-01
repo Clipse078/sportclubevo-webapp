@@ -12,6 +12,12 @@ describe("SCE-PERF-01 request-scoped metadata cache", () => {
     expect(source).toContain("getPersonProfileByUserIdCached");
   });
 
+  it("CMS overview stats use React cache in overview-stats module", () => {
+    const source = readFileSync(join(process.cwd(), "lib/cms/overview-stats.ts"), "utf8");
+    expect(source).toContain('import { cache } from "react"');
+    expect(source).toContain("export const getCmsOverviewStats = cache");
+  });
+
   it("keys cached loaders by tenantId or userId (tenant-safe partitions)", () => {
     const source = readFileSync(join(process.cwd(), "lib/server/request-cache.ts"), "utf8");
     expect(source).toMatch(/cache\(\(tenantId: string\)/);

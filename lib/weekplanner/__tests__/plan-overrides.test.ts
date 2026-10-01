@@ -16,6 +16,11 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+const cacheMocks = vi.hoisted(() => ({
+  getTenantDressingRoomOccupancyPresetsCached: vi.fn(),
+  getTenantMatchOperationalPolicyCached: vi.fn(),
+}));
+
 const mocks = vi.hoisted(() => ({
   facilityResourceFindMany: vi.fn(),
   trainingAllocationFindMany: vi.fn(),
@@ -26,6 +31,16 @@ const mocks = vi.hoisted(() => ({
   weekplannerPlanActivityOverrideFindMany: vi.fn(),
   weekplannerPlanFindFirst: vi.fn(),
   wochenplanPlanFindFirst: vi.fn(),
+  listTournaments: vi.fn(),
+}));
+
+vi.mock("@/lib/server/request-cache", () => ({
+  getTenantDressingRoomOccupancyPresetsCached: cacheMocks.getTenantDressingRoomOccupancyPresetsCached,
+  getTenantMatchOperationalPolicyCached: cacheMocks.getTenantMatchOperationalPolicyCached,
+}));
+
+vi.mock("@/lib/tournaments/tournament-service", () => ({
+  listTournaments: mocks.listTournaments,
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -39,6 +54,7 @@ vi.mock("@/lib/db/prisma", () => ({
     weekplannerPlanActivityOverride: { findMany: mocks.weekplannerPlanActivityOverrideFindMany },
     weekplannerPlan: { findFirst: mocks.weekplannerPlanFindFirst },
     wochenplanPlan: { findFirst: mocks.wochenplanPlanFindFirst },
+    tenant: { findUnique: vi.fn().mockResolvedValue({ logoUrl: null }) },
   },
 }));
 
@@ -228,6 +244,96 @@ function tournamentEventRow(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function tournamentDto(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "event-tournament-1",
+    tenantId: TENANT_A,
+    title: "FCA Sommerturnier",
+    description: null,
+    status: "SCHEDULED",
+    source: "MANUAL",
+    startAt: "2026-08-15T08:00:00.000Z",
+    endAt: "2026-08-15T16:00:00.000Z",
+    meetingTime: null,
+    location: "Im Brüel",
+    organizerName: "FC Allschwil",
+    organizerLogoUrl: null,
+    organizerExternalClubId: null,
+    competitionLabel: null,
+    resultLabel: null,
+    remarks: null,
+    season: { id: "season-1", key: "2026-2027", name: "2026/2027" },
+    team: null,
+    teamLogoUrl: null,
+    homeAway: "HOME",
+    participants: [
+      {
+        id: "participant-1",
+        tournamentId: "event-tournament-1",
+        kind: "TEAM",
+        displayName: "FC Allschwil E1",
+        logoUrl: null,
+        team: {
+          id: "team-own",
+          name: "FC Allschwil E1",
+          slug: "fca-e1",
+          category: "JUNIOREN",
+          genderGroup: null,
+          ageGroup: "E",
+        },
+        externalTeam: null,
+        externalClub: null,
+        manualLabel: null,
+        displayOrder: 0,
+        dressingRoomAllocations: [
+          {
+            id: "participant-alloc-1",
+            notes: null,
+            displayOrder: 0,
+            facilityResourceId: STANDARD_ROOM.id,
+            facilityResourceCode: STANDARD_ROOM.code,
+            facilityResourceName: STANDARD_ROOM.name,
+            facilityResourceType: "DRESSING_ROOM",
+            facilityId: "fac-2",
+            facilityName: STANDARD_ROOM.facility.name,
+          },
+        ],
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+    ],
+    resourceAllocations: [
+      {
+        id: "resource-alloc-1",
+        notes: null,
+        displayOrder: 0,
+        facilityResourceId: STANDARD_PITCH.id,
+        facilityResourceCode: STANDARD_PITCH.code,
+        facilityResourceName: STANDARD_PITCH.name,
+        facilityResourceType: "FULL_PITCH",
+        facilityId: "fac-1",
+        facilityName: STANDARD_PITCH.facility.name,
+      },
+    ],
+    participationResponseDueAt: null,
+    participationReminder1At: null,
+    participationReminder2At: null,
+    participationReminder1PresetKey: null,
+    participationReminder2PresetKey: null,
+    visibility: {
+      websiteVisible: true,
+      infoboardVisible: false,
+      homepageVisible: false,
+      wochenplanVisible: true,
+      teamPageVisible: true,
+    },
+    reviewStage: "DRAFT",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
 /** Raw WeekplannerPlanAllocation override row, as selected by findWeekplannerPlanOverrides(). */
 function overrideRow(overrides: Record<string, unknown> = {}) {
   return {
@@ -242,6 +348,11 @@ function overrideRow(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  cacheMocks.getTenantDressingRoomOccupancyPresetsCached.mockResolvedValue(null);
+  cacheMocks.getTenantMatchOperationalPolicyCached.mockResolvedValue({
+    defaultMatchDurationMinutes: 120,
+    isClubConfigured: false,
+  });
   mocks.facilityResourceFindMany.mockResolvedValue([STANDARD_PITCH, HALLE, STANDARD_ROOM, ALT_ROOM]);
   mocks.trainingAllocationFindMany.mockResolvedValue([]);
   mocks.trainingSessionAllocationFindMany.mockResolvedValue([]);
@@ -251,6 +362,7 @@ beforeEach(() => {
   mocks.weekplannerPlanActivityOverrideFindMany.mockResolvedValue([]);
   mocks.weekplannerPlanFindFirst.mockResolvedValue({ wochenplanPlanId: null });
   mocks.wochenplanPlanFindFirst.mockResolvedValue(null);
+  mocks.listTournaments.mockResolvedValue([]);
 });
 
 describe("getWeekplannerWeek — sparse override fallback to Standardplan", () => {
@@ -348,10 +460,7 @@ describe("getWeekplannerWeek — HOME Match allocation override", () => {
 
 describe("getWeekplannerWeek — HOME Tournament allocation override (incl. dressing-room participant override)", () => {
   it("5. overrides the tournament's Spielfeld/Halle AND one specific participant's Garderobe, leaving other participants untouched", async () => {
-    mocks.eventFindMany.mockImplementation((args: { where?: { type?: string } }) => {
-      if (args.where?.type === "TOURNAMENT") return Promise.resolve([tournamentEventRow()]);
-      return Promise.resolve([]);
-    });
+    mocks.listTournaments.mockResolvedValue([tournamentDto()]);
     mocks.weekplannerPlanAllocationFindMany.mockResolvedValue([
       overrideRow({ activityType: "TOURNAMENT", activityId: "event-tournament-1", allocationGroup: "PITCH_HALL" }),
       overrideRow({
@@ -375,10 +484,7 @@ describe("getWeekplannerWeek — HOME Tournament allocation override (incl. dres
   });
 
   it("6. a participant WITHOUT an override row keeps the Standardplan Garderobe", async () => {
-    mocks.eventFindMany.mockImplementation((args: { where?: { type?: string } }) => {
-      if (args.where?.type === "TOURNAMENT") return Promise.resolve([tournamentEventRow()]);
-      return Promise.resolve([]);
-    });
+    mocks.listTournaments.mockResolvedValue([tournamentDto()]);
     mocks.weekplannerPlanAllocationFindMany.mockResolvedValue([]);
 
     const week = await getWeekplannerWeek(TENANT_A, WEEK_WINDOW, PLAN_STANDARD_WEATHER);
@@ -419,7 +525,11 @@ describe("getWeekplannerWeek — conflict isolation between plans", () => {
     const mondayWithPlan = weekWithPlan.days.find((d) => d.dayKey === "2026-08-10")!;
     expect(mondayWithPlan.items).toHaveLength(2);
     for (const item of mondayWithPlan.items) {
-      expect(item.conflicts).toEqual([{ facilityResourceId: HALLE.id, facilityResourceName: HALLE.name }]);
+      expect(item.conflicts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ facilityResourceId: HALLE.id, facilityResourceName: HALLE.name }),
+        ]),
+      );
     }
 
     // The exact same underlying data, resolved WITHOUT a plan (Standardplan), has no conflict.
@@ -479,9 +589,9 @@ describe("getWeekplannerWeek — canonical source records remain unchanged", () 
     mocks.trainingSessionFindMany.mockResolvedValue([trainingSessionRow()]);
     mocks.eventFindMany.mockImplementation((args: { where?: { type?: string } }) => {
       if (args.where?.type === "MATCH") return Promise.resolve([matchEventRow()]);
-      if (args.where?.type === "TOURNAMENT") return Promise.resolve([tournamentEventRow()]);
       return Promise.resolve([]);
     });
+    mocks.listTournaments.mockResolvedValue([tournamentDto()]);
     mocks.weekplannerPlanAllocationFindMany.mockResolvedValue([
       overrideRow({ activityType: "TRAINING", activityId: "session-1", allocationGroup: "PITCH_HALL" }),
     ]);

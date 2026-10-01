@@ -6,8 +6,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { TrainingSessionDto } from "@/lib/training/types";
 import { getWeekplannerWeek } from "../queries";
 
+const cacheMocks = vi.hoisted(() => ({
+  getTenantDressingRoomOccupancyPresetsCached: vi.fn(),
+  getTenantMatchOperationalPolicyCached: vi.fn(),
+}));
+
 const mocks = vi.hoisted(() => ({
-  listTrainingSessions: vi.fn(),
+  listTrainingSessionsForWeekplanner: vi.fn(),
   trainingAllocationFindMany: vi.fn(),
   trainingSessionAllocationFindMany: vi.fn(),
   facilityResourceFindMany: vi.fn(),
@@ -24,11 +29,13 @@ vi.mock("@/lib/db/prisma", () => ({
     wochenplanPlan: { findFirst: mocks.wochenplanPlanFindFirst },
     weekplannerPlanAllocation: { findMany: vi.fn().mockResolvedValue([]) },
     weekplannerPlanActivityOverride: { findMany: vi.fn().mockResolvedValue([]) },
+    tenant: { findUnique: vi.fn().mockResolvedValue({ logoUrl: null }) },
+    event: { findMany: vi.fn().mockResolvedValue([]) },
   },
 }));
 
 vi.mock("@/lib/training/session-generation-service", () => ({
-  listTrainingSessions: mocks.listTrainingSessions,
+  listTrainingSessionsForWeekplanner: mocks.listTrainingSessionsForWeekplanner,
 }));
 
 vi.mock("@/lib/matchcenter/query-service", () => ({
@@ -37,6 +44,11 @@ vi.mock("@/lib/matchcenter/query-service", () => ({
 
 vi.mock("@/lib/tournaments/tournament-service", () => ({
   listTournaments: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("@/lib/server/request-cache", () => ({
+  getTenantDressingRoomOccupancyPresetsCached: cacheMocks.getTenantDressingRoomOccupancyPresetsCached,
+  getTenantMatchOperationalPolicyCached: cacheMocks.getTenantMatchOperationalPolicyCached,
 }));
 
 const TENANT_A = "tenant-a";
@@ -129,6 +141,11 @@ function sessionAllocationRow(
 
 beforeEach(() => {
   vi.clearAllMocks();
+  cacheMocks.getTenantDressingRoomOccupancyPresetsCached.mockResolvedValue(null);
+  cacheMocks.getTenantMatchOperationalPolicyCached.mockResolvedValue({
+    defaultMatchDurationMinutes: 120,
+    isClubConfigured: false,
+  });
   mocks.facilityResourceFindMany.mockResolvedValue([]);
   mocks.trainingSessionAllocationFindMany.mockResolvedValue([]);
   mocks.weekplannerPlanFindFirst.mockResolvedValue({ wochenplanPlanId: null });
@@ -137,7 +154,7 @@ beforeEach(() => {
 
 describe("getWeekplannerWeek — occurrence-specific training allocations", () => {
   it("D7-D1 Monday resolves Kunstrasen 3 B and Garderobe E4 independently from Wednesday", async () => {
-    mocks.listTrainingSessions.mockResolvedValue([
+    mocks.listTrainingSessionsForWeekplanner.mockResolvedValue([
       trainingSessionDto({ id: "session-mon", weekday: "MONDAY", date: "2026-08-24" }),
       trainingSessionDto({
         id: "session-wed",
@@ -204,7 +221,7 @@ describe("getWeekplannerWeek — occurrence-specific training allocations", () =
   });
 
   it("D9-D1 Wednesday resolves Garderobe E3 from canonical occurrence override", async () => {
-    mocks.listTrainingSessions.mockResolvedValue([
+    mocks.listTrainingSessionsForWeekplanner.mockResolvedValue([
       trainingSessionDto({
         id: "session-d9-wed",
         trainingSeriesId: "series-d9",
@@ -253,7 +270,7 @@ describe("getWeekplannerWeek — occurrence-specific training allocations", () =
   });
 
   it("D9-D1 Wednesday ignores stale occurrence dressing-room rows when a newer override exists", async () => {
-    mocks.listTrainingSessions.mockResolvedValue([
+    mocks.listTrainingSessionsForWeekplanner.mockResolvedValue([
       trainingSessionDto({
         id: "session-d9-wed",
         trainingSeriesId: "series-d9",
@@ -304,7 +321,7 @@ describe("getWeekplannerWeek — occurrence-specific training allocations", () =
   });
 
   it("D9-D1 Wednesday production shape: occurrence dressing-room O4 wins over series E3", async () => {
-    mocks.listTrainingSessions.mockResolvedValue([
+    mocks.listTrainingSessionsForWeekplanner.mockResolvedValue([
       trainingSessionDto({
         id: "session-d9-wed",
         trainingSeriesId: "series-d9",
@@ -384,7 +401,7 @@ describe("getWeekplannerWeek — occurrence-specific training allocations", () =
   });
 
   it("returns all series dressing rooms in displayOrder when no occurrence override exists", async () => {
-    mocks.listTrainingSessions.mockResolvedValue([trainingSessionDto()]);
+    mocks.listTrainingSessionsForWeekplanner.mockResolvedValue([trainingSessionDto()]);
     mocks.trainingAllocationFindMany.mockResolvedValue([
       allocationRow("series-d7", "KR3B", "Kunstrasen 3 B", "HALF_PITCH", 1),
       allocationRow("series-d7", "KR3A", "Kunstrasen 3 A", "HALF_PITCH", 0),

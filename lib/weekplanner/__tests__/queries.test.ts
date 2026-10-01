@@ -37,6 +37,11 @@ const mocks = vi.hoisted(() => ({
   tenantFindFirst: vi.fn(),
   tenantFindUnique: vi.fn(),
   externalClubFindMany: vi.fn(),
+  listTournaments: vi.fn(),
+}));
+
+vi.mock("@/lib/tournaments/tournament-service", () => ({
+  listTournaments: mocks.listTournaments,
 }));
 
 vi.mock("@/lib/server/request-cache", () => ({
@@ -246,6 +251,96 @@ function tournamentEventRow(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function tournamentDto(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "event-tournament-1",
+    tenantId: TENANT_A,
+    title: "FCA Sommerturnier",
+    description: null,
+    status: "SCHEDULED",
+    source: "MANUAL",
+    startAt: "2026-08-15T08:00:00.000Z",
+    endAt: "2026-08-15T16:00:00.000Z",
+    meetingTime: null,
+    location: "Im Brüel",
+    organizerName: "FC Allschwil",
+    organizerLogoUrl: null,
+    organizerExternalClubId: null,
+    competitionLabel: null,
+    resultLabel: null,
+    remarks: null,
+    season: { id: "season-1", key: "2026-2027", name: "2026/2027" },
+    team: null,
+    teamLogoUrl: null,
+    homeAway: "HOME",
+    participants: [
+      {
+        id: "participant-1",
+        tournamentId: "event-tournament-1",
+        kind: "TEAM",
+        displayName: "FC Allschwil E1",
+        logoUrl: null,
+        team: {
+          id: "team-own",
+          name: "FC Allschwil E1",
+          slug: "fca-e1",
+          category: "JUNIOREN",
+          genderGroup: null,
+          ageGroup: "E",
+        },
+        externalTeam: null,
+        externalClub: null,
+        manualLabel: null,
+        displayOrder: 0,
+        dressingRoomAllocations: [
+          {
+            id: "participant-alloc-1",
+            notes: null,
+            displayOrder: 0,
+            facilityResourceId: HOME_ROOM_RESOURCE.id,
+            facilityResourceCode: HOME_ROOM_RESOURCE.code,
+            facilityResourceName: HOME_ROOM_RESOURCE.name,
+            facilityResourceType: "DRESSING_ROOM",
+            facilityId: "fac-2",
+            facilityName: HOME_ROOM_RESOURCE.facility.name,
+          },
+        ],
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      },
+    ],
+    resourceAllocations: [
+      {
+        id: "resource-alloc-1",
+        notes: null,
+        displayOrder: 0,
+        facilityResourceId: PITCH_RESOURCE.id,
+        facilityResourceCode: PITCH_RESOURCE.code,
+        facilityResourceName: PITCH_RESOURCE.name,
+        facilityResourceType: "FULL_PITCH",
+        facilityId: "fac-1",
+        facilityName: PITCH_RESOURCE.facility.name,
+      },
+    ],
+    participationResponseDueAt: null,
+    participationReminder1At: null,
+    participationReminder2At: null,
+    participationReminder1PresetKey: null,
+    participationReminder2PresetKey: null,
+    visibility: {
+      websiteVisible: true,
+      infoboardVisible: false,
+      homepageVisible: false,
+      wochenplanVisible: true,
+      teamPageVisible: true,
+    },
+    reviewStage: "DRAFT",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
 function facilitiesFixture() {
   return [
     {
@@ -289,7 +384,23 @@ beforeEach(() => {
     defaultMatchDurationMinutes: 120,
     isClubConfigured: false,
   });
-  mocks.facilityResourceFindMany.mockResolvedValue([PITCH_RESOURCE, HOME_ROOM_RESOURCE, AWAY_ROOM_RESOURCE]);
+  mocks.facilityResourceFindMany.mockResolvedValue([
+    {
+      ...PITCH_RESOURCE,
+      type: "FULL_PITCH",
+      facility: { id: "facility-pitch", name: PITCH_RESOURCE.facility.name },
+    },
+    {
+      ...HOME_ROOM_RESOURCE,
+      type: "DRESSING_ROOM",
+      facility: { id: "facility-rooms", name: HOME_ROOM_RESOURCE.facility.name },
+    },
+    {
+      ...AWAY_ROOM_RESOURCE,
+      type: "DRESSING_ROOM",
+      facility: { id: "facility-rooms", name: AWAY_ROOM_RESOURCE.facility.name },
+    },
+  ]);
   mocks.trainingAllocationFindMany.mockResolvedValue([]);
   mocks.trainingSessionAllocationFindMany.mockResolvedValue([]);
   mocks.trainingSessionFindMany.mockResolvedValue([]);
@@ -303,6 +414,7 @@ beforeEach(() => {
   mocks.tenantFindFirst.mockResolvedValue({ name: "FC Allschwil", logoUrl: null });
   mocks.tenantFindUnique.mockResolvedValue({ logoUrl: null });
   mocks.externalClubFindMany.mockResolvedValue([]);
+  mocks.listTournaments.mockResolvedValue([]);
 });
 
 describe("getWeekplannerWeek — TrainingSession", () => {
@@ -376,9 +488,11 @@ describe("getWeekplannerWeek — HOME Match", () => {
     const [item] = saturday!.items;
     expect(item.type).toBe("MATCH");
     if (item.type !== "MATCH") throw new Error("expected MATCH");
-    expect(item.teamNames).toEqual(["FC Allschwil 1"]);
+    // MATCHCENTER-UX-01 / TEAM-IDENTITY-01: compact match-side names prefer
+    // Team.shortName ("1. Mannschaft") over Team.name — same contract as Matchcenter.
+    expect(item.teamNames).toEqual(["1. Mannschaft"]);
     expect(item.opponentName).toBe("Gegner FC");
-    expect(item.homeSide.displayName).toBe("FC Allschwil 1");
+    expect(item.homeSide.displayName).toBe("1. Mannschaft");
     expect(item.awaySide.displayName).toBe("Gegner FC");
     expect(item.eventSource).toBe("MANUAL");
     expect(item.homeAway).toBe("HOME");
@@ -416,10 +530,7 @@ describe("getWeekplannerWeek — HOME Match", () => {
 
 describe("getWeekplannerWeek — HOME Tournament", () => {
   it("surfaces a HOME tournament with its pitch and per-participant dressing-room allocations", async () => {
-    mocks.eventFindMany.mockImplementation((args: { where?: { type?: string } }) => {
-      if (args.where?.type === "TOURNAMENT") return Promise.resolve([tournamentEventRow()]);
-      return Promise.resolve([]);
-    });
+    mocks.listTournaments.mockResolvedValue([tournamentDto()]);
 
     const week = await getWeekplannerWeek(TENANT_A, WEEK_WINDOW);
     const saturday = week.days.find((d) => d.dayKey === "2026-08-15");
@@ -436,12 +547,9 @@ describe("getWeekplannerWeek — HOME Tournament", () => {
   });
 
   it("excludes an AWAY tournament entirely", async () => {
-    mocks.eventFindMany.mockImplementation((args: { where?: { type?: string } }) => {
-      if (args.where?.type === "TOURNAMENT") {
-        return Promise.resolve([tournamentEventRow({ id: "event-tournament-away", homeAway: "AWAY" })]);
-      }
-      return Promise.resolve([]);
-    });
+    mocks.listTournaments.mockResolvedValue([
+      tournamentDto({ id: "event-tournament-away", homeAway: "AWAY" }),
+    ]);
 
     const week = await getWeekplannerWeek(TENANT_A, WEEK_WINDOW);
     const totalItems = week.days.reduce((sum, day) => sum + day.items.length, 0);
@@ -474,9 +582,15 @@ describe("getWeekplannerWeek — resource-conflict detection", () => {
     const saturday = week.days.find((d) => d.dayKey === "2026-08-15");
     expect(saturday?.items).toHaveLength(2);
     for (const item of saturday!.items) {
-      expect(item.conflicts).toEqual([
-        { facilityResourceId: PITCH_RESOURCE.id, facilityResourceName: PITCH_RESOURCE.name },
-      ]);
+      expect(item.conflicts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            facilityResourceId: PITCH_RESOURCE.id,
+            facilityResourceName: PITCH_RESOURCE.name,
+            resourceKind: "PITCH_HALL",
+          }),
+        ]),
+      );
     }
   });
 });
@@ -486,13 +600,15 @@ describe("getWeekplannerWeek — tenant isolation", () => {
     mocks.trainingSessionFindMany.mockResolvedValue([trainingSessionRow()]);
     mocks.eventFindMany.mockImplementation((args: { where?: { type?: string } }) => {
       if (args.where?.type === "MATCH") return Promise.resolve([matchEventRow()]);
-      if (args.where?.type === "TOURNAMENT") return Promise.resolve([tournamentEventRow()]);
       return Promise.resolve([]);
     });
+    mocks.listTournaments.mockResolvedValue([tournamentDto()]);
 
     await getWeekplannerWeek(TENANT_A, WEEK_WINDOW);
 
-    expect(cacheMocks.getFacilitiesForTenantCached).toHaveBeenCalledWith(TENANT_A);
+    expect(mocks.facilityResourceFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ tenantId: TENANT_A }) }),
+    );
     expect(mocks.trainingSessionFindMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ tenantId: TENANT_A }) }),
     );
@@ -505,6 +621,12 @@ describe("getWeekplannerWeek — tenant isolation", () => {
     for (const call of mocks.eventFindMany.mock.calls) {
       expect(call[0]).toEqual(expect.objectContaining({ where: expect.objectContaining({ tenantId: TENANT_A }) }));
     }
+    expect(mocks.listTournaments).toHaveBeenCalledWith(
+      TENANT_A,
+      expect.objectContaining({
+        overlapsWindow: expect.objectContaining({ from: WEEK_WINDOW.from, to: WEEK_WINDOW.to }),
+      }),
+    );
   });
 
   it("propagates week navigation params through unchanged", async () => {
@@ -531,6 +653,7 @@ describe("getWeekplannerWeek — Veranstaltung (SCE-EVENTS-01C)", () => {
             pitchCode: null,
             homeDressingRoomCode: null,
             teamSeason: null,
+            eventFacilityAllocations: [],
           },
         ]);
       }

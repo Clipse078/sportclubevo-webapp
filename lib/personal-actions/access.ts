@@ -2,6 +2,7 @@
  * AUFGABEN-05-UI — cheap module / navigation capability (no full inbox load).
  */
 
+import { cache } from "react";
 import { prisma } from "@/lib/db/prisma";
 import { getRequestEffectivePermissions } from "@/lib/permissions/request-effective-permissions";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
@@ -33,35 +34,45 @@ function taskContextFromKeys(
  * Lightweight participation-domain capability: linked person who is a guardian
  * and/or active squad player in the tenant. Does not load attendance obligations.
  */
-export async function resolvePersonalParticipationNavCapability(args: {
+export async function resolvePersonalParticipationNavCapabilityUncached(args: {
   tenantId: string;
   userId: string;
 }): Promise<boolean> {
-  const person = await prisma.person.findFirst({
-    where: { userId: args.userId, tenantId: args.tenantId },
-    select: { id: true },
-  });
-  if (!person) {
-    return false;
-  }
-
-  const [guardianLinks, squadMemberships] = await Promise.all([
-    prisma.guardianRelationship.count({
-      where: { tenantId: args.tenantId, guardianPersonId: person.id },
-    }),
-    prisma.playerSquadMember.count({
-      where: {
-        personId: person.id,
-        teamSeason: {
-          status: "ACTIVE",
-          team: { tenantId: args.tenantId },
-        },
-      },
-    }),
-  ]);
-
-  return guardianLinks > 0 || squadMemberships > 0;
+  // Single round-trip: linked tenant person + guardian and/or active squad probe.
+  // Avoids Prisma Promise.all on two counts, which serializes on a single pg pool
+  // connection and costs ~3× latency versus one EXISTS query.
+  const rows = await prisma.$queryRaw<{ capable: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1
+      FROM "Person" p
+      WHERE p."userId" = ${args.userId}
+        AND p."tenantId" = ${args.tenantId}
+        AND (
+          EXISTS (
+            SELECT 1
+            FROM "GuardianRelationship" gr
+            WHERE gr."tenantId" = ${args.tenantId}
+              AND gr."guardianPersonId" = p."id"
+          )
+          OR EXISTS (
+            SELECT 1
+            FROM "PlayerSquadMember" psm
+            INNER JOIN "TeamSeason" ts ON ts."id" = psm."teamSeasonId"
+            INNER JOIN "Team" t ON t."id" = ts."teamId"
+            WHERE psm."personId" = p."id"
+              AND ts."status" = 'ACTIVE'::"TeamSeasonStatus"
+              AND t."tenantId" = ${args.tenantId}
+          )
+        )
+    ) AS capable
+  `;
+  return Boolean(rows[0]?.capable);
 }
+
+/** Request-scoped deduplication — shell layout may resolve this once per navigation. */
+export const resolvePersonalParticipationNavCapability = cache(
+  resolvePersonalParticipationNavCapabilityUncached,
+);
 
 /** User has at least one open Requirement obligation they may respond to (bounded count). */
 export async function resolvePersonalRequirementNavCapability(args: {

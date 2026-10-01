@@ -2,7 +2,7 @@
 
 > **Document type:** Technical debt register — living document  
 > **Status:** Active  
-> **Last updated:** 2026-06-25  
+> **Last updated:** 2026-10-01  
 > **Maintained by:** SportClubEvo engineering team
 
 ---
@@ -35,6 +35,15 @@ Items are not a source of shame. They are a sign of deliberate, tracked decision
 | Open | Monitoring | No structured uptime monitoring or alerting configured | High | Production incidents will be discovered by users, not by the team | Configure uptime monitoring (e.g. Vercel Analytics, Better Uptime, or similar) before go-live |
 | Open | Logging | Structured logging strategy not documented | Medium | `AuditLog` covers business mutations but application-level error logging and tracing are undefined | Define and implement structured error logging before go-live |
 | Open | Database | `SHADOW_DATABASE_URL` use in migrations is optional but undocumented | Low | If shadow database is not configured, some migration operations may behave differently | Document whether shadow database is required for the production migration strategy |
+
+---
+
+## Performance & Infrastructure Backlog
+
+| ID | Status | Item | Notes |
+|---|---|---|---|
+| **PERFORMANCE-INFRA-01** | OPEN / INVESTIGATION DEFERRED | Vercel ↔ Neon region alignment | **Evidence:** Neon STAGE database is `eu-central-1`. Cloud Agent US → Neon `eu-central-1` `SELECT 1` p50 ≈ 97 ms. Query execution was not the dominant cost in the measured profile. Wochenplaner remains perceptibly slower than desired in human UAT. Exact Vercel Preview execution region was not conclusively measured. **Hypothesis:** If Vercel runtime executes outside Europe, cross-region DB RTT may materially amplify routes with multiple DB round trips. **Future action:** Verify runtime region using Vercel-native/runtime observability without changing SCE authentication. If cross-region is confirmed, evaluate aligning Vercel compute with Neon `eu-central-1` and re-measure before further application-level redesign. |
+| **BUILD-PERF** | OPEN | Default `npm run build` can OOM near normal VM memory limits | An 8 GB `NODE_OPTIONS` build succeeds. Not tracked as part of PERFORMANCE-02 / PR #791 closure. |
 
 ---
 

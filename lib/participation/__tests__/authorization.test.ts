@@ -8,6 +8,7 @@ vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     person: { findFirst: vi.fn() },
     guardianRelationship: { findFirst: vi.fn(), findMany: vi.fn() },
+    tenantCommunicationSafeguardingPolicy: { findUnique: vi.fn().mockResolvedValue(null) },
   },
 }));
 
