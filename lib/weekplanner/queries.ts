@@ -86,16 +86,16 @@ import {
   getTenantDressingRoomOccupancyPresetsCached,
   getTenantMatchOperationalPolicyCached,
 } from "@/lib/server/request-cache";
+import {
+  listMatchcenterMatches,
+  type MatchcenterQueryDatabase,
+} from "@/lib/matchcenter/query-service";
 import { enrichWeekplannerItemDressingRoomOccupancy } from "@/lib/dressing-room-occupancy/weekplanner-enrichment";
 import type { TenantDressingRoomOccupancyPresets } from "@/lib/dressing-room-occupancy/types";
 import {
   resolveTrainingOccurrenceAllocations,
   type TrainingAllocationResourceRow,
 } from "@/lib/training/effective-training-allocation-resolution";
-import {
-  listMatchcenterMatches,
-  type MatchcenterQueryDatabase,
-} from "@/lib/matchcenter/query-service";
 import { resolveClubIdentityLogoUrl } from "@/lib/matchcenter/club-identity";
 import { resolveMatchcenterCompactSideName } from "@/lib/matchcenter/team-display";
 import { listTournaments } from "@/lib/tournaments/tournament-service";
@@ -989,6 +989,9 @@ export async function getWeekplannerWeek(
 ): Promise<WeekplannerWeek> {
   const perfTimer = isScePerfTimingEnabled() ? createAdminServerTimer("weekplanner/data") : null;
 
+  // Overlap the week-bounded training session read with plan/policy prefetch I/O.
+  const trainingLoad = startWeekplannerTrainingSessionsLoad(tenantId, window.days);
+
   const [resourceByCode, overridesByKey, timeOverridesByKey, baselineMode, tenantPresets, tenantMatchPolicy, tenantRow] =
     await Promise.all([
       findFacilityResourceCodeMap(tenantId),
@@ -1003,13 +1006,7 @@ export async function getWeekplannerWeek(
   perfTimer?.mark("prefetch-policy-allocations");
 
   const [trainingItems, matchItems, tournamentItems, veranstaltungItems] = await Promise.all([
-    findWeekplannerTrainingItems(
-      tenantId,
-      window.days,
-      overridesByKey,
-      timeOverridesByKey,
-      tenantPresets,
-    ),
+    trainingLoad.complete(overridesByKey, timeOverridesByKey, tenantPresets),
     findWeekplannerHomeMatches(
       tenantId,
       window.from,

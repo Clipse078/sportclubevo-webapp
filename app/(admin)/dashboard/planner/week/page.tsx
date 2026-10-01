@@ -7,9 +7,11 @@ import { PLANNING_ALLOCATIONS_VIEW_PERMISSIONS } from "@/lib/permissions/plannin
 import { getActiveTenant } from "@/lib/tenants/active-tenant";
 import { resolveTrainingWeekWindow, TRAINING_DEFAULT_TIMEZONE } from "@/lib/training/date-range";
 import {
+  getTenantDressingRoomOccupancyPresetsCached,
   listWeekplannerPlansCached,
   listWochenplanPlansCached,
 } from "@/lib/server/request-cache";
+import { getWeekplannerWeekCached } from "@/lib/weekplanner/weekplanner-request-cache";
 import { materializeLinkedWeekplannerPlan } from "@/lib/wochenplan/plan-materialization";
 import { formatWeekRangeLabel } from "@/lib/weekplanner/date";
 import PlannerWeekStreamingRoot from "@/components/admin/planner/PlannerWeekChromeBridge";
@@ -43,10 +45,12 @@ export default async function PlannerWeekPageRoute({
 }: PlannerWeekPageProps) {
   const perfTimer = isPlannerPerfTimingEnabled() ? createPlannerServerTimer() : null;
 
-  const [session, tenantContext] = await Promise.all([
+  const [session, tenantContext, resolvedSearchParams] = await Promise.all([
     requireAnyPermission([...PLANNING_ALLOCATIONS_VIEW_PERMISSIONS]),
     getActiveTenant(),
+    searchParams ?? Promise.resolve(undefined),
   ]);
+  const params = resolvedSearchParams ?? {};
   if (!tenantContext) notFound();
 
   perfTimer?.mark("auth-rbac-tenant");
@@ -58,7 +62,6 @@ export default async function PlannerWeekPageRoute({
   const canManagePlans = canManageTrainings || canManageEvents || canManageAllocations;
 
   const timezone = tenantContext.timezone ?? TRAINING_DEFAULT_TIMEZONE;
-  const params = (await searchParams) ?? {};
   const urlState = parsePlanningHubUrlState(params);
 
   const now = new Date();
@@ -69,6 +72,26 @@ export default async function PlannerWeekPageRoute({
   });
   const todayParam = resolveTrainingWeekWindow({ now, timeZone: timezone }).param;
   const rangeLabel = formatWeekRangeLabel(weekWindow.days);
+
+  const weekDaysKey = weekWindow.days.join(",");
+  const weekCacheArgs = [
+    tenantContext.id,
+    weekWindow.param,
+    weekDaysKey,
+    weekWindow.from.getTime(),
+    weekWindow.to.getTime(),
+    weekWindow.previousParam,
+    weekWindow.nextParam,
+  ] as const;
+
+  // Overlap Standardplan week aggregation with plan metadata (default navigation path).
+  const standardWeekLoad = getWeekplannerWeekCached(
+    ...weekCacheArgs,
+    null,
+  );
+  const dressingPresetsLoad = canManagePlans
+    ? getTenantDressingRoomOccupancyPresetsCached(tenantContext.id)
+    : null;
 
   const [wochenplanPlans, weekplannerPlans] = await Promise.all([
     listWochenplanPlansCached(tenantContext.id),
@@ -113,6 +136,10 @@ export default async function PlannerWeekPageRoute({
       : weekplannerPlans;
 
   const activePlan = materializedWeekplannerPlan;
+  const weekplannerPlanIdForWeek = activePlan?.id ?? null;
+  if (weekplannerPlanIdForWeek) {
+    void getWeekplannerWeekCached(...weekCacheArgs, weekplannerPlanIdForWeek);
+  }
 
   perfTimer?.mark("plan-resolution");
 
@@ -162,6 +189,10 @@ export default async function PlannerWeekPageRoute({
         <PlannerWeekDataSection
           tenantId={tenantContext.id}
           weekWindow={weekWindow}
+          weekDaysKey={weekDaysKey}
+          weekplannerPlanIdForWeek={weekplannerPlanIdForWeek}
+          standardWeekLoad={standardWeekLoad}
+          dressingPresetsLoad={dressingPresetsLoad}
           locale={tenantContext.locale ?? "de-CH"}
           timezone={timezone}
           activePlan={activePlan}

@@ -14,7 +14,6 @@ import { getTeamsListData as loadTeamsListData } from "@/lib/teams/queries";
 import { getPersonProfileByUserId as loadPersonProfileByUserId } from "@/lib/people/queries";
 import { listWochenplanPlans as loadWochenplanPlans } from "@/lib/wochenplan/plan-service";
 import { listWeekplannerPlans as loadWeekplannerPlans } from "@/lib/weekplanner/plan-service";
-
 export const getFacilitiesForTenantCached = cache((tenantId: string) =>
   loadFacilitiesForTenant(tenantId),
 );
@@ -52,3 +51,4 @@ export const listWochenplanPlansCached = cache((tenantId: string) =>
 export const listWeekplannerPlansCached = cache((tenantId: string, weekId: string) =>
   loadWeekplannerPlans(tenantId, weekId),
 );
+
