@@ -1,4 +1,5 @@
 import type { EventParticipationAudienceKind } from "@prisma/client";
+import { notifyPersonalDashboardForClubEventAudience } from "@/lib/dashboard/read-model/invalidate-audience";
 import { prisma } from "@/lib/db/prisma";
 import {
   resolveOrgUnitAudiencePersonIds,
@@ -126,6 +127,7 @@ export async function replaceClubEventAudiencePerson(
       createdByUserId: actorUserId,
     },
   });
+  void notifyPersonalDashboardForClubEventAudience(tenantId, eventId);
 }
 
 export async function addClubEventAudienceEntry(
@@ -159,6 +161,7 @@ export async function addClubEventAudienceEntry(
   if (input.kind === "ROLE" && !data.roleId) throw new Error("INVALID_ROLE");
 
   await prisma.eventParticipationAudienceEntry.create({ data });
+  void notifyPersonalDashboardForClubEventAudience(tenantId, eventId);
 }
 
 export async function removeClubEventAudienceEntry(
@@ -167,10 +170,14 @@ export async function removeClubEventAudienceEntry(
 ): Promise<void> {
   const entry = await prisma.eventParticipationAudienceEntry.findFirst({
     where: { id: entryId, tenantId },
-    select: { id: true },
+    select: { id: true, eventId: true },
   });
   if (!entry) throw new Error("ENTRY_NOT_FOUND");
+  const eventId = entry.eventId;
   await prisma.eventParticipationAudienceEntry.delete({ where: { id: entryId } });
+  if (eventId) {
+    void notifyPersonalDashboardForClubEventAudience(tenantId, eventId);
+  }
 }
 
 async function assertClubEventWritable(tenantId: string, eventId: string): Promise<void> {

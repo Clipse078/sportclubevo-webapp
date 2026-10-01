@@ -37,6 +37,7 @@
 
 import { TrainingSessionInvalidTransitionError, TrainingSessionNotFoundError, TrainingSessionRescheduleValidationError } from "./errors";
 import { assertTrainingSessionStartCompatibleWithParticipationDue } from "@/lib/participation/participation-request-config-service";
+import { notifyPersonalDashboardForTrainingSession } from "@/lib/dashboard/read-model/invalidate-audience";
 import { findTrainingSessionById, updateTrainingSessionOverride } from "./queries";
 import { getTrainingSession } from "./session-generation-service";
 import { dateKeyFromDate, toDateOnlyUtc, zonedTimeToUtc } from "./recurrence";
@@ -133,7 +134,9 @@ export async function rescheduleTrainingSession(
     });
   }
 
-  return getTrainingSession(tenantId, sessionId);
+  const dto = await getTrainingSession(tenantId, sessionId);
+  void notifyPersonalDashboardForTrainingSession(tenantId, sessionId);
+  return dto;
 }
 
 /**
@@ -165,5 +168,7 @@ export async function resetTrainingSessionSchedule(
     overrideEndAt: null,
   });
 
-  return getTrainingSession(tenantId, sessionId);
+  const dto = await getTrainingSession(tenantId, sessionId);
+  void notifyPersonalDashboardForTrainingSession(tenantId, sessionId);
+  return dto;
 }

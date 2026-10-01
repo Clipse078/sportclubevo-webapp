@@ -3,6 +3,11 @@
  */
 
 import type { EventType } from "@prisma/client";
+import {
+  notifyPersonalDashboardForSportingEvent,
+  notifyPersonalDashboardForTeamSeason,
+  notifyPersonalDashboardForTrainingSession,
+} from "@/lib/dashboard/read-model/invalidate-audience";
 import { prisma } from "@/lib/db/prisma";
 import { logAction } from "@/lib/audit/log-action";
 import { ParticipationEventNotFoundError, ParticipationValidationError } from "./errors";
@@ -140,6 +145,8 @@ export async function updateTrainingSessionParticipationRequestConfig(
       participationReminder2At: data.participationReminder2At?.toISOString() ?? null,
     },
   });
+
+  void notifyPersonalDashboardForTrainingSession(tenantId, trainingSessionId);
 }
 
 export async function updateEventParticipationRequestConfig(
@@ -229,6 +236,8 @@ export async function updateEventParticipationRequestConfig(
       participationResponseDueAt: data.participationResponseDueAt?.toISOString() ?? null,
     },
   });
+
+  void notifyPersonalDashboardForSportingEvent(tenantId, eventId);
 }
 
 export async function assertEventStartCompatibleWithParticipationDue(
@@ -258,7 +267,7 @@ export async function updateTrainingSeriesParticipationRequestPolicy(
 ): Promise<void> {
   const series = await prisma.trainingSeries.findFirst({
     where: { id: trainingSeriesId, tenantId },
-    select: { id: true },
+    select: { id: true, teamSeasonId: true },
   });
   if (!series) {
     throw new ParticipationEventNotFoundError("Trainingsserie nicht gefunden.");
@@ -303,6 +312,8 @@ export async function updateTrainingSeriesParticipationRequestPolicy(
     beforeJson: {},
     afterJson: input,
   });
+
+  void notifyPersonalDashboardForTeamSeason(tenantId, series.teamSeasonId);
 }
 
 export async function assertTrainingSessionStartCompatibleWithParticipationDue(

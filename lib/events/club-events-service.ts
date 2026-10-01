@@ -6,6 +6,7 @@
  * are excluded from all operations here.
  */
 
+import { notifyPersonalDashboardForClubEventAudience } from "@/lib/dashboard/read-model/invalidate-audience";
 import { prisma } from "@/lib/db/prisma";
 
 export class ClubEventNotFoundError extends Error {
@@ -217,11 +218,13 @@ export async function updateClubEvent(
   if (input.teamPageVisible !== undefined)
     data.teamPageVisible = Boolean(input.teamPageVisible);
 
-  return prisma.event.update({
+  const updated = await prisma.event.update({
     where: { id: eventId, tenantId, type: "OTHER" },
     data,
     select: CLUB_EVENT_SELECT,
   });
+  void notifyPersonalDashboardForClubEventAudience(tenantId, eventId);
+  return updated;
 }
 
 /**
@@ -241,11 +244,13 @@ export async function archiveClubEvent(
     throw new ClubEventNotFoundError();
   }
 
-  return prisma.event.update({
+  const archived = await prisma.event.update({
     where: { id: eventId, tenantId, type: "OTHER" },
     data: { status: "ARCHIVED" },
     select: CLUB_EVENT_SELECT,
   });
+  void notifyPersonalDashboardForClubEventAudience(tenantId, eventId);
+  return archived;
 }
 
 /**
@@ -265,11 +270,13 @@ export async function restoreClubEvent(
     throw new ClubEventNotFoundError();
   }
 
-  return prisma.event.update({
+  const restored = await prisma.event.update({
     where: { id: eventId, tenantId, type: "OTHER" },
     data: { status: "SCHEDULED" },
     select: CLUB_EVENT_SELECT,
   });
+  void notifyPersonalDashboardForClubEventAudience(tenantId, eventId);
+  return restored;
 }
 
 /**
