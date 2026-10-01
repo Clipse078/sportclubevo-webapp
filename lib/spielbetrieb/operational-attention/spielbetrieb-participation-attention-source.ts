@@ -10,8 +10,10 @@ import type {
 import { buildDomainOperationalAttentionId } from "@/lib/domain-attention/source-identity";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { prisma } from "@/lib/db/prisma";
-import { resolveEventParticipationAnchor } from "@/lib/communication/event/event-participation-anchor";
-import { listParticipationSubjectPersonIds } from "@/lib/participation/participation-audience-resolution";
+import {
+  buildResolvedEventParticipationAnchorFromKnown,
+  countNotRespondedParticipantsByContextEventId,
+} from "@/lib/participation/batch-not-responded-participation-counts";
 import {
   buildSpielbetriebAudienceCandidateId,
   SPIELBETRIEB_DOMAIN_KEY,
@@ -92,40 +94,45 @@ export const spielbetriebParticipationOutstandingAttentionSource: DomainOperatio
         take: 40,
       });
 
+      const relevantEvents = events.filter((event) => {
+        if (!event.teamId || !event.teamSeasonId) return false;
+        if (!isSpielbetriebMatchOrTournament(event.type)) return false;
+        const eventKind = event.type as SpielbetriebEventKind;
+        return isSpielbetriebEventRelevantForParticipationAttention({
+          type: eventKind,
+          status: event.status,
+          startAt: event.startAt,
+          now: ctx.now,
+          participationResponseDueAt: event.participationResponseDueAt,
+        });
+      });
+
+      const anchors = relevantEvents.map((event) =>
+        buildResolvedEventParticipationAnchorFromKnown({
+          tenantId: ctx.tenantId,
+          teamId: event.teamId!,
+          teamSeasonId: event.teamSeasonId!,
+          title: event.title,
+          startAt: event.startAt,
+          participationEvent: {
+            eventKind: event.type as SpielbetriebEventKind,
+            eventId: event.id,
+          },
+        }),
+      );
+
+      const outstandingByEventId = await countNotRespondedParticipantsByContextEventId(anchors);
+
       const items: DomainOperationalAttentionItem[] = [];
 
-      for (const event of events) {
-        if (!event.teamId || !event.teamSeasonId) continue;
-        if (!isSpielbetriebMatchOrTournament(event.type)) continue;
+      for (const event of relevantEvents) {
         const eventKind = event.type as SpielbetriebEventKind;
-        if (
-          !isSpielbetriebEventRelevantForParticipationAttention({
-            type: eventKind,
-            status: event.status,
-            startAt: event.startAt,
-            now: ctx.now,
-            participationResponseDueAt: event.participationResponseDueAt,
-          })
-        ) {
-          continue;
-        }
-
-        const anchor = await resolveEventParticipationAnchor({
-          tenantId: ctx.tenantId,
-          teamId: event.teamId,
-          teamSeasonId: event.teamSeasonId,
-          event: { eventKind, eventId: event.id },
-        });
-
-        const outstanding = await listParticipationSubjectPersonIds({
-          anchor,
-          preset: "NOT_RESPONDED",
-        });
-        if (outstanding.length === 0) continue;
+        const outstandingCount = outstandingByEventId.get(event.id) ?? 0;
+        if (outstandingCount === 0) continue;
 
         const candidateId = buildSpielbetriebAudienceCandidateId({
-          teamId: event.teamId,
-          teamSeasonId: event.teamSeasonId,
+          teamId: event.teamId!,
+          teamSeasonId: event.teamSeasonId!,
           eventId: event.id,
           eventKind,
           preset: "NOT_RESPONDED",
@@ -154,9 +161,9 @@ export const spielbetriebParticipationOutstandingAttentionSource: DomainOperatio
             eventTitle: event.title,
             eventKind,
           }),
-          summary: `${outstanding.length} Rückmeldung${outstanding.length === 1 ? "" : "en"} ausstehend · ${formatEventWeekday(event.startAt)}`,
+          summary: `${outstandingCount} Rückmeldung${outstandingCount === 1 ? "" : "en"} ausstehend · ${formatEventWeekday(event.startAt)}`,
           severity: "info",
-          count: outstanding.length,
+          count: outstandingCount,
           dueAt: null,
           deepLink: `/dashboard/teams/${event.teamId}/teilnahmen`,
           optionalDomainAudience: deferredAudience,

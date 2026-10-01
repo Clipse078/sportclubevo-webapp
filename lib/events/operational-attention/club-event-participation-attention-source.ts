@@ -10,7 +10,10 @@ import type {
 import { buildDomainOperationalAttentionId } from "@/lib/domain-attention/source-identity";
 import { PERMISSIONS } from "@/lib/permissions/permissions";
 import { prisma } from "@/lib/db/prisma";
-import { listParticipationSubjectPersonIds } from "@/lib/participation/participation-audience-resolution";
+import {
+  buildResolvedEventParticipationAnchorFromKnown,
+  countNotRespondedParticipantsByContextEventId,
+} from "@/lib/participation/batch-not-responded-participation-counts";
 import {
   buildClubEventAudienceCandidateId,
   EVENTS_DOMAIN_KEY,
@@ -21,7 +24,6 @@ import {
   isClubEventType,
 } from "@/lib/events/domain-audience/club-event-relevance";
 import { permissionKeysIncludeClubEventAudienceView } from "@/lib/events/domain-audience/club-event-authorization";
-import { resolveClubEventParticipationAnchor } from "@/lib/events/domain-audience/club-event-participation-anchor";
 import { getVeranstaltungHref } from "@/lib/events/veranstaltung-navigation";
 
 export const CLUB_EVENT_PARTICIPATION_OUTSTANDING_ATTENTION_KIND =
@@ -68,33 +70,36 @@ export const clubEventParticipationOutstandingAttentionSource: DomainOperational
         take: 40,
       });
 
+      const relevantEvents = events.filter((event) => {
+        if (!isClubEventType(event.type)) return false;
+        return isClubEventRelevantForParticipationAttention({
+          type: event.type,
+          status: event.status,
+          startAt: event.startAt,
+          endAt: event.endAt,
+          now: ctx.now,
+          participationResponseDueAt: event.participationResponseDueAt,
+        });
+      });
+
+      const anchors = relevantEvents.map((event) =>
+        buildResolvedEventParticipationAnchorFromKnown({
+          tenantId: ctx.tenantId,
+          teamId: "",
+          teamSeasonId: "",
+          title: event.title,
+          startAt: event.startAt,
+          participationEvent: { eventKind: "CLUB_EVENT", eventId: event.id },
+        }),
+      );
+
+      const outstandingByEventId = await countNotRespondedParticipantsByContextEventId(anchors);
+
       const items: DomainOperationalAttentionItem[] = [];
 
-      for (const event of events) {
-        if (!isClubEventType(event.type)) continue;
-        if (
-          !isClubEventRelevantForParticipationAttention({
-            type: event.type,
-            status: event.status,
-            startAt: event.startAt,
-            endAt: event.endAt,
-            now: ctx.now,
-            participationResponseDueAt: event.participationResponseDueAt,
-          })
-        ) {
-          continue;
-        }
-
-        const anchor = await resolveClubEventParticipationAnchor({
-          tenantId: ctx.tenantId,
-          eventId: event.id,
-        });
-
-        const outstanding = await listParticipationSubjectPersonIds({
-          anchor,
-          preset: "NOT_RESPONDED",
-        });
-        if (outstanding.length === 0) continue;
+      for (const event of relevantEvents) {
+        const outstandingCount = outstandingByEventId.get(event.id) ?? 0;
+        if (outstandingCount === 0) continue;
 
         const candidateId = buildClubEventAudienceCandidateId({
           eventId: event.id,
@@ -120,9 +125,9 @@ export const clubEventParticipationOutstandingAttentionSource: DomainOperational
           contextEntityType: "club-event",
           contextEntityId: event.id,
           title: formatAttentionTitle(event.title),
-          summary: `${outstanding.length} Rückmeldung${outstanding.length === 1 ? "" : "en"} ausstehend`,
+          summary: `${outstandingCount} Rückmeldung${outstandingCount === 1 ? "" : "en"} ausstehend`,
           severity: "info",
-          count: outstanding.length,
+          count: outstandingCount,
           dueAt: event.participationResponseDueAt?.toISOString() ?? null,
           deepLink: getVeranstaltungHref(event.id),
           optionalDomainAudience: deferredAudience,
