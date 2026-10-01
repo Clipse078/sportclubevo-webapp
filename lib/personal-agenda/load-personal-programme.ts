@@ -153,6 +153,7 @@ export async function loadPersonalProgramme(
   );
   if (trace) {
     logSceHotfixLogin01StepFinished("programme-merge", { rowCount: items.length });
+    logSceHotfixLogin01Milestone("T6_PROGRAMME");
     logSceHotfixLogin01Milestone("T7_CALENDAR");
   }
 

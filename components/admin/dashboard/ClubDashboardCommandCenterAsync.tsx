@@ -74,10 +74,6 @@ export default async function ClubDashboardCommandCenterAsync({
   ]);
 
   logSceHotfixLogin01Milestone("T5_FIRST_USEFUL");
-  logSceHotfixLogin01Milestone("T6_PROGRAMME");
-  logSceHotfixLogin01Milestone("T7_CALENDAR");
-  logSceHotfixLogin01Milestone("T8_PERSONAL_ACTIONS");
-  logSceHotfixLogin01Milestone("T9_OPERATIONAL_ATTENTION");
   logSceHotfixLogin01Milestone("T10_INITIAL_CONTENT");
 
   const timeLabelById: Record<string, string> = {};

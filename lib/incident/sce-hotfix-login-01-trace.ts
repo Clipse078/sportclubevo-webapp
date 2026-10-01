@@ -1,10 +1,17 @@
 /**
  * SCE-HOTFIX-LOGIN-01 — temporary dashboard SSR timing instrumentation (no PII).
  * R7: milestones, duplicate probes, duration ledger, critical-path summary.
+ * R8: AsyncLocalStorage request scope, request-class metadata, DB wait ledger.
  */
 
 import { headers } from "next/headers";
 import { randomUUID } from "node:crypto";
+import {
+  createSceHotfixLogin01TraceStore,
+  getSceHotfixLogin01TraceStore,
+  sceHotfixLogin01TraceStorage,
+  type SceHotfixLogin01TraceStore,
+} from "@/lib/incident/sce-hotfix-login-01-trace-store";
 
 const PREFIX = "[SCE-HOTFIX-LOGIN-01]";
 const TRACE_ENABLED =
@@ -13,69 +20,118 @@ const TRACE_ENABLED =
     process.env.VERCEL_ENV === "preview" ||
     process.env.NODE_ENV === "development");
 
-type TraceStep = { name: string; atMs: number };
-
-let correlationId: string | null = null;
-const steps: TraceStep[] = [];
-let originMs: number | null = null;
-
-const stepStartedAtMs = new Map<string, number>();
-const stepDurationMs = new Map<string, number>();
-const duplicateProbeCounts = new Map<string, number>();
-const milestones: { id: string; elapsedMs: number }[] = [];
-
 export function sceHotfixLogin01TraceEnabled(): boolean {
   return TRACE_ENABLED;
 }
 
-export async function initSceHotfixLogin01DashboardTrace(): Promise<string> {
-  if (!TRACE_ENABLED) return "disabled";
-  if (correlationId) return correlationId;
+function requireStore(): SceHotfixLogin01TraceStore | null {
+  if (!TRACE_ENABLED) return null;
+  return getSceHotfixLogin01TraceStore();
+}
+
+function classifyRequest(headersList: Headers): string {
+  const rsc = headersList.get("rsc") ?? headersList.get("RSC");
+  const routerState = headersList.get("next-router-state-tree");
+  const routerPrefetch = headersList.get("next-router-prefetch");
+  const purpose = headersList.get("purpose");
+  const secFetchDest = headersList.get("sec-fetch-dest");
+  const secFetchMode = headersList.get("sec-fetch-mode");
+  const accept = headersList.get("accept") ?? "";
+
+  if (routerPrefetch === "1" || purpose === "prefetch") {
+    return "router-prefetch";
+  }
+  if (rsc === "1" || accept.includes("text/x-component")) {
+    return "rsc-flight";
+  }
+  if (routerState) {
+    return "rsc-navigation";
+  }
+  if (secFetchDest === "document" && secFetchMode === "navigate") {
+    return "document-navigation";
+  }
+  if (secFetchDest === "empty" && secFetchMode === "cors") {
+    return "fetch";
+  }
+  return "unknown";
+}
+
+async function emitRequestMeta(store: SceHotfixLogin01TraceStore): Promise<void> {
+  if (store.requestMetaLogged) return;
+  store.requestMetaLogged = true;
 
   const headerStore = await headers();
-  correlationId =
+  const requestClass = classifyRequest(headerStore);
+  const vercelRegion = process.env.VERCEL_REGION ?? "unknown";
+  const deploymentId = process.env.VERCEL_DEPLOYMENT_ID ?? "unknown";
+  const secFetchDest = headerStore.get("sec-fetch-dest") ?? "-";
+  const secFetchMode = headerStore.get("sec-fetch-mode") ?? "-";
+  const accept = headerStore.get("accept")?.split(",")[0] ?? "-";
+
+  console.info(
+    `${PREFIX} cid=${store.correlationId} meta=request requestClass=${requestClass} vercelRegion=${vercelRegion} deploymentId=${deploymentId} secFetchDest=${secFetchDest} secFetchMode=${secFetchMode} accept=${accept}`,
+  );
+}
+
+export async function initSceHotfixLogin01DashboardTrace(): Promise<string> {
+  if (!TRACE_ENABLED) return "disabled";
+
+  const existing = getSceHotfixLogin01TraceStore();
+  if (existing) {
+    await emitRequestMeta(existing);
+    return existing.correlationId;
+  }
+
+  const headerStore = await headers();
+  const correlationId =
     headerStore.get("x-vercel-id") ??
     headerStore.get("x-request-id") ??
     randomUUID().slice(0, 12);
-  originMs = Date.now();
+
+  const store = createSceHotfixLogin01TraceStore(correlationId);
+  sceHotfixLogin01TraceStorage.enterWith(store);
+
   logSceHotfixLogin01Step("dashboard");
   logSceHotfixLogin01Milestone("T0_REQUEST");
+  await emitRequestMeta(store);
   return correlationId;
 }
 
 /** Count repeated resolver entry points within one request (no cross-request cache). */
 export function recordSceHotfixLogin01DuplicateProbe(probe: string): void {
-  if (!TRACE_ENABLED) return;
-  duplicateProbeCounts.set(probe, (duplicateProbeCounts.get(probe) ?? 0) + 1);
+  const store = requireStore();
+  if (!store) return;
+  store.duplicateProbeCounts.set(probe, (store.duplicateProbeCounts.get(probe) ?? 0) + 1);
 }
 
 export function logSceHotfixLogin01Milestone(milestone: string): void {
-  if (!TRACE_ENABLED || originMs == null) return;
-  const elapsedMs = Date.now() - originMs;
-  milestones.push({ id: milestone, elapsedMs });
+  const store = requireStore();
+  if (!store) return;
+  const elapsedMs = Date.now() - store.originMs;
+  store.milestones.push({ id: milestone, elapsedMs });
   console.info(
-    `${PREFIX} cid=${correlationId ?? "?"} milestone=${milestone} elapsedMs=${elapsedMs}`,
+    `${PREFIX} cid=${store.correlationId} milestone=${milestone} elapsedMs=${elapsedMs}`,
   );
 }
 
 export function logSceHotfixLogin01Step(step: string): void {
-  if (!TRACE_ENABLED || originMs == null) return;
-  const atMs = Date.now() - originMs;
-  steps.push({ name: step, atMs });
-  stepStartedAtMs.set(step, Date.now());
-  console.info(`${PREFIX} cid=${correlationId ?? "?"} step=${step} elapsedMs=${atMs} phase=start`);
+  const store = requireStore();
+  if (!store) return;
+  const atMs = Date.now() - store.originMs;
+  store.stepStartedAtMs.set(step, Date.now());
+  console.info(`${PREFIX} cid=${store.correlationId} step=${step} elapsedMs=${atMs} phase=start`);
 }
 
 export function logSceHotfixLogin01StepDone(step: string): void {
-  if (!TRACE_ENABLED || originMs == null) return;
-  const startedAt = stepStartedAtMs.get(step);
+  const store = requireStore();
+  if (!store) return;
+  const startedAt = store.stepStartedAtMs.get(step);
   if (startedAt != null) {
-    stepDurationMs.set(step, Date.now() - startedAt);
-    stepStartedAtMs.delete(step);
+    store.stepDurationMs.set(step, Date.now() - startedAt);
+    store.stepStartedAtMs.delete(step);
   }
-  const elapsedMs = Date.now() - originMs;
-  steps.push({ name: `${step}:done`, atMs: elapsedMs });
-  console.info(`${PREFIX} cid=${correlationId ?? "?"} step=${step} elapsedMs=${elapsedMs} phase=done`);
+  const elapsedMs = Date.now() - store.originMs;
+  console.info(`${PREFIX} cid=${store.correlationId} step=${step} elapsedMs=${elapsedMs} phase=done`);
 }
 
 /** Per-step wall duration (step start → done), plus optional non-PII metrics. */
@@ -83,15 +139,15 @@ export function logSceHotfixLogin01StepFinished(
   step: string,
   metrics?: Record<string, number | string | boolean>,
 ): void {
-  if (!TRACE_ENABLED || originMs == null) return;
-  const startedAt = stepStartedAtMs.get(step);
+  const store = requireStore();
+  if (!store) return;
+  const startedAt = store.stepStartedAtMs.get(step);
   const durationMs = startedAt != null ? Date.now() - startedAt : 0;
   if (startedAt != null) {
-    stepDurationMs.set(step, durationMs);
-    stepStartedAtMs.delete(step);
+    store.stepDurationMs.set(step, durationMs);
+    store.stepStartedAtMs.delete(step);
   }
-  const elapsedMs = Date.now() - originMs;
-  steps.push({ name: `${step}:done`, atMs: elapsedMs });
+  const elapsedMs = Date.now() - store.originMs;
   const metricParts =
     metrics == null
       ? ""
@@ -99,74 +155,100 @@ export function logSceHotfixLogin01StepFinished(
           .map(([key, value]) => `${key}=${value}`)
           .join(" ")}`;
   console.info(
-    `${PREFIX} cid=${correlationId ?? "?"} step=${step}:done durationMs=${durationMs} elapsedMs=${elapsedMs}${metricParts}`,
+    `${PREFIX} cid=${store.correlationId} step=${step}:done durationMs=${durationMs} elapsedMs=${elapsedMs}${metricParts}`,
   );
 }
 
 export function markSceHotfixLogin01StepStart(step: string): void {
-  if (!TRACE_ENABLED || originMs == null) return;
-  stepStartedAtMs.set(step, Date.now());
+  const store = requireStore();
+  if (!store) return;
+  store.stepStartedAtMs.set(step, Date.now());
   logSceHotfixLogin01Step(step);
 }
 
 export function logSceHotfixLogin01StepFailed(step: string, error: unknown): void {
-  if (!TRACE_ENABLED || originMs == null) return;
-  stepStartedAtMs.delete(step);
-  const elapsedMs = Date.now() - originMs;
+  const store = requireStore();
+  if (!store) return;
+  store.stepStartedAtMs.delete(step);
+  const elapsedMs = Date.now() - store.originMs;
   const message = error instanceof Error ? error.message : "unknown";
   console.error(
-    `${PREFIX} cid=${correlationId ?? "?"} step=${step} elapsedMs=${elapsedMs} phase=failure message=${message}`,
+    `${PREFIX} cid=${store.correlationId} step=${step} elapsedMs=${elapsedMs} phase=failure message=${message}`,
   );
 }
 
 export function getSceHotfixLogin01StepDurationMs(step: string): number | undefined {
-  return stepDurationMs.get(step);
+  const store = getSceHotfixLogin01TraceStore();
+  return store?.stepDurationMs.get(step);
 }
 
-function readDuration(...candidates: string[]): number {
+export function recordSceHotfixLogin01DbClientReadyMs(ms: number): void {
+  const store = requireStore();
+  if (!store || store.dbClientReadyMs != null) return;
+  store.dbClientReadyMs = ms;
+  console.info(
+    `${PREFIX} cid=${store.correlationId} db=client-ready durationMs=${ms}`,
+  );
+}
+
+export function recordSceHotfixLogin01FirstPrismaWaitMs(ms: number): void {
+  const store = requireStore();
+  if (!store || store.firstPrismaCallWaitMs != null) return;
+  store.firstPrismaCallWaitMs = ms;
+  console.info(
+    `${PREFIX} cid=${store.correlationId} db=first-prisma-call-wait durationMs=${ms}`,
+  );
+}
+
+function readDuration(store: SceHotfixLogin01TraceStore, ...candidates: string[]): number {
   for (const step of candidates) {
-    const value = stepDurationMs.get(step);
+    const value = store.stepDurationMs.get(step);
     if (value != null && value > 0) return value;
   }
   return 0;
 }
 
-function maxDuration(...candidates: string[]): number {
+function maxDuration(store: SceHotfixLogin01TraceStore, ...candidates: string[]): number {
   let max = 0;
   for (const step of candidates) {
-    const value = stepDurationMs.get(step);
+    const value = store.stepDurationMs.get(step);
     if (value != null && value > max) max = value;
   }
   return max;
 }
 
-function sumDuration(...candidates: string[]): number {
+function sumDuration(store: SceHotfixLogin01TraceStore, ...candidates: string[]): number {
   let sum = 0;
   for (const step of candidates) {
-    const value = stepDurationMs.get(step);
+    const value = store.stepDurationMs.get(step);
     if (value != null) sum += value;
   }
   return sum;
 }
 
 /** Emit hierarchical wall-clock ledger (critical path uses max of parallel legs). */
-function emitCriticalPathLedger(requestTotalMs: number): void {
-  const authSessionMs = readDuration("layout-auth", "auth");
-  const tenantMs = readDuration("layout-tenant", "tenant");
-  const actorSecurityMs = readDuration("actor-context");
-  const shellMs = sumDuration("person-first-name", "hero-state");
-  const programmeMs = readDuration("programme");
-  const calendarMs = readDuration("programme-merge");
-  const personalActionsMs = readDuration("personal-actions");
-  const operationalAttentionMs = readDuration("operational-attention");
-  const quickAccessMs = readDuration("quick-access");
-  const secondaryMs = readDuration("secondary-snapshot");
-  const commandCenterPrepMs = readDuration("command-center-prep");
-  const commandCenterDataMs = readDuration("command-center-data");
+function emitCriticalPathLedger(store: SceHotfixLogin01TraceStore, requestTotalMs: number): void {
+  const authSessionMs = readDuration(store, "layout-auth", "auth");
+  const tenantMs = readDuration(store, "layout-tenant", "tenant");
+  const actorSecurityMs = readDuration(store, "actor-context");
+  const shellMs = sumDuration(store, "person-first-name", "hero-state");
+  const programmeMs = readDuration(store, "programme");
+  const calendarMs = readDuration(store, "programme-merge");
+  const personalActionsMs = readDuration(store, "personal-actions");
+  const operationalAttentionMs = readDuration(store, "operational-attention");
+  const quickAccessMs = readDuration(store, "quick-access");
+  const secondaryMs = readDuration(store, "secondary-snapshot");
+  const commandCenterPrepMs = readDuration(store, "command-center-prep");
+  const commandCenterDataMs = readDuration(store, "command-center-data");
 
-  const personalWorkMs = maxDuration("personal-actions", "operational-attention");
-  const commandCenterInnerParallelMs = maxDuration("programme", "personal-work", "secondary-snapshot");
-  const commandCenterOuterMs = maxDuration("command-center-data", "quick-access");
+  const personalWorkMs = maxDuration(store, "personal-actions", "operational-attention");
+  const commandCenterInnerParallelMs = maxDuration(
+    store,
+    "programme",
+    "personal-work",
+    "secondary-snapshot",
+  );
+  const commandCenterOuterMs = maxDuration(store, "command-center-data", "quick-access");
 
   const parallelWorkSumMs =
     programmeMs +
@@ -175,8 +257,8 @@ function emitCriticalPathLedger(requestTotalMs: number): void {
     secondaryMs +
     quickAccessMs;
 
-  const layoutParticipationNavMs = readDuration("layout-participation-nav");
-  const pageAuthMs = readDuration("auth");
+  const layoutParticipationNavMs = readDuration(store, "layout-participation-nav");
+  const pageAuthMs = readDuration(store, "auth");
 
   const criticalPathMs =
     authSessionMs +
@@ -187,40 +269,34 @@ function emitCriticalPathLedger(requestTotalMs: number): void {
     shellMs +
     commandCenterPrepMs +
     commandCenterOuterMs +
-    readDuration("command-center-i18n");
+    readDuration(store, "command-center-i18n");
 
-  const accountedMs =
-    authSessionMs +
-    tenantMs +
-    layoutParticipationNavMs +
-    pageAuthMs +
-    actorSecurityMs +
-    shellMs +
-    commandCenterPrepMs +
-    commandCenterOuterMs +
-    readDuration("command-center-i18n");
+  const accountedMs = criticalPathMs;
   const unexplainedMs = Math.max(0, requestTotalMs - accountedMs);
   const reconciliationPercent =
     requestTotalMs > 0
       ? Math.min(100, Math.round((accountedMs / requestTotalMs) * 100))
       : 100;
 
-  const duplicateSummary = [...duplicateProbeCounts.entries()]
+  const duplicateSummary = [...store.duplicateProbeCounts.entries()]
     .map(([probe, count]) => `${probe}=${count}`)
     .join(" ");
 
+  const dbClientReadyMs = store.dbClientReadyMs ?? 0;
+  const firstPrismaWaitMs = store.firstPrismaCallWaitMs ?? 0;
+
   console.info(
-    `${PREFIX} cid=${correlationId ?? "?"} ledger=wall-clock requestTotalMs=${requestTotalMs} criticalPathMs=${criticalPathMs} parallelWorkSumMs=${parallelWorkSumMs} reconciliationPercent=${reconciliationPercent} unexplainedMs=${unexplainedMs}`,
+    `${PREFIX} cid=${store.correlationId} ledger=wall-clock requestTotalMs=${requestTotalMs} criticalPathMs=${criticalPathMs} parallelWorkSumMs=${parallelWorkSumMs} reconciliationPercent=${reconciliationPercent} unexplainedMs=${unexplainedMs} dbClientReadyMs=${dbClientReadyMs} firstPrismaWaitMs=${firstPrismaWaitMs}`,
   );
   console.info(
-    `${PREFIX} cid=${correlationId ?? "?"} ledger=breakdown authSessionMs=${authSessionMs} tenantMs=${tenantMs} layoutParticipationNavMs=${layoutParticipationNavMs} pageAuthMs=${pageAuthMs} actorSecurityMs=${actorSecurityMs} shellMs=${shellMs} programmeMs=${programmeMs} calendarMergeMs=${calendarMs} personalActionsMs=${personalActionsMs} operationalAttentionMs=${operationalAttentionMs} personalWorkMaxMs=${personalWorkMs} secondaryMs=${secondaryMs} quickAccessMs=${quickAccessMs} commandCenterDataMs=${commandCenterDataMs} commandCenterInnerParallelMaxMs=${commandCenterInnerParallelMs} commandCenterOuterMaxMs=${commandCenterOuterMs}`,
+    `${PREFIX} cid=${store.correlationId} ledger=breakdown authSessionMs=${authSessionMs} tenantMs=${tenantMs} layoutParticipationNavMs=${layoutParticipationNavMs} pageAuthMs=${pageAuthMs} actorSecurityMs=${actorSecurityMs} shellMs=${shellMs} programmeMs=${programmeMs} calendarMergeMs=${calendarMs} personalActionsMs=${personalActionsMs} operationalAttentionMs=${operationalAttentionMs} personalWorkMaxMs=${personalWorkMs} secondaryMs=${secondaryMs} quickAccessMs=${quickAccessMs} commandCenterDataMs=${commandCenterDataMs} commandCenterInnerParallelMaxMs=${commandCenterInnerParallelMs} commandCenterOuterMaxMs=${commandCenterOuterMs}`,
   );
   if (duplicateSummary) {
-    console.info(`${PREFIX} cid=${correlationId ?? "?"} ledger=duplicateProbes ${duplicateSummary}`);
+    console.info(`${PREFIX} cid=${store.correlationId} ledger=duplicateProbes ${duplicateSummary}`);
   }
-  if (milestones.length > 0) {
+  if (store.milestones.length > 0) {
     console.info(
-      `${PREFIX} cid=${correlationId ?? "?"} ledger=milestones ${milestones
+      `${PREFIX} cid=${store.correlationId} ledger=milestones ${store.milestones
         .map((m) => `${m.id}@${m.elapsedMs}`)
         .join(" ")}`,
     );
@@ -228,11 +304,12 @@ function emitCriticalPathLedger(requestTotalMs: number): void {
 }
 
 export function finishSceHotfixLogin01DashboardTrace(): void {
-  if (!TRACE_ENABLED || originMs == null) return;
-  const requestTotalMs = Date.now() - originMs;
+  const store = requireStore();
+  if (!store) return;
+  const requestTotalMs = Date.now() - store.originMs;
   logSceHotfixLogin01Milestone("T11_STREAM_COMPLETE");
   logSceHotfixLogin01StepDone("dashboard");
-  emitCriticalPathLedger(requestTotalMs);
+  emitCriticalPathLedger(store, requestTotalMs);
 }
 
 /** Trace start → await fn() → trace done|failure (no-op when tracing disabled). */
@@ -240,7 +317,8 @@ export async function runWithSceHotfixLogin01Trace<T>(
   step: string,
   operation: () => Promise<T>,
 ): Promise<T> {
-  if (!TRACE_ENABLED || originMs == null) {
+  const store = requireStore();
+  if (!store) {
     return operation();
   }
   logSceHotfixLogin01Step(step);
@@ -256,21 +334,29 @@ export async function runWithSceHotfixLogin01Trace<T>(
 
 /** @internal test helpers */
 export function resetSceHotfixLogin01TraceForTests(): void {
-  correlationId = null;
-  originMs = null;
-  steps.length = 0;
-  stepStartedAtMs.clear();
-  stepDurationMs.clear();
-  duplicateProbeCounts.clear();
-  milestones.length = 0;
+  sceHotfixLogin01TraceStorage.enterWith(createSceHotfixLogin01TraceStore("test-cid"));
+  const store = getSceHotfixLogin01TraceStore();
+  if (!store) return;
+  store.originMs = Date.now();
+  store.stepStartedAtMs.clear();
+  store.stepDurationMs.clear();
+  store.duplicateProbeCounts.clear();
+  store.milestones.length = 0;
+  store.dbClientReadyMs = undefined;
+  store.firstPrismaCallWaitMs = undefined;
+  store.requestMetaLogged = false;
 }
 
 export function getSceHotfixLogin01TraceStateForTests(): {
   duplicateProbeCounts: Record<string, number>;
   milestones: string[];
 } {
+  const store = getSceHotfixLogin01TraceStore();
+  if (!store) {
+    return { duplicateProbeCounts: {}, milestones: [] };
+  }
   return {
-    duplicateProbeCounts: Object.fromEntries(duplicateProbeCounts),
-    milestones: milestones.map((m) => m.id),
+    duplicateProbeCounts: Object.fromEntries(store.duplicateProbeCounts),
+    milestones: store.milestones.map((m) => m.id),
   };
 }

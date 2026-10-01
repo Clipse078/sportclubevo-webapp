@@ -24,4 +24,12 @@ describe("sce-hotfix-login-01-trace ledger", () => {
     const state = trace.getSceHotfixLogin01TraceStateForTests();
     expect(state.duplicateProbeCounts["getActiveTenant()"]).toBe(2);
   });
+
+  it("classifies request metadata without throwing when store is active", async () => {
+    const trace = await import("@/lib/incident/sce-hotfix-login-01-trace");
+    trace.resetSceHotfixLogin01TraceForTests();
+    trace.logSceHotfixLogin01Milestone("T0_REQUEST");
+    const state = trace.getSceHotfixLogin01TraceStateForTests();
+    expect(state.milestones).toContain("T0_REQUEST");
+  });
 });
