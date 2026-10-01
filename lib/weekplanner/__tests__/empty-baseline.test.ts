@@ -7,6 +7,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WOCHEPLAN_EMPTY_BASELINE_MARKER } from "@/lib/wochenplan/plan-baseline";
 
+const cacheMocks = vi.hoisted(() => ({
+  getTenantDressingRoomOccupancyPresetsCached: vi.fn(),
+  getTenantMatchOperationalPolicyCached: vi.fn(),
+}));
+
 const mocks = vi.hoisted(() => ({
   facilityResourceFindMany: vi.fn(),
   trainingAllocationFindMany: vi.fn(),
@@ -19,7 +24,7 @@ const mocks = vi.hoisted(() => ({
   wochenplanPlanFindFirst: vi.fn(),
   listTournaments: vi.fn(),
   listMatchcenterMatches: vi.fn(),
-  listTrainingSessions: vi.fn(),
+  listTrainingSessionsForWeekplanner: vi.fn(),
 }));
 
 vi.mock("@/lib/tournaments/tournament-service", () => ({
@@ -31,7 +36,12 @@ vi.mock("@/lib/matchcenter/query-service", () => ({
 }));
 
 vi.mock("@/lib/training/session-generation-service", () => ({
-  listTrainingSessions: mocks.listTrainingSessions,
+  listTrainingSessionsForWeekplanner: mocks.listTrainingSessionsForWeekplanner,
+}));
+
+vi.mock("@/lib/server/request-cache", () => ({
+  getTenantDressingRoomOccupancyPresetsCached: cacheMocks.getTenantDressingRoomOccupancyPresetsCached,
+  getTenantMatchOperationalPolicyCached: cacheMocks.getTenantMatchOperationalPolicyCached,
 }));
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -45,6 +55,7 @@ vi.mock("@/lib/db/prisma", () => ({
     weekplannerPlanActivityOverride: { findMany: mocks.weekplannerPlanActivityOverrideFindMany },
     weekplannerPlan: { findFirst: mocks.weekplannerPlanFindFirst },
     wochenplanPlan: { findFirst: mocks.wochenplanPlanFindFirst },
+    tenant: { findUnique: vi.fn().mockResolvedValue({ logoUrl: null }) },
   },
 }));
 
@@ -74,7 +85,8 @@ function setupCanonicalWeek() {
   mocks.facilityResourceFindMany.mockResolvedValue([]);
   mocks.trainingAllocationFindMany.mockResolvedValue([]);
   mocks.trainingSessionAllocationFindMany.mockResolvedValue([]);
-  mocks.listTrainingSessions.mockResolvedValue([
+  mocks.eventFindMany.mockResolvedValue([]);
+  mocks.listTrainingSessionsForWeekplanner.mockResolvedValue([
     {
       id: "session-1",
       tenantId: TENANT_A,
@@ -97,6 +109,11 @@ function setupCanonicalWeek() {
 describe("getWeekplannerWeek — empty baseline", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    cacheMocks.getTenantDressingRoomOccupancyPresetsCached.mockResolvedValue(null);
+    cacheMocks.getTenantMatchOperationalPolicyCached.mockResolvedValue({
+      defaultMatchDurationMinutes: 120,
+      isClubConfigured: false,
+    });
     setupCanonicalWeek();
   });
 

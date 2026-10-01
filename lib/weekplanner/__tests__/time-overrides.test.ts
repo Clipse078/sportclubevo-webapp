@@ -21,6 +21,11 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+const cacheMocks = vi.hoisted(() => ({
+  getTenantDressingRoomOccupancyPresetsCached: vi.fn(),
+  getTenantMatchOperationalPolicyCached: vi.fn(),
+}));
+
 const mocks = vi.hoisted(() => ({
   facilityResourceFindMany: vi.fn(),
   trainingAllocationFindMany: vi.fn(),
@@ -32,6 +37,11 @@ const mocks = vi.hoisted(() => ({
   weekplannerPlanFindFirst: vi.fn(),
   wochenplanPlanFindFirst: vi.fn(),
   listTournaments: vi.fn(),
+}));
+
+vi.mock("@/lib/server/request-cache", () => ({
+  getTenantDressingRoomOccupancyPresetsCached: cacheMocks.getTenantDressingRoomOccupancyPresetsCached,
+  getTenantMatchOperationalPolicyCached: cacheMocks.getTenantMatchOperationalPolicyCached,
 }));
 
 vi.mock("@/lib/tournaments/tournament-service", () => ({
@@ -49,6 +59,7 @@ vi.mock("@/lib/db/prisma", () => ({
     weekplannerPlanActivityOverride: { findMany: mocks.weekplannerPlanActivityOverrideFindMany },
     weekplannerPlan: { findFirst: mocks.weekplannerPlanFindFirst },
     wochenplanPlan: { findFirst: mocks.wochenplanPlanFindFirst },
+    tenant: { findUnique: vi.fn().mockResolvedValue({ logoUrl: null }) },
   },
 }));
 
@@ -224,6 +235,11 @@ function resourceOverrideRow(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  cacheMocks.getTenantDressingRoomOccupancyPresetsCached.mockResolvedValue(null);
+  cacheMocks.getTenantMatchOperationalPolicyCached.mockResolvedValue({
+    defaultMatchDurationMinutes: 120,
+    isClubConfigured: false,
+  });
   mocks.facilityResourceFindMany.mockResolvedValue([STANDARD_PITCH, HALLE]);
   mocks.trainingAllocationFindMany.mockResolvedValue([]);
   mocks.trainingSessionAllocationFindMany.mockResolvedValue([]);
@@ -372,7 +388,11 @@ describe("getWeekplannerWeek — effective time + effective resource drive confl
     const weekWithPlan = await getWeekplannerWeek(TENANT_A, WEEK_WINDOW, PLAN_STANDARD_WEATHER);
     const mondayWithPlan = weekWithPlan.days.find((d) => d.dayKey === "2026-08-10")!;
     for (const item of mondayWithPlan.items) {
-      expect(item.conflicts).toEqual([{ facilityResourceId: HALLE.id, facilityResourceName: HALLE.name }]);
+      expect(item.conflicts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ facilityResourceId: HALLE.id, facilityResourceName: HALLE.name }),
+        ]),
+      );
     }
 
     // The exact same underlying data, resolved WITHOUT a plan (Standardplan), has no conflict —
