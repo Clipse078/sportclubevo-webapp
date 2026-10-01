@@ -433,13 +433,151 @@ async function loadTenantWidePermissionOverrides(
   return overrides;
 }
 
+/**
+ * Single userRole query for platform + tenant buckets (SCE-PERF-02R1 hot path).
+ * Tenant keys are role baseline only — membership gating and overrides applied by caller.
+ */
+async function resolveCombinedPlatformAndTenantRoleKeys(
+  prisma: PrismaClient,
+  userId: string,
+  tenantId: string,
+): Promise<{ platform: Set<string>; tenantRoleBaseline: Set<string> }> {
+  const userRoles = await prisma.userRole.findMany({
+    where: {
+      userId,
+      OR: [
+        {
+          tenantId: null,
+          role: {
+            scope: "PLATFORM",
+            tenantId: null,
+            isArchived: false,
+          },
+        },
+        {
+          tenantId,
+          orgUnitId: null,
+          scopeMode: null,
+          role: {
+            scope: "TENANT",
+            tenantId,
+            isArchived: false,
+          },
+        },
+      ],
+    },
+    select: {
+      tenantId: true,
+      role: {
+        select: {
+          rolePermissions: {
+            select: {
+              permission: {
+                select: {
+                  key: true,
+                  scope: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const platform = new Set<string>();
+  const tenantRoleBaseline = new Set<string>();
+
+  for (const ur of userRoles) {
+    for (const rp of ur.role.rolePermissions) {
+      if (ur.tenantId === null && rp.permission.scope === "PLATFORM") {
+        platform.add(rp.permission.key);
+      } else if (ur.tenantId === tenantId && rp.permission.scope === "TENANT") {
+        tenantRoleBaseline.add(rp.permission.key);
+      }
+    }
+  }
+
+  return { platform, tenantRoleBaseline };
+}
+
+function tenantMembershipGrantsAccess(
+  membership: {
+    isActive: boolean;
+    user: { isActive: boolean };
+    tenant: { status: string };
+  } | null,
+): boolean {
+  return Boolean(
+    membership?.isActive &&
+      membership.user.isActive &&
+      membership.tenant.status === "ACTIVE",
+  );
+}
+
 async function resolveEffectiveTenantPermissionKeys(
   prisma: PrismaClient,
   userId: string,
   tenantId: string,
 ): Promise<Set<string>> {
-  const roleBaseline = await resolveTenantPermissions(prisma, userId, tenantId);
-  const overrides = await loadTenantWidePermissionOverrides(prisma, userId, tenantId);
+  const [membership, userRoles, overrides] = await Promise.all([
+    prisma.tenantMembership.findUnique({
+      where: { tenantId_userId: { tenantId, userId } },
+      select: {
+        isActive: true,
+        tenant: { select: { status: true } },
+        user: { select: { isActive: true } },
+      },
+    }),
+    prisma.userRole.findMany({
+      where: {
+        userId,
+        tenantId,
+        orgUnitId: null,
+        scopeMode: null,
+        role: {
+          scope: "TENANT",
+          tenantId,
+          isArchived: false,
+        },
+      },
+      select: {
+        role: {
+          select: {
+            rolePermissions: {
+              select: {
+                permission: {
+                  select: {
+                    key: true,
+                    scope: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+    loadTenantWidePermissionOverrides(prisma, userId, tenantId),
+  ]);
+
+  if (
+    !membership?.isActive ||
+    !membership.user.isActive ||
+    membership.tenant.status !== "ACTIVE"
+  ) {
+    return new Set<string>();
+  }
+
+  const roleBaseline = new Set<string>();
+  for (const ur of userRoles) {
+    for (const rp of ur.role.rolePermissions) {
+      if (rp.permission.scope === "TENANT") {
+        roleBaseline.add(rp.permission.key);
+      }
+    }
+  }
+
   if (overrides.length === 0) return roleBaseline;
   return applyPermissionOverrides(roleBaseline, overrides);
 }
@@ -638,19 +776,37 @@ export class EffectivePermissionResolver {
       return { platform: [], tenant: [] };
     }
 
-    const platformKeys = await resolvePlatformPermissions(this.prisma, userId);
-
     if (!tenantId) {
+      const platformKeys = await resolvePlatformPermissions(this.prisma, userId);
       return {
         platform: [...platformKeys].sort(),
         tenant: [],
       };
     }
 
-    const tenantKeys = await resolveEffectiveTenantPermissionKeys(this.prisma, userId, tenantId);
+    const [roleKeys, membership, overrides] = await Promise.all([
+      resolveCombinedPlatformAndTenantRoleKeys(this.prisma, userId, tenantId),
+      this.prisma.tenantMembership.findUnique({
+        where: { tenantId_userId: { tenantId, userId } },
+        select: {
+          isActive: true,
+          tenant: { select: { status: true } },
+          user: { select: { isActive: true } },
+        },
+      }),
+      loadTenantWidePermissionOverrides(this.prisma, userId, tenantId),
+    ]);
+
+    let tenantKeys = new Set<string>();
+    if (tenantMembershipGrantsAccess(membership)) {
+      tenantKeys = roleKeys.tenantRoleBaseline;
+      if (overrides.length > 0) {
+        tenantKeys = applyPermissionOverrides(tenantKeys, overrides);
+      }
+    }
 
     return {
-      platform: [...platformKeys].sort(),
+      platform: [...roleKeys.platform].sort(),
       tenant: [...tenantKeys].sort(),
     };
   }

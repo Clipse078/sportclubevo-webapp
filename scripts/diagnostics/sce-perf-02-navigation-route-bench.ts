@@ -11,6 +11,9 @@ import { getRequestEffectivePermissions } from "@/lib/permissions/request-effect
 import { buildAdminHubGroupsForUser } from "@/lib/nav/admin-hub-catalog";
 import type { PermissionKey } from "@/lib/permissions/permissions";
 import { summarizeLatency } from "@/lib/diagnostics/sce-perf-stats";
+import { resolveCommunicationHubCapabilityAccess } from "@/lib/communication/hub-access";
+import { listWeekplannerPlans } from "@/lib/weekplanner/plan-service";
+import { listWochenplanPlans } from "@/lib/wochenplan/plan-service";
 
 type RouteBenchRow = {
   route: string;
@@ -89,7 +92,51 @@ async function main() {
     firstVisitMs: Number(website.firstVisitMs.toFixed(1)),
     repeatVisitMs: Number(website.repeatVisitMs.toFixed(1)),
     dominantCost: "CMS overview aggregate queries",
-    notes: "Parallel groupBy counts; warm PG cache helps repeat",
+    notes: "Single-round-trip SQL; warm PG cache helps repeat",
+  });
+
+  const planningBench = async () => {
+    const firstStart = performance.now();
+    await getRequestEffectivePermissions(user.id, tenant.id);
+    await listWochenplanPlans(tenant.id);
+    await listWeekplannerPlans(tenant.id, "");
+    const firstVisitMs = performance.now() - firstStart;
+    const repeatStart = performance.now();
+    await getRequestEffectivePermissions(user.id, tenant.id);
+    await listWochenplanPlans(tenant.id);
+    await listWeekplannerPlans(tenant.id, "");
+    const repeatVisitMs = performance.now() - repeatStart;
+    return { firstVisitMs, repeatVisitMs };
+  };
+
+  const communicationBench = async () => {
+    const firstStart = performance.now();
+    const first = await getRequestEffectivePermissions(user.id, tenant.id);
+    resolveCommunicationHubCapabilityAccess(first.tenant);
+    const firstVisitMs = performance.now() - firstStart;
+    const repeatStart = performance.now();
+    const repeat = await getRequestEffectivePermissions(user.id, tenant.id);
+    resolveCommunicationHubCapabilityAccess(repeat.tenant);
+    const repeatVisitMs = performance.now() - repeatStart;
+    return { firstVisitMs, repeatVisitMs };
+  };
+
+  const planning = await planningBench();
+  rows.push({
+    route: "/dashboard/planner/week",
+    firstVisitMs: Number(planning.firstVisitMs.toFixed(1)),
+    repeatVisitMs: Number(planning.repeatVisitMs.toFixed(1)),
+    dominantCost: "live RBAC + plan list queries",
+    notes: "SERVER_PATH_MS — default Planung L1 destination",
+  });
+
+  const communication = await communicationBench();
+  rows.push({
+    route: "/dashboard/communication",
+    firstVisitMs: Number(communication.firstVisitMs.toFixed(1)),
+    repeatVisitMs: Number(communication.repeatVisitMs.toFixed(1)),
+    dominantCost: "live RBAC + hub capability map",
+    notes: "SERVER_PATH_MS — hub cards are static; RBAC dominates",
   });
 
   const artifactPath =

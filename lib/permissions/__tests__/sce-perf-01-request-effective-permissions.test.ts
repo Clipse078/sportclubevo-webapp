@@ -13,6 +13,16 @@ describe("SCE-PERF-01 request-scoped RBAC cache", () => {
     expect(source).toContain("getEffectivePermissions");
   });
 
+  it("resolves platform and tenant permissions concurrently when tenantId is set", () => {
+    const source = readFileSync(
+      join(process.cwd(), "lib/permissions/services/effective-permission-resolver.ts"),
+      "utf8",
+    );
+    expect(source).toContain("Promise.all([");
+    expect(source).toContain("resolveCombinedPlatformAndTenantRoleKeys(this.prisma, userId, tenantId)");
+    expect(source).toContain("tenantMembershipGrantsAccess(membership)");
+  });
+
   it("permission gates delegate to getRequestEffectivePermissions", () => {
     const requireAny = readFileSync(
       join(process.cwd(), "lib/permissions/require-any-permission.ts"),

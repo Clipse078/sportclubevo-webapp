@@ -37,7 +37,7 @@
  *   TS-02 Active membership + ARCHIVED tenant → denied
  *   TS-03 Active membership + INACTIVE tenant → denied
  *   TS-04 Inactive membership + ACTIVE tenant → denied (membership gate still applies)
- *   TS-05 Archived-tenant denial short-circuits before the UserRole query
+ *   TS-05 Archived-tenant denial returns false (tenant role rows may be read in parallel but are not granted)
  *
  * AGGREGATE METHODS
  *   A-01  hasAnyPermission: true when at least one permission granted
@@ -102,10 +102,17 @@ function makeMockPrisma(overrides: MockPrismaOverrides = {}): PrismaClient {
 /** Produces a synthetic UserRole row as returned by the Prisma select shape. */
 function makeUserRoleRow(opts: {
   roleScope: "PLATFORM" | "TENANT";
+  tenantId?: string | null;
   roleIsArchived?: boolean;
   permissions: Array<{ key: string; scope: "PLATFORM" | "TENANT" }>;
 }) {
   return {
+    tenantId:
+      opts.tenantId !== undefined
+        ? opts.tenantId
+        : opts.roleScope === "PLATFORM"
+          ? null
+          : TENANT_A,
     role: {
       rolePermissions: opts.permissions.map((p) => ({
         permission: { key: p.key, scope: p.scope },
@@ -539,8 +546,7 @@ describe("EffectivePermissionResolver", () => {
       });
 
       expect(result).toBe(false);
-      // UserRole query must NOT be reached when membership is inactive
-      expect(userRoleFindMany).not.toHaveBeenCalled();
+      // Live reads may fetch role rows in parallel with membership; grants remain fail-closed.
     });
   });
 
@@ -686,18 +692,23 @@ describe("EffectivePermissionResolver", () => {
     });
   });
 
-  describe("TS-05: archived tenant denial short-circuits before the UserRole query", () => {
-    it("does not query UserRole once the tenant is found to be non-ACTIVE", async () => {
+  describe("TS-05: archived tenant denial returns false", () => {
+    it("does not grant tenant permissions when tenant status is non-ACTIVE", async () => {
       tenantMembershipFindUnique.mockResolvedValue(activeMembership("ARCHIVED"));
-      userRoleFindMany.mockResolvedValue([]);
+      userRoleFindMany.mockResolvedValue([
+        makeUserRoleRow({
+          roleScope: "TENANT",
+          permissions: [{ key: PERM_TEAMS_VIEW, scope: "TENANT" }],
+        }),
+      ]);
 
-      await resolver.hasPermission({
+      const result = await resolver.hasPermission({
         userId: USER_A,
         permission: PERM_TEAMS_VIEW,
         tenantId: TENANT_A,
       });
 
-      expect(userRoleFindMany).not.toHaveBeenCalled();
+      expect(result).toBe(false);
     });
   });
 
@@ -840,20 +851,16 @@ describe("EffectivePermissionResolver", () => {
   describe("L-02: getEffectivePermissions returns both platform and tenant permissions", () => {
     it("resolves platform and tenant permission sets when tenantId is provided", async () => {
       tenantMembershipFindUnique.mockResolvedValue(activeMembership());
-      // First call (platform) returns platform roles; second call (tenant) returns tenant roles.
-      userRoleFindMany
-        .mockResolvedValueOnce([
-          makeUserRoleRow({
-            roleScope: "PLATFORM",
-            permissions: [{ key: PERM_USERS_MANAGE, scope: "PLATFORM" }],
-          }),
-        ])
-        .mockResolvedValueOnce([
-          makeUserRoleRow({
-            roleScope: "TENANT",
-            permissions: [{ key: PERM_TEAMS_VIEW, scope: "TENANT" }],
-          }),
-        ]);
+      userRoleFindMany.mockResolvedValue([
+        makeUserRoleRow({
+          roleScope: "PLATFORM",
+          permissions: [{ key: PERM_USERS_MANAGE, scope: "PLATFORM" }],
+        }),
+        makeUserRoleRow({
+          roleScope: "TENANT",
+          permissions: [{ key: PERM_TEAMS_VIEW, scope: "TENANT" }],
+        }),
+      ]);
 
       const result = await resolver.getEffectivePermissions({
         userId: USER_A,
